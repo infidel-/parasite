@@ -1,0 +1,9 @@
+github!
+
+host death after timeout
+leave host  - body dies
+dogs/cats!
+
+AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
+
+write about getPixels/setPixels bug
