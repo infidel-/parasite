@@ -11,14 +11,13 @@ class AIEntity extends PawnEntity
   var _spriteAlert: Spritemap; // alerted state icon
 
 
-  public function new(vai: AI, g: Game, xx: Int, yy: Int, frameIndex: Int)
+  public function new(vai: AI, g: Game, xx: Int, yy: Int, atlasRow: Int)
     {
-      super(g, xx, yy, frameIndex);
+      super(g, xx, yy, atlasRow);
 
       _spriteAlert = new Spritemap(game.scene.entityAtlas, 32, 32);
       _spriteAlert.frame = Const.FRAME_EMPTY;
       _list.add(_spriteAlert);
-      _spriteAlert.frame = Const.FRAME_EMPTY;
 
       ai = vai;
       type = "ai";
@@ -28,6 +27,6 @@ class AIEntity extends PawnEntity
 // set alert image index
   public inline function setAlert(index: Int)
     {
-      _spriteAlert.frame = index;
+      _spriteAlert.setFrame(index, Const.ROW_ALERT);
     }
 }

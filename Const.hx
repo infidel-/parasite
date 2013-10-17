@@ -4,8 +4,8 @@ class Const
 {
   public static var LAYER_MOUSE = 0; // mouse cursor layer - highest
   public static var LAYER_UI = 1; // ui layer
-  public static var LAYER_PLAYER = 10; // player, enemies, etc layer
-  public static var LAYER_GROUND = 20; // ground layer - bodies, items
+  public static var LAYER_AI = 10; // player, enemies, etc layer
+  public static var LAYER_OBJECT = 20; // ground layer - bodies, items
   public static var LAYER_TILES = 30; // tilemap layer
 
   public static var TILE_WIDTH = 32; // tiles width, height
@@ -13,13 +13,21 @@ class Const
 
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;
-  public static var FRAME_PARASITE = 1;
-  public static var FRAME_HUMAN = 2;
-  public static var FRAME_MASK_POSSESSED1 = 3;
-  public static var FRAME_MASK_ALERT1 = 4;
-  public static var FRAME_MASK_ALERT2 = 5;
-  public static var FRAME_MASK_ALERT3 = 6;
-  public static var FRAME_MASK_ALERTED = 7;
+
+
+  public static var ROW_ALERT = 0;
+  public static var FRAME_ALERT1 = 1;
+  public static var FRAME_ALERT2 = 2;
+  public static var FRAME_ALERT3 = 3;
+  public static var FRAME_ALERTED = 4;
+
+  public static var ROW_PARASITE = 1;
+  public static var ROW_HUMAN = 2;
+  public static var ROW_DOG = 3;
+  public static var FRAME_DEFAULT = 0;
+  public static var FRAME_MASK_POSSESSED = 1;
+  public static var FRAME_BODY = 2;
+
 
   // tiles spritemap indexes
   public static var TILE_HIDDEN = 0;

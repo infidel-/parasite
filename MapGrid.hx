@@ -11,6 +11,7 @@ class MapGrid
 
   var _tilemap: Tilemap;
   var _ai: List<AI>;
+  var _objects: List<GridObject>;
   var _cells: Array<Array<Int>>; // cell types
   public var width: Int; // map width, height in cells
   public var height: Int;
@@ -25,6 +26,7 @@ class MapGrid
       height = h;
 
       _ai = new List<AI>();
+      _objects = new List<GridObject>();
       _tilemap = new Tilemap(tileset, 
         w * Const.TILE_WIDTH, h * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
@@ -112,6 +114,28 @@ class MapGrid
           _ai.add(ai);
           ai.createEntity();
         }
+
+      var maxDogs = Std.int(width * height / 200);
+      for (i in 0...maxDogs)
+        {
+          // find empty spot for new ai
+          var loc = findEmptyLocation();
+
+          // spawn new ai
+          var ai = new DogAI(game, loc.x, loc.y);
+          _ai.add(ai);
+          ai.createEntity();
+        }
+    }
+
+
+// create object with this type
+  public function createObject(x: Int, y: Int, type: String, parentType: String)
+    {
+      var o = new GridObject(game, x, y);
+      o.type = type;
+      o.createEntity(parentType);
+      _objects.add(o);
     }
 
 
@@ -329,5 +353,8 @@ class MapGrid
 
       for (ai in _ai)
         ai.entity.visible = isVisible(game.player.x, game.player.y, ai.x, ai.y);
+
+      for (obj in _objects)
+        obj.entity.visible = isVisible(game.player.x, game.player.y, obj.x, obj.y);
     }
 }

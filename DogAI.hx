@@ -1,13 +1,14 @@
-// AI for humans
+// AI for dogs 
 
-class HumanAI extends AI
+class DogAI extends AI
 {
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
-      type = 'human';
-      name = 'Joe Smith';
+      type = 'dog';
+      name = 'The dog';
 
-      strength = 4 + Std.random(4);
+      strength = 2 + Std.random(3);
+      hostExpiryTurns = (5 + strength) * 10;
     }
 }

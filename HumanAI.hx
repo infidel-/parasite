@@ -9,5 +9,6 @@ class HumanAI extends AI
       name = 'Joe Smith';
 
       strength = 4 + Std.random(4);
+      hostExpiryTurns = (10 + strength) * 10;
     }
 }

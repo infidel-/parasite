@@ -1,9 +1,10 @@
-github!
+host control
+psyche
+problems with movement on low control
 
-host death after timeout
-leave host  - body dies
-dogs/cats!
 
 AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
+
+scene. getSpriteByLayer(layer) - draw lines on this one
 
 write about getPixels/setPixels bug

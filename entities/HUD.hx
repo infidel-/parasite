@@ -50,11 +50,17 @@ class HUD
       buf.add('Actions: ' + game.player.ap + '\n');
 
       if (game.player.state == Player.STATE_PARASITE)
-        buf.add('Turns to live (no host): ' + game.player.noHostTimer + '\n');
+        buf.add('Turns to live (no host): ' + game.player.parasiteNoHostTimer + '\n');
 
       else if (game.player.state == Player.STATE_ATTACHED)
         buf.add('Hold: ' + game.player.attachHold + '\n');
         
+      else if (game.player.state == Player.STATE_HOST)
+        {
+          buf.add('Control: ' + game.player.hostControl + '\n');
+          buf.add('Turns until host expiry: ' + game.player.hostTimer + '\n');
+        }
+
       buf.add('Intent: ');
       var action = Const.getAction(game.player.intent); 
       buf.add(action.name);
@@ -98,7 +104,7 @@ class HUD
   static var cnt = 0;
   public function test()
     {
-          var oldtext = _actionList.text;
+      var oldtext = _actionList.text;
       var buf = new StringBuf();
       buf.add('Intent: Do Nothing\n\n');
       buf.add('1: Access Host Memory (5 AP)\n');

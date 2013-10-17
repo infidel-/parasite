@@ -16,7 +16,7 @@ class PlayerEntity extends PawnEntity
 
   public function new(g: Game, xx: Int, yy: Int)
     {
-      super(g, xx, yy, Const.FRAME_PARASITE); 
+      super(g, xx, yy, Const.ROW_PARASITE); 
 
       player = game.player;
       type = "player";
@@ -40,6 +40,7 @@ class PlayerEntity extends PawnEntity
       Input.define("action9", [ Key.DIGIT_9 ]);
 //      Input.define("test", [ Key.SPACE ]);
       Input.define("skipTurn", [ Key.SPACE ]);
+      Input.define("exit", [ Key.ESCAPE ]);
 
       dx = 0;
       dy = 0;
@@ -56,6 +57,9 @@ class PlayerEntity extends PawnEntity
 */
       handleMovement();
       handleActions();
+
+      if (Input.pressed("exit"))
+        Sys.exit(1);
     }
 
 

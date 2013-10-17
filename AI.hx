@@ -7,8 +7,8 @@ class AI
   var game: Game; // game state link
 
   public var entity: AIEntity; // gui entity
+  public var type: String; // object type
   public var name: String; // AI name (can be unique and capitalized)
-  public var type: String; // AI type
 
   public var x: Int; // grid x,y
   public var y: Int;
@@ -20,6 +20,7 @@ class AI
 
   // stats
   public var strength: Int; // physical strength (1-10)
+  public var hostExpiryTurns: Int; // amount of turns until this host expires
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
@@ -31,25 +32,27 @@ class AI
 
       x = vx;
       y = vy;
+
       state = STATE_IDLE;
       alertness = 0;
       alertTimer = 0;
       direction = 0;
       parasiteAttached = false;
       strength = 1;
+      hostExpiryTurns = 10;
     }
 
 
 // create entity for this AI
   public function createEntity()
     {
-      var frameIndex: Dynamic = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
-      if (frameIndex == null)
+      var atlasRow: Dynamic = Reflect.field(Const, 'ROW_' + type.toUpperCase());
+      if (atlasRow == null)
         {
           trace('No such entity type: ' + type);
           return;
         }
-      entity = new AIEntity(this, game, x, y, frameIndex);
+      entity = new AIEntity(this, game, x, y, atlasRow);
       game.scene.add(entity);
     }
 
@@ -286,13 +289,13 @@ class AI
 
       var alertFrame = Const.FRAME_EMPTY;
       if (state == STATE_ALERT)
-        alertFrame = Const.FRAME_MASK_ALERTED;
+        alertFrame = Const.FRAME_ALERTED;
       else if (alertness > 75)
-        alertFrame = Const.FRAME_MASK_ALERT3;
+        alertFrame = Const.FRAME_ALERT3;
       else if (alertness > 50)
-        alertFrame = Const.FRAME_MASK_ALERT2;
+        alertFrame = Const.FRAME_ALERT2;
       else if (alertness > 0)
-        alertFrame = Const.FRAME_MASK_ALERT1;
+        alertFrame = Const.FRAME_ALERT1;
 
       entity.setAlert(alertFrame);
     }

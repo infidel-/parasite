@@ -9,6 +9,7 @@ class Game
   public var player: Player; // game player
 
   public var turns: Int; // number of turns passed since game start
+  public var isFinished: Bool; // is the game finished?
 
   public function new()
     {
@@ -20,7 +21,10 @@ class Game
 // init game stuff - called from GameScene.begin()
   public function init()
     {
+      Const.todo('proper title screen');
+      log('You are alone. You are scared. You need to find a host or you will die soon.');
       turns = 0;
+      isFinished = false;
 
       // init and generate map
       map = new MapGrid(this, "gfx/tileset.png", 50, 50);
@@ -45,16 +49,11 @@ class Game
 // player turn ends
   public function endTurn()
     {
-      if (player.host == null)
-        player.noHostTimer--;
+      player.turn();
+      if (isFinished)
+        return;
 
-      if (player.noHostTimer == 0)
-        {
-          finish('lose', 'noHost');
-          return;
-        }
-
-      player.ap = 2;
+      // turns counter
       turns++;
 
       // AI movement
@@ -71,13 +70,14 @@ class Game
   public function finish(result: String, condition: String)
     {
       Const.todo('proper finish screen');
+      isFinished = true;
 
       // game lost
       if (result == 'lose')
         {
           log('You have lost the game.');
           if (condition == 'noHost')
-            log('Parasite cannot survive without a host for long.');
+            log('You cannot survive without a host for long.');
         }
       else
         {

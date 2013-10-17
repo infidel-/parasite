@@ -1,6 +1,6 @@
-all: clean test.n
+all: clean windows
 
-test.n:
+neko:
 	openfl build project.nmml neko -debug
 
 linux:
