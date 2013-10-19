@@ -103,6 +103,57 @@ class Player
 // ==============================   ACTIONS   =======================================
 
 
+// do a player action
+  public function action(index: Int)
+    {
+      // find action name by index
+      var i = 1;
+      var actionName = null;
+      for (a in actionList)
+        if (i++ == index)
+          {
+            actionName = a;
+            break;
+          }
+      if (actionName == null)
+        return;
+
+      // harden grip on the victim
+      if (actionName == 'hardenGrip')
+        actionHardenGrip();
+
+      // invade host 
+      else if (actionName == 'invadeHost')
+        actionInvadeHost();
+
+      // try to reinforce control over host 
+      else if (actionName == 'reinforceControl')
+        actionReinforceControl();
+
+      // try to leave current host
+      else if (actionName == 'leaveHost')
+        actionLeaveHost();
+
+      postAction(); // post-action call
+
+      // update HUD info
+      game.updateHUD();
+    }
+
+
+// post-action call: remove AP and new turn
+  function postAction()
+    {
+      // remove 1 AP
+      ap--;
+      if (ap > 0)
+        return;
+
+      // new turn
+      game.endTurn();
+    }
+
+
 // frob the AI - use current intent (possess, attack, etc)
   public function frobAI(ai: AI)
     {
@@ -168,6 +219,16 @@ class Player
     }
 
 
+// action: try to reinforce control over host
+  public function actionReinforceControl()
+    {
+      game.log('You reinforce mental control over the host.');
+      hostControl += 10 - Std.int(host.psyche / 2);
+      if (hostControl > 100)
+        hostControl = 100;
+    }
+
+
 // action: try to leave this AI host
   public function actionLeaveHost()
     {
@@ -195,6 +256,7 @@ class Player
 // returns true on success
   public function moveBy(dx: Int, dy: Int): Bool
     {
+      // if player tries to move when attached, that detaches the parasite
       if (state == STATE_ATTACHED)
         actionDetach();
 
@@ -203,6 +265,18 @@ class Player
 
       if (!game.map.isWalkable(nx, ny))
         return false;
+
+      // random: change movement direction
+      if (state == STATE_HOST && Std.random(100) < 100 - hostControl)
+        {
+          log('The host resists your command.');
+          var dir = game.map.getRandomDirection(x, y);
+          if (dir == -1)
+            throw 'nowhere to move!';
+
+          nx = x + Const.dirx[dir];
+          ny = y + Const.diry[dir];
+        }
 
       x = nx;
       y = ny;
@@ -240,53 +314,6 @@ class Player
     }
 
 
-// do a player action
-  public function action(index: Int)
-    {
-      // find action name by index
-      var i = 1;
-      var actionName = null;
-      for (a in actionList)
-        if (i++ == index)
-          {
-            actionName = a;
-            break;
-          }
-      if (actionName == null)
-        return;
-
-      // harden grip on the victim
-      if (actionName == 'hardenGrip')
-        actionHardenGrip();
-
-      // invade host 
-      else if (actionName == 'invadeHost')
-        actionInvadeHost();
-
-      // try to leave current host
-      else if (actionName == 'leaveHost')
-        actionLeaveHost();
-
-      postAction(); // post-action call
-
-      // update HUD info
-      game.updateHUD();
-    }
-
-
-// post-action call: remove AP and new turn
-  function postAction()
-    {
-      // remove 1 AP
-      ap--;
-      if (ap > 0)
-        return;
-
-      // new turn
-      game.endTurn();
-    }
-
-
 // update player actions list
   public function updateActionsList()
     {
@@ -303,6 +330,7 @@ class Player
       // parasite in control of host
       else if (state == STATE_HOST)
         {
+          actionList.add('reinforceControl');
           actionList.add('accessMemory');
           actionList.add('leaveHost');
         }

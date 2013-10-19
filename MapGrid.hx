@@ -103,7 +103,7 @@ class MapGrid
 // generate AI
   function generateAI()
     {
-      var maxHumans = Std.int(width * height / 50);
+      var maxHumans = Std.int(0.01 * width * height);
       for (i in 0...maxHumans)
         {
           // find empty spot for new ai
@@ -115,7 +115,7 @@ class MapGrid
           ai.createEntity();
         }
 
-      var maxDogs = Std.int(width * height / 200);
+      var maxDogs = Std.int(0.0025 * width * height);
       for (i in 0...maxDogs)
         {
           // find empty spot for new ai
@@ -356,5 +356,34 @@ class MapGrid
 
       for (obj in _objects)
         obj.entity.visible = isVisible(game.player.x, game.player.y, obj.x, obj.y);
+    }
+
+
+// get random direction to a near empty space
+// returns index of Const.dirx[], Const.diry[]
+  public function getRandomDirection(x: Int, y: Int): Int
+    {
+      // form a temp list of walkable dirs
+      var tmp = [];
+      for (i in 0...Const.dirx.length)
+        {
+          var nx = x + Const.dirx[i];
+          var ny = y + Const.diry[i];
+          var ok = 
+            (isWalkable(nx, ny) && 
+             !hasAI(nx, ny) && 
+             !(game.player.x == nx && game.player.y == ny));
+          if (ok)
+            tmp.push(i);
+        }
+
+      // nowhere to go, return
+      if (tmp.length == 0)
+        {
+          trace('ai at (' + x + ',' + y + '): no dirs');
+          return -1;
+        }
+
+      return tmp[Std.random(tmp.length)];
     }
 }

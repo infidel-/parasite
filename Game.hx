@@ -59,6 +59,10 @@ class Game
       // AI movement
       map.aiTurn();
 
+      // host AI logic
+      if (player.state == Player.STATE_HOST)
+        player.host.stateHost();
+
       // update AI visibility to player
       map.updateVisibility();
     }

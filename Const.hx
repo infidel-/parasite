@@ -56,6 +56,7 @@ class Const
       detach: { id: 'detach', name: 'Detach' },
       hardenGrip: { id: 'hardenGrip', name: 'Harden Grip' },
       invadeHost: { id: 'invadeHost', name: 'Invade Host' },
+      reinforceControl: { id: 'reinforceControl', name: 'Reinforce Control' },
       doNothing: { id: 'doNothing', name: 'Do Nothing' },
       leaveHost: { id: 'leaveHost', name: 'Leave Host' },
       accessMemory: { id: 'accessMemory', name: 'Access Host Memory' },

@@ -1,7 +1,5 @@
-host control
-psyche
-problems with movement on low control
-
+access memory - dependent on intellect
+call police
 
 AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
 

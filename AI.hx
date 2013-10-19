@@ -20,10 +20,12 @@ class AI
 
   // stats
   public var strength: Int; // physical strength (1-10)
+  public var psyche: Int; // mental strength (1-10)
   public var hostExpiryTurns: Int; // amount of turns until this host expires
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
+  public var parasiteControlled: Bool; // is parasite currently controlling this AI
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -39,6 +41,7 @@ class AI
       direction = 0;
       parasiteAttached = false;
       strength = 1;
+      psyche = 1;
       hostExpiryTurns = 10;
     }
 
@@ -142,6 +145,7 @@ class AI
 // internal: change direction at random to the empty space
   function changeRandomDirection()
     {
+/*    
       // form a temp list of walkable dirs
       var tmp = [];
       for (i in 0...Const.dirx.length)
@@ -164,6 +168,10 @@ class AI
         }
 
       direction = tmp[Std.random(tmp.length)];
+*/
+      direction = game.map.getRandomDirection(x, y);
+      if (direction == -1)
+        trace('ai at (' + x + ',' + y + '): nowhere to move!');
 /*      
       if (x < 20 && y < 20) 
         trace(tmp + ' ai at (' + x + ',' + y + '): dir' + direction +
@@ -241,6 +249,17 @@ class AI
         
       // try to run away
       else logicRunAwayFrom(game.player.x, game.player.y);
+    }
+
+
+// state: host logic (called directly from game.endTurn()
+  public function stateHost()
+    {
+      if (player.hostControl < 25 && Std.random(100) < 50)
+        {
+          log('manages to tear you away.'); 
+          game.player.onDetach(); // notify player
+        }
     }
 
 
