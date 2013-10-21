@@ -48,6 +48,9 @@ class HUD
       // player intent
       buf.add('Turn: ' + game.turns + '\n');
       buf.add('Actions: ' + game.player.ap + '\n');
+      if (game.player.humanSociety > 0)
+        buf.add('Knowledge about human society: ' + game.player.humanSociety + '%\n');
+      buf.add('===\n');
 
       if (game.player.state == Player.STATE_PARASITE)
         buf.add('Turns to live (no host): ' + game.player.parasiteNoHostTimer + '\n');
@@ -57,6 +60,7 @@ class HUD
         
       else if (game.player.state == Player.STATE_HOST)
         {
+          buf.add('Health: ' + game.player.host.health + '\n');
           buf.add('Control: ' + game.player.hostControl + '\n');
           buf.add('Turns until host expiry: ' + game.player.hostTimer + '\n');
         }
@@ -66,7 +70,7 @@ class HUD
       buf.add(action.name);
 //      if (action.ap > 0)
 //        buf.add(' (' + action.ap + ' AP)');
-      buf.add("\n\n");
+      buf.add("\n===\n\n");
 
       // player actions
       var n = 1;

@@ -1,7 +1,8 @@
-access memory - dependent on intellect
-call police
-
+access memory - lose health and die
+moans and screams from low control host + bystanders
 AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
+police (patrollers + call police)
+
 
 scene. getSpriteByLayer(layer) - draw lines on this one
 

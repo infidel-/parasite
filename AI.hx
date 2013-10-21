@@ -15,17 +15,20 @@ class AI
   var direction: Int; // direction of movement
 
   public var state: String; // AI state
-  public var alertness: Int; // 0-100, how alert is AI to the parasite
+  public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
   public var alertTimer: Int; // when alerted, this will go down until AI calms down
 
   // stats
   public var strength: Int; // physical strength (1-10)
+  public var constitution: Int; // physical constitution (1-10)
+  public var intellect: Int; // mental capability (1-10)
   public var psyche: Int; // mental strength (1-10)
+  public var health(default, set): Int; // current health
+  public var maxHealth: Int; // maximum health
   public var hostExpiryTurns: Int; // amount of turns until this host expires
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
-  public var parasiteControlled: Bool; // is parasite currently controlling this AI
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -41,8 +44,21 @@ class AI
       direction = 0;
       parasiteAttached = false;
       strength = 1;
+      constitution = 1;
+      intellect = 1;
       psyche = 1;
+      maxHealth = 1;
+      health = 1;
       hostExpiryTurns = 10;
+    }
+
+
+// save derived stats (must be called in the end of derived classes constructors)
+  function derivedStats()
+    {
+      hostExpiryTurns = (5 + strength + constitution) * 10;
+      maxHealth = Std.int(strength / 2) + constitution;
+      health = maxHealth;
     }
 
 
@@ -252,12 +268,14 @@ class AI
     }
 
 
-// state: host logic (called directly from game.endTurn()
-  public function stateHost()
+// state: host logic
+  function stateHost()
     {
-      if (player.hostControl < 25 && Std.random(100) < 50)
+      // random: try to tear parasite away
+      if (game.player.hostControl < 25 && Std.random(100) < 5)
         {
-          log('manages to tear you away.'); 
+          log('manages to tear you away.');
+          onDetach();
           game.player.onDetach(); // notify player
         }
     }
@@ -272,6 +290,10 @@ class AI
       // AI alerted - try to run away or attack
       else if (state == STATE_ALERT)
         stateAlert();
+
+      // controlled by parasite
+      else if (state == STATE_HOST)
+        stateHost();
 
       // clamp and change entity icons
       updateEntity();
@@ -296,25 +318,37 @@ class AI
     }
 
 
+// event: parasite invaded this host
+  public function onInvade()
+    {
+      state = STATE_HOST;
+      parasiteAttached = false;
+      entity.setMask(Const.FRAME_MASK_POSSESSED);
+    }
+
+
+// event: parasite detach from this host
+  public function onDetach()
+    {
+      state = STATE_ALERT;
+      entity.setMask(Const.FRAME_EMPTY);
+    }
+
 // post alert changes, clamp and change icon
   function updateEntity()
     {
-      // clamp stuff
-      if (alertness < 0)
-        alertness = 0;
-
-      if (alertness > 100)
-        alertness = 100;
-
       var alertFrame = Const.FRAME_EMPTY;
       if (state == STATE_ALERT)
         alertFrame = Const.FRAME_ALERTED;
-      else if (alertness > 75)
-        alertFrame = Const.FRAME_ALERT3;
-      else if (alertness > 50)
-        alertFrame = Const.FRAME_ALERT2;
-      else if (alertness > 0)
-        alertFrame = Const.FRAME_ALERT1;
+      else if (state == STATE_IDLE)
+        {
+          if (alertness > 75)
+            alertFrame = Const.FRAME_ALERT3;
+          else if (alertness > 50)
+            alertFrame = Const.FRAME_ALERT2;
+          else if (alertness > 0)
+            alertFrame = Const.FRAME_ALERT1;
+        }
 
       entity.setAlert(alertFrame);
     }
@@ -327,7 +361,18 @@ class AI
     }
 
 
+// ========================== SETTERS ====================================
+
+  function set_health(v: Int)
+    { return health = Const.clamp(v, 0, maxHealth); }
+  function set_alertness(v: Int)
+    { return alertness = Const.clamp(v, 0, 100); }
+
+
+// =================================================================================
+
   // AI states
   public static var STATE_IDLE = 'idle';
   public static var STATE_ALERT = 'alert';
+  public static var STATE_HOST = 'host';
 }

@@ -9,7 +9,10 @@ class DogAI extends AI
       name = 'The dog';
 
       strength = 2 + Std.random(3);
+      constitution = 2 + Std.random(3);
+      intellect = 1;
       psyche = 1 + Std.random(1);
-      hostExpiryTurns = (5 + strength) * 10;
+
+      derivedStats();
     }
 }

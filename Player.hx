@@ -14,17 +14,20 @@ class Player
   public var ap: Int; // player action points (2 per turn)
   public var actionList: List<String>; // list of currently available actions
 
+  // knowledge
+  public var humanSociety(default, set): Float; // knowledge about human society (0-99.9%)
+
   // state "parasite"
   public var parasiteNoHostTimer: Int; // amount of turns parasite will survive without a host
 
   // state "attach"
   public var attachHost: AI; // potential host
-  public var attachHold: Int; // hold strength
+  public var attachHold(default, set): Int; // hold strength
 
   // state "host"
   public var host: AI; // invaded host
-  public var hostTimer: Int; // amount of turns host has left to live
-  public var hostControl: Int; // amount of turns until you lose control of the host
+  public var hostTimer(default, set): Int; // amount of turns host has left to live
+  public var hostControl(default, set): Int; // amount of turns until you lose control of the host
 
 
   public function new(g: Game, vx: Int, vy: Int)
@@ -42,6 +45,8 @@ class Player
       attachHold = 0;
       hostTimer = 0;
       hostControl = 0;
+
+      humanSociety = 0.0;
     }
 
 
@@ -61,7 +66,7 @@ class Player
         {
           // "no host" timer
           parasiteNoHostTimer--;
-          if (state == STATE_PARASITE && parasiteNoHostTimer == 0)
+          if (state == STATE_PARASITE && parasiteNoHostTimer <= 0)
             {
               game.finish('lose', 'noHost');
               return;
@@ -71,8 +76,12 @@ class Player
       // state: host (host lifetime timer)
       if (state == STATE_HOST)
         {
+          // knowledge about human society raises automatically
+          if (host.type == 'human')
+            humanSociety += 0.1 * host.intellect;
+
           hostTimer--;
-          if (hostTimer == 0)
+          if (hostTimer <= 0)
             {
               onHostDeath();
 
@@ -84,12 +93,9 @@ class Player
       if (state == STATE_HOST)
         {
           hostControl--;
-          if (hostControl == 0)
+          if (hostControl <= 0)
             {
-              // add AI back to map and clear host var
-              host.setPosition(x, y);
-              game.map.addAI(host);
-
+              host.onDetach();
               onDetach();
 
               game.log("You've lost control of the host.");
@@ -133,6 +139,10 @@ class Player
       // try to leave current host
       else if (actionName == 'leaveHost')
         actionLeaveHost();
+
+      // access host memory
+      else if (actionName == 'accessMemory')
+        actionAccessMemory();
 
       postAction(); // post-action call
 
@@ -188,7 +198,7 @@ class Player
 
 
 // action: harden grip when attached to host
-  public function actionHardenGrip()
+  function actionHardenGrip()
     {
       game.log('You harden your grip on the host.');
       attachHold += 10;
@@ -196,22 +206,24 @@ class Player
 
 
 // action: try to invade this AI host
-  public function actionInvadeHost()
+  function actionInvadeHost()
     {
 //      game.log('You attempt to invade the host.');
 //      if (Std.random(100) < )
       game.log('You are now in control of the host.');
 
-      // save AI link and remove it from map
+      // save AI link
       host = attachHost;
-      host.parasiteAttached = false;
       hostTimer = host.hostExpiryTurns;
       hostControl = HOST_CONTROL_BASE;
-      game.map.destroyAI(host);
+      entity.visible = false;
+      attachHost = null;
+      host.onInvade(); // notify ai
+//      game.map.destroyAI(host);
 
       // change image
-      entity.setImage(host.entity.getImage(), host.entity.atlasRow);
-      entity.setMask(Const.FRAME_MASK_POSSESSED, host.entity.atlasRow);
+//      entity.setImage(host.entity.getImage(), host.entity.atlasRow);
+//      entity.setMask(Const.FRAME_MASK_POSSESSED, host.entity.atlasRow);
 
       // set intent/state
       intent = INTENT_NOTHING;
@@ -220,22 +232,17 @@ class Player
 
 
 // action: try to reinforce control over host
-  public function actionReinforceControl()
+  function actionReinforceControl()
     {
       game.log('You reinforce mental control over the host.');
       hostControl += 10 - Std.int(host.psyche / 2);
-      if (hostControl > 100)
-        hostControl = 100;
     }
 
 
 // action: try to leave this AI host
-  public function actionLeaveHost()
+  function actionLeaveHost()
     {
-      // add AI back to map and clear host var
-      host.setPosition(x, y);
-      game.map.addAI(host);
-
+      host.onDetach();
       onDetach();
 
       game.log('You release the host.');
@@ -243,12 +250,32 @@ class Player
 
 
 // action: remove attached parasite from host
-  public function actionDetach()
+  function actionDetach()
     {
       attachHost.parasiteAttached = false;
       onDetach();
 
       game.log('You detach from the potential host.');
+    }
+
+
+// action: access host memory
+  function actionAccessMemory()
+    {
+      // animals do not have any useful memories
+      if (host.intellect < 2)
+        {
+          game.log('The brain of this host contains nothing useful.');
+          return;
+        }
+
+      humanSociety += 1 * host.intellect;
+      hostTimer -= 10 - host.psyche;
+      host.health--;
+      if (Std.random(100) < 25)
+        host.health--;
+
+      game.log('You probe the brain of the host and access its memory.');
     }
 
 
@@ -280,6 +307,8 @@ class Player
 
       x = nx;
       y = ny;
+      if (state == STATE_HOST) // move invaded host entity with invisible player entity
+        host.setPosition(x, y);
 
       entity.updatePosition();
 
@@ -343,13 +372,12 @@ class Player
 // event: parasite detached from AI 
   public function onDetach()
     {
-      // change image
-      entity.setImage(Const.FRAME_DEFAULT, Const.ROW_PARASITE);
-      entity.setMask(Const.FRAME_EMPTY);
-
       // change intent
       intent = INTENT_ATTACH;
       state = STATE_PARASITE;
+
+      // make player entity visible again
+      entity.visible = true;
 
       // reset no host timer
       parasiteNoHostTimer = NO_HOST_TURNS;
@@ -361,6 +389,7 @@ class Player
 // event: host expired
   public function onHostDeath()
     {
+      game.map.destroyAI(host);
       game.map.createObject(x, y, 'body', host.type);
 
       onDetach();
@@ -375,6 +404,17 @@ class Player
     {
       game.log(s);
     }
+
+
+// =================================  SETTERS  ====================================
+  function set_attachHold(v: Int)
+    { return attachHold = Const.clamp(v, 0, 100); }
+  function set_hostControl(v: Int)
+    { return hostControl = Const.clamp(v, 0, 100); }
+  function set_hostTimer(v: Int)
+    { return hostTimer = Const.clamp(v, 0); }
+  function set_humanSociety(v: Float)
+    { return humanSociety = Const.clampFloat(v, 0, 99.9); }
 
 
 // =================================================================================

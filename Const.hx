@@ -59,7 +59,7 @@ class Const
       reinforceControl: { id: 'reinforceControl', name: 'Reinforce Control' },
       doNothing: { id: 'doNothing', name: 'Do Nothing' },
       leaveHost: { id: 'leaveHost', name: 'Leave Host' },
-      accessMemory: { id: 'accessMemory', name: 'Access Host Memory' },
+      accessMemory: { id: 'accessMemory', name: 'Access Memory' },
       move: { id: 'move', name: 'Movement' },
 //      { id: '', name: '', ap:  },
     };
@@ -103,5 +103,27 @@ class Const
   public static inline function todo(s: String)
     {
       trace('TODO: ' + s);
+    }
+
+
+// return clamped value between min and max
+  public static inline function clamp(v: Int, min: Int, ?max: Int): Int
+    {
+      if (v < min)
+        v = min;
+      else if (max != null && v > max)
+        v = max;
+      return v;
+    }
+
+
+// return clamped value between min and max (float)
+  public static inline function clampFloat(v: Float, min: Float, ?max: Float): Float
+    {
+      if (v < min)
+        v = min;
+      else if (max != null && v > max)
+        v = max;
+      return v;
     }
 }
