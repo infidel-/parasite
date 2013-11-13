@@ -52,15 +52,15 @@ class Const
   // player actions and intents names
   public static var PLAYER_ACTIONS =
     {
-      attachHost: { id: 'attachHost', name: 'Attach To Host' },
-      detach: { id: 'detach', name: 'Detach' },
-      hardenGrip: { id: 'hardenGrip', name: 'Harden Grip' },
-      invadeHost: { id: 'invadeHost', name: 'Invade Host' },
-      reinforceControl: { id: 'reinforceControl', name: 'Reinforce Control' },
-      doNothing: { id: 'doNothing', name: 'Do Nothing' },
-      leaveHost: { id: 'leaveHost', name: 'Leave Host' },
-      accessMemory: { id: 'accessMemory', name: 'Access Memory' },
-      move: { id: 'move', name: 'Movement' },
+      attachHost: { id: 'attachHost', name: 'Attach To Host', energy: 0 },
+      detach: { id: 'detach', name: 'Detach', energy: 0 },
+      hardenGrip: { id: 'hardenGrip', name: 'Harden Grip', energy: 5 },
+      invadeHost: { id: 'invadeHost', name: 'Invade Host', energy: 10 },
+      reinforceControl: { id: 'reinforceControl', name: 'Reinforce Control', energy: 5 },
+      doNothing: { id: 'doNothing', name: 'Do Nothing', energy: 0 },
+      leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
+      accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 5 },
+      move: { id: 'move', name: 'Movement', energy: 0 },
 //      { id: '', name: '', ap:  },
     };
 

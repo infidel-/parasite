@@ -52,10 +52,18 @@ class HUD
         buf.add('Knowledge about human society: ' + game.player.humanSociety + '%\n');
       buf.add('===\n');
 
-      if (game.player.state == Player.STATE_PARASITE)
-        buf.add('Turns to live (no host): ' + game.player.parasiteNoHostTimer + '\n');
+//      if (game.player.state == Player.STATE_PARASITE)
+      buf.add('Chemical A: ' + game.player.chemicals[0] +
+        '/' + game.player.maxChemicals[0] + '\n');
+      buf.add('Chemical B: ' + game.player.chemicals[1] +
+        '/' + game.player.maxChemicals[1] + '\n');
+      buf.add('Chemical C: ' + game.player.chemicals[2] +
+        '/' + game.player.maxChemicals[2] + '\n');
+      buf.add('Energy: ' + game.player.energy +
+        '/' + game.player.maxEnergy + '\n');
+      buf.add('===\n');
 
-      else if (game.player.state == Player.STATE_ATTACHED)
+      if (game.player.state == Player.STATE_ATTACHED)
         buf.add('Hold: ' + game.player.attachHold + '\n');
         
       else if (game.player.state == Player.STATE_HOST)
@@ -68,8 +76,6 @@ class HUD
       buf.add('Intent: ');
       var action = Const.getAction(game.player.intent); 
       buf.add(action.name);
-//      if (action.ap > 0)
-//        buf.add(' (' + action.ap + ' AP)');
       buf.add("\n===\n\n");
 
       // player actions
@@ -86,6 +92,8 @@ class HUD
           var action = Const.getAction(id); 
           buf.add(n + ': ');
           buf.add(action.name);
+          if (action.energy > 0)
+            buf.add(' (' + action.energy + ' energy)');
 //          buf.add(' (' + action.ap + ' AP)');
           if (id != list.last())
             buf.add("\n");

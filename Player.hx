@@ -17,8 +17,13 @@ class Player
   // knowledge
   public var humanSociety(default, set): Float; // knowledge about human society (0-99.9%)
 
+  // state-independent
+  public var energy(default, set): Int; // energy left
+  public var maxEnergy: Int; // max energy
+  public var chemicals: Array<Int>; // chemical compounds
+  public var maxChemicals: Array<Int>; // max chemical compounds
+
   // state "parasite"
-  public var parasiteNoHostTimer: Int; // amount of turns parasite will survive without a host
 
   // state "attach"
   public var attachHost: AI; // potential host
@@ -41,7 +46,10 @@ class Player
       actionList = new List<String>();
       ap = 2;
 
-      parasiteNoHostTimer = NO_HOST_TURNS;
+      energy = STARTING_ENERGY;
+      maxEnergy = STARTING_ENERGY;
+      chemicals = [ 0, 0, 0 ];
+      maxChemicals = [ 20, 20, 20 ];
       attachHold = 0;
       hostTimer = 0;
       hostControl = 0;
@@ -65,12 +73,28 @@ class Player
       if (state == STATE_PARASITE)
         {
           // "no host" timer
-          parasiteNoHostTimer--;
-          if (state == STATE_PARASITE && parasiteNoHostTimer <= 0)
+          energy -= 10;
+          if (state == STATE_PARASITE && energy <= 0)
             {
               game.finish('lose', 'noHost');
               return;
             }
+        }
+
+      // state: host (chemicals harvesting and energy restoration)
+      if (state == STATE_HOST)
+        {
+          chemicals[0] += 1;
+          chemicals[1] += 1;
+          chemicals[2] += 1;
+
+          if (chemicals[0] > maxChemicals[0])
+            chemicals[0] = maxChemicals[0];
+          if (chemicals[1] > maxChemicals[1])
+            chemicals[1] = maxChemicals[1];
+          if (chemicals[2] > maxChemicals[2])
+            chemicals[2] = maxChemicals[2];
+          energy += 10;
         }
 
       // state: host (host lifetime timer)
@@ -124,6 +148,8 @@ class Player
       if (actionName == null)
         return;
 
+      var action = Const.getAction(actionName);
+
       // harden grip on the victim
       if (actionName == 'hardenGrip')
         actionHardenGrip();
@@ -143,6 +169,8 @@ class Player
       // access host memory
       else if (actionName == 'accessMemory')
         actionAccessMemory();
+
+      energy -= action.energy;
 
       postAction(); // post-action call
 
@@ -343,6 +371,15 @@ class Player
     }
 
 
+// helper: add action to list and check for energy
+  inline function addActionToList(name: String)
+    {
+      var action = Const.getAction(name);
+      if (action.energy <= energy)
+        actionList.add(name);
+    }
+
+
 // update player actions list
   public function updateActionsList()
     {
@@ -351,17 +388,17 @@ class Player
       // parasite is attached to host
       if (state == STATE_ATTACHED)
         {
-          actionList.add('hardenGrip');
+          addActionToList('hardenGrip');
           if (attachHold >= 90)
-            actionList.add('invadeHost');
+            addActionToList('invadeHost');
         }
 
       // parasite in control of host
       else if (state == STATE_HOST)
         {
-          actionList.add('reinforceControl');
-          actionList.add('accessMemory');
-          actionList.add('leaveHost');
+          addActionToList('reinforceControl');
+          addActionToList('accessMemory');
+          addActionToList('leaveHost');
         }
     }
 
@@ -380,7 +417,6 @@ class Player
       entity.visible = true;
 
       // reset no host timer
-      parasiteNoHostTimer = NO_HOST_TURNS;
       attachHost = null;
       host = null;
     }
@@ -407,6 +443,14 @@ class Player
 
 
 // =================================  SETTERS  ====================================
+  function set_chemicals(v: Array<Int>)
+    { 
+      trace(v);
+      //return energy = Const.clamp(v, 0, maxEnergy); 
+      return v;
+    }
+  function set_energy(v: Int)
+    { return energy = Const.clamp(v, 0, maxEnergy); }
   function set_attachHold(v: Int)
     { return attachHold = Const.clamp(v, 0, 100); }
   function set_hostControl(v: Int)
@@ -430,8 +474,8 @@ class Player
   public static var INTENT_DETACH = 'detach';
   public static var INTENT_NOTHING = 'doNothing';
 
-  // amount of turns parasite will survive without a host
-  public static var NO_HOST_TURNS = 10;
+  // starting energy of parasite 
+  public static var STARTING_ENERGY = 100;
 
   // base amount of turns the host has to live
 //  public static var HOST_EXPIRY_TURNS = 10;
@@ -450,5 +494,6 @@ typedef PlayerAction =
 {
   var id: String; // action id
   var name: String; // action name
-  var ap: Int; // action points cost
+//  var ap: Int; // action points cost
+  var energy: Int; // energy cost
 }
