@@ -38,6 +38,7 @@ class PlayerEntity extends PawnEntity
       Input.define("action7", [ Key.DIGIT_7 ]);
       Input.define("action8", [ Key.DIGIT_8 ]);
       Input.define("action9", [ Key.DIGIT_9 ]);
+      Input.define("evolutionWindow", [ Key.F1 ]);
 //      Input.define("test", [ Key.SPACE ]);
       Input.define("skipTurn", [ Key.SPACE ]);
       Input.define("exit", [ Key.ESCAPE ]);
@@ -117,6 +118,10 @@ class PlayerEntity extends PawnEntity
             player.action(i);
             break;
           }
+
+      // open evolution screen
+      if (Input.pressed("evolutionWindow"))
+        game.scene.evolutionWindow.show();
 
       // test action
       if (Input.pressed("test"))

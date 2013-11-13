@@ -87,13 +87,10 @@ class Player
           chemicals[0] += 1;
           chemicals[1] += 1;
           chemicals[2] += 1;
+          chemicals[0] = Const.clamp(chemicals[0], 0, maxChemicals[0]);
+          chemicals[1] = Const.clamp(chemicals[1], 0, maxChemicals[1]);
+          chemicals[2] = Const.clamp(chemicals[2], 0, maxChemicals[2]);
 
-          if (chemicals[0] > maxChemicals[0])
-            chemicals[0] = maxChemicals[0];
-          if (chemicals[1] > maxChemicals[1])
-            chemicals[1] = maxChemicals[1];
-          if (chemicals[2] > maxChemicals[2])
-            chemicals[2] = maxChemicals[2];
           energy += 10;
         }
 
@@ -171,6 +168,14 @@ class Player
         actionAccessMemory();
 
       energy -= action.energy;
+
+      // host could've died from some of these actions
+      if (state == STATE_HOST && host.health == 0)
+        {
+          onHostDeath();
+
+          log('Your host has died.');
+        }
 
       postAction(); // post-action call
 

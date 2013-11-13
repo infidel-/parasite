@@ -3,11 +3,13 @@ import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
 
 import entities.HUD;
-  
+import entities.EvolutionWindow;
+
 class GameScene extends Scene
 {
   public var game: Game; // game state link
   public var hud: HUD; // ingame HUD
+  public var evolutionWindow: EvolutionWindow; // evolution window
   public var entityAtlas: TileAtlas; // entity graphics
 
 
@@ -23,8 +25,9 @@ class GameScene extends Scene
       // load all entity images into atlas
       entityAtlas = new TileAtlas("gfx/entities.png", Const.TILE_WIDTH, Const.TILE_HEIGHT);
 
-      // init HUD
+      // init GUI
       hud = new HUD(game);
+      evolutionWindow = new EvolutionWindow(game);
 
       // init game state
       game.init();

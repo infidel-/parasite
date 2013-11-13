@@ -64,13 +64,13 @@ class HUD
       buf.add('===\n');
 
       if (game.player.state == Player.STATE_ATTACHED)
-        buf.add('Hold: ' + game.player.attachHold + '\n');
+        buf.add('Hold: ' + game.player.attachHold + ' / 100\n');
         
       else if (game.player.state == Player.STATE_HOST)
         {
           buf.add('Health: ' + game.player.host.health + '\n');
-          buf.add('Control: ' + game.player.hostControl + '\n');
-          buf.add('Turns until host expiry: ' + game.player.hostTimer + '\n');
+          buf.add('Control: ' + game.player.hostControl + ' / 100\n');
+          buf.add('Life expectancy: ' + game.player.hostTimer + '\n');
         }
 
       buf.add('Intent: ');
@@ -102,6 +102,10 @@ class HUD
 
       if (list.length == 0)
         buf.add('No available actions.');
+
+      buf.add("\n===\n");
+      if (game.player.state == Player.STATE_HOST)
+        buf.add('\nF1: Controlled evolution\n');
 
       _actionList.text = buf.toString();
       _actionListBack.graphics.clear();
