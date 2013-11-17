@@ -41,7 +41,8 @@ class PlayerEntity extends PawnEntity
       Input.define("evolutionWindow", [ Key.F1 ]);
 //      Input.define("test", [ Key.SPACE ]);
       Input.define("skipTurn", [ Key.SPACE ]);
-      Input.define("exit", [ Key.ESCAPE ]);
+      Input.define("closeWindow", [ Key.ESCAPE ]);
+      Input.define("exit", [ Key.F4 ]);
 
       dx = 0;
       dy = 0;
@@ -57,10 +58,30 @@ class PlayerEntity extends PawnEntity
         trace(Key.nameOfKey(Input.lastKey));
 */
       handleMovement();
+      handleWindows();
       handleActions();
 
       if (Input.pressed("exit"))
         Sys.exit(1);
+    }
+
+
+// handle opening and closing windows
+  function handleWindows()
+    {
+      // close current window
+      if (Input.pressed("closeWindow"))
+        {
+          game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
+          game.scene.evolutionWindow.hide();
+        }
+
+      // open evolution window
+      if (Input.pressed("evolutionWindow"))
+        {
+          game.scene.hudState = GameScene.HUDSTATE_EVOLUTION;
+          game.scene.evolutionWindow.show();
+        }
     }
 
 
@@ -115,13 +136,12 @@ class PlayerEntity extends PawnEntity
       for (i in 1...10)
         if (Input.pressed("action" + i))
           {
-            player.action(i);
+            if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
+              game.scene.hud.action(i);
+            else if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
+              game.scene.evolutionWindow.action(i);
             break;
           }
-
-      // open evolution screen
-      if (Input.pressed("evolutionWindow"))
-        game.scene.evolutionWindow.show();
 
       // test action
       if (Input.pressed("test"))

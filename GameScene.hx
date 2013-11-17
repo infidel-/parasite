@@ -9,6 +9,7 @@ class GameScene extends Scene
 {
   public var game: Game; // game state link
   public var hud: HUD; // ingame HUD
+  public var hudState: String; // current HUD state (default, evolution, etc)
   public var evolutionWindow: EvolutionWindow; // evolution window
   public var entityAtlas: TileAtlas; // entity graphics
 
@@ -17,6 +18,7 @@ class GameScene extends Scene
     {
       super();
       game = g;
+      hudState = HUDSTATE_DEFAULT;
     }
 
 
@@ -54,4 +56,9 @@ class GameScene extends Scene
 //      gameScene.mouse.update();
 //      trace(HXP.camera.x + ',' + HXP.camera.y);
     }
+
+
+  // hud state constants
+  public static var HUDSTATE_DEFAULT = 'default'; // default
+  public static var HUDSTATE_EVOLUTION = 'evolution'; // evolution window open
 }

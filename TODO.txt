@@ -1,3 +1,5 @@
+evolution points generation
+two improvements impl
 when parasite is in control, it needs to start researching right away some knowledges and start growing stuff
 gaining knowledges
 growing stuff

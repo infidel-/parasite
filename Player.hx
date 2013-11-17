@@ -12,7 +12,8 @@ class Player
   public var x: Int; // x,y on map grid
   public var y: Int;
   public var ap: Int; // player action points (2 per turn)
-  public var actionList: List<String>; // list of currently available actions
+
+  public var evolutionManager: EvolutionManager; // main evolution control
 
   // knowledge
   public var humanSociety(default, set): Float; // knowledge about human society (0-99.9%)
@@ -38,12 +39,12 @@ class Player
   public function new(g: Game, vx: Int, vy: Int)
     {
       game = g;
+      evolutionManager = new EvolutionManager(this, game);
 
       x = vx;
       y = vy;
       intent = INTENT_ATTACH;
       state = STATE_PARASITE;
-      actionList = new List<String>();
       ap = 2;
 
       energy = STARTING_ENERGY;
@@ -130,21 +131,10 @@ class Player
 // ==============================   ACTIONS   =======================================
 
 
-// do a player action
-  public function action(index: Int)
+// do a player action by string id
+// action energy availability is checked when the list is formed
+  public function action(actionName: String)
     {
-      // find action name by index
-      var i = 1;
-      var actionName = null;
-      for (a in actionList)
-        if (i++ == index)
-          {
-            actionName = a;
-            break;
-          }
-      if (actionName == null)
-        return;
-
       var action = Const.getAction(actionName);
 
       // harden grip on the victim
@@ -373,38 +363,6 @@ class Player
       game.map.updateVisibility();
 
       return true;
-    }
-
-
-// helper: add action to list and check for energy
-  inline function addActionToList(name: String)
-    {
-      var action = Const.getAction(name);
-      if (action.energy <= energy)
-        actionList.add(name);
-    }
-
-
-// update player actions list
-  public function updateActionsList()
-    {
-      actionList.clear();
-
-      // parasite is attached to host
-      if (state == STATE_ATTACHED)
-        {
-          addActionToList('hardenGrip');
-          if (attachHold >= 90)
-            addActionToList('invadeHost');
-        }
-
-      // parasite in control of host
-      else if (state == STATE_HOST)
-        {
-          addActionToList('reinforceControl');
-          addActionToList('accessMemory');
-          addActionToList('leaveHost');
-        }
     }
 
 

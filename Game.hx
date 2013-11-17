@@ -95,8 +95,6 @@ class Game
 // update HUD state from game state
   public function updateHUD()
     {
-      player.updateActionsList(); // update player actions list
-
       scene.hud.update(); // update hud state
     }
 
