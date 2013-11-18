@@ -124,6 +124,9 @@ class HUD
           buf.add('Health: ' + game.player.host.health + '\n');
           buf.add('Control: ' + game.player.hostControl + '/100\n');
           buf.add('Life expectancy: ' + game.player.hostTimer + '\n');
+          buf.add('Evolution direction: ');
+          buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
+          buf.add('\n');
         }
 
       buf.add('Intent: ');

@@ -93,6 +93,7 @@ class Player
           chemicals[2] = Const.clamp(chemicals[2], 0, maxChemicals[2]);
 
           energy += 10;
+          evolutionManager.turn();
         }
 
       // state: host (host lifetime timer)

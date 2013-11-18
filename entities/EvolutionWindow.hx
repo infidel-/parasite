@@ -61,7 +61,10 @@ class EvolutionWindow
       if (actionName == null)
         return;
 
+      // do action
       game.player.evolutionManager.action(actionName);
+      update(); // update display
+      game.scene.hud.update(); // update HUD
     }
 
 
@@ -92,23 +95,27 @@ class EvolutionWindow
       _actionIDs.clear();
       for (imp in game.player.evolutionManager.getList())
         {
-          var info = EvolutionConst.getInfo(imp.id);
-          buf.add(info.name);
+          buf.add(imp.info.name);
           buf.add(' ');
           buf.add(imp.level);
-          buf.add(': ');
-          buf.add(info.note);
+          buf.add(' (' + imp.ep + '/' + EvolutionConst.epCostImprovement[imp.level]);
+          buf.add('): ');
+          buf.add(imp.info.note + '\n');
 
           _actionIDs.add('set.' + imp.id);
-          _actionNames.add(info.name);
+          _actionNames.add(imp.info.name);
         }
 
       // add paths
-      for (p in EvolutionConst.paths)
+      for (p in game.player.evolutionManager.getPathList())
         {
           _actionIDs.add('setPath.' + p.id);
-          _actionNames.add('Path of ' + p.name);
+          _actionNames.add('Path of ' + p.info.name + ' (' + p.ep + '/' +
+            EvolutionConst.epCostPath[p.level] + ')');
         }
+
+      buf.add('\nCurrent evolution direction: ');
+      buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
 
       // add list of actions
       buf.add('\n\nSelect evolution direction:\n\n');

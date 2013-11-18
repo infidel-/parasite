@@ -70,14 +70,17 @@ class PlayerEntity extends PawnEntity
   function handleWindows()
     {
       // close current window
-      if (Input.pressed("closeWindow"))
+      if (Input.pressed("closeWindow") ||
+           (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION &&
+            Input.pressed("evolutionWindow")))
         {
           game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
           game.scene.evolutionWindow.hide();
         }
 
       // open evolution window
-      if (Input.pressed("evolutionWindow"))
+      else if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT &&
+          Input.pressed("evolutionWindow"))
         {
           game.scene.hudState = GameScene.HUDSTATE_EVOLUTION;
           game.scene.evolutionWindow.show();
@@ -143,30 +146,33 @@ class PlayerEntity extends PawnEntity
             break;
           }
 
-      // test action
-      if (Input.pressed("test"))
-        game.scene.hud.test();
-
-      // skip until end of turn
-      if (Input.pressed("skipTurn"))
+      if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
         {
-          game.endTurn();
+          // test action
+          if (Input.pressed("test"))
+            game.scene.hud.test();
 
-          // update HUD info
-          game.updateHUD();
-        }
+          // skip until end of turn
+          if (Input.pressed("skipTurn"))
+            {
+              game.endTurn();
 
-      // mouse click - cell and ai info
-      if (Input.mouseReleased)
-        {
-          var x = Std.int(game.scene.mouseX / Const.TILE_WIDTH);
-          var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
-          trace('(' + x + ',' + y + ') ' + game.map.getType(x, y) +
-            ' player vis: ' + 
-            game.map.isVisible(game.player.x, game.player.y, x, y, true));
-          var ai = game.map.getAI(x, y);
-          if (ai != null)
-            Const.debugObject(ai);
+              // update HUD info
+              game.updateHUD();
+            }
+
+          // mouse click - cell and ai info
+          if (Input.mouseReleased)
+            {
+              var x = Std.int(game.scene.mouseX / Const.TILE_WIDTH);
+              var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
+              trace('(' + x + ',' + y + ') ' + game.map.getType(x, y) +
+                ' player vis: ' + 
+                game.map.isVisible(game.player.x, game.player.y, x, y, true));
+              var ai = game.map.getAI(x, y);
+              if (ai != null)
+                Const.debugObject(ai);
+            }
         }
     }
 

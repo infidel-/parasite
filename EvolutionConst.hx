@@ -3,7 +3,7 @@
 class EvolutionConst
 {
   // major evolution paths
-  public static var paths: Array<EvolutionPath> =
+  public static var paths: Array<PathInfo> =
     [
       { id: 'protection', name: 'Protection' },
       { id: 'control', name: 'Control' },
@@ -18,7 +18,7 @@ class EvolutionConst
       {
         path: 'conceal',
         id: 'hostRelease',
-        name: 'Host release',
+        name: 'Host release process',
         note: 'Controls what happens to the host when parasite leaves.',
         levelNotes: [
           'Host dies with its brain melting and dripping out of its ears.',
@@ -55,11 +55,29 @@ class EvolutionConst
     ];
 
 
+// ep needed to upgrade improvement to next level (index is current level)
+  public static var epCostImprovement = [ 100, 200, 500, 1000 ];
+// ep needed to open new improvement on path (index is current path level)
+  public static var epCostPath = [ 100, 200, 500, 1000, 2000, 5000 ];
+
+
+// get improvement info
   public static function getInfo(id: String): ImprovInfo
     {
       for (imp in improvements)
         if (imp.id == id)
           return imp;
+
+      return null;
+    }
+
+
+// get path info
+  public static function getPathInfo(id: String): PathInfo
+    {
+      for (p in paths)
+        if (p.id == id)
+          return p;
 
       return null;
     }
@@ -75,7 +93,7 @@ typedef ImprovInfo =
   var levelNotes: Array<String>; // improvement descriptions for different levels
 }
 
-typedef EvolutionPath =
+typedef PathInfo =
 {
   var id: String; // path string ID
   var name: String; // path name
