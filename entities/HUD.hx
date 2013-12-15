@@ -19,13 +19,18 @@ class HUD
 
   var _textField: TextField; // actions list
   var _textFieldBack: Sprite; // actions list background
-  var _actionList: List<String>; // list of currently available actions
+  var _listActions: List<String>; // list of currently available actions
+
+  var _log: TextField; // last log lines 
+  var _logBack: Sprite; // log background
+  var _listLog: List<String>; // log lines (last 4)
 
 
   public function new(g: Game)
     {
       game = g;
-      _actionList = new List<String>();
+      _listActions = new List<String>();
+      _listLog = new List<String>();
 
       // actions list
       var font = Assets.getFont("font/04B_03__.ttf");
@@ -39,8 +44,30 @@ class HUD
       _textFieldBack.x = 20;
       _textFieldBack.y = 20;
       HXP.stage.addChild(_textFieldBack);
+
+      // log lines
+      var font = Assets.getFont("font/04B_03__.ttf");
+      _log = new TextField();
+      _log.autoSize = TextFieldAutoSize.LEFT;
+      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      fmt.align = TextFormatAlign.LEFT;
+      _log.defaultTextFormat = fmt;
+      _logBack = new Sprite();
+      _logBack.addChild(_log);
+      _logBack.x = 20;
+      _logBack.y = 20;
+      HXP.stage.addChild(_logBack);
     }
 
+
+// add line to a log and remove first one
+  public function log(s: String)
+    {
+      _listLog.add(s);
+      if (_listLog.length > 4)
+        _listLog.pop();
+    }
+  
 
 // call action by id
   public function action(index: Int)
@@ -48,7 +75,7 @@ class HUD
       // find action name by index
       var i = 1;
       var actionName = null;
-      for (a in _actionList)
+      for (a in _listActions)
         if (i++ == index)
           {
             actionName = a;
@@ -66,14 +93,14 @@ class HUD
     {
       var action = Const.getAction(name);
       if (action.energy <= game.player.energy)
-        _actionList.add(name);
+        _listActions.add(name);
     }
 
 
 // update player actions list
   public function updateActionList()
     {
-      _actionList.clear();
+      _listActions.clear();
 
       // parasite is attached to host
       if (game.player.state == Player.STATE_ATTACHED)
@@ -112,7 +139,9 @@ class HUD
         '/' + game.player.maxChemicals[1] + '\n');
       buf.add('Chemical C: ' + game.player.chemicals[2] +
         '/' + game.player.maxChemicals[2] + '\n');
-      buf.add('Energy: ' + game.player.energy +
+      var colEnergy = (game.player.energy > 30 ? '#FFFFFF' : '#FF0000');
+      buf.add('Energy: ' + 
+        "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy + '\n');
       buf.add('===\n');
 
@@ -121,8 +150,15 @@ class HUD
         
       else if (game.player.state == Player.STATE_HOST)
         {
+          var colControl = '#FFFFFF';
+          if (game.player.hostControl < 30)
+            colControl = '#FF0000';
+          else if (game.player.hostControl < 70)
+            colControl = '#FFFF00';
           buf.add('Health: ' + game.player.host.health + '\n');
-          buf.add('Control: ' + game.player.hostControl + '/100\n');
+          buf.add('Control: ' + 
+            "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
+            '/100\n');
           buf.add('Life expectancy: ' + game.player.hostTimer + '\n');
           buf.add('Evolution direction: ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
@@ -136,7 +172,7 @@ class HUD
 
       // player actions
       var n = 1;
-      for (id in _actionList)
+      for (id in _listActions)
         {
 /*        
           if (a == selectedAction)
@@ -150,19 +186,19 @@ class HUD
           if (action.energy > 0)
             buf.add(' (' + action.energy + ' energy)');
 //          buf.add(' (' + action.ap + ' AP)');
-          if (id != _actionList.last())
+          if (id != _listActions.last())
             buf.add("\n");
           n++;
         }
 
-      if (_actionList.length == 0)
+      if (_listActions.length == 0)
         buf.add('No available actions.');
 
       buf.add("\n===\n");
       if (game.player.state == Player.STATE_HOST)
         buf.add('\nF1: Controlled evolution\n');
 
-      _textField.text = buf.toString();
+      _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();
       _textFieldBack.graphics.beginFill(0x202020, .75);
       _textFieldBack.graphics.drawRect(0, 0, _textField.width, _textField.height);
@@ -190,10 +226,28 @@ class HUD
     }
 
 
+// update log display
+  function updateLog()
+    {
+      var buf = new StringBuf();
+      for (l in _listLog)
+        {
+          buf.add(l);
+          buf.add('\n');
+        }
+
+      _log.htmlText = buf.toString();
+      _logBack.graphics.clear();
+      _logBack.graphics.beginFill(0x202020, .75);
+      _logBack.graphics.drawRect(0, 0, _log.width, _log.height);
+    }
+
+
 // update HUD state from game state
   public function update()
     {
       updateActionList();
       updateWindow();
+      updateLog();
     }
 }

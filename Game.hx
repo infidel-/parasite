@@ -100,8 +100,15 @@ class Game
 
 
 // add entry to game log
-  public function log(s: String)
-    {
-      trace(s + ' [TODO LOG]');
+  public function log(s: String, ?col: Int = 0)
+    { 
+      Sys.println(s);
+
+      var colstr = '#FFFFFF';
+      if (col == Const.COLOR_ALERT)
+        colstr = '#FF0000';
+      else if (col == Const.COLOR_EVOLUTION)
+        colstr = '#00FFFF';
+      scene.hud.log("<font color='" + colstr + "'>" + s + "</font>");
     }
 }

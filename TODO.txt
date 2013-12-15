@@ -1,5 +1,5 @@
-add log
-add colored lines to log!
+parasite vision
+police (patrollers + call police)
 two improvements impl
 when parasite is in control, it needs to start researching right away some knowledges and start growing stuff
 gaining knowledges
@@ -7,7 +7,6 @@ growing stuff
 global suspicion and what comes with its growth
 moans and screams from low control host + bystanders
 AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
-police (patrollers + call police)
 log and attributes should become colored when they're low
 
 scene. getSpriteByLayer(layer) - draw lines on this one

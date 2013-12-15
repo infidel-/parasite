@@ -52,7 +52,8 @@ class EvolutionManager
               var imp = openImprovement(taskID);
               if (imp == null)
                 {
-                  player.log('You have followed this evolution path to the end.');
+                  player.log('You have followed this evolution path to the end.',
+                    Const.COLOR_EVOLUTION);
                   path.ep = 0;
                   taskID = '';
                   Const.todo('I probably need to disable this path at that moment.');
@@ -60,7 +61,8 @@ class EvolutionManager
                 }
 
               player.log('Following the path of ' + path.info.name +
-                ' you now possess the knowledge about ' + imp.info.name + '.');
+                ' you now possess the knowledge about ' + imp.info.name + '.',
+                Const.COLOR_EVOLUTION);
               path.ep = 0;
               path.level++;
               taskID = '';
@@ -77,7 +79,7 @@ class EvolutionManager
             {
               imp.level++;
               player.log('You have improved your understanding of ' + imp.info.name +
-                ' to level ' + imp.level + '.');
+                ' to level ' + imp.level + '.', Const.COLOR_EVOLUTION);
 
               // clear
               imp.ep = 0;
@@ -193,7 +195,7 @@ class EvolutionManager
   public function getEvolutionDirectionInfo(): String
     {
       if (taskID == '')
-        return 'None';
+        return "<font color='#FF0000'>None</font>";
       else if (isTaskPath)
         return EvolutionConst.getPathInfo(taskID).name;
       else return EvolutionConst.getInfo(taskID).name;

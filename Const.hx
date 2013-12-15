@@ -11,6 +11,11 @@ class Const
   public static var TILE_WIDTH = 32; // tiles width, height
   public static var TILE_HEIGHT = 32;
 
+  // text colors
+  public static var COLOR_DEFAULT = 0;
+  public static var COLOR_ALERT = 1;
+  public static var COLOR_EVOLUTION = 2;
+
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;
 

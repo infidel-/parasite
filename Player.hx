@@ -400,9 +400,9 @@ class Player
 
 
 // log
-  public inline function log(s: String)
+  public inline function log(s: String, ?col: Int = 0)
     {
-      game.log(s);
+      game.log(s, col);
     }
 
 
