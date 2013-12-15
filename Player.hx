@@ -100,7 +100,8 @@ class Player
       if (state == STATE_HOST)
         {
           // knowledge about human society raises automatically
-          if (host.type == 'human')
+          // if host memory is available
+          if (host.type == 'human' && evolutionManager.getLevel('hostMemory') > 0)
             humanSociety += 0.1 * host.intellect;
 
           hostTimer--;
@@ -292,12 +293,14 @@ class Player
           game.log('The brain of this host contains nothing useful.');
           return;
         }
+     
+      var params = evolutionManager.getParams('hostMemory');
 
-      humanSociety += 1 * host.intellect;
-      hostTimer -= 10 - host.psyche;
-      host.health--;
+      humanSociety += params.humanSociety * host.intellect;
+      hostTimer -= params.hostTimer - host.psyche;
+      host.health -= params.hostHealthBase;
       if (Std.random(100) < 25)
-        host.health--;
+        host.health -= params.hostHealthMod;
 
       game.log('You probe the brain of the host and access its memory.');
     }
@@ -391,6 +394,7 @@ class Player
     {
       game.map.destroyAI(host);
       game.map.createObject(x, y, 'body', host.type);
+      game.map.updateVisibility();
 
       onDetach();
     }

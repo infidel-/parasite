@@ -114,7 +114,8 @@ class HUD
       else if (game.player.state == Player.STATE_HOST)
         {
           addActionToList('reinforceControl');
-          addActionToList('accessMemory');
+          if (game.player.evolutionManager.getLevel('hostMemory') > 0)
+            addActionToList('accessMemory');
           addActionToList('leaveHost');
         }
     }

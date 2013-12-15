@@ -123,7 +123,7 @@ class EvolutionWindow
       for (a in _actionNames)
         buf.add((n++) + ': ' + a + '\n');
       
-      _textField.text = buf.toString();
+      _textField.htmlText = buf.toString();
       _back.graphics.clear();
       _back.graphics.beginFill(0x202020, .75);
       _back.graphics.drawRect(0, 0, _textField.width, _textField.height);

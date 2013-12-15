@@ -9,6 +9,7 @@ class EvolutionConst
       { id: 'control', name: 'Control' },
       { id: 'attack', name: 'Attack' },
       { id: 'conceal', name: 'Concealment' },
+      { id: 'misc', name: 'Miscellaneous' },
     ];
 
 
@@ -25,7 +26,8 @@ class EvolutionConst
           'Host becomes crazy.',
           'Host is left intact - alive and conscious with all memory wiped.',
           'Host is left alive and conscious, and is implanted with fake memories.',
-          ]
+          ],
+        levelParams: []
       },
       {
         path: 'conceal',
@@ -37,9 +39,48 @@ class EvolutionConst
           'Host looks and walks like a zombie, no huge purple blob, just some streaks here and there.',
           'Host looks and walks almost like a human, but is still a bit creepy.',
           'Parasite is either completely inside of the host body or changes its protective cover visually to look like human skin.',
-          ]
+          ],
+        levelParams: []
       },
 
+      {
+        path: 'misc',
+        id: 'hostMemory',
+        name: 'Host memory',
+        note: 'Gains access to host memory',
+        levelNotes: [
+          'Cannot access host brain',
+          'Access with severe problems',
+          'Limited access with some problems',
+          'Full access',
+          ],
+        levelParams: [
+          { 
+            humanSociety: 0,
+            hostTimer: 0, 
+            hostHealthBase: 0,
+            hostHealthMod: 0
+          },
+          { 
+            humanSociety: 0.25, 
+            hostTimer: 30, 
+            hostHealthBase: 3,
+            hostHealthMod: 2
+          },
+          { 
+            humanSociety: 0.5, 
+            hostTimer: 20, 
+            hostHealthBase: 1,
+            hostHealthMod: 1
+          },
+          { 
+            humanSociety: 1.0, 
+            hostTimer: 10, 
+            hostHealthBase: 0,
+            hostHealthMod: 1
+          },
+          ],
+      },
 
 /*      
       {
@@ -49,7 +90,16 @@ class EvolutionConst
         note: '',
         levelNotes: [
           '',
-          ]
+          '',
+          '',
+          '',
+          ],
+        levelParams: [
+          '',
+          '',
+          '',
+          '',
+          ],
       },
 */      
     ];
@@ -91,6 +141,7 @@ typedef ImprovInfo =
   var name: String; // improvement name
   var note: String; // improvement description
   var levelNotes: Array<String>; // improvement descriptions for different levels
+  var levelParams: Array<Dynamic>; // improvement-specific parameters for different levels
 }
 
 typedef PathInfo =

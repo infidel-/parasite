@@ -155,6 +155,17 @@ class EvolutionManager
     }
 
 
+// get current improvement params
+  public function getParams(id: String): Dynamic
+    {
+      var imp = getImprov(id);
+      if (imp == null)
+        return null;
+
+      return imp.info.levelParams[imp.level];
+    }
+
+
 // get improvement level
   public function getLevel(id: String): Int
     {

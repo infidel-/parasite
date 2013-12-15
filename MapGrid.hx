@@ -329,7 +329,17 @@ class MapGrid
 
 
 // update AI visibility
-  public function updateVisibility()
+  public inline function updateVisibility()
+    {
+      if (game.player.state == Player.STATE_HOST)
+        updateVisibilityHost();
+      else updateVisibilityParasite();
+    }
+
+
+// update visible area (also AI, objects visibility)
+// host version
+  function updateVisibilityHost()
     {
       // calculate visible rectangle
       var x1 = Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1;
@@ -356,6 +366,43 @@ class MapGrid
 
       for (obj in _objects)
         obj.entity.visible = isVisible(game.player.x, game.player.y, obj.x, obj.y);
+    }
+
+
+// update visible area (also AI, objects visibility)
+// parasite version
+// parasite only sees one tile around him but "feels" AIs in a larger radius
+  function updateVisibilityParasite()
+    {
+      // calculate visible rectangle
+      var x1 = Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1;
+      var y1 = Std.int(HXP.camera.y / Const.TILE_HEIGHT) - 1;
+      var x2 = Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH) + 2;
+      var y2 = Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT) + 2;
+      if (x1 < 0)
+        x1 = 0;
+      if (y1 < 0)
+        y1 = 0;
+      if (x2 > width)
+        x2 = width;
+      if (y2 > height)
+        y2 = height;
+
+      // set visibility for all tiles in that area
+      for (y in y1...y2)
+        for (x in x1...x2)
+          if (Math.abs(game.player.x - x) < 2 &&
+              Math.abs(game.player.y - y) < 2)
+            _tilemap.setTile(x, y, _cells[x][y]);
+          else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+
+      for (ai in _ai)
+        ai.entity.visible =
+          (HXP.distanceSquared(game.player.x, game.player.y, ai.x, ai.y) < 6 * 6);
+
+      for (obj in _objects)
+        obj.entity.visible = 
+          (HXP.distanceSquared(game.player.x, game.player.y, obj.x, obj.y) < 6 * 6);
     }
 
 
