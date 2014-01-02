@@ -1,15 +1,24 @@
-host memory improvement
-draw improvement descriptions somewhere!
 police (patrollers + call police)
+combat
+area alertness
 two improvements impl
-when parasite is in control, it needs to start researching right away some knowledges and start growing stuff
-gaining knowledges
-growing stuff
 global suspicion and what comes with its growth
 moans and screams from low control host + bystanders
-AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
-log and attributes should become colored when they're low
+barks, gasps, moans, etc - AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
 
 scene. getSpriteByLayer(layer) - draw lines on this one
-
 write about getPixels/setPixels bug
+
+MASTERPLAN
+============
+combat
+area alertness
+human biology knowledge
+canine biology knowledge
+host skills
+host inventory
+organ growth
+city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
+city and world travel
+operation generation
+information web
