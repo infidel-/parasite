@@ -103,14 +103,14 @@ class MapGrid
 // generate AI
   function generateAI()
     {
-      var maxHumans = Std.int(0.01 * width * height);
-      for (i in 0...maxHumans)
+      var maxCivilians = Std.int(0.01 * width * height);
+      for (i in 0...maxCivilians)
         {
           // find empty spot for new ai
           var loc = findEmptyLocation();
 
           // spawn new ai
-          var ai = new HumanAI(game, loc.x, loc.y);
+          var ai = new CivilianAI(game, loc.x, loc.y);
           _ai.add(ai);
           ai.createEntity();
         }
@@ -304,11 +304,11 @@ class MapGrid
     }
 
 
-// add AI back to map
+// add AI to map
   public function addAI(ai: AI)
     {
-      game.scene.add(ai.entity);
       _ai.add(ai);
+      ai.createEntity();
     }
 
 

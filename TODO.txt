@@ -1,5 +1,7 @@
 police (patrollers + call police)
 combat
+game vars -> player vars
+leave dead bodies as ai?
 area alertness
 two improvements impl
 global suspicion and what comes with its growth

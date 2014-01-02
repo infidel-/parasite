@@ -1,37 +1,60 @@
-// player/AI inventory
+// player/AI 
 
-import ConstItems;
+import ConstSkills;
 
-class Inventory
+class Skills 
 {
-  var _list: List<Item>; // list of items
+  var _list: List<Skill>; // list of skills
 
   public function new()
     {
-      _list = new List<Item>();
+      _list = new List<Skill>();
     }
 
 
-// add item by id
-  public function addID(id: String)
+// get skill level by id
+  public function getLevel(id: String): Int
     {
-      var info = ConstItems.getInfo(id);
+      for (o in _list)
+        if (o.id == id)
+          return o.level;
+
+      // not found, get default value
+      var info = ConstSkills.getInfo(id);
+      return info.defaultLevel;
+    }
+
+
+// add skill by id
+  public function addID(id: String, lvl: Int)
+    {
+      var info = ConstSkills.getInfo(id);
       if (info == null)
         {
-          trace('No such item id: ' + id);
+          trace('No such skill id: ' + id);
           return;
         }
 
-      var item = { id: id, info: info };
-      _list.add(item);
+      var skill = { id: id, level: lvl, info: info };
+      _list.add(skill);
+    }
+
+
+  public function toString(): String
+    {
+      var tmp = [];
+      for (o in _list)
+        tmp.push(o.id + ' ' + o.level + '%');
+      return tmp.join(',');
     }
 }
 
 
-// item type
+// skill type
 
-typedef Item = 
+typedef Skill = 
 {
-  var id: String; // item id
-  var info: ItemInfo; // item info link
+  var id: String; // skill id
+  var level: Int; // skill level
+  var info: SkillInfo; // skill info link
 };

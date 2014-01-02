@@ -21,6 +21,8 @@ class Player
   // state-independent
   public var energy(default, set): Int; // energy left
   public var maxEnergy: Int; // max energy
+  public var health(default, set): Int; // current health
+  public var maxHealth: Int; // maximum health
   public var chemicals: Array<Int>; // chemical compounds
   public var maxChemicals: Array<Int>; // max chemical compounds
 
@@ -47,8 +49,10 @@ class Player
       state = STATE_PARASITE;
       ap = 2;
 
-      energy = STARTING_ENERGY;
-      maxEnergy = STARTING_ENERGY;
+      energy = game.vars.parasiteEnergy;
+      maxEnergy = game.vars.parasiteEnergy;
+      maxHealth = game.vars.parasiteHealth;
+      health = game.vars.parasiteHealth;
       chemicals = [ 0, 0, 0 ];
       maxChemicals = [ 20, 20, 20 ];
       attachHold = 0;
@@ -74,7 +78,7 @@ class Player
       if (state == STATE_PARASITE)
         {
           // "no host" timer
-          energy -= 10;
+          energy -= game.vars.parasiteEnergyPerTurn;
           if (state == STATE_PARASITE && energy <= 0)
             {
               game.finish('lose', 'noHost');
@@ -162,7 +166,7 @@ class Player
       energy -= action.energy;
 
       // host could've died from some of these actions
-      if (state == STATE_HOST && host.health == 0)
+      if (state == STATE_HOST && host.state == AI.STATE_DEAD)
         {
           onHostDeath();
 
@@ -204,8 +208,17 @@ class Player
     }
 
 
+// debug action: attach and invade
+  public function actionDebugAttachAndInvade(ai: AI)
+    {
+      actionAttachToHost(ai);
+      attachHold = 100;
+      actionInvadeHost();
+    }
+
+
 // action: attach to host
-  public function actionAttachToHost(ai: AI)
+  function actionAttachToHost(ai: AI)
     {
       // move to the same spot as AI
       moveTo(ai.x, ai.y);
@@ -298,9 +311,9 @@ class Player
 
       humanSociety += params.humanSociety * host.intellect;
       hostTimer -= params.hostTimer - host.psyche;
-      host.health -= params.hostHealthBase;
+      host.onDamage(params.hostHealthBase);
       if (Std.random(100) < 25)
-        host.health -= params.hostHealthMod;
+        host.onDamage(params.hostHealthMod);
 
       game.log('You probe the brain of the host and access its memory.');
     }
@@ -373,6 +386,33 @@ class Player
 // ================================ EVENTS =========================================
 
 
+// event: on taking damage
+  public function onDamage(damage: Int)
+    {
+      if (state == STATE_HOST)
+        {
+          host.onDamage(damage);
+          if (host.state == AI.STATE_DEAD)
+            {
+              onHostDeath();
+              
+              log('Your host has died from injuries.');
+            }
+
+          return;
+        }
+
+      // not attached to host
+      health -= damage;
+
+      if (health <= 0)
+        {
+          game.finish('lose', 'noHealth');
+          return;
+        }
+    }
+
+
 // event: parasite detached from AI 
   public function onDetach()
     {
@@ -419,6 +459,8 @@ class Player
     }
   function set_energy(v: Int)
     { return energy = Const.clamp(v, 0, maxEnergy); }
+  function set_health(v: Int)
+    { return health = Const.clamp(v, 0, maxHealth); }
   function set_attachHold(v: Int)
     { return attachHold = Const.clamp(v, 0, 100); }
   function set_hostControl(v: Int)

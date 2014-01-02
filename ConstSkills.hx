@@ -1,11 +1,11 @@
-// item list
+// skill info list
 
-class ConstItems
+class ConstSkills
 {
-// return item info by id
-  public static function getInfo(id: String): Item
+// return info by id
+  public static function getInfo(id: String): SkillInfo
     {
-      for (ii in items)
+      for (ii in skills)
         if (ii.id == id)
           return ii;
 
@@ -13,32 +13,27 @@ class ConstItems
     }
 
 
-  public static var items: Array<ItemInfo> = [
+// skill infos
+  public static var skills: Array<SkillInfo> = [
+    {
+      id: 'fists',
+      name: 'fists',
+      defaultLevel: 50,
+    },
     {
       id: 'pistol',
       name: 'pistol',
-      weaponStats:
-        {
-          isRanged: true,
-          skill: 'pistol',
-          minDamage: 1,
-          maxDamage: 8
-        }
+      defaultLevel: 20,
     }
     ];
 }
 
 
-// item info
+// skill info
 
-typedef ItemInfo =
+typedef SkillInfo =
 {
-  var id: String; // item id
-  var name: String; // item name
-  var weaponStats: { // weapon-related stats, null if not a weapon
-    isRanged: Bool, // is this weapon type ranged? 
-    skill: String, // associated skill
-    minDamage: Int, // min weapon damage
-    maxDamage: Int // mxa weapon damage
-    };
+  var id: String; // skill id
+  var name: String; // skill name
+  var defaultLevel: Int; // default skill level
 }

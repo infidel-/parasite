@@ -7,14 +7,28 @@ class Game
   public var scene: GameScene; // ui scene
   public var map: MapGrid; // game world map
   public var player: Player; // game player
+  public var debug: Debug; // debug actions
 
   public var turns: Int; // number of turns passed since game start
   public var isFinished: Bool; // is the game finished?
 
+  public var vars: { // game variables
+    parasiteEnergyPerTurn: Int, // energy spent per turn without a host
+    parasiteHealth: Int, // starting parasite health
+    parasiteEnergy: Int, // starting parasite energy 
+    };
+
   public function new()
     {
       scene = new GameScene(this);
+      debug = new Debug(this);
       HXP.scene = scene;
+
+      vars = {
+        parasiteEnergyPerTurn: 10,
+        parasiteHealth: 10,
+        parasiteEnergy: 100
+        };
     }
 
 
@@ -82,6 +96,8 @@ class Game
           log('You have lost the game.');
           if (condition == 'noHost')
             log('You cannot survive without a host for long.');
+          else if (condition == 'noHost')
+            log('You have succumbed to injuries.');
         }
       else
         {

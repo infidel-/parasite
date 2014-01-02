@@ -29,6 +29,8 @@ class Const
   public static var ROW_PARASITE = 1;
   public static var ROW_HUMAN = 2;
   public static var ROW_DOG = 3;
+  public static var ROW_CIVILIAN = 4;
+  public static var ROW_POLICE = 5;
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_MASK_POSSESSED = 1;
   public static var FRAME_BODY = 2;
@@ -94,11 +96,15 @@ class Const
 // log all object string and int properties 
   public static inline function debugObject(o: Dynamic)
     {
+      var list: Array<Dynamic> = [ Inventory, Skills ];
       for (f in Reflect.fields(o))
         {
           var ff = Reflect.field(o, f);
           if (!Reflect.isFunction(ff) && 
               (!Reflect.isObject(ff) || Type.getClass(ff) == String))
+            trace(f + ': ' + ff);
+
+          else if (Lambda.has(list, Type.getClass(ff)))
             trace(f + ': ' + ff);
         }
     }
@@ -130,5 +136,12 @@ class Const
       else if (max != null && v > max)
         v = max;
       return v;
+    }
+
+
+// roll between X and Y
+  public static inline function roll(min: Int, max: Int): Int
+    {
+      return min + Std.random(max - min + 1);
     }
 }

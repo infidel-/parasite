@@ -1,4 +1,4 @@
-// evolution GUI window
+// debug GUI window
 
 package entities;
 
@@ -10,7 +10,7 @@ import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
 
-class EvolutionWindow
+class DebugWindow
 {
   var game: Game; // game state
   var _textField: TextField; // text field
@@ -36,33 +36,14 @@ class EvolutionWindow
       _back.addChild(_textField);
       _back.x = 20;
       _back.y = 20;
-//      _back.width = 400;
-//      _back.height = 400;
-//      _back.width = HXP.windowWidth - 40;
-//      _back.height = HXP.windowHeight - 40;
       HXP.stage.addChild(_back);
-
-//      _back.visible = false;
     }
 
 
 // call action by id
   public function action(index: Int)
     {
-      // find action name by index
-      var i = 1;
-      var actionName = null;
-      for (a in _actionIDs)
-        if (i++ == index)
-          {
-            actionName = a;
-            break;
-          }
-      if (actionName == null)
-        return;
-
-      // do action
-      game.player.evolutionManager.action(actionName);
+      game.debug.action(index - 1);
       update(); // update display
       game.scene.hud.update(); // update HUD
     }
@@ -87,46 +68,16 @@ class EvolutionWindow
   function update()
     {
       var buf = new StringBuf();
-      buf.add('Controlled Evolution\n===\n\n');
+      buf.add('Debug\n===\n\n');
 
-      // form a list of improvs and actions
-      buf.add('Improvements\n===\n');
-      _actionNames.clear();
-      _actionIDs.clear();
-      for (imp in game.player.evolutionManager.getList())
-        {
-          buf.add(imp.info.name);
-          buf.add(' ');
-          buf.add(imp.level);
-          buf.add(' (' + imp.ep + '/' + EvolutionConst.epCostImprovement[imp.level]);
-          buf.add('): ');
-          buf.add(imp.info.note + '\n');
-          if (imp.level > 0)
-            buf.add('  ' + imp.info.levelNotes[imp.level]);
-
-          _actionIDs.add('set.' + imp.id);
-          if (imp.level < 4)
-            _actionNames.add(imp.info.name + 
-              ' (' + imp.info.levelNotes[imp.level + 1] + ')');
-        }
-
-      // add paths
-      for (p in game.player.evolutionManager.getPathList())
-        {
-          _actionIDs.add('setPath.' + p.id);
-          _actionNames.add('Path of ' + p.info.name + ' (' + p.ep + '/' +
-            EvolutionConst.epCostPath[p.level] + ')');
-        }
-
-      buf.add('\nCurrent evolution direction: ');
-      buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
-
-      // add list of actions
-      buf.add('\n\nSelect evolution direction:\n\n');
+      // draw a list of debug action
       var n = 1;
-      for (a in _actionNames)
-        buf.add((n++) + ': ' + a + '\n');
-      
+      for (a in game.debug.actions)
+        {
+          buf.add((n++) + ': ' + a.name + '\n');
+          
+        }
+
       _textField.htmlText = buf.toString();
       _back.graphics.clear();
       _back.graphics.beginFill(0x202020, .75);

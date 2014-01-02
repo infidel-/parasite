@@ -12,6 +12,17 @@ class Inventory
     }
 
 
+// get first item that is a weapon
+  public function getFirstWeapon(): Item
+    {
+      for (item in _list)
+        if (item.info.weaponStats != null)
+          return item;
+
+      return null;
+    }
+
+
 // add item by id
   public function addID(id: String)
     {
@@ -22,7 +33,21 @@ class Inventory
           return;
         }
 
+      var item = { id: id, info: info };
+      _list.add(item);
     }
+
+
+  public function toString(): String
+    {
+      var tmp = [];
+      for (o in _list)
+        tmp.push(o.id);
+      return tmp.join(',');
+    }
+
+
+// ===============================================================================
 }
 
 

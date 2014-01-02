@@ -140,10 +140,16 @@ class HUD
         '/' + game.player.maxChemicals[1] + '\n');
       buf.add('Chemical C: ' + game.player.chemicals[2] +
         '/' + game.player.maxChemicals[2] + '\n');
-      var colEnergy = (game.player.energy > 30 ? '#FFFFFF' : '#FF0000');
+      var colEnergy = 
+        (game.player.energy > 0.3 * game.player.maxEnergy ? '#FFFFFF' : '#FF0000');
       buf.add('Energy: ' + 
         "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy + '\n');
+      var colHealth = 
+        (game.player.health > 0.3 * game.player.maxHealth ? '#FFFFFF' : '#FF0000');
+      buf.add('Health: ' + 
+        "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
+        '/' + game.player.maxHealth + '\n');
       buf.add('===\n');
 
       if (game.player.state == Player.STATE_ATTACHED)

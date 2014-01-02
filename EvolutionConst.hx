@@ -23,9 +23,9 @@ class EvolutionConst
         note: 'Controls what happens to the host when parasite leaves.',
         levelNotes: [
           'Host dies with its brain melting and dripping out of its ears.',
-          'Host becomes crazy.',
-          'Host is left intact - alive and conscious with all memory wiped.',
-          'Host is left alive and conscious, and is implanted with fake memories.',
+          'Host becomes crazy. [TODO]',
+          'Host is left intact - alive and conscious with all memory wiped. [TODO]',
+          'Host is left alive and conscious, and is implanted with fake memories. [TODO]',
           ],
         levelParams: []
       },
@@ -35,10 +35,10 @@ class EvolutionConst
         name: 'Host appearance',
         note: 'Controls host appearance to passers by.',
         levelNotes: [
-          'Host looks and walks like a zombie with a huge purple blob on his neck, sometimes emits moans.',
-          'Host looks and walks like a zombie, no huge purple blob, just some streaks here and there.',
-          'Host looks and walks almost like a human, but is still a bit creepy.',
-          'Parasite is either completely inside of the host body or changes its protective cover visually to look like human skin.',
+          'Host looks and walks like a zombie with a huge purple blob on his neck. [TODO Alertness formula]',
+          'Host looks and walks like a zombie, no huge purple blob, just some streaks here and there. [TODO]',
+          'Host looks and walks almost like a human, but is still a bit creepy. [TODO]',
+          'Parasite is either completely inside of the host body or changes its protective cover visually to look like human skin. [TODO]',
           ],
         levelParams: []
       },

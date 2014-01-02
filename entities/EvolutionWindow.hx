@@ -36,6 +36,8 @@ class EvolutionWindow
       _back.addChild(_textField);
       _back.x = 20;
       _back.y = 20;
+      _textField.wordWrap = true;
+      _textField.width = HXP.windowWidth - 40;
 //      _back.width = 400;
 //      _back.height = 400;
 //      _back.width = HXP.windowWidth - 40;
@@ -98,12 +100,18 @@ class EvolutionWindow
           buf.add(imp.info.name);
           buf.add(' ');
           buf.add(imp.level);
-          buf.add(' (' + imp.ep + '/' + EvolutionConst.epCostImprovement[imp.level]);
-          buf.add('): ');
+          if (imp.level < 3)
+            buf.add(' (' + imp.ep + '/' + 
+              EvolutionConst.epCostImprovement[imp.level] + ')');
+          buf.add(': ');
           buf.add(imp.info.note + '\n');
+//          if (imp.level > 0)
+          buf.add('  ' + imp.info.levelNotes[imp.level] + '\n');
 
           _actionIDs.add('set.' + imp.id);
-          _actionNames.add(imp.info.name);
+          if (imp.level < 3)
+            _actionNames.add(imp.info.name + 
+              ' (' + imp.info.levelNotes[imp.level + 1] + ')');
         }
 
       // add paths

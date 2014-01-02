@@ -39,6 +39,7 @@ class PlayerEntity extends PawnEntity
       Input.define("action8", [ Key.DIGIT_8 ]);
       Input.define("action9", [ Key.DIGIT_9 ]);
       Input.define("evolutionWindow", [ Key.F1 ]);
+      Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
       Input.define("skipTurn", [ Key.SPACE ]);
       Input.define("closeWindow", [ Key.ESCAPE ]);
@@ -69,13 +70,15 @@ class PlayerEntity extends PawnEntity
 // handle opening and closing windows
   function handleWindows()
     {
-      // close current window
-      if (Input.pressed("closeWindow") ||
-           (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION &&
-            Input.pressed("evolutionWindow")))
+      // close windows
+      if (Input.pressed("closeWindow"))
         {
+          if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
+            game.scene.evolutionWindow.hide();
+          else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
+            game.scene.debugWindow.hide();
+          else return;
           game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
-          game.scene.evolutionWindow.hide();
         }
 
       // open evolution window
@@ -84,6 +87,14 @@ class PlayerEntity extends PawnEntity
         {
           game.scene.hudState = GameScene.HUDSTATE_EVOLUTION;
           game.scene.evolutionWindow.show();
+        }
+
+      // open debug window
+      else if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT &&
+          Input.pressed("debugWindow"))
+        {
+          game.scene.hudState = GameScene.HUDSTATE_DEBUG;
+          game.scene.debugWindow.show();
         }
     }
 
@@ -143,6 +154,8 @@ class PlayerEntity extends PawnEntity
               game.scene.hud.action(i);
             else if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
               game.scene.evolutionWindow.action(i);
+            else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
+              game.scene.debugWindow.action(i);
             break;
           }
 

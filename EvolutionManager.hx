@@ -49,7 +49,7 @@ class EvolutionManager
           // evolution complete
           if (path.ep >= EvolutionConst.epCostPath[path.level])
             {
-              var imp = openImprovement(taskID);
+              var imp = openImprov(taskID);
               if (imp == null)
                 {
                   player.log('You have followed this evolution path to the end.',
@@ -90,7 +90,7 @@ class EvolutionManager
 
   
 // open improvement on that path
-  function openImprovement(path: String): Improv
+  function openImprov(path: String): Improv
     {
       // get list of improvs on that path that player does not yet have
       var tmp = [];
@@ -105,12 +105,20 @@ class EvolutionManager
       // get random improv
       var index = Std.random(tmp.length);
       var impID = tmp[index];
+      
+      var imp = addImprov(impID);
+      return imp;
+    }
 
+
+// add improvement to list
+  public inline function addImprov(id: String): Improv
+    {
       var imp = {
-        id: impID,
+        id: id,
         level: 0,
         ep: 0,
-        info: EvolutionConst.getInfo(impID)
+        info: EvolutionConst.getInfo(id)
         };
       _list.add(imp);
       return imp;

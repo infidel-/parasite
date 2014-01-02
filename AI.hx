@@ -27,6 +27,9 @@ class AI
   public var maxHealth: Int; // maximum health
   public var hostExpiryTurns: Int; // amount of turns until this host expires
 
+  public var inventory: Inventory; // AI inventory
+  public var skills: Skills; // AI skills
+
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
 
@@ -50,6 +53,9 @@ class AI
       maxHealth = 1;
       health = 1;
       hostExpiryTurns = 10;
+
+      inventory = new Inventory();
+      skills = new Skills();
     }
 
 
@@ -257,14 +263,20 @@ class AI
           return;
         }
 
-      // TODO: i could make hooks here, leaving the alert logic intact
-
       // parasite attached - try to tear it away
       if (parasiteAttached)
         logicTearParasiteAway();
-        
+      
+      // call alert logic for this AI type
+      else stateAlertLogic();
+    }
+
+
+// hook: logic in alerted state
+  dynamic function stateAlertLogic()
+    {
       // try to run away
-      else logicRunAwayFrom(game.player.x, game.player.y);
+      logicRunAwayFrom(game.player.x, game.player.y);
     }
 
 
@@ -309,12 +321,44 @@ class AI
     }
 
 
+// post alert changes, clamp and change icon
+  function updateEntity()
+    {
+      var alertFrame = Const.FRAME_EMPTY;
+      if (state == STATE_ALERT)
+        alertFrame = Const.FRAME_ALERTED;
+      else if (state == STATE_IDLE)
+        {
+          if (alertness > 75)
+            alertFrame = Const.FRAME_ALERT3;
+          else if (alertness > 50)
+            alertFrame = Const.FRAME_ALERT2;
+          else if (alertness > 0)
+            alertFrame = Const.FRAME_ALERT1;
+        }
+
+      entity.setAlert(alertFrame);
+    }
+
+
+// ================================ EVENTS =========================================
+
+
+// event: AI receives damage
+  public function onDamage(damage: Int)
+    {
+      health -= damage;
+      if (health == 0)
+        setState(STATE_DEAD);
+    }
+
+
 // event: parasite attached to this host
   public function onAttach()
     {
       // set AI state
       parasiteAttached = true;
-      setState(AI.STATE_ALERT);
+      setState(STATE_ALERT);
     }
 
 
@@ -334,24 +378,8 @@ class AI
       entity.setMask(Const.FRAME_EMPTY);
     }
 
-// post alert changes, clamp and change icon
-  function updateEntity()
-    {
-      var alertFrame = Const.FRAME_EMPTY;
-      if (state == STATE_ALERT)
-        alertFrame = Const.FRAME_ALERTED;
-      else if (state == STATE_IDLE)
-        {
-          if (alertness > 75)
-            alertFrame = Const.FRAME_ALERT3;
-          else if (alertness > 50)
-            alertFrame = Const.FRAME_ALERT2;
-          else if (alertness > 0)
-            alertFrame = Const.FRAME_ALERT1;
-        }
 
-      entity.setAlert(alertFrame);
-    }
+// =================================================================================
 
 
 // log
@@ -375,4 +403,5 @@ class AI
   public static var STATE_IDLE = 'idle';
   public static var STATE_ALERT = 'alert';
   public static var STATE_HOST = 'host';
+  public static var STATE_DEAD = 'dead';
 }

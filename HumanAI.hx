@@ -1,4 +1,4 @@
-// AI for humans
+// AI for humans (should not be used in the game itself)
 
 class HumanAI extends AI
 {
