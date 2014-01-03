@@ -397,7 +397,7 @@ class MapGrid
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       for (ai in _ai)
-        ai.entity.visible =
+        ai.entity.visible = 
           (HXP.distanceSquared(game.player.x, game.player.y, ai.x, ai.y) < 6 * 6);
 
       for (obj in _objects)

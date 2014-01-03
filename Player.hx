@@ -1,6 +1,7 @@
 // player state
 
 import entities.PlayerEntity;
+import com.haxepunk.HXP;
  
 class Player
 {
@@ -43,16 +44,23 @@ class Player
       game = g;
       evolutionManager = new EvolutionManager(this, game);
 
+      vars = {
+        energyPerTurn: 10,
+        startHealth: 10,
+        startEnergy: 100,
+        listenRadius: 10,
+        };
+
       x = vx;
       y = vy;
       intent = INTENT_ATTACH;
       state = STATE_PARASITE;
       ap = 2;
 
-      energy = game.vars.parasiteEnergy;
-      maxEnergy = game.vars.parasiteEnergy;
-      maxHealth = game.vars.parasiteHealth;
-      health = game.vars.parasiteHealth;
+      energy = vars.startEnergy;
+      maxEnergy = vars.startEnergy;
+      maxHealth = vars.startHealth;
+      health = vars.startHealth;
       chemicals = [ 0, 0, 0 ];
       maxChemicals = [ 20, 20, 20 ];
       attachHold = 0;
@@ -78,7 +86,7 @@ class Player
       if (state == STATE_PARASITE)
         {
           // "no host" timer
-          energy -= game.vars.parasiteEnergyPerTurn;
+          energy -= vars.energyPerTurn;
           if (state == STATE_PARASITE && energy <= 0)
             {
               game.finish('lose', 'noHost');
@@ -383,6 +391,15 @@ class Player
     }
 
 
+// does the player hear something in this location?
+// technically we should separate parasite/host hearing radius
+// but nobody will probably notice the difference :)
+  public inline function hears(xx: Int, yy: Int): Bool
+    {
+      return (HXP.distanceSquared(x, y, xx, yy) < vars.listenRadius * vars.listenRadius);
+    }
+
+
 // ================================ EVENTS =========================================
 
 
@@ -473,6 +490,13 @@ class Player
 
 // =================================================================================
 
+  public var vars: { // player variables
+    energyPerTurn: Int, // energy spent per turn without a host
+    startHealth: Int, // starting parasite health
+    startEnergy: Int, // starting parasite energy
+    listenRadius: Int, // player listen radius
+    };
+
 
   // player states
   public static var STATE_PARASITE = 'parasite';
@@ -483,9 +507,6 @@ class Player
   public static var INTENT_ATTACH = 'attachHost';
   public static var INTENT_DETACH = 'detach';
   public static var INTENT_NOTHING = 'doNothing';
-
-  // starting energy of parasite 
-  public static var STARTING_ENERGY = 100;
 
   // base amount of turns the host has to live
 //  public static var HOST_EXPIRY_TURNS = 10;

@@ -1,7 +1,6 @@
-police (patrollers + call police)
-combat
-game vars -> player vars
-leave dead bodies as ai?
+multiple call police should all work simultaneously - the more calls the more police arrives
+police (patrollers + call police + call for backup)
+combat - parasite side, parasite skill bonuses to host
 area alertness
 two improvements impl
 global suspicion and what comes with its growth

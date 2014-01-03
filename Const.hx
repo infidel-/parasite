@@ -15,6 +15,7 @@ class Const
   public static var COLOR_DEFAULT = 0;
   public static var COLOR_ALERT = 1;
   public static var COLOR_EVOLUTION = 2;
+  public static var COLOR_AREA = 3;
 
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;

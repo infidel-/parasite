@@ -7,4 +7,13 @@ class CivilianAI extends HumanAI
       super(g, vx, vy);
       type = 'civilian';
     }
+
+
+// event: on state change
+  public override function onStateChange()
+    {
+      // try to call police on next turn
+      if (state == AI.STATE_ALERT)
+        game.areaManager.addAI(this, AreaManager.EVENT_CALL_POLICE, 1);
+    }
 }

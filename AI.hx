@@ -9,12 +9,14 @@ class AI
   public var entity: AIEntity; // gui entity
   public var type: String; // object type
   public var name: String; // AI name (can be unique and capitalized)
+  public var isAggressive: Bool; // true - attack in alerted state, false - run away
 
   public var x: Int; // grid x,y
   public var y: Int;
   var direction: Int; // direction of movement
 
   public var state: String; // AI state
+  public var reason: String; // reason for setting this state 
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
   public var alertTimer: Int; // when alerted, this will go down until AI calms down
 
@@ -42,9 +44,11 @@ class AI
       y = vy;
 
       state = STATE_IDLE;
+      reason = REASON_NONE;
       alertness = 0;
       alertTimer = 0;
       direction = 0;
+      isAggressive = false;
       parasiteAttached = false;
       strength = 1;
       constitution = 1;
@@ -63,7 +67,8 @@ class AI
   function derivedStats()
     {
       hostExpiryTurns = (5 + strength + constitution) * 10;
-      maxHealth = Std.int(strength / 2) + constitution;
+//      maxHealth = Std.int(strength / 2) + constitution;
+      maxHealth = strength + constitution;
       health = maxHealth;
     }
 
@@ -88,79 +93,6 @@ class AI
       x = vx;
       y = vy;
       entity.setPosition(x, y);
-    }
-
-
-// AI logic: roam around (default)
-  public function logicRoam()
-    {
-      if (Math.random() < 0.2)
-        changeRandomDirection();
-
-      var nx = x + Const.dirx[direction];
-      var ny = y + Const.diry[direction];
-      var ok = 
-        (game.map.isWalkable(nx, ny) && 
-         !game.map.hasAI(nx, ny) && 
-         !(game.player.x == nx && game.player.y == ny));
-      if (!ok)
-        {
-          changeRandomDirection();
-          return;
-        }
-      else setPosition(nx, ny);
-    }
-
-
-// AI logic: run away from this x,y
-  function logicRunAwayFrom(xx: Int, yy: Int)
-    {
-      // form a temp list of dirs that have empty tiles and are as far away
-      // from threat as possible
-      var tmp = [];
-      for (i in 0...Const.dirx.length)
-        {
-          var nx = x + Const.dirx[i];
-          var ny = y + Const.diry[i];
-          var ok = (
-            game.map.isWalkable(nx, ny) && !game.map.hasAI(nx, ny) && 
-              (Math.abs(nx - game.player.x) >= Math.abs(x - game.player.x) &&
-               Math.abs(ny - game.player.y) >= Math.abs(y - game.player.y))
-            );
-          if (ok)
-            tmp.push(i);
-        }
-
-      // nowhere to run
-      if (tmp.length == 0)
-        {
-          Const.todo('is in panic and has nowhere to run!');
-          return;
-        }
-
-      direction = tmp[Std.random(tmp.length)];
-//      trace('tmp: ' + tmp + ' ai at (' + x + ',' + y + '): dir: ' + direction +
-//        ' n:' + (x + Const.dirx[direction]) + ',' + (y + Const.diry[direction]));
-
-//      var distSqr = Const.getDistSquared(x, y, xx, yy);
-      var nx = x + Const.dirx[direction];
-      var ny = y + Const.diry[direction];
-      setPosition(nx, ny);
-    }
-
-
-// AI logic: try to tear parasite away
-  function logicTearParasiteAway()
-    {
-      log('tries to tear you away!');
-
-      game.player.attachHold -= strength;
-      if (game.player.attachHold > 0)
-        return;
-
-      parasiteAttached = false;
-      log('manages to tear you away.'); 
-      game.player.onDetach(); // notify player
     }
 
 
@@ -218,6 +150,162 @@ class AI
     }
 
 
+// set AI state (plus all vars for this state)
+  public function setState(vstate: String, ?vreason: String = 'none')
+    {
+      state = vstate;
+      reason = vreason;
+      if (state == STATE_ALERT)
+        alertTimer = Const.AI_ALERTED_TIMER;
+
+      // dynamic event
+      onStateChange();
+    }
+
+
+// post alert changes, clamp and change icon
+  function updateEntity()
+    {
+      var alertFrame = Const.FRAME_EMPTY;
+      if (state == STATE_ALERT)
+        alertFrame = Const.FRAME_ALERTED;
+      else if (state == STATE_IDLE)
+        {
+          if (alertness > 75)
+            alertFrame = Const.FRAME_ALERT3;
+          else if (alertness > 50)
+            alertFrame = Const.FRAME_ALERT2;
+          else if (alertness > 0)
+            alertFrame = Const.FRAME_ALERT1;
+        }
+
+      entity.setAlert(alertFrame);
+    }
+
+
+// ===================================  LOGIC  =======================================
+
+
+// logic: roam around (default)
+  public function logicRoam()
+    {
+      if (Math.random() < 0.2)
+        changeRandomDirection();
+
+      var nx = x + Const.dirx[direction];
+      var ny = y + Const.diry[direction];
+      var ok = 
+        (game.map.isWalkable(nx, ny) && 
+         !game.map.hasAI(nx, ny) && 
+         !(game.player.x == nx && game.player.y == ny));
+      if (!ok)
+        {
+          changeRandomDirection();
+          return;
+        }
+      else setPosition(nx, ny);
+    }
+
+
+// logic: run away from this x,y
+  function logicRunAwayFrom(xx: Int, yy: Int)
+    {
+      // form a temp list of dirs that have empty tiles and are as far away
+      // from threat as possible
+      var tmp = [];
+      for (i in 0...Const.dirx.length)
+        {
+          var nx = x + Const.dirx[i];
+          var ny = y + Const.diry[i];
+          var ok = (
+            game.map.isWalkable(nx, ny) && !game.map.hasAI(nx, ny) && 
+              (Math.abs(nx - game.player.x) >= Math.abs(x - game.player.x) &&
+               Math.abs(ny - game.player.y) >= Math.abs(y - game.player.y))
+            );
+          if (ok)
+            tmp.push(i);
+        }
+
+      // nowhere to run
+      if (tmp.length == 0)
+        {
+          Const.todo('is in panic and has nowhere to run!');
+          return;
+        }
+
+      direction = tmp[Std.random(tmp.length)];
+//      trace('tmp: ' + tmp + ' ai at (' + x + ',' + y + '): dir: ' + direction +
+//        ' n:' + (x + Const.dirx[direction]) + ',' + (y + Const.diry[direction]));
+
+//      var distSqr = Const.getDistSquared(x, y, xx, yy);
+      var nx = x + Const.dirx[direction];
+      var ny = y + Const.diry[direction];
+      setPosition(nx, ny);
+    }
+
+
+// logic: try to tear parasite away
+  function logicTearParasiteAway()
+    {
+      log('tries to tear you away!');
+
+      game.player.attachHold -= strength;
+      if (game.player.attachHold > 0)
+        return;
+
+      parasiteAttached = false;
+      log('manages to tear you away.'); 
+      game.player.onDetach(); // notify player
+    }
+
+
+// logic: attack player
+  function logicAttack()
+    {
+      // search for player
+      if (!seesPosition(game.player.x, game.player.y))
+        {
+          logicRoam();
+          return;
+        }
+
+      // attack the threat
+
+      // get current weapon
+      var item = inventory.getFirstWeapon();
+      var info = null;
+
+      // use fists
+      if (item == null)
+        info = ConstItems.fists;
+      else info = item.info;
+
+      // weapon skill level
+      var skillLevel = skills.getLevel(info.weaponStats.skill);
+
+      // roll skill
+      if (Std.random(100) > skillLevel)
+        {
+          log('tries to ' + info.verb1 + ' you, but misses.');
+          return;
+        }
+
+      // success, roll damage
+      var damage = Const.roll(info.weaponStats.minDamage, info.weaponStats.maxDamage);
+      if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
+        damage += Const.roll(0, Std.int(strength / 2));
+
+      log(info.verb2 + ' ' + 
+        (game.player.state == Player.STATE_HOST ? 'your host' : 'you') + 
+        ' for ' + damage + ' damage.');
+
+      game.player.onDamage(damage);
+    }
+
+
+// ===================================  STATE  =======================================
+
+
 // state: default idle state handling
   function stateIdle()
     {
@@ -232,7 +320,7 @@ class AI
       // AI has become alerted
       if (alertness >= 100)
         {
-          setState(STATE_ALERT);
+          setState(STATE_ALERT, REASON_PARASITE);
           return;
         }
 
@@ -268,15 +356,15 @@ class AI
         logicTearParasiteAway();
       
       // call alert logic for this AI type
-      else stateAlertLogic();
-    }
+      else
+        {
+          // aggressive AI - attack player if he is near
+          if (isAggressive)
+            logicAttack();
 
-
-// hook: logic in alerted state
-  dynamic function stateAlertLogic()
-    {
-      // try to run away
-      logicRunAwayFrom(game.player.x, game.player.y);
+          // not aggressive AI - try to run away
+          else logicRunAwayFrom(game.player.x, game.player.y);
+        }
     }
 
 
@@ -312,35 +400,6 @@ class AI
     }
 
 
-// set AI state (plus all vars for this state)
-  public function setState(vstate: String)
-    {
-      state = vstate;
-      if (state == STATE_ALERT)
-        alertTimer = Const.AI_ALERTED_TIMER;
-    }
-
-
-// post alert changes, clamp and change icon
-  function updateEntity()
-    {
-      var alertFrame = Const.FRAME_EMPTY;
-      if (state == STATE_ALERT)
-        alertFrame = Const.FRAME_ALERTED;
-      else if (state == STATE_IDLE)
-        {
-          if (alertness > 75)
-            alertFrame = Const.FRAME_ALERT3;
-          else if (alertness > 50)
-            alertFrame = Const.FRAME_ALERT2;
-          else if (alertness > 0)
-            alertFrame = Const.FRAME_ALERT1;
-        }
-
-      entity.setAlert(alertFrame);
-    }
-
-
 // ================================ EVENTS =========================================
 
 
@@ -354,29 +413,34 @@ class AI
 
 
 // event: parasite attached to this host
-  public function onAttach()
+  public inline function onAttach()
     {
       // set AI state
       parasiteAttached = true;
-      setState(STATE_ALERT);
+      setState(STATE_ALERT, REASON_ATTACH);
     }
 
 
 // event: parasite invaded this host
-  public function onInvade()
+  public inline function onInvade()
     {
-      state = STATE_HOST;
+      setState(STATE_HOST);
       parasiteAttached = false;
       entity.setMask(Const.FRAME_MASK_POSSESSED);
     }
 
 
 // event: parasite detach from this host
-  public function onDetach()
+  public inline function onDetach()
     {
-      state = STATE_ALERT;
+      setState(STATE_ALERT, REASON_DETACH);
       entity.setMask(Const.FRAME_EMPTY);
     }
+
+
+// event dynamic: on state change
+  public dynamic function onStateChange()
+    {}
 
 
 // =================================================================================
@@ -404,4 +468,10 @@ class AI
   public static var STATE_ALERT = 'alert';
   public static var STATE_HOST = 'host';
   public static var STATE_DEAD = 'dead';
+
+  // AI state change reasons
+  public static var REASON_NONE = 'none';
+  public static var REASON_ATTACH = 'attach';
+  public static var REASON_DETACH = 'detach';
+  public static var REASON_PARASITE = 'parasite';
 }

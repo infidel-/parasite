@@ -46,7 +46,7 @@ class Debug
 // remove energy spend without a host
   function removeEnergySpend()
     {
-      game.vars.parasiteEnergyPerTurn = 0;
+      game.player.vars.energyPerTurn = 0;
       game.log('Energy per turn removed.');
     }
 

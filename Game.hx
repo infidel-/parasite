@@ -5,6 +5,7 @@ import com.haxepunk.HXP;
 class Game
 {
   public var scene: GameScene; // ui scene
+  public var areaManager: AreaManager; // area event manager
   public var map: MapGrid; // game world map
   public var player: Player; // game player
   public var debug: Debug; // debug actions
@@ -12,23 +13,12 @@ class Game
   public var turns: Int; // number of turns passed since game start
   public var isFinished: Bool; // is the game finished?
 
-  public var vars: { // game variables
-    parasiteEnergyPerTurn: Int, // energy spent per turn without a host
-    parasiteHealth: Int, // starting parasite health
-    parasiteEnergy: Int, // starting parasite energy 
-    };
-
   public function new()
     {
       scene = new GameScene(this);
+      areaManager = new AreaManager(this);
       debug = new Debug(this);
       HXP.scene = scene;
-
-      vars = {
-        parasiteEnergyPerTurn: 10,
-        parasiteHealth: 10,
-        parasiteEnergy: 100
-        };
     }
 
 
@@ -60,9 +50,10 @@ class Game
     }
 
 
-// player turn ends
+// game turn ends
   public function endTurn()
     {
+      // player turn
       player.turn();
       if (isFinished)
         return;
@@ -72,10 +63,13 @@ class Game
 
       // AI movement
       map.aiTurn();
+      if (isFinished)
+        return;
 
-      // host AI logic
-//      if (player.state == Player.STATE_HOST)
-//        player.host.stateHost();
+      // area turn
+      areaManager.turn();
+      if (isFinished)
+        return;
 
       // update AI visibility to player
       map.updateVisibility();
@@ -125,6 +119,8 @@ class Game
         colstr = '#FF0000';
       else if (col == Const.COLOR_EVOLUTION)
         colstr = '#00FFFF';
+      else if (col == Const.COLOR_AREA)
+        colstr = '#00AA00';
       scene.hud.log("<font color='" + colstr + "'>" + s + "</font>");
     }
 }
