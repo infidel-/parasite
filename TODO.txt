@@ -1,6 +1,6 @@
-police (patrollers + call police + call for backup)
-if (parasite has host)  reports = 'dangerous individual';
 combat - parasite side, parasite skill bonuses to host
+police (call for backup on damage)
+ai logic on seeing bodies
 area alertness
 two improvements impl
 global suspicion and what comes with its growth

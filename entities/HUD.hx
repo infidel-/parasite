@@ -178,10 +178,11 @@ class HUD
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');
         }
-
+/*
       buf.add('Intent: ');
       var action = Const.getAction(game.player.intent); 
       buf.add(action.name);
+*/
       buf.add("\n===\n\n");
 
       // player actions

@@ -320,7 +320,8 @@ class AI
       // AI has become alerted
       if (alertness >= 100)
         {
-          setState(STATE_ALERT, REASON_PARASITE);
+          setState(STATE_ALERT, 
+            (game.player.state == Player.STATE_PARASITE ? REASON_PARASITE : REASON_HOST));
           return;
         }
 
@@ -473,5 +474,6 @@ class AI
   public static var REASON_NONE = 'none';
   public static var REASON_ATTACH = 'attach';
   public static var REASON_DETACH = 'detach';
+  public static var REASON_HOST = 'host';
   public static var REASON_PARASITE = 'parasite';
 }

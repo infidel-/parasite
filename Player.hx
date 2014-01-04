@@ -8,7 +8,7 @@ class Player
   var game: Game; // game state link
 
   public var entity: PlayerEntity; // player ui entity
-  public var intent: String; // action on frobbing AI
+  public var intent: String; // action on frobbing AI - DISABLED!
   public var state: String; // player state - parasite, attach, host
   public var x: Int; // x,y on map grid
   public var y: Int;
@@ -200,21 +200,25 @@ class Player
       game.endTurn();
     }
 
-
-// frob the AI - use current intent (possess, attack, etc)
+// frob the AI - intent removed, just attach to host as a parasite
+// use current intent (possess, attack, etc)
   public function frobAI(ai: AI)
     {
+/*
       if (intent == INTENT_NOTHING || intent == INTENT_DETACH)
         return;
 
       // intent: attach to new host
       else if (intent == INTENT_ATTACH)
        actionAttachToHost(ai);
+*/
+      // attach to new host
+      if (state == STATE_PARASITE)
+        actionAttachToHost(ai);
 
       // update HUD info
       game.updateHUD();
     }
-
 
 // debug action: attach and invade
   public function actionDebugAttachAndInvade(ai: AI)
@@ -338,6 +342,7 @@ class Player
       var nx = x + dx;
       var ny = y + dy;
 
+      // cell not walkable
       if (!game.area.isWalkable(nx, ny))
         return false;
 

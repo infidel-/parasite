@@ -3,12 +3,14 @@ import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
 
 import entities.HUD;
+import entities.MouseEntity;
 import entities.EvolutionWindow;
 import entities.DebugWindow;
 
 class GameScene extends Scene
 {
   public var game: Game; // game state link
+  public var mouse: MouseEntity; // mouse cursor entity
   public var hud: HUD; // ingame HUD
   public var hudState: String; // current HUD state (default, evolution, etc)
   public var evolutionWindow: EvolutionWindow; // evolution window
@@ -30,6 +32,8 @@ class GameScene extends Scene
       entityAtlas = new TileAtlas("gfx/entities.png", Const.TILE_WIDTH, Const.TILE_HEIGHT);
 
       // init GUI
+      mouse = new MouseEntity(game);
+      add(mouse);
       hud = new HUD(game);
       evolutionWindow = new EvolutionWindow(game);
       debugWindow = new DebugWindow(game);
@@ -56,7 +60,9 @@ class GameScene extends Scene
         HXP.camera.y = 0;
 
 //      var gameScene: scenes.GameScene = untyped scene;
-//      gameScene.mouse.update();
+//      mouse.update();
+//      trace(mouse.scene);
+//      trace(HXP.camera);
 //      trace(HXP.camera.x + ',' + HXP.camera.y);
     }
 

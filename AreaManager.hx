@@ -80,7 +80,12 @@ class AreaManager
 // event: civilian calls the police
   function eventCallPolice(e: AreaEvent)
     {
-      log('Police have received reports about wild animal attacks. Dispatching available units to the location.');
+      var sdetails;
+      if (e.details == AI.REASON_HOST)
+        sdetails = 'suspicious individual';
+      else sdetails = 'wild animal attacks';
+      log('Police have received reports about ' + sdetails + 
+        '. Dispatching available units to the location.');
 
       if (game.player.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the police!');
