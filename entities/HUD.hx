@@ -157,12 +157,19 @@ class HUD
         
       else if (game.player.state == Player.STATE_HOST)
         {
+          buf.add('Host\n');
+          var colHealth = 
+            (game.player.host.health > 0.3 * game.player.host.maxHealth ? 
+            '#FFFFFF' : '#FF0000');
+          buf.add('Health: ' + 
+            "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
+            '/' + game.player.host.maxHealth + '\n');
+
           var colControl = '#FFFFFF';
           if (game.player.hostControl < 30)
             colControl = '#FF0000';
           else if (game.player.hostControl < 70)
             colControl = '#FFFF00';
-          buf.add('Health: ' + game.player.host.health + '\n');
           buf.add('Control: ' + 
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100\n');

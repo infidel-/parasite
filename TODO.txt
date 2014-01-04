@@ -1,4 +1,5 @@
 police (patrollers + call police + call for backup)
+if (parasite has host)  reports = 'dangerous individual';
 combat - parasite side, parasite skill bonuses to host
 area alertness
 two improvements impl

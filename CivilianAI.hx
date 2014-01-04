@@ -12,8 +12,8 @@ class CivilianAI extends HumanAI
 // event: on state change
   public override function onStateChange()
     {
-      // try to call police on next turn
-      if (state == AI.STATE_ALERT)
+      // try to call police on next turn if not struggling with parasite
+      if (state == AI.STATE_ALERT && !parasiteAttached)
         game.areaManager.addAI(this, AreaManager.EVENT_CALL_POLICE, 1);
     }
 }

@@ -103,6 +103,7 @@ class Area
 // generate AI
   function generateAI()
     {
+      // civvies
       var maxCivilians = Std.int(0.01 * width * height);
       for (i in 0...maxCivilians)
         {
@@ -115,6 +116,7 @@ class Area
           ai.createEntity();
         }
 
+      // doggies
       var maxDogs = Std.int(0.0025 * width * height);
       for (i in 0...maxDogs)
         {
@@ -123,6 +125,19 @@ class Area
 
           // spawn new ai
           var ai = new DogAI(game, loc.x, loc.y);
+          _ai.add(ai);
+          ai.createEntity();
+        }
+
+      // cops
+      var maxCops = Std.int(0.001 * width * height);
+      for (i in 0...maxCops)
+        {
+          // find empty spot for new ai
+          var loc = findEmptyLocation();
+
+          // spawn new ai
+          var ai = new PoliceAI(game, loc.x, loc.y);
           _ai.add(ai);
           ai.createEntity();
         }
