@@ -107,8 +107,8 @@ class AI
           var nx = x + Const.dirx[i];
           var ny = y + Const.diry[i];
           var ok = 
-            (game.map.isWalkable(nx, ny) && 
-             !game.map.hasAI(nx, ny) && 
+            (game.area.isWalkable(nx, ny) && 
+             !game.area.hasAI(nx, ny) && 
              !(game.player.x == nx && game.player.y == ny));
           if (ok)
             tmp.push(i);
@@ -123,7 +123,7 @@ class AI
 
       direction = tmp[Std.random(tmp.length)];
 */
-      direction = game.map.getRandomDirection(x, y);
+      direction = game.area.getRandomDirection(x, y);
       if (direction == -1)
         trace('ai at (' + x + ',' + y + '): nowhere to move!');
 /*      
@@ -143,7 +143,7 @@ class AI
         return false;
 
       // check for visibility
-      if (!game.map.isVisible(x, y, xx, yy))
+      if (!game.area.isVisible(x, y, xx, yy))
         return false;
 
       return true;
@@ -195,8 +195,8 @@ class AI
       var nx = x + Const.dirx[direction];
       var ny = y + Const.diry[direction];
       var ok = 
-        (game.map.isWalkable(nx, ny) && 
-         !game.map.hasAI(nx, ny) && 
+        (game.area.isWalkable(nx, ny) && 
+         !game.area.hasAI(nx, ny) && 
          !(game.player.x == nx && game.player.y == ny));
       if (!ok)
         {
@@ -218,7 +218,7 @@ class AI
           var nx = x + Const.dirx[i];
           var ny = y + Const.diry[i];
           var ok = (
-            game.map.isWalkable(nx, ny) && !game.map.hasAI(nx, ny) && 
+            game.area.isWalkable(nx, ny) && !game.area.hasAI(nx, ny) && 
               (Math.abs(nx - game.player.x) >= Math.abs(x - game.player.x) &&
                Math.abs(ny - game.player.y) >= Math.abs(y - game.player.y))
             );

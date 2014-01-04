@@ -45,10 +45,10 @@ class GameScene extends Scene
       HXP.camera.x = game.player.entity.x - HXP.halfWidth;
       HXP.camera.y = game.player.entity.y - HXP.halfHeight;
 
-      if (HXP.camera.x + HXP.windowWidth > Const.TILE_WIDTH * game.map.width)
-        HXP.camera.x = Const.TILE_WIDTH * game.map.width - HXP.windowWidth;
-      if (HXP.camera.y + HXP.windowHeight > Const.TILE_HEIGHT * game.map.height)
-        HXP.camera.y = Const.TILE_HEIGHT * game.map.height - HXP.windowHeight;
+      if (HXP.camera.x + HXP.windowWidth > Const.TILE_WIDTH * game.area.width)
+        HXP.camera.x = Const.TILE_WIDTH * game.area.width - HXP.windowWidth;
+      if (HXP.camera.y + HXP.windowHeight > Const.TILE_HEIGHT * game.area.height)
+        HXP.camera.y = Const.TILE_HEIGHT * game.area.height - HXP.windowHeight;
 
       if (HXP.camera.x < 0)
         HXP.camera.x = 0;

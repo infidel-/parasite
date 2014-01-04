@@ -55,7 +55,7 @@ class Debug
   function spawnCop()
     {
       var ai = new PoliceAI(game, game.player.x, game.player.y);
-      game.map.addAI(ai);
+      game.area.addAI(ai);
     }
 
 
@@ -92,7 +92,7 @@ class Debug
 
       // spawn AI, attach to it and invade
       var ai = new HumanAI(game, game.player.x, game.player.y);
-      game.map.addAI(ai);
+      game.area.addAI(ai);
       game.player.actionDebugAttachAndInvade(ai);
     }
 }

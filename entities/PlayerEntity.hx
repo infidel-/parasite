@@ -179,10 +179,10 @@ class PlayerEntity extends PawnEntity
             {
               var x = Std.int(game.scene.mouseX / Const.TILE_WIDTH);
               var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
-              trace('(' + x + ',' + y + ') ' + game.map.getType(x, y) +
+              trace('(' + x + ',' + y + ') ' + game.area.getType(x, y) +
                 ' player vis: ' + 
-                game.map.isVisible(game.player.x, game.player.y, x, y, true));
-              var ai = game.map.getAI(x, y);
+                game.area.isVisible(game.player.x, game.player.y, x, y, true));
+              var ai = game.area.getAI(x, y);
               if (ai != null)
                 Const.debugObject(ai);
             }
@@ -200,7 +200,7 @@ class PlayerEntity extends PawnEntity
       if (dx != 0 || dy != 0)
         {
           // frob the AI
-          var ai = game.map.getAI(player.x + dx, player.y + dy);
+          var ai = game.area.getAI(player.x + dx, player.y + dy);
           if (ai != null)
             {
               player.frobAI(ai);

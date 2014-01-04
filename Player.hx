@@ -265,7 +265,7 @@ class Player
       entity.visible = false;
       attachHost = null;
       host.onInvade(); // notify ai
-//      game.map.destroyAI(host);
+//      game.area.destroyAI(host);
 
       // change image
 //      entity.setImage(host.entity.getImage(), host.entity.atlasRow);
@@ -338,14 +338,14 @@ class Player
       var nx = x + dx;
       var ny = y + dy;
 
-      if (!game.map.isWalkable(nx, ny))
+      if (!game.area.isWalkable(nx, ny))
         return false;
 
       // random: change movement direction
       if (state == STATE_HOST && Std.random(100) < 100 - hostControl)
         {
           log('The host resists your command.');
-          var dir = game.map.getRandomDirection(x, y);
+          var dir = game.area.getRandomDirection(x, y);
           if (dir == -1)
             throw 'nowhere to move!';
 
@@ -366,7 +366,7 @@ class Player
       game.updateHUD();
 
       // update AI visibility to player
-      game.map.updateVisibility();
+      game.area.updateVisibility();
 
       return true;
     }
@@ -376,7 +376,7 @@ class Player
 // returns true on success
   public function moveTo(nx: Int, ny: Int): Bool
     {
-      if (!game.map.isWalkable(nx, ny))
+      if (!game.area.isWalkable(nx, ny))
         return false;
 
       x = nx;
@@ -385,7 +385,7 @@ class Player
       entity.updatePosition();
 
       // update cell visibility to player
-      game.map.updateVisibility();
+      game.area.updateVisibility();
 
       return true;
     }
@@ -449,9 +449,9 @@ class Player
 // event: host expired
   public function onHostDeath()
     {
-      game.map.destroyAI(host);
-      game.map.createObject(x, y, 'body', host.type);
-      game.map.updateVisibility();
+      game.area.destroyAI(host);
+      game.area.createObject(x, y, 'body', host.type);
+      game.area.updateVisibility();
 
       onDetach();
     }

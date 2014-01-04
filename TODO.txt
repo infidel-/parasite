@@ -1,4 +1,3 @@
-multiple call police should all work simultaneously - the more calls the more police arrives
 police (patrollers + call police + call for backup)
 combat - parasite side, parasite skill bonuses to host
 area alertness
@@ -20,6 +19,7 @@ host skills
 host inventory
 organ growth
 city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
+cops arriving in cars
 city and world travel
 operation generation
 information web

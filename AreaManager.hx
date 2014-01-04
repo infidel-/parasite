@@ -14,18 +14,29 @@ class AreaManager
 
 
 // add event shortcut
-  public inline function add(type: String, turns: Int)
+  public inline function add(type: String, x: Int, y: Int, turns: Int)
     {
-      addAI(null, type, turns);
+      var e = {
+        ai: null,
+        details: null, 
+        type: type,
+        x: x,
+        y: y,
+        turns: turns
+        };
+
+      _list.push(e);
     }
 
 
 // add event by type originating from this ai
-  public function addAI(ai: AI, type: String, turns: Int)
+  public inline function addAI(ai: AI, type: String, turns: Int)
     {
       var e = {
         ai: ai,
         type: type,
+        x: ai.x,
+        y: ai.y,
         details: (ai != null ? ai.reason : null),
         turns: turns
         };
@@ -52,21 +63,50 @@ class AreaManager
             }
 
           // run this event
+
+          // someone called the police
           if (e.type == EVENT_CALL_POLICE)
-            eventCallPolice(e.ai, e.details);
-          
+            eventCallPolice(e);
+
+          // police arrives
+          else if (e.type == EVENT_ARRIVE_POLICE)
+            eventArrivePolice(e);
+
           _list.remove(e);
         }
     }
 
 
 // event: civilian calls the police
-  function eventCallPolice(ai: AI, reason: String)
+  function eventCallPolice(e: AreaEvent)
     {
       log('Police have received reports about wild animal attacks. Dispatching available units to the location.');
 
-      if (game.player.hears(ai.x, ai.y))
-        ai.log('calls the police!');
+      if (game.player.hears(e.ai.x, e.ai.y))
+        e.ai.log('calls the police!');
+
+      // move on to arriving
+      add(EVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, 5);
+    }
+
+
+// event: police arrives
+  function eventArrivePolice(e: AreaEvent)
+    {
+      log('Police arrives on scene!');
+
+      for (i in 0...2)
+        {
+          var loc = game.area.findEmptyLocationNear(e.x, e.y);
+          if (loc == null)
+            {
+              Const.todo('Could not find free spot for spawn!');
+              return;
+            }
+
+          var ai = new PoliceAI(game, loc.x, loc.y);
+          game.area.addAI(ai);
+        }
     }
 
 
@@ -82,6 +122,7 @@ class AreaManager
 
 // event types
   public static var EVENT_CALL_POLICE = 'callPolice';
+  public static var EVENT_ARRIVE_POLICE = 'arrivePolice';
 }
 
 
@@ -91,6 +132,8 @@ typedef AreaEvent =
 {
   var ai: AI; // ai event origin - can be null
   var details: String; // event details - can be null
+  var x: Int;
+  var y: Int;
   var type: String; // event type
   var turns: Int; // turns left until the event
 };

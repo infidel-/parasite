@@ -1,11 +1,11 @@
-// tiled world map grid
+// tiled area grid
 
 import com.haxepunk.Entity;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.Tilemap;
 
 
-class MapGrid
+class Area
 {
   var game: Game; // game state link
 
@@ -13,9 +13,9 @@ class MapGrid
   var _ai: List<AI>;
   var _objects: List<GridObject>;
   var _cells: Array<Array<Int>>; // cell types
-  public var width: Int; // map width, height in cells
+  public var width: Int; // area width, height in cells
   public var height: Int;
-  public var entity: Entity; // map entity
+  public var entity: Entity; // area entity
 
   public function new (g: Game, tileset: Dynamic, w: Int, h: Int)
     {
@@ -166,6 +166,26 @@ class MapGrid
         }
 
       return { x: x, y: y };
+    }
+
+
+// find empty location on map near xo,yo (to spawn stuff)
+  public function findEmptyLocationNear(xo: Int, yo: Int): { x: Int, y: Int }
+    {
+      // make a temp list of empty spots in square radius 3
+      var tmp = [];
+      for (dy in -3...3)
+        for (dx in -3...3)
+          if (getType(xo + dx, yo + dy) == 'ground' && 
+              getAI(xo + dx, yo + dy) == null &&
+              !(game.player.x == xo + dx && game.player.y == yo + dy))
+            tmp.push({ x: xo + dx, y: yo + dy });
+
+      // no empty cells found
+      if (tmp.length == 0)
+        return null;
+
+      return tmp[Std.random(tmp.length)];
     }
 
 

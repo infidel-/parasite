@@ -6,7 +6,7 @@ class Game
 {
   public var scene: GameScene; // ui scene
   public var areaManager: AreaManager; // area event manager
-  public var map: MapGrid; // game world map
+  public var area: Area; // area, player is currently in 
   public var player: Player; // game player
   public var debug: Debug; // debug actions
 
@@ -30,13 +30,13 @@ class Game
       turns = 0;
       isFinished = false;
 
-      // init and generate map
-      map = new MapGrid(this, "gfx/tileset.png", 50, 50);
-      map.generate();
-      scene.add(map.entity);
+      // generate initial area
+      area = new Area(this, "gfx/tileset.png", 50, 50);
+      area.generate();
+      scene.add(area.entity);
 
       // init player
-      var loc = map.findEmptyLocation();
+      var loc = area.findEmptyLocation();
       player = new Player(this, loc.x, loc.y);
       player.createEntity();
 
@@ -46,7 +46,7 @@ class Game
       scene.updateCamera();
 
       // update AI visibility to player
-      map.updateVisibility();
+      area.updateVisibility();
     }
 
 
@@ -62,7 +62,7 @@ class Game
       turns++;
 
       // AI movement
-      map.aiTurn();
+      area.aiTurn();
       if (isFinished)
         return;
 
@@ -72,7 +72,7 @@ class Game
         return;
 
       // update AI visibility to player
-      map.updateVisibility();
+      area.updateVisibility();
     }
 
 
