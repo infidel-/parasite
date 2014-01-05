@@ -150,6 +150,12 @@ class AI
     }
 
 
+// is this AI near that spot?
+  public function isNear(xx: Int, yy: Int): Bool
+    {
+      return (Math.abs(xx - x) <= 1 && Math.abs(yy - y) <= 1);
+    }
+
 // set AI state (plus all vars for this state)
   public function setState(vstate: String, ?vreason: String = 'none')
     {
@@ -280,6 +286,13 @@ class AI
         info = ConstItems.fists;
       else info = item.info;
 
+      // check for distance on melee
+      if (!info.weaponStats.isRanged && !isNear(game.player.x, game.player.y))
+        {
+          Const.todo('logicMoveTo()');
+          return;
+        }
+
       // weapon skill level
       var skillLevel = skills.getLevel(info.weaponStats.skill);
 
@@ -409,7 +422,19 @@ class AI
     {
       health -= damage;
       if (health == 0)
-        setState(STATE_DEAD);
+        {
+          setState(STATE_DEAD);
+          onDeath();
+        }
+    }
+
+
+// event: on death
+  public function onDeath()
+    {
+      game.area.destroyAI(this);
+      game.area.createObject(x, y, 'body', type);
+      game.area.updateVisibility();
     }
 
 

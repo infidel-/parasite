@@ -94,5 +94,10 @@ class Debug
       var ai = new HumanAI(game, game.player.x, game.player.y);
       game.area.addAI(ai);
       game.player.actionDebugAttachAndInvade(ai);
+      game.player.hostControl = 100;
+
+      // give weapon
+      ai.inventory.addID('pistol');
+      ai.skills.addID('pistol', 25 + Std.random(25));
     }
 }

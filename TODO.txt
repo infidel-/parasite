@@ -1,5 +1,10 @@
 combat - parasite side, parasite skill bonuses to host
+alert on receiving damage
+The dog -> The dog/the dog
+police move in to attack with melee
+police pursuit
 police (call for backup on damage)
+learn skills action
 ai logic on seeing bodies
 area alertness
 two improvements impl

@@ -174,18 +174,8 @@ class PlayerEntity extends PawnEntity
               game.updateHUD();
             }
 
-          // mouse click - cell and ai info
-          if (Input.mouseReleased)
-            {
-              var x = Std.int(game.scene.mouseX / Const.TILE_WIDTH);
-              var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
-              trace('(' + x + ',' + y + ') ' + game.area.getType(x, y) +
-                ' player vis: ' + 
-                game.area.isVisible(game.player.x, game.player.y, x, y, true));
-              var ai = game.area.getAI(x, y);
-              if (ai != null)
-                Const.debugObject(ai);
-            }
+          // handle mouse input
+          game.scene.mouse.handleInput();
         }
     }
 

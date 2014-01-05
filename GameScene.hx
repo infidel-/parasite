@@ -58,12 +58,6 @@ class GameScene extends Scene
         HXP.camera.x = 0;
       if (HXP.camera.y < 0)
         HXP.camera.y = 0;
-
-//      var gameScene: scenes.GameScene = untyped scene;
-//      mouse.update();
-//      trace(mouse.scene);
-//      trace(HXP.camera);
-//      trace(HXP.camera.x + ',' + HXP.camera.y);
     }
 
 

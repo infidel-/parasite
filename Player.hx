@@ -27,6 +27,8 @@ class Player
   public var chemicals: Array<Int>; // chemical compounds
   public var maxChemicals: Array<Int>; // max chemical compounds
 
+  public var skills: Skills; // skills
+
   // state "parasite"
 
   // state "attach"
@@ -56,7 +58,6 @@ class Player
       intent = INTENT_ATTACH;
       state = STATE_PARASITE;
       ap = 2;
-
       energy = vars.startEnergy;
       maxEnergy = vars.startEnergy;
       maxHealth = vars.startHealth;
@@ -66,8 +67,9 @@ class Player
       attachHold = 0;
       hostTimer = 0;
       hostControl = 0;
-
       humanSociety = 0.0;
+
+      skills = new Skills();
     }
 
 
@@ -220,12 +222,64 @@ class Player
       game.updateHUD();
     }
 
+
 // debug action: attach and invade
   public function actionDebugAttachAndInvade(ai: AI)
     {
       actionAttachToHost(ai);
       attachHold = 100;
       actionInvadeHost();
+    }
+
+
+// action: attack this ai
+  public function actionAttack(ai: AI)
+    {
+      // not in a host mode
+      if (state != STATE_HOST)
+        return;
+
+      // check if player can see that spot
+      if (!game.area.isVisible(x, y, ai.x, ai.y))
+        return;
+
+      // get current weapon
+      var item = host.inventory.getFirstWeapon();
+      var info = null;
+
+      // use fists
+      if (item == null)
+        info = ConstItems.fists;
+      else info = item.info;
+
+      // check for distance on melee
+      if (!info.weaponStats.isRanged && !ai.isNear(x, y))
+        return;
+
+      // weapon skill level (ai + parasite bonus)
+      var skillLevel = host.skills.getLevel(info.weaponStats.skill) +
+        skills.getLevel(info.weaponStats.skill);
+
+      // roll skill
+      if (Std.random(100) > skillLevel)
+        {
+          log('Your host tries to ' + info.verb1 + ' ' + ai.name + ', but misses.');
+          return;
+        }
+
+      // success, roll damage
+      var damage = Const.roll(info.weaponStats.minDamage, info.weaponStats.maxDamage);
+      if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
+        damage += Const.roll(0, Std.int(host.strength / 2));
+
+      log('Your host ' + info.verb2 + ' ' + ai.name + ' for ' + damage + ' damage.');
+
+      ai.onDamage(damage); // damage event
+
+      postAction(); // post-action call
+
+      // update HUD info
+      game.updateHUD();
     }
 
 
@@ -416,7 +470,7 @@ class Player
           host.onDamage(damage);
           if (host.state == AI.STATE_DEAD)
             {
-              onHostDeath();
+              onDetach();
               
               log('Your host has died from injuries.');
             }
@@ -452,12 +506,9 @@ class Player
 
 
 // event: host expired
-  public function onHostDeath()
+  public inline function onHostDeath()
     {
-      game.area.destroyAI(host);
-      game.area.createObject(x, y, 'body', host.type);
-      game.area.updateVisibility();
-
+      host.onDeath();
       onDetach();
     }
 
