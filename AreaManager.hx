@@ -66,25 +66,42 @@ class AreaManager
 
           // someone called the police
           if (e.type == EVENT_CALL_POLICE)
-            eventCallPolice(e);
+            onCallPolice(e);
 
           // police arrives
           else if (e.type == EVENT_ARRIVE_POLICE)
-            eventArrivePolice(e);
+            onArrivePolice(e);
 
           _list.remove(e);
         }
     }
 
 
+// ===============================  EVENTS  =========================================
+
+
+// event: attack (called immediately)
+  public function onAttack(x: Int, y: Int, isRanged: Bool)
+    {
+      var tmp = game.area.getAIinRadius(x, y, 
+        (isRanged ? Const.AI_HEAR_DISTANCE : Const.AI_VIEW_DISTANCE), isRanged);
+      for (ai in tmp)
+        if (ai.state == AI.STATE_IDLE)
+          ai.setState(AI.STATE_ALERT, AI.REASON_WITNESS);
+    }
+
+
 // event: civilian calls the police
-  function eventCallPolice(e: AreaEvent)
+  function onCallPolice(e: AreaEvent)
     {
       var sdetails;
       if (e.details == AI.REASON_HOST)
-        sdetails = 'suspicious individual';
-      else sdetails = 'wild animal attacks';
-      log('Police have received reports about ' + sdetails + 
+        sdetails = 'a suspicious individual';
+      else if (e.details == AI.REASON_DAMAGE || e.details == AI.REASON_WITNESS)
+        sdetails = 'an attack';
+      else sdetails = 'wild animal attack';
+
+      log('Police has received a report about ' + sdetails + 
         '. Dispatching available units to the location.');
 
       if (game.player.hears(e.ai.x, e.ai.y))
@@ -96,7 +113,7 @@ class AreaManager
 
 
 // event: police arrives
-  function eventArrivePolice(e: AreaEvent)
+  function onArrivePolice(e: AreaEvent)
     {
       log('Police arrives on scene!');
 
@@ -113,6 +130,9 @@ class AreaManager
           game.area.addAI(ai);
         }
     }
+
+
+// ==================================================================================
 
 
 // log shortcut

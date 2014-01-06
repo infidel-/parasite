@@ -1,4 +1,4 @@
-// AI for humans (should not be used in the game itself)
+// AI for humans (should not be used in the game itself)BB
 
 class HumanAI extends AI
 {
@@ -6,7 +6,7 @@ class HumanAI extends AI
     {
       super(g, vx, vy);
       type = 'human';
-      name = 'Joe Smith';
+      name = nameCapped = 'Joe Smith';
 
       strength = 4 + Std.random(4);
       constitution = 4 + Std.random(4);

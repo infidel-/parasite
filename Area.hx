@@ -468,4 +468,19 @@ class Area
 
       return tmp[Std.random(tmp.length)];
     }
+
+
+// get all AIs in radius from that x,y
+// los - must have los to that location
+  public function getAIinRadius(x: Int, y: Int, dist: Int, los: Bool): List<AI>
+    {
+      var tmp = new List<AI>();
+
+      for (ai in _ai)
+        if (HXP.distanceSquared(x, y, ai.x, ai.y) <= dist * dist &&
+            (!los || game.area.isVisible(ai.x, ai.y, x, y)))
+          tmp.add(ai);
+
+      return tmp;
+    }
 }

@@ -168,7 +168,7 @@ class PlayerEntity extends PawnEntity
           // skip until end of turn
           if (Input.pressed("skipTurn"))
             {
-              game.endTurn();
+              game.turn();
 
               // update HUD info
               game.updateHUD();

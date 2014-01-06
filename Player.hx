@@ -199,7 +199,7 @@ class Player
         return;
 
       // new turn
-      game.endTurn();
+      game.turn();
     }
 
 // frob the AI - intent removed, just attach to host as a parasite
@@ -229,6 +229,9 @@ class Player
       actionAttachToHost(ai);
       attachHold = 100;
       actionInvadeHost();
+
+      // update AI visibility to player
+      game.area.updateVisibility();
     }
 
 
@@ -256,6 +259,9 @@ class Player
       if (!info.weaponStats.isRanged && !ai.isNear(x, y))
         return;
 
+      // propagate shooting/melee event
+      game.areaManager.onAttack(x, y, info.weaponStats.isRanged);
+
       // weapon skill level (ai + parasite bonus)
       var skillLevel = host.skills.getLevel(info.weaponStats.skill) +
         skills.getLevel(info.weaponStats.skill);
@@ -264,6 +270,14 @@ class Player
       if (Std.random(100) > skillLevel)
         {
           log('Your host tries to ' + info.verb1 + ' ' + ai.name + ', but misses.');
+
+          // set alerted state
+          if (ai.state == AI.STATE_IDLE)
+            ai.setState(AI.STATE_ALERT, AI.REASON_DAMAGE);
+
+          postAction(); // post-action call
+          game.updateHUD(); // update HUD info
+
           return;
         }
 
@@ -275,11 +289,8 @@ class Player
       log('Your host ' + info.verb2 + ' ' + ai.name + ' for ' + damage + ' damage.');
 
       ai.onDamage(damage); // damage event
-
       postAction(); // post-action call
-
-      // update HUD info
-      game.updateHUD();
+      game.updateHUD(); // update HUD info
     }
 
 
@@ -323,11 +334,6 @@ class Player
       entity.visible = false;
       attachHost = null;
       host.onInvade(); // notify ai
-//      game.area.destroyAI(host);
-
-      // change image
-//      entity.setImage(host.entity.getImage(), host.entity.atlasRow);
-//      entity.setMask(Const.FRAME_MASK_POSSESSED, host.entity.atlasRow);
 
       // set intent/state
       intent = INTENT_NOTHING;

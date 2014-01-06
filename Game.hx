@@ -51,7 +51,7 @@ class Game
 
 
 // game turn ends
-  public function endTurn()
+  public function turn()
     {
       // player turn
       player.turn();

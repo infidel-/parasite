@@ -9,6 +9,7 @@ class AI
   public var entity: AIEntity; // gui entity
   public var type: String; // object type
   public var name: String; // AI name (can be unique and capitalized)
+  public var nameCapped: String; // AI name capitalized 
   public var isAggressive: Bool; // true - attack in alerted state, false - run away
 
   public var x: Int; // grid x,y
@@ -39,6 +40,8 @@ class AI
     {
       game = g;
       type = 'undefined';
+      name = 'undefined';
+      nameCapped = 'undefined';
 
       x = vx;
       y = vy;
@@ -156,16 +159,22 @@ class AI
       return (Math.abs(xx - x) <= 1 && Math.abs(yy - y) <= 1);
     }
 
+
 // set AI state (plus all vars for this state)
   public function setState(vstate: String, ?vreason: String = 'none')
     {
+      // AI is already in that state
+      if (state == vstate)
+        return;
+
       state = vstate;
       reason = vreason;
       if (state == STATE_ALERT)
         alertTimer = Const.AI_ALERTED_TIMER;
 
-      // dynamic event
-      onStateChange();
+      onStateChange(); // dynamic event
+
+      updateEntity(); // update icon
     }
 
 
@@ -425,7 +434,13 @@ class AI
         {
           setState(STATE_DEAD);
           onDeath();
+
+          return;
         }
+
+      // set alerted state
+      if (state == STATE_IDLE)
+        setState(STATE_ALERT, REASON_DAMAGE);
     }
 
 
@@ -475,7 +490,7 @@ class AI
 // log
   public inline function log(s: String)
     {
-      game.log(name + ' ' + s);
+      game.log(nameCapped + ' ' + s);
     }
 
 
@@ -501,4 +516,6 @@ class AI
   public static var REASON_DETACH = 'detach';
   public static var REASON_HOST = 'host';
   public static var REASON_PARASITE = 'parasite';
+  public static var REASON_DAMAGE = 'damage';
+  public static var REASON_WITNESS = 'witness';
 }

@@ -44,9 +44,10 @@ class Const
   public static var TILE_WALKABLE = [ false, true, false ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building' ];
 
-  // AI view distance
+  // AI view and hear distance
   // TODO: i could probably move these into AI class to change by different AIs
   public static var AI_VIEW_DISTANCE = 10;
+  public static var AI_HEAR_DISTANCE = 15;
 
   // number of turns AI stays alerted
   public static var AI_ALERTED_TIMER = 10;

@@ -6,7 +6,8 @@ class DogAI extends AI
     {
       super(g, vx, vy);
       type = 'dog';
-      name = 'The dog';
+      name = 'the dog';
+      nameCapped = 'The dog';
 
       strength = 2 + Std.random(3);
       constitution = 2 + Std.random(3);
