@@ -38,12 +38,14 @@ class PlayerEntity extends PawnEntity
       Input.define("action7", [ Key.DIGIT_7 ]);
       Input.define("action8", [ Key.DIGIT_8 ]);
       Input.define("action9", [ Key.DIGIT_9 ]);
-      Input.define("evolutionWindow", [ Key.F1 ]);
+      Input.define("inventoryWindow", [ Key.F1 ]);
+      Input.define("evolutionWindow", [ Key.F2 ]);
+      Input.define("exit", [ Key.F4 ]);
       Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
+
       Input.define("skipTurn", [ Key.SPACE ]);
       Input.define("closeWindow", [ Key.ESCAPE ]);
-      Input.define("exit", [ Key.F4 ]);
 
       dx = 0;
       dy = 0;
@@ -75,26 +77,37 @@ class PlayerEntity extends PawnEntity
         {
           if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
             game.scene.evolutionWindow.hide();
+          else if (game.scene.hudState == GameScene.HUDSTATE_INVENTORY)
+            game.scene.inventoryWindow.hide();
           else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
             game.scene.debugWindow.hide();
           else return;
+
           game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
         }
 
-      // open evolution window
-      else if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT &&
-          Input.pressed("evolutionWindow"))
+      else if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
         {
-          game.scene.hudState = GameScene.HUDSTATE_EVOLUTION;
-          game.scene.evolutionWindow.show();
-        }
+          // open inventory window
+          if (Input.pressed("inventoryWindow"))
+            {
+              game.scene.hudState = GameScene.HUDSTATE_INVENTORY;
+              game.scene.inventoryWindow.show();
+            }
 
-      // open debug window
-      else if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT &&
-          Input.pressed("debugWindow"))
-        {
-          game.scene.hudState = GameScene.HUDSTATE_DEBUG;
-          game.scene.debugWindow.show();
+          // open evolution window
+          else if (Input.pressed("evolutionWindow"))
+            {
+              game.scene.hudState = GameScene.HUDSTATE_EVOLUTION;
+              game.scene.evolutionWindow.show();
+            }
+
+          // open debug window
+          else if (Input.pressed("debugWindow"))
+            {
+              game.scene.hudState = GameScene.HUDSTATE_DEBUG;
+              game.scene.debugWindow.show();
+            }
         }
     }
 

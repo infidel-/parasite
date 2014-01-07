@@ -5,6 +5,7 @@ import com.haxepunk.graphics.atlas.TileAtlas;
 import entities.HUD;
 import entities.MouseEntity;
 import entities.EvolutionWindow;
+import entities.InventoryWindow;
 import entities.DebugWindow;
 
 class GameScene extends Scene
@@ -14,6 +15,7 @@ class GameScene extends Scene
   public var hud: HUD; // ingame HUD
   public var hudState: String; // current HUD state (default, evolution, etc)
   public var evolutionWindow: EvolutionWindow; // evolution window
+  public var inventoryWindow: InventoryWindow; // inventory window
   public var debugWindow: DebugWindow; // debug window
   public var entityAtlas: TileAtlas; // entity graphics
 
@@ -36,6 +38,7 @@ class GameScene extends Scene
       add(mouse);
       hud = new HUD(game);
       evolutionWindow = new EvolutionWindow(game);
+      inventoryWindow = new InventoryWindow(game);
       debugWindow = new DebugWindow(game);
 
       // init game state
@@ -64,5 +67,6 @@ class GameScene extends Scene
   // hud state constants
   public static var HUDSTATE_DEFAULT = 'default'; // default
   public static var HUDSTATE_EVOLUTION = 'evolution'; // evolution window open
+  public static var HUDSTATE_INVENTORY = 'inventory'; // inventory window open
   public static var HUDSTATE_DEBUG = 'debug'; // debug window open
 }

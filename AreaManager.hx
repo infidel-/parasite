@@ -127,6 +127,7 @@ class AreaManager
             }
 
           var ai = new PoliceAI(game, loc.x, loc.y);
+          ai.alertness = 50; // AI arrive already somewhat alerted
           game.area.addAI(ai);
         }
     }

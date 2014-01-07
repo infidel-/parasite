@@ -229,9 +229,6 @@ class Player
       actionAttachToHost(ai);
       attachHold = 100;
       actionInvadeHost();
-
-      // update AI visibility to player
-      game.area.updateVisibility();
     }
 
 
@@ -338,6 +335,9 @@ class Player
       // set intent/state
       intent = INTENT_NOTHING;
       state = STATE_HOST;
+
+      // update AI visibility to player
+      game.area.updateVisibility();
     }
 
 

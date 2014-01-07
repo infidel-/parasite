@@ -211,7 +211,10 @@ class HUD
 
       buf.add("\n===\n");
       if (game.player.state == Player.STATE_HOST)
-        buf.add('\nF1: Controlled evolution\n');
+        {
+          buf.add('\nF1: Inventory\n');
+          buf.add('F2: Controlled evolution\n');
+        }
 
       _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();

@@ -16,11 +16,11 @@ write about getPixels/setPixels bug
 MASTERPLAN
 ============
 combat
+host skills
+host inventory
 area alertness
 human biology knowledge
 canine biology knowledge
-host skills
-host inventory
 organ growth
 city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars

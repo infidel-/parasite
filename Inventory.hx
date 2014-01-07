@@ -12,6 +12,12 @@ class Inventory
     }
 
 
+  public function iterator(): Iterator<Item>
+    {
+      return _list.iterator();
+    }
+
+
 // get first item that is a weapon
   public function getFirstWeapon(): Item
     {

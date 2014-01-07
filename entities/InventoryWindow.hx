@@ -1,4 +1,4 @@
-// debug GUI window
+// inventory GUI window
 
 package entities;
 
@@ -10,15 +10,21 @@ import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
 
-class DebugWindow
+class InventoryWindow
 {
   var game: Game; // game state
+
   var _textField: TextField; // text field
   var _back: Sprite; // window background
+//  var _actionNames: List<String>; // list of currently available actions (names)
+//  var _actionIDs: List<String>; // list of currently available actions (string IDs)
 
   public function new(g: Game)
     {
       game = g;
+
+//      _actionNames = new List<String>();
+//      _actionIDs = new List<String>();
 
       // actions list
       var font = Assets.getFont("font/04B_03__.ttf");
@@ -34,7 +40,7 @@ class DebugWindow
       HXP.stage.addChild(_back);
     }
 
-
+/*
 // call action by id
   public function action(index: Int)
     {
@@ -42,7 +48,7 @@ class DebugWindow
       update(); // update display
       game.scene.hud.update(); // update HUD
     }
-
+*/
 
 // update and show window
   public function show()
@@ -63,15 +69,18 @@ class DebugWindow
   function update()
     {
       var buf = new StringBuf();
-      buf.add('Debug\n===\n\n');
+      buf.add('Inventory\n===\n\n');
 
-      // draw a list of debug action
-      var n = 1;
-      for (a in game.debug.actions)
+      // draw a list of items
+      var n = 0;
+      for (item in game.player.host.inventory)
         {
-          buf.add((n++) + ': ' + a.name + '\n');
-          
+          n++;
+          buf.add(item.info.name + '\n');
         }
+
+      if (n == 0)
+        buf.add('  --- empty ---\n');
 
       _textField.htmlText = buf.toString();
       _back.graphics.clear();

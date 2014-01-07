@@ -87,6 +87,8 @@ class AI
         }
       entity = new AIEntity(this, game, x, y, atlasRow);
       game.scene.add(entity);
+
+      updateEntity(); // update icon
     }
 
 
