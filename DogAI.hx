@@ -6,8 +6,13 @@ class DogAI extends AI
     {
       super(g, vx, vy);
       type = 'dog';
-      name = 'the dog';
-      nameCapped = 'The dog';
+      name =
+        {
+          real: 'the dog',
+          realCapped: 'The dog',
+          unknown: 'the dog',
+          unknownCapped: 'The dog'
+        };
 
       strength = 2 + Std.random(3);
       constitution = 2 + Std.random(3);

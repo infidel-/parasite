@@ -6,6 +6,8 @@ class CivilianAI extends HumanAI
     {
       super(g, vx, vy);
       type = 'civilian';
+      name.unknown = 'random civilian';
+      name.unknownCapped = 'Random civilian';
     }
 
 

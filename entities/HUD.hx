@@ -154,10 +154,11 @@ class HUD
 
       if (game.player.state == Player.STATE_ATTACHED)
         buf.add('Hold: ' + game.player.attachHold + ' / 100\n');
-        
+
+      // host stats
       else if (game.player.state == Player.STATE_HOST)
         {
-          buf.add('Host\n');
+          buf.add(game.player.host.getNameCapped() + '\n');
           var colHealth = 
             (game.player.host.health > 0.3 * game.player.host.maxHealth ? 
             '#FFFFFF' : '#FF0000');

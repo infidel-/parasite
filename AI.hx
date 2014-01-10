@@ -8,9 +8,19 @@ class AI
 
   public var entity: AIEntity; // gui entity
   public var type: String; // object type
-  public var name: String; // AI name (can be unique and capitalized)
-  public var nameCapped: String; // AI name capitalized 
+  var name: 
+    { 
+      real: String, // real name
+      realCapped: String, // capitalized real name
+      unknown: String, // class name
+      unknownCapped: String // class name capitalized
+    }; // AI name (can be unique and capitalized)
+  var nameUnknown: String; // AI name when its real name not known
+  var nameCapped: String; // AI name capitalized
+  var nameUnknownCapped: String; // AI unknown name capitalized
+
   public var isAggressive: Bool; // true - attack in alerted state, false - run away
+  public var isNameKnown: Bool; // is real name known to player?
 
   public var x: Int; // grid x,y
   public var y: Int;
@@ -40,8 +50,13 @@ class AI
     {
       game = g;
       type = 'undefined';
-      name = 'undefined';
-      nameCapped = 'undefined';
+      name =
+        {
+          real: 'undefined',
+          realCapped: 'undefined',
+          unknown: 'undefined',
+          unknownCapped: 'undefined'
+        };
 
       x = vx;
       y = vy;
@@ -52,6 +67,7 @@ class AI
       alertTimer = 0;
       direction = 0;
       isAggressive = false;
+      isNameKnown = false;
       parasiteAttached = false;
       strength = 1;
       constitution = 1;
@@ -73,6 +89,20 @@ class AI
 //      maxHealth = Std.int(strength / 2) + constitution;
       maxHealth = strength + constitution;
       health = maxHealth;
+    }
+
+
+// get name depending on whether its known or not
+  public inline function getName(): String
+    {
+      return (isNameKnown ? name.real : name.unknown);
+    }
+
+
+// get capped name depending on whether its known or not
+  public inline function getNameCapped(): String
+    {
+      return (isNameKnown ? name.realCapped : name.unknownCapped);
     }
 
 
@@ -502,7 +532,7 @@ class AI
 // log
   public inline function log(s: String)
     {
-      game.log(nameCapped + ' ' + s);
+      game.log(getNameCapped() + ' ' + s);
     }
 
 

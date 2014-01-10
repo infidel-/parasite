@@ -16,7 +16,6 @@ class Node {
 		this.y = y;
 		this.cost = cost;
         this.engine = e;
-        clean();
 	}
 
 
@@ -63,6 +62,8 @@ class Node {
 		}
 		return G;
 	}
+
+
 	//get a distance to endNode
 	public function getH():Int {
 		var endNode = engine.endNode;
@@ -76,6 +77,8 @@ class Node {
 		}
 		return H;
 	}
+
+
 	//F = G + H
 	public function getF():Int{
 		return getH() + getG();

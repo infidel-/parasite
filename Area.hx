@@ -495,10 +495,9 @@ class Area
       if (!isWalkable(x1, y1) || !isWalkable(x2, y2))
         return null;
 
-      var t = Sys.cpuTime();
-      _pathEngine.clean();
+      var t = Sys.time();
       var p = _pathEngine.getPath(x1, y1, x2, y2);
-      trace('path time:' + Std.int((Sys.cpuTime() - t) / 1000.0) + ' ms');
+      trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');
       return p;
     }
 }

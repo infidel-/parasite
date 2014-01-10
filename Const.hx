@@ -103,7 +103,7 @@ class Const
         {
           var ff = Reflect.field(o, f);
           if (!Reflect.isFunction(ff) && 
-              (!Reflect.isObject(ff) || Type.getClass(ff) == String))
+              (!Reflect.isObject(ff) || Type.getClass(ff) == String || f == 'name'))
             trace(f + ': ' + ff);
 
           else if (Lambda.has(list, Type.getClass(ff)))

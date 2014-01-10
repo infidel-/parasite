@@ -266,7 +266,7 @@ class Player
       // roll skill
       if (Std.random(100) > skillLevel)
         {
-          log('Your host tries to ' + info.verb1 + ' ' + ai.name + ', but misses.');
+          log('Your host tries to ' + info.verb1 + ' ' + ai.getName() + ', but misses.');
 
           // set alerted state
           if (ai.state == AI.STATE_IDLE)
@@ -283,7 +283,7 @@ class Player
       if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
         damage += Const.roll(0, Std.int(host.strength / 2));
 
-      log('Your host ' + info.verb2 + ' ' + ai.name + ' for ' + damage + ' damage.');
+      log('Your host ' + info.verb2 + ' ' + ai.getName() + ' for ' + damage + ' damage.');
 
       ai.onDamage(damage); // damage event
       postAction(); // post-action call
@@ -313,7 +313,7 @@ class Player
   function actionHardenGrip()
     {
       game.log('You harden your grip on the host.');
-      attachHold += 10;
+      attachHold += 15;
     }
 
 
@@ -380,14 +380,19 @@ class Player
         }
      
       var params = evolutionManager.getParams('hostMemory');
-
       humanSociety += params.humanSociety * host.intellect;
-      hostTimer -= params.hostTimer - host.psyche;
-      host.onDamage(params.hostHealthBase);
+      hostTimer -= params.hostTimer - host.psyche; // reduce lifetime
+      host.onDamage(params.hostHealthBase); // damage host
       if (Std.random(100) < 25)
-        host.onDamage(params.hostHealthMod);
+        host.onDamage(params.hostHealthMod); // more damage if unlucky
 
       game.log('You probe the brain of the host and access its memory.');
+
+      if (!host.isNameKnown)
+        {
+          host.isNameKnown = true;
+          game.log('You find out that the name of this host is ' + host.getName() + '.');
+        }
     }
 
 
