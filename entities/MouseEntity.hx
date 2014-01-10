@@ -61,7 +61,8 @@ class MouseEntity extends Entity
       if (_mode == MODE_DEFAULT)
         {
           var ai = game.area.getAI(ax, ay);
-          if (game.player.state == Player.STATE_HOST && ai != null)
+          if (game.player.state == Player.STATE_HOST && ai != null &&
+              ai != game.player.host)
             newframe = CURSOR_ATTACK;
           else newframe = CURSOR_DEFAULT;
         }
@@ -104,6 +105,12 @@ class MouseEntity extends Entity
                 game.area.isVisible(game.player.x, game.player.y, x, y, true));
               if (ai != null)
                 Const.debugObject(ai);
+
+              var p = game.area.getPath(game.player.x, game.player.y, x, y);
+              if (p != null)
+                for (n in p)
+                  trace(n.x + ',' + n.y);
+              else trace('no path');
             }
 
           // default: attack

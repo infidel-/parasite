@@ -1,8 +1,7 @@
-combat - parasite side, parasite skill bonuses to host
-police move in to attack with melee
 police pursuit
 police (call for backup on damage)
 learn skills action
+looting bodies
 ai logic on seeing bodies
 area alertness
 two improvements impl
@@ -16,8 +15,6 @@ write about getPixels/setPixels bug
 MASTERPLAN
 ============
 combat
-host skills
-host inventory
 area alertness
 human biology knowledge
 canine biology knowledge
@@ -27,3 +24,10 @@ cops arriving in cars
 city and world travel
 operation generation
 information web
+
+LATER
+=====
+
+armor - vest + helmet
+stunner
+electric discharge improv + battery organ + stun attack

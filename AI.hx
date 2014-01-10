@@ -276,6 +276,18 @@ class AI
     }
 
 
+// logic: move to x,y
+  function logicMoveTo(x2: Int, y2: Int)
+    {
+      // get path
+      var path = game.area.getPath(x, y, x2, y2);
+      if (path == null)
+        return;
+
+      setPosition(path[0].x, path[0].y);
+    }
+
+
 // logic: attack player
   function logicAttack()
     {
@@ -285,8 +297,6 @@ class AI
           logicRoam();
           return;
         }
-
-      // attack the threat
 
       // get current weapon
       var item = inventory.getFirstWeapon();
@@ -300,7 +310,7 @@ class AI
       // check for distance on melee
       if (!info.weaponStats.isRanged && !isNear(game.player.x, game.player.y))
         {
-          Const.todo('logicMoveTo()');
+          logicMoveTo(game.player.x, game.player.y);
           return;
         }
 
@@ -323,7 +333,7 @@ class AI
         (game.player.state == Player.STATE_HOST ? 'your host' : 'you') + 
         ' for ' + damage + ' damage.');
 
-      game.player.onDamage(damage);
+      game.player.onDamage(damage); // on damage event
     }
 
 

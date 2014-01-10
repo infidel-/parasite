@@ -28,6 +28,14 @@ class Skills
 // add skill by id
   public function addID(id: String, lvl: Int)
     {
+      // check if we already have that skill
+      for (sk in _list)
+        if (sk.id == id)
+          {
+            sk.level = lvl;
+            return;
+          }
+
       var info = ConstSkills.getInfo(id);
       if (info == null)
         {
@@ -45,7 +53,7 @@ class Skills
       var tmp = [];
       for (o in _list)
         tmp.push(o.id + ' ' + o.level + '%');
-      return tmp.join(',');
+      return tmp.join(', ');
     }
 }
 

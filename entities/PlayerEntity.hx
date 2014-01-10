@@ -89,7 +89,7 @@ class PlayerEntity extends PawnEntity
       else if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
         {
           // open inventory window
-          if (Input.pressed("inventoryWindow"))
+          if (Input.pressed("inventoryWindow") && game.player.state == Player.STATE_HOST)
             {
               game.scene.hudState = GameScene.HUDSTATE_INVENTORY;
               game.scene.inventoryWindow.show();

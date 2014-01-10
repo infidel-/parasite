@@ -13,6 +13,8 @@ class Area
   var _ai: List<AI>;
   var _objects: List<GridObject>;
   var _cells: Array<Array<Int>>; // cell types
+  var _pathEngine: aPath.Engine;
+
   public var width: Int; // area width, height in cells
   public var height: Int;
   public var entity: Entity; // area entity
@@ -48,6 +50,9 @@ class Area
 
       generateBuildings();
       generateAI();
+
+      // set path info 
+      _pathEngine = new aPath.Engine(this, width, height);
     }
 
 
@@ -304,8 +309,8 @@ class Area
           var ok = true;
           if (steep)
             {
-              if (doTrace)
-                trace(yy + ',' + xx);
+//              if (doTrace)
+//                trace(yy + ',' + xx);
               ok = isWalkable(yy, xx);
 
               // slight modification - even if endpoint is not walkable, it's still visible
@@ -314,16 +319,15 @@ class Area
             }
           else
             {
-              if (doTrace)
-                trace(xx + ',' + yy);
+//              if (doTrace)
+//                trace(xx + ',' + yy);
               ok = isWalkable(xx, yy);
 
               // slight modification - even if endpoint is not walkable, it's still visible
               if (ox2 == xx && oy2 == yy)
                 ok = true;
             }
-              if (doTrace)
-                trace(xx + ',' + yy);
+
           if (!ok)
             return false;
 
@@ -482,5 +486,19 @@ class Area
           tmp.add(ai);
 
       return tmp;
+    }
+
+
+// get path from x1, y1 -> x2, y2
+  public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node> 
+    {
+      if (!isWalkable(x1, y1) || !isWalkable(x2, y2))
+        return null;
+
+      var t = Sys.cpuTime();
+      _pathEngine.clean();
+      var p = _pathEngine.getPath(x1, y1, x2, y2);
+      trace('path time:' + Std.int((Sys.cpuTime() - t) / 1000.0) + ' ms');
+      return p;
     }
 }

@@ -127,7 +127,15 @@ class AreaManager
             }
 
           var ai = new PoliceAI(game, loc.x, loc.y);
-          ai.alertness = 50; // AI arrive already somewhat alerted
+
+          // called cops have guns
+          ai.inventory.clear();
+          ai.inventory.addID('pistol');
+          ai.skills.addID('pistol', 25 + Std.random(25));
+
+          // and arrive already somewhat alerted
+          ai.alertness = 50;
+
           game.area.addAI(ai);
         }
     }

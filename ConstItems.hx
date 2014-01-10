@@ -33,6 +33,19 @@ class ConstItems
 // all item infos
   public static var items: Array<ItemInfo> = [
     {
+      id: 'baton',
+      name: 'baton',
+      verb1: 'hit',
+      verb2: 'hits',
+      weaponStats:
+        {
+          isRanged: false,
+          skill: 'baton',
+          minDamage: 1,
+          maxDamage: 6
+        }
+    },
+    {
       id: 'pistol',
       name: 'pistol',
       verb1: 'shoot',
@@ -44,7 +57,7 @@ class ConstItems
           minDamage: 1,
           maxDamage: 10
         }
-    }
+    },
     ];
 }
 

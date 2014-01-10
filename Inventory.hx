@@ -18,6 +18,13 @@ class Inventory
     }
 
 
+// clear list
+  public inline function clear()
+    {
+      _list.clear();
+    }
+
+
 // get first item that is a weapon
   public function getFirstWeapon(): Item
     {
@@ -49,7 +56,7 @@ class Inventory
       var tmp = [];
       for (o in _list)
         tmp.push(o.id);
-      return tmp.join(',');
+      return tmp.join(', ');
     }
 
 

@@ -21,10 +21,15 @@ class ConstSkills
       defaultLevel: 50,
     },
     {
+      id: 'baton',
+      name: 'baton',
+      defaultLevel: 40,
+    },
+    {
       id: 'pistol',
       name: 'pistol',
       defaultLevel: 20,
-    }
+    },
     ];
 }
 

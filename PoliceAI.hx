@@ -7,8 +7,7 @@ class PoliceAI extends HumanAI
       super(g, vx, vy);
       type = 'police';
       isAggressive = true;
-
-      inventory.addID('pistol');
-      skills.addID('pistol', 25 + Std.random(25));
+      inventory.addID('baton');
+      skills.addID('baton', 50 + Std.random(25));
     }
 }

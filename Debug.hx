@@ -55,6 +55,9 @@ class Debug
   function spawnCop()
     {
       var ai = new PoliceAI(game, game.player.x, game.player.y);
+      ai.inventory.clear();
+      ai.inventory.addID('baton');
+      ai.skills.addID('baton', 50 + Std.random(25));
       game.area.addAI(ai);
     }
 
