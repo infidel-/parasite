@@ -492,7 +492,7 @@ class Area
 // get path from x1, y1 -> x2, y2
   public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node> 
     {
-      if (!isWalkable(x1, y1) || !isWalkable(x2, y2))
+      if (!isWalkable(x1, y1) || !isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
         return null;
 
       var t = Sys.time();

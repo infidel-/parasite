@@ -116,7 +116,8 @@ class MouseEntity extends Entity
           // default: attack
           else if (_mode == MODE_DEFAULT)
             {
-              if (game.player.state == Player.STATE_HOST && ai != null)
+              if (game.player.state == Player.STATE_HOST && ai != null &&
+                  ai != game.player.host)
                 game.player.actionAttack(ai);
             }
         }

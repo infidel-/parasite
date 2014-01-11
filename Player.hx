@@ -263,6 +263,8 @@ class Player
       var skillLevel = host.skills.getLevel(info.weaponStats.skill) +
         skills.getLevel(info.weaponStats.skill);
 
+      ai.onAttack(); // attack event
+
       // roll skill
       if (Std.random(100) > skillLevel)
         {

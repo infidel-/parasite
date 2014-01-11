@@ -72,6 +72,14 @@ class AreaManager
           else if (e.type == EVENT_ARRIVE_POLICE)
             onArrivePolice(e);
 
+          // police officer called for backup
+          if (e.type == EVENT_CALL_POLICE_BACKUP)
+            onCallPoliceBackup(e);
+
+          // police backup arrives
+          else if (e.type == EVENT_ARRIVE_POLICE_BACKUP)
+            onArrivePoliceBackup(e);
+
           _list.remove(e);
         }
     }
@@ -102,7 +110,7 @@ class AreaManager
       else sdetails = 'wild animal attack';
 
       log('Police has received a report about ' + sdetails + 
-        '. Dispatching available units to the location.');
+        '. Dispatching units to the location.');
 
       if (game.player.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the police!');
@@ -133,8 +141,50 @@ class AreaManager
           ai.inventory.addID('pistol');
           ai.skills.addID('pistol', 25 + Std.random(25));
 
-          // and arrive already somewhat alerted
+          // and arrive already alerted
           ai.alertness = 50;
+
+          game.area.addAI(ai);
+        }
+    }
+
+
+// event: police officer calls for backup 
+  function onCallPoliceBackup(e: AreaEvent)
+    {
+      log('Officer calling for backup. Dispatching units to the location.');
+
+      if (game.player.hears(e.ai.x, e.ai.y))
+        e.ai.log('calls for backup!');
+
+      // move on to arriving
+      add(EVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, 5);
+    }
+
+
+// event: police backup arrives
+  function onArrivePoliceBackup(e: AreaEvent)
+    {
+      log('Police backup arrives on scene!');
+
+      for (i in 0...2)
+        {
+          var loc = game.area.findEmptyLocationNear(e.x, e.y);
+          if (loc == null)
+            {
+              Const.todo('Could not find free spot for spawn!');
+              return;
+            }
+
+          var ai = new PoliceAI(game, loc.x, loc.y);
+
+          // called cops have guns
+          ai.inventory.clear();
+          ai.inventory.addID('pistol');
+          ai.skills.addID('pistol', 25 + Std.random(25));
+
+          // and arrive already alerted
+          ai.alertness = 70;
 
           game.area.addAI(ai);
         }
@@ -157,6 +207,8 @@ class AreaManager
 // event types
   public static var EVENT_CALL_POLICE = 'callPolice';
   public static var EVENT_ARRIVE_POLICE = 'arrivePolice';
+  public static var EVENT_CALL_POLICE_BACKUP = 'callPoliceBackup';
+  public static var EVENT_ARRIVE_POLICE_BACKUP = 'arrivePoliceBackup';
 }
 
 

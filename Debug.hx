@@ -28,6 +28,10 @@ class Debug
           func: gainImprovsMax
         },
         {
+          name: 'Clear AI',
+          func: clearAI
+        },
+        {
           name: 'Spawn a cop',
           func: spawnCop
         },
@@ -84,6 +88,15 @@ class Debug
     }
 
 
+// clear all AI in area
+  function clearAI()
+    {
+      for (ai in game.area.getAIinRadius(game.player.x, game.player.y, 100, false))
+        if (ai != game.player.host)
+          game.area.destroyAI(ai);
+    }
+
+
 // spawn and control host
   function gainHost()
     {
@@ -94,7 +107,7 @@ class Debug
         }
 
       // spawn AI, attach to it and invade
-      var ai = new HumanAI(game, game.player.x, game.player.y);
+      var ai = new CivilianAI(game, game.player.x, game.player.y);
       game.area.addAI(ai);
       game.player.actionDebugAttachAndInvade(ai);
       game.player.hostControl = 100;

@@ -1,5 +1,4 @@
 police pursuit
-police (call for backup on damage)
 learn skills action
 looting bodies
 ai logic on seeing bodies

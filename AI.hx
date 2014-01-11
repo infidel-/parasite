@@ -205,7 +205,6 @@ class AI
         alertTimer = Const.AI_ALERTED_TIMER;
 
       onStateChange(); // dynamic event
-
       updateEntity(); // update icon
     }
 
@@ -472,7 +471,7 @@ class AI
   public function onDamage(damage: Int)
     {
       health -= damage;
-      if (health == 0)
+      if (health == 0) // AI death
         {
           setState(STATE_DEAD);
           onDeath();
@@ -522,7 +521,12 @@ class AI
 
 
 // event dynamic: on state change
-  public dynamic function onStateChange()
+  dynamic function onStateChange()
+    {}
+
+
+// event dynamic: on being attacked 
+  public dynamic function onAttack()
     {}
 
 
