@@ -20,6 +20,10 @@ class Debug
           func: gainHost
         },
         {
+          name: 'Disable LOS',
+          func: disableLOS
+        },
+        {
           name: 'Gain all improvements at level 0',
           func: gainImprovs0
         },
@@ -52,6 +56,15 @@ class Debug
     {
       game.player.vars.energyPerTurn = 0;
       game.log('Energy per turn removed.');
+    }
+
+
+// disable LOS 
+  function disableLOS()
+    {
+      game.player.vars.losEnabled = false;
+      game.area.updateVisibility();
+      game.log('LOS checks for player disabled.');
     }
 
 

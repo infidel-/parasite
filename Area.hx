@@ -360,10 +360,10 @@ class Area
 
 
 // AI turn to act
-  public function aiTurn()
+  public function turn()
     {
       for (ai in _ai)
-        ai.ai();
+        ai.turn();
     }
 
 
@@ -396,15 +396,18 @@ class Area
 
       for (y in y1...y2)
         for (x in x1...x2)
-          if (isVisible(game.player.x, game.player.y, x, y))
+          if (!game.player.vars.losEnabled || 
+              isVisible(game.player.x, game.player.y, x, y))
             _tilemap.setTile(x, y, _cells[x][y]);
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       for (ai in _ai)
-        ai.entity.visible = isVisible(game.player.x, game.player.y, ai.x, ai.y);
+        ai.entity.visible = 
+          (game.player.vars.losEnabled ? isVisible(game.player.x, game.player.y, ai.x, ai.y) : true);
 
       for (obj in _objects)
-        obj.entity.visible = isVisible(game.player.x, game.player.y, obj.x, obj.y);
+        obj.entity.visible =
+          (game.player.vars.losEnabled ? isVisible(game.player.x, game.player.y, obj.x, obj.y) : true);
     }
 
 
@@ -436,12 +439,16 @@ class Area
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       for (ai in _ai)
-        ai.entity.visible = 
-          (HXP.distanceSquared(game.player.x, game.player.y, ai.x, ai.y) < 6 * 6);
+        if (game.player.vars.losEnabled)
+          ai.entity.visible = 
+            (HXP.distanceSquared(game.player.x, game.player.y, ai.x, ai.y) < 6 * 6);
+        else ai.entity.visible = true;
 
       for (obj in _objects)
-        obj.entity.visible = 
-          (HXP.distanceSquared(game.player.x, game.player.y, obj.x, obj.y) < 6 * 6);
+        if (game.player.vars.losEnabled)
+          obj.entity.visible = 
+            (HXP.distanceSquared(game.player.x, game.player.y, obj.x, obj.y) < 6 * 6);
+        else obj.entity.visible = true;
     }
 
 

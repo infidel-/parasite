@@ -29,7 +29,14 @@ class AI
   public var state: String; // AI state
   public var reason: String; // reason for setting this state 
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
-  public var alertTimer: Int; // when alerted, this will go down until AI calms down
+
+  // various AI timers
+  public var timers: {
+    alert: Int, // alerted, count down until AI calms down
+
+    // alerted and player not visible, count down
+//    alertPlayerNotVisible: Int,
+    };
 
   // stats
   public var strength: Int; // physical strength (1-10)
@@ -64,7 +71,12 @@ class AI
       state = STATE_IDLE;
       reason = REASON_NONE;
       alertness = 0;
-      alertTimer = 0;
+      timers = 
+        {
+          alert: 0,
+//          alertPlayerNotVisible: 0
+        };
+
       direction = 0;
       isAggressive = false;
       isNameKnown = false;
@@ -132,40 +144,11 @@ class AI
 
 
 // internal: change direction at random to the empty space
-  function changeRandomDirection()
+  inline function changeRandomDirection()
     {
-/*    
-      // form a temp list of walkable dirs
-      var tmp = [];
-      for (i in 0...Const.dirx.length)
-        {
-          var nx = x + Const.dirx[i];
-          var ny = y + Const.diry[i];
-          var ok = 
-            (game.area.isWalkable(nx, ny) && 
-             !game.area.hasAI(nx, ny) && 
-             !(game.player.x == nx && game.player.y == ny));
-          if (ok)
-            tmp.push(i);
-        }
-
-      // nowhere to go, return
-      if (tmp.length == 0)
-        {
-          trace('ai at (' + x + ',' + y + '): no dirs');
-          return;
-        }
-
-      direction = tmp[Std.random(tmp.length)];
-*/
       direction = game.area.getRandomDirection(x, y);
       if (direction == -1)
         trace('ai at (' + x + ',' + y + '): nowhere to move!');
-/*      
-      if (x < 20 && y < 20) 
-        trace(tmp + ' ai at (' + x + ',' + y + '): dir' + direction +
-          ' n:' + (x + Const.dirx[direction]) + ',' + (y + Const.diry[direction]));
-*/          
     }
 
 
@@ -186,7 +169,7 @@ class AI
 
 
 // is this AI near that spot?
-  public function isNear(xx: Int, yy: Int): Bool
+  public inline function isNear(xx: Int, yy: Int): Bool
     {
       return (Math.abs(xx - x) <= 1 && Math.abs(yy - y) <= 1);
     }
@@ -202,7 +185,7 @@ class AI
       state = vstate;
       reason = vreason;
       if (state == STATE_ALERT)
-        alertTimer = Const.AI_ALERTED_TIMER;
+        timers.alert = Const.AI_ALERTED_TIMER;
 
       onStateChange(); // dynamic event
       updateEntity(); // update icon
@@ -320,13 +303,6 @@ class AI
 // logic: attack player
   function logicAttack()
     {
-      // search for player
-      if (!seesPosition(game.player.x, game.player.y))
-        {
-          logicRoam();
-          return;
-        }
-
       // get current weapon
       var item = inventory.getFirstWeapon();
       var info = null;
@@ -404,11 +380,11 @@ class AI
     {
       // alerted timer update
       if (seesPosition(game.player.x, game.player.y))
-        alertTimer = Const.AI_ALERTED_TIMER;
-      else alertTimer--;
+        timers.alert = Const.AI_ALERTED_TIMER;
+      else timers.alert--;
   
       // AI calms down
-      if (alertTimer == 0)
+      if (timers.alert == 0)
         {
           state = STATE_IDLE;
           alertness = 90;
@@ -422,9 +398,18 @@ class AI
       // call alert logic for this AI type
       else
         {
-          // aggressive AI - attack player if he is near
+          // aggressive AI - attack player if he is near or search for him
           if (isAggressive)
-            logicAttack();
+            {
+              // search for player
+              // we cheat a little and follow invisible player 
+              // before alert timer ends 
+              if (!seesPosition(game.player.x, game.player.y))
+                logicMoveTo(game.player.x, game.player.y);
+
+              // try to attack
+              else logicAttack();
+            }
 
           // not aggressive AI - try to run away
           else logicRunAwayFrom(game.player.x, game.player.y);
@@ -446,7 +431,7 @@ class AI
 
 
 // call AI logic
-  public function ai()
+  public function turn()
     {
       if (state == STATE_IDLE)
         stateIdle();

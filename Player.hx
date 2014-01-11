@@ -51,6 +51,7 @@ class Player
         startHealth: 10,
         startEnergy: 100,
         listenRadius: 10,
+        losEnabled: true
         };
 
       x = vx;
@@ -564,6 +565,7 @@ class Player
     startHealth: Int, // starting parasite health
     startEnergy: Int, // starting parasite energy
     listenRadius: Int, // player listen radius
+    losEnabled: Bool, // LOS checks enabled?
     };
 
 

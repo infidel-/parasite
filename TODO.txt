@@ -1,4 +1,4 @@
-police pursuit
+despawn called cops after they lose sight of player and calm down
 learn skills action
 looting bodies
 ai logic on seeing bodies

@@ -14,11 +14,11 @@ class Engine
   public var height: Int;
   
   public function new(a: Area, w: Int, h: Int){
-      this.map = new Array();
       area = a;
       width = w;
       height = h;
 
+      map = []; 
       for(xi in 0...w)
         {
           map[xi] = []; 
@@ -28,8 +28,12 @@ class Engine
   }
 
 
+// main call: get a path x1, y1 -> x2, y2
   public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<Node> 
     {
+      if (x1 == x2 && y1 == y2)
+        return null;
+
       // clean nodes before another pass
       for (y in 0...height)
         for (x in 0...width)

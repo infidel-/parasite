@@ -62,7 +62,7 @@ class Game
       turns++;
 
       // AI movement
-      area.aiTurn();
+      area.turn();
       if (isFinished)
         return;
 
