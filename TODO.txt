@@ -1,4 +1,4 @@
-learn skills action
+parasite skills window - move society knowledge into it
 looting bodies
 ai logic on seeing bodies
 area alertness

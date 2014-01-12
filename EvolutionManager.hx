@@ -1,6 +1,6 @@
 // parasite evolution manager
 
-import EvolutionConst;
+import ConstEvolution;
 
 
 class EvolutionManager
@@ -23,12 +23,12 @@ class EvolutionManager
       taskID = '';
       isTaskPath = false;
 
-      for (p in EvolutionConst.paths) // we may have hidden paths later ;)
+      for (p in ConstEvolution.paths) // we may have hidden paths later ;)
         _listPaths.add({
           id: p.id,
           ep: 0,
           level: 0,
-          info: EvolutionConst.getPathInfo(p.id)
+          info: ConstEvolution.getPathInfo(p.id)
           });
     }
 
@@ -47,7 +47,7 @@ class EvolutionManager
           path.ep += 10;
 
           // evolution complete
-          if (path.ep >= EvolutionConst.epCostPath[path.level])
+          if (path.ep >= ConstEvolution.epCostPath[path.level])
             {
               var imp = openImprov(taskID);
               if (imp == null)
@@ -75,7 +75,7 @@ class EvolutionManager
           imp.ep += 10;
 
           // upgrade complete
-          if (imp.ep >= EvolutionConst.epCostImprovement[imp.level])
+          if (imp.ep >= ConstEvolution.epCostImprovement[imp.level])
             {
               imp.level++;
               player.log('You have improved your understanding of ' + imp.info.name +
@@ -94,7 +94,7 @@ class EvolutionManager
     {
       // get list of improvs on that path that player does not yet have
       var tmp = [];
-      for (imp in EvolutionConst.improvements)
+      for (imp in ConstEvolution.improvements)
         if (imp.path == path && !isKnown(imp.id))
           tmp.push(imp.id);
 
@@ -118,7 +118,7 @@ class EvolutionManager
         id: id,
         level: 0,
         ep: 0,
-        info: EvolutionConst.getInfo(id)
+        info: ConstEvolution.getInfo(id)
         };
       _list.add(imp);
       return imp;
@@ -216,8 +216,8 @@ class EvolutionManager
       if (taskID == '')
         return "<font color='#FF0000'>None</font>";
       else if (isTaskPath)
-        return EvolutionConst.getPathInfo(taskID).name;
-      else return EvolutionConst.getInfo(taskID).name;
+        return ConstEvolution.getPathInfo(taskID).name;
+      else return ConstEvolution.getInfo(taskID).name;
     }
 }
 

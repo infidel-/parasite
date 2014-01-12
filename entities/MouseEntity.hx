@@ -103,6 +103,8 @@ class MouseEntity extends Entity
               trace('(' + x + ',' + y + ') ' + game.area.getType(x, y) +
                 ' player vis: ' + 
                 game.area.isVisible(game.player.x, game.player.y, x, y, true));
+              if (game.player.x == x && game.player.y == y)
+                Const.debugObject(game.player);
               if (ai != null)
                 Const.debugObject(ai);
 

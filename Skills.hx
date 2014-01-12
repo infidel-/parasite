@@ -12,6 +12,28 @@ class Skills
     }
 
 
+// get random skill
+  public function getRandomSkill(): Skill
+    {
+      if (_list.length == 0)
+        return null;
+
+      var tmp = Lambda.array(_list);
+      return tmp[Std.random(tmp.length)];
+    }
+
+
+// get skill by id
+  public function get(id: String): Skill
+    {
+      for (o in _list)
+        if (o.id == id)
+          return o;
+
+      return null;
+    }
+
+
 // get skill level by id
   public function getLevel(id: String): Int
     {

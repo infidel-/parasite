@@ -382,19 +382,52 @@ class Player
           return;
         }
      
+      game.log('You probe the brain of the host and access its memory.');
+
       var params = evolutionManager.getParams('hostMemory');
       humanSociety += params.humanSociety * host.intellect;
+
+      // can access skills from level 2
+      if (params.hostSkillsMod > 0)
+        actionAccessSkills(params.hostSkillsMod);
+
       hostTimer -= params.hostTimer - host.psyche; // reduce lifetime
       host.onDamage(params.hostHealthBase); // damage host
       if (Std.random(100) < 25)
         host.onDamage(params.hostHealthMod); // more damage if unlucky
 
-      game.log('You probe the brain of the host and access its memory.');
-
       if (!host.isNameKnown)
         {
           host.isNameKnown = true;
           game.log('You find out that the name of this host is ' + host.getName() + '.');
+        }
+    }
+
+
+//  action: access host skills
+  function actionAccessSkills(hostSkillsMod: Float)
+    {
+      var hostSkill = host.skills.getRandomSkill();
+      if (hostSkill == null)
+        return;
+
+      // player already knows this skill better than the host
+      var skill = skills.get(hostSkill.id);
+      if (skill != null && skill.level >= hostSkill.level)
+        return;
+
+      var amount = Std.int((host.intellect / 10.0) * hostSkillsMod * hostSkill.level);
+
+      if (skill == null)
+        {
+          skills.addID(hostSkill.id, amount);
+          game.log('You have learned the basics of ' + hostSkill.info.name + ' skill.');
+        }
+      else
+        {
+          game.log('You have increased your knowledge of ' + hostSkill.info.name +
+            ' skill.');
+          skill.level = Const.clamp(skill.level + amount, 0, hostSkill.level);
         }
     }
 

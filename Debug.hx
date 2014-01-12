@@ -82,7 +82,7 @@ class Debug
 // gain all improvements at level 0 
   function gainImprovs0()
     {
-      for (imp in EvolutionConst.improvements)
+      for (imp in ConstEvolution.improvements)
         if (!game.player.evolutionManager.isKnown(imp.id))
           game.player.evolutionManager.addImprov(imp.id);
     }
@@ -96,7 +96,7 @@ class Debug
       for (imp in game.player.evolutionManager.getList())
         {
           imp.level = 3;
-          imp.ep = EvolutionConst.epCostImprovement[imp.level];
+          imp.ep = ConstEvolution.epCostImprovement[imp.level];
         }
     }
 

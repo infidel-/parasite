@@ -102,7 +102,7 @@ class EvolutionWindow
           buf.add(imp.level);
           if (imp.level < 3)
             buf.add(' (' + imp.ep + '/' + 
-              EvolutionConst.epCostImprovement[imp.level] + ')');
+              ConstEvolution.epCostImprovement[imp.level] + ')');
           buf.add(': ');
           buf.add(imp.info.note + '\n');
 //          if (imp.level > 0)
@@ -119,7 +119,7 @@ class EvolutionWindow
         {
           _actionIDs.add('setPath.' + p.id);
           _actionNames.add('Path of ' + p.info.name + ' (' + p.ep + '/' +
-            EvolutionConst.epCostPath[p.level] + ')');
+            ConstEvolution.epCostPath[p.level] + ')');
         }
 
       buf.add('\nCurrent evolution direction: ');

@@ -1,6 +1,6 @@
 // evolution constants
 
-class EvolutionConst
+class ConstEvolution
 {
   // major evolution paths
   public static var paths: Array<PathInfo> =
@@ -50,8 +50,8 @@ class EvolutionConst
         note: 'Gains access to host memory',
         levelNotes: [
           'Cannot access host brain',
-          'Access with severe problems',
-          'Limited access with some problems',
+          'Access with severe problems (basic knowledge)',
+          'Limited access with some problems (extensive knowledge and basic skills)',
           'Full access',
           ],
         levelParams: [
@@ -59,25 +59,29 @@ class EvolutionConst
             humanSociety: 0,
             hostTimer: 0, 
             hostHealthBase: 0,
-            hostHealthMod: 0
+            hostHealthMod: 0,
+            hostSkillsMod: 0,
           },
           { 
             humanSociety: 0.25, 
             hostTimer: 30, 
             hostHealthBase: 3,
-            hostHealthMod: 2
+            hostHealthMod: 2,
+            hostSkillsMod: 0,
           },
           { 
             humanSociety: 0.5, 
             hostTimer: 20, 
             hostHealthBase: 1,
-            hostHealthMod: 1
+            hostHealthMod: 1,
+            hostSkillsMod: 0.25,  // can access skills from level 2
           },
           { 
             humanSociety: 1.0, 
             hostTimer: 10, 
             hostHealthBase: 0,
-            hostHealthMod: 1
+            hostHealthMod: 1,
+            hostSkillsMod: 0.5,
           },
           ],
       },
