@@ -12,6 +12,13 @@ class Skills
     }
 
 
+// list iterator
+  public function iterator(): Iterator<Skill>
+    {
+      return _list.iterator();
+    }
+
+
 // get random skill
   public function getRandomSkill(): Skill
     {

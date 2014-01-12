@@ -6,6 +6,7 @@ import entities.HUD;
 import entities.MouseEntity;
 import entities.EvolutionWindow;
 import entities.InventoryWindow;
+import entities.SkillsWindow;
 import entities.DebugWindow;
 
 class GameScene extends Scene
@@ -16,6 +17,7 @@ class GameScene extends Scene
   public var hudState: String; // current HUD state (default, evolution, etc)
   public var evolutionWindow: EvolutionWindow; // evolution window
   public var inventoryWindow: InventoryWindow; // inventory window
+  public var skillsWindow: SkillsWindow; // skills window
   public var debugWindow: DebugWindow; // debug window
   public var entityAtlas: TileAtlas; // entity graphics
 
@@ -39,6 +41,7 @@ class GameScene extends Scene
       hud = new HUD(game);
       evolutionWindow = new EvolutionWindow(game);
       inventoryWindow = new InventoryWindow(game);
+      skillsWindow = new SkillsWindow(game);
       debugWindow = new DebugWindow(game);
 
       // init game state
@@ -68,5 +71,6 @@ class GameScene extends Scene
   public static var HUDSTATE_DEFAULT = 'default'; // default
   public static var HUDSTATE_EVOLUTION = 'evolution'; // evolution window open
   public static var HUDSTATE_INVENTORY = 'inventory'; // inventory window open
+  public static var HUDSTATE_SKILLS = 'skills'; // skills window open
   public static var HUDSTATE_DEBUG = 'debug'; // debug window open
 }

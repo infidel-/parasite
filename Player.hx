@@ -262,7 +262,7 @@ class Player
 
       // weapon skill level (ai + parasite bonus)
       var skillLevel = host.skills.getLevel(info.weaponStats.skill) +
-        skills.getLevel(info.weaponStats.skill);
+        0.5 * skills.getLevel(info.weaponStats.skill);
 
       ai.onAttack(); // attack event
 

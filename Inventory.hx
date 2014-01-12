@@ -12,6 +12,7 @@ class Inventory
     }
 
 
+// list iterator
   public function iterator(): Iterator<Item>
     {
       return _list.iterator();

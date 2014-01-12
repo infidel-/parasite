@@ -39,7 +39,8 @@ class PlayerEntity extends PawnEntity
       Input.define("action8", [ Key.DIGIT_8 ]);
       Input.define("action9", [ Key.DIGIT_9 ]);
       Input.define("inventoryWindow", [ Key.F1 ]);
-      Input.define("evolutionWindow", [ Key.F2 ]);
+      Input.define("skillsWindow", [ Key.F2 ]);
+      Input.define("evolutionWindow", [ Key.F3 ]);
       Input.define("exit", [ Key.F4 ]);
       Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
@@ -79,6 +80,8 @@ class PlayerEntity extends PawnEntity
             game.scene.evolutionWindow.hide();
           else if (game.scene.hudState == GameScene.HUDSTATE_INVENTORY)
             game.scene.inventoryWindow.hide();
+          else if (game.scene.hudState == GameScene.HUDSTATE_SKILLS)
+            game.scene.skillsWindow.hide();
           else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
             game.scene.debugWindow.hide();
           else return;
@@ -100,6 +103,13 @@ class PlayerEntity extends PawnEntity
             {
               game.scene.hudState = GameScene.HUDSTATE_EVOLUTION;
               game.scene.evolutionWindow.show();
+            }
+
+          // open skills window
+          else if (Input.pressed("skillsWindow"))
+            {
+              game.scene.hudState = GameScene.HUDSTATE_SKILLS;
+              game.scene.skillsWindow.show();
             }
 
           // open debug window

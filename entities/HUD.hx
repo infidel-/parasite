@@ -129,8 +129,6 @@ class HUD
       // player intent
       buf.add('Turn: ' + game.turns + '\n');
       buf.add('Actions: ' + game.player.ap + '\n');
-      if (game.player.humanSociety > 0)
-        buf.add('Knowledge about human society: ' + game.player.humanSociety + '%\n');
       buf.add('===\n');
 
 //      if (game.player.state == Player.STATE_PARASITE)
@@ -214,7 +212,8 @@ class HUD
       if (game.player.state == Player.STATE_HOST)
         {
           buf.add('\nF1: Inventory\n');
-          buf.add('F2: Controlled evolution\n');
+          buf.add('F2: Skills and knowledge\n');
+          buf.add('F3: Controlled evolution\n');
         }
 
       _textField.htmlText = buf.toString();
