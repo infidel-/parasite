@@ -386,7 +386,7 @@ class AI
       // AI calms down
       if (timers.alert == 0)
         {
-          state = STATE_IDLE;
+          setState(STATE_IDLE); 
           alertness = 90;
           return;
         }

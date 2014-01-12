@@ -2,7 +2,8 @@
 
 class PoliceAI extends HumanAI
 {
-  var backupCalled: Bool; // did this ai called for backup already?
+  public var isBackup: Bool; // is this AI itself backup?
+  var isBackupCalled: Bool; // did this ai called for backup already?
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -15,7 +16,8 @@ class PoliceAI extends HumanAI
       inventory.addID('baton');
       skills.addID('baton', 50 + Std.random(25));
 
-      backupCalled = false;
+      isBackup = false;
+      isBackupCalled = false;
     }
 
 
@@ -24,10 +26,20 @@ class PoliceAI extends HumanAI
     {
       // if this ai has not called for backup yet
       // try it on next turn if not struggling with parasite
-      if (!backupCalled && state == AI.STATE_ALERT && !parasiteAttached)
+      if (!isBackupCalled && state == AI.STATE_ALERT && !parasiteAttached)
         {
-          backupCalled = true;
+          isBackupCalled = true;
           game.areaManager.addAI(this, AreaManager.EVENT_CALL_POLICE_BACKUP, 1);
         }
+    }
+
+
+// event: on state change
+  public override function onStateChange()
+    {
+      // backup despawns when it loses alert state
+      // i could make it roam around for a bit but it's probably not worth it
+      if (state == AI.STATE_IDLE && isBackup)
+        game.area.destroyAI(this);
     }
 }

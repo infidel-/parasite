@@ -102,12 +102,16 @@ class Const
       for (f in Reflect.fields(o))
         {
           var ff = Reflect.field(o, f);
+//          if (f == 'timers')
+//            trace(f + ' ' + Type.getClassName(Type.getClass(ff)));
+//          if (!Reflect.isFunction(ff) && 
+//              (!Reflect.isObject(ff) || Type.getClass(ff) == String || f == 'name'))
           if (!Reflect.isFunction(ff) && 
-              (!Reflect.isObject(ff) || Type.getClass(ff) == String || f == 'name'))
-            trace(f + ': ' + ff);
+              (!Reflect.isObject(ff) || Type.getClassName(Type.getClass(ff)) == null))
+            Sys.println(f + ': ' + ff);
 
           else if (Lambda.has(list, Type.getClass(ff)))
-            trace(f + ': ' + ff);
+            Sys.println(f + ': ' + ff);
         }
     }
 

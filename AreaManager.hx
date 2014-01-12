@@ -184,7 +184,12 @@ class AreaManager
           ai.skills.addID('pistol', 25 + Std.random(25));
 
           // and arrive already alerted
+/*          
           ai.alertness = 70;
+*/        
+          ai.timers.alert = 10;
+          ai.state = AI.STATE_ALERT;
+          ai.isBackup = true;
 
           game.area.addAI(ai);
         }
