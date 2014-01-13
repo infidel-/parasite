@@ -1,14 +1,18 @@
-// object on a map grid
+// object in a map area
 
 import entities.ObjectEntity;
 
-class GridObject
+class AreaObject
 {
   var game: Game; // game state link
 
   public var entity: ObjectEntity; // gui entity
   public var type: String; // object type
 
+  public var isHumanBody: Bool; // is this a human body?
+
+  public var id: Int; // unique object id
+  static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
 
@@ -16,6 +20,8 @@ class GridObject
     {
       game = g;
       type = 'undefined';
+      id = (_maxID++);
+      isHumanBody = false;
 
       x = vx;
       y = vy;

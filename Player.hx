@@ -376,7 +376,7 @@ class Player
   function actionAccessMemory()
     {
       // animals do not have any useful memories
-      if (host.intellect < 2)
+      if (!host.isHuman)
         {
           game.log('The brain of this host contains nothing useful.');
           return;

@@ -21,10 +21,15 @@ class AI
 
   public var isAggressive: Bool; // true - attack in alerted state, false - run away
   public var isNameKnown: Bool; // is real name known to player?
+  public var isHuman: Bool; // is it a human?
 
+  public var id: Int; // unique AI id
+  static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
   var direction: Int; // direction of movement
+
+  var _objectsSeen: List<Int>; // list of object IDs this AI has seen
 
   public var state: String; // AI state
   public var reason: String; // reason for setting this state 
@@ -65,6 +70,7 @@ class AI
           unknownCapped: 'undefined'
         };
 
+      id = (_maxID++);
       x = vx;
       y = vy;
 
@@ -80,6 +86,7 @@ class AI
       direction = 0;
       isAggressive = false;
       isNameKnown = false;
+      isHuman = false;
       parasiteAttached = false;
       strength = 1;
       constitution = 1;
@@ -88,6 +95,7 @@ class AI
       maxHealth = 1;
       health = 1;
       hostExpiryTurns = 10;
+      _objectsSeen = new List<Int>();
 
       inventory = new Inventory();
       skills = new Skills();
@@ -364,6 +372,9 @@ class AI
           return;
         }
 
+      // AI vision
+      visionIdle();
+
       // stand and wonder what happened until alertness go down
       if (alertness > 0)
         return;
@@ -430,6 +441,31 @@ class AI
     }
 
 
+// AI vision: called only in idle state
+  function visionIdle()
+    {
+      // get all objects that this AI sees
+      var tmp = game.area.getObjectsInRadius(x, y, Const.AI_VIEW_DISTANCE, true);
+
+      for (obj in tmp)
+        {
+          // not a body
+          if (obj.type != 'body')
+            continue;
+
+          // already seen
+          if (Lambda.has(_objectsSeen, obj.id))
+            continue;
+
+          // human AI becomes alert on seeing human bodies
+          if (isHuman && obj.isHumanBody)
+            setState(AI.STATE_ALERT, AI.REASON_BODY);
+
+          _objectsSeen.add(obj.id);
+        }
+    }
+
+
 // call AI logic
   public function turn()
     {
@@ -474,7 +510,8 @@ class AI
   public function onDeath()
     {
       game.area.destroyAI(this);
-      game.area.createObject(x, y, 'body', type);
+      var o = game.area.createObject(x, y, 'body', type);
+      o.isHumanBody = isHuman;
       game.area.updateVisibility();
     }
 
@@ -543,6 +580,7 @@ class AI
 
   // AI state change reasons
   public static var REASON_NONE = 'none';
+  public static var REASON_BODY = 'body';
   public static var REASON_ATTACH = 'attach';
   public static var REASON_DETACH = 'detach';
   public static var REASON_HOST = 'host';

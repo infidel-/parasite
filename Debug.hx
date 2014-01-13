@@ -39,6 +39,10 @@ class Debug
           name: 'Spawn a cop',
           func: spawnCop
         },
+        {
+          name: 'Spawn a body',
+          func: spawnBody
+        },
         ];
     }
 
@@ -65,17 +69,6 @@ class Debug
       game.player.vars.losEnabled = false;
       game.area.updateVisibility();
       game.log('LOS checks for player disabled.');
-    }
-
-
-// spawn a cop
-  function spawnCop()
-    {
-      var ai = new PoliceAI(game, game.player.x, game.player.y);
-      ai.inventory.clear();
-      ai.inventory.addID('baton');
-      ai.skills.addID('baton', 50 + Std.random(25));
-      game.area.addAI(ai);
     }
 
 
@@ -128,5 +121,24 @@ class Debug
       // give weapon
       ai.inventory.addID('pistol');
       ai.skills.addID('pistol', 25 + Std.random(25));
+    }
+
+
+// spawn a cop
+  function spawnCop()
+    {
+      var ai = new PoliceAI(game, game.player.x, game.player.y);
+      ai.inventory.clear();
+      ai.inventory.addID('baton');
+      ai.skills.addID('baton', 50 + Std.random(25));
+      game.area.addAI(ai);
+    }
+
+
+// spawn a body
+  function spawnBody()
+    {
+      var o = game.area.createObject(game.player.x, game.player.y, 'body', 'civilian');
+      o.isHumanBody = true;
     }
 }

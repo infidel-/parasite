@@ -99,21 +99,33 @@ class Const
   public static inline function debugObject(o: Dynamic)
     {
       var list: Array<Dynamic> = [ Inventory, Skills ];
-      for (f in Reflect.fields(o))
+      var fields = Reflect.fields(o);
+      fields.sort(sortFunc);
+      for (f in fields) 
         {
           var ff = Reflect.field(o, f);
-//          if (f == 'timers')
+          var className = Type.getClassName(Type.getClass(ff));
+///          if (f == 'timers')
 //            trace(f + ' ' + Type.getClassName(Type.getClass(ff)));
 //          if (!Reflect.isFunction(ff) && 
 //              (!Reflect.isObject(ff) || Type.getClass(ff) == String || f == 'name'))
           if (!Reflect.isFunction(ff) && 
-              (!Reflect.isObject(ff) || Type.getClassName(Type.getClass(ff)) == null))
+              (!Reflect.isObject(ff) || className == null || className == 'String')) 
             Sys.println(f + ': ' + ff);
 
           else if (Lambda.has(list, Type.getClass(ff)))
             Sys.println(f + ': ' + ff);
         }
     }
+
+
+  static function sortFunc(a: String, b: String)
+    {
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    }
+
 
 
 // todo display

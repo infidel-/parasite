@@ -1,7 +1,5 @@
-parasite skills window - move society knowledge into it
-looting bodies
-ai logic on seeing bodies
 area alertness
+looting bodies
 two improvements impl
 global suspicion and what comes with its growth
 moans and screams from low control host + bystanders

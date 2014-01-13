@@ -105,6 +105,8 @@ class AreaManager
       var sdetails;
       if (e.details == AI.REASON_HOST)
         sdetails = 'a suspicious individual';
+      else if (e.details == AI.REASON_BODY)
+        sdetails = 'a dead body';
       else if (e.details == AI.REASON_DAMAGE || e.details == AI.REASON_WITNESS)
         sdetails = 'an attack';
       else sdetails = 'wild animal attack';

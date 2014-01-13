@@ -9,13 +9,13 @@ import com.haxepunk.graphics.Spritemap;
 class ObjectEntity extends Entity
 {
   var game: Game; // game state
-  var object: GridObject; // object link
+  var object: AreaObject; // object link
 
   var _list: Graphiclist; // graphics list
   var _spriteBody: Spritemap; // body sprite map
 
 
-  public function new(o: GridObject, g: Game, xx: Int, yy: Int,
+  public function new(o: AreaObject, g: Game, xx: Int, yy: Int,
       atlasRow: Int, atlasCol: Int)
     {
       super(xx * Const.TILE_WIDTH, yy * Const.TILE_HEIGHT);

@@ -11,7 +11,7 @@ class Area
 
   var _tilemap: Tilemap;
   var _ai: List<AI>;
-  var _objects: List<GridObject>;
+  var _objects: List<AreaObject>;
   var _cells: Array<Array<Int>>; // cell types
   var _pathEngine: aPath.Engine;
 
@@ -28,7 +28,7 @@ class Area
       height = h;
 
       _ai = new List<AI>();
-      _objects = new List<GridObject>();
+      _objects = new List<AreaObject>();
       _tilemap = new Tilemap(tileset, 
         w * Const.TILE_WIDTH, h * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
@@ -150,12 +150,14 @@ class Area
 
 
 // create object with this type
-  public function createObject(x: Int, y: Int, type: String, parentType: String)
+  public function createObject(x: Int, y: Int, type: String, parentType: String): AreaObject
     {
-      var o = new GridObject(game, x, y);
+      var o = new AreaObject(game, x, y);
       o.type = type;
       o.createEntity(parentType);
       _objects.add(o);
+
+      return o;
     }
 
 
@@ -491,6 +493,21 @@ class Area
         if (HXP.distanceSquared(x, y, ai.x, ai.y) <= dist * dist &&
             (!los || game.area.isVisible(ai.x, ai.y, x, y)))
           tmp.add(ai);
+
+      return tmp;
+    }
+
+
+// get all objects in radius from that x,y
+// los - must have los to that location
+  public function getObjectsInRadius(x: Int, y: Int, dist: Int, los: Bool): List<AreaObject>
+    {
+      var tmp = new List<AreaObject>();
+
+      for (o in _objects)
+        if (HXP.distanceSquared(x, y, o.x, o.y) <= dist * dist &&
+            (!los || game.area.isVisible(o.x, o.y, x, y)))
+          tmp.add(o);
 
       return tmp;
     }

@@ -8,6 +8,7 @@ class HumanAI extends AI
       type = 'human';
       name.real = name.realCapped = 'Joe Smith';
 
+      isHuman = true;
       strength = 4 + Std.random(4);
       constitution = 4 + Std.random(4);
       intellect = 4 + Std.random(4);
