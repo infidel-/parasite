@@ -88,7 +88,9 @@ class OrgansWindow
       var n = 0;
       for (organ in game.player.host.organs)
         {
-          buf.add(organ.info.name + ': ' + organ.info.note + '\n');
+          buf.add(organ.info.name +
+            (organ.isReady ? '' : ' (' + organ.gp + '/' + organ.info.gp + 'gp)') +
+            ' [' + organ.info.note + ']\n');
           n++;
         }
 
@@ -106,6 +108,10 @@ class OrgansWindow
 
           var organ = imp.info.organ;
 
+          // organ already completed
+          if (game.player.host.organs.getReady(organ.id) != null)
+            continue;
+
           _actionIDs.add('set.' + imp.id);
           _actionNames.add(organ.name + ' (' + organ.gp + 'gp)' +
             ' [' + organ.note + ']');
@@ -119,6 +125,9 @@ class OrgansWindow
       var n = 1;
       for (a in _actionNames)
         buf.add((n++) + ': ' + a + '\n');
+
+      if (_actionNames.length == 0)
+        buf.add('  --- empty ---\n');
 
       _textField.htmlText = buf.toString();
       _back.graphics.clear();

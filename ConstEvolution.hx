@@ -19,14 +19,14 @@ class ConstEvolution
       {
         path: 'conceal',
         id: 'hostRelease',
-        name: 'Host release process',
-        note: 'Controls what happens to the host when parasite leaves.',
+        name: '[TODO] Host release process',
+        note: 'Controls what happens to the host when parasite leaves',
         organ: null,
         levelNotes: [
-          'Host dies with its brain melting and dripping out of its ears.',
-          'Host becomes crazy. [TODO]',
-          'Host is left intact - alive and conscious with all memory wiped. [TODO]',
-          'Host is left alive and conscious, and is implanted with fake memories. [TODO]',
+          'Host dies with its brain melting and dripping out of its ears',
+          'Host becomes crazy [TODO]',
+          'Host is left intact - alive and conscious with all memory wiped [TODO]',
+          'Host is left alive and conscious, and is implanted with fake memories [TODO]',
           ],
         levelParams: []
       },
@@ -34,18 +34,18 @@ class ConstEvolution
         path: 'conceal',
         id: 'chameleonSkin',
         name: '[TODO] Chameleon skin',
-        note: 'Allows covering parasite body with a temporary camouflage layer that looks like host skin and clothing.',
+        note: 'Allows covering parasite body with a temporary camouflage layer that looks like host skin and clothing',
         organ: {
           id: 'camouflageLayer',
           name: 'Camouflage layer',
-          note: 'Temporary camouflage layer that covers parasite body changing its appearance.',
+          note: 'Temporary camouflage layer that covers parasite body changing its appearance',
           gp: 100
           },
         levelNotes: [
-          'A perfectly visible huge purple blob on head and upper body of the host.',
-          'Streaks of purple running through the partly grown camouflage layer.',
-          'Parasite body is mostly covered by camouflage layer.',
-          'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders.',
+          'A perfectly visible huge purple blob on head and upper body of the host',
+          'Streaks of purple running through the partly grown camouflage layer',
+          'Parasite body is mostly covered by camouflage layer',
+          'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
           ],
         levelParams: [
           {

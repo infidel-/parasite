@@ -103,24 +103,16 @@ class Game
 
 
 // update HUD state from game state
-  public function updateHUD()
+  public inline function updateHUD()
     {
       scene.hud.update(); // update hud state
     }
 
 
 // add entry to game log
-  public function log(s: String, ?col: Int = 0)
+  public inline function log(s: String, ?col: Int = 0)
     { 
       Sys.println(s);
-
-      var colstr = '#FFFFFF';
-      if (col == Const.COLOR_ALERT)
-        colstr = '#FF0000';
-      else if (col == Const.COLOR_EVOLUTION)
-        colstr = '#00FFFF';
-      else if (col == Const.COLOR_AREA)
-        colstr = '#00AA00';
-      scene.hud.log("<font color='" + colstr + "'>" + s + "</font>");
+      scene.hud.log("<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>");
     }
 }

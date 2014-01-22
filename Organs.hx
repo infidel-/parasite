@@ -26,6 +26,26 @@ class Organs
     }
 
 
+// passage of time
+  public function turn()
+    {
+      // no organ selected
+      if (currentOrgan == null)
+        return;
+
+      currentOrgan.gp += 10;
+      game.player.energy -= 5;
+
+      // organ not grown yet
+      if (currentOrgan.gp < currentOrgan.info.gp)
+        return;
+
+      currentOrgan.isReady = true;
+      game.log(currentOrgan.info.name + ' growth completed.', Const.COLOR_ORGAN);
+      currentOrgan = null;
+    }
+
+
 // player action (called from the gui window))
   public function action(id: String)
     {
@@ -36,8 +56,51 @@ class Organs
         throw(actionName);
 
       var imp = game.player.evolutionManager.getImprov(actionID);
-//      currentOrgan = imp.or
-      trace(imp.info.name);
+
+      // if this organ does not exist yet, create it
+      var o = get(imp.info.organ.id);
+      if (o == null)
+        {
+          currentOrgan = {
+            id: imp.info.organ.id,
+            isReady: false,
+            gp: 0,
+            improvInfo: imp.info,
+            info: imp.info.organ
+            };
+          _list.add(currentOrgan);
+        }
+      else currentOrgan = o;
+    }
+
+
+// has this organ? 
+  public function has(id: String): Bool 
+    {
+      for (o in _list)
+        if (o.id == id)
+          return true;
+
+      return false;
+    }
+
+
+// get organ by id
+  public function get(id: String): Organ
+    {
+      for (o in _list)
+        if (o.id == id)
+          return o;
+
+      return null;
+    }
+
+
+// get ready organ by id
+  public inline function getReady(id: String): Organ
+    {
+      var o = get(id);
+      return ((o != null && o.isReady) ? o : null);
     }
 
 

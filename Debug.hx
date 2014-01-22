@@ -78,6 +78,7 @@ class Debug
       for (imp in ConstEvolution.improvements)
         if (!game.player.evolutionManager.isKnown(imp.id))
           game.player.evolutionManager.addImprov(imp.id);
+      game.log('All evolution improvements gained at level 0');
     }
 
 
@@ -91,6 +92,7 @@ class Debug
           imp.level = 3;
           imp.ep = ConstEvolution.epCostImprovement[imp.level];
         }
+      game.log('All evolution improvements gained at max level');
     }
 
 

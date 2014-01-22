@@ -2,13 +2,7 @@ import com.haxepunk.Scene;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
 
-import entities.HUD;
-import entities.MouseEntity;
-import entities.EvolutionWindow;
-import entities.InventoryWindow;
-import entities.SkillsWindow;
-import entities.OrgansWindow;
-import entities.DebugWindow;
+import entities.*;
 
 class GameScene extends Scene
 {

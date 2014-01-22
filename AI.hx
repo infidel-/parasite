@@ -362,9 +362,16 @@ class AI
       if (seesPosition(game.player.x, game.player.y))
         {
           var distance = Const.getDist(x, y, game.player.x, game.player.y);
-          var params = game.player.evolutionManager.getParams('chameleonSkin');
-          var baseAlertness = 
-            (game.player.state == Player.STATE_HOST ? params.baseAlertness : 3);
+
+          // check if player is on a host and has active camouflage layer
+          var hasCamo = (game.player.state == Player.STATE_HOST ? 
+            game.player.host.organs.has('camouflageLayer') : false);
+          var baseAlertness = 3;
+          if (hasCamo)
+            {
+              var params = game.player.evolutionManager.getParams('chameleonSkin');
+              baseAlertness = params.baseAlertness;
+            }
           alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
         }
       else alertness -= 5;
@@ -436,6 +443,9 @@ class AI
 // state: host logic
   function stateHost()
     {
+      // organ growth
+      organs.turn();
+
       // random: try to tear parasite away
       if (game.player.hostControl < 25 && Std.random(100) < 5)
         {

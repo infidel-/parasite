@@ -1,4 +1,3 @@
-host appearance imp
 looting bodies
 improvements impl: host appearance, host release, body dissolution
 global suspicion and what comes with its growth (no global suspicion?)

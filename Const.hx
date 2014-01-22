@@ -16,6 +16,11 @@ class Const
   public static var COLOR_ALERT = 1;
   public static var COLOR_EVOLUTION = 2;
   public static var COLOR_AREA = 3;
+  public static var COLOR_ORGAN = 4;
+
+  // text color strings
+  public static var TEXT_COLORS = 
+    [ '#FFFFFF', '#FF0000', '#00FFFF', '#00AA00', '#DDDD00' ];
 
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;
@@ -91,7 +96,7 @@ class Const
 // log all object string and int properties 
   public static inline function debugObject(o: Dynamic)
     {
-      var list: Array<Dynamic> = [ Inventory, Skills ];
+      var list: Array<Dynamic> = [ Inventory, Skills, Organs ];
       var fields = Reflect.fields(o);
       fields.sort(sortFunc);
       for (f in fields) 
