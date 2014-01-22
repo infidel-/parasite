@@ -54,6 +54,7 @@ class AI
 
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
+  public var organs: Organs; // AI organs
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
@@ -99,6 +100,7 @@ class AI
 
       inventory = new Inventory();
       skills = new Skills();
+      organs = new Organs(game, this);
     }
 
 
@@ -165,7 +167,7 @@ class AI
     {
       // too far away
       var distSqr = Const.getDistSquared(x, y, xx, yy);
-      if (distSqr > Const.AI_VIEW_DISTANCE * Const.AI_VIEW_DISTANCE)
+      if (distSqr > VIEW_DISTANCE * VIEW_DISTANCE)
         return false;
 
       // check for visibility
@@ -193,7 +195,7 @@ class AI
       state = vstate;
       reason = vreason;
       if (state == STATE_ALERT)
-        timers.alert = Const.AI_ALERTED_TIMER;
+        timers.alert = ALERTED_TIMER;
 
       onStateChange(); // dynamic event
       updateEntity(); // update icon
@@ -360,7 +362,10 @@ class AI
       if (seesPosition(game.player.x, game.player.y))
         {
           var distance = Const.getDist(x, y, game.player.x, game.player.y);
-          alertness += 3 * (Const.AI_VIEW_DISTANCE + 1 - distance);
+          var params = game.player.evolutionManager.getParams('chameleonSkin');
+          var baseAlertness = 
+            (game.player.state == Player.STATE_HOST ? params.baseAlertness : 3);
+          alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
         }
       else alertness -= 5;
 
@@ -391,7 +396,7 @@ class AI
     {
       // alerted timer update
       if (seesPosition(game.player.x, game.player.y))
-        timers.alert = Const.AI_ALERTED_TIMER;
+        timers.alert = ALERTED_TIMER;
       else timers.alert--;
   
       // AI calms down
@@ -445,7 +450,7 @@ class AI
   function visionIdle()
     {
       // get all objects that this AI sees
-      var tmp = game.area.getObjectsInRadius(x, y, Const.AI_VIEW_DISTANCE, true);
+      var tmp = game.area.getObjectsInRadius(x, y, VIEW_DISTANCE, true);
 
       for (obj in tmp)
         {
@@ -571,6 +576,12 @@ class AI
 
 
 // =================================================================================
+  // AI view and hear distance
+  public static var VIEW_DISTANCE = 10;
+  public static var HEAR_DISTANCE = 15;
+
+  // number of turns AI stays alerted
+  public static var ALERTED_TIMER = 10;
 
   // AI states
   public static var STATE_IDLE = 'idle';

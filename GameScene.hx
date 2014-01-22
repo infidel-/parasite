@@ -7,6 +7,7 @@ import entities.MouseEntity;
 import entities.EvolutionWindow;
 import entities.InventoryWindow;
 import entities.SkillsWindow;
+import entities.OrgansWindow;
 import entities.DebugWindow;
 
 class GameScene extends Scene
@@ -18,6 +19,7 @@ class GameScene extends Scene
   public var evolutionWindow: EvolutionWindow; // evolution window
   public var inventoryWindow: InventoryWindow; // inventory window
   public var skillsWindow: SkillsWindow; // skills window
+  public var organsWindow: OrgansWindow; // organs window
   public var debugWindow: DebugWindow; // debug window
   public var entityAtlas: TileAtlas; // entity graphics
 
@@ -42,6 +44,7 @@ class GameScene extends Scene
       evolutionWindow = new EvolutionWindow(game);
       inventoryWindow = new InventoryWindow(game);
       skillsWindow = new SkillsWindow(game);
+      organsWindow = new OrgansWindow(game);
       debugWindow = new DebugWindow(game);
 
       // init game state
@@ -72,5 +75,6 @@ class GameScene extends Scene
   public static var HUDSTATE_EVOLUTION = 'evolution'; // evolution window open
   public static var HUDSTATE_INVENTORY = 'inventory'; // inventory window open
   public static var HUDSTATE_SKILLS = 'skills'; // skills window open
+  public static var HUDSTATE_ORGANS = 'organs'; // organs window open
   public static var HUDSTATE_DEBUG = 'debug'; // debug window open
 }

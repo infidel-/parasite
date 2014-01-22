@@ -108,10 +108,12 @@ class EvolutionWindow
 //          if (imp.level > 0)
           buf.add('  ' + imp.info.levelNotes[imp.level] + '\n');
 
-          _actionIDs.add('set.' + imp.id);
           if (imp.level < 3)
-            _actionNames.add(imp.info.name + 
-              ' (' + imp.info.levelNotes[imp.level + 1] + ')');
+            {
+              _actionIDs.add('set.' + imp.id);
+              _actionNames.add(imp.info.name + 
+                ' (' + imp.info.levelNotes[imp.level + 1] + ')');
+            }
         }
 
       // add paths
@@ -133,7 +135,7 @@ class EvolutionWindow
       
       _textField.htmlText = buf.toString();
       _back.graphics.clear();
-      _back.graphics.beginFill(0x202020, .75);
+      _back.graphics.beginFill(0x202020, .95);
       _back.graphics.drawRect(0, 0, _textField.width, _textField.height);
     }
 }

@@ -41,7 +41,8 @@ class PlayerEntity extends PawnEntity
       Input.define("inventoryWindow", [ Key.F1 ]);
       Input.define("skillsWindow", [ Key.F2 ]);
       Input.define("evolutionWindow", [ Key.F3 ]);
-      Input.define("exit", [ Key.F4 ]);
+      Input.define("organsWindow", [ Key.F4 ]);
+      Input.define("exit", [ Key.F8 ]);
       Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
 
@@ -82,6 +83,8 @@ class PlayerEntity extends PawnEntity
             game.scene.inventoryWindow.hide();
           else if (game.scene.hudState == GameScene.HUDSTATE_SKILLS)
             game.scene.skillsWindow.hide();
+          else if (game.scene.hudState == GameScene.HUDSTATE_ORGANS)
+            game.scene.organsWindow.hide();
           else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
             game.scene.debugWindow.hide();
           else return;
@@ -110,6 +113,13 @@ class PlayerEntity extends PawnEntity
             {
               game.scene.hudState = GameScene.HUDSTATE_SKILLS;
               game.scene.skillsWindow.show();
+            }
+
+          // open organs window
+          else if (Input.pressed("organsWindow") && game.player.state == Player.STATE_HOST)
+            {
+              game.scene.hudState = GameScene.HUDSTATE_ORGANS;
+              game.scene.organsWindow.show();
             }
 
           // open debug window
@@ -177,6 +187,8 @@ class PlayerEntity extends PawnEntity
               game.scene.hud.action(i);
             else if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
               game.scene.evolutionWindow.action(i);
+            else if (game.scene.hudState == GameScene.HUDSTATE_ORGANS)
+              game.scene.organsWindow.action(i);
             else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
               game.scene.debugWindow.action(i);
             break;

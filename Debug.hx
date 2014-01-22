@@ -121,6 +121,7 @@ class Debug
       // give weapon
       ai.inventory.addID('pistol');
       ai.skills.addID('pistol', 25 + Std.random(25));
+//      ai.organs.addID('camouflageLayer');
     }
 
 

@@ -167,8 +167,11 @@ class EvolutionManager
   public function getParams(id: String): Dynamic
     {
       var imp = getImprov(id);
-      if (imp == null)
-        return null;
+      if (imp == null) // improvement not learned yet
+        {
+          var info = ConstEvolution.getInfo(id);
+          return info.levelParams[0];
+        }
 
       return imp.info.levelParams[imp.level];
     }

@@ -92,7 +92,7 @@ class AreaManager
   public function onAttack(x: Int, y: Int, isRanged: Bool)
     {
       var tmp = game.area.getAIinRadius(x, y, 
-        (isRanged ? Const.AI_HEAR_DISTANCE : Const.AI_VIEW_DISTANCE), isRanged);
+        (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
       for (ai in tmp)
         if (ai.state == AI.STATE_IDLE)
           ai.setState(AI.STATE_ALERT, AI.REASON_WITNESS);

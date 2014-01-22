@@ -21,6 +21,7 @@ class ConstEvolution
         id: 'hostRelease',
         name: 'Host release process',
         note: 'Controls what happens to the host when parasite leaves.',
+        organ: null,
         levelNotes: [
           'Host dies with its brain melting and dripping out of its ears.',
           'Host becomes crazy. [TODO]',
@@ -31,16 +32,35 @@ class ConstEvolution
       },
       {
         path: 'conceal',
-        id: 'hostAppearance',
-        name: 'Host appearance',
-        note: 'Controls host appearance to passers by.',
+        id: 'chameleonSkin',
+        name: '[TODO] Chameleon skin',
+        note: 'Allows covering parasite body with a temporary camouflage layer that looks like host skin and clothing.',
+        organ: {
+          id: 'camouflageLayer',
+          name: 'Camouflage layer',
+          note: 'Temporary camouflage layer that covers parasite body changing its appearance.',
+          gp: 100
+          },
         levelNotes: [
-          'Host looks and walks like a zombie with a huge purple blob on his neck. [TODO Alertness formula]',
-          'Host looks and walks like a zombie, no huge purple blob, just some streaks here and there. [TODO]',
-          'Host looks and walks almost like a human, but is still a bit creepy. [TODO]',
-          'Parasite is either completely inside of the host body or changes its protective cover visually to look like human skin. [TODO]',
+          'A perfectly visible huge purple blob on head and upper body of the host.',
+          'Streaks of purple running through the partly grown camouflage layer.',
+          'Parasite body is mostly covered by camouflage layer.',
+          'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders.',
           ],
-        levelParams: []
+        levelParams: [
+          {
+            baseAlertness: 3,
+          },
+          {
+            baseAlertness: 2,
+          },
+          {
+            baseAlertness: 1,
+          },
+          {
+            baseAlertness: 0.5,
+          },
+          ]
       },
 
       {
@@ -48,6 +68,7 @@ class ConstEvolution
         id: 'hostMemory',
         name: 'Host memory',
         note: 'Gains access to host memory',
+        organ: null,
         levelNotes: [
           'Cannot access host brain',
           'Access with severe problems (basic knowledge)',
@@ -92,6 +113,7 @@ class ConstEvolution
         id: '',
         name: '',
         note: '',
+        organ: null,
         levelNotes: [
           '',
           '',
@@ -126,6 +148,17 @@ class ConstEvolution
     }
 
 
+// get improvement info by organ id
+  public static function getInfoByOrganID(id: String): ImprovInfo
+    {
+      for (imp in improvements)
+        if (imp.organ != null && imp.organ.id == id)
+          return imp;
+
+      return null;
+    }
+
+
 // get path info
   public static function getPathInfo(id: String): PathInfo
     {
@@ -144,6 +177,7 @@ typedef ImprovInfo =
   var path: String; // path string ID
   var name: String; // improvement name
   var note: String; // improvement description
+  var organ: OrganInfo; // organ that can be grown
   var levelNotes: Array<String>; // improvement descriptions for different levels
   var levelParams: Array<Dynamic>; // improvement-specific parameters for different levels
 }
@@ -154,3 +188,11 @@ typedef PathInfo =
   var name: String; // path name
 }
 
+
+typedef OrganInfo =
+{
+  var id: String; // string ID
+  var name: String; // name
+  var note: String; // description
+  var gp: Int; // gp cost to grow
+}

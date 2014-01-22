@@ -1,7 +1,7 @@
-area alertness
+host appearance imp
 looting bodies
-two improvements impl
-global suspicion and what comes with its growth
+improvements impl: host appearance, host release, body dissolution
+global suspicion and what comes with its growth (no global suspicion?)
 moans and screams from low control host + bystanders
 barks, gasps, moans, etc - AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
 
@@ -10,8 +10,8 @@ write about getPixels/setPixels bug
 
 MASTERPLAN
 ============
-combat
 area alertness
+area interest
 human biology knowledge
 canine biology knowledge
 organ growth
@@ -27,3 +27,4 @@ LATER
 armor - vest + helmet
 stunner
 electric discharge improv + battery organ + stun attack
+parasite smell + dogs + reducing smell intensivity imp

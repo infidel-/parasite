@@ -131,6 +131,7 @@ class HUD
       buf.add('Actions: ' + game.player.ap + '\n');
       buf.add('===\n');
 
+/*
 //      if (game.player.state == Player.STATE_PARASITE)
       buf.add('Chemical A: ' + game.player.chemicals[0] +
         '/' + game.player.maxChemicals[0] + '\n');
@@ -138,6 +139,7 @@ class HUD
         '/' + game.player.maxChemicals[1] + '\n');
       buf.add('Chemical C: ' + game.player.chemicals[2] +
         '/' + game.player.maxChemicals[2] + '\n');
+*/        
       var colEnergy = 
         (game.player.energy > 0.3 * game.player.maxEnergy ? '#FFFFFF' : '#FF0000');
       buf.add('Energy: ' + 
@@ -214,6 +216,7 @@ class HUD
           buf.add('\nF1: Inventory\n');
           buf.add('F2: Skills and knowledge\n');
           buf.add('F3: Controlled evolution\n');
+          buf.add('F4: Body features\n');
         }
 
       _textField.htmlText = buf.toString();

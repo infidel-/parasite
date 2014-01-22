@@ -1,4 +1,4 @@
-// inventory GUI window
+// organs GUI window
 
 package entities;
 
@@ -10,21 +10,21 @@ import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
 
-class InventoryWindow
+class OrgansWindow
 {
   var game: Game; // game state
 
   var _textField: TextField; // text field
   var _back: Sprite; // window background
-//  var _actionNames: List<String>; // list of currently available actions (names)
-//  var _actionIDs: List<String>; // list of currently available actions (string IDs)
+  var _actionNames: List<String>; // list of currently available actions (names)
+  var _actionIDs: List<String>; // list of currently available actions (string IDs)
 
   public function new(g: Game)
     {
       game = g;
 
-//      _actionNames = new List<String>();
-//      _actionIDs = new List<String>();
+      _actionNames = new List<String>();
+      _actionIDs = new List<String>();
 
       // actions list
       var font = Assets.getFont("font/04B_03__.ttf");
@@ -40,15 +40,28 @@ class InventoryWindow
       HXP.stage.addChild(_back);
     }
 
-/*
+
 // call action by id
   public function action(index: Int)
     {
-      game.debug.action(index - 1);
+      // find action name by index
+      var i = 1;
+      var actionName = null;
+      for (a in _actionIDs)
+        if (i++ == index)
+          {
+            actionName = a;
+            break;
+          }
+      if (actionName == null)
+        return;
+
+      // do action
+      game.player.host.organs.action(actionName);
       update(); // update display
       game.scene.hud.update(); // update HUD
     }
-*/
+
 
 // update and show window
   public function show()
@@ -69,18 +82,43 @@ class InventoryWindow
   function update()
     {
       var buf = new StringBuf();
-      buf.add('Inventory\n===\n\n');
+      buf.add('Body features\n===\n\n');
 
-      // draw a list of items
+      // draw a list of organs
       var n = 0;
-      for (item in game.player.host.inventory)
+      for (organ in game.player.host.organs)
         {
+          buf.add(organ.info.name + ': ' + organ.info.note + '\n');
           n++;
-          buf.add(item.info.name + '\n');
         }
 
       if (n == 0)
         buf.add('  --- empty ---\n');
+
+      // form a list of actions
+      _actionNames.clear();
+      _actionIDs.clear();
+      for (imp in game.player.evolutionManager.getList())
+        {
+          // improvement not available yet or no organs
+          if (imp.level == 0 || imp.info.organ == null)
+            continue;
+
+          var organ = imp.info.organ;
+
+          _actionIDs.add('set.' + imp.id);
+          _actionNames.add(organ.name + ' (' + organ.gp + 'gp)' +
+            ' [' + organ.note + ']');
+        }
+
+      buf.add('\nGrowing body feature: ');
+      buf.add(game.player.host.organs.getGrowInfo());
+
+      // add list of actions
+      buf.add('\n\nSelect body feature to grow:\n\n');
+      var n = 1;
+      for (a in _actionNames)
+        buf.add((n++) + ': ' + a + '\n');
 
       _textField.htmlText = buf.toString();
       _back.graphics.clear();

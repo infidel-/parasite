@@ -1,4 +1,4 @@
-// player/AI 
+// player/AI skills
 
 import ConstSkills;
 
