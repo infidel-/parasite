@@ -1,5 +1,7 @@
 // debug actions
 
+import ai.*;
+
 class Debug
 {
   var game: Game;
@@ -42,6 +44,10 @@ class Debug
         {
           name: 'Spawn a body',
           func: spawnBody
+        },
+        {
+          name: 'Show area manager queue',
+          func: showAreaManagerQueue
         },
         ];
     }
@@ -124,6 +130,7 @@ class Debug
       ai.inventory.addID('pistol');
       ai.skills.addID('pistol', 25 + Std.random(25));
 //      ai.organs.addID('camouflageLayer');
+      ai.organs.addID('decayAccel');
     }
 
 
@@ -141,7 +148,18 @@ class Debug
 // spawn a body
   function spawnBody()
     {
-      var o = game.area.createObject(game.player.x, game.player.y, 'body', 'civilian');
+//      var o = game.area.createObject(game.player.x, game.player.y, 'body', 'civilian');
+      var o = new BodyObject(game, game.player.x, game.player.y, 'civilian');
       o.isHumanBody = true;
+      o.setDecay(1);
+
+      game.area.debugShowObjects();
+    }
+
+
+// show area manager queue
+  function showAreaManagerQueue()
+    {
+      game.areaManager.debugShowQueue();
     }
 }

@@ -1,5 +1,7 @@
 // AI for civilians 
 
+package ai;
+
 class CivilianAI extends HumanAI
 {
   public function new(g: Game, vx: Int, vy: Int)

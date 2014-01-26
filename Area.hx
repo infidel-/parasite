@@ -3,6 +3,7 @@
 import com.haxepunk.Entity;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.Tilemap;
+import ai.*;
 
 
 class Area
@@ -11,7 +12,7 @@ class Area
 
   var _tilemap: Tilemap;
   var _ai: List<AI>;
-  var _objects: List<AreaObject>;
+  var _objects: Map<Int, AreaObject>;
   var _cells: Array<Array<Int>>; // cell types
   var _pathEngine: aPath.Engine;
 
@@ -28,7 +29,7 @@ class Area
       height = h;
 
       _ai = new List<AI>();
-      _objects = new List<AreaObject>();
+      _objects = new Map<Int, AreaObject>();
       _tilemap = new Tilemap(tileset, 
         w * Const.TILE_WIDTH, h * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
@@ -148,16 +149,39 @@ class Area
         }
     }
 
-
+/*
 // create object with this type
   public function createObject(x: Int, y: Int, type: String, parentType: String): AreaObject
     {
       var o = new AreaObject(game, x, y);
       o.type = type;
       o.createEntity(parentType);
-      _objects.add(o);
+      _objects.set( o.id, o);
 
       return o;
+    }
+*/
+
+// add object to area
+  public inline function addObject(o: AreaObject)
+    {
+      _objects.set( o.id, o);
+
+    }
+
+
+// get object by id
+  public inline function getObject(id: Int): AreaObject
+    {
+      return _objects.get(id);
+    }
+
+
+// remove object
+  public inline function removeObject(o: AreaObject)
+    {
+      game.scene.remove(o.entity); 
+      _objects.remove(o.id);
     }
 
 
@@ -523,5 +547,13 @@ class Area
       var p = _pathEngine.getPath(x1, y1, x2, y2);
       trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');
       return p;
+    }
+
+
+// DEBUG: show all objects
+  public function debugShowObjects()
+    {
+      for (o in _objects)
+        trace(o);
     }
 }

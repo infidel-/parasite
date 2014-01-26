@@ -1,5 +1,7 @@
 // NPC AI game state
 
+package ai;
+
 import entities.AIEntity;
 
 class AI
@@ -369,7 +371,7 @@ class AI
           var baseAlertness = 3;
           if (hasCamo)
             {
-              var params = game.player.evolutionManager.getParams('chameleonSkin');
+              var params = game.player.evolutionManager.getParams('camouflageLayer');
               baseAlertness = params.baseAlertness;
             }
           alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
@@ -472,8 +474,10 @@ class AI
           if (Lambda.has(_objectsSeen, obj.id))
             continue;
 
+          var body: BodyObject = untyped obj;
+
           // human AI becomes alert on seeing human bodies
-          if (isHuman && obj.isHumanBody)
+          if (isHuman && body.isHumanBody)
             setState(AI.STATE_ALERT, AI.REASON_BODY);
 
           _objectsSeen.add(obj.id);
@@ -525,7 +529,16 @@ class AI
   public function onDeath()
     {
       game.area.destroyAI(this);
-      var o = game.area.createObject(x, y, 'body', type);
+      var o = new BodyObject(game, x, y, type);
+
+      // decay acceleration
+      var organ = organs.getActive('decayAccel');
+      if (organ != null)
+        {
+          var params = ConstEvolution.getParams('decayAccel', organ.level);
+          o.setDecay(params.turns);
+        }
+
       o.isHumanBody = isHuman;
       game.area.updateVisibility();
     }

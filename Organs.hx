@@ -1,5 +1,6 @@
 // AI organs and other body features like camouflage layers etc
 
+import ai.AI;
 import ConstEvolution;
 
 class Organs
@@ -40,7 +41,7 @@ class Organs
       if (currentOrgan.gp < currentOrgan.info.gp)
         return;
 
-      currentOrgan.isReady = true;
+      currentOrgan.isActive = true;
       game.log(currentOrgan.info.name + ' growth completed.', Const.COLOR_ORGAN);
       currentOrgan = null;
     }
@@ -58,12 +59,13 @@ class Organs
       var imp = game.player.evolutionManager.getImprov(actionID);
 
       // if this organ does not exist yet, create it
-      var o = get(imp.info.organ.id);
+      var o = get(imp.id);
       if (o == null)
         {
           currentOrgan = {
-            id: imp.info.organ.id,
-            isReady: false,
+            id: imp.id,
+            level: imp.level, 
+            isActive: false,
             gp: 0,
             improvInfo: imp.info,
             info: imp.info.organ
@@ -96,18 +98,18 @@ class Organs
     }
 
 
-// get ready organ by id
-  public inline function getReady(id: String): Organ
+// get active organ by id
+  public inline function getActive(id: String): Organ
     {
       var o = get(id);
-      return ((o != null && o.isReady) ? o : null);
+      return ((o != null && o.isActive) ? o : null);
     }
 
 
 // add grown organ by id
   public function addID(id: String): Organ
     {
-      var impInfo = ConstEvolution.getInfoByOrganID(id);
+      var impInfo = ConstEvolution.getInfo(id);
       if (impInfo == null)
         {
           trace('No such organ: ' + id);
@@ -116,7 +118,8 @@ class Organs
 
       var o = {
         id: id,
-        isReady: true,
+        level: game.player.evolutionManager.getLevel(impInfo.id),
+        isActive: true,
         gp: 0,
         improvInfo: impInfo,
         info: impInfo.organ
@@ -131,7 +134,7 @@ class Organs
     {
       var tmp = [];
       for (o in _list)
-        tmp.push(o.id + ' ready:' + o.isReady + ' gp:' + o.gp);
+        tmp.push(o.id + ' active:' + o.isActive + ' gp:' + o.gp);
       return tmp.join(', ');
     }
 
@@ -148,7 +151,8 @@ class Organs
 typedef Organ =
 {
   var id: String; // organ id
-  var isReady: Bool; // organ ready?
+  var level: Int; // organ level (copied from improvement on creation)
+  var isActive: Bool; // organ active?
   var gp: Int; // growth points
   var improvInfo: ImprovInfo; // evolution improvement link
   var info: OrganInfo; // organ info link

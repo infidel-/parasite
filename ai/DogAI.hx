@@ -1,5 +1,7 @@
 // AI for dogs 
 
+package ai;
+
 class DogAI extends AI
 {
   public function new(g: Game, vx: Int, vy: Int)

@@ -1,5 +1,7 @@
 // area event manager - timer-related stuff, spawn stuff, despawn stuff, etc
 
+import ai.*;
+
 class AreaManager 
 {
   var game: Game;
@@ -13,11 +15,20 @@ class AreaManager
     }
 
 
-// add event shortcut
+// DEBUG: show queue
+  public function debugShowQueue()
+    {
+      for (e in _list)
+        trace(e);
+    }
+
+
+// add event originating from x,y
   public inline function add(type: String, x: Int, y: Int, turns: Int)
     {
       var e = {
         ai: null,
+        objectID: -1,
         details: null, 
         type: type,
         x: x,
@@ -29,15 +40,34 @@ class AreaManager
     }
 
 
+// add event by type originating from this object 
+  public inline function addObject(o: AreaObject, type: String, turns: Int)
+    {
+      var e = {
+        ai: null,
+        objectID: o.id,
+        type: type,
+        x: -1,
+        y: -1,
+        details: null, 
+        turns: turns
+        };
+
+      _list.push(e);
+    }
+
+
+
 // add event by type originating from this ai
   public inline function addAI(ai: AI, type: String, turns: Int)
     {
       var e = {
         ai: ai,
+        objectID: -1,
         type: type,
         x: ai.x,
         y: ai.y,
-        details: (ai != null ? ai.reason : null),
+        details: ai.reason,
         turns: turns
         };
 
@@ -62,6 +92,14 @@ class AreaManager
               continue;
             }
 
+          // if object origin is not in area now, we skip this event
+          var o = (e.objectID >= 0 ? game.area.getObject(e.objectID) : null);
+          if (e.objectID >= 0 && o == null) 
+            {
+              _list.remove(e);
+              continue;
+            }
+
           // run this event
 
           // someone called the police
@@ -79,6 +117,9 @@ class AreaManager
           // police backup arrives
           else if (e.type == EVENT_ARRIVE_POLICE_BACKUP)
             onArrivePoliceBackup(e);
+
+          else if (e.type == EVENT_OBJECT_DECAY)
+            onObjectDecay(o);
 
           _list.remove(e);
         }
@@ -198,11 +239,18 @@ class AreaManager
     }
 
 
+// event: object decay
+  function onObjectDecay(o: AreaObject)
+    {
+      game.area.removeObject(o);
+    }
+
+
 // ==================================================================================
 
 
 // log shortcut
-  function log(s: String)
+  inline function log(s: String)
     {
       // TODO: add switch between debug mode and actual radio comms?
       game.log('DEBUG: ' + s, Const.COLOR_AREA);
@@ -216,6 +264,8 @@ class AreaManager
   public static var EVENT_ARRIVE_POLICE = 'arrivePolice';
   public static var EVENT_CALL_POLICE_BACKUP = 'callPoliceBackup';
   public static var EVENT_ARRIVE_POLICE_BACKUP = 'arrivePoliceBackup';
+
+  public static var EVENT_OBJECT_DECAY = 'objectDecay';
 }
 
 
@@ -224,6 +274,7 @@ class AreaManager
 typedef AreaEvent =
 {
   var ai: AI; // ai event origin - can be null
+  var objectID: Int; // area object event origin (-1: unused)
   var details: String; // event details - can be null
   var x: Int;
   var y: Int;

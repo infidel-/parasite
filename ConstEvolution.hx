@@ -16,7 +16,7 @@ class ConstEvolution
   // improvement info
   public static var improvements: Array<ImprovInfo> =
     [
-      {
+      { // ***
         path: 'conceal',
         id: 'hostRelease',
         name: '[TODO] Host release process',
@@ -30,13 +30,37 @@ class ConstEvolution
           ],
         levelParams: []
       },
-      {
+
+      { // ***
         path: 'conceal',
-        id: 'chameleonSkin',
-        name: '[TODO] Chameleon skin',
+        id: 'decayAccel',
+        name: 'Decay acceleration',
+        note: 'Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
+        organ: {
+          name: 'Decay accelerant cysts',
+          note: 'Cysts of special bacteria and enzymes spread throughout the body to accelerate its decay after death',
+          gp: 75
+          },
+        levelNotes: [
+          'Only natural decomposition occurs',
+          'Host body takes a lot of time to decompose',
+          'Host body takes some time to decompose',
+          'Host body takes a little time to decompose',
+          ],
+        levelParams: [
+          { turns: 1000 },
+          { turns: 10 },
+          { turns: 5 },
+          { turns: 2 },
+          ],
+      },
+
+      { // ***
+        path: 'conceal',
+        id: 'camouflageLayer',
+        name: 'Camouflage layer',
         note: 'Allows covering parasite body with a temporary camouflage layer that looks like host skin and clothing',
         organ: {
-          id: 'camouflageLayer',
           name: 'Camouflage layer',
           note: 'Temporary camouflage layer that covers parasite body changing its appearance',
           gp: 100
@@ -48,22 +72,14 @@ class ConstEvolution
           'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
           ],
         levelParams: [
-          {
-            baseAlertness: 3,
-          },
-          {
-            baseAlertness: 2,
-          },
-          {
-            baseAlertness: 1,
-          },
-          {
-            baseAlertness: 0.5,
-          },
+          { baseAlertness: 3 },
+          { baseAlertness: 2 },
+          { baseAlertness: 1 },
+          { baseAlertness: 0.5 },
           ]
       },
 
-      {
+      { // ***
         path: 'misc',
         id: 'hostMemory',
         name: 'Host memory',
@@ -108,12 +124,16 @@ class ConstEvolution
       },
 
 /*      
-      {
+      { // ***
         path: '',
         id: '',
         name: '',
         note: '',
-        organ: null,
+        organ: {
+          name: '',
+          note: '',
+          gp: 100
+          },
         levelNotes: [
           '',
           '',
@@ -121,10 +141,10 @@ class ConstEvolution
           '',
           ],
         levelParams: [
-          '',
-          '',
-          '',
-          '',
+          {},
+          {},
+          {},
+          {},
           ],
       },
 */      
@@ -148,6 +168,17 @@ class ConstEvolution
     }
 
 
+// get improvement parameters of the specified level
+  public static function getParams(id: String, level: Int): Dynamic
+    {
+      for (imp in improvements)
+        if (imp.id == id)
+          return imp.levelParams[level];
+      
+      return null;
+    }
+
+/*
 // get improvement info by organ id
   public static function getInfoByOrganID(id: String): ImprovInfo
     {
@@ -157,7 +188,7 @@ class ConstEvolution
 
       return null;
     }
-
+*/
 
 // get path info
   public static function getPathInfo(id: String): PathInfo
@@ -191,7 +222,6 @@ typedef PathInfo =
 
 typedef OrganInfo =
 {
-  var id: String; // string ID
   var name: String; // name
   var note: String; // description
   var gp: Int; // gp cost to grow

@@ -9,8 +9,6 @@ class AreaObject
   public var entity: ObjectEntity; // gui entity
   public var type: String; // object type
 
-  public var isHumanBody: Bool; // is this a human body?
-
   public var id: Int; // unique object id
   static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
@@ -21,10 +19,19 @@ class AreaObject
       game = g;
       type = 'undefined';
       id = (_maxID++);
-      isHumanBody = false;
 
       x = vx;
       y = vy;
+
+      // add to area
+      game.area.addObject(this);
+    }
+
+
+// set object decay in X turns
+  public inline function setDecay(turns: Int)
+    {
+      game.areaManager.addObject(this, AreaManager.EVENT_OBJECT_DECAY, turns);
     }
 
 
@@ -46,5 +53,11 @@ class AreaObject
 //      trace(atlasRow + ' ' + atlasCol);
       entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
       game.scene.add(entity);
+    }
+
+
+  public function toString(): String
+    {
+      return id + ' (' + x + ',' + y + ') t:' + type;
     }
 }

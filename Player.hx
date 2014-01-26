@@ -2,6 +2,7 @@
 
 import entities.PlayerEntity;
 import com.haxepunk.HXP;
+import ai.AI;
  
 class Player
 {

@@ -1,5 +1,7 @@
 // AI for humans (should not be used in the game itself)
 
+package ai;
+
 class HumanAI extends AI
 {
   public function new(g: Game, vx: Int, vy: Int)

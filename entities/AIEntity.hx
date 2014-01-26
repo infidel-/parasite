@@ -3,6 +3,7 @@
 package entities;
 
 import com.haxepunk.graphics.Spritemap;
+import ai.AI;
 
 class AIEntity extends PawnEntity
 {

@@ -1,5 +1,7 @@
 // AI for police 
 
+package ai;
+
 class PoliceAI extends HumanAI
 {
   public var isBackup: Bool; // is this AI itself backup?

@@ -1,5 +1,6 @@
+finding bodies with organs
 looting bodies
-improvements impl: host appearance, host release, body dissolution
+improvements impl: host release, body dissolution
 global suspicion and what comes with its growth (no global suspicion?)
 moans and screams from low control host + bystanders
 barks, gasps, moans, etc - AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text

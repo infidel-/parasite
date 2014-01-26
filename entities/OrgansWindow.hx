@@ -30,6 +30,8 @@ class OrgansWindow
       var font = Assets.getFont("font/04B_03__.ttf");
       _textField = new TextField();
       _textField.autoSize = TextFieldAutoSize.LEFT;
+      _textField.wordWrap = true;
+      _textField.width = HXP.windowWidth - 40;
       var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _textField.defaultTextFormat = fmt;
@@ -89,7 +91,7 @@ class OrgansWindow
       for (organ in game.player.host.organs)
         {
           buf.add(organ.info.name +
-            (organ.isReady ? '' : ' (' + organ.gp + '/' + organ.info.gp + 'gp)') +
+            (organ.isActive ? '' : ' (' + organ.gp + '/' + organ.info.gp + 'gp)') +
             ' [' + organ.info.note + ']\n');
           n++;
         }
@@ -109,7 +111,7 @@ class OrgansWindow
           var organ = imp.info.organ;
 
           // organ already completed
-          if (game.player.host.organs.getReady(organ.id) != null)
+          if (game.player.host.organs.getActive(imp.info.id) != null)
             continue;
 
           _actionIDs.add('set.' + imp.id);
