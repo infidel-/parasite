@@ -13,12 +13,14 @@ class AreaObject
   static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
+  public var creationTime: Int; // when was this object created (turns since game start)
 
   public function new(g: Game, vx: Int, vy: Int)
     {
       game = g;
       type = 'undefined';
       id = (_maxID++);
+      creationTime = game.turns;
 
       x = vx;
       y = vy;
@@ -54,6 +56,11 @@ class AreaObject
       entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
       game.scene.add(entity);
     }
+
+
+// dynamic: object events and stuff
+  public dynamic function turn()
+    {}
 
 
   public function toString(): String

@@ -1,6 +1,7 @@
+calling onBodyDiscovered for all bodies in the area when player leaves it
 finding bodies with organs
 looting bodies
-improvements impl: host release, body dissolution
+improvements impl: host release
 global suspicion and what comes with its growth (no global suspicion?)
 moans and screams from low control host + bystanders
 barks, gasps, moans, etc - AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
@@ -12,6 +13,7 @@ MASTERPLAN
 ============
 area alertness
 area interest
+world generation
 human biology knowledge
 canine biology knowledge
 organ growth

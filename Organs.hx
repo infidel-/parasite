@@ -20,6 +20,18 @@ class Organs
     }
 
 
+// calculate amount of points
+// saved when the body dies and used if body is eventually found by law enforcement
+  public function getPoints(): Int
+    {
+      var cnt = 0;
+      for (o in _list)
+        cnt += o.level;
+
+      return cnt;
+    }
+
+
 // list iterator
   public function iterator(): Iterator<Organ>
     {

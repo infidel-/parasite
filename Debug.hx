@@ -151,7 +151,8 @@ class Debug
 //      var o = game.area.createObject(game.player.x, game.player.y, 'body', 'civilian');
       var o = new BodyObject(game, game.player.x, game.player.y, 'civilian');
       o.isHumanBody = true;
-      o.setDecay(1);
+      o.organPoints = 10;
+//      o.setDecay(1);
 
       game.area.debugShowObjects();
     }

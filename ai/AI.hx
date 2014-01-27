@@ -540,6 +540,7 @@ class AI
         }
 
       o.isHumanBody = isHuman;
+      o.organPoints = organs.getPoints();
       game.area.updateVisibility();
     }
 

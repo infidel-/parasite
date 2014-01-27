@@ -385,11 +385,14 @@ class Area
     }
 
 
-// AI turn to act
+// TURN: area time passage - ai actions, object events
   public function turn()
     {
       for (ai in _ai)
         ai.turn();
+
+      for (o in _objects)
+        o.turn();
     }
 
 

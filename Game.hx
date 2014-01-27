@@ -5,8 +5,10 @@ import com.haxepunk.HXP;
 class Game
 {
   public var scene: GameScene; // ui scene
+  public var world: World; // game world
+  public var worldManager: WorldManager; // game world manager
   public var areaManager: AreaManager; // area event manager
-  public var area: Area; // area, player is currently in 
+  public var area: Area; // area player is currently in 
   public var player: Player; // game player
   public var debug: Debug; // debug actions
 
@@ -16,6 +18,7 @@ class Game
   public function new()
     {
       scene = new GameScene(this);
+      worldManager = new WorldManager(this);
       areaManager = new AreaManager(this);
       debug = new Debug(this);
       HXP.scene = scene;
@@ -29,6 +32,10 @@ class Game
       log('You are alone. You are scared. You need to find a host or you will die soon.');
       turns = 0;
       isFinished = false;
+
+      // generate world
+      world = new World(this);
+      world.generate();
 
       // generate initial area
       area = new Area(this, "gfx/tileset.png", 50, 50);
