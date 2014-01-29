@@ -107,12 +107,13 @@ class MouseEntity extends Entity
                 Const.debugObject(game.player);
               if (ai != null)
                 Const.debugObject(ai);
-
+/*
               var p = game.area.getPath(game.player.x, game.player.y, x, y);
               if (p != null)
                 for (n in p)
                   trace(n.x + ',' + n.y);
               else trace('no path');
+*/              
             }
 
           // default: attack

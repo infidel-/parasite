@@ -1,5 +1,7 @@
 // game world - as in entire world subdivided into areas
 
+import ConstWorld;
+
 class World
 {
   var game: Game;
@@ -23,14 +25,15 @@ class World
         {
           var area = {
             id: (maxAreaID++),
-            type: TYPE_CITY_BLOCK,
+            typeID: ConstWorld.AREA_CITY_BLOCK,
+            info: ConstWorld.getAreaInfo(ConstWorld.AREA_CITY_BLOCK),
             alertness: 0,
             interest: 0
             };
           _list.set(area.id, area);
         }
 
-      area = get(0); 
+      area = get(0);
     }
 
 
@@ -43,8 +46,6 @@ class World
 
 // ==============================================================================
 
-// area types
-  public static var TYPE_CITY_BLOCK = 'cityBlock';
 }
 
 
@@ -53,7 +54,8 @@ class World
 typedef WorldArea =
 {
   var id: Int; // area id
-  var type: String; // area type - city block, university, military base, etc
+  var typeID: String; // area type id - city block, university, military base, etc
+  var info: AreaInfo; // area info link
   var alertness: Int; // area alertness (authorities)
   var interest: Int; // area interest for secret groups
 };

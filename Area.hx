@@ -50,7 +50,7 @@ class Area
           setType(x, y, Const.TILE_GROUND);
 
       generateBuildings();
-      generateAI();
+//      generateAI();
 
       // set path info 
       _pathEngine = new aPath.Engine(this, width, height);
@@ -105,7 +105,7 @@ class Area
           }
     }
 
-
+/*
 // generate AI
   function generateAI()
     {
@@ -148,7 +148,7 @@ class Area
           ai.createEntity();
         }
     }
-
+*/
 /*
 // create object with this type
   public function createObject(x: Int, y: Int, type: String, parentType: String): AreaObject
@@ -386,13 +386,106 @@ class Area
 
 
 // TURN: area time passage - ai actions, object events
-  public function turn()
+  public inline function turn()
     {
       for (ai in _ai)
         ai.turn();
 
       for (o in _objects)
         o.turn();
+
+      turnSpawnAI(); // spawn new AI
+    }
+
+
+// spawn new AI, called each turn
+// will spawn AI depending on area interest/alertness
+  function turnSpawnAI()
+    {
+      var info = game.world.area.info;
+
+      // there are enough AI already
+      if (_ai.length > info.totalAI)
+        return;
+
+      // limit number of spawns per turn
+      var maxSpawn = info.totalAI - _ai.length;
+      if (maxSpawn > 10)
+        maxSpawn = 10;
+
+      for (i in 0...maxSpawn)
+        {
+          // get random ai class id based on probability
+          var rnd = Std.random(100);
+          var min = 0;
+          var type = null;
+          for (key in info.ai.keys())
+            {
+              if (rnd < min + info.ai[key])
+                {
+                  type = key;
+                  break;
+                }
+
+              min += info.ai[key];
+            }
+
+          spawnUnseenAI(type); // spawns AI at spot unseen by player
+        }
+    }
+
+
+// spawn unseen AI with this type somewhere in screen area
+  function spawnUnseenAI(type: String)
+    {
+      // calculate visible rectangle
+      var rect = getVisibleRect();
+
+      var cnt = 0;
+      while (true)
+        {
+          cnt++;
+          if (cnt > 100)
+            {
+              trace('spawnUnseenAI(): could not find empty spot (report this please)!');
+              return; 
+            }
+
+          var x = rect.x1 + Std.random(rect.x2);
+          var y = rect.y1 + Std.random(rect.y2);
+
+          // must be empty ground tile
+          if (getType(x, y) != 'ground')
+            continue;
+
+          // must not have ai
+          if (getAI(x, y) != null)
+            continue;
+
+          // must not be visible to player as a parasite
+          if (game.player.state != Player.STATE_HOST &&
+              HXP.distanceSquared(game.player.x, game.player.y, x, y) < 6 * 6)
+            continue;
+
+          // must not be visible to player when possessing a host
+          if (game.player.state == Player.STATE_HOST &&
+              isVisible(game.player.x, game.player.y, x, y))
+            continue;
+
+          // spot is empty and invisible to player, spawn ai
+          var ai: AI = null;
+          if (type == 'dog')
+            ai = new DogAI(game, x, y);
+          else if (type == 'civilian')
+            ai = new CivilianAI(game, x, y);
+          else if (type == 'police')
+            ai = new PoliceAI(game, x, y);
+          else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
+
+          game.area.addAI(ai);
+
+          break;
+        }
     }
 
 
@@ -405,26 +498,38 @@ class Area
     }
 
 
+// get visible rectangle for this area
+  function getVisibleRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
+    {
+      var rect = { 
+        x1: Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1,
+        y1: Std.int(HXP.camera.y / Const.TILE_HEIGHT) - 1,
+        x2: Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH) + 2,
+        y2: Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT) + 2
+        };
+
+      if (rect.x1 < 0)
+        rect.x1 = 0;
+      if (rect.y1 < 0)
+        rect.y1 = 0;
+      if (rect.x2 > width)
+        rect.x2 = width;
+      if (rect.y2 > height)
+        rect.y2 = height;
+
+      return rect;
+    }
+
+
 // update visible area (also AI, objects visibility)
 // host version
   function updateVisibilityHost()
     {
       // calculate visible rectangle
-      var x1 = Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1;
-      var y1 = Std.int(HXP.camera.y / Const.TILE_HEIGHT) - 1;
-      var x2 = Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH) + 2;
-      var y2 = Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT) + 2;
-      if (x1 < 0)
-        x1 = 0;
-      if (y1 < 0)
-        y1 = 0;
-      if (x2 > width)
-        x2 = width;
-      if (y2 > height)
-        y2 = height;
+      var rect = getVisibleRect();
 
-      for (y in y1...y2)
-        for (x in x1...x2)
+      for (y in rect.y1...rect.y2)
+        for (x in rect.x1...rect.x2)
           if (!game.player.vars.losEnabled || 
               isVisible(game.player.x, game.player.y, x, y))
             _tilemap.setTile(x, y, _cells[x][y]);
@@ -548,7 +653,7 @@ class Area
 
       var t = Sys.time();
       var p = _pathEngine.getPath(x1, y1, x2, y2);
-      trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');
+//      trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');
       return p;
     }
 

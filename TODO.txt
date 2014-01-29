@@ -1,10 +1,12 @@
+dynamic ai and objects spawn/despawn according to area alertness
+ai emitting sounds when they see parasite ()
 calling onBodyDiscovered for all bodies in the area when player leaves it
-finding bodies with organs
 looting bodies
 improvements impl: host release
 global suspicion and what comes with its growth (no global suspicion?)
 moans and screams from low control host + bystanders
 barks, gasps, moans, etc - AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
+way for player to see or estimate area alertness
 
 scene. getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
@@ -17,7 +19,7 @@ world generation
 human biology knowledge
 canine biology knowledge
 organ growth
-city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
+more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars
 city and world travel
 operation generation
@@ -26,6 +28,7 @@ information web
 LATER
 =====
 
+city sewers
 armor - vest + helmet
 stunner
 electric discharge improv + battery organ + stun attack

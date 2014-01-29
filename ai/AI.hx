@@ -17,9 +17,6 @@ class AI
       unknown: String, // class name
       unknownCapped: String // class name capitalized
     }; // AI name (can be unique and capitalized)
-  var nameUnknown: String; // AI name when its real name not known
-  var nameCapped: String; // AI name capitalized
-  var nameUnknownCapped: String; // AI unknown name capitalized
 
   public var isAggressive: Bool; // true - attack in alerted state, false - run away
   public var isNameKnown: Bool; // is real name known to player?
@@ -32,6 +29,7 @@ class AI
   var direction: Int; // direction of movement
 
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
+  var _turnsInvisible: Int; // number of turns passed since player saw this AI
 
   public var state: String; // AI state
   public var reason: String; // reason for setting this state 
@@ -99,6 +97,7 @@ class AI
       health = 1;
       hostExpiryTurns = 10;
       _objectsSeen = new List<Int>();
+      _turnsInvisible = 0;
 
       inventory = new Inventory();
       skills = new Skills();
@@ -412,7 +411,7 @@ class AI
       if (timers.alert == 0)
         {
           setState(STATE_IDLE); 
-          alertness = 90;
+          alertness = 10;
           return;
         }
 
@@ -485,6 +484,31 @@ class AI
     }
 
 
+// checks if this AI should be despawned
+// AI despawns when player has not seen it for X turns in a row and its state is idle
+  public function checkDespawn()
+    {
+      // should be in idle state and calmed down
+      if (state != STATE_IDLE || (state == STATE_IDLE && alertness > 25))
+        {
+          _turnsInvisible = 0;
+          return;
+        }
+
+      // should be invisible to player
+      var isVisible = game.area.isVisible(game.player.x, game.player.y, x, y);
+      if (isVisible)
+        {
+          _turnsInvisible = 0;
+          return;
+        }
+
+      _turnsInvisible++;
+      if (_turnsInvisible > DESPAWN_TIMER)
+        game.area.destroyAI(this); 
+    }
+
+
 // call AI logic
   public function turn()
     {
@@ -499,8 +523,9 @@ class AI
       else if (state == STATE_HOST)
         stateHost();
 
-      // clamp and change entity icons
-      updateEntity();
+      updateEntity(); // clamp and change entity icons
+
+      checkDespawn(); // check for this AI to despawn
     }
 
 
@@ -606,6 +631,9 @@ class AI
 
   // number of turns AI stays alerted
   public static var ALERTED_TIMER = 10;
+
+  // number of turns AI will stay spawned when invisible to player
+  public static var DESPAWN_TIMER = 5;
 
   // AI states
   public static var STATE_IDLE = 'idle';
