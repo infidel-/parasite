@@ -1,4 +1,5 @@
 dynamic ai and objects spawn/despawn according to area alertness
+area alertness increase on police calls, shootings, calls for backup
 ai emitting sounds when they see parasite ()
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies

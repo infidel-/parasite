@@ -65,13 +65,14 @@ class DebugWindow
       var buf = new StringBuf();
       buf.add('Debug\n===\n\n');
 
+      buf.add('Area alertness: ' + game.world.area.alertness + '\n');
+      buf.add('Area interest: ' + game.world.area.interest + '\n');
+      buf.add('\n');
+
       // draw a list of debug action
       var n = 1;
       for (a in game.debug.actions)
-        {
-          buf.add((n++) + ': ' + a.name + '\n');
-          
-        }
+        buf.add((n++) + ': ' + a.name + '\n');
 
       _textField.htmlText = buf.toString();
       _back.graphics.clear();

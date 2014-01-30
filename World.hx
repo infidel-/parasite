@@ -1,14 +1,11 @@
 // game world - as in entire world subdivided into areas
 
-import ConstWorld;
-
 class World
 {
   var game: Game;
 
   var _list: Map<Int, WorldArea>; // list of areas
   public var area: WorldArea; // current world area player is in
-  static var maxAreaID: Int = 0; // area id counter
 
   public function new(g: Game)
     {
@@ -23,13 +20,7 @@ class World
       _list = new Map<Int, WorldArea>();
       for (i in 0...10)
         {
-          var area = {
-            id: (maxAreaID++),
-            typeID: ConstWorld.AREA_CITY_BLOCK,
-            info: ConstWorld.getAreaInfo(ConstWorld.AREA_CITY_BLOCK),
-            alertness: 0,
-            interest: 0
-            };
+          var area = new WorldArea(ConstWorld.AREA_CITY_BLOCK);
           _list.set(area.id, area);
         }
 
@@ -49,13 +40,3 @@ class World
 }
 
 
-// basic world area info
-
-typedef WorldArea =
-{
-  var id: Int; // area id
-  var typeID: String; // area type id - city block, university, military base, etc
-  var info: AreaInfo; // area info link
-  var alertness: Int; // area alertness (authorities)
-  var interest: Int; // area interest for secret groups
-};

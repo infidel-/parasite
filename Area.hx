@@ -61,15 +61,25 @@ class Area
   function generateBuildings()
     {
       // buildings
-      for (y in 0...height)
-        for (x in 0...width)
+      for (y in 1...height)
+        for (x in 1...width)
           {
             if (Math.random() > 0.05)
               continue;
 
             // size
-            var sx = 5 + Std.int(Math.random() * 10);
-            var sy = 5 + Std.int(Math.random() * 10);
+            var sx = 5 + Std.random(10);
+            var sy = 5 + Std.random(10);
+
+            if (x + sx > width - 1)
+              sx = width - 1 - x;
+            if (y + sy > height - 1)
+              sy = height - 1 - y;
+
+            if (sx < 2)
+              continue;
+            if (sy < 2)
+              continue;
 
 //            var cell = get(x,y);
 
@@ -395,6 +405,7 @@ class Area
         o.turn();
 
       turnSpawnAI(); // spawn new AI
+      turnSpawnMoreAI(); // spawn AI related to area alertness
     }
 
 
@@ -404,12 +415,18 @@ class Area
     {
       var info = game.world.area.info;
 
+      // get number of common AI
+      var cnt = 0;
+      for (ai in _ai)
+        if (ai.isCommon)
+          cnt++;
+
       // there are enough AI already
-      if (_ai.length > info.totalAI)
+      if (cnt > info.commonAI)
         return;
 
       // limit number of spawns per turn
-      var maxSpawn = info.totalAI - _ai.length;
+      var maxSpawn = info.commonAI - cnt;
       if (maxSpawn > 10)
         maxSpawn = 10;
 
@@ -430,16 +447,51 @@ class Area
               min += info.ai[key];
             }
 
-          spawnUnseenAI(type); // spawns AI at spot unseen by player
+          spawnUnseenAI(type, true); // spawns AI at spot unseen by player
         }
     }
 
 
+// spawn some more AI related to area alertness
+  function turnSpawnMoreAI()
+    {
+      var info = game.world.area.info;
+
+      // get number of uncommon AI (spawned by alertness logic)
+      var cnt = 0;
+      for (ai in _ai)
+        if (!ai.isCommon)
+          cnt++;
+
+      // calculate the actual number to spawn according to the area alertness
+      var uncommonAI = Std.int(info.uncommonAI * game.world.area.alertness / 100.0);
+
+      // there are enough uncommon AI already
+      if (cnt > uncommonAI)
+        return;
+
+      // limit number of spawns per turn
+      var maxSpawn = uncommonAI - cnt; 
+      if (maxSpawn > 10)
+        maxSpawn = 10;
+
+      // more spawns here based on area alertness
+      // TODO: i'll probably change this later to reflect different area types
+      // and also add stages etc
+      // for now let's keep it simple
+      for (i in 0...maxSpawn)
+        spawnUnseenAI('police', false);
+    }
+
+
 // spawn unseen AI with this type somewhere in screen area
-  function spawnUnseenAI(type: String)
+  function spawnUnseenAI(type: String, isCommon: Bool)
     {
       // calculate visible rectangle
       var rect = getVisibleRect();
+
+      // TODO: in case if this works slowly i can rewrite it to find all potential free
+      // spots and select one of them
 
       var cnt = 0;
       while (true)
@@ -482,6 +534,7 @@ class Area
             ai = new PoliceAI(game, x, y);
           else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
 
+          ai.isCommon = isCommon;
           game.area.addAI(ai);
 
           break;

@@ -14,6 +14,8 @@ class PlayerEntity extends PawnEntity
   var dx: Int; // movement vars - movement direction
   var dy: Int;
 
+  var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
+
   public function new(g: Game, xx: Int, yy: Int)
     {
       super(g, xx, yy, Const.ROW_PARASITE); 
@@ -38,6 +40,7 @@ class PlayerEntity extends PawnEntity
       Input.define("action7", [ Key.DIGIT_7 ]);
       Input.define("action8", [ Key.DIGIT_8 ]);
       Input.define("action9", [ Key.DIGIT_9 ]);
+      Input.define("action10", [ Key.DIGIT_0 ]);
       Input.define("inventoryWindow", [ Key.F1 ]);
       Input.define("skillsWindow", [ Key.F2 ]);
       Input.define("evolutionWindow", [ Key.F3 ]);
@@ -51,6 +54,7 @@ class PlayerEntity extends PawnEntity
 
       dx = 0;
       dy = 0;
+      _inputState = 0;
     }
 
 
@@ -65,7 +69,7 @@ class PlayerEntity extends PawnEntity
       handleMovement();
       handleWindows();
       handleActions();
-
+    
       if (Input.pressed("exit"))
         Sys.exit(1);
     }
@@ -180,17 +184,25 @@ class PlayerEntity extends PawnEntity
   function handleActions()
     {
       // actions from action menu
-      for (i in 1...10)
+      for (i in 1...11)
         if (Input.pressed("action" + i))
           {
+            var n = i;
+
+            // s + number = 10 + action
+            if (_inputState > 0)
+              n += 10;
+
             if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
-              game.scene.hud.action(i);
+              game.scene.hud.action(n);
             else if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
-              game.scene.evolutionWindow.action(i);
+              game.scene.evolutionWindow.action(n);
             else if (game.scene.hudState == GameScene.HUDSTATE_ORGANS)
-              game.scene.organsWindow.action(i);
+              game.scene.organsWindow.action(n);
             else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
-              game.scene.debugWindow.action(i);
+              game.scene.debugWindow.action(n);
+
+            _inputState = 0;
             break;
           }
 
@@ -212,6 +224,10 @@ class PlayerEntity extends PawnEntity
           // handle mouse input
           game.scene.mouse.handleInput();
         }
+
+      // next 10 actions
+      if (Input.pressed(Key.S))
+        _inputState = 1;
     }
 
 

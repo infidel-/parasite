@@ -22,8 +22,8 @@ class Debug
           func: gainHost
         },
         {
-          name: 'Disable LOS',
-          func: disableLOS
+          name: 'Toggle LOS',
+          func: toggleLOS
         },
         {
           name: 'Gain all improvements at level 0',
@@ -49,6 +49,10 @@ class Debug
           name: 'Show area manager queue',
           func: showAreaManagerQueue
         },
+        {
+          name: 'Set area alertness to 100',
+          func: setMaxAlertness
+        }
         ];
     }
 
@@ -69,12 +73,12 @@ class Debug
     }
 
 
-// disable LOS 
-  function disableLOS()
+// toggle LOS 
+  function toggleLOS()
     {
-      game.player.vars.losEnabled = false;
+      game.player.vars.losEnabled = !game.player.vars.losEnabled;
       game.area.updateVisibility();
-      game.log('LOS checks for player disabled.');
+      game.log('LOS checks for player toggled.');
     }
 
 
@@ -162,5 +166,12 @@ class Debug
   function showAreaManagerQueue()
     {
       game.areaManager.debugShowQueue();
+    }
+
+
+// set max area alertness
+  function setMaxAlertness()
+    {
+      game.world.area.alertness = 100;
     }
 }

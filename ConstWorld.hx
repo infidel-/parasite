@@ -6,7 +6,8 @@ class ConstWorld
     [
       { // ***
         id: 'cityBlock', 
-        totalAI: 20, 
+        commonAI: 20,
+        uncommonAI: 20,
         ai: [
           'dog' => 15,
           'civilian' => 75,
@@ -36,6 +37,7 @@ class ConstWorld
 
 typedef AreaInfo = {
   var id: String; // area type id
-  var totalAI: Int; // total ai amount spawned at any time
+  var commonAI: Int; // common ai amount spawned at any time
+  var uncommonAI: Int; // uncommon ai amount spawned at any time
   var ai: Map<String, Int>; // ai spawn probability
 };
