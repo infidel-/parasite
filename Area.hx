@@ -728,9 +728,16 @@ class Area
         return null;
 
       var t = Sys.time();
+      try {
       var p = _pathEngine.getPath(x1, y1, x2, y2);
 //      trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');
       return p;
+      }
+      catch (e: Dynamic)
+        {
+          trace(haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
+        }
+      return null;
     }
 
 

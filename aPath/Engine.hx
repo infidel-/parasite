@@ -48,6 +48,8 @@ class Engine
       var currentNode = startNode;
       while (true)
         {
+          if (currentNode == null)
+            return null;
           var adjacent = currentNode.getAdjacentNodes(map);
           adjacent.sort(function(node_a, node_b)
             {
