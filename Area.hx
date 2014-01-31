@@ -702,6 +702,10 @@ class Area
     }
 
 
+// get all AI
+  public inline function getAllAI(): List<AI>
+    { return _ai; }
+
 // get all objects in radius from that x,y
 // los - must have los to that location
   public function getObjectsInRadius(x: Int, y: Int, dist: Int, los: Bool): List<AreaObject>

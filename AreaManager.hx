@@ -106,6 +106,10 @@ class AreaManager
           if (e.type == EVENT_CALL_POLICE)
             onCallPolice(e);
 
+          // police is alerted
+          else if (e.type == EVENT_ALERT_POLICE)
+            onAlertPolice(e);
+
           // police arrives
           else if (e.type == EVENT_ARRIVE_POLICE)
             onArrivePolice(e);
@@ -161,8 +165,21 @@ class AreaManager
       // increase area alertness
       game.world.area.alertness++;
 
+      // alert all police already in area 
+      add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
+
       // move on to arriving
       add(EVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, 5);
+    }
+
+
+// event: alert police in area
+  function onAlertPolice(e: AreaEvent)
+    {
+      var list = game.area.getAllAI();
+      for (ai in list)
+        if (ai.type == 'police' || ai.state == AI.STATE_IDLE)
+          ai.setState(AI.STATE_ALERT, AI.REASON_BACKUP);
     }
 
 
@@ -205,6 +222,9 @@ class AreaManager
 
       // increase area alertness
       game.world.area.alertness += 2;
+
+      // alert all police already in area 
+      add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
       add(EVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, 5);
@@ -267,6 +287,7 @@ class AreaManager
 
 // event types
   public static var EVENT_CALL_POLICE = 'callPolice';
+  public static var EVENT_ALERT_POLICE = 'alertPolice';
   public static var EVENT_ARRIVE_POLICE = 'arrivePolice';
   public static var EVENT_CALL_POLICE_BACKUP = 'callPoliceBackup';
   public static var EVENT_ARRIVE_POLICE_BACKUP = 'arrivePoliceBackup';

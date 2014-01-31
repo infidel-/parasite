@@ -1,4 +1,3 @@
-area alertness going down
 ai emitting sounds when they see parasite ()
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies

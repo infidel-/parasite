@@ -646,6 +646,7 @@ class AI
   // AI state change reasons
   public static var REASON_NONE = 'none';
   public static var REASON_BODY = 'body';
+  public static var REASON_BACKUP = 'backup';
   public static var REASON_ATTACH = 'attach';
   public static var REASON_DETACH = 'detach';
   public static var REASON_HOST = 'host';
