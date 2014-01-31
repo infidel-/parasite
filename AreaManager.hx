@@ -178,7 +178,7 @@ class AreaManager
     {
       var list = game.area.getAllAI();
       for (ai in list)
-        if (ai.type == 'police' || ai.state == AI.STATE_IDLE)
+        if (ai.type == 'police' && ai.state == AI.STATE_IDLE)
           ai.setState(AI.STATE_ALERT, AI.REASON_BACKUP);
     }
 
