@@ -398,14 +398,33 @@ class Area
 // TURN: area time passage - ai actions, object events
   public inline function turn()
     {
+      // AI logic
       for (ai in _ai)
         ai.turn();
 
+      // object logic
       for (o in _objects)
         o.turn();
 
-      turnSpawnAI(); // spawn new AI
+      turnSpawnAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
+      turnAlertness(); // decrease alertness
+    }
+
+
+// decrease area alertness
+  function turnAlertness()
+    {
+      // count number of alerted AI
+      var cnt = 0;
+      for (ai in _ai)
+        if (ai.state == AI.STATE_ALERT)
+          cnt++;
+
+      if (cnt > 0)
+        return;
+
+      game.world.area.alertness -= 0.1;
     }
 
 

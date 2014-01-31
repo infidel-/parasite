@@ -158,6 +158,9 @@ class AreaManager
       if (game.player.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the police!');
 
+      // increase area alertness
+      game.world.area.alertness++;
+
       // move on to arriving
       add(EVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, 5);
     }
@@ -199,6 +202,9 @@ class AreaManager
 
       if (game.player.hears(e.ai.x, e.ai.y))
         e.ai.log('calls for backup!');
+
+      // increase area alertness
+      game.world.area.alertness += 2;
 
       // move on to arriving
       add(EVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, 5);
