@@ -1,4 +1,4 @@
-ai emitting sounds when they see parasite ()
+sounds of pain
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies
 improvements impl: host release

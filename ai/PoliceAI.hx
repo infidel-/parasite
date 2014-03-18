@@ -14,6 +14,16 @@ class PoliceAI extends HumanAI
       type = 'police';
       name.unknown = 'police officer';
       name.unknownCapped = 'Police officer';
+      sounds = [
+        AI.STATE_IDLE => [
+          { text: 'Huh?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
+          { text: 'Whu?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
+          { text: 'What the?', radius: 0, alertness: 0, params: { minAlertness: 50 }  },
+          ],
+        AI.STATE_ALERT => [
+          { text: 'STOP!', radius: 7, alertness: 10, params: null },
+          ]
+        ];
       isAggressive = true;
       inventory.addID('baton');
       skills.addID('baton', 50 + Std.random(25));

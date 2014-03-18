@@ -10,6 +10,16 @@ class CivilianAI extends HumanAI
       type = 'civilian';
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
+      sounds = [
+        AI.STATE_IDLE => [
+          { text: 'Huh?', radius: 0, alertness: 0, params: { minAlertness: 25 } },
+          { text: 'Whu?', radius: 0, alertness: 0, params: { minAlertness: 25 } },
+          { text: 'What the?', radius: 0, alertness: 0, params: { minAlertness: 50 } },
+          ],
+        AI.STATE_ALERT => [
+          { text: '*SCREAM*', radius: 7, alertness: 15, params: null },
+          ]
+        ];
     }
 
 

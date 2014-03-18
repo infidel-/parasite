@@ -516,6 +516,8 @@ class AI
 // call AI logic
   public function turn()
     {
+      entity.turn(); // turn passing for entity
+
       if (state == STATE_IDLE)
         stateIdle();
 
@@ -546,7 +548,11 @@ class AI
       var idx = Std.random(array.length);
       var sound = array[idx];
 
-      entity.setText(sound.text);
+      // check for min alertness
+      if (state == AI.STATE_IDLE && alertness < sound.params.minAlertness)
+        return;
+
+      entity.setText(sound.text, 2);
       if (sound.radius <= 0 || sound.alertness <= 0)
         return;
 
@@ -687,5 +693,6 @@ typedef AISound =
   var text: String; // text to display
   var radius: Int; // radius this sound propagates to (can be 0)
   var alertness: Int; // amount of alertness that AIs in this radius gain
+  var params: Dynamic; // state-specific parameters
 };
 

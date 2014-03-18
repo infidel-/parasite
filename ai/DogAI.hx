@@ -15,9 +15,11 @@ class DogAI extends AI
         unknownCapped: 'The dog'
         };
       sounds = [
+        AI.STATE_IDLE => [
+          { text: '*GROWL*', radius: 2, alertness: 5, params: { minAlertness: 25 }  },
+          ],
         AI.STATE_ALERT => [
-          { text: '*GROWL*', radius: 2, alertness: 5  },
-          { text: '*BARK*', radius: 5, alertness: 10 },
+          { text: '*BARK*', radius: 5, alertness: 10, params: null },
           ]
         ];
 

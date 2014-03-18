@@ -17,6 +17,8 @@ class PawnEntity extends Entity
   var _spriteMask: Spritemap; // mask sprite map (invaded state)
   public var atlasRow: Int; // tile atlas row
 
+  var _textTimer: Int; // turns left to display this text
+
 
   public function new(g: Game, xx: Int, yy: Int, r: Int)
     {
@@ -33,6 +35,7 @@ class PawnEntity extends Entity
       _list.add(_spriteMask);
 
       _text = new Text("", 0, -10);
+      _textTimer = 0;
       _list.add(_text);
 
       type = "undefined";
@@ -42,10 +45,23 @@ class PawnEntity extends Entity
 
 
 // set text
-  public inline function setText(s: String)
+  public inline function setText(s: String, timer: Int)
     {
       _text.text = s;
       _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
+      _textTimer = timer;
+    }
+
+
+// turn passed
+  public function turn()
+    {
+      if (_textTimer <= 0)
+        return;
+
+      _textTimer--;
+      if (_textTimer == 0)
+        _text.text = '';
     }
 
 
