@@ -5,11 +5,13 @@ package entities;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Spritemap;
+import com.haxepunk.graphics.Text;
 
 class PawnEntity extends Entity
 {
   var game: Game; // game state
 
+  var _text: Text;
   var _list: Graphiclist; // graphics list
   var _spriteBody: Spritemap; // body sprite map
   var _spriteMask: Spritemap; // mask sprite map (invaded state)
@@ -30,9 +32,20 @@ class PawnEntity extends Entity
       _list.add(_spriteBody);
       _list.add(_spriteMask);
 
+      _text = new Text("", 0, -10);
+      _list.add(_text);
+
       type = "undefined";
       layer = Const.LAYER_AI;
       graphic = _list;
+    }
+
+
+// set text
+  public inline function setText(s: String)
+    {
+      _text.text = s;
+      _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
     }
 
 

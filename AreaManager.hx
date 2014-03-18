@@ -154,7 +154,7 @@ class AreaManager
         sdetails = 'a dead body';
       else if (e.details == AI.REASON_DAMAGE || e.details == AI.REASON_WITNESS)
         sdetails = 'an attack';
-      else sdetails = 'wild animal attack';
+      else sdetails = 'wild animal sighting';
 
       log('Police has received a report about ' + sdetails + 
         '. Dispatching units to the location.');
