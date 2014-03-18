@@ -1,10 +1,8 @@
-sounds of pain
+city areas and travel through sewers
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies
 improvements impl: host release
 global suspicion and what comes with its growth (no global suspicion?)
-moans and screams from low control host + bystanders
-barks, gasps, moans, etc - AI must emit "sounds" alerting surrounding AI - they will also need to be displayed as text
 way for player to see or estimate area alertness
 
 scene. getSpriteByLayer(layer) - draw lines on this one

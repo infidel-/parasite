@@ -15,11 +15,22 @@ class DogAI extends AI
         unknownCapped: 'The dog'
         };
       sounds = [
+        AI.REASON_DAMAGE => [
+          { text: '*WHIMPER*', radius: 2, alertness: 5, params: null },
+          { text: '*WHINE*', radius: 2, alertness: 5, params: null },
+          { text: '*YELP*', radius: 2, alertness: 5, params: null },
+          ],
         AI.STATE_IDLE => [
           { text: '*GROWL*', radius: 2, alertness: 5, params: { minAlertness: 25 }  },
           ],
         AI.STATE_ALERT => [
           { text: '*BARK*', radius: 5, alertness: 10, params: null },
+          ],
+        AI.STATE_HOST => [
+          { text: '*whimper*', radius: 2, alertness: 3, params: null },
+          { text: '*whine*', radius: 2, alertness: 3, params: null },
+          { text: '*growl*', radius: 2, alertness: 3, params: null },
+          { text: '*GROWL*', radius: 2, alertness: 3, params: null },
           ]
         ];
 

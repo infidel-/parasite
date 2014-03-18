@@ -448,8 +448,10 @@ class AI
 // state: host logic
   function stateHost()
     {
-      // organ growth
-      organs.turn();
+      organs.turn(); // organ growth
+
+      // emit random sound
+      emitRandomSound(STATE_HOST, Std.int((100 - game.player.hostControl) / 3));
 
       // random: try to tear parasite away
       if (game.player.hostControl < 25 && Std.random(100) < 5)
@@ -531,25 +533,26 @@ class AI
 
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
-      emitSound(); // emit random sound if it exists
+      emitRandomSound(state, 20); // emit random sound if it exists
     }
 
 
-// emit random sound for this state
-  function emitSound()
+// emit random sound for this key 
+  function emitRandomSound(key: String, ?chance: Int = 100)
     {
-      var array = sounds[state];
+      var array = sounds[key];
       if (array == null)
         return;
 
-      if (Std.random(100) > 20) // base chance of sound
+      if (Std.random(100) > chance) // base chance of emitting sound
         return;
 
       var idx = Std.random(array.length);
       var sound = array[idx];
 
       // check for min alertness
-      if (state == AI.STATE_IDLE && alertness < sound.params.minAlertness)
+      if (state == AI.STATE_IDLE && sound.params.minAlertness != null &&
+          alertness < sound.params.minAlertness)
         return;
 
       entity.setText(sound.text, 2);
@@ -581,6 +584,8 @@ class AI
       // set alerted state
       if (state == STATE_IDLE)
         setState(STATE_ALERT, REASON_DAMAGE);
+
+      emitRandomSound(REASON_DAMAGE, 30); // emit random sound
     }
 
 
