@@ -1,5 +1,7 @@
 // object in a map area
 
+package objects;
+
 import entities.ObjectEntity;
 
 class AreaObject

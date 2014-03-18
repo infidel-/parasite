@@ -5,6 +5,7 @@ package entities;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Spritemap;
+import objects.AreaObject;
 
 class ObjectEntity extends Entity
 {

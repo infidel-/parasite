@@ -1,5 +1,7 @@
 // body object (human, animal, etc)
 
+package objects;
+
 class BodyObject extends AreaObject
 {
   public var isHumanBody: Bool; // is this a human body?

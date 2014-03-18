@@ -1,6 +1,7 @@
 // debug actions
 
 import ai.*;
+import objects.*;
 
 class Debug
 {

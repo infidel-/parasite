@@ -1,6 +1,7 @@
 // area event manager - timer-related stuff, spawn stuff, despawn stuff, etc
 
 import ai.*;
+import objects.AreaObject;
 
 class AreaManager 
 {

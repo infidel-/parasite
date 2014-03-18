@@ -3,6 +3,7 @@
 package ai;
 
 import entities.AIEntity;
+import objects.*;
 
 class AI
 {

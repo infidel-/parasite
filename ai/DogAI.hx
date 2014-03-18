@@ -18,7 +18,7 @@ class DogAI extends AI
         AI.REASON_DAMAGE => [
           { text: '*WHIMPER*', radius: 2, alertness: 5, params: null },
           { text: '*WHINE*', radius: 2, alertness: 5, params: null },
-          { text: '*YELP*', radius: 2, alertness: 5, params: null },
+          { text: '*YELP*', radius: 3, alertness: 5, params: null },
           ],
         AI.STATE_IDLE => [
           { text: '*GROWL*', radius: 2, alertness: 5, params: { minAlertness: 25 }  },

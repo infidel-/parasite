@@ -4,6 +4,7 @@ import com.haxepunk.Entity;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.Tilemap;
 import ai.*;
+import objects.*;
 
 
 class Area
@@ -37,7 +38,7 @@ class Area
     }
 
 
-// generate a new map
+// generate a new area map
   public function generate()
     {
       _cells = new Array<Array<Int>>();
@@ -50,7 +51,7 @@ class Area
           setType(x, y, Const.TILE_GROUND);
 
       generateBuildings();
-//      generateAI();
+      generateObjects();
 
       // set path info 
       _pathEngine = new aPath.Engine(this, width, height);
@@ -115,50 +116,13 @@ class Area
           }
     }
 
-/*
-// generate AI
-  function generateAI()
+
+// generate objects
+  function generateObjects()
     {
-      // civvies
-      var maxCivilians = Std.int(0.01 * width * height);
-      for (i in 0...maxCivilians)
-        {
-          // find empty spot for new ai
-          var loc = findEmptyLocation();
-
-          // spawn new ai
-          var ai = new CivilianAI(game, loc.x, loc.y);
-          _ai.add(ai);
-          ai.createEntity();
-        }
-
-      // doggies
-      var maxDogs = Std.int(0.0025 * width * height);
-      for (i in 0...maxDogs)
-        {
-          // find empty spot for new ai
-          var loc = findEmptyLocation();
-
-          // spawn new ai
-          var ai = new DogAI(game, loc.x, loc.y);
-          _ai.add(ai);
-          ai.createEntity();
-        }
-
-      // cops
-      var maxCops = Std.int(0.001 * width * height);
-      for (i in 0...maxCops)
-        {
-          // find empty spot for new ai
-          var loc = findEmptyLocation();
-
-          // spawn new ai
-          var ai = new PoliceAI(game, loc.x, loc.y);
-          _ai.add(ai);
-          ai.createEntity();
-        }
+      // s
     }
-*/
+
 /*
 // create object with this type
   public function createObject(x: Int, y: Int, type: String, parentType: String): AreaObject
@@ -176,7 +140,6 @@ class Area
   public inline function addObject(o: AreaObject)
     {
       _objects.set( o.id, o);
-
     }
 
 
