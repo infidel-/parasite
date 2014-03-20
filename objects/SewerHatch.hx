@@ -4,12 +4,12 @@ package objects;
 
 class SewerHatch extends AreaObject
 {
-  public function new(g: Game, vx: Int, vy: Int, parentType: String)
+  public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
 
       type = 'sewer_hatch';
 
-      createEntity(parentType);
+      createEntity(Const.ROW_OBJECT, Const.FRAME_SEWER_HATCH);
     }
 }

@@ -12,6 +12,9 @@ class ConstWorld
           'dog' => 15,
           'civilian' => 75,
           'police' => 10
+          ],
+        objects: [
+          { id: 'sewer_hatch', amount: 50 }
           ]
       }
     ];
@@ -40,4 +43,5 @@ typedef AreaInfo = {
   var commonAI: Int; // common ai amount spawned at any time
   var uncommonAI: Int; // uncommon ai amount spawned at any time
   var ai: Map<String, Int>; // ai spawn probability
+  var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
 };

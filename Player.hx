@@ -175,6 +175,10 @@ class Player
       else if (actionName == 'accessMemory')
         actionAccessMemory();
 
+      // enter sewers 
+      else if (actionName == 'enterSewers')
+        actionEnterSewers();
+
       energy -= action.energy;
 
       // host could've died from some of these actions
@@ -231,6 +235,12 @@ class Player
       actionAttachToHost(ai);
       attachHold = 100;
       actionInvadeHost();
+    }
+
+
+// action: enter sewers
+  public function actionEnterSewers()
+    {
     }
 
 

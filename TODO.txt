@@ -1,4 +1,9 @@
 city areas and travel through sewers
+generate cluster of areas - initially unvisited and unknown
+fast travel on cluster grid view
+cluster view has a separate list of actions in hud - enter area, etc
+i can display area alertness in cluster view!
+3 classes of city areas with different stats, including police reaction time and probability of police ignoring the call?
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies
 improvements impl: host release

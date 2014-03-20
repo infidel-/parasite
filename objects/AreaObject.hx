@@ -39,22 +39,29 @@ class AreaObject
     }
 
 
-// create entity for this AI
-  public function createEntity(parentType: String)
+// create entity for this AI (using parent type as a row)
+  public function createEntityByType(parentType: String)
     {
-      var atlasRow: Dynamic = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
+      var atlasRow: Int = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
       if (atlasRow == null)
         {
           trace('No such entity type: ' + parentType);
           return;
         }
-      var atlasCol: Dynamic = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
+      var atlasCol: Int = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
       if (atlasCol == null)
         {
           trace('No such entity frame: ' + type);
           return;
         }
 //      trace(atlasRow + ' ' + atlasCol);
+      createEntity(atlasRow, atlasCol);
+    }
+
+
+// create entity for this AI
+  public inline function createEntity(atlasRow: Int, atlasCol: Int)
+    {
       entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
       game.scene.add(entity);
     }

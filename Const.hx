@@ -33,11 +33,15 @@ class Const
   public static var FRAME_ALERT3 = 3;
   public static var FRAME_ALERTED = 4;
 
-  public static var ROW_PARASITE = 1;
-  public static var ROW_HUMAN = 2;
-  public static var ROW_DOG = 3;
-  public static var ROW_CIVILIAN = 4;
-  public static var ROW_POLICE = 5;
+  // object row frames
+  public static var FRAME_SEWER_HATCH = 0;
+
+  public static var ROW_OBJECT = 1;
+  public static var ROW_PARASITE = 2;
+  public static var ROW_HUMAN = 3;
+  public static var ROW_DOG = 4;
+  public static var ROW_CIVILIAN = 5;
+  public static var ROW_POLICE = 6;
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_MASK_POSSESSED = 1;
   public static var FRAME_BODY = 2;
@@ -69,6 +73,7 @@ class Const
       leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
       accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 5 },
       move: { id: 'move', name: 'Movement', energy: 0 },
+      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 0 },
 //      { id: '', name: '', ap:  },
     };
 

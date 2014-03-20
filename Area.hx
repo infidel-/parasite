@@ -120,7 +120,22 @@ class Area
 // generate objects
   function generateObjects()
     {
-      // s
+      var info = game.world.area.info;
+
+      // spawn all objects
+      for (objInfo in info.objects)
+        {
+          // find free spot
+          var loc = findEmptyLocation();
+
+          var o: AreaObject = null;
+          if (objInfo.id == 'sewer_hatch')
+            o = new SewerHatch(game, loc.x, loc.y);
+            
+          else throw 'unknown object type: ' + objInfo.id;
+
+          addObject(o);
+        }
     }
 
 /*
@@ -149,6 +164,16 @@ class Area
       return _objects.get(id);
     }
 
+
+// get object by x,y
+  public function getObjectAt(x: Int, y: Int): AreaObject
+    {
+      for (o in _objects)
+        if (o.x == x && o.y == y)
+          return o;
+
+      return null;
+    }
 
 // remove object
   public inline function removeObject(o: AreaObject)

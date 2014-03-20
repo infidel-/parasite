@@ -118,6 +118,14 @@ class HUD
             addActionToList('accessMemory');
           addActionToList('leaveHost');
         }
+
+      // area object actions
+      var o = game.area.getObjectAt(game.player.x, game.player.y);
+      if (o == null)
+        return;
+
+      if (game.player.state != Player.STATE_ATTACHED && o.type == 'sewer_hatch')
+        addActionToList('enterSewers');
     }
 
 

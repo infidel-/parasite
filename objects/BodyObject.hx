@@ -15,7 +15,7 @@ class BodyObject extends AreaObject
       isHumanBody = false;
       organPoints = 0;
 
-      createEntity(parentType);
+      createEntityByType(parentType);
     }
 
 
