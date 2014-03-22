@@ -124,6 +124,7 @@ class HUD
       if (o == null)
         return;
 
+      // TODO: add this to appropriate object class
       if (game.player.state != Player.STATE_ATTACHED && o.type == 'sewer_hatch')
         addActionToList('enterSewers');
     }
@@ -182,7 +183,7 @@ class HUD
           buf.add('Control: ' + 
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100\n');
-          buf.add('Life expectancy: ' + game.player.hostTimer + '\n');
+          buf.add('Stamina: ' + game.player.host.stamina + '\n');
           buf.add('Evolution direction: ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');

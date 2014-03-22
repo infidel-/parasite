@@ -72,6 +72,11 @@ class AreaObject
     {}
 
 
+// dynamic: on object activate 
+  public dynamic function onActivate()
+    {}
+
+
   public function toString(): String
     {
       return id + ' (' + x + ',' + y + ') t:' + type;

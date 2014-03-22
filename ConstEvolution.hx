@@ -94,28 +94,28 @@ class ConstEvolution
         levelParams: [
           { 
             humanSociety: 0,
-            hostTimer: 0, 
+            hostStaminaBase: 0, 
             hostHealthBase: 0,
             hostHealthMod: 0,
             hostSkillsMod: 0,
           },
           { 
             humanSociety: 0.25, 
-            hostTimer: 30, 
+            hostStaminaBase: 30, 
             hostHealthBase: 3,
             hostHealthMod: 2,
             hostSkillsMod: 0,
           },
           { 
             humanSociety: 0.5, 
-            hostTimer: 20, 
+            hostStaminaBase: 20, 
             hostHealthBase: 1,
             hostHealthMod: 1,
             hostSkillsMod: 0.25,  // can access skills from level 2
           },
           { 
             humanSociety: 1.0, 
-            hostTimer: 10, 
+            hostStaminaBase: 10, 
             hostHealthBase: 0,
             hostHealthMod: 1,
             hostSkillsMod: 0.5,

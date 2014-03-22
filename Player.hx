@@ -38,7 +38,6 @@ class Player
 
   // state "host"
   public var host: AI; // invaded host
-  public var hostTimer(default, set): Int; // amount of turns host has left to live
   public var hostControl(default, set): Int; // amount of turns until you lose control of the host
 
 
@@ -67,7 +66,6 @@ class Player
       chemicals = [ 0, 0, 0 ];
       maxChemicals = [ 20, 20, 20 ];
       attachHold = 0;
-      hostTimer = 0;
       hostControl = 0;
       humanSociety = 0.0;
 
@@ -120,8 +118,8 @@ class Player
           if (host.type == 'human' && evolutionManager.getLevel('hostMemory') > 0)
             humanSociety += 0.1 * host.intellect;
 
-          hostTimer--;
-          if (hostTimer <= 0)
+          host.stamina--;
+          if (host.stamina <= 0)
             {
               onHostDeath();
 
@@ -175,9 +173,9 @@ class Player
       else if (actionName == 'accessMemory')
         actionAccessMemory();
 
-      // enter sewers 
+      // activate object (will make it a common action)
       else if (actionName == 'enterSewers')
-        actionEnterSewers();
+        actionActivateObject();
 
       energy -= action.energy;
 
@@ -238,9 +236,11 @@ class Player
     }
 
 
-// action: enter sewers
-  public function actionEnterSewers()
+// action: activate object 
+  public function actionActivateObject()
     {
+      var o = game.area.getObjectAt(x, y);
+      o.onActivate();
     }
 
 
@@ -340,7 +340,6 @@ class Player
 
       // save AI link
       host = attachHost;
-      hostTimer = host.hostExpiryTurns;
       hostControl = HOST_CONTROL_BASE;
       entity.visible = false;
       attachHost = null;
@@ -402,7 +401,7 @@ class Player
       if (params.hostSkillsMod > 0)
         actionAccessSkills(params.hostSkillsMod);
 
-      hostTimer -= params.hostTimer - host.psyche; // reduce lifetime
+      host.stamina -= params.hostStaminaBase - host.psyche; // reduce lifetime
       host.onDamage(params.hostHealthBase); // damage host
       if (Std.random(100) < 25)
         host.onDamage(params.hostHealthMod); // more damage if unlucky
@@ -596,8 +595,6 @@ class Player
     { return attachHold = Const.clamp(v, 0, 100); }
   function set_hostControl(v: Int)
     { return hostControl = Const.clamp(v, 0, 100); }
-  function set_hostTimer(v: Int)
-    { return hostTimer = Const.clamp(v, 0); }
   function set_humanSociety(v: Float)
     { return humanSociety = Const.clampFloat(v, 0, 99.9); }
 

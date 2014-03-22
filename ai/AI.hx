@@ -53,7 +53,8 @@ class AI
   public var psyche: Int; // mental strength (1-10)
   public var health(default, set): Int; // current health
   public var maxHealth: Int; // maximum health
-  public var hostExpiryTurns: Int; // amount of turns until this host expires
+  public var stamina(default, set): Int; // amount of turns until host death
+  public var maxStamina: Int; // max amount of turns until host expiry
 
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
@@ -100,7 +101,8 @@ class AI
       psyche = 1;
       maxHealth = 1;
       health = 1;
-      hostExpiryTurns = 10;
+      stamina = 10;
+      maxStamina = 10;
       _objectsSeen = new List<Int>();
       _turnsInvisible = 0;
 
@@ -113,7 +115,8 @@ class AI
 // save derived stats (must be called in the end of derived classes constructors)
   function derivedStats()
     {
-      hostExpiryTurns = (5 + strength + constitution) * 10;
+      maxStamina = (5 + strength + constitution) * 10;
+      stamina = maxStamina;
 //      maxHealth = Std.int(strength / 2) + constitution;
       maxHealth = strength + constitution;
       health = maxHealth;
@@ -660,6 +663,8 @@ class AI
 
   function set_health(v: Int)
     { return health = Const.clamp(v, 0, maxHealth); }
+  function set_stamina(v: Int)
+    { return stamina = Const.clamp(v, 0, maxStamina); }
   function set_alertness(v: Int)
     { return alertness = Const.clamp(v, 0, 100); }
 

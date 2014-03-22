@@ -14,7 +14,7 @@ class ConstWorld
           'police' => 10
           ],
         objects: [
-          { id: 'sewer_hatch', amount: 50 }
+          { id: 'sewer_hatch', amount: 20 }
           ]
       }
     ];

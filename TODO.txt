@@ -1,8 +1,11 @@
+area object visibility in parasite mode
+when the host is near death -> trigger area mode
+when the player wants to travel and this would result in host death -> trigger area mode
 city areas and travel through sewers
-generate cluster of areas - initially unvisited and unknown
-fast travel on cluster grid view
-cluster view has a separate list of actions in hud - enter area, etc
-i can display area alertness in cluster view!
+generate region of areas - initially unvisited and unknown
+fast travel on region grid view
+region view has a separate list of actions in hud - enter area, etc
+i can display area alertness in region view!
 3 classes of city areas with different stats, including police reaction time and probability of police ignoring the call?
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies

@@ -1,4 +1,4 @@
-// tiled area grid
+// tiled area view
 
 import com.haxepunk.Entity;
 import com.haxepunk.HXP;
@@ -20,6 +20,7 @@ class Area
   public var width: Int; // area width, height in cells
   public var height: Int;
   public var entity: Entity; // area entity
+//  public var player: PlayerArea; // game player (area mode)
 
   public function new (g: Game, tileset: Dynamic, w: Int, h: Int)
     {
@@ -35,6 +36,13 @@ class Area
         w * Const.TILE_WIDTH, h * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entity.addGraphic(_tilemap);
+    }
+
+
+// hide gui
+  public function hide()
+    {
+      entity.visible = false;
     }
 
 
@@ -124,18 +132,19 @@ class Area
 
       // spawn all objects
       for (objInfo in info.objects)
-        {
-          // find free spot
-          var loc = findEmptyLocation();
+        for (i in 0...objInfo.amount)
+          {
+            // find free spot
+            var loc = findEmptyLocation();
 
-          var o: AreaObject = null;
-          if (objInfo.id == 'sewer_hatch')
-            o = new SewerHatch(game, loc.x, loc.y);
-            
-          else throw 'unknown object type: ' + objInfo.id;
+            var o: AreaObject = null;
+            if (objInfo.id == 'sewer_hatch')
+              o = new SewerHatch(game, loc.x, loc.y);
+              
+            else throw 'unknown object type: ' + objInfo.id;
 
-          addObject(o);
-        }
+            addObject(o);
+          }
     }
 
 /*

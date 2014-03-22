@@ -51,6 +51,8 @@ class Const
   public static var TILE_HIDDEN = 0;
   public static var TILE_GROUND = 1;
   public static var TILE_BUILDING = 2;
+  public static var TILE_REGION_CITY = 8;
+
   public static var TILE_WALKABLE = [ false, true, false ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building' ];
 

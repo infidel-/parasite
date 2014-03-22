@@ -12,4 +12,11 @@ class SewerHatch extends AreaObject
 
       createEntity(Const.ROW_OBJECT, Const.FRAME_SEWER_HATCH);
     }
+
+
+// activate sewers - leave area
+  public override function onActivate()
+    {
+      game.setLocation(Game.LOCATION_REGION);
+    }
 }

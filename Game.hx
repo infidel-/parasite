@@ -7,9 +7,11 @@ class Game
   public var scene: GameScene; // ui scene
   public var world: World; // game world
   public var worldManager: WorldManager; // game world manager
+  public var region: Region; // game world region
   public var areaManager: AreaManager; // area event manager
   public var area: Area; // area player is currently in 
   public var player: Player; // game player
+  public var location(default, null): String; // player location type - area, region, world 
   public var debug: Debug; // debug actions
 
   public var turns: Int; // number of turns passed since game start
@@ -37,12 +39,19 @@ class Game
       world = new World(this);
       world.generate();
 
+      // generate region
+      region = new Region(this, "gfx/tileset.png", 30, 20);
+      region.generate();
+      scene.add(region.entity);
+      region.hide();
+
       // generate initial area
       area = new Area(this, "gfx/tileset.png", 50, 50);
       area.generate();
       scene.add(area.entity);
 
       // init player
+      location = LOCATION_AREA;
       var loc = area.findEmptyLocation();
       player = new Player(this, loc.x, loc.y);
       player.createEntity();
@@ -54,6 +63,26 @@ class Game
 
       // update AI visibility to player
       area.updateVisibility();
+    }
+
+
+// set location
+  public function setLocation(vloc: String)
+    {
+      // hide previous gui
+      if (location == LOCATION_AREA)
+        {
+          area.hide();
+        }
+
+      location = vloc;
+
+      // show new gui
+      if (location == LOCATION_REGION)
+        {
+          player.moveTo(0, 0);
+          region.show();
+        }
     }
 
 
@@ -122,4 +151,8 @@ class Game
       Sys.println(s);
       scene.hud.log("<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>");
     }
+
+
+  public static var LOCATION_AREA = 'area'; 
+  public static var LOCATION_REGION = 'region'; 
 }
