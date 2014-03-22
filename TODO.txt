@@ -1,6 +1,5 @@
-area object visibility in parasite mode
-when the host is near death -> trigger area mode
-when the player wants to travel and this would result in host death -> trigger area mode
+region mode: when the host is near death -> trigger area mode
+region mode: when the player wants to travel and this would result in host death -> trigger area mode
 city areas and travel through sewers
 generate region of areas - initially unvisited and unknown
 fast travel on region grid view

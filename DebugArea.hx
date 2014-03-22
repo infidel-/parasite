@@ -3,15 +3,17 @@
 import ai.*;
 import objects.*;
 
-class Debug
+class DebugArea
 {
   var game: Game;
+  var area: Area;
 
   public var actions: Array<{ name: String, func: Dynamic }>;
 
-  public function new(g: Game)
+  public function new(g: Game, a: Area)
     {
       game = g;
+      area = a;
 
       actions = [
         {
@@ -78,7 +80,7 @@ class Debug
   function toggleLOS()
     {
       game.player.vars.losEnabled = !game.player.vars.losEnabled;
-      game.area.updateVisibility();
+      area.updateVisibility();
       game.log('LOS checks for player toggled.');
     }
 
@@ -110,9 +112,9 @@ class Debug
 // clear all AI in area
   function clearAI()
     {
-      for (ai in game.area.getAIinRadius(game.player.x, game.player.y, 100, false))
+      for (ai in area.getAIinRadius(area.player.x, area.player.y, 100, false))
         if (ai != game.player.host)
-          game.area.destroyAI(ai);
+          area.destroyAI(ai);
     }
 
 
@@ -126,9 +128,9 @@ class Debug
         }
 
       // spawn AI, attach to it and invade
-      var ai = new CivilianAI(game, game.player.x, game.player.y);
-      game.area.addAI(ai);
-      game.player.actionDebugAttachAndInvade(ai);
+      var ai = new CivilianAI(game, area.player.x, area.player.y);
+      area.addAI(ai);
+      area.player.actionDebugAttachAndInvade(ai);
       game.player.hostControl = 100;
 
       // give weapon
@@ -142,24 +144,24 @@ class Debug
 // spawn a cop
   function spawnCop()
     {
-      var ai = new PoliceAI(game, game.player.x, game.player.y);
+      var ai = new PoliceAI(game, area.player.x, area.player.y);
       ai.inventory.clear();
       ai.inventory.addID('baton');
       ai.skills.addID('baton', 50 + Std.random(25));
-      game.area.addAI(ai);
+      area.addAI(ai);
     }
 
 
 // spawn a body
   function spawnBody()
     {
-//      var o = game.area.createObject(game.player.x, game.player.y, 'body', 'civilian');
-      var o = new BodyObject(game, game.player.x, game.player.y, 'civilian');
+//      var o = area.createObject(area.player.x, area.player.y, 'body', 'civilian');
+      var o = new BodyObject(game, area.player.x, area.player.y, 'civilian');
       o.isHumanBody = true;
       o.organPoints = 10;
 //      o.setDecay(1);
 
-      game.area.debugShowObjects();
+      area.debugShowObjects();
     }
 
 

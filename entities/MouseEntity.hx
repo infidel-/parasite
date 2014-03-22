@@ -90,6 +90,14 @@ class MouseEntity extends Entity
 // handle mouse input
   public function handleInput()
     {
+      if (game.location == Game.LOCATION_AREA)
+        handleInputArea();
+    }
+
+
+// handle mouse input (area mode)
+  function handleInputArea()
+    {
       // mouse click
       if (Input.mouseReleased)
         {
@@ -102,8 +110,9 @@ class MouseEntity extends Entity
             {
               trace('(' + x + ',' + y + ') ' + game.area.getType(x, y) +
                 ' player vis: ' + 
-                game.area.isVisible(game.player.x, game.player.y, x, y, true));
-              if (game.player.x == x && game.player.y == y)
+                game.area.isVisible(game.area.player.x, 
+                  game.area.player.y, x, y, true));
+              if (game.area.player.x == x && game.area.player.y == y)
                 Const.debugObject(game.player);
               if (ai != null)
                 Const.debugObject(ai);
@@ -121,7 +130,7 @@ class MouseEntity extends Entity
             {
               if (game.player.state == Player.STATE_HOST && ai != null &&
                   ai != game.player.host)
-                game.player.actionAttack(ai);
+                game.area.player.actionAttack(ai);
             }
         }
 

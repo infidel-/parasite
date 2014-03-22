@@ -38,7 +38,8 @@ class DebugWindow
 // call action by id
   public function action(index: Int)
     {
-      game.debug.action(index - 1);
+      if (game.location == Game.LOCATION_AREA)
+        game.area.debug.action(index - 1);
       update(); // update display
       game.scene.hud.update(); // update HUD
     }
@@ -71,7 +72,10 @@ class DebugWindow
 
       // draw a list of debug action
       var n = 1;
-      for (a in game.debug.actions)
+      var actions = null;
+      if (game.location == Game.LOCATION_AREA)
+        actions = game.area.debug.actions;
+      for (a in actions)
         buf.add((n++) + ': ' + a.name + '\n');
 
       _textField.htmlText = buf.toString();

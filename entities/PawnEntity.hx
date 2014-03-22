@@ -92,4 +92,12 @@ class PawnEntity extends Entity
     {
       _spriteMask.setFrame(col, (row == null ? atlasRow : row));
     }
+
+/*
+// moveTo() wrapper that uses tile x, y
+  public inline function setPosition(vx: Int, vy: Int)
+    {
+      moveTo(vx * Const.TILE_WIDTH, vy * Const.TILE_HEIGHT);
+    }
+*/    
 }

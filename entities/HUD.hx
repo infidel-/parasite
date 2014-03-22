@@ -84,7 +84,8 @@ class HUD
       if (actionName == null)
         return;
 
-      game.player.action(actionName);
+      if (game.location == Game.LOCATION_AREA)
+        game.area.player.action(actionName);
     }
 
 
@@ -102,11 +103,19 @@ class HUD
     {
       _listActions.clear();
 
+      if (game.location == Game.LOCATION_AREA)
+        updateActionListArea();
+    }
+
+
+// update actions list (area mode)
+  function updateActionListArea()
+    {
       // parasite is attached to host
       if (game.player.state == Player.STATE_ATTACHED)
         {
           addActionToList('hardenGrip');
-          if (game.player.attachHold >= 90)
+          if (game.area.player.attachHold >= 90)
             addActionToList('invadeHost');
         }
 
@@ -120,7 +129,7 @@ class HUD
         }
 
       // area object actions
-      var o = game.area.getObjectAt(game.player.x, game.player.y);
+      var o = game.area.getObjectAt(game.area.player.x, game.area.player.y);
       if (o == null)
         return;
 
@@ -137,18 +146,10 @@ class HUD
 
       // player intent
       buf.add('Turn: ' + game.turns + '\n');
-      buf.add('Actions: ' + game.player.ap + '\n');
+      if (game.location == Game.LOCATION_AREA)
+        buf.add('Actions: ' + game.area.player.ap + '\n');
       buf.add('===\n');
 
-/*
-//      if (game.player.state == Player.STATE_PARASITE)
-      buf.add('Chemical A: ' + game.player.chemicals[0] +
-        '/' + game.player.maxChemicals[0] + '\n');
-      buf.add('Chemical B: ' + game.player.chemicals[1] +
-        '/' + game.player.maxChemicals[1] + '\n');
-      buf.add('Chemical C: ' + game.player.chemicals[2] +
-        '/' + game.player.maxChemicals[2] + '\n');
-*/        
       var colEnergy = 
         (game.player.energy > 0.3 * game.player.maxEnergy ? '#FFFFFF' : '#FF0000');
       buf.add('Energy: ' + 
@@ -162,7 +163,7 @@ class HUD
       buf.add('===\n');
 
       if (game.player.state == Player.STATE_ATTACHED)
-        buf.add('Hold: ' + game.player.attachHold + ' / 100\n');
+        buf.add('Hold: ' + game.area.player.attachHold + ' / 100\n');
 
       // host stats
       else if (game.player.state == Player.STATE_HOST)
@@ -183,7 +184,7 @@ class HUD
           buf.add('Control: ' + 
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100\n');
-          buf.add('Stamina: ' + game.player.host.stamina + '\n');
+          buf.add('Energy: ' + game.player.host.energy + '\n');
           buf.add('Evolution direction: ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');

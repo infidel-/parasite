@@ -20,7 +20,8 @@ class Area
   public var width: Int; // area width, height in cells
   public var height: Int;
   public var entity: Entity; // area entity
-//  public var player: PlayerArea; // game player (area mode)
+  public var player: PlayerArea; // game player (area mode)
+  public var debug: DebugArea; // debug actions (area mode)
 
   public function new (g: Game, tileset: Dynamic, w: Int, h: Int)
     {
@@ -29,6 +30,8 @@ class Area
       entity.layer = Const.LAYER_TILES;
       width = w;
       height = h;
+      player = new PlayerArea(g, this);
+      debug = new DebugArea(g, this);
 
       _ai = new List<AI>();
       _objects = new Map<Int, AreaObject>();
@@ -231,7 +234,7 @@ class Area
         for (dx in -3...3)
           if (getType(xo + dx, yo + dy) == 'ground' && 
               getAI(xo + dx, yo + dy) == null &&
-              !(game.player.x == xo + dx && game.player.y == yo + dy))
+              !(player.x == xo + dx && player.y == yo + dy))
             tmp.push({ x: xo + dx, y: yo + dy });
 
       // no empty cells found
@@ -532,12 +535,12 @@ class Area
 
           // must not be visible to player as a parasite
           if (game.player.state != Player.STATE_HOST &&
-              HXP.distanceSquared(game.player.x, game.player.y, x, y) < 6 * 6)
+              HXP.distanceSquared(player.x, player.y, x, y) < 6 * 6)
             continue;
 
           // must not be visible to player when possessing a host
           if (game.player.state == Player.STATE_HOST &&
-              isVisible(game.player.x, game.player.y, x, y))
+              isVisible(player.x, player.y, x, y))
             continue;
 
           // spot is empty and invisible to player, spawn ai
@@ -600,17 +603,17 @@ class Area
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
           if (!game.player.vars.losEnabled || 
-              isVisible(game.player.x, game.player.y, x, y))
+              isVisible(player.x, player.y, x, y))
             _tilemap.setTile(x, y, _cells[x][y]);
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       for (ai in _ai)
         ai.entity.visible = 
-          (game.player.vars.losEnabled ? isVisible(game.player.x, game.player.y, ai.x, ai.y) : true);
+          (game.player.vars.losEnabled ? isVisible(player.x, player.y, ai.x, ai.y) : true);
 
       for (obj in _objects)
         obj.entity.visible =
-          (game.player.vars.losEnabled ? isVisible(game.player.x, game.player.y, obj.x, obj.y) : true);
+          (game.player.vars.losEnabled ? isVisible(player.x, player.y, obj.x, obj.y) : true);
     }
 
 
@@ -636,21 +639,21 @@ class Area
       // set visibility for all tiles in that area
       for (y in y1...y2)
         for (x in x1...x2)
-          if (Math.abs(game.player.x - x) < 2 &&
-              Math.abs(game.player.y - y) < 2)
+          if (Math.abs(player.x - x) < 2 &&
+              Math.abs(player.y - y) < 2)
             _tilemap.setTile(x, y, _cells[x][y]);
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       for (ai in _ai)
         if (game.player.vars.losEnabled)
           ai.entity.visible = 
-            (HXP.distanceSquared(game.player.x, game.player.y, ai.x, ai.y) < 6 * 6);
+            (HXP.distanceSquared(player.x, player.y, ai.x, ai.y) < 6 * 6);
         else ai.entity.visible = true;
 
       for (obj in _objects)
         if (game.player.vars.losEnabled)
           obj.entity.visible = 
-            (HXP.distanceSquared(game.player.x, game.player.y, obj.x, obj.y) < 6 * 6);
+            (HXP.distanceSquared(player.x, player.y, obj.x, obj.y) < 6 * 6);
         else obj.entity.visible = true;
     }
 
@@ -668,7 +671,7 @@ class Area
           var ok = 
             (isWalkable(nx, ny) && 
              !hasAI(nx, ny) && 
-             !(game.player.x == nx && game.player.y == ny));
+             !(player.x == nx && player.y == ny));
           if (ok)
             tmp.push(i);
         }

@@ -12,7 +12,6 @@ class Game
   public var area: Area; // area player is currently in 
   public var player: Player; // game player
   public var location(default, null): String; // player location type - area, region, world 
-  public var debug: Debug; // debug actions
 
   public var turns: Int; // number of turns passed since game start
   public var isFinished: Bool; // is the game finished?
@@ -22,7 +21,6 @@ class Game
       scene = new GameScene(this);
       worldManager = new WorldManager(this);
       areaManager = new AreaManager(this);
-      debug = new Debug(this);
       HXP.scene = scene;
     }
 
@@ -34,6 +32,7 @@ class Game
       log('You are alone. You are scared. You need to find a host or you will die soon.');
       turns = 0;
       isFinished = false;
+      player = new Player(this);
 
       // generate world
       world = new World(this);
@@ -53,8 +52,7 @@ class Game
       // init player
       location = LOCATION_AREA;
       var loc = area.findEmptyLocation();
-      player = new Player(this, loc.x, loc.y);
-      player.createEntity();
+      area.player.createEntity(loc.x, loc.y);
 
       updateHUD(); // update HUD state
 
@@ -80,7 +78,7 @@ class Game
       // show new gui
       if (location == LOCATION_REGION)
         {
-          player.moveTo(0, 0);
+//          player.moveTo(0, 0);
           region.show();
         }
     }

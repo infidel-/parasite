@@ -53,8 +53,8 @@ class AI
   public var psyche: Int; // mental strength (1-10)
   public var health(default, set): Int; // current health
   public var maxHealth: Int; // maximum health
-  public var stamina(default, set): Int; // amount of turns until host death
-  public var maxStamina: Int; // max amount of turns until host expiry
+  public var energy(default, set): Int; // amount of turns until host death
+  public var maxEnergy: Int; // max amount of turns until host death 
 
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
@@ -101,8 +101,8 @@ class AI
       psyche = 1;
       maxHealth = 1;
       health = 1;
-      stamina = 10;
-      maxStamina = 10;
+      energy = 10;
+      maxEnergy = 10;
       _objectsSeen = new List<Int>();
       _turnsInvisible = 0;
 
@@ -115,8 +115,8 @@ class AI
 // save derived stats (must be called in the end of derived classes constructors)
   function derivedStats()
     {
-      maxStamina = (5 + strength + constitution) * 10;
-      stamina = maxStamina;
+      maxEnergy = (5 + strength + constitution) * 10;
+      energy = maxEnergy;
 //      maxHealth = Std.int(strength / 2) + constitution;
       maxHealth = strength + constitution;
       health = maxHealth;
@@ -245,7 +245,7 @@ class AI
       var ok = 
         (game.area.isWalkable(nx, ny) && 
          !game.area.hasAI(nx, ny) && 
-         !(game.player.x == nx && game.player.y == ny));
+         !(game.area.player.x == nx && game.area.player.y == ny));
       if (!ok)
         {
           changeRandomDirection();
@@ -267,8 +267,8 @@ class AI
           var ny = y + Const.diry[i];
           var ok = (
             game.area.isWalkable(nx, ny) && !game.area.hasAI(nx, ny) && 
-              (Math.abs(nx - game.player.x) >= Math.abs(x - game.player.x) &&
-               Math.abs(ny - game.player.y) >= Math.abs(y - game.player.y))
+              (Math.abs(nx - game.area.player.x) >= Math.abs(x - game.area.player.x) &&
+               Math.abs(ny - game.area.player.y) >= Math.abs(y - game.area.player.y))
             );
           if (ok)
             tmp.push(i);
@@ -297,13 +297,13 @@ class AI
     {
       log('tries to tear you away!');
 
-      game.player.attachHold -= strength;
-      if (game.player.attachHold > 0)
+      game.area.player.attachHold -= strength;
+      if (game.area.player.attachHold > 0)
         return;
 
       parasiteAttached = false;
       log('manages to tear you away.'); 
-      game.player.onDetach(); // notify player
+      game.area.player.onDetach(); // notify player
     }
 
 
@@ -332,9 +332,9 @@ class AI
       else info = item.info;
 
       // check for distance on melee
-      if (!info.weaponStats.isRanged && !isNear(game.player.x, game.player.y))
+      if (!info.weaponStats.isRanged && !isNear(game.area.player.x, game.area.player.y))
         {
-          logicMoveTo(game.player.x, game.player.y);
+          logicMoveTo(game.area.player.x, game.area.player.y);
           return;
         }
 
@@ -357,7 +357,7 @@ class AI
         (game.player.state == Player.STATE_HOST ? 'your host' : 'you') + 
         ' for ' + damage + ' damage.');
 
-      game.player.onDamage(damage); // on damage event
+      game.area.player.onDamage(damage); // on damage event
     }
 
 
@@ -368,9 +368,9 @@ class AI
   function stateIdle()
     {
       // alertness update
-      if (seesPosition(game.player.x, game.player.y))
+      if (seesPosition(game.area.player.x, game.area.player.y))
         {
-          var distance = Const.getDist(x, y, game.player.x, game.player.y);
+          var distance = Const.getDist(x, y, game.area.player.x, game.area.player.y);
 
           // check if player is on a host and has active camouflage layer
           var hasCamo = (game.player.state == Player.STATE_HOST ? 
@@ -411,7 +411,7 @@ class AI
   function stateAlert()
     {
       // alerted timer update
-      if (seesPosition(game.player.x, game.player.y))
+      if (seesPosition(game.area.player.x, game.area.player.y))
         timers.alert = ALERTED_TIMER;
       else timers.alert--;
   
@@ -436,15 +436,15 @@ class AI
               // search for player
               // we cheat a little and follow invisible player 
               // before alert timer ends 
-              if (!seesPosition(game.player.x, game.player.y))
-                logicMoveTo(game.player.x, game.player.y);
+              if (!seesPosition(game.area.player.x, game.area.player.y))
+                logicMoveTo(game.area.player.x, game.area.player.y);
 
               // try to attack
               else logicAttack();
             }
 
           // not aggressive AI - try to run away
-          else logicRunAwayFrom(game.player.x, game.player.y);
+          else logicRunAwayFrom(game.area.player.x, game.area.player.y);
         }
     }
 
@@ -462,7 +462,7 @@ class AI
         {
           log('manages to tear you away.');
           onDetach();
-          game.player.onDetach(); // notify player
+          game.area.player.onDetach(); // notify player
         }
     }
 
@@ -506,7 +506,7 @@ class AI
         }
 
       // should be invisible to player
-      var isVisible = game.area.isVisible(game.player.x, game.player.y, x, y);
+      var isVisible = game.area.isVisible(game.area.player.x, game.area.player.y, x, y);
       if (isVisible)
         {
           _turnsInvisible = 0;
@@ -663,8 +663,8 @@ class AI
 
   function set_health(v: Int)
     { return health = Const.clamp(v, 0, maxHealth); }
-  function set_stamina(v: Int)
-    { return stamina = Const.clamp(v, 0, maxStamina); }
+  function set_energy(v: Int)
+    { return energy = Const.clamp(v, 0, maxEnergy); }
   function set_alertness(v: Int)
     { return alertness = Const.clamp(v, 0, 100); }
 
