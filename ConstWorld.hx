@@ -20,6 +20,14 @@ class ConstWorld
     ];
 
 
+  static var regions: Array<RegionInfo> =
+    [
+      { // ***
+        id: 'city',
+      }
+    ];
+
+
 // get area info by id
   public static function getAreaInfo(id: String): AreaInfo
     {
@@ -31,8 +39,22 @@ class ConstWorld
     }
 
 
+// get region info by id
+  public static function getRegionInfo(id: String): RegionInfo
+    {
+      for (r in regions)
+        if (r.id == id)
+          return r;
+
+      return null;
+    }
+
+
 // area types
   public static var AREA_CITY_BLOCK = 'cityBlock';
+
+// region types
+  public static var REGION_CITY = 'city';
 }
 
 
@@ -45,3 +67,10 @@ typedef AreaInfo = {
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
 };
+
+// region info class
+
+typedef RegionInfo = {
+  var id: String; // region type id
+};
+

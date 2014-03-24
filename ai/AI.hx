@@ -515,7 +515,7 @@ class AI
 
       _turnsInvisible++;
       if (_turnsInvisible > DESPAWN_TIMER)
-        game.area.destroyAI(this); 
+        game.area.removeAI(this); 
     }
 
 
@@ -596,7 +596,7 @@ class AI
 // event: on death
   public function onDeath()
     {
-      game.area.destroyAI(this);
+      game.area.removeAI(this);
       var o = new BodyObject(game, x, y, type);
 
       // decay acceleration

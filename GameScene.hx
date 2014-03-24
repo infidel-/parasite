@@ -96,6 +96,12 @@ class GameScene extends Scene
           HXP.camera.y = game.area.player.entity.y - HXP.halfHeight;
         }
 
+      else if (game.location == Game.LOCATION_REGION)
+        {
+          HXP.camera.x = game.region.player.entity.x - HXP.halfWidth;
+          HXP.camera.y = game.region.player.entity.y - HXP.halfHeight;
+        }
+
       if (HXP.camera.x + HXP.windowWidth > Const.TILE_WIDTH * game.area.width)
         HXP.camera.x = Const.TILE_WIDTH * game.area.width - HXP.windowWidth;
       if (HXP.camera.y + HXP.windowHeight > Const.TILE_HEIGHT * game.area.height)
@@ -189,51 +195,55 @@ class GameScene extends Scene
 // handle player movement
   function handleMovement()
     {
-      var _dx = 0;
-      var _dy = 0;
+      var dx = 0;
+      var dy = 0;
 
       if (Input.pressed("up"))
-        _dy = -1;
+        dy = -1;
 
       if (Input.pressed("down"))
-        _dy = 1;
+        dy = 1;
 
       if (Input.pressed("left"))
-        _dx = -1;
+        dx = -1;
 
       if (Input.pressed("right"))
-        _dx = 1;
+        dx = 1;
 
       if (Input.pressed("upleft"))
         {
-          _dx = -1;
-          _dy = -1;
+          dx = -1;
+          dy = -1;
         }
 
       if (Input.pressed("upright"))
         {
-          _dx = 1;
-          _dy = -1;
+          dx = 1;
+          dy = -1;
         }
 
       if (Input.pressed("downleft"))
         {
-          _dx = -1;
-          _dy = 1;
+          dx = -1;
+          dy = 1;
         }
 
       if (Input.pressed("downright"))
         {
-          _dx = 1;
-          _dy = 1;
+          dx = 1;
+          dy = 1;
         }
 
-      if (_dx == 0 && _dy == 0)
+      if (dx == 0 && dy == 0)
         return;
 
       // area mode
       if (game.location == Game.LOCATION_AREA)
-        game.area.player.actionMove(_dx, _dy);
+        game.area.player.actionMove(dx, dy);
+
+      // area mode
+      else if (game.location == Game.LOCATION_REGION)
+        game.region.player.actionMove(dx, dy);
     }
 
 

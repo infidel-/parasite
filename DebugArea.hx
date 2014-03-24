@@ -1,4 +1,4 @@
-// debug actions
+// debug actions (area mode)
 
 import ai.*;
 import objects.*;
@@ -29,6 +29,10 @@ class DebugArea
           func: toggleLOS
         },
         {
+          name: 'Enter sewers',
+          func: enterSewers
+        },
+        {
           name: 'Gain all improvements at level 0',
           func: gainImprovs0
         },
@@ -55,7 +59,7 @@ class DebugArea
         {
           name: 'Set area alertness to 100',
           func: setMaxAlertness
-        }
+        },
         ];
     }
 
@@ -64,6 +68,11 @@ class DebugArea
   public function action(idx: Int)
     {
       var a = actions[idx];
+      if (a == null)
+        {
+          trace("No such area debug action " + idx);
+          return;
+        }
       Reflect.callMethod(this, a.func, []);
     }
 
@@ -114,7 +123,7 @@ class DebugArea
     {
       for (ai in area.getAIinRadius(area.player.x, area.player.y, 100, false))
         if (ai != game.player.host)
-          area.destroyAI(ai);
+          area.removeAI(ai);
     }
 
 
@@ -168,13 +177,22 @@ class DebugArea
 // show area manager queue
   function showAreaManagerQueue()
     {
-      game.areaManager.debugShowQueue();
+      game.area.manager.debugShowQueue();
     }
 
 
 // set max area alertness
   function setMaxAlertness()
     {
-      game.world.area.alertness = 100;
+      game.area.debugSetMaxAlertness();
+    }
+
+
+// enter sewers (region mode)
+  function enterSewers()
+    {
+      game.scene.debugWindow.hide();
+      game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
+      game.setLocation(Game.LOCATION_REGION);
     }
 }

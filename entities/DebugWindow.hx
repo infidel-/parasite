@@ -66,8 +66,8 @@ class DebugWindow
       var buf = new StringBuf();
       buf.add('Debug\n===\n\n');
 
-      buf.add('Area alertness: ' + game.world.area.alertness + '\n');
-      buf.add('Area interest: ' + game.world.area.interest + '\n');
+      buf.add('Area alertness: ' + game.area.getArea().alertness + '\n');
+      buf.add('Area interest: ' + game.area.getArea().interest + '\n');
       buf.add('\n');
 
       // draw a list of debug action
@@ -75,6 +75,8 @@ class DebugWindow
       var actions = null;
       if (game.location == Game.LOCATION_AREA)
         actions = game.area.debug.actions;
+      else if (game.location == Game.LOCATION_REGION)
+        actions = game.region.debug.actions;
       for (a in actions)
         buf.add((n++) + ': ' + a.name + '\n');
 

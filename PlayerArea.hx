@@ -12,7 +12,7 @@ class PlayerArea
   var player: Player; // player state link
 
   public var entity: PlayerEntity; // player ui entity
-  public var x: Int; // x,y on map grid
+  public var x: Int; // x,y on grid
   public var y: Int;
   public var ap: Int; // player action points (2 per turn)
 
@@ -216,7 +216,7 @@ class PlayerArea
         return;
 
       // propagate shooting/melee event
-      game.areaManager.onAttack(x, y, info.weaponStats.isRanged);
+      game.area.manager.onAttack(x, y, info.weaponStats.isRanged);
 
       // weapon skill level (ai + parasite bonus)
       var skillLevel = player.host.skills.getLevel(info.weaponStats.skill) +

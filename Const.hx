@@ -43,18 +43,23 @@ class Const
   public static var ROW_CIVILIAN = 5;
   public static var ROW_POLICE = 6;
   public static var FRAME_DEFAULT = 0;
-  public static var FRAME_MASK_POSSESSED = 1;
-  public static var FRAME_BODY = 2;
+  public static var FRAME_BODY = 1;
+  public static var FRAME_MASK_POSSESSED = 2;
+  public static var FRAME_MASK_REGION = 3;
 
 
   // tiles spritemap indexes
   public static var TILE_HIDDEN = 0;
   public static var TILE_GROUND = 1;
   public static var TILE_BUILDING = 2;
-  public static var TILE_REGION_CITY = 8;
+
+  public static var TILE_REGION_ROW = 8;
+  public static var TILE_REGION_CITY = 0;
 
   public static var TILE_WALKABLE = [ false, true, false ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building' ];
+  public static var TILE_WALKABLE_REGION = [ true];
+  public static var TILE_TYPE_REGION = [ 'city' ];
 
 
   // player stuff

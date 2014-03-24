@@ -8,6 +8,8 @@ class AreaManager
   var game: Game;
   var _list: List<AreaEvent>;
 
+  public var area: RegionArea; // current area link
+
   public function new(g: Game)
     {
       game = g;
@@ -164,7 +166,7 @@ class AreaManager
         e.ai.log('calls the police!');
 
       // increase area alertness
-      game.world.area.alertness++;
+      area.alertness++;
 
       // alert all police already in area 
       add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
@@ -222,7 +224,7 @@ class AreaManager
         e.ai.log('calls for backup!');
 
       // increase area alertness
-      game.world.area.alertness += 2;
+      area.alertness += 2;
 
       // alert all police already in area 
       add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);

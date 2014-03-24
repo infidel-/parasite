@@ -1,3 +1,5 @@
+region mode: do not despawn area until player moves?
+return back to area
 region mode: when the host is near death -> trigger area mode
 region mode: when the player wants to travel and this would result in host death -> trigger area mode
 city areas and travel through sewers

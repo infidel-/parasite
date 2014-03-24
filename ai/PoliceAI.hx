@@ -50,7 +50,7 @@ class PoliceAI extends HumanAI
       if (!isBackupCalled && state == AI.STATE_ALERT && !parasiteAttached)
         {
           isBackupCalled = true;
-          game.areaManager.addAI(this, AreaManager.EVENT_CALL_POLICE_BACKUP, 1);
+          game.area.manager.addAI(this, AreaManager.EVENT_CALL_POLICE_BACKUP, 1);
         }
     }
 
@@ -61,6 +61,6 @@ class PoliceAI extends HumanAI
       // backup despawns when it loses alert state
       // i could make it roam around for a bit but it's probably not worth it
       if (state == AI.STATE_IDLE && isBackup)
-        game.area.destroyAI(this);
+        game.area.removeAI(this);
     }
 }

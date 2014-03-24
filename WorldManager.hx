@@ -12,17 +12,6 @@ class WorldManager
     }
 
 
-// event: body has been discovered by authorities
-// pts - amount of organ points this body has
-  public function onBodyDiscovered(area: WorldArea, pts: Int)
-    {
-      area.alertness += 1;
-      area.interest += pts;
-      if (pts > 0)
-        log('Authorities have discovered a body with some weird anomalies.');
-    }
-
-
 // ==================================================================================
 
 

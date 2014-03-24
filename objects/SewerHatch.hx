@@ -17,6 +17,7 @@ class SewerHatch extends AreaObject
 // activate sewers - leave area
   public override function onActivate()
     {
+      game.log("You enter the damp fetid sewers, escaping the prying eyes.");
       game.setLocation(Game.LOCATION_REGION);
     }
 }

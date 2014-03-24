@@ -11,34 +11,70 @@ class Area
 {
   var game: Game; // game state link
 
+  var _tileset: Dynamic;
   var _tilemap: Tilemap;
   var _ai: List<AI>;
   var _objects: Map<Int, AreaObject>;
   var _cells: Array<Array<Int>>; // cell types
   var _pathEngine: aPath.Engine;
+  var area: RegionArea; // region area link
 
   public var width: Int; // area width, height in cells
   public var height: Int;
   public var entity: Entity; // area entity
+  public var manager: AreaManager; // area event manager
   public var player: PlayerArea; // game player (area mode)
   public var debug: DebugArea; // debug actions (area mode)
 
-  public function new (g: Game, tileset: Dynamic, w: Int, h: Int)
+  public function new (g: Game, tileset: Dynamic)
     {
       game = g;
+      _tilemap = null;
+      _tileset = tileset;
+      width = 0;
+      height = 0;
+
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
-      width = w;
-      height = h;
+
+      manager = new AreaManager(g);
       player = new PlayerArea(g, this);
       debug = new DebugArea(g, this);
+    }
+
+
+// set new area
+  public function setArea(a: RegionArea)
+    {
+      area = a;
+      manager.area = area;
+      width = area.width;
+      height = area.height;
+
+      if (_tilemap != null) // clear old graphic
+        entity.graphic = null;
 
       _ai = new List<AI>();
       _objects = new Map<Int, AreaObject>();
-      _tilemap = new Tilemap(tileset, 
-        w * Const.TILE_WIDTH, h * Const.TILE_HEIGHT,
+      _tilemap = new Tilemap(_tileset, 
+        width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entity.addGraphic(_tilemap);
+
+      generate();
+    }
+
+
+// get current area info
+  public inline function getArea(): RegionArea
+    { return area; }
+
+
+// show gui
+  public function show()
+    {
+      entity.visible = true;
+      player.entity.visible = true;
     }
 
 
@@ -46,19 +82,26 @@ class Area
   public function hide()
     {
       entity.visible = false;
+      player.entity.visible = false;
+
+      for (ai in _ai)
+        removeAI(ai);
+
+      for (o in _objects)
+        removeObject(o);
     }
 
 
 // generate a new area map
-  public function generate()
+  function generate()
     {
       _cells = new Array<Array<Int>>();
       for (i in 0...width)
         _cells[i] = [];
 
       // clear map
-      for (y in 0...width)
-        for (x in 0...height)
+      for (y in 0...height)
+        for (x in 0...width)
           setType(x, y, Const.TILE_GROUND);
 
       generateBuildings();
@@ -131,7 +174,7 @@ class Area
 // generate objects
   function generateObjects()
     {
-      var info = game.world.area.info;
+      var info = area.info;
 
       // spawn all objects
       for (objInfo in info.objects)
@@ -387,8 +430,8 @@ class Area
     }
 
 
-// destroy AI
-  public function destroyAI(ai: AI)
+// remove AI
+  public function removeAI(ai: AI)
     {
       game.scene.remove(ai.entity);
       _ai.remove(ai);
@@ -424,7 +467,7 @@ class Area
       if (cnt > 0)
         return;
 
-      game.world.area.alertness -= 0.1;
+      area.alertness -= 0.1;
     }
 
 
@@ -432,7 +475,7 @@ class Area
 // will spawn AI depending on area interest/alertness
   function turnSpawnAI()
     {
-      var info = game.world.area.info;
+      var info = area.info;
 
       // get number of common AI
       var cnt = 0;
@@ -474,7 +517,7 @@ class Area
 // spawn some more AI related to area alertness
   function turnSpawnMoreAI()
     {
-      var info = game.world.area.info;
+      var info = area.info;
 
       // get number of uncommon AI (spawned by alertness logic)
       var cnt = 0;
@@ -483,7 +526,7 @@ class Area
           cnt++;
 
       // calculate the actual number to spawn according to the area alertness
-      var uncommonAI = Std.int(info.uncommonAI * game.world.area.alertness / 100.0);
+      var uncommonAI = Std.int(info.uncommonAI * area.alertness / 100.0);
 
       // there are enough uncommon AI already
       if (cnt > uncommonAI)
@@ -742,9 +785,16 @@ class Area
 
 
 // DEBUG: show all objects
-  public function debugShowObjects()
+  public inline function debugShowObjects()
     {
       for (o in _objects)
         trace(o);
+    }
+
+
+// DEBUG: set max area alertness
+  public inline function debugSetMaxAlertness()
+    {
+      area.alertness = 100;
     }
 }

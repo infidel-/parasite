@@ -7,9 +7,8 @@ class Game
   public var scene: GameScene; // ui scene
   public var world: World; // game world
   public var worldManager: WorldManager; // game world manager
-  public var region: Region; // game world region
-  public var areaManager: AreaManager; // area event manager
-  public var area: Area; // area player is currently in 
+  public var region: Region; // region view 
+  public var area: Area; // area view 
   public var player: Player; // game player
   public var location(default, null): String; // player location type - area, region, world 
 
@@ -20,7 +19,6 @@ class Game
     {
       scene = new GameScene(this);
       worldManager = new WorldManager(this);
-      areaManager = new AreaManager(this);
       HXP.scene = scene;
     }
 
@@ -34,21 +32,35 @@ class Game
       isFinished = false;
       player = new Player(this);
 
+      region = new Region(this, "gfx/tileset.png");
+      scene.add(region.entity);
+      area = new Area(this, "gfx/tileset.png");
+      scene.add(area.entity);
+
       // generate world
       world = new World(this);
       world.generate();
 
-      // generate region
-      region = new Region(this, "gfx/tileset.png", 30, 20);
+      // set random region (currently only 1 at all)
+      var r = world.get(0);
+      region.setRegion(r);
+      var a = r.getRandom();
+      region.player.createEntity(a.x, a.y);
+      region.hide();
+
+      area.setArea(a);
+
+/* FIX
       region.generate();
       scene.add(region.entity);
+      region.player.createEntity(2, 2); // TODO: change to proper area
       region.hide();
 
       // generate initial area
       area = new Area(this, "gfx/tileset.png", 50, 50);
       area.generate();
       scene.add(area.entity);
-
+*/
       // init player
       location = LOCATION_AREA;
       var loc = area.findEmptyLocation();
@@ -78,9 +90,11 @@ class Game
       // show new gui
       if (location == LOCATION_REGION)
         {
-//          player.moveTo(0, 0);
           region.show();
         }
+
+      // center camera on player
+      scene.updateCamera();
     }
 
 
@@ -96,14 +110,24 @@ class Game
       turns++;
 
       // AI movement
-      area.turn();
-      if (isFinished)
-        return;
+      if (location == LOCATION_AREA)
+        {
+          area.turn();
+          if (isFinished)
+            return;
 
-      // area turn
-      areaManager.turn();
-      if (isFinished)
-        return;
+          // area turn
+          area.manager.turn();
+          if (isFinished)
+            return;
+        }
+
+      else if (location == LOCATION_REGION)
+        {
+          region.turn();
+          if (isFinished)
+            return;
+        }
 
       // update AI visibility to player
       area.updateVisibility();
