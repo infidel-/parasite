@@ -90,27 +90,38 @@ class GameScene extends Scene
 // update camera position
   public function updateCamera()
     {
+      var x = 0.0, y = 0.0, w = 0.0, h = 0.0;
       if (game.location == Game.LOCATION_AREA)
         {
-          HXP.camera.x = game.area.player.entity.x - HXP.halfWidth;
-          HXP.camera.y = game.area.player.entity.y - HXP.halfHeight;
+          x = game.area.player.entity.x;
+          y = game.area.player.entity.y;
+          w = game.area.width;
+          h = game.area.height;
         }
 
       else if (game.location == Game.LOCATION_REGION)
         {
-          HXP.camera.x = game.region.player.entity.x - HXP.halfWidth;
-          HXP.camera.y = game.region.player.entity.y - HXP.halfHeight;
+          x = game.region.player.entity.x;
+          y = game.region.player.entity.y;
+          w = game.region.width;
+          h = game.region.height;
         }
 
-      if (HXP.camera.x + HXP.windowWidth > Const.TILE_WIDTH * game.area.width)
-        HXP.camera.x = Const.TILE_WIDTH * game.area.width - HXP.windowWidth;
-      if (HXP.camera.y + HXP.windowHeight > Const.TILE_HEIGHT * game.area.height)
-        HXP.camera.y = Const.TILE_HEIGHT * game.area.height - HXP.windowHeight;
+      x -= HXP.halfWidth;
+      y -= HXP.halfHeight;
 
-      if (HXP.camera.x < 0)
-        HXP.camera.x = 0;
-      if (HXP.camera.y < 0)
-        HXP.camera.y = 0;
+      if (x + HXP.windowWidth > Const.TILE_WIDTH * w) 
+        x = Const.TILE_WIDTH * w - HXP.windowWidth;
+      if (y + HXP.windowHeight > Const.TILE_HEIGHT * h) 
+        y = Const.TILE_HEIGHT * h - HXP.windowHeight;
+
+      if (x < 0)
+        x = 0;
+      if (y < 0)
+        y = 0;
+
+      HXP.camera.x = x;
+      HXP.camera.y = y;
     }
 
 

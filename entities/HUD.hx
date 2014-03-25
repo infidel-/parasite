@@ -86,56 +86,31 @@ class HUD
 
       if (game.location == Game.LOCATION_AREA)
         game.area.player.action(actionName);
+
+      else if (game.location == Game.LOCATION_REGION)
+        game.region.player.action(actionName);
     }
 
-
-// helper: add action to list and check for energy
+/*
+// add action to list and check for energy
   inline function addActionToList(name: String)
     {
       var action = Const.getAction(name);
       if (action.energy <= game.player.energy)
         _listActions.add(name);
     }
-
+*/
 
 // update player actions list
-  public function updateActionList()
+  inline function updateActionList()
     {
-      _listActions.clear();
+//      _listActions.clear();
 
       if (game.location == Game.LOCATION_AREA)
-        updateActionListArea();
-    }
+        _listActions = game.area.player.getActionList();
 
-
-// update actions list (area mode)
-  function updateActionListArea()
-    {
-      // parasite is attached to host
-      if (game.player.state == Player.STATE_ATTACHED)
-        {
-          addActionToList('hardenGrip');
-          if (game.area.player.attachHold >= 90)
-            addActionToList('invadeHost');
-        }
-
-      // parasite in control of host
-      else if (game.player.state == Player.STATE_HOST)
-        {
-          addActionToList('reinforceControl');
-          if (game.player.evolutionManager.getLevel('hostMemory') > 0)
-            addActionToList('accessMemory');
-          addActionToList('leaveHost');
-        }
-
-      // area object actions
-      var o = game.area.getObjectAt(game.area.player.x, game.area.player.y);
-      if (o == null)
-        return;
-
-      // TODO: add this to appropriate object class
-      if (game.player.state != Player.STATE_ATTACHED && o.type == 'sewer_hatch')
-        addActionToList('enterSewers');
+      else if (game.location == Game.LOCATION_REGION)
+        _listActions = game.region.player.getActionList();
     }
 
 

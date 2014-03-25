@@ -58,6 +58,13 @@ class Region
     }
 
 
+// get region info
+  public inline function getRegion(): WorldRegion
+    {
+      return region;
+    }
+
+
 // show gui
   public function show()
     {

@@ -61,7 +61,19 @@ class Area
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entity.addGraphic(_tilemap);
 
+      // generate new area
       generate();
+
+      // update player position 
+      var loc = findEmptyLocation();
+      if (game.player.state == Player.STATE_HOST)
+        {
+          player.entity.visible = false;
+          game.scene.add(game.player.host.entity);
+          game.player.host.setPosition(loc.x, loc.y);
+          _ai.add(game.player.host);
+        }
+      player.moveTo(loc.x, loc.y);
     }
 
 
@@ -74,7 +86,13 @@ class Area
   public function show()
     {
       entity.visible = true;
-      player.entity.visible = true;
+      if (game.player.state != Player.STATE_HOST)
+        player.entity.visible = true;
+
+      game.scene.updateCamera(); // center camera on player
+
+      // update AI and objects visibility to player
+      updateVisibility();
     }
 
 
@@ -647,7 +665,7 @@ class Area
         for (x in rect.x1...rect.x2)
           if (!game.player.vars.losEnabled || 
               isVisible(player.x, player.y, x, y))
-            _tilemap.setTile(x, y, _cells[x][y]);
+              _tilemap.setTile(x, y, _cells[x][y]);
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       for (ai in _ai)
@@ -666,22 +684,11 @@ class Area
   function updateVisibilityParasite()
     {
       // calculate visible rectangle
-      var x1 = Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1;
-      var y1 = Std.int(HXP.camera.y / Const.TILE_HEIGHT) - 1;
-      var x2 = Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH) + 2;
-      var y2 = Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT) + 2;
-      if (x1 < 0)
-        x1 = 0;
-      if (y1 < 0)
-        y1 = 0;
-      if (x2 > width)
-        x2 = width;
-      if (y2 > height)
-        y2 = height;
+      var rect = getVisibleRect();
 
       // set visibility for all tiles in that area
-      for (y in y1...y2)
-        for (x in x1...x2)
+      for (y in rect.y1...rect.y2)
+        for (x in rect.x1...rect.x2)
           if (Math.abs(player.x - x) < 2 &&
               Math.abs(player.y - y) < 2)
             _tilemap.setTile(x, y, _cells[x][y]);

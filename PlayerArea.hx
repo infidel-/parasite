@@ -84,6 +84,50 @@ class PlayerArea
 // ==============================   ACTIONS   =======================================
 
 
+// helper: add action to list and check for energy
+  inline function addActionToList(list: List<String>, name: String)
+    {
+      var action = Const.getAction(name);
+      if (action.energy <= player.energy)
+        list.add(name);
+    }
+
+
+// get actions list (area mode)
+  public function getActionList(): List<String>
+    {
+      var tmp = new List<String>();
+
+      // parasite is attached to host
+      if (player.state == Player.STATE_ATTACHED)
+        {
+          addActionToList(tmp, 'hardenGrip');
+          if (attachHold >= 90)
+            addActionToList(tmp, 'invadeHost');
+        }
+
+      // parasite in control of host
+      else if (player.state == Player.STATE_HOST)
+        {
+          addActionToList(tmp, 'reinforceControl');
+          if (player.evolutionManager.getLevel('hostMemory') > 0)
+            addActionToList(tmp, 'accessMemory');
+          addActionToList(tmp, 'leaveHost');
+        }
+
+      // area object actions
+      var o = area.getObjectAt(x, y);
+      if (o == null)
+        return tmp;
+
+      // TODO: add this to appropriate object class
+      if (player.state != Player.STATE_ATTACHED && o.type == 'sewer_hatch')
+        addActionToList(tmp, 'enterSewers');
+      
+      return tmp;
+    }
+
+
 // do a player action by string id
 // action energy availability is checked when the list is formed
   public function action(actionName: String)

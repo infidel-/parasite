@@ -35,6 +35,7 @@ class Game
       region = new Region(this, "gfx/tileset.png");
       scene.add(region.entity);
       area = new Area(this, "gfx/tileset.png");
+      area.player.createEntity(0, 0);
       scene.add(area.entity);
 
       // generate world
@@ -48,31 +49,11 @@ class Game
       region.player.createEntity(a.x, a.y);
       region.hide();
 
-      area.setArea(a);
-
-/* FIX
-      region.generate();
-      scene.add(region.entity);
-      region.player.createEntity(2, 2); // TODO: change to proper area
-      region.hide();
-
-      // generate initial area
-      area = new Area(this, "gfx/tileset.png", 50, 50);
-      area.generate();
-      scene.add(area.entity);
-*/
-      // init player
       location = LOCATION_AREA;
-      var loc = area.findEmptyLocation();
-      area.player.createEntity(loc.x, loc.y);
+      area.setArea(a);
+      area.show();
 
       updateHUD(); // update HUD state
-
-      // center camera on player
-      scene.updateCamera();
-
-      // update AI visibility to player
-      area.updateVisibility();
     }
 
 
@@ -85,10 +66,23 @@ class Game
           area.hide();
         }
 
+      else if (location == LOCATION_REGION)
+        {
+          region.hide();
+        }
+
       location = vloc;
 
       // show new gui
-      if (location == LOCATION_REGION)
+      if (location == LOCATION_AREA)
+        {
+          var r = region.getRegion();
+          var a = r.getXY(region.player.x, region.player.y);
+          area.setArea(a);
+          area.show();
+        }
+
+      else if (location == LOCATION_REGION)
         {
           region.show();
         }

@@ -48,6 +48,17 @@ class WorldRegion
     }
 
 
+// get area by x,y
+  public function getXY(x: Int, y: Int): RegionArea
+    {
+      for (r in _list)
+        if (r.x == x && r.y == y)
+          return r;
+
+      return null;
+    }
+
+
 // get random area
   public function getRandom(): RegionArea
     {

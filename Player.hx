@@ -86,6 +86,9 @@ class Player
       // location-specific turn
       if (game.location == Game.LOCATION_AREA)
         game.area.player.turn();
+      
+      else if (game.location == Game.LOCATION_REGION)
+        game.region.player.turn();
     }
 
 

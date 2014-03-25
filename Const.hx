@@ -71,6 +71,7 @@ class Const
   // player actions and intents names
   public static var PLAYER_ACTIONS =
     {
+      // area
       attachHost: { id: 'attachHost', name: 'Attach To Host', energy: 0 },
       detach: { id: 'detach', name: 'Detach', energy: 0 },
       hardenGrip: { id: 'hardenGrip', name: 'Harden Grip', energy: 5 },
@@ -80,7 +81,10 @@ class Const
       leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
       accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 5 },
       move: { id: 'move', name: 'Movement', energy: 0 },
-      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 0 },
+      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 10 },
+
+      // region
+      enterArea: { id: 'enterArea', name: 'Enter Area', energy: 0 },
 //      { id: '', name: '', ap:  },
     };
 

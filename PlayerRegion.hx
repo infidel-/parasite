@@ -36,12 +36,74 @@ class PlayerRegion
     }
 
 
+// end of turn for player (in region mode)
+  public function turn()
+    {
+      // automatically gain control over host each turn
+      if (player.state == Player.STATE_HOST && player.hostControl < 100)
+        player.hostControl += 10;
+    }
+
+
+// ==============================   ACTIONS   =======================================
+
+
+// helper: add action to list and check for energy
+  inline function addActionToList(list: List<String>, name: String)
+    {
+      var action = Const.getAction(name);
+      if (action.energy <= player.energy)
+        list.add(name);
+    }
+
+
+// get actions list (area mode)
+  public function getActionList(): List<String>
+    {
+      var tmp = new List<String>();
+      
+      addActionToList(tmp, 'enterArea');
+      
+      return tmp;
+    }
+
+
+// do a player action by string id
+// action energy availability is checked when the list is formed
+  public function action(actionName: String)
+    {
+      var action = Const.getAction(actionName);
+
+      if (actionName == 'enterArea')
+        actionEnterArea();
+
+      player.energy -= action.energy;
+
+      if (player.energy == 0)
+        Const.todo('Zero energy as a result of a region action. Fix this.');
+
+      // update HUD info
+      game.updateHUD();
+    }
+
+
+// action: enter area
+  function actionEnterArea()
+    {
+      game.log("You emerge from the sewers.");
+      game.setLocation(Game.LOCATION_AREA);
+    }
+
+
 // action: move player by dx,dy
   public function actionMove(dx: Int, dy: Int)
     {
       // try to move to the new location
       moveBy(dx, dy);
     }
+
+
+// ==================================================================================
 
 
 // move player by dx, dy
