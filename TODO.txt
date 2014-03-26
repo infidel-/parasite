@@ -1,6 +1,11 @@
+spawn player in non empty area
+do not allow to enter empty area
 region mode: do not despawn area until player moves?
 generate region of areas - initially unvisited and unknown
-i can display area alertness in region view!
+area generator - change number for different area types
+area generator - change buildings number?
+alertness changes in region mode - alertness should decrease over time
+area mode: increasing area alertness will increase it for adjacent areas
 3 classes of city areas with different stats, including police reaction time and probability of police ignoring the call?
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies

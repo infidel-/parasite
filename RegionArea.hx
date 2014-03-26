@@ -6,6 +6,7 @@ class RegionArea
 {
   public var id: Int; // area id
   public var typeID: String; // area type id - city block, university, military base, etc
+  public var tileID: Int; // tile id on tilemap
   public var info: AreaInfo; // area info link
   public var width: Int;
   public var height: Int;
@@ -28,6 +29,15 @@ class RegionArea
       info = ConstWorld.getAreaInfo(typeID);
       alertness = 0;
       interest = 0;
+
+      if (typeID == ConstWorld.AREA_GROUND)
+        tileID = Const.TILE_REGION_GROUND;
+      else if (typeID == ConstWorld.AREA_CITY_LOW)
+        tileID = Const.TILE_REGION_CITY_LOW;
+      else if (typeID == ConstWorld.AREA_CITY_MEDIUM)
+        tileID = Const.TILE_REGION_CITY_MEDIUM;
+      else if (typeID == ConstWorld.AREA_CITY_HIGH)
+        tileID = Const.TILE_REGION_CITY_HIGH;
     }
 
 

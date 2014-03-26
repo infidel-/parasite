@@ -11,7 +11,6 @@ class Area
 {
   var game: Game; // game state link
 
-  var _tileset: Dynamic;
   var _tilemap: Tilemap;
   var _ai: List<AI>;
   var _objects: Map<Int, AreaObject>;
@@ -26,11 +25,10 @@ class Area
   public var player: PlayerArea; // game player (area mode)
   public var debug: DebugArea; // debug actions (area mode)
 
-  public function new (g: Game, tileset: Dynamic)
+  public function new (g: Game)
     {
       game = g;
       _tilemap = null;
-      _tileset = tileset;
       width = 0;
       height = 0;
 
@@ -56,7 +54,7 @@ class Area
 
       _ai = new List<AI>();
       _objects = new Map<Int, AreaObject>();
-      _tilemap = new Tilemap(_tileset, 
+      _tilemap = new Tilemap("gfx/tileset.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entity.addGraphic(_tilemap);

@@ -32,10 +32,148 @@ class WorldRegion
 // generate a region
   public function generate()
     {
+      if (typeID == ConstWorld.REGION_CITY)
+        generateCity();
+
+      else throw 'unsupported region type: ' + typeID;
+    }
+
+
+// helper: trace tmp array
+  function traceTmp(tmp: Array<Array<Int>>)
+    {
+      // debug output
+      for (y in 0...height)
+        {
+          var s = '';
+          for (x in 0...width)
+            {
+              s += tmp[x][y];
+            }
+          trace(s);
+        }
+    }
+
+
+// helper: smooth cells adjacent to this one
+  inline function smoothAdjacentTmp(tmp: Array<Array<Int>>, x: Int, y: Int)
+    {
+      if (y - 1 >= 0 && tmp[x][y - 1] == 0)
+        tmp[x][y - 1] = 1;
+      if (y + 1 < height && tmp[x][y + 1] == 0)
+        tmp[x][y + 1] = 1;
+
+      if (x - 1 >= 0 && tmp[x - 1][y] == 0)
+        tmp[x - 1][y] = 1;
+      if (x + 1 < width && tmp[x + 1][y] == 0)
+        tmp[x + 1][y] = 1;
+    }
+
+
+// generate: city
+  function generateCity()
+    {
+      // make empty array
+      var tmp = new Array<Array<Int>>();
+      for (i in 0...width)
+        tmp[i] = [];
+
+      // fill array with zeroes
+      for (y in 0...height)
+        for (x in 0...width)
+          tmp[x][y] = 0;
+
+      // form a few peaks near the center of map
+      var numPeaks = Std.int(width * height / 25);
+      for (i in 0...numPeaks)
+        {
+          var x = Std.int(width / 4 + Std.random(Std.int(width / 2)));
+          var y = Std.int(height / 4 + Std.random(Std.int(height/ 2)));
+          tmp[x][y] = 7 + Std.random(3);
+        }
+
+//      trace(0);
+//      traceTmp(tmp);
+
+      // smooth peaks a few times
+//      var numSmooth = Std.int(width * height / 100);
+      for (i in 0...4)//numSmooth)
+        for (y in 0...height)
+          for (x in 0...width)
+            if (tmp[x][y] > 1)
+              {
+                if (y - 1 >= 0 && tmp[x][y - 1] == 0)
+                  tmp[x][y - 1] = tmp[x][y] - 1;
+                if (y + 1 < height && tmp[x][y + 1] == 0)
+                  tmp[x][y + 1] = tmp[x][y] - 1;
+
+                if (x - 1 >= 0 && tmp[x - 1][y] == 0)
+                  tmp[x - 1][y] = tmp[x][y] - 1;
+                if (x + 1 < width && tmp[x + 1][y] == 0)
+                  tmp[x + 1][y] = tmp[x][y] - 1;
+              }
+
+//      trace('s');
+//      traceTmp(tmp);
+
+      // normalize results
+      for (y in 0...height)
+        for (x in 0...width)
+          tmp[x][y] = Std.int(tmp[x][y] * 3.0 / 9.0);
+
+//      trace('n');
+//      traceTmp(tmp);
+
+      // roughen up edges
+      var chance = 30;
+      for (y in 0...height)
+        for (x in 0...width)
+          if (tmp[x][y] == 0)
+            {
+              if (y - 1 >= 0 && tmp[x][y - 1] == 1 && Std.random(100) < chance)
+                tmp[x][y - 1] = 0;
+              if (y + 1 < height && tmp[x][y + 1] == 1 && Std.random(100) < chance)
+                tmp[x][y + 1] = 0;
+
+              if (x - 1 >= 0 && tmp[x - 1][y] == 1 && Std.random(100) < chance)
+                tmp[x - 1][y] = 0;
+              if (x + 1 < width && tmp[x + 1][y] == 1 && Std.random(100) < chance)
+                tmp[x + 1][y] = 0;
+            }
+      
+//      trace('r');
+//      traceTmp(tmp);
+
+      // smooth over again
+      for (y in 0...height)
+        for (x in 0...width)
+          if (tmp[x][y] == 3)
+            smoothAdjacentTmp(tmp, x, y);
+
+//      trace('s2');
+//      traceTmp(tmp);
+
+      // and again (seriously, for the last time!
+      for (y in 0...height)
+        for (x in 0...width)
+          if (tmp[x][y] == 2)
+            smoothAdjacentTmp(tmp, x, y);
+
+//      trace('s3');
+//      traceTmp(tmp);
+
       for (y in 0...height)
         for (x in 0...width)
           {
-            var a = new RegionArea(ConstWorld.AREA_CITY_BLOCK, x, y, 50, 50);
+            var t = ConstWorld.AREA_GROUND;
+            if (tmp[x][y] == 1)
+              t = ConstWorld.AREA_CITY_LOW;
+            else if (tmp[x][y] == 2)
+              t = ConstWorld.AREA_CITY_MEDIUM;
+            else if (tmp[x][y] == 3)
+              t = ConstWorld.AREA_CITY_HIGH;
+
+            var a = new RegionArea(t, x, y, 50, 50);
             _list.set(a.id, a);
           }
     }

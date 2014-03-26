@@ -32,9 +32,10 @@ class Game
       isFinished = false;
       player = new Player(this);
 
-      region = new Region(this, "gfx/tileset.png");
+      region = new Region(this);
       scene.add(region.entity);
-      area = new Area(this, "gfx/tileset.png");
+      scene.add(region.entityAlert);
+      area = new Area(this);
       area.player.createEntity(0, 0);
       scene.add(area.entity);
 

@@ -5,7 +5,46 @@ class ConstWorld
   static var areas: Array<AreaInfo> =
     [
       { // ***
-        id: 'cityBlock', 
+        id: 'ground', 
+        commonAI: 0,
+        uncommonAI: 0,
+        ai: [
+          'dog' => 0
+          ],
+        objects: [
+          ]
+      },
+
+      { // ***
+        id: 'cityLow', 
+        commonAI: 20,
+        uncommonAI: 20,
+        ai: [
+          'dog' => 15,
+          'civilian' => 75,
+          'police' => 10
+          ],
+        objects: [
+          { id: 'sewer_hatch', amount: 20 }
+          ]
+      },
+
+      { // ***
+        id: 'cityMedium', 
+        commonAI: 20,
+        uncommonAI: 20,
+        ai: [
+          'dog' => 15,
+          'civilian' => 75,
+          'police' => 10
+          ],
+        objects: [
+          { id: 'sewer_hatch', amount: 20 }
+          ]
+      },
+
+      { // ***
+        id: 'cityHigh', 
         commonAI: 20,
         uncommonAI: 20,
         ai: [
@@ -51,7 +90,10 @@ class ConstWorld
 
 
 // area types
-  public static var AREA_CITY_BLOCK = 'cityBlock';
+  public static var AREA_GROUND = 'ground';
+  public static var AREA_CITY_LOW = 'cityLow';
+  public static var AREA_CITY_MEDIUM = 'cityMedium';
+  public static var AREA_CITY_HIGH = 'cityHigh';
 
 // region types
   public static var REGION_CITY = 'city';
