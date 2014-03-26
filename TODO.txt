@@ -1,12 +1,5 @@
-does not always remove 10 energy on entering region
 region mode: do not despawn area until player moves?
-region mode: do not allow to move when not enough energy
-region mode: when the host is near death -> trigger area mode
-region mode: when the player wants to travel and this would result in host death -> trigger area mode
-city areas and travel through sewers
 generate region of areas - initially unvisited and unknown
-fast travel on region grid view
-region view has a separate list of actions in hud - enter area, etc
 i can display area alertness in region view!
 3 classes of city areas with different stats, including police reaction time and probability of police ignoring the call?
 calling onBodyDiscovered for all bodies in the area when player leaves it

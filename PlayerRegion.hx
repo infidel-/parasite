@@ -41,7 +41,7 @@ class PlayerRegion
     {
       // automatically gain control over host each turn
       if (player.state == Player.STATE_HOST && player.hostControl < 100)
-        player.hostControl += 10;
+        player.hostControl += 25;
     }
 
 
@@ -98,8 +98,56 @@ class PlayerRegion
 // action: move player by dx,dy
   public function actionMove(dx: Int, dy: Int)
     {
+      // parasite state: check for energy
+      if (player.state == Player.STATE_PARASITE)
+        {
+          if (player.energy < player.vars.regionMoveEnergy)
+            {
+              game.log("Not enough energy to move in region mode.");
+              return;
+            }
+
+          player.energy -= player.vars.regionMoveEnergy;
+        }
+
+      // host state: check for energy
+      if (player.state == Player.STATE_HOST)
+        {
+          player.host.energy -= player.vars.regionMoveEnergy;
+          if (player.host.energy <= 0)
+            {
+              onHostDeath();
+
+              game.log('Your host has expired somewhere in the sewers. You have to find a new one.');
+            }
+        }
+
       // try to move to the new location
       moveBy(dx, dy);
+    }
+
+
+// ================================ EVENTS =========================================
+
+
+// event: host expired
+// in region mode we simply destroy it without any repercussions
+// simplifying that the body is somewhere in the sewers and probably won't be found
+// or if found won't be tied to parasite
+// if we add travel by car later, this would have to be changed to accomodate that
+  public inline function onHostDeath()
+    {
+      // set state 
+      player.state = Player.STATE_PARASITE;
+
+      // set image
+      entity.setMask(Const.FRAME_EMPTY, Const.ROW_PARASITE);
+      entity.setImage(Const.FRAME_DEFAULT, Const.ROW_PARASITE);
+
+      // make player entity visible again
+      entity.visible = true;
+
+      player.host = null;
     }
 
 

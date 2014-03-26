@@ -34,17 +34,17 @@ class EvolutionManager
 
 
 // end of turn
-  public function turn()
+  public function turn(time: Int)
     {
       // no tasks
       if (taskID == '')
         return;
 
-      player.energy -= 5;
+      player.energy -= 5 * time;
       if (isTaskPath) // path evolution
         {
           var path = getPath(taskID);
-          path.ep += 10;
+          path.ep += 10 * time;
 
           // evolution complete
           if (path.ep >= ConstEvolution.epCostPath[path.level])
@@ -72,7 +72,7 @@ class EvolutionManager
       else // upgrade improvement
         {
           var imp = getImprov(taskID);
-          imp.ep += 10;
+          imp.ep += 10 * time;
 
           // upgrade complete
           if (imp.ep >= ConstEvolution.epCostImprovement[imp.level])

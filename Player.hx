@@ -33,7 +33,8 @@ class Player
       evolutionManager = new EvolutionManager(this, game);
 
       vars = {
-        energyPerTurn: 10,
+        areaEnergyPerTurn: 10,
+        regionMoveEnergy: 15,
         startHealth: 10,
         startEnergy: 100,
         listenRadius: 10,
@@ -55,11 +56,17 @@ class Player
 // end of turn for player
   public function turn()
     {
-      // state: parasite
+      var time = 1;
+
+      // different time speed in region mode
+      if (game.location == Game.LOCATION_REGION)
+        time = 5;
+
+      // parasite state: decrease energy 
       if (state == STATE_PARASITE)
         {
-          // "no host" timer
-          energy -= vars.energyPerTurn;
+          // lose some energy 
+          energy -= vars.areaEnergyPerTurn * time;
           if (state == STATE_PARASITE && energy <= 0)
             {
               game.finish('lose', 'noHost');
@@ -67,20 +74,36 @@ class Player
             }
         }
 
-      // state: host (energy restoration)
+      // host state: decrease host energy
       if (state == STATE_HOST)
         {
-          energy += 10;
-          evolutionManager.turn();
+          host.energy -= time;
+          if (host.energy <= 0)
+            {
+              if (game.location == Game.LOCATION_AREA)
+                game.area.player.onHostDeath();
+              
+              else if (game.location == Game.LOCATION_REGION)
+                game.region.player.onHostDeath();
+
+              log('Your host has expired. You have to find a new one.');
+            }
         }
 
-      // state: host (host lifetime timer)
+      // host state: parasite energy restoration
+      if (state == STATE_HOST)
+        {
+          energy += 10 * time;
+          evolutionManager.turn(time);
+        }
+
+      // host state: human society
       if (state == STATE_HOST)
         {
           // knowledge about human society raises automatically
           // if host memory is available
           if (host.type == 'human' && evolutionManager.getLevel('hostMemory') > 0)
-            humanSociety += 0.1 * host.intellect;
+            humanSociety += 0.1 * host.intellect * time;
         }
 
       // location-specific turn
@@ -116,7 +139,8 @@ class Player
 // =================================================================================
 
   public var vars: { // player variables
-    energyPerTurn: Int, // energy spent per turn without a host
+    areaEnergyPerTurn: Int, // area: energy spent per turn without a host
+    regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)
     startHealth: Int, // starting parasite health
     startEnergy: Int, // starting parasite energy
     listenRadius: Int, // player listen radius

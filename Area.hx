@@ -74,6 +74,24 @@ class Area
           _ai.add(game.player.host);
         }
       player.moveTo(loc.x, loc.y);
+
+      player.ap = 2; // renew AP
+
+      // hack: add sewers hatch right under player if this is not at the game start
+      if (game.turns > 0)
+        {
+          var o = new SewerHatch(game, loc.x, loc.y);
+          addObject(o);
+
+          // remove any adjacent sewer hatches
+          for (y in -3...3)
+            for (x in -3...3)
+              {
+                var o2 = getObjectAt(loc.x + x, loc.y + y);
+                if (o2 != null && o2 != o)
+                  removeObject(o2);
+              }
+        }
     }
 
 
@@ -198,8 +216,36 @@ class Area
       for (objInfo in info.objects)
         for (i in 0...objInfo.amount)
           {
-            // find free spot
-            var loc = findEmptyLocation();
+            // find free spot that is not close to another object like this
+            var loc = null;
+            var cnt = 0;
+            while (true)
+              {
+                loc = findEmptyLocation();
+                cnt++;
+                if (cnt > 500)
+                  {
+                    trace('Area.generateObjects(): no free spot for another ' + 
+                      objInfo.id + ', please report');
+                    return;
+                  }
+
+                // check for close objects
+                var ok = true;
+                for (y in -3...3)
+                  for (x in -3...3)
+                    {
+                      var o = getObjectAt(loc.x + x, loc.y + y);
+                      if (o != null && o.type == objInfo.id)
+                        {
+                          ok = false;
+                          break;
+                        }
+                    }
+
+                if (ok)
+                  break;
+              }
 
             var o: AreaObject = null;
             if (objInfo.id == 'sewer_hatch')

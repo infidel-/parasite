@@ -52,18 +52,6 @@ class PlayerArea
       // these can only happen in area mode
       // (region mode will throw player in area mode before that)
 
-      // state: host (host lifetime timer)
-      if (player.state == Player.STATE_HOST)
-        {
-          player.host.energy--;
-          if (player.host.energy <= 0)
-            {
-              onHostDeath();
-
-              log('Your host has expired. You have to find a new one.');
-            }
-        }
-
       // state: host (we might lose it if energy drops to zero earlier)
       if (player.state == Player.STATE_HOST)
         {
@@ -160,12 +148,19 @@ class PlayerArea
 
       player.energy -= action.energy;
 
-      // host could've died from some of these actions
+      // host could be dead
       if (player.state == Player.STATE_HOST && player.host.state == AI.STATE_DEAD)
         {
           onHostDeath();
 
           log('Your host has died.');
+        }
+
+      // parasite could also be dead
+      if (player.state == Player.STATE_PARASITE && player.energy <= 0)
+        {
+          game.finish('lose', 'noHost');
+          return;
         }
 
       postAction(); // post-action call
@@ -183,8 +178,9 @@ class PlayerArea
       if (ap > 0)
         return;
 
-      // new turn
-      game.turn();
+      // new turn (only if still in area mode)
+      if (game.location == Game.LOCATION_AREA)
+        game.turn();
     }
 
 
