@@ -62,7 +62,10 @@ class PlayerRegion
     {
       var tmp = new List<String>();
       
-      addActionToList(tmp, 'enterArea');
+      var r = region.getRegion();
+      var area = r.getXY(x, y);
+      if (area.info.canEnter)
+        addActionToList(tmp, 'enterArea');
       
       return tmp;
     }

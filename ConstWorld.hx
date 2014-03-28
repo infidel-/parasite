@@ -5,7 +5,8 @@ class ConstWorld
   static var areas: Array<AreaInfo> =
     [
       { // ***
-        id: 'ground', 
+        id: 'ground',
+        canEnter: false,
         commonAI: 0,
         uncommonAI: 0,
         ai: [
@@ -15,22 +16,24 @@ class ConstWorld
           ]
       },
 
-      { // ***
+      { // *** low-class, low population - outskirts and suburbs
         id: 'cityLow', 
-        commonAI: 20,
-        uncommonAI: 20,
+        canEnter: true,
+        commonAI: 10,
+        uncommonAI: 10,
         ai: [
-          'dog' => 15,
+          'dog' => 20,
           'civilian' => 75,
-          'police' => 10
+          'police' => 5
           ],
         objects: [
-          { id: 'sewer_hatch', amount: 20 }
+          { id: 'sewer_hatch', amount: 10 }
           ]
       },
 
-      { // ***
+      { // *** mid-class, mid population - residential districts
         id: 'cityMedium', 
+        canEnter: true,
         commonAI: 20,
         uncommonAI: 20,
         ai: [
@@ -43,14 +46,15 @@ class ConstWorld
           ]
       },
 
-      { // ***
+      { // *** high-class, high population - downtown and commercial district
         id: 'cityHigh', 
-        commonAI: 20,
-        uncommonAI: 20,
+        canEnter: true,
+        commonAI: 30,
+        uncommonAI: 30,
         ai: [
-          'dog' => 15,
-          'civilian' => 75,
-          'police' => 10
+          'dog' => 5,
+          'civilian' => 70,
+          'police' => 25
           ],
         objects: [
           { id: 'sewer_hatch', amount: 20 }
@@ -104,8 +108,9 @@ class ConstWorld
 
 typedef AreaInfo = {
   var id: String; // area type id
+  var canEnter: Bool; // player can enter this area?
   var commonAI: Int; // common ai amount spawned at any time
-  var uncommonAI: Int; // uncommon ai amount spawned at any time
+  var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
 };

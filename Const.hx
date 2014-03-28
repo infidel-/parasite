@@ -61,8 +61,8 @@ class Const
 
   public static var TILE_WALKABLE = [ false, true, false ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building' ];
-  public static var TILE_WALKABLE_REGION = [ true];
-  public static var TILE_TYPE_REGION = [ 'city' ];
+  public static var TILE_WALKABLE_REGION = [ true, true, true, true];
+  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 
 
   // player stuff

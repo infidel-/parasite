@@ -1,8 +1,5 @@
-spawn player in non empty area
-do not allow to enter empty area
 region mode: do not despawn area until player moves?
 generate region of areas - initially unvisited and unknown
-area generator - change number for different area types
 area generator - change buildings number?
 alertness changes in region mode - alertness should decrease over time
 area mode: increasing area alertness will increase it for adjacent areas
