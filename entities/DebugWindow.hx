@@ -40,6 +40,8 @@ class DebugWindow
     {
       if (game.location == Game.LOCATION_AREA)
         game.area.debug.action(index - 1);
+      else if (game.location == Game.LOCATION_REGION)
+        game.region.debug.action(index - 1);
       update(); // update display
       game.scene.hud.update(); // update HUD
     }

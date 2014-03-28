@@ -61,6 +61,17 @@ class Game
       region.player.createEntity(a.x, a.y);
       region.hide();
 
+      // make area tiles around player known 
+      for (yy in (a.y - 1)...(a.y + 2))
+        for (xx in (a.x - 1)...(a.x + 2))
+          {
+            var aa = region.getRegion().getXY(xx, yy);
+            if (aa == null)
+              continue;
+            
+            aa.isKnown = true;
+          }
+
       location = LOCATION_AREA;
       area.setArea(a);
       area.show();

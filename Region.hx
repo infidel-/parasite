@@ -107,6 +107,7 @@ class Region
       entity.visible = true;
       entityAlert.visible = true;
       player.entity.visible = true;
+      updateVisibility();
     }
 
 
@@ -158,5 +159,22 @@ class Region
     
 //      trace(x + ' ' + y + ' ' + _isWalkable[x][y]);
       return Const.TILE_WALKABLE_REGION[_cells[x][y]];
+    }
+
+
+// update tile visibility on current player location and known tiles
+  public function updateVisibility()
+    {
+      // maybe it would be more optimal to store currently drawn tile somewhere?
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var a = region.getXY(x, y);
+
+            if ((Math.abs(player.x - x) < 2 &&
+                Math.abs(player.y - y) < 2) || a.isKnown)
+              _tilemap.setTile(x, y, Const.TILE_REGION_ROW + _cells[x][y]);
+            else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+          }
     }
 }

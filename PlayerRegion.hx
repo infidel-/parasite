@@ -171,7 +171,20 @@ class PlayerRegion
       x = nx;
       y = ny;
 
+      // make tiles around player known 
+      for (yy in (y - 1)...(y + 2))
+        for (xx in (x - 1)...(x + 2))
+          {
+            var a = region.getRegion().getXY(xx, yy);
+            if (a == null)
+              continue;
+            
+            a.isKnown = true;
+          }
+
       entity.setPosition(x, y); // move player entity
+
+      region.updateVisibility(); // update visibility of tiles
 
       game.turn(); // new turn
 

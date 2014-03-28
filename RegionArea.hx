@@ -7,6 +7,7 @@ class RegionArea
   public var id: Int; // area id
   public var typeID: String; // area type id - city block, university, military base, etc
   public var tileID: Int; // tile id on tilemap
+  public var isKnown: Bool; // has the player seen this area?
   public var info: AreaInfo; // area info link
   public var width: Int;
   public var height: Int;
@@ -21,6 +22,7 @@ class RegionArea
   public function new(tv: String, vx: Int, vy: Int, w: Int, h: Int)
     {
       typeID = tv;
+      isKnown = false;
       id = _maxID++;
       x = vx;
       y = vy;

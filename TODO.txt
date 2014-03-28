@@ -1,4 +1,3 @@
-region mode: do not despawn area until player moves?
 generate region of areas - initially unvisited and unknown
 area generator - change buildings number?
 alertness changes in region mode - alertness should decrease over time
@@ -29,9 +28,9 @@ information web
 
 LATER
 =====
-
+region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
-city sewers
+city sewers (should i?)
 armor - vest + helmet
 stunner
 electric discharge improv + battery organ + stun attack

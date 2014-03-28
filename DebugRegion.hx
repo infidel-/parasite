@@ -13,12 +13,10 @@ class DebugRegion
       region = r;
 
       actions = [
-/*
         {
-          name: "Remove energy spend without a host",
+          name: "Remove energy spend per turn and movement cost",
           func: removeEnergySpend
         },
-*/
         ];
     }
 
@@ -31,12 +29,11 @@ class DebugRegion
     }
 
 
-/*
 // remove energy spend without a host
   function removeEnergySpend()
     {
-      game.player.vars.energyPerTurn = 0;
-      game.log('Energy per turn removed.');
+      game.player.vars.areaEnergyPerTurn = 0;
+      game.player.vars.regionMoveEnergy = 0;
+      game.log('Energy per turn and movement cost removed.');
     }
-*/
 }

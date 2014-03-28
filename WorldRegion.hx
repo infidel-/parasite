@@ -12,6 +12,7 @@ class WorldRegion
 //  public var alertness(default, set): Float; // area alertness (authorities) (0-100%)
 //  public var interest(default, set): Float; // area interest for secret groups (0-100%)
 
+  var _array: Array<Array<RegionArea>>; // 2-dim array of areas for quicker access
   var _list: Map<Int, RegionArea>; // hashmap of areas
 
   static var _maxID: Int = 0; // region id counter
@@ -26,6 +27,10 @@ class WorldRegion
 //      alertness = 0;
 //      interest = 0;
       _list = new Map<Int, RegionArea>();
+
+      _array = new Array<Array<RegionArea>>();
+      for (i in 0...width)
+        _array[i] = [];
     }
 
 
@@ -175,6 +180,7 @@ class WorldRegion
 
             var a = new RegionArea(t, x, y, 50, 50);
             _list.set(a.id, a);
+            _array[x][y] = a;
           }
     }
 
@@ -189,10 +195,13 @@ class WorldRegion
 // get area by x,y
   public function getXY(x: Int, y: Int): RegionArea
     {
+      if (x >= 0 && x < width && y >= 0 && y < height)
+        return _array[x][y];
+/*    
       for (r in _list)
         if (r.x == x && r.y == y)
           return r;
-
+*/
       return null;
     }
 
