@@ -178,10 +178,48 @@ class WorldRegion
             else if (tmp[x][y] == 3)
               t = ConstWorld.AREA_CITY_HIGH;
 
-            var a = new RegionArea(t, x, y, 50, 50);
+            var a = new RegionArea(this, t, x, y, 50, 50);
             _list.set(a.id, a);
             _array[x][y] = a;
           }
+    }
+
+
+// update areas alertness (called on entering region mode for this region)
+  public function updateAlertness()
+    {
+      // make empty array
+      var tmp = new Array<Array<Float>>();
+      for (i in 0...width)
+        tmp[i] = [];
+
+      // loop through all areas propagating alertness changes to adjacent areas
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var a = _array[x][y];
+
+            for (yy in (y - 1)...(y + 2))
+              for (xx in (x - 1)...(x + 2))
+                {
+                  var aa = getXY(xx, yy);
+                  if (aa == null || aa == a || !aa.info.canEnter)
+                    continue;
+
+                  if (tmp[xx][yy] == null)
+                    tmp[xx][yy] = 0;
+                  tmp[xx][yy] += a.alertnessMod / 2;
+                }
+
+            // reset alertness changes 
+            a.alertnessMod = 0;
+          }
+
+      // store alertness changes 
+      for (y in 0...height)
+        for (x in 0...width)
+          if (tmp[x][y] != null)
+            _array[x][y].setAlertness(_array[x][y].alertness + tmp[x][y]); 
     }
 
 

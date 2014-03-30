@@ -1,7 +1,4 @@
-generate region of areas - initially unvisited and unknown
-area generator - change buildings number?
 alertness changes in region mode - alertness should decrease over time
-area mode: increasing area alertness will increase it for adjacent areas
 3 classes of city areas with different stats, including police reaction time and probability of police ignoring the call?
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies
@@ -28,6 +25,7 @@ information web
 
 LATER
 =====
+proper city area generation for all three types of city areas
 region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
 city sewers (should i?)

@@ -4,6 +4,8 @@ import ConstWorld;
 
 class RegionArea
 {
+  var region: WorldRegion;
+
   public var id: Int; // area id
   public var typeID: String; // area type id - city block, university, military base, etc
   public var tileID: Int; // tile id on tilemap
@@ -14,13 +16,17 @@ class RegionArea
   public var x: Int; // x,y in region
   public var y: Int;
 
-  public var alertness(default, set): Float; // area alertness (authorities) (0-100%)
+  public var alertnessMod: Float; // changes to alertness until next reset
+  // we store all changes until player leaves the current area for propagation
+  public var alertness(get, set): Float; // area alertness (authorities) (0-100%)
+  var _alertness: Float; // actual alertness storage
   public var interest(default, set): Float; // area interest for secret groups (0-100%)
 
   static var _maxID: Int = 0; // area id counter
 
-  public function new(tv: String, vx: Int, vy: Int, w: Int, h: Int)
+  public function new(r: WorldRegion, tv: String, vx: Int, vy: Int, w: Int, h: Int)
     {
+      region = r;
       typeID = tv;
       isKnown = false;
       id = _maxID++;
@@ -29,7 +35,8 @@ class RegionArea
       width = w;
       height = w;
       info = ConstWorld.getAreaInfo(typeID);
-      alertness = 0;
+      _alertness = 0;
+      alertnessMod = 0;
       interest = 0;
 
       if (typeID == ConstWorld.AREA_GROUND)
@@ -43,10 +50,27 @@ class RegionArea
     }
 
 
+// set alertness without counting changes 
+// used in alertness propagation
+  public inline function setAlertness(v: Float)
+    {
+      _alertness = Const.clampFloat(v, 0, 100.0); 
+    }
+
+
 // ========================== SETTERS ====================================
 
+
+  function get_alertness()
+    { return _alertness; }
+
   function set_alertness(v: Float)
-    { return alertness = Const.clampFloat(v, 0, 100.0); }
+    {
+      // save alertness changes for later use
+      alertnessMod += v - _alertness;
+      return _alertness = Const.clampFloat(v, 0, 100.0); 
+    }
+
   function set_interest(v: Float)
     { return interest = Const.clampFloat(v, 0, 100.0); }
 }

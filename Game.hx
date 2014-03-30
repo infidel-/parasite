@@ -107,6 +107,7 @@ class Game
 
       else if (location == LOCATION_REGION)
         {
+          region.getRegion().updateAlertness();
           region.show();
         }
 

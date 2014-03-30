@@ -9,6 +9,7 @@ class ConstWorld
         canEnter: false,
         commonAI: 0,
         uncommonAI: 0,
+        buildingChance: 0.0,
         ai: [
           'dog' => 0
           ],
@@ -21,6 +22,7 @@ class ConstWorld
         canEnter: true,
         commonAI: 10,
         uncommonAI: 10,
+        buildingChance: 0.05,
         ai: [
           'dog' => 20,
           'civilian' => 75,
@@ -36,6 +38,7 @@ class ConstWorld
         canEnter: true,
         commonAI: 20,
         uncommonAI: 20,
+        buildingChance: 0.15,
         ai: [
           'dog' => 15,
           'civilian' => 75,
@@ -51,6 +54,7 @@ class ConstWorld
         canEnter: true,
         commonAI: 30,
         uncommonAI: 30,
+        buildingChance: 0.30,
         ai: [
           'dog' => 5,
           'civilian' => 70,
@@ -111,6 +115,7 @@ typedef AreaInfo = {
   var canEnter: Bool; // player can enter this area?
   var commonAI: Int; // common ai amount spawned at any time
   var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
+  var buildingChance: Float; // chance to spawn building
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
 };

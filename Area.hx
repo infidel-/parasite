@@ -153,7 +153,7 @@ class Area
       for (y in 1...height)
         for (x in 1...width)
           {
-            if (Math.random() > 0.05)
+            if (Math.random() > area.info.buildingChance)
               continue;
 
             // size
