@@ -208,7 +208,7 @@ class WorldRegion
 
                   if (tmp[xx][yy] == null)
                     tmp[xx][yy] = 0;
-                  tmp[xx][yy] += a.alertnessMod / 2;
+                  tmp[xx][yy] += 0.75 * a.alertnessMod;
                 }
 
             // reset alertness changes 

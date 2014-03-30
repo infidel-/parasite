@@ -87,22 +87,8 @@ class Region
       else player.entity.setMask(Const.FRAME_EMPTY, row);
       player.entity.setImage(Const.FRAME_DEFAULT, row);
 
-      // set alertness 
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            var a = region.getXY(x, y);
-
-            // set alertness mask
-            var alertFrame = Const.FRAME_EMPTY;
-            if (a.alertness > 75)
-              alertFrame = Const.FRAME_ALERT3;
-            else if (a.alertness > 50)
-              alertFrame = Const.FRAME_ALERT2;
-            else if (a.alertness > 0)
-              alertFrame = Const.FRAME_ALERT1;
-            _tilemapAlert.setTile(x, y, alertFrame);
-          }
+      // set alertness images
+      updateAlertness();
 
       entity.visible = true;
       entityAlert.visible = true;
@@ -140,6 +126,18 @@ class Region
 // turn in region mode
   public function turn()
     {
+      // decrease area alertness everywhere
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var a = region.getXY(x, y);
+            if (a.alertness == 0)
+              continue;
+
+            a.alertness -= 1;
+          }
+
+      updateAlertness();
     }
 
 
@@ -159,6 +157,27 @@ class Region
     
 //      trace(x + ' ' + y + ' ' + _isWalkable[x][y]);
       return Const.TILE_WALKABLE_REGION[_cells[x][y]];
+    }
+
+
+// update alertness images
+  public function updateAlertness()
+    {
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var a = region.getXY(x, y);
+
+            // set alertness mask
+            var alertFrame = Const.FRAME_EMPTY;
+            if (a.alertness > 75)
+              alertFrame = Const.FRAME_ALERT3;
+            else if (a.alertness > 50)
+              alertFrame = Const.FRAME_ALERT2;
+            else if (a.alertness > 0)
+              alertFrame = Const.FRAME_ALERT1;
+            _tilemapAlert.setTile(x, y, alertFrame);
+          }
     }
 
 

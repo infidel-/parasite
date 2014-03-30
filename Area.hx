@@ -74,6 +74,7 @@ class Area
       player.moveTo(loc.x, loc.y);
 
       player.ap = 2; // renew AP
+      area.alertnessMod = 0; // clear alertness counter
 
       // hack: add sewers hatch right under player if this is not at the game start
       if (game.turns > 0)
