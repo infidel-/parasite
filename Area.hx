@@ -41,6 +41,29 @@ class Area
     }
 
 
+// event: player leaves area
+  public function onLeave()
+    {
+      // count all bodies and discover then in bulk
+      var totalPoints = 0;
+      var totalBodies = 0;
+      for (o in _objects)
+        if (o.type == 'body')
+          {
+            var body: BodyObject = untyped o;
+            totalPoints += body.organPoints;
+            totalBodies++;
+          }
+
+      // notify world about bodies discovered
+      if (totalBodies == 1)
+        game.region.manager.onBodyDiscovered(area, totalPoints);
+
+      else if (totalBodies > 0)
+        game.region.manager.onBodiesDiscovered(area, totalBodies, totalPoints);
+    }
+
+
 // set new area
   public function setArea(a: RegionArea)
     {

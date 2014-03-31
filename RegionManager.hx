@@ -22,6 +22,17 @@ class RegionManager
     }
 
 
+// event: multiple bodies have been discovered (called on leaving area) 
+// pts - amount of organ points this body has
+  public function onBodiesDiscovered(area: RegionArea, bodies: Int, pts: Int)
+    {
+      area.alertness += bodies;
+      area.interest += pts;
+      if (pts > 0)
+        log('Authorities have discovered multiple bodies with disturbing anomalies.');
+    }
+
+
 // ==================================================================================
 
 

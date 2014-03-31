@@ -86,6 +86,7 @@ class Game
       // hide previous gui
       if (location == LOCATION_AREA)
         {
+          area.onLeave(); // event callback
           area.hide();
         }
 

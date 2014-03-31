@@ -1,8 +1,6 @@
-calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies
 improvements impl: host release
 global suspicion and what comes with its growth (no global suspicion?)
-way for player to see or estimate area alertness
 
 scene. getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
@@ -15,7 +13,6 @@ world generation
 human biology knowledge
 canine biology knowledge
 organ growth
-more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars
 city and world travel
 operation generation
@@ -23,7 +20,7 @@ information web
 
 LATER
 =====
-proper city area generation for all three types of city areas
+more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
 city sewers (should i?)

@@ -27,7 +27,6 @@ class BodyObject extends AreaObject
         return;
 
       // notify world about body discovery by authorities
-      Const.todo('check if body despawns after player leaves the area');
       game.region.manager.onBodyDiscovered(game.area.getArea(), organPoints);
 
       game.area.removeObject(this);
