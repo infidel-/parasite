@@ -13,6 +13,8 @@ class Region
   var _cells: Array<Array<Int>>; // cell types
   var region: WorldRegion; // region info link
 
+  public var currentArea(get, null): RegionArea; // area player is in
+
   public var width: Int; // width, height in cells
   public var height: Int;
   public var entity: Entity; // entity
@@ -195,5 +197,15 @@ class Region
               _tilemap.setTile(x, y, Const.TILE_REGION_ROW + _cells[x][y]);
             else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
           }
+    }
+
+
+// =========================== GETTERS AND SETTERS ==================================
+
+
+// get area player is in
+  public function get_currentArea(): RegionArea
+    {
+      return region.getXY(player.x, player.y);
     }
 }

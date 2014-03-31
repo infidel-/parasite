@@ -123,6 +123,8 @@ class HUD
       buf.add('Turn: ' + game.turns + '\n');
       if (game.location == Game.LOCATION_AREA)
         buf.add('Actions: ' + game.area.player.ap + '\n');
+      else if (game.location == Game.LOCATION_REGION)
+        buf.add(game.region.currentArea.info.name + '\n');
       buf.add('===\n');
 
       var colEnergy = 

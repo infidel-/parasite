@@ -8,7 +8,7 @@ class AreaManager
   var game: Game;
   var _list: List<AreaEvent>;
 
-  public var area: RegionArea; // current area link
+  var area(get, null): RegionArea; // current area link
 
   public function new(g: Game)
     {
@@ -172,7 +172,7 @@ class AreaManager
       add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(EVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, 5);
+      add(EVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, area.info.policeResponceTime);
     }
 
 
@@ -191,7 +191,7 @@ class AreaManager
     {
       log('Police arrives on scene!');
 
-      for (i in 0...2)
+      for (i in 0...area.info.policeResponceAmount)
         {
           var loc = game.area.findEmptyLocationNear(e.x, e.y);
           if (loc == null)
@@ -230,7 +230,7 @@ class AreaManager
       add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(EVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, 5);
+      add(EVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, area.info.policeResponceTime);
     }
 
 
@@ -285,6 +285,11 @@ class AreaManager
       game.log('DEBUG: ' + s, Const.COLOR_AREA);
     }
 
+
+  function get_area(): RegionArea
+    {
+      return game.area.getArea();
+    }
 
 // =================================================================================
 

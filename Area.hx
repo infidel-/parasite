@@ -45,7 +45,6 @@ class Area
   public function setArea(a: RegionArea)
     {
       area = a;
-      manager.area = area;
       width = area.width;
       height = area.height;
 

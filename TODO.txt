@@ -1,4 +1,3 @@
-3 classes of city areas with different stats, including police reaction time and probability of police ignoring the call?
 calling onBodyDiscovered for all bodies in the area when player leaves it
 looting bodies
 improvements impl: host release

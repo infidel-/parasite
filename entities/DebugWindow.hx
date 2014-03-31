@@ -75,8 +75,7 @@ class DebugWindow
         }
       else
         {
-          var area = game.region.getRegion().getXY(game.region.player.x, 
-            game.region.player.y);
+          var area = game.region.currentArea;
           buf.add('Area alertness: ' + area.alertness + '\n');
           buf.add('Area interest: ' + area.interest + '\n');
         }

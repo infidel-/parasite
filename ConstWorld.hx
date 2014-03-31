@@ -6,10 +6,13 @@ class ConstWorld
     [
       { // ***
         id: 'ground',
+        name: 'Uninhabited area',
         canEnter: false,
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0.0,
+        policeResponceTime: 0,
+        policeResponceAmount: 0,
         ai: [
           'dog' => 0
           ],
@@ -18,11 +21,14 @@ class ConstWorld
       },
 
       { // *** low-class, low population - outskirts and suburbs
-        id: 'cityLow', 
+        id: 'cityLow',
+        name: 'Low-density city area',
         canEnter: true,
         commonAI: 10,
         uncommonAI: 10,
         buildingChance: 0.05,
+        policeResponceTime: 9,
+        policeResponceAmount: 2,
         ai: [
           'dog' => 20,
           'civilian' => 75,
@@ -35,10 +41,13 @@ class ConstWorld
 
       { // *** mid-class, mid population - residential districts
         id: 'cityMedium', 
+        name: 'Medium-density city area',
         canEnter: true,
         commonAI: 20,
         uncommonAI: 20,
         buildingChance: 0.15,
+        policeResponceTime: 5,
+        policeResponceAmount: 2,
         ai: [
           'dog' => 15,
           'civilian' => 75,
@@ -51,10 +60,13 @@ class ConstWorld
 
       { // *** high-class, high population - downtown and commercial district
         id: 'cityHigh', 
+        name: 'High-density city area',
         canEnter: true,
         commonAI: 30,
         uncommonAI: 30,
         buildingChance: 0.30,
+        policeResponceTime: 3,
+        policeResponceAmount: 3,
         ai: [
           'dog' => 5,
           'civilian' => 70,
@@ -112,10 +124,13 @@ class ConstWorld
 
 typedef AreaInfo = {
   var id: String; // area type id
+  var name: String; // area type name
   var canEnter: Bool; // player can enter this area?
   var commonAI: Int; // common ai amount spawned at any time
   var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
   var buildingChance: Float; // chance to spawn building
+  var policeResponceTime: Int; // number of turns until called police shows up
+  var policeResponceAmount: Int; // actual amount of cops that show up
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
 };
