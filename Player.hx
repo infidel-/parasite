@@ -75,6 +75,7 @@ class Player
         }
 
       // host state: decrease host energy
+      // host can die, so we need to still check for state later
       if (state == STATE_HOST)
         {
           host.energy -= time;
@@ -90,16 +91,16 @@ class Player
             }
         }
 
-      // host state: parasite energy restoration
+
+      // more host state checks
       if (state == STATE_HOST)
         {
+          // parasite energy restoration
           energy += 10 * time;
           evolutionManager.turn(time);
-        }
 
-      // host state: human society
-      if (state == STATE_HOST)
-        {
+          host.organs.turn(time); // host organ growth
+
           // knowledge about human society raises automatically
           // if host memory is available
           if (host.type == 'human' && evolutionManager.getLevel('hostMemory') > 0)

@@ -19,6 +19,7 @@ class Game
     {
       scene = new GameScene(this);
       worldManager = new WorldManager(this);
+      HXP.frameRate = 30;
       HXP.scene = scene;
     }
 

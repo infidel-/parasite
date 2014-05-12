@@ -1,6 +1,5 @@
 looting bodies
 improvements impl: host release
-global suspicion and what comes with its growth (no global suspicion?)
 
 scene. getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
@@ -13,7 +12,6 @@ world generation
 human biology knowledge
 canine biology knowledge
 organ growth
-cops arriving in cars
 city and world travel
 operation generation
 information web
@@ -21,9 +19,11 @@ information web
 LATER
 =====
 more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
+cops arriving in cars
+global suspicion and what comes with its growth (no global suspicion?)
 region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
-city sewers (should i?)
+walkable city sewers (should i?)
 armor - vest + helmet
 stunner
 electric discharge improv + battery organ + stun attack

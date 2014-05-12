@@ -452,8 +452,6 @@ class AI
 // state: host logic
   function stateHost()
     {
-      organs.turn(); // organ growth
-
       // emit random sound
       emitRandomSound(STATE_HOST, Std.int((100 - game.player.hostControl) / 3));
 

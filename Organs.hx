@@ -40,7 +40,7 @@ class Organs
 
 
 // passage of time
-  public function turn()
+  public function turn(time: Int)
     {
       // no organ selected
       if (currentOrgan == null)
