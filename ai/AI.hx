@@ -3,6 +3,7 @@
 package ai;
 
 import entities.AIEntity;
+import _AIState;
 import objects.*;
 
 class AI
@@ -34,8 +35,8 @@ class AI
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
   var _turnsInvisible: Int; // number of turns passed since player saw this AI
 
-  public var state: String; // AI state
-  public var reason: String; // reason for setting this state 
+  public var state: _AIState; // AI state
+  public var reason: _AIStateChangeReason; // reason for setting this state 
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
 
   // various AI timers
@@ -80,7 +81,7 @@ class AI
       x = vx;
       y = vy;
 
-      state = STATE_IDLE;
+      state = AI_STATE_IDLE;
       reason = REASON_NONE;
       alertness = 0;
       timers = 
@@ -195,15 +196,18 @@ class AI
 
 
 // set AI state (plus all vars for this state)
-  public function setState(vstate: String, ?vreason: String = 'none')
+  public function setState(vstate: _AIState, ?vreason: _AIStateChangeReason)
     {
+      if (vreason == null)
+        vreason = REASON_NONE;
+
       // AI is already in that state
       if (state == vstate)
         return;
 
       state = vstate;
       reason = vreason;
-      if (state == STATE_ALERT)
+      if (state == AI_STATE_ALERT)
         timers.alert = ALERTED_TIMER;
 
       onStateChange(); // dynamic event
@@ -215,9 +219,9 @@ class AI
   function updateEntity()
     {
       var alertFrame = Const.FRAME_EMPTY;
-      if (state == STATE_ALERT)
+      if (state == AI_STATE_ALERT)
         alertFrame = Const.FRAME_ALERTED;
-      else if (state == STATE_IDLE)
+      else if (state == AI_STATE_IDLE)
         {
           if (alertness > 75)
             alertFrame = Const.FRAME_ALERT3;
@@ -354,7 +358,7 @@ class AI
         damage += Const.roll(0, Std.int(strength / 2));
 
       log(info.verb2 + ' ' + 
-        (game.player.state == Player.STATE_HOST ? 'your host' : 'you') + 
+        (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') + 
         ' for ' + damage + ' damage.');
 
       game.area.player.onDamage(damage); // on damage event
@@ -373,7 +377,7 @@ class AI
           var distance = Const.getDist(x, y, game.area.player.x, game.area.player.y);
 
           // check if player is on a host and has active camouflage layer
-          var hasCamo = (game.player.state == Player.STATE_HOST ? 
+          var hasCamo = (game.player.state == PLR_STATE_HOST ? 
             game.player.host.organs.has('camouflageLayer') : false);
           var baseAlertness = 3;
           if (hasCamo)
@@ -388,8 +392,8 @@ class AI
       // AI has become alerted
       if (alertness >= 100)
         {
-          setState(STATE_ALERT, 
-            (game.player.state == Player.STATE_PARASITE ? REASON_PARASITE : REASON_HOST));
+          setState(AI_STATE_ALERT, 
+            (game.player.state == PLR_STATE_PARASITE ? REASON_PARASITE : REASON_HOST));
           return;
         }
 
@@ -418,7 +422,7 @@ class AI
       // AI calms down
       if (timers.alert == 0)
         {
-          setState(STATE_IDLE); 
+          setState(AI_STATE_IDLE); 
           alertness = 10;
           return;
         }
@@ -453,7 +457,7 @@ class AI
   function stateHost()
     {
       // emit random sound
-      emitRandomSound(STATE_HOST, Std.int((100 - game.player.hostControl) / 3));
+      emitRandomSound('' + AI_STATE_HOST, Std.int((100 - game.player.hostControl) / 3));
 
       // random: try to tear parasite away
       if (game.player.hostControl < 25 && Std.random(100) < 5)
@@ -485,7 +489,7 @@ class AI
 
           // human AI becomes alert on seeing human bodies
           if (isHuman && body.isHumanBody)
-            setState(AI.STATE_ALERT, AI.REASON_BODY);
+            setState(AI_STATE_ALERT, REASON_BODY);
 
           _objectsSeen.add(obj.id);
         }
@@ -497,7 +501,7 @@ class AI
   public function checkDespawn()
     {
       // should be in idle state and calmed down
-      if (state != STATE_IDLE || (state == STATE_IDLE && alertness > 25))
+      if (state != AI_STATE_IDLE || (state == AI_STATE_IDLE && alertness > 25))
         {
           _turnsInvisible = 0;
           return;
@@ -522,20 +526,20 @@ class AI
     {
       entity.turn(); // turn passing for entity
 
-      if (state == STATE_IDLE)
+      if (state == AI_STATE_IDLE)
         stateIdle();
 
       // AI alerted - try to run away or attack
-      else if (state == STATE_ALERT)
+      else if (state == AI_STATE_ALERT)
         stateAlert();
 
       // controlled by parasite
-      else if (state == STATE_HOST)
+      else if (state == AI_STATE_HOST)
         stateHost();
 
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
-      emitRandomSound(state, 20); // emit random sound if it exists
+      emitRandomSound('' + state, 20); // emit random sound if it exists
     }
 
 
@@ -553,7 +557,7 @@ class AI
       var sound = array[idx];
 
       // check for min alertness
-      if (state == AI.STATE_IDLE && sound.params.minAlertness != null &&
+      if (state == AI_STATE_IDLE && sound.params.minAlertness != null &&
           alertness < sound.params.minAlertness)
         return;
 
@@ -564,7 +568,7 @@ class AI
       // get a list of AIs in that radius without los checks and give alertness bonus
       var list = game.area.getAIinRadius(x, y, sound.radius, false);
       for (ai in list)
-        if (ai.state == AI.STATE_IDLE) 
+        if (ai.state == AI_STATE_IDLE) 
           ai.alertness += sound.alertness;
     }
 
@@ -577,17 +581,17 @@ class AI
       health -= damage;
       if (health == 0) // AI death
         {
-          setState(STATE_DEAD);
+          setState(AI_STATE_DEAD);
           onDeath();
 
           return;
         }
 
       // set alerted state
-      if (state == STATE_IDLE)
-        setState(STATE_ALERT, REASON_DAMAGE);
+      if (state == AI_STATE_IDLE)
+        setState(AI_STATE_ALERT, REASON_DAMAGE);
 
-      emitRandomSound(REASON_DAMAGE, 30); // emit random sound
+      emitRandomSound('' + REASON_DAMAGE, 30); // emit random sound
     }
 
 
@@ -616,14 +620,14 @@ class AI
     {
       // set AI state
       parasiteAttached = true;
-      setState(STATE_ALERT, REASON_ATTACH);
+      setState(AI_STATE_ALERT, REASON_ATTACH);
     }
 
 
 // event: parasite invaded this host
   public inline function onInvade()
     {
-      setState(STATE_HOST);
+      setState(AI_STATE_HOST);
       parasiteAttached = false;
       entity.setMask(Const.FRAME_MASK_POSSESSED);
     }
@@ -632,7 +636,7 @@ class AI
 // event: parasite detach from this host
   public inline function onDetach()
     {
-      setState(STATE_ALERT, REASON_DETACH);
+      setState(AI_STATE_ALERT, REASON_DETACH);
       entity.setMask(Const.FRAME_EMPTY);
     }
 
@@ -677,25 +681,26 @@ class AI
 
   // number of turns AI will stay spawned when invisible to player
   public static var DESPAWN_TIMER = 5;
-
-  // AI states
-  public static var STATE_IDLE = 'idle';
-  public static var STATE_ALERT = 'alert';
-  public static var STATE_HOST = 'host';
-  public static var STATE_DEAD = 'dead';
-
-  // AI state change reasons
-  public static var REASON_NONE = 'none';
-  public static var REASON_BODY = 'body';
-  public static var REASON_BACKUP = 'backup';
-  public static var REASON_ATTACH = 'attach';
-  public static var REASON_DETACH = 'detach';
-  public static var REASON_HOST = 'host';
-  public static var REASON_PARASITE = 'parasite';
-  public static var REASON_DAMAGE = 'damage';
-  public static var REASON_WITNESS = 'witness';
 }
 
+
+// valid reasons for AI to change state
+
+enum _AIStateChangeReason
+{
+  REASON_NONE;
+  REASON_BODY;
+  REASON_BACKUP;
+  REASON_ATTACH;
+  REASON_DETACH;
+  REASON_HOST;
+  REASON_PARASITE;
+  REASON_DAMAGE;
+  REASON_WITNESS;
+}
+
+
+// AI bark with parameters
 
 typedef AISound =
 {

@@ -166,7 +166,7 @@ class GameScene extends Scene
       else if (hudState == GameScene.HUDSTATE_DEFAULT)
         {
           // open inventory window
-          if (Input.pressed("inventoryWindow") && game.player.state == Player.STATE_HOST)
+          if (Input.pressed("inventoryWindow") && game.player.state == PLR_STATE_HOST)
             {
               hudState = GameScene.HUDSTATE_INVENTORY;
               inventoryWindow.show();
@@ -187,7 +187,7 @@ class GameScene extends Scene
             }
 
           // open organs window
-          else if (Input.pressed("organsWindow") && game.player.state == Player.STATE_HOST)
+          else if (Input.pressed("organsWindow") && game.player.state == PLR_STATE_HOST)
             {
               hudState = GameScene.HUDSTATE_ORGANS;
               organsWindow.show();

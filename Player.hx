@@ -20,7 +20,7 @@ class Player
   public var maxHealth: Int; // maximum health
 
   public var skills: Skills; // skills
-  public var state: String; // player state - parasite, attach, host
+  public var state: _PlayerState; // player state - parasite, attach, host
 
   // state "host" - store host link here because host exists in all modes
   public var host: AI; // invaded host
@@ -41,7 +41,7 @@ class Player
         losEnabled: true
         };
 
-      state = STATE_PARASITE;
+      state = PLR_STATE_PARASITE;
       energy = vars.startEnergy;
       maxEnergy = vars.startEnergy;
       maxHealth = vars.startHealth;
@@ -63,11 +63,11 @@ class Player
         time = 5;
 
       // parasite state: decrease energy 
-      if (state == STATE_PARASITE)
+      if (state == PLR_STATE_PARASITE)
         {
           // lose some energy 
           energy -= vars.areaEnergyPerTurn * time;
-          if (state == STATE_PARASITE && energy <= 0)
+          if (state == PLR_STATE_PARASITE && energy <= 0)
             {
               game.finish('lose', 'noHost');
               return;
@@ -76,7 +76,7 @@ class Player
 
       // host state: decrease host energy
       // host can die, so we need to still check for state later
-      if (state == STATE_HOST)
+      if (state == PLR_STATE_HOST)
         {
           host.energy -= time;
           if (host.energy <= 0)
@@ -93,7 +93,7 @@ class Player
 
 
       // more host state checks
-      if (state == STATE_HOST)
+      if (state == PLR_STATE_HOST)
         {
           // parasite energy restoration
           energy += 10 * time;
@@ -148,11 +148,6 @@ class Player
     losEnabled: Bool, // LOS checks enabled?
     };
 
-
-  // player states
-  public static var STATE_PARASITE = 'parasite';
-  public static var STATE_ATTACHED = 'attached';
-  public static var STATE_HOST = 'host';
 
   // base amount of turns the host has to live
 //  public static var HOST_EXPIRY_TURNS = 10;

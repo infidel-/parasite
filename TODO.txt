@@ -7,11 +7,11 @@ write about getPixels/setPixels bug
 MASTERPLAN
 ============
 area alertness
-area interest
+area interest - should bring something special
+police messages should be shown only if player has gained something
 world generation
 human biology knowledge
 canine biology knowledge
-organ growth
 city and world travel
 operation generation
 information web

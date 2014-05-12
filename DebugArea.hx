@@ -130,7 +130,7 @@ class DebugArea
 // spawn and control host
   function gainHost()
     {
-      if (game.player.state != Player.STATE_PARASITE)
+      if (game.player.state != PLR_STATE_PARASITE)
         {
           trace('Must be in default state: ' + game.player.state);
           return;

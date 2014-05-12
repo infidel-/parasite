@@ -83,7 +83,7 @@ class SkillsWindow
         buf.add('  --- empty ---\n');
 
       // host skills
-      if (game.player.state == Player.STATE_HOST)
+      if (game.player.state == PLR_STATE_HOST)
         {
           buf.add('\nHost skills\n===\n\n');
           var n = 0;

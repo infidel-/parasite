@@ -139,11 +139,11 @@ class HUD
         '/' + game.player.maxHealth + '\n');
       buf.add('===\n');
 
-      if (game.player.state == Player.STATE_ATTACHED)
+      if (game.player.state == PLR_STATE_ATTACHED)
         buf.add('Hold: ' + game.area.player.attachHold + ' / 100\n');
 
       // host stats
-      else if (game.player.state == Player.STATE_HOST)
+      else if (game.player.state == PLR_STATE_HOST)
         {
           buf.add(game.player.host.getNameCapped() + '\n');
           var colHealth = 
@@ -198,7 +198,7 @@ class HUD
         buf.add('No available actions.');
 
       buf.add("\n===\n");
-      if (game.player.state == Player.STATE_HOST)
+      if (game.player.state == PLR_STATE_HOST)
         {
           buf.add('\nF1: Inventory\n');
           buf.add('F2: Skills and knowledge\n');

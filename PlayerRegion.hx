@@ -40,7 +40,7 @@ class PlayerRegion
   public function turn()
     {
       // automatically gain control over host each turn
-      if (player.state == Player.STATE_HOST && player.hostControl < 100)
+      if (player.state == PLR_STATE_HOST && player.hostControl < 100)
         player.hostControl += 25;
     }
 
@@ -102,7 +102,7 @@ class PlayerRegion
   public function actionMove(dx: Int, dy: Int)
     {
       // parasite state: check for energy
-      if (player.state == Player.STATE_PARASITE)
+      if (player.state == PLR_STATE_PARASITE)
         {
           if (player.energy < player.vars.regionMoveEnergy)
             {
@@ -114,7 +114,7 @@ class PlayerRegion
         }
 
       // host state: check for energy
-      if (player.state == Player.STATE_HOST)
+      if (player.state == PLR_STATE_HOST)
         {
           player.host.energy -= player.vars.regionMoveEnergy;
           if (player.host.energy <= 0)
@@ -141,7 +141,7 @@ class PlayerRegion
   public inline function onHostDeath()
     {
       // set state 
-      player.state = Player.STATE_PARASITE;
+      player.state = PLR_STATE_PARASITE;
 
       // set image
       entity.setMask(Const.FRAME_EMPTY, Const.ROW_PARASITE);

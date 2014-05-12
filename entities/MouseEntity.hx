@@ -61,7 +61,7 @@ class MouseEntity extends Entity
       if (_mode == MODE_DEFAULT)
         {
           var ai = game.area.getAI(ax, ay);
-          if (game.player.state == Player.STATE_HOST && ai != null &&
+          if (game.player.state == PLR_STATE_HOST && ai != null &&
               ai != game.player.host)
             newframe = CURSOR_ATTACK;
           else newframe = CURSOR_DEFAULT;
@@ -128,7 +128,7 @@ class MouseEntity extends Entity
           // default: attack
           else if (_mode == MODE_DEFAULT)
             {
-              if (game.player.state == Player.STATE_HOST && ai != null &&
+              if (game.player.state == PLR_STATE_HOST && ai != null &&
                   ai != game.player.host)
                 game.area.player.actionAttack(ai);
             }

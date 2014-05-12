@@ -1,6 +1,7 @@
 // area event manager - timer-related stuff, spawn stuff, despawn stuff, etc
 
 import ai.*;
+import ai.AI;
 import objects.AreaObject;
 
 class AreaManager 
@@ -70,7 +71,7 @@ class AreaManager
         type: type,
         x: ai.x,
         y: ai.y,
-        details: ai.reason,
+        details: '' + ai.reason,
         turns: turns
         };
 
@@ -89,7 +90,7 @@ class AreaManager
             continue;
 
           // if ai origin is dead now, we skip this event
-          if (e.ai != null && e.ai.state == AI.STATE_DEAD)
+          if (e.ai != null && e.ai.state == AI_STATE_DEAD)
             {
               _list.remove(e);
               continue;
@@ -142,8 +143,8 @@ class AreaManager
       var tmp = game.area.getAIinRadius(x, y, 
         (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
       for (ai in tmp)
-        if (ai.state == AI.STATE_IDLE)
-          ai.setState(AI.STATE_ALERT, AI.REASON_WITNESS);
+        if (ai.state == AI_STATE_IDLE)
+          ai.setState(AI_STATE_ALERT, REASON_WITNESS);
     }
 
 
@@ -151,11 +152,11 @@ class AreaManager
   function onCallPolice(e: AreaEvent)
     {
       var sdetails;
-      if (e.details == AI.REASON_HOST)
+      if (e.details == '' + REASON_HOST)
         sdetails = 'a suspicious individual';
-      else if (e.details == AI.REASON_BODY)
+      else if (e.details == '' + REASON_BODY)
         sdetails = 'a dead body';
-      else if (e.details == AI.REASON_DAMAGE || e.details == AI.REASON_WITNESS)
+      else if (e.details == '' + REASON_DAMAGE || e.details == '' + REASON_WITNESS)
         sdetails = 'an attack';
       else sdetails = 'wild animal sighting';
 
@@ -181,8 +182,8 @@ class AreaManager
     {
       var list = game.area.getAllAI();
       for (ai in list)
-        if (ai.type == 'police' && ai.state == AI.STATE_IDLE)
-          ai.setState(AI.STATE_ALERT, AI.REASON_BACKUP);
+        if (ai.type == 'police' && ai.state == AI_STATE_IDLE)
+          ai.setState(AI_STATE_ALERT, REASON_BACKUP);
     }
 
 
@@ -260,7 +261,7 @@ class AreaManager
           ai.alertness = 70;
 */        
           ai.timers.alert = 10;
-          ai.state = AI.STATE_ALERT;
+          ai.state = AI_STATE_ALERT;
           ai.isBackup = true;
 
           game.area.addAI(ai);

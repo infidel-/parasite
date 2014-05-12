@@ -86,7 +86,7 @@ class Area
 
       // update player position 
       var loc = findEmptyLocation();
-      if (game.player.state == Player.STATE_HOST)
+      if (game.player.state == PLR_STATE_HOST)
         {
           player.entity.visible = false;
           game.scene.add(game.player.host.entity);
@@ -125,7 +125,7 @@ class Area
   public function show()
     {
       entity.visible = true;
-      if (game.player.state != Player.STATE_HOST)
+      if (game.player.state != PLR_STATE_HOST)
         player.entity.visible = true;
 
       game.scene.updateCamera(); // center camera on player
@@ -546,7 +546,7 @@ class Area
       // count number of alerted AI
       var cnt = 0;
       for (ai in _ai)
-        if (ai.state == AI.STATE_ALERT)
+        if (ai.state == AI_STATE_ALERT)
           cnt++;
 
       if (cnt > 0)
@@ -662,12 +662,12 @@ class Area
             continue;
 
           // must not be visible to player as a parasite
-          if (game.player.state != Player.STATE_HOST &&
+          if (game.player.state != PLR_STATE_HOST &&
               HXP.distanceSquared(player.x, player.y, x, y) < 6 * 6)
             continue;
 
           // must not be visible to player when possessing a host
-          if (game.player.state == Player.STATE_HOST &&
+          if (game.player.state == PLR_STATE_HOST &&
               isVisible(player.x, player.y, x, y))
             continue;
 
@@ -692,7 +692,7 @@ class Area
 // update AI visibility
   public inline function updateVisibility()
     {
-      if (game.player.state == Player.STATE_HOST)
+      if (game.player.state == PLR_STATE_HOST)
         updateVisibilityHost();
       else updateVisibilityParasite();
     }

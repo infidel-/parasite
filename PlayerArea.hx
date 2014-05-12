@@ -2,8 +2,8 @@
 
 import com.haxepunk.HXP;
 
-import entities.PlayerEntity;
 import ai.AI;
+import entities.PlayerEntity;
 
 class PlayerArea
 {
@@ -53,7 +53,7 @@ class PlayerArea
       // (region mode will throw player in area mode before that)
 
       // state: host (we might lose it if energy drops to zero earlier)
-      if (player.state == Player.STATE_HOST)
+      if (player.state == PLR_STATE_HOST)
         {
           player.hostControl--;
           if (player.hostControl <= 0)
@@ -87,7 +87,7 @@ class PlayerArea
       var tmp = new List<String>();
 
       // parasite is attached to host
-      if (player.state == Player.STATE_ATTACHED)
+      if (player.state == PLR_STATE_ATTACHED)
         {
           addActionToList(tmp, 'hardenGrip');
           if (attachHold >= 90)
@@ -95,7 +95,7 @@ class PlayerArea
         }
 
       // parasite in control of host
-      else if (player.state == Player.STATE_HOST)
+      else if (player.state == PLR_STATE_HOST)
         {
           addActionToList(tmp, 'reinforceControl');
           if (player.evolutionManager.getLevel('hostMemory') > 0)
@@ -109,7 +109,7 @@ class PlayerArea
         return tmp;
 
       // TODO: add this to appropriate object class
-      if (player.state != Player.STATE_ATTACHED && o.type == 'sewer_hatch')
+      if (player.state != PLR_STATE_ATTACHED && o.type == 'sewer_hatch')
         addActionToList(tmp, 'enterSewers');
       
       return tmp;
@@ -149,7 +149,7 @@ class PlayerArea
       player.energy -= action.energy;
 
       // host could be dead
-      if (player.state == Player.STATE_HOST && player.host.state == AI.STATE_DEAD)
+      if (player.state == PLR_STATE_HOST && player.host.state == AI_STATE_DEAD)
         {
           onHostDeath();
 
@@ -157,7 +157,7 @@ class PlayerArea
         }
 
       // parasite could also be dead
-      if (player.state == Player.STATE_PARASITE && player.energy <= 0)
+      if (player.state == PLR_STATE_PARASITE && player.energy <= 0)
         {
           game.finish('lose', 'noHost');
           return;
@@ -204,7 +204,7 @@ class PlayerArea
   function actionFrobAI(ai: AI)
     {
       // attach to new host
-      if (player.state == Player.STATE_PARASITE)
+      if (player.state == PLR_STATE_PARASITE)
         {
           actionAttachToHost(ai);
 
@@ -235,7 +235,7 @@ class PlayerArea
   public function actionAttack(ai: AI)
     {
       // not in a host mode
-      if (player.state != Player.STATE_HOST)
+      if (player.state != PLR_STATE_HOST)
         return;
 
       // check if player can see that spot
@@ -270,8 +270,8 @@ class PlayerArea
           log('Your host tries to ' + info.verb1 + ' ' + ai.getName() + ', but misses.');
 
           // set alerted state
-          if (ai.state == AI.STATE_IDLE)
-            ai.setState(AI.STATE_ALERT, AI.REASON_DAMAGE);
+          if (ai.state == AI_STATE_IDLE)
+            ai.setState(AI_STATE_ALERT, REASON_DAMAGE);
 
           postAction(); // post-action call
           game.updateHUD(); // update HUD info
@@ -299,7 +299,7 @@ class PlayerArea
       moveTo(ai.x, ai.y);
 
       // set starting attach parameters
-      player.state = Player.STATE_ATTACHED;
+      player.state = PLR_STATE_ATTACHED;
       attachHost = ai;
       attachHold = ATTACH_HOLD_BASE;
 
@@ -332,7 +332,7 @@ class PlayerArea
       player.host.onInvade(); // notify ai
 
       // set state
-      player.state = Player.STATE_HOST;
+      player.state = PLR_STATE_HOST;
 
       // update AI visibility to player
       area.updateVisibility();
@@ -435,7 +435,7 @@ class PlayerArea
   public function moveBy(dx: Int, dy: Int): Bool
     {
       // if player tries to move when attached, that detaches the parasite
-      if (player.state == Player.STATE_ATTACHED)
+      if (player.state == PLR_STATE_ATTACHED)
         actionDetach();
 
       var nx = x + dx;
@@ -446,7 +446,7 @@ class PlayerArea
         return false;
 
       // random: change movement direction
-      if (player.state == Player.STATE_HOST && 
+      if (player.state == PLR_STATE_HOST && 
           Std.random(100) < 100 - player.hostControl)
         {
           log('The host resists your command.');
@@ -462,7 +462,7 @@ class PlayerArea
       y = ny;
 
       // move invaded host entity with invisible player entity
-      if (player.state == Player.STATE_HOST) 
+      if (player.state == PLR_STATE_HOST) 
         player.host.setPosition(x, y);
 
       entity.setPosition(x, y); // move player entity (even if invisible)
@@ -514,10 +514,10 @@ class PlayerArea
 // event: on taking damage
   public function onDamage(damage: Int)
     {
-      if (player.state == Player.STATE_HOST)
+      if (player.state == PLR_STATE_HOST)
         {
           player.host.onDamage(damage);
-          if (player.host.state == AI.STATE_DEAD)
+          if (player.host.state == AI_STATE_DEAD)
             {
               onDetach();
               
@@ -542,7 +542,7 @@ class PlayerArea
   public function onDetach()
     {
       // set state 
-      player.state = Player.STATE_PARASITE;
+      player.state = PLR_STATE_PARASITE;
 
       // make player entity visible again
       entity.visible = true;
