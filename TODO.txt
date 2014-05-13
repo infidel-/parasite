@@ -1,5 +1,7 @@
 evolution content - some basic evolutions in each path + maybe rework paths? + mb work with evolution as tags instead?
+use host energy to search and loot!
 looting bodies - stand on body, "Search the body" appears. All items have a known flag. If the parasite doesn't what an item is, its described vaguely, like "shiny prolonged object" etc. Access memory action allows parasite to learn about an item, if its in his inventory.
+Const.PLAYER_ACTIONS => Map
 improvements impl: host release
 
 scene. getSpriteByLayer(layer) - draw lines on this one

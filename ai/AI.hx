@@ -244,6 +244,10 @@ class AI
       if (Math.random() < 0.2)
         changeRandomDirection();
 
+      // nowhere to move - should be a bug
+      if (direction == -1)
+        return;
+
       var nx = x + Const.dirx[direction];
       var ny = y + Const.diry[direction];
       var ok = 
@@ -611,6 +615,7 @@ class AI
 
       o.isHumanBody = isHuman;
       o.organPoints = organs.getPoints();
+      o.inventory = inventory; // copy inventory
       game.area.updateVisibility();
     }
 

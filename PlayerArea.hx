@@ -149,10 +149,6 @@ class PlayerArea
         {
           var o = area.getObjectAt(x, y);
           action = o.action(actionID.substr(2));
-
-      // activate object (will make it a common action)
-//      else if (actionID == 'enterSewers')
-//        actionActivateObject();
         }
 
       player.energy -= action.energy;

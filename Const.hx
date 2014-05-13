@@ -71,7 +71,7 @@ class Const
   public static var dirx = [ -1, -1, -1, 0, 0, 1, 1, 1 ];
   public static var diry = [ -1, 0, 1, -1, 1, -1, 0, 1 ];
 
-  // player actions and intents names
+  // common player actions 
   public static var PLAYER_ACTIONS =
     {
       // area
@@ -84,7 +84,7 @@ class Const
       leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
       accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 5 },
       move: { id: 'move', name: 'Movement', energy: 0 },
-      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 10 },
+//      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 10 },
 
       // region
       enterArea: { id: 'enterArea', name: 'Enter Area', energy: 0 },

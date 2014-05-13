@@ -26,6 +26,18 @@ class Inventory
     }
 
 
+// remove item
+  public function remove(id: String)
+    {
+      for (item in _list)
+        if (item.id == id)
+          {
+            _list.remove(item);
+            break;
+          }
+    }
+
+
 // get first item that is a weapon
   public function getFirstWeapon(): Item
     {
