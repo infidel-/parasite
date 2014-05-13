@@ -14,8 +14,15 @@ class SewerHatch extends AreaObject
     }
 
 
+// update actions
+  override function updateActionsList()
+    {
+      addAction('enterSewers', 'Enter Sewers', 10);
+    }
+
+
 // activate sewers - leave area
-  public override function onActivate()
+  override function onAction(id: String)
     {
       game.log("You enter the damp fetid sewers, escaping the prying eyes.");
       game.turns++; // manually increase number of turns

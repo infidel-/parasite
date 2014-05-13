@@ -49,18 +49,18 @@ class PlayerRegion
 
 
 // helper: add action to list and check for energy
-  inline function addActionToList(list: List<String>, name: String)
+  inline function addActionToList(list: List<_PlayerAction>, name: String)
     {
       var action = Const.getAction(name);
       if (action.energy <= player.energy)
-        list.add(name);
+        list.add(action);
     }
 
 
 // get actions list (area mode)
-  public function getActionList(): List<String>
+  public function getActionList(): List<_PlayerAction>
     {
-      var tmp = new List<String>();
+      var tmp = new List<_PlayerAction>();
       
       var r = region.getRegion();
       var area = r.getXY(x, y);
@@ -73,11 +73,11 @@ class PlayerRegion
 
 // do a player action by string id
 // action energy availability is checked when the list is formed
-  public function action(actionName: String)
+  public function action(actionID: String)
     {
-      var action = Const.getAction(actionName);
+      var action = Const.getAction(actionID);
 
-      if (actionName == 'enterArea')
+      if (actionID == 'enterArea')
         actionEnterArea();
 
       player.energy -= action.energy;

@@ -73,18 +73,18 @@ class PlayerArea
 
 
 // helper: add action to list and check for energy
-  inline function addActionToList(list: List<String>, name: String)
+  inline function addActionToList(list: List<_PlayerAction>, id: String)
     {
-      var action = Const.getAction(name);
+      var action = Const.getAction(id);
       if (action.energy <= player.energy)
-        list.add(name);
+        list.add(action);
     }
 
 
 // get actions list (area mode)
-  public function getActionList(): List<String>
+  public function getActionList(): List<_PlayerAction>
     {
-      var tmp = new List<String>();
+      var tmp = new List<_PlayerAction>();
 
       // parasite is attached to host
       if (player.state == PLR_STATE_ATTACHED)
@@ -108,9 +108,11 @@ class PlayerArea
       if (o == null)
         return tmp;
 
+      o.addActions(tmp); // add all actions defined by object
+
       // TODO: add this to appropriate object class
-      if (player.state != PLR_STATE_ATTACHED && o.type == 'sewer_hatch')
-        addActionToList(tmp, 'enterSewers');
+//      if (player.state != PLR_STATE_ATTACHED && o.type == 'sewer_hatch')
+//        addActionToList(tmp, 'enterSewers');
       
       return tmp;
     }
@@ -118,33 +120,40 @@ class PlayerArea
 
 // do a player action by string id
 // action energy availability is checked when the list is formed
-  public function action(actionName: String)
+  public function action(actionID: String)
     {
-      var action = Const.getAction(actionName);
+      var action = Const.getAction(actionID);
 
       // harden grip on the victim
-      if (actionName == 'hardenGrip')
+      if (actionID == 'hardenGrip')
         actionHardenGrip();
 
       // invade host 
-      else if (actionName == 'invadeHost')
+      else if (actionID == 'invadeHost')
         actionInvadeHost();
 
       // try to reinforce control over host 
-      else if (actionName == 'reinforceControl')
+      else if (actionID == 'reinforceControl')
         actionReinforceControl();
 
       // try to leave current host
-      else if (actionName == 'leaveHost')
+      else if (actionID == 'leaveHost')
         actionLeaveHost();
 
       // access host memory
-      else if (actionName == 'accessMemory')
+      else if (actionID == 'accessMemory')
         actionAccessMemory();
 
+      // area object action
+      else if (actionID.substr(0, 2) == 'o:')
+        {
+          var o = area.getObjectAt(x, y);
+          action = o.action(actionID.substr(2));
+
       // activate object (will make it a common action)
-      else if (actionName == 'enterSewers')
-        actionActivateObject();
+//      else if (actionID == 'enterSewers')
+//        actionActivateObject();
+        }
 
       player.energy -= action.energy;
 
@@ -220,14 +229,6 @@ class PlayerArea
       actionAttachToHost(ai);
       attachHold = 100;
       actionInvadeHost();
-    }
-
-
-// action: activate object 
-  public function actionActivateObject()
-    {
-      var o = area.getObjectAt(x, y);
-      o.onActivate();
     }
 
 

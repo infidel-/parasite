@@ -19,7 +19,7 @@ class HUD
 
   var _textField: TextField; // actions list
   var _textFieldBack: Sprite; // actions list background
-  var _listActions: List<String>; // list of currently available actions
+  var _listActions: List<_PlayerAction>; // list of currently available actions
 
   var _log: TextField; // last log lines 
   var _logBack: Sprite; // log background
@@ -29,7 +29,7 @@ class HUD
   public function new(g: Game)
     {
       game = g;
-      _listActions = new List<String>();
+      _listActions = new List<_PlayerAction>();
       _listLog = new List<String>();
 
       // actions list
@@ -74,38 +74,27 @@ class HUD
     {
       // find action name by index
       var i = 1;
-      var actionName = null;
+      var actionID = null;
       for (a in _listActions)
         if (i++ == index)
           {
-            actionName = a;
+            actionID = a.id;
             break;
           }
-      if (actionName == null)
+      if (actionID == null)
         return;
 
       if (game.location == Game.LOCATION_AREA)
-        game.area.player.action(actionName);
+        game.area.player.action(actionID);
 
       else if (game.location == Game.LOCATION_REGION)
-        game.region.player.action(actionName);
+        game.region.player.action(actionID);
     }
 
-/*
-// add action to list and check for energy
-  inline function addActionToList(name: String)
-    {
-      var action = Const.getAction(name);
-      if (action.energy <= game.player.energy)
-        _listActions.add(name);
-    }
-*/
 
 // update player actions list
   inline function updateActionList()
     {
-//      _listActions.clear();
-
       if (game.location == Game.LOCATION_AREA)
         _listActions = game.area.player.getActionList();
 
@@ -175,7 +164,7 @@ class HUD
 
       // player actions
       var n = 1;
-      for (id in _listActions)
+      for (action in _listActions)
         {
 /*        
           if (a == selectedAction)
@@ -183,13 +172,13 @@ class HUD
           else buf.add('  ');
 */
 
-          var action = Const.getAction(id); 
+//          var action = Const.getAction(id); 
           buf.add(n + ': ');
           buf.add(action.name);
           if (action.energy > 0)
             buf.add(' (' + action.energy + ' energy)');
 //          buf.add(' (' + action.ap + ' AP)');
-          if (id != _listActions.last())
+          if (action != _listActions.last())
             buf.add("\n");
           n++;
         }

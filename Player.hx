@@ -158,7 +158,7 @@ class Player
 
 
 // player action type
-
+/*
 typedef PlayerAction =
 {
   var id: String; // action id
@@ -166,3 +166,4 @@ typedef PlayerAction =
 //  var ap: Int; // action points cost
   var energy: Int; // energy cost
 }
+*/

@@ -1,4 +1,5 @@
-looting bodies
+evolution content - some basic evolutions in each path + maybe rework paths? + mb work with evolution as tags instead?
+looting bodies - stand on body, "Search the body" appears. All items have a known flag. If the parasite doesn't what an item is, its described vaguely, like "shiny prolonged object" etc. Access memory action allows parasite to learn about an item, if its in his inventory.
 improvements impl: host release
 
 scene. getSpriteByLayer(layer) - draw lines on this one
@@ -6,7 +7,7 @@ write about getPixels/setPixels bug
 
 MASTERPLAN
 ============
-area alertness
+area alertness - block normal area travel on high alertness
 area interest - should bring something special
 police messages should be shown only if player has gained something
 world generation
@@ -18,8 +19,11 @@ information web
 
 LATER
 =====
+fat people have more energy overall, so they are more desirable
+some evolution can only happen if player has access to prerequisites, for example, stands on top of the 
 more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars
+fast travel in cars in region mode - entering the car will turn it on
 global suspicion and what comes with its growth (no global suspicion?)
 region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1

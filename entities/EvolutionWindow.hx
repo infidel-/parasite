@@ -120,7 +120,7 @@ class EvolutionWindow
       for (p in game.player.evolutionManager.getPathList())
         {
           _actionIDs.add('setPath.' + p.id);
-          _actionNames.add('Path of ' + p.info.name + ' (' + p.ep + '/' +
+          _actionNames.add(p.info.name + ' (' + p.ep + '/' +
             ConstEvolution.epCostPath[p.level] + ')');
         }
 

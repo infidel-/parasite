@@ -93,7 +93,7 @@ class Const
 
 
 // get action by id
-  public static inline function getAction(id: String): PlayerAction
+  public static inline function getAction(id: String): _PlayerAction
     {
       return Reflect.field(Const.PLAYER_ACTIONS, id);
     }

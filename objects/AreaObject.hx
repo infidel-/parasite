@@ -16,6 +16,7 @@ class AreaObject
   public var x: Int; // grid x,y
   public var y: Int;
   public var creationTime: Int; // when was this object created (turns since game start)
+  var _listActions: List<_PlayerAction>; // actions storage
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -23,6 +24,7 @@ class AreaObject
       type = 'undefined';
       id = (_maxID++);
       creationTime = game.turns;
+      _listActions = new List<_PlayerAction>();
 
       x = vx;
       y = vy;
@@ -67,13 +69,48 @@ class AreaObject
     }
 
 
+// check if player has enough energy and add action to list
+  inline function addAction(id: String, name: String, energy: Int)
+    {
+      if (game.player.energy >= energy)
+        _listActions.add({ id: id, name: name, energy: energy });
+    }
+
+
+// get actions for this object
+  public function addActions(tmp: List<_PlayerAction>)
+    {
+      _listActions.clear();
+      updateActionsList(); // overridden by children
+
+      for (a in _listActions)
+        tmp.add({ id: 'o:' + a.id, name: a.name, energy: a.energy });
+    }
+
+
+// object action
+  public function action(id: String): _PlayerAction
+    {
+      onAction(id); // child callback
+      for (a in _listActions)
+        if (a.id == id)
+          return a;
+
+      return null;
+    }
+
+
 // dynamic: object events and stuff
   public dynamic function turn()
     {}
 
 
-// dynamic: on object activate 
-  public dynamic function onActivate()
+// dynamic: current list of object actions
+  dynamic function updateActionsList()
+    {}
+
+// dynamic: object action callback
+  public dynamic function onAction(id: String)
     {}
 
 

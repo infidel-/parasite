@@ -59,10 +59,10 @@ class ConstEvolution
         path: 'conceal',
         id: 'camouflageLayer',
         name: 'Camouflage layer',
-        note: 'Allows covering parasite body with a temporary camouflage layer that looks like host skin and clothing',
+        note: 'Allows covering parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         organ: {
           name: 'Camouflage layer',
-          note: 'Temporary camouflage layer that covers parasite body changing its appearance',
+          note: 'Self-regenerating camouflage layer that covers parasite body changing its appearance',
           gp: 100
           },
         levelNotes: [
