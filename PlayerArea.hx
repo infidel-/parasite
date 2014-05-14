@@ -151,7 +151,10 @@ class PlayerArea
           action = o.action(actionID.substr(2));
         }
 
-      player.energy -= action.energy;
+      // spend energy
+      if (player.state == PLR_STATE_HOST)
+        player.host.energy -= action.energy;
+      else player.energy -= action.energy;
 
       // host could be dead
       if (player.state == PLR_STATE_HOST && player.host.state == AI_STATE_DEAD)

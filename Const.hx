@@ -82,7 +82,7 @@ class Const
       reinforceControl: { id: 'reinforceControl', name: 'Reinforce Control', energy: 5 },
       doNothing: { id: 'doNothing', name: 'Do Nothing', energy: 0 },
       leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
-      accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 5 },
+      accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 0 },
       move: { id: 'move', name: 'Movement', energy: 0 },
 //      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 10 },
 
