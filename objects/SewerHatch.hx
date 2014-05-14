@@ -17,7 +17,8 @@ class SewerHatch extends AreaObject
 // update actions
   override function updateActionsList()
     {
-      addAction('enterSewers', 'Enter Sewers', 10);
+      if (game.player.state != PLR_STATE_ATTACHED)
+        addAction('enterSewers', 'Enter Sewers', 10);
     }
 
 

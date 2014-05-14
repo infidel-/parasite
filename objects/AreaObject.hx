@@ -80,9 +80,10 @@ class AreaObject
 // get actions for this object
   public function addActions(tmp: List<_PlayerAction>)
     {
-      _listActions.clear();
+      _listActions.clear(); // clear old list
       updateActionsList(); // overridden by children
 
+      // add to external list
       for (a in _listActions)
         tmp.add({ id: 'o:' + a.id, name: a.name, energy: a.energy });
     }

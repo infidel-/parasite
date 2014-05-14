@@ -15,6 +15,7 @@ class PlayerArea
   public var x: Int; // x,y on grid
   public var y: Int;
   public var ap: Int; // player action points (2 per turn)
+  var knownObjects: List<String>; // list of known area object types
 
   // state "parasite"
 
@@ -33,6 +34,7 @@ class PlayerArea
       y = 0;
       ap = 2;
       attachHold = 0;
+      knownObjects = new List<String>();
     }
 
 
@@ -68,6 +70,13 @@ class PlayerArea
       ap = 2;
     }
 
+/*
+// does player know about this object?
+  public inline function knowsObject(id: String): Bool
+    {
+      return (Lambda.has(knownObjects, id));
+    }
+*/
 
 // ==============================   ACTIONS   =======================================
 
@@ -108,11 +117,14 @@ class PlayerArea
       if (o == null)
         return tmp;
 
-      o.addActions(tmp); // add all actions defined by object
+      // player does not know what this object is, cannot activate it
+      if (player.state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
+          player.host.isHuman)
+        addActionToList(tmp, 'learnObject');
 
-      // TODO: add this to appropriate object class
-//      if (player.state != PLR_STATE_ATTACHED && o.type == 'sewer_hatch')
-//        addActionToList(tmp, 'enterSewers');
+      // object known - add all actions defined by object
+      else if (Lambda.has(knownObjects, o.type)) 
+        o.addActions(tmp); 
       
       return tmp;
     }
@@ -143,6 +155,10 @@ class PlayerArea
       // access host memory
       else if (actionID == 'accessMemory')
         actionAccessMemory();
+
+      // learn about object 
+      else if (actionID == 'learnObject')
+        actionLearnObject();
 
       // area object action
       else if (actionID.substr(0, 2) == 'o:')
@@ -398,6 +414,16 @@ class PlayerArea
           game.log('You find out that the name of this host is ' + 
             player.host.getName() + '.');
         }
+    }
+
+
+// action: learn about area object
+  function actionLearnObject()
+    {
+      var o = area.getObjectAt(x, y);
+      game.log('You probe the brain of the host and learn what that object is for.');
+
+      knownObjects.add(o.type);
     }
 
 

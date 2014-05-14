@@ -83,6 +83,7 @@ class Const
       doNothing: { id: 'doNothing', name: 'Do Nothing', energy: 0 },
       leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
       accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 0 },
+      learnObject: { id: 'learnObject', name: 'Learn About Object', energy: 10 },
       move: { id: 'move', name: 'Movement', energy: 0 },
 //      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 10 },
 
