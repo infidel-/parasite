@@ -14,7 +14,7 @@ class BodyObject extends AreaObject
     {
       super(g, vx, vy);
 
-      inventory = new Inventory();
+      inventory = new Inventory(g);
       type = 'body';
       isHumanBody = false;
       isSearched = false;
@@ -36,7 +36,11 @@ class BodyObject extends AreaObject
 
       if (isSearched)
         for (item in inventory)
-          addAction('get.' + item.id, 'Get ' + item.info.name, 5);
+          {
+            var name = (game.player.knowsItem(item.id) ? 
+              item.info.name : item.info.unknown);
+            addAction('get.' + item.id, 'Get ' + name, 5);
+          }
     }
 
 

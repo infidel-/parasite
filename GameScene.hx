@@ -277,6 +277,8 @@ class GameScene extends Scene
               game.scene.evolutionWindow.action(n);
             else if (game.scene.hudState == GameScene.HUDSTATE_ORGANS)
               game.scene.organsWindow.action(n);
+            else if (game.scene.hudState == GameScene.HUDSTATE_INVENTORY)
+              game.scene.inventoryWindow.action(n);
             else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
               game.scene.debugWindow.action(n);
 

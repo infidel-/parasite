@@ -1,6 +1,7 @@
 typedef _PlayerAction =
 {
-  var id: String; // action id
-  var name: String; // action name
-  var energy: Int; // energy to complete
+  id: String, // action id
+  name: String, // action name
+  energy: Int, // energy to complete
+  ?obj: Dynamic // bound object to act on
 }

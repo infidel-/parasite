@@ -35,6 +35,7 @@ class PlayerArea
       ap = 2;
       attachHold = 0;
       knownObjects = new List<String>();
+      knownObjects.add('body');
     }
 
 
@@ -172,6 +173,16 @@ class PlayerArea
         player.host.energy -= action.energy;
       else player.energy -= action.energy;
 
+      postAction(); // post-action call
+
+      // update HUD info
+      game.updateHUD();
+    }
+
+
+// post-action call: remove AP and new turn
+  public function postAction()
+    {
       // host could be dead
       if (player.state == PLR_STATE_HOST && player.host.state == AI_STATE_DEAD)
         {
@@ -187,16 +198,6 @@ class PlayerArea
           return;
         }
 
-      postAction(); // post-action call
-
-      // update HUD info
-      game.updateHUD();
-    }
-
-
-// post-action call: remove AP and new turn
-  function postAction()
-    {
       // remove 1 AP
       ap--;
       if (ap > 0)
@@ -259,8 +260,16 @@ class PlayerArea
         return;
 
       // get current weapon
-      var item = player.host.inventory.getFirstWeapon();
+      var item = null;
       var info = null;
+
+      // for now, just get first weapon player knows how to use
+      for (ii in player.host.inventory)
+        if (ii.info.weaponStats != null && player.knowsItem(ii.id))
+          {
+            item = ii;
+            break;
+          }
 
       // use fists
       if (item == null)

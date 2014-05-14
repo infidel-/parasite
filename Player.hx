@@ -18,6 +18,7 @@ class Player
   public var maxEnergy: Int; // max energy
   public var health(default, set): Int; // current health
   public var maxHealth: Int; // maximum health
+  var knownItems: List<String>; // list of known item types
 
   public var skills: Skills; // skills
   public var state: _PlayerState; // player state - parasite, attach, host
@@ -48,6 +49,7 @@ class Player
       health = vars.startHealth;
       hostControl = 0;
       humanSociety = 0.0;
+      knownItems = new List<String>();
 
       skills = new Skills();
     }
@@ -113,6 +115,20 @@ class Player
       
       else if (game.location == Game.LOCATION_REGION)
         game.region.player.turn();
+    }
+
+
+// add item to known list
+  public inline function addKnownItem(id: String)
+    {
+      return knownItems.add(id);
+    }
+
+
+// does player know about this item?
+  public inline function knowsItem(id: String): Bool
+    {
+      return (Lambda.has(knownItems, id));
     }
 
 

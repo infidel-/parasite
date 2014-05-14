@@ -107,7 +107,7 @@ class AI
       _objectsSeen = new List<Int>();
       _turnsInvisible = 0;
 
-      inventory = new Inventory();
+      inventory = new Inventory(g);
       skills = new Skills();
       organs = new Organs(game, this);
     }

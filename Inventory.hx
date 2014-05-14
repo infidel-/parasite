@@ -4,11 +4,65 @@ import ConstItems;
 
 class Inventory
 {
+  var game: Game;
   var _list: List<Item>; // list of items
 
-  public function new()
+  public function new(g: Game)
     {
+      game = g;
       _list = new List<Item>();
+    }
+
+
+// add available actions to list
+  public function addActions(tmp: List<_PlayerAction>)
+    {
+      // add learning actions
+      for (item in _list)
+        {
+          if (game.player.knowsItem(item.id))
+            continue;
+
+          var action = { 
+            id: 'learn.' + item.id,
+            name: 'Learn about ' + item.info.unknown,
+            energy: 10,
+            obj: item
+            };
+
+          if (game.player.host.energy < action.energy)
+            continue;
+
+          tmp.add(action); 
+        }
+    }
+
+
+// ACTION: player inventory action
+  public function action(action: _PlayerAction)
+    {
+      var item: Item = untyped action.obj;
+  
+      // learn about item
+      if (action.id.substr(0, 5) == 'learn')
+        actionLearn(item);
+    
+      // spend energy
+      game.player.host.energy -= action.energy;
+
+      if (game.location == Game.LOCATION_AREA)
+        game.area.player.postAction();
+
+      else Const.todo('Inventory.action() in region mode!');
+    }
+
+
+// ACTION: learn about item
+  function actionLearn(item: Item)
+    {
+      game.log('You probe the brain of the host and learn what that item is for.');
+
+      game.player.addKnownItem(item.id);
     }
 
 

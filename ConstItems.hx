@@ -18,6 +18,7 @@ class ConstItems
     {
       id: 'fists',
       name: 'fists',
+      unknown: 'fists',
       verb1: 'punch',
       verb2: 'punches',
       weaponStats:
@@ -35,6 +36,7 @@ class ConstItems
     {
       id: 'baton',
       name: 'baton',
+      unknown: 'hard cylindric object',
       verb1: 'hit',
       verb2: 'hits',
       weaponStats:
@@ -48,6 +50,7 @@ class ConstItems
     {
       id: 'pistol',
       name: 'pistol',
+      unknown: 'hard metallic object',
       verb1: 'shoot',
       verb2: 'shoots',
       weaponStats:
@@ -68,6 +71,7 @@ typedef ItemInfo =
 {
   var id: String; // item id
   var name: String; // item name
+  var unknown: String; // item name when it's unknown
   var verb1: String; // X tries to $verb1 you, but misses.
   var verb2: String; // X $verb2 you for Y damage.
   var weaponStats: { // weapon-related stats, null if not a weapon
