@@ -1,9 +1,5 @@
 evolution content - some basic evolutions in each path + maybe rework paths? + mb work with evolution as tags instead?
-Const.PLAYER_ACTIONS => Map
 improvements impl: host release
-
-scene. getSpriteByLayer(layer) - draw lines on this one
-write about getPixels/setPixels bug
 
 MASTERPLAN
 ============
@@ -32,3 +28,6 @@ armor - vest + helmet
 stunner
 electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp
+
+scene. getSpriteByLayer(layer) - draw lines on this one
+write about getPixels/setPixels bug

@@ -682,7 +682,8 @@ class Area
           else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
 
           ai.isCommon = isCommon;
-          game.area.addAI(ai);
+//          game.area.addAI(ai);
+          addAI(ai);
 
           break;
         }
