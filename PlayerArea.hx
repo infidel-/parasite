@@ -417,6 +417,7 @@ class PlayerArea
       if (Std.random(100) < 25)
         player.host.onDamage(params.hostHealthMod); // more damage if unlucky
 
+      // get host name
       if (!player.host.isNameKnown)
         {
           player.host.isNameKnown = true;
@@ -436,7 +437,7 @@ class PlayerArea
     }
 
 
-//  action: access host skills
+//  action: access host skills (called from accessMemory)
   function actionAccessSkills(hostSkillsMod: Float)
     {
       var hostSkill = player.host.skills.getRandomSkill();

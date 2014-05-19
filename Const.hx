@@ -72,31 +72,28 @@ class Const
   public static var diry = [ -1, 0, 1, -1, 1, -1, 0, 1 ];
 
   // common player actions 
-  public static var PLAYER_ACTIONS =
-    {
+  public static var PLAYER_ACTIONS: Map<String, _PlayerAction> =
+    [
       // area
-      attachHost: { id: 'attachHost', name: 'Attach To Host', energy: 0 },
-      detach: { id: 'detach', name: 'Detach', energy: 0 },
-      hardenGrip: { id: 'hardenGrip', name: 'Harden Grip', energy: 5 },
-      invadeHost: { id: 'invadeHost', name: 'Invade Host', energy: 10 },
-      reinforceControl: { id: 'reinforceControl', name: 'Reinforce Control', energy: 5 },
-      doNothing: { id: 'doNothing', name: 'Do Nothing', energy: 0 },
-      leaveHost: { id: 'leaveHost', name: 'Leave Host', energy: 0 },
-      accessMemory: { id: 'accessMemory', name: 'Access Memory', energy: 0 },
-      learnObject: { id: 'learnObject', name: 'Learn About Object', energy: 10 },
-      move: { id: 'move', name: 'Movement', energy: 0 },
-//      enterSewers: { id: 'enterSewers', name: 'Enter Sewers', energy: 10 },
+      'attachHost' => { id: 'attachHost', name: 'Attach To Host', energy: 0 },
+      'detach' => { id: 'detach', name: 'Detach', energy: 0 },
+      'hardenGrip' => { id: 'hardenGrip', name: 'Harden Grip', energy: 5 },
+      'invadeHost' => { id: 'invadeHost', name: 'Invade Host', energy: 10 },
+      'reinforceControl' => { id: 'reinforceControl', name: 'Reinforce Control', energy: 5 },
+      'doNothing' => { id: 'doNothing', name: 'Do Nothing', energy: 0 },
+      'leaveHost' => { id: 'leaveHost', name: 'Leave Host', energy: 0 },
+      'accessMemory' => { id: 'accessMemory', name: 'Access Memory', energy: 0 },
+      'learnObject' => { id: 'learnObject', name: 'Learn About Object', energy: 10 },
+      'move' => { id: 'move', name: 'Movement', energy: 0 },
 
       // region
-      enterArea: { id: 'enterArea', name: 'Enter Area', energy: 0 },
-//      { id: '', name: '', ap:  },
-    };
-
+      'enterArea' => { id: 'enterArea', name: 'Enter Area', energy: 0 },
+    ];
 
 // get action by id
   public static inline function getAction(id: String): _PlayerAction
     {
-      return Reflect.field(Const.PLAYER_ACTIONS, id);
+      return PLAYER_ACTIONS.get(id);
     }
 
 

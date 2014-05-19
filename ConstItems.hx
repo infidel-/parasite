@@ -36,7 +36,7 @@ class ConstItems
     {
       id: 'baton',
       name: 'baton',
-      unknown: 'hard cylindric object',
+      unknown: 'hard elongated object',
       verb1: 'hit',
       verb2: 'hits',
       weaponStats:
