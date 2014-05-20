@@ -1,4 +1,3 @@
-move human society knowledge to skills
 evolution content - basic evolutions in each direction
 improvements impl: host release
 

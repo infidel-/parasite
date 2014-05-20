@@ -5,11 +5,11 @@ class ConstEvolution
   // major evolution paths
   public static var paths: Array<PathInfo> =
     [
-      { id: 'protection', name: 'Protection' },
-      { id: 'control', name: 'Control' },
-      { id: 'attack', name: 'Attack' },
-      { id: 'conceal', name: 'Concealment' },
-      { id: 'misc', name: 'Miscellaneous' },
+      { id: PATH_PROTECTION, name: 'Protection' },
+      { id: PATH_CONTROL, name: 'Control' },
+      { id: PATH_ATTACK, name: 'Attack' },
+      { id: PATH_CONCEAL, name: 'Concealment' },
+      { id: PATH_SPECIAL, name: 'Special' },
     ];
 
 
@@ -17,7 +17,7 @@ class ConstEvolution
   public static var improvements: Array<ImprovInfo> =
     [
       { // ***
-        path: 'conceal',
+        path: PATH_CONCEAL,
         id: 'hostRelease',
         name: '[TODO] Host release process',
         note: 'Controls what happens to the host when parasite leaves',
@@ -32,7 +32,7 @@ class ConstEvolution
       },
 
       { // ***
-        path: 'conceal',
+        path: PATH_CONCEAL,
         id: 'decayAccel',
         name: 'Decay acceleration',
         note: 'Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
@@ -56,7 +56,7 @@ class ConstEvolution
       },
 
       { // ***
-        path: 'conceal',
+        path: PATH_CONCEAL,
         id: 'camouflageLayer',
         name: 'Camouflage layer',
         note: 'Allows covering parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
@@ -80,7 +80,7 @@ class ConstEvolution
       },
 
       { // ***
-        path: 'misc',
+        path: PATH_SPECIAL,
         id: 'hostMemory',
         name: 'Host memory',
         note: 'Gains access to host memory',
@@ -191,7 +191,7 @@ class ConstEvolution
 */
 
 // get path info
-  public static function getPathInfo(id: String): PathInfo
+  public static function getPathInfo(id: _Path): PathInfo
     {
       for (p in paths)
         if (p.id == id)
@@ -205,7 +205,7 @@ class ConstEvolution
 typedef ImprovInfo =
 {
   var id: String; // improvement string ID
-  var path: String; // path string ID
+  var path: _Path; // path ID
   var name: String; // improvement name
   var note: String; // improvement description
   var organ: OrganInfo; // organ that can be grown
@@ -215,7 +215,7 @@ typedef ImprovInfo =
 
 typedef PathInfo =
 {
-  var id: String; // path string ID
+  var id: _Path; // path string ID
   var name: String; // path name
 }
 

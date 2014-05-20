@@ -43,13 +43,14 @@ class EvolutionManager
       player.energy -= 5 * time;
       if (isTaskPath) // path evolution
         {
-          var path = getPath(taskID);
+          var pathID = Type.createEnum(_Path, taskID);
+          var path = getPath(pathID);
           path.ep += 10 * time;
 
           // evolution complete
           if (path.ep >= ConstEvolution.epCostPath[path.level])
             {
-              var imp = openImprov(taskID);
+              var imp = openImprov(pathID);
               if (imp == null)
                 {
                   player.log('You have followed this evolution path to the end.',
@@ -90,7 +91,7 @@ class EvolutionManager
 
   
 // open improvement on that path
-  function openImprov(path: String): Improv
+  function openImprov(path: _Path): Improv
     {
       // get list of improvs on that path that player does not yet have
       var tmp = [];
@@ -189,7 +190,7 @@ class EvolutionManager
 
 
 // get path object
-  public function getPath(id: String): Path
+  public function getPath(id: _Path): Path
     {
       for (p in _listPaths)
         if (p.id == id)
@@ -219,8 +220,9 @@ class EvolutionManager
       if (taskID == '')
         return "<font color='#FF0000'>None</font>";
       else if (isTaskPath)
-        return ConstEvolution.getPathInfo(taskID).name;
+        return ConstEvolution.getPathInfo(Type.createEnum(_Path, taskID)).name;
       else return ConstEvolution.getInfo(taskID).name;
+      return null;
     }
 }
 
@@ -235,7 +237,7 @@ typedef Improv =
 
 typedef Path =
 {
-  var id: String; // string ID
+  var id: _Path; // string ID
   var level: Int; // path level is mainly a convenience var, equals number of opened improvements on that path
   var ep: Int; // evolution points
   var info: PathInfo; // path info link
