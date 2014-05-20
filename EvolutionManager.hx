@@ -72,7 +72,8 @@ class EvolutionManager
 
       else // upgrade improvement
         {
-          var imp = getImprov(taskID);
+          var impID = Type.createEnum(_Improv, taskID);
+          var imp = getImprov(impID);
           imp.ep += 10 * time;
 
           // upgrade complete
@@ -113,7 +114,7 @@ class EvolutionManager
 
 
 // add improvement to list
-  public inline function addImprov(id: String): Improv
+  public inline function addImprov(id: _Improv): Improv
     {
       var imp = {
         id: id,
@@ -143,7 +144,7 @@ class EvolutionManager
 
 
 // is this improvement known?
-  public function isKnown(id: String): Bool
+  public function isKnown(id: _Improv): Bool
     {
       for (imp in _list)
         if (imp.id == id)
@@ -154,7 +155,7 @@ class EvolutionManager
 
 
 // get improvement
-  public function getImprov(id: String): Improv
+  public function getImprov(id: _Improv): Improv
     {
       for (imp in _list)
         if (imp.id == id)
@@ -165,7 +166,7 @@ class EvolutionManager
 
 
 // get current improvement params
-  public function getParams(id: String): Dynamic
+  public function getParams(id: _Improv): Dynamic
     {
       var imp = getImprov(id);
       if (imp == null) // improvement not learned yet
@@ -179,7 +180,7 @@ class EvolutionManager
 
 
 // get improvement level
-  public function getLevel(id: String): Int
+  public function getLevel(id: _Improv): Int
     {
       for (imp in _list)
         if (imp.id == id)
@@ -221,14 +222,13 @@ class EvolutionManager
         return "<font color='#FF0000'>None</font>";
       else if (isTaskPath)
         return ConstEvolution.getPathInfo(Type.createEnum(_Path, taskID)).name;
-      else return ConstEvolution.getInfo(taskID).name;
-      return null;
+      return ConstEvolution.getInfo(Type.createEnum(_Improv, taskID)).name;
     }
 }
 
 typedef Improv =
 {
-  var id: String; // improvement string ID
+  var id: _Improv; // improvement string ID
   var level: Int; // improvement level
   var ep: Int; // evolution points
   var info: ImprovInfo; // improvement info link

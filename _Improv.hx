@@ -1,0 +1,7 @@
+enum _Improv
+{
+  IMP_HOST_RELEASE;
+  IMP_DECAY_ACCEL;
+  IMP_CAMO_LAYER;
+  IMP_HOST_MEMORY;
+}

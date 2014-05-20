@@ -18,7 +18,7 @@ class ConstEvolution
     [
       { // ***
         path: PATH_CONCEAL,
-        id: 'hostRelease',
+        id: IMP_HOST_RELEASE,
         name: '[TODO] Host release process',
         note: 'Controls what happens to the host when parasite leaves',
         organ: null,
@@ -33,7 +33,7 @@ class ConstEvolution
 
       { // ***
         path: PATH_CONCEAL,
-        id: 'decayAccel',
+        id: IMP_DECAY_ACCEL,
         name: 'Decay acceleration',
         note: 'Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
         organ: {
@@ -57,7 +57,7 @@ class ConstEvolution
 
       { // ***
         path: PATH_CONCEAL,
-        id: 'camouflageLayer',
+        id: IMP_CAMO_LAYER, 
         name: 'Camouflage layer',
         note: 'Allows covering parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         organ: {
@@ -81,7 +81,7 @@ class ConstEvolution
 
       { // ***
         path: PATH_SPECIAL,
-        id: 'hostMemory',
+        id: IMP_HOST_MEMORY, 
         name: 'Host memory',
         note: 'Gains access to host memory',
         organ: null,
@@ -158,7 +158,7 @@ class ConstEvolution
 
 
 // get improvement info
-  public static function getInfo(id: String): ImprovInfo
+  public static function getInfo(id: _Improv): ImprovInfo
     {
       for (imp in improvements)
         if (imp.id == id)
@@ -169,7 +169,7 @@ class ConstEvolution
 
 
 // get improvement parameters of the specified level
-  public static function getParams(id: String, level: Int): Dynamic
+  public static function getParams(id: _Improv, level: Int): Dynamic
     {
       for (imp in improvements)
         if (imp.id == id)
@@ -204,7 +204,7 @@ class ConstEvolution
 
 typedef ImprovInfo =
 {
-  var id: String; // improvement string ID
+  var id: _Improv; // improvement string ID
   var path: _Path; // path ID
   var name: String; // improvement name
   var note: String; // improvement description

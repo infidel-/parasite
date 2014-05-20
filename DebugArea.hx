@@ -145,8 +145,8 @@ class DebugArea
       // give weapon
       ai.inventory.addID('pistol');
       ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
-//      ai.organs.addID('camouflageLayer');
-      ai.organs.addID('decayAccel');
+//      ai.organs.addID(IMP_CAMO_LAYER);
+      ai.organs.addID(IMP_DECAY_ACCEL);
     }
 
 

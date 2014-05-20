@@ -382,11 +382,11 @@ class AI
 
           // check if player is on a host and has active camouflage layer
           var hasCamo = (game.player.state == PLR_STATE_HOST ? 
-            game.player.host.organs.has('camouflageLayer') : false);
+            game.player.host.organs.has(IMP_CAMO_LAYER) : false);
           var baseAlertness = 3;
           if (hasCamo)
             {
-              var params = game.player.evolutionManager.getParams('camouflageLayer');
+              var params = game.player.evolutionManager.getParams(IMP_CAMO_LAYER);
               baseAlertness = params.baseAlertness;
             }
           alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
@@ -606,10 +606,10 @@ class AI
       var o = new BodyObject(game, x, y, type);
 
       // decay acceleration
-      var organ = organs.getActive('decayAccel');
+      var organ = organs.getActive(IMP_DECAY_ACCEL);
       if (organ != null)
         {
-          var params = ConstEvolution.getParams('decayAccel', organ.level);
+          var params = ConstEvolution.getParams(IMP_DECAY_ACCEL, organ.level);
           o.setDecay(params.turns);
         }
 

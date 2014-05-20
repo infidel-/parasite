@@ -101,7 +101,7 @@ class Player
 
           // knowledge about human society raises automatically
           // if host memory is available
-          if (host.type == 'human' && evolutionManager.getLevel('hostMemory') > 0)
+          if (host.type == 'human' && evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
             skills.increase(KNOW_SOCIETY, 0.1 * host.intellect * time);
         }
 

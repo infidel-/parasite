@@ -108,7 +108,7 @@ class PlayerArea
       else if (player.state == PLR_STATE_HOST)
         {
           addActionToList(tmp, 'reinforceControl');
-          if (player.evolutionManager.getLevel('hostMemory') > 0)
+          if (player.evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
             addActionToList(tmp, 'accessMemory');
           addActionToList(tmp, 'leaveHost');
         }
@@ -404,7 +404,7 @@ class PlayerArea
      
       game.log('You probe the brain of the host and access its memory.');
 
-      var params = player.evolutionManager.getParams('hostMemory');
+      var params = player.evolutionManager.getParams(IMP_HOST_MEMORY);
       player.skills.increase(KNOW_SOCIETY,
         params.humanSociety * player.host.intellect);
 

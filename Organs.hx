@@ -68,7 +68,8 @@ class Organs
       if (actionName != 'set')
         throw(actionName);
 
-      var imp = game.player.evolutionManager.getImprov(actionID);
+      var impID = Type.createEnum(_Improv, actionID);
+      var imp = game.player.evolutionManager.getImprov(impID);
 
       // if this organ does not exist yet, create it
       var o = get(imp.id);
@@ -89,7 +90,7 @@ class Organs
 
 
 // has this organ? 
-  public function has(id: String): Bool 
+  public function has(id: _Improv): Bool 
     {
       for (o in _list)
         if (o.id == id)
@@ -100,7 +101,7 @@ class Organs
 
 
 // get organ by id
-  public function get(id: String): Organ
+  public function get(id: _Improv): Organ
     {
       for (o in _list)
         if (o.id == id)
@@ -110,16 +111,16 @@ class Organs
     }
 
 
-// get active organ by id
-  public inline function getActive(id: String): Organ
+// get active organ by improvement id
+  public inline function getActive(id: _Improv): Organ
     {
       var o = get(id);
       return ((o != null && o.isActive) ? o : null);
     }
 
 
-// add grown organ by id
-  public function addID(id: String): Organ
+// add grown organ by improvement id
+  public function addID(id: _Improv): Organ
     {
       var impInfo = ConstEvolution.getInfo(id);
       if (impInfo == null)
@@ -162,7 +163,7 @@ class Organs
 
 typedef Organ =
 {
-  var id: String; // organ id
+  var id: _Improv; // organ id
   var level: Int; // organ level (copied from improvement on creation)
   var isActive: Bool; // organ active?
   var gp: Int; // growth points
