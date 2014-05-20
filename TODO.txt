@@ -1,4 +1,5 @@
-evolution content - some basic evolutions in each path + maybe rework paths? + mb work with evolution as tags instead?
+move human society knowledge to skills
+evolution content - basic evolutions in each direction
 improvements impl: host release
 
 MASTERPLAN

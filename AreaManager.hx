@@ -206,7 +206,7 @@ class AreaManager
           // called cops have guns
           ai.inventory.clear();
           ai.inventory.addID('pistol');
-          ai.skills.addID('pistol', 25 + Std.random(25));
+          ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
 
           // and arrive already alerted
           ai.alertness = 50;
@@ -254,7 +254,7 @@ class AreaManager
           // called cops have guns
           ai.inventory.clear();
           ai.inventory.addID('pistol');
-          ai.skills.addID('pistol', 25 + Std.random(25));
+          ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
 
           // and arrive already alerted
 /*          

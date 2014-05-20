@@ -10,9 +10,6 @@ class Player
 
   public var evolutionManager: EvolutionManager; // main evolution control
 
-  // knowledge
-  public var humanSociety(default, set): Float; // knowledge about human society (0-99.9%)
-
   // state-independent
   public var energy(default, set): Int; // energy left
   public var maxEnergy: Int; // max energy
@@ -48,7 +45,6 @@ class Player
       maxHealth = vars.startHealth;
       health = vars.startHealth;
       hostControl = 0;
-      humanSociety = 0.0;
       knownItems = new List<String>();
 
       skills = new Skills();
@@ -106,7 +102,7 @@ class Player
           // knowledge about human society raises automatically
           // if host memory is available
           if (host.type == 'human' && evolutionManager.getLevel('hostMemory') > 0)
-            humanSociety += 0.1 * host.intellect * time;
+            skills.increase(KNOW_SOCIETY, 0.1 * host.intellect * time);
         }
 
       // location-specific turn
@@ -149,8 +145,6 @@ class Player
     { return health = Const.clamp(v, 0, maxHealth); }
   function set_hostControl(v: Int)
     { return hostControl = Const.clamp(v, 0, 100); }
-  function set_humanSociety(v: Float)
-    { return humanSociety = Const.clampFloat(v, 0, 99.9); }
 
 
 // =================================================================================

@@ -38,7 +38,7 @@ class PoliceAI extends HumanAI
         ];
       isAggressive = true;
       inventory.addID('baton');
-      skills.addID('baton', 50 + Std.random(25));
+      skills.addID(SKILL_BATON, 50 + Std.random(25));
 
       isBackup = false;
       isBackupCalled = false;

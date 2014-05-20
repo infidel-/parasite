@@ -405,7 +405,8 @@ class PlayerArea
       game.log('You probe the brain of the host and access its memory.');
 
       var params = player.evolutionManager.getParams('hostMemory');
-      player.humanSociety += params.humanSociety * player.host.intellect;
+      player.skills.increase(KNOW_SOCIETY,
+        params.humanSociety * player.host.intellect);
 
       // can access skills from level 2
       if (params.hostSkillsMod > 0)
@@ -461,7 +462,7 @@ class PlayerArea
         {
           game.log('You have increased your knowledge of ' + hostSkill.info.name +
             ' skill.');
-          skill.level = Const.clamp(skill.level + amount, 0, hostSkill.level);
+          skill.level = Const.clampFloat(skill.level + amount, 0, hostSkill.level);
         }
     }
 

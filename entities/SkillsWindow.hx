@@ -71,12 +71,13 @@ class SkillsWindow
       var buf = new StringBuf();
 
       // parasite skills
-      buf.add('Skills\n===\n\n');
+      buf.add('Skills and knowledges\n===\n\n');
       var n = 0;
       for (skill in game.player.skills)
         {
           n++;
-          buf.add(skill.info.name + ' ' + skill.level + '%\n');
+          buf.add((skill.info.isKnowledge ? 'Knowledge: ' : '') +
+            skill.info.name + ' ' + skill.level + '%\n');
         }
 
       if (n == 0)
@@ -96,11 +97,6 @@ class SkillsWindow
           if (n == 0)
             buf.add('  --- empty ---\n');
         }
-
-      // knowledges
-      buf.add('\n');
-      if (game.player.humanSociety > 0)
-        buf.add('Knowledge about human society: ' + game.player.humanSociety + '%\n');
 
       _textField.htmlText = buf.toString();
       _back.graphics.clear();

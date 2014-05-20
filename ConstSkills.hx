@@ -3,7 +3,7 @@
 class ConstSkills
 {
 // return info by id
-  public static function getInfo(id: String): SkillInfo
+  public static function getInfo(id: _Skill): SkillInfo
     {
       for (ii in skills)
         if (ii.id == id)
@@ -16,20 +16,26 @@ class ConstSkills
 // skill infos
   public static var skills: Array<SkillInfo> = [
     {
-      id: 'fists',
+      id: SKILL_FISTS,
       name: 'fists',
       defaultLevel: 50,
     },
     {
-      id: 'baton',
+      id: SKILL_BATON,
       name: 'baton',
       defaultLevel: 40,
     },
     {
-      id: 'pistol',
+      id: SKILL_PISTOL,
       name: 'pistol',
       defaultLevel: 20,
     },
+    {
+      id: KNOW_SOCIETY,
+      name: 'human society',
+      defaultLevel: 0,
+      isKnowledge: true
+    }
     ];
 }
 
@@ -38,7 +44,8 @@ class ConstSkills
 
 typedef SkillInfo =
 {
-  var id: String; // skill id
-  var name: String; // skill name
-  var defaultLevel: Int; // default skill level
+  id: _Skill, // skill id
+  name: String, // skill name
+  defaultLevel: Int, // default skill level
+  ?isKnowledge: Bool, // is this a knowledge?
 }

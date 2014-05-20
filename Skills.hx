@@ -31,7 +31,7 @@ class Skills
 
 
 // get skill by id
-  public function get(id: String): Skill
+  public function get(id: _Skill): Skill
     {
       for (o in _list)
         if (o.id == id)
@@ -41,8 +41,23 @@ class Skills
     }
 
 
+// increase skill level
+  public function increase(id: _Skill, val: Float)
+    {
+      var sk = get(id);
+      if (sk == null)
+        {
+          addID(id, val);
+          return;
+        }
+
+      sk.level += val;
+      sk.level = Const.clampFloat(sk.level, 0, 99.9);
+    }
+
+
 // get skill level by id
-  public function getLevel(id: String): Int
+  public function getLevel(id: _Skill): Float
     {
       for (o in _list)
         if (o.id == id)
@@ -55,7 +70,7 @@ class Skills
 
 
 // add skill by id
-  public function addID(id: String, lvl: Int)
+  public function addID(id: _Skill, lvl: Float)
     {
       // check if we already have that skill
       for (sk in _list)
@@ -91,7 +106,7 @@ class Skills
 
 typedef Skill = 
 {
-  var id: String; // skill id
-  var level: Int; // skill level
+  var id: _Skill; // skill id
+  var level: Float; // skill level
   var info: SkillInfo; // skill info link
 };

@@ -24,7 +24,7 @@ class ConstItems
       weaponStats:
         {
           isRanged: false,
-          skill: 'fists',
+          skill: SKILL_FISTS,
           minDamage: 1,
           maxDamage: 3
         }
@@ -42,7 +42,7 @@ class ConstItems
       weaponStats:
         {
           isRanged: false,
-          skill: 'baton',
+          skill: SKILL_BATON,
           minDamage: 1,
           maxDamage: 6
         }
@@ -56,7 +56,7 @@ class ConstItems
       weaponStats:
         {
           isRanged: true,
-          skill: 'pistol',
+          skill: SKILL_PISTOL,
           minDamage: 1,
           maxDamage: 10
         }
@@ -76,7 +76,7 @@ typedef ItemInfo =
   var verb2: String; // X $verb2 you for Y damage.
   var weaponStats: { // weapon-related stats, null if not a weapon
     isRanged: Bool, // is this weapon type ranged? 
-    skill: String, // associated skill
+    skill: _Skill, // associated skill
     minDamage: Int, // min weapon damage
     maxDamage: Int // mxa weapon damage
     };

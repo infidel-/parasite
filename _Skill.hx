@@ -1,0 +1,7 @@
+enum _Skill
+{
+  SKILL_FISTS;
+  SKILL_BATON;
+  SKILL_PISTOL;
+  KNOW_SOCIETY;
+}
