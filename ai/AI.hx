@@ -357,13 +357,32 @@ class AI
         }
 
       // success, roll damage
+      var tmp = [];
       var damage = Const.roll(info.weaponStats.minDamage, info.weaponStats.maxDamage);
+      tmp.push(damage);
       if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
-        damage += Const.roll(0, Std.int(strength / 2));
+        {
+          var bonus = Const.roll(0, Std.int(strength / 2));
+          damage += bonus;
+          tmp.push(bonus);
+        }
+
+      // protective cover
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          var params = game.player.evolutionManager.getParams(IMP_PROT_COVER);
+          damage -= params.armor;
+          tmp.push(- params.armor);
+        }
+      if (damage < 0)
+        damage = 0;
 
       log(info.verb2 + ' ' + 
         (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') + 
         ' for ' + damage + ' damage.');
+#if debug
+      game.log('AI.attack: ' + tmp);
+#end
 
       game.area.player.onDamage(damage); // on damage event
     }
@@ -380,14 +399,19 @@ class AI
         {
           var distance = Const.getDist(x, y, game.area.player.x, game.area.player.y);
 
-          // check if player is on a host and has active camouflage layer
-          var hasCamo = (game.player.state == PLR_STATE_HOST ? 
-            game.player.host.organs.has(IMP_CAMO_LAYER) : false);
           var baseAlertness = 3;
-          if (hasCamo)
+          var alertnessBonus = 0;
+
+          // if player is on a host, check for organs
+          if (game.player.state == PLR_STATE_HOST)
             {
+              // camouflage layer
               var params = game.player.evolutionManager.getParams(IMP_CAMO_LAYER);
-              baseAlertness = params.baseAlertness;
+              baseAlertness = params.alertness;
+
+              // protective cover
+              var params = game.player.evolutionManager.getParams(IMP_PROT_COVER);
+              alertnessBonus += params.alertness;
             }
           alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
         }

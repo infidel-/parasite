@@ -4,4 +4,5 @@ enum _Improv
   IMP_DECAY_ACCEL;
   IMP_CAMO_LAYER;
   IMP_HOST_MEMORY;
+  IMP_PROT_COVER;
 }

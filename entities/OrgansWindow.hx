@@ -93,6 +93,10 @@ class OrgansWindow
           buf.add(organ.info.name +
             (organ.isActive ? '' : ' (' + organ.gp + '/' + organ.info.gp + 'gp)') +
             ' [' + organ.info.note + ']\n');
+#if debug
+          var params = game.player.evolutionManager.getParams(organ.id);
+          buf.add('DEBUG: ' + params + '\n');
+#end
           n++;
         }
 

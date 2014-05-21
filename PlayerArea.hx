@@ -1,4 +1,4 @@
-// player state (area mode)
+// state (area mode)
 
 import com.haxepunk.HXP;
 
@@ -9,13 +9,14 @@ class PlayerArea
 {
   var game: Game; // game state link
   var area: Area; // area link
-  var player: Player; // player state link
+  var player: Player; // state link
 
   public var entity: PlayerEntity; // player ui entity
   public var x: Int; // x,y on grid
   public var y: Int;
   public var ap: Int; // player action points (2 per turn)
   var knownObjects: List<String>; // list of known area object types
+  var state(get, set): _PlayerState; // state link
 
   // state "parasite"
 
@@ -56,7 +57,7 @@ class PlayerArea
       // (region mode will throw player in area mode before that)
 
       // state: host (we might lose it if energy drops to zero earlier)
-      if (player.state == PLR_STATE_HOST)
+      if (state == PLR_STATE_HOST)
         {
           player.hostControl--;
           if (player.hostControl <= 0)
@@ -97,7 +98,7 @@ class PlayerArea
       var tmp = new List<_PlayerAction>();
 
       // parasite is attached to host
-      if (player.state == PLR_STATE_ATTACHED)
+      if (state == PLR_STATE_ATTACHED)
         {
           addActionToList(tmp, 'hardenGrip');
           if (attachHold >= 90)
@@ -105,7 +106,7 @@ class PlayerArea
         }
 
       // parasite in control of host
-      else if (player.state == PLR_STATE_HOST)
+      else if (state == PLR_STATE_HOST)
         {
           addActionToList(tmp, 'reinforceControl');
           if (player.evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
@@ -119,7 +120,7 @@ class PlayerArea
         return tmp;
 
       // player does not know what this object is, cannot activate it
-      if (player.state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
+      if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
           player.host.isHuman)
         addActionToList(tmp, 'learnObject');
 
@@ -169,7 +170,7 @@ class PlayerArea
         }
 
       // spend energy
-      if (player.state == PLR_STATE_HOST)
+      if (state == PLR_STATE_HOST)
         player.host.energy -= action.energy;
       else player.energy -= action.energy;
 
@@ -184,7 +185,7 @@ class PlayerArea
   public function postAction()
     {
       // host could be dead
-      if (player.state == PLR_STATE_HOST && player.host.state == AI_STATE_DEAD)
+      if (state == PLR_STATE_HOST && player.host.state == AI_STATE_DEAD)
         {
           onHostDeath();
 
@@ -192,7 +193,7 @@ class PlayerArea
         }
 
       // parasite could also be dead
-      if (player.state == PLR_STATE_PARASITE && player.energy <= 0)
+      if (state == PLR_STATE_PARASITE && player.energy <= 0)
         {
           game.finish('lose', 'noHost');
           return;
@@ -229,7 +230,7 @@ class PlayerArea
   function actionFrobAI(ai: AI)
     {
       // attach to new host
-      if (player.state == PLR_STATE_PARASITE)
+      if (state == PLR_STATE_PARASITE)
         {
           actionAttachToHost(ai);
 
@@ -252,7 +253,7 @@ class PlayerArea
   public function actionAttack(ai: AI)
     {
       // not in a host mode
-      if (player.state != PLR_STATE_HOST)
+      if (state != PLR_STATE_HOST)
         return;
 
       // check if player can see that spot
@@ -324,7 +325,7 @@ class PlayerArea
       moveTo(ai.x, ai.y);
 
       // set starting attach parameters
-      player.state = PLR_STATE_ATTACHED;
+      state = PLR_STATE_ATTACHED;
       attachHost = ai;
       attachHold = ATTACH_HOLD_BASE;
 
@@ -357,7 +358,7 @@ class PlayerArea
       player.host.onInvade(); // notify ai
 
       // set state
-      player.state = PLR_STATE_HOST;
+      state = PLR_STATE_HOST;
 
       // update AI visibility to player
       area.updateVisibility();
@@ -472,7 +473,7 @@ class PlayerArea
   public function moveBy(dx: Int, dy: Int): Bool
     {
       // if player tries to move when attached, that detaches the parasite
-      if (player.state == PLR_STATE_ATTACHED)
+      if (state == PLR_STATE_ATTACHED)
         actionDetach();
 
       var nx = x + dx;
@@ -483,7 +484,7 @@ class PlayerArea
         return false;
 
       // random: change movement direction
-      if (player.state == PLR_STATE_HOST && 
+      if (state == PLR_STATE_HOST && 
           Std.random(100) < 100 - player.hostControl)
         {
           log('The host resists your command.');
@@ -499,7 +500,7 @@ class PlayerArea
       y = ny;
 
       // move invaded host entity with invisible player entity
-      if (player.state == PLR_STATE_HOST) 
+      if (state == PLR_STATE_HOST) 
         player.host.setPosition(x, y);
 
       entity.setPosition(x, y); // move player entity (even if invisible)
@@ -551,27 +552,39 @@ class PlayerArea
 // event: on taking damage
   public function onDamage(damage: Int)
     {
-      if (player.state == PLR_STATE_HOST)
-        {
-          player.host.onDamage(damage);
-          if (player.host.state == AI_STATE_DEAD)
-            {
-              onDetach();
-              
-              log('Your host has died from injuries.');
-            }
+      if (state == PLR_STATE_HOST)
+        onDamageHost(damage);
 
+      else onDamagePlayer(damage);
+    }
+
+
+// helper: on taking host damage
+  function onDamageHost(damage: Int)
+    {
+      player.host.onDamage(damage);
+      if (player.host.state == AI_STATE_DEAD)
+        {
+          onDetach();
+          
+          log('Your host has died from injuries.');
           return;
         }
 
+      // 10% chance of parasite receiving part of damage
+      if (Std.random(100) < 10)
+        onDamagePlayer(damage == 1 ? 1 : 2);
+    }
+
+
+// helper: on taking player damage
+  function onDamagePlayer(damage: Int)
+    {
       // not attached to host
       player.health -= damage;
 
       if (player.health <= 0)
-        {
-          game.finish('lose', 'noHealth');
-          return;
-        }
+        game.finish('lose', 'noHealth');
     }
 
 
@@ -579,7 +592,7 @@ class PlayerArea
   public function onDetach()
     {
       // set state 
-      player.state = PLR_STATE_PARASITE;
+      state = PLR_STATE_PARASITE;
 
       // make player entity visible again
       entity.visible = true;
@@ -608,6 +621,12 @@ class PlayerArea
 
 
 // =================================  SETTERS  ====================================
+
+  function get_state()
+    { return player.state; }
+
+  function set_state(v: _PlayerState)
+    { return player.state = v; }
 
   function set_attachHold(v: Int)
     { return attachHold = Const.clamp(v, 0, 100); }

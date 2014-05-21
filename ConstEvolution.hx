@@ -16,6 +16,8 @@ class ConstEvolution
   // improvement info
   public static var improvements: Array<ImprovInfo> =
     [
+      // =============== ************ CONCEAL *************** ===================
+/*
       { // ***
         path: PATH_CONCEAL,
         id: IMP_HOST_RELEASE,
@@ -30,7 +32,7 @@ class ConstEvolution
           ],
         levelParams: []
       },
-
+*/
       { // ***
         path: PATH_CONCEAL,
         id: IMP_DECAY_ACCEL,
@@ -72,12 +74,41 @@ class ConstEvolution
           'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
           ],
         levelParams: [
-          { baseAlertness: 3 },
-          { baseAlertness: 2 },
-          { baseAlertness: 1 },
-          { baseAlertness: 0.5 },
+          { alertness: 3 },
+          { alertness: 2 },
+          { alertness: 1 },
+          { alertness: 0.5 },
           ]
       },
+
+      // =============== ************ PROTECTION *************** ===================
+
+      { // ***
+        path: PATH_PROTECTION,
+        id: IMP_PROT_COVER,
+        name: 'Protective cover',
+        note: 'Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
+        organ: {
+          name: 'Protective cover',
+          note: 'Armor-like host body cover providing protection against damage at the expense of appearance',
+          gp: 150
+          },
+        levelNotes: [
+          'Normal host skin',
+          'Pigmented skin layer looks grayish to the eye',
+          'Collagen fibres running through the dermis layer',
+          'Heavily keratinized and densified skin provides the body with an effective armor',
+          ],
+        levelParams: [
+          { armor: 0, alertness: 0 },
+          { armor: 1, alertness: 1 },
+          { armor: 2, alertness: 5 },
+          { armor: 3, alertness: 10 },
+          ],
+      },
+
+
+      // =============== ************ SPECIAL *************** ===================
 
       { // ***
         path: PATH_SPECIAL,
@@ -125,8 +156,8 @@ class ConstEvolution
 
 /*      
       { // ***
-        path: '',
-        id: '',
+        path: PATH_,
+        id: IMP_,
         name: '',
         note: '',
         organ: {

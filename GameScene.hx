@@ -193,12 +193,14 @@ class GameScene extends Scene
               organsWindow.show();
             }
 
+#if debug
           // open debug window
           else if (Input.pressed("debugWindow"))
             {
               hudState = GameScene.HUDSTATE_DEBUG;
               debugWindow.show();
             }
+#end            
         }
     }
 

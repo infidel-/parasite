@@ -103,7 +103,7 @@ class InventoryWindow
       _actions.clear();
 
       // player has unknown items
-      var n = 0;
+      var n = 1;
       if (hasUnknown && game.player.state == PLR_STATE_HOST && game.player.host.isHuman)
         {
           buf.add('\n\nSelect action:\n\n');
