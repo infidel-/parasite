@@ -56,6 +56,8 @@ class Organs
       currentOrgan.isActive = true;
       game.log(currentOrgan.info.name + ' growth completed.', Const.COLOR_ORGAN);
       currentOrgan = null;
+
+      ai.recalc(); // recalc all stats and mods
     }
 
 

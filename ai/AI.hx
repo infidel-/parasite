@@ -47,11 +47,19 @@ class AI
 //    alertPlayerNotVisible: Int,
     };
 
+  // attrs 
+  public var baseAttrs: _Attributes; // base attributes
+  public var modAttrs: _Attributes; // attribute mods
+  public var strength(get, set): Int; // physical strength (1-10)
+  public var constitution(get, set): Int; // physical constitution (1-10)
+  public var intellect(get, set): Int; // mental capability (1-10)
+  public var psyche(get, set): Int; // mental strength (1-10)
+  public var _strength: Int; // current values
+  public var _constitution: Int;
+  public var _intellect: Int;
+  public var _psyche: Int;
+
   // stats
-  public var strength: Int; // physical strength (1-10)
-  public var constitution: Int; // physical constitution (1-10)
-  public var intellect: Int; // mental capability (1-10)
-  public var psyche: Int; // mental strength (1-10)
   public var health(default, set): Int; // current health
   public var maxHealth: Int; // maximum health
   public var energy(default, set): Int; // amount of turns until host death
@@ -96,10 +104,22 @@ class AI
       isNameKnown = false;
       isHuman = false;
       parasiteAttached = false;
-      strength = 1;
-      constitution = 1;
-      intellect = 1;
-      psyche = 1;
+      baseAttrs = {
+        strength: 1,
+        constitution: 1,
+        intellect: 1,
+        psyche: 1
+        };
+      modAttrs = {
+        strength: 0,
+        constitution: 0,
+        intellect: 0,
+        psyche: 0
+        };
+      _strength = 0;
+      _constitution = 0;
+      _intellect = 0;
+      _psyche = 0;
       maxHealth = 1;
       health = 1;
       energy = 10;
@@ -116,11 +136,36 @@ class AI
 // save derived stats (must be called in the end of derived classes constructors)
   function derivedStats()
     {
-      maxEnergy = (5 + strength + constitution) * 10;
+      recalc();
       energy = maxEnergy;
-//      maxHealth = Std.int(strength / 2) + constitution;
-      maxHealth = strength + constitution;
       health = maxHealth;
+    }
+
+
+// recalculate all stat bonuses
+  public function recalc()
+    {
+      // clean mods
+      modAttrs.strength = 0;
+      modAttrs.constitution = 0;
+      modAttrs.intellect = 0;
+      modAttrs.psyche = 0;
+  
+      // organ: muscle enhanchement
+      var o = organs.get(IMP_MUSCLE);
+      if (o != null)
+        {
+          var p = o.improvInfo.levelParams[o.level];
+          modAttrs.strength += p.strength;
+        }
+
+      _strength = baseAttrs.strength + modAttrs.strength;
+      _constitution = baseAttrs.constitution + modAttrs.constitution;
+      _intellect = baseAttrs.intellect + modAttrs.intellect;
+      _psyche = baseAttrs.psyche + modAttrs.psyche;
+
+      maxEnergy = (5 + strength + constitution) * 10;
+      maxHealth = strength + constitution;
     }
 
 
@@ -699,6 +744,22 @@ class AI
   function set_alertness(v: Int)
     { return alertness = Const.clamp(v, 0, 100); }
 
+  function get_strength()
+    { return _strength; }
+  function set_strength(v: Int)
+    { return baseAttrs.strength = v; }
+  function get_constitution()
+    { return _constitution; }
+  function set_constitution(v: Int)
+    { return baseAttrs.constitution = v; }
+  function get_intellect()
+    { return _intellect; }
+  function set_intellect(v: Int)
+    { return baseAttrs.intellect = v; }
+  function get_psyche()
+    { return _psyche; }
+  function set_psyche(v: Int)
+    { return baseAttrs.psyche = v; }
 
 // =================================================================================
   // AI view and hear distance

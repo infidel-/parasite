@@ -107,6 +107,31 @@ class ConstEvolution
           ],
       },
 
+      // =============== ************ ATTACK *************** ===================
+      { // ***
+        path: PATH_ATTACK,
+        id: IMP_MUSCLE,
+        name: 'Muscle enhancement',
+        note: 'Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
+        organ: {
+          name: 'Microvascular networks',
+          note: 'Functional miscrovascular networks throughout the muscle tissue enhance host body strength',
+          gp: 120
+          },
+        levelNotes: [
+          'Normal host strength',
+          'Basic muscle neovascularization',
+          'Enhanced muscle neovascularization',
+          'Improved neovascularization with additional substrate storage',
+          ],
+        levelParams: [
+          { strength: 0 },
+          { strength: 1 },
+          { strength: 2 },
+          { strength: 3 },
+          ],
+      },
+
 
       // =============== ************ SPECIAL *************** ===================
 

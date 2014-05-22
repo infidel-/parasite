@@ -1,6 +1,4 @@
-when AI shoots host, there should be a chance of parasite receiving damage
 evolution content - basic evolutions in each direction
-improvements impl: host release
 
 MASTERPLAN
 ============

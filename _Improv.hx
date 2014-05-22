@@ -5,4 +5,5 @@ enum _Improv
   IMP_CAMO_LAYER;
   IMP_HOST_MEMORY;
   IMP_PROT_COVER;
+  IMP_MUSCLE;
 }
