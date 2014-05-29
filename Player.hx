@@ -89,7 +89,6 @@ class Player
             }
         }
 
-
       // more host state checks
       if (state == PLR_STATE_HOST)
         {

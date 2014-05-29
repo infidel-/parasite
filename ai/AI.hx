@@ -651,6 +651,7 @@ class AI
 // event: AI receives damage
   public function onDamage(damage: Int)
     {
+      organs.onDamage(damage); // propagate event to organs
       health -= damage;
       if (health == 0) // AI death
         {

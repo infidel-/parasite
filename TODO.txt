@@ -27,6 +27,7 @@ armor - vest + helmet
 stunner
 electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp
+organ damage - organ must heal itself before it becomes active again
 
 scene. getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug

@@ -11,11 +11,14 @@ class Organs
   var _list: List<Organ>; // list of organs
   var currentOrgan: Organ; // currently grown organ
 
+  var woundRegenTurn: Int; // turns until next HP regens
+
   public function new(vgame: Game, vai: AI)
     {
       ai = vai;
       game = vgame;
       currentOrgan = null;
+      woundRegenTurn = 0;
       _list = new List<Organ>();
     }
 
@@ -40,7 +43,15 @@ class Organs
 
 
 // passage of time
-  public function turn(time: Int)
+  public inline function turn(time: Int)
+    {
+      turnGrowth(time);
+      turnActivity(time);
+    }
+
+
+// TURN: organ growth
+  function turnGrowth(time: Int)
     {
       // no organ selected
       if (currentOrgan == null)
@@ -58,6 +69,25 @@ class Organs
       currentOrgan = null;
 
       ai.recalc(); // recalc all stats and mods
+    }
+
+
+// TURN: organ activity 
+  function turnActivity(time: Int)
+    {
+      // organ: wound regeneration
+      var o = get(IMP_WOUND_REGEN);
+      if (o != null && ai.health < ai.maxHealth)
+        {
+          woundRegenTurn++;
+
+          var p = o.improvInfo.levelParams[o.level];
+          if (woundRegenTurn >= p.turns)
+            {
+              ai.health++;
+              woundRegenTurn = 0;
+            }
+        }
     }
 
 
@@ -160,6 +190,15 @@ class Organs
       if (currentOrgan == null)
         return "<font color='#FF0000'>None</font>";
       else return currentOrgan.info.name;
+    }
+
+// ================================ EVENTS =========================================
+
+
+// event: host receives damage
+  public function onDamage(damage: Int)
+    {
+      woundRegenTurn = 0;
     }
 }
 

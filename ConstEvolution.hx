@@ -107,7 +107,32 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_PROTECTION,
+        id: IMP_WOUND_REGEN,
+        name: 'Wound regeneration',
+        note: 'Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
+        organ: {
+          name: 'Stem cell reservoirs',
+          note: 'Microreservoirs of adult stem cells that increase wound recovery speed',
+          gp: 120
+          },
+        levelNotes: [
+          'Normal wound recovery',
+          'Wound recovery speed is slightly increased',
+          'Wound recovery speed is moderately increased',
+          'Wound recovery speed is greatly increased',
+          ],
+        levelParams: [
+          { turns: 100 },
+          { turns: 20 },
+          { turns: 10 },
+          { turns: 5 },
+          ],
+      },
+
       // =============== ************ ATTACK *************** ===================
+
       { // ***
         path: PATH_ATTACK,
         id: IMP_MUSCLE,

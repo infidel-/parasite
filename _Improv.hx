@@ -6,4 +6,5 @@ enum _Improv
   IMP_HOST_MEMORY;
   IMP_PROT_COVER;
   IMP_MUSCLE;
+  IMP_WOUND_REGEN;
 }
