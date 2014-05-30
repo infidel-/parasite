@@ -131,6 +131,30 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_PROTECTION,
+        id: IMP_HEALTH,
+        name: 'Health increase',
+        note: 'Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
+        organ: {
+          name: 'Antibody generators',
+          note: 'Specialized producers of antibodies that increase overall host health',
+          gp: 80
+          },
+        levelNotes: [
+          'Normal health',
+          'Health is slightly increased',
+          'Health is moderately increased',
+          'Health is greatly increased',
+          ],
+        levelParams: [
+          { health: 0 },
+          { health: 1 },
+          { health: 2 },
+          { health: 3 },
+          ],
+      },
+
       // =============== ************ ATTACK *************** ===================
 
       { // ***

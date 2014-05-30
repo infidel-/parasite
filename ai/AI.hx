@@ -154,10 +154,7 @@ class AI
       // organ: muscle enhanchement
       var o = organs.get(IMP_MUSCLE);
       if (o != null)
-        {
-          var p = o.improvInfo.levelParams[o.level];
-          modAttrs.strength += p.strength;
-        }
+        modAttrs.strength += o.params.strength;
 
       _strength = baseAttrs.strength + modAttrs.strength;
       _constitution = baseAttrs.constitution + modAttrs.constitution;
@@ -166,6 +163,11 @@ class AI
 
       maxEnergy = (5 + strength + constitution) * 10;
       maxHealth = strength + constitution;
+  
+      // organ: health increase 
+      var o = organs.get(IMP_HEALTH);
+      if (o != null)
+        maxHealth += o.params.health;
     }
 
 
@@ -402,7 +404,7 @@ class AI
         }
 
       // success, roll damage
-      var tmp = [];
+      var tmp: Array<Int> = [];
       var damage = Const.roll(info.weaponStats.minDamage, info.weaponStats.maxDamage);
       tmp.push(damage);
       if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
@@ -415,9 +417,12 @@ class AI
       // protective cover
       if (game.player.state == PLR_STATE_HOST)
         {
-          var params = game.player.evolutionManager.getParams(IMP_PROT_COVER);
-          damage -= params.armor;
-          tmp.push(- params.armor);
+          var o = organs.get(IMP_PROT_COVER);
+          if (o != null)
+            {
+              damage -= Std.int(o.params.armor);
+              tmp.push(- Std.int(o.params.armor));
+            }
         }
       if (damage < 0)
         damage = 0;
@@ -450,13 +455,19 @@ class AI
           // if player is on a host, check for organs
           if (game.player.state == PLR_STATE_HOST)
             {
-              // camouflage layer
-              var params = game.player.evolutionManager.getParams(IMP_CAMO_LAYER);
-              baseAlertness = params.alertness;
+              // organ: camouflage layer
+              var params = ConstEvolution.getParams(IMP_CAMO_LAYER, 0);
+              var o = organs.get(IMP_CAMO_LAYER);
+              if (o != null)
+                baseAlertness = o.params.alertness;
+              else baseAlertness = params.alertness;
 
-              // protective cover
-              var params = game.player.evolutionManager.getParams(IMP_PROT_COVER);
-              alertnessBonus += params.alertness;
+              // organ: protective cover
+              var params = ConstEvolution.getParams(IMP_PROT_COVER, 0);
+              var o = organs.get(IMP_PROT_COVER);
+              if (o != null)
+                alertnessBonus += o.params.alertness;
+              else alertnessBonus += params.alertness;
             }
           alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
         }
@@ -678,10 +689,7 @@ class AI
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);
       if (organ != null)
-        {
-          var params = ConstEvolution.getParams(IMP_DECAY_ACCEL, organ.level);
-          o.setDecay(params.turns);
-        }
+        o.setDecay(organ.params.turns);
 
       o.isHumanBody = isHuman;
       o.organPoints = organs.getPoints();

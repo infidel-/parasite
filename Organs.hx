@@ -57,8 +57,8 @@ class Organs
       if (currentOrgan == null)
         return;
 
-      currentOrgan.gp += 10;
-      game.player.energy -= 5;
+      currentOrgan.gp += 10 * time;
+      game.player.energy -= 5 * time;
 
       // organ not grown yet
       if (currentOrgan.gp < currentOrgan.info.gp)
@@ -81,8 +81,7 @@ class Organs
         {
           woundRegenTurn++;
 
-          var p = o.improvInfo.levelParams[o.level];
-          if (woundRegenTurn >= p.turns)
+          if (woundRegenTurn >= o.params.turns)
             {
               ai.health++;
               woundRegenTurn = 0;
@@ -113,7 +112,8 @@ class Organs
             isActive: false,
             gp: 0,
             improvInfo: imp.info,
-            info: imp.info.organ
+            info: imp.info.organ,
+            params: imp.info.levelParams[imp.level]
             };
           _list.add(currentOrgan);
         }
@@ -167,7 +167,8 @@ class Organs
         isActive: true,
         gp: 0,
         improvInfo: impInfo,
-        info: impInfo.organ
+        info: impInfo.organ,
+        params: impInfo.levelParams[0]
         };
 
       _list.add(o);
@@ -210,4 +211,5 @@ typedef Organ =
   var gp: Int; // growth points
   var improvInfo: ImprovInfo; // evolution improvement link
   var info: OrganInfo; // organ info link
+  var params: Dynamic; // current level params link
 }

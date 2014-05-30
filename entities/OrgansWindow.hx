@@ -90,12 +90,12 @@ class OrgansWindow
       var n = 0;
       for (organ in game.player.host.organs)
         {
-          buf.add(organ.info.name +
+          buf.add(organ.info.name + ' ' + organ.level +
             (organ.isActive ? '' : ' (' + organ.gp + '/' + organ.info.gp + 'gp)') +
             ' [' + organ.info.note + ']\n');
 #if debug
-          var params = game.player.evolutionManager.getParams(organ.id);
-          buf.add('DEBUG: ' + params + '\n');
+//          var params = game.player.evolutionManager.getParams(organ.id);
+          buf.add('DEBUG: ' + organ.params + '\n');
 #end
           n++;
         }

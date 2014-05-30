@@ -7,4 +7,5 @@ enum _Improv
   IMP_PROT_COVER;
   IMP_MUSCLE;
   IMP_WOUND_REGEN;
+  IMP_HEALTH;
 }

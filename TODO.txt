@@ -10,7 +10,7 @@ human biology knowledge
 canine biology knowledge
 city and world travel
 operation generation
-information web
+information web (based on clue gathering)
 
 LATER
 =====
