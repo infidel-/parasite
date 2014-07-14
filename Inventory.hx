@@ -23,8 +23,9 @@ class Inventory
           if (game.player.knowsItem(item.id))
             continue;
 
-          var action = { 
+          var action: _PlayerAction = { 
             id: 'learn.' + item.id,
+            type: ACTION_INVENTORY,
             name: 'Learn about ' + item.info.unknown,
             energy: 10,
             obj: item

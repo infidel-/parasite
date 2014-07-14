@@ -283,7 +283,7 @@ class AreaManager
   inline function log(s: String)
     {
       // TODO: add switch between debug mode and actual radio comms?
-      game.log('DEBUG: ' + s, Const.COLOR_AREA);
+      game.log('DEBUG: ' + s, COLOR_AREA);
     }
 
 

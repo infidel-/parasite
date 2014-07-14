@@ -23,7 +23,6 @@ class ConstEvolution
         id: IMP_HOST_RELEASE,
         name: '[TODO] Host release process',
         note: 'Controls what happens to the host when parasite leaves',
-        organ: null,
         levelNotes: [
           'Host dies with its brain melting and dripping out of its ears',
           'Host becomes crazy [TODO]',
@@ -181,15 +180,106 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_ATTACK,
+        id: IMP_ACID_SPIT,
+        name: '??Acid spit',
+        note: '(todo fluff)',
+        organ: {
+          name: '??Acid spit',
+          note: '(todo fluff)',
+          gp: 150,
+          action: { 
+            id: 'acidSpit',
+            type: ACTION_ORGAN,
+            name: '??Acid spit',
+            energy: 10
+            },
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          {},
+          {},
+          {},
+          {},
+          ],
+      },
+
+
+      // =============== ************ CONTROL *************** ===================
+
+      { // ***
+        path: PATH_CONTROL,
+        id: IMP_ATTACH,
+        name: '??Attach efficiency',
+        note: '(todo fluff)',
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          { attachHoldBase: 10 },
+          { attachHoldBase: 15 },
+          { attachHoldBase: 20 },
+          { attachHoldBase: 25 },
+          ],
+      },
+
+      { // ***
+        path: PATH_CONTROL,
+        id: IMP_HARDEN_GRIP,
+        name: '??Hold efficiency',
+        note: '(todo fluff)',
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          { attachHoldBase: 15 },
+          { attachHoldBase: 20 },
+          { attachHoldBase: 25 },
+          { attachHoldBase: 30 },
+          ],
+      },
+
+      { // ***
+        path: PATH_CONTROL,
+        id: IMP_REINFORCE,
+        name: '??Control efficiency',
+        note: '(todo fluff)',
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          { reinforceControlBase: 10 },
+          { reinforceControlBase: 15 },
+          { reinforceControlBase: 20 },
+          { reinforceControlBase: 25 },
+          ],
+      },
+
 
       // =============== ************ SPECIAL *************** ===================
 
       { // ***
         path: PATH_SPECIAL,
         id: IMP_HOST_MEMORY, 
-        name: 'Host memory',
+        name: '??Host memory',
         note: 'Gains access to host memory',
-        organ: null,
+        skill: KNOW_MEMORY,
+        skillValue: 1, 
         levelNotes: [
           'Cannot access host brain',
           'Access with severe problems (basic knowledge)',
@@ -228,22 +318,51 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_SPECIAL,
+        id: IMP_ENERGY,
+        name: '??Host energy bonus',
+        note: '(todo fluff)',
+        organ: {
+          name: '? Host energy bonus',
+          note: '(todo fluff)',
+          gp: 200
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          { hostEnergyMod: 1.0 },
+          { hostEnergyMod: 1.25 },
+          { hostEnergyMod: 1.50 },
+          { hostEnergyMod: 2.0 },
+          ],
+      },
 /*      
       { // ***
         path: PATH_,
         id: IMP_,
         name: '',
-        note: '',
+        note: '(todo fluff)',
         organ: {
           name: '',
-          note: '',
-          gp: 100
+          note: '(todo fluff)',
+          gp: 100,
+          action: { 
+            id: '',
+            type: ACTION_ORGAN,
+            name: '',
+            energy: 10
+            },
           },
         levelNotes: [
-          '',
-          '',
-          '',
-          '',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
           ],
         levelParams: [
           {},
@@ -309,13 +428,15 @@ class ConstEvolution
 
 typedef ImprovInfo =
 {
-  var id: _Improv; // improvement string ID
-  var path: _Path; // path ID
-  var name: String; // improvement name
-  var note: String; // improvement description
-  var organ: OrganInfo; // organ that can be grown
-  var levelNotes: Array<String>; // improvement descriptions for different levels
-  var levelParams: Array<Dynamic>; // improvement-specific parameters for different levels
+  id: _Improv, // improvement string ID
+  path: _Path, // path ID
+  name: String, // improvement name
+  note: String, // improvement description
+  ?organ: OrganInfo, // organ that can be grown
+  ?skill: _Skill,  // given skill id
+  ?skillValue: Int, // amount of skill given
+  levelNotes: Array<String>, // improvement descriptions for different levels
+  levelParams: Array<Dynamic>, // improvement-specific parameters for different levels
 }
 
 typedef PathInfo =
@@ -327,7 +448,8 @@ typedef PathInfo =
 
 typedef OrganInfo =
 {
-  var name: String; // name
-  var note: String; // description
-  var gp: Int; // gp cost to grow
+  name: String, // name
+  note: String, // description
+  gp: Int, // gp cost to grow
+  ?action: _PlayerAction // player action
 }

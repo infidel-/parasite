@@ -111,6 +111,10 @@ class PlayerArea
           addActionToList(tmp, 'reinforceControl');
           if (player.evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
             addActionToList(tmp, 'accessMemory');
+
+          // organ-based actions
+          player.host.organs.addActions(tmp);
+
           addActionToList(tmp, 'leaveHost');
         }
 
@@ -134,40 +138,42 @@ class PlayerArea
 
 // do a player action by string id
 // action energy availability is checked when the list is formed
-  public function action(actionID: String)
+  public function action(action: _PlayerAction)
     {
-      var action = Const.getAction(actionID);
+      // area object action
+      if (action.type == ACTION_OBJECT)
+        {
+          var o = area.getObjectAt(x, y);
+          o.action(action);
+        }
+
+      // host organ-based action 
+      if (action.type == ACTION_ORGAN)
+        player.host.organs.areaAction(action);
 
       // harden grip on the victim
-      if (actionID == 'hardenGrip')
+      else if (action.id == 'hardenGrip')
         actionHardenGrip();
 
       // invade host 
-      else if (actionID == 'invadeHost')
+      else if (action.id == 'invadeHost')
         actionInvadeHost();
 
       // try to reinforce control over host 
-      else if (actionID == 'reinforceControl')
+      else if (action.id == 'reinforceControl')
         actionReinforceControl();
 
       // try to leave current host
-      else if (actionID == 'leaveHost')
+      else if (action.id == 'leaveHost')
         actionLeaveHost();
 
       // access host memory
-      else if (actionID == 'accessMemory')
+      else if (action.id == 'accessMemory')
         actionAccessMemory();
 
       // learn about object 
-      else if (actionID == 'learnObject')
+      else if (action.id == 'learnObject')
         actionLearnObject();
-
-      // area object action
-      else if (actionID.substr(0, 2) == 'o:')
-        {
-          var o = area.getObjectAt(x, y);
-          action = o.action(actionID.substr(2));
-        }
 
       // spend energy
       if (state == PLR_STATE_HOST)
@@ -327,7 +333,10 @@ class PlayerArea
       // set starting attach parameters
       state = PLR_STATE_ATTACHED;
       attachHost = ai;
-      attachHold = ATTACH_HOLD_BASE;
+
+      // improv: attach efficiency
+      var params = player.evolutionManager.getParams(IMP_ATTACH);
+      attachHold = params.attachHoldBase;
 
       game.log('You have managed to attach to a host.');
 
@@ -339,7 +348,11 @@ class PlayerArea
   function actionHardenGrip()
     {
       game.log('You harden your grip on the host.');
-      attachHold += 15;
+
+      // improv: harden grip bonus 
+      var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
+
+      attachHold += params.attachHoldBase - Std.int(attachHost.strength / 2);
     }
 
 
@@ -369,7 +382,11 @@ class PlayerArea
   function actionReinforceControl()
     {
       game.log('You reinforce mental control over the host.');
-      player.hostControl += 10 - Std.int(player.host.psyche / 2);
+
+      // improv: control efficiency
+      var params = player.evolutionManager.getParams(IMP_REINFORCE);
+      player.hostControl += params.reinforceControlBase -
+        Std.int(player.host.psyche / 2);
     }
 
 
@@ -614,7 +631,7 @@ class PlayerArea
 
 
 // log
-  public inline function log(s: String, ?col: Int = 0)
+  public inline function log(s: String, ?col: _TextColor)
     {
       game.log(s, col);
     }
@@ -633,7 +650,4 @@ class PlayerArea
 
 
 // =================================================================================
-
-  // base hold on attach to host
-  public static var ATTACH_HOLD_BASE = 10;
 }

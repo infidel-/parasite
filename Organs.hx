@@ -65,10 +65,15 @@ class Organs
         return;
 
       currentOrgan.isActive = true;
-      game.log(currentOrgan.info.name + ' growth completed.', Const.COLOR_ORGAN);
-      currentOrgan = null;
+      game.log(currentOrgan.info.name + ' growth completed.', COLOR_ORGAN);
 
       ai.recalc(); // recalc all stats and mods
+
+      // host energy organ restores energy to max when grown
+      if (currentOrgan.id == IMP_ENERGY)
+        ai.energy = ai.maxEnergy;
+
+      currentOrgan = null;
     }
 
 
@@ -143,6 +148,17 @@ class Organs
     }
 
 
+// get organ level by id
+  public function getLevel(id: _Improv): Int 
+    {
+      for (o in _list)
+        if (o.id == id)
+          return o.level;
+
+      return 0;
+    }
+
+
 // get active organ by improvement id
   public inline function getActive(id: _Improv): Organ
     {
@@ -173,6 +189,50 @@ class Organs
 
       _list.add(o);
       return o;
+    }
+
+
+// get area organ actions
+  public function addActions(tmp: List<_PlayerAction>)
+    {
+      for (o in _list)
+        {
+          if (!o.isActive)
+            continue;
+          
+          var a = o.info.action;
+          if (a == null)
+            continue;
+
+          if (game.player.energy >= a.energy) 
+            tmp.add(a);
+        }
+    }
+
+
+// area action handling
+  public function areaAction(a: _PlayerAction)
+    {
+      if (a.id == 'acidSpit')
+        actionAcidSpit();
+    }
+
+
+// action: acid spit
+  function actionAcidSpit()
+    {
+      // get ai under mouse cursor
+      var pos = game.scene.mouse.getXY();
+      var ai = game.area.getAI(pos.x, pos.y);
+
+      // no ai found
+      if (ai == null)
+        {
+          game.log("Target AI with mouse first.", COLOR_HINT);
+          return;
+        }
+
+      trace(ai.id);
     }
 
 

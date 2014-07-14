@@ -11,17 +11,17 @@ class Const
   public static var TILE_WIDTH = 32; // tiles width, height
   public static var TILE_HEIGHT = 32;
 
-  // text colors
-  public static var COLOR_DEFAULT = 0;
-  public static var COLOR_ALERT = 1;
-  public static var COLOR_EVOLUTION = 2;
-  public static var COLOR_AREA = 3;
-  public static var COLOR_ORGAN = 4;
-  public static var COLOR_WORLD = 5;
-
   // text color strings
-  public static var TEXT_COLORS = 
-    [ '#FFFFFF', '#FF0000', '#00FFFF', '#00AA00', '#DDDD00', '#FF9900' ];
+  public static var TEXT_COLORS: Map<_TextColor, String> = 
+    [ 
+      COLOR_DEFAULT => '#FFFFFF',
+      COLOR_ALERT => '#FF0000',
+      COLOR_EVOLUTION => '#00FFFF',
+      COLOR_AREA => '#00AA00',
+      COLOR_ORGAN => '#DDDD00',
+      COLOR_WORLD => '#FF9900',
+      COLOR_HINT => '#A020F0',
+    ];
 
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;
@@ -75,19 +75,19 @@ class Const
   public static var PLAYER_ACTIONS: Map<String, _PlayerAction> =
     [
       // area
-      'attachHost' => { id: 'attachHost', name: 'Attach To Host', energy: 0 },
-      'detach' => { id: 'detach', name: 'Detach', energy: 0 },
-      'hardenGrip' => { id: 'hardenGrip', name: 'Harden Grip', energy: 5 },
-      'invadeHost' => { id: 'invadeHost', name: 'Invade Host', energy: 10 },
-      'reinforceControl' => { id: 'reinforceControl', name: 'Reinforce Control', energy: 5 },
-      'doNothing' => { id: 'doNothing', name: 'Do Nothing', energy: 0 },
-      'leaveHost' => { id: 'leaveHost', name: 'Leave Host', energy: 0 },
-      'accessMemory' => { id: 'accessMemory', name: 'Access Memory', energy: 0 },
-      'learnObject' => { id: 'learnObject', name: 'Learn About Object', energy: 10 },
-      'move' => { id: 'move', name: 'Movement', energy: 0 },
+      'attachHost' => { id: 'attachHost', type: ACTION_AREA, name: 'Attach To Host', energy: 0 },
+      'detach' => { id: 'detach', type: ACTION_AREA, name: 'Detach', energy: 0 },
+      'hardenGrip' => { id: 'hardenGrip', type: ACTION_AREA, name: 'Harden Grip', energy: 5 },
+      'invadeHost' => { id: 'invadeHost', type: ACTION_AREA, name: 'Invade Host', energy: 10 },
+      'reinforceControl' => { id: 'reinforceControl', type: ACTION_AREA, name: 'Reinforce Control', energy: 5 },
+      'doNothing' => { id: 'doNothing', type: ACTION_AREA, name: 'Do Nothing', energy: 0 },
+      'leaveHost' => { id: 'leaveHost', type: ACTION_AREA, name: 'Leave Host', energy: 0 },
+      'accessMemory' => { id: 'accessMemory', type: ACTION_AREA, name: 'Access Memory', energy: 0 },
+      'learnObject' => { id: 'learnObject', type: ACTION_AREA, name: 'Learn About Object', energy: 10 },
+      'move' => { id: 'move', type: ACTION_AREA, name: 'Movement', energy: 0 },
 
       // region
-      'enterArea' => { id: 'enterArea', name: 'Enter Area', energy: 0 },
+      'enterArea' => { id: 'enterArea', type: ACTION_REGION, name: 'Enter Area', energy: 0 },
     ];
 
 // get action by id

@@ -20,6 +20,6 @@ class WorldManager
     {
       // TODO: should there be any way for player to see this?
       // TODO: probably not, i can't think of a good reason
-      game.log('DEBUG: ' + s, Const.COLOR_WORLD);
+      game.log('DEBUG: ' + s, COLOR_WORLD);
     }
 }

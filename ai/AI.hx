@@ -151,7 +151,7 @@ class AI
       modAttrs.intellect = 0;
       modAttrs.psyche = 0;
   
-      // organ: muscle enhanchement
+      // organ: muscle enhancement
       var o = organs.get(IMP_MUSCLE);
       if (o != null)
         modAttrs.strength += o.params.strength;
@@ -160,8 +160,14 @@ class AI
       _constitution = baseAttrs.constitution + modAttrs.constitution;
       _intellect = baseAttrs.intellect + modAttrs.intellect;
       _psyche = baseAttrs.psyche + modAttrs.psyche;
+  
+      // organ: host energy bonus
+      var o = organs.get(IMP_ENERGY);
+      var energyMod = 1.0;
+      if (o != null)
+        energyMod = o.params.hostEnergyMod;
 
-      maxEnergy = (5 + strength + constitution) * 10;
+      maxEnergy = Std.int((5 + strength + constitution) * 10 * energyMod);
       maxHealth = strength + constitution;
   
       // organ: health increase 

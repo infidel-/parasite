@@ -74,21 +74,21 @@ class HUD
     {
       // find action name by index
       var i = 1;
-      var actionID = null;
+      var action = null;
       for (a in _listActions)
         if (i++ == index)
           {
-            actionID = a.id;
+            action = a;
             break;
           }
-      if (actionID == null)
+      if (action == null)
         return;
 
       if (game.location == Game.LOCATION_AREA)
-        game.area.player.action(actionID);
+        game.area.player.action(action);
 
       else if (game.location == Game.LOCATION_REGION)
-        game.region.player.action(actionID);
+        game.region.player.action(action);
     }
 
 
@@ -129,7 +129,7 @@ class HUD
       buf.add('===\n');
 
       if (game.player.state == PLR_STATE_ATTACHED)
-        buf.add('Hold: ' + game.area.player.attachHold + ' / 100\n');
+        buf.add('Hold: ' + game.area.player.attachHold + '/100\n');
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
@@ -150,7 +150,12 @@ class HUD
           buf.add('Control: ' + 
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100\n');
-          buf.add('Energy: ' + game.player.host.energy + '\n');
+
+          var colEnergy = 
+            (game.player.host.energy > 0.3 * game.player.host.maxEnergy ? 
+              '#FFFFFF' : '#FF0000');
+          buf.add("Energy: <font color='" + colEnergy + "'>" + game.player.host.energy +
+            '</font>/' + game.player.host.maxEnergy + '\n');
           buf.add('Evolution direction: ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');

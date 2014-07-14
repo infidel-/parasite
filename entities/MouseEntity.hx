@@ -42,6 +42,17 @@ class MouseEntity extends Entity
     }
 */
 
+
+// get tile x,y that mouse cursor is on
+  public inline function getXY(): { x: Int, y: Int }
+    {
+      return {
+        x: Std.int(scene.mouseX / Const.TILE_WIDTH),
+        y: Std.int(scene.mouseY / Const.TILE_HEIGHT)
+        };
+    }
+
+
 // update cursor
   public override function update()
 	{
@@ -54,13 +65,11 @@ class MouseEntity extends Entity
       x = scene.mouseX;
       y = scene.mouseY;
 
-      var ax = Std.int(scene.mouseX / Const.TILE_WIDTH);
-      var ay = Std.int(scene.mouseY / Const.TILE_HEIGHT);
-
       var newframe = _frame;
       if (_mode == MODE_DEFAULT)
         {
-          var ai = game.area.getAI(ax, ay);
+          var pos = getXY();
+          var ai = game.area.getAI(pos.x, pos.y);
           if (game.player.state == PLR_STATE_HOST && ai != null &&
               ai != game.player.host)
             newframe = CURSOR_ATTACK;

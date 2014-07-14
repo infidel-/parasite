@@ -73,11 +73,9 @@ class PlayerRegion
 
 // do a player action by string id
 // action energy availability is checked when the list is formed
-  public function action(actionID: String)
+  public function action(action: _PlayerAction)
     {
-      var action = Const.getAction(actionID);
-
-      if (actionID == 'enterArea')
+      if (action.id == 'enterArea')
         actionEnterArea();
 
       player.energy -= action.energy;

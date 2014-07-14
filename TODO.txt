@@ -1,3 +1,4 @@
+acid spit - action appears in list. when pressing a key for it, the code will check if mouse cursor is over the ai
 evolution content - basic evolutions in each direction
 
 MASTERPLAN
@@ -14,7 +15,7 @@ information web (based on clue gathering)
 
 LATER
 =====
-fat people have more energy overall, so they are more desirable
+host perks - for ex, fat people have more energy overall, so they are more desirable
 some evolution can only happen if player has access to prerequisites, for example, stands on top of the 
 more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars

@@ -37,8 +37,8 @@ class DogAI extends AI
           ]
         ];
 
-      strength = 2 + Std.random(3);
-      constitution = 2 + Std.random(3);
+      strength = 2 + Std.random(4);
+      constitution = 2 + Std.random(4);
       intellect = 1;
       psyche = 1 + Std.random(1);
 

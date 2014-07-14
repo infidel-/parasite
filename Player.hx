@@ -131,7 +131,7 @@ class Player
 
 
 // log
-  public inline function log(s: String, ?col: Int = 0)
+  public inline function log(s: String, ?col: _TextColor)
     {
       game.log(s, col);
     }

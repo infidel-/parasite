@@ -51,19 +51,21 @@ class EvolutionManager
           if (path.ep >= ConstEvolution.epCostPath[path.level])
             {
               var imp = openImprov(pathID);
-              if (imp == null)
+              if (imp == null) // should not be here
                 {
-                  player.log('You have followed this evolution path to the end.',
-                    Const.COLOR_EVOLUTION);
+/*                
+                  player.log('You have followed this direction to the end.',
+                    COLOR_EVOLUTION);
                   path.ep = 0;
                   taskID = '';
-                  Const.todo('I probably need to disable this path at that moment.');
+*/
+                  Const.todo('BUG EvolutionManager: You should not be here.');
                   return;
                 }
 
-              player.log('Following the path of ' + path.info.name +
-                ' you now possess the knowledge about ' + imp.info.name + '.',
-                Const.COLOR_EVOLUTION);
+              player.log('Following the ' + path.info.name +
+                ' direction you now possess the knowledge about ' + imp.info.name + '.',
+                COLOR_EVOLUTION);
               path.ep = 0;
               path.level++;
               taskID = '';
@@ -81,7 +83,7 @@ class EvolutionManager
             {
               imp.level++;
               player.log('You have improved your understanding of ' + imp.info.name +
-                ' to level ' + imp.level + '.', Const.COLOR_EVOLUTION);
+                ' to level ' + imp.level + '.', COLOR_EVOLUTION);
 
               // clear
               imp.ep = 0;
@@ -212,6 +214,26 @@ class EvolutionManager
   public function getPathList(): List<Path>
     {
       return _listPaths;
+    }
+
+
+// is this path complete?
+  public function isPathComplete(id: _Path)
+    {
+      var isComplete = true;
+      for (imp in ConstEvolution.improvements)
+        {
+          if (imp.path != id)
+            continue;
+  
+          if (!isKnown(imp.id))
+            {
+              isComplete = false;
+              break;
+            }
+        }
+
+      return isComplete;
     }
 
 

@@ -4,4 +4,5 @@ enum _Skill
   SKILL_BATON;
   SKILL_PISTOL;
   KNOW_SOCIETY;
+  KNOW_MEMORY;
 }

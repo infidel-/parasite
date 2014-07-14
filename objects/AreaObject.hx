@@ -73,7 +73,7 @@ class AreaObject
   inline function addAction(id: String, name: String, energy: Int)
     {
       if (game.player.energy >= energy)
-        _listActions.add({ id: id, name: name, energy: energy });
+        _listActions.add({ id: id, type: ACTION_OBJECT, name: name, energy: energy });
     }
 
 
@@ -85,19 +85,14 @@ class AreaObject
 
       // add to external list
       for (a in _listActions)
-        tmp.add({ id: 'o:' + a.id, name: a.name, energy: a.energy });
+        tmp.add(a);
     }
 
 
 // object action
-  public function action(id: String): _PlayerAction
+  public function action(a: _PlayerAction)
     {
-      onAction(id); // child callback
-      for (a in _listActions)
-        if (a.id == id)
-          return a;
-
-      return null;
+      onAction(a.id); // child callback
     }
 
 

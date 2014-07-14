@@ -194,8 +194,10 @@ class Game
 
 
 // add entry to game log
-  public inline function log(s: String, ?col: Int = 0)
+  public inline function log(s: String, ?col: _TextColor)
     { 
+      if (col == null)
+        col = COLOR_DEFAULT;
       Sys.println(s);
       scene.hud.log("<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>");
     }
