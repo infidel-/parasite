@@ -114,7 +114,7 @@ class Const
 // log all object string and int properties 
   public static inline function debugObject(o: Dynamic)
     {
-      var list: Array<Dynamic> = [ Inventory, Skills, Organs ];
+      var list: Array<Dynamic> = [ Inventory, Skills, Organs, Effects ];
       var fields = Reflect.fields(o);
       fields.sort(sortFunc);
       for (f in fields) 

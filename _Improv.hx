@@ -13,4 +13,5 @@ enum _Improv
   IMP_ATTACH;
   IMP_REINFORCE;
   IMP_ACID_SPIT;
+  IMP_SLIME_SPIT;
 }

@@ -226,6 +226,9 @@ class Organs
     {
       if (a.id == 'acidSpit')
         actionAcidSpit();
+
+      else if (a.id == 'slimeSpit')
+        actionSlimeSpit();
     }
 
 
@@ -259,6 +262,38 @@ class Organs
         ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' screams in pain.');
 
       ai.onDamage(damage); // damage event
+    }
+
+
+// action: slime spit
+  function actionSlimeSpit()
+    {
+      // get ai under mouse cursor
+      var pos = game.scene.mouse.getXY();
+      var ai = game.area.getAI(pos.x, pos.y);
+
+      // no ai found
+      if (ai == null)
+        {
+          game.log("Target AI with mouse first.", COLOR_HINT);
+          return;
+        }
+
+      var params = getParams(IMP_SLIME_SPIT);
+
+      // check for distance
+      var distance = Const.getDist(ai.x, ai.y, game.area.player.x, game.area.player.y);
+      if (distance > params.range)
+        {
+          game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
+          return;
+        }
+
+      game.log('Your host spits a clot of adhesive slime on ' + ai.getName() +
+        '. ' + ai.getNameCapped() + ' desperately tries to tear it away.');
+
+      // AI effect event
+      ai.onEffect({ type: EFFECT_SLIME, points: params.strength }); 
     }
 
 

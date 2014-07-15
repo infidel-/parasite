@@ -226,6 +226,47 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_ATTACK,
+        id: IMP_SLIME_SPIT,
+        name: '??Slime spit',
+        note: '(todo fluff)',
+        organ: {
+          name: '??Slime spit',
+          note: '(todo fluff)',
+          gp: 100,
+          action: { 
+            id: 'slimeSpit',
+            type: ACTION_ORGAN,
+            name: '??Slime spit',
+            energy: 5
+            },
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          {
+            strength: 0,
+            range: 0
+          },
+          {
+            strength: 10,
+            range: 1
+          },
+          {
+            strength: 20,
+            range: 2
+          },
+          {
+            strength: 30,
+            range: 3
+          },
+          ],
+      },
 
       // =============== ************ CONTROL *************** ===================
 

@@ -68,6 +68,7 @@ class AI
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
   public var organs: Organs; // AI organs
+  public var effects: Effects; // AI effects
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
@@ -127,9 +128,10 @@ class AI
       _objectsSeen = new List<Int>();
       _turnsInvisible = 0;
 
-      inventory = new Inventory(g);
+      inventory = new Inventory(game);
       skills = new Skills();
       organs = new Organs(game, this);
+      effects = new Effects(game, this);
     }
 
 
@@ -444,7 +446,7 @@ class AI
     }
 
 
-// ===================================  STATE  =======================================
+// ===================================  LOGIC =======================================
 
 
 // state: default idle state handling
@@ -611,12 +613,33 @@ class AI
     }
 
 
+// logic: slime
+  function effectSlime()
+    {
+      var free = effects.decrease(EFFECT_SLIME, strength);
+      if (free)
+        log('manages to get free of the slime.');
+      else log('desperately tries to get free of the slime.');
+
+      // set alerted state
+      if (state == AI_STATE_IDLE)
+        setState(AI_STATE_ALERT, REASON_DAMAGE);
+
+      emitRandomSound('' + REASON_DAMAGE, 30); // emit random sound
+    }
+
+
 // call AI logic
   public function turn()
     {
-      entity.turn(); // turn passing for entity
+      entity.turn(); // time passing for entity
+      effects.turn(1); // time passing for effects
 
-      if (state == AI_STATE_IDLE)
+      // effect: slime, does not allow movement
+      if (effects.has(EFFECT_SLIME))
+        effectSlime();
+
+      else if (state == AI_STATE_IDLE)
         stateIdle();
 
       // AI alerted - try to run away or attack
@@ -727,6 +750,13 @@ class AI
     {
       setState(AI_STATE_ALERT, REASON_DETACH);
       entity.setMask(Const.FRAME_EMPTY);
+    }
+
+
+// event: on receiving effect
+  public inline function onEffect(effect: _AIEffect)
+    {
+      effects.add(effect);
     }
 
 
