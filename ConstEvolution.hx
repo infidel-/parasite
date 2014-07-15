@@ -203,10 +203,26 @@ class ConstEvolution
           '(todo fluff)',
           ],
         levelParams: [
-          {},
-          {},
-          {},
-          {},
+          {
+            minDamage: 0,
+            maxDamage: 0,
+            range: 0
+          },
+          {
+            minDamage: 1,
+            maxDamage: 2,
+            range: 1
+          },
+          {
+            minDamage: 1,
+            maxDamage: 3,
+            range: 2
+          },
+          {
+            minDamage: 1,
+            maxDamage: 4,
+            range: 3
+          },
           ],
       },
 
@@ -324,7 +340,7 @@ class ConstEvolution
         name: '??Host energy bonus',
         note: '(todo fluff)',
         organ: {
-          name: '? Host energy bonus',
+          name: '??Host energy bonus',
           note: '(todo fluff)',
           gp: 200
           },

@@ -159,6 +159,17 @@ class Organs
     }
 
 
+// get current organ parameters
+  public function getParams(id: _Improv): Dynamic
+    {
+      for (o in _list)
+        if (o.id == id)
+          return o.params;
+
+      return null;
+    }
+
+
 // get active organ by improvement id
   public inline function getActive(id: _Improv): Organ
     {
@@ -232,7 +243,22 @@ class Organs
           return;
         }
 
-      trace(ai.id);
+      var params = getParams(IMP_ACID_SPIT);
+
+      // check for distance
+      var distance = Const.getDist(ai.x, ai.y, game.area.player.x, game.area.player.y);
+      if (distance > params.range)
+        {
+          game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
+          return;
+        }
+
+      // roll damage
+      var damage = Const.roll(params.minDamage, params.maxDamage);
+      game.log('Your host spits a clot of corrosive substance on ' + ai.getName() +
+        ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' screams in pain.');
+
+      ai.onDamage(damage); // damage event
     }
 
 
