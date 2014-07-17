@@ -41,6 +41,10 @@ class DebugArea
           func: gainImprovsMax
         },
         {
+          name: 'Complete current organ',
+          func: completeOrgan 
+        },
+        {
           name: 'Clear AI',
           func: clearAI
         },
@@ -115,6 +119,16 @@ class DebugArea
           imp.ep = ConstEvolution.epCostImprovement[imp.level];
         }
       game.log('All evolution improvements gained at max level');
+    }
+
+
+// complete current organ
+  function completeOrgan()
+    {
+      if (game.player.state != PLR_STATE_HOST)
+        return;
+
+      game.player.host.organs.debugCompleteCurrent();
     }
 
 

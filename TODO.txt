@@ -1,5 +1,6 @@
-acid spit - action appears in list. when pressing a key for it, the code will check if mouse cursor is over the ai
+panic gas timeout
 evolution content - basic evolutions in each direction
+knowledges?
 
 MASTERPLAN
 ============
@@ -23,9 +24,10 @@ fast travel in cars in region mode - entering the car will turn it on
 global suspicion and what comes with its growth (no global suspicion?)
 region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
-walkable city sewers (should i?)
+swat units have gas masks and armor
 armor - vest + helmet
 stunner
+walkable city sewers (should i?)
 electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp
 organ damage - organ must heal itself before it becomes active again

@@ -271,7 +271,7 @@ class AI
 
 
 // post alert changes, clamp and change icon
-  function updateEntity()
+  public function updateEntity()
     {
       var alertFrame = Const.FRAME_EMPTY;
       if (state == AI_STATE_ALERT)
@@ -285,6 +285,10 @@ class AI
           else if (alertness > 0)
             alertFrame = Const.FRAME_ALERT1;
         }
+
+      // panic state
+      if (effects.has(EFFECT_PANIC))
+        alertFrame = Const.FRAME_PANIC;
 
       entity.setAlert(alertFrame);
     }
@@ -638,6 +642,10 @@ class AI
       // effect: slime, does not allow movement
       if (effects.has(EFFECT_SLIME))
         effectSlime();
+
+      // effect: panic, run away 
+      else if (effects.has(EFFECT_PANIC))
+        logicRunAwayFrom(game.area.player.x, game.area.player.y);
 
       else if (state == AI_STATE_IDLE)
         stateIdle();

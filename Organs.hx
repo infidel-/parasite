@@ -7,7 +7,7 @@ class Organs
 {
   var game: Game;
 
-  var ai: AI; // parent AI link
+  var _ai: AI; // parent AI link
   var _list: List<Organ>; // list of organs
   var currentOrgan: Organ; // currently grown organ
 
@@ -15,7 +15,7 @@ class Organs
 
   public function new(vgame: Game, vai: AI)
     {
-      ai = vai;
+      _ai = vai;
       game = vgame;
       currentOrgan = null;
       woundRegenTurn = 0;
@@ -50,6 +50,18 @@ class Organs
     }
 
 
+// debug: complete current organ
+  public function debugCompleteCurrent()
+    {
+      // no organ selected
+      if (currentOrgan == null)
+        return;
+
+      currentOrgan.gp = 100000;
+      turnGrowth(1);
+    }
+
+
 // TURN: organ growth
   function turnGrowth(time: Int)
     {
@@ -67,11 +79,11 @@ class Organs
       currentOrgan.isActive = true;
       game.log(currentOrgan.info.name + ' growth completed.', COLOR_ORGAN);
 
-      ai.recalc(); // recalc all stats and mods
+      _ai.recalc(); // recalc all stats and mods
 
       // host energy organ restores energy to max when grown
       if (currentOrgan.id == IMP_ENERGY)
-        ai.energy = ai.maxEnergy;
+        _ai.energy = _ai.maxEnergy;
 
       currentOrgan = null;
     }
@@ -82,13 +94,13 @@ class Organs
     {
       // organ: wound regeneration
       var o = get(IMP_WOUND_REGEN);
-      if (o != null && ai.health < ai.maxHealth)
+      if (o != null && _ai.health < _ai.maxHealth)
         {
           woundRegenTurn++;
 
           if (woundRegenTurn >= o.params.turns)
             {
-              ai.health++;
+              _ai.health++;
               woundRegenTurn = 0;
             }
         }
@@ -229,6 +241,9 @@ class Organs
 
       else if (a.id == 'slimeSpit')
         actionSlimeSpit();
+
+      else if (a.id == 'panicGas')
+        actionPanicGas();
     }
 
 
@@ -294,6 +309,30 @@ class Organs
 
       // AI effect event
       ai.onEffect({ type: EFFECT_SLIME, points: params.strength }); 
+    }
+
+
+// action: panic gas
+  function actionPanicGas()
+    {
+      var params = getParams(IMP_PANIC_GAS);
+      var tmp = game.area.getAIinRadius(game.area.player.x, game.area.player.y,
+        params.range, false);
+
+      game.log('Your host emits a noxious fear-inducing gas cloud.'); 
+
+      // effect all AI in range
+      for (ai in tmp)
+        {
+          // do not affect self
+          if (ai == _ai)
+            continue;
+
+          // AI effect event
+          ai.onEffect({ type: EFFECT_PANIC, points: params.time, isTimer: true });
+
+          ai.updateEntity(); // update entity graphics
+        }
     }
 
 

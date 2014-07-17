@@ -268,6 +268,53 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_ATTACK,
+        id: IMP_PANIC_GAS,
+        name: '??Panic gas',
+        note: '(todo fluff)',
+        organ: {
+          name: '??Panic gas',
+          note: '(todo fluff)',
+          gp: 175,
+          action: {
+            id: 'panicGas',
+            type: ACTION_ORGAN,
+            name: '??Panic gas',
+            energy: 10
+            },
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          {
+            range: 0,
+            timeout: 0,
+            time: 0
+          },
+          {
+            range: 2,
+            timeout: 20,
+            time: 3
+          },
+          {
+            range: 3,
+            timeout: 10,
+            time: 5
+          },
+          {
+            range: 4,
+            timeout: 5,
+            time: 10
+          },
+          ],
+      },
+
+
       // =============== ************ CONTROL *************** ===================
 
       { // ***

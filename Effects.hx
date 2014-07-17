@@ -20,7 +20,11 @@ class Effects
 // add new effect
   public function add(eff: _AIEffect)
     {
-      _list.add({ type: eff.type, points: eff.points });
+      _list.add({ 
+        type: eff.type, 
+        points: eff.points, 
+        isTimer: (eff.isTimer == true)
+        });
     }
 
 
@@ -72,6 +76,16 @@ class Effects
 // passage of time
   public function turn(time: Int)
     {
+      // rot timer effects
+      for (e in _list)
+        {
+          if (!e.isTimer)
+            continue;
+
+          e.points -= time;
+          if (e.points <= 0)
+            _list.remove(e);
+        }
     }
 
 
@@ -89,4 +103,5 @@ typedef Effect =
 {
   var type: _AIEffectType; // effect type
   var points: Int; // current effect strength
+  var isTimer: Bool; // is this a timer?
 }

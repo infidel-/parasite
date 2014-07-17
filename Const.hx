@@ -32,6 +32,7 @@ class Const
   public static var FRAME_ALERT2 = 2;
   public static var FRAME_ALERT3 = 3;
   public static var FRAME_ALERTED = 4;
+  public static var FRAME_PANIC = 5;
 
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;

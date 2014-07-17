@@ -14,4 +14,5 @@ enum _Improv
   IMP_REINFORCE;
   IMP_ACID_SPIT;
   IMP_SLIME_SPIT;
+  IMP_PANIC_GAS;
 }
