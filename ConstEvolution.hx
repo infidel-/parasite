@@ -277,6 +277,7 @@ class ConstEvolution
           name: '??Panic gas',
           note: '(todo fluff)',
           gp: 175,
+          hasTimeout: true,
           action: {
             id: 'panicGas',
             type: ACTION_ORGAN,
@@ -455,6 +456,7 @@ class ConstEvolution
           name: '',
           note: '(todo fluff)',
           gp: 100,
+          hasTimeout: false,
           action: { 
             id: '',
             type: ACTION_ORGAN,
@@ -555,5 +557,6 @@ typedef OrganInfo =
   name: String, // name
   note: String, // description
   gp: Int, // gp cost to grow
-  ?action: _PlayerAction // player action
+  ?action: _PlayerAction, // player action
+  ?hasTimeout: Bool // has activation timeout?
 }

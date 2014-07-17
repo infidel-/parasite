@@ -90,9 +90,14 @@ class OrgansWindow
       var n = 0;
       for (organ in game.player.host.organs)
         {
-          buf.add(organ.info.name + ' ' + organ.level +
-            (organ.isActive ? '' : ' (' + organ.gp + '/' + organ.info.gp + 'gp)') +
-            ' [' + organ.info.note + ']\n');
+          buf.add(organ.info.name + ' ' + organ.level);
+          if (organ.isActive)
+            {
+              if (organ.info.hasTimeout && organ.timeout > 0)
+                buf.add(' (timeout: ' + organ.timeout + ')');
+            }
+          else buf.add(' (' + organ.gp + '/' + organ.info.gp + 'gp)');
+          buf.add(' [' + organ.info.note + ']\n');
 #if debug
 //          var params = game.player.evolutionManager.getParams(organ.id);
           buf.add('DEBUG: ' + organ.params + '\n');

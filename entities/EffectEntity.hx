@@ -1,36 +1,30 @@
-// objects engine entity
+// tile effects engine entity
 
 package entities;
 
 import com.haxepunk.Entity;
-import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Spritemap;
-import objects.AreaObject;
 
-class ObjectEntity extends Entity
+class EffectEntity extends Entity
 {
-  var game: Game; // game state
-  var object: AreaObject; // object link
+  var game: Game;
 
-  var _list: Graphiclist; // graphics list
+  public var turns: Int; // turns to live
   var _spriteBody: Spritemap; // body sprite map
 
 
-  public function new(o: AreaObject, g: Game, xx: Int, yy: Int,
-      atlasRow: Int, atlasCol: Int)
+  public function new(g: Game, xx: Int, yy: Int, t: Int, atlasRow: Int, atlasCol: Int)
     {
       super(xx * Const.TILE_WIDTH, yy * Const.TILE_HEIGHT);
-
       game = g;
-      object = o;
-      _list = new Graphiclist();
+      turns = t;
+
       _spriteBody = new Spritemap(game.scene.entityAtlas, 32, 32);
       _spriteBody.setFrame(atlasCol, atlasRow);
-      _list.add(_spriteBody);
 
       type = "undefined";
-      layer = Const.LAYER_OBJECT;
-      graphic = _list;
+      layer = Const.LAYER_EFFECT;
+      graphic = _spriteBody;
     }
 
 

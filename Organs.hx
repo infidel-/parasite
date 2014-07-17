@@ -1,5 +1,6 @@
 // AI organs and other body features like camouflage layers etc
 
+import com.haxepunk.HXP;
 import ai.AI;
 import ConstEvolution;
 
@@ -50,7 +51,7 @@ class Organs
     }
 
 
-// debug: complete current organ
+// DEBUG: complete current organ
   public function debugCompleteCurrent()
     {
       // no organ selected
@@ -92,6 +93,11 @@ class Organs
 // TURN: organ activity 
   function turnActivity(time: Int)
     {
+      // activation timeout
+      for (o in _list)
+        if (o.info.hasTimeout && o.timeout > 0)
+          o.timeout--;
+
       // organ: wound regeneration
       var o = get(IMP_WOUND_REGEN);
       if (o != null && _ai.health < _ai.maxHealth)
@@ -130,7 +136,8 @@ class Organs
             gp: 0,
             improvInfo: imp.info,
             info: imp.info.organ,
-            params: imp.info.levelParams[imp.level]
+            params: imp.info.levelParams[imp.level],
+            timeout: 0
             };
           _list.add(currentOrgan);
         }
@@ -207,7 +214,8 @@ class Organs
         gp: 0,
         improvInfo: impInfo,
         info: impInfo.organ,
-        params: impInfo.levelParams[0]
+        params: impInfo.levelParams[0],
+        timeout: 0
         };
 
       _list.add(o);
@@ -227,8 +235,11 @@ class Organs
           if (a == null)
             continue;
 
-          if (game.player.energy >= a.energy) 
-            tmp.add(a);
+          if (game.player.energy < a.energy ||
+              (o.info.hasTimeout && o.timeout > 0))
+            continue;
+
+          tmp.add(a);
         }
     }
 
@@ -319,14 +330,40 @@ class Organs
       var tmp = game.area.getAIinRadius(game.area.player.x, game.area.player.y,
         params.range, false);
 
-      game.log('Your host emits a noxious fear-inducing gas cloud.'); 
+      game.log('Your host emits a noxious fear-inducing gas cloud.');
 
-      // effect all AI in range
+      // set timeout
+      var o = get(IMP_PANIC_GAS);
+      o.timeout = params.timeout;
+
+      // spawn visual effects
+      var xo = game.area.player.x;
+      var yo = game.area.player.y;
+      for (yy in yo - params.range...yo + params.range)
+        for (xx in xo - params.range...xo + params.range)
+          {
+            if (!game.area.isWalkable(xx, yy))
+              continue;
+
+            if (HXP.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
+              continue;
+
+            game.area.addEffect(xx, yy, 2, Const.FRAME_PANIC_GAS);
+          }
+
+      // affect all AI in range
       for (ai in tmp)
         {
           // do not affect self
           if (ai == _ai)
             continue;
+
+          // set alertness
+          if (ai.state == AI_STATE_IDLE)
+            {
+              ai.alertness = 100;
+              ai.setState(AI_STATE_ALERT, REASON_PARASITE);
+            }
 
           // AI effect event
           ai.onEffect({ type: EFFECT_PANIC, points: params.time, isTimer: true });
@@ -372,4 +409,5 @@ typedef Organ =
   var improvInfo: ImprovInfo; // evolution improvement link
   var info: OrganInfo; // organ info link
   var params: Dynamic; // current level params link
+  var timeout: Int; // charge timeout
 }

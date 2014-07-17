@@ -5,6 +5,7 @@ import com.haxepunk.HXP;
 import com.haxepunk.graphics.Tilemap;
 import ai.*;
 import objects.*;
+import entities.EffectEntity;
 
 
 class Area
@@ -12,8 +13,9 @@ class Area
   var game: Game; // game state link
 
   var _tilemap: Tilemap;
-  var _ai: List<AI>;
-  var _objects: Map<Int, AreaObject>;
+  var _ai: List<AI>; // AI list
+  var _objects: Map<Int, AreaObject>; // area objects list
+  var _effects: List<EffectEntity>; // visual effects list
   var _cells: Array<Array<Int>>; // cell types
   var _pathEngine: aPath.Engine;
   var area: RegionArea; // region area link
@@ -61,6 +63,13 @@ class Area
 
       else if (totalBodies > 0)
         game.region.manager.onBodiesDiscovered(area, totalBodies, totalPoints);
+
+      // clear all effects
+      for (eff in _effects)
+        {
+          game.scene.remove(eff);
+          _effects.remove(eff);
+        }
     }
 
 
@@ -76,6 +85,7 @@ class Area
 
       _ai = new List<AI>();
       _objects = new Map<Int, AreaObject>();
+      _effects = new List<EffectEntity>();
       _tilemap = new Tilemap("gfx/tileset.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
@@ -534,6 +544,17 @@ class Area
       for (o in _objects)
         o.turn();
 
+      // effect removal
+      for (e in _effects)
+        {
+          e.turns--;
+          if (e.turns <= 0)
+            {
+              game.scene.remove(e);
+              _effects.remove(e);
+            }
+        }
+
       turnSpawnAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
       turnAlertness(); // decrease alertness
@@ -856,6 +877,18 @@ class Area
           trace(haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
         }
       return null;
+    }
+
+
+// add visual effect entity
+  public function addEffect(x: Int, y: Int, turns: Int, frame: Int)
+    {
+      if (x >= width || y >= height || x < 0 || y < 0)
+        return;
+
+      var effect = new EffectEntity(game, x, y, turns, Const.ROW_EFFECT, frame);
+      _effects.add(effect);
+      game.scene.add(effect);
     }
 
 

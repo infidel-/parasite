@@ -4,6 +4,7 @@ class Const
 {
   public static var LAYER_MOUSE = 0; // mouse cursor layer - highest
   public static var LAYER_UI = 1; // ui layer
+  public static var LAYER_EFFECT = 5; // visual effects layer 
   public static var LAYER_AI = 10; // player, enemies, etc layer
   public static var LAYER_OBJECT = 20; // ground layer - bodies, items
   public static var LAYER_TILES = 30; // tilemap layer
@@ -37,12 +38,16 @@ class Const
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;
 
+  // effect row frames
+  public static var FRAME_PANIC_GAS = 0;
+
   public static var ROW_OBJECT = 1;
-  public static var ROW_PARASITE = 2;
-  public static var ROW_HUMAN = 3;
-  public static var ROW_DOG = 4;
-  public static var ROW_CIVILIAN = 5;
-  public static var ROW_POLICE = 6;
+  public static var ROW_EFFECT = 2;
+  public static var ROW_PARASITE = 3;
+  public static var ROW_HUMAN = 4;
+  public static var ROW_DOG = 5;
+  public static var ROW_CIVILIAN = 6;
+  public static var ROW_POLICE = 7;
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_BODY = 1;
   public static var FRAME_MASK_POSSESSED = 2;
