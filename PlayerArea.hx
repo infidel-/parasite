@@ -143,6 +143,13 @@ class PlayerArea
       // area object action
       if (action.type == ACTION_OBJECT)
         {
+          // cannot act while in paralysis
+          if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
+            {
+              log('Your host is paralyzed.', COLOR_HINT);
+              return;
+            }
+
           var o = area.getObjectAt(x, y);
           o.action(action);
         }
@@ -219,6 +226,13 @@ class PlayerArea
 // action: move player by dx,dy
   public function actionMove(dx: Int, dy: Int)
     {
+      // cannot move while in paralysis
+      if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
+        {
+          log('Your host is paralyzed.', COLOR_HINT);
+          return;
+        }
+
       // frob the AI
       var ai = area.getAI(x + dx, y + dy);
       if (ai != null)
@@ -352,7 +366,13 @@ class PlayerArea
       // improv: harden grip bonus 
       var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
 
-      attachHold += params.attachHoldBase - Std.int(attachHost.strength / 2);
+      var tmp = params.attachHoldBase;
+
+      // effect: paralysis
+      if (!attachHost.effects.has(EFFECT_PARALYSIS))
+        tmp -= Std.int(attachHost.strength / 2);
+
+      attachHold += tmp;
     }
 
 

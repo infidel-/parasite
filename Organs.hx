@@ -253,8 +253,14 @@ class Organs
       else if (a.id == 'slimeSpit')
         actionSlimeSpit();
 
+      else if (a.id == 'paralysisSpit')
+        actionParalysisSpit();
+
       else if (a.id == 'panicGas')
         actionPanicGas();
+
+      else if (a.id == 'paralysisGas')
+        actionParalysisGas();
     }
 
 
@@ -318,8 +324,54 @@ class Organs
       game.log('Your host spits a clot of adhesive slime on ' + ai.getName() +
         '. ' + ai.getNameCapped() + ' desperately tries to tear it away.');
 
+      // set alertness
+      if (ai.state == AI_STATE_IDLE)
+        {
+          ai.alertness = 100;
+          ai.setState(AI_STATE_ALERT, REASON_PARASITE);
+        }
+
       // AI effect event
       ai.onEffect({ type: EFFECT_SLIME, points: params.strength }); 
+    }
+
+
+// action: paralysis spit
+  function actionParalysisSpit()
+    {
+      // get ai under mouse cursor
+      var pos = game.scene.mouse.getXY();
+      var ai = game.area.getAI(pos.x, pos.y);
+
+      // no ai found
+      if (ai == null)
+        {
+          game.log("Target AI with mouse first.", COLOR_HINT);
+          return;
+        }
+
+      var params = getParams(IMP_PARALYSIS_SPIT);
+
+      // check for distance
+      var distance = Const.getDist(ai.x, ai.y, game.area.player.x, game.area.player.y);
+      if (distance > params.range)
+        {
+          game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
+          return;
+        }
+
+      game.log('Your host releases a stream of paralyzing spores on ' + ai.getName() +
+        '.');
+
+      // set alertness
+      if (ai.state == AI_STATE_IDLE)
+        {
+          ai.alertness = 100;
+          ai.setState(AI_STATE_ALERT, REASON_PARASITE);
+        }
+
+      // AI effect event
+      ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true }); 
     }
 
 
@@ -367,8 +419,54 @@ class Organs
 
           // AI effect event
           ai.onEffect({ type: EFFECT_PANIC, points: params.time, isTimer: true });
+        }
+    }
 
-          ai.updateEntity(); // update entity graphics
+
+// action: paralysis gas
+  function actionParalysisGas()
+    {
+      var params = getParams(IMP_PARALYSIS_GAS);
+      var tmp = game.area.getAIinRadius(game.area.player.x, game.area.player.y,
+        params.range, false);
+
+      game.log('Your host emits a cloud of paralysis spores.');
+
+      // set timeout
+      var o = get(IMP_PARALYSIS_GAS);
+      o.timeout = params.timeout;
+
+      // spawn visual effects
+      var xo = game.area.player.x;
+      var yo = game.area.player.y;
+      for (yy in yo - params.range...yo + params.range)
+        for (xx in xo - params.range...xo + params.range)
+          {
+            if (!game.area.isWalkable(xx, yy))
+              continue;
+
+            if (HXP.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
+              continue;
+
+            game.area.addEffect(xx, yy, 2, Const.FRAME_PARALYSIS_GAS);
+          }
+
+      // affect all AI in range
+      for (ai in tmp)
+        {
+          // do not affect self
+          if (ai == _ai)
+            continue;
+
+          // set alertness
+          if (ai.state == AI_STATE_IDLE)
+            {
+              ai.alertness = 100;
+              ai.setState(AI_STATE_ALERT, REASON_PARASITE);
+            }
+
+          // AI effect event
+          ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true });
         }
     }
 

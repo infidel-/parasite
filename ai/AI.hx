@@ -290,6 +290,10 @@ class AI
       if (effects.has(EFFECT_PANIC))
         alertFrame = Const.FRAME_PANIC;
 
+      // paralysis state
+      if (effects.has(EFFECT_PARALYSIS))
+        alertFrame = Const.FRAME_PARALYSIS;
+
       entity.setAlert(alertFrame);
     }
 
@@ -643,6 +647,10 @@ class AI
       if (effects.has(EFFECT_SLIME))
         effectSlime();
 
+      // effect: paralysis 
+      else if (effects.has(EFFECT_PARALYSIS))
+        1;
+
       // effect: panic, run away 
       else if (effects.has(EFFECT_PANIC))
         logicRunAwayFrom(game.area.player.x, game.area.player.y);
@@ -765,6 +773,8 @@ class AI
   public inline function onEffect(effect: _AIEffect)
     {
       effects.add(effect);
+
+      updateEntity(); // update entity graphics
     }
 
 

@@ -270,19 +270,108 @@ class ConstEvolution
 
       { // ***
         path: PATH_ATTACK,
+        id: IMP_PARALYSIS_SPIT,
+        name: '??Paralysis spit',
+        note: '(todo fluff)',
+        organ: {
+          name: '??Paralysis spit',
+          note: '(todo fluff)',
+          gp: 100,
+          action: { 
+            id: 'paralysisSpit',
+            type: ACTION_ORGAN,
+            name: '??Paralysis spit',
+            energy: 5
+            },
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          {
+            time: 0,
+            range: 0
+          },
+          {
+            time: 3,
+            range: 1
+          },
+          {
+            time: 4,
+            range: 2
+          },
+          {
+            time: 5,
+            range: 3
+          },
+          ],
+      },
+
+      { // ***
+        path: PATH_ATTACK,
         id: IMP_PANIC_GAS,
         name: '??Panic gas',
         note: '(todo fluff)',
         organ: {
           name: '??Panic gas',
           note: '(todo fluff)',
-          gp: 175,
+          gp: 150,
           hasTimeout: true,
           action: {
             id: 'panicGas',
             type: ACTION_ORGAN,
             name: '??Panic gas',
             energy: 10
+            },
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          {
+            range: 0,
+            timeout: 0,
+            time: 0
+          },
+          {
+            range: 2,
+            timeout: 20,
+            time: 3
+          },
+          {
+            range: 3,
+            timeout: 10,
+            time: 5
+          },
+          {
+            range: 4,
+            timeout: 5,
+            time: 10
+          },
+          ],
+      },
+
+      { // ***
+        path: PATH_ATTACK,
+        id: IMP_PARALYSIS_GAS,
+        name: '??Paralysis gas',
+        note: '(todo fluff)',
+        organ: {
+          name: '??Paralysis gas',
+          note: '(todo fluff)',
+          gp: 175,
+          hasTimeout: true,
+          action: { 
+            id: 'paralysisGas',
+            type: ACTION_ORGAN,
+            name: '??Paralysis gas',
+            energy: 12
             },
           },
         levelNotes: [

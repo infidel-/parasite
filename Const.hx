@@ -34,12 +34,14 @@ class Const
   public static var FRAME_ALERT3 = 3;
   public static var FRAME_ALERTED = 4;
   public static var FRAME_PANIC = 5;
+  public static var FRAME_PARALYSIS = 6;
 
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;
 
   // effect row frames
   public static var FRAME_PANIC_GAS = 0;
+  public static var FRAME_PARALYSIS_GAS = 1;
 
   public static var ROW_OBJECT = 1;
   public static var ROW_EFFECT = 2;

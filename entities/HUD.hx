@@ -66,6 +66,8 @@ class HUD
       _listLog.add(s);
       if (_listLog.length > 4)
         _listLog.pop();
+
+      updateLog(); // redraw the log just in case
     }
   
 
