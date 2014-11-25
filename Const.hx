@@ -72,6 +72,9 @@ class Const
   public static var TILE_WALKABLE_REGION = [ true, true, true, true];
   public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 
+  public static var greekLetters = [ 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon',
+    'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron',
+    'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega' ];
 
   // player stuff
 

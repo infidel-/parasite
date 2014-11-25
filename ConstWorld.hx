@@ -114,6 +114,8 @@ class ConstWorld
   public static var AREA_CITY_LOW = 'cityLow';
   public static var AREA_CITY_MEDIUM = 'cityMedium';
   public static var AREA_CITY_HIGH = 'cityHigh';
+  public static var AREA_MILITARY_BASE = 'militaryBase';
+  public static var AREA_FACILITY = 'facility';
 
 // region types
   public static var REGION_CITY = 'city';

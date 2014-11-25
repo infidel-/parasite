@@ -1,5 +1,16 @@
-spit timeouts?
-evolution content - basic evolutions in each direction
+Information Web - This is displayed on a separate screen. This represents what the parasite knows about the events that resulted in its current state. It is a timeline of events in operation with lists of participating persons. At the start nothing is known but as the parasite unlocks memories of people that are close to these persons or are these persons, the web will fill up with information that eventually will reveal the masterminds and new goals.
+
+scenario/
+Scenario - flowchart of event/person/location
+Variables
+ScenarioAlienCrashLanding - actual scenario contents
+Timeline - the events that actually happened
+Event  - event contents
+Person - event participants
+Location - event location
+Clue - available clue (generated in process of a game)
+
+host memory + human society > 50 = access to infoweb
 knowledges?
 
 MASTERPLAN
@@ -16,8 +27,10 @@ information web (based on clue gathering)
 
 LATER
 =====
+cell phone
+ecm jammer improvement
 host perks - for ex, fat people have more energy overall, so they are more desirable
-some evolution can only happen if player has access to prerequisites, for example, stands on top of the 
+some evolution can only happen if player has access to prerequisites, for example, stands on top of some object
 more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars
 fast travel in cars in region mode - entering the car will turn it on

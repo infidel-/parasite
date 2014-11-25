@@ -1,10 +1,12 @@
 // game state
 
 import com.haxepunk.HXP;
+import scenario.Timeline;
 
 class Game
 {
   public var scene: GameScene; // ui scene
+  public var timeline: Timeline; // scenario timeline
   public var world: World; // game world
   public var worldManager: WorldManager; // game world manager
   public var region: Region; // region view 
@@ -28,7 +30,6 @@ class Game
   public function init()
     {
       Const.todo('proper title screen');
-      log('You are alone. You are scared. You need to find a host or you will die soon.');
       turns = 0;
       isFinished = false;
       player = new Player(this);
@@ -43,6 +44,12 @@ class Game
       // generate world
       world = new World(this);
       world.generate();
+
+      // generate timeline from a scenario
+      timeline = new Timeline(this);
+      timeline.init();
+
+      log('You are alone. You are scared. You need to find a host or you will die soon.');
 
       // set random region (currently only 1 at all)
       var r = world.get(0);
