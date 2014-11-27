@@ -34,6 +34,11 @@ class WorldRegion
     }
 
 
+// iterator
+  public function iterator()
+    { return _list.iterator(); }
+
+
 // generate a region
   public function generate()
     {
@@ -251,6 +256,46 @@ class WorldRegion
       return tmp[Std.random(tmp.length)];
     }
 
+
+// get random enterable area
+  public function getRandomEnterable(): RegionArea
+    {
+      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp2 = [];
+      for (a in tmp)
+        if (a.info.canEnter)
+          tmp2.push(a);
+
+      if (tmp2.length == 0)
+        throw 'cannot find enterable area';
+
+      return tmp2[Std.random(tmp2.length)];
+    }
+
+
+// get random area with this type id
+  public function getRandomWithType(t: String): RegionArea
+    {
+      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp2 = [];
+      for (a in tmp)
+        if (a.typeID == t)
+          tmp2.push(a);
+
+      if (tmp2.length == 0)
+        return null;
+
+      return tmp2[Std.random(tmp2.length)];
+    }
+
+
+// spawn area with this type (actually just change some ground)
+  public inline function spawnArea(t: String): RegionArea
+    {
+      var a = getRandomWithType(ConstWorld.AREA_GROUND);
+      a.setType(t);
+      return a;
+    }
 
 // ========================== SETTERS ====================================
 /*

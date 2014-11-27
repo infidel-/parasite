@@ -75,7 +75,45 @@ class ConstWorld
         objects: [
           { id: 'sewer_hatch', amount: 20 }
           ]
-      }
+      },
+
+      { // *** military base (TODO)
+        id: 'militaryBase',
+        name: 'Military base',
+        canEnter: true,
+        commonAI: 10,
+        uncommonAI: 10,
+        buildingChance: 0.05,
+        policeResponceTime: 9,
+        policeResponceAmount: 2,
+        ai: [
+          'dog' => 20,
+          'civilian' => 75,
+          'police' => 5
+          ],
+        objects: [
+          { id: 'sewer_hatch', amount: 10 }
+          ]
+      },
+
+      { // *** 
+        id: 'facility',
+        name: 'Facility',
+        canEnter: true,
+        commonAI: 10,
+        uncommonAI: 10,
+        buildingChance: 0.05,
+        policeResponceTime: 9,
+        policeResponceAmount: 2,
+        ai: [
+          'dog' => 20,
+          'civilian' => 75,
+          'police' => 5
+          ],
+        objects: [
+          { id: 'sewer_hatch', amount: 10 }
+          ]
+      },
     ];
 
 

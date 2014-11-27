@@ -2,6 +2,8 @@
 
 package scenario;
 
+import scenario.Scenario;
+
 class Timeline
 {
   var game: Game;
@@ -9,6 +11,7 @@ class Timeline
 
   var _eventsMap: Map<String, Event>; // events hash map
   var _eventsList: List<Event>; // ordered events list
+  var _locationsList: List<Location>; // ordered locations list
   var _names: Map<String, String>; // fully parsed from templates names
   var _variables: Map<String, Dynamic>; // timeline variables map 
 
@@ -18,6 +21,7 @@ class Timeline
 
       _eventsMap = new Map();
       _eventsList = new List();
+      _locationsList = new List();
       _variables = new Map<String, Dynamic>();
       _names = new Map();
     }
@@ -50,6 +54,63 @@ class Timeline
 
           _names.set(key, name);
         }
+    }
+
+
+// init location from info 
+  function initLocation(eventID: String, eventInfo: EventInfo, 
+      info: LocationInfo): Location
+    {
+      if (info == null)
+        return null;
+
+      if (info.id == null)
+        info.id = eventID;
+
+      // location exists
+      var tmp = getLocation(info.id);
+      if (tmp != null)
+        return tmp;
+
+      // copy location from previous event
+      if (info.sameAs != null)
+        {
+          var tmp = getEvent(info.sameAs);
+          if (tmp.location == null)
+            throw '' + info + ': event ' + info.sameAs + ' does not have location.';
+
+          return tmp.location;
+        }
+
+      var location = new Location(info.id);
+      if (info.name != null)
+        location.name = parse(info.name);
+
+      if (info.type == null)
+        {
+          var tmp = [ ConstWorld.AREA_CITY_LOW,
+            ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
+          info.type = tmp[Std.random(tmp.length)];
+        }
+
+      // find area with this type
+      // single region atm
+      var region = game.world.get(0);
+      var area = region.getRandomWithType(info.type);
+      if (area == null)
+        area = region.spawnArea(info.type);
+      location.area = area;
+
+      // location is near this event id
+      if (info.near != null)
+        {
+          Const.todo('LocationInfo.near: ' + info);
+        }
+/*      
+  ?type: String, // location type
+*/  
+      _locationsList.add(location);
+      return location;
     }
 
 
@@ -89,6 +150,9 @@ class Timeline
           if (curInfo.notes != null)
             for (n in curInfo.notes)
               event.notes.push({ text: parse(n), isKnown: false });
+
+          // parse location
+          event.location = initLocation(curID, curInfo, curInfo.location);
 
 /*
   ?location: ScenarioLocation, // event location
@@ -141,6 +205,7 @@ class Timeline
       trace(_eventsList);
       trace(_names);
       trace(_variables);
+      trace(_locationsList);
     }
 
 
@@ -152,6 +217,24 @@ class Timeline
           s = StringTools.replace(s, '%' + n + '%', _names.get(n));
 
       return s;
+    }
+
+
+// get location by id
+  public function getLocation(id: String): Location
+    {
+      for (l in _locationsList)
+        if (l.id == id)
+          return l;
+
+      return null;
+    }
+
+
+// get event by id
+  public function getEvent(id: String): Event
+    {
+      return _eventsMap.get(id);
     }
 }
 

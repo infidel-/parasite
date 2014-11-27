@@ -7,6 +7,7 @@ class Event
   public var id: String; // event id
   public var name: String; // event name
   public var notes: Array<{ text: String, isKnown: Bool }>; // event notes 
+  public var location: Location; // event location link
 
   public function new(vid: String)
     {

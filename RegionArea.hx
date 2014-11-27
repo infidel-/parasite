@@ -27,17 +27,25 @@ class RegionArea
   public function new(r: WorldRegion, tv: String, vx: Int, vy: Int, w: Int, h: Int)
     {
       region = r;
-      typeID = tv;
       isKnown = false;
       id = _maxID++;
       x = vx;
       y = vy;
       width = w;
       height = w;
-      info = ConstWorld.getAreaInfo(typeID);
       _alertness = 0;
       alertnessMod = 0;
       interest = 0;
+
+      setType(tv);
+    }
+
+
+// change area type
+  public function setType(t: String)
+    {
+      typeID = t;
+      info = ConstWorld.getAreaInfo(typeID);
 
       if (typeID == ConstWorld.AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;
@@ -47,6 +55,10 @@ class RegionArea
         tileID = Const.TILE_REGION_CITY_MEDIUM;
       else if (typeID == ConstWorld.AREA_CITY_HIGH)
         tileID = Const.TILE_REGION_CITY_HIGH;
+      else if (typeID == ConstWorld.AREA_MILITARY_BASE)
+        tileID = Const.TILE_REGION_MILITARY_BASE;
+      else if (typeID == ConstWorld.AREA_FACILITY)
+        tileID = Const.TILE_REGION_FACILITY;
     }
 
 
@@ -55,6 +67,13 @@ class RegionArea
   public inline function setAlertness(v: Float)
     {
       _alertness = Const.clampFloat(v, 0, 100.0); 
+    }
+
+
+  public function toString(): String
+    {
+      return '(' + x + ',' + y + '): ' + typeID + ' alertness:' + alertness +
+        ' interest:' + interest;
     }
 
 

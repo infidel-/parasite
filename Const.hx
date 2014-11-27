@@ -66,11 +66,13 @@ class Const
   public static var TILE_REGION_CITY_LOW = 1;
   public static var TILE_REGION_CITY_MEDIUM = 2;
   public static var TILE_REGION_CITY_HIGH = 3;
+  public static var TILE_REGION_MILITARY_BASE = 4;
+  public static var TILE_REGION_FACILITY = 5;
 
   public static var TILE_WALKABLE = [ false, true, false ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building' ];
-  public static var TILE_WALKABLE_REGION = [ true, true, true, true];
-  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
+  public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
+//  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 
   public static var greekLetters = [ 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon',
     'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron',

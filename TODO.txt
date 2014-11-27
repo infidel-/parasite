@@ -10,6 +10,12 @@ Person - event participants
 Location - event location
 Clue - available clue (generated in process of a game)
 
+spawn player near last event location
+modify starting interest/alertness according to scenario flow
+military base and facility area types!
+area type string id -> enum
+RegionArea - change switch type -> tile into map
+
 host memory + human society > 50 = access to infoweb
 knowledges?
 

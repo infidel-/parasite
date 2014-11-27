@@ -17,6 +17,10 @@ class DebugRegion
           name: "Remove energy spend per turn and movement cost",
           func: removeEnergySpend
         },
+        {
+          name: "Make region known",
+          func: makeRegionKnown 
+        },
         ];
     }
 
@@ -35,5 +39,13 @@ class DebugRegion
       game.player.vars.areaEnergyPerTurn = 0;
       game.player.vars.regionMoveEnergy = 0;
       game.log('Energy per turn and movement cost removed.');
+    }
+
+
+  function makeRegionKnown()
+    {
+      for (a in game.region.getRegion())
+        a.isKnown = true;
+      game.region.updateVisibility();
     }
 }

@@ -54,18 +54,7 @@ class Game
       // set random region (currently only 1 at all)
       var r = world.get(0);
       region.setRegion(r);
-      var a = null;
-      var cnt = 0;
-      while (true)
-        {
-          cnt++;
-          if (cnt > 100)
-            throw 'cannot find enterable area';
-
-          a = r.getRandom();
-          if (a.info.canEnter)
-            break;
-        }
+      var a = r.getRandomEnterable();
       region.player.createEntity(a.x, a.y);
       region.hide();
 
