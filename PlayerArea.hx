@@ -160,27 +160,27 @@ class PlayerArea
 
       // harden grip on the victim
       else if (action.id == 'hardenGrip')
-        actionHardenGrip();
+        hardenGripAction();
 
       // invade host 
       else if (action.id == 'invadeHost')
-        actionInvadeHost();
+        invadeHostAction();
 
       // try to reinforce control over host 
       else if (action.id == 'reinforceControl')
-        actionReinforceControl();
+        reinforceControlAction();
 
       // try to leave current host
       else if (action.id == 'leaveHost')
-        actionLeaveHost();
+        leaveHostAction();
 
       // access host memory
       else if (action.id == 'accessMemory')
-        actionAccessMemory();
+        accessMemoryAction();
 
       // learn about object 
       else if (action.id == 'learnObject')
-        actionLearnObject();
+        learnObjectAction();
 
       // spend energy
       if (state == PLR_STATE_HOST)
@@ -224,7 +224,7 @@ class PlayerArea
 
 
 // action: move player by dx,dy
-  public function actionMove(dx: Int, dy: Int)
+  public function moveAction(dx: Int, dy: Int)
     {
       // cannot move while in paralysis
       if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
@@ -237,7 +237,7 @@ class PlayerArea
       var ai = area.getAI(x + dx, y + dy);
       if (ai != null)
         {
-          actionFrobAI(ai);
+          frobAIAction(ai);
           return;
         }
 
@@ -247,12 +247,12 @@ class PlayerArea
 
 
 // frob the AI - atm just attach to host as a parasite
-  function actionFrobAI(ai: AI)
+  function frobAIAction(ai: AI)
     {
       // attach to new host
       if (state == PLR_STATE_PARASITE)
         {
-          actionAttachToHost(ai);
+          attachToHostAction(ai);
 
           // update HUD info
           game.updateHUD();
@@ -261,16 +261,16 @@ class PlayerArea
 
 
 // debug action: attach and invade
-  public function actionDebugAttachAndInvade(ai: AI)
+  public function debugAttachAndInvadeAction(ai: AI)
     {
-      actionAttachToHost(ai);
+      attachToHostAction(ai);
       attachHold = 100;
-      actionInvadeHost();
+      invadeHostAction();
     }
 
 
 // action: attack this ai
-  public function actionAttack(ai: AI)
+  public function attackAction(ai: AI)
     {
       // not in a host mode
       if (state != PLR_STATE_HOST)
@@ -339,7 +339,7 @@ class PlayerArea
 
 
 // action: attach to host
-  function actionAttachToHost(ai: AI)
+  function attachToHostAction(ai: AI)
     {
       // move to the same spot as AI
       moveTo(ai.x, ai.y);
@@ -359,7 +359,7 @@ class PlayerArea
 
 
 // action: harden grip when attached to host
-  function actionHardenGrip()
+  function hardenGripAction()
     {
       game.log('You harden your grip on the host.');
 
@@ -377,7 +377,7 @@ class PlayerArea
 
 
 // action: try to invade this AI host
-  function actionInvadeHost()
+  function invadeHostAction()
     {
 //      game.log('You attempt to invade the host.');
 //      if (Std.random(100) < )
@@ -399,7 +399,7 @@ class PlayerArea
 
 
 // action: try to reinforce control over host
-  function actionReinforceControl()
+  function reinforceControlAction()
     {
       game.log('You reinforce mental control over the host.');
 
@@ -411,7 +411,7 @@ class PlayerArea
 
 
 // action: try to leave this AI host
-  function actionLeaveHost()
+  function leaveHostAction()
     {
       player.host.onDetach();
       onDetach();
@@ -421,7 +421,7 @@ class PlayerArea
 
 
 // action: remove attached parasite from host
-  function actionDetach()
+  function detachAction()
     {
       attachHost.parasiteAttached = false;
       onDetach();
@@ -431,7 +431,7 @@ class PlayerArea
 
 
 // action: access host memory
-  function actionAccessMemory()
+  function accessMemoryAction()
     {
       // animals do not have any useful memories
       if (!player.host.isHuman)
@@ -448,7 +448,7 @@ class PlayerArea
 
       // can access skills from level 2
       if (params.hostSkillsMod > 0)
-        actionAccessSkills(params.hostSkillsMod);
+        accessSkillsAction(params.hostSkillsMod);
 
       // spend energy
       player.host.energy -= params.hostEnergyBase - player.host.psyche; 
@@ -467,7 +467,7 @@ class PlayerArea
 
 
 // action: learn about area object
-  function actionLearnObject()
+  function learnObjectAction()
     {
       var o = area.getObjectAt(x, y);
       game.log('You probe the brain of the host and learn what that object is for.');
@@ -477,7 +477,7 @@ class PlayerArea
 
 
 //  action: access host skills (called from accessMemory)
-  function actionAccessSkills(hostSkillsMod: Float)
+  function accessSkillsAction(hostSkillsMod: Float)
     {
       var hostSkill = player.host.skills.getRandomSkill();
       if (hostSkill == null)
@@ -511,7 +511,7 @@ class PlayerArea
     {
       // if player tries to move when attached, that detaches the parasite
       if (state == PLR_STATE_ATTACHED)
-        actionDetach();
+        detachAction();
 
       var nx = x + dx;
       var ny = y + dy;

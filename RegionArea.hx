@@ -15,6 +15,7 @@ class RegionArea
   public var height: Int;
   public var x: Int; // x,y in region
   public var y: Int;
+  public var event: scenario.Event; // event link
 
   public var alertnessMod: Float; // changes to alertness until next reset
   // we store all changes until player leaves the current area for propagation

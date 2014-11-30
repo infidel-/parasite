@@ -69,8 +69,8 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'dogfight with alien ship',
           nextOR: [ 'shipLanded' => 30, 'shipShotDown' => 70 ],
           notes: [
-            'The interceptor pilot describes the dogfight in detail.',
-            "A veteran pilot, he says it was unlike anything he's ever seen before.",
+            'The interceptor pilot described the dogfight in detail.',
+            "A veteran pilot, he said it was unlike anything he's ever seen before.",
             'The plane suffered heavy damage in a fight.',
             'The pilot is on psychic evaluation and extended leave.'
             ],

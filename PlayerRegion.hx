@@ -76,7 +76,7 @@ class PlayerRegion
   public function action(action: _PlayerAction)
     {
       if (action.id == 'enterArea')
-        actionEnterArea();
+        enterAreaAction();
 
       player.energy -= action.energy;
 
@@ -89,7 +89,7 @@ class PlayerRegion
 
 
 // action: enter area
-  function actionEnterArea()
+  function enterAreaAction()
     {
       game.log("You emerge from the sewers.");
       game.setLocation(Game.LOCATION_AREA);
@@ -97,7 +97,7 @@ class PlayerRegion
 
 
 // action: move player by dx,dy
-  public function actionMove(dx: Int, dy: Int)
+  public function moveAction(dx: Int, dy: Int)
     {
       // parasite state: check for energy
       if (player.state == PLR_STATE_PARASITE)

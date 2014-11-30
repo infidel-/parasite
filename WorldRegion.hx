@@ -274,12 +274,12 @@ class WorldRegion
 
 
 // get random area with this type id
-  public function getRandomWithType(t: String): RegionArea
+  public function getRandomWithType(t: String, noEvent: Bool): RegionArea
     {
       var tmp: Array<RegionArea> = Lambda.array(_list);
       var tmp2 = [];
       for (a in tmp)
-        if (a.typeID == t)
+        if (a.typeID == t && (!noEvent || a.event == null))
           tmp2.push(a);
 
       if (tmp2.length == 0)
@@ -290,9 +290,9 @@ class WorldRegion
 
 
 // spawn area with this type (actually just change some ground)
-  public inline function spawnArea(t: String): RegionArea
+  public inline function spawnArea(t: String, noEvent: Bool): RegionArea
     {
-      var a = getRandomWithType(ConstWorld.AREA_GROUND);
+      var a = getRandomWithType(ConstWorld.AREA_GROUND, noEvent);
       a.setType(t);
       return a;
     }

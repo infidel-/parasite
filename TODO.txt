@@ -1,4 +1,46 @@
-Information Web - This is displayed on a separate screen. This represents what the parasite knows about the events that resulted in its current state. It is a timeline of events in operation with lists of participating persons. At the start nothing is known but as the parasite unlocks memories of people that are close to these persons or are these persons, the web will fill up with information that eventually will reveal the masterminds and new goals.
+* timeline: save previous event link in event? or just move the other way in list (array)
+* timeline: generate npcs in event location areas and areas around them. kill at least half of them if their total number is > 3
+* timeline: all events are numbered. the clue contents will refer to these numbers.
+* raising human society knowledge to 25 (50?) will unlock access to timeline screen
+* display a window with text when this happens: "What am I? What is my purpose? I must know."
+* timeline represents all that parasite knows about the events that resulted in its current state. It is a timeline of events in scenario with lists of participating persons. 
+* there are two types of clues - physical (computer, document, etc) and event npc memory contents
+* there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
+* event npcs and physical clues do not spawn until player has access to timeline
+* physical clues only spawn at event location
+* physical clues stop spawning when everything about that event is known
+* when player is in the area with live event npcs attached, they will spawn periodically
+* when player gains access to timeline, he receives a few clues to start
+* using "Access Memory" on possessed event npc will unlock what he knows about the timeline
+* visually known event npcs must have an icon on them
+* knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
+* having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least 1 info bit known
+* info bits are: name, job + photo, location, dead/alive
+
+Physical clue/Memory contents:
+* event person name - allows researching that name
+* event person job and photo - allows visually spotting this person in the crowd
+* event person location - area x,y - allows actually finding that person
+* event location - area x,y - allows gathering physical clues at that location
+* event clue - each event note has a counter. filling that counter up will show player the note. there is 1-3 event clues in contents
+* event note - rare, only on physical clues, will open full event note
+
+timeline example:
+...
+Event 3: at (5,5)
+ +  The military personnel formed a cordon surrounding the scene.
+ -  ? [1/4]
+ -  ? [0/4]
+Participants:
+ -  Jacob Redfield (?) at (?,?) [no photo]
+ -  Jacob Redfield (?) at (4,5) [no photo]
+ -  Jacob Redfield (soldier) at (4,5) [photo]
+ + Jacob Redfield (soldier) at (4,5) [photo] [deceased]
+ -  ?
+...
+(+ means this person's memory has been mined)
+
+===
 
 scenario/
 Scenario - flowchart of event/person/location
@@ -10,6 +52,9 @@ Person - event participants
 Location - event location
 Clue - available clue (generated in process of a game)
 
+
+===============
+===============
 spawn player near last event location
 modify starting interest/alertness according to scenario flow
 military base and facility area types!

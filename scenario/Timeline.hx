@@ -59,7 +59,7 @@ class Timeline
 
 // init location from info 
   function initLocation(eventID: String, eventInfo: EventInfo, 
-      info: LocationInfo): Location
+      info: LocationInfo, event: Event): Location
     {
       if (info == null)
         return null;
@@ -96,19 +96,18 @@ class Timeline
       // find area with this type
       // single region atm
       var region = game.world.get(0);
-      var area = region.getRandomWithType(info.type);
+      var area = region.getRandomWithType(info.type, true);
       if (area == null)
-        area = region.spawnArea(info.type);
+        area = region.spawnArea(info.type, true);
       location.area = area;
+      area.event = event;
 
       // location is near this event id
       if (info.near != null)
         {
           Const.todo('LocationInfo.near: ' + info);
         }
-/*      
-  ?type: String, // location type
-*/  
+
       _locationsList.add(location);
       return location;
     }
@@ -152,10 +151,9 @@ class Timeline
               event.notes.push({ text: parse(n), isKnown: false });
 
           // parse location
-          event.location = initLocation(curID, curInfo, curInfo.location);
+          event.location = initLocation(curID, curInfo, curInfo.location, event);
 
 /*
-  ?location: ScenarioLocation, // event location
   ?npc: Map<String, Int>, // event npcs
 */
 
