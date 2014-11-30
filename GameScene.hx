@@ -18,6 +18,7 @@ class GameScene extends Scene
   public var inventoryWindow: InventoryWindow; // inventory window
   public var skillsWindow: SkillsWindow; // skills window
   public var organsWindow: OrgansWindow; // organs window
+  public var timelineWindow: TimelineWindow; // timeline window
   public var debugWindow: DebugWindow; // debug window
   public var entityAtlas: TileAtlas; // entity graphics
 
@@ -54,6 +55,7 @@ class GameScene extends Scene
       Input.define("skillsWindow", [ Key.F2 ]);
       Input.define("evolutionWindow", [ Key.F3 ]);
       Input.define("organsWindow", [ Key.F4 ]);
+      Input.define("timelineWindow", [ Key.F5 ]);
       Input.define("exit", [ Key.F8 ]);
       Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
@@ -81,6 +83,7 @@ class GameScene extends Scene
       skillsWindow = new SkillsWindow(game);
       organsWindow = new OrgansWindow(game);
       debugWindow = new DebugWindow(game);
+      timelineWindow = new TimelineWindow(game);
 
       // init game state
       game.init();
@@ -158,6 +161,8 @@ class GameScene extends Scene
             organsWindow.hide();
           else if (hudState == GameScene.HUDSTATE_DEBUG)
             debugWindow.hide();
+          else if (hudState == GameScene.HUDSTATE_TIMELINE)
+            timelineWindow.hide();
           else return;
 
           hudState = GameScene.HUDSTATE_DEFAULT;
@@ -191,6 +196,13 @@ class GameScene extends Scene
             {
               hudState = GameScene.HUDSTATE_ORGANS;
               organsWindow.show();
+            }
+
+          // open timeline window
+          else if (Input.pressed("timelineWindow"))
+            {
+              hudState = GameScene.HUDSTATE_TIMELINE;
+              timelineWindow.show();
             }
 
 #if debug
@@ -252,11 +264,11 @@ class GameScene extends Scene
 
       // area mode
       if (game.location == Game.LOCATION_AREA)
-        game.area.player.actionMove(dx, dy);
+        game.area.player.moveAction(dx, dy);
 
       // area mode
       else if (game.location == Game.LOCATION_REGION)
-        game.region.player.actionMove(dx, dy);
+        game.region.player.moveAction(dx, dy);
     }
 
 
@@ -333,4 +345,5 @@ class GameScene extends Scene
   public static var HUDSTATE_SKILLS = 'skills'; // skills window open
   public static var HUDSTATE_ORGANS = 'organs'; // organs window open
   public static var HUDSTATE_DEBUG = 'debug'; // debug window open
+  public static var HUDSTATE_TIMELINE = 'timeline'; // timeline window open
 }

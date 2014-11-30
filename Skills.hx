@@ -4,10 +4,14 @@ import ConstSkills;
 
 class Skills 
 {
+  var game: Game;
   var _list: List<Skill>; // list of skills
+  var isPlayer: Bool;
 
-  public function new()
+  public function new(g: Game, ispv: Bool)
     {
+      game = g;
+      isPlayer = ispv;
       _list = new List<Skill>();
     }
 
@@ -50,9 +54,16 @@ class Skills
           addID(id, val);
           return;
         }
+      var oldLevel = sk.level;
 
       sk.level += val;
       sk.level = Const.clampFloat(sk.level, 0, 99.9);
+
+      // increasing player skills triggers things
+      if (isPlayer)
+        // gaining society opens timeline
+        if (id == KNOW_SOCIETY && oldLevel < 25 && sk.level >= 25)
+          game.player.unlockTimeline();
     }
 
 

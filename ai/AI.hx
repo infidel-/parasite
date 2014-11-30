@@ -129,7 +129,7 @@ class AI
       _turnsInvisible = 0;
 
       inventory = new Inventory(game);
-      skills = new Skills();
+      skills = new Skills(game, false);
       organs = new Organs(game, this);
       effects = new Effects(game, this);
     }

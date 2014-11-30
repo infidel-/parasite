@@ -64,6 +64,10 @@ class DebugArea
           name: 'Set area alertness to 100',
           func: setMaxAlertness
         },
+        {
+          name: 'Unlock timeline',
+          func: unlockTimeline 
+        },
         ];
     }
 
@@ -153,7 +157,7 @@ class DebugArea
       // spawn AI, attach to it and invade
       var ai = new CivilianAI(game, area.player.x, area.player.y);
       area.addAI(ai);
-      area.player.actionDebugAttachAndInvade(ai);
+      area.player.debugAttachAndInvadeAction(ai);
       game.player.hostControl = 100;
 
       // give weapon
@@ -208,5 +212,14 @@ class DebugArea
       game.scene.debugWindow.hide();
       game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
       game.setLocation(Game.LOCATION_REGION);
+    }
+
+
+// unlock event timeline
+  function unlockTimeline()
+    {
+      game.log('Timeline unlocked.');
+      game.player.skills.increase(KNOW_SOCIETY, 1);
+      game.player.skills.increase(KNOW_SOCIETY, 24);
     }
 }

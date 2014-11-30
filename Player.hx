@@ -47,7 +47,16 @@ class Player
       hostControl = 0;
       knownItems = new List<String>();
 
-      skills = new Skills();
+      skills = new Skills(game, true);
+    }
+
+
+// unlock event timeline
+  public function unlockTimeline()
+    {
+      log("What am I? What is my purpose? I must know.");
+      Const.todo('proper unlock timeline screen');
+      game.timeline.isLocked = false;
     }
 
 

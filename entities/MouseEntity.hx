@@ -139,7 +139,7 @@ class MouseEntity extends Entity
             {
               if (game.player.state == PLR_STATE_HOST && ai != null &&
                   ai != game.player.host)
-                game.area.player.actionAttack(ai);
+                game.area.player.attackAction(ai);
             }
         }
 

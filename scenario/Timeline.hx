@@ -8,9 +8,10 @@ class Timeline
 {
   var game: Game;
   var scenario: Scenario;
+  public var isLocked: Bool; // is timeline screen locked?
 
   var _eventsMap: Map<String, Event>; // events hash map
-  var _eventsList: List<Event>; // ordered events list
+  var _eventsList: Array<Event>; // ordered events list
   var _locationsList: List<Location>; // ordered locations list
   var _names: Map<String, String>; // fully parsed from templates names
   var _variables: Map<String, Dynamic>; // timeline variables map 
@@ -20,10 +21,17 @@ class Timeline
       game = g;
 
       _eventsMap = new Map();
-      _eventsList = new List();
+      _eventsList = []; 
       _locationsList = new List();
       _variables = new Map<String, Dynamic>();
       _names = new Map();
+      isLocked = true;
+    }
+
+
+  public function iterator()
+    {
+      return _eventsList.iterator();
     }
 
 
@@ -84,7 +92,10 @@ class Timeline
 
       var location = new Location(info.id);
       if (info.name != null)
-        location.name = parse(info.name);
+        {
+          location.name = parse(info.name);
+          location.hasName = true;
+        }
 
       if (info.type == null)
         {
@@ -113,6 +124,40 @@ class Timeline
     }
 
 
+// init npc from info 
+  function initNPC(eventID: String, eventInfo: EventInfo, 
+      npc: Map<String, Int>, event: Event) 
+    {
+      // count total number
+      var total = 0;
+      for (n in npc)
+        total += n;
+
+      for (type in npc.keys())
+        {
+          var npc = new NPC();
+          npc.event = event;
+          npc.job = type;
+          var region = game.world.get(0);
+          if (event.location != null)
+            npc.area = region.getRandomAround(event.location.area);
+          else
+            {
+              Const.todo('spawn event npcs in appropriate area types');
+              var tmp = [ ConstWorld.AREA_CITY_LOW,
+                ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
+              npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
+            }
+      
+          // event coverup kills some npcs
+          if (total > 3)
+            npc.isDead = (Std.random(100) < 50 ? true : false);
+
+          event.npc.push(npc);
+        }
+    }
+
+
 // init a new scenario
   public function init()
     {
@@ -122,14 +167,16 @@ class Timeline
       parseNames();
 
       // walk through available events generating a new timeline
+      var n = 0;
       var curID = scenario.startEvent;
       var curInfo = scenario.flow.get(scenario.startEvent);
       while (true)
         {
           var event = new Event(curID);
+          event.num = n++;
           event.name = curInfo.name;
           _eventsMap.set(curID, event);
-          _eventsList.add(event);
+          _eventsList.push(event);
 
           // set timeline variables
           if (curInfo.setVariables != null)
@@ -148,14 +195,14 @@ class Timeline
           // parse event notes
           if (curInfo.notes != null)
             for (n in curInfo.notes)
-              event.notes.push({ text: parse(n), isKnown: false });
+              event.notes.push({ text: parse(n), isKnown: false, clues: 0 });
 
           // parse location
           event.location = initLocation(curID, curInfo, curInfo.location, event);
 
-/*
-  ?npc: Map<String, Int>, // event npcs
-*/
+          // create event npcs
+          if (curInfo.npc != null)
+            initNPC(curID, curInfo, curInfo.npc, event);
 
           // timeline finish
           if (curInfo.next == null && curInfo.nextOR == null)
@@ -199,11 +246,12 @@ class Timeline
           if (curInfo == null)
             throw 'No such event in scenario: ' + curID;
         }
-
+/*
       trace(_eventsList);
       trace(_names);
       trace(_variables);
       trace(_locationsList);
+*/
     }
 
 

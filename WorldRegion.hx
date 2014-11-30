@@ -289,6 +289,30 @@ class WorldRegion
     }
 
 
+// get random area around this one
+  public function getRandomAround(area: RegionArea): RegionArea
+    {
+      var tmp: Array<RegionArea> = [];
+      var a = getXY(area.x, area.y);
+      if (a != null)
+        tmp.push(a);
+      var a = getXY(area.x + 1, area.y);
+      if (a != null)
+        tmp.push(a);
+      var a = getXY(area.x - 1, area.y);
+      if (a != null)
+        tmp.push(a);
+      var a = getXY(area.x, area.y + 1);
+      if (a != null)
+        tmp.push(a);
+      var a = getXY(area.x, area.y - 1);
+      if (a != null)
+        tmp.push(a);
+
+      return tmp[Std.random(tmp.length)];
+    }
+
+
 // spawn area with this type (actually just change some ground)
   public inline function spawnArea(t: String, noEvent: Bool): RegionArea
     {

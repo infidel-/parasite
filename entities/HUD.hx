@@ -202,6 +202,9 @@ class HUD
           buf.add('F4: Body features\n');
         }
 
+      if (!game.timeline.isLocked)
+        buf.add('F5: Event timeline\n');
+
       _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();
       _textFieldBack.graphics.beginFill(0x202020, .75);
