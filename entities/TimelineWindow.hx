@@ -29,14 +29,19 @@ class TimelineWindow
       // actions list
       var font = Assets.getFont("font/04B_03__.ttf");
       _textField = new TextField();
-      _textField.autoSize = TextFieldAutoSize.LEFT;
+      _textField.wordWrap = true;
+//      _textField.autoSize = TextFieldAutoSize.LEFT;
+      _textField.width = HXP.width;
+      _textField.height = HXP.height;
       var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _textField.defaultTextFormat = fmt;
       _back = new Sprite();
       _back.addChild(_textField);
-      _back.x = 20;
-      _back.y = 20;
+      _back.x = 0;
+      _back.y = 0;
+      _back.width = HXP.width;
+      _back.height = HXP.height;
       HXP.stage.addChild(_back);
     }
 
@@ -49,6 +54,28 @@ class TimelineWindow
       game.scene.hud.update(); // update HUD
     }
 */
+
+
+// scroll window up/down
+  public function scroll(n: Int)
+    {
+      _textField.scrollV += n;
+    }
+
+
+// scroll window to beginning
+  public function scrollToBegin()
+    {
+      _textField.scrollV = 0;
+    }
+
+
+// scroll window to end 
+  public function scrollToEnd()
+    {
+      _textField.scrollV = _textField.maxScrollV;
+    }
+
 
 // update and show window
   public function show()
@@ -74,6 +101,9 @@ class TimelineWindow
 
       for (event in game.timeline)
         {
+          if (event.isHidden)
+            continue;
+
           // first line
           buf.add('Event ' + event.num);
           if (event.location != null)
@@ -87,11 +117,9 @@ class TimelineWindow
         
           // event notes
           for (n in event.notes)
-            {
-              buf.add(' + ');
-              buf.add(n.text);
-              buf.add('\n');
-            }
+            if (n.isKnown)
+              buf.add(' + ' + n.text + '\n');
+            else buf.add(' - ? [' + n.clues + '/4]\n');
 
           // event participants
           buf.add('Participants:\n');
@@ -110,6 +138,8 @@ class TimelineWindow
         }
 
       _textField.htmlText = buf.toString();
+      _textField.width = HXP.width;
+      _textField.height = HXP.height;
       _back.graphics.clear();
       _back.graphics.beginFill(0x202020, .95);
       _back.graphics.drawRect(0, 0, _textField.width, _textField.height);

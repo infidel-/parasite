@@ -135,25 +135,31 @@ class Timeline
 
       for (type in npc.keys())
         {
-          var npc = new NPC();
-          npc.event = event;
-          npc.job = type;
-          var region = game.world.get(0);
-          if (event.location != null)
-            npc.area = region.getRandomAround(event.location.area);
-          else
+          var max = npc.get(type);
+          if (max > 3)
+            max = Std.int(max / 2) + Std.random(Std.int(max / 2));
+          for (i in 0...max)
             {
-              Const.todo('spawn event npcs in appropriate area types');
-              var tmp = [ ConstWorld.AREA_CITY_LOW,
-                ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
-              npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
-            }
-      
-          // event coverup kills some npcs
-          if (total > 3)
-            npc.isDead = (Std.random(100) < 50 ? true : false);
+              var npc = new NPC();
+              npc.event = event;
+              npc.job = type;
+              var region = game.world.get(0);
+              if (event.location != null)
+                npc.area = region.getRandomAround(event.location.area);
+              else
+                {
+                  Const.todo('spawn event npcs in appropriate area types');
+                  var tmp = [ ConstWorld.AREA_CITY_LOW,
+                    ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
+                  npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
+                }
+          
+              // event coverup kills some npcs
+              if (total > 3)
+                npc.isDead = (Std.random(100) < 50 ? true : false);
 
-          event.npc.push(npc);
+              event.npc.push(npc);
+            }
         }
     }
 
@@ -167,7 +173,7 @@ class Timeline
       parseNames();
 
       // walk through available events generating a new timeline
-      var n = 0;
+      var n = 1;
       var curID = scenario.startEvent;
       var curInfo = scenario.flow.get(scenario.startEvent);
       while (true)
@@ -175,6 +181,7 @@ class Timeline
           var event = new Event(curID);
           event.num = n++;
           event.name = curInfo.name;
+          event.isHidden = (curInfo.isHidden == true);
           _eventsMap.set(curID, event);
           _eventsList.push(event);
 

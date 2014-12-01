@@ -26,6 +26,7 @@ class ScenarioAlienCrashLanding extends Scenario
         'alienMission' => {
           name: 'alien mission',
           next: 'shipSpottedCiv',
+          isHidden: true,
           setVariablesFunc: function() {
               var tmp = [ 'abduction', 'infiltration', 'research' ];
               return [ { key: 'alienMissionType', val: tmp[Std.random(tmp.length)] } ];

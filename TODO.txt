@@ -1,6 +1,6 @@
 + timeline: generate npcs in event location areas and areas around them. kill at least half of them if their total number is > 3
 + timeline: all events are numbered. the clue contents will refer to these numbers.
-* raising human society knowledge to 25 (50?) will unlock access to timeline screen
++ raising human society knowledge to 25 (50?) will unlock access to timeline screen
 + display a window with text when this happens: "What am I? What is my purpose? I must know."
 * timeline represents all that parasite knows about the events that resulted in its current state. It is a timeline of events in scenario with lists of participating persons. 
 * there are two types of clues - physical (computer, document, etc) and event npc memory contents

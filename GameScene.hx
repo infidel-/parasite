@@ -41,6 +41,12 @@ class GameScene extends Scene
       Input.define("upright", [ Key.E, Key.NUMPAD_9 ]);
       Input.define("downleft", [ Key.Z, Key.NUMPAD_1 ]);
       Input.define("downright", [ Key.C, Key.NUMPAD_3 ]);
+
+      Input.define("pageup", [ Key.PAGE_UP ]);
+      Input.define("pagedown", [ Key.PAGE_DOWN ]);
+      Input.define("home", [ Key.HOME ]);
+      Input.define("end", [ Key.END ]);
+
       Input.define("action1", [ Key.DIGIT_1 ]);
       Input.define("action2", [ Key.DIGIT_2 ]);
       Input.define("action3", [ Key.DIGIT_3 ]);
@@ -136,8 +142,9 @@ class GameScene extends Scene
       if (Input.lastKey != null)
         trace(Key.nameOfKey(Input.lastKey));
 */
-      handleMovement();
-      handleWindows();
+      var ret = handleWindows();
+      if (!ret)
+        handleMovement();
       handleActions();
     
       if (Input.pressed("exit"))
@@ -146,28 +153,69 @@ class GameScene extends Scene
 
 
 // handle opening and closing windows
-  function handleWindows()
+  function handleWindows(): Bool
     {
-      // close windows
-      if (Input.pressed("closeWindow"))
+      // window open
+      if (hudState != GameScene.HUDSTATE_DEFAULT)
         {
-          if (hudState == GameScene.HUDSTATE_EVOLUTION)
-            evolutionWindow.hide();
-          else if (hudState == GameScene.HUDSTATE_INVENTORY)
-            inventoryWindow.hide();
-          else if (hudState == GameScene.HUDSTATE_SKILLS)
-            skillsWindow.hide();
-          else if (hudState == GameScene.HUDSTATE_ORGANS)
-            organsWindow.hide();
-          else if (hudState == GameScene.HUDSTATE_DEBUG)
-            debugWindow.hide();
-          else if (hudState == GameScene.HUDSTATE_TIMELINE)
-            timelineWindow.hide();
-          else return;
+          // get amount of lines
+          var lines = 0;
+          if (Input.pressed("up"))
+            lines = -1;
+          else if (Input.pressed("down"))
+            lines = 1;
+          else if (Input.pressed("pageup"))
+            lines = -20;
+          else if (Input.pressed("pagedown"))
+            lines = 20;
 
-          hudState = GameScene.HUDSTATE_DEFAULT;
+          if (lines != 0)
+            {
+              if (hudState == GameScene.HUDSTATE_TIMELINE)
+                timelineWindow.scroll(lines);
+
+              return true;
+            }
+
+          if (Input.pressed("home"))
+            {
+              if (hudState == GameScene.HUDSTATE_TIMELINE)
+                timelineWindow.scrollToBegin();
+
+              return true;
+            }
+
+          if (Input.pressed("end"))
+            {
+              if (hudState == GameScene.HUDSTATE_TIMELINE)
+                timelineWindow.scrollToEnd();
+
+              return true;
+            }
+
+
+          // close windows
+          if (Input.pressed("closeWindow"))
+            {
+              if (hudState == GameScene.HUDSTATE_EVOLUTION)
+                evolutionWindow.hide();
+              else if (hudState == GameScene.HUDSTATE_INVENTORY)
+                inventoryWindow.hide();
+              else if (hudState == GameScene.HUDSTATE_SKILLS)
+                skillsWindow.hide();
+              else if (hudState == GameScene.HUDSTATE_ORGANS)
+                organsWindow.hide();
+              else if (hudState == GameScene.HUDSTATE_DEBUG)
+                debugWindow.hide();
+              else if (hudState == GameScene.HUDSTATE_TIMELINE)
+                timelineWindow.hide();
+              else return false;
+
+              hudState = GameScene.HUDSTATE_DEFAULT;
+            }
         }
 
+      // no windows open
       else if (hudState == GameScene.HUDSTATE_DEFAULT)
         {
           // open inventory window
@@ -214,6 +262,8 @@ class GameScene extends Scene
             }
 #end            
         }
+
+      return false;
     }
 
 
