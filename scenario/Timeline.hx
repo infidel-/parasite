@@ -133,6 +133,7 @@ class Timeline
       for (n in npc)
         total += n;
 
+      Const.todo('change actual npc type');
       for (type in npc.keys())
         {
           var max = npc.get(type);
@@ -285,9 +286,16 @@ class Timeline
 
 
 // get event by id
-  public function getEvent(id: String): Event
+  public inline function getEvent(id: String): Event
     {
       return _eventsMap.get(id);
+    }
+
+
+// get starting location event
+  public inline function getStartEvent(): Event
+    {
+      return getEvent(scenario.playerStartLocation);
     }
 }
 

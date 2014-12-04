@@ -14,7 +14,7 @@ class NPC
   public var area: RegionArea; // location area
   public var areaKnown: Bool; // location known to player?
   public var isDead: Bool; // is this npc dead?
-  public var isDeadKnown: Bool; // is dead known to player?
+  public var isDeadKnown: Bool; // is dead/alive known to player?
   public var event: Event; // event
 
   public function new()

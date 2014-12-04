@@ -99,19 +99,51 @@ class TimelineWindow
 
       buf.add('Event timeline\n===\n\n');
 
+      var n = 1;
       for (event in game.timeline)
         {
+          // hidden event
           if (event.isHidden)
             continue;
+    
+          // check if anything is known at all
+          var npcSomethingKnown = false;
+          var notesSomethingKnown = false;
+          for (npc in event.npc)
+            {
+              // nothing is known
+              if (!npc.nameKnown && !npc.jobKnown && !npc.areaKnown && 
+                  !npc.isDeadKnown)
+                continue;
 
-          // first line
-          buf.add('Event ' + event.num);
+              npcSomethingKnown = true; // something is known about some npc
+              break;
+            }
+
+          for (n in event.notes)
+            if (n.isKnown || n.clues > 0)
+              {
+                notesSomethingKnown = true; // something is known about some note
+                break;
+              }
+
+          // nothing is known, skip that event
+          if (!event.locationKnown && !npcSomethingKnown && !notesSomethingKnown)
+            continue;
+
+          // first line (events are always numbered relative to known ones)
+          buf.add('Event ' + (n++));
           if (event.location != null)
             {
               buf.add(': ');
-              if (event.location.hasName)
-                buf.add(event.location.name + ' ');
-              buf.add('at (' + event.location.area.x + ',' + event.location.area.y + ')');
+              if (event.locationKnown)
+                {
+                  if (event.location.hasName)
+                    buf.add(event.location.name + ' ');
+                  buf.add('at (' + event.location.area.x + ',' +
+                    event.location.area.y + ')');
+                }
+              else buf.add('at (?,?)');
             }
           buf.add('\n');
         
@@ -119,20 +151,38 @@ class TimelineWindow
           for (n in event.notes)
             if (n.isKnown)
               buf.add(' + ' + n.text + '\n');
-            else buf.add(' - ? [' + n.clues + '/4]\n');
+            else if (n.clues > 0)
+              buf.add(' - ? [' + n.clues + '/4]\n');
 
           // event participants
           buf.add('Participants:\n');
-          for (npc in event.npc)
-            {
-              buf.add(' + ');
-              buf.add(npc.name + ' ');
-              buf.add('(' + npc.job + ') ');
-              buf.add('at (' + npc.area.x + ',' + npc.area.y + ') ');
-              buf.add('[photo] ');
-              buf.add('[deceased]');
-              buf.add('\n');
-            }
+          Const.todo("+10 deceased persons");
+          if (npcSomethingKnown)
+            for (npc in event.npc)
+              {
+                // nothing is known
+                if (!npc.nameKnown && !npc.jobKnown && !npc.areaKnown && 
+                    !npc.isDeadKnown)
+                  continue;
+
+                // npc fully known
+                if (npc.nameKnown && npc.jobKnown && npc.areaKnown &&
+                    npc.isDeadKnown)
+                  buf.add(' + ');
+                else buf.add(' - ');
+                buf.add((npc.nameKnown ? npc.name : '?') + ' ');
+                buf.add('(' + (npc.jobKnown ? npc.job : '?') + ') ');
+                if (npc.areaKnown)
+                  buf.add('at (' + npc.area.x + ',' + npc.area.y + ') ');
+                else buf.add('at (?,?) ');
+                buf.add(npc.jobKnown ? '[photo] ' : '[no photo] ');
+                if (npc.isDead && npc.isDeadKnown)
+                  buf.add('[deceased]');
+                buf.add('\n');
+              }
+
+          // nothing known about any npcs
+          else buf.add('  unknown');
         
           buf.add('\n');
         }

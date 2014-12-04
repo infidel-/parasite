@@ -10,6 +10,7 @@ class Event
   public var name: String; // event name
   public var notes: Array<EventNote>; // event notes 
   public var location: Location; // event location link (can be null)
+  public var locationKnown: Bool; // event location known?
   public var npc: Array<NPC>; // event npcs 
 
   public function new(vid: String)
