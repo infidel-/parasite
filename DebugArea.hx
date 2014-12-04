@@ -68,6 +68,10 @@ class DebugArea
           name: 'Unlock timeline',
           func: unlockTimeline 
         },
+        {
+          name: 'Open timeline',
+          func: openTimeline 
+        },
         ];
     }
 
@@ -221,5 +225,26 @@ class DebugArea
       game.log('Timeline unlocked.');
       game.player.skills.increase(KNOW_SOCIETY, 1);
       game.player.skills.increase(KNOW_SOCIETY, 24);
+    }
+
+
+// open event timeline
+  function openTimeline()
+    {
+      game.log('Timeline opened.');
+      for (e in game.timeline)
+        {
+          e.locationKnown = true;
+          for (n in e.notes)
+            n.isKnown = true;
+
+          for (npc in e.npc)
+            {
+              npc.nameKnown = true;
+              npc.jobKnown = true;
+              npc.areaKnown = true;
+              npc.isDeadKnown = true;
+            }
+        }
     }
 }

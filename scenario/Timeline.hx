@@ -154,6 +154,8 @@ class Timeline
                     ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
                   npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
                 }
+
+              npc.area.npc.add(npc);
           
               // event coverup kills some npcs
               if (total > 3)

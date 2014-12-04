@@ -20,6 +20,17 @@ class Event
       notes = [];
       npc = []; 
     }
+
+
+// all notes known?
+  public function notesKnown(): Bool
+    {
+      for (n in notes)
+        if (!n.isKnown)
+          return false;
+
+      return true;
+    }
 }
 
 

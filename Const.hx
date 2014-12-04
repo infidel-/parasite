@@ -27,14 +27,18 @@ class Const
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;
 
-
-  public static var ROW_ALERT = 0;
+  // alert row frames
   public static var FRAME_ALERT1 = 1;
   public static var FRAME_ALERT2 = 2;
   public static var FRAME_ALERT3 = 3;
   public static var FRAME_ALERTED = 4;
   public static var FRAME_PANIC = 5;
   public static var FRAME_PARALYSIS = 6;
+
+  // region row frames
+  public static var FRAME_EVENT_UNKNOWN = 1;
+  public static var FRAME_EVENT_KNOWN = 2;
+  public static var FRAME_EVENT_NPC = 3;
 
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;
@@ -43,13 +47,16 @@ class Const
   public static var FRAME_PANIC_GAS = 0;
   public static var FRAME_PARALYSIS_GAS = 1;
 
-  public static var ROW_OBJECT = 1;
-  public static var ROW_EFFECT = 2;
-  public static var ROW_PARASITE = 3;
-  public static var ROW_HUMAN = 4;
-  public static var ROW_DOG = 5;
-  public static var ROW_CIVILIAN = 6;
-  public static var ROW_POLICE = 7;
+  public static var ROW_ALERT = 0;
+  public static var ROW_REGION_ICON = 1;
+  public static var ROW_OBJECT = 2;
+  public static var ROW_EFFECT = 3;
+  public static var ROW_PARASITE = 4;
+  public static var ROW_HUMAN = 5;
+  public static var ROW_DOG = 6;
+  public static var ROW_CIVILIAN = 7;
+  public static var ROW_POLICE = 8;
+
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_BODY = 1;
   public static var FRAME_MASK_POSSESSED = 2;

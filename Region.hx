@@ -10,6 +10,8 @@ class Region
 
   var _tilemap: Tilemap;
   var _tilemapAlert: Tilemap;
+  var _tilemapEvent: Tilemap;
+  var _tilemapNPC: Tilemap;
   var _cells: Array<Array<Int>>; // cell types
   var region: WorldRegion; // region info link
 
@@ -19,6 +21,8 @@ class Region
   public var height: Int;
   public var entity: Entity; // entity
   public var entityAlert: Entity; // entity
+  public var entityEvent: Entity; // entity
+  public var entityNPC: Entity; // entity
   public var manager: RegionManager; // event manager (region mode)
   public var player: PlayerRegion; // game player (region mode)
   public var debug: DebugRegion; // debug actions (region mode)
@@ -28,12 +32,18 @@ class Region
       game = g;
       _tilemap = null;
       _tilemapAlert = null;
+      _tilemapEvent = null;
+      _tilemapNPC = null;
       width = 0;
       height = 0;
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
       entityAlert = new Entity();
       entityAlert.layer = Const.LAYER_TILES - 1;
+      entityEvent = new Entity();
+      entityEvent.layer = Const.LAYER_TILES - 2;
+      entityNPC = new Entity();
+      entityNPC.layer = Const.LAYER_TILES - 3;
       manager = new RegionManager(g);
       player = new PlayerRegion(g, this);
       debug = new DebugRegion(g, this);
@@ -65,6 +75,17 @@ class Region
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entityAlert.addGraphic(_tilemapAlert);
 
+      // TODO: i'll probably have to rework that into separate entities for icons later
+      _tilemapEvent = new Tilemap("gfx/entities.png",
+        width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
+      entityEvent.addGraphic(_tilemapEvent);
+
+      _tilemapNPC = new Tilemap("gfx/entities.png",
+        width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
+      entityNPC.addGraphic(_tilemapNPC);
+
       populate();
     }
 
@@ -89,11 +110,13 @@ class Region
       else player.entity.setMask(Const.FRAME_EMPTY, row);
       player.entity.setImage(Const.FRAME_DEFAULT, row);
 
-      // set alertness images
-      updateAlertness();
+      // set all icons
+      updateIcons();
 
       entity.visible = true;
       entityAlert.visible = true;
+      entityEvent.visible = true;
+      entityNPC.visible = true;
       player.entity.visible = true;
       updateVisibility();
     }
@@ -104,6 +127,8 @@ class Region
     {
       entity.visible = false;
       entityAlert.visible = false;
+      entityEvent.visible = false;
+      entityNPC.visible = false;
       player.entity.visible = false;
     }
 
@@ -139,7 +164,7 @@ class Region
             a.alertness -= 1;
           }
 
-      updateAlertness();
+      updateIcons();
     }
 
 
@@ -162,23 +187,65 @@ class Region
     }
 
 
-// update alertness images
-  public function updateAlertness()
+// update alertness icon for this area
+  function updateAlertness(a: RegionArea)
+    {
+      // set alertness mask
+      var alertFrame = Const.FRAME_EMPTY;
+      if (a.alertness > 75)
+        alertFrame = Const.FRAME_ALERT3;
+      else if (a.alertness > 50)
+        alertFrame = Const.FRAME_ALERT2;
+      else if (a.alertness > 0)
+        alertFrame = Const.FRAME_ALERT1;
+      _tilemapAlert.setTile(a.x, a.y, alertFrame);
+    }
+
+
+// update event icon for this area
+  function updateEvent(a: RegionArea)
+    {
+      if (game.timeline.isLocked || a.event == null || !a.event.locationKnown)
+        return;
+
+      var frame = Const.FRAME_EVENT_UNKNOWN;
+      if (a.event.notesKnown())
+        frame = Const.FRAME_EVENT_KNOWN;
+
+      _tilemapEvent.setTile(a.x, a.y, Const.ROW_REGION_ICON * 9 + frame);
+    }
+
+
+// update npc icon for this area
+  function updateNPC(a: RegionArea)
+    {
+      if (game.timeline.isLocked || a.npc.length == 0)
+        return;
+
+      var ok = true;
+      for (npc in a.npc)
+        if (!npc.isDead && npc.areaKnown && !npc.isScanned)
+          ok = false;
+
+      if (ok)
+        return;
+
+      _tilemapNPC.setTile(a.x, a.y,
+        Const.ROW_REGION_ICON * 9 + Const.FRAME_EVENT_NPC);
+    }
+
+
+// update icons 
+  function updateIcons()
     {
       for (y in 0...height)
         for (x in 0...width)
           {
             var a = region.getXY(x, y);
 
-            // set alertness mask
-            var alertFrame = Const.FRAME_EMPTY;
-            if (a.alertness > 75)
-              alertFrame = Const.FRAME_ALERT3;
-            else if (a.alertness > 50)
-              alertFrame = Const.FRAME_ALERT2;
-            else if (a.alertness > 0)
-              alertFrame = Const.FRAME_ALERT1;
-            _tilemapAlert.setTile(x, y, alertFrame);
+            updateAlertness(a);
+            updateEvent(a);
+            updateNPC(a);
           }
     }
 

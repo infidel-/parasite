@@ -111,11 +111,15 @@ class HUD
       var buf = new StringBuf();
 
       // player intent
-      buf.add('Turn: ' + game.turns + '\n');
+      buf.add('Turn: ' + game.turns + ', at (');
       if (game.location == Game.LOCATION_AREA)
-        buf.add('Actions: ' + game.area.player.ap + '\n');
+          buf.add(
+            game.area.player.x + ',' + game.area.player.y + ')\n' +
+            'Actions: ' + game.area.player.ap + '\n');
       else if (game.location == Game.LOCATION_REGION)
-        buf.add(game.region.currentArea.info.name + '\n');
+        buf.add(
+          game.region.player.x + ',' + game.region.player.y + ')\n' +
+          game.region.currentArea.info.name + '\n');
       buf.add('===\n');
 
       var colEnergy = 
