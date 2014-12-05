@@ -38,7 +38,7 @@ class BodyObject extends AreaObject
         for (item in inventory)
           {
             var name = (game.player.knowsItem(item.id) ? 
-              item.info.name : item.info.unknown);
+              item.name : item.info.unknown);
             addAction('get.' + item.id, 'Get ' + name, 5);
           }
     }
@@ -49,16 +49,16 @@ class BodyObject extends AreaObject
     {
       // search body for stuff
       if (id == 'searchBody')
-        actionSearch();
+        searchAction();
 
       // get stuff from body
       else if (id.substr(0, 4) == 'get.')
-        actionGet(id.substr(4));
+        getAction(id.substr(4));
     }
 
 
 // ACTION: get stuff
-  function actionGet(id: String)
+  function getAction(id: String)
     {
       for (item in inventory)
         if (item.id == id)
@@ -71,7 +71,7 @@ class BodyObject extends AreaObject
 
 
 // ACTION: search body
-  function actionSearch()
+  function searchAction()
     {
       if (Std.random(100) < game.player.hostControl)
         game.log("Your host resists your command.");

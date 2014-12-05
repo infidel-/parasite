@@ -41,9 +41,9 @@ class Region
       entityAlert = new Entity();
       entityAlert.layer = Const.LAYER_TILES - 1;
       entityEvent = new Entity();
-      entityEvent.layer = Const.LAYER_TILES - 2;
+      entityEvent.layer = Const.LAYER_EFFECT - 2;
       entityNPC = new Entity();
-      entityNPC.layer = Const.LAYER_TILES - 3;
+      entityNPC.layer = Const.LAYER_EFFECT - 3;
       manager = new RegionManager(g);
       player = new PlayerRegion(g, this);
       debug = new DebugRegion(g, this);

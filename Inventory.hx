@@ -105,7 +105,7 @@ class Inventory
 
 
 // add item by id
-  public function addID(id: String)
+  public function addID(id: String, ?name: String)
     {
       var info = ConstItems.getInfo(id);
       if (info == null)
@@ -114,7 +114,13 @@ class Inventory
           return;
         }
 
-      var item = { id: id, info: info };
+      if (name == null)
+        {
+          name = info.name;
+          if (info.names != null) // pick a name
+            name = info.names[Std.random(info.names.length)];
+        }
+      var item = { id: id, info: info, name: name };
       _list.add(item);
     }
 
@@ -137,5 +143,6 @@ class Inventory
 typedef Item = 
 {
   var id: String; // item id
+  var name: String; // actual item name (from a group of names)
   var info: ItemInfo; // item info link
 };

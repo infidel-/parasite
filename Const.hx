@@ -42,6 +42,7 @@ class Const
 
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;
+  public static var FRAME_PAPER = 1;
 
   // effect row frames
   public static var FRAME_PANIC_GAS = 0;

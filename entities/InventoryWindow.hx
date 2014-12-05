@@ -89,7 +89,7 @@ class InventoryWindow
         {
           n++;
           var knowsItem = game.player.knowsItem(item.id);  
-          var name = (knowsItem ? item.info.name : item.info.unknown);
+          var name = (knowsItem ? item.name : item.info.unknown);
           buf.add(name + '\n');
 
           if (!knowsItem)

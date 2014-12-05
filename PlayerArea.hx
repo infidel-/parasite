@@ -473,6 +473,8 @@ class PlayerArea
       game.log('You probe the brain of the host and learn what that object is for.');
 
       knownObjects.add(o.type);
+      if (o.itemInfo != null)
+        player.addKnownItem(o.itemInfo.id);
     }
 
 

@@ -18,6 +18,7 @@ class ConstItems
     {
       id: 'fists',
       name: 'fists',
+      type: 'weapon',
       unknown: 'fists',
       verb1: 'punch',
       verb2: 'punches',
@@ -33,9 +34,11 @@ class ConstItems
 
 // all item infos
   public static var items: Array<ItemInfo> = [
+    // ========= ******* weapons ********* ==========
     {
       id: 'baton',
       name: 'baton',
+      type: 'weapon',
       unknown: 'hard elongated object',
       verb1: 'hit',
       verb2: 'hits',
@@ -50,6 +53,7 @@ class ConstItems
     {
       id: 'pistol',
       name: 'pistol',
+      type: 'weapon',
       unknown: 'hard metallic object',
       verb1: 'shoot',
       verb2: 'shoots',
@@ -61,23 +65,14 @@ class ConstItems
           maxDamage: 10
         }
     },
+    // ========= ******* readables ********* ==========
+    {
+      id: 'paper',
+      names: [ 'piece of paper', 'report', 'document', 'note', 'dossier',
+        'sheet of paper', 'page' ],
+      type: 'readable',
+      unknown: 'rectangular thin object with markings',
+    },
+    // notebook, diary, journal, logbook, organizer
     ];
-}
-
-
-// item info
-
-typedef ItemInfo =
-{
-  var id: String; // item id
-  var name: String; // item name
-  var unknown: String; // item name when it's unknown
-  var verb1: String; // X tries to $verb1 you, but misses.
-  var verb2: String; // X $verb2 you for Y damage.
-  var weaponStats: { // weapon-related stats, null if not a weapon
-    isRanged: Bool, // is this weapon type ranged? 
-    skill: _Skill, // associated skill
-    minDamage: Int, // min weapon damage
-    maxDamage: Int // mxa weapon damage
-    };
 }

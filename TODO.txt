@@ -5,6 +5,7 @@
 + timeline represents all that parasite knows about the events that resulted in its current state. It is a timeline of events in scenario with lists of participating persons. 
 + when player gains access to timeline, he receives a few clues to start
 * there are two types of clues - physical (computer, document, etc) and event npc memory contents
+* reading notes
 * there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
 * event npcs and physical clues do not spawn until player has access to timeline
 * physical clues only spawn at event location
@@ -69,6 +70,7 @@ military base and facility area types!
 area type string id -> enum
 RegionArea - change switch type -> tile into map
 fix event npcs spawn by job (soldiers go to military bases)
+police radio gives access to radio messages
 
 host memory + human society > 50 = access to infoweb
 knowledges?

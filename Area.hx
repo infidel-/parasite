@@ -140,6 +140,10 @@ class Area
 
       game.scene.updateCamera(); // center camera on player
 
+      // spawn some clues in event areas
+      if (!game.timeline.isLocked && area.event != null)
+        spawnClues();
+
       // update AI and objects visibility to player
       updateVisibility();
     }
@@ -286,6 +290,37 @@ class Area
 
             addObject(o);
           }
+    }
+
+
+// spawn some clues
+  function spawnClues()
+    {
+      var info = ConstItems.getInfo('paper');
+      for (i in 0...10)
+        {
+          // find free spot 
+          var loc = null;
+          var cnt = 0;
+          while (true)
+            {
+              loc = findEmptyLocation();
+              cnt++;
+              if (cnt > 500)
+                {
+                  trace('Area.spawnClues(): no free spot for another ' + 
+                    info.id + ', please report');
+                  return;
+                }
+
+              break;
+            }
+
+          var o = new Paper(game, loc.x, loc.y);
+          o.itemInfo = info;
+          o.name = info.names[Std.random(info.names.length)];
+          addObject(o);
+        }
     }
 
 /*
