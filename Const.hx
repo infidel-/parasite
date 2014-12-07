@@ -22,6 +22,7 @@ class Const
       COLOR_ORGAN => '#DDDD00',
       COLOR_WORLD => '#FF9900',
       COLOR_HINT => '#A020F0',
+      COLOR_TIMELINE => '#F03378',
     ];
 
   // entity spritemap indexes

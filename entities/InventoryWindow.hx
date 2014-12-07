@@ -84,33 +84,40 @@ class InventoryWindow
 
       // draw a list of items
       var n = 0;
-      var hasUnknown = false;
       for (item in game.player.host.inventory)
         {
           n++;
           var knowsItem = game.player.knowsItem(item.id);  
           var name = (knowsItem ? item.name : item.info.unknown);
           buf.add(name + '\n');
-
-          if (!knowsItem)
-            hasUnknown = true;
         }
 
       if (n == 0)
         buf.add('  --- empty ---\n');
 
-      // form a list of actions
-      _actions.clear();
-
-      // player has unknown items
+      // inventory actions 
       var n = 1;
-      if (hasUnknown && game.player.state == PLR_STATE_HOST && game.player.host.isHuman)
+      if (game.player.state == PLR_STATE_HOST && game.player.host.isHuman)
         {
-          buf.add('\n\nSelect action:\n\n');
-          game.player.host.inventory.addActions(_actions);
+          _actions = game.player.host.inventory.getActions();
+
+          // check if list contains at least one possible action
+          var ok = false;
           for (action in _actions)
-            buf.add((n++) + ': ' + action.name +
-              ' (' + action.energy + ' energy)\n');
+            if (game.player.host.energy >= action.energy)
+              {
+                ok = true;
+                break;
+              }
+              
+          if (ok)
+            {
+              buf.add('\n\nSelect action:\n\n');
+              for (action in _actions)
+                if (game.player.host.energy >= action.energy)
+                  buf.add((n++) + ': ' + action.name +
+                    ' (' + action.energy + ' energy)\n');
+            }
         }
 
       _textField.htmlText = buf.toString();

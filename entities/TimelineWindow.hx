@@ -132,6 +132,7 @@ class TimelineWindow
             continue;
 
           // first line (events are always numbered relative to known ones)
+          event.num = n; // stored for use in text messages referring to this event
           buf.add('Event ' + (n++));
           if (event.location != null)
             {

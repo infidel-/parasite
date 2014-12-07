@@ -6,8 +6,6 @@ package objects;
 
 class Pickup extends AreaObject
 {
-  public var name: String; // linked item name
-
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
@@ -22,8 +20,8 @@ class Pickup extends AreaObject
       if (game.player.state != PLR_STATE_HOST)
         return;
 
-      var tmpname = (game.player.knowsItem(itemInfo.id) ? 
-        name : itemInfo.unknown);
+      var tmpname = (game.player.knowsItem(item.info.id) ? 
+        item.name : item.info.unknown);
       addAction('get', 'Get ' + tmpname, 5);
     }
 
@@ -34,7 +32,10 @@ class Pickup extends AreaObject
       // get stuff from body
       if (id == 'get')
         {
-          game.player.host.inventory.addID(itemInfo.id, name);
+          var tmpname = (game.player.knowsItem(item.info.id) ? 
+            item.name : item.info.unknown);
+          game.player.log('You pick the ' + tmpname + ' up.');
+          game.player.host.inventory.add(item);
           game.area.removeObject(this);
         }
     }

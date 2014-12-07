@@ -9,4 +9,5 @@ enum _TextColor
    COLOR_ORGAN;
    COLOR_WORLD;
    COLOR_HINT;
+   COLOR_TIMELINE;
 }

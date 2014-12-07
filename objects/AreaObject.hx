@@ -10,7 +10,7 @@ class AreaObject
 
   public var entity: ObjectEntity; // gui entity
   public var type: String; // object type
-  public var itemInfo: ItemInfo; // linked item info
+  public var item: Item; // linked item
 
   public var id: Int; // unique object id
   static var _maxID: Int = 0; // current max ID

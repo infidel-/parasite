@@ -35,6 +35,14 @@ class Timeline
     }
 
 
+// get a clue for this event
+  public function getClue(e: Event)
+    {
+      game.player.log('You have gained a clue for event ' + e.num + '.',
+        COLOR_TIMELINE);
+    }
+
+
 // parse scenario names
   function parseNames()
     {

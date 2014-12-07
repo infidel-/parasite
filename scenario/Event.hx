@@ -4,7 +4,8 @@ package scenario;
 
 class Event
 {
-  public var num: Int; // event number
+  public var num: Int; // event number (temp var for text messages)
+
   public var isHidden: Bool; // event hidden?
   public var id: String; // event id
   public var name: String; // event name

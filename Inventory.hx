@@ -15,27 +15,36 @@ class Inventory
 
 
 // add available actions to list
-  public function addActions(tmp: List<_PlayerAction>)
+  public function getActions(): List<_PlayerAction>
     {
-      // add learning actions
+      var tmp = new List<_PlayerAction>();
       for (item in _list)
         {
-          if (game.player.knowsItem(item.id))
+          // add learning action
+          if (!game.player.knowsItem(item.id))
+            tmp.add({
+              id: 'learn.' + item.id,
+              type: ACTION_INVENTORY,
+              name: 'Learn about ' + item.info.unknown,
+              energy: 10,
+              obj: item
+              });
+
+          // cant do stuff when item is not known
+          if (!game.player.knowsItem(item.id))
             continue;
 
-          var action: _PlayerAction = { 
-            id: 'learn.' + item.id,
-            type: ACTION_INVENTORY,
-            name: 'Learn about ' + item.info.unknown,
-            energy: 10,
-            obj: item
-            };
-
-          if (game.player.host.energy < action.energy)
-            continue;
-
-          tmp.add(action); 
+          if (item.info.type == 'readable')
+            tmp.add({ 
+              id: 'read.' + item.id,
+              type: ACTION_INVENTORY,
+              name: 'Read ' + item.name,
+              energy: 10,
+              obj: item
+              });
         }
+
+      return tmp;
     }
 
 
@@ -43,10 +52,15 @@ class Inventory
   public function action(action: _PlayerAction)
     {
       var item: Item = untyped action.obj;
+      var actionID = action.id.substr(0, action.id.indexOf('.'));
   
       // learn about item
-      if (action.id.substr(0, 5) == 'learn')
+      if (actionID == 'learn')
         actionLearn(item);
+    
+      // read item
+      else if (actionID == 'read')
+        actionRead(item);
     
       // spend energy
       game.player.host.energy -= action.energy;
@@ -55,6 +69,14 @@ class Inventory
         game.area.player.postAction();
 
       else Const.todo('Inventory.action() in region mode!');
+    }
+
+
+// ACTION: read item
+  function actionRead(item: Item)
+    {
+      game.log('You study the contents of the ' + item.name + '.');
+      game.timeline.getClue(item.event);
     }
 
 
@@ -105,7 +127,7 @@ class Inventory
 
 
 // add item by id
-  public function addID(id: String, ?name: String)
+  public function addID(id: String)
     {
       var info = ConstItems.getInfo(id);
       if (info == null)
@@ -114,13 +136,17 @@ class Inventory
           return;
         }
 
-      if (name == null)
-        {
-          name = info.name;
-          if (info.names != null) // pick a name
-            name = info.names[Std.random(info.names.length)];
-        }
+      var name = info.name;
+      if (info.names != null) // pick a name
+        name = info.names[Std.random(info.names.length)];
       var item = { id: id, info: info, name: name };
+      _list.add(item);
+    }
+
+
+// add item
+  public inline function add(item: Item)
+    {
       _list.add(item);
     }
 
@@ -137,12 +163,3 @@ class Inventory
 // ===============================================================================
 }
 
-
-// item type
-
-typedef Item = 
-{
-  var id: String; // item id
-  var name: String; // actual item name (from a group of names)
-  var info: ItemInfo; // item info link
-};

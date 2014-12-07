@@ -317,8 +317,12 @@ class Area
             }
 
           var o = new Paper(game, loc.x, loc.y);
-          o.itemInfo = info;
-          o.name = info.names[Std.random(info.names.length)];
+          o.item = {
+            id: 'paper',
+            name: info.names[Std.random(info.names.length)],
+            info: info,
+            event: area.event
+            };
           addObject(o);
         }
     }
