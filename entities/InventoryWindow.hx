@@ -54,9 +54,12 @@ class InventoryWindow
       if (action == null)
         return;
 
-      // do action
-      game.player.host.inventory.action(action);
-      update(); // update display
+      game.player.host.inventory.action(action); // do action
+
+      // player host could die after that action
+      if (game.player.host != null)
+        update(); // update display
+
       game.scene.hud.update(); // update HUD
     }
 

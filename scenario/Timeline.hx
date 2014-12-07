@@ -36,10 +36,27 @@ class Timeline
 
 
 // get a clue for this event
-  public function getClue(e: Event)
+  public function learnClue(e: Event, isPhysical: Bool): Bool
     {
+      // get a clue according to random value
+      var rnd = Std.random(100);
+
+      // event clue 
+      if (rnd < 50)
+        return e.learnClue();
+
+      // npc clues
+      else if (rnd < 95)
+        return e.learnNPC();
+
+      // full event note
+      else if (rnd >= 95 && isPhysical)
+        return e.learnNote();
+
       game.player.log('You have gained a clue for event ' + e.num + '.',
         COLOR_TIMELINE);
+
+      return true;
     }
 
 
@@ -189,7 +206,7 @@ class Timeline
       var curInfo = scenario.flow.get(scenario.startEvent);
       while (true)
         {
-          var event = new Event(curID);
+          var event = new Event(game, curID);
           event.num = n++;
           event.name = curInfo.name;
           event.isHidden = (curInfo.isHidden == true);

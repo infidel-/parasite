@@ -152,6 +152,26 @@ class GameScene extends Scene
     }
 
 
+// closes currently opened window
+  public function closeCurrentWindow()
+    {
+      if (hudState == GameScene.HUDSTATE_EVOLUTION)
+        evolutionWindow.hide();
+      else if (hudState == GameScene.HUDSTATE_INVENTORY)
+        inventoryWindow.hide();
+      else if (hudState == GameScene.HUDSTATE_SKILLS)
+        skillsWindow.hide();
+      else if (hudState == GameScene.HUDSTATE_ORGANS)
+        organsWindow.hide();
+      else if (hudState == GameScene.HUDSTATE_DEBUG)
+        debugWindow.hide();
+      else if (hudState == GameScene.HUDSTATE_TIMELINE)
+        timelineWindow.hide();
+
+      hudState = GameScene.HUDSTATE_DEFAULT;
+    }
+
+
 // handle opening and closing windows
   function handleWindows(): Bool
     {
@@ -193,26 +213,9 @@ class GameScene extends Scene
               return true;
             }
 
-
           // close windows
           if (Input.pressed("closeWindow"))
-            {
-              if (hudState == GameScene.HUDSTATE_EVOLUTION)
-                evolutionWindow.hide();
-              else if (hudState == GameScene.HUDSTATE_INVENTORY)
-                inventoryWindow.hide();
-              else if (hudState == GameScene.HUDSTATE_SKILLS)
-                skillsWindow.hide();
-              else if (hudState == GameScene.HUDSTATE_ORGANS)
-                organsWindow.hide();
-              else if (hudState == GameScene.HUDSTATE_DEBUG)
-                debugWindow.hide();
-              else if (hudState == GameScene.HUDSTATE_TIMELINE)
-                timelineWindow.hide();
-              else return false;
-
-              hudState = GameScene.HUDSTATE_DEFAULT;
-            }
+            closeCurrentWindow();
         }
 
       // no windows open

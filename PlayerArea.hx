@@ -644,6 +644,9 @@ class PlayerArea
 // event: host expired
   public inline function onHostDeath()
     {
+      // close open windows
+      game.scene.closeCurrentWindow();
+
       player.host.onDeath();
       onDetach();
     }
