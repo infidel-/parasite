@@ -99,7 +99,6 @@ class TimelineWindow
 
       buf.add('Event timeline\n===\n\n');
 
-      var n = 1;
       for (event in game.timeline)
         {
           // hidden event
@@ -107,33 +106,15 @@ class TimelineWindow
             continue;
     
           // check if anything is known at all
-          var npcSomethingKnown = false;
-          var notesSomethingKnown = false;
-          for (npc in event.npc)
-            {
-              // nothing is known
-              if (!npc.nameKnown && !npc.jobKnown && !npc.areaKnown && 
-                  !npc.isDeadKnown)
-                continue;
-
-              npcSomethingKnown = true; // something is known about some npc
-              break;
-            }
-
-          for (n in event.notes)
-            if (n.isKnown || n.clues > 0)
-              {
-                notesSomethingKnown = true; // something is known about some note
-                break;
-              }
+          var npcSomethingKnown = event.npcSomethingKnown();
+          var notesSomethingKnown = event.notesSomethingKnown();
 
           // nothing is known, skip that event
           if (!event.locationKnown && !npcSomethingKnown && !notesSomethingKnown)
             continue;
 
           // first line (events are always numbered relative to known ones)
-          event.num = n; // stored for use in text messages referring to this event
-          buf.add('Event ' + (n++));
+          buf.add('Event ' + event.num);
           if (event.location != null)
             {
               buf.add(': ');

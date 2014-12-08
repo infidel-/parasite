@@ -66,7 +66,7 @@ class BodyObject extends AreaObject
             var tmpname = (game.player.knowsItem(item.info.id) ? 
               item.name : item.info.unknown);
             game.player.log('You pick the ' + tmpname + ' up.');
-            game.player.host.inventory.addID(id);
+            game.player.host.inventory.add(item);
             inventory.remove(id);
             break;
           }

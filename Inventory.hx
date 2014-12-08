@@ -75,7 +75,7 @@ class Inventory
 // ACTION: read item
   function actionRead(item: Item)
     {
-      game.log('You study the contents of the ' + item.name + '.');
+      game.log('You study the contents of the ' + item.name + ' and destroy it.');
       var cnt = 0;
       cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
       if (Std.random(100) < 30)
@@ -87,6 +87,9 @@ class Inventory
       if (cnt == 0)
         game.player.log('You have not been able to gain any clues.',
           COLOR_TIMELINE);
+
+      // destroy item
+      _list.remove(item);
     }
 
 

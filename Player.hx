@@ -51,45 +51,6 @@ class Player
     }
 
 
-// unlock event timeline
-  public function unlockTimeline()
-    {
-      log("What am I? What is my purpose? I must know.");
-      Const.todo('proper unlock timeline screen');
-      game.timeline.isLocked = false;
-
-      // give some starting clues to player
-      var e = game.timeline.getStartEvent();
-      e.locationKnown = true;
-      var nothingKnown = true;
-      for (npc in e.npc)
-        {
-          // flat 30% chance of knowing name, job+photo or area
-          if (Std.random(100) < 30)
-            {
-              npc.nameKnown = true;
-              nothingKnown = false;
-            }
-
-          else if (Std.random(100) < 30)
-            {
-              npc.jobKnown = true;
-              nothingKnown = false;
-            }
-
-          else if (Std.random(100) < 30)
-            {
-              npc.areaKnown = true;
-              nothingKnown = false;
-            }
-        }
-      
-      // if all rolls fail just give out a name of first npc
-      if (nothingKnown)
-        e.npc[0].nameKnown = true;
-    }
-
-
 // end of turn for player
   public function turn()
     {

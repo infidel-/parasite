@@ -43,6 +43,8 @@ class Event
             break;
           }
 
+      game.timeline.update(); // update event numbering
+
       game.player.log('You have gained a clue for event ' + num + '.',
         COLOR_TIMELINE);
 
@@ -101,10 +103,40 @@ class Event
             break;
           }
 
+      game.timeline.update(); // update event numbering
+
       game.player.log('You have gained a major clue for event ' + num + '.',
         COLOR_TIMELINE);
 
       return true;
+    }
+
+
+// something is known about npc of this event?
+  public function npcSomethingKnown(): Bool
+    {
+      for (n in npc)
+        {
+          // nothing is known
+          if (!n.nameKnown && !n.jobKnown && !n.areaKnown && 
+              !n.isDeadKnown)
+            continue;
+
+          return true; // something is known about some npc
+        }
+
+      return false;
+    }
+
+
+// something is known about some note?
+  public function notesSomethingKnown(): Bool
+    {
+      for (n in notes)
+        if (n.isKnown || n.clues > 0)
+          return true; // something is known about some note
+
+      return false;
     }
 
 

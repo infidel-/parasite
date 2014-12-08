@@ -63,7 +63,7 @@ class Skills
       if (isPlayer)
         // gaining society opens timeline
         if (id == KNOW_SOCIETY && oldLevel < 25 && sk.level >= 25)
-          game.player.unlockTimeline();
+          game.timeline.unlock();
     }
 
 

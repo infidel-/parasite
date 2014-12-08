@@ -36,27 +36,101 @@ class Timeline
 
 
 // get a clue for this event
-  public function learnClue(e: Event, isPhysical: Bool): Bool
+  public function learnClue(event: Event, isPhysical: Bool): Bool
     {
+      // we have a chance of gaining clue from other event up or down the timeline
+      var e = event;
+      if (Std.random(100) < 20)
+        {
+          // get event index
+          var index = -1;
+          for (i in 0..._eventsList.length)
+            if (_eventsList[i] == event)
+              {
+                index = i;
+                break;
+              }
+          
+          if (Std.random(100) < 50 && index - 1 >= 0 &&
+              !_eventsList[index - 1].isHidden)
+            e = _eventsList[index - 1];
+          else if (index + 1 < _eventsList.length &&
+              !_eventsList[index + 1].isHidden)
+            e = _eventsList[index + 1];
+
+          // TODO: hidden events in the middle of timeline will break this
+        }
+
       // get a clue according to random value
       var rnd = Std.random(100);
 
-      // event clue 
+      // event clue
+      var ret = false;
       if (rnd < 50)
-        return e.learnClue();
+        ret = e.learnClue();
 
       // npc clues
       else if (rnd < 95)
-        return e.learnNPC();
+        ret = e.learnNPC();
 
       // full event note
       else if (rnd >= 95 && isPhysical)
-        return e.learnNote();
+        ret = e.learnNote();
 
-      game.player.log('You have gained a clue for event ' + e.num + '.',
-        COLOR_TIMELINE);
+      return ret;
+    }
 
-      return true;
+
+// unlock event timeline
+  public function unlock()
+    {
+      game.log("What am I? What is my purpose? I must know.");
+      Const.todo('proper unlock timeline screen');
+      isLocked = false;
+
+      // give some starting clues to player
+      var e = getStartEvent();
+      e.locationKnown = true;
+      var nothingKnown = true;
+      for (npc in e.npc)
+        {
+          // flat 30% chance of knowing name, job+photo or area
+          if (Std.random(100) < 30)
+            {
+              npc.nameKnown = true;
+              nothingKnown = false;
+            }
+
+          else if (Std.random(100) < 30)
+            {
+              npc.jobKnown = true;
+              nothingKnown = false;
+            }
+
+          else if (Std.random(100) < 30)
+            {
+              npc.areaKnown = true;
+              nothingKnown = false;
+            }
+        }
+      
+      // if all rolls fail just give out a name of first npc
+      if (nothingKnown)
+        e.npc[0].nameKnown = true;
+
+      update(); // update event numbering
+    }
+
+
+// update event numbering
+  public function update()
+    {
+      var n = 1;
+      for (event in _eventsList)
+        if (event.locationKnown || event.npcSomethingKnown() ||
+            event.notesSomethingKnown())
+          // stored for use in text messages referring to this event
+          event.num = (n++);
     }
 
 

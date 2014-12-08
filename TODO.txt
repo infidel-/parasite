@@ -5,11 +5,11 @@
 + timeline represents all that parasite knows about the events that resulted in its current state. It is a timeline of events in scenario with lists of participating persons. 
 + when player gains access to timeline, he receives a few clues to start
 * there are two types of clues - physical (computer, document, etc) and event npc memory contents
-* reading notes
++ reading notes
 * area.getObjectAt -> area.getObjectsAt
-* there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
-* event npcs and physical clues do not spawn until player has access to timeline
-* physical clues only spawn at event location
++ there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
++ event npcs and physical clues do not spawn until player has access to timeline
++ physical clues only spawn at event location
 * physical clues stop spawning when everything about that event is known
 * when player is in the area with live event npcs attached, they will spawn periodically
 * using "Access Memory" on possessed event npc will unlock what he knows about the timeline
