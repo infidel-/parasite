@@ -9,13 +9,13 @@
 + there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
 + event npcs and physical clues do not spawn until player has access to timeline
 + physical clues only spawn at event location
-* physical clues stop spawning when everything about that event is known
++ physical clues stop spawning when everything about that event is known
 * when player is in the area with live event npcs attached, they will spawn periodically
 * using "Access Memory" on possessed event npc will unlock what he knows about the timeline
 * set npc.isScanned=true
 * visually known event npcs must have an icon on them
 * knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
-* having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least 1 info bit known
+* having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
 * info bits are: name, job + photo, location, dead/alive
 ??? job agent ???
 * when done, copy this to docs

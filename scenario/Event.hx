@@ -112,6 +112,17 @@ class Event
     }
 
 
+// names or jobs of all npcs are known?
+  public function npcNamesOrJobsKnown(): Bool
+    {
+      for (n in npc)
+        if (!n.nameKnown && !n.jobKnown)
+          return false;
+
+      return true;
+    }
+
+
 // something is known about npc of this event?
   public function npcSomethingKnown(): Bool
     {
