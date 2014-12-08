@@ -74,7 +74,12 @@ class AreaObject
   inline function addAction(id: String, name: String, energy: Int)
     {
       if (game.player.energy >= energy)
-        _listActions.add({ id: id, type: ACTION_OBJECT, name: name, energy: energy });
+        _listActions.add({ 
+          id: id, 
+          type: ACTION_OBJECT, 
+          name: name, 
+          energy: energy,
+          obj: this });
     }
 
 

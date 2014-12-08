@@ -6,7 +6,6 @@
 + when player gains access to timeline, he receives a few clues to start
 * there are two types of clues - physical (computer, document, etc) and event npc memory contents
 + reading notes
-* area.getObjectAt -> area.getObjectsAt
 + there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
 + event npcs and physical clues do not spawn until player has access to timeline
 + physical clues only spawn at event location
@@ -72,6 +71,8 @@ area type string id -> enum
 RegionArea - change switch type -> tile into map
 fix event npcs spawn by job (soldiers go to military bases)
 police radio gives access to radio messages
+spawn stuff that is seen by player immediately on entering area
+
 
 host memory + human society > 50 = access to infoweb
 knowledges?

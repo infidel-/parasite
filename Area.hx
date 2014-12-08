@@ -113,14 +113,34 @@ class Area
         {
           var o = new SewerHatch(game, loc.x, loc.y);
           addObject(o);
-
+/*
+          Const.todo('!!!remove this!!!');
+          var info = ConstItems.getInfo('paper');
+          var o = new Paper(game, loc.x, loc.y);
+          o.item = {
+            id: 'paper',
+            name: info.names[Std.random(info.names.length)],
+            info: info,
+            event: area.event
+            };
+          addObject(o);
+          var o = new Paper(game, loc.x, loc.y);
+          o.item = {
+            id: 'paper',
+            name: info.names[Std.random(info.names.length)],
+            info: info,
+            event: area.event
+            };
+          addObject(o);
+*/
           // remove any adjacent sewer hatches
           for (y in -3...3)
             for (x in -3...3)
               {
-                var o2 = getObjectAt(loc.x + x, loc.y + y);
-                if (o2 != null && o2 != o)
-                  removeObject(o2);
+                var olist = getObjectsAt(loc.x + x, loc.y + y);
+                for (o2 in olist)
+                  if (o2 != o && o2.type == o.type)
+                    removeObject(o2);
               }
         }
     }
@@ -139,10 +159,6 @@ class Area
         player.entity.visible = true;
 
       game.scene.updateCamera(); // center camera on player
-
-      // spawn some clues in event areas
-      if (!game.timeline.isLocked && area.event != null)
-        spawnClues();
 
       // update AI and objects visibility to player
       updateVisibility();
@@ -270,12 +286,16 @@ class Area
                 for (y in -3...3)
                   for (x in -3...3)
                     {
-                      var o = getObjectAt(loc.x + x, loc.y + y);
-                      if (o != null && o.type == objInfo.id)
-                        {
-                          ok = false;
-                          break;
-                        }
+                      var olist = getObjectsAt(loc.x + x, loc.y + y);
+                      for (o in olist)
+                        if (o.type == objInfo.id)
+                          {
+                            ok = false;
+                            break;
+                          }
+
+                      if (!ok)
+                        break;
                     }
 
                 if (ok)
@@ -290,41 +310,6 @@ class Area
 
             addObject(o);
           }
-    }
-
-
-// spawn some clues
-  function spawnClues()
-    {
-      var info = ConstItems.getInfo('paper');
-      for (i in 0...10)
-        {
-          // find free spot 
-          var loc = null;
-          var cnt = 0;
-          while (true)
-            {
-              loc = findEmptyLocation();
-              cnt++;
-              if (cnt > 500)
-                {
-                  trace('Area.spawnClues(): no free spot for another ' + 
-                    info.id + ', please report');
-                  return;
-                }
-
-              break;
-            }
-
-          var o = new Paper(game, loc.x, loc.y);
-          o.item = {
-            id: 'paper',
-            name: info.names[Std.random(info.names.length)],
-            info: info,
-            event: area.event
-            };
-          addObject(o);
-        }
     }
 
 /*
@@ -343,7 +328,7 @@ class Area
 // add object to area
   public inline function addObject(o: AreaObject)
     {
-      _objects.set( o.id, o);
+      _objects.set(o.id, o);
     }
 
 
@@ -354,21 +339,71 @@ class Area
     }
 
 
-// get object by x,y
-  public function getObjectAt(x: Int, y: Int): AreaObject
+// get objects list at (x,y)
+  public function getObjectsAt(x: Int, y: Int): List<AreaObject>
     {
+      var tmp = new List<AreaObject>();
+
       for (o in _objects)
         if (o.x == x && o.y == y)
-          return o;
+          tmp.push(o);
 
-      return null;
+      return tmp;
     }
+
 
 // remove object
   public inline function removeObject(o: AreaObject)
     {
       game.scene.remove(o.entity); 
       _objects.remove(o.id);
+    }
+
+
+// find unseen empty location on map (to spawn stuff)
+  public function findUnseenEmptyLocation(): { x: Int, y: Int }
+    {
+      // calculate visible rectangle
+      var rect = getVisibleRect();
+
+      // TODO: in case if this works slowly i can rewrite it to find all potential free
+      // spots and select one of them
+
+      var cnt = 0;
+      while (true)
+        {
+          cnt++;
+          if (cnt > 100)
+            {
+              trace('findUnseenEmptyLocation(): could not find empty spot (report this please)!');
+              return { x: -1, y: -1 };
+            }
+
+          var x = rect.x1 + Std.random(rect.x2);
+          var y = rect.y1 + Std.random(rect.y2);
+
+          // must be empty ground tile
+          if (getType(x, y) != 'ground')
+            continue;
+
+          // must not have ai
+          if (getAI(x, y) != null)
+            continue;
+
+          // must not be visible to player as a parasite
+          if (game.player.state != PLR_STATE_HOST &&
+              HXP.distanceSquared(player.x, player.y, x, y) < 6 * 6)
+            continue;
+
+          // must not be visible to player when possessing a host
+          if (game.player.state == PLR_STATE_HOST &&
+              isVisible(player.x, player.y, x, y))
+            continue;
+
+          return { x: x, y: y };
+        }
+
+      return { x: -1, y: -1 };
     }
 
 
@@ -596,7 +631,46 @@ class Area
 
       turnSpawnAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
+      turnSpawnClues(); // spawn clues
       turnAlertness(); // decrease alertness
+    }
+
+
+// spawn some clues
+  function turnSpawnClues()
+    {
+      // spawn some clues in event areas
+      if (game.timeline.isLocked || area.event == null)
+        return;
+
+      // get number of clues already spawned
+      var cnt = 0;
+      for (o in _objects)
+        if (o.item != null && o.item.info.type == 'readable')
+          cnt++;
+
+      var maxSpawn = 5 - cnt;
+
+      var info = ConstItems.getInfo('paper');
+      for (i in 0...maxSpawn)
+        {
+          var loc = findUnseenEmptyLocation();
+          if (loc.x < 0)
+            {
+              trace('Area.turnSpawnClues(): no free spot for another ' + 
+                info.id + ', please report');
+              return;
+            }
+
+          var o = new Paper(game, loc.x, loc.y);
+          o.item = {
+            id: 'paper',
+            name: info.names[Std.random(info.names.length)],
+            info: info,
+            event: area.event
+            };
+          addObject(o);
+        }
     }
 
 
@@ -694,59 +768,26 @@ class Area
 // spawn unseen AI with this type somewhere in screen area
   function spawnUnseenAI(type: String, isCommon: Bool)
     {
-      // calculate visible rectangle
-      var rect = getVisibleRect();
-
-      // TODO: in case if this works slowly i can rewrite it to find all potential free
-      // spots and select one of them
-
-      var cnt = 0;
-      while (true)
+      var loc = findUnseenEmptyLocation();
+      if (loc.x < 0)
         {
-          cnt++;
-          if (cnt > 100)
-            {
-              trace('spawnUnseenAI(): could not find empty spot (report this please)!');
-              return; 
-            }
-
-          var x = rect.x1 + Std.random(rect.x2);
-          var y = rect.y1 + Std.random(rect.y2);
-
-          // must be empty ground tile
-          if (getType(x, y) != 'ground')
-            continue;
-
-          // must not have ai
-          if (getAI(x, y) != null)
-            continue;
-
-          // must not be visible to player as a parasite
-          if (game.player.state != PLR_STATE_HOST &&
-              HXP.distanceSquared(player.x, player.y, x, y) < 6 * 6)
-            continue;
-
-          // must not be visible to player when possessing a host
-          if (game.player.state == PLR_STATE_HOST &&
-              isVisible(player.x, player.y, x, y))
-            continue;
-
-          // spot is empty and invisible to player, spawn ai
-          var ai: AI = null;
-          if (type == 'dog')
-            ai = new DogAI(game, x, y);
-          else if (type == 'civilian')
-            ai = new CivilianAI(game, x, y);
-          else if (type == 'police')
-            ai = new PoliceAI(game, x, y);
-          else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
-
-          ai.isCommon = isCommon;
-//          game.area.addAI(ai);
-          addAI(ai);
-
-          break;
+          trace('Area.spawnUnseenAI(): no free spot for another ' + 
+            type + ', please report');
+          return;
         }
+
+      // spot is empty and invisible to player, spawn ai
+      var ai: AI = null;
+      if (type == 'dog')
+        ai = new DogAI(game, loc.x, loc.y);
+      else if (type == 'civilian')
+        ai = new CivilianAI(game, loc.x, loc.y);
+      else if (type == 'police')
+        ai = new PoliceAI(game, loc.x, loc.y);
+      else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
+
+      ai.isCommon = isCommon;
+      addAI(ai);
     }
 
 

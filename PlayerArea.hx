@@ -4,6 +4,7 @@ import com.haxepunk.HXP;
 
 import ai.AI;
 import entities.PlayerEntity;
+import objects.AreaObject;
 
 class PlayerArea
 {
@@ -84,11 +85,19 @@ class PlayerArea
 
 
 // helper: add action to list and check for energy
-  inline function addActionToList(list: List<_PlayerAction>, id: String)
+  inline function addActionToList(list: List<_PlayerAction>, id: String, ?o: Dynamic)
     {
       var action = Const.getAction(id);
       if (action.energy <= player.energy)
-        list.add(action);
+        {
+          if (o != null)
+            {
+              var a = Reflect.copy(action);
+              a.obj = o;
+              list.add(a);
+            }
+          else list.add(action);
+        }
     }
 
 
@@ -119,18 +128,21 @@ class PlayerArea
         }
 
       // area object actions
-      var o = area.getObjectAt(x, y);
-      if (o == null)
+      var olist = area.getObjectsAt(x, y);
+      if (olist == null)
         return tmp;
 
-      // player does not know what this object is, cannot activate it
-      if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
-          player.host.isHuman)
-        addActionToList(tmp, 'learnObject');
+      for (o in olist)
+        {
+          // player does not know what this object is, cannot activate it
+          if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
+              player.host.isHuman)
+            addActionToList(tmp, 'learnObject', o);
 
-      // object known - add all actions defined by object
-      else if (Lambda.has(knownObjects, o.type)) 
-        o.addActions(tmp); 
+          // object known - add all actions defined by object
+          else if (Lambda.has(knownObjects, o.type)) 
+            o.addActions(tmp);
+        }
       
       return tmp;
     }
@@ -150,8 +162,8 @@ class PlayerArea
               return;
             }
 
-          var o = area.getObjectAt(x, y);
-          o.action(action);
+          var ao: AreaObject = action.obj;
+          ao.action(action);
         }
 
       // host organ-based action 
@@ -180,7 +192,7 @@ class PlayerArea
 
       // learn about object 
       else if (action.id == 'learnObject')
-        learnObjectAction();
+        learnObjectAction(action.obj);
 
       // spend energy
       if (state == PLR_STATE_HOST)
@@ -467,9 +479,8 @@ class PlayerArea
 
 
 // action: learn about area object
-  function learnObjectAction()
+  function learnObjectAction(o: AreaObject)
     {
-      var o = area.getObjectAt(x, y);
       game.log('You probe the brain of the host and learn what that object is for.');
 
       knownObjects.add(o.type);
