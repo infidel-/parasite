@@ -33,7 +33,7 @@ typedef EventInfo = {
   ?setVariablesFunc: Void -> Array<{ key: String, val: Dynamic }>, 
   ?notes: Array<String>, // event notes
   ?location: LocationInfo, // event location
-  ?npc: Map<String, Int>, // event npcs
+  ?npc: Map<String, Int>, // event npcs (ai type is "<type>:<parent>")
 }
 
 

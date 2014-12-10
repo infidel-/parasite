@@ -602,6 +602,8 @@ class Area
 // remove AI
   public function removeAI(ai: AI)
     {
+      if (ai.npc != null)
+        ai.npc.ai = null;
       game.scene.remove(ai.entity);
       _ai.remove(ai);
     }
@@ -631,6 +633,7 @@ class Area
 
       turnSpawnAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
+      turnSpawnNPC(); // spawn NPC AI
       turnSpawnClues(); // spawn clues
       turnAlertness(); // decrease alertness
     }
@@ -690,6 +693,59 @@ class Area
         return;
 
       area.alertness -= 0.1;
+    }
+
+
+// spawn NPC AI each turn
+  function turnSpawnNPC()
+    {
+      // no npcs here
+      if (area.npc.length == 0)
+        return;
+  
+      // count total npcs with photo known and alive
+      var total = 0;
+      for (n in area.npc)
+        if (n.jobKnown && !n.isDead)
+          total++;
+
+      // get number of npcs alive (excluding player one)
+      var cnt = 0;
+      for (ai in _ai)
+        if (ai.npc != null && !ai.parasiteAttached)
+          cnt++;
+
+      if (cnt > 2)
+        return;
+
+      var maxSpawn = total - cnt;
+      if (maxSpawn > 3)
+        maxSpawn = 3;
+  
+      var i = 0;
+      for (n in area.npc)
+        // alive, unspawned and job/photo known
+        if (n.jobKnown && !n.isDead && n.ai == null)
+          {
+            var ai = spawnUnseenAI(n.type, true);
+            trace('event npc spawned, ' + ai.id);
+            if (ai == null)
+              break;
+            n.ai = ai;
+            ai.event = n.event;
+            ai.job = n.job;
+            ai.npc = n;
+            ai.name.real = n.name;
+            ai.name.realCapped = n.name;
+            ai.isNameKnown = true;
+            ai.isJobKnown = true;
+            ai.entity.setNPC();
+
+            // spawn up to maxSpawn npcs
+            i++;
+            if (i >= maxSpawn)
+              break;
+          }
     }
 
 
@@ -769,21 +825,22 @@ class Area
 
 
 // spawn unseen AI with this type somewhere in screen area
-  function spawnUnseenAI(type: String, isCommon: Bool)
+  function spawnUnseenAI(type: String, isCommon: Bool): AI
     {
       var loc = findUnseenEmptyLocation();
       if (loc.x < 0)
         {
           trace('Area.spawnUnseenAI(): no free spot for another ' + 
             type + ', please report');
-          return;
+          return null;
         }
 
       // spot is empty and invisible to player, spawn ai
       var ai: AI = null;
       if (type == 'dog')
         ai = new DogAI(game, loc.x, loc.y);
-      else if (type == 'civilian')
+//      else if (type == 'civilian')
+      else if (type == 'civilian' || type == 'agent' || type == 'soldier')
         ai = new CivilianAI(game, loc.x, loc.y);
       else if (type == 'police')
         ai = new PoliceAI(game, loc.x, loc.y);
@@ -791,6 +848,8 @@ class Area
 
       ai.isCommon = isCommon;
       addAI(ai);
+
+      return ai;
     }
 
 

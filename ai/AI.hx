@@ -10,9 +10,12 @@ class AI
 {
   var game: Game; // game state link
   public var entity: AIEntity; // gui entity
+  public var event: scenario.Event; // event link (for scenario npcs)
+  public var npc: scenario.NPC; // npc link (for scenario npcs)
 
-  public var type: String; // object type
-  var name: 
+  public var type: String; // ai type
+  public var job: String; // ai job 
+  public var name: 
     { 
       real: String, // real name
       realCapped: String, // capitalized real name
@@ -23,6 +26,7 @@ class AI
 
   public var isAggressive: Bool; // true - attack in alerted state, false - run away
   public var isNameKnown: Bool; // is real name known to player?
+  public var isJobKnown: Bool; // is job known to player?
   public var isHuman: Bool; // is it a human?
   public var isCommon: Bool; // is it common AI or spawned by area alertness logic?
 
@@ -77,6 +81,7 @@ class AI
     {
       game = g;
       type = 'undefined';
+      job = 'undefined';
       name =
         {
           real: 'undefined',
@@ -103,6 +108,7 @@ class AI
       isAggressive = false;
       isCommon = true;
       isNameKnown = false;
+      isJobKnown = false;
       isHuman = false;
       parasiteAttached = false;
       baseAttrs = {

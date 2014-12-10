@@ -48,7 +48,11 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             type: ConstWorld.AREA_GROUND,
             },
-          npc: [ 'civilian' => 20, 'reporter' => 5, 'ufologist' => 5, 'conspirologist' => 3 ],
+          npc: [ 
+            'civilian' => 20, 
+            'reporter:civilian' => 5, 
+            'ufologist:civilian' => 5, 
+            'conspirologist:civilian' => 3 ],
           },
 
         'shipSpottedMil' => {
@@ -153,7 +157,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: ConstWorld.AREA_FACILITY,
             name: '%facility1%'
             },
-          npc: [ 'researcher' => 10, 'agent' => 5 ],
+          npc: [ 'researcher:civilian' => 10, 'agent' => 5 ],
           },
 
         'alienCaptureMission' => {
@@ -234,7 +238,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: ConstWorld.AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher' => 10, 'agent' => 2 ],
+          npc: [ 'researcher:civilian' => 10, 'agent' => 2 ],
           },
 
         'deadAlienStudy' => {
@@ -252,7 +256,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: ConstWorld.AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher' => 5 ],
+          npc: [ 'researcher:civilian' => 5 ],
           },
           
         'parasiteRemoval' => {
@@ -268,7 +272,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: ConstWorld.AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher' => 5 ],
+          npc: [ 'researcher:civilian' => 5 ],
           },
 
         'parasiteTransportation' => {

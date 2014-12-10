@@ -10,9 +10,12 @@
 + event npcs and physical clues do not spawn until player has access to timeline
 + physical clues only spawn at event location
 + physical clues stop spawning when everything about that event is known
-* when player is in the area with live event npcs attached, they will spawn periodically
-* using "Access Memory" on possessed event npc will unlock what he knows about the timeline
-* set npc.isScanned=true
++ when player is in the area with live event npcs attached, they will spawn periodically
+* soldier, agent
+* cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
+* improvement screen scrolling
++ using "Access Memory" on possessed event npc will unlock what he knows about the timeline
+* set npc.memoryKnown=true on accessing memory (also disable multiple memory scans?)
 * visually known event npcs must have an icon on them
 * knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
 * having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
@@ -72,6 +75,8 @@ RegionArea - change switch type -> tile into map
 fix event npcs spawn by job (soldiers go to military bases)
 police radio gives access to radio messages
 spawn stuff that is seen by player immediately on entering area
+remove dead npcs from area.npc on death
+
 
 
 host memory + human society > 50 = access to infoweb

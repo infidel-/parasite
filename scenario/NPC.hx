@@ -8,7 +8,7 @@ class NPC
 
   public var name: String; // name
   public var nameKnown: Bool; // name known to player?
-  public var type: String; // ai type 
+  public var type: String; // npc type
   public var job: String; // job title 
   public var jobKnown: Bool; // job known to player?
   public var area: RegionArea; // location area
@@ -17,6 +17,7 @@ class NPC
   public var isDeadKnown: Bool; // is dead/alive known to player?
   public var isScanned: Bool; // has this npc's memory been accessed? 
   public var event: Event; // event
+  public var ai: ai.AI; // ai link
 
   public function new()
     {

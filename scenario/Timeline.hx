@@ -232,17 +232,26 @@ class Timeline
       for (n in npc)
         total += n;
 
-      Const.todo('change actual npc type');
-      for (type in npc.keys())
+      for (typeExt in npc.keys())
         {
-          var max = npc.get(type);
+          var max = npc.get(typeExt);
           if (max > 3)
             max = Std.int(max / 2) + Std.random(Std.int(max / 2));
+
+          var job = typeExt;
+          var type = typeExt;
+          if (typeExt.indexOf(':') >= 0)
+            {
+              job = typeExt.substr(0, typeExt.indexOf(':'));
+              type = typeExt.substr(typeExt.indexOf(':') + 1);
+            }
+
           for (i in 0...max)
             {
               var npc = new NPC();
               npc.event = event;
-              npc.job = type;
+              npc.job = job;
+              npc.type = type;
               var region = game.world.get(0);
               if (event.location != null)
                 npc.area = region.getRandomAround(event.location.area);

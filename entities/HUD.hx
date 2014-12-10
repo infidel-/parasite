@@ -140,7 +140,10 @@ class HUD
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
         {
-          buf.add(game.player.host.getNameCapped() + '\n');
+          buf.add(game.player.host.getNameCapped());
+          if (game.player.host.isJobKnown)
+            buf.add(' (' + game.player.host.job + ')\n');
+          else buf.add('\n');
           var colHealth = 
             (game.player.host.health > 0.3 * game.player.host.maxHealth ? 
             '#FFFFFF' : '#FF0000');

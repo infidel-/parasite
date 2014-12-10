@@ -475,6 +475,22 @@ class PlayerArea
           game.log('You find out that the name of this host is ' + 
             player.host.getName() + '.');
         }
+
+      // get clues
+      if (player.host.event != null)// && player.host.npc)
+        {
+          var cnt = 0;
+          cnt += (game.timeline.learnClue(player.host.event, true) ? 1 : 0);
+          if (Std.random(100) < 30)
+            cnt += (game.timeline.learnClue(player.host.event, true) ? 1 : 0);
+          if (Std.random(100) < 10)
+            cnt += (game.timeline.learnClue(player.host.event, true) ? 1 : 0);
+
+          // no clues learned
+          if (cnt == 0)
+            game.player.log('You have not been able to gain any clues.',
+              COLOR_TIMELINE);
+        }
     }
 
 
