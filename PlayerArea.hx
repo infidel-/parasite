@@ -393,7 +393,7 @@ class PlayerArea
     {
 //      game.log('You attempt to invade the host.');
 //      if (Std.random(100) < )
-      game.log('You are now in control of the host.');
+      game.log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
 
       // save AI link
       player.host = attachHost;
@@ -477,20 +477,29 @@ class PlayerArea
         }
 
       // get clues
-      if (player.host.event != null)// && player.host.npc)
+      if (player.host.event != null && player.host.memoryAccessed < 3)
         {
-          var cnt = 0;
-          cnt += (game.timeline.learnClue(player.host.event, true) ? 1 : 0);
-          if (Std.random(100) < 30)
-            cnt += (game.timeline.learnClue(player.host.event, true) ? 1 : 0);
-          if (Std.random(100) < 10)
-            cnt += (game.timeline.learnClue(player.host.event, true) ? 1 : 0);
+          var chance = 100;
+          if (player.host.memoryAccessed == 1)
+            chance = 30;
+          else if (player.host.memoryAccessed == 2)
+            chance = 10;
+      
+          var ret = false;
+          if (Std.random(100) < chance)
+            ret = game.timeline.learnClue(player.host.event, true);
 
           // no clues learned
-          if (cnt == 0)
+          if (!ret)
             game.player.log('You have not been able to gain any clues.',
               COLOR_TIMELINE);
         }
+
+      // mark npc as scanned
+      if (player.host.event != null && player.host.memoryAccessed >= 2)
+        player.host.npc.memoryAccessed = true; 
+
+      player.host.memoryAccessed++; // increase counter
     }
 
 

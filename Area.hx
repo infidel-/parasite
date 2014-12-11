@@ -728,7 +728,6 @@ class Area
         if (n.jobKnown && !n.isDead && n.ai == null)
           {
             var ai = spawnUnseenAI(n.type, true);
-            trace('event npc spawned, ' + ai.id);
             if (ai == null)
               break;
             n.ai = ai;

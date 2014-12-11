@@ -101,6 +101,8 @@ class MouseEntity extends Entity
     {
       if (game.location == Game.LOCATION_AREA)
         handleInputArea();
+      else if (game.location == Game.LOCATION_REGION)
+        handleInputRegion();
     }
 
 
@@ -146,6 +148,21 @@ class MouseEntity extends Entity
       // mouse wheel - change mouse action
       if (Input.mouseWheel)
         onWheel(Input.mouseWheelDelta);
+    }
+
+
+// handle mouse input (area mode)
+  function handleInputRegion()
+    {
+      // mouse click
+      if (Input.mouseReleased)
+        {
+          var x = Std.int(game.scene.mouseX / Const.TILE_WIDTH);
+          var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
+          var reg = game.world.get(0);     
+          var area = reg.getXY(x, y);
+          game.region.updateNPC(area);
+        }
     }
 
 

@@ -4,7 +4,7 @@
 + display a window with text when this happens: "What am I? What is my purpose? I must know."
 + timeline represents all that parasite knows about the events that resulted in its current state. It is a timeline of events in scenario with lists of participating persons. 
 + when player gains access to timeline, he receives a few clues to start
-* there are two types of clues - physical (computer, document, etc) and event npc memory contents
++ there are two types of clues - physical (computer, document, etc) and event npc memory contents
 + reading notes
 + there is a chance that memory/physical clue will have contents about the previous/next event (make a flag isHidden for special events that will bypass that)
 + event npcs and physical clues do not spawn until player has access to timeline
@@ -15,8 +15,8 @@
 * cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
 * improvement screen scrolling
 + using "Access Memory" on possessed event npc will unlock what he knows about the timeline
-* set npc.memoryKnown=true on accessing memory (also disable multiple memory scans?)
-* visually known event npcs must have an icon on them
++ set npc.memoryAccessed=true on accessing memory (also disable multiple memory scans?)
++ visually known event npcs must have an icon on them
 * knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
 * having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
 * info bits are: name, job + photo, location, dead/alive
@@ -76,7 +76,8 @@ fix event npcs spawn by job (soldiers go to military bases)
 police radio gives access to radio messages
 spawn stuff that is seen by player immediately on entering area
 remove dead npcs from area.npc on death
-
+make reading notes multiple times?
+"+10 persons scanned"?
 
 
 host memory + human society > 50 = access to infoweb

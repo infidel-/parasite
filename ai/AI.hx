@@ -67,7 +67,8 @@ class AI
   public var health(default, set): Int; // current health
   public var maxHealth: Int; // maximum health
   public var energy(default, set): Int; // amount of turns until host death
-  public var maxEnergy: Int; // max amount of turns until host death 
+  public var maxEnergy: Int; // max amount of turns until host death
+  public var memoryAccessed: Int; // how many times memory was accessed
 
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
@@ -98,6 +99,7 @@ class AI
       state = AI_STATE_IDLE;
       reason = REASON_NONE;
       alertness = 0;
+      memoryAccessed = 0;
       timers = 
         {
           alert: 0,

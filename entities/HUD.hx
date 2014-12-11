@@ -135,7 +135,7 @@ class HUD
       buf.add('===\n');
 
       if (game.player.state == PLR_STATE_ATTACHED)
-        buf.add('Hold: ' + game.area.player.attachHold + '/100\n');
+        buf.add('Grip: ' + game.area.player.attachHold + '/100\n');
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)

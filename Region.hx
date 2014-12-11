@@ -217,21 +217,18 @@ class Region
 
 
 // update npc icon for this area
-  function updateNPC(a: RegionArea)
+  public function updateNPC(a: RegionArea)
     {
       if (game.timeline.isLocked || a.npc.length == 0)
         return;
 
       var ok = true;
       for (npc in a.npc)
-        if (!npc.isDead && npc.areaKnown && !npc.isScanned)
+        if (!npc.isDead && npc.areaKnown && !npc.memoryAccessed)
           ok = false;
 
-      if (ok)
-        return;
-
       _tilemapNPC.setTile(a.x, a.y,
-        Const.ROW_REGION_ICON * 9 + Const.FRAME_EVENT_NPC);
+        Const.ROW_REGION_ICON * 9 + (ok ? Const.FRAME_EMPTY : Const.FRAME_EVENT_NPC));
     }
 
 
