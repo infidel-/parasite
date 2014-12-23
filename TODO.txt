@@ -11,9 +11,10 @@
 + physical clues only spawn at event location
 + physical clues stop spawning when everything about that event is known
 + when player is in the area with live event npcs attached, they will spawn periodically
-* soldier, agent
++ soldier, agent
 * cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
 * improvement screen scrolling
+* +10 deceased
 + using "Access Memory" on possessed event npc will unlock what he knows about the timeline
 + set npc.memoryAccessed=true on accessing memory (also disable multiple memory scans?)
 + visually known event npcs must have an icon on them
@@ -78,6 +79,7 @@ spawn stuff that is seen by player immediately on entering area
 remove dead npcs from area.npc on death
 make reading notes multiple times?
 "+10 persons scanned"?
+add some unique traits for agents and soldiers
 
 
 host memory + human society > 50 = access to infoweb

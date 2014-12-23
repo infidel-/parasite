@@ -838,13 +838,14 @@ class Area
       var ai: AI = null;
       if (type == 'dog')
         ai = new DogAI(game, loc.x, loc.y);
-//      else if (type == 'civilian')
-      else if (type == 'civilian' || type == 'agent')
+      else if (type == 'civilian')
         ai = new CivilianAI(game, loc.x, loc.y);
       else if (type == 'police')
         ai = new PoliceAI(game, loc.x, loc.y);
       else if (type == 'soldier')
         ai = new SoldierAI(game, loc.x, loc.y);
+      else if (type == 'agent')
+        ai = new AgentAI(game, loc.x, loc.y);
       else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
 
       ai.isCommon = isCommon;
