@@ -54,7 +54,7 @@ class ConstItems
       id: 'pistol',
       name: 'pistol',
       type: 'weapon',
-      unknown: 'hard metallic object',
+      unknown: 'metallic object with a handle',
       verb1: 'shoot',
       verb2: 'shoots',
       weaponStats:
@@ -65,6 +65,22 @@ class ConstItems
           maxDamage: 10
         }
     },
+    {
+      id: 'rifle',
+      name: 'assault rifle',
+      type: 'weapon',
+      unknown: 'elongated metallic object with a handle',
+      verb1: 'shoot',
+      verb2: 'shoots',
+      weaponStats:
+        {
+          isRanged: true,
+          skill: SKILL_RIFLE,
+          minDamage: 2,
+          maxDamage: 12
+        }
+    },
+
     // ========= ******* readables ********* ==========
     {
       id: 'paper',

@@ -58,6 +58,8 @@ class Const
   public static var ROW_DOG = 6;
   public static var ROW_CIVILIAN = 7;
   public static var ROW_POLICE = 8;
+  public static var ROW_SOLDIER = 9;
+  public static var ROW_AGENT = 10;
 
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_BODY = 1;

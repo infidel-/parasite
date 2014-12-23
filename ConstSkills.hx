@@ -31,6 +31,12 @@ class ConstSkills
       defaultLevel: 20,
     },
     {
+      id: SKILL_RIFLE,
+      name: 'rifle',
+      defaultLevel: 25,
+    },
+
+    {
       id: KNOW_SOCIETY,
       name: 'human society',
       defaultLevel: 0,
