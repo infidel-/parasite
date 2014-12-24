@@ -98,7 +98,7 @@ class OrgansWindow
             }
           else buf.add(' (' + organ.gp + '/' + organ.info.gp + 'gp)');
           buf.add(' [' + organ.info.note + ']\n');
-#if debug
+#if mydebug
 //          var params = game.player.evolutionManager.getParams(organ.id);
           buf.add('DEBUG: ' + organ.params + '\n');
 #end

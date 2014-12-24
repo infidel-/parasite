@@ -51,7 +51,7 @@ class Game
       timeline = new Timeline(this);
       timeline.init();
 
-      log('You are alone. You are scared. You need to find a host or you will die soon.');
+      message('You are alone. You are scared. You need to find a host or you will die soon.');
 
       // set random region (currently only 1 at all)
       var r = world.get(0);
@@ -188,6 +188,14 @@ class Game
   public inline function updateHUD()
     {
       scene.hud.update(); // update hud state
+    }
+
+
+// display text message in a window
+  public inline function message(s: String)
+    {
+      Const.todo('display important message');
+      log(s, COLOR_MESSAGE);
     }
 
 

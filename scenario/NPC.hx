@@ -15,7 +15,7 @@ class NPC
   public var areaKnown: Bool; // location known to player?
   public var isDead: Bool; // is this npc dead?
   public var isDeadKnown: Bool; // is dead/alive known to player?
-  public var memoryAccessed: Bool; // has this npc's memory been accessed? 
+  public var memoryKnown: Bool; // has this npc's memories been learned? 
   public var event: Event; // event
   public var ai: ai.AI; // ai link
 

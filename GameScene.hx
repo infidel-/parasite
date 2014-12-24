@@ -66,7 +66,7 @@ class GameScene extends Scene
       Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
 
-      Input.define("skipTurn", [ Key.SPACE ]);
+      Input.define("skipTurn", [ Key.NUMPAD_5, Key.SPACE ]);
       Input.define("closeWindow", [ Key.ESCAPE ]);
 
 //      _dx = 0;
@@ -221,15 +221,18 @@ class GameScene extends Scene
       // no windows open
       else if (hudState == GameScene.HUDSTATE_DEFAULT)
         {
-          // open inventory window
-          if (Input.pressed("inventoryWindow") && game.player.state == PLR_STATE_HOST)
+          // open inventory window (if items are learned)
+          if (Input.pressed("inventoryWindow") &&
+              game.player.state == PLR_STATE_HOST &&
+              game.player.vars.itemsLearned)
             {
               hudState = GameScene.HUDSTATE_INVENTORY;
               inventoryWindow.show();
             }
 
-          // open evolution window
-          else if (Input.pressed("evolutionWindow"))
+          // open evolution window (if enabled)
+          else if (Input.pressed("evolutionWindow") &&
+                   game.player.evolutionManager.state > 0)
             {
               hudState = GameScene.HUDSTATE_EVOLUTION;
               evolutionWindow.show();
@@ -256,7 +259,7 @@ class GameScene extends Scene
               timelineWindow.show();
             }
 
-#if debug
+#if mydebug
           // open debug window
           else if (Input.pressed("debugWindow"))
             {

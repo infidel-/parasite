@@ -23,6 +23,7 @@ class Const
       COLOR_WORLD => '#FF9900',
       COLOR_HINT => '#A020F0',
       COLOR_TIMELINE => '#F03378',
+      COLOR_MESSAGE => '#1CD450',
     ];
 
   // entity spritemap indexes
@@ -106,7 +107,7 @@ class Const
       'reinforceControl' => { id: 'reinforceControl', type: ACTION_AREA, name: 'Reinforce Control', energy: 5 },
       'doNothing' => { id: 'doNothing', type: ACTION_AREA, name: 'Do Nothing', energy: 0 },
       'leaveHost' => { id: 'leaveHost', type: ACTION_AREA, name: 'Leave Host', energy: 0 },
-      'accessMemory' => { id: 'accessMemory', type: ACTION_AREA, name: 'Access Memory', energy: 0 },
+      'probeBrain' => { id: 'probeBrain', type: ACTION_AREA, name: 'Probe Brain', energy: 0 },
       'learnObject' => { id: 'learnObject', type: ACTION_AREA, name: 'Learn About Object', energy: 10 },
       'move' => { id: 'move', type: ACTION_AREA, name: 'Movement', energy: 0 },
 

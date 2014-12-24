@@ -224,7 +224,7 @@ class Region
 
       var ok = true;
       for (npc in a.npc)
-        if (!npc.isDead && npc.areaKnown && !npc.memoryAccessed)
+        if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
           ok = false;
 
       _tilemapNPC.setTile(a.x, a.y,

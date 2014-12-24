@@ -116,17 +116,18 @@ class EvolutionWindow
             }
         }
 
-      // add paths
-      for (p in game.player.evolutionManager.getPathList())
-        {
-          // do not add completed paths
-          if (game.player.evolutionManager.isPathComplete(p.id))
-            continue;
-            
-          _actionIDs.add('setPath.' + p.id);
-          _actionNames.add(p.info.name + ' (' + p.ep + '/' +
-            ConstEvolution.epCostPath[p.level] + ')');
-        }
+      // add paths (full evolution only)
+      if (game.player.evolutionManager.state > 1)
+        for (p in game.player.evolutionManager.getPathList())
+          {
+            // do not add completed paths
+            if (game.player.evolutionManager.isPathComplete(p.id))
+              continue;
+              
+            _actionIDs.add('setPath.' + p.id);
+            _actionNames.add(p.info.name + ' (' + p.ep + '/' +
+              ConstEvolution.epCostPath[p.level] + ')');
+          }
 
       buf.add('\nCurrent evolution direction: ');
       buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());

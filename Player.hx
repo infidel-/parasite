@@ -17,6 +17,7 @@ class Player
   public var maxHealth: Int; // maximum health
   var knownItems: List<String>; // list of known item types
 
+  public var vars: PlayerVars; // player variables
   public var skills: Skills; // skills
   public var state: _PlayerState; // player state - parasite, attach, host
 
@@ -31,6 +32,9 @@ class Player
       evolutionManager = new EvolutionManager(this, game);
 
       vars = {
+        humansInvaded: false,
+        itemsLearned: false,
+
         areaEnergyPerTurn: 10,
         regionMoveEnergy: 15,
         startHealth: 10,
@@ -148,15 +152,6 @@ class Player
 
 // =================================================================================
 
-  public var vars: { // player variables
-    areaEnergyPerTurn: Int, // area: energy spent per turn without a host
-    regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)
-    startHealth: Int, // starting parasite health
-    startEnergy: Int, // starting parasite energy
-    listenRadius: Int, // player listen radius
-    losEnabled: Bool, // LOS checks enabled?
-    };
-
 
   // base amount of turns the host has to live
 //  public static var HOST_EXPIRY_TURNS = 10;
@@ -166,13 +161,17 @@ class Player
 }
 
 
-// player action type
-/*
-typedef PlayerAction =
-{
-  var id: String; // action id
-  var name: String; // action name
-//  var ap: Int; // action points cost
-  var energy: Int; // energy cost
-}
-*/
+// player variables typedef
+
+private typedef PlayerVars = {
+  // game flags and vars
+  humansInvaded: Bool, // any humans invaded already?
+  itemsLearned: Bool, // items and area objects existance learned?
+
+  areaEnergyPerTurn: Int, // area: energy spent per turn without a host
+  regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)
+  startHealth: Int, // starting parasite health
+  startEnergy: Int, // starting parasite energy
+  listenRadius: Int, // player listen radius
+  losEnabled: Bool, // LOS checks enabled?
+  };

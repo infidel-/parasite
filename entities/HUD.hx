@@ -203,9 +203,12 @@ class HUD
       buf.add("\n===\n");
       if (game.player.state == PLR_STATE_HOST)
         {
-          buf.add('\nF1: Inventory\n');
+          buf.add('\n');
+          if (game.player.vars.itemsLearned)
+            buf.add('F1: Inventory\n');
           buf.add('F2: Skills and knowledge\n');
-          buf.add('F3: Controlled evolution\n');
+          if (game.player.evolutionManager.state > 0)
+            buf.add('F3: Controlled evolution\n');
           buf.add('F4: Body features\n');
         }
 

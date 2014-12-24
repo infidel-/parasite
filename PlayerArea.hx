@@ -119,7 +119,7 @@ class PlayerArea
         {
           addActionToList(tmp, 'reinforceControl');
           if (player.evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
-            addActionToList(tmp, 'accessMemory');
+            addActionToList(tmp, 'probeBrain');
 
           // organ-based actions
           player.host.organs.addActions(tmp);
@@ -132,17 +132,19 @@ class PlayerArea
       if (olist == null)
         return tmp;
 
-      for (o in olist)
-        {
-          // player does not know what this object is, cannot activate it
-          if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
-              player.host.isHuman)
-            addActionToList(tmp, 'learnObject', o);
+      // need to learn about objects
+      if (player.vars.itemsLearned)
+        for (o in olist)
+          {
+            // player does not know what this object is, cannot activate it
+            if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
+                player.host.isHuman)
+              addActionToList(tmp, 'learnObject', o);
 
-          // object known - add all actions defined by object
-          else if (Lambda.has(knownObjects, o.type)) 
-            o.addActions(tmp);
-        }
+            // object known - add all actions defined by object
+            else if (Lambda.has(knownObjects, o.type)) 
+              o.addActions(tmp);
+          }
       
       return tmp;
     }
@@ -186,9 +188,9 @@ class PlayerArea
       else if (action.id == 'leaveHost')
         leaveHostAction();
 
-      // access host memory
-      else if (action.id == 'accessMemory')
-        accessMemoryAction();
+      // probe host brain 
+      else if (action.id == 'probeBrain')
+        probeBrainAction();
 
       // learn about object 
       else if (action.id == 'learnObject')
@@ -407,6 +409,16 @@ class PlayerArea
 
       // update AI visibility to player
       area.updateVisibility();
+
+      // on first invade of human open limited evolution
+      if (player.host.isHuman && !player.vars.humansInvaded)
+        {
+          player.vars.humansInvaded = true;
+          player.evolutionManager.state = 1;
+          player.evolutionManager.addImprov(IMP_HOST_MEMORY);
+
+          game.message('This host is intelligent. I need to evolve and understand it further.');
+        }
     }
 
 
@@ -442,17 +454,17 @@ class PlayerArea
     }
 
 
-// action: access host memory
-  function accessMemoryAction()
+// action: probe host brain 
+  function probeBrainAction()
     {
       // animals do not have any useful memories
       if (!player.host.isHuman)
         {
-          game.log('The brain of this host contains nothing useful.');
+          game.log('This host is not intelligent enough.');
           return;
         }
      
-      game.log('You probe the brain of the host and access its memory.');
+      game.log('You probe the brain of the host and learn its contents.');
 
       var params = player.evolutionManager.getParams(IMP_HOST_MEMORY);
       player.skills.increase(KNOW_SOCIETY,
@@ -476,13 +488,20 @@ class PlayerArea
             player.host.getName() + '.');
         }
 
+      // on first brain probe learn about items and area objects
+      if (!player.vars.itemsLearned)
+        {
+          player.vars.itemsLearned = true;
+          game.message('Some of these objects your host carries can be useful to you. There are also functional objects around you.');
+        }
+
       // get clues
-      if (player.host.event != null && player.host.memoryAccessed < 3)
+      if (player.host.event != null && player.host.brainProbed < 3)
         {
           var chance = 100;
-          if (player.host.memoryAccessed == 1)
+          if (player.host.brainProbed == 1)
             chance = 30;
-          else if (player.host.memoryAccessed == 2)
+          else if (player.host.brainProbed == 2)
             chance = 10;
       
           var ret = false;
@@ -496,10 +515,10 @@ class PlayerArea
         }
 
       // mark npc as scanned
-      if (player.host.event != null && player.host.memoryAccessed >= 2)
-        player.host.npc.memoryAccessed = true; 
+      if (player.host.event != null && player.host.brainProbed >= 2)
+        player.host.npc.memoryKnown = true; 
 
-      player.host.memoryAccessed++; // increase counter
+      player.host.brainProbed++; // increase counter
     }
 
 
@@ -514,7 +533,7 @@ class PlayerArea
     }
 
 
-//  action: access host skills (called from accessMemory)
+//  action: access host skills (called from probeBrain)
   function accessSkillsAction(hostSkillsMod: Float)
     {
       var hostSkill = player.host.skills.getRandomSkill();

@@ -68,7 +68,7 @@ class AI
   public var maxHealth: Int; // maximum health
   public var energy(default, set): Int; // amount of turns until host death
   public var maxEnergy: Int; // max amount of turns until host death
-  public var memoryAccessed: Int; // how many times memory was accessed
+  public var brainProbed: Int; // how many times brain was probed
 
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
@@ -99,7 +99,7 @@ class AI
       state = AI_STATE_IDLE;
       reason = REASON_NONE;
       alertness = 0;
-      memoryAccessed = 0;
+      brainProbed = 0;
       timers = 
         {
           alert: 0,
@@ -454,7 +454,7 @@ class AI
       log(info.verb2 + ' ' + 
         (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') + 
         ' for ' + damage + ' damage.');
-#if debug
+#if mydebug
       game.log('AI.attack: ' + tmp);
 #end
 

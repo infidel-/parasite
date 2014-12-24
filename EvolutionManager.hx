@@ -8,6 +8,7 @@ class EvolutionManager
   var game: Game;
   var player: Player;
 
+  public var state: Int; // 0 - disabled, 1 - limited, 2 - full
   public var isTaskPath: Bool; // is current task path?
   public var taskID: String; // string id of currently evolving path/improvement
   var _list: List<Improv>; // list of known improvements (that can be of level 0)
@@ -17,6 +18,7 @@ class EvolutionManager
     {
       player = p;
       game = g;
+      state = 0;
 
       _list = new List<Improv>();
       _listPaths = new List<Path>();
@@ -88,6 +90,14 @@ class EvolutionManager
               // clear
               imp.ep = 0;
               taskID = '';
+
+              // on gaining access memory open full evolution
+              if (imp.id == IMP_HOST_MEMORY && imp.level == 1)
+                {
+                  state = 2;
+
+                  game.message('I can probe the brain of this host now. I should also evolve further.');
+                }
             }
         }
     }

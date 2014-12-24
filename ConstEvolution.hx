@@ -470,12 +470,12 @@ class ConstEvolution
       { // ***
         path: PATH_SPECIAL,
         id: IMP_HOST_MEMORY, 
-        name: '??Host memory',
-        note: 'Gains access to host memory',
+        name: 'Brain probe',
+        note: 'Allows probing host brain to learn its contents',
         skill: KNOW_MEMORY,
         skillValue: 1, 
         levelNotes: [
-          'Cannot access host brain',
+          'Cannot probe host brain',
           'Access with severe problems (basic knowledge)',
           'Limited access with some problems (extensive knowledge and basic skills)',
           'Full access',

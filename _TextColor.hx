@@ -10,4 +10,5 @@ enum _TextColor
    COLOR_WORLD;
    COLOR_HINT;
    COLOR_TIMELINE;
+   COLOR_MESSAGE;
 }
