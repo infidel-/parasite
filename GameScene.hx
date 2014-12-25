@@ -238,8 +238,9 @@ class GameScene extends Scene
               evolutionWindow.show();
             }
 
-          // open skills window
-          else if (Input.pressed("skillsWindow"))
+          // open skills window (if skills are learned)
+          else if (Input.pressed("skillsWindow") &&
+                   game.player.vars.skillsLearned)
             {
               hudState = GameScene.HUDSTATE_SKILLS;
               skillsWindow.show();
@@ -253,7 +254,7 @@ class GameScene extends Scene
             }
 
           // open timeline window
-          else if (Input.pressed("timelineWindow"))
+          else if (Input.pressed("timelineWindow") && !game.timeline.isLocked)
             {
               hudState = GameScene.HUDSTATE_TIMELINE;
               timelineWindow.show();

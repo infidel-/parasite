@@ -464,7 +464,7 @@ class PlayerArea
           return;
         }
      
-      game.log('You probe the brain of the host and learn its contents.');
+      game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
       var params = player.evolutionManager.getParams(IMP_HOST_MEMORY);
       player.skills.increase(KNOW_SOCIETY,
@@ -492,7 +492,7 @@ class PlayerArea
       if (!player.vars.itemsLearned)
         {
           player.vars.itemsLearned = true;
-          game.message('Some of these objects your host carries can be useful to you. There are also functional objects around you.');
+          game.message('Some of these objects the host carries can be useful. There are also functional objects around.');
         }
 
       // get clues
@@ -536,6 +536,10 @@ class PlayerArea
 //  action: access host skills (called from probeBrain)
   function accessSkillsAction(hostSkillsMod: Float)
     {
+      // need to learn about skills first
+      if (!game.player.vars.skillsLearned)
+        return;
+
       var hostSkill = player.host.skills.getRandomSkill();
       if (hostSkill == null)
         return;

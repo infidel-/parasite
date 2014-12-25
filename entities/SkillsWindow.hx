@@ -29,14 +29,20 @@ class SkillsWindow
       // actions list
       var font = Assets.getFont("font/04B_03__.ttf");
       _textField = new TextField();
-      _textField.autoSize = TextFieldAutoSize.LEFT;
+//      _textField.autoSize = TextFieldAutoSize.LEFT;
+      _textField.width = HXP.width;
+      _textField.height = HXP.height;
       var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _textField.defaultTextFormat = fmt;
       _back = new Sprite();
       _back.addChild(_textField);
-      _back.x = 20;
-      _back.y = 20;
+//      _back.x = 20;
+//      _back.y = 20;
+      _back.x = 0;
+      _back.y = 0;
+      _back.width = HXP.width;
+      _back.height = HXP.height;
       HXP.stage.addChild(_back);
     }
 
@@ -99,6 +105,8 @@ class SkillsWindow
         }
 
       _textField.htmlText = buf.toString();
+      _textField.width = HXP.width;
+      _textField.height = HXP.height;
       _back.graphics.clear();
       _back.graphics.beginFill(0x202020, .95);
       _back.graphics.drawRect(0, 0, _textField.width, _textField.height);

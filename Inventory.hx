@@ -56,11 +56,11 @@ class Inventory
   
       // learn about item
       if (actionID == 'learn')
-        actionLearn(item);
+        learnAction(item);
     
       // read item
       else if (actionID == 'read')
-        actionRead(item);
+        readAction(item);
     
       // spend energy
       game.player.host.energy -= action.energy;
@@ -73,7 +73,7 @@ class Inventory
 
 
 // ACTION: read item
-  function actionRead(item: Item)
+  function readAction(item: Item)
     {
       game.log('You study the contents of the ' + item.name + ' and destroy it.');
       var cnt = 0;
@@ -94,11 +94,18 @@ class Inventory
 
 
 // ACTION: learn about item
-  function actionLearn(item: Item)
+  function learnAction(item: Item)
     {
       game.log('You probe the brain of the host and learn what that item is for.');
 
       game.player.addKnownItem(item.id);
+
+      // on first learn open skills
+      if (!game.player.vars.skillsLearned)
+        {
+          game.player.vars.skillsLearned = true;
+          game.message('I can learn how to use items effectively by probing the host brain for more.');
+        }
     }
 
 

@@ -206,14 +206,21 @@ class HUD
           buf.add('\n');
           if (game.player.vars.itemsLearned)
             buf.add('F1: Inventory\n');
-          buf.add('F2: Skills and knowledge\n');
+          if (game.player.vars.skillsLearned)
+            buf.add('F2: Skills and knowledge\n');
           if (game.player.evolutionManager.state > 0)
             buf.add('F3: Controlled evolution\n');
-          buf.add('F4: Body features\n');
+          if (game.player.vars.organsLearned)
+            buf.add('F4: Body features\n');
         }
 
       if (!game.timeline.isLocked)
         buf.add('F5: Event timeline\n');
+
+      buf.add('F8: Exit\n');
+#if mydebug
+      buf.add('F9: Debug\n');
+#end 
 
       _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();

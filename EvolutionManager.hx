@@ -98,6 +98,13 @@ class EvolutionManager
 
                   game.message('I can probe the brain of this host now. I should also evolve further.');
                 }
+
+              // on first learning of evolution with an organ
+              if (!game.player.vars.organsLearned && imp.info.organ != null)
+                {
+                  game.player.vars.organsLearned = true;
+                  game.message('Evolving allows me to force changes in the host body.');
+                }
             }
         }
     }

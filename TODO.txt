@@ -15,9 +15,9 @@
 *) control dog
 *) first control human - limited evolution (only access memory)
 *) finish evolving access memory - full evolution access
-4) first evolving something with an organ - body features
+*) first evolving something with an organ - body features
 *) first access memory - inventory + can learn about items/area objects
-4) first learn about item/area object - skills
+*) first learn about item - skills
 limit region access?
 5) 25% human society knowledge - access to timeline
 * cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)

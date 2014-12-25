@@ -34,6 +34,8 @@ class Player
       vars = {
         humansInvaded: false,
         itemsLearned: false,
+        skillsLearned: false,
+        organsLearned: false,
 
         areaEnergyPerTurn: 10,
         regionMoveEnergy: 15,
@@ -167,6 +169,8 @@ private typedef PlayerVars = {
   // game flags and vars
   humansInvaded: Bool, // any humans invaded already?
   itemsLearned: Bool, // items and area objects existance learned?
+  skillsLearned: Bool, // skills existance learned?
+  organsLearned: Bool, // organ growth learned?
 
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
   regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)
