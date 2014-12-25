@@ -290,26 +290,43 @@ class WorldRegion
 
 
 // get random area around this one
-  public function getRandomAround(area: RegionArea): RegionArea
+  public function getRandomAround(area: RegionArea, ?isInhabited: Bool): RegionArea
     {
       var tmp: Array<RegionArea> = [];
       var a = getXY(area.x, area.y);
-      if (a != null)
+      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
         tmp.push(a);
       var a = getXY(area.x + 1, area.y);
-      if (a != null)
+      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
         tmp.push(a);
       var a = getXY(area.x - 1, area.y);
-      if (a != null)
+      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
         tmp.push(a);
       var a = getXY(area.x, area.y + 1);
-      if (a != null)
+      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
         tmp.push(a);
       var a = getXY(area.x, area.y - 1);
-      if (a != null)
+      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
         tmp.push(a);
 
-      return tmp[Std.random(tmp.length)];
+      // at least one area found
+      if (tmp.length > 0)
+        return tmp[Std.random(tmp.length)];
+
+      // no inhabitable areas found, find closest inhabitable area to this one
+      var amin = null;
+      var dist = 10000;
+      for (a in _list)
+        {
+          var tmpdist = Const.getDistSquared(a.x, a.y, area.x, area.y);
+          if (a.x != area.x && a.x != area.y && tmpdist < dist)
+            {
+              amin = a;
+              dist = tmpdist; 
+            }
+        }
+
+      return amin;
     }
 
 

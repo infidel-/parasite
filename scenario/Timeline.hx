@@ -84,8 +84,7 @@ class Timeline
 // unlock event timeline
   public function unlock()
     {
-      game.log("What am I? What is my purpose? I must know.");
-      Const.todo('proper unlock timeline screen');
+      game.message("What am I? What is my purpose? I must know.");
       isLocked = false;
 
       // give some starting clues to player
@@ -254,7 +253,7 @@ class Timeline
               npc.type = type;
               var region = game.world.get(0);
               if (event.location != null)
-                npc.area = region.getRandomAround(event.location.area);
+                npc.area = region.getRandomAround(event.location.area, true);
               else
                 {
                   Const.todo('spawn event npcs in appropriate area types');

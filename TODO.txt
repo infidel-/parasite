@@ -12,25 +12,24 @@
 + physical clues stop spawning when everything about that event is known
 + when player is in the area with live event npcs attached, they will spawn periodically
 + soldier, agent
-*) control dog
-*) first control human - limited evolution (only access memory)
-*) finish evolving access memory - full evolution access
-*) first evolving something with an organ - body features
-*) first access memory - inventory + can learn about items/area objects
-*) first learn about item - skills
-limit region access?
-5) 25% human society knowledge - access to timeline
-* cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
-* improvement screen scrolling
-* +10 deceased
++) control dog
++) first control human - limited evolution (only access memory)
++) finish evolving access memory - full evolution access
++) first evolving something with an organ - body features
++) first access memory - inventory + can learn about items/area objects
++) first learn about item - skills
++) 25% human society knowledge - access to timeline
+- cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
+- message log with scrolling
+- +10 deceased
 + using "Access Memory" on possessed event npc will unlock what he knows about the timeline
 + set npc.memoryAccessed=true on accessing memory (also disable multiple memory scans?)
 + visually known event npcs must have an icon on them
-* knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
-* having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
-* info bits are: name, job + photo, location, dead/alive
+- knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
+- having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
+- info bits are: name, job + photo, location, dead/alive
 ??? job agent ???
-* when done, copy this to docs
+- when done, copy this to docs
 
 Physical clue/Memory contents:
 * event person name - allows researching that name
@@ -124,6 +123,8 @@ walkable city sewers (should i?)
 electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp
 organ damage - organ must heal itself before it becomes active again
+limit region access (until some learning flag triggers, initial progression)
+
 
 scene. getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug

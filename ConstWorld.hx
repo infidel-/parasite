@@ -8,6 +8,7 @@ class ConstWorld
         id: 'ground',
         name: 'Uninhabited area',
         canEnter: false,
+        isInhabited: false,
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0.0,
@@ -24,6 +25,7 @@ class ConstWorld
         id: 'cityLow',
         name: 'Low-density city area',
         canEnter: true,
+        isInhabited: true,
         commonAI: 10,
         uncommonAI: 10,
         buildingChance: 0.05,
@@ -43,6 +45,7 @@ class ConstWorld
         id: 'cityMedium', 
         name: 'Medium-density city area',
         canEnter: true,
+        isInhabited: true,
         commonAI: 20,
         uncommonAI: 20,
         buildingChance: 0.15,
@@ -62,6 +65,7 @@ class ConstWorld
         id: 'cityHigh', 
         name: 'High-density city area',
         canEnter: true,
+        isInhabited: true,
         commonAI: 30,
         uncommonAI: 30,
         buildingChance: 0.30,
@@ -81,6 +85,7 @@ class ConstWorld
         id: 'militaryBase',
         name: 'Military base',
         canEnter: true,
+        isInhabited: true,
         commonAI: 10,
         uncommonAI: 10,
         buildingChance: 0.05,
@@ -100,6 +105,7 @@ class ConstWorld
         id: 'facility',
         name: 'Facility',
         canEnter: true,
+        isInhabited: true,
         commonAI: 10,
         uncommonAI: 10,
         buildingChance: 0.05,
@@ -166,6 +172,7 @@ typedef AreaInfo = {
   var id: String; // area type id
   var name: String; // area type name
   var canEnter: Bool; // player can enter this area?
+  var isInhabited: Bool; // is this area inhabited?
   var commonAI: Int; // common ai amount spawned at any time
   var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
   var buildingChance: Float; // chance to spawn building
