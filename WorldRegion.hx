@@ -293,39 +293,48 @@ class WorldRegion
   public function getRandomAround(area: RegionArea, ?isInhabited: Bool): RegionArea
     {
       var tmp: Array<RegionArea> = [];
+
       var a = getXY(area.x, area.y);
       if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
         tmp.push(a);
-      var a = getXY(area.x + 1, area.y);
-      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
-        tmp.push(a);
-      var a = getXY(area.x - 1, area.y);
-      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
-        tmp.push(a);
-      var a = getXY(area.x, area.y + 1);
-      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
-        tmp.push(a);
-      var a = getXY(area.x, area.y - 1);
-      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
-        tmp.push(a);
+
+      for (i in 0...Const.dirx.length)
+        {
+          var a = getXY(area.x + Const.dirx[i], area.y + Const.diry[i]);
+          if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
+            tmp.push(a);
+        }
 
       // at least one area found
       if (tmp.length > 0)
         return tmp[Std.random(tmp.length)];
 
-      // no inhabitable areas found, find closest inhabitable area to this one
+      // no inhabitable areas found, find inhabitable area in radius 5
+      // and closest one
+      var tmp2 = [];
       var amin = null;
       var dist = 10000;
       for (a in _list)
         {
+          if (isInhabited != null && a.info.isInhabited != isInhabited)
+            continue;
+
           var tmpdist = Const.getDistSquared(a.x, a.y, area.x, area.y);
           if (a.x != area.x && a.x != area.y && tmpdist < dist)
             {
               amin = a;
               dist = tmpdist; 
             }
+
+          if (tmpdist < 25)
+            tmp2.push(a);
         }
 
+      // found some areas in radius 5
+      if (tmp2.length > 1)
+        return tmp2[Std.random(tmp2.length)];
+
+      // no areas close, just use the closest one
       return amin;
     }
 
