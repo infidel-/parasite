@@ -109,7 +109,8 @@ class Area
       area.alertnessMod = 0; // clear alertness counter
 
       // hack: add sewers hatch right under player if this is not at the game start
-      if (game.turns > 0)
+      // and inhabited
+      if (game.turns > 0 && area.info.isInhabited)
         {
           var o = new SewerHatch(game, loc.x, loc.y);
           addObject(o);
@@ -191,125 +192,10 @@ class Area
         for (x in 0...width)
           setType(x, y, Const.TILE_GROUND);
 
-      generateBuildings();
-      generateObjects();
+      AreaGenerator.generate(game, this, area.info);
 
       // set path info 
       _pathEngine = new aPath.Engine(this, width, height);
-    }
-
-
-// generate buildings
-  function generateBuildings()
-    {
-      // buildings
-      for (y in 1...height)
-        for (x in 1...width)
-          {
-            if (Math.random() > area.info.buildingChance)
-              continue;
-
-            // size
-            var sx = 5 + Std.random(10);
-            var sy = 5 + Std.random(10);
-
-            if (x + sx > width - 1)
-              sx = width - 1 - x;
-            if (y + sy > height - 1)
-              sy = height - 1 - y;
-
-            if (sx < 2)
-              continue;
-            if (sy < 2)
-              continue;
-
-//            var cell = get(x,y);
-
-            // check for adjacent buildings
-            var ok = true;
-            for (dy in -2...sy + 3)
-              for (dx in -2...sx + 3)
-                {
-                  if (dx == 0 && dy == 0)
-                    continue;
-                  //var cell = get(x + dx, y + dy);
-                  var cellType = getType(x + dx, y + dy);
-                  if (cellType == "building")
-                    {
-                      ok = false;
-                      break;
-                    }
-                }
-
-            if (!ok)
-              continue;
-  
-            // draw a building rect
-            for (dy in 0...sy)
-              for (dx in 0...sx)
-                {
-                  var cellType = getType(x + dx, y + dy);
-                  if (cellType == null)
-                    continue;
-
-                  setType(x + dx, y + dy, Const.TILE_BUILDING);
-                }
-          }
-    }
-
-
-// generate objects
-  function generateObjects()
-    {
-      var info = area.info;
-
-      // spawn all objects
-      for (objInfo in info.objects)
-        for (i in 0...objInfo.amount)
-          {
-            // find free spot that is not close to another object like this
-            var loc = null;
-            var cnt = 0;
-            while (true)
-              {
-                loc = findEmptyLocation();
-                cnt++;
-                if (cnt > 500)
-                  {
-                    trace('Area.generateObjects(): no free spot for another ' + 
-                      objInfo.id + ', please report');
-                    return;
-                  }
-
-                // check for close objects
-                var ok = true;
-                for (y in -3...3)
-                  for (x in -3...3)
-                    {
-                      var olist = getObjectsAt(loc.x + x, loc.y + y);
-                      for (o in olist)
-                        if (o.type == objInfo.id)
-                          {
-                            ok = false;
-                            break;
-                          }
-
-                      if (!ok)
-                        break;
-                    }
-
-                if (ok)
-                  break;
-              }
-
-            var o: AreaObject = null;
-            if (objInfo.id == 'sewer_hatch')
-              o = new SewerHatch(game, loc.x, loc.y);
-              
-            else throw 'unknown object type: ' + objInfo.id;
-
-            addObject(o);
-          }
     }
 
 /*
@@ -368,7 +254,6 @@ class Area
 
       // TODO: in case if this works slowly i can rewrite it to find all potential free
       // spots and select one of them
-
       var cnt = 0;
       while (true)
         {
@@ -492,7 +377,7 @@ class Area
 
 
 // set cell type 
-  inline function setType(x: Int, y: Int, index: Int)
+  public inline function setType(x: Int, y: Int, index: Int)
     {
       _tilemap.setTile(x, y, index);
       _cells[x][y] = index;
@@ -646,8 +531,8 @@ class Area
         return;
 
       // all event notes and npcs names/jobs known, stop spawning clues
-      if (area.event.notesKnown() && area.event.npcNamesOrJobsKnown())
-        return;
+//      if (area.event.notesKnown() && area.event.npcNamesOrJobsKnown())
+//        return;
 
       // get number of clues already spawned
       var cnt = 0;

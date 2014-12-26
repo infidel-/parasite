@@ -145,6 +145,10 @@ class PlayerArea
             else if (Lambda.has(knownObjects, o.type)) 
               o.addActions(tmp);
           }
+
+      // leave area action
+      if (state != PLR_STATE_ATTACHED && !area.getArea().info.isInhabited)
+        addActionToList(tmp, 'leaveArea');
       
       return tmp;
     }
@@ -195,6 +199,10 @@ class PlayerArea
       // learn about object 
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);
+
+      // try to leave area 
+      else if (action.id == 'leaveArea')
+        leaveAreaAction();
 
       // spend energy
       if (state == PLR_STATE_HOST)
@@ -443,6 +451,14 @@ class PlayerArea
       game.log('You release the host.');
     }
 
+
+// action: leave area
+  function leaveAreaAction()
+    {
+      game.log("You leave the area."); 
+      game.turns++; // manually increase number of turns
+      game.setLocation(Game.LOCATION_REGION);
+    }
 
 // action: remove attached parasite from host
   function detachAction()

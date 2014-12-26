@@ -6,8 +6,9 @@ class ConstWorld
     [
       { // ***
         id: 'ground',
+        type: 'wilderness',
         name: 'Uninhabited area',
-        canEnter: false,
+        canEnter: true,
         isInhabited: false,
         commonAI: 0,
         uncommonAI: 0,
@@ -15,7 +16,7 @@ class ConstWorld
         policeResponceTime: 0,
         policeResponceAmount: 0,
         ai: [
-          'dog' => 0
+          'dog' => 5
           ],
         objects: [
           ]
@@ -23,6 +24,7 @@ class ConstWorld
 
       { // *** low-class, low population - outskirts and suburbs
         id: 'cityLow',
+        type: 'city',
         name: 'Low-density city area',
         canEnter: true,
         isInhabited: true,
@@ -43,6 +45,7 @@ class ConstWorld
 
       { // *** mid-class, mid population - residential districts
         id: 'cityMedium', 
+        type: 'city',
         name: 'Medium-density city area',
         canEnter: true,
         isInhabited: true,
@@ -63,6 +66,7 @@ class ConstWorld
 
       { // *** high-class, high population - downtown and commercial district
         id: 'cityHigh', 
+        type: 'city',
         name: 'High-density city area',
         canEnter: true,
         isInhabited: true,
@@ -83,6 +87,7 @@ class ConstWorld
 
       { // *** military base (TODO)
         id: 'militaryBase',
+        type: 'city',
         name: 'Military base',
         canEnter: true,
         isInhabited: true,
@@ -101,8 +106,9 @@ class ConstWorld
           ]
       },
 
-      { // *** 
+      { // *** facility (TODO) 
         id: 'facility',
+        type: 'city',
         name: 'Facility',
         canEnter: true,
         isInhabited: true,
@@ -170,6 +176,7 @@ class ConstWorld
 
 typedef AreaInfo = {
   var id: String; // area type id
+  var type: String; // area generator type 
   var name: String; // area type name
   var canEnter: Bool; // player can enter this area?
   var isInhabited: Bool; // is this area inhabited?

@@ -257,6 +257,22 @@ class WorldRegion
     }
 
 
+// get random inhabited area
+  public function getRandomInhabited(): RegionArea
+    {
+      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp2 = [];
+      for (a in tmp)
+        if (a.info.isInhabited)
+          tmp2.push(a);
+
+      if (tmp2.length == 0)
+        throw 'cannot find enterable area';
+
+      return tmp2[Std.random(tmp2.length)];
+    }
+
+
 // get random enterable area
   public function getRandomEnterable(): RegionArea
     {

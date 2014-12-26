@@ -56,7 +56,7 @@ class Game
       // set random region (currently only 1 at all)
       var r = world.get(0);
       region.setRegion(r);
-      var a = r.getRandomEnterable();
+      var a = r.getRandomInhabited();
       region.player.createEntity(a.x, a.y);
       region.hide();
 

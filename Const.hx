@@ -72,6 +72,8 @@ class Const
   public static var TILE_HIDDEN = 0;
   public static var TILE_GROUND = 1;
   public static var TILE_BUILDING = 2;
+  public static var TILE_ROCK = 3;
+  public static var TILE_TREE = 4;
 
   public static var TILE_REGION_ROW = 8;
   public static var TILE_REGION_GROUND = 0;
@@ -81,8 +83,8 @@ class Const
   public static var TILE_REGION_MILITARY_BASE = 4;
   public static var TILE_REGION_FACILITY = 5;
 
-  public static var TILE_WALKABLE = [ false, true, false ];
-  public static var TILE_TYPE = [ 'hidden', 'ground', 'building' ];
+  public static var TILE_WALKABLE = [ false, true, false, false, false ];
+  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree' ];
   public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
 //  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 
@@ -109,6 +111,7 @@ class Const
       'leaveHost' => { id: 'leaveHost', type: ACTION_AREA, name: 'Leave Host', energy: 0 },
       'probeBrain' => { id: 'probeBrain', type: ACTION_AREA, name: 'Probe Brain', energy: 0 },
       'learnObject' => { id: 'learnObject', type: ACTION_AREA, name: 'Learn About Object', energy: 10 },
+      'leaveArea' => { id: 'leaveArea', type: ACTION_AREA, name: 'Leave Area', energy: 0 },
       'move' => { id: 'move', type: ACTION_AREA, name: 'Movement', energy: 0 },
 
       // region

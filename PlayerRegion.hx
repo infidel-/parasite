@@ -91,7 +91,8 @@ class PlayerRegion
 // action: enter area
   function enterAreaAction()
     {
-      game.log("You emerge from the sewers.");
+      game.log(region.currentArea.info.isInhabited ?
+        "You emerge from the sewers." : "You enter the area.");
       game.setLocation(Game.LOCATION_AREA);
     }
 

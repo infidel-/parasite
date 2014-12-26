@@ -19,7 +19,7 @@
 +) first access memory - inventory + can learn about items/area objects
 +) first learn about item - skills
 +) 25% human society knowledge - access to timeline
-- cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
++ cannot enter non-city area (move npcs to closeby enterable areas? still need to enter to gather physical clues)
 - message log with scrolling
 - search in timeline
 - +10 deceased
