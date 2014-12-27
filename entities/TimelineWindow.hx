@@ -138,7 +138,7 @@ class TimelineWindow
 
           // event participants
           buf.add('Participants:\n');
-          Const.todo("+10 deceased persons");
+          var numDeceasedAndKnown = 0;
           if (npcSomethingKnown)
             for (npc in event.npc)
               {
@@ -146,6 +146,13 @@ class TimelineWindow
                 if (!npc.nameKnown && !npc.jobKnown && !npc.areaKnown && 
                     !npc.isDeadKnown)
                   continue;
+
+                // count number or dead and known dead
+                if (npc.isDead && npc.isDeadKnown)
+                  {
+                    numDeceasedAndKnown++;
+                    continue;
+                  }
 
                 // npc fully known
                 if (npc.nameKnown && npc.jobKnown && npc.areaKnown &&
@@ -158,14 +165,17 @@ class TimelineWindow
                   buf.add('at (' + npc.area.x + ',' + npc.area.y + ') ');
                 else buf.add('at (?,?) ');
                 buf.add(npc.jobKnown ? '[photo] ' : '[no photo] ');
-                if (npc.isDead && npc.isDeadKnown)
-                  buf.add('[deceased]');
+//                if (npc.isDead && npc.isDeadKnown)
+//                  buf.add('[deceased]');
                 buf.add('\n');
               }
 
           // nothing known about any npcs
           else buf.add('  unknown');
-        
+
+          if (numDeceasedAndKnown > 0)
+            buf.add(" ... +" + numDeceasedAndKnown + " persons deceased ...\n");
+
           buf.add('\n');
         }
 
