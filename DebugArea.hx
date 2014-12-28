@@ -126,6 +126,7 @@ class DebugArea
           imp.level = 3;
           imp.ep = ConstEvolution.epCostImprovement[imp.level];
         }
+      game.player.vars.organsLearned = true; 
       game.log('All evolution improvements gained at max level');
     }
 
@@ -213,8 +214,7 @@ class DebugArea
 // enter sewers (region mode)
   function enterSewers()
     {
-      game.scene.debugWindow.hide();
-      game.scene.hudState = GameScene.HUDSTATE_DEFAULT;
+      game.scene.setState(HUDSTATE_DEFAULT);
       game.setLocation(Game.LOCATION_REGION);
     }
 

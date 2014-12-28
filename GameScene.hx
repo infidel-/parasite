@@ -13,13 +13,8 @@ class GameScene extends Scene
   public var game: Game; // game state link
   public var mouse: MouseEntity; // mouse cursor entity
   public var hud: HUD; // ingame HUD
-  public var hudState: String; // current HUD state (default, evolution, etc)
-  public var evolutionWindow: EvolutionWindow; // evolution window
-  public var inventoryWindow: InventoryWindow; // inventory window
-  public var skillsWindow: SkillsWindow; // skills window
-  public var organsWindow: OrgansWindow; // organs window
-  public var timelineWindow: TimelineWindow; // timeline window
-  public var debugWindow: DebugWindow; // debug window
+  var hudState: _HUDState; // current HUD state (default, evolution, etc)
+  var windows: Map<_HUDState, TextWindow>; // GUI windows
   public var entityAtlas: TileAtlas; // entity graphics
 
 //  var _dx: Int; // movement vars - movement direction (changed in handleInput)
@@ -62,6 +57,7 @@ class GameScene extends Scene
       Input.define("evolutionWindow", [ Key.F3 ]);
       Input.define("organsWindow", [ Key.F4 ]);
       Input.define("timelineWindow", [ Key.F5 ]);
+      Input.define("logWindow", [ Key.F6 ]);
       Input.define("exit", [ Key.F8 ]);
       Input.define("debugWindow", [ Key.F9 ]);
 //      Input.define("test", [ Key.SPACE ]);
@@ -84,12 +80,16 @@ class GameScene extends Scene
       mouse = new MouseEntity(game);
       add(mouse);
       hud = new HUD(game);
-      evolutionWindow = new EvolutionWindow(game);
-      inventoryWindow = new InventoryWindow(game);
-      skillsWindow = new SkillsWindow(game);
-      organsWindow = new OrgansWindow(game);
-      debugWindow = new DebugWindow(game);
-      timelineWindow = new TimelineWindow(game);
+
+      windows = [
+        HUDSTATE_INVENTORY => new InventoryWindow(game),
+        HUDSTATE_SKILLS => new SkillsWindow(game),
+        HUDSTATE_EVOLUTION => new EvolutionWindow(game),
+        HUDSTATE_ORGANS => new OrgansWindow(game),
+        HUDSTATE_TIMELINE => new TimelineWindow(game),
+        HUDSTATE_LOG => new LogWindow(game),
+        HUDSTATE_DEBUG => new DebugWindow(game)
+        ];
 
       // init game state
       game.init();
@@ -152,23 +152,22 @@ class GameScene extends Scene
     }
 
 
-// closes currently opened window
-  public function closeCurrentWindow()
+// set new GUI state, open and close windows if needed
+  public function setState(vstate: _HUDState)
     {
-      if (hudState == GameScene.HUDSTATE_EVOLUTION)
-        evolutionWindow.hide();
-      else if (hudState == GameScene.HUDSTATE_INVENTORY)
-        inventoryWindow.hide();
-      else if (hudState == GameScene.HUDSTATE_SKILLS)
-        skillsWindow.hide();
-      else if (hudState == GameScene.HUDSTATE_ORGANS)
-        organsWindow.hide();
-      else if (hudState == GameScene.HUDSTATE_DEBUG)
-        debugWindow.hide();
-      else if (hudState == GameScene.HUDSTATE_TIMELINE)
-        timelineWindow.hide();
+      if (hudState != HUDSTATE_DEFAULT)
+        windows[hudState].hide();
 
-      hudState = GameScene.HUDSTATE_DEFAULT;
+      hudState = vstate;
+      if (hudState != HUDSTATE_DEFAULT)
+        windows[hudState].show();
+    }
+
+
+// get GUI state
+  public function getState(): _HUDState
+    {
+      return hudState;
     }
 
 
@@ -176,7 +175,7 @@ class GameScene extends Scene
   function handleWindows(): Bool
     {
       // window open
-      if (hudState != GameScene.HUDSTATE_DEFAULT)
+      if (hudState != HUDSTATE_DEFAULT)
         {
           // get amount of lines
           var lines = 0;
@@ -191,82 +190,66 @@ class GameScene extends Scene
 
           if (lines != 0)
             {
-              if (hudState == GameScene.HUDSTATE_TIMELINE)
-                timelineWindow.scroll(lines);
-
+              windows[hudState].scroll(lines);
               return true;
             }
 
           if (Input.pressed("home"))
             {
-              if (hudState == GameScene.HUDSTATE_TIMELINE)
-                timelineWindow.scrollToBegin();
-
+              windows[hudState].scrollToBegin();
               return true;
             }
 
           if (Input.pressed("end"))
             {
-              if (hudState == GameScene.HUDSTATE_TIMELINE)
-                timelineWindow.scrollToEnd();
-
+              windows[hudState].scrollToEnd();
               return true;
             }
 
           // close windows
           if (Input.pressed("closeWindow"))
-            closeCurrentWindow();
+            setState(HUDSTATE_DEFAULT);
         }
 
       // no windows open
-      else if (hudState == GameScene.HUDSTATE_DEFAULT)
+      else if (hudState == HUDSTATE_DEFAULT)
         {
           // open inventory window (if items are learned)
           if (Input.pressed("inventoryWindow") &&
               game.player.state == PLR_STATE_HOST &&
+              game.player.host.isHuman &&
               game.player.vars.itemsLearned)
-            {
-              hudState = GameScene.HUDSTATE_INVENTORY;
-              inventoryWindow.show();
-            }
+            setState(HUDSTATE_INVENTORY);
 
           // open evolution window (if enabled)
           else if (Input.pressed("evolutionWindow") &&
                    game.player.evolutionManager.state > 0)
-            {
-              hudState = GameScene.HUDSTATE_EVOLUTION;
-              evolutionWindow.show();
-            }
+            setState(HUDSTATE_EVOLUTION);
 
           // open skills window (if skills are learned)
           else if (Input.pressed("skillsWindow") &&
                    game.player.vars.skillsLearned)
-            {
-              hudState = GameScene.HUDSTATE_SKILLS;
-              skillsWindow.show();
-            }
+            setState(HUDSTATE_SKILLS);
 
           // open organs window
           else if (Input.pressed("organsWindow") && game.player.state == PLR_STATE_HOST)
-            {
-              hudState = GameScene.HUDSTATE_ORGANS;
-              organsWindow.show();
-            }
+            setState(HUDSTATE_ORGANS);
 
           // open timeline window
           else if (Input.pressed("timelineWindow") && !game.timeline.isLocked)
+            setState(HUDSTATE_TIMELINE);
+
+          // open message log window
+          else if (Input.pressed("logWindow"))
             {
-              hudState = GameScene.HUDSTATE_TIMELINE;
-              timelineWindow.show();
+              setState(HUDSTATE_LOG);
+              windows[hudState].scrollToEnd();
             }
 
 #if mydebug
           // open debug window
           else if (Input.pressed("debugWindow"))
-            {
-              hudState = GameScene.HUDSTATE_DEBUG;
-              debugWindow.show();
-            }
+            setState(HUDSTATE_DEBUG);
 #end            
         }
 
@@ -342,22 +325,15 @@ class GameScene extends Scene
             if (_inputState > 0)
               n += 10;
 
-            if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
+            if (game.scene.hudState == HUDSTATE_DEFAULT)
               game.scene.hud.action(n);
-            else if (game.scene.hudState == GameScene.HUDSTATE_EVOLUTION)
-              game.scene.evolutionWindow.action(n);
-            else if (game.scene.hudState == GameScene.HUDSTATE_ORGANS)
-              game.scene.organsWindow.action(n);
-            else if (game.scene.hudState == GameScene.HUDSTATE_INVENTORY)
-              game.scene.inventoryWindow.action(n);
-            else if (game.scene.hudState == GameScene.HUDSTATE_DEBUG)
-              game.scene.debugWindow.action(n);
+            else windows[hudState].action(n);
 
             _inputState = 0;
             break;
           }
 
-      if (game.scene.hudState == GameScene.HUDSTATE_DEFAULT)
+      if (game.scene.hudState == HUDSTATE_DEFAULT)
         {
           // test action
           if (Input.pressed("test"))
@@ -393,14 +369,4 @@ class GameScene extends Scene
 
       super.update();
     }
-
-
-  // hud state constants
-  public static var HUDSTATE_DEFAULT = 'default'; // default
-  public static var HUDSTATE_EVOLUTION = 'evolution'; // evolution window open
-  public static var HUDSTATE_INVENTORY = 'inventory'; // inventory window open
-  public static var HUDSTATE_SKILLS = 'skills'; // skills window open
-  public static var HUDSTATE_ORGANS = 'organs'; // organs window open
-  public static var HUDSTATE_DEBUG = 'debug'; // debug window open
-  public static var HUDSTATE_TIMELINE = 'timeline'; // timeline window open
 }

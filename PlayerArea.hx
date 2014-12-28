@@ -225,6 +225,7 @@ class PlayerArea
           onHostDeath();
 
           log('Your host has died.');
+          game.scene.setState(HUDSTATE_DEFAULT); // close window if it's open
         }
 
       // parasite could also be dead
@@ -720,7 +721,7 @@ class PlayerArea
   public inline function onHostDeath()
     {
       // close open windows
-      game.scene.closeCurrentWindow();
+      game.scene.setState(HUDSTATE_DEFAULT);
 
       player.host.onDeath();
       onDetach();

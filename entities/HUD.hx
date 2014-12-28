@@ -217,6 +217,7 @@ class HUD
       if (!game.timeline.isLocked)
         buf.add('F5: Event timeline\n');
 
+      buf.add('F6: Message log\n');
       buf.add('F8: Exit\n');
 #if mydebug
       buf.add('F9: Debug\n');

@@ -16,6 +16,7 @@ class Game
 
   public var turns: Int; // number of turns passed since game start
   public var isFinished: Bool; // is the game finished?
+  public var messageList: List<String>; // last X messages of log
 
   public function new()
     {
@@ -23,6 +24,7 @@ class Game
       worldManager = new WorldManager(this);
       HXP.frameRate = 30;
       HXP.scene = scene;
+      messageList = new List();
     }
 
 
@@ -205,7 +207,13 @@ class Game
       if (col == null)
         col = COLOR_DEFAULT;
       Sys.println(s);
-      scene.hud.log("<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>");
+      var hs = "<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
+      scene.hud.log(hs);
+
+      // add message to buffer
+      messageList.add(hs);
+      if (messageList.length > 100)
+        messageList.pop();
     }
 
 

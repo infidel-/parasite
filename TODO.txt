@@ -1,5 +1,7 @@
-- message log with scrolling
-- search in timeline
++ message log with scrolling
++ move all windows to TextWindow
+- f1-f7 must always work!
+- tweak control
 + +10 deceased
 - knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
 - having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
@@ -63,6 +65,7 @@ remove dead npcs from area.npc on death
 make reading notes multiple times?
 "+10 persons scanned"?
 add some unique traits for agents and soldiers
+search in timeline
 
 
 host memory + human society > 50 = access to infoweb

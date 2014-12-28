@@ -2,92 +2,55 @@
 
 package entities;
 
-import openfl.Assets;
-import com.haxepunk.HXP;
-import flash.display.Sprite;
-import flash.text.TextField;
-import flash.text.TextFormat;
-import flash.text.TextFormatAlign;
-import flash.text.TextFieldAutoSize;
-
-class OrgansWindow
+class OrgansWindow extends TextWindow
 {
-  var game: Game; // game state
-
-  var _textField: TextField; // text field
-  var _back: Sprite; // window background
-  var _actionNames: List<String>; // list of currently available actions (names)
-  var _actionIDs: List<String>; // list of currently available actions (string IDs)
-
   public function new(g: Game)
     {
-      game = g;
-
-      _actionNames = new List<String>();
-      _actionIDs = new List<String>();
-
-      // actions list
-      var font = Assets.getFont("font/04B_03__.ttf");
-      _textField = new TextField();
-//      _textField.autoSize = TextFieldAutoSize.LEFT;
-      _textField.width = HXP.width;
-      _textField.height = HXP.height;
-      _textField.wordWrap = true;
-      _textField.width = HXP.windowWidth - 40;
-      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _textField.defaultTextFormat = fmt;
-      _back = new Sprite();
-      _back.addChild(_textField);
-//      _back.x = 20;
-//      _back.y = 20;
-      _back.x = 0;
-      _back.y = 0;
-      _back.width = HXP.width;
-      _back.height = HXP.height;
-      HXP.stage.addChild(_back);
+      super(g);
+      actionName = 'body feature to grow';
     }
 
 
-// call action by id
-  public function action(index: Int)
+// get action list
+  override function getActions()
     {
-      // find action name by index
-      var i = 1;
-      var actionName = null;
-      for (a in _actionIDs)
-        if (i++ == index)
-          {
-            actionName = a;
-            break;
-          }
-      if (actionName == null)
-        return;
+      var list = new List<_PlayerAction>();
 
-      // do action
-      game.player.host.organs.action(actionName);
-      update(); // update display
-      game.scene.hud.update(); // update HUD
+      for (imp in game.player.evolutionManager.getList())
+        {
+          // improvement not available yet or no organs
+          if (imp.level == 0 || imp.info.organ == null)
+            continue;
+
+          var organ = imp.info.organ;
+
+          // organ already completed
+          if (game.player.host.organs.getActive(imp.info.id) != null)
+            continue;
+
+          list.add({
+            id: 'set.' + imp.id,
+            type: ACTION_ORGAN,
+            name: organ.name + ' (' + organ.gp + 'gp)' +
+            ' [' + organ.note + ']',
+            energy: 0,
+            });
+        }
+
+      return list;
     }
 
 
-// update and show window
-  public function show()
-    {
-      update();
-      _back.visible = true;
-    }
 
-
-// hide this window
-  public function hide()
+// action
+  override function onAction(action: _PlayerAction)
     {
-      _back.visible = false;
+      game.player.host.organs.action(action.id);
     }
 
 
 // update window text
-  function update()
+  override function getText()
     {
       var buf = new StringBuf();
       buf.add('Body features\n===\n\n');
@@ -114,43 +77,9 @@ class OrgansWindow
       if (n == 0)
         buf.add('  --- empty ---\n');
 
-      // form a list of actions
-      _actionNames.clear();
-      _actionIDs.clear();
-      for (imp in game.player.evolutionManager.getList())
-        {
-          // improvement not available yet or no organs
-          if (imp.level == 0 || imp.info.organ == null)
-            continue;
-
-          var organ = imp.info.organ;
-
-          // organ already completed
-          if (game.player.host.organs.getActive(imp.info.id) != null)
-            continue;
-
-          _actionIDs.add('set.' + imp.id);
-          _actionNames.add(organ.name + ' (' + organ.gp + 'gp)' +
-            ' [' + organ.note + ']');
-        }
-
       buf.add('\nGrowing body feature: ');
       buf.add(game.player.host.organs.getGrowInfo());
 
-      // add list of actions
-      buf.add('\n\nSelect body feature to grow:\n\n');
-      var n = 1;
-      for (a in _actionNames)
-        buf.add((n++) + ': ' + a + '\n');
-
-      if (_actionNames.length == 0)
-        buf.add('  --- empty ---\n');
-
-      _textField.htmlText = buf.toString();
-      _textField.width = HXP.width;
-      _textField.height = HXP.height;
-      _back.graphics.clear();
-      _back.graphics.beginFill(0x202020, .95);
-      _back.graphics.drawRect(0, 0, _textField.width, _textField.height);
+      return buf.toString();
     }
 }
