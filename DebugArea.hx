@@ -112,6 +112,7 @@ class DebugArea
       for (imp in ConstEvolution.improvements)
         if (!game.player.evolutionManager.isKnown(imp.id))
           game.player.evolutionManager.addImprov(imp.id);
+      game.player.evolutionManager.state = 2;
       game.log('All evolution improvements gained at level 0');
     }
 
@@ -126,7 +127,7 @@ class DebugArea
           imp.level = 3;
           imp.ep = ConstEvolution.epCostImprovement[imp.level];
         }
-      game.player.vars.organsLearned = true; 
+      game.player.evolutionManager.state = 2;
       game.log('All evolution improvements gained at max level');
     }
 

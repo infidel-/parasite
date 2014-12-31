@@ -90,5 +90,20 @@ class ConstItems
       unknown: 'rectangular thin object with markings',
     },
     // notebook, diary, journal, logbook, organizer
+
+
+    // ========= ******* misc ********* ==========
+    {
+      id: 'smartphone',
+      name: 'smartphone',
+      type: 'computer',
+      unknown: 'small plastic object',
+    },
+    {
+      id: 'laptop',
+      name: 'laptop',
+      type: 'computer',
+      unknown: 'rectangular plastic object',
+    }
     ];
 }

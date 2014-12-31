@@ -53,7 +53,9 @@ class Game
       timeline = new Timeline(this);
       timeline.init();
 
+      // initial goal
       message('You are alone. You are scared. You need to find a host or you will die soon.');
+      player.goals.receive(GOAL_INVADE_HOST);
 
       // set random region (currently only 1 at all)
       var r = world.get(0);

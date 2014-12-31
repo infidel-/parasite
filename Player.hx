@@ -19,6 +19,7 @@ class Player
 
   public var vars: PlayerVars; // player variables
   public var skills: Skills; // skills
+  public var goals: Goals; // goals
   public var state: _PlayerState; // player state - parasite, attach, host
 
   // state "host" - store host link here because host exists in all modes
@@ -32,10 +33,11 @@ class Player
       evolutionManager = new EvolutionManager(this, game);
 
       vars = {
-        humansInvaded: false,
-        itemsLearned: false,
-        skillsLearned: false,
-        organsLearned: false,
+        inventoryEnabled: false,
+        skillsEnabled: false,
+        timelineEnabled: false,
+        organsEnabled: false,
+        npcLearned: false,
 
         areaEnergyPerTurn: 10,
         regionMoveEnergy: 15,
@@ -54,6 +56,7 @@ class Player
       knownItems = new List<String>();
 
       skills = new Skills(game, true);
+      goals = new Goals(game);
     }
 
 
@@ -106,7 +109,7 @@ class Player
 
           // knowledge about human society raises automatically
           // if host memory is available
-          if (host.type == 'human' && evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
+          if (host.type == 'human' && evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
             skills.increase(KNOW_SOCIETY, 0.1 * host.intellect * time);
         }
 
@@ -167,10 +170,17 @@ class Player
 
 private typedef PlayerVars = {
   // game flags and vars
-  humansInvaded: Bool, // any humans invaded already?
-  itemsLearned: Bool, // items and area objects existance learned?
-  skillsLearned: Bool, // skills existance learned?
-  organsLearned: Bool, // organ growth learned?
+
+  // GUI flags (set on goal completion)
+  inventoryEnabled: Bool,
+  skillsEnabled: Bool,
+  timelineEnabled: Bool,
+  organsEnabled: Bool,
+
+  // learned a clue about npc
+  // on first learn clue about npc
+  // makes computers spawn
+  npcLearned: Bool,
 
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
   regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)

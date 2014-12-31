@@ -205,7 +205,8 @@ class Region
 // update event icon for this area
   function updateEvent(a: RegionArea)
     {
-      if (game.timeline.isLocked || a.event == null || !a.event.locationKnown)
+      if (!game.player.vars.timelineEnabled ||
+          a.event == null || !a.event.locationKnown)
         return;
 
       var frame = Const.FRAME_EVENT_UNKNOWN;
@@ -219,7 +220,7 @@ class Region
 // update npc icon for this area
   public function updateNPC(a: RegionArea)
     {
-      if (game.timeline.isLocked || a.npc.length == 0)
+      if (!game.player.vars.timelineEnabled || a.npc.length == 0)
         return;
 
       var ok = true;

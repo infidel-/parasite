@@ -37,6 +37,12 @@ class ConstSkills
     },
 
     {
+      id: SKILL_COMPUTER,
+      name: 'computer use',
+      defaultLevel: 0,
+    },
+
+    {
       id: KNOW_SOCIETY,
       name: 'human society',
       defaultLevel: 0,

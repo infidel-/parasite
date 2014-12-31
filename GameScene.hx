@@ -52,14 +52,17 @@ class GameScene extends Scene
       Input.define("action8", [ Key.DIGIT_8 ]);
       Input.define("action9", [ Key.DIGIT_9 ]);
       Input.define("action10", [ Key.DIGIT_0 ]);
-      Input.define("inventoryWindow", [ Key.F1 ]);
-      Input.define("skillsWindow", [ Key.F2 ]);
-      Input.define("evolutionWindow", [ Key.F3 ]);
-      Input.define("organsWindow", [ Key.F4 ]);
+
+      Input.define("goalsWindow", [ Key.F1 ]);
+      Input.define("inventoryWindow", [ Key.F2 ]);
+      Input.define("skillsWindow", [ Key.F3 ]);
+      Input.define("logWindow", [ Key.F4 ]);
+
       Input.define("timelineWindow", [ Key.F5 ]);
-      Input.define("logWindow", [ Key.F6 ]);
-      Input.define("exit", [ Key.F8 ]);
+      Input.define("evolutionWindow", [ Key.F6 ]);
+      Input.define("organsWindow", [ Key.F7 ]);
       Input.define("debugWindow", [ Key.F9 ]);
+      Input.define("exit", [ Key.F10 ]);
 //      Input.define("test", [ Key.SPACE ]);
 
       Input.define("skipTurn", [ Key.NUMPAD_5, Key.SPACE ]);
@@ -82,6 +85,7 @@ class GameScene extends Scene
       hud = new HUD(game);
 
       windows = [
+        HUDSTATE_GOALS => new GoalsWindow(game),
         HUDSTATE_INVENTORY => new InventoryWindow(game),
         HUDSTATE_SKILLS => new SkillsWindow(game),
         HUDSTATE_EVOLUTION => new EvolutionWindow(game),
@@ -212,13 +216,13 @@ class GameScene extends Scene
         }
 
       // no windows open
-      else if (hudState == HUDSTATE_DEFAULT)
+//      else if (hudState == HUDSTATE_DEFAULT)
         {
           // open inventory window (if items are learned)
           if (Input.pressed("inventoryWindow") &&
               game.player.state == PLR_STATE_HOST &&
               game.player.host.isHuman &&
-              game.player.vars.itemsLearned)
+              game.player.vars.inventoryEnabled)
             setState(HUDSTATE_INVENTORY);
 
           // open evolution window (if enabled)
@@ -228,15 +232,18 @@ class GameScene extends Scene
 
           // open skills window (if skills are learned)
           else if (Input.pressed("skillsWindow") &&
-                   game.player.vars.skillsLearned)
+                   game.player.vars.skillsEnabled)
             setState(HUDSTATE_SKILLS);
 
           // open organs window
-          else if (Input.pressed("organsWindow") && game.player.state == PLR_STATE_HOST)
+          else if (Input.pressed("organsWindow") &&
+                   game.player.state == PLR_STATE_HOST &&
+                   game.player.vars.organsEnabled)
             setState(HUDSTATE_ORGANS);
 
           // open timeline window
-          else if (Input.pressed("timelineWindow") && !game.timeline.isLocked)
+          else if (Input.pressed("timelineWindow") &&
+                   game.player.vars.timelineEnabled)
             setState(HUDSTATE_TIMELINE);
 
           // open message log window
@@ -245,6 +252,10 @@ class GameScene extends Scene
               setState(HUDSTATE_LOG);
               windows[hudState].scrollToEnd();
             }
+
+          // open goals window
+          else if (Input.pressed("goalsWindow"))
+            setState(HUDSTATE_GOALS);
 
 #if mydebug
           // open debug window

@@ -92,19 +92,15 @@ class EvolutionManager
               taskID = '';
 
               // on gaining access memory open full evolution
-              if (imp.id == IMP_HOST_MEMORY && imp.level == 1)
-                {
-                  state = 2;
+              if (imp.id == IMP_BRAIN_PROBE && imp.level == 1)
+                player.goals.complete(GOAL_EVOLVE_PROBE);
 
-                  game.message('I can probe the brain of this host now. I should also evolve further.');
-                }
+              else if (imp.id == IMP_BRAIN_PROBE && imp.level == 2)
+                player.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
 
               // on first learning of evolution with an organ
-              if (!game.player.vars.organsLearned && imp.info.organ != null)
-                {
-                  game.player.vars.organsLearned = true;
-                  game.message('Evolving allows me to force changes in the host body.');
-                }
+              if (imp.info.organ != null)
+                player.goals.complete(GOAL_EVOLVE_ORGAN);
             }
         }
     }

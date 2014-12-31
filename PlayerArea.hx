@@ -118,7 +118,7 @@ class PlayerArea
       else if (state == PLR_STATE_HOST)
         {
           addActionToList(tmp, 'reinforceControl');
-          if (player.evolutionManager.getLevel(IMP_HOST_MEMORY) > 0)
+          if (player.evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
             addActionToList(tmp, 'probeBrain');
 
           // organ-based actions
@@ -133,7 +133,7 @@ class PlayerArea
         return tmp;
 
       // need to learn about objects
-      if (player.vars.itemsLearned)
+      if (player.goals.completed(GOAL_PROBE_BRAIN))
         for (o in olist)
           {
             // player does not know what this object is, cannot activate it
@@ -419,15 +419,12 @@ class PlayerArea
       // update AI visibility to player
       area.updateVisibility();
 
-      // on first invade of human open limited evolution
-      if (player.host.isHuman && !player.vars.humansInvaded)
-        {
-          player.vars.humansInvaded = true;
-          player.evolutionManager.state = 1;
-          player.evolutionManager.addImprov(IMP_HOST_MEMORY);
+      // goal completed: host invaded 
+      player.goals.complete(GOAL_INVADE_HOST);
 
-          game.message('This host is intelligent. I need to evolve and understand it further.');
-        }
+      // goal completed: human host invaded 
+      if (player.host.isHuman)
+        player.goals.complete(GOAL_INVADE_HUMAN);
     }
 
 
@@ -483,13 +480,17 @@ class PlayerArea
      
       game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
-      var params = player.evolutionManager.getParams(IMP_HOST_MEMORY);
-      player.skills.increase(KNOW_SOCIETY,
-        params.humanSociety * player.host.intellect);
+      // human society knowledge
+      var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
+      if (game.player.vars.skillsEnabled)
+        {
+          player.skills.increase(KNOW_SOCIETY,
+            params.humanSociety * player.host.intellect);
 
-      // can access skills from level 2
-      if (params.hostSkillsMod > 0)
-        accessSkillsAction(params.hostSkillsMod);
+          // can access skills from level 2
+          if (params.hostSkillsMod > 0)
+            accessSkillsAction(params.hostSkillsMod);
+        }
 
       // spend energy
       player.host.energy -= params.hostEnergyBase - player.host.psyche; 
@@ -506,11 +507,7 @@ class PlayerArea
         }
 
       // on first brain probe learn about items and area objects
-      if (!player.vars.itemsLearned)
-        {
-          player.vars.itemsLearned = true;
-          game.message('Some of these objects the host carries can be useful. There are also functional objects around.');
-        }
+      player.goals.complete(GOAL_PROBE_BRAIN);
 
       // get clues
       if (player.host.event != null && player.host.brainProbed < 3)
@@ -553,10 +550,6 @@ class PlayerArea
 //  action: access host skills (called from probeBrain)
   function accessSkillsAction(hostSkillsMod: Float)
     {
-      // need to learn about skills first
-      if (!game.player.vars.skillsLearned)
-        return;
-
       var hostSkill = player.host.skills.getRandomSkill();
       if (hostSkill == null)
         return;
@@ -565,6 +558,9 @@ class PlayerArea
       var skill = player.skills.get(hostSkill.id);
       if (skill != null && skill.level >= hostSkill.level)
         return;
+
+      // goal completion
+      player.goals.complete(GOAL_LEARN_SKILLS);
 
       var amount = Std.int((player.host.intellect / 10.0) *
         hostSkillsMod * hostSkill.level);
@@ -600,7 +596,7 @@ class PlayerArea
 
       // random: change movement direction
       if (state == PLR_STATE_HOST && 
-          Std.random(100) < 100 - player.hostControl)
+          Std.random(100) < 0.9 * (100 - player.hostControl))
         {
           log('The host resists your command.');
           var dir = area.getRandomDirection(x, y);

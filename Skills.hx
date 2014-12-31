@@ -61,9 +61,17 @@ class Skills
 
       // increasing player skills triggers things
       if (isPlayer)
-        // gaining society opens timeline
-        if (id == KNOW_SOCIETY && oldLevel < 25 && sk.level >= 25)
-          game.timeline.unlock();
+        {
+          if (id == KNOW_SOCIETY)
+            {
+              // new goal: learn enough about society
+              game.player.goals.receive(GOAL_LEARN_SOCIETY);
+
+              // gaining society opens timeline
+              if (oldLevel < 25 && sk.level >= 25)
+                game.timeline.unlock();
+            }
+        }
     }
 
 

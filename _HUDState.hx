@@ -3,6 +3,7 @@
 enum _HUDState 
 {
   HUDSTATE_DEFAULT; // default
+  HUDSTATE_GOALS; // goals window open
   HUDSTATE_EVOLUTION; // evolution window open
   HUDSTATE_INVENTORY; // inventory window open
   HUDSTATE_SKILLS; // skills window open

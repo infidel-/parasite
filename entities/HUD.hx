@@ -201,27 +201,32 @@ class HUD
         buf.add('No available actions.');
 
       buf.add("\n===\n");
+      buf.add('\n');
+      buf.add('F1: Goals\n');
       if (game.player.state == PLR_STATE_HOST)
         {
-          buf.add('\n');
-          if (game.player.vars.itemsLearned)
-            buf.add('F1: Inventory\n');
-          if (game.player.vars.skillsLearned)
-            buf.add('F2: Skills and knowledge\n');
-          if (game.player.evolutionManager.state > 0)
-            buf.add('F3: Controlled evolution\n');
-          if (game.player.vars.organsLearned)
-            buf.add('F4: Body features\n');
+          if (game.player.vars.inventoryEnabled)
+            buf.add('F2: Inventory\n');
+          if (game.player.vars.skillsEnabled)
+            buf.add('F3: Skills and knowledge\n');
         }
+      buf.add('F4: Message log\n');
 
-      if (!game.timeline.isLocked)
+      if (game.player.vars.timelineEnabled)
         buf.add('F5: Event timeline\n');
 
-      buf.add('F6: Message log\n');
-      buf.add('F8: Exit\n');
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          if (game.player.evolutionManager.state > 0)
+            buf.add('F6: Controlled evolution\n');
+          if (game.player.vars.organsEnabled)
+            buf.add('F7: Body features\n');
+        }
+      
 #if mydebug
       buf.add('F9: Debug\n');
 #end 
+      buf.add('F10: Exit\n');
 
       _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();

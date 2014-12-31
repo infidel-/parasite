@@ -34,11 +34,22 @@ class Inventory
           if (!game.player.knowsItem(item.id))
             continue;
 
+          // read a readable
           if (item.info.type == 'readable')
             tmp.add({ 
               id: 'read.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Read ' + item.name,
+              energy: 10,
+              obj: item
+              });
+
+          // use computer 
+          else if (item.info.type == 'computer')
+            tmp.add({ 
+              id: 'use.' + item.id,
+              type: ACTION_INVENTORY,
+              name: 'Use ' + item.name,
               energy: 10,
               obj: item
               });
@@ -100,12 +111,8 @@ class Inventory
 
       game.player.addKnownItem(item.id);
 
-      // on first learn open skills
-      if (!game.player.vars.skillsLearned)
-        {
-          game.player.vars.skillsLearned = true;
-          game.message('I can learn how to use items effectively by probing the host brain for more.');
-        }
+      // on first learn items 
+      game.player.goals.complete(GOAL_LEARN_ITEMS);
     }
 
 

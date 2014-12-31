@@ -527,7 +527,7 @@ class Area
 // spawn some clues
   function turnSpawnClues()
     {
-      if (game.timeline.isLocked || area.event == null)
+      if (!game.player.vars.timelineEnabled || area.event == null)
         return;
 
       // all event notes and npcs names/jobs known, stop spawning clues

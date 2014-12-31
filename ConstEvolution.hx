@@ -469,7 +469,7 @@ class ConstEvolution
 
       { // ***
         path: PATH_SPECIAL,
-        id: IMP_HOST_MEMORY, 
+        id: IMP_BRAIN_PROBE, 
         name: 'Brain probe',
         note: 'Allows probing host brain to learn its contents',
         skill: KNOW_MEMORY,

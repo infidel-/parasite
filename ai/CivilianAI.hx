@@ -32,6 +32,22 @@ class CivilianAI extends HumanAI
           { text: '*MOAN*', radius: 3, alertness: 5, params: null },
           ]
         ];
+
+      // these only spawn when they're useful
+      if (game.player.vars.npcLearned)
+        {
+          if (Std.random(100) < 20)
+            {
+              skills.addID(SKILL_COMPUTER, 10 + Std.random(10));
+              inventory.addID('smartphone');
+            }
+
+          if (Std.random(100) < 5)
+            {
+              skills.addID(SKILL_COMPUTER, 10 + Std.random(25));
+              inventory.addID('laptop');
+            }
+        }
     }
 
 

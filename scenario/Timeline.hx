@@ -8,7 +8,6 @@ class Timeline
 {
   var game: Game;
   var scenario: Scenario;
-  public var isLocked: Bool; // is timeline screen locked?
 
   var _eventsMap: Map<String, Event>; // events hash map
   var _eventsList: Array<Event>; // ordered events list
@@ -25,7 +24,6 @@ class Timeline
       _locationsList = new List();
       _variables = new Map<String, Dynamic>();
       _names = new Map();
-      isLocked = true;
     }
 
 
@@ -84,12 +82,15 @@ class Timeline
 // unlock event timeline
   public function unlock()
     {
-      game.message("What am I? What is my purpose? I must know.");
-      isLocked = false;
+      game.message("What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.");
+      game.player.vars.timelineEnabled = true;
 
       // give some starting clues to player
       var e = getStartEvent();
       e.locationKnown = true;
+/*
+let's see how it goes with only the location of starting event known
+should limit player options for guiding purposes
       var nothingKnown = true;
       for (npc in e.npc)
         {
@@ -116,7 +117,7 @@ class Timeline
       // if all rolls fail just give out a name of first npc
       if (nothingKnown)
         e.npc[0].nameKnown = true;
-
+*/
       update(); // update event numbering
     }
 

@@ -81,6 +81,13 @@ class Event
             game.player.log('You have gained a clue about an event ' +
               num + ' participant.', COLOR_TIMELINE);
 
+            // on first learn npc
+            if (!game.player.vars.npcLearned)
+              {
+                game.player.vars.npcLearned = true;
+                game.message('I can investigate these humans further by using a computer.');
+              }
+
             return true;
           }
 
