@@ -129,8 +129,13 @@ class EvolutionManager
 
 
 // add improvement to list
-  public inline function addImprov(id: _Improv): Improv
+  public function addImprov(id: _Improv): Improv
     {
+      // this improvement already learned 
+      var tmp = getImprov(id);
+      if (tmp != null)
+        return tmp;
+
       var imp = {
         id: id,
         level: 0,

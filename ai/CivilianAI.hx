@@ -34,17 +34,17 @@ class CivilianAI extends HumanAI
         ];
 
       // these only spawn when they're useful
-      if (game.player.vars.npcLearned)
+      if (game.player.vars.searchEnabled)
         {
           if (Std.random(100) < 20)
             {
-              skills.addID(SKILL_COMPUTER, 10 + Std.random(10));
+              skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
               inventory.addID('smartphone');
             }
 
           if (Std.random(100) < 5)
             {
-              skills.addID(SKILL_COMPUTER, 10 + Std.random(25));
+              skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
               inventory.addID('laptop');
             }
         }

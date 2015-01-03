@@ -49,28 +49,32 @@ class Skills
   public function increase(id: _Skill, val: Float)
     {
       var sk = get(id);
+      var oldLevel = 0.0;
+      var newLevel = 0.0;
       if (sk == null)
         {
           addID(id, val);
-          return;
+          newLevel = val;
         }
-      var oldLevel = sk.level;
-
-      sk.level += val;
-      sk.level = Const.clampFloat(sk.level, 0, 99.9);
-
-      // increasing player skills triggers things
-      if (isPlayer)
+      else
         {
-          if (id == KNOW_SOCIETY)
-            {
-              // new goal: learn enough about society
-              game.player.goals.receive(GOAL_LEARN_SOCIETY);
+          oldLevel = sk.level;
 
-              // gaining society opens timeline
-              if (oldLevel < 25 && sk.level >= 25)
-                game.timeline.unlock();
-            }
+          sk.level += val;
+          sk.level = Const.clampFloat(sk.level, 0, 99.9);
+          newLevel = sk.level;
+        }
+
+      // human society knowledge increased
+      if (isPlayer && id == KNOW_SOCIETY)
+        {
+          // new goal: learn enough about society
+          game.player.goals.receive(GOAL_LEARN_SOCIETY);
+
+          // open timeline on 25% 
+          if (oldLevel < 25 && newLevel >= 25)
+            // goal completed
+            game.player.goals.complete(GOAL_LEARN_SOCIETY);
         }
     }
 

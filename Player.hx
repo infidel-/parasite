@@ -37,7 +37,8 @@ class Player
         skillsEnabled: false,
         timelineEnabled: false,
         organsEnabled: false,
-        npcLearned: false,
+        npcEnabled: false,
+        searchEnabled: false,
 
         areaEnergyPerTurn: 10,
         regionMoveEnergy: 15,
@@ -171,16 +172,13 @@ class Player
 private typedef PlayerVars = {
   // game flags and vars
 
-  // GUI flags (set on goal completion)
+  // GUI and initial progression flags (set on goal completion)
   inventoryEnabled: Bool,
   skillsEnabled: Bool,
   timelineEnabled: Bool,
   organsEnabled: Bool,
-
-  // learned a clue about npc
-  // on first learn clue about npc
-  // makes computers spawn
-  npcLearned: Bool,
+  npcEnabled: Bool, // npc spawn enabled?
+  searchEnabled: Bool, // computer search info enabled?
 
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
   regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)

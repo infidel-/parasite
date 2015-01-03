@@ -25,12 +25,20 @@ class DebugArea
           func: gainHost
         },
         {
+          name: 'Gain host (advanced)', 
+          func: gainHostAdvanced
+        },
+        {
           name: 'Toggle LOS',
           func: toggleLOS
         },
         {
           name: 'Enter sewers',
           func: enterSewers
+        },
+        {
+          name: 'Complete current evolution',
+          func: completeEvolution
         },
         {
           name: 'Gain all improvements at level 0',
@@ -106,6 +114,15 @@ class DebugArea
     }
 
 
+// complete current improvement
+  function completeEvolution()
+    {
+//      game.player.energy += 10000;
+      game.player.evolutionManager.turn(2000);
+      game.player.energy = 100;
+    }
+
+
 // gain all improvements at level 0 
   function gainImprovs0()
     {
@@ -170,7 +187,54 @@ class DebugArea
       ai.inventory.addID('pistol');
       ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
 //      ai.organs.addID(IMP_CAMO_LAYER);
-      ai.organs.addID(IMP_DECAY_ACCEL);
+//      ai.organs.addID(IMP_DECAY_ACCEL);
+
+      // computer
+      ai.inventory.addID('smartphone');
+      ai.skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
+    }
+
+
+// spawn and control host (plus open stuff up)
+  function gainHostAdvanced()
+    {
+      if (game.player.state != PLR_STATE_PARASITE)
+        {
+          trace('Must be in default state: ' + game.player.state);
+          return;
+        }
+
+      // spawn AI, attach to it and invade
+      var ai = new CivilianAI(game, area.player.x, area.player.y);
+      area.addAI(ai);
+      area.player.debugAttachAndInvadeAction(ai);
+      game.player.hostControl = 100;
+
+      ai.inventory.addID('pistol');
+      ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
+      ai.inventory.addID('smartphone');
+      ai.skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+
+      game.player.evolutionManager.state = 2;
+      game.player.vars.organsEnabled = true;
+      game.player.vars.inventoryEnabled = true;
+      game.player.vars.skillsEnabled = true;
+      game.player.vars.timelineEnabled = true;
+      game.timeline.unlock();
+      game.timeline.learnClue(game.timeline.getStartEvent(), true);
+      game.timeline.learnClue(game.timeline.getStartEvent(), true);
+      game.timeline.learnClue(game.timeline.getStartEvent(), true);
+      game.timeline.getStartEvent().learnNPC();
+      game.timeline.getStartEvent().learnNPC();
+      game.timeline.getStartEvent().learnNPC();
+
+      game.player.vars.npcEnabled = true;
+      game.player.vars.searchEnabled = true;
+
+      // brain probe
+      game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE);
+      var imp = game.player.evolutionManager.getImprov(IMP_BRAIN_PROBE);
+      imp.level = 2;
     }
 
 

@@ -100,10 +100,53 @@ class Goals
 
     GOAL_LEARN_SOCIETY => {
       id: GOAL_LEARN_SOCIETY,
-      name: '',
-      note: '',
-      messageReceive: '',
-      messageComplete: '',
+      name: 'Learn more about human society',
+      note: 'Probe host brains to raise human society knowledge to 25%. This might require multiple hosts.',
+      messageReceive: 'The humans have evolved a large and intricate society. I must study it some more.',
+      messageComplete: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.',
+      onComplete: function (game, player) {
+        player.vars.timelineEnabled = true;
+        game.timeline.unlock();
+        player.goals.receive(GOAL_TRAVEL_EVENT);
+        }
+      },
+
+    GOAL_TRAVEL_EVENT => {
+      id: GOAL_TRAVEL_EVENT,
+      name: 'Travel to the location you remember',
+      note: 'Find the location you remember on region map and travel there.',
+      messageComplete: 'I found the location. There should be some clues here.',
+      onComplete: function (game, player) {
+        player.goals.receive(GOAL_LEARN_CLUE);
+        }
+      },
+
+    GOAL_LEARN_CLUE => {
+      id: GOAL_LEARN_CLUE,
+      name: 'Find a clue',
+      note: 'Find any clue about the events that happened in this location',
+      messageComplete: 'The chain of events that led to my current state is long. There were many humans involved.',
+      onComplete: function (game, player) {
+        player.vars.npcEnabled = true;
+        player.goals.receive(GOAL_LEARN_NPC);
+        }
+      },
+
+    GOAL_LEARN_NPC => {
+      id: GOAL_LEARN_NPC,
+      name: 'Learn a clue about any human',
+      note: 'Find a clue about any event participant.',
+      messageComplete: 'I can investigate the involved humans further by using their computational devices.',
+      onComplete: function (game, player) {
+        player.vars.searchEnabled = true;
+        player.goals.receive(GOAL_USE_COMPUTER);
+        }
+      },
+
+    GOAL_USE_COMPUTER => {
+      id: GOAL_USE_COMPUTER,
+      name: 'Use a computer',
+      note: 'Find a laptop or mobile phone and use it successfully.',
       },
 /*
 

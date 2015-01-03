@@ -81,12 +81,8 @@ class Event
             game.player.log('You have gained a clue about an event ' +
               num + ' participant.', COLOR_TIMELINE);
 
-            // on first learn npc
-            if (!game.player.vars.npcLearned)
-              {
-                game.player.vars.npcLearned = true;
-                game.message('I can investigate these humans further by using a computer.');
-              }
+            // goal completed: learn about any npc
+            game.player.goals.complete(GOAL_LEARN_NPC);
 
             return true;
           }
@@ -130,6 +126,17 @@ class Event
     }
 
 
+// all npcs fully known 
+  public function npcFullyKnown(): Bool
+    {
+      for (n in npc)
+        if (!n.nameKnown || !n.jobKnown || !n.areaKnown || !n.isDeadKnown)
+          return false;
+
+      return true; 
+    }
+
+
 // something is known about npc of this event?
   public function npcSomethingKnown(): Bool
     {
@@ -166,6 +173,12 @@ class Event
           return false;
 
       return true;
+    }
+
+
+  public function toString(): String
+    {
+      return id + ' ' + name + '\n' + notes + '\n' + npc;
     }
 }
 

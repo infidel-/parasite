@@ -64,7 +64,18 @@ class Timeline
 
       // event clue
       var ret = false;
-      if (rnd < 50)
+
+      // if this is the first time, just learn a clue
+      if (!game.player.goals.completed(GOAL_LEARN_CLUE))
+        {
+          ret = e.learnClue();
+
+          // goal completed - event clue learned
+          if (ret)
+            game.player.goals.complete(GOAL_LEARN_CLUE);
+        }
+
+      else if (rnd < 50)
         ret = e.learnClue();
 
       // npc clues
@@ -82,9 +93,6 @@ class Timeline
 // unlock event timeline
   public function unlock()
     {
-      game.message("What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.");
-      game.player.vars.timelineEnabled = true;
-
       // give some starting clues to player
       var e = getStartEvent();
       e.locationKnown = true;
@@ -248,7 +256,7 @@ should limit player options for guiding purposes
 
           for (i in 0...max)
             {
-              var npc = new NPC();
+              var npc = new NPC(game);
               npc.event = event;
               npc.job = job;
               npc.type = type;

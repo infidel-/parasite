@@ -144,6 +144,10 @@ class Area
                     removeObject(o2);
               }
         }
+
+      // goal completed: event area found
+      if (area.event != null)
+        game.player.goals.complete(GOAL_TRAVEL_EVENT);
     }
 
 
@@ -586,6 +590,10 @@ class Area
     {
       // no npcs here
       if (area.npc.length == 0)
+        return;
+      
+      // npc spawn not enabled yet
+      if (!game.player.vars.npcEnabled)
         return;
   
       // count total npcs with photo known and alive

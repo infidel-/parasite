@@ -47,9 +47,9 @@ class Inventory
           // use computer 
           else if (item.info.type == 'computer')
             tmp.add({ 
-              id: 'use.' + item.id,
+              id: 'search.' + item.id,
               type: ACTION_INVENTORY,
-              name: 'Use ' + item.name,
+              name: 'Use ' + item.name + ' to search',
               energy: 10,
               obj: item
               });
@@ -64,6 +64,7 @@ class Inventory
     {
       var item: Item = untyped action.obj;
       var actionID = action.id.substr(0, action.id.indexOf('.'));
+      var ret = true;
   
       // learn about item
       if (actionID == 'learn')
@@ -73,13 +74,22 @@ class Inventory
       else if (actionID == 'read')
         readAction(item);
     
-      // spend energy
-      game.player.host.energy -= action.energy;
+      // search for npc with item
+      else if (actionID == 'search')
+        ret = searchAction(item);
+    
+      // if action was completed, end turn, etc
+      if (ret)
+        {
+          // spend energy
+          game.player.host.energy -= action.energy;
 
-      if (game.location == Game.LOCATION_AREA)
-        game.area.player.postAction();
+          // end turn, etc
+          if (game.location == Game.LOCATION_AREA)
+            game.area.player.postAction();
 
-      else Const.todo('Inventory.action() in region mode!');
+          else Const.todo('Inventory.action() in region mode!');
+        }
     }
 
 
@@ -113,6 +123,76 @@ class Inventory
 
       // on first learn items 
       game.player.goals.complete(GOAL_LEARN_ITEMS);
+    }
+
+
+// ACTION: search for npc information 
+  function searchAction(item: Item): Bool
+    {
+      // player does not have computer skill 
+      var skillLevel = game.player.skills.getLevel(SKILL_COMPUTER);
+      if (skillLevel == 0)
+        {
+          game.log('You require the computer use skill to do that.', COLOR_HINT);
+          return false;
+        }
+
+      // check if all npcs researched
+      var allKnown = true;
+      for (e in game.timeline)
+        {
+          if (e.isHidden)
+            continue;
+
+          if (!e.npcSomethingKnown())
+            continue;
+
+          if (e.npcFullyKnown())
+            continue;
+
+          allKnown = false;
+          break;
+        }
+
+      if (allKnown)
+        {
+          game.log('You have already researched all known persons.', COLOR_HINT);
+          return false;
+        }
+
+      // roll for skill
+      if (Std.random(100) > skillLevel)
+        {
+          game.log('You have failed to use the human device properly.');
+          return true;
+        }
+
+      // TODO: should only be done in lairs
+      game.log('You use the ' + item.name + ' to search for known persons data.');
+
+      var cnt = 1;
+      if (item.info.name == 'smartphone')
+        cnt = 1;
+      else if (item.info.name == 'laptop')
+        cnt = 3;
+
+      // goal completed - use computer
+      game.player.goals.complete(GOAL_USE_COMPUTER);
+
+      // find first event that has some half-known npcs
+      for (e in game.timeline)
+        for (n in e.npc)
+          {
+            if (!n.nameKnown && !n.jobKnown)
+              continue;
+
+            while (cnt > 0 && n.research())
+              cnt--;
+            if (cnt <= 0)
+              return true;
+          }
+
+      return true;
     }
 
 

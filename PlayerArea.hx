@@ -480,16 +480,17 @@ class PlayerArea
      
       game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
-      // human society knowledge
+      // skills and knowledge
       var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
       if (game.player.vars.skillsEnabled)
         {
-          player.skills.increase(KNOW_SOCIETY,
-            params.humanSociety * player.host.intellect);
-
           // can access skills from level 2
           if (params.hostSkillsMod > 0)
             accessSkillsAction(params.hostSkillsMod);
+
+          // human society knowledge
+          player.skills.increase(KNOW_SOCIETY,
+            params.humanSociety * player.host.intellect);
         }
 
       // spend energy

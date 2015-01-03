@@ -19,10 +19,50 @@ class NPC
   public var event: Event; // event
   public var ai: ai.AI; // ai link
 
-  public function new()
+  public function new(g: Game)
     {
+      game = g;
       type = 'civilian';
       name = 'John Doe';
+    }
+
+
+// research this npc with computer 
+  public function research(): Bool
+    {
+      if (!nameKnown)
+        {
+          nameKnown = true;
+          game.player.log('You have found out a name: '  + name + '.',
+            COLOR_TIMELINE);
+          return true;
+        }
+
+      if (!jobKnown)
+        {
+          jobKnown = true;
+          game.player.log('You have found out the job and photo of '  + name + '.',
+            COLOR_TIMELINE);
+          return true;
+        }
+
+      if (!areaKnown)
+        {
+          areaKnown = true;
+          game.player.log('You have found out the location of '  + name + '.',
+            COLOR_TIMELINE);
+          return true;
+        }
+
+      if (!isDeadKnown)
+        {
+          isDeadKnown = true;
+          game.player.log('You have found out that '  + name + ' is ' +
+            (isDead ? 'dead' : 'alive') + '.', COLOR_TIMELINE);
+          return true;
+        }
+
+      return false;
     }
 
 
