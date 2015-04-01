@@ -71,7 +71,7 @@ class Organs
         return;
 
       currentOrgan.gp += 10 * time;
-      game.player.energy -= 5 * time;
+      _ai.energy -= 5 * time;
 
       // organ not grown yet
       if (currentOrgan.gp < currentOrgan.info.gp)

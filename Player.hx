@@ -100,6 +100,7 @@ class Player
         }
 
       // more host state checks
+      // we check for the 2nd time, because host could die in previous block
       if (state == PLR_STATE_HOST)
         {
           // parasite energy restoration

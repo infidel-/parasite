@@ -42,7 +42,7 @@ class EvolutionManager
       if (taskID == '')
         return;
 
-      player.energy -= 5 * time;
+      player.host.energy -= 5 * time;
       if (isTaskPath) // path evolution
         {
           var pathID = Type.createEnum(_Path, taskID);

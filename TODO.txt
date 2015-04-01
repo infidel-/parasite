@@ -6,13 +6,34 @@
 + goals subsystem
 + move flags to goals
 + learn npc flag
-- laptops should only be used in calm places (i.e. lairs) "This action requires intense concentration and time. I can only do it in a lair."
-- lairs (building a lair could require an improvement or knowledge?)
-- while in lair player do not spend energy to control host
 + knowing a person's name, job/photo or location will allow researching them further - find the rest of info bits
 + having known laptop or mobile phone in inventory allows player to research info about event npcs with Computer Use skill. Each successful attempt will automatically add +1 info bit for up to 3 npcs in the timeline that have at least name or job info bit known
 + computer use skill
 + info bits are: name, job + photo, location, dead/alive
+
+- "make a lair" goal chain (opens after completing GOAL_EVOLVE_ORGAN):
+- get "?Sentinel" improvement
+- grow "?Sentinel" organ ()
+- select location in a region (?any cell?), action "?Find location for lair" (need "?Sentinel" organ)
+- enter a lair
+- no energy spend while in lair with a host, control grows each turn up to 100
+- no energy spend while in lair without a host
+
+- "habitat" goal chain (after "lair" goal chain):
+- get "?Slime pod" improvement
+- grow "?Slime pod" organ ()
+- secrete slime on cells (only available if host has "?Slime pod" organ) (special action, spends host energy)
+- powering the cells up requires using a host as a source
+- while in habitat growing organs and evolution is faster
+
+- organ growth and evolution should spend host energy
+- 
+
+- do lairs require something special to power them?
+- player can build multiple lairs all over region
+- laptops should only be used in calm places (i.e. lairs) "This action requires intense concentration and time. I can only do it in a lair."
+- lairs (building a lair could require an improvement or knowledge?)
+
 ??? job agent ???
 - when done, copy this to docs
 
