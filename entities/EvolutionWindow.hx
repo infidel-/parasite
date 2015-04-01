@@ -30,6 +30,10 @@ class EvolutionWindow extends TextWindow
       if (game.player.evolutionManager.state > 1)
         for (p in game.player.evolutionManager.getPathList())
           {
+            // special path is not available
+            if (p.info.id == PATH_SPECIAL)
+              continue;
+
             // do not add completed paths
             if (game.player.evolutionManager.isPathComplete(p.id))
               continue;

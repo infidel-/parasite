@@ -154,6 +154,30 @@ class ConstEvolution
           ],
       },
 
+      { // ***
+        path: PATH_PROTECTION,
+        id: IMP_ENERGY,
+        name: '??Host energy bonus',
+        note: '(todo fluff)',
+        organ: {
+          name: '??Host energy bonus',
+          note: '(todo fluff)',
+          gp: 200
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          { hostEnergyMod: 1.0 },
+          { hostEnergyMod: 1.25 },
+          { hostEnergyMod: 1.50 },
+          { hostEnergyMod: 2.0 },
+          ],
+      },
+
       // =============== ************ ATTACK *************** ===================
 
       { // ***
@@ -466,6 +490,7 @@ class ConstEvolution
 
 
       // =============== ************ SPECIAL *************** ===================
+      // improvements from this direction should only appear as a result of a goal progression
 
       { // ***
         path: PATH_SPECIAL,
@@ -509,30 +534,6 @@ class ConstEvolution
             hostHealthMod: 1,
             hostSkillsMod: 0.5,
           },
-          ],
-      },
-
-      { // ***
-        path: PATH_SPECIAL,
-        id: IMP_ENERGY,
-        name: '??Host energy bonus',
-        note: '(todo fluff)',
-        organ: {
-          name: '??Host energy bonus',
-          note: '(todo fluff)',
-          gp: 200
-          },
-        levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
-        levelParams: [
-          { hostEnergyMod: 1.0 },
-          { hostEnergyMod: 1.25 },
-          { hostEnergyMod: 1.50 },
-          { hostEnergyMod: 2.0 },
           ],
       },
 /*      
