@@ -1,5 +1,7 @@
 // debug actions (region mode)
 
+package game;
+
 class DebugRegion
 {
   var game: Game;

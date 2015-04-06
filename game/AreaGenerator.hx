@@ -1,6 +1,8 @@
 // area generation
 
-import ConstWorld;
+package game;
+
+import const.WorldConst;
 import objects.*;
 
 class AreaGenerator

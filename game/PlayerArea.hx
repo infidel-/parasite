@@ -1,10 +1,13 @@
 // state (area mode)
 
+package game;
+
 import com.haxepunk.HXP;
 
 import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;
+import const.ItemsConst;
 
 class PlayerArea
 {
@@ -317,7 +320,7 @@ class PlayerArea
 
       // use fists
       if (item == null)
-        info = ConstItems.fists;
+        info = ItemsConst.fists;
       else info = item.info;
 
       // check for distance on melee

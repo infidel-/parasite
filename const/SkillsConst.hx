@@ -1,6 +1,8 @@
 // skill info list
 
-class ConstSkills
+package const;
+
+class SkillsConst
 {
 // return info by id
   public static function getInfo(id: _Skill): SkillInfo
@@ -9,6 +11,7 @@ class ConstSkills
         if (ii.id == id)
           return ii;
 
+      throw 'No such skill: ' + id;
       return null;
     }
 
@@ -45,6 +48,13 @@ class ConstSkills
     {
       id: KNOW_SOCIETY,
       name: 'human society',
+      defaultLevel: 0,
+      isKnowledge: true
+    },
+
+    {
+      id: KNOW_HABITAT,
+      name: 'microhabitat',
       defaultLevel: 0,
       isKnowledge: true
     }

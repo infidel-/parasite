@@ -2,6 +2,9 @@
 
 package scenario;
 
+import game.Game;
+import game.AreaGame;
+
 class NPC 
 {
   public var game: Game;
@@ -11,7 +14,7 @@ class NPC
   public var type: String; // npc type
   public var job: String; // job title 
   public var jobKnown: Bool; // job known to player?
-  public var area: RegionArea; // location area
+  public var area: AreaGame; // location area
   public var areaKnown: Bool; // location known to player?
   public var isDead: Bool; // is this npc dead?
   public var isDeadKnown: Bool; // is dead/alive known to player?

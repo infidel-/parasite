@@ -7,6 +7,8 @@ import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Spritemap;
 import com.haxepunk.graphics.Text;
 
+import game.Game;
+
 class PawnEntity extends Entity
 {
   var game: Game; // game state

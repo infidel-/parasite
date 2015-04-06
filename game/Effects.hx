@@ -1,5 +1,7 @@
 // AI effects - paralysis, bleed, panic, etc
 
+package game;
+
 import ai.AI;
 
 class Effects

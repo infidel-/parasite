@@ -1,5 +1,7 @@
 // player state (region mode)
 
+package game;
+
 import com.haxepunk.HXP;
 
 import entities.PlayerEntity;
@@ -48,10 +50,18 @@ class PlayerRegion
 // ==============================   ACTIONS   =======================================
 
 
-// helper: add action to list and check for energy
+// helper: add action to list by string  id and check for energy
   inline function addActionToList(list: List<_PlayerAction>, name: String)
     {
       var action = Const.getAction(name);
+      if (action.energy <= player.energy)
+        list.add(action);
+    }
+
+
+// helper: add action to list and check for energy
+  inline function addActionToList2(list: List<_PlayerAction>, action: _PlayerAction) 
+    {
       if (action.energy <= player.energy)
         list.add(action);
     }
@@ -61,11 +71,20 @@ class PlayerRegion
   public function getActionList(): List<_PlayerAction>
     {
       var tmp = new List<_PlayerAction>();
-      
+
+      // enter area
       var r = region.getRegion();
       var area = r.getXY(x, y);
       if (area.info.canEnter)
         addActionToList(tmp, 'enterArea');
+
+      // create a new habitat
+      if (player.skills.has(KNOW_HABITAT))// && XXXCHECKFORPREVHABITAT)
+        addActionToList2(tmp, { 
+          id: 'createHabitat', 
+          type: ACTION_REGION, 
+          name: 'Create habitat',
+          energy: 10 });
       
       return tmp;
     }

@@ -1,8 +1,10 @@
 // basic world region info
 
-import ConstWorld;
+package game;
 
-class WorldRegion
+import const.WorldConst;
+
+class RegionGame
 {
   public var id: Int; // area id
   public var typeID: String; // region type id - city, military base, etc
@@ -12,8 +14,8 @@ class WorldRegion
 //  public var alertness(default, set): Float; // area alertness (authorities) (0-100%)
 //  public var interest(default, set): Float; // area interest for secret groups (0-100%)
 
-  var _array: Array<Array<RegionArea>>; // 2-dim array of areas for quicker access
-  var _list: Map<Int, RegionArea>; // hashmap of areas
+  var _array: Array<Array<AreaGame>>; // 2-dim array of areas for quicker access
+  var _list: Map<Int, AreaGame>; // hashmap of areas
 
   static var _maxID: Int = 0; // region id counter
 
@@ -23,12 +25,12 @@ class WorldRegion
       id = _maxID++;
       width = w;
       height = h;
-      info = ConstWorld.getRegionInfo(typeID);
+      info = WorldConst.getRegionInfo(typeID);
 //      alertness = 0;
 //      interest = 0;
-      _list = new Map<Int, RegionArea>();
+      _list = new Map<Int, AreaGame>();
 
-      _array = new Array<Array<RegionArea>>();
+      _array = new Array<Array<AreaGame>>();
       for (i in 0...width)
         _array[i] = [];
     }
@@ -42,7 +44,7 @@ class WorldRegion
 // generate a region
   public function generate()
     {
-      if (typeID == ConstWorld.REGION_CITY)
+      if (typeID == WorldConst.REGION_CITY)
         generateCity();
 
       else throw 'unsupported region type: ' + typeID;
@@ -175,15 +177,15 @@ class WorldRegion
       for (y in 0...height)
         for (x in 0...width)
           {
-            var t = ConstWorld.AREA_GROUND;
+            var t = WorldConst.AREA_GROUND;
             if (tmp[x][y] == 1)
-              t = ConstWorld.AREA_CITY_LOW;
+              t = WorldConst.AREA_CITY_LOW;
             else if (tmp[x][y] == 2)
-              t = ConstWorld.AREA_CITY_MEDIUM;
+              t = WorldConst.AREA_CITY_MEDIUM;
             else if (tmp[x][y] == 3)
-              t = ConstWorld.AREA_CITY_HIGH;
+              t = WorldConst.AREA_CITY_HIGH;
 
-            var a = new RegionArea(this, t, x, y, 50, 50);
+            var a = new AreaGame(this, t, x, y, 50, 50);
             _list.set(a.id, a);
             _array[x][y] = a;
           }
@@ -229,14 +231,14 @@ class WorldRegion
 
 
 // get area by id
-  public inline function get(id: Int): RegionArea
+  public inline function get(id: Int): AreaGame
     {
       return _list.get(id);
     }
 
 
 // get area by x,y
-  public function getXY(x: Int, y: Int): RegionArea
+  public function getXY(x: Int, y: Int): AreaGame
     {
       if (x >= 0 && x < width && y >= 0 && y < height)
         return _array[x][y];
@@ -250,17 +252,17 @@ class WorldRegion
 
 
 // get random area
-  public function getRandom(): RegionArea
+  public function getRandom(): AreaGame
     {
-      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp: Array<AreaGame> = Lambda.array(_list);
       return tmp[Std.random(tmp.length)];
     }
 
 
 // get random inhabited area
-  public function getRandomInhabited(): RegionArea
+  public function getRandomInhabited(): AreaGame
     {
-      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp: Array<AreaGame> = Lambda.array(_list);
       var tmp2 = [];
       for (a in tmp)
         if (a.info.isInhabited)
@@ -274,9 +276,9 @@ class WorldRegion
 
 
 // get random enterable area
-  public function getRandomEnterable(): RegionArea
+  public function getRandomEnterable(): AreaGame
     {
-      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp: Array<AreaGame> = Lambda.array(_list);
       var tmp2 = [];
       for (a in tmp)
         if (a.info.canEnter)
@@ -290,9 +292,9 @@ class WorldRegion
 
 
 // get random area with this type id
-  public function getRandomWithType(t: String, noEvent: Bool): RegionArea
+  public function getRandomWithType(t: String, noEvent: Bool): AreaGame
     {
-      var tmp: Array<RegionArea> = Lambda.array(_list);
+      var tmp: Array<AreaGame> = Lambda.array(_list);
       var tmp2 = [];
       for (a in tmp)
         if (a.typeID == t && (!noEvent || a.event == null))
@@ -306,9 +308,9 @@ class WorldRegion
 
 
 // get random area around this one
-  public function getRandomAround(area: RegionArea, ?isInhabited: Bool): RegionArea
+  public function getRandomAround(area: AreaGame, ?isInhabited: Bool): AreaGame
     {
-      var tmp: Array<RegionArea> = [];
+      var tmp: Array<AreaGame> = [];
 
       var a = getXY(area.x, area.y);
       if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
@@ -356,9 +358,9 @@ class WorldRegion
 
 
 // spawn area with this type (actually just change some ground)
-  public inline function spawnArea(t: String, noEvent: Bool): RegionArea
+  public inline function spawnArea(t: String, noEvent: Bool): AreaGame
     {
-      var a = getRandomWithType(ConstWorld.AREA_GROUND, noEvent);
+      var a = getRandomWithType(WorldConst.AREA_GROUND, noEvent);
       a.setType(t);
       return a;
     }

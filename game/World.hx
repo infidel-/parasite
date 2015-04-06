@@ -1,11 +1,15 @@
 // game world - as in entire world subdivided into regions
 
+package game;
+
+import const.WorldConst;
+
 class World
 {
   var game: Game;
 
-  var _list: Map<Int, WorldRegion>; // list of regions
-//  public var region: WorldRegion; // current world region player is in
+  var _list: Map<Int, RegionGame>; // list of regions
+//  public var region: RegionGame; // current world region player is in
 
   public function new(g: Game)
     {
@@ -17,10 +21,10 @@ class World
 // generate a new world
   public function generate()
     {
-      _list = new Map<Int, WorldRegion>();
+      _list = new Map<Int, RegionGame>();
       for (i in 0...1)
         {
-          var region = new WorldRegion(ConstWorld.REGION_CITY, 30, 20);
+          var region = new RegionGame(WorldConst.REGION_CITY, 30, 20);
           region.generate();
           _list.set(region.id, region);
         }
@@ -30,7 +34,7 @@ class World
 
 
 // get region by id
-  public inline function get(id: Int): WorldRegion
+  public inline function get(id: Int): RegionGame
     {
       return _list.get(id);
     }

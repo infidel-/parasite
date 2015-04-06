@@ -2,16 +2,26 @@
 
 package const;
 
+import game.Game;
+import game.Player;
+
 class Goals
 {
   // get goal info by id
   public inline static function getInfo(id: _Goal): GoalInfo
     {
-      return goals.get(id);
+      var g = goals.get(id);
+      if (g == null)
+        throw "No such goal: " + id;
+
+      return g;
     }
 
 
   static var goals: Map<_Goal, GoalInfo> = [
+
+    // ========================= main branch
+
     GOAL_INVADE_HOST => {
       id: GOAL_INVADE_HOST,
       name: 'Find and invade a host',
@@ -47,13 +57,52 @@ class Goals
         }
       },
 
+    // ========================= habitat branch
+
     GOAL_EVOLVE_ORGAN => {
       id: GOAL_EVOLVE_ORGAN,
-      isHidden: true,
+//      isHidden: true,
       name: 'Evolve any body feature',
       note: 'You need to evolve any body feature.',
-      messageComplete: 'Evolving allows me to force changes in the host body.'
+      messageComplete: 'Evolving allows me to force changes in the host body. I should try it now.',
+      onComplete: function (game, player) {
+        player.goals.receive(GOAL_GROW_ORGAN);
+        }
       },
+
+    GOAL_GROW_ORGAN => {
+      id: GOAL_GROW_ORGAN,
+      name: 'Grow any body feature',
+      note: 'You need to grow any body feature.',
+      messageComplete: 'Growing body features and evolving is very inefficient in a hostile environment. I need a microhabitat.',
+      onComplete: function (game, player) {
+        player.evolutionManager.addImprov(IMP_MICROHABITAT);
+        player.goals.receive(GOAL_EVOLVE_MICROHABITAT);
+        }
+      },
+
+     GOAL_EVOLVE_MICROHABITAT => {
+      id: GOAL_EVOLVE_MICROHABITAT,
+      name: 'Evolve a microhabitat knowledge',
+      note: 'You need to evolve the knowledge of microhabitat.',
+      messageComplete: 'Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.',
+      onComplete: function (game, player) {
+        player.skills.addID(KNOW_HABITAT, 100); 
+        player.goals.receive(GOAL_CREATE_HABITAT);
+        }
+      },
+
+     GOAL_CREATE_HABITAT => {
+      id: GOAL_CREATE_HABITAT,
+      name: 'Create a new habitat',
+      note: 'You need to create a microhabitat.',
+      messageComplete: 'My microhabitat is complete. It allows me some degree of calm and safety.',
+      onComplete: function (game, player) {
+//        player.goals.receive();
+        }
+      },
+
+    // ========================= main branch
 
     GOAL_PROBE_BRAIN => {
       id: GOAL_PROBE_BRAIN,

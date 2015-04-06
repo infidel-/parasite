@@ -2,6 +2,8 @@
 
 package entities;
 
+import game.Game;
+
 class TimelineWindow extends TextWindow
 {
   public function new(g: Game)

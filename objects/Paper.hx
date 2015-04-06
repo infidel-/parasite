@@ -2,6 +2,8 @@
 
 package objects;
 
+import game.Game;
+
 class Paper extends Pickup
 {
   public var event: scenario.Event; // scenario event link

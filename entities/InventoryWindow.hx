@@ -2,6 +2,8 @@
 
 package entities;
 
+import game.Game;
+
 class InventoryWindow extends TextWindow
 {
 

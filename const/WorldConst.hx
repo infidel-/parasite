@@ -1,6 +1,8 @@
 // world and area constants
 
-class ConstWorld
+package const;
+
+class WorldConst
 {
   static var areas: Array<AreaInfo> =
     [

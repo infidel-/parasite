@@ -3,6 +3,8 @@
 package scenario;
 
 import scenario.Scenario;
+import game.Game;
+import const.WorldConst;
 
 class Timeline
 {
@@ -206,8 +208,8 @@ should limit player options for guiding purposes
 
       if (info.type == null)
         {
-          var tmp = [ ConstWorld.AREA_CITY_LOW,
-            ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
+          var tmp = [ WorldConst.AREA_CITY_LOW,
+            WorldConst.AREA_CITY_MEDIUM, WorldConst.AREA_CITY_HIGH ];
           info.type = tmp[Std.random(tmp.length)];
         }
 
@@ -266,8 +268,8 @@ should limit player options for guiding purposes
               else
                 {
                   Const.todo('spawn event npcs in appropriate area types');
-                  var tmp = [ ConstWorld.AREA_CITY_LOW,
-                    ConstWorld.AREA_CITY_MEDIUM, ConstWorld.AREA_CITY_HIGH ];
+                  var tmp = [ WorldConst.AREA_CITY_LOW,
+                    WorldConst.AREA_CITY_MEDIUM, WorldConst.AREA_CITY_HIGH ];
                   npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
                 }
 

@@ -1,6 +1,8 @@
 // player/AI inventory
 
-import ConstItems;
+package game;
+
+import const.ItemsConst;
 
 class Inventory
 {
@@ -236,7 +238,7 @@ class Inventory
 // add item by id
   public function addID(id: String)
     {
-      var info = ConstItems.getInfo(id);
+      var info = ItemsConst.getInfo(id);
       if (info == null)
         {
           trace('No such item id: ' + id);

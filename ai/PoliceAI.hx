@@ -4,6 +4,7 @@ package ai;
 
 import ai.AI;
 import _AIState;
+import game.Game;
 
 class PoliceAI extends HumanAI
 {
@@ -53,7 +54,7 @@ class PoliceAI extends HumanAI
       if (!isBackupCalled && state == AI_STATE_ALERT && !parasiteAttached)
         {
           isBackupCalled = true;
-          game.area.manager.addAI(this, AreaManager.EVENT_CALL_POLICE_BACKUP, 1);
+          game.area.manager.addAI(this, AREAEVENT_CALL_POLICE_BACKUP, 1);
         }
     }
 

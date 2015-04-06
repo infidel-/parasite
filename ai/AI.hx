@@ -5,6 +5,9 @@ package ai;
 import entities.AIEntity;
 import _AIState;
 import objects.*;
+import game.*;
+import const.EvolutionConst;
+import const.ItemsConst;
 
 class AI
 {
@@ -407,7 +410,7 @@ class AI
 
       // use fists
       if (item == null)
-        info = ConstItems.fists;
+        info = ItemsConst.fists;
       else info = item.info;
 
       // check for distance on melee
@@ -480,14 +483,14 @@ class AI
           if (game.player.state == PLR_STATE_HOST)
             {
               // organ: camouflage layer
-              var params = ConstEvolution.getParams(IMP_CAMO_LAYER, 0);
+              var params = EvolutionConst.getParams(IMP_CAMO_LAYER, 0);
               var o = organs.get(IMP_CAMO_LAYER);
               if (o != null)
                 baseAlertness = o.params.alertness;
               else baseAlertness = params.alertness;
 
               // organ: protective cover
-              var params = ConstEvolution.getParams(IMP_PROT_COVER, 0);
+              var params = EvolutionConst.getParams(IMP_PROT_COVER, 0);
               var o = organs.get(IMP_PROT_COVER);
               if (o != null)
                 alertnessBonus += o.params.alertness;

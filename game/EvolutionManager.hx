@@ -1,6 +1,8 @@
 // parasite evolution manager
 
-import ConstEvolution;
+package game;
+
+import const.EvolutionConst;
 
 
 class EvolutionManager
@@ -25,12 +27,12 @@ class EvolutionManager
       taskID = '';
       isTaskPath = false;
 
-      for (p in ConstEvolution.paths) // we may have hidden paths later ;)
+      for (p in EvolutionConst.paths) // we may have hidden paths later ;)
         _listPaths.add({
           id: p.id,
           ep: 0,
           level: 0,
-          info: ConstEvolution.getPathInfo(p.id)
+          info: EvolutionConst.getPathInfo(p.id)
           });
     }
 
@@ -50,7 +52,7 @@ class EvolutionManager
           path.ep += 10 * time;
 
           // evolution complete
-          if (path.ep >= ConstEvolution.epCostPath[path.level])
+          if (path.ep >= EvolutionConst.epCostPath[path.level])
             {
               var imp = openImprov(pathID);
               if (imp == null) // should not be here
@@ -81,7 +83,7 @@ class EvolutionManager
           imp.ep += 10 * time;
 
           // upgrade complete
-          if (imp.ep >= ConstEvolution.epCostImprovement[imp.level])
+          if (imp.ep >= EvolutionConst.epCostImprovement[imp.level])
             {
               imp.level++;
               player.log('You have improved your understanding of ' + imp.info.name +
@@ -91,12 +93,9 @@ class EvolutionManager
               imp.ep = 0;
               taskID = '';
 
-              // on gaining access memory open full evolution
-              if (imp.id == IMP_BRAIN_PROBE && imp.level == 1)
-                player.goals.complete(GOAL_EVOLVE_PROBE);
-
-              else if (imp.id == IMP_BRAIN_PROBE && imp.level == 2)
-                player.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
+              // call onUpgrade() func
+              if (imp.info.onUpgrade != null)
+                imp.info.onUpgrade(imp.level, game, player);
 
               // on first learning of evolution with an organ
               if (imp.info.organ != null)
@@ -111,7 +110,7 @@ class EvolutionManager
     {
       // get list of improvs on that path that player does not yet have
       var tmp = [];
-      for (imp in ConstEvolution.improvements)
+      for (imp in EvolutionConst.improvements)
         if (imp.path == path && !isKnown(imp.id))
           tmp.push(imp.id);
 
@@ -140,7 +139,7 @@ class EvolutionManager
         id: id,
         level: 0,
         ep: 0,
-        info: ConstEvolution.getInfo(id)
+        info: EvolutionConst.getInfo(id)
         };
       _list.add(imp);
       return imp;
@@ -191,7 +190,7 @@ class EvolutionManager
       var imp = getImprov(id);
       if (imp == null) // improvement not learned yet
         {
-          var info = ConstEvolution.getInfo(id);
+          var info = EvolutionConst.getInfo(id);
           return info.levelParams[0];
         }
 
@@ -239,7 +238,7 @@ class EvolutionManager
   public function isPathComplete(id: _Path)
     {
       var isComplete = true;
-      for (imp in ConstEvolution.improvements)
+      for (imp in EvolutionConst.improvements)
         {
           if (imp.path != id)
             continue;
@@ -261,8 +260,8 @@ class EvolutionManager
       if (taskID == '')
         return "<font color='#FF0000'>None</font>";
       else if (isTaskPath)
-        return ConstEvolution.getPathInfo(Type.createEnum(_Path, taskID)).name;
-      return ConstEvolution.getInfo(Type.createEnum(_Improv, taskID)).name;
+        return EvolutionConst.getPathInfo(Type.createEnum(_Path, taskID)).name;
+      return EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name;
     }
 }
 

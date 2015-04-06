@@ -2,6 +2,9 @@
 
 package entities;
 
+import game.Game;
+import const.EvolutionConst;
+
 class EvolutionWindow extends TextWindow
 {
   public function new(g: Game)
@@ -42,7 +45,7 @@ class EvolutionWindow extends TextWindow
               id: 'setPath.' + p.id,
               type: ACTION_EVOLUTION,
               name: p.info.name + ' (' + p.ep + '/' +
-                ConstEvolution.epCostPath[p.level] + ')',
+                EvolutionConst.epCostPath[p.level] + ')',
               energy: 0,
               });
           }
@@ -73,7 +76,7 @@ class EvolutionWindow extends TextWindow
           buf.add(imp.level);
           if (imp.level < 3)
             buf.add(' (' + imp.ep + '/' + 
-              ConstEvolution.epCostImprovement[imp.level] + ')');
+              EvolutionConst.epCostImprovement[imp.level] + ')');
           buf.add(': ');
           buf.add(imp.info.note + '\n');
 //          if (imp.level > 0)

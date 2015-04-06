@@ -3,10 +3,12 @@
 import com.haxepunk.Entity;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.Tilemap;
+
 import ai.*;
 import objects.*;
 import entities.EffectEntity;
-
+import const.ItemsConst;
+import game.*;
 
 class Area
 {
@@ -18,7 +20,7 @@ class Area
   var _effects: List<EffectEntity>; // visual effects list
   var _cells: Array<Array<Int>>; // cell types
   var _pathEngine: aPath.Engine;
-  var area: RegionArea; // region area link
+  var area: AreaGame; // region area link
 
   public var width: Int; // area width, height in cells
   public var height: Int;
@@ -74,7 +76,7 @@ class Area
 
 
 // set new area
-  public function setArea(a: RegionArea)
+  public function setArea(a: AreaGame)
     {
       area = a;
       width = area.width;
@@ -116,7 +118,7 @@ class Area
           addObject(o);
 /*
           Const.todo('!!!remove this!!!');
-          var info = ConstItems.getInfo('paper');
+          var info = ItemsConst.getInfo('paper');
           var o = new Paper(game, loc.x, loc.y);
           o.item = {
             id: 'paper',
@@ -152,7 +154,7 @@ class Area
 
 
 // get current area info
-  public inline function getArea(): RegionArea
+  public inline function getArea(): AreaGame
     { return area; }
 
 
@@ -546,7 +548,7 @@ class Area
 
       var maxSpawn = 5 - cnt;
 
-      var info = ConstItems.getInfo('paper');
+      var info = ItemsConst.getInfo('paper');
       for (i in 0...maxSpawn)
         {
           var loc = findUnseenEmptyLocation();

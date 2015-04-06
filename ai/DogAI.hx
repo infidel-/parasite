@@ -5,6 +5,8 @@ package ai;
 import ai.AI;
 import _AIState;
 
+import game.Game;
+
 class DogAI extends AI
 {
   public function new(g: Game, vx: Int, vy: Int)

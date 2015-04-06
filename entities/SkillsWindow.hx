@@ -2,6 +2,8 @@
 
 package entities;
 
+import game.Game;
+
 class SkillsWindow extends TextWindow
 {
   public function new(g: Game)

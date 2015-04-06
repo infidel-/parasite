@@ -1,7 +1,10 @@
 // debug actions (area mode)
 
+package game;
+
 import ai.*;
 import objects.*;
+import const.EvolutionConst;
 
 class DebugArea
 {
@@ -126,7 +129,7 @@ class DebugArea
 // gain all improvements at level 0 
   function gainImprovs0()
     {
-      for (imp in ConstEvolution.improvements)
+      for (imp in EvolutionConst.improvements)
         if (!game.player.evolutionManager.isKnown(imp.id))
           game.player.evolutionManager.addImprov(imp.id);
       game.player.evolutionManager.state = 2;
@@ -142,7 +145,7 @@ class DebugArea
       for (imp in game.player.evolutionManager.getList())
         {
           imp.level = 3;
-          imp.ep = ConstEvolution.epCostImprovement[imp.level];
+          imp.ep = EvolutionConst.epCostImprovement[imp.level];
         }
       game.player.evolutionManager.state = 2;
       game.log('All evolution improvements gained at max level');
@@ -235,6 +238,10 @@ class DebugArea
       game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE);
       var imp = game.player.evolutionManager.getImprov(IMP_BRAIN_PROBE);
       imp.level = 2;
+
+      // start habitat branch
+      game.player.goals.receive(GOAL_GROW_ORGAN);
+      game.player.goals.complete(GOAL_GROW_ORGAN);
     }
 
 

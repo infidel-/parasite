@@ -1,5 +1,6 @@
 // world region manager - region events queue and handling
 
+package game;
 
 class RegionManager
 {
@@ -13,7 +14,7 @@ class RegionManager
 
 // event: body has been discovered by authorities
 // pts - amount of organ points this body has
-  public function onBodyDiscovered(area: RegionArea, pts: Int)
+  public function onBodyDiscovered(area: AreaGame, pts: Int)
     {
       area.alertness += 1;
       area.interest += pts;
@@ -24,7 +25,7 @@ class RegionManager
 
 // event: multiple bodies have been discovered (called on leaving area) 
 // pts - amount of organ points this body has
-  public function onBodiesDiscovered(area: RegionArea, bodies: Int, pts: Int)
+  public function onBodiesDiscovered(area: AreaGame, bodies: Int, pts: Int)
     {
       area.alertness += bodies;
       area.interest += pts;

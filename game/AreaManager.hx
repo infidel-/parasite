@@ -1,5 +1,7 @@
 // area event manager - timer-related stuff, spawn stuff, despawn stuff, etc
 
+package game;
+
 import ai.*;
 import ai.AI;
 import objects.AreaObject;
@@ -9,7 +11,7 @@ class AreaManager
   var game: Game;
   var _list: List<AreaEvent>;
 
-  var area(get, null): RegionArea; // current area link
+  var area(get, null): AreaGame; // current area link
 
   public function new(g: Game)
     {
@@ -28,7 +30,7 @@ class AreaManager
 
 
 // add event originating from x,y
-  public inline function add(type: String, x: Int, y: Int, turns: Int)
+  public inline function add(type: _AreaManagerEventType, x: Int, y: Int, turns: Int)
     {
       var e = {
         ai: null,
@@ -45,7 +47,8 @@ class AreaManager
 
 
 // add event by type originating from this object 
-  public inline function addObject(o: AreaObject, type: String, turns: Int)
+  public inline function addObject(o: AreaObject, type: _AreaManagerEventType,
+      turns: Int)
     {
       var e = {
         ai: null,
@@ -63,7 +66,7 @@ class AreaManager
 
 
 // add event by type originating from this ai
-  public inline function addAI(ai: AI, type: String, turns: Int)
+  public inline function addAI(ai: AI, type: _AreaManagerEventType, turns: Int)
     {
       var e = {
         ai: ai,
@@ -107,26 +110,26 @@ class AreaManager
           // run this event
 
           // someone called the police
-          if (e.type == EVENT_CALL_POLICE)
+          if (e.type == AREAEVENT_CALL_POLICE)
             onCallPolice(e);
 
           // police is alerted
-          else if (e.type == EVENT_ALERT_POLICE)
+          else if (e.type == AREAEVENT_ALERT_POLICE)
             onAlertPolice(e);
 
           // police arrives
-          else if (e.type == EVENT_ARRIVE_POLICE)
+          else if (e.type == AREAEVENT_ARRIVE_POLICE)
             onArrivePolice(e);
 
           // police officer called for backup
-          if (e.type == EVENT_CALL_POLICE_BACKUP)
+          if (e.type == AREAEVENT_CALL_POLICE_BACKUP)
             onCallPoliceBackup(e);
 
           // police backup arrives
-          else if (e.type == EVENT_ARRIVE_POLICE_BACKUP)
+          else if (e.type == AREAEVENT_ARRIVE_POLICE_BACKUP)
             onArrivePoliceBackup(e);
 
-          else if (e.type == EVENT_OBJECT_DECAY)
+          else if (e.type == AREAEVENT_OBJECT_DECAY)
             onObjectDecay(o);
 
           _list.remove(e);
@@ -170,10 +173,10 @@ class AreaManager
       area.alertness++;
 
       // alert all police already in area 
-      add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
+      add(AREAEVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(EVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, area.info.policeResponceTime);
+      add(AREAEVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, area.info.policeResponceTime);
     }
 
 
@@ -228,10 +231,10 @@ class AreaManager
       area.alertness += 2;
 
       // alert all police already in area 
-      add(EVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
+      add(AREAEVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(EVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, area.info.policeResponceTime);
+      add(AREAEVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, area.info.policeResponceTime);
     }
 
 
@@ -287,21 +290,10 @@ class AreaManager
     }
 
 
-  function get_area(): RegionArea
+  function get_area(): AreaGame
     {
       return game.area.getArea();
     }
-
-// =================================================================================
-
-// event types
-  public static var EVENT_CALL_POLICE = 'callPolice';
-  public static var EVENT_ALERT_POLICE = 'alertPolice';
-  public static var EVENT_ARRIVE_POLICE = 'arrivePolice';
-  public static var EVENT_CALL_POLICE_BACKUP = 'callPoliceBackup';
-  public static var EVENT_ARRIVE_POLICE_BACKUP = 'arrivePoliceBackup';
-
-  public static var EVENT_OBJECT_DECAY = 'objectDecay';
 }
 
 
@@ -314,6 +306,6 @@ typedef AreaEvent =
   var details: String; // event details - can be null
   var x: Int;
   var y: Int;
-  var type: String; // event type
+  var type: _AreaManagerEventType; // event type
   var turns: Int; // turns left until the event
 };

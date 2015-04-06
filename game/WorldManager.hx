@@ -1,6 +1,6 @@
 // game world manager - world events queue and handling
 
-import World;
+package game;
 
 class WorldManager
 {

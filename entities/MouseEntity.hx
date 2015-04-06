@@ -6,6 +6,8 @@ import com.haxepunk.graphics.Spritemap;
 import com.haxepunk.utils.Input;
 import flash.ui.Mouse;
 
+import game.Game;
+
 class MouseEntity extends Entity
 {
   var game: Game;

@@ -5,6 +5,8 @@ package entities;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Spritemap;
 
+import game.Game;
+
 class EffectEntity extends Entity
 {
   var game: Game;

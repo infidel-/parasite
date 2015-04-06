@@ -1,5 +1,7 @@
 // item type
 
+package game;
+
 typedef Item = 
 {
   id: String, // item id

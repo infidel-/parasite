@@ -1,4 +1,4 @@
-import Player;
+import game.*;
 
 class Const
 {

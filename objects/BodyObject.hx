@@ -2,6 +2,9 @@
 
 package objects;
 
+import game.Game;
+import game.Inventory;
+
 class BodyObject extends AreaObject
 {
   public var inventory: Inventory; // inventory (copied from AI)

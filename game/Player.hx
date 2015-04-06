@@ -1,5 +1,7 @@
 // player state
 
+package game;
+
 import entities.PlayerEntity;
 import com.haxepunk.HXP;
 import ai.AI;

@@ -2,6 +2,8 @@
 
 package ai;
 
+import game.Game;
+
 class HumanAI extends AI
 {
   public function new(g: Game, vx: Int, vy: Int)

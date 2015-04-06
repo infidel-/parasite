@@ -1,5 +1,7 @@
 // game state
 
+package game;
+
 import com.haxepunk.HXP;
 import scenario.Timeline;
 

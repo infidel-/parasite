@@ -13,6 +13,8 @@ import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
 
+import game.Game;
+
 class HUD
 {
   var game: Game; // game state link

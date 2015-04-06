@@ -2,6 +2,8 @@
 
 package scenario;
 
+import game.Game;
+
 class Event
 {
   public var game: Game;

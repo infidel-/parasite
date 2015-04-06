@@ -4,6 +4,11 @@ package objects;
 
 import entities.ObjectEntity;
 
+import game.Game;
+import game.Item;
+import game.AreaManager;
+
+
 class AreaObject
 {
   var game: Game; // game state link
@@ -38,7 +43,7 @@ class AreaObject
 // set object decay in X turns
   public inline function setDecay(turns: Int)
     {
-      game.area.manager.addObject(this, AreaManager.EVENT_OBJECT_DECAY, turns);
+      game.area.manager.addObject(this, AREAEVENT_OBJECT_DECAY, turns);
     }
 
 

@@ -7,6 +7,8 @@ import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Spritemap;
 import objects.AreaObject;
 
+import game.Game;
+
 class ObjectEntity extends Entity
 {
   var game: Game; // game state

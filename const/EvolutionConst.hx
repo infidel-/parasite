@@ -1,6 +1,11 @@
 // evolution constants
 
-class ConstEvolution
+package const;
+
+import game.Game;
+import game.Player;
+
+class EvolutionConst
 {
   // major evolution paths
   public static var paths: Array<PathInfo> =
@@ -497,8 +502,6 @@ class ConstEvolution
         id: IMP_BRAIN_PROBE, 
         name: 'Brain probe',
         note: 'Allows probing host brain to learn its contents',
-        skill: KNOW_MEMORY,
-        skillValue: 1, 
         levelNotes: [
           'Cannot probe host brain',
           'Access with severe problems (basic knowledge)',
@@ -535,6 +538,40 @@ class ConstEvolution
             hostSkillsMod: 0.5,
           },
           ],
+        onUpgrade: function(level, game, player)
+          {
+            // complete goals
+            if (level == 1)
+              player.goals.complete(GOAL_EVOLVE_PROBE);
+
+            else if (level == 2)
+              player.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
+          }
+      },
+
+      { // ***
+        path: PATH_SPECIAL,
+        id: IMP_MICROHABITAT,
+        name: 'Microhabitat',
+        note: '(todo fluff)',
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        levelParams: [
+          {},
+          {},
+          {},
+          {},
+          ],
+        onUpgrade: function(level, game, player)
+          {
+            // complete goals
+            if (level == 1)
+              player.goals.complete(GOAL_EVOLVE_MICROHABITAT);
+          }
       },
 /*      
       { // ***
@@ -584,6 +621,7 @@ class ConstEvolution
         if (imp.id == id)
           return imp;
 
+      throw 'No such improvement: ' + id;
       return null;
     }
 
@@ -595,6 +633,7 @@ class ConstEvolution
         if (imp.id == id)
           return imp.levelParams[level];
       
+      throw 'No such improvement: ' + id;
       return null;
     }
 
@@ -617,6 +656,7 @@ class ConstEvolution
         if (p.id == id)
           return p;
 
+      throw 'No such path: ' + id;
       return null;
     }
 }
@@ -629,10 +669,10 @@ typedef ImprovInfo =
   name: String, // improvement name
   note: String, // improvement description
   ?organ: OrganInfo, // organ that can be grown
-  ?skill: _Skill,  // given skill id
-  ?skillValue: Int, // amount of skill given
   levelNotes: Array<String>, // improvement descriptions for different levels
   levelParams: Array<Dynamic>, // improvement-specific parameters for different levels
+
+  ?onUpgrade: Int -> Game -> Player -> Void, // func to call on upgrading improvement 
 }
 
 typedef PathInfo =
@@ -648,5 +688,5 @@ typedef OrganInfo =
   note: String, // description
   gp: Int, // gp cost to grow
   ?action: _PlayerAction, // player action
-  ?hasTimeout: Bool // has activation timeout?
+  ?hasTimeout: Bool, // has activation timeout?
 }

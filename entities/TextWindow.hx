@@ -10,6 +10,8 @@ import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
 
+import game.Game;
+
 class TextWindow
 {
   var game: Game; // game state

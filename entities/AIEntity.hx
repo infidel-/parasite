@@ -5,6 +5,8 @@ package entities;
 import com.haxepunk.graphics.Spritemap;
 import ai.AI;
 
+import game.Game;
+
 class AIEntity extends PawnEntity
 {
   var ai: AI; // AI link

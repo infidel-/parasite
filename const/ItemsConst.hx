@@ -1,6 +1,10 @@
 // item list
 
-class ConstItems
+package const;
+
+import game.ItemInfo;
+
+class ItemsConst
 {
 // return item info by id
   public static function getInfo(id: String): ItemInfo
@@ -9,6 +13,7 @@ class ConstItems
         if (ii.id == id)
           return ii;
 
+      throw 'No such item: ' + id;
       return null;
     }
 

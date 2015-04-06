@@ -1,5 +1,7 @@
 // player goals
 
+package game;
+
 class Goals
 {
   var game: Game;
@@ -38,6 +40,9 @@ class Goals
       _listCurrent.add(id);
 
       var info = const.Goals.getInfo(id);
+      if (info == null)
+        throw "No such goal: " + id;
+
       if (info.messageReceive != null) // message on receiving
         game.message(info.messageReceive);
 

@@ -4,6 +4,7 @@ package ai;
 
 import ai.AI;
 import _AIState;
+import game.Game;
 
 class AgentAI extends HumanAI
 {

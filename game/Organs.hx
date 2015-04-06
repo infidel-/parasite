@@ -1,8 +1,10 @@
 // AI organs and other body features like camouflage layers etc
 
+package game;
+
 import com.haxepunk.HXP;
 import ai.AI;
-import ConstEvolution;
+import const.EvolutionConst;
 
 class Organs
 {
@@ -85,6 +87,9 @@ class Organs
       // host energy organ restores energy to max when grown
       if (currentOrgan.id == IMP_ENERGY)
         _ai.energy = _ai.maxEnergy;
+
+      // on first growing an organ 
+      game.player.goals.complete(GOAL_GROW_ORGAN);
 
       currentOrgan = null;
     }
@@ -200,7 +205,7 @@ class Organs
 // add grown organ by improvement id
   public function addID(id: _Improv): Organ
     {
-      var impInfo = ConstEvolution.getInfo(id);
+      var impInfo = EvolutionConst.getInfo(id);
       if (impInfo == null)
         {
           trace('No such organ: ' + id);

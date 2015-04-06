@@ -2,6 +2,8 @@
 
 package objects;
 
+import game.Game;
+
 class SewerHatch extends AreaObject
 {
   public function new(g: Game, vx: Int, vy: Int)

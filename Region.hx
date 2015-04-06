@@ -4,6 +4,8 @@ import com.haxepunk.Entity;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.Tilemap;
 
+import game.*;
+
 class Region
 {
   var game: Game; // game state link
@@ -13,9 +15,9 @@ class Region
   var _tilemapEvent: Tilemap;
   var _tilemapNPC: Tilemap;
   var _cells: Array<Array<Int>>; // cell types
-  var region: WorldRegion; // region info link
+  var region: RegionGame; // region info link
 
-  public var currentArea(get, null): RegionArea; // area player is in
+  public var currentArea(get, null): AreaGame; // area player is in
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -51,7 +53,7 @@ class Region
 
 
 // set current region
-  public function setRegion(r: WorldRegion)
+  public function setRegion(r: RegionGame)
     {
       region = r;
       width = region.width;
@@ -91,7 +93,7 @@ class Region
 
 
 // get region info
-  public inline function getRegion(): WorldRegion
+  public inline function getRegion(): RegionGame
     {
       return region;
     }
@@ -188,7 +190,7 @@ class Region
 
 
 // update alertness icon for this area
-  function updateAlertness(a: RegionArea)
+  function updateAlertness(a: AreaGame)
     {
       // set alertness mask
       var alertFrame = Const.FRAME_EMPTY;
@@ -203,7 +205,7 @@ class Region
 
 
 // update event icon for this area
-  function updateEvent(a: RegionArea)
+  function updateEvent(a: AreaGame)
     {
       if (!game.player.vars.timelineEnabled ||
           a.event == null || !a.event.locationKnown)
@@ -218,7 +220,7 @@ class Region
 
 
 // update npc icon for this area
-  public function updateNPC(a: RegionArea)
+  public function updateNPC(a: AreaGame)
     {
       if (!game.player.vars.timelineEnabled || a.npc.length == 0)
         return;
@@ -269,7 +271,7 @@ class Region
 
 
 // get area player is in
-  public function get_currentArea(): RegionArea
+  public function get_currentArea(): AreaGame
     {
       return region.getXY(player.x, player.y);
     }

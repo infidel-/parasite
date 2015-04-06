@@ -3,6 +3,7 @@
 
 package objects;
 
+import game.Game;
 
 class Pickup extends AreaObject
 {

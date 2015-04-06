@@ -1,6 +1,8 @@
 // player/AI skills
 
-import ConstSkills;
+package game;
+
+import const.SkillsConst;
 
 class Skills 
 {
@@ -31,6 +33,17 @@ class Skills
 
       var tmp = Lambda.array(_list);
       return tmp[Std.random(tmp.length)];
+    }
+
+
+// does the player/ai have that skill? 
+  public function has(id: _Skill): Bool 
+    {
+      for (o in _list)
+        if (o.id == id)
+          return true;
+
+      return false;
     }
 
 
@@ -87,7 +100,7 @@ class Skills
           return o.level;
 
       // not found, get default value
-      var info = ConstSkills.getInfo(id);
+      var info = SkillsConst.getInfo(id);
       return info.defaultLevel;
     }
 
@@ -103,7 +116,7 @@ class Skills
             return;
           }
 
-      var info = ConstSkills.getInfo(id);
+      var info = SkillsConst.getInfo(id);
       if (info == null)
         {
           trace('No such skill id: ' + id);

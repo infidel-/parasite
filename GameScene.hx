@@ -7,6 +7,7 @@ import com.haxepunk.utils.Input;
 import com.haxepunk.utils.Key;
 
 import entities.*;
+import game.Game;
 
 class GameScene extends Scene
 {

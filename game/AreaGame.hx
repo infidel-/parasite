@@ -1,10 +1,12 @@
-// basic region area info
+// basic game area info
 
-import ConstWorld;
+package game;
 
-class RegionArea
+import const.WorldConst;
+
+class AreaGame
 {
-  var region: WorldRegion;
+  var region: RegionGame;
 
   public var id: Int; // area id
   public var typeID: String; // area type id - city block, university, military base, etc
@@ -26,7 +28,7 @@ class RegionArea
 
   static var _maxID: Int = 0; // area id counter
 
-  public function new(r: WorldRegion, tv: String, vx: Int, vy: Int, w: Int, h: Int)
+  public function new(r: RegionGame, tv: String, vx: Int, vy: Int, w: Int, h: Int)
     {
       region = r;
       isKnown = false;
@@ -48,19 +50,19 @@ class RegionArea
   public function setType(t: String)
     {
       typeID = t;
-      info = ConstWorld.getAreaInfo(typeID);
+      info = WorldConst.getAreaInfo(typeID);
 
-      if (typeID == ConstWorld.AREA_GROUND)
+      if (typeID == WorldConst.AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;
-      else if (typeID == ConstWorld.AREA_CITY_LOW)
+      else if (typeID == WorldConst.AREA_CITY_LOW)
         tileID = Const.TILE_REGION_CITY_LOW;
-      else if (typeID == ConstWorld.AREA_CITY_MEDIUM)
+      else if (typeID == WorldConst.AREA_CITY_MEDIUM)
         tileID = Const.TILE_REGION_CITY_MEDIUM;
-      else if (typeID == ConstWorld.AREA_CITY_HIGH)
+      else if (typeID == WorldConst.AREA_CITY_HIGH)
         tileID = Const.TILE_REGION_CITY_HIGH;
-      else if (typeID == ConstWorld.AREA_MILITARY_BASE)
+      else if (typeID == WorldConst.AREA_MILITARY_BASE)
         tileID = Const.TILE_REGION_MILITARY_BASE;
-      else if (typeID == ConstWorld.AREA_FACILITY)
+      else if (typeID == WorldConst.AREA_FACILITY)
         tileID = Const.TILE_REGION_FACILITY;
     }
 
