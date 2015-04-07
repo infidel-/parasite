@@ -97,9 +97,6 @@ class Goals
       name: 'Create a new habitat',
       note: 'You need to create a microhabitat.',
       messageComplete: 'My microhabitat is complete. It allows me some degree of calm and safety.',
-      onComplete: function (game, player) {
-//        player.goals.receive();
-        }
       },
 
     // ========================= main branch

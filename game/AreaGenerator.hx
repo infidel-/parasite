@@ -13,7 +13,18 @@ class AreaGenerator
         generateBuildings(game, area, info);
       else if (info.type == 'wilderness')
         generateWilderness(game, area, info);
+      else if (info.type == 'habitat')
+        generateHabitat(game, area, info);
+      else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
+        
       generateObjects(game, area, info);
+    }
+
+
+// generate a habitat
+  static function generateHabitat (game: Game, area: Area, info: AreaInfo)
+    {
+      Const.todo('habitat generator');
     }
 
 

@@ -43,6 +43,7 @@ class Game
       scene.add(region.entityAlert);
       scene.add(region.entityEvent);
       scene.add(region.entityNPC);
+      scene.add(region.entityHabitat);
       area = new Area(this);
       area.player.createEntity(0, 0);
       scene.add(area.entity);
@@ -92,7 +93,7 @@ class Game
 
 
 // set location
-  public function setLocation(vloc: String)
+  public function setLocation(vloc: String, ?newarea: AreaGame)
     {
       // hide previous gui
       if (location == LOCATION_AREA)
@@ -113,6 +114,8 @@ class Game
         {
           var r = region.getRegion();
           var a = r.getXY(region.player.x, region.player.y);
+          if (newarea != null) // enter specified area
+             a = newarea;
           area.setArea(a);
           area.show();
         }

@@ -5,6 +5,7 @@ package game;
 import com.haxepunk.HXP;
 
 import entities.PlayerEntity;
+import const.WorldConst;
 
 class PlayerRegion
 {
@@ -73,18 +74,24 @@ class PlayerRegion
       var tmp = new List<_PlayerAction>();
 
       // enter area
-      var r = region.getRegion();
-      var area = r.getXY(x, y);
-      if (area.info.canEnter)
+      if (region.currentArea.info.canEnter)
         addActionToList(tmp, 'enterArea');
 
       // create a new habitat
-      if (player.skills.has(KNOW_HABITAT))// && XXXCHECKFORPREVHABITAT)
+      if (player.skills.has(KNOW_HABITAT) && !region.currentArea.hasHabitat)
         addActionToList2(tmp, { 
           id: 'createHabitat', 
           type: ACTION_REGION, 
           name: 'Create habitat',
           energy: 10 });
+
+      // enter habitat
+      if (region.currentArea.hasHabitat)
+        addActionToList2(tmp, { 
+          id: 'enterHabitat', 
+          type: ACTION_REGION, 
+          name: 'Enter habitat',
+          energy: 0 });
       
       return tmp;
     }
@@ -96,6 +103,10 @@ class PlayerRegion
     {
       if (action.id == 'enterArea')
         enterAreaAction();
+      else if (action.id == 'createHabitat')
+        createHabitatAction();
+      else if (action.id == 'enterHabitat')
+        enterHabitatAction();
 
       player.energy -= action.energy;
 
@@ -113,6 +124,28 @@ class PlayerRegion
       game.log(region.currentArea.info.isInhabited ?
         "You emerge from the sewers." : "You enter the area.");
       game.setLocation(Game.LOCATION_AREA);
+    }
+
+
+// action: create habitat
+  function createHabitatAction()
+    {
+      game.log("You have created a habitat in this area.");
+      var r = region.getRegion();
+      var area = r.createArea(WorldConst.AREA_HABITAT);
+      region.currentArea.hasHabitat = true;
+      region.currentArea.habitatAreaID = area.id;
+      region.updateIconsArea(x, y);
+    }
+
+
+// action: enter habitat
+  function enterHabitatAction()
+    {
+      game.log("You enter the habitat. You feel much safer here.");
+      var r = region.getRegion();
+      var habitatArea = r.get(region.currentArea.habitatAreaID);
+      game.setLocation(Game.LOCATION_AREA, habitatArea); 
     }
 
 

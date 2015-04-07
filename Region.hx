@@ -14,6 +14,7 @@ class Region
   var _tilemapAlert: Tilemap;
   var _tilemapEvent: Tilemap;
   var _tilemapNPC: Tilemap;
+  var _tilemapHabitat: Tilemap;
   var _cells: Array<Array<Int>>; // cell types
   var region: RegionGame; // region info link
 
@@ -25,6 +26,7 @@ class Region
   public var entityAlert: Entity; // entity
   public var entityEvent: Entity; // entity
   public var entityNPC: Entity; // entity
+  public var entityHabitat: Entity; // entity
   public var manager: RegionManager; // event manager (region mode)
   public var player: PlayerRegion; // game player (region mode)
   public var debug: DebugRegion; // debug actions (region mode)
@@ -32,12 +34,15 @@ class Region
   public function new (g: Game)
     {
       game = g;
+      width = 0;
+      height = 0;
+
       _tilemap = null;
       _tilemapAlert = null;
       _tilemapEvent = null;
       _tilemapNPC = null;
-      width = 0;
-      height = 0;
+      _tilemapHabitat = null;
+
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
       entityAlert = new Entity();
@@ -46,6 +51,9 @@ class Region
       entityEvent.layer = Const.LAYER_EFFECT - 2;
       entityNPC = new Entity();
       entityNPC.layer = Const.LAYER_EFFECT - 3;
+      entityHabitat = new Entity();
+      entityHabitat.layer = Const.LAYER_EFFECT - 3;
+
       manager = new RegionManager(g);
       player = new PlayerRegion(g, this);
       debug = new DebugRegion(g, this);
@@ -66,18 +74,19 @@ class Region
           entityAlert.graphic = null;
 //          _tilemap.destroy(); // unneeded?
         }
-  
+
       _tilemap = new Tilemap("gfx/tileset.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entity.addGraphic(_tilemap);
 
+      // TODO: this needs to be remade through dynamically spawned entities sometime
+      // later i guess
       _tilemapAlert = new Tilemap("gfx/entities.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entityAlert.addGraphic(_tilemapAlert);
 
-      // TODO: i'll probably have to rework that into separate entities for icons later
       _tilemapEvent = new Tilemap("gfx/entities.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
@@ -87,6 +96,11 @@ class Region
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entityNPC.addGraphic(_tilemapNPC);
+
+      _tilemapHabitat = new Tilemap("gfx/entities.png",
+        width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
+      entityHabitat.addGraphic(_tilemapHabitat);
 
       populate();
     }
@@ -119,6 +133,7 @@ class Region
       entityAlert.visible = true;
       entityEvent.visible = true;
       entityNPC.visible = true;
+      entityHabitat.visible = true;
       player.entity.visible = true;
       updateVisibility();
     }
@@ -131,6 +146,7 @@ class Region
       entityAlert.visible = false;
       entityEvent.visible = false;
       entityNPC.visible = false;
+      entityHabitat.visible = false;
       player.entity.visible = false;
     }
 
@@ -220,7 +236,7 @@ class Region
 
 
 // update npc icon for this area
-  public function updateNPC(a: AreaGame)
+  function updateNPC(a: AreaGame)
     {
       if (!game.player.vars.timelineEnabled || a.npc.length == 0)
         return;
@@ -235,18 +251,28 @@ class Region
     }
 
 
+// update icons on this area
+  public function updateIconsArea(x: Int, y: Int)
+    {
+      var a = region.getXY(x, y);
+
+      updateAlertness(a);
+      updateEvent(a);
+      updateNPC(a);
+
+      // update habitat icons
+      if (a.hasHabitat)
+        _tilemapHabitat.setTile(a.x, a.y, 
+          Const.ROW_REGION_ICON * 9 + Const.FRAME_HABITAT);
+    }
+
+
 // update icons 
-  function updateIcons()
+  inline function updateIcons()
     {
       for (y in 0...height)
         for (x in 0...width)
-          {
-            var a = region.getXY(x, y);
-
-            updateAlertness(a);
-            updateEvent(a);
-            updateNPC(a);
-          }
+          updateIconsArea(x, y);
     }
 
 

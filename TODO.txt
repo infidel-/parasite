@@ -13,10 +13,10 @@
 
 - "Microhabitat" goal chain (opens after completing GOAL_EVOLVE_ORGAN):
 + "Growing organs and evolving is very inefficient in a hostile environment. I need a microhabitat."
-- GOAL: get "Microhabitat" improvement (passive), onComplete -> give microhabitat knowledge
-- GOAL: select location in a region (any walkable cell), action "Find a habitat" (need "Microhabitat" knowledge). This creates the habitat. Player automatically enters it. Text should say how it's much more safe here.
-- ImprovInfo.onComplete()
-- mark habitats on map
++ GOAL: get "Microhabitat" improvement (passive), onComplete -> give microhabitat knowledge
++ ImprovInfo.onComplete()
++ GOAL: select location in a region (any walkable cell), action "Create habitat" (need "Microhabitat" knowledge). This creates the habitat. Text should say how it's much more safe here.
++ mark habitats on map
 - player can build multiple habitats all over region
 - ?? limit total amount of habitats by knowledge/improvement
 - no energy spend while in habitat with a host, control grows each turn up to 100 
@@ -27,6 +27,8 @@
 - each habitat has a detection chance (base chance is in area info). each turn player is in region mode that chance is rolled for each habitat.
 - when habitat is detected, it's silently marked as "detected" and when player enters it, 4 blackops agents spawn and player cannot leave habitat until they're dead (which is probably impossible). if player actually leaves, habitat is destroyed. i should probably make some habitat imps that will notify player about detection.
 - ?? habitat cannot be detected when player is inside. that probably needs to be changed.
+- set habitat width, height in area type
+- habitat area generator
 
 
 ??? job agent ???

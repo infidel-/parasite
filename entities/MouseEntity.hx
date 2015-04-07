@@ -163,7 +163,7 @@ class MouseEntity extends Entity
           var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
           var reg = game.world.get(0);     
           var area = reg.getXY(x, y);
-          game.region.updateNPC(area);
+          game.region.updateIconsArea(x, y);
         }
     }
 

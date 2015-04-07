@@ -41,6 +41,7 @@ class Const
   public static var FRAME_EVENT_UNKNOWN = 1;
   public static var FRAME_EVENT_KNOWN = 2;
   public static var FRAME_EVENT_NPC = 3;
+  public static var FRAME_HABITAT = 4;
 
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;

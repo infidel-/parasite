@@ -240,8 +240,9 @@ class DebugArea
       imp.level = 2;
 
       // start habitat branch
-      game.player.goals.receive(GOAL_GROW_ORGAN);
-      game.player.goals.complete(GOAL_GROW_ORGAN);
+//      game.player.goals.receive(GOAL_GROW_ORGAN);
+//      game.player.goals.complete(GOAL_GROW_ORGAN);
+      game.player.skills.addID(KNOW_HABITAT, 100); 
     }
 
 

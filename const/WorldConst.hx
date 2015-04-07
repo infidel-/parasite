@@ -128,6 +128,21 @@ class WorldConst
           { id: 'sewer_hatch', amount: 10 }
           ]
       },
+
+      { // *** habitat (TODO) 
+        id: 'habitat',
+        type: 'habitat',
+        name: 'Habitat area',
+        canEnter: true,
+        isInhabited: false,
+        commonAI: 0,
+        uncommonAI: 0,
+        buildingChance: 0.05,
+        policeResponceTime: 0,
+        policeResponceAmount: 0,
+        ai: new Map(),
+        objects: []
+      },
     ];
 
 
@@ -168,6 +183,7 @@ class WorldConst
   public static var AREA_CITY_HIGH = 'cityHigh';
   public static var AREA_MILITARY_BASE = 'militaryBase';
   public static var AREA_FACILITY = 'facility';
+  public static var AREA_HABITAT = 'habitat';
 
 // region types
   public static var REGION_CITY = 'city';
