@@ -230,6 +230,18 @@ class RegionGame
     }
 
 
+// get habitats count in this area
+  public function getHabitatsCount(): Int
+    {
+      var cnt = 0;
+      for (area in _list)
+        if (area.isHabitat)
+          cnt++;
+      
+      return cnt;
+    }
+
+
 // get area by id
   public inline function get(id: Int): AreaGame
     {

@@ -17,12 +17,12 @@
 + ImprovInfo.onComplete()
 + GOAL: select location in a region (any walkable cell), action "Create habitat" (need "Microhabitat" knowledge). This creates the habitat. Text should say how it's much more safe here.
 + mark habitats on map
-- player can build multiple habitats all over region
-- ?? limit total amount of habitats by knowledge/improvement
-- no energy spend while in habitat with a host, control grows each turn up to 100 
-- in case of evolution or organ growth, the energy spend is -20%? (4/turn instead of 5/turn)
-- no energy spend while in habitat without a host (but it's not restored)
-- can use laptops and cell phones in habitat and only in habitats. "This action requires intense concentration and time. I can only do it in a habitat."
++ player can build multiple habitats all over region
++ limit total amount of habitats by improvement level
++ no energy spend while in habitat with a host, control grows each turn up to 100 
++ in case of evolution or organ growth, the energy spend is -20% (4/turn instead of 5/turn)
++ no energy spend while in habitat without a host (but it's not restored)
++ can use laptops and cell phones in habitat and only in habitats. "This action requires intense concentration and time. I can only do it in a habitat."
 - habitat area does not despawn after leaving. the contents should all stay there
 - each habitat has a detection chance (base chance is in area info). each turn player is in region mode that chance is rolled for each habitat.
 - when habitat is detected, it's silently marked as "detected" and when player enters it, 4 blackops agents spawn and player cannot leave habitat until they're dead (which is probably impossible). if player actually leaves, habitat is destroyed. i should probably make some habitat imps that will notify player about detection.
@@ -120,8 +120,11 @@ LATER
 - GOAL: grow biomineral. can only be grown in habitat. current host converts into a biomineral on that cell that supplies additional energy to cells around it. biomineral has a lifetime that depends on host stats.
 - while near the biomineral growing organs and evolution is faster
 
+add useful info into improvement notes on evolution screen
+tooltips in area and region mode (type, habitat, clues, events, alertness, etc)
 organ actions -> OrganInfo.actionXXX
 inventory actions -> ItemInfo.actionXXX
+move Const.PLAYER_ACTION into proper classes?
 ecm jammer improvement
 host perks - for ex, fat people have more energy overall, so they are more desirable
 some evolution can only happen if player has access to prerequisites, for example, stands on top of some object

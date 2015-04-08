@@ -561,10 +561,18 @@ class EvolutionConst
           '(todo fluff)',
           ],
         levelParams: [
-          {},
-          {},
-          {},
-          {},
+          {
+            numHabitats: 0
+          },
+          {
+            numHabitats: 1
+          },
+          {
+            numHabitats: 2
+          },
+          {
+            numHabitats: 4
+          },
           ],
         onUpgrade: function(level, game, player)
           {

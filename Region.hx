@@ -22,11 +22,8 @@ class Region
 
   public var width: Int; // width, height in cells
   public var height: Int;
-  public var entity: Entity; // entity
-  public var entityAlert: Entity; // entity
-  public var entityEvent: Entity; // entity
-  public var entityNPC: Entity; // entity
-  public var entityHabitat: Entity; // entity
+  public var entity: Entity; // tilemap entity
+  public var entityIcons: Entity; // icons entity
   public var manager: RegionManager; // event manager (region mode)
   public var player: PlayerRegion; // game player (region mode)
   public var debug: DebugRegion; // debug actions (region mode)
@@ -45,14 +42,8 @@ class Region
 
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
-      entityAlert = new Entity();
-      entityAlert.layer = Const.LAYER_TILES - 1;
-      entityEvent = new Entity();
-      entityEvent.layer = Const.LAYER_EFFECT - 2;
-      entityNPC = new Entity();
-      entityNPC.layer = Const.LAYER_EFFECT - 3;
-      entityHabitat = new Entity();
-      entityHabitat.layer = Const.LAYER_EFFECT - 3;
+      entityIcons = new Entity();
+      entityIcons.layer = Const.LAYER_EFFECT - 1;
 
       manager = new RegionManager(g);
       player = new PlayerRegion(g, this);
@@ -71,7 +62,7 @@ class Region
       if (_tilemap != null)
         {
           entity.graphic = null;
-          entityAlert.graphic = null;
+          entityIcons.graphic = null;
 //          _tilemap.destroy(); // unneeded?
         }
 
@@ -85,22 +76,22 @@ class Region
       _tilemapAlert = new Tilemap("gfx/entities.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      entityAlert.addGraphic(_tilemapAlert);
+      entityIcons.addGraphic(_tilemapAlert);
 
       _tilemapEvent = new Tilemap("gfx/entities.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      entityEvent.addGraphic(_tilemapEvent);
+      entityIcons.addGraphic(_tilemapEvent);
 
       _tilemapNPC = new Tilemap("gfx/entities.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      entityNPC.addGraphic(_tilemapNPC);
+      entityIcons.addGraphic(_tilemapNPC);
 
       _tilemapHabitat = new Tilemap("gfx/entities.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      entityHabitat.addGraphic(_tilemapHabitat);
+      entityIcons.addGraphic(_tilemapHabitat);
 
       populate();
     }
@@ -130,10 +121,7 @@ class Region
       updateIcons();
 
       entity.visible = true;
-      entityAlert.visible = true;
-      entityEvent.visible = true;
-      entityNPC.visible = true;
-      entityHabitat.visible = true;
+      entityIcons.visible = true;
       player.entity.visible = true;
       updateVisibility();
     }
@@ -143,10 +131,7 @@ class Region
   public function hide()
     {
       entity.visible = false;
-      entityAlert.visible = false;
-      entityEvent.visible = false;
-      entityNPC.visible = false;
-      entityHabitat.visible = false;
+      entityIcons.visible = false;
       player.entity.visible = false;
     }
 

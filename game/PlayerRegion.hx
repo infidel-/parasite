@@ -79,11 +79,19 @@ class PlayerRegion
 
       // create a new habitat
       if (player.skills.has(KNOW_HABITAT) && !region.currentArea.hasHabitat)
-        addActionToList2(tmp, { 
-          id: 'createHabitat', 
-          type: ACTION_REGION, 
-          name: 'Create habitat',
-          energy: 10 });
+        {
+          // count total number of habitats
+          var params = player.evolutionManager.getParams(IMP_MICROHABITAT);
+          var maxHabitats = params.numHabitats;
+          var numHabitats = region.getRegion().getHabitatsCount();
+
+          if (numHabitats < maxHabitats)
+            addActionToList2(tmp, { 
+              id: 'createHabitat', 
+              type: ACTION_REGION, 
+              name: 'Create habitat',
+              energy: 10 });
+        }
 
       // enter habitat
       if (region.currentArea.hasHabitat)
@@ -133,6 +141,7 @@ class PlayerRegion
       game.log("You have created a habitat in this area.");
       var r = region.getRegion();
       var area = r.createArea(WorldConst.AREA_HABITAT);
+      area.isHabitat = true;
       region.currentArea.hasHabitat = true;
       region.currentArea.habitatAreaID = area.id;
       region.updateIconsArea(x, y);

@@ -12,6 +12,7 @@ class AreaGame
   public var typeID: String; // area type id - city block, university, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isKnown: Bool; // has the player seen this area?
+  public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
   public var habitatAreaID: Int; // area id of habitat
   public var info: AreaInfo; // area info link
@@ -34,6 +35,7 @@ class AreaGame
     {
       region = r;
       isKnown = false;
+      isHabitat = false;
       hasHabitat = false;
       id = _maxID++;
       x = vx;

@@ -40,10 +40,7 @@ class Game
 
       region = new Region(this);
       scene.add(region.entity);
-      scene.add(region.entityAlert);
-      scene.add(region.entityEvent);
-      scene.add(region.entityNPC);
-      scene.add(region.entityHabitat);
+      scene.add(region.entityIcons);
       area = new Area(this);
       area.player.createEntity(0, 0);
       scene.add(area.entity);

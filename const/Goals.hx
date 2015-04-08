@@ -192,7 +192,7 @@ class Goals
     GOAL_USE_COMPUTER => {
       id: GOAL_USE_COMPUTER,
       name: 'Use a computer',
-      note: 'Find a laptop or mobile phone and use it successfully. You can only do that in lair.',
+      note: 'Find a laptop or mobile phone and use it successfully. You can only do that in a habitat.',
       },
 /*
 

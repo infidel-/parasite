@@ -44,7 +44,11 @@ class EvolutionManager
       if (taskID == '')
         return;
 
-      player.host.energy -= 5 * time;
+      // evolution is easier while in habitat
+      var cost = 5;
+      if (game.location == Game.LOCATION_AREA && game.area.getArea().isHabitat)
+        cost = 4;
+      player.host.energy -= cost * time;
       if (isTaskPath) // path evolution
         {
           var pathID = Type.createEnum(_Path, taskID);
@@ -128,17 +132,28 @@ class EvolutionManager
 
 
 // add improvement to list
-  public function addImprov(id: _Improv): Improv
+  public function addImprov(id: _Improv, ?level: Int = 0): Improv
     {
       // this improvement already learned 
       var tmp = getImprov(id);
-      if (tmp != null)
+      if (tmp != null && tmp.level >= level)
         return tmp;
+
+      var ep = 0;
+      if (level > 0)
+        ep = EvolutionConst.epCostImprovement[level - 1];
+
+      if (tmp != null)
+        {
+          tmp.level = level;
+          tmp.ep = ep;
+          return tmp;
+        }
 
       var imp = {
         id: id,
-        level: 0,
-        ep: 0,
+        level: level,
+        ep: ep,
         info: EvolutionConst.getInfo(id)
         };
       _list.add(imp);

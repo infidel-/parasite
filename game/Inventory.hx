@@ -20,6 +20,11 @@ class Inventory
   public function getActions(): List<_PlayerAction>
     {
       var tmp = new List<_PlayerAction>();
+
+      // disable inventory action in region mode for now
+      if (game.location == Game.LOCATION_REGION)
+        return tmp;
+
       for (item in _list)
         {
           // add learning action
@@ -136,6 +141,13 @@ class Inventory
       if (skillLevel == 0)
         {
           game.log('You require the computer use skill to do that.', COLOR_HINT);
+          return false;
+        }
+
+      // can only do that in habitat
+      if (!game.area.getArea().isHabitat)
+        {
+          game.log("This requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
           return false;
         }
 

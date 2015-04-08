@@ -63,7 +63,11 @@ class PlayerArea
       // state: host (we might lose it if energy drops to zero earlier)
       if (state == PLR_STATE_HOST)
         {
-          player.hostControl--;
+          // control grows while in habitat
+          if (area.getArea().isHabitat)
+            player.hostControl++;
+          else player.hostControl--;
+
           if (player.hostControl <= 0)
             {
               player.host.onDetach();
@@ -120,7 +124,8 @@ class PlayerArea
       // parasite in control of host
       else if (state == PLR_STATE_HOST)
         {
-          addActionToList(tmp, 'reinforceControl');
+          if (player.hostControl < 100)
+            addActionToList(tmp, 'reinforceControl');
           if (player.evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
             addActionToList(tmp, 'probeBrain');
 

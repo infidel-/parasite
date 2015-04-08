@@ -44,16 +44,16 @@ class DebugArea
           func: completeEvolution
         },
         {
+          name: 'Complete current organ',
+          func: completeOrgan 
+        },
+        {
           name: 'Gain all improvements at level 0',
           func: gainImprovs0
         },
         {
           name: 'Gain all improvements at max level',
           func: gainImprovsMax
-        },
-        {
-          name: 'Complete current organ',
-          func: completeOrgan 
         },
         {
           name: 'Clear AI',
@@ -137,7 +137,7 @@ class DebugArea
     }
 
 
-// gain all improvements at level 0 
+// gain all improvements at max level
   function gainImprovsMax()
     {
       gainImprovs0();
@@ -235,14 +235,13 @@ class DebugArea
       game.player.vars.searchEnabled = true;
 
       // brain probe
-      game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE);
-      var imp = game.player.evolutionManager.getImprov(IMP_BRAIN_PROBE);
-      imp.level = 2;
+      game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 2);
 
       // start habitat branch
 //      game.player.goals.receive(GOAL_GROW_ORGAN);
 //      game.player.goals.complete(GOAL_GROW_ORGAN);
       game.player.skills.addID(KNOW_HABITAT, 100); 
+      game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
     }
 
 
