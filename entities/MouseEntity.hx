@@ -121,11 +121,11 @@ class MouseEntity extends Entity
           // debug: cell and ai info
           if (_mode == MODE_DEBUG)
             {
-              trace('(' + x + ',' + y + ') ' + game.area.getType(x, y) +
+              trace('(' + x + ',' + y + ') ' + game.area.getCellType(x, y) +
                 ' player vis: ' + 
-                game.area.isVisible(game.area.player.x, 
-                  game.area.player.y, x, y, true));
-              if (game.area.player.x == x && game.area.player.y == y)
+                game.area.isVisible(game.playerArea.x, 
+                  game.playerArea.y, x, y, true));
+              if (game.playerArea.x == x && game.playerArea.y == y)
                 Const.debugObject(game.player);
               if (ai != null)
                 Const.debugObject(ai);
@@ -143,7 +143,7 @@ class MouseEntity extends Entity
             {
               if (game.player.state == PLR_STATE_HOST && ai != null &&
                   ai != game.player.host)
-                game.area.player.attackAction(ai);
+                game.playerArea.attackAction(ai);
             }
         }
 

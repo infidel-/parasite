@@ -11,9 +11,14 @@ class Game
   public var timeline: Timeline; // scenario timeline
   public var world: World; // game world
   public var worldManager: WorldManager; // game world manager
-  public var region: Region; // region view 
-  public var area: Area; // area view 
+  public var region: Region; // region view
+
+  public var area: AreaGame; // current area link
+  public var managerArea: AreaManager; // area event manager
+  public var debugArea: DebugArea; // debug actions (area mode)
+
   public var player: Player; // game player
+  public var playerArea: PlayerArea; // game player (area mode)
   public var location(default, null): String; // player location type - area, region, world 
 
   public var turns: Int; // number of turns passed since game start
@@ -27,6 +32,8 @@ class Game
       HXP.frameRate = 30;
       HXP.scene = scene;
       messageList = new List();
+
+      area = null;
     }
 
 
@@ -36,14 +43,13 @@ class Game
       Const.todo('proper title screen');
       turns = 0;
       isFinished = false;
+
       player = new Player(this);
+      managerArea = new AreaManager(this);
+      playerArea = new PlayerArea(this);
+      debugArea = new DebugArea(this);
 
       region = new Region(this);
-      scene.add(region.entity);
-      scene.add(region.entityIcons);
-      area = new Area(this);
-      area.player.createEntity(0, 0);
-      scene.add(area.entity);
 
       // generate world
       world = new World(this);
@@ -60,13 +66,13 @@ class Game
       // set random region (currently only 1 at all)
       var r = world.get(0);
       region.setRegion(r);
-      var a = r.getRandomInhabited();
-      region.player.createEntity(a.x, a.y);
+      area = r.getRandomInhabited();
+      region.player.createEntity(area.x, area.y);
       region.hide();
 
       // make area tiles around player known 
-      for (yy in (a.y - 1)...(a.y + 2))
-        for (xx in (a.x - 1)...(a.x + 2))
+      for (yy in (area.y - 1)...(area.y + 2))
+        for (xx in (area.x - 1)...(area.x + 2))
           {
             var aa = region.getRegion().getXY(xx, yy);
             if (aa == null)
@@ -76,11 +82,10 @@ class Game
           }
 
       location = LOCATION_AREA;
-      area.setArea(a);
-      area.show();
+      area.enter();
 
       // spawn initial dog nearby
-      var spot = area.findEmptyLocationNear(area.player.x, area.player.y);
+      var spot = area.findEmptyLocationNear(playerArea.x, playerArea.y);
       var ai = new ai.DogAI(this, spot.x, spot.y);
       ai.isCommon = true;
       area.addAI(ai);
@@ -92,12 +97,9 @@ class Game
 // set location
   public function setLocation(vloc: String, ?newarea: AreaGame)
     {
-      // hide previous gui
+      // hide previous gui, despawn area, etc
       if (location == LOCATION_AREA)
-        {
-          area.onLeave(); // event callback
-          area.hide();
-        }
+        area.leave();
 
       else if (location == LOCATION_REGION)
         {
@@ -110,11 +112,10 @@ class Game
       if (location == LOCATION_AREA)
         {
           var r = region.getRegion();
-          var a = r.getXY(region.player.x, region.player.y);
+          area = r.getXY(region.player.x, region.player.y);
           if (newarea != null) // enter specified area
-             a = newarea;
-          area.setArea(a);
-          area.show();
+             area = newarea;
+          area.enter();
         }
 
       else if (location == LOCATION_REGION)
@@ -147,7 +148,7 @@ class Game
             return;
 
           // area turn
-          area.manager.turn();
+          managerArea.turn();
           if (isFinished)
             return;
         }

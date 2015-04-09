@@ -93,7 +93,7 @@ class Inventory
 
           // end turn, etc
           if (game.location == Game.LOCATION_AREA)
-            game.area.player.postAction();
+            game.playerArea.postAction();
 
           else Const.todo('Inventory.action() in region mode!');
         }
@@ -145,7 +145,7 @@ class Inventory
         }
 
       // can only do that in habitat
-      if (!game.area.getArea().isHabitat)
+      if (!game.area.isHabitat)
         {
           game.log("This requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
           return false;

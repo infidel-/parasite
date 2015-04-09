@@ -9,11 +9,11 @@ class Engine
   public var map: Array<Array<Node>>;
   public var startNode: Node;
   public var endNode: Node;
-  public var area: Area;
+  public var area: game.AreaGame;
   public var width: Int;
   public var height: Int;
   
-  public function new(a: Area, w: Int, h: Int){
+  public function new(a: game.AreaGame, w: Int, h: Int){
       area = a;
       width = w;
       height = h;

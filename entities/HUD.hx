@@ -89,7 +89,7 @@ class HUD
         return;
 
       if (game.location == Game.LOCATION_AREA)
-        game.area.player.action(action);
+        game.playerArea.action(action);
 
       else if (game.location == Game.LOCATION_REGION)
         game.region.player.action(action);
@@ -100,7 +100,7 @@ class HUD
   inline function updateActionList()
     {
       if (game.location == Game.LOCATION_AREA)
-        _listActions = game.area.player.getActionList();
+        _listActions = game.playerArea.getActionList();
 
       else if (game.location == Game.LOCATION_REGION)
         _listActions = game.region.player.getActionList();
@@ -116,8 +116,8 @@ class HUD
       buf.add('Turn: ' + game.turns + ', at (');
       if (game.location == Game.LOCATION_AREA)
           buf.add(
-            game.area.player.x + ',' + game.area.player.y + ')\n' +
-            'Actions: ' + game.area.player.ap + '\n');
+            game.playerArea.x + ',' + game.playerArea.y + ')\n' +
+            'Actions: ' + game.playerArea.ap + '\n');
       else if (game.location == Game.LOCATION_REGION)
         buf.add(
           game.region.player.x + ',' + game.region.player.y + ')\n' +
@@ -137,7 +137,7 @@ class HUD
       buf.add('===\n');
 
       if (game.player.state == PLR_STATE_ATTACHED)
-        buf.add('Grip: ' + game.area.player.attachHold + '/100\n');
+        buf.add('Grip: ' + game.playerArea.attachHold + '/100\n');
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)

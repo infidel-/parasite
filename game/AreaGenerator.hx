@@ -4,10 +4,11 @@ package game;
 
 import const.WorldConst;
 import objects.*;
+import game.AreaGame;
 
 class AreaGenerator
 {
-  public static function generate(game: Game, area: Area, info: AreaInfo)
+  public static function generate(game: Game, area: AreaGame, info: AreaInfo)
     {
       if (info.type == 'city')
         generateBuildings(game, area, info);
@@ -22,14 +23,14 @@ class AreaGenerator
 
 
 // generate a habitat
-  static function generateHabitat (game: Game, area: Area, info: AreaInfo)
+  static function generateHabitat (game: Game, area: AreaGame, info: AreaInfo)
     {
       Const.todo('habitat generator');
     }
 
 
 // generate rocks, trees, etc
-  static function generateWilderness(game: Game, area: Area, info: AreaInfo)
+  static function generateWilderness(game: Game, area: AreaGame, info: AreaInfo)
     {
       var numStuff = Std.int(area.width * area.height / 20);
       for (i in 0...numStuff)
@@ -37,14 +38,14 @@ class AreaGenerator
           var x = Std.random(area.width);
           var y = Std.random(area.height);
 
-          area.setType(x, y,
+          area.setCellType(x, y,
             (Std.random(100) < 50 ? Const.TILE_ROCK : Const.TILE_TREE));
         }
     }
 
 
 // generate buildings
-  static function generateBuildings(game: Game, area: Area, info: AreaInfo)
+  static function generateBuildings(game: Game, area: AreaGame, info: AreaInfo)
     {
       // buildings
       for (y in 1...area.height)
@@ -77,7 +78,7 @@ class AreaGenerator
                   if (dx == 0 && dy == 0)
                     continue;
                   //var cell = get(x + dx, y + dy);
-                  var cellType = area.getType(x + dx, y + dy);
+                  var cellType = area.getCellType(x + dx, y + dy);
                   if (cellType == "building")
                     {
                       ok = false;
@@ -92,18 +93,18 @@ class AreaGenerator
             for (dy in 0...sy)
               for (dx in 0...sx)
                 {
-                  var cellType = area.getType(x + dx, y + dy);
+                  var cellType = area.getCellType(x + dx, y + dy);
                   if (cellType == null)
                     continue;
 
-                  area.setType(x + dx, y + dy, Const.TILE_BUILDING);
+                  area.setCellType(x + dx, y + dy, Const.TILE_BUILDING);
                 }
           }
     }
 
 
 // generate objects
-  static function generateObjects(game: Game, area: Area, info: AreaInfo)
+  static function generateObjects(game: Game, area: AreaGame, info: AreaInfo)
     {
       // spawn all objects
       for (objInfo in info.objects)

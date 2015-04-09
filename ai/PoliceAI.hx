@@ -54,7 +54,7 @@ class PoliceAI extends HumanAI
       if (!isBackupCalled && state == AI_STATE_ALERT && !parasiteAttached)
         {
           isBackupCalled = true;
-          game.area.manager.addAI(this, AREAEVENT_CALL_POLICE_BACKUP, 1);
+          game.managerArea.addAI(this, AREAEVENT_CALL_POLICE_BACKUP, 1);
         }
     }
 

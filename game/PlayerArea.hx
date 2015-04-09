@@ -12,7 +12,6 @@ import const.ItemsConst;
 class PlayerArea
 {
   var game: Game; // game state link
-  var area: Area; // area link
   var player: Player; // state link
 
   public var entity: PlayerEntity; // player ui entity
@@ -29,11 +28,10 @@ class PlayerArea
   public var attachHold(default, set): Int; // hold strength
 
 
-  public function new(g: Game, a: Area)
+  public function new(g: Game)
     {
       game = g;
       player = game.player;
-      area = a;
 
       x = 0;
       y = 0;
@@ -41,14 +39,7 @@ class PlayerArea
       attachHold = 0;
       knownObjects = new List<String>();
       knownObjects.add('body');
-    }
 
-
-// create player entity
-  public inline function createEntity(vx: Int, vy: Int)
-    {
-      x = vx;
-      y = vy;
       entity = new PlayerEntity(game, x, y);
       game.scene.add(entity);
     }
@@ -64,7 +55,7 @@ class PlayerArea
       if (state == PLR_STATE_HOST)
         {
           // control grows while in habitat
-          if (area.getArea().isHabitat)
+          if (game.area.isHabitat)
             player.hostControl++;
           else player.hostControl--;
 
@@ -136,7 +127,7 @@ class PlayerArea
         }
 
       // area object actions
-      var olist = area.getObjectsAt(x, y);
+      var olist = game.area.getObjectsAt(x, y);
       if (olist == null)
         return tmp;
 
@@ -155,7 +146,7 @@ class PlayerArea
           }
 
       // leave area action
-      if (state != PLR_STATE_ATTACHED && !area.getArea().info.isInhabited)
+      if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)
         addActionToList(tmp, 'leaveArea');
       
       return tmp;
@@ -265,7 +256,7 @@ class PlayerArea
         }
 
       // frob the AI
-      var ai = area.getAI(x + dx, y + dy);
+      var ai = game.area.getAI(x + dx, y + dy);
       if (ai != null)
         {
           frobAIAction(ai);
@@ -308,7 +299,7 @@ class PlayerArea
         return;
 
       // check if player can see that spot
-      if (!area.isVisible(x, y, ai.x, ai.y))
+      if (!game.area.isVisible(x, y, ai.x, ai.y))
         return;
 
       // get current weapon
@@ -333,7 +324,7 @@ class PlayerArea
         return;
 
       // propagate shooting/melee event
-      game.area.manager.onAttack(x, y, info.weaponStats.isRanged);
+      game.managerArea.onAttack(x, y, info.weaponStats.isRanged);
 
       // weapon skill level (ai + parasite bonus)
       var skillLevel = player.host.skills.getLevel(info.weaponStats.skill) +
@@ -425,7 +416,7 @@ class PlayerArea
       state = PLR_STATE_HOST;
 
       // update AI visibility to player
-      area.updateVisibility();
+      game.area.updateVisibility();
 
       // goal completed: host invaded 
       player.goals.complete(GOAL_INVADE_HOST);
@@ -600,7 +591,7 @@ class PlayerArea
       var ny = y + dy;
 
       // cell not walkable
-      if (!area.isWalkable(nx, ny))
+      if (!game.area.isWalkable(nx, ny))
         return false;
 
       // random: change movement direction
@@ -608,7 +599,7 @@ class PlayerArea
           Std.random(100) < 0.9 * (100 - player.hostControl))
         {
           log('The host resists your command.');
-          var dir = area.getRandomDirection(x, y);
+          var dir = game.area.getRandomDirection(x, y);
           if (dir == -1)
             throw 'nowhere to move!';
 
@@ -631,7 +622,7 @@ class PlayerArea
       game.updateHUD();
 
       // update AI visibility to player
-      area.updateVisibility();
+      game.area.updateVisibility();
 
       return true;
     }
@@ -641,7 +632,7 @@ class PlayerArea
 // returns true on success
   public function moveTo(nx: Int, ny: Int): Bool
     {
-      if (!area.isWalkable(nx, ny))
+      if (!game.area.isWalkable(nx, ny))
         return false;
 
       x = nx;
@@ -650,7 +641,7 @@ class PlayerArea
       entity.setPosition(x, y);
 
       // update cell visibility to player
-      area.updateVisibility();
+      game.area.updateVisibility();
 
       return true;
     }

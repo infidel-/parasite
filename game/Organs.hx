@@ -286,7 +286,7 @@ class Organs
       var params = getParams(IMP_ACID_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y, game.area.player.x, game.area.player.y);
+      var distance = Const.getDist(ai.x, ai.y, game.playerArea.x, game.playerArea.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
@@ -319,7 +319,7 @@ class Organs
       var params = getParams(IMP_SLIME_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y, game.area.player.x, game.area.player.y);
+      var distance = Const.getDist(ai.x, ai.y, game.playerArea.x, game.playerArea.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
@@ -358,7 +358,7 @@ class Organs
       var params = getParams(IMP_PARALYSIS_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y, game.area.player.x, game.area.player.y);
+      var distance = Const.getDist(ai.x, ai.y, game.playerArea.x, game.playerArea.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
@@ -384,7 +384,7 @@ class Organs
   function actionPanicGas()
     {
       var params = getParams(IMP_PANIC_GAS);
-      var tmp = game.area.getAIinRadius(game.area.player.x, game.area.player.y,
+      var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
         params.range, false);
 
       game.log('Your host emits a noxious fear-inducing gas cloud.');
@@ -394,8 +394,8 @@ class Organs
       o.timeout = params.timeout;
 
       // spawn visual effects
-      var xo = game.area.player.x;
-      var yo = game.area.player.y;
+      var xo = game.playerArea.x;
+      var yo = game.playerArea.y;
       for (yy in yo - params.range...yo + params.range)
         for (xx in xo - params.range...xo + params.range)
           {
@@ -405,7 +405,7 @@ class Organs
             if (HXP.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
               continue;
 
-            game.area.addEffect(xx, yy, 2, Const.FRAME_PANIC_GAS);
+            game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PANIC_GAS);
           }
 
       // affect all AI in range
@@ -432,7 +432,7 @@ class Organs
   function actionParalysisGas()
     {
       var params = getParams(IMP_PARALYSIS_GAS);
-      var tmp = game.area.getAIinRadius(game.area.player.x, game.area.player.y,
+      var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
         params.range, false);
 
       game.log('Your host emits a cloud of paralysis spores.');
@@ -442,8 +442,8 @@ class Organs
       o.timeout = params.timeout;
 
       // spawn visual effects
-      var xo = game.area.player.x;
-      var yo = game.area.player.y;
+      var xo = game.playerArea.x;
+      var yo = game.playerArea.y;
       for (yy in yo - params.range...yo + params.range)
         for (xx in xo - params.range...xo + params.range)
           {
@@ -453,7 +453,7 @@ class Organs
             if (HXP.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
               continue;
 
-            game.area.addEffect(xx, yy, 2, Const.FRAME_PARALYSIS_GAS);
+            game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PARALYSIS_GAS);
           }
 
       // affect all AI in range

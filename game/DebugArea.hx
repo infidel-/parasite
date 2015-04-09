@@ -9,14 +9,12 @@ import const.EvolutionConst;
 class DebugArea
 {
   var game: Game;
-  var area: Area;
 
   public var actions: Array<{ name: String, func: Dynamic }>;
 
-  public function new(g: Game, a: Area)
+  public function new(g: Game)
     {
       game = g;
-      area = a;
 
       actions = [
         {
@@ -38,9 +36,9 @@ class DebugArea
                 }
 
               // spawn AI, attach to it and invade
-              var ai = new CivilianAI(game, area.player.x, area.player.y);
-              area.addAI(ai);
-              area.player.debugAttachAndInvadeAction(ai);
+              var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+              game.area.addAI(ai);
+              game.playerArea.debugAttachAndInvadeAction(ai);
               game.player.hostControl = 100;
 
               // give weapon
@@ -65,9 +63,9 @@ class DebugArea
                 }
 
               // spawn AI, attach to it and invade
-              var ai = new CivilianAI(game, area.player.x, area.player.y);
-              area.addAI(ai);
-              area.player.debugAttachAndInvadeAction(ai);
+              var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+              game.area.addAI(ai);
+              game.playerArea.debugAttachAndInvadeAction(ai);
               game.player.hostControl = 100;
 
               ai.inventory.addID('pistol');
@@ -106,7 +104,7 @@ class DebugArea
           func: function()
             {
               game.player.vars.losEnabled = !game.player.vars.losEnabled;
-              area.updateVisibility();
+              game.area.updateVisibility();
               game.log('LOS checks for player toggled.');
             }
         },
@@ -168,47 +166,47 @@ class DebugArea
           name: 'Clear AI',
           func: function()
             {
-              for (ai in area.getAIinRadius(area.player.x, area.player.y, 100, false))
+              for (ai in game.area.getAIinRadius(game.playerArea.x, game.playerArea.y, 100, false))
                 if (ai != game.player.host)
-                  area.removeAI(ai);
+                  game.area.removeAI(ai);
             }
         },
         {
           name: 'Spawn a cop',
           func: function()
             {
-              var ai = new PoliceAI(game, area.player.x, area.player.y);
+              var ai = new PoliceAI(game, game.playerArea.x, game.playerArea.y);
               ai.inventory.clear();
               ai.inventory.addID('baton');
               ai.skills.addID(SKILL_BATON, 50 + Std.random(25));
-              area.addAI(ai);
+              game.area.addAI(ai);
             }
         },
         {
           name: 'Spawn a body',
           func: function()
             {
-//              var o = area.createObject(area.player.x, area.player.y, 'body', 'civilian');
-              var o = new BodyObject(game, area.player.x, area.player.y, 'civilian');
+//              var o = area.createObject(game.playerArea.x, game.playerArea.y, 'body', 'civilian');
+              var o = new BodyObject(game, game.playerArea.x, game.playerArea.y, 'civilian');
               o.isHumanBody = true;
               o.organPoints = 10;
         //      o.setDecay(1);
 
-              area.debugShowObjects();
+              game.area.debugShowObjects();
             }
         },
         {
           name: 'Show area manager queue',
           func: function()
             {
-              game.area.manager.debugShowQueue();
+              game.managerArea.debugShowQueue();
             }
         },
         {
           name: 'Set area alertness to 100',
           func: function()
             {
-              game.area.debugSetMaxAlertness();
+              game.area.alertness = 100;
             }
         },
         {

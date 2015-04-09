@@ -166,7 +166,7 @@ class AreaManager
       log('Police has received a report about ' + sdetails + 
         '. Dispatching units to the location.');
 
-      if (game.area.player.hears(e.ai.x, e.ai.y))
+      if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the police!');
 
       // increase area alertness
@@ -224,7 +224,7 @@ class AreaManager
     {
       log('Officer calling for backup. Dispatching units to the location.');
 
-      if (game.area.player.hears(e.ai.x, e.ai.y))
+      if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls for backup!');
 
       // increase area alertness
@@ -292,7 +292,7 @@ class AreaManager
 
   function get_area(): AreaGame
     {
-      return game.area.getArea();
+      return game.area;
     }
 }
 

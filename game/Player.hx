@@ -76,7 +76,7 @@ class Player
       if (state == PLR_STATE_PARASITE)
         {
           // energy is stable in habitat
-          if (game.location == Game.LOCATION_AREA && game.area.getArea().isHabitat)
+          if (game.location == Game.LOCATION_AREA && game.area.isHabitat)
             1;
           // lose some energy
           else energy -= vars.areaEnergyPerTurn * time;
@@ -93,14 +93,14 @@ class Player
       if (state == PLR_STATE_HOST)
         {
           // energy is stable in habitat
-          if (game.location == Game.LOCATION_AREA && game.area.getArea().isHabitat)
+          if (game.location == Game.LOCATION_AREA && game.area.isHabitat)
             1;
           else host.energy -= time;
 
           if (host.energy <= 0)
             {
               if (game.location == Game.LOCATION_AREA)
-                game.area.player.onHostDeath();
+                game.playerArea.onHostDeath();
               
               else if (game.location == Game.LOCATION_REGION)
                 game.region.player.onHostDeath();
@@ -127,7 +127,7 @@ class Player
 
       // location-specific turn
       if (game.location == Game.LOCATION_AREA)
-        game.area.player.turn();
+        game.playerArea.turn();
       
       else if (game.location == Game.LOCATION_REGION)
         game.region.player.turn();

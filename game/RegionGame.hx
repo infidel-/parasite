@@ -6,6 +6,8 @@ import const.WorldConst;
 
 class RegionGame
 {
+  var game: Game;
+
   public var id: Int; // area id
   public var typeID: String; // region type id - city, military base, etc
   public var info: RegionInfo; // region info link
@@ -19,8 +21,9 @@ class RegionGame
 
   static var _maxID: Int = 0; // region id counter
 
-  public function new(tv: String, w: Int, h: Int)
+  public function new(g: Game, tv: String, w: Int, h: Int)
     {
+      game = g;
       typeID = tv;
       id = _maxID++;
       width = w;
@@ -185,7 +188,7 @@ class RegionGame
             else if (tmp[x][y] == 3)
               t = WorldConst.AREA_CITY_HIGH;
 
-            var a = new AreaGame(this, t, x, y, 50, 50);
+            var a = new AreaGame(game, this, t, x, y, 50, 50);
             _list.set(a.id, a);
             _array[x][y] = a;
           }
@@ -381,7 +384,7 @@ class RegionGame
 // create a new area with this type (not on map, just somewhere in the region)
   public function createArea(t: String): AreaGame
     {
-      var a = new AreaGame(this, t, -1, -1, 50, 50);
+      var a = new AreaGame(game, this, t, -1, -1, 50, 50);
       _list.set(a.id, a);
       return a;
     }

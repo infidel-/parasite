@@ -327,7 +327,7 @@ class AI
       var ok = 
         (game.area.isWalkable(nx, ny) && 
          !game.area.hasAI(nx, ny) && 
-         !(game.area.player.x == nx && game.area.player.y == ny));
+         !(game.playerArea.x == nx && game.playerArea.y == ny));
       if (!ok)
         {
           changeRandomDirection();
@@ -349,8 +349,8 @@ class AI
           var ny = y + Const.diry[i];
           var ok = (
             game.area.isWalkable(nx, ny) && !game.area.hasAI(nx, ny) && 
-              (Math.abs(nx - game.area.player.x) >= Math.abs(x - game.area.player.x) &&
-               Math.abs(ny - game.area.player.y) >= Math.abs(y - game.area.player.y))
+              (Math.abs(nx - game.playerArea.x) >= Math.abs(x - game.playerArea.x) &&
+               Math.abs(ny - game.playerArea.y) >= Math.abs(y - game.playerArea.y))
             );
           if (ok)
             tmp.push(i);
@@ -379,13 +379,13 @@ class AI
     {
       log('tries to tear you away!');
 
-      game.area.player.attachHold -= strength;
-      if (game.area.player.attachHold > 0)
+      game.playerArea.attachHold -= strength;
+      if (game.playerArea.attachHold > 0)
         return;
 
       parasiteAttached = false;
       log('manages to tear you away.'); 
-      game.area.player.onDetach(); // notify player
+      game.playerArea.onDetach(); // notify player
     }
 
 
@@ -414,9 +414,9 @@ class AI
       else info = item.info;
 
       // check for distance on melee
-      if (!info.weaponStats.isRanged && !isNear(game.area.player.x, game.area.player.y))
+      if (!info.weaponStats.isRanged && !isNear(game.playerArea.x, game.playerArea.y))
         {
-          logicMoveTo(game.area.player.x, game.area.player.y);
+          logicMoveTo(game.playerArea.x, game.playerArea.y);
           return;
         }
 
@@ -461,7 +461,7 @@ class AI
       game.log('AI.attack: ' + tmp);
 #end
 
-      game.area.player.onDamage(damage); // on damage event
+      game.playerArea.onDamage(damage); // on damage event
     }
 
 
@@ -472,9 +472,9 @@ class AI
   function stateIdle()
     {
       // alertness update
-      if (seesPosition(game.area.player.x, game.area.player.y))
+      if (seesPosition(game.playerArea.x, game.playerArea.y))
         {
-          var distance = Const.getDist(x, y, game.area.player.x, game.area.player.y);
+          var distance = Const.getDist(x, y, game.playerArea.x, game.playerArea.y);
 
           var baseAlertness = 3;
           var alertnessBonus = 0;
@@ -526,7 +526,7 @@ class AI
   function stateAlert()
     {
       // alerted timer update
-      if (seesPosition(game.area.player.x, game.area.player.y))
+      if (seesPosition(game.playerArea.x, game.playerArea.y))
         timers.alert = ALERTED_TIMER;
       else timers.alert--;
   
@@ -551,15 +551,15 @@ class AI
               // search for player
               // we cheat a little and follow invisible player 
               // before alert timer ends 
-              if (!seesPosition(game.area.player.x, game.area.player.y))
-                logicMoveTo(game.area.player.x, game.area.player.y);
+              if (!seesPosition(game.playerArea.x, game.playerArea.y))
+                logicMoveTo(game.playerArea.x, game.playerArea.y);
 
               // try to attack
               else logicAttack();
             }
 
           // not aggressive AI - try to run away
-          else logicRunAwayFrom(game.area.player.x, game.area.player.y);
+          else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
         }
     }
 
@@ -575,7 +575,7 @@ class AI
         {
           log('manages to tear you away.');
           onDetach();
-          game.area.player.onDetach(); // notify player
+          game.playerArea.onDetach(); // notify player
         }
     }
 
@@ -619,7 +619,7 @@ class AI
         }
 
       // should be invisible to player
-      var isVisible = game.area.isVisible(game.area.player.x, game.area.player.y, x, y);
+      var isVisible = game.area.isVisible(game.playerArea.x, game.playerArea.y, x, y);
       if (isVisible)
         {
           _turnsInvisible = 0;
@@ -664,7 +664,7 @@ class AI
 
       // effect: panic, run away 
       else if (effects.has(EFFECT_PANIC))
-        logicRunAwayFrom(game.area.player.x, game.area.player.y);
+        logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
 
       else if (state == AI_STATE_IDLE)
         stateIdle();

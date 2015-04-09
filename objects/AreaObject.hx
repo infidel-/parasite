@@ -43,7 +43,7 @@ class AreaObject
 // set object decay in X turns
   public inline function setDecay(turns: Int)
     {
-      game.area.manager.addObject(this, AREAEVENT_OBJECT_DECAY, turns);
+      game.managerArea.addObject(this, AREAEVENT_OBJECT_DECAY, turns);
     }
 
 

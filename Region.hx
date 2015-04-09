@@ -9,6 +9,7 @@ import game.*;
 class Region
 {
   var game: Game; // game state link
+  var scene: GameScene; // scene link
 
   var _tilemap: Tilemap;
   var _tilemapAlert: Tilemap;
@@ -31,6 +32,7 @@ class Region
   public function new (g: Game)
     {
       game = g;
+      scene = game.scene;
       width = 0;
       height = 0;
 
@@ -48,6 +50,9 @@ class Region
       manager = new RegionManager(g);
       player = new PlayerRegion(g, this);
       debug = new DebugRegion(g, this);
+
+      scene.add(entity);
+      scene.add(entityIcons);
     }
 
 

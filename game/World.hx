@@ -24,7 +24,7 @@ class World
       _list = new Map<Int, RegionGame>();
       for (i in 0...1)
         {
-          var region = new RegionGame(WorldConst.REGION_CITY, 30, 20);
+          var region = new RegionGame(game, WorldConst.REGION_CITY, 30, 20);
           region.generate();
           _list.set(region.id, region);
         }
