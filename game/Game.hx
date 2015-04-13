@@ -11,11 +11,15 @@ class Game
   public var timeline: Timeline; // scenario timeline
   public var world: World; // game world
   public var worldManager: WorldManager; // game world manager
-  public var region: Region; // region view
+  public var region: RegionGame; // region info link
 
   public var area: AreaGame; // current area link
   public var managerArea: AreaManager; // area event manager
   public var debugArea: DebugArea; // debug actions (area mode)
+
+  public var managerRegion: RegionManager; // event manager (region mode)
+  public var playerRegion: PlayerRegion; // game player (region mode)
+  public var debugRegion: DebugRegion; // debug actions (region mode)
 
   public var player: Player; // game player
   public var playerArea: PlayerArea; // game player (area mode)
@@ -34,6 +38,7 @@ class Game
       messageList = new List();
 
       area = null;
+      region = null;
     }
 
 
@@ -49,7 +54,9 @@ class Game
       playerArea = new PlayerArea(this);
       debugArea = new DebugArea(this);
 
-      region = new Region(this);
+      managerRegion = new RegionManager(this);
+      playerRegion = new PlayerRegion( this);
+      debugRegion = new DebugRegion(this);
 
       // generate world
       world = new World(this);
@@ -64,17 +71,17 @@ class Game
       player.goals.receive(GOAL_INVADE_HOST);
 
       // set random region (currently only 1 at all)
-      var r = world.get(0);
-      region.setRegion(r);
-      area = r.getRandomInhabited();
-      region.player.createEntity(area.x, area.y);
-      region.hide();
+      region = world.get(0);
+//      region.enter();
+      area = region.getRandomInhabited();
+      playerRegion.createEntity(area.x, area.y);
+//      region.leave();
 
       // make area tiles around player known 
       for (yy in (area.y - 1)...(area.y + 2))
         for (xx in (area.x - 1)...(area.x + 2))
           {
-            var aa = region.getRegion().getXY(xx, yy);
+            var aa = region.getXY(xx, yy);
             if (aa == null)
               continue;
             
@@ -102,17 +109,14 @@ class Game
         area.leave();
 
       else if (location == LOCATION_REGION)
-        {
-          region.hide();
-        }
+        region.leave();
 
       location = vloc;
 
       // show new gui
       if (location == LOCATION_AREA)
         {
-          var r = region.getRegion();
-          area = r.getXY(region.player.x, region.player.y);
+          area = region.getXY(playerRegion.x, playerRegion.y);
           if (newarea != null) // enter specified area
              area = newarea;
           area.enter();
@@ -120,8 +124,8 @@ class Game
 
       else if (location == LOCATION_REGION)
         {
-          region.getRegion().updateAlertness();
-          region.show();
+          region.updateAlertness();
+          region.enter();
         }
 
       // center camera on player

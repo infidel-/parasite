@@ -49,8 +49,8 @@ class MouseEntity extends Entity
   public inline function getXY(): { x: Int, y: Int }
     {
       return {
-        x: Std.int(scene.mouseX / Const.TILE_WIDTH),
-        y: Std.int(scene.mouseY / Const.TILE_HEIGHT)
+        x: Std.int(game.scene.mouseX / Const.TILE_WIDTH),
+        y: Std.int(game.scene.mouseY / Const.TILE_HEIGHT)
         };
     }
 
@@ -61,11 +61,11 @@ class MouseEntity extends Entity
       super.update();
 
       // position unchanged, return
-      if (x == scene.mouseX && y == scene.mouseY && _oldMode == _mode)
+      if (x == game.scene.mouseX && y == game.scene.mouseY && _oldMode == _mode)
         return;
 
-      x = scene.mouseX;
-      y = scene.mouseY;
+      x = game.scene.mouseX;
+      y = game.scene.mouseY;
 
       var newframe = _frame;
       if (_mode == MODE_DEFAULT)
@@ -163,7 +163,7 @@ class MouseEntity extends Entity
           var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
           var reg = game.world.get(0);     
           var area = reg.getXY(x, y);
-          game.region.updateIconsArea(x, y);
+          game.scene.region.updateIconsArea(x, y);
         }
     }
 

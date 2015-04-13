@@ -13,6 +13,7 @@ class GameScene extends Scene
 {
   public var game: Game; // game state link
   public var area: AreaView; // area view 
+  public var region: RegionView; // region view
   public var mouse: MouseEntity; // mouse cursor entity
   public var hud: HUD; // ingame HUD
   var hudState: _HUDState; // current HUD state (default, evolution, etc)
@@ -98,6 +99,7 @@ class GameScene extends Scene
         ];
 
       area = new AreaView(this);
+      region = new RegionView(this);
 
       // init game state
       game.init();
@@ -118,8 +120,8 @@ class GameScene extends Scene
 
       else if (game.location == Game.LOCATION_REGION)
         {
-          x = game.region.player.entity.x;
-          y = game.region.player.entity.y;
+          x = game.playerRegion.entity.x;
+          y = game.playerRegion.entity.y;
           w = game.region.width;
           h = game.region.height;
         }
@@ -323,7 +325,7 @@ class GameScene extends Scene
 
       // area mode
       else if (game.location == Game.LOCATION_REGION)
-        game.region.player.moveAction(dx, dy);
+        game.playerRegion.moveAction(dx, dy);
     }
 
 

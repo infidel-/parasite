@@ -6,7 +6,7 @@ import com.haxepunk.graphics.Tilemap;
 
 import game.*;
 
-class Region
+class RegionView
 {
   var game: Game; // game state link
   var scene: GameScene; // scene link
@@ -16,25 +16,18 @@ class Region
   var _tilemapEvent: Tilemap;
   var _tilemapNPC: Tilemap;
   var _tilemapHabitat: Tilemap;
-  var _cells: Array<Array<Int>>; // cell types
-  var region: RegionGame; // region info link
-
-  public var currentArea(get, null): AreaGame; // area player is in
 
   public var width: Int; // width, height in cells
   public var height: Int;
   public var entity: Entity; // tilemap entity
   public var entityIcons: Entity; // icons entity
-  public var manager: RegionManager; // event manager (region mode)
-  public var player: PlayerRegion; // game player (region mode)
-  public var debug: DebugRegion; // debug actions (region mode)
 
-  public function new (g: Game)
+  public function new (s: GameScene)
     {
-      game = g;
-      scene = game.scene;
-      width = 0;
-      height = 0;
+      scene = s;
+      game = scene.game;
+      width = 100; // should be larger than any region
+      height = 100;
 
       _tilemap = null;
       _tilemapAlert = null;
@@ -46,30 +39,6 @@ class Region
       entity.layer = Const.LAYER_TILES;
       entityIcons = new Entity();
       entityIcons.layer = Const.LAYER_EFFECT - 1;
-
-      manager = new RegionManager(g);
-      player = new PlayerRegion(g, this);
-      debug = new DebugRegion(g, this);
-
-      scene.add(entity);
-      scene.add(entityIcons);
-    }
-
-
-// set current region
-  public function setRegion(r: RegionGame)
-    {
-      region = r;
-      width = region.width;
-      height = region.height;
-
-      // destroy old tilemap if it exists
-      if (_tilemap != null)
-        {
-          entity.graphic = null;
-          entityIcons.graphic = null;
-//          _tilemap.destroy(); // unneeded?
-        }
 
       _tilemap = new Tilemap("gfx/tileset.png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
@@ -98,14 +67,35 @@ class Region
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entityIcons.addGraphic(_tilemapHabitat);
 
-      populate();
+      scene.add(entity);
+      scene.add(entityIcons);
     }
 
 
-// get region info
-  public inline function getRegion(): RegionGame
+// update tilemaps from current region
+  public function update()
     {
-      return region;
+      width = game.region.width;
+      height = game.region.height;
+/*
+      // destroy old tilemap if it exists
+      if (_tilemap != null)
+        {
+          entity.graphic = null;
+          entityIcons.graphic = null;
+        }
+*/
+
+      // set tiles
+      var cells = game.region.getCells();
+      for (y in 0...height)
+        for (x in 0...width)
+          _tilemap.setTile(x, y, Const.TILE_REGION_ROW + cells[x][y].tileID); 
+
+      // set all icons
+      updateIcons();
+
+      scene.updateCamera(); // center camera on player
     }
 
 
@@ -117,18 +107,14 @@ class Region
       if (game.player.host != null)
         {
           row = Reflect.field(Const, 'ROW_' + game.player.host.type.toUpperCase());
-          player.entity.setMask(Const.FRAME_MASK_REGION, row);
+          game.playerRegion.entity.setMask(Const.FRAME_MASK_REGION, row);
         }
-      else player.entity.setMask(Const.FRAME_EMPTY, row);
-      player.entity.setImage(Const.FRAME_DEFAULT, row);
-
-      // set all icons
-      updateIcons();
+      else game.playerRegion.entity.setMask(Const.FRAME_EMPTY, row);
+      game.playerRegion.entity.setImage(Const.FRAME_DEFAULT, row);
 
       entity.visible = true;
       entityIcons.visible = true;
-      player.entity.visible = true;
-      updateVisibility();
+      game.playerRegion.entity.visible = true;
     }
 
 
@@ -137,61 +123,7 @@ class Region
     {
       entity.visible = false;
       entityIcons.visible = false;
-      player.entity.visible = false;
-    }
-
-
-// populate region map
-  public function populate()
-    {
-      _cells = new Array<Array<Int>>();
-      for (i in 0...width)
-        _cells[i] = [];
-
-      // set tiles
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            var a = region.getXY(x, y);
-            setType(x, y, a.tileID); 
-          }
-    }
-
-
-// turn in region mode
-  public function turn()
-    {
-      // decrease area alertness everywhere
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            var a = region.getXY(x, y);
-            if (a.alertness == 0)
-              continue;
-
-            a.alertness -= 1;
-          }
-
-      updateIcons();
-    }
-
-
-// set cell type 
-  inline function setType(x: Int, y: Int, index: Int)
-    {
-      _tilemap.setTile(x, y, Const.TILE_REGION_ROW + index);
-      _cells[x][y] = index;
-    }
-
-
-// check if tile is walkable
-  public function isWalkable(x: Int, y: Int): Bool
-    {
-      if (x < 0 || y < 0 || x >= width || y >= height)
-        return false;
-    
-//      trace(x + ' ' + y + ' ' + _isWalkable[x][y]);
-      return Const.TILE_WALKABLE_REGION[_cells[x][y]];
+      game.playerRegion.entity.visible = false;
     }
 
 
@@ -244,7 +176,7 @@ class Region
 // update icons on this area
   public function updateIconsArea(x: Int, y: Int)
     {
-      var a = region.getXY(x, y);
+      var a = game.region.getXY(x, y);
 
       updateAlertness(a);
       updateEvent(a);
@@ -258,7 +190,7 @@ class Region
 
 
 // update icons 
-  inline function updateIcons()
+  public inline function updateIcons()
     {
       for (y in 0...height)
         for (x in 0...width)
@@ -273,22 +205,12 @@ class Region
       for (y in 0...height)
         for (x in 0...width)
           {
-            var a = region.getXY(x, y);
+            var a = game.region.getXY(x, y);
 
-            if ((Math.abs(player.x - x) < 2 &&
-                Math.abs(player.y - y) < 2) || a.isKnown)
-              _tilemap.setTile(x, y, Const.TILE_REGION_ROW + _cells[x][y]);
+            if ((Math.abs(game.playerRegion.x - x) < 2 &&
+                Math.abs(game.playerRegion.y - y) < 2) || a.isKnown)
+              _tilemap.setTile(x, y, Const.TILE_REGION_ROW + a.tileID);
             else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
           }
-    }
-
-
-// =========================== GETTERS AND SETTERS ==================================
-
-
-// get area player is in
-  public function get_currentArea(): AreaGame
-    {
-      return region.getXY(player.x, player.y);
     }
 }

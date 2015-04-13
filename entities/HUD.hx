@@ -92,7 +92,7 @@ class HUD
         game.playerArea.action(action);
 
       else if (game.location == Game.LOCATION_REGION)
-        game.region.player.action(action);
+        game.playerRegion.action(action);
     }
 
 
@@ -103,7 +103,7 @@ class HUD
         _listActions = game.playerArea.getActionList();
 
       else if (game.location == Game.LOCATION_REGION)
-        _listActions = game.region.player.getActionList();
+        _listActions = game.playerRegion.getActionList();
     }
 
 
@@ -120,8 +120,8 @@ class HUD
             'Actions: ' + game.playerArea.ap + '\n');
       else if (game.location == Game.LOCATION_REGION)
         buf.add(
-          game.region.player.x + ',' + game.region.player.y + ')\n' +
-          game.region.currentArea.info.name + '\n');
+          game.playerRegion.x + ',' + game.playerRegion.y + ')\n' +
+          game.playerRegion.currentArea.info.name + '\n');
       buf.add('===\n');
 
       var colEnergy = 

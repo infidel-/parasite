@@ -44,6 +44,52 @@ class RegionGame
     { return _list.iterator(); }
 
 
+// enter this region
+  public function enter()
+    {
+      game.region = this;
+
+      // no need to generate region here for now, it's generated in game/World
+      // generate();
+
+      // update region view info
+      game.scene.region.update();
+
+      // update cell visibility to player
+      updateVisibility();
+
+      // show region
+      game.scene.region.show();
+    }
+
+
+// leave thie region: hide gui, etc
+  public inline function leave()
+    {
+      // hide gui
+      game.scene.region.hide();
+    }
+
+
+// turn in region mode
+  public function turn()
+    {
+      // decrease area alertness everywhere
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var a = game.region.getXY(x, y);
+            if (a.alertness == 0)
+              continue;
+
+            a.alertness -= 1;
+          }
+
+      // update all icons
+      game.scene.region.updateIcons();
+    }
+
+
 // generate a region
   public function generate()
     {
@@ -195,6 +241,13 @@ class RegionGame
     }
 
 
+// update cell visibility
+  public inline function updateVisibility()
+    {
+      game.scene.region.updateVisibility();
+    }
+
+
 // update areas alertness (called on entering region mode for this region)
   public function updateAlertness()
     {
@@ -252,16 +305,17 @@ class RegionGame
     }
 
 
+// get cells array
+  public inline function getCells()
+    { return _array; }
+
+
 // get area by x,y
   public function getXY(x: Int, y: Int): AreaGame
     {
       if (x >= 0 && x < width && y >= 0 && y < height)
         return _array[x][y];
-/*    
-      for (r in _list)
-        if (r.x == x && r.y == y)
-          return r;
-*/
+
       return null;
     }
 
@@ -387,6 +441,16 @@ class RegionGame
       var a = new AreaGame(game, this, t, -1, -1, 50, 50);
       _list.set(a.id, a);
       return a;
+    }
+
+
+// check if tile is walkable
+  public function isWalkable(x: Int, y: Int): Bool
+    {
+      if (x < 0 || y < 0 || x >= width || y >= height)
+        return false;
+    
+      return Const.TILE_WALKABLE_REGION[_array[x][y].tileID];
     }
 
 

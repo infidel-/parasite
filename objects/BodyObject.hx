@@ -95,7 +95,7 @@ class BodyObject extends AreaObject
         return;
 
       // notify world about body discovery by authorities
-      game.region.manager.onBodyDiscovered(game.area, organPoints);
+      game.managerRegion.onBodyDiscovered(game.area, organPoints);
 
       game.area.removeObject(this);
     }

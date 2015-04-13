@@ -5,23 +5,31 @@ package game;
 class DebugRegion
 {
   var game: Game;
-  var region: Region;
 
-  public var actions: Array<{ name: String, func: Dynamic }>;
+  public var actions: Array<{ name: String, func: Void -> Void }>;
 
-  public function new(g: Game, r: Region)
+  public function new(g: Game)
     {
       game = g;
-      region = r;
 
       actions = [
         {
           name: "Remove energy spend per turn and movement cost",
-          func: removeEnergySpend
+          func: function()
+            {
+              game.player.vars.areaEnergyPerTurn = 0;
+              game.player.vars.regionMoveEnergy = 0;
+              game.log('Energy per turn and movement cost removed.');
+            }
         },
         {
           name: "Make region known",
-          func: makeRegionKnown 
+          func: function()
+            {
+              for (a in game.region)
+                a.isKnown = true;
+              game.region.updateVisibility();
+            }
         },
         ];
     }
@@ -32,22 +40,5 @@ class DebugRegion
     {
       var a = actions[idx];
       Reflect.callMethod(this, a.func, []);
-    }
-
-
-// remove energy spend without a host
-  function removeEnergySpend()
-    {
-      game.player.vars.areaEnergyPerTurn = 0;
-      game.player.vars.regionMoveEnergy = 0;
-      game.log('Energy per turn and movement cost removed.');
-    }
-
-
-  function makeRegionKnown()
-    {
-      for (a in game.region.getRegion())
-        a.isKnown = true;
-      game.region.updateVisibility();
     }
 }

@@ -20,7 +20,7 @@ class DebugWindow extends TextWindow
       if (game.location == Game.LOCATION_AREA)
         actions = game.debugArea.actions;
       else if (game.location == Game.LOCATION_REGION)
-        actions = game.region.debug.actions;
+        actions = game.debugRegion.actions;
 
       var n = 0;
       for (a in actions)
@@ -43,7 +43,7 @@ class DebugWindow extends TextWindow
       if (game.location == Game.LOCATION_AREA)
         game.debugArea.action(index);
       else if (game.location == Game.LOCATION_REGION)
-        game.region.debug.action(index);
+        game.debugRegion.action(index);
     }
 
 
@@ -60,7 +60,7 @@ class DebugWindow extends TextWindow
         }
       else
         {
-          var area = game.region.currentArea;
+          var area = game.playerRegion.currentArea;
           buf.add('Area alertness: ' + area.alertness + '\n');
           buf.add('Area interest: ' + area.interest + '\n');
         }

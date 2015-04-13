@@ -167,10 +167,10 @@ class AreaGame
 
       // notify world about bodies discovered
       if (totalBodies == 1)
-        game.region.manager.onBodyDiscovered(this, totalPoints);
+        game.managerRegion.onBodyDiscovered(this, totalPoints);
 
       else if (totalBodies > 0)
-        game.region.manager.onBodiesDiscovered(this, totalBodies, totalPoints);
+        game.managerRegion.onBodiesDiscovered(this, totalBodies, totalPoints);
 
       for (ai in _ai)
         removeAI(ai);

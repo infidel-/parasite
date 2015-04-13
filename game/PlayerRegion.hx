@@ -10,19 +10,19 @@ import const.WorldConst;
 class PlayerRegion
 {
   var game: Game; // game state link
-  var region: Region; // region link
   var player: Player; // player state link
+
+  public var currentArea(get, null): AreaGame; // area player is in
 
   public var entity: PlayerEntity; // player ui entity (region mode)
   public var x: Int; // x,y on grid
   public var y: Int;
 
 
-  public function new(g: Game, r: Region)
+  public function new(g: Game)
     {
       game = g;
       player = game.player;
-      region = r;
 
       x = 0;
       y = 0;
@@ -74,16 +74,16 @@ class PlayerRegion
       var tmp = new List<_PlayerAction>();
 
       // enter area
-      if (region.currentArea.info.canEnter)
+      if (currentArea.info.canEnter)
         addActionToList(tmp, 'enterArea');
 
       // create a new habitat
-      if (player.skills.has(KNOW_HABITAT) && !region.currentArea.hasHabitat)
+      if (player.skills.has(KNOW_HABITAT) && !currentArea.hasHabitat)
         {
           // count total number of habitats
           var params = player.evolutionManager.getParams(IMP_MICROHABITAT);
           var maxHabitats = params.numHabitats;
-          var numHabitats = region.getRegion().getHabitatsCount();
+          var numHabitats = game.region.getHabitatsCount();
 
           if (numHabitats < maxHabitats)
             addActionToList2(tmp, { 
@@ -94,7 +94,7 @@ class PlayerRegion
         }
 
       // enter habitat
-      if (region.currentArea.hasHabitat)
+      if (currentArea.hasHabitat)
         addActionToList2(tmp, { 
           id: 'enterHabitat', 
           type: ACTION_REGION, 
@@ -129,7 +129,7 @@ class PlayerRegion
 // action: enter area
   function enterAreaAction()
     {
-      game.log(region.currentArea.info.isInhabited ?
+      game.log(currentArea.info.isInhabited ?
         "You emerge from the sewers." : "You enter the area.");
       game.setLocation(Game.LOCATION_AREA);
     }
@@ -139,12 +139,11 @@ class PlayerRegion
   function createHabitatAction()
     {
       game.log("You have created a habitat in this area.");
-      var r = region.getRegion();
-      var area = r.createArea(WorldConst.AREA_HABITAT);
+      var area = game.region.createArea(WorldConst.AREA_HABITAT);
       area.isHabitat = true;
-      region.currentArea.hasHabitat = true;
-      region.currentArea.habitatAreaID = area.id;
-      region.updateIconsArea(x, y);
+      currentArea.hasHabitat = true;
+      currentArea.habitatAreaID = area.id;
+      game.scene.region.updateIconsArea(x, y);
     }
 
 
@@ -152,8 +151,7 @@ class PlayerRegion
   function enterHabitatAction()
     {
       game.log("You enter the habitat. You feel much safer here.");
-      var r = region.getRegion();
-      var habitatArea = r.get(region.currentArea.habitatAreaID);
+      var habitatArea = game.region.get(currentArea.habitatAreaID);
       game.setLocation(Game.LOCATION_AREA, habitatArea); 
     }
 
@@ -226,7 +224,7 @@ class PlayerRegion
       var ny = y + dy;
 
       // cell not walkable
-      if (!region.isWalkable(nx, ny))
+      if (!game.region.isWalkable(nx, ny))
         return false;
 
       x = nx;
@@ -236,7 +234,7 @@ class PlayerRegion
       for (yy in (y - 1)...(y + 2))
         for (xx in (x - 1)...(x + 2))
           {
-            var a = region.getRegion().getXY(xx, yy);
+            var a = game.region.getXY(xx, yy);
             if (a == null)
               continue;
             
@@ -245,7 +243,7 @@ class PlayerRegion
 
       entity.setPosition(x, y); // move player entity
 
-      region.updateVisibility(); // update visibility of tiles
+      game.region.updateVisibility(); // update visibility of tiles
 
       game.turn(); // new turn
 
@@ -255,5 +253,15 @@ class PlayerRegion
 //      region.updateVisibility();
 
       return true;
+    }
+
+
+// =========================== GETTERS AND SETTERS ==================================
+
+
+// get area player is in
+  function get_currentArea(): AreaGame
+    {
+      return game.region.getXY(x, y);
     }
 }

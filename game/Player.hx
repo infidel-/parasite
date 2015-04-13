@@ -103,7 +103,7 @@ class Player
                 game.playerArea.onHostDeath();
               
               else if (game.location == Game.LOCATION_REGION)
-                game.region.player.onHostDeath();
+                game.playerRegion.onHostDeath();
 
               log('Your host has expired. You have to find a new one.');
             }
@@ -130,7 +130,7 @@ class Player
         game.playerArea.turn();
       
       else if (game.location == Game.LOCATION_REGION)
-        game.region.player.turn();
+        game.playerRegion.turn();
     }
 
 
