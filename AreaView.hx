@@ -18,14 +18,15 @@ class AreaView
   public var width: Int; // area width, height in cells
   public var height: Int;
   var entity: Entity; // area entity
+  static var maxSize = 100;
 
   public function new (s: GameScene)
     {
       scene = s;
       game = scene.game;
       _tilemap = null;
-      width = 100; // should be larger than any area
-      height = 100;
+      width = maxSize; // should be larger than any area
+      height = maxSize;
 
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
@@ -45,6 +46,11 @@ class AreaView
     {
       width = game.area.width;
       height = game.area.height;
+
+      // clear tilemap
+      for (y in 0...maxSize)
+        for (x in 0...maxSize)
+          _tilemap.setTile(x, y, Const.TILE_HIDDEN);
 
       // update tilemap from current area
       var cells = game.area.getCells();

@@ -238,7 +238,7 @@ class RegionGame
             else if (tmp[x][y] == 3)
               t = WorldConst.AREA_CITY_HIGH;
 
-            var a = new AreaGame(game, this, t, x, y, 50, 50);
+            var a = new AreaGame(game, this, t, x, y);
             _list.set(a.id, a);
             _array[x][y] = a;
           }
@@ -442,7 +442,7 @@ class RegionGame
 // create a new area with this type (not on map, just somewhere in the region)
   public function createArea(t: String): AreaGame
     {
-      var a = new AreaGame(game, this, t, -1, -1, 50, 50);
+      var a = new AreaGame(game, this, t, -1, -1);
       _list.set(a.id, a);
       return a;
     }

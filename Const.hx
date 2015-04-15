@@ -76,6 +76,7 @@ class Const
   public static var TILE_BUILDING = 2;
   public static var TILE_ROCK = 3;
   public static var TILE_TREE = 4;
+  public static var TILE_WALL = 5;
 
   public static var TILE_REGION_ROW = 8;
   public static var TILE_REGION_GROUND = 0;
@@ -85,8 +86,10 @@ class Const
   public static var TILE_REGION_MILITARY_BASE = 4;
   public static var TILE_REGION_FACILITY = 5;
 
-  public static var TILE_WALKABLE = [ false, true, false, false, false ];
-  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree' ];
+  public static var TILE_WALKABLE = [ false, true, false, false, false,
+    false ];
+  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree', 
+    'wall' ];
   public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
 //  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 

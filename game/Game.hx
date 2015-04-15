@@ -10,7 +10,7 @@ class Game
   public var scene: GameScene; // ui scene
   public var timeline: Timeline; // scenario timeline
   public var world: World; // game world
-  public var worldManager: WorldManager; // game world manager
+  public var managerWorld: WorldManager; // game world manager
   public var region: RegionGame; // region info link
 
   public var area: AreaGame; // current area link
@@ -32,7 +32,7 @@ class Game
   public function new()
     {
       scene = new GameScene(this);
-      worldManager = new WorldManager(this);
+      managerWorld = new WorldManager(this);
       HXP.frameRate = 30;
       HXP.scene = scene;
       messageList = new List();

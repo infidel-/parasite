@@ -113,21 +113,21 @@ class DebugArea
         },
 
         {
+          name: 'Enter sewers',
+          func: function()
+            {
+              game.scene.setState(HUDSTATE_DEFAULT);
+              game.setLocation(Game.LOCATION_REGION);
+            }
+        },
+
+        {
           name: 'Toggle LOS',
           func: function()
             {
               game.player.vars.losEnabled = !game.player.vars.losEnabled;
               game.area.updateVisibility();
               game.log('LOS checks for player toggled.');
-            }
-        },
-
-        {
-          name: 'Enter sewers',
-          func: function()
-            {
-              game.scene.setState(HUDSTATE_DEFAULT);
-              game.setLocation(Game.LOCATION_REGION);
             }
         },
 

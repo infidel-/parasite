@@ -47,7 +47,7 @@ class AreaGame
 
 
   public function new(g: Game, r: RegionGame, tv: String,
-      vx: Int, vy: Int, w: Int, h: Int)
+      vx: Int, vy: Int)
     {
       game = g;
       region = r;
@@ -58,8 +58,8 @@ class AreaGame
       id = _maxID++;
       x = vx;
       y = vy;
-      width = w;
-      height = w;
+      width = 10;
+      height = 10;
       _alertness = 0;
       alertnessMod = 0;
       interest = 0;
@@ -366,6 +366,9 @@ class AreaGame
     {
       typeID = t;
       info = WorldConst.getAreaInfo(typeID);
+
+      width = info.width - 10 + Std.random(20);
+      height = info.height - 10 + Std.random(20);
 
       if (typeID == WorldConst.AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;

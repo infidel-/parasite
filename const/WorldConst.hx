@@ -10,6 +10,8 @@ class WorldConst
         id: 'ground',
         type: 'wilderness',
         name: 'Uninhabited area',
+        width: 50,
+        height: 50,
         canEnter: true,
         isInhabited: false,
         commonAI: 0,
@@ -28,6 +30,8 @@ class WorldConst
         id: 'cityLow',
         type: 'city',
         name: 'Low-density city area',
+        width: 50,
+        height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
@@ -49,6 +53,8 @@ class WorldConst
         id: 'cityMedium', 
         type: 'city',
         name: 'Medium-density city area',
+        width: 50,
+        height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 20,
@@ -70,6 +76,8 @@ class WorldConst
         id: 'cityHigh', 
         type: 'city',
         name: 'High-density city area',
+        width: 50,
+        height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 30,
@@ -91,6 +99,8 @@ class WorldConst
         id: 'militaryBase',
         type: 'city',
         name: 'Military base',
+        width: 50,
+        height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
@@ -112,6 +122,8 @@ class WorldConst
         id: 'facility',
         type: 'city',
         name: 'Facility',
+        width: 50,
+        height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
@@ -129,15 +141,17 @@ class WorldConst
           ]
       },
 
-      { // *** habitat (TODO) 
+      { // *** habitat
         id: 'habitat',
         type: 'habitat',
         name: 'Habitat area',
+        width: 20,
+        height: 20,
         canEnter: true,
         isInhabited: false,
         commonAI: 0,
         uncommonAI: 0,
-        buildingChance: 0.05,
+        buildingChance: 0,
         policeResponceTime: 0,
         policeResponceAmount: 0,
         ai: new Map(),
@@ -196,6 +210,8 @@ typedef AreaInfo = {
   var id: String; // area type id
   var type: String; // area generator type 
   var name: String; // area type name
+  var width: Int; // area base width
+  var height: Int; // area base height
   var canEnter: Bool; // player can enter this area?
   var isInhabited: Bool; // is this area inhabited?
   var commonAI: Int; // common ai amount spawned at any time

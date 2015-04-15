@@ -23,9 +23,36 @@ class AreaGenerator
 
 
 // generate a habitat
-  static function generateHabitat (game: Game, area: AreaGame, info: AreaInfo)
+  static function generateHabitat(game: Game, area: AreaGame, info: AreaInfo)
     {
-      Const.todo('habitat generator');
+      // fill with walls
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          area.setCellType(x, y, Const.TILE_WALL);
+
+      // make some rooms
+      for (i in 0...3)
+        {
+          var x1 = 1 + Std.random(area.width - 5);
+          var y1 = 1 + Std.random(area.height - 5);
+          var w = 5 + Std.random(15);
+          var h = 5 + Std.random(15);
+          if (x1 + w >= area.width)
+            w = area.width - x1 - 2;
+          if (y1 + h >= area.height)
+            h = area.height - y1 - 2;
+          trace(x1 + ',' + y1 + ' ' + w + ',' + h);
+          makeRoom(area, x1, y1, w, h);
+        }
+    }
+
+
+// helper: make a room
+  static function makeRoom(area: AreaGame, x1: Int, y1: Int, w: Int, h: Int)
+    {
+      for (y in y1...y1 + h)
+        for (x in x1...x1 + w)
+          area.setCellType(x, y, Const.TILE_GROUND);
     }
 
 
