@@ -210,8 +210,17 @@ class Game
     }
 
 
+// add debug entry to game log
+  public inline function debug(s: String)
+    {
+#if mydebug
+      log(s, COLOR_DEBUG);
+#end
+    }
+
+
 // add entry to game log
-  public inline function log(s: String, ?col: _TextColor)
+  public function log(s: String, ?col: _TextColor)
     { 
       if (col == null)
         col = COLOR_DEFAULT;

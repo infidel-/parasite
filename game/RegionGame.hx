@@ -47,6 +47,8 @@ class RegionGame
 // enter this region
   public function enter()
     {
+      game.debug('Region.enter()');
+
       game.region = this;
 
       // no need to generate region here for now, it's generated in game/World
@@ -66,6 +68,8 @@ class RegionGame
 // leave thie region: hide gui, etc
   public inline function leave()
     {
+      game.debug('Region.leave()');
+
       // hide gui
       game.scene.region.hide();
     }

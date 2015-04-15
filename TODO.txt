@@ -11,9 +11,6 @@
 + no energy spend while in habitat without a host (but it's not restored)
 + can use laptops and cell phones in habitat and only in habitats. "This action requires intense concentration and time. I can only do it in a habitat."
 - habitat area does not despawn after leaving. the contents should all stay there
-- Area.setArea -> Area.update
-- Game.area,region -> GameScene.area,region
-- Game.area, region - should lead to current AreaGame, RegionGame
 - worldManager -> managerWorld
 - ?? make tilemap screen-sized and repaint with each movement ??
 - each habitat has a detection chance (base chance is in area info). each turn player is in region mode that chance is rolled for each habitat.

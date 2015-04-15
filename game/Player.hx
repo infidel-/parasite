@@ -47,7 +47,8 @@ class Player
         startHealth: 10,
         startEnergy: 100,
         listenRadius: 10,
-        losEnabled: true
+        losEnabled: true,
+        invisibilityEnabled: false,
         };
 
       state = PLR_STATE_PARASITE;
@@ -197,4 +198,5 @@ private typedef PlayerVars = {
   startEnergy: Int, // starting parasite energy
   listenRadius: Int, // player listen radius
   losEnabled: Bool, // LOS checks enabled?
+  invisibilityEnabled: Bool, // player invisibility enabled?
   };

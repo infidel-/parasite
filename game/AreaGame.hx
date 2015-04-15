@@ -17,7 +17,7 @@ class AreaGame
   public var id: Int; // area id
   public var typeID: String; // area type id - city block, university, military base, etc
   public var tileID: Int; // tile id on tilemap
-  public var isReady: Bool; // has this area been generated? 
+  public var isGenerated: Bool; // has this area been generated? 
   public var isKnown: Bool; // has the player seen this area?
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
@@ -51,7 +51,7 @@ class AreaGame
     {
       game = g;
       region = r;
-      isReady = false;
+      isGenerated = false;
       isKnown = false;
       isHabitat = false;
       hasHabitat = false;
@@ -78,15 +78,44 @@ class AreaGame
 // enter this area: generate if needed and update view
   public function enter()
     {
+      game.debug('Area.enter()');
+
       game.area = this;
-//      _ai = new List<AI>();
-//      _objects = new Map<Int, AreaObject>();
 
       // generate new area
-      generate();
+      if (!isGenerated)
+        generate();
+
+      // area already generated, show hidden objects
+      else for (o in _objects)
+        o.show();
+
+      // find location to appear
+      // at game start always appear on empty location
+      var loc = null;
+      if (!info.isInhabited || game.turns == 0)
+        loc = findEmptyLocation();
+      else
+        {
+          // location is inhabited, find random sewer hatch
+          var tmp = [];
+          for (o in _objects)
+            if (o.type == 'sewer_hatch')
+              tmp.push(o);
+
+          if (tmp.length == 0)
+            {
+              trace('inhabited area with no sewers, weird');
+              loc = findEmptyLocation();
+            }
+          else
+            {
+              var o = tmp[Std.random(tmp.length)];
+              loc = { x: o.x, y: o.y };
+            }
+        }
 
       // update player position 
-      var loc = findEmptyLocation();
       if (game.player.state == PLR_STATE_HOST)
         {
           game.playerArea.entity.visible = false;
@@ -99,13 +128,10 @@ class AreaGame
       game.playerArea.ap = 2; // renew AP
       alertnessMod = 0; // clear alertness counter
 
-      // hack: add sewers hatch right under player if this is not at the game start
-      // and inhabited
+/*
+      // temporary debug stuff
       if (game.turns > 0 && info.isInhabited)
         {
-          var o = new SewerHatch(game, loc.x, loc.y);
-          addObject(o);
-/*
           Const.todo('!!!remove this!!!');
           var info = ItemsConst.getInfo('paper');
           var o = new Paper(game, loc.x, loc.y);
@@ -124,17 +150,8 @@ class AreaGame
             event: area.event
             };
           addObject(o);
-*/
-          // remove any adjacent sewer hatches
-          for (y in -3...3)
-            for (x in -3...3)
-              {
-                var olist = getObjectsAt(loc.x + x, loc.y + y);
-                for (o2 in olist)
-                  if (o2 != o && o2.type == o.type)
-                    removeObject(o2);
-              }
         }
+*/
 
       // goal completed: event area found
       if (event != null)
@@ -154,6 +171,8 @@ class AreaGame
 // leave this area: hide gui, despawn, etc
   public function leave()
     {
+      game.debug('Area.leave()');
+
       // count all bodies and discover then in bulk
       var totalPoints = 0;
       var totalBodies = 0;
@@ -175,8 +194,11 @@ class AreaGame
       for (ai in _ai)
         removeAI(ai);
 
+      // hide static objects and remove dynamic ones
       for (o in _objects)
-        removeObject(o);
+        if (o.isStatic)
+          o.hide();
+        else removeObject(o);
 
       // hide gui
       game.scene.area.hide();
@@ -186,6 +208,8 @@ class AreaGame
 // generate a new area map
   function generate()
     {
+      game.debug('Area.generate()');
+
       _cells = new Array<Array<Int>>();
       for (i in 0...width)
         _cells[i] = [];
@@ -199,6 +223,10 @@ class AreaGame
 
       // set path info 
       _pathEngine = new aPath.Engine(this, width, height);
+
+      isGenerated = true; // mark area as ready for entering
+
+      game.debug('Area generated.');
     }
 
 
@@ -232,7 +260,7 @@ class AreaGame
 // remove object
   public inline function removeObject(o: AreaObject)
     {
-      game.scene.remove(o.entity); 
+      o.hide();
       _objects.remove(o.id);
     }
 

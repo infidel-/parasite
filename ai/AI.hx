@@ -472,7 +472,8 @@ class AI
   function stateIdle()
     {
       // alertness update
-      if (seesPosition(game.playerArea.x, game.playerArea.y))
+      if (!game.player.vars.invisibilityEnabled &&
+          seesPosition(game.playerArea.x, game.playerArea.y))
         {
           var distance = Const.getDist(x, y, game.playerArea.x, game.playerArea.y);
 
@@ -526,7 +527,8 @@ class AI
   function stateAlert()
     {
       // alerted timer update
-      if (seesPosition(game.playerArea.x, game.playerArea.y))
+      if (!game.player.vars.invisibilityEnabled &&
+          seesPosition(game.playerArea.x, game.playerArea.y))
         timers.alert = ALERTED_TIMER;
       else timers.alert--;
   
@@ -548,14 +550,17 @@ class AI
           // aggressive AI - attack player if he is near or search for him
           if (isAggressive)
             {
-              // search for player
-              // we cheat a little and follow invisible player 
-              // before alert timer ends 
-              if (!seesPosition(game.playerArea.x, game.playerArea.y))
-                logicMoveTo(game.playerArea.x, game.playerArea.y);
+              if (!game.player.vars.invisibilityEnabled)
+                {
+                  // search for player
+                  // we cheat a little and follow invisible player 
+                  // before alert timer ends 
+                  if (!seesPosition(game.playerArea.x, game.playerArea.y))
+                    logicMoveTo(game.playerArea.x, game.playerArea.y);
 
-              // try to attack
-              else logicAttack();
+                  // try to attack
+                  else logicAttack();
+                }
             }
 
           // not aggressive AI - try to run away

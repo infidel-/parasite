@@ -36,6 +36,7 @@ class PlayerRegion
       y = vy;
       entity = new PlayerEntity(game, x, y);
       game.scene.add(entity);
+      entity.visible = false;
     }
 
 

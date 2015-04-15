@@ -16,6 +16,7 @@ class Const
   public static var TEXT_COLORS: Map<_TextColor, String> = 
     [ 
       COLOR_DEFAULT => '#FFFFFF',
+      COLOR_DEBUG => '#555555',
       COLOR_ALERT => '#FF0000',
       COLOR_EVOLUTION => '#00FFFF',
       COLOR_AREA => '#00AA00',

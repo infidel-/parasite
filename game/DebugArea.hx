@@ -25,6 +25,7 @@ class DebugArea
               game.log('Energy per turn removed.');
             }
         },
+
         {
           name: 'Gain host',
           func: function()
@@ -52,6 +53,7 @@ class DebugArea
               ai.skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
             }
         },
+
         {
           name: 'Gain host (advanced)', 
           func: function()
@@ -99,6 +101,17 @@ class DebugArea
               game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
             }
         },
+
+        {
+          name: 'Toggle invisibility',
+          func: function()
+            {
+              game.player.vars.invisibilityEnabled =
+                !game.player.vars.invisibilityEnabled;
+              game.log('Invisibility toggled.');
+            }
+        },
+
         {
           name: 'Toggle LOS',
           func: function()
@@ -108,6 +121,7 @@ class DebugArea
               game.log('LOS checks for player toggled.');
             }
         },
+
         {
           name: 'Enter sewers',
           func: function()
@@ -116,6 +130,7 @@ class DebugArea
               game.setLocation(Game.LOCATION_REGION);
             }
         },
+
         {
           name: 'Complete current evolution',
           func: function()
@@ -124,6 +139,7 @@ class DebugArea
               game.player.energy = 100;
             }
         },
+
         {
           name: 'Complete current organ',
           func: function()
@@ -134,6 +150,7 @@ class DebugArea
               game.player.host.organs.debugCompleteCurrent();
             }
         },
+
         {
           name: 'Gain all improvements at level 0',
           func: function()
@@ -145,6 +162,7 @@ class DebugArea
               game.log('All evolution improvements gained at level 0');
             }
         },
+
         {
           name: 'Gain all improvements at max level',
           func: function()
@@ -162,6 +180,7 @@ class DebugArea
               game.log('All evolution improvements gained at max level');
             }
         },
+
         {
           name: 'Clear AI',
           func: function()
@@ -171,6 +190,7 @@ class DebugArea
                   game.area.removeAI(ai);
             }
         },
+
         {
           name: 'Spawn a cop',
           func: function()
@@ -182,6 +202,7 @@ class DebugArea
               game.area.addAI(ai);
             }
         },
+
         {
           name: 'Spawn a body',
           func: function()
@@ -195,6 +216,7 @@ class DebugArea
               game.area.debugShowObjects();
             }
         },
+
         {
           name: 'Show area manager queue',
           func: function()
@@ -202,6 +224,7 @@ class DebugArea
               game.managerArea.debugShowQueue();
             }
         },
+
         {
           name: 'Set area alertness to 100',
           func: function()
@@ -209,6 +232,7 @@ class DebugArea
               game.area.alertness = 100;
             }
         },
+
         {
           name: 'Unlock timeline',
           func: function()
@@ -218,6 +242,7 @@ class DebugArea
               game.player.skills.increase(KNOW_SOCIETY, 24);
             }
         },
+
         {
           name: 'Open timeline',
           func: function()

@@ -21,6 +21,7 @@ class AreaObject
   static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
+  public var isStatic: Bool; // is this object static?
   public var creationTime: Int; // when was this object created (turns since game start)
   var _listActions: List<_PlayerAction>; // actions storage
 
@@ -29,6 +30,7 @@ class AreaObject
       game = g;
       type = 'undefined';
       id = (_maxID++);
+      isStatic = false;
       creationTime = game.turns;
       _listActions = new List<_PlayerAction>();
 
@@ -71,7 +73,21 @@ class AreaObject
   public inline function createEntity(atlasRow: Int, atlasCol: Int)
     {
       entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
-      game.scene.add(entity);
+      show();
+    }
+
+
+// show object on screen
+  public inline function show()
+    {
+      game.scene.add(entity); 
+    }
+
+
+// hide object on screen
+  public inline function hide()
+    {
+      game.scene.remove(entity); 
     }
 
 
