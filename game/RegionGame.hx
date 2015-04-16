@@ -89,10 +89,30 @@ class RegionGame
             a.alertness -= 1;
           }
 
+      // try to detect all habitats
+      turnDetectHabitats();
+
       // update all icons
       game.scene.region.updateIcons();
     }
 
+
+// TURN: try to detect all habitats
+  public inline function turnDetectHabitats()
+    {
+      var tmp = getHabitatsList();
+      for (area in tmp)
+        {
+          var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
+          var detectionChance: Float = params.detectionChance;
+//          if (Math.random() * 100 > detectionChance)
+//            continue;
+
+          game.debug("Habitat " + id + " detected.");
+          area.habitatIsDetected = true;
+        }
+    }
+    
 
 // generate a region
   public function generate()
@@ -299,6 +319,18 @@ class RegionGame
           cnt++;
       
       return cnt;
+    }
+
+
+// get habitats list in this area
+  public function getHabitatsList(): List<AreaGame> 
+    {
+      var tmp = new List();
+      for (area in _list)
+        if (area.isHabitat)
+          tmp.add(area);
+      
+      return tmp;
     }
 
 

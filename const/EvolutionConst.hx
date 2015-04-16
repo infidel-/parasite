@@ -562,16 +562,20 @@ class EvolutionConst
           ],
         levelParams: [
           {
-            numHabitats: 0
+            numHabitats: 0,
+            detectionChance: 0,
           },
           {
-            numHabitats: 1
+            numHabitats: 1,
+            detectionChance: 1,
           },
           {
-            numHabitats: 2
+            numHabitats: 2,
+            detectionChance: 0.5,
           },
           {
-            numHabitats: 4
+            numHabitats: 4,
+            detectionChance: 0.25,
           },
           ],
         onUpgrade: function(level, game, player)

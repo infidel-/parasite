@@ -100,7 +100,7 @@ class AreaManager
             }
 
           // if object origin is not in area now, we skip this event
-          var o = (e.objectID >= 0 ? game.area.getObject(e.objectID) : null);
+          var o = (e.objectID >= 0 ? area.getObject(e.objectID) : null);
           if (e.objectID >= 0 && o == null) 
             {
               _list.remove(e);
@@ -143,7 +143,7 @@ class AreaManager
 // event: attack (called immediately)
   public function onAttack(x: Int, y: Int, isRanged: Bool)
     {
-      var tmp = game.area.getAIinRadius(x, y, 
+      var tmp = area.getAIinRadius(x, y, 
         (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
       for (ai in tmp)
         if (ai.state == AI_STATE_IDLE)
@@ -183,7 +183,7 @@ class AreaManager
 // event: alert police in area
   function onAlertPolice(e: AreaEvent)
     {
-      var list = game.area.getAllAI();
+      var list = area.getAllAI();
       for (ai in list)
         if (ai.type == 'police' && ai.state == AI_STATE_IDLE)
           ai.setState(AI_STATE_ALERT, REASON_BACKUP);
@@ -197,7 +197,7 @@ class AreaManager
 
       for (i in 0...area.info.policeResponceAmount)
         {
-          var loc = game.area.findEmptyLocationNear(e.x, e.y);
+          var loc = area.findEmptyLocationNear(e.x, e.y);
           if (loc == null)
             {
               Const.todo('Could not find free spot for spawn!');
@@ -214,7 +214,7 @@ class AreaManager
           // and arrive already alerted
           ai.alertness = 50;
 
-          game.area.addAI(ai);
+          area.addAI(ai);
         }
     }
 
@@ -245,7 +245,7 @@ class AreaManager
 
       for (i in 0...2)
         {
-          var loc = game.area.findEmptyLocationNear(e.x, e.y);
+          var loc = area.findEmptyLocationNear(e.x, e.y);
           if (loc == null)
             {
               Const.todo('Could not find free spot for spawn!');
@@ -267,7 +267,7 @@ class AreaManager
           ai.state = AI_STATE_ALERT;
           ai.isBackup = true;
 
-          game.area.addAI(ai);
+          area.addAI(ai);
         }
     }
 
@@ -275,7 +275,7 @@ class AreaManager
 // event: object decay
   function onObjectDecay(o: AreaObject)
     {
-      game.area.removeObject(o);
+      area.removeObject(o);
     }
 
 

@@ -22,6 +22,7 @@ class AreaGame
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
   public var habitatAreaID: Int; // area id of habitat
+  public var habitatIsDetected: Bool; // habitat: has been detected? 
   public var info: AreaInfo; // area info link
   public var width: Int;
   public var height: Int;
@@ -64,6 +65,7 @@ class AreaGame
       alertnessMod = 0;
       interest = 0;
       habitatAreaID = 0;
+      habitatIsDetected = false;
       npc = new List();
 
       _cells = [];
@@ -89,6 +91,10 @@ class AreaGame
       // area already generated, show hidden objects
       else for (o in _objects)
         o.show();
+
+      // habitat detected: spawn agents
+      if (isHabitat && habitatIsDetected)
+        enterHabitatDetected();
 
       // find location to appear
       // at game start always appear on empty location
@@ -165,6 +171,19 @@ class AreaGame
 
       // show area
       game.scene.area.show();
+    }
+
+
+// on enter: habitat detected, spawn agents
+  public function enterHabitatDetected()
+    {
+      for (i in 0...4)
+        {
+          var loc = findEmptyLocation();
+          var ai = new AgentAI(game, loc.x, loc.y);
+          ai.alertness = 50; // not working???
+          addAI(ai);
+        }
     }
 
 
@@ -935,6 +954,12 @@ class AreaGame
       return null;
     }
 
+
+// does this area have any AI?
+  public function hasAnyAI(): Bool
+    {
+      return (_ai.length > 0);
+    }
 
 // DEBUG: show all objects
   public inline function debugShowObjects()

@@ -31,17 +31,16 @@ class AreaGenerator
           area.setCellType(x, y, Const.TILE_WALL);
 
       // make some rooms
-      for (i in 0...3)
+      for (i in 0...10)
         {
           var x1 = 1 + Std.random(area.width - 5);
           var y1 = 1 + Std.random(area.height - 5);
           var w = 5 + Std.random(15);
           var h = 5 + Std.random(15);
-          if (x1 + w >= area.width)
+          if (x1 + w >= area.width - 1)
             w = area.width - x1 - 2;
-          if (y1 + h >= area.height)
+          if (y1 + h >= area.height - 1)
             h = area.height - y1 - 2;
-          trace(x1 + ',' + y1 + ' ' + w + ',' + h);
           makeRoom(area, x1, y1, w, h);
         }
     }

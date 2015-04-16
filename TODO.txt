@@ -14,8 +14,12 @@
 + worldManager -> managerWorld
 + set habitat width, height in area type
 + habitat area generator
-- each habitat has a detection chance (base chance is in area info). each turn player is in region mode that chance is rolled for each habitat.
-- when habitat is detected, it's silently marked as "detected" and when player enters it, 4 blackops agents spawn and player cannot leave habitat until they're dead (which is probably impossible). if player actually leaves, habitat is destroyed. i should probably make some habitat imps that will notify player about detection.
++ each habitat has a detection chance (based on imp level). each turn player is in region mode that chance is rolled for each habitat.
++ when habitat is detected, it's silently marked as "detected" 
+- when player enters detected habitat, 4 blackops agents spawn
++ player cannot leave habitat when it has any AI
+- if player actually leaves, habitat is destroyed. 
+- i should probably make some habitat imps that will notify player about detection.
 - ?? habitat cannot be detected when player is inside. that probably needs to be changed.
 
 

@@ -152,8 +152,8 @@ class WorldConst
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0,
-        policeResponceTime: 0,
-        policeResponceAmount: 0,
+        policeResponceTime: 10,
+        policeResponceAmount: 4,
         ai: new Map(),
         objects: []
       },

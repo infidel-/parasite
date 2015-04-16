@@ -452,6 +452,13 @@ class PlayerArea
 // action: leave area
   function leaveAreaAction()
     {
+      // special check for habitat
+      if (game.area.typeID == 'habitat' && game.area.hasAnyAI())
+        {
+          game.log('You cannot leave the habitat with outsiders in it!');
+          return;
+        }
+
       game.log("You leave the area."); 
       game.turns++; // manually increase number of turns
       game.setLocation(Game.LOCATION_REGION);
