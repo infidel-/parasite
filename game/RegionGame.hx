@@ -105,8 +105,8 @@ class RegionGame
         {
           var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
           var detectionChance: Float = params.detectionChance;
-//          if (Math.random() * 100 > detectionChance)
-//            continue;
+          if (Math.random() * 100 > detectionChance)
+            continue;
 
           game.debug("Habitat " + id + " detected.");
           area.habitatIsDetected = true;
@@ -477,6 +477,13 @@ class RegionGame
       var a = new AreaGame(game, this, t, -1, -1);
       _list.set(a.id, a);
       return a;
+    }
+
+
+// remove area in this region (only for non-cell areas)
+  public function removeArea(areaID: Int)
+    {
+      _list.remove(areaID);
     }
 
 

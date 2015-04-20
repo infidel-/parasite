@@ -183,9 +183,9 @@ class RegionView
       updateNPC(a);
 
       // update habitat icons
-      if (a.hasHabitat)
-        _tilemapHabitat.setTile(a.x, a.y, 
-          Const.ROW_REGION_ICON * 9 + Const.FRAME_HABITAT);
+      _tilemapHabitat.setTile(a.x, a.y, 
+        Const.ROW_REGION_ICON * 9 +
+        (a.hasHabitat ? Const.FRAME_HABITAT : Const.FRAME_EMPTY));
     }
 
 

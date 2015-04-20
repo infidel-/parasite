@@ -174,7 +174,7 @@ class AreaGame
     }
 
 
-// on enter: habitat detected, spawn agents
+// on enter: habitat detected, spawn blackops agents
   public function enterHabitatDetected()
     {
       for (i in 0...4)
@@ -210,6 +210,7 @@ class AreaGame
       else if (totalBodies > 0)
         game.managerRegion.onBodiesDiscovered(this, totalBodies, totalPoints);
 
+      // remove all ai
       for (ai in _ai)
         removeAI(ai);
 
@@ -218,6 +219,16 @@ class AreaGame
         if (o.isStatic)
           o.hide();
         else removeObject(o);
+
+      // habitat was detected, destroy it
+      if (isHabitat && habitatIsDetected)
+        {
+          game.playerRegion.currentArea.hasHabitat = false;         
+          game.region.removeArea(id);
+          game.scene.region.updateIconsArea(game.playerRegion.x,
+            game.playerRegion.y);
+          game.log("This habitat is no longer secure.");
+        }
 
       // hide gui
       game.scene.area.hide();
