@@ -1,4 +1,4 @@
-// AI for soldiers 
+// AI for blackops agents 
 
 package ai;
 
@@ -6,7 +6,7 @@ import ai.AI;
 import _AIState;
 import game.Game;
 
-class SoldierAI extends HumanAI
+class BlackopsAI extends HumanAI
 {
 //  public var isBackup: Bool; // is this AI itself backup?
 //  var isBackupCalled: Bool; // did this ai called for backup already?
@@ -15,22 +15,22 @@ class SoldierAI extends HumanAI
     {
       super(g, vx, vy);
 
-      type = 'soldier';
-      name.unknown = 'soldier';
-      name.unknownCapped = 'Soldier';
+      type = 'blackops';
+      name.unknown = 'blackops agent';
+      name.unknownCapped = 'Blackops agent';
       sounds = [
         '' + REASON_DAMAGE => [
-          { text: 'Ouch!', radius: 2, alertness: 5, params: null },
+          { text: '*GRUNT*', radius: 2, alertness: 5, params: null },
           { text: '*GROAN*', radius: 2, alertness: 5, params: null },
           ],
         '' + AI_STATE_IDLE => [
           { text: 'Huh?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
           { text: 'Whu?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
           { text: 'What the?', radius: 0, alertness: 0, params: { minAlertness: 50 }  },
-          { text: '*GASP*', radius: 0, alertness: 0, params: { minAlertness: 75 } },
+          { text: 'BOGEY!', radius: 0, alertness: 0, params: { minAlertness: 75 } },
           ],
         '' + AI_STATE_ALERT => [
-          { text: 'STOP!', radius: 7, alertness: 10, params: null },
+          { text: 'TANGO!', radius: 7, alertness: 10, params: null },
           ],
         '' + AI_STATE_HOST => [
           { text: '*moan*', radius: 2, alertness: 5, params: null },
@@ -38,8 +38,11 @@ class SoldierAI extends HumanAI
           ]
         ];
       isAggressive = true;
-      inventory.addID('assaultRifle');
-      skills.addID(SKILL_RIFLE, 40 + Std.random(25));
+      inventory.addID(Std.random(100) < 70 ? 'assaultRifle' : 'combatShotgun');
+      inventory.addID('pistol');
+      skills.addID(SKILL_RIFLE, 60 + Std.random(25));
+      skills.addID(SKILL_SHOTGUN, 60 + Std.random(25));
+      skills.addID(SKILL_PISTOL, 60 + Std.random(25));
 
 //      isBackup = false;
 //      isBackupCalled = false;

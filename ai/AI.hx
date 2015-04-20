@@ -457,9 +457,7 @@ class AI
       log(info.verb2 + ' ' + 
         (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') + 
         ' for ' + damage + ' damage.');
-#if mydebug
-      game.log('AI.attack: ' + tmp);
-#end
+      game.debug('AI.attack: ' + tmp);
 
       game.playerArea.onDamage(damage); // on damage event
     }

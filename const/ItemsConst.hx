@@ -71,7 +71,7 @@ class ItemsConst
         }
     },
     {
-      id: 'rifle',
+      id: 'assaultRifle',
       name: 'assault rifle',
       type: 'weapon',
       unknown: 'elongated metallic object with a handle',
@@ -83,6 +83,21 @@ class ItemsConst
           skill: SKILL_RIFLE,
           minDamage: 2,
           maxDamage: 12
+        }
+    },
+    {
+      id: 'combatShotgun',
+      name: 'combat shotgun',
+      type: 'weapon',
+      unknown: 'elongated metallic object with a handle',
+      verb1: 'shoot',
+      verb2: 'shoots',
+      weaponStats:
+        {
+          isRanged: true,
+          skill: SKILL_SHOTGUN,
+          minDamage: 4,
+          maxDamage: 24
         }
     },
 

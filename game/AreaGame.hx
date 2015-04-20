@@ -180,8 +180,8 @@ class AreaGame
       for (i in 0...4)
         {
           var loc = findEmptyLocation();
-          var ai = new AgentAI(game, loc.x, loc.y);
-          ai.alertness = 50; // not working???
+          var ai = new BlackopsAI(game, loc.x, loc.y);
+          ai.alertness = 75; 
           addAI(ai);
         }
     }
@@ -956,9 +956,9 @@ class AreaGame
 
 
 // does this area have any AI?
-  public function hasAnyAI(): Bool
+  public inline function hasAnyAI(): Bool
     {
-      return (_ai.length > 0);
+      return (game.player.state == PLR_STATE_HOST ? _ai.length > 1 : _ai.length > 0);
     }
 
 // DEBUG: show all objects

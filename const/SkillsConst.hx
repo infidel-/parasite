@@ -38,6 +38,11 @@ class SkillsConst
       name: 'rifle',
       defaultLevel: 25,
     },
+    {
+      id: SKILL_SHOTGUN,
+      name: 'shotgun',
+      defaultLevel: 30,
+    },
 
     {
       id: SKILL_COMPUTER,
