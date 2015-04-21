@@ -132,7 +132,7 @@ class PlayerRegion
     {
       game.log(currentArea.info.isInhabited ?
         "You emerge from the sewers." : "You enter the area.");
-      game.setLocation(Game.LOCATION_AREA);
+      game.setLocation(LOCATION_AREA);
     }
 
 
@@ -153,7 +153,7 @@ class PlayerRegion
     {
       game.log("You enter the habitat. You feel much safer here.");
       var habitatArea = game.region.get(currentArea.habitatAreaID);
-      game.setLocation(Game.LOCATION_AREA, habitatArea); 
+      game.setLocation(LOCATION_AREA, habitatArea); 
     }
 
 

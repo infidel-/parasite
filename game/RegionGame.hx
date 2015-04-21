@@ -98,11 +98,16 @@ class RegionGame
 
 
 // TURN: try to detect all habitats
-  public inline function turnDetectHabitats()
+// also called when player is in the area mode once/10 turns
+  public function turnDetectHabitats()
     {
       var tmp = getHabitatsList();
       for (area in tmp)
         {
+          // skip current area if it's a habitat and player is it
+          if (game.location == LOCATION_AREA && area == game.area)
+            continue;
+
           var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
           var detectionChance: Float = params.detectionChance;
           if (Math.random() * 100 > detectionChance)

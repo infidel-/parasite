@@ -240,7 +240,7 @@ class PlayerArea
         return;
 
       // new turn (only if still in area mode)
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
         game.turn();
     }
 
@@ -461,7 +461,7 @@ class PlayerArea
 
       game.log("You leave the area."); 
       game.turns++; // manually increase number of turns
-      game.setLocation(Game.LOCATION_REGION);
+      game.setLocation(LOCATION_REGION);
     }
 
 // action: remove attached parasite from host

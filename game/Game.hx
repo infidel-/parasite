@@ -23,9 +23,10 @@ class Game
 
   public var player: Player; // game player
   public var playerArea: PlayerArea; // game player (area mode)
-  public var location(default, null): String; // player location type - area, region, world 
+  public var location(default, null): _LocationType; // player location type - area, region, world 
 
   public var turns: Int; // number of turns passed since game start
+  public var turnsArea: Int; // number of turns passed since player entered this area 
   public var isFinished: Bool; // is the game finished?
   public var messageList: List<String>; // last X messages of log
 
@@ -47,6 +48,7 @@ class Game
     {
       Const.todo('proper title screen');
       turns = 0;
+      turnsArea = 0;
       isFinished = false;
 
       player = new Player(this);
@@ -102,7 +104,7 @@ class Game
 
 
 // set location
-  public function setLocation(vloc: String, ?newarea: AreaGame)
+  public function setLocation(vloc: _LocationType, ?newarea: AreaGame)
     {
       // hide previous gui, despawn area, etc
       if (location == LOCATION_AREA)
@@ -116,6 +118,7 @@ class Game
       // show new gui
       if (location == LOCATION_AREA)
         {
+          turnsArea = 0;
           area = region.getXY(playerRegion.x, playerRegion.y);
           if (newarea != null) // enter specified area
              area = newarea;
@@ -155,6 +158,11 @@ class Game
           managerArea.turn();
           if (isFinished)
             return;
+
+          // current area turns
+          turnsArea++;
+          if (turnsArea % 10 == 0)
+            region.turnDetectHabitats();
         }
 
       else if (location == LOCATION_REGION)
@@ -233,8 +241,4 @@ class Game
       if (messageList.length > 100)
         messageList.pop();
     }
-
-
-  public static var LOCATION_AREA = 'area'; 
-  public static var LOCATION_REGION = 'region'; 
 }

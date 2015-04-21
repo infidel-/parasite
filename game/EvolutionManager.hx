@@ -46,7 +46,7 @@ class EvolutionManager
 
       // evolution is easier while in habitat
       var cost = 5;
-      if (game.location == Game.LOCATION_AREA && game.area.isHabitat)
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
         cost = 4;
       player.host.energy -= cost * time;
       if (isTaskPath) // path evolution

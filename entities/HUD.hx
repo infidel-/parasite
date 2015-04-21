@@ -88,10 +88,10 @@ class HUD
       if (action == null)
         return;
 
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
         game.playerArea.action(action);
 
-      else if (game.location == Game.LOCATION_REGION)
+      else if (game.location == LOCATION_REGION)
         game.playerRegion.action(action);
     }
 
@@ -99,10 +99,10 @@ class HUD
 // update player actions list
   inline function updateActionList()
     {
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
         _listActions = game.playerArea.getActionList();
 
-      else if (game.location == Game.LOCATION_REGION)
+      else if (game.location == LOCATION_REGION)
         _listActions = game.playerRegion.getActionList();
     }
 
@@ -114,11 +114,11 @@ class HUD
 
       // player intent
       buf.add('Turn: ' + game.turns + ', at (');
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
           buf.add(
             game.playerArea.x + ',' + game.playerArea.y + ')\n' +
             'Actions: ' + game.playerArea.ap + '\n');
-      else if (game.location == Game.LOCATION_REGION)
+      else if (game.location == LOCATION_REGION)
         buf.add(
           game.playerRegion.x + ',' + game.playerRegion.y + ')\n' +
           game.playerRegion.currentArea.info.name + '\n');

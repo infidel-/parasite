@@ -70,14 +70,14 @@ class Player
       var time = 1;
 
       // different time speed in region mode
-      if (game.location == Game.LOCATION_REGION)
+      if (game.location == LOCATION_REGION)
         time = 5;
 
       // parasite state: decrease energy 
       if (state == PLR_STATE_PARASITE)
         {
           // energy is stable in habitat
-          if (game.location == Game.LOCATION_AREA && game.area.isHabitat)
+          if (game.location == LOCATION_AREA && game.area.isHabitat)
             1;
           // lose some energy
           else energy -= vars.areaEnergyPerTurn * time;
@@ -94,16 +94,16 @@ class Player
       if (state == PLR_STATE_HOST)
         {
           // energy is stable in habitat
-          if (game.location == Game.LOCATION_AREA && game.area.isHabitat)
+          if (game.location == LOCATION_AREA && game.area.isHabitat)
             1;
           else host.energy -= time;
 
           if (host.energy <= 0)
             {
-              if (game.location == Game.LOCATION_AREA)
+              if (game.location == LOCATION_AREA)
                 game.playerArea.onHostDeath();
               
-              else if (game.location == Game.LOCATION_REGION)
+              else if (game.location == LOCATION_REGION)
                 game.playerRegion.onHostDeath();
 
               log('Your host has expired. You have to find a new one.');
@@ -127,10 +127,10 @@ class Player
         }
 
       // location-specific turn
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
         game.playerArea.turn();
       
-      else if (game.location == Game.LOCATION_REGION)
+      else if (game.location == LOCATION_REGION)
         game.playerRegion.turn();
     }
 

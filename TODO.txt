@@ -1,78 +1,7 @@
-+ "Microhabitat" goal chain (opens after completing GOAL_EVOLVE_ORGAN):
-+ "Growing organs and evolving is very inefficient in a hostile environment. I need a microhabitat."
-+ GOAL: get "Microhabitat" improvement (passive), onComplete -> give microhabitat knowledge
-+ ImprovInfo.onComplete()
-+ GOAL: select location in a region (any walkable cell), action "Create habitat" (need "Microhabitat" knowledge). This creates the habitat. Text should say how it's much more safe here.
-+ mark habitats on map
-+ player can build multiple habitats all over region
-+ limit total amount of habitats by improvement level
-+ no energy spend while in habitat with a host, control grows each turn up to 100 
-+ in case of evolution or organ growth, the energy spend is -20% (4/turn instead of 5/turn)
-+ no energy spend while in habitat without a host (but it's not restored)
-+ can use laptops and cell phones in habitat and only in habitats. "This action requires intense concentration and time. I can only do it in a habitat."
-+ habitat area does not despawn after leaving. the contents should all stay there
-+ worldManager -> managerWorld
-+ set habitat width, height in area type
-+ habitat area generator
-+ each habitat has a detection chance (based on imp level). each turn player is in region mode that chance is rolled for each habitat.
-+ when habitat is detected, it's silently marked as "detected" 
-+ when player enters detected habitat, 4 blackops agents spawn
-+ player cannot leave habitat when it has any AI
-+ if player actually leaves, habitat is destroyed. 
-- i should probably make some habitat imps that will notify player about detection.
-- ?? habitat cannot be detected when player is inside. that probably needs to be changed.
-
-
++ when player is in area mode, habitat detection attempt happens each 10 turns
++ if the player is in habitat, it cannot be detected
 ??? job agent ???
-- when done, copy this to docs
 
-=============
-=============
-
-Physical clue/Memory contents:
-* event person name - allows researching that name
-* event person job and photo - allows visually spotting this person in the crowd
-* event person location - area x,y - allows actually finding that person
-* event location - area x,y - allows gathering physical clues at that location
-* event clue - each event note has a counter. filling that counter up will show player the note. there is 1-3 event clues in contents
-* event note - rare, only on physical clues, will open full event note
-
-timeline example:
-...
-Event 3: at (5,5)
- +  The military personnel formed a cordon surrounding the scene.
- -  ? [1/4]
- -  ? [0/4]
-Participants:
- -  Jacob Redfield (?) at (?,?) [no photo]
- -  Jacob Redfield (?) at (4,5) [no photo]
- -  Jacob Redfield (soldier) at (4,5) [photo]
- + Jacob Redfield (soldier) at (4,5) [photo] [deceased]
- -  ?
-...
-Event 20:
-  + The military personnel formed a cordon surrounding the scene.
-Participants:
- -  Jacob Redfield (?) at (?,?) [no photo]
-... +10 deceased persons ...
-...
-(+ means this person's memory has been mined)
-
-===
-
-scenario/
-Scenario - flowchart of event/person/location
-Variables
-ScenarioAlienCrashLanding - actual scenario contents
-Timeline - the events that actually happened
-Event  - event contents
-Person - event participants
-Location - event location
-Clue - available clue (generated in process of a game)
-
-
-===============
-===============
 spawn player near last event location
 modify starting interest/alertness according to scenario flow
 military base and facility area types!
@@ -87,7 +16,6 @@ make reading notes multiple times?
 add some unique traits for agents and soldiers
 search in timeline
 more readable types
-
 
 host memory + human society > 50 = access to infoweb
 knowledges?
@@ -136,6 +64,7 @@ parasite smell + dogs + reducing smell intensivity imp
 organ damage - organ must heal itself before it becomes active again
 limit region access (until some learning flag triggers, initial progression)
 - ?? make tilemap screen-sized and repaint with each movement ??
+- i should probably make some habitat imps that will notify player about detection.
 
 
 scene. getSpriteByLayer(layer) - draw lines on this one

@@ -117,7 +117,7 @@ class DebugArea
           func: function()
             {
               game.scene.setState(HUDSTATE_DEFAULT);
-              game.setLocation(Game.LOCATION_REGION);
+              game.setLocation(LOCATION_REGION);
             }
         },
 

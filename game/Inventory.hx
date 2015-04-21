@@ -22,7 +22,7 @@ class Inventory
       var tmp = new List<_PlayerAction>();
 
       // disable inventory action in region mode for now
-      if (game.location == Game.LOCATION_REGION)
+      if (game.location == LOCATION_REGION)
         return tmp;
 
       for (item in _list)
@@ -92,7 +92,7 @@ class Inventory
           game.player.host.energy -= action.energy;
 
           // end turn, etc
-          if (game.location == Game.LOCATION_AREA)
+          if (game.location == LOCATION_AREA)
             game.playerArea.postAction();
 
           else Const.todo('Inventory.action() in region mode!');

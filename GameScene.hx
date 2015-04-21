@@ -110,7 +110,7 @@ class GameScene extends Scene
   public function updateCamera()
     {
       var x = 0.0, y = 0.0, w = 0.0, h = 0.0;
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
         {
           x = game.playerArea.entity.x;
           y = game.playerArea.entity.y;
@@ -118,7 +118,7 @@ class GameScene extends Scene
           h = game.area.height;
         }
 
-      else if (game.location == Game.LOCATION_REGION)
+      else if (game.location == LOCATION_REGION)
         {
           x = game.playerRegion.entity.x;
           y = game.playerRegion.entity.y;
@@ -320,11 +320,11 @@ class GameScene extends Scene
         return;
 
       // area mode
-      if (game.location == Game.LOCATION_AREA)
+      if (game.location == LOCATION_AREA)
         game.playerArea.moveAction(dx, dy);
 
       // area mode
-      else if (game.location == Game.LOCATION_REGION)
+      else if (game.location == LOCATION_REGION)
         game.playerRegion.moveAction(dx, dy);
     }
 
