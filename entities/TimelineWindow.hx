@@ -59,6 +59,7 @@ class TimelineWindow extends TextWindow
           // event participants
           buf.add('Participants:\n');
           var numDeceasedAndKnown = 0;
+          var numAliveAndMemoryKnown = 0;
           if (npcSomethingKnown)
             for (npc in event.npc)
               {
@@ -71,6 +72,13 @@ class TimelineWindow extends TextWindow
                 if (npc.isDead && npc.isDeadKnown)
                   {
                     numDeceasedAndKnown++;
+                    continue;
+                  }
+
+                // count number of alive and scanned npcs
+                if (!npc.isDead && npc.memoryKnown)
+                  {
+                    numAliveAndMemoryKnown++;
                     continue;
                   }
 
@@ -92,6 +100,9 @@ class TimelineWindow extends TextWindow
 
           // nothing known about any npcs
           else buf.add('  unknown');
+
+          if (numAliveAndMemoryKnown > 0)
+            buf.add(" ... +" + numAliveAndMemoryKnown + " persons probed ...\n");
 
           if (numDeceasedAndKnown > 0)
             buf.add(" ... +" + numDeceasedAndKnown + " persons deceased ...\n");

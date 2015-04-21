@@ -262,8 +262,11 @@ class DebugArea
                       npc.jobKnown = true;
                       npc.areaKnown = true;
                       npc.isDeadKnown = true;
+//                      npc.memoryKnown = true;
                     }
                 }
+
+              game.timeline.update(); // update event numbering
             }
         },
         ];

@@ -5,13 +5,13 @@
 modify starting interest/alertness according to scenario flow
 military base and facility area types!
 area type string id -> enum
-RegionArea - change switch type -> tile into map
+RegionArea - switch type -> tile into map
 fix event npcs spawn by job (soldiers go to military bases)
 police radio gives access to radio messages
 spawn stuff that is seen by player immediately on entering area
 remove dead npcs from area.npc on death
 make reading notes multiple times?
-"+10 persons scanned"?
++ "+10 persons probed"
 add some unique traits for agents and soldiers
 search in timeline
 more readable types
