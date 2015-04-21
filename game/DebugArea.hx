@@ -87,6 +87,8 @@ class DebugArea
               game.timeline.getStartEvent().learnNPC();
               game.timeline.getStartEvent().learnNPC();
               game.timeline.getStartEvent().learnNPC();
+              game.player.goals.receive(GOAL_PROBE_BRAIN);
+              game.player.goals.complete(GOAL_PROBE_BRAIN);
 
               game.player.vars.npcEnabled = true;
               game.player.vars.searchEnabled = true;

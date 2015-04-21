@@ -415,7 +415,7 @@ should limit player options for guiding purposes
 // get starting location event
   public inline function getStartEvent(): Event
     {
-      return getEvent(scenario.playerStartLocation);
+      return getEvent(scenario.playerStartEvent);
     }
 }
 

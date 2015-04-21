@@ -10,7 +10,7 @@ class ScenarioAlienCrashLanding extends Scenario
       super();
       name = 'Alien Crash Landing';
       startEvent = 'alienMission';
-      playerStartLocation = 'parasiteTransportation';
+      playerStartEvent = 'parasiteTransportation';
       names = [
         'facility1' => [ 'Facility 1 TODO' ],
         'facility2' => [ 'Facility 2 TODO' ],

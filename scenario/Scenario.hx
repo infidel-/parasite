@@ -6,7 +6,7 @@ class Scenario
 {
   public var name: String; // scenario name
   public var startEvent: String; // scenario starting event
-  public var playerStartLocation: String; // player starting location
+  public var playerStartEvent: String; // player start location event 
   public var names: Map<String, Array<String>>; // name templates
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
 
@@ -14,7 +14,7 @@ class Scenario
     {
       name = 'unnamed scenario';
       startEvent = '';
-      playerStartLocation = '';
+      playerStartEvent = '';
       names = new Map();
       flow = new Map();
     }

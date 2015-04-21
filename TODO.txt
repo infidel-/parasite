@@ -1,8 +1,7 @@
 + when player is in area mode, habitat detection attempt happens each 10 turns
 + if the player is in habitat, it cannot be detected
-??? job agent ???
 
-spawn player near last event location
++ spawn player near last event location
 modify starting interest/alertness according to scenario flow
 military base and facility area types!
 area type string id -> enum
@@ -16,9 +15,9 @@ make reading notes multiple times?
 add some unique traits for agents and soldiers
 search in timeline
 more readable types
+scenario-based goals
+area interest is unused
 
-host memory + human society > 50 = access to infoweb
-knowledges?
 
 MASTERPLAN
 ============
@@ -34,6 +33,9 @@ information web (based on clue gathering)
 
 LATER
 =====
+?? more knowledges
+make each AI type more unique
+
 - "Biomineralization" goal chain (after "habitat" goal chain):
 - GOAL: get "Biomineralization" improvement
 - GOAL: grow "Biomineral base" organ. When this organ finishes, special action "Grow a biomineral" appears.
