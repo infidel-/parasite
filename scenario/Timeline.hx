@@ -221,6 +221,10 @@ should limit player options for guiding purposes
         area = region.spawnArea(info.type, true);
       location.area = area;
       area.event = event;
+      area.alertness = 
+        (info.alertness != null ? info.alertness : scenario.defaultAlertness);
+      area.interest = 
+        (info.interest != null ? info.interest : scenario.defaultInterest);
 
       // location is near this event id
       if (info.near != null)

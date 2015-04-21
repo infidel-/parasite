@@ -7,6 +7,9 @@ class Scenario
   public var name: String; // scenario name
   public var startEvent: String; // scenario starting event
   public var playerStartEvent: String; // player start location event 
+  public var defaultInterest: Int; // default location interest
+  public var defaultAlertness: Int; // default location alertness 
+
   public var names: Map<String, Array<String>>; // name templates
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
 
@@ -15,6 +18,9 @@ class Scenario
       name = 'unnamed scenario';
       startEvent = '';
       playerStartEvent = '';
+      defaultAlertness = 0;
+      defaultInterest = 0;
+
       names = new Map();
       flow = new Map();
     }
@@ -44,6 +50,8 @@ typedef LocationInfo = {
   ?type: String, // location type
   ?name: String, // location name template
   ?near: String, // location is near this event id
-  ?sameAs: String // location is copied over from this event id
+  ?sameAs: String, // location is copied over from this event id
+  ?alertness: Int, // area alertness
+  ?interest: Int, // area interest
 }
 

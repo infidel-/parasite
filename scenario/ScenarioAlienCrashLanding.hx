@@ -11,6 +11,9 @@ class ScenarioAlienCrashLanding extends Scenario
       name = 'Alien Crash Landing';
       startEvent = 'alienMission';
       playerStartEvent = 'parasiteTransportation';
+      defaultAlertness = 50;
+      defaultInterest = 10;
+
       names = [
         'facility1' => [ 'Facility 1 TODO' ],
         'facility2' => [ 'Facility 2 TODO' ],
@@ -89,7 +92,8 @@ class ScenarioAlienCrashLanding extends Scenario
             'The pilot did not manage to shoot UFO down but it was tracked by a second plane until it landed.',
             ],
           location: {
-            near: 'shipSpottedCiv'
+            near: 'shipSpottedCiv',
+            interest: 25,
             },
           npc: [ 'soldier' => 10 ],
           },
@@ -101,7 +105,8 @@ class ScenarioAlienCrashLanding extends Scenario
             'The pilot managed to shoot down the UFO.',
             ],
           location: {
-            near: 'shipSpottedCiv'
+            near: 'shipSpottedCiv',
+            interest: 25,
             },
           npc: [ 'soldier' => 10 ],
           },
@@ -283,6 +288,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Teams of field specialists have been scrambled to the area.'
             ],
           location: {
+            interest: 50 
             },
           npc: [ 'agent' => 2 ],
           },

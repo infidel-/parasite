@@ -1,8 +1,7 @@
 + when player is in area mode, habitat detection attempt happens each 10 turns
 + if the player is in habitat, it cannot be detected
-
 + spawn player near last event location
-modify starting interest/alertness according to scenario flow
++ modify starting interest/alertness according to scenario flow
 military base and facility area types!
 area type string id -> enum
 RegionArea - switch type -> tile into map
