@@ -18,6 +18,7 @@ class AreaGame
   public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated? 
+  public var isEntering: Bool; // is the player entering this area atm? 
   public var isKnown: Bool; // has the player seen this area?
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
@@ -52,6 +53,7 @@ class AreaGame
       game = g;
       region = r;
       isGenerated = false;
+      isEntering = false;
       isKnown = false;
       isHabitat = false;
       hasHabitat = false;
@@ -82,6 +84,7 @@ class AreaGame
       game.debug('Area.enter()');
 
       game.area = this;
+      isEntering = true;
 
       // generate new area
       if (!isGenerated)
@@ -165,8 +168,18 @@ class AreaGame
       // update area view info
       game.scene.area.update();
 
+      // spawn some AI around player on entering area
+      // called here because it uses player camera x,y
+      if (game.turns != 0)
+        {
+          turnSpawnAI(); // spawn AI
+          turnSpawnMoreAI(); // spawn AI related to area alertness
+        }
+
       // update AI and objects visibility to player
       updateVisibility();
+
+      isEntering = false;
 
       // show area
       game.scene.area.show();
@@ -323,15 +336,19 @@ class AreaGame
           if (getAI(x, y) != null)
             continue;
 
-          // must not be visible to player as a parasite
-          if (game.player.state != PLR_STATE_HOST &&
-              HXP.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) < 6 * 6)
-            continue;
+          // no LOS checks when player is entering the area
+          if (!isEntering)
+            {
+              // must not be visible to player as a parasite
+              if (game.player.state != PLR_STATE_HOST &&
+                  HXP.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) < 6 * 6)
+                continue;
 
-          // must not be visible to player when possessing a host
-          if (game.player.state == PLR_STATE_HOST &&
-              isVisible(game.playerArea.x, game.playerArea.y, x, y))
-            continue;
+              // must not be visible to player when possessing a host
+              if (game.player.state == PLR_STATE_HOST &&
+                  isVisible(game.playerArea.x, game.playerArea.y, x, y))
+                continue;
+            }
 
           return { x: x, y: y };
         }
