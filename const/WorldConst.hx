@@ -4,10 +4,11 @@ package const;
 
 class WorldConst
 {
-  static var areas: Array<AreaInfo> =
+  static var areas: Map<_AreaType, AreaInfo> =
     [
-      { // ***
-        id: 'ground',
+      // *** wilderness around city
+      AREA_GROUND => {
+        id: AREA_GROUND,
         type: 'wilderness',
         name: 'Uninhabited area',
         width: 50,
@@ -27,8 +28,9 @@ class WorldConst
           ]
       },
 
-      { // *** low-class, low population - outskirts and suburbs
-        id: 'cityLow',
+      // *** low-class, low population - outskirts and suburbs
+      AREA_CITY_LOW => { 
+        id: AREA_CITY_LOW,
         type: 'city',
         name: 'Low-density city area',
         width: 50,
@@ -51,8 +53,9 @@ class WorldConst
           ]
       },
 
-      { // *** mid-class, mid population - residential districts
-        id: 'cityMedium', 
+      // *** mid-class, mid population - residential districts
+      AREA_CITY_MEDIUM => { 
+        id: AREA_CITY_MEDIUM, 
         type: 'city',
         name: 'Medium-density city area',
         width: 50,
@@ -75,8 +78,9 @@ class WorldConst
           ]
       },
 
-      { // *** high-class, high population - downtown and commercial district
-        id: 'cityHigh', 
+      // *** high-class, high population - downtown and commercial district
+      AREA_CITY_HIGH => {
+        id: AREA_CITY_HIGH, 
         type: 'city',
         name: 'High-density city area',
         width: 50,
@@ -99,8 +103,9 @@ class WorldConst
           ]
       },
 
-      { // *** military base
-        id: 'militaryBase',
+      // *** military base
+      AREA_MILITARY_BASE => { 
+        id: AREA_MILITARY_BASE,
         type: 'militaryBase',
         name: 'Military base',
         width: 50,
@@ -121,8 +126,9 @@ class WorldConst
           ]
       },
 
-      { // *** facility
-        id: 'facility',
+      // *** facility
+      AREA_FACILITY => { 
+        id: AREA_FACILITY,
         type: 'facility',
         name: 'Facility',
         width: 50,
@@ -144,8 +150,9 @@ class WorldConst
           ]
       },
 
-      { // *** habitat
-        id: 'habitat',
+      // *** habitat
+      AREA_HABITAT => {
+        id: AREA_HABITAT,
         type: 'habitat',
         name: 'Habitat area',
         width: 20,
@@ -173,13 +180,9 @@ class WorldConst
 
 
 // get area info by id
-  public static function getAreaInfo(id: String): AreaInfo
+  public inline static function getAreaInfo(id: _AreaType): AreaInfo
     {
-      for (a in areas)
-        if (a.id == id)
-          return a;
-
-      return null;
+      return areas[id];
     }
 
 
@@ -194,15 +197,6 @@ class WorldConst
     }
 
 
-// area types
-  public static var AREA_GROUND = 'ground';
-  public static var AREA_CITY_LOW = 'cityLow';
-  public static var AREA_CITY_MEDIUM = 'cityMedium';
-  public static var AREA_CITY_HIGH = 'cityHigh';
-  public static var AREA_MILITARY_BASE = 'militaryBase';
-  public static var AREA_FACILITY = 'facility';
-  public static var AREA_HABITAT = 'habitat';
-
 // region types
   public static var REGION_CITY = 'city';
 }
@@ -211,7 +205,7 @@ class WorldConst
 // area info class
 
 typedef AreaInfo = {
-  var id: String; // area type id
+  var id: _AreaType; // area type id
   var type: String; // area generator type 
   var name: String; // area type name
   var width: Int; // area base width

@@ -163,13 +163,13 @@ class AreaManager
         sdetails = 'an attack';
       else sdetails = 'wild animal sighting';
 
-      log((area.info.type == 'facility' ? 'Security' : 'Police') + 
+      log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') + 
         ' has received a report about ' + sdetails + 
         '. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the ' +
-          (area.info.type == 'facility' ? 'security' : 'police') + '!');
+          (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!');
 
       // increase area alertness
       area.alertness++;
@@ -196,7 +196,7 @@ class AreaManager
 // event: law arrives
   function onArriveLaw(e: AreaEvent)
     {
-      log((area.info.type == 'facility' ? 'Security' : 'Police') +
+      log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
         ' arrives on scene!');
 
       for (i in 0...area.info.lawResponceAmount)
@@ -209,7 +209,7 @@ class AreaManager
             }
   
           var ai: AI = null;
-          if (area.info.type == 'facility')
+          if (area.typeID == AREA_FACILITY)
             ai = new SecurityAI(game, loc.x, loc.y);
           else ai = new PoliceAI(game, loc.x, loc.y);
 

@@ -453,7 +453,7 @@ class PlayerArea
   function leaveAreaAction()
     {
       // special check for habitat
-      if (game.area.typeID == 'habitat' && game.area.hasAnyAI())
+      if (game.area.typeID == AREA_HABITAT && game.area.hasAnyAI())
         {
           game.log('You cannot leave the habitat with outsiders in it!');
           return;

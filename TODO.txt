@@ -3,7 +3,7 @@
 + spawn player near last event location
 + modify starting interest/alertness according to scenario flow
 + military base and facility area types!
-area type string id -> enum
++ area type string id -> enum
 RegionArea - switch type -> tile into map
 fix event npcs spawn by job (soldiers go to military bases)
 police radio gives access to radio messages

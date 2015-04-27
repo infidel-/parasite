@@ -15,7 +15,7 @@ class AreaGame
   var region: RegionGame;
 
   public var id: Int; // area id
-  public var typeID: String; // area type id - city block, university, military base, etc
+  public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated? 
   public var isKnown: Bool; // has the player seen this area?
@@ -47,8 +47,7 @@ class AreaGame
   var _pathEngine: aPath.Engine;
 
 
-  public function new(g: Game, r: RegionGame, tv: String,
-      vx: Int, vy: Int)
+  public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
     {
       game = g;
       region = r;
@@ -392,7 +391,7 @@ class AreaGame
 
 
 // change area type
-  public function setType(t: String)
+  public function setType(t: _AreaType)
     {
       typeID = t;
       info = WorldConst.getAreaInfo(typeID);
@@ -400,17 +399,17 @@ class AreaGame
       width = info.width - 10 + Std.random(20);
       height = info.height - 10 + Std.random(20);
 
-      if (typeID == WorldConst.AREA_GROUND)
+      if (typeID == AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;
-      else if (typeID == WorldConst.AREA_CITY_LOW)
+      else if (typeID == AREA_CITY_LOW)
         tileID = Const.TILE_REGION_CITY_LOW;
-      else if (typeID == WorldConst.AREA_CITY_MEDIUM)
+      else if (typeID == AREA_CITY_MEDIUM)
         tileID = Const.TILE_REGION_CITY_MEDIUM;
-      else if (typeID == WorldConst.AREA_CITY_HIGH)
+      else if (typeID == AREA_CITY_HIGH)
         tileID = Const.TILE_REGION_CITY_HIGH;
-      else if (typeID == WorldConst.AREA_MILITARY_BASE)
+      else if (typeID == AREA_MILITARY_BASE)
         tileID = Const.TILE_REGION_MILITARY_BASE;
-      else if (typeID == WorldConst.AREA_FACILITY)
+      else if (typeID == AREA_FACILITY)
         tileID = Const.TILE_REGION_FACILITY;
     }
 

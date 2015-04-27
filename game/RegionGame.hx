@@ -255,13 +255,13 @@ class RegionGame
       for (y in 0...height)
         for (x in 0...width)
           {
-            var t = WorldConst.AREA_GROUND;
+            var t: _AreaType = AREA_GROUND;
             if (tmp[x][y] == 1)
-              t = WorldConst.AREA_CITY_LOW;
+              t = AREA_CITY_LOW;
             else if (tmp[x][y] == 2)
-              t = WorldConst.AREA_CITY_MEDIUM;
+              t = AREA_CITY_MEDIUM;
             else if (tmp[x][y] == 3)
-              t = WorldConst.AREA_CITY_HIGH;
+              t = AREA_CITY_HIGH;
 
             var a = new AreaGame(game, this, t, x, y);
             _list.set(a.id, a);
@@ -402,7 +402,7 @@ class RegionGame
 
 
 // get random area with this type id
-  public function getRandomWithType(t: String, noEvent: Bool): AreaGame
+  public function getRandomWithType(t: _AreaType, noEvent: Bool): AreaGame
     {
       var tmp: Array<AreaGame> = Lambda.array(_list);
       var tmp2 = [];
@@ -468,16 +468,16 @@ class RegionGame
 
 
 // spawn area with this type (actually just change some ground)
-  public inline function spawnArea(t: String, noEvent: Bool): AreaGame
+  public inline function spawnArea(t: _AreaType, noEvent: Bool): AreaGame
     {
-      var a = getRandomWithType(WorldConst.AREA_GROUND, noEvent);
+      var a = getRandomWithType(AREA_GROUND, noEvent);
       a.setType(t);
       return a;
     }
 
 
 // create a new area with this type (not on map, just somewhere in the region)
-  public function createArea(t: String): AreaGame
+  public function createArea(t: _AreaType): AreaGame
     {
       var a = new AreaGame(game, this, t, -1, -1);
       _list.set(a.id, a);

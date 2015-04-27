@@ -208,8 +208,8 @@ should limit player options for guiding purposes
 
       if (info.type == null)
         {
-          var tmp = [ WorldConst.AREA_CITY_LOW,
-            WorldConst.AREA_CITY_MEDIUM, WorldConst.AREA_CITY_HIGH ];
+          var tmp: Array<_AreaType> =
+            [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
           info.type = tmp[Std.random(tmp.length)];
         }
 
@@ -272,8 +272,8 @@ should limit player options for guiding purposes
               else
                 {
                   Const.todo('spawn event npcs in appropriate area types');
-                  var tmp = [ WorldConst.AREA_CITY_LOW,
-                    WorldConst.AREA_CITY_MEDIUM, WorldConst.AREA_CITY_HIGH ];
+                  var tmp: Array<_AreaType> =
+                    [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
                   npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
                 }
 

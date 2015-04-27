@@ -140,7 +140,7 @@ class PlayerRegion
   function createHabitatAction()
     {
       game.log("You have created a habitat in this area.");
-      var area = game.region.createArea(WorldConst.AREA_HABITAT);
+      var area = game.region.createArea(AREA_HABITAT);
       area.isHabitat = true;
       currentArea.hasHabitat = true;
       currentArea.habitatAreaID = area.id;

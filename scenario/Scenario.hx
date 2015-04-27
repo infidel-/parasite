@@ -47,7 +47,7 @@ typedef EventInfo = {
 
 typedef LocationInfo = {
   ?id: String, // unique location id (optional)
-  ?type: String, // location type
+  ?type: _AreaType, // location type
   ?name: String, // location name template
   ?near: String, // location is near this event id
   ?sameAs: String, // location is copied over from this event id

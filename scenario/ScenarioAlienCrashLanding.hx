@@ -49,7 +49,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Independent experts and conspiracy theorists may have some knowledge about the events.'
             ],
           location: {
-            type: WorldConst.AREA_GROUND,
+            type: AREA_GROUND,
             },
           npc: [ 
             'civilian' => 20, 
@@ -67,7 +67,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'An interceptor was scrambled.'
             ],
           location: {
-            type: WorldConst.AREA_MILITARY_BASE,
+            type: AREA_MILITARY_BASE,
             near: 'shipSpottedCiv'
             },
           npc: [ 'soldier' => 20 ],
@@ -159,7 +159,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Scientists have been unable to determine if it is indeed a flying vessel.'
             ],
           location: {
-            type: WorldConst.AREA_FACILITY,
+            type: AREA_FACILITY,
             name: '%facility1%'
             },
           npc: [ 'researcher:civilian' => 10, 'agent' => 5 ],
@@ -240,7 +240,7 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: {
             id: 'facility2',
-            type: WorldConst.AREA_FACILITY,
+            type: AREA_FACILITY,
             name: '%facility2%'
             },
           npc: [ 'researcher:civilian' => 10, 'agent' => 2 ],
@@ -258,7 +258,7 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: {
             id: 'facility2',
-            type: WorldConst.AREA_FACILITY,
+            type: AREA_FACILITY,
             name: '%facility2%'
             },
           npc: [ 'researcher:civilian' => 5 ],
@@ -274,7 +274,7 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: { // cannot use sameAs due to branching but it should smartly check if location with this id exists 
             id: 'facility2',
-            type: WorldConst.AREA_FACILITY,
+            type: AREA_FACILITY,
             name: '%facility2%'
             },
           npc: [ 'researcher:civilian' => 5 ],

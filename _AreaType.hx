@@ -1,0 +1,13 @@
+// area types
+
+enum _AreaType
+{
+  AREA_GROUND;
+  AREA_CITY_LOW;
+  AREA_CITY_MEDIUM;
+  AREA_CITY_HIGH;
+  AREA_MILITARY_BASE;
+  AREA_FACILITY;
+  AREA_HABITAT;
+}
+
