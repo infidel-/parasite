@@ -803,6 +803,8 @@ class AreaGame
         ai = new PoliceAI(game, loc.x, loc.y);
       else if (type == 'soldier')
         ai = new SoldierAI(game, loc.x, loc.y);
+      else if (type == 'security')
+        ai = new SecurityAI(game, loc.x, loc.y);
       else if (type == 'agent')
         ai = new AgentAI(game, loc.x, loc.y);
       else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';

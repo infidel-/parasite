@@ -12,6 +12,10 @@ class AreaGenerator
     {
       if (info.type == 'city')
         generateBuildings(game, area, info);
+      else if (info.type == 'militaryBase')
+        generateBuildings(game, area, info);
+      else if (info.type == 'facility')
+        generateBuildings(game, area, info);
       else if (info.type == 'wilderness')
         generateWilderness(game, area, info);
       else if (info.type == 'habitat')

@@ -1,4 +1,4 @@
-// AI for police 
+// AI for security guards
 
 package ai;
 
@@ -6,7 +6,7 @@ import ai.AI;
 import _AIState;
 import game.Game;
 
-class PoliceAI extends HumanAI
+class SecurityAI extends HumanAI
 {
   public var isBackup: Bool; // is this AI itself backup?
   var isBackupCalled: Bool; // did this ai called for backup already?
@@ -15,9 +15,9 @@ class PoliceAI extends HumanAI
     {
       super(g, vx, vy);
 
-      type = 'police';
-      name.unknown = 'police officer';
-      name.unknownCapped = 'Police officer';
+      type = 'security';
+      name.unknown = 'security guard';
+      name.unknownCapped = 'Security guard';
       sounds = [
         '' + REASON_DAMAGE => [
           { text: 'Ouch!', radius: 2, alertness: 5, params: null },
@@ -38,6 +38,12 @@ class PoliceAI extends HumanAI
           ]
         ];
       isAggressive = true;
+      if (Std.random(100) < 20)
+        {
+          inventory.addID('pistol');
+          skills.addID(SKILL_PISTOL, 25 + Std.random(25));
+        }
+
       inventory.addID('baton');
       skills.addID(SKILL_BATON, 50 + Std.random(25));
 

@@ -57,6 +57,6 @@ class CivilianAI extends HumanAI
     {
       // try to call police on next turn if not struggling with parasite
       if (state == AI_STATE_ALERT && !parasiteAttached)
-        game.managerArea.addAI(this, AREAEVENT_CALL_POLICE, 1);
+        game.managerArea.addAI(this, AREAEVENT_CALL_LAW, 1);
     }
 }

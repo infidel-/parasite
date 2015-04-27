@@ -64,6 +64,7 @@ class Const
   public static var ROW_SOLDIER = 9;
   public static var ROW_AGENT = 10;
   public static var ROW_BLACKOPS = 11;
+  public static var ROW_SECURITY = 12;
 
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_BODY = 1;

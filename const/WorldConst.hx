@@ -17,8 +17,9 @@ class WorldConst
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0.0,
-        policeResponceTime: 0,
-        policeResponceAmount: 0,
+        lawResponceTime: 0,
+        lawResponceAmount: 0,
+        lawResponceEnabled: false,
         ai: [
           'dog' => 5
           ],
@@ -37,8 +38,9 @@ class WorldConst
         commonAI: 10,
         uncommonAI: 10,
         buildingChance: 0.05,
-        policeResponceTime: 9,
-        policeResponceAmount: 2,
+        lawResponceTime: 9,
+        lawResponceAmount: 2,
+        lawResponceEnabled: true,
         ai: [
           'dog' => 20,
           'civilian' => 75,
@@ -60,8 +62,9 @@ class WorldConst
         commonAI: 20,
         uncommonAI: 20,
         buildingChance: 0.15,
-        policeResponceTime: 5,
-        policeResponceAmount: 2,
+        lawResponceTime: 5,
+        lawResponceAmount: 2,
+        lawResponceEnabled: true,
         ai: [
           'dog' => 15,
           'civilian' => 75,
@@ -83,8 +86,9 @@ class WorldConst
         commonAI: 30,
         uncommonAI: 30,
         buildingChance: 0.30,
-        policeResponceTime: 3,
-        policeResponceAmount: 3,
+        lawResponceTime: 3,
+        lawResponceAmount: 3,
+        lawResponceEnabled: true,
         ai: [
           'dog' => 5,
           'civilian' => 70,
@@ -95,49 +99,48 @@ class WorldConst
           ]
       },
 
-      { // *** military base (TODO)
+      { // *** military base
         id: 'militaryBase',
-        type: 'city',
+        type: 'militaryBase',
         name: 'Military base',
         width: 50,
         height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
-        uncommonAI: 10,
-        buildingChance: 0.05,
-        policeResponceTime: 9,
-        policeResponceAmount: 2,
+        uncommonAI: 0,
+        buildingChance: 0.005,
+        lawResponceTime: 0,
+        lawResponceAmount: 0,
+        lawResponceEnabled: false,
         ai: [
-          'dog' => 20,
-          'civilian' => 75,
-          'police' => 5
+          'soldier' => 100,
           ],
         objects: [
-          { id: 'sewer_hatch', amount: 10 }
+          { id: 'sewer_hatch', amount: 5 }
           ]
       },
 
-      { // *** facility (TODO) 
+      { // *** facility
         id: 'facility',
-        type: 'city',
+        type: 'facility',
         name: 'Facility',
         width: 50,
         height: 50,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
-        uncommonAI: 10,
-        buildingChance: 0.05,
-        policeResponceTime: 9,
-        policeResponceAmount: 2,
+        uncommonAI: 0,
+        buildingChance: 0.005,
+        lawResponceTime: 5,
+        lawResponceAmount: 2,
+        lawResponceEnabled: true,
         ai: [
-          'dog' => 20,
-          'civilian' => 75,
-          'police' => 5
+          'civilian' => 90,
+          'security' => 10
           ],
         objects: [
-          { id: 'sewer_hatch', amount: 10 }
+          { id: 'sewer_hatch', amount: 5 }
           ]
       },
 
@@ -152,8 +155,9 @@ class WorldConst
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0,
-        policeResponceTime: 10,
-        policeResponceAmount: 4,
+        lawResponceTime: 10,
+        lawResponceAmount: 4,
+        lawResponceEnabled: true,
         ai: new Map(),
         objects: []
       },
@@ -217,8 +221,9 @@ typedef AreaInfo = {
   var commonAI: Int; // common ai amount spawned at any time
   var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
   var buildingChance: Float; // chance to spawn building
-  var policeResponceTime: Int; // number of turns until called police shows up
-  var policeResponceAmount: Int; // actual amount of cops that show up
+  var lawResponceTime: Int; // number of turns until backup shows up
+  var lawResponceAmount: Int; // amount of backup ai that shows up
+  var lawResponceEnabled: Bool; // law responce enabled?
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
 };

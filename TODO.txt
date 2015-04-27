@@ -2,7 +2,7 @@
 + if the player is in habitat, it cannot be detected
 + spawn player near last event location
 + modify starting interest/alertness according to scenario flow
-military base and facility area types!
++ military base and facility area types!
 area type string id -> enum
 RegionArea - switch type -> tile into map
 fix event npcs spawn by job (soldiers go to military bases)
@@ -11,7 +11,6 @@ spawn stuff that is seen by player immediately on entering area
 remove dead npcs from area.npc on death
 make reading notes multiple times?
 + "+10 persons probed"
-add some unique traits for agents and soldiers
 search in timeline
 more readable types
 scenario-based goals

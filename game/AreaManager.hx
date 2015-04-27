@@ -109,25 +109,25 @@ class AreaManager
 
           // run this event
 
-          // someone called the police
-          if (e.type == AREAEVENT_CALL_POLICE)
-            onCallPolice(e);
+          // someone called the law 
+          if (e.type == AREAEVENT_CALL_LAW)
+            onCallLaw(e);
 
-          // police is alerted
-          else if (e.type == AREAEVENT_ALERT_POLICE)
-            onAlertPolice(e);
+          // law enforcement in area is alerted
+          else if (e.type == AREAEVENT_ALERT_LAW)
+            onAlertLaw(e);
 
-          // police arrives
-          else if (e.type == AREAEVENT_ARRIVE_POLICE)
-            onArrivePolice(e);
+          // law arrives
+          else if (e.type == AREAEVENT_ARRIVE_LAW)
+            onArriveLaw(e);
 
-          // police officer called for backup
-          if (e.type == AREAEVENT_CALL_POLICE_BACKUP)
-            onCallPoliceBackup(e);
+          // police/security/army called for backup
+          else if (e.type == AREAEVENT_CALL_BACKUP)
+            onCallBackup(e);
 
-          // police backup arrives
-          else if (e.type == AREAEVENT_ARRIVE_POLICE_BACKUP)
-            onArrivePoliceBackup(e);
+          // backup arrives
+          else if (e.type == AREAEVENT_ARRIVE_BACKUP)
+            onArriveBackup(e);
 
           else if (e.type == AREAEVENT_OBJECT_DECAY)
             onObjectDecay(o);
@@ -151,8 +151,8 @@ class AreaManager
     }
 
 
-// event: civilian calls the police
-  function onCallPolice(e: AreaEvent)
+// event: civilian calls the law 
+  function onCallLaw(e: AreaEvent)
     {
       var sdetails;
       if (e.details == '' + REASON_HOST)
@@ -163,39 +163,43 @@ class AreaManager
         sdetails = 'an attack';
       else sdetails = 'wild animal sighting';
 
-      log('Police has received a report about ' + sdetails + 
+      log((area.info.type == 'facility' ? 'Security' : 'Police') + 
+        ' has received a report about ' + sdetails + 
         '. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
-        e.ai.log('calls the police!');
+        e.ai.log('calls the ' +
+          (area.info.type == 'facility' ? 'security' : 'police') + '!');
 
       // increase area alertness
       area.alertness++;
 
       // alert all police already in area 
-      add(AREAEVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
+      add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(AREAEVENT_ARRIVE_POLICE, e.ai.x, e.ai.y, area.info.policeResponceTime);
+      add(AREAEVENT_ARRIVE_LAW, e.ai.x, e.ai.y, area.info.lawResponceTime);
     }
 
 
-// event: alert police in area
-  function onAlertPolice(e: AreaEvent)
+// event: alert law enf. in area
+  function onAlertLaw(e: AreaEvent)
     {
       var list = area.getAllAI();
       for (ai in list)
-        if (ai.type == 'police' && ai.state == AI_STATE_IDLE)
+        if (Lambda.has([ 'police', 'security', 'soldier' ], ai.type) &&
+            ai.state == AI_STATE_IDLE)
           ai.setState(AI_STATE_ALERT, REASON_BACKUP);
     }
 
 
-// event: police arrives
-  function onArrivePolice(e: AreaEvent)
+// event: law arrives
+  function onArriveLaw(e: AreaEvent)
     {
-      log('Police arrives on scene!');
+      log((area.info.type == 'facility' ? 'Security' : 'Police') +
+        ' arrives on scene!');
 
-      for (i in 0...area.info.policeResponceAmount)
+      for (i in 0...area.info.lawResponceAmount)
         {
           var loc = area.findEmptyLocationNear(e.x, e.y);
           if (loc == null)
@@ -203,15 +207,18 @@ class AreaManager
               Const.todo('Could not find free spot for spawn!');
               return;
             }
+  
+          var ai: AI = null;
+          if (area.info.type == 'facility')
+            ai = new SecurityAI(game, loc.x, loc.y);
+          else ai = new PoliceAI(game, loc.x, loc.y);
 
-          var ai = new PoliceAI(game, loc.x, loc.y);
-
-          // called cops have guns
+          // called law has guns
           ai.inventory.clear();
           ai.inventory.addID('pistol');
           ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
 
-          // and arrive already alerted
+          // and arrives already alerted
           ai.alertness = 50;
 
           area.addAI(ai);
@@ -219,10 +226,11 @@ class AreaManager
     }
 
 
-// event: police officer calls for backup 
-  function onCallPoliceBackup(e: AreaEvent)
+// event: police/security/army calls for backup 
+  function onCallBackup(e: AreaEvent)
     {
-      log('Officer calling for backup. Dispatching units to the location.');
+      log((e.ai.type == 'police' ? 'Officer' : 'Unit') +
+        ' calling for backup. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls for backup!');
@@ -230,18 +238,18 @@ class AreaManager
       // increase area alertness
       area.alertness += 2;
 
-      // alert all police already in area 
-      add(AREAEVENT_ALERT_POLICE, e.ai.x, e.ai.y, 2);
+      // alert all law already in area 
+      add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(AREAEVENT_ARRIVE_POLICE_BACKUP, e.ai.x, e.ai.y, area.info.policeResponceTime);
+      add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y, area.info.lawResponceTime);
     }
 
 
-// event: police backup arrives
-  function onArrivePoliceBackup(e: AreaEvent)
+// event: law enf. backup arrives
+  function onArriveBackup(e: AreaEvent)
     {
-      log('Police backup arrives on scene!');
+      log('Backup arrives on scene!');
 
       for (i in 0...2)
         {
@@ -251,13 +259,35 @@ class AreaManager
               Const.todo('Could not find free spot for spawn!');
               return;
             }
+      
+          var ai: AI = null;
+          if (e.ai.type == 'police')
+            ai = new PoliceAI(game, loc.x, loc.y);
+          else if (e.ai.type == 'security')
+            ai = new SecurityAI(game, loc.x, loc.y);
+          else if (e.ai.type == 'soldier')
+            ai = new SoldierAI(game, loc.x, loc.y);
 
-          var ai = new PoliceAI(game, loc.x, loc.y);
-
-          // called cops have guns
+          // backup has better equipment
           ai.inventory.clear();
-          ai.inventory.addID('pistol');
-          ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
+          if (e.ai.type == 'police')
+            {
+              ai.inventory.addID('pistol');
+              ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
+            }
+
+          else if (e.ai.type == 'security')
+            {
+              ai.inventory.addID('pistol');
+              ai.skills.addID(SKILL_PISTOL, 50 + Std.random(25));
+            }
+
+          else if (e.ai.type == 'soldier')
+            {
+              ai.inventory.addID('assaultRifle');
+              ai.skills.addID(SKILL_RIFLE, 50 + Std.random(25));
+            }
+
 
           // and arrive already alerted
 /*          
@@ -265,7 +295,7 @@ class AreaManager
 */        
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
-          ai.isBackup = true;
+          untyped ai.isBackup = true;
 
           area.addAI(ai);
         }
