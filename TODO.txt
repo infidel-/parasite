@@ -4,13 +4,13 @@
 + modify starting interest/alertness according to scenario flow
 + military base and facility area types!
 + area type string id -> enum
-RegionArea - switch type -> tile into map
-fix event npcs spawn by job (soldiers go to military bases)
++ fix event npcs spawn by job (soldiers go to military bases)
 police radio gives access to radio messages
 spawn stuff that is seen by player immediately on entering area
 remove dead npcs from area.npc on death
 make reading notes multiple times?
 + "+10 persons probed"
+RegionArea - switch type -> tile into map
 search in timeline
 more readable types
 scenario-based goals

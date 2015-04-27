@@ -267,6 +267,13 @@ class RegionGame
             _list.set(a.id, a);
             _array[x][y] = a;
           }
+
+      // spawn 2 bases and 3 facilities
+      spawnArea(AREA_MILITARY_BASE, true);
+      spawnArea(AREA_MILITARY_BASE, true);
+      spawnArea(AREA_FACILITY, true);
+      spawnArea(AREA_FACILITY, true);
+      spawnArea(AREA_FACILITY, true);
     }
 
 

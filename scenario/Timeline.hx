@@ -267,14 +267,19 @@ should limit player options for guiding purposes
               npc.job = job;
               npc.type = type;
               var region = game.world.get(0);
-              if (event.location != null)
+
+              // find proper area for this NPC
+              if (npc.type == 'soldier')
+                npc.area = region.getRandomWithType(AREA_MILITARY_BASE, false);
+              else if (event.location != null)
                 npc.area = region.getRandomAround(event.location.area, true);
               else
                 {
-                  Const.todo('spawn event npcs in appropriate area types');
                   var tmp: Array<_AreaType> =
                     [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
-                  npc.area = region.getRandomWithType(tmp[Std.random(tmp.length)], false);
+                  var type = tmp[Std.random(tmp.length)];  
+
+                  npc.area = region.getRandomWithType(type, false);
                 }
 
               npc.area.npc.add(npc);
