@@ -50,6 +50,8 @@ class HUD
       // log lines
       var font = Assets.getFont("font/04B_03__.ttf");
       _log = new TextField();
+      _log.width = HXP.width - 40;
+      _log.wordWrap = true;
       _log.autoSize = TextFieldAutoSize.LEFT;
       var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
@@ -269,6 +271,7 @@ class HUD
         }
 
       _log.htmlText = buf.toString();
+      _log.width = HXP.width - 40;
       _logBack.graphics.clear();
       _logBack.graphics.beginFill(0x202020, .75);
       _logBack.graphics.drawRect(0, 0, _log.width, _log.height);

@@ -271,7 +271,7 @@ class ScenarioAlienCrashLanding extends Scenario
             },
           npc: [ 'researcher:civilian' => 5 ],
           },
-          
+
         'parasiteRemoval' => {
           name: 'parasite removal',
           next: 'parasiteTransportation',

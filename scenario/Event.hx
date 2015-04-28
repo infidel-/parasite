@@ -35,12 +35,16 @@ class Event
       if (notesKnown())
         return false;
 
+      var note = null;
       for (n in notes)
         if (!n.isKnown)
           {
             n.clues++;
             if (n.clues >= 4)
-              n.isKnown = true;
+              {
+                n.isKnown = true;
+                note = n;
+              }
 
             break;
           }
@@ -49,6 +53,8 @@ class Event
 
       game.player.log('You have gained a clue for event ' + num + '.',
         COLOR_TIMELINE);
+      if (note != null)
+        game.player.log(note.text, COLOR_TIMELINE);
 
       return true;
     }
@@ -100,10 +106,12 @@ class Event
       if (notesKnown())
         return false;
 
+      var note = null;
       for (n in notes)
         if (!n.isKnown)
           {
             n.isKnown = true;
+            note = n;
 
             break;
           }
@@ -112,6 +120,7 @@ class Event
 
       game.player.log('You have gained a major clue for event ' + num + '.',
         COLOR_TIMELINE);
+      game.player.log(note.text, COLOR_TIMELINE);
 
       return true;
     }
