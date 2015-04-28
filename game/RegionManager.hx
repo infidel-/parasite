@@ -42,6 +42,7 @@ class RegionManager
     {
       // TODO: should there be any way for player to see this?
       // TODO: probably not, i can't think of a good reason
-      game.log('DEBUG: ' + s, COLOR_WORLD); // TODO: COLOR_REGION?
+//      game.log('DEBUG: ' + s, COLOR_WORLD); // TODO: COLOR_REGION?
+      game.debug(s); // TODO: COLOR_REGION?
     }
 }

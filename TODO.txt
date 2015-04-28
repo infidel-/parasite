@@ -5,17 +5,17 @@
 + military base and facility area types!
 + area type string id -> enum
 + fix event npcs spawn by job (soldiers go to military bases)
-police radio gives access to radio messages
 + spawn AI that is seen by player immediately on entering area
 + todo: LocationInfo.near
-remove dead npcs from area.npc on death
-make reading notes multiple times?
 + "+10 persons probed"
-RegionArea - switch type -> tile into map
+
+make reading notes multiple times?
 search in timeline
 more readable types
 scenario-based goals
 area interest is unused
+
+
 
 MASTERPLAN
 ============
@@ -33,12 +33,29 @@ LATER
 =====
 ?? more knowledges
 make each AI type more unique
-
+==
 - "Biomineralization" goal chain (after "habitat" goal chain):
 - GOAL: get "Biomineralization" improvement
 - GOAL: grow "Biomineral base" organ. When this organ finishes, special action "Grow a biomineral" appears.
 - GOAL: grow biomineral. can only be grown in habitat. current host converts into a biomineral on that cell that supplies additional energy to cells around it. biomineral has a lifetime that depends on host stats.
 - while near the biomineral growing organs and evolution is faster
+==
+police radio gives access to radio messages
+
+radio transceiver improvement:
+lv1 - listen to police/security radio
+lv2 - listen to 
+lv3 - listen to cellphone comms
+
+em noise improvement:
+lv1 - civilians cannot call for help in small radius
+lv2 - radius+
+lv3 - radius++
+
+1) find police radio/security radio
+2) evolve radio receiver
+3) grow receiver
+==
 
 ?? Area -> move some code to game/AreaGame, some to entities/Area
 add useful info into improvement notes on evolution screen
