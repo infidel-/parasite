@@ -30,10 +30,12 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien mission',
           next: 'shipSpottedCiv',
           isHidden: true,
-          setVariablesFunc: function() {
+          init: function (timeline: Timeline)
+            {
               var tmp = [ 'abduction', 'infiltration', 'research' ];
-              return [ { key: 'alienMissionType', val: tmp[Std.random(tmp.length)] } ];
+              timeline.setVar('alienMissionType', tmp[Std.random(tmp.length)]);
             },
+
           notes: [
             'You have received your mission details in the HQ.'
             ],
@@ -210,7 +212,10 @@ class ScenarioAlienCrashLanding extends Scenario
         'liveAlienTransportation' => {
           name: 'live alien was tranported to secret facility',
           next: 'liveAlienStudy',
-          setVariables: [ 'alienIsAlive' => 1 ],
+          init: function (timeline: Timeline)
+            {
+              timeline.setVar('alienIsAlive', 1);
+            },
           notes: [
             'The captured organism was transported to %facility2% for further study.',
             'Captured organism has received a special Code: %alienCode%',
@@ -221,7 +226,10 @@ class ScenarioAlienCrashLanding extends Scenario
         'deadAlienTransportation' => {
           name: 'alien remains were transported to secret facility',
           next: 'deadAlienStudy',
-          setVariables: [ 'alienIsDead' => 1 ],
+          init: function (timeline: Timeline)
+            {
+              timeline.setVar('alienIsDead', 1);
+            },
           notes: [
             'The acquired cadaver was transported to %facility2% for further study.',
             'The body of possibly alien origins has received a special Code: %alienCode%.',

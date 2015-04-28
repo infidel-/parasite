@@ -325,19 +325,9 @@ should limit player options for guiding purposes
           _eventsMap.set(curID, event);
           _eventsList.push(event);
 
-          // set timeline variables
-          if (curInfo.setVariables != null)
-            for (key in curInfo.setVariables.keys())
-              _variables.set(key, curInfo.setVariables.get(key));
-
-          // call a function that sets timeline variables
-          if (curInfo.setVariablesFunc != null)
-            {
-              var tmpList = curInfo.setVariablesFunc();
-              if (tmpList != null)
-                for (tmp in tmpList)
-                  _variables.set(tmp.key, tmp.val); 
-            }
+          // run init() function
+          if (curInfo.init != null)
+            curInfo.init(this);
 
           // parse event notes
           if (curInfo.notes != null)
@@ -396,9 +386,9 @@ should limit player options for guiding purposes
 /*
       trace(_eventsList);
       trace(_names);
-      trace(_variables);
       trace(_locationsList);
 */
+      trace(_variables);
     }
 
 
@@ -428,6 +418,28 @@ should limit player options for guiding purposes
   public inline function getEvent(id: String): Event
     {
       return _eventsMap.get(id);
+    }
+
+
+// set timeline variable
+  public inline function setVar(key: String, value: Dynamic)
+    {
+      _variables.set(key, value);
+    }
+    
+
+// get timeline variable value
+  public inline function getStringVar(key: String): String
+    {
+      return _variables.get(key);
+    }
+
+
+// get timeline variable value
+  public inline function getIntVar(key: String): Int
+    {
+      var val = _variables.get(key);
+      return (val != null ? val : 0);
     }
 
 

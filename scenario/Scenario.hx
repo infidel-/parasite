@@ -34,9 +34,7 @@ typedef EventInfo = {
   ?next: String, // next event id
   ?nextOR: Map<String, Int>, // multiple next ids for OR with chances
   ?isHidden: Bool, // event hidden?
-  ?setVariables: Map<String, Dynamic>, // variables to set if this event happens
-  // function that can set some variables
-  ?setVariablesFunc: Void -> Array<{ key: String, val: Dynamic }>, 
+  ?init: Timeline -> Void, // init function that runs when event is added to timeline 
   ?notes: Array<String>, // event notes
   ?location: LocationInfo, // event location
   ?npc: Map<String, Int>, // event npcs (ai type is "<type>:<parent>")

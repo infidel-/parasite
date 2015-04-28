@@ -9,7 +9,6 @@
 + todo: LocationInfo.near
 + "+10 persons probed"
 
-search in timeline
 scenario-based goals
 area interest is unused
 
@@ -52,6 +51,7 @@ lv3 - radius++
 3) grow receiver
 ==
 
+search in timeline
 ?? Area -> move some code to game/AreaGame, some to entities/Area
 add useful info into improvement notes on evolution screen
 tooltips in area and region mode (type, habitat, clues, events, alertness, etc)
