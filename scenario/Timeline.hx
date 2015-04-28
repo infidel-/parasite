@@ -216,21 +216,28 @@ should limit player options for guiding purposes
       // find area with this type
       // single region atm
       var region = game.world.get(0);
-      var area = region.getRandomWithType(info.type, true);
+      var area = null;
+
+      // location is near this event id
+      if (info.near != null)
+        {
+          var tmp = getEvent(info.near);
+          area = region.getRandomAround(tmp.location.area, {
+            minRadius: 2,
+            maxRadius: 5 });
+          area.setType(info.type);
+        }
+      area = region.getRandomWithType(info.type, true);
       if (area == null)
         area = region.spawnArea(info.type, true);
+
+      // init area
       location.area = area;
       area.event = event;
       area.alertness = 
         (info.alertness != null ? info.alertness : scenario.defaultAlertness);
       area.interest = 
         (info.interest != null ? info.interest : scenario.defaultInterest);
-
-      // location is near this event id
-      if (info.near != null)
-        {
-          Const.todo('LocationInfo.near: ' + info);
-        }
 
       _locationsList.add(location);
       return location;
@@ -272,7 +279,10 @@ should limit player options for guiding purposes
               if (npc.type == 'soldier')
                 npc.area = region.getRandomWithType(AREA_MILITARY_BASE, false);
               else if (event.location != null)
-                npc.area = region.getRandomAround(event.location.area, true);
+                npc.area = region.getRandomAround(event.location.area, {
+                  isInhabited: true,
+                  minRadius: 1,
+                  maxRadius: 5 });
               else
                 {
                   var tmp: Array<_AreaType> =

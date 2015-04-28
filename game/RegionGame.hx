@@ -425,24 +425,38 @@ class RegionGame
 
 
 // get random area around this one
-  public function getRandomAround(area: AreaGame, ?isInhabited: Bool): AreaGame
+  public function getRandomAround(area: AreaGame, params: {
+    ?isInhabited: Bool,
+    ?minRadius: Int,
+    ?maxRadius: Int
+    } ): AreaGame
     {
+      if (params.minRadius == null)
+        params.minRadius = 1;
+      if (params.maxRadius == null)
+        params.maxRadius = 5;
+/*
       var tmp: Array<AreaGame> = [];
 
       var a = getXY(area.x, area.y);
-      if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
+      if (a != null &&
+          (params.isInhabited == null ||
+            a.info.params.isInhabited == params.isInhabited))
         tmp.push(a);
 
       for (i in 0...Const.dirx.length)
         {
           var a = getXY(area.x + Const.dirx[i], area.y + Const.diry[i]);
-          if (a != null && (isInhabited == null || a.info.isInhabited == isInhabited))
+          if (a != null && 
+              (params.isInhabited == null || 
+                a.info.params.isInhabited == params.isInhabited))
             tmp.push(a);
         }
 
       // at least one area found
       if (tmp.length > 0)
         return tmp[Std.random(tmp.length)];
+*/
 
       // no inhabitable areas found, find inhabitable area in radius 5
       // and closest one
@@ -451,7 +465,8 @@ class RegionGame
       var dist = 10000;
       for (a in _list)
         {
-          if (isInhabited != null && a.info.isInhabited != isInhabited)
+          if (params.isInhabited != null && 
+              a.info.isInhabited != params.isInhabited)
             continue;
 
           var tmpdist = Const.getDistSquared(a.x, a.y, area.x, area.y);
@@ -461,11 +476,12 @@ class RegionGame
               dist = tmpdist; 
             }
 
-          if (tmpdist < 25)
+          if (tmpdist >= params.minRadius * params.minRadius &&
+              tmpdist <= params.maxRadius * params.maxRadius)
             tmp2.push(a);
         }
 
-      // found some areas in radius 5
+      // found some areas 
       if (tmp2.length > 1)
         return tmp2[Std.random(tmp2.length)];
 

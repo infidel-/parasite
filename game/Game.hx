@@ -77,7 +77,10 @@ class Game
 
       // find random inhabited area near player starting location 
       var event = timeline.getStartEvent();
-      area = region.getRandomAround(event.location.area, true);
+      area = region.getRandomAround(event.location.area, {
+        isInhabited: true,
+        minRadius: 2,
+        maxRadius: 5 });
       playerRegion.createEntity(area.x, area.y);
 
       // make area tiles around player known 
