@@ -3,6 +3,7 @@
 package const;
 
 import game.ItemInfo;
+import objects.*;
 
 class ItemsConst
 {
@@ -108,8 +109,16 @@ class ItemsConst
         'sheet of paper', 'page' ],
       type: 'readable',
       unknown: 'rectangular thin object with markings',
+      areaObjectClass: Paper,
     },
-    // notebook, diary, journal, logbook, organizer
+
+    {
+      id: 'book',
+      names: [ 'notebook', 'diary', 'journal', 'logbook', 'organizer', 'book' ],
+      type: 'readable',
+      unknown: 'rectangular object with lots of markings',
+      areaObjectClass: Book,
+    },
 
 
     // ========= ******* misc ********* ==========

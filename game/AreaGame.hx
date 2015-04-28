@@ -632,7 +632,7 @@ class AreaGame
 
       var maxSpawn = 5 - cnt;
 
-      var info = ItemsConst.getInfo('paper');
+      var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
       for (i in 0...maxSpawn)
         {
           var loc = findUnseenEmptyLocation();
@@ -643,9 +643,10 @@ class AreaGame
               return;
             }
 
-          var o = new Paper(game, loc.x, loc.y);
+          var o: AreaObject = Type.createInstance(info.areaObjectClass,
+            [ game, loc.x, loc.y ]);
           o.item = {
-            id: 'paper',
+            id: info.id, 
             name: info.names[Std.random(info.names.length)],
             info: info,
             event: event

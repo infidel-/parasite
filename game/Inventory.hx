@@ -103,9 +103,18 @@ class Inventory
 // ACTION: read item
   function readAction(item: Item)
     {
+      // can only read books in habitat
+      if (item.id == 'book' && !game.area.isHabitat)
+        {
+          game.log("This requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
+          return;
+        }
+
       game.log('You study the contents of the ' + item.name + ' and destroy it.');
       var cnt = 0;
       cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
+      if (item.id == 'book') // 1 more clue in books
+        cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
       if (Std.random(100) < 30)
         cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
       if (Std.random(100) < 10)

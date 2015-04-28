@@ -15,7 +15,8 @@ typedef ItemInfo =
     isRanged: Bool, // is this weapon type ranged? 
     skill: _Skill, // associated skill
     minDamage: Int, // min weapon damage
-    maxDamage: Int // mxa weapon damage
+    maxDamage: Int // max weapon damage
     },
+  ?areaObjectClass: Dynamic, // area objet class
 }
 
