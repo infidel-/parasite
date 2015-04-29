@@ -103,7 +103,7 @@ class EvolutionManager
 
               // on first learning of evolution with an organ
               if (imp.info.organ != null)
-                player.goals.complete(GOAL_EVOLVE_ORGAN);
+                game.goals.complete(GOAL_EVOLVE_ORGAN);
             }
         }
     }

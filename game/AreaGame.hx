@@ -163,7 +163,7 @@ class AreaGame
 
       // goal completed: event area found
       if (event != null)
-        game.player.goals.complete(GOAL_TRAVEL_EVENT);
+        game.goals.complete(GOAL_TRAVEL_EVENT);
 
       // update area view info
       game.scene.area.update();

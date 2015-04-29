@@ -89,7 +89,7 @@ class Organs
         _ai.energy = _ai.maxEnergy;
 
       // on first growing an organ 
-      game.player.goals.complete(GOAL_GROW_ORGAN);
+      game.goals.complete(GOAL_GROW_ORGAN);
 
       currentOrgan = null;
     }

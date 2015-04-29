@@ -9,6 +9,7 @@ class Game
 {
   public var scene: GameScene; // ui scene
   public var timeline: Timeline; // scenario timeline
+  public var goals: Goals; // game.goals
   public var world: World; // game world
   public var managerWorld: WorldManager; // game world manager
   public var region: RegionGame; // region info link
@@ -66,11 +67,12 @@ class Game
 
       // generate timeline from a scenario
       timeline = new Timeline(this);
+      goals = new Goals(this);
       timeline.init();
 
       // initial goal
       message('You are alone. You are scared. You need to find a host or you will die soon.');
-      player.goals.receive(GOAL_INVADE_HOST);
+      goals.receive(GOAL_INVADE_HOST);
 
       // set random region (currently only 1 at all)
       region = world.get(0);

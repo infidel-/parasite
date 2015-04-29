@@ -542,10 +542,10 @@ class EvolutionConst
           {
             // complete goals
             if (level == 1)
-              player.goals.complete(GOAL_EVOLVE_PROBE);
+              game.goals.complete(GOAL_EVOLVE_PROBE);
 
             else if (level == 2)
-              player.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
+              game.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
           }
       },
 
@@ -582,7 +582,7 @@ class EvolutionConst
           {
             // complete goals
             if (level == 1)
-              player.goals.complete(GOAL_EVOLVE_MICROHABITAT);
+              game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
           }
       },
 /*      

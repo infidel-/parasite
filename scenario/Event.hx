@@ -3,19 +3,21 @@
 package scenario;
 
 import game.Game;
+import scenario.Scenario;
 
 class Event
 {
   public var game: Game;
+  public var info: EventInfo; // event info link
 
   public var num: Int; // event number (temp var for text messages)
 
   public var isHidden: Bool; // event hidden?
   public var id: String; // event id
   public var name: String; // event name
-  public var notes: Array<EventNote>; // event notes 
   public var location: Location; // event location link (can be null)
   public var locationKnown: Bool; // event location known?
+  public var notes: Array<EventNote>; // event notes 
   public var npc: Array<NPC>; // event npcs 
 
   public function new(g: Game, vid: String)
@@ -23,6 +25,8 @@ class Event
       game = g;
       id = vid;
       name = 'unnamed event';
+      location = null;
+      locationKnown = false;
       notes = [];
       npc = []; 
     }
@@ -54,7 +58,18 @@ class Event
       game.player.log('You have gained a clue for event ' + num + '.',
         COLOR_TIMELINE);
       if (note != null)
-        game.player.log(note.text, COLOR_TIMELINE);
+        {
+          game.player.log(note.text, COLOR_TIMELINE);
+
+          // event hook
+          var idx = -1;
+          for (i in 0...notes.length)
+            if (notes[i] == note)
+              idx = i;
+//          var idx = notes.indexOf(note);
+          if (info.onLearnNote != null)
+            info.onLearnNote(game, idx);
+        }
 
       return true;
     }
@@ -90,7 +105,7 @@ class Event
               num + ' participant.', COLOR_TIMELINE);
 
             // goal completed: learn about any npc
-            game.player.goals.complete(GOAL_LEARN_NPC);
+            game.goals.complete(GOAL_LEARN_NPC);
 
             return true;
           }
@@ -122,9 +137,37 @@ class Event
         COLOR_TIMELINE);
       game.player.log(note.text, COLOR_TIMELINE);
 
+      // event hook
+      var idx = -1;
+      for (i in 0...notes.length)
+        if (notes[i] == note)
+          idx = i;
+//      var idx = notes.indexOf(note);
+      if (info.onLearnNote != null)
+        info.onLearnNote(game, idx);
+
       return true;
     }
 
+
+// learn location
+  public function learnLocation(): Bool
+    {
+      if (location == null || locationKnown) 
+        return false;
+
+      locationKnown = true;
+
+      game.timeline.update(); // update event numbering
+      game.player.log('You have gained the location for event ' + num + '.',
+        COLOR_TIMELINE);
+
+      // event hook
+      if (info.onLearnLocation != null)
+        info.onLearnLocation(game);
+
+      return true;
+    }
 
 // names or jobs of all npcs are known?
   public function npcNamesOrJobsKnown(): Bool

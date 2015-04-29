@@ -132,7 +132,7 @@ class PlayerArea
         return tmp;
 
       // need to learn about objects
-      if (player.goals.completed(GOAL_PROBE_BRAIN))
+      if (game.goals.completed(GOAL_PROBE_BRAIN))
         for (o in olist)
           {
             // player does not know what this object is, cannot activate it
@@ -419,11 +419,11 @@ class PlayerArea
       game.area.updateVisibility();
 
       // goal completed: host invaded 
-      player.goals.complete(GOAL_INVADE_HOST);
+      game.goals.complete(GOAL_INVADE_HOST);
 
       // goal completed: human host invaded 
       if (player.host.isHuman)
-        player.goals.complete(GOAL_INVADE_HUMAN);
+        game.goals.complete(GOAL_INVADE_HUMAN);
     }
 
 
@@ -514,7 +514,7 @@ class PlayerArea
         }
 
       // on first brain probe learn about items and area objects
-      player.goals.complete(GOAL_PROBE_BRAIN);
+      game.goals.complete(GOAL_PROBE_BRAIN);
 
       // get clues
       if (player.host.event != null && player.host.brainProbed < 3)
@@ -567,7 +567,7 @@ class PlayerArea
         return;
 
       // goal completion
-      player.goals.complete(GOAL_LEARN_SKILLS);
+      game.goals.complete(GOAL_LEARN_SKILLS);
 
       var amount = Std.int((player.host.intellect / 10.0) *
         hostSkillsMod * hostSkill.level);

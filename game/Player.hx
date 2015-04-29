@@ -21,7 +21,6 @@ class Player
 
   public var vars: PlayerVars; // player variables
   public var skills: Skills; // skills
-  public var goals: Goals; // goals
   public var state: _PlayerState; // player state - parasite, attach, host
 
   // state "host" - store host link here because host exists in all modes
@@ -60,7 +59,6 @@ class Player
       knownItems = new List<String>();
 
       skills = new Skills(game, true);
-      goals = new Goals(game);
     }
 
 

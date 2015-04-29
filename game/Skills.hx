@@ -82,12 +82,12 @@ class Skills
       if (isPlayer && id == KNOW_SOCIETY)
         {
           // new goal: learn enough about society
-          game.player.goals.receive(GOAL_LEARN_SOCIETY);
+          game.goals.receive(GOAL_LEARN_SOCIETY);
 
           // open timeline on 25% 
           if (oldLevel < 25 && newLevel >= 25)
             // goal completed
-            game.player.goals.complete(GOAL_LEARN_SOCIETY);
+            game.goals.complete(GOAL_LEARN_SOCIETY);
         }
     }
 

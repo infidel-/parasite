@@ -2,6 +2,9 @@
 
 package scenario;
 
+import const.Goals;
+import game.Game;
+
 class Scenario
 {
   public var name: String; // scenario name
@@ -12,6 +15,7 @@ class Scenario
 
   public var names: Map<String, Array<String>>; // name templates
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
+  public var goals: Map<_Goal, GoalInfo>; // scenario goals (link to static map)
 
   public function new()
     {
@@ -23,6 +27,7 @@ class Scenario
 
       names = new Map();
       flow = new Map();
+      goals = new Map();
     }
 }
 
@@ -34,10 +39,13 @@ typedef EventInfo = {
   ?next: String, // next event id
   ?nextOR: Map<String, Int>, // multiple next ids for OR with chances
   ?isHidden: Bool, // event hidden?
-  ?init: Timeline -> Void, // init function that runs when event is added to timeline 
   ?notes: Array<String>, // event notes
   ?location: LocationInfo, // event location
   ?npc: Map<String, Int>, // event npcs (ai type is "<type>:<parent>")
+
+  ?init: Timeline -> Void, // init function that runs when event is added to timeline 
+  ?onLearnNote: Game -> Int -> Void, // runs when player learns event note 
+  ?onLearnLocation: Game -> Void, // runs when player learns event location 
 }
 
 

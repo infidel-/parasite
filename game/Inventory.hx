@@ -138,7 +138,7 @@ class Inventory
       game.player.addKnownItem(item.id);
 
       // on first learn items 
-      game.player.goals.complete(GOAL_LEARN_ITEMS);
+      game.goals.complete(GOAL_LEARN_ITEMS);
     }
 
 
@@ -200,7 +200,7 @@ class Inventory
         cnt = 3;
 
       // goal completed - use computer
-      game.player.goals.complete(GOAL_USE_COMPUTER);
+      game.goals.complete(GOAL_USE_COMPUTER);
 
       // find first event that has some half-known npcs
       for (e in game.timeline)

@@ -87,8 +87,8 @@ class DebugArea
               game.timeline.getStartEvent().learnNPC();
               game.timeline.getStartEvent().learnNPC();
               game.timeline.getStartEvent().learnNPC();
-              game.player.goals.receive(GOAL_PROBE_BRAIN);
-              game.player.goals.complete(GOAL_PROBE_BRAIN);
+              game.goals.receive(GOAL_PROBE_BRAIN);
+              game.goals.complete(GOAL_PROBE_BRAIN);
 
               game.player.vars.npcEnabled = true;
               game.player.vars.searchEnabled = true;
@@ -97,8 +97,8 @@ class DebugArea
               game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 2);
 
               // start habitat branch
-        //      game.player.goals.receive(GOAL_GROW_ORGAN);
-        //      game.player.goals.complete(GOAL_GROW_ORGAN);
+        //      game.goals.receive(GOAL_GROW_ORGAN);
+        //      game.goals.complete(GOAL_GROW_ORGAN);
               game.player.skills.addID(KNOW_HABITAT, 100); 
               game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
             }
@@ -269,6 +269,19 @@ class DebugArea
               game.timeline.update(); // update event numbering
             }
         },
+
+        {
+          name: 'Learn random clues',
+          func: function()
+            {
+              game.goals.receive(GOAL_LEARN_CLUE);
+              game.goals.complete(GOAL_LEARN_CLUE);
+              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
+            }
+        },
+
         ];
     }
 

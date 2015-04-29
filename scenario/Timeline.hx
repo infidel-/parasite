@@ -68,17 +68,25 @@ class Timeline
       var ret = false;
 
       // if this is the first time, just learn a clue
-      if (!game.player.goals.completed(GOAL_LEARN_CLUE))
+      if (!game.goals.completed(GOAL_LEARN_CLUE))
         {
           ret = e.learnClue();
 
           // goal completed - event clue learned
           if (ret)
-            game.player.goals.complete(GOAL_LEARN_CLUE);
+            game.goals.complete(GOAL_LEARN_CLUE);
         }
 
+      // learn a clue or location
       else if (rnd < 50)
-        ret = e.learnClue();
+        {
+          // learn event location
+          if (e.location != null && !e.locationKnown && Std.random(100) < 30)
+            ret = e.learnLocation();
+
+          // learn event clue
+          else ret = e.learnClue();
+        }
 
       // npc clues
       else if (rnd < 95)
@@ -319,6 +327,7 @@ should limit player options for guiding purposes
       while (true)
         {
           var event = new Event(game, curID);
+          event.info = curInfo;
           event.num = n++;
           event.name = curInfo.name;
           event.isHidden = (curInfo.isHidden == true);
@@ -414,6 +423,14 @@ should limit player options for guiding purposes
     }
 
 
+// get random event
+  public inline function getRandomEvent(): Event
+    {
+      var arr = Lambda.array(_eventsMap);
+      return arr[Std.random(arr.length)];
+    }
+
+
 // get event by id
   public inline function getEvent(id: String): Event
     {
@@ -447,6 +464,13 @@ should limit player options for guiding purposes
   public inline function getStartEvent(): Event
     {
       return getEvent(scenario.playerStartEvent);
+    }
+
+
+// get goals map
+  public inline function getGoals()
+    {
+      return scenario.goals;
     }
 }
 

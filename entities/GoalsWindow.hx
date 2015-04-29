@@ -15,9 +15,9 @@ class GoalsWindow extends TextWindow
       var buf = new StringBuf();
 
       buf.add('Current goals\n====\n\n');
-      for (g in game.player.goals.iteratorCurrent()) 
+      for (g in game.goals.iteratorCurrent()) 
         {
-          var info = const.Goals.getInfo(g);
+          var info = game.goals.getInfo(g);
           if (info.isHidden)
             continue;
 
@@ -26,9 +26,9 @@ class GoalsWindow extends TextWindow
         }
 
       buf.add("\nCompleted goals\n====\n\n<font color='#777777'>");
-      for (g in game.player.goals.iteratorCompleted()) 
+      for (g in game.goals.iteratorCompleted()) 
         {
-          var info = const.Goals.getInfo(g);
+          var info = game.goals.getInfo(g);
           if (info.isHidden)
             continue;
 

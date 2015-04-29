@@ -1,3 +1,5 @@
+// scenario - alien crash landing
+
 package scenario;
 
 import scenario.Scenario;
@@ -13,6 +15,7 @@ class ScenarioAlienCrashLanding extends Scenario
       playerStartEvent = 'parasiteTransportation';
       defaultAlertness = 50;
       defaultInterest = 10;
+      goals = GoalsAlienCrashLanding.map;
 
       names = [
         'facility1' => [ 'Facility 1 TODO' ],
@@ -165,6 +168,10 @@ class ScenarioAlienCrashLanding extends Scenario
             name: '%facility1%'
             },
           npc: [ 'researcher:civilian' => 10, 'agent' => 5 ],
+          onLearnLocation: function (game)
+            {
+              game.goals.complete(SCENARIO_ALIEN_FIND_SHIP);
+            },
           },
 
         'alienCaptureMission' => {
@@ -218,7 +225,7 @@ class ScenarioAlienCrashLanding extends Scenario
             },
           notes: [
             'The captured organism was transported to %facility2% for further study.',
-            'Captured organism has received a special Code: %alienCode%',
+            'Captured organism has received a special code: %alienCode%',
             ],
           npc: [ 'agent' => 2 ],
           },
@@ -252,6 +259,13 @@ class ScenarioAlienCrashLanding extends Scenario
             name: '%facility2%'
             },
           npc: [ 'researcher:civilian' => 10, 'agent' => 2 ],
+          onLearnNote: function(game, noteID)
+            {
+              game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
+
+              // alien is alive, save it
+              game.goals.receive(SCENARIO_ALIEN_SAVE_ALIEN);
+            },
           },
 
         'deadAlienStudy' => {
@@ -270,6 +284,10 @@ class ScenarioAlienCrashLanding extends Scenario
             name: '%facility2%'
             },
           npc: [ 'researcher:civilian' => 5 ],
+          onLearnNote: function(game, noteID)
+            {
+              game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
+            },
           },
 
         'parasiteRemoval' => {

@@ -2,6 +2,8 @@
 
 package game;
 
+import const.Goals;
+
 class Goals
 {
   var game: Game;
@@ -39,7 +41,7 @@ class Goals
 
       _listCurrent.add(id);
 
-      var info = const.Goals.getInfo(id);
+      var info = getInfo(id);
       if (info == null)
         throw "No such goal: " + id;
 
@@ -61,7 +63,7 @@ class Goals
       _listCurrent.remove(id);
       _listCompleted.add(id);
 
-      var info = const.Goals.getInfo(id);
+      var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
         game.log('You have completed a goal: ' + info.name + '.');
 
@@ -86,4 +88,22 @@ class Goals
     {
       return (Lambda.has(_listCompleted, id));
     }
+
+
+// get goal info 
+  public function getInfo(id: _Goal): GoalInfo
+    {
+      // common goals
+      var info = const.Goals.map.get(id);
+      if (info != null)
+        return info;
+
+      // scenario-specific goals
+      var info = game.timeline.getGoals().get(id);
+      if (info != null)
+        return info;
+    
+      throw 'no such goal: ' + id;
+    }
+
 }

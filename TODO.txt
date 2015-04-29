@@ -10,6 +10,7 @@
 + "+10 persons probed"
 
 scenario-based goals
+save alien not completable
 area interest is unused
 
 
