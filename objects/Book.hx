@@ -13,6 +13,7 @@ class Book extends Pickup
       super(g, vx, vy);
 
       type = 'book';
+      name = 'book';
       createEntity(Const.ROW_OBJECT, Const.FRAME_BOOK);
     }
 }

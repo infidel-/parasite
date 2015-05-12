@@ -11,6 +11,7 @@ class SewerHatch extends AreaObject
       super(g, vx, vy);
 
       type = 'sewer_hatch';
+      name = 'sewer hatch';
       isStatic = true;
 
       createEntity(Const.ROW_OBJECT, Const.FRAME_SEWER_HATCH);

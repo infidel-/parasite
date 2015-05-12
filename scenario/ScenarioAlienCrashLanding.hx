@@ -33,10 +33,15 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien mission',
           next: 'shipSpottedCiv',
           isHidden: true,
-          init: function (timeline: Timeline)
+          init: function (timeline)
             {
               var tmp = [ 'abduction', 'infiltration', 'research' ];
-              timeline.setVar('alienMissionType', tmp[Std.random(tmp.length)]);
+              var type = tmp[Std.random(tmp.length)];
+              timeline.setVar('alienMissionType', type);
+
+              // change event note on the fly
+              var ev = timeline.getEvent('alienMission');
+              ev.notes[0].text += ' The mission type was ' + type + '.'; 
             },
 
           notes: [
@@ -93,6 +98,10 @@ class ScenarioAlienCrashLanding extends Scenario
         'shipLanded' => {
           name: 'alien ship safely landed',
           next: 'shipLandingInvestigation',
+          init: function (timeline)
+            {
+              timeline.setVar('shipLanded', true);
+            },
           notes: [
             'The pilot did not manage to shoot UFO down but it was tracked by a second plane until it landed.',
             ],
@@ -106,6 +115,10 @@ class ScenarioAlienCrashLanding extends Scenario
         'shipShotDown' => {
           name: 'alien ship shot down by military',
           next: 'crashLandingInvestigation',
+          init: function (timeline)
+            {
+              timeline.setVar('shipShotDown', true);
+            },
           notes: [
             'The pilot managed to shoot down the UFO.',
             ],
@@ -239,7 +252,7 @@ class ScenarioAlienCrashLanding extends Scenario
             },
           notes: [
             'The acquired cadaver was transported to %facility2% for further study.',
-            'The body of possibly alien origins has received a special Code: %alienCode%.',
+            'The body of possibly extraterrestrial origins has received a special Code: %alienCode%.',
             ],
           npc: [ 'agent' => 2 ],
           },
@@ -248,7 +261,7 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'study of a live alien',
           next: 'parasiteRemoval',
           notes: [
-            'Preliminary examinations confirmed the alien origins of %alienCode% organism.',
+            'Preliminary examinations confirmed the extraterrestrial origins of %alienCode% organism.',
             'Studies have shown that %alienCode% actually consists of two separate organisms.',
             'One of the organisms is parasitic in nature. It has received a unique codename: %parasiteCode%.',
             'It is unclear whether the host organism of %alienCode% has any intelligence.'
@@ -272,7 +285,7 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'study of alien remains',
           next: 'parasiteRemoval',
           notes: [
-            'Preliminary examinations confirmed the alien origins of %alienCode% cadaver.',
+            'Preliminary examinations confirmed the extraterrestrial origins of %alienCode% cadaver.',
             'Studies have shown that %alienCode% remains actually consist of two separate organisms.',
             'One of the organisms is still functioning and is parasitic in nature.',
             'The parasite organism has received a unique codename: %parasiteCode%.',

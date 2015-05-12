@@ -272,6 +272,27 @@ class AreaGame
     }
 
 
+// add event object to area
+  public function addEventObject(params: {
+    name: String, // object name
+    action: _PlayerAction, // object action
+    onAction: Game -> Player -> String -> Void, // action handler
+    })
+    {
+      // generate area if it's not yet generated
+      if (!isGenerated)
+        generate();
+
+      var loc = findEmptyLocation();
+      var o = new EventObject(game, loc.x, loc.y);
+      o.name = params.name;
+      var tmp = new List();
+      tmp.add(params.action);
+      o.addActions(tmp);
+      o.eventOnAction = params.onAction;
+    }
+
+
 // add object to area
   public inline function addObject(o: AreaObject)
     {
@@ -645,9 +666,10 @@ class AreaGame
 
           var o: AreaObject = Type.createInstance(info.areaObjectClass,
             [ game, loc.x, loc.y ]);
+          o.name = info.names[Std.random(info.names.length)];
           o.item = {
             id: info.id, 
-            name: info.names[Std.random(info.names.length)],
+            name: o.name, 
             info: info,
             event: event
             };

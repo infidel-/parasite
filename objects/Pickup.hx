@@ -12,6 +12,7 @@ class Pickup extends AreaObject
       super(g, vx, vy);
 
       type = 'pickup';
+      name = 'pickup';
     }
 
 

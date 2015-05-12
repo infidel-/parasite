@@ -50,6 +50,10 @@ class Goals
 
       if (info.isHidden == null || info.isHidden == false)
         game.log('You have received a new goal: ' + info.name + '.');
+
+      // call receive hook
+      if (info.onReceive != null)
+        info.onReceive(game, game.player);
     }
 
 

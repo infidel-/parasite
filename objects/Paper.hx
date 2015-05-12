@@ -13,6 +13,7 @@ class Paper extends Pickup
       super(g, vx, vy);
 
       type = 'paper';
+      name = 'paper';
       createEntity(Const.ROW_OBJECT, Const.FRAME_PAPER);
     }
 }

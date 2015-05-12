@@ -334,10 +334,6 @@ should limit player options for guiding purposes
           _eventsMap.set(curID, event);
           _eventsList.push(event);
 
-          // run init() function
-          if (curInfo.init != null)
-            curInfo.init(this);
-
           // parse event notes
           if (curInfo.notes != null)
             for (n in curInfo.notes)
@@ -349,6 +345,11 @@ should limit player options for guiding purposes
           // create event npcs
           if (curInfo.npc != null)
             initNPC(curID, curInfo, curInfo.npc, event);
+
+          // run init() function
+          // note: it's after the static stuff because it can change event notes
+          if (curInfo.init != null)
+            curInfo.init(this);
 
           // timeline finish
           if (curInfo.next == null && curInfo.nextOR == null)

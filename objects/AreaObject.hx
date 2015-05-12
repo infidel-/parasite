@@ -15,6 +15,7 @@ class AreaObject
 
   public var entity: ObjectEntity; // gui entity
   public var type: String; // object type
+  public var name: String; // object name 
   public var item: Item; // linked item
 
   public var id: Int; // unique object id
@@ -29,6 +30,7 @@ class AreaObject
     {
       game = g;
       type = 'undefined';
+      name = 'undefined';
       id = (_maxID++);
       isStatic = false;
       creationTime = game.turns;

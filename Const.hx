@@ -48,6 +48,7 @@ class Const
   public static var FRAME_SEWER_HATCH = 0;
   public static var FRAME_PAPER = 1;
   public static var FRAME_BOOK = 2;
+  public static var FRAME_EVENT_OBJECT = 3;
 
   // effect row frames
   public static var FRAME_PANIC_GAS = 0;

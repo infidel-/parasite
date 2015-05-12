@@ -19,6 +19,7 @@ class BodyObject extends AreaObject
 
       inventory = new Inventory(g);
       type = 'body';
+      name = 'body';
       isHumanBody = false;
       isSearched = false;
       organPoints = 0;
