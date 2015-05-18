@@ -137,13 +137,18 @@ class PlayerArea
           {
             // player does not know what this object is, cannot activate it
             if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
-                player.host.isHuman)
+                player.host.isHuman && o.type != 'event_object')
               addActionToList(tmp, 'learnObject', o);
 
             // object known - add all actions defined by object
             else if (Lambda.has(knownObjects, o.type)) 
               o.addActions(tmp);
           }
+
+      // event objects always known
+      for (o in olist)
+        if (o.type == 'event_object')
+          o.addActions(tmp);
 
       // leave area action
       if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)

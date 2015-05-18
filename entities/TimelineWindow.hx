@@ -99,7 +99,12 @@ class TimelineWindow extends TextWindow
               }
 
           // nothing known about any npcs
-          else buf.add('  unknown\n');
+          if (!npcSomethingKnown && event.npc.length > 0)
+            buf.add('  unknown\n');
+
+          // no npcs
+          else if (event.npc.length == 0)
+            buf.add('  none\n');
 
           if (numAliveAndMemoryKnown > 0)
             buf.add(" ... +" + numAliveAndMemoryKnown + " persons probed ...\n");

@@ -10,9 +10,14 @@
 + "+10 persons probed"
 
 scenario-based goals
-save alien not completable
+what happens on mission failure
+mission - infiltration
+mission - research
+goal - save alien
+what if player raises alertness in ship location? i should handle that somehow
 area interest is unused
-
+mission - abduction - chance of target being a soldier in a base or vip in facility
+?bug - can go to spaceship without goal - breaks goal completion
 
 
 MASTERPLAN

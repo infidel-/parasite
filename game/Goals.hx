@@ -32,6 +32,21 @@ class Goals
     }
 
 
+// TURN: goals turn functions
+  public function turn()
+    {
+      for (goal in _listCurrent)
+        {
+          var info = getInfo(goal);
+          if (info.onTurn != null)
+            {
+              game.debug(info.id + ' onTurn()');
+              info.onTurn(game, game.player);
+            }
+        }
+    }
+
+
 // receive a new goal
   public function receive(id: _Goal)
     {

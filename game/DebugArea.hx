@@ -81,6 +81,10 @@ class DebugArea
               game.player.vars.skillsEnabled = true;
               game.player.vars.timelineEnabled = true;
               game.timeline.unlock();
+              for (ev in game.timeline.iterator())
+                if (!ev.isHidden)
+                  for (n in ev.notes)
+                    n.clues = 3;
               game.timeline.learnClue(game.timeline.getStartEvent(), true);
               game.timeline.learnClue(game.timeline.getStartEvent(), true);
               game.timeline.learnClue(game.timeline.getStartEvent(), true);
@@ -276,6 +280,8 @@ class DebugArea
             {
               game.goals.receive(GOAL_LEARN_CLUE);
               game.goals.complete(GOAL_LEARN_CLUE);
+              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
               game.timeline.learnClue(game.timeline.getRandomEvent(), true);
               game.timeline.learnClue(game.timeline.getRandomEvent(), true);
               game.timeline.learnClue(game.timeline.getRandomEvent(), true);

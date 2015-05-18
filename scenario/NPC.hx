@@ -19,14 +19,29 @@ class NPC
   public var isDead: Bool; // is this npc dead?
   public var isDeadKnown: Bool; // is dead/alive known to player?
   public var memoryKnown: Bool; // has this npc's memories been learned? 
-  public var event: Event; // event
+  public var event: Event; // event (can be null)
   public var ai: ai.AI; // ai link
+
+  public var id: Int; // unique NPC id
+  static var _maxID: Int = 0; // current max ID
 
   public function new(g: Game)
     {
       game = g;
-      type = 'civilian';
       name = 'John Doe';
+      nameKnown = false;
+      type = 'civilian';
+      job = null;
+      jobKnown = false;
+      area = null;
+      areaKnown = false;
+      isDead = false;
+      isDeadKnown = false;
+      memoryKnown = false;
+      event = null;
+      ai = null;
+
+      id = (_maxID++);
     }
 
 
@@ -72,6 +87,6 @@ class NPC
   public function toString()
     {
       return '' + name + ' ' + job + ' (' + area.x + ',' + area.y +
-        ') dead:' + isDead + ' event:' + event.id;
+        ') dead:' + isDead + ' event:' + (event != null ? event.id : 'null');
     }
 }

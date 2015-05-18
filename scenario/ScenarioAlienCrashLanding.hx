@@ -36,7 +36,8 @@ class ScenarioAlienCrashLanding extends Scenario
           init: function (timeline)
             {
               var tmp = [ 'abduction', 'infiltration', 'research' ];
-              var type = tmp[Std.random(tmp.length)];
+//              var type = tmp[Std.random(tmp.length)];
+              var type = 'abduction';
               timeline.setVar('alienMissionType', type);
 
               // change event note on the fly
@@ -45,7 +46,7 @@ class ScenarioAlienCrashLanding extends Scenario
             },
 
           notes: [
-            'You have received your mission details in the HQ.'
+            'You have received your mission details at the HQ.'
             ],
           },
 

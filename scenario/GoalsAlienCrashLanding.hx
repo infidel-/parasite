@@ -14,14 +14,14 @@ class GoalsAlienCrashLanding
       messageReceive: 'Now I remember. I came here on a ship from somewhere far away. But where is it now?',
       messageComplete: 'Now I know its location. I should enter it and find out more about myself.',
       onReceive: function (game, player) {
-        // spawn a ship on the event location
+        // spawn ship on the event location
         var ev = game.timeline.getEvent('alienShipStudy');
         var area = ev.location.area;
         area.addEventObject({
           name: 'spaceship',
           action: {
             id: 'enterShip',
-            type: ACTION_AREA,
+            type: ACTION_OBJECT,
             name: 'Enter Spaceship',
             energy: 0 
             },
@@ -60,14 +60,76 @@ class GoalsAlienCrashLanding
         'Spending some time on the computer you remember what was your initial goal on this planet. ' +
         'You have a mission. You need to complete it.',
       onComplete: function (game, player) {
-        // one of missions
+        // get the mission goal
+        if (game.timeline.getStringVar('alienMissionType') == 'abduction')
+          game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION);
+/*
+        else if (game.timeline.getStringVar('alienMissionType') == 'infiltration')
+          game.goals.receive(SCENARIO_ALIEN_MISSION_INFILTRATION);
+        else if (game.timeline.getStringVar('alienMissionType') == 'research')
+          game.goals.receive(SCENARIO_ALIEN_MISSION_RESEARCH);
+*/
+        },
+      },
+
+    SCENARIO_ALIEN_MISSION_ABDUCTION => {
+      id: SCENARIO_ALIEN_MISSION_ABDUCTION,
+      name: 'Mission: Abduction',
+      note: 'You need to locate the target host and invade it.',
+      messageComplete: 'Target invaded. I need to return to my habitat.',
+      onTurn: function (game, player) {
+        // check if player has target host and complete
+        if (player.state == PLR_STATE_HOST && player.host.npc != null &&
+            player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
+          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION); 
+      },
+      onReceive: function (game, player) {
+        // find random area
+        var area = game.region.getRandomWithType(AREA_CITY_HIGH, true);
+
+        // add NPC to it
+        var npc = new NPC(game);
+        // TODO: maybe link to first event, but that would break brain probe
+        npc.event = null;
+        npc.job = 'corporate executive';
+        npc.jobKnown = true;
+        npc.type = 'civilian';
+        npc.area = area;
+        area.npc.add(npc);
+
+        // store npc id to check against later
+        game.timeline.setVar('missionTargetID', npc.id);
+
+        // put location in text
+        var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_ABDUCTION);
+
+        goal.note += ' Target location: (' + area.x + ',' + area.y + ')';
+      },
+      onComplete: function (game, player) {
+        game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_HABITAT);
+        },
+      },
+
+    SCENARIO_ALIEN_MISSION_ABDUCTION_GO_HABITAT => {
+      id: SCENARIO_ALIEN_MISSION_ABDUCTION_GO_HABITAT,
+      name: 'Mission: Abduction',
+      note: 'You need to bring the target host to a habitat.',
+      messageComplete: 'Mission accomplished. I can return to the HQ.',
+      onTurn: function (game, player) {
+        // TODO if player is in habitat, complete mission
+        // TODO if player does not possess target host, failure
+      },
+      onComplete: function (game, player) {
+//        game.goals.receive();
+        },
+      },
+
+    ];
+/*
+
         // game.timeline.getBoolVar('shipLanded') fly away
         // game.timeline.getBoolVar('shipShotDown') send distress signal 
         //game.goals.receive();
-        },
-      },
-    ];
-/*
 
      => {
       id: ,

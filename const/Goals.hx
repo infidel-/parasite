@@ -207,6 +207,7 @@ typedef GoalInfo = {
   note: String, // goal note
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion 
+  ?onTurn: Game -> Player -> Void, // func to call each turn while this goal is active 
   ?onReceive: Game -> Player -> Void, // func to call on receive 
   ?onComplete: Game -> Player -> Void, // func to call on completion
 }

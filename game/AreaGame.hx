@@ -284,12 +284,14 @@ class AreaGame
         generate();
 
       var loc = findEmptyLocation();
+      game.debug('!!! ev obj ' + params.name + ' loc:' + loc);
       var o = new EventObject(game, loc.x, loc.y);
       o.name = params.name;
-      var tmp = new List();
-      tmp.add(params.action);
-      o.addActions(tmp);
+      o.eventAction = params.action;
+      o.eventAction.obj = o;
       o.eventOnAction = params.onAction;
+
+      addObject(o);
     }
 
 
@@ -732,6 +734,7 @@ class AreaGame
             var ai = spawnUnseenAI(n.type, true);
             if (ai == null)
               break;
+            game.debug('spawn npc');
             n.ai = ai;
             ai.event = n.event;
             ai.job = n.job;

@@ -7,6 +7,7 @@ import game.Player;
 
 class EventObject extends AreaObject
 {
+  public var eventAction: _PlayerAction; // available action
   public var eventOnAction: Game -> Player -> String -> Void; // action handler
 
   public function new(g: Game, vx: Int, vy: Int)
@@ -18,6 +19,13 @@ class EventObject extends AreaObject
       isStatic = true;
 
       createEntity(Const.ROW_OBJECT, Const.FRAME_EVENT_OBJECT);
+    }
+
+
+// update actions
+  override function updateActionsList()
+    {
+      addActionFull(eventAction);
     }
 
 

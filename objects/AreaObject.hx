@@ -106,6 +106,14 @@ class AreaObject
     }
 
 
+// add full player action to list
+  inline function addActionFull(a: _PlayerAction)
+    {
+      if (game.player.energy >= a.energy)
+        _listActions.add(a); 
+    }
+
+
 // get actions for this object
   public function addActions(tmp: List<_PlayerAction>)
     {

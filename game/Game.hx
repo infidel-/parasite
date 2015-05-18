@@ -165,6 +165,11 @@ class Game
           if (isFinished)
             return;
 
+          // goals turn
+          goals.turn();
+          if (isFinished)
+            return;
+
           // current area turns
           turnsArea++;
           if (turnsArea % 10 == 0)
@@ -174,6 +179,11 @@ class Game
       else if (location == LOCATION_REGION)
         {
           region.turn();
+          if (isFinished)
+            return;
+
+          // goals turn
+          goals.turn();
           if (isFinished)
             return;
         }

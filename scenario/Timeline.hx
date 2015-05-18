@@ -300,7 +300,7 @@ should limit player options for guiding purposes
                   npc.area = region.getRandomWithType(type, false);
                 }
 
-              npc.area.npc.add(npc);
+              npc.area.npc.add(npc); // boom! *head explodes*
           
               // event coverup kills some npcs
               if (total > 3)
