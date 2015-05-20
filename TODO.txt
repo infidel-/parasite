@@ -18,7 +18,22 @@ what if player raises alertness in ship location? i should handle that somehow
 area interest is unused
 mission - abduction - chance of target being a soldier in a base or vip in facility
 ?bug - can go to spaceship without goal - breaks goal completion
+mission completed, what if spaceship is crashed
+add spaceship object to global object map or make easier getObject(id) function or 
+debug mode - timeline - show numeric event id
 
+==
+TESTING:
+;le12 - learn about aliens
+;le8 - learn location of spaceship
+
+;le11 - learn about aliens (other branch)
+;le7 - learn location of spaceship (other branch)
+
+;ge8 - go to spaceship location
+
+;ga10 10 - go to area at 10,10
+;gg24 7 - don't change mode, go to x=24, y=7 (area or region)
 
 MASTERPLAN
 ============

@@ -219,11 +219,18 @@ class PlayerRegion
 
 // move player by dx, dy
 // returns true on success
-  public function moveBy(dx: Int, dy: Int): Bool
+  public inline function moveBy(dx: Int, dy: Int): Bool
     {
       var nx = x + dx;
       var ny = y + dy;
 
+      return moveTo(nx, ny);
+    }
+
+  
+// move player to nx, ny
+  public function moveTo(nx, ny): Bool
+    {
       // cell not walkable
       if (!game.region.isWalkable(nx, ny))
         return false;

@@ -11,4 +11,5 @@ enum _HUDState
   HUDSTATE_DEBUG; // debug window open
   HUDSTATE_TIMELINE; // timeline window open
   HUDSTATE_LOG; // log window open
+  HUDSTATE_CONSOLE; // console open
 }

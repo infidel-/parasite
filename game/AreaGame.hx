@@ -277,7 +277,7 @@ class AreaGame
     name: String, // object name
     action: _PlayerAction, // object action
     onAction: Game -> Player -> String -> Void, // action handler
-    })
+    }): EventObject
     {
       // generate area if it's not yet generated
       if (!isGenerated)
@@ -292,6 +292,7 @@ class AreaGame
       o.eventOnAction = params.onAction;
 
       addObject(o);
+      return o;
     }
 
 

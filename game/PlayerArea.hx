@@ -650,6 +650,10 @@ class PlayerArea
       x = nx;
       y = ny;
 
+      // move invaded host entity with invisible player entity
+      if (state == PLR_STATE_HOST) 
+        player.host.setPosition(x, y);
+
       entity.setPosition(x, y);
 
       // update cell visibility to player

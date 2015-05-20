@@ -205,9 +205,13 @@ typedef GoalInfo = {
   ?isHidden: Bool, // is this goal hidden?
   name: String, // goal name
   note: String, // goal note
+
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion 
+  ?messageFailure: String, // message on goal failure 
+
   ?onTurn: Game -> Player -> Void, // func to call each turn while this goal is active 
   ?onReceive: Game -> Player -> Void, // func to call on receive 
   ?onComplete: Game -> Player -> Void, // func to call on completion
+  ?onFailure: Game -> Player -> Void, // func to call on failure 
 }

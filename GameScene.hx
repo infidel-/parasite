@@ -147,15 +147,31 @@ class GameScene extends Scene
 // handle player input
   function handleInput()
     {
+      // show console (;)
+      if (Input.released(186))
+        {
+          hud.showConsole();
+          return;
+        }
+
+      // run console command
+      if (Input.pressed(Key.ENTER) && hud.consoleVisible())
+        {
+          hud.runConsoleCommand();
+          return;
+        }
 /*
       trace(Input.lastKey);
       if (Input.lastKey != null)
         trace(Key.nameOfKey(Input.lastKey));
 */
-      var ret = handleWindows();
-      if (!ret)
-        handleMovement();
-      handleActions();
+      if (!hud.consoleVisible())
+        {
+          var ret = handleWindows();
+          if (!ret)
+            handleMovement();
+          handleActions();
+        }
     
       if (Input.pressed("exit"))
         Sys.exit(1);
@@ -342,19 +358,19 @@ class GameScene extends Scene
             if (_inputState > 0)
               n += 10;
 
-            if (game.scene.hudState == HUDSTATE_DEFAULT)
-              game.scene.hud.action(n);
+            if (hudState == HUDSTATE_DEFAULT)
+              hud.action(n);
             else windows[hudState].action(n);
 
             _inputState = 0;
             break;
           }
 
-      if (game.scene.hudState == HUDSTATE_DEFAULT)
+      if (hudState == HUDSTATE_DEFAULT)
         {
           // test action
           if (Input.pressed("test"))
-            game.scene.hud.test();
+            hud.test();
 
           // skip until end of turn
           if (Input.pressed("skipTurn"))
@@ -366,7 +382,7 @@ class GameScene extends Scene
             }
 
           // handle mouse input
-          game.scene.mouse.handleInput();
+          mouse.handleInput();
         }
 
       // next 10 actions

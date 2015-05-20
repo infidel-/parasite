@@ -9,12 +9,14 @@ class Goals
   var game: Game;
   var _listCurrent: List<_Goal>; // list of current goals
   var _listCompleted: List<_Goal>; // list of completed goals
+  var _listFailed: List<_Goal>; // list of failed goals
 
   public function new(g: Game)
     {
       game = g;
       _listCurrent = new List();
       _listCompleted = new List();
+      _listFailed = new List();
     }
 
 
@@ -29,6 +31,13 @@ class Goals
   public function iteratorCompleted()
     {
       return _listCompleted.iterator();
+    }
+
+
+// iterator for failed goals
+  public function iteratorFailed()
+    {
+      return _listFailed.iterator();
     }
 
 
@@ -92,6 +101,29 @@ class Goals
       // call completion hook
       if (info.onComplete != null)
         info.onComplete(game, game.player);
+    }
+
+
+// fail this goal
+  public function fail(id: _Goal)
+    {
+      // check if this goal already completed or not received
+      if (Lambda.has(_listCompleted, id) || !Lambda.has(_listCurrent, id))
+        return;
+
+      _listCurrent.remove(id);
+      _listFailed.add(id);
+
+      var info = getInfo(id);
+      if (info.isHidden == null || info.isHidden == false)
+        game.log('You have failed a goal: ' + info.name + '.');
+
+      if (info.messageFailure != null) // failure message
+        game.message(info.messageFailure);
+
+      // call failure hook
+      if (info.onFailure != null)
+        info.onFailure(game, game.player);
     }
 
 

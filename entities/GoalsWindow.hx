@@ -37,6 +37,18 @@ class GoalsWindow extends TextWindow
         }
       buf.add('</font>');
 
+      buf.add("\nFailed goals\n====\n\n<font color='#770000'>");
+      for (g in game.goals.iteratorFailed()) 
+        {
+          var info = game.goals.getInfo(g);
+          if (info.isHidden)
+            continue;
+
+          buf.add(info.name + '\n');
+          buf.add(info.note + '\n\n');
+        }
+      buf.add('</font>');
+
       return buf.toString();
     }
 }

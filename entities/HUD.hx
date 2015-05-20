@@ -9,6 +9,7 @@ import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Text;
 import flash.display.Sprite;
 import flash.text.TextField;
+import flash.text.TextFieldType;
 import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
@@ -27,6 +28,8 @@ class HUD
   var _logBack: Sprite; // log background
   var _listLog: List<String>; // log lines (last 4)
 
+  var _console: TextField; // console 
+  var _consoleBack: Sprite; // console background
 
   public function new(g: Game)
     {
@@ -61,6 +64,22 @@ class HUD
       _logBack.x = 20;
       _logBack.y = 20;
       HXP.stage.addChild(_logBack);
+
+      // console 
+      var font = Assets.getFont("font/04B_03__.ttf");
+      _console = new TextField();
+      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      fmt.align = TextFormatAlign.LEFT;
+      _console.defaultTextFormat = fmt;
+      _console.type = TextFieldType.INPUT;
+      _consoleBack = new Sprite();
+      _consoleBack.addChild(_console);
+      _consoleBack.x = 20;
+      _consoleBack.y = HXP.height - 20;
+      _consoleBack.visible = false;
+      _console.width = HXP.width - 40;
+      _console.height = 20;
+      HXP.stage.addChild(_consoleBack);
     }
 
 
@@ -284,5 +303,52 @@ class HUD
       updateActionList();
       updateWindow();
       updateLog();
+      updateConsole();
+    }
+
+
+// show debug console
+  public function showConsole()
+    {
+#if mydebug
+      _console.text = '';
+      _consoleBack.visible = true;
+      HXP.stage.focus = _console;
+#end
+    }
+
+
+// hide debug console
+  public function hideConsole()
+    {
+#if mydebug
+      _consoleBack.visible = false;
+#end
+    }
+
+
+// is console visible?
+  public function consoleVisible(): Bool
+    {
+      return _consoleBack.visible;
+    }
+
+
+// run console command and close it
+  public function runConsoleCommand()
+    {
+#if mydebug      
+      game.console.run(_console.text);
+      hideConsole();
+#end
+    }
+
+
+// update console text
+  public function updateConsole()
+    {
+      _consoleBack.graphics.clear();
+      _consoleBack.graphics.beginFill(0x202020, .75);
+      _consoleBack.graphics.drawRect(0, 0, _console.width, _console.height);
     }
 }

@@ -13,6 +13,7 @@ class Game
   public var world: World; // game world
   public var managerWorld: WorldManager; // game world manager
   public var region: RegionGame; // region info link
+  public var console: ConsoleGame; // game console
 
   public var area: AreaGame; // current area link
   public var managerArea: AreaManager; // area event manager
@@ -34,6 +35,7 @@ class Game
   public function new()
     {
       scene = new GameScene(this);
+      console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);
       HXP.frameRate = 30;
       HXP.scene = scene;

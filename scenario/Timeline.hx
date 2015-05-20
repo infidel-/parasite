@@ -444,7 +444,7 @@ should limit player options for guiding purposes
     {
       _variables.set(key, value);
     }
-    
+
 
 // get timeline variable value
   public inline function getStringVar(key: String): String
@@ -458,6 +458,13 @@ should limit player options for guiding purposes
     {
       var val = _variables.get(key);
       return (val != null ? val : 0);
+    }
+
+
+// get timeline variable value
+  public inline function getDynamicVar(key: String) 
+    {
+      return _variables.get(key);
     }
 
 

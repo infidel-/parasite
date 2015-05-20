@@ -3,6 +3,7 @@
 package scenario;
 
 import const.Goals;
+import objects.EventObject;
 
 class GoalsAlienCrashLanding
 {
@@ -17,7 +18,7 @@ class GoalsAlienCrashLanding
         // spawn ship on the event location
         var ev = game.timeline.getEvent('alienShipStudy');
         var area = ev.location.area;
-        area.addEventObject({
+        var obj = area.addEventObject({
           name: 'spaceship',
           action: {
             id: 'enterShip',
@@ -33,10 +34,14 @@ class GoalsAlienCrashLanding
               var ev = game.timeline.getEvent('alienMission');
               ev.isHidden = false;
               for (n in ev.notes)
-                n.isKnown = true;
+              n.isKnown = true;
               game.timeline.update();
             }
           });
+
+        // store object id for later use
+        game.timeline.setVar('spaceShipObjectID', obj.id);
+        game.timeline.setVar('spaceShipObject', obj);
         },
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_ENTER_SHIP);
@@ -76,13 +81,15 @@ class GoalsAlienCrashLanding
       id: SCENARIO_ALIEN_MISSION_ABDUCTION,
       name: 'Mission: Abduction',
       note: 'You need to locate the target host and invade it.',
-      messageComplete: 'Target invaded. I need to return to my habitat.',
+      messageComplete: 'Target invaded. I need to return to my spaceship.',
+
       onTurn: function (game, player) {
-        // check if player has target host and complete
+        // if player has target host, complete
         if (player.state == PLR_STATE_HOST && player.host.npc != null &&
             player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
           game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION); 
       },
+
       onReceive: function (game, player) {
         // find random area
         var area = game.region.getRandomWithType(AREA_CITY_HIGH, true);
@@ -97,7 +104,7 @@ class GoalsAlienCrashLanding
         npc.area = area;
         area.npc.add(npc);
 
-        // store npc id to check against later
+        // store npc id for later use
         game.timeline.setVar('missionTargetID', npc.id);
 
         // put location in text
@@ -105,25 +112,87 @@ class GoalsAlienCrashLanding
 
         goal.note += ' Target location: (' + area.x + ',' + area.y + ')';
       },
+
       onComplete: function (game, player) {
-        game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_HABITAT);
+        game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
         },
       },
 
-    SCENARIO_ALIEN_MISSION_ABDUCTION_GO_HABITAT => {
-      id: SCENARIO_ALIEN_MISSION_ABDUCTION_GO_HABITAT,
+    SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP => {
+      id: SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
       name: 'Mission: Abduction',
-      note: 'You need to bring the target host to a habitat.',
-      messageComplete: 'Mission accomplished. I can return to the HQ.',
+      note: 'You need to bring the target host to the spaceship.',
+      messageComplete: 'Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.',
+      messageFailure: 'Mission failed. I will return to the HQ now.',
+
       onTurn: function (game, player) {
-        // TODO if player is in habitat, complete mission
-        // TODO if player does not possess target host, failure
+/*        
+        // if player is in habitat and has target host, complete mission
+        if (game.location == LOCATION_AREA &&
+            game.area.isHabitat &&
+            player.state == PLR_STATE_HOST &&
+            player.host.npc != null &&
+            player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
+          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+*/
+        // if player does not possess target host, mission failure
+        if (player.state != PLR_STATE_HOST ||
+            player.host.npc == null ||
+            player.host.npc.id != game.timeline.getIntVar('missionTargetID'))
+          game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
       },
+
+      onReceive: function (game, player) {
+//        var objID = game.timeline.getIntVar('spaceShipObjectID');
+//        var obj = game.world.getEventObject(objID);
+/*        
+        var ev = game.timeline.getEvent('alienShipStudy');
+        var area = ev.location.area;
+        var objID = game.timeline.getIntVar('spaceShipObjectID');
+        var obj = area.getObject(game.timeline);
+*/
+        // change spaceship action contents 
+        var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
+        obj.eventOnAction = 
+          function (game, player, id)
+            {
+              game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+            };
+      },
+
       onComplete: function (game, player) {
-//        game.goals.receive();
+        // finish game
+        game.finish('win', 'scenario');
+        },
+
+      onFailure: function (game, player) {
+          game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
         },
       },
 
+
+    SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP => {
+      id: SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
+      name: 'Return to spaceship',
+      note: 'You need to return to the spaceship.',
+      messageComplete: 'Returning to the HQ now.',
+
+      onReceive: function (game, player) {
+        // change spaceship action contents 
+        var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
+        obj.eventOnAction = 
+          function (game, player, id)
+            {
+              game.goals.complete(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
+            };
+      },
+
+      onComplete: function (game, player) {
+        // finish game
+        // TODO mission failed
+        game.finish('win', 'scenario');
+        },
+      },
     ];
 /*
 
