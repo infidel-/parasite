@@ -1,15 +1,5 @@
-+ when player is in area mode, habitat detection attempt happens each 10 turns
-+ if the player is in habitat, it cannot be detected
-+ spawn player near last event location
-+ modify starting interest/alertness according to scenario flow
-+ military base and facility area types!
-+ area type string id -> enum
-+ fix event npcs spawn by job (soldiers go to military bases)
-+ spawn AI that is seen by player immediately on entering area
-+ todo: LocationInfo.near
-+ "+10 persons probed"
+add some common items into inventory - cigarettes + smoking knowledge, money + shopping knowledge
 
-scenario-based goals
 what happens on mission failure
 mission - infiltration
 mission - research
