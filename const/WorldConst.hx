@@ -40,7 +40,7 @@ class WorldConst
         commonAI: 10,
         uncommonAI: 10,
         buildingChance: 0.05,
-        lawResponceTime: 9,
+        lawResponceTime: 10,
         lawResponceAmount: 2,
         lawResponceEnabled: true,
         ai: [

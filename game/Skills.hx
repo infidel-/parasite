@@ -106,7 +106,7 @@ class Skills
 
 
 // add skill by id
-  public function addID(id: _Skill, lvl: Float)
+  public function addID(id: _Skill, ?lvl: Float = 1)
     {
       // check if we already have that skill
       for (sk in _list)

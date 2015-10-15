@@ -133,6 +133,18 @@ class ItemsConst
       name: 'laptop',
       type: 'computer',
       unknown: 'rectangular plastic object',
-    }
+    },
+    {
+      id: 'money',
+      name: 'money',
+      type: 'money',
+      unknown: 'a pack of soft thin objects',
+    },
+    {
+      id: 'cigarettes',
+      name: 'cigarettes',
+      type: 'cigarettes',
+      unknown: 'small container full of thin cylinders',
+    },
     ];
 }

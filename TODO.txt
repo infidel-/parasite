@@ -1,4 +1,7 @@
-add some common items into inventory - cigarettes + smoking knowledge, money + shopping knowledge
+regen health by default + regen improv
+brain probe + its goals should reflect that the host weakens/loses health
+civs shouldnt tear away parasite on next turn after possession
+probe brain - show energy cost
 
 what happens on mission failure
 mission - infiltration

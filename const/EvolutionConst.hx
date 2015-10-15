@@ -467,10 +467,10 @@ class EvolutionConst
           '(todo fluff)',
           ],
         levelParams: [
-          { attachHoldBase: 15 },
           { attachHoldBase: 20 },
           { attachHoldBase: 25 },
           { attachHoldBase: 30 },
+          { attachHoldBase: 35 },
           ],
       },
 
@@ -486,10 +486,10 @@ class EvolutionConst
           '(todo fluff)',
           ],
         levelParams: [
-          { reinforceControlBase: 10 },
-          { reinforceControlBase: 15 },
           { reinforceControlBase: 20 },
           { reinforceControlBase: 25 },
+          { reinforceControlBase: 30 },
+          { reinforceControlBase: 35 },
           ],
       },
 

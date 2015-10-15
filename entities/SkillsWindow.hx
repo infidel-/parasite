@@ -24,7 +24,9 @@ class SkillsWindow extends TextWindow
         {
           n++;
           buf.add((skill.info.isKnowledge ? 'Knowledge: ' : '') +
-            skill.info.name + ' ' + skill.level + '%\n');
+            skill.info.name);
+          if (skill.info.isBool == null || !skill.info.isBool)
+            buf.add(' ' + skill.level + '%\n');
         }
 
       if (n == 0)
@@ -33,12 +35,14 @@ class SkillsWindow extends TextWindow
       // host skills
       if (game.player.state == PLR_STATE_HOST)
         {
-          buf.add('\nHost skills\n===\n\n');
+          buf.add('\nHost skills and knowledges\n===\n\n');
           var n = 0;
           for (skill in game.player.host.skills)
             {
               n++;
-              buf.add(skill.info.name + ' ' + skill.level + '%\n');
+              buf.add(skill.info.name);
+              if (skill.info.isBool == null || !skill.info.isBool)
+                buf.add(' ' + skill.level + '%\n');
             }
 
           if (n == 0)

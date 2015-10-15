@@ -50,6 +50,24 @@ class SkillsConst
       defaultLevel: 0,
     },
 
+    // knowledges
+
+    {
+      id: KNOW_SMOKING,
+      name: 'smoking',
+      defaultLevel: 0,
+      isKnowledge: true,
+      isBool: true
+    },
+
+    {
+      id: KNOW_SHOPPING,
+      name: 'shopping',
+      defaultLevel: 0,
+      isKnowledge: true,
+      isBool: true
+    },
+
     {
       id: KNOW_SOCIETY,
       name: 'human society',
@@ -75,4 +93,5 @@ typedef SkillInfo =
   name: String, // skill name
   defaultLevel: Int, // default skill level
   ?isKnowledge: Bool, // is this a knowledge?
+  ?isBool: Bool, // is this a boolean knowledge?
 }

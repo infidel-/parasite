@@ -18,6 +18,18 @@ class HumanAI extends AI
       intellect = 4 + Std.random(4);
       psyche = 4 + Std.random(4);
 
+      // common stuff for all humans
+      if (Std.random(100) < 20)
+        {
+          skills.addID(KNOW_SMOKING);
+          inventory.addID('cigarettes');
+        }
+      if (Std.random(100) < 50)
+        {
+          skills.addID(KNOW_SHOPPING);
+          inventory.addID('money');
+        }
+
       derivedStats();
     }
 }

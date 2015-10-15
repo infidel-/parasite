@@ -607,8 +607,8 @@ class PlayerArea
         return false;
 
       // random: change movement direction
-      if (state == PLR_STATE_HOST && 
-          Std.random(100) < 0.9 * (100 - player.hostControl))
+      if (state == PLR_STATE_HOST && player.hostControl < 90 && 
+          Std.random(100) < 0.75 * (100 - player.hostControl))
         {
           log('The host resists your command.');
           var dir = game.area.getRandomDirection(x, y);
