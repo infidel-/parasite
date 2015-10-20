@@ -538,7 +538,20 @@ class EvolutionConst
             hostSkillsMod: 0.5,
           },
           ],
-        onUpgrade: function(level, game, player)
+        action: { 
+          id: 'probeBrain',
+          type: ACTION_AREA,
+          name: 'Probe Brain',
+          energyFunc: function (player)
+            {
+              var level = player.evolutionManager.getLevel(IMP_BRAIN_PROBE);
+              if (level == 0)
+                return -1;
+              var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
+              return params.hostEnergyBase - player.host.psyche; 
+            },
+          },
+        onUpgrade: function (level, game, player)
           {
             // complete goals
             if (level == 1)
@@ -546,7 +559,7 @@ class EvolutionConst
 
             else if (level == 2)
               game.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
-          }
+          },
       },
 
       { // ***
@@ -684,6 +697,7 @@ typedef ImprovInfo =
   levelNotes: Array<String>, // improvement descriptions for different levels
   levelParams: Array<Dynamic>, // improvement-specific parameters for different levels
 
+  ?action: _PlayerAction, // added player action
   ?onUpgrade: Int -> Game -> Player -> Void, // func to call on upgrading improvement 
 }
 

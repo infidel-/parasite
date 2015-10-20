@@ -118,7 +118,6 @@ class Const
       'reinforceControl' => { id: 'reinforceControl', type: ACTION_AREA, name: 'Reinforce Control', energy: 5 },
       'doNothing' => { id: 'doNothing', type: ACTION_AREA, name: 'Do Nothing', energy: 0 },
       'leaveHost' => { id: 'leaveHost', type: ACTION_AREA, name: 'Leave Host', energy: 0 },
-      'probeBrain' => { id: 'probeBrain', type: ACTION_AREA, name: 'Probe Brain', energy: 0 },
       'learnObject' => { id: 'learnObject', type: ACTION_AREA, name: 'Learn About Object', energy: 10 },
       'leaveArea' => { id: 'leaveArea', type: ACTION_AREA, name: 'Leave Area', energy: 0 },
       'move' => { id: 'move', type: ACTION_AREA, name: 'Movement', energy: 0 },

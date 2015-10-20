@@ -7,7 +7,7 @@ import com.haxepunk.HXP;
 import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;
-import const.ItemsConst;
+import const.*;
 
 class PlayerArea
 {
@@ -117,13 +117,31 @@ class PlayerArea
         {
           if (player.hostControl < 100)
             addActionToList(tmp, 'reinforceControl');
-          if (player.evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
-            addActionToList(tmp, 'probeBrain');
+//          if (player.evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
+//            addActionToList(tmp, 'probeBrain');
 
           // organ-based actions
           player.host.organs.addActions(tmp);
 
           addActionToList(tmp, 'leaveHost');
+        }
+
+      // improvement actions
+      for (imp in player.evolutionManager.getList())
+        {
+          var info = imp.info; 
+          if (info.action != null)
+            {
+              if (info.action.energy != null && info.action.energy <= player.energy)
+                tmp.add(info.action);
+
+              else if (info.action.energyFunc != null)
+                {
+                  var e = info.action.energyFunc(player);
+                  if (e >= 0 && e <= player.energy)
+                    tmp.add(info.action);
+                }
+            }
         }
 
       // area object actions
@@ -209,9 +227,18 @@ class PlayerArea
         leaveAreaAction();
 
       // spend energy
-      if (state == PLR_STATE_HOST)
-        player.host.energy -= action.energy;
-      else player.energy -= action.energy;
+      if (action.energy != null)
+        {
+          if (state == PLR_STATE_HOST)
+            player.host.energy -= action.energy;
+          else player.energy -= action.energy;
+        }
+      else if (action.energyFunc != null)
+        {
+          if (state == PLR_STATE_HOST)
+            player.host.energy -= action.energyFunc(player);
+          else player.energy -= action.energyFunc(player);
+        }
 
       postAction(); // post-action call
 
@@ -469,6 +496,7 @@ class PlayerArea
       game.setLocation(LOCATION_REGION);
     }
 
+
 // action: remove attached parasite from host
   function detachAction()
     {
@@ -492,6 +520,7 @@ class PlayerArea
       game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
       // skills and knowledge
+//      var info = EvolutionConst.getInfo(IMP_BRAIN_PROBE);
       var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
       if (game.player.vars.skillsEnabled)
         {
@@ -505,7 +534,8 @@ class PlayerArea
         }
 
       // spend energy
-      player.host.energy -= params.hostEnergyBase - player.host.psyche; 
+//      player.host.energy -= params.hostEnergyBase - player.host.psyche; 
+//      player.host.energy -= info.action.energyFunc(player); 
       player.host.onDamage(params.hostHealthBase); // damage host
       if (Std.random(100) < 25)
         player.host.onDamage(params.hostHealthMod); // more damage if unlucky

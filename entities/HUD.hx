@@ -212,8 +212,10 @@ class HUD
 //          var action = Const.getAction(id); 
           buf.add(n + ': ');
           buf.add(action.name);
-          if (action.energy > 0)
+          if (action.energy != null && action.energy > 0)
             buf.add(' (' + action.energy + ' energy)');
+          else if (action.energyFunc != null)
+            buf.add(' (' + action.energyFunc(game.player) + ' energy)');
 //          buf.add(' (' + action.ap + ' AP)');
           if (action != _listActions.last())
             buf.add("\n");
