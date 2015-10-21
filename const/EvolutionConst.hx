@@ -544,6 +544,8 @@ class EvolutionConst
           name: 'Probe Brain',
           energyFunc: function (player)
             {
+              if (player.host == null)
+                return -1;
               var level = player.evolutionManager.getLevel(IMP_BRAIN_PROBE);
               if (level == 0)
                 return -1;

@@ -441,6 +441,18 @@ class AI
           tmp.push(bonus);
         }
 
+      // parasite attached to human, do not shoot (blackops are fine)
+      if (isHuman && game.player.state == PLR_STATE_ATTACHED &&
+          game.playerArea.attachHost.isHuman &&
+          type != 'blackops')
+        {
+          if (Std.random(100) < 30)
+            {
+              emitSound({ text: 'Shit!', radius: 5, alertness: 10 });
+              return;
+            }
+        }
+
       // protective cover
       if (game.player.state == PLR_STATE_HOST)
         {
@@ -699,8 +711,16 @@ class AI
       var idx = Std.random(array.length);
       var sound = array[idx];
 
+      emitSound(sound);
+    }
+
+ 
+// emit specific sound
+  function emitSound(sound: AISound)
+    {
       // check for min alertness
-      if (state == AI_STATE_IDLE && sound.params.minAlertness != null &&
+      if (state == AI_STATE_IDLE && sound.params != null &&
+          sound.params.minAlertness != null &&
           alertness < sound.params.minAlertness)
         return;
 
@@ -874,6 +894,6 @@ typedef AISound =
   var text: String; // text to display
   var radius: Int; // radius this sound propagates to (can be 0)
   var alertness: Int; // amount of alertness that AIs in this radius gain
-  var params: Dynamic; // state-specific parameters
+  @:optional var params: Dynamic; // state-specific parameters
 };
 

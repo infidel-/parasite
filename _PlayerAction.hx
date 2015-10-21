@@ -8,5 +8,6 @@ typedef _PlayerAction =
   ?energy: Int, // energy to complete
 
   ?obj: Dynamic, // bound object to act on
-  ?energyFunc: Player -> Int, // func that returns energy activation cost
+  // func that returns energy activation cost (should return < 0 if action is not available)
+  ?energyFunc: Player -> Int,
 }
