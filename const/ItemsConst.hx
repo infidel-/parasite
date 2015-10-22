@@ -141,6 +141,12 @@ class ItemsConst
       unknown: 'a pack of soft thin objects',
     },
     {
+      id: 'wallet',
+      name: 'wallet',
+      type: 'wallet',
+      unknown: 'small leather object',
+    },
+    {
       id: 'cigarettes',
       name: 'cigarettes',
       type: 'cigarettes',

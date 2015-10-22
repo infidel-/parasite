@@ -24,10 +24,10 @@ class HumanAI extends AI
           skills.addID(KNOW_SMOKING);
           inventory.addID('cigarettes');
         }
-      if (Std.random(100) < 50)
+      if (Std.random(100) < 75)
         {
           skills.addID(KNOW_SHOPPING);
-          inventory.addID('money');
+          inventory.addID(Std.random(10) < 7 ? 'wallet' : 'money');
         }
 
       derivedStats();

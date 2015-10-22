@@ -18,7 +18,7 @@ class DebugRegion
           func: function()
             {
               game.player.vars.areaEnergyPerTurn = 0;
-              game.player.vars.regionMoveEnergy = 0;
+              game.player.vars.regionEnergyPerTurn = 0;
               game.log('Energy per turn and movement cost removed.');
             }
         },

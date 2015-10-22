@@ -73,7 +73,8 @@ class MouseEntity extends Entity
           var pos = getXY();
           var ai = game.area.getAI(pos.x, pos.y);
           if (game.player.state == PLR_STATE_HOST && ai != null &&
-              ai != game.player.host)
+              ai != game.player.host &&
+              game.area.isVisible(game.playerArea.x, game.playerArea.y, pos.x, pos.y))
             newframe = CURSOR_ATTACK;
           else newframe = CURSOR_DEFAULT;
         }

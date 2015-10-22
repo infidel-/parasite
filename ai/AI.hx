@@ -448,6 +448,7 @@ class AI
         {
           if (Std.random(100) < 30)
             {
+              log('hesitates to attack you.');
               emitSound({ text: 'Shit!', radius: 5, alertness: 10 });
               return;
             }

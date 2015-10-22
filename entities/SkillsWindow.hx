@@ -27,6 +27,7 @@ class SkillsWindow extends TextWindow
             skill.info.name);
           if (skill.info.isBool == null || !skill.info.isBool)
             buf.add(' ' + skill.level + '%\n');
+          else buf.add('\n');
         }
 
       if (n == 0)
@@ -43,6 +44,7 @@ class SkillsWindow extends TextWindow
               buf.add(skill.info.name);
               if (skill.info.isBool == null || !skill.info.isBool)
                 buf.add(' ' + skill.level + '%\n');
+              else buf.add('\n');
             }
 
           if (n == 0)

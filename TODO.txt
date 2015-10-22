@@ -1,6 +1,9 @@
 regen health by default + regen improv
 brain probe + its goals should reflect that the host weakens/loses health
 civs shouldnt tear away parasite on next turn after possession
+cops should spawn at spot unseen to player closest to the call and move there as a target
+important message window - exit only by space/enter
+after losing grip, menu should update properly (cannot reattach)
 
 what happens on mission failure
 mission - infiltration

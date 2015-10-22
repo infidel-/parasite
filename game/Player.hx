@@ -41,8 +41,8 @@ class Player
         npcEnabled: false,
         searchEnabled: false,
 
-        areaEnergyPerTurn: 10,
-        regionMoveEnergy: 15,
+        areaEnergyPerTurn: 5,
+        regionEnergyPerTurn: 15,
         startHealth: 10,
         startEnergy: 100,
         listenRadius: 10,
@@ -77,8 +77,14 @@ class Player
           // energy is stable in habitat
           if (game.location == LOCATION_AREA && game.area.isHabitat)
             1;
+
           // lose some energy
-          else energy -= vars.areaEnergyPerTurn * time;
+          else if (game.location == LOCATION_AREA)
+            energy -= vars.areaEnergyPerTurn;
+
+          // lose some energy
+          else if (game.location == LOCATION_REGION)
+            energy -= vars.regionEnergyPerTurn;
 
           if (state == PLR_STATE_PARASITE && energy <= 0)
             {
@@ -191,7 +197,7 @@ private typedef PlayerVars = {
   searchEnabled: Bool, // computer search info enabled?
 
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
-  regionMoveEnergy: Int, // region: energy cost for movement (+ normal turn cost)
+  regionEnergyPerTurn: Int, // region: energy cost per turn without a host 
   startHealth: Int, // starting parasite health
   startEnergy: Int, // starting parasite energy
   listenRadius: Int, // player listen radius

@@ -163,19 +163,19 @@ class PlayerRegion
       // parasite state: check for energy
       if (player.state == PLR_STATE_PARASITE)
         {
-          if (player.energy < player.vars.regionMoveEnergy)
+          if (player.energy < player.vars.regionEnergyPerTurn)
             {
               game.log("Not enough energy to move in region mode.");
               return;
             }
 
-          player.energy -= player.vars.regionMoveEnergy;
+//          player.energy -= player.vars.regionMoveEnergy;
         }
 
       // host state: check for energy
       if (player.state == PLR_STATE_HOST)
         {
-          player.host.energy -= player.vars.regionMoveEnergy;
+//          player.host.energy -= player.vars.regionMoveEnergy;
           if (player.host.energy <= 0)
             {
               onHostDeath();

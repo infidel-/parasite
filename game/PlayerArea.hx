@@ -250,12 +250,13 @@ class PlayerArea
 // post-action call: remove AP and new turn
   public function postAction()
     {
-      // host could be dead
-      if (state == PLR_STATE_HOST && player.host.state == AI_STATE_DEAD)
+      // host death
+      if (state == PLR_STATE_HOST &&
+          (player.host.state == AI_STATE_DEAD || player.host.energy <= 0))
         {
           onHostDeath();
 
-          log('Your host has died.');
+          log('Your host has expired. You have to find a new one.');
           game.scene.setState(HUDSTATE_DEFAULT); // close window if it's open
         }
 
@@ -612,7 +613,7 @@ class PlayerArea
           player.skills.addID(hostSkill.id, amount);
           game.log('You have learned the basics of ' + hostSkill.info.name + ' skill.');
         }
-      else
+      else if (!hostSkill.info.isBool)
         {
           game.log('You have increased your knowledge of ' + hostSkill.info.name +
             ' skill.');
