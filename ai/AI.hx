@@ -793,6 +793,9 @@ class AI
       setState(AI_STATE_HOST);
       parasiteAttached = false;
       entity.setMask(Const.FRAME_MASK_POSSESSED);
+
+      // paralyze AI for a turn so it can't tear parasite away
+      onEffect({ type: EFFECT_PARALYSIS, points: 1, isTimer: true });
     }
 
 

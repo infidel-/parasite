@@ -15,7 +15,7 @@ class Goals
       id: GOAL_INVADE_HOST,
       name: 'Find and invade a host',
       note: 'You need to find and invade a host or you will die from lack of energy.',
-      messageComplete: 'These bipedal hosts look like a dominant life form. They may be more useful.',
+      messageComplete: 'The bipedal hosts look like a dominant life form. They may be more useful.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_INVADE_HUMAN);
         }
