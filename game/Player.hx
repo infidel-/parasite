@@ -44,7 +44,8 @@ class Player
         areaEnergyPerTurn: 5,
         regionEnergyPerTurn: 15,
         startHealth: 10,
-        startEnergy: 100,
+        startEnergy: 50,
+        maxEnergy: 100,
         listenRadius: 10,
         losEnabled: true,
         invisibilityEnabled: false,
@@ -52,7 +53,7 @@ class Player
 
       state = PLR_STATE_PARASITE;
       energy = vars.startEnergy;
-      maxEnergy = vars.startEnergy;
+      maxEnergy = vars.maxEnergy;
       maxHealth = vars.startHealth;
       health = vars.startHealth;
       hostControl = 0;
@@ -200,6 +201,7 @@ private typedef PlayerVars = {
   regionEnergyPerTurn: Int, // region: energy cost per turn without a host 
   startHealth: Int, // starting parasite health
   startEnergy: Int, // starting parasite energy
+  maxEnergy: Int, // max parasite energy
   listenRadius: Int, // player listen radius
   losEnabled: Bool, // LOS checks enabled?
   invisibilityEnabled: Bool, // player invisibility enabled?
