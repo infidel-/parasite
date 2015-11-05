@@ -37,6 +37,8 @@ class AI
   static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
+  public var roamTargetX: Int; // target x,y when roaming (resets on state change)
+  public var roamTargetY: Int;
   var direction: Int; // direction of movement
 
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
@@ -98,6 +100,8 @@ class AI
       id = (_maxID++);
       x = vx;
       y = vy;
+      roamTargetX = -1;
+      roamTargetY = -1;
 
       state = AI_STATE_IDLE;
       reason = REASON_NONE;
@@ -223,6 +227,9 @@ class AI
 // set position
   public function setPosition(vx: Int, vy: Int)
     {
+      if (game.area.getAI(vx, vy) != null)
+        return;
+
       x = vx;
       y = vy;
       entity.setPosition(x, y);
@@ -276,6 +283,10 @@ class AI
       if (state == AI_STATE_ALERT)
         timers.alert = ALERTED_TIMER;
 
+      // reset roam target on changing state
+      roamTargetX = -1;
+      roamTargetY = -1;
+
       onStateChange(); // dynamic event
       updateEntity(); // update icon
     }
@@ -313,8 +324,15 @@ class AI
 
 
 // logic: roam around (default)
-  public function logicRoam()
+  function logicRoam()
     {
+      // roam target set, move to it
+      if (roamTargetX >= 0 && roamTargetY >= 0)
+        {
+          logicMoveTo(roamTargetX, roamTargetY);
+          return;
+        }
+
       if (Math.random() < 0.2)
         changeRandomDirection();
 
@@ -524,7 +542,8 @@ class AI
       visionIdle();
 
       // stand and wonder what happened until alertness go down
-      if (alertness > 0)
+      // if roam target is set, continue moving instead
+      if (alertness > 0 && roamTargetX < 0)
         return;
 
       // TODO: i could make hooks here, leaving the alert logic intact

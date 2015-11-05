@@ -411,6 +411,60 @@ class AreaGame
     }
 
 
+// generic find empty location method with parameters
+  public function findLocation(params: {
+      near: { x: Int, y: Int }, // near this x, y
+      ?radius: Int, // radius to find in (for near)
+      ?isUnseen: Bool, // location should be unseen by player
+    }): { x: Int, y: Int }
+    {
+      // all map 
+      if (params.near == null)
+        {
+          Const.todo('findLocation near == null');
+          return null;
+        }
+
+      if (params.radius == null)
+        params.radius = 3;
+
+      var xo = params.near.x;
+      var yo = params.near.y;
+
+      // make a temp list of empty spots in square radius
+      var tmp = [];
+      for (dy in -params.radius...params.radius)
+        for (dx in -params.radius...params.radius)
+          {
+            // no LOS checks when player is entering the area
+            if (!isEntering)
+              {
+                // must not be visible to player as a parasite
+                if (game.player.state != PLR_STATE_HOST &&
+                    HXP.distanceSquared(game.playerArea.x, game.playerArea.y,
+                      xo + dx, yo + dy) < 6 * 6)
+                  continue;
+
+                // must not be visible to player when possessing a host
+                if (game.player.state == PLR_STATE_HOST &&
+                    isVisible(game.playerArea.x, game.playerArea.y, xo + dx, yo + dy))
+                  continue;
+              }
+
+            if (getCellType(xo + dx, yo + dy) == 'ground' && 
+                getAI(xo + dx, yo + dy) == null &&
+                !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
+              tmp.push({ x: xo + dx, y: yo + dy });
+          }
+
+      // no empty cells found
+      if (tmp.length == 0)
+        return null;
+
+      return tmp[Std.random(tmp.length)];
+    }
+
+
 // find empty location on map near xo,yo (to spawn stuff)
   public function findEmptyLocationNear(xo: Int, yo: Int): { x: Int, y: Int }
     {

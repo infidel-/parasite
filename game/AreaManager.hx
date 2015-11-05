@@ -201,7 +201,12 @@ class AreaManager
 
       for (i in 0...area.info.lawResponceAmount)
         {
-          var loc = area.findEmptyLocationNear(e.x, e.y);
+//          var loc = area.findEmptyLocationNear(e.x, e.y);
+          var loc = area.findLocation({
+            near: { x: e.x, y: e.y },
+            radius: 5,
+            isUnseen: true
+            });
           if (loc == null)
             {
               Const.todo('Could not find free spot for spawn!');
@@ -212,6 +217,10 @@ class AreaManager
           if (area.typeID == AREA_FACILITY)
             ai = new SecurityAI(game, loc.x, loc.y);
           else ai = new PoliceAI(game, loc.x, loc.y);
+
+          // set roam target
+          ai.roamTargetX = e.x;
+          ai.roamTargetY = e.y;
 
           // called law has guns
           ai.inventory.clear();

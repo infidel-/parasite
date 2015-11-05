@@ -1,7 +1,7 @@
 regen health by default + regen improv
-brain probe + its goals should reflect that the host weakens/loses health
-cops should spawn at spot unseen to player closest to the call and move there as a target
 important message window - exit only by space/enter
+goal receive/complete color
+starting energy < 100
 
 what happens on mission failure
 mission - infiltration
