@@ -104,8 +104,14 @@ class PlayerArea
     {
       var tmp = new List<_PlayerAction>();
 
+      if (state == PLR_STATE_PARASITE)
+        {
+          if (game.area.hasAI(x, y))
+            addActionToList(tmp, 'attachHost');
+        }
+
       // parasite is attached to host
-      if (state == PLR_STATE_ATTACHED)
+      else if (state == PLR_STATE_ATTACHED)
         {
           addActionToList(tmp, 'hardenGrip');
           if (attachHold >= 90)
@@ -201,6 +207,15 @@ class PlayerArea
       // harden grip on the victim
       else if (action.id == 'hardenGrip')
         hardenGripAction();
+
+      // attach host 
+      else if (action.id == 'attachHost')
+        {
+          var ai = game.area.getAI(x, y);
+          attachToHostAction(ai);
+
+          game.updateHUD();
+        }
 
       // invade host 
       else if (action.id == 'invadeHost')
