@@ -25,6 +25,7 @@ class Const
       COLOR_HINT => '#A020F0',
       COLOR_TIMELINE => '#F03378',
       COLOR_MESSAGE => '#1CD450',
+      COLOR_GOAL => '#4788FF',
     ];
 
   // entity spritemap indexes

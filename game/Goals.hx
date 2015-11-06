@@ -73,7 +73,7 @@ class Goals
         game.message(info.messageReceive);
 
       if (info.isHidden == null || info.isHidden == false)
-        game.log('You have received a new goal: ' + info.name + '.');
+        game.log('You have received a new goal: ' + info.name + '.', COLOR_GOAL);
 
       // call receive hook
       if (info.onReceive != null)
@@ -93,7 +93,7 @@ class Goals
 
       var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
-        game.log('You have completed a goal: ' + info.name + '.');
+        game.log('You have completed a goal: ' + info.name + '.', COLOR_GOAL);
 
       if (info.messageComplete != null) // completion message
         game.message(info.messageComplete);
@@ -116,7 +116,7 @@ class Goals
 
       var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
-        game.log('You have failed a goal: ' + info.name + '.');
+        game.log('You have failed a goal: ' + info.name + '.', COLOR_GOAL);
 
       if (info.messageFailure != null) // failure message
         game.message(info.messageFailure);
