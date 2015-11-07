@@ -31,6 +31,7 @@ class Game
   public var turnsArea: Int; // number of turns passed since player entered this area 
   public var isFinished: Bool; // is the game finished?
   public var messageList: List<String>; // last X messages of log
+  public var importantMessage: String; // last important message
 
   public function new()
     {
@@ -40,6 +41,7 @@ class Game
       HXP.frameRate = 30;
       HXP.scene = scene;
       messageList = new List();
+      importantMessage = '';
 
       area = null;
       region = null;
@@ -240,10 +242,14 @@ class Game
 
 
 // display text message in a window
-  public inline function message(s: String)
+  public inline function message(s: String, ?col: _TextColor)
     {
-      Const.todo('display important message');
-      log(s, COLOR_MESSAGE);
+      if (col == null)
+        col = COLOR_MESSAGE;
+      importantMessage =
+        "<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
+      log(s, col);
+      scene.setState(HUDSTATE_MESSAGE);
     }
 
 

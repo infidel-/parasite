@@ -1,5 +1,5 @@
 regen health by default + regen improv
-important message window - exit only by space/enter
+;s1 - stage 1 (tutorial up to evolution, inv/area objects known, skills known)
 
 what happens on mission failure
 mission - infiltration

@@ -12,4 +12,5 @@ enum _HUDState
   HUDSTATE_TIMELINE; // timeline window open
   HUDSTATE_LOG; // log window open
   HUDSTATE_CONSOLE; // console open
+  HUDSTATE_MESSAGE; // important message window open
 }

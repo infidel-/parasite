@@ -44,6 +44,7 @@ class GameScene extends Scene
       Input.define("pagedown", [ Key.PAGE_DOWN ]);
       Input.define("home", [ Key.HOME ]);
       Input.define("end", [ Key.END ]);
+      Input.define("enter", [ Key.ENTER ]);
 
       Input.define("action1", [ Key.DIGIT_1 ]);
       Input.define("action2", [ Key.DIGIT_2 ]);
@@ -95,7 +96,8 @@ class GameScene extends Scene
         HUDSTATE_ORGANS => new OrgansWindow(game),
         HUDSTATE_TIMELINE => new TimelineWindow(game),
         HUDSTATE_LOG => new LogWindow(game),
-        HUDSTATE_DEBUG => new DebugWindow(game)
+        HUDSTATE_DEBUG => new DebugWindow(game),
+        HUDSTATE_MESSAGE => new MessageWindow(game),
         ];
 
       area = new AreaView(this);
@@ -231,6 +233,9 @@ class GameScene extends Scene
               windows[hudState].scrollToEnd();
               return true;
             }
+
+          if (Input.pressed("enter") && windows[hudState].exitByEnter)
+            setState(HUDSTATE_DEFAULT);
 
           // close windows
           if (Input.pressed("closeWindow"))

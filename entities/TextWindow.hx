@@ -21,10 +21,23 @@ class TextWindow
   var _back: Sprite; // window background
   var actionName: String; // default action name
 
+  // options
+  public var exitByEnter: Bool; // allows exiting by pressing enter
+  var width: Int; // window size
+  var height: Int;
+  var x: Int; // window position
+  var y: Int;
+  var textFormat: TextFormat;
+
   public function new(g: Game)
     {
       game = g;
       actionName = 'action';
+      exitByEnter = false;
+      width = 0;
+      height = 0;
+      x = 0;
+      y = 0;
 
       _actions = new List<_PlayerAction>();
 
@@ -34,9 +47,11 @@ class TextWindow
       _textField.wordWrap = true;
       _textField.width = HXP.width;
       _textField.height = HXP.height;
-      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _textField.defaultTextFormat = fmt;
+//      _textField.x = 5;
+//      _textField.y = 5;
+      textFormat = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      textFormat.align = TextFormatAlign.LEFT;
+      _textField.defaultTextFormat = textFormat;
       _back = new Sprite();
       _back.addChild(_textField);
       _back.x = 0;
@@ -44,6 +59,24 @@ class TextWindow
       _back.width = HXP.width;
       _back.height = HXP.height;
       HXP.stage.addChild(_back);
+    }
+
+
+// set window size
+  public inline function setSize(w: Int, h: Int)
+    {
+      width = w;
+      height = h;
+    }
+
+
+// set window position
+  public inline function setPosition(xv: Int, yv: Int)
+    {
+      x = xv;
+      y = yv;
+      _back.x = x;
+      _back.y = y;
     }
 
 
@@ -147,8 +180,8 @@ class TextWindow
         }
 
       _textField.htmlText = text + buf.toString();
-      _textField.width = HXP.width;
-      _textField.height = HXP.height;
+      _textField.width = (width > 0 ? width : HXP.width);
+      _textField.height = (height > 0 ? height : HXP.height);
       _back.graphics.clear();
       _back.graphics.beginFill(0x202020, .95);
       _back.graphics.drawRect(0, 0, _textField.width, _textField.height);
