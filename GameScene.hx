@@ -216,6 +216,15 @@ class GameScene extends Scene
           else if (Input.pressed("pagedown"))
             lines = 20;
 
+          // hack: disallow movement while in window
+          if (Input.pressed("left") ||
+              Input.pressed("right")||
+              Input.pressed("upleft")||
+              Input.pressed("upright")||
+              Input.pressed("downleft")||
+              Input.pressed("downright"))
+            return true;
+
           if (lines != 0)
             {
               windows[hudState].scroll(lines);

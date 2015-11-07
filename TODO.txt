@@ -1,5 +1,4 @@
 regen health by default + regen improv
-;s1 - stage 1 (tutorial up to evolution, inv/area objects known, skills known)
 
 what happens on mission failure
 mission - infiltration
@@ -14,7 +13,7 @@ add spaceship object to global object map or make easier getObject(id) function 
 debug mode - timeline - show numeric event id
 
 ==
-TESTING:
+CONSOLE CHEATSHEET:
 ;le12 - learn about aliens
 ;le8 - learn location of spaceship
 
