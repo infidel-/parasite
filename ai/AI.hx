@@ -526,7 +526,8 @@ class AI
                 alertnessBonus += o.params.alertness;
               else alertnessBonus += params.alertness;
             }
-          alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance));
+          alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance)) +
+            alertnessBonus;
         }
       else alertness -= 5;
 

@@ -71,16 +71,20 @@ class EvolutionWindow extends TextWindow
       buf.add('Improvements\n===\n');
       for (imp in game.player.evolutionManager.getList())
         {
-          buf.add(imp.info.name);
+          buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
           buf.add(' ');
           buf.add(imp.level);
           if (imp.level < 3)
             buf.add(' (' + imp.ep + '/' + 
               EvolutionConst.epCostImprovement[imp.level] + ')');
-          buf.add(': ');
-          buf.add(imp.info.note + '\n');
+          buf.add("\n<font color='#5ebee5'>" + imp.info.note + '</font>\n');
 //          if (imp.level > 0)
-          buf.add('  ' + imp.info.levelNotes[imp.level] + '\n');
+          buf.add("<font color='#4cd47b'>" +
+            imp.info.levelNotes[imp.level] + '</font>\n');
+          if (imp.info.noteFunc != null)
+            buf.add("<font color='#13ff65'>" +
+              imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');
+          buf.add('\n');
         }
 
       buf.add('\nCurrent evolution direction: ');

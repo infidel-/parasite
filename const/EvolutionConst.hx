@@ -42,6 +42,10 @@ class EvolutionConst
         id: IMP_DECAY_ACCEL,
         name: 'Decay acceleration',
         note: 'Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
+        noteFunc: function (l)
+          {
+            return "Bodies will disappear in " + l.turns + " turns";
+          },
         organ: {
           name: 'Decay accelerant cysts',
           note: 'Cysts of special bacteria and enzymes spread throughout the body to accelerate its decay after death',
@@ -66,6 +70,10 @@ class EvolutionConst
         id: IMP_CAMO_LAYER, 
         name: 'Camouflage layer',
         note: 'Allows covering parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
+        noteFunc: function (l)
+          {
+            return "AI alertness multiplier: " + l.alertness;
+          },
         organ: {
           name: 'Camouflage layer',
           note: 'Self-regenerating camouflage layer that covers parasite body changing its appearance',
@@ -92,6 +100,11 @@ class EvolutionConst
         id: IMP_PROT_COVER,
         name: 'Protective cover',
         note: 'Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
+        noteFunc: function (l)
+          {
+            return "Host armor bonus (minus to damage): " + l.armor + "\n" +
+              "AI alertness bonus: " + l.alertness;
+          },
         organ: {
           name: 'Protective cover',
           note: 'Armor-like host body cover providing protection against damage at the expense of appearance',
@@ -116,6 +129,10 @@ class EvolutionConst
         id: IMP_WOUND_REGEN,
         name: 'Wound regeneration',
         note: 'Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
+        noteFunc: function (l)
+          {
+            return l.turns + " turns to restore 1 health of host";
+          },
         organ: {
           name: 'Stem cell reservoirs',
           note: 'Microreservoirs of adult stem cells that increase wound recovery speed',
@@ -140,6 +157,10 @@ class EvolutionConst
         id: IMP_HEALTH,
         name: 'Health increase',
         note: 'Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
+        noteFunc: function (l)
+          {
+            return "+" + l.health + " health to host";
+          },
         organ: {
           name: 'Antibody generators',
           note: 'Specialized producers of antibodies that increase overall host health',
@@ -164,6 +185,11 @@ class EvolutionConst
         id: IMP_ENERGY,
         name: '??Host energy bonus',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Host maximum energy multiplier: " + l.hostEnergyMod +
+              "\nRestores energy to maximum on completion";
+          },
         organ: {
           name: '??Host energy bonus',
           note: '(todo fluff)',
@@ -190,6 +216,10 @@ class EvolutionConst
         id: IMP_MUSCLE,
         name: 'Muscle enhancement',
         note: 'Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
+        noteFunc: function (l)
+          {
+            return "+" + l.strength + " strength to host";
+          },
         organ: {
           name: 'Microvascular networks',
           note: 'Functional miscrovascular networks throughout the muscle tissue enhance host body strength',
@@ -214,6 +244,11 @@ class EvolutionConst
         id: IMP_ACID_SPIT,
         name: '??Acid spit',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
+              "\nSpit range: " + l.range;
+          },
         organ: {
           name: '??Acid spit',
           note: '(todo fluff)',
@@ -260,6 +295,10 @@ class EvolutionConst
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Slime strength: " + l.strength;
+          },
         organ: {
           name: '??Slime spit',
           note: '(todo fluff)',
@@ -302,6 +341,11 @@ class EvolutionConst
         id: IMP_PARALYSIS_SPIT,
         name: '??Paralysis spit',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Paralysis effect time: " + l.time +
+              "\nSpit range: " + l.range;
+          },
         organ: {
           name: '??Paralysis spit',
           note: '(todo fluff)',
@@ -344,6 +388,12 @@ class EvolutionConst
         id: IMP_PANIC_GAS,
         name: '??Panic gas',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Cloud range: " + l.range +
+              "\nCloud dissipation time: " + l.timeout +
+              "\nPanic effect time: " + l.time;
+          },
         organ: {
           name: '??Panic gas',
           note: '(todo fluff)',
@@ -391,6 +441,12 @@ class EvolutionConst
         id: IMP_PARALYSIS_GAS,
         name: '??Paralysis gas',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Cloud range: " + l.range +
+              "\nCloud dissipation time: " + l.timeout +
+              "\nParalysis effect time: " + l.time;
+          },
         organ: {
           name: '??Paralysis gas',
           note: '(todo fluff)',
@@ -441,6 +497,10 @@ class EvolutionConst
         id: IMP_ATTACH,
         name: '??Attach efficiency',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Base attach grip: " + l.attachHoldBase;
+          },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -460,6 +520,10 @@ class EvolutionConst
         id: IMP_HARDEN_GRIP,
         name: '??Hold efficiency',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Base harden grip: " + l.attachHoldBase;
+          },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -479,6 +543,10 @@ class EvolutionConst
         id: IMP_REINFORCE,
         name: '??Control efficiency',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Base reinforce control: " + l.reinforceControlBase;
+          },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -502,6 +570,13 @@ class EvolutionConst
         id: IMP_BRAIN_PROBE, 
         name: 'Brain probe',
         note: 'Allows probing host brain to learn its contents',
+        noteFunc: function (l)
+          {
+            return "Human society knowledge multiplier: " + l.humanSociety +
+              "\nBase host energy cost: " + l.hostEnergyBase +
+              "\nBase host health cost: " + l.hostHealthBase +
+              "\nHost skills learning multiplier: " + l.hostSkillsMod;
+          },
         levelNotes: [
           'Cannot probe host brain',
           'Access with severe problems (basic knowledge)',
@@ -569,6 +644,11 @@ class EvolutionConst
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
         note: '(todo fluff)',
+        noteFunc: function (l)
+          {
+            return "Maximum number of microhabitats: " + l.numHabitats +
+              "\nMicrohabitat detection chance: " + l.detectionChance + "%";
+          },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -695,6 +775,7 @@ typedef ImprovInfo =
   path: _Path, // path ID
   name: String, // improvement name
   note: String, // improvement description
+  ?noteFunc: Dynamic -> String, // advanced description
   ?organ: OrganInfo, // organ that can be grown
   levelNotes: Array<String>, // improvement descriptions for different levels
   levelParams: Array<Dynamic>, // improvement-specific parameters for different levels
