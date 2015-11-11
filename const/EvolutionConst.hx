@@ -127,7 +127,7 @@ class EvolutionConst
       { // ***
         path: PATH_PROTECTION,
         id: IMP_WOUND_REGEN,
-        name: 'Wound regeneration',
+        name: 'Stem cell reservoirs',
         note: 'Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
         noteFunc: function (l)
           {
@@ -155,7 +155,7 @@ class EvolutionConst
       { // ***
         path: PATH_PROTECTION,
         id: IMP_HEALTH,
-        name: 'Health increase',
+        name: 'Antibody generators',
         note: 'Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
         noteFunc: function (l)
           {
@@ -214,7 +214,7 @@ class EvolutionConst
       { // ***
         path: PATH_ATTACK,
         id: IMP_MUSCLE,
-        name: 'Muscle enhancement',
+        name: 'Microvascular networks',
         note: 'Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
         noteFunc: function (l)
           {

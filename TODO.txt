@@ -4,10 +4,6 @@ evolution screen:
   select evolution direction - show stats on next level
 regen health by default + regen improv (change wound regen to regen parasite too)
 
-00fcff
-00cccc
-3aa3a3
-
 what happens on mission failure
 mission - infiltration
 mission - research
