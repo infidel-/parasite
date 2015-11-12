@@ -2,7 +2,7 @@ B<?xml version="1.0" encoding="utf-8"?>
 <project>
 	<meta title="parasite" package="org.parasite" version="1.0.0" company="" />
 
- 	<app file="parasite" main="Main" path="bin" />
+ 	<app file="parasite" main="Main" path=".bin" />
 
 	<window fps="30" background="0x333333" antialiasing="0" />
 	<window width="1024" height="768" resizable="true" unless="mobile" />

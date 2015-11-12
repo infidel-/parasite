@@ -26,8 +26,12 @@ class EvolutionWindow extends TextWindow
             buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
             buf.add(' ');
             buf.add(imp.level + 1);
-              buf.add(' (' + imp.ep + '/' + 
-                EvolutionConst.epCostImprovement[imp.level] + ' ep)\n');
+            buf.add(' (' + imp.ep + '/' + 
+              EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
+            var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
+            buf.add(epLeft / _Formula.epPerTurn(game));
+            buf.add(" turns)\n");
+
             buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
             buf.add("<font color='#4cd47b'>" +
               imp.info.levelNotes[imp.level] + '</font>\n');
@@ -39,9 +43,6 @@ class EvolutionWindow extends TextWindow
               id: 'set.' + imp.id,
               type: ACTION_EVOLUTION,
               name: buf.toString(),
-
-  //            name: imp.info.name + 
-  //              ' (' + imp.info.levelNotes[imp.level + 1] + ')',
               energy: 0,
               });
           }
@@ -57,12 +58,20 @@ class EvolutionWindow extends TextWindow
             // do not add completed paths
             if (game.player.evolutionManager.isPathComplete(p.id))
               continue;
+
+            var buf = new StringBuf();
+            buf.add("<font color='#00ffff'>" + p.info.name + "</font>");
+            buf.add(' (');
+            buf.add(p.ep + '/' +
+              EvolutionConst.epCostPath[p.level] + ' ep) (');
+            var epLeft = EvolutionConst.epCostPath[p.level] - p.ep;
+            buf.add(epLeft / _Formula.epPerTurn(game));
+            buf.add(" turns)");
               
             list.add({
               id: 'setPath.' + p.id,
               type: ACTION_EVOLUTION,
-              name: p.info.name + ' (' + p.ep + '/' +
-                EvolutionConst.epCostPath[p.level] + ' ep)',
+              name: buf.toString(),
               energy: 0,
               });
           }
@@ -103,9 +112,16 @@ class EvolutionWindow extends TextWindow
           buf.add('\n');
         }
 
+      buf.add('Evolving costs additional ' + game.player.vars.evolutionEnergyPerTurn +
+        ' energy per turn (' + game.player.vars.evolutionEnergyPerTurnMicrohabitat +
+        ' while in microhabitat).\n' +
+        'You will receive ' + _Formula.epPerTurn(game) + ' ep per turn.\n' +
+        'Your host will survive for ' +
+          Std.int(game.player.host.energy / _Formula.evolutionEnergyPerTurn(game)) +
+        ' turns while evolving (not counting other spending).\n');
+
       buf.add('\nCurrent evolution direction: ');
-      buf.add("<font color='#00ffff'>" + 
-        game.player.evolutionManager.getEvolutionDirectionInfo() + "</font>");
+      buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
 
       return buf.toString();
     }

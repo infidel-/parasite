@@ -11,8 +11,8 @@
 -D windows
 -D desktop
 #--no-output
--cp bin/windows/neko/haxe
--neko bin/windows/neko/obj/ApplicationMain.n
+-cp .bin/windows/neko/haxe
+-neko .bin/windows/neko/obj/ApplicationMain.n
 -dce no
 #-neko test.n
 --macro allowPackage("flash")

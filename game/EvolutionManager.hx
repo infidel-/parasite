@@ -12,6 +12,7 @@ class EvolutionManager
 
   public var state: Int; // 0 - disabled, 1 - limited, 2 - full
   public var isTaskPath: Bool; // is current task path?
+  public var isActive: Bool; // is currently evolving?
   public var taskID: String; // string id of currently evolving path/improvement
   var _list: List<Improv>; // list of known improvements (that can be of level 0)
   var _listPaths: List<Path>; // list of paths (evolution progress)
@@ -21,6 +22,7 @@ class EvolutionManager
       player = p;
       game = g;
       state = 0;
+      isActive = false;
 
       _list = new List<Improv>();
       _listPaths = new List<Path>();
@@ -48,19 +50,16 @@ class EvolutionManager
   public function turn(time: Int)
     {
       // no tasks
-      if (taskID == '')
+      if (!isActive)
         return;
 
       // evolution is easier while in habitat
-      var cost = 5;
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
-        cost = 4;
-      player.host.energy -= cost * time;
+      player.host.energy -= _Formula.evolutionEnergyPerTurn(game) * time;
       if (isTaskPath) // path evolution
         {
           var pathID = Type.createEnum(_Path, taskID);
           var path = getPath(pathID);
-          path.ep += 10 * time;
+          path.ep += _Formula.epPerTurn(game) * time;
 
           // evolution complete
           if (path.ep >= EvolutionConst.epCostPath[path.level])
@@ -68,7 +67,7 @@ class EvolutionManager
               var imp = openImprov(pathID);
               if (imp == null) // should not be here
                 {
-/*                
+/*
                   player.log('You have followed this direction to the end.',
                     COLOR_EVOLUTION);
                   path.ep = 0;
@@ -84,6 +83,7 @@ class EvolutionManager
               path.ep = 0;
               path.level++;
               taskID = '';
+              isActive = false;
             }
         }
 
@@ -103,6 +103,7 @@ class EvolutionManager
               // clear
               imp.ep = 0;
               taskID = '';
+              isActive = false;
 
               // call onUpgrade() func
               if (imp.info.onUpgrade != null)
@@ -132,7 +133,7 @@ class EvolutionManager
       // get random improv
       var index = Std.random(tmp.length);
       var impID = tmp[index];
-      
+
       var imp = addImprov(impID);
       return imp;
     }
@@ -175,6 +176,7 @@ class EvolutionManager
       var actionID = id.substr(id.indexOf('.') + 1);
 
       taskID = actionID;
+      isActive = true;
       if (actionName == 'setPath')
         isTaskPath = true;
       else if (actionName == 'set')
@@ -272,11 +274,29 @@ class EvolutionManager
 // get current evolution direction info
   public function getEvolutionDirectionInfo(): String
     {
-      if (taskID == '')
+      if (!isActive)
         return "<font color='#FF0000'>None</font>";
-      else if (isTaskPath)
-        return EvolutionConst.getPathInfo(Type.createEnum(_Path, taskID)).name;
-      return EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name;
+
+      var buf = new StringBuf();
+      buf.add("<font color='#00ffff'>");
+      if (isTaskPath)
+        buf.add(EvolutionConst.getPathInfo(Type.createEnum(_Path, taskID)).name);
+      else buf.add(EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name);
+      buf.add("</font> (");
+      var epLeft = 0;
+      if (isTaskPath)
+        {
+          var path = getPath(Type.createEnum(_Path, taskID));
+          epLeft = EvolutionConst.epCostPath[path.level] - path.ep;
+        }
+      else
+        {
+          var imp = getImprov(Type.createEnum(_Improv, taskID));
+          epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
+        }
+      buf.add(epLeft / _Formula.epPerTurn(game));
+      buf.add(" turns)");
+      return buf.toString();
     }
 }
 

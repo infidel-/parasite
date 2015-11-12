@@ -41,6 +41,9 @@ class Player
         npcEnabled: false,
         searchEnabled: false,
 
+        evolutionEnergyPerTurn: 5,
+        evolutionEnergyPerTurnMicrohabitat: 4,
+
         areaEnergyPerTurn: 5,
         regionEnergyPerTurn: 15,
         startHealth: 10,
@@ -197,6 +200,8 @@ private typedef PlayerVars = {
   npcEnabled: Bool, // npc spawn enabled?
   searchEnabled: Bool, // computer search info enabled?
 
+  evolutionEnergyPerTurn: Int, // energy spent per turn during evolution
+  evolutionEnergyPerTurnMicrohabitat: Int, // -- in microhabitat
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
   regionEnergyPerTurn: Int, // region: energy cost per turn without a host 
   startHealth: Int, // starting parasite health

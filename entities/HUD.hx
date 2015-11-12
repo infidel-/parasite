@@ -188,7 +188,7 @@ class HUD
               '#FFFFFF' : '#FF0000');
           buf.add("Energy: <font color='" + colEnergy + "'>" + game.player.host.energy +
             '</font>/' + game.player.host.maxEnergy + '\n');
-          buf.add('Evolution direction: ');
+          buf.add('Evolution direction:\n  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');
         }
