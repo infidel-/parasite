@@ -1,7 +1,6 @@
-evolution screen:
-  advanced note to organs
-  energy cost to organ screen (and evolution maybe too)
-  select evolution direction - show stats on next level
+"Evolving costs X energy per turn. You will receive Y ep. Your host will survive for Z turns during the process."
+"Growing body features costs X energy per turn. You will receive Y gp. Your host will survive for Z turns during the process."
+automatically give level 1 of improvement after direction research?
 regen health by default + regen improv (change wound regen to regen parasite too)
 
 what happens on mission failure

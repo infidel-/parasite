@@ -19,7 +19,7 @@ class EvolutionWindow extends TextWindow
     {
       var list = new List<_PlayerAction>();
 
-      for (imp in game.player.evolutionManager.getList())
+      for (imp in game.player.evolutionManager)
         if (imp.level < 3)
           {
             var buf = new StringBuf();
@@ -27,7 +27,7 @@ class EvolutionWindow extends TextWindow
             buf.add(' ');
             buf.add(imp.level + 1);
               buf.add(' (' + imp.ep + '/' + 
-                EvolutionConst.epCostImprovement[imp.level] + ')\n');
+                EvolutionConst.epCostImprovement[imp.level] + ' ep)\n');
             buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
             buf.add("<font color='#4cd47b'>" +
               imp.info.levelNotes[imp.level] + '</font>\n');
@@ -62,7 +62,7 @@ class EvolutionWindow extends TextWindow
               id: 'setPath.' + p.id,
               type: ACTION_EVOLUTION,
               name: p.info.name + ' (' + p.ep + '/' +
-                EvolutionConst.epCostPath[p.level] + ')',
+                EvolutionConst.epCostPath[p.level] + ' ep)',
               energy: 0,
               });
           }
@@ -86,16 +86,15 @@ class EvolutionWindow extends TextWindow
 
       // form a list of improvs and actions
       buf.add('Improvements\n===\n');
-      for (imp in game.player.evolutionManager.getList())
+      for (imp in game.player.evolutionManager)
         {
           buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
           buf.add(' ');
           buf.add(imp.level);
           if (imp.level < 3)
             buf.add(' (' + imp.ep + '/' + 
-              EvolutionConst.epCostImprovement[imp.level] + ')');
+              EvolutionConst.epCostImprovement[imp.level] + ' ep)');
           buf.add("\n<font color='#5ebee5'>" + imp.info.note + '</font>\n');
-//          if (imp.level > 0)
           buf.add("<font color='#4cd47b'>" +
             imp.info.levelNotes[imp.level] + '</font>\n');
           if (imp.info.noteFunc != null)
@@ -105,7 +104,8 @@ class EvolutionWindow extends TextWindow
         }
 
       buf.add('\nCurrent evolution direction: ');
-      buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
+      buf.add("<font color='#00ffff'>" + 
+        game.player.evolutionManager.getEvolutionDirectionInfo() + "</font>");
 
       return buf.toString();
     }

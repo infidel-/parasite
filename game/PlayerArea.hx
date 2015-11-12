@@ -133,7 +133,7 @@ class PlayerArea
         }
 
       // improvement actions
-      for (imp in player.evolutionManager.getList())
+      for (imp in player.evolutionManager)
         {
           var info = imp.info; 
           if (info.action != null)

@@ -18,23 +18,38 @@ class OrgansWindow extends TextWindow
     {
       var list = new List<_PlayerAction>();
 
-      for (imp in game.player.evolutionManager.getList())
+      for (imp in game.player.evolutionManager)
         {
           // improvement not available yet or no organs
           if (imp.level == 0 || imp.info.organ == null)
             continue;
 
-          var organ = imp.info.organ;
+          var organInfo = imp.info.organ;
 
-          // organ already completed
+          // organ already completed 
           if (game.player.host.organs.getActive(imp.info.id) != null)
             continue;
+
+          var buf = new StringBuf();
+          buf.add("<font color='#DDDD00'>" + organInfo.name + "</font>");
+          buf.add(' ');
+          buf.add(imp.level);
+          buf.add(' (' + organInfo.gp + ' gp)');
+
+          buf.add("\n<font color='#5ebee5'>" + organInfo.note + '</font>\n');
+          buf.add("<font color='#4cd47b'>" +
+            imp.info.levelNotes[imp.level] + '</font>\n');
+          if (imp.info.noteFunc != null)
+            buf.add("<font color='#13ff65'>" +
+              imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');
+          else buf.add('\n');
 
           list.add({
             id: 'set.' + imp.id,
             type: ACTION_ORGAN,
-            name: organ.name + ' (' + organ.gp + 'gp)' +
-            ' [' + organ.note + ']',
+            name: buf.toString(),
+//            organ.name + ' (' + organ.gp + 'gp)' +
+//            ' [' + organ.note + ']',
             energy: 0,
             });
         }
@@ -61,17 +76,29 @@ class OrgansWindow extends TextWindow
       var n = 0;
       for (organ in game.player.host.organs)
         {
-          buf.add(organ.info.name + ' ' + organ.level);
+          if (organ.isActive)
+            buf.add("<font color='#DDDD00'>" + organ.info.name + "</font>");
+          else buf.add("<font color='#CCCCCC'>" + organ.info.name + "</font>");
+          buf.add(' ');
+          buf.add(organ.level);
           if (organ.isActive)
             {
               if (organ.info.hasTimeout && organ.timeout > 0)
                 buf.add(' (timeout: ' + organ.timeout + ')');
             }
-          else buf.add(' (' + organ.gp + '/' + organ.info.gp + 'gp)');
-          buf.add(' [' + organ.info.note + ']\n');
+          else buf.add(' (' + organ.gp + '/' + organ.info.gp + ' gp)');
+//          buf.add(' [' + organ.info.note + ']\n');
+          var imp = game.player.evolutionManager.getImprov(organ.improvInfo.id);
+          buf.add("\n<font color='#5ebee5'>" + organ.info.note + '</font>\n');
+          buf.add("<font color='#4cd47b'>" +
+            organ.improvInfo.levelNotes[imp.level] + '</font>\n');
+          if (organ.improvInfo.noteFunc != null)
+            buf.add("<font color='#13ff65'>" +
+              organ.improvInfo.noteFunc(organ.improvInfo.levelParams[imp.level]) + '</font>\n');
+          buf.add('\n');
 #if mydebug
 //          var params = game.player.evolutionManager.getParams(organ.id);
-          buf.add('DEBUG: ' + organ.params + '\n');
+//          buf.add('DEBUG: ' + organ.params + '\n');
 #end
           n++;
         }
@@ -80,7 +107,8 @@ class OrgansWindow extends TextWindow
         buf.add('  --- empty ---\n');
 
       buf.add('\nGrowing body feature: ');
-      buf.add(game.player.host.organs.getGrowInfo());
+      buf.add("<font color='#DDDD00'>" +
+        game.player.host.organs.getGrowInfo() + "</font>");
 
       return buf.toString();
     }

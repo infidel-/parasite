@@ -37,6 +37,13 @@ class EvolutionManager
     }
 
 
+// list iterator
+  public function iterator(): Iterator<Improv>
+    {
+      return _list.iterator();
+    }
+
+
 // end of turn
   public function turn(time: Int)
     {
@@ -232,13 +239,6 @@ class EvolutionManager
           return p;
 
       return null;
-    }
-
-
-// get full list
-  public function getList(): List<Improv>
-    {
-      return _list;
     }
 
 

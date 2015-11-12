@@ -177,7 +177,7 @@ class DebugArea
                 if (!game.player.evolutionManager.isKnown(imp.id))
                   game.player.evolutionManager.addImprov(imp.id);
           
-              for (imp in game.player.evolutionManager.getList())
+              for (imp in game.player.evolutionManager)
                 {
                   imp.level = 3;
                   imp.ep = EvolutionConst.epCostImprovement[imp.level];

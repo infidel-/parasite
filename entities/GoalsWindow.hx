@@ -21,7 +21,7 @@ class GoalsWindow extends TextWindow
           if (info.isHidden)
             continue;
 
-          buf.add(info.name + '\n');
+          buf.add("<font color='#4788FF'>" + info.name + '</font>\n');
           buf.add(info.note + '\n\n');
         }
 
