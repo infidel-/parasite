@@ -25,10 +25,10 @@ class Game
 
   public var player: Player; // game player
   public var playerArea: PlayerArea; // game player (area mode)
-  public var location(default, null): _LocationType; // player location type - area, region, world 
+  public var location(default, null): _LocationType; // player location type - area, region, world
 
   public var turns: Int; // number of turns passed since game start
-  public var turnsArea: Int; // number of turns passed since player entered this area 
+  public var turnsArea: Int; // number of turns passed since player entered this area
   public var isFinished: Bool; // is the game finished?
   public var messageList: List<String>; // last X messages of log
   public var importantMessage: String; // last important message
@@ -81,7 +81,7 @@ class Game
       // set random region (currently only 1 at all)
       region = world.get(0);
 
-      // find random inhabited area near player starting location 
+      // find random inhabited area near player starting location
       var event = timeline.getStartEvent();
 
       // at first we try to find low-population area for easier start
@@ -100,14 +100,14 @@ class Game
           maxRadius: 5 });
       playerRegion.createEntity(area.x, area.y);
 
-      // make area tiles around player known 
+      // make area tiles around player known
       for (yy in (area.y - 1)...(area.y + 2))
         for (xx in (area.x - 1)...(area.x + 2))
           {
             var aa = region.getXY(xx, yy);
             if (aa == null)
               continue;
-            
+
             aa.isKnown = true;
           }
 
@@ -264,7 +264,7 @@ class Game
 
 // add entry to game log
   public function log(s: String, ?col: _TextColor)
-    { 
+    {
       if (col == null)
         col = COLOR_DEFAULT;
       Sys.println(s);

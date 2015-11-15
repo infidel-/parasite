@@ -81,7 +81,8 @@ class GameScene extends Scene
   public override function begin()
     {
       // load all entity images into atlas
-      entityAtlas = new TileAtlas("gfx/entities.png", Const.TILE_WIDTH, Const.TILE_HEIGHT);
+      entityAtlas = new TileAtlas("gfx/entities.png");
+      entityAtlas.prepare(Const.TILE_WIDTH, Const.TILE_HEIGHT);
 
       // init GUI
       mouse = new MouseEntity(game);
