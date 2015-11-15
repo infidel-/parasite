@@ -32,9 +32,13 @@ class ConsoleGame
       else if (cmd.charAt(0) == 'l')
         learnCommand(cmd);
 
-      // XXX stage commands 
+      // XXX stage commands
       else if (cmd.charAt(0) == 's')
         stageCommand(cmd);
+
+      // XXX quit game
+      else if (cmd.charAt(0) == 'q')
+        Sys.exit(1);
 
       game.updateHUD(); // update HUD state
     }
