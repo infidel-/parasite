@@ -29,7 +29,7 @@ class EvolutionWindow extends TextWindow
             buf.add(' (' + imp.ep + '/' + 
               EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
             var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
-            buf.add(epLeft / _Formula.epPerTurn(game));
+            buf.add(Math.ceil(epLeft / _Formula.epPerTurn(game)));
             buf.add(" turns)\n");
 
             buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
@@ -67,7 +67,7 @@ class EvolutionWindow extends TextWindow
             var epLeft = EvolutionConst.epCostPath[p.level] - p.ep;
             buf.add(epLeft / _Formula.epPerTurn(game));
             buf.add(" turns)");
-              
+
             list.add({
               id: 'setPath.' + p.id,
               type: ACTION_EVOLUTION,
@@ -95,6 +95,7 @@ class EvolutionWindow extends TextWindow
 
       // form a list of improvs and actions
       buf.add('Improvements\n===\n');
+      var n = 0;
       for (imp in game.player.evolutionManager)
         {
           buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
@@ -110,7 +111,11 @@ class EvolutionWindow extends TextWindow
             buf.add("<font color='#13ff65'>" +
               imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');
           buf.add('\n');
+          n++;
         }
+
+      if (n == 0)
+        buf.add('  --- empty ---\n');
 
       buf.add('Evolving costs additional ' + game.player.vars.evolutionEnergyPerTurn +
         ' energy per turn (' + game.player.vars.evolutionEnergyPerTurnMicrohabitat +

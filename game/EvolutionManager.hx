@@ -294,7 +294,7 @@ class EvolutionManager
           var imp = getImprov(Type.createEnum(_Improv, taskID));
           epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
         }
-      buf.add(epLeft / _Formula.epPerTurn(game));
+      buf.add(Math.ceil(epLeft / _Formula.epPerTurn(game)));
       buf.add(" turns)");
       return buf.toString();
     }

@@ -26,6 +26,23 @@ class Organs
     }
 
 
+  public function getGrowthInfo(): String
+    {
+      if (currentOrgan == null)
+        return null;
+
+      var buf = new StringBuf();
+      var col: _TextColor = COLOR_ORGAN;
+      buf.add("<font color='" + Const.TEXT_COLORS[col] + "'>");
+      buf.add(currentOrgan.info.name);
+      buf.add("</font> (");
+      var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
+      buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
+      buf.add(" turns)");
+      return buf.toString();
+    }
+
+
 // calculate amount of points
 // saved when the body dies and used if body is eventually found by law enforcement
   public function getPoints(): Int
@@ -72,8 +89,8 @@ class Organs
       if (currentOrgan == null)
         return;
 
-      currentOrgan.gp += 10 * time;
-      _ai.energy -= 5 * time;
+      currentOrgan.gp += game.player.vars.organGrowthPointsPerTurn * time;
+      _ai.energy -= game.player.vars.organGrowthEnergyPerTurn * time;
 
       // organ not grown yet
       if (currentOrgan.gp < currentOrgan.info.gp)
@@ -235,7 +252,7 @@ class Organs
         {
           if (!o.isActive)
             continue;
-          
+
           var a = o.info.action;
           if (a == null)
             continue;

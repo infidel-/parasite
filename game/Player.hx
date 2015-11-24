@@ -43,6 +43,8 @@ class Player
 
         evolutionEnergyPerTurn: 5,
         evolutionEnergyPerTurnMicrohabitat: 4,
+        organGrowthEnergyPerTurn: 5,
+        organGrowthPointsPerTurn: 10,
 
         areaEnergyPerTurn: 5,
         regionEnergyPerTurn: 15,
@@ -202,6 +204,9 @@ private typedef PlayerVars = {
 
   evolutionEnergyPerTurn: Int, // energy spent per turn during evolution
   evolutionEnergyPerTurnMicrohabitat: Int, // -- in microhabitat
+  organGrowthEnergyPerTurn: Int, // energy spent per turn when growing organs
+  organGrowthPointsPerTurn: Int, // organ growth points per turn
+
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
   regionEnergyPerTurn: Int, // region: energy cost per turn without a host 
   startHealth: Int, // starting parasite health

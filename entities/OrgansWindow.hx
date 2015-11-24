@@ -30,11 +30,19 @@ class OrgansWindow extends TextWindow
           if (game.player.host.organs.getActive(imp.info.id) != null)
             continue;
 
+          var organ = game.player.host.organs.get(imp.info.id);
+          var currentGP = 0;
+          if (organ != null)
+            currentGP = organ.gp;
+
           var buf = new StringBuf();
           buf.add("<font color='#DDDD00'>" + organInfo.name + "</font>");
           buf.add(' ');
           buf.add(imp.level);
-          buf.add(' (' + organInfo.gp + ' gp)');
+          buf.add(' (' + organInfo.gp + ' gp) (');
+          var gpLeft = organInfo.gp - currentGP;
+          buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
+          buf.add(" turns)\n");
 
           buf.add("\n<font color='#5ebee5'>" + organInfo.note + '</font>\n');
           buf.add("<font color='#4cd47b'>" +
@@ -104,7 +112,17 @@ class OrgansWindow extends TextWindow
         }
 
       if (n == 0)
-        buf.add('  --- empty ---\n');
+        buf.add('  --- empty ---\n\n');
+
+      buf.add('Body feature growth costs additional ' +
+        game.player.vars.organGrowthEnergyPerTurn +
+        ' energy per turn.\n' +
+        'You will receive ' + game.player.vars.organGrowthPointsPerTurn +
+        ' gp per turn.\n' +
+        'Your host will survive for ' +
+          Std.int(game.player.host.energy /
+            game.player.vars.organGrowthEnergyPerTurn) +
+        ' turns while growing body features (not counting other spending).\n');
 
       buf.add('\nGrowing body feature: ');
       buf.add("<font color='#DDDD00'>" +
