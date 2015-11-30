@@ -131,7 +131,7 @@ class EvolutionConst
         note: 'Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
         noteFunc: function (l)
           {
-            return l.turns + " turns to restore 1 health of host";
+            return l.turns + " turns to restore 1 health of host and parasite";
           },
         organ: {
           name: 'Stem cell reservoirs',

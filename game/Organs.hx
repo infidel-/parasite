@@ -122,14 +122,25 @@ class Organs
 
       // organ: wound regeneration
       var o = get(IMP_WOUND_REGEN);
-      if (o != null && _ai.health < _ai.maxHealth)
+      if (o != null)
         {
           woundRegenTurn++;
-
+          var ok = false;
           if (woundRegenTurn >= o.params.turns)
             {
-              _ai.health++;
+              ok = true;
               woundRegenTurn = 0;
+            }
+
+          if (ok)
+            {
+              // ai health regen
+              if (_ai.health < _ai.maxHealth)
+                _ai.health++;
+
+              // parasite health regen
+              if (game.player.state == PLR_STATE_HOST && _ai == game.player.host)
+                game.player.health++;
             }
         }
     }
