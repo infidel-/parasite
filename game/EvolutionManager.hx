@@ -134,7 +134,7 @@ class EvolutionManager
       var index = Std.random(tmp.length);
       var impID = tmp[index];
 
-      var imp = addImprov(impID);
+      var imp = addImprov(impID, 1);
       return imp;
     }
 

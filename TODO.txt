@@ -1,5 +1,4 @@
 automatically give level 1 of improvement after direction research?
-regen health by default + regen improv (change wound regen to regen parasite too)
 
 what happens on mission failure
 mission - infiltration
