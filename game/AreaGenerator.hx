@@ -11,7 +11,7 @@ class AreaGenerator
   public static function generate(game: Game, area: AreaGame, info: AreaInfo)
     {
       if (info.type == 'city')
-        generateBuildings(game, area, info);
+        generateCity(game, area, info);
       else if (info.type == 'militaryBase')
         generateBuildings(game, area, info);
       else if (info.type == 'facility')
@@ -21,8 +21,268 @@ class AreaGenerator
       else if (info.type == 'habitat')
         generateHabitat(game, area, info);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
-        
+
+/*
+      var cells = area.getCells();
+      for (y in 0...area.height)
+        {
+          for (x in 0...area.width)
+            neko.Lib.print(cells[x][y]);
+          neko.Lib.println('');
+        }
+*/
+      var cells = area.getCells();
+      for (y in 0...area.height)
+        {
+          for (x in 0...area.width)
+            neko.Lib.print(cells[x][y] == Const.TILE_BUILDING ? 1 : 0);
+          neko.Lib.println('');
+        }
+  //    Sys.exit(1);
+
       generateObjects(game, area, info);
+    }
+
+
+  static function addStreet(area: AreaGame, dir: _LineDir, sx: Int, sy: Int,
+      level: Int)
+    {
+      var i = 0;
+      var xx = sx;
+      var yy = sy;
+
+      var prevRoad = ((dir == TB || dir == BT) ? sy : sx);
+      var w = 0;
+      var maxlen = 200;
+      if (level == 0)
+        w = 10;
+      else if (level == 1)
+        {
+          maxlen = 50;
+          w = 5;
+        }
+      else if (level == 2)
+        {
+          maxlen = 25;
+          w = 3;
+        }
+      else
+        {
+          maxlen = 15;
+          w = 3;
+        }
+
+      while (true) 
+        {
+          for (i in 0...w)
+            area.setCellType(xx + ((dir == TB || dir == BT) ? i : 0),
+              yy + ((dir == LR || dir == RL) ? i : 0), Const.TILE_ROAD);
+
+          if (i > maxlen && Std.random(100) > i && level > 0)
+            break;
+
+          var dx = 0;
+          var dy = 0;
+          if (dir == TB)
+            dy = 1;
+          else if (dir == BT)
+            dy = -1;
+          else if (dir == LR)
+            dx = 1;
+          else if (dir == RL)
+            dx = -1;
+
+          if (xx + dx < 0 || yy + dy < 0 ||
+              xx + dx >= area.width || yy + dy >= area.height)
+            break;
+
+          var newRoad = (dx != 0 ? xx : yy);
+          var blocksz = 10;
+          if (level == 0)
+            blocksz = 20;
+          else if (level == 1)
+            blocksz = 10;
+
+          var newblock = ((newRoad - prevRoad) % 20) == 0;
+          if (level < 3 && newRoad - prevRoad > 0 && newblock)
+            {
+              var newdir = null;
+              if (dir == TB || dir == BT)
+                newdir = Std.random(100) < 50 ? LR : RL;
+              else if (dir == LR || dir == RL)
+                newdir = Std.random(100) < 50 ? BT : TB;
+
+              // new road starting x,y
+              var rx = xx;
+              var ry = yy;
+              if (newdir == TB)
+                ry += w;
+              else if (newdir == BT)
+                ry -= 1;
+              if (newdir == LR)
+                rx += w;
+              else if (newdir == RL)
+                rx -= 1;
+
+              prevRoad == (dx != 0 ? xx : yy);
+              addStreet(area, newdir, rx, ry, level + 1);
+            }
+
+          xx += dx;
+          yy += dy;
+
+          i++;
+        }
+    }
+
+
+// generate a city block
+  static function generateCity(game: Game, area: AreaGame, info: AreaInfo)
+    {
+      // fill with walls
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          area.setCellType(x, y, Const.TILE_BUILDING);
+
+      var blockSize = 20;
+      var blockW = Std.int(area.width / blockSize);
+      var blockH = Std.int(area.height / blockSize);
+      var blockW4 = Std.int(area.width / blockSize / 4);
+      var blockH4 = Std.int(area.height / blockSize / 4);
+      var bx = blockW4 + Std.random(blockW - 1 - blockW4);
+      var by = blockH4 + Std.random(blockH - 1 - blockH4);
+      addStreet(area, TB, bx * blockSize, 0, 0);
+/*
+      var blockSize = 10;
+      for (by in 1...Std.int(area.height / blockSize))
+        for (bx in 1...Std.int(area.width / blockSize))
+          {
+            if (Std.random(100) > 50)
+              continue;
+
+            var blocklen = 2 + Std.random(3);
+            var isVertical = (Std.random(100) > 50);
+            var x = bx * blockSize;
+            var y = by * blockSize;
+            for (i in 0...blocklen * blockSize)
+              area.setCellType(x + (isVertical ? 0 : i),
+                (y + (isVertical ? i : 0)), Const.TILE_ROAD);
+          }
+*/
+
+      // walkways
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (area.getCellType(x, y) != Const.TILE_ROAD)
+              continue;
+
+            var ok = false;
+            for (i in 0...Const.dirx.length)
+              if (area.getCellType(x + Const.dirx[i], y + Const.diry[i]) == Const.TILE_BUILDING)
+                {
+                  ok = true;
+                  break;
+                }
+
+            if (ok)
+              area.setCellType(x, y, Const.TILE_WALKWAY);
+          }
+
+      // crosswalks
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (area.getCellType(x, y) != Const.TILE_WALKWAY)
+              continue;
+
+            // find walkway corners
+            var cnt = 0;
+            for (i in 0...Const.dirx.length)
+              if (area.getCellType(x + Const.dirx[i], y + Const.diry[i]) == Const.TILE_ROAD)
+                cnt++;
+
+            if (cnt < 5)
+              continue;
+
+            var roadDown = (area.getCellType(x, y - 1) == Const.TILE_WALKWAY);
+            var roadRight = (area.getCellType(x - 1, y) == Const.TILE_WALKWAY);
+
+            // get vertical crosswalk length 
+            var yy = y;
+            var len = 0;
+            while (true)
+              {
+                yy = (roadDown ? yy + 1 : yy - 1);
+                if (area.getCellType(x, yy) != Const.TILE_ROAD)
+                  break;
+                len++;
+              }
+
+            // good corner for vertical road
+            if (len <= 5)
+              {
+                var yy = y;
+                while (true)
+                  {
+                    yy = (roadDown ? yy + 1 : yy - 1);
+                    if (area.getCellType(x, yy) != Const.TILE_ROAD)
+                      break;
+                    area.setCellType(x, yy, Const.TILE_CROSSWALKV);
+                  }
+              }
+
+            // get horizontal crosswalk length 
+            var xx = x;
+            var len = 0;
+            while (true)
+              {
+                xx = (roadRight ? xx + 1 : xx - 1);
+                if (area.getCellType(xx, y) != Const.TILE_ROAD)
+                  break;
+                len++;
+              }
+
+            // good corner for horizontal road
+            if (len <= 5)
+              {
+                var xx = x;
+                while (true)
+                  {
+                    xx = (roadRight ? xx + 1 : xx - 1);
+                    if (area.getCellType(xx, y) != Const.TILE_ROAD)
+                      break;
+                    area.setCellType(xx, y, Const.TILE_CROSSWALKH);
+                  }
+              }
+          }
+    }
+
+
+// helper: draw street
+//  static function drawVerticalStreet(area: AreaGame, x1: Int, y1: Int, )
+  static function lineV(area: AreaGame, x: Int, y1: Int, y2: Int, w: Int, t: Int)
+    {
+      if (w > 1)
+        for (xx in x...x + w)
+          for (y in y1...y2)
+            area.setCellType(xx, y, t);
+      else
+        for (y in y1...y2)
+          area.setCellType(x, y, t);
+    }
+
+
+// helper: draw street
+  static function lineH(area: AreaGame, x1: Int, x2: Int, y: Int, w: Int, t: Int)
+    {
+      if (w > 1)
+        for (x in x1...x2)
+          for (yy in y...y + w)
+            area.setCellType(x, yy, t);
+      else
+        for (x in x1...x2)
+          area.setCellType(x, y, t);
     }
 
 
@@ -109,7 +369,7 @@ class AreaGenerator
                     continue;
                   //var cell = get(x + dx, y + dy);
                   var cellType = area.getCellType(x + dx, y + dy);
-                  if (cellType == "building")
+                  if (cellType == Const.TILE_BUILDING)
                     {
                       ok = false;
                       break;
@@ -184,4 +444,13 @@ class AreaGenerator
             area.addObject(o);
           }
     }
+}
+
+
+enum _LineDir
+{
+  TB;
+  BT;
+  LR;
+  RL;
 }

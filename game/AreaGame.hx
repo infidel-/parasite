@@ -353,7 +353,7 @@ class AreaGame
           var y = rect.y1 + Std.random(rect.y2);
 
           // must be empty ground tile
-          if (getCellType(x, y) != 'ground')
+          if (!isWalkable(x, y))
             continue;
 
           // must not have ai
@@ -398,7 +398,7 @@ class AreaGame
 
           x = Std.random(width);
           y = Std.random(height);
-          if (getCellType(x, y) != 'ground')
+          if (!isWalkable(x, y))
             continue;
 
           if (getAI(x, y) != null)
@@ -451,7 +451,7 @@ class AreaGame
                   continue;
               }
 
-            if (getCellType(xo + dx, yo + dy) == 'ground' && 
+            if (isWalkable(xo + dx, yo + dy) && 
                 getAI(xo + dx, yo + dy) == null &&
                 !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
               tmp.push({ x: xo + dx, y: yo + dy });
@@ -472,7 +472,7 @@ class AreaGame
       var tmp = [];
       for (dy in -3...3)
         for (dx in -3...3)
-          if (getCellType(xo + dx, yo + dy) == 'ground' && 
+          if (isWalkable(xo + dx, yo + dy) && 
               getAI(xo + dx, yo + dy) == null &&
               !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
             tmp.push({ x: xo + dx, y: yo + dy });
@@ -522,12 +522,21 @@ class AreaGame
     { return _cells; }
 
 
-// get cell type of this cell
-  public function getCellType(x: Int, y: Int): String
+// get string cell type of this cell
+  public function getCellTypeString(x: Int, y: Int): String
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return null;
       return Const.TILE_TYPE[_cells[x][y]];
+    }
+
+
+// get cell type of this cell
+  public function getCellType(x: Int, y: Int): Int
+    {
+      if (x < 0 || y < 0 || x >= width || y >= height)
+        return null;
+      return _cells[x][y];
     }
 
 
@@ -556,7 +565,8 @@ class AreaGame
 // set cell type 
   public inline function setCellType(x: Int, y: Int, index: Int)
     {
-      _cells[x][y] = index;
+      if (x >= 0 && y >= 0 && x < width && y < height)
+        _cells[x][y] = index;
     }
 
 

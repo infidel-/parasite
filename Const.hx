@@ -90,9 +90,20 @@ class Const
   public static var TILE_REGION_CITY_HIGH = 3;
   public static var TILE_REGION_MILITARY_BASE = 4;
   public static var TILE_REGION_FACILITY = 5;
+  
+  public static var TILE_CITY_ROW = 16;
+  public static var TILE_ROAD = TILE_CITY_ROW + 0;
+  public static var TILE_WALKWAY = TILE_CITY_ROW + 1;
+  public static var TILE_CROSSWALKV = TILE_CITY_ROW + 2;
+  public static var TILE_CROSSWALKH = TILE_CITY_ROW + 3;
 
-  public static var TILE_WALKABLE = [ false, true, false, false, false,
-    false ];
+  public static var TILE_CITY_WALKABLE = [ true ];
+
+  public static var TILE_WALKABLE = [
+    false, true, false, false, false, false, false, false,
+    true, true, true, true, true, true, false, false,
+    true, true, true, true, false, false, false, false,
+    ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree', 
     'wall' ];
   public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];

@@ -122,7 +122,9 @@ class MouseEntity extends Entity
           // debug: cell and ai info
           if (_mode == MODE_DEBUG)
             {
-              trace('(' + x + ',' + y + ') ' + game.area.getCellType(x, y) +
+              trace('(' + x + ',' + y + ') ' +
+                game.area.getCellType(x, y) + ' ' +
+                game.area.getCellTypeString(x, y) +
                 ' player vis: ' + 
                 game.area.isVisible(game.playerArea.x, 
                   game.playerArea.y, x, y, true));

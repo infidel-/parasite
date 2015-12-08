@@ -18,7 +18,7 @@ class AreaView
   public var width: Int; // area width, height in cells
   public var height: Int;
   var entity: Entity; // area entity
-  static var maxSize = 100;
+  static var maxSize = 120;
 
   public function new (s: GameScene)
     {
