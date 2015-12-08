@@ -152,23 +152,102 @@ class AreaGenerator
       var bx = blockW4 + Std.random(blockW - 1 - blockW4);
       var by = blockH4 + Std.random(blockH - 1 - blockH4);
       addStreet(area, TB, bx * blockSize, 0, 0);
-/*
-      var blockSize = 10;
-      for (by in 1...Std.int(area.height / blockSize))
-        for (bx in 1...Std.int(area.width / blockSize))
-          {
-            if (Std.random(100) > 50)
-              continue;
 
-            var blocklen = 2 + Std.random(3);
-            var isVertical = (Std.random(100) > 50);
-            var x = bx * blockSize;
-            var y = by * blockSize;
-            for (i in 0...blocklen * blockSize)
-              area.setCellType(x + (isVertical ? 0 : i),
-                (y + (isVertical ? i : 0)), Const.TILE_ROAD);
-          }
-*/
+      // add alleys
+      var cells = area.getCells();
+      var maxrange = 10;
+      for (y in 0...area.height)
+        {
+          var x = 0;
+          while (x < area.width)
+            {
+              // check if there's a road in range
+              var minx = x - maxrange;
+              if (minx < 0)
+                minx = 0;
+              var maxx = x + maxrange;
+              if (maxx > area.width)
+                maxx = area.width;
+
+              var miny = y - maxrange;
+              if (miny < 0)
+                miny = 0;
+              var maxy = y + maxrange;
+              if (maxy > area.height)
+                maxy = area.height;
+
+              var roadNear = false;
+              for (yy in miny...maxy)
+                for (xx in minx...maxx)
+                  if (cells[xx][yy] == Const.TILE_ROAD)
+                    {
+                      roadNear = true;
+                      break;
+                    }
+
+              // road near, skip this
+              if (roadNear)
+                {
+                  x += 10;
+                  continue;
+                }
+
+              // build an alley in random direction
+              var dir = (Std.random(100) > 50 ? LR : TB);
+              var len = 0;
+              var xx = x;
+              var yy = y;
+              area.setCellType(xx, yy, Const.TILE_ROAD);
+              var dirChanged = 0;
+              while (true) 
+                {
+                  var dx = 0;
+                  var dy = 0;
+                  if (dir == TB)
+                    dy = 1;
+                  else if (dir == BT)
+                    dy = -1;
+                  else if (dir == LR)
+                    dx = 1;
+                  else if (dir == RL)
+                    dx = -1;
+
+                  xx += dx;
+                  yy += dy;
+                  len++;
+
+                  if (xx < 0 || yy < 0)
+                    break;
+
+                  if (xx >= area.width)
+                    break;
+
+                  if (yy >= area.height)
+                    break;
+
+                  if (cells[xx][yy] == Const.TILE_ROAD)
+                    break;
+
+                  area.setCellType(xx, yy, Const.TILE_ROAD);
+
+                  // switch direction
+                  if (len > 5 && len % 10 == 1 && Std.random(100) < 40 &&
+                      dirChanged < 4)
+                    {
+                      if (dir == TB)
+                        dir = (Std.random(100) > 50 ? LR : RL);
+                      else if (dir == LR)
+                        dir = (Std.random(100) > 50 ? BT : TB);
+                      dirChanged++;
+                    }
+
+                  if (len > 100)
+                    break;
+                }
+
+              x += 10;
+            }
+        }
 
       // walkways
       for (y in 0...area.height)
