@@ -1,3 +1,5 @@
+smooth out building tiles when they are not wide enough
+
 what happens on mission failure
 mission - infiltration
 mission - research
