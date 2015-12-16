@@ -235,7 +235,7 @@ class AreaGame
       // habitat was detected, destroy it
       if (isHabitat && habitatIsDetected)
         {
-          game.playerRegion.currentArea.hasHabitat = false;         
+          game.playerRegion.currentArea.hasHabitat = false;
           game.region.removeArea(id);
           game.scene.region.updateIconsArea(game.playerRegion.x,
             game.playerRegion.y);
@@ -259,7 +259,7 @@ class AreaGame
       // clear map
       for (y in 0...height)
         for (x in 0...width)
-          setCellType(x, y, Const.TILE_GROUND);
+          _cells[x][y] = Const.TILE_GROUND;
 
       AreaGenerator.generate(game, this, info);
 

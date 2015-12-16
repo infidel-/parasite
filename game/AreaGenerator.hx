@@ -31,6 +31,7 @@ class AreaGenerator
           neko.Lib.println('');
         }
 */
+/*
       var cells = area.getCells();
       for (y in 0...area.height)
         {
@@ -39,6 +40,7 @@ class AreaGenerator
             neko.Lib.print(cells[x][y]);
           neko.Lib.println('');
         }
+*/
       Sys.exit(1);
 
       generateObjects(game, area, info);
@@ -244,19 +246,27 @@ class AreaGenerator
         }
     }
 
+  static var TEMP_BUILDING = 0;
   static var TEMP_ROAD = 1;
   static var TEMP_ALLEY = 2;
   static var TEMP_ALLEYTEMP = 3;
-  static var TEMP_BUILDING = 0;
+  static var TEMP_ACTUAL_BUILDING = 4;
+  static var TEMP_WALKWAY = 5;
 
 
 // generate a city block
   static function generateCity(game: Game, area: AreaGame, info: AreaInfo)
     {
+/*
+      var cells = new Array<Array<Int>>();
+      for (i in 0...area.width)
+        cells[i] = [];
+*/
+      var cells = area.getCells();
       // fill with walls
       for (y in 0...area.height)
         for (x in 0...area.width)
-          area.setCellType(x, y, TEMP_BUILDING); //Const.TILE_BUILDING);
+          cells[x][y] = TEMP_BUILDING; //Const.TILE_BUILDING);
 
       var blockSize = 20;
       var blockW = Std.int(area.width / blockSize);
@@ -278,7 +288,7 @@ class AreaGenerator
               x += 10;
             }
         }
-
+/*
       // add alleys w=1
       for (y in 0...area.height)
         {
@@ -289,6 +299,96 @@ class AreaGenerator
 
               x += 5;
             }
+        }
+*/
+      // smooth out 1-cell wide buildings
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (area.getCellType(x, y) != TEMP_BUILDING)
+              continue;
+
+            // continue vertical roads
+            if (area.getCellType(x, y - 1) == TEMP_ROAD &&
+                area.getCellType(x, y + 1) == TEMP_ROAD)
+              area.setCellType(x, y, TEMP_ROAD);
+
+            // continue horizontal roads
+            if (area.getCellType(x - 1, y) == TEMP_ROAD &&
+                area.getCellType(x + 1, y) == TEMP_ROAD)
+              area.setCellType(x, y, TEMP_ROAD);
+
+            // continue vertical alleys and connect roads to alleys
+            if (area.getCellType(x, y - 1) != TEMP_BUILDING &&
+                area.getCellType(x, y + 1) != TEMP_BUILDING)
+              area.setCellType(x, y, TEMP_ALLEY);
+
+            // continue horizontal alleys
+            if (area.getCellType(x - 1, y) != TEMP_BUILDING &&
+                area.getCellType(x + 1, y) != TEMP_BUILDING)
+              area.setCellType(x, y, TEMP_ALLEY);
+          }
+
+      // make actual buildings from building cells
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (cells[x][y] != TEMP_BUILDING)
+              continue;
+
+            // find max w,h of new building (roughly)
+            var maxx = 0;
+            var maxy = 0;
+            for (xx in x...area.width)
+              if (cells[xx][y] != TEMP_BUILDING)
+                {
+                  maxx = xx;
+                  break;
+                }
+            for (yy in y...area.height)
+              if (cells[x][yy] != TEMP_BUILDING)
+                {
+                  maxy = yy;
+                  break;
+                }
+
+            var w = maxx - x;
+            var h = maxy - y;
+
+            // max building size
+            var maxw = 10 + Std.random(5);
+            var maxh = 10 + Std.random(5);
+            if (w > maxw)
+              {
+                w = maxw;
+                maxx = x + w;
+              }
+            if (h > maxh)
+              {
+                h = maxh;
+                maxy = y + h;
+              }
+
+            // too small to be a building, fill with alley tile
+            var tile = TEMP_ACTUAL_BUILDING;
+            if (w <= 3 || h <= 3)
+              tile = TEMP_WALKWAY;
+
+            // fill with new tile (with walkways around)
+            for (yy in y...maxy)
+              for (xx in x...maxx)
+                cells[xx][yy] =
+                  (yy == y || yy == maxy - 1 || xx == x || xx == maxx - 1) ?
+                  TEMP_WALKWAY : tile;
+          }
+
+
+      for (y in 0...area.height)
+        {
+          for (x in 0...area.width)
+//            neko.Lib.print(cells[x][y] == Const.TILE_BUILDING ? 1 : 0);
+            neko.Lib.print(cells[x][y]);
+          neko.Lib.println('');
         }
       return;
 
