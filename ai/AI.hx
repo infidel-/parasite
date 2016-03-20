@@ -17,9 +17,9 @@ class AI
   public var npc: scenario.NPC; // npc link (for scenario npcs)
 
   public var type: String; // ai type
-  public var job: String; // ai job 
-  public var name: 
-    { 
+  public var job: String; // ai job
+  public var name:
+    {
       real: String, // real name
       realCapped: String, // capitalized real name
       unknown: String, // class name
@@ -45,7 +45,7 @@ class AI
   var _turnsInvisible: Int; // number of turns passed since player saw this AI
 
   public var state: _AIState; // AI state
-  public var reason: _AIStateChangeReason; // reason for setting this state 
+  public var reason: _AIStateChangeReason; // reason for setting this state
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
 
   // various AI timers
@@ -56,7 +56,7 @@ class AI
 //    alertPlayerNotVisible: Int,
     };
 
-  // attrs 
+  // attrs
   public var baseAttrs: _Attributes; // base attributes
   public var modAttrs: _Attributes; // attribute mods
   public var strength(get, set): Int; // physical strength (1-10)
@@ -107,7 +107,7 @@ class AI
       reason = REASON_NONE;
       alertness = 0;
       brainProbed = 0;
-      timers = 
+      timers =
         {
           alert: 0,
 //          alertPlayerNotVisible: 0
@@ -167,7 +167,7 @@ class AI
       modAttrs.constitution = 0;
       modAttrs.intellect = 0;
       modAttrs.psyche = 0;
-  
+ 
       // organ: muscle enhancement
       var o = organs.get(IMP_MUSCLE);
       if (o != null)
@@ -177,7 +177,7 @@ class AI
       _constitution = baseAttrs.constitution + modAttrs.constitution;
       _intellect = baseAttrs.intellect + modAttrs.intellect;
       _psyche = baseAttrs.psyche + modAttrs.psyche;
-  
+ 
       // organ: host energy bonus
       var o = organs.get(IMP_ENERGY);
       var energyMod = 1.0;
@@ -186,8 +186,8 @@ class AI
 
       maxEnergy = Std.int((5 + strength + constitution) * 10 * energyMod);
       maxHealth = strength + constitution;
-  
-      // organ: health increase 
+ 
+      // organ: health increase
       var o = organs.get(IMP_HEALTH);
       if (o != null)
         maxHealth += o.params.health;
@@ -342,9 +342,9 @@ class AI
 
       var nx = x + Const.dirx[direction];
       var ny = y + Const.diry[direction];
-      var ok = 
-        (game.area.isWalkable(nx, ny) && 
-         !game.area.hasAI(nx, ny) && 
+      var ok =
+        (game.area.isWalkable(nx, ny) &&
+         !game.area.hasAI(nx, ny) &&
          !(game.playerArea.x == nx && game.playerArea.y == ny));
       if (!ok)
         {
@@ -366,7 +366,7 @@ class AI
           var nx = x + Const.dirx[i];
           var ny = y + Const.diry[i];
           var ok = (
-            game.area.isWalkable(nx, ny) && !game.area.hasAI(nx, ny) && 
+            game.area.isWalkable(nx, ny) && !game.area.hasAI(nx, ny) &&
               (Math.abs(nx - game.playerArea.x) >= Math.abs(x - game.playerArea.x) &&
                Math.abs(ny - game.playerArea.y) >= Math.abs(y - game.playerArea.y))
             );
@@ -402,7 +402,7 @@ class AI
         return;
 
       parasiteAttached = false;
-      log('manages to tear you away.'); 
+      log('manages to tear you away.');
       game.playerArea.onDetach(); // notify player
     }
 
@@ -485,8 +485,8 @@ class AI
       if (damage < 0)
         damage = 0;
 
-      log(info.verb2 + ' ' + 
-        (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') + 
+      log(info.verb2 + ' ' +
+        (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
         ' for ' + damage + ' damage.');
       game.debug('AI.attack: ' + tmp);
 
@@ -534,7 +534,7 @@ class AI
       // AI has become alerted
       if (alertness >= 100)
         {
-          setState(AI_STATE_ALERT, 
+          setState(AI_STATE_ALERT,
             (game.player.state == PLR_STATE_PARASITE ? REASON_PARASITE : REASON_HOST));
           return;
         }
@@ -562,11 +562,11 @@ class AI
           seesPosition(game.playerArea.x, game.playerArea.y))
         timers.alert = ALERTED_TIMER;
       else timers.alert--;
-  
+ 
       // AI calms down
       if (timers.alert == 0)
         {
-          setState(AI_STATE_IDLE); 
+          setState(AI_STATE_IDLE);
           alertness = 10;
           return;
         }
@@ -574,7 +574,7 @@ class AI
       // parasite attached - try to tear it away
       if (parasiteAttached)
         logicTearParasiteAway();
-      
+     
       // call alert logic for this AI type
       else
         {
@@ -584,8 +584,8 @@ class AI
               if (!game.player.vars.invisibilityEnabled)
                 {
                   // search for player
-                  // we cheat a little and follow invisible player 
-                  // before alert timer ends 
+                  // we cheat a little and follow invisible player
+                  // before alert timer ends
                   if (!seesPosition(game.playerArea.x, game.playerArea.y))
                     logicMoveTo(game.playerArea.x, game.playerArea.y);
 
@@ -664,7 +664,7 @@ class AI
 
       _turnsInvisible++;
       if (_turnsInvisible > DESPAWN_TIMER)
-        game.area.removeAI(this); 
+        game.area.removeAI(this);
     }
 
 
@@ -694,11 +694,11 @@ class AI
       if (effects.has(EFFECT_SLIME))
         effectSlime();
 
-      // effect: paralysis 
+      // effect: paralysis
       else if (effects.has(EFFECT_PARALYSIS))
         1;
 
-      // effect: panic, run away 
+      // effect: panic, run away
       else if (effects.has(EFFECT_PANIC))
         logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
 
@@ -719,7 +719,7 @@ class AI
     }
 
 
-// emit random sound for this key 
+// emit random sound for this key
   function emitRandomSound(key: String, ?chance: Int = 100)
     {
       var array = sounds[key];
@@ -735,7 +735,7 @@ class AI
       emitSound(sound);
     }
 
- 
+
 // emit specific sound
   function emitSound(sound: AISound)
     {
@@ -752,7 +752,7 @@ class AI
       // get a list of AIs in that radius without los checks and give alertness bonus
       var list = game.area.getAIinRadius(x, y, sound.radius, false);
       for (ai in list)
-        if (ai.state == AI_STATE_IDLE) 
+        if (ai.state == AI_STATE_IDLE)
           ai.alertness += sound.alertness;
     }
 
@@ -841,7 +841,7 @@ class AI
     {}
 
 
-// event dynamic: on being attacked 
+// event dynamic: on being attacked
   public dynamic function onAttack()
     {}
 

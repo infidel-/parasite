@@ -14,7 +14,7 @@ class Goals
     GOAL_INVADE_HOST => {
       id: GOAL_INVADE_HOST,
       name: 'Find and invade a host',
-      note: 'You need to find and invade a host or you will die from lack of energy.',
+      note: 'You need to find and invade a host or you will die from the lack of energy.',
       messageComplete: 'The bipedal hosts look like a dominant life form. They may be more useful.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_INVADE_HUMAN);
@@ -24,7 +24,7 @@ class Goals
     GOAL_INVADE_HUMAN => {
       id: GOAL_INVADE_HUMAN,
       name: 'Find and invade a bipedal host',
-      note: 'You need to find and invade a bipedal host', 
+      note: 'You need to find and invade a bipedal host',
       messageComplete: 'This host is intelligent. I need to evolve and understand it further.',
       onComplete: function (game, player) {
         player.evolutionManager.state = 1;
@@ -36,7 +36,7 @@ class Goals
     GOAL_EVOLVE_PROBE => {
       id: GOAL_EVOLVE_PROBE,
       name: 'Evolve brain probe',
-      note: 'You need to evolve brain probe improvement.',
+      note: 'You need to evolve the brain probe improvement.',
       messageComplete: 'I can probe the brain of this host now. I should also evolve further.',
       onComplete: function (game, player) {
         player.evolutionManager.state = 2;
@@ -72,11 +72,11 @@ class Goals
 
      GOAL_EVOLVE_MICROHABITAT => {
       id: GOAL_EVOLVE_MICROHABITAT,
-      name: 'Evolve a microhabitat knowledge',
+      name: 'Evolve the microhabitat knowledge',
       note: 'You need to evolve the knowledge of microhabitat.',
       messageComplete: 'Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.',
       onComplete: function (game, player) {
-        player.skills.addID(KNOW_HABITAT, 100); 
+        player.skills.addID(KNOW_HABITAT, 100);
         game.goals.receive(GOAL_CREATE_HABITAT);
         }
       },
@@ -92,7 +92,7 @@ class Goals
 
     GOAL_PROBE_BRAIN => {
       id: GOAL_PROBE_BRAIN,
-      name: 'Probe host brain',
+      name: 'Probe the host brain',
       note: 'You need to probe the brain of any host.',
       messageComplete: 'Some of the objects the hosts carry can be useful. There are also functional objects around.',
       onComplete: function (game, player) {
@@ -103,7 +103,7 @@ class Goals
 
     GOAL_LEARN_ITEMS => {
       id: GOAL_LEARN_ITEMS,
-      name: 'Learn any item',
+      name: 'Learn about any item',
       note: 'You need to learn information about any item.',
       messageComplete: 'I can learn how to use items effectively by probing the host brain for more.',
       onComplete: function (game, player) {
@@ -119,7 +119,7 @@ class Goals
 
     GOAL_PROBE_BRAIN_ADVANCED => {
       id: GOAL_PROBE_BRAIN_ADVANCED,
-      name: 'Improve brain probe',
+      name: 'Improve the brain probe',
       note: 'Your brain probe is not advanced enough to gain information about host skills. You need to improve it.',
       messageComplete: 'My brain probe has improved significantly.',
       onComplete: function (game, player) {
@@ -129,14 +129,14 @@ class Goals
 
     GOAL_LEARN_SKILLS => {
       id: GOAL_LEARN_SKILLS,
-      name: 'Use brain probe to learn any skill',
+      name: 'Use the brain probe to learn any skill',
       note: 'Probe the host brain to learn useful skills.',
       },
 
     GOAL_LEARN_SOCIETY => {
       id: GOAL_LEARN_SOCIETY,
-      name: 'Learn more about human society',
-      note: 'Probe host brains to raise human society knowledge to 25%. This might require multiple hosts.',
+      name: 'Learn more about the human society',
+      note: 'Probe host brains to raise the human society knowledge to 25%. This might require multiple hosts.',
       messageReceive: 'The humans have evolved a large and intricate society. I must study it some more.',
       messageComplete: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.',
       onComplete: function (game, player) {
@@ -207,11 +207,11 @@ typedef GoalInfo = {
   note: String, // goal note
 
   ?messageReceive: String, // message on receiving goal
-  ?messageComplete: String, // message on goal completion 
-  ?messageFailure: String, // message on goal failure 
+  ?messageComplete: String, // message on goal completion
+  ?messageFailure: String, // message on goal failure
 
-  ?onTurn: Game -> Player -> Void, // func to call each turn while this goal is active 
-  ?onReceive: Game -> Player -> Void, // func to call on receive 
+  ?onTurn: Game -> Player -> Void, // func to call each turn while this goal is active
+  ?onReceive: Game -> Player -> Void, // func to call on receive
   ?onComplete: Game -> Player -> Void, // func to call on completion
-  ?onFailure: Game -> Player -> Void, // func to call on failure 
+  ?onFailure: Game -> Player -> Void, // func to call on failure
 }

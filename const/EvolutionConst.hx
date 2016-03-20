@@ -67,7 +67,7 @@ class EvolutionConst
 
       { // ***
         path: PATH_CONCEAL,
-        id: IMP_CAMO_LAYER, 
+        id: IMP_CAMO_LAYER,
         name: 'Camouflage layer',
         note: 'Allows covering parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         noteFunc: function (l)
@@ -184,7 +184,7 @@ class EvolutionConst
         path: PATH_PROTECTION,
         id: IMP_ENERGY,
         name: '??Host energy bonus',
-        note: '(todo fluff)',
+        note: 'Grown body feature gives a bonus to maximum host energy (todo)',
         noteFunc: function (l)
           {
             return "Host maximum energy multiplier: " + l.hostEnergyMod +
@@ -192,7 +192,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Host energy bonus',
-          note: '(todo fluff)',
+          note: 'Gives a bonus to maximum host energy (todo)',
           gp: 200
           },
         levelNotes: [
@@ -243,7 +243,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_ACID_SPIT,
         name: '??Acid spit',
-        note: '(todo fluff)',
+        note: 'Grown body feature gives the host an ability to spit acid on an NPC (todo)',
         noteFunc: function (l)
           {
             return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
@@ -251,9 +251,9 @@ class EvolutionConst
           },
         organ: {
           name: '??Acid spit',
-          note: '(todo fluff)',
+          note: 'Gives the host an ability to spit acid on an NPC (todo)',
           gp: 150,
-          action: { 
+          action: {
             id: 'acidSpit',
             type: ACTION_ORGAN,
             name: '??Acid spit',
@@ -294,20 +294,22 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
+        note: 'Grown body feature gives the host an ability to spit slime on an NPC (slows them down) (todo)',
         note: '(todo fluff)',
         noteFunc: function (l)
           {
-            return "Slime strength: " + l.strength;
+            return "Slime strength: " + l.strength +
+              "\nSpit range: " + l.range;
           },
         organ: {
           name: '??Slime spit',
-          note: '(todo fluff)',
+          note: 'Gives the host an ability to spit slime on an NPC (slows them down) (todo)',
           gp: 100,
-          action: { 
+          action: {
             id: 'slimeSpit',
             type: ACTION_ORGAN,
             name: '??Slime spit',
-            energy: 5
+            energy: 10
             },
           },
         levelNotes: [
@@ -340,7 +342,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PARALYSIS_SPIT,
         name: '??Paralysis spit',
-        note: '(todo fluff)',
+        note: 'Grown body feature gives the host an ability to paralyze an NPC (todo)',
         noteFunc: function (l)
           {
             return "Paralysis effect time: " + l.time +
@@ -348,9 +350,9 @@ class EvolutionConst
           },
         organ: {
           name: '??Paralysis spit',
-          note: '(todo fluff)',
+          note: 'Gives the host an ability to paralyze an NPC (todo)',
           gp: 100,
-          action: { 
+          action: {
             id: 'paralysisSpit',
             type: ACTION_ORGAN,
             name: '??Paralysis spit',
@@ -387,7 +389,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PANIC_GAS,
         name: '??Panic gas',
-        note: '(todo fluff)',
+        note: 'Grown body feature gives the host an ability to emit a cloud of panic gas (makes NPCs run away) (todo)',
         noteFunc: function (l)
           {
             return "Cloud range: " + l.range +
@@ -396,7 +398,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Panic gas',
-          note: '(todo fluff)',
+          note: 'Gives the host an ability to emit a cloud of panic gas (makes NPCs run away) (todo)',
           gp: 150,
           hasTimeout: true,
           action: {
@@ -440,7 +442,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PARALYSIS_GAS,
         name: '??Paralysis gas',
-        note: '(todo fluff)',
+        note: 'Grown body feature gives the host an ability to emit a cloud of paralytic gas (todo)',
         noteFunc: function (l)
           {
             return "Cloud range: " + l.range +
@@ -449,10 +451,10 @@ class EvolutionConst
           },
         organ: {
           name: '??Paralysis gas',
-          note: '(todo fluff)',
+          note: 'Gives the host an ability to emit a cloud of paralytic gas (todo)',
           gp: 175,
           hasTimeout: true,
-          action: { 
+          action: {
             id: 'paralysisGas',
             type: ACTION_ORGAN,
             name: '??Paralysis gas',
@@ -496,7 +498,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_ATTACH,
         name: '??Attach efficiency',
-        note: '(todo fluff)',
+        note: 'Improves base grip on attach to host (todo)',
         noteFunc: function (l)
           {
             return "Base attach grip: " + l.attachHoldBase;
@@ -519,7 +521,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_HARDEN_GRIP,
         name: '??Hold efficiency',
-        note: '(todo fluff)',
+        note: 'Improves base grip on harden grip action (todo)',
         noteFunc: function (l)
           {
             return "Base harden grip: " + l.attachHoldBase;
@@ -543,6 +545,7 @@ class EvolutionConst
         id: IMP_REINFORCE,
         name: '??Control efficiency',
         note: '(todo fluff)',
+        note: 'Improves base control on reinforce control action (todo)',
         noteFunc: function (l)
           {
             return "Base reinforce control: " + l.reinforceControlBase;
@@ -567,7 +570,7 @@ class EvolutionConst
 
       { // ***
         path: PATH_SPECIAL,
-        id: IMP_BRAIN_PROBE, 
+        id: IMP_BRAIN_PROBE,
         name: 'Brain probe',
         note: 'Allows probing host brain to learn its contents',
         noteFunc: function (l)
@@ -584,36 +587,36 @@ class EvolutionConst
           'Full access',
           ],
         levelParams: [
-          { 
+          {
             humanSociety: 0,
-            hostEnergyBase: 0, 
+            hostEnergyBase: 0,
             hostHealthBase: 0,
             hostHealthMod: 0,
             hostSkillsMod: 0,
           },
-          { 
-            humanSociety: 0.25, 
-            hostEnergyBase: 30, 
+          {
+            humanSociety: 0.25,
+            hostEnergyBase: 30,
             hostHealthBase: 3,
             hostHealthMod: 2,
             hostSkillsMod: 0,
           },
-          { 
-            humanSociety: 0.5, 
-            hostEnergyBase: 20, 
+          {
+            humanSociety: 0.5,
+            hostEnergyBase: 20,
             hostHealthBase: 1,
             hostHealthMod: 1,
             hostSkillsMod: 0.25,  // can access skills from level 2
           },
-          { 
-            humanSociety: 1.0, 
-            hostEnergyBase: 10, 
+          {
+            humanSociety: 1.0,
+            hostEnergyBase: 10,
             hostHealthBase: 0,
             hostHealthMod: 1,
             hostSkillsMod: 0.5,
           },
           ],
-        action: { 
+        action: {
           id: 'probeBrain',
           type: ACTION_AREA,
           name: 'Probe Brain',
@@ -625,7 +628,7 @@ class EvolutionConst
               if (level == 0)
                 return -1;
               var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
-              return params.hostEnergyBase - player.host.psyche; 
+              return params.hostEnergyBase - player.host.psyche;
             },
           },
         onUpgrade: function (level, game, player)
@@ -643,7 +646,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
-        note: '(todo fluff)',
+        note: 'Gives the player ability to build microhabitats (todo fluff)',
         noteFunc: function (l)
           {
             return "Maximum number of microhabitats: " + l.numHabitats +
@@ -680,7 +683,7 @@ class EvolutionConst
               game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
           }
       },
-/*      
+/*
       { // ***
         path: PATH_,
         id: IMP_,
@@ -691,7 +694,7 @@ class EvolutionConst
           note: '(todo fluff)',
           gp: 100,
           hasTimeout: false,
-          action: { 
+          action: {
             id: '',
             type: ACTION_ORGAN,
             name: '',
@@ -711,7 +714,7 @@ class EvolutionConst
           {},
           ],
       },
-*/      
+*/
     ];
 
 
@@ -739,7 +742,7 @@ class EvolutionConst
       for (imp in improvements)
         if (imp.id == id)
           return imp.levelParams[level];
-      
+
       throw 'No such improvement: ' + id;
       return null;
     }
@@ -781,7 +784,7 @@ typedef ImprovInfo =
   levelParams: Array<Dynamic>, // improvement-specific parameters for different levels
 
   ?action: _PlayerAction, // added player action
-  ?onUpgrade: Int -> Game -> Player -> Void, // func to call on upgrading improvement 
+  ?onUpgrade: Int -> Game -> Player -> Void, // func to call on upgrading improvement
 }
 
 typedef PathInfo =

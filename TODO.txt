@@ -1,3 +1,10 @@
+1) (todo fluff) - write at least something to help players
+2) body features with timeouts should show them on hud
+3) explain that number will select an option
+4) game restart
+x-1) write a readme and a short guide
+x) release asking feedback
+
 smooth out building tiles when they are not wide enough
 
 what happens on mission failure

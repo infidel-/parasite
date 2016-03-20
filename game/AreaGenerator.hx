@@ -11,7 +11,8 @@ class AreaGenerator
   public static function generate(game: Game, area: AreaGame, info: AreaInfo)
     {
       if (info.type == 'city')
-        generateCity(game, area, info);
+//        generateCity(game, area, info);
+        generateBuildings(game, area, info);
       else if (info.type == 'militaryBase')
         generateBuildings(game, area, info);
       else if (info.type == 'facility')
@@ -41,7 +42,7 @@ class AreaGenerator
           neko.Lib.println('');
         }
 */
-      Sys.exit(1);
+//      Sys.exit(1);
 
       generateObjects(game, area, info);
     }
@@ -298,6 +299,7 @@ class AreaGenerator
               addAlley(area, x, y, 1);
 
               x += 5;
+            var maxw = 10 + Std.random(5);
             }
         }
 */
