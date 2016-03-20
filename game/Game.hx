@@ -213,8 +213,8 @@ class Game
 // condition - noHost, etc
   public function finish(result: String, condition: String)
     {
-      Const.todo('proper finish screen');
       isFinished = true;
+      scene.setState(HUDSTATE_FINISH);
 
       // game lost
       if (result == 'lose')
@@ -229,8 +229,6 @@ class Game
         {
           log('You have won the game!');
         }
-
-      Sys.exit(1);
     }
 
 

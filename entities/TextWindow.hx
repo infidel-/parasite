@@ -126,7 +126,7 @@ class TextWindow
     }
 
 
-// scroll window to end 
+// scroll window to end
   public function scrollToEnd()
     {
       _textField.scrollV = _textField.maxScrollV;
@@ -164,7 +164,7 @@ class TextWindow
             ok = true;
             break;
           }
-          
+
       if (ok)
         {
           var n = 1;
@@ -199,7 +199,7 @@ class TextWindow
   static var _emptyList: List<_PlayerAction> = new List();
   dynamic function getActions(): List<_PlayerAction>
     {
-      return _emptyList; 
+      return _emptyList;
     }
 
 

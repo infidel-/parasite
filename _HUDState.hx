@@ -13,4 +13,5 @@ enum _HUDState
   HUDSTATE_LOG; // log window open
   HUDSTATE_CONSOLE; // console open
   HUDSTATE_MESSAGE; // important message window open
+  HUDSTATE_FINISH; // game over window
 }

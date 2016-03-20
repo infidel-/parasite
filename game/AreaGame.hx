@@ -681,11 +681,16 @@ class AreaGame
 
 
 // TURN: area time passage - ai actions, object events
-  public inline function turn()
+  public function turn()
     {
       // AI logic
       for (ai in _ai)
-        ai.turn();
+        {
+          ai.turn();
+
+          if (game.isFinished)
+            return;
+        }
 
       // object logic
       for (o in _objects)

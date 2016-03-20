@@ -99,6 +99,7 @@ class GameScene extends Scene
         HUDSTATE_LOG => new LogWindow(game),
         HUDSTATE_DEBUG => new DebugWindow(game),
         HUDSTATE_MESSAGE => new MessageWindow(game),
+        HUDSTATE_FINISH => new FinishWindow(game),
         ];
 
       area = new AreaView(this);
@@ -203,6 +204,11 @@ class GameScene extends Scene
 // handle opening and closing windows
   function handleWindows(): Bool
     {
+      // game over screen
+      if (hudState == HUDSTATE_FINISH &&
+          Input.pressed("closeWindow"))
+        Sys.exit(1);
+
       // window open
       if (hudState != HUDSTATE_DEFAULT)
         {
