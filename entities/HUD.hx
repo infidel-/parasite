@@ -191,13 +191,9 @@ class HUD
           buf.add('Evolution direction:\n  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');
-          var str = game.player.host.organs.getGrowthInfo();
+          var str = game.player.host.organs.getInfo();
           if (str != null)
-            {
-              buf.add('Body feature:\n  ');
-              buf.add(str);
-              buf.add('\n');
-            }
+            buf.add(str);
         }
 /*
       buf.add('Intent: ');

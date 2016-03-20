@@ -26,19 +26,38 @@ class Organs
     }
 
 
-  public function getGrowthInfo(): String
+  public function getInfo(): String
     {
-      if (currentOrgan == null)
-        return null;
-
       var buf = new StringBuf();
-      var col: _TextColor = COLOR_ORGAN;
-      buf.add("<font color='" + Const.TEXT_COLORS[col] + "'>");
-      buf.add(currentOrgan.info.name);
-      buf.add("</font> (");
-      var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
-      buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
-      buf.add(" turns)");
+
+      // current growing organ info
+      if (currentOrgan != null)
+        {
+          buf.add('Body feature:\n  ');
+          var col: _TextColor = COLOR_ORGAN;
+          buf.add("<font color='" + Const.TEXT_COLORS[col] + "'>");
+          buf.add(currentOrgan.info.name);
+          buf.add("</font> (");
+          var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
+          buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
+          buf.add(" turns)\n");
+        }
+
+      // show organs on timeout
+      for (organ in game.player.host.organs)
+        {
+          if (!organ.isActive)
+            continue;
+
+          if (!organ.info.hasTimeout || organ.timeout == 0)
+            continue;
+
+          buf.add("<font color='#DDDD00'>" + organ.info.name + "</font>");
+          buf.add(' ');
+          buf.add(organ.level);
+          buf.add(' (timeout: ' + organ.timeout + ')\n');
+        }
+
       return buf.toString();
     }
 

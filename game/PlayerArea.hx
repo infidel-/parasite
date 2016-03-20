@@ -433,7 +433,7 @@ class PlayerArea
     {
       game.log('You harden your grip on the host.');
 
-      // improv: harden grip bonus 
+      // improv: harden grip bonus
       var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
 
       var tmp = params.attachHoldBase;

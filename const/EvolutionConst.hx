@@ -295,7 +295,6 @@ class EvolutionConst
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
         note: 'Grown body feature gives the host an ability to spit slime on an NPC (slows them down) (todo)',
-        note: '(todo fluff)',
         noteFunc: function (l)
           {
             return "Slime strength: " + l.strength +
@@ -544,7 +543,6 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_REINFORCE,
         name: '??Control efficiency',
-        note: '(todo fluff)',
         note: 'Improves base control on reinforce control action (todo)',
         noteFunc: function (l)
           {
