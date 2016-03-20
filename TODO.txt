@@ -1,4 +1,3 @@
-3) explain that number will select an option
 4) game restart
 x-1) write a readme and a short guide
 x) release asking feedback

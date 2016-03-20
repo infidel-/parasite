@@ -168,7 +168,7 @@ class TextWindow
       if (ok)
         {
           var n = 1;
-          buf.add('\n\nSelect ' + actionName + ':\n\n');
+          buf.add('\n\nSelect ' + actionName + ' (press 0-9):\n\n');
           for (action in _actions)
             if (action.energy == 0 || game.player.host.energy >= action.energy)
               {
