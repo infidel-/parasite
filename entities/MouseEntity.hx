@@ -92,10 +92,12 @@ class MouseEntity extends Entity
 // event: on wheel scroll
   function onWheel(delta: Int)
     {
+#if mydebug
       // switch mouse mode
       _oldMode = _mode;
       _mode = (_mode == MODE_DEFAULT ? MODE_DEBUG : MODE_DEFAULT);
       update();
+#end
     }
 
 

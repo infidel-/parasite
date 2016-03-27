@@ -1,5 +1,4 @@
 all: clean windows-mydebug
-#-Dmydebug
 
 neko:
 	openfl build project.nmml neko -Dmydebug
@@ -15,11 +14,6 @@ windows-mydebug:
 windows-clean:
 	haxe --connect 6000 .bin/linux64/neko/haxe/release.hxml && \
     openfl build project.nmml windows && \
-    cp -R .bin/windows/neko/bin/* /mnt/1/Projects/Parasite/
-
-windows-Dmydebug:
-	haxe --connect 6000 .bin/linux64/neko/haxe/release.hxml && \
-    openfl build project.nmml windows -Dmydebug && \
     cp -R .bin/windows/neko/bin/* /mnt/1/Projects/Parasite/
 
 test:
