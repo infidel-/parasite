@@ -1,10 +1,16 @@
 all: clean windows-mydebug
 
-neko:
-	openfl build project.nmml neko -Dmydebug
+linux32-mydebug:
+	openfl build project.nmml linux -neko -32 -Dmydebug
 
-linux:
-	openfl build project.nmml linux -Dmydebug
+linux32-clean:
+	openfl build project.nmml linux -neko
+
+linux64-mydebug:
+	openfl build project.nmml linux -neko -Dmydebug
+
+linux64-clean:
+	openfl build project.nmml linux -neko
 
 windows-mydebug:
 	haxe --connect 6000 -D mydebug .bin/linux64/neko/haxe/release.hxml && \

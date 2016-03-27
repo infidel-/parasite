@@ -288,7 +288,7 @@ class RegionGame
   public function updateAlertness()
     {
       // make empty array
-      var tmp = new Array<Array<Float>>();
+      var tmp = new Array<Array<Null<Float>>>();
       for (i in 0...width)
         tmp[i] = [];
 

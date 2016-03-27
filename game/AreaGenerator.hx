@@ -28,8 +28,8 @@ class AreaGenerator
       for (y in 0...area.height)
         {
           for (x in 0...area.width)
-            neko.Lib.print(cells[x][y]);
-          neko.Lib.println('');
+            Sys.print(cells[x][y]);
+          Sys.println('');
         }
 */
 /*
@@ -37,9 +37,9 @@ class AreaGenerator
       for (y in 0...area.height)
         {
           for (x in 0...area.width)
-//            neko.Lib.print(cells[x][y] == Const.TILE_BUILDING ? 1 : 0);
-            neko.Lib.print(cells[x][y]);
-          neko.Lib.println('');
+//            Sys.print(cells[x][y] == Const.TILE_BUILDING ? 1 : 0);
+            Sys.print(cells[x][y]);
+          Sys.println('');
         }
 */
 //      Sys.exit(1);
@@ -388,9 +388,9 @@ class AreaGenerator
       for (y in 0...area.height)
         {
           for (x in 0...area.width)
-//            neko.Lib.print(cells[x][y] == Const.TILE_BUILDING ? 1 : 0);
-            neko.Lib.print(cells[x][y]);
-          neko.Lib.println('');
+//            Sys.print(cells[x][y] == Const.TILE_BUILDING ? 1 : 0);
+            Sys.print(cells[x][y]);
+          Sys.println('');
         }
       return;
 
@@ -608,7 +608,7 @@ class AreaGenerator
               for (dx in 0...sx)
                 {
                   var cellType = area.getCellType(x + dx, y + dy);
-                  if (cellType == null)
+                  if (cellType == -1)
                     continue;
 
                   area.setCellType(x + dx, y + dy, Const.TILE_BUILDING);

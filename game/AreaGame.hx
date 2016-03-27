@@ -535,7 +535,7 @@ class AreaGame
   public function getCellType(x: Int, y: Int): Int
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
-        return null;
+        return -1;
       return _cells[x][y];
     }
 

@@ -54,13 +54,13 @@ class AreaObject
 // create entity for this AI (using parent type as a row)
   public function createEntityByType(parentType: String)
     {
-      var atlasRow: Int = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
+      var atlasRow: Null<Int> = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
       if (atlasRow == null)
         {
           trace('No such entity type: ' + parentType);
           return;
         }
-      var atlasCol: Int = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
+      var atlasCol: Null<Int> = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
       if (atlasCol == null)
         {
           trace('No such entity frame: ' + type);
