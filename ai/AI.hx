@@ -167,7 +167,7 @@ class AI
       modAttrs.constitution = 0;
       modAttrs.intellect = 0;
       modAttrs.psyche = 0;
- 
+
       // organ: muscle enhancement
       var o = organs.get(IMP_MUSCLE);
       if (o != null)
@@ -177,7 +177,7 @@ class AI
       _constitution = baseAttrs.constitution + modAttrs.constitution;
       _intellect = baseAttrs.intellect + modAttrs.intellect;
       _psyche = baseAttrs.psyche + modAttrs.psyche;
- 
+
       // organ: host energy bonus
       var o = organs.get(IMP_ENERGY);
       var energyMod = 1.0;
@@ -186,7 +186,7 @@ class AI
 
       maxEnergy = Std.int((5 + strength + constitution) * 10 * energyMod);
       maxHealth = strength + constitution;
- 
+
       // organ: health increase
       var o = organs.get(IMP_HEALTH);
       if (o != null)
@@ -562,7 +562,7 @@ class AI
           seesPosition(game.playerArea.x, game.playerArea.y))
         timers.alert = ALERTED_TIMER;
       else timers.alert--;
- 
+
       // AI calms down
       if (timers.alert == 0)
         {
@@ -574,7 +574,7 @@ class AI
       // parasite attached - try to tear it away
       if (parasiteAttached)
         logicTearParasiteAway();
-     
+
       // call alert logic for this AI type
       else
         {
@@ -605,6 +605,10 @@ class AI
     {
       // emit random sound
       emitRandomSound('' + AI_STATE_HOST, Std.int((100 - game.player.hostControl) / 3));
+
+      // effect: cannot tear parasite away (given right after invasion)
+      if (effects.has(EFFECT_CANNOT_TEAR_AWAY))
+        return;
 
       // random: try to tear parasite away
       if (game.player.hostControl < 25 && Std.random(100) < 5)
@@ -814,8 +818,8 @@ class AI
       parasiteAttached = false;
       entity.setMask(Const.FRAME_MASK_POSSESSED);
 
-      // paralyze AI for a turn so it can't tear parasite away
-      onEffect({ type: EFFECT_PARALYSIS, points: 1, isTimer: true });
+      // add effect marker so that AI can't tear parasite away
+      onEffect({ type: EFFECT_CANNOT_TEAR_AWAY, points: 5, isTimer: true });
     }
 
 

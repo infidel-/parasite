@@ -1,6 +1,4 @@
-4) game restart
-x-1) write a readme and a short guide
-x) release asking feedback
+game restart
 
 smooth out building tiles when they are not wide enough
 

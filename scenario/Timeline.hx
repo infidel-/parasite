@@ -398,7 +398,9 @@ should limit player options for guiding purposes
       trace(_names);
       trace(_locationsList);
 */
+#if mydebug
       trace(_variables);
+#end
     }
 
 
