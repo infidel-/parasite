@@ -1,7 +1,13 @@
+test playthrough after stage 1 to microhabitat (stage 2)
+add logging to bat/sh files and check it out
+
+hosts should stop dying at some point:
+- make goal chain for building "host convertor" in microhabitat
+- Assimilation process: when the host convertor is active, player can convert hosts and they stop losing energy passively
+- Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
+
 game restart
-
 smooth out building tiles when they are not wide enough
-
 what happens on mission failure
 mission - infiltration
 mission - research
@@ -11,7 +17,7 @@ area interest is unused
 mission - abduction - chance of target being a soldier in a base or vip in facility
 ?bug - can go to spaceship without goal - breaks goal completion
 mission completed, what if spaceship is crashed
-add spaceship object to global object map or make easier getObject(id) function or 
+add spaceship object to global object map or make easier getObject(id) function or
 debug mode - timeline - show numeric event id
 
 ==
@@ -27,7 +33,7 @@ CONSOLE CHEATSHEET:
 ;ga10 10 - go to area at 10,10
 ;gg24 7 - don't change mode, go to x=24, y=7 (area or region)
 
-;s1 - player stage 1
+;s1 - player stage 1 (human civilian host, tutorial done)
 
 MASTERPLAN
 ============
@@ -53,7 +59,7 @@ police radio gives access to radio messages
 
 radio transceiver improvement:
 lv1 - listen to police/security radio
-lv2 - listen to 
+lv2 - listen to
 lv3 - listen to cellphone comms
 
 em noise improvement:
@@ -68,7 +74,6 @@ lv3 - radius++
 
 search in timeline
 ?? Area -> move some code to game/AreaGame, some to entities/Area
-add useful info into improvement notes on evolution screen
 tooltips in area and region mode (type, habitat, clues, events, alertness, etc)
 organ actions -> OrganInfo.actionXXX
 inventory actions -> ItemInfo.actionXXX

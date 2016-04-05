@@ -19,6 +19,16 @@ class EvolutionWindow extends TextWindow
     {
       var list = new List<_PlayerAction>();
 
+      // add stop action
+      if (game.player.evolutionManager.isActive)
+        list.add({
+          id: 'stop',
+          type: ACTION_EVOLUTION,
+          name: 'Stop evolution',
+          energy: 0,
+          });
+
+      // add available improvements
       for (imp in game.player.evolutionManager)
         if (imp.level < 3)
           {
@@ -26,7 +36,7 @@ class EvolutionWindow extends TextWindow
             buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
             buf.add(' ');
             buf.add(imp.level + 1);
-            buf.add(' (' + imp.ep + '/' + 
+            buf.add(' (' + imp.ep + '/' +
               EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
             var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
             buf.add(Math.ceil(epLeft / _Formula.epPerTurn(game)));
@@ -102,7 +112,7 @@ class EvolutionWindow extends TextWindow
           buf.add(' ');
           buf.add(imp.level);
           if (imp.level < 3)
-            buf.add(' (' + imp.ep + '/' + 
+            buf.add(' (' + imp.ep + '/' +
               EvolutionConst.epCostImprovement[imp.level] + ' ep)');
           buf.add("\n<font color='#5ebee5'>" + imp.info.note + '</font>\n');
           buf.add("<font color='#4cd47b'>" +

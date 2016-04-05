@@ -116,7 +116,7 @@ class EvolutionManager
         }
     }
 
-  
+
 // open improvement on that path
   function openImprov(path: _Path): Improv
     {
@@ -142,7 +142,7 @@ class EvolutionManager
 // add improvement to list
   public function addImprov(id: _Improv, ?level: Int = 0): Improv
     {
-      // this improvement already learned 
+      // this improvement already learned
       var tmp = getImprov(id);
       if (tmp != null && tmp.level >= level)
         return tmp;
@@ -175,10 +175,23 @@ class EvolutionManager
       var actionName = id.substr(0, id.indexOf('.'));
       var actionID = id.substr(id.indexOf('.') + 1);
 
+      // stop evolution
+      if (id == 'stop')
+        {
+          taskID = '';
+          isActive = false;
+          return;
+        }
+
+      // set task and activate
       taskID = actionID;
       isActive = true;
+
+      // set evolution path
       if (actionName == 'setPath')
         isTaskPath = true;
+
+      // set improvement path
       else if (actionName == 'set')
         isTaskPath = false;
 
@@ -259,7 +272,7 @@ class EvolutionManager
         {
           if (imp.path != id)
             continue;
-  
+
           if (!isKnown(imp.id))
             {
               isComplete = false;
