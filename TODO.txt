@@ -1,5 +1,4 @@
-test playthrough after stage 1 to microhabitat (stage 2)
-add stage 2 - has microhabitat + timeline opened
+test playthrough of the clue gathering
 add logging to bat/sh files and check it out
 
 hosts should stop dying at some point:
@@ -35,6 +34,7 @@ CONSOLE CHEATSHEET:
 ;gg24 7 - don't change mode, go to x=24, y=7 (area or region)
 
 ;s1 - player stage 1 (human civilian host, tutorial done)
+;s2 - player stage 2 (stage 1 + microhabitat)
 
 MASTERPLAN
 ============

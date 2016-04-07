@@ -173,33 +173,73 @@ class ConsoleGame
     }
 
 
+
+// stage 1: civ host, tutorial done
+  function stage1()
+    {
+      game.log('stage 1');
+      // spawn AI, attach to it and invade
+      var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+      game.area.addAI(ai);
+      game.playerArea.debugAttachAndInvadeAction(ai);
+      game.player.hostControl = 100;
+
+      // tutorial line
+      game.goals.complete(GOAL_INVADE_HUMAN);
+      game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 2);
+      game.goals.complete(GOAL_EVOLVE_PROBE);
+      var probeInfo = const.EvolutionConst.getInfo(IMP_BRAIN_PROBE);
+      game.playerArea.action(probeInfo.action);
+      game.goals.complete(GOAL_LEARN_ITEMS);
+      game.playerArea.action(probeInfo.action);
+
+      // society knowledge
+      game.player.skills.increase(KNOW_SOCIETY, 1);
+      game.player.skills.increase(KNOW_SOCIETY, 24);
+    }
+
+
+// stage 2: stage 1 + microhabitat, timeline open
+  function stage2()
+    {
+      game.log('stage 2');
+      game.player.evolutionManager.addImprov(IMP_ENERGY, 1);
+      game.goals.complete(GOAL_EVOLVE_ORGAN);
+      game.player.host.organs.action('set.IMP_ENERGY');
+      game.player.host.organs.debugCompleteCurrent();
+      game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
+      game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
+
+      // enter sewers
+      game.scene.setState(HUDSTATE_DEFAULT);
+      game.setLocation(LOCATION_REGION);
+
+      game.playerRegion.action({
+        id: 'createHabitat', 
+        type: ACTION_REGION, 
+        name: 'Create habitat',
+        energy: 0
+      });
+//      game.goals.complete(GOAL_CREATE_HABITAT);
+    }
+
+
 // stage commands
   function stageCommand(cmd: String)
     {
       var stage = Std.parseInt(cmd.substr(1));
      
       // stage 1: civ host, tutorial done
-      if (stage >= 1)
+      if (stage == 1)
         {
-          // spawn AI, attach to it and invade
-          var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
-          game.area.addAI(ai);
-          game.playerArea.debugAttachAndInvadeAction(ai);
-          game.player.hostControl = 100;
+          stage1();
+        }
 
-          // tutorial line
-          game.goals.complete(GOAL_INVADE_HUMAN);
-          game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 2);
-          game.goals.complete(GOAL_EVOLVE_PROBE);
-          var probeInfo = const.EvolutionConst.getInfo(IMP_BRAIN_PROBE);
-          game.playerArea.action(probeInfo.action);
-          game.goals.complete(GOAL_LEARN_ITEMS);
-          game.playerArea.action(probeInfo.action);
-
-          // society knowledge
-          game.player.skills.increase(KNOW_SOCIETY, 1);
-          game.player.skills.increase(KNOW_SOCIETY, 24);
-//          game.goals.complete();
+      // stage 2: civ host, microhabitat, timeline open
+      else if (stage >= 2)
+        {
+          stage1();
+          stage2();
         }
     }
 }
