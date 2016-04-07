@@ -145,6 +145,9 @@ class PlayerRegion
       currentArea.hasHabitat = true;
       currentArea.habitatAreaID = area.id;
       game.scene.region.updateIconsArea(x, y);
+
+      // complete goal
+      game.goals.complete(GOAL_CREATE_HABITAT);
     }
 
 

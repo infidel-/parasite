@@ -143,6 +143,7 @@ class DebugArea
             {
               game.player.evolutionManager.turn(2000);
               game.player.energy = 100;
+              game.player.host.energy = 100;
             }
         },
 

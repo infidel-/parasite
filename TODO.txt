@@ -1,4 +1,5 @@
 test playthrough after stage 1 to microhabitat (stage 2)
+add stage 2 - has microhabitat + timeline opened
 add logging to bat/sh files and check it out
 
 hosts should stop dying at some point:
@@ -7,7 +8,7 @@ hosts should stop dying at some point:
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
 
 game restart
-smooth out building tiles when they are not wide enough
+citygen - smooth out building tiles when they are not wide enough
 what happens on mission failure
 mission - infiltration
 mission - research
