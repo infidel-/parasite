@@ -60,7 +60,7 @@ class ConsoleGame
                   event = ev;
                   break;
                 }
-                
+
               cnt++;
             }
 
@@ -124,7 +124,7 @@ class ConsoleGame
           game.setLocation(LOCATION_AREA);
         }
 
-      // XXX [gg10 10] go to location x,y at current location 
+      // XXX [gg10 10] go to location x,y at current location
       else if (cmd.charAt(1) == 'g')
         {
           var tmp = cmd.substr(2).split(' ');
@@ -149,7 +149,7 @@ class ConsoleGame
 // learn commands
   function learnCommand(cmd: String)
     {
-      // XXX [le10] learn everything about event 
+      // XXX [le10] learn everything about event
       if (cmd.charAt(1) == 'e')
         {
           var id = Std.parseInt(cmd.substr(2));
@@ -162,7 +162,7 @@ class ConsoleGame
                   event = ev;
                   break;
                 }
-                
+
               cnt++;
             }
 
@@ -215,8 +215,8 @@ class ConsoleGame
       game.setLocation(LOCATION_REGION);
 
       game.playerRegion.action({
-        id: 'createHabitat', 
-        type: ACTION_REGION, 
+        id: 'createHabitat',
+        type: ACTION_REGION,
         name: 'Create habitat',
         energy: 0
       });
@@ -228,7 +228,7 @@ class ConsoleGame
   function stageCommand(cmd: String)
     {
       var stage = Std.parseInt(cmd.substr(1));
-     
+
       // stage 1: civ host, tutorial done
       if (stage == 1)
         {

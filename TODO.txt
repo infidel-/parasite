@@ -1,5 +1,12 @@
 test playthrough of the clue gathering
+facility codenames
+message on habitat invasion!
+stage 2: auto-learn sewers
+dropped objects in habitat should be persistent (leave phone etc)
+alertness on habitat should raise chance of blackops finding it
+brain probing for skills should skip known skills
 add logging to bat/sh files and check it out
+move starting AI inventory into WorldConst (make func onSpawn)
 
 hosts should stop dying at some point:
 - make goal chain for building "host convertor" in microhabitat

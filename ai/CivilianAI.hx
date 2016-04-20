@@ -1,4 +1,4 @@
-// AI for civilians 
+// AI for civilians
 
 package ai;
 
@@ -37,13 +37,36 @@ class CivilianAI extends HumanAI
       // these only spawn when they're useful
       if (game.player.vars.searchEnabled)
         {
-          if (Std.random(100) < 20)
+          // civs in higher class areas have a higher chance of having computers
+          // smartphones
+          var chance = 25;
+          if (game.area.info.id == AREA_CITY_LOW)
+            chance = 25;
+          else if (game.area.info.id == AREA_CITY_MEDIUM)
+            chance = 50;
+          else if (game.area.info.id == AREA_CITY_HIGH)
+            chance = 75;
+          else if (game.area.info.id == AREA_FACILITY)
+            chance = 75;
+
+          if (Std.random(100) < chance)
             {
               skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
               inventory.addID('smartphone');
             }
 
-          if (Std.random(100) < 5)
+          // laptops
+          var chance = 5;
+          if (game.area.info.id == AREA_CITY_LOW)
+            chance = 5;
+          else if (game.area.info.id == AREA_CITY_MEDIUM)
+            chance = 10;
+          else if (game.area.info.id == AREA_CITY_HIGH)
+            chance = 15;
+          else if (game.area.info.id == AREA_FACILITY)
+            chance = 20;
+
+          if (Std.random(100) < 10)
             {
               skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
               inventory.addID('laptop');
