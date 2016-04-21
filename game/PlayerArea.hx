@@ -614,8 +614,6 @@ class PlayerArea
 
       // player already knows this skill better than the host
       var skill = player.skills.get(hostSkill.id);
-//      if (skill != null && skill.level >= hostSkill.level)
-//        return;
 
       // goal completion
       game.goals.complete(GOAL_LEARN_SKILLS);

@@ -44,10 +44,10 @@ class EvolutionWindow extends TextWindow
 
             buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
             buf.add("<font color='#4cd47b'>" +
-              imp.info.levelNotes[imp.level] + '</font>\n');
+              imp.info.levelNotes[imp.level + 1] + '</font>\n');
             if (imp.info.noteFunc != null)
               buf.add("<font color='#13ff65'>" +
-                imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');
+                imp.info.noteFunc(imp.info.levelParams[imp.level + 1]) + '</font>\n');
 
             list.add({
               id: 'set.' + imp.id,
