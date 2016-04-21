@@ -210,7 +210,8 @@ class ConsoleGame
       game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
       game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
 
-      // enter sewers
+      // learn and enter sewers
+      game.playerArea.debugLearnObject('sewer_hatch');
       game.scene.setState(HUDSTATE_DEFAULT);
       game.setLocation(LOCATION_REGION);
 

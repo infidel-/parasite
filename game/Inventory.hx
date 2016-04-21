@@ -43,7 +43,7 @@ class Inventory
 
           // read a readable
           if (item.info.type == 'readable')
-            tmp.add({ 
+            tmp.add({
               id: 'read.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Read ' + item.name,
@@ -51,9 +51,9 @@ class Inventory
               obj: item
               });
 
-          // use computer 
+          // use computer
           else if (item.info.type == 'computer')
-            tmp.add({ 
+            tmp.add({
               id: 'search.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Use ' + item.name + ' to search',
@@ -72,19 +72,19 @@ class Inventory
       var item: Item = untyped action.obj;
       var actionID = action.id.substr(0, action.id.indexOf('.'));
       var ret = true;
-  
+
       // learn about item
       if (actionID == 'learn')
         learnAction(item);
-    
+
       // read item
       else if (actionID == 'read')
         readAction(item);
-    
+
       // search for npc with item
       else if (actionID == 'search')
         ret = searchAction(item);
-    
+
       // if action was completed, end turn, etc
       if (ret)
         {
@@ -137,15 +137,15 @@ class Inventory
 
       game.player.addKnownItem(item.id);
 
-      // on first learn items 
+      // on first learn items
       game.goals.complete(GOAL_LEARN_ITEMS);
     }
 
 
-// ACTION: search for npc information 
+// ACTION: search for npc information
   function searchAction(item: Item): Bool
     {
-      // player does not have computer skill 
+      // player does not have computer skill
       var skillLevel = game.player.skills.getLevel(SKILL_COMPUTER);
       if (skillLevel == 0)
         {

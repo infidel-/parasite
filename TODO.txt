@@ -1,7 +1,6 @@
 test playthrough of the clue gathering
 facility codenames
 message on habitat invasion!
-stage 2: auto-learn sewers
 dropped objects in habitat should be persistent (leave phone etc)
 alertness on habitat should raise chance of blackops finding it
 brain probing for skills should skip known skills

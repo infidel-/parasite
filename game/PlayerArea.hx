@@ -786,6 +786,13 @@ class PlayerArea
     }
 
 
+// debug: learn about object 
+  public inline function debugLearnObject(t: String )
+    {
+      knownObjects.add(t);
+    }
+
+
 // =================================================================================
 
 
