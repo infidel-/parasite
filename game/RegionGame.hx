@@ -117,7 +117,7 @@ class RegionGame
           area.habitatIsDetected = true;
         }
     }
-    
+
 
 // generate a region
   public function generate()
@@ -230,7 +230,7 @@ class RegionGame
               if (x + 1 < width && tmp[x + 1][y] == 1 && Std.random(100) < chance)
                 tmp[x + 1][y] = 0;
             }
-      
+
 //      trace('r');
 //      traceTmp(tmp);
 
@@ -310,15 +310,15 @@ class RegionGame
                   tmp[xx][yy] += 0.75 * a.alertnessMod;
                 }
 
-            // reset alertness changes 
+            // reset alertness changes
             a.alertnessMod = 0;
           }
 
-      // store alertness changes 
+      // store alertness changes
       for (y in 0...height)
         for (x in 0...width)
           if (tmp[x][y] != null)
-            _array[x][y].setAlertness(_array[x][y].alertness + tmp[x][y]); 
+            _array[x][y].setAlertness(_array[x][y].alertness + tmp[x][y]);
     }
 
 
@@ -329,19 +329,19 @@ class RegionGame
       for (area in _list)
         if (area.isHabitat)
           cnt++;
-      
+
       return cnt;
     }
 
 
 // get habitats list in this area
-  public function getHabitatsList(): List<AreaGame> 
+  public function getHabitatsList(): List<AreaGame>
     {
       var tmp = new List();
       for (area in _list)
         if (area.isHabitat)
           tmp.add(area);
-      
+
       return tmp;
     }
 
@@ -444,7 +444,7 @@ class RegionGame
       for (a in _list)
         {
           // find only inhabited
-          if (params.isInhabited != null && 
+          if (params.isInhabited != null &&
               a.info.isInhabited != params.isInhabited)
             continue;
 
@@ -456,7 +456,7 @@ class RegionGame
           if (a.x != area.x && a.x != area.y && tmpdist < dist)
             {
               amin = a;
-              dist = tmpdist; 
+              dist = tmpdist;
             }
 
           if (tmpdist >= params.minRadius * params.minRadius &&
@@ -464,7 +464,7 @@ class RegionGame
             tmp2.push(a);
         }
 
-      // found some areas 
+      // found some areas
       if (tmp2.length > 1)
         return tmp2[Std.random(tmp2.length)];
 
@@ -507,7 +507,7 @@ class RegionGame
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-    
+
       return Const.TILE_WALKABLE_REGION[_array[x][y].tileID];
     }
 
@@ -518,5 +518,5 @@ class RegionGame
     { return alertness = Const.clampFloat(v, 0, 100.0); }
   function set_interest(v: Float)
     { return interest = Const.clampFloat(v, 0, 100.0); }
-*/    
+*/
 }
