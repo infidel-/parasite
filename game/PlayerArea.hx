@@ -608,14 +608,14 @@ class PlayerArea
 //  action: access host skills (called from probeBrain)
   function accessSkillsAction(hostSkillsMod: Float)
     {
-      var hostSkill = player.host.skills.getRandomSkill();
+      var hostSkill = player.host.skills.getRandomLearnableSkill();
       if (hostSkill == null)
         return;
 
       // player already knows this skill better than the host
       var skill = player.skills.get(hostSkill.id);
-      if (skill != null && skill.level >= hostSkill.level)
-        return;
+//      if (skill != null && skill.level >= hostSkill.level)
+//        return;
 
       // goal completion
       game.goals.complete(GOAL_LEARN_SKILLS);

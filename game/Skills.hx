@@ -25,6 +25,32 @@ class Skills
     }
 
 
+// get random learnable skill
+  public function getRandomLearnableSkill(): Skill
+    {
+      if (_list.length == 0)
+        return null;
+
+      var tmp = [];
+      for (s in _list)
+        {
+          var playerSkill = game.player.skills.get(s.id);
+
+          // skip learned knowledges
+          if (playerSkill != null && s.info.isBool)
+            continue;
+
+          // skip learned skills
+          if (s.info.isBool == null || !s.info.isBool)
+            if (playerSkill != null && playerSkill.level >= s.level)
+              continue;
+
+          tmp.push(s);
+        }
+      return tmp[Std.random(tmp.length)];
+    }
+
+
 // get random skill
   public function getRandomSkill(): Skill
     {
