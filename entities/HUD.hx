@@ -236,7 +236,7 @@ class HUD
           if (game.player.vars.inventoryEnabled)
             buf.add('F2: Inventory\n');
           if (game.player.vars.skillsEnabled)
-            buf.add('F3: Skills and knowledge\n');
+            buf.add('F3: Knowledge\n');
         }
       buf.add('F4: Message log\n');
 
@@ -250,10 +250,10 @@ class HUD
           if (game.player.vars.organsEnabled)
             buf.add('F7: Body features\n');
         }
-      
+
 #if mydebug
       buf.add('F9: Debug\n');
-#end 
+#end
       buf.add('F10: Exit\n');
 
       _textField.htmlText = buf.toString();

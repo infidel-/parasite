@@ -3,7 +3,6 @@ facility codenames
 dropped objects in habitat should be persistent (leave phone etc)
 alertness on habitat should raise chance of blackops finding it
 add logging to bat/sh files and check it out
-brain probe 3 should reveal host attributes (show on skills page, change name to "Knowledge")
 move starting AI inventory into WorldConst (make func onSpawn)
 
 hosts should stop dying at some point:

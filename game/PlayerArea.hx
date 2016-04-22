@@ -135,7 +135,7 @@ class PlayerArea
       // improvement actions
       for (imp in player.evolutionManager)
         {
-          var info = imp.info; 
+          var info = imp.info;
           if (info.action != null)
             {
               if (info.action.energy != null && info.action.energy <= player.energy)
@@ -165,7 +165,7 @@ class PlayerArea
               addActionToList(tmp, 'learnObject', o);
 
             // object known - add all actions defined by object
-            else if (Lambda.has(knownObjects, o.type)) 
+            else if (Lambda.has(knownObjects, o.type))
               o.addActions(tmp);
           }
 
@@ -177,7 +177,7 @@ class PlayerArea
       // leave area action
       if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)
         addActionToList(tmp, 'leaveArea');
-      
+
       return tmp;
     }
 
@@ -200,7 +200,7 @@ class PlayerArea
           ao.action(action);
         }
 
-      // host organ-based action 
+      // host organ-based action
       if (action.type == ACTION_ORGAN)
         player.host.organs.areaAction(action);
 
@@ -208,7 +208,7 @@ class PlayerArea
       else if (action.id == 'hardenGrip')
         hardenGripAction();
 
-      // attach host 
+      // attach host
       else if (action.id == 'attachHost')
         {
           var ai = game.area.getAI(x, y);
@@ -217,11 +217,11 @@ class PlayerArea
           game.updateHUD();
         }
 
-      // invade host 
+      // invade host
       else if (action.id == 'invadeHost')
         invadeHostAction();
 
-      // try to reinforce control over host 
+      // try to reinforce control over host
       else if (action.id == 'reinforceControl')
         reinforceControlAction();
 
@@ -229,15 +229,15 @@ class PlayerArea
       else if (action.id == 'leaveHost')
         leaveHostAction();
 
-      // probe host brain 
+      // probe host brain
       else if (action.id == 'probeBrain')
         probeBrainAction();
 
-      // learn about object 
+      // learn about object
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);
 
-      // try to leave area 
+      // try to leave area
       else if (action.id == 'leaveArea')
         leaveAreaAction();
 
@@ -466,10 +466,10 @@ class PlayerArea
       // update AI visibility to player
       game.area.updateVisibility();
 
-      // goal completed: host invaded 
+      // goal completed: host invaded
       game.goals.complete(GOAL_INVADE_HOST);
 
-      // goal completed: human host invaded 
+      // goal completed: human host invaded
       if (player.host.isHuman)
         game.goals.complete(GOAL_INVADE_HUMAN);
     }
@@ -507,7 +507,7 @@ class PlayerArea
           return;
         }
 
-      game.log("You leave the area."); 
+      game.log("You leave the area.");
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
     }
@@ -523,7 +523,7 @@ class PlayerArea
     }
 
 
-// action: probe host brain 
+// action: probe host brain
   function probeBrainAction()
     {
       // animals do not have any useful memories
@@ -532,7 +532,7 @@ class PlayerArea
           game.log('This host is not intelligent enough.');
           return;
         }
-     
+
       game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
       // skills and knowledge
@@ -544,14 +544,21 @@ class PlayerArea
           if (params.hostSkillsMod > 0)
             accessSkillsAction(params.hostSkillsMod);
 
+          // can access attributes on level 3
+          if (params.hostAttrsMod > 0 && !player.host.isAttrsKnown)
+            {
+              player.host.isAttrsKnown = true;
+              game.log('You have learned the parameters of this host.');
+            }
+
           // human society knowledge
           player.skills.increase(KNOW_SOCIETY,
             params.humanSociety * player.host.intellect);
         }
 
       // spend energy
-//      player.host.energy -= params.hostEnergyBase - player.host.psyche; 
-//      player.host.energy -= info.action.energyFunc(player); 
+//      player.host.energy -= params.hostEnergyBase - player.host.psyche;
+//      player.host.energy -= info.action.energyFunc(player);
       player.host.onDamage(params.hostHealthBase); // damage host
       if (Std.random(100) < 25)
         player.host.onDamage(params.hostHealthMod); // more damage if unlucky
@@ -560,7 +567,7 @@ class PlayerArea
       if (!player.host.isNameKnown)
         {
           player.host.isNameKnown = true;
-          game.log('You find out that the name of this host is ' + 
+          game.log('You find out that the name of this host is ' +
             player.host.getName() + '.');
         }
 
@@ -575,7 +582,7 @@ class PlayerArea
             chance = 30;
           else if (player.host.brainProbed == 2)
             chance = 10;
-      
+
           var ret = false;
           if (Std.random(100) < chance)
             ret = game.timeline.learnClue(player.host.event, true);
@@ -588,7 +595,7 @@ class PlayerArea
 
       // mark npc as scanned
       if (player.host.event != null && player.host.brainProbed >= 2)
-        player.host.npc.memoryKnown = true; 
+        player.host.npc.memoryKnown = true;
 
       player.host.brainProbed++; // increase counter
     }
@@ -651,7 +658,7 @@ class PlayerArea
         return false;
 
       // random: change movement direction
-      if (state == PLR_STATE_HOST && player.hostControl < 90 && 
+      if (state == PLR_STATE_HOST && player.hostControl < 90 &&
           Std.random(100) < 0.75 * (100 - player.hostControl))
         {
           log('The host resists your command.');
@@ -667,7 +674,7 @@ class PlayerArea
       y = ny;
 
       // move invaded host entity with invisible player entity
-      if (state == PLR_STATE_HOST) 
+      if (state == PLR_STATE_HOST)
         player.host.setPosition(x, y);
 
       entity.setPosition(x, y); // move player entity (even if invisible)
@@ -695,7 +702,7 @@ class PlayerArea
       y = ny;
 
       // move invaded host entity with invisible player entity
-      if (state == PLR_STATE_HOST) 
+      if (state == PLR_STATE_HOST)
         player.host.setPosition(x, y);
 
       entity.setPosition(x, y);
@@ -712,7 +719,7 @@ class PlayerArea
 // but nobody will probably notice the difference :)
   public inline function hears(xx: Int, yy: Int): Bool
     {
-      return (HXP.distanceSquared(x, y, xx, yy) < 
+      return (HXP.distanceSquared(x, y, xx, yy) <
         player.vars.listenRadius * player.vars.listenRadius);
     }
 
@@ -737,7 +744,7 @@ class PlayerArea
       if (player.host.state == AI_STATE_DEAD)
         {
           onDetach();
-          
+
           log('Your host has died from injuries.');
           return;
         }
@@ -759,10 +766,10 @@ class PlayerArea
     }
 
 
-// event: parasite detached from AI 
+// event: parasite detached from AI
   public function onDetach()
     {
-      // set state 
+      // set state
       state = PLR_STATE_PARASITE;
 
       // make player entity visible again
@@ -784,7 +791,7 @@ class PlayerArea
     }
 
 
-// debug: learn about object 
+// debug: learn about object
   public inline function debugLearnObject(t: String )
     {
       knownObjects.add(t);

@@ -30,6 +30,7 @@ class AI
   public var isAggressive: Bool; // true - attack in alerted state, false - run away
   public var isNameKnown: Bool; // is real name known to player?
   public var isJobKnown: Bool; // is job known to player?
+  public var isAttrsKnown: Bool; // are attributes known to player?
   public var isHuman: Bool; // is it a human?
   public var isCommon: Bool; // is it common AI or spawned by area alertness logic?
 
@@ -118,6 +119,7 @@ class AI
       isCommon = true;
       isNameKnown = false;
       isJobKnown = false;
+      isAttrsKnown = false;
       isHuman = false;
       parasiteAttached = false;
       baseAttrs = {

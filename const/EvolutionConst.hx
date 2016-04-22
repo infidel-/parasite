@@ -576,7 +576,8 @@ class EvolutionConst
             return "Human society knowledge multiplier: " + l.humanSociety +
               "\nBase host energy cost: " + l.hostEnergyBase +
               "\nBase host health cost: " + l.hostHealthBase +
-              "\nHost skills learning multiplier: " + l.hostSkillsMod;
+              "\nHost skills learning multiplier: " + l.hostSkillsMod +
+              (l.hostAttrsMod == 1 ? "\nProbe shows host attributes" : "");
           },
         levelNotes: [
           'Cannot probe host brain',
@@ -591,27 +592,31 @@ class EvolutionConst
             hostHealthBase: 0,
             hostHealthMod: 0,
             hostSkillsMod: 0,
+            hostAttrsMod: 0,
           },
           {
             humanSociety: 0.25,
-            hostEnergyBase: 30,
+            hostEnergyBase: 20,
             hostHealthBase: 3,
             hostHealthMod: 2,
             hostSkillsMod: 0,
+            hostAttrsMod: 0,
           },
           {
             humanSociety: 0.5,
-            hostEnergyBase: 20,
+            hostEnergyBase: 10,
             hostHealthBase: 1,
             hostHealthMod: 1,
             hostSkillsMod: 0.25,  // can access skills from level 2
+            hostAttrsMod: 0,
           },
           {
             humanSociety: 1.0,
-            hostEnergyBase: 10,
+            hostEnergyBase: 5,
             hostHealthBase: 0,
             hostHealthMod: 1,
             hostSkillsMod: 0.5,
+            hostAttrsMod: 1,
           },
           ],
         action: {
@@ -626,7 +631,7 @@ class EvolutionConst
               if (level == 0)
                 return -1;
               var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
-              return params.hostEnergyBase - player.host.psyche;
+              return params.hostEnergyBase + player.host.psyche;
             },
           },
         onUpgrade: function (level, game, player)
