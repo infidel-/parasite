@@ -772,7 +772,6 @@ class AI
       health -= damage;
       if (health == 0) // AI death
         {
-          setState(AI_STATE_DEAD);
           onDeath();
 
           return;
@@ -789,6 +788,12 @@ class AI
 // event: on death
   public function onDeath()
     {
+      // AI already dead from another call
+      if (state == AI_STATE_DEAD)
+        return;
+
+      game.debug('AI.onDeath(' + id + ')');
+      setState(AI_STATE_DEAD);
       game.area.removeAI(this);
       var o = new BodyObject(game, x, y, type);
 

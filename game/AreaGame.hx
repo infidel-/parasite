@@ -17,13 +17,13 @@ class AreaGame
   public var id: Int; // area id
   public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
-  public var isGenerated: Bool; // has this area been generated? 
-  public var isEntering: Bool; // is the player entering this area atm? 
+  public var isGenerated: Bool; // has this area been generated?
+  public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
   public var habitatAreaID: Int; // area id of habitat
-  public var habitatIsDetected: Bool; // habitat: has been detected? 
+  public var habitatIsDetected: Bool; // habitat: has been detected?
   public var info: AreaInfo; // area info link
   public var width: Int;
   public var height: Int;
@@ -123,7 +123,7 @@ class AreaGame
             }
         }
 
-      // update player position 
+      // update player position
       if (game.player.state == PLR_STATE_HOST)
         {
           game.playerArea.entity.visible = false;
@@ -193,7 +193,7 @@ class AreaGame
         {
           var loc = findEmptyLocation();
           var ai = new BlackopsAI(game, loc.x, loc.y);
-          ai.alertness = 75; 
+          ai.alertness = 75;
           addAI(ai);
         }
     }
@@ -204,31 +204,35 @@ class AreaGame
     {
       game.debug('Area.leave()');
 
-      // count all bodies and discover then in bulk
-      var totalPoints = 0;
-      var totalBodies = 0;
-      for (o in _objects)
-        if (o.type == 'body')
-          {
-            var body: BodyObject = untyped o;
-            totalPoints += body.organPoints;
-            totalBodies++;
-          }
+      if (!isHabitat)
+        {
+          // count all bodies and discover then in bulk
+          var totalPoints = 0;
+          var totalBodies = 0;
+          for (o in _objects)
+            if (o.type == 'body')
+              {
+                var body: BodyObject = untyped o;
+                totalPoints += body.organPoints;
+                totalBodies++;
+              }
 
-      // notify world about bodies discovered
-      if (totalBodies == 1)
-        game.managerRegion.onBodyDiscovered(this, totalPoints);
+          // notify world about bodies discovered
+          if (totalBodies == 1)
+            game.managerRegion.onBodyDiscovered(this, totalPoints);
 
-      else if (totalBodies > 0)
-        game.managerRegion.onBodiesDiscovered(this, totalBodies, totalPoints);
+          else if (totalBodies > 0)
+            game.managerRegion.onBodiesDiscovered(this, totalBodies, totalPoints);
+        }
 
       // remove all ai
       for (ai in _ai)
         removeAI(ai);
 
       // hide static objects and remove dynamic ones
+      // all objects in habitat are considered static
       for (o in _objects)
-        if (o.isStatic)
+        if (o.isStatic || isHabitat)
           o.hide();
         else removeObject(o);
 
@@ -263,7 +267,7 @@ class AreaGame
 
       AreaGenerator.generate(game, this, info);
 
-      // set path info 
+      // set path info
       _pathEngine = new aPath.Engine(this, width, height);
 
       isGenerated = true; // mark area as ready for entering
@@ -418,7 +422,7 @@ class AreaGame
       ?isUnseen: Bool, // location should be unseen by player
     }): { x: Int, y: Int }
     {
-      // all map 
+      // all map
       if (params.near == null)
         {
           Const.todo('findLocation near == null');
@@ -451,7 +455,7 @@ class AreaGame
                   continue;
               }
 
-            if (isWalkable(xo + dx, yo + dy) && 
+            if (isWalkable(xo + dx, yo + dy) &&
                 getAI(xo + dx, yo + dy) == null &&
                 !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
               tmp.push({ x: xo + dx, y: yo + dy });
@@ -472,7 +476,7 @@ class AreaGame
       var tmp = [];
       for (dy in -3...3)
         for (dx in -3...3)
-          if (isWalkable(xo + dx, yo + dy) && 
+          if (isWalkable(xo + dx, yo + dy) &&
               getAI(xo + dx, yo + dy) == null &&
               !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
             tmp.push({ x: xo + dx, y: yo + dy });
@@ -509,11 +513,11 @@ class AreaGame
     }
 
 
-// set alertness without counting changes 
+// set alertness without counting changes
 // used in alertness propagation
   public inline function setAlertness(v: Float)
     {
-      _alertness = Const.clampFloat(v, 0, 100.0); 
+      _alertness = Const.clampFloat(v, 0, 100.0);
     }
 
 
@@ -562,7 +566,7 @@ class AreaGame
     }
 
 
-// set cell type 
+// set cell type
   public inline function setCellType(x: Int, y: Int, index: Int)
     {
       if (x >= 0 && y >= 0 && x < width && y < height)
@@ -575,7 +579,7 @@ class AreaGame
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-    
+
 //      trace(x + ' ' + y + ' ' + _isWalkable[x][y]);
       return Const.TILE_WALKABLE[_cells[x][y]];
     }
@@ -731,7 +735,7 @@ class AreaGame
           var loc = findUnseenEmptyLocation();
           if (loc.x < 0)
             {
-              trace('Area.turnSpawnClues(): no free spot for another ' + 
+              trace('Area.turnSpawnClues(): no free spot for another ' +
                 info.id + ', please report');
               return;
             }
@@ -740,8 +744,8 @@ class AreaGame
             [ game, loc.x, loc.y ]);
           o.name = info.names[Std.random(info.names.length)];
           o.item = {
-            id: info.id, 
-            name: o.name, 
+            id: info.id,
+            name: o.name,
             info: info,
             event: event
             };
@@ -772,11 +776,11 @@ class AreaGame
       // no npcs here
       if (npc.length == 0)
         return;
-      
+
       // npc spawn not enabled yet
       if (!game.player.vars.npcEnabled)
         return;
-  
+
       // count total npcs with photo known and alive
       var total = 0;
       for (n in npc)
@@ -795,7 +799,7 @@ class AreaGame
       var maxSpawn = total - cnt;
       if (maxSpawn > 3)
         maxSpawn = 3;
-  
+
       var i = 0;
       for (n in npc)
         // alive, unspawned and job/photo known
@@ -881,7 +885,7 @@ class AreaGame
         return;
 
       // limit number of spawns per turn
-      var maxSpawn = uncommonAI - cnt; 
+      var maxSpawn = uncommonAI - cnt;
       if (maxSpawn > 10)
         maxSpawn = 10;
 
@@ -900,7 +904,7 @@ class AreaGame
       var loc = findUnseenEmptyLocation();
       if (loc.x < 0)
         {
-          trace('Area.spawnUnseenAI(): no free spot for another ' + 
+          trace('Area.spawnUnseenAI(): no free spot for another ' +
             type + ', please report');
           return null;
         }
@@ -942,7 +946,7 @@ class AreaGame
 // get visible rectangle for this area
   public function getVisibleRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
     {
-      var rect = { 
+      var rect = {
         x1: Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1,
         y1: Std.int(HXP.camera.y / Const.TILE_HEIGHT) - 1,
         x2: Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH) + 2,
@@ -967,13 +971,13 @@ class AreaGame
   function updateVisibilityHost()
     {
       for (ai in _ai)
-        ai.entity.visible = 
-          (game.player.vars.losEnabled ? 
+        ai.entity.visible =
+          (game.player.vars.losEnabled ?
             isVisible(game.playerArea.x, game.playerArea.y, ai.x, ai.y) : true);
 
       for (obj in _objects)
         obj.entity.visible =
-          (game.player.vars.losEnabled ? 
+          (game.player.vars.losEnabled ?
             isVisible(game.playerArea.x, game.playerArea.y, obj.x, obj.y) : true);
     }
 
@@ -985,13 +989,13 @@ class AreaGame
     {
       for (ai in _ai)
         if (game.player.vars.losEnabled)
-          ai.entity.visible = 
+          ai.entity.visible =
             (HXP.distanceSquared(game.playerArea.x, game.playerArea.y, ai.x, ai.y) < 6 * 6);
         else ai.entity.visible = true;
 
       for (obj in _objects)
         if (game.player.vars.losEnabled)
-          obj.entity.visible = 
+          obj.entity.visible =
             (HXP.distanceSquared(game.playerArea.x, game.playerArea.y, obj.x, obj.y) < 6 * 6);
         else obj.entity.visible = true;
     }
@@ -1007,9 +1011,9 @@ class AreaGame
         {
           var nx = x + Const.dirx[i];
           var ny = y + Const.diry[i];
-          var ok = 
-            (isWalkable(nx, ny) && 
-             !hasAI(nx, ny) && 
+          var ok =
+            (isWalkable(nx, ny) &&
+             !hasAI(nx, ny) &&
              !(game.playerArea.x == nx && game.playerArea.y == ny));
           if (ok)
             tmp.push(i);
@@ -1061,7 +1065,7 @@ class AreaGame
 
 
 // get path from x1, y1 -> x2, y2
-  public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node> 
+  public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node>
     {
       if (!isWalkable(x1, y1) || !isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
         return null;
@@ -1111,7 +1115,7 @@ class AreaGame
     {
       // save alertness changes for later use
       alertnessMod += v - _alertness;
-      return _alertness = Const.clampFloat(v, 0, 100.0); 
+      return _alertness = Const.clampFloat(v, 0, 100.0);
     }
 
   function set_interest(v: Float)

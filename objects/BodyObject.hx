@@ -96,7 +96,10 @@ class BodyObject extends AreaObject
         return;
 
       // notify world about body discovery by authorities
-      game.managerRegion.onBodyDiscovered(game.area, organPoints);
+      // habitat bodies are not discovered
+      if (!game.area.isHabitat)
+        game.managerRegion.onBodyDiscovered(game.area, organPoints);
+//      else game.log("Body decays.");
 
       game.area.removeObject(this);
     }
