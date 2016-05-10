@@ -38,7 +38,7 @@ class InventoryWindow extends TextWindow
       for (item in game.player.host.inventory)
         {
           n++;
-          var knowsItem = game.player.knowsItem(item.id);  
+          var knowsItem = game.player.knowsItem(item.id);
           var name = (knowsItem ? item.name : item.info.unknown);
           buf.add(name + '\n');
         }

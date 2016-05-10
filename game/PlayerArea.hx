@@ -39,6 +39,7 @@ class PlayerArea
       attachHold = 0;
       knownObjects = new List<String>();
       knownObjects.add('body');
+      knownObjects.add('pickup');
 
       entity = new PlayerEntity(game, x, y);
       game.scene.add(entity);

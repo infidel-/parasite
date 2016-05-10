@@ -3,6 +3,7 @@
 package game;
 
 import const.ItemsConst;
+import objects.*;
 
 class Inventory
 {
@@ -21,7 +22,7 @@ class Inventory
     {
       var tmp = new List<_PlayerAction>();
 
-      // disable inventory action in region mode for now
+      // disable inventory actions in region mode for now
       if (game.location == LOCATION_REGION)
         return tmp;
 
@@ -37,29 +38,39 @@ class Inventory
               obj: item
               });
 
-          // cant do stuff when item is not known
-          if (!game.player.knowsItem(item.id))
-            continue;
+          // can do stuff when item is known
+          if (game.player.knowsItem(item.id))
+            {
+              // read a readable
+              if (item.info.type == 'readable')
+                tmp.add({
+                  id: 'read.' + item.id,
+                  type: ACTION_INVENTORY,
+                  name: 'Read ' + item.name,
+                  energy: 10,
+                  obj: item
+                  });
 
-          // read a readable
-          if (item.info.type == 'readable')
-            tmp.add({
-              id: 'read.' + item.id,
-              type: ACTION_INVENTORY,
-              name: 'Read ' + item.name,
-              energy: 10,
-              obj: item
-              });
+              // use computer
+              else if (item.info.type == 'computer')
+                tmp.add({
+                  id: 'search.' + item.id,
+                  type: ACTION_INVENTORY,
+                  name: 'Use ' + item.name + ' to search',
+                  energy: 10,
+                  obj: item
+                  });
+            }
 
-          // use computer
-          else if (item.info.type == 'computer')
-            tmp.add({
-              id: 'search.' + item.id,
-              type: ACTION_INVENTORY,
-              name: 'Use ' + item.name + ' to search',
-              energy: 10,
-              obj: item
-              });
+          // drop item
+          tmp.add({
+            id: 'drop.' + item.id,
+            type: ACTION_INVENTORY,
+            name: 'Drop ' +
+              (game.player.knowsItem(item.id) ? item.name : item.info.unknown),
+            energy: 0,
+            obj: item
+            });
         }
 
       return tmp;
@@ -84,6 +95,10 @@ class Inventory
       // search for npc with item
       else if (actionID == 'search')
         ret = searchAction(item);
+
+      // drop item
+      else if (actionID == 'drop')
+        dropAction(item);
 
       // if action was completed, end turn, etc
       if (ret)
@@ -216,6 +231,23 @@ class Inventory
           }
 
       return true;
+    }
+
+
+// ACTION: drop item
+  function dropAction(item: Item)
+    {
+      var tmpname = (game.player.knowsItem(item.info.id) ?
+        item.name : item.info.unknown);
+
+      var o = new GenericPickup(game, game.playerArea.x, game.playerArea.y,
+        Const.FRAME_PICKUP);
+      o.name = tmpname;
+      o.item = item;
+      game.area.addObject(o);
+      _list.remove(item);
+
+      game.player.log('You drop the ' + tmpname + '.');
     }
 
 

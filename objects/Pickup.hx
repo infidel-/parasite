@@ -13,6 +13,8 @@ class Pickup extends AreaObject
 
       type = 'pickup';
       name = 'pickup';
+
+      // do not create entities here!
     }
 
 
@@ -22,19 +24,19 @@ class Pickup extends AreaObject
       if (game.player.state != PLR_STATE_HOST)
         return;
 
-      var tmpname = (game.player.knowsItem(item.info.id) ? 
+      var tmpname = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
       addAction('get', 'Get ' + tmpname, 5);
     }
 
 
-// ACTION: action handling 
+// ACTION: action handling
   override function onAction(id: String)
     {
       // get stuff from body
       if (id == 'get')
         {
-          var tmpname = (game.player.knowsItem(item.info.id) ? 
+          var tmpname = (game.player.knowsItem(item.info.id) ?
             item.name : item.info.unknown);
           game.player.log('You pick the ' + tmpname + ' up.');
           game.player.host.inventory.add(item);
@@ -58,5 +60,5 @@ class Pickup extends AreaObject
 
 
   static var DESPAWN_TURNS = 20; // turns until body is despawned (picked up by law etc)
-*/  
+*/
 }

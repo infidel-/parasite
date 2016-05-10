@@ -1,6 +1,5 @@
 test playthrough of the clue gathering
 facility codenames
-dropping objects in habitat
 alertness on habitat should raise chance of blackops finding it
 add logging to bat/sh files and check it out
 move starting AI inventory into WorldConst (make func onSpawn)
@@ -23,6 +22,7 @@ mission - abduction - chance of target being a soldier in a base or vip in facil
 mission completed, what if spaceship is crashed
 add spaceship object to global object map or make easier getObject(id) function or
 debug mode - timeline - show numeric event id
+?inventory actions - r1, l1, d1
 
 ==
 CONSOLE CHEATSHEET:
