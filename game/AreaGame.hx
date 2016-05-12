@@ -8,6 +8,7 @@ import ai.*;
 import objects.*;
 import const.WorldConst;
 import const.ItemsConst;
+import const.NameConst;
 
 class AreaGame
 {
@@ -15,6 +16,7 @@ class AreaGame
   var region: RegionGame;
 
   public var id: Int; // area id
+  public var name: String; // area name
   public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated?
@@ -58,6 +60,7 @@ class AreaGame
       isHabitat = false;
       hasHabitat = false;
       id = _maxID++;
+      name = null;
       x = vx;
       y = vy;
       width = 10;
@@ -510,6 +513,13 @@ class AreaGame
         tileID = Const.TILE_REGION_MILITARY_BASE;
       else if (typeID == AREA_FACILITY)
         tileID = Const.TILE_REGION_FACILITY;
+
+      // set name
+      name = info.name;
+      if (typeID == AREA_MILITARY_BASE)
+        name = NameConst.generate('%baseA1% %baseB1%');
+      else if (typeID == AREA_FACILITY)
+        name = NameConst.generate('%tree1% %geo1% %lab1%');
     }
 
 

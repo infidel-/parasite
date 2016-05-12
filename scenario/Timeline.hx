@@ -5,6 +5,7 @@ package scenario;
 import scenario.Scenario;
 import game.Game;
 import const.WorldConst;
+import const.NameConst;
 
 class Timeline
 {
@@ -159,23 +160,7 @@ should limit player options for guiding purposes
         {
           var tmp = scenario.names.get(key);
           var name = tmp[Std.random(tmp.length)];
-
-          // %num?% => random numbers
-          if (name.indexOf('%num') > 0)
-            for (i in 0...9)
-              name = StringTools.replace(name, '%num' + i + '%', '' + Std.random(10));
-
-          // %letter?% => random letter A-Z 
-          if (name.indexOf('%letter') > 0)
-            for (i in 0...9)
-              name = StringTools.replace(name, '%letter' + i + '%',
-                String.fromCharCode(65 + Std.random(26)));
-
-          // %greek?% => random greek letter 
-          if (name.indexOf('%greek') > 0)
-            for (i in 0...9)
-              name = StringTools.replace(name, '%greek' + i + '%',
-                Const.greekLetters[Std.random(Const.greekLetters.length)]);
+          name = NameConst.generate(name);
 
           _names.set(key, name);
         }
@@ -246,6 +231,8 @@ should limit player options for guiding purposes
         (info.alertness != null ? info.alertness : scenario.defaultAlertness);
       area.interest = 
         (info.interest != null ? info.interest : scenario.defaultInterest);
+      if (location.hasName)
+        area.name = location.name;
 
       _locationsList.add(location);
       return location;

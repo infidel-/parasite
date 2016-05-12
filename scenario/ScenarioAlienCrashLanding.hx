@@ -18,9 +18,10 @@ class ScenarioAlienCrashLanding extends Scenario
       goals = GoalsAlienCrashLanding.map;
 
       names = [
-        'facility1' => [ 'Facility 1 TODO' ],
-        'facility2' => [ 'Facility 2 TODO' ],
-        'facility3' => [ 'Facility 3 TODO' ],
+        'facility1' => [ '%tree1% %geo1% %lab1%' ],
+        'facility2' => [ '%tree1% %geo1% %lab1%' ],
+        'facility3' => [ '%tree1% %geo1% %lab1%' ],
+        'base1' => [ 'Area %num1%%num2%', '%baseA1% %baseB1%' ],
         'shipCode' => [ 'OBJ-%num1%%num2%', 'UFO-%num1%%num2%-%greek1%',
           'SAUCE-%num1%%num1%' ],
         'alienCode' => [ 'ET-%letter1%%num1%%num2%', 'ETO-%num1%%num2%%letter1%',
@@ -42,7 +43,7 @@ class ScenarioAlienCrashLanding extends Scenario
 
               // change event note on the fly
               var ev = timeline.getEvent('alienMission');
-              ev.notes[0].text += ' The mission type was ' + type + '.'; 
+              ev.notes[0].text += ' The mission type was ' + type + '.';
             },
 
           notes: [
@@ -62,10 +63,10 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             type: AREA_GROUND,
             },
-          npc: [ 
-            'civilian' => 20, 
-            'reporter:civilian' => 5, 
-            'ufologist:civilian' => 5, 
+          npc: [
+            'civilian' => 20,
+            'reporter:civilian' => 5,
+            'ufologist:civilian' => 5,
             'conspirologist:civilian' => 3 ],
           },
 
@@ -79,6 +80,8 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: {
             type: AREA_MILITARY_BASE,
+            id: 'base1',
+            name: '%base1%',
             near: 'shipSpottedCiv'
             },
           npc: [ 'soldier' => 20 ],
@@ -312,7 +315,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Separation was successful and %parasiteCode% was scheduled for transportation to %facility3%.',
             'The specialist performing the operation speculated that separation was a violent shock for both %alienCode% and %parasiteCode% nervous systems and mental capacity.',
             ],
-          location: { // cannot use sameAs due to branching but it should smartly check if location with this id exists 
+          location: { // cannot use sameAs due to branching but it should smartly check if location with this id exists
             id: 'facility2',
             type: AREA_FACILITY,
             name: '%facility2%'
@@ -328,7 +331,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Teams of field specialists have been scrambled to the area.'
             ],
           location: {
-            interest: 50 
+            interest: 50
             },
           npc: [ 'agent' => 2 ],
           },
@@ -337,7 +340,7 @@ class ScenarioAlienCrashLanding extends Scenario
         '' => {
           name: '',
           },
-*/        
+*/
         ];
     }
 }

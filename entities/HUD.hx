@@ -24,11 +24,11 @@ class HUD
   var _textFieldBack: Sprite; // actions list background
   var _listActions: List<_PlayerAction>; // list of currently available actions
 
-  var _log: TextField; // last log lines 
+  var _log: TextField; // last log lines
   var _logBack: Sprite; // log background
   var _listLog: List<String>; // log lines (last 4)
 
-  var _console: TextField; // console 
+  var _console: TextField; // console
   var _consoleBack: Sprite; // console background
 
   public function new(g: Game)
@@ -65,7 +65,7 @@ class HUD
       _logBack.y = 20;
       HXP.stage.addChild(_logBack);
 
-      // console 
+      // console
       var font = Assets.getFont("font/04B_03__.ttf");
       _console = new TextField();
       var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
@@ -92,7 +92,7 @@ class HUD
 
       updateLog(); // redraw the log just in case
     }
-  
+
 
 // call action by id
   public function action(index: Int)
@@ -142,17 +142,17 @@ class HUD
       else if (game.location == LOCATION_REGION)
         buf.add(
           game.playerRegion.x + ',' + game.playerRegion.y + ')\n' +
-          game.playerRegion.currentArea.info.name + '\n');
+          game.playerRegion.currentArea.name + '\n');
       buf.add('===\n');
 
-      var colEnergy = 
+      var colEnergy =
         (game.player.energy > 0.3 * game.player.maxEnergy ? '#FFFFFF' : '#FF0000');
-      buf.add('Energy: ' + 
+      buf.add('Energy: ' +
         "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy + '\n');
-      var colHealth = 
+      var colHealth =
         (game.player.health > 0.3 * game.player.maxHealth ? '#FFFFFF' : '#FF0000');
-      buf.add('Health: ' + 
+      buf.add('Health: ' +
         "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
         '/' + game.player.maxHealth + '\n');
       buf.add('===\n');
@@ -167,10 +167,10 @@ class HUD
           if (game.player.host.isJobKnown)
             buf.add(' (' + game.player.host.job + ')\n');
           else buf.add('\n');
-          var colHealth = 
-            (game.player.host.health > 0.3 * game.player.host.maxHealth ? 
+          var colHealth =
+            (game.player.host.health > 0.3 * game.player.host.maxHealth ?
             '#FFFFFF' : '#FF0000');
-          buf.add('Health: ' + 
+          buf.add('Health: ' +
             "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
             '/' + game.player.host.maxHealth + '\n');
 
@@ -179,12 +179,12 @@ class HUD
             colControl = '#FF0000';
           else if (game.player.hostControl < 70)
             colControl = '#FFFF00';
-          buf.add('Control: ' + 
+          buf.add('Control: ' +
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100\n');
 
-          var colEnergy = 
-            (game.player.host.energy > 0.3 * game.player.host.maxEnergy ? 
+          var colEnergy =
+            (game.player.host.energy > 0.3 * game.player.host.maxEnergy ?
               '#FFFFFF' : '#FF0000');
           buf.add("Energy: <font color='" + colEnergy + "'>" + game.player.host.energy +
             '</font>/' + game.player.host.maxEnergy + '\n');
@@ -197,7 +197,7 @@ class HUD
         }
 /*
       buf.add('Intent: ');
-      var action = Const.getAction(game.player.intent); 
+      var action = Const.getAction(game.player.intent);
       buf.add(action.name);
 */
       buf.add("\n===\n\n");
@@ -206,13 +206,13 @@ class HUD
       var n = 1;
       for (action in _listActions)
         {
-/*        
+/*
           if (a == selectedAction)
             buf.add('* ');
           else buf.add('  ');
 */
 
-//          var action = Const.getAction(id); 
+//          var action = Const.getAction(id);
           buf.add(n + ': ');
           buf.add(action.name);
           if (action.energy != null && action.energy > 0)
@@ -342,7 +342,7 @@ class HUD
 // run console command and close it
   public function runConsoleCommand()
     {
-#if mydebug      
+#if mydebug
       game.console.run(_console.text);
       hideConsole();
 #end

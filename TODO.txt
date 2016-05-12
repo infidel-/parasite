@@ -1,5 +1,4 @@
 test playthrough of the clue gathering
-facility codenames
 alertness on habitat should raise chance of blackops finding it
 add logging to bat/sh files and check it out
 move starting AI inventory into WorldConst (make func onSpawn)
