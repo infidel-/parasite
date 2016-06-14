@@ -1,24 +1,24 @@
-// scenario npc 
+// scenario npc
 
 package scenario;
 
 import game.Game;
 import game.AreaGame;
 
-class NPC 
+class NPC
 {
   public var game: Game;
 
   public var name: String; // name
   public var nameKnown: Bool; // name known to player?
   public var type: String; // npc type
-  public var job: String; // job title 
+  public var job: String; // job title
   public var jobKnown: Bool; // job known to player?
   public var area: AreaGame; // location area
   public var areaKnown: Bool; // location known to player?
   public var isDead: Bool; // is this npc dead?
   public var isDeadKnown: Bool; // is dead/alive known to player?
-  public var memoryKnown: Bool; // has this npc's memories been learned? 
+  public var memoryKnown: Bool; // has this npc's memories been learned?
   public var event: Event; // event (can be null)
   public var ai: ai.AI; // ai link
 
@@ -28,7 +28,7 @@ class NPC
   public function new(g: Game)
     {
       game = g;
-      name = 'John Doe';
+      name = const.NameConst.getHumanName();
       nameKnown = false;
       type = 'civilian';
       job = null;
@@ -45,7 +45,7 @@ class NPC
     }
 
 
-// research this npc with computer 
+// research this npc with computer
   public function research(): Bool
     {
       if (!nameKnown)

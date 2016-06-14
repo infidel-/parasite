@@ -16,14 +16,14 @@ class Timeline
   var _eventsList: Array<Event>; // ordered events list
   var _locationsList: List<Location>; // ordered locations list
   var _names: Map<String, String>; // fully parsed from templates names
-  var _variables: Map<String, Dynamic>; // timeline variables map 
+  var _variables: Map<String, Dynamic>; // timeline variables map
 
   public function new(g: Game)
     {
       game = g;
 
       _eventsMap = new Map();
-      _eventsList = []; 
+      _eventsList = [];
       _locationsList = new List();
       _variables = new Map<String, Dynamic>();
       _names = new Map();
@@ -51,7 +51,7 @@ class Timeline
                 index = i;
                 break;
               }
-          
+
           if (Std.random(100) < 50 && index - 1 >= 0 &&
               !_eventsList[index - 1].isHidden)
             e = _eventsList[index - 1];
@@ -132,7 +132,7 @@ should limit player options for guiding purposes
               nothingKnown = false;
             }
         }
-      
+
       // if all rolls fail just give out a name of first npc
       if (nothingKnown)
         e.npc[0].nameKnown = true;
@@ -167,8 +167,8 @@ should limit player options for guiding purposes
     }
 
 
-// init location from info 
-  function initLocation(eventID: String, eventInfo: EventInfo, 
+// init location from info
+  function initLocation(eventID: String, eventInfo: EventInfo,
       info: LocationInfo, event: Event): Location
     {
       if (info == null)
@@ -227,9 +227,9 @@ should limit player options for guiding purposes
       // init area
       location.area = area;
       area.event = event;
-      area.alertness = 
+      area.alertness =
         (info.alertness != null ? info.alertness : scenario.defaultAlertness);
-      area.interest = 
+      area.interest =
         (info.interest != null ? info.interest : scenario.defaultInterest);
       if (location.hasName)
         area.name = location.name;
@@ -239,9 +239,9 @@ should limit player options for guiding purposes
     }
 
 
-// init npc from info 
-  function initNPC(eventID: String, eventInfo: EventInfo, 
-      npc: Map<String, Int>, event: Event) 
+// init npc from info
+  function initNPC(eventID: String, eventInfo: EventInfo,
+      npc: Map<String, Int>, event: Event)
     {
       // count total number
       var total = 0;
@@ -282,13 +282,13 @@ should limit player options for guiding purposes
                 {
                   var tmp: Array<_AreaType> =
                     [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
-                  var type = tmp[Std.random(tmp.length)];  
+                  var type = tmp[Std.random(tmp.length)];
 
                   npc.area = region.getRandomWithType(type, false);
                 }
 
               npc.area.npc.add(npc); // boom! *head explodes*
-          
+
               // event coverup kills some npcs
               if (total > 3)
                 npc.isDead = (Std.random(100) < 50 ? true : false);
@@ -451,7 +451,7 @@ should limit player options for guiding purposes
 
 
 // get timeline variable value
-  public inline function getDynamicVar(key: String) 
+  public inline function getDynamicVar(key: String)
     {
       return _variables.get(key);
     }

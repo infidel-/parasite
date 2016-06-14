@@ -3,6 +3,7 @@
 package ai;
 
 import game.Game;
+import const.NameConst;
 
 class HumanAI extends AI
 {
@@ -10,7 +11,7 @@ class HumanAI extends AI
     {
       super(g, vx, vy);
       type = 'human';
-      name.real = name.realCapped = 'Joe Smith';
+      name.real = name.realCapped = const.NameConst.getHumanName();
 
       isHuman = true;
       strength = 4 + Std.random(4);

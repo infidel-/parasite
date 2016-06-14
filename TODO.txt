@@ -11,6 +11,7 @@ hosts should stop dying at some point:
 game restart
 citygen - smooth out building tiles when they are not wide enough
 what happens on mission failure
+scenario - alien weapons cache, has a chance of spawning (left by yourself)
 mission - infiltration
 mission - research
 goal - save alien
@@ -22,6 +23,10 @@ mission completed, what if spaceship is crashed
 add spaceship object to global object map or make easier getObject(id) function or
 debug mode - timeline - show numeric event id
 ?inventory actions - r1, l1, d1
+
+expand hidden events - opening certain clues will lead to hidden events, that these clues hint on. For ex., ufologists clue:
+'Independent experts and conspiracy theorists may have some knowledge about the events.'
+should open up a hidden event in some way.
 
 ==
 CONSOLE CHEATSHEET:

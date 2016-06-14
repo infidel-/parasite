@@ -88,4 +88,115 @@ class NameConst
 
       return name;
     }
+
+
+// returns a random human name
+  public static function getHumanName()
+    {
+      return
+        (Std.random(2) == 0 ?
+         NameConst.maleFirst[Std.random(NameConst.maleFirst.length)] :
+         NameConst.femaleFirst[Std.random(NameConst.femaleFirst.length)]) +
+        ' ' +
+        NameConst.last[Std.random(NameConst.last.length)];
+    }
+
+
+  // male first names
+  public static var maleFirst = [
+    "Aaron", "Adam", "Alan", "Albert", "Alex", "Alexander", "Alfred",
+    "Allen", "Alvin", "Andrew", "Anthony", "Antonio", "Arthur", "Barry",
+    "Benjamin", "Bernard", "Bill", "Billy", "Bobby", "Bradley", "Brandon",
+    "Brent", "Brian", "Bruce", "Bryan", "Calvin", "Carl", "Carlos", "Chad",
+    "Charles", "Charlie", "Chris", "Christopher", "Clarence", "Clifford",
+    "Clyde", "Corey", "Craig", "Curtis", "Dale", "Dan", "Daniel", "Danny",
+    "Darrell", "David", "Dean", "Dennis", "Derek", "Derrick", "Don", "Donald",
+    "Douglas", "Dustin", "Earl", "Eddie", "Edward", "Edwin", "Eric", "Ernest",
+    "Eugene", "Floyd", "Francis", "Francisco", "Frank", "Fred", "Frederick",
+    "Gary", "Gene", "George", "Gerald", "Gilbert", "Glen", "Glenn", "Gordon",
+    "Greg", "Gregory", "Harold", "Harry", "Hector", "Henry", "Herbert",
+    "Herman", "Howard", "Jack", "Jacob", "James", "Jason", "Jay", "Jeff",
+    "Jeffery", "Jeffrey", "Jeremy", "Jerome", "Jerry", "Jesse", "Jesus",
+    "Jim", "Jimmy", "Joe", "Joel", "John", "Johnny", "Jon", "Jonathan",
+    "Jorge", "Jose", "Joseph", "Joshua", "Juan", "Justin", "Keith", "Kenneth",
+    "Kevin", "Kyle", "Larry", "Lawrence", "Lee", "Leo", "Leon", "Leonard",
+    "Leroy", "Lester", "Lewis", "Lloyd", "Louis", "Luis", "Manuel", "Marcus",
+    "Mario", "Mark", "Martin", "Marvin", "Matthew", "Maurice", "Melvin",
+    "Michael", "Micheal", "Miguel", "Mike", "Nathan", "Nicholas", "Norman",
+    "Oscar", "Patrick", "Paul", "Pedro", "Peter", "Philip", "Phillip",
+    "Ralph", "Ramon", "Randall", "Randy", "Ray", "Raymond", "Ricardo",
+    "Richard", "Rick", "Ricky", "Robert", "Roberto", "Rodney", "Roger",
+    "Ronald", "Ronnie", "Roy", "Russell", "Ryan", "Sam", "Samuel", "Scott",
+    "Sean", "Shane", "Shawn", "Stanley", "Stephen", "Steve", "Steven",
+    "Terry", "Theodore", "Thomas", "Tim", "Timothy", "Todd", "Tom", "Tommy",
+    "Tony", "Travis", "Troy", "Tyler", "Vernon", "Victor", "Vincent",
+    "Walter", "Warren", "Wayne", "Wesley", "William", "Willie", "Zachary",
+    ];
+
+  // female first names
+  public static var femaleFirst = [
+    "Alice", "Alicia", "Alma", "Amanda", "Amber", "Amy", "Ana", "Andrea",
+    "Angela", "Anita", "Ann", "Anna", "Anne", "Annette", "Annie", "April",
+    "Ashley", "Audrey", "Barbara", "Beatrice", "Bernice", "Bertha",
+    "Beth", "Betty", "Beverly", "Bonnie", "Brenda", "Brittany", "Carmen",
+    "Carol", "Carolyn", "Carrie", "Catherine", "Cathy", "Charlotte",
+    "Cheryl", "Christina", "Christine", "Cindy", "Clara", "Connie",
+    "Crystal", "Cynthia", "Dana", "Danielle", "Darlene", "Dawn", "Debbie",
+    "Deborah", "Debra", "Denise", "Diana", "Diane", "Dolores", "Donna",
+    "Doris", "Dorothy", "Edith", "Edna", "Elaine", "Eleanor", "Elizabeth",
+    "Ellen", "Elsie", "Emily", "Emma", "Erica", "Erin", "Esther", "Ethel",
+    "Eva", "Evelyn", "Florence", "Frances", "Gail", "Geraldine", "Gladys",
+    "Gloria", "Grace", "Hazel", "Heather", "Helen", "Holly", "Ida",
+    "Irene", "Jacqueline", "Jamie", "Jane", "Janet", "Janice", "Jean",
+    "Jeanette", "Jeanne", "Jennifer", "Jessica", "Jill", "Joan", "Joann",
+    "Joanne", "Josephine", "Joyce", "Juanita", "Judith", "Judy", "Julia",
+    "Julie", "June", "Karen", "Katherine", "Kathleen", "Kathryn", "Kathy",
+    "Katie", "Kelly", "Kim", "Kimberly", "Kristen", "Laura", "Lauren",
+    "Laurie", "Leslie", "Lillian", "Linda", "Lisa", "Lois", "Loretta",
+    "Lori", "Lorraine", "Louise", "Lucille", "Lynn", "Margaret", "Maria",
+    "Marie", "Marilyn", "Marion", "Marjorie", "Martha", "Mary", "Megan",
+    "Melanie", "Melissa", "Michele", "Michelle", "Mildred", "Monica",
+    "Nancy", "Nicole", "Norma", "Pamela", "Patricia", "Paula", "Pauline",
+    "Peggy", "Phyllis", "Rachel", "Rebecca", "Regina", "Renee", "Rhonda",
+    "Rita", "Roberta", "Robin", "Rosa", "Rose", "Ruby", "Ruth", "Sally",
+    "Samantha", "Sandra", "Sara", "Sarah", "Shannon", "Sharon", "Sheila",
+    "Sherry", "Shirley", "Stacy", "Stephanie", "Sue", "Susan", "Suzanne",
+    "Sylvia", "Tammy", "Teresa", "Thelma", "Theresa", "Tiffany", "Tina",
+    "Tracy", "Valerie", "Vanessa", "Veronica", "Victoria", "Virginia",
+    "Vivian", "Wanda", "Wendy", "Yolanda", "Yvonne",
+    ];
+
+  // last names
+  public static var last = [
+    "Adams", "Alexander", "Allen", "Anderson", "Andrews", "Armstrong",
+    "Arnold", "Bailey", "Baker", "Barnes", "Bell", "Bennett", "Berry",
+    "Bishop", "Black", "Boyd", "Bradley", "Brooks", "Brown", "Bryant",
+    "Burke", "Burns", "Butler", "Campbell", "Carlson", "Carpenter",
+    "Carr", "Carroll", "Carter", "Chapman", "Clark", "Cole", "Coleman",
+    "Collins", "Cook", "Cooper", "Cox", "Crawford", "Cunningham",
+    "Davidson", "Davis", "Day", "Dean", "Dixon", "Duncan", "Dunn",
+    "Edwards", "Elliott", "Ellis", "Evans", "Ferguson", "Fisher",
+    "Ford", "Foster", "Fox", "Freeman", "Gardner", "Gibson", "Gilbert",
+    "Gordon", "Graham", "Gray", "Green", "Griffin", "Hall", "Hamilton",
+    "Hansen", "Hanson", "Harris", "Harrison", "Hart", "Hayes", "Henderson",
+    "Henry", "Hicks", "Hill", "Hoffman", "Holmes", "Howard", "Howell",
+    "Hudson", "Hughes", "Hunt", "Hunter", "Jackson", "Jacobs", "James",
+    "Jenkins", "Jensen", "Johnson", "Johnston", "Jones", "Jordan",
+    "Keller", "Kelley", "Kelly", "Kennedy", "King", "Knight", "Lane",
+    "Larson", "Lawrence", "Lawson", "Lee", "Lewis", "Long", "Lynch",
+    "Marshall", "Martin", "Mason", "May", "Mcdonald", "Meyer", "Miller",
+    "Mills", "Mitchell", "Moore", "Morgan", "Morris", "Morrison", "Murphy",
+    "Murray", "Myers", "Nelson", "Nichols", "Obrien", "Olson", "Owens",
+    "Palmer", "Parker", "Patterson", "Payne", "Perkins", "Perry", "Peters",
+    "Peterson", "Phillips", "Pierce", "Porter", "Powell", "Price", "Ray",
+    "Reed", "Reynolds", "Rice", "Richards", "Richardson", "Riley", "Roberts",
+    "Robertson", "Robinson", "Rogers", "Rose", "Ross", "Russell", "Ryan",
+    "Sanders", "Schmidt", "Schneider", "Schultz", "Scott", "Shaw", "Simmons",
+    "Simpson", "Smith", "Snyder", "Spencer", "Stephens", "Stevens", "Stewart",
+    "Stone", "Sullivan", "Taylor", "Thomas", "Thompson", "Tucker", "Turner",
+    "Wagner", "Walker", "Wallace", "Walsh", "Walters", "Ward", "Warren",
+    "Watson", "Weaver", "Webb", "Weber", "Welch", "Wells", "West", "Wheeler",
+    "White", "Williams", "Williamson", "Wilson", "Wood", "Woods", "Wright",
+    "Young",
+    ];
 }
