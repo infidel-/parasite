@@ -4,19 +4,26 @@ package game;
 
 typedef ItemInfo =
 {
-  id: String, // item id
-  type: String, // item type
-  ?name: String, // item name
-  ?names: Array<String>, // item names (one is picked on item generation)
-  unknown: String, // item name when it's unknown
-  ?verb1: String, // X tries to $verb1 you, but misses.
-  ?verb2: String, // X $verb2 you for Y damage.
-  ?weaponStats: { // weapon-related stats, null if not a weapon
-    isRanged: Bool, // is this weapon type ranged? 
-    skill: _Skill, // associated skill
-    minDamage: Int, // min weapon damage
-    maxDamage: Int // max weapon damage
-    },
-  ?areaObjectClass: Dynamic, // area objet class
+  var id: String; // item id
+  var type: String; // item type
+  @:optional var name: String; // item name
+  @:optional var names: Array<String>; // item names (one is picked on item generation)
+  var unknown: String; // item name when it's unknown
+  @:optional var verb1: String; // X tries to $verb1 you; but misses.
+  @:optional var verb2: String; // X $verb2 you for Y damage.
+  @:optional var weaponStats: { // weapon-related stats; null if not a weapon
+    var isRanged: Bool; // is this weapon type ranged?
+    var skill: _Skill; // associated skill
+    var minDamage: Int; // min weapon damage
+    var maxDamage: Int; // max weapon damage
+    };
+  @:optional var areaObjectClass: Dynamic; // area object class
+
+//  public function getInt(key: String): Int;
+/*
+    {
+      return 15;
+    }
+*/
 }
 

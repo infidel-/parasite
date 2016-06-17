@@ -205,7 +205,6 @@ class Inventory
           return true;
         }
 
-      // TODO: should only be done in lairs
       game.log('You use the ' + item.name + ' to search for known persons data.');
 
       var cnt = 1;
@@ -213,6 +212,8 @@ class Inventory
         cnt = 1;
       else if (item.info.name == 'laptop')
         cnt = 3;
+
+//      trace(item.info.getInt('skill_computer'));
 
       // goal completed - use computer
       game.goals.complete(GOAL_USE_COMPUTER);

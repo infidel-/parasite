@@ -1,7 +1,30 @@
 test playthrough of the clue gathering
-alertness on habitat should raise chance of blackops finding it
-add logging to bat/sh files and check it out
+
+give brain probe 2 on stage 2
+push past AI with host
+
+fix "knowledge microhabitat 100%"
+laptop +10% computer use bonus
+item info - move verb1,2 to weapon stats
 move starting AI inventory into WorldConst (make func onSpawn)
+?? make computer use grind faster - give +1%/+3% skill on each search action (even on failure)
+show host attributes in HUD as STR 1 CON 1 INT 1 PSY 1 line (?)
+make all formulas return standard _RollResult { result: Float, hint: String }
+make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
+  rework attack hints through extended mode
+extended message: you have learned the basics of YYY (Y%)
+extended message: increased your knowledge of XXX (+X%)
+probing event NPC - you have not been able to gain any clues ???
+events should always renumber on opening new one (bug):
+  You study the contents of the organizer and destroy it.
+  You have gained a clue for event 1.
+  Current location of AO-PN29 specimen is unknown.
+  You have gained a clue about an event 1 participant.
+  You have gained a clue about an event 13 participant.
+events weren't renumbered
+
+alertness on habitat should raise chance of blackops finding it
+for 0.2 release: add logging to bat/sh files and check it out
 
 hosts should stop dying at some point:
 - make goal chain for building "host convertor" in microhabitat
@@ -106,6 +129,7 @@ organ damage - organ must heal itself before it becomes active again
 limit region access (until some learning flag triggers, initial progression)
 - ?? make tilemap screen-sized and repaint with each movement ??
 - i should probably make some habitat imps that will notify player about detection.
+use debug player stages as basis for a save system (allow saves only on some critical game events)
 
 
 scene. getSpriteByLayer(layer) - draw lines on this one

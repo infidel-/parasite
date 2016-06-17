@@ -41,13 +41,13 @@ class CivilianAI extends HumanAI
           // smartphones
           var chance = 25;
           if (game.area.info.id == AREA_CITY_LOW)
-            chance = 25;
-          else if (game.area.info.id == AREA_CITY_MEDIUM)
             chance = 50;
+          else if (game.area.info.id == AREA_CITY_MEDIUM)
+            chance = 75;
           else if (game.area.info.id == AREA_CITY_HIGH)
-            chance = 75;
+            chance = 85;
           else if (game.area.info.id == AREA_FACILITY)
-            chance = 75;
+            chance = 90;
 
           if (Std.random(100) < chance)
             {
@@ -58,13 +58,13 @@ class CivilianAI extends HumanAI
           // laptops
           var chance = 5;
           if (game.area.info.id == AREA_CITY_LOW)
-            chance = 5;
-          else if (game.area.info.id == AREA_CITY_MEDIUM)
             chance = 10;
-          else if (game.area.info.id == AREA_CITY_HIGH)
-            chance = 15;
-          else if (game.area.info.id == AREA_FACILITY)
+          else if (game.area.info.id == AREA_CITY_MEDIUM)
             chance = 20;
+          else if (game.area.info.id == AREA_CITY_HIGH)
+            chance = 25;
+          else if (game.area.info.id == AREA_FACILITY)
+            chance = 30;
 
           if (Std.random(100) < 10)
             {

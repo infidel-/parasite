@@ -326,7 +326,7 @@ class ScenarioAlienCrashLanding extends Scenario
         'parasiteTransportation' => {
           name: 'parasite transportation',
           notes: [
-            'During %parasiteCode% transportation to facility %facility3% the containment protocol has been breached and the specimen managed to escape.',
+            'During %parasiteCode% transportation to %facility3% the containment protocol has been breached and the specimen managed to escape.',
             'Current location of %parasiteCode% specimen is unknown.',
             'Teams of field specialists have been scrambled to the area.'
             ],
