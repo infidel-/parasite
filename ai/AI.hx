@@ -227,9 +227,9 @@ class AI
 
 
 // set position
-  public function setPosition(vx: Int, vy: Int)
+  public function setPosition(vx: Int, vy: Int, ?force: Bool = false)
     {
-      if (game.area.getAI(vx, vy) != null)
+      if (game.area.getAI(vx, vy) != null && !force)
         return;
 
       x = vx;

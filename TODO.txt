@@ -1,7 +1,19 @@
 test playthrough of the clue gathering
 
-give brain probe 2 on stage 2
-push past AI with host
+since use computer is max 30% (rarer 50%), search is very slow
+  "use computer" goal completion should open next optional goal:
+    find hacker and probe his brain (an alternative is to grind computer use)
+    new area type - university
+    add NPC age
+    new NPC parameter - job
+    university has professors and students (job types)
+    search for a person with high skill X interface
+    sub-menus:
+      "u" opens "use item" menu
+      "computer" item opens sub-menu
+        "search for timeline info",
+        "search for a person with high Computer Use skill"
+    pressing "." will repeat previous "use" command
 
 fix "knowledge microhabitat 100%"
 laptop +10% computer use bonus

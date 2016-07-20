@@ -204,6 +204,7 @@ class ConsoleGame
     {
       game.log('stage 2');
       game.player.evolutionManager.addImprov(IMP_ENERGY, 1);
+      game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 3);
       game.goals.complete(GOAL_EVOLVE_ORGAN);
       game.player.host.organs.action('set.IMP_ENERGY');
       game.player.host.organs.debugCompleteCurrent();

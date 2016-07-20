@@ -328,6 +328,30 @@ class PlayerArea
           // update HUD info
           game.updateHUD();
         }
+
+      // push past AI
+      else if (state == PLR_STATE_HOST)
+        {
+          // opposing strength check
+          if (!_Math.opposingAttr(player.host.strength, ai.strength, 'strength'))
+            {
+              log('Your host does not manage to push past ' + ai.getName() + '.');
+              return;
+            }
+
+          var newx = ai.x, newy = ai.y;
+
+          ai.setPosition(x, y, true);
+
+          moveTo(newx, newy);
+
+          game.area.updateVisibility();
+
+          log('Your host pushes past ' + ai.getName() + '.');
+
+          // update HUD info
+          game.updateHUD();
+        }
     }
 
 

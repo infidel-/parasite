@@ -199,7 +199,7 @@ class Inventory
         }
 
       // roll for skill
-      if (Std.random(100) > skillLevel)
+      if (!_Math.skill(skillLevel, SKILL_COMPUTER))
         {
           game.log('You have failed to use the human device properly.');
           return true;
@@ -212,8 +212,6 @@ class Inventory
         cnt = 1;
       else if (item.info.name == 'laptop')
         cnt = 3;
-
-//      trace(item.info.getInt('skill_computer'));
 
       // goal completed - use computer
       game.goals.complete(GOAL_USE_COMPUTER);

@@ -12,7 +12,7 @@ import game.Game;
 class GameScene extends Scene
 {
   public var game: Game; // game state link
-  public var area: AreaView; // area view 
+  public var area: AreaView; // area view
   public var region: RegionView; // region view
   public var mouse: MouseEntity; // mouse cursor entity
   public var hud: HUD; // ingame HUD
@@ -133,9 +133,9 @@ class GameScene extends Scene
       x -= HXP.halfWidth;
       y -= HXP.halfHeight;
 
-      if (x + HXP.windowWidth > Const.TILE_WIDTH * w) 
+      if (x + HXP.windowWidth > Const.TILE_WIDTH * w)
         x = Const.TILE_WIDTH * w - HXP.windowWidth;
-      if (y + HXP.windowHeight > Const.TILE_HEIGHT * h) 
+      if (y + HXP.windowHeight > Const.TILE_HEIGHT * h)
         y = Const.TILE_HEIGHT * h - HXP.windowHeight;
 
       if (x < 0)
@@ -176,7 +176,7 @@ class GameScene extends Scene
             handleMovement();
           handleActions();
         }
-    
+
       if (Input.pressed("exit"))
         Sys.exit(1);
     }
@@ -304,7 +304,7 @@ class GameScene extends Scene
           // open debug window
           else if (Input.pressed("debugWindow"))
             setState(HUDSTATE_DEBUG);
-#end            
+#end
         }
 
       return false;

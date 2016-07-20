@@ -4,7 +4,7 @@ package game;
 
 import const.SkillsConst;
 
-class Skills 
+class Skills
 {
   var game: Game;
   var _list: List<Skill>; // list of skills
@@ -62,8 +62,8 @@ class Skills
     }
 
 
-// does the player/ai have that skill? 
-  public function has(id: _Skill): Bool 
+// does the player/ai have that skill?
+  public function has(id: _Skill): Bool
     {
       for (o in _list)
         if (o.id == id)
@@ -110,7 +110,7 @@ class Skills
           // new goal: learn enough about society
           game.goals.receive(GOAL_LEARN_SOCIETY);
 
-          // open timeline on 25% 
+          // open timeline on 25%
           if (oldLevel < 25 && newLevel >= 25)
             // goal completed
             game.goals.complete(GOAL_LEARN_SOCIETY);
@@ -166,7 +166,7 @@ class Skills
 
 // skill type
 
-typedef Skill = 
+typedef Skill =
 {
   var id: _Skill; // skill id
   var level: Float; // skill level

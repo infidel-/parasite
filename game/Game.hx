@@ -7,6 +7,7 @@ import scenario.Timeline;
 
 class Game
 {
+  public var config: Config; // game config
   public var scene: GameScene; // ui scene
   public var timeline: Timeline; // scenario timeline
   public var goals: Goals; // game.goals
@@ -35,6 +36,7 @@ class Game
 
   public function new()
     {
+      config = new Config();
       scene = new GameScene(this);
       console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);
@@ -45,6 +47,7 @@ class Game
 
       area = null;
       region = null;
+      _Math.game = this;
     }
 
 
