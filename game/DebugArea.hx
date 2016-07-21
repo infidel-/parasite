@@ -73,6 +73,7 @@ class DebugArea
               ai.inventory.addID('pistol');
               ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
               ai.inventory.addID('smartphone');
+              ai.inventory.addID('laptop');
               ai.skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
 
               game.player.evolutionManager.state = 2;

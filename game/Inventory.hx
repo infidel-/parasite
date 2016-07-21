@@ -199,7 +199,15 @@ class Inventory
         }
 
       // roll for skill
-      if (!_Math.skill(skillLevel, SKILL_COMPUTER))
+      var bonuses = [];
+      if (item.info.name == 'laptop')
+        bonuses.push({ name: 'laptop', val: 10.0 });
+      var ret = _Math.skill({
+        id: SKILL_COMPUTER,
+        level: skillLevel,
+        bonuses: bonuses
+        });
+      if (!ret)
         {
           game.log('You have failed to use the human device properly.');
           return true;
