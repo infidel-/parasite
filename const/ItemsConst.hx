@@ -123,6 +123,12 @@ class ItemsConst
 
     // ========= ******* misc ********* ==========
     {
+      id: 'mobilePhone',
+      name: 'mobile phone',
+      type: 'phone',
+      unknown: 'small plastic object',
+    },
+    {
       id: 'smartphone',
       name: 'smartphone',
       type: 'computer',

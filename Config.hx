@@ -5,7 +5,7 @@ import sys.io.File;
 class Config
 {
   // cached values
-  public var extendedMode: Bool;
+  public var extendedInfo: Bool;
 
   var map: Map<String, String>;
 
@@ -28,8 +28,8 @@ class Config
           var val = StringTools.trim(tmp[1]);
           map.set(key, val);
 
-          if (key == 'extendedMode')
-            extendedMode = (val == '1');
+          if (key == 'extendedInfo')
+            extendedInfo = (val == '1');
         }
     }
 }

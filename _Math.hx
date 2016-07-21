@@ -44,7 +44,7 @@ class _Math
       if (chance < 1)
         chance = 1;
 
-      if (game.config.extendedMode)
+      if (game.config.extendedInfo)
         {
           var s = new StringBuf();
           s.add('Skill ');
@@ -97,7 +97,7 @@ class _Math
         chance = 1;
       var roll = Std.random(100);
 
-      if (game.config.extendedMode)
+      if (game.config.extendedInfo)
         game.debug(
           'Opposing attribute check for ' + name + ': ' +
           attr + ' vs ' + attr2 + ', ' + chance + '% (roll: ' + roll + ') = ' +

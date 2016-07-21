@@ -46,6 +46,7 @@ class AI
   var _turnsInvisible: Int; // number of turns passed since player saw this AI
 
   public var state: _AIState; // AI state
+  public var stateTime: Int; // turns spent in this state
   public var reason: _AIStateChangeReason; // reason for setting this state
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
 
@@ -105,6 +106,7 @@ class AI
       roamTargetY = -1;
 
       state = AI_STATE_IDLE;
+      stateTime = 0;
       reason = REASON_NONE;
       alertness = 0;
       brainProbed = 0;
@@ -271,7 +273,8 @@ class AI
 
 
 // set AI state (plus all vars for this state)
-  public function setState(vstate: _AIState, ?vreason: _AIStateChangeReason)
+  public function setState(vstate: _AIState, ?vreason: _AIStateChangeReason,
+      ?msg: String)
     {
       if (vreason == null)
         vreason = REASON_NONE;
@@ -281,6 +284,7 @@ class AI
         return;
 
       state = vstate;
+      stateTime = 0;
       reason = vreason;
       if (state == AI_STATE_ALERT)
         timers.alert = ALERTED_TIMER;
@@ -288,6 +292,9 @@ class AI
       // reset roam target on changing state
       roamTargetX = -1;
       roamTargetY = -1;
+
+      if (msg != null)
+        log(msg);
 
       onStateChange(); // dynamic event
       updateEntity(); // update icon
@@ -379,7 +386,8 @@ class AI
       // nowhere to run
       if (tmp.length == 0)
         {
-          Const.todo('is in panic and has nowhere to run!');
+          if (Std.random(100) < 30)
+            log('cowers in panic!');
           return;
         }
 
@@ -693,6 +701,7 @@ class AI
 // call AI logic
   public function turn()
     {
+      stateTime++; // time spent in this state
       entity.turn(); // time passing for entity
       effects.turn(1); // time passing for effects
 
@@ -718,6 +727,10 @@ class AI
       // controlled by parasite
       else if (state == AI_STATE_HOST)
         stateHost();
+
+      // post-detach
+      else if (state == AI_STATE_POST_DETACH && stateTime >= 1)
+        setState(AI_STATE_ALERT, REASON_DETACH);
 
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
@@ -833,7 +846,7 @@ class AI
 // event: parasite detach from this host
   public inline function onDetach()
     {
-      setState(AI_STATE_ALERT, REASON_DETACH);
+      setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
       entity.setMask(Const.FRAME_EMPTY);
     }
 

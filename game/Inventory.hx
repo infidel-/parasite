@@ -272,6 +272,17 @@ class Inventory
     }
 
 
+// checks whether this inventory contains this item ID
+  public function has(id: String): Bool
+    {
+      for (item in _list)
+        if (item.id == id)
+          return true;
+
+      return false;
+    }
+
+
 // remove item
   public function remove(id: String)
     {

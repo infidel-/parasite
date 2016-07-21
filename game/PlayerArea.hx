@@ -517,10 +517,9 @@ class PlayerArea
 // action: try to leave this AI host
   function leaveHostAction()
     {
+      game.log('You release the host.');
       player.host.onDetach();
       onDetach();
-
-      game.log('You release the host.');
     }
 
 

@@ -52,6 +52,7 @@ class CivilianAI extends HumanAI
           if (Std.random(100) < chance)
             {
               skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
+              inventory.remove('mobilePhone');
               inventory.addID('smartphone');
             }
 
@@ -80,6 +81,21 @@ class CivilianAI extends HumanAI
     {
       // try to call police on next turn if not struggling with parasite
       if (state == AI_STATE_ALERT && !parasiteAttached)
-        game.managerArea.addAI(this, AREAEVENT_CALL_LAW, 1);
+        {
+          // cannot call police without a phone
+          if (!inventory.has('smartphone') &&
+              !inventory.has('mobilePhone'))
+            return;
+
+          // no reception in habitat
+          if (game.area.isHabitat)
+            {
+              log('fumbles with something in its hands. "Shit! No reception!"');
+
+              return;
+            }
+
+          game.managerArea.addAI(this, AREAEVENT_CALL_LAW, 1);
+        }
     }
 }
