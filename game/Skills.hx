@@ -102,6 +102,10 @@ class Skills
           sk.level += val;
           sk.level = Const.clampFloat(sk.level, 0, 99.9);
           newLevel = sk.level;
+
+          if (isPlayer && game.config.extendedInfo)
+            game.debug('Skill increased: ' + sk.info.name + ' +' + val +
+              '% = ' + sk.level + '%.');
         }
 
       // human society knowledge increased
@@ -151,6 +155,14 @@ class Skills
 
       var skill = { id: id, level: lvl, info: info };
       _list.add(skill);
+
+      if (isPlayer && game.config.extendedInfo)
+        {
+          if (info.isKnowledge)
+            game.debug('Knowledge added: ' + info.name +
+              (info.isBool ? '.' : ' ' + lvl + '%.'));
+          else game.debug('Skill added: ' + info.name + ' ' + lvl + '%.');
+        }
     }
 
 

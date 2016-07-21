@@ -209,7 +209,8 @@ class Inventory
         });
       if (!ret)
         {
-          game.log('You have failed to use the human device properly.');
+          game.log('You have failed to use the human device properly. You still gain some insight.');
+          game.player.skills.increase(SKILL_COMPUTER, 1);
           return true;
         }
 

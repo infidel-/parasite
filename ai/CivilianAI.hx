@@ -67,7 +67,7 @@ class CivilianAI extends HumanAI
           else if (game.area.info.id == AREA_FACILITY)
             chance = 30;
 
-          if (Std.random(100) < 10)
+          if (Std.random(100) < chance)
             {
               skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
               inventory.addID('laptop');

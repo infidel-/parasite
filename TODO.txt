@@ -1,13 +1,10 @@
 test playthrough of the clue gathering
 
-move starting AI inventory into WorldConst (make func onSpawn)
 ?? make computer use grind faster - give +1%/+3% skill on each search action (even on failure)
 show host attributes in HUD as STR 1 CON 1 INT 1 PSY 1 line (?)
 make all formulas return standard _RollResult { result: Float, hint: String }
 make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
   rework attack hints through extended mode
-extended message: you have learned the basics of YYY (Y%)
-extended message: increased your knowledge of XXX (+X%)
 probing event NPC - you have not been able to gain any clues ???
 events should always renumber on opening new one (bug):
   You study the contents of the organizer and destroy it.

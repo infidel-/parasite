@@ -656,14 +656,15 @@ class PlayerArea
 
       if (skill == null)
         {
-          player.skills.addID(hostSkill.id, amount);
           game.log('You have learned the basics of ' + hostSkill.info.name + ' skill.');
+          player.skills.addID(hostSkill.id, amount);
         }
       else if (!hostSkill.info.isBool)
         {
           game.log('You have increased your knowledge of ' + hostSkill.info.name +
             ' skill.');
-          skill.level = Const.clampFloat(skill.level + amount, 0, hostSkill.level);
+          var val = Const.clampFloat(skill.level + amount, 0, hostSkill.level);
+          player.skills.increase(hostSkill.id, val - skill.level);
         }
     }
 
