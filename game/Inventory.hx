@@ -8,12 +8,12 @@ import objects.*;
 class Inventory
 {
   var game: Game;
-  var _list: List<Item>; // list of items
+  var _list: List<_Item>; // list of items
 
   public function new(g: Game)
     {
       game = g;
-      _list = new List<Item>();
+      _list = new List<_Item>();
     }
 
 
@@ -80,7 +80,7 @@ class Inventory
 // ACTION: player inventory action
   public function action(action: _PlayerAction)
     {
-      var item: Item = untyped action.obj;
+      var item: _Item = untyped action.obj;
       var actionID = action.id.substr(0, action.id.indexOf('.'));
       var ret = true;
 
@@ -116,7 +116,7 @@ class Inventory
 
 
 // ACTION: read item
-  function readAction(item: Item)
+  function readAction(item: _Item)
     {
       // can only read books in habitat
       if (item.id == 'book' && !game.area.isHabitat)
@@ -146,7 +146,7 @@ class Inventory
 
 
 // ACTION: learn about item
-  function learnAction(item: Item)
+  function learnAction(item: _Item)
     {
       game.log('You probe the brain of the host and learn what that item is for.');
 
@@ -158,7 +158,7 @@ class Inventory
 
 
 // ACTION: search for npc information
-  function searchAction(item: Item): Bool
+  function searchAction(item: _Item): Bool
     {
       // player does not have computer skill
       var skillLevel = game.player.skills.getLevel(SKILL_COMPUTER);
@@ -234,7 +234,7 @@ class Inventory
 
 
 // ACTION: drop item
-  function dropAction(item: Item)
+  function dropAction(item: _Item)
     {
       var tmpname = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
@@ -251,7 +251,7 @@ class Inventory
 
 
 // list iterator
-  public function iterator(): Iterator<Item>
+  public function iterator(): Iterator<_Item>
     {
       return _list.iterator();
     }
@@ -277,10 +277,10 @@ class Inventory
 
 
 // get first item that is a weapon
-  public function getFirstWeapon(): Item
+  public function getFirstWeapon(): _Item
     {
       for (item in _list)
-        if (item.info.weaponStats != null)
+        if (item.info.weapon != null)
           return item;
 
       return null;
@@ -306,7 +306,7 @@ class Inventory
 
 
 // add item
-  public inline function add(item: Item)
+  public inline function add(item: _Item)
     {
       _list.add(item);
     }

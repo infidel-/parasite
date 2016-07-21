@@ -2,13 +2,13 @@
 
 package const;
 
-import game.ItemInfo;
+import game._ItemInfo;
 import objects.*;
 
 class ItemsConst
 {
 // return item info by id
-  public static function getInfo(id: String): ItemInfo
+  public static function getInfo(id: String): _ItemInfo
     {
       for (ii in items)
         if (ii.id == id)
@@ -20,40 +20,40 @@ class ItemsConst
 
 
 // special item: fists
-  public static var fists: ItemInfo = 
+  public static var fists: _ItemInfo =
     {
       id: 'fists',
       name: 'fists',
       type: 'weapon',
       unknown: 'fists',
-      verb1: 'punch',
-      verb2: 'punches',
-      weaponStats:
+      weapon:
         {
           isRanged: false,
           skill: SKILL_FISTS,
           minDamage: 1,
-          maxDamage: 3
+          maxDamage: 3,
+          verb1: 'punch',
+          verb2: 'punches',
         }
     };
 
 
 // all item infos
-  public static var items: Array<ItemInfo> = [
+  public static var items: Array<_ItemInfo> = [
     // ========= ******* weapons ********* ==========
     {
       id: 'baton',
       name: 'baton',
       type: 'weapon',
       unknown: 'hard elongated object',
-      verb1: 'hit',
-      verb2: 'hits',
-      weaponStats:
+      weapon:
         {
           isRanged: false,
           skill: SKILL_BATON,
           minDamage: 1,
-          maxDamage: 6
+          maxDamage: 6,
+          verb1: 'hit',
+          verb2: 'hits',
         }
     },
     {
@@ -61,14 +61,14 @@ class ItemsConst
       name: 'pistol',
       type: 'weapon',
       unknown: 'metallic object with a handle',
-      verb1: 'shoot',
-      verb2: 'shoots',
-      weaponStats:
+      weapon:
         {
           isRanged: true,
           skill: SKILL_PISTOL,
           minDamage: 1,
-          maxDamage: 10
+          maxDamage: 10,
+          verb1: 'shoot',
+          verb2: 'shoots',
         }
     },
     {
@@ -76,14 +76,14 @@ class ItemsConst
       name: 'assault rifle',
       type: 'weapon',
       unknown: 'elongated metallic object with a handle',
-      verb1: 'shoot',
-      verb2: 'shoots',
-      weaponStats:
+      weapon:
         {
           isRanged: true,
           skill: SKILL_RIFLE,
           minDamage: 2,
-          maxDamage: 12
+          maxDamage: 12,
+          verb1: 'shoot',
+          verb2: 'shoots',
         }
     },
     {
@@ -91,14 +91,14 @@ class ItemsConst
       name: 'combat shotgun',
       type: 'weapon',
       unknown: 'elongated metallic object with a handle',
-      verb1: 'shoot',
-      verb2: 'shoots',
-      weaponStats:
+      weapon:
         {
           isRanged: true,
           skill: SKILL_SHOTGUN,
           minDamage: 4,
-          maxDamage: 24
+          maxDamage: 24,
+          verb1: 'shoot',
+          verb2: 'shoots',
         }
     },
 

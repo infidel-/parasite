@@ -434,27 +434,27 @@ class AI
       else info = item.info;
 
       // check for distance on melee
-      if (!info.weaponStats.isRanged && !isNear(game.playerArea.x, game.playerArea.y))
+      if (!info.weapon.isRanged && !isNear(game.playerArea.x, game.playerArea.y))
         {
           logicMoveTo(game.playerArea.x, game.playerArea.y);
           return;
         }
 
       // weapon skill level
-      var skillLevel = skills.getLevel(info.weaponStats.skill);
+      var skillLevel = skills.getLevel(info.weapon.skill);
 
       // roll skill
       if (Std.random(100) > skillLevel)
         {
-          log('tries to ' + info.verb1 + ' you, but misses.');
+          log('tries to ' + info.weapon.verb1 + ' you, but misses.');
           return;
         }
 
       // success, roll damage
       var tmp: Array<Int> = [];
-      var damage = Const.roll(info.weaponStats.minDamage, info.weaponStats.maxDamage);
+      var damage = Const.roll(info.weapon.minDamage, info.weapon.maxDamage);
       tmp.push(damage);
-      if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
+      if (!info.weapon.isRanged) // all melee weapons have damage bonus
         {
           var bonus = Const.roll(0, Std.int(strength / 2));
           damage += bonus;
@@ -487,7 +487,7 @@ class AI
       if (damage < 0)
         damage = 0;
 
-      log(info.verb2 + ' ' +
+      log(info.weapon.verb2 + ' ' +
         (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
         ' for ' + damage + ' damage.');
       game.debug('AI.attack: ' + tmp);

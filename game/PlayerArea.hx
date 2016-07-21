@@ -381,7 +381,7 @@ class PlayerArea
 
       // for now, just get first weapon player knows how to use
       for (ii in player.host.inventory)
-        if (ii.info.weaponStats != null && player.knowsItem(ii.id))
+        if (ii.info.weapon != null && player.knowsItem(ii.id))
           {
             item = ii;
             break;
@@ -393,22 +393,23 @@ class PlayerArea
       else info = item.info;
 
       // check for distance on melee
-      if (!info.weaponStats.isRanged && !ai.isNear(x, y))
+      if (!info.weapon.isRanged && !ai.isNear(x, y))
         return;
 
       // propagate shooting/melee event
-      game.managerArea.onAttack(x, y, info.weaponStats.isRanged);
+      game.managerArea.onAttack(x, y, info.weapon.isRanged);
 
       // weapon skill level (ai + parasite bonus)
-      var skillLevel = player.host.skills.getLevel(info.weaponStats.skill) +
-        0.5 * player.skills.getLevel(info.weaponStats.skill);
+      var skillLevel = player.host.skills.getLevel(info.weapon.skill) +
+        0.5 * player.skills.getLevel(info.weapon.skill);
 
       ai.onAttack(); // attack event
 
       // roll skill
       if (Std.random(100) > skillLevel)
         {
-          log('Your host tries to ' + info.verb1 + ' ' + ai.getName() + ', but misses.');
+          log('Your host tries to ' + info.weapon.verb1 + ' ' +
+            ai.getName() + ', but misses.');
 
           // set alerted state
           if (ai.state == AI_STATE_IDLE)
@@ -421,11 +422,12 @@ class PlayerArea
         }
 
       // success, roll damage
-      var damage = Const.roll(info.weaponStats.minDamage, info.weaponStats.maxDamage);
-      if (!info.weaponStats.isRanged) // all melee weapons have damage bonus
+      var damage = Const.roll(info.weapon.minDamage, info.weapon.maxDamage);
+      if (!info.weapon.isRanged) // all melee weapons have damage bonus
         damage += Const.roll(0, Std.int(player.host.strength / 2));
 
-      log('Your host ' + info.verb2 + ' ' + ai.getName() + ' for ' + damage + ' damage.');
+      log('Your host ' + info.weapon.verb2 + ' ' + ai.getName() +
+        ' for ' + damage + ' damage.');
 
       ai.onDamage(damage); // damage event
       postAction(); // post-action call

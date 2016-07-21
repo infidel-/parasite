@@ -5,7 +5,7 @@ package objects;
 import entities.ObjectEntity;
 
 import game.Game;
-import game.Item;
+import game._Item;
 import game.AreaManager;
 
 
@@ -15,8 +15,8 @@ class AreaObject
 
   public var entity: ObjectEntity; // gui entity
   public var type: String; // object type
-  public var name: String; // object name 
-  public var item: Item; // linked item
+  public var name: String; // object name
+  public var item: _Item; // linked item
 
   public var id: Int; // unique object id
   static var _maxID: Int = 0; // current max ID

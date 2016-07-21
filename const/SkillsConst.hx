@@ -72,14 +72,15 @@ class SkillsConst
       id: KNOW_SOCIETY,
       name: 'human society',
       defaultLevel: 0,
-      isKnowledge: true
+      isKnowledge: true,
     },
 
     {
       id: KNOW_HABITAT,
       name: 'microhabitat',
       defaultLevel: 0,
-      isKnowledge: true
+      isKnowledge: true,
+      isBool: true
     }
     ];
 }
