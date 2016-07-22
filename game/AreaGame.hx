@@ -838,7 +838,6 @@ class AreaGame
 
 
 // spawn new AI, called each turn
-// will spawn AI depending on area interest/alertness
   function turnSpawnAI()
     {
       // get number of common AI

@@ -128,12 +128,23 @@ class HUD
     }
 
 
+// get color for text (red, yellow, white)
+  function getTextColor(val: Float, max: Float)
+    {
+      if (val > 0.7 * max)
+        return '#FFFFFF';
+      else if (val > 0.3 * max)
+        return '#FFFF00';
+
+      return '#FF0000';
+    }
+
+
 // update HUD window
   function updateWindow()
     {
       var buf = new StringBuf();
 
-      // player intent
       buf.add('Turn: ' + game.turns + ', at (');
       if (game.location == LOCATION_AREA)
           buf.add(
@@ -145,20 +156,20 @@ class HUD
           game.playerRegion.currentArea.name + '\n');
       buf.add('===\n');
 
-      var colEnergy =
-        (game.player.energy > 0.3 * game.player.maxEnergy ? '#FFFFFF' : '#FF0000');
+      var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
       buf.add('Energy: ' +
         "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy + '\n');
-      var colHealth =
-        (game.player.health > 0.3 * game.player.maxHealth ? '#FFFFFF' : '#FF0000');
+      var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
         "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
         '/' + game.player.maxHealth + '\n');
       buf.add('===\n');
 
       if (game.player.state == PLR_STATE_ATTACHED)
-        buf.add('Grip: ' + game.playerArea.attachHold + '/100\n');
+        buf.add("Grip: <font color='" +
+          getTextColor(game.playerArea.attachHold, 100) + "'>" +
+          game.playerArea.attachHold + "</font>/100\n");
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
@@ -167,27 +178,28 @@ class HUD
           if (game.player.host.isJobKnown)
             buf.add(' (' + game.player.host.job + ')\n');
           else buf.add('\n');
-          var colHealth =
-            (game.player.host.health > 0.3 * game.player.host.maxHealth ?
-            '#FFFFFF' : '#FF0000');
+          if (game.player.host.isAttrsKnown)
+            buf.add('STR ' + game.player.host.strength +
+              ' CON ' + game.player.host.constitution +
+              ' INT ' + game.player.host.intellect +
+              ' PSY ' + game.player.host.psyche + '\n');
+
+          var colHealth = getTextColor(game.player.host.health,
+            game.player.host.maxHealth);
           buf.add('Health: ' +
             "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
             '/' + game.player.host.maxHealth + '\n');
 
-          var colControl = '#FFFFFF';
-          if (game.player.hostControl < 30)
-            colControl = '#FF0000';
-          else if (game.player.hostControl < 70)
-            colControl = '#FFFF00';
+          var colControl = getTextColor(game.player.hostControl, 100);
           buf.add('Control: ' +
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100\n');
 
-          var colEnergy =
-            (game.player.host.energy > 0.3 * game.player.host.maxEnergy ?
-              '#FFFFFF' : '#FF0000');
-          buf.add("Energy: <font color='" + colEnergy + "'>" + game.player.host.energy +
-            '</font>/' + game.player.host.maxEnergy + '\n');
+          var colEnergy = getTextColor(game.player.host.energy,
+            game.player.host.maxEnergy);
+          buf.add("Energy: <font color='" + colEnergy + "'>" +
+            game.player.host.energy + '</font>/' +
+            game.player.host.maxEnergy + '\n');
           buf.add('Evolution direction:\n  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');
@@ -195,31 +207,18 @@ class HUD
           if (str != null)
             buf.add(str);
         }
-/*
-      buf.add('Intent: ');
-      var action = Const.getAction(game.player.intent);
-      buf.add(action.name);
-*/
       buf.add("\n===\n\n");
 
       // player actions
       var n = 1;
       for (action in _listActions)
         {
-/*
-          if (a == selectedAction)
-            buf.add('* ');
-          else buf.add('  ');
-*/
-
-//          var action = Const.getAction(id);
           buf.add(n + ': ');
           buf.add(action.name);
           if (action.energy != null && action.energy > 0)
             buf.add(' (' + action.energy + ' energy)');
           else if (action.energyFunc != null)
             buf.add(' (' + action.energyFunc(game.player) + ' energy)');
-//          buf.add(' (' + action.ap + ' AP)');
           if (action != _listActions.last())
             buf.add("\n");
           n++;
