@@ -4,6 +4,8 @@ make all formulas return standard _RollResult { result: Float, hint: String }
 make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
   rework attack hints through extended mode
 probing event NPC - you have not been able to gain any clues ???
+after probing all NPCs and getting all readables player can get stuck
+do not allow using computers when there is nothing to gain from it
 events should always renumber on opening new one (bug):
   You study the contents of the organizer and destroy it.
   You have gained a clue for event 1.
@@ -15,6 +17,8 @@ events weren't renumbered
 civs call police in habitat, it can't spawn
 alertness on habitat should raise chance of blackops finding it
 for 0.2 release: add logging to bat/sh files and check it out
+alt-z: hide hud
+mark npc as dead when it expires as a host
 
 hosts should stop dying at some point:
 - make goal chain for building "host convertor" in microhabitat
@@ -79,7 +83,7 @@ make each AI type more unique
 
 make microhabitat knowledge percentage-based. when building new stuff in habitats, the knowledge increases, opening up new possibilities.
 ==
-police radio gives access to radio messages
+police radio gives access to radio messages and opens up way to:
 
 radio transceiver improvement:
 lv1 - listen to police/security radio

@@ -100,8 +100,11 @@ class Skills
           oldLevel = sk.level;
 
           sk.level += val;
-          sk.level = Const.clampFloat(sk.level, 0, 99.9);
+          sk.level = Const.clampFloat(sk.level, 0, 99);
           newLevel = sk.level;
+
+          if (oldLevel == newLevel)
+            return;
 
           if (isPlayer && game.config.extendedInfo)
             game.debug('Skill increased: ' + sk.info.name + ' +' + val +
