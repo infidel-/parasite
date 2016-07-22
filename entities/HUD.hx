@@ -234,9 +234,9 @@ class HUD
         {
           if (game.player.vars.inventoryEnabled)
             buf.add('F2: Inventory\n');
-          if (game.player.vars.skillsEnabled)
-            buf.add('F3: Knowledge\n');
         }
+      if (game.player.vars.skillsEnabled)
+        buf.add('F3: Knowledge\n');
       buf.add('F4: Message log\n');
 
       if (game.player.vars.timelineEnabled)

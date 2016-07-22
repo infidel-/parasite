@@ -270,23 +270,24 @@ class GameScene extends Scene
 
           // open evolution window (if enabled)
           else if (Input.pressed("evolutionWindow") &&
-                   game.player.evolutionManager.state > 0)
+              game.player.state == PLR_STATE_HOST &&
+              game.player.evolutionManager.state > 0)
             setState(HUDSTATE_EVOLUTION);
 
           // open skills window (if skills are learned)
           else if (Input.pressed("skillsWindow") &&
-                   game.player.vars.skillsEnabled)
+              game.player.vars.skillsEnabled)
             setState(HUDSTATE_SKILLS);
 
           // open organs window
           else if (Input.pressed("organsWindow") &&
-                   game.player.state == PLR_STATE_HOST &&
-                   game.player.vars.organsEnabled)
+              game.player.state == PLR_STATE_HOST &&
+              game.player.vars.organsEnabled)
             setState(HUDSTATE_ORGANS);
 
           // open timeline window
           else if (Input.pressed("timelineWindow") &&
-                   game.player.vars.timelineEnabled)
+              game.player.vars.timelineEnabled)
             setState(HUDSTATE_TIMELINE);
 
           // open message log window
