@@ -1,8 +1,5 @@
 test playthrough of the clue gathering
 
-LEARNING OTHER EVENTS SHOULD START FROM LOCATION!
-INCREASE PERCENTAGE OF OTHER EVENTS
-
 close inventory after action
 ? can get NPC clue - name, location, photo, job
 ? if job/name unknown, cannot research NPC using computers - dead end

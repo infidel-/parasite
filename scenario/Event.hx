@@ -14,16 +14,18 @@ class Event
 
   public var isHidden: Bool; // event hidden?
   public var id: String; // event id
+  public var index: Int; // event index in array
   public var name: String; // event name
   public var location: Location; // event location link (can be null)
   public var locationKnown: Bool; // event location known?
   public var notes: Array<EventNote>; // event notes
   public var npc: Array<NPC>; // event npcs
 
-  public function new(g: Game, vid: String)
+  public function new(g: Game, vid: String, idx: Int)
     {
       game = g;
       id = vid;
+      index = idx;
       name = 'unnamed event';
       location = null;
       locationKnown = false;

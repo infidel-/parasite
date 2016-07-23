@@ -41,25 +41,28 @@ class Timeline
     {
       // we have a chance of gaining clue from other event up or down the timeline
       var e = event;
-      if (Std.random(100) < 20)
+      if (Std.random(100) < 30)
         {
-          // get event index
-          var index = -1;
-          for (i in 0..._eventsList.length)
-            if (_eventsList[i] == event)
-              {
-                index = i;
+          var index = event.index;
+          var mod = (Std.random(2) == 0 ? 1 : -1);
+          mod = -1;
+
+          // move to the start or to the end of array, skipping hidden events
+          while (true)
+            {
+              index += mod;
+
+              // start/end of array
+              if (index < 0 || index >= _eventsList.length)
                 break;
-              }
 
-          if (Std.random(100) < 50 && index - 1 >= 0 &&
-              !_eventsList[index - 1].isHidden)
-            e = _eventsList[index - 1];
-          else if (index + 1 < _eventsList.length &&
-              !_eventsList[index + 1].isHidden)
-            e = _eventsList[index + 1];
+              // skip hidden event
+              if (_eventsList[index].isHidden)
+                continue;
 
-          // TODO: hidden events in the middle of timeline will break this
+              e = _eventsList[index];
+              break;
+            }
         }
 
       // if this is the first time, just learn a clue
@@ -75,44 +78,51 @@ class Timeline
           return ret;
         }
 
-      // get a list of things that are still not known for this event
-      var types = [];
-      var weights = [];
-      if (!e.notesKnown())
-        {
-          if (isPhysical)
-            {
-              types.push('note');
-              weights.push(5);
-            }
-          types.push('clue');
-          weights.push(30);
-        }
-      if (e.location != null && !e.locationKnown)
-        {
-          types.push('location');
-          weights.push(20);
-        }
-      if (!e.npcFullyKnown())
-        {
-          types.push('npc');
-          weights.push(45);
-        }
-
-      // find random type according to weights
-      var max = 0;
-      for (w in weights)
-        max += w;
-      var rnd = Std.random(max);
-      var cnt = 0;
+      // different event, start from its location
       var t = null;
-      for (i in 0...weights.length)
+      if (e != event && e.location != null && !e.locationKnown)
+        t = 'location';
+
+      else
         {
-          cnt += weights[i];
-          if (rnd < cnt)
+          // get a list of things that are still not known for this event
+          var types = [];
+          var weights = [];
+          if (!e.notesKnown())
             {
-              t = types[i];
-              break;
+              if (isPhysical)
+                {
+                  types.push('note');
+                  weights.push(5);
+                }
+              types.push('clue');
+              weights.push(30);
+            }
+          if (e.location != null && !e.locationKnown)
+            {
+              types.push('location');
+              weights.push(20);
+            }
+          if (!e.npcFullyKnown())
+            {
+              types.push('npc');
+              weights.push(45);
+            }
+
+          // find random type according to weights
+          var max = 0;
+          for (w in weights)
+            max += w;
+          var rnd = Std.random(max);
+          var cnt = 0;
+          for (i in 0...weights.length)
+            {
+              cnt += weights[i];
+              if (rnd < cnt)
+                {
+                  t = types[i];
+                  break;
+                }
             }
         }
 
@@ -348,7 +358,7 @@ should limit player options for guiding purposes
       var curInfo = scenario.flow.get(scenario.startEvent);
       while (true)
         {
-          var event = new Event(game, curID);
+          var event = new Event(game, curID, _eventsList.length);
           event.info = curInfo;
           event.num = n++;
           event.name = curInfo.name;
