@@ -62,13 +62,8 @@ class Timeline
           // TODO: hidden events in the middle of timeline will break this
         }
 
-      // get a clue according to random value
-      var rnd = Std.random(100);
-
-      // event clue
-      var ret = false;
-
       // if this is the first time, just learn a clue
+      var ret = false;
       if (!game.goals.completed(GOAL_LEARN_CLUE))
         {
           ret = e.learnClue();
@@ -76,25 +71,65 @@ class Timeline
           // goal completed - event clue learned
           if (ret)
             game.goals.complete(GOAL_LEARN_CLUE);
+
+          return ret;
         }
 
-      // learn a clue or location
-      else if (rnd < 50)
+      // get a list of things that are still not known for this event
+      var types = [];
+      var weights = [];
+      if (!e.notesKnown())
         {
-          // learn event location
-          if (e.location != null && !e.locationKnown && Std.random(100) < 30)
-            ret = e.learnLocation();
-
-          // learn event clue
-          else ret = e.learnClue();
+          if (isPhysical)
+            {
+              types.push('note');
+              weights.push(5);
+            }
+          types.push('clue');
+          weights.push(30);
         }
+      if (e.location != null && !e.locationKnown)
+        {
+          types.push('location');
+          weights.push(20);
+        }
+      if (!e.npcFullyKnown())
+        {
+          types.push('npc');
+          weights.push(45);
+        }
+
+      // find random type according to weights
+      var max = 0;
+      for (w in weights)
+        max += w;
+      var rnd = Std.random(max);
+      var cnt = 0;
+      var t = null;
+      for (i in 0...weights.length)
+        {
+          cnt += weights[i];
+          if (rnd < cnt)
+            {
+              t = types[i];
+              break;
+            }
+        }
+
+      // learn event location
+      if (t == 'location')
+        ret = e.learnLocation();
+
+      // learn event clue
+      else if (t == 'clue')
+        ret = e.learnClue();
 
       // npc clues
-      else if (rnd < 95)
+      else if (t == 'npc')
         ret = e.learnNPC();
 
       // full event note
-      else if (rnd >= 95 && isPhysical)
+      else if (t == 'note')
         ret = e.learnNote();
 
       return ret;

@@ -602,22 +602,7 @@ class PlayerArea
 
       // get clues
       if (player.host.event != null && player.host.brainProbed < 3)
-        {
-          var chance = 100;
-          if (player.host.brainProbed == 1)
-            chance = 30;
-          else if (player.host.brainProbed == 2)
-            chance = 10;
-
-          var ret = false;
-          if (Std.random(100) < chance)
-            ret = game.timeline.learnClue(player.host.event, true);
-
-          // no clues learned
-          if (!ret)
-            game.player.log('You have not been able to gain any clues.',
-              COLOR_TIMELINE);
-        }
+        game.timeline.learnClue(player.host.event, true);
 
       // mark npc as scanned
       if (player.host.event != null && player.host.brainProbed >= 2)

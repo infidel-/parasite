@@ -1,5 +1,26 @@
 test playthrough of the clue gathering
 
+LEARNING OTHER EVENTS SHOULD START FROM LOCATION!
+INCREASE PERCENTAGE OF OTHER EVENTS
+
+close inventory after action
+? can get NPC clue - name, location, photo, job
+? if job/name unknown, cannot research NPC using computers - dead end
+? paper clues do not reliably yield NPCs
+bug - got event location, paper clues spawn, but area not marked on region map
+bug - when body and item are on the same cell, no item actions displayed
+bug - event npc, gained clue only on 3rd time:
+  You probe the brain of the host and learn its contents. The host grows weaker.
+  You have learned the parameters of this host.
+  Skill increased: human society +5% = 91%.
+  You probe the brain of the host and learn its contents. The host grows weaker.
+  Skill increased: human society +5% = 96%.
+  You probe the brain of the host and learn its contents. The host grows weaker.
+  Skill increased: human society +5% = 99%.
+  You have gained a clue for event 3.
+bug - entering spaceship does not do anything
+do not spawn quest objects near the map edges!
+
 make all formulas return standard _RollResult { result: Float, hint: String }
 make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
   rework attack hints through extended mode
@@ -14,11 +35,22 @@ events should always renumber on opening new one (bug):
   You have gained a clue about an event 13 participant.
 events weren't renumbered
 
+show [alive] in timeline for npcs
+log message on 3rd brain probe for event npcs showing that this npc does not know anything more
+log message on ai death from combat damage
 civs call police in habitat, it can't spawn
 alertness on habitat should raise chance of blackops finding it
 for 0.2 release: add logging to bat/sh files and check it out
 alt-z: hide hud
 mark npc as dead when it expires as a host
+roads on region map leading to facilities
+  faster travel on roads when in car?
+  disallow travel outside of city bounds by foot (no sewers)?
+  disguise skill - allows hiding parasite without using improv
+  disguise allows using public transport and cars
+    public transport and car rental costs money (gained from wallets)
+  how to gain disguise skill?
+  needs disguise kit?
 
 hosts should stop dying at some point:
 - make goal chain for building "host convertor" in microhabitat
@@ -33,7 +65,6 @@ mission - infiltration
 mission - research
 goal - save alien
 what if player raises alertness in ship location? i should handle that somehow
-area interest is unused
 mission - abduction - chance of target being a soldier in a base or vip in facility
 ?bug - can go to spaceship without goal - breaks goal completion
 mission completed, what if spaceship is crashed
@@ -64,7 +95,6 @@ CONSOLE CHEATSHEET:
 MASTERPLAN
 ============
 area alertness - block normal area travel on high alertness
-area interest - should bring something special
 world generation
 human biology knowledge
 canine biology knowledge
@@ -113,6 +143,25 @@ since use computer is max 30% (rarer 50%), search is very slow
         "search for timeline info",
         "search for a person with high Computer Use skill"
     pressing "." will repeat previous "use" command
+==
+unlocked by finding a drug dose on a human (or by selecting path)
+  improv: low-level dopamine control - the control is raised every turn to max
+    active or passive?
+==
+SCENARIO: CULT
+sanity stat for the followers (they can get totally mad in the process)
+high-level control path improv (research dopamine) that puts a euphoria-inducing biodrone on the host
+  humans stay as loyal but free agents that can do the tasks set by the player
+build a cult of followers
+==
+AREA INTEREST, CONSPIRACY
+brain probing some event NPCs (marked with flags) should reveal the existence of the conspiracy (player antags)
+  this is a special event that opens up the area interest indicator
+  it might show when the habitat was compromised?
+  it might open up new research venues?
+area interest is unused
+area interest should bring something special
+killing agents should increase both area interest and conspiracy interest
 ==
 
 search in timeline

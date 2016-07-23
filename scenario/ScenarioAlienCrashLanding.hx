@@ -256,7 +256,7 @@ class ScenarioAlienCrashLanding extends Scenario
             },
           notes: [
             'The acquired cadaver was transported to %facility2% for further study.',
-            'The body of possibly extraterrestrial origins has received a special Code: %alienCode%.',
+            'The body of possibly extraterrestrial origins has received a special code: %alienCode%.',
             ],
           npc: [ 'agent' => 2 ],
           },

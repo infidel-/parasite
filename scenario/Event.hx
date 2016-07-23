@@ -17,8 +17,8 @@ class Event
   public var name: String; // event name
   public var location: Location; // event location link (can be null)
   public var locationKnown: Bool; // event location known?
-  public var notes: Array<EventNote>; // event notes 
-  public var npc: Array<NPC>; // event npcs 
+  public var notes: Array<EventNote>; // event notes
+  public var npc: Array<NPC>; // event npcs
 
   public function new(g: Game, vid: String)
     {
@@ -28,7 +28,7 @@ class Event
       location = null;
       locationKnown = false;
       notes = [];
-      npc = []; 
+      npc = [];
     }
 
 
@@ -39,6 +39,7 @@ class Event
       if (notesKnown())
         return false;
 
+      // get first unknown note
       var note = null;
       for (n in notes)
         if (!n.isKnown)
@@ -87,8 +88,23 @@ class Event
         type = 'job';
       else type = 'area';
 
+      // if there are any npc whose name/job is not known
+      // learn that first since location does not allow computer NPC research
+      // resulting in a potential dead end
+      for (n in npc)
+        if (!n.nameKnown || !n.jobKnown)
+          {
+            if (!n.nameKnown && !n.jobKnown)
+              type = (Std.random(2) == 0 ? 'name' : 'job');
+            else if (!n.nameKnown)
+              type = 'name';
+            else if (!n.jobKnown)
+              type = 'job';
+
+            break;
+          }
+
       // loop through all npcs finding one has that bit unknown
-      var ok = true;
       for (n in npc)
         if ((type == 'name' && !n.nameKnown) ||
             (type == 'job' && !n.jobKnown) ||
@@ -153,7 +169,7 @@ class Event
 // learn location
   public function learnLocation(): Bool
     {
-      if (location == null || locationKnown) 
+      if (location == null || locationKnown)
         return false;
 
       locationKnown = true;
@@ -180,14 +196,14 @@ class Event
     }
 
 
-// all npcs fully known 
+// all npcs fully known
   public function npcFullyKnown(): Bool
     {
       for (n in npc)
         if (!n.nameKnown || !n.jobKnown || !n.areaKnown || !n.isDeadKnown)
           return false;
 
-      return true; 
+      return true;
     }
 
 
@@ -197,7 +213,7 @@ class Event
       for (n in npc)
         {
           // nothing is known
-          if (!n.nameKnown && !n.jobKnown && !n.areaKnown && 
+          if (!n.nameKnown && !n.jobKnown && !n.areaKnown &&
               !n.isDeadKnown)
             continue;
 
