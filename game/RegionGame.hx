@@ -414,7 +414,7 @@ class RegionGame
       var tmp: Array<AreaGame> = Lambda.array(_list);
       var tmp2 = [];
       for (a in tmp)
-        if (a.typeID == t && (!noEvent || a.event == null))
+        if (a.typeID == t && (!noEvent || a.events.length == 0))
           tmp2.push(a);
 
       if (tmp2.length == 0)

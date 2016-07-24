@@ -1,9 +1,6 @@
 test playthrough of the clue gathering
 
-? can get NPC clue - name, location, photo, job
-? if job/name unknown, cannot research NPC using computers - dead end
-? paper clues do not reliably yield NPCs
-bug - got event location, paper clues spawn, but area not marked on region map
+bug - important messages are now closed immediately
 bug - when body and item are on the same cell, no item actions displayed
 bug - event npc, gained clue only on 3rd time:
   You probe the brain of the host and learn its contents. The host grows weaker.
@@ -15,6 +12,7 @@ bug - event npc, gained clue only on 3rd time:
   Skill increased: human society +5% = 99%.
   You have gained a clue for event 3.
 bug - entering spaceship does not do anything
+bug - spaceship spawns on buildings
 do not spawn quest objects near the map edges!
 
 make all formulas return standard _RollResult { result: Float, hint: String }

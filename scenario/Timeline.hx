@@ -223,9 +223,14 @@ should limit player options for guiding purposes
         info.id = eventID;
 
       // location exists
-      var tmp = getLocation(info.id);
-      if (tmp != null)
-        return tmp;
+      var loc = getLocation(info.id);
+      if (loc != null)
+        {
+          // still add event to the list
+          loc.area.events.push(event);
+
+          return loc;
+        }
 
       // copy location from previous event
       if (info.sameAs != null)
@@ -233,6 +238,9 @@ should limit player options for guiding purposes
           var tmp = getEvent(info.sameAs);
           if (tmp.location == null)
             throw '' + info + ': event ' + info.sameAs + ' does not have location.';
+
+          // still add event to the list
+          tmp.location.area.events.push(event);
 
           return tmp.location;
         }
@@ -271,7 +279,7 @@ should limit player options for guiding purposes
 
       // init area
       location.area = area;
-      area.event = event;
+      area.events.push(event);
       area.alertness =
         (info.alertness != null ? info.alertness : scenario.defaultAlertness);
       area.interest =

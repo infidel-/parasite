@@ -90,7 +90,7 @@ class RegionView
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
-          _tilemap.setTile(x, y, Const.TILE_REGION_ROW + cells[x][y].tileID); 
+          _tilemap.setTile(x, y, Const.TILE_REGION_ROW + cells[x][y].tileID);
 
       // set all icons
       updateIcons();
@@ -146,11 +146,26 @@ class RegionView
   function updateEvent(a: AreaGame)
     {
       if (!game.player.vars.timelineEnabled ||
-          a.event == null || !a.event.locationKnown)
+          a.events.length == 0)
+        return;
+
+      // need at least one event with known location to show icon
+      // need all notes for all events known to show the right icon
+      var oneLocationKnown = false;
+      var allNotesKnown = true;
+      for (e in a.events)
+        {
+          if (e.locationKnown)
+            oneLocationKnown = true;
+
+          if (!e.notesKnown())
+            allNotesKnown = false;
+        }
+      if (!oneLocationKnown)
         return;
 
       var frame = Const.FRAME_EVENT_UNKNOWN;
-      if (a.event.notesKnown())
+      if (allNotesKnown)
         frame = Const.FRAME_EVENT_KNOWN;
 
       _tilemapEvent.setTile(a.x, a.y, Const.ROW_REGION_ICON * 9 + frame);
@@ -183,13 +198,13 @@ class RegionView
       updateNPC(a);
 
       // update habitat icons
-      _tilemapHabitat.setTile(a.x, a.y, 
+      _tilemapHabitat.setTile(a.x, a.y,
         Const.ROW_REGION_ICON * 9 +
         (a.hasHabitat ? Const.FRAME_HABITAT : Const.FRAME_EMPTY));
     }
 
 
-// update icons 
+// update icons
   public inline function updateIcons()
     {
       for (y in 0...height)

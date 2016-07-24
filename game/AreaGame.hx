@@ -31,7 +31,7 @@ class AreaGame
   public var height: Int;
   public var x: Int; // x,y in region
   public var y: Int;
-  public var event: scenario.Event; // event link
+  public var events: Array<scenario.Event>; // events array
   public var npc: List<scenario.NPC>; // npc list
 
   public var alertnessMod: Float; // changes to alertness until next reset
@@ -53,6 +53,7 @@ class AreaGame
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
     {
       game = g;
+      events = [];
       region = r;
       isGenerated = false;
       isEntering = false;
@@ -165,7 +166,7 @@ class AreaGame
 */
 
       // goal completed: event area found
-      if (event != null)
+      if (events.length > 0)
         game.goals.complete(GOAL_TRAVEL_EVENT);
 
       // update area view info
@@ -724,12 +725,27 @@ class AreaGame
 // spawn some clues
   function turnSpawnClues()
     {
-      if (!game.player.vars.timelineEnabled || event == null)
+      if (!game.player.vars.timelineEnabled || events.length == 0)
         return;
 
-      // all event notes and npcs names/jobs known, stop spawning clues
-//      if (area.event.notesKnown() && area.event.npcNamesOrJobsKnown())
-//        return;
+      // NOTE: hmm, it appears that if player stumbles into event location by
+      // chance, the clues will spawn anyway. it wasn't intentional but
+      // but i'll leave it like that.
+
+      // get the event for which to spawn clues for
+      var e = null;
+      for (ev in events)
+        {
+          // all event notes and npcs names/jobs known
+          if (ev.notesKnown() && ev.npcNamesOrJobsKnown())
+            continue;
+
+          e = ev;
+
+          // i could put events into a temp array but not much need to
+          if (Std.random(2) == 0)
+            break;
+        }
 
       // get number of clues already spawned
       var cnt = 0;
@@ -757,7 +773,7 @@ class AreaGame
             id: info.id,
             name: o.name,
             info: info,
-            event: event
+            event: e
             };
           addObject(o);
         }
