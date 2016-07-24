@@ -257,9 +257,6 @@ class PlayerArea
         }
 
       postAction(); // post-action call
-
-      // update HUD info
-      game.updateHUD();
     }
 
 
@@ -286,11 +283,19 @@ class PlayerArea
       // remove 1 AP
       ap--;
       if (ap > 0)
-        return;
+        {
+          // update HUD info
+          game.updateHUD();
+
+          return;
+        }
 
       // new turn (only if still in area mode)
       if (game.location == LOCATION_AREA)
         game.turn();
+
+      // update HUD info
+      game.updateHUD();
     }
 
 
@@ -309,6 +314,12 @@ class PlayerArea
       if (ai != null)
         {
           frobAIAction(ai);
+
+          postAction(); // post-action call
+
+          // update AI visibility to player
+          game.area.updateVisibility();
+
           return;
         }
 
@@ -324,9 +335,6 @@ class PlayerArea
       if (state == PLR_STATE_PARASITE)
         {
           attachToHostAction(ai);
-
-          // update HUD info
-          game.updateHUD();
         }
 
       // push past AI
@@ -345,12 +353,7 @@ class PlayerArea
 
           moveTo(newx, newy);
 
-          game.area.updateVisibility();
-
           log('Your host pushes past ' + ai.getName() + '.');
-
-          // update HUD info
-          game.updateHUD();
         }
     }
 
@@ -416,7 +419,6 @@ class PlayerArea
             ai.setState(AI_STATE_ALERT, REASON_DAMAGE);
 
           postAction(); // post-action call
-          game.updateHUD(); // update HUD info
 
           return;
         }
@@ -431,7 +433,6 @@ class PlayerArea
 
       ai.onDamage(damage); // damage event
       postAction(); // post-action call
-      game.updateHUD(); // update HUD info
     }
 
 
@@ -692,9 +693,6 @@ class PlayerArea
       entity.setPosition(x, y); // move player entity (even if invisible)
 
       postAction(); // post-action call
-
-      // update HUD info
-      game.updateHUD();
 
       // update AI visibility to player
       game.area.updateVisibility();
