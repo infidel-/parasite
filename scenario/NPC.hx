@@ -17,7 +17,7 @@ class NPC
   public var area: AreaGame; // location area
   public var areaKnown: Bool; // location known to player?
   public var isDead: Bool; // is this npc dead?
-  public var isDeadKnown: Bool; // is dead/alive known to player?
+  public var statusKnown: Bool; // is dead/alive status known to player?
   public var memoryKnown: Bool; // has this npc's memories been learned?
   public var event: Event; // event (can be null)
   public var ai: ai.AI; // ai link
@@ -36,7 +36,7 @@ class NPC
       area = null;
       areaKnown = false;
       isDead = false;
-      isDeadKnown = false;
+      statusKnown = false;
       memoryKnown = false;
       event = null;
       ai = null;
@@ -72,9 +72,9 @@ class NPC
           return true;
         }
 
-      if (!isDeadKnown)
+      if (!statusKnown)
         {
-          isDeadKnown = true;
+          statusKnown = true;
           game.player.log('You have found out that '  + name + ' is ' +
             (isDead ? 'dead' : 'alive') + '.', COLOR_TIMELINE);
           return true;
@@ -86,7 +86,9 @@ class NPC
 
   public function toString()
     {
-      return '' + name + ' ' + job + ' (' + area.x + ',' + area.y +
-        ') dead:' + isDead + ' event:' + (event != null ? event.id : 'null');
+      return '{ ' + name + ', ' + job + ', (' + area.x + ',' + area.y +
+        '), dead: ' + isDead +
+        ', statusKnown: ' + statusKnown +
+        ', event: ' + (event != null ? event.id : 'null') + ' }';
     }
 }

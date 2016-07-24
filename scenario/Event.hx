@@ -119,6 +119,7 @@ class Event
             else if (type == 'area')
               n.areaKnown = true;
 
+            game.timeline.update(); // update event numbering
             game.player.log('You have gained a clue about an event ' +
               num + ' participant.', COLOR_TIMELINE);
 
@@ -150,7 +151,6 @@ class Event
           }
 
       game.timeline.update(); // update event numbering
-
       game.player.log('You have gained a major clue for event ' + num + '.',
         COLOR_TIMELINE);
       game.player.log(note.text, COLOR_TIMELINE);
@@ -202,7 +202,7 @@ class Event
   public function npcFullyKnown(): Bool
     {
       for (n in npc)
-        if (!n.nameKnown || !n.jobKnown || !n.areaKnown || !n.isDeadKnown)
+        if (!n.nameKnown || !n.jobKnown || !n.areaKnown || !n.statusKnown)
           return false;
 
       return true;
@@ -216,7 +216,7 @@ class Event
         {
           // nothing is known
           if (!n.nameKnown && !n.jobKnown && !n.areaKnown &&
-              !n.isDeadKnown)
+              !n.statusKnown)
             continue;
 
           return true; // something is known about some npc
@@ -250,7 +250,12 @@ class Event
 
   public function toString(): String
     {
-      return id + ' ' + name + '\n' + notes + '\n' + npc;
+      return 'event ' + index + ', num: ' + num + ', id: ' + id + ', ' +
+        name + '\n' +
+        '  locationKnown: ' + locationKnown + '\n' +
+        '  location: { ' + location + ' }\n' +
+        '  notes: ' + notes + '\n' +
+        '  NPCs: ' + npc + '\n';
     }
 }
 

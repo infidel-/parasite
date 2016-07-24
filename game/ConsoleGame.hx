@@ -28,6 +28,10 @@ class ConsoleGame
       if (cmd.charAt(0) == 'g')
         goCommand(cmd);
 
+      // XXX info commands
+      else if (cmd.charAt(0) == 'i')
+        infoCommand(cmd);
+
       // XXX learn commands
       else if (cmd.charAt(0) == 'l')
         learnCommand(cmd);
@@ -50,33 +54,21 @@ class ConsoleGame
       // XXX [ge10] go to event location
       if (cmd.charAt(1) == 'e')
         {
-          var id = Std.parseInt(cmd.substr(2));
-          var cnt = 0;
-          var event = null;
-          for (ev in game.timeline.iterator())
-            {
-              if (cnt == id)
-                {
-                  event = ev;
-                  break;
-                }
-
-              cnt++;
-            }
-
+          var idx = Std.parseInt(cmd.substr(2));
+          var event = game.timeline.getEventByIndex(idx);
           if (event == null)
             {
-              game.debug('No event with id ' + id + ' found in timeline.');
+              game.debug('Event ' + idx + ' not found in the timeline.');
               return;
             }
 
           if (event.location == null)
             {
-              game.debug('Event ' + id + ' has no location.');
+              game.debug('Event ' + idx + ' has no location.');
               return;
             }
 
-          game.debug('Teleporting to event ' + id + ' location.');
+          game.debug('Teleporting to event ' + idx + ' location.');
 
           var area = event.location.area;
           game.scene.setState(HUDSTATE_DEFAULT);
@@ -146,24 +138,30 @@ class ConsoleGame
     }
 
 
+// info commands
+  function infoCommand(cmd: String)
+    {
+      // XXX [ie] events info
+      if (cmd.charAt(1) == 'e')
+        {
+          for (ev in game.timeline)
+            Sys.println(ev);
+        }
+    }
+
+
 // learn commands
   function learnCommand(cmd: String)
     {
       // XXX [le10] learn everything about event
       if (cmd.charAt(1) == 'e')
         {
-          var id = Std.parseInt(cmd.substr(2));
-          var cnt = 0;
-          var event = null;
-          for (ev in game.timeline.iterator())
+          var idx = Std.parseInt(cmd.substr(2));
+          var event = game.timeline.getEventByIndex(idx);
+          if (event == null)
             {
-              if (cnt == id)
-                {
-                  event = ev;
-                  break;
-                }
-
-              cnt++;
+              game.debug('Event [' + idx + '] not found in the timeline.');
+              return;
             }
 
           while (!event.notesKnown())
@@ -171,7 +169,6 @@ class ConsoleGame
           event.learnLocation();
         }
     }
-
 
 
 // stage 1: civ host, tutorial done

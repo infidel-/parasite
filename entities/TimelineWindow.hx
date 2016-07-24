@@ -24,7 +24,7 @@ class TimelineWindow extends TextWindow
           // hidden event
           if (event.isHidden)
             continue;
-    
+
           // check if anything is known at all
           var npcSomethingKnown = event.npcSomethingKnown();
           var notesSomethingKnown = event.notesSomethingKnown();
@@ -35,6 +35,9 @@ class TimelineWindow extends TextWindow
 
           // first line (events are always numbered relative to known ones)
           buf.add('Event ' + event.num);
+#if mydebug
+          buf.add(' [index: ' + event.index + ']');
+#end
           if (event.location != null)
             {
               buf.add(': ');
@@ -48,7 +51,7 @@ class TimelineWindow extends TextWindow
               else buf.add('at (?,?)');
             }
           buf.add('\n');
-        
+
           // event notes
           for (n in event.notes)
             if (n.isKnown)
@@ -64,12 +67,12 @@ class TimelineWindow extends TextWindow
             for (npc in event.npc)
               {
                 // nothing is known
-                if (!npc.nameKnown && !npc.jobKnown && !npc.areaKnown && 
-                    !npc.isDeadKnown)
+                if (!npc.nameKnown && !npc.jobKnown && !npc.areaKnown &&
+                    !npc.statusKnown)
                   continue;
 
                 // count number or dead and known dead
-                if (npc.isDead && npc.isDeadKnown)
+                if (npc.isDead && npc.statusKnown)
                   {
                     numDeceasedAndKnown++;
                     continue;
@@ -84,7 +87,7 @@ class TimelineWindow extends TextWindow
 
                 // npc fully known
                 if (npc.nameKnown && npc.jobKnown && npc.areaKnown &&
-                    npc.isDeadKnown)
+                    npc.statusKnown)
                   buf.add(' + ');
                 else buf.add(' - ');
                 buf.add((npc.nameKnown ? npc.name : '?') + ' ');
@@ -93,8 +96,8 @@ class TimelineWindow extends TextWindow
                   buf.add('at (' + npc.area.x + ',' + npc.area.y + ') ');
                 else buf.add('at (?,?) ');
                 buf.add(npc.jobKnown ? '[photo] ' : '[no photo] ');
-//                if (npc.isDead && npc.isDeadKnown)
-//                  buf.add('[deceased]');
+                if (!npc.statusKnown)
+                  buf.add('[status:unknown]');
                 buf.add('\n');
               }
 

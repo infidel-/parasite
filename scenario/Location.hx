@@ -15,6 +15,14 @@ class Location
   public function new(vid: String)
     {
       id = vid;
-      name = 'unnamed location';
+      hasName = false;
+      name = '-';
+    }
+
+
+  public function toString()
+    {
+      return 'id: ' + id + ', name: ' + name + ', hasName: ' + hasName +
+        ', (' + area.x + ',' + area.y + ')';
     }
 }

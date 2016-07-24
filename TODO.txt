@@ -1,15 +1,5 @@
 test playthrough of the clue gathering
 
-bug - when body and item are on the same cell, no item actions displayed
-bug - event npc, gained clue only on 3rd time:
-  You probe the brain of the host and learn its contents. The host grows weaker.
-  You have learned the parameters of this host.
-  Skill increased: human society +5% = 91%.
-  You probe the brain of the host and learn its contents. The host grows weaker.
-  Skill increased: human society +5% = 96%.
-  You probe the brain of the host and learn its contents. The host grows weaker.
-  Skill increased: human society +5% = 99%.
-  You have gained a clue for event 3.
 bug - entering spaceship does not do anything
 bug - spaceship spawns on buildings
 do not spawn quest objects near the map edges!
@@ -84,6 +74,8 @@ CONSOLE CHEATSHEET:
 
 ;s1 - player stage 1 (human civilian host, tutorial done)
 ;s2 - player stage 2 (stage 1 + microhabitat)
+
+;ie - info: events list
 
 MASTERPLAN
 ============

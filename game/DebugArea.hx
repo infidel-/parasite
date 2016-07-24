@@ -267,7 +267,7 @@ class DebugArea
                       npc.nameKnown = true;
                       npc.jobKnown = true;
                       npc.areaKnown = true;
-                      npc.isDeadKnown = true;
+                      npc.statusKnown = true;
 //                      npc.memoryKnown = true;
                     }
                 }

@@ -474,10 +474,17 @@ should limit player options for guiding purposes
     }
 
 
+// get event by index
+  public inline function getEventByIndex(idx: Int): Event
+    {
+      return _eventsList[idx];
+    }
+
+
 // get event by id
   public inline function getEvent(id: String): Event
     {
-      return _eventsMap.get(id);
+      return _eventsMap[id];
     }
 
 
