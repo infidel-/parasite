@@ -1,6 +1,5 @@
 test playthrough of the clue gathering
 
-bug - important messages are now closed immediately
 bug - when body and item are on the same cell, no item actions displayed
 bug - event npc, gained clue only on 3rd time:
   You probe the brain of the host and learn its contents. The host grows weaker.
