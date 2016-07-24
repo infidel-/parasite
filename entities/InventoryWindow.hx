@@ -23,7 +23,11 @@ class InventoryWindow extends TextWindow
 // action
   override function onAction(action: _PlayerAction)
     {
-      game.player.host.inventory.action(action); // do action
+      // do action
+      game.player.host.inventory.action(action);
+
+      // close window
+      game.scene.setState(HUDSTATE_DEFAULT);
     }
 
 

@@ -1,6 +1,5 @@
 test playthrough of the clue gathering
 
-close inventory after action
 ? can get NPC clue - name, location, photo, job
 ? if job/name unknown, cannot research NPC using computers - dead end
 ? paper clues do not reliably yield NPCs
