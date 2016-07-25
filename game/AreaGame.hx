@@ -292,12 +292,16 @@ class AreaGame
         generate();
 
       var loc = findEmptyLocation();
-      game.debug('!!! ev obj ' + params.name + ' loc:' + loc);
-      var o = new EventObject(game, loc.x, loc.y);
+      game.debug('!!! event obj ' + params.name +
+        ' loc: (' + loc.x + ',' + loc.y +
+        ') area: (' + x + ',' + y + ')');
+      var o = new EventObject(game, loc.x, loc.y, false);
       o.name = params.name;
       o.eventAction = params.action;
       o.eventAction.obj = o;
       o.eventOnAction = params.onAction;
+      if (game.area != this) // hide object if it's not in the current area
+        o.hide();
 
       addObject(o);
       return o;
@@ -746,6 +750,8 @@ class AreaGame
           if (Std.random(2) == 0)
             break;
         }
+      if (e == null)
+        return;
 
       // get number of clues already spawned
       var cnt = 0;

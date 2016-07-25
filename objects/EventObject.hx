@@ -1,4 +1,4 @@
-// special event object 
+// special event object
 
 package objects;
 
@@ -10,9 +10,9 @@ class EventObject extends AreaObject
   public var eventAction: _PlayerAction; // available action
   public var eventOnAction: Game -> Player -> String -> Void; // action handler
 
-  public function new(g: Game, vx: Int, vy: Int)
+  public function new(g: Game, vx: Int, vy: Int, ?addToCurrent: Bool = true)
     {
-      super(g, vx, vy);
+      super(g, vx, vy, addToCurrent);
 
       type = 'event_object';
       name = 'event object';
@@ -29,7 +29,7 @@ class EventObject extends AreaObject
     }
 
 
-// handle special action 
+// handle special action
   override function onAction(id: String)
     {
       eventOnAction(game, game.player, id);

@@ -26,7 +26,7 @@ class AreaObject
   public var creationTime: Int; // when was this object created (turns since game start)
   var _listActions: List<_PlayerAction>; // actions storage
 
-  public function new(g: Game, vx: Int, vy: Int)
+  public function new(g: Game, vx: Int, vy: Int, ?addToCurrent: Bool = true)
     {
       game = g;
       type = 'undefined';
@@ -39,8 +39,9 @@ class AreaObject
       x = vx;
       y = vy;
 
-      // add to area
-      game.area.addObject(this);
+      // add to current area
+      if (addToCurrent)
+        game.area.addObject(this);
     }
 
 
@@ -51,7 +52,7 @@ class AreaObject
     }
 
 
-// create entity for this AI (using parent type as a row)
+// create entity for this object (using parent type as a row)
   public function createEntityByType(parentType: String)
     {
       var atlasRow: Null<Int> = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
@@ -71,7 +72,7 @@ class AreaObject
     }
 
 
-// create entity for this AI
+// create entity for this object
   public inline function createEntity(atlasRow: Int, atlasCol: Int)
     {
       entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
@@ -82,14 +83,14 @@ class AreaObject
 // show object on screen
   public inline function show()
     {
-      game.scene.add(entity); 
+      game.scene.add(entity);
     }
 
 
 // hide object on screen
   public inline function hide()
     {
-      game.scene.remove(entity); 
+      game.scene.remove(entity);
     }
 
 
@@ -97,10 +98,10 @@ class AreaObject
   inline function addAction(id: String, name: String, energy: Int)
     {
       if (game.player.energy >= energy)
-        _listActions.add({ 
-          id: id, 
-          type: ACTION_OBJECT, 
-          name: name, 
+        _listActions.add({
+          id: id,
+          type: ACTION_OBJECT,
+          name: name,
           energy: energy,
           obj: this });
     }
@@ -110,7 +111,7 @@ class AreaObject
   inline function addActionFull(a: _PlayerAction)
     {
       if (game.player.energy >= a.energy)
-        _listActions.add(a); 
+        _listActions.add(a);
     }
 
 

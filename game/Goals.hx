@@ -127,7 +127,7 @@ class Goals
     }
 
 
-// does player has this goal? 
+// does player has this goal?
   public inline function has(id: _Goal): Bool
     {
       return (Lambda.has(_listCurrent, id));
@@ -141,7 +141,7 @@ class Goals
     }
 
 
-// get goal info 
+// get goal info
   public function getInfo(id: _Goal): GoalInfo
     {
       // common goals
@@ -153,7 +153,7 @@ class Goals
       var info = game.timeline.getGoals().get(id);
       if (info != null)
         return info;
-    
+
       throw 'no such goal: ' + id;
     }
 

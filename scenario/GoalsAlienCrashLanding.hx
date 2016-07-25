@@ -24,7 +24,7 @@ class GoalsAlienCrashLanding
             id: 'enterShip',
             type: ACTION_OBJECT,
             name: 'Enter Spaceship',
-            energy: 0 
+            energy: 0
             },
           onAction: function (game, player, id)
             {
@@ -34,7 +34,7 @@ class GoalsAlienCrashLanding
               var ev = game.timeline.getEvent('alienMission');
               ev.isHidden = false;
               for (n in ev.notes)
-              n.isKnown = true;
+                n.isKnown = true;
               game.timeline.update();
             }
           });
@@ -87,7 +87,7 @@ class GoalsAlienCrashLanding
         // if player has target host, complete
         if (player.state == PLR_STATE_HOST && player.host.npc != null &&
             player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
-          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION); 
+          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
       },
 
       onReceive: function (game, player) {
@@ -126,7 +126,7 @@ class GoalsAlienCrashLanding
       messageFailure: 'Mission failed. I will return to the HQ now.',
 
       onTurn: function (game, player) {
-/*        
+/*
         // if player is in habitat and has target host, complete mission
         if (game.location == LOCATION_AREA &&
             game.area.isHabitat &&
@@ -145,15 +145,15 @@ class GoalsAlienCrashLanding
       onReceive: function (game, player) {
 //        var objID = game.timeline.getIntVar('spaceShipObjectID');
 //        var obj = game.world.getEventObject(objID);
-/*        
+/*
         var ev = game.timeline.getEvent('alienShipStudy');
         var area = ev.location.area;
         var objID = game.timeline.getIntVar('spaceShipObjectID');
         var obj = area.getObject(game.timeline);
 */
-        // change spaceship action contents 
+        // change spaceship action contents
         var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
-        obj.eventOnAction = 
+        obj.eventOnAction =
           function (game, player, id)
             {
               game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
@@ -178,9 +178,9 @@ class GoalsAlienCrashLanding
       messageComplete: 'Returning to the HQ now.',
 
       onReceive: function (game, player) {
-        // change spaceship action contents 
+        // change spaceship action contents
         var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
-        obj.eventOnAction = 
+        obj.eventOnAction =
           function (game, player, id)
             {
               game.goals.complete(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
@@ -197,7 +197,7 @@ class GoalsAlienCrashLanding
 /*
 
         // game.timeline.getBoolVar('shipLanded') fly away
-        // game.timeline.getBoolVar('shipShotDown') send distress signal 
+        // game.timeline.getBoolVar('shipShotDown') send distress signal
         //game.goals.receive();
 
      => {

@@ -97,7 +97,7 @@ class TimelineWindow extends TextWindow
                 else buf.add('at (?,?) ');
                 buf.add(npc.jobKnown ? '[photo] ' : '[no photo] ');
                 if (!npc.statusKnown)
-                  buf.add('[status:unknown]');
+                  buf.add('status: unknown');
                 buf.add('\n');
               }
 

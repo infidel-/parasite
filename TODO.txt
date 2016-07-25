@@ -1,8 +1,6 @@
 test playthrough of the clue gathering
 
-bug - entering spaceship does not do anything
-bug - spaceship spawns on buildings
-do not spawn quest objects near the map edges!
+bug - last action on the same turn as hosty expiry is not handled correctly
 
 make all formulas return standard _RollResult { result: Float, hint: String }
 make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
@@ -146,7 +144,8 @@ brain probing some event NPCs (marked with flags) should reveal the existence of
   it might open up new research venues?
 area interest is unused
 area interest should bring something special
-killing agents should increase both area interest and conspiracy interest
+killing conspiracy agents should increase both area interest and conspiracy interest
+leaving conspiracy agent hosts should increase interest eventually
 ==
 
 search in timeline
