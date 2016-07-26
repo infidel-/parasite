@@ -1,20 +1,13 @@
 test playthrough of the clue gathering
 
-bug - last action on the same turn as hosty expiry is not handled correctly
-
 make all formulas return standard _RollResult { result: Float, hint: String }
 make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
   rework attack hints through extended mode
 probing event NPC - you have not been able to gain any clues ???
 after probing all NPCs and getting all readables player can get stuck
 do not allow using computers when there is nothing to gain from it
-events should always renumber on opening new one (bug):
-  You study the contents of the organizer and destroy it.
-  You have gained a clue for event 1.
-  Current location of AO-PN29 specimen is unknown.
-  You have gained a clue about an event 1 participant.
-  You have gained a clue about an event 13 participant.
-events weren't renumbered
+?bug - can go to spaceship without goal - breaks goal completion
+  auto-complete previous goals
 
 show [alive] in timeline for npcs
 log message on 3rd brain probe for event npcs showing that this npc does not know anything more
@@ -47,10 +40,8 @@ mission - research
 goal - save alien
 what if player raises alertness in ship location? i should handle that somehow
 mission - abduction - chance of target being a soldier in a base or vip in facility
-?bug - can go to spaceship without goal - breaks goal completion
 mission completed, what if spaceship is crashed
 add spaceship object to global object map or make easier getObject(id) function or
-debug mode - timeline - show numeric event id
 ?inventory actions - r1, l1, d1
 
 expand hidden events - opening certain clues will lead to hidden events, that these clues hint on. For ex., ufologists clue:

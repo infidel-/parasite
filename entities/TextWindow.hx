@@ -103,11 +103,6 @@ class TextWindow
       if (state == game.scene.getState())
         update();
 
-      // close window if player
-
-      // player host could die after that action
-//      if (game.player.host != null)
-
       game.scene.hud.update(); // update HUD
     }
 
@@ -156,16 +151,12 @@ class TextWindow
       var buf = new StringBuf();
       _actions = getActions();
 
-      // check if list contains at least one possible action
-      var ok = false;
-      for (action in _actions)
-        if (action.energy == 0 || game.player.host.energy >= action.energy)
-          {
-            ok = true;
-            break;
-          }
+      // remove actions that there is no energy for
+      for (a in _actions)
+        if (a.energy > 0 && game.player.host.energy < a.energy)
+          _actions.remove(a);
 
-      if (ok)
+      if (_actions.length > 0)
         {
           var n = 1;
           buf.add('\n\nSelect ' + actionName + ' (press 0-9):\n\n');

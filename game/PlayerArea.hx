@@ -187,11 +187,9 @@ class PlayerArea
 // action energy availability is checked when the list is formed
   public function action(action: _PlayerAction)
     {
-      trace('action ' + action.id + ' ' + action.type);
       // area object action
       if (action.type == ACTION_OBJECT)
         {
-          trace('action object');
           // cannot act while in paralysis
           if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
             {
