@@ -1,8 +1,7 @@
 test playthrough of the clue gathering
 
-make all formulas return standard _RollResult { result: Float, hint: String }
-make learn skills amount use formula and display hint in extended mode. Debug mode auto enables extended mode.
-  rework attack hints through extended mode
+prot cover isn't working?
+crash on backup arrive
 probing event NPC - you have not been able to gain any clues ???
 after probing all NPCs and getting all readables player can get stuck
 do not allow using computers when there is nothing to gain from it

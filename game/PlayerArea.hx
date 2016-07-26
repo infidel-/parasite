@@ -402,14 +402,20 @@ class PlayerArea
       // propagate shooting/melee event
       game.managerArea.onAttack(x, y, info.weapon.isRanged);
 
-      // weapon skill level (ai + parasite bonus)
-      var skillLevel = player.host.skills.getLevel(info.weapon.skill) +
-        0.5 * player.skills.getLevel(info.weapon.skill);
-
       ai.onAttack(); // attack event
 
+      // weapon skill level (ai + parasite bonus)
+      var roll = _Math.skill({
+        id: info.weapon.skill,
+        level: player.host.skills.getLevel(info.weapon.skill),
+        mods: [{
+          name: '0.5x parasite',
+          val: 0.5 * player.skills.getLevel(info.weapon.skill)
+          }]
+        });
+
       // roll skill
-      if (Std.random(100) > skillLevel)
+      if (!roll)
         {
           log('Your host tries to ' + info.weapon.verb1 + ' ' +
             ai.getName() + ', but misses.');
@@ -423,10 +429,20 @@ class PlayerArea
           return;
         }
 
-      // success, roll damage
-      var damage = Const.roll(info.weapon.minDamage, info.weapon.maxDamage);
+      // damage
+      var mods = null;
       if (!info.weapon.isRanged) // all melee weapons have damage bonus
-        damage += Const.roll(0, Std.int(player.host.strength / 2));
+        mods = [{
+          name: 'melee 0.5xSTR',
+          min: 0,
+          max: Std.int(player.host.strength / 2)
+        }];
+      var damage = _Math.damage({
+        name: 'player->AI',
+        min: info.weapon.minDamage,
+        max: info.weapon.maxDamage,
+        mods: mods
+      });
 
       log('Your host ' + info.weapon.verb2 + ' ' + ai.getName() +
         ' for ' + damage + ' damage.');
@@ -583,13 +599,6 @@ class PlayerArea
             params.humanSociety * player.host.intellect);
         }
 
-      // spend energy
-//      player.host.energy -= params.hostEnergyBase - player.host.psyche;
-//      player.host.energy -= info.action.energyFunc(player);
-      player.host.onDamage(params.hostHealthBase); // damage host
-      if (Std.random(100) < 25)
-        player.host.onDamage(params.hostHealthMod); // more damage if unlucky
-
       // get host name
       if (!player.host.isNameKnown)
         {
@@ -608,6 +617,18 @@ class PlayerArea
       // mark npc as scanned
       if (player.host.event != null && player.host.brainProbed >= 2)
         player.host.npc.memoryKnown = true;
+
+      // damage
+      var damage = _Math.damage({
+        name: 'brain probe',
+        val: params.hostHealthBase,
+        mods: [{
+          name: 'luck',
+          val: params.hostHealthMod,
+          chance: 25 }]
+      });
+
+      player.host.onDamage(damage); // damage host
 
       player.host.brainProbed++; // increase counter
     }
@@ -760,8 +781,11 @@ class PlayerArea
         }
 
       // 10% chance of parasite receiving part of damage
-      if (Std.random(100) < 10)
-        onDamagePlayer(damage == 1 ? 1 : 2);
+      var damage = _Math.damage({
+        name: 'transmit to parasite',
+        chance: 10,
+        val: (damage == 1 ? 1 : 2),
+      });
     }
 
 

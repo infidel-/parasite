@@ -8,6 +8,7 @@ import objects.*;
 import game.*;
 import const.EvolutionConst;
 import const.ItemsConst;
+import _Math;
 
 class AI
 {
@@ -448,16 +449,67 @@ class AI
           return;
         }
 
+      // parasite attached to human, do not shoot (blackops are fine)
+      if (isHuman && game.player.state == PLR_STATE_ATTACHED &&
+          game.playerArea.attachHost.isHuman &&
+          type != 'blackops')
+        {
+          if (Std.random(100) < 30)
+            {
+              log('hesitates to attack you.');
+              emitSound({ text: 'Shit!', radius: 5, alertness: 10 });
+              return;
+            }
+        }
+
       // weapon skill level
-      var skillLevel = skills.getLevel(info.weapon.skill);
+//      var skillLevel = skills.getLevel(info.weapon.skill);
+
+      // weapon skill level (ai + parasite bonus)
+      var roll = _Math.skill({
+        id: info.weapon.skill,
+        level: skills.getLevel(info.weapon.skill),
+        });
 
       // roll skill
-      if (Std.random(100) > skillLevel)
+//      if (Std.random(100) > skillLevel)
+      if (!roll)
         {
           log('tries to ' + info.weapon.verb1 + ' you, but misses.');
           return;
         }
 
+      var mods: Array<_DamageBonus> = [];
+      if (!info.weapon.isRanged) // all melee weapons have damage bonus
+        mods.push({
+          name: 'melee 0.5xSTR',
+          min: 0,
+          max: Std.int(strength / 2)
+        });
+
+      // protective cover
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          var o = organs.get(IMP_PROT_COVER);
+          if (o != null)
+            mods.push({
+              name: 'protective cover',
+              val: - Std.int(o.params.armor)
+            });
+        }
+
+      var damage = _Math.damage({
+        name: 'AI->player',
+        min: info.weapon.minDamage,
+        max: info.weapon.maxDamage,
+        mods: mods
+      });
+
+      log(info.weapon.verb2 + ' ' +
+        (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
+        ' for ' + damage + ' damage.');
+
+/*
       // success, roll damage
       var tmp: Array<Int> = [];
       var damage = Const.roll(info.weapon.minDamage, info.weapon.maxDamage);
@@ -499,6 +551,7 @@ class AI
         (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
         ' for ' + damage + ' damage.');
       game.debug('AI.attack: ' + tmp);
+*/
 
       game.playerArea.onDamage(damage); // on damage event
     }

@@ -199,13 +199,13 @@ class Inventory
         }
 
       // roll for skill
-      var bonuses = [];
+      var mods = [];
       if (item.info.name == 'laptop')
-        bonuses.push({ name: 'laptop', val: 10.0 });
+        mods.push({ name: 'laptop', val: 10.0 });
       var ret = _Math.skill({
         id: SKILL_COMPUTER,
         level: skillLevel,
-        bonuses: bonuses
+        mods: mods
         });
       if (!ret)
         {
