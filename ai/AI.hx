@@ -814,7 +814,9 @@ class AI
       if (state == AI_STATE_DEAD)
         return;
 
-      game.debug('AI.onDeath(' + id + ')');
+      game.debug('AI.onDeath[' + id + ']');
+      if (game.player.state != PLR_STATE_HOST || game.player.host != this)
+        log('dies.');
       setState(AI_STATE_DEAD);
       game.area.removeAI(this);
       var o = new BodyObject(game, x, y, type);

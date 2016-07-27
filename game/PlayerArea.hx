@@ -615,8 +615,13 @@ class PlayerArea
         game.timeline.learnClue(player.host.event, true);
 
       // mark npc as scanned
-      if (player.host.event != null && player.host.brainProbed >= 2)
-        player.host.npc.memoryKnown = true;
+      if (player.host.event != null && player.host.brainProbed >= 2 &&
+          !player.host.npc.memoryKnown)
+        {
+          player.host.npc.memoryKnown = true;
+
+          game.log('This human does not know anything else.', COLOR_TIMELINE);
+        }
 
       // damage
       var damage = _Math.damage({

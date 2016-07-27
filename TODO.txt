@@ -1,7 +1,5 @@
 test playthrough of the clue gathering
 
-log message on 3rd brain probe for event npcs showing that this npc does not know anything more
-log message on ai death from combat damage
 civs call police in habitat, it can't spawn
 alertness on habitat should raise chance of blackops finding it
 for 0.2 release: add logging to bat/sh files and check it out
