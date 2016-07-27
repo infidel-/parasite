@@ -490,7 +490,7 @@ class AI
       // protective cover
       if (game.player.state == PLR_STATE_HOST)
         {
-          var o = organs.get(IMP_PROT_COVER);
+          var o = game.player.host.organs.get(IMP_PROT_COVER);
           if (o != null)
             mods.push({
               name: 'protective cover',

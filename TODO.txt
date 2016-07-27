@@ -2,11 +2,17 @@ test playthrough of the clue gathering
 
 prot cover isn't working?
 crash on backup arrive
+acid spit, acid cloud - use _Math.damage
 probing event NPC - you have not been able to gain any clues ???
 after probing all NPCs and getting all readables player can get stuck
 do not allow using computers when there is nothing to gain from it
 ?bug - can go to spaceship without goal - breaks goal completion
   auto-complete previous goals
+;iimp - info: improvements list
+;io - info: available organs list
+;limpa - learn all improvements
+;limp1 - learn improvement 1
+;ao1 - add organ 1
 
 show [alive] in timeline for npcs
 log message on 3rd brain probe for event npcs showing that this npc does not know anything more
@@ -63,7 +69,8 @@ CONSOLE CHEATSHEET:
 ;s1 - player stage 1 (human civilian host, tutorial done)
 ;s2 - player stage 2 (stage 1 + microhabitat)
 
-;ie - info: events list
+;ievt - info: events list
+
 
 MASTERPLAN
 ============
