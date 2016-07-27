@@ -1,8 +1,5 @@
 test playthrough of the clue gathering
 
-crash on backup arrive
-
-show [alive] in timeline for npcs
 log message on 3rd brain probe for event npcs showing that this npc does not know anything more
 log message on ai death from combat damage
 civs call police in habitat, it can't spawn

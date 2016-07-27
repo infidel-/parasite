@@ -1,4 +1,4 @@
-// AI for police 
+// AI for police
 
 package ai;
 
@@ -46,7 +46,7 @@ class PoliceAI extends HumanAI
     }
 
 
-// event: on being attacked 
+// event: on being attacked
   public override function onAttack()
     {
       // if this ai has not called for backup yet

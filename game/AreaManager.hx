@@ -6,7 +6,7 @@ import ai.*;
 import ai.AI;
 import objects.AreaObject;
 
-class AreaManager 
+class AreaManager
 {
   var game: Game;
   var _list: List<AreaEvent>;
@@ -30,23 +30,25 @@ class AreaManager
 
 
 // add event originating from x,y
-  public inline function add(type: _AreaManagerEventType, x: Int, y: Int, turns: Int)
+  public inline function add(type: _AreaManagerEventType, x: Int, y: Int,
+      turns: Int, ?params: Dynamic = null)
     {
       var e = {
         ai: null,
         objectID: -1,
-        details: null, 
+        details: null,
         type: type,
         x: x,
         y: y,
-        turns: turns
+        turns: turns,
+        params: params
         };
 
       _list.push(e);
     }
 
 
-// add event by type originating from this object 
+// add event by type originating from this object
   public inline function addObject(o: AreaObject, type: _AreaManagerEventType,
       turns: Int)
     {
@@ -56,7 +58,7 @@ class AreaManager
         type: type,
         x: -1,
         y: -1,
-        details: null, 
+        details: null,
         turns: turns
         };
 
@@ -101,7 +103,7 @@ class AreaManager
 
           // if object origin is not in area now, we skip this event
           var o = (e.objectID >= 0 ? area.getObject(e.objectID) : null);
-          if (e.objectID >= 0 && o == null) 
+          if (e.objectID >= 0 && o == null)
             {
               _list.remove(e);
               continue;
@@ -109,7 +111,7 @@ class AreaManager
 
           // run this event
 
-          // someone called the law 
+          // someone called the law
           if (e.type == AREAEVENT_CALL_LAW)
             onCallLaw(e);
 
@@ -143,7 +145,7 @@ class AreaManager
 // event: attack (called immediately)
   public function onAttack(x: Int, y: Int, isRanged: Bool)
     {
-      var tmp = area.getAIinRadius(x, y, 
+      var tmp = area.getAIinRadius(x, y,
         (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
       for (ai in tmp)
         if (ai.state == AI_STATE_IDLE)
@@ -151,7 +153,7 @@ class AreaManager
     }
 
 
-// event: civilian calls the law 
+// event: civilian calls the law
   function onCallLaw(e: AreaEvent)
     {
       var sdetails;
@@ -163,8 +165,8 @@ class AreaManager
         sdetails = 'an attack';
       else sdetails = 'wild animal sighting';
 
-      log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') + 
-        ' has received a report about ' + sdetails + 
+      log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
+        ' has received a report about ' + sdetails +
         '. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
@@ -174,7 +176,7 @@ class AreaManager
       // increase area alertness
       area.alertness++;
 
-      // alert all police already in area 
+      // alert all police already in area
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
@@ -212,7 +214,7 @@ class AreaManager
               Const.todo('Could not find free spot for spawn!');
               return;
             }
-  
+
           var ai: AI = null;
           if (area.typeID == AREA_FACILITY)
             ai = new SecurityAI(game, loc.x, loc.y);
@@ -235,7 +237,7 @@ class AreaManager
     }
 
 
-// event: police/security/army calls for backup 
+// event: police/security/army calls for backup
   function onCallBackup(e: AreaEvent)
     {
       log((e.ai.type == 'police' ? 'Officer' : 'Unit') +
@@ -247,11 +249,12 @@ class AreaManager
       // increase area alertness
       area.alertness += 2;
 
-      // alert all law already in area 
+      // alert all law already in area
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y, area.info.lawResponceTime);
+      add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y, area.info.lawResponceTime,
+        { type: e.ai.type });
     }
 
 
@@ -268,30 +271,30 @@ class AreaManager
               Const.todo('Could not find free spot for spawn!');
               return;
             }
-      
+
           var ai: AI = null;
-          if (e.ai.type == 'police')
+          if (e.params.type == 'police')
             ai = new PoliceAI(game, loc.x, loc.y);
-          else if (e.ai.type == 'security')
+          else if (e.params.type == 'security')
             ai = new SecurityAI(game, loc.x, loc.y);
-          else if (e.ai.type == 'soldier')
+          else if (e.params.type == 'soldier')
             ai = new SoldierAI(game, loc.x, loc.y);
 
           // backup has better equipment
           ai.inventory.clear();
-          if (e.ai.type == 'police')
+          if (e.params.type == 'police')
             {
               ai.inventory.addID('pistol');
               ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
             }
 
-          else if (e.ai.type == 'security')
+          else if (e.params.type == 'security')
             {
               ai.inventory.addID('pistol');
               ai.skills.addID(SKILL_PISTOL, 50 + Std.random(25));
             }
 
-          else if (e.ai.type == 'soldier')
+          else if (e.params.type == 'soldier')
             {
               ai.inventory.addID('assaultRifle');
               ai.skills.addID(SKILL_RIFLE, 50 + Std.random(25));
@@ -299,9 +302,9 @@ class AreaManager
 
 
           // and arrive already alerted
-/*          
+/*
           ai.alertness = 70;
-*/        
+*/
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
           untyped ai.isBackup = true;
@@ -348,4 +351,5 @@ typedef AreaEvent =
   var y: Int;
   var type: _AreaManagerEventType; // event type
   var turns: Int; // turns left until the event
+  @:optional var params: Dynamic; // additional parameters
 };
