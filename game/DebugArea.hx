@@ -55,7 +55,7 @@ class DebugArea
         },
 
         {
-          name: 'Gain host (advanced)', 
+          name: 'Gain host (advanced)',
           func: function()
             {
               if (game.player.state != PLR_STATE_PARASITE)
@@ -104,7 +104,7 @@ class DebugArea
               // start habitat branch
         //      game.goals.receive(GOAL_GROW_ORGAN);
         //      game.goals.complete(GOAL_GROW_ORGAN);
-              game.player.skills.addID(KNOW_HABITAT, 100); 
+              game.player.skills.addID(KNOW_HABITAT, 100);
               game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
             }
         },
@@ -160,36 +160,6 @@ class DebugArea
         },
 
         {
-          name: 'Gain all improvements at level 0',
-          func: function()
-            {
-              for (imp in EvolutionConst.improvements)
-                if (!game.player.evolutionManager.isKnown(imp.id))
-                  game.player.evolutionManager.addImprov(imp.id);
-              game.player.evolutionManager.state = 2;
-              game.log('All evolution improvements gained at level 0');
-            }
-        },
-
-        {
-          name: 'Gain all improvements at max level',
-          func: function()
-            {
-              for (imp in EvolutionConst.improvements)
-                if (!game.player.evolutionManager.isKnown(imp.id))
-                  game.player.evolutionManager.addImprov(imp.id);
-          
-              for (imp in game.player.evolutionManager)
-                {
-                  imp.level = 3;
-                  imp.ep = EvolutionConst.epCostImprovement[imp.level];
-                }
-              game.player.evolutionManager.state = 2;
-              game.log('All evolution improvements gained at max level');
-            }
-        },
-
-        {
           name: 'Clear AI',
           func: function()
             {
@@ -238,41 +208,6 @@ class DebugArea
           func: function()
             {
               game.area.alertness = 100;
-            }
-        },
-
-        {
-          name: 'Unlock timeline',
-          func: function()
-            {
-              game.log('Timeline unlocked.');
-              game.player.skills.increase(KNOW_SOCIETY, 1);
-              game.player.skills.increase(KNOW_SOCIETY, 24);
-            }
-        },
-
-        {
-          name: 'Open timeline',
-          func: function()
-            {
-              game.log('Timeline opened.');
-              for (e in game.timeline)
-                {
-                  e.locationKnown = true;
-                  for (n in e.notes)
-                    n.isKnown = true;
-
-                  for (npc in e.npc)
-                    {
-                      npc.nameKnown = true;
-                      npc.jobKnown = true;
-                      npc.areaKnown = true;
-                      npc.statusKnown = true;
-//                      npc.memoryKnown = true;
-                    }
-                }
-
-              game.timeline.update(); // update event numbering
             }
         },
 

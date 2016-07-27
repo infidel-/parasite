@@ -915,9 +915,8 @@ class AreaGame
       if (cnt >= uncommonAI)
         return;
 
-      if (game.config.extendedInfo)
-        game.debug('Uncommon AI ' + cnt + '/' + uncommonAI +
-          ' (alertness: ' + alertness + '%, max: ' + info.uncommonAI + ')');
+      game.info('Uncommon AI ' + cnt + '/' + uncommonAI +
+        ' (alertness: ' + alertness + '%, max: ' + info.uncommonAI + ')');
 
       // limit number of spawns per turn
       var maxSpawn = uncommonAI - cnt;

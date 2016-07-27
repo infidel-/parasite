@@ -1,16 +1,9 @@
 test playthrough of the clue gathering
 
 crash on backup arrive
-probing event NPC - you have not been able to gain any clues ???
-after probing all NPCs and getting all readables player can get stuck
 do not allow using computers when there is nothing to gain from it
 ?bug - can go to spaceship without goal - breaks goal completion
   auto-complete previous goals
-;iimp - info: improvements list
-;io - info: available organs list
-;limpa - learn all improvements
-;limp1 - learn improvement 1
-;ao1 - add organ 1
 
 show [alive] in timeline for npcs
 log message on 3rd brain probe for event npcs showing that this npc does not know anything more
@@ -67,7 +60,13 @@ CONSOLE CHEATSHEET:
 ;s1 - player stage 1 (human civilian host, tutorial done)
 ;s2 - player stage 2 (stage 1 + microhabitat)
 
-;ievt - info: events list
+;ie - info: events list
+;ii - info: all improvements and organs list
+;ao1 - add organ 1
+;lt - learn all timeline
+;li1 - learn improvement 1
+;lia - learn all improvements at level 3
+;lia1 - learn all improvements at level 1
 
 
 MASTERPLAN

@@ -106,8 +106,8 @@ class Skills
           if (oldLevel == newLevel)
             return;
 
-          if (isPlayer && game.config.extendedInfo)
-            game.debug('Skill increased: ' + sk.info.name + ' +' + val +
+          if (isPlayer)
+            game.info('Skill increased: ' + sk.info.name + ' +' + val +
               '% = ' + sk.level + '%.');
         }
 
@@ -159,12 +159,12 @@ class Skills
       var skill = { id: id, level: lvl, info: info };
       _list.add(skill);
 
-      if (isPlayer && game.config.extendedInfo)
+      if (isPlayer)
         {
           if (info.isKnowledge)
-            game.debug('Knowledge added: ' + info.name +
+            game.info('Knowledge added: ' + info.name +
               (info.isBool ? '.' : ' ' + lvl + '%.'));
-          else game.debug('Skill added: ' + info.name + ' ' + lvl + '%.');
+          else game.info('Skill added: ' + info.name + ' ' + lvl + '%.');
         }
     }
 

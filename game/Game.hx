@@ -254,6 +254,16 @@ class Game
     }
 
 
+// add info entry to game log
+  public inline function info(s: String)
+    {
+#if mydebug
+      if (config.extendedInfo)
+        log(s, COLOR_DEBUG);
+#end
+    }
+
+
 // add debug entry to game log
   public inline function debug(s: String)
     {

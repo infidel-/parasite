@@ -3,6 +3,7 @@
 package game;
 
 import ai.*;
+import const.*;
 
 class ConsoleGame
 {
@@ -24,8 +25,12 @@ class ConsoleGame
 
       game.debug('Console command: ' + cmd);
 
+      // XXX add commands
+      if (cmd.charAt(0) == 'a')
+        addCommand(cmd);
+
       // XXX go commands
-      if (cmd.charAt(0) == 'g')
+      else if (cmd.charAt(0) == 'g')
         goCommand(cmd);
 
       // XXX info commands
@@ -48,10 +53,31 @@ class ConsoleGame
     }
 
 
+// add commands
+  function addCommand(cmd: String)
+    {
+      // XXX [ao10] add organ X
+      if (cmd.charAt(1) == 'o')
+        {
+          var idx = Std.parseInt(cmd.substr(2));
+          var imp = EvolutionConst.improvements[idx];
+          if (imp == null)
+            {
+              game.debug('Improvement [' + idx + '] not found.');
+              return;
+            }
+
+          game.player.evolutionManager.addImprov(imp.id, 3);
+          game.player.host.organs.action('set.' + imp.id);
+          game.player.host.organs.debugCompleteCurrent();
+        }
+    }
+
+
 // go commands
   function goCommand(cmd: String)
     {
-      // XXX [ge10] go to event location
+      // XXX [ge10] go to event X location
       if (cmd.charAt(1) == 'e')
         {
           var idx = Std.parseInt(cmd.substr(2));
@@ -147,13 +173,27 @@ class ConsoleGame
           for (ev in game.timeline)
             Sys.println(ev);
         }
+
+      // XXX [ii] improvements info
+      else if (cmd.charAt(1) == 'i')
+        {
+          for (i in 0...EvolutionConst.improvements.length)
+            {
+              var imp = EvolutionConst.improvements[i];
+
+              Sys.println(i + ': ' + imp.name + ', ' + imp.id +
+                ' (' + imp.path + ')');
+              if (imp.organ != null)
+                Sys.println('  organ: ' + imp.organ.name);
+            }
+        }
     }
 
 
 // learn commands
   function learnCommand(cmd: String)
     {
-      // XXX [le10] learn everything about event
+      // XXX [le10] learn everything about event X
       if (cmd.charAt(1) == 'e')
         {
           var idx = Std.parseInt(cmd.substr(2));
@@ -167,6 +207,54 @@ class ConsoleGame
           while (!event.notesKnown())
             event.learnNote();
           event.learnLocation();
+        }
+
+      // XXX [lia] learn all improvements
+      else if (cmd.charAt(1) == 'i' && cmd.charAt(2) == 'a')
+        {
+          var level = 3;
+          if (cmd.length > 2)
+            level = Std.parseInt(cmd.substr(3));
+          for (imp in EvolutionConst.improvements)
+            game.player.evolutionManager.addImprov(imp.id, level);
+
+          game.player.evolutionManager.state = 2;
+        }
+
+      // XXX [li10] learn improvement X
+      else if (cmd.charAt(1) == 'i')
+        {
+          var idx = Std.parseInt(cmd.substr(2));
+          var imp = EvolutionConst.improvements[idx];
+          if (imp == null)
+            {
+              game.debug('Improvement [' + idx + '] not found.');
+              return;
+            }
+
+          game.player.evolutionManager.addImprov(imp.id, 3);
+        }
+
+      // XXX [lt] learn all timeline
+      else if (cmd.charAt(1) == 't')
+        {
+          game.log('Timeline opened.');
+          for (e in game.timeline)
+            {
+              e.locationKnown = true;
+              for (n in e.notes)
+                n.isKnown = true;
+
+              for (npc in e.npc)
+                {
+                  npc.nameKnown = true;
+                  npc.jobKnown = true;
+                  npc.areaKnown = true;
+                  npc.statusKnown = true;
+                }
+            }
+
+          game.timeline.update(); // update event numbering
         }
     }
 

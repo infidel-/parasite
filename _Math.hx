@@ -106,7 +106,7 @@ class _Math
       if (game.config.extendedInfo)
         {
           s.add(' = ' + damage + '.');
-          game.debug(s.toString());
+          game.info(s.toString());
         }
 
       return damage;
@@ -169,7 +169,7 @@ class _Math
           else s.add('fail');
           s.add('.');
 
-          game.debug(s.toString());
+          game.info(s.toString());
         }
 
       return (roll <= chance);
@@ -187,11 +187,10 @@ class _Math
         chance = 1;
       var roll = Std.random(100);
 
-      if (game.config.extendedInfo)
-        game.debug(
-          'Opposing attribute check for ' + name + ': ' +
-          attr + ' vs ' + attr2 + ', ' + chance + '% (roll: ' + roll + ') = ' +
-          (roll <= chance ? 'success' : 'fail') + '.');
+      game.info(
+        'Opposing attribute check for ' + name + ': ' +
+        attr + ' vs ' + attr2 + ', ' + chance + '% (roll: ' + roll + ') = ' +
+        (roll <= chance ? 'success' : 'fail') + '.');
 
       return (roll <= chance);
     }

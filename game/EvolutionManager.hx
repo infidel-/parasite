@@ -155,6 +155,9 @@ class EvolutionManager
         {
           tmp.level = level;
           tmp.ep = ep;
+
+          game.info('Improvement set: ' + tmp.info.name + ' (' + level + ')');
+
           return tmp;
         }
 
@@ -165,6 +168,9 @@ class EvolutionManager
         info: EvolutionConst.getInfo(id)
         };
       _list.add(imp);
+
+      game.info('Improvement gained: ' + imp.info.name + ' (' + level + ')');
+
       return imp;
     }
 
