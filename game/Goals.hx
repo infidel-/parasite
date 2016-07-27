@@ -57,7 +57,7 @@ class Goals
 
 
 // receive a new goal
-  public function receive(id: _Goal)
+  public function receive(id: _Goal, ?silent: Bool = false)
     {
       // check if this goal already completed or received
       if (Lambda.has(_listCompleted, id) || Lambda.has(_listCurrent, id))
@@ -69,11 +69,13 @@ class Goals
       if (info == null)
         throw "No such goal: " + id;
 
-      if (info.messageReceive != null) // message on receiving
+      if (!silent && info.messageReceive != null) // message on receiving
         game.message(info.messageReceive);
 
       if (info.isHidden == null || info.isHidden == false)
-        game.log('You have received a new goal: ' + info.name + '.', COLOR_GOAL);
+        if (!silent)
+          game.log('You have received a new goal: ' + info.name + '.',
+            COLOR_GOAL);
 
       // call receive hook
       if (info.onReceive != null)
@@ -82,7 +84,7 @@ class Goals
 
 
 // complete a goal
-  public function complete(id: _Goal)
+  public function complete(id: _Goal, ?silent: Bool = false)
     {
       // check if player has this goal
       if (!Lambda.has(_listCurrent, id))
@@ -93,9 +95,11 @@ class Goals
 
       var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
-        game.log('You have completed a goal: ' + info.name + '.', COLOR_GOAL);
+        if (!silent)
+          game.log('You have completed a goal: ' + info.name + '.',
+            COLOR_GOAL);
 
-      if (info.messageComplete != null) // completion message
+      if (!silent && info.messageComplete != null) // completion message
         game.message(info.messageComplete);
 
       // call completion hook

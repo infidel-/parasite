@@ -1,9 +1,6 @@
 test playthrough of the clue gathering
 
 crash on backup arrive
-do not allow using computers when there is nothing to gain from it
-?bug - can go to spaceship without goal - breaks goal completion
-  auto-complete previous goals
 
 show [alive] in timeline for npcs
 log message on 3rd brain probe for event npcs showing that this npc does not know anything more

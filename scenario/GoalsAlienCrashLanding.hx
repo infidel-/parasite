@@ -28,6 +28,14 @@ class GoalsAlienCrashLanding
             },
           onAction: function (game, player, id)
             {
+              // player can stumble on a spaceship without having the goal
+              // in that case we silently give previous goal and
+              // auto-complete it
+              if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
+                {
+                  game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, true);
+                  game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, true);
+                }
               game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
 
               // show first event
