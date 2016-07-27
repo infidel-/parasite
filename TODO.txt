@@ -1,8 +1,6 @@
 test playthrough of the clue gathering
 
-prot cover isn't working?
 crash on backup arrive
-acid spit, acid cloud - use _Math.damage
 probing event NPC - you have not been able to gain any clues ???
 after probing all NPCs and getting all readables player can get stuck
 do not allow using computers when there is nothing to gain from it

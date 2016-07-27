@@ -124,14 +124,14 @@ class Organs
       if (currentOrgan.id == IMP_ENERGY)
         _ai.energy = _ai.maxEnergy;
 
-      // on first growing an organ 
+      // on first growing an organ
       game.goals.complete(GOAL_GROW_ORGAN);
 
       currentOrgan = null;
     }
 
 
-// TURN: organ activity 
+// TURN: organ activity
   function turnActivity(time: Int)
     {
       // activation timeout
@@ -183,7 +183,7 @@ class Organs
         {
           currentOrgan = {
             id: imp.id,
-            level: imp.level, 
+            level: imp.level,
             isActive: false,
             gp: 0,
             improvInfo: imp.info,
@@ -197,8 +197,8 @@ class Organs
     }
 
 
-// has this organ? 
-  public function has(id: _Improv): Bool 
+// has this organ?
+  public function has(id: _Improv): Bool
     {
       for (o in _list)
         if (o.id == id)
@@ -220,7 +220,7 @@ class Organs
 
 
 // get organ level by id
-  public function getLevel(id: _Improv): Int 
+  public function getLevel(id: _Improv): Int
     {
       for (o in _list)
         if (o.id == id)
@@ -341,9 +341,13 @@ class Organs
         }
 
       // roll damage
-      var damage = Const.roll(params.minDamage, params.maxDamage);
+      var damage = _Math.damage({
+        name: 'acid spit',
+        min: params.minDamage,
+        max: params.maxDamage,
+      });
       game.log('Your host spits a clot of corrosive substance on ' + ai.getName() +
-        ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' screams in pain.');
+        ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' howls in pain.');
 
       ai.onDamage(damage); // damage event
     }
@@ -384,7 +388,7 @@ class Organs
         }
 
       // AI effect event
-      ai.onEffect({ type: EFFECT_SLIME, points: params.strength }); 
+      ai.onEffect({ type: EFFECT_SLIME, points: params.strength });
     }
 
 
@@ -423,7 +427,7 @@ class Organs
         }
 
       // AI effect event
-      ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true }); 
+      ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true });
     }
 
 
