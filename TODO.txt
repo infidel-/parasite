@@ -1,10 +1,12 @@
-test playthrough of the clue gathering
+1) test playthrough of the clue gathering
+2) release 0.2
+3) add stage 3 to debug and test playthrough of the goal completion
 
 civs call police in habitat, it can't spawn
 alertness on habitat should raise chance of blackops finding it
-for 0.2 release: add logging to bat/sh files and check it out
 alt-z: hide hud
-mark npc as dead when it expires as a host
+for 0.2 release: add logging to bat/sh files and check it out
+
 roads on region map leading to facilities
   faster travel on roads when in car?
   disallow travel outside of city bounds by foot (no sewers)?
@@ -13,6 +15,10 @@ roads on region map leading to facilities
     public transport and car rental costs money (gained from wallets)
   how to gain disguise skill?
   needs disguise kit?
+
+unlocked by finding a drug dose on a human (or by selecting path)
+  improv: low-level dopamine control - the control is raised every turn to max
+    active or passive?
 
 hosts should stop dying at some point:
 - make goal chain for building "host convertor" in microhabitat
@@ -113,10 +119,6 @@ since use computer is max 30% (rarer 50%), search is very slow
         "search for a person with high Computer Use skill"
     pressing "." will repeat previous "use" command
 ==
-unlocked by finding a drug dose on a human (or by selecting path)
-  improv: low-level dopamine control - the control is raised every turn to max
-    active or passive?
-==
 SCENARIO: CULT
 sanity stat for the followers (they can get totally mad in the process)
 high-level control path improv (research dopamine) that puts a euphoria-inducing biodrone on the host
@@ -132,6 +134,7 @@ area interest is unused
 area interest should bring something special
 killing conspiracy agents should increase both area interest and conspiracy interest
 leaving conspiracy agent hosts should increase interest eventually
+==
 ==
 
 search in timeline

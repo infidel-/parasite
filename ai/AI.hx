@@ -830,6 +830,13 @@ class AI
       o.organPoints = organs.getPoints();
       o.inventory = inventory; // copy inventory
       game.area.updateVisibility();
+
+      // event stuff
+      if (npc != null)
+        {
+          npc.isDead = true;
+          npc.statusKnown = true;
+        }
     }
 
 
