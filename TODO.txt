@@ -2,7 +2,6 @@
 2) release 0.2
 3) add stage 3 to debug and test playthrough of the goal completion
 
-separate extended info mode and debug
 alt-z: hide hud
 for 0.2 release: add logging to bat/sh files and check it out
 compile in VERSION and display it on start
@@ -26,6 +25,7 @@ hosts should stop dying at some point:
 - Assimilation process: when the host convertor is active, player can convert hosts and they stop losing energy passively
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
 
+? rework habitat detection from probability to counter based on interest (counter grows with each turn until it starts rolling chances based on interest)
 game restart
 citygen - smooth out building tiles when they are not wide enough
 what happens on mission failure
