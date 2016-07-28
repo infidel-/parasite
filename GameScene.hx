@@ -462,7 +462,7 @@ class GameScene extends Scene
               s.add(stack + '\n');
 
               var h = new haxe.Http(
-                'http://php-starinfidel.rhcloud.com/exception.php');
+                'http://parasite.in-fi-del.net/exception.php');
               h.addParameter('msg', s.toString());
               h.onData = function(d){
                 trace(d);
