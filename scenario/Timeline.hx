@@ -438,9 +438,7 @@ should limit player options for guiding purposes
       trace(_names);
       trace(_locationsList);
 */
-#if mydebug
-      trace(_variables);
-#end
+      game.info('Timeline variables: ' + _variables);
     }
 
 

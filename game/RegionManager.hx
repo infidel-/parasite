@@ -23,7 +23,7 @@ class RegionManager
     }
 
 
-// event: multiple bodies have been discovered (called on leaving area) 
+// event: multiple bodies have been discovered (called on leaving area)
 // pts - amount of organ points this body has
   public function onBodiesDiscovered(area: AreaGame, bodies: Int, pts: Int)
     {

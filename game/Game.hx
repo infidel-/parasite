@@ -30,6 +30,7 @@ class Game
 
   public var turns: Int; // number of turns passed since game start
   public var turnsArea: Int; // number of turns passed since player entered this area
+  public var isInited: Bool; // is the game initialized?
   public var isFinished: Bool; // is the game finished?
   public var messageList: List<String>; // last X messages of log
   public var importantMessage: String; // last important message
@@ -44,6 +45,7 @@ class Game
       HXP.scene = scene;
       messageList = new List();
       importantMessage = '';
+      isInited = false;
 
       area = null;
       region = null;
@@ -58,6 +60,7 @@ class Game
       turns = 0;
       turnsArea = 0;
       isFinished = false;
+      isInited = false;
 
       player = new Player(this);
       managerArea = new AreaManager(this);
@@ -124,6 +127,7 @@ class Game
       area.addAI(ai);
 
       updateHUD(); // update HUD state
+      isInited = true;
     }
 
 

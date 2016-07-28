@@ -738,7 +738,7 @@ class AI
         stateHost();
 
       // post-detach
-      else if (state == AI_STATE_POST_DETACH && stateTime >= 1)
+      else if (state == AI_STATE_POST_DETACH && stateTime >= 2)
         setState(AI_STATE_ALERT, REASON_DETACH);
 
       updateEntity(); // clamp and change entity icons

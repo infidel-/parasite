@@ -1153,5 +1153,11 @@ class AreaGame
     }
 
   function set_interest(v: Float)
-    { return interest = Const.clampFloat(v, 0, 100.0); }
+    {
+      if (game.isInited && interest != null && v != interest)
+        game.info('Area interest changed: ' +
+          (v - interest > 0 ? '+' : '') +
+          (v - interest) + '.');
+      return interest = Const.clampFloat(v, 0, 100.0);
+    }
 }

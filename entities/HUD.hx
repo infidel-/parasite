@@ -148,12 +148,20 @@ class HUD
       buf.add('Turn: ' + game.turns + ', at (');
       if (game.location == LOCATION_AREA)
           buf.add(
-            game.playerArea.x + ',' + game.playerArea.y + ')\n' +
-            'Actions: ' + game.playerArea.ap + '\n');
+            game.playerArea.x + ',' + game.playerArea.y + ')' +
+#if mydebug
+            ' A ' + game.area.alertness +
+            ', I ' + game.area.interest +
+#end
+            '\nActions: ' + game.playerArea.ap + '\n');
       else if (game.location == LOCATION_REGION)
         buf.add(
-          game.playerRegion.x + ',' + game.playerRegion.y + ')\n' +
-          game.playerRegion.currentArea.name + '\n');
+          game.playerRegion.x + ',' + game.playerRegion.y + ')' +
+#if mydebug
+            ' A ' + game.playerRegion.currentArea.alertness +
+            ', I ' + game.playerRegion.currentArea.interest +
+#end
+          '\n' + game.playerRegion.currentArea.name + '\n');
       buf.add('===\n');
 
       var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
