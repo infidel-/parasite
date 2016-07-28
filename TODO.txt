@@ -2,10 +2,11 @@
 2) release 0.2
 3) add stage 3 to debug and test playthrough of the goal completion
 
-alertness on habitat should raise chance of blackops finding it
+separate extended info mode and debug
 alt-z: hide hud
-compile in VERSION and display it on start
 for 0.2 release: add logging to bat/sh files and check it out
+compile in VERSION and display it on start
+make release
 
 roads on region map leading to facilities
   faster travel on roads when in car?
@@ -55,8 +56,9 @@ CONSOLE CHEATSHEET:
 ;ga10 10 - go to area at 10,10
 ;gg24 7 - don't change mode, go to x=24, y=7 (area or region)
 
-;s1 - player stage 1 (human civilian host, tutorial done)
-;s2 - player stage 2 (stage 1 + microhabitat)
+;s1 - set player stage 1 (human civilian host, tutorial done)
+;s2 - set player stage 2 (stage 1 + microhabitat)
+;sai10 - set area interest 10
 
 ;ie - info: events list
 ;ii - info: all improvements and organs list

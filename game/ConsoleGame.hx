@@ -41,9 +41,9 @@ class ConsoleGame
       else if (cmd.charAt(0) == 'l')
         learnCommand(cmd);
 
-      // XXX stage commands
+      // XXX set commands
       else if (cmd.charAt(0) == 's')
-        stageCommand(cmd);
+        setCommand(cmd);
 
       // XXX quit game
       else if (cmd.charAt(0) == 'q')
@@ -259,6 +259,45 @@ class ConsoleGame
     }
 
 
+// set commands
+  function setCommand(cmd: String)
+    {
+      var stage = Std.parseInt(cmd.substr(1));
+
+      // XXX [s1] set stage X
+      if (stage > 0)
+        {
+          // stage 1: civ host, tutorial done
+          if (stage == 1)
+            {
+              stage1();
+            }
+
+          // stage 2: civ host, microhabitat, timeline open
+          else if (stage >= 2)
+            {
+              stage1();
+              stage2();
+            }
+        }
+
+      // XXX [sa] set area commands
+      else if (cmd.charAt(1) == 'a')
+        {
+          // XXX [sai20] set area interest
+          if (cmd.charAt(2) == 'i')
+            {
+              var val = Std.parseInt(cmd.substr(3));
+
+              if (game.location == LOCATION_AREA)
+                game.area.interest = val;
+
+              else game.playerRegion.currentArea.interest = val;
+            }
+        }
+    }
+
+
 // stage 1: civ host, tutorial done
   function stage1()
     {
@@ -308,25 +347,5 @@ class ConsoleGame
         energy: 0
       });
 //      game.goals.complete(GOAL_CREATE_HABITAT);
-    }
-
-
-// stage commands
-  function stageCommand(cmd: String)
-    {
-      var stage = Std.parseInt(cmd.substr(1));
-
-      // stage 1: civ host, tutorial done
-      if (stage == 1)
-        {
-          stage1();
-        }
-
-      // stage 2: civ host, microhabitat, timeline open
-      else if (stage >= 2)
-        {
-          stage1();
-          stage2();
-        }
     }
 }

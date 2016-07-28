@@ -263,7 +263,7 @@ class Game
     {
 #if mydebug
       if (config.extendedInfo)
-        log(s, COLOR_DEBUG);
+        log('INFO ' + s, COLOR_DEBUG);
 #end
     }
 

@@ -62,7 +62,7 @@ class PlayerRegion
 
 
 // helper: add action to list and check for energy
-  inline function addActionToList2(list: List<_PlayerAction>, action: _PlayerAction) 
+  inline function addActionToList2(list: List<_PlayerAction>, action: _PlayerAction)
     {
       if (action.energy <= player.energy)
         list.add(action);
@@ -87,21 +87,21 @@ class PlayerRegion
           var numHabitats = game.region.getHabitatsCount();
 
           if (numHabitats < maxHabitats)
-            addActionToList2(tmp, { 
-              id: 'createHabitat', 
-              type: ACTION_REGION, 
+            addActionToList2(tmp, {
+              id: 'createHabitat',
+              type: ACTION_REGION,
               name: 'Create habitat',
               energy: 10 });
         }
 
       // enter habitat
       if (currentArea.hasHabitat)
-        addActionToList2(tmp, { 
-          id: 'enterHabitat', 
-          type: ACTION_REGION, 
+        addActionToList2(tmp, {
+          id: 'enterHabitat',
+          type: ACTION_REGION,
           name: 'Enter habitat',
           energy: 0 });
-      
+
       return tmp;
     }
 
@@ -144,6 +144,7 @@ class PlayerRegion
       area.isHabitat = true;
       currentArea.hasHabitat = true;
       currentArea.habitatAreaID = area.id;
+      area.parent = currentArea;
       game.scene.region.updateIconsArea(x, y);
 
       // complete goal
@@ -158,7 +159,7 @@ class PlayerRegion
       if (habitatArea.habitatIsDetected)
         game.log("You enter the habitat. Looks like someone is here!");
       else game.log("You enter the habitat. You feel much safer here.");
-      game.setLocation(LOCATION_AREA, habitatArea); 
+      game.setLocation(LOCATION_AREA, habitatArea);
     }
 
 
@@ -205,7 +206,7 @@ class PlayerRegion
 // if we add travel by car later, this would have to be changed to accomodate that
   public inline function onHostDeath()
     {
-      // set state 
+      // set state
       player.state = PLR_STATE_PARASITE;
 
       // set image
@@ -232,7 +233,7 @@ class PlayerRegion
       return moveTo(nx, ny);
     }
 
-  
+
 // move player to nx, ny
   public function moveTo(nx, ny): Bool
     {
@@ -243,14 +244,14 @@ class PlayerRegion
       x = nx;
       y = ny;
 
-      // make tiles around player known 
+      // make tiles around player known
       for (yy in (y - 1)...(y + 2))
         for (xx in (x - 1)...(x + 2))
           {
             var a = game.region.getXY(xx, yy);
             if (a == null)
               continue;
-            
+
             a.isKnown = true;
           }
 

@@ -22,10 +22,6 @@ class AreaGame
   public var isGenerated: Bool; // has this area been generated?
   public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
-  public var isHabitat: Bool; // is this area itself a habitat?
-  public var hasHabitat: Bool; // does this area have a habitat?
-  public var habitatAreaID: Int; // area id of habitat
-  public var habitatIsDetected: Bool; // habitat: has been detected?
   public var info: AreaInfo; // area info link
   public var width: Int;
   public var height: Int;
@@ -33,6 +29,13 @@ class AreaGame
   public var y: Int;
   public var events: Array<scenario.Event>; // events array
   public var npc: List<scenario.NPC>; // npc list
+
+  // habitat related
+  public var parent: AreaGame; // parent area (for sub-areas, habitats)
+  public var isHabitat: Bool; // is this area itself a habitat?
+  public var hasHabitat: Bool; // does this area have a habitat?
+  public var habitatAreaID: Int; // area id of habitat
+  public var habitatIsDetected: Bool; // habitat: has been detected?
 
   public var alertnessMod: Float; // changes to alertness until next reset
   // we store all changes until player leaves the current area for propagation
@@ -62,6 +65,7 @@ class AreaGame
       hasHabitat = false;
       id = _maxID++;
       name = null;
+      parent = null;
       x = vx;
       y = vy;
       width = 10;

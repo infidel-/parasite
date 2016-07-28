@@ -101,6 +101,8 @@ class RegionGame
 // also called when player is in the area mode once/10 turns
   public function turnDetectHabitats()
     {
+      var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
+      var detectionChance: Float = params.detectionChance;
       var tmp = getHabitatsList();
       for (area in tmp)
         {
@@ -108,9 +110,11 @@ class RegionGame
           if (game.location == LOCATION_AREA && area == game.area)
             continue;
 
-          var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
-          var detectionChance: Float = params.detectionChance;
-          if (Math.random() * 100 > detectionChance)
+          var ret = _Math.detectHabitat({
+            base: detectionChance,
+            interest: area.parent.interest
+          });
+          if (!ret)
             continue;
 
           game.debug("Habitat " + id + " detected.");
