@@ -32,6 +32,7 @@ class Game
   public var turnsArea: Int; // number of turns passed since player entered this area
   public var isInited: Bool; // is the game initialized?
   public var isFinished: Bool; // is the game finished?
+  public var finishText: String; // finishing text in game over window
   public var messageList: List<String>; // last X messages of log
   public var importantMessage: String; // last important message
 
@@ -46,6 +47,7 @@ class Game
       messageList = new List();
       importantMessage = '';
       isInited = false;
+      finishText = '';
 
       area = null;
       region = null;
@@ -221,6 +223,7 @@ class Game
   public function finish(result: String, condition: String)
     {
       isFinished = true;
+      finishText = '';
       scene.setState(HUDSTATE_FINISH);
 
       // game lost

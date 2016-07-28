@@ -1,4 +1,4 @@
-// game over window 
+// game over window
 
 package entities;
 
@@ -70,6 +70,7 @@ class FinishWindow extends TextWindow
     {
       var buf = new StringBuf();
       buf.add('\n\nGame Over\n===\n\n');
+      buf.add(game.finishText);
 
       return buf.toString();
     }

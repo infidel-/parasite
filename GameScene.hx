@@ -5,6 +5,7 @@ import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
 import com.haxepunk.utils.Input;
 import com.haxepunk.utils.Key;
+import sys.io.File;
 
 import entities.*;
 import game.Game;
@@ -429,12 +430,64 @@ class GameScene extends Scene
 // entity update
   public override function update()
     {
-      // handle player input
-      handleInput();
+      try {
+        // handle player input
+        handleInput();
 
-      // update camera position
-      updateCamera();
+        // update camera position
+        updateCamera();
 
-      super.update();
+        super.update();
+        }
+      catch (e: Dynamic)
+        {
+          // log to file
+          var f = File.append('exceptions.txt', false);
+          f.writeString('Exception: ' + e + '\n');
+          var stack = haxe.CallStack.toString(
+            haxe.CallStack.exceptionStack());
+          f.writeString(stack + '\n');
+          f.close();
+
+          // write to stdout
+          trace('Exception: ' + e);
+          trace(stack);
+
+          // send exception to web server
+          if (game.config.sendExceptions)
+            {
+              var s = new StringBuf();
+              s.add(game.messageList.last() + '\n');
+              s.add('Exception: ' + e + '\n');
+              s.add(stack + '\n');
+
+              var h = new haxe.Http(
+                'http://php-starinfidel.rhcloud.com/exception.php');
+              h.addParameter('msg', s.toString());
+              h.onData = function(d){
+                trace(d);
+
+                // show window
+                game.finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
+                  "P.S. If you want to disable exception gathering thingy for whatever reason, open the parasite.cfg configuration file and set sendExceptions to 0.";
+                setState(HUDSTATE_FINISH);
+              }
+              h.onError = function(e){
+                game.finishText = "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
+                  "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
+                setState(HUDSTATE_FINISH);
+                trace(e);
+              }
+              h.request(true);
+            }
+
+          else
+            {
+              // show window
+              game.finishText = "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
+                "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
+              setState(HUDSTATE_FINISH);
+            }
+        }
     }
 }

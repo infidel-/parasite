@@ -6,6 +6,7 @@ class Config
 {
   // cached values
   public var extendedInfo: Bool;
+  public var sendExceptions: Bool;
 
   var map: Map<String, String>;
 
@@ -14,6 +15,10 @@ class Config
       map = new Map();
       var str = File.getContent("./parasite.cfg");
       var arr = str.split("\n");
+
+      // default values
+      extendedInfo = false;
+      sendExceptions = false;
 
       for (line in arr)
         {
@@ -30,6 +35,8 @@ class Config
 
           if (key == 'extendedInfo')
             extendedInfo = (val == '1');
+          if (key == 'sendExceptions')
+            sendExceptions = (val == '1');
         }
     }
 }
