@@ -2,7 +2,6 @@
 2) release 0.2
 3) add stage 3 to debug and test playthrough of the goal completion
 
-alt-z: hide hud
 for 0.2 release: add logging to bat/sh files and check it out
 compile in VERSION and display it on start
 make release

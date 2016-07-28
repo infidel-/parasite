@@ -270,7 +270,7 @@ class Game
   public inline function debug(s: String)
     {
 #if mydebug
-      log(s, COLOR_DEBUG);
+      log('DEBUG ' + s, COLOR_DEBUG);
 #end
     }
 

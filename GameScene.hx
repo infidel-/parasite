@@ -69,7 +69,8 @@ class GameScene extends Scene
       Input.define("exit", [ Key.F10 ]);
 //      Input.define("test", [ Key.SPACE ]);
 
-      Input.define("skipTurn", [ Key.NUMPAD_5, Key.SPACE ]);
+      Input.define("hideGUI", [ Key.SPACE ]);
+      Input.define("skipTurn", [ Key.NUMPAD_5 ]);
       Input.define("closeWindow", [ Key.ESCAPE ]);
 
 //      _dx = 0;
@@ -162,6 +163,18 @@ class GameScene extends Scene
       if (Input.pressed(Key.ENTER) && hud.consoleVisible())
         {
           hud.runConsoleCommand();
+          return;
+        }
+
+      // toggle gui
+      if (Input.pressed("hideGUI"))
+        {
+          hud.show(false);
+          return;
+        }
+      else if (Input.released("hideGUI"))
+        {
+          hud.show(true);
           return;
         }
 /*

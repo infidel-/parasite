@@ -340,14 +340,14 @@ class HUD
 
 
 // is console visible?
-  public function consoleVisible(): Bool
+  public inline function consoleVisible(): Bool
     {
       return _consoleBack.visible;
     }
 
 
 // run console command and close it
-  public function runConsoleCommand()
+  public inline function runConsoleCommand()
     {
 #if mydebug
       game.console.run(_console.text);
@@ -362,5 +362,13 @@ class HUD
       _consoleBack.graphics.clear();
       _consoleBack.graphics.beginFill(0x202020, .75);
       _consoleBack.graphics.drawRect(0, 0, _console.width, _console.height);
+    }
+
+
+// show hide HUD
+  public inline function show(state: Bool)
+    {
+      _textFieldBack.visible = state;
+      _logBack.visible = state;
     }
 }
