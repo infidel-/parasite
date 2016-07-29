@@ -58,6 +58,7 @@ class Game
 // init game stuff - called from GameScene.begin()
   public function init()
     {
+      log('Parasite v' + Version.getVersion());
       Const.todo('proper title screen');
       turns = 0;
       turnsArea = 0;
@@ -293,3 +294,4 @@ class Game
         messageList.pop();
     }
 }
+

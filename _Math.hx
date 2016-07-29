@@ -85,7 +85,8 @@ class _Math
                     s.add(' }, { ');
                 }
             }
-          s.add(' }]');
+          if (game.config.extendedInfo)
+            s.add(' }]');
         }
 
       // clamp value

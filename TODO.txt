@@ -2,9 +2,6 @@
 2) release 0.2
 3) add stage 3 to debug and test playthrough of the goal completion
 
-compile in VERSION and display it on start
-make release
-
 roads on region map leading to facilities
   faster travel on roads when in car?
   disallow travel outside of city bounds by foot (no sewers)?

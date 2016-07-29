@@ -457,6 +457,7 @@ class GameScene extends Scene
           if (game.config.sendExceptions)
             {
               var s = new StringBuf();
+              s.add('v' + Version.getVersion() + ' ' + Sys.systemName() + '\n');
               s.add(game.messageList.last() + '\n');
               s.add('Exception: ' + e + '\n');
               s.add(stack + '\n');
