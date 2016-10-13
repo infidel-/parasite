@@ -16,8 +16,8 @@ unlocked by finding a drug dose on a human (or by selecting path)
     active or passive?
 
 hosts should stop dying at some point:
-- make goal chain for building "host convertor" in microhabitat
-- Assimilation process: when the host convertor is active, player can convert hosts and they stop losing energy passively
+- make goal chain for building "host assimilator" in microhabitat
+- Assimilation process: when the host assimilator is active, player can convert hosts and they stop losing energy passively
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
 
 ? rework habitat detection from probability to counter based on interest (counter grows with each turn until it starts rolling chances based on interest)

@@ -65,34 +65,6 @@ class EvolutionConst
           ],
       },
 
-      { // ***
-        path: PATH_CONCEAL,
-        id: IMP_CAMO_LAYER,
-        name: 'Camouflage layer',
-        note: 'Allows covering parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
-        noteFunc: function (l)
-          {
-            return "AI alertness multiplier: " + l.alertness;
-          },
-        organ: {
-          name: 'Camouflage layer',
-          note: 'Self-regenerating camouflage layer that covers parasite body changing its appearance',
-          gp: 100
-          },
-        levelNotes: [
-          'A perfectly visible huge purple blob on head and upper body of the host',
-          'Streaks of purple running through the partly grown camouflage layer',
-          'Parasite body is mostly covered by camouflage layer',
-          'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
-          ],
-        levelParams: [
-          { alertness: 3 },
-          { alertness: 2 },
-          { alertness: 1 },
-          { alertness: 0.5 },
-          ]
-      },
-
       // =============== ************ PROTECTION *************** ===================
 
       { // ***
@@ -647,6 +619,45 @@ class EvolutionConst
 
       { // ***
         path: PATH_SPECIAL,
+        id: IMP_CAMO_LAYER,
+        name: 'Camouflage layer',
+        note: 'Allows to cover parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
+        noteFunc: function (l)
+          {
+            return "AI alertness multiplier: " + l.alertness;
+          },
+        organ: {
+          name: 'Camouflage layer',
+          note: 'Self-regenerating camouflage layer that covers parasite body changing its appearance',
+          gp: 100,
+          onGrow: function(game, player)
+            {
+              // complete goals
+              game.goals.complete(GOAL_GROW_CAMO);
+            }
+          },
+        levelNotes: [
+          'A perfectly visible huge purple blob on head and upper body of the host',
+          'Streaks of purple running through the partly grown camouflage layer',
+          'Parasite body is mostly covered by camouflage layer',
+          'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
+          ],
+        levelParams: [
+          { alertness: 3 },
+          { alertness: 2 },
+          { alertness: 1 },
+          { alertness: 0.5 },
+          ],
+        onUpgrade: function(level, game, player)
+          {
+            // complete goals
+            if (level == 1)
+              game.goals.complete(GOAL_EVOLVE_CAMO);
+          }
+      },
+
+      { // ***
+        path: PATH_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
         note: 'Gives the player ability to build microhabitats (todo fluff)',
@@ -804,4 +815,5 @@ typedef OrganInfo =
   gp: Int, // gp cost to grow
   ?action: _PlayerAction, // player action
   ?hasTimeout: Bool, // has activation timeout?
+  ?onGrow: Game -> Player -> Void, // func to call on growing organ
 }

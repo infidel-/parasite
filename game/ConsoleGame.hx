@@ -323,7 +323,7 @@ class ConsoleGame
     }
 
 
-// stage 2: stage 1 + microhabitat, timeline open
+// stage 2: stage 1 + microhabitat, camo layer, timeline open
   function stage2()
     {
       game.log('stage 2');
@@ -332,8 +332,17 @@ class ConsoleGame
       game.goals.complete(GOAL_EVOLVE_ORGAN);
       game.player.host.organs.action('set.IMP_ENERGY');
       game.player.host.organs.debugCompleteCurrent();
+
+      // habitat
       game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
       game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
+
+      // camo
+      game.goals.receive(GOAL_EVOLVE_CAMO);
+      game.goals.complete(GOAL_EVOLVE_CAMO);
+      game.player.evolutionManager.addImprov(IMP_CAMO_LAYER, 2);
+      game.player.host.organs.action('set.IMP_CAMO_LAYER');
+      game.player.host.organs.debugCompleteCurrent();
 
       // learn and enter sewers
       game.playerArea.debugLearnObject('sewer_hatch');

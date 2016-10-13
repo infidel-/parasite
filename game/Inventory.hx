@@ -148,7 +148,8 @@ class Inventory
 // ACTION: learn about item
   function learnAction(item: _Item)
     {
-      game.log('You probe the brain of the host and learn what that item is for.');
+      game.log('You probe the brain of the host and learn that this item is a ' +
+        item.name + '.');
 
       game.player.addKnownItem(item.id);
 

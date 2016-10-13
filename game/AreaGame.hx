@@ -169,6 +169,11 @@ class AreaGame
         }
 */
 
+      // goal received: grow camouflage layer
+      if (info.id == AREA_CITY_HIGH &&
+          game.goals.completed(GOAL_EVOLVE_PROBE))
+        game.goals.receive(GOAL_EVOLVE_CAMO);
+
       // goal completed: event area found
       if (events.length > 0)
         game.goals.complete(GOAL_TRAVEL_EVENT);

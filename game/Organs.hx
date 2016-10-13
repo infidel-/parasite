@@ -127,6 +127,10 @@ class Organs
       // on first growing an organ
       game.goals.complete(GOAL_GROW_ORGAN);
 
+      // call onUpgrade() func
+      if (currentOrgan.info.onGrow != null)
+        currentOrgan.info.onGrow(game, game.player);
+
       currentOrgan = null;
     }
 

@@ -46,6 +46,28 @@ class Goals
         }
       },
 
+    // ========================= camouflage layer branch
+
+    GOAL_EVOLVE_CAMO => {
+      id: GOAL_EVOLVE_CAMO,
+      name: 'Evolve camouflage layer',
+      note: 'You need to evolve the camouflage layer improvement.',
+      messageReceive: 'These areas are much more dangerous to me. I need to be less visible on the host body.',
+      onReceive: function (game, player) {
+        player.evolutionManager.addImprov(IMP_CAMO_LAYER);
+        },
+      onComplete: function (game, player) {
+        game.goals.receive(GOAL_GROW_CAMO);
+        }
+      },
+
+    GOAL_GROW_CAMO => {
+      id: GOAL_GROW_CAMO,
+      name: 'Grow camouflage layer',
+      note: 'You need to grow the camouflage layer body feature.',
+      },
+
+
     // ========================= habitat branch
 
     GOAL_EVOLVE_ORGAN => {
