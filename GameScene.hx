@@ -466,8 +466,6 @@ class GameScene extends Scene
                 'http://parasite.in-fi-del.net/exception.php');
               h.addParameter('msg', s.toString());
               h.onData = function(d){
-                trace(d);
-
                 // show window
                 game.finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to disable exception gathering thingy for whatever reason, open the parasite.cfg configuration file and set sendExceptions to 0.";

@@ -11,7 +11,7 @@ release-win:
 	cp -R assets/font/ _releases/parasite-$(VERSION)-win/
 	cp -R assets/graphics/ _releases/parasite-$(VERSION)-win/gfx/
 	cp _release.windows/* _releases/parasite-$(VERSION)-win/
-	cp parasite.cfg _releases/parasite-$(VERSION)-win/
+	cp parasite.cfg.default _releases/parasite-$(VERSION)-win/parasite.cfg
 	openfl build project.nmml windows -Dmydebug
 	cp .bin/windows/neko/bin/parasite.exe \
 	  _releases/parasite-$(VERSION)-win/parasite-debug.exe
@@ -26,7 +26,7 @@ release-linux32:
 	cp -R assets/font/ _releases/parasite-$(VERSION)-linux32/
 	cp -R assets/graphics/ _releases/parasite-$(VERSION)-linux32/gfx/
 	cp _release.linux32/* _releases/parasite-$(VERSION)-linux32/
-	cp parasite.cfg _releases/parasite-$(VERSION)-linux32/
+	cp parasite.cfg.default _releases/parasite-$(VERSION)-linux32/parasite.cfg
 	openfl build project.nmml linux -neko -32 -Dmydebug
 	cp .bin/linux/neko/bin/parasite \
 	  _releases/parasite-$(VERSION)-linux32/parasite-debug
@@ -42,7 +42,7 @@ release-linux64:
 	cp -R assets/font/ _releases/parasite-$(VERSION)-linux64/
 	cp -R assets/graphics/ _releases/parasite-$(VERSION)-linux64/gfx/
 	cp _release.linux64/* _releases/parasite-$(VERSION)-linux64/
-	cp parasite.cfg _releases/parasite-$(VERSION)-linux64/
+	cp parasite.cfg.default _releases/parasite-$(VERSION)-linux64/parasite.cfg
 	openfl build project.nmml linux -neko -Dmydebug
 	cp .bin/linux64/neko/bin/parasite \
 	  _releases/parasite-$(VERSION)-linux64/parasite-debug
@@ -59,7 +59,7 @@ release-mac64:
 #	cp .bin/mac64/neko/bin/parasite \
 #	  _releases/parasite-$(VERSION)-mac64/parasite-debug
 	openfl build project.nmml mac -neko
-	cp parasite.cfg .bin/mac64/neko/bin/parasite.app/Contents/MacOS/
+	cp parasite.cfg.default .bin/mac64/neko/bin/parasite.app/Contents/MacOS/parasite.cfg
 	cp -R .bin/mac64/neko/bin/parasite.app \
 	  _releases/parasite-$(VERSION)-mac64/
 	cd _releases && zip -r9 parasite-$(VERSION)-mac64.zip parasite-$(VERSION)-mac64/
