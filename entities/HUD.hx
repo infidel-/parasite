@@ -31,6 +31,9 @@ class HUD
   var _console: TextField; // console
   var _consoleBack: Sprite; // console background
 
+  var _help: TextField; // help
+  var _helpBack: Sprite; // help background
+
   public function new(g: Game)
     {
       game = g;
@@ -75,11 +78,26 @@ class HUD
       _consoleBack = new Sprite();
       _consoleBack.addChild(_console);
       _consoleBack.x = 20;
-      _consoleBack.y = HXP.height - 20;
+      _consoleBack.y = 0;
       _consoleBack.visible = false;
       _console.width = HXP.width - 40;
       _console.height = 20;
       HXP.stage.addChild(_consoleBack);
+
+      // help
+      var font = Assets.getFont("font/04B_03__.ttf");
+      _help = new TextField();
+      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      fmt.align = TextFormatAlign.LEFT;
+      _help.defaultTextFormat = fmt;
+      _help.type = TextFieldType.INPUT;
+      _helpBack = new Sprite();
+      _helpBack.addChild(_help);
+      _helpBack.x = 20;
+      _helpBack.y = HXP.height - 20;
+      _help.width = HXP.width - 40;
+      _help.height = 20;
+      HXP.stage.addChild(_helpBack);
     }
 
 
@@ -235,41 +253,13 @@ class HUD
       if (_listActions.length == 0)
         buf.add('No available actions.');
 
-      buf.add("\n===\n");
-      buf.add('\n');
-      buf.add('F1: Goals\n');
-      if (game.player.state == PLR_STATE_HOST)
-        {
-          if (game.player.vars.inventoryEnabled)
-            buf.add('F2: Inventory\n');
-        }
-      if (game.player.vars.skillsEnabled)
-        buf.add('F3: Knowledge\n');
-      buf.add('F4: Message log\n');
-
-      if (game.player.vars.timelineEnabled)
-        buf.add('F5: Event timeline\n');
-
-      if (game.player.state == PLR_STATE_HOST)
-        {
-          if (game.player.evolutionManager.state > 0)
-            buf.add('F6: Controlled evolution\n');
-          if (game.player.vars.organsEnabled)
-            buf.add('F7: Body features\n');
-        }
-
-#if mydebug
-      buf.add('F9: Debug\n');
-#end
-      buf.add('F10: Exit\n');
-
       _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();
       _textFieldBack.graphics.beginFill(0x202020, .75);
       _textFieldBack.graphics.drawRect(0, 0, _textField.width, _textField.height);
 
       _textFieldBack.x = 20;
-      _textFieldBack.y = HXP.windowHeight - _textField.height - 20;
+      _textFieldBack.y = HXP.windowHeight - _textField.height - 30;
     }
 
 
@@ -309,12 +299,50 @@ class HUD
     }
 
 
+  function updateHelp()
+    {
+      var buf = new StringBuf();
+
+      buf.add('F1: Goals  ');
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          if (game.player.vars.inventoryEnabled)
+            buf.add('F2: Inventory  ');
+        }
+      if (game.player.vars.skillsEnabled)
+        buf.add('F3: Knowledge  ');
+      buf.add('F4: Log  ');
+
+      if (game.player.vars.timelineEnabled)
+        buf.add('F5: Timeline  ');
+
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          if (game.player.evolutionManager.state > 0)
+            buf.add('F6: Evolution  ');
+          if (game.player.vars.organsEnabled)
+            buf.add('F7: Body features  ');
+        }
+
+#if mydebug
+      buf.add('F9: Debug  ');
+#end
+      buf.add('F10: Exit');
+
+      _help.htmlText = buf.toString();
+      _helpBack.graphics.clear();
+      _helpBack.graphics.beginFill(0x202020, .75);
+      _helpBack.graphics.drawRect(0, 0, _help.width, _help.height);
+    }
+
+
 // update HUD state from game state
   public function update()
     {
       updateActionList();
       updateWindow();
       updateLog();
+      updateHelp();
       updateConsole();
     }
 
@@ -370,5 +398,6 @@ class HUD
     {
       _textFieldBack.visible = state;
       _logBack.visible = state;
+      _helpBack.visible = state;
     }
 }
