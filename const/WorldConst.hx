@@ -21,6 +21,7 @@ class WorldConst
         lawResponceTime: 0,
         lawResponceAmount: 0,
         lawResponceEnabled: false,
+        isHighRisk: false,
         ai: [
           'dog' => 5
           ],
@@ -29,7 +30,7 @@ class WorldConst
       },
 
       // *** low-class, low population - outskirts and suburbs
-      AREA_CITY_LOW => { 
+      AREA_CITY_LOW => {
         id: AREA_CITY_LOW,
         type: 'city',
         name: 'Low-density city area',
@@ -43,6 +44,7 @@ class WorldConst
         lawResponceTime: 10,
         lawResponceAmount: 2,
         lawResponceEnabled: true,
+        isHighRisk: false,
         ai: [
           'dog' => 20,
           'civilian' => 75,
@@ -54,8 +56,8 @@ class WorldConst
       },
 
       // *** mid-class, mid population - residential districts
-      AREA_CITY_MEDIUM => { 
-        id: AREA_CITY_MEDIUM, 
+      AREA_CITY_MEDIUM => {
+        id: AREA_CITY_MEDIUM,
         type: 'city',
         name: 'Medium-density city area',
         width: 100,
@@ -68,6 +70,7 @@ class WorldConst
         lawResponceTime: 5,
         lawResponceAmount: 2,
         lawResponceEnabled: true,
+        isHighRisk: false,
         ai: [
           'dog' => 15,
           'civilian' => 75,
@@ -80,7 +83,7 @@ class WorldConst
 
       // *** high-class, high population - downtown and commercial district
       AREA_CITY_HIGH => {
-        id: AREA_CITY_HIGH, 
+        id: AREA_CITY_HIGH,
         type: 'city',
         name: 'High-density city area',
         width: 100,
@@ -93,6 +96,7 @@ class WorldConst
         lawResponceTime: 3,
         lawResponceAmount: 3,
         lawResponceEnabled: true,
+        isHighRisk: true,
         ai: [
           'dog' => 5,
           'civilian' => 70,
@@ -104,7 +108,7 @@ class WorldConst
       },
 
       // *** military base
-      AREA_MILITARY_BASE => { 
+      AREA_MILITARY_BASE => {
         id: AREA_MILITARY_BASE,
         type: 'militaryBase',
         name: 'Military base',
@@ -118,6 +122,7 @@ class WorldConst
         lawResponceTime: 0,
         lawResponceAmount: 0,
         lawResponceEnabled: false,
+        isHighRisk: true,
         ai: [
           'soldier' => 100,
           ],
@@ -127,7 +132,7 @@ class WorldConst
       },
 
       // *** facility
-      AREA_FACILITY => { 
+      AREA_FACILITY => {
         id: AREA_FACILITY,
         type: 'facility',
         name: 'Facility',
@@ -141,6 +146,7 @@ class WorldConst
         lawResponceTime: 5,
         lawResponceAmount: 2,
         lawResponceEnabled: true,
+        isHighRisk: true,
         ai: [
           'civilian' => 90,
           'security' => 10
@@ -165,6 +171,7 @@ class WorldConst
         lawResponceTime: 10,
         lawResponceAmount: 4,
         lawResponceEnabled: true,
+        isHighRisk: false,
         ai: new Map(),
         objects: []
       },
@@ -206,7 +213,7 @@ class WorldConst
 
 typedef AreaInfo = {
   var id: _AreaType; // area type id
-  var type: String; // area generator type 
+  var type: String; // area generator type
   var name: String; // area type name
   var width: Int; // area base width
   var height: Int; // area base height
@@ -218,8 +225,9 @@ typedef AreaInfo = {
   var lawResponceTime: Int; // number of turns until backup shows up
   var lawResponceAmount: Int; // amount of backup ai that shows up
   var lawResponceEnabled: Bool; // law responce enabled?
+  var isHighRisk: Bool; // is this area type considered high risk?
   var ai: Map<String, Int>; // ai spawn probability
-  var objects: Array<{ id: String, amount: Int }>; // objects spawn info 
+  var objects: Array<{ id: String, amount: Int }>; // objects spawn info
 };
 
 // region info class
