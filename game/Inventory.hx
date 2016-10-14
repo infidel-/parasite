@@ -183,10 +183,7 @@ class Inventory
           if (e.isHidden)
             continue;
 
-          if (!e.npcSomethingKnown())
-            continue;
-
-          if (e.npcFullyKnown())
+          if (!e.npcCanResearch())
             continue;
 
           allKnown = false;

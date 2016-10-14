@@ -274,10 +274,18 @@ class ConsoleGame
             }
 
           // stage 2: civ host, microhabitat, timeline open
-          else if (stage >= 2)
+          else if (stage == 2)
             {
               stage1();
               stage2();
+            }
+
+          // stage 2.1: 2 + computer
+          else if (stage == 21)
+            {
+              stage1();
+              stage2();
+              stage21();
             }
         }
 
@@ -323,7 +331,7 @@ class ConsoleGame
     }
 
 
-// stage 2: stage 1 + microhabitat, camo layer, timeline open
+// stage 2: stage 1 + microhabitat, timeline open
   function stage2()
     {
       game.log('stage 2');
@@ -336,13 +344,6 @@ class ConsoleGame
       // habitat
       game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
       game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
-
-      // camo
-      game.goals.receive(GOAL_EVOLVE_CAMO);
-      game.goals.complete(GOAL_EVOLVE_CAMO);
-      game.player.evolutionManager.addImprov(IMP_CAMO_LAYER, 2);
-      game.player.host.organs.action('set.IMP_CAMO_LAYER');
-      game.player.host.organs.debugCompleteCurrent();
 
       // learn and enter sewers
       game.playerArea.debugLearnObject('sewer_hatch');
@@ -357,4 +358,29 @@ class ConsoleGame
       });
 //      game.goals.complete(GOAL_CREATE_HABITAT);
     }
+
+
+// stage 2.1: stage 2 + camo layer, computer
+  function stage21()
+    {
+      // camo
+      game.goals.receive(GOAL_EVOLVE_CAMO);
+      game.goals.complete(GOAL_EVOLVE_CAMO);
+      game.player.evolutionManager.addImprov(IMP_CAMO_LAYER, 2);
+      game.player.host.organs.action('set.IMP_CAMO_LAYER');
+      game.player.host.organs.debugCompleteCurrent();
+
+      // computer and computer use
+      game.player.host.inventory.addID('smartphone');
+      game.player.addKnownItem('smartphone');
+      game.player.host.skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
+      game.player.skills.addID(SKILL_COMPUTER, 30);
+
+      // forward timeline
+      game.goals.receive(GOAL_LEARN_CLUE);
+      game.timeline.learnClue(game.timeline.getStartEvent(), true);
+      game.timeline.getStartEvent().learnNPC();
+      game.goals.complete(GOAL_LEARN_NPC);
+    }
 }
+

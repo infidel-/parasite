@@ -150,16 +150,16 @@ class HUD
           buf.add(
             game.playerArea.x + ',' + game.playerArea.y + ')' +
 #if mydebug
-            ' A ' + game.area.alertness +
-            ', I ' + game.area.interest +
+            ' A ' + Math.round(game.area.alertness) +
+            ', I ' + Math.round(game.area.interest) +
 #end
             '\nActions: ' + game.playerArea.ap + '\n');
       else if (game.location == LOCATION_REGION)
         buf.add(
           game.playerRegion.x + ',' + game.playerRegion.y + ')' +
 #if mydebug
-            ' A ' + game.playerRegion.currentArea.alertness +
-            ', I ' + game.playerRegion.currentArea.interest +
+            ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
+            ', I ' + Math.round(game.playerRegion.currentArea.interest) +
 #end
           '\n' + game.playerRegion.currentArea.name + '\n');
       buf.add('===\n');

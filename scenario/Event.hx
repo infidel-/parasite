@@ -226,6 +226,28 @@ class Event
     }
 
 
+// can research npcs of this event (have some partially known)
+  public function npcCanResearch(): Bool
+    {
+      for (n in npc)
+        {
+          // nothing is known - cannot research
+          if (!n.nameKnown && !n.jobKnown && !n.areaKnown &&
+              !n.statusKnown)
+            continue;
+
+          // everything is known - cannot research
+          else if (n.nameKnown && n.jobKnown && n.areaKnown &&
+              n.statusKnown)
+            continue;
+
+          return true; // something is known about some npc
+        }
+
+      return false;
+    }
+
+
 // something is known about some note?
   public function notesSomethingKnown(): Bool
     {
