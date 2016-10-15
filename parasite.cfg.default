@@ -1,0 +1,5 @@
+# extended info mode (additional information)
+extendedInfo = 0
+
+# send exceptions to the webserver
+sendExceptions = 1

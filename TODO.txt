@@ -1,7 +1,21 @@
-1) test playthrough of the clue gathering
-2) add stage 3 to debug and test playthrough of the goal completion
+- test playthrough of the clue gathering
+- traits
+  - drug addict (10%)
+    - 2.2 auto-control improv
+- add debug stage 3 (scenario goals)
+- test scenario goals
+- 2.2 biomineralization (habitat energy cell)
+- 2.3 assimilation (host conversion - stop passive energy loss)
+- start work on area interest and conspiracy/antags
+  - should become more active in the scenario goal phase
+? camo layer as a passive knowledge?
 
 
+important message queue for showing multiple important messages in window
+
+unlocked by finding a drug dose on a human (or by selecting path)
+  improv: low-level dopamine control - the control is raised every turn to max
+    active or passive?
 ==
 police radio gives access to radio messages and opens up way to:
 
@@ -10,56 +24,65 @@ lv1 - listen to police/security radio
 lv2 - listen to
 lv3 - listen to cellphone comms
 
-em noise improvement:
-lv1 - civilians cannot call for help in small radius
+em noise/ecm jammer improvement:
+lv1 - civilians and police cannot call for help in small radius
 lv2 - radius+
 lv3 - radius++
 
 1) find police radio/security radio
 2) evolve radio receiver
 3) grow receiver
-==================================
-LATER
-roads on region map leading to facilities
-  faster travel on roads when in car?
-  disallow travel outside of city bounds by foot (no sewers)?
-  disguise skill - allows hiding parasite without using improv
-  disguise allows using public transport and cars
-    public transport and car rental costs money (gained from wallets)
-  how to gain disguise skill?
-  needs disguise kit?
-
-unlocked by finding a drug dose on a human (or by selecting path)
-  improv: low-level dopamine control - the control is raised every turn to max
-    active or passive?
-
+==
 hosts should stop dying at some point:
 - make goal chain for building "host assimilator" in microhabitat
 - Assimilation process: when the host assimilator is active, player can convert hosts and they stop losing energy passively
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
+==
+- "Biomineralization" goal chain (after "habitat" goal chain):
+- GOAL: get "Biomineralization" improvement
+- GOAL: grow "Biomineral base" organ. When this organ finishes, special action "Grow a biomineral" appears.
+- GOAL: grow biomineral. can only be grown in habitat. current host converts into a biomineral on that cell that supplies additional energy to cells around it. biomineral has a lifetime that depends on host stats.
+- while near the biomineral growing organs and evolution is faster
 
-scenes (need forensics)
+make microhabitat knowledge percentage-based. when building new stuff in habitats, the knowledge increases, opening up new possibilities.
+
+- i should probably make some habitat imps that will notify player about detection.
+==================================
+LATER
+
+scenes (sometimes need forensics)
 police station -> forensics expert -> forensics
 ? news (newspapers, mobile)
 books - forensics guide (15%), sherlock holmes (10%)
+
+roads on region map leading to facilities
+  fast travel on roads when in car
+    entering a car
+  disallow travel outside of city bounds by foot (no sewers)?
+  disguise skill - allows hiding parasite without using improv
+  disguise + assimilation allows using public transport and cars
+    public transport and car rental costs money (gained from wallets)
+  how to gain disguise skill?
+  needs disguise kit?
 
 ? rework habitat detection from probability to counter based on interest (counter grows with each turn until it starts rolling chances based on interest)
 game restart
 citygen - smooth out building tiles when they are not wide enough
 what happens on mission failure
-scenario - alien weapons cache, has a chance of spawning (left by yourself)
-mission - infiltration
-mission - research
-goal - save alien
-what if player raises alertness in ship location? i should handle that somehow
-mission - abduction - chance of target being a soldier in a base or vip in facility
-mission completed, what if spaceship is crashed
-add spaceship object to global object map or make easier getObject(id) function or
+scenario work and expansion:
+  - alien weapons cache, has a chance of spawning (left by yourself)
+  - mission - infiltration
+  - mission - research
+  - goal - save alien
+  - what if player raises alertness in ship location? i should handle that somehow
+  - mission - abduction - chance of target being a soldier in a base or vip in facility
+  - mission completed, what if spaceship is crashed
+  - add spaceship object to global object map or make easier getObject(id) function
+  - expand hidden events - opening certain clues will lead to hidden events, that these clues hint on. For ex., ufologists clue:
+    'Independent experts and conspiracy theorists may have some knowledge about the events.'
+    - should open up a hidden event in some way.
 ?inventory actions - r1, l1, d1
 
-expand hidden events - opening certain clues will lead to hidden events, that these clues hint on. For ex., ufologists clue:
-'Independent experts and conspiracy theorists may have some knowledge about the events.'
-should open up a hidden event in some way.
 
 ==
 CONSOLE CHEATSHEET:
@@ -87,27 +110,12 @@ CONSOLE CHEATSHEET:
 ;lia - learn all improvements at level 3
 ;lia1 - learn all improvements at level 1
 
-
-MASTERPLAN
-============
-area alertness - block normal area travel on high alertness
-world generation
-human biology knowledge
-canine biology knowledge
-city and world travel
-
-LATER
 =====
+area alertness - block normal area travel on high alertness
+? world generation
+? world travel
 ?? more knowledges
 make each AI type more unique
-==
-- "Biomineralization" goal chain (after "habitat" goal chain):
-- GOAL: get "Biomineralization" improvement
-- GOAL: grow "Biomineral base" organ. When this organ finishes, special action "Grow a biomineral" appears.
-- GOAL: grow biomineral. can only be grown in habitat. current host converts into a biomineral on that cell that supplies additional energy to cells around it. biomineral has a lifetime that depends on host stats.
-- while near the biomineral growing organs and evolution is faster
-
-make microhabitat knowledge percentage-based. when building new stuff in habitats, the knowledge increases, opening up new possibilities.
 ==
 since use computer is max 30% (rarer 50%), search is very slow
   "use computer" goal completion should open next optional goal:
@@ -125,16 +133,19 @@ since use computer is max 30% (rarer 50%), search is very slow
     pressing "." will repeat previous "use" command
 ==
 SCENARIO: CULT
+
 sanity stat for the followers (they can get totally mad in the process)
 high-level control path improv (research dopamine) that puts a euphoria-inducing biodrone on the host
   humans stay as loyal but free agents that can do the tasks set by the player
 build a cult of followers
 ==
 SCENARIO: SHADOW OUT OF TIME, GREAT RACE/PNAKOTUS
+
 raise knowledge human society to max and build mind-swap device
 ? need to tie in with the original idea
 ==
 AREA INTEREST, CONSPIRACY
+
 brain probing some event NPCs (marked with flags) should reveal the existence of the conspiracy (player antags)
   this is a special event that opens up the area interest indicator
   it might show when the habitat was compromised?
@@ -152,13 +163,10 @@ tooltips in area and region mode (type, habitat, clues, events, alertness, etc)
 organ actions -> OrganInfo.actionXXX
 inventory actions -> ItemInfo.actionXXX
 move Const.PLAYER_ACTION into proper classes?
-ecm jammer improvement
-host perks - for ex, fat people have more energy overall, so they are more desirable
+host traits - for ex, fat people have more energy overall, so they are more desirable
 some evolution can only happen if player has access to prerequisites, for example, stands on top of some object
 more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars
-fast travel in cars in region mode - entering the car will turn it on
-global suspicion and what comes with its growth (no global suspicion?)
 region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
 swat units have gas masks and armor
@@ -170,7 +178,6 @@ parasite smell + dogs + reducing smell intensivity imp
 organ damage - organ must heal itself before it becomes active again
 limit region access (until some learning flag triggers, initial progression)
 - ?? make tilemap screen-sized and repaint with each movement ??
-- i should probably make some habitat imps that will notify player about detection.
 use debug player stages as basis for a save system (allow saves only on some critical game events)
 
 

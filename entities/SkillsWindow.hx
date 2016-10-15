@@ -3,6 +3,7 @@
 package entities;
 
 import game.Game;
+import const.*;
 
 class SkillsWindow extends TextWindow
 {
@@ -50,7 +51,7 @@ class SkillsWindow extends TextWindow
           if (n == 0)
             buf.add('  --- empty ---\n');
 
-          // host attributes
+          // host attributes and traits
           if (game.player.host.isAttrsKnown)
             {
               buf.add('\nHost attributes\n===\n\n');
@@ -78,6 +79,15 @@ class SkillsWindow extends TextWindow
                 'Increases energy needed to probe brain\n' +
                 'Reduces the efficiency of reinforcing control\n' +
                 '</font>\n');
+
+              // traits
+              buf.add('Host traits\n===\n\n');
+              for (t in game.player.host.traits)
+                {
+                  var info = TraitsConst.getInfo(t);
+                  buf.add(info.name + '\n');
+                  buf.add('<font color=#777777>' + info.note + '</font>\n');
+                }
             }
         }
 

@@ -4,7 +4,7 @@ class Const
 {
   public static var LAYER_MOUSE = 0; // mouse cursor layer - highest
   public static var LAYER_UI = 1; // ui layer
-  public static var LAYER_EFFECT = 5; // visual effects layer 
+  public static var LAYER_EFFECT = 5; // visual effects layer
   public static var LAYER_AI = 10; // player, enemies, etc layer
   public static var LAYER_OBJECT = 20; // ground layer - bodies, items
   public static var LAYER_TILES = 30; // tilemap layer
@@ -13,8 +13,8 @@ class Const
   public static var TILE_HEIGHT = 32;
 
   // text color strings
-  public static var TEXT_COLORS: Map<_TextColor, String> = 
-    [ 
+  public static var TEXT_COLORS: Map<_TextColor, String> =
+    [
       COLOR_DEFAULT => '#FFFFFF',
       COLOR_DEBUG => '#555555',
       COLOR_ALERT => '#FF0000',
@@ -91,7 +91,7 @@ class Const
   public static var TILE_REGION_CITY_HIGH = 3;
   public static var TILE_REGION_MILITARY_BASE = 4;
   public static var TILE_REGION_FACILITY = 5;
-  
+
   public static var TILE_CITY_ROW = 16;
   public static var TILE_ROAD = TILE_CITY_ROW + 0;
   public static var TILE_WALKWAY = TILE_CITY_ROW + 1;
@@ -105,7 +105,7 @@ class Const
     true, true, true, true, true, true, false, false,
     true, true, true, true, false, false, false, false,
     ];
-  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree', 
+  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree',
     'wall' ];
   public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
 //  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
@@ -116,7 +116,7 @@ class Const
   public static var dirx = [ -1, -1, -1, 0, 0, 1, 1, 1 ];
   public static var diry = [ -1, 0, 1, -1, 1, -1, 0, 1 ];
 
-  // common player actions 
+  // common player actions
   public static var PLAYER_ACTIONS: Map<String, _PlayerAction> =
     [
       // area
@@ -156,24 +156,36 @@ class Const
     }
 
 
-// log all object string and int properties 
+// log all object string and int properties
   public static inline function debugObject(o: Dynamic)
     {
       var list: Array<Dynamic> = [ Inventory, Skills, Organs, Effects ];
+      var classes: Array<String> = [ 'String' ];
       var fields = Reflect.fields(o);
       fields.sort(sortFunc);
-      for (f in fields) 
+      for (f in fields)
         {
           var ff = Reflect.field(o, f);
           var className = Type.getClassName(Type.getClass(ff));
-///          if (f == 'timers')
-//            trace(f + ' ' + Type.getClassName(Type.getClass(ff)));
-//          if (!Reflect.isFunction(ff) && 
-//              (!Reflect.isObject(ff) || Type.getClass(ff) == String || f == 'name'))
-          if (!Reflect.isFunction(ff) && 
-              (!Reflect.isObject(ff) || className == null || className == 'String')) 
+
+          // library classes and anonymous objects
+          if (!Reflect.isFunction(ff) &&
+              (!Reflect.isObject(ff) ||
+               className == null || Lambda.has(classes, className)))
             Sys.println(f + ': ' + ff);
 
+          // lists
+          else if (className == 'List')
+            {
+              var l: List<Dynamic> = untyped ff;
+              var tmp = [];
+              for (x in l)
+                tmp.push(x);
+
+              Sys.println(f + ': ' + tmp.join(', '));
+            }
+
+          // ingame classes
           else if (Lambda.has(list, Type.getClass(ff)))
             Sys.println(f + ': ' + ff);
         }

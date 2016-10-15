@@ -32,6 +32,12 @@ class HumanAI extends AI
         }
       inventory.addID('mobilePhone');
 
+      // common traits for all humans
+      if (Std.random(100) < 10)
+        {
+          addTrait(TRAIT_DRUG_ADDICT);
+        }
+
       derivedStats();
     }
 }

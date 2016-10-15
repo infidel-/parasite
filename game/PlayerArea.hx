@@ -579,7 +579,6 @@ class PlayerArea
       game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
       // skills and knowledge
-//      var info = EvolutionConst.getInfo(IMP_BRAIN_PROBE);
       var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
       if (game.player.vars.skillsEnabled)
         {
@@ -587,11 +586,15 @@ class PlayerArea
           if (params.hostSkillsMod > 0)
             accessSkillsAction(params.hostSkillsMod);
 
-          // can access attributes on level 3
+          // can access attributes and traits on level 3
           if (params.hostAttrsMod > 0 && !player.host.isAttrsKnown)
             {
               player.host.isAttrsKnown = true;
               game.log('You have learned the parameters of this host.');
+
+              // drug addict goal chain
+              if (player.host.hasTrait(TRAIT_DRUG_ADDICT))
+                game.goals.receive(GOAL_EVOLVE_DOPAMINE);
             }
 
           // human society knowledge

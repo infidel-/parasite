@@ -6,8 +6,7 @@ import entities.AIEntity;
 import _AIState;
 import objects.*;
 import game.*;
-import const.EvolutionConst;
-import const.ItemsConst;
+import const.*;
 import _Math;
 
 class AI
@@ -82,6 +81,7 @@ class AI
   public var skills: Skills; // AI skills
   public var organs: Organs; // AI organs
   public var effects: Effects; // AI effects
+  public var traits: List<_AITraitType>;
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
@@ -152,6 +152,24 @@ class AI
       skills = new Skills(game, false);
       organs = new Organs(game, this);
       effects = new Effects(game, this);
+      traits = new List();
+    }
+
+
+// does this AI have this trait?
+  public inline function hasTrait(t: _AITraitType): Bool
+    {
+      return (Lambda.has(traits, t));
+    }
+
+
+// add trait to this AI
+  public function addTrait(t: _AITraitType)
+    {
+      if (hasTrait(t))
+        return;
+
+      traits.add(t);
     }
 
 

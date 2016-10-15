@@ -579,7 +579,7 @@ class EvolutionConst
             hostEnergyBase: 10,
             hostHealthBase: 1,
             hostHealthMod: 1,
-            hostSkillsMod: 0.25,  // can access skills from level 2
+            hostSkillsMod: 0.25, // can access skills from level 2
             hostAttrsMod: 0,
           },
           {
@@ -588,7 +588,7 @@ class EvolutionConst
             hostHealthBase: 0,
             hostHealthMod: 1,
             hostSkillsMod: 0.5,
-            hostAttrsMod: 1,
+            hostAttrsMod: 1, // can access attributes and traits from level 3
           },
           ],
         action: {
@@ -621,7 +621,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_CAMO_LAYER,
         name: 'Camouflage layer',
-        note: 'Allows to cover parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
+        note: 'Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         noteFunc: function (l)
           {
             return "AI alertness multiplier: " + l.alertness;

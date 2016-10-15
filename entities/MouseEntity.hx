@@ -127,8 +127,8 @@ class MouseEntity extends Entity
               trace('(' + x + ',' + y + ') ' +
                 game.area.getCellType(x, y) + ' ' +
                 game.area.getCellTypeString(x, y) +
-                ' player vis: ' + 
-                game.area.isVisible(game.playerArea.x, 
+                ' player vis: ' +
+                game.area.isVisible(game.playerArea.x,
                   game.playerArea.y, x, y, true));
               if (game.playerArea.x == x && game.playerArea.y == y)
                 Const.debugObject(game.player);
@@ -140,7 +140,7 @@ class MouseEntity extends Entity
                 for (n in p)
                   trace(n.x + ',' + n.y);
               else trace('no path');
-*/              
+*/
             }
 
           // default: attack
@@ -166,7 +166,7 @@ class MouseEntity extends Entity
         {
           var x = Std.int(game.scene.mouseX / Const.TILE_WIDTH);
           var y = Std.int(game.scene.mouseY / Const.TILE_HEIGHT);
-          var reg = game.world.get(0);     
+          var reg = game.world.get(0);
           var area = reg.getXY(x, y);
           game.scene.region.updateIconsArea(x, y);
         }
