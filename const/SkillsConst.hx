@@ -76,12 +76,20 @@ class SkillsConst
     },
 
     {
+      id: KNOW_DOPAMINE,
+      name: 'dopamine regulation',
+      defaultLevel: 0,
+      isKnowledge: true,
+      isBool: true
+    },
+
+    {
       id: KNOW_HABITAT,
       name: 'microhabitat',
       defaultLevel: 0,
       isKnowledge: true,
       isBool: true
-    }
+    },
     ];
 }
 

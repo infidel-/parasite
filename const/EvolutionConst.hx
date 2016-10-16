@@ -658,6 +658,31 @@ class EvolutionConst
 
       { // ***
         path: PATH_SPECIAL,
+        id: IMP_DOPAMINE,
+        name: 'Dopamine regulation',
+        note: 'Removes the need to reinforce control of the host. (fluff)',
+        levelNotes: [
+          '(fluff)',
+          '(fluff)',
+          '(fluff)',
+          '(fluff)',
+          ],
+        levelParams: [
+          {},
+          {},
+          {},
+          {},
+          ],
+        onUpgrade: function(level, game, player)
+          {
+            // complete goals
+            if (level == 1)
+              game.goals.complete(GOAL_EVOLVE_DOPAMINE);
+          }
+      },
+
+      { // ***
+        path: PATH_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
         note: 'Gives the player ability to build microhabitats (todo fluff)',

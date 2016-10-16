@@ -1,7 +1,4 @@
 - test playthrough of the clue gathering
-- traits
-  - drug addict (10%)
-    - 2.2 auto-control improv
 - add debug stage 3 (scenario goals)
 - test scenario goals
 - 2.2 biomineralization (habitat energy cell)
@@ -11,11 +8,8 @@
 ? camo layer as a passive knowledge?
 
 
+cops - stunner (stun effect severely reduces host control every turn)
 important message queue for showing multiple important messages in window
-
-unlocked by finding a drug dose on a human (or by selecting path)
-  improv: low-level dopamine control - the control is raised every turn to max
-    active or passive?
 ==
 police radio gives access to radio messages and opens up way to:
 
@@ -171,7 +165,7 @@ region mode: do not despawn area until player moves?
 swat + police calling backup brings swat when alertness stage is >= 1
 swat units have gas masks and armor
 armor - vest + helmet
-stunner
+military stun rifles for the blackops with greater effect
 walkable city sewers (should i?)
 electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp

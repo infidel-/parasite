@@ -280,7 +280,7 @@ class ConsoleGame
               stage2();
             }
 
-          // stage 2.1: 2 + computer
+          // stage 2.1: 2 + camo, dopamine, computer
           else if (stage == 21)
             {
               stage1();
@@ -360,7 +360,7 @@ class ConsoleGame
     }
 
 
-// stage 2.1: stage 2 + camo layer, computer
+// stage 2.1: stage 2 + camo, dopamine, computer
   function stage21()
     {
       // camo
@@ -369,6 +369,11 @@ class ConsoleGame
       game.player.evolutionManager.addImprov(IMP_CAMO_LAYER, 2);
       game.player.host.organs.action('set.IMP_CAMO_LAYER');
       game.player.host.organs.debugCompleteCurrent();
+
+      // dopamine
+      game.goals.receive(GOAL_EVOLVE_DOPAMINE);
+      game.goals.complete(GOAL_EVOLVE_DOPAMINE);
+      game.player.evolutionManager.addImprov(IMP_DOPAMINE, 1);
 
       // computer and computer use
       game.player.host.inventory.addID('smartphone');

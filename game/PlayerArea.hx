@@ -58,6 +58,11 @@ class PlayerArea
           // control grows while in habitat
           if (game.area.isHabitat)
             player.hostControl++;
+
+          // also when player has dopamine control
+          else if (player.skills.has(KNOW_DOPAMINE))
+            player.hostControl += 5;
+
           else player.hostControl--;
 
           if (player.hostControl <= 0)
@@ -124,8 +129,6 @@ class PlayerArea
         {
           if (player.hostControl < 100)
             addActionToList(tmp, 'reinforceControl');
-//          if (player.evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
-//            addActionToList(tmp, 'probeBrain');
 
           // organ-based actions
           player.host.organs.addActions(tmp);

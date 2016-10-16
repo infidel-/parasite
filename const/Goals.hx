@@ -67,6 +67,20 @@ class Goals
       note: 'You need to grow the camouflage layer body feature.',
       },
 
+    // ========================= dopamine branch
+
+    GOAL_EVOLVE_DOPAMINE => {
+      id: GOAL_EVOLVE_DOPAMINE,
+      name: 'Evolve dopamine regulation',
+      note: 'You need to evolve the dopamine regulation improvement.',
+      messageReceive: 'The addiction to chemicals of this host can be useful to me.',
+      onReceive: function (game, player) {
+        player.evolutionManager.addImprov(IMP_DOPAMINE);
+        },
+      onComplete: function (game, player) {
+        player.skills.addID(KNOW_DOPAMINE, 100);
+        }
+      },
 
     // ========================= habitat branch
 
