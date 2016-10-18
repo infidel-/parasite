@@ -34,6 +34,7 @@ class ItemsConst
           maxDamage: 3,
           verb1: 'punch',
           verb2: 'punches',
+          type: WEAPON_BLUNT,
         }
     };
 
@@ -54,6 +55,23 @@ class ItemsConst
           maxDamage: 6,
           verb1: 'hit',
           verb2: 'hits',
+          type: WEAPON_BLUNT,
+        }
+    },
+    {
+      id: 'stunner',
+      name: 'stunner',
+      type: 'weapon',
+      unknown: 'hard elongated object',
+      weapon:
+        {
+          isRanged: false,
+          skill: SKILL_FISTS,
+          minDamage: 2, // rounds of stun effect instead of damage
+          maxDamage: 8,
+          verb1: 'stun',
+          verb2: 'stuns',
+          type: WEAPON_STUN,
         }
     },
     {
@@ -69,6 +87,7 @@ class ItemsConst
           maxDamage: 10,
           verb1: 'shoot',
           verb2: 'shoots',
+          type: WEAPON_KINETIC,
         }
     },
     {
@@ -84,6 +103,7 @@ class ItemsConst
           maxDamage: 12,
           verb1: 'shoot',
           verb2: 'shoots',
+          type: WEAPON_KINETIC,
         }
     },
     {
@@ -99,6 +119,7 @@ class ItemsConst
           maxDamage: 24,
           verb1: 'shoot',
           verb2: 'shoots',
+          type: WEAPON_KINETIC,
         }
     },
 
@@ -143,19 +164,19 @@ class ItemsConst
     {
       id: 'money',
       name: 'money',
-      type: 'money',
+      type: 'junk',
       unknown: 'a pack of soft thin objects',
     },
     {
       id: 'wallet',
       name: 'wallet',
-      type: 'wallet',
+      type: 'junk',
       unknown: 'small leather object',
     },
     {
       id: 'cigarettes',
       name: 'cigarettes',
-      type: 'cigarettes',
+      type: 'junk',
       unknown: 'small container full of thin cylinders',
     },
     ];

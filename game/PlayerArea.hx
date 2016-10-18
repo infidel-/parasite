@@ -397,30 +397,31 @@ class PlayerArea
       if (item == null)
         info = ItemsConst.fists;
       else info = item.info;
+      var weapon = info.weapon;
 
       // check for distance on melee
-      if (!info.weapon.isRanged && !ai.isNear(x, y))
+      if (!weapon.isRanged && !ai.isNear(x, y))
         return;
 
       // propagate shooting/melee event
-      game.managerArea.onAttack(x, y, info.weapon.isRanged);
+      game.managerArea.onAttack(x, y, weapon.isRanged);
 
       ai.onAttack(); // attack event
 
       // weapon skill level (ai + parasite bonus)
       var roll = _Math.skill({
-        id: info.weapon.skill,
-        level: player.host.skills.getLevel(info.weapon.skill),
+        id: weapon.skill,
+        level: player.host.skills.getLevel(weapon.skill),
         mods: [{
           name: '0.5x parasite',
-          val: 0.5 * player.skills.getLevel(info.weapon.skill)
+          val: 0.5 * player.skills.getLevel(weapon.skill)
           }]
         });
 
       // roll skill
       if (!roll)
         {
-          log('Your host tries to ' + info.weapon.verb1 + ' ' +
+          log('Your host tries to ' + weapon.verb1 + ' ' +
             ai.getName() + ', but misses.');
 
           // set alerted state
@@ -432,25 +433,56 @@ class PlayerArea
           return;
         }
 
-      // damage
-      var mods = null;
-      if (!info.weapon.isRanged) // all melee weapons have damage bonus
-        mods = [{
-          name: 'melee 0.5xSTR',
-          min: 0,
-          max: Std.int(player.host.strength / 2)
-        }];
-      var damage = _Math.damage({
-        name: 'player->AI',
-        min: info.weapon.minDamage,
-        max: info.weapon.maxDamage,
-        mods: mods
-      });
+      // stun damage
+      if (weapon.type == WEAPON_STUN)
+        {
+          var roll = _Math.damage({
+            name: 'STUN player->AI',
+            min: weapon.minDamage,
+            max: weapon.maxDamage,
+          });
+          var resist = _Math.opposingAttr(ai.constitution, roll,
+            'con/stun');
+          if (resist)
+            roll = Std.int(roll / 2);
+          if (game.config.extendedInfo)
+            game.info('stun for ' + roll + ' rounds');
 
-      log('Your host ' + info.weapon.verb2 + ' ' + ai.getName() +
-        ' for ' + damage + ' damage.');
+          log('Your host ' + weapon.verb2 + ' ' + ai.getName() +
+            ' for ' + roll + ' rounds.');
 
-      ai.onDamage(damage); // damage event
+          ai.onEffect({
+            type: EFFECT_PARALYSIS,
+            points: roll,
+            isTimer: true
+            });
+          ai.onDamage(0); // damage event (for alert)
+        }
+
+      // normal damage
+      else
+        {
+          var mods = null;
+          // all melee weapons have damage bonus
+          if (!weapon.isRanged)
+            mods = [{
+              name: 'melee 0.5xSTR',
+              min: 0,
+              max: Std.int(player.host.strength / 2)
+            }];
+          var damage = _Math.damage({
+            name: 'player->AI',
+            min: weapon.minDamage,
+            max: weapon.maxDamage,
+            mods: mods
+          });
+
+          log('Your host ' + weapon.verb2 + ' ' + ai.getName() +
+            ' for ' + damage + ' damage.');
+
+          ai.onDamage(damage); // damage event
+        }
+
       postAction(); // post-action call
     }
 

@@ -8,7 +8,6 @@
 ? camo layer as a passive knowledge?
 
 
-cops - stunner (stun effect severely reduces host control every turn)
 important message queue for showing multiple important messages in window
 ==
 police radio gives access to radio messages and opens up way to:
@@ -136,6 +135,7 @@ build a cult of followers
 SCENARIO: SHADOW OUT OF TIME, GREAT RACE/PNAKOTUS
 
 raise knowledge human society to max and build mind-swap device
+raising knowledge requires special evolution imp - memory map
 ? need to tie in with the original idea
 ==
 AREA INTEREST, CONSPIRACY

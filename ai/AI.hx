@@ -459,9 +459,10 @@ class AI
       if (item == null)
         info = ItemsConst.fists;
       else info = item.info;
+      var weapon = info.weapon;
 
       // check for distance on melee
-      if (!info.weapon.isRanged && !isNear(game.playerArea.x, game.playerArea.y))
+      if (!weapon.isRanged && !isNear(game.playerArea.x, game.playerArea.y))
         {
           logicMoveTo(game.playerArea.x, game.playerArea.y);
           return;
@@ -480,54 +481,101 @@ class AI
             }
         }
 
-      // weapon skill level
-//      var skillLevel = skills.getLevel(info.weapon.skill);
-
       // weapon skill level (ai + parasite bonus)
       var roll = _Math.skill({
-        id: info.weapon.skill,
-        level: skills.getLevel(info.weapon.skill),
+        id: weapon.skill,
+        level: skills.getLevel(weapon.skill),
         });
 
       // roll skill
-//      if (Std.random(100) > skillLevel)
       if (!roll)
         {
-          log('tries to ' + info.weapon.verb1 + ' you, but misses.');
+          log('tries to ' + weapon.verb1 + ' you, but misses.');
           return;
         }
 
-      var mods: Array<_DamageBonus> = [];
-      if (!info.weapon.isRanged) // all melee weapons have damage bonus
-        mods.push({
-          name: 'melee 0.5xSTR',
-          min: 0,
-          max: Std.int(strength / 2)
-        });
-
-      // protective cover
-      if (game.player.state == PLR_STATE_HOST)
+      // stun damage
+      // when player has a host, stuns the host
+      // when player is a parasite, just do regular damage
+      if (weapon.type == WEAPON_STUN && game.player.state == PLR_STATE_HOST)
         {
-          var o = game.player.host.organs.get(IMP_PROT_COVER);
-          if (o != null)
-            mods.push({
-              name: 'protective cover',
-              val: - Std.int(o.params.armor)
+          var mods: Array<_DamageBonus> = [];
+
+          // protective cover
+          if (game.player.state == PLR_STATE_HOST)
+            {
+              var o = game.player.host.organs.get(IMP_PROT_COVER);
+              if (o != null)
+                mods.push({
+                  name: 'protective cover',
+                  val: - Std.int(o.params.armor)
+                });
+            }
+
+          var roll = _Math.damage({
+            name: 'STUN AI->player',
+            min: weapon.minDamage,
+            max: weapon.maxDamage,
+            mods: mods
+          });
+
+          var resist = _Math.opposingAttr(
+            game.player.host.constitution, roll, 'con/stun');
+          if (resist)
+            roll = Std.int(roll / 2);
+          if (game.config.extendedInfo)
+            game.info('stun for ' + roll + ' rounds, -' + (roll * 2) +
+              ' control.');
+          game.player.hostControl -= roll * 2;
+
+          log(weapon.verb2 + ' your host for ' + roll +
+            " rounds. You're losing control.");
+
+          game.player.host.onEffect({
+            type: EFFECT_PARALYSIS,
+            points: roll,
+            isTimer: true
             });
+
+          game.playerArea.onDamage(0); // on damage event
         }
 
-      var damage = _Math.damage({
-        name: 'AI->player',
-        min: info.weapon.minDamage,
-        max: info.weapon.maxDamage,
-        mods: mods
-      });
+      // normal damage
+      else
+        {
+          var mods: Array<_DamageBonus> = [];
+          // all melee weapons have damage bonus
+          if (!weapon.isRanged && weapon.type == WEAPON_BLUNT)
+            mods.push({
+              name: 'melee 0.5xSTR',
+              min: 0,
+              max: Std.int(strength / 2)
+            });
 
-      log(info.weapon.verb2 + ' ' +
-        (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
-        ' for ' + damage + ' damage.');
+          // protective cover
+          if (game.player.state == PLR_STATE_HOST)
+            {
+              var o = game.player.host.organs.get(IMP_PROT_COVER);
+              if (o != null)
+                mods.push({
+                  name: 'protective cover',
+                  val: - Std.int(o.params.armor)
+                });
+            }
 
-      game.playerArea.onDamage(damage); // on damage event
+          var damage = _Math.damage({
+            name: 'AI->player',
+            min: weapon.minDamage,
+            max: weapon.maxDamage,
+            mods: mods
+          });
+
+          log(weapon.verb2 + ' ' +
+            (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
+            ' for ' + damage + ' damage.');
+
+          game.playerArea.onDamage(damage); // on damage event
+        }
     }
 
 

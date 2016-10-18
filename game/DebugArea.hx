@@ -45,6 +45,8 @@ class DebugArea
               // give weapon
               ai.inventory.addID('pistol');
               ai.skills.addID(SKILL_PISTOL, 25 + Std.random(25));
+              ai.inventory.addID('stunner');
+              ai.skills.addID(SKILL_FISTS, 50 + Std.random(25));
         //      ai.organs.addID(IMP_CAMO_LAYER);
         //      ai.organs.addID(IMP_DECAY_ACCEL);
 
@@ -175,8 +177,12 @@ class DebugArea
             {
               var ai = new PoliceAI(game, game.playerArea.x, game.playerArea.y);
               ai.inventory.clear();
+/*
               ai.inventory.addID('baton');
               ai.skills.addID(SKILL_BATON, 50 + Std.random(25));
+*/
+              ai.inventory.addID('stunner');
+              ai.skills.addID(SKILL_FISTS, 50 + Std.random(25));
               game.area.addAI(ai);
             }
         },

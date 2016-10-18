@@ -18,6 +18,7 @@ typedef _ItemInfo =
     var maxDamage: Int; // max weapon damage
     var verb1: String; // X tries to $verb1 you; but misses.
     var verb2: String; // X $verb2 you for Y damage.
+    var type: _WeaponType; // weapon damage type
     };
 
   @:optional var areaObjectClass: Dynamic; // area object class

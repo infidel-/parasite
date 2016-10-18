@@ -38,8 +38,21 @@ class PoliceAI extends HumanAI
           ]
         ];
       isAggressive = true;
-      inventory.addID('baton');
-      skills.addID(SKILL_BATON, 50 + Std.random(25));
+
+      // chance of having stunner
+      var ch = 20;
+      if (game.area.info.isHighRisk)
+        ch = 35;
+      if (Std.random(100) < ch)
+        {
+          inventory.addID('stunner');
+          skills.addID(SKILL_FISTS, 50 + Std.random(25));
+        }
+      else
+        {
+          inventory.addID('baton');
+          skills.addID(SKILL_BATON, 50 + Std.random(25));
+        }
 
       isBackup = false;
       isBackupCalled = false;
