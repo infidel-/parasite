@@ -150,6 +150,6 @@ class AreaObject
 
   public function toString(): String
     {
-      return id + ' (' + x + ',' + y + ') t:' + type;
+      return id + ' (' + x + ',' + y + ') t:' + type + ' n:' + name;
     }
 }

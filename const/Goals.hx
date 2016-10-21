@@ -122,6 +122,28 @@ class Goals
       name: 'Create a new habitat',
       note: 'You need to create a microhabitat.',
       messageComplete: 'My microhabitat is complete. It allows me some degree of calm and safety.',
+      onComplete: function (game, player) {
+        player.evolutionManager.addImprov(IMP_BIOMINERAL);
+        game.goals.receive(GOAL_PUT_BIOMINERAL);
+        }
+      },
+
+     GOAL_PUT_BIOMINERAL => {
+      id: GOAL_PUT_BIOMINERAL,
+      name: 'Construct biomineral formation',
+      note: 'You need to evolve, grow and construct a biomineral formation. It can only be constructed in a habitat.',
+      messageReceive: 'I can improve it further. But I will need energy for that.',
+      messageComplete: 'Ah, yes. I can feel the energy surge. A little more and I can begin the assimilation process.',
+      onComplete: function (game, player) {
+        game.goals.receive(GOAL_PUT_ASSIMILATION);
+        }
+      },
+
+     GOAL_PUT_ASSIMILATION => {
+      id: GOAL_PUT_ASSIMILATION,
+      name: 'Construct assimilation cavity',
+      note: 'You need to evolve, grow and construct the assimilation cavity. You can only construct it in a habitat.',
+      messageComplete: 'Finally. I can begin the host assimilation process.',
       },
 
     // ========================= main branch

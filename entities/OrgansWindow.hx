@@ -26,7 +26,7 @@ class OrgansWindow extends TextWindow
 
           var organInfo = imp.info.organ;
 
-          // organ already completed 
+          // organ already completed
           if (game.player.host.organs.getActive(imp.info.id) != null)
             continue;
 
@@ -42,11 +42,14 @@ class OrgansWindow extends TextWindow
           buf.add(' (' + organInfo.gp + ' gp) (');
           var gpLeft = organInfo.gp - currentGP;
           buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
-          buf.add(" turns)\n");
+          buf.add(" turns)");
 
           buf.add("\n<font color='#5ebee5'>" + organInfo.note + '</font>\n');
-          buf.add("<font color='#4cd47b'>" +
-            imp.info.levelNotes[imp.level] + '</font>\n');
+          var levelNote = imp.info.levelNotes[imp.level];
+          if (levelNote.indexOf('fluff') < 0 &&
+              levelNote.indexOf('todo') < 0)
+            buf.add("<font color='#4cd47b'>" +
+              imp.info.levelNotes[imp.level] + '</font>\n');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
               imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');

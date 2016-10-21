@@ -1,11 +1,10 @@
 - test playthrough of the clue gathering
-- add debug stage 3 (scenario goals)
-- test scenario goals
 - 2.2 biomineralization (habitat energy cell)
 - 2.3 assimilation (host conversion - stop passive energy loss)
+- add debug stage 3 (scenario goals)
+- test scenario goals
 - start work on area interest and conspiracy/antags
   - should become more active in the scenario goal phase
-? camo layer as a passive knowledge?
 
 
 important message queue for showing multiple important messages in window
@@ -36,6 +35,8 @@ hosts should stop dying at some point:
 - GOAL: grow "Biomineral base" organ. When this organ finishes, special action "Grow a biomineral" appears.
 - GOAL: grow biomineral. can only be grown in habitat. current host converts into a biomineral on that cell that supplies additional energy to cells around it. biomineral has a lifetime that depends on host stats.
 - while near the biomineral growing organs and evolution is faster
+==
+do not allow hosts with biomineral and assimilation body features to leave habitat
 
 make microhabitat knowledge percentage-based. when building new stuff in habitats, the knowledge increases, opening up new possibilities.
 
@@ -173,6 +174,8 @@ organ damage - organ must heal itself before it becomes active again
 limit region access (until some learning flag triggers, initial progression)
 - ?? make tilemap screen-sized and repaint with each movement ??
 use debug player stages as basis for a save system (allow saves only on some critical game events)
+move all organ actions into EvolutionConst?
+evolution fluff
 
 
 scene. getSpriteByLayer(layer) - draw lines on this one

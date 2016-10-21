@@ -190,6 +190,8 @@ class PlayerArea
 // action energy availability is checked when the list is formed
   public function action(action: _PlayerAction)
     {
+      var ret = true;
+
       // area object action
       if (action.type == ACTION_OBJECT)
         {
@@ -205,8 +207,8 @@ class PlayerArea
         }
 
       // host organ-based action
-      if (action.type == ACTION_ORGAN)
-        player.host.organs.areaAction(action);
+      else if (action.type == ACTION_ORGAN)
+        ret = player.host.organs.areaAction(action);
 
       // harden grip on the victim
       else if (action.id == 'hardenGrip')
@@ -244,6 +246,10 @@ class PlayerArea
       // try to leave area
       else if (action.id == 'leaveArea')
         leaveAreaAction();
+
+      // action interrupted for some reason
+      if (!ret)
+        return;
 
       // spend energy
       if (action.energy != null)

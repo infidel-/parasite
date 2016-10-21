@@ -295,33 +295,44 @@ class Organs
               (o.info.hasTimeout && o.timeout > 0))
             continue;
 
+          // save link to that organ
+          a.obj = o;
           tmp.add(a);
         }
     }
 
 
 // area action handling
-  public function areaAction(a: _PlayerAction)
+  public function areaAction(a: _PlayerAction): Bool
     {
       if (a.id == 'acidSpit')
-        actionAcidSpit();
+        return actionAcidSpit();
 
       else if (a.id == 'slimeSpit')
-        actionSlimeSpit();
+        return actionSlimeSpit();
 
       else if (a.id == 'paralysisSpit')
-        actionParalysisSpit();
+        return actionParalysisSpit();
 
       else if (a.id == 'panicGas')
-        actionPanicGas();
+        return actionPanicGas();
 
       else if (a.id == 'paralysisGas')
-        actionParalysisGas();
+        return actionParalysisGas();
+
+      else
+        {
+          var o: Organ = a.obj;
+          var ret = o.info.onAction(game, game.player);
+          return ret;
+        }
+
+      return false;
     }
 
 
 // action: acid spit
-  function actionAcidSpit()
+  function actionAcidSpit(): Bool
     {
       // get ai under mouse cursor
       var pos = game.scene.mouse.getXY();
@@ -331,7 +342,7 @@ class Organs
       if (ai == null)
         {
           game.log("Target AI with mouse first.", COLOR_HINT);
-          return;
+          return false;
         }
 
       var params = getParams(IMP_ACID_SPIT);
@@ -341,7 +352,7 @@ class Organs
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
-          return;
+          return false;
         }
 
       // roll damage
@@ -354,11 +365,13 @@ class Organs
         ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' howls in pain.');
 
       ai.onDamage(damage); // damage event
+
+      return true;
     }
 
 
 // action: slime spit
-  function actionSlimeSpit()
+  function actionSlimeSpit(): Bool
     {
       // get ai under mouse cursor
       var pos = game.scene.mouse.getXY();
@@ -368,7 +381,7 @@ class Organs
       if (ai == null)
         {
           game.log("Target AI with mouse first.", COLOR_HINT);
-          return;
+          return false;
         }
 
       var params = getParams(IMP_SLIME_SPIT);
@@ -378,7 +391,7 @@ class Organs
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
-          return;
+          return false;
         }
 
       game.log('Your host spits a clot of adhesive slime on ' + ai.getName() +
@@ -393,11 +406,13 @@ class Organs
 
       // AI effect event
       ai.onEffect({ type: EFFECT_SLIME, points: params.strength });
+
+      return true;
     }
 
 
 // action: paralysis spit
-  function actionParalysisSpit()
+  function actionParalysisSpit(): Bool
     {
       // get ai under mouse cursor
       var pos = game.scene.mouse.getXY();
@@ -407,7 +422,7 @@ class Organs
       if (ai == null)
         {
           game.log("Target AI with mouse first.", COLOR_HINT);
-          return;
+          return false;
         }
 
       var params = getParams(IMP_PARALYSIS_SPIT);
@@ -417,7 +432,7 @@ class Organs
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
-          return;
+          return false;
         }
 
       game.log('Your host releases a stream of paralyzing spores on ' + ai.getName() +
@@ -432,11 +447,13 @@ class Organs
 
       // AI effect event
       ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true });
+
+      return true;
     }
 
 
 // action: panic gas
-  function actionPanicGas()
+  function actionPanicGas(): Bool
     {
       var params = getParams(IMP_PANIC_GAS);
       var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
@@ -480,11 +497,13 @@ class Organs
           // AI effect event
           ai.onEffect({ type: EFFECT_PANIC, points: params.time, isTimer: true });
         }
+
+      return true;
     }
 
 
 // action: paralysis gas
-  function actionParalysisGas()
+  function actionParalysisGas(): Bool
     {
       var params = getParams(IMP_PARALYSIS_GAS);
       var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
@@ -528,6 +547,8 @@ class Organs
           // AI effect event
           ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true });
         }
+
+      return true;
     }
 
 

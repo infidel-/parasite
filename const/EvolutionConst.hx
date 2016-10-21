@@ -3,7 +3,9 @@
 package const;
 
 import game.Game;
+import game.Habitat;
 import game.Player;
+import objects.*;
 
 class EvolutionConst
 {
@@ -156,7 +158,7 @@ class EvolutionConst
         path: PATH_PROTECTION,
         id: IMP_ENERGY,
         name: '??Host energy bonus',
-        note: 'Grown body feature gives a bonus to maximum host energy (todo)',
+        note: 'Grown body feature gives a bonus to maximum host energy',
         noteFunc: function (l)
           {
             return "Host maximum energy multiplier: " + l.hostEnergyMod +
@@ -164,7 +166,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Host energy bonus',
-          note: 'Gives a bonus to maximum host energy (todo)',
+          note: 'Gives a bonus to maximum host energy',
           gp: 200
           },
         levelNotes: [
@@ -215,7 +217,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_ACID_SPIT,
         name: '??Acid spit',
-        note: 'Grown body feature gives the host an ability to spit acid on an NPC (todo)',
+        note: 'Grown body feature gives the host an ability to spit acid on an NPC',
         noteFunc: function (l)
           {
             return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
@@ -223,7 +225,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Acid spit',
-          note: 'Gives the host an ability to spit acid on an NPC (todo)',
+          note: 'Gives the host an ability to spit acid on an NPC',
           gp: 150,
           action: {
             id: 'acidSpit',
@@ -266,7 +268,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
-        note: 'Grown body feature gives the host an ability to spit slime on an NPC (slows them down) (todo)',
+        note: 'Grown body feature gives the host an ability to spit slime on an NPC to slow them down)',
         noteFunc: function (l)
           {
             return "Slime strength: " + l.strength +
@@ -274,7 +276,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Slime spit',
-          note: 'Gives the host an ability to spit slime on an NPC (slows them down) (todo)',
+          note: 'Gives the host an ability to spit slime on an NPC to slow them down',
           gp: 100,
           action: {
             id: 'slimeSpit',
@@ -313,7 +315,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PARALYSIS_SPIT,
         name: '??Paralysis spit',
-        note: 'Grown body feature gives the host an ability to paralyze an NPC (todo)',
+        note: 'Grown body feature gives the host an ability to paralyze an NPC',
         noteFunc: function (l)
           {
             return "Paralysis effect time: " + l.time +
@@ -321,7 +323,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Paralysis spit',
-          note: 'Gives the host an ability to paralyze an NPC (todo)',
+          note: 'Gives the host an ability to paralyze an NPC',
           gp: 100,
           action: {
             id: 'paralysisSpit',
@@ -360,7 +362,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PANIC_GAS,
         name: '??Panic gas',
-        note: 'Grown body feature gives the host an ability to emit a cloud of panic gas (makes NPCs run away) (todo)',
+        note: 'Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
         noteFunc: function (l)
           {
             return "Cloud range: " + l.range +
@@ -369,7 +371,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Panic gas',
-          note: 'Gives the host an ability to emit a cloud of panic gas (makes NPCs run away) (todo)',
+          note: 'Gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
           gp: 150,
           hasTimeout: true,
           action: {
@@ -413,7 +415,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PARALYSIS_GAS,
         name: '??Paralysis gas',
-        note: 'Grown body feature gives the host an ability to emit a cloud of paralytic gas (todo)',
+        note: 'Grown body feature gives the host an ability to emit a cloud of paralytic gas',
         noteFunc: function (l)
           {
             return "Cloud range: " + l.range +
@@ -422,7 +424,7 @@ class EvolutionConst
           },
         organ: {
           name: '??Paralysis gas',
-          note: 'Gives the host an ability to emit a cloud of paralytic gas (todo)',
+          note: 'Gives the host an ability to emit a cloud of paralytic gas',
           gp: 175,
           hasTimeout: true,
           action: {
@@ -469,7 +471,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_ATTACH,
         name: '??Attach efficiency',
-        note: 'Improves base grip on attach to host (todo)',
+        note: 'Improves base grip on attach to host',
         noteFunc: function (l)
           {
             return "Base attach grip: " + l.attachHoldBase;
@@ -492,7 +494,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_HARDEN_GRIP,
         name: '??Hold efficiency',
-        note: 'Improves base grip on harden grip action (todo)',
+        note: 'Improves base grip on harden grip action',
         noteFunc: function (l)
           {
             return "Base harden grip: " + l.attachHoldBase;
@@ -515,7 +517,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_REINFORCE,
         name: '??Control efficiency',
-        note: 'Improves base control on reinforce control action (todo)',
+        note: 'Improves base control on reinforce control action',
         noteFunc: function (l)
           {
             return "Base reinforce control: " + l.reinforceControlBase;
@@ -660,7 +662,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_DOPAMINE,
         name: 'Dopamine regulation',
-        note: 'Removes the need to reinforce control of the host. (fluff)',
+        note: 'Removes the need to reinforce control of the host.',
         levelNotes: [
           '(fluff)',
           '(fluff)',
@@ -685,7 +687,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
-        note: 'Gives the player ability to build microhabitats (todo fluff)',
+        note: 'Gives the player an ability to build microhabitats',
         noteFunc: function (l)
           {
             return "Maximum number of microhabitats: " + l.numHabitats +
@@ -721,6 +723,102 @@ class EvolutionConst
             if (level == 1)
               game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
           }
+      },
+
+      { // ***
+        path: PATH_SPECIAL,
+        id: IMP_BIOMINERAL,
+        name: 'Biomineral formation',
+        note: 'Gives the player an ability to supply microhabitat with energy. Being near the formation increases the speed of organ growth and evolution.',
+        noteFunc: function (l)
+          {
+            return "Energy units per formation: " + l.energyUnits +
+              "\nBonus organ and evolution points: +" + l.evolutionBonus + "%";
+          },
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        organ: {
+          name: 'Biomineral mold',
+          note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed.',
+          gp: 200,
+          action: {
+            id: 'formBiomineral',
+            type: ACTION_ORGAN,
+            name: 'Produce biomineral formation',
+            energy: 0
+            },
+          onAction: Habitat.putBiomineral
+          },
+        levelParams: [
+          {
+            energyUnits: 0,
+            evolutionBonus: 0,
+          },
+          {
+            energyUnits: 1,
+            evolutionBonus: 10,
+          },
+          {
+            energyUnits: 2,
+            evolutionBonus: 20,
+          },
+          {
+            energyUnits: 3,
+            evolutionBonus: 25,
+          },
+          ],
+      },
+
+      { // ***
+        path: PATH_SPECIAL,
+        id: IMP_ASSIMILATION,
+        name: 'Assimilation cavity',
+        note: 'Gives the player an ability to assimilate hosts (todo fluff)',
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          ],
+        organ: {
+          name: 'Assimilation mold',
+          note: '',
+          gp: 200,
+          action: {
+            id: 'formAssimilation',
+            type: ACTION_ORGAN,
+            name: 'Form assimilation cavity',
+            energy: 0
+            },
+          onAction: function(game, player): Bool
+            {
+              // only in habitat
+              if (!game.area.isHabitat)
+                {
+                  game.log('Only works in habitat.', COLOR_HINT);
+                  return false;
+                }
+
+              // complete goals
+              game.goals.complete(GOAL_PUT_ASSIMILATION);
+
+              return true;
+            }
+          },
+        levelParams: [
+          {
+          },
+          {
+          },
+          {
+          },
+          {
+          },
+          ],
       },
 /*
       { // ***
@@ -841,4 +939,5 @@ typedef OrganInfo =
   ?action: _PlayerAction, // player action
   ?hasTimeout: Bool, // has activation timeout?
   ?onGrow: Game -> Player -> Void, // func to call on growing organ
+  ?onAction: Game -> Player -> Bool, // func to call on organ action
 }
