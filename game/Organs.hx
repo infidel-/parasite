@@ -39,7 +39,7 @@ class Organs
           buf.add(currentOrgan.info.name);
           buf.add("</font> (");
           var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
-          buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
+          buf.add(Math.round(gpLeft / _Math.gpPerTurn()));
           buf.add(" turns)\n");
         }
 
@@ -108,8 +108,8 @@ class Organs
       if (currentOrgan == null)
         return;
 
-      currentOrgan.gp += game.player.vars.organGrowthPointsPerTurn * time;
-      _ai.energy -= game.player.vars.organGrowthEnergyPerTurn * time;
+      currentOrgan.gp += _Math.gpPerTurn() * time;
+      _ai.energy -= _Math.growthEnergyPerTurn() * time;
 
       // organ not grown yet
       if (currentOrgan.gp < currentOrgan.info.gp)

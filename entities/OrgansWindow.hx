@@ -41,7 +41,7 @@ class OrgansWindow extends TextWindow
           buf.add(imp.level);
           buf.add(' (' + organInfo.gp + ' gp) (');
           var gpLeft = organInfo.gp - currentGP;
-          buf.add(Math.ceil(gpLeft / game.player.vars.organGrowthPointsPerTurn));
+          buf.add(Math.round(gpLeft / _Math.gpPerTurn()));
           buf.add(" turns)");
 
           buf.add("\n<font color='#5ebee5'>" + organInfo.note + '</font>\n');
@@ -117,11 +117,12 @@ class OrgansWindow extends TextWindow
       if (n == 0)
         buf.add('  --- empty ---\n\n');
 
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        buf.add('You are in a microhabitat.\n');
       buf.add('Body feature growth costs additional ' +
-        game.player.vars.organGrowthEnergyPerTurn +
+        _Math.growthEnergyPerTurn() +
         ' energy per turn.\n' +
-        'You will receive ' + game.player.vars.organGrowthPointsPerTurn +
-        ' gp per turn.\n' +
+        'You will receive ' + _Math.gpPerTurn() + ' gp per turn.\n' +
         'Your host will survive for ' +
           Std.int(game.player.host.energy /
             game.player.vars.organGrowthEnergyPerTurn) +

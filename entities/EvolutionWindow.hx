@@ -39,7 +39,7 @@ class EvolutionWindow extends TextWindow
             buf.add(' (' + imp.ep + '/' +
               EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
             var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
-            buf.add(Math.ceil(epLeft / _Math.epPerTurn()));
+            buf.add(Math.round(epLeft / _Math.epPerTurn()));
             buf.add(" turns)\n");
 
             buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
@@ -75,7 +75,7 @@ class EvolutionWindow extends TextWindow
             buf.add(p.ep + '/' +
               EvolutionConst.epCostPath[p.level] + ' ep) (');
             var epLeft = EvolutionConst.epCostPath[p.level] - p.ep;
-            buf.add(epLeft / _Math.epPerTurn());
+            buf.add(Math.round(epLeft / _Math.epPerTurn()));
             buf.add(" turns)");
 
             list.add({
@@ -127,9 +127,10 @@ class EvolutionWindow extends TextWindow
       if (n == 0)
         buf.add('  --- empty ---\n');
 
-      buf.add('Evolving costs additional ' + game.player.vars.evolutionEnergyPerTurn +
-        ' energy per turn (' + game.player.vars.evolutionEnergyPerTurnMicrohabitat +
-        ' while in microhabitat).\n' +
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        buf.add('You are in a microhabitat.\n');
+      buf.add('Evolving costs additional ' + _Math.evolutionEnergyPerTurn() +
+        ' energy per turn.\n' +
         'You will receive ' + _Math.epPerTurn() + ' ep per turn.\n' +
         'Your host will survive for ' +
           Std.int(game.player.host.energy / _Math.evolutionEnergyPerTurn()) +

@@ -732,7 +732,7 @@ class EvolutionConst
         note: 'Gives the player an ability to supply microhabitat with energy. Being near the formation increases the speed of organ growth and evolution.',
         noteFunc: function (l)
           {
-            return "Energy units per formation: " + l.energyUnits +
+            return "Energy units per formation: " + l.energy +
               "\nBonus organ and evolution points: +" + l.evolutionBonus + "%";
           },
         levelNotes: [
@@ -751,23 +751,33 @@ class EvolutionConst
             name: 'Produce biomineral formation',
             energy: 0
             },
-          onAction: Habitat.putBiomineral
+          onAction: function(game, player)
+            {
+              // only in habitat
+              if (!game.area.isHabitat)
+                {
+                  game.log('This action only works in habitat.', COLOR_HINT);
+                  return false;
+                }
+
+              return game.area.habitat.putBiomineral();
+            }
           },
         levelParams: [
           {
-            energyUnits: 0,
+            energy: 0,
             evolutionBonus: 0,
           },
           {
-            energyUnits: 1,
+            energy: 1,
             evolutionBonus: 10,
           },
           {
-            energyUnits: 2,
+            energy: 2,
             evolutionBonus: 20,
           },
           {
-            energyUnits: 3,
+            energy: 3,
             evolutionBonus: 25,
           },
           ],

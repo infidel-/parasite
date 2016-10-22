@@ -142,6 +142,7 @@ class PlayerRegion
       game.log("You have created a habitat in this area.");
       var area = game.region.createArea(AREA_HABITAT);
       area.isHabitat = true;
+      area.habitat = new Habitat(game, area);
       currentArea.hasHabitat = true;
       currentArea.habitatAreaID = area.id;
       area.parent = currentArea;

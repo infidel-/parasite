@@ -7,10 +7,31 @@ class _Math
 {
   public static var game: Game; // game link (set on init)
 
+// growth points per turn
+  public static inline function gpPerTurn()
+    {
+      var gp = game.player.vars.organGrowthPointsPerTurn;
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        gp = Math.round(gp * (100 + game.area.habitat.evolutionBonus) / 100.0);
+      return gp;
+    }
+
+
+// growth energy per turn
+  public static inline function growthEnergyPerTurn()
+    {
+      var x = game.player.vars.organGrowthEnergyPerTurn;
+      return x;
+    }
+
+
 // evolution points per turn
   public static inline function epPerTurn()
     {
-      return 10;
+      var ep = 10;
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        ep = Math.round(ep * (100 + game.area.habitat.evolutionBonus) / 100.0);
+      return ep;
     }
 
 

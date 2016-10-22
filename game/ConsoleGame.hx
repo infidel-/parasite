@@ -287,6 +287,15 @@ class ConsoleGame
               stage2();
               stage21();
             }
+
+          // stage 2.2: 2.1 + biomineral
+          else if (stage == 22)
+            {
+              stage1();
+              stage2();
+              stage21();
+              stage22();
+            }
         }
 
       // XXX [sa] set area commands
@@ -386,6 +395,24 @@ class ConsoleGame
       game.timeline.learnClue(game.timeline.getStartEvent(), true);
       game.timeline.getStartEvent().learnNPC();
       game.goals.complete(GOAL_LEARN_NPC);
+    }
+
+
+// stage 2.2: stage 2.1 + biomineral
+  function stage22()
+    {
+      // enter habitat
+      game.playerRegion.action({
+        id: 'enterHabitat',
+        type: ACTION_REGION,
+        name: 'Enter habitat',
+        energy: 0
+      });
+
+      // biomineral
+      game.player.evolutionManager.addImprov(IMP_BIOMINERAL, 1);
+      game.player.host.organs.action('set.IMP_BIOMINERAL');
+      game.player.host.organs.debugCompleteCurrent();
     }
 }
 

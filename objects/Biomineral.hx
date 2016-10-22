@@ -6,7 +6,7 @@ import game.Game;
 
 class Biomineral extends AreaObject
 {
-  var level: Int;
+  public var level: Int;
 
   public function new(g: Game, vx: Int, vy: Int, l: Int)
     {

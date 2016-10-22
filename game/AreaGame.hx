@@ -32,6 +32,7 @@ class AreaGame
 
   // habitat related
   public var parent: AreaGame; // parent area (for sub-areas, habitats)
+  public var habitat: Habitat; // habitat stuff
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
   public var habitatAreaID: Int; // area id of habitat
@@ -63,6 +64,7 @@ class AreaGame
       isKnown = false;
       isHabitat = false;
       hasHabitat = false;
+      habitat = null;
       id = _maxID++;
       name = null;
       parent = null;
@@ -1103,6 +1105,13 @@ class AreaGame
           tmp.add(o);
 
       return tmp;
+    }
+
+
+// get objects iterator
+  public function getObjects(): Iterator<AreaObject>
+    {
+      return _objects.iterator();
     }
 
 
