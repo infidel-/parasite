@@ -43,8 +43,10 @@ class EvolutionWindow extends TextWindow
             buf.add(" turns)\n");
 
             buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
-            buf.add("<font color='#4cd47b'>" +
-              imp.info.levelNotes[imp.level + 1] + '</font>\n');
+            var levelNote = imp.info.levelNotes[imp.level + 1];
+            if (levelNote.indexOf('fluff') < 0 &&
+                levelNote.indexOf('todo') < 0)
+              buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
             if (imp.info.noteFunc != null)
               buf.add("<font color='#13ff65'>" +
                 imp.info.noteFunc(imp.info.levelParams[imp.level + 1]) + '</font>\n');
@@ -115,8 +117,10 @@ class EvolutionWindow extends TextWindow
             buf.add(' (' + imp.ep + '/' +
               EvolutionConst.epCostImprovement[imp.level] + ' ep)');
           buf.add("\n<font color='#5ebee5'>" + imp.info.note + '</font>\n');
-          buf.add("<font color='#4cd47b'>" +
-            imp.info.levelNotes[imp.level] + '</font>\n');
+          var levelNote = imp.info.levelNotes[imp.level];
+          if (levelNote.indexOf('fluff') < 0 &&
+              levelNote.indexOf('todo') < 0)
+            buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
               imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');

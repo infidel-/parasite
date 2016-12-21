@@ -30,6 +30,8 @@ hosts should stop dying at some point:
 - Assimilation process: when the host assimilator is active, player can convert hosts and they stop losing energy passively
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
 ==
+window size and font size
+disable learn object for habitat objects
 do not allow putting habitat constructions top of each other
 do not allow hosts with biomineral and assimilation body features to leave habitat
 
@@ -89,7 +91,7 @@ CONSOLE CHEATSHEET:
 ;s1 - set player stage 1 (human civilian host, tutorial done)
 ;s2 - set player stage 2 (stage 1 + microhabitat)
 ;s21 - set player stage 2.1 (stage 2 + camo layer, computer use)
-;s21 - set player stage 2.2 (stage 2.1 + biomineral)
+;s22 - set player stage 2.2 (stage 2.1 + biomineral)
 ;sai10 - set area interest 10
 
 ;ie - info: events list

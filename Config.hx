@@ -8,6 +8,10 @@ class Config
   public var extendedInfo: Bool;
   public var sendExceptions: Bool;
 
+  public var fontSize: Int;
+  public var windowWidth: Int;
+  public var windowHeight: Int;
+
   var map: Map<String, String>;
 
   public function new()
@@ -19,6 +23,9 @@ class Config
       // default values
       extendedInfo = false;
       sendExceptions = false;
+      fontSize = 16;
+      windowWidth = 1024;
+      windowHeight = 768;
 
       for (line in arr)
         {
@@ -35,8 +42,14 @@ class Config
 
           if (key == 'extendedInfo')
             extendedInfo = (val == '1');
-          if (key == 'sendExceptions')
+          else if (key == 'sendExceptions')
             sendExceptions = (val == '1');
+          else if (key == 'fontSize')
+            fontSize = Std.parseInt(val);
+          else if (key == 'windowWidth')
+            windowWidth = Std.parseInt(val);
+          else if (key == 'windowHeight')
+            windowHeight = Std.parseInt(val);
         }
     }
 }

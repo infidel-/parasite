@@ -46,10 +46,9 @@ class OrgansWindow extends TextWindow
 
           buf.add("\n<font color='#5ebee5'>" + organInfo.note + '</font>\n');
           var levelNote = imp.info.levelNotes[imp.level];
-          if (levelNote.indexOf('fluff') < 0 &&
+          if (levelNote.indexOf('fluff') < 0 ||
               levelNote.indexOf('todo') < 0)
-            buf.add("<font color='#4cd47b'>" +
-              imp.info.levelNotes[imp.level] + '</font>\n');
+            buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
               imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');
@@ -101,8 +100,10 @@ class OrgansWindow extends TextWindow
 //          buf.add(' [' + organ.info.note + ']\n');
           var imp = game.player.evolutionManager.getImprov(organ.improvInfo.id);
           buf.add("\n<font color='#5ebee5'>" + organ.info.note + '</font>\n');
-          buf.add("<font color='#4cd47b'>" +
-            organ.improvInfo.levelNotes[imp.level] + '</font>\n');
+          var levelNote = organ.improvInfo.levelNotes[imp.level];
+          if (levelNote.indexOf('fluff') < 0 ||
+              levelNote.indexOf('todo') < 0)
+            buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
           if (organ.improvInfo.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
               organ.improvInfo.noteFunc(organ.improvInfo.levelParams[imp.level]) + '</font>\n');

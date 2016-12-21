@@ -71,6 +71,7 @@ class Const
   public static var ROW_SECURITY = 12;
 
   public static var ROW_BIOMINERAL = 16;
+  public static var ROW_ASSIMILATION = 17;
 
   public static var FRAME_DEFAULT = 0;
   public static var FRAME_BODY = 1;

@@ -13,6 +13,7 @@ class Habitat
 
   // calculated stats
   public var energy: Int; // produced energy
+  public var energyUsed: Int; // used energy
   public var evolutionBonus: Int; // biomineral evolution bonus (max)
 
 
@@ -23,6 +24,7 @@ class Habitat
       area = a;
 
       energy = 0;
+      energyUsed = 0;
       evolutionBonus = 0;
     }
 
@@ -54,12 +56,49 @@ class Habitat
     }
 
 
+// put assimilation cavity in habitat
+// called from organ actions
+  public function putAssimilation(): Bool
+    {
+      // check for energy
+      if (energyUsed >= energy)
+        {
+          game.log('Not enough energy in habitat.', COLOR_HINT);
+          return false;
+        }
+
+      // complete goals
+      game.goals.complete(GOAL_PUT_ASSIMILATION);
+
+      // spawn object
+      var ai = player.host;
+      var level = ai.organs.getLevel(IMP_ASSIMILATION);
+      var o = new AssimilationCavity(game, ai.x, ai.y, level);
+
+      // remove and kill host
+      game.playerArea.onDetach();
+      game.area.removeAI(ai);
+
+      game.log('Assimilation cavity completed.', COLOR_AREA);
+
+      game.area.updateVisibility();
+
+      // update habitat stats
+      update();
+
+      return true;
+    }
+
+
 // update habitat stats
   public function update()
     {
+      // clear vars
       energy = 0;
+      energyUsed = 0;
       evolutionBonus = 0;
 
+      // recalc vars
       for (o in area.getObjects())
         // biomineral - give energy
         if (o.name == 'biomineral')
@@ -70,6 +109,10 @@ class Habitat
             if (info.evolutionBonus > evolutionBonus)
               evolutionBonus = info.evolutionBonus;
           }
+
+        // each habitat object uses energy
+        else if (o.type == 'habitat')
+          energyUsed++;
 
       Const.debugObject(this);
     }

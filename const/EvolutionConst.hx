@@ -787,7 +787,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_ASSIMILATION,
         name: 'Assimilation cavity',
-        note: 'Gives the player an ability to assimilate hosts (todo fluff)',
+        note: 'Gives the player an ability to assimilate hosts',
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -796,7 +796,7 @@ class EvolutionConst
           ],
         organ: {
           name: 'Assimilation mold',
-          note: '',
+          note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed.',
           gp: 200,
           action: {
             id: 'formAssimilation',
@@ -813,10 +813,7 @@ class EvolutionConst
                   return false;
                 }
 
-              // complete goals
-              game.goals.complete(GOAL_PUT_ASSIMILATION);
-
-              return true;
+              return game.area.habitat.putAssimilation();
             }
           },
         levelParams: [

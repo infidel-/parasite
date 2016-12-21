@@ -135,6 +135,7 @@ class Goals
       messageReceive: 'I can improve it further. But I will need energy for that.',
       messageComplete: 'Ah, yes. I can feel the energy surge. A little more and I can begin the assimilation process.',
       onComplete: function (game, player) {
+        player.evolutionManager.addImprov(IMP_ASSIMILATION);
         game.goals.receive(GOAL_PUT_ASSIMILATION);
         }
       },
