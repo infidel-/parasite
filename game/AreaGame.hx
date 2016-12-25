@@ -1121,7 +1121,6 @@ class AreaGame
       if (!isWalkable(x1, y1) || !isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
         return null;
 
-      var t = Sys.time();
       try {
       var p = _pathEngine.getPath(x1, y1, x2, y2);
 //      trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');

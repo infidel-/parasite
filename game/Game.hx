@@ -42,7 +42,16 @@ class Game
       scene = new GameScene(this);
       console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);
-      HXP.frameRate = 30;
+/*
+      openfl.Lib.application.window.resize(
+        config.windowWidth, config.windowHeight);
+/*
+      HXP.width = config.windowWidth;
+      HXP.height = config.windowHeight;
+*/
+//      HXP.screen.scaleX = HXP.screen.scaleY = 1;
+//      HXP.resize(config.windowWidth, config.windowHeight);
+//      HXP.frameRate = 30;
       HXP.scene = scene;
       messageList = new List();
       importantMessage = '';
@@ -51,7 +60,7 @@ class Game
 
       area = null;
       region = null;
-      _Math.game = this;
+      __Math.game = this;
     }
 
 
@@ -284,7 +293,7 @@ class Game
     {
       if (col == null)
         col = COLOR_DEFAULT;
-      Sys.println(s);
+      Const.p(s);
       var hs = "<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
       scene.hud.log(hs);
 

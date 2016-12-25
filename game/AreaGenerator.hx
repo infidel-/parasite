@@ -385,6 +385,7 @@ class AreaGenerator
           }
 
 
+#if !js
       for (y in 0...area.height)
         {
           for (x in 0...area.width)
@@ -392,6 +393,7 @@ class AreaGenerator
             Sys.print(cells[x][y]);
           Sys.println('');
         }
+#end
       return;
 
       // walkways

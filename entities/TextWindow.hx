@@ -42,14 +42,14 @@ class TextWindow
       _actions = new List<_PlayerAction>();
 
       // actions list
-      var font = Assets.getFont("font/04B_03__.ttf");
+      var font = Assets.getFont(Const.FONT);
       _textField = new TextField();
       _textField.wordWrap = true;
       _textField.width = HXP.width;
       _textField.height = HXP.height;
 //      _textField.x = 5;
 //      _textField.y = 5;
-      textFormat = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      textFormat = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
       textFormat.align = TextFormatAlign.LEFT;
       _textField.defaultTextFormat = textFormat;
       _back = new Sprite();

@@ -7,7 +7,7 @@ import _AIState;
 import objects.*;
 import game.*;
 import const.*;
-import _Math;
+import __Math;
 
 class AI
 {
@@ -482,7 +482,7 @@ class AI
         }
 
       // weapon skill level (ai + parasite bonus)
-      var roll = _Math.skill({
+      var roll = __Math.skill({
         id: weapon.skill,
         level: skills.getLevel(weapon.skill),
         });
@@ -512,14 +512,14 @@ class AI
                 });
             }
 
-          var roll = _Math.damage({
+          var roll = __Math.damage({
             name: 'STUN AI->player',
             min: weapon.minDamage,
             max: weapon.maxDamage,
             mods: mods
           });
 
-          var resist = _Math.opposingAttr(
+          var resist = __Math.opposingAttr(
             game.player.host.constitution, roll, 'con/stun');
           if (resist)
             roll = Std.int(roll / 2);
@@ -563,7 +563,7 @@ class AI
                 });
             }
 
-          var damage = _Math.damage({
+          var damage = __Math.damage({
             name: 'AI->player',
             min: weapon.minDamage,
             max: weapon.maxDamage,

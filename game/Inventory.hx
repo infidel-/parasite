@@ -200,7 +200,7 @@ class Inventory
       var mods = [];
       if (item.info.name == 'laptop')
         mods.push({ name: 'laptop', val: 10.0 });
-      var ret = _Math.skill({
+      var ret = __Math.skill({
         id: SKILL_COMPUTER,
         level: skillLevel,
         mods: mods

@@ -41,10 +41,10 @@ class HUD
       _listLog = new List<String>();
 
       // actions list
-      var font = Assets.getFont("font/04B_03__.ttf");
+      var font = Assets.getFont(Const.FONT);
       _textField = new TextField();
       _textField.autoSize = TextFieldAutoSize.LEFT;
-      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _textField.defaultTextFormat = fmt;
       _textFieldBack = new Sprite();
@@ -54,12 +54,11 @@ class HUD
       HXP.stage.addChild(_textFieldBack);
 
       // log lines
-      var font = Assets.getFont("font/04B_03__.ttf");
       _log = new TextField();
       _log.width = HXP.width - 40;
       _log.wordWrap = true;
       _log.autoSize = TextFieldAutoSize.LEFT;
-      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _log.defaultTextFormat = fmt;
       _logBack = new Sprite();
@@ -69,9 +68,8 @@ class HUD
       HXP.stage.addChild(_logBack);
 
       // console
-      var font = Assets.getFont("font/04B_03__.ttf");
       _console = new TextField();
-      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _console.defaultTextFormat = fmt;
       _console.type = TextFieldType.INPUT;
@@ -85,18 +83,17 @@ class HUD
       HXP.stage.addChild(_consoleBack);
 
       // help
-      var font = Assets.getFont("font/04B_03__.ttf");
       _help = new TextField();
-      var fmt = new TextFormat(font.fontName, 16, 0xFFFFFF);
+      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
       fmt.align = TextFormatAlign.LEFT;
       _help.defaultTextFormat = fmt;
       _help.type = TextFieldType.INPUT;
       _helpBack = new Sprite();
       _helpBack.addChild(_help);
       _helpBack.x = 20;
-      _helpBack.y = HXP.height - 20;
+      _helpBack.y = HXP.height - 24;
       _help.width = HXP.width - 40;
-      _help.height = 20;
+      _help.height = 24;
       HXP.stage.addChild(_helpBack);
     }
 
@@ -302,32 +299,40 @@ class HUD
   function updateHelp()
     {
       var buf = new StringBuf();
+      var prefix =
+#if js
+        "C-";
+#else
+        "F";
+#end
 
-      buf.add('F1: Goals  ');
+      buf.add(prefix + '1: Goals  ');
       if (game.player.state == PLR_STATE_HOST)
         {
           if (game.player.vars.inventoryEnabled)
-            buf.add('F2: Inventory  ');
+            buf.add(prefix + '2: Inventory  ');
         }
       if (game.player.vars.skillsEnabled)
-        buf.add('F3: Knowledge  ');
-      buf.add('F4: Log  ');
+        buf.add(prefix + '3: Knowledge  ');
+      buf.add(prefix + '4: Log  ');
 
       if (game.player.vars.timelineEnabled)
-        buf.add('F5: Timeline  ');
+        buf.add(prefix + '5: Timeline  ');
 
       if (game.player.state == PLR_STATE_HOST)
         {
           if (game.player.evolutionManager.state > 0)
-            buf.add('F6: Evolution  ');
+            buf.add(prefix + '6: Evolution  ');
           if (game.player.vars.organsEnabled)
-            buf.add('F7: Body features  ');
+            buf.add(prefix + '7: Body features  ');
         }
 
 #if mydebug
-      buf.add('F9: Debug  ');
+      buf.add(prefix + '9: Debug  ');
 #end
-      buf.add('F10: Exit');
+#if !js
+      buf.add(prefix + '10: Exit');
+#end
 
       _help.htmlText = buf.toString();
       _helpBack.graphics.clear();

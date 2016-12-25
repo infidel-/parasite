@@ -1,6 +1,8 @@
 // game configuration
 
+#if !js
 import sys.io.File;
+#end
 
 class Config
 {
@@ -17,8 +19,16 @@ class Config
   public function new()
     {
       map = new Map();
-      var str = File.getContent("./parasite.cfg");
-      var arr = str.split("\n");
+      var str = '';
+      var arr = [];
+#if !js
+      try {
+        str = File.getContent("./parasite.cfg");
+        arr = str.split("\n");
+        }
+      catch (e: Dynamic)
+        {}
+#end
 
       // default values
       extendedInfo = false;

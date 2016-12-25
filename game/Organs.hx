@@ -39,7 +39,7 @@ class Organs
           buf.add(currentOrgan.info.name);
           buf.add("</font> (");
           var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
-          buf.add(Math.round(gpLeft / _Math.gpPerTurn()));
+          buf.add(Math.round(gpLeft / __Math.gpPerTurn()));
           buf.add(" turns)\n");
         }
 
@@ -108,8 +108,8 @@ class Organs
       if (currentOrgan == null)
         return;
 
-      currentOrgan.gp += _Math.gpPerTurn() * time;
-      _ai.energy -= _Math.growthEnergyPerTurn() * time;
+      currentOrgan.gp += __Math.gpPerTurn() * time;
+      _ai.energy -= __Math.growthEnergyPerTurn() * time;
 
       // organ not grown yet
       if (currentOrgan.gp < currentOrgan.info.gp)
@@ -356,7 +356,7 @@ class Organs
         }
 
       // roll damage
-      var damage = _Math.damage({
+      var damage = __Math.damage({
         name: 'acid spit',
         min: params.minDamage,
         max: params.maxDamage,

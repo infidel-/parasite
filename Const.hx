@@ -2,6 +2,9 @@ import game.*;
 
 class Const
 {
+//  public static var FONT = "font/04B_03__.ttf";
+//  public static var FONT = "font/amiri-regular.ttf";
+  public static var FONT = "font/Orkney-Regular.otf";
   public static var LAYER_MOUSE = 0; // mouse cursor layer - highest
   public static var LAYER_UI = 1; // ui layer
   public static var LAYER_EFFECT = 5; // visual effects layer
@@ -175,7 +178,7 @@ class Const
           if (!Reflect.isFunction(ff) &&
               (!Reflect.isObject(ff) ||
                className == null || Lambda.has(classes, className)))
-            Sys.println(f + ': ' + ff);
+            Const.p(f + ': ' + ff);
 
           // lists
           else if (className == 'List')
@@ -185,12 +188,12 @@ class Const
               for (x in l)
                 tmp.push(x);
 
-              Sys.println(f + ': ' + tmp.join(', '));
+              Const.p(f + ': ' + tmp.join(', '));
             }
 
           // ingame classes
           else if (Lambda.has(list, Type.getClass(ff)))
-            Sys.println(f + ': ' + ff);
+            Const.p(f + ': ' + ff);
         }
     }
 
@@ -237,5 +240,16 @@ class Const
   public static inline function roll(min: Int, max: Int): Int
     {
       return min + Std.random(max - min + 1);
+    }
+
+
+// print stuff
+  public static inline function p(s: String)
+    {
+#if js
+      trace(s);
+#else
+      Sys.println(s);
+#end
     }
 }

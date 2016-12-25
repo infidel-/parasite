@@ -3,7 +3,7 @@
 import game.*;
 import const.*;
 
-class _Math
+class __Math
 {
   public static var game: Game; // game link (set on init)
 

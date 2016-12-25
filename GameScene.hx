@@ -5,7 +5,9 @@ import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
 import com.haxepunk.utils.Input;
 import com.haxepunk.utils.Key;
+#if !js
 import sys.io.File;
+#end
 
 import entities.*;
 import game.Game;
@@ -20,6 +22,7 @@ class GameScene extends Scene
   var hudState: _HUDState; // current HUD state (default, evolution, etc)
   var windows: Map<_HUDState, TextWindow>; // GUI windows
   public var entityAtlas: TileAtlas; // entity graphics
+  public var controlPressed: Bool; // Ctrl key pressed?
 
 //  var _dx: Int; // movement vars - movement direction (changed in handleInput)
 //  var _dy: Int;
@@ -31,7 +34,9 @@ class GameScene extends Scene
       super();
       game = g;
       hudState = HUDSTATE_DEFAULT;
+      controlPressed = false;
 
+      Input.define("ctrl", [ Key.CONTROL ]);
       Input.define("up", [ Key.UP, Key.W, Key.NUMPAD_8 ]);
       Input.define("down", [ Key.DOWN, Key.X, Key.NUMPAD_2 ]);
       Input.define("left", [ Key.LEFT, Key.A, Key.NUMPAD_4 ]);
@@ -167,6 +172,18 @@ class GameScene extends Scene
           return;
         }
 
+      // toggle control
+      if (Input.pressed("ctrl"))
+        {
+          controlPressed = true;
+          return;
+        }
+      else if (Input.released("ctrl"))
+        {
+          controlPressed = false;
+          return;
+        }
+
       // toggle gui
       if (Input.pressed("hideGUI"))
         {
@@ -183,6 +200,7 @@ class GameScene extends Scene
       if (Input.lastKey != null)
         trace(Key.nameOfKey(Input.lastKey));
 */
+
       if (!hud.consoleVisible())
         {
           var ret = handleWindows();
@@ -192,7 +210,7 @@ class GameScene extends Scene
         }
 
       if (Input.pressed("exit"))
-        Sys.exit(1);
+        exit();
     }
 
 
@@ -221,7 +239,7 @@ class GameScene extends Scene
       // game over screen
       if (hudState == HUDSTATE_FINISH &&
           Input.pressed("closeWindow"))
-        Sys.exit(1);
+        exit();
 
       // window open
       if (hudState != HUDSTATE_DEFAULT)
@@ -275,45 +293,67 @@ class GameScene extends Scene
       // no windows open
 //      else if (hudState == HUDSTATE_DEFAULT)
         {
+          var goalsPressed =
+            (Input.pressed("action1") && controlPressed) ||
+            Input.pressed("goalsWindow");
+          var inventoryPressed =
+            (Input.pressed("action2") && controlPressed) ||
+            Input.pressed("inventoryWindow");
+          var skillsPressed =
+            (Input.pressed("action3") && controlPressed) ||
+            Input.pressed("skillsWindow");
+          var logPressed =
+            (Input.pressed("action4") && controlPressed) ||
+            Input.pressed("logWindow");
+          var timelinePressed =
+            (Input.pressed("action5") && controlPressed) ||
+            Input.pressed("timelineWindow");
+          var evolutionPressed =
+            (Input.pressed("action6") && controlPressed) ||
+            Input.pressed("evolutionWindow");
+          var organsPressed =
+            (Input.pressed("action7") && controlPressed) ||
+            Input.pressed("organsWindow");
+
+          // open goals window
+          if (goalsPressed)
+            setState(HUDSTATE_GOALS);
+
           // open inventory window (if items are learned)
-          if (Input.pressed("inventoryWindow") &&
+          else if (inventoryPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.host.isHuman &&
               game.player.vars.inventoryEnabled)
             setState(HUDSTATE_INVENTORY);
 
-          // open evolution window (if enabled)
-          else if (Input.pressed("evolutionWindow") &&
-              game.player.state == PLR_STATE_HOST &&
-              game.player.evolutionManager.state > 0)
-            setState(HUDSTATE_EVOLUTION);
-
           // open skills window (if skills are learned)
-          else if (Input.pressed("skillsWindow") &&
+          else if (skillsPressed &&
               game.player.vars.skillsEnabled)
             setState(HUDSTATE_SKILLS);
 
-          // open organs window
-          else if (Input.pressed("organsWindow") &&
-              game.player.state == PLR_STATE_HOST &&
-              game.player.vars.organsEnabled)
-            setState(HUDSTATE_ORGANS);
-
-          // open timeline window
-          else if (Input.pressed("timelineWindow") &&
-              game.player.vars.timelineEnabled)
-            setState(HUDSTATE_TIMELINE);
-
           // open message log window
-          else if (Input.pressed("logWindow"))
+          else if (logPressed)
             {
               setState(HUDSTATE_LOG);
               windows[hudState].scrollToEnd();
             }
 
-          // open goals window
-          else if (Input.pressed("goalsWindow"))
-            setState(HUDSTATE_GOALS);
+          // open timeline window
+          else if (timelinePressed &&
+              game.player.vars.timelineEnabled)
+            setState(HUDSTATE_TIMELINE);
+
+          // open evolution window (if enabled)
+          else if (evolutionPressed &&
+              game.player.state == PLR_STATE_HOST &&
+              game.player.evolutionManager.state > 0)
+            setState(HUDSTATE_EVOLUTION);
+
+          // open organs window
+          else if (organsPressed &&
+              game.player.state == PLR_STATE_HOST &&
+              game.player.vars.organsEnabled)
+            setState(HUDSTATE_ORGANS);
 
 #if mydebug
           // open debug window
@@ -441,13 +481,15 @@ class GameScene extends Scene
         }
       catch (e: Dynamic)
         {
+          var stack = haxe.CallStack.toString(
+            haxe.CallStack.exceptionStack());
+#if !js
           // log to file
           var f = File.append('exceptions.txt', false);
           f.writeString('Exception: ' + e + '\n');
-          var stack = haxe.CallStack.toString(
-            haxe.CallStack.exceptionStack());
           f.writeString(stack + '\n');
           f.close();
+#end
 
           // write to stdout
           trace('Exception: ' + e);
@@ -456,6 +498,7 @@ class GameScene extends Scene
           // send exception to web server
           if (game.config.sendExceptions)
             {
+#if !js
               var s = new StringBuf();
               s.add('v' + Version.getVersion() + ' ' + Sys.systemName() + '\n');
               s.add(game.messageList.last() + '\n');
@@ -478,6 +521,7 @@ class GameScene extends Scene
                 trace(e);
               }
               h.request(true);
+#end
             }
 
           else
@@ -488,5 +532,14 @@ class GameScene extends Scene
               setState(HUDSTATE_FINISH);
             }
         }
+    }
+
+
+  public inline function exit()
+    {
+#if !js
+        Sys.exit(1);
+#else
+#end
     }
 }

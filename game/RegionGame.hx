@@ -110,7 +110,7 @@ class RegionGame
           if (game.location == LOCATION_AREA && area == game.area)
             continue;
 
-          var ret = _Math.detectHabitat({
+          var ret = __Math.detectHabitat({
             base: detectionChance,
             interest: area.parent.interest
           });

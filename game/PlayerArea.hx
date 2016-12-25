@@ -350,7 +350,7 @@ class PlayerArea
       else if (state == PLR_STATE_HOST)
         {
           // opposing strength check
-          if (!_Math.opposingAttr(player.host.strength, ai.strength, 'strength'))
+          if (!__Math.opposingAttr(player.host.strength, ai.strength, 'strength'))
             {
               log('Your host does not manage to push past ' + ai.getName() + '.');
               return;
@@ -415,7 +415,7 @@ class PlayerArea
       ai.onAttack(); // attack event
 
       // weapon skill level (ai + parasite bonus)
-      var roll = _Math.skill({
+      var roll = __Math.skill({
         id: weapon.skill,
         level: player.host.skills.getLevel(weapon.skill),
         mods: [{
@@ -442,12 +442,12 @@ class PlayerArea
       // stun damage
       if (weapon.type == WEAPON_STUN)
         {
-          var roll = _Math.damage({
+          var roll = __Math.damage({
             name: 'STUN player->AI',
             min: weapon.minDamage,
             max: weapon.maxDamage,
           });
-          var resist = _Math.opposingAttr(ai.constitution, roll,
+          var resist = __Math.opposingAttr(ai.constitution, roll,
             'con/stun');
           if (resist)
             roll = Std.int(roll / 2);
@@ -476,7 +476,7 @@ class PlayerArea
               min: 0,
               max: Std.int(player.host.strength / 2)
             }];
-          var damage = _Math.damage({
+          var damage = __Math.damage({
             name: 'player->AI',
             min: weapon.minDamage,
             max: weapon.maxDamage,
@@ -668,7 +668,7 @@ class PlayerArea
         }
 
       // damage
-      var damage = _Math.damage({
+      var damage = __Math.damage({
         name: 'brain probe',
         val: params.hostHealthBase,
         mods: [{
@@ -830,7 +830,7 @@ class PlayerArea
         }
 
       // 10% chance of parasite receiving part of damage
-      var damage = _Math.damage({
+      var damage = __Math.damage({
         name: 'transmit to parasite',
         chance: 10,
         val: (damage == 1 ? 1 : 2),

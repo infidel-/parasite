@@ -24,7 +24,7 @@ class MessageWindow extends TextWindow
 
   override function getText(): String
     {
-      return '<br>' + game.importantMessage + '\n\n\n' +
+      return '<br>' + game.importantMessage + '\n\n' +
         'Press ENTER to continue';
     }
 }

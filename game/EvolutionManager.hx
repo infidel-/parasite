@@ -56,12 +56,12 @@ class EvolutionManager
       var imp = null;
 
       // evolution is easier while in habitat
-      player.host.energy -= _Math.evolutionEnergyPerTurn() * time;
+      player.host.energy -= __Math.evolutionEnergyPerTurn() * time;
       if (isTaskPath) // path evolution
         {
           var pathID = Type.createEnum(_Path, taskID);
           var path = getPath(pathID);
-          path.ep += _Math.epPerTurn() * time;
+          path.ep += __Math.epPerTurn() * time;
 
           // evolution complete
           if (path.ep >= EvolutionConst.epCostPath[path.level])
@@ -319,7 +319,7 @@ class EvolutionManager
           var imp = getImprov(Type.createEnum(_Improv, taskID));
           epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
         }
-      buf.add(Math.round(epLeft / _Math.epPerTurn()));
+      buf.add(Math.round(epLeft / __Math.epPerTurn()));
       buf.add(" turns)");
       return buf.toString();
     }

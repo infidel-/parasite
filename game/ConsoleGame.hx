@@ -47,7 +47,7 @@ class ConsoleGame
 
       // XXX quit game
       else if (cmd.charAt(0) == 'q')
-        Sys.exit(1);
+        game.scene.exit();
 
       game.updateHUD(); // update HUD state
     }
@@ -171,7 +171,7 @@ class ConsoleGame
       if (cmd.charAt(1) == 'e')
         {
           for (ev in game.timeline)
-            Sys.println(ev);
+            Const.p('' + ev);
         }
 
       // XXX [ii] improvements info
@@ -181,10 +181,10 @@ class ConsoleGame
             {
               var imp = EvolutionConst.improvements[i];
 
-              Sys.println(i + ': ' + imp.name + ', ' + imp.id +
+              Const.p(i + ': ' + imp.name + ', ' + imp.id +
                 ' (' + imp.path + ')');
               if (imp.organ != null)
-                Sys.println('  organ: ' + imp.organ.name);
+                Const.p('  organ: ' + imp.organ.name);
             }
         }
     }

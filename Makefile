@@ -1,7 +1,7 @@
 #VERSION=`cat VERSION`
 VERSION := $(shell cat VERSION)
 
-all: clean windows-mydebug
+all: clean html5-mydebug 
 
 release: release-win release-linux32 release-linux64 release-mac64
 
@@ -83,15 +83,20 @@ mac64-mydebug:
 mac64-clean:
 	openfl build project.nmml mac -neko
 
+#	haxe --connect 6000 -D mydebug .bin/windows/neko/release/haxe/release.hxml && 
 windows-mydebug:
-	haxe --connect 6000 -D mydebug .bin/windows/neko/haxe/release.hxml && \
-	openfl build project.nmml windows -Dmydebug && \
-	cp -R .bin/windows/neko/bin/* /mnt/1/Projects/Parasite/
+	openfl build project.nmml windows -32 -Dmydebug --connect 6000 && \
+	cp -R .bin/windows/neko/release/bin/* /mnt/1/Projects/bin/
 
 windows-clean:
-	haxe --connect 6000 .bin/windows/neko/haxe/release.hxml && \
-    openfl build project.nmml windows && \
-    cp -R .bin/windows/neko/bin/* /mnt/1/Projects/Parasite/
+	haxe --connect 6000 .bin/windows/neko/release/haxe/release.hxml && \
+    openfl build project.nmml windows --connect 6000 && \
+    cp -R .bin/windows/neko/release/bin/* /mnt/1/Projects/bin/
+
+html5-mydebug:
+	haxe --connect 6000 .bin/html5/release/haxe/release.hxml && \
+	openfl build project.nmml html5 -Dmydebug --connect 6000 && \
+	cp -R .bin/html5/release/bin/* /mnt/1/Projects/html5/
 
 test:
 	haxe .bin/linux64/neko/haxe/release.hxml

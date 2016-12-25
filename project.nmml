@@ -5,20 +5,26 @@ B<?xml version="1.0" encoding="utf-8"?>
  	<app file="parasite" main="Main" path=".bin" />
 
 	<window fps="30" background="0x333333" antialiasing="0" />
-	<window width="1024" height="768" resizable="true" unless="mobile" />
+	<window hardware="true" resizable="true" />
+	<window width="1024" height="768" unless="mobile" />
+	<window width="0" height="0" if="html5"/>
 	<window fullscreen="true" if="mobile" />
 	<window orientation="landscape" vsync="true" antialiasing="0" if="cpp" />
+	<window if="html5" fps="0" resizable="false" />
+<!--
+	<window if="html5" resizable="false" />
+-->
 
 	<source path="./" />
 
-	<haxelib name="openfl" />
-	<haxelib name="openfl-bitfive" if="html5" />
 	<haxelib name="HaxePunk" />
 
 	<assets path="assets/graphics" rename="gfx" include="*.png|*.jpg" />
 	<assets path="assets/audio" rename="sfx" include="*.mp3" if="flash" />
 	<assets path="assets/audio" rename="sfx" include="*.wav|*.ogg" unless="flash" />
-	<assets path="assets/font" rename="font" include="*.ttf" />
+	<assets path="assets/font" rename="font" include="*.ttf|*.otf" />
 
+<!--
     <icon path="assets/HaxePunk.svg" />
+-->
 </project>
