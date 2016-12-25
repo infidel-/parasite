@@ -291,7 +291,6 @@ class GameScene extends Scene
         }
 
       // no windows open
-//      else if (hudState == HUDSTATE_DEFAULT)
         {
           var goalsPressed =
             (Input.pressed("action1") && controlPressed) ||

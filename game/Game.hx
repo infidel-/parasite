@@ -38,7 +38,7 @@ class Game
 
   public function new()
     {
-      config = new Config();
+      config = new Config(this);
       scene = new GameScene(this);
       console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);

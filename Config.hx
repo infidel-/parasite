@@ -4,38 +4,54 @@
 import sys.io.File;
 #end
 
+import game.Game;
+
 class Config
 {
+  var game: Game;
+
   // cached values
   public var extendedInfo: Bool;
   public var sendExceptions: Bool;
 
   public var fontSize: Int;
+  public var fontSizeLarge: Int;
   public var windowWidth: Int;
   public var windowHeight: Int;
 
   var map: Map<String, String>;
 
-  public function new()
+  public function new(g: Game)
     {
+      game = g;
+
+      // default values
+      extendedInfo = false;
+      sendExceptions = false;
+      fontSize = 16;
+      fontSizeLarge = 24;
+      windowWidth = 1024;
+      windowHeight = 768;
+
       map = new Map();
+#if js
+      var str = js.Browser.window.localStorage.getItem('config');
+      var obj = {};
+      if (str != null)
+        obj = haxe.Json.parse(str);
+
+      for (f in Reflect.fields(obj))
+        set(f, Reflect.field(obj, f));
+#else
       var str = '';
       var arr = [];
-#if !js
+
       try {
         str = File.getContent("./parasite.cfg");
         arr = str.split("\n");
         }
       catch (e: Dynamic)
         {}
-#end
-
-      // default values
-      extendedInfo = false;
-      sendExceptions = false;
-      fontSize = 16;
-      windowWidth = 1024;
-      windowHeight = 768;
 
       for (line in arr)
         {
@@ -46,20 +62,62 @@ class Config
             continue;
 
           var tmp = line.split('=');
-          var key = StringTools.trim(tmp[0]);
-          var val = StringTools.trim(tmp[1]);
-          map.set(key, val);
 
-          if (key == 'extendedInfo')
-            extendedInfo = (val == '1');
-          else if (key == 'sendExceptions')
-            sendExceptions = (val == '1');
-          else if (key == 'fontSize')
-            fontSize = Std.parseInt(val);
-          else if (key == 'windowWidth')
-            windowWidth = Std.parseInt(val);
-          else if (key == 'windowHeight')
-            windowHeight = Std.parseInt(val);
+          set(key, val);
         }
+#end
+    }
+
+
+// set option to value and save config
+  public function set(key: String, val: String, ?doSave = false)
+    {
+      var key = StringTools.trim(key);
+      var val = StringTools.trim(val);
+
+      if (key == 'extendedInfo')
+        extendedInfo = (val == '1');
+      else if (key == 'sendExceptions')
+        sendExceptions = (val == '1');
+      else if (key == 'fontSize')
+        {
+          fontSize = Std.parseInt(val);
+          if (fontSize < 8)
+            fontSize = 8;
+          fontSizeLarge = Std.int(fontSize * 1.5);
+        }
+      else if (key == 'windowWidth')
+        windowWidth = Std.parseInt(val);
+      else if (key == 'windowHeight')
+        windowHeight = Std.parseInt(val);
+
+      else
+        {
+          game.debug('No such config setting.');
+          return;
+        }
+
+      map.set(key, val);
+
+      // save config
+      if (doSave)
+        save();
+    }
+
+
+// save config
+  public function save()
+    {
+#if js
+      var obj = {};
+      for (key in map.keys())
+        Reflect.setField(obj, key, map[key]);
+      var str = haxe.Json.stringify(obj);
+      js.Browser.window.localStorage.setItem('config', str);
+
+      game.debug('Config saved. Reload page to apply new settings.');
+#else
+      Const.todo('config saving!');
+#end
     }
 }

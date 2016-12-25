@@ -31,6 +31,7 @@ hosts should stop dying at some point:
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
 ==
 draw assim cavity
+html5 - disable space when in console
 html5 - on resize window try to reinit or resize everything
 html5 - options window for font size selection
 win - fix compilation

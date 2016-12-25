@@ -24,6 +24,7 @@ class ConsoleGame
         return;
 
       game.debug('Console command: ' + cmd);
+      var arr = cmd.split(' ');
 
       // XXX add commands
       if (cmd.charAt(0) == 'a')
@@ -43,13 +44,34 @@ class ConsoleGame
 
       // XXX set commands
       else if (cmd.charAt(0) == 's')
-        setCommand(cmd);
+        {
+          // XXX set <option> <value>
+          if (arr[0] == 'set')
+            setOptionCommand(arr);
+
+          setCommand(cmd);
+        }
 
       // XXX quit game
       else if (cmd.charAt(0) == 'q')
         game.scene.exit();
 
       game.updateHUD(); // update HUD state
+    }
+
+
+// set <option> <value>
+  function setOptionCommand(arr: Array<String>)
+    {
+      if (arr.length < 3)
+        {
+          game.debug('set <option> <value>');
+          return;
+        }
+
+      var key = arr[1];
+      var val = arr[2];
+      game.config.set(key, val, true);
     }
 
 

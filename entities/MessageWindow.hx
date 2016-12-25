@@ -15,7 +15,7 @@ class MessageWindow extends TextWindow
       var hh = Std.int(HXP.height / 4);
       setSize(ww, hh);
       setPosition(Std.int(HXP.halfWidth - ww / 2), Std.int(HXP.halfHeight - hh / 2));
-      textFormat.size = 24;
+      textFormat.size = game.config.fontSizeLarge;
       _textField.defaultTextFormat = textFormat;
       _textField.border = true;
       _textField.borderColor = 0x004040;

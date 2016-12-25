@@ -15,8 +15,9 @@ class FinishWindow extends TextWindow
     {
       super(g);
 
-      var font = Assets.getFont("font/04B_03__.ttf");
-      textFormat = new TextFormat(font.fontName, 24, 0xFFFFFF);
+      var font = Assets.getFont(Const.FONT);
+      textFormat = new TextFormat(font.fontName,
+        game.config.fontSizeLarge, 0xFFFFFF);
       textFormat.align = TextFormatAlign.CENTER;
       _textField.defaultTextFormat = textFormat;
 
