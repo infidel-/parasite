@@ -39,33 +39,7 @@ class HUD
       game = g;
       _listActions = new List<_PlayerAction>();
       _listLog = new List<String>();
-
-      // actions list
       var font = Assets.getFont(Const.FONT);
-      _textField = new TextField();
-      _textField.autoSize = TextFieldAutoSize.LEFT;
-      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _textField.defaultTextFormat = fmt;
-      _textFieldBack = new Sprite();
-      _textFieldBack.addChild(_textField);
-      _textFieldBack.x = 20;
-      _textFieldBack.y = 20;
-      HXP.stage.addChild(_textFieldBack);
-
-      // log lines
-      _log = new TextField();
-      _log.width = HXP.width - 40;
-      _log.wordWrap = true;
-      _log.autoSize = TextFieldAutoSize.LEFT;
-      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _log.defaultTextFormat = fmt;
-      _logBack = new Sprite();
-      _logBack.addChild(_log);
-      _logBack.x = 20;
-      _logBack.y = 20;
-      HXP.stage.addChild(_logBack);
 
       // console
       _console = new TextField();
@@ -79,8 +53,34 @@ class HUD
       _consoleBack.y = 0;
       _consoleBack.visible = false;
       _console.width = HXP.width - 40;
-      _console.height = 20;
+      _console.height = game.config.fontSize + 4;
       HXP.stage.addChild(_consoleBack);
+
+      // log lines
+      _log = new TextField();
+      _log.width = HXP.width - 40;
+      _log.wordWrap = true;
+      _log.autoSize = TextFieldAutoSize.LEFT;
+      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
+      fmt.align = TextFormatAlign.LEFT;
+      _log.defaultTextFormat = fmt;
+      _logBack = new Sprite();
+      _logBack.addChild(_log);
+      _logBack.x = 20;
+      _logBack.y = game.config.fontSize + 10;
+      HXP.stage.addChild(_logBack);
+
+      // actions list
+      _textField = new TextField();
+      _textField.autoSize = TextFieldAutoSize.LEFT;
+      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
+      fmt.align = TextFormatAlign.LEFT;
+      _textField.defaultTextFormat = fmt;
+      _textFieldBack = new Sprite();
+      _textFieldBack.addChild(_textField);
+      _textFieldBack.x = 20;
+      _textFieldBack.y = 20;
+      HXP.stage.addChild(_textFieldBack);
 
       // help
       _help = new TextField();
@@ -91,9 +91,9 @@ class HUD
       _helpBack = new Sprite();
       _helpBack.addChild(_help);
       _helpBack.x = 20;
-      _helpBack.y = HXP.height - 24;
+      _helpBack.y = HXP.height - game.config.fontSize - 8;
       _help.width = HXP.width - 40;
-      _help.height = 24;
+      _help.height = game.config.fontSize + 4;
       HXP.stage.addChild(_helpBack);
     }
 
@@ -256,13 +256,15 @@ class HUD
       _textFieldBack.graphics.drawRect(0, 0, _textField.width, _textField.height);
 
       _textFieldBack.x = 20;
-      _textFieldBack.y = HXP.windowHeight - _textField.height - 30;
+      _textFieldBack.y = HXP.windowHeight - _textField.height -
+        game.config.fontSize - 12;
     }
 
 
   static var cnt = 0;
   public function test()
     {
+/*
       var oldtext = _textField.text;
       var buf = new StringBuf();
       buf.add('Intent: Do Nothing\n\n');
@@ -275,6 +277,7 @@ class HUD
       if (cnt % 2 == 0)
         HXP.stage.removeChild(_textFieldBack);
       else HXP.stage.addChild(_textFieldBack);
+*/
     }
 
 

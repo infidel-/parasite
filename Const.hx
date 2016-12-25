@@ -172,7 +172,10 @@ class Const
       for (f in fields)
         {
           var ff = Reflect.field(o, f);
-          var className = Type.getClassName(Type.getClass(ff));
+          var cl = Type.getClass(ff);
+          if (cl == null)
+            continue;
+          var className = Type.getClassName(cl);
 
           // library classes and anonymous objects
           if (!Reflect.isFunction(ff) &&

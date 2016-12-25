@@ -75,7 +75,6 @@ class GameScene extends Scene
       Input.define("exit", [ Key.F10 ]);
 //      Input.define("test", [ Key.SPACE ]);
 
-      Input.define("hideGUI", [ Key.SPACE ]);
       Input.define("skipTurn", [ Key.NUMPAD_5 ]);
       Input.define("closeWindow", [ Key.ESCAPE ]);
 
@@ -185,15 +184,18 @@ class GameScene extends Scene
         }
 
       // toggle gui
-      if (Input.pressed("hideGUI"))
+      if (!hud.consoleVisible())
         {
-          hud.show(false);
-          return;
-        }
-      else if (Input.released("hideGUI"))
-        {
-          hud.show(true);
-          return;
+          if (Input.pressed(Key.SPACE))
+            {
+              hud.show(false);
+              return;
+            }
+          if (Input.released(Key.SPACE))
+            {
+              hud.show(true);
+              return;
+            }
         }
 /*
       trace(Input.lastKey);
@@ -443,9 +445,11 @@ class GameScene extends Scene
 
       if (hudState == HUDSTATE_DEFAULT)
         {
+/*
           // test action
           if (Input.pressed("test"))
             hud.test();
+*/
 
           // skip until end of turn
           if (Input.pressed("skipTurn"))
@@ -499,7 +503,9 @@ class GameScene extends Scene
             {
 #if !js
               var s = new StringBuf();
-              s.add('v' + Version.getVersion() + ' ' + Sys.systemName() + '\n');
+              s.add('v' + Version.getVersion() +
+                ' (build: ' + Version.getBuild() +
+                ') ' + Sys.systemName() + '\n');
               s.add(game.messageList.last() + '\n');
               s.add('Exception: ' + e + '\n');
               s.add(stack + '\n');
@@ -514,7 +520,7 @@ class GameScene extends Scene
                 setState(HUDSTATE_FINISH);
               }
               h.onError = function(e){
-                game.finishText = "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
+                game.finishText = "Something broke! An exception was thrown and saved to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
                 setState(HUDSTATE_FINISH);
                 trace(e);
