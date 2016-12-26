@@ -36,7 +36,7 @@ class GameScene extends Scene
       hudState = HUDSTATE_DEFAULT;
       controlPressed = false;
 
-      Input.define("ctrl", [ Key.CONTROL ]);
+      Input.define("ctrl", [ 18 ]); // Alt key
       Input.define("up", [ Key.UP, Key.W, Key.NUMPAD_8 ]);
       Input.define("down", [ Key.DOWN, Key.X, Key.NUMPAD_2 ]);
       Input.define("left", [ Key.LEFT, Key.A, Key.NUMPAD_4 ]);
@@ -315,6 +315,9 @@ class GameScene extends Scene
           var organsPressed =
             (Input.pressed("action7") && controlPressed) ||
             Input.pressed("organsWindow");
+          var debugPressed =
+            (Input.pressed("action9") && controlPressed) ||
+            Input.pressed("debugWindow");
 
           // open goals window
           if (goalsPressed)
@@ -358,7 +361,7 @@ class GameScene extends Scene
 
 #if mydebug
           // open debug window
-          else if (Input.pressed("debugWindow"))
+          else if (debugPressed)
             setState(HUDSTATE_DEBUG);
 #end
         }

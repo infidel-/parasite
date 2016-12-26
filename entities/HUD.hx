@@ -304,7 +304,7 @@ class HUD
       var buf = new StringBuf();
       var prefix =
 #if js
-        "C-";
+        "A-";
 #else
         "F";
 #end
