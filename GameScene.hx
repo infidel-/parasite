@@ -23,6 +23,7 @@ class GameScene extends Scene
   var windows: Map<_HUDState, TextWindow>; // GUI windows
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
+  public var shiftPressed: Bool; // Shift key pressed?
 
 //  var _dx: Int; // movement vars - movement direction (changed in handleInput)
 //  var _dy: Int;
@@ -35,8 +36,10 @@ class GameScene extends Scene
       game = g;
       hudState = HUDSTATE_DEFAULT;
       controlPressed = false;
+      shiftPressed = false;
 
       Input.define("ctrl", [ 18 ]); // Alt key
+      Input.define("shift", [ Key.SHIFT ]);
       Input.define("up", [ Key.UP, Key.W, Key.NUMPAD_8 ]);
       Input.define("down", [ Key.DOWN, Key.X, Key.NUMPAD_2 ]);
       Input.define("left", [ Key.LEFT, Key.A, Key.NUMPAD_4 ]);
@@ -183,6 +186,18 @@ class GameScene extends Scene
           return;
         }
 
+      // toggle control
+      if (Input.pressed("shift"))
+        {
+          shiftPressed = true;
+          return;
+        }
+      else if (Input.released("shift"))
+        {
+          shiftPressed = false;
+          return;
+        }
+
       // toggle gui
       if (!hud.consoleVisible())
         {
@@ -251,14 +266,16 @@ class GameScene extends Scene
         {
           // get amount of lines
           var lines = 0;
-          if (Input.pressed("up"))
-            lines = -1;
-          else if (Input.pressed("down"))
-            lines = 1;
-          else if (Input.pressed("pageup"))
+          if (Input.pressed("pageup") ||
+            (Input.pressed(Key.K) && shiftPressed))
             lines = -20;
-          else if (Input.pressed("pagedown"))
+          else if (Input.pressed("pagedown") ||
+            (Input.pressed(Key.J) && shiftPressed))
             lines = 20;
+          else if (Input.pressed("up") || Input.pressed(Key.K))
+            lines = -1;
+          else if (Input.pressed("down") || Input.pressed(Key.J))
+            lines = 1;
 
           // hack: disallow movement while in window
           if (Input.pressed("left") ||
@@ -275,15 +292,16 @@ class GameScene extends Scene
               return true;
             }
 
-          if (Input.pressed("home"))
+          if (Input.pressed("end") ||
+            (Input.pressed(Key.G) && shiftPressed))
             {
-              windows[hudState].scrollToBegin();
+              windows[hudState].scrollToEnd();
               return true;
             }
 
-          if (Input.pressed("end"))
+          if (Input.pressed("home") || Input.pressed(Key.G))
             {
-              windows[hudState].scrollToEnd();
+              windows[hudState].scrollToBegin();
               return true;
             }
 
