@@ -102,8 +102,8 @@ windows-clean:
     openfl build project.nmml windows --connect 6000 && \
     cp -R .bin/windows/neko/release/bin/* /mnt/1/Projects/bin/
 
+#	haxe --connect 6000 .bin/html5/release/haxe/release.hxml && 
 html5-mydebug:
-	haxe --connect 6000 .bin/html5/release/haxe/release.hxml && \
 	openfl build project.nmml html5 -Dmydebug --connect 6000 && \
 	cp -R .bin/html5/release/bin/* /mnt/1/Projects/html5/
 

@@ -208,7 +208,10 @@ class GameScene extends Scene
           var ret = handleWindows();
           if (!ret)
             handleMovement();
-          handleActions();
+
+          // hack: disallow actions when control/alt pressed
+          if (!controlPressed)
+            handleActions();
         }
 
       if (Input.pressed("exit"))
