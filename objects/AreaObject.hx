@@ -45,6 +45,24 @@ class AreaObject
     }
 
 
+// is this object known to player?
+  public inline function known(): Bool
+    {
+      return game.playerArea.knowsObject(type);
+    }
+
+
+// get object name considering whether it's known or not
+// can be overridden
+  public dynamic function getName(): String
+    {
+      // habitat objects return level
+      if (known())
+        return name;
+      else return 'unknown object';
+    }
+
+
 // set object decay in X turns
   public inline function setDecay(turns: Int)
     {

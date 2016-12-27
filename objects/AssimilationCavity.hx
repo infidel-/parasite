@@ -4,18 +4,13 @@ package objects;
 
 import game.Game;
 
-class AssimilationCavity extends AreaObject
+class AssimilationCavity extends HabitatObject
 {
-  public var level: Int;
-
   public function new(g: Game, vx: Int, vy: Int, l: Int)
     {
-      super(g, vx, vy);
+      super(g, vx, vy, l);
 
-      type = 'habitat';
       name = 'assimilation cavity';
-      isStatic = true;
-      level = l;
 
       createEntity(Const.ROW_ASSIMILATION, level);
     }

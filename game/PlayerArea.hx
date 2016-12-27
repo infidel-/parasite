@@ -40,6 +40,7 @@ class PlayerArea
       knownObjects = new List<String>();
       knownObjects.add('body');
       knownObjects.add('pickup');
+      knownObjects.add('habitat');
 
       entity = new PlayerEntity(game, x, y);
       game.scene.add(entity);
@@ -77,13 +78,13 @@ class PlayerArea
       ap = 2;
     }
 
-/*
+
 // does player know about this object?
   public inline function knowsObject(id: String): Bool
     {
       return (Lambda.has(knownObjects, id));
     }
-*/
+
 
 // ==============================   ACTIONS   =======================================
 
@@ -164,12 +165,12 @@ class PlayerArea
         for (o in olist)
           {
             // player does not know what this object is, cannot activate it
-            if (state == PLR_STATE_HOST && !Lambda.has(knownObjects, o.type) &&
+            if (state == PLR_STATE_HOST && !o.known() &&
                 player.host.isHuman && o.type != 'event_object')
               addActionToList(tmp, 'learnObject', o);
 
             // object known - add all actions defined by object
-            else if (Lambda.has(knownObjects, o.type))
+            else if (o.known())
               o.addActions(tmp);
           }
 
@@ -736,10 +737,6 @@ class PlayerArea
       var nx = x + dx;
       var ny = y + dy;
 
-      // cell not walkable
-      if (!game.area.isWalkable(nx, ny))
-        return false;
-
       // random: change movement direction
       if (state == PLR_STATE_HOST && player.hostControl < 90 &&
           Std.random(100) < 0.75 * (100 - player.hostControl))
@@ -753,19 +750,7 @@ class PlayerArea
           ny = y + Const.diry[dir];
         }
 
-      x = nx;
-      y = ny;
-
-      // move invaded host entity with invisible player entity
-      if (state == PLR_STATE_HOST)
-        player.host.setPosition(x, y);
-
-      entity.setPosition(x, y); // move player entity (even if invisible)
-
-      postAction(); // post-action call
-
-      // update AI visibility to player
-      game.area.updateVisibility();
+      moveTo(nx, ny, true);
 
       return true;
     }
@@ -773,7 +758,7 @@ class PlayerArea
 
 // move player to x, y
 // returns true on success
-  public function moveTo(nx: Int, ny: Int): Bool
+  public function moveTo(nx: Int, ny: Int, ?doPost: Bool = false): Bool
     {
       if (!game.area.isWalkable(nx, ny))
         return false;
@@ -785,10 +770,31 @@ class PlayerArea
       if (state == PLR_STATE_HOST)
         player.host.setPosition(x, y);
 
-      entity.setPosition(x, y);
+      entity.setPosition(x, y); // move player entity (even if invisible)
 
-      // update cell visibility to player
+      if (doPost)
+        postAction(); // post-action call
+
+      // update AI and cell visibility to player
       game.area.updateVisibility();
+
+      // describe objects on the ground
+      var s = new StringBuf();
+      var cnt = 0;
+      var objs = game.area.getObjectsAt(x, y);
+      for (o in objs)
+        {
+          cnt++;
+          s.add(o.getName());
+          if (cnt < objs.length)
+            s.add(', ');
+        }
+      if (s.length == 0)
+        return true;
+
+      game.log('You can see ' +
+        (cnt > 1 ? 'the following objects ' : 'an object ') + 'here: ' +
+        s.toString() + '.');
 
       return true;
     }

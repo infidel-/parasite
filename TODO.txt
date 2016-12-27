@@ -30,9 +30,7 @@ hosts should stop dying at some point:
 - Assimilation process: when the host assimilator is active, player can convert hosts and they stop losing energy passively
 - Assimilated hosts can refill their energy either using Biomineral or another structure (need a good name for biostructures)
 ==
-C-1...C-9 bad in chrome...
-draw assim cavity
-disable learn object for habitat objects
+keypress propagates into the window
 do not allow putting habitat constructions top of each other
 do not allow hosts with biomineral and assimilation body features to leave habitat
 
