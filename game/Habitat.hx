@@ -33,6 +33,13 @@ class Habitat
 // called from organ actions
   public function putBiomineral(): Bool
     {
+      // check for free space
+      if (game.area.hasObjectAt(player.host.x, player.host.y))
+        {
+          game.log('Not enough free space.', COLOR_HINT);
+          return false;
+        }
+
       // complete goals
       game.goals.complete(GOAL_PUT_BIOMINERAL);
 
@@ -60,6 +67,13 @@ class Habitat
 // called from organ actions
   public function putAssimilation(): Bool
     {
+      // check for free space
+      if (game.area.hasObjectAt(player.host.x, player.host.y))
+        {
+          game.log('Not enough free space.', COLOR_HINT);
+          return false;
+        }
+
       // check for energy
       if (energyUsed >= energy)
         {

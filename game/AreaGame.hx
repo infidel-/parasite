@@ -332,6 +332,17 @@ class AreaGame
     }
 
 
+// check if the area has any objects at (x,y)
+  public function hasObjectAt(x: Int, y: Int): Bool
+    {
+      for (o in _objects)
+        if (o.x == x && o.y == y)
+          return true;
+
+      return false;
+    }
+
+
 // get objects list at (x,y)
   public function getObjectsAt(x: Int, y: Int): List<AreaObject>
     {
