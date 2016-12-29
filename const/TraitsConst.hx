@@ -23,6 +23,11 @@ class TraitsConst
       name: 'drug addict',
       note: 'Addicted to drugs.'
     },
+    {
+      id: TRAIT_ASSIMILATED,
+      name: 'assimilated',
+      note: 'Has been assimilated.'
+    },
     ];
 }
 

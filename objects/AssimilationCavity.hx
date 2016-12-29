@@ -19,8 +19,9 @@ class AssimilationCavity extends HabitatObject
 // update actions
   override function updateActionsList()
     {
-      if (game.player.state == PLR_STATE_HOST)
-        addAction('assimilate', 'Assimilate', 0);
+      if (game.player.state == PLR_STATE_HOST &&
+          !game.player.host.hasTrait(TRAIT_ASSIMILATED))
+        addAction('assimilate', 'Assimilate Host', 0);
     }
 
 
@@ -28,6 +29,12 @@ class AssimilationCavity extends HabitatObject
   override function onAction(id: String)
     {
       game.log("Twisting tendrils wrap around the host, starting the assimilation process.");
+      game.player.host.emitSound({
+        text: '*GASP*',
+        radius: 5,
+        alertness: 10
+      });
+      game.player.host.addTrait(TRAIT_ASSIMILATED);
     }
 }
 

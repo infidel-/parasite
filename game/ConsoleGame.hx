@@ -318,6 +318,16 @@ class ConsoleGame
               stage21();
               stage22();
             }
+
+          // stage 2.3: 2.2 + assimilation cavity
+          else if (stage == 23)
+            {
+              stage1();
+              stage2();
+              stage21();
+              stage22();
+              stage23();
+            }
         }
 
       // XXX [sa] set area commands
@@ -435,6 +445,43 @@ class ConsoleGame
       game.player.evolutionManager.addImprov(IMP_BIOMINERAL, 1);
       game.player.host.organs.action('set.IMP_BIOMINERAL');
       game.player.host.organs.debugCompleteCurrent();
+
+      // build biomineral
+      var o = game.player.host.organs.get(IMP_BIOMINERAL);
+      var a = o.info.action;
+      a.obj = o;
+      game.player.host.organs.areaAction(a);
+
+      // spawn AI, attach to it and invade
+      var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+      game.area.addAI(ai);
+      game.playerArea.debugAttachAndInvadeAction(ai);
+      game.player.hostControl = 100;
+    }
+
+
+// stage 2.3: stage 2.2 + assimilation cavity
+  function stage23()
+    {
+      // assimilation cavity
+      game.player.evolutionManager.addImprov(IMP_ASSIMILATION, 1);
+      game.player.host.organs.action('set.IMP_ASSIMILATION');
+      game.player.host.organs.debugCompleteCurrent();
+
+      // move right
+      game.playerArea.moveBy(1, 0);
+
+      // build assimilation cavity
+      var o = game.player.host.organs.get(IMP_ASSIMILATION);
+      var a = o.info.action;
+      a.obj = o;
+      game.player.host.organs.areaAction(a);
+
+      // spawn AI, attach to it and invade
+      var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+      game.area.addAI(ai);
+      game.playerArea.debugAttachAndInvadeAction(ai);
+      game.player.hostControl = 100;
     }
 }
 

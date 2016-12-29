@@ -22,9 +22,9 @@ class Effects
 // add new effect
   public function add(eff: _AIEffect)
     {
-      _list.add({ 
-        type: eff.type, 
-        points: eff.points, 
+      _list.add({
+        type: eff.type,
+        points: eff.points,
         isTimer: (eff.isTimer == true)
         });
     }

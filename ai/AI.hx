@@ -831,7 +831,7 @@ class AI
 
 
 // emit specific sound
-  function emitSound(sound: AISound)
+  public function emitSound(sound: AISound)
     {
       // check for min alertness
       if (state == AI_STATE_IDLE && sound.params != null &&
