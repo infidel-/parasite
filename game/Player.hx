@@ -5,7 +5,7 @@ package game;
 import entities.PlayerEntity;
 import com.haxepunk.HXP;
 import ai.AI;
- 
+
 class Player
 {
   var game: Game; // game state link
@@ -77,7 +77,7 @@ class Player
       if (game.location == LOCATION_REGION)
         time = 5;
 
-      // parasite state: decrease energy 
+      // parasite state: decrease energy
       if (state == PLR_STATE_PARASITE)
         {
           // energy is stable in habitat
@@ -99,20 +99,18 @@ class Player
             }
         }
 
-      // host state: decrease host energy
+      // host state: host energy
       // host can die, so we need to still check for state later
       if (state == PLR_STATE_HOST)
         {
-          // energy is stable in habitat
-          if (game.location == LOCATION_AREA && game.area.isHabitat)
-            1;
-          else host.energy -= time;
+          var delta = __Math.hostEnergyPerTurn(time);
+          host.energy += delta;
 
           if (host.energy <= 0)
             {
               if (game.location == LOCATION_AREA)
                 game.playerArea.onHostDeath();
-              
+
               else if (game.location == LOCATION_REGION)
                 game.playerRegion.onHostDeath();
 
@@ -139,7 +137,7 @@ class Player
       // location-specific turn
       if (game.location == LOCATION_AREA)
         game.playerArea.turn();
-      
+
       else if (game.location == LOCATION_REGION)
         game.playerRegion.turn();
     }
@@ -208,7 +206,7 @@ private typedef PlayerVars = {
   organGrowthPointsPerTurn: Int, // organ growth points per turn
 
   areaEnergyPerTurn: Int, // area: energy spent per turn without a host
-  regionEnergyPerTurn: Int, // region: energy cost per turn without a host 
+  regionEnergyPerTurn: Int, // region: energy cost per turn without a host
   startHealth: Int, // starting parasite health
   startEnergy: Int, // starting parasite energy
   maxEnergy: Int, // max parasite energy

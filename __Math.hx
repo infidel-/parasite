@@ -7,6 +7,30 @@ class __Math
 {
   public static var game: Game; // game link (set on init)
 
+
+// host energy per turn (spent or acquired)
+  public static inline function hostEnergyPerTurn(time: Int)
+    {
+      var energy = 0;
+
+      // assimilated hosts checks
+      if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
+        {
+          // energy bonus if there is free biomineral energy and in habitat
+          if (game.location == LOCATION_AREA && game.area.isHabitat)
+            energy = game.area.habitat.hostEnergyRestored * time;
+
+          // assimilated hosts do not lose energy by default
+          else 1;
+        }
+
+      // lose energy by default
+      else energy = - time;
+
+      return energy;
+    }
+
+
 // growth points per turn
   public static inline function gpPerTurn()
     {
@@ -29,7 +53,9 @@ class __Math
   public static inline function epPerTurn()
     {
       var ep = 10;
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
+      if (game.location == LOCATION_AREA &&
+          game.area.isHabitat &&
+          game.area.habitat.energyUsed < game.area.habitat.energy)
         ep = Math.round(ep * (100 + game.area.habitat.evolutionBonus) / 100.0);
       return ep;
     }

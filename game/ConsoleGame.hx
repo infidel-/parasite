@@ -442,7 +442,7 @@ class ConsoleGame
       });
 
       // biomineral
-      game.player.evolutionManager.addImprov(IMP_BIOMINERAL, 1);
+      game.player.evolutionManager.addImprov(IMP_BIOMINERAL, 2);
       game.player.host.organs.action('set.IMP_BIOMINERAL');
       game.player.host.organs.debugCompleteCurrent();
 

@@ -688,8 +688,10 @@ class AI
 // state: host logic
   function stateHost()
     {
-      // emit random sound
-      emitRandomSound('' + AI_STATE_HOST, Std.int((100 - game.player.hostControl) / 3));
+      // non-assimilated hosts emit random sounds
+      if (!hasTrait(TRAIT_ASSIMILATED))
+        emitRandomSound('' + AI_STATE_HOST,
+          Std.int((100 - game.player.hostControl) / 3));
 
       // effect: cannot tear parasite away (given right after invasion)
       if (effects.has(EFFECT_CANNOT_TEAR_AWAY))
@@ -809,7 +811,11 @@ class AI
 
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
-      emitRandomSound('' + state, 20); // emit random sound if it exists
+
+      // emit random sound if it exists
+      // assimilated hosts do not emit random sounds
+      if (state != AI_STATE_HOST || !hasTrait(TRAIT_ASSIMILATED))
+        emitRandomSound('' + state, 20);
     }
 
 

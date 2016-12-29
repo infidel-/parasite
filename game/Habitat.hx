@@ -14,6 +14,7 @@ class Habitat
   // calculated stats
   public var energy: Int; // produced energy
   public var energyUsed: Int; // used energy
+  public var hostEnergyRestored: Int; // restored energy per turn
   public var evolutionBonus: Int; // biomineral evolution bonus (max)
 
 
@@ -25,6 +26,7 @@ class Habitat
 
       energy = 0;
       energyUsed = 0;
+      hostEnergyRestored = 0;
       evolutionBonus = 0;
     }
 
@@ -110,6 +112,7 @@ class Habitat
       // clear vars
       energy = 0;
       energyUsed = 0;
+      hostEnergyRestored = 0;
       evolutionBonus = 0;
 
       // recalc vars
@@ -121,12 +124,19 @@ class Habitat
             var info = EvolutionConst.getParams(IMP_BIOMINERAL, b.level);
             energy += info.energy;
             if (info.evolutionBonus > evolutionBonus)
-              evolutionBonus = info.evolutionBonus;
+              {
+                evolutionBonus = info.evolutionBonus;
+                hostEnergyRestored = info.hostEnergyRestored;
+              }
           }
 
         // each habitat object uses energy
         else if (o.type == 'habitat')
           energyUsed++;
+
+      // no free energy, disable energy restoration
+      if (energyUsed >= energy)
+        hostEnergyRestored = 0;
 
       Const.debugObject(this);
     }

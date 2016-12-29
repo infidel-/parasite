@@ -729,11 +729,13 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
-        note: 'Gives the player an ability to supply microhabitat with energy. Being near the formation increases the speed of organ growth and evolution.',
+        note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution and slowly restores the energy of assimilated hosts.',
         noteFunc: function (l)
           {
-            return "Energy units per formation: " + l.energy +
-              "\nBonus organ and evolution points: +" + l.evolutionBonus + "%";
+            return
+              "Energy units per formation: " + l.energy +
+              "\nBonus organ and evolution points per turn: +" + l.evolutionBonus + "%" +
+              "\nHost energy restored per turn: +" + l.energyRestored;
           },
         levelNotes: [
           '(todo fluff)',
@@ -766,18 +768,22 @@ class EvolutionConst
         levelParams: [
           {
             energy: 0,
+            hostEnergyRestored: 0,
             evolutionBonus: 0,
           },
           {
             energy: 1,
+            hostEnergyRestored: 2,
             evolutionBonus: 10,
           },
           {
             energy: 2,
+            hostEnergyRestored: 5,
             evolutionBonus: 20,
           },
           {
             energy: 3,
+            hostEnergyRestored: 10,
             evolutionBonus: 25,
           },
           ],
@@ -787,7 +793,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_ASSIMILATION,
         name: 'Assimilation cavity',
-        note: 'Gives the player an ability to assimilate hosts',
+        note: 'Gives the player an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
