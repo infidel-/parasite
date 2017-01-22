@@ -6,8 +6,20 @@
 - start work on area interest and conspiracy/antags
   - should become more active in the scenario goal phase
 
-
+mark dopamine reg and assim cavity as single-level
 important message queue for showing multiple important messages in window
+do not allow hosts with biomineral and assimilation body features to leave habitat
+do not allow to esc from quit window, allow to start a new game or exit to main menu instead
+
+if player releases live humans, they talk to authorities and media (i was possessed by an angel!)
+releasing live agents increases The Group's mission priority
+  - adds media exposure
+  - adds area interest
+  - adds area alertness
+  - adds cleanup side missions (silence the reporter, erase memory, etc)
+gauging media exposure and receiving the side missions is done by using computers
+or building a special processing building?
+
 ==
 police radio gives access to radio messages and opens up way to:
 
@@ -21,15 +33,12 @@ lv1 - civilians and police cannot call for help in small radius
 lv2 - radius+
 lv3 - radius++
 
+habitat detection alert improvement:
+no levels - marks with a red + on map, gives a message
+
 1) find police radio/security radio
 2) evolve radio receiver
 3) grow receiver
-==
-do not allow hosts with biomineral and assimilation body features to leave habitat
-
-make microhabitat knowledge percentage-based. when building new stuff in habitats, the knowledge increases, opening up new possibilities.
-
-- i should probably make some habitat imps that will notify player about detection.
 ==================================
 LATER
 
@@ -84,7 +93,7 @@ CONSOLE CHEATSHEET:
 ;s2 - set player stage 2 (stage 1 + microhabitat)
 ;s21 - set player stage 2.1 (stage 2 + camo layer, computer use)
 ;s22 - set player stage 2.2 (stage 2.1 + biomineral)
-;s23 - set player stage 2.3 (stage 2.1 + assimilation)
+;s23 - set player stage 2.3 (stage 2.2 + assimilation)
 ;sai10 - set area interest 10
 
 ;ie - info: events list

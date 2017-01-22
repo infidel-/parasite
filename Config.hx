@@ -105,6 +105,14 @@ class Config
     }
 
 
+// dump current config
+  public function dump()
+    {
+      for (key in map.keys())
+        game.debug(key + ' = ' + map[key]);
+    }
+
+
 // save config
   public function save()
     {

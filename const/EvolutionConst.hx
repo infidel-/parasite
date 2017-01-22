@@ -735,7 +735,7 @@ class EvolutionConst
             return
               "Energy units per formation: " + l.energy +
               "\nBonus organ and evolution points per turn: +" + l.evolutionBonus + "%" +
-              "\nHost energy restored per turn: +" + l.energyRestored;
+              "\nHost energy restored per turn: +" + l.hostEnergyRestored;
           },
         levelNotes: [
           '(todo fluff)',

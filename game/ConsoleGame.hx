@@ -61,11 +61,19 @@ class ConsoleGame
 
 
 // set <option> <value>
+// set
   function setOptionCommand(arr: Array<String>)
     {
+      if (arr.length == 1)
+        {
+          game.config.dump();
+          return;
+        }
+
       if (arr.length < 3)
         {
-          game.debug('set <option> <value>');
+          game.debug('set <option> <value> - set option');
+          game.debug('set - show options');
           return;
         }
 
@@ -284,6 +292,19 @@ class ConsoleGame
 // set commands
   function setCommand(cmd: String)
     {
+      // no arguments, show available
+      if (cmd == 's')
+        {
+          game.debug(
+            ';s1 - set player stage 1 (human civilian host, tutorial done)\n' +
+            ';s2 - set player stage 2 (stage 1 + microhabitat)\n' +
+            ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)\n' +
+            ';s22 - set player stage 2.2 (stage 2.1 + biomineral)\n' +
+            ';s23 - set player stage 2.3 (stage 2.2 + assimilation)\n' +
+            ';sai10 - set area interest 10');
+          return;
+        }
+
       var stage = Std.parseInt(cmd.substr(1));
 
       // XXX [s1] set stage X
