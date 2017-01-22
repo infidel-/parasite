@@ -30,7 +30,7 @@ class EvolutionWindow extends TextWindow
 
       // add available improvements
       for (imp in game.player.evolutionManager)
-        if (imp.level < 3)
+        if (imp.level < imp.info.maxLevel)
           {
             var buf = new StringBuf();
             buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
@@ -112,8 +112,9 @@ class EvolutionWindow extends TextWindow
         {
           buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
           buf.add(' ');
-          buf.add(imp.level);
-          if (imp.level < 3)
+          if (imp.info.maxLevel > 1)
+            buf.add(imp.level);
+          if (imp.level < imp.info.maxLevel)
             buf.add(' (' + imp.ep + '/' +
               EvolutionConst.epCostImprovement[imp.level] + ' ep)');
           buf.add("\n<font color='#5ebee5'>" + imp.info.note + '</font>\n');

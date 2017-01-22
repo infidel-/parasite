@@ -1,6 +1,4 @@
 - test playthrough of the clue gathering
-- 2.2 biomineralization (habitat energy cell)
-- 2.3 assimilation (host conversion - stop passive energy loss)
 - add debug stage 3 (scenario goals)
 - test scenario goals
 - start work on area interest and conspiracy/antags
@@ -9,7 +7,7 @@
 mark dopamine reg and assim cavity as single-level
 important message queue for showing multiple important messages in window
 do not allow hosts with biomineral and assimilation body features to leave habitat
-do not allow to esc from quit window, allow to start a new game or exit to main menu instead
+do not allow to esc from quit window, allow to start a new game or exit to main menu instead. allow watching logs and stuff!
 
 if player releases live humans, they talk to authorities and media (i was possessed by an angel!)
 releasing live agents increases The Group's mission priority

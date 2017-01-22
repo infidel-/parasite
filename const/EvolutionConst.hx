@@ -44,6 +44,7 @@ class EvolutionConst
         id: IMP_DECAY_ACCEL,
         name: 'Decay acceleration',
         note: 'Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Bodies will disappear in " + l.turns + " turns";
@@ -74,6 +75,7 @@ class EvolutionConst
         id: IMP_PROT_COVER,
         name: 'Protective cover',
         note: 'Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Host armor bonus (minus to damage): " + l.armor + "\n" +
@@ -103,6 +105,7 @@ class EvolutionConst
         id: IMP_WOUND_REGEN,
         name: 'Stem cell reservoirs',
         note: 'Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return l.turns + " turns to restore 1 health of host and parasite";
@@ -131,6 +134,7 @@ class EvolutionConst
         id: IMP_HEALTH,
         name: 'Antibody generators',
         note: 'Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "+" + l.health + " health to host";
@@ -159,6 +163,7 @@ class EvolutionConst
         id: IMP_ENERGY,
         name: '??Host energy bonus',
         note: 'Grown body feature gives a bonus to maximum host energy',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Host maximum energy multiplier: " + l.hostEnergyMod +
@@ -190,6 +195,7 @@ class EvolutionConst
         id: IMP_MUSCLE,
         name: 'Microvascular networks',
         note: 'Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "+" + l.strength + " strength to host";
@@ -218,6 +224,7 @@ class EvolutionConst
         id: IMP_ACID_SPIT,
         name: '??Acid spit',
         note: 'Grown body feature gives the host an ability to spit acid on an NPC',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
@@ -269,6 +276,7 @@ class EvolutionConst
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
         note: 'Grown body feature gives the host an ability to spit slime on an NPC to slow them down)',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Slime strength: " + l.strength +
@@ -316,6 +324,7 @@ class EvolutionConst
         id: IMP_PARALYSIS_SPIT,
         name: '??Paralysis spit',
         note: 'Grown body feature gives the host an ability to paralyze an NPC',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Paralysis effect time: " + l.time +
@@ -363,6 +372,7 @@ class EvolutionConst
         id: IMP_PANIC_GAS,
         name: '??Panic gas',
         note: 'Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Cloud range: " + l.range +
@@ -416,6 +426,7 @@ class EvolutionConst
         id: IMP_PARALYSIS_GAS,
         name: '??Paralysis gas',
         note: 'Grown body feature gives the host an ability to emit a cloud of paralytic gas',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Cloud range: " + l.range +
@@ -472,6 +483,7 @@ class EvolutionConst
         id: IMP_ATTACH,
         name: '??Attach efficiency',
         note: 'Improves base grip on attach to host',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Base attach grip: " + l.attachHoldBase;
@@ -495,6 +507,7 @@ class EvolutionConst
         id: IMP_HARDEN_GRIP,
         name: '??Hold efficiency',
         note: 'Improves base grip on harden grip action',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Base harden grip: " + l.attachHoldBase;
@@ -518,6 +531,7 @@ class EvolutionConst
         id: IMP_REINFORCE,
         name: '??Control efficiency',
         note: 'Improves base control on reinforce control action',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Base reinforce control: " + l.reinforceControlBase;
@@ -545,6 +559,7 @@ class EvolutionConst
         id: IMP_BRAIN_PROBE,
         name: 'Brain probe',
         note: 'Allows probing host brain to learn its contents',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Human society knowledge multiplier: " + l.humanSociety +
@@ -624,6 +639,7 @@ class EvolutionConst
         id: IMP_CAMO_LAYER,
         name: 'Camouflage layer',
         note: 'Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "AI alertness multiplier: " + l.alertness;
@@ -663,6 +679,7 @@ class EvolutionConst
         id: IMP_DOPAMINE,
         name: 'Dopamine regulation',
         note: 'Removes the need to reinforce control of the host.',
+        maxLevel: 1,
         levelNotes: [
           '(fluff)',
           '(fluff)',
@@ -688,6 +705,7 @@ class EvolutionConst
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
         note: 'Gives the player an ability to build microhabitats',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return "Maximum number of microhabitats: " + l.numHabitats +
@@ -730,6 +748,7 @@ class EvolutionConst
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
         note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution and slowly restores the energy of assimilated hosts.',
+        maxLevel: 3,
         noteFunc: function (l)
           {
             return
@@ -794,6 +813,7 @@ class EvolutionConst
         id: IMP_ASSIMILATION,
         name: 'Assimilation cavity',
         note: 'Gives the player an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
+        maxLevel: 1,
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -839,6 +859,7 @@ class EvolutionConst
         id: IMP_,
         name: '',
         note: '(todo fluff)',
+        maxLevel: 3,
         organ: {
           name: '',
           note: '(todo fluff)',
@@ -928,6 +949,7 @@ typedef ImprovInfo =
   path: _Path, // path ID
   name: String, // improvement name
   note: String, // improvement description
+  maxLevel: Int, // maximum improvement level
   ?noteFunc: Dynamic -> String, // advanced description
   ?organ: OrganInfo, // organ that can be grown
   levelNotes: Array<String>, // improvement descriptions for different levels
