@@ -212,6 +212,17 @@ class Organs
     }
 
 
+// has any mold or in progress of growing one
+  public function hasMold(): Bool
+    {
+      for (o in _list)
+        if (o.info.isMold)
+          return true;
+
+      return (currentOrgan != null ? currentOrgan.info.isMold : false);
+    }
+
+
 // get organ by id
   public function get(id: _Improv): Organ
     {

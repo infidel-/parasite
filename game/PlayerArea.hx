@@ -71,7 +71,7 @@ class PlayerArea
               player.host.onDetach();
               onDetach();
 
-              game.log("You've lost control of the host.");
+              log("You've lost control of the host.");
             }
         }
 
@@ -508,7 +508,7 @@ class PlayerArea
       var params = player.evolutionManager.getParams(IMP_ATTACH);
       attachHold = params.attachHoldBase;
 
-      game.log('You have managed to attach to a host.');
+      log('You have managed to attach to a host.');
 
       ai.onAttach(); // callback to AI
     }
@@ -517,7 +517,7 @@ class PlayerArea
 // action: harden grip when attached to host
   function hardenGripAction()
     {
-      game.log('You harden your grip on the host.');
+      log('You harden your grip on the host.');
 
       // improv: harden grip bonus
       var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
@@ -535,9 +535,9 @@ class PlayerArea
 // action: try to invade this AI host
   function invadeHostAction()
     {
-//      game.log('You attempt to invade the host.');
+//      log('You attempt to invade the host.');
 //      if (Std.random(100) < )
-      game.log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
+      log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
 
       // save AI link
       player.host = attachHost;
@@ -564,7 +564,7 @@ class PlayerArea
 // action: try to reinforce control over host
   function reinforceControlAction()
     {
-      game.log('You reinforce mental control over the host.');
+      log('You reinforce mental control over the host.');
 
       // improv: control efficiency
       var params = player.evolutionManager.getParams(IMP_REINFORCE);
@@ -576,7 +576,7 @@ class PlayerArea
 // action: try to leave this AI host
   function leaveHostAction()
     {
-      game.log('You release the host.');
+      log('You release the host.');
       player.host.onDetach();
       onDetach();
     }
@@ -585,14 +585,25 @@ class PlayerArea
 // action: leave area
   function leaveAreaAction()
     {
-      // special check for habitat
-      if (game.area.typeID == AREA_HABITAT && game.area.hasAnyAI())
+      // special checks for habitat
+      if (game.area.typeID == AREA_HABITAT)
         {
-          game.log('You cannot leave the habitat with outsiders in it!');
-          return;
+          if (game.area.hasAnyAI())
+            {
+              log('You cannot leave the habitat with outsiders in it!',
+                COLOR_HINT);
+              return;
+            }
+
+          if (state == PLR_STATE_HOST && player.host.organs.hasMold())
+            {
+              log('You cannot leave the habitat with a mold.',
+                COLOR_HINT);
+              return;
+            }
         }
 
-      game.log("You leave the area.");
+      log("You leave the area.");
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
     }
@@ -604,7 +615,7 @@ class PlayerArea
       attachHost.parasiteAttached = false;
       onDetach();
 
-      game.log('You detach from the potential host.');
+      log('You detach from the potential host.');
     }
 
 
@@ -614,15 +625,15 @@ class PlayerArea
       // animals do not have any useful memories
       if (!player.host.isHuman)
         {
-          game.log('This host is not intelligent enough.');
+          log('This host is not intelligent enough.');
           return;
         }
 
-      game.log('You probe the brain of the host and learn its contents. The host grows weaker.');
+      log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
       // skills and knowledge
       var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
-      if (game.player.vars.skillsEnabled)
+      if (player.vars.skillsEnabled)
         {
           // can access skills from level 2
           if (params.hostSkillsMod > 0)
@@ -632,7 +643,7 @@ class PlayerArea
           if (params.hostAttrsMod > 0 && !player.host.isAttrsKnown)
             {
               player.host.isAttrsKnown = true;
-              game.log('You have learned the parameters of this host.');
+              log('You have learned the parameters of this host.');
 
               // drug addict goal chain
               if (player.host.hasTrait(TRAIT_DRUG_ADDICT))
@@ -648,7 +659,7 @@ class PlayerArea
       if (!player.host.isNameKnown)
         {
           player.host.isNameKnown = true;
-          game.log('You find out that the name of this host is ' +
+          log('You find out that the name of this host is ' +
             player.host.getName() + '.');
         }
 
@@ -665,7 +676,7 @@ class PlayerArea
         {
           player.host.npc.memoryKnown = true;
 
-          game.log('This human does not know anything else.', COLOR_TIMELINE);
+          log('This human does not know anything else.', COLOR_TIMELINE);
         }
 
       // damage
@@ -687,7 +698,7 @@ class PlayerArea
 // action: learn about area object
   function learnObjectAction(o: AreaObject)
     {
-      game.log('You probe the brain of the host and learn what that object is for.');
+      log('You probe the brain of the host and learn what that object is for.');
 
       knownObjects.add(o.type);
       if (o.item != null)
@@ -713,12 +724,12 @@ class PlayerArea
 
       if (skill == null)
         {
-          game.log('You have learned the basics of ' + hostSkill.info.name + ' skill.');
+          log('You have learned the basics of ' + hostSkill.info.name + ' skill.');
           player.skills.addID(hostSkill.id, amount);
         }
       else if (!hostSkill.info.isBool)
         {
-          game.log('You have increased your knowledge of ' + hostSkill.info.name +
+          log('You have increased your knowledge of ' + hostSkill.info.name +
             ' skill.');
           var val = Const.clampFloat(skill.level + amount, 0, hostSkill.level);
           player.skills.increase(hostSkill.id, val - skill.level);
@@ -792,7 +803,7 @@ class PlayerArea
       if (s.length == 0)
         return true;
 
-      game.log('You can see ' +
+      log('You can see ' +
         (cnt > 1 ? 'the following objects ' : 'an object ') + 'here: ' +
         s.toString() + '.');
 

@@ -766,6 +766,7 @@ class EvolutionConst
           name: 'Biomineral mold',
           note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed.',
           gp: 200,
+          isMold: true,
           action: {
             id: 'formBiomineral',
             type: ACTION_ORGAN,
@@ -824,6 +825,7 @@ class EvolutionConst
           name: 'Assimilation mold',
           note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed.',
           gp: 200,
+          isMold: true,
           action: {
             id: 'formAssimilation',
             type: ACTION_ORGAN,
@@ -971,6 +973,7 @@ typedef OrganInfo =
   name: String, // name
   note: String, // description
   gp: Int, // gp cost to grow
+  ?isMold: Bool, // is this a construction mold?
   ?action: _PlayerAction, // player action
   ?hasTimeout: Bool, // has activation timeout?
   ?onGrow: Game -> Player -> Void, // func to call on growing organ

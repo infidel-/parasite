@@ -6,7 +6,6 @@
 
 mark dopamine reg and assim cavity as single-level
 important message queue for showing multiple important messages in window
-do not allow hosts with biomineral and assimilation body features to leave habitat
 do not allow to esc from quit window, allow to start a new game or exit to main menu instead. allow watching logs and stuff!
 
 if player releases live humans, they talk to authorities and media (i was possessed by an angel!)
