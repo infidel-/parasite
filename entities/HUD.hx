@@ -135,6 +135,9 @@ class HUD
 // update player actions list
   inline function updateActionList()
     {
+      if (game.isFinished)
+        return;
+
       if (game.location == LOCATION_AREA)
         _listActions = game.playerArea.getActionList();
 
@@ -247,7 +250,9 @@ class HUD
           n++;
         }
 
-      if (_listActions.length == 0)
+      if (game.isFinished)
+        buf.add('<font color="#FF0000">Press ENTER to restart</font>');
+      else if (_listActions.length == 0)
         buf.add('No available actions.');
 
       _textField.htmlText = buf.toString();

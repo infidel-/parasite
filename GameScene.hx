@@ -220,6 +220,14 @@ class GameScene extends Scene
 
       if (!hud.consoleVisible())
         {
+          // enter restarts the game when it is finished
+          if (game.isFinished && Input.pressed("enter") &&
+              getState() == HUDSTATE_DEFAULT)
+            {
+              game.restart();
+              return;
+            }
+
           var ret = handleWindows();
           if (!ret)
             handleMovement();
@@ -275,11 +283,6 @@ class GameScene extends Scene
 // handle opening and closing windows
   function handleWindows(): Bool
     {
-      // game over screen
-      if (hudState == HUDSTATE_FINISH &&
-          Input.pressed("closeWindow"))
-        exit();
-
       // window open
       if (hudState != HUDSTATE_DEFAULT)
         {
@@ -401,7 +404,7 @@ class GameScene extends Scene
 
 #if mydebug
           // open debug window
-          else if (debugPressed)
+          else if (debugPressed && !game.isFinished)
             setState(HUDSTATE_DEBUG);
 #end
         }
@@ -413,6 +416,10 @@ class GameScene extends Scene
 // handle player movement
   function handleMovement()
     {
+      // game finished
+      if (game.isFinished)
+        return;
+
       var dx = 0;
       var dy = 0;
 
@@ -468,6 +475,10 @@ class GameScene extends Scene
 // handle player actions
   function handleActions()
     {
+      // game finished
+      if (game.isFinished)
+        return;
+
       // actions from action menu
       for (i in 1...11)
         if (Input.pressed("action" + i))

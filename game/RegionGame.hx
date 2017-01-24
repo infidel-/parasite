@@ -19,7 +19,7 @@ class RegionGame
   var _array: Array<Array<AreaGame>>; // 2-dim array of areas for quicker access
   var _list: Map<Int, AreaGame>; // hashmap of areas (can include additional areas)
 
-  static var _maxID: Int = 0; // region id counter
+  public static var _maxID: Int = 0; // region id counter
 
   public function new(g: Game, tv: String, w: Int, h: Int)
     {

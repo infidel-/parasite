@@ -71,9 +71,9 @@ class Game
 // init game stuff - called from GameScene.begin()
   public function init()
     {
-      log('Parasite v' + Version.getVersion() +
-        ' (build: ' + Version.getBuild() + ')');
-      Const.todo('proper title screen');
+      var s = 'Parasite v' + Version.getVersion() +
+        ' (build: ' + Version.getBuild() + ')';
+      log(s);
       turns = 0;
       turnsArea = 0;
       isFinished = false;
@@ -85,12 +85,13 @@ class Game
       debugArea = new DebugArea(this);
 
       managerRegion = new RegionManager(this);
-      playerRegion = new PlayerRegion( this);
+      playerRegion = new PlayerRegion(this);
       debugRegion = new DebugRegion(this);
 
       // generate world
       world = new World(this);
       world.generate();
+      var region = world.get(0);
 
       // generate timeline from a scenario
       timeline = new Timeline(this);
@@ -145,6 +146,16 @@ class Game
 
       updateHUD(); // update HUD state
       isInited = true;
+    }
+
+
+// game restart
+  public function restart()
+    {
+      isInited = false;
+      RegionGame._maxID = 0;
+      messageList.clear();
+      init();
     }
 
 
@@ -239,21 +250,24 @@ class Game
     {
       isFinished = true;
       finishText = '';
-      scene.setState(HUDSTATE_FINISH);
 
       // game lost
       if (result == 'lose')
         {
           log('You have lost the game.');
           if (condition == 'noHost')
-            log('You cannot survive without a host for long.');
-          else if (condition == 'noHost')
-            log('You have succumbed to injuries.');
+            finishText = 'You cannot survive without a host for long.';
+          else if (condition == 'noHealth')
+            finishText = 'You have succumbed to injuries.';
+
+          log(finishText);
         }
       else
         {
           log('You have won the game!');
         }
+
+      scene.setState(HUDSTATE_FINISH);
     }
 
 
