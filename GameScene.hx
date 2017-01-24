@@ -253,6 +253,25 @@ class GameScene extends Scene
     }
 
 
+// close the current window
+  function closeWindow()
+    {
+      // in case of message window check if there are more messages in the queue
+      if (hudState == HUDSTATE_MESSAGE &&
+          game.importantMessageQueue.length > 0)
+        {
+          game.importantMessage = game.importantMessageQueue.first();
+          game.importantMessageQueue.remove(game.importantMessage);
+
+          setState(HUDSTATE_MESSAGE);
+
+          return;
+        }
+
+      setState(HUDSTATE_DEFAULT);
+    }
+
+
 // handle opening and closing windows
   function handleWindows(): Bool
     {
@@ -306,11 +325,11 @@ class GameScene extends Scene
             }
 
           if (Input.pressed("enter") && windows[hudState].exitByEnter)
-            setState(HUDSTATE_DEFAULT);
+            closeWindow();
 
           // close windows
           if (Input.pressed("closeWindow"))
-            setState(HUDSTATE_DEFAULT);
+            closeWindow();
         }
 
       // no windows open

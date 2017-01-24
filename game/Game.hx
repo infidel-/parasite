@@ -35,6 +35,8 @@ class Game
   public var finishText: String; // finishing text in game over window
   public var messageList: List<String>; // last X messages of log
   public var importantMessage: String; // last important message
+  public var importantMessageQueue: List<String>; // last important message
+  public var importantMessagesEnabled: Bool; // messages enabled?
 
   public function new()
     {
@@ -55,6 +57,8 @@ class Game
       HXP.scene = scene;
       messageList = new List();
       importantMessage = '';
+      importantMessageQueue = new List();
+      importantMessagesEnabled = true;
       isInited = false;
       finishText = '';
 
@@ -265,9 +269,22 @@ class Game
     {
       if (col == null)
         col = COLOR_MESSAGE;
-      importantMessage =
+      var msg =
         "<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
       log(s, col);
+
+      if (!importantMessagesEnabled)
+        return;
+
+      // another message already displayed, add to queue
+      if (scene.getState() == HUDSTATE_MESSAGE)
+        {
+          importantMessageQueue.add(msg);
+          return;
+        }
+
+      // hud clear, show message
+      importantMessage = msg;
       scene.setState(HUDSTATE_MESSAGE);
     }
 

@@ -310,6 +310,8 @@ class ConsoleGame
       // XXX [s1] set stage X
       if (stage > 0)
         {
+          game.importantMessagesEnabled = false;
+
           // stage 1: civ host, tutorial done
           if (stage == 1)
             {
@@ -349,6 +351,8 @@ class ConsoleGame
               stage22();
               stage23();
             }
+
+          game.importantMessagesEnabled = true;
         }
 
       // XXX [sa] set area commands

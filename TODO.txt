@@ -4,8 +4,6 @@
 - start work on area interest and conspiracy/antags
   - should become more active in the scenario goal phase
 
-mark dopamine reg and assim cavity as single-level
-important message queue for showing multiple important messages in window
 do not allow to esc from quit window, allow to start a new game or exit to main menu instead. allow watching logs and stuff!
 
 if player releases live humans, they talk to authorities and media (i was possessed by an angel!)
