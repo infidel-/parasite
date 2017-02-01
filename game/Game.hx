@@ -91,7 +91,6 @@ class Game
       // generate world
       world = new World(this);
       world.generate();
-      var region = world.get(0);
 
       // generate timeline from a scenario
       timeline = new Timeline(this);

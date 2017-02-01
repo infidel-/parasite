@@ -62,6 +62,8 @@ class Config
             continue;
 
           var tmp = line.split('=');
+          var key = StringTools.trim(tmp[0]);
+          var val = StringTools.trim(tmp[1]);
 
           set(key, val);
         }

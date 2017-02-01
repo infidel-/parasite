@@ -1,3 +1,117 @@
+broad directions:
+scenario goals test
+conspiracy group
+  priority
+side missions (depending on interaction with humans and hosts)
+  ufologists and conspiracy nuts (fringe media)
+  mainstream media
+group active measures
+more scenario goals
+scenes
+additional skills
+city generation + city graphics
+gui graphics + gui rework to support mouse
+
+NO TEXT IN WINDOWS IN WINDOWS RELEASE (CHECK LINUX)!
+
+===
+
+remove area interest
+
+group priority logic:
+events increase group priority ->
+priority increases the chance of creating dedicated agents team ->
+creates agents team (four team levels, based on current priority):
+  1) pistols (occasional grenade), kevlar armor,
+     1 analytic (-1 distance/turn)
+  2) pistols (chance of assault rifle or shotgun), kevlar armor
+     2 analytics (-2 distance/turn)
+  3) assault rifles/shotguns, grenades, full-body armor
+     3 analytics (-5 distance/turn)
+  4) military stunners and parasite-specific researched weapons
+     4 analytics (-10 distance/turn)
+  ->
+with active team team distance is decreased with each event (starts with 100)
+  agents actively search for parasite (parasite leaves detectable residue)
+  all events count toward team distance instead of group priority
+when team distance is low enough, spawn team agents (one by one) in any area
+  how does the parasite know who is agent and who is not?
+    special improvement or psychology/spot hidden/alertness skill
+      false positives
+      improv is a knowledge?
+      any ideas on how to obtain that improv?
+  base message: You feel someone watching you.
+  on team agent alert:
+    -distance
+    combat
+  if team agent is spawned and seen by player but evaded with no alert:
+    +distance
+when team distance is zero and any part of the team is alive, spawn whole team in a random habitat
+when team distance is 200:
+  -priority
+  team deactivated
+killing or possessing team members:
+  -distance
+  +priority
+killing whole team:
+  +priority
+  activate new team
+
+
+brain probing any event NPCs increases a special counter
+when that counter raises to X (5-10) the existence of the group is revealed
+  and group modus operandi is explained. priority and agent teams concepts.
+    will be potentially a lot of text, open a separate help window (if it could open a wiki page inside, that would be awesome)?
+  give player a choice:
+    1) easy - show exact group priority and team size, distance
+    2) normal - describe priority and distance in vague words
+    3) realistic - disable that information, only message-based hints
+in debug mode it is added to knowledge window in any case
+
+
+== Events, side missions and group priority logic ==
+events raise area alertness (don't forget to check!)
+events always increase group priority
+event results (npcs) are put into the list
+  time
+  severity
+group-only events only increase group priority and do not go into the list
+the list grows up to X, then randomly removes stuff that overflows it
+each turn:
+  check if X turns have passed, then treat time passed as a chance bonus
+  roll chance
+  on success generate news item (group coverup or sanity loss):
+    X suicide
+    X was gunned down today in a shootout with the local police
+    X had been in a terrible accident, dead now
+    X had been put into an asylum
+    fringe: interview with X (i was possessed by an angel!)
+    fringe: body with strange abnormalities was found
+  latest news items can be read using the computer
+    use computer will probably need a separate window interface at some point
+list of possible events (debug shows all priority increases):
+  parasite sightings (low)
+  parasite with a host sightings (medium)
+  dead bodies with organs (high)
+  dead bodies (low)
+  freeing any hosts (low)
+  freeing agent hosts (no mission, group only, high)
+  any combat (medium)
+  combat with agents (high)
+  agents finding habitat (no mission, group only, high)
+
+what is the point of side missions?
+side missions:
+  silence X (reporter, investigator, previous host)
+    decreases city-wide alertness
+  steal and destroy the body?
+
+sanity (psyche-based)
+  sanity loss on parasite-related events
+  temp insanity
+==
+===
+
 - test playthrough of the clue gathering
 - add debug stage 3 (scenario goals)
 - test scenario goals
@@ -5,14 +119,8 @@
   - should become more active in the scenario goal phase
 
 
-if player releases live humans, they talk to authorities and media (i was possessed by an angel!)
-releasing live agents increases The Group's mission priority
-  - adds media exposure
-  - adds area interest
-  - adds area alertness
-  - adds cleanup side missions (silence the reporter, erase memory, etc)
-gauging media exposure and receiving the side missions is done by using computers
-or building a special processing building?
+remove exception.txt text (and fix sending exceptions)
+auto-add google analytics to html
 
 ==
 police radio gives access to radio messages and opens up way to:
@@ -21,6 +129,8 @@ radio transceiver improvement:
 lv1 - listen to police/security radio
 lv2 - listen to
 lv3 - listen to cellphone comms
+
+when player has that improv, each time someone uses a phone/radio, an animation of radiowaves is played on top of the NPC
 
 em noise/ecm jammer improvement:
 lv1 - civilians and police cannot call for help in small radius
@@ -35,24 +145,37 @@ no levels - marks with a red + on map, gives a message
 3) grow receiver
 ==================================
 LATER
+most of the improvements and skills should come from special conditions, like people professions, traits, finding locations, etc
 
 scenes (sometimes need forensics)
 police station -> forensics expert -> forensics
 ? news (newspapers, mobile)
 books - forensics guide (15%), sherlock holmes (10%)
 
-roads on region map leading to facilities
+fast travel:
+  public transport
+  roads on region map leading to facilities
   fast travel on roads when in car
     entering a car
   disallow travel outside of city bounds by foot (no sewers)?
   disguise skill - allows hiding parasite without using improv
   disguise + assimilation allows using public transport and cars
     public transport and car rental costs money (gained from wallets)
-  how to gain disguise skill?
+  how to gain disguise skill? (books, some professions)
   needs disguise kit?
 
+rename alertness to panic?
+area alertness effects (make four rough alertness stages):
+  1) civilians start carrying guns and mace
+  2) more cops and heavier cop gear
+  3) block fast travel
+  3) block normal area travel on high alertness
+  3) police calling backup brings swat units
+    swat units have gas masks and armor
+      armor - vest + helmet
+  4) curfew and military patrols
+
 ? rework habitat detection from probability to counter based on interest (counter grows with each turn until it starts rolling chances based on interest)
-game restart
 citygen - smooth out building tiles when they are not wide enough
 what happens on mission failure
 scenario work and expansion:
@@ -99,7 +222,6 @@ CONSOLE CHEATSHEET:
 ;lia1 - learn all improvements at level 1
 
 =====
-area alertness - block normal area travel on high alertness
 ? world generation
 ? world travel
 ?? more knowledges
@@ -110,7 +232,7 @@ since use computer is max 30% (rarer 50%), search is very slow
     find hacker and probe his brain (an alternative is to grind computer use)
     new area type - university
     add NPC age
-    new NPC parameter - job
+    new NPC parameter - job (profession)
     university has professors and students (job types)
     search for a person with high skill X interface
     sub-menus:
@@ -133,17 +255,6 @@ raise knowledge human society to max and build mind-swap device
 raising knowledge requires special evolution imp - memory map
 ? need to tie in with the original idea
 ==
-AREA INTEREST, CONSPIRACY
-
-brain probing some event NPCs (marked with flags) should reveal the existence of the conspiracy (player antags)
-  this is a special event that opens up the area interest indicator
-  it might show when the habitat was compromised?
-  it might open up new research venues?
-area interest is unused
-area interest should bring something special
-killing conspiracy agents should increase both area interest and conspiracy interest
-leaving conspiracy agent hosts should increase interest eventually
-==
 ==
 
 search in timeline
@@ -152,25 +263,36 @@ tooltips in area and region mode (type, habitat, clues, events, alertness, etc)
 organ actions -> OrganInfo.actionXXX
 inventory actions -> ItemInfo.actionXXX
 move Const.PLAYER_ACTION into proper classes?
-host traits - for ex, fat people have more energy overall, so they are more desirable
+more host traits
+  skills:
+    marksman, hacker, martial arts expert
+  intellect:
+    low, medium, high
+  will (psyche):
+    weak-willed, strong-willed
+  body type:
+    anorexic - -energy, -str, -con
+    weak - -str, -con
+    overweight - +energy
+    heavily overweight - +energy, -str, -con
+    muscular - +energy, +str, +con
 some evolution can only happen if player has access to prerequisites, for example, stands on top of some object
 more believable city generation - areas, buildings, sidewalk, roadway, car traffic, traffic lights
 cops arriving in cars
 region mode: do not despawn area until player moves?
-swat + police calling backup brings swat when alertness stage is >= 1
-swat units have gas masks and armor
-armor - vest + helmet
 military stun rifles for the blackops with greater effect
 walkable city sewers (should i?)
 electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp
 organ damage - organ must heal itself before it becomes active again
 limit region access (until some learning flag triggers, initial progression)
-- ?? make tilemap screen-sized and repaint with each movement ??
+?? make tilemap screen-sized and repaint with each movement ??
 use debug player stages as basis for a save system (allow saves only on some critical game events)
 move all organ actions into EvolutionConst?
 evolution fluff
+indoor locations - whole building floor, can enter and leave through the exit or stairs
+ingame help window with links leading to wiki pages
 
 
-scene. getSpriteByLayer(layer) - draw lines on this one
+scene.getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
