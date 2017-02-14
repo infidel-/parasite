@@ -8,6 +8,29 @@ class __Math
   public static var game: Game; // game link (set on init)
 
 
+// parasite energy per turn (spent or acquired)
+  public static inline function parasiteEnergyPerTurn(time: Int)
+    {
+      var energy = 0;
+
+      // energy is stable in habitat by default
+      // but is restored when free habitat energy is available
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        energy = game.area.habitat.parasiteEnergyRestored * time;
+
+      // lose some energy
+      // do not multiple by time since we account for that in the player vars
+      else if (game.location == LOCATION_AREA)
+        energy = - game.player.vars.areaEnergyPerTurn;
+
+      // lose some energy
+      else if (game.location == LOCATION_REGION)
+        energy = - game.player.vars.regionEnergyPerTurn;
+
+      return energy;
+    }
+
+
 // host energy per turn (spent or acquired)
   public static inline function hostEnergyPerTurn(time: Int)
     {

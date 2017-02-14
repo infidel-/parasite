@@ -1,23 +1,45 @@
-broad directions:
-scenario goals test
-conspiracy group
-  priority
-side missions (depending on interaction with humans and hosts)
-  ufologists and conspiracy nuts (fringe media)
-  mainstream media
-group active measures
-more scenario goals
-scenes
-additional skills
-city generation + city graphics
-gui graphics + gui rework to support mouse
+== MAINTENANCE
+restore parasite health when near biomineral
+remove exception.txt text (and fix sending exceptions)
+auto-add google analytics to html
 
-NO TEXT IN WINDOWS IN WINDOWS RELEASE (CHECK LINUX)!
+== CURRENT
 
-===
+- test playthrough of the clue gathering
+- add debug stage 3 (scenario goals)
+- test scenario goals
+- start work on area interest and conspiracy/antags
+  - should become more active in the scenario goal phase
+
+== GROUP: ACTIVE MEASURES
 
 remove area interest
 
+== PHASE 1:
+brain probing any event NPCs increases a special counter
+when that counter raises to X (5-10) the existence of the group is revealed
+  and group modus operandi is explained. priority and agent teams concepts.
+    will be potentially a lot of text, open a separate help window (if it could open a wiki page inside, that would be awesome)?
+  give player a choice:
+    1) easy - show exact group priority and team level and size, distance
+    2) normal - describe priority and distance in vague words
+    3) realistic - disable that information, only message-based hints
+in debug mode it is added to knowledge window in any case
+
+== PHASE 2: Events and group priority
+events always increase group priority from the game start
+list of possible events (debug shows all priority increases):
+  parasite sightings (low)
+  parasite with a host sightings (medium)
+  dead bodies with organs (high)
+  dead bodies (low)
+  freeing any hosts (low)
+  freeing agent hosts (no mission, group only, high)
+  any combat (medium)
+  combat with agents (high)
+  agents finding habitat (no mission, group only, high)
+
+== PHASE 3:
 group priority logic:
 events increase group priority ->
 priority increases the chance of creating dedicated agents team ->
@@ -35,12 +57,12 @@ with active team team distance is decreased with each event (starts with 100)
   agents actively search for parasite (parasite leaves detectable residue)
   all events count toward team distance instead of group priority
 when team distance is low enough, spawn team agents (one by one) in any area
-  how does the parasite know who is agent and who is not?
-    special improvement or psychology/spot hidden/alertness skill
-      false positives
-      improv is a knowledge?
-      any ideas on how to obtain that improv?
+  smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
+  psychology skill: can vaguely detect which people are team members and has false positives
+  at this point the best thing player can do is detect team members and avoid all contact, plus keep a low profile
+
   base message: You feel someone watching you.
+distance:
   on team agent alert:
     -distance
     combat
@@ -49,7 +71,7 @@ when team distance is low enough, spawn team agents (one by one) in any area
 when team distance is zero and any part of the team is alive, spawn whole team in a random habitat
 when team distance is 200:
   -priority
-  team deactivated
+  team evaded completely and deactivated, message
 killing or possessing team members:
   -distance
   +priority
@@ -58,71 +80,9 @@ killing whole team:
   activate new team
 
 
-brain probing any event NPCs increases a special counter
-when that counter raises to X (5-10) the existence of the group is revealed
-  and group modus operandi is explained. priority and agent teams concepts.
-    will be potentially a lot of text, open a separate help window (if it could open a wiki page inside, that would be awesome)?
-  give player a choice:
-    1) easy - show exact group priority and team size, distance
-    2) normal - describe priority and distance in vague words
-    3) realistic - disable that information, only message-based hints
-in debug mode it is added to knowledge window in any case
-
-
-== Events, side missions and group priority logic ==
-events raise area alertness (don't forget to check!)
-events always increase group priority
-event results (npcs) are put into the list
-  time
-  severity
-group-only events only increase group priority and do not go into the list
-the list grows up to X, then randomly removes stuff that overflows it
-each turn:
-  check if X turns have passed, then treat time passed as a chance bonus
-  roll chance
-  on success generate news item (group coverup or sanity loss):
-    X suicide
-    X was gunned down today in a shootout with the local police
-    X had been in a terrible accident, dead now
-    X had been put into an asylum
-    fringe: interview with X (i was possessed by an angel!)
-    fringe: body with strange abnormalities was found
-  latest news items can be read using the computer
-    use computer will probably need a separate window interface at some point
-list of possible events (debug shows all priority increases):
-  parasite sightings (low)
-  parasite with a host sightings (medium)
-  dead bodies with organs (high)
-  dead bodies (low)
-  freeing any hosts (low)
-  freeing agent hosts (no mission, group only, high)
-  any combat (medium)
-  combat with agents (high)
-  agents finding habitat (no mission, group only, high)
-
-what is the point of side missions?
-side missions:
-  silence X (reporter, investigator, previous host)
-    decreases city-wide alertness
-  steal and destroy the body?
-
-sanity (psyche-based)
-  sanity loss on parasite-related events
-  temp insanity
 ==
-===
+RADIO IMPROVEMENT
 
-- test playthrough of the clue gathering
-- add debug stage 3 (scenario goals)
-- test scenario goals
-- start work on area interest and conspiracy/antags
-  - should become more active in the scenario goal phase
-
-
-remove exception.txt text (and fix sending exceptions)
-auto-add google analytics to html
-
-==
 police radio gives access to radio messages and opens up way to:
 
 radio transceiver improvement:
@@ -255,8 +215,38 @@ raise knowledge human society to max and build mind-swap device
 raising knowledge requires special evolution imp - memory map
 ? need to tie in with the original idea
 ==
-==
+SIDE MISSIONS
 
+parasite-related event results (npcs) are put into the list
+  time
+  severity
+group-only events only increase group priority and do not go into the list
+the list grows up to X, then randomly removes stuff that overflows it
+each turn:
+  check if X turns have passed, then treat time passed as a chance bonus
+  roll chance
+  on success generate news item (group coverup or sanity loss):
+    X suicide
+    X was gunned down today in a shootout with the local police
+    X had been in a terrible accident, dead now
+    X had been put into an asylum
+    fringe: interview with X (i was possessed by an angel!)
+    fringe: body with strange abnormalities was found
+  latest news items can be read using the computer
+    use computer will probably need a separate window interface at some point
+
+what is the point of side missions?
+side missions:
+  silence X (reporter, investigator, previous host)
+    decreases city-wide alertness
+  steal and destroy the body?
+==
+==
+GENERAL IDEAS
+
+sanity (psyche-based)
+  sanity loss on parasite-related events
+  temp insanity
 search in timeline
 ?? Area -> move some code to game/AreaGame, some to entities/Area
 tooltips in area and region mode (type, habitat, clues, events, alertness, etc)
@@ -292,7 +282,16 @@ move all organ actions into EvolutionConst?
 evolution fluff
 indoor locations - whole building floor, can enter and leave through the exit or stairs
 ingame help window with links leading to wiki pages
-
-
 scene.getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
+
+== BROAD DIRECTIONS
+scenario goals test
+conspiracy group and group active measures
+city generation + city graphics
+gui graphics + gui rework to support mouse
+
+more scenario goals
+scenes
+additional skills and acquiring them (locations, jobs, etc)
+

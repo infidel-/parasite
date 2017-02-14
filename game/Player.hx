@@ -80,17 +80,8 @@ class Player
       // parasite state: decrease energy
       if (state == PLR_STATE_PARASITE)
         {
-          // energy is stable in habitat
-          if (game.location == LOCATION_AREA && game.area.isHabitat)
-            1;
-
-          // lose some energy
-          else if (game.location == LOCATION_AREA)
-            energy -= vars.areaEnergyPerTurn;
-
-          // lose some energy
-          else if (game.location == LOCATION_REGION)
-            energy -= vars.regionEnergyPerTurn;
+          var delta = __Math.parasiteEnergyPerTurn(time);
+          energy += delta;
 
           if (state == PLR_STATE_PARASITE && energy <= 0)
             {
@@ -100,7 +91,7 @@ class Player
         }
 
       // host state: host energy
-      // host can die, so we need to still check for state later
+      // host can die, so we still need to check for state later
       if (state == PLR_STATE_HOST)
         {
           var delta = __Math.hostEnergyPerTurn(time);

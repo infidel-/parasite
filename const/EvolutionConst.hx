@@ -747,14 +747,17 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
-        note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution and slowly restores the energy of assimilated hosts.',
+        note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the energy of parasite and assimilated hosts.',
         maxLevel: 3,
         noteFunc: function (l)
           {
             return
               "Energy units per formation: " + l.energy +
-              "\nBonus organ and evolution points per turn: +" + l.evolutionBonus + "%" +
-              "\nHost energy restored per turn: +" + l.hostEnergyRestored;
+              "\nBonus organ and evolution points per turn: +" +
+                l.evolutionBonus + "%" +
+              "\nHost energy restored per turn: +" + l.hostEnergyRestored +
+              "\nParasite energy restored per turn: +" +
+                l.parasiteEnergyRestored;
           },
         levelNotes: [
           '(todo fluff)',
@@ -764,7 +767,7 @@ class EvolutionConst
           ],
         organ: {
           name: 'Biomineral mold',
-          note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed.',
+          note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed!',
           gp: 200,
           isMold: true,
           action: {
@@ -789,21 +792,25 @@ class EvolutionConst
           {
             energy: 0,
             hostEnergyRestored: 0,
+            parasiteEnergyRestored: 0,
             evolutionBonus: 0,
           },
           {
             energy: 1,
             hostEnergyRestored: 2,
+            parasiteEnergyRestored: 5,
             evolutionBonus: 10,
           },
           {
             energy: 2,
             hostEnergyRestored: 5,
+            parasiteEnergyRestored: 10,
             evolutionBonus: 20,
           },
           {
             energy: 3,
             hostEnergyRestored: 10,
+            parasiteEnergyRestored: 25,
             evolutionBonus: 25,
           },
           ],
