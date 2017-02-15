@@ -237,18 +237,19 @@ class HUD
 
       // player actions
       var n = 1;
-      for (action in _listActions)
-        {
-          buf.add(n + ': ');
-          buf.add(action.name);
-          if (action.energy != null && action.energy > 0)
-            buf.add(' (' + action.energy + ' energy)');
-          else if (action.energyFunc != null)
-            buf.add(' (' + action.energyFunc(game.player) + ' energy)');
-          if (action != _listActions.last())
-            buf.add("\n");
-          n++;
-        }
+      if (!game.isFinished)
+        for (action in _listActions)
+          {
+            buf.add(n + ': ');
+            buf.add(action.name);
+            if (action.energy != null && action.energy > 0)
+              buf.add(' (' + action.energy + ' energy)');
+            else if (action.energyFunc != null)
+              buf.add(' (' + action.energyFunc(game.player) + ' energy)');
+            if (action != _listActions.last())
+              buf.add("\n");
+            n++;
+          }
 
       if (game.isFinished)
         buf.add('<font color="#FF0000">Press ENTER to restart</font>');
