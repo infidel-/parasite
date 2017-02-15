@@ -77,7 +77,7 @@ class Player
       if (game.location == LOCATION_REGION)
         time = 5;
 
-      // parasite state: decrease energy
+      // parasite state: energy and health
       if (state == PLR_STATE_PARASITE)
         {
           var delta = __Math.parasiteEnergyPerTurn(time);
@@ -89,6 +89,10 @@ class Player
               return;
             }
         }
+
+      // all states: restore health in habitat
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        health += game.area.habitat.parasiteHealthRestored * time;
 
       // host state: host energy
       // host can die, so we still need to check for state later
@@ -121,7 +125,8 @@ class Player
 
           // knowledge about human society raises automatically
           // if host memory is available
-          if (host.type == 'human' && evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
+          if (host.type == 'human' &&
+              evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
             skills.increase(KNOW_SOCIETY, 0.1 * host.intellect * time);
         }
 

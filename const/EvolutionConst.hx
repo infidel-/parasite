@@ -747,7 +747,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
-        note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the energy of parasite and assimilated hosts.',
+        note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -757,7 +757,9 @@ class EvolutionConst
                 l.evolutionBonus + "%" +
               "\nHost energy restored per turn: +" + l.hostEnergyRestored +
               "\nParasite energy restored per turn: +" +
-                l.parasiteEnergyRestored;
+                l.parasiteEnergyRestored +
+              "\nParasite health restored per turn: +" +
+                l.parasiteHealthRestored;
           },
         levelNotes: [
           '(todo fluff)',
@@ -793,24 +795,28 @@ class EvolutionConst
             energy: 0,
             hostEnergyRestored: 0,
             parasiteEnergyRestored: 0,
+            parasiteHealthRestored: 0,
             evolutionBonus: 0,
           },
           {
             energy: 1,
             hostEnergyRestored: 2,
             parasiteEnergyRestored: 5,
+            parasiteHealthRestored: 1,
             evolutionBonus: 10,
           },
           {
             energy: 2,
             hostEnergyRestored: 5,
             parasiteEnergyRestored: 10,
+            parasiteHealthRestored: 2,
             evolutionBonus: 20,
           },
           {
             energy: 3,
             hostEnergyRestored: 10,
             parasiteEnergyRestored: 25,
+            parasiteHealthRestored: 3,
             evolutionBonus: 25,
           },
           ],

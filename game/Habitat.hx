@@ -16,6 +16,7 @@ class Habitat
   public var energyUsed: Int; // used energy
   public var hostEnergyRestored: Int; // restored energy per turn (host)
   public var parasiteEnergyRestored: Int; // restored energy per turn (parasite)
+  public var parasiteHealthRestored: Int; // restored health per turn (parasite)
   public var evolutionBonus: Int; // biomineral evolution bonus (max)
 
 
@@ -29,6 +30,7 @@ class Habitat
       energyUsed = 0;
       hostEnergyRestored = 0;
       parasiteEnergyRestored = 0;
+      parasiteHealthRestored = 0;
       evolutionBonus = 0;
     }
 
@@ -116,6 +118,7 @@ class Habitat
       energyUsed = 0;
       hostEnergyRestored = 0;
       parasiteEnergyRestored = 0;
+      parasiteHealthRestored = 0;
       evolutionBonus = 0;
 
       // recalc vars
@@ -131,6 +134,7 @@ class Habitat
                 evolutionBonus = info.evolutionBonus;
                 hostEnergyRestored = info.hostEnergyRestored;
                 parasiteEnergyRestored = info.parasiteEnergyRestored;
+                parasiteHealthRestored = info.parasiteHealthRestored;
               }
           }
 
@@ -143,6 +147,7 @@ class Habitat
         {
           hostEnergyRestored = 0;
           parasiteEnergyRestored = 0;
+          parasiteHealthRestored = 0;
         }
 
       Const.debugObject(this);
