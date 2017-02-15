@@ -1,5 +1,4 @@
 == MAINTENANCE
-auto-add google analytics to html
 
 == CURRENT
 
