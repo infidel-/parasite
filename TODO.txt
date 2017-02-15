@@ -1,5 +1,4 @@
 == MAINTENANCE
-remove exception.txt text (and fix sending exceptions)
 auto-add google analytics to html
 
 == CURRENT

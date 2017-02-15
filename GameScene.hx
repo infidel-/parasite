@@ -552,10 +552,10 @@ class GameScene extends Scene
           trace('Exception: ' + e);
           trace(stack);
 
+#if !js
           // send exception to web server
           if (game.config.sendExceptions)
             {
-#if !js
               var s = new StringBuf();
               s.add('v' + Version.getVersion() +
                 ' (build: ' + Version.getBuild() +
@@ -580,14 +580,22 @@ class GameScene extends Scene
                 trace(e);
               }
               h.request(true);
-#end
             }
 
           else
+#end
             {
               // show window
-              game.finishText = "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
+              game.finishText =
+#if !js
+                "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
                 "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
+#else
+                "Something broke! Unfortunately, the game cannot be continued. Sorry!\n" +
+                '<font size="12px">Exception: ' + e + '\n' +
+                stack + '</font>\n' +
+                "P.S. If you want to help the development, make a screenshot of this message and send it to starinfidel_at_gmail_dot_com. Thanks!";
+#end
               setState(HUDSTATE_FINISH);
             }
         }
