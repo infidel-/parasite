@@ -154,7 +154,9 @@ class Game
       isInited = false;
       RegionGame._maxID = 0;
       messageList.clear();
-      setLocation(LOCATION_AREA);
+      area.leave();
+      region.leave();
+      scene.region.clearIcons();
       init();
     }
 

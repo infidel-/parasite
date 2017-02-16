@@ -204,6 +204,20 @@ class RegionView
     }
 
 
+// clear icons (needed on game restart)
+  public function clearIcons()
+    {
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            _tilemapEvent.setTile(x, y,
+              Const.ROW_REGION_ICON * 9 + Const.FRAME_EMPTY);
+            _tilemapNPC.setTile(x, y,
+              Const.ROW_REGION_ICON * 9 + Const.FRAME_EMPTY);
+          }
+    }
+
+
 // update icons
   public inline function updateIcons()
     {

@@ -42,6 +42,13 @@ class ConsoleGame
       else if (cmd.charAt(0) == 'l')
         learnCommand(cmd);
 
+      // XXX restart
+      else if (cmd.charAt(0) == 'r')
+        {
+          if (arr[0] == 'restart')
+            game.restart();
+        }
+
       // XXX set commands
       else if (cmd.charAt(0) == 's')
         {
@@ -444,7 +451,9 @@ class ConsoleGame
       // computer and computer use
       game.player.host.inventory.addID('smartphone');
       game.player.addKnownItem('smartphone');
-      game.player.host.skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
+      game.player.host.inventory.addID('laptop');
+      game.player.addKnownItem('laptop');
+      game.player.host.skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
       game.player.skills.addID(SKILL_COMPUTER, 30);
 
       // forward timeline
@@ -507,6 +516,13 @@ class ConsoleGame
       game.area.addAI(ai);
       game.playerArea.debugAttachAndInvadeAction(ai);
       game.player.hostControl = 100;
+
+      // computer and computer use
+      game.player.host.inventory.addID('smartphone');
+      game.player.addKnownItem('smartphone');
+      game.player.host.inventory.addID('laptop');
+      game.player.addKnownItem('laptop');
+      game.player.host.skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
     }
 }
 

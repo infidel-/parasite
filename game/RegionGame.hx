@@ -65,7 +65,7 @@ class RegionGame
     }
 
 
-// leave thie region: hide gui, etc
+// leave the region: hide gui, etc
   public inline function leave()
     {
       game.debug('Region.leave()');
@@ -101,6 +101,9 @@ class RegionGame
 // also called when player is in the area mode once/10 turns
   public function turnDetectHabitats()
     {
+      // disabled for now
+      return false;
+
       var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
       var detectionChance: Float = params.detectionChance;
       var tmp = getHabitatsList();

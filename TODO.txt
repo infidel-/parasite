@@ -1,4 +1,7 @@
 == MAINTENANCE
+make use computer action more convenient (add to hud?)
+shorten time to gain computer skill?
+add more useful codenames for timeline stuff
 
 == CURRENT
 
@@ -105,6 +108,8 @@ LATER
 most of the improvements and skills should come from special conditions, like people professions, traits, finding locations, etc
 
 scenes (sometimes need forensics)
+  spawn readables and other clues only on scenes
+  this will fix the weird thing that important stuff is lying everywhere
 police station -> forensics expert -> forensics
 ? news (newspapers, mobile)
 books - forensics guide (15%), sherlock holmes (10%)
@@ -184,20 +189,24 @@ CONSOLE CHEATSHEET:
 ?? more knowledges
 make each AI type more unique
 ==
-since use computer is max 30% (rarer 50%), search is very slow
-  "use computer" goal completion should open next optional goal:
-    find hacker and probe his brain (an alternative is to grind computer use)
-    new area type - university
-    add NPC age
-    new NPC parameter - job (profession)
-    university has professors and students (job types)
-    search for a person with high skill X interface
-    sub-menus:
-      "u" opens "use item" menu
-      "computer" item opens sub-menu
-        "search for timeline info",
-        "search for a person with high Computer Use skill"
-    pressing "." will repeat previous "use" command
+"use computer" goal completion should open next optional goal:
+  find hacker and probe his brain (an alternative is to grind computer use)
+  new area type - university
+  add NPC age
+  new NPC parameter - job (profession)
+  university has professors and students (job types)
+  search for a person with high skill X interface
+  sub-menus:
+    "u" opens "use item" menu
+    "computer" item opens sub-menu
+      "search for timeline info",
+      "search for a person with high Computer Use skill"
+  pressing "." will repeat previous "use" command
+gathering clues through hacking?
+HDD/laptop/smartphone as a clue source
+  needs to be hacked with computer science skill
+    only hackers possess it (look above)
+
 ==
 SCENARIO: CULT
 
