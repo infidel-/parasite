@@ -1,6 +1,5 @@
 == MAINTENANCE
 make use computer action more convenient (add to hud?)
-shorten time to gain computer skill?
 add more useful codenames for timeline stuff
 
 == CURRENT

@@ -117,8 +117,7 @@ class GoalsAlienCrashLanding
 
         // put location in text
         var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_ABDUCTION);
-
-        goal.note += ' Target location: (' + area.x + ',' + area.y + ')';
+        goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
       },
 
       onComplete: function (game, player) {
@@ -166,6 +165,12 @@ class GoalsAlienCrashLanding
             {
               game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
             };
+
+        // put spaceship location in text
+        var ev = game.timeline.getEvent('alienShipStudy');
+        var area = ev.location.area;
+        var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+        goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
       },
 
       onComplete: function (game, player) {
@@ -175,6 +180,12 @@ class GoalsAlienCrashLanding
 
       onFailure: function (game, player) {
           game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
+
+        // put spaceship location in text
+        var ev = game.timeline.getEvent('alienShipStudy');
+        var area = ev.location.area;
+        var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
+        goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
         },
       },
 

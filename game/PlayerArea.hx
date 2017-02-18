@@ -173,12 +173,12 @@ class PlayerArea
             else if (o.known())
               o.addActions(tmp);
           }
-
+/*
       // event objects always known
       for (o in olist)
         if (o.type == 'event_object')
           o.addActions(tmp);
-
+*/
       // leave area action
       if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)
         addActionToList(tmp, 'leaveArea');
@@ -668,7 +668,11 @@ class PlayerArea
 
       // get clues
       if (player.host.event != null && player.host.brainProbed < 3)
-        game.timeline.learnClue(player.host.event, true);
+        {
+          var ret = game.timeline.learnClue(player.host.event, true);
+          if (!ret)
+            log('You did not learn any new information.', COLOR_TIMELINE);
+        }
 
       // mark npc as scanned
       if (player.host.event != null && player.host.brainProbed >= 2 &&

@@ -263,7 +263,8 @@ typedef GoalInfo = {
   id: _Goal, // goal id
   ?isHidden: Bool, // is this goal hidden?
   name: String, // goal name
-  note: String, // goal note
+  note: String, // goal note (static part)
+  ?note2: String, // additional goal note (dynamic part, changed ingame)
 
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion

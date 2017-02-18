@@ -46,9 +46,10 @@ class AreaObject
 
 
 // is this object known to player?
+// atm all event objects are considered known, may be changed later
   public inline function known(): Bool
     {
-      return game.playerArea.knowsObject(type);
+      return (type == 'event_object' || game.playerArea.knowsObject(type));
     }
 
 

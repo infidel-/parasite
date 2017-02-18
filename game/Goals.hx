@@ -49,7 +49,7 @@ class Goals
           var info = getInfo(goal);
           if (info.onTurn != null)
             {
-              game.debug(info.id + ' onTurn()');
+//              game.debug(info.id + ' onTurn()');
               info.onTurn(game, game.player);
             }
         }
