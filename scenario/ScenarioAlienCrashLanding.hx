@@ -22,13 +22,58 @@ class ScenarioAlienCrashLanding extends Scenario
         'facility2' => [ '%tree1% %geo1% %lab1%' ],
         'facility3' => [ '%tree1% %geo1% %lab1%' ],
         'base1' => [ 'Area %num1%%num2%', '%baseA1% %baseB1%' ],
-        'shipCode' => [ 'OBJ-%num1%%num2%', 'UFO-%num1%%num2%-%greek1%',
-          'SAUCE-%num1%%num1%' ],
-        'alienCode' => [ 'ET-%letter1%%num1%%num2%', 'ETO-%num1%%num2%%letter1%',
-          'XBO-%num1%%num2%' ],
-        'parasiteCode' => [ 'AO-%letter1%%letter2%%num1%%num2%', 'OUO-%num1%%num2%',
-          'LF-%greek1%-%greek2%' ],
-        ];
+        'shipCode' => [
+          'OBJ-%num1%%num2%',
+          'UFO-%num1%%num2%-%greek1%',
+          'SAUCE-%num1%%num1%',
+          'Capricorn',
+          'Jellyfish',
+          'Manatee',
+          'Manta',
+          'Mantis',
+          'Nautilus',
+          'Phantom',
+          'Rainbow',
+          'Revenant',
+          'Swordfish',
+        ],
+        'alienCode' => [
+          'ET-%letter1%%num1%%num2%',
+          'ETO-%num1%%num2%%letter1%',
+          'XBO-%num1%%num2%',
+          'Bearer',
+          'Carrier',
+          'Envoy',
+          'Fiddler',
+          'Gray',
+          'Sage',
+          'Visitor',
+        ],
+        'parasiteCode' => [
+          'AO-%letter1%%letter2%%num1%%num2%',
+          'OUO-%num1%%num2%',
+          'LF-%greek1%-%greek2%',
+          'Cuckoo',
+          'Gecko',
+          'Jumper',
+          'Junior',
+        ],
+        'projectCode' => [
+          'Antares',
+          'Aurora',
+          'Canopus',
+          'Chimera',
+          'Eclipse',
+          'Mercury',
+          'Mirage',
+          'Monolith',
+          'Nighthawk',
+          'Saturn',
+          'Unity',
+          'Vega',
+          'Xenon',
+        ],
+      ];
       flow = [
         'alienMission' => {
           name: 'alien mission',
@@ -124,7 +169,7 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('shipShotDown', true);
             },
           notes: [
-            'The pilot managed to shoot down the UFO.',
+            'The pilot managed to shoot down the object.',
             ],
           location: {
             near: 'shipSpottedCiv',
@@ -241,8 +286,8 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('alienIsAlive', 1);
             },
           notes: [
-            'The captured organism was transported to %facility2% for further study.',
-            'Captured organism has received a special code: %alienCode%',
+            'The captured organism was transported to %facility2% for further study. Project %projectCode% initiated.',
+            'Captured organism has received a special code: %alienCode%.',
             ],
           npc: [ 'agent' => 2 ],
           },
@@ -255,7 +300,7 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('alienIsDead', 1);
             },
           notes: [
-            'The acquired cadaver was transported to %facility2% for further study.',
+            'The acquired cadaver was transported to %facility2% for further study. Project %projectCode% initiated.',
             'The body of possibly extraterrestrial origins has received a special code: %alienCode%.',
             ],
           npc: [ 'agent' => 2 ],
@@ -327,7 +372,7 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'parasite transportation',
           notes: [
             'During %parasiteCode% transportation to %facility3% the containment protocol has been breached and the specimen managed to escape.',
-            'Current location of %parasiteCode% specimen is unknown.',
+            'Current location of %parasiteCode% specimen is unknown, project %projectCode% is on hold until retrieval.',
             'Teams of field specialists have been scrambled to the area.'
             ],
           location: {
