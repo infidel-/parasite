@@ -3,9 +3,6 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
-- start work on area interest and conspiracy/antags
-  - should become more active in the scenario goal phase
-
 == GROUP: ACTIVE MEASURES
 
 remove area interest
@@ -168,7 +165,6 @@ CONSOLE CHEATSHEET:
 ;s21 - set player stage 2.1 (stage 2 + camo layer, computer use)
 ;s22 - set player stage 2.2 (stage 2.1 + biomineral)
 ;s23 - set player stage 2.3 (stage 2.2 + assimilation)
-;sai10 - set area interest 10
 
 ;ie - info: events list
 ;ii - info: all improvements and organs list

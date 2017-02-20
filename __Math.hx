@@ -270,8 +270,9 @@ class __Math
 // formula: detect habitats
   public static inline function detectHabitat(p: {
       base: Float,
-      interest: Float }): Bool
+      }): Bool
     {
+/*
       var chance = p.base + p.base * p.interest / 100.0;
       var roll = Std.random(100);
 
@@ -281,6 +282,8 @@ class __Math
         (roll <= chance ? 'success' : 'fail') + '.');
 
       return (roll <= chance);
+*/
+      return false;
     }
 }
 

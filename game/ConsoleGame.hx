@@ -309,8 +309,8 @@ class ConsoleGame
             ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)\n' +
             ';s22 - set player stage 2.2 (stage 2.1 + biomineral)\n' +
             ';s23 - set player stage 2.3 (stage 2.2 + assimilation)\n' +
-            ';s3 - set player stage 3 (stage 2.3 + timeline open until scenario goals)\n' +
-            ';sai10 - set area interest 10');
+            ';s3 - set player stage 3 (stage 2.3 + timeline open until scenario goals)'
+            );
           return;
         }
 
@@ -378,16 +378,6 @@ class ConsoleGame
       // XXX [sa] set area commands
       else if (cmd.charAt(1) == 'a')
         {
-          // XXX [sai20] set area interest
-          if (cmd.charAt(2) == 'i')
-            {
-              var val = Std.parseInt(cmd.substr(3));
-
-              if (game.location == LOCATION_AREA)
-                game.area.interest = val;
-
-              else game.playerRegion.currentArea.interest = val;
-            }
         }
     }
 

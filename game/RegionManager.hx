@@ -17,7 +17,7 @@ class RegionManager
   public function onBodyDiscovered(area: AreaGame, pts: Int)
     {
       area.alertness += 1;
-      area.interest += pts;
+//      game.group.priority += pts;
       if (pts > 0)
         log('Authorities have discovered a body with some weird anomalies.');
     }
@@ -28,7 +28,7 @@ class RegionManager
   public function onBodiesDiscovered(area: AreaGame, bodies: Int, pts: Int)
     {
       area.alertness += bodies;
-      area.interest += pts;
+//      game.group.priority += pts;
       if (pts > 0)
         log('Authorities have discovered multiple bodies with disturbing anomalies.');
     }

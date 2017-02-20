@@ -9,9 +9,8 @@ class Scenario
 {
   public var name: String; // scenario name
   public var startEvent: String; // scenario starting event
-  public var playerStartEvent: String; // player start location event 
-  public var defaultInterest: Int; // default location interest
-  public var defaultAlertness: Int; // default location alertness 
+  public var playerStartEvent: String; // player start location event
+  public var defaultAlertness: Int; // default location alertness
 
   public var names: Map<String, Array<String>>; // name templates
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
@@ -23,7 +22,6 @@ class Scenario
       startEvent = '';
       playerStartEvent = '';
       defaultAlertness = 0;
-      defaultInterest = 0;
 
       names = new Map();
       flow = new Map();
@@ -32,7 +30,7 @@ class Scenario
 }
 
 
-// scenario event 
+// scenario event
 
 typedef EventInfo = {
   name: String, // event name
@@ -43,9 +41,9 @@ typedef EventInfo = {
   ?location: LocationInfo, // event location
   ?npc: Map<String, Int>, // event npcs (ai type is "<type>:<parent>")
 
-  ?init: Timeline -> Void, // init function that runs when event is added to timeline 
-  ?onLearnNote: Game -> Int -> Void, // runs when player learns event note 
-  ?onLearnLocation: Game -> Void, // runs when player learns event location 
+  ?init: Timeline -> Void, // init function that runs when event is added to timeline
+  ?onLearnNote: Game -> Int -> Void, // runs when player learns event note
+  ?onLearnLocation: Game -> Void, // runs when player learns event location
 }
 
 
@@ -58,6 +56,5 @@ typedef LocationInfo = {
   ?near: String, // location is near this event id
   ?sameAs: String, // location is copied over from this event id
   ?alertness: Int, // area alertness
-  ?interest: Int, // area interest
 }
 

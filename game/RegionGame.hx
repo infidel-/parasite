@@ -13,8 +13,6 @@ class RegionGame
   public var info: RegionInfo; // region info link
   public var width: Int;
   public var height: Int;
-//  public var alertness(default, set): Float; // area alertness (authorities) (0-100%)
-//  public var interest(default, set): Float; // area interest for secret groups (0-100%)
 
   var _array: Array<Array<AreaGame>>; // 2-dim array of areas for quicker access
   var _list: Map<Int, AreaGame>; // hashmap of areas (can include additional areas)
@@ -29,8 +27,6 @@ class RegionGame
       width = w;
       height = h;
       info = WorldConst.getRegionInfo(typeID);
-//      alertness = 0;
-//      interest = 0;
       _list = new Map<Int, AreaGame>();
 
       _array = new Array<Array<AreaGame>>();
@@ -115,7 +111,6 @@ class RegionGame
 
           var ret = __Math.detectHabitat({
             base: detectionChance,
-            interest: area.parent.interest
           });
           if (!ret)
             continue;
@@ -517,13 +512,4 @@ class RegionGame
 
       return Const.TILE_WALKABLE_REGION[_array[x][y].tileID];
     }
-
-
-// ========================== SETTERS ====================================
-/*
-  function set_alertness(v: Float)
-    { return alertness = Const.clampFloat(v, 0, 100.0); }
-  function set_interest(v: Float)
-    { return interest = Const.clampFloat(v, 0, 100.0); }
-*/
 }

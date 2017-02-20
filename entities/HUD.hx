@@ -169,7 +169,6 @@ class HUD
             game.playerArea.x + ',' + game.playerArea.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.area.alertness) +
-            ', I ' + Math.round(game.area.interest) +
 #end
             '\nActions: ' + game.playerArea.ap + '\n');
       else if (game.location == LOCATION_REGION)
@@ -177,7 +176,6 @@ class HUD
           game.playerRegion.x + ',' + game.playerRegion.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
-            ', I ' + Math.round(game.playerRegion.currentArea.interest) +
 #end
           '\n' + game.playerRegion.currentArea.name + '\n');
       buf.add('===\n');

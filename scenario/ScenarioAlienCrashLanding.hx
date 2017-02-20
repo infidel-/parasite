@@ -14,7 +14,6 @@ class ScenarioAlienCrashLanding extends Scenario
       startEvent = 'alienMission';
       playerStartEvent = 'parasiteTransportation';
       defaultAlertness = 50;
-      defaultInterest = 10;
       goals = GoalsAlienCrashLanding.map;
 
       names = [
@@ -156,7 +155,6 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: {
             near: 'shipSpottedCiv',
-            interest: 25,
             },
           npc: [ 'soldier' => 10 ],
           },
@@ -173,7 +171,6 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: {
             near: 'shipSpottedCiv',
-            interest: 25,
             },
           npc: [ 'soldier' => 10 ],
           },
@@ -376,7 +373,6 @@ class ScenarioAlienCrashLanding extends Scenario
             'Teams of field specialists have been scrambled to the area.'
             ],
           location: {
-            interest: 50
             },
           npc: [ 'agent' => 2 ],
           },

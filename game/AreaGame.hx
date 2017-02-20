@@ -42,7 +42,6 @@ class AreaGame
   // we store all changes until player leaves the current area for propagation
   public var alertness(get, set): Float; // area alertness (authorities) (0-100%)
   var _alertness: Float; // actual alertness storage
-  public var interest(default, set): Float; // area interest for secret groups (0-100%)
 
   static var _maxID: Int = 0; // area id counter
 
@@ -74,7 +73,6 @@ class AreaGame
       height = 10;
       _alertness = 0;
       alertnessMod = 0;
-      interest = 0;
       habitatAreaID = 0;
       habitatIsDetected = false;
       npc = new List();
@@ -1161,8 +1159,7 @@ class AreaGame
 
   public function toString(): String
     {
-      return '(' + x + ',' + y + '): ' + typeID + ' alertness:' + alertness +
-        ' interest:' + interest;
+      return '(' + x + ',' + y + '): ' + typeID + ' alertness:' + alertness;
     }
 
 
@@ -1177,14 +1174,5 @@ class AreaGame
       // save alertness changes for later use
       alertnessMod += v - _alertness;
       return _alertness = Const.clampFloat(v, 0, 100.0);
-    }
-
-  function set_interest(v: Float)
-    {
-      if (game.isInited && interest != null && v != interest)
-        game.info('Area interest changed: ' +
-          (v - interest > 0 ? '+' : '') +
-          (v - interest) + '.');
-      return interest = Const.clampFloat(v, 0, 100.0);
     }
 }

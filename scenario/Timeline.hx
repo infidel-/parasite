@@ -282,8 +282,6 @@ should limit player options for guiding purposes
       area.events.push(event);
       area.alertness =
         (info.alertness != null ? info.alertness : scenario.defaultAlertness);
-      area.interest =
-        (info.interest != null ? info.interest : scenario.defaultInterest);
       if (location.hasName)
         area.name = location.name;
 
