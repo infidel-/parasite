@@ -3,9 +3,6 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
-- test playthrough of the clue gathering
-- add debug stage 3 (scenario goals)
-- test scenario goals
 - start work on area interest and conspiracy/antags
   - should become more active in the scenario goal phase
 

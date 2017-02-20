@@ -4,6 +4,7 @@ package game;
 
 import ai.*;
 import const.*;
+import objects.EventObject;
 
 class ConsoleGame
 {
@@ -308,6 +309,7 @@ class ConsoleGame
             ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)\n' +
             ';s22 - set player stage 2.2 (stage 2.1 + biomineral)\n' +
             ';s23 - set player stage 2.3 (stage 2.2 + assimilation)\n' +
+            ';s3 - set player stage 3 (stage 2.3 + timeline open until scenario goals)\n' +
             ';sai10 - set area interest 10');
           return;
         }
@@ -357,6 +359,17 @@ class ConsoleGame
               stage21();
               stage22();
               stage23();
+            }
+
+          // stage 3: 2.3 + timeline open until scenario goals
+          else if (stage == 3)
+            {
+              stage1();
+              stage2();
+              stage21();
+              stage22();
+              stage23();
+              stage3();
             }
 
           game.importantMessagesEnabled = true;
@@ -523,6 +536,31 @@ class ConsoleGame
       game.player.host.inventory.addID('laptop');
       game.player.addKnownItem('laptop');
       game.player.host.skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
+    }
+
+
+// stage 3: stage 2.3 + timeline open until scenario goals
+  function stage3()
+    {
+      // assimilate current host
+      game.player.host.addTrait(TRAIT_ASSIMILATED);
+
+      // learn needed events
+      for (idx in [ 12, 11, 8, 7 ])
+        {
+          var event = game.timeline.getEventByIndex(idx);
+          while (!event.notesKnown())
+            event.learnNote();
+          event.learnLocation();
+        }
+
+      // go to the spaceship location
+      var ev = game.timeline.getEvent('alienShipStudy');
+      var area = ev.location.area;
+      goCommand('ga' + area.x + ' ' + area.y);
+
+      var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
+      goCommand('gg' + obj.x + ' ' + obj.y);
     }
 }
 
