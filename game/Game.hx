@@ -14,6 +14,7 @@ class Game
   public var world: World; // game world
   public var managerWorld: WorldManager; // game world manager
   public var region: RegionGame; // region info link
+  public var group: Group; // conspiracy group - antags
   public var console: ConsoleGame; // game console
 
   public var area: AreaGame; // current area link
@@ -80,6 +81,7 @@ class Game
       isInited = false;
 
       player = new Player(this);
+      group = new Group(this);
       managerArea = new AreaManager(this);
       playerArea = new PlayerArea(this);
       debugArea = new DebugArea(this);

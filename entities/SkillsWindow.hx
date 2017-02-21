@@ -34,6 +34,11 @@ class SkillsWindow extends TextWindow
       if (n == 0)
         buf.add('  --- empty ---\n');
 
+#if mydebug
+      buf.add('[DEBUG] Group priority: ' + Std.int(game.group.priority) +
+        '\n');
+#end
+
       // host skills and attributes
       if (game.player.state == PLR_STATE_HOST)
         {

@@ -131,6 +131,7 @@ class AreaManager
           else if (e.type == AREAEVENT_ARRIVE_BACKUP)
             onArriveBackup(e);
 
+          // object decay
           else if (e.type == AREAEVENT_OBJECT_DECAY)
             onObjectDecay(o);
 
@@ -157,17 +158,35 @@ class AreaManager
   function onCallLaw(e: AreaEvent)
     {
       var sdetails;
+      var pts = 0;
       if (e.details == '' + REASON_HOST)
-        sdetails = 'a suspicious individual';
+        {
+          sdetails = 'a suspicious individual';
+          pts = 2;
+        }
       else if (e.details == '' + REASON_BODY)
         sdetails = 'a dead body';
-      else if (e.details == '' + REASON_DAMAGE || e.details == '' + REASON_WITNESS)
-        sdetails = 'an attack';
-      else sdetails = 'wild animal sighting';
+      else if (e.details == '' + REASON_WITNESS)
+        {
+          sdetails = 'an attack';
+          pts = 1;
+        }
+      else if (e.details == '' + REASON_DAMAGE)
+        {
+          sdetails = 'an attack';
+          pts = 2;
+        }
+      else
+        {
+          sdetails = 'wild animal sighting';
+          pts = 1;
+        }
 
       log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
         ' has received a report about ' + sdetails +
         '. Dispatching units to the location.');
+
+      game.group.priority += pts;
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the ' +
@@ -245,6 +264,8 @@ class AreaManager
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls for backup!');
+
+      game.group.priority += 1;
 
       // increase area alertness
       area.alertness += 2;
