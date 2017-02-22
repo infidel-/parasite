@@ -2,6 +2,7 @@
 
 import game.*;
 import const.*;
+import ai.AI;
 
 class __Math
 {
@@ -284,6 +285,43 @@ class __Math
       return (roll <= chance);
 */
       return false;
+    }
+
+
+// host discovered priority calculation
+  public static inline function hostDiscovered(ai: AI)
+    {
+      var base = 0.0;
+      if (ai.wasHost)
+        base = 3;
+      else if (ai.wasAttached)
+        base = 1;
+      var mod = 0.0 + ai.organs.getPoints();
+      if (mod < 2)
+        mod = 1.5;
+
+      if (game.config.extendedInfo)
+        {
+          var s = new StringBuf();
+          s.add('Host discovered: ');
+          s.add(base);
+          if (ai.wasHost)
+            s.add(' [was host]');
+          else if (ai.wasAttached)
+            s.add(' [was attached]');
+          s.add(' * ');
+          s.add(mod);
+          if (mod >= 2)
+            s.add(' [organs]');
+          else s.add(' [base]');
+          s.add(' = ');
+          s.add(base * mod);
+          s.add('.');
+
+          game.info(s.toString());
+        }
+
+      return (base * mod);
     }
 }
 

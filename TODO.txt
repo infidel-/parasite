@@ -6,13 +6,7 @@ make use computer action more convenient (add to hud?)
 == GROUP: ACTIVE MEASURES
 
 == PHASE 1: Events and group priority
-events always increase group priority from the game start
 list of possible events (debug shows all priority increases):
-+ parasite sightings (low)
-+ parasite with a host sightings (medium)
-+ dead bodies with organs (high)
-+ dead bodies (low)
-  freeing any hosts (low)
   freeing agent hosts (no mission, group only, high)
   combat with agents (high)
   agents finding habitat (no mission, group only, high)
@@ -23,8 +17,8 @@ when that counter raises to X (5-10) the existence of the group is revealed
   and group modus operandi is explained. priority and agent teams concepts.
     will be potentially a lot of text, open a separate help window (if it could open a wiki page inside, that would be awesome)?
   give player a choice:
-    1) easy - show exact group priority and team level and size, distance
-    2) normal - describe priority and distance in vague words
+    1) easy - show exact group priority and team level and size, distance, give messages about priority changes
+    2) normal - describe everything in vague words
     3) realistic - disable that information, only message-based hints
 in debug mode it is added to knowledge window in any case
 

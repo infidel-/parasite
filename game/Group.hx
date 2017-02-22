@@ -22,7 +22,7 @@ class Group
 
       var mod = v - priority;
       priority = Const.clampFloat(v, 0, 100.0);
-      game.info('group priority: ' + (mod > 0 ? '+' : '') + mod + ' = ' +
+      game.info('Group priority: ' + (mod > 0 ? '+' : '') + mod + ' = ' +
         priority);
       return priority;
     }

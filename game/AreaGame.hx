@@ -224,10 +224,15 @@ class AreaGame
           for (o in _objects)
             if (o.type == 'body')
               {
-                var body: BodyObject = untyped o;
+                var body: BodyObject = cast o;
                 totalPoints += body.organPoints;
                 totalBodies++;
               }
+
+          // count all previous hosts and do consequences
+          for (ai in _ai)
+            if (ai.isHuman && (ai.wasHost || ai.wasAttached))
+              game.managerRegion.onHostDiscovered(this, ai);
 
           // notify world about bodies discovered
           if (totalBodies == 1)

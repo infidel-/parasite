@@ -33,6 +33,8 @@ class AI
   public var isAttrsKnown: Bool; // are attributes known to player?
   public var isHuman: Bool; // is it a human?
   public var isCommon: Bool; // is it common AI or spawned by area alertness logic?
+  public var wasAttached: Bool; // was parasite attached to this AI?
+  public var wasHost: Bool; // was this AI a host at any point?
 
   public var id: Int; // unique AI id
   static var _maxID: Int = 0; // current max ID
@@ -124,6 +126,8 @@ class AI
       isJobKnown = false;
       isAttrsKnown = false;
       isHuman = false;
+      wasAttached = false;
+      wasHost = false;
       parasiteAttached = false;
       baseAttrs = {
         strength: 1,
@@ -754,8 +758,16 @@ class AI
         }
 
       _turnsInvisible++;
+
+      // remove from area
       if (_turnsInvisible > DESPAWN_TIMER)
-        game.area.removeAI(this);
+        {
+          // do previous host consequences
+          if (isHuman && (wasHost || wasAttached))
+            game.managerRegion.onHostDiscovered(game.area, this);
+
+          game.area.removeAI(this);
+        }
     }
 
 
@@ -917,6 +929,7 @@ class AI
     {
       // set AI state
       parasiteAttached = true;
+      wasAttached = true; // mark as touched by parasite
       setState(AI_STATE_ALERT, REASON_ATTACH);
     }
 
@@ -926,6 +939,7 @@ class AI
     {
       setState(AI_STATE_HOST);
       parasiteAttached = false;
+      wasHost = true; // mark as previous host
       entity.setMask(Const.FRAME_MASK_POSSESSED);
 
       // add effect marker so that AI can't tear parasite away

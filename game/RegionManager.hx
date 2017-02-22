@@ -2,6 +2,8 @@
 
 package game;
 
+import ai.AI;
+
 class RegionManager
 {
   var game: Game;
@@ -9,6 +11,26 @@ class RegionManager
   public function new(g: Game)
     {
       game = g;
+    }
+
+
+// event: human that hosted or was attached to the parasite, got away
+  public function onHostDiscovered(area: AreaGame, ai: AI)
+    {
+      game.group.priority += __Math.hostDiscovered(ai);
+      if (ai.wasHost)
+        {
+          var tmp = [
+            ' is claiming to have been possessed by an angel.',
+            ' is claiming to be the subject of experiments conducted by aliens.',
+            ' has died under mysterious circumstances.',
+            ' had to be committed to a mental institution after having a nervous breakdown.',
+            ' has apparently taken their own life after having a mental breakdown.',
+            ];
+          log(ai.name.realCapped + tmp[Std.random(tmp.length)]);
+        }
+      else if (ai.wasAttached)
+        log(ai.name.realCapped + ' is claiming to be the subject of a weird animal attack.');
     }
 
 
