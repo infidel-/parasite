@@ -5,12 +5,6 @@ make use computer action more convenient (add to hud?)
 
 == GROUP: ACTIVE MEASURES
 
-== PHASE 1: Events and group priority
-list of possible events (debug shows all priority increases):
-  freeing agent hosts (no mission, group only, high)
-  combat with agents (high)
-  agents finding habitat (no mission, group only, high)
-
 == PHASE 2:
 brain probing any event NPCs increases a special counter
 when that counter raises to X (5-10) the existence of the group is revealed
@@ -61,6 +55,13 @@ killing or possessing team members:
 killing whole team:
   +priority
   activate new team
+
+
+== PHASE 1: Events and group priority
+list of possible events:
+  invading team agents (very high)
+  combat with agents (high)
+  agents finding habitat (very high)
 
 
 ==

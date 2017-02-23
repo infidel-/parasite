@@ -18,7 +18,9 @@ class RegionManager
   public function onHostDiscovered(area: AreaGame, ai: AI)
     {
       game.group.priority += __Math.hostDiscovered(ai);
-      if (ai.wasHost)
+      if (ai.npc != null)
+        log(ai.name.realCapped + ' had suffered a fatal accident.');
+      else if (ai.wasInvaded)
         {
           var tmp = [
             ' is claiming to have been possessed by an angel.',

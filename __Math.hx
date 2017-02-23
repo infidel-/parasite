@@ -292,7 +292,9 @@ class __Math
   public static inline function hostDiscovered(ai: AI)
     {
       var base = 0.0;
-      if (ai.wasHost)
+      if (ai.npc != null) // invaded event NPCs are the worst
+        base = 10;
+      else if (ai.wasInvaded)
         base = 3;
       else if (ai.wasAttached)
         base = 1;
@@ -305,10 +307,12 @@ class __Math
           var s = new StringBuf();
           s.add('Host discovered: ');
           s.add(base);
-          if (ai.wasHost)
-            s.add(' [was host]');
+          if (ai.npc != null)
+            s.add(' [npc]');
+          else if (ai.wasInvaded)
+            s.add(' [invaded]');
           else if (ai.wasAttached)
-            s.add(' [was attached]');
+            s.add(' [attached]');
           s.add(' * ');
           s.add(mod);
           if (mod >= 2)

@@ -231,7 +231,7 @@ class AreaGame
 
           // count all previous hosts and do consequences
           for (ai in _ai)
-            if (ai.isHuman && (ai.wasHost || ai.wasAttached))
+            if (ai.isHuman && (ai.wasInvaded || ai.wasAttached))
               game.managerRegion.onHostDiscovered(this, ai);
 
           // notify world about bodies discovered

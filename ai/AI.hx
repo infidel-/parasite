@@ -34,7 +34,7 @@ class AI
   public var isHuman: Bool; // is it a human?
   public var isCommon: Bool; // is it common AI or spawned by area alertness logic?
   public var wasAttached: Bool; // was parasite attached to this AI?
-  public var wasHost: Bool; // was this AI a host at any point?
+  public var wasInvaded: Bool; // was this AI a host at any point?
 
   public var id: Int; // unique AI id
   static var _maxID: Int = 0; // current max ID
@@ -127,7 +127,7 @@ class AI
       isAttrsKnown = false;
       isHuman = false;
       wasAttached = false;
-      wasHost = false;
+      wasInvaded = false;
       parasiteAttached = false;
       baseAttrs = {
         strength: 1,
@@ -151,6 +151,8 @@ class AI
       maxEnergy = 10;
       _objectsSeen = new List<Int>();
       _turnsInvisible = 0;
+      event = null;
+      npc = null;
 
       inventory = new Inventory(game);
       skills = new Skills(game, false);
@@ -763,7 +765,7 @@ class AI
       if (_turnsInvisible > DESPAWN_TIMER)
         {
           // do previous host consequences
-          if (isHuman && (wasHost || wasAttached))
+          if (isHuman && (wasInvaded || wasAttached))
             game.managerRegion.onHostDiscovered(game.area, this);
 
           game.area.removeAI(this);
@@ -939,7 +941,7 @@ class AI
     {
       setState(AI_STATE_HOST);
       parasiteAttached = false;
-      wasHost = true; // mark as previous host
+      wasInvaded = true; // mark as invaded
       entity.setMask(Const.FRAME_MASK_POSSESSED);
 
       // add effect marker so that AI can't tear parasite away
