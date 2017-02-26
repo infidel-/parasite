@@ -17,7 +17,7 @@ class RegionManager
 // event: human that hosted or was attached to the parasite, got away
   public function onHostDiscovered(area: AreaGame, ai: AI)
     {
-      game.group.priority += __Math.hostDiscovered(ai);
+      game.group.raisePriority(__Math.hostDiscovered(ai));
       if (ai.npc != null)
         log(ai.name.realCapped + ' had suffered a fatal accident.');
       else if (ai.wasInvaded)
@@ -41,7 +41,7 @@ class RegionManager
   public function onBodyDiscovered(area: AreaGame, pts: Int)
     {
       area.alertness += 1;
-      game.group.priority += pts;
+      game.group.raisePriority(pts);
       if (pts > 0)
         log('Authorities have discovered a body with some weird anomalies.');
     }
@@ -52,7 +52,7 @@ class RegionManager
   public function onBodiesDiscovered(area: AreaGame, bodies: Int, pts: Int)
     {
       area.alertness += bodies;
-      game.group.priority += pts;
+      game.group.raisePriority(pts);
       if (pts > 0)
         log('Authorities have discovered multiple bodies with disturbing anomalies.');
     }

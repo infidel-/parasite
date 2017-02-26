@@ -207,6 +207,9 @@ class Game
       // turns counter
       turns++;
 
+      // conspiracy group logic
+      group.turn();
+
       // AI movement
       if (location == LOCATION_AREA)
         {

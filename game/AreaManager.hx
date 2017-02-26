@@ -186,7 +186,7 @@ class AreaManager
         ' has received a report about ' + sdetails +
         '. Dispatching units to the location.');
 
-      game.group.priority += pts;
+      game.group.raisePriority(pts);
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls the ' +
@@ -265,7 +265,7 @@ class AreaManager
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls for backup!');
 
-      game.group.priority += 1;
+      game.group.raisePriority(1);
 
       // increase area alertness
       area.alertness += 2;
