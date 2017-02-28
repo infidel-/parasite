@@ -1,4 +1,4 @@
-// AI for blackops agents 
+// AI for blackops agents
 
 package ai;
 
@@ -49,7 +49,7 @@ class BlackopsAI extends HumanAI
     }
 
 /*
-// event: on being attacked 
+// event: on being attacked
   public override function onAttack()
     {
       // if this ai has not called for backup yet
@@ -69,5 +69,5 @@ class BlackopsAI extends HumanAI
       // i could make it roam around for a bit but it's probably not worth it
       if (state == AI_STATE_IDLE && isBackup)
         game.area.removeAI(this);
-    }*/ 
+    }*/
 }

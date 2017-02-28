@@ -890,7 +890,7 @@ class PlayerArea
       // close open windows
       game.scene.setState(HUDSTATE_DEFAULT);
 
-      player.host.onDeath();
+      player.host.death();
       onDetach();
     }
 

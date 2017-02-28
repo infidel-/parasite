@@ -40,4 +40,14 @@ class HumanAI extends AI
 
       derivedStats();
     }
+
+
+// event: despawn live AI
+  public override function onRemove()
+    {
+      // do previous host consequences
+      if (wasInvaded || wasAttached)
+        game.managerRegion.onHostDiscovered(game.area, this);
+    }
 }
+

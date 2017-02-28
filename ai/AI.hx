@@ -33,8 +33,12 @@ class AI
   public var isAttrsKnown: Bool; // are attributes known to player?
   public var isHuman: Bool; // is it a human?
   public var isCommon: Bool; // is it common AI or spawned by area alertness logic?
+  public var isTeamMember: Bool; // is this AI a group team member?
+
+  // history flags
   public var wasAttached: Bool; // was parasite attached to this AI?
   public var wasInvaded: Bool; // was this AI a host at any point?
+  public var wasAlerted: Bool; // was this AI alerted at some point?
 
   public var id: Int; // unique AI id
   static var _maxID: Int = 0; // current max ID
@@ -128,7 +132,10 @@ class AI
       isHuman = false;
       wasAttached = false;
       wasInvaded = false;
+      wasAlerted = false;
       parasiteAttached = false;
+      isTeamMember = false;
+
       baseAttrs = {
         strength: 1,
         constitution: 1,
@@ -312,7 +319,10 @@ class AI
       stateTime = 0;
       reason = vreason;
       if (state == AI_STATE_ALERT)
-        timers.alert = ALERTED_TIMER;
+        {
+          timers.alert = ALERTED_TIMER;
+          wasAlerted = true;
+        }
 
       // reset roam target on changing state
       roamTargetX = -1;
@@ -763,13 +773,7 @@ class AI
 
       // remove from area
       if (_turnsInvisible > DESPAWN_TIMER)
-        {
-          // do previous host consequences
-          if (isHuman && (wasInvaded || wasAttached))
-            game.managerRegion.onHostDiscovered(game.area, this);
-
-          game.area.removeAI(this);
-        }
+        game.area.removeAI(this);
     }
 
 
@@ -880,7 +884,7 @@ class AI
       health -= damage;
       if (health == 0) // AI death
         {
-          onDeath();
+          death();
 
           return;
         }
@@ -893,16 +897,17 @@ class AI
     }
 
 
-// event: on death
-  public function onDeath()
+// AI death
+  public function death()
     {
       // AI already dead from another call
       if (state == AI_STATE_DEAD)
         return;
 
-      game.debug('AI.onDeath[' + id + ']');
+      game.debug('AI.death[' + id + ']');
       if (game.player.state != PLR_STATE_HOST || game.player.host != this)
         log('dies.');
+      onDeath(); // event hook
       setState(AI_STATE_DEAD);
       game.area.removeAI(this);
       var o = new BodyObject(game, x, y, type);
@@ -973,6 +978,16 @@ class AI
 
 // event dynamic: on being attacked
   public dynamic function onAttack()
+    {}
+
+
+// event dynamic: on despawning live AI
+  public dynamic function onRemove()
+    {}
+
+
+// event dynamic: on AI death
+  public dynamic function onDeath()
     {}
 
 

@@ -53,16 +53,6 @@ class DebugWindow extends TextWindow
       var buf = new StringBuf();
       buf.add('Debug\n===\n\n');
 
-      if (game.location == LOCATION_AREA)
-        {
-          buf.add('Area alertness: ' + game.area.alertness + '\n');
-        }
-      else
-        {
-          var area = game.playerRegion.currentArea;
-          buf.add('Area alertness: ' + area.alertness + '\n');
-        }
-
       return buf.toString();
     }
 }

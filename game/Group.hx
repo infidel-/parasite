@@ -5,11 +5,13 @@ package game;
 class Group
 {
   var game: Game;
-  var teamTimeout: Int;
+  public var teamTimeout: Int;
+  public var teamStartDistance: Float;
   public var team: {
-    var level: Int;
-    var size: Int;
-    var distance: Float;
+    var level: Int; // team level
+    var size: Int; // current size
+    var maxSize: Int; // total size
+    var distance: Float; // distance to parasite (0-100)
   };
 
   public var priority: Float; // group priority (0-100%)
@@ -19,7 +21,8 @@ class Group
       game = g;
       priority = 0;
       team = null;
-      teamTimeout = 0;
+      teamTimeout = 100;
+      teamStartDistance = 100.0;
     }
 
 
@@ -35,8 +38,8 @@ class Group
 
       // every time the team is wiped, we give some time to the player
       // first time spawns on the same principle
-      teamTimeout++;
-      if (teamTimeout < 50)
+      teamTimeout--;
+      if (teamTimeout > 0)
         return;
 
       // roll a chance just to make it a bit randomy
@@ -46,9 +49,10 @@ class Group
       team = {
         level: Std.int(4 * priority / 100.0) + 1,
         size: 4 + Std.random(3),
-        distance: 100,
+        maxSize: 0,
+        distance: teamStartDistance,
       };
-      teamTimeout = 0;
+      team.maxSize = team.size;
 
       game.debug('team ' + team + ' generated');
     }
@@ -58,18 +62,27 @@ class Group
   function turnTeam()
     {
       // passive distance decrease
-      var mod = 0.0;
-      if (team.level == 1)
-        mod = 0.1;
-      else if (team.level == 2)
-        mod = 0.2;
-      else if (team.level == 3)
-        mod = 0.5;
-      else if (team.level == 4)
-        mod = 1.0;
+      if (team.distance > 0)
+        {
+          var mod = 0.0;
+          if (team.level == 1)
+            mod = 0.1;
+          else if (team.level == 2)
+            mod = 0.2;
+          else if (team.level == 3)
+            mod = 0.5;
+          else if (team.level == 4)
+            mod = 1.0;
 
-      team.distance -= mod;
-      team.distance = Const.clampFloat(team.distance, 0, 100.0);
+          var old = team.distance;
+          team.distance -= mod;
+          team.distance = Const.clampFloat(team.distance, 0, 100.0);
+
+          // reduce info message amount
+          if (Const.round(team.distance) == Math.floor(team.distance))
+            game.info('Team distance: -' + mod + ' = ' +
+              Const.round(team.distance));
+        }
     }
 
 
@@ -84,14 +97,43 @@ class Group
         {
           team.distance -= mod;
           team.distance = Const.clampFloat(team.distance, 0, 100.0);
-          game.info('Team distance: -' + mod + ' = ' + team.distance);
+          game.info('Team distance: -' + mod + ' = ' +
+            Const.round(team.distance));
         }
 
-      else
-        {
-          priority += mod;
-          priority = Const.clampFloat(priority, 0, 100.0);
-          game.info('Group priority: +' + mod + ' = ' + priority);
-        }
+      else raiseOnlyPriority(mod);
+    }
+
+
+// specifically raise priority, without team distance logic
+  function raiseOnlyPriority(mod: Float)
+    {
+      priority += mod;
+      priority = Const.clampFloat(priority, 0, 100.0);
+      game.info('Group priority: +' + mod + ' = ' +
+        Const.round(priority));
+    }
+
+
+// on team member death
+  public function teamMemberDeath()
+    {
+      team.size--;
+
+      raiseOnlyPriority(10);
+
+      if (team.size > 0)
+        return;
+
+      // each new team starts with some distance covered
+      teamStartDistance = 1.5 * team.distance;
+      if (teamStartDistance > 100.0)
+        teamStartDistance = 100.0;
+
+      // team wipe, timeout
+      teamTimeout = 50;
+      team = null;
+
+      game.info('Team wiped, timeout: ' + teamTimeout + ' turns');
     }
 }

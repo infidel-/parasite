@@ -31,6 +31,14 @@ class ConsoleGame
       if (cmd.charAt(0) == 'a')
         addCommand(cmd);
 
+      // XXX config commands
+      else if (cmd.charAt(0) == 'c')
+        {
+          // XXX config|cfg <option> <value>
+          if (arr[0] == 'config' || arr[0] == 'cfg')
+            configOptionCommand(arr);
+        }
+
       // XXX go commands
       else if (cmd.charAt(0) == 'g')
         goCommand(cmd);
@@ -53,11 +61,11 @@ class ConsoleGame
       // XXX set commands
       else if (cmd.charAt(0) == 's')
         {
-          // XXX set <option> <value>
+          // XXX set <variable> <value>
           if (arr[0] == 'set')
-            setOptionCommand(arr);
+            setVariableCommand(arr);
 
-          setCommand(cmd);
+          else setCommand(cmd);
         }
 
       // XXX quit game
@@ -68,9 +76,9 @@ class ConsoleGame
     }
 
 
-// set <option> <value>
-// set
-  function setOptionCommand(arr: Array<String>)
+// config <option> <value>
+// config
+  function configOptionCommand(arr: Array<String>)
     {
       if (arr.length == 1)
         {
@@ -80,14 +88,47 @@ class ConsoleGame
 
       if (arr.length < 3)
         {
-          game.debug('set <option> <value> - set option');
-          game.debug('set - show options');
+          game.debug('config|cfg <option> <value> - set config option');
+          game.debug('config|cfg - show config options');
           return;
         }
 
       var key = arr[1];
       var val = arr[2];
       game.config.set(key, val, true);
+    }
+
+
+// set <variable> <value>
+// set
+  function setVariableCommand(arr: Array<String>)
+    {
+      if (arr.length < 3)
+        {
+          game.debug('set <variable> <value> - set game variable');
+          game.debug('set - show options');
+          game.debug('group.priority, team.distance, team.size, team.timeout');
+          return;
+        }
+
+      var key = arr[1];
+      var val = arr[2];
+      var valInt = Std.parseInt(val);
+
+      if (key == 'group.priority')
+        game.group.priority = valInt;
+      else if (key == 'team.distance')
+        {
+          if (game.group.team != null)
+            game.group.team.distance = valInt;
+        }
+      else if (key == 'team.size')
+        {
+          if (game.group.team != null)
+            game.group.team.size = valInt;
+        }
+      else if (key == 'team.timeout')
+        game.group.teamTimeout = valInt;
     }
 
 

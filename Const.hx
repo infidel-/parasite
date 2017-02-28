@@ -246,6 +246,13 @@ class Const
     }
 
 
+// round to 1 decimal
+  public static inline function round(x: Float): Float
+    {
+      return Math.round(x * 10) / 10;
+    }
+
+
 // print stuff
   public static inline function p(s: String)
     {

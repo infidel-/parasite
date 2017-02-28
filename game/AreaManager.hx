@@ -131,6 +131,14 @@ class AreaManager
           else if (e.type == AREAEVENT_ARRIVE_BACKUP)
             onArriveBackup(e);
 
+          // team called for backup
+          else if (e.type == AREAEVENT_CALL_TEAM_BACKUP)
+            onCallTeamBackup(e);
+
+          // team backup arrives
+          else if (e.type == AREAEVENT_ARRIVE_TEAM_BACKUP)
+            onArriveTeamBackup(e);
+
           // object decay
           else if (e.type == AREAEVENT_OBJECT_DECAY)
             onObjectDecay(o);
@@ -329,6 +337,51 @@ class AreaManager
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
           untyped ai.isBackup = true;
+
+          area.addAI(ai);
+        }
+    }
+
+
+// event: team member calls for backup
+  function onCallTeamBackup(e: AreaEvent)
+    {
+      log('Team member calling for backup. Dispatching units to the location.');
+
+      if (game.playerArea.hears(e.ai.x, e.ai.y))
+        e.ai.log('calls for backup!');
+
+      game.group.raisePriority(5);
+
+      // move on to arriving
+      add(AREAEVENT_ARRIVE_TEAM_BACKUP, e.ai.x, e.ai.y, 3, {});
+    }
+
+
+// event: team backup arrives
+  function onArriveTeamBackup(e: AreaEvent)
+    {
+      log('Backup arrives on scene!');
+
+      for (i in 0...2)
+        {
+          var loc = area.findEmptyLocationNear(e.x, e.y);
+          if (loc == null)
+            {
+              Const.todo('Could not find free spot for spawn!');
+              return;
+            }
+
+          var ai = new BlackopsAI(game, loc.x, loc.y);
+
+          // backup has better equipment
+          ai.inventory.clear();
+          ai.inventory.addID('assaultRifle');
+          ai.skills.addID(SKILL_RIFLE, 50 + Std.random(25));
+
+          // and arrive already alerted
+          ai.timers.alert = 10;
+          ai.state = AI_STATE_ALERT;
 
           area.addAI(ai);
         }

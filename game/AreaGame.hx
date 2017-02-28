@@ -27,6 +27,7 @@ class AreaGame
   public var height: Int;
   public var x: Int; // x,y in region
   public var y: Int;
+  public var turns: Int; // turns spent in this area counter
   public var events: Array<scenario.Event>; // events array
   public var npc: List<scenario.NPC>; // npc list
 
@@ -75,6 +76,7 @@ class AreaGame
       alertnessMod = 0;
       habitatAreaID = 0;
       habitatIsDetected = false;
+      turns = 0;
       npc = new List();
 
       _cells = [];
@@ -90,6 +92,7 @@ class AreaGame
   public function enter()
     {
       game.debug('Area.enter()');
+      turns = 0;
 
       game.area = this;
       isEntering = true;
@@ -218,7 +221,7 @@ class AreaGame
 
       if (!isHabitat)
         {
-          // count all bodies and discover then in bulk
+          // count all bodies and discover them in bulk
           var totalPoints = 0;
           var totalBodies = 0;
           for (o in _objects)
@@ -228,11 +231,6 @@ class AreaGame
                 totalPoints += body.organPoints;
                 totalBodies++;
               }
-
-          // count all previous hosts and do consequences
-          for (ai in _ai)
-            if (ai.isHuman && (ai.wasInvaded || ai.wasAttached))
-              game.managerRegion.onHostDiscovered(this, ai);
 
           // notify world about bodies discovered
           if (totalBodies == 1)
@@ -716,6 +714,10 @@ class AreaGame
 // remove AI
   public function removeAI(ai: AI)
     {
+      // event: despawn live AI
+      if (ai.state != AI_STATE_DEAD && ai != game.player.host)
+        ai.onRemove();
+
       if (ai.npc != null)
         ai.npc.ai = null;
       game.scene.remove(ai.entity);
@@ -726,6 +728,9 @@ class AreaGame
 // TURN: area time passage - ai actions, object events
   public function turn()
     {
+      // turns spent in this area
+      turns++;
+
       // AI logic
       for (ai in _ai)
         {
@@ -746,7 +751,41 @@ class AreaGame
       turnSpawnMoreAI(); // spawn AI related to area alertness
       turnSpawnNPC(); // spawn NPC AI
       turnSpawnClues(); // spawn clues
+      turnSpawnTeam(); // spawn team agents
       turnAlertness(); // decrease alertness
+    }
+
+
+// spawn group team members
+  function turnSpawnTeam()
+    {
+      var team = game.group.team;
+      if (team == null || isHabitat)
+        return;
+
+      // limit spawns by turns spent in this area
+      if (turns < team.distance)
+        return;
+
+      // introduce some randomness
+      if (Std.random(100) > 20)
+        return;
+
+      // count number of spawned team members
+      var numSpawned = 0;
+      for (ai in _ai)
+        if (ai.isTeamMember && !ai.parasiteAttached)
+          numSpawned++;
+
+      var numFree = team.size - numSpawned;
+      if (numFree <= 0)
+        return;
+
+      // spawn a team member
+      var ai = spawnUnseenAI('team', false);
+      ai.isTeamMember = true;
+
+      game.debug('Team member spawned');
     }
 
 
@@ -886,6 +925,9 @@ class AreaGame
 // spawn new AI, called each turn
   function turnSpawnAI()
     {
+      if (info.commonAI == 0)
+        return;
+
       // get number of common AI
       var cnt = 0;
       for (ai in _ai)
@@ -926,6 +968,9 @@ class AreaGame
 // spawn some more AI related to area alertness
   function turnSpawnMoreAI()
     {
+      if (info.commonAI == 0)
+        return;
+
       // get number of uncommon AI (spawned by alertness logic)
       var cnt = 0;
       for (ai in _ai)
@@ -940,7 +985,8 @@ class AreaGame
         return;
 
       game.info('Uncommon AI ' + cnt + '/' + uncommonAI +
-        ' (alertness: ' + alertness + '%, max: ' + info.uncommonAI + ')');
+        ' (alertness: ' + Const.round(alertness) + '%, max: ' +
+        info.uncommonAI + ')');
 
       // limit number of spawns per turn
       var maxSpawn = uncommonAI - cnt;
@@ -981,6 +1027,8 @@ class AreaGame
         ai = new SecurityAI(game, loc.x, loc.y);
       else if (type == 'agent')
         ai = new AgentAI(game, loc.x, loc.y);
+      else if (type == 'team')
+        ai = new TeamMemberAI(game, loc.x, loc.y);
       else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
 
       ai.isCommon = isCommon;

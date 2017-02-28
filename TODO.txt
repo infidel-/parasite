@@ -1,5 +1,6 @@
 == MAINTENANCE
 make use computer action more convenient (add to hud?)
+leaving area does not destroy backup events
 
 == CURRENT
 
@@ -16,13 +17,10 @@ creates agents team (four team levels, based on current priority):
   4) military stunners and parasite-specific researched weapons
      4 analytics (-10 distance/turn)
   ->
+add weapons/armor to backup
 
-;set team.distance 80 - console command
-
-when team distance is low enough, spawn team agents (one by one) in any area
-  smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
-  psychology skill: can vaguely detect which people are team members and has false positives
-  at this point the best thing player can do is detect team members and avoid all contact, plus keep a low profile
+smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
+psychology skill: can vaguely detect which people are team members and has false positives
 
   base message: You feel someone watching you.
 distance:
