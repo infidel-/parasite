@@ -76,7 +76,7 @@ class Group
 
           var old = team.distance;
           team.distance -= mod;
-          team.distance = Const.clampFloat(team.distance, 0, 100.0);
+          team.distance = Const.clampFloat(team.distance, 0, 150.0);
 
           // reduce info message amount
           if (Const.round(team.distance) == Math.floor(team.distance))
@@ -96,22 +96,45 @@ class Group
       if (team != null)
         {
           team.distance -= mod;
-          team.distance = Const.clampFloat(team.distance, 0, 100.0);
+          team.distance = Const.clampFloat(team.distance, 0, 150.0);
           game.info('Team distance: -' + mod + ' = ' +
             Const.round(team.distance));
         }
 
-      else raiseOnlyPriority(mod);
+      else changeOnlyPriority(mod);
     }
 
 
 // specifically raise priority, without team distance logic
-  function raiseOnlyPriority(mod: Float)
+  function changeOnlyPriority(mod: Float)
     {
       priority += mod;
       priority = Const.clampFloat(priority, 0, 100.0);
-      game.info('Group priority: +' + mod + ' = ' +
+      game.info('Group priority: ' + (mod > 0 ? '+' : '') + mod + ' = ' +
         Const.round(priority));
+    }
+
+
+// specifically raise team distance
+  public function raiseTeamDistance(mod: Float)
+    {
+      team.distance += mod;
+      team.distance = Const.clampFloat(team.distance, 0, 150.0);
+      game.info('Team distance: +' + mod + ' = ' +
+        Const.round(team.distance));
+
+      if (team.distance < 150)
+        return;
+
+      // team completely evaded, deactivate and lower priority
+      changeOnlyPriority(-20);
+
+      // larger timeout and reset starting distance
+      teamStartDistance = 100.0;
+      teamTimeout = 100;
+      team = null;
+
+      game.info('Team deactivated, timeout: ' + teamTimeout + ' turns');
     }
 
 
@@ -120,7 +143,7 @@ class Group
     {
       team.size--;
 
-      raiseOnlyPriority(10);
+      changeOnlyPriority(10);
 
       if (team.size > 0)
         return;

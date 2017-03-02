@@ -76,6 +76,10 @@ class TeamMemberAI extends HumanAI
       // team member was alerted at some point before despawn, raise priority
       if (wasAlerted)
         game.group.raisePriority(10);
+
+      // team member was noticed but never alerted, raise distance instead
+      else if (wasNoticed)
+        game.group.raiseTeamDistance(10);
     }
 
 
