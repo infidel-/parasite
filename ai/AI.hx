@@ -39,6 +39,7 @@ class AI
   public var wasAttached: Bool; // was parasite attached to this AI?
   public var wasInvaded: Bool; // was this AI a host at any point?
   public var wasAlerted: Bool; // was this AI alerted at some point?
+  public var wasNoticed: Bool; // was this AI seen by parasite after spawning?
 
   public var id: Int; // unique AI id
   static var _maxID: Int = 0; // current max ID
@@ -124,17 +125,20 @@ class AI
         };
 
       direction = 0;
+      parasiteAttached = false;
+
       isAggressive = false;
       isCommon = true;
       isNameKnown = false;
       isJobKnown = false;
       isAttrsKnown = false;
       isHuman = false;
+      isTeamMember = false;
+
       wasAttached = false;
       wasInvaded = false;
       wasAlerted = false;
-      parasiteAttached = false;
-      isTeamMember = false;
+      wasNoticed = false;
 
       baseAttrs = {
         strength: 1,
@@ -988,6 +992,11 @@ class AI
 
 // event dynamic: on AI death
   public dynamic function onDeath()
+    {}
+
+
+// event dynamic: on being noticed by player
+  public dynamic function onNotice()
     {}
 
 

@@ -1053,10 +1053,10 @@ class AreaGame
   public function getVisibleRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
     {
       var rect = {
-        x1: Std.int(HXP.camera.x / Const.TILE_WIDTH) - 1,
-        y1: Std.int(HXP.camera.y / Const.TILE_HEIGHT) - 1,
-        x2: Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH) + 2,
-        y2: Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT) + 2
+        x1: game.scene.cameraTileX1 - 1,
+        y1: game.scene.cameraTileY1 - 1,
+        x2: game.scene.cameraTileX2 + 2,
+        y2: game.scene.cameraTileY2 + 2
         };
 
       if (rect.x1 < 0)
@@ -1072,14 +1072,33 @@ class AreaGame
     }
 
 
+// checks if this x,y is on screen
+  public inline function inVisibleRect(x: Int, y: Int): Bool
+    {
+      return (x >= game.scene.cameraTileX1 &&
+        y >= game.scene.cameraTileY1 &&
+        x < game.scene.cameraTileX2 &&
+        y < game.scene.cameraTileY2);
+    }
+
+
+
 // update AI, objects visibility
 // host version
   function updateVisibilityHost()
     {
       for (ai in _ai)
-        ai.entity.visible =
-          (game.player.vars.losEnabled ?
-            isVisible(game.playerArea.x, game.playerArea.y, ai.x, ai.y) : true);
+        {
+          var v = isVisible(game.playerArea.x, game.playerArea.y, ai.x, ai.y);
+          // noticed by player for the first time
+          if (!ai.wasNoticed && v && inVisibleRect(ai.x, ai.y))
+            {
+              ai.wasNoticed = true;
+              ai.onNotice();
+            }
+
+          ai.entity.visible = (game.player.vars.losEnabled ? v : true);
+        }
 
       for (obj in _objects)
         obj.entity.visible =

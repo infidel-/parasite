@@ -25,6 +25,12 @@ class GameScene extends Scene
   public var controlPressed: Bool; // Ctrl key pressed?
   public var shiftPressed: Bool; // Shift key pressed?
 
+  // camera tile x,y
+  public var cameraTileX1: Int;
+  public var cameraTileY1: Int;
+  public var cameraTileX2: Int;
+  public var cameraTileY2: Int;
+
 //  var _dx: Int; // movement vars - movement direction (changed in handleInput)
 //  var _dy: Int;
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
@@ -37,6 +43,10 @@ class GameScene extends Scene
       hudState = HUDSTATE_DEFAULT;
       controlPressed = false;
       shiftPressed = false;
+      cameraTileX1 = 0;
+      cameraTileY1 = 0;
+      cameraTileX2 = 0;
+      cameraTileY2 = 0;
 
       Input.define("ctrl", [ 18 ]); // Alt key
       Input.define("shift", [ Key.SHIFT ]);
@@ -154,6 +164,14 @@ class GameScene extends Scene
 
       HXP.camera.x = x;
       HXP.camera.y = y;
+
+      // update tile x,y
+      cameraTileX1 = Std.int(HXP.camera.x / Const.TILE_WIDTH);
+      cameraTileY1 = Std.int(HXP.camera.y / Const.TILE_HEIGHT);
+      cameraTileX2 =
+        Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH);
+      cameraTileY2 =
+        Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT);
     }
 
 

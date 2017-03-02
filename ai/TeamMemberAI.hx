@@ -85,4 +85,11 @@ class TeamMemberAI extends HumanAI
       // call group hook
       game.group.teamMemberDeath();
     }
+
+
+// event: on being noticed by player
+  public override function onNotice()
+    {
+      game.log('You feel someone watching you.');
+    }
 }
