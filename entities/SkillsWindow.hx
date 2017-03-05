@@ -38,10 +38,7 @@ class SkillsWindow extends TextWindow
       buf.add('[DEBUG] Group priority: ' + Const.round(game.group.priority) +
         ', team timeout: ' + game.group.teamTimeout + '\n');
       if (game.group.team != null)
-        buf.add('[DEBUG] Team level: ' + game.group.team.level +
-          ', size: ' + game.group.team.size +
-          '/' + game.group.team.maxSize +
-          ', distance: ' + Const.round(game.group.team.distance) + '\n');
+        buf.add('[DEBUG] Team: ' + game.group.team + '\n');
 #end
 
       // host skills and attributes

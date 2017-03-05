@@ -7,12 +7,7 @@ class Group
   var game: Game;
   public var teamTimeout: Int;
   public var teamStartDistance: Float;
-  public var team: {
-    var level: Int; // team level
-    var size: Int; // current size
-    var maxSize: Int; // total size
-    var distance: Float; // distance to parasite (0-100)
-  };
+  public var team: Team;
 
   public var priority: Float; // group priority (0-100%)
 
@@ -26,13 +21,13 @@ class Group
     }
 
 
-// new turn logic
+// TURN: new turn logic
   public function turn()
     {
       // team already spawned
       if (team != null)
         {
-          turnTeam();
+          team.turn();
           return;
         }
 
@@ -46,43 +41,9 @@ class Group
       if (Std.random(100) > 20)
         return;
 
-      team = {
-        level: Std.int(4 * priority / 100.0) + 1,
-        size: 4 + Std.random(3),
-        maxSize: 0,
-        distance: teamStartDistance,
-      };
-      team.maxSize = team.size;
+      team = new Team(game);
 
       game.debug('team ' + team + ' generated');
-    }
-
-
-// team turn logic
-  function turnTeam()
-    {
-      // passive distance decrease
-      if (team.distance > 0)
-        {
-          var mod = 0.0;
-          if (team.level == 1)
-            mod = 0.1;
-          else if (team.level == 2)
-            mod = 0.2;
-          else if (team.level == 3)
-            mod = 0.5;
-          else if (team.level == 4)
-            mod = 1.0;
-
-          var old = team.distance;
-          team.distance -= mod;
-          team.distance = Const.clampFloat(team.distance, 0, 150.0);
-
-          // reduce info message amount
-          if (Const.round(team.distance) == Math.floor(team.distance))
-            game.info('Team distance: -' + mod + ' = ' +
-              Const.round(team.distance));
-        }
     }
 
 
@@ -94,12 +55,7 @@ class Group
         return;
 
       if (team != null)
-        {
-          team.distance -= mod;
-          team.distance = Const.clampFloat(team.distance, 0, 150.0);
-          game.info('Team distance: -' + mod + ' = ' +
-            Const.round(team.distance));
-        }
+        team.distance -= mod;
 
       else changeOnlyPriority(mod);
     }
@@ -119,9 +75,6 @@ class Group
   public function raiseTeamDistance(mod: Float)
     {
       team.distance += mod;
-      team.distance = Const.clampFloat(team.distance, 0, 150.0);
-      game.info('Team distance: +' + mod + ' = ' +
-        Const.round(team.distance));
 
       if (team.distance < 150)
         return;

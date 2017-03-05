@@ -37,7 +37,6 @@ class AreaGame
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
   public var habitatAreaID: Int; // area id of habitat
-  public var habitatIsDetected: Bool; // habitat: has been detected?
 
   public var alertnessMod: Float; // changes to alertness until next reset
   // we store all changes until player leaves the current area for propagation
@@ -75,7 +74,6 @@ class AreaGame
       _alertness = 0;
       alertnessMod = 0;
       habitatAreaID = 0;
-      habitatIsDetected = false;
       turns = 0;
       npc = new List();
 
@@ -105,9 +103,9 @@ class AreaGame
       else for (o in _objects)
         o.show();
 
-      // habitat detected: spawn agents
-      if (isHabitat && habitatIsDetected)
-        enterHabitatDetected();
+      // enter habitat with active team
+      if (isHabitat && game.group.team != null)
+        game.group.team.onEnterHabitat();
 
       // find location to appear
       // at game start always appear on empty location
@@ -201,19 +199,6 @@ class AreaGame
     }
 
 
-// on enter: habitat detected, spawn blackops agents
-  public function enterHabitatDetected()
-    {
-      for (i in 0...4)
-        {
-          var loc = findEmptyLocation();
-          var ai = new BlackopsAI(game, loc.x, loc.y);
-          ai.alertness = 75;
-          addAI(ai);
-        }
-    }
-
-
 // leave this area: hide gui, despawn, etc
   public function leave()
     {
@@ -237,7 +222,8 @@ class AreaGame
             game.managerRegion.onBodyDiscovered(this, totalPoints);
 
           else if (totalBodies > 0)
-            game.managerRegion.onBodiesDiscovered(this, totalBodies, totalPoints);
+            game.managerRegion.onBodiesDiscovered(this, totalBodies,
+              totalPoints);
         }
 
       // remove all ai
@@ -251,15 +237,9 @@ class AreaGame
           o.hide();
         else removeObject(o);
 
-      // habitat was detected, destroy it
-      if (isHabitat && habitatIsDetected)
-        {
-          game.playerRegion.currentArea.hasHabitat = false;
-          game.region.removeArea(id);
-          game.scene.region.updateIconsArea(game.playerRegion.x,
-            game.playerRegion.y);
-          game.log("This habitat is no longer secure.");
-        }
+      // leave habitat with active team
+      if (isHabitat && game.group.team != null)
+        game.group.team.onLeaveHabitat();
 
       // hide gui
       game.scene.area.hide();

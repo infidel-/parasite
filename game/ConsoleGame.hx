@@ -107,7 +107,8 @@ class ConsoleGame
         {
           game.debug('set <variable> <value> - set game variable');
           game.debug('set - show options');
-          game.debug('group.priority, team.distance, team.size, team.timeout');
+          game.debug('group.priority, ' +
+            'team.distance, team.size, team.timeout, team.timer');
           return;
         }
 
@@ -129,6 +130,11 @@ class ConsoleGame
         }
       else if (key == 'team.timeout')
         game.group.teamTimeout = valInt;
+      else if (key == 'team.timer')
+        {
+          if (game.group.team != null)
+            game.group.team.timer = valInt;
+        }
     }
 
 

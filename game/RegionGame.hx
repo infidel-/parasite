@@ -115,8 +115,7 @@ class RegionGame
           if (!ret)
             continue;
 
-          game.debug("Habitat " + id + " detected.");
-          area.habitatIsDetected = true;
+          game.debug("Habitat " + area.id + " detected.");
         }
     }
 

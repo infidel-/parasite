@@ -157,9 +157,10 @@ class PlayerRegion
   function enterHabitatAction()
     {
       var habitatArea = game.region.get(currentArea.habitatAreaID);
-      if (habitatArea.habitatIsDetected)
+      if (game.group.team != null && game.group.team.state == TEAM_AMBUSH)
         game.log("You enter the habitat. Looks like someone is here!");
       else game.log("You enter the habitat. You feel much safer here.");
+
       game.setLocation(LOCATION_AREA, habitatArea);
     }
 

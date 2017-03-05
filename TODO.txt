@@ -22,9 +22,10 @@ add weapons/armor to backup
 smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
 psychology skill: can vaguely detect which people are team members and has false positives
 
-habitats act as buffers for team search
-when team distance is zero and any part of the team is alive, select random habitat as discovered
-add habitat discovery even when player is in area or in it
+add habitat discovery even when player is in area or in habitat
+
+cleanup:
+RegionGame.turnDetectHabitats()
 
 when habitat is discovered:
   1) it is destroyed immediately, hurting parasite
@@ -47,6 +48,8 @@ killing whole team:
 
 sum levels of dead teams and make that influence the starting distance
 
+
+need wiki page describing mechanics!
 
 == PHASE 2:
 brain probing any event NPCs increases a special counter
@@ -276,6 +279,7 @@ ingame help window with links leading to wiki pages
 scene.getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
 improvement that lowers passive team distance decrease (reduces amount of residue left)
+ATM the team ambushes any habitat the player enters. i might need to roll a chance if the ambush is actually in this habitat or in some other.
 
 == BROAD DIRECTIONS
 scenario goals test
