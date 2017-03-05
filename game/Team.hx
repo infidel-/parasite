@@ -4,7 +4,7 @@ package game;
 
 import ai.BlackopsAI;
 
-class Team extends FSM<_TeamState>
+class Team extends FSM<_TeamState, _TeamFlag>
 {
   public var level: Int; // team level
   public var size: Int; // current size
@@ -77,6 +77,14 @@ class Team extends FSM<_TeamState>
       if (timer > 0)
         return;
 
+      // player in habitat, spawn blackops
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        {
+          game.log("Something is wrong here... It's an ambush!");
+          onEnterHabitat();
+          return;
+        }
+
       // pick a random habitat
       var tmp = game.region.getHabitatsList();
 
@@ -90,6 +98,8 @@ class Team extends FSM<_TeamState>
     {
       if (state != TEAM_AMBUSH)
         return;
+
+      state = TEAM_FIGHT;
 
       // team was in ambush, spawn blackops
       for (i in 0...4)
@@ -173,3 +183,7 @@ enum _TeamState
   TEAM_FIGHT; // team is fighting with parasite
 }
 
+
+enum _TeamFlag
+{
+}

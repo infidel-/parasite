@@ -22,8 +22,6 @@ add weapons/armor to backup
 smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
 psychology skill: can vaguely detect which people are team members and has false positives
 
-add habitat discovery even when player is in area or in habitat
-
 cleanup:
 RegionGame.turnDetectHabitats()
 
