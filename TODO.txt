@@ -22,16 +22,7 @@ add weapons/armor to backup
 smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
 psychology skill: can vaguely detect which people are team members and has false positives
 
-cleanup:
-RegionGame.turnDetectHabitats()
-
-when habitat is discovered:
-  1) it is destroyed immediately, hurting parasite
-  OR
-  2) ambush (if parasite is currently inside it, it is always ambush)
-
 on ambush player can leave habitat after 3 turns stating that he abandons it. that will destroy the habitat with the same effects. (try using "no leave" effect)
-  if the player kills the ambush and leaves with everyone dead, habitat is destroyed anyways
 
 when habitat is destroyed, the parasite feels the connection broken and is hurt by this (perma-reduces max energy + shocked for X turns + reduces host control).
   team distance goes up significantly (+25?)

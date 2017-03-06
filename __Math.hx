@@ -268,26 +268,6 @@ class __Math
     }
 
 
-// formula: detect habitats
-  public static inline function detectHabitat(p: {
-      base: Float,
-      }): Bool
-    {
-/*
-      var chance = p.base + p.base * p.interest / 100.0;
-      var roll = Std.random(100);
-
-      game.info('Detect habitat (base + base * interest / 100): ' +
-        p.base + ' + ' + p.base + ' * ' + p.interest + ' = ' + chance +
-        '% (roll: ' + roll + ') = ' +
-        (roll <= chance ? 'success' : 'fail') + '.');
-
-      return (roll <= chance);
-*/
-      return false;
-    }
-
-
 // host discovered priority calculation
   public static inline function hostDiscovered(ai: AI)
     {

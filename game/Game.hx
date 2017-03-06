@@ -30,7 +30,6 @@ class Game
   public var location(default, null): _LocationType; // player location type - area, region, world
 
   public var turns: Int; // number of turns passed since game start
-  public var turnsArea: Int; // number of turns passed since player entered this area
   public var isInited: Bool; // is the game initialized?
   public var isFinished: Bool; // is the game finished?
   public var finishText: String; // finishing text in game over window
@@ -76,7 +75,6 @@ class Game
         ' (build: ' + Version.getBuild() + ')';
       log(s);
       turns = 0;
-      turnsArea = 0;
       isFinished = false;
       isInited = false;
 
@@ -178,7 +176,6 @@ class Game
       // show new gui
       if (location == LOCATION_AREA)
         {
-          turnsArea = 0;
           area = region.getXY(playerRegion.x, playerRegion.y);
           if (newarea != null) // enter specified area
              area = newarea;
@@ -226,11 +223,6 @@ class Game
           goals.turn();
           if (isFinished)
             return;
-
-          // current area turns
-          turnsArea++;
-          if (turnsArea % 10 == 0)
-            region.turnDetectHabitats();
         }
 
       else if (location == LOCATION_REGION)

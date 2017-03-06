@@ -85,38 +85,8 @@ class RegionGame
             a.alertness -= 1;
           }
 
-      // try to detect all habitats
-      turnDetectHabitats();
-
       // update all icons
       game.scene.region.updateIcons();
-    }
-
-
-// TURN: try to detect all habitats
-// also called when player is in the area mode once/10 turns
-  public function turnDetectHabitats()
-    {
-      // disabled for now
-      return false;
-
-      var params = game.player.evolutionManager.getParams(IMP_MICROHABITAT);
-      var detectionChance: Float = params.detectionChance;
-      var tmp = getHabitatsList();
-      for (area in tmp)
-        {
-          // skip current area if it's a habitat and player is it
-          if (game.location == LOCATION_AREA && area == game.area)
-            continue;
-
-          var ret = __Math.detectHabitat({
-            base: detectionChance,
-          });
-          if (!ret)
-            continue;
-
-          game.debug("Habitat " + area.id + " detected.");
-        }
     }
 
 

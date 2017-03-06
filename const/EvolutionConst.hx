@@ -708,8 +708,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l)
           {
-            return "Maximum number of microhabitats: " + l.numHabitats +
-              "\nMicrohabitat detection chance: " + l.detectionChance + "%";
+            return "Maximum number of microhabitats: " + l.numHabitats;
           },
         levelNotes: [
           '(todo fluff)',
@@ -720,19 +719,15 @@ class EvolutionConst
         levelParams: [
           {
             numHabitats: 0,
-            detectionChance: 0,
           },
           {
             numHabitats: 1,
-            detectionChance: 1,
           },
           {
             numHabitats: 2,
-            detectionChance: 0.5,
           },
           {
             numHabitats: 4,
-            detectionChance: 0.25,
           },
           ],
         onUpgrade: function(level, game, player)
