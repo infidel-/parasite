@@ -588,13 +588,26 @@ class PlayerArea
       // special checks for habitat
       if (game.area.typeID == AREA_HABITAT)
         {
-          if (game.area.hasAnyAI())
+          // currently fighting ambush
+          if (game.group.team != null && game.group.team.state == TEAM_FIGHT)
+            {
+              if (game.group.team.timer > 0)
+                {
+                  log('You try to leave but the exit is blocked! You can leave the area in ' + game.group.team.timer + ' turns.',
+                    COLOR_HINT);
+                  return;
+                }
+            }
+
+          // no free AI allowed
+          else if (game.area.hasAnyAI())
             {
               log('You cannot leave the habitat with outsiders in it!',
                 COLOR_HINT);
               return;
             }
 
+          // no leaving with any construction molds
           if (state == PLR_STATE_HOST && player.host.organs.hasMold())
             {
               log('You cannot leave the habitat with a mold.',

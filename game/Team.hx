@@ -34,6 +34,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
         turnSearch();
       else if (state == TEAM_AMBUSH)
         turnAmbush();
+      else if (state == TEAM_FIGHT)
+        turnFight();
     }
 
 
@@ -44,7 +46,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (distance <= 0)
         {
           state = TEAM_AMBUSH;
-          timer = 20 + 10 * Std.random(20);
+
+          // if player is currently in habitat, skip timer
+          if (game.location == LOCATION_AREA && game.area.isHabitat)
+            timer = 0;
+          else timer = 20 + 10 * Std.random(20);
           return;
         }
 
@@ -93,6 +99,15 @@ class Team extends FSM<_TeamState, _TeamFlag>
     }
 
 
+// TURN: fight in progress
+  function turnFight()
+    {
+      // increase fight timer (to allow player to leave)
+      if (timer > 0)
+        timer--;
+    }
+
+
 // event: player entered habitat with an active team
   public function onEnterHabitat()
     {
@@ -100,6 +115,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
         return;
 
       state = TEAM_FIGHT;
+      timer = 3; // 3 turns until exit is available
 
       // team was in ambush, spawn blackops
       for (i in 0...4)
@@ -115,7 +131,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // event: player leaves habitat with an active team
   public function onLeaveHabitat()
     {
-      if (state != TEAM_AMBUSH)
+      if (state != TEAM_AMBUSH && state != TEAM_FIGHT)
         return;
 
       // note that we do not care whether the actual ambushers are dead
