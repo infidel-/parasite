@@ -144,8 +144,6 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // called either on ambush timeout or when player leaves ambushed habitat
   function destroyHabitat(area: AreaGame)
     {
-      game.debug('KABLAM!');
-
       // team distance is increased providing a buffer
       distance = 20;
 
@@ -158,7 +156,28 @@ class Team extends FSM<_TeamState, _TeamFlag>
       game.region.removeArea(area.habitatAreaID);
       game.scene.region.updateIconsArea(area.x, area.y);
       game.log("You feel great pain as the habitat at " +
-        area.x + "," + area.y + " is destroyed.");
+        area.x + "," + area.y + " is destroyed. This will leave a permanent mark.");
+
+      // reduce max energy (20 min)
+      if (game.player.maxEnergy > 20)
+        {
+          game.player.maxEnergy -= 20;
+          game.player.energy = game.player.energy; // clamp current value
+        }
+
+      // control reduced
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          game.player.hostControl -= 30;
+          game.log('You feel your control slipping.');
+        }
+
+      // attach hold reduced
+      else if (game.player.state == PLR_STATE_ATTACHED)
+        {
+          game.playerArea.attachHold -= 20;
+          game.log('You feel your grip slipping.');
+        }
     }
 
 
