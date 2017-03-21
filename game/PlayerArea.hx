@@ -685,6 +685,9 @@ class PlayerArea
           var ret = game.timeline.learnClue(player.host.event, true);
           if (!ret)
             log('You did not learn any new information.', COLOR_TIMELINE);
+
+          // knowledge about group timer
+          game.group.brainProbe();
         }
 
       // mark npc as scanned

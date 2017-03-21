@@ -35,6 +35,8 @@ class SkillsWindow extends TextWindow
         buf.add('  --- empty ---\n');
 
 #if mydebug
+      if (!game.group.isKnown)
+        buf.add('[DEBUG] Group known timer: ' + game.group.knownTimer + '\n');
       buf.add('[DEBUG] Group priority: ' + Const.round(game.group.priority) +
         ', team timeout: ' + game.group.teamTimeout + '\n');
       if (game.group.team != null)

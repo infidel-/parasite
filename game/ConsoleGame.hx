@@ -107,7 +107,7 @@ class ConsoleGame
         {
           game.debug('set <variable> <value> - set game variable');
           game.debug('set - show options');
-          game.debug('group.priority, ' +
+          game.debug('group.knownTimer, group.priority, ' +
             'team.distance, team.size, team.timeout, team.timer');
           return;
         }
@@ -116,7 +116,9 @@ class ConsoleGame
       var val = arr[2];
       var valInt = Std.parseInt(val);
 
-      if (key == 'group.priority')
+      if (key == 'group.knownTimer')
+        game.group.knownTimer = valInt;
+      else if (key == 'group.priority')
         game.group.priority = valInt;
       else if (key == 'team.distance')
         {

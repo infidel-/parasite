@@ -8,6 +8,8 @@ class Group
   public var teamTimeout: Int;
   public var teamStartDistance: Float;
   public var team: Team;
+  public var knownTimer: Int; // probe timer until the group becomes known
+  public var isKnown: Bool; // group existence known?
 
   public var priority: Float; // group priority (0-100%)
 
@@ -18,6 +20,8 @@ class Group
       team = null;
       teamTimeout = 100;
       teamStartDistance = 100.0;
+      knownTimer = 5 + Std.random(5); // randomized slightly
+      isKnown = false;
     }
 
 
@@ -111,5 +115,22 @@ class Group
       team = null;
 
       game.info('Team wiped, timeout: ' + teamTimeout + ' turns');
+    }
+
+
+// on brain probing the event NPC
+  public function brainProbe()
+    {
+      if (game.group.isKnown)
+        return;
+
+      knownTimer--;
+      if (knownTimer > 0)
+        return;
+
+      // player becomes aware of the group existence
+      game.message('There is a group of humans that wants to destroy me.');
+
+      isKnown = true;
     }
 }
