@@ -8,7 +8,7 @@ class Group
   public var teamTimeout: Int;
   public var teamStartDistance: Float;
   public var team: Team;
-  public var knownTimer: Int; // probe timer until the group becomes known
+  public var knownCount: Int; // probe timer until the group becomes known
   public var isKnown: Bool; // group existence known?
 
   public var priority: Float; // group priority (0-100%)
@@ -20,7 +20,7 @@ class Group
       team = null;
       teamTimeout = 100;
       teamStartDistance = 100.0;
-      knownTimer = 5 + Std.random(5); // randomized slightly
+      knownCount = 5 + Std.random(5); // randomized slightly
       isKnown = false;
     }
 
@@ -124,8 +124,8 @@ class Group
       if (game.group.isKnown)
         return;
 
-      knownTimer--;
-      if (knownTimer > 0)
+      knownCount--;
+      if (knownCount > 0)
         return;
 
       // player becomes aware of the group existence
