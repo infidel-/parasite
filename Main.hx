@@ -1,5 +1,13 @@
+import openfl.Lib;
 import com.haxepunk.Engine;
 import com.haxepunk.HXP;
+import com.haxepunk.Scene;
+import com.haxepunk.Entity;
+import com.haxepunk.graphics.Spritemap;
+import com.haxepunk.masks.Circle;
+
+import haxe.ui.HaxeUIApp;
+import haxe.ui.Toolkit;
 
 import game.Game;
 
@@ -17,5 +25,11 @@ class Main extends Engine
       game = new Game();
     }
 
-  public static function main() { new Main(); }
+  public static function main()
+    {
+      Toolkit.theme = "native";
+      Toolkit.init();
+
+      var m = new Main();
+    }
 }

@@ -30,8 +30,7 @@ class MouseEntity extends Entity
       graphic = _map;
       layer = Const.LAYER_MOUSE;
 
-      Mouse.hide(); // hide the mouse cursor
-
+//      Mouse.hide(); // hide the mouse cursor
 	}
 
 /*

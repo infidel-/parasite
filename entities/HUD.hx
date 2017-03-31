@@ -3,6 +3,7 @@
 package entities;
 
 import openfl.Assets;
+import openfl.Lib;
 import com.haxepunk.HXP;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Graphiclist;
@@ -13,6 +14,9 @@ import flash.text.TextFieldType;
 import flash.text.TextFormat;
 import flash.text.TextFormatAlign;
 import flash.text.TextFieldAutoSize;
+
+import haxe.ui.components.Button;
+import haxe.ui.core.MouseEvent;
 
 import game.Game;
 
@@ -40,6 +44,17 @@ class HUD
       _listActions = new List<_PlayerAction>();
       _listLog = new List<String>();
       var font = Assets.getFont(Const.FONT);
+/*
+      var b:Button = new Button();
+      b.text = "Test button";
+      b.x = 10;
+      b.y = 10;
+      Lib.current.addChild(b);
+
+      b.onClick = function(e) {
+          b.text = "Clicked!";
+      }
+*/
 
       // console
       _console = new TextField();
@@ -80,7 +95,6 @@ class HUD
       _textFieldBack.addChild(_textField);
       _textFieldBack.x = 20;
       _textFieldBack.y = 20;
-      HXP.stage.addChild(_textFieldBack);
 
       // help
       _help = new TextField();

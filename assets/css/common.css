@@ -1,0 +1,20 @@
+#main {
+  background-color: #111111;
+  border: 1px solid #CCCCCC;
+  padding: 10px;
+}
+
+#text {
+  width: 90%;
+  height: 80%;
+  horizontal-align: center;
+  font-size: 24px;
+  color: #888888;
+  border: none;
+  background-color: #111111;
+}
+
+.button {
+  font-size: 20px;
+  width: 250px;
+}

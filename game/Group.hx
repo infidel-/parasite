@@ -12,6 +12,7 @@ class Group
   public var isKnown: Bool; // group existence known?
 
   public var priority: Float; // group priority (0-100%)
+  public var difficulty: _Difficulty; // difficulty setting
 
   public function new(g: Game)
     {
@@ -22,6 +23,7 @@ class Group
       teamStartDistance = 100.0;
       knownCount = 5 + Std.random(5); // randomized slightly
       isKnown = false;
+      difficulty = UNSET;
     }
 
 

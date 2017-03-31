@@ -1,8 +1,14 @@
 == MAINTENANCE
+disallow changing gui state in difficulty window
+fix close by enter in new windows
 make use computer action more convenient (add to hud?)
 leaving area does not destroy backup events
+more gui work
 
 == CURRENT
+
+mouse - change to openfl entity
+move code to src/?
 
 == GROUP: ACTIVE MEASURES
 

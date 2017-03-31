@@ -1,7 +1,7 @@
 #VERSION=`cat VERSION`
 VERSION := $(shell cat VERSION)
 
-all: clean html5-mydebug 
+all: clean html5-mydebug
 
 release: release-win release-linux32 release-linux64 release-mac64
 
@@ -108,8 +108,9 @@ windows-clean:
     cp -R .bin/windows/neko/release/bin/* /mnt/1/Projects/bin/
 
 html5-mydebug:
-	openfl build project.nmml html5 -Dmydebug --connect 6000 && \
-	cp -R .bin/html5/release/bin/* /mnt/1/Projects/html5/
+	openfl build project.nmml html5 -Dmydebug --connect 6000
+#	&& \
+#	cp -R .bin/html5/release/bin/* /mnt/1/Projects/html5/
 
 test:
 	haxe .bin/linux64/neko/haxe/release.hxml

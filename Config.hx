@@ -34,6 +34,12 @@ class Config
       windowHeight = 768;
 
       map = new Map();
+      map['extendedInfo'] = '0';
+      map['sendExceptions'] = '0';
+      map['fontSize'] = '' + fontSize;
+      map['windowWidth'] = '' + windowWidth;
+      map['windowHeight'] = '' + windowHeight;
+
 #if js
       var str = js.Browser.window.localStorage.getItem('config');
       var obj = {};
@@ -95,7 +101,7 @@ class Config
 
       else
         {
-          game.debug('No such config setting.');
+          game.debug('No such config setting [' + key + '].');
           return;
         }
 

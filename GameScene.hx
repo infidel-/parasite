@@ -5,11 +5,13 @@ import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
 import com.haxepunk.utils.Input;
 import com.haxepunk.utils.Key;
+import haxe.ui.core.Component;
 #if !js
 import sys.io.File;
 #end
 
 import entities.*;
+import ui.*;
 import game.Game;
 
 class GameScene extends Scene
@@ -21,6 +23,8 @@ class GameScene extends Scene
   public var hud: HUD; // ingame HUD
   var hudState: _HUDState; // current HUD state (default, evolution, etc)
   var windows: Map<_HUDState, TextWindow>; // GUI windows
+  var components: Map<_HUDState, UIWindow>; // GUI windows (HaxeUI)
+  public var difficulty: Difficulty; // difficulty setting
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
   public var shiftPressed: Bool; // Shift key pressed?
@@ -117,8 +121,13 @@ class GameScene extends Scene
         HUDSTATE_TIMELINE => new TimelineWindow(game),
         HUDSTATE_LOG => new LogWindow(game),
         HUDSTATE_DEBUG => new DebugWindow(game),
-        HUDSTATE_MESSAGE => new MessageWindow(game),
         HUDSTATE_FINISH => new FinishWindow(game),
+        HUDSTATE_MESSAGE => new MessageWindow(game),
+        ];
+
+      difficulty = new Difficulty(game);
+      components = [
+        HUDSTATE_DIFFICULTY => difficulty,
         ];
 
       area = new AreaView(this);
@@ -264,11 +273,23 @@ class GameScene extends Scene
   public function setState(vstate: _HUDState)
     {
       if (hudState != HUDSTATE_DEFAULT)
-        windows[hudState].hide();
+        {
+          if (windows[hudState] != null)
+            windows[hudState].hide();
+
+          if (components[hudState] != null)
+            components[hudState].hide();
+        }
 
       hudState = vstate;
       if (hudState != HUDSTATE_DEFAULT)
-        windows[hudState].show();
+        {
+          if (windows[hudState] != null)
+            windows[hudState].show();
+
+          if (components[hudState] != null)
+            components[hudState].show();
+        }
     }
 
 

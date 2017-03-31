@@ -106,7 +106,7 @@ class ConsoleGame
       if (arr.length < 3)
         {
           game.debug('set <variable> <value> - set game variable');
-          game.debug('set - show options');
+          game.debug('set - show variables');
           game.debug('group.knownCount, group.priority, ' +
             'team.distance, team.size, team.timeout, team.timer');
           return;

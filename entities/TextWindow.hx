@@ -44,6 +44,7 @@ class TextWindow
       // actions list
       var font = Assets.getFont(Const.FONT);
       _textField = new TextField();
+      _textField.visible = false;
       _textField.wordWrap = true;
       _textField.width = HXP.width;
       _textField.height = HXP.height;
@@ -133,6 +134,7 @@ class TextWindow
     {
       update();
       _back.visible = true;
+      _textField.visible = true;
     }
 
 
@@ -140,6 +142,7 @@ class TextWindow
   public function hide()
     {
       _back.visible = false;
+      _textField.visible = false;
     }
 
 // update window text

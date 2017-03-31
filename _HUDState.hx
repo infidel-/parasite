@@ -1,6 +1,6 @@
 // available HUD states
 
-enum _HUDState 
+enum _HUDState
 {
   HUDSTATE_DEFAULT; // default
   HUDSTATE_GOALS; // goals window open
@@ -14,4 +14,7 @@ enum _HUDState
   HUDSTATE_CONSOLE; // console open
   HUDSTATE_MESSAGE; // important message window open
   HUDSTATE_FINISH; // game over window
+
+  // haxeui
+  HUDSTATE_DIFFICULTY; // difficulty setting
 }
