@@ -27,6 +27,67 @@ class Group
     }
 
 
+// get group and team info according to difficulty
+  public function getInfo(buf: StringBuf)
+    {
+#if mydebug
+      if (!isKnown)
+        buf.add('[DEBUG] Group known count: ' + knownCount + '\n');
+      buf.add('[DEBUG] Group priority: ' + Const.round(priority) +
+        ', team timeout: ' + teamTimeout + '\n');
+      if (team != null)
+        buf.add('[DEBUG] Team: ' + team + '\n');
+#end
+
+      // group existence not discovered yet
+      if (!isKnown)
+        return;
+
+      // group info
+      buf.add('\nGroup info [' + difficulty + ']\n');
+      if (difficulty == HARD)
+        {
+          buf.add('  --- hidden ---\n');
+          return;
+        }
+      buf.add('Group priority: ' +
+        (difficulty == EASY ? '' + Const.round(priority) :
+         numToWord(Std.int(priority), 0, 100)) + '\n');
+      if (team == null)
+        buf.add('Team timeout: ' +
+          (difficulty == EASY ? teamTimeout + ' turns' :
+           numToWord(teamTimeout, 0, 100)) + '\n');
+      else
+        {
+          buf.add('Team level: ' +
+            (difficulty == EASY ? team.level + '' :
+             numToWord(team.level, 1, 4)) + '\n');
+          buf.add('Team size: ' +
+            (difficulty == EASY ? team.size + '' :
+             numToWord(team.size, 1, team.maxSize)) + '\n');
+          buf.add('Team distance: ' +
+            (difficulty == EASY ? Std.int(team.distance) + '' :
+             numToWord(Std.int(team.distance), 0, 150)) + '\n');
+        }
+    }
+
+
+// convert number to word description
+  function numToWord(val: Int, min: Int, max: Int): String
+    {
+      var percent = 100.0 * (val - min) / (max - min);
+      if (percent < 20)
+        return 'very low';
+      else if (percent < 40)
+        return 'low';
+      else if (percent < 60)
+        return 'medium';
+      else if (percent < 80)
+        return 'high';
+      else return 'very high';
+    }
+
+
 // TURN: new turn logic
   public function turn()
     {

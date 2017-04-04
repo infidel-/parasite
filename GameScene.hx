@@ -24,6 +24,7 @@ class GameScene extends Scene
   var hudState: _HUDState; // current HUD state (default, evolution, etc)
   var windows: Map<_HUDState, TextWindow>; // GUI windows
   var components: Map<_HUDState, UIWindow>; // GUI windows (HaxeUI)
+  var hudLocked: Array<_HUDState>; // list of hud states that lock the player
   public var difficulty: Difficulty; // difficulty setting
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -44,6 +45,7 @@ class GameScene extends Scene
     {
       super();
       game = g;
+      hudLocked = [];
       hudState = HUDSTATE_DEFAULT;
       controlPressed = false;
       shiftPressed = false;
@@ -129,6 +131,7 @@ class GameScene extends Scene
       components = [
         HUDSTATE_DIFFICULTY => difficulty,
         ];
+      hudLocked = [ HUDSTATE_DIFFICULTY ];
 
       area = new AreaView(this);
       region = new RegionView(this);
@@ -301,7 +304,7 @@ class GameScene extends Scene
 
 
 // close the current window
-  function closeWindow()
+  public function closeWindow()
     {
       // in case of message window check if there are more messages in the queue
       if (hudState == HUDSTATE_MESSAGE &&
@@ -322,6 +325,9 @@ class GameScene extends Scene
 // handle opening and closing windows
   function handleWindows(): Bool
     {
+      if (hudState == HUDSTATE_DIFFICULTY)
+        return true;
+
       // window open
       if (hudState != HUDSTATE_DEFAULT)
         {
@@ -366,7 +372,7 @@ class GameScene extends Scene
               return true;
             }
 
-          if (Input.pressed("enter") && windows[hudState].exitByEnter)
+          if (Input.pressed("enter") && hudState == HUDSTATE_MESSAGE)
             closeWindow();
 
           // close windows

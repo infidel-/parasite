@@ -95,6 +95,7 @@ class HUD
       _textFieldBack.addChild(_textField);
       _textFieldBack.x = 20;
       _textFieldBack.y = 20;
+      HXP.stage.addChild(_textFieldBack);
 
       // help
       _help = new TextField();

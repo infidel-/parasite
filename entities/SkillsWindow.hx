@@ -34,18 +34,8 @@ class SkillsWindow extends TextWindow
       if (n == 0)
         buf.add('  --- empty ---\n');
 
-      // group info
-//      if (!game.group.isKnown)
-      buf.add(game.group.difficulty + '\n');
-
-#if mydebug
-      if (!game.group.isKnown)
-        buf.add('[DEBUG] Group known timer: ' + game.group.knownCount + '\n');
-      buf.add('[DEBUG] Group priority: ' + Const.round(game.group.priority) +
-        ', team timeout: ' + game.group.teamTimeout + '\n');
-      if (game.group.team != null)
-        buf.add('[DEBUG] Team: ' + game.group.team + '\n');
-#end
+      // get group/team info
+      game.group.getInfo(buf);
 
       // host skills and attributes
       if (game.player.state == PLR_STATE_HOST)

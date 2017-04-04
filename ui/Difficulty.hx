@@ -22,16 +22,19 @@ class Difficulty extends UIWindow
       super(g);
       currentChoice = null;
       window = ComponentMacros.buildComponent("assets/ui/difficulty.xml");
-      var ww = Std.int(HXP.width / 2);
-      var hh = Std.int(HXP.height / 4);
-      window.width = ww;
-      window.height = hh;
-      window.x = Std.int(HXP.halfWidth - ww / 2);
-      window.y = Std.int(HXP.halfHeight - hh / 2);
+//      var ww = Std.int(HXP.width / 2);
+//      var hh = Std.int(HXP.height / 4);
+      var w = 1000;
+      var h = 300;
+      window.width = w;
+      window.height = h;
+      window.x = Std.int(HXP.halfWidth - w / 2);
+      window.y = Std.int(HXP.halfHeight - h / 2);
       HXP.stage.addChild(window);
 
       title = window.findComponent("title", null, true);
       text = window.findComponent("text", null, true);
+      text.getTextInput().selectable = false;
       var button: Button = window.findComponent("easy", null, true);
       button.registerEvent(MouseEvent.MOUSE_OVER, onOver);
       button.registerEvent(MouseEvent.MOUSE_OUT, onOut);
@@ -72,7 +75,7 @@ class Difficulty extends UIWindow
       if (currentChoice.id == 'group')
         game.group.difficulty = d;
 
-      hide();
+      game.scene.closeWindow();
     }
 
 

@@ -1,7 +1,8 @@
 == MAINTENANCE
-disallow changing gui state in difficulty window
-fix close by enter in new windows
+integrate difficulty selection into the message queue (and later opening the manual window)
+bug - if player has no habitats, exception on ambush (add ambush in current area or skip ambush stage)
 make use computer action more convenient (add to hud?)
+switch message to new gui
 leaving area does not destroy backup events
 more gui work
 

@@ -354,6 +354,7 @@ class ConsoleGame
         {
           game.debug(
             ';s1 - set player stage 1 (human civilian host, tutorial done)\n' +
+            ';s11 - set player stage 1.1 (stage 1 + group knowledge)\n' +
             ';s2 - set player stage 2 (stage 1 + microhabitat)\n' +
             ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)\n' +
             ';s22 - set player stage 2.2 (stage 2.1 + biomineral)\n' +
@@ -374,6 +375,13 @@ class ConsoleGame
           if (stage == 1)
             {
               stage1();
+            }
+
+          // stage 1.1: stage 1 + group knowledge
+          else if (stage == 11)
+            {
+              stage1();
+              stage11();
             }
 
           // stage 2: civ host, microhabitat, timeline open
@@ -453,6 +461,41 @@ class ConsoleGame
       // society knowledge
       game.player.skills.increase(KNOW_SOCIETY, 1);
       game.player.skills.increase(KNOW_SOCIETY, 24);
+    }
+
+
+// stage 1.1: stage 1 + group knowledge
+  function stage11()
+    {
+      var ai = game.player.host;
+      ai.brainProbed = 0;
+      game.group.knownCount = 1;
+
+      // get a random live npc
+      var listEvents = [ 'parasiteRemoval', 'parasiteTransportation' ];
+      for (id in listEvents)
+        {
+          var ev = game.timeline.getEvent(id);
+          var npc = null;
+          trace(ev.npc);
+          for (n in ev.npc)
+            if (!n.isDead)
+              {
+                npc = n;
+                break;
+              }
+          // all npcs dead, try next event
+          if (npc == null)
+            continue;
+
+          // link host to this npc
+          npc.ai = ai;
+          ai.event = ev;
+          ai.npc = npc;
+          ai.entity.setNPC();
+
+          break;
+        }
     }
 
 
