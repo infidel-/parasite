@@ -17,6 +17,12 @@ class UIWindow
     }
 
 
+// action handling
+  public dynamic function action(index: Int)
+    {
+    }
+
+
 // show window
   public inline function show()
     {

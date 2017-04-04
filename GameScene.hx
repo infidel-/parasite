@@ -536,7 +536,10 @@ class GameScene extends Scene
 
             if (hudState == HUDSTATE_DEFAULT)
               hud.action(n);
-            else windows[hudState].action(n);
+            else if (windows[hudState] != null)
+              windows[hudState].action(n);
+            else if (components[hudState] != null)
+              components[hudState].action(n);
 
             _inputState = 0;
             break;

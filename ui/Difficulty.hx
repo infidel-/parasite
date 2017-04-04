@@ -63,12 +63,27 @@ class Difficulty extends UIWindow
 // on click
   function onClick(e: MouseEvent)
     {
-      var d: _Difficulty = UNSET;
+      var index = -1;
       if (e.target.id == 'easy')
-        d = EASY;
+        index = 1;
       else if (e.target.id == 'normal')
-        d = NORMAL;
+        index = 2;
       else if (e.target.id == 'hard')
+        index = 3;
+
+      action(index);
+    }
+
+
+// action
+  public override function action(index: Int)
+    {
+      var d: _Difficulty = UNSET;
+      if (index == 1)
+        d = EASY;
+      else if (index == 2)
+        d = NORMAL;
+      else if (index == 3)
         d = HARD;
 
       // set specific game difficulty setting
