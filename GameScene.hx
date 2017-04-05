@@ -21,10 +21,11 @@ class GameScene extends Scene
   public var region: RegionView; // region view
   public var mouse: MouseEntity; // mouse cursor entity
   public var hud: HUD; // ingame HUD
-  var hudState: _HUDState; // current HUD state (default, evolution, etc)
-  var windows: Map<_HUDState, TextWindow>; // GUI windows
-  var components: Map<_HUDState, UIWindow>; // GUI windows (HaxeUI)
-  var hudLocked: Array<_HUDState>; // list of hud states that lock the player
+  public var uiQueue: List<_UIEvent>; // gui event queue
+  var uiState: _UIState; // current HUD state (default, evolution, etc)
+  var windows: Map<_UIState, TextWindow>; // GUI windows
+  var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
+  var hudLocked: Array<_UIState>; // list of hud states that lock the player
   public var difficulty: Difficulty; // difficulty setting
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -46,7 +47,8 @@ class GameScene extends Scene
       super();
       game = g;
       hudLocked = [];
-      hudState = HUDSTATE_DEFAULT;
+      uiState = UISTATE_DEFAULT;
+      uiQueue = new List();
       controlPressed = false;
       shiftPressed = false;
       cameraTileX1 = 0;
@@ -115,23 +117,23 @@ class GameScene extends Scene
       hud = new HUD(game);
 
       windows = [
-        HUDSTATE_GOALS => new GoalsWindow(game),
-        HUDSTATE_INVENTORY => new InventoryWindow(game),
-        HUDSTATE_SKILLS => new SkillsWindow(game),
-        HUDSTATE_EVOLUTION => new EvolutionWindow(game),
-        HUDSTATE_ORGANS => new OrgansWindow(game),
-        HUDSTATE_TIMELINE => new TimelineWindow(game),
-        HUDSTATE_LOG => new LogWindow(game),
-        HUDSTATE_DEBUG => new DebugWindow(game),
-        HUDSTATE_FINISH => new FinishWindow(game),
-        HUDSTATE_MESSAGE => new MessageWindow(game),
+        UISTATE_GOALS => new GoalsWindow(game),
+        UISTATE_INVENTORY => new InventoryWindow(game),
+        UISTATE_SKILLS => new SkillsWindow(game),
+        UISTATE_EVOLUTION => new EvolutionWindow(game),
+        UISTATE_ORGANS => new OrgansWindow(game),
+        UISTATE_TIMELINE => new TimelineWindow(game),
+        UISTATE_LOG => new LogWindow(game),
+        UISTATE_DEBUG => new DebugWindow(game),
+        UISTATE_FINISH => new FinishWindow(game),
+        UISTATE_MESSAGE => new MessageWindow(game),
         ];
 
       difficulty = new Difficulty(game);
       components = [
-        HUDSTATE_DIFFICULTY => difficulty,
+        UISTATE_DIFFICULTY => difficulty,
         ];
-      hudLocked = [ HUDSTATE_DIFFICULTY ];
+      hudLocked = [ UISTATE_DIFFICULTY ];
 
       area = new AreaView(this);
       region = new RegionView(this);
@@ -252,7 +254,7 @@ class GameScene extends Scene
         {
           // enter restarts the game when it is finished
           if (game.isFinished && Input.pressed("enter") &&
-              getState() == HUDSTATE_DEFAULT)
+              getState() == UISTATE_DEFAULT)
             {
               game.restart();
               return;
@@ -273,63 +275,76 @@ class GameScene extends Scene
 
 
 // set new GUI state, open and close windows if needed
-  public function setState(vstate: _HUDState)
+  public function setState(vstate: _UIState)
     {
-      if (hudState != HUDSTATE_DEFAULT)
+      if (uiState != UISTATE_DEFAULT)
         {
-          if (windows[hudState] != null)
-            windows[hudState].hide();
+          if (windows[uiState] != null)
+            windows[uiState].hide();
 
-          if (components[hudState] != null)
-            components[hudState].hide();
+          if (components[uiState] != null)
+            components[uiState].hide();
         }
 
-      hudState = vstate;
-      if (hudState != HUDSTATE_DEFAULT)
+      uiState = vstate;
+      if (uiState != UISTATE_DEFAULT)
         {
-          if (windows[hudState] != null)
-            windows[hudState].show();
+          if (windows[uiState] != null)
+            windows[uiState].show();
 
-          if (components[hudState] != null)
-            components[hudState].show();
+          if (components[uiState] != null)
+            components[uiState].show();
         }
     }
 
 
 // get GUI state
-  public function getState(): _HUDState
+  public function getState(): _UIState
     {
-      return hudState;
+      return uiState;
     }
 
 
 // close the current window
   public function closeWindow()
     {
-      // in case of message window check if there are more messages in the queue
-      if (hudState == HUDSTATE_MESSAGE &&
-          game.importantMessageQueue.length > 0)
+      // check if there are more UI events in the queue
+      if (uiQueue.length > 0)
         {
-          game.importantMessage = game.importantMessageQueue.first();
-          game.importantMessageQueue.remove(game.importantMessage);
+          // get next event
+          var ev = uiQueue.first();
+          uiQueue.remove(ev);
 
-          setState(HUDSTATE_MESSAGE);
+          // message
+          if (ev.state == UISTATE_MESSAGE)
+            {
+              var win: MessageWindow = cast windows.get(UISTATE_MESSAGE);
+              win.setText(ev.obj);
+            }
+          // difficulty selector
+          else if (ev.state == UISTATE_DIFFICULTY)
+            {
+              var win: Difficulty = cast components.get(UISTATE_DIFFICULTY);
+              win.setChoices(ev.obj);
+            }
+
+          setState(ev.state);
 
           return;
         }
 
-      setState(HUDSTATE_DEFAULT);
+      setState(UISTATE_DEFAULT);
     }
 
 
 // handle opening and closing windows
   function handleWindows(): Bool
     {
-      if (hudState == HUDSTATE_DIFFICULTY)
+      if (uiState == UISTATE_DIFFICULTY)
         return true;
 
       // window open
-      if (hudState != HUDSTATE_DEFAULT)
+      if (uiState != UISTATE_DEFAULT)
         {
           // get amount of lines
           var lines = 0;
@@ -355,24 +370,24 @@ class GameScene extends Scene
 
           if (lines != 0)
             {
-              windows[hudState].scroll(lines);
+              windows[uiState].scroll(lines);
               return true;
             }
 
           if (Input.pressed("end") ||
             (Input.pressed(Key.G) && shiftPressed))
             {
-              windows[hudState].scrollToEnd();
+              windows[uiState].scrollToEnd();
               return true;
             }
 
           if (Input.pressed("home") || Input.pressed(Key.G))
             {
-              windows[hudState].scrollToBegin();
+              windows[uiState].scrollToBegin();
               return true;
             }
 
-          if (Input.pressed("enter") && hudState == HUDSTATE_MESSAGE)
+          if (Input.pressed("enter") && uiState == UISTATE_MESSAGE)
             closeWindow();
 
           // close windows
@@ -409,48 +424,48 @@ class GameScene extends Scene
 
           // open goals window
           if (goalsPressed)
-            setState(HUDSTATE_GOALS);
+            setState(UISTATE_GOALS);
 
           // open inventory window (if items are learned)
           else if (inventoryPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.host.isHuman &&
               game.player.vars.inventoryEnabled)
-            setState(HUDSTATE_INVENTORY);
+            setState(UISTATE_INVENTORY);
 
           // open skills window (if skills are learned)
           else if (skillsPressed &&
               game.player.vars.skillsEnabled)
-            setState(HUDSTATE_SKILLS);
+            setState(UISTATE_SKILLS);
 
           // open message log window
           else if (logPressed)
             {
-              setState(HUDSTATE_LOG);
-              windows[hudState].scrollToEnd();
+              setState(UISTATE_LOG);
+              windows[uiState].scrollToEnd();
             }
 
           // open timeline window
           else if (timelinePressed &&
               game.player.vars.timelineEnabled)
-            setState(HUDSTATE_TIMELINE);
+            setState(UISTATE_TIMELINE);
 
           // open evolution window (if enabled)
           else if (evolutionPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.evolutionManager.state > 0)
-            setState(HUDSTATE_EVOLUTION);
+            setState(UISTATE_EVOLUTION);
 
           // open organs window
           else if (organsPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.vars.organsEnabled)
-            setState(HUDSTATE_ORGANS);
+            setState(UISTATE_ORGANS);
 
 #if mydebug
           // open debug window
           else if (debugPressed && !game.isFinished)
-            setState(HUDSTATE_DEBUG);
+            setState(UISTATE_DEBUG);
 #end
         }
 
@@ -534,18 +549,18 @@ class GameScene extends Scene
             if (_inputState > 0)
               n += 10;
 
-            if (hudState == HUDSTATE_DEFAULT)
+            if (uiState == UISTATE_DEFAULT)
               hud.action(n);
-            else if (windows[hudState] != null)
-              windows[hudState].action(n);
-            else if (components[hudState] != null)
-              components[hudState].action(n);
+            else if (windows[uiState] != null)
+              windows[uiState].action(n);
+            else if (components[uiState] != null)
+              components[uiState].action(n);
 
             _inputState = 0;
             break;
           }
 
-      if (hudState == HUDSTATE_DEFAULT)
+      if (uiState == UISTATE_DEFAULT)
         {
 /*
           // test action
@@ -619,12 +634,12 @@ class GameScene extends Scene
                 // show window
                 game.finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to disable exception gathering thingy for whatever reason, open the parasite.cfg configuration file and set sendExceptions to 0.";
-                setState(HUDSTATE_FINISH);
+                setState(UISTATE_FINISH);
               }
               h.onError = function(e){
                 game.finishText = "Something broke! An exception was thrown and saved to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
-                setState(HUDSTATE_FINISH);
+                setState(UISTATE_FINISH);
                 trace(e);
               }
               h.request(true);
@@ -644,7 +659,7 @@ class GameScene extends Scene
                 stack + '</font>\n' +
                 "P.S. If you want to help the development, make a screenshot of this message and send it to starinfidel_at_gmail_dot_com. Thanks!";
 #end
-              setState(HUDSTATE_FINISH);
+              setState(UISTATE_FINISH);
             }
         }
     }
@@ -657,4 +672,11 @@ class GameScene extends Scene
 #else
 #end
     }
+}
+
+// UI events (open specific UI, display message, etc)
+
+typedef _UIEvent = {
+  var state: _UIState;  // new UI state
+  var obj: Dynamic; // parameters
 }

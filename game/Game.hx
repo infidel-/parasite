@@ -34,8 +34,6 @@ class Game
   public var isFinished: Bool; // is the game finished?
   public var finishText: String; // finishing text in game over window
   public var messageList: List<String>; // last X messages of log
-  public var importantMessage: String; // last important message
-  public var importantMessageQueue: List<String>; // last important message
   public var importantMessagesEnabled: Bool; // messages enabled?
 
   public function new()
@@ -56,8 +54,6 @@ class Game
 //      HXP.frameRate = 30;
       HXP.scene = scene;
       messageList = new List();
-      importantMessage = '';
-      importantMessageQueue = new List();
       importantMessagesEnabled = true;
       isInited = false;
       finishText = '';
@@ -98,9 +94,15 @@ class Game
       timeline.init();
 
       // initial goal
+/*
       scene.difficulty.setChoices('group');
-      scene.setState(HUDSTATE_DIFFICULTY);
-//      message('You are alone. You are scared. You need to find a host or you will die soon.');
+      scene.setState(UISTATE_DIFFICULTY);
+      message('1');
+      message('2');
+      message('3');
+      scene.uiQueue.add({ state: UISTATE_DIFFICULTY, obj: 'test' });
+*/
+      message('You are alone. You are scared. You need to find a host or you will die soon.');
       goals.receive(GOAL_INVADE_HOST);
 
       // set random region (currently only 1 at all)
@@ -269,7 +271,7 @@ class Game
           log('You have won the game!');
         }
 
-      scene.setState(HUDSTATE_FINISH);
+      scene.setState(UISTATE_FINISH);
     }
 
 
@@ -292,16 +294,15 @@ class Game
       if (!importantMessagesEnabled)
         return;
 
-      // another message already displayed, add to queue
-      if (scene.getState() == HUDSTATE_MESSAGE)
-        {
-          importantMessageQueue.add(msg);
-          return;
-        }
+      // add to event queue
+      scene.uiQueue.add({ state: UISTATE_MESSAGE, obj: msg });
 
-      // hud clear, show message
-      importantMessage = msg;
-      scene.setState(HUDSTATE_MESSAGE);
+      // some window already open, wait until it closes
+      if (scene.getState() != UISTATE_DEFAULT)
+        return;
+
+      // no windows open, show message (hack)
+      scene.closeWindow();
     }
 
 
@@ -337,4 +338,3 @@ class Game
         messageList.pop();
     }
 }
-

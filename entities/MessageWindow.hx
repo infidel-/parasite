@@ -7,6 +7,8 @@ import com.haxepunk.HXP;
 
 class MessageWindow extends TextWindow
 {
+  var text: String;
+
   public function new (g: Game)
     {
       super(g);
@@ -22,9 +24,16 @@ class MessageWindow extends TextWindow
     }
 
 
+// set text to display
+  public inline function setText(t: String)
+    {
+      text = t;
+    }
+
+
   override function getText(): String
     {
-      return '<br>' + game.importantMessage + '\n\n' +
+      return '<br>' + text + '\n\n' +
         'Press ENTER to continue';
     }
 }

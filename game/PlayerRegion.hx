@@ -189,7 +189,7 @@ class PlayerRegion
               onHostDeath();
 
               game.log('Your host has expired somewhere in the sewers. You have to find a new one.');
-              game.scene.setState(HUDSTATE_DEFAULT); // close window just in case
+              game.scene.setState(UISTATE_DEFAULT); // close window just in case
             }
         }
 

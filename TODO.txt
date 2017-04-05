@@ -4,7 +4,8 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
-integrate difficulty selection into the message queue (and later opening the manual window)
+dialog window - "show group manual?"
+group manual window
 bug - if player has no habitats, exception on ambush (add ambush in current area or skip ambush stage)
 switch message to new gui
 more gui work

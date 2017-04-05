@@ -115,7 +115,7 @@ class Difficulty extends UIWindow
       easy: 'Shows the exact numerical group priority information and team stats in skills and knowledges window.',
       normal: 'Shows group and team information described in vague words.',
       hard: 'No group or team information.',
-    }
+    },
     ];
 }
 
