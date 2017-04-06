@@ -26,7 +26,6 @@ class GameScene extends Scene
   var windows: Map<_UIState, TextWindow>; // GUI windows
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
-  public var difficulty: Difficulty; // difficulty setting
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
   public var shiftPressed: Bool; // Shift key pressed?
@@ -129,9 +128,8 @@ class GameScene extends Scene
         UISTATE_MESSAGE => new MessageWindow(game),
         ];
 
-      difficulty = new Difficulty(game);
       components = [
-        UISTATE_DIFFICULTY => difficulty,
+        UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_YESNO => new YesNo(game),
         UISTATE_DOCUMENT => new Document(game),
         ];

@@ -112,6 +112,9 @@ html5-mydebug:
 #	&& \
 #	cp -R .bin/html5/release/bin/* /mnt/1/Projects/html5/
 
+fast:
+	time -p haxe .bin/html5/release/haxe/release.hxml --connect 6000
+
 test:
 	haxe .bin/linux64/neko/haxe/release.hxml
 
