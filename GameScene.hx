@@ -342,11 +342,7 @@ class GameScene extends Scene
 // handle opening and closing windows
   function handleWindows(): Bool
     {
-      // ui in locked state, do not allow changing windows
-      if (Lambda.has(uiLocked, uiState))
-        return true;
-
-      // window open
+      // scrolling text
       if (uiState != UISTATE_DEFAULT)
         {
           // get amount of lines
@@ -371,25 +367,66 @@ class GameScene extends Scene
               Input.pressed("downright"))
             return true;
 
-          if (lines != 0)
+          if (uiState == UISTATE_DOCUMENT)
             {
-              windows[uiState].scroll(lines);
-              return true;
+              var win: Document = cast components[uiState];
+
+              // copy-pasted for now
+              if (lines != 0)
+                {
+                  win.scroll(lines);
+                  return true;
+                }
+
+              else if (Input.pressed("end") ||
+                (Input.pressed(Key.G) && shiftPressed))
+                {
+                  win.scrollToEnd();
+                  return true;
+                }
+
+              else if (Input.pressed("home") || Input.pressed(Key.G))
+                {
+                  win.scrollToBegin();
+                  return true;
+                }
             }
 
-          if (Input.pressed("end") ||
-            (Input.pressed(Key.G) && shiftPressed))
-            {
-              windows[uiState].scrollToEnd();
-              return true;
-            }
+          // skip for now
+          else if (uiState == UISTATE_DIFFICULTY || uiState == UISTATE_YESNO)
+            1;
 
-          if (Input.pressed("home") || Input.pressed(Key.G))
+          // copy-pasted for now
+          else
             {
-              windows[uiState].scrollToBegin();
-              return true;
-            }
+              if (lines != 0)
+                {
+                  windows[uiState].scroll(lines);
+                  return true;
+                }
 
+              else if (Input.pressed("end") ||
+                (Input.pressed(Key.G) && shiftPressed))
+                {
+                  windows[uiState].scrollToEnd();
+                  return true;
+                }
+
+              else if (Input.pressed("home") || Input.pressed(Key.G))
+                {
+                  windows[uiState].scrollToBegin();
+                  return true;
+                }
+            }
+        }
+
+      // ui in locked state, do not allow changing windows
+      if (Lambda.has(uiLocked, uiState))
+        return true;
+
+      // window open
+      if (uiState != UISTATE_DEFAULT)
+        {
           if (Input.pressed("enter") && uiState == UISTATE_MESSAGE)
             closeWindow();
 
