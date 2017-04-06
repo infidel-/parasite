@@ -20,7 +20,7 @@ class YesNo extends UIWindow
     {
       super(g);
       func = null;
-      window = ComponentMacros.buildComponent("assets/ui/dialog.xml");
+      window = ComponentMacros.buildComponent("../assets/ui/dialog.xml");
       var w = 800;
       var h = 300;
       window.width = w;

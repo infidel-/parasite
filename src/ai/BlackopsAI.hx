@@ -38,6 +38,7 @@ class BlackopsAI extends HumanAI
           ]
         ];
       isAggressive = true;
+      isRelentless = true;
       inventory.addID(Std.random(100) < 70 ? 'assaultRifle' : 'combatShotgun');
       inventory.addID('pistol');
       skills.addID(SKILL_RIFLE, 60 + Std.random(25));

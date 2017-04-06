@@ -194,6 +194,30 @@ class Group
       // player becomes aware of the group existence
       game.message('There is a group of humans that wants to destroy me.');
 
+      // show yes/no dialog about manual
+      game.scene.uiQueue.add({
+        state: UISTATE_YESNO,
+        obj: {
+          text: 'Do you want to read the manual about The Group?',
+          func: function(yes: Bool)
+            {
+              // open the manual file
+              if (yes)
+                {
+                  var doc = openfl.Assets.getText('wiki/The-Group.md');
+                  game.scene.uiQueue.add({
+                    state: UISTATE_DOCUMENT,
+                    obj: doc
+                  });
+                }
+              game.scene.uiQueue.add({
+                state: UISTATE_DIFFICULTY,
+                obj: 'group'
+              });
+            }
+        }
+      });
+
       isKnown = true;
     }
 }

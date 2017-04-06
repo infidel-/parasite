@@ -21,7 +21,7 @@ class Difficulty extends UIWindow
     {
       super(g);
       currentChoice = null;
-      window = ComponentMacros.buildComponent("assets/ui/difficulty.xml");
+      window = ComponentMacros.buildComponent("../assets/ui/difficulty.xml");
       var w = 1000;
       var h = 300;
       window.width = w;

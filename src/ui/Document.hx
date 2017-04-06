@@ -20,7 +20,7 @@ class Document extends UIWindow
   public function new(g: Game)
     {
       super(g);
-      window = ComponentMacros.buildComponent("assets/ui/document.xml");
+      window = ComponentMacros.buildComponent("../assets/ui/document.xml");
       window.width = HXP.width - 1;
       window.height = HXP.height - 1;
       window.x = 0;

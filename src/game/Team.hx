@@ -91,6 +91,48 @@ class Team extends FSM<_TeamState, _TeamFlag>
           return;
         }
 
+      // no habitats, wait until player is in area mode and spawn ambush
+      var cnt = game.region.getHabitatsCount();
+      if (cnt == 0)
+        {
+          if (game.location == LOCATION_REGION)
+            return;
+
+          // spawn blackops
+          state = TEAM_FIGHT;
+
+          var x = game.playerArea.x;
+          var y = game.playerArea.y;
+
+          game.log("Something is wrong here... It's an ambush!");
+          for (i in 0...4)
+            {
+              var loc = game.area.findLocation({
+                near: { x: x, y: y },
+                radius: 20,
+                isUnseen: true
+                });
+              if (loc == null)
+                {
+                  Const.todo('Could not find free spot for spawn!');
+                  return;
+                }
+
+              var ai = new BlackopsAI(game, loc.x, loc.y);
+
+              // set roam target
+              ai.roamTargetX = x;
+              ai.roamTargetY = y;
+
+              ai.alertness = 75;
+              game.area.addAI(ai);
+            }
+
+          return;
+        }
+
+      // player has habitats but is not in one of them
+
       // pick a random habitat
       var tmp = game.region.getHabitatsList();
 
@@ -115,7 +157,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
         return;
 
       state = TEAM_FIGHT;
-      timer = 3; // 3 turns until exit is available
+      timer = 3; // 3 turns until exit is available (in habitat)
 
       // team was in ambush, spawn blackops
       for (i in 0...4)
@@ -128,15 +170,27 @@ class Team extends FSM<_TeamState, _TeamFlag>
     }
 
 
-// event: player leaves habitat with an active team
-  public function onLeaveHabitat()
+// event: player leaves area with an active team
+  public function onLeaveArea()
     {
       if (state != TEAM_AMBUSH && state != TEAM_FIGHT)
         return;
 
+      game.log("You've managed to survive the ambush.");
+
       // note that we do not care whether the actual ambushers are dead
       // the habitat is still burned
-      destroyHabitat(game.area.parent);
+      if (game.area.isHabitat)
+        destroyHabitat(game.area.parent);
+
+      else
+        {
+          // team distance is increased a little providing a buffer
+          distance = 10;
+
+          // team goes back to search
+          state = TEAM_SEARCH;
+        }
     }
 
 

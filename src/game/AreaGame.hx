@@ -238,8 +238,8 @@ class AreaGame
         else removeObject(o);
 
       // leave habitat with active team
-      if (isHabitat && game.group.team != null)
-        game.group.team.onLeaveHabitat();
+      if (game.group.team != null)
+        game.group.team.onLeaveArea();
 
       // hide gui
       game.scene.area.hide();

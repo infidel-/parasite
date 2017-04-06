@@ -1,5 +1,5 @@
 #VERSION=`cat VERSION`
-VERSION := $(shell cat ../VERSION)
+VERSION := $(shell cat VERSION)
 
 all: clean html5-mydebug
 
@@ -108,14 +108,15 @@ windows-clean:
     cp -R .bin/windows/neko/release/bin/* /mnt/1/Projects/bin/
 
 html5-mydebug:
-	cd .. && openfl build project.nmml html5 -Dmydebug --connect 6000
-#	&& \
-#	cp -R .bin/html5/release/bin/* /mnt/1/Projects/html5/
+	openfl build project.nmml html5 -Dmydebug --connect 6000
 
 fast:
-	cd .. && time -p haxe .bin/html5/release/haxe/release.hxml --connect 6000
+	time -p haxe ../.bin/html5/release/haxe/release.hxml --connect 6000
 
 test:
 	haxe .bin/linux64/neko/haxe/release.hxml
+
+count:
+	git rev-list HEAD --count > COUNT
 
 clean:

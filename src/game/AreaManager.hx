@@ -230,7 +230,6 @@ class AreaManager
 
       for (i in 0...area.info.lawResponceAmount)
         {
-//          var loc = area.findEmptyLocationNear(e.x, e.y);
           var loc = area.findLocation({
             near: { x: e.x, y: e.y },
             radius: 5,
