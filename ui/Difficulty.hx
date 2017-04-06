@@ -22,8 +22,6 @@ class Difficulty extends UIWindow
       super(g);
       currentChoice = null;
       window = ComponentMacros.buildComponent("assets/ui/difficulty.xml");
-//      var ww = Std.int(HXP.width / 2);
-//      var hh = Std.int(HXP.height / 4);
       var w = 1000;
       var h = 300;
       window.width = w;
@@ -52,7 +50,7 @@ class Difficulty extends UIWindow
 
 
 // set choices
-  public function setChoices(t: String)
+  public override function setParams(t: Dynamic)
     {
       currentChoice = choices[t];
       title.text = 'Difficulty: ' + currentChoice.title;
@@ -89,6 +87,8 @@ class Difficulty extends UIWindow
       // set specific game difficulty setting
       if (currentChoice.id == 'group')
         game.group.difficulty = d;
+
+      game.log('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
       game.scene.closeWindow();
     }

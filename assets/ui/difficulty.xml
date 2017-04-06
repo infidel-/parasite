@@ -7,7 +7,9 @@
     <textarea wrap="true" id="text" text="Choose your difficulty setting." />
     <hbox style="horizontal-align: center; vertical-align: bottom;">
         <button id="easy" styleNames="button" text="EASY" />
+        <spacer width="120" />
         <button id="normal" styleNames="button" text="NORMAL" />
+        <spacer width="120" />
         <button id="hard" styleNames="button" text="HARD" />
     </hbox>
 </vbox>

@@ -25,7 +25,7 @@ class GameScene extends Scene
   var uiState: _UIState; // current HUD state (default, evolution, etc)
   var windows: Map<_UIState, TextWindow>; // GUI windows
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
-  var hudLocked: Array<_UIState>; // list of hud states that lock the player
+  var uiLocked: Array<_UIState>; // list of gui states that lock the player
   public var difficulty: Difficulty; // difficulty setting
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -46,7 +46,7 @@ class GameScene extends Scene
     {
       super();
       game = g;
-      hudLocked = [];
+      uiLocked = [];
       uiState = UISTATE_DEFAULT;
       uiQueue = new List();
       controlPressed = false;
@@ -132,8 +132,10 @@ class GameScene extends Scene
       difficulty = new Difficulty(game);
       components = [
         UISTATE_DIFFICULTY => difficulty,
+        UISTATE_YESNO => new YesNo(game),
+        UISTATE_DOCUMENT => new Document(game),
         ];
-      hudLocked = [ UISTATE_DIFFICULTY ];
+      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
 
       area = new AreaView(this);
       region = new RegionView(this);
@@ -321,12 +323,9 @@ class GameScene extends Scene
               var win: MessageWindow = cast windows.get(UISTATE_MESSAGE);
               win.setText(ev.obj);
             }
-          // difficulty selector
-          else if (ev.state == UISTATE_DIFFICULTY)
-            {
-              var win: Difficulty = cast components.get(UISTATE_DIFFICULTY);
-              win.setChoices(ev.obj);
-            }
+
+          else if (components[ev.state] != null)
+            components[ev.state].setParams(ev.obj);
 
           setState(ev.state);
 
@@ -340,7 +339,8 @@ class GameScene extends Scene
 // handle opening and closing windows
   function handleWindows(): Bool
     {
-      if (uiState == UISTATE_DIFFICULTY)
+      // ui in locked state, do not allow changing windows
+      if (Lambda.has(uiLocked, uiState))
         return true;
 
       // window open

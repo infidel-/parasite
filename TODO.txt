@@ -4,13 +4,15 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
-dialog window - "show group manual?"
-group manual window
+keyboard in manual window
+mouse wheel in manual chooses debug cursor
 bug - if player has no habitats, exception on ambush (add ambush in current area or skip ambush stage)
 switch message to new gui
 more gui work
 mouse - change to openfl entity
 move code to src/?
+remove GameScene.difficulty link
+git commit number -> build number
 
 == GROUP: ACTIVE MEASURES
 

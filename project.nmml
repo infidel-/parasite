@@ -18,6 +18,7 @@ B<?xml version="1.0" encoding="utf-8"?>
     <haxelib name="haxeui-core" />
     <haxelib name="haxeui-openfl" />
 
+    <assets path="assets/wiki" rename="wiki" />
     <assets path="assets/css" rename="css" />
     <assets path="assets/ui" rename="ui" />
 

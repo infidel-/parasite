@@ -17,6 +17,12 @@ class UIWindow
     }
 
 
+// set window parameters
+  public dynamic function setParams(obj: Dynamic)
+    {
+    }
+
+
 // action handling
   public dynamic function action(index: Int)
     {
