@@ -5,7 +5,6 @@ make use computer action more convenient (add to hud?)
 == CURRENT
 
 keyboard in manual window
-mouse wheel in manual chooses debug cursor
 bug - if player has no habitats, exception on ambush (add ambush in current area or skip ambush stage)
 switch message to new gui
 more gui work

@@ -286,6 +286,9 @@ class GameScene extends Scene
 
           if (components[uiState] != null)
             components[uiState].hide();
+
+          // hack: getting delta clears the mouse wheel flag
+          Input.mouseWheelDelta;
         }
 
       uiState = vstate;

@@ -103,6 +103,9 @@ class MouseEntity extends Entity
 // handle mouse input
   public function handleInput()
     {
+      if (game.scene.getState() != UISTATE_DEFAULT)
+        return;
+
       if (game.location == LOCATION_AREA)
         handleInputArea();
       else if (game.location == LOCATION_REGION)
