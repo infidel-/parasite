@@ -12,7 +12,7 @@ B<?xml version="1.0" encoding="utf-8"?>
     <window orientation="landscape" vsync="true" antialiasing="0" if="cpp" />
     <window if="html5" fps="0" resizable="false" />
 
-    <source path="./" />
+    <source path="./src/" />
 
     <haxelib name="HaxePunk" />
     <haxelib name="haxeui-core" />
