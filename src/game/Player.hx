@@ -54,6 +54,7 @@ class Player
         listenRadius: 10,
         losEnabled: true,
         invisibilityEnabled: false,
+        godmodeEnabled: false,
         };
 
       state = PLR_STATE_PARASITE;
@@ -209,4 +210,5 @@ private typedef PlayerVars = {
   listenRadius: Int, // player listen radius
   losEnabled: Bool, // LOS checks enabled?
   invisibilityEnabled: Bool, // player invisibility enabled?
+  godmodeEnabled: Bool, // player godmode enabled?
   };

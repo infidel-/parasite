@@ -107,7 +107,10 @@ class ConsoleGame
         {
           game.debug('set <variable> <value> - set game variable');
           game.debug('set - show variables');
-          game.debug('group.knownCount, group.priority, ' +
+          game.debug(
+            '(h.) host.energy, host.maxEnergy, host.health, host.maxHealth, ' +
+            'group.knownCount, group.priority, ' +
+            'player.godmode (p.god), player.invisible (p.invis), ' +
             'team.distance, team.level, team.size, team.timeout, team.timer');
           return;
         }
@@ -115,11 +118,40 @@ class ConsoleGame
       var key = arr[1];
       var val = arr[2];
       var valInt = Std.parseInt(val);
+      var valBool = (valInt > 0);
 
-      if (key == 'group.knownCount')
+      if (key == 'host.energy' || key == 'h.energy')
+        {
+          if (game.player.state == PLR_STATE_HOST)
+            game.player.host.energy = valInt;
+        }
+      else if (key == 'host.maxEnergy' || key == 'h.maxEnergy')
+        {
+          if (game.player.state == PLR_STATE_HOST)
+            game.player.host.maxEnergy = valInt;
+        }
+      else if (key == 'host.health' || key == 'h.health')
+        {
+          if (game.player.state == PLR_STATE_HOST)
+            game.player.host.health = valInt;
+        }
+      else if (key == 'host.maxHealth' || key == 'h.maxHealth')
+        {
+          if (game.player.state == PLR_STATE_HOST)
+            game.player.host.maxHealth = valInt;
+        }
+
+      else if (key == 'group.knownCount')
         game.group.knownCount = valInt;
       else if (key == 'group.priority')
         game.group.priority = valInt;
+
+      else if (key == 'player.godmode' || key == 'p.god')
+        game.player.vars.godmodeEnabled = valBool;
+
+      else if (key == 'player.invisible' || key == 'p.invis')
+        game.player.vars.invisibilityEnabled = valBool;
+
       else if (key == 'team.distance')
         {
           if (game.group.team != null)

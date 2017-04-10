@@ -112,16 +112,6 @@ class DebugArea
         },
 
         {
-          name: 'Toggle invisibility',
-          func: function()
-            {
-              game.player.vars.invisibilityEnabled =
-                !game.player.vars.invisibilityEnabled;
-              game.log('Invisibility toggled.');
-            }
-        },
-
-        {
           name: 'Enter sewers',
           func: function()
             {

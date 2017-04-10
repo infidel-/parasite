@@ -4,6 +4,7 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
+dog host - "punches"
 grenades
 make some agents non-controllable
 all old text windows into new one

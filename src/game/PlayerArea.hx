@@ -856,6 +856,9 @@ class PlayerArea
 // event: on taking damage
   public function onDamage(damage: Int)
     {
+      if (player.vars.godmodeEnabled)
+        return;
+
       if (state == PLR_STATE_HOST)
         onDamageHost(damage);
 
