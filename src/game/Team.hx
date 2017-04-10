@@ -109,13 +109,17 @@ class Team extends FSM<_TeamState, _TeamFlag>
             {
               var loc = game.area.findLocation({
                 near: { x: x, y: y },
-                radius: 20,
+                radius: 10,
                 isUnseen: true
                 });
               if (loc == null)
                 {
-                  Const.todo('Could not find free spot for spawn!');
-                  return;
+                  loc = game.area.findEmptyLocationNear(x, y);
+                  if (loc == null)
+                    {
+                      Const.todo('Could not find free spot for spawn x2!');
+                      return;
+                    }
                 }
 
               var ai = new BlackopsAI(game, loc.x, loc.y);

@@ -29,7 +29,7 @@ class ConsoleGame
 
       // XXX add commands
       if (cmd.charAt(0) == 'a')
-        addCommand(cmd);
+        addCommand(cmd, arr);
 
       // XXX config commands
       else if (cmd.charAt(0) == 'c')
@@ -108,7 +108,7 @@ class ConsoleGame
           game.debug('set <variable> <value> - set game variable');
           game.debug('set - show variables');
           game.debug('group.knownCount, group.priority, ' +
-            'team.distance, team.size, team.timeout, team.timer');
+            'team.distance, team.level, team.size, team.timeout, team.timer');
           return;
         }
 
@@ -124,6 +124,11 @@ class ConsoleGame
         {
           if (game.group.team != null)
             game.group.team.distance = valInt;
+        }
+      else if (key == 'team.level')
+        {
+          if (game.group.team != null)
+            game.group.team.level = valInt;
         }
       else if (key == 'team.size')
         {
@@ -141,7 +146,7 @@ class ConsoleGame
 
 
 // add commands
-  function addCommand(cmd: String)
+  function addCommand(cmd: String, arr: Array<String>)
     {
       // XXX [ao10] add organ X
       if (cmd.charAt(1) == 'o')
@@ -157,6 +162,28 @@ class ConsoleGame
           game.player.evolutionManager.addImprov(imp.id, 3);
           game.player.host.organs.action('set.' + imp.id);
           game.player.host.organs.debugCompleteCurrent();
+        }
+
+      // XXX [ai pistol] add item X
+      else if (cmd.charAt(1) == 'i')
+        {
+          if (arr.length < 2)
+            {
+              var buf = new StringBuf();
+              buf.add('Items: ');
+              for (info in ItemsConst.items)
+                buf.add(info.id + ', ');
+              var s = buf.toString();
+              s = s.substr(0, s.length - 2) + '.';
+              game.debug(s);
+            }
+
+          var id = arr[1];
+          if (game.player.state != PLR_STATE_HOST)
+            return;
+
+          game.player.host.inventory.addID(id);
+          game.log('Item added.');
         }
     }
 

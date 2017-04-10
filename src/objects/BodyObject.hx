@@ -41,14 +41,18 @@ class BodyObject extends AreaObject
       if (isSearched)
         for (item in inventory)
           {
-            var name = (game.player.knowsItem(item.id) ? 
+            // atm can't take clothing/armor
+            if (item.info.type == 'clothing')
+              continue;
+
+            var name = (game.player.knowsItem(item.id) ?
               item.name : item.info.unknown);
             addAction('get.' + item.id, 'Get ' + name, 5);
           }
     }
 
 
-// ACTION: action handling 
+// ACTION: action handling
   override function onAction(id: String)
     {
       // search body for stuff
@@ -67,7 +71,7 @@ class BodyObject extends AreaObject
       for (item in inventory)
         if (item.id == id)
           {
-            var tmpname = (game.player.knowsItem(item.info.id) ? 
+            var tmpname = (game.player.knowsItem(item.info.id) ?
               item.name : item.info.unknown);
             game.player.log('You pick the ' + tmpname + ' up.');
             game.player.host.inventory.add(item);

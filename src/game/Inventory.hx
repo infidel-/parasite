@@ -10,10 +10,19 @@ class Inventory
   var game: Game;
   var _list: List<_Item>; // list of items
 
+  // item slots
+  public var clothing(default, null): _Item;
+
   public function new(g: Game)
     {
       game = g;
       _list = new List<_Item>();
+      var info = ItemsConst.armorNone;
+      clothing = {
+        id: info.id,
+        info: info,
+        name: info.name
+      };
     }
 
 
@@ -308,7 +317,7 @@ class Inventory
 
 
 // add item by id
-  public function addID(id: String)
+  public function addID(id: String, ?wear: Bool = false)
     {
       var info = ItemsConst.getInfo(id);
       if (info == null)
@@ -321,7 +330,14 @@ class Inventory
       if (info.names != null) // pick a name
         name = info.names[Std.random(info.names.length)];
       var item = { id: id, info: info, name: name };
-      _list.add(item);
+
+      // wear/wield item automatically
+      if (wear)
+        {
+          if (info.type == 'clothing')
+            clothing = item;
+        }
+      else _list.add(item);
     }
 
 
@@ -337,6 +353,8 @@ class Inventory
       var tmp = [];
       for (o in _list)
         tmp.push(o.id);
+      if (clothing.id != 'armorNone')
+        tmp.push('clothing: ' + clothing.id);
       return tmp.join(', ');
     }
 

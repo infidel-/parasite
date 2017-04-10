@@ -39,11 +39,55 @@ class BlackopsAI extends HumanAI
         ];
       isAggressive = true;
       isRelentless = true;
-      inventory.addID(Std.random(100) < 70 ? 'assaultRifle' : 'combatShotgun');
-      inventory.addID('pistol');
-      skills.addID(SKILL_RIFLE, 60 + Std.random(25));
-      skills.addID(SKILL_SHOTGUN, 60 + Std.random(25));
-      skills.addID(SKILL_PISTOL, 60 + Std.random(25));
+      inventory.clear();
+
+      // team level changes loadout
+      if (game.group.team.level == 1)
+        {
+          inventory.addID(
+            Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
+          inventory.addID('pistol');
+          skills.addID(SKILL_RIFLE, 60 + Std.random(25));
+          skills.addID(SKILL_SHOTGUN, 60 + Std.random(25));
+          skills.addID(SKILL_PISTOL, 60 + Std.random(25));
+          inventory.addID('kevlarArmor', true);
+        }
+      else if (game.group.team.level == 2)
+        {
+          inventory.addID(
+            Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
+          inventory.addID('pistol');
+          skills.addID(SKILL_RIFLE, 65 + Std.random(25));
+          skills.addID(SKILL_SHOTGUN, 65 + Std.random(25));
+          skills.addID(SKILL_PISTOL, 65 + Std.random(25));
+          inventory.addID(
+            Std.random(100) < 75 ? 'kevlarArmor' : 'fullBodyArmor',
+            true);
+        }
+
+      else if (game.group.team.level == 3)
+        {
+          inventory.addID(
+            Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
+          inventory.addID('pistol');
+          skills.addID(SKILL_RIFLE, 70 + Std.random(25));
+          skills.addID(SKILL_SHOTGUN, 70 + Std.random(25));
+          skills.addID(SKILL_PISTOL, 70 + Std.random(25));
+          inventory.addID(
+            Std.random(100) < 50 ? 'kevlarArmor' : 'fullBodyArmor',
+            true);
+        }
+
+      else if (game.group.team.level == 4)
+        {
+          inventory.addID(
+            Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
+          inventory.addID('pistol');
+          skills.addID(SKILL_RIFLE, 70 + Std.random(25));
+          skills.addID(SKILL_SHOTGUN, 70 + Std.random(25));
+          skills.addID(SKILL_PISTOL, 70 + Std.random(25));
+          inventory.addID('fullBodyArmor', true);
+        }
 
 //      isBackup = false;
 //      isBackupCalled = false;

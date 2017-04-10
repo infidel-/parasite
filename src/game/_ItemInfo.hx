@@ -19,7 +19,10 @@ typedef _ItemInfo =
     var verb1: String; // X tries to $verb1 you; but misses.
     var verb2: String; // X $verb2 you for Y damage.
     var type: _WeaponType; // weapon damage type
-    };
+  };
+  @:optional var armor: {
+    var damage: Int; // value of damage reduced
+  };
 
   @:optional var areaObjectClass: Dynamic; // area object class
 }

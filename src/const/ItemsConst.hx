@@ -39,6 +39,19 @@ class ItemsConst
     };
 
 
+// special item: no armor
+  public static var armorNone: _ItemInfo =
+    {
+      id: 'armorNone',
+      name: 'no armor',
+      type: 'clothing',
+      unknown: 'clothing',
+      armor: {
+        damage: 0
+      }
+    };
+
+
 // all item infos
   public static var items: Array<_ItemInfo> = [
     // ========= ******* weapons ********* ==========
@@ -121,6 +134,28 @@ class ItemsConst
           verb2: 'shoots',
           type: WEAPON_KINETIC,
         }
+    },
+
+    // ========= ******* clothing ********* ==========
+
+    {
+      id: 'kevlarArmor',
+      name: 'kevlar armor',
+      type: 'clothing',
+      unknown: 'ARMOR BUG!',
+      armor: {
+        damage: 2,
+      }
+    },
+
+    {
+      id: 'fullBodyArmor',
+      name: 'full-body armor',
+      type: 'clothing',
+      unknown: 'ARMOR BUG!',
+      armor: {
+        damage: 4,
+      }
     },
 
     // ========= ******* readables ********* ==========

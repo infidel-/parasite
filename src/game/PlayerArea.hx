@@ -8,6 +8,7 @@ import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;
 import const.*;
+import __Math;
 
 class PlayerArea
 {
@@ -388,7 +389,7 @@ class PlayerArea
       if (!game.area.isVisible(x, y, ai.x, ai.y))
         return;
 
-      // get current weapon
+      // get current weapon and armor
       var item = null;
       var info = null;
 
@@ -469,14 +470,22 @@ class PlayerArea
       // normal damage
       else
         {
-          var mods = null;
+          var mods: Array<_DamageBonus> = [];
           // all melee weapons have damage bonus
           if (!weapon.isRanged)
-            mods = [{
+            mods.push({
               name: 'melee 0.5xSTR',
               min: 0,
               max: Std.int(player.host.strength / 2)
-            }];
+            });
+
+          // armor
+          var clothing = ai.inventory.clothing.info;
+          if (clothing.armor.damage != 0)
+            mods.push({
+              name: clothing.name,
+              val: - clothing.armor.damage
+            });
           var damage = __Math.damage({
             name: 'player->AI',
             min: weapon.minDamage,

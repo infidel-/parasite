@@ -34,8 +34,34 @@ class TeamMemberAI extends HumanAI
           ]
         ];
       isAggressive = true;
-      skills.addID(SKILL_PISTOL, 40 + Std.random(20));
-      inventory.addID('pistol');
+
+      // team level changes loadout
+      if (game.group.team.level == 1)
+        {
+          skills.addID(SKILL_PISTOL, 40 + Std.random(20));
+          inventory.addID('pistol');
+        }
+      else if (game.group.team.level == 2)
+        {
+          skills.addID(SKILL_PISTOL, 45 + Std.random(20));
+          inventory.addID('pistol');
+          if (Std.random(100) < 25)
+            inventory.addID('kevlarArmor', true);
+        }
+      else if (game.group.team.level == 3)
+        {
+          skills.addID(SKILL_PISTOL, 50 + Std.random(20));
+          inventory.addID('pistol');
+          if (Std.random(100) < 50)
+            inventory.addID('kevlarArmor', true);
+        }
+      else if (game.group.team.level == 4)
+        {
+          skills.addID(SKILL_PISTOL, 55 + Std.random(20));
+          inventory.addID('pistol');
+          if (Std.random(100) < 75)
+            inventory.addID('kevlarArmor', true);
+        }
 
       // these only spawn when they're useful
       if (game.player.vars.searchEnabled)

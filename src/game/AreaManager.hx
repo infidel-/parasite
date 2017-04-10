@@ -364,23 +364,30 @@ class AreaManager
 
       for (i in 0...2)
         {
-          var loc = area.findEmptyLocationNear(e.x, e.y);
+          var loc = game.area.findLocation({
+            near: { x: e.x, y: e.y },
+            radius: 10,
+            isUnseen: true
+            });
           if (loc == null)
             {
-              Const.todo('Could not find free spot for spawn!');
-              return;
+              loc = area.findEmptyLocationNear(e.x, e.y);
+              if (loc == null)
+                {
+                  Const.todo('Could not find free spot for spawn x2!');
+                  return;
+                }
             }
 
           var ai = new BlackopsAI(game, loc.x, loc.y);
 
-          // backup has better equipment
-          ai.inventory.clear();
-          ai.inventory.addID('assaultRifle');
-          ai.skills.addID(SKILL_RIFLE, 50 + Std.random(25));
-
           // and arrive already alerted
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
+
+          // set roam target
+          ai.roamTargetX = e.x;
+          ai.roamTargetY = e.y;
 
           area.addAI(ai);
         }

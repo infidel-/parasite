@@ -583,6 +583,14 @@ class AI
                   name: 'protective cover',
                   val: - Std.int(o.params.armor)
                 });
+
+              // armor
+              var clothing = game.player.host.inventory.clothing.info;
+              if (clothing.armor.damage != 0)
+                mods.push({
+                  name: clothing.name,
+                  val: - clothing.armor.damage
+                });
             }
 
           var damage = __Math.damage({

@@ -4,6 +4,8 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
+grenades
+make some agents non-controllable
 all old text windows into new one
 more gui work
 mouse - change to openfl entity
@@ -12,7 +14,7 @@ mouse - change to openfl entity
 
 == PHASE 3:
 creates agents team (four team levels, based on current priority):
-  1) pistols (occasional grenade), kevlar armor,
+  1) pistols (occasional grenade), kevlar armor (sometimes),
   2) pistols (chance of assault rifle or shotgun), kevlar armor
   3) assault rifles/shotguns, grenades, full-body armor
   4) military stunners and parasite-specific researched weapons
