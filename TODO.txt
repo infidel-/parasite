@@ -4,40 +4,22 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
-note no-habitat ambush stuff in group manual
-switch message to new gui
 all old text windows into new one
 more gui work
 mouse - change to openfl entity
 
 == GROUP: ACTIVE MEASURES
 
-== PHASE 2:
-  and group modus operandi is explained. priority and agent teams concepts.
-    will be potentially a lot of text, open a separate help window (if it could open a wiki page inside, that would be awesome)?
-  give player a choice:
-    1) easy - show exact group priority and team level and size, distance, give messages about priority changes
-    2) normal - describe everything in vague words
-    3) realistic - disable that information, only message-based hints
-in debug mode it is added to knowledge window in any case
-
 == PHASE 3:
 creates agents team (four team levels, based on current priority):
   1) pistols (occasional grenade), kevlar armor,
-     1 analytic (-1 distance/turn)
   2) pistols (chance of assault rifle or shotgun), kevlar armor
-     2 analytics (-2 distance/turn)
   3) assault rifles/shotguns, grenades, full-body armor
-     3 analytics (-5 distance/turn)
   4) military stunners and parasite-specific researched weapons
-     4 analytics (-10 distance/turn)
-  ->
 add weapons/armor to backup
 
 smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs an special organ.
 psychology skill: can vaguely detect which people are team members and has false positives
-
-need wiki page describing mechanics!
 
 ==
 RADIO IMPROVEMENT

@@ -30,6 +30,21 @@ class Const
       COLOR_MESSAGE => '#1CD450',
       COLOR_GOAL => '#4788FF',
     ];
+  // copy-pasted for now
+  public static var TEXT_COLORS_INT: Map<_TextColor, Int> =
+    [
+      COLOR_DEFAULT => 0xFFFFFF,
+      COLOR_DEBUG => 0x555555,
+      COLOR_ALERT => 0xFF0000,
+      COLOR_EVOLUTION => 0x00FFFF,
+      COLOR_AREA => 0x00AA00,
+      COLOR_ORGAN => 0xDDDD00,
+      COLOR_WORLD => 0xFF9900,
+      COLOR_HINT => 0xA020F0,
+      COLOR_TIMELINE => 0xF03378,
+      COLOR_MESSAGE => 0x1CD450,
+      COLOR_GOAL => 0x4788FF,
+    ];
 
   // entity spritemap indexes
   public static var FRAME_EMPTY = 0;

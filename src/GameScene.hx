@@ -125,13 +125,13 @@ class GameScene extends Scene
         UISTATE_LOG => new LogWindow(game),
         UISTATE_DEBUG => new DebugWindow(game),
         UISTATE_FINISH => new FinishWindow(game),
-        UISTATE_MESSAGE => new MessageWindow(game),
         ];
 
       components = [
         UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_YESNO => new YesNo(game),
         UISTATE_DOCUMENT => new Document(game),
+        UISTATE_MESSAGE => new Message(game),
         ];
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
 
@@ -318,14 +318,7 @@ class GameScene extends Scene
           var ev = uiQueue.first();
           uiQueue.remove(ev);
 
-          // message
-          if (ev.state == UISTATE_MESSAGE)
-            {
-              var win: MessageWindow = cast windows.get(UISTATE_MESSAGE);
-              win.setText(ev.obj);
-            }
-
-          else if (components[ev.state] != null)
+          if (components[ev.state] != null)
             components[ev.state].setParams(ev.obj);
 
           setState(ev.state);
