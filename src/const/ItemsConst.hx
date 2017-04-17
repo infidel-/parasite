@@ -39,6 +39,27 @@ class ItemsConst
     };
 
 
+// special item: animal attack
+  public static var animal: _ItemInfo =
+    {
+      id: 'animal',
+      name: 'animal BUG!!!',
+      type: 'weapon',
+      unknown: 'animal BUG!!!',
+      weapon:
+        {
+          isRanged: false,
+          skill: SKILL_ATTACK,
+          minDamage: 1,
+          maxDamage: 4,
+          verb1: 'attack',
+          verb2: 'attacks',
+          // don't bother with weapon type
+          type: WEAPON_BLUNT,
+        }
+    };
+
+
 // special item: no armor
   public static var armorNone: _ItemInfo =
     {

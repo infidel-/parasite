@@ -44,6 +44,10 @@ class SkillsWindow extends TextWindow
           var n = 0;
           for (skill in game.player.host.skills)
             {
+              // hidden animal attack skill
+              if (skill.info.id == SKILL_ATTACK)
+                continue;
+
               n++;
               buf.add(skill.info.name);
               if (skill.info.isBool == null || !skill.info.isBool)

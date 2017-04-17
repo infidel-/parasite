@@ -477,8 +477,11 @@ class AI
       var item = inventory.getFirstWeapon();
       var info = null;
 
+      // use animal attack
+      if (!isHuman)
+        info = ItemsConst.animal;
       // use fists
-      if (item == null)
+      else if (item == null)
         info = ItemsConst.fists;
       else info = item.info;
       var weapon = info.weapon;
@@ -506,6 +509,7 @@ class AI
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
         id: weapon.skill,
+        // hardcoded animal attack skill level
         level: skills.getLevel(weapon.skill),
         });
 

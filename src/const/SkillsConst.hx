@@ -19,6 +19,11 @@ class SkillsConst
 // skill infos
   public static var skills: Array<SkillInfo> = [
     {
+      id: SKILL_ATTACK,
+      name: 'attack',
+      defaultLevel: 0,
+    },
+    {
       id: SKILL_FISTS,
       name: 'fists',
       defaultLevel: 50,

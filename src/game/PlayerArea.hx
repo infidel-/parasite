@@ -401,8 +401,11 @@ class PlayerArea
             break;
           }
 
+      // use animal attack
+      if (!player.host.isHuman)
+        info = ItemsConst.animal;
       // use fists
-      if (item == null)
+      else if (item == null)
         info = ItemsConst.fists;
       else info = item.info;
       var weapon = info.weapon;
@@ -419,6 +422,7 @@ class PlayerArea
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
         id: weapon.skill,
+        // hardcoded animal attack skill level
         level: player.host.skills.getLevel(weapon.skill),
         mods: [{
           name: '0.5x parasite',

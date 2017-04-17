@@ -1,5 +1,6 @@
 enum _Skill
 {
+  SKILL_ATTACK;
   SKILL_FISTS;
   SKILL_BATON;
   SKILL_PISTOL;

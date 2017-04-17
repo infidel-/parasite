@@ -1,4 +1,4 @@
-// AI for dogs 
+// AI for dogs
 
 package ai;
 
@@ -43,6 +43,8 @@ class DogAI extends AI
       constitution = 2 + Std.random(4);
       intellect = 1;
       psyche = 1 + Std.random(1);
+
+      skills.addID(SKILL_ATTACK, 65);
 
       derivedStats();
     }
