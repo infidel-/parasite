@@ -156,6 +156,22 @@ class ItemsConst
           type: WEAPON_KINETIC,
         }
     },
+    {
+      id: 'stunRifle',
+      name: 'stun rifle',
+      type: 'weapon',
+      unknown: 'elongated metallic object with a handle',
+      weapon:
+        {
+          isRanged: true,
+          skill: SKILL_RIFLE,
+          minDamage: 2, // rounds of stun effect instead of damage
+          maxDamage: 10,
+          verb1: 'stun',
+          verb2: 'stuns',
+          type: WEAPON_STUN,
+        }
+    },
 
     // ========= ******* clothing ********* ==========
 

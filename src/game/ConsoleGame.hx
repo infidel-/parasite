@@ -208,6 +208,7 @@ class ConsoleGame
               var s = buf.toString();
               s = s.substr(0, s.length - 2) + '.';
               game.debug(s);
+              return;
             }
 
           var id = arr[1];

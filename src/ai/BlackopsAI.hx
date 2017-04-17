@@ -46,7 +46,6 @@ class BlackopsAI extends HumanAI
         {
           inventory.addID(
             Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
-          inventory.addID('pistol');
           skills.addID(SKILL_RIFLE, 60 + Std.random(25));
           skills.addID(SKILL_SHOTGUN, 60 + Std.random(25));
           skills.addID(SKILL_PISTOL, 60 + Std.random(25));
@@ -56,7 +55,6 @@ class BlackopsAI extends HumanAI
         {
           inventory.addID(
             Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
-          inventory.addID('pistol');
           skills.addID(SKILL_RIFLE, 65 + Std.random(25));
           skills.addID(SKILL_SHOTGUN, 65 + Std.random(25));
           skills.addID(SKILL_PISTOL, 65 + Std.random(25));
@@ -67,9 +65,10 @@ class BlackopsAI extends HumanAI
 
       else if (game.group.team.level == 3)
         {
-          inventory.addID(
-            Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
-          inventory.addID('pistol');
+          if (Std.random(100) < 75)
+            inventory.addID(
+              Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
+          else inventory.addID('stunRifle');
           skills.addID(SKILL_RIFLE, 70 + Std.random(25));
           skills.addID(SKILL_SHOTGUN, 70 + Std.random(25));
           skills.addID(SKILL_PISTOL, 70 + Std.random(25));
@@ -80,9 +79,10 @@ class BlackopsAI extends HumanAI
 
       else if (game.group.team.level == 4)
         {
-          inventory.addID(
-            Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
-          inventory.addID('pistol');
+          if (Std.random(100) < 50)
+            inventory.addID(
+              Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
+          else inventory.addID('stunRifle');
           skills.addID(SKILL_RIFLE, 70 + Std.random(25));
           skills.addID(SKILL_SHOTGUN, 70 + Std.random(25));
           skills.addID(SKILL_PISTOL, 70 + Std.random(25));
