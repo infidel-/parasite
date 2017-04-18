@@ -202,6 +202,7 @@ class ConsoleGame
           if (arr.length < 2)
             {
               var buf = new StringBuf();
+              buf.add('Usage: ai [item]');
               buf.add('Items: ');
               for (info in ItemsConst.items)
                 buf.add(info.id + ', ');
@@ -217,6 +218,60 @@ class ConsoleGame
 
           game.player.host.inventory.addID(id);
           game.log('Item added.');
+        }
+
+      // XXX [as computer 10] add skill X Y
+      else if (cmd.charAt(1) == 's')
+        {
+          if (arr.length < 3)
+            {
+              var buf = new StringBuf();
+              game.debug('Usage: as [skill] [amount]');
+              buf.add('Skills: ');
+              for (info in SkillsConst.skills)
+                {
+                  var tmp = '' + info.id;
+                  tmp = tmp.substr(tmp.indexOf('_') + 1);
+                  tmp = tmp.toLowerCase();
+
+                  buf.add(tmp + ', ');
+                }
+              var s = buf.toString();
+              s = s.substr(0, s.length - 2) + '.';
+              game.debug(s);
+              return;
+            }
+
+          var id = arr[1].toUpperCase();
+          var amount = Std.parseInt(arr[2]);
+          var skill = null;
+          try {
+              skill = Type.createEnum(_Skill, 'SKILL_' + id);
+            }
+          catch (e: Dynamic)
+            {
+              skill = null;
+              trace(e);
+            }
+
+          if (skill == null)
+            try {
+                skill = Type.createEnum(_Skill, 'KNOW_' + id);
+              }
+            catch (e: Dynamic)
+              {
+                skill = null;
+                trace(e);
+              }
+
+          if (skill == null)
+            {
+              game.log('No such skill or knowledge found.');
+              return;
+            }
+
+          game.player.skills.addID(skill, amount);
+          game.log('Skill/knowledge added.');
         }
     }
 

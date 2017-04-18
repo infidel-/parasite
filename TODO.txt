@@ -4,9 +4,9 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
+mouse - change to openfl entity
 all old text windows into new one
 more gui work
-mouse - change to openfl entity
 
 == GROUP: ACTIVE MEASURES
 
