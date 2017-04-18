@@ -68,7 +68,8 @@ class ItemsConst
       type: 'clothing',
       unknown: 'clothing',
       armor: {
-        damage: 0
+        canAttach: true,
+        damage: 0,
       }
     };
 
@@ -181,6 +182,7 @@ class ItemsConst
       type: 'clothing',
       unknown: 'ARMOR BUG!',
       armor: {
+        canAttach: true,
         damage: 2,
       }
     },
@@ -191,6 +193,7 @@ class ItemsConst
       type: 'clothing',
       unknown: 'ARMOR BUG!',
       armor: {
+        canAttach: false,
         damage: 4,
       }
     },

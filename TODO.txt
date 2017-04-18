@@ -4,7 +4,6 @@ make use computer action more convenient (add to hud?)
 
 == CURRENT
 
-make some agents non-controllable
 all old text windows into new one
 more gui work
 mouse - change to openfl entity
@@ -225,7 +224,6 @@ ingame help window with links leading to wiki pages
 scene.getSpriteByLayer(layer) - draw lines on this one
 write about getPixels/setPixels bug
 improvement that lowers passive team distance decrease (reduces amount of residue left)
-ATM the team ambushes any habitat the player enters. i might need to roll a chance if the ambush is actually in this habitat or in some other.
 
 == BROAD DIRECTIONS
 scenario goals test

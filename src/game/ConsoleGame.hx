@@ -415,6 +415,7 @@ class ConsoleGame
           game.debug(
             ';s1 - set player stage 1 (human civilian host, tutorial done)\n' +
             ';s11 - set player stage 1.1 (stage 1 + group knowledge)\n' +
+            ';s12 - set player stage 1.2 (stage 1.1 + ambush)\n' +
             ';s2 - set player stage 2 (stage 1 + microhabitat)\n' +
             ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)\n' +
             ';s22 - set player stage 2.2 (stage 2.1 + biomineral)\n' +
@@ -442,6 +443,14 @@ class ConsoleGame
             {
               stage1();
               stage11();
+            }
+
+          // stage 1.1: stage 1 + group knowledge
+          else if (stage == 12)
+            {
+              stage1();
+              stage11();
+              stage12();
             }
 
           // stage 2: civ host, microhabitat, timeline open
@@ -527,6 +536,7 @@ class ConsoleGame
 // stage 1.1: stage 1 + group knowledge
   function stage11()
     {
+      game.log('stage 1.1');
       var ai = game.player.host;
       ai.brainProbed = 0;
       game.group.knownCount = 1;
@@ -556,6 +566,18 @@ class ConsoleGame
 
           break;
         }
+    }
+
+
+// stage 1.2: stage 1.1 + ambush
+  function stage12()
+    {
+      game.log('stage 1.2');
+      game.group.team = new Team(game);
+      game.group.team.distance = 0;
+      game.group.team.level = 4;
+      game.group.team.state = TEAM_AMBUSH;
+      game.group.team.timer = 0;
     }
 
 

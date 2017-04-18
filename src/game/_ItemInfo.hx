@@ -21,6 +21,7 @@ typedef _ItemInfo =
     var type: _WeaponType; // weapon damage type
   };
   @:optional var armor: {
+    var canAttach: Bool; // armor can disable parasite attach
     var damage: Int; // value of damage reduced
   };
 

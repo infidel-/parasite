@@ -220,7 +220,7 @@ class PlayerArea
       else if (action.id == 'attachHost')
         {
           var ai = game.area.getAI(x, y);
-          attachToHostAction(ai);
+          ret = attachToHostAction(ai);
 
           game.updateHUD();
         }
@@ -324,7 +324,9 @@ class PlayerArea
       var ai = game.area.getAI(x + dx, y + dy);
       if (ai != null)
         {
-          frobAIAction(ai);
+          var ret = frobAIAction(ai);
+          if (!ret)
+            return;
 
           postAction(); // post-action call
 
@@ -340,12 +342,14 @@ class PlayerArea
 
 
 // frob the AI - atm just attach to host as a parasite
-  function frobAIAction(ai: AI)
+  function frobAIAction(ai: AI): Bool
     {
+      var ret = false;
+
       // attach to new host
       if (state == PLR_STATE_PARASITE)
         {
-          attachToHostAction(ai);
+          ret = attachToHostAction(ai);
         }
 
       // push past AI
@@ -355,7 +359,7 @@ class PlayerArea
           if (!__Math.opposingAttr(player.host.strength, ai.strength, 'strength'))
             {
               log('Your host does not manage to push past ' + ai.getName() + '.');
-              return;
+              return true;
             }
 
           var newx = ai.x, newy = ai.y;
@@ -365,7 +369,11 @@ class PlayerArea
           moveTo(newx, newy);
 
           log('Your host pushes past ' + ai.getName() + '.');
+
+          ret = true;
         }
+
+      return ret;
     }
 
 
@@ -508,8 +516,17 @@ class PlayerArea
 
 
 // action: attach to host
-  function attachToHostAction(ai: AI)
+  function attachToHostAction(ai: AI): Bool
     {
+      // armor protection
+      if (ai.inventory.clothing.info.armor != null &&
+          !ai.inventory.clothing.info.armor.canAttach)
+        {
+          game.log('You cannot attach to this host due to its clothing.',
+            COLOR_HINT);
+          return false;
+        }
+
       // move to the same spot as AI
       moveTo(ai.x, ai.y);
 
@@ -524,6 +541,8 @@ class PlayerArea
       log('You have managed to attach to a host.');
 
       ai.onAttach(); // callback to AI
+
+      return true;
     }
 
 
