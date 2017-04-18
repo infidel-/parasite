@@ -1,12 +1,16 @@
 == MAINTENANCE
-leaving area does not destroy backup events
-make use computer action more convenient (add to hud?)
+bug: inventory -> learn about first item -> message queued, window auto-closed but message is not auto-shown, need to open/close any window to see it
+after constructing biomineral, it's too easy to die with no host
+bug: on constructing habitat stuff host death is treated like host discovered by group
+check if assimilated hosts count for more on host discovery/death (they should be treated as bodies with weird anomalies, add assim organ and show it)
+leaving area does not destroy backup and police arrive events
 
 == CURRENT
 
 mouse - change to openfl entity
 all old text windows into new one
 more gui work
+make use computer action more convenient (add to hud?)
 
 == GROUP: ACTIVE MEASURES
 

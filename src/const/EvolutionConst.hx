@@ -84,7 +84,7 @@ class EvolutionConst
         organ: {
           name: 'Protective cover',
           note: 'Armor-like host body cover providing protection against damage at the expense of appearance',
-          gp: 150
+          gp: 120
           },
         levelNotes: [
           'Normal host skin',
@@ -113,7 +113,7 @@ class EvolutionConst
         organ: {
           name: 'Stem cell reservoirs',
           note: 'Microreservoirs of adult stem cells that increase wound recovery speed',
-          gp: 120
+          gp: 100
           },
         levelNotes: [
           'Normal wound recovery',
@@ -172,7 +172,7 @@ class EvolutionConst
         organ: {
           name: '??Host energy bonus',
           note: 'Gives a bonus to maximum host energy',
-          gp: 200
+          gp: 180
           },
         levelNotes: [
           '(todo fluff)',
@@ -436,7 +436,7 @@ class EvolutionConst
         organ: {
           name: '??Paralysis gas',
           note: 'Gives the host an ability to emit a cloud of paralytic gas',
-          gp: 175,
+          gp: 180,
           hasTimeout: true,
           action: {
             id: 'paralysisGas',
@@ -765,7 +765,7 @@ class EvolutionConst
         organ: {
           name: 'Biomineral mold',
           note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed!',
-          gp: 200,
+          gp: 150,
           isMold: true,
           action: {
             id: 'formBiomineral',
@@ -832,7 +832,7 @@ class EvolutionConst
         organ: {
           name: 'Assimilation mold',
           note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed.',
-          gp: 200,
+          gp: 150,
           isMold: true,
           action: {
             id: 'formAssimilation',

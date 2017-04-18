@@ -243,7 +243,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
     {
       return '{ level: ' + level +
         ', size: ' + size + '/' + maxSize +
-        ', distance: ' + distance +
+        ', distance: ' + Const.round(distance) +
         ', state: ' + state +
         ', timer: ' + timer +
         ' }';
