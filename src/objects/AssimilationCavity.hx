@@ -26,7 +26,7 @@ class AssimilationCavity extends HabitatObject
 
 
 // assimilate host
-  override function onAction(id: String)
+  override function onAction(id: String): Bool
     {
       game.log("Twisting tendrils wrap around the host, starting the assimilation process.");
       game.player.host.emitSound({
@@ -35,6 +35,8 @@ class AssimilationCavity extends HabitatObject
         alertness: 10
       });
       game.player.host.addTrait(TRAIT_ASSIMILATED);
+
+      return true;
     }
 }
 

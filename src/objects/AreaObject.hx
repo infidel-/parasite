@@ -149,7 +149,7 @@ class AreaObject
 // object action
   public function action(a: _PlayerAction)
     {
-      onAction(a.id); // child callback
+      return onAction(a.id); // child callback
     }
 
 
@@ -163,8 +163,9 @@ class AreaObject
     {}
 
 // dynamic: object action callback
-  public dynamic function onAction(id: String)
-    {}
+// returns true on successful action
+  public dynamic function onAction(id: String): Bool
+    { return false; }
 
 
   public function toString(): String

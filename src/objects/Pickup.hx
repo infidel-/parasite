@@ -31,7 +31,7 @@ class Pickup extends AreaObject
 
 
 // ACTION: action handling
-  override function onAction(id: String)
+  override function onAction(id: String): Bool
     {
       // get stuff from body
       if (id == 'get')
@@ -41,7 +41,11 @@ class Pickup extends AreaObject
           game.player.log('You pick the ' + tmpname + ' up.');
           game.player.host.inventory.add(item);
           game.area.removeObject(this);
+
+          return true;
         }
+
+      return false;
     }
 
 /*

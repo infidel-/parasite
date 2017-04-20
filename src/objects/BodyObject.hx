@@ -53,7 +53,7 @@ class BodyObject extends AreaObject
 
 
 // ACTION: action handling
-  override function onAction(id: String)
+  override function onAction(id: String): Bool
     {
       // search body for stuff
       if (id == 'searchBody')
@@ -62,6 +62,8 @@ class BodyObject extends AreaObject
       // get stuff from body
       else if (id.substr(0, 4) == 'get.')
         getAction(id.substr(4));
+
+      return true;
     }
 
 

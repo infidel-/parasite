@@ -30,8 +30,10 @@ class EventObject extends AreaObject
 
 
 // handle special action
-  override function onAction(id: String)
+  override function onAction(id: String): Bool
     {
       eventOnAction(game, game.player, id);
+
+      return true;
     }
 }

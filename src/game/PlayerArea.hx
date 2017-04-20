@@ -205,7 +205,7 @@ class PlayerArea
             }
 
           var ao: AreaObject = action.obj;
-          ao.action(action);
+          ret = ao.action(action);
         }
 
       // host organ-based action

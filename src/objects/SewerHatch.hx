@@ -27,10 +27,18 @@ class SewerHatch extends AreaObject
 
 
 // activate sewers - leave area
-  override function onAction(id: String)
+  override function onAction(id: String): Bool
     {
+      if (game.player.state == PLR_STATE_HOST && !game.player.host.isHuman)
+        {
+          game.log("This host cannot open the sewer hatch.", COLOR_HINT);
+          return false;
+        }
+
       game.log("You enter the damp fetid sewers, escaping the prying eyes.");
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
+
+      return true;
     }
 }
