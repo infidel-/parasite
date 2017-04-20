@@ -70,6 +70,10 @@ class Organs
       for (o in _list)
         cnt += o.level;
 
+      // assimilated hosts count as body features
+      if (_ai.hasTrait(TRAIT_ASSIMILATED))
+        cnt += 2;
+
       return cnt;
     }
 

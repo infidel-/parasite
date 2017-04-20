@@ -198,7 +198,7 @@ class AreaGame
       game.scene.area.show();
 
       // mercifully spawn dog nearby if player has no host
-      if (game.player.state == PLR_STATE_PARASITE)
+      if (game.player.state == PLR_STATE_PARASITE && !isHabitat)
         {
           var spot = findEmptyLocationNear(game.playerArea.x,
             game.playerArea.y);

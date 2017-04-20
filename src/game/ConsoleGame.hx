@@ -174,6 +174,12 @@ class ConsoleGame
           if (game.group.team != null)
             game.group.team.timer = valInt;
         }
+      else
+        {
+          game.log('Variable [' + key + '] not found.');
+          return;
+        }
+      game.log('Set variable [' + key + '] to ' + val + '.');
     }
 
 

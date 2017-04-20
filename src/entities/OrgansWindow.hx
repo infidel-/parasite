@@ -82,8 +82,15 @@ class OrgansWindow extends TextWindow
       var buf = new StringBuf();
       buf.add('Body features\n===\n\n');
 
-      // draw a list of organs
+      // assimilated info
       var n = 0;
+      if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
+        {
+          buf.add("<font color='#DDDD00'>This host has been assimilated.</font>\n\n");
+          n++;
+        }
+
+      // draw a list of organs
       for (organ in game.player.host.organs)
         {
           if (organ.isActive)
