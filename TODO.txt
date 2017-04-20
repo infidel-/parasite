@@ -1,5 +1,4 @@
 == MAINTENANCE
-leaving area does not destroy backup and police arrive events
 
 in area:
 Const.hx:275: DEBUG FSM team set state: TEAM_AMBUSH

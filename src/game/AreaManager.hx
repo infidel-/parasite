@@ -84,6 +84,13 @@ class AreaManager
     }
 
 
+// clean old events on leaving area
+  public function onLeaveArea()
+    {
+      _list.clear();
+    }
+
+
 // area manager new turn
   public function turn()
     {

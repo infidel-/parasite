@@ -251,6 +251,9 @@ class AreaGame
       if (game.group.team != null)
         game.group.team.onLeaveArea();
 
+      // remove events
+      game.managerArea.onLeaveArea();
+
       // hide gui
       game.scene.area.hide();
     }
