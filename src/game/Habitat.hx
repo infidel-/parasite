@@ -51,6 +51,7 @@ class Habitat
 
       // spawn object
       var ai = player.host;
+      ai.state = AI_STATE_DEAD; // quick kill to fix host discovery
       var level = ai.organs.getLevel(IMP_BIOMINERAL);
       var o = new Biomineral(game, ai.x, ai.y, level);
 
@@ -92,6 +93,7 @@ class Habitat
 
       // spawn object
       var ai = player.host;
+      ai.state = AI_STATE_DEAD; // quick kill to fix host discovery
       var level = ai.organs.getLevel(IMP_ASSIMILATION);
       var o = new AssimilationCavity(game, ai.x, ai.y, level);
 

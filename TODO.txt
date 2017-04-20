@@ -1,5 +1,4 @@
 == MAINTENANCE
-bug: on constructing habitat stuff host death is treated like host discovered by group
 check if assimilated hosts count for more on host discovery/death (they should be treated as bodies with weird anomalies, add assim organ and show it)
 leaving area does not destroy backup and police arrive events
 
