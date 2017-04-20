@@ -26,9 +26,9 @@ class InventoryWindow extends TextWindow
       // do action
       game.player.host.inventory.action(action);
 
-      // close window if it's still in inventory mode 
+      // close window if it's still in inventory mode
       if (game.scene.getState() == UISTATE_INVENTORY)
-        game.scene.setState(UISTATE_DEFAULT);
+        game.scene.closeWindow();
     }
 
 

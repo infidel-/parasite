@@ -1,9 +1,22 @@
 == MAINTENANCE
-bug: inventory -> learn about first item -> message queued, window auto-closed but message is not auto-shown, need to open/close any window to see it
-after constructing biomineral, it's too easy to die with no host
 bug: on constructing habitat stuff host death is treated like host discovered by group
 check if assimilated hosts count for more on host discovery/death (they should be treated as bodies with weird anomalies, add assim organ and show it)
 leaving area does not destroy backup and police arrive events
+
+in area:
+Const.hx:275: DEBUG FSM team set state: TEAM_AMBUSH
+parasite.js:6645 Const.hx:275: DEBUG Team member spawned
+parasite.js:6645 Const.hx:275: DEBUG Team member spawned
+parasite.js:6645 Const.hx:275: The host resists your command.
+parasite.js:6645 Const.hx:275: The host resists your command.
+parasite.js:6645 Const.hx:275: You reinforce mental control over the host.
+parasite.js:6645 Const.hx:275: You reinforce mental control over the host.
+parasite.js:6645 Const.hx:275: You can see an object here: sewer hatch.
+parasite.js:6645 Const.hx:275: You enter the damp fetid sewers, escaping the prying eyes.
+parasite.js:6645 Const.hx:275: DEBUG Area.leave()
+parasite.js:6645 Const.hx:275: You've managed to survive the ambush.
+parasite.js:6645 Const.hx:275: INFO Team distance: +10 = 10
+parasite.js:6645 Const.hx:275: DEBUG FSM team set state: TEAM_SEARCH
 
 == CURRENT
 

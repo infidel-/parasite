@@ -133,12 +133,6 @@ class Game
       location = LOCATION_AREA;
       area.enter();
 
-      // spawn initial dog nearby
-      var spot = area.findEmptyLocationNear(playerArea.x, playerArea.y);
-      var ai = new ai.DogAI(this, spot.x, spot.y);
-      ai.isCommon = true;
-      area.addAI(ai);
-
       updateHUD(); // update HUD state
 
       isInited = true;
