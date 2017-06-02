@@ -148,7 +148,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // TURN: fight in progress
   function turnFight()
     {
-      // increase fight timer (to allow player to leave)
+      // decrease fight timer (to allow player to leave)
       if (timer > 0)
         timer--;
     }
@@ -177,7 +177,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // event: player leaves area with an active team
   public function onLeaveArea()
     {
-      if (state != TEAM_AMBUSH && state != TEAM_FIGHT)
+      if (state != TEAM_FIGHT)
         return;
 
       game.log("You've managed to survive the ambush.");

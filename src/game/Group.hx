@@ -21,7 +21,7 @@ class Group
       team = null;
       teamTimeout = 100;
       teamStartDistance = 100.0;
-      knownCount = 5 + Std.random(5); // randomized slightly
+      knownCount = 1 + Std.random(4); // randomized slightly
       isKnown = false;
       difficulty = UNSET;
     }

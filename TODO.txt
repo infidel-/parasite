@@ -1,33 +1,44 @@
 == MAINTENANCE
 
-in area:
-Const.hx:275: DEBUG FSM team set state: TEAM_AMBUSH
-parasite.js:6645 Const.hx:275: DEBUG Team member spawned
-parasite.js:6645 Const.hx:275: DEBUG Team member spawned
-parasite.js:6645 Const.hx:275: The host resists your command.
-parasite.js:6645 Const.hx:275: The host resists your command.
-parasite.js:6645 Const.hx:275: You reinforce mental control over the host.
-parasite.js:6645 Const.hx:275: You reinforce mental control over the host.
-parasite.js:6645 Const.hx:275: You can see an object here: sewer hatch.
-parasite.js:6645 Const.hx:275: You enter the damp fetid sewers, escaping the prying eyes.
-parasite.js:6645 Const.hx:275: DEBUG Area.leave()
-parasite.js:6645 Const.hx:275: You've managed to survive the ambush.
-parasite.js:6645 Const.hx:275: INFO Team distance: +10 = 10
-parasite.js:6645 Const.hx:275: DEBUG FSM team set state: TEAM_SEARCH
+speed up scenario clues learning process? difficulty (speed) selection?
+mouse - change to openfl entity
+all old text windows into new one
+"you feel someone watching you" needs to be bright red color!
+
+    ,hardenGripAction: function() {
+        this.game.log("You harden your grip on the host.",null);
+        var params = this.player.evolutionManager.getParams(_$Improv.IMP_HARDEN_GRIP);
+        var tmp = params.attachHoldBase;
+!!!        if(!this.attachHost.effects.has(_$AIEffectType.EFFECT_PARALYSIS)) tmp -= Std["int"](this.attachHost.get_strength() / 2);
+        var _g = this;
+        _g.set_attachHold(_g.attachHold + tmp);
+    }
+
+
+parasite.js:6645 Const.hx:275: You have managed to attach to a host.
+parasite.js:6645 Const.hx:275: You detach from the potential host.
+parasite.js:6645 Const.hx:275: You harden your grip on the host.
+ GameScene.hx:646: Exception: TypeError: Cannot read property 'effects' of null
 
 == CURRENT
 
-mouse - change to openfl entity
-all old text windows into new one
-more gui work
+fix bugs and maintenance
+remove evolution paths
+give out 4 random possible imps at start (hidden or known)
+evolution - hard difficulty limits all improvements to level 1, normal - 2, easy - 3
+evolution - limit starting generic improvements to hard - 1, normal - 2, easy - 4
+test gameplay
+new gui (with mouse support for everything)
 make use computer action more convenient (add to hud?)
 
 == GROUP: ACTIVE MEASURES
 
-== PHASE 3:
+habitat + assimilation: distance 64
+after building l2 battery and assim, there's nothing stopping the player from evolving everything available...
 
-smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs a special organ.
-psychology skill: can vaguely detect which people are team members and has false positives
+need to play more to determine if that is necessary:
+?? smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs a special organ.
+?? psychology skill: can vaguely detect which people are team members and has false positives
 
 ==
 RADIO IMPROVEMENT
@@ -55,6 +66,7 @@ no levels - marks with a red + on map, gives a message
 ==================================
 LATER
 most of the improvements and skills should come from special conditions, like people professions, traits, finding locations, etc
+need a way to get more generic improvements to lower difficulty a bit and have some options
 
 scenes (sometimes need forensics)
   spawn readables and other clues only on scenes

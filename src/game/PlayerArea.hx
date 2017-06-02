@@ -567,8 +567,6 @@ class PlayerArea
 // action: try to invade this AI host
   function invadeHostAction()
     {
-//      log('You attempt to invade the host.');
-//      if (Std.random(100) < )
       log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
 
       // save AI link
