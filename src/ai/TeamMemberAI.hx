@@ -120,6 +120,6 @@ class TeamMemberAI extends HumanAI
 // event: on being noticed by player
   public override function onNotice()
     {
-      game.log('You feel someone watching you.');
+      game.log('You feel someone watching you.', COLOR_ALERT);
     }
 }

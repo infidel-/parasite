@@ -20,7 +20,7 @@ class Const
     [
       COLOR_DEFAULT => '#FFFFFF',
       COLOR_DEBUG => '#555555',
-      COLOR_ALERT => '#FF0000',
+      COLOR_ALERT => '#FF2222',
       COLOR_EVOLUTION => '#00FFFF',
       COLOR_AREA => '#00AA00',
       COLOR_ORGAN => '#DDDD00',
@@ -35,7 +35,7 @@ class Const
     [
       COLOR_DEFAULT => 0xFFFFFF,
       COLOR_DEBUG => 0x555555,
-      COLOR_ALERT => 0xFF0000,
+      COLOR_ALERT => 0xFF2222,
       COLOR_EVOLUTION => 0x00FFFF,
       COLOR_AREA => 0x00AA00,
       COLOR_ORGAN => 0xDDDD00,

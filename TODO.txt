@@ -3,7 +3,6 @@
 speed up scenario clues learning process? difficulty (speed) selection?
 mouse - change to openfl entity
 all old text windows into new one
-"you feel someone watching you" needs to be bright red color!
 
     ,hardenGripAction: function() {
         this.game.log("You harden your grip on the host.",null);
