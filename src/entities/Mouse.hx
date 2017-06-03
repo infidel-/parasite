@@ -12,6 +12,7 @@ import com.haxepunk.utils.Input;
 import com.haxepunk.utils.Key;
 
 import game.Game;
+import ai.AI;
 
 class Mouse extends Sprite
 {
@@ -21,6 +22,7 @@ class Mouse extends Sprite
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
+  public var ignoreNextClick: Bool;
 
   public function new(g: Game)
     {
@@ -30,6 +32,7 @@ class Mouse extends Sprite
       oldx = 0;
       oldy = 0;
       sceneState = game.scene.state;
+      ignoreNextClick = false;
 
       var b = new Bitmap(Assets.getBitmapData('gfx/mouse.png'));
       rect = new Rectangle(0, 0, CURSOR_WIDTH, CURSOR_HEIGHT);
@@ -37,24 +40,47 @@ class Mouse extends Sprite
       addChild(b);
       mouseEnabled = false;
 
-#if mydebug
       HXP.stage.addEventListener(MouseEvent.CLICK, onClick);
-#end
 
       b.x = 0;
       b.y = 0;
     }
 
 
-// click in debug mode
-#if mydebug
+// mouse click
   function onClick(e: Dynamic)
     {
-      // not in debug mode
-      if (cursor != CURSOR_DEBUG || game.location != LOCATION_AREA)
-        return;
+      // hack: ignore next mouse click (haxeui button bug)
+      if (ignoreNextClick)
+        {
+          ignoreNextClick = false;
+          return;
+        }
 
       var pos = getXY();
+#if mydebug
+      // debug mode
+      if (cursor == CURSOR_DEBUG)
+        {
+          if (game.location == LOCATION_AREA)
+            onClickDebug(pos);
+          return;
+        }
+#end
+      // some window open
+      if (game.scene.state != UISTATE_DEFAULT)
+        return;
+
+      // area mode - click moves
+      if (game.location == LOCATION_AREA)
+        onClickArea(pos);
+    }
+
+
+// DEBUG: on click
+#if mydebug
+  function onClickDebug(pos)
+    {
       var ai = game.area.getAI(pos.x, pos.y);
       trace('(' + pos.x + ',' + pos.y + ') ' +
         game.area.getCellType(pos.x, pos.y) + ' ' +
@@ -66,16 +92,24 @@ class Mouse extends Sprite
         Const.debugObject(game.player);
       if (ai != null)
         Const.debugObject(ai);
-
-/*
-              var p = game.area.getPath(game.player.x, game.player.y, x, y);
-              if (p != null)
-                for (n in p)
-                  trace(n.x + ',' + n.y);
-              else trace('no path');
-*/
     }
 #end
+
+
+// on click in area mode
+  function onClickArea(pos)
+    {
+      // attack AI
+      var ai = game.area.getAI(pos.x, pos.y);
+      if (canAttack(ai))
+        {
+          game.playerArea.attackAction(ai);
+          return;
+        }
+
+      // generate a path
+      game.playerArea.setPath(pos.x, pos.y);
+    }
 
 
 // update mouse cursor
@@ -146,19 +180,20 @@ class Mouse extends Sprite
       // attack cursor
       var pos = getXY();
       var ai = game.area.getAI(pos.x, pos.y);
-      if (game.player.state == PLR_STATE_HOST && ai != null &&
-          ai != game.player.host &&
-          game.area.isVisible(game.playerArea.x, game.playerArea.y,
-            pos.x, pos.y))
+      if (canAttack(ai))
         c = CURSOR_ATTACK;
 
-      // mouse click in attack mode on target
-      if (Input.mouseReleased && c == CURSOR_ATTACK)
-        {
-          game.playerArea.attackAction(ai);
-        }
-
       setCursor(c);
+    }
+
+
+// check if player can attack that AI
+  inline function canAttack(ai: AI)
+    {
+      return (game.player.state == PLR_STATE_HOST && ai != null &&
+        ai != game.player.host &&
+        game.area.isVisible(game.playerArea.x, game.playerArea.y,
+          ai.x, ai.y));
     }
 
 

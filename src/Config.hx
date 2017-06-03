@@ -18,6 +18,7 @@ class Config
   public var fontSizeLarge: Int;
   public var windowWidth: Int;
   public var windowHeight: Int;
+  public var pathDelay: Int;
 
   var map: Map<String, String>;
 
@@ -32,6 +33,7 @@ class Config
       fontSizeLarge = 24;
       windowWidth = 1024;
       windowHeight = 768;
+      pathDelay = 50;
 
       map = new Map();
       map['extendedInfo'] = '0';
@@ -39,6 +41,7 @@ class Config
       map['fontSize'] = '' + fontSize;
       map['windowWidth'] = '' + windowWidth;
       map['windowHeight'] = '' + windowHeight;
+      map['pathDelay'] = '' + pathDelay;
 
 #if js
       var str = js.Browser.window.localStorage.getItem('config');
@@ -98,6 +101,8 @@ class Config
         windowWidth = Std.parseInt(val);
       else if (key == 'windowHeight')
         windowHeight = Std.parseInt(val);
+      else if (key == 'pathDelay')
+        pathDelay = Std.parseInt(val);
 
       else
         {

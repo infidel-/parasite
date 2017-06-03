@@ -28,6 +28,8 @@ evolution - limit starting generic improvements to hard - 1, normal - 2, easy - 
 test gameplay
 new gui (with mouse support for everything)
 make use computer action more convenient (add to hud?)
+make tiles 64x64?
+"cannot move" mouse cursor
 
 == GROUP: ACTIVE MEASURES
 

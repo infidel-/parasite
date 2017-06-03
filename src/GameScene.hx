@@ -626,8 +626,12 @@ class GameScene extends Scene
   public override function update()
     {
       try {
+        // path active, try to move on it
+        if (game.location == LOCATION_AREA && game.playerArea.path != null)
+          game.playerArea.nextPath();
+
         // handle player input
-        handleInput();
+        else handleInput();
 
         // update camera position
         updateCamera();

@@ -3,6 +3,7 @@
 package game;
 
 import com.haxepunk.HXP;
+import openfl.Lib;
 
 import ai.AI;
 import entities.PlayerEntity;
@@ -21,6 +22,8 @@ class PlayerArea
   public var ap: Int; // player action points (2 per turn)
   var knownObjects: List<String>; // list of known area object types
   var state(get, set): _PlayerState; // state link
+  public var path(default, null): Array<aPath.Node>; // current player path
+  var pathTS: Int; // last time player moved on a path
 
   // state "parasite"
 
@@ -33,6 +36,8 @@ class PlayerArea
     {
       game = g;
       player = game.player;
+      path = null;
+      pathTS = 0;
 
       x = 0;
       y = 0;
@@ -311,13 +316,13 @@ class PlayerArea
 
 
 // action: move player by dx,dy
-  public function moveAction(dx: Int, dy: Int)
+  public function moveAction(dx: Int, dy: Int): Bool
     {
       // cannot move while in paralysis
       if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
         {
           log('Your host is paralyzed.', COLOR_HINT);
-          return;
+          return false;
         }
 
       // frob the AI
@@ -326,18 +331,18 @@ class PlayerArea
         {
           var ret = frobAIAction(ai);
           if (!ret)
-            return;
+            return false;
 
           postAction(); // post-action call
 
           // update AI visibility to player
           game.area.updateVisibility();
 
-          return;
+          return true;
         }
 
       // try to move to the new location
-      moveBy(dx, dy);
+      return moveBy(dx, dy);
     }
 
 
@@ -647,6 +652,7 @@ class PlayerArea
         }
 
       log("You leave the area.");
+      path = null; // clear path
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
     }
@@ -870,6 +876,40 @@ class PlayerArea
         player.vars.listenRadius * player.vars.listenRadius);
     }
 
+
+// create a path to given x,y and start moving on it
+  public function setPath(destx: Int, desty: Int)
+    {
+      path = game.area.getPath(x, y, destx, desty);
+//      pathTS = Lib.getTimer();
+      if (path == null)
+        return;
+
+      // start moving
+      nextPath();
+    }
+
+
+// move to next path waypoint
+  public function nextPath()
+    {
+      // path clear
+      if (path == null || Lib.getTimer() - pathTS < game.config.pathDelay)
+        return;
+
+      var n = path.shift();
+//      trace(n.x + ',' + n.y);
+      pathTS = Lib.getTimer();
+      var ret = moveAction(n.x - x, n.y - y);
+      if (!ret)
+        {
+          trace('path broken!');
+          path = null;
+        }
+
+      if (path.length == 0)
+        path = null;
+    }
 
 // ================================ EVENTS =========================================
 
