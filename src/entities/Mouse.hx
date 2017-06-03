@@ -71,9 +71,13 @@ class Mouse extends Sprite
       if (game.scene.state != UISTATE_DEFAULT)
         return;
 
-      // area mode - click moves
+      // area mode - click moves or attacks
       if (game.location == LOCATION_AREA)
         onClickArea(pos);
+
+      // region mode
+      else if (game.location == LOCATION_REGION)
+        onClickRegion(pos);
     }
 
 
@@ -115,6 +119,21 @@ class Mouse extends Sprite
           else if (game.area.isWalkable(pos.x, pos.y))
             game.playerArea.setPath(pos.x, pos.y);
         }
+    }
+
+
+// on click in region mode
+  function onClickRegion(pos)
+    {
+      var pos = getXY();
+      var area = game.region.getXY(pos.x, pos.y);
+      if (area == null)
+        return;
+      if (!game.scene.region.isKnown(area))
+        return;
+
+      // generate a path
+      game.playerRegion.setTarget(pos.x, pos.y);
     }
 
 
@@ -164,6 +183,10 @@ class Mouse extends Sprite
       if (game.location == LOCATION_AREA)
         updateArea();
 
+      // in region
+      else if (game.location == LOCATION_REGION)
+        updateRegion();
+
       sceneState = game.scene.state;
     }
 
@@ -195,6 +218,26 @@ class Mouse extends Sprite
           else if (game.area.isWalkable(pos.x, pos.y))
             c = CURSOR_DEFAULT;
         }
+
+      setCursor(c);
+    }
+
+
+// region mode
+  function updateRegion()
+    {
+      var c = CURSOR_BLOCKED;
+
+      var pos = getXY();
+      var area = game.region.getXY(pos.x, pos.y);
+      if (area == null)
+        {
+          setCursor(c);
+          return;
+        }
+      var isKnown = game.scene.region.isKnown(area);
+      if (isKnown)
+        c = CURSOR_DEFAULT;
 
       setCursor(c);
     }

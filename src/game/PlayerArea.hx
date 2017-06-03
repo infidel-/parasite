@@ -881,7 +881,6 @@ class PlayerArea
   public function setPath(destx: Int, desty: Int)
     {
       path = game.area.getPath(x, y, destx, desty);
-//      pathTS = Lib.getTimer();
       if (path == null)
         return;
 

@@ -132,12 +132,15 @@ class RegionView
     {
       // set alertness mask
       var alertFrame = Const.FRAME_EMPTY;
-      if (a.alertness > 75)
-        alertFrame = Const.FRAME_ALERT3;
-      else if (a.alertness > 50)
-        alertFrame = Const.FRAME_ALERT2;
-      else if (a.alertness > 0)
-        alertFrame = Const.FRAME_ALERT1;
+      if (isKnown(a))
+        {
+          if (a.alertness > 75)
+            alertFrame = Const.FRAME_ALERT3;
+          else if (a.alertness > 50)
+            alertFrame = Const.FRAME_ALERT2;
+          else if (a.alertness > 0)
+            alertFrame = Const.FRAME_ALERT1;
+        }
       _tilemapAlert.setTile(a.x, a.y, alertFrame);
     }
 
@@ -224,6 +227,15 @@ class RegionView
       for (y in 0...height)
         for (x in 0...width)
           updateIconsArea(x, y);
+    }
+
+
+// returns whether this tile is known to the player
+  public inline function isKnown(a: AreaGame): Bool
+    {
+      return
+        ((Math.abs(game.playerRegion.x - a.x) < 2 &&
+          Math.abs(game.playerRegion.y - a.y) < 2) || a.isKnown);
     }
 
 

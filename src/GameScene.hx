@@ -629,6 +629,9 @@ class GameScene extends Scene
         // path active, try to move on it
         if (game.location == LOCATION_AREA && game.playerArea.path != null)
           game.playerArea.nextPath();
+        else if (game.location == LOCATION_REGION &&
+            game.playerRegion.target != null)
+          game.playerRegion.nextPath();
 
         // handle player input
         else handleInput();

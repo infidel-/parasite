@@ -3,6 +3,7 @@
 package game;
 
 import com.haxepunk.HXP;
+import openfl.Lib;
 
 import entities.PlayerEntity;
 import const.WorldConst;
@@ -17,12 +18,16 @@ class PlayerRegion
   public var entity: PlayerEntity; // player ui entity (region mode)
   public var x: Int; // x,y on grid
   public var y: Int;
+  public var target(default, null): { x: Int, y: Int }; // current player target x,y
+  var pathTS: Int; // last time player moved to target
 
 
   public function new(g: Game)
     {
       game = g;
       player = game.player;
+      target = null;
+      pathTS = 0;
 
       x = 0;
       y = 0;
@@ -130,6 +135,7 @@ class PlayerRegion
 // action: enter area
   function enterAreaAction()
     {
+      target = null;
       game.log(currentArea.info.isInhabited ?
         "You emerge from the sewers." : "You enter the area.");
       game.setLocation(LOCATION_AREA);
@@ -166,7 +172,7 @@ class PlayerRegion
 
 
 // action: move player by dx,dy
-  public function moveAction(dx: Int, dy: Int)
+  public function moveAction(dx: Int, dy: Int): Bool
     {
       // parasite state: check for energy
       if (player.state == PLR_STATE_PARASITE)
@@ -174,7 +180,7 @@ class PlayerRegion
           if (player.energy < player.vars.regionEnergyPerTurn)
             {
               game.log("Not enough energy to move in region mode.");
-              return;
+              return false;
             }
 
 //          player.energy -= player.vars.regionMoveEnergy;
@@ -194,7 +200,40 @@ class PlayerRegion
         }
 
       // try to move to the new location
-      moveBy(dx, dy);
+      return moveBy(dx, dy);
+    }
+
+
+// create a path to given x,y and start moving on it
+  public function setTarget(destx: Int, desty: Int)
+    {
+      target = { x: destx, y: desty };
+
+      // start moving
+      nextPath();
+    }
+
+
+// move to next path waypoint
+  public function nextPath()
+    {
+      // path clear
+      if (target == null || Lib.getTimer() - pathTS < game.config.pathDelay)
+        return;
+
+      var dx = target.x - x;
+      var dy = target.y - y;
+      pathTS = Lib.getTimer();
+      var ret = moveAction(dx, dy);
+      if (!ret)
+        {
+          trace('cannot move there!');
+          target = null;
+        }
+
+      // finish
+      if (target.x == x && target.y == y)
+        target = null;
     }
 
 
