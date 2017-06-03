@@ -99,16 +99,22 @@ class Mouse extends Sprite
 // on click in area mode
   function onClickArea(pos)
     {
-      // attack AI
+      // attack AI or move
       var ai = game.area.getAI(pos.x, pos.y);
-      if (canAttack(ai))
+      var isVisible = game.scene.area.isVisible(pos.x, pos.y);
+      if (isVisible)
         {
-          game.playerArea.attackAction(ai);
-          return;
-        }
+          // try to attack
+          if (canAttack(ai))
+            {
+              game.playerArea.attackAction(ai);
+              return;
+            }
 
-      // generate a path
-      game.playerArea.setPath(pos.x, pos.y);
+          // generate a path
+          else if (game.area.isWalkable(pos.x, pos.y))
+            game.playerArea.setPath(pos.x, pos.y);
+        }
     }
 
 
@@ -175,13 +181,20 @@ class Mouse extends Sprite
 // area mode
   function updateArea()
     {
-      var c = CURSOR_DEFAULT;
+      var c = CURSOR_BLOCKED;
 
       // attack cursor
       var pos = getXY();
+      var isVisible = game.scene.area.isVisible(pos.x, pos.y);
       var ai = game.area.getAI(pos.x, pos.y);
-      if (canAttack(ai))
-        c = CURSOR_ATTACK;
+      if (isVisible)
+        {
+          if (canAttack(ai))
+            c = CURSOR_ATTACK;
+
+          else if (game.area.isWalkable(pos.x, pos.y))
+            c = CURSOR_DEFAULT;
+        }
 
       setCursor(c);
     }
@@ -191,9 +204,7 @@ class Mouse extends Sprite
   inline function canAttack(ai: AI)
     {
       return (game.player.state == PLR_STATE_HOST && ai != null &&
-        ai != game.player.host &&
-        game.area.isVisible(game.playerArea.x, game.playerArea.y,
-          ai.x, ai.y));
+        ai != game.player.host);
     }
 
 
@@ -212,6 +223,7 @@ class Mouse extends Sprite
   public static var CURSOR_DEFAULT = 0;
   public static var CURSOR_ATTACK = 1;
   public static var CURSOR_DEBUG = 2;
+  public static var CURSOR_BLOCKED = 3;
 
 // size in pixels
   public static var CURSOR_WIDTH = 24;

@@ -41,8 +41,8 @@ class AreaView
     }
 
 
-// update tilemap, etc from current area 
-  public function update() 
+// update tilemap, etc from current area
+  public function update()
     {
       width = game.area.width;
       height = game.area.height;
@@ -107,7 +107,7 @@ class AreaView
     }
 
 
-// update visible area 
+// update visible area
 // host version
   function updateVisibilityHost()
     {
@@ -117,7 +117,7 @@ class AreaView
 
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
-          if (!game.player.vars.losEnabled || 
+          if (!game.player.vars.losEnabled ||
               game.area.isVisible(game.playerArea.x, game.playerArea.y, x, y))
             _tilemap.setTile(x, y, cells[x][y]);
           else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
@@ -143,7 +143,15 @@ class AreaView
     }
 
 
-// TURN: area time passage - effects removal 
+// returns whether this tile is currently visible to the player
+// using graphics tile cache
+  public inline function isVisible(x: Int, y: Int): Bool
+    {
+      return (_tilemap.getTile(x, y) != Const.TILE_HIDDEN);
+    }
+
+
+// TURN: area time passage - effects removal
   public function turn()
     {
       // effect removal
