@@ -96,12 +96,12 @@ class TextWindow
       if (act == null)
         return;
 
-      var state = game.scene.getState();
+      var state = game.scene.state;
 
       onAction(act); // call action handler
 
       // gui is still in the same state post-action, update window
-      if (state == game.scene.getState())
+      if (state == game.scene.state)
         update();
 
       game.scene.hud.update(); // update HUD

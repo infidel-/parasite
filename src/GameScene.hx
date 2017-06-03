@@ -19,10 +19,11 @@ class GameScene extends Scene
   public var game: Game; // game state link
   public var area: AreaView; // area view
   public var region: RegionView; // region view
-  public var mouse: MouseEntity; // mouse cursor entity
+  public var mouse: Mouse; // mouse cursor entity
   public var hud: HUD; // ingame HUD
   public var uiQueue: List<_UIEvent>; // gui event queue
-  var uiState: _UIState; // current HUD state (default, evolution, etc)
+  public var state(get, set): _UIState;
+  var _state: _UIState; // current HUD state (default, evolution, etc)
   var windows: Map<_UIState, TextWindow>; // GUI windows
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
@@ -46,7 +47,7 @@ class GameScene extends Scene
       super();
       game = g;
       uiLocked = [];
-      uiState = UISTATE_DEFAULT;
+      _state = UISTATE_DEFAULT;
       uiQueue = new List();
       controlPressed = false;
       shiftPressed = false;
@@ -111,8 +112,6 @@ class GameScene extends Scene
       entityAtlas.prepare(Const.TILE_WIDTH, Const.TILE_HEIGHT);
 
       // init GUI
-      mouse = new MouseEntity(game);
-      add(mouse);
       hud = new HUD(game);
 
       windows = [
@@ -134,6 +133,10 @@ class GameScene extends Scene
         UISTATE_MESSAGE => new Message(game),
         ];
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
+
+      // init mouse cursor
+      mouse = new Mouse(game);
+      HXP.stage.addChild(mouse);
 
       area = new AreaView(this);
       region = new RegionView(this);
@@ -254,7 +257,7 @@ class GameScene extends Scene
         {
           // enter restarts the game when it is finished
           if (game.isFinished && Input.pressed("enter") &&
-              getState() == UISTATE_DEFAULT)
+              _state == UISTATE_DEFAULT)
             {
               game.restart();
               return;
@@ -275,36 +278,38 @@ class GameScene extends Scene
 
 
 // set new GUI state, open and close windows if needed
-  public function setState(vstate: _UIState)
+  public function set_state(vstate: _UIState)
     {
-      if (uiState != UISTATE_DEFAULT)
+      if (_state != UISTATE_DEFAULT)
         {
-          if (windows[uiState] != null)
-            windows[uiState].hide();
+          if (windows[_state] != null)
+            windows[_state].hide();
 
-          if (components[uiState] != null)
-            components[uiState].hide();
+          if (components[_state] != null)
+            components[_state].hide();
 
           // hack: getting delta clears the mouse wheel flag
           Input.mouseWheelDelta;
         }
 
-      uiState = vstate;
-      if (uiState != UISTATE_DEFAULT)
+      _state = vstate;
+      if (_state != UISTATE_DEFAULT)
         {
-          if (windows[uiState] != null)
-            windows[uiState].show();
+          if (windows[_state] != null)
+            windows[_state].show();
 
-          if (components[uiState] != null)
-            components[uiState].show();
+          if (components[_state] != null)
+            components[_state].show();
         }
+
+      return _state;
     }
 
 
 // get GUI state
-  public function getState(): _UIState
+  inline function get_state(): _UIState
     {
-      return uiState;
+      return _state;
     }
 
 
@@ -321,12 +326,12 @@ class GameScene extends Scene
           if (components[ev.state] != null)
             components[ev.state].setParams(ev.obj);
 
-          setState(ev.state);
+          state = ev.state;
 
           return;
         }
 
-      setState(UISTATE_DEFAULT);
+      state = UISTATE_DEFAULT;
     }
 
 
@@ -334,7 +339,7 @@ class GameScene extends Scene
   function handleWindows(): Bool
     {
       // scrolling text
-      if (uiState != UISTATE_DEFAULT)
+      if (_state != UISTATE_DEFAULT)
         {
           // get amount of lines
           var lines = 0;
@@ -358,9 +363,9 @@ class GameScene extends Scene
               Input.pressed("downright"))
             return true;
 
-          if (uiState == UISTATE_DOCUMENT)
+          if (_state == UISTATE_DOCUMENT)
             {
-              var win: Document = cast components[uiState];
+              var win: Document = cast components[_state];
 
               // copy-pasted for now
               if (lines != 0)
@@ -384,7 +389,7 @@ class GameScene extends Scene
             }
 
           // skip for now
-          else if (uiState == UISTATE_DIFFICULTY || uiState == UISTATE_YESNO)
+          else if (_state == UISTATE_DIFFICULTY || _state == UISTATE_YESNO)
             1;
 
           // copy-pasted for now
@@ -392,33 +397,33 @@ class GameScene extends Scene
             {
               if (lines != 0)
                 {
-                  windows[uiState].scroll(lines);
+                  windows[_state].scroll(lines);
                   return true;
                 }
 
               else if (Input.pressed("end") ||
                 (Input.pressed(Key.G) && shiftPressed))
                 {
-                  windows[uiState].scrollToEnd();
+                  windows[_state].scrollToEnd();
                   return true;
                 }
 
               else if (Input.pressed("home") || Input.pressed(Key.G))
                 {
-                  windows[uiState].scrollToBegin();
+                  windows[_state].scrollToBegin();
                   return true;
                 }
             }
         }
 
       // ui in locked state, do not allow changing windows
-      if (Lambda.has(uiLocked, uiState))
+      if (Lambda.has(uiLocked, _state))
         return true;
 
       // window open
-      if (uiState != UISTATE_DEFAULT)
+      if (_state != UISTATE_DEFAULT)
         {
-          if (Input.pressed("enter") && uiState == UISTATE_MESSAGE)
+          if (Input.pressed("enter") && _state == UISTATE_MESSAGE)
             closeWindow();
 
           // close windows
@@ -455,48 +460,48 @@ class GameScene extends Scene
 
           // open goals window
           if (goalsPressed)
-            setState(UISTATE_GOALS);
+            state = UISTATE_GOALS;
 
           // open inventory window (if items are learned)
           else if (inventoryPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.host.isHuman &&
               game.player.vars.inventoryEnabled)
-            setState(UISTATE_INVENTORY);
+            state = UISTATE_INVENTORY;
 
           // open skills window (if skills are learned)
           else if (skillsPressed &&
               game.player.vars.skillsEnabled)
-            setState(UISTATE_SKILLS);
+            state = UISTATE_SKILLS;
 
           // open message log window
           else if (logPressed)
             {
-              setState(UISTATE_LOG);
-              windows[uiState].scrollToEnd();
+              state = UISTATE_LOG;
+              windows[_state].scrollToEnd();
             }
 
           // open timeline window
           else if (timelinePressed &&
               game.player.vars.timelineEnabled)
-            setState(UISTATE_TIMELINE);
+            state = UISTATE_TIMELINE;
 
           // open evolution window (if enabled)
           else if (evolutionPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.evolutionManager.state > 0)
-            setState(UISTATE_EVOLUTION);
+            state = UISTATE_EVOLUTION;
 
           // open organs window
           else if (organsPressed &&
               game.player.state == PLR_STATE_HOST &&
               game.player.vars.organsEnabled)
-            setState(UISTATE_ORGANS);
+            state = UISTATE_ORGANS;
 
 #if mydebug
           // open debug window
           else if (debugPressed && !game.isFinished)
-            setState(UISTATE_DEBUG);
+            state = UISTATE_DEBUG;
 #end
         }
 
@@ -580,18 +585,18 @@ class GameScene extends Scene
             if (_inputState > 0)
               n += 10;
 
-            if (uiState == UISTATE_DEFAULT)
+            if (_state == UISTATE_DEFAULT)
               hud.action(n);
-            else if (windows[uiState] != null)
-              windows[uiState].action(n);
-            else if (components[uiState] != null)
-              components[uiState].action(n);
+            else if (windows[_state] != null)
+              windows[_state].action(n);
+            else if (components[_state] != null)
+              components[_state].action(n);
 
             _inputState = 0;
             break;
           }
 
-      if (uiState == UISTATE_DEFAULT)
+      if (_state == UISTATE_DEFAULT)
         {
 /*
           // test action
@@ -607,10 +612,9 @@ class GameScene extends Scene
               // update HUD info
               game.updateHUD();
             }
-
-          // handle mouse input
-          mouse.handleInput();
         }
+
+      mouse.update();
 
       // next 10 actions
       if (Input.pressed(Key.S))
@@ -665,12 +669,12 @@ class GameScene extends Scene
                 // show window
                 game.finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to disable exception gathering thingy for whatever reason, open the parasite.cfg configuration file and set sendExceptions to 0.";
-                setState(UISTATE_FINISH);
+                state = UISTATE_FINISH);
               }
               h.onError = function(e){
                 game.finishText = "Something broke! An exception was thrown and saved to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
-                setState(UISTATE_FINISH);
+                state = UISTATE_FINISH);
                 trace(e);
               }
               h.request(true);
@@ -690,7 +694,7 @@ class GameScene extends Scene
                 stack + '</font>\n' +
                 "P.S. If you want to help the development, make a screenshot of this message and send it to starinfidel_at_gmail_dot_com. Thanks!";
 #end
-              setState(UISTATE_FINISH);
+              state = UISTATE_FINISH;
             }
         }
     }

@@ -257,7 +257,7 @@ class Game
           log('You have won the game!');
         }
 
-      scene.setState(UISTATE_FINISH);
+      scene.state = UISTATE_FINISH;
     }
 
 
@@ -290,7 +290,7 @@ class Game
       });
 
       // some window already open, wait until it closes
-      if (scene.getState() != UISTATE_DEFAULT)
+      if (scene.state != UISTATE_DEFAULT)
         return;
 
       // no windows open, show message (hack)
