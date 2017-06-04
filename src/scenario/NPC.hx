@@ -45,6 +45,25 @@ class NPC
     }
 
 
+// is this NPC fully researched?
+  public inline function fullyKnown()
+    {
+      return (nameKnown && jobKnown && areaKnown && statusKnown);
+    }
+
+
+// fully research NPC with computer
+  public function researchFull()
+    {
+      nameKnown = true;
+      jobKnown = true;
+      areaKnown = true;
+      statusKnown = true;
+      game.player.log('You have found out everything about '  + name +
+        ' (' + (isDead ? 'deceased' : 'alive') + ').', COLOR_TIMELINE);
+    }
+
+
 // research this npc with computer
   public function research(): Bool
     {

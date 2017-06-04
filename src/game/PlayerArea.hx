@@ -67,7 +67,7 @@ class PlayerArea
             player.hostControl++;
 
           // also when player has dopamine control
-          else if (player.skills.has(KNOW_DOPAMINE))
+          else if (player.evolutionManager.getLevel(IMP_DOPAMINE) > 0)
             player.hostControl += 5;
 
           else player.hostControl--;
@@ -718,7 +718,7 @@ class PlayerArea
       // get clues
       if (player.host.event != null && player.host.brainProbed < 3)
         {
-          var ret = game.timeline.learnClue(player.host.event, true);
+          var ret = game.timeline.learnClues(player.host.event, true);
           if (!ret)
             log('You did not learn any new information.', COLOR_TIMELINE);
 

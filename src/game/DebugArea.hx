@@ -88,9 +88,9 @@ class DebugArea
                 if (!ev.isHidden)
                   for (n in ev.notes)
                     n.clues = 3;
-              game.timeline.learnClue(game.timeline.getStartEvent(), true);
-              game.timeline.learnClue(game.timeline.getStartEvent(), true);
-              game.timeline.learnClue(game.timeline.getStartEvent(), true);
+              game.timeline.learnClues(game.timeline.getStartEvent(), true);
+              game.timeline.learnClues(game.timeline.getStartEvent(), true);
+              game.timeline.learnClues(game.timeline.getStartEvent(), true);
               game.timeline.getStartEvent().learnNPC();
               game.timeline.getStartEvent().learnNPC();
               game.timeline.getStartEvent().learnNPC();
@@ -106,7 +106,7 @@ class DebugArea
               // start habitat branch
         //      game.goals.receive(GOAL_GROW_ORGAN);
         //      game.goals.complete(GOAL_GROW_ORGAN);
-              game.player.skills.addID(KNOW_HABITAT, 100);
+//              game.player.skills.addID(KNOW_HABITAT, 100);
               game.player.evolutionManager.addImprov(IMP_MICROHABITAT, 1);
             }
         },
@@ -117,16 +117,6 @@ class DebugArea
             {
               game.scene.state = UISTATE_DEFAULT;
               game.setLocation(LOCATION_REGION);
-            }
-        },
-
-        {
-          name: 'Toggle LOS',
-          func: function()
-            {
-              game.player.vars.losEnabled = !game.player.vars.losEnabled;
-              game.area.updateVisibility();
-              game.log('LOS checks for player toggled.');
             }
         },
 
@@ -213,11 +203,11 @@ class DebugArea
             {
               game.goals.receive(GOAL_LEARN_CLUE);
               game.goals.complete(GOAL_LEARN_CLUE);
-              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClue(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
+              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
             }
         },
 

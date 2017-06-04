@@ -111,6 +111,7 @@ class ConsoleGame
             '(h.) host.energy, host.maxEnergy, host.health, host.maxHealth, ' +
             'group.knownCount, group.priority, ' +
             'player.godmode (p.god), player.invisible (p.invis), ' +
+            'player.los (p.los), ' +
             'team.distance, team.level, team.size, team.timeout, team.timer');
           return;
         }
@@ -118,7 +119,7 @@ class ConsoleGame
       var key = arr[1];
       var val = arr[2];
       var valInt = Std.parseInt(val);
-      var valBool = (valInt > 0);
+      var valBool = (valInt > 0 || val == 'true');
 
       if (key == 'host.energy' || key == 'h.energy')
         {
@@ -148,9 +149,14 @@ class ConsoleGame
 
       else if (key == 'player.godmode' || key == 'p.god')
         game.player.vars.godmodeEnabled = valBool;
-
       else if (key == 'player.invisible' || key == 'p.invis')
         game.player.vars.invisibilityEnabled = valBool;
+      else if (key == 'player.los' || key == 'p.los')
+        {
+          game.player.vars.losEnabled = valBool;
+          if (game.location == LOCATION_AREA)
+            game.area.updateVisibility();
+        }
 
       else if (key == 'team.distance')
         {
@@ -699,7 +705,7 @@ class ConsoleGame
 
       // forward timeline
       game.goals.receive(GOAL_LEARN_CLUE);
-      game.timeline.learnClue(game.timeline.getStartEvent(), true);
+      game.timeline.learnClues(game.timeline.getStartEvent(), true);
       game.timeline.getStartEvent().learnNPC();
       game.goals.complete(GOAL_LEARN_NPC);
     }

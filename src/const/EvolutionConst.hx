@@ -704,7 +704,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
-        note: 'Knowledge. Gives the player an ability to build microhabitats',
+        note: 'Knowledge. Gives the player an ability to build microhabitats.',
         maxLevel: 3,
         noteFunc: function (l)
           {

@@ -84,7 +84,7 @@ class Goals
         player.evolutionManager.addImprov(IMP_DOPAMINE);
         },
       onComplete: function (game, player) {
-        player.skills.addID(KNOW_DOPAMINE, 100);
+//        player.skills.addID(KNOW_DOPAMINE, 100);
         }
       },
 
@@ -118,7 +118,7 @@ class Goals
       note: 'You need to evolve the knowledge of microhabitat.',
       messageComplete: 'Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.',
       onComplete: function (game, player) {
-        player.skills.addID(KNOW_HABITAT, 100);
+//        player.skills.addID(KNOW_HABITAT, 100);
         game.goals.receive(GOAL_CREATE_HABITAT);
         }
       },
@@ -229,6 +229,12 @@ class Goals
       onComplete: function (game, player) {
         player.vars.npcEnabled = true;
         game.goals.receive(GOAL_LEARN_NPC);
+
+        // choose difficulty
+        game.scene.uiQueue.add({
+          state: UISTATE_DIFFICULTY,
+          obj: 'timeline'
+        });
         }
       },
 

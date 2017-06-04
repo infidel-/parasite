@@ -12,6 +12,7 @@ class Timeline
   var game: Game;
   var scenario: Scenario;
 
+  public var difficulty: _Difficulty; // difficulty
   var _eventsMap: Map<String, Event>; // events hash map
   var _eventsList: Array<Event>; // ordered events list
   var _locationsList: List<Location>; // ordered locations list
@@ -21,6 +22,7 @@ class Timeline
   public function new(g: Game)
     {
       game = g;
+      difficulty = UNSET;
 
       _eventsMap = new Map();
       _eventsList = [];
@@ -36,8 +38,26 @@ class Timeline
     }
 
 
-// get a clue for this event
-  public function learnClue(event: Event, isPhysical: Bool): Bool
+// get clues according to difficulty for this event
+  public function learnClues(event: Event, isPhysical: Bool): Bool
+    {
+      var n = 1;
+      if (difficulty == EASY)
+        n = 1 + Std.random(3);
+      else if (difficulty == NORMAL)
+        n = 1 + Std.random(2);
+
+      var ret = false;
+      for (i in 0...n)
+        if (learnSingleClue(event, isPhysical))
+          ret = true;
+
+      return ret;
+    }
+
+
+// learn a single clue for this event
+  public function learnSingleClue(event: Event, isPhysical: Bool): Bool
     {
       // we have a chance of gaining clue from other event up or down the timeline
       var e = event;

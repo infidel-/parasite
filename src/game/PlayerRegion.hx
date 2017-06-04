@@ -84,7 +84,8 @@ class PlayerRegion
         addActionToList(tmp, 'enterArea');
 
       // create a new habitat
-      if (player.skills.has(KNOW_HABITAT) && !currentArea.hasHabitat)
+      if (player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0 &&
+          !currentArea.hasHabitat)
         {
           // count total number of habitats
           var params = player.evolutionManager.getParams(IMP_MICROHABITAT);

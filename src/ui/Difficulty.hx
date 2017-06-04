@@ -92,6 +92,8 @@ class Difficulty extends UIWindow
           game.player.evolutionManager.difficulty = d;
           game.player.evolutionManager.giveStartingImprovements();
         }
+      else if (currentChoice.id == 'timeline')
+        game.timeline.difficulty = d;
 
       game.log('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
@@ -128,6 +130,14 @@ class Difficulty extends UIWindow
       easy: 'Gives 4 generic improvements. No limits for maximum improvement level.',
       normal: 'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe.',
       hard: 'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe.',
+    },
+
+    'timeline' => {
+      id: 'timeline',
+      title: 'Timeline',
+      easy: '1-3 clues on each learn attempt. Fast computer research.',
+      normal: '1-2 clues on each learn attempt. Fast computer research.',
+      hard: '1 clue on each learn attempt. Normal computer research.',
     },
     ];
 }

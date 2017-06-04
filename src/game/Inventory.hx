@@ -130,19 +130,21 @@ class Inventory
       // can only read books in habitat
       if (item.id == 'book' && !game.area.isHabitat)
         {
-          game.log("This requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
+          if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
+            game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
+          else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
           return;
         }
 
       game.log('You study the contents of the ' + item.name + ' and destroy it.');
       var cnt = 0;
-      cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
-      if (item.id == 'book') // 1 more clue in books
-        cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
+      cnt += (game.timeline.learnClues(item.event, true) ? 1 : 0);
+      if (item.id == 'book') // 1 more clue try in books
+        cnt += (game.timeline.learnClues(item.event, true) ? 1 : 0);
       if (Std.random(100) < 30)
-        cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
+        cnt += (game.timeline.learnSingleClue(item.event, true) ? 1 : 0);
       if (Std.random(100) < 10)
-        cnt += (game.timeline.learnClue(item.event, true) ? 1 : 0);
+        cnt += (game.timeline.learnSingleClue(item.event, true) ? 1 : 0);
 
       // no clues learned
       if (cnt == 0)
@@ -181,7 +183,9 @@ class Inventory
       // can only do that in habitat
       if (!game.area.isHabitat)
         {
-          game.log("This requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
+          if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
+            game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
+          else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
           return false;
         }
 
@@ -241,10 +245,25 @@ class Inventory
             if (!n.nameKnown && !n.jobKnown)
               continue;
 
-            while (cnt > 0 && n.research())
-              cnt--;
-            if (cnt <= 0)
-              return true;
+            if (n.fullyKnown())
+              continue;
+
+            // easy difficulty - cnt acts as number npcs to fully research
+            if (game.timeline.difficulty == EASY)
+              {
+                n.researchFull();
+                cnt--;
+                if (cnt <= 0)
+                  return true;
+              }
+            else
+              {
+                // normal, hard difficulty - cnt acts as research tries count
+                while (cnt > 0 && n.research())
+                  cnt--;
+                if (cnt <= 0)
+                  return true;
+              }
           }
 
       return true;

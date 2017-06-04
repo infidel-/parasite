@@ -202,7 +202,7 @@ class Event
   public function npcFullyKnown(): Bool
     {
       for (n in npc)
-        if (!n.nameKnown || !n.jobKnown || !n.areaKnown || !n.statusKnown)
+        if (!n.fullyKnown())
           return false;
 
       return true;
@@ -237,8 +237,7 @@ class Event
             continue;
 
           // everything is known - cannot research
-          else if (n.nameKnown && n.jobKnown && n.areaKnown &&
-              n.statusKnown)
+          else if (n.fullyKnown())
             continue;
 
           return true; // something is known about some npc
