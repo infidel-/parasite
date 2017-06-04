@@ -43,8 +43,14 @@ class Goals
         game.player.vars.organsEnabled = true;
         game.goals.receive(GOAL_PROBE_BRAIN);
         game.goals.receive(GOAL_EVOLVE_ORGAN);
-        }
-      },
+
+        // choose difficulty
+        game.scene.uiQueue.add({
+          state: UISTATE_DIFFICULTY,
+          obj: 'evolution'
+        });
+      }
+    },
 
     // ========================= camouflage layer branch
 

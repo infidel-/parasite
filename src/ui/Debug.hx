@@ -45,7 +45,7 @@ class Debug extends Actions
       else if (game.location == LOCATION_REGION)
         game.debugRegion.action(index);
 
-      hide();
+      game.scene.closeWindow();
     }
 
 

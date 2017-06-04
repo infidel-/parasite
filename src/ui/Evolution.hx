@@ -29,36 +29,50 @@ class Evolution extends Actions
           });
 
       // add available improvements
+      var diff = game.player.evolutionManager.difficulty;
       for (imp in game.player.evolutionManager)
-        if (imp.level < imp.info.maxLevel)
-          {
-            var buf = new StringBuf();
-            buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
-            buf.add(' ');
-            buf.add(imp.level + 1);
-            buf.add(' (' + imp.ep + '/' +
-              EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
-            var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
-            buf.add(Math.round(epLeft / __Math.epPerTurn()));
-            buf.add(" turns)\n");
+        {
+          // limit max level
+          var maxLevel = imp.info.maxLevel;
+          if (imp.info.id == IMP_BRAIN_PROBE || diff == EASY)
+            1;
+          else if (diff == NORMAL && maxLevel > 2)
+            maxLevel = 2;
+          else if (diff == HARD && maxLevel > 1)
+            maxLevel = 1;
 
-            buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
-            var levelNote = imp.info.levelNotes[imp.level + 1];
-            if (levelNote.indexOf('fluff') < 0 &&
-                levelNote.indexOf('todo') < 0)
-              buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
-            if (imp.info.noteFunc != null)
-              buf.add("<font color='#13ff65'>" +
-                imp.info.noteFunc(imp.info.levelParams[imp.level + 1]) + '</font>\n');
+          if (imp.level >= maxLevel)
+            continue;
 
-            list.add({
-              id: 'set.' + imp.id,
-              type: ACTION_EVOLUTION,
-              name: buf.toString(),
-              energy: 0,
-              });
-          }
+          var buf = new StringBuf();
+          buf.add("<font color='#00ffff'>" + imp.info.name + "</font>");
+          buf.add(' ');
+          buf.add(imp.level + 1);
+          buf.add(' (' + imp.ep + '/' +
+            EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
+          var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
+          buf.add(Math.round(epLeft / __Math.epPerTurn()));
+          buf.add(" turns)\n");
 
+          buf.add("<font color='#5ebee5'>" + imp.info.note + '</font>\n');
+          var levelNote = imp.info.levelNotes[imp.level + 1];
+          if (levelNote.indexOf('fluff') < 0 &&
+              levelNote.indexOf('todo') < 0)
+            buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
+          if (imp.info.noteFunc != null)
+            buf.add("<font color='#13ff65'>" +
+              imp.info.noteFunc(imp.info.levelParams[imp.level + 1]) + '</font>\n');
+
+          list.add({
+            id: 'set.' + imp.id,
+            type: ACTION_EVOLUTION,
+            name: buf.toString(),
+            energy: 0,
+            });
+        }
+
+/*
+  paths disabled
       // add paths (full evolution only)
       if (game.player.evolutionManager.state > 1)
         for (p in game.player.evolutionManager.getPathList())
@@ -87,6 +101,7 @@ class Evolution extends Actions
               energy: 0,
               });
           }
+*/
 
       return list;
     }

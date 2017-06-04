@@ -358,7 +358,6 @@ class GameScene extends Scene
             {
               var win: UIWindow = cast components[_state];
 
-              // copy-pasted for now
               if (lines != 0)
                 {
                   win.scroll(lines);

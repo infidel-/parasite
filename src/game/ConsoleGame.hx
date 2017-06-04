@@ -566,6 +566,9 @@ class ConsoleGame
       else if (cmd.charAt(1) == 'a')
         {
         }
+
+      // fix for gui queue
+      game.scene.closeWindow();
     }
 
 

@@ -10,6 +10,7 @@ class EvolutionManager
   var game: Game;
   var player: Player;
 
+  public var difficulty: _Difficulty; // difficulty setting
   public var state: Int; // 0 - disabled, 1 - limited, 2 - full
   public var isTaskPath: Bool; // is current task path?
   public var isActive: Bool; // is currently evolving?
@@ -23,6 +24,7 @@ class EvolutionManager
       game = g;
       state = 0;
       isActive = false;
+      difficulty = UNSET;
 
       _list = new List<Improv>();
       _listPaths = new List<Path>();
@@ -322,6 +324,46 @@ class EvolutionManager
       buf.add(Math.round(epLeft / __Math.epPerTurn()));
       buf.add(" turns)");
       return buf.toString();
+    }
+
+
+// gives out X starting improvements according to difficulty
+  public function giveStartingImprovements()
+    {
+      var n = 0;
+      if (difficulty == EASY)
+        n = 4;
+      else if (difficulty == NORMAL)
+        n = 2;
+      else if (difficulty == HARD)
+        n = 1;
+      trace(n);
+
+      // fill temp arrays
+      var tmpOrgans = [];
+      var tmpFull = [];
+      for (info in EvolutionConst.improvements)
+        if (info.path != PATH_SPECIAL)
+          {
+            if (info.organ != null)
+              tmpOrgans.push(info.id);
+            tmpFull.push(info.id);
+          }
+
+      // last one must always be an organ (for the tutorial to work correctly)
+      while (n > 0)
+        {
+          // pick a random improv
+          var arr = (n == 1 ? tmpOrgans : tmpFull);
+          var id = arr[Std.random(arr.length)];
+          if (n == 1)
+            tmpOrgans.remove(id);
+          tmpFull.remove(id);
+
+          addImprov(id);
+
+          n--;
+        }
     }
 }
 

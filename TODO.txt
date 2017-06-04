@@ -18,18 +18,16 @@ parasite.js:6645 Const.hx:275: You harden your grip on the host.
 
 == CURRENT
 
-all old text windows into new one
-  mouse wheel scrolling
-  add action buttons
-fix bugs and maintenance
-remove evolution paths
-give out 4 random possible imps at start (hidden or known)
-evolution - hard difficulty limits all improvements to level 1, normal - 2, easy - 3
-evolution - limit starting generic improvements to hard - 1, normal - 2, easy - 4
 speed up scenario clues learning process? difficulty (speed) selection?
 test gameplay
 new gui (with mouse support for everything)
+  hud
+  inventory
+  evolution
+  organs
+  debug (or move debug to console)
 make use computer action more convenient (add to hud?)
+? show all selected difficulties in knowledge window
 
 == GROUP: ACTIVE MEASURES
 

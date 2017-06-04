@@ -87,6 +87,11 @@ class Difficulty extends UIWindow
       // set specific game difficulty setting
       if (currentChoice.id == 'group')
         game.group.difficulty = d;
+      else if (currentChoice.id == 'evolution')
+        {
+          game.player.evolutionManager.difficulty = d;
+          game.player.evolutionManager.giveStartingImprovements();
+        }
 
       game.log('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
@@ -115,6 +120,14 @@ class Difficulty extends UIWindow
       easy: 'Shows the exact numerical group priority information and team stats in skills and knowledges window.',
       normal: 'Shows group and team information described in vague words.',
       hard: 'No group or team information.',
+    },
+
+    'evolution' => {
+      id: 'evolution',
+      title: 'Evolution',
+      easy: 'Gives 4 generic improvements. No limits for maximum improvement level.',
+      normal: 'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe.',
+      hard: 'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe.',
     },
     ];
 }

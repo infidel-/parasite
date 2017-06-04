@@ -43,7 +43,7 @@ class EvolutionConst
         path: PATH_CONCEAL,
         id: IMP_DECAY_ACCEL,
         name: 'Decay acceleration',
-        note: 'Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
+        note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -74,7 +74,7 @@ class EvolutionConst
         path: PATH_PROTECTION,
         id: IMP_PROT_COVER,
         name: 'Protective cover',
-        note: 'Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
+        note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -104,7 +104,7 @@ class EvolutionConst
         path: PATH_PROTECTION,
         id: IMP_WOUND_REGEN,
         name: 'Stem cell reservoirs',
-        note: 'Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
+        note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -133,7 +133,7 @@ class EvolutionConst
         path: PATH_PROTECTION,
         id: IMP_HEALTH,
         name: 'Antibody generators',
-        note: 'Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
+        note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -162,7 +162,7 @@ class EvolutionConst
         path: PATH_PROTECTION,
         id: IMP_ENERGY,
         name: '??Host energy bonus',
-        note: 'Grown body feature gives a bonus to maximum host energy',
+        note: 'Body feature. Grown body feature gives a bonus to maximum host energy',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -194,7 +194,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_MUSCLE,
         name: 'Microvascular networks',
-        note: 'Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
+        note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -223,7 +223,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_ACID_SPIT,
         name: '??Acid spit',
-        note: 'Grown body feature gives the host an ability to spit acid on an NPC',
+        note: 'Body feature. Grown body feature gives the host an ability to spit acid on an NPC',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -275,7 +275,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
-        note: 'Grown body feature gives the host an ability to spit slime on an NPC to slow them down)',
+        note: 'Body feature. Grown body feature gives the host an ability to spit slime on an NPC to slow them down)',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -323,7 +323,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PARALYSIS_SPIT,
         name: '??Paralysis spit',
-        note: 'Grown body feature gives the host an ability to paralyze an NPC',
+        note: 'Body feature. Grown body feature gives the host an ability to paralyze an NPC',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -371,7 +371,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PANIC_GAS,
         name: '??Panic gas',
-        note: 'Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
+        note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -425,7 +425,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_PARALYSIS_GAS,
         name: '??Paralysis gas',
-        note: 'Grown body feature gives the host an ability to emit a cloud of paralytic gas',
+        note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of paralytic gas',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -482,7 +482,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_ATTACH,
         name: '??Attach efficiency',
-        note: 'Improves base grip on attach to host',
+        note: 'Knowledge. Improves base grip on attach to host',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -506,7 +506,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_HARDEN_GRIP,
         name: '??Hold efficiency',
-        note: 'Improves base grip on harden grip action',
+        note: 'Knowledge. Improves base grip on harden grip action',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -530,7 +530,7 @@ class EvolutionConst
         path: PATH_CONTROL,
         id: IMP_REINFORCE,
         name: '??Control efficiency',
-        note: 'Improves base control on reinforce control action',
+        note: 'Knowledge. Improves base control on reinforce control action',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -558,7 +558,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_BRAIN_PROBE,
         name: 'Brain probe',
-        note: 'Allows probing host brain to learn its contents',
+        note: 'Knowledge. Allows probing host brain to learn its contents',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -638,7 +638,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_CAMO_LAYER,
         name: 'Camouflage layer',
-        note: 'Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
+        note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -678,7 +678,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_DOPAMINE,
         name: 'Dopamine regulation',
-        note: 'Removes the need to reinforce control of the host.',
+        note: 'Knowledge. Removes the need to reinforce control of the host.',
         maxLevel: 1,
         levelNotes: [
           '(fluff)',
@@ -704,7 +704,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
-        note: 'Gives the player an ability to build microhabitats',
+        note: 'Knowledge. Gives the player an ability to build microhabitats',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -742,7 +742,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
-        note: 'Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
+        note: 'Habitat growth. Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -821,7 +821,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_ASSIMILATION,
         name: 'Assimilation cavity',
-        note: 'Gives the player an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
+        note: 'Habitat growth. Gives the player an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
         maxLevel: 1,
         levelNotes: [
           '(todo fluff)',
