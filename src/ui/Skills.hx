@@ -1,20 +1,18 @@
 // skills GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 import const.*;
 
-class SkillsWindow extends TextWindow
+class Skills extends Text
 {
   public function new(g: Game)
-    {
-      super(g);
-    }
+    { super(g); }
 
 
-// update window text
-  override function getText()
+// update text
+  override function update()
     {
       var buf = new StringBuf();
 
@@ -98,6 +96,6 @@ class SkillsWindow extends TextWindow
             }
         }
 
-      return buf.toString();
+      setParams(buf.toString());
     }
 }

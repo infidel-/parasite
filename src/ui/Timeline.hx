@@ -1,19 +1,17 @@
 // event timeline GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 
-class TimelineWindow extends TextWindow
+class Timeline extends Text
 {
   public function new(g: Game)
-    {
-      super(g);
-    }
+    { super(g); }
 
 
-// update window text
-  override function getText()
+// update text
+  override function update()
     {
       var buf = new StringBuf();
 
@@ -118,6 +116,6 @@ class TimelineWindow extends TextWindow
           buf.add('\n');
         }
 
-      return buf.toString();
+      setParams(buf.toString());
     }
 }

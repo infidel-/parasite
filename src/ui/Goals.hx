@@ -1,16 +1,17 @@
 // player goals GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 
-class GoalsWindow extends TextWindow
+class Goals extends Text
 {
   public function new (g: Game)
     { super(g); }
 
 
-  override function getText(): String
+// update text
+  override function update()
     {
       var buf = new StringBuf();
 
@@ -58,7 +59,7 @@ class GoalsWindow extends TextWindow
         }
       buf.add('</font>');
 
-      return buf.toString();
+      setParams(buf.toString());
     }
 }
 

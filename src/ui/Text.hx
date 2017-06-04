@@ -10,6 +10,11 @@ import haxe.ui.core.Screen;
 import haxe.ui.core.MouseEvent;
 import haxe.ui.core.TextInput;
 import haxe.ui.macros.ComponentMacros;
+import openfl.Assets;
+import openfl.text.TextFormat;
+import openfl.text.TextFormatAlign;
+import openfl.text.TextFieldAutoSize;
+
 import game.Game;
 
 class Text extends UIWindow
@@ -29,10 +34,18 @@ class Text extends UIWindow
 
       text = window.findComponent("text", null, true);
       text.registerEvent(MouseEvent.MOUSE_WHEEL, onWheel);
+
       textInput = text.getTextInput();
       textInput.selectable = false;
+      var font = Assets.getFont(Const.FONT);
+      var textFormat = new TextFormat(font.fontName,
+        game.config.fontSize, 0xFFFFFF);
+      textFormat.align = TextFormatAlign.LEFT;
+      textInput.defaultTextFormat = textFormat;
+
       var button: Button = window.findComponent("close", null, true);
       button.registerEvent(MouseEvent.CLICK, onClick);
+
       window.hide();
     }
 
@@ -54,7 +67,6 @@ class Text extends UIWindow
 // set parameters
   public override function setParams(o: Dynamic)
     {
-//      text.text = o;
       textInput.htmlText = o;
     }
 

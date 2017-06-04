@@ -115,12 +115,9 @@ class GameScene extends Scene
       hud = new HUD(game);
 
       windows = [
-        UISTATE_GOALS => new GoalsWindow(game),
         UISTATE_INVENTORY => new InventoryWindow(game),
-        UISTATE_SKILLS => new SkillsWindow(game),
         UISTATE_EVOLUTION => new EvolutionWindow(game),
         UISTATE_ORGANS => new OrgansWindow(game),
-        UISTATE_TIMELINE => new TimelineWindow(game),
         UISTATE_DEBUG => new DebugWindow(game),
         UISTATE_FINISH => new FinishWindow(game),
         ];
@@ -131,6 +128,9 @@ class GameScene extends Scene
         UISTATE_DOCUMENT => new Document(game),
         UISTATE_MESSAGE => new Message(game),
 
+        UISTATE_GOALS => new Goals(game),
+        UISTATE_SKILLS => new Skills(game),
+        UISTATE_TIMELINE => new Timeline(game),
         UISTATE_LOG => new Log(game),
         ];
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
@@ -364,7 +364,11 @@ class GameScene extends Scene
               Input.pressed("downright"))
             return true;
 
+          // window scrolling
           if (_state == UISTATE_DOCUMENT ||
+              _state == UISTATE_GOALS ||
+              _state == UISTATE_SKILLS ||
+              _state == UISTATE_TIMELINE ||
               _state == UISTATE_LOG)
             {
               var win: UIWindow = cast components[_state];
@@ -394,7 +398,7 @@ class GameScene extends Scene
           else if (_state == UISTATE_DIFFICULTY || _state == UISTATE_YESNO)
             1;
 
-          // copy-pasted for now
+          // legacy windows - copy-pasted for now
           else
             {
               if (lines != 0)
