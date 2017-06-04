@@ -12,8 +12,8 @@ class Const
   public static var LAYER_OBJECT = 20; // ground layer - bodies, items
   public static var LAYER_TILES = 30; // tilemap layer
 
-  public static var TILE_WIDTH = 32; // tiles width, height
-  public static var TILE_HEIGHT = 32;
+  public static var TILE_WIDTH = 48; // tiles width, height
+  public static var TILE_HEIGHT = 48;
 
   // text color strings
   public static var TEXT_COLORS: Map<_TextColor, String> =

@@ -21,7 +21,8 @@ class EffectEntity extends Entity
       game = g;
       turns = t;
 
-      _spriteBody = new Spritemap(game.scene.entityAtlas, 32, 32);
+      _spriteBody = new Spritemap(game.scene.entityAtlas,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
       _spriteBody.setFrame(atlasCol, atlasRow);
 
       type = "undefined";

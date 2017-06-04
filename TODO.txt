@@ -28,7 +28,6 @@ evolution - limit starting generic improvements to hard - 1, normal - 2, easy - 
 test gameplay
 new gui (with mouse support for everything)
 make use computer action more convenient (add to hud?)
-make tiles 64x64?
 
 == GROUP: ACTIVE MEASURES
 
@@ -76,7 +75,7 @@ books - forensics guide (15%), sherlock holmes (10%)
 
 fast travel:
   public transport
-  roads on region map leading to facilities
+  roads on region map leading to facilities (and disable walking in wilderness)
   fast travel on roads when in car
     entering a car
   disallow travel outside of city bounds by foot (no sewers)?
@@ -260,4 +259,5 @@ more scenario goals
 scenes
   ? start the game with a scene (teaches about team agents)
 additional skills and acquiring them (locations, jobs, etc)
+? make 32x32/64x64 tiles selectable (if someone wants) - need to tweak AI visiblity/hearing radius for larger tilesets
 

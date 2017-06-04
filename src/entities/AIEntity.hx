@@ -19,11 +19,13 @@ class AIEntity extends PawnEntity
     {
       super(g, xx, yy, atlasRow);
 
-      _spriteAlert = new Spritemap(game.scene.entityAtlas, 32, 32);
+      _spriteAlert = new Spritemap(game.scene.entityAtlas,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
       _spriteAlert.frame = Const.FRAME_EMPTY;
       _list.add(_spriteAlert);
 
-      _spriteNPC = new Spritemap(game.scene.entityAtlas, 32, 32);
+      _spriteNPC = new Spritemap(game.scene.entityAtlas,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
       _spriteNPC.frame = Const.FRAME_EMPTY;
       _list.add(_spriteNPC);
 

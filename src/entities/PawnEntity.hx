@@ -29,9 +29,11 @@ class PawnEntity extends Entity
       game = g;
       atlasRow = r;
       _list = new Graphiclist();
-      _spriteBody = new Spritemap(game.scene.entityAtlas, 32, 32);
+      _spriteBody = new Spritemap(game.scene.entityAtlas,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
       _spriteBody.setFrame(Const.FRAME_DEFAULT, atlasRow);
-      _spriteMask = new Spritemap(game.scene.entityAtlas, 32, 32);
+      _spriteMask = new Spritemap(game.scene.entityAtlas,
+        Const.TILE_WIDTH, Const.TILE_HEIGHT);
       _spriteMask.frame = Const.FRAME_EMPTY;
       _list.add(_spriteBody);
       _list.add(_spriteMask);
@@ -101,5 +103,5 @@ class PawnEntity extends Entity
     {
       moveTo(vx * Const.TILE_WIDTH, vy * Const.TILE_HEIGHT);
     }
-*/    
+*/
 }
