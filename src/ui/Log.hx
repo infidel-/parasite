@@ -1,26 +1,27 @@
 // message log GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 
-class LogWindow extends TextWindow
+class Log extends Text
 {
   public function new (g: Game)
     { super(g); }
 
 
-  override function getText(): String
+// update text
+  override function update()
     {
       var buf = new StringBuf();
 
-      for (l in game.messageList) 
+      for (l in game.messageList)
         {
           buf.add(l);
           buf.add('\n');
         }
 
-      return buf.toString();
+      setParams(buf.toString());
     }
 }
 

@@ -1,4 +1,4 @@
-// text document window
+// text window (temp thing for all legacy windows)
 
 package ui;
 
@@ -12,7 +12,7 @@ import haxe.ui.core.TextInput;
 import haxe.ui.macros.ComponentMacros;
 import game.Game;
 
-class Document extends UIWindow
+class Text extends UIWindow
 {
   var text: Label;
   var textInput: TextInput;
@@ -28,11 +28,19 @@ class Document extends UIWindow
       HXP.stage.addChild(window);
 
       text = window.findComponent("text", null, true);
+      text.registerEvent(MouseEvent.MOUSE_WHEEL, onWheel);
       textInput = text.getTextInput();
       textInput.selectable = false;
       var button: Button = window.findComponent("close", null, true);
       button.registerEvent(MouseEvent.CLICK, onClick);
       window.hide();
+    }
+
+
+// on wheel - scroll
+  function onWheel(e: MouseEvent)
+    {
+      scroll(e.delta > 0 ? -1 : 1);
     }
 
 
@@ -46,7 +54,8 @@ class Document extends UIWindow
 // set parameters
   public override function setParams(o: Dynamic)
     {
-      text.text = o;
+//      text.text = o;
+      textInput.htmlText = o;
     }
 
 

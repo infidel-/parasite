@@ -121,7 +121,6 @@ class GameScene extends Scene
         UISTATE_EVOLUTION => new EvolutionWindow(game),
         UISTATE_ORGANS => new OrgansWindow(game),
         UISTATE_TIMELINE => new TimelineWindow(game),
-        UISTATE_LOG => new LogWindow(game),
         UISTATE_DEBUG => new DebugWindow(game),
         UISTATE_FINISH => new FinishWindow(game),
         ];
@@ -131,6 +130,8 @@ class GameScene extends Scene
         UISTATE_YESNO => new YesNo(game),
         UISTATE_DOCUMENT => new Document(game),
         UISTATE_MESSAGE => new Message(game),
+
+        UISTATE_LOG => new Log(game),
         ];
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
 
@@ -363,9 +364,10 @@ class GameScene extends Scene
               Input.pressed("downright"))
             return true;
 
-          if (_state == UISTATE_DOCUMENT)
+          if (_state == UISTATE_DOCUMENT ||
+              _state == UISTATE_LOG)
             {
-              var win: Document = cast components[_state];
+              var win: UIWindow = cast components[_state];
 
               // copy-pasted for now
               if (lines != 0)
@@ -478,7 +480,8 @@ class GameScene extends Scene
           else if (logPressed)
             {
               state = UISTATE_LOG;
-              windows[_state].scrollToEnd();
+              var win: Log = cast components[_state];
+              win.scrollToEnd();
             }
 
           // open timeline window
