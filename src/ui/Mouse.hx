@@ -1,6 +1,6 @@
 // openfl mouse cursor
 
-package entities;
+package ui;
 
 import com.haxepunk.HXP;
 import openfl.Assets;

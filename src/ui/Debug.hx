@@ -1,10 +1,10 @@
 // debug GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 
-class DebugWindow extends TextWindow
+class Debug extends Actions
 {
   public function new(g: Game)
     {
@@ -44,6 +44,8 @@ class DebugWindow extends TextWindow
         game.debugArea.action(index);
       else if (game.location == LOCATION_REGION)
         game.debugRegion.action(index);
+
+      hide();
     }
 
 

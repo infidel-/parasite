@@ -1,20 +1,19 @@
 // ingame HUD
 
-package entities;
+package ui;
 
-import openfl.Assets;
-import openfl.Lib;
 import com.haxepunk.HXP;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Text;
-import flash.display.Sprite;
-import flash.text.TextField;
-import flash.text.TextFieldType;
-import flash.text.TextFormat;
-import flash.text.TextFormatAlign;
-import flash.text.TextFieldAutoSize;
-
+import openfl.Assets;
+import openfl.Lib;
+import openfl.display.Sprite;
+import openfl.text.TextField;
+import openfl.text.TextFieldType;
+import openfl.text.TextFormat;
+import openfl.text.TextFormatAlign;
+import openfl.text.TextFieldAutoSize;
 import haxe.ui.components.Button;
 import haxe.ui.core.MouseEvent;
 

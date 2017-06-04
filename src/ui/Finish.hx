@@ -1,31 +1,32 @@
 // game over window
 
-package entities;
+package ui;
 
 import openfl.Assets;
 import com.haxepunk.HXP;
-import flash.text.TextFormat;
-import flash.text.TextFormatAlign;
+import openfl.text.TextFormat;
+import openfl.text.TextFormatAlign;
 
 import game.Game;
 
-class FinishWindow extends TextWindow
+class Finish extends Actions
 {
   public function new(g: Game)
     {
       super(g);
 
       var font = Assets.getFont(Const.FONT);
-      textFormat = new TextFormat(font.fontName,
+      var textFormat = new TextFormat(font.fontName,
         game.config.fontSizeLarge, 0xFFFFFF);
       textFormat.align = TextFormatAlign.CENTER;
-      _textField.defaultTextFormat = textFormat;
+      textInput.defaultTextFormat = textFormat;
 
       var w = Std.int(HXP.width / 2);
       var h = Std.int(HXP.height / 2);
-      setSize(w, h);
-      setPosition(Std.int(HXP.width / 2 - w / 2),
-        Std.int(HXP.height / 2 - h / 2));
+      window.width = w;
+      window.height = h;
+      window.x = Std.int(HXP.halfWidth - w / 2);
+      window.y = Std.int(HXP.halfHeight - h / 2);
     }
 
 
@@ -35,7 +36,7 @@ class FinishWindow extends TextWindow
       var buf = new StringBuf();
       buf.add('\nGame Over\n===\n\n');
       buf.add(game.finishText);
-      buf.add("\n\nPress ESC to close window" +
+      buf.add("\n\nClose window" +
         "\nThen you can restart the game by pressing ENTER\n");
 
       return buf.toString();

@@ -1,10 +1,10 @@
 // organs GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 
-class OrgansWindow extends TextWindow
+class Organs extends Actions
 {
   public function new(g: Game)
     {

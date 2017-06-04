@@ -1,11 +1,11 @@
 // evolution GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 import const.EvolutionConst;
 
-class EvolutionWindow extends TextWindow
+class Evolution extends Actions
 {
   public function new(g: Game)
     {

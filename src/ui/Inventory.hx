@@ -1,16 +1,13 @@
 // inventory GUI window
 
-package entities;
+package ui;
 
 import game.Game;
 
-class InventoryWindow extends TextWindow
+class Inventory extends Actions
 {
-
   public function new(g: Game)
-    {
-      super(g);
-    }
+    { super(g); }
 
 
 // get action list

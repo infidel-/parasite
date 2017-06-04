@@ -10,7 +10,6 @@ import haxe.ui.core.Component;
 import sys.io.File;
 #end
 
-import entities.*;
 import ui.*;
 import game.Game;
 
@@ -24,7 +23,6 @@ class GameScene extends Scene
   public var uiQueue: List<_UIEvent>; // gui event queue
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
-  var windows: Map<_UIState, TextWindow>; // GUI windows
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
   public var entityAtlas: TileAtlas; // entity graphics
@@ -114,14 +112,6 @@ class GameScene extends Scene
       // init GUI
       hud = new HUD(game);
 
-      windows = [
-        UISTATE_INVENTORY => new InventoryWindow(game),
-        UISTATE_EVOLUTION => new EvolutionWindow(game),
-        UISTATE_ORGANS => new OrgansWindow(game),
-        UISTATE_DEBUG => new DebugWindow(game),
-        UISTATE_FINISH => new FinishWindow(game),
-        ];
-
       components = [
         UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_YESNO => new YesNo(game),
@@ -129,9 +119,14 @@ class GameScene extends Scene
         UISTATE_MESSAGE => new Message(game),
 
         UISTATE_GOALS => new Goals(game),
+        UISTATE_INVENTORY => new Inventory(game),
         UISTATE_SKILLS => new Skills(game),
         UISTATE_TIMELINE => new Timeline(game),
+        UISTATE_EVOLUTION => new Evolution(game),
+        UISTATE_ORGANS => new Organs(game),
         UISTATE_LOG => new Log(game),
+        UISTATE_DEBUG => new Debug(game),
+        UISTATE_FINISH => new Finish(game),
         ];
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
 
@@ -283,9 +278,6 @@ class GameScene extends Scene
     {
       if (_state != UISTATE_DEFAULT)
         {
-          if (windows[_state] != null)
-            windows[_state].hide();
-
           if (components[_state] != null)
             components[_state].hide();
 
@@ -296,9 +288,6 @@ class GameScene extends Scene
       _state = vstate;
       if (_state != UISTATE_DEFAULT)
         {
-          if (windows[_state] != null)
-            windows[_state].show();
-
           if (components[_state] != null)
             components[_state].show();
         }
@@ -365,11 +354,7 @@ class GameScene extends Scene
             return true;
 
           // window scrolling
-          if (_state == UISTATE_DOCUMENT ||
-              _state == UISTATE_GOALS ||
-              _state == UISTATE_SKILLS ||
-              _state == UISTATE_TIMELINE ||
-              _state == UISTATE_LOG)
+          if (_state != UISTATE_DEFAULT)
             {
               var win: UIWindow = cast components[_state];
 
@@ -397,29 +382,6 @@ class GameScene extends Scene
           // skip for now
           else if (_state == UISTATE_DIFFICULTY || _state == UISTATE_YESNO)
             1;
-
-          // legacy windows - copy-pasted for now
-          else
-            {
-              if (lines != 0)
-                {
-                  windows[_state].scroll(lines);
-                  return true;
-                }
-
-              else if (Input.pressed("end") ||
-                (Input.pressed(Key.G) && shiftPressed))
-                {
-                  windows[_state].scrollToEnd();
-                  return true;
-                }
-
-              else if (Input.pressed("home") || Input.pressed(Key.G))
-                {
-                  windows[_state].scrollToBegin();
-                  return true;
-                }
-            }
         }
 
       // ui in locked state, do not allow changing windows
@@ -578,6 +540,8 @@ class GameScene extends Scene
 // handle player actions
   function handleActions()
     {
+      mouse.update();
+
       // game finished
       if (game.isFinished)
         return;
@@ -594,8 +558,6 @@ class GameScene extends Scene
 
             if (_state == UISTATE_DEFAULT)
               hud.action(n);
-            else if (windows[_state] != null)
-              windows[_state].action(n);
             else if (components[_state] != null)
               components[_state].action(n);
 
@@ -620,8 +582,6 @@ class GameScene extends Scene
               game.updateHUD();
             }
         }
-
-      mouse.update();
 
       // next 10 actions
       if (Input.pressed(Key.S))
