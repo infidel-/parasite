@@ -39,6 +39,7 @@ class Mouse extends Sprite
       b.scrollRect = rect;
       addChild(b);
       mouseEnabled = false;
+      openfl.ui.Mouse.hide();
 
       HXP.stage.addEventListener(MouseEvent.CLICK, onClick);
 

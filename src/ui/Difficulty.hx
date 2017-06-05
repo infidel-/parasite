@@ -136,7 +136,7 @@ class Difficulty extends UIWindow
       id: 'timeline',
       title: 'Timeline',
       easy: '1-3 clues on each learn attempt. Fast computer research.',
-      normal: '1-2 clues on each learn attempt. Fast computer research.',
+      normal: '1-2 clues on each learn attempt. Normal computer research.',
       hard: '1 clue on each learn attempt. Normal computer research.',
     },
     ];

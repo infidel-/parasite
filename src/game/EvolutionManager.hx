@@ -108,19 +108,15 @@ class EvolutionManager
               imp.ep = 0;
               taskID = '';
               isActive = false;
+
+              // call onUpgrade() func
+              if (imp.info.onUpgrade != null)
+                imp.info.onUpgrade(imp.level, game, player);
+
+              // on first learning of evolution with an organ
+              if (imp.info.organ != null)
+                game.goals.complete(GOAL_EVOLVE_ORGAN);
             }
-        }
-
-      // improvement opened or upgraded
-      if (imp != null)
-        {
-          // call onUpgrade() func
-          if (imp.info.onUpgrade != null)
-            imp.info.onUpgrade(imp.level, game, player);
-
-          // on first learning of evolution with an organ
-          if (imp.info.organ != null)
-            game.goals.complete(GOAL_EVOLVE_ORGAN);
         }
     }
 

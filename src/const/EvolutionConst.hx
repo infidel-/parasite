@@ -750,7 +750,7 @@ class EvolutionConst
               "Energy units per formation: " + l.energy +
               "\nBonus organ and evolution points per turn: +" +
                 l.evolutionBonus + "%" +
-              "\nHost energy restored per turn: +" + l.hostEnergyRestored +
+              "\nAssimilated host energy restored per turn: +" + l.hostEnergyRestored +
               "\nParasite energy restored per turn: +" +
                 l.parasiteEnergyRestored +
               "\nParasite health restored per turn: +" +
