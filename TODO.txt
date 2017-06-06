@@ -18,12 +18,9 @@ parasite.js:6645 Const.hx:275: You harden your grip on the host.
 
 test first organ evolution - tutorial
 amount of AI should really be in percentage to the amount of tiles in visible rect
-no movement delay on click in region mode
+no movement delay on click in region mode (+ does not open cells)
 enter the ship goal - show location and coordinates where to go
 
-game finish message skipped - Const.hx:275: Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.
-parasite.js:6650 Const.hx:275: You have won the game!
-no message on game finish window
 
 One of:
 1) add generic resource needed for all evolution past level 1 (harvested from humans?)

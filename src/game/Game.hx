@@ -32,7 +32,6 @@ class Game
   public var turns: Int; // number of turns passed since game start
   public var isInited: Bool; // is the game initialized?
   public var isFinished: Bool; // is the game finished?
-  public var finishText: String; // finishing text in game over window
   public var messageList: List<String>; // last X messages of log
   public var importantMessagesEnabled: Bool; // messages enabled?
 
@@ -56,7 +55,6 @@ class Game
       messageList = new List();
       importantMessagesEnabled = true;
       isInited = false;
-      finishText = '';
 
       area = null;
       region = null;
@@ -239,7 +237,7 @@ class Game
   public function finish(result: String, condition: String)
     {
       isFinished = true;
-      finishText = '';
+      var finishText = '';
 
       // game lost
       if (result == 'lose')
@@ -255,9 +253,14 @@ class Game
       else
         {
           log('You have won the game!');
+          finishText = 'You have won the game.';
         }
 
-      scene.state = UISTATE_FINISH;
+      // add to event queue
+      scene.event({
+        state: UISTATE_FINISH,
+        obj: finishText
+      });
     }
 
 
@@ -281,7 +284,7 @@ class Game
         return;
 
       // add to event queue
-      scene.uiQueue.add({
+      scene.event({
         state: UISTATE_MESSAGE,
         obj: {
           text: s,

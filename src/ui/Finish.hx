@@ -9,7 +9,7 @@ import openfl.text.TextFormatAlign;
 
 import game.Game;
 
-class Finish extends Actions
+class Finish extends Text
 {
   public function new(g: Game)
     {
@@ -30,16 +30,16 @@ class Finish extends Actions
     }
 
 
-// update window text
-  override function getText()
+// set parameters
+  public override function setParams(o: Dynamic)
     {
       var buf = new StringBuf();
       buf.add('\nGame Over\n===\n\n');
-      buf.add(game.finishText);
+      buf.add(o);
       buf.add("\n\nClose window" +
         "\nThen you can restart the game by pressing ENTER\n");
 
-      return buf.toString();
+      textInput.htmlText = buf.toString();
     }
 }
 

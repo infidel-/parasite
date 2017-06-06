@@ -195,7 +195,7 @@ class Group
       game.message('There is a group of humans that wants to destroy me.');
 
       // show yes/no dialog about manual
-      game.scene.uiQueue.add({
+      game.scene.event({
         state: UISTATE_YESNO,
         obj: {
           text: 'Do you want to read the manual about The Group?',
@@ -205,12 +205,12 @@ class Group
               if (yes)
                 {
                   var doc = openfl.Assets.getText('wiki/The-Group.md');
-                  game.scene.uiQueue.add({
+                  game.scene.event({
                     state: UISTATE_DOCUMENT,
                     obj: doc
                   });
                 }
-              game.scene.uiQueue.add({
+              game.scene.event({
                 state: UISTATE_DIFFICULTY,
                 obj: 'group'
               });

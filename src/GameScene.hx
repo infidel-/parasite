@@ -20,7 +20,7 @@ class GameScene extends Scene
   public var region: RegionView; // region view
   public var mouse: Mouse; // mouse cursor entity
   public var hud: HUD; // ingame HUD
-  public var uiQueue: List<_UIEvent>; // gui event queue
+  var uiQueue: List<_UIEvent>; // gui event queue
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
@@ -300,6 +300,17 @@ class GameScene extends Scene
   inline function get_state(): _UIState
     {
       return _state;
+    }
+
+
+// add event to the GUI queue
+  public function event(ev: _UIEvent)
+    {
+      uiQueue.add(ev);
+
+      // no windows open, work on event immediately
+      if (state == UISTATE_DEFAULT)
+        closeWindow();
     }
 
 
@@ -640,14 +651,22 @@ class GameScene extends Scene
               h.addParameter('msg', s.toString());
               h.onData = function(d){
                 // show window
-                game.finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
+                var finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to disable exception gathering thingy for whatever reason, open the parasite.cfg configuration file and set sendExceptions to 0.";
-                state = UISTATE_FINISH);
+                uiQueue.add({
+                  state: UISTATE_FINISH,
+                  obj: finishText
+                });
+                closeWindow();
               }
               h.onError = function(e){
-                game.finishText = "Something broke! An exception was thrown and saved to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
+                var finishText = "Something broke! An exception was thrown and saved to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
                   "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
-                state = UISTATE_FINISH);
+                uiQueue.add({
+                  state: UISTATE_FINISH,
+                  obj: finishText
+                });
+                closeWindow();
                 trace(e);
               }
               h.request(true);
@@ -657,7 +676,7 @@ class GameScene extends Scene
 #end
             {
               // show window
-              game.finishText =
+              var finishText =
 #if !js
                 "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
                 "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
@@ -667,7 +686,11 @@ class GameScene extends Scene
                 stack + '</font>\n' +
                 "P.S. If you want to help the development, make a screenshot of this message and send it to starinfidel_at_gmail_dot_com. Thanks!";
 #end
-              state = UISTATE_FINISH;
+                uiQueue.add({
+                  state: UISTATE_FINISH,
+                  obj: finishText
+                });
+                closeWindow();
             }
         }
     }
