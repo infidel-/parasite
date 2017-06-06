@@ -180,7 +180,8 @@ class PlayerRegion
         {
           if (player.energy < player.vars.regionEnergyPerTurn)
             {
-              game.log("Not enough energy to move in region mode.");
+              game.log("Not enough energy to move in region mode.",
+                COLOR_HINT);
               return false;
             }
 
@@ -222,14 +223,22 @@ class PlayerRegion
       if (target == null || Lib.getTimer() - pathTS < game.config.pathDelay)
         return;
 
-      var dx = target.x - x;
-      var dy = target.y - y;
+      var dx = 0;
+      var dy = 0;
+      if (target.x - x > 0)
+        dx = 1;
+      else if (target.x - x < 0)
+        dx = -1;
+      if (target.y - y > 0)
+        dy = 1;
+      else if (target.y - y < 0)
+        dy = -1;
       pathTS = Lib.getTimer();
       var ret = moveAction(dx, dy);
       if (!ret)
         {
-          trace('cannot move there!');
           target = null;
+          return;
         }
 
       // finish

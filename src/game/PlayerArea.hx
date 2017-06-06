@@ -902,8 +902,8 @@ class PlayerArea
       var ret = moveAction(n.x - x, n.y - y);
       if (!ret)
         {
-          trace('path broken!');
           path = null;
+          return;
         }
 
       if (path.length == 0)
