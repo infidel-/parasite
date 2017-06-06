@@ -4,9 +4,29 @@ package scenario;
 
 import const.Goals;
 import objects.EventObject;
+import game.Game;
 
 class GoalsAlienCrashLanding
 {
+// init function - modifies goals text where needed
+  public static function onInit(game: Game)
+  {
+      // put spaceship location in goals text
+      var ev = game.timeline.getEvent('alienShipStudy');
+      var area = ev.location.area;
+      var ids: Array<_Goal> = [
+        SCENARIO_ALIEN_ENTER_SHIP,
+        SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
+        SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
+      ];
+      for (id in ids)
+        {
+          var goal = game.goals.getInfo(id);
+          goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
+        }
+    }
+
+// goals map
   public static var map: Map<_Goal, GoalInfo> = [
     SCENARIO_ALIEN_FIND_SHIP => {
       id: SCENARIO_ALIEN_FIND_SHIP,
@@ -165,12 +185,6 @@ class GoalsAlienCrashLanding
             {
               game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
             };
-
-        // put spaceship location in text
-        var ev = game.timeline.getEvent('alienShipStudy');
-        var area = ev.location.area;
-        var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
-        goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
       },
 
       onComplete: function (game, player) {
@@ -179,13 +193,7 @@ class GoalsAlienCrashLanding
         },
 
       onFailure: function (game, player) {
-          game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
-
-        // put spaceship location in text
-        var ev = game.timeline.getEvent('alienShipStudy');
-        var area = ev.location.area;
-        var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
-        goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
+        game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
         },
       },
 

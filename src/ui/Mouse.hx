@@ -22,7 +22,6 @@ class Mouse extends Sprite
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
-  public var ignoreNextClick: Bool;
 
   public function new(g: Game)
     {
@@ -32,7 +31,6 @@ class Mouse extends Sprite
       oldx = 0;
       oldy = 0;
       sceneState = game.scene.state;
-      ignoreNextClick = false;
 
       var b = new Bitmap(Assets.getBitmapData('gfx/mouse.png'));
       rect = new Rectangle(0, 0, CURSOR_WIDTH, CURSOR_HEIGHT);
@@ -51,13 +49,6 @@ class Mouse extends Sprite
 // mouse click
   function onClick(e: Dynamic)
     {
-      // hack: ignore next mouse click (haxeui button bug)
-      if (ignoreNextClick)
-        {
-          ignoreNextClick = false;
-          return;
-        }
-
       var pos = getXY();
 #if mydebug
       // debug mode

@@ -17,7 +17,6 @@ parasite.js:6645 Const.hx:275: You harden your grip on the host.
  GameScene.hx:646: Exception: TypeError: Cannot read property 'effects' of null
 
 amount of AI should really be in percentage to the amount of tiles in visible rect
-enter the ship goal - show location and coordinates where to go
 
 
 One of:

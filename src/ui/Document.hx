@@ -40,6 +40,7 @@ class Document extends UIWindow
   function onClick(e: MouseEvent)
     {
       game.scene.closeWindow();
+      e.cancel();
     }
 
 

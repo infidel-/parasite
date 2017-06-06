@@ -59,7 +59,5 @@ class UIWindow
   public inline function hide()
     {
       window.hide();
-      // hack: ignore next mouse click (haxeui button)
-      game.scene.mouse.ignoreNextClick = true;
     }
 }

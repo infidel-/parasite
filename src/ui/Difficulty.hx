@@ -70,6 +70,7 @@ class Difficulty extends UIWindow
         index = 3;
 
       action(index);
+      e.cancel();
     }
 
 

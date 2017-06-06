@@ -457,6 +457,9 @@ should limit player options for guiding purposes
       trace(_locationsList);
 */
       game.info('Timeline variables: ' + _variables);
+
+      // fix some goals text
+      scenario.onInit(game);
     }
 
 

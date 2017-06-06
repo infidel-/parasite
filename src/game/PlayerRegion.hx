@@ -184,14 +184,11 @@ class PlayerRegion
                 COLOR_HINT);
               return false;
             }
-
-//          player.energy -= player.vars.regionMoveEnergy;
         }
 
       // host state: check for energy
       if (player.state == PLR_STATE_HOST)
         {
-//          player.host.energy -= player.vars.regionMoveEnergy;
           if (player.host.energy <= 0)
             {
               onHostDeath();

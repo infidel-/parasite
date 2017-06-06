@@ -49,6 +49,7 @@ class YesNo extends UIWindow
         index = 2;
 
       action(index);
+      e.cancel();
     }
 
 

@@ -15,6 +15,7 @@ class Scenario
   public var names: Map<String, Array<String>>; // name templates
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
   public var goals: Map<_Goal, GoalInfo>; // scenario goals (link to static map)
+  public var onInit: Game -> Void;
 
   public function new()
     {
@@ -22,6 +23,7 @@ class Scenario
       startEvent = '';
       playerStartEvent = '';
       defaultAlertness = 0;
+      onInit = null;
 
       names = new Map();
       flow = new Map();
