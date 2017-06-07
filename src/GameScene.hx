@@ -611,7 +611,7 @@ class GameScene extends Scene
           game.playerRegion.nextPath();
 
         // handle player input
-        else handleInput();
+        handleInput();
 
         // update camera position
         updateCamera();

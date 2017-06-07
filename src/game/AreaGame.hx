@@ -376,8 +376,8 @@ class AreaGame
               return { x: -1, y: -1 };
             }
 
-          var x = rect.x1 + Std.random(rect.x2);
-          var y = rect.y1 + Std.random(rect.y2);
+          var x = rect.x1 + Std.random(rect.x2 - rect.x1);
+          var y = rect.y1 + Std.random(rect.y2 - rect.y1);
 
           // must be empty ground tile
           if (!isWalkable(x, y))
@@ -926,13 +926,26 @@ class AreaGame
       for (ai in _ai)
         if (ai.isCommon)
           cnt++;
+      // do not count player
+      if (game.player.state == PLR_STATE_HOST)
+        cnt--;
+
+      // calc max possible number of AI
+      var maxAI =
+        Std.int(info.commonAI * game.scene.area.emptyScreenCells /
+          WorldConst.AREA_AI_CELLS);
+/*
+      trace('info:' + info.commonAI +
+        ' empty:' + game.scene.area.emptyScreenCells +
+        ' res:' + maxAI + ' cnt:' + cnt);
+*/
 
       // there are enough AI already
-      if (cnt > info.commonAI)
+      if (cnt > maxAI)
         return;
 
       // limit number of spawns per turn
-      var maxSpawn = info.commonAI - cnt;
+      var maxSpawn = maxAI - cnt;
       if (maxSpawn > 10)
         maxSpawn = 10;
 
@@ -961,7 +974,7 @@ class AreaGame
 // spawn some more AI related to area alertness
   function turnSpawnMoreAI()
     {
-      if (info.commonAI == 0)
+      if (info.uncommonAI == 0)
         return;
 
       // get number of uncommon AI (spawned by alertness logic)
@@ -970,8 +983,18 @@ class AreaGame
         if (!ai.isCommon)
           cnt++;
 
+      // calc max possible number of AI
+      var maxAI =
+        Std.int(info.uncommonAI * game.scene.area.emptyScreenCells /
+          WorldConst.AREA_AI_CELLS);
+/*
+      trace('info:' + info.uncommonAI +
+        ' empty:' + game.scene.area.emptyScreenCells +
+        ' res:' + maxAI + ' cnt:' + cnt);
+*/
+
       // calculate the actual number to spawn according to the area alertness
-      var uncommonAI = Std.int(info.uncommonAI * alertness / 100.0);
+      var uncommonAI = Std.int(maxAI * alertness / 100.0);
 
       // there are enough uncommon AI already
       if (cnt >= uncommonAI)
@@ -1048,8 +1071,8 @@ class AreaGame
       var rect = {
         x1: game.scene.cameraTileX1 - 1,
         y1: game.scene.cameraTileY1 - 1,
-        x2: game.scene.cameraTileX2 + 2,
-        y2: game.scene.cameraTileY2 + 2
+        x2: game.scene.cameraTileX2 + 1,
+        y2: game.scene.cameraTileY2 + 1
         };
 
       if (rect.x1 < 0)

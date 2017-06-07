@@ -17,6 +17,7 @@ class AreaView
 
   public var width: Int; // area width, height in cells
   public var height: Int;
+  public var emptyScreenCells: Int; // amount of empty cells on screen
   var entity: Entity; // area entity
   static var maxSize = 120;
 
@@ -27,6 +28,7 @@ class AreaView
       _tilemap = null;
       width = maxSize; // should be larger than any area
       height = maxSize;
+      emptyScreenCells = 0;
 
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
@@ -115,12 +117,20 @@ class AreaView
       var rect = game.area.getVisibleRect();
       var cells = game.area.getCells();
 
+      emptyScreenCells = 0;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
-          if (!game.player.vars.losEnabled ||
-              game.area.isVisible(game.playerArea.x, game.playerArea.y, x, y))
-            _tilemap.setTile(x, y, cells[x][y]);
-          else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+          {
+            // count number of empty cells on screen
+            if (game.area.isWalkable(x, y))
+              emptyScreenCells++;
+
+            if (!game.player.vars.losEnabled ||
+                game.area.isVisible(game.playerArea.x,
+                  game.playerArea.y, x, y))
+              _tilemap.setTile(x, y, cells[x][y]);
+            else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+          }
     }
 
 
@@ -134,12 +144,19 @@ class AreaView
       var cells = game.area.getCells();
 
       // set visibility for all tiles in that area
+      emptyScreenCells = 0;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
-          if (Math.abs(game.playerArea.x - x) < 2 &&
-              Math.abs(game.playerArea.y - y) < 2)
-            _tilemap.setTile(x, y, cells[x][y]);
-          else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+          {
+            // count number of empty cells on screen
+            if (game.area.isWalkable(x, y))
+              emptyScreenCells++;
+
+            if (Math.abs(game.playerArea.x - x) < 2 &&
+                Math.abs(game.playerArea.y - y) < 2)
+              _tilemap.setTile(x, y, cells[x][y]);
+            else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+          }
     }
 
 
@@ -151,7 +168,7 @@ class AreaView
     }
 
 
-// TURN: area time passage - effects removal
+// TURN: area time passage
   public function turn()
     {
       // effect removal

@@ -314,6 +314,7 @@ class AreaManager
             ai = new SecurityAI(game, loc.x, loc.y);
           else if (e.params.type == 'soldier')
             ai = new SoldierAI(game, loc.x, loc.y);
+          ai.isCommon = false;
 
           // backup has better equipment
           ai.inventory.clear();

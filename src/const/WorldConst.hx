@@ -38,7 +38,7 @@ class WorldConst
         height: 100,
         canEnter: true,
         isInhabited: true,
-        commonAI: 5,
+        commonAI: 10,
         uncommonAI: 2,
         buildingChance: 0.05,
         lawResponceTime: 10,
@@ -64,7 +64,7 @@ class WorldConst
         height: 100,
         canEnter: true,
         isInhabited: true,
-        commonAI: 10,
+        commonAI: 14,
         uncommonAI: 5,
         buildingChance: 0.15,
         lawResponceTime: 5,
@@ -90,7 +90,7 @@ class WorldConst
         height: 100,
         canEnter: true,
         isInhabited: true,
-        commonAI: 20,
+        commonAI: 30,
         uncommonAI: 10,
         buildingChance: 0.30,
         lawResponceTime: 3,
@@ -206,6 +206,9 @@ class WorldConst
 
 // region types
   public static var REGION_CITY = 'city';
+
+// amount of screen cells the AI amount is based for
+  public static var AREA_AI_CELLS = 650;
 }
 
 
