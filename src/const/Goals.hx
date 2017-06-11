@@ -37,6 +37,7 @@ class Goals
       id: GOAL_EVOLVE_PROBE,
       name: 'Evolve brain probe',
       note: 'You need to evolve the brain probe improvement.',
+      messageReceive: 'Evolution degrades the host. I need to be careful.',
       messageComplete: 'I can probe the brain of this host now. I should also evolve further.',
       onComplete: function (game, player) {
         player.evolutionManager.state = 2;
@@ -170,7 +171,7 @@ class Goals
       id: GOAL_LEARN_ITEMS,
       name: 'Learn about any item',
       note: 'You need to learn information about any item.',
-      messageComplete: 'I can learn how to use items effectively by probing the host brain for more.',
+      messageComplete: 'I can learn how to use items effectively by improving the probe.',
       onComplete: function (game, player) {
         game.player.vars.skillsEnabled = true;
 

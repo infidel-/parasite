@@ -40,7 +40,7 @@ class RegionManager
 // pts - amount of organ points this body has
   public function onBodyDiscovered(area: AreaGame, pts: Int)
     {
-      area.alertness += 1;
+      area.alertness += 10;
       game.group.raisePriority(pts);
       if (pts > 0)
         log('Authorities have discovered a body with some weird anomalies.');
@@ -51,7 +51,7 @@ class RegionManager
 // pts - amount of organ points this body has
   public function onBodiesDiscovered(area: AreaGame, bodies: Int, pts: Int)
     {
-      area.alertness += bodies;
+      area.alertness += bodies * 10;
       game.group.raisePriority(pts);
       if (pts > 0)
         log('Authorities have discovered multiple bodies with disturbing anomalies.');

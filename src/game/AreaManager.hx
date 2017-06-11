@@ -208,7 +208,7 @@ class AreaManager
           (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!');
 
       // increase area alertness
-      area.alertness++;
+      area.alertness += 10;
 
       // alert all police already in area
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
@@ -282,7 +282,7 @@ class AreaManager
       game.group.raisePriority(1);
 
       // increase area alertness
-      area.alertness += 2;
+      area.alertness += 20;
 
       // alert all law already in area
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);

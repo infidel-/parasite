@@ -70,8 +70,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // reduce info message amount
       if (Const.round(distance) == Math.floor(distance))
-        game.info('Team distance: -' + Const.round(mod) + ' = ' +
-          Const.round(distance));
+        game.infoChange('Team distance', - mod, distance);
     }
 
 

@@ -19,7 +19,7 @@ class Group
       game = g;
       priority = 0;
       team = null;
-      teamTimeout = 100;
+      teamTimeout = 150;
       teamStartDistance = 100.0;
       knownCount = 1 + Std.random(4); // randomized slightly
       isKnown = false;

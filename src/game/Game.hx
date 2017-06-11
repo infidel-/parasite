@@ -304,6 +304,14 @@ class Game
     }
 
 
+// add info about stat change to game log
+  public inline function infoChange(name: String, mod: Float, val: Float)
+    {
+      info(name + ': ' + (mod > 0 ? '+' : '') + Const.round(mod) +
+        ' = ' + Const.round(val));
+    }
+
+
 // add info entry to game log
   public inline function info(s: String)
     {

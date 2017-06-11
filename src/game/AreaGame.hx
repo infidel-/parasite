@@ -1259,8 +1259,13 @@ class AreaGame
 
   function set_alertness(v: Float)
     {
+      var mod = v - _alertness;
       // save alertness changes for later use
       alertnessMod += v - _alertness;
-      return _alertness = Const.clampFloat(v, 0, 100.0);
+      _alertness = Const.clampFloat(v, 0, 100.0);
+      if (mod >= 1 || mod <= - 1)
+        game.infoChange('Area alertness', mod, _alertness);
+
+      return _alertness;
     }
 }
