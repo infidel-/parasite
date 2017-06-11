@@ -346,7 +346,7 @@ class Game
       if (messageList.length > 100)
         messageList.pop();
       hudMessageList.add(msg);
-      if (hudMessageList.length > 4)
+      if (hudMessageList.length > config.hudLogLines)
         hudMessageList.pop();
 
       // update HUD minilog display

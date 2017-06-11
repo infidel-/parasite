@@ -14,6 +14,7 @@ class Config
   public var extendedInfo: Bool;
   public var sendExceptions: Bool;
 
+  public var hudLogLines: Int;
   public var fontSize: Int;
   public var fontSizeLarge: Int;
   public var windowWidth: Int;
@@ -28,6 +29,7 @@ class Config
 
       // default values
       extendedInfo = false;
+      hudLogLines = 4;
       sendExceptions = false;
       fontSize = 16;
       fontSizeLarge = 24;
@@ -37,6 +39,7 @@ class Config
 
       map = new Map();
       map['extendedInfo'] = '0';
+      map['hudLogLines'] = '4';
       map['sendExceptions'] = '0';
       map['fontSize'] = '' + fontSize;
       map['windowWidth'] = '' + windowWidth;
@@ -88,6 +91,8 @@ class Config
 
       if (key == 'extendedInfo')
         extendedInfo = (val == '1');
+      else if (key == 'hudLogLines')
+        hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
       else if (key == 'sendExceptions')
         sendExceptions = (val == '1');
       else if (key == 'fontSize')

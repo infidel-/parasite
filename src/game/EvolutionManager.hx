@@ -113,7 +113,8 @@ class EvolutionManager
 
       if (val > 0)
         {
-          player.log('Your host degrades.');
+          player.log(val == 1 ? 'Your host degrades to a breaking point and might die soon.' :
+            'Your host degrades.');
           game.info(attr + ': ' + val);
           return;
         }

@@ -785,6 +785,15 @@ class EvolutionConst
               return game.area.habitat.putBiomineral();
             }
           },
+/*
+  evolution cost:
+  base 10pt/turn + 10/20/25 from biomineral
+  public static var epCostImprovement = [ 100, 200, 500 ];
+  biomineral level 0 (10/t)- 10, 20, 50 turns
+  biomineral level 1 (20/t) - 5, 10, 25 turns
+  biomineral level 2 (30/t) - 3, 7, 17 turns
+  biomineral level 3 (35/t) - 3, 6, 14 turns
+*/
         levelParams: [
           {
             energy: 0,

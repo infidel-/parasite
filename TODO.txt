@@ -31,17 +31,6 @@ parasite.js:6645 Const.hx:275: You harden your grip on the host.
 
 == CURRENT
 
-4) permanent host degradation on evolution
-  perma-reduces attributes each tick (humans have 16-32 pts total)
-/*
-  base 10pt/turn + 10/20/25 from biomineral
-  public static var epCostImprovement = [ 100, 200, 500 ];
-  biomineral level 0 (10/t)- 10, 20, 50 turns
-  biomineral level 1 (20/t) - 5, 10, 25 turns
-  biomineral level 2 (30/t) - 3, 7, 17 turns
-  biomineral level 3 (35/t) - 3, 6, 14 turns
-*/
-
 test gameplay
 new gui (with mouse support for everything)
   hud
