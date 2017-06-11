@@ -1,6 +1,5 @@
 == MAINTENANCE
 
-
     ,hardenGripAction: function() {
         this.game.log("You harden your grip on the host.",null);
         var params = this.player.evolutionManager.getParams(_$Improv.IMP_HARDEN_GRIP);
@@ -16,12 +15,32 @@ parasite.js:6645 Const.hx:275: You detach from the potential host.
 parasite.js:6645 Const.hx:275: You harden your grip on the host.
  GameScene.hx:646: Exception: TypeError: Cannot read property 'effects' of null
 
-One of:
-1) add generic resource needed for all evolution past level 1 (harvested from humans?)
-2) automate evolution after it's trivialized by biomineral + assimilation
-3) require something special for each improvement evolution - like moving to specific area
+?do i need this for this release?
+?maybe only add this to growing organs (since all that implies the mutation process)
+5) make rapid evolution more dangerous to player (not just host)
+  when evolving, genetic drift of the host raises each turn
+  total sum of evolved improvement levels acts as a base drift, you cannot lower the drift below that base level
+  drift is a chance of evolution going haywire and producing amorphous tentacled monster out of host when the process finishes (need a name - the divergent, aberration) OR total meltdown
+    monster is hostile to player and everyone else
+    either despawns when player exits with +alertness,+group priority,-team distance
+    or rampages through the area for some time until downed by the government/conspiracy (dont have to actually display/simulate it)
+  mutational meltdown - host completely collapses under the strain of evolution (reset all progress?)
+  drift goes down when not evolving to minimum
+  devolution, divergent evolution, genetic drift
+  "That was... unexpected." "I think I need to escape."
 
 == CURRENT
+
+4) permanent host degradation on evolution
+  perma-reduces attributes each tick (humans have 16-32 pts total)
+/*
+  base 10pt/turn + 10/20/25 from biomineral
+  public static var epCostImprovement = [ 100, 200, 500 ];
+  biomineral level 0 (10/t)- 10, 20, 50 turns
+  biomineral level 1 (20/t) - 5, 10, 25 turns
+  biomineral level 2 (30/t) - 3, 7, 17 turns
+  biomineral level 3 (35/t) - 3, 6, 14 turns
+*/
 
 test gameplay
 new gui (with mouse support for everything)
@@ -38,7 +57,7 @@ make use computer action more convenient (add to hud?)
 habitat + assimilation: distance 64
 after building l2 battery and assim, there's nothing stopping the player from evolving everything available...
 
-need to play more to determine if that is necessary:
+need to play more to determine if this is necessary:
 ?? smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs a special organ.
 ?? psychology skill: can vaguely detect which people are team members and has false positives
 
@@ -203,6 +222,58 @@ side missions:
   silence X (reporter, investigator, previous host)
     decreases city-wide alertness
   steal and destroy the body?
+==
+==
+EXTENDED EVOLUTION
+
+  IMP_DECAY_ACCEL;
+    // location: morgue, need decaying dead bodies (can use dead bodies in habitat?)
+  IMP_CAMO_LAYER;
+    // ?
+  IMP_BRAIN_PROBE;
+    // need smart people (scientists, professors (location: university))
+    // last level needs a very smart person (locatable only through computer)
+  IMP_PROT_COVER;
+    // wilderness critters: bugs, cockroaches (city)
+  IMP_MUSCLE;
+    // need bodybuilders (trait), location: gym, high strength
+  IMP_WOUND_REGEN;
+    // young people
+  IMP_HEALTH;
+    // young people
+  IMP_ENERGY;
+    // sports, gym, athletes, martial artists
+  IMP_HARDEN_GRIP;
+    // snakes (wilderness)
+  IMP_ATTACH;
+    // snakes (wilderness)
+  IMP_REINFORCE;
+    // psychic people, fortune teller, telepaths
+  IMP_ACID_SPIT;
+    // toxic waste (industrial facility, factory, storage)
+  IMP_SLIME_SPIT;
+    // spiders
+  IMP_PARALYSIS_SPIT;
+    // spiders
+    // snakes (wilderness)
+  IMP_PANIC_GAS;
+    // X chemicals - medical lab, chemical lab, drug lab, hospital, pharmacy
+  IMP_PARALYSIS_GAS;
+    // X chemicals - medical lab, chemical lab, drug lab, hospital, pharmacy
+  IMP_MICROHABITAT;
+    // levels 2,3 only progress when you have multiple active human pods/cocoons in first habitat (habitat growth)
+  IMP_BIOMINERAL;
+    // ?
+
+when mutation needs critter:
+  go out to wilderness (or in the city), find critter, kill it and eat it
+when mutation progress needs specific host job or trait:
+  search for specific jobs/traits on computer (marks person)
+  enter location, find person, invade (mutation research only progresses when host requirement is fulfilled)
+  or search for location (closest X), enter location, randomly invade hosts?
+when needs item:
+  find location
+  go to location, use item
 ==
 ==
 GENERAL IDEAS

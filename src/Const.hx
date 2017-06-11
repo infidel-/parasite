@@ -19,6 +19,7 @@ class Const
   public static var TEXT_COLORS: Map<_TextColor, String> =
     [
       COLOR_DEFAULT => '#FFFFFF',
+      COLOR_REPEAT => '#BBBBBB',
       COLOR_DEBUG => '#555555',
       COLOR_ALERT => '#FF2222',
       COLOR_EVOLUTION => '#00FFFF',
@@ -34,6 +35,7 @@ class Const
   public static var TEXT_COLORS_INT: Map<_TextColor, Int> =
     [
       COLOR_DEFAULT => 0xFFFFFF,
+      COLOR_REPEAT => 0xBBBBBB,
       COLOR_DEBUG => 0x555555,
       COLOR_ALERT => 0xFF2222,
       COLOR_EVOLUTION => 0x00FFFF,

@@ -71,12 +71,6 @@ class EvolutionManager
               imp = openImprov(pathID);
               if (imp == null) // should not be here
                 {
-/*
-                  player.log('You have followed this direction to the end.',
-                    COLOR_EVOLUTION);
-                  path.ep = 0;
-                  taskID = '';
-*/
                   Const.todo('BUG EvolutionManager: You should not be here.');
                   return;
                 }
@@ -97,27 +91,59 @@ class EvolutionManager
           imp = getImprov(impID);
           imp.ep += 10 * time;
 
+          // host degradation - reduce one of the host attributes
+          turnDegrade(time);
+
           // upgrade complete
           if (imp.ep >= EvolutionConst.epCostImprovement[imp.level])
-            {
-              imp.level++;
-              player.log('You have improved your understanding of ' + imp.info.name +
-                ' to level ' + imp.level + '.', COLOR_EVOLUTION);
-
-              // clear
-              imp.ep = 0;
-              taskID = '';
-              isActive = false;
-
-              // call onUpgrade() func
-              if (imp.info.onUpgrade != null)
-                imp.info.onUpgrade(imp.level, game, player);
-
-              // on first learning of evolution with an organ
-              if (imp.info.organ != null)
-                game.goals.complete(GOAL_EVOLVE_ORGAN);
-            }
+            turnUpgrade(imp);
         }
+    }
+
+
+// TURN: host degradation
+  function turnDegrade(time: Int)
+    {
+      // pick a random attribute
+      var list = [ 'strength', 'constitution', 'intellect', 'psyche' ];
+      var attr = list[Std.random(list.length)];
+      var val = Reflect.field(player.host.baseAttrs, attr) - 1;
+      Reflect.setField(player.host.baseAttrs, attr, val);
+      player.host.recalc();
+
+      if (val > 0)
+        {
+          player.log('Your host degrades.');
+          game.info(attr + ': ' + val);
+          return;
+        }
+
+      // when any attribute is zero, host collapses
+      player.host.health = 0;
+
+      player.onHostDeath('You host has degraded completely.');
+    }
+
+
+// TURN: finish upgrading improvement
+  function turnUpgrade(imp: Improv)
+    {
+      imp.level++;
+      player.log('You have improved your understanding of ' + imp.info.name +
+        ' to level ' + imp.level + '.', COLOR_EVOLUTION);
+
+      // clear
+      imp.ep = 0;
+      taskID = '';
+      isActive = false;
+
+      // call onUpgrade() func
+      if (imp.info.onUpgrade != null)
+        imp.info.onUpgrade(imp.level, game, player);
+
+      // on first learning of evolution with an organ
+      if (imp.info.organ != null)
+        game.goals.complete(GOAL_EVOLVE_ORGAN);
     }
 
 

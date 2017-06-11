@@ -103,15 +103,7 @@ class Player
           host.energy += delta;
 
           if (host.energy <= 0)
-            {
-              if (game.location == LOCATION_AREA)
-                game.playerArea.onHostDeath();
-
-              else if (game.location == LOCATION_REGION)
-                game.playerRegion.onHostDeath();
-
-              log('Your host has expired. You have to find a new one.');
-            }
+            onHostDeath('Your host has expired. You have to find a new one.');
         }
 
       // more host state checks
@@ -120,7 +112,6 @@ class Player
         {
           // parasite energy restoration
           energy += 10 * time;
-          evolutionManager.turn(time);
 
           host.organs.turn(time); // host organ growth
 
@@ -129,6 +120,9 @@ class Player
           if (host.type == 'human' &&
               evolutionManager.getLevel(IMP_BRAIN_PROBE) > 0)
             skills.increase(KNOW_SOCIETY, 0.1 * host.intellect * time);
+
+          // evolution can kill host (change state)
+          evolutionManager.turn(time);
         }
 
       // location-specific turn
@@ -137,6 +131,19 @@ class Player
 
       else if (game.location == LOCATION_REGION)
         game.playerRegion.turn();
+    }
+
+
+// convenience method for host death
+  public inline function onHostDeath(msg: String)
+    {
+      if (game.location == LOCATION_AREA)
+        game.playerArea.onHostDeath();
+
+      else if (game.location == LOCATION_REGION)
+        game.playerRegion.onHostDeath();
+
+      log(msg);
     }
 
 

@@ -233,6 +233,9 @@ class AI
       var o = organs.get(IMP_HEALTH);
       if (o != null)
         maxHealth += o.params.health;
+
+      // clamp new health if decreased
+      health = health;
     }
 
 

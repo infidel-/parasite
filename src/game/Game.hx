@@ -32,7 +32,8 @@ class Game
   public var turns: Int; // number of turns passed since game start
   public var isInited: Bool; // is the game initialized?
   public var isFinished: Bool; // is the game finished?
-  public var messageList: List<String>; // last X messages of log
+  public var messageList: List<_LogMessage>; // last X messages of log
+  public var hudMessageList: List<_LogMessage>; // last X messages of hud log
   public var importantMessagesEnabled: Bool; // messages enabled?
 
   public function new()
@@ -53,6 +54,7 @@ class Game
 //      HXP.frameRate = 30;
       HXP.scene = scene;
       messageList = new List();
+      hudMessageList = new List();
       importantMessagesEnabled = true;
       isInited = false;
 
@@ -143,6 +145,7 @@ class Game
       isInited = false;
       RegionGame._maxID = 0;
       messageList.clear();
+      hudMessageList.clear();
       area.leave();
       region.leave();
       scene.region.clearIcons();
@@ -324,12 +327,29 @@ class Game
       if (col == null)
         col = COLOR_DEFAULT;
       Const.p(s);
-      var hs = "<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
-      scene.hud.log(hs);
 
-      // add message to buffer
-      messageList.add(hs);
+      // check for same message
+      var last = messageList.last();
+      if (last != null && last.msg == s)
+        {
+          last.cnt++;
+          return;
+        }
+
+      // add message to the log and minilog
+      var msg = {
+        msg: s,
+        col: col,
+        cnt: 1,
+      };
+      messageList.add(msg);
       if (messageList.length > 100)
         messageList.pop();
+      hudMessageList.add(msg);
+      if (hudMessageList.length > 4)
+        hudMessageList.pop();
+
+      // update HUD minilog display
+      scene.hud.updateLog();
     }
 }

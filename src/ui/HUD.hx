@@ -29,7 +29,6 @@ class HUD
 
   var _log: TextField; // last log lines
   var _logBack: Sprite; // log background
-  var _listLog: List<String>; // log lines (last 4)
 
   var _console: TextField; // console
   var _consoleBack: Sprite; // console background
@@ -41,19 +40,7 @@ class HUD
     {
       game = g;
       _listActions = new List<_PlayerAction>();
-      _listLog = new List<String>();
       var font = Assets.getFont(Const.FONT);
-/*
-      var b:Button = new Button();
-      b.text = "Test button";
-      b.x = 10;
-      b.y = 10;
-      Lib.current.addChild(b);
-
-      b.onClick = function(e) {
-          b.text = "Clicked!";
-      }
-*/
 
       // console
       _console = new TextField();
@@ -109,17 +96,6 @@ class HUD
       _help.width = HXP.width - 40;
       _help.height = game.config.fontSize + 4;
       HXP.stage.addChild(_helpBack);
-    }
-
-
-// add line to a log and remove first one
-  public function log(s: String)
-    {
-      _listLog.add(s);
-      if (_listLog.length > 4)
-        _listLog.pop();
-
-      updateLog(); // redraw the log just in case
     }
 
 
@@ -300,12 +276,24 @@ class HUD
 
 
 // update log display
-  function updateLog()
+  public function updateLog()
     {
       var buf = new StringBuf();
-      for (l in _listLog)
+      for (l in game.hudMessageList)
         {
-          buf.add(l);
+          buf.add("<font color='");
+          buf.add(Const.TEXT_COLORS[l.col]);
+          buf.add("'>");
+          buf.add(l.msg);
+          buf.add("</font>");
+          if (l.cnt > 1)
+            {
+              buf.add(" <font color='");
+              buf.add(Const.TEXT_COLORS[_TextColor.COLOR_REPEAT]);
+              buf.add("'>(x");
+              buf.add(l.cnt);
+              buf.add(")</font>");
+            }
           buf.add('\n');
         }
 
