@@ -757,15 +757,26 @@ class AI
           if (obj.type != 'body')
             continue;
 
-          // already seen
+          // object already seen by this AI
           if (Lambda.has(_objectsSeen, obj.id))
             continue;
 
-          var body: BodyObject = untyped obj;
+          var body: BodyObject = cast obj;
 
           // human AI becomes alert on seeing human bodies
           if (isHuman && body.isHumanBody)
-            setState(AI_STATE_ALERT, REASON_BODY);
+            {
+              if (!body.wasSeen)
+                {
+                  // mark body as seen by someone to limit the law response
+                  body.wasSeen = true;
+
+                  setState(AI_STATE_ALERT, REASON_BODY);
+                }
+
+              // silent alert - no calling law
+              else setState(AI_STATE_ALERT, REASON_BODY_SILENT);
+            }
 
           _objectsSeen.add(obj.id);
         }
@@ -1074,6 +1085,7 @@ enum _AIStateChangeReason
 {
   REASON_NONE;
   REASON_BODY;
+  REASON_BODY_SILENT;
   REASON_BACKUP;
   REASON_ATTACH;
   REASON_DETACH;

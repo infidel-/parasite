@@ -49,8 +49,12 @@ high alertness should bleed into group interest
   ? block area for entry through the sewers
 check alertness falloff
 ? increase police presence after body found (raise area alertness faster)
-body found by multiple people - multiple alertness increases + patrols summoned
 change "Random civilian calls the police" to appropriate message if society knowledge is 0
+slow down phone use to call police by civs
+habitat - ambush detection and protection (auto-destroy on ambush?)
+bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
+bug: disallows movement for assimilated hosts in region mode when low energy
+
 rumors and hearsay as a source of current information
 "Police? Police? Please help!" - if you near the source of call
 "Have you heard that X was committed to a mental institution?"

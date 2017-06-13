@@ -9,6 +9,7 @@ class BodyObject extends AreaObject
 {
   public var inventory: Inventory; // inventory (copied from AI)
 
+  public var wasSeen: Bool; // was this body seen by someone already? (limit for call law events)
   public var isSearched: Bool; // is this body searched?
   public var isHumanBody: Bool; // is this a human body?
   public var organPoints: Int; // amount of organs on this body
@@ -20,6 +21,7 @@ class BodyObject extends AreaObject
       inventory = new Inventory(g);
       type = 'body';
       name = 'body';
+      wasSeen = false;
       isHumanBody = false;
       isSearched = false;
       organPoints = 0;

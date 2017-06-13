@@ -1266,7 +1266,7 @@ class AreaGame
 
       if (game.isInited)
         {
-          if (mod >= 1 || mod <= - 1)
+          if (mod >= 1)
             game.infoChange('Area alertness', mod, _alertness);
 
           // chance of bleeding into group priority

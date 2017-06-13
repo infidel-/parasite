@@ -173,32 +173,41 @@ class AreaManager
   function onCallLaw(e: AreaEvent)
     {
       var sdetails;
+      var apts = 0;
       var pts = 0;
       if (e.details == '' + REASON_HOST)
         {
           sdetails = 'a suspicious individual';
+          apts = 5;
           pts = 2;
         }
       else if (e.details == '' + REASON_BODY)
-        sdetails = 'a dead body';
+        {
+          sdetails = 'a dead body';
+          apts = 10;
+          pts = 0;
+        }
       else if (e.details == '' + REASON_WITNESS)
         {
           sdetails = 'an attack';
+          apts = 5;
           pts = 1;
         }
       else if (e.details == '' + REASON_DAMAGE)
         {
           sdetails = 'an attack';
+          apts = 10;
           pts = 2;
         }
       else
         {
           sdetails = 'wild animal sighting';
+          apts = 5;
           pts = 1;
         }
 
       log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
-        ' has received a report about ' + sdetails +
+        ' has received reports about ' + sdetails +
         '. Dispatching units to the location.');
 
       game.group.raisePriority(pts);
@@ -208,7 +217,7 @@ class AreaManager
           (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!');
 
       // increase area alertness
-      area.alertness += 10;
+      area.alertness += apts;
 
       // alert all police already in area
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
