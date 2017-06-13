@@ -124,7 +124,13 @@ class Group
       if (team != null)
         team.distance -= mod;
 
-      else changeOnlyPriority(mod);
+      else
+        {
+          // reduce team timer
+          teamTimeout--;
+
+          changeOnlyPriority(mod);
+        }
     }
 
 
@@ -133,8 +139,7 @@ class Group
     {
       priority += mod;
       priority = Const.clampFloat(priority, 0, 100.0);
-      game.info('Group priority: ' + (mod > 0 ? '+' : '') + mod + ' = ' +
-        Const.round(priority));
+      game.infoChange('Group priority', mod, priority);
     }
 
 

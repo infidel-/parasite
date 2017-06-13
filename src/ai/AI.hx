@@ -1056,6 +1056,7 @@ class AI
 
 // =================================================================================
   // AI view and hear distance
+  // recalculated in GameScene.begin() at game start
   public static var VIEW_DISTANCE = 10;
   public static var HEAR_DISTANCE = 15;
 

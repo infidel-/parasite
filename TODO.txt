@@ -49,6 +49,7 @@ high alertness should bleed into group interest
   ? block area for entry through the sewers
 check alertness falloff
 ? increase police presence after body found (raise area alertness faster)
+body found by multiple people - multiple alertness increases + patrols summoned
 change "Random civilian calls the police" to appropriate message if society knowledge is 0
 rumors and hearsay as a source of current information
 "Police? Police? Please help!" - if you near the source of call

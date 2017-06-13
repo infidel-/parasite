@@ -108,11 +108,11 @@ class ConsoleGame
           game.debug('set <variable> <value> - set game variable');
           game.debug('set - show variables');
           game.debug(
-            '(h.) host.energy, host.maxEnergy, host.health, host.maxHealth, ' +
-            'group.knownCount, group.priority, ' +
-            'player.godmode (p.god), player.invisible (p.invis), ' +
-            'player.los (p.los), ' +
-            'team.distance, team.level, team.size, team.timeout, team.timer');
+            'area.alertness, ' +
+            'host., h. - energy, maxEnergy, health, maxHealth, ' +
+            'group. - knownCount, priority, ' +
+            'player. - godmode (p.god), invisible (p.invis), los (p.los), ' +
+            'team. - distance, level, size, timeout, timer');
           return;
         }
 
@@ -121,7 +121,14 @@ class ConsoleGame
       var valInt = Std.parseInt(val);
       var valBool = (valInt > 0 || val == 'true');
 
-      if (key == 'host.energy' || key == 'h.energy')
+      if (key == 'area.alertness')
+        {
+          if (game.location == LOCATION_AREA)
+            game.area.alertness = valInt;
+          else if (game.location == LOCATION_REGION)
+            game.playerRegion.currentArea.alertness = valInt;
+        }
+      else if (key == 'host.energy' || key == 'h.energy')
         {
           if (game.player.state == PLR_STATE_HOST)
             game.player.host.energy = valInt;

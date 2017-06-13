@@ -1071,8 +1071,8 @@ class AreaGame
       var rect = {
         x1: game.scene.cameraTileX1 - 1,
         y1: game.scene.cameraTileY1 - 1,
-        x2: game.scene.cameraTileX2 + 1,
-        y2: game.scene.cameraTileY2 + 1
+        x2: game.scene.cameraTileX2 + 2,
+        y2: game.scene.cameraTileY2 + 2
         };
 
       if (rect.x1 < 0)
@@ -1263,8 +1263,16 @@ class AreaGame
       // save alertness changes for later use
       alertnessMod += v - _alertness;
       _alertness = Const.clampFloat(v, 0, 100.0);
-      if (mod >= 1 || mod <= - 1)
-        game.infoChange('Area alertness', mod, _alertness);
+
+      if (game.isInited)
+        {
+          if (mod >= 1 || mod <= - 1)
+            game.infoChange('Area alertness', mod, _alertness);
+
+          // chance of bleeding into group priority
+          if (mod >= 1 && v > 25 && Std.random(100) < v)
+            game.group.raisePriority(1);
+        }
 
       return _alertness;
     }

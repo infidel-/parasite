@@ -259,9 +259,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
     {
       var mod = v - _distance;
       v = Const.clampFloat(v, 0, 150.0);
-      game.info('Team distance: ' + (mod > 0 ? '+' : '') +
-        Const.round(mod) + ' = ' +
-        Const.round(v));
+      game.infoChange('Team distance', mod, v);
       _distance = v;
       return v;
     }

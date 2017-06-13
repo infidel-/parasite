@@ -139,6 +139,14 @@ class GameScene extends Scene
 
       // init game state
       game.init();
+
+      // update AI hear, view distance
+      var xmin = cameraTileX2 - cameraTileX1;
+      var ymin = cameraTileY2 - cameraTileY1;
+      ai.AI.VIEW_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) / 2.5);
+      ai.AI.HEAR_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) * 1.5 / 2.5);
+      game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
+        ', AI hear: ' + ai.AI.HEAR_DISTANCE);
     }
 
 
@@ -401,7 +409,7 @@ class GameScene extends Scene
       // window open
       if (_state != UISTATE_DEFAULT)
         {
-          if (Input.pressed("enter") && _state == UISTATE_MESSAGE)
+          if (Input.pressed("enter"))
             closeWindow();
 
           // close windows
