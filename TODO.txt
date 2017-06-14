@@ -2,35 +2,6 @@
 
 REASON_HOST - suspicious individual (even if host is a dog)
 
-    ,hardenGripAction: function() {
-        this.game.log("You harden your grip on the host.",null);
-        var params = this.player.evolutionManager.getParams(_$Improv.IMP_HARDEN_GRIP);
-        var tmp = params.attachHoldBase;
-!!!        if(!this.attachHost.effects.has(_$AIEffectType.EFFECT_PARALYSIS)) tmp -= Std["int"](this.attachHost.get_strength() / 2);
-        var _g = this;
-        _g.set_attachHold(_g.attachHold + tmp);
-    }
-
-
-parasite.js:6645 Const.hx:275: You have managed to attach to a host.
-parasite.js:6645 Const.hx:275: You detach from the potential host.
-parasite.js:6645 Const.hx:275: You harden your grip on the host.
- GameScene.hx:646: Exception: TypeError: Cannot read property 'effects' of null
-
-?do i need this for this release?
-?maybe only add this to growing organs (since all that implies the mutation process)
-5) make rapid evolution more dangerous to player (not just host)
-  when evolving, genetic drift of the host raises each turn
-  total sum of evolved improvement levels acts as a base drift, you cannot lower the drift below that base level
-  drift is a chance of evolution going haywire and producing amorphous tentacled monster out of host when the process finishes (need a name - the divergent, aberration) OR total meltdown
-    monster is hostile to player and everyone else
-    either despawns when player exits with +alertness,+group priority,-team distance
-    or rampages through the area for some time until downed by the government/conspiracy (dont have to actually display/simulate it)
-  mutational meltdown - host completely collapses under the strain of evolution (reset all progress?)
-  drift goes down when not evolving to minimum
-  devolution, divergent evolution, genetic drift
-  "That was... unexpected." "I think I need to escape."
-
 
 == CURRENT
 
@@ -38,12 +9,12 @@ test gameplay
 new gui (with mouse support for everything)
   hud
   inventory
+    make use computer action more convenient (add to hud?)
   evolution
   organs
   debug (or move debug to console)
-make use computer action more convenient (add to hud?)
-? show all selected difficulties in knowledge window
 
+? show all selected difficulties in knowledge window
 high alertness should bleed into group interest
   heavier police response
   ? block area for entry through the sewers
@@ -53,7 +24,10 @@ change "Random civilian calls the police" to appropriate message if society know
 slow down phone use to call police by civs
 habitat - ambush detection and protection (auto-destroy on ambush?)
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
-bug: disallows movement for assimilated hosts in region mode when low energy
+exploit: hang around one area -> evade team member -> +10 distance -> repeat
+exploit/bug: when evolving in the sewers, only one host degradation per tick
+disallow habitats outside of city
+
 
 rumors and hearsay as a source of current information
 "Police? Police? Please help!" - if you near the source of call
@@ -67,8 +41,24 @@ need to play more to determine if this is necessary:
 ?? smell-based improvement [opens up for research on group knowledge]: parasite can accurately detect which people are team members. needs a special organ.
 ?? psychology skill: can vaguely detect which people are team members and has false positives
 
-==
-RADIO IMPROVEMENT
+== ORGAN GROWTH DANGER
+
+make rapid organ growth more dangerous to player
+
+when evolving, genetic drift of the host raises each turn
+total sum of evolved improvement levels acts as a base drift, you cannot lower the drift below that base level
+drift is a chance of evolution going haywire and producing tentacled monster out of host when the process finishes (need a name - the divergent, aberration, abomination) OR total meltdown
+monster
+  hostile to player and everyone else
+  despawns when player exits with +alertness, +group priority, -team distance
+  or rampages through the area for some time until downed by the government/conspiracy (dont have to actually display/simulate it but max plan is showing icon in region map and spawn it on entering area)
+  rampaging monster automatically sets team state to "monster", raises team distance and lowers group priority (beneficial to the player but risky)
+mutational meltdown - host completely collapses under the strain of evolution (reset all progress?)
+drift goes down to minimum when not evolving
+devolution, divergent evolution, genetic drift
+"That was... unexpected." "I think I need to escape."
+
+== RADIO IMPROVEMENT
 
 police radio gives access to radio messages and opens up way to:
 
@@ -90,6 +80,7 @@ no levels - marks with a red + on map, gives a message
 1) find police radio/security radio
 2) evolve radio receiver
 3) grow receiver
+
 ==================================
 LATER
 most of the improvements and skills should come from special conditions, like people professions, traits, finding locations, etc
@@ -142,8 +133,7 @@ scenario work and expansion:
 ?inventory actions - r1, l1, d1
 
 
-==
-CONSOLE CHEATSHEET:
+== CONSOLE CHEATSHEET:
 ;le12 - learn about aliens
 ;le8 - learn location of spaceship
 
@@ -189,21 +179,20 @@ HDD/laptop/smartphone as a clue source
   needs to be hacked with computer science skill
     only hackers possess it (look above)
 
-==
-SCENARIO: CULT
+== SCENARIO: CULT
 
 sanity stat for the followers (they can get totally mad in the process)
 high-level control path improv (research dopamine) that puts a euphoria-inducing biodrone on the host
   humans stay as loyal but free agents that can do the tasks set by the player
 build a cult of followers
-==
-SCENARIO: SHADOW OUT OF TIME, GREAT RACE/PNAKOTUS
+
+== SCENARIO: SHADOW OUT OF TIME, GREAT RACE/PNAKOTUS
 
 raise knowledge human society to max and build mind-swap device
 raising knowledge requires special evolution imp - memory map
 ? need to tie in with the original idea
-==
-SIDE MISSIONS
+
+== SIDE MISSIONS
 
 parasite-related event results (npcs) are put into the list
   time
@@ -228,9 +217,8 @@ side missions:
   silence X (reporter, investigator, previous host)
     decreases city-wide alertness
   steal and destroy the body?
-==
-==
-EXTENDED EVOLUTION
+
+== EXTENDED EVOLUTION
 
   IMP_DECAY_ACCEL;
     // location: morgue, need decaying dead bodies (can use dead bodies in habitat?)
@@ -280,10 +268,12 @@ when mutation progress needs specific host job or trait:
 when needs item:
   find location
   go to location, use item
-==
-==
-GENERAL IDEAS
 
+== GENERAL IDEAS
+
+? make 32x32/64x64 tiles selectable (if someone wants) - need to tweak AI visiblity/hearing radius for larger tilesets
+scenes
+  ? start the game with a scene (teaches about team agents)
 sanity (psyche-based)
   sanity loss on parasite-related events
   temp insanity
@@ -327,14 +317,10 @@ write about getPixels/setPixels bug
 improvement that lowers passive team distance decrease (reduces amount of residue left)
 
 == BROAD DIRECTIONS
-scenario goals test
-conspiracy group and group active measures
+
 city generation + city graphics
 gui graphics + gui rework to support mouse
 
 more scenario goals
-scenes
-  ? start the game with a scene (teaches about team agents)
 additional skills and acquiring them (locations, jobs, etc)
-? make 32x32/64x64 tiles selectable (if someone wants) - need to tweak AI visiblity/hearing radius for larger tilesets
 

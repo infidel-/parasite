@@ -275,7 +275,7 @@ class EvolutionConst
         path: PATH_ATTACK,
         id: IMP_SLIME_SPIT,
         name: '??Slime spit',
-        note: 'Body feature. Grown body feature gives the host an ability to spit slime on an NPC to slow them down)',
+        note: 'Body feature. Grown body feature gives the host an ability to spit slime on an NPC to slow them down',
         maxLevel: 3,
         noteFunc: function (l)
           {
@@ -596,7 +596,7 @@ class EvolutionConst
             hostEnergyBase: 10,
             hostHealthBase: 1,
             hostHealthMod: 1,
-            hostSkillsMod: 0.25, // can access skills from level 2
+            hostSkillsMod: 0.5, // can access skills from level 2
             hostAttrsMod: 0,
           },
           {
@@ -604,7 +604,7 @@ class EvolutionConst
             hostEnergyBase: 5,
             hostHealthBase: 0,
             hostHealthMod: 1,
-            hostSkillsMod: 0.5,
+            hostSkillsMod: 0.75,
             hostAttrsMod: 1, // can access attributes and traits from level 3
           },
           ],

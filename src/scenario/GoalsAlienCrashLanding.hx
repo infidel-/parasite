@@ -202,7 +202,7 @@ class GoalsAlienCrashLanding
       id: SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
       name: 'Return to spaceship',
       note: 'You need to return to the spaceship.',
-      messageComplete: 'Returning to the HQ now.',
+      messageComplete: 'Returning to the HQ now...',
 
       onReceive: function (game, player) {
         // change spaceship action contents

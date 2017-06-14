@@ -140,7 +140,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       var tmp = game.region.getHabitatsList();
 
       // habitat destroyed
-      destroyHabitat(tmp.first());
+      destroyHabitat(tmp.first().parent);
     }
 
 
@@ -212,8 +212,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
       area.habitat = null;
       game.region.removeArea(area.habitatAreaID);
       game.scene.region.updateIconsArea(area.x, area.y);
-      game.log("You feel great pain as the habitat at " +
-        area.x + "," + area.y + " is destroyed. This will leave a permanent mark.");
+      game.message("You feel great pain as the habitat at " +
+        area.x + "," + area.y +
+        " is destroyed. This will leave a permanent mark.", COLOR_ALERT);
 
       // reduce max energy (20 min)
       if (game.player.maxEnergy > 20)

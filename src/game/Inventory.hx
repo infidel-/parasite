@@ -221,13 +221,13 @@ class Inventory
       if (!ret)
         {
           game.log('You have failed to use the human device properly. You still gain some insight.');
-          game.player.skills.increase(SKILL_COMPUTER, 0.5);
+          game.player.skills.increase(SKILL_COMPUTER, 1);
           return true;
         }
 
       game.log('You use the ' + item.name + ' to search for known persons data.');
       if (skillLevel < 99)
-        game.player.skills.increase(SKILL_COMPUTER, 1);
+        game.player.skills.increase(SKILL_COMPUTER, 2);
 
       var cnt = 1;
       if (item.info.name == 'smartphone')
