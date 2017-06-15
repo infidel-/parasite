@@ -14,20 +14,15 @@ new gui (with mouse support for everything)
   organs
   debug (or move debug to console)
 
-? show all selected difficulties in knowledge window
 high alertness should bleed into group interest
   heavier police response
   ? block area for entry through the sewers
-check alertness falloff
-? increase police presence after body found (raise area alertness faster)
 change "Random civilian calls the police" to appropriate message if society knowledge is 0
-slow down phone use to call police by civs
-habitat - ambush detection and protection (auto-destroy on ambush?)
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
 exploit: hang around one area -> evade team member -> +10 distance -> repeat
 exploit/bug: when evolving in the sewers, only one host degradation per tick
-disallow habitats outside of city
 
+habitat - ambush detection and protection (auto-destroy on ambush?)
 
 rumors and hearsay as a source of current information
 "Police? Police? Please help!" - if you near the source of call
