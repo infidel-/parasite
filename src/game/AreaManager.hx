@@ -213,8 +213,12 @@ class AreaManager
       game.group.raisePriority(pts);
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
-        e.ai.log('calls the ' +
-          (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!');
+        {
+          if (game.player.skills.getLevel(KNOW_SOCIETY) < 5)
+            e.ai.log('calls someone!');
+          else e.ai.log('calls the ' +
+            (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!');
+        }
 
       // increase area alertness
       area.alertness += apts;
