@@ -298,6 +298,9 @@ class GameScene extends Scene
         {
           if (components[_state] != null)
             components[_state].show();
+
+          if (_state != UISTATE_LOG)
+            components[_state].scrollToBegin();
         }
 
       return _state;

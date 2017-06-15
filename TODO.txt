@@ -16,7 +16,6 @@ new gui (with mouse support for everything)
 
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
 exploit: hang around one area -> evade team member -> +10 distance -> repeat
-on open GUI window scroll top (except log)
 
 habitat - ambush detection and protection (auto-destroy on ambush?)
 
