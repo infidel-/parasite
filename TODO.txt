@@ -20,7 +20,6 @@ high alertness should bleed into group interest
 change "Random civilian calls the police" to appropriate message if society knowledge is 0
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
 exploit: hang around one area -> evade team member -> +10 distance -> repeat
-exploit/bug: when evolving in the sewers, only one host degradation per tick
 
 habitat - ambush detection and protection (auto-destroy on ambush?)
 

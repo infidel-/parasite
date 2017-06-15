@@ -38,7 +38,7 @@ class Goals
       name: 'Evolve brain probe',
       note: 'You need to evolve the brain probe improvement.',
       messageReceive: 'Evolution degrades the host. I need to be careful.',
-      messageComplete: 'I can probe the brain of this host now. I should also evolve further.',
+      messageComplete: 'I can probe the host brains now. I should also evolve further.',
       onComplete: function (game, player) {
         player.evolutionManager.state = 2;
         game.player.vars.organsEnabled = true;

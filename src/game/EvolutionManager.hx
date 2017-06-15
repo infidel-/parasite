@@ -104,26 +104,36 @@ class EvolutionManager
 // TURN: host degradation
   function turnDegrade(time: Int)
     {
-      // pick a random attribute
       var list = [ 'strength', 'constitution', 'intellect', 'psyche' ];
-      var attr = list[Std.random(list.length)];
-      var val = Reflect.field(player.host.baseAttrs, attr) - 1;
-      Reflect.setField(player.host.baseAttrs, attr, val);
-      player.host.recalc();
 
-      if (val > 0)
+      // reduce attributes in loop
+      for (i in 0...time)
         {
-          if (val == 1)
-            player.log('Your host degrades to a breaking point and might die soon.', COLOR_ALERT);
-          else player.log('Your host degrades.');
-          game.info(attr + ': ' + val);
-          return;
+          var attr = list[Std.random(list.length)];
+          var val = Reflect.field(player.host.baseAttrs, attr) - 1;
+          Reflect.setField(player.host.baseAttrs, attr, val);
+
+          if (val > 0)
+            {
+              if (val == 1)
+                player.log('Your host degrades to a breaking point and might die soon.', COLOR_ALERT);
+              else player.log('Your host degrades.');
+              game.info(attr + ': ' + val);
+            }
+
+          // when any attribute is zero, host collapses
+          else if (val == 0)
+            {
+              player.host.recalc();
+              player.host.health = 0;
+
+              player.onHostDeath('You host has degraded completely.');
+
+              return;
+            }
         }
 
-      // when any attribute is zero, host collapses
-      player.host.health = 0;
-
-      player.onHostDeath('You host has degraded completely.');
+      player.host.recalc();
     }
 
 
