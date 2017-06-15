@@ -116,12 +116,21 @@ class PlayerRegion
 // action energy availability is checked when the list is formed
   public function action(action: _PlayerAction)
     {
+      var ret = true;
+
       if (action.id == 'enterArea')
-        enterAreaAction();
+        ret = enterAreaAction();
       else if (action.id == 'createHabitat')
         createHabitatAction();
       else if (action.id == 'enterHabitat')
         enterHabitatAction();
+
+      // action failed
+      if (!ret)
+        {
+          game.updateHUD();
+          return;
+        }
 
       player.energy -= action.energy;
 
@@ -134,12 +143,21 @@ class PlayerRegion
 
 
 // action: enter area
-  function enterAreaAction()
+  function enterAreaAction(): Bool
     {
+      // cannot enter area with high alertness
+      if (currentArea.alertness >= 75)
+        {
+          game.log("This area is too dangerous at the moment.", COLOR_HINT);
+          return false;
+        }
+
       target = null;
       game.log(currentArea.info.isInhabited ?
         "You emerge from the sewers." : "You enter the area.");
       game.setLocation(LOCATION_AREA);
+
+      return true;
     }
 
 
