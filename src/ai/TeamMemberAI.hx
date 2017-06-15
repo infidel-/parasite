@@ -105,7 +105,7 @@ class TeamMemberAI extends HumanAI
 
       // team member was noticed but never alerted, raise distance instead
       else if (wasNoticed)
-        game.group.raiseTeamDistance(10);
+        game.group.raiseTeamDistance(1);
     }
 
 

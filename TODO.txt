@@ -5,17 +5,20 @@ REASON_HOST - suspicious individual (even if host is a dog)
 
 == CURRENT
 
+bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
+exploit: hang around one area -> evade team member -> +10 distance -> repeat
+debug: complete evolution kills host and bugs
+habitat destroy - maybe raise distance to 50?
+
 test gameplay
 new gui (with mouse support for everything)
+  tooltips in region mode with area x,y, type, etc
   hud
   inventory
     make use computer action more convenient (add to hud?)
   evolution
   organs
   debug (or move debug to console)
-
-bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
-exploit: hang around one area -> evade team member -> +10 distance -> repeat
 
 habitat - ambush detection and protection (auto-destroy on ambush?)
 
