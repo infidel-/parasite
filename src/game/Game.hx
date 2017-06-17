@@ -149,6 +149,7 @@ class Game
       area.leave();
       region.leave();
       scene.region.clearIcons();
+      scene.clearEvents();
       init();
     }
 

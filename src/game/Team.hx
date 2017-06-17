@@ -202,7 +202,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
   function destroyHabitat(area: AreaGame)
     {
       // team distance is increased providing a buffer
-      distance = 20;
+      distance = 30;
 
       // team goes back to search
       state = TEAM_SEARCH;

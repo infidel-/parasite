@@ -325,6 +325,13 @@ class GameScene extends Scene
     }
 
 
+// clear GUI queue
+  public inline function clearEvents()
+    {
+      uiQueue.clear();
+    }
+
+
 // close the current window
   public function closeWindow()
     {

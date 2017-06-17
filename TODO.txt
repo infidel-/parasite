@@ -6,9 +6,12 @@ REASON_HOST - suspicious individual (even if host is a dog)
 == CURRENT
 
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
-exploit: hang around one area -> evade team member -> +10 distance -> repeat
-debug: complete evolution kills host and bugs
-habitat destroy - maybe raise distance to 50?
+  not all object icons clear when re-enter?
+bug: if host dies on entering sewers, the region mode icon does not update
+dont increase distance on evasion when team is in ambush state
+disable evolution on new host?
+shorten ambush time?
+check los as if with host when spawning cops even when parasite (or they just appear badly)
 
 test gameplay
 new gui (with mouse support for everything)
@@ -21,6 +24,7 @@ new gui (with mouse support for everything)
   debug (or move debug to console)
 
 habitat - ambush detection and protection (auto-destroy on ambush?)
+  as an option (random) give the ability to lure ambush into specific habitat?
 
 rumors and hearsay as a source of current information
 "Police? Police? Please help!" - if you near the source of call

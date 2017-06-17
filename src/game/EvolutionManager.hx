@@ -49,7 +49,7 @@ class EvolutionManager
 
 
 // end of turn
-  public function turn(time: Int)
+  public function turn(time: Int, ?debug: Bool = false)
     {
       // no tasks
       if (!isActive)
@@ -92,7 +92,8 @@ class EvolutionManager
           imp.ep += 10 * time;
 
           // host degradation - reduce one of the host attributes
-          turnDegrade(time);
+          if (!debug)
+            turnDegrade(time);
 
           // upgrade complete
           if (imp.ep >= EvolutionConst.epCostImprovement[imp.level])

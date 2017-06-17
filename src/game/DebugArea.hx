@@ -124,7 +124,7 @@ class DebugArea
           name: 'Complete current evolution',
           func: function()
             {
-              game.player.evolutionManager.turn(2000);
+              game.player.evolutionManager.turn(2000, true);
               game.player.energy = 100;
               game.player.host.energy = 100;
             }
