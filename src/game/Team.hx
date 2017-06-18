@@ -218,10 +218,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
         area.x + "," + area.y +
         " is destroyed. This will leave a permanent mark.", COLOR_ALERT);
 
-      // reduce max energy (20 min)
-      if (game.player.maxEnergy > 20)
+      // reduce max energy (30 min)
+      if (game.player.maxEnergy > 30)
         {
-          game.player.maxEnergy -= 20;
+          game.player.maxEnergy -= 10;
           game.player.energy = game.player.energy; // clamp current value
         }
 

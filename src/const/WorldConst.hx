@@ -93,7 +93,7 @@ class WorldConst
         commonAI: 28,
         uncommonAI: 12,
         buildingChance: 0.30,
-        lawResponceTime: 3,
+        lawResponceTime: 5,
         lawResponceAmount: 3,
         lawResponceEnabled: true,
         isHighRisk: true,
