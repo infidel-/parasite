@@ -310,6 +310,11 @@ class PlayerArea
       if (game.location == LOCATION_AREA)
         game.turn();
 
+      // fix for when player enters sewers and host dies
+      // we need to recheck player icon
+      else if (game.location == LOCATION_REGION)
+        game.scene.region.show();
+
       // update HUD info
       game.updateHUD();
     }

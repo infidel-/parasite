@@ -85,7 +85,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // player in habitat, spawn blackops
       if (game.location == LOCATION_AREA && game.area.isHabitat)
         {
-          game.log("Something is wrong here... It's an ambush!");
+          game.message("Something is wrong here... It's an ambush!",
+            COLOR_ALERT);
           onEnterHabitat();
           return;
         }
@@ -103,7 +104,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
           var x = game.playerArea.x;
           var y = game.playerArea.y;
 
-          game.log("Something is wrong here... It's an ambush!");
+          game.message("Something is wrong here... It's an ambush!",
+            COLOR_ALERT);
           for (i in 0...4)
             {
               var loc = game.area.findLocation({

@@ -7,8 +7,6 @@ REASON_HOST - suspicious individual (even if host is a dog)
 
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
   not all object icons clear when re-enter?
-bug: if host dies on entering sewers, the region mode icon does not update
-dont increase distance on evasion when team is in ambush state
 disable evolution on new host?
 shorten ambush time?
 check los as if with host when spawning cops even when parasite (or they just appear badly)
