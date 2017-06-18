@@ -586,6 +586,10 @@ class PlayerArea
       attachHost = null;
       player.host.onInvade(); // notify ai
 
+      // disable evolution for dogs - they can die in the same turn
+      if (!player.host.isHuman)
+        game.player.evolutionManager.stop();
+
       // set state
       state = PLR_STATE_HOST;
 

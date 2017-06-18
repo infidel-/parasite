@@ -82,7 +82,9 @@ class Player
       if (state == PLR_STATE_PARASITE)
         {
           var delta = __Math.parasiteEnergyPerTurn(time);
-          energy += delta;
+          // DEBUG: godmode
+          if (!vars.godmodeEnabled)
+            energy += delta;
 
           if (state == PLR_STATE_PARASITE && energy <= 0)
             {

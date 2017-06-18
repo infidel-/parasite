@@ -466,15 +466,9 @@ class AreaGame
             // no LOS checks when player is entering the area
             if (!isEntering)
               {
-                // must not be visible to player as a parasite
-                if (game.player.state != PLR_STATE_HOST &&
-                    HXP.distanceSquared(game.playerArea.x, game.playerArea.y,
-                      xo + dx, yo + dy) < 6 * 6)
-                  continue;
-
-                // must not be visible to player when possessing a host
-                if (game.player.state == PLR_STATE_HOST &&
-                    isVisible(game.playerArea.x, game.playerArea.y, xo + dx, yo + dy))
+                // always check for LOS, even in parasite mode
+                if (isVisible(game.playerArea.x, game.playerArea.y,
+                      xo + dx, yo + dy))
                   continue;
               }
 

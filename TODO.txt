@@ -7,9 +7,6 @@ REASON_HOST - suspicious individual (even if host is a dog)
 
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
   not all object icons clear when re-enter?
-disable evolution on new host?
-shorten ambush time?
-check los as if with host when spawning cops even when parasite (or they just appear badly)
 
 test gameplay
 new gui (with mouse support for everything)

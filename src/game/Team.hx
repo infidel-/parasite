@@ -50,7 +50,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           // if player is currently in habitat, skip timer
           if (game.location == LOCATION_AREA && game.area.isHabitat)
             timer = 0;
-          else timer = 20 + 10 * Std.random(20);
+          else timer = 40 + 10 * Std.random(5);
           return;
         }
 

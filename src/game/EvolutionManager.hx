@@ -218,6 +218,14 @@ class EvolutionManager
     }
 
 
+// stop the evolution
+  public inline function stop()
+    {
+      taskID = '';
+      isActive = false;
+    }
+
+
 // player action (called from the EvolutionWindow)
   public function action(id: String)
     {
@@ -227,8 +235,7 @@ class EvolutionManager
       // stop evolution
       if (id == 'stop')
         {
-          taskID = '';
-          isActive = false;
+          stop();
           return;
         }
 
