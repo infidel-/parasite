@@ -29,6 +29,7 @@ class GameScene extends Scene
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
+  public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
   var loseFocus: LoseFocus; // lose focus blur
 
@@ -57,7 +58,21 @@ class GameScene extends Scene
       cameraTileX2 = 0;
       cameraTileY2 = 0;
 
+#if js
+      var os = Browser.navigator.platform;
+      if (os.indexOf('Linux') >= 0) // use C-1 on Linux
+        {
+          controlKey = 'ctrl';
+          Input.define("ctrl", [ 17 ]); // Ctrl key
+        }
+      else
+        {
+          controlKey = 'alt';
+          Input.define("ctrl", [ 18 ]); // Alt key
+        }
+#else
       Input.define("ctrl", [ 18 ]); // Alt key
+#end
       Input.define("shift", [ Key.SHIFT ]);
       Input.define("up", [ Key.UP, Key.W, Key.NUMPAD_8 ]);
       Input.define("down", [ Key.DOWN, Key.X, Key.NUMPAD_2 ]);

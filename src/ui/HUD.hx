@@ -310,7 +310,7 @@ class HUD
       var buf = new StringBuf();
       var prefix =
 #if js
-        "A-";
+        (game.scene.controlKey == 'alt' ? "A-" : "C-");
 #else
         "F";
 #end
