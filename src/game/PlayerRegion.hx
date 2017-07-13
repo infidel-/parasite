@@ -132,7 +132,29 @@ class PlayerRegion
           return;
         }
 
-      player.energy -= action.energy;
+      if (player.state == PLR_STATE_PARASITE)
+        player.energy -= action.energy;
+      else if (player.state == PLR_STATE_HOST)
+        player.host.energy -= action.energy;
+
+      postAction(); // post-action call
+    }
+
+
+// post-action
+  public function postAction()
+    {
+      // host state: check for energy
+      if (player.state == PLR_STATE_HOST)
+        {
+          if (player.host.energy <= 0)
+            {
+              onHostDeath();
+
+              game.log('Your host has expired somewhere in the sewers. You have to find a new one.');
+              game.scene.state = UISTATE_DEFAULT; // close window just in case
+            }
+        }
 
       if (player.energy == 0)
         Const.todo('Zero energy as a result of a region action. Fix this.');
