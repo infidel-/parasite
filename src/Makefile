@@ -72,12 +72,12 @@ release-mac64:
 
 release-html5-dev-debug:
 	openfl build project.nmml html5 -Dmydebug && \
-	cp -R .bin/html5/release/bin/* \
+	cp -R ../.bin/html5/release/bin/* \
 	~/projects/starinfidel.github.io/parasite-dev-debug/
 
 release-html5-dev:
 	openfl build project.nmml html5 && \
-	cp -R .bin/html5/release/bin/* \
+	cp -R ../.bin/html5/release/bin/* \
 	~/projects/starinfidel.github.io/parasite-dev/
 
 linux32-mydebug:

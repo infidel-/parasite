@@ -6,7 +6,9 @@ import com.haxepunk.graphics.atlas.TileAtlas;
 import com.haxepunk.utils.Input;
 import com.haxepunk.utils.Key;
 import haxe.ui.core.Component;
-#if !js
+#if js
+import js.Browser;
+#else
 import sys.io.File;
 #end
 
@@ -28,6 +30,7 @@ class GameScene extends Scene
   public var entityAtlas: TileAtlas; // entity graphics
   public var controlPressed: Bool; // Ctrl key pressed?
   public var shiftPressed: Bool; // Shift key pressed?
+  var loseFocus: LoseFocus; // lose focus blur
 
   // camera tile x,y
   public var cameraTileX1: Int;
@@ -128,6 +131,7 @@ class GameScene extends Scene
         UISTATE_DEBUG => new Debug(game),
         UISTATE_FINISH => new Finish(game),
         ];
+      loseFocus = new LoseFocus();
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
 
       // init mouse cursor
@@ -147,6 +151,18 @@ class GameScene extends Scene
       ai.AI.HEAR_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) * 1.5 / 2.5);
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
+
+#if js
+      // show stuff on losing focus
+      Browser.window.onfocus = function()
+        {
+          loseFocus.hide();
+        }
+      Browser.window.onblur = function()
+        {
+          loseFocus.show();
+        }
+#end
     }
 
 
