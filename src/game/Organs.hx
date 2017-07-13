@@ -10,6 +10,7 @@ class Organs
 {
   var game: Game;
 
+  public var isGrowing(get, null): Bool; // is currently growing organ?
   var _ai: AI; // parent AI link
   var _list: List<Organ>; // list of organs
   var currentOrgan: Organ; // currently grown organ
@@ -582,6 +583,12 @@ class Organs
       if (currentOrgan == null)
         return "<font color='#FF0000'>None</font>";
       else return currentOrgan.info.name;
+    }
+
+
+  function get_isGrowing(): Bool
+    {
+      return (currentOrgan != null);
     }
 
 // ================================ EVENTS =========================================

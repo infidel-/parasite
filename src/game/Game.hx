@@ -70,6 +70,7 @@ class Game
       var s = 'Parasite v' + Version.getVersion() +
         ' (build: ' + Version.getBuild() + ')';
       log(s);
+      log('<font size="10">A high-pitched whirring sound produced by machinery may bring you into a placating mood.</font>', COLOR_DEBUG);
       turns = 0;
       isFinished = false;
       isInited = false;

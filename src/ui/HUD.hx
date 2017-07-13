@@ -171,9 +171,12 @@ class HUD
       buf.add('===\n');
 
       var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
+      var time = (game.location == LOCATION_AREA ? 1 : 5);
+      var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
       buf.add('Energy: ' +
         "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
-        '/' + game.player.maxEnergy + '\n');
+        '/' + game.player.maxEnergy);
+      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]\n');
       var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
         "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
@@ -211,9 +214,12 @@ class HUD
 
           var colEnergy = getTextColor(game.player.host.energy,
             game.player.host.maxEnergy);
+          var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
           buf.add("Energy: <font color='" + colEnergy + "'>" +
             game.player.host.energy + '</font>/' +
-            game.player.host.maxEnergy + '\n');
+            game.player.host.maxEnergy);
+          buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
+            energyPerTurn + '/t]\n');
           buf.add('Evolution direction:\n  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           buf.add('\n');

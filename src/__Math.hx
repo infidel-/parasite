@@ -14,9 +14,13 @@ class __Math
     {
       var energy = 0;
 
+      // restore energy when on host
+      if (game.player.state == PLR_STATE_HOST)
+        energy = 10 * time;
+
       // energy is stable in habitat by default
       // but is restored when free habitat energy is available
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
+      else if (game.location == LOCATION_AREA && game.area.isHabitat)
         energy = game.area.habitat.parasiteEnergyRestored * time;
 
       // lose some energy
@@ -27,6 +31,19 @@ class __Math
       // lose some energy
       else if (game.location == LOCATION_REGION)
         energy = - game.player.vars.regionEnergyPerTurn;
+
+      return energy;
+    }
+
+
+// full host energy per turn from all sources (spent or acquired)
+  public static inline function fullHostEnergyPerTurn(time: Int)
+    {
+      var energy = hostEnergyPerTurn(time);
+      if (game.player.host.organs.isGrowing)
+        energy -= __Math.growthEnergyPerTurn() * time;
+      if (game.player.evolutionManager.isActive)
+        energy -= __Math.evolutionEnergyPerTurn() * time;
 
       return energy;
     }

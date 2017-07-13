@@ -113,7 +113,8 @@ class Player
       if (state == PLR_STATE_HOST)
         {
           // parasite energy restoration
-          energy += 10 * time;
+          var delta = __Math.parasiteEnergyPerTurn(time);
+          energy += delta;
 
           host.organs.turn(time); // host organ growth
 
