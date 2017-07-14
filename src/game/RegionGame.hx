@@ -306,12 +306,12 @@ class RegionGame
 
 
 // get habitats list in this area
-  public function getHabitatsList(): List<AreaGame>
+  public function getHabitatsList(): Array<AreaGame>
     {
-      var tmp = new List();
+      var tmp = new Array();
       for (area in _list)
         if (area.isHabitat)
-          tmp.add(area);
+          tmp.push(area);
 
       return tmp;
     }

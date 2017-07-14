@@ -50,7 +50,12 @@ class Team extends FSM<_TeamState, _TeamFlag>
           // if player is currently in habitat, skip timer
           if (game.location == LOCATION_AREA && game.area.isHabitat)
             timer = 0;
-          else timer = 40 + 10 * Std.random(5);
+          else
+            {
+              timer = 40 + 10 * Std.random(5);
+              if (game.group.difficulty == EASY)
+                game.message("They are waiting for me.", COLOR_ALERT);
+            }
           return;
         }
 
@@ -142,7 +147,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       var tmp = game.region.getHabitatsList();
 
       // habitat destroyed
-      destroyHabitat(tmp.first().parent);
+      destroyHabitat(tmp[Std.random(tmp.length)].parent);
     }
 
 

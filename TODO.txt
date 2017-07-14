@@ -7,9 +7,6 @@ REASON_HOST - suspicious individual (even if host is a dog)
 
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
   not all object icons clear when re-enter?
-easy, distance 0 - "They're waiting for you."
-each 20 distance say - "They're getting closer."
-destroy habitat should choose random instead of first one
 
 test gameplay
 new gui (with mouse support for everything)
