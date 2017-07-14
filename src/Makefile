@@ -110,6 +110,9 @@ windows-clean:
 html5-mydebug:
 	openfl build project.nmml html5 -Dmydebug --connect 6000
 
+html5:
+	openfl build project.nmml html5 --connect 6000
+
 fast:
 	time -p haxe ../.bin/html5/release/haxe/release.hxml --connect 6000
 

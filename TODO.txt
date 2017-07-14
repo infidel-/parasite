@@ -128,25 +128,11 @@ scenario work and expansion:
 == CONSOLE CHEATSHEET:
 ;le12 - learn about aliens
 ;le8 - learn location of spaceship
+;ge8 - go to spaceship location
 
 ;le11 - learn about aliens (other branch)
 ;le7 - learn location of spaceship (other branch)
-
-;ge8 - go to spaceship location
-
-;ga10 10 - go to area at 10,10
-;gg24 7 - don't change mode, go to x=24, y=7 (area or region)
-
-;ie - info: events list
-;ii - info: all improvements and organs list
-;ai - add item
-;as - add skill
-;ao1 - add organ 1
-;lt - learn all timeline
-;li1 - learn improvement 1
-;lia - learn all improvements at level 3
-;lia1 - learn all improvements at level 1
-
+;ge7 - go to spaceship location
 =====
 ? world generation
 ? world travel

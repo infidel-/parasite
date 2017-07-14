@@ -24,25 +24,52 @@ class ConsoleGame
       if (cmd == '')
         return;
 
-      game.debug('Console command: ' + cmd);
+//      log('Console command: ' + cmd);
       var arr = cmd.split(' ');
 
+#if mydebug
       // XXX add commands
       if (cmd.charAt(0) == 'a')
         addCommand(cmd, arr);
 
       // XXX config commands
-      else if (cmd.charAt(0) == 'c')
+      else
+#end
+        if (cmd.charAt(0) == 'c')
         {
           // XXX config|cfg <option> <value>
           if (arr[0] == 'config' || arr[0] == 'cfg')
             configOptionCommand(arr);
         }
 
+#if mydebug
       // XXX go commands
       else if (cmd.charAt(0) == 'g')
         goCommand(cmd);
+#end
 
+      // XXX help
+      else if (cmd.charAt(0) == 'h')
+        {
+#if mydebug
+          log('Available commands: ai - add item, ao - add organ, ' +
+            'as - add skill, cfg|config,\n' +
+            'ga - go and enter area, ' +
+            'ge - go event location, ' +
+            'gg - go x,y (region or area mode),\n' +
+            'ie - timeline info (trace), ' +
+            'ii - improvements info (trace),\n' +
+            'le - learn about event, ' +
+            'lia - learn all improvements, ' +
+            'li - learn improvement, ' +
+            'lt - learn all timeline,\n' +
+            'restart, s - set player stage, quit.');
+#else
+          log('Available commands: cfg, config, restart, quit.');
+#end
+        }
+
+#if mydebug
       // XXX info commands
       else if (cmd.charAt(0) == 'i')
         infoCommand(cmd);
@@ -50,6 +77,7 @@ class ConsoleGame
       // XXX learn commands
       else if (cmd.charAt(0) == 'l')
         learnCommand(cmd);
+#end
 
       // XXX restart
       else if (cmd.charAt(0) == 'r')
@@ -58,6 +86,7 @@ class ConsoleGame
             game.restart();
         }
 
+#if mydebug
       // XXX set commands
       else if (cmd.charAt(0) == 's')
         {
@@ -67,6 +96,7 @@ class ConsoleGame
 
           else setCommand(cmd);
         }
+#end
 
       // XXX quit game
       else if (cmd.charAt(0) == 'q')
@@ -88,8 +118,8 @@ class ConsoleGame
 
       if (arr.length < 3)
         {
-          game.debug('config|cfg <option> <value> - set config option');
-          game.debug('config|cfg - show config options');
+          log('config|cfg <option> <value> - set config option');
+          log('config|cfg - show config options');
           return;
         }
 
@@ -105,9 +135,9 @@ class ConsoleGame
     {
       if (arr.length < 3)
         {
-          game.debug('set <variable> <value> - set game variable');
-          game.debug('set - show variables');
-          game.debug(
+          log('set <variable> <value> - set game variable');
+          log('set - show variables');
+          log(
             'area.alertness, ' +
             'host., h. - energy, maxEnergy, health, maxHealth, ' +
             'group. - knownCount, priority, ' +
@@ -199,35 +229,19 @@ class ConsoleGame
 // add commands
   function addCommand(cmd: String, arr: Array<String>)
     {
-      // XXX [ao10] add organ X
-      if (cmd.charAt(1) == 'o')
-        {
-          var idx = Std.parseInt(cmd.substr(2));
-          var imp = EvolutionConst.improvements[idx];
-          if (imp == null)
-            {
-              game.debug('Improvement [' + idx + '] not found.');
-              return;
-            }
-
-          game.player.evolutionManager.addImprov(imp.id, 3);
-          game.player.host.organs.action('set.' + imp.id);
-          game.player.host.organs.debugCompleteCurrent();
-        }
-
       // XXX [ai pistol] add item X
-      else if (cmd.charAt(1) == 'i')
+      if (cmd.charAt(1) == 'i')
         {
           if (arr.length < 2)
             {
               var buf = new StringBuf();
-              buf.add('Usage: ai [item]');
+              buf.add('Usage: ai [item]\n');
               buf.add('Items: ');
               for (info in ItemsConst.items)
                 buf.add(info.id + ', ');
               var s = buf.toString();
               s = s.substr(0, s.length - 2) + '.';
-              game.debug(s);
+              log(s);
               return;
             }
 
@@ -239,13 +253,47 @@ class ConsoleGame
           game.log('Item added.');
         }
 
+      // XXX [ao10] add organ X
+      else if (cmd.charAt(1) == 'o')
+        {
+          if (arr.length < 2)
+            {
+              log('Usage: ao [index]');
+              var s = new StringBuf();
+              for (i in 0...EvolutionConst.improvements.length)
+                {
+                  var imp = EvolutionConst.improvements[i];
+                  if (imp.organ == null)
+                    continue;
+
+                  s.add(i + ': ' + imp.organ.name + ', ' + imp.id + '\n');
+                }
+              log(s.toString());
+              return;
+            }
+          if (game.player.state != PLR_STATE_HOST)
+            return;
+
+          var idx = Std.parseInt(cmd.substr(2));
+          var imp = EvolutionConst.improvements[idx];
+          if (imp == null)
+            {
+              log('Improvement [' + idx + '] not found.');
+              return;
+            }
+
+          game.player.evolutionManager.addImprov(imp.id, 3);
+          game.player.host.organs.action('set.' + imp.id);
+          game.player.host.organs.debugCompleteCurrent();
+        }
+
       // XXX [as computer 10] add skill X Y
       else if (cmd.charAt(1) == 's')
         {
           if (arr.length < 3)
             {
               var buf = new StringBuf();
-              game.debug('Usage: as [skill] [amount]');
+              log('Usage: as [skill] [amount]');
               buf.add('Skills: ');
               for (info in SkillsConst.skills)
                 {
@@ -257,7 +305,7 @@ class ConsoleGame
                 }
               var s = buf.toString();
               s = s.substr(0, s.length - 2) + '.';
-              game.debug(s);
+              log(s);
               return;
             }
 
@@ -298,24 +346,66 @@ class ConsoleGame
 // go commands
   function goCommand(cmd: String)
     {
-      // XXX [ge10] go to event X location
-      if (cmd.charAt(1) == 'e')
+      // XXX [ga10 10] go to area and enter it
+      if (cmd.charAt(1) == 'a')
         {
+          if (cmd.length < 3)
+            {
+              log('Usage: ga[x] [y]');
+              return;
+            }
+          var tmp = cmd.substr(2).split(' ');
+          if (tmp.length < 2 || tmp.length > 2)
+            {
+              log('wrong format');
+              return;
+            }
+
+          var x = Std.parseInt(tmp[0]);
+          var y = Std.parseInt(tmp[1]);
+          var area = game.region.getXY(x, y);
+          if (area == null)
+            {
+              log('wrong location');
+              return;
+            }
+
+          log('Teleporting to area (' + x + ',' + y + ').');
+
+          // leave current area
+          if (game.location == LOCATION_AREA)
+            game.setLocation(LOCATION_REGION);
+
+          // move to new location
+          game.playerRegion.moveTo(area.x, area.y);
+
+          // enter area
+          game.setLocation(LOCATION_AREA);
+        }
+
+      // XXX [ge10] go to event X location
+      else if (cmd.charAt(1) == 'e')
+        {
+          if (cmd.length < 3)
+            {
+              log('Usage: ge[event index]');
+              return;
+            }
           var idx = Std.parseInt(cmd.substr(2));
           var event = game.timeline.getEventByIndex(idx);
           if (event == null)
             {
-              game.debug('Event ' + idx + ' not found in the timeline.');
+              log('Event ' + idx + ' not found in the timeline.');
               return;
             }
 
           if (event.location == null)
             {
-              game.debug('Event ' + idx + ' has no location.');
+              log('Event ' + idx + ' has no location.');
               return;
             }
 
-          game.debug('Teleporting to event ' + idx + ' location.');
+          log('Teleporting to event ' + idx + ' location.');
 
           var area = event.location.area;
           game.scene.state = UISTATE_DEFAULT;
@@ -331,52 +421,25 @@ class ConsoleGame
           game.setLocation(LOCATION_AREA);
         }
 
-      // XXX [ga10 10] go to area and enter it
-      else if (cmd.charAt(1) == 'a')
-        {
-          var tmp = cmd.substr(2).split(' ');
-          if (tmp.length < 2 || tmp.length > 2)
-            {
-              game.debug('wrong format');
-              return;
-            }
-
-          var x = Std.parseInt(tmp[0]);
-          var y = Std.parseInt(tmp[1]);
-          var area = game.region.getXY(x, y);
-          if (area == null)
-            {
-              game.debug('wrong location');
-              return;
-            }
-
-          game.debug('Teleporting to area (' + x + ',' + y + ').');
-
-          // leave current area
-          if (game.location == LOCATION_AREA)
-            game.setLocation(LOCATION_REGION);
-
-          // move to new location
-          game.playerRegion.moveTo(area.x, area.y);
-
-          // enter area
-          game.setLocation(LOCATION_AREA);
-        }
-
       // XXX [gg10 10] go to location x,y at current location
       else if (cmd.charAt(1) == 'g')
         {
+          if (cmd.length < 3)
+            {
+              log('Usage: gg[x] [y]');
+              return;
+            }
           var tmp = cmd.substr(2).split(' ');
           if (tmp.length < 2 || tmp.length > 2)
             {
-              game.debug('wrong format');
+              log('wrong format');
               return;
             }
 
           var x = Std.parseInt(tmp[0]);
           var y = Std.parseInt(tmp[1]);
 
-          game.debug('Teleporting to location (' + x + ',' + y + ').');
+          log('Teleporting to location (' + x + ',' + y + ').');
 
           if (game.location == LOCATION_AREA)
             game.playerArea.moveTo(x, y);
@@ -417,11 +480,16 @@ class ConsoleGame
       // XXX [le10] learn everything about event X
       if (cmd.charAt(1) == 'e')
         {
+          if (cmd.length < 3)
+            {
+              log('Usage: le[event index]');
+              return;
+            }
           var idx = Std.parseInt(cmd.substr(2));
           var event = game.timeline.getEventByIndex(idx);
           if (event == null)
             {
-              game.debug('Event [' + idx + '] not found in the timeline.');
+              log('Event [' + idx + '] not found in the timeline.');
               return;
             }
 
@@ -445,11 +513,16 @@ class ConsoleGame
       // XXX [li10] learn improvement X
       else if (cmd.charAt(1) == 'i')
         {
+          if (cmd.length < 3)
+            {
+              log('Usage: li[improvement index]');
+              return;
+            }
           var idx = Std.parseInt(cmd.substr(2));
           var imp = EvolutionConst.improvements[idx];
           if (imp == null)
             {
-              game.debug('Improvement [' + idx + '] not found.');
+              log('Improvement [' + idx + '] not found.');
               return;
             }
 
@@ -486,7 +559,7 @@ class ConsoleGame
       // no arguments, show available
       if (cmd == 's')
         {
-          game.debug(
+          log(
             ';s1 - set player stage 1 (human civilian host, tutorial done)\n' +
             ';s11 - set player stage 1.1 (stage 1 + group knowledge)\n' +
             ';s12 - set player stage 1.2 (stage 1.1 + ambush)\n' +
@@ -802,6 +875,13 @@ class ConsoleGame
 
       var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
       goCommand('gg' + obj.x + ' ' + obj.y);
+    }
+
+
+// log function
+  inline function log(s: String)
+    {
+      game.log(s, COLOR_DEBUG);
     }
 }
 

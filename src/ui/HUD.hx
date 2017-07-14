@@ -370,20 +370,16 @@ class HUD
 // show debug console
   public function showConsole()
     {
-#if mydebug
       _console.text = '';
       _consoleBack.visible = true;
       HXP.stage.focus = _console;
-#end
     }
 
 
 // hide debug console
   public function hideConsole()
     {
-#if mydebug
       _consoleBack.visible = false;
-#end
     }
 
 
@@ -397,10 +393,8 @@ class HUD
 // run console command and close it
   public inline function runConsoleCommand()
     {
-#if mydebug
       game.console.run(_console.text);
       hideConsole();
-#end
     }
 
 

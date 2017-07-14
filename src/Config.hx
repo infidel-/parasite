@@ -126,8 +126,10 @@ class Config
 // dump current config
   public function dump()
     {
+      var s = new StringBuf();
       for (key in map.keys())
-        game.debug(key + ' = ' + map[key]);
+        s.add(key + ' = ' + map[key] + '\n');
+      game.log(s.toString(), COLOR_DEBUG);
     }
 
 
