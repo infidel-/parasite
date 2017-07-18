@@ -8,7 +8,6 @@ REASON_HOST - suspicious individual (even if host is a dog)
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
   not all object icons clear when re-enter?
 
-"it looks like someone is in here" - mark in red
 sewer hatch spawned in habitat...
 auto-replace "reinforce hold" with "invade" when it's available
 if host expires on enter sewers, wrong icon (still?)

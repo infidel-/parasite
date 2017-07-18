@@ -205,7 +205,8 @@ class PlayerRegion
     {
       var habitatArea = game.region.get(currentArea.habitatAreaID);
       if (game.group.team != null && game.group.team.state == TEAM_AMBUSH)
-        game.log("You enter the habitat. It looks like someone is here!");
+        game.log("You enter the habitat. It looks like someone is in here!",
+          COLOR_ALERT);
       else game.log("You enter the habitat. You feel much safer here.");
 
       game.setLocation(LOCATION_AREA, habitatArea);
