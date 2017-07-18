@@ -266,6 +266,9 @@ class Game
         state: UISTATE_FINISH,
         obj: finishText
       });
+
+      // update HUD info just in case
+      updateHUD();
     }
 
 

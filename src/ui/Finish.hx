@@ -36,7 +36,7 @@ class Finish extends Text
       var buf = new StringBuf();
       buf.add('\nGame Over\n===\n\n');
       buf.add(o);
-      buf.add("\n\nClose window" +
+      buf.add("\n\nClose the window" +
         "\nThen you can restart the game by pressing ENTER\n");
 
       textInput.htmlText = buf.toString();
