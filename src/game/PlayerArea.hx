@@ -296,6 +296,11 @@ class PlayerArea
           return;
         }
 
+      // fix for when player enters sewers and host dies
+      // we need to recheck player icon
+      if (game.location == LOCATION_REGION)
+        game.scene.region.show();
+
       // remove 1 AP
       ap--;
       if (ap > 0)
@@ -309,11 +314,6 @@ class PlayerArea
       // new turn (only if still in area mode)
       if (game.location == LOCATION_AREA)
         game.turn();
-
-      // fix for when player enters sewers and host dies
-      // we need to recheck player icon
-      else if (game.location == LOCATION_REGION)
-        game.scene.region.show();
 
       // update HUD info
       game.updateHUD();
