@@ -656,8 +656,13 @@ class AI
       // AI has become alerted
       if (alertness >= 100)
         {
-          setState(AI_STATE_ALERT,
-            (game.player.state == PLR_STATE_PARASITE ? REASON_PARASITE : REASON_HOST));
+          var reason = REASON_PARASITE;
+
+          if (game.player.state == PLR_STATE_HOST &&
+              game.player.host.isHuman)
+            reason = REASON_HOST;
+
+          setState(AI_STATE_ALERT, reason);
           return;
         }
 

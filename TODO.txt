@@ -1,14 +1,11 @@
 == MAINTENANCE
 
-REASON_HOST - suspicious individual (even if host is a dog)
-
-
 == CURRENT
 
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
   not all object icons clear when re-enter?
 
-sewer hatch spawned in habitat...
+working sewer hatch spawned in habitat...
 record letsplay video (maybe a couple) and release!
 
 test gameplay
@@ -29,6 +26,7 @@ rumors and hearsay as a source of current information
 "Have you heard that X was committed to a mental institution?"
 "Someone called the police about the wild animal here!" - in red?
 etc
+console history
 
 == GROUP: ACTIVE MEASURES
 
