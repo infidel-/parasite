@@ -272,11 +272,13 @@ should limit player options for guiding purposes
           location.hasName = true;
         }
 
+      var infoTypeWasNull = false;
       if (info.type == null)
         {
           var tmp: Array<_AreaType> =
             [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
           info.type = tmp[Std.random(tmp.length)];
+          infoTypeWasNull = true;
         }
 
       // find area with this type
@@ -288,10 +290,31 @@ should limit player options for guiding purposes
       if (info.near != null)
         {
           var tmp = getEvent(info.near);
-          area = region.getRandomAround(tmp.location.area, {
+
+          // desired type was not set, try to find inhabited area by default
+          if (infoTypeWasNull)
+            area = region.getRandomAround(tmp.location.area, {
+              minRadius: 2,
+              maxRadius: 5,
+              isInhabited: true,
+            });
+
+          // type was set
+          else area = region.getRandomAround(tmp.location.area, {
             minRadius: 2,
-            maxRadius: 5 });
-          area.setType(info.type);
+            maxRadius: 5,
+            type: info.type,
+          });
+
+          // first iteration did not find a good area, pick random and force
+          if (area == null)
+            {
+              area = region.getRandomAround(tmp.location.area, {
+                minRadius: 2,
+                maxRadius: 5,
+              });
+              area.setType(info.type);
+            }
         }
       area = region.getRandomWithType(info.type, true);
       if (area == null)
