@@ -770,6 +770,8 @@ class AreaGame
 
       // spawn a team member
       var ai = spawnUnseenAI('team', false);
+      if (ai == null)
+        return;
       ai.isTeamMember = true;
 
       game.debug('Team member spawned');

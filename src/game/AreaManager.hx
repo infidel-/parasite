@@ -217,7 +217,8 @@ class AreaManager
           if (game.player.skills.getLevel(KNOW_SOCIETY) < 5)
             e.ai.log('calls someone!');
           else e.ai.log('calls the ' +
-            (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!');
+            (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!',
+            COLOR_ALERT);
         }
 
       // increase area alertness

@@ -1033,9 +1033,9 @@ class AI
 
 
 // log
-  public inline function log(s: String)
+  public inline function log(s: String, ?col: _TextColor = null)
     {
-      game.log(getNameCapped() + ' ' + s);
+      game.log(getNameCapped() + ' ' + s, col);
     }
 
 

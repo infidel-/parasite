@@ -8,6 +8,14 @@ REASON_HOST - suspicious individual (even if host is a dog)
 bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
   not all object icons clear when re-enter?
 
+region map gen - check how single high-density area can appear (maybe in event npc spawn)
+no "press enter to restart" message in hud
+"it looks like someone is in here" - mark in red
+sewer hatch spawned in habitat...
+auto-replace "reinforce hold" with "invade" when it's available
+if host expires on enter sewers, wrong icon (still?)
+record letsplay video (maybe a couple) and release!
+
 test gameplay
 new gui (with mouse support for everything)
   tooltips in region mode with area x,y, type, etc
