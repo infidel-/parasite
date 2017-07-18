@@ -9,7 +9,6 @@ bug: returning to facility spawns (or shows) sewer hatches on buildings (probabl
   not all object icons clear when re-enter?
 
 sewer hatch spawned in habitat...
-auto-replace "reinforce hold" with "invade" when it's available
 if host expires on enter sewers, wrong icon (still?)
 record letsplay video (maybe a couple) and release!
 

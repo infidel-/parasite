@@ -126,9 +126,9 @@ class PlayerArea
       // parasite is attached to host
       else if (state == PLR_STATE_ATTACHED)
         {
-          addActionToList(tmp, 'hardenGrip');
           if (attachHold >= 90)
             addActionToList(tmp, 'invadeHost');
+          else addActionToList(tmp, 'hardenGrip');
         }
 
       // parasite in control of host
