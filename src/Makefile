@@ -8,15 +8,15 @@ release: release-win release-linux32 release-linux64 release-mac64
 release-win:
 	echo "Building windows release" $(VERSION)
 	mkdir -p _releases _releases/parasite-$(VERSION)-win
-#	cp _release.windows/* _releases/parasite-$(VERSION)-win/
+	cp _release.windows/* _releases/parasite-$(VERSION)-win/
 	cp ../parasite.cfg.default _releases/parasite-$(VERSION)-win/parasite.cfg
-	openfl build project.nmml windows -Dmydebug
+	haxelib run openfl build project.nmml windows -Dmydebug
 	cp -R ../.bin/windows/neko/release/bin/* \
 	  _releases/parasite-$(VERSION)-win/
 	rm _releases/parasite-$(VERSION)-win/index.html
 	cp ../.bin/windows/neko/release/bin/parasite.exe \
 	  _releases/parasite-$(VERSION)-win/parasite-debug.exe
-	openfl build project.nmml windows
+	haxelib run openfl build project.nmml windows
 	cp ../.bin/windows/neko/release/bin/parasite.exe \
 	  _releases/parasite-$(VERSION)-win/
 	cd _releases && zip -r9 parasite-$(VERSION)-win.zip parasite-$(VERSION)-win/
