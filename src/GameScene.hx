@@ -3,8 +3,8 @@
 import com.haxepunk.Scene;
 import com.haxepunk.HXP;
 import com.haxepunk.graphics.atlas.TileAtlas;
-import com.haxepunk.utils.Input;
-import com.haxepunk.utils.Key;
+import com.haxepunk.input.Input;
+import com.haxepunk.input.Key;
 import haxe.ui.core.Component;
 #if js
 import js.Browser;
@@ -124,7 +124,7 @@ class GameScene extends Scene
   public override function begin()
     {
       // load all entity images into atlas
-      entityAtlas = new TileAtlas("gfx/entities.png");
+      entityAtlas = new TileAtlas("gfx/entities" + Const.TILE_WIDTH + ".png");
       entityAtlas.prepare(Const.TILE_WIDTH, Const.TILE_HEIGHT);
 
       // init GUI

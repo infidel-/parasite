@@ -5,7 +5,7 @@ package entities;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Graphiclist;
 import com.haxepunk.graphics.Spritemap;
-import com.haxepunk.graphics.Text;
+import com.haxepunk.graphics.text.BitmapText;
 
 import game.Game;
 
@@ -13,7 +13,7 @@ class PawnEntity extends Entity
 {
   var game: Game; // game state
 
-  var _text: Text;
+  var _text: BitmapText;
   var _list: Graphiclist; // graphics list
   var _spriteBody: Spritemap; // body sprite map
   var _spriteMask: Spritemap; // mask sprite map (invaded state)
@@ -38,7 +38,7 @@ class PawnEntity extends Entity
       _list.add(_spriteBody);
       _list.add(_spriteMask);
 
-      _text = new Text("", 0, -10);
+      _text = new BitmapText("", 0, -10);
       _textTimer = 0;
       _list.add(_text);
 

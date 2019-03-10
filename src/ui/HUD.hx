@@ -5,7 +5,6 @@ package ui;
 import com.haxepunk.HXP;
 import com.haxepunk.Entity;
 import com.haxepunk.graphics.Graphiclist;
-import com.haxepunk.graphics.Text;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Sprite;

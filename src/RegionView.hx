@@ -2,7 +2,7 @@
 
 import com.haxepunk.Entity;
 import com.haxepunk.HXP;
-import com.haxepunk.graphics.Tilemap;
+import haxepunk.graphics.tile.Tilemap;
 
 import game.*;
 

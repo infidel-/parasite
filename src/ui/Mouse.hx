@@ -8,8 +8,8 @@ import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.geom.Rectangle;
 import openfl.events.MouseEvent;
-import com.haxepunk.utils.Input;
-import com.haxepunk.utils.Key;
+import com.haxepunk.input.Input;
+import com.haxepunk.input.Key;
 
 import game.Game;
 import ai.AI;

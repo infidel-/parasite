@@ -12,15 +12,15 @@ class Const
   public static var LAYER_OBJECT = 20; // ground layer - bodies, items
   public static var LAYER_TILES = 30; // tilemap layer
 
-  public static var TILE_WIDTH = 48; // tiles width, height
-  public static var TILE_HEIGHT = 48;
+  public static var TILE_WIDTH = 64; // tiles width, height
+  public static var TILE_HEIGHT = 64;
 
   // text color strings
   public static var TEXT_COLORS: Map<_TextColor, String> =
     [
       COLOR_DEFAULT => '#FFFFFF',
       COLOR_REPEAT => '#BBBBBB',
-      COLOR_DEBUG => '#555555',
+      COLOR_DEBUG => '#777777',
       COLOR_ALERT => '#FF2222',
       COLOR_EVOLUTION => '#00FFFF',
       COLOR_AREA => '#00AA00',
@@ -36,7 +36,7 @@ class Const
     [
       COLOR_DEFAULT => 0xFFFFFF,
       COLOR_REPEAT => 0xBBBBBB,
-      COLOR_DEBUG => 0x555555,
+      COLOR_DEBUG => 0x777777,
       COLOR_ALERT => 0xFF2222,
       COLOR_EVOLUTION => 0x00FFFF,
       COLOR_AREA => 0x00AA00,

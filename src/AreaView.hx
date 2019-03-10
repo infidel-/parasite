@@ -2,7 +2,7 @@
 
 import com.haxepunk.Entity;
 import com.haxepunk.HXP;
-import com.haxepunk.graphics.Tilemap;
+import haxepunk.graphics.tile.Tilemap;
 
 import entities.EffectEntity;
 import game.Game;
@@ -35,7 +35,7 @@ class AreaView
 
       _effects = new List<EffectEntity>();
 
-      _tilemap = new Tilemap("gfx/tileset.png",
+      _tilemap = new Tilemap("gfx/tileset" + Const.TILE_WIDTH + ".png",
         width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       entity.addGraphic(_tilemap);
