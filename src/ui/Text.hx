@@ -2,7 +2,7 @@
 
 package ui;
 
-import com.haxepunk.HXP;
+/*
 import haxe.ui.components.Label;
 import haxe.ui.components.Button;
 import haxe.ui.core.Component;
@@ -10,21 +10,22 @@ import haxe.ui.core.Screen;
 import haxe.ui.core.MouseEvent;
 import haxe.ui.core.TextInput;
 import haxe.ui.macros.ComponentMacros;
-import openfl.Assets;
-import openfl.text.TextFormat;
-import openfl.text.TextFormatAlign;
-import openfl.text.TextFieldAutoSize;
+*/
 
 import game.Game;
 
 class Text extends UIWindow
 {
+/*
   var text: Label;
   var textInput: TextInput;
+*/
 
   public function new(g: Game)
     {
       super(g);
+      trace('Text');
+/*
       window = ComponentMacros.buildComponent("../assets/ui/document.xml");
       window.width = HXP.width - 1;
       window.height = HXP.height - 1;
@@ -47,9 +48,11 @@ class Text extends UIWindow
       button.registerEvent(MouseEvent.CLICK, onClick);
 
       window.hide();
+*/
     }
 
 
+/*
 // on wheel - scroll
   function onWheel(e: MouseEvent)
     {
@@ -63,12 +66,13 @@ class Text extends UIWindow
       game.scene.closeWindow();
       e.cancel();
     }
+*/
 
 
 // set parameters
   public override function setParams(o: Dynamic)
     {
-      textInput.htmlText = o;
+//      textInput.htmlText = o;
     }
 
 
@@ -82,20 +86,20 @@ class Text extends UIWindow
 // scroll window up/down
   public override function scroll(n: Int)
     {
-      textInput.scrollV += n;
+//      textInput.scrollV += n;
     }
 
 
 // scroll window to beginning
   public override function scrollToBegin()
     {
-      textInput.scrollV = 0;
+//      textInput.scrollV = 0;
     }
 
 
 // scroll window to end
   public override function scrollToEnd()
     {
-      textInput.scrollV = textInput.maxScrollV;
+//      textInput.scrollV = textInput.maxScrollV;
     }
 }

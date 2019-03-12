@@ -1,8 +1,6 @@
 // tiled area view
 
-import com.haxepunk.Entity;
-import com.haxepunk.HXP;
-import haxepunk.graphics.tile.Tilemap;
+import h2d.TileGroup;
 
 import entities.EffectEntity;
 import game.Game;
@@ -12,34 +10,35 @@ class AreaView
   var game: Game; // game state link
   var scene: GameScene; // ui scene
 
-  var _tilemap: Tilemap;
+  var _tilemap: TileGroup;
   var _effects: List<EffectEntity>; // visual effects list
 
   public var width: Int; // area width, height in cells
   public var height: Int;
   public var emptyScreenCells: Int; // amount of empty cells on screen
-  var entity: Entity; // area entity
+//  var entity: Entity; // area entity
   static var maxSize = 120;
 
   public function new (s: GameScene)
     {
       scene = s;
       game = scene.game;
-      _tilemap = null;
       width = maxSize; // should be larger than any area
       height = maxSize;
       emptyScreenCells = 0;
 
+      trace('area');
+
+/*
       entity = new Entity();
       entity.layer = Const.LAYER_TILES;
+*/
 
       _effects = new List<EffectEntity>();
-
-      _tilemap = new Tilemap("gfx/tileset" + Const.TILE_WIDTH + ".png",
-        width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
-        Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      entity.addGraphic(_tilemap);
-      scene.add(entity);
+      _tilemap = new TileGroup(
+        game.scene.tileAtlas[Const.TILE_REGION_GROUND][Const.TILE_BUILDING],
+        game.scene);
+      _tilemap.blendMode = None;
     }
 
 
@@ -49,33 +48,57 @@ class AreaView
       width = game.area.width;
       height = game.area.height;
 
+      trace('AreaView.update ' + maxSize + ' w:' + width + ', h:' + height);
+      _tilemap.clear();
+/*
       // clear tilemap
       for (y in 0...maxSize)
         for (x in 0...maxSize)
-          _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+          _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
+            game.scene.tileAtlas[Const.TILE_REGION_GROUND]
+              [Const.TILE_HIDDEN]);
+*/
 
       // update tilemap from current area
       var cells = game.area.getCells();
       for (y in 0...height)
         for (x in 0...width)
-          _tilemap.setTile(x, y, cells[x][y]);
+          _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
+            game.scene.tileAtlas[cells[x][y]][Const.TILE_REGION_GROUND]);
 
       scene.updateCamera(); // center camera on player
+    }
+
+
+// update camera
+  public function updateCamera(x: Int, y: Int)
+    {
+      _tilemap.x = - x;
+      _tilemap.y = - y;
+
+      // adjust AI entity positions
+      for (ai in game.area.getAllAI())
+        ai.entity.setPosition(ai.x, ai.y);
     }
 
 
 // show gui
   public function show()
     {
+      trace('show');
+/*
       entity.visible = true;
       if (game.player.state != PLR_STATE_HOST)
         game.playerArea.entity.visible = true;
+*/
     }
 
 
 // hide gui
   public function hide()
     {
+      trace('hide');
+/*
       entity.visible = false;
       game.playerArea.entity.visible = false;
 
@@ -85,6 +108,7 @@ class AreaView
           scene.remove(eff);
           _effects.remove(eff);
         }
+*/
     }
 
 
@@ -96,7 +120,8 @@ class AreaView
 
       var effect = new EffectEntity(game, x, y, turns, Const.ROW_EFFECT, frame);
       _effects.add(effect);
-      scene.add(effect);
+      trace('add effect');
+//      scene.add(effect);
     }
 
 
@@ -113,6 +138,7 @@ class AreaView
 // host version
   function updateVisibilityHost()
     {
+      trace('updateVisibilityHost');
       // calculate visible rectangle
       var rect = game.area.getVisibleRect();
       var cells = game.area.getCells();
@@ -125,11 +151,13 @@ class AreaView
             if (game.area.isWalkable(x, y))
               emptyScreenCells++;
 
+/*
             if (!game.player.vars.losEnabled ||
                 game.area.isVisible(game.playerArea.x,
                   game.playerArea.y, x, y))
               _tilemap.setTile(x, y, cells[x][y]);
             else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+*/
           }
     }
 
@@ -139,6 +167,7 @@ class AreaView
 // parasite only sees one tile around him but "feels" AIs in a larger radius
   function updateVisibilityParasite()
     {
+      trace('updateVisibilityParasite');
       // calculate visible rectangle
       var rect = game.area.getVisibleRect();
       var cells = game.area.getCells();
@@ -152,10 +181,12 @@ class AreaView
             if (game.area.isWalkable(x, y))
               emptyScreenCells++;
 
+/*
             if (Math.abs(game.playerArea.x - x) < 2 &&
                 Math.abs(game.playerArea.y - y) < 2)
               _tilemap.setTile(x, y, cells[x][y]);
             else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+*/
           }
     }
 
@@ -164,20 +195,23 @@ class AreaView
 // using graphics tile cache
   public inline function isVisible(x: Int, y: Int): Bool
     {
-      return (_tilemap.getTile(x, y) != Const.TILE_HIDDEN);
+      trace('isVisible');
+//      return (_tilemap.getTile(x, y) != Const.TILE_HIDDEN);
+      return false;
     }
 
 
 // TURN: area time passage
   public function turn()
     {
+      trace('turn');
       // effect removal
       for (e in _effects)
         {
           e.turns--;
           if (e.turns <= 0)
             {
-              scene.remove(e);
+//              scene.remove(e);
               _effects.remove(e);
             }
         }

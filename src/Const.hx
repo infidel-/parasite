@@ -270,11 +270,18 @@ class Const
     }
 
 
+// calc distance squared
+  public static inline function distanceSquared(x1: Int, y1: Int, x2: Int, y2: Int)
+    {
+      return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+    }
+
+
 // print stuff
   public static inline function p(s: String)
     {
 #if js
-      trace(s);
+      js.Browser.console.log(s);
 #else
       Sys.println(s);
 #end

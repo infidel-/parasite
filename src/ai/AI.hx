@@ -263,7 +263,8 @@ class AI
           return;
         }
       entity = new AIEntity(this, game, x, y, atlasRow);
-      game.scene.add(entity);
+      trace('AI create');
+//      game.scene.add(entity);
 
       updateEntity(); // update icon
     }

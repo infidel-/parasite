@@ -29,6 +29,9 @@ class Config
 
       // default values
       extendedInfo = false;
+#if mydebug
+      extendedInfo = true;
+#end
       hudLogLines = 4;
       sendExceptions = false;
       fontSize = 16;

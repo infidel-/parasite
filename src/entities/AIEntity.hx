@@ -2,48 +2,63 @@
 
 package entities;
 
-import com.haxepunk.graphics.Spritemap;
-import ai.AI;
+import h2d.Bitmap;
 
+import ai.AI;
 import game.Game;
 
 class AIEntity extends PawnEntity
 {
   var ai: AI; // AI link
 
-  var _spriteAlert: Spritemap; // alerted state icon
-  var _spriteNPC: Spritemap; // npc icon
+  var _spriteAlert: Bitmap; // alerted state icon
+  var _spriteNPC: Bitmap; // npc icon
 
 
   public function new(vai: AI, g: Game, xx: Int, yy: Int, atlasRow: Int)
     {
       super(g, xx, yy, atlasRow);
 
-      _spriteAlert = new Spritemap(game.scene.entityAtlas,
-        Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      _spriteAlert.frame = Const.FRAME_EMPTY;
-      _list.add(_spriteAlert);
-
-      _spriteNPC = new Spritemap(game.scene.entityAtlas,
-        Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      _spriteNPC.frame = Const.FRAME_EMPTY;
-      _list.add(_spriteNPC);
-
+      _spriteAlert = null;
+      _spriteNPC = null;
       ai = vai;
       type = "ai";
     }
 
 
 // set alert image index
-  public inline function setAlert(index)
+  public function setAlert(index: Int)
     {
-      _spriteAlert.setFrame(index, Const.ROW_ALERT);
+      // no alert, remove image
+      if (index == 0)
+        {
+          if (_spriteAlert == null)
+            return;
+
+          _spriteAlert.remove();
+          _spriteAlert = null;
+          return;
+        }
+
+      // skip same image
+      var tile = game.scene.entityAtlas[index][Const.ROW_ALERT];
+      if (_spriteAlert != null && _spriteAlert.tile == tile)
+        return;
+
+      if (_spriteAlert != null)
+        _spriteAlert.remove();
+      _spriteAlert = new Bitmap(tile, _container);
     }
 
 
 // set alert image index
-  public inline function setNPC()
+  public function setNPC()
     {
-      _spriteNPC.setFrame(Const.FRAME_EVENT_NPC, Const.ROW_REGION_ICON);
+      if (_spriteNPC != null)
+        return;
+
+      _spriteNPC = new Bitmap(
+        game.scene.entityAtlas[Const.FRAME_EVENT_NPC][Const.ROW_REGION_ICON],
+        _container);
     }
 }

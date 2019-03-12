@@ -2,8 +2,6 @@
 
 package game;
 
-import com.haxepunk.HXP;
-
 import ai.*;
 import objects.*;
 import const.WorldConst;
@@ -135,11 +133,13 @@ class AreaGame
       // update player position
       if (game.player.state == PLR_STATE_HOST)
         {
-          game.playerArea.entity.visible = false;
-          game.scene.add(game.player.host.entity);
+          trace('AreaGame1');
+//          game.playerArea.entity.visible = false;
+//          game.scene.add(game.player.host.entity);
           game.player.host.setPosition(loc.x, loc.y);
           _ai.add(game.player.host);
         }
+      trace('enter ' + loc.x + ',' + loc.y);
       game.playerArea.moveTo(loc.x, loc.y);
 
       game.playerArea.ap = 2; // renew AP
@@ -392,7 +392,7 @@ class AreaGame
             {
               // must not be visible to player as a parasite
               if (game.player.state != PLR_STATE_HOST &&
-                  HXP.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) < 6 * 6)
+                  Const.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) < 6 * 6)
                 continue;
 
               // must not be visible to player when possessing a host
@@ -707,7 +707,8 @@ class AreaGame
 
       if (ai.npc != null)
         ai.npc.ai = null;
-      game.scene.remove(ai.entity);
+      ai.entity.remove();
+      ai.entity = null;
       _ai.remove(ai);
     }
 
@@ -1099,6 +1100,8 @@ class AreaGame
 // host version
   function updateVisibilityHost()
     {
+      trace('updateVisibilityHost');
+/*
       for (ai in _ai)
         {
           var v = isVisible(game.playerArea.x, game.playerArea.y, ai.x, ai.y);
@@ -1116,6 +1119,7 @@ class AreaGame
         obj.entity.visible =
           (game.player.vars.losEnabled ?
             isVisible(game.playerArea.x, game.playerArea.y, obj.x, obj.y) : true);
+*/
     }
 
 
@@ -1124,17 +1128,20 @@ class AreaGame
 // parasite only sees one tile around him but "feels" AIs in a larger radius
   function updateVisibilityParasite()
     {
+      trace('updateVisibilityParasite');
+/*
       for (ai in _ai)
         if (game.player.vars.losEnabled)
           ai.entity.visible =
-            (HXP.distanceSquared(game.playerArea.x, game.playerArea.y, ai.x, ai.y) < 6 * 6);
+            (Const.distanceSquared(game.playerArea.x, game.playerArea.y, ai.x, ai.y) < 6 * 6);
         else ai.entity.visible = true;
 
       for (obj in _objects)
         if (game.player.vars.losEnabled)
           obj.entity.visible =
-            (HXP.distanceSquared(game.playerArea.x, game.playerArea.y, obj.x, obj.y) < 6 * 6);
+            (Const.distanceSquared(game.playerArea.x, game.playerArea.y, obj.x, obj.y) < 6 * 6);
         else obj.entity.visible = true;
+*/
     }
 
 
@@ -1174,7 +1181,7 @@ class AreaGame
       var tmp = new List<AI>();
 
       for (ai in _ai)
-        if (HXP.distanceSquared(x, y, ai.x, ai.y) <= dist * dist &&
+        if (Const.distanceSquared(x, y, ai.x, ai.y) <= dist * dist &&
             (!los || isVisible(ai.x, ai.y, x, y)))
           tmp.add(ai);
 
@@ -1193,7 +1200,7 @@ class AreaGame
       var tmp = new List<AreaObject>();
 
       for (o in _objects)
-        if (HXP.distanceSquared(x, y, o.x, o.y) <= dist * dist &&
+        if (Const.distanceSquared(x, y, o.x, o.y) <= dist * dist &&
             (!los || isVisible(o.x, o.y, x, y)))
           tmp.add(o);
 

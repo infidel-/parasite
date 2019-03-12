@@ -102,14 +102,16 @@ class AreaObject
 // show object on screen
   public inline function show()
     {
-      game.scene.add(entity);
+      trace('AreaObject');
+//      game.scene.add(entity);
     }
 
 
 // hide object on screen
   public inline function hide()
     {
-      game.scene.remove(entity);
+      trace('AreaObject');
+//      game.scene.remove(entity);
     }
 
 

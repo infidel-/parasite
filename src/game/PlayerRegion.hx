@@ -2,9 +2,6 @@
 
 package game;
 
-import com.haxepunk.HXP;
-import openfl.Lib;
-
 import entities.PlayerEntity;
 import const.WorldConst;
 
@@ -19,7 +16,7 @@ class PlayerRegion
   public var x: Int; // x,y on grid
   public var y: Int;
   public var target(default, null): { x: Int, y: Int }; // current player target x,y
-  var pathTS: Int; // last time player moved to target
+  var pathTS: Float; // last time player moved to target
 
 
   public function new(g: Game)
@@ -40,7 +37,6 @@ class PlayerRegion
       x = vx;
       y = vy;
       entity = new PlayerEntity(game, x, y);
-      game.scene.add(entity);
       entity.visible = false;
     }
 
@@ -258,7 +254,7 @@ class PlayerRegion
   public function nextPath()
     {
       // path clear
-      if (target == null || Lib.getTimer() - pathTS < game.config.pathDelay)
+      if (target == null || haxe.Timer.stamp() - pathTS < game.config.pathDelay)
         return;
 
       var dx = 0;
@@ -271,7 +267,7 @@ class PlayerRegion
         dy = 1;
       else if (target.y - y < 0)
         dy = -1;
-      pathTS = Lib.getTimer();
+      pathTS = haxe.Timer.stamp();
       var ret = moveAction(dx, dy);
       if (!ret)
         {
@@ -303,7 +299,8 @@ class PlayerRegion
       entity.setImage(Const.FRAME_DEFAULT, Const.ROW_PARASITE);
 
       // make player entity visible again
-      entity.visible = true;
+      trace('onHostDeath');
+//      entity.visible = true;
 
       player.host = null;
     }

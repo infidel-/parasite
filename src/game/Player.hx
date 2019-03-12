@@ -3,7 +3,6 @@
 package game;
 
 import entities.PlayerEntity;
-import com.haxepunk.HXP;
 import ai.AI;
 
 class Player
@@ -54,7 +53,7 @@ class Player
         listenRadius: 10,
         losEnabled: true,
         invisibilityEnabled: false,
-        godmodeEnabled: false,
+        godmodeEnabled: true,
         };
 
       state = PLR_STATE_PARASITE;

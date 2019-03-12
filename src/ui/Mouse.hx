@@ -2,22 +2,13 @@
 
 package ui;
 
-import com.haxepunk.HXP;
-import openfl.Assets;
-import openfl.display.Sprite;
-import openfl.display.Bitmap;
-import openfl.geom.Rectangle;
-import openfl.events.MouseEvent;
-import com.haxepunk.input.Input;
-import com.haxepunk.input.Key;
-
 import game.Game;
 import ai.AI;
 
-class Mouse extends Sprite
+class Mouse //extends Sprite
 {
   var game: Game;
-  var rect: Rectangle;
+//  var rect: Rectangle;
   var cursor: Int;
   var sceneState: _UIState;
   var oldx: Float;
@@ -25,24 +16,27 @@ class Mouse extends Sprite
 
   public function new(g: Game)
     {
-      super();
+//      super();
       game = g;
       cursor = 0;
       oldx = 0;
       oldy = 0;
       sceneState = game.scene.state;
 
+      trace('Mouse');
+/*
       var b = new Bitmap(Assets.getBitmapData('gfx/mouse.png'));
       rect = new Rectangle(0, 0, CURSOR_WIDTH, CURSOR_HEIGHT);
       b.scrollRect = rect;
       addChild(b);
       mouseEnabled = false;
       openfl.ui.Mouse.hide();
-
       HXP.stage.addEventListener(MouseEvent.CLICK, onClick);
 
       b.x = 0;
       b.y = 0;
+      HXP.stage.addChild(this);
+*/
     }
 
 
@@ -132,6 +126,7 @@ class Mouse extends Sprite
 // update mouse cursor
   public function update()
     {
+/*
 #if mydebug
       // control key pressed, change to debug cursor
       if (game.scene.state == UISTATE_DEFAULT)
@@ -180,6 +175,7 @@ class Mouse extends Sprite
         updateRegion();
 
       sceneState = game.scene.state;
+*/
     }
 
 
@@ -250,7 +246,7 @@ class Mouse extends Sprite
         return;
 
       cursor = c;
-      rect.x = cursor * CURSOR_WIDTH;
+//      rect.x = cursor * CURSOR_WIDTH;
     }
 
 

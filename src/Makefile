@@ -104,7 +104,8 @@ windows-clean:
 	openfl build project.nmml windows -32
 
 html5-mydebug:
-	openfl build project.nmml html5 -Dmydebug --connect 6000
+	haxe project_js.hxml -D mydebug --connect 6000
+#	openfl build project.nmml html5 -Dmydebug --connect 6000
 
 html5:
 	openfl build project.nmml html5 --connect 6000

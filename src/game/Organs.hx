@@ -2,7 +2,6 @@
 
 package game;
 
-import com.haxepunk.HXP;
 import ai.AI;
 import const.EvolutionConst;
 
@@ -490,7 +489,7 @@ class Organs
             if (!game.area.isWalkable(xx, yy))
               continue;
 
-            if (HXP.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
+            if (Const.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
               continue;
 
             game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PANIC_GAS);
@@ -540,7 +539,7 @@ class Organs
             if (!game.area.isWalkable(xx, yy))
               continue;
 
-            if (HXP.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
+            if (Const.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
               continue;
 
             game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PARALYSIS_GAS);

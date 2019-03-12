@@ -209,11 +209,12 @@ class Group
               // open the manual file
               if (yes)
                 {
-                  var doc = openfl.Assets.getText('wiki/The-Group.md');
-                  game.scene.event({
-                    state: UISTATE_DOCUMENT,
-                    obj: doc
-                  });
+                  trace('Manual');
+//                  var doc = openfl.Assets.getText('wiki/The-Group.md');
+//                  game.scene.event({
+//                    state: UISTATE_DOCUMENT,
+//                    obj: doc
+//                  });
                 }
               game.scene.event({
                 state: UISTATE_DIFFICULTY,

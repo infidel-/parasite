@@ -2,9 +2,6 @@
 
 package game;
 
-import com.haxepunk.HXP;
-import openfl.Lib;
-
 import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;
@@ -23,7 +20,7 @@ class PlayerArea
   var knownObjects: List<String>; // list of known area object types
   var state(get, set): _PlayerState; // state link
   public var path(default, null): Array<aPath.Node>; // current player path
-  var pathTS: Int; // last time player moved on a path
+  var pathTS: Float; // last time player moved on a path
 
   // state "parasite"
 
@@ -47,9 +44,9 @@ class PlayerArea
       knownObjects.add('body');
       knownObjects.add('pickup');
       knownObjects.add('habitat');
+      trace('PlayerArea');
 
       entity = new PlayerEntity(game, x, y);
-      game.scene.add(entity);
     }
 
 
@@ -881,7 +878,7 @@ class PlayerArea
 // but nobody will probably notice the difference :)
   public inline function hears(xx: Int, yy: Int): Bool
     {
-      return (HXP.distanceSquared(x, y, xx, yy) <
+      return (Const.distanceSquared(x, y, xx, yy) <
         player.vars.listenRadius * player.vars.listenRadius);
     }
 
@@ -902,12 +899,12 @@ class PlayerArea
   public function nextPath()
     {
       // path clear
-      if (path == null || Lib.getTimer() - pathTS < game.config.pathDelay)
+      if (path == null || haxe.Timer.stamp() - pathTS < game.config.pathDelay)
         return;
 
       var n = path.shift();
 //      trace(n.x + ',' + n.y);
-      pathTS = Lib.getTimer();
+      pathTS = haxe.Timer.stamp();
       var ret = moveAction(n.x - x, n.y - y);
       if (!ret)
         {

@@ -1,9 +1,5 @@
 // tiled region view (each tile corresponds to an area)
 
-import com.haxepunk.Entity;
-import com.haxepunk.HXP;
-import haxepunk.graphics.tile.Tilemap;
-
 import game.*;
 
 class RegionView
@@ -11,24 +7,28 @@ class RegionView
   var game: Game; // game state link
   var scene: GameScene; // scene link
 
+/*
   var _tilemap: Tilemap;
   var _tilemapAlert: Tilemap;
   var _tilemapEvent: Tilemap;
   var _tilemapNPC: Tilemap;
   var _tilemapHabitat: Tilemap;
+*/
 
   public var width: Int; // width, height in cells
   public var height: Int;
-  public var entity: Entity; // tilemap entity
-  public var entityIcons: Entity; // icons entity
+//  public var entity: Entity; // tilemap entity
+//  public var entityIcons: Entity; // icons entity
 
   public function new (s: GameScene)
     {
+      trace('RegionView');
       scene = s;
       game = scene.game;
       width = 100; // should be larger than any region
       height = 100;
 
+/*
       _tilemap = null;
       _tilemapAlert = null;
       _tilemapEvent = null;
@@ -69,6 +69,7 @@ class RegionView
 
       scene.add(entity);
       scene.add(entityIcons);
+*/
     }
 
 
@@ -77,20 +78,14 @@ class RegionView
     {
       width = game.region.width;
       height = game.region.height;
-/*
-      // destroy old tilemap if it exists
-      if (_tilemap != null)
-        {
-          entity.graphic = null;
-          entityIcons.graphic = null;
-        }
-*/
 
+/*
       // set tiles
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
           _tilemap.setTile(x, y, Const.TILE_REGION_ROW + cells[x][y].tileID);
+*/
 
       // set all icons
       updateIcons();
@@ -102,6 +97,7 @@ class RegionView
 // show gui
   public function show()
     {
+/*
       // change player entity image and mask
       var row = Const.ROW_PARASITE;
       if (game.player.host != null)
@@ -115,15 +111,18 @@ class RegionView
       entity.visible = true;
       entityIcons.visible = true;
       game.playerRegion.entity.visible = true;
+*/
     }
 
 
 // hide gui
   public function hide()
     {
+/*
       entity.visible = false;
       entityIcons.visible = false;
       game.playerRegion.entity.visible = false;
+*/
     }
 
 
@@ -141,7 +140,7 @@ class RegionView
           else if (a.alertness > 0)
             alertFrame = Const.FRAME_ALERT1;
         }
-      _tilemapAlert.setTile(a.x, a.y, alertFrame);
+//      _tilemapAlert.setTile(a.x, a.y, alertFrame);
     }
 
 
@@ -171,7 +170,7 @@ class RegionView
       if (allNotesKnown)
         frame = Const.FRAME_EVENT_KNOWN;
 
-      _tilemapEvent.setTile(a.x, a.y, Const.ROW_REGION_ICON * 9 + frame);
+//      _tilemapEvent.setTile(a.x, a.y, Const.ROW_REGION_ICON * 9 + frame);
     }
 
 
@@ -186,8 +185,8 @@ class RegionView
         if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
           ok = false;
 
-      _tilemapNPC.setTile(a.x, a.y,
-        Const.ROW_REGION_ICON * 9 + (ok ? Const.FRAME_EMPTY : Const.FRAME_EVENT_NPC));
+//      _tilemapNPC.setTile(a.x, a.y,
+//        Const.ROW_REGION_ICON * 9 + (ok ? Const.FRAME_EMPTY : Const.FRAME_EVENT_NPC));
     }
 
 
@@ -200,16 +199,19 @@ class RegionView
       updateEvent(a);
       updateNPC(a);
 
+/*
       // update habitat icons
       _tilemapHabitat.setTile(a.x, a.y,
         Const.ROW_REGION_ICON * 9 +
         (a.hasHabitat ? Const.FRAME_HABITAT : Const.FRAME_EMPTY));
+*/
     }
 
 
 // clear icons (needed on game restart)
   public function clearIcons()
     {
+/*
       for (y in 0...height)
         for (x in 0...width)
           {
@@ -218,6 +220,7 @@ class RegionView
             _tilemapNPC.setTile(x, y,
               Const.ROW_REGION_ICON * 9 + Const.FRAME_EMPTY);
           }
+*/
     }
 
 
@@ -243,15 +246,15 @@ class RegionView
   public function updateVisibility()
     {
       // maybe it would be more optimal to store currently drawn tile somewhere?
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            var a = game.region.getXY(x, y);
-
-            if ((Math.abs(game.playerRegion.x - x) < 2 &&
-                Math.abs(game.playerRegion.y - y) < 2) || a.isKnown)
-              _tilemap.setTile(x, y, Const.TILE_REGION_ROW + a.tileID);
-            else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
-          }
+//      for (y in 0...height)
+//        for (x in 0...width)
+//          {
+//            var a = game.region.getXY(x, y);
+//
+//            if ((Math.abs(game.playerRegion.x - x) < 2 &&
+//                Math.abs(game.playerRegion.y - y) < 2) || a.isKnown)
+//              _tilemap.setTile(x, y, Const.TILE_REGION_ROW + a.tileID);
+//            else _tilemap.setTile(x, y, Const.TILE_HIDDEN);
+//          }
     }
 }

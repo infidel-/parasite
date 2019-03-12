@@ -1,11 +1,10 @@
 // - has all links to windows and handles input
 
-import com.haxepunk.Scene;
-import com.haxepunk.HXP;
-import com.haxepunk.graphics.atlas.TileAtlas;
-import com.haxepunk.input.Input;
-import com.haxepunk.input.Key;
-import haxe.ui.core.Component;
+import h2d.Scene;
+import h2d.Tile;
+import hxd.Window;
+import hxd.Key;
+//import haxe.ui.core.Component;
 #if js
 import js.Browser;
 #else
@@ -27,17 +26,20 @@ class GameScene extends Scene
   var _state: _UIState; // current HUD state (default, evolution, etc)
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
-  public var entityAtlas: TileAtlas; // entity graphics
+  public var entityAtlas: Array<Array<Tile>>; // entity graphics
+  public var tileAtlas: Array<Array<Tile>>; // tile graphics
   public var controlPressed: Bool; // Ctrl key pressed?
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
-  var loseFocus: LoseFocus; // lose focus blur
+//  var loseFocus: LoseFocus; // lose focus blur
 
-  // camera tile x,y
+  // camera x,y
   public var cameraTileX1: Int;
   public var cameraTileY1: Int;
   public var cameraTileX2: Int;
   public var cameraTileY2: Int;
+  public var cameraX: Int;
+  public var cameraY: Int;
 
 //  var _dx: Int; // movement vars - movement direction (changed in handleInput)
 //  var _dy: Int;
@@ -47,6 +49,7 @@ class GameScene extends Scene
   public function new(g: Game)
     {
       super();
+      Window.getInstance().addEventTarget(onEvent);
       game = g;
       uiLocked = [];
       _state = UISTATE_DEFAULT;
@@ -58,6 +61,11 @@ class GameScene extends Scene
       cameraTileX2 = 0;
       cameraTileY2 = 0;
 
+      width = game.config.windowWidth;
+      height = game.config.windowHeight;
+
+      trace('GameScene');
+/*
 #if js
       var os = Browser.navigator.platform;
       if (os.indexOf('Linux') >= 0) // use C-1 on Linux
@@ -74,62 +82,37 @@ class GameScene extends Scene
       Input.define("ctrl", [ 18 ]); // Alt key
 #end
       Input.define("shift", [ Key.SHIFT ]);
-      Input.define("up", [ Key.UP, Key.W, Key.NUMPAD_8 ]);
-      Input.define("down", [ Key.DOWN, Key.X, Key.NUMPAD_2 ]);
-      Input.define("left", [ Key.LEFT, Key.A, Key.NUMPAD_4 ]);
-      Input.define("right", [ Key.RIGHT, Key.D, Key.NUMPAD_6 ]);
-      Input.define("upleft", [ Key.Q, Key.NUMPAD_7 ]);
-      Input.define("upright", [ Key.E, Key.NUMPAD_9 ]);
-      Input.define("downleft", [ Key.Z, Key.NUMPAD_1 ]);
-      Input.define("downright", [ Key.C, Key.NUMPAD_3 ]);
 
       Input.define("pageup", [ Key.PAGE_UP ]);
       Input.define("pagedown", [ Key.PAGE_DOWN ]);
       Input.define("home", [ Key.HOME ]);
       Input.define("end", [ Key.END ]);
-      Input.define("enter", [ Key.ENTER ]);
 
-      Input.define("action1", [ Key.DIGIT_1 ]);
-      Input.define("action2", [ Key.DIGIT_2 ]);
-      Input.define("action3", [ Key.DIGIT_3 ]);
-      Input.define("action4", [ Key.DIGIT_4 ]);
-      Input.define("action5", [ Key.DIGIT_5 ]);
-      Input.define("action6", [ Key.DIGIT_6 ]);
-      Input.define("action7", [ Key.DIGIT_7 ]);
-      Input.define("action8", [ Key.DIGIT_8 ]);
-      Input.define("action9", [ Key.DIGIT_9 ]);
-      Input.define("action10", [ Key.DIGIT_0 ]);
-
-      Input.define("goalsWindow", [ Key.F1 ]);
-      Input.define("inventoryWindow", [ Key.F2 ]);
-      Input.define("skillsWindow", [ Key.F3 ]);
-      Input.define("logWindow", [ Key.F4 ]);
-
-      Input.define("timelineWindow", [ Key.F5 ]);
-      Input.define("evolutionWindow", [ Key.F6 ]);
-      Input.define("organsWindow", [ Key.F7 ]);
-      Input.define("debugWindow", [ Key.F9 ]);
       Input.define("exit", [ Key.F10 ]);
-//      Input.define("test", [ Key.SPACE ]);
-
-      Input.define("skipTurn", [ Key.NUMPAD_5 ]);
-      Input.define("closeWindow", [ Key.ESCAPE ]);
-
-//      _dx = 0;
-//      _dy = 0;
-      _inputState = 0;
+*/
     }
 
 
-  public override function begin()
+// init scene and game
+  public function init()
     {
+      // allow repeating keypresses
+      Key.ALLOW_KEY_REPEAT = true;
+
       // load all entity images into atlas
-      entityAtlas = new TileAtlas("gfx/entities" + Const.TILE_WIDTH + ".png");
-      entityAtlas.prepare(Const.TILE_WIDTH, Const.TILE_HEIGHT);
+      var res = hxd.Res.load('graphics/entities' + Const.TILE_WIDTH +
+        '.png').toTile();
+      entityAtlas = res.grid(Const.TILE_WIDTH);
+      var res = hxd.Res.load('graphics/tileset' + Const.TILE_WIDTH +
+        '.png').toTile();
+      tileAtlas = res.grid(Const.TILE_WIDTH);
 
       // init GUI
       hud = new HUD(game);
-
+      components = [
+        UISTATE_LOG => new Log(game),
+      ];
+/*
       components = [
         UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_YESNO => new YesNo(game),
@@ -142,17 +125,13 @@ class GameScene extends Scene
         UISTATE_TIMELINE => new Timeline(game),
         UISTATE_EVOLUTION => new Evolution(game),
         UISTATE_ORGANS => new Organs(game),
-        UISTATE_LOG => new Log(game),
         UISTATE_DEBUG => new Debug(game),
         UISTATE_FINISH => new Finish(game),
         ];
       loseFocus = new LoseFocus();
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
-
-      // init mouse cursor
+*/
       mouse = new Mouse(game);
-      HXP.stage.addChild(mouse);
-
       area = new AreaView(this);
       region = new RegionView(this);
 
@@ -167,6 +146,8 @@ class GameScene extends Scene
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
 
+/*
+   // TODO: why did i need this?
 #if js
       // show stuff on losing focus
       Browser.window.onfocus = function()
@@ -178,58 +159,70 @@ class GameScene extends Scene
           loseFocus.show();
         }
 #end
+*/
     }
 
 
 // update camera position
   public function updateCamera()
     {
+      trace('updateCamera');
       var x = 0.0, y = 0.0, w = 0.0, h = 0.0;
       if (game.location == LOCATION_AREA)
         {
-          x = game.playerArea.entity.x;
-          y = game.playerArea.entity.y;
+          x = game.playerArea.x * Const.TILE_WIDTH;
+          y = game.playerArea.y * Const.TILE_HEIGHT;
           w = game.area.width;
           h = game.area.height;
         }
 
       else if (game.location == LOCATION_REGION)
         {
-          x = game.playerRegion.entity.x;
-          y = game.playerRegion.entity.y;
+          x = game.playerRegion.x * Const.TILE_WIDTH;
+          y = game.playerRegion.y * Const.TILE_HEIGHT;
           w = game.region.width;
           h = game.region.height;
         }
 
-      x -= HXP.halfWidth;
-      y -= HXP.halfHeight;
+      var win = Window.getInstance();
+      x -= win.width / 2;
+      y -= win.height / 2;
+      x = Math.ceil(x / Const.TILE_WIDTH) * Const.TILE_WIDTH;
+      y = Math.ceil(y / Const.TILE_HEIGHT) * Const.TILE_HEIGHT;
 
-      if (x + HXP.windowWidth > Const.TILE_WIDTH * w)
-        x = Const.TILE_WIDTH * w - HXP.windowWidth;
-      if (y + HXP.windowHeight > Const.TILE_HEIGHT * h)
-        y = Const.TILE_HEIGHT * h - HXP.windowHeight;
-
+      if (x + win.width > Const.TILE_WIDTH * w)
+        x = Const.TILE_WIDTH * w - win.width;
+      if (y + win.height > Const.TILE_HEIGHT * h)
+        y = Const.TILE_HEIGHT * h - win.height;
       if (x < 0)
         x = 0;
       if (y < 0)
         y = 0;
 
-      HXP.camera.x = x;
-      HXP.camera.y = y;
-
       // update tile x,y
-      cameraTileX1 = Std.int(HXP.camera.x / Const.TILE_WIDTH);
-      cameraTileY1 = Std.int(HXP.camera.y / Const.TILE_HEIGHT);
+      cameraTileX1 = Std.int(x / Const.TILE_WIDTH);
+      cameraTileY1 = Std.int(y / Const.TILE_HEIGHT);
       cameraTileX2 =
-        Std.int((HXP.camera.x + HXP.windowWidth) / Const.TILE_WIDTH);
+        Std.int((x + win.width) / Const.TILE_WIDTH);
       cameraTileY2 =
-        Std.int((HXP.camera.y + HXP.windowHeight) / Const.TILE_HEIGHT);
+        Std.int((y + win.height) / Const.TILE_HEIGHT);
+      cameraX = Std.int(x);
+      cameraY = Std.int(y);
+
+      // adjust tilemap and player entity position
+      if (game.location == LOCATION_AREA)
+        {
+          game.playerArea.entity.setPosition(
+            game.playerArea.x, game.playerArea.y);
+          area.updateCamera(cameraX, cameraY);
+        }
     }
 
 
 // handle player input
-  function handleInput()
+  function handleInput(key: Int): Bool
     {
+/*
       // show console (;)
       if (Input.released(186))
         {
@@ -282,33 +275,35 @@ class GameScene extends Scene
               return;
             }
         }
-/*
-      trace(Input.lastKey);
-      if (Input.lastKey != null)
-        trace(Key.nameOfKey(Input.lastKey));
 */
 
       if (!hud.consoleVisible())
         {
           // enter restarts the game when it is finished
-          if (game.isFinished && Input.pressed("enter") &&
+          if (game.isFinished && Key.isPressed(Key.ENTER) &&
               _state == UISTATE_DEFAULT)
             {
               game.restart();
-              return;
+              return true;
             }
 
-          var ret = handleWindows();
+          var ret = handleWindows(key);
           if (!ret)
-            handleMovement();
+            ret = handleMovement(key);
 
           // hack: disallow actions when control/alt pressed
-          if (!controlPressed)
-            handleActions();
+          if (!controlPressed && !ret)
+            ret = handleActions(key);
+
+          return ret;
         }
 
+      return false;
+
+/*
       if (Input.pressed("exit"))
         exit();
+*/
     }
 
 
@@ -321,11 +316,11 @@ class GameScene extends Scene
             components[_state].hide();
 
           // hack: getting delta clears the mouse wheel flag
-          Input.mouseWheelDelta;
+//          Input.mouseWheelDelta;
         }
 
       _state = vstate;
-      if (_state != UISTATE_DEFAULT)
+      if (_state != UISTATE_DEFAULT && components[_state] != null)
         {
           if (components[_state] != null)
             components[_state].show();
@@ -386,8 +381,9 @@ class GameScene extends Scene
 
 
 // handle opening and closing windows
-  function handleWindows(): Bool
+  function handleWindows(key: Int): Bool
     {
+/*
       // scrolling text
       if (_state != UISTATE_DEFAULT)
         {
@@ -446,145 +442,145 @@ class GameScene extends Scene
       // ui in locked state, do not allow changing windows
       if (Lambda.has(uiLocked, _state))
         return true;
+*/
 
       // window open
       if (_state != UISTATE_DEFAULT)
         {
-          if (Input.pressed("enter"))
-            closeWindow();
-
           // close windows
-          if (Input.pressed("closeWindow"))
+          if (key == Key.ENTER || key == Key.ESCAPE) 
             closeWindow();
         }
 
       // no windows open
+      var goalsPressed =
+        (key == Key.NUMPAD_1 && controlPressed) || key == Key.F1;
+      var inventoryPressed =
+        (key == Key.NUMPAD_2 && controlPressed) || key == Key.F2;
+      var skillsPressed =
+        (key == Key.NUMPAD_3 && controlPressed) || key == Key.F3;
+      var logPressed =
+        (key == Key.NUMPAD_4 && controlPressed) || key == Key.F4;
+      var timelinePressed =
+        (key == Key.NUMPAD_5 && controlPressed) || key == Key.F5;
+      var evolutionPressed =
+        (key == Key.NUMPAD_6 && controlPressed) || key == Key.F6;
+      var organsPressed =
+        (key == Key.NUMPAD_7 && controlPressed) || key == Key.F7;
+      var debugPressed =
+        (key == Key.NUMPAD_9 && controlPressed) || key == Key.F9;
+
+      // open goals window
+      if (goalsPressed)
+        state = UISTATE_GOALS;
+
+      // open inventory window (if items are learned)
+      else if (inventoryPressed &&
+          game.player.state == PLR_STATE_HOST &&
+          game.player.host.isHuman &&
+          game.player.vars.inventoryEnabled)
+        state = UISTATE_INVENTORY;
+
+      // open skills window (if skills are learned)
+      else if (skillsPressed &&
+          game.player.vars.skillsEnabled)
+        state = UISTATE_SKILLS;
+
+      // open message log window
+      else if (logPressed)
         {
-          var goalsPressed =
-            (Input.pressed("action1") && controlPressed) ||
-            Input.pressed("goalsWindow");
-          var inventoryPressed =
-            (Input.pressed("action2") && controlPressed) ||
-            Input.pressed("inventoryWindow");
-          var skillsPressed =
-            (Input.pressed("action3") && controlPressed) ||
-            Input.pressed("skillsWindow");
-          var logPressed =
-            (Input.pressed("action4") && controlPressed) ||
-            Input.pressed("logWindow");
-          var timelinePressed =
-            (Input.pressed("action5") && controlPressed) ||
-            Input.pressed("timelineWindow");
-          var evolutionPressed =
-            (Input.pressed("action6") && controlPressed) ||
-            Input.pressed("evolutionWindow");
-          var organsPressed =
-            (Input.pressed("action7") && controlPressed) ||
-            Input.pressed("organsWindow");
-          var debugPressed =
-            (Input.pressed("action9") && controlPressed) ||
-            Input.pressed("debugWindow");
+          state = UISTATE_LOG;
+          var win: Log = cast components[_state];
+          win.scrollToEnd();
+        }
 
-          // open goals window
-          if (goalsPressed)
-            state = UISTATE_GOALS;
+      // open timeline window
+      else if (timelinePressed &&
+          game.player.vars.timelineEnabled)
+        state = UISTATE_TIMELINE;
 
-          // open inventory window (if items are learned)
-          else if (inventoryPressed &&
-              game.player.state == PLR_STATE_HOST &&
-              game.player.host.isHuman &&
-              game.player.vars.inventoryEnabled)
-            state = UISTATE_INVENTORY;
+      // open evolution window (if enabled)
+      else if (evolutionPressed &&
+          game.player.state == PLR_STATE_HOST &&
+          game.player.evolutionManager.state > 0)
+        state = UISTATE_EVOLUTION;
 
-          // open skills window (if skills are learned)
-          else if (skillsPressed &&
-              game.player.vars.skillsEnabled)
-            state = UISTATE_SKILLS;
-
-          // open message log window
-          else if (logPressed)
-            {
-              state = UISTATE_LOG;
-              var win: Log = cast components[_state];
-              win.scrollToEnd();
-            }
-
-          // open timeline window
-          else if (timelinePressed &&
-              game.player.vars.timelineEnabled)
-            state = UISTATE_TIMELINE;
-
-          // open evolution window (if enabled)
-          else if (evolutionPressed &&
-              game.player.state == PLR_STATE_HOST &&
-              game.player.evolutionManager.state > 0)
-            state = UISTATE_EVOLUTION;
-
-          // open organs window
-          else if (organsPressed &&
-              game.player.state == PLR_STATE_HOST &&
-              game.player.vars.organsEnabled)
-            state = UISTATE_ORGANS;
+      // open organs window
+      else if (organsPressed &&
+          game.player.state == PLR_STATE_HOST &&
+          game.player.vars.organsEnabled)
+        state = UISTATE_ORGANS;
 
 #if mydebug
-          // open debug window
-          else if (debugPressed && !game.isFinished)
-            state = UISTATE_DEBUG;
+      // open debug window
+      else if (debugPressed && !game.isFinished)
+        state = UISTATE_DEBUG;
 #end
-        }
 
       return false;
     }
 
 
 // handle player movement
-  function handleMovement()
+  function handleMovement(key: Int): Bool
     {
-      // game finished
-      if (game.isFinished)
-        return;
+      // game finished or window open
+      if (game.isFinished || _state != UISTATE_DEFAULT)
+        return false;
 
       var dx = 0;
       var dy = 0;
 
-      if (Input.pressed("up"))
+      if (key == Key.UP ||
+          key == Key.W ||
+          key == Key.NUMPAD_8)
         dy = -1;
 
-      if (Input.pressed("down"))
+      if (key == Key.DOWN ||
+          key == Key.X ||
+          key == Key.NUMPAD_2)
         dy = 1;
 
-      if (Input.pressed("left"))
+      if (key == Key.LEFT ||
+          key == Key.A ||
+          key == Key.NUMPAD_4)
         dx = -1;
 
-      if (Input.pressed("right"))
+      if (key == Key.RIGHT ||
+          key == Key.D ||
+          key == Key.NUMPAD_6)
         dx = 1;
 
-      if (Input.pressed("upleft"))
+      if (key == Key.Q ||
+          key == Key.NUMPAD_7)
         {
           dx = -1;
           dy = -1;
         }
 
-      if (Input.pressed("upright"))
+      if (key == Key.E ||
+          key == Key.NUMPAD_9)
         {
           dx = 1;
           dy = -1;
         }
 
-      if (Input.pressed("downleft"))
+      if (key == Key.Z ||
+          key == Key.NUMPAD_1)
         {
           dx = -1;
           dy = 1;
         }
 
-      if (Input.pressed("downright"))
+      if (key == Key.C ||
+          key == Key.NUMPAD_3)
         {
           dx = 1;
           dy = 1;
         }
 
       if (dx == 0 && dy == 0)
-        return;
+        return false;
 
       // area mode
       if (game.location == LOCATION_AREA)
@@ -593,21 +589,24 @@ class GameScene extends Scene
       // area mode
       else if (game.location == LOCATION_REGION)
         game.playerRegion.moveAction(dx, dy);
+
+      return true;
     }
 
 
 // handle player actions
-  function handleActions()
+  function handleActions(key: Int): Bool
     {
       mouse.update();
 
       // game finished
       if (game.isFinished)
-        return;
+        return false;
 
       // actions from action menu
+      var ret = false;
       for (i in 1...11)
-        if (Input.pressed("action" + i))
+        if (key == Key.NUMBER_0 + i)
           {
             var n = i;
 
@@ -621,51 +620,70 @@ class GameScene extends Scene
               components[_state].action(n);
 
             _inputState = 0;
+            ret = true;
             break;
           }
 
+      if (_state != UISTATE_DEFAULT)
+        trace('UISTATE: ' + _state);
       if (_state == UISTATE_DEFAULT)
         {
-/*
-          // test action
-          if (Input.pressed("test"))
-            hud.test();
-*/
-
           // skip until end of turn
-          if (Input.pressed("skipTurn"))
+          if (key == Key.NUMPAD_5)
             {
               game.turn();
 
               // update HUD info
               game.updateHUD();
+
+              ret = true;
             }
         }
 
       // next 10 actions
-      if (Input.pressed(Key.S))
-        _inputState = 1;
+      if (key == Key.S)
+        {
+
+          _inputState = 1;
+          ret = true;
+        }
+
+      return ret;
     }
 
 
-// entity update
-  public override function update()
+// update scene
+//  public function update()
+  function onEvent(ev: hxd.Event)
     {
       try {
+/*
         // path active, try to move on it
         if (game.location == LOCATION_AREA && game.playerArea.path != null)
           game.playerArea.nextPath();
         else if (game.location == LOCATION_REGION &&
             game.playerRegion.target != null)
           game.playerRegion.nextPath();
+*/
+        // only handle keyboard events
+        var key = 0;
+        switch (ev.kind)
+          {
+            case EKeyDown:
+              key = ev.keyCode;
+            case EPush:
+              trace('path movement!');
+            case _:
+          }
+        if (key == 0)
+          return;
 
         // handle player input
-        handleInput();
+        var ret = handleInput(key);
 
         // update camera position
-        updateCamera();
-
-        super.update();
+        if (ret)
+          updateCamera();
         }
       catch (e: Dynamic)
         {
@@ -682,7 +700,7 @@ class GameScene extends Scene
           // write to stdout
           trace('Exception: ' + e);
           trace(stack);
-
+/*
 #if !js
           // send exception to web server
           if (game.config.sendExceptions)
@@ -741,6 +759,7 @@ class GameScene extends Scene
                 });
                 closeWindow();
             }
+*/
         }
     }
 

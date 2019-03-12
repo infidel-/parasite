@@ -2,21 +2,20 @@
 
 package entities;
 
-import com.haxepunk.Entity;
-import com.haxepunk.graphics.Graphiclist;
-import com.haxepunk.graphics.Spritemap;
-import com.haxepunk.graphics.text.BitmapText;
+import h2d.Bitmap;
+import h2d.Object;
 
 import game.Game;
 
 class PawnEntity extends Entity
 {
-  var game: Game; // game state
 
+/*
   var _text: BitmapText;
   var _list: Graphiclist; // graphics list
-  var _spriteBody: Spritemap; // body sprite map
-  var _spriteMask: Spritemap; // mask sprite map (invaded state)
+*/
+  var _spriteBody: Bitmap; // body sprite
+  var _spriteMask: Bitmap; // mask sprite map (invaded state)
   public var atlasRow: Int; // tile atlas row
 
   var _textTimer: Int; // turns left to display this text
@@ -24,36 +23,36 @@ class PawnEntity extends Entity
 
   public function new(g: Game, xx: Int, yy: Int, r: Int)
     {
-      super(xx * Const.TILE_WIDTH, yy * Const.TILE_HEIGHT);
-
-      game = g;
+      super(g);
+      type = 'pawn';
+      trace('PawnEntity');
       atlasRow = r;
-      _list = new Graphiclist();
-      _spriteBody = new Spritemap(game.scene.entityAtlas,
-        Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      _spriteBody.setFrame(Const.FRAME_DEFAULT, atlasRow);
+
+      _spriteBody = new Bitmap(
+        game.scene.entityAtlas[Const.FRAME_DEFAULT][atlasRow], _container);
+      _spriteMask = null;
+/*
       _spriteMask = new Spritemap(game.scene.entityAtlas,
         Const.TILE_WIDTH, Const.TILE_HEIGHT);
       _spriteMask.frame = Const.FRAME_EMPTY;
-      _list.add(_spriteBody);
       _list.add(_spriteMask);
 
       _text = new BitmapText("", 0, -10);
       _textTimer = 0;
       _list.add(_text);
 
-      type = "undefined";
       layer = Const.LAYER_AI;
-      graphic = _list;
+*/
+      setPosition(xx, yy);
     }
 
 
 // set text
   public inline function setText(s: String, timer: Int)
     {
-      _text.text = s;
-      _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
-      _textTimer = timer;
+//      _text.text = s;
+//      _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
+//      _textTimer = timer;
     }
 
 
@@ -64,44 +63,49 @@ class PawnEntity extends Entity
         return;
 
       _textTimer--;
-      if (_textTimer == 0)
-        _text.text = '';
-    }
-
-
-// set position on map
-  public inline function setPosition(vx: Int, vy: Int)
-    {
-      x = vx * Const.TILE_WIDTH;
-      y = vy * Const.TILE_HEIGHT;
+//      if (_textTimer == 0)
+//        _text.text = '';
     }
 
 
 // set body image index
   public inline function setImage(col: Int, ?row: Int)
     {
-      _spriteBody.setFrame(col, (row == null ? atlasRow : row));
+//      _spriteBody.setFrame(col, (row == null ? atlasRow : row));
     }
 
 
 // get body image index
   public inline function getImage(): Int
     {
-      return _spriteBody.frame;
+//      return _spriteBody.frame;
+      return 0;
     }
 
 
 // set mask image index
   public inline function setMask(col: Int, ?row: Int)
     {
-      _spriteMask.setFrame(col, (row == null ? atlasRow : row));
-    }
+      trace('setMask ' + col + ' ' + row);
+      // no mask, remove image
+      if (col == 0)
+        {
+          if (_spriteMask == null)
+            return;
 
-/*
-// moveTo() wrapper that uses tile x, y
-  public inline function setPosition(vx: Int, vy: Int)
-    {
-      moveTo(vx * Const.TILE_WIDTH, vy * Const.TILE_HEIGHT);
+          _spriteMask.remove();
+          _spriteMask = null;
+          return;
+        }
+
+      // skip same image
+      var tile = game.scene.entityAtlas[col]
+        [(row == null ? atlasRow : row)];
+      if (_spriteMask != null && _spriteMask.tile == tile)
+        return;
+
+      if (_spriteMask != null)
+        _spriteMask.remove();
+      _spriteMask = new Bitmap(tile, _container);
     }
-*/
 }

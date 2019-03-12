@@ -2,45 +2,31 @@
 
 package ui;
 
-import com.haxepunk.HXP;
-import com.haxepunk.Entity;
-import com.haxepunk.graphics.Graphiclist;
-import openfl.Assets;
-import openfl.Lib;
-import openfl.display.Sprite;
-import openfl.text.TextField;
-import openfl.text.TextFieldType;
-import openfl.text.TextFormat;
-import openfl.text.TextFormatAlign;
-import openfl.text.TextFieldAutoSize;
-import haxe.ui.components.Button;
-import haxe.ui.core.MouseEvent;
-
 import game.Game;
 
 class HUD
 {
   var game: Game; // game state link
 
+  var _listActions: List<_PlayerAction>; // list of currently available actions
+/*
   var _textField: TextField; // actions list
   var _textFieldBack: Sprite; // actions list background
-  var _listActions: List<_PlayerAction>; // list of currently available actions
-
   var _log: TextField; // last log lines
   var _logBack: Sprite; // log background
-
   var _console: TextField; // console
   var _consoleBack: Sprite; // console background
-
   var _help: TextField; // help
   var _helpBack: Sprite; // help background
-
+*/
   public function new(g: Game)
     {
       game = g;
       _listActions = new List<_PlayerAction>();
-      var font = Assets.getFont(Const.FONT);
 
+      trace('HUD');
+/*
+      var font = Assets.getFont(Const.FONT);
       // console
       _console = new TextField();
       var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
@@ -95,6 +81,7 @@ class HUD
       _help.width = HXP.width - 40;
       _help.height = game.config.fontSize + 4;
       HXP.stage.addChild(_helpBack);
+*/
     }
 
 
@@ -249,6 +236,7 @@ class HUD
       else if (_listActions.length == 0)
         buf.add('No available actions.');
 
+/*
       _textField.htmlText = buf.toString();
       _textFieldBack.graphics.clear();
       _textFieldBack.graphics.beginFill(0x202020, .75);
@@ -257,27 +245,13 @@ class HUD
       _textFieldBack.x = 20;
       _textFieldBack.y = HXP.windowHeight - _textField.height -
         game.config.fontSize - 12;
+*/
     }
 
 
   static var cnt = 0;
   public function test()
-    {
-/*
-      var oldtext = _textField.text;
-      var buf = new StringBuf();
-      buf.add('Intent: Do Nothing\n\n');
-      buf.add('1: Access Host Memory (5 AP)\n');
-      buf.add('2: Leave Host (5 AP)\n');
-      trace(cnt);
-      cnt++;
-      _textField.text = 'random string ' + cnt; //buf.toString();
-      _textField.width += 20;
-      if (cnt % 2 == 0)
-        HXP.stage.removeChild(_textFieldBack);
-      else HXP.stage.addChild(_textFieldBack);
-*/
-    }
+    {}
 
 
 // update log display
@@ -302,11 +276,13 @@ class HUD
           buf.add('\n');
         }
 
+/*
       _log.htmlText = buf.toString();
       _log.width = HXP.width - 40;
       _logBack.graphics.clear();
       _logBack.graphics.beginFill(0x202020, .75);
       _logBack.graphics.drawRect(0, 0, _log.width, _log.height);
+*/
     }
 
 
@@ -348,10 +324,12 @@ class HUD
       buf.add(prefix + '10: Exit');
 #end
 
+/*
       _help.htmlText = buf.toString();
       _helpBack.graphics.clear();
       _helpBack.graphics.beginFill(0x202020, .75);
       _helpBack.graphics.drawRect(0, 0, _help.width, _help.height);
+*/
     }
 
 
@@ -369,30 +347,31 @@ class HUD
 // show debug console
   public function showConsole()
     {
-      _console.text = '';
-      _consoleBack.visible = true;
-      HXP.stage.focus = _console;
+//      _console.text = '';
+//      _consoleBack.visible = true;
+//      HXP.stage.focus = _console;
     }
 
 
 // hide debug console
   public function hideConsole()
     {
-      _consoleBack.visible = false;
+//      _consoleBack.visible = false;
     }
 
 
 // is console visible?
   public inline function consoleVisible(): Bool
     {
-      return _consoleBack.visible;
+//      return _consoleBack.visible;
+      return false;
     }
 
 
 // run console command and close it
   public inline function runConsoleCommand()
     {
-      game.console.run(_console.text);
+//      game.console.run(_console.text);
       hideConsole();
     }
 
@@ -400,17 +379,17 @@ class HUD
 // update console text
   public function updateConsole()
     {
-      _consoleBack.graphics.clear();
-      _consoleBack.graphics.beginFill(0x202020, .75);
-      _consoleBack.graphics.drawRect(0, 0, _console.width, _console.height);
+//      _consoleBack.graphics.clear();
+//      _consoleBack.graphics.beginFill(0x202020, .75);
+//      _consoleBack.graphics.drawRect(0, 0, _console.width, _console.height);
     }
 
 
 // show hide HUD
   public inline function show(state: Bool)
     {
-      _textFieldBack.visible = state;
-      _logBack.visible = state;
-      _helpBack.visible = state;
+//      _textFieldBack.visible = state;
+//      _logBack.visible = state;
+//      _helpBack.visible = state;
     }
 }

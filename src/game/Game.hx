@@ -2,7 +2,6 @@
 
 package game;
 
-import com.haxepunk.HXP;
 import scenario.Timeline;
 
 class Game
@@ -42,17 +41,6 @@ class Game
       scene = new GameScene(this);
       console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);
-/*
-      openfl.Lib.application.window.resize(
-        config.windowWidth, config.windowHeight);
-/*
-      HXP.width = config.windowWidth;
-      HXP.height = config.windowHeight;
-*/
-//      HXP.screen.scaleX = HXP.screen.scaleY = 1;
-//      HXP.resize(config.windowWidth, config.windowHeight);
-//      HXP.frameRate = 30;
-      HXP.scene = scene;
       messageList = new List();
       hudMessageList = new List();
       importantMessagesEnabled = true;
@@ -64,7 +52,7 @@ class Game
     }
 
 
-// init game stuff - called from GameScene.begin()
+// init game stuff - called from GameScene.init()
   public function init()
     {
       var s = 'Parasite v' + Version.getVersion() +
@@ -280,7 +268,7 @@ class Game
 
 
 // display text message in a window
-  public inline function message(s: String, ?col: _TextColor)
+  public function message(s: String, ?col: _TextColor)
     {
       if (col == null)
         col = COLOR_MESSAGE;
