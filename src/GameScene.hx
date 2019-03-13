@@ -21,6 +21,7 @@ class GameScene extends Scene
   public var region: RegionView; // region view
   public var mouse: Mouse; // mouse cursor entity
   public var hud: HUD; // ingame HUD
+  public var win: Window;
   var uiQueue: List<_UIEvent>; // gui event queue
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
@@ -49,7 +50,8 @@ class GameScene extends Scene
   public function new(g: Game)
     {
       super();
-      Window.getInstance().addEventTarget(onEvent);
+      win = Window.getInstance();
+      win.addEventTarget(onEvent);
       game = g;
       uiLocked = [];
       _state = UISTATE_DEFAULT;
@@ -184,7 +186,6 @@ class GameScene extends Scene
           h = game.region.height;
         }
 
-      var win = Window.getInstance();
       x -= win.width / 2;
       y -= win.height / 2;
       x = Math.ceil(x / Const.TILE_WIDTH) * Const.TILE_WIDTH;
@@ -260,27 +261,22 @@ class GameScene extends Scene
           shiftPressed = false;
           return;
         }
+*/
 
       // toggle gui
       if (!hud.consoleVisible())
         {
-          if (Input.pressed(Key.SPACE))
+          if (key == Key.SPACE)
             {
-              hud.show(false);
-              return;
-            }
-          if (Input.released(Key.SPACE))
-            {
-              hud.show(true);
-              return;
+              hud.toggle();
+              return true;
             }
         }
-*/
 
       if (!hud.consoleVisible())
         {
           // enter restarts the game when it is finished
-          if (game.isFinished && Key.isPressed(Key.ENTER) &&
+          if (game.isFinished && key == Key.ENTER &&
               _state == UISTATE_DEFAULT)
             {
               game.restart();

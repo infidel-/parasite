@@ -2,6 +2,11 @@
 
 package ui;
 
+import h2d.Bitmap;
+import h2d.Graphics;
+import h2d.Object;
+import h2d.HtmlText;
+
 import game.Game;
 
 class HUD
@@ -9,11 +14,13 @@ class HUD
   var game: Game; // game state link
 
   var _listActions: List<_PlayerAction>; // list of currently available actions
+  var _container: Object;
+  var _text: HtmlText; // actions list
+  var _textBack: Graphics; // actions list background
+  var _log: HtmlText; // last log lines
+  var _logBack: Graphics; // log background
+
 /*
-  var _textField: TextField; // actions list
-  var _textFieldBack: Sprite; // actions list background
-  var _log: TextField; // last log lines
-  var _logBack: Sprite; // log background
   var _console: TextField; // console
   var _consoleBack: Sprite; // console background
   var _help: TextField; // help
@@ -23,6 +30,8 @@ class HUD
     {
       game = g;
       _listActions = new List<_PlayerAction>();
+      _container = new Object();
+      game.scene.add(_container, Const.LAYER_HUD);
 
       trace('HUD');
 /*
@@ -41,33 +50,23 @@ class HUD
       _console.width = HXP.width - 40;
       _console.height = game.config.fontSize + 4;
       HXP.stage.addChild(_consoleBack);
+*/
 
       // log lines
-      _log = new TextField();
-      _log.width = HXP.width - 40;
-      _log.wordWrap = true;
-      _log.autoSize = TextFieldAutoSize.LEFT;
-      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _log.defaultTextFormat = fmt;
-      _logBack = new Sprite();
-      _logBack.addChild(_log);
+      _logBack = new Graphics(_container);
+      _log = new HtmlText(hxd.res.DefaultFont.get(), _logBack);
+      _log.maxWidth = game.scene.win.width - 40;
+      _log.textAlign = Left;
       _logBack.x = 20;
       _logBack.y = game.config.fontSize + 10;
-      HXP.stage.addChild(_logBack);
 
       // actions list
-      _textField = new TextField();
-      _textField.autoSize = TextFieldAutoSize.LEFT;
-      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _textField.defaultTextFormat = fmt;
-      _textFieldBack = new Sprite();
-      _textFieldBack.addChild(_textField);
-      _textFieldBack.x = 20;
-      _textFieldBack.y = 20;
-      HXP.stage.addChild(_textFieldBack);
+      _textBack = new Graphics(_container);
+      _text = new HtmlText(hxd.res.DefaultFont.get(), _textBack);
+      _text.textAlign = Left;
+      _textBack.x = 20;
 
+/*
       // help
       _help = new TextField();
       var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
@@ -146,15 +145,15 @@ class HUD
 #if mydebug
             ' A ' + Math.round(game.area.alertness) +
 #end
-            '\nActions: ' + game.playerArea.ap + '\n');
+            '<br>Actions: ' + game.playerArea.ap + '<br>');
       else if (game.location == LOCATION_REGION)
         buf.add(
           game.playerRegion.x + ',' + game.playerRegion.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
 #end
-          '\n' + game.playerRegion.currentArea.name + '\n');
-      buf.add('===\n');
+          '<br>' + game.playerRegion.currentArea.name + '<br>');
+      buf.add('===<br>');
 
       var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
       var time = (game.location == LOCATION_AREA ? 1 : 5);
@@ -162,41 +161,41 @@ class HUD
       buf.add('Energy: ' +
         "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy);
-      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]\n');
+      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br>');
       var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
         "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
-        '/' + game.player.maxHealth + '\n');
-      buf.add('===\n');
+        '/' + game.player.maxHealth + '<br>');
+      buf.add('===<br>');
 
       if (game.player.state == PLR_STATE_ATTACHED)
         buf.add("Grip: <font color='" +
           getTextColor(game.playerArea.attachHold, 100) + "'>" +
-          game.playerArea.attachHold + "</font>/100\n");
+          game.playerArea.attachHold + "</font>/100<br>");
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
         {
           buf.add(game.player.host.getNameCapped());
           if (game.player.host.isJobKnown)
-            buf.add(' (' + game.player.host.job + ')\n');
-          else buf.add('\n');
+            buf.add(' (' + game.player.host.job + ')<br>');
+          else buf.add('<br>');
           if (game.player.host.isAttrsKnown)
             buf.add('STR ' + game.player.host.strength +
               ' CON ' + game.player.host.constitution +
               ' INT ' + game.player.host.intellect +
-              ' PSY ' + game.player.host.psyche + '\n');
+              ' PSY ' + game.player.host.psyche + '<br>');
 
           var colHealth = getTextColor(game.player.host.health,
             game.player.host.maxHealth);
           buf.add('Health: ' +
             "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
-            '/' + game.player.host.maxHealth + '\n');
+            '/' + game.player.host.maxHealth + '<br>');
 
           var colControl = getTextColor(game.player.hostControl, 100);
           buf.add('Control: ' +
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
-            '/100\n');
+            '/100<br>');
 
           var colEnergy = getTextColor(game.player.host.energy,
             game.player.host.maxEnergy);
@@ -205,15 +204,15 @@ class HUD
             game.player.host.energy + '</font>/' +
             game.player.host.maxEnergy);
           buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]\n');
-          buf.add('Evolution direction:\n  ');
+            energyPerTurn + '/t]<br>');
+          buf.add('Evolution direction:<br>  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
-          buf.add('\n');
+          buf.add('<br>');
           var str = game.player.host.organs.getInfo();
           if (str != null)
             buf.add(str);
         }
-      buf.add("\n===\n\n");
+      buf.add("<br>===<br><br>");
 
       // player actions
       var n = 1;
@@ -227,7 +226,7 @@ class HUD
             else if (action.energyFunc != null)
               buf.add(' (' + action.energyFunc(game.player) + ' energy)');
             if (action != _listActions.last())
-              buf.add("\n");
+              buf.add("<br>");
             n++;
           }
 
@@ -236,16 +235,13 @@ class HUD
       else if (_listActions.length == 0)
         buf.add('No available actions.');
 
-/*
-      _textField.htmlText = buf.toString();
-      _textFieldBack.graphics.clear();
-      _textFieldBack.graphics.beginFill(0x202020, .75);
-      _textFieldBack.graphics.drawRect(0, 0, _textField.width, _textField.height);
-
-      _textFieldBack.x = 20;
-      _textFieldBack.y = HXP.windowHeight - _textField.height -
+      _text.text = buf.toString();
+      _textBack.clear();
+      _textBack.beginFill(0x202020, 0.75);
+      _textBack.drawRect(0, 0, _text.textWidth, _text.textHeight);
+      _textBack.endFill();
+      _textBack.y = game.scene.win.height - _text.textHeight -
         game.config.fontSize - 12;
-*/
     }
 
 
@@ -273,16 +269,14 @@ class HUD
               buf.add(l.cnt);
               buf.add(")</font>");
             }
-          buf.add('\n');
+          buf.add('<br/>');
         }
 
-/*
-      _log.htmlText = buf.toString();
-      _log.width = HXP.width - 40;
-      _logBack.graphics.clear();
-      _logBack.graphics.beginFill(0x202020, .75);
-      _logBack.graphics.drawRect(0, 0, _log.width, _log.height);
-*/
+      _log.text = buf.toString();
+      _logBack.clear();
+      _logBack.beginFill(0x202020, 0.75);
+      _logBack.drawRect(0, 0, _log.maxWidth, _log.textHeight);
+      _logBack.endFill();
     }
 
 
@@ -386,10 +380,8 @@ class HUD
 
 
 // show hide HUD
-  public inline function show(state: Bool)
+  public inline function toggle()
     {
-//      _textFieldBack.visible = state;
-//      _logBack.visible = state;
-//      _helpBack.visible = state;
+      _container.visible = !_container.visible;
     }
 }

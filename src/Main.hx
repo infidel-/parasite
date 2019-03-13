@@ -1,12 +1,4 @@
 /*
-import openfl.Lib;
-import com.haxepunk.Engine;
-import com.haxepunk.HXP;
-import com.haxepunk.Scene;
-import com.haxepunk.Entity;
-import com.haxepunk.graphics.Spritemap;
-import com.haxepunk.masks.Circle;
-
 import haxe.ui.HaxeUIApp;
 import haxe.ui.Toolkit;
 */
@@ -27,6 +19,7 @@ class Main extends hxd.App
       setScene(game.scene, true);
       game.scene.init();
 
+/*
       var tf = new h2d.Text(hxd.res.DefaultFont.get(), game.scene);
       tf.text = "Hello World 2!";
       tf.x = 200;

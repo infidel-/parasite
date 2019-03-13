@@ -9,7 +9,6 @@ class PlayerEntity extends PawnEntity
   public function new(g: Game, xx: Int, yy: Int)
     {
       super(g, xx, yy, Const.ROW_PARASITE);
-      trace('PlayerEntity ' + xx + ',' + yy);
 
       type = "player";
     }

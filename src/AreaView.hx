@@ -16,7 +16,6 @@ class AreaView
   public var width: Int; // area width, height in cells
   public var height: Int;
   public var emptyScreenCells: Int; // amount of empty cells on screen
-//  var entity: Entity; // area entity
   static var maxSize = 120;
 
   public function new (s: GameScene)
@@ -29,15 +28,10 @@ class AreaView
 
       trace('area');
 
-/*
-      entity = new Entity();
-      entity.layer = Const.LAYER_TILES;
-*/
-
       _effects = new List<EffectEntity>();
-      _tilemap = new TileGroup(
-        game.scene.tileAtlas[Const.TILE_REGION_GROUND][Const.TILE_BUILDING],
-        game.scene);
+      _tilemap = new TileGroup(game.scene.tileAtlas
+          [Const.TILE_REGION_GROUND][Const.TILE_BUILDING]);
+      game.scene.add(_tilemap, Const.LAYER_TILES);
       _tilemap.blendMode = None;
     }
 
@@ -76,9 +70,13 @@ class AreaView
       _tilemap.x = - x;
       _tilemap.y = - y;
 
-      // adjust AI entity positions
+      // adjust all entity positions
       for (ai in game.area.getAllAI())
         ai.entity.setPosition(ai.x, ai.y);
+      for (obj in game.area.getObjects())
+        obj.entity.setPosition(obj.x, obj.y);
+      for (e in _effects)
+        e.setPosition(e.x, e.y);
     }
 
 
@@ -120,8 +118,6 @@ class AreaView
 
       var effect = new EffectEntity(game, x, y, turns, Const.ROW_EFFECT, frame);
       _effects.add(effect);
-      trace('add effect');
-//      scene.add(effect);
     }
 
 
@@ -204,14 +200,13 @@ class AreaView
 // TURN: area time passage
   public function turn()
     {
-      trace('turn');
       // effect removal
       for (e in _effects)
         {
           e.turns--;
           if (e.turns <= 0)
             {
-//              scene.remove(e);
+              e.remove();
               _effects.remove(e);
             }
         }

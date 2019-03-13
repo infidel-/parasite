@@ -139,7 +139,6 @@ class AreaGame
           game.player.host.setPosition(loc.x, loc.y);
           _ai.add(game.player.host);
         }
-      trace('enter ' + loc.x + ',' + loc.y);
       game.playerArea.moveTo(loc.x, loc.y);
 
       game.playerArea.ap = 2; // renew AP

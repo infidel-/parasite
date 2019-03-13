@@ -14,16 +14,17 @@ class Entity
   public var visible(get, set): Bool;
 
 
-  public function new(g: Game)
+  public function new(g: Game, layer: Int)
     {
       game = g;
       type = 'undefined';
-      _container = new Object(game.scene);
+      _container = new Object();
+      game.scene.add(_container, layer);
     }
 
 
 // set position on map (calc from map x,y)
-  public inline function setPosition(mx: Int, my: Int)
+  public function setPosition(mx: Int, my: Int)
     {
       _container.x = mx * Const.TILE_WIDTH - game.scene.cameraX;
       _container.y = my * Const.TILE_HEIGHT - game.scene.cameraY;
@@ -31,7 +32,7 @@ class Entity
 
 
 // remove from scene
-  public inline function remove()
+  public function remove()
     {
       _container.removeChildren();
       _container.remove();

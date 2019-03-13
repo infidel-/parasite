@@ -3,17 +3,16 @@
 package entities;
 
 import h2d.Bitmap;
-import h2d.Object;
+import h2d.Graphics;
+import h2d.Text;
 
 import game.Game;
 
 class PawnEntity extends Entity
 {
 
-/*
-  var _text: BitmapText;
-  var _list: Graphiclist; // graphics list
-*/
+  var _text: Text;
+  var _textBack: Graphics;
   var _spriteBody: Bitmap; // body sprite
   var _spriteMask: Bitmap; // mask sprite map (invaded state)
   public var atlasRow: Int; // tile atlas row
@@ -23,36 +22,48 @@ class PawnEntity extends Entity
 
   public function new(g: Game, xx: Int, yy: Int, r: Int)
     {
-      super(g);
+      super(g, Const.LAYER_AI);
       type = 'pawn';
-      trace('PawnEntity');
       atlasRow = r;
 
       _spriteBody = new Bitmap(
         game.scene.entityAtlas[Const.FRAME_DEFAULT][atlasRow], _container);
       _spriteMask = null;
-/*
-      _spriteMask = new Spritemap(game.scene.entityAtlas,
-        Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      _spriteMask.frame = Const.FRAME_EMPTY;
-      _list.add(_spriteMask);
-
-      _text = new BitmapText("", 0, -10);
+      _text = null;
+      _textBack = null;
       _textTimer = 0;
-      _list.add(_text);
-
-      layer = Const.LAYER_AI;
-*/
       setPosition(xx, yy);
     }
 
 
 // set text
-  public inline function setText(s: String, timer: Int)
+  public function setText(s: String, timer: Int)
     {
-//      _text.text = s;
-//      _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
-//      _textTimer = timer;
+      if (_text == null)
+        {
+          _textBack = new Graphics(_container);
+          _text = new Text(hxd.res.DefaultFont.get(), _container);
+        }
+      else _textBack.clear();
+/*
+      _text.scale(1.2);
+      _text.dropShadow = {
+        dx: 1,
+        dy: 1,
+        color: 0,
+        alpha: 1 
+      };
+*/
+      _text.textColor = 0xffffff;
+      _text.text = s;
+      _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
+      _textTimer = timer;
+
+      var bounds = _text.getBounds(_container);
+      var size = _text.getSize();
+      _textBack.beginFill(0,  0.75);
+      _textBack.drawRect(bounds.x, 0, size.width, size.height + 2);
+      _textBack.endFill();
     }
 
 
@@ -63,30 +74,29 @@ class PawnEntity extends Entity
         return;
 
       _textTimer--;
-//      if (_textTimer == 0)
-//        _text.text = '';
+      if (_textTimer == 0)
+        {
+          _text.remove();
+          _textBack.remove();
+          _text = null;
+          _textBack = null;
+        }
     }
 
 
 // set body image index
-  public inline function setImage(col: Int, ?row: Int)
+  public function setImage(col: Int, ?row: Int)
     {
-//      _spriteBody.setFrame(col, (row == null ? atlasRow : row));
-    }
-
-
-// get body image index
-  public inline function getImage(): Int
-    {
-//      return _spriteBody.frame;
-      return 0;
+      _spriteBody.remove();
+      _spriteBody = new Bitmap(
+        game.scene.entityAtlas[col][(row == null ? atlasRow : row)],
+        _container);
     }
 
 
 // set mask image index
-  public inline function setMask(col: Int, ?row: Int)
+  public function setMask(col: Int, ?row: Int)
     {
-      trace('setMask ' + col + ' ' + row);
       // no mask, remove image
       if (col == 0)
         {

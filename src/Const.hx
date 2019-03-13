@@ -5,12 +5,13 @@ class Const
 //  public static var FONT = "font/04B_03__.ttf";
 //  public static var FONT = "font/amiri-regular.ttf";
   public static var FONT = "font/Orkney-Regular.otf";
-  public static var LAYER_MOUSE = 0; // mouse cursor layer - highest
-  public static var LAYER_UI = 1; // ui layer
-  public static var LAYER_EFFECT = 5; // visual effects layer
-  public static var LAYER_AI = 10; // player, enemies, etc layer
-  public static var LAYER_OBJECT = 20; // ground layer - bodies, items
-  public static var LAYER_TILES = 30; // tilemap layer
+  public static var LAYER_MOUSE = 6; // mouse cursor layer - highest
+  public static var LAYER_UI = 5; // ui windows layer
+  public static var LAYER_HUD = 4; // ui layer
+  public static var LAYER_EFFECT = 3; // visual effects layer
+  public static var LAYER_AI = 2; // player, enemies, etc layer
+  public static var LAYER_OBJECT = 1; // ground layer - bodies, items
+  public static var LAYER_TILES = 0; // tilemap layer
 
   public static var TILE_WIDTH = 64; // tiles width, height
   public static var TILE_HEIGHT = 64;
