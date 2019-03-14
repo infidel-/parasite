@@ -2,8 +2,6 @@ import game.*;
 
 class Const
 {
-//  public static var FONT = "font/04B_03__.ttf";
-//  public static var FONT = "font/amiri-regular.ttf";
   public static var FONT = "font/Orkney-Regular.otf";
   public static var LAYER_MOUSE = 6; // mouse cursor layer - highest
   public static var LAYER_UI = 5; // ui windows layer

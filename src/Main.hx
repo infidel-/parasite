@@ -19,8 +19,24 @@ class Main extends hxd.App
       setScene(game.scene, true);
       game.scene.init();
 
+#if js
+      // focus window
+      js.Browser.document.getElementById("webgl").focus();
+#end
+      game.scene.win.propagateKeyEvents = true;
+
 /*
-      var tf = new h2d.Text(hxd.res.DefaultFont.get(), game.scene);
+      engine.backgroundColor = 0x202020;
+      hxd.Window.getInstance().propagateKeyEvents = true;
+
+      var console = new h2d.Console(hxd.res.DefaultFont.get(), s2d);
+      console.addCommand("hello", "Prints the correct answer", [], function() console.log("World", 0xFF00FF));
+
+/*
+//      var tf = new h2d.Text(hxd.res.DefaultFont.get(), game.scene);
+//      var tf = new h2d.Text(game.scene.font, game.scene);
+      var tf = new h2d.HtmlText(hxd.Res.font.OrkneyRegular.toFont(), game.scene);
+      tf.textColor = 0xffffff;
       tf.text = "Hello World 2!";
       tf.x = 200;
 /*
@@ -39,10 +55,13 @@ class Main extends hxd.App
 */
     }
 
+
 /*
   override function update(dt: Float)
     {
-      game.scene.update();
+//      game.scene.update();
+      if (hxd.Key.isPressed(hxd.Key.CTRL))
+        trace('press!');
     }
 */
 

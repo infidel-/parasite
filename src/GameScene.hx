@@ -1,5 +1,6 @@
 // - has all links to windows and handles input
 
+import h2d.Font;
 import h2d.Scene;
 import h2d.Tile;
 import hxd.Window;
@@ -22,6 +23,7 @@ class GameScene extends Scene
   public var mouse: Mouse; // mouse cursor entity
   public var hud: HUD; // ingame HUD
   public var win: Window;
+  public var font: Font;
   var uiQueue: List<_UIEvent>; // gui event queue
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
@@ -108,6 +110,9 @@ class GameScene extends Scene
       var res = hxd.Res.load('graphics/tileset' + Const.TILE_WIDTH +
         '.png').toTile();
       tileAtlas = res.grid(Const.TILE_WIDTH);
+      var ttf = hxd.Res.font.OrkneyRegular;
+//      font = ttf.build(game.config.fontSize);
+      font = ttf.toFont();
 
       // init GUI
       hud = new HUD(game);
@@ -223,33 +228,16 @@ class GameScene extends Scene
 // handle player input
   function handleInput(key: Int): Bool
     {
+      // reload window with Ctrl-R
+#if js
+      if (key == Key.R && controlPressed)
+        {
+          js.Browser.location.reload();
+          return true;
+        }
+#end
+
 /*
-      // show console (;)
-      if (Input.released(186))
-        {
-          hud.showConsole();
-          return;
-        }
-
-      // run console command
-      if (Input.pressed(Key.ENTER) && hud.consoleVisible())
-        {
-          hud.runConsoleCommand();
-          return;
-        }
-
-      // toggle control
-      if (Input.pressed("ctrl"))
-        {
-          controlPressed = true;
-          return;
-        }
-      else if (Input.released("ctrl"))
-        {
-          controlPressed = false;
-          return;
-        }
-
       // toggle control
       if (Input.pressed("shift"))
         {
@@ -663,14 +651,30 @@ class GameScene extends Scene
 */
         // only handle keyboard events
         var key = 0;
+        var keyUp = 0;
         switch (ev.kind)
           {
             case EKeyDown:
               key = ev.keyCode;
+            case EKeyUp:
+              keyUp = ev.keyCode;
             case EPush:
               trace('path movement!');
             case _:
           }
+//        trace(key + ' ' + keyUp);
+        // toggle control
+        if (key == Key.CTRL)
+          {
+            controlPressed = true;
+            return;
+          }
+        if (keyUp == Key.CTRL)
+          {
+            controlPressed = false;
+            return;
+          }
+
         if (key == 0)
           return;
 

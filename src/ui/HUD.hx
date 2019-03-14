@@ -6,6 +6,8 @@ import h2d.Bitmap;
 import h2d.Graphics;
 import h2d.Object;
 import h2d.HtmlText;
+import h2d.TextInput;
+import hxd.Key;
 
 import game.Game;
 
@@ -19,13 +21,11 @@ class HUD
   var _textBack: Graphics; // actions list background
   var _log: HtmlText; // last log lines
   var _logBack: Graphics; // log background
+  var _console: TextInput; // console
+  var _consoleBack: Graphics; // console background
+  var _help: h2d.Text; // help
+  var _helpBack: Graphics; // help background
 
-/*
-  var _console: TextField; // console
-  var _consoleBack: Sprite; // console background
-  var _help: TextField; // help
-  var _helpBack: Sprite; // help background
-*/
   public function new(g: Game)
     {
       game = g;
@@ -34,27 +34,18 @@ class HUD
       game.scene.add(_container, Const.LAYER_HUD);
 
       trace('HUD');
-/*
-      var font = Assets.getFont(Const.FONT);
-      // console
-      _console = new TextField();
-      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _console.defaultTextFormat = fmt;
-      _console.type = TextFieldType.INPUT;
-      _consoleBack = new Sprite();
-      _consoleBack.addChild(_console);
+      _consoleBack = new Graphics(_container);
+      _console = new TextInput(game.scene.font, _consoleBack);
+      _console.maxWidth = game.scene.win.width - 40;
+      _console.textAlign = Left;
+      _console.onKeyDown = handleConsoleInput;
       _consoleBack.x = 20;
       _consoleBack.y = 0;
       _consoleBack.visible = false;
-      _console.width = HXP.width - 40;
-      _console.height = game.config.fontSize + 4;
-      HXP.stage.addChild(_consoleBack);
-*/
 
       // log lines
       _logBack = new Graphics(_container);
-      _log = new HtmlText(hxd.res.DefaultFont.get(), _logBack);
+      _log = new HtmlText(game.scene.font, _logBack);
       _log.maxWidth = game.scene.win.width - 40;
       _log.textAlign = Left;
       _logBack.x = 20;
@@ -62,25 +53,53 @@ class HUD
 
       // actions list
       _textBack = new Graphics(_container);
-      _text = new HtmlText(hxd.res.DefaultFont.get(), _textBack);
+      _text = new HtmlText(game.scene.font, _textBack);
       _text.textAlign = Left;
       _textBack.x = 20;
 
-/*
       // help
-      _help = new TextField();
-      var fmt = new TextFormat(font.fontName, game.config.fontSize, 0xFFFFFF);
-      fmt.align = TextFormatAlign.LEFT;
-      _help.defaultTextFormat = fmt;
-      _help.type = TextFieldType.INPUT;
-      _helpBack = new Sprite();
-      _helpBack.addChild(_help);
+      _helpBack = new Graphics(_container);
+      _help = new h2d.Text(game.scene.font, _helpBack);
+      _help.maxWidth = game.scene.win.width - 40;
+      _help.textAlign = Left;
       _helpBack.x = 20;
-      _helpBack.y = HXP.height - game.config.fontSize - 8;
-      _help.width = HXP.width - 40;
-      _help.height = game.config.fontSize + 4;
-      HXP.stage.addChild(_helpBack);
-*/
+      _helpBack.y = game.scene.win.height - game.config.fontSize - 8;
+
+      @:privateAccess game.scene.window.addEventTarget(onEvent);
+    }
+
+
+// show console
+  function onEvent(e: hxd.Event)
+    {
+      if (e.kind != ETextInput)
+        return;
+
+      if (!_consoleBack.visible && e.charCode == 59)
+        {
+          showConsole();
+          return;
+        }
+
+      if (!consoleVisible())
+        return;
+
+      _console.text += String.fromCharCode(e.charCode);
+    }
+
+
+// handle misc console keys
+  function handleConsoleInput(e: hxd.Event)
+    {
+      if (!consoleVisible())
+        return;
+
+      if (e.keyCode == Key.ENTER)
+        runConsoleCommand();
+      else if (e.keyCode == Key.ESCAPE)
+        hideConsole();
+      else if (e.keyCode == Key.BACKSPACE)
+        _console.text = _console.text.substr(0, -1);
     }
 
 
@@ -318,12 +337,11 @@ class HUD
       buf.add(prefix + '10: Exit');
 #end
 
-/*
-      _help.htmlText = buf.toString();
-      _helpBack.graphics.clear();
-      _helpBack.graphics.beginFill(0x202020, .75);
-      _helpBack.graphics.drawRect(0, 0, _help.width, _help.height);
-*/
+      _help.text = buf.toString();
+      _helpBack.clear();
+      _helpBack.beginFill(0x202020, 0.75);
+      _helpBack.drawRect(0, 0, _help.maxWidth, _help.textHeight);
+      _helpBack.endFill();
     }
 
 
@@ -341,41 +359,51 @@ class HUD
 // show debug console
   public function showConsole()
     {
-//      _console.text = '';
-//      _consoleBack.visible = true;
-//      HXP.stage.focus = _console;
+      _console.text = '';
+      _consoleBack.visible = true;
+      _console.focus();
+
+/*
+      // kludge to fix textfield focus
+      var e = new hxd.Event(EPush, 0, 0);
+      @:privateAccess _console.interactive.onPush(e);
+      var e = new hxd.Event(EKeyDown, 0, 0);
+      e.keyCode = Key.BACKSPACE;
+      @:privateAccess _console.handleKey(e);
+      _console.text = '';
+*/
     }
 
 
 // hide debug console
   public function hideConsole()
     {
-//      _consoleBack.visible = false;
+      _consoleBack.visible = false;
     }
 
 
 // is console visible?
   public inline function consoleVisible(): Bool
     {
-//      return _consoleBack.visible;
-      return false;
+      return _consoleBack.visible;
     }
 
 
 // run console command and close it
   public inline function runConsoleCommand()
     {
-//      game.console.run(_console.text);
+      game.console.run(_console.text);
       hideConsole();
     }
 
 
 // update console text
-  public function updateConsole()
+  function updateConsole()
     {
-//      _consoleBack.graphics.clear();
-//      _consoleBack.graphics.beginFill(0x202020, .75);
-//      _consoleBack.graphics.drawRect(0, 0, _console.width, _console.height);
+      _consoleBack.clear();
+      _consoleBack.beginFill(0x202020, 0.75);
+      _consoleBack.drawRect(0, 0, _console.maxWidth, _console.textHeight);
+      _consoleBack.endFill();
     }
 
 
