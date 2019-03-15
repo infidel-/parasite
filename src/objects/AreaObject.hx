@@ -102,7 +102,7 @@ class AreaObject
 // show object on screen
   public inline function show()
     {
-      trace('AreaObject');
+      trace('AreaObject RECREATE ' + type + ' ' + name);
 //      game.scene.add(entity);
     }
 
@@ -110,8 +110,7 @@ class AreaObject
 // hide object on screen
   public inline function hide()
     {
-      trace('AreaObject');
-//      game.scene.remove(entity);
+      entity.remove();
     }
 
 

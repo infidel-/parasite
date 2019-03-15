@@ -12,6 +12,7 @@ import haxe.ui.core.TextInput;
 import haxe.ui.macros.ComponentMacros;
 */
 
+import h2d.HtmlText;
 import game.Game;
 
 class Text extends UIWindow
@@ -20,11 +21,15 @@ class Text extends UIWindow
   var text: Label;
   var textInput: TextInput;
 */
+  var text: HtmlText;
 
-  public function new(g: Game)
+  public function new(g: Game, ?w: Int, ?h: Int)
     {
-      super(g);
-      trace('Text');
+      super(g, w, h);
+
+      text = new HtmlText(game.scene.font, window);
+      text.maxWidth = width;
+
 /*
       window = ComponentMacros.buildComponent("../assets/ui/document.xml");
       window.width = HXP.width - 1;
@@ -72,7 +77,7 @@ class Text extends UIWindow
 // set parameters
   public override function setParams(o: Dynamic)
     {
-//      textInput.htmlText = o;
+      text.text = o;
     }
 
 
@@ -87,6 +92,14 @@ class Text extends UIWindow
   public override function scroll(n: Int)
     {
 //      textInput.scrollV += n;
+      if (text.textHeight < height)
+        return;
+      var res = text.y - n * (text.font.lineHeight);
+      if (res > 0)
+        res = 0;
+      if (- res > text.textHeight - game.scene.win.height)
+        res = game.scene.win.height - text.textHeight;
+      text.y = res;
     }
 
 
@@ -94,6 +107,7 @@ class Text extends UIWindow
   public override function scrollToBegin()
     {
 //      textInput.scrollV = 0;
+      text.y = 0;
     }
 
 
@@ -101,5 +115,6 @@ class Text extends UIWindow
   public override function scrollToEnd()
     {
 //      textInput.scrollV = textInput.maxScrollV;
+      text.y = game.scene.win.height - text.textHeight;
     }
 }

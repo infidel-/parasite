@@ -31,14 +31,14 @@ class Actions extends Text
       if (_actions.length > 0)
         {
           var n = 1;
-          buf.add('\n\nSelect ' + actionName + ' (press 0-9):\n\n');
+          buf.add('<br/><br/>Select ' + actionName + ' (press 0-9):<br/><br/>');
           for (action in _actions)
             if (action.energy == 0 || game.player.host.energy >= action.energy)
               {
                 buf.add((n++) + ': ' + action.name);
                 if (action.energy > 0)
                   buf.add(' (' + action.energy + ' energy)');
-                buf.add('\n');
+                buf.add('<br/>');
               }
         }
 

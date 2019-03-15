@@ -33,7 +33,7 @@ class Inventory extends Actions
   override function getText()
     {
       var buf = new StringBuf();
-      buf.add('Inventory\n===\n\n');
+      buf.add('Inventory<br/>===<br/><br/>');
 
       // draw a list of items
       var n = 0;
@@ -42,11 +42,11 @@ class Inventory extends Actions
           n++;
           var knowsItem = game.player.knowsItem(item.id);
           var name = (knowsItem ? item.name : item.info.unknown);
-          buf.add(name + '\n');
+          buf.add(name + '<br/>');
         }
 
       if (n == 0)
-        buf.add('  --- empty ---\n');
+        buf.add('  --- empty ---<br/>');
 
       return buf.toString();
     }

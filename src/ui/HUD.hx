@@ -33,7 +33,6 @@ class HUD
       _container = new Object();
       game.scene.add(_container, Const.LAYER_HUD);
 
-      trace('HUD');
       _consoleBack = new Graphics(_container);
       _console = new TextInput(game.scene.font, _consoleBack);
       _console.maxWidth = game.scene.win.width - 40;
@@ -362,16 +361,6 @@ class HUD
       _console.text = '';
       _consoleBack.visible = true;
       _console.focus();
-
-/*
-      // kludge to fix textfield focus
-      var e = new hxd.Event(EPush, 0, 0);
-      @:privateAccess _console.interactive.onPush(e);
-      var e = new hxd.Event(EKeyDown, 0, 0);
-      e.keyCode = Key.BACKSPACE;
-      @:privateAccess _console.handleKey(e);
-      _console.text = '';
-*/
     }
 
 

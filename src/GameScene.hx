@@ -29,6 +29,7 @@ class GameScene extends Scene
   var _state: _UIState; // current HUD state (default, evolution, etc)
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
+  var uiNoClose: Array<_UIState>; // list of gui states that disable window closing
   public var entityAtlas: Array<Array<Tile>>; // entity graphics
   public var tileAtlas: Array<Array<Tile>>; // tile graphics
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -56,6 +57,7 @@ class GameScene extends Scene
       win.addEventTarget(onEvent);
       game = g;
       uiLocked = [];
+      uiNoClose = [];
       _state = UISTATE_DEFAULT;
       uiQueue = new List();
       controlPressed = false;
@@ -69,22 +71,14 @@ class GameScene extends Scene
       height = game.config.windowHeight;
 
       trace('GameScene');
-/*
 #if js
       var os = Browser.navigator.platform;
       if (os.indexOf('Linux') >= 0) // use C-1 on Linux
-        {
-          controlKey = 'ctrl';
-          Input.define("ctrl", [ 17 ]); // Ctrl key
-        }
+        controlKey = 'ctrl';
       else
-        {
-          controlKey = 'alt';
-          Input.define("ctrl", [ 18 ]); // Alt key
-        }
-#else
-      Input.define("ctrl", [ 18 ]); // Alt key
+        controlKey = 'alt';
 #end
+/*
       Input.define("shift", [ Key.SHIFT ]);
 
       Input.define("pageup", [ Key.PAGE_UP ]);
@@ -117,27 +111,26 @@ class GameScene extends Scene
       // init GUI
       hud = new HUD(game);
       components = [
-        UISTATE_LOG => new Log(game),
-      ];
-/*
-      components = [
-        UISTATE_DIFFICULTY => new Difficulty(game),
-        UISTATE_YESNO => new YesNo(game),
-        UISTATE_DOCUMENT => new Document(game),
         UISTATE_MESSAGE => new Message(game),
+        UISTATE_DIFFICULTY => new Difficulty(game),
+//        UISTATE_DOCUMENT => new Document(game),
+        UISTATE_DOCUMENT => new Text(game),
+        UISTATE_YESNO => new YesNo(game),
 
         UISTATE_GOALS => new Goals(game),
         UISTATE_INVENTORY => new Inventory(game),
         UISTATE_SKILLS => new Skills(game),
+        UISTATE_LOG => new Log(game),
         UISTATE_TIMELINE => new Timeline(game),
         UISTATE_EVOLUTION => new Evolution(game),
         UISTATE_ORGANS => new Organs(game),
         UISTATE_DEBUG => new Debug(game),
         UISTATE_FINISH => new Finish(game),
-        ];
-      loseFocus = new LoseFocus();
+      ];
+//      loseFocus = new LoseFocus();
+
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
-*/
+      uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
       mouse = new Mouse(game);
       area = new AreaView(this);
       region = new RegionView(this);
@@ -222,6 +215,12 @@ class GameScene extends Scene
             game.playerArea.x, game.playerArea.y);
           area.updateCamera(cameraX, cameraY);
         }
+      else if (game.location == LOCATION_REGION)
+        {
+          game.playerRegion.entity.setPosition(
+            game.playerRegion.x, game.playerRegion.y);
+          region.updateCamera(cameraX, cameraY);
+        }
     }
 
 
@@ -236,20 +235,6 @@ class GameScene extends Scene
           return true;
         }
 #end
-
-/*
-      // toggle control
-      if (Input.pressed("shift"))
-        {
-          shiftPressed = true;
-          return;
-        }
-      else if (Input.released("shift"))
-        {
-          shiftPressed = false;
-          return;
-        }
-*/
 
       // toggle gui
       if (!hud.consoleVisible())
@@ -271,13 +256,14 @@ class GameScene extends Scene
               return true;
             }
 
-          var ret = handleWindows(key);
+          // hack: disallow actions when control/alt pressed
+          var ret = false;
+          if (!controlPressed)
+            ret = handleActions(key);
+          if (!ret)
+            ret = handleWindows(key);
           if (!ret)
             ret = handleMovement(key);
-
-          // hack: disallow actions when control/alt pressed
-          if (!controlPressed && !ret)
-            ret = handleActions(key);
 
           return ret;
         }
@@ -298,9 +284,6 @@ class GameScene extends Scene
         {
           if (components[_state] != null)
             components[_state].hide();
-
-          // hack: getting delta clears the mouse wheel flag
-//          Input.mouseWheelDelta;
         }
 
       _state = vstate;
@@ -367,31 +350,21 @@ class GameScene extends Scene
 // handle opening and closing windows
   function handleWindows(key: Int): Bool
     {
-/*
       // scrolling text
       if (_state != UISTATE_DEFAULT)
         {
           // get amount of lines
           var lines = 0;
-          if (Input.pressed("pageup") ||
-            (Input.pressed(Key.K) && shiftPressed))
+          if (key == Key.PGUP ||
+            (key == Key.K && shiftPressed))
             lines = -20;
-          else if (Input.pressed("pagedown") ||
-            (Input.pressed(Key.J) && shiftPressed))
+          else if (key == Key.PGDOWN ||
+            (key == Key.J && shiftPressed))
             lines = 20;
-          else if (Input.pressed("up") || Input.pressed(Key.K))
+          else if (key == Key.UP || key == Key.K || key == Key.NUMPAD_8)
             lines = -1;
-          else if (Input.pressed("down") || Input.pressed(Key.J))
+          else if (key == Key.DOWN || key == Key.J || key == Key.NUMPAD_2)
             lines = 1;
-
-          // hack: disallow movement while in window
-          if (Input.pressed("left") ||
-              Input.pressed("right")||
-              Input.pressed("upleft")||
-              Input.pressed("upright")||
-              Input.pressed("downleft")||
-              Input.pressed("downright"))
-            return true;
 
           // window scrolling
           if (_state != UISTATE_DEFAULT)
@@ -401,20 +374,20 @@ class GameScene extends Scene
               if (lines != 0)
                 {
                   win.scroll(lines);
-                  return true;
+                  return false;
                 }
 
-              else if (Input.pressed("end") ||
-                (Input.pressed(Key.G) && shiftPressed))
+              else if (key == Key.END ||
+                (key == Key.G && shiftPressed))
                 {
                   win.scrollToEnd();
-                  return true;
+                  return false;
                 }
 
-              else if (Input.pressed("home") || Input.pressed(Key.G))
+              else if (key == Key.HOME || key == Key.G)
                 {
                   win.scrollToBegin();
-                  return true;
+                  return false;
                 }
             }
 
@@ -423,36 +396,35 @@ class GameScene extends Scene
             1;
         }
 
-      // ui in locked state, do not allow changing windows
-      if (Lambda.has(uiLocked, _state))
-        return true;
-*/
-
       // window open
-      if (_state != UISTATE_DEFAULT)
+      if (!Lambda.has(uiNoClose, _state))
         {
           // close windows
           if (key == Key.ENTER || key == Key.ESCAPE) 
             closeWindow();
         }
 
+      // ui in locked state, do not allow changing windows
+      if (Lambda.has(uiLocked, _state))
+        return true;
+
       // no windows open
       var goalsPressed =
-        (key == Key.NUMPAD_1 && controlPressed) || key == Key.F1;
+        (key == Key.NUMBER_1 && controlPressed) || key == Key.F1;
       var inventoryPressed =
-        (key == Key.NUMPAD_2 && controlPressed) || key == Key.F2;
+        (key == Key.NUMBER_2 && controlPressed) || key == Key.F2;
       var skillsPressed =
-        (key == Key.NUMPAD_3 && controlPressed) || key == Key.F3;
+        (key == Key.NUMBER_3 && controlPressed) || key == Key.F3;
       var logPressed =
-        (key == Key.NUMPAD_4 && controlPressed) || key == Key.F4;
+        (key == Key.NUMBER_4 && controlPressed) || key == Key.F4;
       var timelinePressed =
-        (key == Key.NUMPAD_5 && controlPressed) || key == Key.F5;
+        (key == Key.NUMBER_5 && controlPressed) || key == Key.F5;
       var evolutionPressed =
-        (key == Key.NUMPAD_6 && controlPressed) || key == Key.F6;
+        (key == Key.NUMBER_6 && controlPressed) || key == Key.F6;
       var organsPressed =
-        (key == Key.NUMPAD_7 && controlPressed) || key == Key.F7;
+        (key == Key.NUMBER_7 && controlPressed) || key == Key.F7;
       var debugPressed =
-        (key == Key.NUMPAD_9 && controlPressed) || key == Key.F9;
+        (key == Key.NUMBER_9 && controlPressed) || key == Key.F9;
 
       // open goals window
       if (goalsPressed)
@@ -664,16 +636,29 @@ class GameScene extends Scene
           }
 //        trace(key + ' ' + keyUp);
         // toggle control
-        if (key == Key.CTRL)
+        var ctrlKey = (controlKey == 'ctrl' ? Key.CTRL : Key.ALT);
+        if (key == ctrlKey)
           {
             controlPressed = true;
             return;
           }
-        if (keyUp == Key.CTRL)
+        if (keyUp == ctrlKey)
           {
             controlPressed = false;
             return;
           }
+
+      // toggle shift
+      if (key == Key.SHIFT)
+        {
+          shiftPressed = true;
+          return;
+        }
+      else if (keyUp == Key.SHIFT)
+        {
+          shiftPressed = false;
+          return;
+        }
 
         if (key == 0)
           return;

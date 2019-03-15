@@ -15,47 +15,47 @@ class Goals extends Text
     {
       var buf = new StringBuf();
 
-      buf.add('Current goals\n====\n\n');
+      buf.add('Current goals<br/>====<br/><br/>');
       for (g in game.goals.iteratorCurrent())
         {
           var info = game.goals.getInfo(g);
           if (info.isHidden)
             continue;
 
-          buf.add("<font color='#4788FF'>" + info.name + '</font>\n');
-          buf.add(info.note + '\n');
+          buf.add("<font color='#4788FF'>" + info.name + '</font><br/>');
+          buf.add(info.note + '<br/>');
           if (info.note2 != null)
-            buf.add(info.note2 + '\n');
-          buf.add('\n');
+            buf.add(info.note2 + '<br/>');
+          buf.add('<br/>');
         }
 
-      buf.add("\nCompleted goals\n====\n\n<font color='#777777'>");
+      buf.add("<br/>Completed goals<br/>====<br/><br/><font color='#777777'>");
       for (g in game.goals.iteratorCompleted())
         {
           var info = game.goals.getInfo(g);
           if (info.isHidden)
             continue;
 
-          buf.add(info.name + '\n');
-          buf.add(info.note + '\n');
+          buf.add(info.name + '<br/>');
+          buf.add(info.note + '<br/>');
           if (info.note2 != null)
-            buf.add(info.note2 + '\n');
-          buf.add('\n');
+            buf.add(info.note2 + '<br/>');
+          buf.add('<br/>');
         }
       buf.add('</font>');
 
-      buf.add("\nFailed goals\n====\n\n<font color='#770000'>");
+      buf.add("<br/>Failed goals<br/>====<br/><br/><font color='#770000'>");
       for (g in game.goals.iteratorFailed())
         {
           var info = game.goals.getInfo(g);
           if (info.isHidden)
             continue;
 
-          buf.add(info.name + '\n');
-          buf.add(info.note + '\n');
+          buf.add(info.name + '<br/>');
+          buf.add(info.note + '<br/>');
           if (info.note2 != null)
-            buf.add(info.note2 + '\n');
-          buf.add('\n');
+            buf.add(info.note2 + '<br/>');
+          buf.add('<br/>');
         }
       buf.add('</font>');
 

@@ -1,7 +1,6 @@
 // tiled area view
 
 import h2d.TileGroup;
-
 import entities.EffectEntity;
 import game.Game;
 
@@ -29,9 +28,9 @@ class AreaView
       trace('area');
 
       _effects = new List<EffectEntity>();
-      _tilemap = new TileGroup(game.scene.tileAtlas
+      _tilemap = new TileGroup(scene.tileAtlas
           [Const.TILE_REGION_GROUND][Const.TILE_BUILDING]);
-      game.scene.add(_tilemap, Const.LAYER_TILES);
+      scene.add(_tilemap, Const.LAYER_TILES);
       _tilemap.blendMode = None;
     }
 
@@ -49,7 +48,7 @@ class AreaView
       for (y in 0...maxSize)
         for (x in 0...maxSize)
           _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
-            game.scene.tileAtlas[Const.TILE_REGION_GROUND]
+            scene.tileAtlas[Const.TILE_REGION_GROUND]
               [Const.TILE_HIDDEN]);
 */
 
@@ -58,7 +57,7 @@ class AreaView
       for (y in 0...height)
         for (x in 0...width)
           _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
-            game.scene.tileAtlas[cells[x][y]][Const.TILE_REGION_GROUND]);
+            scene.tileAtlas[cells[x][y]][Const.TILE_REGION_GROUND]);
 
       scene.updateCamera(); // center camera on player
     }
@@ -83,30 +82,24 @@ class AreaView
 // show gui
   public function show()
     {
-      trace('show');
-/*
-      entity.visible = true;
+      _tilemap.visible = true;
       if (game.player.state != PLR_STATE_HOST)
         game.playerArea.entity.visible = true;
-*/
     }
 
 
 // hide gui
   public function hide()
     {
-      trace('hide');
-/*
-      entity.visible = false;
+      _tilemap.visible = false;
       game.playerArea.entity.visible = false;
 
       // clear all effects
       for (eff in _effects)
         {
-          scene.remove(eff);
+          eff.remove();
           _effects.remove(eff);
         }
-*/
     }
 
 

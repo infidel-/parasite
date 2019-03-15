@@ -29,7 +29,7 @@ class Log extends Text
               buf.add(l.cnt);
               buf.add(")</font>");
             }
-          buf.add('\n');
+          buf.add('<br/>');
         }
 
       setParams(buf.toString());

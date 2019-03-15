@@ -106,7 +106,7 @@ class Const
   public static var TILE_TREE = 4;
   public static var TILE_WALL = 5;
 
-  public static var TILE_REGION_ROW = 8;
+  public static var TILE_REGION_ROW = 1;
   public static var TILE_REGION_GROUND = 0;
   public static var TILE_REGION_CITY_LOW = 1;
   public static var TILE_REGION_CITY_MEDIUM = 2;

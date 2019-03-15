@@ -2,6 +2,7 @@
 
 package ui;
 
+/*
 import com.haxepunk.HXP;
 import haxe.ui.components.Label;
 import haxe.ui.components.Button;
@@ -9,17 +10,25 @@ import haxe.ui.core.Component;
 import haxe.ui.core.Screen;
 import haxe.ui.core.MouseEvent;
 import haxe.ui.macros.ComponentMacros;
+*/
 import game.Game;
 
 class YesNo extends UIWindow
 {
-  var text: Label;
+//  var text: Label;
+  var text: h2d.Text;
   var func: Bool -> Void;
 
   public function new(g: Game)
     {
-      super(g);
+      super(g, 800, 300);
       func = null;
+
+      text = new h2d.Text(game.scene.font, back);
+      text.y = text.font.lineHeight + 10;
+      text.textAlign = Center;
+      text.maxWidth = width;
+/*
       window = ComponentMacros.buildComponent("../assets/ui/dialog.xml");
       var w = 800;
       var h = 300;
@@ -36,9 +45,11 @@ class YesNo extends UIWindow
       var button: Button = window.findComponent("no", null, true);
       button.registerEvent(MouseEvent.CLICK, onClick);
       window.hide();
+*/
     }
 
 
+/*
 // on click
   function onClick(e: MouseEvent)
     {
@@ -51,6 +62,7 @@ class YesNo extends UIWindow
       action(index);
       e.cancel();
     }
+*/
 
 
 // set parameters

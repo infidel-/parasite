@@ -118,7 +118,7 @@ class ConsoleGame
 
       if (arr.length < 3)
         {
-          log('config|cfg <option> <value> - set config option');
+          log('config|cfg [option] [value] - set config option');
           log('config|cfg - show config options');
           return;
         }
@@ -135,7 +135,7 @@ class ConsoleGame
     {
       if (arr.length < 3)
         {
-          log('set <variable> <value> - set game variable');
+          log('set [variable] [value] - set game variable');
           log('set - show variables');
           log(
             'area.alertness, ' +

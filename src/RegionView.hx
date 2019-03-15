@@ -1,5 +1,6 @@
 // tiled region view (each tile corresponds to an area)
 
+import h2d.TileGroup;
 import game.*;
 
 class RegionView
@@ -7,8 +8,8 @@ class RegionView
   var game: Game; // game state link
   var scene: GameScene; // scene link
 
+  var _tilemap: TileGroup;
 /*
-  var _tilemap: Tilemap;
   var _tilemapAlert: Tilemap;
   var _tilemapEvent: Tilemap;
   var _tilemapNPC: Tilemap;
@@ -17,7 +18,6 @@ class RegionView
 
   public var width: Int; // width, height in cells
   public var height: Int;
-//  public var entity: Entity; // tilemap entity
 //  public var entityIcons: Entity; // icons entity
 
   public function new (s: GameScene)
@@ -28,8 +28,11 @@ class RegionView
       width = 100; // should be larger than any region
       height = 100;
 
+      _tilemap = new TileGroup(scene.tileAtlas
+        [Const.TILE_REGION_GROUND][Const.TILE_BUILDING]);
+      scene.add(_tilemap, Const.LAYER_TILES);
+      _tilemap.blendMode = None;
 /*
-      _tilemap = null;
       _tilemapAlert = null;
       _tilemapEvent = null;
       _tilemapNPC = null;
@@ -39,11 +42,6 @@ class RegionView
       entity.layer = Const.LAYER_TILES;
       entityIcons = new Entity();
       entityIcons.layer = Const.LAYER_EFFECT - 1;
-
-      _tilemap = new Tilemap("gfx/tileset.png",
-        width * Const.TILE_WIDTH, height * Const.TILE_HEIGHT,
-        Const.TILE_WIDTH, Const.TILE_HEIGHT);
-      entity.addGraphic(_tilemap);
 
       // TODO: this needs to be remade through dynamically spawned entities sometime
       // later i guess
@@ -79,13 +77,13 @@ class RegionView
       width = game.region.width;
       height = game.region.height;
 
-/*
       // set tiles
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
-          _tilemap.setTile(x, y, Const.TILE_REGION_ROW + cells[x][y].tileID);
-*/
+//          _tilemap.setTile(x, y, Const.TILE_REGION_ROW + cells[x][y].tileID);
+          _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
+            scene.tileAtlas[cells[x][y].tileID][Const.TILE_REGION_ROW]);
 
       // set all icons
       updateIcons();
@@ -94,10 +92,17 @@ class RegionView
     }
 
 
+// update camera
+  public function updateCamera(x: Int, y: Int)
+    {
+      _tilemap.x = - x;
+      _tilemap.y = - y;
+    }
+
+
 // show gui
   public function show()
     {
-/*
       // change player entity image and mask
       var row = Const.ROW_PARASITE;
       if (game.player.host != null)
@@ -108,10 +113,9 @@ class RegionView
       else game.playerRegion.entity.setMask(Const.FRAME_EMPTY, row);
       game.playerRegion.entity.setImage(Const.FRAME_DEFAULT, row);
 
-      entity.visible = true;
-      entityIcons.visible = true;
+      _tilemap.visible = true;
       game.playerRegion.entity.visible = true;
-*/
+//      entityIcons.visible = true;
     }
 
 

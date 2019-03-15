@@ -44,15 +44,15 @@ class Organs extends Actions
           buf.add(Math.round(gpLeft / __Math.gpPerTurn()));
           buf.add(" turns)");
 
-          buf.add("\n<font color='#5ebee5'>" + organInfo.note + '</font>\n');
+          buf.add("<br/><font color='#5ebee5'>" + organInfo.note + '</font><br/>');
           var levelNote = imp.info.levelNotes[imp.level];
           if (levelNote.indexOf('fluff') < 0 ||
               levelNote.indexOf('todo') < 0)
-            buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
+            buf.add("<font color='#4cd47b'>" + levelNote + '</font><br/>');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
-              imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font>\n');
-          else buf.add('\n');
+              imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font><br/>');
+          else buf.add('<br/>');
 
           list.add({
             id: 'set.' + imp.id,
@@ -80,13 +80,13 @@ class Organs extends Actions
   override function getText()
     {
       var buf = new StringBuf();
-      buf.add('Body features\n===\n\n');
+      buf.add('Body features<br/>===<br/><br/>');
 
       // assimilated info
       var n = 0;
       if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
         {
-          buf.add("<font color='#DDDD00'>This host has been assimilated.</font>\n\n");
+          buf.add("<font color='#DDDD00'>This host has been assimilated.</font><br/><br/>");
           n++;
         }
 
@@ -104,39 +104,39 @@ class Organs extends Actions
                 buf.add(' (timeout: ' + organ.timeout + ')');
             }
           else buf.add(' (' + organ.gp + '/' + organ.info.gp + ' gp)');
-//          buf.add(' [' + organ.info.note + ']\n');
+//          buf.add(' [' + organ.info.note + ']<br/>');
           var imp = game.player.evolutionManager.getImprov(organ.improvInfo.id);
-          buf.add("\n<font color='#5ebee5'>" + organ.info.note + '</font>\n');
+          buf.add("<br/><font color='#5ebee5'>" + organ.info.note + '</font><br/>');
           var levelNote = organ.improvInfo.levelNotes[imp.level];
           if (levelNote.indexOf('fluff') < 0 ||
               levelNote.indexOf('todo') < 0)
-            buf.add("<font color='#4cd47b'>" + levelNote + '</font>\n');
+            buf.add("<font color='#4cd47b'>" + levelNote + '</font><br/>');
           if (organ.improvInfo.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
-              organ.improvInfo.noteFunc(organ.improvInfo.levelParams[imp.level]) + '</font>\n');
-          buf.add('\n');
+              organ.improvInfo.noteFunc(organ.improvInfo.levelParams[imp.level]) + '</font><br/>');
+          buf.add('<br/>');
 #if mydebug
 //          var params = game.player.evolutionManager.getParams(organ.id);
-//          buf.add('DEBUG: ' + organ.params + '\n');
+//          buf.add('DEBUG: ' + organ.params + '<br/>');
 #end
           n++;
         }
 
       if (n == 0)
-        buf.add('  --- empty ---\n\n');
+        buf.add('  --- empty ---<br/><br/>');
 
       if (game.location == LOCATION_AREA && game.area.isHabitat)
-        buf.add('You are in a microhabitat.\n');
+        buf.add('You are in a microhabitat.<br/>');
       buf.add('Body feature growth costs additional ' +
         __Math.growthEnergyPerTurn() +
-        ' energy per turn.\n' +
-        'You will receive ' + __Math.gpPerTurn() + ' gp per turn.\n' +
+        ' energy per turn.<br/>' +
+        'You will receive ' + __Math.gpPerTurn() + ' gp per turn.<br/>' +
         'Your host will survive for ' +
           Std.int(game.player.host.energy /
             game.player.vars.organGrowthEnergyPerTurn) +
-        ' turns while growing body features (not counting other spending).\n');
+        ' turns while growing body features (not counting other spending).<br/>');
 
-      buf.add('\nGrowing body feature: ');
+      buf.add('<br/>Growing body feature: ');
       buf.add("<font color='#DDDD00'>" +
         game.player.host.organs.getGrowInfo() + "</font>");
 

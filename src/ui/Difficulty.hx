@@ -2,6 +2,7 @@
 
 package ui;
 
+/*
 import com.haxepunk.HXP;
 import haxe.ui.components.Label;
 import haxe.ui.components.Button;
@@ -9,18 +10,37 @@ import haxe.ui.core.Component;
 import haxe.ui.core.Screen;
 import haxe.ui.core.MouseEvent;
 import haxe.ui.macros.ComponentMacros;
+*/
 import game.Game;
 
 class Difficulty extends UIWindow
 {
+/*
   var title: Label;
   var text: Label;
+*/
+  var title: h2d.Text;
+  var text: h2d.Text;
   var currentChoice: _Choice;
 
   public function new(g: Game)
     {
-      super(g);
+      super(g, 1000, 300);
       currentChoice = null;
+
+      window.x = Std.int((game.scene.win.width - width) / 2);
+      window.y = Std.int((game.scene.win.height - height) / 2);
+
+      title = new h2d.Text(game.scene.font, back);
+      title.textAlign = Center;
+      title.maxWidth = width;
+
+      text = new h2d.Text(game.scene.font, back);
+      text.y = text.font.lineHeight + 10;
+      text.textAlign = Center;
+      text.maxWidth = width;
+
+/*
       window = ComponentMacros.buildComponent("../assets/ui/difficulty.xml");
       var w = 1000;
       var h = 300;
@@ -46,6 +66,7 @@ class Difficulty extends UIWindow
       button.registerEvent(MouseEvent.MOUSE_OUT, onOut);
       button.registerEvent(MouseEvent.CLICK, onClick);
       window.hide();
+*/
     }
 
 
@@ -58,6 +79,7 @@ class Difficulty extends UIWindow
     }
 
 
+/*
 // on click
   function onClick(e: MouseEvent)
     {
@@ -72,6 +94,7 @@ class Difficulty extends UIWindow
       action(index);
       e.cancel();
     }
+*/
 
 
 // action
@@ -102,6 +125,7 @@ class Difficulty extends UIWindow
     }
 
 
+/*
 // on mouse over
   function onOver(e: MouseEvent)
     {
@@ -114,6 +138,7 @@ class Difficulty extends UIWindow
     {
       text.text = 'Choose difficulty setting.';
     }
+*/
 
 
   static var choices: Map<String, _Choice> = [

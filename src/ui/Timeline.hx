@@ -15,7 +15,7 @@ class Timeline extends Text
     {
       var buf = new StringBuf();
 
-      buf.add('Event timeline\n===\n\n');
+      buf.add('Event timeline<br/>===<br/><br/>');
 
       for (event in game.timeline)
         {
@@ -48,17 +48,17 @@ class Timeline extends Text
                 }
               else buf.add('at (?,?)');
             }
-          buf.add('\n');
+          buf.add('<br/>');
 
           // event notes
           for (n in event.notes)
             if (n.isKnown)
-              buf.add(' + ' + n.text + '\n');
+              buf.add(' + ' + n.text + '<br/>');
             else if (n.clues > 0)
-              buf.add(' - ? [' + n.clues + '/4]\n');
+              buf.add(' - ? [' + n.clues + '/4]<br/>');
 
           // event participants
-          buf.add('Participants:\n');
+          buf.add('Participants:<br/>');
           var numDeceasedAndKnown = 0;
           var numAliveAndMemoryKnown = 0;
           if (npcSomethingKnown)
@@ -96,24 +96,24 @@ class Timeline extends Text
                 buf.add(npc.jobKnown ? '[photo] ' : '[no photo] ');
                 if (!npc.statusKnown)
                   buf.add('status: unknown');
-                buf.add('\n');
+                buf.add('<br/>');
               }
 
           // nothing known about any npcs
           if (!npcSomethingKnown && event.npc.length > 0)
-            buf.add('  unknown\n');
+            buf.add('  unknown<br/>');
 
           // no npcs
           else if (event.npc.length == 0)
-            buf.add('  none\n');
+            buf.add('  none<br/>');
 
           if (numAliveAndMemoryKnown > 0)
-            buf.add(" ... +" + numAliveAndMemoryKnown + " persons probed ...\n");
+            buf.add(" ... +" + numAliveAndMemoryKnown + " persons probed ...<br/>");
 
           if (numDeceasedAndKnown > 0)
-            buf.add(" ... +" + numDeceasedAndKnown + " persons deceased ...\n");
+            buf.add(" ... +" + numDeceasedAndKnown + " persons deceased ...<br/>");
 
-          buf.add('\n');
+          buf.add('<br/>');
         }
 
       setParams(buf.toString());

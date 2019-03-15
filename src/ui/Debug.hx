@@ -53,7 +53,7 @@ class Debug extends Actions
   override function getText()
     {
       var buf = new StringBuf();
-      buf.add('Debug\n===\n\n');
+      buf.add('Debug<br/>===<br/><br/>');
 
       return buf.toString();
     }
