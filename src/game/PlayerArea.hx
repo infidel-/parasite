@@ -44,7 +44,6 @@ class PlayerArea
       knownObjects.add('body');
       knownObjects.add('pickup');
       knownObjects.add('habitat');
-      trace('PlayerArea');
 
       entity = new PlayerEntity(game, x, y);
     }
@@ -896,24 +895,27 @@ class PlayerArea
 
 
 // move to next path waypoint
-  public function nextPath()
+// returns true on success
+  public function nextPath(): Bool
     {
       // path clear
-      if (path == null || haxe.Timer.stamp() - pathTS < game.config.pathDelay)
-        return;
+      if (path == null ||
+          (haxe.Timer.stamp() - pathTS) * 1000.0 < game.config.pathDelay)
+        return false;
 
       var n = path.shift();
-//      trace(n.x + ',' + n.y);
       pathTS = haxe.Timer.stamp();
       var ret = moveAction(n.x - x, n.y - y);
       if (!ret)
         {
           path = null;
-          return;
+          return true;
         }
 
       if (path.length == 0)
         path = null;
+
+      return true;
     }
 
 // ================================ EVENTS =========================================
@@ -984,7 +986,7 @@ class PlayerArea
       // close open windows
       game.scene.state = UISTATE_DEFAULT;
 
-      player.host.death();
+      player.host.die();
       onDetach();
     }
 

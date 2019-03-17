@@ -10,7 +10,7 @@ import h2d.Bitmap;
 class ObjectEntity extends Entity
 {
   var object: AreaObject; // object link
-  var _spriteBody: Bitmap; // body sprite
+  var _body: Bitmap; // body sprite
   public var atlasRow: Int; // tile atlas row
 
 
@@ -22,7 +22,7 @@ class ObjectEntity extends Entity
       object = o;
       atlasRow = row;
 
-      _spriteBody = new Bitmap(
+      _body = new Bitmap(
         game.scene.entityAtlas[atlasCol][atlasRow], _container);
     }
 
@@ -30,8 +30,8 @@ class ObjectEntity extends Entity
 // set image index
   public function setImage(col: Int)
     {
-      _spriteBody.remove();
-      _spriteBody = new Bitmap(
+      _body.remove();
+      _body = new Bitmap(
         game.scene.entityAtlas[col][atlasRow],
         _container);
     }

@@ -17,6 +17,8 @@ class AreaObject
   public var type: String; // object type
   public var name: String; // object name
   public var item: _Item; // linked item
+  var atlasRow: Int;
+  var atlasCol: Int;
 
   public var id: Int; // unique object id
   static var _maxID: Int = 0; // current max ID
@@ -38,6 +40,8 @@ class AreaObject
 
       x = vx;
       y = vy;
+      atlasRow = 0;
+      atlasCol = 0;
 
       // add to current area
       if (addToCurrent)
@@ -74,36 +78,36 @@ class AreaObject
 // create entity for this object (using parent type as a row)
   public function createEntityByType(parentType: String)
     {
-      var atlasRow: Null<Int> = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
-      if (atlasRow == null)
+      var row: Null<Int> = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
+      if (row == null)
         {
           trace('No such entity type: ' + parentType);
           return;
         }
-      var atlasCol: Null<Int> = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
-      if (atlasCol == null)
+      var col: Null<Int> = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
+      if (col == null)
         {
           trace('No such entity frame: ' + type);
           return;
         }
-//      trace(atlasRow + ' ' + atlasCol);
-      createEntity(atlasRow, atlasCol);
+//      trace(row + ' ' + col);
+      createEntity(row, col);
     }
 
 
 // create entity for this object
-  public inline function createEntity(atlasRow: Int, atlasCol: Int)
+  public inline function createEntity(row: Int, col: Int)
     {
+      atlasRow = row;
+      atlasCol = col;
       entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
-      show();
     }
 
 
 // show object on screen
   public inline function show()
     {
-      trace('AreaObject RECREATE ' + type + ' ' + name);
-//      game.scene.add(entity);
+      createEntity(atlasRow, atlasCol);
     }
 
 

@@ -56,19 +56,15 @@ class Main extends hxd.App
     }
 
 
-/*
   override function update(dt: Float)
     {
-//      game.scene.update();
-      if (hxd.Key.isPressed(hxd.Key.CTRL))
-        trace('press!');
+      game.scene.mouse.update();
+      game.scene.checkPath();
     }
-*/
 
 
   public static function main()
     {
-      trace('todo main');
 /*
       Toolkit.theme = "native";
       Toolkit.init();

@@ -263,8 +263,6 @@ class AI
           return;
         }
       entity = new AIEntity(this, game, x, y, atlasRow);
-      trace('AI create');
-//      game.scene.add(entity);
 
       updateEntity(); // update icon
     }
@@ -923,7 +921,7 @@ class AI
       health -= damage;
       if (health == 0) // AI death
         {
-          death();
+          die();
 
           return;
         }
@@ -937,13 +935,13 @@ class AI
 
 
 // AI death
-  public function death()
+  public function die()
     {
       // AI already dead from another call
       if (state == AI_STATE_DEAD)
         return;
 
-      game.debug('AI.death[' + id + ']');
+      game.debug('AI.die[' + id + ']');
       if (game.player.state != PLR_STATE_HOST || game.player.host != this)
         log('dies.');
       onDeath(); // event hook
@@ -959,7 +957,7 @@ class AI
       o.isHumanBody = isHuman;
       o.organPoints = organs.getPoints();
       o.inventory = inventory; // copy inventory
-      game.area.updateVisibility();
+      game.scene.updateCamera();
 
       // event stuff
       if (npc != null)

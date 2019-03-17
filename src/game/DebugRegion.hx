@@ -28,8 +28,7 @@ class DebugRegion
             {
               for (a in game.region)
                 a.isKnown = true;
-              game.region.updateVisibility();
-              game.scene.region.updateIcons();
+              game.scene.region.update();
             }
         },
         ];

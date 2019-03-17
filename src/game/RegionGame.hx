@@ -53,9 +53,6 @@ class RegionGame
       // update region view info
       game.scene.region.update();
 
-      // update cell visibility to player
-      updateVisibility();
-
       // show region
       game.scene.region.show();
     }
@@ -85,8 +82,7 @@ class RegionGame
             a.alertness -= 1;
           }
 
-      // update all icons
-      game.scene.region.updateIcons();
+      game.scene.region.update();
     }
 
 
@@ -245,13 +241,6 @@ class RegionGame
       spawnArea(AREA_FACILITY, true);
       spawnArea(AREA_FACILITY, true);
       spawnArea(AREA_FACILITY, true);
-    }
-
-
-// update cell visibility
-  public inline function updateVisibility()
-    {
-      game.scene.region.updateVisibility();
     }
 
 

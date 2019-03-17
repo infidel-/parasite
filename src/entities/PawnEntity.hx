@@ -12,9 +12,9 @@ class PawnEntity extends Entity
 {
 
   var _text: Text;
-  var _textBack: Graphics;
-  var _spriteBody: Bitmap; // body sprite
-  var _spriteMask: Bitmap; // mask sprite map (invaded state)
+  var _back: Graphics;
+  var _body: Bitmap; // body sprite
+  var _mask: Bitmap; // mask sprite map (invaded state)
   public var atlasRow: Int; // tile atlas row
 
   var _textTimer: Int; // turns left to display this text
@@ -26,11 +26,11 @@ class PawnEntity extends Entity
       type = 'pawn';
       atlasRow = r;
 
-      _spriteBody = new Bitmap(
+      _body = new Bitmap(
         game.scene.entityAtlas[Const.FRAME_DEFAULT][atlasRow], _container);
-      _spriteMask = null;
+      _mask = null;
       _text = null;
-      _textBack = null;
+      _back = null;
       _textTimer = 0;
       setPosition(xx, yy);
     }
@@ -41,10 +41,10 @@ class PawnEntity extends Entity
     {
       if (_text == null)
         {
-          _textBack = new Graphics(_container);
+          _back = new Graphics(_container);
           _text = new Text(hxd.res.DefaultFont.get(), _container);
         }
-      else _textBack.clear();
+      else _back.clear();
 /*
       _text.scale(1.2);
       _text.dropShadow = {
@@ -61,9 +61,9 @@ class PawnEntity extends Entity
 
       var bounds = _text.getBounds(_container);
       var size = _text.getSize();
-      _textBack.beginFill(0,  0.75);
-      _textBack.drawRect(bounds.x, 0, size.width, size.height + 2);
-      _textBack.endFill();
+      _back.beginFill(0,  0.75);
+      _back.drawRect(bounds.x, 0, size.width, size.height + 2);
+      _back.endFill();
     }
 
 
@@ -77,9 +77,9 @@ class PawnEntity extends Entity
       if (_textTimer == 0)
         {
           _text.remove();
-          _textBack.remove();
+          _back.remove();
           _text = null;
-          _textBack = null;
+          _back = null;
         }
     }
 
@@ -87,8 +87,8 @@ class PawnEntity extends Entity
 // set body image index
   public function setImage(col: Int, ?row: Int)
     {
-      _spriteBody.remove();
-      _spriteBody = new Bitmap(
+      _body.remove();
+      _body = new Bitmap(
         game.scene.entityAtlas[col][(row == null ? atlasRow : row)],
         _container);
     }
@@ -100,22 +100,22 @@ class PawnEntity extends Entity
       // no mask, remove image
       if (col == 0)
         {
-          if (_spriteMask == null)
+          if (_mask == null)
             return;
 
-          _spriteMask.remove();
-          _spriteMask = null;
+          _mask.remove();
+          _mask = null;
           return;
         }
 
       // skip same image
       var tile = game.scene.entityAtlas[col]
         [(row == null ? atlasRow : row)];
-      if (_spriteMask != null && _spriteMask.tile == tile)
+      if (_mask != null && _mask.tile == tile)
         return;
 
-      if (_spriteMask != null)
-        _spriteMask.remove();
-      _spriteMask = new Bitmap(tile, _container);
+      if (_mask != null)
+        _mask.remove();
+      _mask = new Bitmap(tile, _container);
     }
 }

@@ -11,16 +11,16 @@ class AIEntity extends PawnEntity
 {
   var ai: AI; // AI link
 
-  var _spriteAlert: Bitmap; // alerted state icon
-  var _spriteNPC: Bitmap; // npc icon
+  var _alert: Bitmap; // alerted state icon
+  var _npc: Bitmap; // npc icon
 
 
   public function new(vai: AI, g: Game, xx: Int, yy: Int, atlasRow: Int)
     {
       super(g, xx, yy, atlasRow);
 
-      _spriteAlert = null;
-      _spriteNPC = null;
+      _alert = null;
+      _npc = null;
       ai = vai;
       type = "ai";
     }
@@ -32,32 +32,32 @@ class AIEntity extends PawnEntity
       // no alert, remove image
       if (index == 0)
         {
-          if (_spriteAlert == null)
+          if (_alert == null)
             return;
 
-          _spriteAlert.remove();
-          _spriteAlert = null;
+          _alert.remove();
+          _alert = null;
           return;
         }
 
       // skip same image
       var tile = game.scene.entityAtlas[index][Const.ROW_ALERT];
-      if (_spriteAlert != null && _spriteAlert.tile == tile)
+      if (_alert != null && _alert.tile == tile)
         return;
 
-      if (_spriteAlert != null)
-        _spriteAlert.remove();
-      _spriteAlert = new Bitmap(tile, _container);
+      if (_alert != null)
+        _alert.remove();
+      _alert = new Bitmap(tile, _container);
     }
 
 
 // set alert image index
   public function setNPC()
     {
-      if (_spriteNPC != null)
+      if (_npc != null)
         return;
 
-      _spriteNPC = new Bitmap(
+      _npc = new Bitmap(
         game.scene.entityAtlas[Const.FRAME_EVENT_NPC][Const.ROW_REGION_ICON],
         _container);
     }

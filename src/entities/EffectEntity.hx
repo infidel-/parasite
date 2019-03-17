@@ -11,7 +11,7 @@ class EffectEntity extends Entity
   public var x: Int;
   public var y: Int;
   public var turns: Int; // turns to live
-  var _spriteBody: Bitmap; // body sprite map
+  var _body: Bitmap; // body sprite map
 
 
   public function new(g: Game, xx: Int, yy: Int, t: Int, atlasRow: Int, atlasCol: Int)
@@ -22,7 +22,7 @@ class EffectEntity extends Entity
       turns = t;
       type = 'effect';
 
-      _spriteBody = new Bitmap(
+      _body = new Bitmap(
         game.scene.entityAtlas[atlasCol][atlasRow], _container);
     }
 }

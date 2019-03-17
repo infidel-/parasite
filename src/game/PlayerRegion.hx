@@ -251,11 +251,13 @@ class PlayerRegion
 
 
 // move to next path waypoint
-  public function nextPath()
+// returns true on success
+  public function nextPath(): Bool
     {
       // path clear
-      if (target == null || haxe.Timer.stamp() - pathTS < game.config.pathDelay)
-        return;
+      if (target == null ||
+          (haxe.Timer.stamp() - pathTS) * 1000.0 < game.config.pathDelay)
+        return false;
 
       var dx = 0;
       var dy = 0;
@@ -272,12 +274,14 @@ class PlayerRegion
       if (!ret)
         {
           target = null;
-          return;
+          return true;
         }
 
       // finish
       if (target.x == x && target.y == y)
         target = null;
+
+      return true;
     }
 
 
@@ -342,15 +346,8 @@ class PlayerRegion
           }
 
       entity.setPosition(x, y); // move player entity
-
-      game.region.updateVisibility(); // update visibility of tiles
-
       game.turn(); // new turn
-
       game.updateHUD(); // update HUD info
-
-      // update AI visibility to player
-//      region.updateVisibility();
 
       return true;
     }

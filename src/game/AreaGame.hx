@@ -7,11 +7,14 @@ import objects.*;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
+import entities.RegionEntity;
 
 class AreaGame
 {
   var game: Game;
   var region: RegionGame;
+
+  public var icons: Array<RegionEntity>; // alert, event, npc, habitat icons
 
   public var id: Int; // area id
   public var name: String; // area name
@@ -55,6 +58,7 @@ class AreaGame
     {
       game = g;
       events = [];
+      icons = [ null, null, null, null ];
       region = r;
       isGenerated = false;
       isEntering = false;
@@ -73,6 +77,7 @@ class AreaGame
       alertnessMod = 0;
       habitatAreaID = 0;
       turns = 0;
+      tileID = 0;
       npc = new List();
 
       _cells = [];
@@ -130,12 +135,11 @@ class AreaGame
             }
         }
 
-      // update player position
+      // recreate player host AI entity
       if (game.player.state == PLR_STATE_HOST)
         {
-          trace('AreaGame1');
-//          game.playerArea.entity.visible = false;
-//          game.scene.add(game.player.host.entity);
+          game.playerArea.entity.visible = false;
+          game.player.host.createEntity();
           game.player.host.setPosition(loc.x, loc.y);
           _ai.add(game.player.host);
         }
@@ -239,6 +243,10 @@ class AreaGame
       for (ai in _ai)
         removeAI(ai);
 
+      // remove host AI entity link (AI entity already removed above)
+      if (game.player.state == PLR_STATE_HOST)
+        game.player.host.entity = null;
+
       // hide static objects and remove dynamic ones
       // all objects in habitat are considered static
       for (o in _objects)
@@ -263,11 +271,10 @@ class AreaGame
     {
       game.debug('Area.generate()');
 
-      _cells = new Array<Array<Int>>();
+      // clear map
+      _cells = [];
       for (i in 0...width)
         _cells[i] = [];
-
-      // clear map
       for (y in 0...height)
         for (x in 0...width)
           _cells[x][y] = Const.TILE_GROUND;
@@ -1050,17 +1057,6 @@ class AreaGame
     }
 
 
-// update AI visibility
-  public inline function updateVisibility()
-    {
-      if (game.player.state == PLR_STATE_HOST)
-        updateVisibilityHost();
-      else updateVisibilityParasite();
-
-      game.scene.area.updateVisibility();
-    }
-
-
 // get visible rectangle for this area
   public function getVisibleRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
     {
@@ -1094,13 +1090,21 @@ class AreaGame
     }
 
 
+// update AI visibility
+  public inline function updateVisibility()
+    {
+      if (game.player.state == PLR_STATE_HOST)
+        updateVisibilityHost();
+      else updateVisibilityParasite();
+
+      game.scene.area.updateVisibility();
+    }
+
 
 // update AI, objects visibility
 // host version
   function updateVisibilityHost()
     {
-      trace('updateVisibilityHost');
-/*
       for (ai in _ai)
         {
           var v = isVisible(game.playerArea.x, game.playerArea.y, ai.x, ai.y);
@@ -1118,7 +1122,6 @@ class AreaGame
         obj.entity.visible =
           (game.player.vars.losEnabled ?
             isVisible(game.playerArea.x, game.playerArea.y, obj.x, obj.y) : true);
-*/
     }
 
 
@@ -1127,8 +1130,6 @@ class AreaGame
 // parasite only sees one tile around him but "feels" AIs in a larger radius
   function updateVisibilityParasite()
     {
-      trace('updateVisibilityParasite');
-/*
       for (ai in _ai)
         if (game.player.vars.losEnabled)
           ai.entity.visible =
@@ -1140,7 +1141,6 @@ class AreaGame
           obj.entity.visible =
             (Const.distanceSquared(game.playerArea.x, game.playerArea.y, obj.x, obj.y) < 6 * 6);
         else obj.entity.visible = true;
-*/
     }
 
 

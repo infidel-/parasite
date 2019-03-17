@@ -45,8 +45,6 @@ class GameScene extends Scene
   public var cameraX: Int;
   public var cameraY: Int;
 
-//  var _dx: Int; // movement vars - movement direction (changed in handleInput)
-//  var _dy: Int;
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
 
 
@@ -70,7 +68,6 @@ class GameScene extends Scene
       width = game.config.windowWidth;
       height = game.config.windowHeight;
 
-      trace('GameScene');
 #if js
       var os = Browser.navigator.platform;
       if (os.indexOf('Linux') >= 0) // use C-1 on Linux
@@ -78,16 +75,6 @@ class GameScene extends Scene
       else
         controlKey = 'alt';
 #end
-/*
-      Input.define("shift", [ Key.SHIFT ]);
-
-      Input.define("pageup", [ Key.PAGE_UP ]);
-      Input.define("pagedown", [ Key.PAGE_DOWN ]);
-      Input.define("home", [ Key.HOME ]);
-      Input.define("end", [ Key.END ]);
-
-      Input.define("exit", [ Key.F10 ]);
-*/
     }
 
 
@@ -268,12 +255,11 @@ class GameScene extends Scene
           return ret;
         }
 
-      return false;
+      // exit game
+      if (key == Key.F10)
+        hxd.System.exit();
 
-/*
-      if (Input.pressed("exit"))
-        exit();
-*/
+      return false;
     }
 
 
@@ -553,8 +539,6 @@ class GameScene extends Scene
 // handle player actions
   function handleActions(key: Int): Bool
     {
-      mouse.update();
-
       // game finished
       if (game.isFinished)
         return false;
@@ -580,8 +564,6 @@ class GameScene extends Scene
             break;
           }
 
-      if (_state != UISTATE_DEFAULT)
-        trace('UISTATE: ' + _state);
       if (_state == UISTATE_DEFAULT)
         {
           // skip until end of turn
@@ -608,19 +590,27 @@ class GameScene extends Scene
     }
 
 
+// check if it's time to move on path
+  public function checkPath()
+    {
+      // path active, try to move on it
+      var ret = false;
+      if (game.location == LOCATION_AREA && game.playerArea.path != null)
+        ret = game.playerArea.nextPath();
+      else if (game.location == LOCATION_REGION &&
+          game.playerRegion.target != null)
+        ret = game.playerRegion.nextPath();
+
+      if (ret)
+        updateCamera();
+    }
+
+
 // update scene
 //  public function update()
   function onEvent(ev: hxd.Event)
     {
       try {
-/*
-        // path active, try to move on it
-        if (game.location == LOCATION_AREA && game.playerArea.path != null)
-          game.playerArea.nextPath();
-        else if (game.location == LOCATION_REGION &&
-            game.playerRegion.target != null)
-          game.playerRegion.nextPath();
-*/
         // only handle keyboard events
         var key = 0;
         var keyUp = 0;
@@ -631,7 +621,7 @@ class GameScene extends Scene
             case EKeyUp:
               keyUp = ev.keyCode;
             case EPush:
-              trace('path movement!');
+              mouse.onClick();
             case _:
           }
 //        trace(key + ' ' + keyUp);
@@ -668,7 +658,10 @@ class GameScene extends Scene
 
         // update camera position
         if (ret)
-          updateCamera();
+          {
+            trace('GameScene.onEvent updateCamera()');
+            updateCamera();
+          }
         }
       catch (e: Dynamic)
         {
@@ -746,15 +739,6 @@ class GameScene extends Scene
             }
 */
         }
-    }
-
-
-  public inline function exit()
-    {
-#if !js
-        Sys.exit(1);
-#else
-#end
     }
 }
 

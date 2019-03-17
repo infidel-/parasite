@@ -135,8 +135,10 @@ class Game
       RegionGame._maxID = 0;
       messageList.clear();
       hudMessageList.clear();
-      area.leave();
-      region.leave();
+      if (location == LOCATION_AREA)
+        area.leave();
+      else if (location == LOCATION_REGION)
+        region.leave();
       scene.region.clearIcons();
       scene.clearEvents();
       init();
@@ -205,6 +207,9 @@ class Game
           goals.turn();
           if (isFinished)
             return;
+
+          // update AI visibility to player
+          area.updateVisibility();
         }
 
       else if (location == LOCATION_REGION)
@@ -218,9 +223,6 @@ class Game
           if (isFinished)
             return;
         }
-
-      // update AI visibility to player
-      area.updateVisibility();
     }
 
 

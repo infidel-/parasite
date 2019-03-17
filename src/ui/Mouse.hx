@@ -2,46 +2,50 @@
 
 package ui;
 
+import h2d.Bitmap;
+import h2d.Tile;
+import hxd.Key;
 import game.Game;
 import ai.AI;
 
-class Mouse //extends Sprite
+class Mouse
 {
+  var _body: Bitmap;
   var game: Game;
-//  var rect: Rectangle;
   var cursor: Int;
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
+  var atlas: Array<Array<Tile>>;
+  var cursors: Array<Bitmap>;
 
   public function new(g: Game)
     {
-//      super();
       game = g;
-      cursor = 0;
+      cursor = -1;
       oldx = 0;
       oldy = 0;
       sceneState = game.scene.state;
 
-      trace('Mouse');
-/*
-      var b = new Bitmap(Assets.getBitmapData('gfx/mouse.png'));
-      rect = new Rectangle(0, 0, CURSOR_WIDTH, CURSOR_HEIGHT);
-      b.scrollRect = rect;
-      addChild(b);
-      mouseEnabled = false;
-      openfl.ui.Mouse.hide();
-      HXP.stage.addEventListener(MouseEvent.CLICK, onClick);
+      hxd.System.setNativeCursor(Hide);
+      var res = hxd.Res.load('graphics/mouse.png').toTile();
+      atlas = res.grid(CURSOR_SIZE);
+      cursors = [];
+      for (i in 0...atlas.length)
+        {
+          cursors[i] = new Bitmap(atlas[i][0]);
+          cursors[i].tile = cursors[i].tile.center();
+          cursors[i].visible = false;
+          game.scene.add(cursors[i], Const.LAYER_MOUSE);
+        }
 
-      b.x = 0;
-      b.y = 0;
-      HXP.stage.addChild(this);
-*/
+      _body = null;
+      setCursor(CURSOR_DEFAULT);
     }
 
 
 // mouse click
-  function onClick(e: Dynamic)
+  public function onClick()
     {
       var pos = getXY();
 #if mydebug
@@ -126,30 +130,30 @@ class Mouse //extends Sprite
 // update mouse cursor
   public function update()
     {
-/*
 #if mydebug
+//      trace(Key.isPressed(Key.CTRL) + ' ' +  cursor);
       // control key pressed, change to debug cursor
       if (game.scene.state == UISTATE_DEFAULT)
         {
-          if (Input.pressed(Key.CONTROL) && cursor != CURSOR_DEBUG)
+          if (Key.isPressed(Key.CTRL) && cursor != CURSOR_DEBUG)
             setCursor(CURSOR_DEBUG);
 
           // ctrl released, mark as changed
-          else if (Input.released(Key.CONTROL) && cursor == CURSOR_DEBUG)
+          else if (!Key.isPressed(Key.CTRL) && cursor == CURSOR_DEBUG)
             oldx = -1;
         }
 #end
 
       // position and state unchanged, return
-      if (oldx == HXP.stage.mouseX &&
-          oldy == HXP.stage.mouseY &&
+      if (oldx == game.scene.mouseX &&
+          oldy == game.scene.mouseY &&
           sceneState == game.scene.state)
         return;
 
-      x = HXP.stage.mouseX - CURSOR_WIDTH / 2;
-      y = HXP.stage.mouseY - CURSOR_HEIGHT / 2;
-      oldx = HXP.stage.mouseX;
-      oldy = HXP.stage.mouseY;
+      _body.x = game.scene.mouseX;
+      _body.y = game.scene.mouseY;
+      oldx = game.scene.mouseX;
+      oldy = game.scene.mouseY;
 
       // window open, reset state
       if (game.scene.state != UISTATE_DEFAULT)
@@ -162,7 +166,7 @@ class Mouse //extends Sprite
 
 #if mydebug
       // control key held, do not change cursor
-      if (Input.check(Key.CONTROL))
+      if (Key.isPressed(Key.CTRL))
         return;
 #end
 
@@ -175,7 +179,6 @@ class Mouse //extends Sprite
         updateRegion();
 
       sceneState = game.scene.state;
-*/
     }
 
 
@@ -183,8 +186,8 @@ class Mouse //extends Sprite
   public inline function getXY(): { x: Int, y: Int }
     {
       return {
-        x: Std.int(game.scene.mouseX / Const.TILE_WIDTH),
-        y: Std.int(game.scene.mouseY / Const.TILE_HEIGHT)
+        x: Std.int((game.scene.cameraX + game.scene.mouseX) / Const.TILE_WIDTH),
+        y: Std.int((game.scene.cameraY + game.scene.mouseY) / Const.TILE_HEIGHT)
         };
     }
 
@@ -246,7 +249,13 @@ class Mouse //extends Sprite
         return;
 
       cursor = c;
-//      rect.x = cursor * CURSOR_WIDTH;
+      if (_body != null)
+        _body.visible = false;
+
+      _body = cursors[c];
+      _body.x = game.scene.mouseX;
+      _body.y = game.scene.mouseY;
+      _body.visible = true;
     }
 
 
@@ -257,6 +266,5 @@ class Mouse //extends Sprite
   public static var CURSOR_BLOCKED = 3;
 
 // size in pixels
-  public static var CURSOR_WIDTH = 24;
-  public static var CURSOR_HEIGHT = 24;
+  public static var CURSOR_SIZE = 24;
 }

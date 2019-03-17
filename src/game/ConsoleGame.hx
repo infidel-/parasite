@@ -100,7 +100,7 @@ class ConsoleGame
 
       // XXX quit game
       else if (cmd.charAt(0) == 'q')
-        game.scene.exit();
+        hxd.System.exit();
 
       game.updateHUD(); // update HUD state
     }
@@ -547,6 +547,8 @@ class ConsoleGame
                   npc.statusKnown = true;
                 }
             }
+          game.player.vars.npcEnabled = true;
+          game.player.vars.searchEnabled = true;
 
           game.timeline.update(); // update event numbering
         }
