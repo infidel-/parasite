@@ -16,6 +16,7 @@ class NPC
   public var jobKnown: Bool; // job known to player?
   public var area: AreaGame; // location area
   public var areaKnown: Bool; // location known to player?
+  public var isMale: Bool; // gender
   public var isDead: Bool; // is this npc dead?
   public var statusKnown: Bool; // is dead/alive status known to player?
   public var memoryKnown: Bool; // has this npc's memories been learned?
@@ -28,7 +29,8 @@ class NPC
   public function new(g: Game)
     {
       game = g;
-      name = const.NameConst.getHumanName();
+      isMale = (Std.random(100) < 50 ? true : false);
+      name = const.NameConst.getHumanName(isMale);
       nameKnown = false;
       type = 'civilian';
       job = null;

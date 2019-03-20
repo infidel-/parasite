@@ -906,6 +906,7 @@ class AreaGame
             ai.npc = n;
             ai.name.real = n.name;
             ai.name.realCapped = n.name;
+            ai.isMale = n.isMale;
             ai.isNameKnown = true;
             ai.isJobKnown = true;
             ai.entity.setNPC();

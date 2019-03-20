@@ -30,6 +30,7 @@ class GameScene extends Scene
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
   var uiLocked: Array<_UIState>; // list of gui states that lock the player
   var uiNoClose: Array<_UIState>; // list of gui states that disable window closing
+  public var atlas: Atlas; // AI tiles atlas
   public var entityAtlas: Array<Array<Tile>>; // entity graphics
   public var tileAtlas: Array<Array<Tile>>; // tile graphics
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -85,6 +86,7 @@ class GameScene extends Scene
       Key.ALLOW_KEY_REPEAT = true;
 
       // load all entity images into atlas
+      atlas = new Atlas(this);
       var res = hxd.Res.load('graphics/entities' + Const.TILE_WIDTH +
         '.png').toTile();
       entityAtlas = res.grid(Const.TILE_WIDTH);

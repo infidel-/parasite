@@ -11,7 +11,8 @@ class HumanAI extends AI
     {
       super(g, vx, vy);
       type = 'human';
-      name.real = name.realCapped = const.NameConst.getHumanName();
+      isMale = (Std.random(100) < 50 ? true : false);
+      name.real = name.realCapped = const.NameConst.getHumanName(isMale);
 
       isHuman = true;
       strength = 4 + Std.random(4);

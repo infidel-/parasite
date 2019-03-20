@@ -32,11 +32,11 @@ class Group
     {
 #if mydebug
       if (!isKnown)
-        buf.add('[DEBUG] Group known count: ' + knownCount + '\n');
+        buf.add('[DEBUG] Group known count: ' + knownCount + '<br/>');
       buf.add('[DEBUG] Group priority: ' + Const.round(priority) +
-        ', team timeout: ' + teamTimeout + '\n');
+        ', team timeout: ' + teamTimeout + '<br/>');
       if (team != null)
-        buf.add('[DEBUG] Team: ' + team + '\n');
+        buf.add('[DEBUG] Team: ' + team + '<br/>');
 #end
 
       // group existence not discovered yet
@@ -44,30 +44,30 @@ class Group
         return;
 
       // group info
-      buf.add('\nGroup info [' + difficulty + ']\n');
+      buf.add('<br/>Group info [' + difficulty + ']<br/>');
       if (difficulty == HARD)
         {
-          buf.add('  --- hidden ---\n');
+          buf.add('  --- hidden ---<br/>');
           return;
         }
       buf.add('Group priority: ' +
         (difficulty == EASY ? '' + Const.round(priority) :
-         numToWord(Std.int(priority), 0, 100)) + '\n');
+         numToWord(Std.int(priority), 0, 100)) + '<br/>');
       if (team == null)
         buf.add('Team timeout: ' +
           (difficulty == EASY ? teamTimeout + ' turns' :
-           numToWord(teamTimeout, 0, 100)) + '\n');
+           numToWord(teamTimeout, 0, 100)) + '<br/>');
       else
         {
           buf.add('Team level: ' +
             (difficulty == EASY ? team.level + '' :
-             numToWord(team.level, 1, 4)) + '\n');
+             numToWord(team.level, 1, 4)) + '<br/>');
           buf.add('Team size: ' +
             (difficulty == EASY ? team.size + '' :
-             numToWord(team.size, 1, team.maxSize)) + '\n');
+             numToWord(team.size, 1, team.maxSize)) + '<br/>');
           buf.add('Team distance: ' +
             (difficulty == EASY ? Std.int(team.distance) + '' :
-             numToWord(Std.int(team.distance), 0, 150)) + '\n');
+             numToWord(Std.int(team.distance), 0, 150)) + '<br/>');
         }
     }
 

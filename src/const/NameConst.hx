@@ -91,10 +91,10 @@ class NameConst
 
 
 // returns a random human name
-  public static function getHumanName()
+  public static function getHumanName(isMale: Bool)
     {
       return
-        (Std.random(2) == 0 ?
+        (isMale ?
          NameConst.maleFirst[Std.random(NameConst.maleFirst.length)] :
          NameConst.femaleFirst[Std.random(NameConst.femaleFirst.length)]) +
         ' ' +

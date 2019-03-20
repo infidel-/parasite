@@ -3,6 +3,7 @@
 package entities;
 
 import h2d.Bitmap;
+import h2d.Tile;
 
 import ai.AI;
 import game.Game;
@@ -15,9 +16,9 @@ class AIEntity extends PawnEntity
   var _npc: Bitmap; // npc icon
 
 
-  public function new(vai: AI, g: Game, xx: Int, yy: Int, atlasRow: Int)
+  public function new(vai: AI, g: Game, xx: Int, yy: Int, tile: Tile)
     {
-      super(g, xx, yy, atlasRow);
+      super(g, xx, yy, tile);
 
       _alert = null;
       _npc = null;

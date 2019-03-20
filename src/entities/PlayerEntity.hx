@@ -8,7 +8,7 @@ class PlayerEntity extends PawnEntity
 {
   public function new(g: Game, xx: Int, yy: Int)
     {
-      super(g, xx, yy, Const.ROW_PARASITE);
+      super(g, xx, yy, g.scene.entityAtlas[0][Const.ROW_PARASITE]);
 
       type = "player";
     }

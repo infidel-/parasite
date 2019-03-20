@@ -300,11 +300,10 @@ class PlayerRegion
 
       // set image
       entity.setMask(Const.FRAME_EMPTY, Const.ROW_PARASITE);
-      entity.setImage(Const.FRAME_DEFAULT, Const.ROW_PARASITE);
+      entity.tile = game.scene.entityAtlas[0][Const.ROW_PARASITE];
 
       // make player entity visible again
-      trace('onHostDeath');
-//      entity.visible = true;
+      entity.visible = true;
 
       player.host = null;
     }

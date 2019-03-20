@@ -5,29 +5,30 @@ package entities;
 import h2d.Bitmap;
 import h2d.Graphics;
 import h2d.Text;
+import h2d.Tile;
 
 import game.Game;
 
 class PawnEntity extends Entity
 {
-
   var _text: Text;
   var _back: Graphics;
   var _body: Bitmap; // body sprite
   var _mask: Bitmap; // mask sprite map (invaded state)
   public var atlasRow: Int; // tile atlas row
+  public var tile(default, set): Tile;
 
   var _textTimer: Int; // turns left to display this text
 
 
-  public function new(g: Game, xx: Int, yy: Int, r: Int)
+  public function new(g: Game, xx: Int, yy: Int, t: Tile)
     {
       super(g, Const.LAYER_AI);
+      _body = null;
+      tile = t;
       type = 'pawn';
-      atlasRow = r;
+      atlasRow = 0;
 
-      _body = new Bitmap(
-        game.scene.entityAtlas[Const.FRAME_DEFAULT][atlasRow], _container);
       _mask = null;
       _text = null;
       _back = null;
@@ -84,13 +85,14 @@ class PawnEntity extends Entity
     }
 
 
-// set body image index
-  public function setImage(col: Int, ?row: Int)
+// set new image
+  function set_tile(t: Tile)
     {
-      _body.remove();
-      _body = new Bitmap(
-        game.scene.entityAtlas[col][(row == null ? atlasRow : row)],
-        _container);
+      tile = t;
+      if (_body != null)
+        _body.remove();
+      _body = new Bitmap(tile, _container);
+      return tile;
     }
 
 

@@ -222,19 +222,17 @@ class RegionView
     }
 
 
-// show gui
+// show region view
   public function show()
     {
-      // change player entity image and mask
-      var row = Const.ROW_PARASITE;
+      // update player image and mask
+      var tile = null;
       if (game.player.host != null)
-        {
-          row = Reflect.field(Const, 'ROW_' + game.player.host.type.toUpperCase());
-          game.playerRegion.entity.setMask(Const.FRAME_MASK_REGION, row);
-        }
-      else game.playerRegion.entity.setMask(Const.FRAME_EMPTY, row);
-      game.playerRegion.entity.setImage(Const.FRAME_DEFAULT, row);
+        tile = game.player.host.tile;
+      else tile = game.scene.entityAtlas[0][Const.ROW_PARASITE];
+      game.playerRegion.entity.tile = tile;
 
+      // make all visible
       _tilemap.visible = true;
       game.playerRegion.entity.visible = true;
       icons.visible = true;
