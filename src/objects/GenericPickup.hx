@@ -10,7 +10,8 @@ class GenericPickup extends Pickup
     {
       super(g, vx, vy);
 
-      createEntity(Const.ROW_OBJECT, imgID);
+      createEntity(game.scene.entityAtlas
+        [imgID][Const.ROW_OBJECT]);
     }
 }
 

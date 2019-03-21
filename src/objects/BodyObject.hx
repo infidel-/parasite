@@ -22,11 +22,13 @@ class BodyObject extends AreaObject
       type = 'body';
       name = 'body';
       wasSeen = false;
-      isHumanBody = false;
+      isHumanBody = (parentType != 'dog');
       isSearched = false;
       organPoints = 0;
 
-      createEntityByType(parentType);
+      createEntity(game.scene.entityAtlas
+        [isHumanBody ? Const.FRAME_HUMAN_BODY : Const.FRAME_DOG_BODY]
+        [Const.ROW_OBJECT]);
     }
 
 

@@ -2,37 +2,32 @@
 
 package entities;
 
+import h2d.Bitmap;
+import h2d.Tile;
 import objects.AreaObject;
 import game.Game;
 
-import h2d.Bitmap;
 
 class ObjectEntity extends Entity
 {
   var object: AreaObject; // object link
   var _body: Bitmap; // body sprite
-  public var atlasRow: Int; // tile atlas row
 
 
-  public function new(o: AreaObject, g: Game, xx: Int, yy: Int,
-      row: Int, atlasCol: Int)
+  public function new(o: AreaObject, g: Game, xx: Int, yy: Int, t: Tile)
     {
       super(g, Const.LAYER_OBJECT);
       type = 'object';
       object = o;
-      atlasRow = row;
 
-      _body = new Bitmap(
-        game.scene.entityAtlas[atlasCol][atlasRow], _container);
+      _body = new Bitmap(t, _container);
     }
 
 
-// set image index
-  public function setImage(col: Int)
+// set image
+  public function setImage(tile: Tile)
     {
       _body.remove();
-      _body = new Bitmap(
-        game.scene.entityAtlas[col][atlasRow],
-        _container);
+      _body = new Bitmap(tile, _container);
     }
 }

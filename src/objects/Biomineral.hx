@@ -12,7 +12,7 @@ class Biomineral extends HabitatObject
 
       name = 'biomineral';
 
-      createEntity(Const.ROW_BIOMINERAL, level);
+      createEntity(game.scene.entityAtlas[level][Const.ROW_BIOMINERAL]);
     }
 
 /*

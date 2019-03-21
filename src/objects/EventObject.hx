@@ -18,7 +18,8 @@ class EventObject extends AreaObject
       name = 'event object';
       isStatic = true;
 
-      createEntity(Const.ROW_OBJECT, Const.FRAME_EVENT_OBJECT);
+      createEntity(game.scene.entityAtlas
+        [Const.FRAME_EVENT_OBJECT][Const.ROW_OBJECT]);
     }
 
 

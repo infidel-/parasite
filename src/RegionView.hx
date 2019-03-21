@@ -226,11 +226,18 @@ class RegionView
   public function show()
     {
       // update player image and mask
-      var tile = null;
       if (game.player.host != null)
-        tile = game.player.host.tile;
-      else tile = game.scene.entityAtlas[0][Const.ROW_PARASITE];
-      game.playerRegion.entity.tile = tile;
+        {
+          game.playerRegion.entity.tile = game.player.host.tile;
+          game.playerRegion.entity.setMask(game.scene.entityAtlas
+            [Const.FRAME_MASK_PARASITE][Const.ROW_PARASITE]);
+        }
+      else
+        {
+          game.playerRegion.entity.tile = 
+            game.scene.entityAtlas
+              [Const.FRAME_PARASITE][Const.ROW_PARASITE];
+        }
 
       // make all visible
       _tilemap.visible = true;

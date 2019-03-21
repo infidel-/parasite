@@ -2,8 +2,8 @@
 
 package objects;
 
+import h2d.Tile;
 import entities.ObjectEntity;
-
 import game.Game;
 import game._Item;
 import game.AreaManager;
@@ -17,8 +17,7 @@ class AreaObject
   public var type: String; // object type
   public var name: String; // object name
   public var item: _Item; // linked item
-  var atlasRow: Int;
-  var atlasCol: Int;
+  var tile: Tile; // object image
 
   public var id: Int; // unique object id
   static var _maxID: Int = 0; // current max ID
@@ -37,11 +36,9 @@ class AreaObject
       isStatic = false;
       creationTime = game.turns;
       _listActions = new List<_PlayerAction>();
-
       x = vx;
       y = vy;
-      atlasRow = 0;
-      atlasCol = 0;
+      tile = null;
 
       // add to current area
       if (addToCurrent)
@@ -75,39 +72,19 @@ class AreaObject
     }
 
 
-// create entity for this object (using parent type as a row)
-  public function createEntityByType(parentType: String)
-    {
-      var row: Null<Int> = Reflect.field(Const, 'ROW_' + parentType.toUpperCase());
-      if (row == null)
-        {
-          trace('No such entity type: ' + parentType);
-          return;
-        }
-      var col: Null<Int> = Reflect.field(Const, 'FRAME_' + type.toUpperCase());
-      if (col == null)
-        {
-          trace('No such entity frame: ' + type);
-          return;
-        }
-//      trace(row + ' ' + col);
-      createEntity(row, col);
-    }
-
-
 // create entity for this object
-  public inline function createEntity(row: Int, col: Int)
+  public function createEntity(t: Tile)
     {
-      atlasRow = row;
-      atlasCol = col;
-      entity = new ObjectEntity(this, game, x, y, atlasRow, atlasCol);
+      if (tile == null)
+        tile = t;
+      entity = new ObjectEntity(this, game, x, y, tile);
     }
 
 
 // show object on screen
   public inline function show()
     {
-      createEntity(atlasRow, atlasCol);
+      createEntity(tile);
     }
 
 
@@ -127,7 +104,8 @@ class AreaObject
           type: ACTION_OBJECT,
           name: name,
           energy: energy,
-          obj: this });
+          obj: this
+        });
     }
 
 

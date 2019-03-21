@@ -15,7 +15,6 @@ class PawnEntity extends Entity
   var _back: Graphics;
   var _body: Bitmap; // body sprite
   var _mask: Bitmap; // mask sprite map (invaded state)
-  public var atlasRow: Int; // tile atlas row
   public var tile(default, set): Tile;
 
   var _textTimer: Int; // turns left to display this text
@@ -27,7 +26,6 @@ class PawnEntity extends Entity
       _body = null;
       tile = t;
       type = 'pawn';
-      atlasRow = 0;
 
       _mask = null;
       _text = null;
@@ -97,10 +95,10 @@ class PawnEntity extends Entity
 
 
 // set mask image index
-  public function setMask(col: Int, ?row: Int)
+  public function setMask(t: Tile)
     {
       // no mask, remove image
-      if (col == 0)
+      if (t == null)
         {
           if (_mask == null)
             return;
@@ -111,13 +109,12 @@ class PawnEntity extends Entity
         }
 
       // skip same image
-      var tile = game.scene.entityAtlas[col]
-        [(row == null ? atlasRow : row)];
-      if (_mask != null && _mask.tile == tile)
+      if (_mask != null && _mask.tile == t)
         return;
 
       if (_mask != null)
         _mask.remove();
-      _mask = new Bitmap(tile, _container);
+      _mask = new Bitmap(t);
+      _container.addChildAt(_mask, 0);
     }
 }

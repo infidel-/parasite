@@ -61,7 +61,7 @@ class Atlas
 
       // dogs have different atlas
       if (type == 'dog')
-        tile = scene.entityAtlas[0][Const.ROW_DOG];
+        tile = scene.entityAtlas[1][Const.ROW_PARASITE];
 
       // generic civilian
       else if (type == 'civilian')

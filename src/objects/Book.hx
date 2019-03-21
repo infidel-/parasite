@@ -14,6 +14,7 @@ class Book extends Pickup
 
       type = 'book';
       name = 'book';
-      createEntity(Const.ROW_OBJECT, Const.FRAME_BOOK);
+      createEntity(game.scene.entityAtlas
+        [Const.FRAME_BOOK][Const.ROW_OBJECT]);
     }
 }

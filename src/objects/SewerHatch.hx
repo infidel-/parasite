@@ -14,7 +14,8 @@ class SewerHatch extends AreaObject
       name = 'sewer hatch';
       isStatic = true;
 
-      createEntity(Const.ROW_OBJECT, Const.FRAME_SEWER_HATCH);
+      createEntity(game.scene.entityAtlas
+        [Const.FRAME_SEWER_HATCH][Const.ROW_OBJECT]);
     }
 
 

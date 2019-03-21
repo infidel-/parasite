@@ -173,7 +173,6 @@ class DebugArea
             {
 //              var o = area.createObject(game.playerArea.x, game.playerArea.y, 'body', 'civilian');
               var o = new BodyObject(game, game.playerArea.x, game.playerArea.y, 'civilian');
-              o.isHumanBody = true;
               o.organPoints = 10;
         //      o.setDecay(1);
 

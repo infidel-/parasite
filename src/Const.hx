@@ -70,32 +70,28 @@ class Const
   public static var FRAME_BOOK = 2;
   public static var FRAME_EVENT_OBJECT = 3;
   public static var FRAME_PICKUP = 4;
+  public static var FRAME_HUMAN_BODY = 5;
+  public static var FRAME_DOG_BODY = 6;
 
   // effect row frames
   public static var FRAME_PANIC_GAS = 0;
   public static var FRAME_PARALYSIS_GAS = 1;
+
+  // parasite row frames
+  public static var FRAME_PARASITE = 0;
+  public static var FRAME_DOG = 1;
+  public static var FRAME_MASK_PARASITE = 2;
 
   public static var ROW_ALERT = 0;
   public static var ROW_REGION_ICON = 1;
   public static var ROW_OBJECT = 2;
   public static var ROW_EFFECT = 3;
   public static var ROW_PARASITE = 4;
-  public static var ROW_HUMAN = 5;
-  public static var ROW_DOG = 6;
-  public static var ROW_CIVILIAN = 7;
-  public static var ROW_POLICE = 8;
-  public static var ROW_SOLDIER = 9;
-  public static var ROW_AGENT = 10;
-  public static var ROW_BLACKOPS = 11;
-  public static var ROW_SECURITY = 12;
 
-  public static var ROW_BIOMINERAL = 16;
-  public static var ROW_ASSIMILATION = 17;
+  public static var ROW_BIOMINERAL = 5;
+  public static var ROW_ASSIMILATION = 6;
 
   public static var FRAME_DEFAULT = 0;
-  public static var FRAME_BODY = 1;
-  public static var FRAME_MASK_POSSESSED = 2;
-  public static var FRAME_MASK_REGION = 3;
 
 
   // tiles spritemap indexes

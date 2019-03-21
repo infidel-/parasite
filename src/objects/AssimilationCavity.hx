@@ -12,7 +12,7 @@ class AssimilationCavity extends HabitatObject
 
       name = 'assimilation cavity';
 
-      createEntity(Const.ROW_ASSIMILATION, level);
+      createEntity(game.scene.entityAtlas[level][Const.ROW_ASSIMILATION]);
     }
 
 

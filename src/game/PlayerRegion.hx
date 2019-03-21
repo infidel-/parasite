@@ -299,7 +299,7 @@ class PlayerRegion
       player.state = PLR_STATE_PARASITE;
 
       // set image
-      entity.setMask(Const.FRAME_EMPTY, Const.ROW_PARASITE);
+      entity.setMask(null);
       entity.tile = game.scene.entityAtlas[0][Const.ROW_PARASITE];
 
       // make player entity visible again

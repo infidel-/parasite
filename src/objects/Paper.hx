@@ -14,6 +14,7 @@ class Paper extends Pickup
 
       type = 'paper';
       name = 'paper';
-      createEntity(Const.ROW_OBJECT, Const.FRAME_PAPER);
+      createEntity(game.scene.entityAtlas
+        [Const.FRAME_PAPER][Const.ROW_OBJECT]);
     }
 }

@@ -956,7 +956,6 @@ class AI
       if (organ != null)
         o.setDecay(organ.params.turns);
 
-      o.isHumanBody = isHuman;
       o.organPoints = organs.getPoints();
       o.inventory = inventory; // copy inventory
       game.scene.updateCamera();
@@ -986,10 +985,15 @@ class AI
       setState(AI_STATE_HOST);
       parasiteAttached = false;
       wasInvaded = true; // mark as invaded
-      entity.setMask(Const.FRAME_MASK_POSSESSED);
+      entity.setMask(game.scene.entityAtlas
+        [Const.FRAME_MASK_PARASITE][Const.ROW_PARASITE]);
 
       // add effect marker so that AI can't tear parasite away
-      onEffect({ type: EFFECT_CANNOT_TEAR_AWAY, points: 5, isTimer: true });
+      onEffect({
+        type: EFFECT_CANNOT_TEAR_AWAY,
+        points: 5,
+        isTimer: true
+      });
     }
 
 
@@ -997,7 +1001,7 @@ class AI
   public inline function onDetach()
     {
       setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
-      entity.setMask(Const.FRAME_EMPTY);
+      entity.setMask(null);
     }
 
 
