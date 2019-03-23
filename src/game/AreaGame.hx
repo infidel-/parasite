@@ -140,6 +140,8 @@ class AreaGame
         {
           game.playerArea.entity.visible = false;
           game.player.host.createEntity();
+          game.player.host.entity.setMask(game.scene.entityAtlas
+            [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
           game.player.host.setPosition(loc.x, loc.y);
           _ai.add(game.player.host);
         }

@@ -61,7 +61,7 @@ class Skills extends Text
             {
               buf.add('<br/>Host attributes<br/>===<br/><br/>');
               buf.add('Strength ' + game.player.host.strength + '<br/>');
-              buf.add('<font color=#777777>' +
+              buf.add('<font color="#777777">' +
                 'Increases health and energy<br/>' +
                 'Increases melee damage<br/>' +
                 'Decreases grip efficiency<br/>' +
@@ -70,17 +70,17 @@ class Skills extends Text
                 '</font><br/>');
 
               buf.add('Constitution ' + game.player.host.constitution + '<br/>');
-              buf.add('<font color=#777777>' +
+              buf.add('<font color="#777777">' +
                 'Increases health and energy<br/>' +
                 '</font><br/>');
 
               buf.add('Intellect ' + game.player.host.intellect + '<br/>');
-              buf.add('<font color=#777777>' +
+              buf.add('<font color="#777777">' +
                 'Increases skills and society knowledge learning efficiency<br/>' +
                 '</font><br/>');
 
               buf.add('Psyche ' + game.player.host.psyche + '<br/>');
-              buf.add('<font color=#777777>' +
+              buf.add('<font color="#777777">' +
                 'Increases energy needed to probe brain<br/>' +
                 'Reduces the efficiency of reinforcing control<br/>' +
                 '</font><br/>');
@@ -91,7 +91,7 @@ class Skills extends Text
                 {
                   var info = TraitsConst.getInfo(t);
                   buf.add(info.name + '<br/>');
-                  buf.add('<font color=#777777>' + info.note + '</font><br/>');
+                  buf.add('<font color="#777777">' + info.note + '</font><br/>');
                 }
             }
         }
