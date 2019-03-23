@@ -539,6 +539,7 @@ class PlayerArea
       // set starting attach parameters
       state = PLR_STATE_ATTACHED;
       attachHost = ai;
+      entity.visible = false;
 
       // improv: attach efficiency
       var params = player.evolutionManager.getParams(IMP_ATTACH);
@@ -667,6 +668,7 @@ class PlayerArea
   function detachAction()
     {
       attachHost.parasiteAttached = false;
+      attachHost.entity.setMask(null);
       onDetach();
 
       log('You detach from the potential host.');

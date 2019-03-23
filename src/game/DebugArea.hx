@@ -171,7 +171,6 @@ class DebugArea
           name: 'Spawn a body',
           func: function()
             {
-//              var o = area.createObject(game.playerArea.x, game.playerArea.y, 'body', 'civilian');
               var o = new BodyObject(game, game.playerArea.x, game.playerArea.y, 'civilian');
               o.organPoints = 10;
         //      o.setDecay(1);

@@ -230,7 +230,7 @@ class RegionView
         {
           game.playerRegion.entity.tile = game.player.host.tile;
           game.playerRegion.entity.setMask(game.scene.entityAtlas
-            [Const.FRAME_MASK_PARASITE][Const.ROW_PARASITE]);
+            [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
         }
       else
         {

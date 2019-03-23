@@ -457,6 +457,7 @@ class AI
         return;
 
       parasiteAttached = false;
+      entity.setMask(null);
       log('manages to tear you away.');
       game.playerArea.onDetach(); // notify player
     }
@@ -976,6 +977,8 @@ class AI
       parasiteAttached = true;
       wasAttached = true; // mark as touched by parasite
       setState(AI_STATE_ALERT, REASON_ATTACH);
+      entity.setMask(game.scene.entityAtlas
+        [Const.FRAME_MASK_ATTACHED][Const.ROW_PARASITE]);
     }
 
 
@@ -986,7 +989,7 @@ class AI
       parasiteAttached = false;
       wasInvaded = true; // mark as invaded
       entity.setMask(game.scene.entityAtlas
-        [Const.FRAME_MASK_PARASITE][Const.ROW_PARASITE]);
+        [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
 
       // add effect marker so that AI can't tear parasite away
       onEffect({

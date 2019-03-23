@@ -3,10 +3,11 @@ import game.*;
 class Const
 {
   public static var FONT = "font/Orkney-Regular.otf";
-  public static var LAYER_MOUSE = 6; // mouse cursor layer - highest
-  public static var LAYER_UI = 5; // ui windows layer
-  public static var LAYER_HUD = 4; // ui layer
-  public static var LAYER_EFFECT = 3; // visual effects layer
+  public static var LAYER_MOUSE = 7; // mouse cursor layer - highest
+  public static var LAYER_UI = 6; // ui windows layer
+  public static var LAYER_HUD = 5; // ui layer
+  public static var LAYER_EFFECT = 4; // visual effects layer
+  public static var LAYER_PLAYER = 3; // player, enemies, etc layer
   public static var LAYER_AI = 2; // player, enemies, etc layer
   public static var LAYER_OBJECT = 1; // ground layer - bodies, items
   public static var LAYER_TILES = 0; // tilemap layer
@@ -80,7 +81,8 @@ class Const
   // parasite row frames
   public static var FRAME_PARASITE = 0;
   public static var FRAME_DOG = 1;
-  public static var FRAME_MASK_PARASITE = 2;
+  public static var FRAME_MASK_CONTROL = 2;
+  public static var FRAME_MASK_ATTACHED = 3;
 
   public static var ROW_ALERT = 0;
   public static var ROW_REGION_ICON = 1;
