@@ -26,16 +26,17 @@ class ConsoleGame
 
 //      log('Console command: ' + cmd);
       var arr = cmd.split(' ');
+      var char0 = cmd.charAt(0);
 
 #if mydebug
       // XXX add commands
-      if (cmd.charAt(0) == 'a')
+      if (char0 == 'a')
         addCommand(cmd, arr);
 
       // XXX config commands
       else
 #end
-        if (cmd.charAt(0) == 'c')
+        if (char0 == 'c')
         {
           // XXX config|cfg <option> <value>
           if (arr[0] == 'config' || arr[0] == 'cfg')
@@ -44,12 +45,12 @@ class ConsoleGame
 
 #if mydebug
       // XXX go commands
-      else if (cmd.charAt(0) == 'g')
+      else if (char0 == 'g')
         goCommand(cmd);
 #end
 
       // XXX help
-      else if (cmd.charAt(0) == 'h')
+      else if (char0 == 'h')
         {
 #if mydebug
           log('Available commands: ai - add item, ao - add organ, ' +
@@ -71,24 +72,24 @@ class ConsoleGame
 
 #if mydebug
       // XXX info commands
-      else if (cmd.charAt(0) == 'i')
+      else if (char0 == 'i')
         infoCommand(cmd);
 
       // XXX learn commands
-      else if (cmd.charAt(0) == 'l')
+      else if (char0 == 'l')
         learnCommand(cmd);
 #end
 
       // XXX restart
-      else if (cmd.charAt(0) == 'r')
+      else if (char0 == 'r')
         {
-          if (arr[0] == 'restart')
+//          if (arr[0] == 'restart')
             game.restart();
         }
 
 #if mydebug
       // XXX set commands
-      else if (cmd.charAt(0) == 's')
+      else if (char0 == 's')
         {
           // XXX set <variable> <value>
           if (arr[0] == 'set')
@@ -99,7 +100,7 @@ class ConsoleGame
 #end
 
       // XXX quit game
-      else if (cmd.charAt(0) == 'q')
+      else if (char0 == 'q')
         hxd.System.exit();
 
       game.updateHUD(); // update HUD state

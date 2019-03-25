@@ -342,13 +342,18 @@ class AI
         log(msg);
 
       onStateChange(); // dynamic event
-      updateEntity(); // update icon
+      if (entity != null) // could despawn in state change hook
+        updateEntity(); // update icon
     }
 
 
 // post alert changes, clamp and change icon
   public function updateEntity()
     {
+      // already despawned
+      if (entity == null)
+        return;
+
       var alertFrame = Const.FRAME_EMPTY;
       if (state == AI_STATE_ALERT)
         alertFrame = Const.FRAME_ALERTED;

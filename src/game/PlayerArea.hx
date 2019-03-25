@@ -392,18 +392,10 @@ class PlayerArea
     }
 
 
-// action: attack this ai
-  public function attackAction(ai: AI)
+// get current player weapon
+  public function getWeapon()
     {
-      // not in a host mode
-      if (state != PLR_STATE_HOST)
-        return;
-
-      // check if player can see that spot
-      if (!game.area.isVisible(x, y, ai.x, ai.y))
-        return;
-
-      // get current weapon and armor
+      // get current weapon
       var item = null;
       var info = null;
 
@@ -422,7 +414,24 @@ class PlayerArea
       else if (item == null)
         info = ItemsConst.fists;
       else info = item.info;
-      var weapon = info.weapon;
+
+      return info.weapon;
+    }
+
+
+// action: attack this ai
+  public function attackAction(ai: AI)
+    {
+      // not in a host mode
+      if (state != PLR_STATE_HOST)
+        return;
+
+      // check if player can see that spot
+      if (!game.area.isVisible(x, y, ai.x, ai.y))
+        return;
+
+      // get current weapon
+      var weapon = getWeapon();
 
       // check for distance on melee
       if (!weapon.isRanged && !ai.isNear(x, y))
@@ -916,9 +925,6 @@ class PlayerArea
 
       if (path.length == 0)
         path = null;
-
-      // force update mouse and path
-      game.scene.mouse.update(true);
 
       return true;
     }

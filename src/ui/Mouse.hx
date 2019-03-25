@@ -177,29 +177,40 @@ class Mouse
 // area mode
   function updateArea()
     {
-      // check if tile position changed
-      var pos = getXY();
-      if (oldPos.x == pos.x && oldPos.y == pos.y)
-        return;
-
       var c = CURSOR_BLOCKED;
 
-      oldPos = pos;
+      var pos = getXY();
+      var posChanged = false;
+      if (oldPos.x != pos.x || oldPos.y != pos.y)
+        {
+          oldPos = pos;
+          posChanged = true;
+        }
       var isVisible = game.scene.area.isVisible(pos.x, pos.y);
       var ai = game.area.getAI(pos.x, pos.y);
       if (isVisible)
         {
           // attack cursor
           if (canAttack(ai))
-            c = CURSOR_ATTACK;
+            {
+              var weapon = game.playerArea.getWeapon();
+              c = (weapon.isRanged ? CURSOR_ATTACK_RANGED : CURSOR_ATTACK);
+              if (!weapon.isRanged &&
+                  !ai.isNear(game.playerArea.x, game.playerArea.y))
+                c = CURSOR_BLOCKED;
+              game.scene.area.clearPath();
+            }
 
           // move cursor and path
           else if (game.area.isWalkable(pos.x, pos.y))
             {
-              game.scene.area.updatePath(
-                game.playerArea.x, game.playerArea.y,
-                pos.x, pos.y);
               c = CURSOR_MOVE;
+
+              // check if tile position changed
+              if (posChanged)
+                game.scene.area.updatePath(
+                  game.playerArea.x, game.playerArea.y,
+                  pos.x, pos.y);
             }
 
           // clear path
@@ -265,6 +276,7 @@ class Mouse
   public static var CURSOR_MOVE = 0;
   public static var CURSOR_BLOCKED = 1;
   public static var CURSOR_ATTACK = 2;
+  public static var CURSOR_ATTACK_RANGED = 3;
 
 // size in pixels
   public static var CURSOR_SIZE = 32;
