@@ -917,6 +917,9 @@ class PlayerArea
       if (path.length == 0)
         path = null;
 
+      // force update mouse and path
+      game.scene.mouse.update(true);
+
       return true;
     }
 

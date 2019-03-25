@@ -32,7 +32,7 @@ class GameScene extends Scene
   var uiNoClose: Array<_UIState>; // list of gui states that disable window closing
   public var atlas: Atlas; // AI tiles atlas
   public var entityAtlas: Array<Array<Tile>>; // entity graphics
-  public var tileAtlas: Array<Array<Tile>>; // tile graphics
+  public var tileAtlas: Array<Tile>; // tile graphics
   public var controlPressed: Bool; // Ctrl key pressed?
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
@@ -92,7 +92,7 @@ class GameScene extends Scene
       entityAtlas = res.grid(Const.TILE_WIDTH);
       var res = hxd.Res.load('graphics/tileset' + Const.TILE_WIDTH +
         '.png').toTile();
-      tileAtlas = res.grid(Const.TILE_WIDTH);
+      tileAtlas = res.gridFlatten(Const.TILE_WIDTH);
       var ttf = hxd.Res.font.OrkneyRegular;
 //      font = ttf.build(game.config.fontSize);
       font = ttf.toFont();
@@ -623,7 +623,7 @@ class GameScene extends Scene
             case EKeyUp:
               keyUp = ev.keyCode;
             case EPush:
-              mouse.onClick();
+              mouse.onClick(ev.button);
             case _:
           }
 //        trace(key + ' ' + keyUp);

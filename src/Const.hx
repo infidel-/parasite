@@ -3,9 +3,10 @@ import game.*;
 class Const
 {
   public static var FONT = "font/Orkney-Regular.otf";
-  public static var LAYER_MOUSE = 7; // mouse cursor layer - highest
-  public static var LAYER_UI = 6; // ui windows layer
-  public static var LAYER_HUD = 5; // ui layer
+  public static var LAYER_MOUSE = 8; // mouse cursor layer - highest
+  public static var LAYER_UI = 7; // ui windows layer
+  public static var LAYER_HUD = 6; // ui layer
+  public static var LAYER_DOT = 5; // path doths layer
   public static var LAYER_EFFECT = 4; // visual effects layer
   public static var LAYER_PLAYER = 3; // player, enemies, etc layer
   public static var LAYER_AI = 2; // player, enemies, etc layer
@@ -83,6 +84,7 @@ class Const
   public static var FRAME_DOG = 1;
   public static var FRAME_MASK_CONTROL = 2;
   public static var FRAME_MASK_ATTACHED = 3;
+  public static var FRAME_DOT = 4;
 
   public static var ROW_ALERT = 0;
   public static var ROW_REGION_ICON = 1;
@@ -101,16 +103,18 @@ class Const
   public static var TILE_GROUND = 1;
   public static var TILE_BUILDING = 2;
   public static var TILE_ROCK = 3;
-  public static var TILE_TREE = 4;
-  public static var TILE_WALL = 5;
+  public static var TILE_WALL = 4;
+  public static var TILE_TREE1 = 5;
+  public static var TILE_BUSH = 9;
+  public static var TILE_GRASS = 10;
 
-  public static var TILE_REGION_ROW = 1;
-  public static var TILE_REGION_GROUND = 0;
-  public static var TILE_REGION_CITY_LOW = 1;
-  public static var TILE_REGION_CITY_MEDIUM = 2;
-  public static var TILE_REGION_CITY_HIGH = 3;
-  public static var TILE_REGION_MILITARY_BASE = 4;
-  public static var TILE_REGION_FACILITY = 5;
+  public static var OFFSET_REGION = 16;
+  public static var TILE_REGION_GROUND = OFFSET_REGION + 0;
+  public static var TILE_CITY_LOW = OFFSET_REGION + 1;
+  public static var TILE_CITY_MEDIUM = OFFSET_REGION + 2;
+  public static var TILE_CITY_HIGH = OFFSET_REGION + 3;
+  public static var TILE_FACILITY1 = OFFSET_REGION + 4;
+  public static var TILE_MILITARY_BASE1 = OFFSET_REGION + 8;
 
   public static var TILE_CITY_ROW = 16;
   public static var TILE_ROAD = TILE_CITY_ROW + 0;
@@ -118,16 +122,26 @@ class Const
   public static var TILE_CROSSWALKV = TILE_CITY_ROW + 2;
   public static var TILE_CROSSWALKH = TILE_CITY_ROW + 3;
 
+
   public static var TILE_CITY_WALKABLE = [ true ];
 
   public static var TILE_WALKABLE = [
-    false, true, false, false, false, false, false, false,
-    true, true, true, true, true, true, false, false,
-    true, true, true, true, false, false, false, false,
+    // row 0
+    false, true, false, true,
+    false, false, false, false,
+    false, true, true, true,
+    false, false, false, false,
+    // row 1 - region
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    // row 2
+    true, true, true, true,
     ];
-  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock', 'tree',
-    'wall' ];
-  public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
+  public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock',
+    'wall', 'tree', 'tree', 'tree', 'tree', 'grass' ];
+//  public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
 //  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 
   // player stuff

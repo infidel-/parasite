@@ -554,8 +554,13 @@ class AreaGenerator
           var x = Std.random(area.width);
           var y = Std.random(area.height);
 
-          area.setCellType(x, y,
-            (Std.random(100) < 50 ? Const.TILE_ROCK : Const.TILE_TREE));
+          var t = Const.TILE_BUSH;
+          if (Std.random(100) < 30)
+            t = Const.TILE_ROCK;
+          if (Std.random(100) < 30)
+            t = Const.TILE_TREE1 + Std.random(Const.TILE_BUSH - Const.TILE_TREE1);
+
+          area.setCellType(x, y, t);
         }
     }
 

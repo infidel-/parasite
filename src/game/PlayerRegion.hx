@@ -281,6 +281,9 @@ class PlayerRegion
       if (target.x == x && target.y == y)
         target = null;
 
+      // force update mouse and path
+      game.scene.mouse.update(true);
+
       return true;
     }
 

@@ -1,5 +1,6 @@
 // tiled region view (each tile corresponds to an area)
 
+import h2d.Bitmap;
 import h2d.TileGroup;
 import h2d.Object;
 import game.*;
@@ -11,6 +12,7 @@ class RegionView
   var scene: GameScene; // scene link
 
   var _tilemap: TileGroup;
+  var _path: Array<Bitmap>; // currently visible path
   public var icons: Object; // all region icons container
 
   public var width: Int; // width, height in cells
@@ -23,10 +25,10 @@ class RegionView
       width = 100; // should be larger than any region
       height = 100;
 
-      _tilemap = new TileGroup(scene.tileAtlas
-        [Const.TILE_REGION_GROUND][Const.TILE_BUILDING]);
+      _tilemap = new TileGroup(scene.tileAtlas[Const.TILE_REGION_GROUND]);
       scene.add(_tilemap, Const.LAYER_TILES);
       _tilemap.blendMode = None;
+      _path = null;
 
       icons = new Object();
       scene.add(icons, Const.LAYER_OBJECT);
@@ -58,16 +60,12 @@ class RegionView
             a = cells[x][y];
 
             tileID = Const.TILE_HIDDEN;
-            row = Const.TILE_REGION_GROUND;
             if (isKnown(a))
-              {
-                tileID = a.tileID;
-                row = Const.TILE_REGION_ROW;
-              }
+              tileID = a.tileID;
 
             // update tile
             _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
-              scene.tileAtlas[tileID][row]);
+              scene.tileAtlas[tileID]);
 
             // update icons
             updateIconsArea(a.x, a.y);
@@ -222,6 +220,53 @@ class RegionView
     }
 
 
+// clears visible path
+  public function clearPath()
+    {
+      if (_path == null)
+        return;
+      for (dot in _path)
+        dot.remove();
+
+      _path = null;
+    }
+
+
+// updates visible path
+  public function updatePath(x1: Int, y1: Int, x2: Int, y2: Int)
+    {
+      clearPath();
+      _path = [];
+      var xx = x1;
+      var yy = y1;
+      var cnt = 0;
+      while (cnt++ < 100)
+        {
+          var dx = 0;
+          var dy = 0;
+          if (x2 - xx > 0)
+            dx = 1;
+          else if (x2 - xx < 0)
+            dx = -1;
+          if (y2 - yy > 0)
+            dy = 1;
+          else if (y2 - yy < 0)
+            dy = -1;
+          xx += dx;
+          yy += dy;
+          if (xx == x2 && yy == y2)
+            break;
+
+          var dot = new Bitmap(game.scene.entityAtlas
+            [Const.FRAME_DOT][Const.ROW_PARASITE]);
+          dot.x = xx * Const.TILE_WIDTH - game.scene.cameraX;
+          dot.y = yy * Const.TILE_HEIGHT - game.scene.cameraY;
+          game.scene.add(dot, Const.LAYER_DOT);
+          _path.push(dot);
+        }
+    }
+
+
 // show region view
   public function show()
     {
@@ -252,6 +297,9 @@ class RegionView
       _tilemap.visible = false;
       icons.visible = false;
       game.playerRegion.entity.visible = false;
+
+      // clear path
+      clearPath();
     }
 
 

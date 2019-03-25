@@ -275,11 +275,14 @@ class AreaGame
 
       // clear map
       _cells = [];
+      var baseTile = Const.TILE_GROUND;
+      if (typeID == AREA_GROUND)
+        baseTile = Const.TILE_GRASS;
       for (i in 0...width)
         _cells[i] = [];
       for (y in 0...height)
         for (x in 0...width)
-          _cells[x][y] = Const.TILE_GROUND;
+          _cells[x][y] = baseTile;
 
       AreaGenerator.generate(game, this, info);
 
@@ -526,15 +529,16 @@ class AreaGame
       if (typeID == AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;
       else if (typeID == AREA_CITY_LOW)
-        tileID = Const.TILE_REGION_CITY_LOW;
+        tileID = Const.TILE_CITY_LOW;
       else if (typeID == AREA_CITY_MEDIUM)
-        tileID = Const.TILE_REGION_CITY_MEDIUM;
+        tileID = Const.TILE_CITY_MEDIUM;
       else if (typeID == AREA_CITY_HIGH)
-        tileID = Const.TILE_REGION_CITY_HIGH;
+        tileID = Const.TILE_CITY_HIGH;
       else if (typeID == AREA_MILITARY_BASE)
-        tileID = Const.TILE_REGION_MILITARY_BASE;
+        tileID = Const.TILE_MILITARY_BASE1 + Std.random(2);
       else if (typeID == AREA_FACILITY)
-        tileID = Const.TILE_REGION_FACILITY;
+        tileID = Const.TILE_FACILITY1 +
+          Std.random(Const.TILE_MILITARY_BASE1 - Const.TILE_FACILITY1);
 
       // set name
       name = info.name;

@@ -1,5 +1,6 @@
 // tiled area view
 
+import h2d.Bitmap;
 import h2d.TileGroup;
 import entities.EffectEntity;
 import game.Game;
@@ -12,6 +13,7 @@ class AreaView
   var _tilemap: TileGroup;
   var _effects: List<EffectEntity>; // visual effects list
   var _cache: Array<Array<Int>>; // currently drawn tiles
+  var _path: Array<Bitmap>; // currently visible path
 
   public var width: Int; // area width, height in cells
   public var height: Int;
@@ -34,11 +36,10 @@ class AreaView
         for (x in 0...width)
           _cache[x][y] = 0;
 
+      _path = null;
       _effects = new List<EffectEntity>();
-      _tilemap = new TileGroup(scene.tileAtlas
-          [Const.TILE_REGION_GROUND][Const.TILE_BUILDING]);
+      _tilemap = new TileGroup(scene.tileAtlas[Const.TILE_GROUND]);
       scene.add(_tilemap, Const.LAYER_TILES);
-      _tilemap.blendMode = None;
     }
 
 
@@ -69,6 +70,39 @@ class AreaView
     }
 
 
+// clears visible path
+  public function clearPath()
+    {
+      if (_path == null)
+        return;
+      for (dot in _path)
+        dot.remove();
+
+      _path = null;
+    }
+
+
+// updates visible path
+  public function updatePath(x1: Int, y1: Int, x2: Int, y2: Int)
+    {
+      clearPath();
+      _path = [];
+      var path = game.area.getPath(x1, y1, x2, y2);
+      if (path == null)
+        return;
+      path.pop();
+      for (pos in path)
+        {
+          var dot = new Bitmap(game.scene.entityAtlas
+            [Const.FRAME_DOT][Const.ROW_PARASITE]);
+          dot.x = pos.x * Const.TILE_WIDTH - game.scene.cameraX;
+          dot.y = pos.y * Const.TILE_HEIGHT - game.scene.cameraY;
+          game.scene.add(dot, Const.LAYER_DOT);
+          _path.push(dot);
+        }
+    }
+
+
 // show gui
   public function show()
     {
@@ -90,6 +124,9 @@ class AreaView
           eff.remove();
           _effects.remove(eff);
         }
+
+      // clear path
+      clearPath();
     }
 
 
@@ -138,7 +175,7 @@ class AreaView
             else tileID = Const.TILE_HIDDEN;
 
             _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
-              scene.tileAtlas[tileID][0]);
+              scene.tileAtlas[tileID]);
             _cache[x][y] = tileID;
           }
     }
@@ -170,7 +207,7 @@ class AreaView
             else tileID = Const.TILE_HIDDEN;
 
             _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
-              scene.tileAtlas[tileID][0]);
+              scene.tileAtlas[tileID]);
             _cache[x][y] = tileID;
           }
     }

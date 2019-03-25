@@ -1,7 +1,8 @@
-// openfl mouse cursor
+// mouse cursor
 
 package ui;
 
+import h2d.Anim;
 import h2d.Bitmap;
 import h2d.Tile;
 import hxd.Key;
@@ -10,14 +11,14 @@ import ai.AI;
 
 class Mouse
 {
-  var _body: Bitmap;
   var game: Game;
   var cursor: Int;
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
-  var atlas: Array<Array<Tile>>;
-  var cursors: Array<Bitmap>;
+  var atlas: Array<Tile>;
+  var _body: Anim;
+  var oldPos: { x: Int, y: Int };
 
   public function new(g: Game)
     {
@@ -25,32 +26,29 @@ class Mouse
       cursor = -1;
       oldx = 0;
       oldy = 0;
+      oldPos = { x: -1, y: -1 };
       sceneState = game.scene.state;
 
       hxd.System.setNativeCursor(Hide);
-      var res = hxd.Res.load('graphics/mouse.png').toTile();
-      atlas = res.grid(CURSOR_SIZE);
-      cursors = [];
+      var res = hxd.Res.load('graphics/mouse64.png').toTile();
+      atlas = res.gridFlatten(CURSOR_SIZE);
       for (i in 0...atlas.length)
-        {
-          cursors[i] = new Bitmap(atlas[i][0]);
-          cursors[i].tile = cursors[i].tile.center();
-          cursors[i].visible = false;
-          game.scene.add(cursors[i], Const.LAYER_MOUSE);
-        }
+        atlas[i] = atlas[i].center();
 
-      _body = null;
-      setCursor(CURSOR_DEFAULT);
+      _body = new Anim(atlas, 15);
+      _body.pause = true;
+      _body.visible = true;
+      game.scene.add(_body, Const.LAYER_MOUSE);
     }
 
 
 // mouse click
-  public function onClick()
+  public function onClick(button: Int)
     {
       var pos = getXY();
 #if mydebug
       // debug mode
-      if (cursor == CURSOR_DEBUG)
+      if (button == Key.MOUSE_MIDDLE)
         {
           if (game.location == LOCATION_AREA)
             onClickDebug(pos);
@@ -81,7 +79,8 @@ class Mouse
         game.area.getCellTypeString(pos.x, pos.y) +
         ' player vis: ' +
         game.area.isVisible(game.playerArea.x,
-          game.playerArea.y, pos.x, pos.y, true));
+          game.playerArea.y, pos.x, pos.y, true) +
+        ' walk: ' + game.area.isWalkable(pos.x, pos.y));
       if (game.playerArea.x == pos.x && game.playerArea.y == pos.y)
         Const.debugObject(game.player);
       if (ai != null)
@@ -128,27 +127,16 @@ class Mouse
 
 
 // update mouse cursor
-  public function update()
+  public function update(?force = false)
     {
-#if mydebug
-//      trace(Key.isPressed(Key.CTRL) + ' ' +  cursor);
-      // control key pressed, change to debug cursor
-      if (game.scene.state == UISTATE_DEFAULT)
-        {
-          if (Key.isPressed(Key.CTRL) && cursor != CURSOR_DEBUG)
-            setCursor(CURSOR_DEBUG);
-
-          // ctrl released, mark as changed
-          else if (!Key.isPressed(Key.CTRL) && cursor == CURSOR_DEBUG)
-            oldx = -1;
-        }
-#end
-
       // position and state unchanged, return
-      if (oldx == game.scene.mouseX &&
-          oldy == game.scene.mouseY &&
-          sceneState == game.scene.state)
-        return;
+      if (!force)
+        {
+          if (oldx == game.scene.mouseX &&
+              oldy == game.scene.mouseY &&
+              sceneState == game.scene.state)
+            return;
+        }
 
       _body.x = game.scene.mouseX;
       _body.y = game.scene.mouseY;
@@ -158,17 +146,11 @@ class Mouse
       // window open, reset state
       if (game.scene.state != UISTATE_DEFAULT)
         {
-          setCursor(CURSOR_DEFAULT);
+          setCursor(CURSOR_MOVE);
           sceneState = game.scene.state;
 
           return;
         }
-
-#if mydebug
-      // control key held, do not change cursor
-      if (Key.isPressed(Key.CTRL))
-        return;
-#end
 
       // in area
       if (game.location == LOCATION_AREA)
@@ -195,20 +177,37 @@ class Mouse
 // area mode
   function updateArea()
     {
+      // check if tile position changed
+      var pos = getXY();
+      if (oldPos.x == pos.x && oldPos.y == pos.y)
+        return;
+
       var c = CURSOR_BLOCKED;
 
-      // attack cursor
-      var pos = getXY();
+      oldPos = pos;
       var isVisible = game.scene.area.isVisible(pos.x, pos.y);
       var ai = game.area.getAI(pos.x, pos.y);
       if (isVisible)
         {
+          // attack cursor
           if (canAttack(ai))
             c = CURSOR_ATTACK;
 
+          // move cursor and path
           else if (game.area.isWalkable(pos.x, pos.y))
-            c = CURSOR_DEFAULT;
+            {
+              game.scene.area.updatePath(
+                game.playerArea.x, game.playerArea.y,
+                pos.x, pos.y);
+              c = CURSOR_MOVE;
+            }
+
+          // clear path
+          else game.scene.area.clearPath();
         }
+
+      // clear path
+      else game.scene.area.clearPath();
 
       setCursor(c);
     }
@@ -217,9 +216,13 @@ class Mouse
 // region mode
   function updateRegion()
     {
+      // check if tile position changed
+      var pos = getXY();
+      if (oldPos.x == pos.x && oldPos.y == pos.y)
+        return;
+
       var c = CURSOR_BLOCKED;
 
-      var pos = getXY();
       var area = game.region.getXY(pos.x, pos.y);
       if (area == null)
         {
@@ -228,7 +231,12 @@ class Mouse
         }
       var isKnown = game.scene.region.isKnown(area);
       if (isKnown)
-        c = CURSOR_DEFAULT;
+        {
+          game.scene.region.updatePath(
+            game.playerRegion.x, game.playerRegion.y,
+            pos.x, pos.y);
+          c = CURSOR_MOVE;
+        }
 
       setCursor(c);
     }
@@ -249,22 +257,15 @@ class Mouse
         return;
 
       cursor = c;
-      if (_body != null)
-        _body.visible = false;
-
-      _body = cursors[c];
-      _body.x = game.scene.mouseX;
-      _body.y = game.scene.mouseY;
-      _body.visible = true;
+      _body.currentFrame = cursor;
     }
 
 
 // mouse cursor images
-  public static var CURSOR_DEFAULT = 0;
-  public static var CURSOR_ATTACK = 1;
-  public static var CURSOR_DEBUG = 2;
-  public static var CURSOR_BLOCKED = 3;
+  public static var CURSOR_MOVE = 0;
+  public static var CURSOR_BLOCKED = 1;
+  public static var CURSOR_ATTACK = 2;
 
 // size in pixels
-  public static var CURSOR_SIZE = 24;
+  public static var CURSOR_SIZE = 32;
 }
