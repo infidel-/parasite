@@ -95,8 +95,8 @@ class AreaView
         {
           var dot = new Bitmap(game.scene.entityAtlas
             [Const.FRAME_DOT][Const.ROW_PARASITE]);
-          dot.x = pos.x * Const.TILE_WIDTH - game.scene.cameraX;
-          dot.y = pos.y * Const.TILE_HEIGHT - game.scene.cameraY;
+          dot.x = pos.x * Const.TILE_SIZE - game.scene.cameraX;
+          dot.y = pos.y * Const.TILE_SIZE - game.scene.cameraY;
           game.scene.add(dot, Const.LAYER_DOT);
           _path.push(dot);
         }
@@ -174,7 +174,7 @@ class AreaView
               tileID = cells[x][y];
             else tileID = Const.TILE_HIDDEN;
 
-            _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
+            _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
               scene.tileAtlas[tileID]);
             _cache[x][y] = tileID;
           }
@@ -206,7 +206,7 @@ class AreaView
               tileID = cells[x][y];
             else tileID = Const.TILE_HIDDEN;
 
-            _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
+            _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
               scene.tileAtlas[tileID]);
             _cache[x][y] = tileID;
           }

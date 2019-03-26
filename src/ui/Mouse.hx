@@ -169,8 +169,8 @@ class Mouse
   public inline function getXY(): { x: Int, y: Int }
     {
       return {
-        x: Std.int((game.scene.cameraX + game.scene.mouseX) / Const.TILE_WIDTH),
-        y: Std.int((game.scene.cameraY + game.scene.mouseY) / Const.TILE_HEIGHT)
+        x: Std.int((game.scene.cameraX + game.scene.mouseX) / Const.TILE_SIZE),
+        y: Std.int((game.scene.cameraY + game.scene.mouseY) / Const.TILE_SIZE)
         };
     }
 

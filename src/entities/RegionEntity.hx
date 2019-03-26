@@ -21,8 +21,8 @@ class RegionEntity
 
       _body = new Bitmap(scene.entityAtlas[atlasCol][atlasRow],
         scene.region.icons);
-      _body.x = xx * Const.TILE_WIDTH;
-      _body.y = yy * Const.TILE_HEIGHT;
+      _body.x = xx * Const.TILE_SIZE;
+      _body.y = yy * Const.TILE_SIZE;
     }
 
 

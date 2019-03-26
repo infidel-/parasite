@@ -87,12 +87,12 @@ class GameScene extends Scene
 
       // load all entity images into atlas
       atlas = new Atlas(this);
-      var res = hxd.Res.load('graphics/entities' + Const.TILE_WIDTH +
+      var res = hxd.Res.load('graphics/entities' + Const.TILE_SIZE +
         '.png').toTile();
-      entityAtlas = res.grid(Const.TILE_WIDTH);
-      var res = hxd.Res.load('graphics/tileset' + Const.TILE_WIDTH +
+      entityAtlas = res.grid(Const.TILE_SIZE);
+      var res = hxd.Res.load('graphics/tileset' + Const.TILE_SIZE +
         '.png').toTile();
-      tileAtlas = res.gridFlatten(Const.TILE_WIDTH);
+      tileAtlas = res.gridFlatten(Const.TILE_SIZE);
       var ttf = hxd.Res.font.OrkneyRegular;
 //      font = ttf.build(game.config.fontSize);
       font = ttf.toFont();
@@ -159,41 +159,41 @@ class GameScene extends Scene
       var x = 0.0, y = 0.0, w = 0.0, h = 0.0;
       if (game.location == LOCATION_AREA)
         {
-          x = game.playerArea.x * Const.TILE_WIDTH;
-          y = game.playerArea.y * Const.TILE_HEIGHT;
+          x = game.playerArea.x * Const.TILE_SIZE;
+          y = game.playerArea.y * Const.TILE_SIZE;
           w = game.area.width;
           h = game.area.height;
         }
 
       else if (game.location == LOCATION_REGION)
         {
-          x = game.playerRegion.x * Const.TILE_WIDTH;
-          y = game.playerRegion.y * Const.TILE_HEIGHT;
+          x = game.playerRegion.x * Const.TILE_SIZE;
+          y = game.playerRegion.y * Const.TILE_SIZE;
           w = game.region.width;
           h = game.region.height;
         }
 
       x -= win.width / 2;
       y -= win.height / 2;
-      x = Math.ceil(x / Const.TILE_WIDTH) * Const.TILE_WIDTH;
-      y = Math.ceil(y / Const.TILE_HEIGHT) * Const.TILE_HEIGHT;
+      x = Math.ceil(x / Const.TILE_SIZE) * Const.TILE_SIZE;
+      y = Math.ceil(y / Const.TILE_SIZE) * Const.TILE_SIZE;
 
-      if (x + win.width > Const.TILE_WIDTH * w)
-        x = Const.TILE_WIDTH * w - win.width;
-      if (y + win.height > Const.TILE_HEIGHT * h)
-        y = Const.TILE_HEIGHT * h - win.height;
+      if (x + win.width > Const.TILE_SIZE * w)
+        x = Const.TILE_SIZE * w - win.width;
+      if (y + win.height > Const.TILE_SIZE * h)
+        y = Const.TILE_SIZE * h - win.height;
       if (x < 0)
         x = 0;
       if (y < 0)
         y = 0;
 
       // update tile x,y
-      cameraTileX1 = Std.int(x / Const.TILE_WIDTH);
-      cameraTileY1 = Std.int(y / Const.TILE_HEIGHT);
+      cameraTileX1 = Std.int(x / Const.TILE_SIZE);
+      cameraTileY1 = Std.int(y / Const.TILE_SIZE);
       cameraTileX2 =
-        Std.int((x + win.width) / Const.TILE_WIDTH);
+        Std.int((x + win.width) / Const.TILE_SIZE);
       cameraTileY2 =
-        Std.int((y + win.height) / Const.TILE_HEIGHT);
+        Std.int((y + win.height) / Const.TILE_SIZE);
       cameraX = Std.int(x);
       cameraY = Std.int(y);
 

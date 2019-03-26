@@ -13,8 +13,7 @@ class Const
   public static var LAYER_OBJECT = 1; // ground layer - bodies, items
   public static var LAYER_TILES = 0; // tilemap layer
 
-  public static var TILE_WIDTH = 64; // tiles width, height
-  public static var TILE_HEIGHT = 64;
+  public static var TILE_SIZE = 64; // tiles width, height
 
   // text color strings
   public static var TEXT_COLORS: Map<_TextColor, String> =

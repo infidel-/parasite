@@ -15,12 +15,12 @@ class Atlas
       scene = s;
 
       // currently we assume there's no empty space
-      var res = hxd.Res.load('graphics/male' + Const.TILE_WIDTH +
+      var res = hxd.Res.load('graphics/male' + Const.TILE_SIZE +
         '.png').toTile();
-      maleAtlas = res.grid(Const.TILE_WIDTH);
-      var res = hxd.Res.load('graphics/female' + Const.TILE_WIDTH +
+      maleAtlas = res.grid(Const.TILE_SIZE);
+      var res = hxd.Res.load('graphics/female' + Const.TILE_SIZE +
         '.png').toTile();
-      femaleAtlas = res.grid(Const.TILE_WIDTH);
+      femaleAtlas = res.grid(Const.TILE_SIZE);
 
       // nullify empty space
       var maleEmpty = 8;

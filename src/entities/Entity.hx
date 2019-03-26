@@ -26,8 +26,8 @@ class Entity
 // set position on map (calc from map x,y)
   public function setPosition(mx: Int, my: Int)
     {
-      _container.x = mx * Const.TILE_WIDTH - game.scene.cameraX;
-      _container.y = my * Const.TILE_HEIGHT - game.scene.cameraY;
+      _container.x = mx * Const.TILE_SIZE - game.scene.cameraX;
+      _container.y = my * Const.TILE_SIZE - game.scene.cameraY;
     }
 
 

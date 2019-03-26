@@ -55,7 +55,7 @@ class PawnEntity extends Entity
 */
       _text.textColor = 0xffffff;
       _text.text = s;
-      _text.x = - (_text.textWidth - Const.TILE_WIDTH) / 2;
+      _text.x = - (_text.textWidth - Const.TILE_SIZE) / 2;
       _textTimer = timer;
 
       var bounds = _text.getBounds(_container);

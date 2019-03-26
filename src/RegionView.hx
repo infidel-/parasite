@@ -64,7 +64,7 @@ class RegionView
               tileID = a.tileID;
 
             // update tile
-            _tilemap.add(x * Const.TILE_WIDTH, y * Const.TILE_HEIGHT,
+            _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
               scene.tileAtlas[tileID]);
 
             // update icons
@@ -259,8 +259,8 @@ class RegionView
 
           var dot = new Bitmap(game.scene.entityAtlas
             [Const.FRAME_DOT][Const.ROW_PARASITE]);
-          dot.x = xx * Const.TILE_WIDTH - game.scene.cameraX;
-          dot.y = yy * Const.TILE_HEIGHT - game.scene.cameraY;
+          dot.x = xx * Const.TILE_SIZE - game.scene.cameraX;
+          dot.y = yy * Const.TILE_SIZE - game.scene.cameraY;
           game.scene.add(dot, Const.LAYER_DOT);
           _path.push(dot);
         }
