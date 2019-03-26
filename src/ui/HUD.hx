@@ -74,7 +74,8 @@ class HUD
       if (e.kind != ETextInput)
         return;
 
-      if (!_consoleBack.visible && e.charCode == 59)
+      if (!_consoleBack.visible && _container.visible &&
+          e.charCode == 59) // ;
         {
           showConsole();
           return;

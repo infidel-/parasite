@@ -59,7 +59,7 @@ class AIEntity extends PawnEntity
         return;
 
       _npc = new Bitmap(
-        game.scene.entityAtlas[Const.FRAME_EVENT_NPC][Const.ROW_REGION_ICON],
+        game.scene.entityAtlas[Const.FRAME_EVENT_NPC_AREA][Const.ROW_REGION_ICON],
         _container);
     }
 }

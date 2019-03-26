@@ -32,7 +32,8 @@ class Mouse
       hxd.System.setNativeCursor(Hide);
       var res = hxd.Res.load('graphics/mouse64.png').toTile();
       atlas = res.gridFlatten(CURSOR_SIZE);
-      for (i in 0...atlas.length)
+//      atlas[0] = atlas[0].sub(0, 0, atlas[0].width, atlas[0]);
+      for (i in 1...atlas.length)
         atlas[i] = atlas[i].center();
 
       _body = new Anim(atlas, 15);
@@ -146,7 +147,7 @@ class Mouse
       // window open, reset state
       if (game.scene.state != UISTATE_DEFAULT)
         {
-          setCursor(CURSOR_MOVE);
+          setCursor(CURSOR_ARROW);
           sceneState = game.scene.state;
 
           return;
@@ -273,10 +274,11 @@ class Mouse
 
 
 // mouse cursor images
-  public static var CURSOR_MOVE = 0;
-  public static var CURSOR_BLOCKED = 1;
-  public static var CURSOR_ATTACK = 2;
-  public static var CURSOR_ATTACK_RANGED = 3;
+  public static var CURSOR_ARROW = 0;
+  public static var CURSOR_MOVE = 1;
+  public static var CURSOR_BLOCKED = 2;
+  public static var CURSOR_ATTACK = 3;
+  public static var CURSOR_ATTACK_RANGED = 4;
 
 // size in pixels
   public static var CURSOR_SIZE = 32;
