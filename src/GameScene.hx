@@ -354,34 +354,26 @@ class GameScene extends Scene
           else if (key == Key.DOWN || key == Key.J || key == Key.NUMPAD_2)
             lines = 1;
 
-          // window scrolling
-          if (_state != UISTATE_DEFAULT)
+          var win: UIWindow = cast components[_state];
+
+          if (lines != 0)
             {
-              var win: UIWindow = cast components[_state];
-
-              if (lines != 0)
-                {
-                  win.scroll(lines);
-                  return false;
-                }
-
-              else if (key == Key.END ||
-                (key == Key.G && shiftPressed))
-                {
-                  win.scrollToEnd();
-                  return false;
-                }
-
-              else if (key == Key.HOME || key == Key.G)
-                {
-                  win.scrollToBegin();
-                  return false;
-                }
+              win.scroll(lines);
+              return false;
             }
 
-          // skip for now
-          else if (_state == UISTATE_DIFFICULTY || _state == UISTATE_YESNO)
-            1;
+          else if (key == Key.END ||
+            (key == Key.G && shiftPressed))
+            {
+              win.scrollToEnd();
+              return false;
+            }
+
+          else if (key == Key.HOME || key == Key.G)
+            {
+              win.scrollToBegin();
+              return false;
+            }
         }
 
       // window open
@@ -624,6 +616,9 @@ class GameScene extends Scene
               keyUp = ev.keyCode;
             case EPush:
               mouse.onClick(ev.button);
+            case EWheel:
+              if (_state != UISTATE_DEFAULT)
+                key = (ev.wheelDelta > 0 ? Key.DOWN : Key.UP);
             case _:
           }
 //        trace(key + ' ' + keyUp);
