@@ -32,7 +32,6 @@ class Mouse
       hxd.System.setNativeCursor(Hide);
       var res = hxd.Res.load('graphics/mouse64.png').toTile();
       atlas = res.gridFlatten(CURSOR_SIZE);
-//      atlas[0] = atlas[0].sub(0, 0, atlas[0].width, atlas[0]);
       for (i in 1...atlas.length)
         atlas[i] = atlas[i].center();
 

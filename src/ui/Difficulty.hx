@@ -2,71 +2,42 @@
 
 package ui;
 
-/*
-import com.haxepunk.HXP;
-import haxe.ui.components.Label;
-import haxe.ui.components.Button;
-import haxe.ui.core.Component;
-import haxe.ui.core.Screen;
-import haxe.ui.core.MouseEvent;
-import haxe.ui.macros.ComponentMacros;
-*/
+import h2d.Text;
 import game.Game;
 
 class Difficulty extends UIWindow
 {
-/*
-  var title: Label;
-  var text: Label;
-*/
-  var title: h2d.Text;
-  var text: h2d.Text;
+  var title: Text;
+  var text: Text;
   var currentChoice: _Choice;
 
   public function new(g: Game)
     {
-      super(g, 1000, 300);
+      super(g, 700, 200);
       currentChoice = null;
 
       window.x = Std.int((game.scene.win.width - width) / 2);
       window.y = Std.int((game.scene.win.height - height) / 2);
 
-      title = new h2d.Text(game.scene.font, back);
+      var tile = game.scene.atlas.getInterface('button');
+      var texty = Std.int(15 + game.scene.font.lineHeight);
+      text = addText(false, 10, texty, width - 10,
+        Std.int(height - 20 - tile.height - texty));
+      text.textAlign = Center;
+
+      // after text to be on top of background
+      title = new Text(game.scene.font, back);
+      title.y = 10;
       title.textAlign = Center;
       title.maxWidth = width;
 
-      text = new h2d.Text(game.scene.font, back);
-      text.y = text.font.lineHeight + 10;
-      text.textAlign = Center;
-      text.maxWidth = width;
-
-/*
-      window = ComponentMacros.buildComponent("../assets/ui/difficulty.xml");
-      var w = 1000;
-      var h = 300;
-      window.width = w;
-      window.height = h;
-      window.x = Std.int(HXP.halfWidth - w / 2);
-      window.y = Std.int(HXP.halfHeight - h / 2);
-      HXP.stage.addChild(window);
-
-      title = window.findComponent("title", null, true);
-      text = window.findComponent("text", null, true);
-      text.getTextInput().selectable = false;
-      var button: Button = window.findComponent("easy", null, true);
-      button.registerEvent(MouseEvent.MOUSE_OVER, onOver);
-      button.registerEvent(MouseEvent.MOUSE_OUT, onOut);
-      button.registerEvent(MouseEvent.CLICK, onClick);
-      var button: Button = window.findComponent("normal", null, true);
-      button.registerEvent(MouseEvent.MOUSE_OVER, onOver);
-      button.registerEvent(MouseEvent.MOUSE_OUT, onOut);
-      button.registerEvent(MouseEvent.CLICK, onClick);
-      var button: Button = window.findComponent("hard", null, true);
-      button.registerEvent(MouseEvent.MOUSE_OVER, onOver);
-      button.registerEvent(MouseEvent.MOUSE_OUT, onOut);
-      button.registerEvent(MouseEvent.CLICK, onClick);
-      window.hide();
-*/
+      var y = Std.int(height - 10 - tile.height);
+      addButton(Std.int(width / 2 - 3 * tile.width / 2 - 10), y, '1',
+        action.bind(1), onOver.bind(0), onOut);
+      addButton(Std.int(width / 2 - tile.width / 2) + 20, y, '2',
+        action.bind(2), onOver.bind(1), onOut);
+      addButton(Std.int(width / 2 + tile.width + 5), y, '3',
+        action.bind(3), onOver.bind(2), onOut);
     }
 
 
@@ -77,24 +48,6 @@ class Difficulty extends UIWindow
       title.text = 'Difficulty: ' + currentChoice.title;
       text.text = 'Choose difficulty setting.';
     }
-
-
-/*
-// on click
-  function onClick(e: MouseEvent)
-    {
-      var index = -1;
-      if (e.target.id == 'easy')
-        index = 1;
-      else if (e.target.id == 'normal')
-        index = 2;
-      else if (e.target.id == 'hard')
-        index = 3;
-
-      action(index);
-      e.cancel();
-    }
-*/
 
 
 // action
@@ -125,45 +78,49 @@ class Difficulty extends UIWindow
     }
 
 
-/*
 // on mouse over
-  function onOver(e: MouseEvent)
+  function onOver(id: Int)
     {
-      text.text = Reflect.field(currentChoice, e.target.id);
+      text.text = currentChoice.notes[id];
     }
 
 
 // on mouse out
-  function onOut(e: MouseEvent)
+  function onOut()
     {
       text.text = 'Choose difficulty setting.';
     }
-*/
 
 
   static var choices: Map<String, _Choice> = [
     'group' => {
       id: 'group',
       title: 'The Group',
-      easy: 'Shows the exact numerical group priority information and team stats in skills and knowledges window.',
-      normal: 'Shows group and team information described in vague words.',
-      hard: 'No group or team information.',
+      notes: [
+        'Shows the exact numerical group priority information and team stats in skills and knowledges window.',
+        'Shows group and team information described in vague words.',
+        'No group or team information.',
+      ]
     },
 
     'evolution' => {
       id: 'evolution',
       title: 'Evolution',
-      easy: 'Gives 4 generic improvements. No limits for maximum improvement level.',
-      normal: 'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe.',
-      hard: 'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe.',
+      notes: [
+        'Gives 4 generic improvements. No limits for maximum improvement level.',
+        'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe.',
+        'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe.',
+      ]
     },
 
     'timeline' => {
       id: 'timeline',
       title: 'Timeline',
-      easy: '1-3 clues on each learn attempt. Fast computer research.',
-      normal: '1-2 clues on each learn attempt. Normal computer research.',
-      hard: '1 clue on each learn attempt. Normal computer research.',
+      notes: [
+        '1-3 clues on each learn attempt. Fast computer research.',
+        '1-2 clues on each learn attempt. Normal computer research.',
+        '1 clue on each learn attempt. Normal computer research.',
+      ]
     },
     ];
 }
@@ -172,7 +129,5 @@ class Difficulty extends UIWindow
 typedef _Choice = {
   var id: String;
   var title: String;
-  var easy: String;
-  var normal: String;
-  var hard: String;
+  var notes: Array<String>;
 }

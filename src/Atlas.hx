@@ -9,6 +9,7 @@ class Atlas
   var maleAtlas: Array<Array<Tile>>; // male graphics
   var femaleAtlas: Array<Array<Tile>>; // female graphics
   var specialAtlas: Map<String, Array<Tile>>; // specials
+  var interfaceAtlas: Map<String, Tile>; // interface tiles
 
   public function new(s: GameScene)
     {
@@ -51,6 +52,12 @@ class Atlas
             }
           specialAtlas[key] = tmp;
         }
+
+      // interface graphics
+      var tile = hxd.Res.load('graphics/interface.png').toTile();
+      interfaceAtlas = new Map();
+      for (def in interfaceDefs)
+        interfaceAtlas[def.key] = tile.sub(def.x, def.y, def.w, def.h);
     }
 
 
@@ -101,6 +108,13 @@ class Atlas
     }
 
 
+// get interface tile
+  public inline function getInterface(key: String): Tile
+    {
+      return interfaceAtlas[key];
+    }
+
+
   static var specials = [
     'police' => [
       { x: 9, y: 2 },
@@ -119,6 +133,31 @@ class Atlas
     'security' => [
       { x: 1, y: 8 },
     ],
+  ];
+
+  static var interfaceDefs = [
+/* x2
+    { key: 'textUL', x: 51, y: 51, w: 13, h: 14 },
+    { key: 'textDL', x: 51, y: 122, w: 13, h: 14 },
+    { key: 'textU', x: 66, y: 51, w: 10, h: 14 },
+    { key: 'textD', x: 67, y: 122, w: 10, h: 14 },
+    { key: 'textL', x: 51, y: 66, w: 13, h: 10 },
+    { key: 'textR', x: 602, y: 66, w: 14, h: 10 },
+    { key: 'textUR', x: 602, y: 51, w: 14, h: 13 },
+    { key: 'textDR', x: 602, y: 122, w: 14, h: 14 },
+*/
+    { key: 'textUL', x: 25, y: 25, w: 7, h: 7 },
+    { key: 'textDL', x: 25, y: 61, w: 7, h: 7 },
+    { key: 'textU', x: 32, y: 25, w: 5, h: 7 },
+    { key: 'textD', x: 67, y: 61, w: 5, h: 7 },
+    { key: 'textL', x: 25, y: 32, w: 5, h: 7 },
+    { key: 'textR', x: 301, y: 32, w: 7, h: 5 },
+    { key: 'textUR', x: 301, y: 25, w: 7, h: 7 },
+    { key: 'textDR', x: 301, y: 61, w: 7, h: 7 },
+
+    { key: 'button', x: 789, y: 306, w: 97, h: 43 },
+    { key: 'buttonOver', x: 789, y: 358, w: 97, h: 43 },
+    { key: 'buttonPress', x: 789, y: 412, w: 97, h: 43 },
   ];
 }
 

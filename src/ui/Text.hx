@@ -2,76 +2,27 @@
 
 package ui;
 
-/*
-import haxe.ui.components.Label;
-import haxe.ui.components.Button;
-import haxe.ui.core.Component;
-import haxe.ui.core.Screen;
-import haxe.ui.core.MouseEvent;
-import haxe.ui.core.TextInput;
-import haxe.ui.macros.ComponentMacros;
-*/
-
 import h2d.HtmlText;
 import game.Game;
 
 class Text extends UIWindow
 {
-/*
-  var text: Label;
-  var textInput: TextInput;
-*/
   var text: HtmlText;
+  var textHeight: Int;
+  var ymin: Int;
 
   public function new(g: Game, ?w: Int, ?h: Int)
     {
       super(g, w, h);
 
-      text = new HtmlText(game.scene.font, window);
-      text.maxWidth = width;
+      var tile = game.scene.atlas.getInterface('button');
+      text = cast addText(true, 10, 10, width - 20,
+        Std.int(height - 30 - tile.height));
+      ymin = Std.int(text.y);
 
-/*
-      window = ComponentMacros.buildComponent("../assets/ui/document.xml");
-      window.width = HXP.width - 1;
-      window.height = HXP.height - 1;
-      window.x = 0;
-      window.y = 0;
-      HXP.stage.addChild(window);
-
-      text = window.findComponent("text", null, true);
-      text.registerEvent(MouseEvent.MOUSE_WHEEL, onWheel);
-
-      textInput = text.getTextInput();
-      textInput.selectable = false;
-      var font = Assets.getFont(Const.FONT);
-      var textFormat = new TextFormat(font.fontName,
-        game.config.fontSize, 0xFFFFFF);
-      textFormat.align = TextFormatAlign.LEFT;
-      textInput.defaultTextFormat = textFormat;
-
-      var button: Button = window.findComponent("close", null, true);
-      button.registerEvent(MouseEvent.CLICK, onClick);
-
-      window.hide();
-*/
+      textHeight = Std.int(height - 10 - tile.height);
+      addButton(-1, textHeight, 'CLOSE', game.scene.closeWindow);
     }
-
-
-/*
-// on wheel - scroll
-  function onWheel(e: MouseEvent)
-    {
-      scroll(e.delta > 0 ? -1 : 1);
-    }
-
-
-// on click - close
-  function onClick(e: MouseEvent)
-    {
-      game.scene.closeWindow();
-      e.cancel();
-    }
-*/
 
 
 // set parameters
@@ -91,14 +42,13 @@ class Text extends UIWindow
 // scroll window up/down
   public override function scroll(n: Int)
     {
-//      textInput.scrollV += n;
-      if (text.textHeight < height)
+      if (text.textHeight < textHeight)
         return;
       var res = text.y - n * (text.font.lineHeight);
-      if (res > 0)
-        res = 0;
-      if (- res > text.textHeight - game.scene.win.height)
-        res = game.scene.win.height - text.textHeight;
+      if (res > ymin)
+        res = ymin;
+      if (- res > text.textHeight - textHeight)
+        res = textHeight - text.textHeight;
       text.y = res;
     }
 
@@ -106,15 +56,13 @@ class Text extends UIWindow
 // scroll window to beginning
   public override function scrollToBegin()
     {
-//      textInput.scrollV = 0;
-      text.y = 0;
+      text.y = ymin;
     }
 
 
 // scroll window to end
   public override function scrollToEnd()
     {
-//      textInput.scrollV = textInput.maxScrollV;
-      text.y = game.scene.win.height - text.textHeight;
+      text.y = textHeight - text.textHeight;
     }
 }

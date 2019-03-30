@@ -2,16 +2,6 @@
 
 package ui;
 
-/*
-import com.haxepunk.HXP;
-import haxe.ui.components.Label;
-import haxe.ui.components.Button;
-import haxe.ui.core.Component;
-import haxe.ui.core.Screen;
-import haxe.ui.core.MouseEvent;
-import haxe.ui.core.TextInput;
-import haxe.ui.macros.ComponentMacros;
-*/
 import game.Game;
 
 // TODO: legacy? remove? can use Text instead
