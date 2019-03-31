@@ -152,6 +152,7 @@ class UIWindow
       img.pause = true;
       b.x = (x > 0 ? x : Std.int((width - tile1.width) / 2));
       b.y = y;
+      b.cursor = Hide;
       b.onPush = function (e: Event)
         { img.currentFrame = 2; }
       b.onOver = function (e: Event)

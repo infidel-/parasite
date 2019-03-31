@@ -2,13 +2,6 @@
 
 package ui;
 
-/*
-import openfl.Assets;
-import com.haxepunk.HXP;
-import openfl.text.TextFormat;
-import openfl.text.TextFormatAlign;
-*/
-
 import game.Game;
 
 class Finish extends Text
@@ -16,26 +9,10 @@ class Finish extends Text
   public function new(g: Game)
     {
       super(g,
-        Std.int(g.scene.win.width / 2),
-        Std.int(g.scene.win.height / 2));
+        Std.int(g.scene.win.width / 3),
+        Std.int(g.scene.win.height / 3));
+      center();
       text.textAlign = Center;
-      window.x = Std.int((game.scene.win.width - width) / 2);
-      window.y = Std.int((game.scene.win.height - height) / 2);
-
-/*
-      var font = Assets.getFont(Const.FONT);
-      var textFormat = new TextFormat(font.fontName,
-        game.config.fontSizeLarge, 0xFFFFFF);
-      textFormat.align = TextFormatAlign.CENTER;
-      textInput.defaultTextFormat = textFormat;
-
-      var w = Std.int(HXP.width / 2);
-      var h = Std.int(HXP.height / 2);
-      window.width = w;
-      window.height = h;
-      window.x = Std.int(HXP.halfWidth - w / 2);
-      window.y = Std.int(HXP.halfHeight - h / 2);
-*/
     }
 
 

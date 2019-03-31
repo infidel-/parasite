@@ -29,7 +29,11 @@ class Mouse
       oldPos = { x: -1, y: -1 };
       sceneState = game.scene.state;
 
-      hxd.System.setNativeCursor(Hide);
+      hxd.System.setCursor = function(cur)
+        {
+          hxd.System.setNativeCursor(Hide);
+        }
+      hxd.System.setCursor(Hide);
       var res = hxd.Res.load('graphics/mouse64.png').toTile();
       atlas = res.gridFlatten(CURSOR_SIZE);
       for (i in 1...atlas.length)
