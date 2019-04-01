@@ -266,9 +266,6 @@ class Game
   public inline function updateHUD()
     {
       scene.hud.update(); // update hud state
-
-      // force update mouse and path
-      scene.mouse.update(true);
     }
 
 

@@ -45,7 +45,7 @@ class RegionView
       width = game.region.width;
       height = game.region.height;
 
-      trace('update');
+//      trace('update');
 
       // set tiles
       // TODO: redoing all tiles on each turn is probably slow...
@@ -71,7 +71,7 @@ class RegionView
             updateIconsArea(a.x, a.y);
           }
 
-      trace('RegionView.update updateCamera()');
+//      trace('RegionView.update updateCamera()');
       scene.updateCamera(); // center camera on player
     }
 

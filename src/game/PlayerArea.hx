@@ -301,6 +301,9 @@ class PlayerArea
       ap--;
       if (ap > 0)
         {
+          // update AI and cell visibility to player
+          game.area.updateVisibility();
+
           // update HUD info
           game.updateHUD();
 
@@ -310,6 +313,9 @@ class PlayerArea
       // new turn (only if still in area mode)
       if (game.location == LOCATION_AREA)
         game.turn();
+
+      // update AI and cell visibility to player
+      game.area.updateVisibility();
 
       // update HUD info
       game.updateHUD();
@@ -857,9 +863,6 @@ class PlayerArea
 
       if (doPost)
         postAction(); // post-action call
-
-      // update AI and cell visibility to player
-      game.area.updateVisibility();
 
       // describe objects on the ground
       var s = new StringBuf();

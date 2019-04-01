@@ -254,6 +254,7 @@ class Goals
       id: GOAL_USE_COMPUTER,
       name: 'Use a computer',
       note: 'Find a laptop or a smartphone and use it successfully. You can only do that in a habitat.',
+      messageComplete: 'I will learn what happened to me.',
       },
 /*
 

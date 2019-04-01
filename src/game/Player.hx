@@ -53,7 +53,7 @@ class Player
         listenRadius: 10,
         losEnabled: true,
         invisibilityEnabled: false,
-        godmodeEnabled: true,
+        godmodeEnabled: false,
         };
 
       state = PLR_STATE_PARASITE;

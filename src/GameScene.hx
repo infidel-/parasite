@@ -155,7 +155,7 @@ class GameScene extends Scene
 // update camera position
   public function updateCamera()
     {
-      trace('updateCamera');
+//      trace('updateCamera');
       var x = 0.0, y = 0.0, w = 0.0, h = 0.0;
       if (game.location == LOCATION_AREA)
         {
@@ -210,6 +210,9 @@ class GameScene extends Scene
             game.playerRegion.x, game.playerRegion.y);
           region.updateCamera(cameraX, cameraY);
         }
+
+      // force update mouse and path
+      mouse.update(true);
     }
 
 
@@ -602,7 +605,7 @@ class GameScene extends Scene
 
 // update scene
 //  public function update()
-  function onEvent(ev: hxd.Event)
+  public function onEvent(ev: hxd.Event)
     {
       try {
         // only handle keyboard events
@@ -656,7 +659,7 @@ class GameScene extends Scene
         // update camera position
         if (ret)
           {
-            trace('GameScene.onEvent updateCamera()');
+//            trace('GameScene.onEvent updateCamera()');
             updateCamera();
           }
         }

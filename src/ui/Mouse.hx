@@ -158,11 +158,11 @@ class Mouse
 
       // in area
       if (game.location == LOCATION_AREA)
-        updateArea();
+        updateArea(force);
 
       // in region
       else if (game.location == LOCATION_REGION)
-        updateRegion();
+        updateRegion(force);
 
       sceneState = game.scene.state;
     }
@@ -179,13 +179,13 @@ class Mouse
 
 
 // area mode
-  function updateArea()
+  function updateArea(force: Bool)
     {
       var c = CURSOR_BLOCKED;
 
       var pos = getXY();
       var posChanged = false;
-      if (oldPos.x != pos.x || oldPos.y != pos.y)
+      if (oldPos.x != pos.x || oldPos.y != pos.y || force)
         {
           oldPos = pos;
           posChanged = true;
@@ -229,11 +229,11 @@ class Mouse
 
 
 // region mode
-  function updateRegion()
+  function updateRegion(force: Bool)
     {
       // check if tile position changed
       var pos = getXY();
-      if (oldPos.x == pos.x && oldPos.y == pos.y)
+      if (oldPos.x == pos.x && oldPos.y == pos.y && !force)
         return;
 
       var c = CURSOR_BLOCKED;

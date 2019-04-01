@@ -1,8 +1,3 @@
-/*
-import haxe.ui.HaxeUIApp;
-import haxe.ui.Toolkit;
-*/
-
 import game.Game;
 
 class Main extends hxd.App
@@ -58,6 +53,7 @@ class Main extends hxd.App
 
   override function update(dt: Float)
     {
+//      super.update(dt);
       game.scene.mouse.update();
       game.scene.checkPath();
     }
@@ -65,11 +61,6 @@ class Main extends hxd.App
 
   public static function main()
     {
-/*
-      Toolkit.theme = "native";
-      Toolkit.init();
-*/
-
       var m = new Main();
     }
 }
