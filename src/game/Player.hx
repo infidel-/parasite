@@ -2,7 +2,6 @@
 
 package game;
 
-import entities.PlayerEntity;
 import ai.AI;
 
 class Player

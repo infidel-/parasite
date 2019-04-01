@@ -268,6 +268,7 @@ class RegionView
 
 
 // show region view
+// called twice in case player host dies on entering sewers
   public function show()
     {
       // update player image and mask
@@ -282,6 +283,7 @@ class RegionView
           game.playerRegion.entity.tile = 
             game.scene.entityAtlas
               [Const.FRAME_PARASITE][Const.ROW_PARASITE];
+          game.playerRegion.entity.setMask(null);
         }
 
       // make all visible

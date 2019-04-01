@@ -302,7 +302,8 @@ class PlayerArea
       if (ap > 0)
         {
           // update AI and cell visibility to player
-          game.area.updateVisibility();
+          if (game.location == LOCATION_AREA)
+            game.area.updateVisibility();
 
           // update HUD info
           game.updateHUD();
@@ -310,12 +311,14 @@ class PlayerArea
           return;
         }
 
-      // new turn (only if still in area mode)
+      // new turn and update visibility (only if still in area mode)
       if (game.location == LOCATION_AREA)
-        game.turn();
+        {
+          game.turn();
 
-      // update AI and cell visibility to player
-      game.area.updateVisibility();
+          // update AI and cell visibility to player
+          game.area.updateVisibility();
+        }
 
       // update HUD info
       game.updateHUD();
