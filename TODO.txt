@@ -2,13 +2,6 @@
 
 == CURRENT
 
-bug: returning to facility spawns (or shows) sewer hatches on buildings (probably due to persistence)
-  not all object icons clear when re-enter?
-
-working sewer hatch spawned in habitat...
-record letsplay video (maybe a couple) and release!
-
-test gameplay
 new gui (with mouse support for everything)
   tooltips in region mode with area x,y, type, etc
   hud
@@ -250,7 +243,6 @@ when needs item:
 
 == GENERAL IDEAS
 
-? make 32x32/64x64 tiles selectable (if someone wants) - need to tweak AI visiblity/hearing radius for larger tilesets
 scenes
   ? start the game with a scene (teaches about team agents)
 sanity (psyche-based)
@@ -285,7 +277,6 @@ electric discharge improv + battery organ + stun attack
 parasite smell + dogs + reducing smell intensivity imp
 organ damage - organ must heal itself before it becomes active again
 limit region access (until some learning flag triggers, initial progression)
-?? make tilemap screen-sized and repaint with each movement ??
 use debug player stages as basis for a save system (allow saves only on some critical game events)
 move all organ actions into EvolutionConst?
 evolution fluff

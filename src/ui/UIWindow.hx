@@ -61,6 +61,14 @@ class UIWindow
       // text (goes below the borders)
       var text = (isHTML ? new HtmlText(game.scene.font, back) :
         new Text(game.scene.font, back));
+/*
+      if (isHTML)
+        cast(text, HtmlText).loadFont = function (name: String)
+          {
+            trace(name);
+            return null;
+          }
+*/
 
       // back on top of text hiding parts of it
       var back2 = new Graphics(back);

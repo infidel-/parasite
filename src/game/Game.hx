@@ -58,7 +58,7 @@ class Game
       var s = 'Parasite v' + Version.getVersion() +
         ' (build: ' + Version.getBuild() + ')';
       log(s);
-      log('<font size="10">Sinister reflections might shed light on the nature of perception.</font>', COLOR_DEBUG);
+      log('<font face="10">Sinister reflections might shed some light on the nature of perception.</font>', COLOR_DEBUG);
       turns = 0;
       isFinished = false;
       isInited = false;

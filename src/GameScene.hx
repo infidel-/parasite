@@ -24,6 +24,7 @@ class GameScene extends Scene
   public var hud: HUD; // ingame HUD
   public var win: Window;
   public var font: Font;
+//  public var font10: Font;
   var uiQueue: List<_UIEvent>; // gui event queue
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
@@ -96,6 +97,10 @@ class GameScene extends Scene
       var ttf = hxd.Res.font.OrkneyRegular;
 //      font = ttf.build(game.config.fontSize);
       font = ttf.toFont();
+/*
+      ttf = hxd.Res.font.OrkneyRegular10;
+      font10 = ttf.toFont();
+*/
 
       // init GUI
       hud = new HUD(game);
