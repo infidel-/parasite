@@ -5,7 +5,6 @@ import h2d.Scene;
 import h2d.Tile;
 import hxd.Window;
 import hxd.Key;
-//import haxe.ui.core.Component;
 #if js
 import js.Browser;
 #else

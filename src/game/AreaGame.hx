@@ -523,8 +523,8 @@ class AreaGame
       typeID = t;
       info = WorldConst.getAreaInfo(typeID);
 
-      width = info.width - 10 + Std.random(20);
-      height = info.height - 10 + Std.random(20);
+      width = info.width - 10 + 10 * Std.random(2);
+      height = info.height - 10 + 10 * Std.random(2);
 
       if (typeID == AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;

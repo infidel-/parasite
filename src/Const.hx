@@ -116,11 +116,10 @@ class Const
   public static var TILE_FACILITY1 = OFFSET_REGION + 4;
   public static var TILE_MILITARY_BASE1 = OFFSET_REGION + 8;
 
-  public static var TILE_CITY_ROW = 16;
-  public static var TILE_ROAD = TILE_CITY_ROW + 0;
-  public static var TILE_WALKWAY = TILE_CITY_ROW + 1;
-  public static var TILE_CROSSWALKV = TILE_CITY_ROW + 2;
-  public static var TILE_CROSSWALKH = TILE_CITY_ROW + 3;
+  public static var OFFSET_AREA = 32;
+  public static var TILE_ROAD = OFFSET_AREA + 0;
+  public static var TILE_ALLEY = OFFSET_AREA + 1;
+  public static var TILE_WALKWAY = OFFSET_AREA + 2;
 
 
   public static var TILE_CITY_WALKABLE = [ true ];
