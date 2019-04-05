@@ -102,6 +102,7 @@ class GameScene extends Scene
 */
 
       // init GUI
+      mouse = new Mouse(game);
       hud = new HUD(game);
       components = [
         UISTATE_MESSAGE => new Message(game),
@@ -124,7 +125,6 @@ class GameScene extends Scene
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
-      mouse = new Mouse(game);
       area = new AreaView(this);
       region = new RegionView(this);
 

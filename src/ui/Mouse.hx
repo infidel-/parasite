@@ -6,6 +6,7 @@ import h2d.Anim;
 import h2d.Bitmap;
 import h2d.Tile;
 import hxd.Key;
+import hxd.Cursor;
 import game.Game;
 import ai.AI;
 
@@ -16,8 +17,8 @@ class Mouse
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
-  var atlas: Array<Tile>;
-  var _body: Anim;
+  public var atlas: Array<Cursor>;
+  public var forceNextUpdate: Int; // kludge for update
   var oldPos: { x: Int, y: Int };
 
   public function new(g: Game)
@@ -28,21 +29,24 @@ class Mouse
       oldy = 0;
       oldPos = { x: -1, y: -1 };
       sceneState = game.scene.state;
+      forceNextUpdate = 0;
 
+      var res = hxd.Res.load('graphics/mouse64.png').toImage();
+      var bmp = res.toBitmap();
+      atlas = [];
+      for (i in 0...CURSOR_ATTACK_RANGED + 1)
+        {
+          var tmp = bmp.sub(i * CURSOR_SIZE, 0, CURSOR_SIZE, CURSOR_SIZE);
+          var cursor = Custom(new CustomCursor([ tmp ], 1,
+            i == 0 ? 0 : 16,
+            i == 0 ? 0 : 16));
+          atlas.push(cursor);
+        }
       hxd.System.setCursor = function(cur)
         {
-          hxd.System.setNativeCursor(Hide);
+          hxd.System.setNativeCursor(cur);
         }
-      hxd.System.setCursor(Hide);
-      var res = hxd.Res.load('graphics/mouse64.png').toTile();
-      atlas = res.gridFlatten(CURSOR_SIZE);
-      for (i in 1...atlas.length)
-        atlas[i] = atlas[i].center();
-
-      _body = new Anim(atlas, 15);
-      _body.pause = true;
-      _body.visible = true;
-      game.scene.add(_body, Const.LAYER_MOUSE);
+      setCursor(0);
     }
 
 
@@ -133,6 +137,9 @@ class Mouse
 // update mouse cursor
   public function update(?force = false)
     {
+      if (forceNextUpdate > 0)
+        force = true;
+
       // position and state unchanged, return
       if (!force)
         {
@@ -141,9 +148,9 @@ class Mouse
               sceneState == game.scene.state)
             return;
         }
+      if (force)
+        cursor = - 1;
 
-      _body.x = game.scene.mouseX;
-      _body.y = game.scene.mouseY;
       oldx = game.scene.mouseX;
       oldy = game.scene.mouseY;
 
@@ -152,6 +159,8 @@ class Mouse
         {
           setCursor(CURSOR_ARROW);
           sceneState = game.scene.state;
+          if (forceNextUpdate > 0)
+            forceNextUpdate--;
 
           return;
         }
@@ -165,6 +174,8 @@ class Mouse
         updateRegion(force);
 
       sceneState = game.scene.state;
+      if (forceNextUpdate > 0)
+        forceNextUpdate--;
     }
 
 
@@ -266,13 +277,14 @@ class Mouse
 
 
 // set new cursor image
-  function setCursor(c: Int)
+  public function setCursor(c: Int)
     {
       if (cursor == c)
         return;
 
+//      trace('setCursor ' + c);
       cursor = c;
-      _body.currentFrame = cursor;
+      hxd.System.setCursor(atlas[cursor]);
     }
 
 

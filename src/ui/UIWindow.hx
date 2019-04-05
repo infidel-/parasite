@@ -160,7 +160,7 @@ class UIWindow
       img.pause = true;
       b.x = (x > 0 ? x : Std.int((width - tile1.width) / 2));
       b.y = y;
-      b.cursor = Hide;
+      b.cursor = game.scene.mouse.atlas[Mouse.CURSOR_ARROW];
       b.onPush = function (e: Event)
         { img.currentFrame = 2; }
       b.onOver = function (e: Event)
@@ -172,6 +172,9 @@ class UIWindow
       b.onOut = function (e: Event)
         {
           img.currentFrame = 0;
+
+          // KLUDGE: fix cursor on leaving button
+          game.scene.mouse.forceNextUpdate = 5;
           if (onOut != null)
             onOut();
         }
