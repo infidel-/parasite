@@ -607,12 +607,10 @@ class GameScene extends Scene
     }
 
 
-// update scene
-//  public function update()
+// event handling
   public function onEvent(ev: hxd.Event)
     {
       try {
-        // only handle keyboard events
         var key = 0;
         var keyUp = 0;
         switch (ev.kind)

@@ -17,7 +17,6 @@ class WorldConst
         isInhabited: false,
         commonAI: 0,
         uncommonAI: 0,
-        buildingChance: 0.0,
         lawResponceTime: 0,
         lawResponceAmount: 0,
         lawResponceEnabled: false,
@@ -40,7 +39,7 @@ class WorldConst
         isInhabited: true,
         commonAI: 8,
         uncommonAI: 5,
-        buildingChance: 0.05,
+        buildingSize: 1,
         lawResponceTime: 10,
         lawResponceAmount: 2,
         lawResponceEnabled: true,
@@ -66,7 +65,7 @@ class WorldConst
         isInhabited: true,
         commonAI: 12,
         uncommonAI: 8,
-        buildingChance: 0.15,
+        buildingSize: 5,
         lawResponceTime: 5,
         lawResponceAmount: 2,
         lawResponceEnabled: true,
@@ -92,7 +91,7 @@ class WorldConst
         isInhabited: true,
         commonAI: 28,
         uncommonAI: 12,
-        buildingChance: 0.30,
+        buildingSize: 10,
         lawResponceTime: 5,
         lawResponceAmount: 3,
         lawResponceEnabled: true,
@@ -224,7 +223,8 @@ typedef AreaInfo = {
   var isInhabited: Bool; // is this area inhabited?
   var commonAI: Int; // common ai amount spawned at any time
   var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
-  var buildingChance: Float; // chance to spawn building
+  @:optional var buildingChance: Float; // chance to spawn building (building gen)
+  @:optional var buildingSize: Int; // building size x2 (city gen)
   var lawResponceTime: Int; // number of turns until backup shows up
   var lawResponceAmount: Int; // amount of backup ai that shows up
   var lawResponceEnabled: Bool; // law responce enabled?

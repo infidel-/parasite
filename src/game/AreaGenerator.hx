@@ -24,7 +24,6 @@ class AreaGenerator
 
       generateObjects(game, area, info);
 
-/*
       // draw map
       var map = new h2d.Graphics();
       var scale = 4;
@@ -65,7 +64,6 @@ class AreaGenerator
         }
       map.endFill();
       game.scene.add(map, 100);
-*/
     }
 
 
@@ -134,7 +132,7 @@ class AreaGenerator
 
       // fill blocks with content
       for (b in blocks)
-        generateBlock(area, b);
+        generateBlock(area, info, b);
 
       // convert temp tiles to correct
       var conv = [
@@ -261,7 +259,7 @@ class AreaGenerator
 
 
 // fill block with buildings
-  static function generateBlock(area: AreaGame, block: _Block)
+  static function generateBlock(area: AreaGame, info: AreaInfo, block: _Block)
     {
 //      trace('block: ' + block);
 
@@ -273,8 +271,8 @@ class AreaGenerator
               continue;
 
             // size
-            var sx = 6 + 2 * Std.random(5);
-            var sy = 6 + 2 * Std.random(5);
+            var sx = 6 + 2 * Std.random(info.buildingSize);
+            var sy = 6 + 2 * Std.random(info.buildingSize);
 
             if (x + sx > block.x2 - 1)
               sx = block.x2 - 1 - x;

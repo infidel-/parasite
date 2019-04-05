@@ -64,7 +64,7 @@ class Mouse
         }
 #end
       // some window open
-      if (game.scene.state != UISTATE_DEFAULT)
+      if (game.isFinished || game.scene.state != UISTATE_DEFAULT)
         return;
 
       // area mode - click moves or attacks
@@ -155,7 +155,7 @@ class Mouse
       oldy = game.scene.mouseY;
 
       // window open, reset state
-      if (game.scene.state != UISTATE_DEFAULT)
+      if (game.isFinished || game.scene.state != UISTATE_DEFAULT)
         {
           setCursor(CURSOR_ARROW);
           sceneState = game.scene.state;
