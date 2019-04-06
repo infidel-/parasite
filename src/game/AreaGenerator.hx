@@ -10,8 +10,14 @@ class AreaGenerator
 {
   public static function generate(game: Game, area: AreaGame, info: AreaInfo)
     {
+      var state: _GeneratorState = {
+        alleys: new List(),
+        sewers: new List(),
+        blockSize: 20,
+      };
+
       if (info.type == 'city')
-        generateCity(game, area, info);
+        generateCity(state, game, area, info);
       else if (info.type == 'militaryBase')
         generateBuildings(game, area, info);
       else if (info.type == 'facility')
@@ -22,8 +28,9 @@ class AreaGenerator
         generateHabitat(game, area, info);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
 
-      generateObjects(game, area, info);
+      generateObjects(state, game, area, info);
 
+/*
       // draw map
       var map = new h2d.Graphics();
       var scale = 4;
@@ -43,6 +50,7 @@ class AreaGenerator
         TEMP_ALLEY_BT => 0x44ffff,
         TEMP_ALLEY_LR => 0xff44ff,
         TEMP_ALLEY_RL => 0x4444ff,
+        TEMP_MARKER => 0xffffff,
         TEMP_ACTUAL_BUILDING => 0xff6666, // pink
         TEMP_WALKWAY => 0x6666ff,
         TEMP_BLOCK => 0x00ffff,
@@ -58,17 +66,18 @@ class AreaGenerator
         {
           for (x in 0...area.width)
             {
-              map.beginFill(cols[cells[x][y]], 1);
+              map.beginFill(cols1[cells[x][y]], 1);
               map.drawRect(x * (scale + 1), y * (scale + 1), scale, scale);
             }
         }
       map.endFill();
       game.scene.add(map, 100);
+*/
     }
 
 
 // generate a city block
-  static function generateCity(game: Game, area: AreaGame, info: AreaInfo)
+  static function generateCity(state: _GeneratorState, game: Game, area: AreaGame, info: AreaInfo)
     {
       var cells = area.getCells();
       // fill with proto-buildings
@@ -76,28 +85,26 @@ class AreaGenerator
         for (x in 0...area.width)
           cells[x][y] = TEMP_BUILDING;
 
-      var blockSize = 20;
-      var blockW = Std.int(area.width / blockSize);
-      var blockH = Std.int(area.height / blockSize);
-      var blockW4 = Std.int(area.width / blockSize / 4);
-      var blockH4 = Std.int(area.height / blockSize / 4);
+      var blockW = Std.int(area.width / state.blockSize);
+      var blockH = Std.int(area.height / state.blockSize);
+      var blockW4 = Std.int(area.width / state.blockSize / 4);
+      var blockH4 = Std.int(area.height / state.blockSize / 4);
       var bx = blockW4 + Std.random(blockW - 1 - blockW4);
       var by = blockH4 + Std.random(blockH - 1 - blockH4);
 
       // add all streets with spawn points for alleys
-      var state: _GeneratorState = {
-        alleys: new List(),
-        blockSize: blockSize,
-      };
       // horizontal roads
       var noMainRoad = true;
+      if (info.hasMainRoad == null || info.hasMainRoad == false)
+        noMainRoad = false;
       var mainRoadChance = 20;
       for (i in 0...4)
         {
           var level = (noMainRoad &&
-             Std.random(100) < mainRoadChance &&
-             i > 0 && i < 3 ? 0 : 1);
-          addStreet(state, area, cells, LR, 0, blockSize * (i + 1), level);
+            Std.random(100) < mainRoadChance &&
+            i > 0 && i < 3 ? 0 : 1);
+          addStreet(state, area, cells, LR, 0,
+            state.blockSize * (i + 1), level);
           if (level == 0)
             noMainRoad = false;
           else mainRoadChance += 20;
@@ -108,7 +115,8 @@ class AreaGenerator
           var level = (noMainRoad &&
             Std.random(100) < mainRoadChance &&
             i > 0 && i < 3 ? 0 : 1);
-          addStreet(state, area, cells, TB, blockSize * (i + 1), 0, level);
+          addStreet(state, area, cells, TB,
+            state.blockSize * (i + 1), 0, level);
           if (level == 0)
             noMainRoad = false;
           else mainRoadChance += 20;
@@ -417,8 +425,8 @@ class AreaGenerator
 
 // add main street with branches (recursive)
   static var streetLevels = [
-    { w: 8, blockSize: 20 },
-    { w: 4, blockSize: 16 },
+    { w: 8, blockSize: 20, half: 4 },
+    { w: 4, blockSize: 16, half: 2 },
   ];
   static function addStreet(state: _GeneratorState, area: AreaGame, cells: Array<Array<Int>>,
       dir: _LineDir, sx: Int, sy: Int,
@@ -427,10 +435,8 @@ class AreaGenerator
       var i = 0;
       var xx = sx;
       var yy = sy;
-
-      var prevRoad = ((dir == TB || dir == BT) ? sy : sx);
-      var prevRoadDir = TB;
       var w = 0;
+      var toggle = false;
       var streetLevel = streetLevels[level];
       w = streetLevel.w;
 //      trace(level + ': addStreet ' + dir + ', start:' + sx + ',' + sy +
@@ -488,12 +494,10 @@ class AreaGenerator
               break;
             }
 
-          var newRoad = (dx != 0 ? xx : yy);
+          // alley spawn points
           var bs = 8;
-
           if (dir == TB &&
               ((yy - sy - w) % bs == 0) &&
-              yy - prevRoad > bs &&
               yy != sy)
             {
 //              fillBlock(area, cells, xx - 2, yy, TEMP_ALLEY_RL, 1);
@@ -511,7 +515,6 @@ class AreaGenerator
             }
           else if (dir == LR &&
               ((xx - sx - w) % bs == 0) &&
-              xx - prevRoad > bs &&
               xx != sx)
             {
 //              fillBlock(area, cells, xx, yy - 2, TEMP_ALLEY_BT, 1);
@@ -528,8 +531,66 @@ class AreaGenerator
               });
             }
 
+          // sewer spawn points
+          var bs = 4;
+          if (dir == TB &&
+              ((yy - sy - w) % bs == 0) &&
+              yy != sy)
+            {
+              if (area.getCellType(xx - 1, yy) != TEMP_ROAD)
+//                fillBlock(area, cells, xx - 1, yy, TEMP_MARKER, 1);
+                state.sewers.add({ x: xx - 1, y: yy });
+              if (area.getCellType(xx + w, yy) != TEMP_ROAD)
+//                fillBlock(area, cells, xx + w, yy, TEMP_MARKER, 1);
+                state.sewers.add({ x: xx + w, y: yy });
+//              fillBlock(area, cells,
+//                xx + streetLevel.half + (toggle ? -1 : 0), yy, TEMP_MARKER, 1);
+              state.sewers.add({
+                x: xx + streetLevel.half + (toggle ? -1 : 0), y: yy });
+/*
+              state.alleys.add({
+                x: xx - 1,
+                y: yy,
+                t: RL
+              });
+              state.alleys.add({
+                x: xx + w,
+                y: yy,
+                t: LR
+              });
+*/
+            }
+          else if (dir == LR &&
+              ((xx - sx - w) % bs == 0) &&
+              xx != sx)
+            {
+              if (area.getCellType(xx, yy - 1) != TEMP_ROAD)
+//                fillBlock(area, cells, xx, yy - 1, TEMP_MARKER, 1);
+                state.sewers.add({ x: xx, y: yy - 1 });
+              if (area.getCellType(xx, yy + w) != TEMP_ROAD)
+//                fillBlock(area, cells, xx, yy + w, TEMP_MARKER, 1);
+                state.sewers.add({ x: xx, y: yy + w });
+//              fillBlock(area, cells,
+//                xx, yy + streetLevel.half + (toggle ? -1 : 0), TEMP_MARKER, 1);
+              state.sewers.add({
+                x: xx, y: yy + streetLevel.half + (toggle ? -1 : 0) });
+/*
+              state.alleys.add({
+                x: xx,
+                y: yy - 1,
+                t: BT
+              });
+              state.alleys.add({
+                x: xx,
+                y: yy + w,
+                t: TB
+              });
+*/
+            }
+
           xx += dx;
           yy += dy;
+          toggle = !toggle;
 
           i++;
         }
@@ -711,8 +772,9 @@ class AreaGenerator
 
 
 // generate objects
-  static function generateObjects(game: Game, area: AreaGame, info: AreaInfo)
+  static function generateObjects(state: _GeneratorState, game: Game, area: AreaGame, info: AreaInfo)
     {
+/*
       // spawn all objects
       for (objInfo in info.objects)
         for (i in 0...objInfo.amount)
@@ -760,6 +822,32 @@ class AreaGenerator
 
             area.addObject(o);
           }
+*/
+      // spawn sewers
+      var spawned = new List();
+      for (pt in state.sewers)
+        if (Std.random(100) < 20)
+          {
+            // check if road or walkway
+            var c = area.getCellType(pt.x, pt.y);
+            if (c != Const.TILE_ROAD && c != Const.TILE_WALKWAY)
+              continue;
+
+            // check for close objects
+            var ok = true;
+            for (old in spawned)
+              if (Const.getDistSquared(pt.x, pt.y, old.x, old.y) < 8 * 8)
+                {
+                  ok = false;
+                  break;
+                }
+            if (!ok)
+              continue;
+
+            var o = new SewerHatch(game, pt.x, pt.y);
+            spawned.add(pt);
+            area.addObject(o);
+          }
     }
 
   static var TEMP_BUILDING = 0;
@@ -772,6 +860,7 @@ class AreaGenerator
   static var TEMP_ACTUAL_BUILDING = 7;
   static var TEMP_WALKWAY = 8;
   static var TEMP_BLOCK = 9;
+  static var TEMP_MARKER = 10;
 }
 
 
@@ -789,6 +878,10 @@ typedef _GeneratorState = {
     x: Int,
     y: Int,
     t: _LineDir
+  }>,
+  sewers: List<{
+    x: Int,
+    y: Int,
   }>,
   blockSize: Int,
 }

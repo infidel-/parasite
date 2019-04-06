@@ -206,7 +206,7 @@ class AreaGame
       if (game.player.state == PLR_STATE_PARASITE && !isHabitat)
         {
           var spot = findEmptyLocationNear(game.playerArea.x,
-            game.playerArea.y);
+            game.playerArea.y, 3);
           var ai = new ai.DogAI(game, spot.x, spot.y);
           ai.isCommon = true;
           addAI(ai);
@@ -454,7 +454,8 @@ class AreaGame
       near: { x: Int, y: Int }, // near this x, y
       ?radius: Int, // radius to find in (for near)
       ?isUnseen: Bool, // location should be unseen by player
-    }): { x: Int, y: Int }
+      ?canIncrease: Bool, // can increase radius in case of fail
+    }, ?level: Int = 0): { x: Int, y: Int }
     {
       // all map
       if (params.near == null)
@@ -465,6 +466,8 @@ class AreaGame
 
       if (params.radius == null)
         params.radius = 3;
+      if (params.canIncrease == null)
+        params.canIncrease = true;
 
       var xo = params.near.x;
       var yo = params.near.y;
@@ -491,19 +494,26 @@ class AreaGame
 
       // no empty cells found
       if (tmp.length == 0)
-        return null;
+        {
+          // can increase radius once
+          if (level == 0 && params.canIncrease)
+            {
+              params.radius *= 2;
+              return findLocation(params, 1);
+            }
+        }
 
       return tmp[Std.random(tmp.length)];
     }
 
 
 // find empty location on map near xo,yo (to spawn stuff)
-  public function findEmptyLocationNear(xo: Int, yo: Int): { x: Int, y: Int }
+  public function findEmptyLocationNear(xo: Int, yo: Int, radius: Int, ?level: Int = 0): { x: Int, y: Int }
     {
       // make a temp list of empty spots in square radius 3
       var tmp = [];
-      for (dy in -3...3)
-        for (dx in -3...3)
+      for (dy in -radius...radius)
+        for (dx in -radius...radius)
           if (isWalkable(xo + dx, yo + dy) &&
               getAI(xo + dx, yo + dy) == null &&
               !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
@@ -511,7 +521,11 @@ class AreaGame
 
       // no empty cells found
       if (tmp.length == 0)
-        return null;
+        {
+          // can increase radius once
+          if (level == 0)
+            return findEmptyLocationNear(xo, yo, radius * 2, 1);
+        }
 
       return tmp[Std.random(tmp.length)];
     }

@@ -70,6 +70,7 @@ class WorldConst
         lawResponceAmount: 2,
         lawResponceEnabled: true,
         isHighRisk: false,
+        hasMainRoad: true,
         ai: [
           'dog' => 15,
           'civilian' => 75,
@@ -96,6 +97,7 @@ class WorldConst
         lawResponceAmount: 3,
         lawResponceEnabled: true,
         isHighRisk: true,
+        hasMainRoad: true,
         ai: [
           'dog' => 5,
           'civilian' => 70,
@@ -225,6 +227,7 @@ typedef AreaInfo = {
   var uncommonAI: Int; // uncommon ai amount spawned at any time (by area alertness)
   @:optional var buildingChance: Float; // chance to spawn building (building gen)
   @:optional var buildingSize: Int; // building size x2 (city gen)
+  @:optional var hasMainRoad: Bool; // has main road (city gen)
   var lawResponceTime: Int; // number of turns until backup shows up
   var lawResponceAmount: Int; // amount of backup ai that shows up
   var lawResponceEnabled: Bool; // law responce enabled?

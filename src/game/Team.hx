@@ -120,7 +120,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
                 });
               if (loc == null)
                 {
-                  loc = game.area.findEmptyLocationNear(x, y);
+                  loc = game.area.findEmptyLocationNear(x, y, 5);
                   if (loc == null)
                     {
                       Const.todo('Could not find free spot for spawn x2!');

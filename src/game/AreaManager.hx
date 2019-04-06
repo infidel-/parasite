@@ -258,7 +258,7 @@ class AreaManager
             });
           if (loc == null)
             {
-              Const.todo('Could not find free spot for spawn!');
+              Const.todo('Could not find free spot for spawn (law)!');
               return;
             }
 
@@ -314,10 +314,10 @@ class AreaManager
 
       for (i in 0...2)
         {
-          var loc = area.findEmptyLocationNear(e.x, e.y);
+          var loc = area.findEmptyLocationNear(e.x, e.y, 5);
           if (loc == null)
             {
-              Const.todo('Could not find free spot for spawn!');
+              Const.todo('Could not find free spot for spawn (area)!');
               return;
             }
 
@@ -393,10 +393,10 @@ class AreaManager
             });
           if (loc == null)
             {
-              loc = area.findEmptyLocationNear(e.x, e.y);
+              loc = area.findEmptyLocationNear(e.x, e.y, 5);
               if (loc == null)
                 {
-                  Const.todo('Could not find free spot for spawn x2!');
+                  Const.todo('Could not find free spot for spawn (team backup)!');
                   return;
                 }
             }
