@@ -43,6 +43,10 @@ class ConsoleGame
             configOptionCommand(arr);
         }
 
+      // XXX debug commands
+      else if (char0 == 'd')
+        debugCommand(cmd);
+
 #if mydebug
       // XXX go commands
       else if (char0 == 'g')
@@ -54,19 +58,22 @@ class ConsoleGame
         {
 #if mydebug
           log('Available commands: ai - add item, ao - add organ, ' +
-            'as - add skill, cfg|config,\n' +
+            'as - add skill, cfg|config,<br/>' +
+            'dg - debug: graphics info, ' +
             'ga - go and enter area, ' +
             'ge - go event location, ' +
-            'gg - go x,y (region or area mode),\n' +
+            'gg - go x,y (region or area mode),<br/>' +
             'ie - timeline info (trace), ' +
-            'ii - improvements info (trace),\n' +
+            'ii - improvements info (trace),<br/>' +
             'le - learn about event, ' +
             'lia - learn all improvements, ' +
             'li - learn improvement, ' +
-            'lt - learn all timeline,\n' +
+            'lt - learn all timeline,<br/>' +
             'restart, s - set player stage, quit.');
 #else
-          log('Available commands: cfg, config, restart, quit.');
+          log('Available commands: cfg, config, ' +
+            'dg - debug: graphics info, ' +
+            'restart, quit.');
 #end
         }
 
@@ -236,7 +243,7 @@ class ConsoleGame
           if (arr.length < 2)
             {
               var buf = new StringBuf();
-              buf.add('Usage: ai [item]\n');
+              buf.add('Usage: ai [item]<br/>');
               buf.add('Items: ');
               for (info in ItemsConst.items)
                 buf.add(info.id + ', ');
@@ -267,7 +274,7 @@ class ConsoleGame
                   if (imp.organ == null)
                     continue;
 
-                  s.add(i + ': ' + imp.organ.name + ', ' + imp.id + '\n');
+                  s.add(i + ': ' + imp.organ.name + ', ' + imp.id + '<br/>');
                 }
               log(s.toString());
               return;
@@ -340,6 +347,18 @@ class ConsoleGame
 
           game.player.skills.addID(skill, amount);
           game.log('Skill/knowledge added.');
+        }
+    }
+
+
+// debug commands
+  function debugCommand(cmd: String)
+    {
+      // XXX dg - show graphics objects info
+      if (cmd.charAt(1) == 'g')
+        {
+          log('Scene children objects: ' + game.scene.numChildren +
+            '<br/>Scene total objects: ' + game.scene.getObjectsCount());
         }
     }
 
@@ -563,13 +582,13 @@ class ConsoleGame
       if (cmd == 's')
         {
           log(
-            ';s1 - set player stage 1 (human civilian host, tutorial done)\n' +
-            ';s11 - set player stage 1.1 (stage 1 + group knowledge)\n' +
-            ';s12 - set player stage 1.2 (stage 1.1 + ambush)\n' +
-            ';s2 - set player stage 2 (stage 1 + microhabitat)\n' +
-            ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)\n' +
-            ';s22 - set player stage 2.2 (stage 2.1 + biomineral)\n' +
-            ';s23 - set player stage 2.3 (stage 2.2 + assimilation)\n' +
+            ';s1 - set player stage 1 (human civilian host, tutorial done)<br/>' +
+            ';s11 - set player stage 1.1 (stage 1 + group knowledge)<br/>' +
+            ';s12 - set player stage 1.2 (stage 1.1 + ambush)<br/>' +
+            ';s2 - set player stage 2 (stage 1 + microhabitat)<br/>' +
+            ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)<br/>' +
+            ';s22 - set player stage 2.2 (stage 2.1 + biomineral)<br/>' +
+            ';s23 - set player stage 2.3 (stage 2.2 + assimilation)<br/>' +
             ';s3 - set player stage 3 (stage 2.3 + timeline open until scenario goals)'
             );
           return;
