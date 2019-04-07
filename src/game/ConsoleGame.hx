@@ -120,7 +120,7 @@ class ConsoleGame
     {
       if (arr.length == 1)
         {
-          game.config.dump();
+          game.config.dump(true);
           return;
         }
 

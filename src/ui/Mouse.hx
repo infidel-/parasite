@@ -30,6 +30,11 @@ class Mouse
       oldPos = { x: -1, y: -1 };
       sceneState = game.scene.state;
       forceNextUpdate = 0;
+      atlas = null;
+
+      // config - mouse disabled
+      if (!game.config.mouseEnabled)
+        return;
 
       var res = hxd.Res.load('graphics/mouse64.png').toImage();
       var bmp = res.toBitmap();
@@ -53,6 +58,10 @@ class Mouse
 // mouse click
   public function onClick(button: Int)
     {
+      // config - mouse disabled
+      if (!game.config.mouseEnabled)
+        return;
+
       var pos = getXY();
 #if mydebug
       // debug mode
@@ -137,6 +146,10 @@ class Mouse
 // update mouse cursor
   public function update(?force = false)
     {
+      // config - mouse disabled
+      if (!game.config.mouseEnabled)
+        return;
+
       if (forceNextUpdate > 0)
         force = true;
 
@@ -279,6 +292,10 @@ class Mouse
 // set new cursor image
   public function setCursor(c: Int)
     {
+      // config - mouse disabled
+      if (!game.config.mouseEnabled)
+        return;
+
       if (cursor == c)
         return;
 

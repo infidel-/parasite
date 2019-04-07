@@ -241,7 +241,7 @@ class Game
           if (condition == 'noHost')
             finishText = 'You cannot survive without a host for long.';
           else if (condition == 'noHealth')
-            finishText = 'You have succumbed to injuries.';
+            finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
 
           log(finishText);
         }
@@ -327,6 +327,9 @@ class Game
 // add entry to game log
   public function log(s: String, ?col: _TextColor)
     {
+      // called before init from config
+      if (messageList == null)
+        return;
       if (col == null)
         col = COLOR_DEFAULT;
       Const.p(s);

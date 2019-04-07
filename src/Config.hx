@@ -11,15 +11,16 @@ class Config
   var game: Game;
 
   // cached values
+  public var mouseEnabled: Bool;
   public var extendedInfo: Bool;
   public var sendExceptions: Bool;
 
-  public var hudLogLines: Int;
   public var fontSize: Int;
   public var fontSizeLarge: Int;
-  public var windowWidth: Int;
-  public var windowHeight: Int;
+  public var hudLogLines: Int;
   public var pathDelay: Int;
+  public var windowHeight: Int;
+  public var windowWidth: Int;
 
   var map: Map<String, String>;
 
@@ -28,26 +29,30 @@ class Config
       game = g;
 
       // default values
+      mouseEnabled = true;
       extendedInfo = false;
 #if mydebug
       extendedInfo = true;
 #end
-      hudLogLines = 4;
       sendExceptions = false;
+
       fontSize = 16;
       fontSizeLarge = 24;
-      windowWidth = 1024;
+      hudLogLines = 4;
+      pathDelay = 100;
       windowHeight = 768;
-      pathDelay = 50;
+      windowWidth = 1024;
 
       map = new Map();
+      map['mouseEnabled'] = '1';
       map['extendedInfo'] = '0';
-      map['hudLogLines'] = '4';
       map['sendExceptions'] = '0';
+
       map['fontSize'] = '' + fontSize;
-      map['windowWidth'] = '' + windowWidth;
-      map['windowHeight'] = '' + windowHeight;
+      map['hudLogLines'] = '4';
       map['pathDelay'] = '' + pathDelay;
+      map['windowHeight'] = '' + windowHeight;
+      map['windowWidth'] = '' + windowWidth;
 
 #if js
       var str = js.Browser.window.localStorage.getItem('config');
@@ -92,12 +97,13 @@ class Config
       var key = StringTools.trim(key);
       var val = StringTools.trim(val);
 
-      if (key == 'extendedInfo')
+      if (key == 'mouseEnabled')
+        mouseEnabled = (val == '1');
+      else if (key == 'extendedInfo')
         extendedInfo = (val == '1');
-      else if (key == 'hudLogLines')
-        hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
       else if (key == 'sendExceptions')
         sendExceptions = (val == '1');
+
       else if (key == 'fontSize')
         {
           fontSize = Std.parseInt(val);
@@ -105,12 +111,14 @@ class Config
             fontSize = 8;
           fontSizeLarge = Std.int(fontSize * 1.5);
         }
-      else if (key == 'windowWidth')
-        windowWidth = Std.parseInt(val);
-      else if (key == 'windowHeight')
-        windowHeight = Std.parseInt(val);
+      else if (key == 'hudLogLines')
+        hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
       else if (key == 'pathDelay')
         pathDelay = Std.parseInt(val);
+      else if (key == 'windowHeight')
+        windowHeight = Std.parseInt(val);
+      else if (key == 'windowWidth')
+        windowWidth = Std.parseInt(val);
 
       else
         {
@@ -127,11 +135,11 @@ class Config
 
 
 // dump current config
-  public function dump()
+  public function dump(isHTML: Bool)
     {
       var s = new StringBuf();
       for (key in map.keys())
-        s.add(key + ' = ' + map[key] + '\n');
+        s.add(key + ' = ' + map[key] + (isHTML ? '<br/>' : '\n'));
       game.log(s.toString(), COLOR_DEBUG);
     }
 
