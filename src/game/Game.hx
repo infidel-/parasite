@@ -82,9 +82,11 @@ class Game
       goals = new Goals(this);
       timeline.init();
 
-      // initial goal
+      // initial goals
       message('You are alone. You are scared. You need to find a host or you will die soon.');
-      goals.receive(GOAL_INVADE_HOST);
+      for (goal in const.Goals.map.keys())
+        if (const.Goals.map[goal].isStarting)
+          goals.receive(goal);
 
       // set random region (currently only 1 at all)
       region = world.get(0);

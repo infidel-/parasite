@@ -9,10 +9,22 @@ class Goals
 {
   public static var map: Map<_Goal, GoalInfo> = [
 
+    // ========================= misc goals (tutorials)
+
+    GOAL_TUTORIAL_ALERT => {
+      id: GOAL_TUTORIAL_ALERT,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "That host is agitated, I need to flee to avoid trouble.",
+    },
+
     // ========================= main branch
 
     GOAL_INVADE_HOST => {
       id: GOAL_INVADE_HOST,
+      isStarting: true,
       name: 'Find and invade a host',
       note: 'You need to find and invade a host or you will die from the lack of energy.',
       messageComplete: 'The bipedal hosts look like a dominant life form. They may be more useful.',
@@ -276,6 +288,7 @@ class Goals
 typedef GoalInfo = {
   id: _Goal, // goal id
   ?isHidden: Bool, // is this goal hidden?
+  ?isStarting: Bool, // goal received on game start?
   name: String, // goal name
   note: String, // goal note (static part)
   ?note2: String, // additional goal note (dynamic part, changed ingame)

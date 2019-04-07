@@ -286,14 +286,25 @@ class GameScene extends Scene
             components[_state].show();
 
           // clear old path on opening message window
-          if (game.location == LOCATION_AREA && _state == UISTATE_MESSAGE)
-            area.clearPath();
+          if (_state == UISTATE_MESSAGE)
+            clearPath();
 
           if (_state != UISTATE_LOG)
             components[_state].scrollToBegin();
         }
 
       return _state;
+    }
+
+
+// common clear path (both images and list)
+  public inline function clearPath()
+    {
+      if (game.location == LOCATION_AREA)
+        game.scene.area.clearPath(true);
+
+      else if (game.location == LOCATION_REGION)
+        game.scene.region.clearPath();
     }
 
 

@@ -8,9 +8,13 @@ class Finish extends Text
 {
   public function new(g: Game)
     {
-      super(g,
-        Std.int(g.scene.win.width / 3),
-        Std.int(g.scene.win.height / 3));
+      var w = Std.int(g.scene.win.width / 3);
+      var h = Std.int(g.scene.win.height / 3);
+      if (w < 600)
+        w = 600;
+      if (h < 400)
+        h = 400;
+      super(g, w, h);
       center();
       text.textAlign = Center;
     }

@@ -71,13 +71,15 @@ class AreaView
 
 
 // clears visible path
-  public function clearPath()
+  public function clearPath(?clearAll: Bool = false)
     {
       if (_path == null)
         return;
       for (dot in _path)
         dot.remove();
 
+      if (clearAll)
+        game.playerArea.clearPath();
       _path = null;
     }
 

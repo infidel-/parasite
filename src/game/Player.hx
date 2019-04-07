@@ -53,7 +53,7 @@ class Player
         losEnabled: true,
         invisibilityEnabled: false,
         godmodeEnabled: false,
-        };
+      };
 
       state = PLR_STATE_PARASITE;
       energy = vars.startEnergy;
@@ -143,6 +143,9 @@ class Player
 
       else if (game.location == LOCATION_REGION)
         game.playerRegion.onHostDeath();
+
+      // stop moving
+      game.scene.clearPath();
 
       log(msg);
     }

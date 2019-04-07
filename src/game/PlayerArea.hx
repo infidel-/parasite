@@ -911,6 +911,13 @@ class PlayerArea
     }
 
 
+// clear path
+  public inline function clearPath()
+    {
+      path = null;
+    }
+
+
 // move to next path waypoint
 // returns true on success
   public function nextPath(): Bool
@@ -929,7 +936,7 @@ class PlayerArea
           return true;
         }
 
-      if (path.length == 0)
+      if (path != null && path.length == 0)
         path = null;
 
       return true;
@@ -954,12 +961,16 @@ class PlayerArea
 // helper: on taking host damage
   function onDamageHost(damage: Int)
     {
+      // stop moving
+      game.scene.clearPath();
+
       player.host.onDamage(damage);
       if (player.host.state == AI_STATE_DEAD)
         {
           onDetach();
 
           log('Your host has died from injuries.');
+
           return;
         }
 

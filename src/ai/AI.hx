@@ -330,6 +330,10 @@ class AI
       reason = vreason;
       if (state == AI_STATE_ALERT)
         {
+          // message on first alert
+          if (isHuman && vreason != REASON_ATTACH)
+            game.goals.complete(GOAL_TUTORIAL_ALERT);
+
           timers.alert = ALERTED_TIMER;
           wasAlerted = true;
         }
