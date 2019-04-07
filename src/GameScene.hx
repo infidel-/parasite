@@ -36,7 +36,7 @@ class GameScene extends Scene
   public var controlPressed: Bool; // Ctrl key pressed?
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
-//  var loseFocus: LoseFocus; // lose focus blur
+  var loseFocus: LoseFocus; // lose focus blur
 
   // camera x,y
   public var cameraTileX1: Int;
@@ -121,7 +121,7 @@ class GameScene extends Scene
         UISTATE_DEBUG => new Debug(game),
         UISTATE_FINISH => new Finish(game),
       ];
-//      loseFocus = new LoseFocus();
+      loseFocus = new LoseFocus(game);
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
@@ -139,10 +139,9 @@ class GameScene extends Scene
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
 
-/*
-   // TODO: why did i need this?
 #if js
-      // show stuff on losing focus
+      // show blur on losing focus
+      // this is needed because it's too easy to press Alt, lose it and not notice it
       Browser.window.onfocus = function()
         {
           loseFocus.hide();
@@ -152,7 +151,6 @@ class GameScene extends Scene
           loseFocus.show();
         }
 #end
-*/
     }
 
 
@@ -286,6 +284,10 @@ class GameScene extends Scene
         {
           if (components[_state] != null)
             components[_state].show();
+
+          // clear old path on opening message window
+          if (game.location == LOCATION_AREA && _state == UISTATE_MESSAGE)
+            area.clearPath();
 
           if (_state != UISTATE_LOG)
             components[_state].scrollToBegin();

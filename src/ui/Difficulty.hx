@@ -32,11 +32,11 @@ class Difficulty extends UIWindow
       title.maxWidth = width;
 
       var y = Std.int(height - 10 - tile.height);
-      addButton(Std.int(width / 2 - 3 * tile.width / 2 - 10), y, '1',
+      addButton(Std.int(width / 2 - 3 * tile.width / 2 - 10), y, 'EASY',
         action.bind(1), onOver.bind(0), onOut);
-      addButton(Std.int(width / 2 - tile.width / 2) + 20, y, '2',
+      addButton(Std.int(width / 2 - tile.width / 2) + 20, y, 'NORMAL',
         action.bind(2), onOver.bind(1), onOut);
-      addButton(Std.int(width / 2 + tile.width + 5), y, '3',
+      addButton(Std.int(width / 2 + tile.width + 5), y, 'HARD',
         action.bind(3), onOver.bind(2), onOut);
     }
 
