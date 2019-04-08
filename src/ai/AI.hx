@@ -334,6 +334,10 @@ class AI
           if (isHuman && vreason != REASON_ATTACH)
             game.goals.complete(GOAL_TUTORIAL_ALERT);
 
+          // clear path
+          if (isHuman)
+            game.scene.clearPath();
+
           timers.alert = ALERTED_TIMER;
           wasAlerted = true;
         }
