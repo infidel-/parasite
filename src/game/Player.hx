@@ -100,10 +100,16 @@ class Player
       if (state == PLR_STATE_HOST)
         {
           var delta = __Math.hostEnergyPerTurn(time);
+          var old = host.energy;
           host.energy += delta;
 
           if (host.energy <= 0)
             onHostDeath('Your host has expired. You have to find a new one.');
+
+          // tutorial if host is alive
+          else if (host.energy < 0.3 * host.maxEnergy &&
+                   old >= 0.3 * host.maxEnergy)
+            game.goals.complete(GOAL_TUTORIAL_ENERGY);
         }
 
       // more host state checks
@@ -139,10 +145,24 @@ class Player
   public inline function onHostDeath(msg: String)
     {
       if (game.location == LOCATION_AREA)
-        game.playerArea.onHostDeath();
+        {
+          // message on first death
+          if (game.player.host.isHuman)
+            game.goals.complete(GOAL_TUTORIAL_BODY);
+
+          game.playerArea.onHostDeath();
+        }
 
       else if (game.location == LOCATION_REGION)
-        game.playerRegion.onHostDeath();
+        {
+          // message on first death
+          if (game.player.host.isHuman)
+            {
+              game.goals.complete(GOAL_TUTORIAL_BODY_SEWERS);
+              game.goals.complete(GOAL_TUTORIAL_BODY, true);
+            }
+          game.playerRegion.onHostDeath();
+        }
 
       // stop moving
       game.scene.clearPath();

@@ -145,10 +145,11 @@ class PlayerRegion
         {
           if (player.host.energy <= 0)
             {
-              onHostDeath();
+              game.player.onHostDeath('Your host has expired somewhere in the sewers. You have to find a new one.');
 
-              game.log('Your host has expired somewhere in the sewers. You have to find a new one.');
-              game.scene.state = UISTATE_DEFAULT; // close window just in case
+              // close window just in case
+              if (game.scene.state != UISTATE_MESSAGE)
+                game.scene.state = UISTATE_DEFAULT;
             }
         }
 
@@ -228,10 +229,11 @@ class PlayerRegion
         {
           if (player.host.energy <= 0)
             {
-              onHostDeath();
+              game.player.onHostDeath('Your host has expired somewhere in the sewers. You have to find a new one.');
 
-              game.log('Your host has expired somewhere in the sewers. You have to find a new one.');
-              game.scene.state = UISTATE_DEFAULT; // close window just in case
+              // close window just in case
+              if (game.scene.state != UISTATE_MESSAGE)
+                game.scene.state = UISTATE_DEFAULT;
             }
         }
 

@@ -20,6 +20,33 @@ class Goals
       messageComplete: "That host is agitated by my appearance, I need to flee to avoid trouble.",
     },
 
+    GOAL_TUTORIAL_BODY => {
+      id: GOAL_TUTORIAL_BODY,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "This host has expired and its body will be found. Unfortunate.",
+    },
+
+    GOAL_TUTORIAL_BODY_SEWERS => {
+      id: GOAL_TUTORIAL_BODY_SEWERS,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "This host has expired in the sewers and its body will not bring me problems.",
+    },
+
+    GOAL_TUTORIAL_ENERGY => {
+      id: GOAL_TUTORIAL_ENERGY,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "This host will soon expire, time to look for another one.",
+    },
+
     // ========================= main branch
 
     GOAL_INVADE_HOST => {
