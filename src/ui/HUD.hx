@@ -25,6 +25,8 @@ class HUD
   var _consoleBack: Graphics; // console background
   var _help: h2d.Text; // help
   var _helpBack: Graphics; // help background
+  var _goals: HtmlText; // goals list
+  var _goalsBack: Graphics; // goals list background
 
   public function new(g: Game)
     {
@@ -33,6 +35,7 @@ class HUD
       _container = new Object();
       game.scene.add(_container, Const.LAYER_HUD);
 
+      // console
       _consoleBack = new Graphics(_container);
       _console = new TextInput(game.scene.font, _consoleBack);
       _console.maxWidth = game.scene.win.width - 40;
@@ -63,6 +66,13 @@ class HUD
       _help.textAlign = Left;
       _helpBack.x = 20;
       _helpBack.y = game.scene.win.height - game.config.fontSize - 8;
+
+      // player goals
+      _goalsBack = new Graphics(_container);
+      _goals = new HtmlText(game.scene.font, _goalsBack);
+      _goals.maxWidth = 400;
+      _goals.textAlign = Left;
+      _goalsBack.x = game.scene.win.width - 420;
 
       @:privateAccess game.scene.window.addEventTarget(onEvent);
     }
@@ -264,6 +274,34 @@ class HUD
     }
 
 
+// update goals list
+  function updateGoals()
+    {
+      var buf = new StringBuf();
+
+      for (g in game.goals.iteratorCurrent())
+        {
+          var info = game.goals.getInfo(g);
+          if (info.isHidden)
+            continue;
+
+          buf.add("<font color='#4788FF'>" + info.name + '</font><br/>');
+          buf.add(info.note + '<br/>');
+          if (info.note2 != null)
+            buf.add(info.note2 + '<br/>');
+          buf.add('<br/>');
+        }
+
+      _goals.text = buf.toString();
+      _goalsBack.clear();
+      _goalsBack.beginFill(0x202020, 0.75);
+      _goalsBack.drawRect(0, 0, _goals.maxWidth, _goals.textHeight);
+      _goalsBack.endFill();
+      _goalsBack.y = game.scene.win.height - _goals.textHeight -
+        game.config.fontSize - 12;
+    }
+
+
   static var cnt = 0;
   public function test()
     {}
@@ -353,6 +391,7 @@ class HUD
       updateLog();
       updateHelp();
       updateConsole();
+      updateGoals();
     }
 
 
