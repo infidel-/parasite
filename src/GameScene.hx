@@ -153,6 +153,10 @@ class GameScene extends Scene
         }
       Browser.window.onblur = function()
         {
+          // reset input flags
+          controlPressed = false;
+          shiftPressed = false;
+
           loseFocus.show();
         }
 #end
