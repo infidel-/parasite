@@ -19,14 +19,20 @@ class Pickup extends AreaObject
 
 
 // update actions
-  override function updateActionsList()
+  override function updateActionList()
     {
       if (game.player.state != PLR_STATE_HOST)
         return;
 
       var tmpname = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
-      addAction('get', 'Get ' + tmpname, 5);
+      game.scene.hud.addAction({
+        id: 'get',
+        type: ACTION_OBJECT,
+        name: 'Get ' + tmpname,
+        energy: 5,
+        obj: this
+      });
     }
 
 

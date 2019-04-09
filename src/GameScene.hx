@@ -498,48 +498,40 @@ class GameScene extends Scene
       var dy = 0;
 
       if (key == Key.UP ||
-          key == Key.W ||
           key == Key.NUMPAD_8)
         dy = -1;
 
       if (key == Key.DOWN ||
-          key == Key.X ||
           key == Key.NUMPAD_2)
         dy = 1;
 
       if (key == Key.LEFT ||
-          key == Key.A ||
           key == Key.NUMPAD_4)
         dx = -1;
 
       if (key == Key.RIGHT ||
-          key == Key.D ||
           key == Key.NUMPAD_6)
         dx = 1;
 
-      if (key == Key.Q ||
-          key == Key.NUMPAD_7)
+      if (key == Key.NUMPAD_7)
         {
           dx = -1;
           dy = -1;
         }
 
-      if (key == Key.E ||
-          key == Key.NUMPAD_9)
+      if (key == Key.NUMPAD_9)
         {
           dx = 1;
           dy = -1;
         }
 
-      if (key == Key.Z ||
-          key == Key.NUMPAD_1)
+      if (key == Key.NUMPAD_1)
         {
           dx = -1;
           dy = 1;
         }
 
-      if (key == Key.C ||
-          key == Key.NUMPAD_3)
+      if (key == Key.NUMPAD_3)
         {
           dx = 1;
           dy = 1;
@@ -588,6 +580,9 @@ class GameScene extends Scene
             break;
           }
 
+      // actions by key
+      ret = hud.keyAction(key);
+
       if (_state == UISTATE_DEFAULT)
         {
           // skip until end of turn
@@ -605,7 +600,6 @@ class GameScene extends Scene
       // next 10 actions
       if (key == Key.S)
         {
-
           _inputState = 1;
           ret = true;
         }

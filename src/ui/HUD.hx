@@ -16,6 +16,7 @@ class HUD
   var game: Game; // game state link
 
   var _listActions: List<_PlayerAction>; // list of currently available actions
+  var _listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
   var _container: Object;
   var _text: HtmlText; // actions list
   var _textBack: Graphics; // actions list background
@@ -31,7 +32,8 @@ class HUD
   public function new(g: Game)
     {
       game = g;
-      _listActions = new List<_PlayerAction>();
+      _listActions = new List();
+      _listKeyActions = new List();
       _container = new Object();
       game.scene.add(_container, Const.LAYER_HUD);
 
@@ -113,7 +115,7 @@ class HUD
     }
 
 
-// call action by id
+// call numbered action by index
   public function action(index: Int)
     {
       // find action name by index
@@ -136,17 +138,59 @@ class HUD
     }
 
 
+// call action by key
+  public function keyAction(key: Int): Bool
+    {
+      var action = null;
+      for (a in _listKeyActions)
+        if (a.key == key)
+          {
+            action = a;
+            break;
+          }
+      if (action == null)
+        return false;
+
+      if (game.location == LOCATION_AREA)
+        game.playerArea.action(action);
+
+      else if (game.location == LOCATION_REGION)
+        game.playerRegion.action(action);
+
+      return true;
+    }
+
+
 // update player actions list
   inline function updateActionList()
     {
       if (game.isFinished)
         return;
 
+      _listActions = new List();
+      _listKeyActions = new List();
+
       if (game.location == LOCATION_AREA)
-        _listActions = game.playerArea.getActionList();
+        game.playerArea.updateActionList();
 
       else if (game.location == LOCATION_REGION)
-        _listActions = game.playerRegion.getActionList();
+        game.playerRegion.updateActionList();
+    }
+
+
+// add player action to numbered list
+  public function addAction(a: _PlayerAction)
+    {
+      if (a.energy <= game.player.energy)
+        _listActions.add(a);
+    }
+
+
+// add player action to key list
+  public function addKeyAction(a: _PlayerAction)
+    {
+      if (a.energy <= game.player.energy)
+        _listKeyActions.add(a);
     }
 
 
@@ -174,15 +218,15 @@ class HUD
 #if mydebug
             ' A ' + Math.round(game.area.alertness) +
 #end
-            '<br>Actions: ' + game.playerArea.ap + '<br>');
+            '<br/>Actions: ' + game.playerArea.ap + '<br/>');
       else if (game.location == LOCATION_REGION)
         buf.add(
           game.playerRegion.x + ',' + game.playerRegion.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
 #end
-          '<br>' + game.playerRegion.currentArea.name + '<br>');
-      buf.add('===<br>');
+          '<br/>' + game.playerRegion.currentArea.name + '<br/>');
+      buf.add('===<br/>');
 
       var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
       var time = (game.location == LOCATION_AREA ? 1 : 5);
@@ -190,41 +234,41 @@ class HUD
       buf.add('Energy: ' +
         "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy);
-      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br>');
+      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br/>');
       var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
         "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
-        '/' + game.player.maxHealth + '<br>');
-      buf.add('===<br>');
+        '/' + game.player.maxHealth + '<br/>');
+      buf.add('===<br/>');
 
       if (game.player.state == PLR_STATE_ATTACHED)
         buf.add("Grip: <font color='" +
           getTextColor(game.playerArea.attachHold, 100) + "'>" +
-          game.playerArea.attachHold + "</font>/100<br>");
+          game.playerArea.attachHold + "</font>/100<br/>");
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
         {
           buf.add(game.player.host.getNameCapped());
           if (game.player.host.isJobKnown)
-            buf.add(' (' + game.player.host.job + ')<br>');
-          else buf.add('<br>');
+            buf.add(' (' + game.player.host.job + ')<br/>');
+          else buf.add('<br/>');
           if (game.player.host.isAttrsKnown)
             buf.add('STR ' + game.player.host.strength +
               ' CON ' + game.player.host.constitution +
               ' INT ' + game.player.host.intellect +
-              ' PSY ' + game.player.host.psyche + '<br>');
+              ' PSY ' + game.player.host.psyche + '<br/>');
 
           var colHealth = getTextColor(game.player.host.health,
             game.player.host.maxHealth);
           buf.add('Health: ' +
             "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
-            '/' + game.player.host.maxHealth + '<br>');
+            '/' + game.player.host.maxHealth + '<br/>');
 
           var colControl = getTextColor(game.player.hostControl, 100);
           buf.add('Control: ' +
             "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
-            '/100<br>');
+            '/100<br/>');
 
           var colEnergy = getTextColor(game.player.host.energy,
             game.player.host.maxEnergy);
@@ -233,35 +277,46 @@ class HUD
             game.player.host.energy + '</font>/' +
             game.player.host.maxEnergy);
           buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]<br>');
-          buf.add('Evolution direction:<br>  ');
+            energyPerTurn + '/t]<br/>');
+          buf.add('Evolution direction:<br/>  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
-          buf.add('<br>');
+          buf.add('<br/>');
           var str = game.player.host.organs.getInfo();
           if (str != null)
             buf.add(str);
         }
-      buf.add("<br>===<br><br>");
+      buf.add("<br/>===<br/><br/>");
 
       // player actions
       var n = 1;
       if (!game.isFinished)
-        for (action in _listActions)
-          {
-            buf.add(n + ': ');
-            buf.add(action.name);
-            if (action.energy != null && action.energy > 0)
-              buf.add(' (' + action.energy + ' energy)');
-            else if (action.energyFunc != null)
-              buf.add(' (' + action.energyFunc(game.player) + ' energy)');
-            if (action != _listActions.last())
-              buf.add("<br>");
-            n++;
-          }
+        {
+          var list = [ _listActions, _listKeyActions ];
+          for (l in list)
+            {
+              if (l == _listKeyActions && n > 1 &&
+                  _listKeyActions.length > 0)
+                buf.add("<br/>");
+              for (action in l)
+                {
+                  if (action.key != null)
+                    buf.add(String.fromCharCode(action.key) + ': ');
+                  else buf.add(n + ': ');
+                  buf.add(action.name);
+                  if (action.energy != null && action.energy > 0)
+                    buf.add(' (' + action.energy + ' energy)');
+                  else if (action.energyFunc != null)
+                    buf.add(' (' + action.energyFunc(game.player) + ' energy)');
+                  if (action != l.last())
+                    buf.add("<br/>");
+                  n++;
+                }
+            }
+        }
 
       if (game.isFinished)
         buf.add('<font color="#FF0000">Press ENTER to restart</font>');
-      else if (_listActions.length == 0)
+      else if (n == 1)
         buf.add('No available actions.');
 
       _text.text = buf.toString();

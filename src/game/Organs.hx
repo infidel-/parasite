@@ -294,8 +294,8 @@ class Organs
     }
 
 
-// get area organ actions
-  public function addActions(tmp: List<_PlayerAction>)
+// add area organ actions to list
+  public function updateActionList()
     {
       for (o in _list)
         {
@@ -312,7 +312,7 @@ class Organs
 
           // save link to that organ
           a.obj = o;
-          tmp.add(a);
+          game.scene.hud.addAction(a);
         }
     }
 

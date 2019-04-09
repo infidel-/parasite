@@ -17,11 +17,17 @@ class AssimilationCavity extends HabitatObject
 
 
 // update actions
-  override function updateActionsList()
+  override function updateActionList()
     {
       if (game.player.state == PLR_STATE_HOST &&
           !game.player.host.hasTrait(TRAIT_ASSIMILATED))
-        addAction('assimilate', 'Assimilate Host', 0);
+        game.scene.hud.addAction({
+          id: 'assimilate',
+          type: ACTION_OBJECT,
+          name: 'Assimilate Host',
+          energy: 0,
+          obj: this
+        });
     }
 
 

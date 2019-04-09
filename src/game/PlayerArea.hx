@@ -2,6 +2,7 @@
 
 package game;
 
+import hxd.Key;
 import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;
@@ -91,52 +92,59 @@ class PlayerArea
 // ==============================   ACTIONS   =======================================
 
 
-// helper: add action to list and check for energy
-  inline function addActionToList(list: List<_PlayerAction>, id: String, ?o: Dynamic)
-    {
-      var action = Const.getAction(id);
-      if (action.energy <= player.energy)
-        {
-          if (o != null)
-            {
-              var a = Reflect.copy(action);
-              a.obj = o;
-              list.add(a);
-            }
-          else list.add(action);
-        }
-    }
-
-
 // get actions list (area mode)
-  public function getActionList(): List<_PlayerAction>
+  public function updateActionList()
     {
-      var tmp = new List<_PlayerAction>();
-
       if (state == PLR_STATE_PARASITE)
         {
           if (game.area.hasAI(x, y))
-            addActionToList(tmp, 'attachHost');
+            game.scene.hud.addAction({
+              id: 'attachHost',
+              type: ACTION_AREA,
+              name: 'Attach To Host',
+              energy: 0
+            });
         }
 
       // parasite is attached to host
       else if (state == PLR_STATE_ATTACHED)
         {
           if (attachHold >= 90)
-            addActionToList(tmp, 'invadeHost');
-          else addActionToList(tmp, 'hardenGrip');
+            game.scene.hud.addAction({
+              id: 'invadeHost',
+              type: ACTION_AREA,
+              name: 'Invade Host',
+              energy: 10
+            });
+          else game.scene.hud.addAction({
+            id: 'hardenGrip',
+            type: ACTION_AREA,
+            name: 'Harden Grip',
+            energy: 5
+          });
         }
 
       // parasite in control of host
       else if (state == PLR_STATE_HOST)
         {
           if (player.hostControl < 100)
-            addActionToList(tmp, 'reinforceControl');
+            game.scene.hud.addAction({
+              id: 'reinforceControl',
+              type: ACTION_AREA,
+              name: 'Reinforce Control',
+              energy: 5
+            });
 
           // organ-based actions
-          player.host.organs.addActions(tmp);
+          player.host.organs.updateActionList();
 
-          addActionToList(tmp, 'leaveHost');
+          game.scene.hud.addKeyAction({
+            id: 'leaveHost',
+            type: ACTION_AREA,
+            name: 'Leave Host',
+            energy: 0,
+            key: Key.X
+          });
         }
 
       // improvement actions
@@ -145,47 +153,50 @@ class PlayerArea
           var info = imp.info;
           if (info.action != null)
             {
-              if (info.action.energy != null && info.action.energy <= player.energy)
-                tmp.add(info.action);
+              if (info.action.energy != null &&
+                  info.action.energy <= player.energy)
+                game.scene.hud.addAction(info.action);
 
               else if (info.action.energyFunc != null)
                 {
                   var e = info.action.energyFunc(player);
                   if (e >= 0 && e <= player.energy)
-                    tmp.add(info.action);
+                    game.scene.hud.addAction(info.action);
                 }
             }
         }
 
-      // area object actions
+      // area object actions - need to learn about objects
       var olist = game.area.getObjectsAt(x, y);
-      if (olist == null)
-        return tmp;
-
-      // need to learn about objects
-      if (game.goals.completed(GOAL_PROBE_BRAIN))
+      if (olist != null && game.goals.completed(GOAL_PROBE_BRAIN))
         for (o in olist)
           {
-            // player does not know what this object is, cannot activate it
-            if (state == PLR_STATE_HOST && !o.known() &&
-                player.host.isHuman && o.type != 'event_object')
-              addActionToList(tmp, 'learnObject', o);
+            // player does not know what this is, cannot activate it
+            if (state == PLR_STATE_HOST &&
+                !o.known() &&
+                player.host.isHuman &&
+                o.type != 'event_object')
+              game.scene.hud.addAction({
+                id: 'learnObject',
+                type: ACTION_AREA,
+                name: 'Learn About Object',
+                energy: 10,
+                obj: o,
+              });
 
             // object known - add all actions defined by object
             else if (o.known())
-              o.addActions(tmp);
+              o.updateActionList();
           }
-/*
-      // event objects always known
-      for (o in olist)
-        if (o.type == 'event_object')
-          o.addActions(tmp);
-*/
+
       // leave area action
       if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)
-        addActionToList(tmp, 'leaveArea');
-
-      return tmp;
+        game.scene.hud.addAction({
+          id: 'leaveArea',
+          type: ACTION_AREA,
+          name: 'Leave Area',
+          energy: 0
+        });
     }
 
 

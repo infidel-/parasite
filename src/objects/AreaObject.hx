@@ -95,40 +95,6 @@ class AreaObject
     }
 
 
-// check if player has enough energy and add action to list
-  inline function addAction(id: String, name: String, energy: Int)
-    {
-      if (game.player.energy >= energy)
-        _listActions.add({
-          id: id,
-          type: ACTION_OBJECT,
-          name: name,
-          energy: energy,
-          obj: this
-        });
-    }
-
-
-// add full player action to list
-  inline function addActionFull(a: _PlayerAction)
-    {
-      if (game.player.energy >= a.energy)
-        _listActions.add(a);
-    }
-
-
-// get actions for this object
-  public function addActions(tmp: List<_PlayerAction>)
-    {
-      _listActions.clear(); // clear old list
-      updateActionsList(); // overridden by children
-
-      // add to external list
-      for (a in _listActions)
-        tmp.add(a);
-    }
-
-
 // object action
   public function action(a: _PlayerAction)
     {
@@ -142,7 +108,7 @@ class AreaObject
 
 
 // dynamic: current list of object actions
-  dynamic function updateActionsList()
+  public dynamic function updateActionList()
     {}
 
 // dynamic: object action callback

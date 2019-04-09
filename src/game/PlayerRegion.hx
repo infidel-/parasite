@@ -53,31 +53,17 @@ class PlayerRegion
 // ==============================   ACTIONS   =======================================
 
 
-// helper: add action to list by string  id and check for energy
-  inline function addActionToList(list: List<_PlayerAction>, name: String)
-    {
-      var action = Const.getAction(name);
-      if (action.energy <= player.energy)
-        list.add(action);
-    }
-
-
-// helper: add action to list and check for energy
-  inline function addActionToList2(list: List<_PlayerAction>, action: _PlayerAction)
-    {
-      if (action.energy <= player.energy)
-        list.add(action);
-    }
-
-
 // get actions list (area mode)
-  public function getActionList(): List<_PlayerAction>
+  public function updateActionList()
     {
-      var tmp = new List<_PlayerAction>();
-
       // enter area
       if (currentArea.info.canEnter)
-        addActionToList(tmp, 'enterArea');
+        game.scene.hud.addAction({
+          id: 'enterArea',
+          type: ACTION_REGION,
+          name: 'Enter Area',
+          energy: 0
+        });
 
       // create a new habitat
       if (player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0 &&
@@ -89,22 +75,22 @@ class PlayerRegion
           var numHabitats = game.region.getHabitatsCount();
 
           if (numHabitats < maxHabitats)
-            addActionToList2(tmp, {
+            game.scene.hud.addAction({
               id: 'createHabitat',
               type: ACTION_REGION,
               name: 'Create habitat',
-              energy: 10 });
+              energy: 10
+            });
         }
 
       // enter habitat
       if (currentArea.hasHabitat)
-        addActionToList2(tmp, {
+        game.scene.hud.addAction({
           id: 'enterHabitat',
           type: ACTION_REGION,
           name: 'Enter habitat',
-          energy: 0 });
-
-      return tmp;
+          energy: 0
+        });
     }
 
 

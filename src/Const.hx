@@ -149,31 +149,6 @@ class Const
   public static var dirx = [ -1, -1, -1, 0, 0, 1, 1, 1 ];
   public static var diry = [ -1, 0, 1, -1, 1, -1, 0, 1 ];
 
-  // common player actions
-  public static var PLAYER_ACTIONS: Map<String, _PlayerAction> =
-    [
-      // area
-      'attachHost' => { id: 'attachHost', type: ACTION_AREA, name: 'Attach To Host', energy: 0 },
-      'detach' => { id: 'detach', type: ACTION_AREA, name: 'Detach', energy: 0 },
-      'hardenGrip' => { id: 'hardenGrip', type: ACTION_AREA, name: 'Harden Grip', energy: 5 },
-      'invadeHost' => { id: 'invadeHost', type: ACTION_AREA, name: 'Invade Host', energy: 10 },
-      'reinforceControl' => { id: 'reinforceControl', type: ACTION_AREA, name: 'Reinforce Control', energy: 5 },
-      'doNothing' => { id: 'doNothing', type: ACTION_AREA, name: 'Do Nothing', energy: 0 },
-      'leaveHost' => { id: 'leaveHost', type: ACTION_AREA, name: 'Leave Host', energy: 0 },
-      'learnObject' => { id: 'learnObject', type: ACTION_AREA, name: 'Learn About Object', energy: 10 },
-      'leaveArea' => { id: 'leaveArea', type: ACTION_AREA, name: 'Leave Area', energy: 0 },
-      'move' => { id: 'move', type: ACTION_AREA, name: 'Movement', energy: 0 },
-
-      // region
-      'enterArea' => { id: 'enterArea', type: ACTION_REGION, name: 'Enter Area', energy: 0 },
-    ];
-
-// get action by id
-  public static inline function getAction(id: String): _PlayerAction
-    {
-      return PLAYER_ACTIONS.get(id);
-    }
-
 
 // get squared distance between two points
   public static inline function getDistSquared(x1: Int, y1: Int, x2: Int, y2: Int): Int

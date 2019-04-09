@@ -33,14 +33,20 @@ class BodyObject extends AreaObject
 
 
 // update actions
-  override function updateActionsList()
+  override function updateActionList()
     {
       if (game.player.state != PLR_STATE_HOST)
         return;
 
       // animals don't have stuff on them
       if (!isSearched && isHumanBody)
-        addAction('searchBody', 'Search Body', 10);
+        game.scene.hud.addAction({
+          id: 'searchBody',
+          type: ACTION_OBJECT,
+          name: 'Search Body',
+          energy: 10,
+          obj: this
+        });
 
       if (isSearched)
         for (item in inventory)
@@ -51,7 +57,13 @@ class BodyObject extends AreaObject
 
             var name = (game.player.knowsItem(item.id) ?
               item.name : item.info.unknown);
-            addAction('get.' + item.id, 'Get ' + name, 5);
+            game.scene.hud.addAction({
+              id: 'get.' + item.id,
+              type: ACTION_OBJECT,
+              name: 'Get ' + name,
+              energy: 5,
+              obj: this
+            });
           }
     }
 

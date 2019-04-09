@@ -24,9 +24,9 @@ class EventObject extends AreaObject
 
 
 // update actions
-  override function updateActionsList()
+  override function updateActionList()
     {
-      addActionFull(eventAction);
+      game.scene.hud.addAction(eventAction);
     }
 
 
