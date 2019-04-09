@@ -55,6 +55,10 @@ class RegionGame
 
       // show region
       game.scene.region.show();
+
+      // tutorial
+      if (game.playerRegion.currentArea.alertness > 20)
+        game.goals.complete(GOAL_TUTORIAL_AREA_ALERT);
     }
 
 

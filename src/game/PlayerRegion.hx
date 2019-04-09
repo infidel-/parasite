@@ -353,6 +353,10 @@ class PlayerRegion
       game.turn(); // new turn
       game.updateHUD(); // update HUD info
 
+      // tutorial
+      if (game.playerRegion.currentArea.alertness > 20)
+        game.goals.complete(GOAL_TUTORIAL_AREA_ALERT);
+
       return true;
     }
 

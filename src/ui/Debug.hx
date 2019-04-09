@@ -45,7 +45,8 @@ class Debug extends Actions
       else if (game.location == LOCATION_REGION)
         game.debugRegion.action(index);
 
-      game.scene.closeWindow();
+      if (game.scene.state != UISTATE_MESSAGE)
+        game.scene.closeWindow();
     }
 
 

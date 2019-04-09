@@ -2,5 +2,4 @@
 -lib heaps
 -js ../bin/parasite.js
 -main Main
--debug
 

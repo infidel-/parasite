@@ -26,7 +26,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "This host has expired and its body will be found. Unfortunate.",
+      messageComplete: "This host has expired and its body will be found. Troublesome.",
     },
 
     GOAL_TUTORIAL_BODY_SEWERS => {
@@ -35,7 +35,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "This host has expired in the sewers and its body will not bring me problems.",
+      messageComplete: "This host has expired in the sewers and its body will not bring problems.",
     },
 
     GOAL_TUTORIAL_ENERGY => {
@@ -45,6 +45,15 @@ class Goals
       name: '',
       note: '',
       messageComplete: "This host will soon expire, time to look for another one.",
+    },
+
+    GOAL_TUTORIAL_AREA_ALERT => {
+      id: GOAL_TUTORIAL_AREA_ALERT,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "This area is getting dangerous to enter. Better to wait until things calm down.",
     },
 
     // ========================= main branch

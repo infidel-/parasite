@@ -278,6 +278,7 @@ class GameScene extends Scene
 // set new GUI state, open and close windows if needed
   public function set_state(vstate: _UIState)
     {
+//      Const.traceStack();
       if (_state != UISTATE_DEFAULT)
         {
           if (components[_state] != null)
