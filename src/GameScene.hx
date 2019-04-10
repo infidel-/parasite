@@ -82,17 +82,22 @@ class GameScene extends Scene
 // init scene and game
   public function init()
     {
+      // scale tile size
+      if (game.config.mapScale != 1)
+        Const.TILE_SIZE =
+          Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
+
       // allow repeating keypresses
       Key.ALLOW_KEY_REPEAT = true;
 
       // load all entity images into atlas
       atlas = new Atlas(this);
-      var res = hxd.Res.load('graphics/entities' + Const.TILE_SIZE +
+      var res = hxd.Res.load('graphics/entities' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
-      entityAtlas = res.grid(Const.TILE_SIZE);
-      var res = hxd.Res.load('graphics/tileset' + Const.TILE_SIZE +
+      entityAtlas = res.grid(Const.TILE_SIZE_CLEAN);
+      var res = hxd.Res.load('graphics/tileset' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
-      tileAtlas = res.gridFlatten(Const.TILE_SIZE);
+      tileAtlas = res.gridFlatten(Const.TILE_SIZE_CLEAN);
       var ttf = hxd.Res.font.OrkneyRegular;
 //      font = ttf.build(game.config.fontSize);
       font = ttf.toFont();
@@ -100,6 +105,16 @@ class GameScene extends Scene
       ttf = hxd.Res.font.OrkneyRegular10;
       font10 = ttf.toFont();
 */
+      // scale atlases if needed
+      if (game.config.mapScale != 1)
+        {
+          for (tile in tileAtlas)
+            tile.scaleToSize(Const.TILE_SIZE, Const.TILE_SIZE);
+          for (i in 0...entityAtlas.length)
+            for (j in 0...entityAtlas[i].length)
+              entityAtlas[i][j].scaleToSize(Const.TILE_SIZE,
+                Const.TILE_SIZE);
+        }
 
       // init GUI
       mouse = new Mouse(game);
@@ -137,10 +152,10 @@ class GameScene extends Scene
       var ymin = cameraTileY2 - cameraTileY1;
       ai.AI.VIEW_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) / 2.5);
       ai.AI.HEAR_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) * 1.5 / 2.5);
-      if (ai.AI.VIEW_DISTANCE > 10)
-        ai.AI.VIEW_DISTANCE = 10;
-      if (ai.AI.HEAR_DISTANCE > 15)
-        ai.AI.HEAR_DISTANCE = 15;
+      if (ai.AI.VIEW_DISTANCE > 6)
+        ai.AI.VIEW_DISTANCE = 6;
+      if (ai.AI.HEAR_DISTANCE > 10)
+        ai.AI.HEAR_DISTANCE = 10;
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
 
@@ -282,6 +297,7 @@ class GameScene extends Scene
 // set new GUI state, open and close windows if needed
   public function set_state(vstate: _UIState)
     {
+//      trace(vstate);
 //      Const.traceStack();
       if (_state != UISTATE_DEFAULT)
         {
@@ -295,13 +311,13 @@ class GameScene extends Scene
           if (components[_state] != null)
             components[_state].show();
 
-          // clear old path on opening message window
-          if (_state == UISTATE_MESSAGE)
-            clearPath();
-
           if (_state != UISTATE_LOG)
             components[_state].scrollToBegin();
         }
+
+      // clear old path on opening message window
+      if (_state == UISTATE_MESSAGE)
+        clearPath();
 
       return _state;
     }
@@ -314,7 +330,7 @@ class GameScene extends Scene
         game.scene.area.clearPath(true);
 
       else if (game.location == LOCATION_REGION)
-        game.scene.region.clearPath();
+        game.scene.region.clearPath(true);
     }
 
 

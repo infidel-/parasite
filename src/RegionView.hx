@@ -221,13 +221,15 @@ class RegionView
 
 
 // clears visible path
-  public function clearPath()
+  public function clearPath(?clearAll: Bool = false)
     {
       if (_path == null)
         return;
       for (dot in _path)
         dot.remove();
 
+      if (clearAll)
+        game.playerRegion.clearPath();
       _path = null;
     }
 

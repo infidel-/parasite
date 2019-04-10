@@ -18,6 +18,7 @@ class Config
   public var fontSize: Int;
   public var fontSizeLarge: Int;
   public var hudLogLines: Int;
+  public var mapScale: Float;
   public var pathDelay: Int;
   public var windowHeight: Int;
   public var windowWidth: Int;
@@ -39,6 +40,7 @@ class Config
       fontSize = 16;
       fontSizeLarge = 24;
       hudLogLines = 4;
+      mapScale = 1;
       pathDelay = 100;
       windowHeight = 768;
       windowWidth = 1024;
@@ -50,6 +52,7 @@ class Config
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
+      map['mapScale'] = '1';
       map['pathDelay'] = '' + pathDelay;
       map['windowHeight'] = '' + windowHeight;
       map['windowWidth'] = '' + windowWidth;
@@ -113,6 +116,8 @@ class Config
         }
       else if (key == 'hudLogLines')
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
+      else if (key == 'mapScale')
+        mapScale = Const.clampFloat(Std.parseFloat(val), 0.1, 10);
       else if (key == 'pathDelay')
         pathDelay = Std.parseInt(val);
       else if (key == 'windowHeight')

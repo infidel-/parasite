@@ -181,8 +181,15 @@ class HUD
 // add player action to numbered list
   public function addAction(a: _PlayerAction)
     {
-      if (a.energy <= game.player.energy)
+      if (a.energy != null && a.energy <= game.player.energy)
         _listActions.add(a);
+
+      else if (a.energyFunc != null)
+        {
+          var e = a.energyFunc(game.player);
+          if (e >= 0 && e <= game.player.energy)
+            _listActions.add(a);
+        }
     }
 
 

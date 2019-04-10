@@ -238,6 +238,13 @@ class PlayerRegion
     }
 
 
+// clear current path (target since path is auto-generated)
+  public inline function clearPath()
+    {
+      target = null;
+    }
+
+
 // move to next path waypoint
 // returns true on success
   public function nextPath(): Bool
@@ -266,7 +273,7 @@ class PlayerRegion
         }
 
       // finish
-      if (target.x == x && target.y == y)
+      if (target != null && target.x == x && target.y == y)
         target = null;
 
       // force update mouse and path

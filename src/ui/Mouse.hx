@@ -5,6 +5,7 @@ package ui;
 import h2d.Anim;
 import h2d.Bitmap;
 import h2d.Tile;
+import hxd.BitmapData;
 import hxd.Key;
 import hxd.Cursor;
 import game.Game;
@@ -39,12 +40,23 @@ class Mouse
       var res = hxd.Res.load('graphics/mouse64.png').toImage();
       var bmp = res.toBitmap();
       atlas = [];
+      var size = (game.config.mapScale == 1 ? CURSOR_SIZE :
+        Std.int(CURSOR_SIZE * game.config.mapScale));
       for (i in 0...CURSOR_ATTACK_RANGED + 1)
         {
           var tmp = bmp.sub(i * CURSOR_SIZE, 0, CURSOR_SIZE, CURSOR_SIZE);
+/*
+          if (game.config.mapScale != 1)
+            {
+              var tmp2 = new BitmapData(size, size);
+              tmp2.drawScaled(0, 0, size, size, tmp, 0, 0,
+                CURSOR_SIZE, CURSOR_SIZE, Alpha, true);
+              tmp = tmp2;
+            }
+*/
           var cursor = Custom(new CustomCursor([ tmp ], 1,
-            i == 0 ? 0 : 16,
-            i == 0 ? 0 : 16));
+            i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2),
+            i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2)));
           atlas.push(cursor);
         }
       hxd.System.setCursor = function(cur)

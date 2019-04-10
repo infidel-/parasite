@@ -152,18 +152,7 @@ class PlayerArea
         {
           var info = imp.info;
           if (info.action != null)
-            {
-              if (info.action.energy != null &&
-                  info.action.energy <= player.energy)
-                game.scene.hud.addAction(info.action);
-
-              else if (info.action.energyFunc != null)
-                {
-                  var e = info.action.energyFunc(player);
-                  if (e >= 0 && e <= player.energy)
-                    game.scene.hud.addAction(info.action);
-                }
-            }
+            game.scene.hud.addAction(info.action);
         }
 
       // area object actions - need to learn about objects

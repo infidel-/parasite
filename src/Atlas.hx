@@ -16,12 +16,12 @@ class Atlas
       scene = s;
 
       // currently we assume there's no empty space
-      var res = hxd.Res.load('graphics/male' + Const.TILE_SIZE +
+      var res = hxd.Res.load('graphics/male' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
-      maleAtlas = res.grid(Const.TILE_SIZE);
-      var res = hxd.Res.load('graphics/female' + Const.TILE_SIZE +
+      maleAtlas = res.grid(Const.TILE_SIZE_CLEAN);
+      var res = hxd.Res.load('graphics/female' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
-      femaleAtlas = res.grid(Const.TILE_SIZE);
+      femaleAtlas = res.grid(Const.TILE_SIZE_CLEAN);
 
       // nullify empty space
       var maleEmpty = 8;
@@ -37,6 +37,21 @@ class Atlas
           trace(sbuf.toString());
         }
 */
+
+      // scale atlases if needed
+      if (scene.game.config.mapScale != 1)
+        {
+          for (i in 0...maleAtlas.length)
+            for (j in 0...maleAtlas[i].length)
+              if (maleAtlas[i][j] != null)
+                maleAtlas[i][j].scaleToSize(Const.TILE_SIZE,
+                  Const.TILE_SIZE);
+          for (i in 0...femaleAtlas.length)
+            for (j in 0...femaleAtlas[i].length)
+              if (femaleAtlas[i][j] != null)
+                femaleAtlas[i][j].scaleToSize(Const.TILE_SIZE,
+                  Const.TILE_SIZE);
+        }
 
       // form special atlases from complete ones
       // punch holes in complete ones
