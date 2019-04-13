@@ -83,6 +83,12 @@ class PlayerRegion
             });
         }
 
+      if (player.state == PLR_STATE_HOST)
+        {
+          // evolution manager actions
+          player.evolutionManager.updateActionList();
+        }
+
       // enter habitat
       if (currentArea.hasHabitat)
         game.scene.hud.addAction({
@@ -106,6 +112,10 @@ class PlayerRegion
         createHabitatAction();
       else if (action.id == 'enterHabitat')
         enterHabitatAction();
+
+      // evolution manager action
+      else if (action.type == ACTION_EVOLUTION)
+        ret = player.evolutionManager.action(action);
 
       // action failed
       if (!ret)

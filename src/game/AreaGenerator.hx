@@ -687,7 +687,7 @@ class AreaGenerator
     {
       for (y in y1...y1 + h)
         for (x in x1...x1 + w)
-          area.setCellType(x, y, Const.TILE_GROUND);
+          area.setCellType(x, y, Const.TILE_WALKWAY);
     }
 
 

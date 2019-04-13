@@ -138,6 +138,9 @@ class PlayerArea
           // organ-based actions
           player.host.organs.updateActionList();
 
+          // evolution manager actions
+          player.evolutionManager.updateActionList();
+
           game.scene.hud.addKeyAction({
             id: 'leaveHost',
             type: ACTION_AREA,
@@ -212,6 +215,10 @@ class PlayerArea
       // host organ-based action
       else if (action.type == ACTION_ORGAN)
         ret = player.host.organs.areaAction(action);
+
+      // evolution manager action
+      else if (action.type == ACTION_EVOLUTION)
+        ret = player.evolutionManager.action(action);
 
       // harden grip on the victim
       else if (action.id == 'hardenGrip')

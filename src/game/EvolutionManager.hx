@@ -37,7 +37,7 @@ class EvolutionManager
           ep: 0,
           level: 0,
           info: EvolutionConst.getPathInfo(p.id)
-          });
+        });
     }
 
 
@@ -226,9 +226,10 @@ class EvolutionManager
     }
 
 
-// player action (called from the EvolutionWindow)
-  public function action(id: String)
+// player action (called from the EvolutionWindow or by hotkey)
+  public function action(action: _PlayerAction): Bool
     {
+      var id = action.id;
       var actionName = id.substr(0, id.indexOf('.'));
       var actionID = id.substr(id.indexOf('.') + 1);
 
@@ -236,7 +237,7 @@ class EvolutionManager
       if (id == 'stop')
         {
           stop();
-          return;
+          return true;
         }
 
       // set task and activate
@@ -252,6 +253,7 @@ class EvolutionManager
         isTaskPath = false;
 
 //      trace(actionName + ' ' + actionID);
+      return true;
     }
 
 
@@ -406,6 +408,20 @@ class EvolutionManager
 
           n--;
         }
+    }
+
+
+// update actions
+  public function updateActionList()
+    {
+      if (isActive)
+        game.scene.hud.addKeyAction({
+          id: 'stop',
+          type: ACTION_EVOLUTION,
+          name: 'Stop evolution',
+          energy: 0,
+          key: hxd.Key.S
+        });
     }
 }
 

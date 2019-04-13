@@ -26,7 +26,7 @@ class Evolution extends Actions
           type: ACTION_EVOLUTION,
           name: 'Stop evolution',
           energy: 0,
-          });
+        });
 
       // add available improvements
       var diff = game.player.evolutionManager.difficulty;
@@ -110,7 +110,7 @@ class Evolution extends Actions
 // action
   override function onAction(action: _PlayerAction)
     {
-      game.player.evolutionManager.action(action.id);
+      game.player.evolutionManager.action(action);
     }
 
 

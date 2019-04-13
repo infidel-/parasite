@@ -275,7 +275,7 @@ class AreaGame
 
       // clear map
       _cells = [];
-      var baseTile = Const.TILE_GROUND;
+      var baseTile = Const.TILE_WALKWAY;
       if (typeID == AREA_GROUND)
         baseTile = Const.TILE_GRASS;
       for (i in 0...width)
