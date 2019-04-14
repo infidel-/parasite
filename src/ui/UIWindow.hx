@@ -19,12 +19,16 @@ class UIWindow
   var back: Graphics;
   var width: Int;
   var height: Int;
+  var isScreenSize: Bool;
+  var isCentered: Bool;
 
   public function new(g: Game, ?w: Int, ?h: Int)
     {
       game = g;
       width = (w != null ? w : game.scene.win.width);
       height = (h != null ? h : game.scene.win.height);
+      isCentered = false;
+      isScreenSize = (w == null && h == null);
       window = new Object();
       window.x = 0;
       window.y = 0;
@@ -47,6 +51,7 @@ class UIWindow
     {
       window.x = Std.int((game.scene.win.width - width) / 2);
       window.y = Std.int((game.scene.win.height - height) / 2);
+      isCentered = true;
     }
 
 

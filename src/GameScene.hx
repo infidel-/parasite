@@ -26,6 +26,8 @@ class GameScene extends Scene
   public var font: Font;
 //  public var font10: Font;
   var uiQueue: List<_UIEvent>; // gui event queue
+  var uiQueuePaused: Bool; // if true, the queue is paused
+  var uiQueuePrev: _UIEvent; // previous UI event
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
   var components: Map<_UIState, UIWindow>; // GUI windows (HaxeUI)
@@ -39,6 +41,7 @@ class GameScene extends Scene
   public var shiftPressed: Bool; // Shift key pressed?
   var loseFocus: LoseFocus; // lose focus blur
   var isFullScreen: Bool; // game is in fullscreen mode?
+  var firstResize: Bool; // ignore first resize
 
   // camera x,y
   public var cameraTileX1: Int;
@@ -56,12 +59,16 @@ class GameScene extends Scene
       super();
       win = Window.getInstance();
       win.addEventTarget(onEvent);
+//      win.addResizeEvent(resize);
       isFullScreen = false;
+      firstResize = true;
       game = g;
       uiLocked = [];
       uiNoClose = [];
       _state = UISTATE_DEFAULT;
       uiQueue = new List();
+      uiQueuePaused = false;
+      uiQueuePrev = null;
       controlPressed = false;
       shiftPressed = false;
       cameraTileX1 = 0;
@@ -93,6 +100,17 @@ class GameScene extends Scene
         controlKey = 'ctrl';
       else
         controlKey = 'alt';
+
+      // handle resize
+      js.Browser.window.onresize = function ()
+        {
+          var doc = js.Browser.document;
+          var w = js.Browser.window;
+          var canvas = doc.getElementById("webgl");
+          canvas.style.width = w.innerWidth + 'px';
+          canvas.style.height = w.innerHeight + 'px';
+          resize();
+        };
 #end
     }
 
@@ -137,23 +155,7 @@ class GameScene extends Scene
       // init GUI
       mouse = new Mouse(game);
       hud = new HUD(game);
-      components = [
-        UISTATE_MESSAGE => new Message(game),
-        UISTATE_DIFFICULTY => new Difficulty(game),
-//        UISTATE_DOCUMENT => new Document(game),
-        UISTATE_DOCUMENT => new Text(game),
-        UISTATE_YESNO => new YesNo(game),
-
-        UISTATE_GOALS => new Goals(game),
-        UISTATE_INVENTORY => new Inventory(game),
-        UISTATE_SKILLS => new Skills(game),
-        UISTATE_LOG => new Log(game),
-        UISTATE_TIMELINE => new Timeline(game),
-        UISTATE_EVOLUTION => new Evolution(game),
-        UISTATE_ORGANS => new Organs(game),
-        UISTATE_DEBUG => new Debug(game),
-        UISTATE_FINISH => new Finish(game),
-      ];
+      createComponents();
       loseFocus = new LoseFocus(game);
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
@@ -385,6 +387,7 @@ class GameScene extends Scene
         {
           // get next event
           var ev = uiQueue.first();
+          uiQueuePrev = ev;
           uiQueue.remove(ev);
 
           if (components[ev.state] != null)
@@ -629,33 +632,33 @@ class GameScene extends Scene
 
               ret = true;
             }
-
-          // toggle fullscreen
-          else if (key == Key.F)
-            {
-              isFullScreen = !isFullScreen;
-#if js
-              var doc = js.Browser.document;
-              if (doc.fullscreenEnabled)
-                {
-                  var e: js.html.CanvasElement =
-                    cast doc.getElementById("webgl");
-                  if (isFullScreen)
-                    untyped e.requestFullscreen();
-                  else doc.exitFullscreen();
-                }
-#else
-              win.setFullScreen(isFullScreen);
-#end
-
-              ret = true;
-            }
         }
 
       // next 10 actions
       if (key == Key.S)
         {
           _inputState = 1;
+          ret = true;
+        }
+
+      // toggle fullscreen
+      else if (key == Key.F)
+        {
+          isFullScreen = !isFullScreen;
+#if js
+          var doc = js.Browser.document;
+          if (doc.fullscreenEnabled)
+            {
+              var e: js.html.CanvasElement =
+                cast doc.getElementById("webgl");
+              if (isFullScreen)
+                untyped e.requestFullscreen();
+              else doc.exitFullscreen();
+            }
+#else
+          win.setFullScreen(isFullScreen);
+#end
+
           ret = true;
         }
 
@@ -813,6 +816,65 @@ class GameScene extends Scene
             }
 */
         }
+    }
+
+
+// handle window resize event
+  public function resize()
+    {
+#if js
+      // hack: ignore first resize on js
+      if (firstResize)
+        {
+          firstResize = false;
+          return;
+        }
+#end
+      hud.resize();
+      updateCamera();
+      if (game.location == LOCATION_AREA)
+        {
+          area.update();
+          game.area.updateVisibility();
+        }
+      else if (game.location == LOCATION_REGION)
+        region.update();
+
+      // hack: pause queue, close current window and re-create all windows
+      uiQueuePaused = true;
+      var prevState = state;
+      if (prevState != UISTATE_DEFAULT)
+        closeWindow();
+      createComponents();
+      uiQueuePaused = false;
+      if (prevState != UISTATE_DEFAULT)
+        {
+          if (prevState == UISTATE_MESSAGE)
+            event(uiQueuePrev);
+          else state = prevState;
+        }
+    }
+
+
+// create or re-create windows
+  function createComponents()
+    {
+      components = [
+        UISTATE_MESSAGE => new Message(game),
+        UISTATE_DIFFICULTY => new Difficulty(game),
+        UISTATE_DOCUMENT => new Text(game),
+        UISTATE_YESNO => new YesNo(game),
+
+        UISTATE_GOALS => new Goals(game),
+        UISTATE_INVENTORY => new Inventory(game),
+        UISTATE_SKILLS => new Skills(game),
+        UISTATE_LOG => new Log(game),
+        UISTATE_TIMELINE => new Timeline(game),
+        UISTATE_EVOLUTION => new Evolution(game),
+        UISTATE_ORGANS => new Organs(game),
+        UISTATE_DEBUG => new Debug(game),
+        UISTATE_FINISH => new Finish(game),
+      ];
     }
 }
 

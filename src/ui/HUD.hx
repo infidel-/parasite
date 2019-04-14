@@ -503,4 +503,17 @@ class HUD
     {
       _container.visible = !_container.visible;
     }
+
+
+// resize HUD elements
+  public function resize()
+    {
+      _console.maxWidth = game.scene.win.width - 40;
+      _log.maxWidth = game.scene.win.width - 40;
+      _help.maxWidth = game.scene.win.width - 40;
+      _helpBack.y = game.scene.win.height - game.config.fontSize - 8;
+      _goalsBack.x = game.scene.win.width - 420;
+
+      update();
+    }
 }
