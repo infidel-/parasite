@@ -45,7 +45,7 @@ class EvolutionConst
         name: 'Decay acceleration',
         note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Bodies will disappear in " + l.turns + " turns";
           },
@@ -76,7 +76,7 @@ class EvolutionConst
         name: 'Protective cover',
         note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Host armor bonus (minus to damage): " + l.armor + "\n" +
               "AI alertness bonus: " + l.alertness;
@@ -106,7 +106,7 @@ class EvolutionConst
         name: 'Stem cell reservoirs',
         note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return l.turns + " turns to restore 1 health of host and parasite";
           },
@@ -135,7 +135,7 @@ class EvolutionConst
         name: 'Antibody generators',
         note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "+" + l.health + " health to host";
           },
@@ -164,7 +164,7 @@ class EvolutionConst
         name: '??Host energy bonus',
         note: 'Body feature. Grown body feature gives a bonus to maximum host energy',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Host maximum energy multiplier: " + l.hostEnergyMod +
               "\nRestores energy to maximum on completion";
@@ -196,7 +196,7 @@ class EvolutionConst
         name: 'Microvascular networks',
         note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "+" + l.strength + " strength to host";
           },
@@ -225,7 +225,7 @@ class EvolutionConst
         name: '??Acid spit',
         note: 'Body feature. Grown body feature gives the host an ability to spit acid on an NPC',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
               "\nSpit range: " + l.range;
@@ -277,7 +277,7 @@ class EvolutionConst
         name: '??Slime spit',
         note: 'Body feature. Grown body feature gives the host an ability to spit slime on an NPC to slow them down',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Slime strength: " + l.strength +
               "\nSpit range: " + l.range;
@@ -325,7 +325,7 @@ class EvolutionConst
         name: '??Paralysis spit',
         note: 'Body feature. Grown body feature gives the host an ability to paralyze an NPC',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Paralysis effect time: " + l.time +
               "\nSpit range: " + l.range;
@@ -373,7 +373,7 @@ class EvolutionConst
         name: '??Panic gas',
         note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Cloud range: " + l.range +
               "\nCloud dissipation time: " + l.timeout +
@@ -427,7 +427,7 @@ class EvolutionConst
         name: '??Paralysis gas',
         note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of paralytic gas',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Cloud range: " + l.range +
               "\nCloud dissipation time: " + l.timeout +
@@ -484,7 +484,7 @@ class EvolutionConst
         name: '??Attach efficiency',
         note: 'Knowledge. Improves base grip on attach to host',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Base attach grip: " + l.attachHoldBase;
           },
@@ -508,7 +508,7 @@ class EvolutionConst
         name: '??Hold efficiency',
         note: 'Knowledge. Improves base grip on harden grip action',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Base harden grip: " + l.attachHoldBase;
           },
@@ -532,7 +532,7 @@ class EvolutionConst
         name: '??Control efficiency',
         note: 'Knowledge. Improves base control on reinforce control action',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Base reinforce control: " + l.reinforceControlBase;
           },
@@ -560,7 +560,7 @@ class EvolutionConst
         name: 'Brain probe',
         note: 'Knowledge. Allows probing host brain to learn its contents',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Human society knowledge multiplier: " + l.humanSociety +
               "\nBase host energy cost: " + l.hostEnergyBase +
@@ -640,7 +640,7 @@ class EvolutionConst
         name: 'Camouflage layer',
         note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "AI alertness multiplier: " + l.alertness;
           },
@@ -706,7 +706,7 @@ class EvolutionConst
         name: 'Microhabitat',
         note: 'Knowledge. Gives the player an ability to build microhabitats.',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return "Maximum number of microhabitats: " + l.numHabitats;
           },
@@ -744,7 +744,7 @@ class EvolutionConst
         name: 'Biomineral formation',
         note: 'Habitat growth. Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
         maxLevel: 3,
-        noteFunc: function (l)
+        noteFunc: function (l: Dynamic)
           {
             return
               "Energy units per formation: " + l.energy +

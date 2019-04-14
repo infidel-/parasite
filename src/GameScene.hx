@@ -3,8 +3,9 @@
 import h2d.Font;
 import h2d.Scene;
 import h2d.Tile;
-import hxd.Window;
 import hxd.Key;
+import hxd.System;
+import hxd.Window;
 #if js
 import js.Browser;
 #else
@@ -37,6 +38,7 @@ class GameScene extends Scene
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
   var loseFocus: LoseFocus; // lose focus blur
+  var isFullScreen: Bool; // game is in fullscreen mode?
 
   // camera x,y
   public var cameraTileX1: Int;
@@ -54,6 +56,7 @@ class GameScene extends Scene
       super();
       win = Window.getInstance();
       win.addEventTarget(onEvent);
+      isFullScreen = false;
       game = g;
       uiLocked = [];
       uiNoClose = [];
@@ -66,8 +69,23 @@ class GameScene extends Scene
       cameraTileX2 = 0;
       cameraTileY2 = 0;
 
+      // set correct window size and center
+#if !js
       width = game.config.windowWidth;
       height = game.config.windowHeight;
+      if (width < 800)
+        width = 800;
+      if (height < 600)
+        height = 600;
+      win.resize(width, height);
+      var x = Std.int((System.width - width) / 2);
+      var y = Std.int((System.height - height) / 2);
+      if (x < 0)
+        x = 0;
+      if (y < 0)
+        y = 0;
+      @:privateAccess win.window.setPosition(x, y);
+#end
 
 #if js
       var os = Browser.navigator.platform;
@@ -252,6 +270,10 @@ class GameScene extends Scene
           js.Browser.location.reload();
           return true;
         }
+#else
+      // exit game
+      if (key == Key.F10)
+        hxd.System.exit();
 #end
 
       // toggle gui
@@ -285,10 +307,6 @@ class GameScene extends Scene
 
           return ret;
         }
-
-      // exit game
-      if (key == Key.F10)
-        hxd.System.exit();
 
       return false;
     }
@@ -608,6 +626,27 @@ class GameScene extends Scene
 
               // update HUD info
               game.updateHUD();
+
+              ret = true;
+            }
+
+          // toggle fullscreen
+          else if (key == Key.F)
+            {
+              isFullScreen = !isFullScreen;
+#if js
+              var doc = js.Browser.document;
+              if (doc.fullscreenEnabled)
+                {
+                  var e: js.html.CanvasElement =
+                    cast doc.getElementById("webgl");
+                  if (isFullScreen)
+                    untyped e.requestFullscreen();
+                  else doc.exitFullscreen();
+                }
+#else
+              win.setFullScreen(isFullScreen);
+#end
 
               ret = true;
             }

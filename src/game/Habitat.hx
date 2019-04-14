@@ -62,6 +62,7 @@ class Habitat
       game.log('Biomineral formation completed.', COLOR_AREA);
 
       game.area.updateVisibility();
+      game.scene.updateCamera();
 
       // update habitat stats
       update();
@@ -104,6 +105,7 @@ class Habitat
       game.log('Assimilation cavity completed.', COLOR_AREA);
 
       game.area.updateVisibility();
+      game.scene.updateCamera();
 
       // update habitat stats
       update();

@@ -189,7 +189,7 @@ class Const
           // lists
           else if (className == 'List')
             {
-              var l: List<Dynamic> = untyped ff;
+              var l: List<Dynamic> = cast ff;
               var tmp = [];
               for (x in l)
                 tmp.push(x);

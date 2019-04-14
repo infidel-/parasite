@@ -56,8 +56,8 @@ class Player
       };
 
       state = PLR_STATE_PARASITE;
+      maxEnergy = vars.maxEnergy; // first set max for correct clamping
       energy = vars.startEnergy;
-      maxEnergy = vars.maxEnergy;
       maxHealth = vars.startHealth;
       health = vars.startHealth;
       hostControl = 0;

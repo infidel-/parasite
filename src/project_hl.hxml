@@ -1,0 +1,7 @@
+-D resourcesPath=../assets/
+-D windowTitle=Parasite
+-lib heaps
+-lib hlsdl
+-hl ../bin.hl/parasite.hl
+-main Main
+

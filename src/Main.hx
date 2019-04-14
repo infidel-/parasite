@@ -17,8 +17,8 @@ class Main extends hxd.App
 #if js
       // focus window
       js.Browser.document.getElementById("webgl").focus();
-#end
       game.scene.win.propagateKeyEvents = true;
+#end
 
 /*
       engine.backgroundColor = 0x202020;
