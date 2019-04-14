@@ -17,7 +17,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "That host is agitated by my appearance, I need to flee to avoid trouble.",
+      messageComplete: "That host is agitated, I need to flee to avoid trouble.",
     },
 
     GOAL_TUTORIAL_BODY => {

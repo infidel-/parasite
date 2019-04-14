@@ -3,24 +3,22 @@ VERSION := $(shell cat VERSION)
 
 all: clean html5-mydebug
 
-#release: release-win release-linux32 release-linux64 release-mac64
+#release: release-win release-linux32 release-linux64
 
-#release-win:
-#	echo "Building windows release" $(VERSION)
-#	mkdir -p _releases _releases/parasite-$(VERSION)-win
-#	cp _release.windows/* _releases/parasite-$(VERSION)-win/
-#	cp ../parasite.cfg.default _releases/parasite-$(VERSION)-win/parasite.cfg
-#	haxelib run openfl build project.nmml windows -Dmydebug
-#	cp -R ../.bin/windows/neko/release/bin/* \
-#	  _releases/parasite-$(VERSION)-win/
-#	rm _releases/parasite-$(VERSION)-win/index.html
-#	cp ../.bin/windows/neko/release/bin/parasite.exe \
-#	  _releases/parasite-$(VERSION)-win/parasite-debug.exe
-#	haxelib run openfl build project.nmml windows
-#	cp ../.bin/windows/neko/release/bin/parasite.exe \
-#	  _releases/parasite-$(VERSION)-win/
-#	cd _releases && zip -r9 parasite-$(VERSION)-win.zip parasite-$(VERSION)-win/
-#
+release-win:
+	echo "Building windows release" $(VERSION)
+	mkdir -p ../_releases ../_releases/parasite-$(VERSION)-win
+	cp ../_release.windows/* ../_releases/parasite-$(VERSION)-win/
+	cp ../parasite.cfg.default ../_releases/parasite-$(VERSION)-win/parasite.cfg
+	echo "Debug build..."
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -debug -D mydebug
+	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win/parasite-debug.hl
+	echo "Normal build..."
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml
+	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win/parasite.hl
+	cd ../_releases && zip -r9 parasite-$(VERSION)-win.zip parasite-$(VERSION)-win/
+	cp ../_releases/parasite-$(VERSION)-win.zip /mnt/d/1/
+
 #release-linux32:
 #	echo "Building linux 32-bit release" $(VERSION)
 #	mkdir -p _releases _releases/parasite-$(VERSION)-linux32
@@ -57,18 +55,6 @@ all: clean html5-mydebug
 #	cd _releases && tar -c parasite-$(VERSION)-linux64/ | gzip - > \
 #	  parasite-$(VERSION)-linux64.tar.gz
 #
-#release-mac64:
-#	echo "Building MacOSX 64-bit release" $(VERSION)
-#	mkdir -p _releases _releases/parasite-$(VERSION)-mac64
-##	openfl build project.nmml mac -neko -Dmydebug
-##	cp ../.bin/mac64/neko/release/bin/parasite \
-##	  _releases/parasite-$(VERSION)-mac64/parasite-debug
-#	openfl build project.nmml mac -neko
-#	cp ../parasite.cfg.default ../.bin/mac64/neko/release/bin/parasite.app/Contents/MacOS/parasite.cfg
-#	cp -R ../.bin/mac64/neko/release/bin/parasite.app \
-#	  _releases/parasite-$(VERSION)-mac64/
-#	cd _releases && zip -r9 parasite-$(VERSION)-mac64.zip parasite-$(VERSION)-mac64/
-#
 #release-html5-dev-debug:
 #	openfl build project.nmml html5 -Dmydebug && \
 #	cp -R ../.bin/html5/release/bin/* \
@@ -91,12 +77,6 @@ all: clean html5-mydebug
 #linux64-clean:
 #	openfl build project.nmml linux -neko
 #
-#mac64-mydebug:
-#	openfl build project.nmml mac -neko -Dmydebug
-#
-#mac64-clean:
-#	openfl build project.nmml mac -neko
-#
 #windows-mydebug:
 #	openfl build project.nmml windows -32 -Dmydebug
 #
@@ -110,7 +90,6 @@ html5:
 	haxe project_js.hxml --connect 6000
 
 hl-mydebug:
-#	haxe project_hl.hxml -debug -D mydebug --connect 6000 && 
 	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -debug -D mydebug && \
 	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.9.0-win/
 
