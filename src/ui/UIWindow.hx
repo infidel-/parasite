@@ -46,6 +46,13 @@ class UIWindow
     }
 
 
+// remove from scene
+  public function remove()
+    {
+      window.remove();
+    }
+
+
 // center window on screen
   function center()
     {

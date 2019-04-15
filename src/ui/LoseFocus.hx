@@ -16,6 +16,7 @@ class LoseFocus extends UIWindow
       text.text = 'LOST WINDOW FOCUS';
       text.y = Std.int((game.scene.win.height - 20) / 2);
       text.textAlign = Center;
-    }
 
+      game.scene.add(window, 100);
+    }
 }

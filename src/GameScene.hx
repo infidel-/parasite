@@ -156,7 +156,6 @@ class GameScene extends Scene
       mouse = new Mouse(game);
       hud = new HUD(game);
       createComponents();
-      loseFocus = new LoseFocus(game);
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
@@ -859,6 +858,14 @@ class GameScene extends Scene
 // create or re-create windows
   function createComponents()
     {
+      // free old ones
+      if (components != null)
+        for (c in components)
+          c.remove();
+      if (loseFocus != null)
+        loseFocus.remove();
+
+      loseFocus = new LoseFocus(game);
       components = [
         UISTATE_MESSAGE => new Message(game),
         UISTATE_DIFFICULTY => new Difficulty(game),
