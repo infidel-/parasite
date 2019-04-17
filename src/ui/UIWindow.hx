@@ -102,6 +102,7 @@ class UIWindow
 //      bg.beginTileFill(0, 0, 1, 1, tile);
 //      bg.drawRect(0, 0, w, h);
 
+#if !free
       // up
       var atlas = game.scene.atlas;
       var xx = 0;
@@ -151,6 +152,11 @@ class UIWindow
       bg.drawTile(0, h - tile.height, tile);
       tile = atlas.getInterface('textDR');
       bg.drawTile(w - tile.width, h - tile.height, tile);
+#else
+      var textx = 10;
+      var textx2 = 10;
+      var texty = 10;
+#end
 
       text.x = x + textx;
       text.y = y + texty;
