@@ -190,6 +190,7 @@ class GameScene extends Scene
           // reset input flags
           controlPressed = false;
           shiftPressed = false;
+          mouse.ignoreNextClick = true; // ignore click on screen
 
           loseFocus.show();
         }

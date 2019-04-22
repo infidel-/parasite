@@ -20,6 +20,7 @@ class Mouse
   var oldy: Float;
   public var atlas: Array<Cursor>;
   public var forceNextUpdate: Int; // kludge for update
+  public var ignoreNextClick: Bool; // kludge for regaining focus
   var oldPos: { x: Int, y: Int };
 
   public function new(g: Game)
@@ -31,6 +32,7 @@ class Mouse
       oldPos = { x: -1, y: -1 };
       sceneState = game.scene.state;
       forceNextUpdate = 0;
+      ignoreNextClick = false;
       atlas = null;
 
       // config - mouse disabled
@@ -73,6 +75,13 @@ class Mouse
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         return;
+
+      // skip next click once
+      if (ignoreNextClick)
+        {
+          ignoreNextClick = false;
+          return;
+        }
 
       var pos = getXY();
 #if mydebug

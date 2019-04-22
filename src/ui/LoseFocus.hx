@@ -13,7 +13,7 @@ class LoseFocus extends UIWindow
       super(g);
 
       var text = addText(false, 0, 0, width, height);
-      text.text = 'LOST WINDOW FOCUS';
+      text.text = 'CLICK TO CONTINUE';
       text.y = Std.int((game.scene.win.height - 20) / 2);
       text.textAlign = Center;
 
