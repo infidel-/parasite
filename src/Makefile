@@ -79,13 +79,13 @@ release-html5-dev: html5-free
 	cp -R ../bin/parasite.js \
 	~/git/starinfidel.github.io/parasite-dev/
 
+cp-paid:
+	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid/graphics
 
-html5-mydebug:
-	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid/graphics && \
+html5-mydebug: cp-paid
 	haxe project_js.hxml -debug -D resourcesPath=../assets.paid/ -D mydebug --connect 6000
 
-html5:
-	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid/graphics && \
+html5: cp-paid
 	haxe project_js.hxml -D resourcesPath=../assets.paid/ --connect 6000
 
 html5-free-mydebug:
@@ -94,8 +94,12 @@ html5-free-mydebug:
 html5-free:
 	haxe project_js.hxml -D free --connect 6000
 
+hl-mydebug-free:
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -debug -D mydebug -D free && \
+	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.9.0-win/
+
 hl-mydebug:
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -debug -D mydebug && \
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D resourcesPath=../assets.paid/ -debug -D mydebug && \
 	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.9.0-win/
 
 count:

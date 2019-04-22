@@ -22,6 +22,9 @@ class Text extends UIWindow
 
       textHeight = Std.int(height - 10 - tile.height);
       addButton(-1, textHeight, 'CLOSE', game.scene.closeWindow);
+#if (free || (!free && !js))
+      addItchLink(textHeight);
+#end
     }
 
 

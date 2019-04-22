@@ -3,10 +3,12 @@
 package ui;
 
 import h2d.Anim;
+import h2d.Bitmap;
 import h2d.Object;
 import h2d.Graphics;
 import h2d.Interactive;
 import h2d.Text;
+import h2d.TextInput;
 import h2d.HtmlText;
 import hxd.Event;
 
@@ -163,6 +165,62 @@ class UIWindow
       text.maxWidth = w - text.x - textx2;
 
       return text;
+    }
+
+
+// add itch.io link
+  function addItchLink(y: Int)
+    {
+      // image
+      var tile = hxd.Res.load('graphics/logo_small.png').toTile();
+#if js
+      var b = new Interactive(tile.width, tile.height, window);
+      var img = new Bitmap(tile, b);
+      b.x = 10;
+      b.y = y - 5;
+      b.onOut = function (e: Event)
+        {
+          // KLUDGE: fix cursor on leaving button
+          game.scene.mouse.forceNextUpdate = 5;
+        }
+      b.onClick = function (e: Event)
+        {
+          js.Browser.window.open('https://starinfidel.itch.io/parasite',
+            '_blank');
+        }
+#else
+      var img = new Bitmap(tile, window);
+      img.x = 10;
+      img.y = y - 5;
+#end
+
+      // text
+      var back2 = new Graphics(back);
+      var text = new Text(game.scene.font, back2);
+      text.x = tile.width + 20;
+      text.y = y + 10;
+      text.textColor = 0x5febbd;
+      text.text = 'https://starinfidel.itch.io/parasite';
+
+      back2.beginFill(0x283134, 1);
+      back2.drawRect(tile.width + 15, y + 5,
+        text.textWidth + 10, text.textHeight + 10);
+      back2.endFill();
+#if js
+      var b = new Interactive(text.textWidth + 10, text.textHeight + 10, window);
+      b.x = text.x - 5;
+      b.y = text.y - 5;
+      b.onOut = function (e: Event)
+        {
+          // KLUDGE: fix cursor on leaving button
+          game.scene.mouse.forceNextUpdate = 5;
+        }
+      b.onClick = function (e: Event)
+        {
+          js.Browser.window.open('https://starinfidel.itch.io/parasite',
+            '_blank');
+        }
+#end
     }
 
 
