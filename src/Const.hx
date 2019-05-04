@@ -122,6 +122,7 @@ class Const
   public static var TILE_ALLEY = OFFSET_AREA + 1;
   public static var TILE_WALKWAY = OFFSET_AREA + 2;
 
+  public static var OFFSET_CITY = 48;
 
   public static var TILE_CITY_WALKABLE = [ true ];
 
@@ -136,9 +137,37 @@ class Const
     true, true, true, true,
     true, true, true, true,
     true, true, true, true,
-    // row 2
+    // row 2 - roads
     true, true, true, true,
-    ];
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    // row 3+ - region tiles
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+  ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock',
     'wall', 'tree', 'tree', 'tree', 'tree', 'grass' ];
 //  public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];

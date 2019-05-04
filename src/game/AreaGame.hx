@@ -542,12 +542,33 @@ class AreaGame
 
       if (typeID == AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;
+#if !free
+      else if (typeID == AREA_CITY_LOW)
+        {
+          tileID = Const.OFFSET_CITY;
+          tileID += x % 4;
+          tileID += (y % 4) * 16;
+        }
+      else if (typeID == AREA_CITY_MEDIUM)
+        {
+          tileID = Const.OFFSET_CITY + 4;
+          tileID += x % 4;
+          tileID += (y % 4) * 16;
+        }
+      else if (typeID == AREA_CITY_HIGH)
+        {
+          tileID = Const.OFFSET_CITY + 8;
+          tileID += x % 4;
+          tileID += (y % 4) * 16;
+        }
+#else
       else if (typeID == AREA_CITY_LOW)
         tileID = Const.TILE_CITY_LOW;
       else if (typeID == AREA_CITY_MEDIUM)
         tileID = Const.TILE_CITY_MEDIUM;
       else if (typeID == AREA_CITY_HIGH)
         tileID = Const.TILE_CITY_HIGH;
+#end
       else if (typeID == AREA_MILITARY_BASE)
         tileID = Const.TILE_MILITARY_BASE1 + Std.random(2);
       else if (typeID == AREA_FACILITY)

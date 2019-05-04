@@ -27,7 +27,7 @@ release-win-free:
 	cp ../_release.windows/* ../_releases/parasite-$(VERSION)-win-free/
 	cp ../parasite.cfg.default ../_releases/parasite-$(VERSION)-win-free/parasite.cfg
 	echo "FREE Debug build..."
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -debug -D mydebug
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D free -debug -D mydebug
 	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win-free/parasite-debug.hl
 	echo "FREE Normal build..."
 	~/haxe-4.0.0-rc2/run.sh project_hl.hxml
@@ -78,6 +78,12 @@ release-html5-dev-debug: html5-free-mydebug
 release-html5-dev: html5-free
 	cp -R ../bin/parasite.js \
 	~/git/starinfidel.github.io/parasite-dev/
+
+release-html5-paid: cp-paid
+	haxe project_js.hxml -D resourcesPath=../assets.paid/ --connect 6000
+	cd ../bin/ && zip -r9 parasite-$(VERSION)-js.zip index.html parasite.js favicon.png
+	mv ../bin/parasite-$(VERSION)-js.zip ../_releases
+	cp ../_releases/parasite-$(VERSION)-js.zip /mnt/d/1/
 
 cp-paid:
 	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid/graphics
