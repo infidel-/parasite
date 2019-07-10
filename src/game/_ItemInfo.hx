@@ -12,6 +12,7 @@ typedef _ItemInfo =
 
   // weapon-related stats; null if not a weapon
   @:optional var weapon: {
+    @:optional var sounds: Array<String>; // attack sounds
     var isRanged: Bool; // is this weapon type ranged?
     var skill: _Skill; // associated skill
     var minDamage: Int; // min weapon damage

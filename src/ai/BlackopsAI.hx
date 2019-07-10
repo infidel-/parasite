@@ -5,6 +5,7 @@ package ai;
 import ai.AI;
 import _AIState;
 import game.Game;
+import const.*;
 
 class BlackopsAI extends HumanAI
 {
@@ -18,25 +19,7 @@ class BlackopsAI extends HumanAI
       type = 'blackops';
       name.unknown = 'blackops agent';
       name.unknownCapped = 'Blackops agent';
-      sounds = [
-        '' + REASON_DAMAGE => [
-          { text: '*GRUNT*', radius: 2, alertness: 5, params: null },
-          { text: '*GROAN*', radius: 2, alertness: 5, params: null },
-          ],
-        '' + AI_STATE_IDLE => [
-          { text: 'Huh?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
-          { text: 'Whu?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
-          { text: 'What the?', radius: 0, alertness: 0, params: { minAlertness: 50 }  },
-          { text: 'BOGEY!', radius: 0, alertness: 0, params: { minAlertness: 75 } },
-          ],
-        '' + AI_STATE_ALERT => [
-          { text: 'TANGO!', radius: 7, alertness: 10, params: null },
-          ],
-        '' + AI_STATE_HOST => [
-          { text: '*moan*', radius: 2, alertness: 5, params: null },
-          { text: '*MOAN*', radius: 3, alertness: 5, params: null },
-          ]
-        ];
+      sounds = SoundConst.team;
       isAggressive = true;
       isRelentless = true;
       inventory.clear();

@@ -5,6 +5,7 @@ package ai;
 import ai.AI;
 import _AIState;
 import game.Game;
+import const.*;
 
 class AgentAI extends HumanAI
 {
@@ -18,25 +19,7 @@ class AgentAI extends HumanAI
       type = 'agent';
       name.unknown = 'agent';
       name.unknownCapped = 'Agent';
-      sounds = [
-        '' + REASON_DAMAGE => [
-          { text: 'Ouch!', radius: 2, alertness: 5, params: null },
-          { text: '*GROAN*', radius: 2, alertness: 5, params: null },
-          ],
-        '' + AI_STATE_IDLE => [
-          { text: 'Huh?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
-          { text: 'Whu?', radius: 0, alertness: 0, params: { minAlertness: 25 }  },
-          { text: 'What the?', radius: 0, alertness: 0, params: { minAlertness: 50 }  },
-          { text: '*GASP*', radius: 0, alertness: 0, params: { minAlertness: 75 } },
-          ],
-        '' + AI_STATE_ALERT => [
-          { text: 'STOP!', radius: 7, alertness: 10, params: null },
-          ],
-        '' + AI_STATE_HOST => [
-          { text: '*moan*', radius: 2, alertness: 5, params: null },
-          { text: '*MOAN*', radius: 3, alertness: 5, params: null },
-          ]
-        ];
+      sounds = SoundConst.agent;
       isAggressive = true;
       inventory.addID('pistol');
       skills.addID(SKILL_PISTOL, 40 + Std.random(25));

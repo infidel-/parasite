@@ -69,7 +69,7 @@ class ConsoleGame
             'lia - learn all improvements, ' +
             'li - learn improvement, ' +
             'lt - learn all timeline,<br/>' +
-            'restart, s - set player stage, quit.');
+            'snd - play sound, restart, s - set player stage, quit.');
 #else
           log('Available commands: cfg, config, ' +
             'dg - debug: graphics info, ' +
@@ -101,6 +101,10 @@ class ConsoleGame
           // XXX set <variable> <value>
           if (arr[0] == 'set')
             setVariableCommand(arr);
+
+          // XXX snd <file>
+          else if (arr[0] == 'snd')
+            playSoundCommand(arr);
 
           else setCommand(cmd);
         }
@@ -231,6 +235,34 @@ class ConsoleGame
           return;
         }
       game.log('Set variable [' + key + '] to ' + val + '.');
+    }
+
+
+// snd <file>
+// snd
+  function playSoundCommand(arr: Array<String>)
+    {
+      if (arr.length < 2)
+        {
+          log('snd [file] - play sound file (no extension)');
+          log('snd - show sound files');
+          var list = new Array();
+          for (s in @:privateAccess game.scene.soundManager.sounds.keys())
+            list.push(s);
+          list.sort(function (a: String, b: String)
+            {
+              if (a > b)
+                return 1;
+              else if (a < b)
+                return -1;
+              return 0;
+            });
+          game.log(list.join(', '));
+
+          return;
+        }
+
+      game.scene.soundManager.playSound(arr[1], true);
     }
 
 

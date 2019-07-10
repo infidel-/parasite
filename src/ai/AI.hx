@@ -524,6 +524,11 @@ class AI
             }
         }
 
+      // play weapon sound
+      if (weapon.sounds != null)
+        game.scene.soundManager.playSound(
+          weapon.sounds[Std.random(weapon.sounds.length)], true);
+
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
         id: weapon.skill,
@@ -907,7 +912,8 @@ class AI
     }
 
 
-// emit specific sound
+// emit specific sound (both visual and audio if it exists)
+// also handle sound propagation here
   public function emitSound(sound: AISound)
     {
       // check for min alertness
@@ -917,6 +923,13 @@ class AI
         return;
 
       entity.setText(sound.text, 2);
+      if (sound.files != null)
+        {
+          var file = sound.files[Std.random(sound.files.length)];
+          if (isHuman && !isMale && file.indexOf('male') == 0)
+            file = 'fe' + file;
+          game.scene.soundManager.playSound(file, false);
+        }
       if (sound.radius <= 0 || sound.alertness <= 0)
         return;
 
@@ -1124,11 +1137,22 @@ enum _AIStateChangeReason
 
 // AI bark with parameters
 
-typedef AISound =
+@:structInit
+class AISound
 {
-  var text: String; // text to display
-  var radius: Int; // radius this sound propagates to (can be 0)
-  var alertness: Int; // amount of alertness that AIs in this radius gain
-  @:optional var params: Dynamic; // state-specific parameters
-};
+  public var text: String; // text to display
+  public var radius: Int; // radius this sound propagates to (can be 0)
+  public var alertness: Int; // amount of alertness that AIs in this radius gain
+  @:optional public var params: Dynamic; // state-specific parameters
+  @:optional public var files: Array<String>; // play one of these sounds
+
+  public function new(text: String, radius: Int, alertness: Int,
+      ?params: Dynamic, ?files: Array<String>)
+    {
+      this.text = text;
+      this.alertness = alertness;
+      this.params = params;
+      this.files = files;
+    }
+}
 

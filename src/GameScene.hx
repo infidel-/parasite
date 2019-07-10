@@ -24,6 +24,7 @@ class GameScene extends Scene
   public var hud: HUD; // ingame HUD
   public var win: Window;
   public var font: Font;
+  public var soundManager: SoundManager;
 //  public var font10: Font;
   var uiQueue: List<_UIEvent>; // gui event queue
   var uiQueuePaused: Bool; // if true, the queue is paused
@@ -178,12 +179,15 @@ class GameScene extends Scene
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
 
+      soundManager = new SoundManager(this);
+
 #if js
       // show blur on losing focus
       // this is needed because it's too easy to press Alt, lose it and not notice it
       Browser.window.onfocus = function()
         {
           loseFocus.hide();
+          soundManager.resume();
         }
       Browser.window.onblur = function()
         {
@@ -193,6 +197,7 @@ class GameScene extends Scene
           mouse.ignoreNextClick = true; // ignore click on screen
 
           loseFocus.show();
+          soundManager.pause();
         }
 #end
     }

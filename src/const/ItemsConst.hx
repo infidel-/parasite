@@ -35,6 +35,11 @@ class ItemsConst
           verb1: 'punch',
           verb2: 'punches',
           type: WEAPON_BLUNT,
+          sounds: [
+            'attack_fists1',
+            'attack_fists2',
+            'attack_fists3',
+          ]
         }
     };
 
@@ -56,6 +61,11 @@ class ItemsConst
           verb2: 'attacks',
           // don't bother with weapon type
           type: WEAPON_BLUNT,
+          sounds: [
+            'attack_bite1',
+            'attack_bite2',
+            'attack_bite3',
+          ]
         }
     };
 
@@ -91,6 +101,11 @@ class ItemsConst
           verb1: 'hit',
           verb2: 'hits',
           type: WEAPON_BLUNT,
+          sounds: [
+            'attack_baton1',
+            'attack_baton2',
+            'attack_baton3',
+          ]
         }
     },
     {
@@ -107,6 +122,10 @@ class ItemsConst
           verb1: 'stun',
           verb2: 'stuns',
           type: WEAPON_STUN,
+          sounds: [
+            'attack_stunner1',
+            'attack_stunner2',
+          ]
         }
     },
     {
@@ -123,6 +142,10 @@ class ItemsConst
           verb1: 'shoot',
           verb2: 'shoots',
           type: WEAPON_KINETIC,
+          sounds: [
+            'attack_pistol1',
+            'attack_pistol2',
+          ]
         }
     },
     {
@@ -139,6 +162,9 @@ class ItemsConst
           verb1: 'shoot',
           verb2: 'shoots',
           type: WEAPON_KINETIC,
+          sounds: [
+            'attack_assault_rifle1',
+          ]
         }
     },
     {
@@ -155,6 +181,9 @@ class ItemsConst
           verb1: 'shoot',
           verb2: 'shoots',
           type: WEAPON_KINETIC,
+          sounds: [
+            'attack_shotgun1',
+          ]
         }
     },
     {
@@ -171,6 +200,10 @@ class ItemsConst
           verb1: 'stun',
           verb2: 'stuns',
           type: WEAPON_STUN,
+          sounds: [
+            'attack_stun_rifle1',
+            'attack_stun_rifle2',
+          ]
         }
     },
 

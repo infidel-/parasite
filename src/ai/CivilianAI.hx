@@ -5,6 +5,7 @@ package ai;
 import ai.AI;
 import _AIState;
 import game.Game;
+import const.*;
 
 class CivilianAI extends HumanAI
 {
@@ -14,25 +15,7 @@ class CivilianAI extends HumanAI
       type = 'civilian';
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
-      sounds = [
-        '' + REASON_DAMAGE => [
-          { text: 'Ouch!', radius: 2, alertness: 5, params: null },
-          { text: '*GROAN*', radius: 2, alertness: 5, params: null },
-          ],
-        '' + AI_STATE_IDLE => [
-          { text: 'Huh?', radius: 0, alertness: 0, params: { minAlertness: 25 } },
-          { text: 'Whu?', radius: 0, alertness: 0, params: { minAlertness: 25 } },
-          { text: 'What the?', radius: 0, alertness: 0, params: { minAlertness: 50 } },
-          { text: '*GASP*', radius: 0, alertness: 0, params: { minAlertness: 75 } },
-          ],
-        '' + AI_STATE_ALERT => [
-          { text: '*SCREAM*', radius: 7, alertness: 15, params: null },
-          ],
-        '' + AI_STATE_HOST => [
-          { text: '*moan*', radius: 2, alertness: 5, params: null },
-          { text: '*MOAN*', radius: 3, alertness: 5, params: null },
-          ]
-        ];
+      sounds = SoundConst.civilian;
 
       // these only spawn when they're useful
       if (game.player.vars.searchEnabled)

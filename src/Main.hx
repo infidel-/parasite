@@ -47,6 +47,13 @@ class Main extends hxd.App
       var b = new h2d.Bitmap(tiles[0][4], game.scene);
       b.x = 0;
       b.y = 0;
+-/
+      if (hxd.res.Sound.supportedFormat(Mp3))
+        {
+          var res = hxd.Res.load('music/music.mp3').toSound();
+          var music = res.play(true, 0.3);
+        }
+      else trace('no mp3!');
 */
     }
 

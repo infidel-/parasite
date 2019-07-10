@@ -443,6 +443,13 @@ class PlayerArea
       if (state != PLR_STATE_HOST)
         return;
 
+      // cannot attack when paralyzed
+      if (player.host.effects.has(EFFECT_PARALYSIS))
+        {
+          log('Your host is paralyzed.', COLOR_HINT);
+          return;
+        }
+
       // check if player can see that spot
       if (!game.area.isVisible(x, y, ai.x, ai.y))
         return;
@@ -469,6 +476,11 @@ class PlayerArea
           val: 0.5 * player.skills.getLevel(weapon.skill)
           }]
         });
+
+      // play weapon sound
+      if (weapon.sounds != null)
+        game.scene.soundManager.playSound(
+          weapon.sounds[Std.random(weapon.sounds.length)], true);
 
       // roll skill
       if (!roll)
