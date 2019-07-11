@@ -28,7 +28,9 @@ class AreaGenerator
         generateHabitat(game, area, info);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
 
-      generateObjects(state, game, area, info);
+      if (info.type == 'city')
+        generateObjectsCity(state, game, area, info);
+      else generateObjects(state, game, area, info);
 
 /*
       // draw map
@@ -774,7 +776,6 @@ class AreaGenerator
 // generate objects
   static function generateObjects(state: _GeneratorState, game: Game, area: AreaGame, info: AreaInfo)
     {
-/*
       // spawn all objects
       for (objInfo in info.objects)
         for (i in 0...objInfo.amount)
@@ -822,7 +823,12 @@ class AreaGenerator
 
             area.addObject(o);
           }
-*/
+    }
+
+
+// generate objects on city block
+  static function generateObjectsCity(state: _GeneratorState, game: Game, area: AreaGame, info: AreaInfo)
+    {
       // spawn sewers
       var spawned = new List();
       for (pt in state.sewers)
