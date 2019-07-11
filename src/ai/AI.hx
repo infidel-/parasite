@@ -970,6 +970,9 @@ class AI
       if (state == AI_STATE_DEAD)
         return;
 
+      // dying sound
+      emitRandomSound('' + AI_STATE_DEAD);
+
       game.debug('AI.die[' + id + ']');
       if (game.player.state != PLR_STATE_HOST || game.player.host != this)
         log('dies.');

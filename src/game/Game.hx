@@ -245,6 +245,10 @@ class Game
           else if (condition == 'noHealth')
             finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
 
+          // parasite death
+          scene.soundManager.playSound('parasite_die' +
+            (1 + Std.random(1)), true);
+
           log(finishText);
         }
       else

@@ -94,6 +94,17 @@ class SoundConst
         alertness: 3,
         params: null
       },
+    ],
+    '' + AI_STATE_DEAD => [
+      {
+        text: '*whine*',
+        files: [
+          'dog_die1',
+        ],
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
     ]
   ];
 
@@ -202,6 +213,19 @@ class SoundConst
       params: null
     },
   ];
+  static var humanDie: Array<AISound> = [
+    {
+      text: '*death*',
+      files: [
+        'male_die1',
+        'male_die2',
+        'male_die3',
+      ],
+      radius: 6,
+      alertness: 10,
+      params: null
+    },
+  ];
 
   // civilian sounds
   public static var civilian: Map<String, Array<AISound>> = [
@@ -219,6 +243,7 @@ class SoundConst
       },
     ],
     '' + AI_STATE_HOST => humanHost,
+    '' + AI_STATE_DEAD => humanDie,
   ];
 
   // police officer sounds
@@ -227,6 +252,7 @@ class SoundConst
     '' + AI_STATE_IDLE => humanIdle,
     '' + AI_STATE_ALERT => genericAlert,
     '' + AI_STATE_HOST => humanHost,
+    '' + AI_STATE_DEAD => humanDie,
   ];
 
   // soldier sounds
@@ -310,5 +336,6 @@ class SoundConst
       },
     ],
     '' + AI_STATE_HOST => humanHost,
+    '' + AI_STATE_DEAD => humanDie,
   ];
 }

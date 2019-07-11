@@ -46,6 +46,8 @@ class SoundManager
 
       // load sounds
       var files = new List();
+      files.add('parasite_die1');
+      files.add('parasite_die2');
       for (f in filesMap.keys())
         files.add(f);
       for (f in files)

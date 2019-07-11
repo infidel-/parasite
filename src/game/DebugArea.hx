@@ -77,6 +77,9 @@ class DebugArea
               ai.inventory.addID('smartphone');
               ai.inventory.addID('laptop');
               ai.skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+              game.player.addKnownItem('pistol');
+              game.player.addKnownItem('smartphone');
+              game.player.addKnownItem('laptop');
 
               game.player.evolutionManager.state = 2;
               game.player.vars.organsEnabled = true;
