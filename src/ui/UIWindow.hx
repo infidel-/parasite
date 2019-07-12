@@ -23,6 +23,7 @@ class UIWindow
   var height: Int;
   var isScreenSize: Bool;
   var isCentered: Bool;
+  var state: _UIState; // state this relates to
 
   public function new(g: Game, ?w: Int, ?h: Int)
     {

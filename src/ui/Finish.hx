@@ -8,6 +8,7 @@ class Finish extends Text
 {
   public function new(g: Game)
     {
+      state = UISTATE_FINISH;
       var w = Std.int(g.scene.win.width / 3);
       var h = Std.int(g.scene.win.height / 3);
       if (w < 600)

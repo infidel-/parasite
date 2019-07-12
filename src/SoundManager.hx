@@ -19,6 +19,7 @@ class SoundManager
       scene = s;
       sounds = new Map();
 
+#if !free
       // ogg for HL, mp3 for web
       var ext = (Sound.supportedFormat(Mp3) ? 'mp3' : 'ogg');
 
@@ -64,6 +65,7 @@ class SoundManager
 
           sounds[f] = res.toSound();
         }
+#end
     }
 
 
@@ -97,6 +99,7 @@ class SoundManager
 // play given sound
   public function playSound(key: String, always: Bool)
     {
+#if !free
       if (!sounds.exists(key))
         {
           scene.game.log('Sound [' + key + '] not found.');
@@ -111,23 +114,28 @@ class SoundManager
         }
       scene.game.debug('Playing sound ' + key);
       sounds[key].play(false, 0.5);
+#end
     }
 
 
 // temporarily pause all sounds
   public function pause()
     {
+#if !free
       trace('pause');
       music.fadeTo(0.01, 0.5);
       ambient.fadeTo(0.01, 0.5);
+#end
     }
 
 
 // resume sound playing
   public function resume()
     {
+#if !free
       trace('resume');
       music.fadeTo(0.3, 0.5);
       ambient.fadeTo(0.3, 0.5);
+#end
     }
 }
