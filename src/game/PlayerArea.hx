@@ -167,7 +167,8 @@ class PlayerArea
             if (state == PLR_STATE_HOST &&
                 !o.known() &&
                 player.host.isHuman &&
-                o.type != 'event_object')
+                o.type != 'event_object' &&
+                game.player.vars.objectsEnabled)
               game.scene.hud.addAction({
                 id: 'learnObject',
                 type: ACTION_AREA,

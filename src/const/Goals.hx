@@ -208,7 +208,7 @@ class Goals
       id: GOAL_PROBE_BRAIN,
       name: 'Probe the host brain',
       note: 'You need to probe the brain of any host.',
-      messageComplete: 'Some of the objects the hosts carry can be useful. There are also functional objects around.',
+      messageComplete: 'Some of the objects the hosts carry can be useful.',
       onComplete: function (game, player) {
         game.player.vars.inventoryEnabled = true;
         game.goals.receive(GOAL_LEARN_ITEMS);
@@ -238,14 +238,14 @@ class Goals
       messageComplete: 'My brain probe has improved significantly.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_LEARN_SKILLS);
-        }
-      },
+      }
+    },
 
     GOAL_LEARN_SKILLS => {
       id: GOAL_LEARN_SKILLS,
       name: 'Use the brain probe to learn any skill',
       note: 'Probe the host brain to learn useful skills.',
-      },
+    },
 
     GOAL_LEARN_SOCIETY => {
       id: GOAL_LEARN_SOCIETY,
@@ -255,10 +255,20 @@ class Goals
       messageComplete: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.',
       onComplete: function (game, player) {
         player.vars.timelineEnabled = true;
+        game.player.vars.objectsEnabled = true;
         game.timeline.unlock();
+        game.goals.receive(GOAL_ENTER_SEWERS);
+      }
+    },
+
+    GOAL_ENTER_SEWERS => {
+      id: GOAL_ENTER_SEWERS,
+      name: 'Enter the sewers',
+      note: 'Find a sewers hatch and enter the sewers.',
+      onComplete: function (game, player) {
         game.goals.receive(GOAL_TRAVEL_EVENT);
-        }
-      },
+      }
+    },
 
     GOAL_TRAVEL_EVENT => {
       id: GOAL_TRAVEL_EVENT,

@@ -33,6 +33,7 @@ class Player
 
       vars = {
         inventoryEnabled: false,
+        objectsEnabled: false,
         skillsEnabled: false,
         timelineEnabled: false,
         organsEnabled: false,
@@ -222,6 +223,7 @@ private typedef PlayerVars = {
 
   // GUI and initial progression flags (set on goal completion)
   inventoryEnabled: Bool,
+  objectsEnabled: Bool,
   skillsEnabled: Bool,
   timelineEnabled: Bool,
   organsEnabled: Bool,
