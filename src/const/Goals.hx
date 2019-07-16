@@ -110,17 +110,17 @@ class Goals
       messageReceive: 'These areas are much more dangerous to me. I need to be less visible on the host body.',
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_CAMO_LAYER);
-        },
+      },
       onComplete: function (game, player) {
         game.goals.receive(GOAL_GROW_CAMO);
-        }
-      },
+      }
+    },
 
     GOAL_GROW_CAMO => {
       id: GOAL_GROW_CAMO,
       name: 'Grow camouflage layer',
       note: 'You need to grow the camouflage layer body feature.',
-      },
+    },
 
     // ========================= dopamine branch
 
@@ -131,11 +131,11 @@ class Goals
       messageReceive: 'The addiction to chemicals of this host can be useful to me.',
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_DOPAMINE);
-        },
+      },
       onComplete: function (game, player) {
 //        player.skills.addID(KNOW_DOPAMINE, 100);
-        }
-      },
+      }
+    },
 
     // ========================= habitat branch
 
@@ -147,8 +147,8 @@ class Goals
       messageComplete: 'Evolving allows me to force changes in the host body. I should try it now.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_GROW_ORGAN);
-        }
-      },
+      }
+    },
 
     GOAL_GROW_ORGAN => {
       id: GOAL_GROW_ORGAN,
@@ -158,10 +158,10 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_MICROHABITAT);
         game.goals.receive(GOAL_EVOLVE_MICROHABITAT);
-        }
-      },
+      }
+    },
 
-     GOAL_EVOLVE_MICROHABITAT => {
+    GOAL_EVOLVE_MICROHABITAT => {
       id: GOAL_EVOLVE_MICROHABITAT,
       name: 'Evolve the microhabitat knowledge',
       note: 'You need to evolve the knowledge of microhabitat.',
@@ -169,10 +169,10 @@ class Goals
       onComplete: function (game, player) {
 //        player.skills.addID(KNOW_HABITAT, 100);
         game.goals.receive(GOAL_CREATE_HABITAT);
-        }
-      },
+      }
+    },
 
-     GOAL_CREATE_HABITAT => {
+    GOAL_CREATE_HABITAT => {
       id: GOAL_CREATE_HABITAT,
       name: 'Create a new habitat',
       note: 'You need to create a microhabitat.',
@@ -180,10 +180,13 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_BIOMINERAL);
         game.goals.receive(GOAL_PUT_BIOMINERAL);
-        }
-      },
+        // add watcher goal if group is known
+        if (game.group.isKnown)
+          game.goals.receive(GOAL_PUT_WATCHER);
+      }
+    },
 
-     GOAL_PUT_BIOMINERAL => {
+    GOAL_PUT_BIOMINERAL => {
       id: GOAL_PUT_BIOMINERAL,
       name: 'Construct biomineral formation',
       note: 'You need to evolve, grow and construct a biomineral formation. It can only be constructed in a habitat.',
@@ -192,15 +195,28 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_ASSIMILATION);
         game.goals.receive(GOAL_PUT_ASSIMILATION);
-        }
-      },
+      }
+    },
 
-     GOAL_PUT_ASSIMILATION => {
+    GOAL_PUT_ASSIMILATION => {
       id: GOAL_PUT_ASSIMILATION,
       name: 'Construct assimilation cavity',
       note: 'You need to evolve, grow and construct the assimilation cavity. You can only construct it in a habitat.',
       messageComplete: 'Finally. I can begin the host assimilation process.',
+    },
+
+    // continued after player learns about the group
+    GOAL_PUT_WATCHER => {
+      id: GOAL_PUT_WATCHER,
+      name: 'Construct watcher',
+      note: 'You need to evolve, grow and construct the watcher. You can only construct it in a habitat.',
+      messageReceive: 'They might try to ambush me in the habitat. I will need something to warn me.',
+      onReceive: function (game, player) {
+        player.evolutionManager.addImprov(IMP_WATCHER);
       },
+    },
+
+    // ========================= group branch (?)
 
     // ========================= main branch
 
@@ -212,8 +228,8 @@ class Goals
       onComplete: function (game, player) {
         game.player.vars.inventoryEnabled = true;
         game.goals.receive(GOAL_LEARN_ITEMS);
-        }
-      },
+      }
+    },
 
     GOAL_LEARN_ITEMS => {
       id: GOAL_LEARN_ITEMS,
@@ -228,8 +244,8 @@ class Goals
         if (level >= 2)
           game.goals.receive(GOAL_LEARN_SKILLS);
         else game.goals.receive(GOAL_PROBE_BRAIN_ADVANCED);
-        }
-      },
+      }
+    },
 
     GOAL_PROBE_BRAIN_ADVANCED => {
       id: GOAL_PROBE_BRAIN_ADVANCED,

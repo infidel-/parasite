@@ -10,7 +10,8 @@ class Biomineral extends HabitatObject
     {
       super(g, vx, vy, l);
 
-      name = 'biomineral';
+      name = 'biomineral formation';
+      spawnMessage = 'The biomineral formation is ready to feed the habitat.';
 
       createEntity(game.scene.entityAtlas[level][Const.ROW_BIOMINERAL]);
     }

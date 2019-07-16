@@ -9,7 +9,7 @@ class Habitat
 {
   var game: Game;
   var player: Player;
-  var area: AreaGame;
+  public var area: AreaGame;
 
   // calculated stats
   public var energy: Int; // produced energy
@@ -18,6 +18,7 @@ class Habitat
   public var parasiteEnergyRestored: Int; // restored energy per turn (parasite)
   public var parasiteHealthRestored: Int; // restored health per turn (parasite)
   public var evolutionBonus: Int; // biomineral evolution bonus (max)
+  public var hasWatcher: Bool; // habitat has watcher?
 
 
   public function new(g: Game, a: AreaGame)
@@ -32,48 +33,13 @@ class Habitat
       parasiteEnergyRestored = 0;
       parasiteHealthRestored = 0;
       evolutionBonus = 0;
+      hasWatcher = false;
     }
 
 
-// put biomineral in habitat
+// put evolution object in habitat
 // called from organ actions
-  public function putBiomineral(): Bool
-    {
-      // check for free space
-      if (game.area.hasObjectAt(player.host.x, player.host.y))
-        {
-          game.log('Not enough free space.', COLOR_HINT);
-          return false;
-        }
-
-      // complete goals
-      game.goals.complete(GOAL_PUT_BIOMINERAL);
-
-      // spawn object
-      var ai = player.host;
-      ai.state = AI_STATE_DEAD; // quick kill to fix host discovery
-      var level = ai.organs.getLevel(IMP_BIOMINERAL);
-      var o = new Biomineral(game, ai.x, ai.y, level);
-
-      // remove and kill host
-      game.playerArea.onDetach();
-      game.area.removeAI(ai);
-
-      game.log('Biomineral formation completed.', COLOR_AREA);
-
-      game.area.updateVisibility();
-      game.scene.updateCamera();
-
-      // update habitat stats
-      update();
-
-      return true;
-    }
-
-
-// put assimilation cavity in habitat
-// called from organ actions
-  public function putAssimilation(): Bool
+  public function putObject(id: _Improv): Bool
     {
       // check for free space
       if (game.area.hasObjectAt(player.host.x, player.host.y))
@@ -83,26 +49,38 @@ class Habitat
         }
 
       // check for energy
-      if (energyUsed >= energy)
+      if (id != IMP_BIOMINERAL && energyUsed >= energy)
         {
-          game.log('Not enough energy in habitat.', COLOR_HINT);
+          game.log('Not enough energy in habitat (' +
+            energyUsed + '/' + energy + ').', COLOR_HINT);
           return false;
         }
 
       // complete goals
-      game.goals.complete(GOAL_PUT_ASSIMILATION);
+      if (id == IMP_BIOMINERAL)
+        game.goals.complete(GOAL_PUT_BIOMINERAL);
+      if (id == IMP_ASSIMILATION)
+        game.goals.complete(GOAL_PUT_ASSIMILATION);
+      else if (id == IMP_WATCHER)
+        game.goals.complete(GOAL_PUT_WATCHER);
 
       // spawn object
       var ai = player.host;
       ai.state = AI_STATE_DEAD; // quick kill to fix host discovery
-      var level = ai.organs.getLevel(IMP_ASSIMILATION);
-      var o = new AssimilationCavity(game, ai.x, ai.y, level);
+      var level = ai.organs.getLevel(id);
+      var o: HabitatObject = null;
+      if (id == IMP_BIOMINERAL)
+        o = new Biomineral(game, ai.x, ai.y, level);
+      else if (id == IMP_ASSIMILATION)
+        o = new AssimilationCavity(game, ai.x, ai.y, level);
+      else if (id == IMP_WATCHER)
+        o = new Watcher(game, ai.x, ai.y, level);
 
       // remove and kill host
       game.playerArea.onDetach();
       game.area.removeAI(ai);
 
-      game.log('Assimilation cavity completed.', COLOR_AREA);
+      game.log(o.spawnMessage, COLOR_AREA);
 
       game.area.updateVisibility();
       game.scene.updateCamera();
@@ -128,7 +106,7 @@ class Habitat
       // recalc vars
       for (o in area.getObjects())
         // biomineral - give energy
-        if (o.name == 'biomineral')
+        if (o.name == 'biomineral formation')
           {
             var b: Biomineral = cast o;
             var info = EvolutionConst.getParams(IMP_BIOMINERAL, b.level);
@@ -144,7 +122,12 @@ class Habitat
 
         // each habitat object uses energy
         else if (o.type == 'habitat')
-          energyUsed++;
+          {
+            if (o.name == 'watcher')
+              hasWatcher = true;
+
+            energyUsed++;
+          }
 
       // no free energy, disable energy and health restoration
       if (energyUsed >= energy)

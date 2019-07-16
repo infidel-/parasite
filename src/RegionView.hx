@@ -92,6 +92,12 @@ class RegionView
         row: Const.ROW_REGION_ICON,
         col: (a.hasHabitat ? Const.FRAME_HABITAT : Const.FRAME_EMPTY)
       };
+      if (a.hasHabitat &&
+          game.group.team != null &&
+          game.group.team.ambushedHabitat != null &&
+          game.group.team.ambushedHabitat.hasWatcher &&
+          game.group.team.ambushedHabitat.area.id == a.habitatAreaID)
+        icon.col = Const.FRAME_HABITAT_AMBUSHED;
       setAreaIcon(a, ICON_HABITAT, icon);
     }
 

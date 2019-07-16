@@ -13,10 +13,10 @@ release-win:
 	cp ../_release.windows/* ../_releases/parasite-$(VERSION)-win/
 	cp ../parasite.cfg.default ../_releases/parasite-$(VERSION)-win/parasite.cfg
 	echo "PAID Debug build..."
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D resourcesPath=../assets.paid/ -debug -D mydebug
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid/ -debug -D mydebug
 	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win/parasite-debug.hl
 	echo "PAID Normal build..."
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D resourcesPath=../assets.paid/
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid/
 	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win/parasite.hl
 	cd ../_releases && zip -r9 parasite-$(VERSION)-win.zip parasite-$(VERSION)-win/
 	cp ../_releases/parasite-$(VERSION)-win.zip /mnt/d/1/
@@ -101,12 +101,12 @@ html5-free:
 	haxe project_js.hxml -D free --connect 6000
 
 hl-mydebug-free:
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -debug -D mydebug -D free && \
-	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.9.0-win/
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -debug -D mydebug -D free && \
+	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.10.0-win/
 
 hl-mydebug:
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D resourcesPath=../assets.paid/ -debug -D mydebug && \
-	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.9.0-win/
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid/ -debug -D mydebug && \
+	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.10.0-win/
 
 count:
 	git rev-list HEAD --count > COUNT

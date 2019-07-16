@@ -66,6 +66,7 @@ class Const
   public static var FRAME_EVENT_NPC = 3;
   public static var FRAME_HABITAT = 4;
   public static var FRAME_EVENT_NPC_AREA = 5;
+  public static var FRAME_HABITAT_AMBUSHED = 6;
 
   // object row frames
   public static var FRAME_SEWER_HATCH = 0;
@@ -95,6 +96,7 @@ class Const
 
   public static var ROW_BIOMINERAL = 5;
   public static var ROW_ASSIMILATION = 6;
+  public static var ROW_WATCHER = 7;
 
   public static var FRAME_DEFAULT = 0;
 
@@ -307,5 +309,12 @@ class Const
   public static inline function traceStack()
     {
       trace(haxe.CallStack.toString(haxe.CallStack.callStack()));
+    }
+
+
+// capitalize string
+  public static inline function capitalize(s: String): String
+    {
+      return s.substr(0, 1).toUpperCase() + s.substr(1);
     }
 }

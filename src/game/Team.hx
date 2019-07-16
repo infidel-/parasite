@@ -10,6 +10,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
   public var size: Int; // current size
   public var maxSize: Int; // total size
   public var distance(get, set): Float; // distance to parasite (0-100)
+  public var ambushedHabitat: Habitat; // habitat with ambush
   var _distance: Float;
 
   public var timer: Int; // generic state timer
@@ -24,6 +25,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       maxSize = size;
       _distance = game.group.teamStartDistance;
       timer = 0;
+      ambushedHabitat = null;
     }
 
 
@@ -39,23 +41,47 @@ class Team extends FSM<_TeamState, _TeamFlag>
     }
 
 
+// TURN: spawn ambush at random habitat
+  function spawnAmbush()
+    {
+      state = TEAM_AMBUSH;
+
+      // set ambush timer
+      // if player is currently in habitat, skip timer
+      timer = 40 + 10 * Std.random(5);
+      if (game.location == LOCATION_AREA && game.area.isHabitat)
+        timer = 0;
+
+      // no habitats, skip
+      var cnt = game.region.getHabitatsCount();
+      if (cnt == 0)
+        {
+          ambushedHabitat = null;
+          return;
+        }
+
+      // pick random habitat
+      var tmp = game.region.getHabitatsList();
+      ambushedHabitat = tmp[Std.random(tmp.length)].habitat;
+
+      // watcher notification
+      if (ambushedHabitat.hasWatcher || game.group.difficulty == EASY)
+        {
+          game.scene.soundManager.playSound('watcher_ambush', true);
+          if (ambushedHabitat.hasWatcher)
+            game.message("The watcher warns they are waiting for me.", COLOR_ALERT);
+          else game.message("They are waiting for me.", COLOR_ALERT);
+        }
+    }
+
+
 // TURN: search for player
   function turnSearch()
     {
       // distance is zero, switch state and set timer
       if (distance <= 0)
         {
-          state = TEAM_AMBUSH;
-
-          // if player is currently in habitat, skip timer
-          if (game.location == LOCATION_AREA && game.area.isHabitat)
-            timer = 0;
-          else
-            {
-              timer = 40 + 10 * Std.random(5);
-              if (game.group.difficulty == EASY)
-                game.message("They are waiting for me.", COLOR_ALERT);
-            }
+          spawnAmbush();
           return;
         }
 
@@ -87,8 +113,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (timer > 0)
         return;
 
-      // player in habitat, spawn blackops
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
+      // player in correct habitat, spawn blackops
+      if (game.location == LOCATION_AREA &&
+          game.area.isHabitat &&
+          ambushedHabitat != null &&
+          game.area.habitat == ambushedHabitat)
         {
           game.message("Something is wrong here... It's an ambush!",
             COLOR_ALERT);
@@ -96,10 +125,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
           return;
         }
 
-      // no habitats, wait until player is in area mode and spawn ambush
-      var cnt = game.region.getHabitatsCount();
-      if (cnt == 0)
+      // no ambushed habitat, spawn ambush right on player
+      if (ambushedHabitat == null)
         {
+          // player is in the sewers
           if (game.location == LOCATION_REGION)
             return;
 
@@ -117,7 +146,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
                 near: { x: x, y: y },
                 radius: 10,
                 isUnseen: true
-                });
+              });
               if (loc == null)
                 {
                   loc = game.area.findEmptyLocationNear(x, y, 5);
@@ -141,13 +170,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
           return;
         }
 
-      // player has habitats but is not in one of them
-
-      // pick a random habitat
-      var tmp = game.region.getHabitatsList();
-
-      // habitat destroyed
-      destroyHabitat(tmp[Std.random(tmp.length)].parent);
+      // habitat ambushed but player is not in it, destroy habitat
+      destroyHabitat(ambushedHabitat.area.parent);
     }
 
 
@@ -164,6 +188,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
   public function onEnterHabitat()
     {
       if (state != TEAM_AMBUSH)
+        return;
+
+      // wrong habitat
+      if (game.area.id != ambushedHabitat.area.id)
         return;
 
       state = TEAM_FIGHT;

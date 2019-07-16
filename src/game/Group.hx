@@ -198,6 +198,9 @@ class Group
 
       // player becomes aware of the group existence
       game.message('There is a group of humans that wants to destroy me.');
+      // receive watcher goal if habitat was created already
+      if (game.goals.completed(GOAL_CREATE_HABITAT))
+        game.goals.receive(GOAL_PUT_WATCHER);
 
       // show yes/no dialog about manual
       game.scene.event({

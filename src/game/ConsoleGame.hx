@@ -578,7 +578,7 @@ class ConsoleGame
               return;
             }
 
-          game.player.evolutionManager.addImprov(imp.id, 3);
+          game.player.evolutionManager.addImprov(imp.id, imp.maxLevel);
         }
 
       // XXX [lt] learn all timeline

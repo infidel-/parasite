@@ -11,6 +11,7 @@ class AssimilationCavity extends HabitatObject
       super(g, vx, vy, l);
 
       name = 'assimilation cavity';
+      spawnMessage = 'The assimilation cavity opens its maw.';
 
       createEntity(game.scene.entityAtlas[level][Const.ROW_ASSIMILATION]);
     }

@@ -782,7 +782,7 @@ class EvolutionConst
                   return false;
                 }
 
-              return game.area.habitat.putBiomineral();
+              return game.area.habitat.putObject(IMP_BIOMINERAL);
             }
           },
 /*
@@ -858,7 +858,7 @@ class EvolutionConst
                   return false;
                 }
 
-              return game.area.habitat.putAssimilation();
+              return game.area.habitat.putObject(IMP_ASSIMILATION);
             }
           },
         levelParams: [
@@ -870,7 +870,54 @@ class EvolutionConst
           },
           {
           },
+        ],
+      },
+
+      { // ***
+        path: PATH_SPECIAL,
+        id: IMP_WATCHER,
+        name: 'Watcher',
+        note: 'Watcher growth. Will warn the player of the ambush in the habitat.',
+        maxLevel: 1,
+        levelNotes: [
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
+          '(todo fluff)',
           ],
+        organ: {
+          name: 'Watcher mold',
+          note: 'Mold for a watcher. You can only grow that in a habitat. Host inventory will be destroyed when it becomes the watcher.',
+          gp: 150,
+          isMold: true,
+          action: {
+            id: 'formWatcher',
+            type: ACTION_ORGAN,
+            name: 'Form watcher',
+            energy: 0
+            },
+          onAction: function(game, player): Bool
+            {
+              // only in habitat
+              if (!game.area.isHabitat)
+                {
+                  game.log('Only works in habitat.', COLOR_HINT);
+                  return false;
+                }
+
+              return game.area.habitat.putObject(IMP_WATCHER);
+            }
+          },
+        levelParams: [
+          {
+          },
+          {
+          },
+          {
+          },
+          {
+          },
+        ],
       },
 /*
       { // ***

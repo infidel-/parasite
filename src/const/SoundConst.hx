@@ -7,6 +7,13 @@ import _AIState;
 
 class SoundConst
 {
+  // misc sounds
+  public static var misc = [
+    'parasite_die1',
+    'parasite_die2',
+    'watcher_ambush',
+  ];
+
   // dog sounds
   static var growl = [
     'dog_growl1',

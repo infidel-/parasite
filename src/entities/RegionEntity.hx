@@ -11,6 +11,8 @@ class RegionEntity
   var _body: Bitmap; // body sprite
   public var atlasRow: Int; // tile atlas row
   public var atlasCol: Int; // tile atlas row
+  public var x: Int;
+  public var y: Int;
 
 
   public function new(s: GameScene, xx: Int, yy: Int, row: Int, col: Int)
@@ -18,11 +20,13 @@ class RegionEntity
       atlasRow = row;
       atlasCol = col;
       scene = s;
+      x = xx;
+      y = yy;
 
       _body = new Bitmap(scene.entityAtlas[atlasCol][atlasRow],
         scene.region.icons);
-      _body.x = xx * Const.TILE_SIZE;
-      _body.y = yy * Const.TILE_SIZE;
+      _body.x = x * Const.TILE_SIZE;
+      _body.y = y * Const.TILE_SIZE;
     }
 
 
@@ -36,6 +40,8 @@ class RegionEntity
       _body.remove();
       _body = new Bitmap(scene.entityAtlas[col][atlasRow],
         scene.region.icons);
+      _body.x = x * Const.TILE_SIZE;
+      _body.y = y * Const.TILE_SIZE;
     }
 
 
