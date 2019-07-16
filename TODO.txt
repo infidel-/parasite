@@ -35,6 +35,7 @@ when evolving, genetic drift of the host raises each turn
 total sum of evolved improvement levels acts as a base drift, you cannot lower the drift below that base level
 drift is a chance of evolution going haywire and producing tentacled monster out of host when the process finishes (need a name - the divergent, aberration, abomination) OR total meltdown
 monster
+  is called child or progeny in all texts
   hostile to player and everyone else
   despawns when player exits with +alertness, +group priority, -team distance
   or rampages through the area for some time until downed by the government/conspiracy (dont have to actually display/simulate it but max plan is showing icon in region map and spawn it on entering area)

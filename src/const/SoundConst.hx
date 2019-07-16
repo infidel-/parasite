@@ -12,6 +12,8 @@ class SoundConst
     'parasite_die1',
     'parasite_die2',
     'watcher_ambush',
+    'parasite_attach1',
+    'parasite_detach1',
   ];
 
   // dog sounds

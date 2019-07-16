@@ -621,6 +621,7 @@ class ConsoleGame
             ';s21 - set player stage 2.1 (stage 2 + camo layer, computer use)<br/>' +
             ';s22 - set player stage 2.2 (stage 2.1 + biomineral)<br/>' +
             ';s23 - set player stage 2.3 (stage 2.2 + assimilation)<br/>' +
+            ';s24 - set player stage 2.4 (stage 2.1 + group knowledge)<br/>' +
             ';s3 - set player stage 3 (stage 2.3 + timeline open until scenario goals)'
             );
           return;
@@ -688,6 +689,15 @@ class ConsoleGame
               stage23();
             }
 
+          // stage 2.4: 2.1 + group knowledge
+          else if (stage == 24)
+            {
+              stage1();
+              stage2();
+              stage21();
+              stage24();
+            }
+
           // stage 3: 2.3 + timeline open until scenario goals
           else if (stage == 3)
             {
@@ -734,6 +744,10 @@ class ConsoleGame
       // society knowledge
       game.player.skills.increase(KNOW_SOCIETY, 1);
       game.player.skills.increase(KNOW_SOCIETY, 24);
+
+      // starting improvements
+      game.player.evolutionManager.difficulty = EASY;
+      game.player.evolutionManager.giveStartingImprovements();
     }
 
 
@@ -904,6 +918,15 @@ class ConsoleGame
       game.player.host.inventory.addID('laptop');
       game.player.addKnownItem('laptop');
       game.player.host.skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
+    }
+
+
+// stage 2.4: stage 2.1 + group knowledge
+  function stage24()
+    {
+      game.log('stage 2.4');
+      game.setLocation(LOCATION_AREA);
+      stage11();
     }
 
 

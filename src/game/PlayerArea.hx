@@ -586,6 +586,8 @@ class PlayerArea
 
       log('You have managed to attach to a host.');
 
+      game.scene.soundManager.playSound('parasite_attach1', false);
+
       ai.onAttach(); // callback to AI
 
       return true;
@@ -1026,6 +1028,8 @@ class PlayerArea
 
       attachHost = null;
       player.host = null;
+
+      game.scene.soundManager.playSound('parasite_detach1', false);
     }
 
 

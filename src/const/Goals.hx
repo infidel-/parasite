@@ -180,9 +180,6 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_BIOMINERAL);
         game.goals.receive(GOAL_PUT_BIOMINERAL);
-        // add watcher goal if group is known
-        if (game.group.isKnown)
-          game.goals.receive(GOAL_PUT_WATCHER);
       }
     },
 
@@ -195,6 +192,9 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_ASSIMILATION);
         game.goals.receive(GOAL_PUT_ASSIMILATION);
+        // add watcher goal if group is known
+        if (game.group.isKnown)
+          game.goals.receive(GOAL_PUT_WATCHER);
       }
     },
 

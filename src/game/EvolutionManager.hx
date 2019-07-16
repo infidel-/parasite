@@ -381,7 +381,7 @@ class EvolutionManager
         n = 2;
       else if (difficulty == HARD)
         n = 1;
-      trace(n);
+//      trace(n);
 
       // fill temp arrays
       var tmpOrgans = [];
