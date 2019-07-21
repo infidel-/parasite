@@ -43,6 +43,7 @@ class GameScene extends Scene
   var loseFocus: LoseFocus; // lose focus blur
   var isFullScreen: Bool; // game is in fullscreen mode?
   var firstResize: Bool; // ignore first resize
+  var isFocused: Bool;
 
   // camera x,y
   public var cameraTileX1: Int;
@@ -58,6 +59,7 @@ class GameScene extends Scene
   public function new(g: Game)
     {
       super();
+      isFocused = true; // may not be true but we want the game to play immediately
       win = Window.getInstance();
       win.addEventTarget(onEvent);
 //      win.addResizeEvent(resize);
@@ -181,7 +183,7 @@ class GameScene extends Scene
         ai.AI.HEAR_DISTANCE = 10;
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
-
+/*
 #if js
       // show blur on losing focus
       // this is needed because it's too easy to press Alt, lose it and not notice it
@@ -200,7 +202,35 @@ class GameScene extends Scene
           loseFocus.show();
           soundManager.pause();
         }
+#else
 #end
+*/
+      // focus/blur handling
+      win.addEventTarget(function (e: hxd.Event) {
+        if (e.kind == EFocus)
+          {
+            // skip first focus on web
+            if (isFocused)
+              return;
+
+            // show blur on losing focus
+            // this is needed for web because it's too easy to press Alt, lose it and not notice it
+            loseFocus.hide();
+            soundManager.resume();
+            isFocused = true;
+          }
+        else if (e.kind == EFocusLost)
+          {
+            // reset input flags
+            controlPressed = false;
+            shiftPressed = false;
+            mouse.ignoreNextClick = true; // ignore click on screen
+            isFocused = false;
+
+            loseFocus.show();
+            soundManager.pause();
+          }
+      });
     }
 
 

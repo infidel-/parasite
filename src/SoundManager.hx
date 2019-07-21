@@ -31,9 +31,6 @@ class SoundManager
       // ogg for HL, mp3 for web
       var ext = (Sound.supportedFormat(Mp3) ? 'mp3' : 'ogg');
 
-      var res = Res.load('sound/music1.' + ext).toSound();
-      music = res.play(true, 0.3);
-
       // browse all AI sound maps and pull sound names
       var filesMap = new Map();
       addSoundMap(filesMap, SoundConst.dog);
@@ -70,6 +67,9 @@ class SoundManager
 
           sounds[f] = res.toSound();
         }
+
+      // start playing music
+      music = sounds['music1'].play(true, 0.3);
 #end
     }
 
@@ -204,7 +204,11 @@ class SoundManager
     {
 #if !free
       if (music != null)
-        music.fadeTo(0.3, 1);
+        {
+          music.stop();
+          music = sounds['music1'].play(true, 0.01);
+          music.fadeTo(0.3, 1);
+        }
       var old = ambientState;
       ambientState = AMBIENT_NONE;
       setAmbient(old);
