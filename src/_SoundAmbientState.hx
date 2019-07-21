@@ -1,0 +1,12 @@
+// sound ambience state
+
+enum _SoundAmbientState
+{
+  AMBIENT_NONE;
+  AMBIENT_CITY;
+  AMBIENT_REGION;
+  AMBIENT_WILDERNESS;
+  AMBIENT_MILITARY;
+  AMBIENT_FACILITY;
+  AMBIENT_HABITAT;
+}

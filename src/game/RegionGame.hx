@@ -44,6 +44,7 @@ class RegionGame
   public function enter()
     {
       game.debug('Region.enter()');
+      game.scene.soundManager.setAmbient(AMBIENT_REGION);
 
       game.region = this;
 

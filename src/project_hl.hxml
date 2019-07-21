@@ -1,4 +1,3 @@
--D resourcesPath=../assets/
 -D windowTitle=Parasite
 -lib heaps
 -lib hlsdl

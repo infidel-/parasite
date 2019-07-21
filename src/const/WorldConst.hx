@@ -9,6 +9,7 @@ class WorldConst
       // *** wilderness around city
       AREA_GROUND => {
         id: AREA_GROUND,
+        ambient: AMBIENT_WILDERNESS,
         type: 'wilderness',
         name: 'Uninhabited area',
         width: 100,
@@ -31,6 +32,7 @@ class WorldConst
       // *** low-class, low population - outskirts and suburbs
       AREA_CITY_LOW => {
         id: AREA_CITY_LOW,
+        ambient: AMBIENT_CITY,
         type: 'city',
         name: 'Low-density city area',
         width: 100,
@@ -57,6 +59,7 @@ class WorldConst
       // *** mid-class, mid population - residential districts
       AREA_CITY_MEDIUM => {
         id: AREA_CITY_MEDIUM,
+        ambient: AMBIENT_CITY,
         type: 'city',
         name: 'Medium-density city area',
         width: 100,
@@ -84,6 +87,7 @@ class WorldConst
       // *** high-class, high population - downtown and commercial district
       AREA_CITY_HIGH => {
         id: AREA_CITY_HIGH,
+        ambient: AMBIENT_CITY,
         type: 'city',
         name: 'High-density city area',
         width: 100,
@@ -111,6 +115,7 @@ class WorldConst
       // *** military base
       AREA_MILITARY_BASE => {
         id: AREA_MILITARY_BASE,
+        ambient: AMBIENT_MILITARY,
         type: 'militaryBase',
         name: 'Military base',
         width: 50,
@@ -135,6 +140,7 @@ class WorldConst
       // *** facility
       AREA_FACILITY => {
         id: AREA_FACILITY,
+        ambient: AMBIENT_FACILITY,
         type: 'facility',
         name: 'Facility',
         width: 50,
@@ -160,6 +166,7 @@ class WorldConst
       // *** habitat
       AREA_HABITAT => {
         id: AREA_HABITAT,
+        ambient: AMBIENT_HABITAT,
         type: 'habitat',
         name: 'Habitat area',
         width: 20,
@@ -217,6 +224,7 @@ class WorldConst
 
 typedef AreaInfo = {
   var id: _AreaType; // area type id
+  var ambient: _SoundAmbientState; // ambient sound
   var type: String; // area generator type
   var name: String; // area type name
   var width: Int; // area base width

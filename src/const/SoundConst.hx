@@ -9,6 +9,12 @@ class SoundConst
 {
   // misc sounds
   public static var misc = [
+    'ambient_city1',
+    'ambient_region1',
+    'ambient_wilderness1',
+    'ambient_habitat1',
+    'ambient_military1',
+    'ambient_facility1',
     'parasite_die1',
     'parasite_die2',
     'watcher_ambush',

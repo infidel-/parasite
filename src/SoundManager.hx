@@ -12,22 +12,27 @@ class SoundManager
   var scene: GameScene;
   var music: Channel;
   var ambient: Channel;
+  var ambientNext: Channel;
+  var ambientState: _SoundAmbientState;
+  var ambientFade: Bool; // when true, ambient state is being switched
   var sounds: Map<String, Sound>;
 
   public function new(s: GameScene)
     {
       scene = s;
       sounds = new Map();
+      ambient = null;
+      ambientNext = null;
+      ambientState = AMBIENT_NONE;
+      ambientFade = false;
+      music = null;
 
 #if !free
       // ogg for HL, mp3 for web
       var ext = (Sound.supportedFormat(Mp3) ? 'mp3' : 'ogg');
 
-      var res = Res.load('sound/music3.' + ext).toSound();
+      var res = Res.load('sound/music1.' + ext).toSound();
       music = res.play(true, 0.3);
-
-      var res = Res.load('sound/city1.' + ext).toSound();
-      ambient = res.play(true, 0.3);
 
       // browse all AI sound maps and pull sound names
       var filesMap = new Map();
@@ -66,6 +71,71 @@ class SoundManager
           sounds[f] = res.toSound();
         }
 #end
+    }
+
+
+// change ambience state
+  public function setAmbient(st: _SoundAmbientState)
+    {
+      if (st == ambientState)
+        return;
+
+      scene.game.debug('sound ambient ' + st);
+
+      // currently in fade, just reset
+      if (ambientFade)
+        stopAmbient();
+
+      // fade old to silence
+      ambientFade = true;
+      ambientState = st;
+      if (ambient != null)
+        ambient.fadeTo(0, 2, function () {
+          ambientFade = false;
+          ambient.stop();
+          ambient = ambientNext;
+        });
+
+      // start playing next with fade in
+      var key = null;
+      if (st == AMBIENT_CITY)
+        key = 'ambient_city1';
+      else if (st == AMBIENT_REGION)
+        key = 'ambient_region1';
+      else if (st == AMBIENT_WILDERNESS)
+        key = 'ambient_wilderness1';
+      else if (st == AMBIENT_HABITAT)
+        key = 'ambient_habitat1';
+      else if (st == AMBIENT_MILITARY)
+        key = 'ambient_military1';
+      else if (st == AMBIENT_FACILITY)
+        key = 'ambient_facility1';
+      else key = 'ambient_city1';
+      var res = sounds[key];
+      if (res == null)
+        {
+          trace('No such sound: ' + key);
+          return;
+        }
+      ambientNext = res.play(true, 0.01);
+      ambientNext.fadeTo(0.3, 2);
+      if (ambient == null) // first call or after reset
+        {
+          ambient = ambientNext;
+          ambientFade = false;
+        }
+    }
+
+
+// reset ambient sound state
+  function stopAmbient()
+    {
+//          scene.game.debug('reset!');
+      ambient.stop();
+      ambientNext.stop();
+      ambient = null;
+      ambientNext = null;
+      ambientFade = false;
     }
 
 
@@ -122,9 +192,9 @@ class SoundManager
   public function pause()
     {
 #if !free
-      trace('pause');
-      music.fadeTo(0.01, 0.5);
-      ambient.fadeTo(0.01, 0.5);
+      if (music != null)
+        music.stop();
+      stopAmbient();
 #end
     }
 
@@ -133,9 +203,11 @@ class SoundManager
   public function resume()
     {
 #if !free
-      trace('resume');
-      music.fadeTo(0.3, 0.5);
-      ambient.fadeTo(0.3, 0.5);
+      if (music != null)
+        music.fadeTo(0.3, 1);
+      var old = ambientState;
+      ambientState = AMBIENT_NONE;
+      setAmbient(old);
 #end
     }
 }

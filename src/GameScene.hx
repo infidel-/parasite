@@ -163,6 +163,9 @@ class GameScene extends Scene
       area = new AreaView(this);
       region = new RegionView(this);
 
+      // init sound
+      soundManager = new SoundManager(this);
+
       // init game state
       game.init();
 
@@ -178,8 +181,6 @@ class GameScene extends Scene
         ai.AI.HEAR_DISTANCE = 10;
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
-
-      soundManager = new SoundManager(this);
 
 #if js
       // show blur on losing focus

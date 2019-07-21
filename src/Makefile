@@ -13,10 +13,10 @@ release-win:
 	cp ../_release.windows/* ../_releases/parasite-$(VERSION)-win/
 	cp ../parasite.cfg.default ../_releases/parasite-$(VERSION)-win/parasite.cfg
 	echo "PAID Debug build..."
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid/ -debug -D mydebug
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid.hl/ -debug -D mydebug
 	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win/parasite-debug.hl
 	echo "PAID Normal build..."
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid/
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid.hl/
 	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win/parasite.hl
 	cd ../_releases && zip -r9 parasite-$(VERSION)-win.zip parasite-$(VERSION)-win/
 	cp ../_releases/parasite-$(VERSION)-win.zip /mnt/d/1/
@@ -80,19 +80,19 @@ release-html5-dev: html5-free
 	~/git/starinfidel.github.io/parasite-dev/
 
 release-html5-paid: cp-paid
-	haxe project_js.hxml -D resourcesPath=../assets.paid/ --connect 6000
+	haxe project_js.hxml -D resourcesPath=../assets.paid.web/ --connect 6000
 	cd ../bin/ && zip -r9 parasite-$(VERSION)-js.zip index.html parasite.js favicon.png
 	mv ../bin/parasite-$(VERSION)-js.zip ../_releases
 	cp ../_releases/parasite-$(VERSION)-js.zip /mnt/d/1/
 
 cp-paid:
-	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid/graphics
+	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid.hl/graphics
 
 html5-mydebug: cp-paid
-	haxe project_js.hxml -debug -D resourcesPath=../assets.paid/ -D mydebug --connect 6000
+	haxe project_js.hxml -debug -D resourcesPath=../assets.paid.web/ -D mydebug --connect 6000
 
 html5: cp-paid
-	haxe project_js.hxml -D resourcesPath=../assets.paid/ --connect 6000
+	haxe project_js.hxml -D resourcesPath=../assets.paid.web/ --connect 6000
 
 html5-free-mydebug:
 	haxe project_js.hxml -debug -D mydebug -D free --connect 6000
@@ -105,7 +105,7 @@ hl-mydebug-free:
 	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.10.0-win/
 
 hl-mydebug:
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid/ -debug -D mydebug && \
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets.paid.hl/ -debug -D mydebug && \
 	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.10.0-win/
 
 count:
