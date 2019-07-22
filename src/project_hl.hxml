@@ -1,6 +1,6 @@
 -D windowTitle=Parasite
 -lib heaps
--lib hlsdl
+-lib hldx
 -hl ../bin.hl/parasite.hl
 -main Main
 

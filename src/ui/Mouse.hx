@@ -48,6 +48,8 @@ class Mouse
         {
           var tmp = bmp.sub(i * CURSOR_SIZE, 0, CURSOR_SIZE, CURSOR_SIZE);
 /*
+          var r = hxd.Res.load('graphics/' + i + '.png').toImage();
+          var tmp = r.toBitmap();
           if (game.config.mapScale != 1)
             {
               var tmp2 = new BitmapData(size, size);
@@ -59,11 +61,36 @@ class Mouse
           var cursor = Custom(new CustomCursor([ tmp ], 1,
             i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2),
             i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2)));
+
+/*
+          if (i == 2)
+            {
+          var defOverride = new hxd.BitmapData(10, 10);
+          var col = 0xffff0000;
+          if (i == 1)
+            col = 0xff00ff00;
+          else if (i == 2)
+            col = 0xff0000ff;
+          else if (i == 3)
+            col = 0xff00ffff;
+          else if (i == 4)
+            col = 0xffff00ff;
+          defOverride.line(0, 0, 5, 0, col);
+          defOverride.line(0, 1, 0, 5, col);
+          defOverride.line(0, 0, 10, 10, col);
+          var overrideCursor:hxd.Cursor =
+            Custom(new hxd.Cursor.CustomCursor([defOverride], 0, 0, 0));
+          atlas.push(overrideCursor);
+            }
+
+          else */
           atlas.push(cursor);
         }
       hxd.System.setCursor = function(cur)
         {
-          hxd.System.setNativeCursor(cur);
+          if (cur == Default)
+            hxd.System.setNativeCursor(atlas[cursor]);
+          else hxd.System.setNativeCursor(cur);
         }
       setCursor(0);
     }
@@ -320,7 +347,6 @@ class Mouse
       if (cursor == c)
         return;
 
-//      trace('setCursor ' + c);
       cursor = c;
       hxd.System.setCursor(atlas[cursor]);
     }
