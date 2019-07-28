@@ -27,7 +27,7 @@ release-win-free:
 	cp ../_release.windows/* ../_releases/parasite-$(VERSION)-win-free/
 	cp ../parasite.cfg.default ../_releases/parasite-$(VERSION)-win-free/parasite.cfg
 	echo "FREE Debug build..."
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D free -debug -D mydebug
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D resourcesPath=../assets/ -D free -debug -D mydebug
 	cp ../bin.hl/parasite.hl ../_releases/parasite-$(VERSION)-win-free/parasite-debug.hl
 	echo "FREE Normal build..."
 	~/haxe-4.0.0-rc2/run.sh project_hl.hxml
@@ -88,10 +88,10 @@ release-html5-paid: cp-paid
 cp-paid:
 	cp /mnt/d/1/___Assets/Results.paid/* ../assets.paid.hl/graphics
 
-html5-mydebug: cp-paid
+html5-mydebug:
 	haxe project_js.hxml -debug -D resourcesPath=../assets.paid.web/ -D mydebug --connect 6000
 
-html5: cp-paid
+html5:
 	haxe project_js.hxml -D resourcesPath=../assets.paid.web/ --connect 6000
 
 html5-free-mydebug:
@@ -101,7 +101,7 @@ html5-free:
 	haxe project_js.hxml -D free --connect 6000
 
 hl-mydebug-free:
-	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -debug -D mydebug -D free && \
+	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets/ -debug -D mydebug -D free && \
 	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.10.0-win/
 
 hl-mydebug:

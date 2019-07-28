@@ -16,12 +16,14 @@ class Config
   public var sendExceptions: Bool;
 
   public var fontSize: Int;
-  public var fontSizeLarge: Int;
   public var hudLogLines: Int;
   public var mapScale: Float;
   public var pathDelay: Int;
   public var windowHeight: Int;
   public var windowWidth: Int;
+  public var musicVolume: Int;
+  public var effectsVolume: Int;
+  public var ambientVolume: Int;
 
   var map: Map<String, String>;
 
@@ -37,10 +39,12 @@ class Config
 #end
       sendExceptions = false;
 
-      fontSize = 16;
-      fontSizeLarge = 24;
+      fontSize = 24;
       hudLogLines = 4;
       mapScale = 1;
+      musicVolume = 30;
+      effectsVolume = 40;
+      ambientVolume = 30;
       pathDelay = 100;
       windowHeight = 768;
       windowWidth = 1024;
@@ -53,10 +57,14 @@ class Config
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
       map['mapScale'] = '1';
+      map['musicVolume'] = '' + musicVolume;
+      map['effectsVolume'] = '' + effectsVolume;
+      map['ambientVolume'] = '' + ambientVolume;
       map['pathDelay'] = '' + pathDelay;
       map['windowHeight'] = '' + windowHeight;
       map['windowWidth'] = '' + windowWidth;
 
+      game.debug('config load');
 #if js
       var str = js.Browser.window.localStorage.getItem('config');
       var obj = {};
@@ -110,14 +118,22 @@ class Config
       else if (key == 'fontSize')
         {
           fontSize = Std.parseInt(val);
-          if (fontSize < 8)
-            fontSize = 8;
-          fontSizeLarge = Std.int(fontSize * 1.5);
+          if (!Lambda.has(Const.FONTS, fontSize))
+            {
+              fontSize = Const.FONTS[1];
+              val = '' + fontSize;
+            }
         }
       else if (key == 'hudLogLines')
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
       else if (key == 'mapScale')
         mapScale = Const.clampFloat(Std.parseFloat(val), 0.1, 10);
+      else if (key == 'musicVolume')
+        musicVolume = Const.clamp(Std.parseInt(val), 0, 100);
+      else if (key == 'effectsVolume')
+        effectsVolume = Const.clamp(Std.parseInt(val), 0, 100);
+      else if (key == 'ambientVolume')
+        ambientVolume = Const.clamp(Std.parseInt(val), 0, 100);
       else if (key == 'pathDelay')
         pathDelay = Std.parseInt(val);
       else if (key == 'windowHeight')
@@ -135,7 +151,7 @@ class Config
 
       // save config
       if (doSave)
-        save();
+        save(true);
     }
 
 
@@ -150,8 +166,9 @@ class Config
 
 
 // save config
-  public function save()
+  public function save(needRestart: Bool)
     {
+      game.debug('config save');
 #if js
       var obj = {};
       for (key in map.keys())
@@ -159,9 +176,13 @@ class Config
       var str = haxe.Json.stringify(obj);
       js.Browser.window.localStorage.setItem('config', str);
 
-      game.debug('Config saved. Reload page to apply new settings.');
+      if (needRestart)
+        game.log('Config saved. Reload page to apply new settings.');
 #else
-      Const.todo('config saving!');
+      var s = new StringBuf();
+      for (key in map.keys())
+        s.add(key + ' = ' + map[key] + '\n');
+      sys.io.File.saveContent('parasite.cfg', s.toString());
 #end
     }
 }

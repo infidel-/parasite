@@ -12,7 +12,7 @@ class YesNo extends UIWindow
 
   public function new(g: Game)
     {
-      super(g, 800, 150);
+      super(g, 800, g.config.fontSize > 24 ? 200 : 150);
       center();
       func = null;
 

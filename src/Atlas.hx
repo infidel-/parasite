@@ -173,6 +173,12 @@ class Atlas
     { key: 'button', x: 789, y: 306, w: 97, h: 43 },
     { key: 'buttonOver', x: 789, y: 358, w: 97, h: 43 },
     { key: 'buttonPress', x: 789, y: 412, w: 97, h: 43 },
+
+    { key: 'sliderBack', x: 25, y: 300, w: 313, h: 23 },
+    { key: 'sliderKnob', x: 2, y: 300, w: 22, h: 23 },
+
+    { key: 'radio', x: 423, y: 298, w: 25, h: 24 },
+    { key: 'radioPress', x: 451, y: 298, w: 25, h: 24 },
   ];
 }
 

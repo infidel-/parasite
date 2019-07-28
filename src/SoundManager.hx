@@ -5,11 +5,13 @@ import hxd.res.Sound;
 import hxd.snd.Channel;
 import ai.AI;
 import game._ItemInfo;
+import game.Game;
 import const.*;
 
 class SoundManager
 {
   var scene: GameScene;
+  var game: Game;
   var music: Channel;
   var ambient: Channel;
   var ambientNext: Channel;
@@ -20,6 +22,7 @@ class SoundManager
   public function new(s: GameScene)
     {
       scene = s;
+      game = scene.game;
       sounds = new Map();
       ambient = null;
       ambientNext = null;
@@ -61,7 +64,7 @@ class SoundManager
           }
           catch (e: Dynamic)
             {
-              scene.game.debug('Cannot load file sound/' + f + '.' + ext + '.');
+              game.debug('Cannot load file sound/' + f + '.' + ext + '.');
               continue;
             }
 
@@ -69,7 +72,8 @@ class SoundManager
         }
 
       // start playing music
-      music = sounds['music1'].play(true, 0.3);
+      music = sounds['music1'].play(true,
+        game.config.musicVolume / 100.0);
 #end
     }
 
@@ -77,10 +81,11 @@ class SoundManager
 // change ambience state
   public function setAmbient(st: _SoundAmbientState)
     {
+#if !free
       if (st == ambientState)
         return;
 
-      scene.game.debug('sound ambient ' + st);
+      game.debug('sound ambient ' + st);
 
       // currently in fade, just reset
       if (ambientFade)
@@ -118,19 +123,20 @@ class SoundManager
           return;
         }
       ambientNext = res.play(true, 0.01);
-      ambientNext.fadeTo(0.3, 2);
+      ambientNext.fadeTo(game.config.ambientVolume / 100.0, 2);
       if (ambient == null) // first call or after reset
         {
           ambient = ambientNext;
           ambientFade = false;
         }
+#end
     }
 
 
 // reset ambient sound state
   function stopAmbient()
     {
-//          scene.game.debug('reset!');
+//          game.debug('reset!');
       ambient.stop();
       ambientNext.stop();
       ambient = null;
@@ -172,18 +178,18 @@ class SoundManager
 #if !free
       if (!sounds.exists(key))
         {
-          scene.game.log('Sound [' + key + '] not found.');
+          game.log('Sound [' + key + '] not found.');
           return;
         }
 
       // not important sounds are skipped if not enough time has passed
       if (!always && haxe.Timer.stamp() - sounds[key].lastPlay < 1)
         {
-//          scene.game.debug('Skipping ' + key);
+//          game.debug('Skipping ' + key);
           return;
         }
-      scene.game.debug('Playing sound ' + key);
-      sounds[key].play(false, 0.5);
+      game.debug('Playing sound ' + key);
+      sounds[key].play(false, game.config.effectsVolume / 100.0);
 #end
     }
 
@@ -207,11 +213,29 @@ class SoundManager
         {
           music.stop();
           music = sounds['music1'].play(true, 0.01);
-          music.fadeTo(0.3, 1);
+          music.fadeTo(game.config.musicVolume / 100.0, 1);
         }
       var old = ambientState;
       ambientState = AMBIENT_NONE;
       setAmbient(old);
 #end
     }
+
+
+#if !free
+// music volume changed from options
+  public inline function musicVolumeChanged()
+    {
+      game.scene.soundManager.music.volume =
+        game.config.musicVolume / 100.0;
+    }
+
+
+// ambient volume changed from options
+  public inline function ambientVolumeChanged()
+    {
+      game.scene.soundManager.ambient.volume =
+        game.config.ambientVolume / 100.0;
+    }
+#end
 }

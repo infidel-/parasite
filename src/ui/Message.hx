@@ -11,7 +11,7 @@ class Message extends UIWindow
 
   public function new(g: Game)
     {
-      super(g, 700, 200);
+      super(g, 700, g.config.fontSize > 24 ? 250 : 200);
       center();
 
       var tile = game.scene.atlas.getInterface('button');

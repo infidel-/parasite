@@ -14,8 +14,8 @@ enum _UIState
   UISTATE_CONSOLE; // console open
   UISTATE_MESSAGE; // important message window open
   UISTATE_FINISH; // game over window
+  UISTATE_OPTIONS; // options window
 
-  // haxeui
   UISTATE_DIFFICULTY; // difficulty setting
   UISTATE_YESNO; // yes/no dialog window
   UISTATE_DOCUMENT; // text document window

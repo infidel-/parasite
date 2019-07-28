@@ -137,13 +137,9 @@ class GameScene extends Scene
       var res = hxd.Res.load('graphics/tileset' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
       tileAtlas = res.gridFlatten(Const.TILE_SIZE_CLEAN);
-      var ttf = hxd.Res.font.OrkneyRegular;
-//      font = ttf.build(game.config.fontSize);
-      font = ttf.toFont();
-/*
-      ttf = hxd.Res.font.OrkneyRegular10;
-      font10 = ttf.toFont();
-*/
+      font = hxd.Res.load('font/OrkneyRegular' +
+        game.config.fontSize + '.fnt').to(hxd.res.BitmapFont).toFont();
+
       // scale atlases if needed
       if (game.config.mapScale != 1)
         {
@@ -506,6 +502,8 @@ class GameScene extends Scene
         (key == Key.NUMBER_6 && controlPressed) || key == Key.F6;
       var organsPressed =
         (key == Key.NUMBER_7 && controlPressed) || key == Key.F7;
+      var optionsPressed =
+        (key == Key.NUMBER_8 && controlPressed) || key == Key.F8;
       var debugPressed =
         (key == Key.NUMBER_9 && controlPressed) || key == Key.F9;
 
@@ -549,6 +547,10 @@ class GameScene extends Scene
           game.player.state == PLR_STATE_HOST &&
           game.player.vars.organsEnabled)
         state = UISTATE_ORGANS;
+
+      // open options window
+      else if (optionsPressed)
+        state = UISTATE_OPTIONS;
 
 #if mydebug
       // open debug window
@@ -918,6 +920,7 @@ class GameScene extends Scene
         UISTATE_ORGANS => new Organs(game),
         UISTATE_DEBUG => new Debug(game),
         UISTATE_FINISH => new Finish(game),
+        UISTATE_OPTIONS => new Options(game),
       ];
     }
 }

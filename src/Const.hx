@@ -2,7 +2,7 @@ import game.*;
 
 class Const
 {
-  public static var FONT = "font/Orkney-Regular.otf";
+  public static var FONTS = [ 16, 24, 32, 40 ];
   public static var LAYER_MOUSE = 8; // mouse cursor layer - highest
   public static var LAYER_UI = 7; // ui windows layer
   public static var LAYER_HUD = 6; // ui layer

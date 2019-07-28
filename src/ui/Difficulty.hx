@@ -13,7 +13,7 @@ class Difficulty extends UIWindow
 
   public function new(g: Game)
     {
-      super(g, 700, 200);
+      super(g, 700, g.config.fontSize > 24 ? 250 : 200);
       currentChoice = null;
 
       window.x = Std.int((game.scene.win.width - width) / 2);

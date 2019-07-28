@@ -429,6 +429,7 @@ class HUD
           if (game.player.vars.organsEnabled)
             buf.add(prefix + '7: Body features  ');
         }
+      buf.add(prefix + '8: Options  ');
 
 #if mydebug
       buf.add(prefix + '9: Debug  ');

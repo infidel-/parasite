@@ -4,18 +4,20 @@ package ui;
 
 import h2d.Anim;
 import h2d.Bitmap;
-import h2d.Object;
+import h2d.Font;
 import h2d.Graphics;
+import h2d.HtmlText;
 import h2d.Interactive;
+import h2d.Object;
 import h2d.Text;
 import h2d.TextInput;
-import h2d.HtmlText;
 import hxd.Event;
 
 import game.Game;
 
 class UIWindow
 {
+  var atlas: Atlas;
   var game: Game;
   var window: Object;
   var back: Graphics;
@@ -24,10 +26,13 @@ class UIWindow
   var isScreenSize: Bool;
   var isCentered: Bool;
   var state: _UIState; // state this relates to
+  var font24: Font;
 
   public function new(g: Game, ?w: Int, ?h: Int)
     {
+      font24 = hxd.Res.font.OrkneyRegular24.toFont();
       game = g;
+      atlas = game.scene.atlas;
       width = (w != null ? w : game.scene.win.width);
       height = (h != null ? h : game.scene.win.height);
       isCentered = false;
@@ -107,7 +112,6 @@ class UIWindow
 
 #if !free
       // up
-      var atlas = game.scene.atlas;
       var xx = 0;
       var tile = atlas.getInterface('textU');
       while (xx < w - tile.width)
@@ -197,7 +201,7 @@ class UIWindow
 
       // text
       var back2 = new Graphics(back);
-      var text = new Text(game.scene.font, back2);
+      var text = new Text(font24, back2);
       text.x = tile.width + 20;
       text.y = y + 10;
       text.textColor = 0x5febbd;
@@ -229,9 +233,9 @@ class UIWindow
   public function addButton(x: Int, y: Int, text: String,
       onClick: Void -> Void, ?onOver: Void -> Void, ?onOut: Void -> Void)
     {
-      var tile1 = game.scene.atlas.getInterface('button');
-      var tile2 = game.scene.atlas.getInterface('buttonOver');
-      var tile3 = game.scene.atlas.getInterface('buttonPress');
+      var tile1 = atlas.getInterface('button');
+      var tile2 = atlas.getInterface('buttonOver');
+      var tile3 = atlas.getInterface('buttonPress');
       var b = new Interactive(tile1.width, tile1.height, window);
       var img = new Anim([ tile1, tile2, tile3 ], 15, b);
       img.pause = true;
@@ -261,7 +265,7 @@ class UIWindow
           img.currentFrame = 1;
           onClick();
         }
-      var t = new Text(game.scene.font, img);
+      var t = new Text(font24, img);
       t.text = text;
       t.y = (tile1.height - t.textHeight) / 2;
       t.maxWidth = tile1.width;
