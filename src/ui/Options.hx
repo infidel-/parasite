@@ -28,10 +28,11 @@ class Options extends UIWindow
       row = 0;
       groups = [];
 
-      // color background
+      // color background and border
       back.beginFill(0x415056, 1);
       back.drawRect(0, 0, w, h);
       back.endFill();
+      makeBorder();
 
       // options list
 #if !free

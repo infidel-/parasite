@@ -230,7 +230,7 @@ class UIWindow
 
 
 // add button to these coordinates
-  public function addButton(x: Int, y: Int, text: String,
+  function addButton(x: Int, y: Int, text: String,
       onClick: Void -> Void, ?onOver: Void -> Void, ?onOut: Void -> Void)
     {
       var tile1 = atlas.getInterface('button');
@@ -270,6 +270,36 @@ class UIWindow
       t.y = (tile1.height - t.textHeight) / 2;
       t.maxWidth = tile1.width;
       t.textAlign = Center;
+    }
+
+
+// make border
+// does not work if addText() was called
+  function makeBorder()
+    {
+      back.beginFill(0x273033, 0.75);
+      back.lineStyle(4, 0x273033, 0.75);
+      back.moveTo(2,0);
+      back.lineTo(2,height);
+      back.endFill();
+
+      back.beginFill(0x273033, 0.75);
+      back.lineStyle(4, 0x273033, 0.75);
+      back.moveTo(4,height - 2);
+      back.lineTo(width,height - 2);
+      back.endFill();
+
+      back.beginFill(0x273033, 0.75);
+      back.lineStyle(4, 0x273033, 0.75);
+      back.moveTo(width - 2,height - 4);
+      back.lineTo(width - 2,0);
+      back.endFill();
+
+      back.beginFill(0x273033, 0.75);
+      back.lineStyle(4, 0x273033, 0.75);
+      back.moveTo(width - 4,2);
+      back.lineTo(4,2);
+      back.endFill();
     }
 
 
