@@ -20,7 +20,7 @@ class Mouse
   var oldy: Float;
   public var atlas: Array<Cursor>;
   public var forceNextUpdate: Int; // kludge for update
-  public var ignoreNextClick: Bool; // kludge for regaining focus
+  public var ignoreNextClick: Bool; // kludge for regaining focus and hud buttons
   var oldPos: { x: Int, y: Int };
 
   public function new(g: Game)

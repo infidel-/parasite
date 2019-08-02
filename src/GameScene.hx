@@ -1,6 +1,7 @@
 // - has all links to windows and handles input
 
 import h2d.Font;
+import h2d.Interactive;
 import h2d.Scene;
 import h2d.Tile;
 import hxd.Key;
@@ -20,6 +21,7 @@ class GameScene extends Scene
   public var game: Game; // game state link
   public var area: AreaView; // area view
   public var region: RegionView; // region view
+  var tilemapInt: Interactive; // tilemap interactive
   public var mouse: Mouse; // mouse cursor entity
   public var hud: HUD; // ingame HUD
   public var win: Window;
@@ -160,6 +162,12 @@ class GameScene extends Scene
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
       area = new AreaView(this);
       region = new RegionView(this);
+
+      // add screen-sized tilemap interactive object
+      tilemapInt = new h2d.Interactive(win.width, win.height);
+      this.add(tilemapInt, Const.LAYER_TILEMAP);
+      tilemapInt.onClick = function (e: hxd.Event)
+        { mouse.onClick(e.button); }
 
       // init sound
       soundManager = new SoundManager(this);
@@ -307,7 +315,21 @@ class GameScene extends Scene
 #else
       // exit game
       if (key == Key.F10)
-        hxd.System.exit();
+        {
+
+          // show exit yes/no dialog
+          game.scene.event({
+            state: UISTATE_YESNO,
+            obj: {
+              text: 'Do you want to exit the game?',
+              func: function(yes: Bool)
+                {
+                  if (yes)
+                    hxd.System.exit();
+                }
+            }
+          });
+        }
 #end
 
       // toggle gui
@@ -732,8 +754,6 @@ class GameScene extends Scene
               key = ev.keyCode;
             case EKeyUp:
               keyUp = ev.keyCode;
-            case EPush:
-              mouse.onClick(ev.button);
             case EWheel:
               if (_state != UISTATE_DEFAULT)
                 key = (ev.wheelDelta > 0 ? Key.DOWN : Key.UP);
@@ -868,6 +888,8 @@ class GameScene extends Scene
           return;
         }
 #end
+      tilemapInt.width = win.width;
+      tilemapInt.height = win.height;
       hud.resize();
       updateCamera();
       if (game.location == LOCATION_AREA)

@@ -470,7 +470,6 @@ class PlayerArea
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
         id: weapon.skill,
-        // hardcoded animal attack skill level
         level: player.host.skills.getLevel(weapon.skill),
         mods: [{
           name: '0.5x parasite',

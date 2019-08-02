@@ -1,12 +1,13 @@
 // ingame HUD
 
-package ui;
-
+package ui; 
 import h2d.Bitmap;
 import h2d.Graphics;
-import h2d.Object;
 import h2d.HtmlText;
+import h2d.Interactive;
+import h2d.Object;
 import h2d.TextInput;
+import hxd.Event;
 import hxd.Key;
 
 import game.Game;
@@ -20,6 +21,11 @@ class HUD
   var _container: Object;
   var _text: HtmlText; // actions list
   var _textBack: Graphics; // actions list background
+  var _menuButtons: Array<{
+    state: _UIState,
+    back: Graphics,
+    text: h2d.Text
+  }>; // menu buttons list
   var _log: HtmlText; // last log lines
   var _logBack: Graphics; // log background
   var _console: TextInput; // console
@@ -32,6 +38,7 @@ class HUD
   public function new(g: Game)
     {
       game = g;
+      _menuButtons = [];
       _listActions = new List();
       _listKeyActions = new List();
       _container = new Object();
@@ -68,6 +75,28 @@ class HUD
       _help.textAlign = Left;
       _helpBack.x = 20;
       _helpBack.y = game.scene.win.height - game.config.fontSize - 8;
+      _helpBack.visible = false;
+
+      // menu buttons
+      addMenuButton(UISTATE_GOALS, '1: Goals');
+      addMenuButton(UISTATE_INVENTORY, '2: Inventory');
+      addMenuButton(UISTATE_SKILLS, '3: Knowledge');
+      addMenuButton(UISTATE_LOG, '4: Log');
+      addMenuButton(UISTATE_TIMELINE, '5: Timeline');
+      addMenuButton(UISTATE_EVOLUTION, '6: Evolution');
+      addMenuButton(UISTATE_ORGANS, '7: Body features');
+      addMenuButton(UISTATE_OPTIONS, '8: Options');
+#if mydebug
+      addMenuButton(UISTATE_DEBUG, '9: Debug');
+#end
+#if !js
+      // should be unique state but no matter
+      var btn = addMenuButton(UISTATE_YESNO, '10: Exit');
+      btn.onClick = function (e: Event)
+        {
+          @:privateAccess game.scene.handleInput(Key.F10);
+        }
+#end
 
       // player goals
       _goalsBack = new Graphics(_container);
@@ -79,6 +108,48 @@ class HUD
       @:privateAccess game.scene.window.addEventTarget(onEvent);
     }
 
+
+// add button to menu
+  function addMenuButton(state: _UIState, str: String): Interactive
+    {
+#if js
+      str = ' ' + (game.scene.controlKey == 'alt' ? 'A-' : 'C-') +
+        str + ' ';
+#else
+      str = ' F' + str + ' ';
+#end
+
+      // backs and text
+      var back = new Graphics(_container);
+      var backOver = new Graphics(back);
+      var text = new h2d.Text(game.scene.font, back);
+      text.textAlign = Left;
+      text.text = str;
+      back.x = 20;
+      back.y = game.scene.win.height - game.config.fontSize - 8;
+      back.visible = false;
+      _menuButtons.push({ state: state, back: back, text: text });
+      back.clear();
+      back.beginFill(0x202020, 0.75);
+      back.drawRect(0, 0, text.textWidth, text.textHeight);
+      back.endFill();
+      backOver.clear();
+      backOver.beginFill(0x777777, 0.75);
+      backOver.drawRect(0, 0, text.textWidth, text.textHeight);
+      backOver.endFill();
+      backOver.visible = false;
+
+      // button
+      var btn = new Interactive(text.textWidth, text.textHeight, back);
+      btn.cursor = game.scene.mouse.atlas[Mouse.CURSOR_ARROW];
+      btn.onClick = function (e: Event)
+        { game.scene.state = state; }
+      btn.onOver = function (e: Event)
+        { backOver.visible = true; }
+      btn.onOut = function (e: Event)
+        { backOver.visible = false; }
+      return btn;
+    }
 
 // show console
   function onEvent(e: hxd.Event)
@@ -399,8 +470,60 @@ class HUD
     }
 
 
-  function updateHelp()
+  function updateMenu()
     {
+      var x = 20.0;
+      var vis = false;
+      for (m in _menuButtons)
+        {
+          vis = false;
+          if (m.state == UISTATE_GOALS ||
+              m.state == UISTATE_LOG ||
+              m.state == UISTATE_DEBUG ||
+              m.state == UISTATE_YESNO) // exit
+            vis = true;
+
+          else if (m.state == UISTATE_INVENTORY)
+            {
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.vars.inventoryEnabled)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_SKILLS)
+            {
+              if (game.player.vars.skillsEnabled)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_TIMELINE)
+            {
+              if (game.player.vars.timelineEnabled)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_EVOLUTION)
+            {
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.evolutionManager.state > 0)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_ORGANS)
+            {
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.vars.organsEnabled)
+                vis = true;
+            }
+
+          if (vis)
+            {
+              m.back.visible = true;
+              m.back.x = x;
+              x += m.text.textWidth + 10;
+            }
+        }
+/*
       var buf = new StringBuf();
       var prefix =
 #if js
@@ -443,6 +566,7 @@ class HUD
       _helpBack.beginFill(0x202020, 0.75);
       _helpBack.drawRect(0, 0, _help.maxWidth, _help.textHeight);
       _helpBack.endFill();
+*/
     }
 
 
@@ -452,7 +576,7 @@ class HUD
       updateActionList();
       updateWindow();
       updateLog();
-      updateHelp();
+      updateMenu();
       updateConsole();
       updateGoals();
     }
