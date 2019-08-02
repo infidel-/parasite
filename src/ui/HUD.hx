@@ -30,8 +30,6 @@ class HUD
   var _logBack: Graphics; // log background
   var _console: TextInput; // console
   var _consoleBack: Graphics; // console background
-  var _help: h2d.Text; // help
-  var _helpBack: Graphics; // help background
   var _goals: HtmlText; // goals list
   var _goalsBack: Graphics; // goals list background
 
@@ -67,15 +65,6 @@ class HUD
       _text = new HtmlText(game.scene.font, _textBack);
       _text.textAlign = Left;
       _textBack.x = 20;
-
-      // help
-      _helpBack = new Graphics(_container);
-      _help = new h2d.Text(game.scene.font, _helpBack);
-      _help.maxWidth = game.scene.win.width - 40;
-      _help.textAlign = Left;
-      _helpBack.x = 20;
-      _helpBack.y = game.scene.win.height - game.config.fontSize - 8;
-      _helpBack.visible = false;
 
       // menu buttons
       addMenuButton(UISTATE_GOALS, '1: Goals');
@@ -523,50 +512,6 @@ class HUD
               x += m.text.textWidth + 10;
             }
         }
-/*
-      var buf = new StringBuf();
-      var prefix =
-#if js
-        (game.scene.controlKey == 'alt' ? "A-" : "C-");
-#else
-        "F";
-#end
-
-      buf.add(prefix + '1: Goals  ');
-      if (game.player.state == PLR_STATE_HOST)
-        {
-          if (game.player.vars.inventoryEnabled)
-            buf.add(prefix + '2: Inventory  ');
-        }
-      if (game.player.vars.skillsEnabled)
-        buf.add(prefix + '3: Knowledge  ');
-      buf.add(prefix + '4: Log  ');
-
-      if (game.player.vars.timelineEnabled)
-        buf.add(prefix + '5: Timeline  ');
-
-      if (game.player.state == PLR_STATE_HOST)
-        {
-          if (game.player.evolutionManager.state > 0)
-            buf.add(prefix + '6: Evolution  ');
-          if (game.player.vars.organsEnabled)
-            buf.add(prefix + '7: Body features  ');
-        }
-      buf.add(prefix + '8: Options  ');
-
-#if mydebug
-      buf.add(prefix + '9: Debug  ');
-#end
-#if !js
-      buf.add(prefix + '10: Exit');
-#end
-
-      _help.text = buf.toString();
-      _helpBack.clear();
-      _helpBack.beginFill(0x202020, 0.75);
-      _helpBack.drawRect(0, 0, _help.maxWidth, _help.textHeight);
-      _helpBack.endFill();
-*/
     }
 
 
@@ -635,9 +580,9 @@ class HUD
     {
       _console.maxWidth = game.scene.win.width - 40;
       _log.maxWidth = game.scene.win.width - 40;
-      _help.maxWidth = game.scene.win.width - 40;
-      _helpBack.y = game.scene.win.height - game.config.fontSize - 8;
       _goalsBack.x = game.scene.win.width - 420;
+      for (m in _menuButtons)
+        m.back.y = game.scene.win.height - game.config.fontSize - 8;
 
       update();
     }
