@@ -16,11 +16,17 @@ class HUD
 {
   var game: Game; // game state link
 
+  var _actionButtons: List<{
+    back: Graphics,
+    btn: Interactive
+  }>; // list of actions
   var _listActions: List<_PlayerAction>; // list of currently available actions
   var _listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
   var _container: Object;
-  var _text: HtmlText; // actions list
-  var _textBack: Graphics; // actions list background
+  var _text: HtmlText; // player info
+  var _textBack: Graphics; // player info background
+  var _actions: HtmlText; // actions list
+  var _actionsBack: Graphics; // actions list background
   var _menuButtons: Array<{
     state: _UIState,
     back: Graphics,
@@ -37,6 +43,7 @@ class HUD
     {
       game = g;
       _menuButtons = [];
+      _actionButtons = new List();
       _listActions = new List();
       _listKeyActions = new List();
       _container = new Object();
@@ -60,11 +67,17 @@ class HUD
       _logBack.x = 20;
       _logBack.y = game.config.fontSize + 10;
 
-      // actions list
+      // player info
       _textBack = new Graphics(_container);
       _text = new HtmlText(game.scene.font, _textBack);
       _text.textAlign = Left;
       _textBack.x = 20;
+
+      // actions list
+      _actionsBack = new Graphics(_container);
+      _actions = new HtmlText(game.scene.font, _actionsBack);
+      _actions.textAlign = Left;
+      _actionsBack.x = 20;
 
       // menu buttons
       addMenuButton(UISTATE_GOALS, '1: Goals');
@@ -273,8 +286,8 @@ class HUD
     }
 
 
-// update HUD window
-  function updateWindow()
+// update player info
+  function updateInfo()
     {
       var buf = new StringBuf();
 
@@ -305,17 +318,20 @@ class HUD
       var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
         "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
-        '/' + game.player.maxHealth + '<br/>');
-      buf.add('===<br/>');
+        '/' + game.player.maxHealth);
 
       if (game.player.state == PLR_STATE_ATTACHED)
-        buf.add("Grip: <font color='" +
-          getTextColor(game.playerArea.attachHold, 100) + "'>" +
-          game.playerArea.attachHold + "</font>/100<br/>");
+        {
+          buf.add('<br/>===<br/>');
+          buf.add("Grip: <font color='" +
+            getTextColor(game.playerArea.attachHold, 100) + "'>" +
+            game.playerArea.attachHold + "</font>/100<br/>");
+        }
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
         {
+          buf.add('<br/>===<br/>');
           buf.add(game.player.host.getNameCapped());
           if (game.player.host.isJobKnown)
             buf.add(' (' + game.player.host.job + ')<br/>');
@@ -347,14 +363,26 @@ class HUD
             energyPerTurn + '/t]<br/>');
           buf.add('Evolution direction:<br/>  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
-          buf.add('<br/>');
+//          buf.add('<br/>');
           var str = game.player.host.organs.getInfo();
           if (str != null)
             buf.add(str);
         }
-      buf.add("<br/>===<br/><br/>");
 
-      // player actions
+      _text.text = buf.toString();
+      _textBack.clear();
+      _textBack.beginFill(0x202020, 0.75);
+      _textBack.drawRect(0, 0, _text.textWidth, _text.textHeight);
+      _textBack.endFill();
+      _textBack.y = game.scene.win.height - _text.textHeight -
+        _actions.textHeight - game.config.fontSize - 20;
+    }
+
+
+// update player actions
+  function updateActions()
+    {
+      var buf = new StringBuf();
       var n = 1;
       if (!game.isFinished)
         {
@@ -386,13 +414,68 @@ class HUD
       else if (n == 1)
         buf.add('No available actions.');
 
-      _text.text = buf.toString();
-      _textBack.clear();
-      _textBack.beginFill(0x202020, 0.75);
-      _textBack.drawRect(0, 0, _text.textWidth, _text.textHeight);
-      _textBack.endFill();
-      _textBack.y = game.scene.win.height - _text.textHeight -
+      _actions.text = buf.toString();
+      _actionsBack.clear();
+      _actionsBack.beginFill(0x202020, 0.75);
+      _actionsBack.drawRect(0, 0, _actions.textWidth, _actions.textHeight);
+      _actionsBack.endFill();
+      _actionsBack.y = game.scene.win.height - _actions.textHeight -
         game.config.fontSize - 12;
+
+      // clear old buttons
+      for (b in _actionButtons)
+        {
+          b.back.remove();
+          b.btn.remove();
+        }
+      _actionButtons = new List();
+
+      if (game.isFinished || n == 1)
+        return;
+
+      // action buttons
+      var n = 1;
+      var list = [ _listActions, _listKeyActions ];
+      for (l in list)
+        for (action in l)
+          addActionButton(n++, action.key);
+      _actionsBack.addChild(_actions);
+    }
+
+
+// add player action button
+  function addActionButton(n: Int, key: Null<Int>)
+    {
+      // button highlight
+      var backOver = new Graphics(_actionsBack);
+      backOver.y = (n - 1) * game.scene.font.lineHeight;
+      backOver.clear();
+      backOver.beginFill(0x777777, 0.75);
+      backOver.drawRect(0, 0, _actions.textWidth,
+        game.scene.font.lineHeight);
+      backOver.endFill();
+      backOver.visible = false;
+
+      // button
+      var btn = new Interactive(_actions.textWidth,
+        game.scene.font.lineHeight, _actionsBack);
+      btn.y = (n - 1) * game.scene.font.lineHeight;
+      btn.cursor = game.scene.mouse.atlas[Mouse.CURSOR_ARROW];
+      btn.onClick = function (e: Event)
+        {
+          if (key != null)
+            keyAction(key);
+          else action(n);
+        }
+      btn.onOver = function (e: Event)
+        { backOver.visible = true; }
+      btn.onOut = function (e: Event)
+        { backOver.visible = false; }
+
+      _actionButtons.add({
+        back: backOver,
+        btn: btn,
+      });
     }
 
 
@@ -422,11 +505,6 @@ class HUD
       _goalsBack.y = game.scene.win.height - _goals.textHeight -
         game.config.fontSize - 12;
     }
-
-
-  static var cnt = 0;
-  public function test()
-    {}
 
 
 // update log display
@@ -511,6 +589,7 @@ class HUD
               m.back.x = x;
               x += m.text.textWidth + 10;
             }
+          else m.back.visible = false;
         }
     }
 
@@ -519,7 +598,8 @@ class HUD
   public function update()
     {
       updateActionList();
-      updateWindow();
+      updateActions(); // before info because info uses its height
+      updateInfo();
       updateLog();
       updateMenu();
       updateConsole();

@@ -91,7 +91,7 @@ class ItemsConst
       id: 'baton',
       name: 'baton',
       type: 'weapon',
-      unknown: 'hard elongated object',
+      unknown: 'elongated object',
       weapon:
         {
           isRanged: false,
@@ -112,7 +112,7 @@ class ItemsConst
       id: 'stunner',
       name: 'stunner',
       type: 'weapon',
-      unknown: 'hard elongated object',
+      unknown: 'elongated object',
       weapon:
         {
           isRanged: false,
@@ -132,7 +132,7 @@ class ItemsConst
       id: 'pistol',
       name: 'pistol',
       type: 'weapon',
-      unknown: 'metallic object with a handle',
+      unknown: 'metallic object',
       weapon:
         {
           isRanged: true,
@@ -152,7 +152,7 @@ class ItemsConst
       id: 'assaultRifle',
       name: 'assault rifle',
       type: 'weapon',
-      unknown: 'elongated metallic object with a handle',
+      unknown: 'elongated metallic object',
       weapon:
         {
           isRanged: true,
@@ -171,7 +171,7 @@ class ItemsConst
       id: 'combatShotgun',
       name: 'combat shotgun',
       type: 'weapon',
-      unknown: 'elongated metallic object with a handle',
+      unknown: 'elongated metallic object',
       weapon:
         {
           isRanged: true,
@@ -190,7 +190,7 @@ class ItemsConst
       id: 'stunRifle',
       name: 'stun rifle',
       type: 'weapon',
-      unknown: 'elongated metallic object with a handle',
+      unknown: 'elongated metallic object',
       weapon:
         {
           isRanged: true,
@@ -237,7 +237,7 @@ class ItemsConst
       names: [ 'piece of paper', 'report', 'document', 'note', 'dossier',
         'sheet of paper', 'page' ],
       type: 'readable',
-      unknown: 'rectangular thin object with markings',
+      unknown: 'thin object with markings',
       areaObjectClass: Paper,
     },
 
@@ -245,7 +245,7 @@ class ItemsConst
       id: 'book',
       names: [ 'notebook', 'diary', 'journal', 'logbook', 'organizer', 'book' ],
       type: 'readable',
-      unknown: 'rectangular object with lots of markings',
+      unknown: 'object with many markings',
       areaObjectClass: Book,
     },
 
@@ -285,7 +285,7 @@ class ItemsConst
       id: 'cigarettes',
       name: 'cigarettes',
       type: 'junk',
-      unknown: 'small container full of thin cylinders',
+      unknown: 'small container',
     },
     ];
 }
