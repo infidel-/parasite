@@ -685,7 +685,10 @@ class GameScene extends Scene
           else if (key == Key.N)
             n = 2;
           if (n > 0)
-            components[_state].action(n);
+            {
+              components[_state].action(n);
+              return true;
+            }
         }
 
       // actions by key
@@ -721,15 +724,14 @@ class GameScene extends Scene
 #else
               win.setFullScreen(isFullScreen);
 #end
+              ret = true;
+            }
         }
 
       // next 10 actions
       if (key == Key.S)
         {
           _inputState = 1;
-          ret = true;
-        }
-
           ret = true;
         }
 

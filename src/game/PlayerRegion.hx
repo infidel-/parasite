@@ -306,6 +306,9 @@ class PlayerRegion
 // if we add travel by car later, this would have to be changed to accomodate that
   public inline function onHostDeath()
     {
+      // call AI death (for NPC and sound)
+      player.host.dieRegion();
+
       // set state
       player.state = PLR_STATE_PARASITE;
 

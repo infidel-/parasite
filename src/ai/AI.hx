@@ -964,6 +964,29 @@ class AI
     }
 
 
+// AI death in the sewers
+  public function dieRegion()
+    {
+      // dying sound
+      var array = sounds['' + AI_STATE_DEAD];
+      if (array == null)
+        return;
+      var idx = Std.random(array.length);
+      var sound = array[idx];
+      var file = sound.files[Std.random(sound.files.length)];
+      if (isHuman && !isMale && file.indexOf('male') == 0)
+        file = 'fe' + file;
+      game.scene.soundManager.playSound(file, false);
+
+      // event stuff
+      if (npc != null)
+        {
+          npc.isDead = true;
+          npc.statusKnown = true;
+        }
+    }
+
+
 // AI death
   public function die()
     {

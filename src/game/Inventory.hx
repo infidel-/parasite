@@ -282,6 +282,7 @@ class Inventory
       o.item = item;
       game.area.addObject(o);
       _list.remove(item);
+      o.entity.setPosition(o.x, o.y);
 
       game.player.log('You drop the ' + tmpname + '.');
     }
