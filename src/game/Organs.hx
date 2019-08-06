@@ -33,7 +33,7 @@ class Organs
       // current growing organ info
       if (currentOrgan != null)
         {
-          buf.add('Body feature:\n  ');
+          buf.add('Body feature:<br/>  ');
           var col: _TextColor = COLOR_ORGAN;
           buf.add("<font color='" + Const.TEXT_COLORS[col] + "'>");
           buf.add(currentOrgan.info.name);
@@ -55,7 +55,7 @@ class Organs
           buf.add("<font color='#DDDD00'>" + organ.info.name + "</font>");
           buf.add(' ');
           buf.add(organ.level);
-          buf.add(' (timeout: ' + organ.timeout + ')\n');
+          buf.add(' (timeout: ' + organ.timeout + ')');
         }
 
       return buf.toString();

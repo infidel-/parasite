@@ -324,7 +324,7 @@ class ScenarioAlienCrashLanding extends Scenario
               game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
 
               // alien is alive, save it
-              game.goals.receive(SCENARIO_ALIEN_SAVE_ALIEN);
+//              game.goals.receive(SCENARIO_ALIEN_SAVE_ALIEN);
             },
           },
 

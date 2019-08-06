@@ -363,10 +363,12 @@ class HUD
             energyPerTurn + '/t]<br/>');
           buf.add('Evolution direction:<br/>  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
-//          buf.add('<br/>');
           var str = game.player.host.organs.getInfo();
           if (str != null)
-            buf.add(str);
+            {
+              buf.add('<br/>');
+              buf.add(str);
+            }
         }
 
       _text.text = buf.toString();
@@ -547,6 +549,7 @@ class HUD
           vis = false;
           if (m.state == UISTATE_GOALS ||
               m.state == UISTATE_LOG ||
+              m.state == UISTATE_OPTIONS ||
               m.state == UISTATE_DEBUG ||
               m.state == UISTATE_YESNO) // exit
             vis = true;

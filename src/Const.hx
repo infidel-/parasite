@@ -211,6 +211,8 @@ class Const
           if (cl == null)
             continue;
           var className = Type.getClassName(cl);
+          if ((ff + '').indexOf('function') == 0)
+            continue;
 
           // library classes and anonymous objects
           if (!Reflect.isFunction(ff) &&

@@ -676,6 +676,17 @@ class GameScene extends Scene
             ret = true;
             break;
           }
+      // yes/no
+      if (_state == UISTATE_YESNO)
+        {
+          var n = 0;
+          if (key == Key.Y)
+            n = 1;
+          else if (key == Key.N)
+            n = 2;
+          if (n > 0)
+            components[_state].action(n);
+        }
 
       // actions by key
       ret = hud.keyAction(key);
@@ -692,6 +703,24 @@ class GameScene extends Scene
 
               ret = true;
             }
+
+          // toggle fullscreen
+          else if (key == Key.F)
+            {
+              isFullScreen = !isFullScreen;
+#if js
+              var doc = js.Browser.document;
+              if (doc.fullscreenEnabled)
+                {
+                  var e: js.html.CanvasElement =
+                    cast doc.getElementById("webgl");
+                  if (isFullScreen)
+                    untyped e.requestFullscreen();
+                  else doc.exitFullscreen();
+                }
+#else
+              win.setFullScreen(isFullScreen);
+#end
         }
 
       // next 10 actions
@@ -700,24 +729,6 @@ class GameScene extends Scene
           _inputState = 1;
           ret = true;
         }
-
-      // toggle fullscreen
-      else if (key == Key.F)
-        {
-          isFullScreen = !isFullScreen;
-#if js
-          var doc = js.Browser.document;
-          if (doc.fullscreenEnabled)
-            {
-              var e: js.html.CanvasElement =
-                cast doc.getElementById("webgl");
-              if (isFullScreen)
-                untyped e.requestFullscreen();
-              else doc.exitFullscreen();
-            }
-#else
-          win.setFullScreen(isFullScreen);
-#end
 
           ret = true;
         }
@@ -754,6 +765,10 @@ class GameScene extends Scene
               key = ev.keyCode;
             case EKeyUp:
               keyUp = ev.keyCode;
+            case ERelease:
+              // hack: always pass-through middle click
+              if (ev.button == Key.MOUSE_MIDDLE)
+                mouse.onClick(ev.button);
             case EWheel:
               if (_state != UISTATE_DEFAULT)
                 key = (ev.wheelDelta > 0 ? Key.DOWN : Key.UP);

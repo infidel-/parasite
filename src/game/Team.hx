@@ -65,12 +65,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
       ambushedHabitat = tmp[Std.random(tmp.length)].habitat;
 
       // watcher notification
-      if (ambushedHabitat.hasWatcher || game.group.difficulty == EASY)
+      if (ambushedHabitat.hasWatcher)
         {
           game.scene.soundManager.playSound('watcher_ambush', true);
-          if (ambushedHabitat.hasWatcher)
-            game.message("The watcher warns they are waiting for me.", COLOR_ALERT);
-          else game.message("They are waiting for me.", COLOR_ALERT);
+          game.message("The watcher warns they are waiting for me.",
+            COLOR_ALERT);
         }
     }
 
