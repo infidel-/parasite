@@ -728,7 +728,7 @@ class PlayerArea
       log('You probe the brain of the host and learn its contents. The host grows weaker.');
 
       // skills and knowledge
-      var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
+      var params: Dynamic = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
       if (player.vars.skillsEnabled)
         {
           // can access skills from level 2

@@ -749,6 +749,7 @@ class AreaGame
 // remove AI
   public function removeAI(ai: AI)
     {
+//      game.debug('AI remove ' + ai.id);
       // event: despawn live AI
       if (ai.state != AI_STATE_DEAD && ai != game.player.host)
         ai.onRemove();

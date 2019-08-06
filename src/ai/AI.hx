@@ -855,7 +855,8 @@ class AI
   public function turn()
     {
       stateTime++; // time spent in this state
-      entity.turn(); // time passing for entity
+      if (entity != null)
+        entity.turn(); // time passing for entity
       effects.turn(1); // time passing for effects
 
       // effect: slime, does not allow movement

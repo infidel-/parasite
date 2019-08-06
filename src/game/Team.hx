@@ -236,8 +236,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // called either on ambush timeout or when player leaves ambushed habitat
   function destroyHabitat(area: AreaGame)
     {
-      // team distance is increased providing a buffer
-      distance = 30;
+      // team distance is reset providing a buffer
+      distance = 50;
 
       // team goes back to search
       state = TEAM_SEARCH;

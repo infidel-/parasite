@@ -496,8 +496,9 @@ class HUD
             buf.add(info.note2 + '<br/>');
           buf.add('<br/>');
         }
+      var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'
 
-      _goals.text = buf.toString();
+      _goals.text = s;
       _goalsBack.clear();
       _goalsBack.beginFill(0x202020, 0.75);
       _goalsBack.drawRect(0, 0, _goals.maxWidth, _goals.textHeight);
