@@ -17,28 +17,28 @@ class CivilianAI extends HumanAI
       name.unknownCapped = 'Random civilian';
       sounds = SoundConst.civilian;
 
+      // civs in higher class areas have a higher chance of having computers
+      // smartphones
+      var chance = 50;
+      if (game.area.info.id == AREA_CITY_LOW)
+        chance = 70;
+      else if (game.area.info.id == AREA_CITY_MEDIUM)
+        chance = 75;
+      else if (game.area.info.id == AREA_CITY_HIGH)
+        chance = 85;
+      else if (game.area.info.id == AREA_FACILITY)
+        chance = 90;
+
+      if (Std.random(100) < chance)
+        {
+          skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
+          inventory.remove('mobilePhone');
+          inventory.addID('smartphone');
+        }
+
       // these only spawn when they're useful
       if (game.player.vars.searchEnabled)
         {
-          // civs in higher class areas have a higher chance of having computers
-          // smartphones
-          var chance = 25;
-          if (game.area.info.id == AREA_CITY_LOW)
-            chance = 50;
-          else if (game.area.info.id == AREA_CITY_MEDIUM)
-            chance = 75;
-          else if (game.area.info.id == AREA_CITY_HIGH)
-            chance = 85;
-          else if (game.area.info.id == AREA_FACILITY)
-            chance = 90;
-
-          if (Std.random(100) < chance)
-            {
-              skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
-              inventory.remove('mobilePhone');
-              inventory.addID('smartphone');
-            }
-
           // laptops
           var chance = 5;
           if (game.area.info.id == AREA_CITY_LOW)

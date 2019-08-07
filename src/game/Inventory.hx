@@ -61,7 +61,8 @@ class Inventory
                   });
 
               // use computer
-              else if (item.info.type == 'computer')
+              else if (item.info.type == 'computer' &&
+                  game.player.vars.searchEnabled)
                 tmp.add({
                   id: 'search.' + item.id,
                   type: ACTION_INVENTORY,
