@@ -270,6 +270,12 @@ class ItemsConst
       unknown: 'rectangular plastic object',
     },
     {
+      id: 'radio',
+      name: 'police radio',
+      type: 'radio',
+      unknown: 'small plastic object',
+    },
+    {
       id: 'money',
       name: 'money',
       type: 'junk',

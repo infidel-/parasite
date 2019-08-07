@@ -46,12 +46,8 @@ class TeamMemberAI extends HumanAI
             inventory.addID('kevlarArmor', true);
         }
 
-      // these only spawn when they're useful
-      if (game.player.vars.searchEnabled)
-        {
-          skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
-          inventory.addID('smartphone');
-        }
+      skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+      inventory.addID('smartphone');
     }
 
 

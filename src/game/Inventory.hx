@@ -45,7 +45,7 @@ class Inventory
               name: 'Learn about ' + item.info.unknown,
               energy: 10,
               obj: item
-              });
+            });
 
           // can do stuff when item is known
           if (game.player.knowsItem(item.id))
@@ -58,7 +58,7 @@ class Inventory
                   name: 'Read ' + item.name,
                   energy: 10,
                   obj: item
-                  });
+                });
 
               // use computer
               else if (item.info.type == 'computer' &&
@@ -69,7 +69,7 @@ class Inventory
                   name: 'Use ' + item.name + ' to search',
                   energy: 10,
                   obj: item
-                  });
+                });
             }
 
           // drop item
@@ -80,7 +80,7 @@ class Inventory
               (game.player.knowsItem(item.id) ? item.name : item.info.unknown),
             energy: 0,
             obj: item
-            });
+          });
         }
 
       return tmp;

@@ -30,6 +30,13 @@ class SecurityAI extends HumanAI
       inventory.addID('baton');
       skills.addID(SKILL_BATON, 50 + Std.random(25));
 
+      if (Std.random(100) < 70)
+        {
+          skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+          inventory.addID('smartphone');
+        }
+      else inventory.addID('mobilePhone');
+
       isBackup = false;
       isBackupCalled = false;
     }

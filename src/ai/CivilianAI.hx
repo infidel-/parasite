@@ -32,9 +32,9 @@ class CivilianAI extends HumanAI
       if (Std.random(100) < chance)
         {
           skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
-          inventory.remove('mobilePhone');
           inventory.addID('smartphone');
         }
+      else inventory.addID('mobilePhone');
 
       // these only spawn when they're useful
       if (game.player.vars.searchEnabled)

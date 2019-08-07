@@ -24,6 +24,9 @@ class AgentAI extends HumanAI
       inventory.addID('pistol');
       skills.addID(SKILL_PISTOL, 40 + Std.random(25));
 
+      skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+      inventory.addID('smartphone');
+
 //      isBackup = false;
 //      isBackupCalled = false;
     }

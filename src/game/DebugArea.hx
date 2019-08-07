@@ -164,6 +164,7 @@ class DebugArea
               ai.inventory.addID('baton');
               ai.skills.addID(SKILL_BATON, 50 + Std.random(25));
 */
+              ai.inventory.addID('radio');
               ai.inventory.addID('stunner');
               ai.skills.addID(SKILL_FISTS, 50 + Std.random(25));
               game.area.addAI(ai);
