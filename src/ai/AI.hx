@@ -923,6 +923,10 @@ class AI
           alertness < sound.params.minAlertness)
         return;
 
+      // check if AI is visible
+      if (!game.area.inVisibleRect(x, y))
+        return;
+
       entity.setText(sound.text, 2);
       if (sound.files != null)
         {

@@ -1109,7 +1109,7 @@ class AreaGame
         y1: game.scene.cameraTileY1 - 1,
         x2: game.scene.cameraTileX2 + 2,
         y2: game.scene.cameraTileY2 + 2
-        };
+      };
 
       if (rect.x1 < 0)
         rect.x1 = 0;
