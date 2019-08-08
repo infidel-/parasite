@@ -248,6 +248,14 @@ class HUD
 
       else if (game.location == LOCATION_REGION)
         game.playerRegion.updateActionList();
+
+      game.scene.hud.addKeyAction({
+        id: 'skipTurn',
+        type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
+        name: 'Wait',
+        energy: 0,
+        key: Key.Z
+      });
     }
 
 

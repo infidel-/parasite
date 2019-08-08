@@ -697,7 +697,7 @@ class GameScene extends Scene
       if (_state == UISTATE_DEFAULT)
         {
           // skip until end of turn
-          if (key == Key.NUMPAD_5)
+          if (key == Key.NUMPAD_5 || key == Key.Z)
             {
               game.turn();
 
