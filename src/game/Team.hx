@@ -62,7 +62,16 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // pick random habitat
       var tmp = game.region.getHabitatsList();
-      ambushedHabitat = tmp[Std.random(tmp.length)].habitat;
+
+      // L2 watcher attracts ambush
+      for (area in tmp)
+        if (area.habitat.watcherLevel >= 2)
+          {
+            ambushedHabitat = area.habitat;
+            break;
+          }
+      if (ambushedHabitat == null)
+        ambushedHabitat = tmp[Std.random(tmp.length)].habitat;
 
       // watcher notification
       if (ambushedHabitat.hasWatcher)

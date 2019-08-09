@@ -78,7 +78,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic)
           {
-            return "Host armor bonus (minus to damage): " + l.armor + "\n" +
+            return "Host armor bonus (minus to damage): " + l.armor + "<br/>" +
               "AI alertness bonus: " + l.alertness;
           },
         organ: {
@@ -167,7 +167,7 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Host maximum energy multiplier: " + l.hostEnergyMod +
-              "\nRestores energy to maximum on completion";
+              "<br/>Restores energy to maximum on completion";
           },
         organ: {
           name: '??Host energy bonus',
@@ -228,7 +228,7 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
-              "\nSpit range: " + l.range;
+              "<br/>Spit range: " + l.range;
           },
         organ: {
           name: '??Acid spit',
@@ -280,7 +280,7 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Slime strength: " + l.strength +
-              "\nSpit range: " + l.range;
+              "<br/>Spit range: " + l.range;
           },
         organ: {
           name: '??Slime spit',
@@ -328,7 +328,7 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Paralysis effect time: " + l.time +
-              "\nSpit range: " + l.range;
+              "<br/>Spit range: " + l.range;
           },
         organ: {
           name: '??Paralysis spit',
@@ -376,8 +376,8 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Cloud range: " + l.range +
-              "\nCloud dissipation time: " + l.timeout +
-              "\nPanic effect time: " + l.time;
+              "<br/>Cloud dissipation time: " + l.timeout +
+              "<br/>Panic effect time: " + l.time;
           },
         organ: {
           name: '??Panic gas',
@@ -430,8 +430,8 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Cloud range: " + l.range +
-              "\nCloud dissipation time: " + l.timeout +
-              "\nParalysis effect time: " + l.time;
+              "<br/>Cloud dissipation time: " + l.timeout +
+              "<br/>Paralysis effect time: " + l.time;
           },
         organ: {
           name: '??Paralysis gas',
@@ -563,10 +563,10 @@ class EvolutionConst
         noteFunc: function (l: Dynamic)
           {
             return "Human society knowledge multiplier: " + l.humanSociety +
-              "\nBase host energy cost: " + l.hostEnergyBase +
-              "\nBase host health cost: " + l.hostHealthBase +
-              "\nHost skills learning multiplier: " + l.hostSkillsMod +
-              (l.hostAttrsMod == 1 ? "\nProbe shows host attributes" : "");
+              "<br/>Base host energy cost: " + l.hostEnergyBase +
+              "<br/>Base host health cost: " + l.hostHealthBase +
+              "<br/>Host skills learning multiplier: " + l.hostSkillsMod +
+              (l.hostAttrsMod == 1 ? "<br/>Probe shows host attributes" : "");
           },
         levelNotes: [
           'Cannot probe host brain',
@@ -748,12 +748,12 @@ class EvolutionConst
           {
             return
               "Energy units per formation: " + l.energy +
-              "\nBonus organ and evolution points per turn: +" +
+              "<br/>Bonus organ and evolution points per turn: +" +
                 l.evolutionBonus + "%" +
-              "\nAssimilated host energy restored per turn: +" + l.hostEnergyRestored +
-              "\nParasite energy restored per turn: +" +
+              "<br/>Assimilated host energy restored per turn: +" + l.hostEnergyRestored +
+              "<br/>Parasite energy restored per turn: +" +
                 l.parasiteEnergyRestored +
-              "\nParasite health restored per turn: +" +
+              "<br/>Parasite health restored per turn: +" +
                 l.parasiteHealthRestored;
           },
         levelNotes: [
@@ -854,7 +854,7 @@ class EvolutionConst
               // only in habitat
               if (!game.area.isHabitat)
                 {
-                  game.log('Only works in habitat.', COLOR_HINT);
+                  game.log('This action only works in habitat.', COLOR_HINT);
                   return false;
                 }
 
@@ -877,12 +877,12 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_WATCHER,
         name: 'Watcher',
-        note: 'Watcher growth. Will warn the player of the ambush in the habitat.',
-        maxLevel: 1,
+        note: 'Watcher growth. Will warn the player of the ambush in the habitat',
+        maxLevel: 2,
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
+          'Unavailable',
+          'Watcher will warn about the ambush',
+          'Watcher will attract the ambush',
           '(todo fluff)',
           ],
         organ: {
@@ -901,7 +901,7 @@ class EvolutionConst
               // only in habitat
               if (!game.area.isHabitat)
                 {
-                  game.log('Only works in habitat.', COLOR_HINT);
+                  game.log('This action only works in habitat.', COLOR_HINT);
                   return false;
                 }
 

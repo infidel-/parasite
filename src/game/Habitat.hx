@@ -19,6 +19,7 @@ class Habitat
   public var parasiteHealthRestored: Int; // restored health per turn (parasite)
   public var evolutionBonus: Int; // biomineral evolution bonus (max)
   public var hasWatcher: Bool; // habitat has watcher?
+  public var watcherLevel: Int; // habitat watcher level
 
 
   public function new(g: Game, a: AreaGame)
@@ -34,6 +35,7 @@ class Habitat
       parasiteHealthRestored = 0;
       evolutionBonus = 0;
       hasWatcher = false;
+      watcherLevel = 0;
     }
 
 
@@ -102,6 +104,8 @@ class Habitat
       parasiteEnergyRestored = 0;
       parasiteHealthRestored = 0;
       evolutionBonus = 0;
+      hasWatcher = false;
+      watcherLevel = 0;
 
       // recalc vars
       for (o in area.getObjects())
@@ -123,8 +127,13 @@ class Habitat
         // each habitat object uses energy
         else if (o.type == 'habitat')
           {
-            if (o.name == 'watcher')
-              hasWatcher = true;
+            var w: Watcher = cast o;
+            if (w.name == 'watcher')
+              {
+                hasWatcher = true;
+                if (w.level > watcherLevel)
+                  watcherLevel = w.level;
+              }
 
             energyUsed++;
           }

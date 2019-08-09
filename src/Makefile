@@ -100,7 +100,7 @@ html5-free-mydebug:
 html5-free:
 	haxe project_js.hxml -D free --connect 6000
 
-hl-mydebug-free:
+hl-free-mydebug:
 	~/haxe-4.0.0-rc2/run.sh project_hl.hxml -D heaps_enable_hl_mp3 -D resourcesPath=../assets/ -debug -D mydebug -D free && \
 	cp ../bin.hl/parasite.hl /mnt/d/1/hl-1.10.0-win/
 

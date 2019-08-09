@@ -57,18 +57,27 @@ class ConsoleGame
       else if (char0 == 'h')
         {
 #if mydebug
-          log('Available commands: ai - add item, ao - add organ, ' +
-            'as - add skill, cfg|config,<br/>' +
+          log('Available commands: ' +
+            // add
+            'ai - add item, ' +
+            'ao - add organ, ' +
+            'as - add skill, ' +
+            'cfg|config,<br/>' +
             'dg - debug: graphics info, ' +
+            // go
             'ga - go and enter area, ' +
             'ge - go event location, ' +
             'gg - go x,y (region or area mode),<br/>' +
+            // info
             'ie - timeline info (trace), ' +
             'ii - improvements info (trace),<br/>' +
+            // learn
             'le - learn about event, ' +
             'lia - learn all improvements, ' +
             'li - learn improvement, ' +
             'lt - learn all timeline,<br/>' +
+            //
+            'oa - organ action,<br/>' +
             'snd - play sound, restart, s - set player stage, quit.');
 #else
           log('Available commands: cfg, config, ' +
@@ -109,6 +118,54 @@ class ConsoleGame
           else setCommand(cmd);
         }
 #end
+
+      // XXX organ action
+      else if (char0 == 'o' && cmd.substr(0, 2) == 'oa')
+        {
+          if (cmd.length < 3)
+            {
+              log('Usage: oa[improvement index] [?level = max]');
+              return;
+            }
+
+          if (game.player.state != PLR_STATE_HOST)
+            {
+              log('Need to have a host.');
+              return;
+            }
+
+          var cmd2 = cmd.substr(2);
+          var tmp = cmd2.split(' ');
+          var idx = Std.parseInt(tmp[0]);
+          var lvl = (tmp.length < 2 ? -1 : Std.parseInt(tmp[1]));
+          var imp = EvolutionConst.improvements[idx];
+          if (imp == null)
+            {
+              log('Improvement [' + idx + '] not found.');
+              return;
+            }
+          if (lvl == -1 || lvl > imp.maxLevel)
+            lvl = imp.maxLevel;
+
+          if (imp.organ == null)
+            {
+              log('Improvement [' + idx + '] has no organ.');
+              return;
+            }
+
+          if (imp.organ.onAction == null)
+            {
+              log('Improvement [' + idx + '] has no action.');
+              return;
+            }
+
+          // give organ
+          game.player.evolutionManager.addImprov(imp.id, lvl);
+          game.player.host.organs.action('set.' + imp.id);
+          game.player.host.organs.debugCompleteCurrent();
+
+          imp.organ.onAction(game, game.player);
+        }
 
       // XXX quit game
       else if (char0 == 'q')
@@ -562,23 +619,28 @@ class ConsoleGame
           game.player.evolutionManager.state = 2;
         }
 
-      // XXX [li10] learn improvement X
+      // XXX [li10 1] learn improvement X at level Y
       else if (cmd.charAt(1) == 'i')
         {
           if (cmd.length < 3)
             {
-              log('Usage: li[improvement index]');
+              log('Usage: li[improvement index] [?level = max]');
               return;
             }
-          var idx = Std.parseInt(cmd.substr(2));
+          var cmd2 = cmd.substr(2);
+          var tmp = cmd2.split(' ');
+          var idx = Std.parseInt(tmp[0]);
+          var lvl = (tmp.length < 2 ? -1 : Std.parseInt(tmp[1]));
           var imp = EvolutionConst.improvements[idx];
           if (imp == null)
             {
               log('Improvement [' + idx + '] not found.');
               return;
             }
+          if (lvl == -1 || lvl > imp.maxLevel)
+            lvl = imp.maxLevel;
 
-          game.player.evolutionManager.addImprov(imp.id, imp.maxLevel);
+          game.player.evolutionManager.addImprov(imp.id, lvl);
         }
 
       // XXX [lt] learn all timeline
