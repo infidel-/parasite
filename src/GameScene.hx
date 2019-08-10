@@ -26,6 +26,7 @@ class GameScene extends Scene
   public var hud: HUD; // ingame HUD
   public var win: Window;
   public var font: Font;
+  public var font40: Font;
   public var soundManager: SoundManager;
 //  public var font10: Font;
   var uiQueue: List<_UIEvent>; // gui event queue
@@ -141,6 +142,7 @@ class GameScene extends Scene
       tileAtlas = res.gridFlatten(Const.TILE_SIZE_CLEAN);
       font = hxd.Res.load('font/OrkneyRegular' +
         game.config.fontSize + '.fnt').to(hxd.res.BitmapFont).toFont();
+      font40 = hxd.Res.font.OrkneyRegular40.toFont();
 
       // scale atlases if needed
       if (game.config.mapScale != 1)

@@ -38,6 +38,7 @@ class HUD
   var _consoleBack: Graphics; // console background
   var _goals: HtmlText; // goals list
   var _goalsBack: Graphics; // goals list background
+  public var blinkingText: BlinkingText; // blinking text
 
   public function new(g: Game)
     {
@@ -106,6 +107,9 @@ class HUD
       _goals.maxWidth = 400;
       _goals.textAlign = Left;
       _goalsBack.x = game.scene.win.width - 420;
+
+      // team member notification
+      blinkingText = new BlinkingText(game, _container);
 
       @:privateAccess game.scene.window.addEventTarget(onEvent);
     }
@@ -675,7 +679,15 @@ class HUD
       _goalsBack.x = game.scene.win.width - 420;
       for (m in _menuButtons)
         m.back.y = game.scene.win.height - game.config.fontSize - 8;
+      blinkingText.resize();
 
       update();
+    }
+
+
+// periodic update for animation
+  public function updateAnimation(dt: Float)
+    {
+      blinkingText.update(dt);
     }
 }

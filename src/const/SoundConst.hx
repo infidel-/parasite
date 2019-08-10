@@ -21,6 +21,7 @@ class SoundConst
     'watcher_ambush',
     'parasite_attach1',
     'parasite_detach1',
+    'team_notify',
   ];
 
   // dog sounds

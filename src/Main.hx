@@ -71,6 +71,7 @@ class Main extends hxd.App
     {
       game.scene.mouse.update();
       game.scene.checkPath();
+      game.scene.hud.updateAnimation(dt);
     }
 
 
