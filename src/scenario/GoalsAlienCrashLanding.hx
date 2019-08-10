@@ -130,7 +130,9 @@ class GoalsAlienCrashLanding
         npc.jobKnown = true;
         npc.type = 'civilian';
         npc.area = area;
+        npc.areaKnown = true;
         area.npc.add(npc);
+        game.debug('' + npc);
 
         // store npc id for later use
         game.timeline.setVar('missionTargetID', npc.id);

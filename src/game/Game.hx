@@ -255,6 +255,7 @@ class Game
         {
           log('You have won the game!');
           finishText = 'You have won the game.';
+          scene.soundManager.playSound('game_win', true);
         }
 
       // add to event queue

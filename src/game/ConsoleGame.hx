@@ -660,6 +660,8 @@ class ConsoleGame
                   npc.areaKnown = true;
                   npc.statusKnown = true;
                 }
+
+//              e.learnLocation();
             }
           game.player.vars.npcEnabled = true;
           game.player.vars.searchEnabled = true;
