@@ -166,14 +166,13 @@ class HUD
       if (!_consoleBack.visible && _container.visible &&
           e.charCode == 59) // ;
         {
+          e.cancel = true;
           showConsole();
           return;
         }
 
       if (!consoleVisible())
         return;
-
-      _console.text += String.fromCharCode(e.charCode);
     }
 
 

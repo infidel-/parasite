@@ -11,6 +11,11 @@ class SoundConst
   public static var misc = [
     'game_win',
     'music1',
+#if !js
+    'music2',
+    'music3',
+    'music5',
+#end
     'ambient_city1',
     'ambient_region1',
     'ambient_wilderness1',

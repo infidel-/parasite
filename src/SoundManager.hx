@@ -12,6 +12,7 @@ class SoundManager
 {
   var scene: GameScene;
   var game: Game;
+  var musicIdx: Int;
   var music: Channel;
   var ambient: Channel;
   var ambientNext: Channel;
@@ -72,9 +73,27 @@ class SoundManager
         }
 
       // start playing music
-      music = sounds['music1'].play(true,
+      musicIdx = 1;
+      music = sounds['music' + musicIdx].play(false,
         game.config.musicVolume / 100.0);
+      music.onEnd = onMusicEnd;
 #end
+    }
+
+
+// pick new music and queue
+  function onMusicEnd()
+    {
+      var idx = 1;
+#if !js
+      var files = [ 1, 2, 3, 5 ];
+      files.remove(musicIdx);
+      idx = files[Std.random(files.length)];
+#end
+      musicIdx = idx;
+      music = sounds['music' + musicIdx].play(false,
+        game.config.musicVolume / 100.0);
+      music.onEnd = onMusicEnd;
     }
 
 
@@ -212,7 +231,8 @@ class SoundManager
       if (music != null)
         {
           music.stop();
-          music = sounds['music1'].play(true, 0.01);
+          music = sounds['music' + musicIdx].play(false, 0.01);
+          music.onEnd = onMusicEnd;
           music.fadeTo(game.config.musicVolume / 100.0, 1);
         }
       var old = ambientState;
