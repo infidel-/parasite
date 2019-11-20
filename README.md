@@ -7,7 +7,7 @@ If you're new to the game, take a look at the guide in the wiki [here](https://g
 
 The latest commercial release is playable and purchasable at [itch.io](https://starinfidel.itch.io/parasite).
 
-The latest free version is v0.5, playable [here](https://www.in-fi-del.net/parasite-05/).
+The latest free version is v0.6, playable [here](https://www.in-fi-del.net/parasite-06/).
 
 You can play the latest development build [here](https://www.in-fi-del.net/parasite-dev/).
 
