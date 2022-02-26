@@ -169,7 +169,12 @@ class ConsoleGame
 
       // XXX quit game
       else if (char0 == 'q')
-        hxd.System.exit();
+// exit game
+#if electron
+        electron.renderer.IpcRenderer.invoke('quit');
+#else
+        Sys.exit(0);
+#end
 
       game.updateHUD(); // update HUD state
     }

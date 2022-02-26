@@ -4,6 +4,7 @@ import js.Node;
 import js.Node.__dirname;
 import electron.main.App;
 import electron.main.BrowserWindow;
+import electron.main.IpcMain;
 
 class MainElectron
 {
@@ -19,7 +20,8 @@ class MainElectron
             height: 685,
             webPreferences: {
               nodeIntegration: true,
-              contextIsolation: false
+              contextIsolation: false,
+//              enableRemoteModule: true,
             }
           });
 #if !mydebug
@@ -37,6 +39,10 @@ class MainElectron
       App.on(window_all_closed, function(e) {
           if (Node.process.platform != 'darwin')
             App.quit();
+      });
+
+      IpcMain.handle('quit', function(e) {
+        App.quit();
       });
     }
 }

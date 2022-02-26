@@ -1,3 +1,4 @@
+-lib electron
 -D electron
 -lib hxnodejs
 -D resourcesPath=../assets.paid.web/
