@@ -118,7 +118,9 @@ class HUD
 // add button to menu
   function addMenuButton(state: _UIState, str: String): Interactive
     {
-#if js
+#if electron
+      str = ' F' + str + ' ';
+#elseif js
       str = ' ' + (game.scene.controlKey == 'alt' ? 'A-' : 'C-') +
         str + ' ';
 #else
@@ -163,6 +165,7 @@ class HUD
       if (e.kind != ETextInput)
         return;
 
+/*
       if (!_consoleBack.visible && _container.visible &&
           e.charCode == 59) // ;
         {
@@ -170,7 +173,7 @@ class HUD
           showConsole();
           return;
         }
-
+*/
       if (!consoleVisible())
         return;
     }

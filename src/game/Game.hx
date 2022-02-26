@@ -2,12 +2,14 @@
 
 package game;
 
+import jsui.UI;
 import scenario.Timeline;
 
 class Game
 {
   public var config: Config; // game config
-  public var scene: GameScene; // ui scene
+  public var scene: GameScene; // ui scene (hashlink OLD)
+  public var ui: UI; // new (js)
   public var timeline: Timeline; // scenario timeline
   public var goals: Goals; // game.goals
   public var world: World; // game world
@@ -38,6 +40,7 @@ class Game
   public function new()
     {
       config = new Config(this);
+      ui = new UI(this);
       scene = new GameScene(this);
       console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);

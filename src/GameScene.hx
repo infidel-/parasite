@@ -211,6 +211,7 @@ class GameScene extends Scene
 #else
 #end
 */
+#if !electron
       // focus/blur handling
       win.addEventTarget(function (e: hxd.Event) {
         if (e.kind == EFocus)
@@ -237,6 +238,7 @@ class GameScene extends Scene
             soundManager.pause();
           }
       });
+#end
     }
 
 
