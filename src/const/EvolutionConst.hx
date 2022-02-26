@@ -584,15 +584,15 @@ class EvolutionConst
             hostAttrsMod: 0,
           },
           {
-            humanSociety: 0.25,
+            humanSociety: 0.5,
             hostEnergyBase: 20,
-            hostHealthBase: 3,
-            hostHealthMod: 2,
+            hostHealthBase: 2,
+            hostHealthMod: 1,
             hostSkillsMod: 0,
             hostAttrsMod: 0,
           },
           {
-            humanSociety: 0.5,
+            humanSociety: 1.0,
             hostEnergyBase: 10,
             hostHealthBase: 1,
             hostHealthMod: 1,
@@ -600,7 +600,7 @@ class EvolutionConst
             hostAttrsMod: 0,
           },
           {
-            humanSociety: 1.0,
+            humanSociety: 2.0,
             hostEnergyBase: 5,
             hostHealthBase: 0,
             hostHealthMod: 1,

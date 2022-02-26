@@ -74,9 +74,13 @@ class SoundManager
 
       // start playing music
       musicIdx = 1;
-      music = sounds['music' + musicIdx].play(false,
-        game.config.musicVolume / 100.0);
-      music.onEnd = onMusicEnd;
+      var m = sounds['music' + musicIdx];
+      if (m != null)
+        {
+          music = m.play(false,
+            game.config.musicVolume / 100.0);
+          music.onEnd = onMusicEnd;
+        }
 #end
     }
 

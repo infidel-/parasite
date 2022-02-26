@@ -1,8 +1,11 @@
 // game configuration
 
-#if !js
+#if hl
 import sys.io.File;
+#elseif electron
+import js.node.Fs;
 #end
+import haxe.Json;
 
 import game.Game;
 
@@ -13,7 +16,6 @@ class Config
   // cached values
   public var mouseEnabled: Bool;
   public var extendedInfo: Bool;
-  public var sendExceptions: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
@@ -37,7 +39,6 @@ class Config
 #if mydebug
       extendedInfo = true;
 #end
-      sendExceptions = false;
 
       fontSize = 24;
       hudLogLines = 4;
@@ -52,7 +53,6 @@ class Config
       map = new Map();
       map['mouseEnabled'] = '1';
       map['extendedInfo'] = '0';
-      map['sendExceptions'] = '0';
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
@@ -65,11 +65,22 @@ class Config
       map['windowWidth'] = '' + windowWidth;
 
       game.debug('config load');
-#if js
+#if electron
+      try {
+        var s = Fs.readFileSync('settings.json', 'utf8');
+        var obj = Json.parse(s);
+        for (f in Reflect.fields(obj))
+          set(f, Reflect.field(obj, f));
+      }
+      catch (e: Dynamic)
+        {
+          trace(e);
+        }
+#elseif js
       var str = js.Browser.window.localStorage.getItem('config');
       var obj = {};
       if (str != null)
-        obj = haxe.Json.parse(str);
+        obj = Json.parse(str);
 
       for (f in Reflect.fields(obj))
         set(f, Reflect.field(obj, f));
@@ -112,8 +123,6 @@ class Config
         mouseEnabled = (val == '1');
       else if (key == 'extendedInfo')
         extendedInfo = (val == '1');
-      else if (key == 'sendExceptions')
-        sendExceptions = (val == '1');
 
       else if (key == 'fontSize')
         {
@@ -169,7 +178,13 @@ class Config
   public function save(needRestart: Bool)
     {
       game.debug('config save');
-#if js
+#if electron
+      var obj = {};
+      for (k => v in map)
+        Reflect.setField(obj, k, v);
+      Fs.writeFileSync('settings.json',
+        Json.stringify(obj, null, '  '), 'utf8');
+#elseif js
       var obj = {};
       for (key in map.keys())
         Reflect.setField(obj, key, map[key]);

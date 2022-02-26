@@ -832,66 +832,6 @@ class GameScene extends Scene
           // write to stdout
           trace('Exception: ' + e);
           trace(stack);
-/*
-#if !js
-          // send exception to web server
-          if (game.config.sendExceptions)
-            {
-              var s = new StringBuf();
-              s.add('v' + Version.getVersion() +
-                ' (build: ' + Version.getBuild() +
-                ') ' + Sys.systemName() + '\n');
-              s.add(game.messageList.last() + '\n');
-              s.add('Exception: ' + e + '\n');
-              s.add(stack + '\n');
-
-              var h = new haxe.Http(
-                'http://parasite.in-fi-del.net/exception.php');
-              h.addParameter('msg', s.toString());
-              h.onData = function(d){
-                // show window
-                var finishText = "Something broke! An exception was thrown and sent to the Dark Realm (exception gathering server). Unfortunately, the game cannot be continued. Sorry!\n\n" +
-                  "P.S. If you want to disable exception gathering thingy for whatever reason, open the parasite.cfg configuration file and set sendExceptions to 0.";
-                uiQueue.add({
-                  state: UISTATE_FINISH,
-                  obj: finishText
-                });
-                closeWindow();
-              }
-              h.onError = function(e){
-                var finishText = "Something broke! An exception was thrown and saved to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
-                  "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
-                uiQueue.add({
-                  state: UISTATE_FINISH,
-                  obj: finishText
-                });
-                closeWindow();
-                trace(e);
-              }
-              h.request(true);
-            }
-
-          else
-#end
-            {
-              // show window
-              var finishText =
-#if !js
-                "Something broke! An exception was thrown and save to exceptions.txt file. Unfortunately, the game cannot be continued. Sorry!\n\n" +
-                "P.S. If you want to help the development, send the contents of the exceptions.txt file to starinfidel_at_gmail_dot_com. Thanks!";
-#else
-                "Something broke! Unfortunately, the game cannot be continued. Sorry!\n" +
-                '<font size="12px">Exception: ' + e + '\n' +
-                stack + '</font>\n' +
-                "P.S. If you want to help the development, make a screenshot of this message and send it to starinfidel_at_gmail_dot_com. Thanks!";
-#end
-                uiQueue.add({
-                  state: UISTATE_FINISH,
-                  obj: finishText
-                });
-                closeWindow();
-            }
-*/
         }
     }
 

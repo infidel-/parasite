@@ -11,6 +11,7 @@ class Version
 
 
 // get current build
+/*
   public static macro function getBuild(): ExprOf<String>
     {
       var date = Date.now();
@@ -20,5 +21,5 @@ class Version
       var str = DateTools.format(date, "%Y%m%d-") +
         StringTools.trim(count);
       return macro $v{str};
-    }
+    }*/
 }

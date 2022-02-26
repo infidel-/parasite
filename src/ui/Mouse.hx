@@ -59,6 +59,9 @@ class Mouse
             }
 */
           var cursor = Custom(new CustomCursor([ tmp ], 1,
+            i == 0 ? 0 : Std.int(CURSOR_SIZE / 2),
+            i == 0 ? 0 : Std.int(CURSOR_SIZE / 2)));
+/*
             i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2),
             i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2)));
 

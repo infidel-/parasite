@@ -6,3 +6,4 @@
 *.js
 *.map
 _release*
+assets*

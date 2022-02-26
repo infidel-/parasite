@@ -1,0 +1,7 @@
+-D electron
+-lib hxnodejs
+-D resourcesPath=../assets.paid.web/
+-lib heaps
+-js ../bin/parasite.js
+-main Main
+

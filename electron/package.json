@@ -1,0 +1,14 @@
+{
+    "name": "parasite",
+    "version": "1.0.0",
+    "license": "GPL",
+    "description": "A stealth horror roguelike",
+    "repository": "https://github.com/-infidel/parasite",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "dependencies": {
+        "electron": "^17.0.1"
+    }
+}

@@ -55,10 +55,10 @@ class Game
 // init game stuff - called from GameScene.init()
   public function init()
     {
-      var s = 'Parasite v' + Version.getVersion() +
-        ' (build: ' + Version.getBuild() + ')';
+      var s = 'Parasite v' + Version.getVersion();
+//        ' (build: ' + Version.getBuild() + ')';
       log(s);
-      log('<font face="16">Count not to three when you see the gray blood ooze excitedly.</font>', COLOR_DEBUG);
+      log('<font face="16">Into the river of the Green, into the river of Unseen.</font>', COLOR_DEBUG);
       turns = 0;
       isFinished = false;
       isInited = false;
