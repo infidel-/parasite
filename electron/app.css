@@ -29,8 +29,19 @@ canvas#webgl {
   height: 100%;
 }
 
-.console-div {
+.hud {
   z-index: 100;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.console-div {
   width: calc(100% - 20px);
   height: 1.2em;
   top: 10px;
@@ -59,5 +70,27 @@ canvas#webgl {
   font-size: var(--text-font-size);
   letter-spacing: 0.08em;
   resize: none;
+}
+
+.text {
+  color: var(--text-fg-color);
+  background: #202020aa;
+  font-family: var(--text-font);
+  font-size: var(--text-font-size);
+  resize: none;
+}
+
+#log {
+  border: 15px solid;
+  width: calc(100% - 50px);
+  min-height: 1.2em;
+  top: calc(10px + 1.2em);
+  left: 10px;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  letter-spacing: 0.08em;
 }
 

@@ -22,7 +22,7 @@ class Const
     [
       COLOR_DEFAULT => '#FFFFFF',
       COLOR_REPEAT => '#BBBBBB',
-      COLOR_DEBUG => '#777777',
+      COLOR_DEBUG => '#A7A7A7',
       COLOR_ALERT => '#FF2222',
       COLOR_EVOLUTION => '#00FFFF',
       COLOR_AREA => '#00AA00',
@@ -30,10 +30,11 @@ class Const
       COLOR_WORLD => '#FF9900',
       COLOR_HINT => '#A020F0',
       COLOR_TIMELINE => '#F03378',
-      COLOR_MESSAGE => '#1CD450',
-      COLOR_GOAL => '#4788FF',
+      COLOR_MESSAGE => '#30FF6B',
+      COLOR_GOAL => '#92B9FF',
     ];
   // copy-pasted for now
+  // TODO: move to TEXT_COLORS
   public static var TEXT_COLORS_INT: Map<_TextColor, Int> =
     [
       COLOR_DEFAULT => 0xFFFFFF,

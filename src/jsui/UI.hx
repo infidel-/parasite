@@ -39,6 +39,13 @@ class UI
       // hud/movement/actions
       else
         {
+          // toggle hud
+          if (e.code == 'Space')
+            {
+              hud.toggle();
+              return;
+            }
+
           // open console
           if (e.code == 'Semicolon' && !hud.consoleVisible())
             hud.showConsole();

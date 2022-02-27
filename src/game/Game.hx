@@ -276,6 +276,7 @@ class Game
   public inline function updateHUD()
     {
       scene.hud.update(); // update hud state
+      ui.hud.update(); // update hud state
     }
 
 
@@ -368,5 +369,6 @@ class Game
 
       // update HUD minilog display
       scene.hud.updateLog();
+      ui.hud.updateLog();
     }
 }

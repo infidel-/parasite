@@ -67,6 +67,7 @@ class HUD
       _log.textAlign = Left;
       _logBack.x = 20;
       _logBack.y = game.config.fontSize + 10;
+      _logBack.visible = false;
 
       // player info
       _textBack = new Graphics(_container);
