@@ -16,6 +16,7 @@ class HUD
   var consoleDiv: DivElement;
   var console: TextAreaElement;
   var log: DivElement;
+  var goals: DivElement;
 
   public function new(u: UI, g: Game)
     {
@@ -25,7 +26,6 @@ class HUD
       container.className = 'hud';
       container.style.visibility = 'visible';
       Browser.document.body.appendChild(container);
-
 
       consoleDiv = Browser.document.createDivElement();
       consoleDiv.className = 'console-div';
@@ -50,6 +50,12 @@ class HUD
       log.id = 'log';
       log.style.borderImage = "url('./img/log-border.png') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
+
+      goals = Browser.document.createDivElement();
+      goals.className = 'text';
+      goals.id = 'goals';
+      goals.style.borderImage = "url('./img/goals-border.png') 24 fill / 1 / 0 stretch";
+      container.appendChild(goals);
     }
 
 // show hide HUD
@@ -90,8 +96,8 @@ class HUD
       updateLog();
 /*
       updateMenu();
-      updateConsole();
-      updateGoals();*/
+      updateConsole();*/
+      updateGoals();
     }
 
 // update log display
@@ -117,6 +123,30 @@ class HUD
         }
 
       log.innerHTML = buf.toString();
+    }
+
+// update goals list
+  function updateGoals()
+    {
+      var buf = new StringBuf();
+
+      for (g in game.goals.iteratorCurrent())
+        {
+          var info = game.goals.getInfo(g);
+          if (info.isHidden)
+            continue;
+
+          buf.add("<font color='" +
+            Const.TEXT_COLORS[_TextColor.COLOR_GOAL] +
+            "'>" + info.name + '</font><br/>');
+          buf.add(info.note + '<br/>');
+          if (info.note2 != null)
+            buf.add(info.note2 + '<br/>');
+          buf.add('<br/>');
+        }
+      var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'
+
+      goals.innerHTML = s;
     }
 }
 

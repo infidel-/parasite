@@ -94,3 +94,17 @@ canvas#webgl {
   letter-spacing: 0.08em;
 }
 
+#goals {
+  border: 20px solid;
+  width: 350px;
+  min-height: 1.2em;
+  bottom: 32px;
+  left: calc(100% - 400px);
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  letter-spacing: 0.08em;
+}
+

@@ -108,6 +108,7 @@ class HUD
       _goals.maxWidth = 400;
       _goals.textAlign = Left;
       _goalsBack.x = game.scene.win.width - 420;
+      _goalsBack.visible = false;
 
       // team member notification
       blinkingText = new BlinkingText(game, _container);
