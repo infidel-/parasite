@@ -74,12 +74,13 @@ class HUD
       _text = new HtmlText(game.scene.font, _textBack);
       _text.textAlign = Left;
       _textBack.x = 20;
+      _textBack.visible = false;
 
       // actions list
       _actionsBack = new Graphics(_container);
       _actions = new HtmlText(game.scene.font, _actionsBack);
       _actions.textAlign = Left;
-      _actionsBack.x = 20;
+      _actionsBack.x = 400;
 
       // menu buttons
       addMenuButton(UISTATE_GOALS, '1: Goals');

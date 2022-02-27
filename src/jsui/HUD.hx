@@ -17,13 +17,14 @@ class HUD
   var console: TextAreaElement;
   var log: DivElement;
   var goals: DivElement;
+  var info: DivElement;
 
   public function new(u: UI, g: Game)
     {
       game = g;
       ui = u;
       container = Browser.document.createDivElement();
-      container.className = 'hud';
+      container.id = 'hud';
       container.style.visibility = 'visible';
       Browser.document.body.appendChild(container);
 
@@ -33,7 +34,7 @@ class HUD
       container.appendChild(consoleDiv);
 
       console = Browser.document.createTextAreaElement();
-      console.className = 'console';
+      console.id = 'hud-console';
       console.onkeydown = function(e: KeyboardEvent) {
         if (e.code == 'Escape')
           hideConsole();
@@ -47,15 +48,21 @@ class HUD
 
       log = Browser.document.createDivElement();
       log.className = 'text';
-      log.id = 'log';
+      log.id = 'hud-log';
       log.style.borderImage = "url('./img/log-border.png') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
 
       goals = Browser.document.createDivElement();
       goals.className = 'text';
-      goals.id = 'goals';
+      goals.id = 'hud-goals';
       goals.style.borderImage = "url('./img/goals-border.png') 24 fill / 1 / 0 stretch";
       container.appendChild(goals);
+
+      info = Browser.document.createDivElement();
+      info.className = 'text';
+      info.id = 'hud-info';
+      info.style.borderImage = "url('./img/info-border.png') 28 fill / 1 / 0 stretch";
+      container.appendChild(info);
     }
 
 // show hide HUD
@@ -91,8 +98,9 @@ class HUD
     {
 /*
       updateActionList();
-      updateActions(); // before info because info uses its height
-      updateInfo();*/
+      // NOTE: before info because info uses its height
+      updateActions();*/
+      updateInfo();
       updateLog();
 /*
       updateMenu();
@@ -147,6 +155,104 @@ class HUD
       var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'
 
       goals.innerHTML = s;
+    }
+
+// get color for text (red, yellow, white)
+  function getTextColor(val: Float, max: Float)
+    {
+      if (val > 0.7 * max)
+        return '#FFFFFF';
+      else if (val > 0.3 * max)
+        return '#FFEA0E';
+
+      return '#FC420E';
+    }
+
+// update player info
+  function updateInfo()
+    {
+      var buf = new StringBuf();
+      buf.add('Turn: ' + game.turns + ', at (');
+      if (game.location == LOCATION_AREA)
+          buf.add(
+            game.playerArea.x + ',' + game.playerArea.y + ')' +
+#if mydebug
+            ' A ' + Math.round(game.area.alertness) +
+#end
+            '<br/>Actions: ' + game.playerArea.ap + '<br/>');
+      else if (game.location == LOCATION_REGION)
+        buf.add(
+          game.playerRegion.x + ',' + game.playerRegion.y + ')' +
+#if mydebug
+            ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
+#end
+          '<br/>' + game.playerRegion.currentArea.name + '<br/>');
+      buf.add('===<br/>');
+
+      var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
+      var time = (game.location == LOCATION_AREA ? 1 : 5);
+      var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
+      buf.add('Energy: ' +
+        "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
+        '/' + game.player.maxEnergy);
+      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br/>');
+      var colHealth = getTextColor(game.player.health, game.player.maxHealth);
+      buf.add('Health: ' +
+        "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
+        '/' + game.player.maxHealth);
+
+      if (game.player.state == PLR_STATE_ATTACHED)
+        {
+          buf.add('<br/>===<br/>');
+          buf.add("Grip: <font color='" +
+            getTextColor(game.playerArea.attachHold, 100) + "'>" +
+            game.playerArea.attachHold + "</font>/100<br/>");
+        }
+
+      // host stats
+      else if (game.player.state == PLR_STATE_HOST)
+        {
+          buf.add('<br/>===<br/>');
+          buf.add(game.player.host.getNameCapped());
+          if (game.player.host.isJobKnown)
+            buf.add(' (' + game.player.host.job + ')<br/>');
+          else buf.add('<br/>');
+          if (game.player.host.isAttrsKnown)
+            buf.add('STR ' + game.player.host.strength +
+              ' CON ' + game.player.host.constitution +
+              ' INT ' + game.player.host.intellect +
+              ' PSY ' + game.player.host.psyche + '<br/>');
+
+          var colHealth = getTextColor(game.player.host.health,
+            game.player.host.maxHealth);
+          buf.add('Health: ' +
+            "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
+            '/' + game.player.host.maxHealth + '<br/>');
+
+          var colControl = getTextColor(game.player.hostControl, 100);
+          buf.add('Control: ' +
+            "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
+            '/100<br/>');
+
+          var colEnergy = getTextColor(game.player.host.energy,
+            game.player.host.maxEnergy);
+          var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
+          buf.add("Energy: <font color='" + colEnergy + "'>" +
+            game.player.host.energy + '</font>/' +
+            game.player.host.maxEnergy);
+          buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
+            energyPerTurn + '/t]<br/>');
+          buf.add('Evolution direction:<br/>  ');
+          buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
+          var str = game.player.host.organs.getInfo();
+          if (str != null)
+            {
+              buf.add('<br/>');
+              buf.add(str);
+            }
+        }
+
+      info.innerHTML = buf.toString();
     }
 }
 
