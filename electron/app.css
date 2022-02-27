@@ -57,7 +57,8 @@ canvas#webgl {
 }
 
 #hud-console {
-  opacity: 0.9;
+  opacity: 0.95;
+  background-color: #ffffff00;
   width: calc(100% - 20px);
   height: 1.2em;
   color: var(--text-fg-color);
@@ -82,7 +83,8 @@ canvas#webgl {
 }
 
 #hud-log {
-  opacity: 0.9;
+  opacity: 0.95;
+  background-color: #ffffff00;
   border: 13px solid;
   width: calc(100% - 50px);
   min-height: 1.2em;
@@ -94,14 +96,16 @@ canvas#webgl {
   outline: none;
   appearance: none;
   letter-spacing: 0.08em;
+  user-select: none;
 }
 
 #hud-goals {
-  opacity: 0.9;
+  opacity: 0.95;
+  background-color: #ffffff00;
   border: 20px solid;
   width: 350px;
   min-height: 1.2em;
-  bottom: 32px;
+  bottom: 60px;
   left: calc(100% - 400px);
   position: fixed;
   margin: 0;
@@ -109,14 +113,16 @@ canvas#webgl {
   outline: none;
   appearance: none;
   letter-spacing: 0.08em;
+  user-select: none;
 }
 
 #hud-info {
-  opacity: 0.9;
+  opacity: 0.95;
+  background-color: #ffffff00;
   border: 18px solid;
   min-width: 200px;
   min-height: 1.2em;
-  bottom: 32px;
+  bottom: 60px;
   left: 10px;
   position: fixed;
   margin: 0;
@@ -124,4 +130,44 @@ canvas#webgl {
   outline: none;
   appearance: none;
   letter-spacing: 0.08em;
+  user-select: none;
+}
+
+.hud-button {
+  opacity: 0.95;
+  background-color: #ffffff00;
+  border: 11px solid;
+  color: white;
+  max-width: 126px;
+  min-height: 1.2em;
+  margin: 0px 5px 0px 5px;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  letter-spacing: 0.08em;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.hud-button:hover {
+  background-color: #bde1ed;
+  color: white;
+  opacity: 1;
+  font-weight:bold;
+}
+
+.hud-button:active {
+  color: #879ea3;
+}
+
+#hud-buttons {
+  left: 0px;
+  width: 100%;
+  bottom: 10px;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }

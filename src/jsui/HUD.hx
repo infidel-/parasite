@@ -18,6 +18,10 @@ class HUD
   var log: DivElement;
   var goals: DivElement;
   var info: DivElement;
+  var menuButtons: Array<{
+    state: _UIState,
+    btn: DivElement,
+  }>;
 
   public function new(u: UI, g: Game)
     {
@@ -49,20 +53,60 @@ class HUD
       log = Browser.document.createDivElement();
       log.className = 'text';
       log.id = 'hud-log';
-      log.style.borderImage = "url('./img/log-border.png') 15 fill / 1 / 0 stretch";
+      log.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
 
       goals = Browser.document.createDivElement();
       goals.className = 'text';
       goals.id = 'hud-goals';
-      goals.style.borderImage = "url('./img/goals-border.png') 24 fill / 1 / 0 stretch";
+      goals.style.borderImage = "url('./img/hud-goals-border.png') 24 fill / 1 / 0 stretch";
       container.appendChild(goals);
 
       info = Browser.document.createDivElement();
       info.className = 'text';
       info.id = 'hud-info';
-      info.style.borderImage = "url('./img/info-border.png') 28 fill / 1 / 0 stretch";
+      info.style.borderImage = "url('./img/hud-info-border.png') 28 fill / 1 / 0 stretch";
       container.appendChild(info);
+
+      var buttons = Browser.document.createDivElement();
+      buttons.id = 'hud-buttons';
+      container.appendChild(buttons);
+      menuButtons = [];
+      addMenuButton(buttons, UISTATE_GOALS, '1: GOALS');
+      addMenuButton(buttons, UISTATE_INVENTORY, '2: INV');
+      addMenuButton(buttons, UISTATE_SKILLS, '3: KNOW');
+      addMenuButton(buttons, UISTATE_LOG, '4: LOG');
+      addMenuButton(buttons, UISTATE_TIMELINE, '5: TIMELINE');
+      addMenuButton(buttons, UISTATE_EVOLUTION, '6: EVO');
+      addMenuButton(buttons, UISTATE_ORGANS, '7: BODY');
+      addMenuButton(buttons, UISTATE_OPTIONS, '8: OPT');
+#if mydebug
+      addMenuButton(buttons, UISTATE_DEBUG, '9: DBG');
+#end
+      // should be unique state but no matter
+      var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
+/*
+      btn.onClick = function (e: Event)
+        {
+          @:privateAccess game.scene.handleInput(Key.F10);
+        }*/
+    }
+
+// add button to menu
+  function addMenuButton(cont: DivElement, state: _UIState, str: String): DivElement
+    {
+      var btn = Browser.document.createDivElement();
+      btn.innerHTML = 'F' + str;
+      btn.className = 'hud-button';
+      btn.style.borderImage = "url('./img/hud-button.png') 23 fill / 1 / 0 stretch";
+      cont.appendChild(btn);
+      menuButtons.push({
+        state: state,
+        btn: btn,
+      });
+      btn.onclick = function (e)
+        { game.scene.state = state; }
+      return btn;
     }
 
 // show hide HUD
@@ -102,8 +146,8 @@ class HUD
       updateActions();*/
       updateInfo();
       updateLog();
-/*
       updateMenu();
+/*
       updateConsole();*/
       updateGoals();
     }
@@ -253,6 +297,57 @@ class HUD
         }
 
       info.innerHTML = buf.toString();
+    }
+
+// update menu buttons visibility
+  function updateMenu()
+    {
+      var vis = false;
+      for (m in menuButtons)
+        {
+          vis = false;
+          if (m.state == UISTATE_GOALS ||
+              m.state == UISTATE_LOG ||
+              m.state == UISTATE_OPTIONS ||
+              m.state == UISTATE_DEBUG ||
+              m.state == UISTATE_YESNO) // exit
+            vis = true;
+
+          else if (m.state == UISTATE_INVENTORY)
+            {
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.vars.inventoryEnabled)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_SKILLS)
+            {
+              if (game.player.vars.skillsEnabled)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_TIMELINE)
+            {
+              if (game.player.vars.timelineEnabled)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_EVOLUTION)
+            {
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.evolutionManager.state > 0)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_ORGANS)
+            {
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.vars.organsEnabled)
+                vis = true;
+            }
+
+          m.btn.style.display = (vis ? 'flex' : 'none');
+        }
     }
 }
 

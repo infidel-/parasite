@@ -439,7 +439,7 @@ class HUD
       _actionsBack.drawRect(0, 0, _actions.textWidth, _actions.textHeight);
       _actionsBack.endFill();
       _actionsBack.y = game.scene.win.height - _actions.textHeight -
-        game.config.fontSize - 12;
+        game.config.fontSize - 50;
 
       // clear old buttons
       for (b in _actionButtons)
@@ -559,6 +559,9 @@ class HUD
 
   function updateMenu()
     {
+      for (m in _menuButtons)
+        m.back.visible = false;
+      return;
       var x = 20.0;
       var vis = false;
       for (m in _menuButtons)
