@@ -81,6 +81,7 @@ class HUD
       _actions = new HtmlText(game.scene.font, _actionsBack);
       _actions.textAlign = Left;
       _actionsBack.x = 400;
+      _actionsBack.visible = false;
 
       // menu buttons
       addMenuButton(UISTATE_GOALS, '1: Goals');
@@ -220,6 +221,7 @@ class HUD
     }
 
 
+/*
 // call action by key
   public function keyAction(key: Int): Bool
     {
@@ -240,7 +242,7 @@ class HUD
         game.playerRegion.action(action);
 
       return true;
-    }
+    }*/
 
 
 // update player actions list
@@ -263,12 +265,13 @@ class HUD
         type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
         name: 'Wait',
         energy: 0,
-        key: Key.Z
+        key: 'KeyZ'
       });
     }
 
 
 // add player action to numbered list
+// TODO: remove
   public function addAction(a: _PlayerAction)
     {
       if (a.energy != null && a.energy <= game.player.energy)
@@ -414,7 +417,7 @@ class HUD
               for (action in l)
                 {
                   if (action.key != null)
-                    buf.add(String.fromCharCode(action.key) + ': ');
+                    buf.add(action.key.substr(3) + ': ');
                   else buf.add(n + ': ');
                   buf.add(action.name);
                   if (action.energy != null && action.energy > 0)
@@ -455,9 +458,10 @@ class HUD
       // action buttons
       var n = 1;
       var list = [ _listActions, _listKeyActions ];
+/*
       for (l in list)
         for (action in l)
-          addActionButton(n++, action.key);
+          addActionButton(n++, action.key);*/
       _actionsBack.addChild(_actions);
     }
 
@@ -480,12 +484,13 @@ class HUD
         game.scene.font.lineHeight, _actionsBack);
       btn.y = (n - 1) * game.scene.font.lineHeight;
       btn.cursor = game.scene.mouse.atlas[Mouse.CURSOR_ARROW];
+/*
       btn.onClick = function (e: Event)
         {
           if (key != null)
             keyAction(key);
           else action(n);
-        }
+        }*/
       btn.onOver = function (e: Event)
         { backOver.visible = true; }
       btn.onOut = function (e: Event)

@@ -1,7 +1,10 @@
 :root {
   --text-font-size: 16px;
   --text-font: Orkney-Regular;
-  --text-fg-color: #e1e1e1;
+  --text-fg-color: #E1E1E1;
+  --text-color-white: #FFFFFF;
+  --text-color-yellow: #FFEA0E;
+  --text-color-red: #FC420E;
 }
 
 @font-face {
@@ -24,9 +27,22 @@ html, body {
   font-size: var(--text-font-size);
 }
 
-canvas#webgl {
+hr {
+  width: 90%;
+  border-width: 2px 0px 0px 0px;
+  border-color: #aacde0;
+}
+
+#webgl {
   width: 100%;
   height: 100%;
+  filter: saturate(0.9)
+}
+
+#tint {
+  width: 100%;
+  height: 100%;
+  background: rgba(0,255,255, 0.5);
 }
 
 #hud {
@@ -170,4 +186,41 @@ canvas#webgl {
   display: flex;
   flex-direction: row;
   justify-content: center;
+}
+
+#hud-actions {
+  opacity: 0.95;
+  background-color: #ffffff00;
+  border: 20px solid;
+  left: calc(50% - 135px);
+  max-width: 270px;
+  bottom: 60px;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hud-action {
+  color: white;
+  height: 1.2em;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  letter-spacing: 0.08em;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.hud-action:hover {
+  background-color: #5f818c;
+  color: white;
+  opacity: 1;
+  font-weight:bold;
+}
+
+.hud-action:active {
+  color: #879ea3;
 }

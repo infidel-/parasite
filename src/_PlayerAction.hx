@@ -10,5 +10,5 @@ typedef _PlayerAction =
   ?obj: Dynamic, // bound object to act on
   // func that returns energy activation cost (should return < 0 if action is not available)
   ?energyFunc: Player -> Int,
-  ?key: Int, // keyboard shortcut
+  ?key: String, // keyboard shortcut
 }

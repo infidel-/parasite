@@ -420,7 +420,7 @@ class EvolutionManager
           type: ACTION_EVOLUTION,
           name: 'Stop evolution',
           energy: 0,
-          key: hxd.Key.S
+          key: 'KeyS',
         });
     }
 }

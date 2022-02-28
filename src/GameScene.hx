@@ -107,6 +107,7 @@ class GameScene extends Scene
       else
         controlKey = 'alt';
 
+/*
       // handle resize
       js.Browser.window.onresize = function ()
         {
@@ -116,7 +117,7 @@ class GameScene extends Scene
           canvas.style.width = w.innerWidth + 'px';
           canvas.style.height = w.innerHeight + 'px';
           resize();
-        };
+        };*/
 #end
     }
 
@@ -348,6 +349,7 @@ class GameScene extends Scene
 
       if (!hud.consoleVisible())
         {
+/*
           // enter restarts the game when it is finished
           if (game.isFinished && key == Key.ENTER &&
               _state == UISTATE_DEFAULT)
@@ -355,15 +357,18 @@ class GameScene extends Scene
               game.restart();
               return true;
             }
+*/
 
           // hack: disallow actions when control/alt pressed
           var ret = false;
+/*
           if (!controlPressed)
             ret = handleActions(key);
           if (!ret)
             ret = handleWindows(key);
           if (!ret)
             ret = handleMovement(key);
+*/
 
           return ret;
         }
@@ -587,7 +592,7 @@ class GameScene extends Scene
       return false;
     }
 
-
+/*
 // handle player movement
   function handleMovement(key: Int): Bool
     {
@@ -650,7 +655,7 @@ class GameScene extends Scene
         game.playerRegion.moveAction(dx, dy);
 
       return true;
-    }
+    }*/
 
 
 // handle player actions
@@ -696,7 +701,7 @@ class GameScene extends Scene
         }
 
       // actions by key
-      ret = hud.keyAction(key);
+//      ret = hud.keyAction(key);
 
       if (_state == UISTATE_DEFAULT)
         {

@@ -98,7 +98,7 @@ class PlayerArea
       if (state == PLR_STATE_PARASITE)
         {
           if (game.area.hasAI(x, y))
-            game.scene.hud.addAction({
+            game.ui.hud.addAction({
               id: 'attachHost',
               type: ACTION_AREA,
               name: 'Attach To Host',
@@ -110,13 +110,13 @@ class PlayerArea
       else if (state == PLR_STATE_ATTACHED)
         {
           if (attachHold >= 90)
-            game.scene.hud.addAction({
+            game.ui.hud.addAction({
               id: 'invadeHost',
               type: ACTION_AREA,
               name: 'Invade Host',
               energy: 10
             });
-          else game.scene.hud.addAction({
+          else game.ui.hud.addAction({
             id: 'hardenGrip',
             type: ACTION_AREA,
             name: 'Harden Grip',
@@ -128,7 +128,7 @@ class PlayerArea
       else if (state == PLR_STATE_HOST)
         {
           if (player.hostControl < 100)
-            game.scene.hud.addAction({
+            game.ui.hud.addAction({
               id: 'reinforceControl',
               type: ACTION_AREA,
               name: 'Reinforce Control',
@@ -141,12 +141,12 @@ class PlayerArea
           // evolution manager actions
           player.evolutionManager.updateActionList();
 
-          game.scene.hud.addKeyAction({
+          game.ui.hud.addKeyAction({
             id: 'leaveHost',
             type: ACTION_AREA,
             name: 'Leave Host',
             energy: 0,
-            key: Key.X
+            key: 'KeyX'
           });
         }
 
@@ -155,7 +155,7 @@ class PlayerArea
         {
           var info = imp.info;
           if (info.action != null)
-            game.scene.hud.addAction(info.action);
+            game.ui.hud.addAction(info.action);
         }
 
       // area object actions - need to learn about objects
@@ -169,7 +169,7 @@ class PlayerArea
                 player.host.isHuman &&
                 o.type != 'event_object' &&
                 game.player.vars.objectsEnabled)
-              game.scene.hud.addAction({
+              game.ui.hud.addAction({
                 id: 'learnObject',
                 type: ACTION_AREA,
                 name: 'Learn About Object',
@@ -184,7 +184,7 @@ class PlayerArea
 
       // leave area action
       if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)
-        game.scene.hud.addAction({
+        game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
           name: 'Leave Area',

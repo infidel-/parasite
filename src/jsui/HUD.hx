@@ -22,11 +22,18 @@ class HUD
     state: _UIState,
     btn: DivElement,
   }>;
+  var actions: DivElement;
+  var actionButtons: List<DivElement>; // list of action buttons
+  var listActions: List<_PlayerAction>; // list of currently available actions
+  var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
 
   public function new(u: UI, g: Game)
     {
       game = g;
       ui = u;
+      actionButtons = new List();
+      listActions = new List();
+      listKeyActions = new List();
       container = Browser.document.createDivElement();
       container.id = 'hud';
       container.style.visibility = 'visible';
@@ -65,9 +72,10 @@ class HUD
       info = Browser.document.createDivElement();
       info.className = 'text';
       info.id = 'hud-info';
-      info.style.borderImage = "url('./img/hud-info-border.png') 28 fill / 1 / 0 stretch";
+      info.style.borderImage = "url('./img/hud-info-border.png') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
 
+      // menu
       var buttons = Browser.document.createDivElement();
       buttons.id = 'hud-buttons';
       container.appendChild(buttons);
@@ -90,6 +98,12 @@ class HUD
         {
           @:privateAccess game.scene.handleInput(Key.F10);
         }*/
+
+      // actions
+      actions = Browser.document.createDivElement();
+      actions.id = 'hud-actions';
+      actions.style.borderImage = "url('./img/hud-actions-border.png') 28 fill / 1 / 0 stretch";
+      container.appendChild(actions);
     }
 
 // add button to menu
@@ -140,10 +154,9 @@ class HUD
 // update HUD state from game state
   public function update()
     {
-/*
       updateActionList();
       // NOTE: before info because info uses its height
-      updateActions();*/
+      updateActions();
       updateInfo();
       updateLog();
       updateMenu();
@@ -205,11 +218,11 @@ class HUD
   function getTextColor(val: Float, max: Float)
     {
       if (val > 0.7 * max)
-        return '#FFFFFF';
+        return 'var(--text-color-white)';
       else if (val > 0.3 * max)
-        return '#FFEA0E';
+        return 'var(--text-color-yellow)';
 
-      return '#FC420E';
+      return 'var(--text-color-red)';
     }
 
 // update player info
@@ -231,24 +244,24 @@ class HUD
             ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
 #end
           '<br/>' + game.playerRegion.currentArea.name + '<br/>');
-      buf.add('===<br/>');
+      buf.add('<hr/>');
 
       var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
       var time = (game.location == LOCATION_AREA ? 1 : 5);
       var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
       buf.add('Energy: ' +
-        "<font color='" + colEnergy + "'>" + game.player.energy + "</font>" +
+        "<font style='color:" + colEnergy + "'>" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy);
       buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br/>');
       var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
-        "<font color='" + colHealth + "'>" + game.player.health + "</font>" +
+        "<font style='color:" + colHealth + "'>" + game.player.health + "</font>" +
         '/' + game.player.maxHealth);
 
       if (game.player.state == PLR_STATE_ATTACHED)
         {
-          buf.add('<br/>===<br/>');
-          buf.add("Grip: <font color='" +
+          buf.add('<br/><hr/>');
+          buf.add("Grip: <font style='color:" +
             getTextColor(game.playerArea.attachHold, 100) + "'>" +
             game.playerArea.attachHold + "</font>/100<br/>");
         }
@@ -256,7 +269,7 @@ class HUD
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
         {
-          buf.add('<br/>===<br/>');
+          buf.add('<br/><hr/>');
           buf.add(game.player.host.getNameCapped());
           if (game.player.host.isJobKnown)
             buf.add(' (' + game.player.host.job + ')<br/>');
@@ -270,18 +283,18 @@ class HUD
           var colHealth = getTextColor(game.player.host.health,
             game.player.host.maxHealth);
           buf.add('Health: ' +
-            "<font color='" + colHealth + "'>" + game.player.host.health + "</font>" +
+            "<font style='color:" + colHealth + "'>" + game.player.host.health + "</font>" +
             '/' + game.player.host.maxHealth + '<br/>');
 
           var colControl = getTextColor(game.player.hostControl, 100);
           buf.add('Control: ' +
-            "<font color='" + colControl + "'>" + game.player.hostControl + "</font>" +
+            "<font style='color:" + colControl + "'>" + game.player.hostControl + "</font>" +
             '/100<br/>');
 
           var colEnergy = getTextColor(game.player.host.energy,
             game.player.host.maxEnergy);
           var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
-          buf.add("Energy: <font color='" + colEnergy + "'>" +
+          buf.add("Energy: <font style='color:" + colEnergy + "'>" +
             game.player.host.energy + '</font>/' +
             game.player.host.maxEnergy);
           buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
@@ -348,6 +361,197 @@ class HUD
 
           m.btn.style.display = (vis ? 'flex' : 'none');
         }
+    }
+
+// update player actions list
+  inline function updateActionList()
+    {
+      if (game.isFinished)
+        return;
+
+      listActions = new List();
+      listKeyActions = new List();
+
+      if (game.location == LOCATION_AREA)
+        game.playerArea.updateActionList();
+
+//      else if (game.location == LOCATION_REGION)
+//        game.playerRegion.updateActionList();
+
+      addKeyAction({
+        id: 'skipTurn',
+        type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
+        name: 'Wait',
+        energy: 0,
+        key: 'KeyZ'
+      });
+    }
+
+// add player action to numbered list
+  public function addAction(a: _PlayerAction)
+    {
+      if (a.energy != null && a.energy <= game.player.energy)
+        listActions.add(a);
+
+      else if (a.energyFunc != null)
+        {
+          var e = a.energyFunc(game.player);
+          if (e >= 0 && e <= game.player.energy)
+            listActions.add(a);
+        }
+    }
+
+// add player action to key list
+  public function addKeyAction(a: _PlayerAction)
+    {
+      if (a.energy <= game.player.energy)
+        listKeyActions.add(a);
+    }
+
+// update player actions
+  function updateActions()
+    {
+      var n = 1;
+      while (actions.firstChild != null)
+        actions.removeChild(actions.lastChild);
+      if (!game.isFinished)
+        {
+          var list = [ listActions, listKeyActions ];
+          for (l in list)
+            for (action in l)
+              {
+                var buf = new StringBuf();
+                if (action.key != null)
+                  buf.add(action.key.substr(3) + ': ');
+                else buf.add(n + ': ');
+                buf.add(action.name);
+                if (action.energy != null && action.energy > 0)
+                  buf.add(' (' + action.energy + ' energy)');
+                else if (action.energyFunc != null)
+                  buf.add(' (' + action.energyFunc(game.player) + ' energy)');
+
+                var btn = Browser.document.createDivElement();
+                btn.innerHTML = buf.toString();
+                btn.className = 'hud-action';
+                btn.onclick = function (e) {
+                  if (game.location == LOCATION_AREA)
+                    game.playerArea.action(action);
+
+                  else if (game.location == LOCATION_REGION)
+                    game.playerRegion.action(action);
+                }
+                actions.appendChild(btn);
+                n++;
+              }
+        }
+
+      if (game.isFinished)
+        actions.innerHTML = '<font style="color:var(--text-color-red)">Press ENTER to restart</font>';
+      else if (n == 1)
+        actions.innerHTML = 'No available actions.';
+/*
+
+      _actions.text = buf.toString();
+      _actionsBack.clear();
+      _actionsBack.beginFill(0x202020, 0.75);
+      _actionsBack.drawRect(0, 0, _actions.textWidth, _actions.textHeight);
+      _actionsBack.endFill();
+      _actionsBack.y = game.scene.win.height - _actions.textHeight -
+        game.config.fontSize - 50;
+
+      // clear old buttons
+      for (b in _actionButtons)
+        {
+          b.back.remove();
+          b.btn.remove();
+        }
+      _actionButtons = new List();
+
+      if (game.isFinished || n == 1)
+        return;
+
+      // action buttons
+      var n = 1;
+      var list = [ _listActions, _listKeyActions ];
+      for (l in list)
+        for (action in l)
+          addActionButton(n++, action.key);
+      _actionsBack.addChild(_actions);
+*/
+    }
+
+/*
+// add player action button
+  function addActionButton(n: Int, key: Null<Int>)
+    {
+      // button highlight
+      var backOver = new Graphics(_actionsBack);
+      backOver.y = (n - 1) * game.scene.font.lineHeight;
+      backOver.clear();
+      backOver.beginFill(0x777777, 0.75);
+      backOver.drawRect(0, 0, _actions.textWidth,
+        game.scene.font.lineHeight);
+      backOver.endFill();
+      backOver.visible = false;
+
+      // button
+      var btn = new Interactive(_actions.textWidth,
+        game.scene.font.lineHeight, _actionsBack);
+      btn.y = (n - 1) * game.scene.font.lineHeight;
+      btn.cursor = game.scene.mouse.atlas[Mouse.CURSOR_ARROW];
+      btn.onOver = function (e: Event)
+        { backOver.visible = true; }
+      btn.onOut = function (e: Event)
+        { backOver.visible = false; }
+
+      _actionButtons.add({
+        back: backOver,
+        btn: btn,
+      });
+    }*/
+
+// call numbered action by index
+  public function action(index: Int)
+    {
+      // find action name by index
+      var i = 1;
+      var action = null;
+      for (a in listActions)
+        if (i++ == index)
+          {
+            action = a;
+            break;
+          }
+      if (action == null)
+        return;
+
+      if (game.location == LOCATION_AREA)
+        game.playerArea.action(action);
+
+      else if (game.location == LOCATION_REGION)
+        game.playerRegion.action(action);
+    }
+
+// call action by key
+  public function keyAction(key: String): Bool
+    {
+      var action = null;
+      for (a in listKeyActions)
+        if (a.key == key)
+          {
+            action = a;
+            break;
+          }
+      if (action == null)
+        return false;
+
+      if (game.location == LOCATION_AREA)
+        game.playerArea.action(action);
+
+      else if (game.location == LOCATION_REGION)
+        game.playerRegion.action(action);
+
+      return true;
     }
 }
 
