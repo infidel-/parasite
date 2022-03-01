@@ -12,7 +12,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   src: url(./Orkney-Regular.ttf) format('truetype');
 }
 
@@ -95,7 +95,9 @@ hr {
   background: #202020aa;
   font-family: var(--text-font);
   font-size: var(--text-font-size);
+  letter-spacing: 0.08em;
   resize: none;
+  user-select: none;
 }
 
 #hud-log {
@@ -111,7 +113,6 @@ hr {
   padding: 0;
   outline: none;
   appearance: none;
-  letter-spacing: 0.08em;
   user-select: none;
 }
 
@@ -128,7 +129,6 @@ hr {
   padding: 0;
   outline: none;
   appearance: none;
-  letter-spacing: 0.08em;
   user-select: none;
 }
 
@@ -145,7 +145,6 @@ hr {
   padding: 0;
   outline: none;
   appearance: none;
-  letter-spacing: 0.08em;
   user-select: none;
 }
 
@@ -160,7 +159,6 @@ hr {
   padding: 0;
   outline: none;
   appearance: none;
-  letter-spacing: 0.08em;
   pointer-events: auto;
   user-select: none;
 }
@@ -192,7 +190,8 @@ hr {
   opacity: 0.95;
   background-color: #ffffff00;
   border: 20px solid;
-  left: calc(50% - 135px);
+  left: 50%;
+  transform: translate(-50%, 0);
   max-width: 270px;
   bottom: 60px;
   position: fixed;
@@ -209,7 +208,6 @@ hr {
   padding: 0;
   outline: none;
   appearance: none;
-  letter-spacing: 0.08em;
   pointer-events: auto;
   user-select: none;
 }
@@ -223,4 +221,42 @@ hr {
 
 .hud-action:active {
   color: #879ea3;
+}
+
+.window {
+  opacity: 0.95;
+  z-index: 110;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  position: fixed;
+  pointer-events: none;
+  background-color: #ffffff00;
+}
+
+#window-message {
+  border: 30px solid;
+  min-width: 20%;
+  max-width: 40%;
+  min-height: 1.2em;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#window-message-text {
+  transform: translate(0, -10px);
+}
+
+#window-message-close {
+  border: 11px solid;
+  position: fixed;
+  bottom: -49px;
+  left: 50%;
+  opacity: 1;
+  text-align: center;
+  width: 80px;
+  transform: translate(-50%, 0);
 }

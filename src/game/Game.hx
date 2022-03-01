@@ -262,7 +262,7 @@ class Game
         }
 
       // add to event queue
-      scene.event({
+      ui.event({
         state: UISTATE_FINISH,
         obj: finishText
       });
@@ -286,18 +286,18 @@ class Game
       if (col == null)
         col = COLOR_MESSAGE;
       var msg =
-        "<font color='" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
+        "<font style='color:" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
       log(s, col);
 
       if (!importantMessagesEnabled)
         return;
 
       // add to event queue
-      scene.event({
+      ui.event({
         state: UISTATE_MESSAGE,
         obj: {
           text: s,
-          col: Const.TEXT_COLORS_INT[col]
+          col: Const.TEXT_COLORS[col]
         }
       });
 

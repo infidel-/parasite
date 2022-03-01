@@ -16,15 +16,45 @@ class UI
   var _state: _UIState; // current HUD state (default, evolution, etc)
   var inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
   var isFullScreen: Bool; // game is in fullscreen mode?
+  var components: Map<_UIState, UIWindow>; // GUI windows
+  var uiLocked: Array<_UIState>; // list of gui states that lock the player
+  var uiNoClose: Array<_UIState>; // list of gui states that disable window closing
+  var uiQueue: List<_UIEvent>; // gui event queue
+  var uiQueuePaused: Bool; // if true, the queue is paused
+  var uiQueuePrev: _UIEvent; // previous UI event
 
   public function new(g: Game)
     {
       game = g;
       isFullScreen = false;
       _state = UISTATE_DEFAULT;
+      uiQueue = new List();
+      uiQueuePaused = false;
+      uiQueuePrev = null;
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('webgl');
       canvas.onkeydown = onKey;
+
+      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
+      uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
+      components = [
+        UISTATE_MESSAGE => new Message(game),
+/*
+        UISTATE_DIFFICULTY => new Difficulty(game),
+        UISTATE_DOCUMENT => new Text(game),
+        UISTATE_YESNO => new YesNo(game),
+
+        UISTATE_GOALS => new Goals(game),
+        UISTATE_INVENTORY => new Inventory(game),
+        UISTATE_SKILLS => new Skills(game),
+        UISTATE_LOG => new Log(game),
+        UISTATE_TIMELINE => new Timeline(game),
+        UISTATE_EVOLUTION => new Evolution(game),
+        UISTATE_ORGANS => new Organs(game),
+        UISTATE_DEBUG => new Debug(game),
+        UISTATE_FINISH => new Finish(game),
+        UISTATE_OPTIONS => new Options(game),*/
+      ];
     }
 
 // refocus canvas
@@ -54,7 +84,8 @@ class UI
 
           // enter restarts the game when it is finished
           if (game.isFinished &&
-              e.code == 'Enter' &&
+              (e.code == 'Enter' ||
+              e.code == 'NumpadEnter') && 
               _state == UISTATE_DEFAULT)
             {
               game.restart();
@@ -76,12 +107,140 @@ class UI
 
           // try to handle keyboard actions
           var ret = handleActions(e.code);
-/*
           if (!ret)
-            ret = handleWindows(e.code);*/
+            ret = handleWindows(e.code);
           if (!ret)
             ret = handleMovement(e.code);
         }
+    }
+
+// handle opening and closing windows
+  function handleWindows(key: String): Bool
+    {
+/*
+      // scrolling text
+      if (_state != UISTATE_DEFAULT)
+        {
+          // get amount of lines
+          var lines = 0;
+          if (key == Key.PGUP ||
+            (key == Key.K && shiftPressed))
+            lines = -20;
+          else if (key == Key.PGDOWN ||
+            (key == Key.J && shiftPressed))
+            lines = 20;
+          else if (key == Key.UP || key == Key.K || key == Key.NUMPAD_8)
+            lines = -1;
+          else if (key == Key.DOWN || key == Key.J || key == Key.NUMPAD_2)
+            lines = 1;
+
+          var win: UIWindow = cast components[_state];
+
+          if (lines != 0)
+            {
+              win.scroll(lines);
+              return false;
+            }
+
+          else if (key == Key.END ||
+            (key == Key.G && shiftPressed))
+            {
+              win.scrollToEnd();
+              return false;
+            }
+
+          else if (key == Key.HOME || key == Key.G)
+            {
+              win.scrollToBegin();
+              return false;
+            }
+        }*/
+
+      // window open
+      if (!Lambda.has(uiNoClose, _state))
+        {
+          // close windows
+          if (key == 'Enter' || key == 'NumpadEnter' || key == 'Escape') 
+            closeWindow();
+        }
+
+      // ui in locked state, do not allow changing windows
+      if (Lambda.has(uiLocked, _state))
+        return true;
+
+/*
+      // no windows open
+      var goalsPressed =
+        (key == Key.NUMBER_1 && controlPressed) || key == Key.F1;
+      var inventoryPressed =
+        (key == Key.NUMBER_2 && controlPressed) || key == Key.F2;
+      var skillsPressed =
+        (key == Key.NUMBER_3 && controlPressed) || key == Key.F3;
+      var logPressed =
+        (key == Key.NUMBER_4 && controlPressed) || key == Key.F4;
+      var timelinePressed =
+        (key == Key.NUMBER_5 && controlPressed) || key == Key.F5;
+      var evolutionPressed =
+        (key == Key.NUMBER_6 && controlPressed) || key == Key.F6;
+      var organsPressed =
+        (key == Key.NUMBER_7 && controlPressed) || key == Key.F7;
+      var optionsPressed =
+        (key == Key.NUMBER_8 && controlPressed) || key == Key.F8;
+      var debugPressed =
+        (key == Key.NUMBER_9 && controlPressed) || key == Key.F9;
+
+      // open goals window
+      if (goalsPressed)
+        state = UISTATE_GOALS;
+
+      // open inventory window (if items are learned)
+      else if (inventoryPressed &&
+          game.player.state == PLR_STATE_HOST &&
+          game.player.host.isHuman &&
+          game.player.vars.inventoryEnabled)
+        state = UISTATE_INVENTORY;
+
+      // open skills window (if skills are learned)
+      else if (skillsPressed &&
+          game.player.vars.skillsEnabled)
+        state = UISTATE_SKILLS;
+
+      // open message log window
+      else if (logPressed)
+        {
+          state = UISTATE_LOG;
+          var win: Log = cast components[_state];
+          win.scrollToEnd();
+        }
+
+      // open timeline window
+      else if (timelinePressed &&
+          game.player.vars.timelineEnabled)
+        state = UISTATE_TIMELINE;
+
+      // open evolution window (if enabled)
+      else if (evolutionPressed &&
+          game.player.state == PLR_STATE_HOST &&
+          game.player.evolutionManager.state > 0)
+        state = UISTATE_EVOLUTION;
+
+      // open organs window
+      else if (organsPressed &&
+          game.player.state == PLR_STATE_HOST &&
+          game.player.vars.organsEnabled)
+        state = UISTATE_ORGANS;
+
+      // open options window
+      else if (optionsPressed)
+        state = UISTATE_OPTIONS;
+
+#if mydebug
+      // open debug window
+      else if (debugPressed && !game.isFinished)
+        state = UISTATE_DEBUG;
+#end
+*/
+      return false;
     }
 
 // handle player actions
@@ -258,7 +417,6 @@ class UI
     {
       trace(vstate);
 //      Const.traceStack();
-/*
       if (_state != UISTATE_DEFAULT)
         {
           if (components[_state] != null)
@@ -277,8 +435,45 @@ class UI
 
       // clear old path on opening message window
       if (_state == UISTATE_MESSAGE)
-        clearPath();*/
+        game.scene.clearPath();
 
       return _state;
+    }
+
+// add event to the GUI queue
+  public function event(ev: _UIEvent)
+    {
+      uiQueue.add(ev);
+
+      // no windows open, work on event immediately
+      if (state == UISTATE_DEFAULT)
+        closeWindow();
+    }
+
+// clear GUI queue
+  public inline function clearEvents()
+    {
+      uiQueue.clear();
+    }
+
+// close the current window
+  public function closeWindow()
+    {
+      // check if there are more UI events in the queue
+      if (uiQueue.length > 0)
+        {
+          // get next event
+          var ev = uiQueue.first();
+          uiQueuePrev = ev;
+          uiQueue.remove(ev);
+
+          if (components[ev.state] != null)
+            components[ev.state].setParams(ev.obj);
+          else trace('component is null for ' + ev.state);
+          state = ev.state;
+          return;
+        }
+
+      state = UISTATE_DEFAULT;
     }
 }

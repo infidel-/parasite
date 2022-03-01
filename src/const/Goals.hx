@@ -94,7 +94,7 @@ class Goals
         game.goals.receive(GOAL_EVOLVE_ORGAN);
 
         // choose difficulty
-        game.scene.event({
+        game.ui.event({
           state: UISTATE_DIFFICULTY,
           obj: 'evolution'
         });
@@ -306,7 +306,7 @@ class Goals
         game.goals.receive(GOAL_LEARN_NPC);
 
         // choose difficulty
-        game.scene.event({
+        game.ui.event({
           state: UISTATE_DIFFICULTY,
           obj: 'timeline'
         });
