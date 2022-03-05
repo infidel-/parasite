@@ -350,3 +350,63 @@ fieldset {
   transform: translate(0, -10px);
   height: 94%;
 }
+
+#window-timeline {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+}
+
+#window-timeline-text {
+  transform: translate(0, -10px);
+  height: 94%;
+}
+
+#window-evolution {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+}
+
+#window-evolution-text {
+  transform: translate(0, -10px);
+  height: 94%;
+}
+
+#window-inventory {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+}
+
+#window-inventory-text {
+  transform: translate(0, -10px);
+  height: 94%;
+}
+
+#window-skills {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+}
+
+#window-skills-text {
+  transform: translate(0, -10px);
+  height: 94%;
+}
+
+#window-organs {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+}
+
+#window-organs-text {
+  transform: translate(0, -10px);
+  height: 94%;
+}

@@ -385,8 +385,8 @@ class HUD
       if (game.location == LOCATION_AREA)
         game.playerArea.updateActionList();
 
-//      else if (game.location == LOCATION_REGION)
-//        game.playerRegion.updateActionList();
+      else if (game.location == LOCATION_REGION)
+        game.playerRegion.updateActionList();
 
       addKeyAction({
         id: 'skipTurn',

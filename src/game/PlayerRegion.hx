@@ -58,7 +58,7 @@ class PlayerRegion
     {
       // enter area
       if (currentArea.info.canEnter)
-        game.scene.hud.addAction({
+        game.ui.hud.addAction({
           id: 'enterArea',
           type: ACTION_REGION,
           name: 'Enter Area',
@@ -75,7 +75,7 @@ class PlayerRegion
           var numHabitats = game.region.getHabitatsCount();
 
           if (numHabitats < maxHabitats)
-            game.scene.hud.addAction({
+            game.ui.hud.addAction({
               id: 'createHabitat',
               type: ACTION_REGION,
               name: 'Create habitat',
@@ -91,7 +91,7 @@ class PlayerRegion
 
       // enter habitat
       if (currentArea.hasHabitat)
-        game.scene.hud.addAction({
+        game.ui.hud.addAction({
           id: 'enterHabitat',
           type: ACTION_REGION,
           name: 'Enter habitat',

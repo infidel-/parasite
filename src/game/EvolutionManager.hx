@@ -415,7 +415,7 @@ class EvolutionManager
   public function updateActionList()
     {
       if (isActive)
-        game.scene.hud.addKeyAction({
+        game.ui.hud.addKeyAction({
           id: 'stop',
           type: ACTION_EVOLUTION,
           name: 'Stop evolution',
