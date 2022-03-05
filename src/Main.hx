@@ -1,5 +1,9 @@
 import game.Game;
 
+#if js
+import js.Browser;
+#end
+
 class Main extends hxd.App
 {
   var game: Game;
@@ -18,6 +22,9 @@ class Main extends hxd.App
       // focus window
       js.Browser.document.getElementById("webgl").focus();
       game.scene.win.propagateKeyEvents = true;
+      var canvas = Browser.document.getElementById("webgl");
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
 #end
     }
 

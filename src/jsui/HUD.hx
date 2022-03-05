@@ -119,15 +119,25 @@ class HUD
         btn: btn,
       });
       btn.onclick = function (e)
-        { game.scene.state = state; }
+        { game.ui.state = state; }
       return btn;
     }
 
 // show hide HUD
-  public inline function toggle()
+  public function toggle()
     {
       container.style.visibility =
         (container.style.visibility == 'visible' ? 'hidden' : 'visible');
+    }
+
+  public function show()
+    {
+      container.style.visibility = 'visible';
+    }
+
+  public function hide()
+    {
+      container.style.visibility = 'hidden';
     }
 
   public function consoleVisible(): Bool

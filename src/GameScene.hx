@@ -28,7 +28,6 @@ class GameScene extends Scene
   public var font: Font;
   public var font40: Font;
   public var soundManager: SoundManager;
-//  public var font10: Font;
   var uiQueue: List<_UIEvent>; // gui event queue
   var uiQueuePaused: Bool; // if true, the queue is paused
   var uiQueuePrev: _UIEvent; // previous UI event
@@ -107,17 +106,12 @@ class GameScene extends Scene
       else
         controlKey = 'alt';
 
-/*
       // handle resize
-      js.Browser.window.onresize = function ()
+      // needed for hxd
+      Browser.window.onresize = function ()
         {
-          var doc = js.Browser.document;
-          var w = js.Browser.window;
-          var canvas = doc.getElementById("webgl");
-          canvas.style.width = w.innerWidth + 'px';
-          canvas.style.height = w.innerHeight + 'px';
           resize();
-        };*/
+        };
 #end
     }
 

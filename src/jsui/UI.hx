@@ -5,7 +5,7 @@ import js.Browser;
 import js.html.KeyboardEvent;
 import js.html.CanvasElement;
 
-import game.*;
+import game.Game;
 
 class UI
 {
@@ -43,11 +43,14 @@ class UI
         UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_DOCUMENT => new Text(game),
         UISTATE_YESNO => new YesNo(game),
+*/
 
         UISTATE_GOALS => new Goals(game),
+/*
         UISTATE_INVENTORY => new Inventory(game),
-        UISTATE_SKILLS => new Skills(game),
+        UISTATE_SKILLS => new Skills(game),*/
         UISTATE_LOG => new Log(game),
+/*
         UISTATE_TIMELINE => new Timeline(game),
         UISTATE_EVOLUTION => new Evolution(game),
         UISTATE_ORGANS => new Organs(game),
@@ -66,56 +69,47 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
-//      trace(e.keyCode + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.code);
-      // TODO check windows first
-      if (false)
+ //      trace(e.keyCode + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.code);
+      // toggle hud
+      if (e.code == 'Space' && _state == UISTATE_DEFAULT)
         {
-
+          hud.toggle();
+          return;
         }
-      // hud/movement/actions
-      else
+
+      // enter restarts the game when it is finished
+      if (game.isFinished &&
+          (e.code == 'Enter' ||
+          e.code == 'NumpadEnter') && 
+          _state == UISTATE_DEFAULT)
         {
-          // toggle hud
-          if (e.code == 'Space')
-            {
-              hud.toggle();
-              return;
-            }
-
-          // enter restarts the game when it is finished
-          if (game.isFinished &&
-              (e.code == 'Enter' ||
-              e.code == 'NumpadEnter') && 
-              _state == UISTATE_DEFAULT)
-            {
-              game.restart();
-              return;
-            }
-
-          // open console
-          if (e.code == 'Semicolon' && !hud.consoleVisible())
-            {
-              hud.showConsole();
-              return;
-            }
-          // close console
-          if (e.code == 'Escape' && hud.consoleVisible())
-            {
-              hud.hideConsole();
-              return;
-            }
-
-          // try to handle keyboard actions
-          var ret = handleActions(e.code);
-          if (!ret)
-            ret = handleWindows(e.code);
-          if (!ret)
-            ret = handleMovement(e.code);
+          game.restart();
+          return;
         }
+
+      // open console
+      if (e.code == 'Semicolon' && !hud.consoleVisible())
+        {
+          hud.showConsole();
+          return;
+        }
+      // close console
+      if (e.code == 'Escape' && hud.consoleVisible())
+        {
+          hud.hideConsole();
+          return;
+        }
+
+      // try to handle keyboard actions
+      var ret = handleActions(e.code);
+      if (!ret)
+        ret = handleWindows(e.code, e.altKey, e.ctrlKey);
+      if (!ret)
+        ret = handleMovement(e.code);
     }
 
 // handle opening and closing windows
-  function handleWindows(key: String): Bool
+  function handleWindows(key: String, altKey: Bool, ctrlKey: Bool): Bool
     {
 /*
       // scrolling text
@@ -168,31 +162,30 @@ class UI
       if (Lambda.has(uiLocked, _state))
         return true;
 
-/*
       // no windows open
-      var goalsPressed =
-        (key == Key.NUMBER_1 && controlPressed) || key == Key.F1;
+      var goalsPressed = (key == 'Digit1' && altKey) || key == 'F1';
+/*
       var inventoryPressed =
-        (key == Key.NUMBER_2 && controlPressed) || key == Key.F2;
+        (key == 'Digit2' && altKey) || key == 'F2';
       var skillsPressed =
-        (key == Key.NUMBER_3 && controlPressed) || key == Key.F3;
+        (key == 'Digit3' && altKey) || key == 'F3';*/
       var logPressed =
-        (key == Key.NUMBER_4 && controlPressed) || key == Key.F4;
-      var timelinePressed =
-        (key == Key.NUMBER_5 && controlPressed) || key == Key.F5;
+        (key == 'Digit4' && altKey) || key == 'F4';
+/*      var timelinePressed =
+        (key == 'Digit5' && altKey) || key == 'F5';
       var evolutionPressed =
-        (key == Key.NUMBER_6 && controlPressed) || key == Key.F6;
+        (key == 'Digit6' && altKey) || key == 'F6';
       var organsPressed =
-        (key == Key.NUMBER_7 && controlPressed) || key == Key.F7;
+        (key == 'Digit7' && altKey) || key == 'F7';
       var optionsPressed =
-        (key == Key.NUMBER_8 && controlPressed) || key == Key.F8;
+        (key == 'Digit8' && altKey) || key == 'F8';
       var debugPressed =
-        (key == Key.NUMBER_9 && controlPressed) || key == Key.F9;
-
+        (key == 'Digit9' && altKey) || key == 'F9';
+*/
       // open goals window
       if (goalsPressed)
         state = UISTATE_GOALS;
-
+/*
       // open inventory window (if items are learned)
       else if (inventoryPressed &&
           game.player.state == PLR_STATE_HOST &&
@@ -204,7 +197,7 @@ class UI
       else if (skillsPressed &&
           game.player.vars.skillsEnabled)
         state = UISTATE_SKILLS;
-
+*/
       // open message log window
       else if (logPressed)
         {
@@ -212,7 +205,7 @@ class UI
           var win: Log = cast components[_state];
           win.scrollToEnd();
         }
-
+/*
       // open timeline window
       else if (timelinePressed &&
           game.player.vars.timelineEnabled)
@@ -437,6 +430,13 @@ class UI
       if (_state == UISTATE_MESSAGE)
         game.scene.clearPath();
 
+      if (_state == UISTATE_DEFAULT)
+        {
+          canvas.focus();
+          hud.show();
+        }
+      else hud.hide();
+
       return _state;
     }
 
@@ -469,7 +469,12 @@ class UI
 
           if (components[ev.state] != null)
             components[ev.state].setParams(ev.obj);
-          else trace('component is null for ' + ev.state);
+          else
+            {
+              trace('component is null for ' + ev.state);
+              state = UISTATE_DEFAULT;
+              return;
+            }
           state = ev.state;
           return;
         }
