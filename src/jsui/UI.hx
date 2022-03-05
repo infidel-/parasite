@@ -52,9 +52,9 @@ class UI
         UISTATE_TIMELINE => new Timeline(game),
         UISTATE_EVOLUTION => new Evolution(game),
         UISTATE_ORGANS => new Organs(game),
+        UISTATE_FINISH => new Finish(game),
 /*
         UISTATE_DEBUG => new Debug(game),
-        UISTATE_FINISH => new Finish(game),
         UISTATE_OPTIONS => new Options(game),*/
       ];
     }

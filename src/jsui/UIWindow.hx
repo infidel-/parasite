@@ -14,7 +14,7 @@ class UIWindow
   var bg: DivElement;
   var state: _UIState; // state this relates to
 
-  public function new(g: Game, id: String)
+  public function new(g: Game, id: String, ?addCloseButton: Bool = true)
     {
       game = g;
       bg = Browser.document.createDivElement();
@@ -28,7 +28,7 @@ class UIWindow
       bg.appendChild(window);
 
       // add common close button
-      if (id != 'window-message')
+      if (addCloseButton)
         {
           var close = Browser.document.createDivElement();
           close.className = 'hud-button window-common-close';
