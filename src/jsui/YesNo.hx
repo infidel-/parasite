@@ -49,7 +49,7 @@ class YesNo extends UIWindow
   public override function setParams(obj: Dynamic)
     {
       var o: { text: String, func: Bool -> Void } = cast obj;
-      text.innerHTML = o.text;
+      text.innerHTML = '<center>' + o.text + '</center>';
       func = o.func;
     }
 

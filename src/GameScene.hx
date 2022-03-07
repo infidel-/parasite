@@ -311,24 +311,6 @@ class GameScene extends Scene
           js.Browser.location.reload();
           return true;
         }
-#else
-      // exit game
-      if (key == Key.F10)
-        {
-
-          // show exit yes/no dialog
-          game.scene.event({
-            state: UISTATE_YESNO,
-            obj: {
-              text: 'Do you want to exit the game?',
-              func: function(yes: Bool)
-                {
-                  if (yes)
-                    hxd.System.exit();
-                }
-            }
-          });
-        }
 #end
 
       // toggle gui

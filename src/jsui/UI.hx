@@ -179,6 +179,9 @@ class UI
       var debugPressed =
         (key == 'Digit9' && altKey) || key == 'F9';
 */
+      var exitPressed =
+        (key == 'Digit0' && altKey) || key == 'F10';
+
       // open goals window
       if (goalsPressed)
         state = UISTATE_GOALS;
@@ -209,6 +212,22 @@ class UI
           game.player.state == PLR_STATE_HOST &&
           game.player.vars.organsEnabled)
         state = UISTATE_ORGANS;
+
+      else if (exitPressed)
+        {
+          // show exit yes/no dialog
+          game.ui.event({
+            state: UISTATE_YESNO,
+            obj: {
+              text: 'Do you want to exit the game?',
+              func: function(yes: Bool)
+                {
+                  if (yes)
+                    electron.renderer.IpcRenderer.invoke('quit');
+                }
+            }
+          });
+        }
 /*
       // open options window
       else if (optionsPressed)

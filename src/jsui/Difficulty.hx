@@ -27,7 +27,7 @@ class Difficulty extends UIWindow
       var easy = Browser.document.createDivElement();
       easy.className = 'hud-button window-dialog-button';
       easy.id = 'window-difficulty-easy';
-      easy.innerHTML = 'easy';
+      easy.innerHTML = 'EASY';
       easy.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       easy.onclick = function (e) {
         action(1);
@@ -43,7 +43,7 @@ class Difficulty extends UIWindow
       var normal = Browser.document.createDivElement();
       normal.className = 'hud-button window-dialog-button';
       normal.id = 'window-difficulty-normal';
-      normal.innerHTML = 'normal';
+      normal.innerHTML = 'NORMAL';
       normal.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       normal.onclick = function (e) {
         action(2);
@@ -59,7 +59,7 @@ class Difficulty extends UIWindow
       var hard = Browser.document.createDivElement();
       hard.className = 'hud-button window-dialog-button';
       hard.id = 'window-difficulty-hard';
-      hard.innerHTML = 'hard';
+      hard.innerHTML = 'HARD';
       hard.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       hard.onclick = function (e) {
         action(3);

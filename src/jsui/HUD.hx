@@ -93,11 +93,9 @@ class HUD
 #end
       // should be unique state but no matter
       var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
-/*
-      btn.onClick = function (e: Event)
-        {
-          @:privateAccess game.scene.handleInput(Key.F10);
-        }*/
+      btn.onclick = function (e) {
+          @:privateAccess game.ui.handleWindows('F10', false, false);
+      }
 
       // actions
       actions = Browser.document.createDivElement();

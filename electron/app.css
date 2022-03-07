@@ -272,6 +272,11 @@ hr {
   transform: translate(0, -10px);
 }
 
+#window-yesno {
+  width: 40%;
+  height: 4em;
+}
+
 #window-difficulty {
   width: 40%;
   height: 4em;
