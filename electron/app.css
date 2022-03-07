@@ -28,6 +28,10 @@ html, body {
   font-size: var(--text-font-size);
 }
 
+h3 {
+  margin: 0px;
+}
+
 hr {
   width: 90%;
   border-width: 2px 0px 0px 0px;
@@ -257,18 +261,23 @@ hr {
   transform: translate(-50%, -50%);
 }
 
-#window-message {
+.window-dialog {
   border: 30px solid;
   min-width: 20%;
   max-width: 40%;
   min-height: 1.2em;
 }
 
-#window-message-text {
+.window-dialog-text {
   transform: translate(0, -10px);
 }
 
-#window-message-close {
+#window-difficulty {
+  width: 40%;
+  height: 4em;
+}
+
+.window-dialog-button {
   border: 11px solid;
   position: fixed;
   bottom: -49px;
@@ -277,6 +286,26 @@ hr {
   text-align: center;
   width: 80px;
   transform: translate(-50%, 0);
+}
+
+#window-yesno-yes {
+  left: 34%;
+}
+
+#window-yesno-no {
+  left: 63%;
+}
+
+#window-difficulty-easy {
+  left: 23%;
+}
+
+#window-difficulty-normal {
+  left: 49%;
+}
+
+#window-difficulty-hard {
+  left: 75%;
 }
 
 #window-goals {
@@ -411,24 +440,14 @@ fieldset {
   height: 94%;
 }
 
-#window-finish {
-  border: 30px solid;
-  min-width: 20%;
-  max-width: 40%;
-  min-height: 1.2em;
+#window-document {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
 }
 
-#window-finish-text {
+#window-document-text {
   transform: translate(0, -10px);
-}
-
-#window-finish-close {
-  border: 11px solid;
-  position: fixed;
-  bottom: -49px;
-  left: 50%;
-  opacity: 1;
-  text-align: center;
-  width: 80px;
-  transform: translate(-50%, 0);
+  height: 94%;
 }

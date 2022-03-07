@@ -5,8 +5,10 @@ package game;
 import jsui.UI;
 import scenario.Timeline;
 
+@:expose
 class Game
 {
+  public static var inst: Game;
   public var config: Config; // game config
   public var scene: GameScene; // ui scene (hashlink OLD)
   public var ui: UI; // new (js)
@@ -39,6 +41,7 @@ class Game
 
   public function new()
     {
+      inst = this;
       config = new Config(this);
       ui = new UI(this);
       scene = new GameScene(this);

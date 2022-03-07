@@ -6,7 +6,7 @@ import js.Browser;
 
 class Main extends hxd.App
 {
-  var game: Game;
+  public var game: Game;
 
 
 // engine init entry-point

@@ -203,7 +203,7 @@ class Group
         game.goals.receive(GOAL_PUT_WATCHER);
 
       // show yes/no dialog about manual
-      game.scene.event({
+      game.ui.event({
         state: UISTATE_YESNO,
         obj: {
           text: 'Do you want to read the manual about The Group?',
@@ -215,12 +215,12 @@ class Group
                   var doc = hxd.Res.load('wiki/The-Group.md').toText();
                   doc = StringTools.replace(doc, "\n", '<br/>');
                   doc = StringTools.replace(doc, "# ", '');
-                  game.scene.event({
+                  game.ui.event({
                     state: UISTATE_DOCUMENT,
                     obj: doc
                   });
                 }
-              game.scene.event({
+              game.ui.event({
                 state: UISTATE_DIFFICULTY,
                 obj: 'group'
               });

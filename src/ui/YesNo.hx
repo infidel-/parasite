@@ -46,7 +46,6 @@ class YesNo extends UIWindow
         yes = true;
 
       func(yes);
-
       game.scene.closeWindow();
     }
 }

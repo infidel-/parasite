@@ -39,11 +39,9 @@ class UI
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
       components = [
         UISTATE_MESSAGE => new Message(game),
-/*
-        UISTATE_DIFFICULTY => new Difficulty(game),
-        UISTATE_DOCUMENT => new Text(game),
+        UISTATE_DOCUMENT => new Document(game),
         UISTATE_YESNO => new YesNo(game),
-*/
+        UISTATE_DIFFICULTY => new Difficulty(game),
 
         UISTATE_GOALS => new Goals(game),
         UISTATE_INVENTORY => new Inventory(game),
@@ -251,14 +249,14 @@ class UI
             ret = true;
             break;
           }
-/*
+
       // yes/no
       if (_state == UISTATE_YESNO)
         {
           var n = 0;
-          if (key == Key.Y)
+          if (key == 'KeyY')
             n = 1;
-          else if (key == Key.N)
+          else if (key == 'KeyN')
             n = 2;
           if (n > 0)
             {
@@ -266,7 +264,6 @@ class UI
               return true;
             }
         }
-*/
 
       // actions by key
       ret = hud.keyAction(key);

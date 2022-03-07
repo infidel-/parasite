@@ -14,17 +14,16 @@ class Finish extends UIWindow
   public function new(g: Game)
     {
       super(g, 'window-finish', false);
-      window.style.borderImage = "url('./img/window-message.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();
-      text.id = 'window-finish-text';
+      text.className = 'window-dialog-text';
       window.appendChild(text);
 
       var close = Browser.document.createDivElement();
-      close.className = 'hud-button';
-      close.id = 'window-finish-close';
+      close.className = 'hud-button window-dialog-button';
       close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('./img/window-message-close.png') 14 fill / 1 / 0 stretch";
+      close.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       close.onclick = function (e) {
         game.ui.closeWindow();
       }
