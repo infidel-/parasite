@@ -457,66 +457,7 @@ class HUD
         actions.innerHTML = '<font style="color:var(--text-color-red)">Press ENTER to restart</font>';
       else if (n == 1)
         actions.innerHTML = 'No available actions.';
-/*
-
-      _actions.text = buf.toString();
-      _actionsBack.clear();
-      _actionsBack.beginFill(0x202020, 0.75);
-      _actionsBack.drawRect(0, 0, _actions.textWidth, _actions.textHeight);
-      _actionsBack.endFill();
-      _actionsBack.y = game.scene.win.height - _actions.textHeight -
-        game.config.fontSize - 50;
-
-      // clear old buttons
-      for (b in _actionButtons)
-        {
-          b.back.remove();
-          b.btn.remove();
-        }
-      _actionButtons = new List();
-
-      if (game.isFinished || n == 1)
-        return;
-
-      // action buttons
-      var n = 1;
-      var list = [ _listActions, _listKeyActions ];
-      for (l in list)
-        for (action in l)
-          addActionButton(n++, action.key);
-      _actionsBack.addChild(_actions);
-*/
     }
-
-/*
-// add player action button
-  function addActionButton(n: Int, key: Null<Int>)
-    {
-      // button highlight
-      var backOver = new Graphics(_actionsBack);
-      backOver.y = (n - 1) * game.scene.font.lineHeight;
-      backOver.clear();
-      backOver.beginFill(0x777777, 0.75);
-      backOver.drawRect(0, 0, _actions.textWidth,
-        game.scene.font.lineHeight);
-      backOver.endFill();
-      backOver.visible = false;
-
-      // button
-      var btn = new Interactive(_actions.textWidth,
-        game.scene.font.lineHeight, _actionsBack);
-      btn.y = (n - 1) * game.scene.font.lineHeight;
-      btn.cursor = game.scene.mouse.atlas[Mouse.CURSOR_ARROW];
-      btn.onOver = function (e: Event)
-        { backOver.visible = true; }
-      btn.onOut = function (e: Event)
-        { backOver.visible = false; }
-
-      _actionButtons.add({
-        back: backOver,
-        btn: btn,
-      });
-    }*/
 
 // call numbered action by index
   public function action(index: Int)

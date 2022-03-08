@@ -52,8 +52,8 @@ class UI
         UISTATE_ORGANS => new Organs(game),
         UISTATE_FINISH => new Finish(game),
 /*
-        UISTATE_DEBUG => new Debug(game),
-        UISTATE_OPTIONS => new Options(game),*/
+        UISTATE_DEBUG => new Debug(game),*/
+        UISTATE_OPTIONS => new Options(game),
       ];
     }
 
@@ -173,9 +173,9 @@ class UI
         (key == 'Digit6' && altKey) || key == 'F6';
       var organsPressed =
         (key == 'Digit7' && altKey) || key == 'F7';
-/*
       var optionsPressed =
         (key == 'Digit8' && altKey) || key == 'F8';
+/*
       var debugPressed =
         (key == 'Digit9' && altKey) || key == 'F9';
 */
@@ -212,7 +212,10 @@ class UI
           game.player.state == PLR_STATE_HOST &&
           game.player.vars.organsEnabled)
         state = UISTATE_ORGANS;
-
+      // open options window
+      else if (optionsPressed)
+        state = UISTATE_OPTIONS;
+      // exit button
       else if (exitPressed)
         {
           // show exit yes/no dialog
@@ -220,18 +223,14 @@ class UI
             state: UISTATE_YESNO,
             obj: {
               text: 'Do you want to exit the game?',
-              func: function(yes: Bool)
-                {
-                  if (yes)
-                    electron.renderer.IpcRenderer.invoke('quit');
-                }
+              func: function(yes: Bool) {
+                if (yes)
+                  electron.renderer.IpcRenderer.invoke('quit');
+              }
             }
           });
         }
 /*
-      // open options window
-      else if (optionsPressed)
-        state = UISTATE_OPTIONS;
 
 #if mydebug
       // open debug window
@@ -388,6 +387,12 @@ class UI
       return true;
     }
 
+// set CSS variable
+  public static inline function setVar(s: String, v: String)
+    {
+      Browser.document.documentElement.style.setProperty(s, v);
+    }
+
 // get CSS variable
   public static inline function getVar(s: String): String
     {
@@ -411,7 +416,7 @@ class UI
 // set new GUI state, open and close windows if needed
   public function set_state(vstate: _UIState)
     {
-      trace(vstate);
+//      trace(vstate);
 //      Const.traceStack();
       if (_state != UISTATE_DEFAULT)
         {

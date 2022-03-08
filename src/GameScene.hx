@@ -135,8 +135,7 @@ class GameScene extends Scene
       var res = hxd.Res.load('graphics/tileset' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
       tileAtlas = res.gridFlatten(Const.TILE_SIZE_CLEAN);
-      font = hxd.Res.load('font/OrkneyRegular' +
-        game.config.fontSize + '.fnt').to(hxd.res.BitmapFont).toFont();
+      font = hxd.Res.load('font/OrkneyRegular24.fnt').to(hxd.res.BitmapFont).toFont();
       font40 = hxd.Res.font.OrkneyRegular40.toFont();
 
       // scale atlases if needed

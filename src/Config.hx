@@ -40,7 +40,7 @@ class Config
       extendedInfo = true;
 #end
 
-      fontSize = 24;
+      fontSize = 16;
       hudLogLines = 4;
       mapScale = 1;
       musicVolume = 30;
@@ -76,6 +76,7 @@ class Config
         {
           trace(e);
         }
+      jsui.UI.setVar('--text-font-size', fontSize + 'px');
 #elseif js
       var str = js.Browser.window.localStorage.getItem('config');
       var obj = {};
@@ -127,11 +128,6 @@ class Config
       else if (key == 'fontSize')
         {
           fontSize = Std.parseInt(val);
-          if (!Lambda.has(Const.FONTS, fontSize))
-            {
-              fontSize = Const.FONTS[1];
-              val = '' + fontSize;
-            }
         }
       else if (key == 'hudLogLines')
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
