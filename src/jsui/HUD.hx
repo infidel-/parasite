@@ -89,7 +89,7 @@ class HUD
       addMenuButton(buttons, UISTATE_ORGANS, '7: BODY');
       addMenuButton(buttons, UISTATE_OPTIONS, '8: OPT');
 #if mydebug
-      addMenuButton(buttons, UISTATE_DEBUG, '9: DBG');
+//      addMenuButton(buttons, UISTATE_DEBUG, '9: DBG');
 #end
       // should be unique state but no matter
       var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
@@ -168,8 +168,6 @@ class HUD
       updateInfo();
       updateLog();
       updateMenu();
-/*
-      updateConsole();*/
       updateGoals();
     }
 

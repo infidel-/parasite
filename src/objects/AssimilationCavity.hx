@@ -22,7 +22,7 @@ class AssimilationCavity extends HabitatObject
     {
       if (game.player.state == PLR_STATE_HOST &&
           !game.player.host.hasTrait(TRAIT_ASSIMILATED))
-        game.scene.hud.addAction({
+        game.ui.hud.addAction({
           id: 'assimilate',
           type: ACTION_OBJECT,
           name: 'Assimilate Host',

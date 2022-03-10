@@ -26,7 +26,7 @@ class Pickup extends AreaObject
 
       var tmpname = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
-      game.scene.hud.addAction({
+      game.ui.hud.addAction({
         id: 'get',
         type: ACTION_OBJECT,
         name: 'Get ' + tmpname,

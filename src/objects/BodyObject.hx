@@ -40,7 +40,7 @@ class BodyObject extends AreaObject
 
       // animals don't have stuff on them
       if (!isSearched && isHumanBody)
-        game.scene.hud.addAction({
+        game.ui.hud.addAction({
           id: 'searchBody',
           type: ACTION_OBJECT,
           name: 'Search Body',
@@ -57,7 +57,7 @@ class BodyObject extends AreaObject
 
             var name = (game.player.knowsItem(item.id) ?
               item.name : item.info.unknown);
-            game.scene.hud.addAction({
+            game.ui.hud.addAction({
               id: 'get.' + item.id,
               type: ACTION_OBJECT,
               name: 'Get ' + name,

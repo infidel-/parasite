@@ -103,6 +103,9 @@ class UI
         ret = handleWindows(e.code, e.altKey, e.ctrlKey);
       if (!ret)
         ret = handleMovement(e.code);
+      // update camera position
+      if (ret)
+        game.scene.updateCamera();
     }
 
 // handle opening and closing windows
@@ -302,10 +305,13 @@ class UI
               var doc = js.Browser.document;
               if (doc.fullscreenEnabled)
                 {
+                  doc.documentElement.requestFullscreen();
+/*
                   var e: js.html.CanvasElement =
-                    cast doc.getElementById("webgl");
+                    cast doc.getElementById("webgl");*/
                   if (isFullScreen)
-                    untyped e.requestFullscreen();
+                    doc.documentElement.requestFullscreen();
+//                    untyped e.requestFullscreen();
                   else doc.exitFullscreen();
                 }
               ret = true;
