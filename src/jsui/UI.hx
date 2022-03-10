@@ -3,6 +3,7 @@ package jsui;
 
 import js.Browser;
 import js.html.KeyboardEvent;
+import js.html.MouseEvent;
 import js.html.CanvasElement;
 
 import game.Game;
@@ -34,6 +35,9 @@ class UI
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('webgl');
       canvas.onkeydown = onKey;
+      canvas.onmousemove = function (e: MouseEvent) {
+        hud.onMouseMove(e);
+      }
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];

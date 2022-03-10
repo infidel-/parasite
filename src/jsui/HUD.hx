@@ -5,6 +5,7 @@ import js.Browser;
 import js.html.TextAreaElement;
 import js.html.DivElement;
 import js.html.KeyboardEvent;
+import js.html.MouseEvent;
 
 import game.*;
 
@@ -26,6 +27,7 @@ class HUD
   var actionButtons: List<DivElement>; // list of action buttons
   var listActions: List<_PlayerAction>; // list of currently available actions
   var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
+  var listTransparentElements: Array<DivElement>;
 
   public function new(u: UI, g: Game)
     {
@@ -102,6 +104,12 @@ class HUD
       actions.id = 'hud-actions';
       actions.style.borderImage = "url('./img/hud-actions-border.png') 28 fill / 1 / 0 stretch";
       container.appendChild(actions);
+
+      listTransparentElements = [
+        info,
+        log,
+        goals,
+      ];
     }
 
 // add button to menu
@@ -119,6 +127,21 @@ class HUD
       btn.onclick = function (e)
         { game.ui.state = state; }
       return btn;
+    }
+
+// make hud transparent
+  public function onMouseMove(e: MouseEvent)
+    {
+      for (el in listTransparentElements)
+        {
+          var r = el.getBoundingClientRect();
+          if (r.x < e.clientX &&
+              r.y < e.clientY &&
+              e.clientX < r.x + r.width &&
+              e.clientY < r.y + r.height)
+            el.style.opacity = '0.1';
+          else el.style.opacity = '1.0';
+        }
     }
 
 // show hide HUD
@@ -221,14 +244,14 @@ class HUD
     }
 
 // get color for text (red, yellow, white)
-  function getTextColor(val: Float, max: Float)
+  function getColor(val: Float, max: Float): String
     {
       if (val > 0.7 * max)
-        return 'var(--text-color-white)';
+        return "style='color:'var(--text-color-white)'";
       else if (val > 0.3 * max)
-        return 'var(--text-color-yellow)';
+        return "style='color:'var(--text-color-yellow)'";
 
-      return 'var(--text-color-red)';
+      return "style='color:'var(--text-color-red)' class=blinking-red";
     }
 
 // update player info
@@ -252,62 +275,60 @@ class HUD
           '<br/>' + game.playerRegion.currentArea.name + '<br/>');
       buf.add('<hr/>');
 
-      var colEnergy = getTextColor(game.player.energy, game.player.maxEnergy);
       var time = (game.location == LOCATION_AREA ? 1 : 5);
       var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
       buf.add('Energy: ' +
-        "<font style='color:" + colEnergy + "'>" + game.player.energy + "</font>" +
+        "<font " + getColor(game.player.energy, game.player.maxEnergy) +
+        ">" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy);
       buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br/>');
-      var colHealth = getTextColor(game.player.health, game.player.maxHealth);
       buf.add('Health: ' +
-        "<font style='color:" + colHealth + "'>" + game.player.health + "</font>" +
+        "<font " + getColor(game.player.health, game.player.maxHealth) +
+        ">" + game.player.health + "</font>" +
         '/' + game.player.maxHealth);
 
       if (game.player.state == PLR_STATE_ATTACHED)
         {
           buf.add('<br/><hr/>');
-          buf.add("Grip: <font style='color:" +
-            getTextColor(game.playerArea.attachHold, 100) + "'>" +
-            game.playerArea.attachHold + "</font>/100<br/>");
+          buf.add('Grip: ' +
+            '<font ' + getColor(game.playerArea.attachHold, 100) + '>' +
+            game.playerArea.attachHold + '</font>/100<br/>');
         }
 
       // host stats
       else if (game.player.state == PLR_STATE_HOST)
         {
+          var host = game.player.host;
           buf.add('<br/><hr/>');
-          buf.add(game.player.host.getNameCapped());
-          if (game.player.host.isJobKnown)
-            buf.add(' (' + game.player.host.job + ')<br/>');
+          buf.add(host.getNameCapped());
+          if (host.isJobKnown)
+            buf.add(' (' + host.job + ')<br/>');
           else buf.add('<br/>');
-          if (game.player.host.isAttrsKnown)
-            buf.add('STR ' + game.player.host.strength +
-              ' CON ' + game.player.host.constitution +
-              ' INT ' + game.player.host.intellect +
-              ' PSY ' + game.player.host.psyche + '<br/>');
-
-          var colHealth = getTextColor(game.player.host.health,
-            game.player.host.maxHealth);
+          if (host.isAttrsKnown)
+            buf.add('STR ' + host.strength +
+              ' CON ' + host.constitution +
+              ' INT ' + host.intellect +
+              ' PSY ' + host.psyche + '<br/>');
           buf.add('Health: ' +
-            "<font style='color:" + colHealth + "'>" + game.player.host.health + "</font>" +
-            '/' + game.player.host.maxHealth + '<br/>');
+            '<font ' + getColor(host.health,
+            host.maxHealth) + '>' +
+            host.health + '</font>' +
+            '/' + host.maxHealth + '<br/>');
 
-          var colControl = getTextColor(game.player.hostControl, 100);
           buf.add('Control: ' +
-            "<font style='color:" + colControl + "'>" + game.player.hostControl + "</font>" +
+            '<font ' + getColor(game.player.hostControl, 100) + '>' + game.player.hostControl + '</font>' +
             '/100<br/>');
 
-          var colEnergy = getTextColor(game.player.host.energy,
-            game.player.host.maxEnergy);
           var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
-          buf.add("Energy: <font style='color:" + colEnergy + "'>" +
-            game.player.host.energy + '</font>/' +
-            game.player.host.maxEnergy);
+          buf.add("Energy: <font " + getColor(host.energy,
+            host.maxEnergy) + ">" +
+            host.energy + '</font>/' +
+            host.maxEnergy);
           buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
             energyPerTurn + '/t]<br/>');
           buf.add('Evolution direction:<br/>  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
-          var str = game.player.host.organs.getInfo();
+          var str = host.organs.getInfo();
           if (str != null)
             {
               buf.add('<br/>');

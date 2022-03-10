@@ -14,6 +14,7 @@ class Finish extends UIWindow
   public function new(g: Game)
     {
       super(g, 'window-finish', false);
+      window.className += ' window-dialog';
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();

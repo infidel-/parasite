@@ -6,6 +6,7 @@
   --text-color-yellow: #FFEA0E;
   --text-color-red: #FC420E;
   --text-color-gray: #969696;
+  --text-color-evolution-title: #73f3ff;
 }
 
 @font-face {
@@ -197,7 +198,7 @@ hr {
   border: 20px solid;
   left: 50%;
   transform: translate(-50%, 0);
-  max-width: 270px;
+  max-width: 27ch;
   bottom: 4em;
   position: fixed;
   margin: 0;
@@ -514,4 +515,14 @@ fieldset {
 .slider-value {
   width: 16%;
   text-align: center;
+}
+
+.blinking-red {
+  animation: blinking-red-text 2s infinite;
+}
+
+@keyframes blinking-red-text {
+  0% { color: #f59393; }
+  50% { color: #f54040; }
+  100% { color: #f59393; }
 }

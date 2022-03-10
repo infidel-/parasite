@@ -346,10 +346,10 @@ class EvolutionManager
   public function getEvolutionDirectionInfo(): String
     {
       if (!isActive)
-        return "<font color='#FF0000'>None</font>";
+        return "<font style='color:var(--text-color-red)'>None</font>";
 
       var buf = new StringBuf();
-      buf.add("<font color='#00ffff'>");
+      buf.add("<font style='color:var(--text-color-evolution-title)'>");
       if (isTaskPath)
         buf.add(EvolutionConst.getPathInfo(Type.createEnum(_Path, taskID)).name);
       else buf.add(EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name);
