@@ -382,8 +382,13 @@ fieldset {
 }
 
 #window-log-text {
-  transform: translate(0, -10px);
+  transform: translate(-10px, -10px);
+  width: 102%;
   height: 94%;
+}
+
+#window-log-fieldset {
+  height: 100%;
 }
 
 #window-timeline {

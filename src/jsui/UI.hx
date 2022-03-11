@@ -34,7 +34,7 @@ class UI
       uiQueuePrev = null;
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('webgl');
-      canvas.onkeydown = onKey;
+      Browser.document.onkeydown = onKey;
       canvas.onmousemove = function (e: MouseEvent) {
         hud.onMouseMove(e);
       }

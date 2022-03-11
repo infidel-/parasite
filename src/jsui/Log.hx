@@ -14,11 +14,11 @@ class Log extends UIWindow
   public function new (g: Game)
     {
       super(g, 'window-log');
-      window.style.borderImage = "url('./img/window-temp.png') 130 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('./img/window-log.png') 215 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();
       text.id = 'window-log-text';
-      text.className = 'scroller';
+      //text.className = 'scroller';
       window.appendChild(text);
     }
 
@@ -27,6 +27,7 @@ class Log extends UIWindow
   override function update()
     {
       var buf = new StringBuf();
+      buf.add('<fieldset id="window-log-fieldset"><legend>LOG</legend><div class=scroller>');
       for (l in game.messageList)
         {
           buf.add("<font style='color:");
@@ -44,6 +45,8 @@ class Log extends UIWindow
             }
           buf.add('<br/>');
         }
+      buf.add('</div>');
+      buf.add('</fieldset>');
 
       setParams(buf.toString());
     }
