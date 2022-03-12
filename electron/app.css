@@ -33,6 +33,10 @@ h3 {
   margin: 0px;
 }
 
+ul {
+  margin: 0.1em;
+}
+
 hr {
   width: 90%;
   border-width: 2px 0px 0px 0px;
@@ -120,6 +124,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
+  transition: 0.1s;
 }
 
 #hud-goals {
@@ -136,6 +141,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
+  transition: 0.1s;
 }
 
 #hud-info {
@@ -152,6 +158,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
+  transition: 0.1s;
 }
 
 .hud-button {
@@ -167,6 +174,7 @@ hr {
   appearance: none;
   pointer-events: auto;
   user-select: none;
+  transition: 0.1s;
 }
 
 .hud-button:hover {
@@ -206,6 +214,7 @@ hr {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  transition: 0.1s;
 }
 
 .hud-action {
@@ -398,9 +407,27 @@ fieldset {
   pointer-events: all;
 }
 
+#window-timeline-fieldset {
+  height: 100%;
+}
+
 #window-timeline-text {
-  transform: translate(0, -10px);
+  transform: translate(-10px, -10px);
+  width: 102%;
   height: 94%;
+}
+
+.window-timeline-event-title {
+  color: white;
+  text-decoration: underline;
+}
+
+.window-timeline-event-note {
+  color: #f7af46;
+}
+
+.window-timeline-event-npc {
+  color: #ff8f6f;
 }
 
 #window-evolution {

@@ -4,6 +4,8 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.FieldSetElement;
+import js.html.LegendElement;
 
 import game.Game;
 
@@ -16,10 +18,18 @@ class Log extends UIWindow
       super(g, 'window-log');
       window.style.borderImage = "url('./img/window-log.png') 215 fill / 1 / 0 stretch";
 
+      var cont = Browser.document.createDivElement();
+      cont.id = 'window-log-text';
+      window.appendChild(cont);
+      var fieldset = Browser.document.createFieldSetElement();
+      fieldset.id = 'window-log-fieldset';
+      cont.appendChild(fieldset);
+      var legend = Browser.document.createLegendElement();
+      legend.innerHTML = 'LOG';
+      fieldset.appendChild(legend);
       text = Browser.document.createDivElement();
-      text.id = 'window-log-text';
-      //text.className = 'scroller';
-      window.appendChild(text);
+      text.className = 'scroller';
+      fieldset.appendChild(text);
     }
 
 
@@ -27,7 +37,6 @@ class Log extends UIWindow
   override function update()
     {
       var buf = new StringBuf();
-      buf.add('<fieldset id="window-log-fieldset"><legend>LOG</legend><div class=scroller>');
       for (l in game.messageList)
         {
           buf.add("<font style='color:");
@@ -45,9 +54,6 @@ class Log extends UIWindow
             }
           buf.add('<br/>');
         }
-      buf.add('</div>');
-      buf.add('</fieldset>');
-
       setParams(buf.toString());
     }
 

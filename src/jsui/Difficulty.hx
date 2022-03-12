@@ -94,6 +94,7 @@ class Difficulty extends UIWindow
         d = NORMAL;
       else if (index == 3)
         d = HARD;
+      else return;
 
       // set specific game difficulty setting
       if (currentChoice.id == 'group')

@@ -14,12 +14,20 @@ class Timeline extends UIWindow
   public function new (g: Game)
     {
       super(g, 'window-timeline');
-      window.style.borderImage = "url('./img/window-temp.png') 130 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('./img/window-timeline.png') 208 fill / 1 / 0 stretch";
 
+      var cont = Browser.document.createDivElement();
+      cont.id = 'window-timeline-text';
+      window.appendChild(cont);
+      var fieldset = Browser.document.createFieldSetElement();
+      fieldset.id = 'window-timeline-fieldset';
+      cont.appendChild(fieldset);
+      var legend = Browser.document.createLegendElement();
+      legend.innerHTML = 'TIMELINE';
+      fieldset.appendChild(legend);
       text = Browser.document.createDivElement();
-      text.id = 'window-timeline-text';
       text.className = 'scroller';
-      window.appendChild(text);
+      fieldset.appendChild(text);
     }
 
 
@@ -27,8 +35,6 @@ class Timeline extends UIWindow
   override function update()
     {
       var buf = new StringBuf();
-
-      buf.add('Event timeline<br/>===<br/><br/>');
       for (event in game.timeline)
         {
           // hidden event
@@ -44,7 +50,7 @@ class Timeline extends UIWindow
             continue;
 
           // first line (events are always numbered relative to known ones)
-          buf.add('Event ' + event.num);
+          buf.add('<span class=window-timeline-event-title>Event ' + event.num);
 #if mydebug
           buf.add(' [index: ' + event.index + ']');
 #end
@@ -60,19 +66,22 @@ class Timeline extends UIWindow
                 }
               else buf.add('at (?,?)');
             }
-          buf.add('<br/>');
+          buf.add('</span><br/>');
 
           // event notes
+          buf.add('<ul>');
           for (n in event.notes)
             if (n.isKnown)
-              buf.add(' + ' + n.text + '<br/>');
+              buf.add('<li class=window-timeline-event-note>' + n.text);
             else if (n.clues > 0)
-              buf.add(' - ? [' + n.clues + '/4]<br/>');
+              buf.add('<li class=window-timeline-event-note>? [' + n.clues + '/4]');
+          buf.add('</ul>');
 
           // event participants
           buf.add('Participants:<br/>');
           var numDeceasedAndKnown = 0;
           var numAliveAndMemoryKnown = 0;
+          buf.add('<ul>');
           if (npcSomethingKnown)
             for (npc in event.npc)
               {
@@ -96,10 +105,13 @@ class Timeline extends UIWindow
                   }
 
                 // npc fully known
+/*
                 if (npc.nameKnown && npc.jobKnown && npc.areaKnown &&
                     npc.statusKnown)
-                  buf.add(' + ');
-                else buf.add(' - ');
+                  buf.add('<li class=window-timeline-event-npc>');
+                else buf.add('<li class=window-timeline-event-npc>');
+*/
+                buf.add('<li class=window-timeline-event-npc>');
                 buf.add((npc.nameKnown ? npc.name : '?') + ' ');
                 buf.add('(' + (npc.jobKnown ? npc.job : '?') + ') ');
                 if (npc.areaKnown)
@@ -110,6 +122,7 @@ class Timeline extends UIWindow
                   buf.add('status: unknown');
                 buf.add('<br/>');
               }
+          buf.add('</ul>');
 
           // nothing known about any npcs
           if (!npcSomethingKnown && event.npc.length > 0)
@@ -134,6 +147,6 @@ class Timeline extends UIWindow
   public override function setParams(obj: Dynamic)
     {
       text.innerHTML = obj;
-      text.scrollTop = 10000;
+//      text.scrollTop = 10000;
     }
 }

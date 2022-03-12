@@ -119,7 +119,7 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship spotted by military',
           next: 'dogfight',
           notes: [
-            'Radars from a military base have spotted the moving signature.',
+            'Radars from a military base have spotted a moving signature.',
             'Radio requests were left unanswered.',
             'An interceptor was scrambled.'
             ],
