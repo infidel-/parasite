@@ -42,6 +42,21 @@ class UIWindow
         }
     }
 
+// add scrolled text block wrapped in fieldset
+  function addBlock(cont: DivElement, id: String, title: String): DivElement
+    {
+      var fieldset = Browser.document.createFieldSetElement();
+      fieldset.id = id;
+      cont.appendChild(fieldset);
+      var legend = Browser.document.createLegendElement();
+      legend.innerHTML = title;
+      fieldset.appendChild(legend);
+      var text = Browser.document.createDivElement();
+      text.className = 'scroller';
+      fieldset.appendChild(text);
+      return text;
+    }
+
 // set window parameters
   public dynamic function setParams(obj: Dynamic)
     {}

@@ -1,5 +1,4 @@
 // player timeline GUI window
-
 package jsui;
 
 import js.Browser;
@@ -19,15 +18,7 @@ class Timeline extends UIWindow
       var cont = Browser.document.createDivElement();
       cont.id = 'window-timeline-text';
       window.appendChild(cont);
-      var fieldset = Browser.document.createFieldSetElement();
-      fieldset.id = 'window-timeline-fieldset';
-      cont.appendChild(fieldset);
-      var legend = Browser.document.createLegendElement();
-      legend.innerHTML = 'TIMELINE';
-      fieldset.appendChild(legend);
-      text = Browser.document.createDivElement();
-      text.className = 'scroller';
-      fieldset.appendChild(text);
+      text = addBlock(cont, 'window-timeline-fieldset', 'TIMELINE');
     }
 
 
@@ -78,7 +69,8 @@ class Timeline extends UIWindow
           buf.add('</ul>');
 
           // event participants
-          buf.add('Participants:<br/>');
+          buf.add('');
+          buf.add('<span class=window-timeline-event-npc-title>Participants:</span><br/>');
           var numDeceasedAndKnown = 0;
           var numAliveAndMemoryKnown = 0;
           buf.add('<ul>');
@@ -125,6 +117,7 @@ class Timeline extends UIWindow
           buf.add('</ul>');
 
           // nothing known about any npcs
+          buf.add('<span class=window-timeline-event-npc>');
           if (!npcSomethingKnown && event.npc.length > 0)
             buf.add('  unknown<br/>');
 
@@ -133,11 +126,12 @@ class Timeline extends UIWindow
             buf.add('  none<br/>');
 
           if (numAliveAndMemoryKnown > 0)
-            buf.add(" ... +" + numAliveAndMemoryKnown + " persons probed ...<br/>");
+            buf.add("... +" + numAliveAndMemoryKnown + " persons probed ...<br/>");
 
           if (numDeceasedAndKnown > 0)
-            buf.add(" ... +" + numDeceasedAndKnown + " persons deceased ...<br/>");
+            buf.add("... +" + numDeceasedAndKnown + " persons deceased ...<br/>");
 
+          buf.add('</span>');
           buf.add('<br/>');
         }
 

@@ -6,7 +6,11 @@
   --text-color-yellow: #FFEA0E;
   --text-color-red: #FC420E;
   --text-color-gray: #969696;
+
   --text-color-evolution-title: #73f3ff;
+  --text-color-evolution-note: #5ebee5;
+  --text-color-evolution-level-note: #4cd47b;
+  --text-color-evolution-params: #13ff65;
 }
 
 @font-face {
@@ -53,6 +57,12 @@ hr {
   width: 100%;
   height: 100%;
   background: rgba(0,255,255, 0.5);
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #hud {
@@ -368,6 +378,7 @@ fieldset {
 
 .scroller {
   overflow-y: auto;
+  width: 100%;
   height: 100%;
 }
 
@@ -426,20 +437,12 @@ fieldset {
   color: #f7af46;
 }
 
+.window-timeline-event-npc-title {
+  color: #ffcdbf;
+}
+
 .window-timeline-event-npc {
   color: #ff8f6f;
-}
-
-#window-evolution {
-  border: 39px solid;
-  width: 90%;
-  height: 90%;
-  pointer-events: all;
-}
-
-#window-evolution-text {
-  transform: translate(0, -10px);
-  height: 94%;
 }
 
 #window-inventory {
@@ -558,3 +561,79 @@ fieldset {
   50% { color: #f54040; }
   100% { color: #f59393; }
 }
+
+#window-evolution {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+}
+
+#window-evolution-text {
+  transform: translate(0, -10px);
+  height: 94%;
+}
+
+#window-evolution-contents {
+  transform: translate(-10px, -10px);
+  width: 102%;
+  height: 94%;
+}
+
+#window-evolution-list {
+  display: flex;
+  height: 47%;
+}
+
+.window-evolution-list-row {
+  display: flex;
+  flex-direction: row;
+  margin: 5px;
+  padding: 5px;
+  border: solid 2px;
+  border-color: #4f688e;
+  border-radius: 6px;
+}
+
+.window-evolution-list-item {
+  width: 50%;
+}
+
+.window-evolution-list-notes {
+  font-size: 80%;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+  margin: 5px 5px 0px 5px;
+}
+
+#window-evolution-info {
+  height: 17%;
+  margin-top: 10px;
+}
+
+#window-evolution-actions {
+  height: 28%;
+  margin-top: 10px;
+  display: flex;
+}
+
+.window-evolution-actions-item {
+/*
+  margin: 5px;
+  padding: 5px;
+  border: solid 2px;
+  border-color: #4f688e;
+  border-radius: 6px;*/
+}
+
+.window-evolution-actions-item:hover {
+  background-color: #5f818c;
+  color: white;
+  opacity: 1;
+  font-weight:bold;
+}
+
+.window-evolution-actions-item:active {
+  color: #879ea3;
+}
+

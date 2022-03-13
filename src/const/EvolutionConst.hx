@@ -45,9 +45,11 @@ class EvolutionConst
         name: 'Decay acceleration',
         note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Bodies will disappear in " + l.turns + " turns";
+            return "Bodies will disappear in " + l.turns +
+              (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
+              " turns";
           },
         organ: {
           name: 'Decay accelerant cysts',
@@ -76,10 +78,13 @@ class EvolutionConst
         name: 'Protective cover',
         note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Host armor bonus (minus to damage): " + l.armor + "<br/>" +
-              "AI alertness bonus: " + l.alertness;
+            return "Host armor bonus (minus to damage): " +
+              l.armor + (l2 != null ? ' => ' + l2.armor : '') +
+              "<br/>" +
+              "AI alertness bonus: " + l.alertness +
+              (l2 != null ? ' => ' + l2.alertness : '');
           },
         organ: {
           name: 'Protective cover',
@@ -106,9 +111,11 @@ class EvolutionConst
         name: 'Stem cell reservoirs',
         note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return l.turns + " turns to restore 1 health of host and parasite";
+            return l.turns +
+              (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
+              " turns to restore 1 health of host and parasite";
           },
         organ: {
           name: 'Stem cell reservoirs',
@@ -135,9 +142,11 @@ class EvolutionConst
         name: 'Antibody generators',
         note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "+" + l.health + " health to host";
+            return "+" + l.health +
+              (l2 != null ? ' (=> ' + l2.health + ')' : '') +
+              " health to host";
           },
         organ: {
           name: 'Antibody generators',
@@ -164,9 +173,10 @@ class EvolutionConst
         name: '??Host energy bonus',
         note: 'Body feature. Grown body feature gives a bonus to maximum host energy',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
             return "Host maximum energy multiplier: " + l.hostEnergyMod +
+              (l2 != null ? ' => ' + l2.hostEnergyMod : '') +
               "<br/>Restores energy to maximum on completion";
           },
         organ: {
@@ -196,9 +206,11 @@ class EvolutionConst
         name: 'Microvascular networks',
         note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "+" + l.strength + " strength to host";
+            return "+" + l.strength +
+              (l2 != null ? ' (=> ' + l2.strength + ')' : '') +
+              " strength to host";
           },
         organ: {
           name: 'Microvascular networks',
@@ -225,10 +237,12 @@ class EvolutionConst
         name: '??Acid spit',
         note: 'Body feature. Grown body feature gives the host an ability to spit acid on an NPC',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
             return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
-              "<br/>Spit range: " + l.range;
+              (l2 != null ? ' => ' + l2.minDamage + '-' + l2.maxDamage : '') +
+              "<br/>Spit range: " + l.range +
+              (l2 != null ? ' => ' + l2.range :  '');
           },
         organ: {
           name: '??Acid spit',
@@ -277,10 +291,12 @@ class EvolutionConst
         name: '??Slime spit',
         note: 'Body feature. Grown body feature gives the host an ability to spit slime on an NPC to slow them down',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
             return "Slime strength: " + l.strength +
-              "<br/>Spit range: " + l.range;
+              (l2 != null ? ' => ' + l2.strength : '') +
+              "<br/>Spit range: " + l.range +
+              (l2 != null ? ' => ' + l2.range :  '');
           },
         organ: {
           name: '??Slime spit',
@@ -325,10 +341,12 @@ class EvolutionConst
         name: '??Paralysis spit',
         note: 'Body feature. Grown body feature gives the host an ability to paralyze an NPC',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
             return "Paralysis effect time: " + l.time +
-              "<br/>Spit range: " + l.range;
+              (l2 != null ? ' => ' + l2.time : '') +
+              "<br/>Spit range: " + l.range +
+              (l2 != null ? ' => ' + l2.range :  '');
           },
         organ: {
           name: '??Paralysis spit',
@@ -373,11 +391,14 @@ class EvolutionConst
         name: '??Panic gas',
         note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
             return "Cloud range: " + l.range +
+              (l2 != null ? ' => ' + l2.range : '') +
               "<br/>Cloud dissipation time: " + l.timeout +
-              "<br/>Panic effect time: " + l.time;
+              (l2 != null ? ' => ' + l2.timeout : '') +
+              "<br/>Panic effect time: " + l.time +
+              (l2 != null ? ' => ' + l2.time : '');
           },
         organ: {
           name: '??Panic gas',
@@ -427,11 +448,14 @@ class EvolutionConst
         name: '??Paralysis gas',
         note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of paralytic gas',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
             return "Cloud range: " + l.range +
+              (l2 != null ? ' => ' + l2.range : '') +
               "<br/>Cloud dissipation time: " + l.timeout +
-              "<br/>Paralysis effect time: " + l.time;
+              (l2 != null ? ' => ' + l2.timeout : '') +
+              "<br/>Panic effect time: " + l.time +
+              (l2 != null ? ' => ' + l2.time : '');
           },
         organ: {
           name: '??Paralysis gas',
@@ -484,9 +508,10 @@ class EvolutionConst
         name: '??Attach efficiency',
         note: 'Knowledge. Improves base grip on attach to host',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Base attach grip: " + l.attachHoldBase;
+            return "Base attach grip: " + l.attachHoldBase +
+              (l2 != null ? ' => ' + l2.attachHoldBase : '');
           },
         levelNotes: [
           '(todo fluff)',
@@ -508,9 +533,10 @@ class EvolutionConst
         name: '??Hold efficiency',
         note: 'Knowledge. Improves base grip on harden grip action',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Base harden grip: " + l.attachHoldBase;
+            return "Base harden grip: " + l.attachHoldBase +
+              (l2 != null ? ' => ' + l2.attachHoldBase : '');
           },
         levelNotes: [
           '(todo fluff)',
@@ -532,9 +558,10 @@ class EvolutionConst
         name: '??Control efficiency',
         note: 'Knowledge. Improves base control on reinforce control action',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Base reinforce control: " + l.reinforceControlBase;
+            return "Base reinforce control: " + l.reinforceControlBase +
+              (l2 != null ? ' => ' + l2.reinforceControlBase : '');
           },
         levelNotes: [
           '(todo fluff)',
@@ -560,13 +587,19 @@ class EvolutionConst
         name: 'Brain probe',
         note: 'Knowledge. Allows probing host brain to learn its contents',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Human society knowledge multiplier: " + l.humanSociety +
-              "<br/>Base host energy cost: " + l.hostEnergyBase +
-              "<br/>Base host health cost: " + l.hostHealthBase +
-              "<br/>Host skills learning multiplier: " + l.hostSkillsMod +
-              (l.hostAttrsMod == 1 ? "<br/>Probe shows host attributes" : "");
+            var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' => ' + l2.humanSociety : '') +
+              "<br/>Base host energy cost: " + l.hostEnergyBase + (l2 != null ? ' => ' + l2.hostEnergyBase : '') +
+              "<br/>Base host health cost: " + l.hostHealthBase + (l2 != null ? ' => ' + l2.hostHealthBase: '') +
+              "<br/>Host skills learning multiplier: " + l.hostSkillsMod + (l2 != null ? ' => ' + l2.hostSkillsMod : '') + '<br/>';
+            if (l.hostAttrsMod == 0)
+              s += "Host attributes unknown ";
+            if (l2 != null && l2.hostAttrsMod == 1)
+              s += "=> Probe shows host attributes";
+            else if (l.hostAttrsMod == 1)
+              s += "Probe shows host attributes";
+            return s;
           },
         levelNotes: [
           'Cannot probe host brain',
@@ -640,9 +673,10 @@ class EvolutionConst
         name: 'Camouflage layer',
         note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "AI alertness multiplier: " + l.alertness;
+            return "AI alertness multiplier: " + l.alertness +
+              (l2 != null ? ' => ' + l2.alertness : '');
           },
         organ: {
           name: 'Camouflage layer',
@@ -706,9 +740,10 @@ class EvolutionConst
         name: 'Microhabitat',
         note: 'Knowledge. Gives the player an ability to build microhabitats.',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
+        noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Maximum number of microhabitats: " + l.numHabitats;
+            return "Maximum number of microhabitats: " + l.numHabitats +
+              (l2 != null ? ' => ' + l2.numHabitats : '');
           },
         levelNotes: [
           '(todo fluff)',
@@ -744,18 +779,22 @@ class EvolutionConst
         name: 'Biomineral formation',
         note: 'Habitat growth. Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic)
-          {
-            return
-              "Energy units per formation: " + l.energy +
-              "<br/>Bonus organ and evolution points per turn: +" +
-                l.evolutionBonus + "%" +
-              "<br/>Assimilated host energy restored per turn: +" + l.hostEnergyRestored +
-              "<br/>Parasite energy restored per turn: +" +
-                l.parasiteEnergyRestored +
-              "<br/>Parasite health restored per turn: +" +
-                l.parasiteHealthRestored;
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return
+            "Energy units per formation: " + l.energy +
+            (l2 != null ? ' => ' + l2.energy : '') +
+            "<br/>Bonus organ and evolution points per turn: +" +
+              l.evolutionBonus + "%" +
+              (l2 != null ? ' => ' + l2.evolutionBonus + '%' : '') +
+            "<br/>Assimilated host energy restored per turn: +" + l.hostEnergyRestored +
+            (l2 != null ? ' => +' + l2.hostEnergyRestored : '') +
+            "<br/>Parasite energy restored per turn: +" +
+            l.parasiteEnergyRestored +
+            (l2 != null ? ' => +' + l2.parasiteEnergyRestored : '') +
+            "<br/>Parasite health restored per turn: +" +
+            l.parasiteHealthRestored +
+            (l2 != null ? ' => +' + l2.parasiteHealthRestored : '');
+        },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
@@ -877,7 +916,7 @@ class EvolutionConst
         path: PATH_SPECIAL,
         id: IMP_WATCHER,
         name: 'Watcher',
-        note: 'Watcher growth. Will warn the player of the ambush in the habitat',
+        note: 'Watcher growth. Will warn of the ambush in the habitat',
         maxLevel: 2,
         levelNotes: [
           'Unavailable',
@@ -1016,7 +1055,7 @@ typedef ImprovInfo =
   name: String, // improvement name
   note: String, // improvement description
   maxLevel: Int, // maximum improvement level
-  ?noteFunc: Dynamic -> String, // advanced description
+  ?noteFunc: Dynamic -> Dynamic -> String, // advanced description
   ?organ: OrganInfo, // organ that can be grown
   levelNotes: Array<String>, // improvement descriptions for different levels
   levelParams: Array<Dynamic>, // improvement-specific parameters for different levels

@@ -61,7 +61,7 @@ class Evolution extends Actions
             buf.add("<font color='#4cd47b'>" + levelNote + '</font><br/>');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
-              imp.info.noteFunc(imp.info.levelParams[imp.level + 1]) + '</font><br/>');
+              imp.info.noteFunc(imp.info.levelParams[imp.level + 1], null) + '</font><br/>');
 
           list.add({
             id: 'set.' + imp.id,
@@ -139,7 +139,7 @@ class Evolution extends Actions
             buf.add("<font color='#4cd47b'>" + levelNote + '</font><br/>');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
-              imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font><br/>');
+              imp.info.noteFunc(imp.info.levelParams[imp.level], null) + '</font><br/>');
           buf.add('<br/>');
           n++;
         }

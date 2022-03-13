@@ -51,7 +51,7 @@ class Organs extends Actions
             buf.add("<font color='#4cd47b'>" + levelNote + '</font><br/>');
           if (imp.info.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
-              imp.info.noteFunc(imp.info.levelParams[imp.level]) + '</font><br/>');
+              imp.info.noteFunc(imp.info.levelParams[imp.level], null) + '</font><br/>');
           else buf.add('<br/>');
 
           list.add({
@@ -113,7 +113,7 @@ class Organs extends Actions
             buf.add("<font color='#4cd47b'>" + levelNote + '</font><br/>');
           if (organ.improvInfo.noteFunc != null)
             buf.add("<font color='#13ff65'>" +
-              organ.improvInfo.noteFunc(organ.improvInfo.levelParams[imp.level]) + '</font><br/>');
+              organ.improvInfo.noteFunc(organ.improvInfo.levelParams[imp.level], null) + '</font><br/>');
           buf.add('<br/>');
 #if mydebug
 //          var params = game.player.evolutionManager.getParams(organ.id);
