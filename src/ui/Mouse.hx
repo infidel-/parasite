@@ -219,10 +219,10 @@ class Mouse
       oldy = game.scene.mouseY;
 
       // window open, reset state
-      if (game.isFinished || game.scene.state != UISTATE_DEFAULT)
+      if (game.isFinished || game.ui.state != UISTATE_DEFAULT)
         {
           setCursor(CURSOR_ARROW);
-          sceneState = game.scene.state;
+          sceneState = game.ui.state;
           if (forceNextUpdate > 0)
             forceNextUpdate--;
 
@@ -237,7 +237,7 @@ class Mouse
       else if (game.location == LOCATION_REGION)
         updateRegion(force);
 
-      sceneState = game.scene.state;
+      sceneState = game.ui.state;
       if (forceNextUpdate > 0)
         forceNextUpdate--;
     }
@@ -249,7 +249,7 @@ class Mouse
       return {
         x: Std.int((game.scene.cameraX + game.scene.mouseX) / Const.TILE_SIZE),
         y: Std.int((game.scene.cameraY + game.scene.mouseY) / Const.TILE_SIZE)
-        };
+      };
     }
 
 

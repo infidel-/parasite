@@ -20,7 +20,7 @@ class Evolution extends UIWindow
     {
       super(g, 'window-evolution');
       listActions = [];
-      window.style.borderImage = "url('./img/window-evolution.png') 190 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
       cont.id = 'window-evolution-contents';
