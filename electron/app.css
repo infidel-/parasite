@@ -216,7 +216,7 @@ hr {
   border: 20px solid;
   left: 50%;
   transform: translate(-50%, 0);
-  max-width: 27ch;
+  max-width: 31ch;
   bottom: 4em;
   position: fixed;
   margin: 0;
@@ -263,6 +263,7 @@ hr {
   left: 0px;
   width: 100%;
   height: 100%;
+  backdrop-filter: saturate(50%) blur(2px);
 }
 
 .window {
@@ -590,13 +591,15 @@ fieldset {
   flex-direction: row;
   margin: 5px;
   padding: 5px;
-  border: solid 2px;
-  border-color: #4f688e;
-  border-radius: 6px;
 }
 
 .window-evolution-list-item {
-  width: 50%;
+  width: 47.5%;
+  margin: 0px 5px 0px 5px;
+  padding: 5px;
+  border: solid 2px;
+  border-radius: 6px;
+  border-color: #4f688e;
 }
 
 .window-evolution-list-notes {
@@ -617,23 +620,96 @@ fieldset {
   display: flex;
 }
 
-.window-evolution-actions-item {
-/*
-  margin: 5px;
-  padding: 5px;
-  border: solid 2px;
-  border-color: #4f688e;
-  border-radius: 6px;*/
+.actions-item {
 }
 
-.window-evolution-actions-item:hover {
+.actions-item:hover {
   background-color: #5f818c;
   color: white;
   opacity: 1;
   font-weight:bold;
 }
 
-.window-evolution-actions-item:active {
+.actions-item:active {
   color: #879ea3;
 }
 
+#window-body {
+  border: 39px solid;
+  width: 90%;
+  height: 90%;
+  pointer-events: all;
+  display: flex;
+  flex-direction: row;
+}
+
+#window-body-col1 {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  margin-right: 10px;
+}
+
+#window-body-col2 {
+  display: flex;
+  flex-direction: column;
+  width: 49%;
+}
+
+#window-inventory-contents {
+  height: 45%;
+  margin-bottom: 10px;
+}
+
+#window-inventory-list {
+  margin-bottom: 10px;
+  height: 40%;
+}
+
+#window-inventory-actions {
+  height: 47%;
+  display: flex;
+}
+
+#window-skills-contents {
+  height: 44%;
+}
+
+#window-skills-parasite {
+  margin-bottom: 10px;
+  height: 43%;
+}
+
+#window-skills-host {
+  height: 43%;
+}
+
+#window-organs-contents {
+  height: 92.5%;
+}
+
+#window-organs-list {
+  margin-bottom: 10px;
+  height: 10%;
+}
+
+#window-organs-available {
+  margin-bottom: 10px;
+  height: 25%;
+}
+
+#window-organs-info {
+  margin-bottom: 10px;
+  height: 15%;
+}
+
+#window-organs-actions {
+  margin-bottom: 10px;
+  height: 36%;
+}
+
+.window-organs-contents-wrapper {
+  overflow-y: none;
+  width: 100%;
+  height: 100%;
+}

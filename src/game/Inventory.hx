@@ -27,11 +27,10 @@ class Inventory
 
 
 // add available actions to list
-  public function getActions(): List<_PlayerAction>
+  public function getActions(): Array<_PlayerAction>
     {
-      var tmp = new List<_PlayerAction>();
-
       // disable inventory actions in region mode for now
+      var tmp = [];
       if (game.location == LOCATION_REGION)
         return tmp;
 
@@ -39,7 +38,7 @@ class Inventory
         {
           // add learning action
           if (!game.player.knowsItem(item.id))
-            tmp.add({
+            tmp.push({
               id: 'learn.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Learn about ' + item.info.unknown,
@@ -52,7 +51,7 @@ class Inventory
             {
               // read a readable
               if (item.info.type == 'readable')
-                tmp.add({
+                tmp.push({
                   id: 'read.' + item.id,
                   type: ACTION_INVENTORY,
                   name: 'Read ' + item.name,
@@ -63,7 +62,7 @@ class Inventory
               // use computer
               else if (item.info.type == 'computer' &&
                   game.player.vars.searchEnabled)
-                tmp.add({
+                tmp.push({
                   id: 'search.' + item.id,
                   type: ACTION_INVENTORY,
                   name: 'Use ' + item.name + ' to search',
@@ -73,7 +72,7 @@ class Inventory
             }
 
           // drop item
-          tmp.add({
+          tmp.push({
             id: 'drop.' + item.id,
             type: ACTION_INVENTORY,
             name: 'Drop ' +
@@ -82,7 +81,6 @@ class Inventory
             obj: item
           });
         }
-
       return tmp;
     }
 

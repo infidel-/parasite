@@ -279,7 +279,7 @@ class ItemsConst
       id: 'money',
       name: 'money',
       type: 'junk',
-      unknown: 'a pack of soft thin objects',
+      unknown: 'a pack of thin objects',
     },
     {
       id: 'wallet',

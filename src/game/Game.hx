@@ -343,7 +343,7 @@ class Game
     {
       if (col == null)
         col = COLOR_DEFAULT;
-      Const.p(s);
+//      Const.p(s);
 
       // called before init from config
       if (messageList == null)

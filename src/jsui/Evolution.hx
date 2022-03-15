@@ -169,7 +169,7 @@ class Evolution extends UIWindow
           listActions.push(act);
           // html element
           var action = Browser.document.createDivElement();
-          action.className = 'window-evolution-actions-item';
+          action.className = 'actions-item';
           action.innerHTML = buf.toString();
           action.onclick = function (e) {
             game.player.evolutionManager.action(act);

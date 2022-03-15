@@ -54,6 +54,7 @@ class UI
         UISTATE_TIMELINE => new Timeline(game),
         UISTATE_EVOLUTION => new Evolution(game),
         UISTATE_ORGANS => new Organs(game),
+        UISTATE_BODY => new Body(game),
         UISTATE_FINISH => new Finish(game),
 /*
         UISTATE_DEBUG => new Debug(game),*/
@@ -182,10 +183,8 @@ class UI
         (key == 'Digit7' && altKey) || key == 'F7';
       var optionsPressed =
         (key == 'Digit8' && altKey) || key == 'F8';
-/*
-      var debugPressed =
+      var bodyPressed =
         (key == 'Digit9' && altKey) || key == 'F9';
-*/
       var exitPressed =
         (key == 'Digit0' && altKey) || key == 'F10';
 
@@ -222,6 +221,9 @@ class UI
       // open options window
       else if (optionsPressed)
         state = UISTATE_OPTIONS;
+      // open body window
+      else if (bodyPressed)
+        state = UISTATE_BODY;
       // exit button
       else if (exitPressed)
         {
@@ -237,14 +239,6 @@ class UI
             }
           });
         }
-/*
-
-#if mydebug
-      // open debug window
-      else if (debugPressed && !game.isFinished)
-        state = UISTATE_DEBUG;
-#end
-*/
       return false;
     }
 

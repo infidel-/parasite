@@ -11,10 +11,11 @@ class Inventory extends Actions
 
 
 // get action list
+  /*
   override function getActions()
     {
       return game.player.host.inventory.getActions();
-    }
+    }*/
 
 
 // action

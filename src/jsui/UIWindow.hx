@@ -43,7 +43,7 @@ class UIWindow
     }
 
 // add scrolled text block wrapped in fieldset
-  function addBlock(cont: DivElement, id: String, title: String): DivElement
+  function addBlock(cont: DivElement, id: String, title: String, ?textClassName = 'scroller'): DivElement
     {
       var fieldset = Browser.document.createFieldSetElement();
       fieldset.id = id;
@@ -52,7 +52,7 @@ class UIWindow
       legend.innerHTML = title;
       fieldset.appendChild(legend);
       var text = Browser.document.createDivElement();
-      text.className = 'scroller';
+      text.className = textClassName;
       fieldset.appendChild(text);
       return text;
     }
