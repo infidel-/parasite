@@ -337,6 +337,11 @@ class Game
 #end
     }
 
+// add narrative entry to game log
+  public function narrative(s: String, ?col: _TextColor)
+    {
+      log('<span class=narrative>' + s + '</span>', col);
+    }
 
 // add entry to game log
   public function log(s: String, ?col: _TextColor)
@@ -371,7 +376,7 @@ class Game
         hudMessageList.pop();
 
       // update HUD minilog display
-      scene.hud.updateLog();
+//      scene.hud.updateLog();
       ui.hud.updateLog();
     }
 }

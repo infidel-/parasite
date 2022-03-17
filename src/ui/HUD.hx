@@ -535,6 +535,7 @@ class HUD
 // update log display
   public function updateLog()
     {
+      return;
       var buf = new StringBuf();
       for (l in game.hudMessageList)
         {

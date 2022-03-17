@@ -17,7 +17,6 @@ class Organs extends Actions
   override function getActions()
     {
       var list = new List<_PlayerAction>();
-
       for (imp in game.player.evolutionManager)
         {
           // improvement not available yet or no organs

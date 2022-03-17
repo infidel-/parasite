@@ -59,7 +59,7 @@ class Evolution extends UIWindow
       if (imp.level < imp.info.maxLevel)
         buf.add(' (' + imp.ep + '/' +
           EvolutionConst.epCostImprovement[imp.level] + ' ep)');
-      buf.add("<br/><span style='color:var(--text-color-evolution-note)'>" + imp.info.note + '</span><br/>');
+      buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + imp.info.note + '</p>');
 
       // imp notes
       buf.add('<p class=window-evolution-list-notes>');

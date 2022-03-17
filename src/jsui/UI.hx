@@ -71,6 +71,8 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
+      if (hud.consoleVisible())
+        return;
  //      trace(e.keyCode + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.code);
       // toggle hud
       if (e.code == 'Space' && _state == UISTATE_DEFAULT)
@@ -169,28 +171,17 @@ class UI
 
       // no windows open
       var goalsPressed = (key == 'Digit1' && altKey) || key == 'F1';
-      var inventoryPressed =
-        (key == 'Digit2' && altKey) || key == 'F2';
-      var skillsPressed =
-        (key == 'Digit3' && altKey) || key == 'F3';
-      var logPressed =
-        (key == 'Digit4' && altKey) || key == 'F4';
-      var timelinePressed =
-        (key == 'Digit5' && altKey) || key == 'F5';
-      var evolutionPressed =
-        (key == 'Digit6' && altKey) || key == 'F6';
-      var organsPressed =
-        (key == 'Digit7' && altKey) || key == 'F7';
-      var optionsPressed =
-        (key == 'Digit8' && altKey) || key == 'F8';
-      var bodyPressed =
-        (key == 'Digit9' && altKey) || key == 'F9';
-      var exitPressed =
-        (key == 'Digit0' && altKey) || key == 'F10';
+      var bodyPressed = (key == 'Digit2' && altKey) || key == 'F2';
+      var logPressed = (key == 'Digit3' && altKey) || key == 'F3';
+      var timelinePressed = (key == 'Digit4' && altKey) || key == 'F4';
+      var evolutionPressed = (key == 'Digit5' && altKey) || key == 'F5';
+      var optionsPressed = (key == 'Digit6' && altKey) || key == 'F6';
+      var exitPressed = (key == 'Digit0' && altKey) || key == 'F10';
 
       // open goals window
       if (goalsPressed)
         state = UISTATE_GOALS;
+/*
       // open inventory window (if items are learned)
       else if (inventoryPressed &&
           game.player.state == PLR_STATE_HOST &&
@@ -201,6 +192,7 @@ class UI
       else if (skillsPressed &&
           game.player.vars.skillsEnabled)
         state = UISTATE_SKILLS;
+*/
       // open message log window
       else if (logPressed)
         state = UISTATE_LOG;
@@ -213,11 +205,13 @@ class UI
           game.player.state == PLR_STATE_HOST &&
           game.player.evolutionManager.state > 0)
         state = UISTATE_EVOLUTION;
+/*
       // open organs window
       else if (organsPressed &&
           game.player.state == PLR_STATE_HOST &&
           game.player.vars.organsEnabled)
         state = UISTATE_ORGANS;
+*/
       // open options window
       else if (optionsPressed)
         state = UISTATE_OPTIONS;

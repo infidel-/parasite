@@ -11,6 +11,10 @@
   --text-color-evolution-note: #5ebee5;
   --text-color-evolution-level-note: #4cd47b;
   --text-color-evolution-params: #13ff65;
+
+  --text-color-organ-title: #dddd00;
+  --text-color-organ-title-inactive: #cccccc;
+  --text-color-organ-note: #5ebee5;
 }
 
 @font-face {
@@ -45,6 +49,10 @@ hr {
   width: 90%;
   border-width: 2px 0px 0px 0px;
   border-color: #aacde0;
+}
+
+.narrative {
+  font-style: italic;
 }
 
 #webgl {
@@ -609,6 +617,13 @@ fieldset {
   margin: 5px 5px 0px 5px;
 }
 
+.small {
+  font-size: 80%;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+  margin: 0px;
+}
+
 #window-evolution-info {
   height: 17%;
   margin-top: 10px;
@@ -659,6 +674,8 @@ fieldset {
 #window-inventory-contents {
   height: 45%;
   margin-bottom: 10px;
+  border-color: #475c7ab5;
+  border-width: 3px;
 }
 
 #window-inventory-list {
@@ -673,6 +690,8 @@ fieldset {
 
 #window-skills-contents {
   height: 44%;
+  border-color: #475c7ab5;
+  border-width: 3px;
 }
 
 #window-skills-parasite {
@@ -684,18 +703,39 @@ fieldset {
   height: 43%;
 }
 
+.host-attr-title {
+  color: #a3ff83;
+}
+
+.host-attr-notes {
+  color: #9dd38a;
+  font-size: 80%;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
 #window-organs-contents {
   height: 92.5%;
+  border-color: #475c7ab5;
+  border-width: 3px;
 }
 
 #window-organs-list {
   margin-bottom: 10px;
-  height: 10%;
+  height: 26%;
+}
+
+.window-organs-list-item {
+  margin: 0px 5px 5px 5px;
+  padding: 5px;
+  border: solid 2px;
+  border-radius: 6px;
+  border-color: #4f688e;
 }
 
 #window-organs-available {
   margin-bottom: 10px;
-  height: 25%;
+  height: 26%;
 }
 
 #window-organs-info {
@@ -705,10 +745,10 @@ fieldset {
 
 #window-organs-actions {
   margin-bottom: 10px;
-  height: 36%;
+  height: 19%;
 }
 
-.window-organs-contents-wrapper {
+.window-contents-wrapper {
   overflow-y: none;
   width: 100%;
   height: 100%;

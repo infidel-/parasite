@@ -620,6 +620,7 @@ class ConsoleGame
             level = Std.parseInt(cmd.substr(3));
           for (imp in EvolutionConst.improvements)
             game.player.evolutionManager.addImprov(imp.id, level);
+          log('All improvements learned.');
 
           game.player.evolutionManager.state = 2;
         }
@@ -646,6 +647,7 @@ class ConsoleGame
             lvl = imp.maxLevel;
 
           game.player.evolutionManager.addImprov(imp.id, lvl);
+          log('Learned ' + imp.name + ' ' + lvl);
         }
 
       // XXX [lt] learn all timeline

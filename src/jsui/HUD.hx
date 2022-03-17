@@ -83,16 +83,11 @@ class HUD
       container.appendChild(buttons);
       menuButtons = [];
       addMenuButton(buttons, UISTATE_GOALS, '1: GOALS');
-      addMenuButton(buttons, UISTATE_INVENTORY, '2: INV');
-      addMenuButton(buttons, UISTATE_SKILLS, '3: KNOW');
-      addMenuButton(buttons, UISTATE_LOG, '4: LOG');
-      addMenuButton(buttons, UISTATE_TIMELINE, '5: TIMELINE');
-      addMenuButton(buttons, UISTATE_EVOLUTION, '6: EVO');
-      addMenuButton(buttons, UISTATE_ORGANS, '7: BODY');
-      addMenuButton(buttons, UISTATE_OPTIONS, '8: OPT');
-#if mydebug
-//      addMenuButton(buttons, UISTATE_DEBUG, '9: DBG');
-#end
+      addMenuButton(buttons, UISTATE_BODY, '2: BODY');
+      addMenuButton(buttons, UISTATE_LOG, '3: LOG');
+      addMenuButton(buttons, UISTATE_TIMELINE, '4: TIMELINE');
+      addMenuButton(buttons, UISTATE_EVOLUTION, '5: EVO');
+      addMenuButton(buttons, UISTATE_OPTIONS, '6: OPT');
       // should be unique state but no matter
       var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
       btn.onclick = function (e) {
@@ -353,6 +348,14 @@ class HUD
               m.state == UISTATE_YESNO) // exit
             vis = true;
 
+          else if (m.state == UISTATE_BODY)
+            {
+              if (game.player.vars.inventoryEnabled ||
+                  game.player.vars.skillsEnabled ||
+                  game.player.vars.organsEnabled)
+                vis = true;
+            }
+/*
           else if (m.state == UISTATE_INVENTORY)
             {
               if (game.player.state == PLR_STATE_HOST &&
@@ -365,7 +368,7 @@ class HUD
               if (game.player.vars.skillsEnabled)
                 vis = true;
             }
-
+*/
           else if (m.state == UISTATE_TIMELINE)
             {
               if (game.player.vars.timelineEnabled)
@@ -378,14 +381,14 @@ class HUD
                   game.player.evolutionManager.state > 0)
                 vis = true;
             }
-
+/*
           else if (m.state == UISTATE_ORGANS)
             {
               if (game.player.state == PLR_STATE_HOST &&
                   game.player.vars.organsEnabled)
                 vis = true;
             }
-
+*/
           m.btn.style.display = (vis ? 'flex' : 'none');
         }
     }

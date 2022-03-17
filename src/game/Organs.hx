@@ -83,7 +83,10 @@ class Organs
     {
       return _list.iterator();
     }
-
+  public function length(): Int
+    {
+      return _list.length;
+    }
 
 // passage of time
   public inline function turn(time: Int)
@@ -580,8 +583,9 @@ class Organs
   public function getGrowInfo(): String
     {
       if (currentOrgan == null)
-        return "<font color='#FF0000'>None</font>";
-      else return currentOrgan.info.name;
+        return "<span style='color:var(--text-color-red)'>None</span>";
+      else return "<span style='color:var(--text-color-organ-title)'>" +
+        currentOrgan.info.name + "</span>";
     }
 
 
