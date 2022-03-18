@@ -23,13 +23,14 @@ class Body extends UIWindow
   var organsActions: DivElement;
   var listInventoryActions: Array<_PlayerAction>;
   var listOrgansActions: Array<_PlayerAction>;
+  var actionPrefix: String; // action prefix: inventory or body
 
   public function new(g: Game)
     {
       super(g, 'window-body');
       listInventoryActions = [];
       listOrgansActions = [];
-      window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('./img/window-body.png') 234 fill / 1 / 0 stretch";
 
       // columns
       var col1 = Browser.document.createDivElement();
@@ -172,6 +173,10 @@ class Body extends UIWindow
     {
       listOrgansActions = [];
       organsActions.innerHTML = '';
+      // disable organs actions in region mode for now
+      if (game.location == LOCATION_REGION)
+        return;
+
       var n = 1;
       for (imp in game.player.evolutionManager)
         {
@@ -362,16 +367,38 @@ class Body extends UIWindow
       return buf.toString();
     }
 
-// TODO: i/b prefix support
+// set action prefix
+  public function prefix(p: String)
+    {
+      actionPrefix = p;
+    }
+
+// action buttons need to be prefixed
   public override function action(index: Int)
     {
-      var a = listInventoryActions[index - 1];
-      if (a == null)
-        return;
-
-      game.player.host.inventory.action(a);
-      if (game.ui.state == UISTATE_BODY)
-        game.ui.closeWindow();
+      if (actionPrefix == null)
+        {
+          game.log('No prefix selected.');
+        }
+      else if (actionPrefix == 'inventory')
+        {
+          var a = listInventoryActions[index - 1];
+          if (a == null)
+            return;
+          game.player.host.inventory.action(a);
+          if (game.ui.state == UISTATE_BODY)
+            game.ui.closeWindow();
+        }
+      else if (actionPrefix == 'body')
+        {
+          var a = listOrgansActions[index - 1];
+          if (a == null)
+            return;
+          game.player.host.organs.action(a.id);
+          update();
+          game.ui.hud.update();
+        }
+      actionPrefix = null;
     }
 
   public override function setParams(obj: Dynamic)

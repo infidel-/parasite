@@ -56,8 +56,6 @@ class UI
         UISTATE_ORGANS => new Organs(game),
         UISTATE_BODY => new Body(game),
         UISTATE_FINISH => new Finish(game),
-/*
-        UISTATE_DEBUG => new Debug(game),*/
         UISTATE_OPTIONS => new Options(game),
       ];
     }
@@ -242,6 +240,16 @@ class UI
       // game finished
       if (game.isFinished)
         return false;
+
+      // action prefix for body window
+      if (_state == UISTATE_BODY)
+        {
+          var window: Body = cast components[_state];
+          if (key == 'KeyI')
+            window.prefix('inventory');
+          else if (key == 'KeyB')
+            window.prefix('body');
+        }
 
       // actions from action menu
       var ret = false;
