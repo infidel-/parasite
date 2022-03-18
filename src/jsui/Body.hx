@@ -198,9 +198,8 @@ class Body extends UIWindow
           var act: _PlayerAction = {
             id: 'set.' + imp.id,
             type: ACTION_ORGAN,
-            name: "<span style='color:var(--text-color-organ-title)'>" +
-              organInfo.name + '</span> ' + imp.level +
-              ' (' + organInfo.gp + ' gp) (' +
+            name: Const.col('organ-title', organInfo.name) +
+              ' ' + imp.level + ' (' + organInfo.gp + ' gp) (' +
               Math.round(gpLeft / __Math.gpPerTurn()) + " turns)",
             energy: 0,
           };
@@ -230,7 +229,7 @@ class Body extends UIWindow
           n++;
           var knowsItem = game.player.knowsItem(item.id);
           var name = (knowsItem ? item.name : item.info.unknown);
-          buf.add(name + '<br/>');
+          buf.add(Const.col('inventory-item', name) + '<br/>');
         }
 
       if (n == 0)
@@ -274,7 +273,7 @@ class Body extends UIWindow
         {
           n++;
           buf.add((skill.info.isKnowledge ? 'Knowledge: ' : '') +
-            skill.info.name);
+            Const.col('skill-title', skill.info.name));
           if (skill.info.isBool == null || !skill.info.isBool)
             buf.add(' ' + skill.level + '%<br/>');
           else buf.add('<br/>');
@@ -303,7 +302,7 @@ class Body extends UIWindow
             continue;
 
           n++;
-          buf.add(skill.info.name);
+          buf.add(Const.col('skill-title', skill.info.name));
           if (skill.info.isBool == null || !skill.info.isBool)
             buf.add(' ' + skill.level + '%<br/>');
           else buf.add('<br/>');

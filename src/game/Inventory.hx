@@ -36,12 +36,14 @@ class Inventory
 
       for (item in _list)
         {
+          var itemName =
+            (game.player.knowsItem(item.id) ? item.name : item.info.unknown);
           // add learning action
           if (!game.player.knowsItem(item.id))
             tmp.push({
               id: 'learn.' + item.id,
               type: ACTION_INVENTORY,
-              name: 'Learn about ' + item.info.unknown,
+              name: 'Learn about ' + Const.col('inventory-item', itemName),
               energy: 10,
               obj: item
             });
@@ -54,7 +56,7 @@ class Inventory
                 tmp.push({
                   id: 'read.' + item.id,
                   type: ACTION_INVENTORY,
-                  name: 'Read ' + item.name,
+                  name: 'Read ' + Const.col('inventory-item', itemName),
                   energy: 10,
                   obj: item
                 });
@@ -65,7 +67,8 @@ class Inventory
                 tmp.push({
                   id: 'search.' + item.id,
                   type: ACTION_INVENTORY,
-                  name: 'Use ' + item.name + ' to search',
+                  name: 'Use ' +
+                    Const.col('inventory-item', itemName) + ' to search',
                   energy: 10,
                   obj: item
                 });
@@ -75,8 +78,7 @@ class Inventory
           tmp.push({
             id: 'drop.' + item.id,
             type: ACTION_INVENTORY,
-            name: 'Drop ' +
-              (game.player.knowsItem(item.id) ? item.name : item.info.unknown),
+            name: 'Drop ' + Const.col('inventory-item', itemName),
             energy: 0,
             obj: item
           });
@@ -272,18 +274,18 @@ class Inventory
 // ACTION: drop item
   function dropAction(item: _Item)
     {
-      var tmpname = (game.player.knowsItem(item.info.id) ?
+      var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
 
       var o = new GenericPickup(game, game.playerArea.x, game.playerArea.y,
         Const.FRAME_PICKUP);
-      o.name = tmpname;
+      o.name = itemName;
       o.item = item;
       game.area.addObject(o);
       _list.remove(item);
       o.entity.setPosition(o.x, o.y);
 
-      game.player.log('You drop the ' + tmpname + '.');
+      game.player.log('You drop the ' + Const.col('inventory-item', itemName) + '.');
     }
 
 

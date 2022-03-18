@@ -26,7 +26,7 @@ class Const
       COLOR_ALERT => '#FF2222',
       COLOR_EVOLUTION => '#d7e12b',
       COLOR_AREA => '#00AA00',
-      COLOR_ORGAN => '#DDDD00',
+      COLOR_ORGAN => '#e0e13a',
       COLOR_WORLD => '#FF9900',
       COLOR_HINT => '#A020F0',
       COLOR_TIMELINE => '#eb9b27',
@@ -308,6 +308,12 @@ class Const
 #end
     }
 
+// return the string wrapped into color marker
+  public static inline function col(col: String, s: String)
+    {
+      return "<span style='color:var(--text-color-" + col + ")'>" +
+        s + '</span>';
+    }
 
 // trace call stack for debug
   public static inline function traceStack()

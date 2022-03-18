@@ -44,28 +44,30 @@ class Group
         return;
 
       // group info
-      buf.add('<br/>Group info [' + difficulty + ']<br/>');
+      buf.add('<br/>' +
+        Const.col('group-title', 'Group info [' + difficulty + ']') +
+        '<br/>');
       if (difficulty == HARD)
         {
           buf.add('  --- hidden ---<br/>');
           return;
         }
-      buf.add('Group priority: ' +
+      buf.add(Const.col('group-note', 'Group priority: ') +
         (difficulty == EASY ? '' + Const.round(priority) :
          numToWord(Std.int(priority), 0, 100)) + '<br/>');
       if (team == null)
-        buf.add('Team timeout: ' +
+        buf.add(Const.col('group-note', 'Team timeout: ') +
           (difficulty == EASY ? teamTimeout + ' turns' :
            numToWord(teamTimeout, 0, 100)) + '<br/>');
       else
         {
-          buf.add('Team level: ' +
+          buf.add(Const.col('group-note', 'Team level: ') +
             (difficulty == EASY ? team.level + '' :
              numToWord(team.level, 1, 4)) + '<br/>');
-          buf.add('Team size: ' +
+          buf.add(Const.col('group-note', 'Team size: ') +
             (difficulty == EASY ? team.size + '' :
              numToWord(team.size, 1, team.maxSize)) + '<br/>');
-          buf.add('Team distance: ' +
+          buf.add(Const.col('group-note', 'Team distance: ') +
             (difficulty == EASY ? Std.int(team.distance) + '' :
              numToWord(Std.int(team.distance), 0, 150)) + '<br/>');
         }
@@ -77,14 +79,14 @@ class Group
     {
       var percent = 100.0 * (val - min) / (max - min);
       if (percent < 20)
-        return 'very low';
+        return Const.col('white', 'very low');
       else if (percent < 40)
-        return 'low';
+        return Const.col('white', 'low');
       else if (percent < 60)
-        return 'medium';
+        return Const.col('yellow', 'medium');
       else if (percent < 80)
-        return 'high';
-      else return 'very high';
+        return Const.col('red', 'high');
+      else return Const.col('red', 'very high');
     }
 
 

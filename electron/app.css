@@ -12,9 +12,14 @@
   --text-color-evolution-level-note: #4cd47b;
   --text-color-evolution-params: #13ff65;
 
-  --text-color-organ-title: #dddd00;
-  --text-color-organ-title-inactive: #cccccc;
+  --text-color-organ-title: #e0e13a;
+  --text-color-organ-title-inactive: #e0e13a;
   --text-color-organ-note: #5ebee5;
+  --text-color-inventory-item: #8eee43;
+
+  --text-color-skill-title: #d969e8;
+  --text-color-group-title: #ff7f73;
+  --text-color-group-note: #e35c3f;
 }
 
 @font-face {
@@ -704,11 +709,11 @@ fieldset {
 }
 
 .host-attr-title {
-  color: #a3ff83;
+  color: #c9e289;
 }
 
 .host-attr-notes {
-  color: #9dd38a;
+  color: #a1c66f;
   font-size: 80%;
   line-height: 1.1;
   letter-spacing: 0.5px;

@@ -24,12 +24,12 @@ class Pickup extends AreaObject
       if (game.player.state != PLR_STATE_HOST)
         return;
 
-      var tmpname = (game.player.knowsItem(item.info.id) ?
+      var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
       game.ui.hud.addAction({
         id: 'get',
         type: ACTION_OBJECT,
-        name: 'Get ' + tmpname,
+        name: 'Get ' + Const.col('inventory-item', itemName),
         energy: 5,
         obj: this
       });
@@ -42,9 +42,9 @@ class Pickup extends AreaObject
       // get stuff from body
       if (id == 'get')
         {
-          var tmpname = (game.player.knowsItem(item.info.id) ?
+          var itemName = (game.player.knowsItem(item.info.id) ?
             item.name : item.info.unknown);
-          game.player.log('You pick the ' + tmpname + ' up.');
+          game.player.log('You pick the ' + Const.col('inventory-item', itemName) + ' up.');
           game.player.host.inventory.add(item);
           game.area.removeObject(this);
 
