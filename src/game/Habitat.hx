@@ -82,7 +82,7 @@ class Habitat
       game.playerArea.onDetach();
       game.area.removeAI(ai);
 
-      game.log(o.spawnMessage, COLOR_AREA);
+      game.narrative(o.spawnMessage, COLOR_ORGAN);
 
       game.area.updateVisibility();
       game.scene.updateCamera();

@@ -315,7 +315,7 @@ class Organs
 
           // save link to that organ
           a.obj = o;
-          game.scene.hud.addAction(a);
+          game.ui.hud.addAction(a);
         }
     }
 

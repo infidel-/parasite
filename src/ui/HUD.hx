@@ -547,7 +547,7 @@ class HUD
           if (l.cnt > 1)
             {
               buf.add(" <font color='");
-              buf.add(Const.TEXT_COLORS[_TextColor.COLOR_REPEAT]);
+              //buf.add(Const.TEXT_COLORS[_TextColor.COLOR_REPEAT]);
               buf.add("'>(x");
               buf.add(l.cnt);
               buf.add(")</font>");

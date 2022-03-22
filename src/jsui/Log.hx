@@ -39,18 +39,16 @@ class Log extends UIWindow
       var buf = new StringBuf();
       for (l in game.messageList)
         {
-          buf.add("<font style='color:");
+          buf.add("<span style='color:");
           buf.add(Const.TEXT_COLORS[l.col]);
           buf.add("'>");
           buf.add(l.msg);
-          buf.add("</font>");
+          buf.add("</pan>");
           if (l.cnt > 1)
             {
-              buf.add(" <font style='color:");
-              buf.add(Const.TEXT_COLORS[_TextColor.COLOR_REPEAT]);
-              buf.add("'>(x");
+              buf.add(" <span class=small style='color:var(--text-color-repeat)'>(x");
               buf.add(l.cnt);
-              buf.add(")</font>");
+              buf.add(")</span>");
             }
           buf.add('<br/>');
         }

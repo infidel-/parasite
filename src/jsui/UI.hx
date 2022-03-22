@@ -5,6 +5,7 @@ import js.Browser;
 import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 import js.html.CanvasElement;
+import js.html.Element;
 
 import game.Game;
 
@@ -179,18 +180,6 @@ class UI
       // open goals window
       if (goalsPressed)
         state = UISTATE_GOALS;
-/*
-      // open inventory window (if items are learned)
-      else if (inventoryPressed &&
-          game.player.state == PLR_STATE_HOST &&
-          game.player.host.isHuman &&
-          game.player.vars.inventoryEnabled)
-        state = UISTATE_INVENTORY;
-      // open skills window (if skills are learned)
-      else if (skillsPressed &&
-          game.player.vars.skillsEnabled)
-        state = UISTATE_SKILLS;
-*/
       // open message log window
       else if (logPressed)
         state = UISTATE_LOG;
@@ -203,18 +192,14 @@ class UI
           game.player.state == PLR_STATE_HOST &&
           game.player.evolutionManager.state > 0)
         state = UISTATE_EVOLUTION;
-/*
-      // open organs window
-      else if (organsPressed &&
-          game.player.state == PLR_STATE_HOST &&
-          game.player.vars.organsEnabled)
-        state = UISTATE_ORGANS;
-*/
       // open options window
       else if (optionsPressed)
         state = UISTATE_OPTIONS;
       // open body window
-      else if (bodyPressed)
+      else if (bodyPressed &&
+              (game.player.vars.inventoryEnabled ||
+               game.player.vars.skillsEnabled ||
+               game.player.vars.organsEnabled))
         state = UISTATE_BODY;
       // exit button
       else if (exitPressed)
@@ -494,5 +479,11 @@ class UI
         }
 
       state = UISTATE_DEFAULT;
+    }
+
+// find element
+  public function getElement(id: String): Element
+    {
+      return Browser.document.getElementById(id);
     }
 }

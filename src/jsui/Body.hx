@@ -4,6 +4,7 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.Element;
 
 import game.Game;
 import game.Organs;
@@ -116,6 +117,8 @@ class Body extends UIWindow
 // update organs list
   function updateOrgansList(): String
     {
+      if (game.player.state != PLR_STATE_HOST)
+        return '';
       var buf = new StringBuf();
       for (organ in game.player.host.organs)
         addOrgan(buf, game.player.evolutionManager.getImprov(organ.id));
@@ -128,6 +131,8 @@ class Body extends UIWindow
 // update available organs list
   function updateOrgansAvailable(): String
     {
+      if (game.player.state != PLR_STATE_HOST)
+        return '';
       var buf = new StringBuf();
       for (imp in game.player.evolutionManager)
         {
@@ -147,6 +152,8 @@ class Body extends UIWindow
 // update organs info
   function updateOrgansInfo(): String
     {
+      if (game.player.state != PLR_STATE_HOST)
+        return '';
       var buf = new StringBuf();
       buf.add('<p class=small>');
       if (game.location == LOCATION_AREA && game.area.isHabitat)
@@ -174,7 +181,8 @@ class Body extends UIWindow
       listOrgansActions = [];
       organsActions.innerHTML = '';
       // disable organs actions in region mode for now
-      if (game.location == LOCATION_REGION)
+      if (game.location == LOCATION_REGION ||
+          game.player.state != PLR_STATE_HOST)
         return;
 
       var n = 1;
@@ -222,6 +230,8 @@ class Body extends UIWindow
 // update inventory list
   function updateInventoryList(): String
     {
+      if (game.player.state != PLR_STATE_HOST)
+        return '';
       var buf = new StringBuf();
       var n = 0;
       for (item in game.player.host.inventory)
@@ -280,7 +290,7 @@ class Body extends UIWindow
         }
 
       if (n == 0)
-        buf.add('  --- empty ---<br/>');
+        buf.add('<center>no skills</center><br/>');
 
       // get group/team info
       game.group.getInfo(buf);
@@ -291,9 +301,9 @@ class Body extends UIWindow
 // update host skills
   function updateSkillsHost(): String
     {
-      var buf = new StringBuf();
       if (game.player.state != PLR_STATE_HOST)
         return '';
+      var buf = new StringBuf();
       var n = 0;
       for (skill in game.player.host.skills)
         {
@@ -309,7 +319,7 @@ class Body extends UIWindow
         }
 
       if (n == 0)
-        buf.add('  --- no knowledge ---<br/>');
+        buf.add('<center>no useful knowledge</center><br/>');
 
       // host attributes and traits
       if (!game.player.host.isAttrsKnown)
@@ -377,7 +387,7 @@ class Body extends UIWindow
     {
       if (actionPrefix == null)
         {
-          game.log('No prefix selected.');
+          game.log('No prefix selected.', COLOR_HINT);
         }
       else if (actionPrefix == 'inventory')
         {
@@ -400,6 +410,11 @@ class Body extends UIWindow
       actionPrefix = null;
     }
 
+  function e(id: String): Element
+    {
+      return Browser.document.getElementById(id);
+    }
+
   public override function setParams(obj: Dynamic)
     {
       inventoryList.innerHTML = obj.inventoryList;
@@ -408,5 +423,39 @@ class Body extends UIWindow
       organsList.innerHTML = obj.organsList;
       organsAvailable.innerHTML = obj.organsAvailable;
       organsInfo.innerHTML = obj.organsInfo;
+      e('window-inventory-contents').className = '';
+      e('window-inventory-list').className = '';
+      e('window-inventory-actions').className = '';
+      e('window-skills-contents').className = '';
+      e('window-skills-parasite').className = '';
+      e('window-skills-host').className = '';
+      e('window-organs-contents').className = '';
+      e('window-organs-available').className = '';
+      e('window-organs-actions').className = '';
+      e('window-organs-list').className = '';
+      e('window-organs-info').className = '';
+      if (game.player.state != PLR_STATE_HOST ||
+          !game.player.host.isHuman ||
+          !game.player.vars.inventoryEnabled)
+        {
+          e('window-inventory-contents').className = 'window-disabled';
+          e('window-inventory-list').className = 'window-disabled';
+          e('window-inventory-actions').className = 'window-disabled';
+        }
+      if (!game.player.vars.skillsEnabled)
+        {
+          e('window-skills-contents').className = 'window-disabled';
+          e('window-skills-parasite').className = 'window-disabled';
+          e('window-skills-host').className = 'window-disabled';
+        }
+      if (game.player.state != PLR_STATE_HOST ||
+          !game.player.vars.organsEnabled)
+        {
+          e('window-organs-contents').className = 'window-disabled';
+          e('window-organs-available').className = 'window-disabled';
+          e('window-organs-actions').className = 'window-disabled';
+          e('window-organs-list').className = 'window-disabled';
+          e('window-organs-info').className = 'window-disabled';
+        }
     }
 }

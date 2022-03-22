@@ -135,7 +135,7 @@ class HUD
               e.clientX < r.x + r.width &&
               e.clientY < r.y + r.height)
             el.style.opacity = '0.1';
-          else el.style.opacity = '1.0';
+          else el.style.opacity = '0.9';
         }
     }
 
@@ -195,18 +195,16 @@ class HUD
       var buf = new StringBuf();
       for (l in game.hudMessageList)
         {
-          buf.add("<font color='");
+          buf.add("<span style='color:");
           buf.add(Const.TEXT_COLORS[l.col]);
           buf.add("'>");
           buf.add(l.msg);
-          buf.add("</font>");
+          buf.add("</span>");
           if (l.cnt > 1)
             {
-              buf.add(" <font color='");
-              buf.add(Const.TEXT_COLORS[_TextColor.COLOR_REPEAT]);
-              buf.add("'>(x");
+              buf.add(" <span class=small style='color:var(--text-color-repeat)'>(x");
               buf.add(l.cnt);
-              buf.add(")</font>");
+              buf.add(")</span>");
             }
           buf.add('<br/>');
         }
@@ -276,7 +274,8 @@ class HUD
         "<font " + getColor(game.player.energy, game.player.maxEnergy) +
         ">" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy);
-      buf.add(' [' + (energyPerTurn > 0 ? '+' : '') + energyPerTurn + '/t]<br/>');
+      buf.add(' ' + Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
+        energyPerTurn + '/t]') + '<br/>');
       buf.add('Health: ' +
         "<font " + getColor(game.player.health, game.player.maxHealth) +
         ">" + game.player.health + "</font>" +
@@ -319,8 +318,8 @@ class HUD
             host.maxEnergy) + ">" +
             host.energy + '</font>/' +
             host.maxEnergy);
-          buf.add(' [' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]<br/>');
+          buf.add(' ' + Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
+            energyPerTurn + '/t]') + '<br/>');
           buf.add('Evolution direction:<br/>  ');
           buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           var str = host.organs.getInfo();
@@ -355,20 +354,6 @@ class HUD
                   game.player.vars.organsEnabled)
                 vis = true;
             }
-/*
-          else if (m.state == UISTATE_INVENTORY)
-            {
-              if (game.player.state == PLR_STATE_HOST &&
-                  game.player.vars.inventoryEnabled)
-                vis = true;
-            }
-
-          else if (m.state == UISTATE_SKILLS)
-            {
-              if (game.player.vars.skillsEnabled)
-                vis = true;
-            }
-*/
           else if (m.state == UISTATE_TIMELINE)
             {
               if (game.player.vars.timelineEnabled)
@@ -381,14 +366,6 @@ class HUD
                   game.player.evolutionManager.state > 0)
                 vis = true;
             }
-/*
-          else if (m.state == UISTATE_ORGANS)
-            {
-              if (game.player.state == PLR_STATE_HOST &&
-                  game.player.vars.organsEnabled)
-                vis = true;
-            }
-*/
           m.btn.style.display = (vis ? 'flex' : 'none');
         }
     }

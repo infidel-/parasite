@@ -7,6 +7,9 @@
   --text-color-red: #FC420E;
   --text-color-gray: #969696;
 
+  --text-color-repeat: #9fb8c4;
+  --text-color-timeline: #f7af46;
+
   --text-color-evolution-title: #73f3ff;
   --text-color-evolution-note: #5ebee5;
   --text-color-evolution-level-note: #4cd47b;
@@ -106,7 +109,7 @@ hr {
 }
 
 #hud-console {
-  opacity: 0.95;
+  opacity: 0.9;
   background-color: #ffffff00;
   width: calc(100% - 20px);
   height: 1.2em;
@@ -134,7 +137,7 @@ hr {
 }
 
 #hud-log {
-  opacity: 0.95;
+  opacity: 0.9;
   background-color: #ffffff00;
   border: 13px solid;
   width: calc(100% - 50px);
@@ -151,7 +154,7 @@ hr {
 }
 
 #hud-goals {
-  opacity: 0.95;
+  opacity: 0.9;
   background-color: #ffffff00;
   border: 20px solid;
   width: 350px;
@@ -168,7 +171,7 @@ hr {
 }
 
 #hud-info {
-  opacity: 0.95;
+  opacity: 0.9;
   background-color: #ffffff00;
   border: 18px solid;
   min-width: 200px;
@@ -185,7 +188,7 @@ hr {
 }
 
 .hud-button {
-  opacity: 0.95;
+  opacity: 0.9;
   background-color: #ffffff00;
   border: 11px solid;
   color: white;
@@ -224,7 +227,7 @@ hr {
 }
 
 #hud-actions {
-  opacity: 0.95;
+  opacity: 0.9;
   background-color: #ffffff00;
   border: 20px solid;
   left: 50%;
@@ -280,7 +283,7 @@ hr {
 }
 
 .window {
-  opacity: 0.95;
+  opacity: 0.9;
   z-index: 110;
   position: fixed;
   margin: 0;
@@ -448,7 +451,7 @@ fieldset {
 }
 
 .window-timeline-event-note {
-  color: #f7af46;
+  color: var(--text-color-timeline);
 }
 
 .window-timeline-event-npc-title {
@@ -757,4 +760,11 @@ fieldset {
   overflow-y: none;
   width: 100%;
   height: 100%;
+}
+
+.window-disabled {
+  background: #3b4451;
+  color: #626262;
+  border-color: #323e503b !important;
+  filter: blur(4px);
 }

@@ -21,15 +21,12 @@ class Const
   public static var TEXT_COLORS: Map<_TextColor, String> =
     [
       COLOR_DEFAULT => '#FFFFFF',
-      COLOR_REPEAT => '#BBBBBB',
-      COLOR_DEBUG => '#A7A7A7',
-      COLOR_ALERT => '#FF2222',
-      COLOR_EVOLUTION => '#d7e12b',
-      COLOR_AREA => '#00AA00',
+      COLOR_ALERT => '#FC420E',
       COLOR_ORGAN => '#e0e13a',
-      COLOR_WORLD => '#FF9900',
-      COLOR_HINT => '#A020F0',
-      COLOR_TIMELINE => '#eb9b27',
+      COLOR_EVOLUTION => '#73f3ff',
+      COLOR_DEBUG => '#a7a7a7',
+      COLOR_HINT => '#e36767',
+      COLOR_TIMELINE => '#f7af46',
       COLOR_MESSAGE => '#30FF6B',
       COLOR_GOAL => '#92B9FF',
     ];
@@ -38,13 +35,10 @@ class Const
   public static var TEXT_COLORS_INT: Map<_TextColor, Int> =
     [
       COLOR_DEFAULT => 0xFFFFFF,
-      COLOR_REPEAT => 0xBBBBBB,
       COLOR_DEBUG => 0x777777,
       COLOR_ALERT => 0xFF2222,
       COLOR_EVOLUTION => 0x00FFFF,
-      COLOR_AREA => 0x00AA00,
       COLOR_ORGAN => 0xDDDD00,
-      COLOR_WORLD => 0xFF9900,
       COLOR_HINT => 0xA020F0,
       COLOR_TIMELINE => 0xF03378,
       COLOR_MESSAGE => 0x1CD450,
@@ -306,6 +300,16 @@ class Const
 #else
       Sys.println(s);
 #end
+    }
+
+  public static inline function small(s: String)
+    {
+      return '<span class=small>' + s + '</span>';
+    }
+
+  public static inline function narrative(s: String)
+    {
+      return '<span class=narrative>' + s + '</span>';
     }
 
 // return the string wrapped into color marker

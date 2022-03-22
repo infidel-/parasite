@@ -288,9 +288,7 @@ class Game
     {
       if (col == null)
         col = COLOR_MESSAGE;
-      var msg =
-        "<font style='color:" + Const.TEXT_COLORS[col] + "'>" + s + "</font>";
-      log(s, col);
+      narrative(s, col);
 
       if (!importantMessagesEnabled)
         return;
@@ -299,7 +297,7 @@ class Game
       ui.event({
         state: UISTATE_MESSAGE,
         obj: {
-          text: s,
+          text: Const.narrative(s),
           col: Const.TEXT_COLORS[col]
         }
       });
@@ -376,7 +374,6 @@ class Game
         hudMessageList.pop();
 
       // update HUD minilog display
-//      scene.hud.updateLog();
       ui.hud.updateLog();
     }
 }
