@@ -279,6 +279,9 @@ hr {
   width: 100%;
   height: 100%;
   backdrop-filter: saturate(50%) blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .window {
@@ -292,9 +295,6 @@ hr {
   position: fixed;
   pointer-events: none;
   background-color: #ffffff00;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .window-dialog {
@@ -318,15 +318,18 @@ hr {
   height: 4em;
 }
 
+#window-message {
+}
+
 .window-dialog-button {
   border: 11px solid;
-  position: fixed;
+  position: absolute;
   bottom: -49px;
   left: 50%;
   opacity: 1;
   text-align: center;
   width: 7ch;
-  transform: translate(-50%, 0);
+  -webkit-transform: translate3d(-50%, 0, 0);
 }
 
 #window-yesno-yes {
@@ -363,7 +366,7 @@ hr {
 
 .window-common-close {
   border: 11px solid;
-  position: fixed;
+  position: absolute;
   bottom: -9px;
   left: 50%;
   opacity: 1;
