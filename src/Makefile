@@ -9,6 +9,11 @@ electron-mydebug:
       --connect 6000 && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css /mnt/e/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
 
+electron:
+	haxe project_electron.hxml \
+      --connect 6000 && \
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css /mnt/e/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
+
 html5-mydebug:
 	haxe project_js.hxml -debug \
       -D resourcesPath=../assets.paid.web/ \

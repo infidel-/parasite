@@ -28,6 +28,7 @@ class HUD
   var listActions: List<_PlayerAction>; // list of currently available actions
   var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
   var listTransparentElements: Array<DivElement>;
+  var listElements: Array<DivElement>;
 
   public function new(u: UI, g: Game)
     {
@@ -105,6 +106,12 @@ class HUD
         log,
         goals,
       ];
+      listElements = [
+        info,
+        actions,
+        log,
+        goals,
+      ];
     }
 
 // add button to menu
@@ -142,17 +149,24 @@ class HUD
 // show hide HUD
   public function toggle()
     {
-      container.style.visibility =
-        (container.style.visibility == 'visible' ? 'hidden' : 'visible');
+      if (container.style.visibility == 'visible')
+        hide();
+      else show();
     }
 
   public function show()
     {
+      // hack: restore opacity animation
+      for (el in listElements)
+        el.style.transition = '0.1s';
       container.style.visibility = 'visible';
     }
 
   public function hide()
     {
+      // hack: remove opacity animation
+      for (el in listElements)
+        el.style.transition = '0s';
       container.style.visibility = 'hidden';
     }
 

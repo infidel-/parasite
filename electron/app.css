@@ -200,7 +200,6 @@ hr {
   appearance: none;
   pointer-events: auto;
   user-select: none;
-  transition: 0.1s;
 }
 
 .hud-button:hover {
