@@ -332,15 +332,24 @@ class Goals
       onComplete: function (game, player) {
         player.vars.searchEnabled = true;
         game.goals.receive(GOAL_USE_COMPUTER);
-        }
-      },
+      }
+    },
 
     GOAL_USE_COMPUTER => {
       id: GOAL_USE_COMPUTER,
       name: 'Use a computer',
       note: 'Find a laptop or a smartphone and use it successfully. You can only do that in a habitat.',
       messageComplete: 'I will learn what happened to me.',
-      },
+      onComplete: function (game, player) {
+        game.goals.receive(GOAL_PROGRESS_TIMELINE);
+      }
+    },
+
+    GOAL_PROGRESS_TIMELINE => {
+      id: GOAL_PROGRESS_TIMELINE,
+      name: 'Uncover more events',
+      note: 'Continue your progress through the timeline.',
+    },
 /*
 
      => {
@@ -351,8 +360,8 @@ class Goals
       messageComplete: '',
       onComplete: function (game, player) {
         game.goals.receive();
-        }
-      },
+      }
+    },
 */
     ];
 }

@@ -35,6 +35,7 @@ enum _Goal
   GOAL_LEARN_CLUE;
   GOAL_LEARN_NPC;
   GOAL_USE_COMPUTER;
+  GOAL_PROGRESS_TIMELINE;
 
   // scenario: alien crash landing
   SCENARIO_ALIEN_FIND_SHIP;

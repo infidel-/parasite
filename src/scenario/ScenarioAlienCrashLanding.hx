@@ -321,6 +321,7 @@ class ScenarioAlienCrashLanding extends Scenario
           npc: [ 'researcher:civilian' => 10, 'agent' => 2 ],
           onLearnNote: function(game, noteID)
             {
+              game.goals.complete(GOAL_PROGRESS_TIMELINE);
               game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
 
               // alien is alive, save it
@@ -346,6 +347,7 @@ class ScenarioAlienCrashLanding extends Scenario
           npc: [ 'researcher:civilian' => 5 ],
           onLearnNote: function(game, noteID)
             {
+              game.goals.complete(GOAL_PROGRESS_TIMELINE);
               game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
             },
           },
