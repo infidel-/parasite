@@ -105,6 +105,7 @@ class Goals
 
     GOAL_EVOLVE_CAMO => {
       id: GOAL_EVOLVE_CAMO,
+      isOptional: true,
       name: 'Evolve camouflage layer',
       note: 'You need to evolve the camouflage layer improvement.',
       messageReceive: 'These areas are much more dangerous to me. I need to be less visible on the host body.',
@@ -118,6 +119,7 @@ class Goals
 
     GOAL_GROW_CAMO => {
       id: GOAL_GROW_CAMO,
+      isOptional: true,
       name: 'Grow camouflage layer',
       note: 'You need to grow the camouflage layer body feature.',
     },
@@ -126,6 +128,7 @@ class Goals
 
     GOAL_EVOLVE_DOPAMINE => {
       id: GOAL_EVOLVE_DOPAMINE,
+      isOptional: true,
       name: 'Evolve dopamine regulation',
       note: 'You need to evolve the dopamine regulation improvement.',
       messageReceive: 'The addiction to chemicals of this host can be useful to me.',
@@ -141,6 +144,7 @@ class Goals
 
     GOAL_EVOLVE_ORGAN => {
       id: GOAL_EVOLVE_ORGAN,
+      isOptional: true,
 //      isHidden: true,
       name: 'Evolve any body feature',
       note: 'You need to evolve any body feature.',
@@ -152,6 +156,7 @@ class Goals
 
     GOAL_GROW_ORGAN => {
       id: GOAL_GROW_ORGAN,
+      isOptional: true,
       name: 'Grow any body feature',
       note: 'You need to grow any body feature.',
       messageComplete: 'Growing body features and evolving is very inefficient in a hostile environment. I need a microhabitat.',
@@ -163,6 +168,7 @@ class Goals
 
     GOAL_EVOLVE_MICROHABITAT => {
       id: GOAL_EVOLVE_MICROHABITAT,
+      isOptional: true,
       name: 'Evolve the microhabitat knowledge',
       note: 'You need to evolve the knowledge of microhabitat.',
       messageComplete: 'Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.',
@@ -174,6 +180,7 @@ class Goals
 
     GOAL_CREATE_HABITAT => {
       id: GOAL_CREATE_HABITAT,
+      isOptional: true,
       name: 'Create a new habitat',
       note: 'You need to create a microhabitat.',
       messageComplete: 'My microhabitat is complete. It allows me some degree of calm and safety.',
@@ -185,6 +192,7 @@ class Goals
 
     GOAL_PUT_BIOMINERAL => {
       id: GOAL_PUT_BIOMINERAL,
+      isOptional: true,
       name: 'Construct biomineral formation',
       note: 'You need to evolve, grow and construct a biomineral formation. It can only be constructed in a habitat.',
       messageReceive: 'I can improve it further. But I will need energy for that.',
@@ -200,6 +208,7 @@ class Goals
 
     GOAL_PUT_ASSIMILATION => {
       id: GOAL_PUT_ASSIMILATION,
+      isOptional: true,
       name: 'Construct assimilation cavity',
       note: 'You need to evolve, grow and construct the assimilation cavity. You can only construct it in a habitat.',
       messageComplete: 'Finally. I can begin the host assimilation process.',
@@ -208,6 +217,7 @@ class Goals
     // continued after player learns about the group
     GOAL_PUT_WATCHER => {
       id: GOAL_PUT_WATCHER,
+      isOptional: true,
       name: 'Construct watcher',
       note: 'You need to evolve, grow and construct the watcher. You can only construct it in a habitat.',
       messageReceive: 'They might try to ambush me in the habitat. I will need something to warn me.',
@@ -249,6 +259,7 @@ class Goals
 
     GOAL_PROBE_BRAIN_ADVANCED => {
       id: GOAL_PROBE_BRAIN_ADVANCED,
+      isOptional: true,
       name: 'Improve the brain probe',
       note: 'Your brain probe is not advanced enough to gain information about host skills. You need to improve it.',
       messageComplete: 'My brain probe has improved significantly.',
@@ -351,6 +362,7 @@ typedef GoalInfo = {
   id: _Goal, // goal id
   ?isHidden: Bool, // is this goal hidden?
   ?isStarting: Bool, // goal received on game start?
+  ?isOptional: Bool, // is this goal optional?
   name: String, // goal name
   note: String, // goal note (static part)
   ?note2: String, // additional goal note (dynamic part, changed ingame)

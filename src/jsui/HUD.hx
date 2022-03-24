@@ -230,23 +230,22 @@ class HUD
   function updateGoals()
     {
       var buf = new StringBuf();
-
       for (g in game.goals.iteratorCurrent())
         {
           var info = game.goals.getInfo(g);
           if (info.isHidden)
             continue;
 
-          buf.add("<font color='" +
-            Const.TEXT_COLORS[_TextColor.COLOR_GOAL] +
-            "'>" + info.name + '</font><br/>');
+          buf.add(Const.col('goal', info.name));
+          if (info.isOptional)
+            buf.add(' ' + Const.small(Const.col('gray', '[optional]')));
+          buf.add('<br/>');
           buf.add(info.note + '<br/>');
           if (info.note2 != null)
             buf.add(info.note2 + '<br/>');
           buf.add('<br/>');
         }
       var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'
-
       goals.innerHTML = s;
     }
 

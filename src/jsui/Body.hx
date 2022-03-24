@@ -123,7 +123,7 @@ class Body extends UIWindow
       for (organ in game.player.host.organs)
         addOrgan(buf, game.player.evolutionManager.getImprov(organ.id));
       if (game.player.host.organs.length() == 0)
-        buf.add('  --- empty ---');
+        buf.add('<center>no body feature</center>');
 
       return buf.toString();
     }
@@ -243,7 +243,7 @@ class Body extends UIWindow
         }
 
       if (n == 0)
-        buf.add('  --- empty ---<br/>');
+        buf.add('<center>no items</center><br/>');
 
       return buf.toString();
     }

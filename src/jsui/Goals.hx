@@ -34,7 +34,10 @@ class Goals extends UIWindow
           if (info.isHidden)
             continue;
 
-          buf.add("<font color='" + Const.TEXT_COLORS[_TextColor.COLOR_GOAL] + "'>" + info.name + '</font><br/>');
+          buf.add(Const.col('goal', info.name));
+          if (info.isOptional)
+            buf.add(' ' + Const.small(Const.col('gray', '[optional]')));
+          buf.add('<br/>');
           buf.add(info.note + '<br/>');
           if (info.note2 != null)
             buf.add(info.note2 + '<br/>');
