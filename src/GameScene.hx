@@ -233,6 +233,8 @@ class GameScene extends Scene
           }
       });
 #end
+      // hack: bugs out otherwise
+      game.scene.mouse.setCursor(Mouse.CURSOR_MOVE);
     }
 
 

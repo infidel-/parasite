@@ -30,7 +30,7 @@ class Mouse
       oldx = 0;
       oldy = 0;
       oldPos = { x: -1, y: -1 };
-      sceneState = game.scene.state;
+      sceneState = game.ui.state;
       forceNextUpdate = 0;
       ignoreNextClick = false;
       atlas = null;
@@ -47,46 +47,9 @@ class Mouse
       for (i in 0...CURSOR_ATTACK_RANGED + 1)
         {
           var tmp = bmp.sub(i * CURSOR_SIZE, 0, CURSOR_SIZE, CURSOR_SIZE);
-/*
-          var r = hxd.Res.load('graphics/' + i + '.png').toImage();
-          var tmp = r.toBitmap();
-          if (game.config.mapScale != 1)
-            {
-              var tmp2 = new BitmapData(size, size);
-              tmp2.drawScaled(0, 0, size, size, tmp, 0, 0,
-                CURSOR_SIZE, CURSOR_SIZE, Alpha, true);
-              tmp = tmp2;
-            }
-*/
           var cursor = Custom(new CustomCursor([ tmp ], 1,
             i == 0 ? 0 : Std.int(CURSOR_SIZE / 2),
             i == 0 ? 0 : Std.int(CURSOR_SIZE / 2)));
-/*
-            i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2),
-            i == 0 ? 0 : Std.int(Const.TILE_SIZE / 2)));
-
-/*
-          if (i == 2)
-            {
-          var defOverride = new hxd.BitmapData(10, 10);
-          var col = 0xffff0000;
-          if (i == 1)
-            col = 0xff00ff00;
-          else if (i == 2)
-            col = 0xff0000ff;
-          else if (i == 3)
-            col = 0xff00ffff;
-          else if (i == 4)
-            col = 0xffff00ff;
-          defOverride.line(0, 0, 5, 0, col);
-          defOverride.line(0, 1, 0, 5, col);
-          defOverride.line(0, 0, 10, 10, col);
-          var overrideCursor:hxd.Cursor =
-            Custom(new hxd.Cursor.CustomCursor([defOverride], 0, 0, 0));
-          atlas.push(overrideCursor);
-            }
-
-          else */
           atlas.push(cursor);
         }
       hxd.System.setCursor = function(cur)
@@ -95,7 +58,6 @@ class Mouse
             hxd.System.setNativeCursor(atlas[cursor]);
           else hxd.System.setNativeCursor(cur);
         }
-      setCursor(0);
     }
 
 
@@ -124,7 +86,7 @@ class Mouse
         }
 #end
       // some window open
-      if (game.isFinished || game.scene.state != UISTATE_DEFAULT)
+      if (game.isFinished || game.ui.state != UISTATE_DEFAULT)
         return;
 
       // area mode - click moves or attacks
@@ -209,7 +171,7 @@ class Mouse
         {
           if (oldx == game.scene.mouseX &&
               oldy == game.scene.mouseY &&
-              sceneState == game.scene.state)
+              sceneState == game.ui.state)
             return;
         }
       if (force)
