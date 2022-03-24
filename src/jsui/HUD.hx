@@ -308,7 +308,7 @@ class HUD
         {
           var host = game.player.host;
           buf.add('<br/><hr/>');
-          buf.add(host.getNameCapped());
+          buf.add('<b>' + host.getNameCapped() + '</b>');
           if (host.isJobKnown)
             buf.add(' (' + host.job + ')<br/>');
           else buf.add('<br/>');
@@ -447,9 +447,9 @@ class HUD
                 else buf.add(n + ': ');
                 buf.add(action.name);
                 if (action.energy != null && action.energy > 0)
-                  buf.add(' (' + action.energy + ' energy)');
+                  buf.add(' <span class=small>(' + action.energy + ' energy)</span>');
                 else if (action.energyFunc != null)
-                  buf.add(' (' + action.energyFunc(game.player) + ' energy)');
+                  buf.add(' <span class=small>(' + action.energyFunc(game.player) + ' energy)</span>');
 
                 var btn = Browser.document.createDivElement();
                 btn.innerHTML = buf.toString();
