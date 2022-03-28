@@ -336,7 +336,7 @@ class UI
           key == 'Numpad4')
         dx = -1;
 
-      if (key == 'ArrowLeft' ||
+      if (key == 'ArrowRight' ||
           key == 'Numpad6')
         dx = 1;
 

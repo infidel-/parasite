@@ -172,7 +172,7 @@ class GameScene extends Scene
       game.init();
 
       // update AI hear, view distance
-      // clamp so that 4k players did not have it hard
+      // clamp so that 4k players do not have it hard
       var xmin = cameraTileX2 - cameraTileX1;
       var ymin = cameraTileY2 - cameraTileY1;
       ai.AI.VIEW_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) / 2.5);
