@@ -16,7 +16,7 @@ class Difficulty extends UIWindow
 
   public function new(g: Game)
     {
-      super(g, 'window-difficulty', false);
+      super(g, 'window-difficulty');
       window.className += ' window-dialog';
       window.style.borderImage = "url('./img/window-difficulty.png') 100 fill / 1 / 0 stretch";
 

@@ -19,6 +19,8 @@ class Timeline extends UIWindow
       cont.id = 'window-timeline-text';
       window.appendChild(cont);
       text = addBlock(cont, 'window-timeline-fieldset', 'TIMELINE');
+
+      addCloseButton();
     }
 
 

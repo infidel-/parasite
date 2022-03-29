@@ -15,7 +15,7 @@ class Options extends UIWindow
 
   public function new(g: Game)
     {
-      super(g, 'window-options', true);
+      super(g, 'window-options');
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
 
       var title = Browser.document.createDivElement();
@@ -26,6 +26,7 @@ class Options extends UIWindow
       contents.id = 'window-options-contents';
       window.appendChild(contents);
 
+      addCloseButton();
       close.onclick = function (e) {
         game.config.save(false);
         game.ui.closeWindow();

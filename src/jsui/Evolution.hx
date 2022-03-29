@@ -28,6 +28,7 @@ class Evolution extends UIWindow
       list = addBlock(cont, 'window-evolution-list', 'CONTROLLED EVOLUTION: IMPROVEMENTS');
       info = addBlock(cont, 'window-evolution-info', 'INFO');
       actions = addBlock(cont, 'window-evolution-actions', 'ACTIONS');
+      addCloseButton();
     }
 
 // add improvement (col 0 or 1)

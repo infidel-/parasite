@@ -30,6 +30,8 @@ class Log extends UIWindow
       text = Browser.document.createDivElement();
       text.className = 'scroller';
       fieldset.appendChild(text);
+
+      addCloseButton();
     }
 
 
@@ -43,7 +45,7 @@ class Log extends UIWindow
           buf.add(Const.TEXT_COLORS[l.col]);
           buf.add("'>");
           buf.add(l.msg);
-          buf.add("</pan>");
+          buf.add("</span>");
           if (l.cnt > 1)
             {
               buf.add(" <span class=small style='color:var(--text-color-repeat)'>(x");

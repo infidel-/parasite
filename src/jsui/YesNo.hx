@@ -14,7 +14,7 @@ class YesNo extends UIWindow
 
   public function new(g: Game)
     {
-      super(g, 'window-yesno', false);
+      super(g, 'window-yesno');
       window.className += ' window-dialog';
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
 

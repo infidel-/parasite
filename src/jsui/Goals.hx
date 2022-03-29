@@ -19,6 +19,8 @@ class Goals extends UIWindow
       text = Browser.document.createDivElement();
       text.id = 'window-goals-text';
       window.appendChild(text);
+
+      addCloseButton();
     }
 
 
@@ -46,7 +48,7 @@ class Goals extends UIWindow
       buf.add('</div>');
       buf.add('</fieldset>');
 
-      buf.add('<br><fieldset id="window-goals-completed"><legend>COMPLETED GOALS</legend><div class=scroller style="color:var(--text-color-gray)">');
+      buf.add('<fieldset id="window-goals-completed"><legend>COMPLETED GOALS</legend><div class=scroller style="color:var(--text-color-gray)">');
       var hasCompletedGoals = false;
       for (g in game.goals.iteratorCompleted())
         {
@@ -66,7 +68,7 @@ class Goals extends UIWindow
       buf.add('</div>');
       buf.add('</fieldset>');
 
-      buf.add('<br><fieldset id="window-goals-failed"><legend>FAILED GOALS</legend><div class=scroller style="color:var(--text-color-red)">');
+      buf.add('<fieldset id="window-goals-failed"><legend>FAILED GOALS</legend><div class=scroller style="color:var(--text-color-red)">');
       var hasFailedGoals = false;
       for (g in game.goals.iteratorFailed())
         {

@@ -73,34 +73,37 @@ class UI
       if (hud.consoleVisible())
         return;
  //      trace(e.keyCode + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.code);
-      // toggle hud
-      if (e.code == 'Space' && _state == UISTATE_DEFAULT)
+      // default state
+      if (_state == UISTATE_DEFAULT)
         {
-          hud.toggle();
-          return;
-        }
+          // toggle hud
+          if (e.code == 'Space')
+            {
+              hud.toggle();
+              return;
+            }
 
-      // enter restarts the game when it is finished
-      if (game.isFinished &&
-          (e.code == 'Enter' ||
-          e.code == 'NumpadEnter') && 
-          _state == UISTATE_DEFAULT)
-        {
-          game.restart();
-          return;
-        }
+          // enter restarts the game when it is finished
+          if (game.isFinished &&
+              (e.code == 'Enter' ||
+              e.code == 'NumpadEnter'))
+            {
+              game.restart();
+              return;
+            }
 
-      // open console
-      if (e.code == 'Semicolon' && !hud.consoleVisible())
-        {
-          hud.showConsole();
-          return;
-        }
-      // close console
-      if (e.code == 'Escape' && hud.consoleVisible())
-        {
-          hud.hideConsole();
-          return;
+          // open console
+          if (e.code == 'Semicolon' && !hud.consoleVisible())
+            {
+              hud.showConsole();
+              return;
+            }
+          // close console
+          if (e.code == 'Escape' && hud.consoleVisible())
+            {
+              hud.hideConsole();
+              return;
+            }
         }
 
       // try to handle keyboard actions

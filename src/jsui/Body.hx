@@ -47,7 +47,7 @@ class Body extends UIWindow
       inventoryActions = addBlock(cont, 'window-inventory-actions', 'ACTIONS');
 
       // skills
-      var cont = addBlock(col1, 'window-skills-contents', 'KNOWLEDGE');
+      var cont = addBlock(col1, 'window-skills-contents', 'KNOWLEDGE', 'window-contents-wrapper');
       skillsParasite = addBlock(cont, 'window-skills-parasite', 'PARASITE');
       skillsHost = addBlock(cont, 'window-skills-host', 'HOST');
       skillsHost.innerHTML = 'skills host';
@@ -59,6 +59,8 @@ class Body extends UIWindow
       organsInfo = addBlock(cont, 'window-organs-info', 'INFO');
       organsActions = addBlock(cont, 'window-organs-actions', 'ACTIONS');
       organsActions.innerHTML = 'actions list';
+
+      addCloseButton();
     }
 
 // update window contents
