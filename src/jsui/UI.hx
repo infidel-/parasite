@@ -107,7 +107,7 @@ class UI
         }
 
       // try to handle keyboard actions
-      var ret = handleActions(e.code);
+      var ret = handleActions(e.code, e.altKey, e.ctrlKey, e.shiftKey);
       if (!ret)
         ret = handleWindows(e.code, e.altKey, e.ctrlKey);
       if (!ret)
@@ -223,7 +223,7 @@ class UI
     }
 
 // handle player actions
-  function handleActions(key: String): Bool
+  function handleActions(key: String, altKey: Bool, ctrlKey: Bool, shiftKey: Bool): Bool
     {
       // game finished
       if (game.isFinished)
@@ -233,9 +233,11 @@ class UI
       if (_state == UISTATE_BODY)
         {
           var window: Body = cast components[_state];
-          if (key == 'KeyI')
+          if (key == 'KeyI' ||
+              (key.indexOf('Digit') == 0 && ctrlKey))
             window.prefix('inventory');
-          else if (key == 'KeyB')
+          else if (key == 'KeyB' ||
+              (key.indexOf('Digit') == 0 && shiftKey))
             window.prefix('body');
         }
 

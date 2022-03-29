@@ -217,7 +217,7 @@ class Body extends UIWindow
           // html element
           var action = Browser.document.createDivElement();
           action.className = 'actions-item';
-          action.innerHTML = 'b' + n + ': ' + act.name;
+          action.innerHTML = 'S-' + n + ': ' + act.name;
           n++;
           action.onclick = function (e) {
             game.player.host.organs.action(act.id);
@@ -263,7 +263,7 @@ class Body extends UIWindow
           // html element
           var action = Browser.document.createDivElement();
           action.className = 'actions-item';
-          action.innerHTML = 'i' + n + ': ' + act.name +
+          action.innerHTML = 'C-' + n + ': ' + act.name +
             (act.energy > 0 ? ' (' + act.energy + ' energy)' : '');
           n++;
           action.onclick = function (e) {
