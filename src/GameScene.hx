@@ -264,14 +264,18 @@ class GameScene extends Scene
       x = Math.ceil(x / Const.TILE_SIZE) * Const.TILE_SIZE;
       y = Math.ceil(y / Const.TILE_SIZE) * Const.TILE_SIZE;
 
-      if (x + win.width > Const.TILE_SIZE * w)
-        x = Const.TILE_SIZE * w - win.width;
-      if (y + win.height > Const.TILE_SIZE * h)
-        y = Const.TILE_SIZE * h - win.height;
-      if (x < 0)
-        x = 0;
-      if (y < 0)
-        y = 0;
+      // limit camera x,y by map edges
+      if (!game.config.alwaysCenterCamera)
+        {
+          if (x + win.width > Const.TILE_SIZE * w)
+            x = Const.TILE_SIZE * w - win.width;
+          if (y + win.height > Const.TILE_SIZE * h)
+            y = Const.TILE_SIZE * h - win.height;
+          if (x < 0)
+            x = 0;
+          if (y < 0)
+            y = 0;
+        }
 
       // update tile x,y
       cameraTileX1 = Std.int(x / Const.TILE_SIZE);

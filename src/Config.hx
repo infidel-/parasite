@@ -13,9 +13,9 @@ class Config
 {
   var game: Game;
 
-  // cached values
   public var mouseEnabled: Bool;
   public var extendedInfo: Bool;
+  public var alwaysCenterCamera: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
@@ -39,6 +39,7 @@ class Config
 #if mydebug
       extendedInfo = true;
 #end
+      alwaysCenterCamera = true;
 
       fontSize = 16;
       hudLogLines = 4;
@@ -53,6 +54,7 @@ class Config
       map = new Map();
       map['mouseEnabled'] = '1';
       map['extendedInfo'] = '0';
+      map['alwaysCenterCamera'] = '1';
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
@@ -124,6 +126,8 @@ class Config
         mouseEnabled = (val == '1');
       else if (key == 'extendedInfo')
         extendedInfo = (val == '1');
+      else if (key == 'alwaysCenterCamera')
+        alwaysCenterCamera = (val == '1');
 
       else if (key == 'fontSize')
         {
