@@ -64,6 +64,7 @@ class ConsoleGame
             'as - add skill, ' +
             'cfg|config,<br/>' +
             'dg - debug: graphics info, ' +
+            'dthrow - debug: throw exception, ' +
             // go
             'ga - go and enter area, ' +
             'ge - go event location, ' +
@@ -454,6 +455,10 @@ class ConsoleGame
           log('Scene children objects: ' + game.scene.numChildren +
             '<br/>Scene total objects: ' + game.scene.getObjectsCount());
         }
+#if mydebug
+      else if (cmd == 'dthrow')
+        throw 'test exception';
+#end
     }
 
 

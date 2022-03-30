@@ -6,6 +6,9 @@ import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 import js.html.CanvasElement;
 import js.html.Element;
+#if electron
+import js.node.Fs;
+#end
 
 import game.Game;
 
@@ -39,6 +42,9 @@ class UI
       canvas.onmousemove = function (e: MouseEvent) {
         hud.onMouseMove(e);
       }
+#if electron
+      Browser.window.onerror = onError;
+#end
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
@@ -60,6 +66,22 @@ class UI
         UISTATE_OPTIONS => new Options(game),
       ];
     }
+
+#if electron
+  public function onError(msg: Dynamic, url: String, line: Int, col: Int, err: Dynamic): Bool
+    {
+      var d = Date.now();
+      var l = msg + ', ' + err.stack + ', line ' + line + ', col ' + col + '\n';
+      trace(l);
+      game.log('An exception has occured and was logged. Please send exceptions.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
+      try {
+        Fs.appendFileSync('exceptions.txt', l);
+      }
+      catch (e: Dynamic)
+        {}
+      return false;
+    }
+#end
 
 // refocus canvas
   public function focus()
