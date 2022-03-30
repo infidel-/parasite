@@ -961,6 +961,13 @@ class AreaGame
           }
     }
 
+// max number of visible AI
+  public function getMaxAI(): Int
+    {
+      return
+        Std.int(info.commonAI * game.scene.area.emptyScreenCells /
+          WorldConst.AREA_AI_CELLS);
+    }
 
 // spawn new AI, called each turn
   function turnSpawnAI()
@@ -978,9 +985,7 @@ class AreaGame
         cnt--;
 
       // calc max possible number of AI
-      var maxAI =
-        Std.int(info.commonAI * game.scene.area.emptyScreenCells /
-          WorldConst.AREA_AI_CELLS);
+      var maxAI = getMaxAI();
 /*
       trace('info:' + info.commonAI +
         ' empty:' + game.scene.area.emptyScreenCells +

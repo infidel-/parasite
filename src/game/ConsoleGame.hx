@@ -83,6 +83,7 @@ class ConsoleGame
 #else
           log('Available commands: cfg, config, ' +
             'dg - debug: graphics info, ' +
+            'dai - debug: ai info, ' +
             'restart, quit.');
 #end
         }
@@ -445,7 +446,6 @@ class ConsoleGame
         }
     }
 
-
 // debug commands
   function debugCommand(cmd: String)
     {
@@ -455,12 +455,29 @@ class ConsoleGame
           log('Scene children objects: ' + game.scene.numChildren +
             '<br/>Scene total objects: ' + game.scene.getObjectsCount());
         }
+      // XXX dai - show ai view/hear info
+      else if (cmd == 'dai')
+        {
+          log(
+            'Window resolution: ' +
+            game.scene.win.width + 'x' + game.scene.win.height +
+            ', scale: ' + (game.config.mapScale * 100) +
+            '%, tile resolution: ' +
+            Std.int(game.scene.win.width / Const.TILE_SIZE) + 'x' +
+            Std.int(game.scene.win.height / Const.TILE_SIZE) +
+            ', AI view distance: ' + ai.AI.VIEW_DISTANCE +
+            ', AI hear distance: ' + ai.AI.HEAR_DISTANCE +
+            '<br>Current area, max AI: ' + game.area.getMaxAI() +
+            ', common AI: ' + game.area.info.commonAI +
+            ', emptyScreenCells: ' + game.scene.area.emptyScreenCells +
+            ', AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS
+          );
+        }
 #if mydebug
       else if (cmd == 'dthrow')
         throw 'test exception';
 #end
     }
-
 
 // go commands
   function goCommand(cmd: String)
