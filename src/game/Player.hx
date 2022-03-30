@@ -102,7 +102,9 @@ class Player
         {
           var delta = __Math.hostEnergyPerTurn(time);
           var old = host.energy;
-          host.energy += delta;
+          // DEBUG: godmode
+          if (!vars.godmodeEnabled)
+            host.energy += delta;
 
           if (host.energy <= 0)
             onHostDeath('Your host has expired. You have to find a new one.');

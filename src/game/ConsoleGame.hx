@@ -693,6 +693,7 @@ class ConsoleGame
             ';s22 - set player stage 2.2 (stage 2.1 + biomineral)<br/>' +
             ';s23 - set player stage 2.3 (stage 2.2 + assimilation)<br/>' +
             ';s24 - set player stage 2.4 (stage 2.1 + group knowledge)<br/>' +
+            ';s25 - set player stage 2.5 (stage 2 + ambush)<br/>' +
             ';s3 - set player stage 3 (stage 2.3 + timeline open until scenario goals)'
             );
           return;
@@ -767,6 +768,14 @@ class ConsoleGame
               stage2();
               stage21();
               stage24();
+            }
+
+          // stage 2.5: 2 + 1.2 (ambush)
+          else if (stage == 25)
+            {
+              stage1();
+              stage2();
+              stage25();
             }
 
           // stage 3: 2.3 + timeline open until scenario goals
@@ -998,6 +1007,23 @@ class ConsoleGame
       game.log('stage 2.4');
       game.setLocation(LOCATION_AREA);
       stage11();
+    }
+
+// stage 2.5: stage 2 + ambush
+  function stage25()
+    {
+      // enter habitat
+      game.playerRegion.action({
+        id: 'enterHabitat',
+        type: ACTION_REGION,
+        name: 'Enter habitat',
+        energy: 0
+      });
+      game.group.team = new Team(game);
+      game.group.team.distance = 2;
+      game.group.team.level = 4;
+      game.group.team.state = TEAM_AMBUSH;
+      game.group.team.timer = 0;
     }
 
 

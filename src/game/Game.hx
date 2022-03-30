@@ -278,7 +278,6 @@ class Game
 // update HUD state from game state
   public inline function updateHUD()
     {
-      scene.hud.update(); // update hud state
       ui.hud.update(); // update hud state
     }
 

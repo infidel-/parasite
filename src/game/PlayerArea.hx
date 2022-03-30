@@ -198,17 +198,19 @@ class PlayerArea
   public function action(action: _PlayerAction)
     {
       var ret = true;
+      // cannot do some actions while in paralysis
+      if (state == PLR_STATE_HOST &&
+          player.host.effects.has(EFFECT_PARALYSIS) &&
+          (action.type == ACTION_OBJECT || action.id == 'leaveArea'))
+        {
+          log('Your host is paralyzed.', COLOR_HINT);
+          game.updateHUD();
+          return;
+        }
 
       // area object action
       if (action.type == ACTION_OBJECT)
         {
-          // cannot act while in paralysis
-          if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
-            {
-              log('Your host is paralyzed.', COLOR_HINT);
-              return;
-            }
-
           var ao: AreaObject = action.obj;
           ret = ao.action(action);
         }

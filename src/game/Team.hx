@@ -45,6 +45,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
   function spawnAmbush()
     {
       state = TEAM_AMBUSH;
+      ambushedHabitat = null; // clear just in case
 
       // set ambush timer
       // if player is currently in habitat, skip timer
@@ -146,7 +147,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           var x = game.playerArea.x;
           var y = game.playerArea.y;
 
-          game.message("Something is wrong here... It's an ambush!",
+          game.message("Something is wrong here... They're after me!",
             COLOR_ALERT);
           for (i in 0...4)
             {
@@ -199,7 +200,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
         return;
 
       // wrong habitat
-      if (game.area.id != ambushedHabitat.area.id)
+      if (ambushedHabitat == null ||
+          game.area.id != ambushedHabitat.area.id)
         return;
 
       state = TEAM_FIGHT;
