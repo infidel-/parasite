@@ -265,7 +265,7 @@ class HUD
         type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
         name: 'Wait',
         energy: 0,
-        key: 'KeyZ'
+        key: 'z'
       });
     }
 
@@ -417,7 +417,7 @@ class HUD
               for (action in l)
                 {
                   if (action.key != null)
-                    buf.add(action.key.substr(3) + ': ');
+                    buf.add(action.key.toUpperCase() + ': ');
                   else buf.add(n + ': ');
                   buf.add(action.name);
                   if (action.energy != null && action.energy > 0)

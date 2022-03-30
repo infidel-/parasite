@@ -92,7 +92,7 @@ class HUD
       // should be unique state but no matter
       var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
       btn.onclick = function (e) {
-          @:privateAccess game.ui.handleWindows('F10', false, false);
+          @:privateAccess game.ui.handleWindows('F10', 'F10', false, false);
       }
 
       // actions
@@ -403,7 +403,7 @@ class HUD
         type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
         name: 'Wait',
         energy: 0,
-        key: 'KeyZ'
+        key: 'z'
       });
     }
 
@@ -442,7 +442,7 @@ class HUD
               {
                 var buf = new StringBuf();
                 if (action.key != null)
-                  buf.add(action.key.substr(3) + ': ');
+                  buf.add(action.key.toUpperCase() + ': ');
                 else buf.add(n + ': ');
                 buf.add(action.name);
                 if (action.energy != null && action.energy > 0)

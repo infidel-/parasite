@@ -146,7 +146,7 @@ class PlayerArea
             type: ACTION_AREA,
             name: 'Leave Host',
             energy: 0,
-            key: 'KeyX'
+            key: 'x'
           });
         }
 

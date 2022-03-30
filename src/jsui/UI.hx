@@ -94,7 +94,7 @@ class UI
     {
       if (hud.consoleVisible())
         return;
- //      trace(e.keyCode + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.code);
+//      trace(e.code + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.shiftKey + ' ' + e.key);
       // default state
       if (_state == UISTATE_DEFAULT)
         {
@@ -106,16 +106,14 @@ class UI
             }
 
           // enter restarts the game when it is finished
-          if (game.isFinished &&
-              (e.code == 'Enter' ||
-              e.code == 'NumpadEnter'))
+          if (game.isFinished && e.key == 'Enter')
             {
               game.restart();
               return;
             }
 
           // open console
-          if (e.code == 'Semicolon' && !hud.consoleVisible())
+          if (e.key == ';' && !hud.consoleVisible())
             {
               hud.showConsole();
               return;
@@ -129,18 +127,18 @@ class UI
         }
 
       // try to handle keyboard actions
-      var ret = handleActions(e.code, e.altKey, e.ctrlKey, e.shiftKey);
+      var ret = handleActions(e.key, e.code, e.altKey, e.ctrlKey, e.shiftKey);
       if (!ret)
-        ret = handleWindows(e.code, e.altKey, e.ctrlKey);
+        ret = handleWindows(e.key, e.code, e.altKey, e.ctrlKey);
       if (!ret)
-        ret = handleMovement(e.code);
+        ret = handleMovement(e.key, e.code);
       // update camera position
       if (ret)
         game.scene.updateCamera();
     }
 
 // handle opening and closing windows
-  function handleWindows(key: String, altKey: Bool, ctrlKey: Bool): Bool
+  function handleWindows(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
     {
 /*
       // scrolling text
@@ -194,13 +192,13 @@ class UI
         return true;
 
       // no windows open
-      var goalsPressed = (key == 'Digit1' && altKey) || key == 'F1';
-      var bodyPressed = (key == 'Digit2' && altKey) || key == 'F2';
-      var logPressed = (key == 'Digit3' && altKey) || key == 'F3';
-      var timelinePressed = (key == 'Digit4' && altKey) || key == 'F4';
-      var evolutionPressed = (key == 'Digit5' && altKey) || key == 'F5';
-      var optionsPressed = (key == 'Digit6' && altKey) || key == 'F6';
-      var exitPressed = (key == 'Digit0' && altKey) || key == 'F10';
+      var goalsPressed = (code == 'Digit1' && altKey) || code == 'F1';
+      var bodyPressed = (code == 'Digit2' && altKey) || code == 'F2';
+      var logPressed = (code == 'Digit3' && altKey) || code == 'F3';
+      var timelinePressed = (code == 'Digit4' && altKey) || code == 'F4';
+      var evolutionPressed = (code == 'Digit5' && altKey) || code == 'F5';
+      var optionsPressed = (code == 'Digit6' && altKey) || code == 'F6';
+      var exitPressed = (code == 'Digit0' && altKey) || code == 'F10';
 
       // open goals window
       if (goalsPressed)
@@ -245,7 +243,7 @@ class UI
     }
 
 // handle player actions
-  function handleActions(key: String, altKey: Bool, ctrlKey: Bool, shiftKey: Bool): Bool
+  function handleActions(key: String, code: String, altKey: Bool, ctrlKey: Bool, shiftKey: Bool): Bool
     {
       // game finished
       if (game.isFinished)
@@ -255,18 +253,18 @@ class UI
       if (_state == UISTATE_BODY)
         {
           var window: Body = cast components[_state];
-          if (key == 'KeyI' ||
-              (key.indexOf('Digit') == 0 && ctrlKey))
+          if (key == 'i' ||
+              (code.indexOf('Digit') == 0 && ctrlKey))
             window.prefix('inventory');
-          else if (key == 'KeyB' ||
-              (key.indexOf('Digit') == 0 && shiftKey))
+          else if (key == 'b' ||
+              (code.indexOf('Digit') == 0 && shiftKey))
             window.prefix('body');
         }
 
       // actions from action menu
       var ret = false;
       for (i in 1...11)
-        if (key == 'Digit' + i)
+        if (code == 'Digit' + i)
           {
             var n = i;
 
@@ -287,9 +285,9 @@ class UI
       if (_state == UISTATE_YESNO)
         {
           var n = 0;
-          if (key == 'KeyY')
+          if (key == 'y')
             n = 1;
-          else if (key == 'KeyN')
+          else if (key == 'n')
             n = 2;
           if (n > 0)
             {
@@ -303,7 +301,7 @@ class UI
       if (_state == UISTATE_DEFAULT)
         {
           // skip until end of turn
-          if (key == 'Numpad5' || key == 'KeyZ')
+          if (code == 'Numpad5' || key == 'z')
             {
               game.turn();
               game.updateHUD();
@@ -311,19 +309,15 @@ class UI
             }
 
           // toggle fullscreen
-          else if (key == 'KeyF')
+          else if (key == 'f')
             {
               isFullScreen = !isFullScreen;
               var doc = js.Browser.document;
               if (doc.fullscreenEnabled)
                 {
                   doc.documentElement.requestFullscreen();
-/*
-                  var e: js.html.CanvasElement =
-                    cast doc.getElementById("webgl");*/
                   if (isFullScreen)
                     doc.documentElement.requestFullscreen();
-//                    untyped e.requestFullscreen();
                   else doc.exitFullscreen();
                 }
               ret = true;
@@ -331,7 +325,7 @@ class UI
         }
 
       // next 10 actions
-      if (key == 'KeyS')
+      if (key == 's')
         {
           inputState = 1;
           ret = true;
@@ -341,7 +335,7 @@ class UI
     }
 
 // handle player movement
-  function handleMovement(key: String): Bool
+  function handleMovement(key: String, code: String): Bool
     {
       // game finished or window open
       if (game.isFinished ||
@@ -351,41 +345,41 @@ class UI
       var dx = 0;
       var dy = 0;
 
-      if (key == 'ArrowUp' ||
-          key == 'Numpad8')
+      if (code == 'ArrowUp' ||
+          code == 'Numpad8')
         dy = -1;
 
-      if (key == 'ArrowDown' ||
-          key == 'Numpad2')
+      if (code == 'ArrowDown' ||
+          code == 'Numpad2')
         dy = 1;
 
-      if (key == 'ArrowLeft' ||
-          key == 'Numpad4')
+      if (code == 'ArrowLeft' ||
+          code == 'Numpad4')
         dx = -1;
 
-      if (key == 'ArrowRight' ||
-          key == 'Numpad6')
+      if (code == 'ArrowRight' ||
+          code == 'Numpad6')
         dx = 1;
 
-      if (key == 'Numpad7')
+      if (code == 'Numpad7')
         {
           dx = -1;
           dy = -1;
         }
 
-      if (key == 'Numpad9')
+      if (code == 'Numpad9')
         {
           dx = 1;
           dy = -1;
         }
 
-      if (key == 'Numpad1')
+      if (code == 'Numpad1')
         {
           dx = -1;
           dy = 1;
         }
 
-      if (key == 'Numpad3')
+      if (code == 'Numpad3')
         {
           dx = 1;
           dy = 1;
