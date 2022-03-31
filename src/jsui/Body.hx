@@ -393,6 +393,8 @@ class Body extends UIWindow
         }
       else if (actionPrefix == 'inventory')
         {
+          if (!game.player.vars.inventoryEnabled)
+            return;
           var a = listInventoryActions[index - 1];
           if (a == null)
             return;
