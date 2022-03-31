@@ -322,7 +322,7 @@ class Game
   public inline function info(s: String)
     {
       if (config.extendedInfo)
-        log('INFO ' + s, COLOR_DEBUG);
+        log(Const.small('INFO ' + s), COLOR_DEBUG);
     }
 
 
@@ -330,7 +330,7 @@ class Game
   public inline function debug(s: String)
     {
 #if mydebug
-      log('DEBUG ' + s, COLOR_DEBUG);
+      log(Const.small('DEBUG ' + s), COLOR_DEBUG);
 #end
     }
 

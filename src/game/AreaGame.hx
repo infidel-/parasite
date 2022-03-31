@@ -962,11 +962,15 @@ class AreaGame
     }
 
 // max number of visible AI
+  public function getMaxAICoef(): Float
+    {
+      return (game.scene.area.emptyScreenCells <= WorldConst.AREA_AI_CELLS ? 1.0 : 0.5);
+    }
   public function getMaxAI(): Int
     {
       return
-        Std.int(info.commonAI * game.scene.area.emptyScreenCells /
-          WorldConst.AREA_AI_CELLS);
+        Std.int(getMaxAICoef() * info.commonAI *
+        game.scene.area.emptyScreenCells / WorldConst.AREA_AI_CELLS);
     }
 
 // spawn new AI, called each turn
