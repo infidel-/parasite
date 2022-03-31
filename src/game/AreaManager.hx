@@ -10,6 +10,7 @@ class AreaManager
 {
   var game: Game;
   var _list: List<AreaEvent>;
+  var lastEventID: Int;
 
   var area(get, null): AreaGame; // current area link
 
@@ -18,6 +19,7 @@ class AreaManager
       game = g;
 
       _list = new List<AreaEvent>();
+      lastEventID = 1;
     }
 
 
@@ -34,6 +36,7 @@ class AreaManager
       turns: Int, ?params: Dynamic = null)
     {
       var e = {
+        id: lastEventID++,
         ai: null,
         objectID: -1,
         details: null,
@@ -43,6 +46,9 @@ class AreaManager
         turns: turns,
         params: params
         };
+#if mydebug
+      Const.p(game.turns + ': AreaManager.add(): ' + e);
+#end
 
       _list.push(e);
     }
@@ -53,6 +59,7 @@ class AreaManager
       turns: Int)
     {
       var e = {
+        id: lastEventID++,
         ai: null,
         objectID: o.id,
         type: type,
@@ -60,7 +67,10 @@ class AreaManager
         y: -1,
         details: null,
         turns: turns
-        };
+      };
+#if mydebug
+      Const.p(game.turns + ': AreaManager.addObject(): ' + e);
+#end
 
       _list.push(e);
     }
@@ -71,6 +81,7 @@ class AreaManager
   public inline function addAI(ai: AI, type: _AreaManagerEventType, turns: Int)
     {
       var e = {
+        id: lastEventID++,
         ai: ai,
         objectID: -1,
         type: type,
@@ -78,7 +89,10 @@ class AreaManager
         y: ai.y,
         details: '' + ai.reason,
         turns: turns
-        };
+      };
+#if mydebug
+      Const.p(game.turns + ': AreaManager.addAI(): ' + e);
+#end
 
       _list.push(e);
     }
@@ -117,6 +131,9 @@ class AreaManager
             }
 
           // run this event
+#if mydebug
+      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
+#end
 
           // someone called the law
           if (e.type == AREAEVENT_CALL_LAW)
@@ -446,6 +463,7 @@ class AreaManager
 
 typedef AreaEvent =
 {
+  var id: Int;
   var ai: AI; // ai event origin - can be null
   var objectID: Int; // area object event origin (-1: unused)
   var details: String; // event details - can be null

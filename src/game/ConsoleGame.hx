@@ -79,7 +79,10 @@ class ConsoleGame
             'lt - learn all timeline,<br/>' +
             //
             'oa - organ action,<br/>' +
-            'snd - play sound, restart, s - set player stage, quit.');
+            'snd - play sound, restart, ' +
+            's - set player stage, ' +
+            'set - set game variale, ' +
+            'quit.');
 #else
           log('Available commands: cfg, config, ' +
             'dg - debug: graphics info, ' +

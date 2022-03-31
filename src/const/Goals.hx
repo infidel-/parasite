@@ -259,7 +259,6 @@ class Goals
 
     GOAL_PROBE_BRAIN_ADVANCED => {
       id: GOAL_PROBE_BRAIN_ADVANCED,
-      isOptional: true,
       name: 'Improve the brain probe',
       note: 'Your brain probe is not advanced enough to gain information about host skills. You need to improve it.',
       messageComplete: 'My brain probe has improved significantly.',

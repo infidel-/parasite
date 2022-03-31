@@ -1108,6 +1108,11 @@ class AI
       game.log(getNameCapped() + ' ' + s, col);
     }
 
+  public function toString()
+    {
+      return getName() + ' (' + x + ',' + y + '): ' + type + ', ' + job;
+    }
+
 
 // ========================== SETTERS ====================================
 
