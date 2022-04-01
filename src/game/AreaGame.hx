@@ -961,16 +961,65 @@ class AreaGame
           }
     }
 
-// max number of visible AI
-  public function getMaxAICoef(): Float
+/* quick try.haxe.org (https://try.haxe.org/#C38a6393) test:
+class Test {
+  static function main() {
+    var commonAI = 8;
+    var constCells = 650;
+    for (i in 0...35)
     {
-      return (game.scene.area.emptyScreenCells <= WorldConst.AREA_AI_CELLS ? 1.0 : 0.5);
+      if (i == 13)
+        trace('===');
+      trace('v0.7: ' + (i * 50) + ': ' + Std.int(commonAI * i * 50 / constCells) +
+            ', sqrt: ' + Std.int(commonAI * Math.sqrt(i * 50 / constCells)) +
+            ', test:' + Std.int(commonAI * Math.pow(i * 50 / constCells, 0.3))
+           );    
     }
+  }
+}
+v0.7: 0: 0, sqrt: 0, root3:0
+v0.7: 50: 0, sqrt: 2, root3:3
+v0.7: 100: 1, sqrt: 3, root3:4
+v0.7: 150: 1, sqrt: 3, root3:5
+v0.7: 200: 2, sqrt: 4, root3:5
+v0.7: 250: 3, sqrt: 4, root3:6
+v0.7: 300: 3, sqrt: 5, root3:6
+v0.7: 350: 4, sqrt: 5, root3:6
+v0.7: 400: 4, sqrt: 6, root3:6
+v0.7: 450: 5, sqrt: 6, root3:7
+v0.7: 500: 6, sqrt: 7, root3:7
+v0.7: 550: 6, sqrt: 7, root3:7
+v0.7: 600: 7, sqrt: 7, root3:7
+===
+v0.7: 650: 8, sqrt: 8, root3:8
+v0.7: 700: 8, sqrt: 8, root3:8
+v0.7: 750: 9, sqrt: 8, root3:8
+v0.7: 800: 9, sqrt: 8, root3:8
+v0.7: 850: 10, sqrt: 9, root3:8
+v0.7: 900: 11, sqrt: 9, root3:8
+v0.7: 950: 11, sqrt: 9, root3:8
+v0.7: 1000: 12, sqrt: 9, root3:9
+v0.7: 1050: 12, sqrt: 10, root3:9
+v0.7: 1100: 13, sqrt: 10, root3:9
+v0.7: 1150: 14, sqrt: 10, root3:9
+v0.7: 1200: 14, sqrt: 10, root3:9
+v0.7: 1250: 15, sqrt: 11, root3:9
+v0.7: 1300: 16, sqrt: 11, root3:9
+v0.7: 1350: 16, sqrt: 11, root3:9
+v0.7: 1400: 17, sqrt: 11, root3:10
+v0.7: 1450: 17, sqrt: 11, root3:10
+v0.7: 1500: 18, sqrt: 12, root3:10
+v0.7: 1550: 19, sqrt: 12, root3:10
+v0.7: 1600: 19, sqrt: 12, root3:10
+v0.7: 1650: 20, sqrt: 12, root3:10
+v0.7: 1700: 20, sqrt: 12, root3:10
+   */
+// max number of visible AI
   public function getMaxAI(): Int
     {
-      return
-        Std.int(getMaxAICoef() * info.commonAI *
-        game.scene.area.emptyScreenCells / WorldConst.AREA_AI_CELLS);
+      return Std.int(info.commonAI *
+        Math.pow(1.0 * game.scene.area.emptyScreenCells /
+          WorldConst.AREA_AI_CELLS, 0.3));
     }
 
 // spawn new AI, called each turn

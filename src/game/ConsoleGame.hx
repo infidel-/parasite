@@ -471,10 +471,10 @@ class ConsoleGame
             ', AI view distance: ' + ai.AI.VIEW_DISTANCE +
             ', AI hear distance: ' + ai.AI.HEAR_DISTANCE +
             '<br>Current area, max AI: ' + game.area.getMaxAI() +
-            ' = (coef: ' + game.area.getMaxAICoef() +
-            ' * common AI: ' + game.area.info.commonAI +
-            ' * emptyScreenCells: ' + game.scene.area.emptyScreenCells +
-            ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ')'
+            ' = [common AI: ' + game.area.info.commonAI +
+            ' * pow(' +
+            'emptyScreenCells: ' + game.scene.area.emptyScreenCells +
+            ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', 0.3)]'
           );
         }
 #if mydebug
