@@ -19,6 +19,9 @@ class HUD
   var log: DivElement;
   var goals: DivElement;
   var info: DivElement;
+#if mydebug
+  var debugInfo: DivElement;
+#end
   var menuButtons: Array<{
     state: _UIState,
     btn: DivElement,
@@ -77,6 +80,13 @@ class HUD
       info.id = 'hud-info';
       info.style.borderImage = "url('./img/hud-info-border.png') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
+
+#if mydebug
+      debugInfo = Browser.document.createDivElement();
+      debugInfo.className = 'text';
+      debugInfo.id = 'hud-debug-info';
+      container.appendChild(debugInfo);
+#end
 
       // menu
       var buttons = Browser.document.createDivElement();
@@ -201,6 +211,9 @@ class HUD
       updateLog();
       updateMenu();
       updateGoals();
+#if mydebug
+      updateDebugInfo();
+#end
     }
 
 // update log display
@@ -345,6 +358,21 @@ class HUD
 
       info.innerHTML = buf.toString();
     }
+
+#if mydebug
+// debug info
+  function updateDebugInfo()
+    {
+      var buf = new StringBuf();
+      if (!game.group.isKnown)
+        buf.add('Group known count: ' + game.group.knownCount + '<br/>');
+      buf.add('Group priority: ' + Const.round(game.group.priority) +
+        ', team timeout: ' + game.group.teamTimeout + '<br/>');
+      if (game.group.team != null)
+        buf.add('Team: ' + game.group.team + '<br/>');
+      debugInfo.innerHTML = buf.toString();
+    }
+#end
 
 // update menu buttons visibility
   function updateMenu()

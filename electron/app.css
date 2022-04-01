@@ -189,6 +189,29 @@ hr {
   transition: 0.1s;
 }
 
+#hud-debug-info {
+  opacity: 0.9;
+  background-color: #ffffff17;
+  color: #9ad1ff;
+  border: 1px solid #a4a4a4;
+  min-width: 200px;
+  max-width: 30ch;
+  min-height: 1.2em;
+  left: 10px;
+  top: 300px;
+  position: fixed;
+  padding: 5px;
+  outline: none;
+  appearance: none;
+  user-select: none;
+  transition: 0.1s;
+
+  font-size: 80%;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+  margin: 0px;
+}
+
 .hud-button {
   opacity: 0.9;
   background-color: #ffffff00;
