@@ -92,7 +92,7 @@ class AreaGame
 // enter this area: generate if needed and update view
   public function enter()
     {
-      game.debug('Area.enter()');
+//      game.debug('Area.enter()');
       game.scene.soundManager.setAmbient(info.ambient);
       turns = 0;
 
@@ -272,7 +272,7 @@ class AreaGame
 // generate a new area map
   function generate()
     {
-      game.debug('Area.generate()');
+//      game.debug('Area.generate()');
 
       // clear map
       _cells = [];
@@ -292,7 +292,7 @@ class AreaGame
 
       isGenerated = true; // mark area as ready for entering
 
-      game.debug('Area generated.');
+//      game.debug('Area generated.');
     }
 
 
@@ -970,56 +970,64 @@ class Test {
     {
       if (i == 13)
         trace('===');
-      trace('v0.7: ' + (i * 50) + ': ' + Std.int(commonAI * i * 50 / constCells) +
+      trace((i * 50) + ' | v0.7: ' + Std.int(commonAI * i * 50 / constCells) +
             ', sqrt: ' + Std.int(commonAI * Math.sqrt(i * 50 / constCells)) +
-            ', test:' + Std.int(commonAI * Math.pow(i * 50 / constCells, 0.3))
+            ', root3:' + Std.int(commonAI * Math.pow(i * 50 / constCells, 0.3)) +
+            ', rootX:' + Std.int(commonAI * Math.pow(i * 50 / constCells, 0.7))
            );    
     }
   }
 }
-v0.7: 0: 0, sqrt: 0, root3:0
-v0.7: 50: 0, sqrt: 2, root3:3
-v0.7: 100: 1, sqrt: 3, root3:4
-v0.7: 150: 1, sqrt: 3, root3:5
-v0.7: 200: 2, sqrt: 4, root3:5
-v0.7: 250: 3, sqrt: 4, root3:6
-v0.7: 300: 3, sqrt: 5, root3:6
-v0.7: 350: 4, sqrt: 5, root3:6
-v0.7: 400: 4, sqrt: 6, root3:6
-v0.7: 450: 5, sqrt: 6, root3:7
-v0.7: 500: 6, sqrt: 7, root3:7
-v0.7: 550: 6, sqrt: 7, root3:7
-v0.7: 600: 7, sqrt: 7, root3:7
+
+0 | v0.7: 0, sqrt: 0, root3:0, rootX:0
+50 | v0.7: 0, sqrt: 2, root3:3, rootX:1
+100 | v0.7: 1, sqrt: 3, root3:4, rootX:2
+150 | v0.7: 1, sqrt: 3, root3:5, rootX:2
+200 | v0.7: 2, sqrt: 4, root3:5, rootX:3
+250 | v0.7: 3, sqrt: 4, root3:6, rootX:4
+300 | v0.7: 3, sqrt: 5, root3:6, rootX:4
+350 | v0.7: 4, sqrt: 5, root3:6, rootX:5
+400 | v0.7: 4, sqrt: 6, root3:6, rootX:5
+450 | v0.7: 5, sqrt: 6, root3:7, rootX:6
+500 | v0.7: 6, sqrt: 7, root3:7, rootX:6
+550 | v0.7: 6, sqrt: 7, root3:7, rootX:7
+600 | v0.7: 7, sqrt: 7, root3:7, rootX:7
 ===
-v0.7: 650: 8, sqrt: 8, root3:8
-v0.7: 700: 8, sqrt: 8, root3:8
-v0.7: 750: 9, sqrt: 8, root3:8
-v0.7: 800: 9, sqrt: 8, root3:8
-v0.7: 850: 10, sqrt: 9, root3:8
-v0.7: 900: 11, sqrt: 9, root3:8
-v0.7: 950: 11, sqrt: 9, root3:8
-v0.7: 1000: 12, sqrt: 9, root3:9
-v0.7: 1050: 12, sqrt: 10, root3:9
-v0.7: 1100: 13, sqrt: 10, root3:9
-v0.7: 1150: 14, sqrt: 10, root3:9
-v0.7: 1200: 14, sqrt: 10, root3:9
-v0.7: 1250: 15, sqrt: 11, root3:9
-v0.7: 1300: 16, sqrt: 11, root3:9
-v0.7: 1350: 16, sqrt: 11, root3:9
-v0.7: 1400: 17, sqrt: 11, root3:10
-v0.7: 1450: 17, sqrt: 11, root3:10
-v0.7: 1500: 18, sqrt: 12, root3:10
-v0.7: 1550: 19, sqrt: 12, root3:10
-v0.7: 1600: 19, sqrt: 12, root3:10
-v0.7: 1650: 20, sqrt: 12, root3:10
-v0.7: 1700: 20, sqrt: 12, root3:10
+650 | v0.7: 8, sqrt: 8, root3:8, rootX:8
+700 | v0.7: 8, sqrt: 8, root3:8, rootX:8
+750 | v0.7: 9, sqrt: 8, root3:8, rootX:8
+800 | v0.7: 9, sqrt: 8, root3:8, rootX:9
+850 | v0.7: 10, sqrt: 9, root3:8, rootX:9
+900 | v0.7: 11, sqrt: 9, root3:8, rootX:10
+950 | v0.7: 11, sqrt: 9, root3:8, rootX:10
+1000 | v0.7: 12, sqrt: 9, root3:9, rootX:10
+1050 | v0.7: 12, sqrt: 10, root3:9, rootX:11
+1100 | v0.7: 13, sqrt: 10, root3:9, rootX:11
+1150 | v0.7: 14, sqrt: 10, root3:9, rootX:11
+1200 | v0.7: 14, sqrt: 10, root3:9, rootX:12
+1250 | v0.7: 15, sqrt: 11, root3:9, rootX:12
+1300 | v0.7: 16, sqrt: 11, root3:9, rootX:12
+1350 | v0.7: 16, sqrt: 11, root3:9, rootX:13
+1400 | v0.7: 17, sqrt: 11, root3:10, rootX:13
+1450 | v0.7: 17, sqrt: 11, root3:10, rootX:14
+1500 | v0.7: 18, sqrt: 12, root3:10, rootX:14
+1550 | v0.7: 19, sqrt: 12, root3:10, rootX:14
+1600 | v0.7: 19, sqrt: 12, root3:10, rootX:15
+1650 | v0.7: 20, sqrt: 12, root3:10, rootX:15
+1700 | v0.7: 20, sqrt: 12, root3:10, rootX:15
    */
 // max number of visible AI
+  public function getMaxAICoef(): Float
+    {
+      return (game.scene.area.emptyScreenCells <
+        WorldConst.AREA_AI_CELLS ? 0.6 : 0.3);
+
+    }
   public function getMaxAI(): Int
     {
       return Std.int(info.commonAI *
         Math.pow(1.0 * game.scene.area.emptyScreenCells /
-          WorldConst.AREA_AI_CELLS, 0.3));
+          WorldConst.AREA_AI_CELLS, getMaxAICoef()));
     }
 
 // spawn new AI, called each turn

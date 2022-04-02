@@ -211,7 +211,7 @@ class SoundManager
 //          game.debug('Skipping ' + key);
           return;
         }
-      game.debug('Playing sound ' + key);
+//      game.debug('Playing sound ' + key);
       sounds[key].play(false, game.config.effectsVolume / 100.0);
 #end
     }

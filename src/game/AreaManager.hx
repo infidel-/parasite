@@ -30,6 +30,15 @@ class AreaManager
         trace(e);
     }
 
+#if mydebug
+  public function debugInfo(buf: StringBuf)
+    {
+      if (_list.length > 0)
+        buf.add('<hr>');
+      for (e in _list)
+        buf.add(e.type + ': ' + e.turns + '<br>');
+    }
+#end
 
 // add event originating from x,y
   public inline function add(type: _AreaManagerEventType, x: Int, y: Int,
@@ -47,7 +56,7 @@ class AreaManager
         params: params
         };
 #if mydebug
-      Const.p(game.turns + ': AreaManager.add(): ' + e);
+//      Const.p(game.turns + ': AreaManager.add(): ' + e);
 #end
 
       _list.push(e);
@@ -69,7 +78,7 @@ class AreaManager
         turns: turns
       };
 #if mydebug
-      Const.p(game.turns + ': AreaManager.addObject(): ' + e);
+ //     Const.p(game.turns + ': AreaManager.addObject(): ' + e);
 #end
 
       _list.push(e);
@@ -91,7 +100,7 @@ class AreaManager
         turns: turns
       };
 #if mydebug
-      Const.p(game.turns + ': AreaManager.addAI(): ' + e);
+//      Const.p(game.turns + ': AreaManager.addAI(): ' + e);
 #end
 
       _list.push(e);
@@ -132,7 +141,7 @@ class AreaManager
 
           // run this event
 #if mydebug
-      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
+//      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
 #end
 
           // someone called the law

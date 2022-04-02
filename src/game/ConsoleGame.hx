@@ -474,7 +474,8 @@ class ConsoleGame
             ' = [common AI: ' + game.area.info.commonAI +
             ' * pow(' +
             'emptyScreenCells: ' + game.scene.area.emptyScreenCells +
-            ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', 0.3)]'
+            ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', ' +
+            game.area.getMaxAICoef() + ')]'
           );
         }
 #if mydebug

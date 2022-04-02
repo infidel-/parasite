@@ -191,14 +191,14 @@ hr {
 
 #hud-debug-info {
   opacity: 0.9;
-  background-color: #ffffff17;
+  background-color: #273242d6;
   color: #9ad1ff;
   border: 1px solid #a4a4a4;
   min-width: 200px;
   max-width: 30ch;
   min-height: 1.2em;
   left: 10px;
-  top: 300px;
+  top: 200px;
   position: fixed;
   padding: 5px;
   outline: none;

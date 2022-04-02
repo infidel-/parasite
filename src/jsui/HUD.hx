@@ -364,12 +364,20 @@ class HUD
   function updateDebugInfo()
     {
       var buf = new StringBuf();
+      buf.add(
+        'Tile resolution: ' +
+        Std.int(game.scene.win.width / Const.TILE_SIZE) + 'x' +
+        Std.int(game.scene.win.height / Const.TILE_SIZE) +
+        '<br>emptyScreenCells: ' + game.scene.area.emptyScreenCells +
+        ', maxAI: ' + game.area.getMaxAI() + '<br>');
       if (!game.group.isKnown)
         buf.add('Group known count: ' + game.group.knownCount + '<br/>');
       buf.add('Group priority: ' + Const.round(game.group.priority) +
         ', team timeout: ' + game.group.teamTimeout + '<br/>');
       if (game.group.team != null)
         buf.add('Team: ' + game.group.team + '<br/>');
+      if (game.location == LOCATION_AREA)
+        game.managerArea.debugInfo(buf);
       debugInfo.innerHTML = buf.toString();
     }
 #end
