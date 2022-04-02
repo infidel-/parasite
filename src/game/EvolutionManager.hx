@@ -4,7 +4,6 @@ package game;
 
 import const.EvolutionConst;
 
-
 class EvolutionManager
 {
   var game: Game;
@@ -76,7 +75,8 @@ class EvolutionManager
                 }
 
               player.log('Following the ' + path.info.name +
-                ' direction you now possess the knowledge about ' + imp.info.name + '.',
+                ' direction you now possess the knowledge about ' +
+                imp.info.name + '.',
                 COLOR_EVOLUTION);
               path.ep = 0;
               path.level++;
@@ -108,8 +108,16 @@ class EvolutionManager
       var list = [ 'strength', 'constitution', 'intellect', 'psyche' ];
 
       // reduce attributes in loop
+      var chance = 100;
+      if (game.player.difficulty == UNSET ||
+          game.player.difficulty == EASY)
+        chance = 50;
+      else if (game.player.difficulty == NORMAL)
+        chance = 75;
       for (i in 0...time)
         {
+          if (Std.random(100) > chance)
+            continue;
           var attr = list[Std.random(list.length)];
           var val = Reflect.field(player.host.baseAttrs, attr) - 1;
           Reflect.setField(player.host.baseAttrs, attr, val);

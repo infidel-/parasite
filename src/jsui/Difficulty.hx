@@ -139,9 +139,9 @@ class Difficulty extends UIWindow
       id: 'evolution',
       title: 'Evolution',
       notes: [
-        'Gives 4 generic improvements. No limits for maximum improvement level.',
-        'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe.',
-        'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe.',
+        'Gives 4 generic improvements. No limits for maximum improvement level. Host degradation is slower.',
+        'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe. Normal host degradation.',
+        'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe. Fast host degradation.',
       ]
     },
 
