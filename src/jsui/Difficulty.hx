@@ -97,7 +97,9 @@ class Difficulty extends UIWindow
       else return;
 
       // set specific game difficulty setting
-      if (currentChoice.id == 'group')
+      if (currentChoice.id == 'survival')
+        game.player.difficulty = d;
+      else if (currentChoice.id == 'group')
         game.group.difficulty = d;
       else if (currentChoice.id == 'evolution')
         {
@@ -113,6 +115,16 @@ class Difficulty extends UIWindow
     }
 
   static var choices: Map<String, _Choice> = [
+    'survival' => {
+      id: 'survival',
+      title: 'Survival',
+      notes: [
+        'Humans call the law slower. You will stop them from doing that when you jump on them.',
+        'Fast calling speed. Calls are not interrupted with attaching.',
+        'Same calling rules as normal.',
+      ]
+    },
+
     'group' => {
       id: 'group',
       title: 'The Group',

@@ -8,6 +8,7 @@ class Player
 {
   var game: Game; // game state link
 
+  public var difficulty: _Difficulty; // survival difficulty
   public var evolutionManager: EvolutionManager; // main evolution control
 
   // state-independent
@@ -30,6 +31,7 @@ class Player
     {
       game = g;
       evolutionManager = new EvolutionManager(this, game);
+      difficulty = UNSET;
 
       vars = {
         inventoryEnabled: false,

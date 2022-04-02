@@ -276,9 +276,10 @@ class UI
               hud.action(n);
             else if (components[_state] != null)
               components[_state].action(n);
-            inputState = 0;
-            ret = true;
-            break;
+            return true;
+//            inputState = 0;
+//            ret = true;
+//            break;
           }
 
       // yes/no
@@ -324,12 +325,13 @@ class UI
             }
         }
 
+/*
       // next 10 actions
       if (key == 's')
         {
           inputState = 1;
           ret = true;
-        }
+        }*/
 
       return ret;
     }

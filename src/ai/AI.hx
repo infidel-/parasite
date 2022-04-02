@@ -67,7 +67,7 @@ class AI
 
     // alerted and player not visible, count down
 //    alertPlayerNotVisible: Int,
-    };
+  };
 
   // attrs
   public var baseAttrs: _Attributes; // base attributes

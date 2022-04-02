@@ -26,7 +26,7 @@ class PlayerArea
   // state "parasite"
 
   // state "attach"
-  public var attachHost: AI; // potential host
+  public var attachHost: AI; // host player is attached to
   public var attachHold(default, set): Int; // hold strength
 
 

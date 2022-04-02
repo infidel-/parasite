@@ -66,8 +66,12 @@ class Goals
       messageComplete: 'The bipedal hosts look like a dominant life form. They may be more useful.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_INVADE_HUMAN);
-        }
-      },
+        game.ui.event({
+          state: UISTATE_DIFFICULTY,
+          obj: 'survival'
+        });
+      }
+    },
 
     GOAL_INVADE_HUMAN => {
       id: GOAL_INVADE_HUMAN,

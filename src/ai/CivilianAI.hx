@@ -78,7 +78,11 @@ class CivilianAI extends HumanAI
               return;
             }
 
-          game.managerArea.addAI(this, AREAEVENT_CALL_LAW, 1);
+          var time = 1;
+          if (game.player.difficulty == UNSET ||
+              game.player.difficulty == EASY)
+            time = 2;
+          game.managerArea.addAI(this, AREAEVENT_CALL_LAW, time);
         }
     }
 }

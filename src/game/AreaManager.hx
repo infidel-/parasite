@@ -198,6 +198,16 @@ class AreaManager
 // event: civilian calls the law
   function onCallLaw(e: AreaEvent)
     {
+      if (game.player.difficulty == UNSET ||
+          game.player.difficulty == EASY)
+        {
+          if ((game.player.state == PLR_STATE_HOST && game.player.host == e.ai) ||
+              (game.player.state == PLR_STATE_ATTACHED && game.playerArea.attachHost == e.ai))
+            {
+              game.log('You have managed to stop ' + e.ai.getName() + ' from calling the authorities.');
+              return;
+            }
+        }
       var sdetails;
       var apts = 0;
       var pts = 0;
