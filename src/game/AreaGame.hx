@@ -259,7 +259,9 @@ class AreaGame
 
       // leave area with active team
       if (game.group.team != null)
-        game.group.team.onLeaveArea();
+        {
+          game.group.team.onLeaveArea();
+        }
 
       // remove events
       game.managerArea.onLeaveArea();

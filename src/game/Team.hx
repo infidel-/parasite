@@ -257,12 +257,44 @@ class Team extends FSM<_TeamState, _TeamFlag>
       area.habitat = null;
       game.region.removeArea(area.habitatAreaID);
       game.scene.region.updateIconsArea(area.x, area.y);
-      game.message("You feel great pain as the habitat at " +
-        area.x + "," + area.y +
-        " is destroyed. This will leave a permanent mark.", COLOR_ALERT);
+      var msg = 'You feel great pain as the habitat at ' +
+        area.x + ',' + area.y + ' is destroyed. ';
+      if (game.player.vars.habitatsLeft == 1)
+        msg += 'This is the end...';
+      else msg += 'This will leave a permanent mark.';
+      game.message(msg, COLOR_ALERT);
 
-      // reduce max energy (30 min)
-      if (game.player.maxEnergy > 30)
+      // habitat shock death
+      game.player.vars.habitatsLeft--;
+      if (game.player.vars.habitatsLeft == 0)
+        {
+          game.finish('lose', 'habitatShock');
+          return;
+        }
+
+      // reduce max energy
+      var maxEnergy = 0;
+      var shock1 = 0;
+      var shock2 = 0;
+      if (game.group.difficulty == EASY)
+        {
+          maxEnergy = 50;
+          shock1 = 10;
+          shock2 = 10;
+        }
+      else if (game.group.difficulty == NORMAL)
+        {
+          maxEnergy = 30;
+          shock1 = 30;
+          shock2 = 20;
+        }
+      else if (game.group.difficulty == HARD)
+        {
+          maxEnergy = 10;
+          shock1 = 50;
+          shock2 = 50;
+        }
+      if (game.player.maxEnergy > maxEnergy)
         {
           game.player.maxEnergy -= 10;
           game.player.energy = game.player.energy; // clamp current value
@@ -271,14 +303,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // control reduced
       if (game.player.state == PLR_STATE_HOST)
         {
-          game.player.hostControl -= 30;
+          game.player.hostControl -= shock1;
           game.log('You feel your control slipping.');
         }
 
       // attach hold reduced
       else if (game.player.state == PLR_STATE_ATTACHED)
         {
-          game.playerArea.attachHold -= 20;
+          game.playerArea.attachHold -= shock2;
           game.log('You feel your grip slipping.');
         }
     }

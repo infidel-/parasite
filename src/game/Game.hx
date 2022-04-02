@@ -252,6 +252,8 @@ class Game
             finishText = 'Your energy was completely depleted.';
           else if (condition == 'noHealth')
             finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
+          else if (condition == 'habitatShock')
+            finishText = "You have received your final shock from the habitat destruction.";
 
           // parasite death
           scene.soundManager.playSound('parasite_die' +

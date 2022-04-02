@@ -220,7 +220,7 @@ class ConsoleGame
             'area.alertness, ' +
             'host., h. - energy, maxEnergy, health, maxHealth, ' +
             'group. - knownCount, priority, ' +
-            'player. - godmode (p.god), invisible (p.invis), los (p.los), ' +
+            'player. - godmode (p.god), habitats (p.hab), invisible (p.invis), los (p.los), ' +
             'team. - distance, level, size, timeout, timer');
           return;
         }
@@ -263,6 +263,8 @@ class ConsoleGame
       else if (key == 'group.priority')
         game.group.priority = valInt;
 
+      else if (key == 'player.habitats' || key == 'p.hab')
+        game.player.vars.habitatsLeft = valInt;
       else if (key == 'player.godmode' || key == 'p.god')
         game.player.vars.godmodeEnabled = valBool;
       else if (key == 'player.invisible' || key == 'p.invis')

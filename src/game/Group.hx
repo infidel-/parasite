@@ -44,8 +44,8 @@ class Group
         return;
 
       // group info
-      buf.add('<br/>' +
-        Const.col('group-title', 'Group info [' + difficulty + ']') +
+      buf.add('<br/>');
+      buf.add(Const.col('group-title', 'Group info [' + difficulty + ']') +
         '<br/>');
       if (difficulty == HARD)
         {

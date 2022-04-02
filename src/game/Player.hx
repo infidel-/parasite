@@ -41,6 +41,7 @@ class Player
         organsEnabled: false,
         npcEnabled: false,
         searchEnabled: false,
+        habitatsLeft: 1000,
 
         evolutionEnergyPerTurn: 5,
         evolutionEnergyPerTurnMicrohabitat: 4,
@@ -233,6 +234,7 @@ private typedef PlayerVars = {
   organsEnabled: Bool,
   npcEnabled: Bool, // npc spawn enabled?
   searchEnabled: Bool, // computer search info enabled?
+  habitatsLeft: Int, // max total amount of habitats
 
   evolutionEnergyPerTurn: Int, // energy spent per turn during evolution
   evolutionEnergyPerTurnMicrohabitat: Int, // -- in microhabitat
@@ -248,4 +250,4 @@ private typedef PlayerVars = {
   losEnabled: Bool, // LOS checks enabled?
   invisibilityEnabled: Bool, // player invisibility enabled?
   godmodeEnabled: Bool, // player godmode enabled?
-  };
+};

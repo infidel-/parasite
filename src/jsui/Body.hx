@@ -294,6 +294,9 @@ class Body extends UIWindow
       if (n == 0)
         buf.add('<center>no skills</center><br/>');
 
+      if (game.player.vars.habitatsLeft < 100)
+        buf.add('Habitats left: ' + game.player.vars.habitatsLeft + '<br>');
+
       // get group/team info
       game.group.getInfo(buf);
 

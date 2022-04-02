@@ -100,10 +100,18 @@ class Difficulty extends UIWindow
       if (currentChoice.id == 'survival')
         game.player.difficulty = d;
       else if (currentChoice.id == 'group')
-        game.group.difficulty = d;
+        {
+          game.group.difficulty = d;
+        }
       else if (currentChoice.id == 'evolution')
         {
           game.player.evolutionManager.difficulty = d;
+          if (game.player.evolutionManager.difficulty == EASY)
+            game.player.vars.habitatsLeft = 1000;
+          else if (game.player.evolutionManager.difficulty == NORMAL)
+            game.player.vars.habitatsLeft = 10;
+          else if (game.player.evolutionManager.difficulty == HARD)
+            game.player.vars.habitatsLeft = 5;
           game.player.evolutionManager.giveStartingImprovements();
         }
       else if (currentChoice.id == 'timeline')
@@ -129,9 +137,9 @@ class Difficulty extends UIWindow
       id: 'group',
       title: 'The Group',
       notes: [
-        'Shows the exact numerical group priority information and team stats in skills and knowledges window.',
-        'Shows group and team information described in vague words.',
-        'No group or team information.',
+        'Shows the exact numerical group and team information in the skills section. Limited shock and energy loss from habitat destruction.',
+        'Shows group and team information described vaguely. Habitat destruction shock is more severe.',
+        'No group or team information available. Habitat destruction shock is harsh.',
       ]
     },
 
@@ -139,9 +147,9 @@ class Difficulty extends UIWindow
       id: 'evolution',
       title: 'Evolution',
       notes: [
-        'Gives 4 generic improvements. No limits for maximum improvement level. Host degradation is slower.',
-        'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe. Normal host degradation.',
-        'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe. Fast host degradation.',
+        'Gives 4 generic improvements. No limit for maximum improvement level. Host degradation is slower. No limit on total habitats amount.',
+        'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe. Normal host degradation. Finite habitat amount per game.',
+        'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe. Fast host degradation. Habitat limit decreased.',
       ]
     },
 
