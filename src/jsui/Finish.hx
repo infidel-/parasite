@@ -37,8 +37,7 @@ class Finish extends UIWindow
       var buf = new StringBuf();
       buf.add('<center><h3>GAME OVER</h3></center><br/>');
       buf.add(obj);
-      buf.add("<br/><br/>Close the window" +
-        "<br/>Then you can restart the game by pressing ENTER<br/>");
+      buf.add("<br/><br/>Close the window, then you can restart the game by pressing ENTER<br/>");
       text.innerHTML = buf.toString();
     }
 

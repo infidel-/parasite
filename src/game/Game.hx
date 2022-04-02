@@ -248,6 +248,8 @@ class Game
           log('You have lost the game.');
           if (condition == 'noHost')
             finishText = 'You cannot survive without a host for long.';
+          else if (condition == 'noEnergy')
+            finishText = 'Your energy was completely depleted.';
           else if (condition == 'noHealth')
             finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
 

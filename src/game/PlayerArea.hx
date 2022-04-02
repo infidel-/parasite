@@ -303,6 +303,12 @@ class PlayerArea
           return;
         }
 
+      else if (state == PLR_STATE_ATTACHED && player.energy <= 0)
+        {
+          game.finish('lose', 'noEnergy');
+          return;
+        }
+
       // fix for when player enters sewers and host dies
       // we need to recheck player icon
       if (game.location == LOCATION_REGION)
