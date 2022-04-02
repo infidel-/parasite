@@ -277,16 +277,17 @@ class HUD
   function updateInfo()
     {
       var buf = new StringBuf();
-      buf.add('Turn: ' + game.turns + ', at (');
+      buf.add('Turn: ' + game.turns);
       if (game.location == LOCATION_AREA)
-          buf.add(
+          buf.add(Const.col('gray',
+              Const.small(' [' + game.playerArea.ap + ']')) + ', at (' +
             game.playerArea.x + ',' + game.playerArea.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.area.alertness) +
 #end
-            '<br/>Actions: ' + game.playerArea.ap + '<br/>');
+            '<br/>');
       else if (game.location == LOCATION_REGION)
-        buf.add(
+        buf.add(', at (' +
           game.playerRegion.x + ',' + game.playerRegion.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
@@ -345,9 +346,12 @@ class HUD
             host.energy + '</font>/' +
             host.maxEnergy);
           buf.add(' ' + Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]') + '<br/>');
-          buf.add('Evolution direction:<br/>  ');
-          buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
+            energyPerTurn + '/t]'));
+          if (game.player.evolutionManager.isActive)
+            {
+              buf.add('<br>Evolution direction:<br/>  ');
+              buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
+            }
           var str = host.organs.getInfo();
           if (str != null)
             {
