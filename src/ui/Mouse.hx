@@ -76,6 +76,9 @@ class Mouse
         }
 
       var pos = getXY();
+      if (pos.x < 0 || pos.y < 0 ||
+          pos.x >= game.area.width || pos.y >= game.area.height)
+        return;
 #if mydebug
       // debug mode
       if (button == Key.MOUSE_MIDDLE)
@@ -209,8 +212,8 @@ class Mouse
   public inline function getXY(): { x: Int, y: Int }
     {
       return {
-        x: Std.int((game.scene.cameraX + game.scene.mouseX) / Const.TILE_SIZE),
-        y: Std.int((game.scene.cameraY + game.scene.mouseY) / Const.TILE_SIZE)
+        x: Math.floor((game.scene.cameraX + game.scene.mouseX) / Const.TILE_SIZE),
+        y: Math.floor((game.scene.cameraY + game.scene.mouseY) / Const.TILE_SIZE)
       };
     }
 
@@ -219,8 +222,15 @@ class Mouse
   function updateArea(force: Bool)
     {
       var c = CURSOR_BLOCKED;
-
       var pos = getXY();
+      if (pos.x < 0 || pos.y < 0 ||
+          pos.x >= game.area.width || pos.y >= game.area.height)
+        {
+          oldPos = pos;
+          game.scene.area.clearPath();
+          setCursor(c);
+          return;
+        }
       var posChanged = false;
       if (oldPos.x != pos.x || oldPos.y != pos.y || force)
         {
