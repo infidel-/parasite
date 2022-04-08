@@ -5,6 +5,8 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.InputElement;
+import js.html.PointerEvent;
 
 import game.Game;
 
@@ -20,7 +22,7 @@ class Options extends UIWindow
 
       var title = Browser.document.createDivElement();
       title.id = 'window-options-title';
-      title.innerHTML = '<center><h3>OPTIONS</h3></center>';
+      title.innerHTML = 'OPTIONS';
       window.appendChild(title);
       contents = Browser.document.createDivElement();
       contents.id = 'window-options-contents';
@@ -61,10 +63,57 @@ class Options extends UIWindow
           restartText.style.visibility = 'inherit';
         }, 8, 40, 1, 'int', '');
 
+      // options
+      var subtitle = Browser.document.createDivElement();
+      subtitle.id = 'window-options-subtitle';
+      subtitle.innerHTML = 'ADVANCED';
+      contents.appendChild(subtitle);
+
+      addSlider('Log lines in HUD', game.config.hudLogLines,
+        function (v: Float) {
+          game.config.set('hudLogLines', '' + Std.int(v), false);
+          game.hudMessageList.clear();
+        }, 1, 10, 1, 'int', '');
+      addCheckbox('Center camera on player near map edges',
+        'alwaysCenterCamera', game.config.alwaysCenterCamera, '-9%');
+      addCheckbox('Extended gameplay information',
+        'extendedInfo', game.config.extendedInfo, '-26.9%');
+
       restartText = Browser.document.createDivElement();
       restartText.innerHTML = "<center>The changes you've made will require restart.</center>";
       restartText.style.visibility = 'hidden';
       contents.appendChild(restartText);
+    }
+
+// add checkbox to options
+  function addCheckbox(label: String, id: String, val: Bool, pos: String)
+    {
+      var cont = Browser.document.createDivElement();
+      cont.className = 'checkbox-contents';
+      contents.appendChild(cont);
+
+      var title = Browser.document.createLabelElement();
+      title.className = 'checkbox-title';
+      title.innerHTML = label;
+      cont.appendChild(title);
+
+      var cb = Browser.document.createInputElement();
+      cb.id = 'option-' + id;
+      cb.type = 'checkbox';
+      cb.className = 'checkbox-element';
+      cb.checked = val;
+      title.appendChild(cb);
+      cb.onclick = function (e: PointerEvent) {
+        var targetID: String = untyped e.target.id;
+        var el: InputElement = cast game.ui.getElement(targetID);
+        var itemID = targetID.substr(7);
+        game.config.set(itemID, (el.checked ? '1' : '0'), true);
+      };
+
+      var span = Browser.document.createSpanElement();
+      span.className = 'checkbox-span';
+      span.style.right = pos;
+      title.appendChild(span);
     }
 
 // add slider to options

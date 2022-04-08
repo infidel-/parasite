@@ -293,7 +293,7 @@ class Const
 
 
 // print stuff
-  public static inline function p(s: String)
+  public static inline function p(s: Dynamic)
     {
 #if js
       js.Browser.console.log(s);

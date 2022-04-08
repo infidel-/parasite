@@ -10,7 +10,6 @@ import game.Game;
 class UIWindow
 {
   var game: Game;
-  var ui: UI;
   var window: DivElement;
   var bg: DivElement;
   var close: DivElement;
@@ -19,7 +18,6 @@ class UIWindow
   public function new(g: Game, id: String)
     {
       game = g;
-      ui = game.ui;
       bg = Browser.document.createDivElement();
       bg.className = 'window-bg';
       bg.id = id + '-bg';

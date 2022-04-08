@@ -555,12 +555,22 @@ fieldset {
 #window-options {
   border: 30px solid;
   width: 40ch;
-  height: 16em;
+  height: 25em;
   pointer-events: all;
 }
 
 #window-options-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
   padding-bottom: 10px;
+}
+
+#window-options-subtitle {
+  font-weight: bold;
+  text-align: center;
+  padding-top: 10px;
+  padding-bottom: 5px;
 }
 
 #window-options-contents {
@@ -609,6 +619,45 @@ fieldset {
 .slider-value {
   width: 16%;
   text-align: center;
+}
+
+.checkbox-contents {
+  display: flex;
+  padding-bottom: 4px;
+}
+
+.checkbox-title {
+  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  width: 100%;
+}
+
+.checkbox-element {
+  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  width: 16%;
+  text-align: center;
+  display: none;
+}
+
+.checkbox-span {
+  height: 1em;
+  width: 1em;
+  top: 3px;
+  right: -9%;
+  border: 2px solid #7d92a2;
+  border-radius: 3px;
+  display: inline-block;
+  position: relative;
+}
+
+[type=checkbox]:checked + span:before {
+  content: '\2714';
+  position: absolute;
+  top: -4px;
+  left: 2px;
+}
+
+input[type=checkbox] {
+  transform: scale(1.5);
 }
 
 .blinking-red {
