@@ -76,11 +76,15 @@ class Options extends UIWindow
         }, 1, 10, 1, 'int', '');
       addCheckbox('Center camera on player near map edges',
         'alwaysCenterCamera', game.config.alwaysCenterCamera, '-9%');
+      addCheckbox('Laptop movement keys (uiojklm,.)',
+        'laptopKeyboard', game.config.laptopKeyboard, '-23.6%');
       addCheckbox('Extended gameplay information',
         'extendedInfo', game.config.extendedInfo, '-26.9%');
 
       restartText = Browser.document.createDivElement();
-      restartText.innerHTML = "<center>The changes you've made will require restart.</center>";
+      restartText.style.textAlign = 'center';
+      restartText.style.fontWeight = 'bold';
+      restartText.innerHTML = "The changes you've made will require restart.";
       restartText.style.visibility = 'hidden';
       contents.appendChild(restartText);
     }

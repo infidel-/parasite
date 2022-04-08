@@ -302,7 +302,8 @@ class UI
       if (_state == UISTATE_DEFAULT)
         {
           // skip until end of turn
-          if (code == 'Numpad5' || key == 'z')
+          if (code == 'Numpad5' || key == 'z' ||
+              (game.config.laptopKeyboard && key == 'k'))
             {
               game.turn();
               game.updateHUD();
@@ -348,40 +349,48 @@ class UI
       var dy = 0;
 
       if (code == 'ArrowUp' ||
-          code == 'Numpad8')
+          code == 'Numpad8' ||
+          (game.config.laptopKeyboard && key == 'i'))
         dy = -1;
 
       if (code == 'ArrowDown' ||
-          code == 'Numpad2')
+          code == 'Numpad2' ||
+          (game.config.laptopKeyboard && key == ','))
         dy = 1;
 
       if (code == 'ArrowLeft' ||
-          code == 'Numpad4')
+          code == 'Numpad4' ||
+          (game.config.laptopKeyboard && key == 'j'))
         dx = -1;
 
       if (code == 'ArrowRight' ||
-          code == 'Numpad6')
+          code == 'Numpad6' ||
+          (game.config.laptopKeyboard && key == 'l'))
         dx = 1;
 
-      if (code == 'Numpad7')
+      if (code == 'Numpad7' ||
+          (game.config.laptopKeyboard && key == 'u'))
         {
           dx = -1;
           dy = -1;
         }
 
-      if (code == 'Numpad9')
+      if (code == 'Numpad9' ||
+          (game.config.laptopKeyboard && key == 'o'))
         {
           dx = 1;
           dy = -1;
         }
 
-      if (code == 'Numpad1')
+      if (code == 'Numpad1' ||
+          (game.config.laptopKeyboard && key == 'm'))
         {
           dx = -1;
           dy = 1;
         }
 
-      if (code == 'Numpad3')
+      if (code == 'Numpad3' ||
+          (game.config.laptopKeyboard && key == '.'))
         {
           dx = 1;
           dy = 1;

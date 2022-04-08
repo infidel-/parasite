@@ -16,6 +16,7 @@ class Config
   public var mouseEnabled: Bool;
   public var extendedInfo: Bool;
   public var alwaysCenterCamera: Bool;
+  public var laptopKeyboard: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
@@ -40,6 +41,7 @@ class Config
       extendedInfo = true;
 #end
       alwaysCenterCamera = true;
+      laptopKeyboard = false;
 
       fontSize = 16;
       hudLogLines = 4;
@@ -55,6 +57,7 @@ class Config
       map['mouseEnabled'] = '1';
       map['extendedInfo'] = '0';
       map['alwaysCenterCamera'] = '1';
+      map['laptopKeyboard'] = '0';
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
@@ -78,6 +81,7 @@ class Config
         {
           trace(e);
         }
+      // apply options
       jsui.UI.setVar('--text-font-size', fontSize + 'px');
 #elseif js
       var str = js.Browser.window.localStorage.getItem('config');
@@ -128,6 +132,8 @@ class Config
         extendedInfo = (val == '1');
       else if (key == 'alwaysCenterCamera')
         alwaysCenterCamera = (val == '1');
+      else if (key == 'laptopKeyboard')
+        laptopKeyboard = (val == '1');
 
       else if (key == 'fontSize')
         {
