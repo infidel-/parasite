@@ -65,6 +65,7 @@ class ConsoleGame
             'cfg|config,<br/>' +
             'dg - debug: graphics info, ' +
             'dthrow - debug: throw exception, ' +
+            'dalert - debug: show alert, ' +
             // go
             'ga - go and enter area, ' +
             'ge - go event location, ' +
@@ -483,6 +484,8 @@ class ConsoleGame
 #if mydebug
       else if (cmd == 'dthrow')
         throw 'test exception';
+      else if (cmd == 'dalert')
+        game.log('This is a test alert message.', COLOR_ALERT);
 #end
     }
 

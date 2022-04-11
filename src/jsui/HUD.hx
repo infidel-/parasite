@@ -222,7 +222,10 @@ class HUD
       var buf = new StringBuf();
       for (l in game.hudMessageList)
         {
-          buf.add("<span style='color:");
+          buf.add('<span ');
+          if (l.col == COLOR_ALERT)
+            buf.add('class=highlight ');
+          buf.add("style='color:");
           buf.add(Const.TEXT_COLORS[l.col]);
           buf.add("'>");
           buf.add(l.msg);

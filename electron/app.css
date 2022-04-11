@@ -868,3 +868,22 @@ input[type=checkbox] {
   border-color: #323e503b !important;
   filter: blur(4px);
 }
+
+.highlight {
+  animation: 2.5s infinite font-highlight;
+}
+
+@keyframes font-highlight {
+  from {
+    font-size: var(--text-font-size);
+    opacity:0.8;
+  }
+  50% {
+    font-size: 101%;
+    opacity:1.0;
+  }
+  to {
+    font-size: var(--text-font-size);
+    opacity:0.8;
+  }
+}
