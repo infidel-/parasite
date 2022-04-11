@@ -309,7 +309,7 @@ class UI
               game.updateHUD();
               ret = true;
             }
-
+/*
           // toggle fullscreen
           else if (key == 'f')
             {
@@ -324,6 +324,7 @@ class UI
                 }
               ret = true;
             }
+*/
         }
 
 /*

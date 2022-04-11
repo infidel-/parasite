@@ -62,8 +62,10 @@ class Options extends UIWindow
           game.config.set('fontSize', '' + v, false);
           restartText.style.visibility = 'inherit';
         }, 8, 40, 1, 'int', '');
+      addCheckbox('Enable fullscreen',
+        'fullscreen', game.config.fullscreen, '-55.6%');
 
-      // options
+      // advanced options
       var subtitle = Browser.document.createDivElement();
       subtitle.id = 'window-options-subtitle';
       subtitle.innerHTML = 'ADVANCED';

@@ -17,6 +17,7 @@ class Config
   public var extendedInfo: Bool;
   public var alwaysCenterCamera: Bool;
   public var laptopKeyboard: Bool;
+  public var fullscreen: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
@@ -42,6 +43,7 @@ class Config
 #end
       alwaysCenterCamera = true;
       laptopKeyboard = false;
+      fullscreen = false;
 
       fontSize = 16;
       hudLogLines = 4;
@@ -58,6 +60,7 @@ class Config
       map['extendedInfo'] = '0';
       map['alwaysCenterCamera'] = '1';
       map['laptopKeyboard'] = '0';
+      map['fullscreen'] = '0';
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
@@ -134,6 +137,11 @@ class Config
         alwaysCenterCamera = (val == '1');
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
+      else if (key == 'fullscreen')
+        {
+          fullscreen = (val == '1');
+          electron.renderer.IpcRenderer.invoke('fullscreen' + val);
+        }
 
       else if (key == 'fontSize')
         {
