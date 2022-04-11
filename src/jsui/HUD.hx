@@ -256,6 +256,8 @@ class HUD
           buf.add(info.note + '<br/>');
           if (info.note2 != null)
             buf.add(info.note2 + '<br/>');
+          if (info.noteFunc != null)
+            buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');
         }
       var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'

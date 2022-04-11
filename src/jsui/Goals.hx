@@ -43,6 +43,8 @@ class Goals extends UIWindow
           buf.add(info.note + '<br/>');
           if (info.note2 != null)
             buf.add(info.note2 + '<br/>');
+          if (info.noteFunc != null)
+            buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');
         }
       buf.add('</div>');
@@ -60,6 +62,8 @@ class Goals extends UIWindow
           buf.add(info.note + '<br/>');
           if (info.note2 != null)
             buf.add(info.note2 + '<br/>');
+          if (info.noteFunc != null)
+            buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');
           hasCompletedGoals = true;
         }
@@ -80,6 +84,8 @@ class Goals extends UIWindow
           buf.add(info.note + '<br/>');
           if (info.note2 != null)
             buf.add(info.note2 + '<br/>');
+          if (info.noteFunc != null)
+            buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');
           hasFailedGoals = true;
         }

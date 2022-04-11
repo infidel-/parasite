@@ -283,6 +283,10 @@ class Goals
       note: 'Probe host brains to raise the human society knowledge to 25%. This might require multiple hosts.',
       messageReceive: 'The humans have evolved a large and intricate society. I must study it some more.',
       messageComplete: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.',
+      noteFunc: function (game) {
+        return Const.small('Current level: ' +
+          game.player.skills.getLevel(KNOW_SOCIETY) + '%');
+      },
       onComplete: function (game, player) {
         player.vars.timelineEnabled = true;
         game.player.vars.objectsEnabled = true;
@@ -378,6 +382,7 @@ typedef GoalInfo = {
   name: String, // goal name
   note: String, // goal note (static part)
   ?note2: String, // additional goal note (dynamic part, changed ingame)
+  ?noteFunc: Game -> String, // dynamic note function, changed every turn
 
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion
