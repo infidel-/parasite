@@ -317,7 +317,7 @@ class Goals
     GOAL_LEARN_CLUE => {
       id: GOAL_LEARN_CLUE,
       name: 'Find a clue',
-      note: 'Find any clue about the events that happened in this location',
+      note: 'Find any clue about the events that happened.',
       messageComplete: 'The chain of events that led to my current state is long. There were many humans involved.',
       onComplete: function (game, player) {
         player.vars.npcEnabled = true;
