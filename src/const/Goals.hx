@@ -284,8 +284,8 @@ class Goals
       messageReceive: 'The humans have evolved a large and intricate society. I must study it some more.',
       messageComplete: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.',
       noteFunc: function (game) {
-        return Const.small('Current level: ' +
-          game.player.skills.getLevel(KNOW_SOCIETY) + '%');
+        return Const.col('gray', Const.small('Current level: ' +
+          game.player.skills.getLevel(KNOW_SOCIETY) + '%'));
       },
       onComplete: function (game, player) {
         player.vars.timelineEnabled = true;

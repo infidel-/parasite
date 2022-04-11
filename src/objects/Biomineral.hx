@@ -20,13 +20,13 @@ class Biomineral extends HabitatObject
   public override function onMoveTo()
     {
       var h = game.area.habitat;
-      game.log(Const.small('[' +
+      game.log(Const.col('gray', Const.small('[' +
         h.energyUsed + '/' + h.energy +
         ' habitat energy used. ' +
         'Each turn: host energy: +' + h.hostEnergyRestored +
         ', parasite energy: +' + h.parasiteEnergyRestored +
         ', parasite health: +' + h.parasiteHealthRestored +
-        ']'));
+        ']')));
     }
 
 /*
