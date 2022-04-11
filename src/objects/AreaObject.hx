@@ -116,6 +116,9 @@ class AreaObject
   public dynamic function onAction(id: String): Bool
     { return false; }
 
+// dynamic: when moved onto
+  public dynamic function onMoveTo()
+    {}
 
   public function toString(): String
     {

@@ -915,6 +915,10 @@ class PlayerArea
         (cnt > 1 ? 'the following objects ' : 'an object ') + 'here: ' +
         s.toString() + '.');
 
+      // run trigger on move to
+      for (o in objs)
+        o.onMoveTo();
+
       return true;
     }
 
