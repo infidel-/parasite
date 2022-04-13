@@ -2,6 +2,8 @@
 
 package const;
 
+import Sounds;
+
 class WorldConst
 {
   static var areas: Map<_AreaType, AreaInfo> =
@@ -224,7 +226,7 @@ class WorldConst
 
 typedef AreaInfo = {
   var id: _AreaType; // area type id
-  var ambient: _SoundAmbientState; // ambient sound
+  var ambient: _SoundAmbientLocation; // ambient sound
   var type: String; // area generator type
   var name: String; // area type name
   var width: Int; // area base width

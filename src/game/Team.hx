@@ -77,7 +77,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // watcher notification
       if (ambushedHabitat.hasWatcher)
         {
-          game.scene.soundManager.playSound('watcher_ambush', true);
+          game.scene.sounds.play('watcher-ambush', true);
           game.message("The watcher warns they are waiting for me.",
             COLOR_ALERT);
         }

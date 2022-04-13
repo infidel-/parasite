@@ -105,6 +105,6 @@ class TeamMemberAI extends HumanAI
     {
       game.log('You feel someone watching you.', COLOR_ALERT);
       game.scene.hud.blinkingText.show(2);
-      game.scene.soundManager.playSound('team_notify', true);
+      game.scene.sounds.play('team-notify', true);
     }
 }

@@ -525,16 +525,15 @@ class AI
         }
 
       // play weapon sound
-      if (weapon.sounds != null)
-        game.scene.soundManager.playSound(
-          weapon.sounds[Std.random(weapon.sounds.length)], true);
+      if (weapon.sound != null)
+        game.scene.sounds.play(weapon.sound, true);
 
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
         id: weapon.skill,
         // hardcoded animal attack skill level
         level: skills.getLevel(weapon.skill),
-        });
+      });
 
       // roll skill
       if (!roll)
@@ -928,12 +927,12 @@ class AI
         return;
 
       entity.setText(sound.text, 2);
-      if (sound.files != null)
+      if (sound.file != null)
         {
-          var file = sound.files[Std.random(sound.files.length)];
+          var file = sound.file;
           if (isHuman && !isMale && file.indexOf('male') == 0)
             file = 'fe' + file;
-          game.scene.soundManager.playSound(file, false);
+          game.scene.sounds.play(file, false);
         }
       if (sound.radius <= 0 || sound.alertness <= 0)
         return;
@@ -977,10 +976,10 @@ class AI
         return;
       var idx = Std.random(array.length);
       var sound = array[idx];
-      var file = sound.files[Std.random(sound.files.length)];
+      var file = sound.file;
       if (isHuman && !isMale && file.indexOf('male') == 0)
         file = 'fe' + file;
-      game.scene.soundManager.playSound(file, false);
+      game.scene.sounds.play(file, false);
 
       // event stuff
       if (npc != null)
@@ -1180,15 +1179,15 @@ class AISound
   public var radius: Int; // radius this sound propagates to (can be 0)
   public var alertness: Int; // amount of alertness that AIs in this radius gain
   @:optional public var params: Dynamic; // state-specific parameters
-  @:optional public var files: Array<String>; // play one of these sounds
+  @:optional public var file: String; // sound files prefix
 
   public function new(text: String, radius: Int, alertness: Int,
-      ?params: Dynamic, ?files: Array<String>)
+      ?params: Dynamic, ?file: String)
     {
       this.text = text;
       this.alertness = alertness;
       this.params = params;
-      this.files = files;
+      this.file = file;
     }
 }
 

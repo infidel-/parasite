@@ -93,7 +93,7 @@ class AreaGame
   public function enter()
     {
 //      game.debug('Area.enter()');
-      game.scene.soundManager.setAmbient(info.ambient);
+      game.scene.sounds.setAmbient(info.ambient);
       turns = 0;
 
       game.area = this;

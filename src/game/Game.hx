@@ -256,8 +256,7 @@ class Game
             finishText = "You have received your final shock from the habitat destruction.";
 
           // parasite death
-          scene.soundManager.playSound('parasite_die' +
-            (1 + Std.random(1)), true);
+          scene.sounds.play('parasite-die', true);
 
           log(finishText);
         }
@@ -265,7 +264,7 @@ class Game
         {
           log('You have won the game!');
           finishText = 'You have won the game.';
-          scene.soundManager.playSound('game_win', true);
+          scene.sounds.play('game-win', true);
         }
 
       // add to event queue

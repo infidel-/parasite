@@ -486,9 +486,8 @@ class PlayerArea
         });
 
       // play weapon sound
-      if (weapon.sounds != null)
-        game.scene.soundManager.playSound(
-          weapon.sounds[Std.random(weapon.sounds.length)], true);
+      if (weapon.sound != null)
+        game.scene.sounds.play(weapon.sound, true);
 
       // roll skill
       if (!roll)
@@ -593,7 +592,7 @@ class PlayerArea
 
       log('You have managed to attach to a host.');
 
-      game.scene.soundManager.playSound('parasite_attach1', false);
+      game.scene.sounds.play('parasite-attach', false);
 
       ai.onAttach(); // callback to AI
 
@@ -1040,7 +1039,7 @@ class PlayerArea
       attachHost = null;
       player.host = null;
 
-      game.scene.soundManager.playSound('parasite_detach1', false);
+      game.scene.sounds.play('parasite-detach', false);
     }
 
 

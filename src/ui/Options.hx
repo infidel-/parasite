@@ -39,7 +39,7 @@ class Options extends UIWindow
       addSlider('Music volume', game.config.musicVolume,
         function (v: Float) {
           game.config.set('musicVolume', '' + Std.int(v), false);
-          game.scene.soundManager.musicVolumeChanged();
+          game.scene.sounds.musicVolumeChanged();
         }, 0, 100, 'int');
       addSlider('Effects volume', game.config.effectsVolume,
         function (v: Float) {
@@ -48,7 +48,7 @@ class Options extends UIWindow
       addSlider('Ambience volume', game.config.ambientVolume,
         function (v: Float) {
           game.config.set('ambientVolume', '' + Std.int(v), false);
-          game.scene.soundManager.ambientVolumeChanged();
+          game.scene.sounds.ambientVolumeChanged();
         }, 0, 100, 'int');
 #end
       addSlider('Movement delay', game.config.pathDelay,

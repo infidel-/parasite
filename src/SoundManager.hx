@@ -8,7 +8,7 @@ import game._ItemInfo;
 import game.Game;
 import const.*;
 
-class SoundManager
+class SoundManagerOLD
 {
   var scene: GameScene;
   var game: Game;
@@ -211,7 +211,7 @@ class SoundManager
 //          game.debug('Skipping ' + key);
           return;
         }
-//      game.debug('Playing sound ' + key);
+      game.debug('Playing sound ' + key);
       sounds[key].play(false, game.config.effectsVolume / 100.0);
 #end
     }
@@ -250,16 +250,14 @@ class SoundManager
 // music volume changed from options
   public inline function musicVolumeChanged()
     {
-      game.scene.soundManager.music.volume =
-        game.config.musicVolume / 100.0;
+      music.volume = game.config.musicVolume / 100.0;
     }
 
 
 // ambient volume changed from options
   public inline function ambientVolumeChanged()
     {
-      game.scene.soundManager.ambient.volume =
-        game.config.ambientVolume / 100.0;
+      ambient.volume = game.config.ambientVolume / 100.0;
     }
 #end
 }

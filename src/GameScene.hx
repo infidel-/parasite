@@ -27,7 +27,7 @@ class GameScene extends Scene
   public var win: Window;
   public var font: Font;
   public var font40: Font;
-  public var soundManager: SoundManager;
+  public var sounds: Sounds;
   var uiQueue: List<_UIEvent>; // gui event queue
   var uiQueuePaused: Bool; // if true, the queue is paused
   var uiQueuePrev: _UIEvent; // previous UI event
@@ -166,7 +166,7 @@ class GameScene extends Scene
         { mouse.onClick(e.button); }
 
       // init sound
-      soundManager = new SoundManager(this);
+      sounds = new Sounds(this);
 
       // init game state
       game.init();
@@ -217,7 +217,7 @@ class GameScene extends Scene
             // show blur on losing focus
             // this is needed for web because it's too easy to press Alt, lose it and not notice it
             loseFocus.hide();
-            soundManager.resume();
+            sounds.resume();
             isFocused = true;
           }
         else if (e.kind == EFocusLost)
@@ -229,7 +229,7 @@ class GameScene extends Scene
             isFocused = false;
 
             loseFocus.show();
-            soundManager.pause();
+            sounds.pause();
           }
       });
 #end

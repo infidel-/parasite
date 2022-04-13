@@ -66,6 +66,7 @@ class ConsoleGame
             'dg - debug: graphics info, ' +
             'dthrow - debug: throw exception, ' +
             'dalert - debug: show alert, ' +
+            'dleave - debug: leave area, ' +
             // go
             'ga - go and enter area, ' +
             'ge - go event location, ' +
@@ -317,7 +318,7 @@ class ConsoleGame
           log('snd [file] - play sound file (no extension)');
           log('snd - show sound files');
           var list = new Array();
-          for (s in @:privateAccess game.scene.soundManager.sounds.keys())
+          for (s in @:privateAccess game.scene.sounds.sounds.keys())
             list.push(s);
           list.sort(function (a: String, b: String)
             {
@@ -332,7 +333,7 @@ class ConsoleGame
           return;
         }
 
-      game.scene.soundManager.playSound(arr[1], true);
+      game.scene.sounds.play(arr[1], true);
     }
 
 
@@ -486,6 +487,12 @@ class ConsoleGame
         throw 'test exception';
       else if (cmd == 'dalert')
         game.log('This is a test alert message.', COLOR_ALERT);
+      else if (cmd == 'dleave')
+        {
+          if (game.location != LOCATION_AREA)
+            game.log('Not in area.');
+          else game.setLocation(LOCATION_REGION);
+        }
 #end
     }
 

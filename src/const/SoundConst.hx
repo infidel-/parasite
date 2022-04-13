@@ -7,58 +7,26 @@ import _AIState;
 
 class SoundConst
 {
-  // misc sounds
-  public static var misc = [
-    'game_win',
-    'music1',
-#if !js
-    'music2',
-    'music3',
-    'music5',
-#end
-    'ambient_city1',
-    'ambient_region1',
-    'ambient_wilderness1',
-    'ambient_habitat1',
-    'ambient_military1',
-    'ambient_facility1',
-    'parasite_die1',
-    'parasite_die2',
-    'watcher_ambush',
-    'parasite_attach1',
-    'parasite_detach1',
-    'team_notify',
-  ];
-
   // dog sounds
-  static var growl = [
-    'dog_growl1',
-  ];
   public static var dog: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
         text: '*WHIMPER*',
-        files: [
-          'dog_whimper1',
-        ],
+        file: 'dog-whimper',
         radius: 2,
         alertness: 5,
         params: null
       },
       {
         text: '*WHINE*',
-        files: [
-          'dog_whine1',
-        ],
+        file: 'dog-whine',
         radius: 2,
         alertness: 5,
         params: null
       },
       {
         text: '*YELP*',
-        files: [
-          'dog_yelp1',
-        ],
+        file: 'dog-yelp',
         radius: 3,
         alertness: 5,
         params: null
@@ -67,7 +35,7 @@ class SoundConst
     '' + AI_STATE_IDLE => [
       {
         text: '*GROWL*',
-        files: growl,
+        file: 'dog-growl',
         radius: 2,
         alertness: 5,
         params: { minAlertness: 25 }
@@ -76,9 +44,7 @@ class SoundConst
     '' + AI_STATE_ALERT => [
       {
         text: '*BARK*',
-        files: [
-          'dog_bark1',
-        ],
+        file: 'dog-bark',
         radius: 5,
         alertness: 10,
         params: null
@@ -87,32 +53,28 @@ class SoundConst
     '' + AI_STATE_HOST => [
       {
         text: '*whimper*',
-        files: [
-          'dog_whimper1',
-        ],
+        file: 'dog-whimper',
         radius: 2,
         alertness: 3,
         params: null
       },
       {
         text: '*whine*',
-        files: [
-          'dog_whine1',
-        ],
+        file: 'dog-whine',
         radius: 2,
         alertness: 3,
         params: null
       },
       {
         text: '*growl*',
-        files: growl,
+        file: 'dog-growl',
         radius: 2,
         alertness: 3,
         params: null
       },
       {
         text: '*GROWL*',
-        files: growl,
+        file: 'dog-growl',
         radius: 2,
         alertness: 3,
         params: null
@@ -121,9 +83,7 @@ class SoundConst
     '' + AI_STATE_DEAD => [
       {
         text: '*whine*',
-        files: [
-          'dog_die1',
-        ],
+        file: 'dog-die',
         radius: 2,
         alertness: 3,
         params: null
@@ -135,18 +95,14 @@ class SoundConst
   static var humanDamage: Array<AISound> = [
     {
       text: 'Ouch!',
-      files: [
-        'male_ouch1',
-      ],
+      file: 'male-ouch',
       radius: 2,
       alertness: 5,
       params: null
     },
     {
       text: '*GROAN*',
-      files: [
-        'male_grunt1',
-      ],
+      file: 'male-grunt',
       radius: 2,
       alertness: 5,
       params: null
@@ -155,36 +111,28 @@ class SoundConst
   static var humanIdle: Array<AISound> = [
     {
       text: 'Huh?',
-      files: [
-        'male_huh1',
-      ],
+      file: 'male-huh',
       radius: 0,
       alertness: 0,
       params: { minAlertness: 25 }
     },
     {
       text: 'Whu?',
-      files: [
-        'male_whu1',
-      ],
+      file: 'male-whu',
       radius: 0,
       alertness: 0,
       params: { minAlertness: 25 }
     },
     {
       text: 'What the?',
-      files: [
-        'male_what1',
-      ],
+      file: 'male-what',
       radius: 0,
       alertness: 0,
       params: { minAlertness: 50 }
     },
     {
       text: '*GASP*',
-      files: [
-        'male_gasp1',
-      ],
+      file: 'male-gasp',
       radius: 0,
       alertness: 0,
       params: { minAlertness: 75 }
@@ -192,33 +140,21 @@ class SoundConst
   ];
   static var humanHost: Array<AISound> = [
     {
-      files: [
-        'male_choke1',
-        'male_choke2',
-        'male_choke3',
-      ],
+      file: 'male-choke',
       text: '*choke*',
       radius: 2,
       alertness: 3,
       params: null
     },
     {
-      files: [
-        'male_moan1',
-        'male_moan2',
-        'male_moan3',
-      ],
+      file: 'male-moan',
       text: '*moan*',
       radius: 2,
       alertness: 5,
       params: null
     },
     {
-      files: [
-        'male_moan_loud1',
-        'male_moan_loud2',
-        'male_moan_loud3',
-      ],
+      file: 'male-moan-loud',
       text: '*MOAN*',
       radius: 3,
       alertness: 5,
@@ -227,9 +163,7 @@ class SoundConst
   ];
   static var genericAlert: Array<AISound> = [
     {
-      files: [
-        'human_stop1',
-      ],
+      file: 'human-stop',
       text: 'STOP!',
       radius: 7,
       alertness: 10,
@@ -239,11 +173,7 @@ class SoundConst
   static var humanDie: Array<AISound> = [
     {
       text: '*death*',
-      files: [
-        'male_die1',
-        'male_die2',
-        'male_die3',
-      ],
+      file: 'male-die',
       radius: 6,
       alertness: 10,
       params: null
@@ -256,9 +186,7 @@ class SoundConst
     '' + AI_STATE_IDLE => humanIdle,
     '' + AI_STATE_ALERT => [
       {
-        files: [
-          'male_scream1',
-        ],
+        file: 'male-scream',
         text: '*SCREAM*',
         radius: 7,
         alertness: 15,
@@ -292,18 +220,14 @@ class SoundConst
     '' + REASON_DAMAGE => [
       {
         text: '*GRUNT*',
-        files: [
-          'male_grunt1',
-        ],
+        file: 'male-grunt',
         radius: 2,
         alertness: 5,
         params: null
       },
       {
         text: '*GROAN*',
-        files: [
-          'male_grunt1',
-        ],
+        file: 'male-grunt',
         radius: 2,
         alertness: 5,
         params: null
@@ -312,36 +236,28 @@ class SoundConst
     '' + AI_STATE_IDLE => [
       {
         text: 'Huh?',
-        files: [
-          'male_huh1',
-        ],
+        file: 'male-huh',
         radius: 0,
         alertness: 0,
         params: { minAlertness: 25 }
       },
       {
         text: 'Whu?',
-        files: [
-          'male_whu1',
-        ],
+        file: 'male-whu',
         radius: 0,
         alertness: 0,
         params: { minAlertness: 25 }
       },
       {
         text: 'What the?',
-        files: [
-          'male_what1',
-        ],
+        file: 'male-what',
         radius: 0,
         alertness: 0,
         params: { minAlertness: 50 }
       },
       {
         text: 'BOGEY!',
-        files: [
-          'human_alert1',
-        ],
+        file: 'human-alert',
         radius: 0,
         alertness: 0,
         params: { minAlertness: 75 }
@@ -349,9 +265,7 @@ class SoundConst
     ],
     '' + AI_STATE_ALERT => [
       {
-        files: [
-          'human_stop1',
-        ],
+        file: 'human-stop',
         text: 'TANGO!',
         radius: 7,
         alertness: 10,
