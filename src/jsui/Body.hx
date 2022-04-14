@@ -332,7 +332,8 @@ class Body extends UIWindow
           if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
             {
               var info = TraitsConst.getInfo(TRAIT_ASSIMILATED);
-              buf.add('<br/>' + info.name + '<br/>');
+              buf.add('<br/><span class=host-attr-title>' +
+                info.name + '</span><br/>');
               buf.add('<span class=host-attr-notes>' + info.note +
                 '</span><br/>');
             }
@@ -346,7 +347,8 @@ class Body extends UIWindow
               for (t in game.player.host.traits)
                 {
                   var info = TraitsConst.getInfo(t);
-                  buf.add(info.name + '<br/>');
+                  buf.add('<span class=host-attr-title>' +
+                    info.name + '</span><br/>');
                   buf.add('<span class=host-attr-notes>' + info.note +
                     '</span><br/>');
                 }
