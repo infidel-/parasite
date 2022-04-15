@@ -20,6 +20,7 @@ class Document extends UIWindow
       text.id = 'window-document-text';
       text.className = 'scroller';
       window.appendChild(text);
+      addCloseButton();
     }
 
   public override function setParams(obj: Dynamic)
