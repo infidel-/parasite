@@ -15,7 +15,7 @@ import game.Game;
 class UI
 {
   var game: Game;
-  var canvas: CanvasElement;
+  public var canvas: CanvasElement;
   public var hud: HUD;
   public var state(get, set): _UIState;
   var _state: _UIState; // current HUD state (default, evolution, etc)
@@ -38,6 +38,7 @@ class UI
       uiQueuePrev = null;
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('webgl');
+      canvas.style.visibility = 'hidden';
       Browser.document.onkeydown = onKey;
       canvas.onmousemove = function (e: MouseEvent) {
         hud.onMouseMove(e);
@@ -64,6 +65,7 @@ class UI
         UISTATE_BODY => new Body(game),
         UISTATE_FINISH => new Finish(game),
         UISTATE_OPTIONS => new Options(game),
+        UISTATE_MAINMENU => new MainMenu(game),
       ];
     }
 
@@ -118,11 +120,20 @@ class UI
               hud.showConsole();
               return;
             }
-          // close console
-          if (e.code == 'Escape' && hud.consoleVisible())
+
+          // close console or open main menu
+          if (e.code == 'Escape')
             {
-              hud.hideConsole();
-              return;
+              if (hud.consoleVisible())
+                {
+                  hud.hideConsole();
+                  return;
+                }
+              else
+                {
+                  state = UISTATE_MAINMENU;
+                  return;
+                }
             }
         }
 
@@ -184,7 +195,13 @@ class UI
         {
           // close windows
           if (key == 'Enter' || key == 'NumpadEnter' || key == 'Escape') 
-            closeWindow();
+            {
+              if (_state == UISTATE_OPTIONS)
+                state = UISTATE_MAINMENU;
+              else if (_state == UISTATE_MAINMENU && !game.isStarted)
+                return true;
+              else closeWindow();
+            }
         }
 
       // ui in locked state, do not allow changing windows

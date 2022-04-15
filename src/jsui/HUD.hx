@@ -98,12 +98,13 @@ class HUD
       addMenuButton(buttons, UISTATE_LOG, '3: LOG');
       addMenuButton(buttons, UISTATE_TIMELINE, '4: TIMELINE');
       addMenuButton(buttons, UISTATE_EVOLUTION, '5: EVO');
+/*
       addMenuButton(buttons, UISTATE_OPTIONS, '6: OPT');
       // should be unique state but no matter
       var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
       btn.onclick = function (e) {
           @:privateAccess game.ui.handleWindows('F10', 'F10', false, false);
-      }
+      }*/
 
       // actions
       actions = Browser.document.createDivElement();

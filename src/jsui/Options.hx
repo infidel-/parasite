@@ -1,5 +1,4 @@
-
-// yes/no window
+// options window
 
 package jsui;
 
@@ -31,7 +30,8 @@ class Options extends UIWindow
       addCloseButton();
       close.onclick = function (e) {
         game.config.save(false);
-        game.ui.closeWindow();
+        game.ui.state = UISTATE_MAINMENU;
+//        game.ui.closeWindow();
       }
 
       addSlider('Music volume', game.config.musicVolume,

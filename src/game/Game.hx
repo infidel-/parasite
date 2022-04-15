@@ -34,6 +34,7 @@ class Game
 
   public var turns: Int; // number of turns passed since game start
   public var isInited: Bool; // is the game initialized?
+  public var isStarted: Bool; // has the gameplay started?
   public var isFinished: Bool; // is the game finished?
   public var messageList: List<_LogMessage>; // last X messages of log
   public var hudMessageList: List<_LogMessage>; // last X messages of hud log
@@ -51,6 +52,7 @@ class Game
       hudMessageList = new List();
       importantMessagesEnabled = true;
       isInited = false;
+      isStarted = false;
 
       area = null;
       region = null;

@@ -125,7 +125,7 @@ class Body extends UIWindow
       for (organ in game.player.host.organs)
         addOrgan(buf, game.player.evolutionManager.getImprov(organ.id));
       if (game.player.host.organs.length() == 0)
-        buf.add('<center>no body feature</center>');
+        buf.add('<center>no body features</center>');
 
       return buf.toString();
     }

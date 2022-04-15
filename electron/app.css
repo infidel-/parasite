@@ -581,6 +581,54 @@ fieldset {
   justify-content: center;
 }
 
+#window-mainmenu {
+  border: 30px solid;
+  width: 25ch;
+  height: 17em;
+  pointer-events: all;
+}
+
+#window-mainmenu-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+#window-mainmenu-contents {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.window-mainmenu-cont {
+  justify-content: center;
+  display: flex;
+}
+
+.window-mainmenu-item {
+  background: #3a4f71;
+  color: white;
+  width: 80%;
+  border-radius: 2px;
+  border: solid 2px #abc4ea;
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.window-mainmenu-item:hover {
+  background-color: #5f818c;
+  color: white;
+  font-weight:bold;
+}
+
+.window-mainmenu-item:active {
+  color: #879ea3;
+}
+
 .slider-contents {
   display: flex;
   padding-bottom: 4px;

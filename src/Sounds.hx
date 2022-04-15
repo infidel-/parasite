@@ -34,6 +34,28 @@ class Sounds
         state: SOUND_STOPPED,
       };
       Browser.window.setInterval(function () {
+        if (game.ui.state == UISTATE_MAINMENU ||
+            game.ui.state == UISTATE_OPTIONS)
+          {
+            if (music.playState == 1 && !music.paused)
+              music.pause();
+            if (ambient.state != SOUND_STOPPED && !ambient.sound.muted)
+              ambient.sound.mute();
+            if (ambientNext.state != SOUND_STOPPED && !ambientNext.sound.muted)
+              ambientNext.sound.mute();
+            return;
+          }
+        else
+          {
+            if (music.playState == 0)
+              music.play();
+            else if (music.paused)
+              music.resume();
+            if (ambient.state != SOUND_STOPPED && ambient.sound.muted)
+              ambient.sound.unmute();
+            if (ambientNext.state != SOUND_STOPPED && ambientNext.sound.muted)
+              ambientNext.sound.unmute();
+          }
         ambientTick(ambient);
         ambientTick(ambientNext);
       }, 15);
@@ -84,7 +106,6 @@ class Sounds
         volume: game.config.musicVolume,
         onfinish: onMusicEnd,
       });
-      music.play();
 #end
     }
 
@@ -161,7 +182,7 @@ class Sounds
         }
       key += res[Std.random(res.length)];
       ambientNext.sound = SoundManager.createSound({
-        id: 'ambient-' + key,
+        id: key,
         url: 'sound/' + key + '.mp3',
         volume: 0,
         loops: 10000,
@@ -340,9 +361,16 @@ typedef SMSound = {
   var id: String;
   var url: String;
   var volume(default, null): Int;
+  var paused(default, null): Bool;
+  var muted(default, null): Bool;
+  var playState: Int; // 0 - stopped, 1 - playing
   public function setVolume(vol: Int): Void;
   public function stop(): Void;
   public function play(): Void;
+  public function mute(): Void;
+  public function unmute(): Void;
+  public function pause(): Void;
+  public function resume(): Void;
 
   @:optional var whileplaying: Void -> Void; // callback during play (position update)
 /**
@@ -350,15 +378,11 @@ destruct()
 load()
 clearOnPosition()
 onPosition()
-mute()
-pause()
-resume()
 setPan()
 setPosition()
 toggleMute()
 togglePause()
 unload()
-unmute()
 **/
   
 }

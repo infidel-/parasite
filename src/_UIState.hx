@@ -16,6 +16,7 @@ enum _UIState
   UISTATE_FINISH; // game over window
   UISTATE_OPTIONS; // options window
   UISTATE_BODY; // new body window
+  UISTATE_MAINMENU; // main menu
 
   UISTATE_DIFFICULTY; // difficulty setting
   UISTATE_YESNO; // yes/no dialog window

@@ -17,14 +17,15 @@ class Main extends hxd.App
       game = new Game();
       setScene(game.scene, true);
       game.scene.init();
+      game.ui.state = UISTATE_MAINMENU;
 
 #if js
       // focus window
-      js.Browser.document.getElementById("webgl").focus();
-      game.scene.win.propagateKeyEvents = true;
       var canvas = Browser.document.getElementById("webgl");
       canvas.style.width = '100%';
       canvas.style.height = '100%';
+      canvas.focus();
+      game.scene.win.propagateKeyEvents = true;
 #end
     }
 
