@@ -11,6 +11,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
   public var maxSize: Int; // total size
   public var distance(get, set): Float; // distance to parasite (0-100)
   public var ambushedHabitat: Habitat; // habitat with ambush
+  public var lastAlertTurn: Int;
   var _distance: Float;
 
   public var timer: Int; // generic state timer
@@ -19,6 +20,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
     {
       super(g, 'team');
 
+      lastAlertTurn = 0;
       state = TEAM_SEARCH;
       level = Std.int(4 * game.group.priority / 100.0) + 1;
       size = 4 + Std.random(3);
@@ -105,14 +107,29 @@ class Team extends FSM<_TeamState, _TeamFlag>
       else if (level == 4)
         mod = 1.0;
 
+      var prevDistance = _distance;
       _distance -= mod;
       _distance = Const.clampFloat(distance, 0, 150.0);
 
       // reduce info message amount
       if (Const.round(distance) == Math.floor(distance))
         game.infoChange('Team distance', - mod, distance);
+      checkAlert(prevDistance, distance);
     }
 
+// check for distance alert
+  function checkAlert(prev: Float, val: Float)
+    {
+      if (state == TEAM_SEARCH &&
+          (game.group.difficulty == EASY ||
+            game.group.difficulty == NORMAL) &&
+          prev >= 9.91 && val < 9.91 &&
+          game.turns - lastAlertTurn > 10)
+        {
+          game.message("They are getting very close to me.", COLOR_ALERT);
+          lastAlertTurn = game.turns;
+        }
+    }
 
 // TURN: wait in ambush
   function turnAmbush()
@@ -332,12 +349,12 @@ class Team extends FSM<_TeamState, _TeamFlag>
       return _distance;
     }
 
-
   function set_distance(v: Float)
     {
       var mod = v - _distance;
       v = Const.clampFloat(v, 0, 150.0);
       game.infoChange('Team distance', mod, v);
+      checkAlert(_distance, v);
       _distance = v;
       return v;
     }

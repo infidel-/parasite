@@ -22,7 +22,7 @@ class BlinkingText
       back = new Graphics(container);
       text = new h2d.Text(game.scene.font40, back);
       text.textAlign = Left;
-      text.text = 'You feel someone watching you.';
+      text.text = 'You feel someone is watching.';
       text.textColor = 0xff3333;
       back.x = Std.int(game.scene.win.width / 2 -
         text.textWidth / 2);

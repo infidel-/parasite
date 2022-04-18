@@ -307,8 +307,9 @@ class HUD
         "<font " + getColor(game.player.energy, game.player.maxEnergy) +
         ">" + game.player.energy + "</font>" +
         '/' + game.player.maxEnergy);
-      buf.add(' ' + Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
-        energyPerTurn + '/t]') + '<br/>');
+      buf.add(' ' + Const.col('gray',
+        Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
+        energyPerTurn + '/t]')) + '<br/>');
       buf.add('Health: ' +
         "<font " + getColor(game.player.health, game.player.maxHealth) +
         ">" + game.player.health + "</font>" +
@@ -351,8 +352,9 @@ class HUD
             host.maxEnergy) + ">" +
             host.energy + '</font>/' +
             host.maxEnergy);
-          buf.add(' ' + Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]'));
+          buf.add(' ' + Const.col('gray',
+            Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
+            energyPerTurn + '/t]')));
           if (game.player.evolutionManager.isActive)
             {
               buf.add('<br>Evolution direction:<br/>  ');
