@@ -55,6 +55,7 @@ class Const
   public static var FRAME_ALERTED = 4;
   public static var FRAME_PANIC = 5;
   public static var FRAME_PARALYSIS = 6;
+  public static var FRAME_CALLING = 7;
 
   // region row frames
   public static var FRAME_EVENT_UNKNOWN = 1;

@@ -379,6 +379,12 @@ class AI
       if (effects.has(EFFECT_PANIC))
         alertFrame = Const.FRAME_PANIC;
 
+      // calling
+      if (game.managerArea.hasAI(this, AREAEVENT_CALL_LAW) ||
+          game.managerArea.hasAI(this, AREAEVENT_CALL_BACKUP) ||
+          game.managerArea.hasAI(this, AREAEVENT_CALL_TEAM_BACKUP))
+        alertFrame = Const.FRAME_CALLING;
+
       // paralysis state
       if (effects.has(EFFECT_PARALYSIS))
         alertFrame = Const.FRAME_PARALYSIS;

@@ -106,6 +106,15 @@ class AreaManager
       _list.push(e);
     }
 
+// returns true if there is this event from this ai
+  public function hasAI(ai: AI, type: _AreaManagerEventType): Bool
+    {
+      for (e in _list)
+        if (e.ai == ai && e.type == type)
+          return true;
+      return false;
+    }
+
 
 // clean old events on leaving area
   public function onLeaveArea()
