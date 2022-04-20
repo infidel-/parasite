@@ -108,7 +108,8 @@ class UI
             }
 
           // enter restarts the game when it is finished
-          if (game.isFinished && e.key == 'Enter')
+          if (game.isFinished &&
+              (e.key == 'Enter' || e.key == 'r'))
             {
               game.restart();
               return;

@@ -197,6 +197,13 @@ class PlayerArea
 // action energy availability is checked when the list is formed
   public function action(action: _PlayerAction)
     {
+      // restart
+      if (action.id == 'restart')
+        {
+          game.restart();
+          return;
+        }
+
       var ret = true;
       // cannot do some actions while in paralysis
       if (state == PLR_STATE_HOST &&

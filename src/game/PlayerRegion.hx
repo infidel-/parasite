@@ -105,8 +105,14 @@ class PlayerRegion
 // action energy availability is checked when the list is formed
   public function action(action: _PlayerAction)
     {
-      var ret = true;
+      // restart
+      if (action.id == 'restart')
+        {
+          game.restart();
+          return;
+        }
 
+      var ret = true;
       if (action.id == 'enterArea')
         ret = enterAreaAction();
       else if (action.id == 'createHabitat')

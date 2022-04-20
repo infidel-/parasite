@@ -330,7 +330,8 @@ class HUD
           buf.add('<br/><hr/>');
           buf.add('<b>' + host.getNameCapped() + '</b>');
           if (host.isJobKnown)
-            buf.add(' (' + host.job + ')<br/>');
+            buf.add(' ' + Const.col('gray',
+              Const.small('(' + host.job + ')<br/>')));
           else buf.add('<br/>');
           if (host.isAttrsKnown)
             buf.add('STR ' + host.strength +
@@ -434,11 +435,20 @@ class HUD
 // update player actions list
   inline function updateActionList()
     {
-      if (game.isFinished)
-        return;
-
       listActions = new List();
       listKeyActions = new List();
+      if (game.isFinished)
+        {
+          addKeyAction({
+            id: 'restart',
+            type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
+            name: Const.col('red', 'RESTART'),
+            energy: 0,
+            // fake
+            key: 'r'
+          });
+          return;
+        }
 
       if (game.location == LOCATION_AREA)
         game.playerArea.updateActionList();
@@ -451,6 +461,7 @@ class HUD
         type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
         name: 'Wait',
         energy: 0,
+        // fake
         key: 'z'
       });
     }
@@ -479,43 +490,37 @@ class HUD
 // update player actions
   function updateActions()
     {
+      // clear old items
       var n = 1;
       while (actions.firstChild != null)
         actions.removeChild(actions.lastChild);
-      if (!game.isFinished)
-        {
-          var list = [ listActions, listKeyActions ];
-          for (l in list)
-            for (action in l)
-              {
-                var buf = new StringBuf();
-                if (action.key != null)
-                  buf.add(action.key.toUpperCase() + ': ');
-                else buf.add(n + ': ');
-                buf.add(action.name);
-                if (action.energy != null && action.energy > 0)
-                  buf.add(' <span class=small>(' + action.energy + ' energy)</span>');
-                else if (action.energyFunc != null)
-                  buf.add(' <span class=small>(' + action.energyFunc(game.player) + ' energy)</span>');
+      var list = [ listActions, listKeyActions ];
+      for (l in list)
+        for (action in l)
+          {
+            var buf = new StringBuf();
+            if (action.key != null)
+              buf.add(action.key.toUpperCase() + ': ');
+            else buf.add(n + ': ');
+            buf.add(action.name);
+            if (action.energy != null && action.energy > 0)
+              buf.add(' <span class=small>(' + action.energy + ' energy)</span>');
+            else if (action.energyFunc != null)
+              buf.add(' <span class=small>(' + action.energyFunc(game.player) + ' energy)</span>');
 
-                var btn = Browser.document.createDivElement();
-                btn.innerHTML = buf.toString();
-                btn.className = 'hud-action';
-                btn.onclick = function (e) {
-                  if (game.location == LOCATION_AREA)
-                    game.playerArea.action(action);
-
-                  else if (game.location == LOCATION_REGION)
-                    game.playerRegion.action(action);
-                }
-                actions.appendChild(btn);
-                n++;
-              }
-        }
-
-      if (game.isFinished)
-        actions.innerHTML = '<font style="color:var(--text-color-red)">Press ENTER to restart</font>';
-      else if (n == 1)
+            var btn = Browser.document.createDivElement();
+            btn.innerHTML = buf.toString();
+            btn.className = 'hud-action';
+            btn.onclick = function (e) {
+              if (game.location == LOCATION_AREA)
+                game.playerArea.action(action);
+              else if (game.location == LOCATION_REGION)
+                game.playerRegion.action(action);
+            }
+            actions.appendChild(btn);
+            n++;
+          }
+      if (n == 1)
         actions.innerHTML = 'No available actions.';
     }
 
