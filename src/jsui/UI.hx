@@ -318,8 +318,8 @@ class UI
       ret = hud.keyAction(key);
       if (_state == UISTATE_DEFAULT)
         {
-          // skip until end of turn
-          if (code == 'Numpad5' || key == 'z' ||
+          // skip until end of turn (alternative to z)
+          if (code == 'Numpad5' ||// key == 'z' ||
               (game.config.laptopKeyboard && key == 'k'))
             {
               game.turn();

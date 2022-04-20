@@ -259,6 +259,8 @@ class PlayerArea
       // try to leave area
       else if (action.id == 'leaveArea')
         leaveAreaAction();
+      else if (action.id == 'skipTurn')
+        game.turn();
 
       // action interrupted for some reason
       if (!ret)

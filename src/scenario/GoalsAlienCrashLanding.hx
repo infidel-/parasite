@@ -22,7 +22,8 @@ class GoalsAlienCrashLanding
       for (id in ids)
         {
           var goal = game.goals.getInfo(id);
-          goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
+          goal.note2 = Const.col('gray', Const.small(
+            'Target location: (' + area.x + ',' + area.y + ')'));
         }
     }
 
@@ -139,7 +140,8 @@ class GoalsAlienCrashLanding
 
         // put location in text
         var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_ABDUCTION);
-        goal.note2 = 'Target location: (' + area.x + ',' + area.y + ')';
+        goal.note2 = Const.col('gray', Const.small(
+          'Target location: (' + area.x + ',' + area.y + ')'));
       },
 
       onComplete: function (game, player) {

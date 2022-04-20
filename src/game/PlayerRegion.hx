@@ -67,7 +67,8 @@ class PlayerRegion
 
       // create a new habitat
       if (player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0 &&
-          !currentArea.hasHabitat && currentArea.info.isInhabited)
+          !currentArea.hasHabitat &&
+          currentArea.info.isInhabited)
         {
           // count total number of habitats
           var params = player.evolutionManager.getParams(IMP_MICROHABITAT);
@@ -112,6 +113,8 @@ class PlayerRegion
         createHabitatAction();
       else if (action.id == 'enterHabitat')
         enterHabitatAction();
+      else if (action.id == 'skipTurn')
+        game.turn();
 
       // evolution manager action
       else if (action.type == ACTION_EVOLUTION)
