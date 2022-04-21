@@ -206,6 +206,7 @@ class Group
 
       // show yes/no dialog about manual
       game.ui.event({
+        type: UIEVENT_STATE,
         state: UISTATE_YESNO,
         obj: {
           text: 'Do you want to read the manual about The Group?',
@@ -218,11 +219,13 @@ class Group
                   doc = StringTools.replace(doc, "\n", '<br/>');
                   doc = StringTools.replace(doc, "# ", '');
                   game.ui.event({
+                    type: UIEVENT_STATE,
                     state: UISTATE_DOCUMENT,
                     obj: doc
                   });
                 }
               game.ui.event({
+                type: UIEVENT_STATE,
                 state: UISTATE_DIFFICULTY,
                 obj: 'group'
               });

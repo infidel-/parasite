@@ -1,7 +1,6 @@
 // available UI states
 
-enum _UIState
-{
+enum _UIState {
   UISTATE_DEFAULT; // default
   UISTATE_GOALS; // goals window open
   UISTATE_EVOLUTION; // evolution window open

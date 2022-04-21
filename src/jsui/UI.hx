@@ -247,6 +247,7 @@ class UI
         {
           // show exit yes/no dialog
           game.ui.event({
+            type: UIEVENT_STATE,
             state: UISTATE_YESNO,
             obj: {
               text: 'Do you want to exit the game?',
@@ -517,15 +518,24 @@ class UI
           uiQueuePrev = ev;
           uiQueue.remove(ev);
 
-          if (components[ev.state] != null)
-            components[ev.state].setParams(ev.obj);
-          else
+          // change UI state (open window)
+          if (ev.type == UIEVENT_STATE)
             {
-              trace('component is null for ' + ev.state);
-              state = UISTATE_DEFAULT;
-              return;
+              if (components[ev.state] != null)
+                components[ev.state].setParams(ev.obj);
+              else
+                {
+                  trace('component is null for ' + ev.state);
+                  state = UISTATE_DEFAULT;
+                  return;
+                }
+              state = ev.state;
             }
-          state = ev.state;
+          else if (ev.type == UIEVENT_HIGHLIGHT)
+            {
+              state = UISTATE_DEFAULT;
+              hud.getMenuButton(ev.state).className += ' highlight-button';
+            }
           return;
         }
 

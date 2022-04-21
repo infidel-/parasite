@@ -98,13 +98,6 @@ class HUD
       addMenuButton(buttons, UISTATE_LOG, '3: LOG');
       addMenuButton(buttons, UISTATE_TIMELINE, '4: TIMELINE');
       addMenuButton(buttons, UISTATE_EVOLUTION, '5: EVO');
-/*
-      addMenuButton(buttons, UISTATE_OPTIONS, '6: OPT');
-      // should be unique state but no matter
-      var btn = addMenuButton(buttons, UISTATE_YESNO, '10: EXIT');
-      btn.onclick = function (e) {
-          @:privateAccess game.ui.handleWindows('F10', 'F10', false, false);
-      }*/
 
       // actions
       actions = Browser.document.createDivElement();
@@ -140,6 +133,15 @@ class HUD
       btn.onclick = function (e)
         { game.ui.state = state; }
       return btn;
+    }
+
+// get menu button
+  public function getMenuButton(state: _UIState): DivElement
+    {
+      for (b in menuButtons)
+        if (b.state == state)
+          return b.btn;
+      return null;
     }
 
 // make hud transparent
@@ -225,7 +227,7 @@ class HUD
         {
           buf.add('<span ');
           if (l.col == COLOR_ALERT)
-            buf.add('class=highlight ');
+            buf.add('class=highlight-text ');
           buf.add("style='color:");
           buf.add(Const.TEXT_COLORS[l.col]);
           buf.add("'>");

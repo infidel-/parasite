@@ -216,7 +216,7 @@ hr {
   opacity: 0.9;
   background-color: #ffffff00;
   border: 11px solid;
-  color: white;
+  color: #a4d6ff;
   max-width: 10ch;
   min-height: 1.2em;
   margin: 0px 5px 0px 5px;
@@ -230,7 +230,7 @@ hr {
 
 .hud-button:hover {
   background-color: #bde1ed;
-  color: white;
+  color: #bde4ff;
   opacity: 1;
   font-weight:bold;
 }
@@ -357,6 +357,7 @@ hr {
   border: 11px solid;
   position: absolute;
   bottom: -49px;
+  color: white;
   left: 50%;
   opacity: 1;
   text-align: center;
@@ -919,11 +920,10 @@ input[type=checkbox] {
   filter: blur(4px);
 }
 
-.highlight {
-  animation: 2.5s infinite font-highlight;
+.highlight-text {
+  animation: 2.5s infinite text-highlight;
 }
-
-@keyframes font-highlight {
+@keyframes text-highlight {
   from {
     font-size: var(--text-font-size);
     opacity:0.8;
@@ -935,5 +935,20 @@ input[type=checkbox] {
   to {
     font-size: var(--text-font-size);
     opacity:0.8;
+  }
+}
+
+.highlight-button {
+  animation: 1.2s 2 button-highlight;
+}
+@keyframes button-highlight {
+  from {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 1.0;
+  }
+  to {
+    opacity: 0.1;
   }
 }

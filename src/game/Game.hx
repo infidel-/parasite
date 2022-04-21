@@ -271,6 +271,7 @@ class Game
 
       // add to event queue
       ui.event({
+        type: UIEVENT_STATE,
         state: UISTATE_FINISH,
         obj: finishText
       });
@@ -299,6 +300,7 @@ class Game
 
       // add to event queue
       ui.event({
+        type: UIEVENT_STATE,
         state: UISTATE_MESSAGE,
         obj: {
           text: Const.narrative(s),

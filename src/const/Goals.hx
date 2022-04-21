@@ -67,6 +67,7 @@ class Goals
       onComplete: function (game, player) {
         game.goals.receive(GOAL_INVADE_HUMAN);
         game.ui.event({
+          type: UIEVENT_STATE,
           state: UISTATE_DIFFICULTY,
           obj: 'survival'
         });
@@ -82,8 +83,12 @@ class Goals
         player.evolutionManager.state = 1;
         player.evolutionManager.addImprov(IMP_BRAIN_PROBE);
         game.goals.receive(GOAL_EVOLVE_PROBE);
-        },
+        game.ui.event({
+          type: UIEVENT_HIGHLIGHT,
+          state: UISTATE_EVOLUTION,
+        });
       },
+    },
 
     GOAL_EVOLVE_PROBE => {
       id: GOAL_EVOLVE_PROBE,
@@ -94,11 +99,13 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.state = 2;
         game.player.vars.organsEnabled = true;
+
         game.goals.receive(GOAL_PROBE_BRAIN);
         game.goals.receive(GOAL_EVOLVE_ORGAN);
 
         // choose difficulty
         game.ui.event({
+          type: UIEVENT_STATE,
           state: UISTATE_DIFFICULTY,
           obj: 'evolution'
         });
@@ -241,6 +248,10 @@ class Goals
       messageComplete: 'Some of the objects the hosts carry can be useful.',
       onComplete: function (game, player) {
         game.player.vars.inventoryEnabled = true;
+        game.ui.event({
+          type: UIEVENT_HIGHLIGHT,
+          state: UISTATE_BODY,
+        });
         game.goals.receive(GOAL_LEARN_ITEMS);
       }
     },
@@ -291,6 +302,10 @@ class Goals
         player.vars.timelineEnabled = true;
         game.player.vars.objectsEnabled = true;
         game.timeline.unlock();
+        game.ui.event({
+          type: UIEVENT_HIGHLIGHT,
+          state: UISTATE_TIMELINE,
+        });
         game.goals.receive(GOAL_ENTER_SEWERS);
       }
     },
@@ -325,6 +340,7 @@ class Goals
 
         // choose difficulty
         game.ui.event({
+          type: UIEVENT_STATE,
           state: UISTATE_DIFFICULTY,
           obj: 'timeline'
         });
