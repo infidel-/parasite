@@ -27,6 +27,7 @@ class UI
   var uiQueue: List<_UIEvent>; // gui event queue
   var uiQueuePaused: Bool; // if true, the queue is paused
   var uiQueuePrev: _UIEvent; // previous UI event
+  public var shiftPressed: Bool; // true when shift is held
 
   public function new(g: Game)
     {
@@ -36,10 +37,12 @@ class UI
       uiQueue = new List();
       uiQueuePaused = false;
       uiQueuePrev = null;
+      shiftPressed = false;
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('webgl');
       canvas.style.visibility = 'hidden';
       Browser.document.onkeydown = onKey;
+      Browser.document.onkeyup = onKeyUp;
       canvas.onmousemove = function (e: MouseEvent) {
         hud.onMouseMove(e);
       }
@@ -91,12 +94,30 @@ class UI
       canvas.focus();
     }
 
+// key releases
+  function onKeyUp(e: KeyboardEvent)
+    {
+      if (hud.consoleVisible())
+        return;
+
+      if (_state == UISTATE_DEFAULT)
+        {
+          // shift key - redraw actions list
+          if (e.key == 'Shift' && game.config.shiftLongActions)
+            {
+              shiftPressed = false;
+              hud.updateActions();
+              return;
+            }
+        }
+    }
+
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
       if (hud.consoleVisible())
         return;
-//      trace(e.code + ' ' + e.altKey + ' ' + e.ctrlKey + ' ' + e.shiftKey + ' ' + e.key);
+//      trace('code:' + e.code + ' alt:' + e.altKey + ' ctrl:' + e.ctrlKey + ' shift:' + e.shiftKey + ' key:' + e.key);
       // default state
       if (_state == UISTATE_DEFAULT)
         {
@@ -135,6 +156,15 @@ class UI
                   state = UISTATE_MAINMENU;
                   return;
                 }
+            }
+          // shift key - redraw actions list
+          else if (e.key == 'Shift' &&
+              game.config.shiftLongActions &&
+              !shiftPressed)
+            {
+              shiftPressed = true;
+              hud.updateActions();
+              return;
             }
         }
 
@@ -292,13 +322,10 @@ class UI
               n += 10;
 
             if (_state == UISTATE_DEFAULT)
-              hud.action(n);
+              hud.action(n, shiftKey);
             else if (components[_state] != null)
               components[_state].action(n);
             return true;
-//            inputState = 0;
-//            ret = true;
-//            break;
           }
 
       // yes/no
@@ -459,6 +486,13 @@ class UI
 // set new GUI state, open and close windows if needed
   public function set_state(vstate: _UIState)
     {
+      // clear shift key
+      if (shiftPressed && game.config.shiftLongActions)
+        {
+          shiftPressed = false;
+          hud.updateActions();
+        }
+
 //      trace(vstate);
 //      Const.traceStack();
       if (_state != UISTATE_DEFAULT)

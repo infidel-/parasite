@@ -303,9 +303,19 @@ class Const
 #end
     }
 
+  public static inline function bold(s: String)
+    {
+      return '<span style="font-weight:bold">' + s + '</span>';
+    }
+
   public static inline function small(s: String)
     {
       return '<span class=small>' + s + '</span>';
+    }
+
+  public static inline function smallgray(s: String)
+    {
+      return '<span class=small>' + col('gray', s) + '</span>';
     }
 
   public static inline function narrative(s: String)

@@ -42,7 +42,7 @@ class Main extends hxd.App
   override function update(dt: Float)
     {
       game.scene.mouse.update();
-      game.scene.checkPath();
+      game.update();
       game.scene.hud.updateAnimation(dt);
     }
 

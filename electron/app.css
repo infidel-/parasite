@@ -83,6 +83,19 @@ hr {
   align-items: center;
 }
 
+#overlay {
+  z-index: 200;
+  width: 100%;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  pointer-events: all;
+  cursor: crosshair;
+}
+
 #hud {
   z-index: 100;
   width: 100%;
@@ -556,7 +569,7 @@ fieldset {
 #window-options {
   border: 30px solid;
   width: 40ch;
-  height: 27em;
+  height: 28em;
   pointer-events: all;
 }
 

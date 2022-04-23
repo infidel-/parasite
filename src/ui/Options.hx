@@ -51,9 +51,9 @@ class Options extends UIWindow
           game.scene.sounds.ambientVolumeChanged();
         }, 0, 100, 'int');
 #end
-      addSlider('Movement delay', game.config.pathDelay,
+      addSlider('Movement delay', game.config.repeatDelay,
         function (v: Float) {
-          game.config.set('pathDelay', '' + Std.int(v), false);
+          game.config.set('repeatDelay', '' + Std.int(v), false);
         }, 0, 500, 'int');
       addSlider('Map scale', game.config.mapScale,
         function (v: Float) {

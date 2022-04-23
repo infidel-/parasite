@@ -13,6 +13,7 @@ class HUD
 {
   var game: Game;
   var ui: UI;
+  var overlay: DivElement;
   var container: DivElement;
   var consoleDiv: DivElement;
   var console: TextAreaElement;
@@ -40,6 +41,11 @@ class HUD
       actionButtons = new List();
       listActions = new List();
       listKeyActions = new List();
+      overlay = Browser.document.createDivElement();
+      overlay.id = 'overlay';
+      overlay.style.visibility = 'hidden';
+      Browser.document.body.appendChild(overlay);
+
       container = Browser.document.createDivElement();
       container.id = 'hud';
       container.style.visibility = 'visible';
@@ -116,6 +122,19 @@ class HUD
         log,
         goals,
       ];
+    }
+
+// show glass wall overlay
+// NOTE: dont really like it, the mouse cursor will not change without movement
+  public inline function showOverlay()
+    {
+//      overlay.style.visibility = 'visible';
+    }
+
+// hide glass wall overlay
+  public inline function hideOverlay()
+    {
+//      overlay.style.visibility = 'hidden';
     }
 
 // add button to menu
@@ -490,7 +509,7 @@ class HUD
     }
 
 // update player actions
-  function updateActions()
+  public function updateActions()
     {
       // clear old items
       var n = 1;
@@ -501,19 +520,38 @@ class HUD
         for (action in l)
           {
             var buf = new StringBuf();
+            var key = '';
+            if (game.config.shiftLongActions &&
+                action.canRepeat &&
+                ui.shiftPressed)
+              key = 'S-';
             if (action.key != null)
-              buf.add(action.key.toUpperCase() + ': ');
-            else buf.add(n + ': ');
-            buf.add(action.name);
+              key += action.key.toUpperCase();
+            else key += '' + n;
+            key = Const.col('gray', Const.bold(key));
+            buf.add(key + ': ' + action.name);
             if (action.energy != null && action.energy > 0)
-              buf.add(' <span class=small>(' + action.energy + ' energy)</span>');
+              buf.add(' ' + Const.smallgray(
+                '(' + action.energy + ' energy)'));
             else if (action.energyFunc != null)
-              buf.add(' <span class=small>(' + action.energyFunc(game.player) + ' energy)</span>');
+              buf.add(' ' + Const.smallgray(
+                '(' + action.energyFunc(game.player) + ' energy)'));
 
             var btn = Browser.document.createDivElement();
             btn.innerHTML = buf.toString();
             btn.className = 'hud-action';
             btn.onclick = function (e) {
+              if (untyped e.shiftKey &&
+                  game.config.shiftLongActions &&
+                  action.canRepeat)
+                {
+                  if (game.location == LOCATION_AREA)
+                    game.playerArea.setAction(action);
+/*
+                  else if (game.location == LOCATION_REGION)
+                    game.playerRegion.action(action);*/
+                  return;
+                }
               if (game.location == LOCATION_AREA)
                 game.playerArea.action(action);
               else if (game.location == LOCATION_REGION)
@@ -527,7 +565,7 @@ class HUD
     }
 
 // call numbered action by index
-  public function action(index: Int)
+  public function action(index: Int, withRepeat: Bool)
     {
       // find action name by index
       var i = 1;
@@ -540,6 +578,17 @@ class HUD
           }
       if (action == null)
         return;
+      if (withRepeat &&
+          game.config.shiftLongActions &&
+          action.canRepeat)
+        {
+          if (game.location == LOCATION_AREA)
+            game.playerArea.setAction(action);
+/*
+          else if (game.location == LOCATION_REGION)
+            game.playerRegion.action(action);*/
+          return;
+        }
 
       if (game.location == LOCATION_AREA)
         game.playerArea.action(action);

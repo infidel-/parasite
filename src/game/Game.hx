@@ -137,7 +137,6 @@ class Game
       isInited = true;
     }
 
-
 // game restart
   public function restart()
     {
@@ -381,5 +380,27 @@ class Game
 
       // update HUD minilog display
       ui.hud.updateLog();
+    }
+
+// path movement/continuous actions
+  public function update()
+    {
+      if (isFinished)
+        return;
+      // path active, try to move on it
+      var ret = false;
+      if (location == LOCATION_AREA)
+        {
+          if (playerArea.path != null)
+            ret = playerArea.nextPath();
+          else if (playerArea.currentAction != null)
+            ret = playerArea.nextAction();
+        }
+      else if (location == LOCATION_REGION &&
+          playerRegion.target != null)
+        ret = playerRegion.nextPath();
+
+      if (ret)
+        scene.updateCamera();
     }
 }

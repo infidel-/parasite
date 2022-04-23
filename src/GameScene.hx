@@ -729,21 +729,6 @@ class GameScene extends Scene
     }
 
 
-// check if it's time to move on path
-  public function checkPath()
-    {
-      // path active, try to move on it
-      var ret = false;
-      if (game.location == LOCATION_AREA && game.playerArea.path != null)
-        ret = game.playerArea.nextPath();
-      else if (game.location == LOCATION_REGION &&
-          game.playerRegion.target != null)
-        ret = game.playerRegion.nextPath();
-
-      if (ret)
-        updateCamera();
-    }
-
 
 // event handling
   public function onEvent(ev: hxd.Event)
@@ -861,7 +846,6 @@ class GameScene extends Scene
           else state = prevState;
         }
     }
-
 
 // create or re-create windows
   function createComponents()

@@ -21,7 +21,8 @@ class PlayerArea
   var knownObjects: List<String>; // list of known area object types
   var state(get, set): _PlayerState; // state link
   public var path(default, null): Array<aPath.Node>; // current player path
-  var pathTS: Float; // last time player moved on a path
+  var actionTS: Float; // last time player moved on a path/did action
+  public var currentAction(default, null): _PlayerAction; // current continuous action
 
   // state "parasite"
 
@@ -35,7 +36,8 @@ class PlayerArea
       game = g;
       player = game.player;
       path = null;
-      pathTS = 0;
+      actionTS = 0;
+      currentAction = null;
 
       x = 0;
       y = 0;
@@ -120,6 +122,7 @@ class PlayerArea
             id: 'hardenGrip',
             type: ACTION_AREA,
             name: 'Harden Grip',
+            canRepeat: true,
             energy: 5
           });
         }
@@ -132,6 +135,7 @@ class PlayerArea
               id: 'reinforceControl',
               type: ACTION_AREA,
               name: 'Reinforce Control',
+              canRepeat: true,
               energy: 5
             });
 
@@ -940,6 +944,15 @@ class PlayerArea
         player.vars.listenRadius * player.vars.listenRadius);
     }
 
+// set action to repeat continuously
+  public function setAction(a: _PlayerAction)
+    {
+      currentAction = a;
+      game.ui.hud.showOverlay();
+      
+      // start doing it
+      nextAction();
+    }
 
 // create a path to given x,y and start moving on it
   public function setPath(destx: Int, desty: Int)
@@ -947,18 +960,49 @@ class PlayerArea
       path = game.area.getPath(x, y, destx, desty);
       if (path == null)
         return;
-
+      game.ui.hud.showOverlay();
       // start moving
       nextPath();
     }
 
-
-// clear path
-  public inline function clearPath()
+// repeat action
+// returns true on success
+  public function nextAction(): Bool
     {
-      path = null;
-    }
+      // path clear
+      if (currentAction == null ||
+          (haxe.Timer.stamp() - actionTS) * 1000.0 <
+          game.config.repeatDelay)
+        return false;
 
+      actionTS = haxe.Timer.stamp();
+      var prevState = player.state;
+      action(currentAction);
+      var stop = false;
+      // stop when the player state changes or not enough energy
+      var energy = (currentAction.energyFunc != null ?
+        currentAction.energyFunc(player) : currentAction.energy);
+      if (player.state != prevState ||
+          player.energy < energy)
+        stop = true;
+      else if (currentAction.id == 'hardenGrip')
+        {
+          if (attachHold >= 100)
+            stop = true;
+        }
+      else if (currentAction.id == 'reinforceControl')
+        {
+          if (player.hostControl >= 90)
+            stop = true;
+        }
+      if (stop)
+        {
+          currentAction = null;
+          game.ui.hud.hideOverlay();
+          return true;
+        }
+      return true;
+    }
 
 // move to next path waypoint
 // returns true on success
@@ -966,22 +1010,33 @@ class PlayerArea
     {
       // path clear
       if (path == null ||
-          (haxe.Timer.stamp() - pathTS) * 1000.0 < game.config.pathDelay)
+          (haxe.Timer.stamp() - actionTS) * 1000.0 < game.config.repeatDelay)
         return false;
 
       var n = path.shift();
-      pathTS = haxe.Timer.stamp();
+      actionTS = haxe.Timer.stamp();
       var ret = moveAction(n.x - x, n.y - y);
       if (!ret)
         {
           path = null;
+          game.ui.hud.hideOverlay();
           return true;
         }
 
       if (path != null && path.length == 0)
-        path = null;
+        {
+          game.ui.hud.hideOverlay();
+          path = null;
+        }
 
       return true;
+    }
+
+
+// clear path
+  public inline function clearPath()
+    {
+      path = null;
     }
 
 // ================================ EVENTS =========================================

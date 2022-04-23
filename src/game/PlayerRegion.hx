@@ -273,7 +273,7 @@ class PlayerRegion
     {
       // path clear
       if (target == null ||
-          (haxe.Timer.stamp() - pathTS) * 1000.0 < game.config.pathDelay)
+          (haxe.Timer.stamp() - pathTS) * 1000.0 < game.config.repeatDelay)
         return false;
 
       var dx = 0;

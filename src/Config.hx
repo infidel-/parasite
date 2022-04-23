@@ -18,11 +18,12 @@ class Config
   public var alwaysCenterCamera: Bool;
   public var laptopKeyboard: Bool;
   public var fullscreen: Bool;
+  public var shiftLongActions: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
   public var mapScale: Float;
-  public var pathDelay: Int;
+  public var repeatDelay: Int;
   public var windowHeight: Int;
   public var windowWidth: Int;
   public var musicVolume: Int;
@@ -44,6 +45,7 @@ class Config
       alwaysCenterCamera = true;
       laptopKeyboard = false;
       fullscreen = false;
+      shiftLongActions = true;
 
       fontSize = 16;
       hudLogLines = 4;
@@ -51,7 +53,7 @@ class Config
       musicVolume = 30;
       effectsVolume = 40;
       ambientVolume = 30;
-      pathDelay = 100;
+      repeatDelay = 100;
       windowHeight = 768;
       windowWidth = 1024;
 
@@ -60,6 +62,7 @@ class Config
       map['extendedInfo'] = '0';
       map['alwaysCenterCamera'] = '1';
       map['laptopKeyboard'] = '0';
+      map['shiftLongActions'] = '1';
       map['fullscreen'] = '0';
 
       map['fontSize'] = '' + fontSize;
@@ -68,7 +71,7 @@ class Config
       map['musicVolume'] = '' + musicVolume;
       map['effectsVolume'] = '' + effectsVolume;
       map['ambientVolume'] = '' + ambientVolume;
-      map['pathDelay'] = '' + pathDelay;
+      map['repeatDelay'] = '' + repeatDelay;
       map['windowHeight'] = '' + windowHeight;
       map['windowWidth'] = '' + windowWidth;
 
@@ -137,6 +140,8 @@ class Config
         alwaysCenterCamera = (val == '1');
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
+      else if (key == 'shiftLongActions')
+        shiftLongActions = (val == '1');
       else if (key == 'fullscreen')
         {
           fullscreen = (val == '1');
@@ -157,8 +162,8 @@ class Config
         effectsVolume = Const.clamp(Std.parseInt(val), 0, 100);
       else if (key == 'ambientVolume')
         ambientVolume = Const.clamp(Std.parseInt(val), 0, 100);
-      else if (key == 'pathDelay')
-        pathDelay = Std.parseInt(val);
+      else if (key == 'repeatDelay')
+        repeatDelay = Std.parseInt(val);
       else if (key == 'windowHeight')
         windowHeight = Std.parseInt(val);
       else if (key == 'windowWidth')

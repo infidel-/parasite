@@ -48,9 +48,9 @@ class Options extends UIWindow
           game.config.set('ambientVolume', '' + Std.int(v), false);
           game.scene.sounds.ambientVolumeChanged();
         }, 0, 100, 1, 'int', '');
-      addSlider('Movement delay', game.config.pathDelay,
+      addSlider('Repeat delay', game.config.repeatDelay,
         function (v: Float) {
-          game.config.set('pathDelay', '' + Std.int(v), false);
+          game.config.set('repeatDelay', '' + Std.int(v), false);
         }, 0, 500, 10, 'int', 'ms');
       addSlider('Map scale', game.config.mapScale * 100,
         function (v: Float) {
@@ -82,6 +82,8 @@ class Options extends UIWindow
         'laptopKeyboard', game.config.laptopKeyboard, '-23.6%');
       addCheckbox('Extended gameplay information',
         'extendedInfo', game.config.extendedInfo, '-26.9%');
+      addCheckbox('Shift-click/number repeat action',
+        'shiftLongActions', game.config.shiftLongActions, '-24.7%');
 
       restartText = Browser.document.createDivElement();
       restartText.style.textAlign = 'center';
