@@ -450,6 +450,9 @@ class HUD
                 vis = true;
             }
           m.btn.style.display = (vis ? 'flex' : 'none');
+          // clear highlight on hide
+          if (!vis && m.btn.className.indexOf('highlight') > 0)
+            m.btn.className = 'hud-button';
         }
     }
 

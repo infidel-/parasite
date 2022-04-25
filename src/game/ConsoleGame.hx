@@ -63,6 +63,7 @@ class ConsoleGame
             'ao - add organ, ' +
             'as - add skill, ' +
             'cfg|config,<br/>' +
+            'ddemo - debug: finish demo, ' +
             'dg - debug: graphics info, ' +
             'dthrow - debug: throw exception, ' +
             'dalert - debug: show alert, ' +
@@ -75,6 +76,7 @@ class ConsoleGame
             'ie - timeline info (trace), ' +
             'ii - improvements info (trace),<br/>' +
             // learn
+            'lc - learn random clues, ' +
             'le - learn about event, ' +
             'lia - learn all improvements, ' +
             'li - learn improvement, ' +
@@ -483,16 +485,28 @@ class ConsoleGame
           );
         }
 #if mydebug
-      else if (cmd == 'dthrow')
-        throw 'test exception';
       else if (cmd == 'dalert')
         game.log('This is a test alert message.', COLOR_ALERT);
+      else if (cmd == 'ddemo')
+        {
+          game.message('Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.');
+          game.ui.event({
+            type: UIEVENT_FINISH,
+            state: null,
+            obj: {
+              result: 'lose',
+              condition: 'demo',
+            }
+          });
+        }
       else if (cmd == 'dleave')
         {
           if (game.location != LOCATION_AREA)
             game.log('Not in area.');
           else game.setLocation(LOCATION_REGION);
         }
+      else if (cmd == 'dthrow')
+        throw 'test exception';
 #end
     }
 
@@ -630,8 +644,16 @@ class ConsoleGame
 // learn commands
   function learnCommand(cmd: String)
     {
+      // XXX [lc] learn random clues
+      if (cmd.charAt(1) == 'c')
+        {
+          game.goals.receive(GOAL_LEARN_CLUE);
+          game.goals.complete(GOAL_LEARN_CLUE);
+          for (i in 0...5)
+            game.timeline.learnClues(game.timeline.getRandomEvent(), true);
+        }
       // XXX [le10] learn everything about event X
-      if (cmd.charAt(1) == 'e')
+      else if (cmd.charAt(1) == 'e')
         {
           if (cmd.length < 3)
             {

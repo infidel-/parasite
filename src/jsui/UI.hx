@@ -565,10 +565,16 @@ class UI
                 }
               state = ev.state;
             }
+          // highlight HUD button
           else if (ev.type == UIEVENT_HIGHLIGHT)
             {
               state = UISTATE_DEFAULT;
               hud.getMenuButton(ev.state).className += ' highlight-button';
+            }
+          // finish the game
+          else if (ev.type == UIEVENT_FINISH)
+            {
+              game.finish(ev.obj.result, ev.obj.condition);
             }
           return;
         }

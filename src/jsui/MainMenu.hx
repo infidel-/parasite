@@ -21,7 +21,11 @@ class MainMenu extends UIWindow
       var title = Browser.document.createDivElement();
       title.id = 'window-mainmenu-title';
       title.innerHTML = 'PARASITE ' + Const.small(Const.col('gray',
-        'v' + Version.getVersion()));
+        'v' + Version.getVersion()
+#if demo
+        + ' DEMO'
+#end
+        ));
       window.appendChild(title);
       contents = Browser.document.createDivElement();
       contents.id = 'window-mainmenu-contents';

@@ -65,7 +65,11 @@ class Game
     {
       var s = 'Parasite v' + Version.getVersion();
 //        ' (build: ' + Version.getBuild() + ')';
+#if demo
+      log (s + ' DEMO');
+#else
       log(s);
+#end
       log('<font style="font-size: 6px">Into the river of the Green, into the river of Unseen.</font>', COLOR_DEBUG);
       turns = 0;
       isFinished = false;
@@ -254,7 +258,11 @@ class Game
           else if (condition == 'noHealth')
             finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
           else if (condition == 'habitatShock')
-            finishText = "You have received your final shock from the habitat destruction.";
+            finishText = 'You have received your final shock from the habitat destruction.';
+#if demo
+          else if (condition == 'demo')
+            finishText = 'Demo finished.';
+#end
 
           // parasite death
           scene.sounds.play('parasite-die', true);

@@ -25,7 +25,11 @@ class MainElectron
             {
               trace(e);
             }
-          var isFullscreen = (obj.fullscreen != null && obj.fullscreen != '0');
+          var isFullscreen = false;
+          if (obj != null)
+            {
+              isFullscreen = (obj.fullscreen != null && obj.fullscreen != '0');
+            }
 
           // create main window
 //          var isClassic = App.commandLine.hasSwitch('classic');

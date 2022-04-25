@@ -8,4 +8,5 @@ typedef _UIEvent = {
 enum _UIEventType {
   UIEVENT_STATE; // change ui state (open window)
   UIEVENT_HIGHLIGHT; // highlight menu button for this state
+  UIEVENT_FINISH; // finish the game
 }
