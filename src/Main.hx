@@ -29,21 +29,12 @@ class Main extends hxd.App
 #end
     }
 
-
-// resize GUI
-  override function onResize()
-    {
-      if (game != null && game.scene != null)
-        game.scene.resize();
-    }
-
-
 // main update tick, check mouse cursor
   override function update(dt: Float)
     {
       game.scene.mouse.update();
       game.update();
-      game.scene.hud.updateAnimation(dt);
+      game.scene.blinkingText.update(dt);
     }
 
 

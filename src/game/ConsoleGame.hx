@@ -575,7 +575,7 @@ class ConsoleGame
           log('Teleporting to event ' + idx + ' location.');
 
           var area = event.location.area;
-          game.scene.state = UISTATE_DEFAULT;
+          game.ui.state = UISTATE_DEFAULT;
 
           // leave current area
           if (game.location == LOCATION_AREA)
@@ -859,7 +859,7 @@ class ConsoleGame
         }
 
       // fix for gui queue
-      game.scene.closeWindow();
+      game.ui.closeWindow();
     }
 
 
@@ -956,7 +956,7 @@ class ConsoleGame
 
       // learn and enter sewers
       game.playerArea.debugLearnObject('sewer_hatch');
-      game.scene.state = UISTATE_DEFAULT;
+      game.ui.state = UISTATE_DEFAULT;
       game.setLocation(LOCATION_REGION);
 
       game.playerRegion.action({

@@ -118,7 +118,7 @@ class DebugArea
           name: 'Enter sewers',
           func: function()
             {
-              game.scene.state = UISTATE_DEFAULT;
+              game.ui.state = UISTATE_DEFAULT;
               game.setLocation(LOCATION_REGION);
             }
         },

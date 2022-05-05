@@ -305,8 +305,8 @@ class PlayerArea
           game.player.onHostDeath('Your host has expired. You have to find a new one.');
 
           // close window just in case
-          if (game.scene.state != UISTATE_MESSAGE)
-            game.scene.state = UISTATE_DEFAULT;
+          if (game.ui.state != UISTATE_MESSAGE)
+            game.ui.state = UISTATE_DEFAULT;
         }
 
       // parasite could also be dead
@@ -1111,8 +1111,8 @@ class PlayerArea
   public inline function onHostDeath()
     {
       // close open windows
-      if (game.scene.state != UISTATE_MESSAGE)
-        game.scene.state = UISTATE_DEFAULT;
+      if (game.ui.state != UISTATE_MESSAGE)
+        game.ui.state = UISTATE_DEFAULT;
 
       player.host.die();
       onDetach();

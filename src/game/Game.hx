@@ -153,7 +153,7 @@ class Game
       else if (location == LOCATION_REGION)
         region.leave();
       scene.region.clearIcons();
-      scene.clearEvents();
+      ui.clearEvents();
       init();
     }
 
@@ -314,13 +314,6 @@ class Game
           col: Const.TEXT_COLORS[col]
         }
       });
-
-      // some window already open, wait until it closes
-      if (scene.state != UISTATE_DEFAULT)
-        return;
-
-      // no windows open, show message (hack)
-      scene.closeWindow();
     }
 
 
