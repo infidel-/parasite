@@ -634,7 +634,7 @@ class ConsoleGame
               var imp = EvolutionConst.improvements[i];
 
               Const.p(i + ': ' + imp.name + ', ' + imp.id +
-                ' (' + imp.path + ')');
+                ' (' + imp.type + ')');
               if (imp.organ != null)
                 Const.p('  organ: ' + imp.organ.name);
             }

@@ -11,11 +11,9 @@ class EvolutionManager
 
   public var difficulty: _Difficulty; // difficulty setting
   public var state: Int; // 0 - disabled, 1 - limited, 2 - full
-  public var isTaskPath: Bool; // is current task path?
   public var isActive: Bool; // is currently evolving?
-  public var taskID: String; // string id of currently evolving path/improvement
+  public var taskID: String; // string id of currently evolving improvement
   var _list: List<Improv>; // list of known improvements (that can be of level 0)
-  var _listPaths: List<Path>; // list of paths (evolution progress)
 
   public function new(p: Player, g: Game)
     {
@@ -26,17 +24,7 @@ class EvolutionManager
       difficulty = UNSET;
 
       _list = new List<Improv>();
-      _listPaths = new List<Path>();
       taskID = '';
-      isTaskPath = false;
-
-      for (p in EvolutionConst.paths) // we may have hidden paths later ;)
-        _listPaths.add({
-          id: p.id,
-          ep: 0,
-          level: 0,
-          info: EvolutionConst.getPathInfo(p.id)
-        });
     }
 
 
@@ -54,51 +42,19 @@ class EvolutionManager
       if (!isActive)
         return;
 
-      var imp = null;
-
       // evolution is easier while in habitat
       player.host.energy -= __Math.evolutionEnergyPerTurn() * time;
-      if (isTaskPath) // path evolution
-        {
-          var pathID = Type.createEnum(_Path, taskID);
-          var path = getPath(pathID);
-          path.ep += __Math.epPerTurn() * time;
+      var impID = Type.createEnum(_Improv, taskID);
+      var imp = getImprov(impID);
+      imp.ep += 10 * time;
 
-          // evolution complete
-          if (path.ep >= EvolutionConst.epCostPath[path.level])
-            {
-              imp = openImprov(pathID);
-              if (imp == null) // should not be here
-                {
-                  Const.todo('BUG EvolutionManager: You should not be here.');
-                  return;
-                }
+      // host degradation - reduce one of the host attributes
+      if (!debug)
+        turnDegrade(time);
 
-              player.log('Following the ' + path.info.name +
-                ' direction you now possess the knowledge about ' +
-                imp.info.name + '.',
-                COLOR_EVOLUTION);
-              path.ep = 0;
-              path.level++;
-              taskID = '';
-              isActive = false;
-            }
-        }
-
-      else // upgrade improvement
-        {
-          var impID = Type.createEnum(_Improv, taskID);
-          imp = getImprov(impID);
-          imp.ep += 10 * time;
-
-          // host degradation - reduce one of the host attributes
-          if (!debug)
-            turnDegrade(time);
-
-          // upgrade complete
-          if (imp.ep >= EvolutionConst.epCostImprovement[imp.level])
-            turnUpgrade(imp);
-        }
+      // upgrade complete
+      if (imp.ep >= EvolutionConst.epCostImprovement[imp.level])
+        turnUpgrade(imp);
     }
 
 
@@ -167,29 +123,6 @@ class EvolutionManager
         game.goals.complete(GOAL_EVOLVE_ORGAN);
     }
 
-
-// open improvement on that path
-  function openImprov(path: _Path): Improv
-    {
-      // get list of improvs on that path that player does not yet have
-      var tmp = [];
-      for (imp in EvolutionConst.improvements)
-        if (imp.path == path && !isKnown(imp.id))
-          tmp.push(imp.id);
-
-      // no improvs left on that path
-      if (tmp.length == 0)
-        return null;
-
-      // get random improv
-      var index = Std.random(tmp.length);
-      var impID = tmp[index];
-
-      var imp = addImprov(impID, 1);
-      return imp;
-    }
-
-
 // add improvement to list
   public function addImprov(id: _Improv, ?level: Int = 0): Improv
     {
@@ -252,14 +185,6 @@ class EvolutionManager
       taskID = actionID;
       isActive = true;
 
-      // set evolution path
-      if (actionName == 'setPath')
-        isTaskPath = true;
-
-      // set improvement path
-      else if (actionName == 'set')
-        isTaskPath = false;
-
 //      trace(actionName + ' ' + actionID);
       return true;
     }
@@ -311,45 +236,6 @@ class EvolutionManager
       return 0;
     }
 
-
-// get path object
-  public function getPath(id: _Path): Path
-    {
-      for (p in _listPaths)
-        if (p.id == id)
-          return p;
-
-      return null;
-    }
-
-
-// get full list of paths
-  public function getPathList(): List<Path>
-    {
-      return _listPaths;
-    }
-
-
-// is this path complete?
-  public function isPathComplete(id: _Path)
-    {
-      var isComplete = true;
-      for (imp in EvolutionConst.improvements)
-        {
-          if (imp.path != id)
-            continue;
-
-          if (!isKnown(imp.id))
-            {
-              isComplete = false;
-              break;
-            }
-        }
-
-      return isComplete;
-    }
-
-
 // get current evolution direction info
   public function getEvolutionDirectionInfo(): String
     {
@@ -358,21 +244,11 @@ class EvolutionManager
 
       var buf = new StringBuf();
       buf.add("<font style='color:var(--text-color-evolution-title)'>");
-      if (isTaskPath)
-        buf.add(EvolutionConst.getPathInfo(Type.createEnum(_Path, taskID)).name);
-      else buf.add(EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name);
+      buf.add(EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name);
       buf.add("</font> (");
       var epLeft = 0;
-      if (isTaskPath)
-        {
-          var path = getPath(Type.createEnum(_Path, taskID));
-          epLeft = EvolutionConst.epCostPath[path.level] - path.ep;
-        }
-      else
-        {
-          var imp = getImprov(Type.createEnum(_Improv, taskID));
-          epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
-        }
+      var imp = getImprov(Type.createEnum(_Improv, taskID));
+      epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
       buf.add(Math.round(epLeft / __Math.epPerTurn()));
       buf.add(" turns)");
       return buf.toString();
@@ -395,7 +271,7 @@ class EvolutionManager
       var tmpOrgans = [];
       var tmpFull = [];
       for (info in EvolutionConst.improvements)
-        if (info.path != PATH_SPECIAL)
+        if (info.type == TYPE_BASIC)
           {
             if (info.organ != null)
               tmpOrgans.push(info.id);
@@ -439,13 +315,4 @@ typedef Improv =
   var level: Int; // improvement level
   var ep: Int; // evolution points
   var info: ImprovInfo; // improvement info link
-}
-
-
-typedef Path =
-{
-  var id: _Path; // string ID
-  var level: Int; // path level is mainly a convenience var, equals number of opened improvements on that path
-  var ep: Int; // evolution points
-  var info: PathInfo; // path info link
 }
