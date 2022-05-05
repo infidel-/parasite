@@ -70,5 +70,7 @@ class MainElectron
       IpcMain.handle('fullscreen1', function(e) {
         win.fullScreen = true;
       });
+      App.commandLine.appendSwitch('in-process-gpu');
+      App.commandLine.appendSwitch('disable-direct-composition');
     }
 }
