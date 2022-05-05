@@ -26,7 +26,6 @@ class Game
 
   public var managerRegion: RegionManager; // event manager (region mode)
   public var playerRegion: PlayerRegion; // game player (region mode)
-  public var debugRegion: DebugRegion; // debug actions (region mode)
 
   public var player: Player; // game player
   public var playerArea: PlayerArea; // game player (area mode)
@@ -83,7 +82,6 @@ class Game
 
       managerRegion = new RegionManager(this);
       playerRegion = new PlayerRegion(this);
-      debugRegion = new DebugRegion(this);
 
       // generate world
       world = new World(this);

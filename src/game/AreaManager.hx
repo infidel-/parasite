@@ -23,13 +23,6 @@ class AreaManager
     }
 
 
-// DEBUG: show queue
-  public function debugShowQueue()
-    {
-      for (e in _list)
-        trace(e);
-    }
-
 #if mydebug
   public function debugInfo(buf: StringBuf)
     {

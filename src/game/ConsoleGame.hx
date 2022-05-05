@@ -80,6 +80,7 @@ class ConsoleGame
             'le - learn about event, ' +
             'lia - learn all improvements, ' +
             'li - learn improvement, ' +
+            'lr - learn region map, ' +
             'lt - learn all timeline,<br/>' +
             //
             'oa - organ action,<br/>' +
@@ -709,6 +710,16 @@ class ConsoleGame
 
           game.player.evolutionManager.addImprov(imp.id, lvl);
           log('Learned ' + imp.name + ' ' + lvl);
+        }
+
+      // XXX [lr] learn region map
+      else if (cmd.charAt(1) == 'r')
+        {
+          for (a in game.region)
+            a.isKnown = true;
+          if (game.location == LOCATION_REGION)
+            game.scene.region.update();
+          log('Region map opened.');
         }
 
       // XXX [lt] learn all timeline

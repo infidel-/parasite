@@ -18,15 +18,6 @@ class DebugArea
 
       actions = [
         {
-          name: "Remove energy spend without a host",
-          func: function()
-            {
-              game.player.vars.areaEnergyPerTurn = 0;
-              game.log('Energy per turn removed.');
-            }
-        },
-
-        {
           name: 'Gain host',
           func: function()
             {
@@ -115,15 +106,6 @@ class DebugArea
         },
 
         {
-          name: 'Enter sewers',
-          func: function()
-            {
-              game.ui.state = UISTATE_DEFAULT;
-              game.setLocation(LOCATION_REGION);
-            }
-        },
-
-        {
           name: 'Complete current evolution',
           func: function()
             {
@@ -182,38 +164,7 @@ class DebugArea
               game.area.debugShowObjects();
             }
         },
-
-        {
-          name: 'Show area manager queue',
-          func: function()
-            {
-              game.managerArea.debugShowQueue();
-            }
-        },
-
-        {
-          name: 'Set area alertness to 100',
-          func: function()
-            {
-              game.area.alertness = 100;
-            }
-        },
-
-        {
-          name: 'Learn random clues',
-          func: function()
-            {
-              game.goals.receive(GOAL_LEARN_CLUE);
-              game.goals.complete(GOAL_LEARN_CLUE);
-              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
-              game.timeline.learnClues(game.timeline.getRandomEvent(), true);
-            }
-        },
-
-        ];
+      ];
     }
 
 
