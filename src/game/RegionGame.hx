@@ -4,8 +4,9 @@ package game;
 
 import const.WorldConst;
 
-class RegionGame
+class RegionGame extends _SaveObject
 {
+  static var _ignoredFields = [ '_array', 'info' ];
   var game: Game;
 
   public var id: Int; // area id

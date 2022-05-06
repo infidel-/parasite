@@ -4,7 +4,7 @@ package game;
 
 import const.Goals;
 
-class Goals
+class Goals extends _SaveObject
 {
   var game: Game;
   var _listCurrent: List<_Goal>; // list of current goals

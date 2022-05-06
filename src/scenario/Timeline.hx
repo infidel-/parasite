@@ -7,8 +7,9 @@ import game.Game;
 import const.WorldConst;
 import const.NameConst;
 
-class Timeline
+class Timeline extends _SaveObject
 {
+  static var _ignoredFields = [ '_eventsMap', ];
   var game: Game;
   var scenario: Scenario;
 

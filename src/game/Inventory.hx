@@ -5,7 +5,7 @@ package game;
 import const.ItemsConst;
 import objects.*;
 
-class Inventory
+class Inventory extends _SaveObject
 {
   var game: Game;
   var _list: List<_Item>; // list of items
@@ -21,7 +21,8 @@ class Inventory
       clothing = {
         id: info.id,
         info: info,
-        name: info.name
+        name: info.name,
+        event: null,
       };
     }
 
@@ -350,7 +351,12 @@ class Inventory
       var name = info.name;
       if (info.names != null) // pick a name
         name = info.names[Std.random(info.names.length)];
-      var item = { id: id, info: info, name: name };
+      var item: _Item = {
+        id: id,
+        info: info,
+        name: name,
+        event: null,
+      };
 
       // wear/wield item automatically
       if (wear)

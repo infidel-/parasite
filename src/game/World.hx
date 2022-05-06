@@ -4,7 +4,7 @@ package game;
 
 import const.WorldConst;
 
-class World
+class World extends _SaveObject
 {
   var game: Game;
 

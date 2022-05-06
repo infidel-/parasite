@@ -4,8 +4,9 @@ package game;
 
 import ai.AI;
 
-class Player
+class Player extends _SaveObject
 {
+  static var _ignoredFields = [ 'host', ];
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty
@@ -220,34 +221,3 @@ class Player
   public static var HOST_CONTROL_BASE = 10;
 }
 
-
-// player variables typedef
-
-private typedef PlayerVars = {
-  // game flags and vars
-
-  // GUI and initial progression flags (set on goal completion)
-  inventoryEnabled: Bool,
-  objectsEnabled: Bool,
-  skillsEnabled: Bool,
-  timelineEnabled: Bool,
-  organsEnabled: Bool,
-  npcEnabled: Bool, // npc spawn enabled?
-  searchEnabled: Bool, // computer search info enabled?
-  habitatsLeft: Int, // max total amount of habitats
-
-  evolutionEnergyPerTurn: Int, // energy spent per turn during evolution
-  evolutionEnergyPerTurnMicrohabitat: Int, // -- in microhabitat
-  organGrowthEnergyPerTurn: Int, // energy spent per turn when growing organs
-  organGrowthPointsPerTurn: Int, // organ growth points per turn
-
-  areaEnergyPerTurn: Int, // area: energy spent per turn without a host
-  regionEnergyPerTurn: Int, // region: energy cost per turn without a host
-  startHealth: Int, // starting parasite health
-  startEnergy: Int, // starting parasite energy
-  maxEnergy: Int, // max parasite energy
-  listenRadius: Int, // player listen radius
-  losEnabled: Bool, // LOS checks enabled?
-  invisibilityEnabled: Bool, // player invisibility enabled?
-  godmodeEnabled: Bool, // player godmode enabled?
-};

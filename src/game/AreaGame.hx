@@ -9,8 +9,11 @@ import const.ItemsConst;
 import const.NameConst;
 import entities.RegionEntity;
 
-class AreaGame
+class AreaGame extends _SaveObject
 {
+  static var _ignoredFields = [ 'region', 'events', 'npc', 'parent',
+    'icons', 'info'
+  ];
   var game: Game;
   var region: RegionGame;
 
@@ -1333,9 +1336,9 @@ class Test {
         return null;
 
       try {
-      var p = _pathEngine.getPath(x1, y1, x2, y2);
+        var p = _pathEngine.getPath(x1, y1, x2, y2);
 //      trace('path generation time: ' + Std.int((Sys.time() - t) * 1000.0) + ' ms');
-      return p;
+        return p;
       }
       catch (e: Dynamic)
         {

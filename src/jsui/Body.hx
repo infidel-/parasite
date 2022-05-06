@@ -7,6 +7,7 @@ import js.html.DivElement;
 import js.html.Element;
 
 import game.Game;
+import game.Improv;
 import game.Organs;
 import game.EvolutionManager;
 import const.*;

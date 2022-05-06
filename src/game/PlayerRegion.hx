@@ -5,8 +5,9 @@ package game;
 import entities.PlayerEntity;
 import const.WorldConst;
 
-class PlayerRegion
+class PlayerRegion extends _SaveObject
 {
+  static var _ignoredFields = [ 'player', 'entity', 'target', 'pathTS' ];
   var game: Game; // game state link
   var player: Player; // player state link
 

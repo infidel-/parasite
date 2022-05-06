@@ -5,8 +5,10 @@ package game;
 import objects.*;
 import const.*;
 
-class Habitat
+class Habitat extends _SaveObject
 {
+  static var _ignoredFields = [ 'player', 'area',
+  ];
   var game: Game;
   var player: Player;
   public var area: AreaGame;

@@ -4,8 +4,9 @@ package scenario;
 
 import game.AreaGame;
 
-class Location
+class Location extends _SaveObject
 {
+  static var _ignoredFields = [ 'area' ];
   public var id: String; // unique location id
   public var name: String; // location name
   public var hasName: Bool; // does this location have name?

@@ -2,7 +2,7 @@
 
 package game;
 
-class Group
+class Group extends _SaveObject
 {
   var game: Game;
   public var teamTimeout: Int;

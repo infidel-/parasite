@@ -4,10 +4,10 @@ package game;
 
 import ai.AI;
 
-class Effects
+class Effects extends _SaveObject
 {
+  static var _ignoredFields = [ 'ai' ];
   var game: Game;
-
   var ai: AI; // parent AI link
   var _list: List<Effect>; // list of effects
 
@@ -26,7 +26,7 @@ class Effects
         type: eff.type,
         points: eff.points,
         isTimer: (eff.isTimer == true)
-        });
+      });
     }
 
 

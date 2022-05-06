@@ -2,12 +2,19 @@
 
 package game;
 
+#if electron
+import js.node.Fs;
+#end
+import haxe.Json;
 import jsui.UI;
 import scenario.Timeline;
 
 @:expose
-class Game
+class Game extends _SaveObject
 {
+  static var _ignoredFields = [ 'importantMessagesEnabled', 'region',
+    'area',
+  ];
   public static var inst: Game;
   public var config: Config; // game config
   public var scene: GameScene; // ui scene (hashlink OLD)
@@ -401,5 +408,154 @@ class Game
 
       if (ret)
         scene.updateCamera();
+    }
+
+// save current game into slot
+  public function save(slotID: Int)
+    {
+      if (!isStarted || isFinished)
+        {
+          debug('Not in game.');
+          return;
+        }
+      var o: _SaveGame = {
+        game: {},
+        version: Version.getVersion(),
+      };
+      o.game = saveObject('game', this, 0);
+#if electron
+      Fs.writeFileSync('save' +
+        (slotID < 10 ? '0' : '') + slotID + '.json',
+        Json.stringify(o, null, '  '), 'utf8');
+#end
+      log('Game saved to slot ' + slotID + '.');
+    }
+
+// save object (recursively)
+  function saveObject(name: String, o: Dynamic, depth: Int): Dynamic
+    {
+      if (depth > 20)
+        throw 'Depth too high: ' + depth + ' ' + name;
+      // basic type cases
+      if (Std.isOfType(o, Int) ||
+          Std.isOfType(o, Float) ||
+          Std.isOfType(o, Bool) ||
+          Std.isOfType(o, String))
+        return o;
+      if (Std.isOfType(o, Array))
+        {
+          var val = [];
+          var tmp: Array<Dynamic> = o;
+          for (el in tmp)
+            val.push(saveObject(name + '[]', el, depth + 1));
+          return val;
+        }
+      switch (Type.typeof(o)) {
+        case TEnum(e):
+          return '' + o;
+        default:
+      }
+
+      // ignored fields
+      // kludge for ai/game object subclasses
+      var ret = {};
+      var cl = Type.getClass(o);
+      var clname: String = null;
+      if (cl != null)
+        clname = untyped cl.__name__;
+      if (clname != null &&
+          (StringTools.startsWith(clname, 'ai') ||
+           StringTools.startsWith(clname, 'objects') ||
+           StringTools.endsWith(clname, 'FSM')))
+        {
+          cl = Type.getSuperClass(cl);
+          if (cl != null)
+            {
+              clname = untyped cl.__name__;
+              // sub-subclass
+              if (clname != 'ai.AI' &&
+                  clname != 'objects.AreaObject')
+                cl = Type.getSuperClass(cl);
+    //          trace('super:' + cl);
+            }
+        }
+      var ignoredFields: Array<String> =
+        Reflect.field(cl, '_ignoredFields');
+
+      // object, loop through fields
+      for (f in Reflect.fields(o))
+        {
+          // circular links
+          if (f == 'game' || f == 'ui')
+            continue;
+          var fobj: Dynamic = Reflect.field(o, f);
+/*
+          if (f == 'sounds')
+            {
+              trace(depth + ' ' + name + '.' + f + ' ' + ignoredFields + ' ' + cl + ' ' + clname);
+              trace(depth + ' ' + name + '.' + f + ' ' + ignoredFields +
+              ' cl:' + Type.getClass(fobj) +
+              ' t:' + Type.typeof(fobj));
+            }*/
+          if (ignoredFields != null && Lambda.has(ignoredFields, f))
+            continue;
+
+          // enums
+          var fval: Dynamic = null;
+          switch (Type.typeof(fobj)) {
+            case TEnum(e):
+              fval = '' + fobj;
+//            case TObject:
+            default:
+          }
+/*
+          var fcl = Type.getClass(fobj);
+          if (fcl != null)
+            trace(f + ' ' + Type.getClassName(fcl));
+          else trace(f + ' null ');*/
+          if (fval != null)
+            1;
+          else if (Std.isOfType(fobj, Int) ||
+              Std.isOfType(fobj, Float) ||
+              Std.isOfType(fobj, Bool) ||
+              Std.isOfType(fobj, String))
+            fval = fobj;
+          else if (Std.isOfType(fobj, Array))
+            {
+              fval = [];
+              var tmp: Array<Dynamic> = fobj;
+              for (el in tmp)
+                fval.push(saveObject(f + '[]', el, depth + 1));
+            }
+          else if (Std.isOfType(fobj, List))
+            {
+              fval = [];
+              var tmp: List<Dynamic> = fobj;
+              for (el in tmp)
+                fval.push(saveObject(f + '[]', el, depth + 1));
+            }
+          else if (Std.isOfType(fobj, haxe.ds.IntMap))
+            {
+              fval = {};
+              var tmp: Map<Int, Dynamic> = fobj;
+              for (key => el in tmp)
+                Reflect.setField(fval, '' + key,
+                  saveObject(f + '[]', el, depth + 1));
+            }
+          else if (Std.isOfType(fobj, haxe.ds.StringMap))
+            {
+              fval = {};
+              var tmp: Map<String, Dynamic> = fobj;
+              for (key => el in tmp)
+                Reflect.setField(fval, key,
+                  saveObject(f + '[]', el, depth + 1));
+            }
+          // serializable objects
+          else if (Std.isOfType(fobj, _SaveObject))
+            fval = saveObject(f, fobj, depth + 1);
+          else continue;
+          Reflect.setField(ret, f, fval);
+        }
+      return ret;
     }
 }

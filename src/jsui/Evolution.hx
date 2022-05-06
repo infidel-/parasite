@@ -6,6 +6,7 @@ import js.Browser;
 import js.html.DivElement;
 
 import game.Game;
+import game.Improv;
 import game.EvolutionManager;
 import const.EvolutionConst;
 

@@ -6,7 +6,7 @@ import ai.*;
 import ai.AI;
 import objects.AreaObject;
 
-class AreaManager
+class AreaManager extends _SaveObject
 {
   var game: Game;
   var _list: List<AreaEvent>;
@@ -37,7 +37,7 @@ class AreaManager
   public inline function add(type: _AreaManagerEventType, x: Int, y: Int,
       turns: Int, ?params: Dynamic = null)
     {
-      var e = {
+      var e: AreaEvent = {
         id: lastEventID++,
         ai: null,
         objectID: -1,
@@ -47,7 +47,7 @@ class AreaManager
         y: y,
         turns: turns,
         params: params
-        };
+      };
 #if mydebug
 //      Const.p(game.turns + ': AreaManager.add(): ' + e);
 #end
@@ -60,7 +60,7 @@ class AreaManager
   public inline function addObject(o: AreaObject, type: _AreaManagerEventType,
       turns: Int)
     {
-      var e = {
+      var e: AreaEvent = {
         id: lastEventID++,
         ai: null,
         objectID: o.id,
@@ -68,7 +68,8 @@ class AreaManager
         x: -1,
         y: -1,
         details: null,
-        turns: turns
+        turns: turns,
+        params: null,
       };
 #if mydebug
  //     Const.p(game.turns + ': AreaManager.addObject(): ' + e);
@@ -82,7 +83,7 @@ class AreaManager
 // add event by type originating from this ai
   public inline function addAI(ai: AI, type: _AreaManagerEventType, turns: Int)
     {
-      var e = {
+      var e: AreaEvent = {
         id: lastEventID++,
         ai: ai,
         objectID: -1,
@@ -90,7 +91,8 @@ class AreaManager
         x: ai.x,
         y: ai.y,
         details: '' + ai.reason,
-        turns: turns
+        turns: turns,
+        params: null,
       };
 #if mydebug
 //      Const.p(game.turns + ': AreaManager.addAI(): ' + e);
@@ -479,18 +481,3 @@ class AreaManager
     }
 }
 
-
-// area event type
-
-typedef AreaEvent =
-{
-  var id: Int;
-  var ai: AI; // ai event origin - can be null
-  var objectID: Int; // area object event origin (-1: unused)
-  var details: String; // event details - can be null
-  var x: Int;
-  var y: Int;
-  var type: _AreaManagerEventType; // event type
-  var turns: Int; // turns left until the event
-  @:optional var params: Dynamic; // additional parameters
-};

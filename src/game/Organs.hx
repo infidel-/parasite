@@ -5,15 +5,14 @@ package game;
 import ai.AI;
 import const.EvolutionConst;
 
-class Organs
+class Organs extends _SaveObject
 {
+  static var _ignoredFields = [ '_ai', 'currentOrgan' ];
   var game: Game;
-
   public var isGrowing(get, null): Bool; // is currently growing organ?
   var _ai: AI; // parent AI link
   var _list: List<Organ>; // list of organs
   var currentOrgan: Organ; // currently grown organ
-
   var woundRegenTurn: Int; // turns until next HP regens
 
   public function new(vgame: Game, vai: AI)
@@ -281,7 +280,7 @@ class Organs
           return null;
         }
 
-      var o = {
+      var o: Organ = {
         id: id,
         level: game.player.evolutionManager.getLevel(impInfo.id),
         isActive: true,
@@ -290,8 +289,7 @@ class Organs
         info: impInfo.organ,
         params: impInfo.levelParams[0],
         timeout: 0
-        };
-
+      };
       _list.add(o);
       return o;
     }
@@ -604,14 +602,3 @@ class Organs
     }
 }
 
-typedef Organ =
-{
-  var id: _Improv; // organ id
-  var level: Int; // organ level (copied from improvement on creation)
-  var isActive: Bool; // organ active?
-  var gp: Int; // growth points
-  var improvInfo: ImprovInfo; // evolution improvement link
-  var info: OrganInfo; // organ info link
-  var params: Dynamic; // current level params link
-  var timeout: Int; // charge timeout
-}

@@ -4,8 +4,9 @@ package game;
 
 import const.EvolutionConst;
 
-class EvolutionManager
+class EvolutionManager extends _SaveObject
 {
+  static var _ignoredFields = [ 'player' ];
   var game: Game;
   var player: Player;
 
@@ -145,12 +146,12 @@ class EvolutionManager
           return tmp;
         }
 
-      var imp = {
+      var imp: Improv = {
         id: id,
         level: level,
         ep: ep,
         info: EvolutionConst.getInfo(id)
-        };
+      };
       _list.add(imp);
 
       game.info('Improvement gained: ' + imp.info.name + ' (' + level + ')');
@@ -307,12 +308,4 @@ class EvolutionManager
           key: 's',
         });
     }
-}
-
-typedef Improv =
-{
-  var id: _Improv; // improvement string ID
-  var level: Int; // improvement level
-  var ep: Int; // evolution points
-  var info: ImprovInfo; // improvement info link
 }

@@ -9,9 +9,7 @@ class Event
 {
   public var game: Game;
   public var info: EventInfo; // event info link
-
   public var num: Int; // event number (temp var for text messages)
-
   public var isHidden: Bool; // event hidden?
   public var id: String; // event id
   public var index: Int; // event index in array

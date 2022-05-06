@@ -2,7 +2,7 @@
 
 package game;
 
-class FSM<StateType, FlagType>
+class FSM<StateType, FlagType> extends _SaveObject
 {
   var fsmName: String;
   var game: Game;

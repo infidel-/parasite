@@ -59,9 +59,11 @@ class ConsoleGame
 #if mydebug
           log('Available commands: ' +
             // add
+            'ae - add effect, ' +
             'ai - add item, ' +
             'ao - add organ, ' +
             'as - add skill, ' +
+            'at - add trait, ' +
             'cfg|config,<br/>' +
             'ddemo - debug: finish demo, ' +
             'dg - debug: graphics info, ' +
@@ -84,15 +86,16 @@ class ConsoleGame
             'lt - learn all timeline,<br/>' +
             //
             'oa - organ action,<br/>' +
-            'snd - play sound, restart, ' +
+            'snd - play sound, r/restart, ' +
             's - set player stage, ' +
-            'set - set game variale, ' +
+            'save - save game, ' +
+            'set - set game variable, ' +
             'quit.');
 #else
           log('Available commands: cfg, config, ' +
             'dg - debug: graphics info, ' +
             'dai - debug: ai info, ' +
-            'restart, quit.');
+            'restart, save, quit.');
 #end
         }
 
@@ -117,8 +120,12 @@ class ConsoleGame
       // XXX set commands
       else if (char0 == 's')
         {
+          // XXX save game
+          if (arr[0] == 'save' || arr[0] == 'sav' || arr[0] == 'sa')
+            game.save(1);
+
           // XXX set <variable> <value>
-          if (arr[0] == 'set')
+          else if (arr[0] == 'set')
             setVariableCommand(arr);
 
           // XXX snd <file>
@@ -343,8 +350,30 @@ class ConsoleGame
 // add commands
   function addCommand(cmd: String, arr: Array<String>)
     {
+      // XXX [ae] add random effect
+      if (cmd.charAt(1) == 'e')
+        {
+          if (game.player.state != PLR_STATE_HOST)
+            {
+              log('Not on host.');
+              return;
+            }
+          var rnd = Std.random(100);
+          var t: _AIEffectType = EFFECT_PANIC;
+          if (rnd < 30)
+            t = EFFECT_PARALYSIS;
+          else if (rnd < 60)
+            t = EFFECT_SLIME;
+          game.player.host.onEffect({
+            type: t,
+            points: 10,
+            isTimer: true
+          });
+          log('Added effect: ' + t);
+        }
+
       // XXX [ai pistol] add item X
-      if (cmd.charAt(1) == 'i')
+      else if (cmd.charAt(1) == 'i')
         {
           if (arr.length < 2)
             {
@@ -454,6 +483,23 @@ class ConsoleGame
           game.player.skills.addID(skill, amount);
           game.log('Skill/knowledge added.');
         }
+
+      // XXX [at] add random trait
+      else if (cmd.charAt(1) == 't')
+        {
+          if (game.player.state != PLR_STATE_HOST)
+            {
+              log('Not on host.');
+              return;
+            }
+          var rnd = Std.random(100);
+          var t: _AITraitType = TRAIT_DRUG_ADDICT;
+          if (rnd < 50)
+            t = TRAIT_ASSIMILATED;
+          game.player.host.addTrait(t);
+          log('Added trait: ' + t);
+        }
+
     }
 
 // debug commands
@@ -880,6 +926,7 @@ class ConsoleGame
       game.log('stage 1');
       // spawn AI, attach to it and invade
       var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+      ai.skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
       game.area.addAI(ai);
       game.playerArea.debugAttachAndInvadeAction(ai);
       game.player.hostControl = 100;

@@ -9,8 +9,11 @@ import objects.AreaObject;
 import const.*;
 import __Math;
 
-class PlayerArea
+class PlayerArea extends _SaveObject
 {
+  static var _ignoredFields = [ 'player', 'entity', 'actionTS',
+    'currentAction', 'attachHost',
+  ];
   var game: Game; // game state link
   var player: Player; // state link
 

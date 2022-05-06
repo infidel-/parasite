@@ -4,7 +4,7 @@ package game;
 
 import const.SkillsConst;
 
-class Skills
+class Skills extends _SaveObject
 {
   var game: Game;
   var _list: List<Skill>; // list of skills

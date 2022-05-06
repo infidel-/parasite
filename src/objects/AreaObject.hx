@@ -9,8 +9,9 @@ import game._Item;
 import game.AreaManager;
 
 
-class AreaObject
+class AreaObject extends _SaveObject
 {
+  static var _ignoredFields = [ 'tile' ];
   var game: Game; // game state link
 
   public var entity: ObjectEntity; // gui entity
@@ -25,7 +26,6 @@ class AreaObject
   public var y: Int;
   public var isStatic: Bool; // is this object static?
   public var creationTime: Int; // when was this object created (turns since game start)
-  var _listActions: List<_PlayerAction>; // actions storage
 
   public function new(g: Game, vx: Int, vy: Int, ?addToCurrent: Bool = true)
     {
@@ -35,7 +35,6 @@ class AreaObject
       id = (_maxID++);
       isStatic = false;
       creationTime = game.turns;
-      _listActions = new List<_PlayerAction>();
       x = vx;
       y = vy;
       tile = null;
