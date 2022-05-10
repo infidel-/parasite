@@ -8,10 +8,9 @@ import game.Game;
 import game._Item;
 import game.AreaManager;
 
-
 class AreaObject extends _SaveObject
 {
-  static var _ignoredFields = [ 'tile' ];
+  static var _ignoredFields = [ 'tile', 'entity' ];
   var game: Game; // game state link
 
   public var entity: ObjectEntity; // gui entity
@@ -21,27 +20,47 @@ class AreaObject extends _SaveObject
   var tile: Tile; // object image
 
   public var id: Int; // unique object id
+  public var areaID: Int;
   static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
   public var isStatic: Bool; // is this object static?
   public var creationTime: Int; // when was this object created (turns since game start)
+  public var imageRow: Int;
+  public var imageCol: Int;
 
-  public function new(g: Game, vx: Int, vy: Int, ?addToCurrent: Bool = true)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
       game = g;
-      type = 'undefined';
-      name = 'undefined';
       id = (_maxID++);
-      isStatic = false;
+      areaID = vaid;
       creationTime = game.turns;
       x = vx;
       y = vy;
-      tile = null;
 
+// will be called by sub-classes
+//      init();
+//      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+      type = 'undefined';
+      name = 'undefined';
+      isStatic = false;
+      tile = null;
+      imageRow = Const.ROW_OBJECT;
+      imageCol = -1;
+    }
+
+// called after load or creation
+  public function loadPost()
+    {
       // add to current area
-      if (addToCurrent)
-        game.area.addObject(this);
+      var area = game.region.get(areaID);
+      area.addObject(this);
+      createEntity(game.scene.entityAtlas[imageCol][imageRow]);
     }
 
 

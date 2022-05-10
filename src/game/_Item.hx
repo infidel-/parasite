@@ -17,5 +17,17 @@ package game;
       this.name = name;
       this.info = info;
       this.event = event;
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function loadPost()
+    {
     }
 }

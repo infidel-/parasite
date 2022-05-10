@@ -5,10 +5,10 @@ package scenario;
 import game.Game;
 import game.AreaGame;
 
-class NPC
+class NPC extends _SaveObject
 {
+  static var _ignoredFields = [ 'area', 'ai', 'event' ];
   public var game: Game;
-
   public var name: String; // name
   public var nameKnown: Bool; // name known to player?
   public var type: String; // npc type
@@ -31,6 +31,15 @@ class NPC
       game = g;
       isMale = (Std.random(100) < 50 ? true : false);
       name = const.NameConst.getHumanName(isMale);
+      id = (_maxID++);
+
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
       nameKnown = false;
       type = 'civilian';
       job = null;
@@ -42,8 +51,11 @@ class NPC
       memoryKnown = false;
       event = null;
       ai = null;
+    }
 
-      id = (_maxID++);
+// called after load or creation
+  public function loadPost()
+    {
     }
 
 

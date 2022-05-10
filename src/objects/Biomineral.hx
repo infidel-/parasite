@@ -6,14 +6,27 @@ import game.Game;
 
 class Biomineral extends HabitatObject
 {
-  public function new(g: Game, vx: Int, vy: Int, l: Int)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int, l: Int)
     {
-      super(g, vx, vy, l);
+      super(g, vaid, vx, vy, l);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       name = 'biomineral formation';
       spawnMessage = 'The biomineral formation is ready to feed the habitat.';
+      imageRow = Const.ROW_BIOMINERAL;
+      imageCol = level;
+    }
 
-      createEntity(game.scene.entityAtlas[level][Const.ROW_BIOMINERAL]);
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 // show additional info

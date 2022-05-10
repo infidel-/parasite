@@ -23,15 +23,25 @@ class Timeline extends _SaveObject
   public function new(g: Game)
     {
       game = g;
-      difficulty = UNSET;
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public function init()
+    {
+      difficulty = UNSET;
       _eventsMap = new Map();
       _eventsList = [];
       _locationsList = new List();
-      _variables = new Map<String, Dynamic>();
+      _variables = new Map();
       _names = new Map();
     }
 
+// called after load or creation
+  public function loadPost()
+    {
+    }
 
   public function iterator()
     {
@@ -314,7 +324,8 @@ should limit player options for guiding purposes
                 minRadius: 2,
                 maxRadius: 5,
               });
-              area.setType(info.type);
+              area.typeID = info.type;
+              area.updateType();
             }
         }
       area = region.getRandomWithType(info.type, true);
@@ -381,7 +392,6 @@ should limit player options for guiding purposes
 
                   npc.area = region.getRandomWithType(type, false);
                 }
-
               npc.area.npc.add(npc); // boom! *head explodes*
 
               // event coverup kills some npcs
@@ -395,7 +405,7 @@ should limit player options for guiding purposes
 
 
 // init a new scenario
-  public function init()
+  public function create()
     {
       scenario = new ScenarioAlienCrashLanding();
 

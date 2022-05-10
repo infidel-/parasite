@@ -6,12 +6,24 @@ import game.Game;
 
 class GenericPickup extends Pickup
 {
-  public function new(g: Game, vx: Int, vy: Int, imgID: Int)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int, imgID: Int)
     {
-      super(g, vx, vy);
+      super(g, vaid, vx, vy);
+      imageCol = imgID;
+      init();
+      loadPost();
+    }
 
-      createEntity(game.scene.entityAtlas
-        [imgID][Const.ROW_OBJECT]);
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 }
 

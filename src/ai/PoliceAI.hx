@@ -15,7 +15,14 @@ class PoliceAI extends HumanAI
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'police';
       name.unknown = 'police officer';
       name.unknownCapped = 'Police officer';
@@ -40,6 +47,12 @@ class PoliceAI extends HumanAI
 
       isBackup = false;
       isBackupCalled = false;
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 

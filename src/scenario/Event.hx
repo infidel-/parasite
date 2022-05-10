@@ -5,7 +5,7 @@ package scenario;
 import game.Game;
 import scenario.Scenario;
 
-class Event
+class Event extends _SaveObject
 {
   public var game: Game;
   public var info: EventInfo; // event info link
@@ -24,11 +24,23 @@ class Event
       game = g;
       id = vid;
       index = idx;
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
       name = 'unnamed event';
       location = null;
       locationKnown = false;
       notes = [];
       npc = [];
+    }
+
+// called after load or creation
+  public function loadPost()
+    {
     }
 
 

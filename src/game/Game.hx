@@ -97,7 +97,7 @@ class Game extends _SaveObject
       // generate timeline from a scenario
       timeline = new Timeline(this);
       goals = new Goals(this);
-      timeline.init();
+      timeline.create();
 
       // initial goals
       message('You are alone. You are scared. You need to find a host or you will die soon.');
@@ -434,6 +434,7 @@ class Game extends _SaveObject
 // save object (recursively)
   function saveObject(name: String, o: Dynamic, depth: Int): Dynamic
     {
+//      trace(name + ' ' + depth);
       if (depth > 20)
         throw 'Depth too high: ' + depth + ' ' + name;
       // basic type cases
@@ -452,17 +453,22 @@ class Game extends _SaveObject
         }
       switch (Type.typeof(o)) {
         case TEnum(e):
-          return '' + o;
+          return {
+            _classID: Type.getEnumName(e),
+            _isEnum: true,
+            val: '' + o,
+          }
         default:
       }
 
       // ignored fields
       // kludge for ai/game object subclasses
-      var ret = {};
+      var ret: Dynamic = {};
       var cl = Type.getClass(o);
       var clname: String = null;
       if (cl != null)
         clname = untyped cl.__name__;
+      ret._classID = clname;
       if (clname != null &&
           (StringTools.startsWith(clname, 'ai') ||
            StringTools.startsWith(clname, 'objects') ||
@@ -486,8 +492,16 @@ class Game extends _SaveObject
       for (f in Reflect.fields(o))
         {
           // circular links
-          if (f == 'game' || f == 'ui')
-            continue;
+          if (f == 'game')
+            {
+              ret._hasGame = true;
+              continue;
+            }
+          if (f == 'ui')
+            {
+              ret._hasUI = true;
+              continue;
+            }
           var fobj: Dynamic = Reflect.field(o, f);
 /*
           if (f == 'sounds')
@@ -557,5 +571,205 @@ class Game extends _SaveObject
           Reflect.setField(ret, f, fval);
         }
       return ret;
+    }
+
+// load current game from slot
+  public function load(slotID: Int)
+    {
+#if electron
+      try {
+        var s = Fs.readFileSync('save' +
+          (slotID < 10 ? '0' : '') + slotID + '.json',
+          'utf8');
+        var o: _SaveGame = Json.parse(s);
+        loadObject(o.game, this, 'game', 0);
+      }
+      catch (e: Dynamic)
+        {
+          ui.onError('load game: ' + e, '', -1, -1, {
+            stack: haxe.CallStack.toString(haxe.CallStack.exceptionStack()),
+          });
+        }
+#end
+      log('Game saved to slot ' + slotID + '.');
+    }
+
+// load source object into destination object recursively
+  function loadObject(src: Dynamic, dst: Dynamic, name: String, depth: Int)
+    {
+      for (f in Reflect.fields(src))
+        {
+          // ignore class ID marker
+          if (f == '_classID')
+            continue;
+          var srcval: Dynamic = Reflect.field(src, f);
+          var dstval = Reflect.field(dst, f);
+          var classID: String = srcval._classID;
+          // enums
+          switch (Type.typeof(dstval)) {
+            case TEnum(e):
+              Reflect.setField(dst, f, Type.createEnum(e, srcval));
+              continue;
+            default:
+          }
+
+          if (Std.isOfType(srcval, Int) ||
+              Std.isOfType(srcval, Float) ||
+              Std.isOfType(srcval, Bool) ||
+              Std.isOfType(srcval, String))
+            Reflect.setField(dst, f, srcval);
+
+          else if (
+              Std.isOfType(srcval, Array) ||
+              Std.isOfType(dstval, Array) ||
+              Std.isOfType(dstval, List))
+            {
+              var dsttmp = new Array<Dynamic>();
+              var srctmp: Array<Dynamic> = untyped srcval;
+              for (el in srctmp)
+                {
+                  if (Std.isOfType(el, Int) ||
+                      Std.isOfType(el, Float) ||
+                      Std.isOfType(el, Bool) ||
+                      Std.isOfType(el, String))
+                    dsttmp.push(el);
+                  // NOTE: we only use Array<Array<Int>> currently
+                  else if (Std.isOfType(el, Array))
+                    {
+                      // assume int atm
+                      dsttmp.push(el);
+                    }
+                  var elClassID: String = untyped el._classID;
+                  var isEnum: Bool = untyped el._isEnum;
+                  if (elClassID == null)
+                    dsttmp.push(el);
+                  else if (isEnum)
+                    {
+                      var ee = Type.resolveEnum(elClassID);
+                      if (ee == null)
+                        throw "No such enum: " + elClassID;
+                      var dstel = Type.createEnum(ee, untyped el.val);
+                      dsttmp.push(dstel);
+                    }
+                  else
+                    {
+                      var dstel = initObject(name + '.' + f + '[][]', el, depth);
+                      dsttmp.push(dstel);
+                    }
+//                  else trace(name + '.' + f + '[][] type is unsupported (' + elClassID + ').');
+                }
+              if (Std.isOfType(dstval, List))
+                Reflect.setField(dst, f, Lambda.list(dsttmp));
+              else Reflect.setField(dst, f, dsttmp);
+            }
+
+          else if (Std.isOfType(dstval, haxe.ds.IntMap))
+            {
+              var dsttmp = new Map<Int, Dynamic>();
+              for (ff in Reflect.fields(srcval))
+                {
+                  var el = Reflect.field(srcval, ff);
+                  var key = Std.parseInt(ff);
+                  if (Std.isOfType(el, Int) ||
+                      Std.isOfType(el, Float) ||
+                      Std.isOfType(el, Bool) ||
+                      Std.isOfType(el, String))
+                    dsttmp.set(key, el);
+                  var elClassID: String = untyped el._classID;
+                  if (elClassID == null)
+                    dsttmp.set(key, el);
+                  else
+                    {
+                      var dstel = initObject(name + '[' + ff + ']', el, depth);
+                      dsttmp.set(key, dstel);
+                    }
+//                  else trace(name + '.' + f + '[] type is unsupported (' + elClassID + ').');
+                }
+              Reflect.setField(dst, f, dsttmp);
+            }
+
+          else if (Std.isOfType(dstval, haxe.ds.StringMap))
+            {
+              var dsttmp = new Map<String, Dynamic>();
+              for (ff in Reflect.fields(srcval))
+                {
+                  var el = Reflect.field(srcval, ff);
+                  if (Std.isOfType(el, Int) ||
+                      Std.isOfType(el, Float) ||
+                      Std.isOfType(el, Bool) ||
+                      Std.isOfType(el, String))
+                    dsttmp.set(ff, el);
+                  var elClassID: String = untyped el._classID;
+                  if (elClassID == null)
+                    dsttmp.set(ff, el);
+                  else
+                    {
+                      var dstel = initObject(name + '[' + ff + ']', el, depth);
+                      dsttmp.set(ff, dstel);
+                    }
+//                  else trace(name + '.' + f + '[] type is unsupported (' + elClassID + ').');
+                }
+              Reflect.setField(dst, f, dsttmp);
+            }
+          else if (Std.isOfType(dstval, _SaveObject))
+            {
+              loadObject(srcval, dstval, f, depth + 1);
+              Reflect.setField(dst, f, dstval);
+            }
+          else if (dstval == null)
+            {
+              dstval = initObject(name + '.' + f, srcval, depth);
+              Reflect.setField(dst, f, dstval);
+            }
+          else trace(name + '.' + f + ' type is unsupported (' +
+            classID + ').');
+        }
+
+      // common fields
+      var hasUI: Bool = untyped src._hasUI;
+      if (hasUI == null)
+        hasUI = false;
+      if (hasUI)
+        dst.ui = this.ui;
+      var hasGame: Bool = untyped src._hasGame;
+      if (hasGame == null)
+        hasGame = false;
+      if (hasGame)
+        dst.game = this;
+    }
+
+// will create a new class instance and populate it with data from save object
+  function initObject(name: String, src: Dynamic, depth: Int): Dynamic
+    {
+      // common fields
+      var hasUI: Bool = untyped src._hasUI;
+      if (hasUI == null)
+        hasUI = false;
+      var hasGame: Bool = untyped src._hasGame;
+      if (hasGame == null)
+        hasGame = false;
+
+      var srcClassID: String = untyped src._classID;
+      var srcClass = Type.resolveClass(srcClassID);
+      if (srcClass == null)
+        throw 'Could not resolve class ' + srcClassID + ' src:' + src;
+      var dst = Type.createEmptyInstance(srcClass);
+      if (hasGame)
+        dst.game = this;
+      if (hasUI)
+        dst.ui = this.ui;
+      if (dst.init != null)
+        dst.init();
+      else trace('no init for ' + name);
+      loadObject(src, dst, name, depth + 1);
+      if (dst.initPost != null)
+        dst.initPost();
+      return dst;
+    }
+
+
+  function toString()
+    {
+      return 'game';
     }
 }

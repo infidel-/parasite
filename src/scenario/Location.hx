@@ -16,8 +16,20 @@ class Location extends _SaveObject
   public function new(vid: String)
     {
       id = vid;
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
       hasName = false;
       name = '-';
+    }
+
+// called after load or creation
+  public function loadPost()
+    {
     }
 
 

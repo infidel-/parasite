@@ -80,6 +80,7 @@ class ConsoleGame
             // learn
             'lc - learn random clues, ' +
             'le - learn about event, ' +
+            'load - load game, ' +
             'lia - learn all improvements, ' +
             'li - learn improvement, ' +
             'lr - learn region map, ' +
@@ -95,7 +96,10 @@ class ConsoleGame
           log('Available commands: cfg, config, ' +
             'dg - debug: graphics info, ' +
             'dai - debug: ai info, ' +
-            'restart, save, quit.');
+            'load - load game, ' +
+            'restart, ' +
+            'save - save game, ' +
+            'quit.');
 #end
         }
 
@@ -106,7 +110,13 @@ class ConsoleGame
 
       // XXX learn commands
       else if (char0 == 'l')
-        learnCommand(cmd);
+        {
+          // XXX load game
+          if (arr[0] == 'load' || arr[0] == 'lo')
+            game.load(1);
+
+          else learnCommand(cmd);
+        }
 #end
 
       // XXX restart

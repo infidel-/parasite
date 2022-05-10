@@ -101,6 +101,18 @@ class AI extends _SaveObject
   public function new(g: Game, vx: Int, vy: Int)
     {
       game = g;
+      id = (_maxID++);
+      x = vx;
+      y = vy;
+
+// will be called by sub-classes
+//      init();
+//      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
       tile = null;
       type = 'undefined';
       job = 'undefined';
@@ -110,14 +122,9 @@ class AI extends _SaveObject
         unknown: 'undefined',
         unknownCapped: 'undefined'
       };
-      sounds = new Map<String, Array<AISound>>();
-
-      id = (_maxID++);
-      x = vx;
-      y = vy;
+      sounds = new Map();
       roamTargetX = -1;
       roamTargetY = -1;
-
       state = AI_STATE_IDLE;
       stateTime = 0;
       reason = REASON_NONE;
@@ -127,7 +134,6 @@ class AI extends _SaveObject
         alert: 0,
 //          alertPlayerNotVisible: 0
       };
-
       direction = 0;
       parasiteAttached = false;
 
@@ -140,7 +146,6 @@ class AI extends _SaveObject
       isAttrsKnown = false;
       isHuman = false;
       isTeamMember = false;
-
       wasAttached = false;
       wasInvaded = false;
       wasAlerted = false;
@@ -166,7 +171,7 @@ class AI extends _SaveObject
       health = 1;
       energy = 10;
       maxEnergy = 10;
-      _objectsSeen = new List<Int>();
+      _objectsSeen = new List();
       _turnsInvisible = 0;
       event = null;
       npc = null;
@@ -176,6 +181,11 @@ class AI extends _SaveObject
       organs = new Organs(game, this);
       effects = new Effects(game, this);
       traits = new List();
+    }
+
+// called after load or creation
+  public function loadPost()
+    {
     }
 
 
@@ -1010,7 +1020,7 @@ class AI extends _SaveObject
       onDeath(); // event hook
       setState(AI_STATE_DEAD);
       game.area.removeAI(this);
-      var o = new BodyObject(game, x, y, type);
+      var o = new BodyObject(game, game.area.id, x, y, type);
 
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);

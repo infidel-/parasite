@@ -12,6 +12,14 @@ class CivilianAI extends HumanAI
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'civilian';
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
@@ -56,6 +64,12 @@ class CivilianAI extends HumanAI
               inventory.addID('laptop');
             }
         }
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 

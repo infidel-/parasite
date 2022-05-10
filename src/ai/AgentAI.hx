@@ -15,7 +15,14 @@ class AgentAI extends HumanAI
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'agent';
       name.unknown = 'agent';
       name.unknownCapped = 'Agent';
@@ -29,6 +36,12 @@ class AgentAI extends HumanAI
 
 //      isBackup = false;
 //      isBackupCalled = false;
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 /*

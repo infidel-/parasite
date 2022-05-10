@@ -74,11 +74,11 @@ class Habitat extends _SaveObject
       var level = ai.organs.getLevel(id);
       var o: HabitatObject = null;
       if (id == IMP_BIOMINERAL)
-        o = new Biomineral(game, ai.x, ai.y, level);
+        o = new Biomineral(game, area.id, ai.x, ai.y, level);
       else if (id == IMP_ASSIMILATION)
-        o = new AssimilationCavity(game, ai.x, ai.y, level);
+        o = new AssimilationCavity(game, area.id, ai.x, ai.y, level);
       else if (id == IMP_WATCHER)
-        o = new Watcher(game, ai.x, ai.y, level);
+        o = new Watcher(game, area.id, ai.x, ai.y, level);
 
       // remove and kill host
       game.playerArea.onDetach();

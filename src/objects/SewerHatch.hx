@@ -6,16 +6,27 @@ import game.Game;
 
 class SewerHatch extends AreaObject
 {
-  public function new(g: Game, vx: Int, vy: Int)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
-      super(g, vx, vy);
+      super(g, vaid, vx, vy);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      imageCol = Const.FRAME_SEWER_HATCH;
       type = 'sewer_hatch';
       name = 'sewer hatch';
       isStatic = true;
+    }
 
-      createEntity(game.scene.entityAtlas
-        [Const.FRAME_SEWER_HATCH][Const.ROW_OBJECT]);
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 

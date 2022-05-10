@@ -6,15 +6,28 @@ import game.Game;
 
 class Book extends Pickup
 {
+  static var _ignoredFields = [ 'event' ];
   public var event: scenario.Event; // scenario event link
 
-  public function new(g: Game, vx: Int, vy: Int)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
-      super(g, vx, vy);
+      super(g, vaid, vx, vy);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'book';
       name = 'book';
-      createEntity(game.scene.entityAtlas
-        [Const.FRAME_BOOK][Const.ROW_OBJECT]);
+      imageCol = Const.FRAME_BOOK;
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 }

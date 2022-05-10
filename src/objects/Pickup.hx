@@ -7,14 +7,26 @@ import game.Game;
 
 class Pickup extends AreaObject
 {
-  public function new(g: Game, vx: Int, vy: Int)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
-      super(g, vx, vy);
+      super(g, vaid, vx, vy);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'pickup';
       name = 'pickup';
+    }
 
-      // do not create entities here!
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
+      // NOTE: do not create entities here!
     }
 
 

@@ -16,7 +16,14 @@ class Inventory extends _SaveObject
   public function new(g: Game)
     {
       game = g;
-      _list = new List<_Item>();
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+      _list = new List();
       var info = ItemsConst.armorNone;
       clothing = {
         id: info.id,
@@ -24,6 +31,11 @@ class Inventory extends _SaveObject
         name: info.name,
         event: null,
       };
+    }
+
+// called after load or creation
+  public function loadPost()
+    {
     }
 
 
@@ -278,7 +290,8 @@ class Inventory extends _SaveObject
       var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
 
-      var o = new GenericPickup(game, game.playerArea.x, game.playerArea.y,
+      var o = new GenericPickup(game, game.area.id,
+        game.playerArea.x, game.playerArea.y,
         Const.FRAME_PICKUP);
       o.name = itemName;
       o.item = item;

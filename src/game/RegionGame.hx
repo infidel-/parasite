@@ -27,14 +27,24 @@ class RegionGame extends _SaveObject
       id = _maxID++;
       width = w;
       height = h;
-      info = WorldConst.getRegionInfo(typeID);
-      _list = new Map<Int, AreaGame>();
+      init();
+      initPost();
+    }
 
-      _array = new Array<Array<AreaGame>>();
+// init object before loading/post creation
+  public function init()
+    {
+      _list = new Map();
+      _array = new Array();
       for (i in 0...width)
         _array[i] = [];
     }
 
+// called after load or creation
+  public function initPost()
+    {
+      info = WorldConst.getRegionInfo(typeID);
+    }
 
 // iterator
   public function iterator()
@@ -447,7 +457,8 @@ class RegionGame extends _SaveObject
   public inline function spawnArea(t: _AreaType, noEvent: Bool): AreaGame
     {
       var a = getRandomWithType(AREA_GROUND, noEvent);
-      a.setType(t);
+      a.typeID = t;
+      a.updateType();
       return a;
     }
 

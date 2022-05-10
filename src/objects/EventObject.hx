@@ -10,16 +10,28 @@ class EventObject extends AreaObject
   public var eventAction: _PlayerAction; // available action
   public var eventOnAction: Game -> Player -> String -> Void; // action handler
 
-  public function new(g: Game, vx: Int, vy: Int, ?addToCurrent: Bool = true)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
-      super(g, vx, vy, addToCurrent);
+      super(g, vaid, vx, vy);
 
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'event_object';
       name = 'event object';
       isStatic = true;
+      imageCol = Const.FRAME_EVENT_OBJECT;
+    }
 
-      createEntity(game.scene.entityAtlas
-        [Const.FRAME_EVENT_OBJECT][Const.ROW_OBJECT]);
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 

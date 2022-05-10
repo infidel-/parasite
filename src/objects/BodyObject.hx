@@ -13,24 +13,36 @@ class BodyObject extends AreaObject
   public var isSearched: Bool; // is this body searched?
   public var isHumanBody: Bool; // is this a human body?
   public var organPoints: Int; // amount of organs on this body
+  var parentType: String;
 
-  public function new(g: Game, vx: Int, vy: Int, parentType: String)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int, parentType: String)
     {
-      super(g, vx, vy);
+      super(g, vaid, vx, vy);
+      this.parentType = parentType;
+      init();
+      loadPost();
+    }
 
-      inventory = new Inventory(g);
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      inventory = new Inventory(game);
       type = 'body';
       name = 'body';
       wasSeen = false;
-      isHumanBody = (parentType != 'dog');
       isSearched = false;
       organPoints = 0;
-
-      createEntity(game.scene.entityAtlas
-        [isHumanBody ? Const.FRAME_HUMAN_BODY : Const.FRAME_DOG_BODY]
-        [Const.ROW_OBJECT]);
     }
 
+// called after load or creation
+  public override function loadPost()
+    {
+      isHumanBody = (parentType != 'dog');
+      imageRow = Const.ROW_OBJECT;
+      imageCol = (isHumanBody ? Const.FRAME_HUMAN_BODY : Const.FRAME_DOG_BODY);
+      super.loadPost();
+    }
 
 // update actions
   override function updateActionList()

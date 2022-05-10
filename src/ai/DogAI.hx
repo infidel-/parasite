@@ -12,6 +12,14 @@ class DogAI extends AI
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
+      init();
+      loadPost();
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'dog';
       name = {
         real: 'the dog',
@@ -29,5 +37,11 @@ class DogAI extends AI
       skills.addID(SKILL_ATTACK, 65);
 
       derivedStats();
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 }

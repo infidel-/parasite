@@ -10,6 +10,15 @@ class HumanAI extends AI
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
+// will be called by sub-classes
+//      init();
+//      loadPost();
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'human';
       isMale = (Std.random(100) < 50 ? true : false);
       name.real = name.realCapped = const.NameConst.getHumanName(isMale);
@@ -39,6 +48,12 @@ class HumanAI extends AI
         }
 
       derivedStats();
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 

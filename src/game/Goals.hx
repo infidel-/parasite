@@ -158,7 +158,7 @@ class Goals extends _SaveObject
       if (info != null)
         return info;
 
-      throw 'no such goal: ' + id;
+      throw 'no such goal: ' + id + " " + Std.isOfType(id, String);
     }
 
 }

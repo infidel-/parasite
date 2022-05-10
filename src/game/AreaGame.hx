@@ -60,20 +60,29 @@ class AreaGame extends _SaveObject
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
     {
       game = g;
+      region = r;
+      id = _maxID++;
+      x = vx;
+      y = vy;
+      init();
+      typeID = tv; // reset to correct on create
+      initPost();
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+      typeID = AREA_GROUND;
       events = [];
       icons = [ null, null, null, null ];
-      region = r;
       isGenerated = false;
       isEntering = false;
       isKnown = false;
       isHabitat = false;
       hasHabitat = false;
       habitat = null;
-      id = _maxID++;
       name = null;
       parent = null;
-      x = vx;
-      y = vy;
       width = 10;
       height = 10;
       _alertness = 0;
@@ -82,15 +91,17 @@ class AreaGame extends _SaveObject
       turns = 0;
       tileID = 0;
       npc = new List();
-
       _cells = [];
       _ai = new List();
       _objects = new Map();
       _pathEngine = null;
-
-      setType(tv);
     }
 
+// called after load or creation
+  public function initPost()
+    {
+      updateType();
+    }
 
 // enter this area: generate if needed and update view
   public function enter()
@@ -316,7 +327,7 @@ class AreaGame extends _SaveObject
       game.debug('!!! event obj ' + params.name +
         ' loc: (' + loc.x + ',' + loc.y +
         ') area: (' + x + ',' + y + ')');
-      var o = new EventObject(game, loc.x, loc.y, false);
+      var o = new EventObject(game, this.id, loc.x, loc.y);
       o.name = params.name;
       o.eventAction = params.action;
       o.eventAction.obj = o;
@@ -537,12 +548,10 @@ class AreaGame extends _SaveObject
     }
 
 
-// change area type
-  public function setType(t: _AreaType)
+// update area type after change
+  public function updateType()
     {
-      typeID = t;
       info = WorldConst.getAreaInfo(typeID);
-
       width = info.width - 10 + 10 * Std.random(2);
       height = info.height - 10 + 10 * Std.random(2);
 

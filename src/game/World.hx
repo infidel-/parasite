@@ -14,6 +14,7 @@ class World extends _SaveObject
   public function new(g: Game)
     {
       game = g;
+      _list = new Map();
 //      region = null;
     }
 
@@ -21,7 +22,7 @@ class World extends _SaveObject
 // generate a new world
   public function generate()
     {
-      _list = new Map<Int, RegionGame>();
+      _list = new Map();
       for (i in 0...1)
         {
           var region = new RegionGame(game, WorldConst.REGION_CITY, 32, 24);

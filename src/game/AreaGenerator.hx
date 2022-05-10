@@ -817,7 +817,7 @@ class AreaGenerator
 
             var o: AreaObject = null;
             if (objInfo.id == 'sewer_hatch')
-              o = new SewerHatch(game, loc.x, loc.y);
+              o = new SewerHatch(game, area.id, loc.x, loc.y);
               
             else throw 'unknown object type: ' + objInfo.id;
 
@@ -850,7 +850,7 @@ class AreaGenerator
             if (!ok)
               continue;
 
-            var o = new SewerHatch(game, pt.x, pt.y);
+            var o = new SewerHatch(game, area.id, pt.x, pt.y);
             spawned.add(pt);
             area.addObject(o);
           }

@@ -15,7 +15,14 @@ class SoldierAI extends HumanAI
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
+      init();
+      loadPost();
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
       type = 'soldier';
       name.unknown = 'soldier';
       name.unknownCapped = 'Soldier';
@@ -26,6 +33,12 @@ class SoldierAI extends HumanAI
 
 //      isBackup = false;
 //      isBackupCalled = false;
+    }
+
+// called after load or creation
+  public override function loadPost()
+    {
+      super.loadPost();
     }
 
 /*

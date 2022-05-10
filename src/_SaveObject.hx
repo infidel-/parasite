@@ -1,5 +1,6 @@
 class _SaveObject {
   static var _ignoredFields: Array<String>;
-  public function loadPost(o: Dynamic) {}
+//  public function init() {}
+//  public function initPost() {}
 //  static var _ignoredFields = [];
 }
