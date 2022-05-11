@@ -12,7 +12,7 @@ class HumanAI extends AI
       super(g, vx, vy);
 // will be called by sub-classes
 //      init();
-//      loadPost();
+//      initPost(false);
     }
 
 // init object before loading/post creation
@@ -51,9 +51,9 @@ class HumanAI extends AI
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
-      super.loadPost();
+      super.initPost(onLoad);
     }
 
 

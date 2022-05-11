@@ -40,7 +40,7 @@ class AreaObject extends _SaveObject
 
 // will be called by sub-classes
 //      init();
-//      loadPost();
+//      initPost(false);
     }
 
 // init object before loading/post creation
@@ -55,12 +55,16 @@ class AreaObject extends _SaveObject
     }
 
 // called after load or creation
-  public function loadPost()
+  public function initPost(onLoad: Bool)
     {
+      tile = game.scene.entityAtlas[imageCol][imageRow];
       // add to current area
-      var area = game.region.get(areaID);
-      area.addObject(this);
-      createEntity(game.scene.entityAtlas[imageCol][imageRow]);
+      if (!onLoad)
+        {
+          var area = game.region.get(areaID);
+          area.addObject(this);
+          createEntity();
+        }
     }
 
 
@@ -91,10 +95,9 @@ class AreaObject extends _SaveObject
 
 
 // create entity for this object
-  public function createEntity(t: Tile)
+  function createEntity()
     {
-      if (tile == null)
-        tile = t;
+//      trace('new object ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
       entity = new ObjectEntity(this, game, x, y, tile);
     }
 
@@ -102,13 +105,15 @@ class AreaObject extends _SaveObject
 // show object on screen
   public inline function show()
     {
-      createEntity(tile);
+//      trace('object ' + type + ' ' + x + ',' + y + ' show' + ' (' + areaID + ')');
+      createEntity();
     }
 
 
 // hide object on screen
   public inline function hide()
     {
+ //     trace('object ' + type + ' ' + x + ',' + y + ' hide' + ' (' + areaID + ')');
       entity.remove();
     }
 

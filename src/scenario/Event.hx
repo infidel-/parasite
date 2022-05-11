@@ -25,7 +25,7 @@ class Event extends _SaveObject
       id = vid;
       index = idx;
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -39,7 +39,7 @@ class Event extends _SaveObject
     }
 
 // called after load or creation
-  public function loadPost()
+  public function initPost(onLoad: Bool)
     {
     }
 

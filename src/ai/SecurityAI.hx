@@ -16,7 +16,7 @@ class SecurityAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -49,9 +49,9 @@ class SecurityAI extends HumanAI
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
-      super.loadPost();
+      super.initPost(onLoad);
     }
 
 // event: on being attacked 

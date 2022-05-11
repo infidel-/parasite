@@ -28,7 +28,7 @@ class RegionGame extends _SaveObject
       width = w;
       height = h;
       init();
-      initPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -41,7 +41,7 @@ class RegionGame extends _SaveObject
     }
 
 // called after load or creation
-  public function initPost()
+  public function initPost(onLoad: Bool)
     {
       info = WorldConst.getRegionInfo(typeID);
     }

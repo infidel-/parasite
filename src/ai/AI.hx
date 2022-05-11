@@ -107,7 +107,7 @@ class AI extends _SaveObject
 
 // will be called by sub-classes
 //      init();
-//      loadPost();
+//      initPost(false);
     }
 
 // init object before loading/post creation
@@ -184,8 +184,10 @@ class AI extends _SaveObject
     }
 
 // called after load or creation
-  public function loadPost()
+  public function initPost(onLoad: Bool)
     {
+      if (onLoad)
+        createEntity();
     }
 
 

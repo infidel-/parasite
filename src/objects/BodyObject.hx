@@ -20,7 +20,7 @@ class BodyObject extends AreaObject
       super(g, vaid, vx, vy);
       this.parentType = parentType;
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -36,12 +36,12 @@ class BodyObject extends AreaObject
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
       isHumanBody = (parentType != 'dog');
       imageRow = Const.ROW_OBJECT;
       imageCol = (isHumanBody ? Const.FRAME_HUMAN_BODY : Const.FRAME_DOG_BODY);
-      super.loadPost();
+      super.initPost(onLoad);
     }
 
 // update actions

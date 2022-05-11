@@ -10,7 +10,7 @@ class Biomineral extends HabitatObject
     {
       super(g, vaid, vx, vy, l);
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -24,9 +24,9 @@ class Biomineral extends HabitatObject
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
-      super.loadPost();
+      super.initPost(onLoad);
     }
 
 // show additional info

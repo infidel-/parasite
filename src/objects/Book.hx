@@ -13,7 +13,7 @@ class Book extends Pickup
     {
       super(g, vaid, vx, vy);
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -26,8 +26,8 @@ class Book extends Pickup
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
-      super.loadPost();
+      super.initPost(onLoad);
     }
 }

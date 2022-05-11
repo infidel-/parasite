@@ -17,7 +17,7 @@ class Location extends _SaveObject
     {
       id = vid;
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -28,7 +28,7 @@ class Location extends _SaveObject
     }
 
 // called after load or creation
-  public function loadPost()
+  public function initPost(onLoad: Bool)
     {
     }
 

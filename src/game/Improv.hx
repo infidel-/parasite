@@ -16,5 +16,18 @@ import const.EvolutionConst;
       this.level = level;
       this.ep = ep;
       this.info = info;
+      init();
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
+      info = EvolutionConst.getInfo(id);
     }
 }

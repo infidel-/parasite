@@ -11,7 +11,7 @@ class Pickup extends AreaObject
     {
       super(g, vaid, vx, vy);
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -23,9 +23,9 @@ class Pickup extends AreaObject
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
-      super.loadPost();
+      super.initPost(onLoad);
       // NOTE: do not create entities here!
     }
 

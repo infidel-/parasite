@@ -65,7 +65,6 @@ class Game extends _SaveObject
       __Math.game = this;
     }
 
-
 // init game stuff - called from GameScene.init()
   public function init()
     {
@@ -86,7 +85,6 @@ class Game extends _SaveObject
       managerArea = new AreaManager(this);
       playerArea = new PlayerArea(this);
       debugArea = new DebugArea(this);
-
       managerRegion = new RegionManager(this);
       playerRegion = new PlayerRegion(this);
 
@@ -146,8 +144,8 @@ class Game extends _SaveObject
       isInited = true;
     }
 
-// game restart
-  public function restart()
+// clear all game stuff
+  function restartPre()
     {
       isInited = false;
       RegionGame._maxID = 0;
@@ -159,6 +157,12 @@ class Game extends _SaveObject
         region.leave();
       scene.region.clearIcons();
       ui.clearEvents();
+    }
+
+// game restart
+  public function restart()
+    {
+      restartPre();
       init();
     }
 
@@ -419,10 +423,12 @@ class Game extends _SaveObject
           return;
         }
       var o: _SaveGame = {
-        game: {},
+        game: null,
         version: Version.getVersion(),
       };
       o.game = saveObject('game', this, 0);
+      o.game.regionID = region.id;
+      o.game.areaID = area.id;
 #if electron
       Fs.writeFileSync('save' +
         (slotID < 10 ? '0' : '') + slotID + '.json',
@@ -576,6 +582,11 @@ class Game extends _SaveObject
 // load current game from slot
   public function load(slotID: Int)
     {
+      // clear old game
+      trace('====== RESTART PRE ' + area.id);
+      restartPre();
+      trace('====== LOAD ' + area.id);
+
 #if electron
       try {
         var s = Fs.readFileSync('save' +
@@ -583,6 +594,10 @@ class Game extends _SaveObject
           'utf8');
         var o: _SaveGame = Json.parse(s);
         loadObject(o.game, this, 'game', 0);
+
+        // post load
+        region = world.get(o.game.regionID);
+        area = region.get(o.game.areaID);
       }
       catch (e: Dynamic)
         {
@@ -591,7 +606,13 @@ class Game extends _SaveObject
           });
         }
 #end
-      log('Game saved to slot ' + slotID + '.');
+      // reset game stuff
+      trace('====== ENTER ' + area.id);
+      if (location == LOCATION_AREA)
+        area.loadPost();
+      else if (location == LOCATION_REGION)
+        region.enter();
+      log('Game loaded from slot ' + slotID + '.');
     }
 
 // load source object into destination object recursively
@@ -763,7 +784,7 @@ class Game extends _SaveObject
       else trace('no init for ' + name);
       loadObject(src, dst, name, depth + 1);
       if (dst.initPost != null)
-        dst.initPost();
+        dst.initPost(true);
       return dst;
     }
 

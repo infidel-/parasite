@@ -66,7 +66,7 @@ class AreaGame extends _SaveObject
       y = vy;
       init();
       typeID = tv; // reset to correct on create
-      initPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -98,9 +98,11 @@ class AreaGame extends _SaveObject
     }
 
 // called after load or creation
-  public function initPost()
+  public function initPost(onLoad: Bool)
     {
       updateType();
+      if (onLoad && isGenerated)
+        _pathEngine = new aPath.Engine(this, width, height);
     }
 
 // enter this area: generate if needed and update view
@@ -109,7 +111,6 @@ class AreaGame extends _SaveObject
 //      game.debug('Area.enter()');
       game.scene.sounds.setAmbient(info.ambient);
       turns = 0;
-
       game.area = this;
       isEntering = true;
 
@@ -150,6 +151,7 @@ class AreaGame extends _SaveObject
             }
         }
 
+      // TODO: fix for loading
       // recreate player host AI entity
       if (game.player.state == PLR_STATE_HOST)
         {
@@ -161,7 +163,6 @@ class AreaGame extends _SaveObject
           _ai.add(game.player.host);
         }
       game.playerArea.moveTo(loc.x, loc.y);
-
       game.playerArea.ap = 2; // renew AP
       alertnessMod = 0; // clear alertness counter
 
@@ -228,6 +229,35 @@ class AreaGame extends _SaveObject
         }
     }
 
+// partially enter area on load
+  public function loadPost()
+    {
+      game.scene.sounds.setAmbient(info.ambient);
+      for (o in _objects)
+        o.show();
+
+/*
+      // TODO: fix for loading
+      // recreate player host AI entity
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          game.playerArea.entity.visible = false;
+          game.player.host.createEntity();
+          game.player.host.entity.setMask(game.scene.entityAtlas
+            [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
+          game.player.host.setPosition(loc.x, loc.y);
+          _ai.add(game.player.host);
+        }
+*/
+      // update area view info
+      game.scene.area.update();
+
+      // update AI and objects visibility to player
+      updateVisibility();
+
+      // show area
+      game.scene.area.show();
+    }
 
 // leave this area: hide gui, despawn, etc
   public function leave()
@@ -273,9 +303,7 @@ class AreaGame extends _SaveObject
 
       // leave area with active team
       if (game.group.team != null)
-        {
-          game.group.team.onLeaveArea();
-        }
+        game.group.team.onLeaveArea();
 
       // remove events
       game.managerArea.onLeaveArea();
@@ -283,7 +311,6 @@ class AreaGame extends _SaveObject
       // hide gui
       game.scene.area.hide();
     }
-
 
 // generate a new area map
   function generate()

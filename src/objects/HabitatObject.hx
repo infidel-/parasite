@@ -14,7 +14,7 @@ class HabitatObject extends AreaObject
       super(g, vaid, vx, vy);
       level = l;
       init();
-      loadPost();
+      initPost(false);
     }
 
 // init object before loading/post creation
@@ -27,9 +27,9 @@ class HabitatObject extends AreaObject
     }
 
 // called after load or creation
-  public override function loadPost()
+  public override function initPost(onLoad: Bool)
     {
-      super.loadPost();
+      super.initPost(onLoad);
     }
 
 
