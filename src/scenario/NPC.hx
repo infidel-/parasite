@@ -14,7 +14,8 @@ class NPC extends _SaveObject
   public var type: String; // npc type
   public var job: String; // job title
   public var jobKnown: Bool; // job known to player?
-  public var area: AreaGame; // location area
+  public var area(get, null): AreaGame; // location area
+  public var areaID: Int; // area id
   public var areaKnown: Bool; // location known to player?
   public var isMale: Bool; // gender
   public var isDead: Bool; // is this npc dead?
@@ -44,7 +45,7 @@ class NPC extends _SaveObject
       type = 'civilian';
       job = null;
       jobKnown = false;
-      area = null;
+      areaID = -1;
       areaKnown = false;
       isDead = false;
       statusKnown = false;
@@ -116,10 +117,15 @@ class NPC extends _SaveObject
       return false;
     }
 
+  function get_area()
+    {
+      return game.world.get(0).get(areaID);
+    }
 
   public function toString()
     {
-      return '{ ' + name + ', ' + job + ', (' + area.x + ',' + area.y +
+      return '{ ' + name + ', ' + job +
+        ', (' + area.x + ',' + area.y +
         '), dead: ' + isDead +
         ', statusKnown: ' + statusKnown +
         ', event: ' + (event != null ? event.id : 'null') + ' }';

@@ -142,7 +142,7 @@ class GoalsAlienCrashLanding
         npc.job = 'corporate executive';
         npc.jobKnown = true;
         npc.type = 'civilian';
-        npc.area = area;
+        npc.areaID = area.id;
         npc.areaKnown = true;
         area.npc.add(npc);
         game.debug('' + npc);

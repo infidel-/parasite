@@ -608,6 +608,7 @@ class Game extends _SaveObject
 #end
       // reset game stuff
       trace('====== ENTER ' + area.id);
+      timeline.loadPost();
       if (location == LOCATION_AREA)
         area.loadPost();
       else if (location == LOCATION_REGION)
@@ -659,6 +660,7 @@ class Game extends _SaveObject
                     {
                       // assume int atm
                       dsttmp.push(el);
+                      continue;
                     }
                   var elClassID: String = untyped el._classID;
                   var isEnum: Bool = untyped el._isEnum;

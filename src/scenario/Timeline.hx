@@ -24,7 +24,6 @@ class Timeline extends _SaveObject
     {
       game = g;
       init();
-      initPost(false);
     }
 
 // init object before loading/post creation
@@ -38,9 +37,12 @@ class Timeline extends _SaveObject
       _names = new Map();
     }
 
-// called after load or creation
-  public function initPost(onLoad: Bool)
+// called after load or creation (manually)
+  public function loadPost()
     {
+      _eventsMap = new Map();
+      for (ev in _eventsList)
+        _eventsMap[ev.id] = ev;
     }
 
   public function iterator()
@@ -377,10 +379,11 @@ should limit player options for guiding purposes
               var region = game.world.get(0);
 
               // find proper area for this NPC
+              var area = null;
               if (npc.type == 'soldier')
-                npc.area = region.getRandomWithType(AREA_MILITARY_BASE, false);
+                area = region.getRandomWithType(AREA_MILITARY_BASE, false);
               else if (event.location != null)
-                npc.area = region.getRandomAround(event.location.area, {
+                area = region.getRandomAround(event.location.area, {
                   isInhabited: true,
                   minRadius: 1,
                   maxRadius: 5 });
@@ -389,10 +392,10 @@ should limit player options for guiding purposes
                   var tmp: Array<_AreaType> =
                     [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
                   var type = tmp[Std.random(tmp.length)];
-
-                  npc.area = region.getRandomWithType(type, false);
+                  area = region.getRandomWithType(type, false);
                 }
-              npc.area.npc.add(npc); // boom! *head explodes*
+              npc.areaID = area.id;
+              area.npc.add(npc);
 
               // event coverup kills some npcs
               if (total > 3)
