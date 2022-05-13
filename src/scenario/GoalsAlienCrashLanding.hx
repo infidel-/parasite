@@ -8,23 +8,12 @@ import game.Game;
 
 class GoalsAlienCrashLanding
 {
-// init function - modifies goals text where needed
-  public static function onInit(game: Game)
-  {
-      // put spaceship location in goals text
+  static function alienShipLocationFunc(game: Game): String
+    {
       var ev = game.timeline.getEvent('alienShipStudy');
       var area = ev.location.area;
-      var ids: Array<_Goal> = [
-        SCENARIO_ALIEN_ENTER_SHIP,
-        SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
-        SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
-      ];
-      for (id in ids)
-        {
-          var goal = game.goals.getInfo(id);
-          goal.note2 = Const.col('gray', Const.small(
-            'Target location: (' + area.x + ',' + area.y + ')'));
-        }
+      return Const.col('gray', Const.small(
+        'Target location: (' + area.x + ',' + area.y + ')'));
     }
 
 // goals map
@@ -101,6 +90,7 @@ class GoalsAlienCrashLanding
       id: SCENARIO_ALIEN_ENTER_SHIP,
       name: 'Enter the ship',
       note: 'You need to enter the ship and activate the onboard computer.',
+      noteFunc: alienShipLocationFunc,
       messageComplete:
         'The onboard computer recognizes your signature and allows you to enter the ship. ' +
         'Spending some time on the computer you remember what was your initial goal on this planet. ' +
@@ -115,8 +105,8 @@ class GoalsAlienCrashLanding
         else if (game.timeline.getStringVar('alienMissionType') == 'research')
           game.goals.receive(SCENARIO_ALIEN_MISSION_RESEARCH);
 */
-        },
       },
+    },
 
     SCENARIO_ALIEN_MISSION_ABDUCTION => {
       id: SCENARIO_ALIEN_MISSION_ABDUCTION,
@@ -165,6 +155,7 @@ class GoalsAlienCrashLanding
       id: SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
       name: 'Mission: Abduction',
       note: 'You need to bring the target host to the spaceship.',
+      noteFunc: alienShipLocationFunc,
       messageComplete: 'Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
 
@@ -218,6 +209,7 @@ class GoalsAlienCrashLanding
       id: SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
       name: 'Return to spaceship',
       note: 'You need to return to the spaceship.',
+      noteFunc: alienShipLocationFunc,
       messageComplete: 'Returning to the HQ now...',
 
       onReceive: function (game, player) {

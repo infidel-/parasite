@@ -7,6 +7,7 @@ import scenario.Scenario;
 
 class Event extends _SaveObject
 {
+  static var _ignoredFields = [ 'location', ];
   public var game: Game;
   public var info: EventInfo; // event info link
   public var num: Int; // event number (temp var for text messages)
@@ -14,7 +15,8 @@ class Event extends _SaveObject
   public var id: String; // event id
   public var index: Int; // event index in array
   public var name: String; // event name
-  public var location: Location; // event location link (can be null)
+  public var locationID: String; // location id
+  public var location(get, null): Location; // event location link (can be null)
   public var locationKnown: Bool; // event location known?
   public var notes: Array<EventNote>; // event notes
   public var npc: Array<NPC>; // event npcs
@@ -32,6 +34,7 @@ class Event extends _SaveObject
   public function init()
     {
       name = 'unnamed event';
+      locationID = null;
       location = null;
       locationKnown = false;
       notes = [];
@@ -278,6 +281,12 @@ class Event extends _SaveObject
       return true;
     }
 
+  function get_location(): Location
+    {
+      if (locationID == null)
+        return null;
+      else return game.timeline.getLocation(locationID);
+    }
 
   public function toString(): String
     {

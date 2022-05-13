@@ -9,14 +9,17 @@ import const.NameConst;
 
 class Timeline extends _SaveObject
 {
-  static var _ignoredFields = [ '_eventsMap', ];
+  static var _ignoredFields = [ '_eventsMap', '_locationsMap',
+  ];
   var game: Game;
   var scenario: Scenario;
+  var scenarioID: String;
 
   public var difficulty: _Difficulty; // difficulty
   var _eventsMap: Map<String, Event>; // events hash map
   var _eventsList: Array<Event>; // ordered events list
   var _locationsList: List<Location>; // ordered locations list
+  var _locationsMap: Map<String, Location>; // locations map
   var _names: Map<String, String>; // fully parsed from templates names
   var _variables: Map<String, Dynamic>; // timeline variables map
 
@@ -29,10 +32,12 @@ class Timeline extends _SaveObject
 // init object before loading/post creation
   public function init()
     {
+      scenarioID = null;
       difficulty = UNSET;
       _eventsMap = new Map();
       _eventsList = [];
       _locationsList = new List();
+      _locationsMap = new Map();
       _variables = new Map();
       _names = new Map();
     }
@@ -40,9 +45,16 @@ class Timeline extends _SaveObject
 // called after load or creation (manually)
   public function loadPost()
     {
+      var scenarioClass = Type.resolveClass(scenarioID);
+      if (scenarioClass == null)
+        throw 'Could not resolve class ' + scenarioID;
+      scenario = Type.createInstance(scenarioClass, []);
       _eventsMap = new Map();
       for (ev in _eventsList)
         _eventsMap[ev.id] = ev;
+      _locationsMap = new Map();
+      for (ev in _locationsList)
+        _locationsMap[ev.id] = ev;
     }
 
   public function iterator()
@@ -278,7 +290,7 @@ should limit player options for guiding purposes
           return tmp.location;
         }
 
-      var location = new Location(info.id);
+      var location = new Location(game, info.id);
       if (info.name != null)
         {
           location.name = parse(info.name);
@@ -335,7 +347,7 @@ should limit player options for guiding purposes
         area = region.spawnArea(info.type, true);
 
       // init area
-      location.area = area;
+      location.areaID = area.id;
       area.events.push(event);
       area.alertness =
         (info.alertness != null ? info.alertness : scenario.defaultAlertness);
@@ -343,6 +355,7 @@ should limit player options for guiding purposes
         area.name = location.name;
 
       _locationsList.add(location);
+      _locationsMap.set(location.id, location);
       return location;
     }
 
@@ -411,6 +424,7 @@ should limit player options for guiding purposes
   public function create()
     {
       scenario = new ScenarioAlienCrashLanding();
+      scenarioID = untyped Type.getClass(scenario).__name__;
 
       // parse names
       parseNames();
@@ -434,8 +448,10 @@ should limit player options for guiding purposes
             for (n in curInfo.notes)
               event.notes.push({ text: parse(n), isKnown: false, clues: 0 });
 
-          // parse location
-          event.location = initLocation(curID, curInfo, curInfo.location, event);
+          // parse location (can be null!)
+          var location = initLocation(curID, curInfo, curInfo.location, event);
+          if (location != null)
+            event.locationID = location.id;
 
           // create event npcs
           if (curInfo.npc != null)
@@ -496,7 +512,7 @@ should limit player options for guiding purposes
       game.info('Timeline variables: ' + _variables);
 
       // fix some goals text
-      scenario.onInit(game);
+//      scenario.onInit(game);
     }
 
 
@@ -514,11 +530,7 @@ should limit player options for guiding purposes
 // get location by id
   public function getLocation(id: String): Location
     {
-      for (l in _locationsList)
-        if (l.id == id)
-          return l;
-
-      return null;
+      return _locationsMap[id];
     }
 
 

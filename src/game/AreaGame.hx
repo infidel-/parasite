@@ -916,7 +916,7 @@ class AreaGame extends _SaveObject
             }
 
           var o: AreaObject = Type.createInstance(info.areaObjectClass,
-            [ game, loc.x, loc.y ]);
+            [ game, this.id, loc.x, loc.y ]);
           o.name = info.names[Std.random(info.names.length)];
           o.item = {
             id: info.id,
