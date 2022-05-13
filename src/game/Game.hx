@@ -609,6 +609,7 @@ class Game extends _SaveObject
       // reset game stuff
       trace('====== ENTER ' + area.id);
       timeline.loadPost();
+      world.loadPost();
       if (location == LOCATION_AREA)
         area.loadPost();
       else if (location == LOCATION_REGION)

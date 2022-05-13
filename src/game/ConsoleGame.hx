@@ -987,8 +987,8 @@ class ConsoleGame
 
           // link host to this npc
           npc.ai = ai;
-          ai.event = ev;
-          ai.npc = npc;
+          ai.eventID = ev.id;
+          ai.npcID = npc.id;
           ai.entity.setNPC();
 
           break;

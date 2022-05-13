@@ -11,7 +11,8 @@ class Habitat extends _SaveObject
   ];
   var game: Game;
   var player: Player;
-  public var area: AreaGame;
+  public var areaID: Int;
+  public var area(get, null): AreaGame;
 
   // calculated stats
   public var energy: Int; // produced energy
@@ -27,9 +28,14 @@ class Habitat extends _SaveObject
   public function new(g: Game, a: AreaGame)
     {
       game = g;
-      player = game.player;
-      area = a;
+      areaID = a.id;
+      init();
+      initPost();
+    }
 
+// init object before loading/post creation
+  public function init()
+    {
       energy = 0;
       energyUsed = 0;
       hostEnergyRestored = 0;
@@ -40,6 +46,11 @@ class Habitat extends _SaveObject
       watcherLevel = 0;
     }
 
+// called after load or creation
+  public function initPost()
+    {
+      player = game.player;
+    }
 
 // put evolution object in habitat
 // called from organ actions
@@ -149,5 +160,10 @@ class Habitat extends _SaveObject
         }
 
       Const.debugObject(this);
+    }
+
+  function get_area(): AreaGame
+    {
+      return game.world.get(0).get(areaID);
     }
 }

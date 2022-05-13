@@ -13,8 +13,8 @@ class HabitatObject extends AreaObject
     {
       super(g, vaid, vx, vy);
       level = l;
-      init();
-      initPost(false);
+//      init();
+//      initPost(false);
     }
 
 // init object before loading/post creation

@@ -16,6 +16,7 @@ class AreaGame extends _SaveObject
   ];
   var game: Game;
   var region: RegionGame;
+  public var regionID: Int;
 
   public var icons: Array<RegionEntity>; // alert, event, npc, habitat icons
 
@@ -36,7 +37,8 @@ class AreaGame extends _SaveObject
   public var npc: List<scenario.NPC>; // npc list
 
   // habitat related
-  public var parent: AreaGame; // parent area (for sub-areas, habitats)
+  public var parentID: Int;
+  public var parent(get, null): AreaGame; // parent area (for sub-areas, habitats)
   public var habitat: Habitat; // habitat stuff
   public var isHabitat: Bool; // is this area itself a habitat?
   public var hasHabitat: Bool; // does this area have a habitat?
@@ -47,7 +49,7 @@ class AreaGame extends _SaveObject
   public var alertness(get, set): Float; // area alertness (authorities) (0-100%)
   var _alertness: Float; // actual alertness storage
 
-  static var _maxID: Int = 0; // area id counter
+  public static var _maxID: Int = 0; // area id counter
 
   // these are empty until the area has been generated
   // when player leaves the area, ai list is emptied, cells and objects are saved
@@ -61,6 +63,7 @@ class AreaGame extends _SaveObject
     {
       game = g;
       region = r;
+      regionID = r.id;
       id = _maxID++;
       x = vx;
       y = vy;
@@ -82,9 +85,9 @@ class AreaGame extends _SaveObject
       hasHabitat = false;
       habitat = null;
       name = null;
-      parent = null;
-      width = 10;
-      height = 10;
+      parentID = -1;
+      width = -1;
+      height = -1;
       _alertness = 0;
       alertnessMod = 0;
       habitatAreaID = 0;
@@ -100,7 +103,12 @@ class AreaGame extends _SaveObject
 // called after load or creation
   public function initPost(onLoad: Bool)
     {
-      updateType();
+      if (!onLoad)
+        updateType();
+      else
+        {
+          info = WorldConst.getAreaInfo(typeID);
+        }
       if (onLoad && isGenerated)
         _pathEngine = new aPath.Engine(this, width, height);
     }
@@ -693,7 +701,7 @@ class AreaGame extends _SaveObject
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
 
-//      trace(x + ' ' + y + ' ' + _isWalkable[x][y]);
+//      trace(x + ',' + y + ' ' + _cells[x][y]);
       return Const.TILE_WALKABLE[_cells[x][y]];
     }
 
@@ -985,9 +993,9 @@ class AreaGame extends _SaveObject
               break;
             game.debug('spawn npc');
             n.ai = ai;
-            ai.event = n.event;
+            ai.eventID = n.event.id;
             ai.job = n.job;
-            ai.npc = n;
+            ai.npcID = n.id;
             ai.name.real = n.name;
             ai.name.realCapped = n.name;
             ai.isMale = n.isMale;
@@ -1400,12 +1408,18 @@ class Test {
 
   public function toString(): String
     {
-      return '(' + x + ',' + y + '): ' + typeID + ' alertness:' + alertness;
+      return '[' + id + '] (' + x + ',' + y + '): ' + typeID + ' alertness:' + alertness;
     }
 
 
 // ========================== SETTERS ====================================
 
+  function get_parent(): AreaGame
+    {
+      if (parentID < 0)
+        return null;
+      else return game.world.get(0).get(parentID);
+    }
 
   function get_alertness()
     { return _alertness; }

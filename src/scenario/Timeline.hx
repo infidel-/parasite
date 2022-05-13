@@ -12,7 +12,7 @@ class Timeline extends _SaveObject
   static var _ignoredFields = [ '_eventsMap', '_locationsMap',
   ];
   var game: Game;
-  var scenario: Scenario;
+  public var scenario: Scenario;
   var scenarioID: String;
 
   public var difficulty: _Difficulty; // difficulty
@@ -49,12 +49,20 @@ class Timeline extends _SaveObject
       if (scenarioClass == null)
         throw 'Could not resolve class ' + scenarioID;
       scenario = Type.createInstance(scenarioClass, []);
-      _eventsMap = new Map();
-      for (ev in _eventsList)
-        _eventsMap[ev.id] = ev;
+      // NOTE: need locations before events
       _locationsMap = new Map();
       for (ev in _locationsList)
         _locationsMap[ev.id] = ev;
+      _eventsMap = new Map();
+      for (ev in _eventsList)
+        {
+          _eventsMap[ev.id] = ev;
+          var loc = ev.location;
+          if (loc != null)
+            loc.area.events.push(ev);
+          for (npc in ev.npc)
+            npc.area.npc.add(npc);
+        }
     }
 
   public function iterator()
@@ -399,7 +407,8 @@ should limit player options for guiding purposes
                 area = region.getRandomAround(event.location.area, {
                   isInhabited: true,
                   minRadius: 1,
-                  maxRadius: 5 });
+                  maxRadius: 5
+                });
               else
                 {
                   var tmp: Array<_AreaType> =
@@ -436,7 +445,6 @@ should limit player options for guiding purposes
       while (true)
         {
           var event = new Event(game, curID, _eventsList.length);
-          event.info = curInfo;
           event.num = n++;
           event.name = curInfo.name;
           event.isHidden = (curInfo.isHidden == true);

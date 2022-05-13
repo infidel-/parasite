@@ -9,7 +9,7 @@ class Event extends _SaveObject
 {
   static var _ignoredFields = [ 'location', ];
   public var game: Game;
-  public var info: EventInfo; // event info link
+  public var info(get, null): EventInfo; // event info link
   public var num: Int; // event number (temp var for text messages)
   public var isHidden: Bool; // event hidden?
   public var id: String; // event id
@@ -34,6 +34,7 @@ class Event extends _SaveObject
   public function init()
     {
       name = 'unnamed event';
+      info = null;
       locationID = null;
       location = null;
       locationKnown = false;
@@ -46,6 +47,13 @@ class Event extends _SaveObject
     {
     }
 
+  public function getNPC(id: Int): NPC
+    {
+      for (n in npc)
+        if (n.id == id)
+          return n;
+      return null;
+    }
 
 // learn a note clue
   public function learnClue(): Bool
@@ -286,6 +294,11 @@ class Event extends _SaveObject
       if (locationID == null)
         return null;
       else return game.timeline.getLocation(locationID);
+    }
+
+  function get_info(): EventInfo
+    {
+      return game.timeline.scenario.flow.get(id);
     }
 
   public function toString(): String

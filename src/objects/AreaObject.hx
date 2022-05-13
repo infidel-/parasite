@@ -63,6 +63,7 @@ class AreaObject extends _SaveObject
         {
           var area = game.region.get(areaID);
           area.addObject(this);
+//          trace('create entity ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
           createEntity();
         }
     }
@@ -97,6 +98,7 @@ class AreaObject extends _SaveObject
 // create entity for this object
   function createEntity()
     {
+//      Const.traceStack();
 //      trace('new object ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
       entity = new ObjectEntity(this, game, x, y, tile);
     }

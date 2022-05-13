@@ -35,7 +35,7 @@ class RegionGame extends _SaveObject
   public function init()
     {
       _list = new Map();
-      _array = new Array();
+      _array = [];
       for (i in 0...width)
         _array[i] = [];
     }
@@ -44,6 +44,27 @@ class RegionGame extends _SaveObject
   public function initPost(onLoad: Bool)
     {
       info = WorldConst.getRegionInfo(typeID);
+      AreaGame._maxID = 0;
+      if (onLoad)
+        {
+          _array = [];
+          for (i in 0...width)
+            _array[i] = [];
+          for (a in _list)
+            {
+              if (a.x >= 0 && a.y >= 0)
+                _array[a.x][a.y] = a;
+              if (a.id > AreaGame._maxID)
+                AreaGame._maxID = a.id;
+              if (a.hasHabitat)
+                {
+                  var habarea = get(a.habitatAreaID);
+                  if (habarea.id > AreaGame._maxID)
+                    AreaGame._maxID = habarea.id;
+                }
+            }
+          AreaGame._maxID += 1;
+        }
     }
 
 // iterator

@@ -16,8 +16,10 @@ class AI extends _SaveObject
   ];
   var game: Game; // game state link
   public var entity: AIEntity; // gui entity
-  public var event: scenario.Event; // event link (for scenario npcs)
-  public var npc: scenario.NPC; // npc link (for scenario npcs)
+  public var eventID: String;
+  public var event(get, null): scenario.Event; // event link (for scenario npcs)
+  public var npcID: Int;
+  public var npc(get, null): scenario.NPC; // npc link (for scenario npcs)
   public var tile(default, null): Tile; // AI tile
 
   public var type: String; // ai type
@@ -174,7 +176,9 @@ class AI extends _SaveObject
       _objectsSeen = new List();
       _turnsInvisible = 0;
       event = null;
+      eventID = null;
       npc = null;
+      npcID = -1;
 
       inventory = new Inventory(game);
       skills = new Skills(game, false);
@@ -1130,6 +1134,20 @@ class AI extends _SaveObject
 
 
 // ========================== SETTERS ====================================
+
+  function get_event(): scenario.Event
+    {
+      if (eventID == null)
+        return null;
+      else return game.timeline.getEvent(eventID);
+    }
+
+  function get_npc(): scenario.NPC
+    {
+      if (npcID < 0)
+        return null;
+      else return event.getNPC(npcID);
+    }
 
   function set_health(v: Int)
     { return health = Const.clamp(v, 0, maxHealth); }

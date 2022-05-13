@@ -18,6 +18,21 @@ class World extends _SaveObject
 //      region = null;
     }
 
+// post load
+  public function loadPost()
+    {
+      RegionGame._maxID = 0;
+      for (r in _list)
+        {
+          if (r.id > RegionGame._maxID)
+            RegionGame._maxID = r.id;
+          for (a in @:privateAccess r._list)
+            {
+              @:privateAccess a.region = get(a.regionID);
+            }
+        }
+      RegionGame._maxID++;
+    }
 
 // generate a new world
   public function generate()
