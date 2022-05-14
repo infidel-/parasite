@@ -26,7 +26,7 @@ class AgentAI extends HumanAI
       type = 'agent';
       name.unknown = 'agent';
       name.unknownCapped = 'Agent';
-      sounds = SoundConst.agent;
+      soundsID = 'agent';
       isAggressive = true;
       inventory.addID('pistol');
       skills.addID(SKILL_PISTOL, 40 + Std.random(25));

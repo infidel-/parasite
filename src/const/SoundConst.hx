@@ -7,6 +7,11 @@ import _AIState;
 
 class SoundConst
 {
+  public static function getSounds(field: String): Map<String, Array<AISound>>
+    {
+      return Reflect.field(SoundConst, field);
+    }
+
   // dog sounds
   public static var dog: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [

@@ -23,7 +23,7 @@ class CivilianAI extends HumanAI
       type = 'civilian';
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
-      sounds = SoundConst.civilian;
+      soundsID = 'civilian';
 
       // civs in higher class areas have a higher chance of having computers
       // smartphones

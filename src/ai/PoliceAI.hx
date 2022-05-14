@@ -26,7 +26,7 @@ class PoliceAI extends HumanAI
       type = 'police';
       name.unknown = 'police officer';
       name.unknownCapped = 'Police officer';
-      sounds = SoundConst.police;
+      soundsID = 'police';
       isAggressive = true;
 
       // chance of having stunner

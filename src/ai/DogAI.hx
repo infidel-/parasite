@@ -27,7 +27,7 @@ class DogAI extends AI
         unknown: 'the dog',
         unknownCapped: 'The dog'
       };
-      sounds = SoundConst.dog;
+      soundsID = 'dog';
 
       strength = 2 + Std.random(4);
       constitution = 2 + Std.random(4);

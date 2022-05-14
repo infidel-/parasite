@@ -26,7 +26,7 @@ class SecurityAI extends HumanAI
       type = 'security';
       name.unknown = 'security guard';
       name.unknownCapped = 'Security guard';
-      sounds = SoundConst.security;
+      soundsID = 'security';
       isAggressive = true;
       if (Std.random(100) < 20)
         {

@@ -26,7 +26,7 @@ class BlackopsAI extends HumanAI
       type = 'blackops';
       name.unknown = 'blackops agent';
       name.unknownCapped = 'Blackops agent';
-      sounds = SoundConst.team;
+      soundsID = 'team';
       isAggressive = true;
       isRelentless = true;
       inventory.clear();

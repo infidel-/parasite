@@ -26,7 +26,7 @@ class SoldierAI extends HumanAI
       type = 'soldier';
       name.unknown = 'soldier';
       name.unknownCapped = 'Soldier';
-      sounds = SoundConst.soldier;
+      soundsID = 'soldier';
       isAggressive = true;
       inventory.addID('assaultRifle');
       skills.addID(SKILL_RIFLE, 40 + Std.random(25));

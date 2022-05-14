@@ -23,7 +23,7 @@ class TeamMemberAI extends HumanAI
       type = 'civilian';
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
-      sounds = SoundConst.team;
+      soundsID = 'team';
       isAggressive = true;
 
       // team level changes loadout
