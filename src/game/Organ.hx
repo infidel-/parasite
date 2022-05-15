@@ -24,5 +24,22 @@ import const.EvolutionConst;
       this.info = info;
       this.params = params;
       this.timeout = timeout;
+      init();
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
+      if (onLoad)
+        {
+          improvInfo = EvolutionConst.getInfo(id);
+          info = improvInfo.organ;
+        }
     }
 }

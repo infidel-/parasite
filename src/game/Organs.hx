@@ -13,6 +13,7 @@ class Organs extends _SaveObject
   var _ai: AI; // parent AI link
   var _list: List<Organ>; // list of organs
   var currentOrgan: Organ; // currently grown organ
+  var currentOrganID: _Improv;
   var woundRegenTurn: Int; // turns until next HP regens
 
   public function new(vgame: Game, vai: AI)
@@ -20,10 +21,24 @@ class Organs extends _SaveObject
       _ai = vai;
       game = vgame;
       currentOrgan = null;
+      currentOrganID = null;
       woundRegenTurn = 0;
-      _list = new List<Organ>();
+      _list = new List();
     }
 
+// called after load
+  public function loadPost()
+    {
+      if (currentOrganID != null)
+        {
+          for (o in _list)
+            if (o.id == currentOrganID)
+              {
+                currentOrgan = o;
+                break;
+              }
+        }
+    }
 
   public function getInfo(): String
     {
@@ -138,6 +153,7 @@ class Organs extends _SaveObject
         currentOrgan.info.onGrow(game, game.player);
 
       currentOrgan = null;
+      currentOrganID = null;
     }
 
 
@@ -200,10 +216,11 @@ class Organs extends _SaveObject
             info: imp.info.organ,
             params: imp.info.levelParams[imp.level],
             timeout: 0
-            };
+          };
           _list.add(currentOrgan);
         }
       else currentOrgan = o;
+      currentOrganID = currentOrgan.id;
     }
 
 

@@ -113,6 +113,23 @@ class AreaGame extends _SaveObject
         _pathEngine = new aPath.Engine(this, width, height);
     }
 
+// called after main load
+  public function loadPost()
+    {
+      region = game.world.get(regionID);
+      if (id > AreaGame._maxID)
+        AreaGame._maxID = id;
+      for (ai in _ai)
+        {
+          if (ai.id > AI._maxID)
+            AI._maxID = ai.id;
+          ai.loadPost();
+        }
+      for (o in _objects)
+        if (o.id > AreaObject._maxID)
+          AreaObject._maxID = o.id;
+    }
+
 // enter this area: generate if needed and update view
   public function enter()
     {
@@ -238,7 +255,7 @@ class AreaGame extends _SaveObject
     }
 
 // partially enter area on load
-  public function loadPost()
+  public function currentAreaLoadPost()
     {
       game.scene.sounds.setAmbient(info.ambient);
       for (o in _objects)
@@ -671,10 +688,17 @@ class AreaGame extends _SaveObject
       for (ai in _ai)
         if (ai.x == x && ai.y == y)
           return true;
-
       return false;
     }
 
+// get ai on this cell
+  public function getAIByID(id: Int): AI
+    {
+      for (ai in _ai)
+        if (ai.id == id)
+          return ai;
+      return null;
+    }
 
 // get ai on this cell
   public function getAI(x: Int, y: Int): AI
@@ -682,7 +706,6 @@ class AreaGame extends _SaveObject
       for (ai in _ai)
         if (ai.x == x && ai.y == y)
           return ai;
-
       return null;
     }
 
@@ -927,11 +950,12 @@ class AreaGame extends _SaveObject
             [ game, this.id, loc.x, loc.y ]);
           o.name = info.names[Std.random(info.names.length)];
           o.item = {
+            game: game,
             id: info.id,
             name: o.name,
             info: info,
             event: e
-            };
+          };
           addObject(o);
         }
     }

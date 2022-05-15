@@ -75,27 +75,37 @@ class Atlas
         interfaceAtlas[def.key] = tile.sub(def.x, def.y, def.w, def.h);
     }
 
-
 // get AI graphics with given params
-  public function get(type: String, isMale: Bool): Tile
+  public function get(type: String, isMale: Bool): {
+      tile: Tile,
+      x: Int,
+      y: Int,
+    }
     {
-      var tile = null;
-
       // dogs have different atlas
       if (type == 'dog')
-        tile = scene.entityAtlas[1][Const.ROW_PARASITE];
+        return {
+          tile: scene.entityAtlas[1][Const.ROW_PARASITE],
+          x: -1,
+          y: -1,
+        }
 
       // generic civilian
       else if (type == 'civilian')
         {
           var atlas = (isMale ? maleAtlas : femaleAtlas);
+          var tile = null;
           for (i in 0...100)
             {
               var x = Std.random(atlas.length);
               var y = Std.random(atlas[0].length);
               tile = atlas[x][y];
               if (tile != null)
-                break;
+                return {
+                  tile: tile,
+                  x: x,
+                  y: y,
+                }
             }
           if (tile == null)
             {
@@ -114,12 +124,51 @@ class Atlas
               return null;
             }
           var len = specialAtlas[type].length;
-          tile = specialAtlas[type][Std.random(len)];
+          var x = Std.random(len);
+          var tile = specialAtlas[type][x];
+          return {
+            tile: tile,
+            x: x,
+            y: -1,
+          }
+        }
+      return null;
+    }
 
+// get specific AI graphics
+  public function getXY(type: String, isMale: Bool, x: Int, y: Int): Tile
+    {
+      if (type == 'dog')
+        return scene.entityAtlas[1][Const.ROW_PARASITE];
+      else if (type == 'civilian')
+        {
+          var atlas = (isMale ? maleAtlas : femaleAtlas);
+          var tile = atlas[x][y];
+          if (tile == null)
+            {
+              trace('could not find tile at ' + x + ',' + y +
+                ' for ' + type + ' ' + isMale);
+              return null;
+            }
           return tile;
         }
-
-      return tile;
+      else
+        {
+          if (specialAtlas[type] == null)
+            {
+              trace('no atlas for type ' + type);
+              return null;
+            }
+          var tile = specialAtlas[type][x];
+          if (tile == null)
+            {
+              trace('could not find special tile at ' + x +
+                ' for ' + type + ' ' + isMale);
+              return null;
+            }
+          return tile;
+        }
+      return null;
     }
 
 

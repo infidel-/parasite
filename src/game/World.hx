@@ -3,6 +3,8 @@
 package game;
 
 import const.WorldConst;
+import ai.AI;
+import objects.AreaObject;
 
 class World extends _SaveObject
 {
@@ -21,6 +23,9 @@ class World extends _SaveObject
 // post load
   public function loadPost()
     {
+      AI._maxID = 0;
+      AreaGame._maxID = 0;
+      AreaObject._maxID = 0;
       RegionGame._maxID = 0;
       for (r in _list)
         {
@@ -28,10 +33,18 @@ class World extends _SaveObject
             RegionGame._maxID = r.id;
           for (a in @:privateAccess r._list)
             {
-              @:privateAccess a.region = get(a.regionID);
+              a.loadPost();
+              if (a.hasHabitat)
+                {
+                  var habarea = r.get(a.habitatAreaID);
+                  habarea.loadPost();
+                }
             }
         }
+      AreaGame._maxID++;
+      AreaObject._maxID++;
       RegionGame._maxID++;
+      AI._maxID++;
     }
 
 // generate a new world

@@ -26,6 +26,7 @@ class Inventory extends _SaveObject
       _list = new List();
       var info = ItemsConst.armorNone;
       clothing = {
+        game: game,
         id: info.id,
         info: info,
         name: info.name,
@@ -365,6 +366,7 @@ class Inventory extends _SaveObject
       if (info.names != null) // pick a name
         name = info.names[Std.random(info.names.length)];
       var item: _Item = {
+        game: game,
         id: id,
         info: info,
         name: name,

@@ -25,6 +25,7 @@ class Player extends _SaveObject
 
   // state "host" - store host link here because host exists in all modes
   public var host: AI; // invaded host
+  public var hostID: Int;
   public var hostControl(default, set): Int; // amount of turns until you lose control of the host
 
 
@@ -67,10 +68,22 @@ class Player extends _SaveObject
       health = vars.startHealth;
       hostControl = 0;
       knownItems = new List<String>();
+      host = null;
+      hostID = -1;
 
       skills = new Skills(game, true);
     }
 
+// called post-loading game
+  public function loadPost()
+    {
+      if (hostID >= 0)
+        {
+          host = game.area.getAIByID(hostID);
+          host.updateMask(Const.FRAME_MASK_CONTROL);
+        }
+      skills.loadPost();
+    }
 
 // end of turn for player
   public function turn()

@@ -50,7 +50,13 @@ class ConsoleGame
 #if mydebug
       // XXX go commands
       else if (char0 == 'g')
-        goCommand(cmd);
+        {
+          if (cmd == 'god')
+            {
+              setVariableCommand(['set', 'player.godmode', '1' ]);
+            }
+          else goCommand(cmd);
+        }
 #end
 
       // XXX help
@@ -74,6 +80,7 @@ class ConsoleGame
             'ga - go and enter area, ' +
             'ge - go event location, ' +
             'gg - go x,y (region or area mode),<br/>' +
+            'god - enable godmode, ' +
             // info
             'ie - timeline info (trace), ' +
             'ii - improvements info (trace),<br/>' +

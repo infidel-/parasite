@@ -10,8 +10,8 @@ class Pickup extends AreaObject
   public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
       super(g, vaid, vx, vy);
-      init();
-      initPost(false);
+//      init();
+//      initPost(false);
     }
 
 // init object before loading/post creation

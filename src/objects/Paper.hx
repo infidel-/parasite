@@ -7,7 +7,6 @@ import game.Game;
 class Paper extends Pickup
 {
   static var _ignoredFields = [ 'event' ];
-  public var event: scenario.Event; // scenario event link
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
@@ -22,7 +21,6 @@ class Paper extends Pickup
       super.init();
       type = 'paper';
       name = 'paper';
-      event = null;
       imageCol = Const.FRAME_PAPER;
     }
 

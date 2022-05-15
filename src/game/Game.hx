@@ -611,9 +611,13 @@ class Game extends _SaveObject
       timeline.loadPost();
       world.loadPost();
       if (location == LOCATION_AREA)
-        area.loadPost();
+        {
+          area.currentAreaLoadPost();
+          playerArea.loadPost();
+        }
       else if (location == LOCATION_REGION)
         region.enter();
+      player.loadPost();
       log('Game loaded from slot ' + slotID + '.');
     }
 

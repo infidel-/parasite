@@ -21,7 +21,7 @@ class AreaObject extends _SaveObject
 
   public var id: Int; // unique object id
   public var areaID: Int;
-  static var _maxID: Int = 0; // current max ID
+  public static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
   public var isStatic: Bool; // is this object static?
@@ -63,7 +63,10 @@ class AreaObject extends _SaveObject
         {
           var area = game.region.get(areaID);
           area.addObject(this);
-//          trace('create entity ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
+/*
+          trace('create entity ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
+          if (type == 'paper')
+            Const.traceStack();*/
           createEntity();
         }
     }

@@ -21,6 +21,8 @@ class AI extends _SaveObject
   public var npcID: Int;
   public var npc(get, null): scenario.NPC; // npc link (for scenario npcs)
   public var tile(default, null): Tile; // AI tile
+  var tileAtlasX: Int; // tile atlas info
+  var tileAtlasY: Int;
 
   public var type: String; // ai type
   public var job: String; // ai job
@@ -50,7 +52,7 @@ class AI extends _SaveObject
   public var wasNoticed: Bool; // was this AI seen by parasite after spawning?
 
   public var id: Int; // unique AI id
-  static var _maxID: Int = 0; // current max ID
+  public static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
   public var roamTargetX: Int; // target x,y when roaming (resets on state change)
@@ -117,6 +119,8 @@ class AI extends _SaveObject
   public function init()
     {
       tile = null;
+      tileAtlasX = -1;
+      tileAtlasY = -1;
       type = 'undefined';
       job = 'undefined';
       name = {
@@ -193,7 +197,17 @@ class AI extends _SaveObject
     {
       sounds = SoundConst.getSounds(soundsID);
       if (onLoad)
-        createEntity();
+        {
+          tile = game.scene.atlas.getXY(type, isMale, tileAtlasX, tileAtlasY);
+          createEntity();
+        }
+    }
+
+// called in main post-load
+  public function loadPost()
+    {
+      organs.loadPost();
+      skills.loadPost();
     }
 
 
@@ -279,7 +293,12 @@ class AI extends _SaveObject
     {
       // do not change tile on re-creation (on entering area)
       if (tile == null)
-        tile = game.scene.atlas.get(type, isMale);
+        {
+          var tmp = game.scene.atlas.get(type, isMale);
+          tile = tmp.tile;
+          tileAtlasX = tmp.x;
+          tileAtlasY = tmp.y;
+        }
       entity = new AIEntity(this, game, x, y, tile);
 
       updateEntity(); // update icon
@@ -1055,10 +1074,13 @@ class AI extends _SaveObject
       parasiteAttached = true;
       wasAttached = true; // mark as touched by parasite
       setState(AI_STATE_ALERT, REASON_ATTACH);
-      entity.setMask(game.scene.entityAtlas
-        [Const.FRAME_MASK_ATTACHED][Const.ROW_PARASITE]);
+      updateMask(Const.FRAME_MASK_ATTACHED);
     }
 
+  public function updateMask(x: Int)
+    {
+      entity.setMask(game.scene.entityAtlas[x][Const.ROW_PARASITE]);
+    }
 
 // event: parasite invaded this host
   public inline function onInvade()
@@ -1066,8 +1088,7 @@ class AI extends _SaveObject
       setState(AI_STATE_HOST);
       parasiteAttached = false;
       wasInvaded = true; // mark as invaded
-      entity.setMask(game.scene.entityAtlas
-        [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
+      updateMask(Const.FRAME_MASK_CONTROL);
 
       // add effect marker so that AI can't tear parasite away
       onEffect({

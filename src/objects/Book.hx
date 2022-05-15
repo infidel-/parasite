@@ -7,7 +7,6 @@ import game.Game;
 class Book extends Pickup
 {
   static var _ignoredFields = [ 'event' ];
-  public var event: scenario.Event; // scenario event link
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {

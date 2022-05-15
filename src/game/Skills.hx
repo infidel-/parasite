@@ -17,6 +17,12 @@ class Skills extends _SaveObject
       _list = new List<Skill>();
     }
 
+// called after load
+  public function loadPost()
+    {
+      for (s in _list)
+        s.info = SkillsConst.getInfo(s.id);
+    }
 
 // list iterator
   public function iterator(): Iterator<Skill>
@@ -181,8 +187,7 @@ class Skills extends _SaveObject
 
 // skill type
 
-typedef Skill =
-{
+typedef Skill = {
   var id: _Skill; // skill id
   var level: Float; // skill level
   var info: SkillInfo; // skill info link

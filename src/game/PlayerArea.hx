@@ -30,6 +30,7 @@ class PlayerArea extends _SaveObject
   // state "parasite"
 
   // state "attach"
+  var attachHostID: Int;
   public var attachHost: AI; // host player is attached to
   public var attachHold(default, set): Int; // hold strength
 
@@ -41,19 +42,29 @@ class PlayerArea extends _SaveObject
       path = null;
       actionTS = 0;
       currentAction = null;
-
       x = 0;
       y = 0;
       ap = 2;
       attachHold = 0;
+      attachHost = null;
+      attachHostID = -1;
       knownObjects = new List<String>();
       knownObjects.add('body');
       knownObjects.add('pickup');
       knownObjects.add('habitat');
-
       entity = new PlayerEntity(game, x, y);
     }
 
+// called post-loading game
+  public function loadPost()
+    {
+      if (attachHostID >= 0)
+        {
+          entity.visible = false;
+          attachHost = game.area.getAIByID(attachHostID);
+          attachHost.updateMask(Const.FRAME_MASK_ATTACHED);
+        }
+    }
 
 // end of turn for player (in area mode)
   public function turn()
@@ -600,6 +611,7 @@ class PlayerArea extends _SaveObject
       // set starting attach parameters
       state = PLR_STATE_ATTACHED;
       attachHost = ai;
+      attachHostID = ai.id;
       entity.visible = false;
 
       // improv: attach efficiency
@@ -641,9 +653,11 @@ class PlayerArea extends _SaveObject
 
       // save AI link
       player.host = attachHost;
+      player.hostID = attachHostID;
       player.hostControl = Player.HOST_CONTROL_BASE;
       entity.visible = false;
       attachHost = null;
+      attachHostID = -1;
       player.host.onInvade(); // notify ai
 
       // disable evolution for dogs - they can die in the same turn
