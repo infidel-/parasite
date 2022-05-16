@@ -101,9 +101,28 @@ class Effects extends _SaveObject
 }
 
 
-typedef Effect =
+@:structInit class Effect extends _SaveObject
 {
-  var type: _AIEffectType; // effect type
-  var points: Int; // current effect strength
-  var isTimer: Bool; // is this a timer?
+  public var type: _AIEffectType; // effect type
+  public var points: Int; // current effect strength
+  public var isTimer: Bool; // is this a timer?
+
+  public function new(type, points, isTimer)
+    {
+      this.type = type;
+      this.points = points;
+      this.isTimer = isTimer;
+      init();
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
+    }
 }

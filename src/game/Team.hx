@@ -6,11 +6,14 @@ import ai.BlackopsAI;
 
 class Team extends FSM<_TeamState, _TeamFlag>
 {
+  static var _ignoredFields = [ 'ambushedHabitat',
+  ];
   public var level: Int; // team level
   public var size: Int; // current size
   public var maxSize: Int; // total size
   public var distance(get, set): Float; // distance to parasite (0-100)
   public var ambushedHabitat: Habitat; // habitat with ambush
+  public var ambushedHabitatAreaID: Int;
   public var lastAlertTurn: Int;
   var _distance: Float;
 
@@ -26,10 +29,29 @@ class Team extends FSM<_TeamState, _TeamFlag>
       size = 4 + Std.random(3);
       maxSize = size;
       _distance = game.group.teamStartDistance;
-      timer = 0;
-      ambushedHabitat = null;
+      init();
+      initPost(false);
     }
 
+// init object before loading/post creation
+  public function init()
+    {
+      timer = 0;
+      ambushedHabitat = null;
+      ambushedHabitatAreaID = -1;
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
+    }
+
+// called after loading
+  public function loadPost()
+    {
+      if (state == TEAM_AMBUSH)
+        ambushedHabitat = game.world.get(0).get(ambushedHabitatAreaID).habitat;
+    }
 
 // TURN: team turn logic
   public function turn()
@@ -48,6 +70,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
     {
       state = TEAM_AMBUSH;
       ambushedHabitat = null; // clear just in case
+      ambushedHabitatAreaID = -1;
 
       // set ambush timer
       // if player is currently in habitat, skip timer
@@ -60,6 +83,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (cnt == 0)
         {
           ambushedHabitat = null;
+          ambushedHabitatAreaID = -1;
           return;
         }
 
@@ -71,10 +95,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
         if (area.habitat.watcherLevel >= 2)
           {
             ambushedHabitat = area.habitat;
+            ambushedHabitatAreaID = area.id;
             break;
           }
       if (ambushedHabitat == null)
-        ambushedHabitat = tmp[Std.random(tmp.length)].habitat;
+        {
+          ambushedHabitat = tmp[Std.random(tmp.length)].habitat;
+          ambushedHabitatAreaID = ambushedHabitat.areaID;
+        }
 
       // watcher notification
       if (ambushedHabitat.hasWatcher)

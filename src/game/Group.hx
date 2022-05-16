@@ -26,6 +26,12 @@ class Group extends _SaveObject
       difficulty = UNSET;
     }
 
+// called after loading
+  public function loadPost()
+    {
+      if (team != null)
+        team.loadPost();
+    }
 
 // get group and team info according to difficulty
   public function getInfo(buf: StringBuf)

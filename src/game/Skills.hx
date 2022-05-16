@@ -162,8 +162,11 @@ class Skills extends _SaveObject
           return;
         }
 
-      var skill = { id: id, level: lvl, info: info };
-      _list.add(skill);
+      _list.add({
+        id: id,
+        level: lvl,
+        info: info
+      });
 
       if (isPlayer)
         {
@@ -187,8 +190,28 @@ class Skills extends _SaveObject
 
 // skill type
 
-typedef Skill = {
-  var id: _Skill; // skill id
-  var level: Float; // skill level
-  var info: SkillInfo; // skill info link
-};
+@:structInit class Skill extends _SaveObject
+{
+  public var id: _Skill; // skill id
+  public var level: Float; // skill level
+  public var info: SkillInfo; // skill info link
+
+  public function new(id, level, info)
+    {
+      this.id = id;
+      this.level = level;
+      this.info = info;
+      init();
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
+    }
+}

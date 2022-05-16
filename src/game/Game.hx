@@ -524,7 +524,11 @@ class Game extends _SaveObject
           var fval: Dynamic = null;
           switch (Type.typeof(fobj)) {
             case TEnum(e):
-              fval = '' + fobj;
+              fval = {
+                _classID: Type.getEnumName(e),
+                _isEnum: true,
+                val: '' + fobj,
+              }
 //            case TObject:
             default:
           }
@@ -610,6 +614,7 @@ class Game extends _SaveObject
       trace('====== ENTER ' + area.id);
       timeline.loadPost();
       world.loadPost();
+      group.loadPost();
       if (location == LOCATION_AREA)
         {
           area.currentAreaLoadPost();
@@ -631,14 +636,20 @@ class Game extends _SaveObject
             continue;
           var srcval: Dynamic = Reflect.field(src, f);
           var dstval = Reflect.field(dst, f);
+          var isEnum: Bool = untyped srcval._isEnum;
           var classID: String = srcval._classID;
-          // enums
+          // enum cases
           switch (Type.typeof(dstval)) {
             case TEnum(e):
-              Reflect.setField(dst, f, Type.createEnum(e, srcval));
+              Reflect.setField(dst, f, initEnum(name, srcval, depth + 1));
               continue;
             default:
           }
+          if (isEnum)
+            {
+              Reflect.setField(dst, f, initEnum(name, srcval, depth + 1));
+              continue;
+            }
 
           if (Std.isOfType(srcval, Int) ||
               Std.isOfType(srcval, Float) ||
@@ -672,13 +683,7 @@ class Game extends _SaveObject
                   if (elClassID == null)
                     dsttmp.push(el);
                   else if (isEnum)
-                    {
-                      var ee = Type.resolveEnum(elClassID);
-                      if (ee == null)
-                        throw "No such enum: " + elClassID;
-                      var dstel = Type.createEnum(ee, untyped el.val);
-                      dsttmp.push(dstel);
-                    }
+                    dsttmp.push(initEnum(name, el, depth + 1));
                   else
                     {
                       var dstel = initObject(name + '.' + f + '[][]', el, depth);
@@ -766,9 +771,23 @@ class Game extends _SaveObject
         dst.game = this;
     }
 
+// will init enum from src data { classID, isEnum, val }
+  function initEnum(name: String, src: Dynamic, depth: Int): Dynamic
+    {
+      var classID: String = untyped src._classID;
+      var ee = Type.resolveEnum(classID);
+      if (ee == null)
+        throw "No such enum: " + classID;
+      return Type.createEnum(ee, untyped src.val);
+    }
+
 // will create a new class instance and populate it with data from save object
   function initObject(name: String, src: Dynamic, depth: Int): Dynamic
     {
+      var isEnum: Bool = untyped src._isEnum;
+      if (isEnum)
+        return initEnum(name, src, depth);
+
       // common fields
       var hasUI: Bool = untyped src._hasUI;
       if (hasUI == null)
