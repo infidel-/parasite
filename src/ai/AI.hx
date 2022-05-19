@@ -202,6 +202,8 @@ class AI extends _SaveObject
         {
           tile = game.scene.atlas.getXY(type, isMale, tileAtlasX, tileAtlasY);
           createEntity();
+          if (isNPC)
+            entity.setNPC();
         }
     }
 
@@ -309,6 +311,15 @@ class AI extends _SaveObject
       entity = new AIEntity(this, game, x, y, tile);
 
       updateEntity(); // update icon
+    }
+
+// update AI tile to a new one
+  public function updateTile(x: Int, y: Int)
+    {
+      tileAtlasX = x;
+      tileAtlasY = y;
+      tile = game.scene.atlas.getXY(type, isMale, tileAtlasX, tileAtlasY);
+      entity.tile = tile;
     }
 
 
@@ -1176,12 +1187,7 @@ class AI extends _SaveObject
     {
       if (npcID < 0 || !isNPC)
         return null;
-      // first check event
-      var npc = event.getNPC(npcID);
-      if (npc != null)
-        return npc;
-      // then check in current area (corp exec)
-      return game.area.getNPC(npcID);
+      return event.getNPC(npcID);
     }
 
   function set_health(v: Int)

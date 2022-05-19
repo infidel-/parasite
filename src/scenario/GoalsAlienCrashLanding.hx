@@ -9,6 +9,16 @@ import game.Game;
 
 class GoalsAlienCrashLanding
 {
+// helper: find spaceship object
+  static function getSpaceShipObject(game: Game): EventObject
+    {
+      // change spaceship action contents
+      var areaID = game.timeline.getIntVar('spaceShipAreaID');
+      var objID = game.timeline.getIntVar('spaceShipObjectID');
+      var area = game.world.get(0).get(areaID);
+      return cast area.getObject(objID);
+    }
+
   static function alienShipLocationFunc(game: Game): String
     {
       var ev = game.timeline.getEvent('alienShipStudy');
@@ -97,9 +107,10 @@ class GoalsAlienCrashLanding
         var area = ev.location.area;
         var obj = area.addEventObject('spaceship', 'spaceshipStart');
 
-        // store object id for later use
+        // store object/area id for later use
+        // NOTE: we cannot store object link since this is not serializable
         game.timeline.setVar('spaceShipObjectID', obj.id);
-        game.timeline.setVar('spaceShipObject', obj);
+        game.timeline.setVar('spaceShipAreaID', area.id);
 #end
       },
       onComplete: function (game, player) {
@@ -145,7 +156,8 @@ class GoalsAlienCrashLanding
 
       onTurn: function (game, player) {
         // if player has target host, complete
-        if (player.state == PLR_STATE_HOST && player.host.npc != null &&
+        if (player.state == PLR_STATE_HOST &&
+            player.host.npc != null &&
             player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
           game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
       },
@@ -154,16 +166,20 @@ class GoalsAlienCrashLanding
         // find random area
         var area = game.region.getRandomWithType(AREA_CITY_HIGH, true);
 
-        // add NPC to it
+        // add hidden NPC to it
+        // NOTE: all dynamic NPCs should belong to an event anyway
         var npc = new NPC(game);
         npc.event = game.timeline.getEvent('alienMission');
+        npc.event.npc.push(npc);
         npc.isMale = true;
+        npc.tileAtlasX = 3;
+        npc.tileAtlasY = 4;
         npc.job = 'corporate executive';
         npc.jobKnown = true;
         npc.type = 'civilian';
         npc.areaID = area.id;
         npc.areaKnown = true;
-        npc.noEventClues = true;
+        npc.noEventClues = true; // cannot brain probe for clues
         area.npc.add(npc);
         game.debug('' + npc);
 
@@ -178,8 +194,8 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
-        },
       },
+    },
 
     SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP => {
       id: SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
@@ -207,16 +223,7 @@ class GoalsAlienCrashLanding
       },
 
       onReceive: function (game, player) {
-//        var objID = game.timeline.getIntVar('spaceShipObjectID');
-//        var obj = game.world.getEventObject(objID);
-/*
-        var ev = game.timeline.getEvent('alienShipStudy');
-        var area = ev.location.area;
-        var objID = game.timeline.getIntVar('spaceShipObjectID');
-        var obj = area.getObject(game.timeline);
-*/
-        // change spaceship action contents
-        var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
+        var obj = getSpaceShipObject(game);
         obj.infoID = 'spaceshipAbductionSuccess';
       },
 
@@ -240,7 +247,7 @@ class GoalsAlienCrashLanding
 
       onReceive: function (game, player) {
         // change spaceship action contents
-        var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
+        var obj = getSpaceShipObject(game);
         obj.infoID = 'spaceshipAbductionFailure';
       },
 

@@ -24,6 +24,8 @@ class NPC extends _SaveObject
   public var noEventClues: Bool; // flag: cannot brain probe event clues
   public var event: Event; // event (can be null)
   public var ai: ai.AI; // ai link
+  public var tileAtlasX: Int; // image x,y
+  public var tileAtlasY: Int;
 
   public var id: Int; // unique NPC id
   static var _maxID: Int = 0; // current max ID
@@ -34,6 +36,8 @@ class NPC extends _SaveObject
       isMale = (Std.random(100) < 50 ? true : false);
       name = const.NameConst.getHumanName(isMale);
       id = (_maxID++);
+      tileAtlasX = -1;
+      tileAtlasY = -1;
 
       init();
       initPost(false);

@@ -1184,7 +1184,7 @@ class ConsoleGame
       var area = ev.location.area;
       goCommand('ga' + area.x + ' ' + area.y);
 
-      var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
+      var obj = @:privateAccess scenario.GoalsAlienCrashLanding.getSpaceShipObject(game);
       goCommand('gg' + obj.x + ' ' + obj.y);
     }
 

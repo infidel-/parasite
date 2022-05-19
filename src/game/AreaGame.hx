@@ -1018,6 +1018,7 @@ class AreaGame extends _SaveObject
             ai.isNameKnown = true;
             ai.isJobKnown = true;
             ai.isNPC = true;
+            ai.updateTile(n.tileAtlasX, n.tileAtlasY);
             ai.entity.setNPC();
 
             // spawn up to maxSpawn npcs
@@ -1412,15 +1413,6 @@ class Test {
   public inline function hasAnyAI(): Bool
     {
       return (game.player.state == PLR_STATE_HOST ? _ai.length > 1 : _ai.length > 0);
-    }
-
-// get npc by id
-  public function getNPC(id: Int): scenario.NPC
-    {
-      for (n in npc)
-        if (n.id == id)
-          return n;
-      return null;
     }
 
 // DEBUG: show all objects
