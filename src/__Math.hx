@@ -289,7 +289,7 @@ class __Math
   public static inline function hostDiscovered(ai: AI)
     {
       var base = 0.0;
-      if (ai.npc != null) // invaded event NPCs are the worst
+      if (ai.isNPC) // invaded event NPCs are the worst
         base = 10;
       else if (ai.wasInvaded)
         base = 3;

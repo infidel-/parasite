@@ -185,7 +185,12 @@ class RegionView
 // update npc icon for this area
   function getNPCIcon(a: AreaGame): _Icon
     {
-      if (!game.player.vars.timelineEnabled || a.npc.length == 0)
+      if (!game.player.vars.timelineEnabled)
+        return null;
+      var len = 0;
+      for (v in a.npc)
+        len++;
+      if (len == 0)
         return null;
 
       var ok = true;

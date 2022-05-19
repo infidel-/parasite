@@ -800,23 +800,26 @@ class PlayerArea extends _SaveObject
       game.goals.complete(GOAL_PROBE_BRAIN);
 
       // get clues
-      if (player.host.event != null && player.host.brainProbed < 3)
+      if (player.host.isNPC)
         {
-          var ret = game.timeline.learnClues(player.host.event, true);
-          if (!ret)
-            log('You did not learn any new information.', COLOR_TIMELINE);
+          if (!player.host.npc.memoryKnown)
+            {
+              var ret = game.timeline.learnClues(player.host.event, true);
+              if (!ret)
+                log('You did not learn any new information.', COLOR_TIMELINE);
 
-          // knowledge about group timer
-          game.group.brainProbe();
-        }
+              // knowledge about group timer
+              game.group.brainProbe();
+            }
 
-      // mark npc as scanned
-      if (player.host.event != null && player.host.brainProbed >= 2 &&
-          !player.host.npc.memoryKnown)
-        {
-          player.host.npc.memoryKnown = true;
+          // mark npc as scanned (after 3 times)
+          if (player.host.brainProbed >= 2 &&
+              !player.host.npc.memoryKnown)
+            {
+              player.host.npc.memoryKnown = true;
 
-          log('This human does not know anything else.', COLOR_TIMELINE);
+              log('This human does not know anything else.', COLOR_TIMELINE);
+            }
         }
 
       // damage

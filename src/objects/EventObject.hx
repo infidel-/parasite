@@ -1,20 +1,22 @@
 // special event object
+// NOTE: infoID can change dynamically, always use link
 
 package objects;
 
+import scenario.Scenario;
 import game.Game;
 import game.Player;
 
 class EventObject extends AreaObject
 {
-  public var eventAction: _PlayerAction; // available action
-  public var eventOnAction: Game -> Player -> String -> Void; // action handler
+  public var infoID: String;
 
-  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int, name: String, infoID: String)
     {
       super(g, vaid, vx, vy);
-
       init();
+      this.name = name;
+      this.infoID = infoID;
       initPost(false);
     }
 
@@ -23,7 +25,6 @@ class EventObject extends AreaObject
     {
       super.init();
       type = 'event_object';
-      name = 'event object';
       isStatic = true;
       imageCol = Const.FRAME_EVENT_OBJECT;
     }
@@ -38,14 +39,23 @@ class EventObject extends AreaObject
 // update actions
   override function updateActionList()
     {
-      game.ui.hud.addAction(eventAction);
+      var actions = game.timeline.scenario.eventObjectActions[infoID];
+      for (info in actions)
+        {
+          var action: _PlayerAction = Reflect.copy(info.action);
+          action.obj = this;
+          game.ui.hud.addAction(action);
+        }
     }
 
 
 // handle special action
   override function onAction(id: String): Bool
     {
-      eventOnAction(game, game.player, id);
+      var actions = game.timeline.scenario.eventObjectActions[infoID];
+      for (info in actions)
+        if (info.action.id == id)
+          info.func(game, game.player, id);
 
       return true;
     }

@@ -376,7 +376,7 @@ class Game extends _SaveObject
         }
 
       // add message to the log and minilog
-      var msg = {
+      var msg: _LogMessage = {
         msg: s,
         col: col,
         cnt: 1,
@@ -614,6 +614,7 @@ class Game extends _SaveObject
       trace('====== ENTER ' + area.id);
       timeline.loadPost();
       world.loadPost();
+      managerArea.loadPost();
       group.loadPost();
       if (location == LOCATION_AREA)
         {

@@ -4,6 +4,7 @@ package scenario;
 
 import const.Goals;
 import objects.EventObject;
+import scenario.Scenario;
 import game.Game;
 
 class GoalsAlienCrashLanding
@@ -15,6 +16,61 @@ class GoalsAlienCrashLanding
       return Const.col('gray', Const.small(
         'Target location: (' + area.x + ',' + area.y + ')'));
     }
+
+// NOTE: event objects functions moved here because of save/loading
+  public static var eventObjectActions: _EventObjectActionsList = [
+    'spaceshipStart' => [{
+      action: {
+        id: 'enterShip',
+        type: ACTION_OBJECT,
+        name: 'Enter Spaceship',
+        energy: 0
+        // NOTE: obj field will be set up on init
+      },
+      func: function (game, player, id) {
+        // player can stumble on a spaceship without having the goal
+        // in that case we silently give previous goal and
+        // auto-complete it
+        if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
+          {
+            game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, true);
+            game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, true);
+          }
+        game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
+
+        // show first event
+        var ev = game.timeline.getEvent('alienMission');
+        ev.isHidden = false;
+        for (n in ev.notes)
+          n.isKnown = true;
+        game.timeline.update();
+      },
+    }],
+    'spaceshipAbductionSuccess' => [{
+      action: {
+        id: 'enterShip',
+        type: ACTION_OBJECT,
+        name: 'Enter Spaceship',
+        energy: 0
+        // NOTE: obj field will be set up on init
+      },
+      func: function (game, player, id) {
+        game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+      },
+    }],
+    'spaceshipAbductionFailure' => [{
+      action: {
+        id: 'enterShip',
+        type: ACTION_OBJECT,
+        name: 'Enter Spaceship',
+        energy: 0
+        // NOTE: obj field will be set up on init
+      },
+      func: function (game, player, id) {
+        game.goals.complete(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
+      },
+    }],
+  ];
 
 // goals map
   public static var map: Map<_Goal, GoalInfo> = [
@@ -39,34 +95,7 @@ class GoalsAlienCrashLanding
         // spawn ship on the event location
         var ev = game.timeline.getEvent('alienShipStudy');
         var area = ev.location.area;
-        var obj = area.addEventObject({
-          name: 'spaceship',
-          action: {
-            id: 'enterShip',
-            type: ACTION_OBJECT,
-            name: 'Enter Spaceship',
-            energy: 0
-            },
-          onAction: function (game, player, id)
-            {
-              // player can stumble on a spaceship without having the goal
-              // in that case we silently give previous goal and
-              // auto-complete it
-              if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
-                {
-                  game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, true);
-                  game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, true);
-                }
-              game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
-
-              // show first event
-              var ev = game.timeline.getEvent('alienMission');
-              ev.isHidden = false;
-              for (n in ev.notes)
-                n.isKnown = true;
-              game.timeline.update();
-            }
-          });
+        var obj = area.addEventObject('spaceship', 'spaceshipStart');
 
         // store object id for later use
         game.timeline.setVar('spaceShipObjectID', obj.id);
@@ -127,13 +156,14 @@ class GoalsAlienCrashLanding
 
         // add NPC to it
         var npc = new NPC(game);
-        // TODO: maybe link to first event, but that would break brain probe
-        npc.event = null;
+        npc.event = game.timeline.getEvent('alienMission');
+        npc.isMale = true;
         npc.job = 'corporate executive';
         npc.jobKnown = true;
         npc.type = 'civilian';
         npc.areaID = area.id;
         npc.areaKnown = true;
+        npc.noEventClues = true;
         area.npc.add(npc);
         game.debug('' + npc);
 
@@ -187,17 +217,13 @@ class GoalsAlienCrashLanding
 */
         // change spaceship action contents
         var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
-        obj.eventOnAction =
-          function (game, player, id)
-            {
-              game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
-            };
+        obj.infoID = 'spaceshipAbductionSuccess';
       },
 
       onComplete: function (game, player) {
         // finish game
         game.finish('win', 'scenario');
-        },
+      },
 
       onFailure: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
@@ -215,11 +241,7 @@ class GoalsAlienCrashLanding
       onReceive: function (game, player) {
         // change spaceship action contents
         var obj: EventObject = game.timeline.getDynamicVar('spaceShipObject');
-        obj.eventOnAction =
-          function (game, player, id)
-            {
-              game.goals.complete(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
-            };
+        obj.infoID = 'spaceshipAbductionFailure';
       },
 
       onComplete: function (game, player) {

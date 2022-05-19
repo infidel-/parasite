@@ -15,6 +15,7 @@ class ScenarioAlienCrashLanding extends Scenario
       playerStartEvent = 'parasiteTransportation';
       defaultAlertness = 50;
       goals = GoalsAlienCrashLanding.map;
+      eventObjectActions = GoalsAlienCrashLanding.eventObjectActions;
 //      onInit = GoalsAlienCrashLanding.onInit;
 
       names = [

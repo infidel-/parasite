@@ -21,6 +21,7 @@ class NPC extends _SaveObject
   public var isDead: Bool; // is this npc dead?
   public var statusKnown: Bool; // is dead/alive status known to player?
   public var memoryKnown: Bool; // has this npc's memories been learned?
+  public var noEventClues: Bool; // flag: cannot brain probe event clues
   public var event: Event; // event (can be null)
   public var ai: ai.AI; // ai link
 
@@ -50,6 +51,7 @@ class NPC extends _SaveObject
       isDead = false;
       statusKnown = false;
       memoryKnown = false;
+      noEventClues = false;
       event = null;
       ai = null;
     }

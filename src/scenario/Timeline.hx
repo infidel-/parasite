@@ -61,7 +61,10 @@ class Timeline extends _SaveObject
           if (loc != null)
             loc.area.events.push(ev);
           for (npc in ev.npc)
-            npc.area.npc.add(npc);
+            {
+              npc.area.npc.add(npc);
+              npc.event = ev;
+            }
         }
     }
 

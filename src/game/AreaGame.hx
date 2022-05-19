@@ -365,28 +365,19 @@ class AreaGame extends _SaveObject
 
 
 // add event object to area
-  public function addEventObject(params: {
-    name: String, // object name
-    action: _PlayerAction, // object action
-    onAction: Game -> Player -> String -> Void, // action handler
-    }): EventObject
+  public function addEventObject(name: String, infoID: String): EventObject
     {
       // generate area if it's not yet generated
       if (!isGenerated)
         generate();
 
       var loc = findEmptyLocation();
-      game.debug('!!! event obj ' + params.name +
+      game.debug('!!! event obj ' + name +
         ' loc: (' + loc.x + ',' + loc.y +
         ') area: (' + x + ',' + y + ')');
-      var o = new EventObject(game, this.id, loc.x, loc.y);
-      o.name = params.name;
-      o.eventAction = params.action;
-      o.eventAction.obj = o;
-      o.eventOnAction = params.onAction;
+      var o = new EventObject(game, this.id, loc.x, loc.y, name, infoID);
       if (game.area != this) // hide object if it's not in the current area
         o.hide();
-
       addObject(o);
       return o;
     }
@@ -821,7 +812,8 @@ class AreaGame extends _SaveObject
 // remove AI
   public function removeAI(ai: AI)
     {
-//      game.debug('AI remove ' + ai.id);
+//      if (ai.isNPC)
+//        game.debug('AI remove ' + ai.id);
       // event: despawn live AI
       if (ai.state != AI_STATE_DEAD && ai != game.player.host)
         ai.onRemove();
@@ -1015,9 +1007,9 @@ class AreaGame extends _SaveObject
             var ai = spawnUnseenAI(n.type, true);
             if (ai == null)
               break;
-            game.debug('spawn npc');
+            game.debug('spawn npc ' + n.id + ' (ai: ' + ai.id + ')');
             n.ai = ai;
-            ai.eventID = n.event.id;
+            ai.eventID = (n.event != null ? n.event.id : null);
             ai.job = n.job;
             ai.npcID = n.id;
             ai.name.real = n.name;
@@ -1025,6 +1017,7 @@ class AreaGame extends _SaveObject
             ai.isMale = n.isMale;
             ai.isNameKnown = true;
             ai.isJobKnown = true;
+            ai.isNPC = true;
             ai.entity.setNPC();
 
             // spawn up to maxSpawn npcs
@@ -1415,11 +1408,19 @@ class Test {
       return null;
     }
 
-
 // does this area have any AI?
   public inline function hasAnyAI(): Bool
     {
       return (game.player.state == PLR_STATE_HOST ? _ai.length > 1 : _ai.length > 0);
+    }
+
+// get npc by id
+  public function getNPC(id: Int): scenario.NPC
+    {
+      for (n in npc)
+        if (n.id == id)
+          return n;
+      return null;
     }
 
 // DEBUG: show all objects

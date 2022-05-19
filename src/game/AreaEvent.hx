@@ -8,6 +8,7 @@ import ai.AI;
   static var _ignoredFields = [ 'ai' ];
   public var id: Int;
   public var ai: AI; // ai event origin - can be null
+  public var aiID: Int;
   public var objectID: Int; // area object event origin (-1: unused)
   public var details: String; // event details - can be null
   public var x: Int;
@@ -20,6 +21,7 @@ import ai.AI;
     {
       this.id = id;
       this.ai = ai;
+      this.aiID = (ai != null ? ai.id : -1);
       this.objectID = objectID;
       this.details = details;
       this.x = x;
@@ -27,5 +29,17 @@ import ai.AI;
       this.type = type;
       this.turns = turns;
       this.params = params;
+      init();
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
     }
 }

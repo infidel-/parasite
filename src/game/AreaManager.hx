@@ -22,6 +22,13 @@ class AreaManager extends _SaveObject
       lastEventID = 1;
     }
 
+// called after loading
+  public function loadPost()
+    {
+      for (ev in _list)
+        if (ev.aiID >= 0)
+          ev.ai = area.getAIByID(ev.aiID);
+    }
 
 #if mydebug
   public function debugInfo(buf: StringBuf)

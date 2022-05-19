@@ -20,6 +20,7 @@ class AI extends _SaveObject
   public var event(get, null): scenario.Event; // event link (for scenario npcs)
   public var npcID: Int;
   public var npc(get, null): scenario.NPC; // npc link (for scenario npcs)
+  public var isNPC: Bool;
   public var tile(default, null): Tile; // AI tile
   var tileAtlasX: Int; // tile atlas info
   var tileAtlasY: Int;
@@ -184,6 +185,7 @@ class AI extends _SaveObject
       eventID = null;
       npc = null;
       npcID = -1;
+      isNPC = false;
 
       inventory = new Inventory(game);
       skills = new Skills(game, false);
@@ -208,6 +210,11 @@ class AI extends _SaveObject
     {
       organs.loadPost();
       skills.loadPost();
+      if (npc != null)
+        {
+          npc.ai = this;
+          entity.setNPC();
+        }
     }
 
 
@@ -1167,9 +1174,14 @@ class AI extends _SaveObject
 
   function get_npc(): scenario.NPC
     {
-      if (npcID < 0)
+      if (npcID < 0 || !isNPC)
         return null;
-      else return event.getNPC(npcID);
+      // first check event
+      var npc = event.getNPC(npcID);
+      if (npc != null)
+        return npc;
+      // then check in current area (corp exec)
+      return game.area.getNPC(npcID);
     }
 
   function set_health(v: Int)

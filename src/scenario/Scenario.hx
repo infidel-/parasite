@@ -4,6 +4,7 @@ package scenario;
 
 import const.Goals;
 import game.Game;
+import game.Player;
 
 class Scenario
 {
@@ -15,6 +16,7 @@ class Scenario
   public var names: Map<String, Array<String>>; // name templates
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
   public var goals: Map<_Goal, GoalInfo>; // scenario goals (link to static map)
+  public var eventObjectActions: _EventObjectActionsList;
 /// unneeded for now
 //  public var onInit: Game -> Void;
 
@@ -61,3 +63,8 @@ typedef LocationInfo = {
   ?alertness: Int, // area alertness
 }
 
+typedef _EventObjectAction = {
+  action: _PlayerAction,
+  func: Game -> Player -> String -> Void,
+}
+typedef _EventObjectActionsList = Map<String, Array<_EventObjectAction>>;
