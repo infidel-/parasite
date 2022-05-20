@@ -528,6 +528,9 @@ class UI
 // add event to the GUI queue
   public function event(ev: _UIEvent)
     {
+      // ignore highlight events on debug
+      if (game.importantMessagesEnabled && ev.type == UIEVENT_HIGHLIGHT)
+        return;
       uiQueue.add(ev);
 
       // no windows open, work on event immediately
@@ -570,6 +573,8 @@ class UI
             {
               state = UISTATE_DEFAULT;
               hud.getMenuButton(ev.state).className += ' highlight-button';
+              // only needed when debugging
+              closeWindow();
             }
           // finish the game
           else if (ev.type == UIEVENT_FINISH)

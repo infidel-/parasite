@@ -925,7 +925,6 @@ class ConsoleGame
             }
 
           game.importantMessagesEnabled = true;
-          game.ui.closeWindow();
         }
 
       // XXX [sa] set area commands
