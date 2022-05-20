@@ -41,8 +41,6 @@ class Goals extends UIWindow
             buf.add(' ' + Const.small(Const.col('gray', '[optional]')));
           buf.add('<br/>');
           buf.add(info.note + '<br/>');
-          if (info.note2 != null)
-            buf.add(info.note2 + '<br/>');
           if (info.noteFunc != null)
             buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');
@@ -60,8 +58,6 @@ class Goals extends UIWindow
 
           buf.add('<b>' + info.name + '</b><br/>');
           buf.add(info.note + '<br/>');
-          if (info.note2 != null)
-            buf.add(info.note2 + '<br/>');
           if (info.noteFunc != null)
             buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');
@@ -82,8 +78,6 @@ class Goals extends UIWindow
 
           buf.add(info.name + '<br/>');
           buf.add(info.note + '<br/>');
-          if (info.note2 != null)
-            buf.add(info.note2 + '<br/>');
           if (info.noteFunc != null)
             buf.add(info.noteFunc(game) + '<br/>');
           buf.add('<br/>');

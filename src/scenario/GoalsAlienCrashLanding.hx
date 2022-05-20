@@ -185,10 +185,13 @@ class GoalsAlienCrashLanding
 
         // store npc id for later use
         game.timeline.setVar('missionTargetID', npc.id);
+        game.timeline.setVar('missionTargetAreaID', area.id);
+      },
 
-        // put location in text
-        var goal = game.goals.getInfo(SCENARIO_ALIEN_MISSION_ABDUCTION);
-        goal.note2 = Const.col('gray', Const.small(
+      noteFunc: function (game) {
+        var areaID = game.timeline.getIntVar('missionTargetAreaID');
+        var area = game.world.get(0).get(areaID);
+        return Const.col('gray', Const.small(
           'Target location: (' + area.x + ',' + area.y + ')'));
       },
 

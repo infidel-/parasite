@@ -397,15 +397,14 @@ typedef GoalInfo = {
   ?isOptional: Bool, // is this goal optional?
   name: String, // goal name
   note: String, // goal note (static part)
-  ?note2: String, // additional goal note (dynamic part, changed ingame)
-  ?noteFunc: Game -> String, // dynamic note function, changed every turn
+  ?noteFunc: Game -> String, // dynamic note function, called on display
 
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion
   ?messageFailure: String, // message on goal failure
 
-  ?onTurn: Game -> Player -> Void, // func to call each turn while this goal is active
-  ?onReceive: Game -> Player -> Void, // func to call on receive
-  ?onComplete: Game -> Player -> Void, // func to call on completion
-  ?onFailure: Game -> Player -> Void, // func to call on failure
+  ?onTurn: Game -> Player -> Void, // called each turn while this goal is active
+  ?onReceive: Game -> Player -> Void, // called on receive
+  ?onComplete: Game -> Player -> Void, // called on completion
+  ?onFailure: Game -> Player -> Void, // called on failure
 }
