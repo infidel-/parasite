@@ -63,12 +63,44 @@ class AreaObject extends _SaveObject
         {
           var area = game.region.get(areaID);
           area.addObject(this);
+//          if (type == 'sewer_hatch')
+//            trace('create entity ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
 /*
-          trace('create entity ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
           if (type == 'paper')
             Const.traceStack();*/
           createEntity();
+//          @:privateAccess entity._body.visible = false;
         }
+    }
+
+// create entity for this object
+  function createEntity()
+    {
+      if (entity != null)
+        return;
+/*
+      if (type == 'sewer_hatch')
+        {
+          trace('new object ' + type + ' ' + id + ': ' +
+            x + ',' + y + ' (' + areaID + ')');
+//          Const.traceStack();
+        }*/
+      entity = new ObjectEntity(this, game, x, y, tile);
+    }
+
+// show object on screen
+  public inline function show()
+    {
+//      trace('object ' + type + ' ' + x + ',' + y + ' show' + ' (' + areaID + ')');
+      createEntity();
+    }
+
+// hide object on screen
+  public inline function hide()
+    {
+ //     trace('object ' + type + ' ' + x + ',' + y + ' hide' + ' (' + areaID + ')');
+      entity.remove();
+      entity = null;
     }
 
 
@@ -96,32 +128,6 @@ class AreaObject extends _SaveObject
     {
       game.managerArea.addObject(this, AREAEVENT_OBJECT_DECAY, turns);
     }
-
-
-// create entity for this object
-  function createEntity()
-    {
-//      Const.traceStack();
-//      trace('new object ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
-      entity = new ObjectEntity(this, game, x, y, tile);
-    }
-
-
-// show object on screen
-  public inline function show()
-    {
-//      trace('object ' + type + ' ' + x + ',' + y + ' show' + ' (' + areaID + ')');
-      createEntity();
-    }
-
-
-// hide object on screen
-  public inline function hide()
-    {
- //     trace('object ' + type + ' ' + x + ',' + y + ' hide' + ' (' + areaID + ')');
-      entity.remove();
-    }
-
 
 // object action
   public function action(a: _PlayerAction)

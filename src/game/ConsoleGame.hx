@@ -211,6 +211,11 @@ class ConsoleGame
 #end
 
       game.updateHUD(); // update HUD state
+      if (game.location == LOCATION_AREA)
+        {
+          game.scene.updateCamera();
+          game.area.updateVisibility();
+        }
     }
 
 
