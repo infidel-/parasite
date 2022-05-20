@@ -508,6 +508,7 @@ fieldset {
 
 .window-timeline-event-note {
   color: var(--text-color-timeline);
+  font-style: italic;
 }
 
 .window-timeline-event-npc-title {
