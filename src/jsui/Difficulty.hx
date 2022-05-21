@@ -147,7 +147,7 @@ class Difficulty extends UIWindow
       id: 'evolution',
       title: 'Evolution',
       notes: [
-        'Gives 4 generic improvements. No limit for maximum improvement level. Host degradation is slower. No limit on total habitats amount.',
+        'Gives 2 generic improvements. No limit for maximum improvement level. Host degradation is slower. No limit on total habitats amount.',
         'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe. Normal host degradation. Finite habitat amount per game.',
         'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe. Fast host degradation. Habitat limit decreased.',
       ]

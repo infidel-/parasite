@@ -261,7 +261,7 @@ class EvolutionManager extends _SaveObject
     {
       var n = 0;
       if (difficulty == EASY)
-        n = 4;
+        n = 2;
       else if (difficulty == NORMAL)
         n = 2;
       else if (difficulty == HARD)
