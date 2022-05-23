@@ -116,6 +116,17 @@ class Difficulty extends UIWindow
         }
       else if (currentChoice.id == 'timeline')
         game.timeline.difficulty = d;
+      else if (currentChoice.id == 'save')
+        {
+          game.player.saveDifficulty = d;
+          if (game.player.saveDifficulty == EASY)
+            game.player.vars.savesLeft = 10;
+          else if (game.player.saveDifficulty == NORMAL)
+            game.player.vars.savesLeft = 3;
+          else if (game.player.saveDifficulty == HARD)
+            game.player.vars.savesLeft = 1;
+          game.save(1);
+        }
 
       game.log('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
@@ -160,6 +171,16 @@ class Difficulty extends UIWindow
         '1-3 clues on each learn attempt. Fast computer research.',
         '1-2 clues on each learn attempt. Normal computer research.',
         '1 clue on each learn attempt. Normal computer research.',
+      ]
+    },
+
+    'save' => {
+      id: 'save',
+      title: 'Saving',
+      notes: [
+        'You can save your game anywhere, up to 10 times per one game.',
+        'You can only save in region mode, 3 times per game.',
+        'You can only save once per game while in region mode.',
       ]
     },
   ];

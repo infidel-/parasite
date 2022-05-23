@@ -10,6 +10,7 @@ class Player extends _SaveObject
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty
+  public var saveDifficulty: _Difficulty; // save difficulty
   public var evolutionManager: EvolutionManager; // main evolution control
 
   // state-independent
@@ -34,6 +35,7 @@ class Player extends _SaveObject
       game = g;
       evolutionManager = new EvolutionManager(this, game);
       difficulty = UNSET;
+      saveDifficulty = UNSET;
 
       vars = {
         inventoryEnabled: false,
@@ -44,6 +46,7 @@ class Player extends _SaveObject
         npcEnabled: false,
         searchEnabled: false,
         habitatsLeft: 1000,
+        savesLeft: -1,
 
         evolutionEnergyPerTurn: 5,
         evolutionEnergyPerTurnMicrohabitat: 4,

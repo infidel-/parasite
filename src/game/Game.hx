@@ -422,6 +422,21 @@ class Game extends _SaveObject
           debug('Not in game.');
           return;
         }
+      if (player.saveDifficulty == UNSET)
+        {
+          ui.event({
+            type: UIEVENT_STATE,
+            state: UISTATE_DIFFICULTY,
+            obj: 'save'
+          });
+          return;
+        }
+      if (player.vars.savesLeft < 1)
+        {
+          log('You cannot save anymore in this game.');
+          return;
+        }
+      player.vars.savesLeft--;
       var o: _SaveGame = {
         game: null,
         version: Version.getVersion(),
@@ -434,7 +449,12 @@ class Game extends _SaveObject
         (slotID < 10 ? '0' : '') + slotID + '.json',
         Json.stringify(o, null, '  '), 'utf8');
 #end
-      log('Game saved to slot ' + slotID + '.');
+      var remaining = player.vars.savesLeft + ' saves';
+      if (player.vars.savesLeft == 0)
+        remaining = 'No saves';
+      else if (player.vars.savesLeft == 1)
+        remaining = 'Last save';
+      log('Game saved to slot ' + slotID + '. ' + remaining + ' remaining.');
     }
 
 // save object (recursively)
@@ -581,6 +601,16 @@ class Game extends _SaveObject
           Reflect.setField(ret, f, fval);
         }
       return ret;
+    }
+
+// check if save exists
+  public function saveExists(slotID: Int): Bool
+    {
+#if electron
+      return Fs.existsSync('save' +
+        (slotID < 10 ? '0' : '') + slotID + '.json');
+#end
+      return false;
     }
 
 // load current game from slot

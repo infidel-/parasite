@@ -12,6 +12,7 @@ package game;
   public var npcEnabled: Bool; // npc spawn enabled?
   public var searchEnabled: Bool; // computer search info enabled?
   public var habitatsLeft: Int; // max total amount of habitats
+  public var savesLeft: Int; // amount of saves left
 
   public var evolutionEnergyPerTurn: Int; // energy spent per turn during evolution
   public var evolutionEnergyPerTurnMicrohabitat: Int; // -- in microhabitat
@@ -37,6 +38,7 @@ package game;
     npcEnabled,
     searchEnabled,
     habitatsLeft,
+    savesLeft,
     evolutionEnergyPerTurn,
     evolutionEnergyPerTurnMicrohabitat,
     organGrowthEnergyPerTurn,
@@ -72,5 +74,6 @@ package game;
       this.losEnabled = losEnabled;
       this.invisibilityEnabled = invisibilityEnabled;
       this.godmodeEnabled = godmodeEnabled;
+      this.savesLeft = savesLeft;
     }
 }

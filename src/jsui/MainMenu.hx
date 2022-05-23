@@ -12,6 +12,8 @@ import game.Game;
 class MainMenu extends UIWindow
 {
   var contents: DivElement;
+  var loadItem: DivElement;
+  var saveItem: DivElement;
 
   public function new(g: Game)
     {
@@ -20,12 +22,12 @@ class MainMenu extends UIWindow
 
       var title = Browser.document.createDivElement();
       title.id = 'window-mainmenu-title';
-      title.innerHTML = 'PARASITE ' + Const.small(Const.col('gray',
+      title.innerHTML = 'PARASITE ' + Const.smallgray(
         'v' + Version.getVersion()
 #if demo
         + ' DEMO'
 #end
-        ));
+      );
       window.appendChild(title);
       contents = Browser.document.createDivElement();
       contents.id = 'window-mainmenu-contents';
@@ -38,7 +40,19 @@ class MainMenu extends UIWindow
         close.style.display = 'block';
         game.ui.canvas.style.visibility = 'visible';
       });
-      addItem('SAVE GAME ' + Const.small(Const.col('gray', '[unavailable]')), function(e) {
+      loadItem = addItem('LOAD GAME', function(e) {
+        if (!game.saveExists(1))
+          return;
+        game.load(1);
+        game.ui.closeWindow();
+        close.style.display = 'block';
+        game.ui.canvas.style.visibility = 'visible';
+      });
+      saveItem = addItem('SAVE GAME', function(e) {
+        if (!game.isStarted || game.isFinished)
+          return;
+        game.save(1);
+        game.ui.closeWindow();
       });
       addItem('OPTIONS', function(e) {
         game.ui.state = UISTATE_OPTIONS;
@@ -80,7 +94,7 @@ class MainMenu extends UIWindow
     }
 
 // add menu item
-  function addItem(label: String, f: Dynamic -> Void)
+  function addItem(label: String, f: Dynamic -> Void): DivElement
     {
       var cont = Browser.document.createDivElement();
       cont.className = 'window-mainmenu-cont';
@@ -91,8 +105,24 @@ class MainMenu extends UIWindow
       item.innerHTML = label;
       cont.appendChild(item);
       item.onclick = f;
+      return item;
     }
 
+  override function update()
+    {
+      saveItem.innerHTML = 'SAVE GAME';
+      if (game.isStarted && !game.isFinished &&
+          game.player.saveDifficulty != UNSET)
+        saveItem.innerHTML += ' ' + Const.smallgray('[' +
+          game.player.vars.savesLeft + ' saves left]');
+
+      if (!game.saveExists(1))
+        loadItem.className = 'window-mainmenu-item-disabled';
+      else loadItem.className = 'window-mainmenu-item';
+      if (!game.isStarted || game.isFinished)
+        saveItem.className = 'window-mainmenu-item-disabled';
+      else saveItem.className = 'window-mainmenu-item';
+    }
 /*
 // add slider to options
   function addSlider(label: String, val: Float, set: Float -> Void,

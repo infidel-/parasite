@@ -599,7 +599,7 @@ fieldset {
 #window-mainmenu {
   border: 30px solid;
   width: 25ch;
-  height: 17em;
+  height: 20em;
   pointer-events: all;
 }
 
@@ -636,12 +636,22 @@ fieldset {
 
 .window-mainmenu-item:hover {
   background-color: #5f818c;
-  color: white;
   font-weight:bold;
 }
 
 .window-mainmenu-item:active {
   color: #879ea3;
+}
+
+.window-mainmenu-item-disabled {
+  background: #3a4f71;
+  color: #5e738787;
+  width: 80%;
+  border-radius: 2px;
+  border: solid 2px #abc4ea;
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 10px;
 }
 
 .slider-contents {
