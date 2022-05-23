@@ -6,7 +6,7 @@ import ai.AI;
 
 class Player extends _SaveObject
 {
-  static var _ignoredFields = [ 'host', ];
+  static var _ignoredFields = [];
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty
@@ -77,10 +77,15 @@ class Player extends _SaveObject
 // called post-loading game
   public function loadPost()
     {
-      if (hostID >= 0)
+      // NOTE: in area mode we rewrite the serialized ai copy replacing it with link
+      // in region mode we use serialized ai
+      if (game.location == LOCATION_AREA)
         {
-          host = game.area.getAIByID(hostID);
-          host.updateMask(Const.FRAME_MASK_CONTROL);
+          if (hostID >= 0)
+            {
+              host = game.area.getAIByID(hostID);
+              host.updateMask(Const.FRAME_MASK_CONTROL);
+            }
         }
       skills.loadPost();
     }
