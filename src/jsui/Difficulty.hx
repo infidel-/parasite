@@ -140,7 +140,7 @@ class Difficulty extends UIWindow
       notes: [
         'Humans call the law slower. You will stop them from doing that when you jump on them.',
         'Fast calling speed. Calls are not interrupted with attaching.',
-        'Same calling rules as normal.',
+        'Same calling rules as normal. No free dog on exiting the sewers.',
       ]
     },
 

@@ -319,8 +319,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // reduce max energy
       var maxEnergy = 0;
-      var shock1 = 0;
-      var shock2 = 0;
+      var shock1 = 0; // control
+      var shock2 = 0; // attach hold
       if (game.group.difficulty == EASY)
         {
           maxEnergy = 50;
