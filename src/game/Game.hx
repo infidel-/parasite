@@ -251,7 +251,8 @@ class Game extends _SaveObject
 // game finish
 // result - win, lose
 // condition - noHost, etc
-  public function finish(result: String, condition: String)
+// if result is win, text is displayed
+  public function finish(result: String, text: String)
     {
       isFinished = true;
       var finishText = '';
@@ -260,16 +261,16 @@ class Game extends _SaveObject
       if (result == 'lose')
         {
           log('You have lost the game.');
-          if (condition == 'noHost')
+          if (text == 'noHost')
             finishText = 'You cannot survive without a host for long.';
-          else if (condition == 'noEnergy')
+          else if (text == 'noEnergy')
             finishText = 'Your energy was completely depleted.';
-          else if (condition == 'noHealth')
+          else if (text == 'noHealth')
             finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
-          else if (condition == 'habitatShock')
+          else if (text == 'habitatShock')
             finishText = 'You have received your final shock from the habitat destruction.';
 #if demo
-          else if (condition == 'demo')
+          else if (text == 'demo')
             finishText = 'Demo finished.';
 #end
 
@@ -280,8 +281,8 @@ class Game extends _SaveObject
         }
       else
         {
-          log('You have won the game!');
-          finishText = 'You have won the game.';
+          log('You have completed the game.');
+          finishText = text;
           scene.sounds.play('game-win', true);
         }
 

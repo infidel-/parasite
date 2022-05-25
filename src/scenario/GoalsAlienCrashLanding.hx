@@ -232,13 +232,13 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'scenario');
+        game.finish('win', 'You have completed your mission.');
       },
 
       onFailure: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
-        },
       },
+    },
 
 
     SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP => {
@@ -256,11 +256,10 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        // TODO mission failed
-        game.finish('win', 'scenario');
-        },
+        game.finish('win', 'You have failed in your original mission.');
       },
-    ];
+    },
+  ];
 /*
 
         // game.timeline.getBoolVar('shipLanded') fly away
