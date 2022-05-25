@@ -585,7 +585,7 @@ class AI extends _SaveObject
 
       // play weapon sound
       if (weapon.sound != null)
-        game.scene.sounds.play(weapon.sound, true);
+        game.scene.sounds.play(weapon.sound, true, true);
 
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({

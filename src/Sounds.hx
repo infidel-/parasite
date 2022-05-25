@@ -224,7 +224,17 @@ class Sounds
     }
 
 // play given sound from the library
-  public function play(key: String, always: Bool)
+// add random delay
+  public function play(key: String, always: Bool, ?canDelay: Bool)
+    {
+      if (canDelay)
+        Browser.window.setTimeout(playNow.bind(key, always),
+          Std.random(100));
+      else playNow(key, always);
+    }
+
+// play given sound from the library
+  function playNow(key: String, always: Bool)
     {
 #if !free
       var res = sounds[key];
@@ -241,9 +251,8 @@ class Sounds
 //          trace('Skipping ' + key);
           return;
         }
-      if (!always)
-        lastPlayedTS[key] = haxe.Timer.stamp();
-      game.debug('Playing sound ' + key);
+      lastPlayedTS[key] = haxe.Timer.stamp();
+      game.debug('Playing sound ' + key + ' (always: ' + always + ')');
       var sound = SoundManager.createSound({
         url: 'sound/' + key + '.mp3',
         volume: game.config.effectsVolume,
