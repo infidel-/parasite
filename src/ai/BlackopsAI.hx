@@ -79,6 +79,14 @@ class BlackopsAI extends HumanAI
           inventory.addID('fullBodyArmor', true);
         }
 
+      if (inventory.clothing.id == 'fullBodyArmor')
+        {
+          var tmp = game.scene.atlas.get('blackops-heavy', isMale);
+          tile = tmp.tile;
+          tileAtlasX = tmp.x;
+          tileAtlasY = tmp.y;
+        }
+
 //      isBackup = false;
 //      isBackupCalled = false;
     }

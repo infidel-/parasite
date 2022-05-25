@@ -208,7 +208,12 @@ class Atlas
       { x: 8, y: 1 },
     ],
     'blackops' => [
+      { x: 3, y: 8 },
+      { x: 4, y: 8 },
+    ],
+    'blackops-heavy' => [
       { x: 0, y: 8 },
+      { x: 2, y: 8 },
     ],
     'security' => [
       { x: 1, y: 8 },
