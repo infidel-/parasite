@@ -96,6 +96,7 @@ class ConsoleGame
             'oa - organ action,<br/>' +
             'snd - play sound, r/restart, ' +
             's - set player stage, ' +
+            'spa - spawn ai' +
             'save - save game, ' +
             'set - set game variable, ' +
             'quit.');
@@ -148,6 +149,10 @@ class ConsoleGame
           // XXX snd <file>
           else if (arr[0] == 'snd')
             playSoundCommand(arr);
+
+          // XXX spa <ai type>
+          else if (arr[0] == 'spa')
+            spawnAICommand(arr);
 
           else setCommand(cmd);
         }
@@ -338,6 +343,27 @@ class ConsoleGame
           return;
         }
       game.log('Set variable [' + key + '] to ' + val + '.');
+    }
+
+// spa <ai type>
+// spa
+  function spawnAICommand(arr: Array<String>)
+    {
+      if (arr.length < 2)
+        {
+          log('spa [ai type] - spawn AI');
+          var buf = new StringBuf();
+          log('spa - show AI types');
+          log('AI types: ' + AreaGame.aiTypes.join(', '));
+          return;
+        }
+      if (game.location != LOCATION_AREA)
+        {
+          log('Not in area.');
+          return;
+        }
+      var type = arr[1];
+      game.area.spawnAI(type, game.playerArea.x, game.playerArea.y);
     }
 
 
@@ -947,9 +973,9 @@ class ConsoleGame
     {
       game.log('stage 1');
       // spawn AI, attach to it and invade
-      var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
+      var ai = game.area.spawnAI('civilian',
+        game.playerArea.x, game.playerArea.y);
       ai.skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
-      game.area.addAI(ai);
       game.playerArea.debugAttachAndInvadeAction(ai);
       game.player.hostControl = 100;
 

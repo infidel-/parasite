@@ -1212,26 +1212,38 @@ class Test {
         }
 
       // spot is empty and invisible to player, spawn ai
-      var ai: AI = null;
-      if (type == 'dog')
-        ai = new DogAI(game, loc.x, loc.y);
-      else if (type == 'civilian')
-        ai = new CivilianAI(game, loc.x, loc.y);
-      else if (type == 'police')
-        ai = new PoliceAI(game, loc.x, loc.y);
-      else if (type == 'soldier')
-        ai = new SoldierAI(game, loc.x, loc.y);
-      else if (type == 'security')
-        ai = new SecurityAI(game, loc.x, loc.y);
-      else if (type == 'agent')
-        ai = new AgentAI(game, loc.x, loc.y);
-      else if (type == 'team')
-        ai = new TeamMemberAI(game, loc.x, loc.y);
-      else throw 'spawnUnseenAI(): AI type [' + type + '] unknown';
-
+      var ai = spawnAI(type, loc.x, loc.y);
       ai.isCommon = isCommon;
-      addAI(ai);
+      return ai;
+    }
 
+// spawn AI (both from command-line and internally)
+  public static var aiTypes = [
+    'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier', 'security (sec)',
+    'agent', 'team',
+  ];
+  public function spawnAI(type: String, x: Int, y: Int)
+    {
+      var ai: AI = null;
+      if (type == 'blackops')
+        ai = new BlackopsAI(game, x, y);
+      else if (type == 'dog')
+        ai = new DogAI(game, x, y);
+      else if (type == 'civilian' || type == 'civ')
+        ai = new CivilianAI(game, x, y);
+      else if (type == 'police' || type == 'cop')
+        ai = new PoliceAI(game, x, y);
+      else if (type == 'soldier')
+        ai = new SoldierAI(game, x, y);
+      else if (type == 'security' || type == 'sec')
+        ai = new SecurityAI(game, x, y);
+      else if (type == 'agent')
+        ai = new AgentAI(game, x, y);
+      else if (type == 'team')
+        ai = new TeamMemberAI(game, x, y);
+      else throw 'spawnAI(): AI type [' + type + '] unknown';
+
+      addAI(ai);
       return ai;
     }
 
