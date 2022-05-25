@@ -76,7 +76,8 @@ class UI
   public function onError(msg: Dynamic, url: String, line: Int, col: Int, err: Dynamic): Bool
     {
       var date = DateTools.format(Date.now(), "%d %b %Y %H:%M:%S");
-      var l = date + ' ' + msg + ', ' + err.stack + ', line ' + line + ', col ' + col + '\n';
+      var l = date + ' v' + Version.getVersion() + ' ' + msg + ', ' +
+        err.stack + ', line ' + line + ', col ' + col + '\n';
       trace(l);
       game.log('An exception has occured and was logged. Please send exceptions.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
       try {
