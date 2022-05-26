@@ -37,6 +37,7 @@ class AreaObject extends _SaveObject
       creationTime = game.turns;
       x = vx;
       y = vy;
+      imageCol = -1;
 
 // will be called by sub-classes
 //      init();
@@ -51,7 +52,6 @@ class AreaObject extends _SaveObject
       isStatic = false;
       tile = null;
       imageRow = Const.ROW_OBJECT;
-      imageCol = -1;
     }
 
 // called after load or creation
