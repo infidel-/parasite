@@ -400,6 +400,9 @@ should limit player options for guiding purposes
               npc.event = event;
               npc.job = job;
               npc.type = type;
+              var tmp = game.scene.atlas.get(type, npc.isMale);
+              npc.tileAtlasX = tmp.x;
+              npc.tileAtlasY = tmp.y;
               var region = game.world.get(0);
 
               // find proper area for this NPC

@@ -209,7 +209,7 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship transported to secret facility',
           next: 'alienShipStudy',
           notes: [
-            'Everything recovered from the scene was successfully transported to %facility1%',
+            'Everything recovered from the scene was successfully transported to %facility1%.',
             'The largest object has received a speficic codename for future reference: %shipCode%.'
             ],
           npc: [ 'agent' => 5 ],

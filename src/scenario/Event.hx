@@ -174,7 +174,7 @@ class Event extends _SaveObject
       game.timeline.update(); // update event numbering
       game.player.log('You have gained a major clue for event ' + num + '.',
         COLOR_TIMELINE);
-      game.player.log(note.text, COLOR_TIMELINE);
+      game.player.log(Const.narrative(note.text), COLOR_TIMELINE);
 
       // event hook
       var idx = -1;

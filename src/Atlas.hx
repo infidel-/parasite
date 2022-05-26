@@ -190,6 +190,9 @@ class Atlas
     }
 
   static var specialsFemale = [
+    'agent' => [
+      { x: 8, y: 0 },
+    ],
     'police' => [
       { x: 0, y: 6 },
       { x: 1, y: 6 },
