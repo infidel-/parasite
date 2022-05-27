@@ -23,10 +23,10 @@ class Atlas
       femaleAtlas = res.grid(Const.TILE_SIZE_CLEAN);
 
       // nullify empty space
-      var maleEmpty = 5;
+      var maleEmpty = 2;
       for (i in 0...maleEmpty)
         maleAtlas[9 - i][maleAtlas[0].length - 1] = null;
-      var femaleEmpty = 8;
+      var femaleEmpty = 0;
       for (i in 0...femaleEmpty)
         femaleAtlas[9 - i][femaleAtlas[0].length - 1] = null;
 /*
@@ -193,6 +193,16 @@ class Atlas
     'agent' => [
       { x: 8, y: 0 },
     ],
+    'blackops' => [
+      { x: 2, y: 6 },
+      { x: 3, y: 6 },
+      { x: 4, y: 6 },
+      { x: 5, y: 6 },
+      { x: 6, y: 6 },
+      { x: 7, y: 6 },
+      { x: 8, y: 6 },
+      { x: 9, y: 6 },
+    ],
     'police' => [
       { x: 0, y: 6 },
       { x: 1, y: 6 },
@@ -213,6 +223,13 @@ class Atlas
     'blackops' => [
       { x: 3, y: 8 },
       { x: 4, y: 8 },
+      { x: 5, y: 8 },
+      { x: 6, y: 8 },
+      { x: 7, y: 8 },
+      { x: 8, y: 8 },
+      { x: 9, y: 8 },
+      { x: 0, y: 9 },
+      { x: 1, y: 9 },
     ],
     'blackops-heavy' => [
       { x: 0, y: 8 },

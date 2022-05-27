@@ -254,6 +254,7 @@ class Sounds
       lastPlayedTS[key] = haxe.Timer.stamp();
       game.debug('Playing sound ' + key + ' (always: ' + always + ')');
       var sound = SoundManager.createSound({
+        id: key,
         url: 'sound/' + key + '.mp3',
         volume: game.config.effectsVolume,
       });
