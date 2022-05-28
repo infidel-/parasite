@@ -29,6 +29,7 @@ class Config
   public var musicVolume: Int;
   public var effectsVolume: Int;
   public var ambientVolume: Int;
+  public var difficulty: Int;
 
   var map: Map<String, String>;
 
@@ -56,6 +57,7 @@ class Config
       repeatDelay = 100;
       windowHeight = 768;
       windowWidth = 1024;
+      difficulty = 0;
 
       map = new Map();
       map['mouseEnabled'] = '1';
@@ -74,6 +76,7 @@ class Config
       map['repeatDelay'] = '' + repeatDelay;
       map['windowHeight'] = '' + windowHeight;
       map['windowWidth'] = '' + windowWidth;
+      map['difficulty'] = '' + difficulty;
 
       game.debug('config load');
 #if electron
@@ -168,6 +171,8 @@ class Config
         windowHeight = Std.parseInt(val);
       else if (key == 'windowWidth')
         windowWidth = Std.parseInt(val);
+      else if (key == 'difficulty')
+        difficulty = Std.parseInt(val);
 
       else
         {

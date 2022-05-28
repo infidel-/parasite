@@ -559,7 +559,17 @@ class UI
           // change UI state (open window)
           if (ev.type == UIEVENT_STATE)
             {
-              if (components[ev.state] != null)
+              // overall difficulty: auto-set
+              if (ev.state == UISTATE_DIFFICULTY &&
+                  game.config.difficulty > 0)
+                {
+                  components[ev.state].setParams(ev.obj);
+                  var win: jsui.Difficulty = cast components[ev.state];
+                  win.action(game.config.difficulty);
+                  return;
+                }
+              // set window params and then open window
+              else if (components[ev.state] != null)
                 components[ev.state].setParams(ev.obj);
               else
                 {

@@ -5,6 +5,8 @@ package jsui;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
+import js.html.SelectElement;
+import js.html.OptionElement;
 import js.html.PointerEvent;
 
 import game.Game;
@@ -62,6 +64,31 @@ class Options extends UIWindow
           game.config.set('fontSize', '' + v, false);
           restartText.style.visibility = 'inherit';
         }, 8, 40, 1, 'int', '');
+      addSelect('Overall difficulty', 'difficulty', [
+          {
+            title: 'Unset',
+            val: '0',
+            isSelected: (game.config.difficulty == 0),
+          },
+          {
+            title: 'Easy',
+            val: '1',
+            isSelected: (game.config.difficulty == 1),
+          },
+          {
+            title: 'Normal',
+            val: '2',
+            isSelected: (game.config.difficulty == 2),
+          },
+          {
+            title: 'Hard',
+            val: '3',
+            isSelected: (game.config.difficulty == 3),
+          },
+        ],
+        function (val: String) {
+          game.config.set('difficulty', val);
+        });
       addCheckbox('Enable fullscreen',
         'fullscreen', game.config.fullscreen, '-55.6%');
 
@@ -91,6 +118,40 @@ class Options extends UIWindow
       restartText.innerHTML = "The changes you've made will require restart.";
       restartText.style.visibility = 'hidden';
       contents.appendChild(restartText);
+    }
+
+// add select to options
+  function addSelect(label: String, id: String, options: Array<{ title: String, val: String, isSelected: Bool }>, set: String -> Void)
+    {
+      var cont = Browser.document.createDivElement();
+      cont.className = 'select-contents';
+      contents.appendChild(cont);
+
+      var title = Browser.document.createLabelElement();
+      title.className = 'select-title';
+      title.innerHTML = label;
+      cont.appendChild(title);
+
+      var el = Browser.document.createSelectElement();
+      el.id = 'option-' + id;
+      el.className = 'select-element';
+      title.appendChild(el);
+      el.onclick = function (e: PointerEvent) {
+        var select: SelectElement = untyped e.target;
+        var op: OptionElement = cast select.options[select.selectedIndex];
+        set(op.value);
+      }
+
+      for (info in options)
+        {
+          var op = Browser.document.createOptionElement();
+          op.className = 'select-element';
+          op.label = info.title;
+          if (info.isSelected)
+            op.selected = true;
+          op.value = info.val;
+          el.appendChild(op);
+        }
     }
 
 // add checkbox to options
@@ -126,7 +187,7 @@ class Options extends UIWindow
 
 // add slider to options
   function addSlider(label: String, val: Float, set: Float -> Void,
-      min: Float, max: Float, step: Float,  roundType: String,
+      min: Float, max: Float, step: Float, roundType: String,
       post: String)
     {
       var cont = Browser.document.createDivElement();

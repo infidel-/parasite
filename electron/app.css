@@ -944,6 +944,23 @@ input[type=checkbox] {
   filter: blur(4px);
 }
 
+.select-contents {
+}
+
+.select-title {
+}
+
+.select-element {
+  margin-left: 8px;
+  width: 49%;
+  padding: 1px 3px 0px 3px;
+  background: #ccdef4c2;
+  border-radius: 6px;
+  color: #303c48;
+  font-family: var(--text-font);
+  font-weight: bold;
+}
+
 .highlight-text {
   animation: 2.5s infinite text-highlight;
 }
