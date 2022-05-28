@@ -59,16 +59,14 @@ class UI
         UISTATE_DIFFICULTY => new Difficulty(game),
 
         UISTATE_GOALS => new Goals(game),
-        UISTATE_INVENTORY => new Inventory(game),
-        UISTATE_SKILLS => new Skills(game),
         UISTATE_LOG => new Log(game),
         UISTATE_TIMELINE => new Timeline(game),
         UISTATE_EVOLUTION => new Evolution(game),
-        UISTATE_ORGANS => new Organs(game),
         UISTATE_BODY => new Body(game),
         UISTATE_FINISH => new Finish(game),
         UISTATE_OPTIONS => new Options(game),
         UISTATE_MAINMENU => new MainMenu(game),
+        UISTATE_SPOON => new Spoon(game),
       ];
     }
 

@@ -304,9 +304,8 @@ class HUD
       var buf = new StringBuf();
       buf.add('Turn: ' + game.turns);
       if (game.location == LOCATION_AREA)
-          buf.add(Const.col('gray',
-              Const.small(' [' + game.playerArea.ap + ']')) + ', at (' +
-            game.playerArea.x + ',' + game.playerArea.y + ')' +
+          buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
+            ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
 #if mydebug
             ' A ' + Math.round(game.area.alertness) +
 #end
@@ -388,6 +387,9 @@ class HUD
             }
         }
 
+      if (game.player.vars.isSpoonGame)
+        buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +
+          Const.col('yellow', 'SPOONED') + '</div>');
       info.innerHTML = buf.toString();
     }
 

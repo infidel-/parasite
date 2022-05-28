@@ -255,6 +255,13 @@ class EvolutionManager extends _SaveObject
       return buf.toString();
     }
 
+// SPOON: give all basic imps
+  public function giveAllBasic()
+    {
+      for (info in EvolutionConst.improvements)
+        if (info.type == TYPE_BASIC)
+          addImprov(info.id);
+    }
 
 // gives out X starting improvements according to difficulty
   public function giveStartingImprovements()

@@ -302,6 +302,15 @@ class Team extends FSM<_TeamState, _TeamFlag>
       area.habitat = null;
       game.region.removeArea(area.habitatAreaID);
       game.scene.region.updateIconsArea(area.x, area.y);
+
+      // SPOON: disable habitat death shock
+      if (game.config.spoonHabitats)
+        {
+          game.message('You sense that the habitat at ' +
+            area.x + ',' + area.y + ' was destroyed.', COLOR_ALERT);
+          return;
+        }
+
       var msg = 'You feel great pain as the habitat at ' +
         area.x + ',' + area.y + ' is destroyed. ';
       if (game.player.vars.habitatsLeft == 1)

@@ -113,6 +113,9 @@ class Difficulty extends UIWindow
           else if (game.player.evolutionManager.difficulty == HARD)
             game.player.vars.habitatsLeft = 5;
           game.player.evolutionManager.giveStartingImprovements();
+          // SPOON: give all basic imps
+          if (game.config.spoonEvolutionBasic)
+            game.player.evolutionManager.giveAllBasic();
         }
       else if (currentChoice.id == 'timeline')
         game.timeline.difficulty = d;

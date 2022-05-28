@@ -4,6 +4,10 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.InputElement;
+import js.html.SelectElement;
+import js.html.OptionElement;
+import js.html.PointerEvent;
 
 import game.Game;
 
@@ -55,6 +59,124 @@ class UIWindow
       text.className = textClassName;
       fieldset.appendChild(text);
       return text;
+    }
+
+// add select to options
+  function addSelect(contents: DivElement, label: String, id: String,
+      options: Array<{ title: String, val: String, isSelected: Bool }>,
+      set: String -> Void)
+    {
+      var cont = Browser.document.createDivElement();
+      cont.className = 'select-contents';
+      contents.appendChild(cont);
+
+      var title = Browser.document.createLabelElement();
+      title.className = 'select-title';
+      title.innerHTML = label;
+      cont.appendChild(title);
+
+      var el = Browser.document.createSelectElement();
+      el.id = 'option-' + id;
+      el.className = 'select-element';
+      title.appendChild(el);
+      el.onclick = function (e: PointerEvent) {
+        var select: SelectElement = untyped e.target;
+        var op: OptionElement = cast select.options[select.selectedIndex];
+        set(op.value);
+      }
+
+      for (info in options)
+        {
+          var op = Browser.document.createOptionElement();
+          op.className = 'select-element';
+          op.label = info.title;
+          if (info.isSelected)
+            op.selected = true;
+          op.value = info.val;
+          el.appendChild(op);
+        }
+    }
+
+// add checkbox to options
+  function addCheckbox(contents: DivElement, label: String, id: String,
+      val: Bool, pos: String): InputElement
+    {
+      var cont = Browser.document.createDivElement();
+      cont.className = 'checkbox-contents';
+      contents.appendChild(cont);
+
+      var title = Browser.document.createLabelElement();
+      title.className = 'checkbox-title';
+      title.innerHTML = label;
+      cont.appendChild(title);
+
+      var cb = Browser.document.createInputElement();
+      cb.id = 'option-' + id;
+      cb.type = 'checkbox';
+      cb.className = 'checkbox-element';
+      cb.checked = val;
+      title.appendChild(cb);
+      cb.onclick = function (e: PointerEvent) {
+        var targetID: String = untyped e.target.id;
+        var el: InputElement = cast game.ui.getElement(targetID);
+        var itemID = targetID.substr(7);
+        game.config.set(itemID, (el.checked ? '1' : '0'), true);
+      };
+
+      var span = Browser.document.createSpanElement();
+      span.className = 'checkbox-span';
+      span.style.right = pos;
+      title.appendChild(span);
+
+      return cb;
+    }
+
+// add slider to options
+  function addSlider(contents: DivElement, label: String, val: Float,
+      set: Float -> Void,
+      min: Float, max: Float, step: Float, roundType: String,
+      post: String)
+    {
+      var cont = Browser.document.createDivElement();
+      cont.className = 'slider-contents';
+      contents.appendChild(cont);
+
+      var title = Browser.document.createDivElement();
+      title.className = 'slider-title';
+      title.innerHTML = label;
+      cont.appendChild(title);
+
+      var value = Browser.document.createDivElement();
+      value.className = 'slider-value';
+      value.innerHTML = roundValue(val, roundType) + post;
+
+      var sliderwrap = Browser.document.createDivElement();
+      sliderwrap.className = 'slider-wrapper';
+      cont.appendChild(sliderwrap);
+      var slider = Browser.document.createInputElement();
+      slider.className = 'slider';
+      slider.type = 'range';
+      slider.min = '' + min;
+      slider.max = '' + max;
+      slider.step = '' + step;
+      slider.value = '' + val;
+      slider.oninput = function (e) {
+        var val = slider.valueAsNumber;
+        value.innerHTML = roundValue(val, roundType) + post;
+        set(val);
+      }
+      sliderwrap.appendChild(slider);
+      cont.appendChild(value);
+    }
+
+  function roundValue(v: Float, t: String): String
+    {
+      if (t == 'int')
+        return '' + Std.int(v);
+      else if (t == 'round')
+        return '' + Const.round(v);
+
+      return '?';
     }
 
 // set window parameters

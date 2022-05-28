@@ -62,6 +62,7 @@ class Player extends _SaveObject
         losEnabled: true,
         invisibilityEnabled: false,
         godmodeEnabled: false,
+        isSpoonGame: game.config.isSpoonMode(),
       };
 
       state = PLR_STATE_PARASITE;

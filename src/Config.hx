@@ -19,6 +19,9 @@ class Config
   public var laptopKeyboard: Bool;
   public var fullscreen: Bool;
   public var shiftLongActions: Bool;
+  // NOTE: new spoon vars will require fixing isSpoonMode() check!
+  public var spoonEvolutionBasic: Bool;
+  public var spoonHabitats: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
@@ -47,6 +50,8 @@ class Config
       laptopKeyboard = false;
       fullscreen = false;
       shiftLongActions = true;
+      spoonEvolutionBasic = false;
+      spoonHabitats = false;
 
       fontSize = 16;
       hudLogLines = 4;
@@ -66,6 +71,8 @@ class Config
       map['laptopKeyboard'] = '0';
       map['shiftLongActions'] = '1';
       map['fullscreen'] = '0';
+      map['spoonEvolutionBasic'] = '0';
+      map['spoonHabitats'] = '0';
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
@@ -128,6 +135,11 @@ class Config
 #end
     }
 
+// check if any spoon vars enabled
+  public function isSpoonMode(): Bool
+    {
+      return (spoonEvolutionBasic || spoonHabitats);
+    }
 
 // set option to value and save config
   public function set(key: String, val: String, ?doSave = false)
@@ -150,6 +162,10 @@ class Config
           fullscreen = (val == '1');
           electron.renderer.IpcRenderer.invoke('fullscreen' + val);
         }
+      else if (key == 'spoonEvolutionBasic')
+        spoonEvolutionBasic = (val == '1');
+      else if (key == 'spoonHabitats')
+        spoonHabitats = (val == '1');
 
       else if (key == 'fontSize')
         {
