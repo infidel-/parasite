@@ -26,6 +26,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
       lastAlertTurn = 0;
       state = TEAM_SEARCH;
       level = Std.int(4 * game.group.priority / 100.0) + 1;
+      if (level > 4)
+        level = 4;
       size = 4 + Std.random(3);
       maxSize = size;
       _distance = game.group.teamStartDistance;

@@ -300,6 +300,11 @@ class AI extends _SaveObject
 // create entity for this AI
   public function createEntity()
     {
+      if (entity != null)
+        {
+          updateEntity();
+          return;
+        }
       // do not change tile on re-creation (on entering area)
       if (tile == null)
         {

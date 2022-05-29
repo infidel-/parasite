@@ -85,6 +85,12 @@ class Player extends _SaveObject
       // in region mode we use serialized ai
       if (game.location == LOCATION_AREA)
         {
+          if (host != null)
+            {
+              host.entity.remove();
+              host.entity = null;
+              host = null;
+            }
           if (hostID >= 0)
             {
               host = game.area.getAIByID(hostID);

@@ -45,6 +45,7 @@ class MainMenu extends UIWindow
           return;
         game.load(1);
         game.ui.closeWindow();
+        game.ui.hud.update();
         close.style.display = 'block';
         game.ui.canvas.style.visibility = 'visible';
       });
@@ -123,40 +124,6 @@ class MainMenu extends UIWindow
         saveItem.className = 'window-mainmenu-item-disabled';
       else saveItem.className = 'window-mainmenu-item';
     }
-/*
-// add slider to options
-  function addSlider(label: String, val: Float, set: Float -> Void,
-      min: Float, max: Float, step: Float,  roundType: String,
-      post: String)
-    {
-      var sliderwrap = Browser.document.createDivElement();
-      sliderwrap.className = 'slider-wrapper';
-      cont.appendChild(sliderwrap);
-      var slider = Browser.document.createInputElement();
-      slider.className = 'slider';
-      slider.type = 'range';
-      slider.min = '' + min;
-      slider.max = '' + max;
-      slider.step = '' + step;
-      slider.value = '' + val;
-      slider.oninput = function (e) {
-        var val = slider.valueAsNumber;
-        value.innerHTML = roundValue(val, roundType) + post;
-        set(val);
-      }
-      sliderwrap.appendChild(slider);
-      cont.appendChild(value);
-    }
-
-  function roundValue(v: Float, t: String): String
-    {
-      if (t == 'int')
-        return '' + Std.int(v);
-      else if (t == 'round')
-        return '' + Const.round(v);
-
-      return '?';
-    }*/
 }
 
 
