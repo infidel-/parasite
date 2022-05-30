@@ -429,6 +429,9 @@ class AreaManager extends _SaveObject
 // event: team backup arrives
   function onArriveTeamBackup(e: AreaEvent)
     {
+      // in rare case, team can get deleted by raiseTeamDistance() while backup is on the way
+      if (game.group.team == null)
+        return;
       log('Backup arrives on scene!');
 
       for (i in 0...2)

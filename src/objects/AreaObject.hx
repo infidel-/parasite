@@ -13,7 +13,7 @@ class AreaObject extends _SaveObject
   static var _ignoredFields = [ 'tile', 'entity' ];
   var game: Game; // game state link
 
-  public var entity: ObjectEntity; // gui entity
+  public var entity(default, null): ObjectEntity; // gui entity
   public var type: String; // object type
   public var name: String; // object name
   public var item: _Item; // linked item

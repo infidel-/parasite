@@ -51,7 +51,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // called after loading
   public function loadPost()
     {
-      if (state == TEAM_AMBUSH)
+      if (state == TEAM_AMBUSH && ambushedHabitatAreaID >= 0)
         ambushedHabitat = game.world.get(0).get(ambushedHabitatAreaID).habitat;
     }
 

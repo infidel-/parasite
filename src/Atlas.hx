@@ -22,13 +22,14 @@ class Atlas
         '.png').toTile();
       femaleAtlas = res.grid(Const.TILE_SIZE_CLEAN);
 
-      // nullify empty space
-      var maleEmpty = 2;
+      // nullify empty space (count on last row from the left!)
+      var maleEmpty = 8;
       for (i in 0...maleEmpty)
         maleAtlas[9 - i][maleAtlas[0].length - 1] = null;
       var femaleEmpty = 0;
       for (i in 0...femaleEmpty)
         femaleAtlas[9 - i][femaleAtlas[0].length - 1] = null;
+
 /*
       for (y in 0...maleAtlas[0].length)
         {
@@ -86,6 +87,16 @@ class Atlas
             }
           femaleSpecialAtlas[key] = tmp;
         }
+
+/*
+      for (y in 0...maleAtlas[0].length)
+        {
+          var sbuf = new StringBuf();
+          for (x in 0...10)
+            sbuf.add(maleAtlas[x][y] == null ? '0' : '1');
+          trace(sbuf.toString());
+        }
+*/
     }
 
 // get AI graphics with given params
