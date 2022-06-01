@@ -37,6 +37,8 @@ class MainElectron
             icon: __dirname + '/favicon.png',
             width: 1056,
             height: 685,
+            minWidth: 600,
+            minHeight: 400,
             fullscreen: isFullscreen,
             webPreferences: {
               nodeIntegration: true,
