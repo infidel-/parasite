@@ -36,15 +36,6 @@ class Group extends _SaveObject
 // get group and team info according to difficulty
   public function getInfo(buf: StringBuf)
     {
-#if mydebug
-      if (!isKnown)
-        buf.add('[DEBUG] Group known count: ' + knownCount + '<br/>');
-      buf.add('[DEBUG] Group priority: ' + Const.round(priority) +
-        ', team timeout: ' + teamTimeout + '<br/>');
-      if (team != null)
-        buf.add('[DEBUG] Team: ' + team + '<br/>');
-#end
-
       // group existence not discovered yet
       if (!isKnown)
         return;

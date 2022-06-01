@@ -213,5 +213,6 @@ class Skills extends _SaveObject
 // called after load or creation
   public function initPost(onLoad: Bool)
     {
+      info = SkillsConst.getInfo(id);
     }
 }
