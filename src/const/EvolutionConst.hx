@@ -12,7 +12,7 @@ class EvolutionConst
   // improvement info
   public static var improvements: Array<ImprovInfo> =
     [
-      // =============== ************ CONCEAL *************** ===================
+      // =============== BASIC ===================
 /*
       { // ***
         type: TYPE_BASIC;
@@ -58,8 +58,6 @@ class EvolutionConst
           { turns: 2 },
           ],
       },
-
-      // =============== ************ PROTECTION *************** ===================
 
       { // ***
         type: TYPE_BASIC,
@@ -159,35 +157,32 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_ENERGY,
-        name: '??Host energy bonus',
-        note: 'Body feature. Grown body feature gives a bonus to maximum host energy',
+        name: 'Adipose tissue layer',
+        note: 'Body feature. Modifications to metabolism allow for adipose tissue outgrowths on the host body for storing energy surplus',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Host maximum energy multiplier: " + l.hostEnergyMod +
-              (l2 != null ? ' => ' + l2.hostEnergyMod : '') +
-              "<br/>Restores energy to maximum on completion";
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Host maximum energy multiplier: " + l.hostEnergyMod +
+            (l2 != null ? ' => ' + l2.hostEnergyMod : '') +
+            "<br/>Restores energy to maximum on completion";
+        },
         organ: {
-          name: '??Host energy bonus',
-          note: 'Gives a bonus to maximum host energy',
+          name: 'Adipose tissue layer',
+          note: 'Additional layer of adipose tissue allows for having energy surplus',
           gp: 180
-          },
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'Normal host subcutaneous tissue',
+          'Increased adipose tissue in abdominal area',
+          'Clusters of adipose tissue on the body',
+          'Enormous protrusions of adipose tissue',
+        ],
         levelParams: [
           { hostEnergyMod: 1.0 },
           { hostEnergyMod: 1.25 },
           { hostEnergyMod: 1.50 },
           { hostEnergyMod: 2.0 },
-          ],
+        ],
       },
-
-      // =============== ************ ATTACK *************** ===================
 
       { // ***
         type: TYPE_BASIC,
@@ -214,9 +209,9 @@ class EvolutionConst
           ],
         levelParams: [
           { strength: 0 },
-          { strength: 1 },
           { strength: 2 },
           { strength: 3 },
+          { strength: 4 },
           ],
       },
 
@@ -488,9 +483,6 @@ class EvolutionConst
           ],
       },
 
-
-      // =============== ************ CONTROL *************** ===================
-
       { // ***
         type: TYPE_BASIC,
         id: IMP_ATTACH,
@@ -566,8 +558,7 @@ class EvolutionConst
           ],
       },
 
-
-      // =============== ************ SPECIAL *************** ===================
+      // =============== SPECIAL ===================
       // improvements from this direction should only appear as a result of a goal progression
 
       { // ***

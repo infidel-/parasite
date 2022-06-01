@@ -723,15 +723,19 @@ class ConsoleGame
       // XXX [ii] improvements info
       else if (cmd.charAt(1) == 'i')
         {
+          var s = new StringBuf();
           for (i in 0...EvolutionConst.improvements.length)
             {
               var imp = EvolutionConst.improvements[i];
 
-              Const.p(i + ': ' + imp.name + ', ' + imp.id +
-                ' (' + imp.type + ')');
+              s.add(i + ': ' + imp.name + ', ' + imp.id +
+                ' (' + ('' + imp.type).substr(5) + ')');
               if (imp.organ != null)
-                Const.p('  organ: ' + imp.organ.name);
+                s.add(' [' + imp.organ.name + ']');
+              if (i < EvolutionConst.improvements.length - 1)
+                s.add(', ');
             }
+          log(Const.small(s.toString()));
         }
     }
 
