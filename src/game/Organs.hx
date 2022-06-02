@@ -427,7 +427,7 @@ class Organs extends _SaveObject
           return false;
         }
 
-      game.log('Your host spits a clot of adhesive slime on ' + ai.getName() +
+      game.log('Your host spits a clot of adhesive mucus on ' + ai.getName() +
         '. ' + ai.getNameCapped() + ' desperately tries to tear it away.');
 
       // set alertness

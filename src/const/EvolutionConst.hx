@@ -318,13 +318,12 @@ class EvolutionConst
         name: '??Paralysis spit',
         note: 'Body feature. Grown body feature gives the host an ability to paralyze an NPC',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Paralysis effect time: " + l.time +
-              (l2 != null ? ' => ' + l2.time : '') +
-              "<br/>Spit range: " + l.range +
-              (l2 != null ? ' => ' + l2.range :  '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Paralysis effect time: " + l.time +
+            (l2 != null ? ' => ' + l2.time : '') +
+            "<br/>Spit range: " + l.range +
+            (l2 != null ? ' => ' + l2.range :  '');
+        },
         organ: {
           name: '??Paralysis spit',
           note: 'Gives the host an ability to paralyze an NPC',
@@ -334,14 +333,14 @@ class EvolutionConst
             type: ACTION_ORGAN,
             name: '??Paralysis spit',
             energy: 5
-            },
           },
+        },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
           '(todo fluff)',
           '(todo fluff)',
-          ],
+        ],
         levelParams: [
           {
             time: 0,
@@ -359,7 +358,7 @@ class EvolutionConst
             time: 5,
             range: 3
           },
-          ],
+        ],
       },
 
       { // ***

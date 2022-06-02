@@ -647,7 +647,7 @@ class AI extends _SaveObject
             type: EFFECT_PARALYSIS,
             points: roll,
             isTimer: true
-            });
+          });
 
           game.playerArea.onDamage(0); // on damage event
         }
@@ -903,8 +903,8 @@ class AI extends _SaveObject
     {
       var free = effects.decrease(EFFECT_SLIME, strength);
       if (free)
-        log('manages to get free of the slime.');
-      else log('desperately tries to get free of the slime.');
+        log('manages to get free of the mucus.');
+      else log('desperately tries to get free of the mucus.');
 
       // set alerted state
       if (state == AI_STATE_IDLE)

@@ -362,7 +362,7 @@ class Body extends UIWindow
             'Increases melee damage<br/>' +
             'Decreases grip efficiency<br/>' +
             'Decreases paralysis efficiency<br/>' +
-            'Increases speed of removing slime<br/>' +
+            'Increases speed of freeing from mucus<br/>' +
             '</span><br/>');
 
           buf.add('<span class=host-attr-title>Constitution ' + game.player.host.constitution + '</span><br/>');
