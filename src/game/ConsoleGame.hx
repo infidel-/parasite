@@ -457,9 +457,9 @@ class ConsoleGame
                   if (imp.organ == null)
                     continue;
 
-                  s.add(i + ': ' + imp.organ.name + ', ' + imp.id + '<br/>');
+                  s.add(i + ': ' + imp.organ.name + ', ' + imp.id + ', ');
                 }
-              log(s.toString());
+              log(Const.small(s.toString()));
               return;
             }
           if (game.player.state != PLR_STATE_HOST)

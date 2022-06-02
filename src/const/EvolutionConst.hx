@@ -34,29 +34,28 @@ class EvolutionConst
         name: 'Decay acceleration',
         note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Bodies will disappear in " + l.turns +
-              (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
-              " turns";
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Bodies will disappear in " + l.turns +
+            (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
+            " turns";
+        },
         organ: {
           name: 'Decay accelerant cysts',
           note: 'Cysts of special bacteria and enzymes spread throughout the body to accelerate its decay after death',
           gp: 75
-          },
+        },
         levelNotes: [
           'Only natural decomposition occurs',
           'Host body takes a lot of time to decompose',
           'Host body takes some time to decompose',
           'Host body takes a little time to decompose',
-          ],
+        ],
         levelParams: [
           { turns: 1000 },
           { turns: 10 },
           { turns: 5 },
           { turns: 2 },
-          ],
+        ],
       },
 
       { // ***
@@ -65,31 +64,30 @@ class EvolutionConst
         name: 'Protective cover',
         note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Host armor bonus (minus to damage): " +
-              l.armor + (l2 != null ? ' => ' + l2.armor : '') +
-              "<br/>" +
-              "AI alertness bonus: " + l.alertness +
-              (l2 != null ? ' => ' + l2.alertness : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Host armor bonus (minus to damage): " +
+            l.armor + (l2 != null ? ' => ' + l2.armor : '') +
+            "<br/>" +
+            "AI alertness bonus: " + l.alertness +
+            (l2 != null ? ' => ' + l2.alertness : '');
+        },
         organ: {
           name: 'Protective cover',
           note: 'Armor-like host body cover providing protection against damage at the expense of appearance',
           gp: 120
-          },
+        },
         levelNotes: [
           'Normal host skin',
           'Pigmented skin layer looks grayish to the eye',
           'Collagen fibres running through the dermis layer',
           'Heavily keratinized and densified skin provides the body with an effective armor',
-          ],
+        ],
         levelParams: [
           { armor: 0, alertness: 0 },
           { armor: 1, alertness: 1 },
           { armor: 2, alertness: 5 },
           { armor: 3, alertness: 10 },
-          ],
+        ],
       },
 
       { // ***
@@ -98,29 +96,28 @@ class EvolutionConst
         name: 'Stem cell reservoirs',
         note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return l.turns +
-              (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
-              " turns to restore 1 health of host and parasite";
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return l.turns +
+            (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
+            " turns to restore 1 health of host and parasite";
+        },
         organ: {
           name: 'Stem cell reservoirs',
           note: 'Microreservoirs of adult stem cells that increase wound recovery speed',
           gp: 100
-          },
+        },
         levelNotes: [
           'Normal wound recovery',
           'Wound recovery speed is slightly increased',
           'Wound recovery speed is moderately increased',
           'Wound recovery speed is greatly increased',
-          ],
+        ],
         levelParams: [
           { turns: 100 },
           { turns: 20 },
           { turns: 10 },
           { turns: 5 },
-          ],
+        ],
       },
 
       { // ***
@@ -129,29 +126,28 @@ class EvolutionConst
         name: 'Antibody generators',
         note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "+" + l.health +
-              (l2 != null ? ' (=> ' + l2.health + ')' : '') +
-              " health to host";
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "+" + l.health +
+            (l2 != null ? ' (=> ' + l2.health + ')' : '') +
+            " health to host";
+        },
         organ: {
           name: 'Antibody generators',
           note: 'Specialized producers of antibodies that increase overall host health',
           gp: 80
-          },
+        },
         levelNotes: [
           'Normal health',
           'Health is slightly increased',
           'Health is moderately increased',
           'Health is greatly increased',
-          ],
+        ],
         levelParams: [
           { health: 0 },
           { health: 1 },
           { health: 2 },
           { health: 3 },
-          ],
+        ],
       },
 
       { // ***
@@ -190,29 +186,28 @@ class EvolutionConst
         name: 'Microvascular networks',
         note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "+" + l.strength +
-              (l2 != null ? ' (=> ' + l2.strength + ')' : '') +
-              " strength to host";
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "+" + l.strength +
+            (l2 != null ? ' (=> ' + l2.strength + ')' : '') +
+            " strength to host";
+        },
         organ: {
           name: 'Microvascular networks',
           note: 'Functional miscrovascular networks throughout the muscle tissue enhance host body strength',
           gp: 120
-          },
+        },
         levelNotes: [
           'Normal host strength',
           'Basic muscle neovascularization',
           'Enhanced muscle neovascularization',
           'Improved neovascularization with additional substrate storage',
-          ],
+        ],
         levelParams: [
           { strength: 0 },
           { strength: 2 },
           { strength: 3 },
           { strength: 4 },
-          ],
+        ],
       },
 
       { // ***
@@ -221,16 +216,15 @@ class EvolutionConst
         name: 'Gastric hypersecretion',
         note: 'Body feature. Recalibration of gastric glands results in increased potency and volume of produced acid, allowing the host to forcibly eject it as a sort of weapon',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Emesis damage: " + l.minDamage + "-" + l.maxDamage +
-              (l2 != null ? ' => ' + l2.minDamage + '-' + l2.maxDamage : '') +
-              "<br/>Emesis range: " + l.range +
-              (l2 != null ? ' => ' + l2.range :  '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Emesis damage: " + l.minDamage + "-" + l.maxDamage +
+            (l2 != null ? ' => ' + l2.minDamage + '-' + l2.maxDamage : '') +
+            "<br/>Emesis range: " + l.range +
+            (l2 != null ? ' => ' + l2.range :  '');
+        },
         organ: {
           name: 'Improved gastric glands',
-          note: 'Recalibrated gastric glands secrete enormous amounts of acid for hyperemesis',
+          note: 'Recalibrated gastric glands secrete enormous amounts of acid for hyperemesis attack',
           gp: 150,
           action: {
             id: 'acidSpit',
@@ -272,33 +266,32 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_SLIME_SPIT,
-        name: '??Slime spit',
-        note: 'Body feature. Grown body feature gives the host an ability to spit slime on an NPC to slow them down',
+        name: 'Mucilaginous fluid',
+        note: 'Body feature. Restructuring of salivary glands and surrounding buccal cavity. Secreted mucosal fluid now exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Slime strength: " + l.strength +
-              (l2 != null ? ' => ' + l2.strength : '') +
-              "<br/>Spit range: " + l.range +
-              (l2 != null ? ' => ' + l2.range :  '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Mucus strength: " + l.strength +
+            (l2 != null ? ' => ' + l2.strength : '') +
+            "<br/>Discharge range: " + l.range +
+            (l2 != null ? ' => ' + l2.range :  '');
+        },
         organ: {
-          name: '??Slime spit',
-          note: 'Gives the host an ability to spit slime on an NPC to slow them down',
+          name: 'Salivary gland extension',
+          note: 'Enhanced salivary glands produce viscous mucosal fluid useful for slowing opponents down',
           gp: 100,
           action: {
             id: 'slimeSpit',
             type: ACTION_ORGAN,
-            name: '??Slime spit',
+            name: 'Salivate',
             energy: 10
-            },
           },
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'Normal host salivary glands',
+          'Enlarged salivary glands and buccal cavity',
+          'Expanded salivary glands and further widened buccal cavity',
+          'Expanded salivary glands, enormous buccal cavity and enhanced cheek muscles',
+        ],
         levelParams: [
           {
             strength: 0,
@@ -316,7 +309,7 @@ class EvolutionConst
             strength: 30,
             range: 3
           },
-          ],
+        ],
       },
 
       { // ***

@@ -96,7 +96,8 @@ class Body extends UIWindow
         (isActive ? '' : '-inactive') + ")'>" +
         organInfo.name + "</span>");
       buf.add(' ');
-      buf.add(organ != null ? organ.level : imp.level);
+      var organLevel = (organ != null ? organ.level : imp.level);
+      buf.add(organLevel);
       if (isActive)
         {
           if (organInfo.hasTimeout && organ.timeout > 0)
@@ -105,13 +106,13 @@ class Body extends UIWindow
       else buf.add(' (' + currentGP + '/' + organInfo.gp + ' gp)');
       buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + organInfo.note + '</p>');
       buf.add('<p class=window-evolution-list-notes>');
-      var levelNote = impInfo.levelNotes[imp.level];
+      var levelNote = impInfo.levelNotes[organLevel];
       if (levelNote.indexOf('fluff') < 0 ||
         levelNote.indexOf('todo') < 0)
       buf.add("<span style='color:var(--text-color-evolution-level-note)'>" + levelNote + '</span><br/>');
       if (impInfo.noteFunc != null)
         buf.add("<span style='color:var(--text-color-evolution-params)'>" +
-          impInfo.noteFunc(impInfo.levelParams[imp.level], null) +
+          impInfo.noteFunc(impInfo.levelParams[organLevel], null) +
           '</span><br/>');
       buf.add('</p>');
       buf.add('</div>');
