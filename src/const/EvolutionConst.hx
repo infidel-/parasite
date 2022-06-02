@@ -218,33 +218,33 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_ACID_SPIT,
-        name: '??Acid spit',
-        note: 'Body feature. Grown body feature gives the host an ability to spit acid on an NPC',
+        name: 'Gastric hypersecretion',
+        note: 'Body feature. Recalibration of gastric glands results in increased potency and volume of produced acid, allowing the host to forcibly eject it as a sort of weapon',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic)
           {
-            return "Spit damage: " + l.minDamage + "-" + l.maxDamage +
+            return "Emesis damage: " + l.minDamage + "-" + l.maxDamage +
               (l2 != null ? ' => ' + l2.minDamage + '-' + l2.maxDamage : '') +
-              "<br/>Spit range: " + l.range +
+              "<br/>Emesis range: " + l.range +
               (l2 != null ? ' => ' + l2.range :  '');
           },
         organ: {
-          name: '??Acid spit',
-          note: 'Gives the host an ability to spit acid on an NPC',
+          name: 'Improved gastric glands',
+          note: 'Recalibrated gastric glands secrete enormous amounts of acid for hyperemesis',
           gp: 150,
           action: {
             id: 'acidSpit',
             type: ACTION_ORGAN,
-            name: '??Acid spit',
+            name: 'Emesis',
             energy: 10
-            },
           },
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'Normal host gastric glands',
+          'Enlarged gastric glands',
+          'Improved gastric glands with specialized abdominal muscles',
+          'Highly-effective gastric glands with additional abdominal and neck muscles',
+        ],
         levelParams: [
           {
             minDamage: 0,
@@ -266,7 +266,7 @@ class EvolutionConst
             maxDamage: 4,
             range: 3
           },
-          ],
+        ],
       },
 
       { // ***
