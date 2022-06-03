@@ -316,7 +316,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_PARALYSIS_SPIT,
         name: 'Neurotoxin projectiles',
-        note: 'Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be fatal',
+        note: 'Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be lethal',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Paralysis effect time: " + l.time +
@@ -326,7 +326,7 @@ class EvolutionConst
         },
         organ: {
           name: 'Neurotoxin cirrus',
-          note: 'The cirrus shoots paralyzing needles into the opponents that can sometimes be fatal',
+          note: 'The cirrus shoots paralyzing needles into the opponents that can sometimes be lethal',
           gp: 100,
           action: {
             id: 'paralysisSpit',
@@ -364,36 +364,35 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PANIC_GAS,
-        name: '??Panic gas',
-        note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
+        name: 'Hallucinogen gas',
+        note: 'Body feature. Host stomach is increased in size and separated into two sections, with one reserved for synthesis and storage of compressed hallucinogen gas that can be released into air if necessary. When inhaled by the opponents, the gas results in fear and anxiety.',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Cloud range: " + l.range +
-              (l2 != null ? ' => ' + l2.range : '') +
-              "<br/>Cloud dissipation time: " + l.timeout +
-              (l2 != null ? ' => ' + l2.timeout : '') +
-              "<br/>Panic effect time: " + l.time +
-              (l2 != null ? ' => ' + l2.time : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Cloud range: " + l.range +
+            (l2 != null ? ' => ' + l2.range : '') +
+            "<br/>Gas release timeout: " + l.timeout +
+            (l2 != null ? ' => ' + l2.timeout : '') +
+            "<br/>Panic effect time: " + l.time +
+            (l2 != null ? ' => ' + l2.time : '');
+        },
         organ: {
-          name: '??Panic gas',
-          note: 'Gives the host an ability to emit a cloud of panic gas that will make NPCs run away',
+          name: 'Gas section',
+          note: 'Hallucinogenic gas section synthesizes and stores the gas. Releasing it causes the opponents in range to panic and run away',
           gp: 150,
           hasTimeout: true,
           action: {
             id: 'panicGas',
             type: ACTION_ORGAN,
-            name: '??Panic gas',
+            name: 'Release gas',
             energy: 10
-            },
           },
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'No modications',
+          'Small gas section with low effective radius and strength',
+          'Moderate gas section with increased effective radius and strength',
+          'Large gas section with high effective radius and strength',
+        ],
         levelParams: [
           {
             range: 0,
@@ -415,7 +414,7 @@ class EvolutionConst
             timeout: 5,
             time: 10
           },
-          ],
+        ],
       },
 
       { // ***
