@@ -315,31 +315,31 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PARALYSIS_SPIT,
-        name: '??Paralysis spit',
-        note: 'Body feature. Grown body feature gives the host an ability to paralyze an NPC',
+        name: 'Neurotoxin projectiles',
+        note: 'Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be fatal',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Paralysis effect time: " + l.time +
             (l2 != null ? ' => ' + l2.time : '') +
-            "<br/>Spit range: " + l.range +
+            "<br/>Needle range: " + l.range +
             (l2 != null ? ' => ' + l2.range :  '');
         },
         organ: {
-          name: '??Paralysis spit',
-          note: 'Gives the host an ability to paralyze an NPC',
+          name: 'Neurotoxin cirrus',
+          note: 'The cirrus shoots paralyzing needles into the opponents that can sometimes be fatal',
           gp: 100,
           action: {
             id: 'paralysisSpit',
             type: ACTION_ORGAN,
-            name: '??Paralysis spit',
+            name: 'Needle',
             energy: 5
           },
         },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
+          'No modications',
+          'Small cirrus and weak neurotoxin resulting in limited effectiveness',
+          'Strengthened cirrus and more potent neurotoxin',
+          'Highly enhanced cirrus and strong neurotoxin',
         ],
         levelParams: [
           {
