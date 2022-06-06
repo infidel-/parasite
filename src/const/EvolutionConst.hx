@@ -524,26 +524,25 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_REINFORCE,
-        name: '??Control efficiency',
-        note: 'Knowledge. Improves base control on reinforce control action',
+        name: 'Regulated neurotransmission',
+        note: 'Knowledge. Correctly timing the neurotransmitters release allows you to more efficiently control and override the actions of your host',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Base reinforce control: " + l.reinforceControlBase +
-              (l2 != null ? ' => ' + l2.reinforceControlBase : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Base reinforce control: " + l.reinforceControlBase +
+            (l2 != null ? ' => ' + l2.reinforceControlBase : '');
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'Natural control reinforcing process',
+          'Increased control reinforcing mechanism',
+          'Improved control reinforcement',
+          'Efficient control reinfocement',
+        ],
         levelParams: [
           { reinforceControlBase: 20 },
           { reinforceControlBase: 25 },
           { reinforceControlBase: 30 },
           { reinforceControlBase: 35 },
-          ],
+        ],
       },
 
       // =============== SPECIAL ===================
