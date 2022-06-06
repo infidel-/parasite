@@ -542,7 +542,7 @@ class Organs extends _SaveObject
       var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
         params.range, false);
 
-      game.log('Your host emits a cloud of paralysis spores.');
+      game.log('Your host emits a cloud of paralysis-inducing spores.');
 
       // set timeout
       var o = get(IMP_PARALYSIS_GAS);
@@ -557,7 +557,8 @@ class Organs extends _SaveObject
             if (!game.area.isWalkable(xx, yy))
               continue;
 
-            if (Const.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
+            if (Const.distanceSquared(xo, yo, xx, yy) >
+                params.range * params.range)
               continue;
 
             game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PARALYSIS_GAS);
@@ -578,7 +579,11 @@ class Organs extends _SaveObject
             }
 
           // AI effect event
-          ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true });
+          ai.onEffect({
+            type: EFFECT_PARALYSIS,
+            points: params.time,
+            isTimer: true
+          });
         }
 
       return true;

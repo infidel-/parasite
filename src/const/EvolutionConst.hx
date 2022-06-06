@@ -420,36 +420,35 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PARALYSIS_GAS,
-        name: '??Paralysis gas',
-        note: 'Body feature. Grown body feature gives the host an ability to emit a cloud of paralytic gas',
+        name: 'Ballistospores',
+        note: 'Body feature. Clusters of sporangiums designed to produce multitudes of fungal-like ballistospores in the surrounding air. When inhaled by the hosts, the ballistospores act as a mild neurotoxin paralyzing them temporarily.',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Cloud range: " + l.range +
-              (l2 != null ? ' => ' + l2.range : '') +
-              "<br/>Cloud dissipation time: " + l.timeout +
-              (l2 != null ? ' => ' + l2.timeout : '') +
-              "<br/>Panic effect time: " + l.time +
-              (l2 != null ? ' => ' + l2.time : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Cloud range: " + l.range +
+            (l2 != null ? ' => ' + l2.range : '') +
+            "<br/>Gas release time: " + l.timeout +
+            (l2 != null ? ' => ' + l2.timeout : '') +
+            "<br/>Panic effect time: " + l.time +
+            (l2 != null ? ' => ' + l2.time : '');
+        },
         organ: {
-          name: '??Paralysis gas',
-          note: 'Gives the host an ability to emit a cloud of paralytic gas',
+          name: 'Sporangium',
+          note: 'Releases a cloud of ballistospores which paralyze the opponents for a limited amount of time',
           gp: 180,
           hasTimeout: true,
           action: {
             id: 'paralysisGas',
             type: ACTION_ORGAN,
-            name: '??Paralysis gas',
+            name: 'Emit spores',
             energy: 12
-            },
           },
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'No modications',
+          'Low amount of emitter organs with limited range and repeatability',
+          'Medium amount of emitters with increased range and time between emissions',
+          'High amount of efficient emitters that have a wider range. Spores have faster effect',
+        ],
         levelParams: [
           {
             range: 0,
@@ -471,7 +470,7 @@ class EvolutionConst
             timeout: 5,
             time: 10
           },
-          ],
+        ],
       },
 
       { // ***
