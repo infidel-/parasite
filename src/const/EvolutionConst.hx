@@ -476,51 +476,49 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_ATTACH,
-        name: '??Attach efficiency',
-        note: 'Knowledge. Improves base grip on attach to host',
+        name: 'Sudden leap',
+        note: 'Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows you to gain an initial advantage when attaching to the host',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Base attach grip: " + l.attachHoldBase +
-              (l2 != null ? ' => ' + l2.attachHoldBase : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Base attach grip: " + l.attachHoldBase +
+            (l2 != null ? ' => ' + l2.attachHoldBase : '');
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'Natural attaching method',
+          'Small gains in grip',
+          'Medium gains due to well-researched procedure',
+          'The initial attach action is fast and precise',
+        ],
         levelParams: [
           { attachHoldBase: 10 },
           { attachHoldBase: 15 },
           { attachHoldBase: 20 },
           { attachHoldBase: 25 },
-          ],
+        ],
       },
 
       { // ***
         type: TYPE_BASIC,
         id: IMP_HARDEN_GRIP,
-        name: '??Hold efficiency',
-        note: 'Knowledge. Improves base grip on harden grip action',
+        name: 'Constriction',
+        note: 'Knowledge. Advanced constriction technique allows you to rapidly subdue the host before the invasion process',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Base harden grip: " + l.attachHoldBase +
-              (l2 != null ? ' => ' + l2.attachHoldBase : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Base harden grip: " + l.attachHoldBase +
+            (l2 != null ? ' => ' + l2.attachHoldBase : '');
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          'Natural grip hardening process',
+          'Minor constriction bonus to the grip',
+          'Significant bonus to the grip',
+          'Superb constriction bonus',
+        ],
         levelParams: [
           { attachHoldBase: 20 },
           { attachHoldBase: 25 },
           { attachHoldBase: 30 },
           { attachHoldBase: 35 },
-          ],
+        ],
       },
 
       { // ***
