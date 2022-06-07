@@ -477,7 +477,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_ATTACH,
         name: 'Sudden leap',
-        note: 'Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows you to gain an initial advantage when attaching to the host',
+        note: 'Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows the parasite to gain initial advantage when attaching to it',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base attach grip: " + l.attachHoldBase +
@@ -525,7 +525,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_REINFORCE,
         name: 'Regulated neurotransmission',
-        note: 'Knowledge. Correctly timing the neurotransmitters release allows you to more efficiently control and override the actions of your host',
+        note: 'Knowledge. Correctly timing the neurotransmitters release allows the parasite to more efficiently control and override the actions of the host',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base reinforce control: " + l.reinforceControlBase +
@@ -546,34 +546,33 @@ class EvolutionConst
       },
 
       // =============== SPECIAL ===================
-      // improvements from this direction should only appear as a result of a goal progression
+      // improvements of this type should only appear as a result of a goal progression
 
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_BRAIN_PROBE,
         name: 'Brain probe',
-        note: 'Knowledge. Allows probing host brain to learn its contents',
+        note: 'Knowledge. Establishing an intense temporary connection to the host brain allows probing it to partially learn its contents',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' => ' + l2.humanSociety : '') +
-              "<br/>Base host energy cost: " + l.hostEnergyBase + (l2 != null ? ' => ' + l2.hostEnergyBase : '') +
-              "<br/>Base host health cost: " + l.hostHealthBase + (l2 != null ? ' => ' + l2.hostHealthBase: '') +
-              "<br/>Host skills learning multiplier: " + l.hostSkillsMod + (l2 != null ? ' => ' + l2.hostSkillsMod : '') + '<br/>';
-            if (l.hostAttrsMod == 0)
-              s += "Host attributes unknown ";
-            if (l2 != null && l2.hostAttrsMod == 1)
-              s += "=> Probe shows host attributes";
-            else if (l.hostAttrsMod == 1)
-              s += "Probe shows host attributes";
-            return s;
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' => ' + l2.humanSociety : '') +
+            "<br/>Base host energy cost: " + l.hostEnergyBase + (l2 != null ? ' => ' + l2.hostEnergyBase : '') +
+            "<br/>Base host health cost: " + l.hostHealthBase + (l2 != null ? ' => ' + l2.hostHealthBase: '') +
+            "<br/>Host skills learning multiplier: " + l.hostSkillsMod + (l2 != null ? ' => ' + l2.hostSkillsMod : '') + '<br/>';
+          if (l.hostAttrsMod == 0)
+            s += "Host attributes unknown ";
+          if (l2 != null && l2.hostAttrsMod == 1)
+            s += "=> Probe shows host attributes";
+          else if (l.hostAttrsMod == 1)
+            s += "Probe shows host attributes";
+          return s;
+        },
         levelNotes: [
           'Cannot probe host brain',
           'Access with severe problems (basic knowledge)',
           'Limited access with some problems (extensive knowledge and basic skills)',
           'Full access',
-          ],
+        ],
         levelParams: [
           {
             humanSociety: 0,
@@ -607,31 +606,29 @@ class EvolutionConst
             hostSkillsMod: 0.75,
             hostAttrsMod: 1, // can access attributes and traits from level 3
           },
-          ],
+        ],
         action: {
           id: 'probeBrain',
           type: ACTION_AREA,
           name: 'Probe Brain',
-          energyFunc: function (player)
-            {
-              if (player.host == null)
-                return -1;
-              var level = player.evolutionManager.getLevel(IMP_BRAIN_PROBE);
-              if (level == 0)
-                return -1;
-              var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
-              return params.hostEnergyBase + player.host.psyche;
-            },
+          energyFunc: function (player) {
+            if (player.host == null)
+              return -1;
+            var level = player.evolutionManager.getLevel(IMP_BRAIN_PROBE);
+            if (level == 0)
+              return -1;
+            var params = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
+            return params.hostEnergyBase + player.host.psyche;
           },
-        onUpgrade: function (level, game, player)
-          {
-            // complete goals
-            if (level == 1)
-              game.goals.complete(GOAL_EVOLVE_PROBE);
+        },
+        onUpgrade: function (level, game, player) {
+          // complete goals
+          if (level == 1)
+            game.goals.complete(GOAL_EVOLVE_PROBE);
 
-            else if (level == 2)
-              game.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
-          },
+          else if (level == 2)
+            game.goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
+        },
       },
 
       { // ***
@@ -640,84 +637,79 @@ class EvolutionConst
         name: 'Camouflage layer',
         note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "AI alertness multiplier: " + l.alertness +
-              (l2 != null ? ' => ' + l2.alertness : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "AI alertness multiplier: " + l.alertness +
+            (l2 != null ? ' => ' + l2.alertness : '');
+        },
         organ: {
           name: 'Camouflage layer',
           note: 'Self-regenerating camouflage layer that covers parasite body changing its appearance',
           gp: 100,
-          onGrow: function(game, player)
-            {
-              // complete goals
-              game.goals.complete(GOAL_GROW_CAMO);
-            }
-          },
+          onGrow: function(game, player) {
+            // complete goals
+            game.goals.complete(GOAL_GROW_CAMO);
+          }
+        },
         levelNotes: [
-          'A perfectly visible huge purple blob on head and upper body of the host',
+          'A perfectly visible huge purple blob on the head and upper body of the host',
           'Streaks of purple running through the partly grown camouflage layer',
           'Parasite body is mostly covered by camouflage layer',
           'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
-          ],
+        ],
         levelParams: [
           { alertness: 3 },
           { alertness: 2 },
           { alertness: 1 },
           { alertness: 0.5 },
-          ],
-        onUpgrade: function(level, game, player)
-          {
-            // complete goals
-            if (level == 1)
-              game.goals.complete(GOAL_EVOLVE_CAMO);
-          }
+        ],
+        onUpgrade: function(level, game, player) {
+          // complete goals
+          if (level == 1)
+            game.goals.complete(GOAL_EVOLVE_CAMO);
+        }
       },
 
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_DOPAMINE,
         name: 'Dopamine regulation',
-        note: 'Knowledge. Removes the need to reinforce control of the host.',
+        note: 'Knowledge. Direct control of the host\'s adrenal glands alows regulating the amount of produced dopamine which in turn removes the need to reinforce control of the host.',
         maxLevel: 1,
         levelNotes: [
-          '(fluff)',
-          '(fluff)',
-          '(fluff)',
-          '(fluff)',
-          ],
+          'No regulation',
+          'Direct control',
+          '',
+          '',
+        ],
         levelParams: [
           {},
           {},
           {},
           {},
-          ],
-        onUpgrade: function(level, game, player)
-          {
-            // complete goals
-            if (level == 1)
-              game.goals.complete(GOAL_EVOLVE_DOPAMINE);
-          }
+        ],
+        onUpgrade: function(level, game, player) {
+          // complete goals
+          if (level == 1)
+            game.goals.complete(GOAL_EVOLVE_DOPAMINE);
+        }
       },
 
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
-        note: 'Knowledge. Gives the player an ability to build microhabitats.',
+        note: 'Knowledge. Better understanding of the urban sewage system gives the parasite an ability to build microhabitats.',
         maxLevel: 3,
-        noteFunc: function (l: Dynamic, l2: Dynamic)
-          {
-            return "Maximum number of microhabitats: " + l.numHabitats +
-              (l2 != null ? ' => ' + l2.numHabitats : '');
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Maximum number of microhabitats: " + l.numHabitats +
+            (l2 != null ? ' => ' + l2.numHabitats : '');
+        },
         levelNotes: [
           '(todo fluff)',
           '(todo fluff)',
           '(todo fluff)',
           '(todo fluff)',
-          ],
+        ],
         levelParams: [
           {
             numHabitats: 0,
@@ -731,20 +723,19 @@ class EvolutionConst
           {
             numHabitats: 4,
           },
-          ],
-        onUpgrade: function(level, game, player)
-          {
-            // complete goals
-            if (level == 1)
-              game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
-          }
+        ],
+        onUpgrade: function(level, game, player) {
+          // complete goals
+          if (level == 1)
+            game.goals.complete(GOAL_EVOLVE_MICROHABITAT);
+        }
       },
 
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
-        note: 'Habitat growth. Gives the player an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
+        note: 'Habitat growth. Gives the parasite an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return
@@ -763,11 +754,11 @@ class EvolutionConst
             (l2 != null ? ' => +' + l2.parasiteHealthRestored : '');
         },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          '',
+          '',
+          '',
+          '',
+        ],
         organ: {
           name: 'Biomineral mold',
           note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed!',
@@ -778,19 +769,17 @@ class EvolutionConst
             type: ACTION_ORGAN,
             name: 'Produce biomineral formation',
             energy: 0
-            },
-          onAction: function(game, player)
-            {
-              // only in habitat
-              if (!game.area.isHabitat)
-                {
-                  game.log('This action only works in habitat.', COLOR_HINT);
-                  return false;
-                }
-
-              return game.area.habitat.putObject(IMP_BIOMINERAL);
-            }
           },
+          onAction: function(game, player) {
+            // only in habitat
+            if (!game.area.isHabitat)
+              {
+                game.log('This action only works in habitat.', COLOR_HINT);
+                return false;
+              }
+            return game.area.habitat.putObject(IMP_BIOMINERAL);
+          }
+        },
 /*
   evolution cost:
   base 10pt/turn + 10/20/25 from biomineral
@@ -836,17 +825,17 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_ASSIMILATION,
         name: 'Assimilation cavity',
-        note: 'Habitat growth. Gives the player an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
+        note: 'Habitat growth. Gives the parasite an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
         maxLevel: 1,
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          '',
+          '',
+          '',
+          '',
+        ],
         organ: {
           name: 'Assimilation mold',
-          note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed.',
+          note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed!',
           gp: 150,
           isMold: true,
           action: {
@@ -854,28 +843,23 @@ class EvolutionConst
             type: ACTION_ORGAN,
             name: 'Form assimilation cavity',
             energy: 0
-            },
-          onAction: function(game, player): Bool
-            {
-              // only in habitat
-              if (!game.area.isHabitat)
-                {
-                  game.log('This action only works in habitat.', COLOR_HINT);
-                  return false;
-                }
+          },
+          onAction: function(game, player): Bool {
+            // only in habitat
+            if (!game.area.isHabitat)
+              {
+                game.log('This action only works in habitat.', COLOR_HINT);
+                return false;
+              }
 
-              return game.area.habitat.putObject(IMP_ASSIMILATION);
-            }
-          },
+            return game.area.habitat.putObject(IMP_ASSIMILATION);
+          }
+        },
         levelParams: [
-          {
-          },
-          {
-          },
-          {
-          },
-          {
-          },
+          {},
+          {},
+          {},
+          {},
         ],
       },
 
@@ -889,11 +873,11 @@ class EvolutionConst
           'Unavailable',
           'Watcher will warn about the ambush',
           'Watcher will attract the ambush',
-          '(todo fluff)',
-          ],
+          '',
+        ],
         organ: {
           name: 'Watcher mold',
-          note: 'Mold for a watcher. You can only grow that in a habitat. Host inventory will be destroyed when it becomes the watcher.',
+          note: 'Mold for a watcher. You can only grow that in a habitat. Host inventory will be destroyed when it becomes the watcher!',
           gp: 150,
           isMold: true,
           action: {
@@ -901,28 +885,22 @@ class EvolutionConst
             type: ACTION_ORGAN,
             name: 'Form watcher',
             energy: 0
-            },
-          onAction: function(game, player): Bool
-            {
-              // only in habitat
-              if (!game.area.isHabitat)
-                {
-                  game.log('This action only works in habitat.', COLOR_HINT);
-                  return false;
-                }
-
-              return game.area.habitat.putObject(IMP_WATCHER);
-            }
           },
+          onAction: function(game, player): Bool {
+            // only in habitat
+            if (!game.area.isHabitat)
+              {
+                game.log('This action only works in habitat.', COLOR_HINT);
+                return false;
+              }
+            return game.area.habitat.putObject(IMP_WATCHER);
+          }
+        },
         levelParams: [
-          {
-          },
-          {
-          },
-          {
-          },
-          {
-          },
+          {},
+          {},
+          {},
+          {},
         ],
       },
 /*
