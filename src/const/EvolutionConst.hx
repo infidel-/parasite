@@ -283,7 +283,7 @@ class EvolutionConst
             id: 'slimeSpit',
             type: ACTION_ORGAN,
             name: 'Salivate',
-            energy: 10
+            energy: 5
           },
         },
         levelNotes: [
@@ -836,7 +836,7 @@ class EvolutionConst
         organ: {
           name: 'Assimilation mold',
           note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed!',
-          gp: 150,
+          gp: 120,
           isMold: true,
           action: {
             id: 'formAssimilation',
@@ -878,7 +878,7 @@ class EvolutionConst
         organ: {
           name: 'Watcher mold',
           note: 'Mold for a watcher. You can only grow that in a habitat. Host inventory will be destroyed when it becomes the watcher!',
-          gp: 150,
+          gp: 120,
           isMold: true,
           action: {
             id: 'formWatcher',
