@@ -230,7 +230,7 @@ class EvolutionConst
             id: 'acidSpit',
             type: ACTION_ORGAN,
             name: 'Emesis',
-            energy: 10
+            energy: 5
           },
         },
         levelNotes: [
@@ -247,17 +247,17 @@ class EvolutionConst
           },
           {
             minDamage: 1,
-            maxDamage: 2,
+            maxDamage: 6,
             range: 1
           },
           {
             minDamage: 1,
-            maxDamage: 3,
+            maxDamage: 8,
             range: 2
           },
           {
             minDamage: 1,
-            maxDamage: 4,
+            maxDamage: 10,
             range: 3
           },
         ],

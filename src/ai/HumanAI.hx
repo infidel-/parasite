@@ -29,6 +29,8 @@ class HumanAI extends AI
       intellect = 4 + Std.random(4);
       psyche = 4 + Std.random(4);
 
+      // MATH: health 8-16 (~12), energy 130-210 (~170)
+
       // common stuff for all humans
       if (Std.random(100) < 20)
         {
