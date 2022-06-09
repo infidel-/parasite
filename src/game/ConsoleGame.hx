@@ -363,7 +363,12 @@ class ConsoleGame
           return;
         }
       var type = arr[1];
-      game.area.spawnAI(type, game.playerArea.x, game.playerArea.y);
+      try {
+        game.area.spawnAI(type, game.playerArea.x, game.playerArea.y);
+      } catch (e: Dynamic)
+        {
+          log(e);
+        }
     }
 
 
@@ -447,9 +452,9 @@ class ConsoleGame
       // XXX [ao10] add organ X
       else if (cmd.charAt(1) == 'o')
         {
-          if (arr.length < 2)
+          if (cmd == 'ao')
             {
-              log('Usage: ao [index]');
+              log('Usage: ao[index]');
               var s = new StringBuf();
               for (i in 0...EvolutionConst.improvements.length)
                 {
@@ -465,7 +470,7 @@ class ConsoleGame
           if (game.player.state != PLR_STATE_HOST)
             return;
 
-          var idx = Std.parseInt(cmd.substr(2));
+          var idx = Std.parseInt(StringTools.trim(cmd.substr(2)));
           var imp = EvolutionConst.improvements[idx];
           if (imp == null)
             {
@@ -473,7 +478,7 @@ class ConsoleGame
               return;
             }
 
-          game.player.evolutionManager.addImprov(imp.id, 3);
+          game.player.evolutionManager.addImprov(imp.id, imp.maxLevel);
           game.player.host.organs.action('set.' + imp.id);
           game.player.host.organs.debugCompleteCurrent();
         }

@@ -254,5 +254,12 @@ class ItemsConst
       type: 'junk',
       unknown: 'small container',
     },
-    ];
+    {
+      id: 'nutrients',
+      name: 'nutrients',
+      type: 'nutrients',
+      unknown: 'uneven dark-red object',
+      isKnown: true,
+    },
+  ];
 }

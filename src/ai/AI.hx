@@ -1075,7 +1075,10 @@ class AI extends _SaveObject
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);
       if (organ != null)
-        o.setDecay(organ.params.turns);
+        {
+          o.setDecay(organ.params.turns);
+          o.isDecayAccel = true;
+        }
 
       o.organPoints = organs.getPoints();
       o.inventory = inventory; // copy inventory

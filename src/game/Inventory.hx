@@ -63,7 +63,7 @@ class Inventory extends _SaveObject
             });
 
           // can do stuff when item is known
-          if (game.player.knowsItem(item.id))
+          else
             {
               // read a readable
               if (item.info.type == 'readable')
@@ -84,6 +84,16 @@ class Inventory extends _SaveObject
                   name: 'Use ' +
                     Const.col('inventory-item', itemName) + ' to search',
                   energy: 10,
+                  obj: item
+                });
+
+              // eat nutrients
+              else if (item.info.type == 'nutrients')
+                tmp.push({
+                  id: 'use.' + item.id,
+                  type: ACTION_INVENTORY,
+                  name: 'Consume ' + Const.col('inventory-item', itemName),
+                  energy: 0,
                   obj: item
                 });
             }
@@ -124,6 +134,10 @@ class Inventory extends _SaveObject
       else if (actionID == 'drop')
         dropAction(item);
 
+      // generic use item
+      else if (actionID == 'use')
+        ret = useAction(item);
+
       // if action was completed, end turn, etc
       if (ret)
         {
@@ -138,6 +152,17 @@ class Inventory extends _SaveObject
         }
     }
 
+// ACTION: generic use item
+  function useAction(item: _Item): Bool
+    {
+      if (item.info.type == 'nutrients')
+        {
+          game.log('Your host gnaws the delicious nutrients recovering health and energy.');
+          game.player.host.health += 10;
+          game.player.host.energy += 50;
+        }
+      return true;
+    }
 
 // ACTION: read item
   function readAction(item: _Item)

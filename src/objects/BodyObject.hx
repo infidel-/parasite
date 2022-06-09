@@ -12,6 +12,7 @@ class BodyObject extends AreaObject
   public var wasSeen: Bool; // was this body seen by someone already? (limit for call law events)
   public var isSearched: Bool; // is this body searched?
   public var isHumanBody: Bool; // is this a human body?
+  public var isDecayAccel: Bool; // is this body with decay acceleration?
   public var organPoints: Int; // amount of organs on this body
   var parentType: String;
 
@@ -33,6 +34,7 @@ class BodyObject extends AreaObject
       wasSeen = false;
       isSearched = false;
       organPoints = 0;
+      isDecayAccel = false;
     }
 
 // called after load or creation
@@ -123,6 +125,7 @@ class BodyObject extends AreaObject
 
 
 // TURN: despawn bodies and generate area events
+// NOTE: despawn != decay
   public override function turn()
     {
       // not enough time has passed
@@ -133,9 +136,18 @@ class BodyObject extends AreaObject
       // habitat bodies are not discovered
       if (!game.area.isHabitat)
         game.managerRegion.onBodyDiscovered(game.area, organPoints);
-//      else game.log("Body decays.");
 
       game.area.removeObject(this);
+    }
+
+  public override function onDecay()
+    {
+      if (isDecayAccel)
+        {
+          var o = new Nutrient(game, game.area.id, x, y);
+          game.area.addObject(o);
+          game.log("The body decays fast leaving nutrients behind.");
+        }
     }
 
 

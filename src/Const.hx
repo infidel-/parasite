@@ -73,6 +73,7 @@ class Const
   public static var FRAME_PICKUP = 4;
   public static var FRAME_HUMAN_BODY = 5;
   public static var FRAME_DOG_BODY = 6;
+  public static var FRAME_NUTRIENT = 7;
 
   // effect row frames
   public static var FRAME_PANIC_GAS = 0;

@@ -3,6 +3,7 @@
 package game;
 
 import ai.AI;
+import const.*;
 
 class Player extends _SaveObject
 {
@@ -219,7 +220,8 @@ class Player extends _SaveObject
 // does player know about this item?
   public inline function knowsItem(id: String): Bool
     {
-      return (Lambda.has(knownItems, id));
+      return (ItemsConst.getInfo(id).isKnown ||
+        Lambda.has(knownItems, id));
     }
 
 

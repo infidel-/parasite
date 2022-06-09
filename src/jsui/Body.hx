@@ -266,7 +266,7 @@ class Body extends UIWindow
           var action = Browser.document.createDivElement();
           action.className = 'actions-item';
           action.innerHTML = 'C-' + n + ': ' + act.name +
-            (act.energy > 0 ? ' (' + act.energy + ' energy)' : '');
+            (act.energy > 0 ? ' ' + Const.smallgray('(' + act.energy + ' energy)') : '');
           n++;
           action.onclick = function (e) {
             game.player.host.inventory.action(act);

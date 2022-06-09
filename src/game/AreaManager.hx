@@ -467,8 +467,10 @@ class AreaManager extends _SaveObject
 
 
 // event: object decay
+// NOTE: despawn != decay
   function onObjectDecay(o: AreaObject)
     {
+      o.onDecay();
       area.removeObject(o);
     }
 

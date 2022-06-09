@@ -145,6 +145,10 @@ class AreaObject extends _SaveObject
   public dynamic function updateActionList()
     {}
 
+// dynamic: called when the object decays by timer
+  public dynamic function onDecay()
+    {}
+
 // dynamic: object action callback
 // returns true on successful action
   public dynamic function onAction(id: String): Bool

@@ -52,6 +52,7 @@ class PlayerArea extends _SaveObject
       knownObjects.add('body');
       knownObjects.add('pickup');
       knownObjects.add('habitat');
+      knownObjects.add('nutrients');
       entity = new PlayerEntity(game, x, y);
     }
 

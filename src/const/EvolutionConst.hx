@@ -32,7 +32,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_DECAY_ACCEL,
         name: 'Decay acceleration',
-        note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death',
+        note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death. Moreover, the decomposition produces highly nutritional residue',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Bodies will disappear in " + l.turns +
@@ -41,8 +41,8 @@ class EvolutionConst
         },
         organ: {
           name: 'Decay accelerant cysts',
-          note: 'Cysts of special bacteria and enzymes spread throughout the body to accelerate its decay after death',
-          gp: 75
+          note: 'Cysts of special bacteria and enzymes spread throughout the body to accelerate its decay after death and transform it into a dry nutritional residue',
+          gp: 50
         },
         levelNotes: [
           'Only natural decomposition occurs',
@@ -552,7 +552,7 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_BRAIN_PROBE,
         name: 'Brain probe',
-        note: 'Knowledge. Establishing an intense temporary connection to the host brain allows probing it to partially learn its contents',
+        note: 'Knowledge. Temporarily joining with the host consciousness allows to partially learn its contents',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' => ' + l2.humanSociety : '') +

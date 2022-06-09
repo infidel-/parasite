@@ -6,6 +6,7 @@ typedef _ItemInfo =
 {
   var id: String; // item id
   var type: String; // item type
+  @:optional var isKnown: Bool; // always known
   @:optional var name: String; // item name
   @:optional var names: Array<String>; // item names (one is picked on item generation)
   var unknown: String; // item name when it's unknown
