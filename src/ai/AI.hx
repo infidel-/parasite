@@ -446,6 +446,8 @@ class AI extends _SaveObject
       // paralysis state
       if (effects.has(EFFECT_PARALYSIS))
         alertFrame = Const.FRAME_PARALYSIS;
+      else if (effects.has(EFFECT_SLIME))
+        alertFrame = Const.FRAME_SLIME;
 
       entity.setAlert(alertFrame);
     }
