@@ -302,6 +302,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // cleanup habitat links
       area.hasHabitat = false;
       area.habitat = null;
+      ambushedHabitat = null;
+      ambushedHabitatAreaID = -1;
       game.region.removeArea(area.habitatAreaID);
       game.scene.region.updateIconsArea(area.x, area.y);
 
