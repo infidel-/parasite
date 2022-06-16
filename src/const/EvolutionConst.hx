@@ -827,6 +827,10 @@ class EvolutionConst
         name: 'Assimilation cavity',
         note: 'Habitat growth. Gives the parasite an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
         maxLevel: 1,
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return
+            "Assimilated hosts have 2 more body features<br/>";
+        },
         levelNotes: [
           '',
           '',
@@ -851,7 +855,6 @@ class EvolutionConst
                 game.log('This action only works in habitat.', COLOR_HINT);
                 return false;
               }
-
             return game.area.habitat.putObject(IMP_ASSIMILATION);
           }
         },

@@ -70,7 +70,8 @@ class Evolution extends UIWindow
       if (!isMaxLevel)
         nextLevelNote = ' => ' + imp.info.levelNotes[imp.level + 1];
       if (levelNote.indexOf('fluff') < 0 &&
-          levelNote.indexOf('todo') < 0)
+          levelNote.indexOf('todo') < 0 &&
+          levelNote != '')
         buf.add("<span style='color:var(--text-color-evolution-level-note)'>" + levelNote + nextLevelNote + '</span><br/>');
       if (imp.info.noteFunc != null)
         buf.add("<span style='color:var(--text-color-evolution-params)'>" +

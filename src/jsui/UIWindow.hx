@@ -5,6 +5,7 @@ package jsui;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
+import js.html.LegendElement;
 import js.html.SelectElement;
 import js.html.OptionElement;
 import js.html.PointerEvent;
@@ -47,7 +48,11 @@ class UIWindow
     }
 
 // add scrolled text block wrapped in fieldset
-  function addBlock(cont: DivElement, id: String, title: String, ?textClassName = 'scroller'): DivElement
+  function addBlockExtended(cont: DivElement, id: String, title: String,
+      ?textClassName = 'scroller'): {
+      text: DivElement,
+      legend: LegendElement
+    }
     {
       var fieldset = Browser.document.createFieldSetElement();
       fieldset.id = id;
@@ -58,7 +63,18 @@ class UIWindow
       var text = Browser.document.createDivElement();
       text.className = textClassName;
       fieldset.appendChild(text);
-      return text;
+      return {
+        text: text,
+        legend: legend,
+      };
+    }
+
+// add scrolled text block wrapped in fieldset
+  function addBlock(cont: DivElement, id: String, title: String,
+      ?textClassName = 'scroller'): DivElement
+    {
+      var x = addBlockExtended(cont, id, title, textClassName);
+      return x.text;
     }
 
 // add select to options

@@ -4,6 +4,7 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.LegendElement;
 import js.html.Element;
 
 import game.Game;
@@ -20,6 +21,7 @@ class Body extends UIWindow
   var skillsParasite: DivElement;
   var skillsHost: DivElement;
   var organsList: DivElement;
+  var organsTitle: LegendElement;
   var organsAvailable: DivElement;
   var organsInfo: DivElement;
   var organsActions: DivElement;
@@ -55,7 +57,9 @@ class Body extends UIWindow
 
       // organs
       var cont = addBlock(col2, 'window-organs-contents', 'BODY', 'window-contents-wrapper');
-      organsList = addBlock(cont, 'window-organs-list', 'FEATURES');
+      var ret = addBlockExtended(cont, 'window-organs-list', 'FEATURES');
+      organsList = ret.text;
+      organsTitle = ret.legend;
       organsAvailable = addBlock(cont, 'window-organs-available', 'AVAILABLE FEATURES');
       organsInfo = addBlock(cont, 'window-organs-info', 'INFO');
       organsActions = addBlock(cont, 'window-organs-actions', 'ACTIONS');
@@ -107,8 +111,9 @@ class Body extends UIWindow
       buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + organInfo.note + '</p>');
       buf.add('<p class=window-evolution-list-notes>');
       var levelNote = impInfo.levelNotes[organLevel];
-      if (levelNote.indexOf('fluff') < 0 ||
-        levelNote.indexOf('todo') < 0)
+      if (levelNote.indexOf('fluff') < 0 &&
+        levelNote.indexOf('todo') < 0 &&
+        levelNote != '')
       buf.add("<span style='color:var(--text-color-evolution-level-note)'>" + levelNote + '</span><br/>');
       if (impInfo.noteFunc != null)
         buf.add("<span style='color:var(--text-color-evolution-params)'>" +
@@ -123,6 +128,9 @@ class Body extends UIWindow
     {
       if (game.player.state != PLR_STATE_HOST)
         return '';
+      organsTitle.innerHTML = 'FEATURES ' + Const.smallgray('[' +
+        game.player.host.organs.length() + '/' +
+        game.player.host.maxOrgans + ']');
       var buf = new StringBuf();
       for (organ in game.player.host.organs)
         addOrgan(buf, game.player.evolutionManager.getImprov(organ.id));
@@ -138,6 +146,7 @@ class Body extends UIWindow
       if (game.player.state != PLR_STATE_HOST)
         return '';
       var buf = new StringBuf();
+      var hasOrgans = false;
       for (imp in game.player.evolutionManager)
         {
           // improvement not available yet or no organs
@@ -149,7 +158,10 @@ class Body extends UIWindow
             continue;
 
           addOrgan(buf, imp);
+          hasOrgans = true;
         }
+      if (!hasOrgans)
+        buf.add('<center>no features available</center><br/>');
       return buf.toString();
     }
 
@@ -186,7 +198,8 @@ class Body extends UIWindow
       organsActions.innerHTML = '';
       // disable organs actions in region mode for now
       if (game.location == LOCATION_REGION ||
-          game.player.state != PLR_STATE_HOST)
+          game.player.state != PLR_STATE_HOST ||
+          game.player.host.organs.length() >= game.player.host.maxOrgans)
         return;
 
       var n = 1;
