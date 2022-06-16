@@ -554,7 +554,7 @@ class PlayerArea extends _SaveObject
             type: EFFECT_PARALYSIS,
             points: roll,
             isTimer: true
-            });
+          });
           ai.onDamage(0); // damage event (for alert)
         }
 

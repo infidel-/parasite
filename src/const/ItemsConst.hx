@@ -65,6 +65,7 @@ class ItemsConst
     armor: {
       canAttach: true,
       damage: 0,
+      needleDeathChance: 10,
     }
   };
 
@@ -178,6 +179,7 @@ class ItemsConst
       armor: {
         canAttach: true,
         damage: 2,
+        needleDeathChance: 5,
       }
     },
 
@@ -189,6 +191,7 @@ class ItemsConst
       armor: {
         canAttach: false,
         damage: 4,
+        needleDeathChance: 1,
       }
     },
 

@@ -461,15 +461,25 @@ class Organs extends _SaveObject
       var params = getParams(IMP_PARALYSIS_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y, game.playerArea.x, game.playerArea.y);
+      var distance = Const.getDist(ai.x, ai.y,
+        game.playerArea.x, game.playerArea.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
           return false;
         }
 
-      game.log('Your host releases a stream of paralyzing spores on ' + ai.getName() +
-        '.');
+      var msg = 'Your host releases a paralyzing projectile on ' +
+        ai.getName() + '.';
+      var chance = ai.inventory.clothing.info.armor.needleDeathChance;
+      if (Std.random(100) < chance)
+        {
+          game.log(msg + ' The toxin works quickly and lethally.');
+          ai.onDamage(ai.health);
+          return true;
+        }
+
+      game.log(msg);
 
       // set alertness
       if (ai.state == AI_STATE_IDLE)
@@ -479,7 +489,11 @@ class Organs extends _SaveObject
         }
 
       // AI effect event
-      ai.onEffect({ type: EFFECT_PARALYSIS, points: params.time, isTimer: true });
+      ai.onEffect({
+        type: EFFECT_PARALYSIS,
+        points: params.time,
+        isTimer: true
+      });
 
       return true;
     }

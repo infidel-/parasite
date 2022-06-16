@@ -25,6 +25,7 @@ typedef _ItemInfo =
   @:optional var armor: {
     var canAttach: Bool; // armor can disable parasite attach
     var damage: Int; // value of damage reduced
+    var needleDeathChance: Int; // chance of paralyzing needles killing
   };
 
   @:optional var areaObjectClass: Dynamic; // area object class
