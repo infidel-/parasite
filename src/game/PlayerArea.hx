@@ -510,12 +510,16 @@ class PlayerArea extends _SaveObject
         mods: [{
           name: '0.5x parasite',
           val: 0.5 * player.skills.getLevel(weapon.skill)
-          }]
-        });
+        }]
+      });
 
       // play weapon sound
       if (weapon.sound != null)
         game.scene.sounds.play(weapon.sound, true);
+
+      // +1 from passive when not assimilated, so it becomes 3
+      player.host.energy -= 2;
+//        (player.host.hasTrait(TRAIT_ASSIMILATED) ? 2 : 2);
 
       // roll skill
       if (!roll)
