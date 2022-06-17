@@ -34,7 +34,9 @@ class Pickup extends AreaObject
   override function updateActionList()
     {
       if (game.player.state != PLR_STATE_HOST ||
-          !game.player.host.isHuman)
+          !game.player.host.isHuman ||
+          game.player.host.inventory.length() >=
+          game.player.host.maxItems)
         return;
 
       var itemName = (game.player.knowsItem(item.info.id) ?

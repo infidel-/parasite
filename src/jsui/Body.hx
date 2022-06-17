@@ -17,6 +17,7 @@ import const.EvolutionConst;
 class Body extends UIWindow
 {
   var inventoryList: DivElement;
+  var inventoryTitle: LegendElement;
   var inventoryActions: DivElement;
   var skillsParasite: DivElement;
   var skillsHost: DivElement;
@@ -46,7 +47,9 @@ class Body extends UIWindow
 
       // inventory
       var cont = addBlock(col1, 'window-inventory-contents', 'INVENTORY', 'window-contents-wrapper');
-      inventoryList = addBlock(cont, 'window-inventory-list', 'ITEMS');
+      var ret = addBlockExtended(cont, 'window-inventory-list', 'ITEMS');
+      inventoryList = ret.text;
+      inventoryTitle = ret.legend;
       inventoryActions = addBlock(cont, 'window-inventory-actions', 'ACTIONS');
 
       // skills
@@ -249,6 +252,9 @@ class Body extends UIWindow
     {
       if (game.player.state != PLR_STATE_HOST)
         return '';
+      inventoryTitle.innerHTML = 'INVENTORY ' + Const.smallgray('[' +
+        game.player.host.inventory.length() + '/' +
+        game.player.host.maxItems + ']');
       var buf = new StringBuf();
       var n = 0;
       for (item in game.player.host.inventory)
@@ -376,11 +382,13 @@ class Body extends UIWindow
             'Decreases grip efficiency<br/>' +
             'Decreases paralysis efficiency<br/>' +
             'Increases speed of freeing from mucus<br/>' +
+            'Limits the amount of inventory items<br/>' +
             '</span><br/>');
 
           buf.add('<span class=host-attr-title>Constitution ' + game.player.host.constitution + '</span><br/>');
           buf.add('<span class=host-attr-notes>' +
             'Increases health and energy<br/>' +
+            'Limits the amount of body features<br/>' +
             '</span><br/>');
 
           buf.add('<span class=host-attr-title>Intellect ' + game.player.host.intellect + '</span><br/>');

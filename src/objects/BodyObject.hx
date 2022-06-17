@@ -68,6 +68,9 @@ class BodyObject extends AreaObject
             // atm can't take clothing/armor
             if (item.info.type == 'clothing')
               continue;
+            if (game.player.host.inventory.length() >=
+                game.player.host.maxItems)
+              continue;
 
             var name = (game.player.knowsItem(item.id) ?
               item.name : item.info.unknown);

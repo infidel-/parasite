@@ -39,7 +39,6 @@ class Inventory extends _SaveObject
     {
     }
 
-
 // add available actions to list
   public function getActions(): Array<_PlayerAction>
     {
@@ -414,6 +413,10 @@ class Inventory extends _SaveObject
       _list.add(item);
     }
 
+  public function length(): Int
+    {
+      return _list.length;
+    }
 
   public function toString(): String
     {
@@ -424,8 +427,5 @@ class Inventory extends _SaveObject
         tmp.push('clothing: ' + clothing.id);
       return tmp.join(', ');
     }
-
-
-// ===============================================================================
 }
 

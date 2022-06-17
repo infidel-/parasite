@@ -94,7 +94,8 @@ class AI extends _SaveObject
   public var energy(default, set): Int; // amount of turns until host death
   public var maxEnergy: Int; // max amount of turns until host death
   public var brainProbed: Int; // how many times brain was probed
-  public var maxOrgans(get, null): Int; // amount of turns until host death
+  public var maxOrgans(get, null): Int; // max amount of organs
+  public var maxItems(get, null): Int; // max amount of items in inventory
 
   public var inventory: Inventory; // AI inventory
   public var skills: Skills; // AI skills
@@ -1231,6 +1232,13 @@ class AI extends _SaveObject
       // ASSIM human: 4-6, dog: 3-5
       var x = Std.int(constitution / 2);
       return (x > 0 ? x : 1) + (hasTrait(TRAIT_ASSIMILATED) ? 2 : 0);
+    }
+  function get_maxItems()
+    {
+      // STR human: 4-8
+      // BASE human: 6-10
+      // ASSIM human: 8-12
+      return strength + 2 + (hasTrait(TRAIT_ASSIMILATED) ? 2 : 0);
     }
 
 // =================================================================================

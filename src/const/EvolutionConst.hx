@@ -829,7 +829,8 @@ class EvolutionConst
         maxLevel: 1,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return
-            "Assimilated hosts have 2 more body features<br/>";
+            "Assimilated hosts have 2 more body features<br/>" +
+            "Assimilated hosts can hold 2 more inventory items<br/>";
         },
         levelNotes: [
           '',
