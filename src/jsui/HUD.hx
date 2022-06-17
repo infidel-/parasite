@@ -291,11 +291,11 @@ class HUD
   function getColor(val: Float, max: Float): String
     {
       if (val > 0.7 * max)
-        return "style='color:'var(--text-color-white)'";
+        return "style='color:var(--text-color-white)'";
       else if (val > 0.3 * max)
-        return "style='color:'var(--text-color-yellow)'";
+        return "style='color:var(--text-color-yellow)'";
 
-      return "style='color:'var(--text-color-red)' class=blinking-red";
+      return "style='color:var(--text-color-red)' class=blinking-red";
     }
 
 // update player info
@@ -391,6 +391,11 @@ class HUD
         buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +
           Const.col('yellow', 'SPOONED') + '</div>');
       info.innerHTML = buf.toString();
+      if (game.player.state != PLR_STATE_HOST)
+        info.className = 
+          (game.player.energy <= 0.5 * game.player.maxEnergy ?
+           'text highlight-text' : 'text');
+      else info.className = 'text';
     }
 
 #if mydebug
