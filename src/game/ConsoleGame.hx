@@ -857,7 +857,7 @@ class ConsoleGame
     }
 
 
-// set commands
+// set/stage commands
   function setCommand(cmd: String)
     {
       // no arguments, show available
@@ -993,6 +993,12 @@ class ConsoleGame
       game.player.hostControl = 100;
 
       // tutorial line
+      game.goals.complete(GOAL_TUTORIAL_ALERT);
+      game.goals.complete(GOAL_TUTORIAL_BODY);
+      game.goals.complete(GOAL_TUTORIAL_BODY_SEWERS);
+      game.goals.complete(GOAL_TUTORIAL_ENERGY);
+      game.goals.complete(GOAL_TUTORIAL_AREA_ALERT);
+      game.goals.complete(GOAL_INVADE_HOST);
       game.goals.complete(GOAL_INVADE_HUMAN);
       game.player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 2);
       game.goals.complete(GOAL_EVOLVE_PROBE);

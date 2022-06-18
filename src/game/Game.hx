@@ -97,12 +97,6 @@ class Game extends _SaveObject
       goals = new Goals(this);
       timeline.create();
 
-      // initial goals
-      message('You are alone. You are scared. You need to find a host or you will die soon.');
-      for (goal in const.Goals.map.keys())
-        if (const.Goals.map[goal].isStarting)
-          goals.receive(goal);
-
       // set random region (currently only 1 at all)
       region = world.get(0);
 
@@ -139,9 +133,53 @@ class Game extends _SaveObject
       location = LOCATION_AREA;
       area.enter();
 
+      // initial goals
+      message('You are alone. You are scared. You need to find a host or you will die soon.');
+      var silent = (config.skipTutorial && config.difficulty > 0);
+      for (goal in const.Goals.map.keys())
+        if (const.Goals.map[goal].isStarting)
+          goals.receive(goal, silent);
+
+      // skip tutorial flag
+      if (config.skipTutorial)
+        skipTutorial();
+
       updateHUD(); // update HUD state
 
       isInited = true;
+    }
+
+// skip starting tutorial
+  function skipTutorial()
+    {
+      // only with overall difficulty
+      if (config.difficulty == 0)
+        {
+          system('Cannot skip tutorial with overall difficulty unset.');
+          return;
+        }
+      importantMessagesEnabled = false;
+      goals.complete(GOAL_TUTORIAL_ALERT);
+      goals.complete(GOAL_TUTORIAL_BODY);
+      goals.complete(GOAL_TUTORIAL_BODY_SEWERS);
+      goals.complete(GOAL_TUTORIAL_ENERGY);
+      goals.complete(GOAL_TUTORIAL_AREA_ALERT);
+      goals.complete(GOAL_INVADE_HOST);
+      goals.complete(GOAL_INVADE_HUMAN);
+      player.evolutionManager.addImprov(IMP_BRAIN_PROBE, 2);
+      goals.complete(GOAL_EVOLVE_PROBE);
+      goals.complete(GOAL_PROBE_BRAIN);
+      goals.complete(GOAL_LEARN_ITEMS);
+      goals.complete(GOAL_PROBE_BRAIN_ADVANCED);
+      goals.complete(GOAL_LEARN_SKILLS);
+      player.skills.increase(KNOW_SOCIETY, 1);
+      player.skills.increase(KNOW_SOCIETY, 24);
+      turns = 200;
+      group.priority = 5;
+      group.teamTimeout = 50;
+      player.energy = 100;
+      importantMessagesEnabled = true;
+      system('Tutorial skipped.');
     }
 
 // clear all game stuff
@@ -355,6 +393,12 @@ class Game extends _SaveObject
   public function narrative(s: String, ?col: _TextColor)
     {
       log('<span class=narrative>' + s + '</span>', col);
+    }
+
+// add system log entry to game log
+  public function system(s: String)
+    {
+      log(Const.smallgray(s));
     }
 
 // add entry to game log

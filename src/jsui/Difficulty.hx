@@ -131,7 +131,7 @@ class Difficulty extends UIWindow
           game.save(1);
         }
 
-      game.log('Difficulty selected for ' + currentChoice.title + ': ' + d);
+      game.system('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
       game.ui.closeWindow();
     }

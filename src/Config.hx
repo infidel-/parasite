@@ -18,6 +18,7 @@ class Config
   public var alwaysCenterCamera: Bool;
   public var laptopKeyboard: Bool;
   public var fullscreen: Bool;
+  public var skipTutorial: Bool;
   public var shiftLongActions: Bool;
   // NOTE: new spoon vars will require fixing isSpoonMode() check!
   public var spoonEvolutionBasic: Bool;
@@ -49,6 +50,7 @@ class Config
       alwaysCenterCamera = true;
       laptopKeyboard = false;
       fullscreen = false;
+      skipTutorial = false;
       shiftLongActions = true;
       spoonEvolutionBasic = false;
       spoonHabitats = false;
@@ -71,6 +73,7 @@ class Config
       map['laptopKeyboard'] = '0';
       map['shiftLongActions'] = '1';
       map['fullscreen'] = '0';
+      map['skipTutorial'] = '0';
       map['spoonEvolutionBasic'] = '0';
       map['spoonHabitats'] = '0';
 
@@ -162,6 +165,8 @@ class Config
           fullscreen = (val == '1');
           electron.renderer.IpcRenderer.invoke('fullscreen' + val);
         }
+      else if (key == 'skipTutorial')
+        skipTutorial = (val == '1');
       else if (key == 'spoonEvolutionBasic')
         spoonEvolutionBasic = (val == '1');
       else if (key == 'spoonHabitats')

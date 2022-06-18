@@ -62,6 +62,8 @@ class Goals extends _SaveObject
       // check if this goal already completed or received
       if (Lambda.has(_listCompleted, id) || Lambda.has(_listCurrent, id))
         return;
+      if (!game.importantMessagesEnabled)
+        silent = true;
 
       _listCurrent.add(id);
 
@@ -69,7 +71,8 @@ class Goals extends _SaveObject
       if (info == null)
         throw "No such goal: " + id;
 
-      if (!silent && info.messageReceive != null) // message on receiving
+      // message on receiving
+      if (!silent && info.messageReceive != null)
         game.message(info.messageReceive);
 
       if (info.isHidden == null || info.isHidden == false)
@@ -89,6 +92,8 @@ class Goals extends _SaveObject
       // check if player has this goal
       if (!Lambda.has(_listCurrent, id))
         return;
+      if (!game.importantMessagesEnabled)
+        silent = true;
 
       _listCurrent.remove(id);
       _listCompleted.add(id);

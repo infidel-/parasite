@@ -19,7 +19,7 @@ class Group extends _SaveObject
       game = g;
       priority = 0;
       team = null;
-      teamTimeout = 200;
+      teamTimeout = 250;
       teamStartDistance = 100.0;
       knownCount = 1 + Std.random(3); // randomized slightly
       isKnown = false;

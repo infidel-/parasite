@@ -317,7 +317,7 @@ class Const
 
   public static inline function smallgray(s: String)
     {
-      return '<span class=small>' + col('gray', s) + '</span>';
+      return '<span style="color:var(--text-color-gray)" class=small>' + s + '</span>';
     }
 
   public static inline function narrative(s: String)

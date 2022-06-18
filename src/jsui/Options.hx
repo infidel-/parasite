@@ -101,6 +101,9 @@ class Options extends UIWindow
         function (val: String) {
           game.config.set('difficulty', val);
         });
+      addCheckbox(contents, 'Skip tutorial ' +
+        Const.smallgray('(needs overall difficulty set)'),
+        'skipTutorial', game.config.skipTutorial, '-22.3%');
       addCheckbox(contents, 'Enable fullscreen',
         'fullscreen', game.config.fullscreen, '-55.6%');
 
