@@ -257,9 +257,9 @@ class ConsoleGame
           log('set - show variables');
           log(
             'area.alertness, ' +
-            'host., h. - energy, maxEnergy, health, maxHealth, ' +
+            'host., h. - energy (e), maxEnergy, health (h), maxHealth, ' +
             'group. - knownCount, priority, ' +
-            'player. - godmode (p.god), habitats (p.hab), invisible (p.invis), los (p.los), ' +
+            'player. - godmode (p.god), habitats (p.hab), health (h), invisible (p.invis), los (p.los), ' +
             'team. - distance, level, size, timeout, timer');
           return;
         }
@@ -276,7 +276,7 @@ class ConsoleGame
           else if (game.location == LOCATION_REGION)
             game.playerRegion.currentArea.alertness = valInt;
         }
-      else if (key == 'host.energy' || key == 'h.energy')
+      else if (key == 'host.energy' || key == 'h.energy' || key == 'h.e')
         {
           if (game.player.state == PLR_STATE_HOST)
             game.player.host.energy = valInt;
@@ -286,7 +286,7 @@ class ConsoleGame
           if (game.player.state == PLR_STATE_HOST)
             game.player.host.maxEnergy = valInt;
         }
-      else if (key == 'host.health' || key == 'h.health')
+      else if (key == 'host.health' || key == 'h.health' || key == 'h.h')
         {
           if (game.player.state == PLR_STATE_HOST)
             game.player.host.health = valInt;
@@ -304,6 +304,10 @@ class ConsoleGame
 
       else if (key == 'player.habitats' || key == 'p.hab')
         game.player.vars.habitatsLeft = valInt;
+      else if (key == 'player.health' || key == 'player.h' || key == 'p.h')
+        {
+          game.player.health = valInt;
+        }
       else if (key == 'player.godmode' || key == 'p.god')
         game.player.vars.godmodeEnabled = valBool;
       else if (key == 'player.invisible' || key == 'p.invis')

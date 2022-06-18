@@ -133,13 +133,21 @@ class PlayerArea extends _SaveObject
               name: 'Invade Host',
               energy: 10
             });
-          else game.ui.hud.addAction({
-            id: 'hardenGrip',
-            type: ACTION_AREA,
-            name: 'Harden Grip',
-            canRepeat: true,
-            energy: 5
-          });
+          if (game.player.energy <= 30)
+            game.ui.hud.addAction({
+              id: 'invadeEarly',
+              type: ACTION_AREA,
+              name: 'Early Invasion',
+              energy: 1
+            });
+          if (attachHold < 90)
+            game.ui.hud.addAction({
+              id: 'hardenGrip',
+              type: ACTION_AREA,
+              name: 'Harden Grip',
+              canRepeat: true,
+              energy: 5
+            });
         }
 
       // parasite in control of host
@@ -264,7 +272,11 @@ class PlayerArea extends _SaveObject
 
       // invade host
       else if (action.id == 'invadeHost')
-        invadeHostAction();
+        invadeHostAction(false);
+
+      // invade host early
+      else if (action.id == 'invadeEarly')
+        invadeEarlyAction();
 
       // try to reinforce control over host
       else if (action.id == 'reinforceControl')
@@ -334,6 +346,12 @@ class PlayerArea extends _SaveObject
       else if (state == PLR_STATE_ATTACHED && player.energy <= 0)
         {
           game.finish('lose', 'noEnergy');
+          return;
+        }
+
+      else if (player.health <= 0)
+        {
+          game.finish('lose', 'noHealth');
           return;
         }
 
@@ -442,7 +460,7 @@ class PlayerArea extends _SaveObject
     {
       attachToHostAction(ai);
       attachHold = 100;
-      invadeHostAction();
+      invadeHostAction(false);
     }
 
 
@@ -651,10 +669,45 @@ class PlayerArea extends _SaveObject
     }
 
 
-// action: try to invade this AI host
-  function invadeHostAction()
+// action: try to invade this AI host early
+  function invadeEarlyAction()
     {
-      log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
+      // calculate and roll chance
+      var chance = attachHold;
+      if (game.player.difficulty == HARD)
+        chance -= 20;
+      else if (game.player.difficulty == NORMAL)
+        chance -= 10;
+      else if (game.player.difficulty == EASY)
+        chance -= 10;
+      if (chance < 5)
+        chance = 5;
+      if (chance > 90)
+        chance = 90;
+      var roll = Std.random(100);
+      game.info('invade early, ' + chance + '% (roll: ' + roll + '), ' +
+        (roll <= chance ? 'success' : 'fail'));
+      if (roll > chance)
+        {
+          player.health -= 2;
+          log('The host wrestles with you frantically, injuring you in the process.');
+          return;
+        }
+      player.health -= 1;
+      if (player.health == 0)
+        {
+          log('The host wrestles with you violently, injuring you fatally.');
+          return;
+        }
+      log('Your proboscis painfully penetrates the warm flesh. You are now in control of the host.');
+      invadeHostAction(true);
+    }
+
+// action: try to invade this AI host
+  function invadeHostAction(fromInvadeEarly: Bool)
+    {
+      if (!fromInvadeEarly)
+        log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
 
       // save AI link
       player.host = attachHost;

@@ -141,9 +141,9 @@ class Difficulty extends UIWindow
       id: 'survival',
       title: 'Survival',
       notes: [
-        'Humans call the law slower. You will stop them from doing that when you jump on them.',
-        'Fast calling speed. Calls are not interrupted with attaching.',
-        'Same calling rules as normal. No free dog on exiting the sewers.',
+        'Humans call the law slower. You will stop them from doing that when you jump on them. Minor early invasion chance bonus.',
+        'Fast calling speed. Calls are not interrupted with attaching. Early invasion chance penalty.',
+        'Same calling rules as normal. No free dog on exiting the sewers. Larger penalty for early invasion chance.',
       ]
     },
 
