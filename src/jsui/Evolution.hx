@@ -128,7 +128,7 @@ class Evolution extends UIWindow
           listActions.push(act);
           var action = Browser.document.createDivElement();
           action.className = 'window-evolution-actions-item';
-          action.innerHTML = n + ': Stop evolution';
+          action.innerHTML = Const.key('' + n) + ': Stop evolution';
           action.onclick = function (e) {
             game.player.evolutionManager.action(act);
             update();
@@ -154,7 +154,7 @@ class Evolution extends UIWindow
             continue;
 
           var buf = new StringBuf();
-          buf.add(n + ': ');
+          buf.add(Const.key('' + n) + ': ');
           buf.add("<span style='color:var(--text-color-evolution-title)'>" + imp.info.name + "</span>");
           buf.add(' ');
           buf.add(imp.level + 1);

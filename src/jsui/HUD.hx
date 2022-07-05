@@ -100,15 +100,15 @@ class HUD
       container.appendChild(buttons);
       menuButtons = [];
       addMenuButton(buttons, UISTATE_GOALS,
-        Const.col('gray', Const.bold('F1')) + ': GOALS');
+        Const.key('F1') + ': GOALS');
       addMenuButton(buttons, UISTATE_BODY,
-        Const.col('gray', Const.bold('F2')) + ': BODY');
+        Const.key('F2') + ': BODY');
       addMenuButton(buttons, UISTATE_LOG,
-        Const.col('gray', Const.bold('F3')) + ': LOG');
+        Const.key('F3') + ': LOG');
       addMenuButton(buttons, UISTATE_TIMELINE,
-        Const.col('gray', Const.bold('F4')) + ': TIMELINE');
+        Const.key('F4') + ': TIMELINE');
       addMenuButton(buttons, UISTATE_EVOLUTION,
-        Const.col('gray', Const.bold('F5')) + ': EVO');
+        Const.key('F5') + ': EVO');
 
       // actions
       actions = Browser.document.createDivElement();
@@ -541,8 +541,7 @@ class HUD
             if (action.key != null)
               key += action.key.toUpperCase();
             else key += '' + n;
-            key = Const.col('gray', Const.bold(key));
-            buf.add(key + ': ' + action.name);
+            buf.add(Const.key(key) + ': ' + action.name);
             if (action.energy != null && action.energy > 0)
               buf.add(' ' + Const.smallgray(
                 '(' + action.energy + ' energy)'));

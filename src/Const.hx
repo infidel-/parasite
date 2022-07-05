@@ -305,6 +305,11 @@ class Const
 #end
     }
 
+  public static inline function key(s: String)
+    {
+      return '<span style="font-weight:bold; color:var(--text-color-gray)">' + s + '</span>';
+    }
+
   public static inline function bold(s: String)
     {
       return '<span style="font-weight:bold">' + s + '</span>';
