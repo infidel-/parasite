@@ -133,13 +133,6 @@ class PlayerArea extends _SaveObject
               name: 'Invade Host',
               energy: 10
             });
-          if (game.player.energy <= 30)
-            game.ui.hud.addAction({
-              id: 'invadeEarly',
-              type: ACTION_AREA,
-              name: 'Early Invasion',
-              energy: 1
-            });
           if (attachHold < 90)
             game.ui.hud.addAction({
               id: 'hardenGrip',
@@ -147,6 +140,13 @@ class PlayerArea extends _SaveObject
               name: 'Harden Grip',
               canRepeat: true,
               energy: 5
+            });
+          if (game.player.energy <= 30)
+            game.ui.hud.addAction({
+              id: 'invadeEarly',
+              type: ACTION_AREA,
+              name: 'Early Invasion',
+              energy: 1
             });
         }
 
