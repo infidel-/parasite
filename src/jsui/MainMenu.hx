@@ -33,28 +33,9 @@ class MainMenu extends UIWindow
       contents.id = 'window-mainmenu-contents';
       window.appendChild(contents);
 
-      addItem('NEW GAME', function(e) {
-        game.isStarted = true;
-        game.ui.closeWindow();
-        game.restart();
-        close.style.display = 'block';
-        game.ui.canvas.style.visibility = 'visible';
-      });
-      loadItem = addItem('LOAD GAME', function(e) {
-        if (!game.saveExists(1))
-          return;
-        game.load(1);
-        game.ui.closeWindow();
-        game.ui.hud.update();
-        close.style.display = 'block';
-        game.ui.canvas.style.visibility = 'visible';
-      });
-      saveItem = addItem('SAVE GAME', function(e) {
-        if (!game.isStarted || game.isFinished)
-          return;
-        game.save(1);
-        game.ui.closeWindow();
-      });
+      addItem('NEW GAME', newGame);
+      loadItem = addItem('LOAD GAME', loadGame);
+      saveItem = addItem('SAVE GAME', saveGame);
       addItem('OPTIONS', function(e) {
         game.ui.state = UISTATE_OPTIONS;
       });
@@ -77,16 +58,40 @@ class MainMenu extends UIWindow
       game.ui.canvas.style.visibility = 'visible';
     }
 
+// load game
+  function loadGame(e)
+    {
+      if (!game.saveExists(1))
+        return;
+      game.load(1);
+      game.ui.closeWindow();
+      game.ui.hud.update();
+      close.style.display = 'block';
+      game.ui.canvas.style.visibility = 'visible';
+    }
+
+// save game
+  function saveGame(e)
+    {
+      if (!game.isStarted || game.isFinished)
+        return;
+      game.save(1);
+      game.ui.closeWindow();
+    }
+
 // action handling
   public override function action(index: Int)
     {
+      // skip tutorial
       if (index == 1)
         newGame(null);
-      else if (index == 2) // save
-        1;
+      else if (index == 2)
+        loadGame(null);
       else if (index == 3)
-        game.ui.state = UISTATE_OPTIONS;
+        saveGame(null);
       else if (index == 4)
+        game.ui.state = UISTATE_OPTIONS;
+      else if (index == 5)
 #if electron
         electron.renderer.IpcRenderer.invoke('quit');
 #else

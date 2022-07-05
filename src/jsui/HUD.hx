@@ -99,11 +99,16 @@ class HUD
       buttons.id = 'hud-buttons';
       container.appendChild(buttons);
       menuButtons = [];
-      addMenuButton(buttons, UISTATE_GOALS, '1: GOALS');
-      addMenuButton(buttons, UISTATE_BODY, '2: BODY');
-      addMenuButton(buttons, UISTATE_LOG, '3: LOG');
-      addMenuButton(buttons, UISTATE_TIMELINE, '4: TIMELINE');
-      addMenuButton(buttons, UISTATE_EVOLUTION, '5: EVO');
+      addMenuButton(buttons, UISTATE_GOALS,
+        Const.col('gray', Const.bold('F1')) + ': GOALS');
+      addMenuButton(buttons, UISTATE_BODY,
+        Const.col('gray', Const.bold('F2')) + ': BODY');
+      addMenuButton(buttons, UISTATE_LOG,
+        Const.col('gray', Const.bold('F3')) + ': LOG');
+      addMenuButton(buttons, UISTATE_TIMELINE,
+        Const.col('gray', Const.bold('F4')) + ': TIMELINE');
+      addMenuButton(buttons, UISTATE_EVOLUTION,
+        Const.col('gray', Const.bold('F5')) + ': EVO');
 
       // actions
       actions = Browser.document.createDivElement();
@@ -141,7 +146,7 @@ class HUD
   function addMenuButton(cont: DivElement, state: _UIState, str: String): DivElement
     {
       var btn = Browser.document.createDivElement();
-      btn.innerHTML = 'F' + str;
+      btn.innerHTML = str;
       btn.className = 'hud-button';
       btn.style.borderImage = "url('./img/hud-button.png') 23 fill / 1 / 0 stretch";
       cont.appendChild(btn);
