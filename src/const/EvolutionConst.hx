@@ -36,7 +36,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Bodies will disappear in " + l.turns +
-            (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
+            (l2 != null ? ' (&rarr; ' + l2.turns + ')' : '') +
             " turns";
         },
         organ: {
@@ -66,10 +66,10 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Host armor bonus (minus to damage): " +
-            l.armor + (l2 != null ? ' => ' + l2.armor : '') +
+            l.armor + (l2 != null ? ' &rarr; ' + l2.armor : '') +
             "<br/>" +
             "AI alertness bonus: " + l.alertness +
-            (l2 != null ? ' => ' + l2.alertness : '');
+            (l2 != null ? ' &rarr; ' + l2.alertness : '');
         },
         organ: {
           name: 'Protective cover',
@@ -98,7 +98,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return l.turns +
-            (l2 != null ? ' (=> ' + l2.turns + ')' : '') +
+            (l2 != null ? ' (&rarr; ' + l2.turns + ')' : '') +
             " turns to restore 1 health of host and parasite";
         },
         organ: {
@@ -128,7 +128,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "+" + l.health +
-            (l2 != null ? ' (=> ' + l2.health + ')' : '') +
+            (l2 != null ? ' (&rarr; ' + l2.health + ')' : '') +
             " health to host";
         },
         organ: {
@@ -158,7 +158,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Host maximum energy multiplier: " + l.hostEnergyMod +
-            (l2 != null ? ' => ' + l2.hostEnergyMod : '') +
+            (l2 != null ? ' &rarr; ' + l2.hostEnergyMod : '') +
             "<br/>Restores energy to maximum on completion";
         },
         organ: {
@@ -188,7 +188,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "+" + l.strength +
-            (l2 != null ? ' (=> ' + l2.strength + ')' : '') +
+            (l2 != null ? ' (&rarr; ' + l2.strength + ')' : '') +
             " strength to host";
         },
         organ: {
@@ -218,9 +218,9 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Emesis damage: " + l.minDamage + "-" + l.maxDamage +
-            (l2 != null ? ' => ' + l2.minDamage + '-' + l2.maxDamage : '') +
+            (l2 != null ? ' &rarr; ' + l2.minDamage + '-' + l2.maxDamage : '') +
             "<br/>Emesis range: " + l.range +
-            (l2 != null ? ' => ' + l2.range :  '');
+            (l2 != null ? ' &rarr; ' + l2.range :  '');
         },
         organ: {
           name: 'Improved gastric glands',
@@ -271,9 +271,9 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Mucus strength: " + l.strength +
-            (l2 != null ? ' => ' + l2.strength : '') +
+            (l2 != null ? ' &rarr; ' + l2.strength : '') +
             "<br/>Discharge range: " + l.range +
-            (l2 != null ? ' => ' + l2.range :  '');
+            (l2 != null ? ' &rarr; ' + l2.range :  '');
         },
         organ: {
           name: 'Salivary gland extension',
@@ -320,9 +320,9 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Paralysis effect time: " + l.time +
-            (l2 != null ? ' => ' + l2.time : '') +
+            (l2 != null ? ' &rarr; ' + l2.time : '') +
             "<br/>Needle range: " + l.range +
-            (l2 != null ? ' => ' + l2.range :  '');
+            (l2 != null ? ' &rarr; ' + l2.range :  '');
         },
         organ: {
           name: 'Neurotoxin cirrus',
@@ -369,11 +369,11 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Cloud range: " + l.range +
-            (l2 != null ? ' => ' + l2.range : '') +
+            (l2 != null ? ' &rarr; ' + l2.range : '') +
             "<br/>Gas release timeout: " + l.timeout +
-            (l2 != null ? ' => ' + l2.timeout : '') +
+            (l2 != null ? ' &rarr; ' + l2.timeout : '') +
             "<br/>Panic effect time: " + l.time +
-            (l2 != null ? ' => ' + l2.time : '');
+            (l2 != null ? ' &rarr; ' + l2.time : '');
         },
         organ: {
           name: 'Gas section',
@@ -425,11 +425,11 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Cloud range: " + l.range +
-            (l2 != null ? ' => ' + l2.range : '') +
+            (l2 != null ? ' &rarr; ' + l2.range : '') +
             "<br/>Gas release time: " + l.timeout +
-            (l2 != null ? ' => ' + l2.timeout : '') +
+            (l2 != null ? ' &rarr; ' + l2.timeout : '') +
             "<br/>Panic effect time: " + l.time +
-            (l2 != null ? ' => ' + l2.time : '');
+            (l2 != null ? ' &rarr; ' + l2.time : '');
         },
         organ: {
           name: 'Sporangium',
@@ -481,7 +481,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base attach grip: " + l.attachHoldBase +
-            (l2 != null ? ' => ' + l2.attachHoldBase : '');
+            (l2 != null ? ' &rarr; ' + l2.attachHoldBase : '');
         },
         levelNotes: [
           'Natural attaching method',
@@ -505,7 +505,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base harden grip: " + l.attachHoldBase +
-            (l2 != null ? ' => ' + l2.attachHoldBase : '');
+            (l2 != null ? ' &rarr; ' + l2.attachHoldBase : '');
         },
         levelNotes: [
           'Natural grip hardening process',
@@ -529,7 +529,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base reinforce control: " + l.reinforceControlBase +
-            (l2 != null ? ' => ' + l2.reinforceControlBase : '');
+            (l2 != null ? ' &rarr; ' + l2.reinforceControlBase : '');
         },
         levelNotes: [
           'Natural control reinforcing process',
@@ -555,14 +555,14 @@ class EvolutionConst
         note: 'Knowledge. Temporarily joining with the host consciousness allows to partially learn its contents',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' => ' + l2.humanSociety : '') +
-            "<br/>Base host energy cost: " + l.hostEnergyBase + (l2 != null ? ' => ' + l2.hostEnergyBase : '') +
-            "<br/>Base host health cost: " + l.hostHealthBase + (l2 != null ? ' => ' + l2.hostHealthBase: '') +
-            "<br/>Host skills learning multiplier: " + l.hostSkillsMod + (l2 != null ? ' => ' + l2.hostSkillsMod : '') + '<br/>';
+          var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' &rarr; ' + l2.humanSociety : '') +
+            "<br/>Base host energy cost: " + l.hostEnergyBase + (l2 != null ? ' &rarr; ' + l2.hostEnergyBase : '') +
+            "<br/>Base host health cost: " + l.hostHealthBase + (l2 != null ? ' &rarr; ' + l2.hostHealthBase: '') +
+            "<br/>Host skills learning multiplier: " + l.hostSkillsMod + (l2 != null ? ' &rarr; ' + l2.hostSkillsMod : '') + '<br/>';
           if (l.hostAttrsMod == 0)
             s += "Host attributes unknown ";
           if (l2 != null && l2.hostAttrsMod == 1)
-            s += "=> Probe shows host attributes";
+            s += "&rarr; Probe shows host attributes";
           else if (l.hostAttrsMod == 1)
             s += "Probe shows host attributes";
           return s;
@@ -639,7 +639,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "AI alertness multiplier: " + l.alertness +
-            (l2 != null ? ' => ' + l2.alertness : '');
+            (l2 != null ? ' &rarr; ' + l2.alertness : '');
         },
         organ: {
           name: 'Camouflage layer',
@@ -702,7 +702,7 @@ class EvolutionConst
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Maximum number of microhabitats: " + l.numHabitats +
-            (l2 != null ? ' => ' + l2.numHabitats : '');
+            (l2 != null ? ' &rarr; ' + l2.numHabitats : '');
         },
         levelNotes: [
           '(todo fluff)',
@@ -740,18 +740,18 @@ class EvolutionConst
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return
             "Energy units per formation: " + l.energy +
-            (l2 != null ? ' => ' + l2.energy : '') +
+            (l2 != null ? ' &rarr; ' + l2.energy : '') +
             "<br/>Bonus organ and evolution points per turn: +" +
               l.evolutionBonus + "%" +
-              (l2 != null ? ' => ' + l2.evolutionBonus + '%' : '') +
+              (l2 != null ? ' &rarr; ' + l2.evolutionBonus + '%' : '') +
             "<br/>Assimilated host energy restored per turn: +" + l.hostEnergyRestored +
-            (l2 != null ? ' => +' + l2.hostEnergyRestored : '') +
+            (l2 != null ? ' &rarr; +' + l2.hostEnergyRestored : '') +
             "<br/>Parasite energy restored per turn: +" +
             l.parasiteEnergyRestored +
-            (l2 != null ? ' => +' + l2.parasiteEnergyRestored : '') +
+            (l2 != null ? ' &rarr; +' + l2.parasiteEnergyRestored : '') +
             "<br/>Parasite health restored per turn: +" +
             l.parasiteHealthRestored +
-            (l2 != null ? ' => +' + l2.parasiteHealthRestored : '');
+            (l2 != null ? ' &rarr; +' + l2.parasiteHealthRestored : '');
         },
         levelNotes: [
           '',

@@ -57,7 +57,7 @@ class Evolution extends UIWindow
       if (imp.info.maxLevel > 1)
         buf.add(imp.level);
       if (!isMaxLevel)
-        buf.add(' => ' + (imp.level + 1));
+        buf.add(' &rarr; ' + (imp.level + 1));
       if (imp.level < imp.info.maxLevel)
         buf.add(' (' + imp.ep + '/' +
           EvolutionConst.epCostImprovement[imp.level] + ' ep)');
@@ -68,7 +68,7 @@ class Evolution extends UIWindow
       var levelNote = imp.info.levelNotes[imp.level];
       var nextLevelNote = '';
       if (!isMaxLevel)
-        nextLevelNote = ' => ' + imp.info.levelNotes[imp.level + 1];
+        nextLevelNote = ' &rarr; ' + imp.info.levelNotes[imp.level + 1];
       if (levelNote.indexOf('fluff') < 0 &&
           levelNote.indexOf('todo') < 0 &&
           levelNote != '')
