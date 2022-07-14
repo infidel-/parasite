@@ -101,6 +101,7 @@ class Const
 
 
   // tiles spritemap indexes
+  // row 0
   public static var TILE_HIDDEN = 0;
   public static var TILE_GROUND = 1;
   public static var TILE_BUILDING = 2;
@@ -110,6 +111,7 @@ class Const
   public static var TILE_BUSH = 9;
   public static var TILE_GRASS = 10;
 
+  // row 1
   public static var OFFSET_REGION = 16;
   public static var TILE_REGION_GROUND = OFFSET_REGION + 0;
   public static var TILE_CITY_LOW = OFFSET_REGION + 1;
@@ -118,37 +120,88 @@ class Const
   public static var TILE_FACILITY1 = OFFSET_REGION + 4;
   public static var TILE_MILITARY_BASE1 = OFFSET_REGION + 8;
 
+  // row 2
   public static var OFFSET_AREA = 32;
   public static var TILE_ROAD = OFFSET_AREA + 0;
   public static var TILE_ALLEY = OFFSET_AREA + 1;
   public static var TILE_WALKWAY = OFFSET_AREA + 2;
+  public static var TILE_WINDOW1 = OFFSET_AREA + 3;
+  public static var TILE_WINDOWH1 = OFFSET_AREA + 4;
+  public static var TILE_WINDOWH2 = OFFSET_AREA + 5;
+  public static var TILE_WINDOWH3 = OFFSET_AREA + 6;
+  public static var TILE_WINDOWV1 = OFFSET_AREA + 7;
+  public static var TILE_WINDOWV2 = OFFSET_AREA + 8;
+  public static var TILE_WINDOWV3 = OFFSET_AREA + 9;
+  public static var TILE_DOOR_CABINET = OFFSET_AREA + 10;
+  public static var TILE_DOOR_CABINET_OPEN = OFFSET_AREA + 11;
+  public static var TILE_DOOR_DOUBLE = OFFSET_AREA + 12;
+  public static var TILE_DOOR_DOUBLE_OPEN = OFFSET_AREA + 13;
+  public static var TILE_DOOR_GLASS = OFFSET_AREA + 14;
+  public static var TILE_DOOR_GLASS_OPEN = OFFSET_AREA + 15;
 
-  public static var OFFSET_CITY = 48;
+  // row 3
+  public static var OFFSET_ROW3 = 48;
+  public static var TILE_FLOOR_TILE = OFFSET_ROW3 + 0;
+  public static var TILE_FLOOR_LINO = OFFSET_ROW3 + 1;
+
+  public static var OFFSET_CITY = 64;
 
   public static var TILE_CITY_WALKABLE = [ true ];
 
   public static var TILE_WALKABLE = [
     // row 0
-    false, true, false, true,
-    false, false, false, false,
-    false, true, true, true,
-    false, false, false, false,
+    false, true, false, true, false, false, false, false,
+    false, true, true, true, false, false, false, false,
     // row 1 - region
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    // row 2 - roads
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    // row 3+ - region tiles
+    true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true,
+    // row 2 - roads, indoor
+    true, true, true, false, false, false, false, false,
+    false, false, false, true, false, true, false, true,
+    // row 3 - floor
     true, true, true, true,
     true, true, true, true,
     true, true, true, true,
     true, true, true, true,
 
+    // row 4+ - region tiles
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+  ];
+  public static var TILE_SEETHROUGH = [
+    // row 0
+    false, true, false, true, false, false, false, false,
+    false, true, true, true, false, false, false, false,
+    // row 1 - region
+    true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true,
+    // row 2 - roads, indoor
+    true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true,
+    // row 3 - floor
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+
+    // row 4+ - region tiles
     true, true, true, true,
     true, true, true, true,
     true, true, true, true,
@@ -179,6 +232,8 @@ class Const
   // movement directions
   public static var dirx = [ -1, -1, -1, 0, 0, 1, 1, 1 ];
   public static var diry = [ -1, 0, 1, -1, 1, -1, 0, 1 ];
+  public static var dir4x = [ -1, 0, 0, 1 ];
+  public static var dir4y = [ 0, -1, 1, 0 ];
 
 
 // get squared distance between two points

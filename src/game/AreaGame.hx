@@ -710,17 +710,22 @@ class AreaGame extends _SaveObject
         _cells[x][y] = index;
     }
 
+// check if you can see through this tile 
+  public function canSeeThrough(x: Int, y: Int): Bool
+    {
+      if (x < 0 || y < 0 || x >= width || y >= height)
+        return false;
+      return Const.TILE_SEETHROUGH[_cells[x][y]];
+    }
 
 // check if tile is walkable
   public function isWalkable(x: Int, y: Int): Bool
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-
 //      trace(x + ',' + y + ' ' + _cells[x][y]);
       return Const.TILE_WALKABLE[_cells[x][y]];
     }
-
 
 // check if x1, y1 sees x2, y2
 // bresenham copied from wikipedia with one slight modification
@@ -771,7 +776,7 @@ class AreaGame extends _SaveObject
             {
 //              if (doTrace)
 //                trace(yy + ',' + xx);
-              ok = isWalkable(yy, xx);
+              ok = canSeeThrough(yy, xx);
 
               // slight modification - even if endpoint is not walkable, it's still visible
               if (ox2 == yy && oy2 == xx)
@@ -781,7 +786,7 @@ class AreaGame extends _SaveObject
             {
 //              if (doTrace)
 //                trace(xx + ',' + yy);
-              ok = isWalkable(xx, yy);
+              ok = canSeeThrough(xx, yy);
 
               // slight modification - even if endpoint is not walkable, it's still visible
               if (ox2 == xx && oy2 == yy)

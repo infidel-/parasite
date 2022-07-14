@@ -26,9 +26,9 @@ class WorldConst
         isHighRisk: false,
         ai: [
           'dog' => 5
-          ],
+        ],
         objects: [
-          ]
+        ]
       },
 
       // *** low-class, low population - outskirts and suburbs
@@ -52,10 +52,10 @@ class WorldConst
           'dog' => 20,
           'civilian' => 75,
           'police' => 5
-          ],
+        ],
         objects: [
           { id: 'sewer_hatch', amount: 10 }
-          ]
+        ]
       },
 
       // *** mid-class, mid population - residential districts
@@ -80,10 +80,10 @@ class WorldConst
           'dog' => 15,
           'civilian' => 75,
           'police' => 10
-          ],
+        ],
         objects: [
           { id: 'sewer_hatch', amount: 20 }
-          ]
+        ]
       },
 
       // *** high-class, high population - downtown and commercial district
@@ -108,10 +108,10 @@ class WorldConst
           'dog' => 5,
           'civilian' => 70,
           'police' => 25
-          ],
+        ],
         objects: [
           { id: 'sewer_hatch', amount: 20 }
-          ]
+        ]
       },
 
       // *** military base
@@ -133,10 +133,10 @@ class WorldConst
         isHighRisk: true,
         ai: [
           'soldier' => 100,
-          ],
+        ],
         objects: [
           { id: 'sewer_hatch', amount: 5 }
-          ]
+        ]
       },
 
       // *** facility
@@ -145,7 +145,7 @@ class WorldConst
         ambient: AMBIENT_FACILITY,
         type: 'facility',
         name: 'Facility',
-        width: 50,
+        width: 75,
         height: 50,
         canEnter: true,
         isInhabited: true,
@@ -159,10 +159,10 @@ class WorldConst
         ai: [
           'civilian' => 90,
           'security' => 10
-          ],
+        ],
         objects: [
           { id: 'sewer_hatch', amount: 5 }
-          ]
+        ]
       },
 
       // *** habitat

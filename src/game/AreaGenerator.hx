@@ -21,7 +21,7 @@ class AreaGenerator
       else if (info.type == 'militaryBase')
         generateBuildings(game, area, info);
       else if (info.type == 'facility')
-        generateBuildings(game, area, info);
+        FacilityAreaGenerator.generate(game, area, info);
       else if (info.type == 'wilderness')
         generateWilderness(game, area, info);
       else if (info.type == 'habitat')
@@ -77,6 +77,42 @@ class AreaGenerator
 */
     }
 
+// print generated area tiles 
+  public static function printArea(game: Game, area: AreaGame, mapTiles: Array<String>)
+    {
+      var cells = area.getCells();
+      var s = 'XX: ';
+      for (i in 0...Std.int(cells.length / 10))
+        s += '|123456789';
+      js.Browser.console.log(s);
+      var list = '';
+      var lastRoomID = 0;
+      for (y in 0...area.height)
+        {
+          var s = '';
+          var tileID = 0;
+          for (x in 0...area.width)
+            {
+              tileID = cells[x][y];
+              // room IDs after
+              if (tileID < 100)
+                s += '' + mapTiles[cells[x][y]];
+              else
+                {
+                  var char = String.fromCharCode(tileID - 100 + 97);
+                  if (lastRoomID < tileID)
+                    {
+
+                      list += char + ': ' + tileID + ', ';
+                      lastRoomID = tileID;
+                    }
+                  s += char;
+                }
+            }
+          js.Browser.console.log((y < 10 ? '0' : '') + y + ': ' + s);
+        }
+      js.Browser.console.log(list);
+    }
 
 // generate a city block
   static function generateCity(state: _GeneratorState, game: Game, area: AreaGame, info: AreaInfo)

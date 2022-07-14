@@ -145,6 +145,9 @@ class Game extends _SaveObject
         skipTutorial();
 
       updateHUD(); // update HUD state
+      // TODO: REMOVE TEST!!!
+      var testArea = region.getRandomWithType(AREA_FACILITY, false);
+      @:privateAccess testArea.generate();
 
       isInited = true;
     }
