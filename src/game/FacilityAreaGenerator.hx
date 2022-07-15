@@ -20,7 +20,7 @@ class FacilityAreaGenerator
       finalTiles = [
         TEMP_BLANK => Const.TILE_ROAD,
         TEMP_BUILDING_WALL => Const.TILE_BUILDING,
-//        TEMP_BUILDING_ROOM => Const.TILE_GROUND,
+        TEMP_BUILDING_ROOM => Const.TILE_FLOOR_TILE,
         TEMP_BUILDING_CORRIDOR => Const.TILE_FLOOR_LINO,
         TEMP_BUILDING_FRONT_DOOR => Const.TILE_DOOR_DOUBLE,
         TEMP_BUILDING_SIDE_DOOR => Const.TILE_DOOR_GLASS,
@@ -207,6 +207,10 @@ class FacilityAreaGenerator
 
       // make windows
       makeWindows(state, bx, by, bw, bh);
+
+      // work on individual rooms
+      generateRoomContents(state);
+
 //      replaceTiles(cells, bx, by, bw, bh,
 //        TEMP_BUILDING_ROOM_MARKED, TEMP_BUILDING_ROOM);
     }
@@ -567,6 +571,69 @@ class FacilityAreaGenerator
         }
     }
 
+// fill rooms with content
+  static function generateRoomContents(state: _FacilityState)
+    {
+      for (room in state.rooms)
+        {
+          roomChemistryLab(state, room);
+        }
+    }
+
+// make this room a chem lab
+  static function roomChemistryLab(state: _FacilityState, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var tableW = 1 + Std.random(3), tableH = 1 + Std.random(3);
+      if (room.w <= 5)
+        tableW = 1;
+      else if (room.w > 5)
+        tableW = 2;
+      if (room.h <= 5)
+        tableH = 1;
+      else if (room.h > 5)
+        tableH = 2;
+      if (tableW == 3 && tableH == 3)
+        tableW = 2;
+      var table1: Array<Array<Int>> =
+        Reflect.field(Const, 'LABS_TABLE_' + tableW + 'X' + tableH);
+      var table2: Array<Array<Int>> =
+        Reflect.field(Const, 'LABS_TABLE2_' + tableW + 'X' + tableH);
+
+      // clear room to default tile
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, TEMP_BUILDING_ROOM);
+
+      // go left
+      var sx = room.x1 + Std.random(2), sy = room.y1 + Std.random(2);
+      var x = sx, y = sy;
+      while (x <= room.x2 + 1 - tableW)
+        {
+          // go down
+          while (y <= room.y2 + 1 - tableH)
+            {
+              // check if this block is near door
+              if (!isBlockNearDoor(cells, x, y, tableW, tableH))
+                drawArray(cells, x, y,
+                  (Std.random(100) < 30 ? table2 : table1));
+              y += tableH + 1;
+            }
+          x += tableW + 1;
+          y = sy;
+        }
+    }
+
+// check a w,h block at x,y if it is near a door
+  static function isBlockNearDoor(cells: Array<Array<Int>>, x: Int, y: Int,
+      w: Int, h: Int): Bool
+    {
+      for (i in -1...w + 1)
+        for (j in -1...h + 1)
+          if (cells[x + i][y + j] == TEMP_BUILDING_INNER_DOOR)
+            return true;
+      return false;
+    }
+
 // mark all A tiles to B tiles in rect
   static function replaceTiles(cells: Array<Array<Int>>,
       sx: Int, sy: Int, w: Int, h: Int, from: Int, to: Int)
@@ -651,8 +718,8 @@ class FacilityAreaGenerator
         y1: sy,
         x2: sx + w,
         y2: sy + h,
-        w: w,
-        h: h,
+        w: w + 1,
+        h: h + 1,
       }
     }
 
@@ -784,7 +851,25 @@ class FacilityAreaGenerator
       else for (i in 0...w)
         cells[x][y + i] = tile;
     }
-  
+
+// draw a w,h block at x,y 
+  static function drawBlock(cells: Array<Array<Int>>, x: Int, y: Int,
+      w: Int, h: Int, tile: Int)
+    {
+      for (i in 0...w)
+        for (j in 0...h)
+          cells[x + i][y + j] = tile;
+    }
+
+// draw an 2-dim array at x,y 
+  static function drawArray(cells: Array<Array<Int>>, x: Int, y: Int,
+      block: Array<Array<Int>>)
+    {
+      for (i in 0...block[0].length)
+        for (j in 0...block.length)
+          cells[x + i][y + j] = block[j][i];
+    }
+
 // replace all temp tiles into final ones
   static function finalizeTiles(state: _FacilityState)
     {
@@ -794,8 +879,11 @@ class FacilityAreaGenerator
         for (x in 0...area.width)
           {
             var tileID = cells[x][y];
+            if (tileID >= Const.OFFSET_ROW8)
+              continue;
+/*
             if (tileID >= TEMP_BUILDING_ROOM_ID_START)
-              tileID = Const.TILE_FLOOR_TILE;
+              tileID = Const.TILE_FLOOR_TILE;*/
             else tileID = finalTiles[tileID];
 
             cells[x][y] = tileID;
@@ -832,10 +920,11 @@ class FacilityAreaGenerator
   static var TEMP_BUILDING_WINDOWV1 = 13;
   static var TEMP_BUILDING_WINDOWV2 = 14;
   static var TEMP_BUILDING_WINDOWV3 = 15;
+  static var TEMP_BUILDING_TABLE = 16;
   static var TEMP_BUILDING_ROOM_ID_START = 100;
   static var mapTempTiles = [
     '0', '#', '2', '.', 'x', '+', 'w', '*', '8', 'X',
-    '<', '-', '>', '^', '|', 'v'
+    '<', '-', '>', '^', '|', 'v', '_'
   ];
 }
 

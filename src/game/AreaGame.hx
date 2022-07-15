@@ -715,7 +715,7 @@ class AreaGame extends _SaveObject
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-      return Const.TILE_SEETHROUGH[_cells[x][y]];
+      return (Const.TILE_SEETHROUGH[_cells[x][y]] == 1);
     }
 
 // check if tile is walkable
@@ -724,7 +724,7 @@ class AreaGame extends _SaveObject
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
 //      trace(x + ',' + y + ' ' + _cells[x][y]);
-      return Const.TILE_WALKABLE[_cells[x][y]];
+      return (Const.TILE_WALKABLE[_cells[x][y]] == 1);
     }
 
 // check if x1, y1 sees x2, y2

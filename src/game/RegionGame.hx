@@ -496,6 +496,6 @@ class RegionGame extends _SaveObject
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
 
-      return Const.TILE_WALKABLE[_array[x][y].tileID];
+      return (Const.TILE_WALKABLE[_array[x][y].tileID] == 1);
     }
 }

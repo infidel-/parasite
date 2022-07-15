@@ -94,9 +94,15 @@ class AreaGenerator
           for (x in 0...area.width)
             {
               tileID = cells[x][y];
+              var char = mapTiles[cells[x][y]];
+              s += (char != null ? char : '?');
+/*
               // room IDs after
               if (tileID < 100)
-                s += '' + mapTiles[cells[x][y]];
+                {
+                  var char = mapTiles[cells[x][y]];
+                  s += (char != null ? char : '?');
+                }
               else
                 {
                   var char = String.fromCharCode(tileID - 100 + 97);
@@ -107,7 +113,7 @@ class AreaGenerator
                       lastRoomID = tileID;
                     }
                   s += char;
-                }
+                }*/
             }
           js.Browser.console.log((y < 10 ? '0' : '') + y + ': ' + s);
         }

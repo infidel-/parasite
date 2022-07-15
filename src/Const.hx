@@ -146,81 +146,151 @@ class Const
 
   public static var OFFSET_CITY = 64;
 
+  public static var OFFSET_ROW8 = 128;
+  public static var OFFSET_ROW9 = 144;
+  public static var OFFSET_ROW10 = 160;
+  public static var TILE_LABS_TABLE_3X3_7 = OFFSET_ROW8 + 0;
+  public static var TILE_LABS_TABLE_3X3_8 = OFFSET_ROW8 + 1;
+  public static var TILE_LABS_TABLE_3X3_9 = OFFSET_ROW8 + 2;
+  public static var TILE_LABS_TABLE_3X3_4 = OFFSET_ROW9 + 0;
+  public static var TILE_LABS_TABLE_3X3_5 = OFFSET_ROW9 + 1;
+  public static var TILE_LABS_TABLE_3X3_6 = OFFSET_ROW9 + 2;
+  public static var TILE_LABS_TABLE_3X3_1 = OFFSET_ROW10 + 0;
+  public static var TILE_LABS_TABLE_3X3_2 = OFFSET_ROW10 + 1;
+  public static var TILE_LABS_TABLE_3X3_3 = OFFSET_ROW10 + 2;
+  public static var LABS_TABLE_2X2 = [
+    [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_9 ],
+    [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_3 ],
+  ];
+  public static var LABS_TABLE_3X2 = [
+    [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_9 ],
+    [ TILE_LABS_TABLE_3X3_4, TILE_LABS_TABLE_3X3_6 ],
+    [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_3 ],
+  ];
+  public static var LABS_TABLE_2X3 = [
+    [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_8, TILE_LABS_TABLE_3X3_9, ],
+    [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_2, TILE_LABS_TABLE_3X3_3, ],
+  ];
+
+  public static var TILE_LABS_TABLE2_3X3_7 = OFFSET_ROW8 + 4;
+  public static var TILE_LABS_TABLE2_3X3_8 = OFFSET_ROW8 + 5;
+  public static var TILE_LABS_TABLE2_3X3_9 = OFFSET_ROW8 + 6;
+  public static var TILE_LABS_TABLE2_3X3_4 = OFFSET_ROW9 + 4;
+  public static var TILE_LABS_TABLE2_3X3_5 = OFFSET_ROW9 + 5;
+  public static var TILE_LABS_TABLE2_3X3_6 = OFFSET_ROW9 + 6;
+  public static var TILE_LABS_TABLE2_3X3_1 = OFFSET_ROW10 + 4;
+  public static var TILE_LABS_TABLE2_3X3_2 = OFFSET_ROW10 + 5;
+  public static var TILE_LABS_TABLE2_3X3_3 = OFFSET_ROW10 + 6;
+  public static var LABS_TABLE2_2X2 = [
+    [ TILE_LABS_TABLE2_3X3_7, TILE_LABS_TABLE2_3X3_9 ],
+    [ TILE_LABS_TABLE2_3X3_1, TILE_LABS_TABLE2_3X3_3 ],
+  ];
+  public static var LABS_TABLE2_3X2 = [
+    [ TILE_LABS_TABLE2_3X3_7, TILE_LABS_TABLE2_3X3_9 ],
+    [ TILE_LABS_TABLE2_3X3_4, TILE_LABS_TABLE2_3X3_6 ],
+    [ TILE_LABS_TABLE2_3X3_1, TILE_LABS_TABLE2_3X3_3 ],
+  ];
+  public static var LABS_TABLE2_2X3 = [
+    [ TILE_LABS_TABLE2_3X3_7, TILE_LABS_TABLE2_3X3_8, TILE_LABS_TABLE2_3X3_9, ],
+    [ TILE_LABS_TABLE2_3X3_1, TILE_LABS_TABLE2_3X3_2, TILE_LABS_TABLE2_3X3_3, ],
+  ];
+
+  public static var TILE_LABS_TABLE_1X3_1 = OFFSET_ROW8 + 3;
+  public static var TILE_LABS_TABLE_1X3_2 = OFFSET_ROW9 + 3;
+  public static var TILE_LABS_TABLE_1X3_3 = OFFSET_ROW10 + 3;
+  public static var LABS_TABLE_1X3 = [
+    [ TILE_LABS_TABLE_1X3_1 ],
+    [ TILE_LABS_TABLE_1X3_2 ],
+    [ TILE_LABS_TABLE_1X3_3 ],
+  ];
+  public static var LABS_TABLE_1X2 = [
+    [ TILE_LABS_TABLE_1X3_1 ],
+    [ TILE_LABS_TABLE_1X3_3 ],
+  ];
+
+  public static var TILE_LABS_TABLE2_1X3_1 = OFFSET_ROW8 + 7;
+  public static var TILE_LABS_TABLE2_1X3_2 = OFFSET_ROW9 + 7;
+  public static var TILE_LABS_TABLE2_1X3_3 = OFFSET_ROW10 + 7;
+  public static var LABS_TABLE2_1X3 = [
+    [ TILE_LABS_TABLE2_1X3_1 ],
+    [ TILE_LABS_TABLE2_1X3_2 ],
+    [ TILE_LABS_TABLE2_1X3_3 ],
+  ];
+  public static var LABS_TABLE2_1X2 = [
+    [ TILE_LABS_TABLE2_1X3_1 ],
+    [ TILE_LABS_TABLE2_1X3_3 ],
+  ];
+
+  public static var OFFSET_ROW11 = 176;
+  public static var TILE_LABS_TABLE_3X1_1 = OFFSET_ROW11 + 0;
+  public static var TILE_LABS_TABLE_3X1_2 = OFFSET_ROW11 + 1;
+  public static var TILE_LABS_TABLE_3X1_3 = OFFSET_ROW11 + 2;
+  public static var LABS_TABLE_3X1 = [
+    [ TILE_LABS_TABLE_3X1_1, TILE_LABS_TABLE_3X1_2, TILE_LABS_TABLE_3X1_3, ]
+  ];
+  public static var LABS_TABLE_2X1 = [
+    [ TILE_LABS_TABLE_3X1_1, TILE_LABS_TABLE_3X1_3, ]
+  ];
+  public static var TILE_LABS_TABLE_1X1 = OFFSET_ROW11 + 3;
+  public static var LABS_TABLE_1X1 = [[ TILE_LABS_TABLE_1X1 ]];
+
+  public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
+  public static var TILE_LABS_TABLE2_3X1_2 = OFFSET_ROW11 + 5;
+  public static var TILE_LABS_TABLE2_3X1_3 = OFFSET_ROW11 + 6;
+  public static var LABS_TABLE2_3X1 = [
+    [ TILE_LABS_TABLE2_3X1_1, TILE_LABS_TABLE2_3X1_2, TILE_LABS_TABLE2_3X1_3, ]
+  ];
+  public static var LABS_TABLE2_2X1 = [
+    [ TILE_LABS_TABLE2_3X1_1, TILE_LABS_TABLE2_3X1_3, ]
+  ];
+  public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
+  public static var LABS_TABLE2_1X1 = [[ TILE_LABS_TABLE2_1X1 ]];
+
   public static var TILE_CITY_WALKABLE = [ true ];
 
   public static var TILE_WALKABLE = [
     // row 0
-    false, true, false, true, false, false, false, false,
-    false, true, true, true, false, false, false, false,
+    0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
     // row 1 - region
-    true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
-    true, true, true, false, false, false, false, false,
-    false, false, false, true, false, true, false, true,
+    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
     // row 3 - floor
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
     // row 4+ - region tiles
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
+    // row 8,9,10,11 - table
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
-    false, true, false, true, false, false, false, false,
-    false, true, true, true, false, false, false, false,
+    0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
     // row 1 - region
-    true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
-    true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 3 - floor
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
     // row 4+ - region tiles
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
-    true, true, true, true,
+    // row 8,9,10,11 - table
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock',
     'wall', 'tree', 'tree', 'tree', 'tree', 'grass' ];
