@@ -355,7 +355,7 @@ class AreaGame extends _SaveObject
         for (x in 0...width)
           _cells[x][y] = baseTile;
 
-      AreaGenerator.generate(game, this, info);
+      game.areaGenerator.generate(this, info);
 
       // set path info
       _pathEngine = new aPath.Engine(this, width, height);

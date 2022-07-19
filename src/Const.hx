@@ -18,37 +18,37 @@ class Const
   public static var TILE_SIZE = TILE_SIZE_CLEAN; // screen tile size
 
   // text color strings
-  public static var TEXT_COLORS: Map<_TextColor, String> =
-    [
-      COLOR_DEFAULT => '#FFFFFF',
-      COLOR_ALERT => '#FC420E',
-      COLOR_ORGAN => '#e0e13a',
-      COLOR_EVOLUTION => '#73f3ff',
-      COLOR_DEBUG => '#a7a7a7',
-      COLOR_HINT => '#e36767',
-      COLOR_TIMELINE => '#f7af46',
-      COLOR_MESSAGE => '#30FF6B',
-      COLOR_GOAL => '#92B9FF',
-    ];
+  public static var TEXT_COLORS: Map<_TextColor, String> = [
+    COLOR_DEFAULT => '#FFFFFF',
+    COLOR_ALERT => '#FC420E',
+    COLOR_ORGAN => '#e0e13a',
+    COLOR_EVOLUTION => '#73f3ff',
+    COLOR_DEBUG => '#a7a7a7',
+    COLOR_HINT => '#e36767',
+    COLOR_TIMELINE => '#f7af46',
+    COLOR_MESSAGE => '#30FF6B',
+    COLOR_GOAL => '#92B9FF',
+  ];
   // copy-pasted for now
   // TODO: move to TEXT_COLORS
-  public static var TEXT_COLORS_INT: Map<_TextColor, Int> =
-    [
-      COLOR_DEFAULT => 0xFFFFFF,
-      COLOR_DEBUG => 0x777777,
-      COLOR_ALERT => 0xFF2222,
-      COLOR_EVOLUTION => 0x00FFFF,
-      COLOR_ORGAN => 0xDDDD00,
-      COLOR_HINT => 0xA020F0,
-      COLOR_TIMELINE => 0xF03378,
-      COLOR_MESSAGE => 0x1CD450,
-      COLOR_GOAL => 0x4788FF,
-    ];
+  public static var TEXT_COLORS_INT: Map<_TextColor, Int> = [
+    COLOR_DEFAULT => 0xFFFFFF,
+    COLOR_DEBUG => 0x777777,
+    COLOR_ALERT => 0xFF2222,
+    COLOR_EVOLUTION => 0x00FFFF,
+    COLOR_ORGAN => 0xDDDD00,
+    COLOR_HINT => 0xA020F0,
+    COLOR_TIMELINE => 0xF03378,
+    COLOR_MESSAGE => 0x1CD450,
+    COLOR_GOAL => 0x4788FF,
+  ];
 
   // entity spritemap indexes
+  public static var ROW_ALERT = 0;
   public static var FRAME_EMPTY = 0;
 
   // alert row frames
+  public static var ROW_REGION_ICON = 1;
   public static var FRAME_ALERT1 = 1;
   public static var FRAME_ALERT2 = 2;
   public static var FRAME_ALERT3 = 3;
@@ -67,6 +67,7 @@ class Const
   public static var FRAME_HABITAT_AMBUSHED = 6;
 
   // object row frames
+  public static var ROW_OBJECT = 2;
   public static var FRAME_SEWER_HATCH = 0;
   public static var FRAME_PAPER = 1;
   public static var FRAME_BOOK = 2;
@@ -77,29 +78,35 @@ class Const
   public static var FRAME_NUTRIENT = 7;
 
   // effect row frames
+  public static var ROW_EFFECT = 3;
   public static var FRAME_PANIC_GAS = 0;
   public static var FRAME_PARALYSIS_GAS = 1;
 
   // parasite row frames
+  public static var ROW_PARASITE = 4;
   public static var FRAME_PARASITE = 0;
   public static var FRAME_DOG = 1;
   public static var FRAME_MASK_CONTROL = 2;
   public static var FRAME_MASK_ATTACHED = 3;
   public static var FRAME_DOT = 4;
 
-  public static var ROW_ALERT = 0;
-  public static var ROW_REGION_ICON = 1;
-  public static var ROW_OBJECT = 2;
-  public static var ROW_EFFECT = 3;
-  public static var ROW_PARASITE = 4;
-
   public static var ROW_BIOMINERAL = 5;
   public static var ROW_ASSIMILATION = 6;
   public static var ROW_WATCHER = 7;
 
+  // row 8 - chem laboratory decoration floor
+  public static var ROW_CHEM_LABS_DECO_FLOOR = 8;
+  public static var ROW_CHEM_LABS_DECO_FLOOR_AMOUNT = 10;
+
+  // row 9 - chem laboratory decoration table
+  public static var ROW_CHEM_LABS_DECO_TABLE = 9;
+  public static var ROW_CHEM_LABS_DECO_TABLE_AMOUNT = 10;
+
+  // ==============================================
+  // ==============================================
+  // ==============================================
+
   public static var FRAME_DEFAULT = 0;
-
-
   // tiles spritemap indexes
   // row 0
   public static var TILE_HIDDEN = 0;
@@ -146,6 +153,7 @@ class Const
 
   public static var OFFSET_CITY = 64;
 
+  // === row 8-10 - tables
   public static var OFFSET_ROW8 = 128;
   public static var OFFSET_ROW9 = 144;
   public static var OFFSET_ROW10 = 160;
@@ -221,6 +229,7 @@ class Const
     [ TILE_LABS_TABLE2_1X3_3 ],
   ];
 
+  // === row 11 - tables
   public static var OFFSET_ROW11 = 176;
   public static var TILE_LABS_TABLE_3X1_1 = OFFSET_ROW11 + 0;
   public static var TILE_LABS_TABLE_3X1_2 = OFFSET_ROW11 + 1;
@@ -246,8 +255,10 @@ class Const
   public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
   public static var LABS_TABLE2_1X1 = [[ TILE_LABS_TABLE2_1X1 ]];
 
-  public static var TILE_CITY_WALKABLE = [ true ];
+  // === row 12 -
+  public static var OFFSET_ROW12 = 240;
 
+  public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_WALKABLE = [
     // row 0
     0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
@@ -264,7 +275,7 @@ class Const
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
-    // row 8,9,10,11 - table
+    // row 8-11 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -286,7 +297,7 @@ class Const
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
-    // row 8,9,10,11 - table
+    // row 8-11 - table
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

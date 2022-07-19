@@ -13,7 +13,7 @@ import scenario.Timeline;
 class Game extends _SaveObject
 {
   static var _ignoredFields = [ 'importantMessagesEnabled', 'region',
-    'area',
+    'area', 'areaGenerator',
   ];
   public static var inst: Game;
   public var config: Config; // game config
@@ -27,6 +27,7 @@ class Game extends _SaveObject
   public var group: Group; // conspiracy group - antags
   public var console: ConsoleGame; // game console
 
+  public var areaGenerator: AreaGenerator; // generator link
   public var area: AreaGame; // current area link
   public var managerArea: AreaManager; // area event manager
   public var debugArea: DebugArea; // debug actions (area mode)
@@ -54,6 +55,7 @@ class Game extends _SaveObject
       scene = new GameScene(this);
       console = new ConsoleGame(this);
       managerWorld = new WorldManager(this);
+      areaGenerator = new AreaGenerator(this);
       messageList = new List();
       hudMessageList = new List();
       importantMessagesEnabled = true;
@@ -117,6 +119,12 @@ class Game extends _SaveObject
           isInhabited: true,
           minRadius: 2,
           maxRadius: 5 });
+      // TODO: REMOVE TEST!!!
+      area = region.getRandomWithType(AREA_FACILITY, false);
+      player.vars.losEnabled = false;
+      player.vars.godmodeEnabled = true;
+//      @:privateAccess testArea.generate();
+
       playerRegion.createEntity(area.x, area.y);
 
       // make area tiles around player known
@@ -145,9 +153,6 @@ class Game extends _SaveObject
         skipTutorial();
 
       updateHUD(); // update HUD state
-      // TODO: REMOVE TEST!!!
-      var testArea = region.getRandomWithType(AREA_FACILITY, false);
-      @:privateAccess testArea.generate();
 
       isInited = true;
     }

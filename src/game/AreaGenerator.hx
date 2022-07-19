@@ -8,7 +8,15 @@ import game.AreaGame;
 
 class AreaGenerator
 {
-  public static function generate(game: Game, area: AreaGame, info: AreaInfo)
+  public var game: Game;
+
+  public function new(g: Game)
+    {
+      game = g;
+    }
+
+// generate area
+  public function generate(area: AreaGame, info: AreaInfo)
     {
       var state: _GeneratorState = {
         alleys: new List(),

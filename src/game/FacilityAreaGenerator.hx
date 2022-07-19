@@ -613,9 +613,44 @@ class FacilityAreaGenerator
           while (y <= room.y2 + 1 - tableH)
             {
               // check if this block is near door
-              if (!isBlockNearDoor(cells, x, y, tableW, tableH))
-                drawArray(cells, x, y,
-                  (Std.random(100) < 30 ? table2 : table1));
+              if (isBlockNearDoor(cells, x, y, tableW, tableH))
+                {
+                  y += tableH + 1;
+                  continue;
+                }
+
+              var addFloorDecoration = false;
+              if (y == room.y1 || y == room.y2)
+                if (Std.random(100) < 30)
+                  addFloorDecoration = true;
+
+              // table
+              if (!addFloorDecoration)
+                {
+                  var block = (Std.random(100) < 30 ? table2 : table1);
+                  for (i in 0...block[0].length)
+                    for (j in 0...block.length)
+                      {
+                        cells[x + i][y + j] = block[j][i];
+                        if (Std.random(100) < 10)
+                          {
+                            var col = Std.random(Const.ROW_CHEM_LABS_DECO_TABLE_AMOUNT);
+                            var o = new Decoration(state.game, state.area.id,
+                              x + i, y + j, Const.ROW_CHEM_LABS_DECO_TABLE, col);
+                            state.area.addObject(o);
+                          }
+                      }
+
+//                drawArray(cells, x, y,
+//                  (Std.random(100) < 30 ? table2 : table1));
+                }
+              else 
+                {
+                  var col = Std.random(Const.ROW_CHEM_LABS_DECO_FLOOR_AMOUNT);
+                  var o = new Decoration(state.game, state.area.id,
+                    x, y, Const.ROW_CHEM_LABS_DECO_FLOOR, col);
+                  state.area.addObject(o);
+                }
               y += tableH + 1;
             }
           x += tableW + 1;
