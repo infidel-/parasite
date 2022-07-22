@@ -94,13 +94,32 @@ class Const
   public static var ROW_ASSIMILATION = 6;
   public static var ROW_WATCHER = 7;
 
-  // row 8 - chem laboratory decoration floor
-  public static var ROW_CHEM_LABS_DECO_FLOOR = 8;
-  public static var ROW_CHEM_LABS_DECO_FLOOR_AMOUNT = 10;
+  // row 8 - chem laboratory decoration floor (high)
+  public static var CHEM_LABS_DECO_FLOOR_HIGH = [
+    { row: 8, amount: 12 },
+    { row: 13, amount: 7 },
+  ];
 
-  // row 9 - chem laboratory decoration table
-  public static var ROW_CHEM_LABS_DECO_TABLE = 9;
-  public static var ROW_CHEM_LABS_DECO_TABLE_AMOUNT = 10;
+  // row 9-11 - chem laboratory decoration table
+  public static var CHEM_LABS_DECO_TABLE: Array<_TileRow> = [
+    { row: 9, amount: 12 },
+    { row: 10, amount: 12 },
+    { row: 11, amount: 12 },
+    { row: 14, amount: 6 },
+  ];
+
+  // row 12 - chem laboratory decoration floor (low)
+  public static var CHEM_LABS_DECO_FLOOR_LOW = [
+    { row: 12, amount: 11 },
+  ];
+
+  public static var ROW_DOORS = 15;
+  public static var FRAME_DOOR_CABINET = 0;
+  public static var FRAME_DOOR_CABINET_OPEN = 1;
+  public static var FRAME_DOOR_DOUBLE = 2;
+  public static var FRAME_DOOR_DOUBLE_OPEN = 3;
+  public static var FRAME_DOOR_GLASS = 4;
+  public static var FRAME_DOOR_GLASS_OPEN = 5;
 
   // ==============================================
   // ==============================================
@@ -139,17 +158,14 @@ class Const
   public static var TILE_WINDOWV1 = OFFSET_AREA + 7;
   public static var TILE_WINDOWV2 = OFFSET_AREA + 8;
   public static var TILE_WINDOWV3 = OFFSET_AREA + 9;
-  public static var TILE_DOOR_CABINET = OFFSET_AREA + 10;
-  public static var TILE_DOOR_CABINET_OPEN = OFFSET_AREA + 11;
-  public static var TILE_DOOR_DOUBLE = OFFSET_AREA + 12;
-  public static var TILE_DOOR_DOUBLE_OPEN = OFFSET_AREA + 13;
-  public static var TILE_DOOR_GLASS = OFFSET_AREA + 14;
-  public static var TILE_DOOR_GLASS_OPEN = OFFSET_AREA + 15;
 
   // row 3
   public static var OFFSET_ROW3 = 48;
   public static var TILE_FLOOR_TILE = OFFSET_ROW3 + 0;
-  public static var TILE_FLOOR_LINO = OFFSET_ROW3 + 1;
+  public static var TILE_FLOOR_TILE_GRATE1 = OFFSET_ROW3 + 1;
+  public static var TILE_FLOOR_TILE_GRATE2 = OFFSET_ROW3 + 2;
+  public static var TILE_FLOOR_TILE_GRATE3 = OFFSET_ROW3 + 3;
+  public static var TILE_FLOOR_LINO = OFFSET_ROW3 + 4;
 
   public static var OFFSET_CITY = 64;
 
@@ -166,18 +182,14 @@ class Const
   public static var TILE_LABS_TABLE_3X3_1 = OFFSET_ROW10 + 0;
   public static var TILE_LABS_TABLE_3X3_2 = OFFSET_ROW10 + 1;
   public static var TILE_LABS_TABLE_3X3_3 = OFFSET_ROW10 + 2;
-  public static var LABS_TABLE_2X2 = [
-    [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_9 ],
-    [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_3 ],
+  public static var LABS_TABLE_2X3 = [
+    [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_8, TILE_LABS_TABLE_3X3_9, ],
+    [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_2, TILE_LABS_TABLE_3X3_3, ],
   ];
   public static var LABS_TABLE_3X2 = [
     [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_9 ],
     [ TILE_LABS_TABLE_3X3_4, TILE_LABS_TABLE_3X3_6 ],
     [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_3 ],
-  ];
-  public static var LABS_TABLE_2X3 = [
-    [ TILE_LABS_TABLE_3X3_7, TILE_LABS_TABLE_3X3_8, TILE_LABS_TABLE_3X3_9, ],
-    [ TILE_LABS_TABLE_3X3_1, TILE_LABS_TABLE_3X3_2, TILE_LABS_TABLE_3X3_3, ],
   ];
 
   public static var TILE_LABS_TABLE2_3X3_7 = OFFSET_ROW8 + 4;
@@ -189,71 +201,25 @@ class Const
   public static var TILE_LABS_TABLE2_3X3_1 = OFFSET_ROW10 + 4;
   public static var TILE_LABS_TABLE2_3X3_2 = OFFSET_ROW10 + 5;
   public static var TILE_LABS_TABLE2_3X3_3 = OFFSET_ROW10 + 6;
-  public static var LABS_TABLE2_2X2 = [
-    [ TILE_LABS_TABLE2_3X3_7, TILE_LABS_TABLE2_3X3_9 ],
-    [ TILE_LABS_TABLE2_3X3_1, TILE_LABS_TABLE2_3X3_3 ],
-  ];
-  public static var LABS_TABLE2_3X2 = [
-    [ TILE_LABS_TABLE2_3X3_7, TILE_LABS_TABLE2_3X3_9 ],
-    [ TILE_LABS_TABLE2_3X3_4, TILE_LABS_TABLE2_3X3_6 ],
-    [ TILE_LABS_TABLE2_3X3_1, TILE_LABS_TABLE2_3X3_3 ],
-  ];
-  public static var LABS_TABLE2_2X3 = [
-    [ TILE_LABS_TABLE2_3X3_7, TILE_LABS_TABLE2_3X3_8, TILE_LABS_TABLE2_3X3_9, ],
-    [ TILE_LABS_TABLE2_3X3_1, TILE_LABS_TABLE2_3X3_2, TILE_LABS_TABLE2_3X3_3, ],
-  ];
 
   public static var TILE_LABS_TABLE_1X3_1 = OFFSET_ROW8 + 3;
   public static var TILE_LABS_TABLE_1X3_2 = OFFSET_ROW9 + 3;
   public static var TILE_LABS_TABLE_1X3_3 = OFFSET_ROW10 + 3;
-  public static var LABS_TABLE_1X3 = [
-    [ TILE_LABS_TABLE_1X3_1 ],
-    [ TILE_LABS_TABLE_1X3_2 ],
-    [ TILE_LABS_TABLE_1X3_3 ],
-  ];
-  public static var LABS_TABLE_1X2 = [
-    [ TILE_LABS_TABLE_1X3_1 ],
-    [ TILE_LABS_TABLE_1X3_3 ],
-  ];
-
   public static var TILE_LABS_TABLE2_1X3_1 = OFFSET_ROW8 + 7;
   public static var TILE_LABS_TABLE2_1X3_2 = OFFSET_ROW9 + 7;
   public static var TILE_LABS_TABLE2_1X3_3 = OFFSET_ROW10 + 7;
-  public static var LABS_TABLE2_1X3 = [
-    [ TILE_LABS_TABLE2_1X3_1 ],
-    [ TILE_LABS_TABLE2_1X3_2 ],
-    [ TILE_LABS_TABLE2_1X3_3 ],
-  ];
-  public static var LABS_TABLE2_1X2 = [
-    [ TILE_LABS_TABLE2_1X3_1 ],
-    [ TILE_LABS_TABLE2_1X3_3 ],
-  ];
 
   // === row 11 - tables
   public static var OFFSET_ROW11 = 176;
   public static var TILE_LABS_TABLE_3X1_1 = OFFSET_ROW11 + 0;
   public static var TILE_LABS_TABLE_3X1_2 = OFFSET_ROW11 + 1;
   public static var TILE_LABS_TABLE_3X1_3 = OFFSET_ROW11 + 2;
-  public static var LABS_TABLE_3X1 = [
-    [ TILE_LABS_TABLE_3X1_1, TILE_LABS_TABLE_3X1_2, TILE_LABS_TABLE_3X1_3, ]
-  ];
-  public static var LABS_TABLE_2X1 = [
-    [ TILE_LABS_TABLE_3X1_1, TILE_LABS_TABLE_3X1_3, ]
-  ];
   public static var TILE_LABS_TABLE_1X1 = OFFSET_ROW11 + 3;
-  public static var LABS_TABLE_1X1 = [[ TILE_LABS_TABLE_1X1 ]];
 
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
   public static var TILE_LABS_TABLE2_3X1_2 = OFFSET_ROW11 + 5;
   public static var TILE_LABS_TABLE2_3X1_3 = OFFSET_ROW11 + 6;
-  public static var LABS_TABLE2_3X1 = [
-    [ TILE_LABS_TABLE2_3X1_1, TILE_LABS_TABLE2_3X1_2, TILE_LABS_TABLE2_3X1_3, ]
-  ];
-  public static var LABS_TABLE2_2X1 = [
-    [ TILE_LABS_TABLE2_3X1_1, TILE_LABS_TABLE2_3X1_3, ]
-  ];
   public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
-  public static var LABS_TABLE2_1X1 = [[ TILE_LABS_TABLE2_1X1 ]];
 
   // === row 12 -
   public static var OFFSET_ROW12 = 240;
@@ -265,7 +231,7 @@ class Const
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
-    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
+    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
     // row 3 - floor
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
@@ -486,3 +452,5 @@ class Const
       return s.substr(0, 1).toUpperCase() + s.substr(1);
     }
 }
+
+typedef _TileRow = { row: Int, amount: Int }

@@ -3,6 +3,7 @@
 package game;
 
 import const.WorldConst;
+import Const;
 import objects.*;
 import game.AreaGame;
 
@@ -22,8 +23,8 @@ class FacilityAreaGenerator
         TEMP_BUILDING_WALL => Const.TILE_BUILDING,
         TEMP_BUILDING_ROOM => Const.TILE_FLOOR_TILE,
         TEMP_BUILDING_CORRIDOR => Const.TILE_FLOOR_LINO,
-        TEMP_BUILDING_FRONT_DOOR => Const.TILE_DOOR_DOUBLE,
-        TEMP_BUILDING_SIDE_DOOR => Const.TILE_DOOR_GLASS,
+        TEMP_BUILDING_FRONT_DOOR => Const.TILE_FLOOR_LINO,
+        TEMP_BUILDING_SIDE_DOOR => Const.TILE_FLOOR_LINO,
         TEMP_BUILDING_WINDOW => Const.TILE_WINDOW1,
         TEMP_BUILDING_WINDOWH1 => Const.TILE_WINDOWH1,
         TEMP_BUILDING_WINDOWH2 => Const.TILE_WINDOWH2,
@@ -33,7 +34,7 @@ class FacilityAreaGenerator
         TEMP_BUILDING_WINDOWV3 => Const.TILE_WINDOWV3,
         TEMP_BUILDING_INNER_WALL => Const.TILE_BUILDING,
 //        TEMP_BUILDING_ROOM_MARKED => Const.TILE_GROUND,
-        TEMP_BUILDING_INNER_DOOR => Const.TILE_DOOR_CABINET,
+        TEMP_BUILDING_INNER_DOOR => Const.TILE_FLOOR_LINO,
       ];
       var state: _FacilityState = {
         game: game,
@@ -507,66 +508,168 @@ class FacilityAreaGenerator
         [ TEMP_BUILDING_WINDOWH1, TEMP_BUILDING_WINDOWH3 ],
         [ TEMP_BUILDING_WINDOWV1, TEMP_BUILDING_WINDOWV3 ],
       ];
+      var table1TilesList = [
+        [ Const.TILE_LABS_TABLE_3X1_1, Const.TILE_LABS_TABLE_3X1_2, Const.TILE_LABS_TABLE_3X1_3, ],
+        [ Const.TILE_LABS_TABLE_1X3_1, Const.TILE_LABS_TABLE_1X3_2, Const.TILE_LABS_TABLE_1X3_3, ],
+        [ Const.TILE_LABS_TABLE_3X1_1, Const.TILE_LABS_TABLE_3X1_3, ],
+        [ Const.TILE_LABS_TABLE_1X3_1, Const.TILE_LABS_TABLE_1X3_3, ],
+      ];
+      var table2TilesList = [
+        [ Const.TILE_LABS_TABLE2_3X1_1, Const.TILE_LABS_TABLE2_3X1_2, Const.TILE_LABS_TABLE2_3X1_3, ],
+        [ Const.TILE_LABS_TABLE2_1X3_1, Const.TILE_LABS_TABLE2_1X3_2, Const.TILE_LABS_TABLE2_1X3_3, ],
+        [ Const.TILE_LABS_TABLE2_3X1_1, Const.TILE_LABS_TABLE2_3X1_3, ],
+        [ Const.TILE_LABS_TABLE2_1X3_1, Const.TILE_LABS_TABLE2_1X3_3, ],
+      ];
       for (room in state.rooms)
         {
+          // clear room to default tile
+          drawBlock(cells, room.x1, room.y1, room.w, room.h, TEMP_BUILDING_ROOM);
           var corners = getRoomWallCorners(room);
 //          trace(room + ' ' + corners);
           for (spot in corners)
             {
+              var noWindow = false;
               if (cells[spot.x][spot.y] != TEMP_BUILDING_WALL)
-                continue;
+                noWindow = true;
 
               // pick correct window tiles list
               var windowSize = 3;
               var windowTiles = null;
+              var tableTilesList = table1TilesList;
+              // only upper horizontal tables can have drawers
+              if (spot.dir == DIR_RIGHT &&
+                  spot.dir90 == DIR_DOWN &&
+                  Std.random(100) < 50)
+                tableTilesList = table2TilesList;
+              var tableTiles = null;
               if (spot.dir == DIR_RIGHT && room.w < 7)
                 {
                   windowSize = 2;
                   windowTiles = windowTilesList[2];
+                  tableTiles = tableTilesList[2];
                 }
               else if (spot.dir == DIR_RIGHT)
-                windowTiles = windowTilesList[0];
+                {
+                  windowTiles = windowTilesList[0];
+                  tableTiles = tableTilesList[0];
+                }
               else if (spot.dir == DIR_DOWN && room.h < 7)
                 {
                   windowSize = 2;
                   windowTiles = windowTilesList[3];
+                  tableTiles = tableTilesList[3];
                 }
               else if (spot.dir == DIR_DOWN)
-                windowTiles = windowTilesList[1];
+                {
+                  windowTiles = windowTilesList[1];
+                  tableTiles = tableTilesList[1];
+                }
 
-              // paint window
+              // paint window and table near it
               var len = 0;
+              var tablelen = 0;
+              var cnt = 0;
               var delta = deltaMap[spot.dir];
+              var delta90 = deltaMap[spot.dir90];
               var x = spot.x, y = spot.y;
+              var tx = 0, ty = 0; // table x,y
+              var noTable = false;
               while (true)
                 {
                   x += delta.x;
                   y += delta.y;
+                  tx = x + delta90.x;
+                  ty = y + delta90.y;
                   if (cells[x][y] != TEMP_BUILDING_WALL)
-                    break;
+                    noWindow = true;
                   if (len >= windowSize)
                     {
                       len = 0;
+                      tablelen = 0;
+                      cnt++;
+                      if (spot.dir == DIR_DOWN &&
+                          y >= room.y2 - windowSize)
+                        noTable = true;
+                      else if (spot.dir == DIR_RIGHT &&
+                          x > room.x2 - windowSize)
+                        noTable = true;
+                      if (isBlockNearDoor(cells, x, y,
+                          (spot.dir == DIR_DOWN ? 1 : windowSize),
+                          (spot.dir == DIR_RIGHT ? 1 : windowSize)))
+                        noTable = true;
                       continue;
                     }
                   if (spot.dir == DIR_RIGHT && x >= room.x2 + 1)
                     break;
                   else if (spot.dir == DIR_DOWN && y >= room.y2 + 1)
                     break;
-                  cells[x][y] = windowTiles[len];
+                  if (!noWindow)
+                    cells[x][y] = windowTiles[len];
                   len++;
+                  // skip first vertical table
+                  if (spot.dir == DIR_DOWN && (cnt == 0))// || !noWindow))
+                    continue;
+                  // already table or decoration there
+                  if (cells[tx][ty] != TEMP_BUILDING_ROOM)
+                    continue;
+                  if (noTable)
+                    {
+                      // no table - add floor decoration
+                      if (!nextTo(cells, tx, ty, TEMP_BUILDING_INNER_DOOR) &&
+                          !area.hasObjectAt(tx, ty))
+                        {
+                          if (Std.random(100) < 70)
+                            {
+                              var arr = (Std.random(100) < 50 ?
+                                Const.CHEM_LABS_DECO_FLOOR_HIGH :
+                                Const.CHEM_LABS_DECO_FLOOR_LOW);
+                              if (nextToWindow(cells, tx, ty))
+                                arr = Const.CHEM_LABS_DECO_FLOOR_LOW;
+                              addDecoration(state, tx, ty, arr);
+                            }
+                        }
+                    }
+                  else
+                    {
+                      // add next table tile
+                      if (cells[tx][ty] == TEMP_BUILDING_ROOM)
+                        {
+                          cells[tx][ty] = tableTiles[tablelen];
+                          tablelen++;
+                        }
+                      // add table decoration
+                      if (Std.random(100) < 70)
+                        addDecoration(state, tx, ty,
+                          Const.CHEM_LABS_DECO_TABLE);
+                    }
                 }
               // fix last cell if necessary
               x -= delta.x;
               y -= delta.y;
               if (cells[x][y] == TEMP_BUILDING_WINDOWH2)
                 cells[x][y] = TEMP_BUILDING_WINDOWH3;
+/*
+              if (cells[x + delta90.x][y + delta90.y] == Const.TILE_L)
+                cells[x + delta90.x][y + delta90.y] =
+                  Const.TILE_LABS_TABLE_3X1_3;*/
               else if (cells[x][y] == TEMP_BUILDING_WINDOWH1)
-                cells[x][y] = TEMP_BUILDING_WINDOW;
+                {
+                  cells[x][y] = TEMP_BUILDING_WINDOW;
+//                  cells[x + delta90.x][y + delta90.y] =
+//                    Const.TILE_LABS_TABLE_1X1;
+                }
               else if (cells[x][y] == TEMP_BUILDING_WINDOWV2)
-                cells[x][y] = TEMP_BUILDING_WINDOWV3;
+                {
+                  cells[x][y] = TEMP_BUILDING_WINDOWV3;
+//                  cells[x + delta90.x][y + delta90.y] =
+//                    Const.TILE_LABS_TABLE_1X3_3;
+                }
               else if (cells[x][y] == TEMP_BUILDING_WINDOWV1)
-                cells[x][y] = TEMP_BUILDING_WINDOW;
+                {
+                  cells[x][y] = TEMP_BUILDING_WINDOW;
+//                  cells[x + delta90.x][y + delta90.y] =
+//                    Const.TILE_LABS_TABLE_1X1;
+                }
             }
         }
     }
@@ -585,77 +688,43 @@ class FacilityAreaGenerator
     {
       var area = state.area;
       var cells = area.getCells();
-      var tableW = 1 + Std.random(3), tableH = 1 + Std.random(3);
-      if (room.w <= 5)
-        tableW = 1;
-      else if (room.w > 5)
-        tableW = 2;
-      if (room.h <= 5)
-        tableH = 1;
-      else if (room.h > 5)
-        tableH = 2;
-      if (tableW == 3 && tableH == 3)
-        tableW = 2;
-      var table1: Array<Array<Int>> =
-        Reflect.field(Const, 'LABS_TABLE_' + tableW + 'X' + tableH);
-      var table2: Array<Array<Int>> =
-        Reflect.field(Const, 'LABS_TABLE2_' + tableW + 'X' + tableH);
 
-      // clear room to default tile
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, TEMP_BUILDING_ROOM);
+      // put a drain
+      var cx = room.x1 + 1 + Std.random(room.w - 2),
+        cy = room.y1 + 1 + Std.random(room.h - 2);
+      cells[cx][cy] = Const.TILE_FLOOR_TILE + 1 + Std.random(3);
 
-      // go left
-      var sx = room.x1 + Std.random(2), sy = room.y1 + Std.random(2);
-      var x = sx, y = sy;
-      while (x <= room.x2 + 1 - tableW)
-        {
-          // go down
-          while (y <= room.y2 + 1 - tableH)
-            {
-              // check if this block is near door
-              if (isBlockNearDoor(cells, x, y, tableW, tableH))
-                {
-                  y += tableH + 1;
-                  continue;
-                }
+      // make a big table near the center
+      if (room.w < 7 || room.h < 7)
+        return;
 
-              var addFloorDecoration = false;
-              if (y == room.y1 || y == room.y2)
-                if (Std.random(100) < 30)
-                  addFloorDecoration = true;
+      var block = Std.random(100) < 50 ? Const.LABS_TABLE_3X2 :
+        Const.LABS_TABLE_2X3;
+      var tableW = block[0].length, tableH = block.length;
+      var sx = room.x1 + 2 + Std.random(2),
+        sy = room.y1 + 2 + Std.random(2);
+      if (sx + tableW >= room.x2 - 2)
+        sx = room.x1 + 2;
+      if (sy + tableH >= room.y2 - 2)
+        sy = room.y1 + 2;
+      for (i in 0...tableH)
+        for (j in 0...tableW)
+          {
+            cells[sx + j][sy + i] = block[i][j];
+            if (Std.random(100) < 70)
+              addDecoration(state, sx + j, sy + i,
+                Const.CHEM_LABS_DECO_TABLE);
+          }
+    }
 
-              // table
-              if (!addFloorDecoration)
-                {
-                  var block = (Std.random(100) < 30 ? table2 : table1);
-                  for (i in 0...block[0].length)
-                    for (j in 0...block.length)
-                      {
-                        cells[x + i][y + j] = block[j][i];
-                        if (Std.random(100) < 10)
-                          {
-                            var col = Std.random(Const.ROW_CHEM_LABS_DECO_TABLE_AMOUNT);
-                            var o = new Decoration(state.game, state.area.id,
-                              x + i, y + j, Const.ROW_CHEM_LABS_DECO_TABLE, col);
-                            state.area.addObject(o);
-                          }
-                      }
-
-//                drawArray(cells, x, y,
-//                  (Std.random(100) < 30 ? table2 : table1));
-                }
-              else 
-                {
-                  var col = Std.random(Const.ROW_CHEM_LABS_DECO_FLOOR_AMOUNT);
-                  var o = new Decoration(state.game, state.area.id,
-                    x, y, Const.ROW_CHEM_LABS_DECO_FLOOR, col);
-                  state.area.addObject(o);
-                }
-              y += tableH + 1;
-            }
-          x += tableW + 1;
-          y = sy;
-        }
+// add decoration from a list
+  static function addDecoration(state: _FacilityState, x: Int, y: Int, infos: Array<_TileRow>)
+    {
+      var info = infos[Std.random(infos.length)];
+      var col = Std.random(info.amount);
+      var o = new Decoration(state.game, state.area.id,
+          x, y, info.row, col);
+      state.area.addObject(o);
     }
 
 // check a w,h block at x,y if it is near a door
@@ -758,6 +827,31 @@ class FacilityAreaGenerator
       }
     }
 
+// check if this cell is next to a tile from a list
+  static function nextToAny(cells: Array<Array<Int>>,
+      x: Int, y: Int, tiles: Array<Int>): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (Lambda.has(tiles, cells[x + Const.dir4x[i]][y + Const.dir4y[i]]))
+          return true;
+      return false;
+    }
+
+// check if this cell is next to a window
+  static function nextToWindow(cells: Array<Array<Int>>,
+      x: Int, y: Int): Bool
+    {
+      var tile = 0;
+      for (i in 0...Const.dir4x.length)
+        {
+          tile = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          if (tile >= TEMP_BUILDING_WINDOW &&
+              tile <= TEMP_BUILDING_WINDOWV3)
+            return true;
+        }
+      return false;
+    }
+
 // check if this cell is next to a given tile
   static function nextTo(cells: Array<Array<Int>>,
       x: Int, y: Int, tile: Int): Bool
@@ -830,21 +924,25 @@ class FacilityAreaGenerator
           x: room.x1 - 1,
           y: Std.int(room.y1 + room.h / 2),
           dir: DIR_LEFT,
+          dir90: 0,
         },
         {
           x: room.x2 + 1,
           y: Std.int(room.y1 + room.h / 2),
           dir: DIR_RIGHT,
+          dir90: 0,
         },
         {
           x: Std.int(room.x1 + room.w / 2),
           y: room.y1 - 1,
           dir: DIR_UP,
+          dir90: 0,
         },
         {
           x: Std.int(room.x1 + room.w / 2),
           y: room.y2 + 1,
           dir: DIR_DOWN,
+          dir90: 0,
         },
       ];
     }
@@ -857,21 +955,25 @@ class FacilityAreaGenerator
           x: room.x1 - 1,
           y: room.y1 - 1,
           dir: DIR_RIGHT,
+          dir90: DIR_DOWN,
         },
         {
           x: room.x1 - 1,
           y: room.y2 + 1,
           dir: DIR_RIGHT,
+          dir90: DIR_UP,
         },
         {
           x: room.x1 - 1,
           y: room.y1 - 1,
           dir: DIR_DOWN,
+          dir90: DIR_RIGHT,
         },
         {
           x: room.x2 + 1,
           y: room.y1 - 1,
           dir: DIR_DOWN,
+          dir90: DIR_LEFT,
         },
       ];
     }
@@ -914,7 +1016,28 @@ class FacilityAreaGenerator
         for (x in 0...area.width)
           {
             var tileID = cells[x][y];
-            if (tileID >= Const.OFFSET_ROW8)
+            // spawn doors
+            if (tileID == TEMP_BUILDING_FRONT_DOOR)
+              {
+                var o = new Door(state.game, area.id, x, y,
+                  Const.ROW_DOORS, Const.FRAME_DOOR_DOUBLE);
+                state.area.addObject(o);
+              }
+            else if (tileID == TEMP_BUILDING_SIDE_DOOR)
+              {
+                var o = new Door(state.game, area.id, x, y,
+                  Const.ROW_DOORS, Const.FRAME_DOOR_GLASS);
+                state.area.addObject(o);
+              }
+            else if (tileID == TEMP_BUILDING_INNER_DOOR)
+              {
+                var o = new Door(state.game, area.id, x, y,
+                  Const.ROW_DOORS, Const.FRAME_DOOR_CABINET);
+                state.area.addObject(o);
+              }
+
+            //if (tileID >= Const.OFFSET_ROW8)
+            if (tileID >= Const.OFFSET_ROW3)
               continue;
 /*
             if (tileID >= TEMP_BUILDING_ROOM_ID_START)
@@ -945,10 +1068,10 @@ class FacilityAreaGenerator
   static var TEMP_BUILDING_CORRIDOR = 3;
   static var TEMP_BUILDING_FRONT_DOOR = 4;
   static var TEMP_BUILDING_SIDE_DOOR = 5;
-  static var TEMP_BUILDING_WINDOW = 6;
-  static var TEMP_BUILDING_INNER_WALL = 7;
-  static var TEMP_BUILDING_ROOM_MARKED = 8;
-  static var TEMP_BUILDING_INNER_DOOR = 9;
+  static var TEMP_BUILDING_INNER_WALL = 6;
+  static var TEMP_BUILDING_ROOM_MARKED = 7;
+  static var TEMP_BUILDING_INNER_DOOR = 8;
+  static var TEMP_BUILDING_WINDOW = 9;
   static var TEMP_BUILDING_WINDOWH1 = 10;
   static var TEMP_BUILDING_WINDOWH2 = 11;
   static var TEMP_BUILDING_WINDOWH3 = 12;
@@ -958,7 +1081,7 @@ class FacilityAreaGenerator
   static var TEMP_BUILDING_TABLE = 16;
   static var TEMP_BUILDING_ROOM_ID_START = 100;
   static var mapTempTiles = [
-    '0', '#', '2', '.', 'x', '+', 'w', '*', '8', 'X',
+    '0', '#', '2', '.', 'x', '+', '*', '8', 'X', 'w', 
     '<', '-', '>', '^', '|', 'v', '_'
   ];
 }
@@ -993,4 +1116,5 @@ typedef _Spot = {
   x: Int,
   y: Int,
   dir: Int,
+  dir90: Int,
 }

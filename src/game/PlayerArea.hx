@@ -398,6 +398,19 @@ class PlayerArea extends _SaveObject
           return false;
         }
 
+      // frob the object
+      var objs = game.area.getObjectsAt(x + dx, y + dy);
+      for (o in objs)
+        {
+          // 0 - return false
+          // 1 - ok, continue
+          var ret = o.frob(true, player.host);
+          if (ret == 0)
+            return false;
+          else if (ret == 1)
+            1;
+        }
+
       // frob the AI
       var ai = game.area.getAI(x + dx, y + dy);
       if (ai != null)
@@ -407,7 +420,6 @@ class PlayerArea extends _SaveObject
             return false;
 
           postAction(); // post-action call
-
           // update AI visibility to player
           game.area.updateVisibility();
 

@@ -73,6 +73,13 @@ class AreaObject extends _SaveObject
         }
     }
 
+// update entity image
+  function updateImage()
+    {
+      tile = game.scene.entityAtlas[imageCol][imageRow];
+      entity.setImage(tile);
+    }
+
 // create entity for this object
   function createEntity()
     {
@@ -134,6 +141,12 @@ class AreaObject extends _SaveObject
     {
       return onAction(a.id); // child callback
     }
+
+// dynamic: frob object
+// 0 - return false
+// 1 - ok, continue
+  public dynamic function frob(isPlayer: Bool, ai: ai.AI): Int
+    { return 1; }
 
 
 // dynamic: object events and stuff
