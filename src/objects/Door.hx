@@ -8,6 +8,7 @@ class Door extends AreaObject
 {
   public var isOpen: Bool;
   var closeTimer: Int;
+  var sound: String;
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int, row: Int, col: Int)
     {
@@ -34,6 +35,12 @@ class Door extends AreaObject
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+      if (imageCol < 2)
+        sound = 'cabinet';
+      else if (imageCol < 4)
+        sound = 'double';
+      else if (imageCol < 6)
+        sound = 'glass';
     }
 
 // open door if possible
@@ -46,7 +53,7 @@ class Door extends AreaObject
 
       imageCol++; // opened door tile is right next to closed
       updateImage();
-      game.scene.sounds.play('door-cabinet-open', true);
+      game.scene.sounds.play('door-' + sound + '-open', true);
       isOpen = true;
       closeTimer = 2;
       return 1;
@@ -57,12 +64,15 @@ class Door extends AreaObject
     {
       if (!isOpen)
         return;
+      if (game.area.hasAI(x, y) ||
+          (game.playerArea.x == x && game.playerArea.y == y))
+        return;
       closeTimer--;
       if (closeTimer > 0)
         return;
       imageCol--; // closed door tile is to the left
       updateImage();
       isOpen = false;
-      game.scene.sounds.play('door-cabinet-close', true);
+      game.scene.sounds.play('door-' + sound + '-close', true);
     }
 }
