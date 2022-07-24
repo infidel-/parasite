@@ -30,4 +30,10 @@ class Decoration extends AreaObject
     {
       super.initPost(onLoad);
     }
+
+  public override function known(): Bool
+    { return true; }
+
+  public override function visible(): Bool
+    { return false; }
 }

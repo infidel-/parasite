@@ -75,4 +75,10 @@ class Door extends AreaObject
       isOpen = false;
       game.scene.sounds.play('door-' + sound + '-close', true);
     }
+
+  public override function known(): Bool
+    { return true; }
+
+  public override function visible(): Bool
+    { return false; }
 }

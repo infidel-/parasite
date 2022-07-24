@@ -194,7 +194,6 @@ class PlayerArea extends _SaveObject
             if (state == PLR_STATE_HOST &&
                 !o.known() &&
                 player.host.isHuman &&
-                o.type != 'event_object' &&
                 game.player.vars.objectsEnabled)
               game.ui.hud.addAction({
                 id: 'learnObject',
@@ -1005,6 +1004,8 @@ class PlayerArea extends _SaveObject
       var objs = game.area.getObjectsAt(x, y);
       for (o in objs)
         {
+          if (!o.visible())
+            continue;
           cnt++;
           s.add(o.getName());
           if (cnt < objs.length)

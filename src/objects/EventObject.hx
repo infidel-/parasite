@@ -59,4 +59,7 @@ class EventObject extends AreaObject
 
       return true;
     }
+
+  public override function known(): Bool
+    { return true; }
 }

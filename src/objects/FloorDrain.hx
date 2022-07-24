@@ -1,10 +1,10 @@
-// sewer hatch - leads to sewers when activated
+// floor drain - leads to sewers when activated
 
 package objects;
 
 import game.Game;
 
-class SewerHatch extends AreaObject
+class FloorDrain extends AreaObject
 {
   public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
@@ -17,9 +17,10 @@ class SewerHatch extends AreaObject
   public override function init()
     {
       super.init();
-      imageCol = Const.FRAME_SEWER_HATCH;
-      type = 'sewer_hatch';
-      name = 'sewer hatch';
+      imageRow = Const.ROW_OBJECT_INDOOR;
+      imageCol = Const.FRAME_FLOOR_DRAIN;
+      type = 'floor_drain';
+      name = 'floor drain';
       isStatic = true;
     }
 
@@ -33,27 +34,26 @@ class SewerHatch extends AreaObject
 // update actions
   override function updateActionList()
     {
-      if (game.player.state != PLR_STATE_ATTACHED)
-        game.ui.hud.addAction({
-          id: 'enterSewers',
-          type: ACTION_OBJECT,
-          name: 'Enter Sewers',
-          energy: 10,
-          obj: this
-        });
+      game.ui.hud.addAction({
+        id: 'enterDrain',
+        type: ACTION_OBJECT,
+        name: 'Enter Drain',
+        energy: 10,
+        obj: this
+      });
     }
 
 
 // activate sewers - leave area
   override function onAction(id: String): Bool
     {
-      if (game.player.state == PLR_STATE_HOST && !game.player.host.isHuman)
+      if (game.player.state != PLR_STATE_PARASITE)
         {
-          game.log("This host cannot open the sewer hatch.", COLOR_HINT);
+
+          game.log("You can only enter the drain without a host.", COLOR_HINT);
           return false;
         }
-
-      game.log("You enter the damp fetid sewers escaping the prying eyes.");
+      game.log("You slither through the drain escaping the prying eyes.");
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
       game.goals.complete(GOAL_ENTER_SEWERS);

@@ -626,6 +626,8 @@ class FacilityAreaGenerator
                               if (nextToWindow(cells, tx, ty))
                                 arr = Const.CHEM_LABS_DECO_FLOOR_LOW;
                               addDecoration(state, tx, ty, arr);
+                              // change to unwalkable tile
+                              cells[tx][ty] = Const.TILE_FLOOR_TILE_UNWALKABLE;
                             }
                         }
                     }
@@ -693,6 +695,11 @@ class FacilityAreaGenerator
       var cx = room.x1 + 1 + Std.random(room.w - 2),
         cy = room.y1 + 1 + Std.random(room.h - 2);
       cells[cx][cy] = Const.TILE_FLOOR_TILE + 1 + Std.random(3);
+      if (Std.random(100) < 30)
+        {
+          var o = new FloorDrain(state.game, area.id, cx, cy);
+          state.area.addObject(o);
+        }
 
       // make a big table near the center
       if (room.w < 7 || room.h < 7)

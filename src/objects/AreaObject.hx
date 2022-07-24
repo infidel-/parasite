@@ -110,14 +110,19 @@ class AreaObject extends _SaveObject
       entity = null;
     }
 
-
 // is this object known to player?
-// atm all event objects are considered known, may be changed later
-  public inline function known(): Bool
+  public function known(): Bool
     {
-      return (type == 'event_object' || game.playerArea.knowsObject(type));
+      return game.playerArea.knowsObject(type);
     }
 
+// is this object visible to player?
+  public function visible(): Bool
+    { return true; }
+
+// is this object sensable to player when in parasite mode?
+  public function sensable(): Bool
+    { return false; }
 
 // get object name considering whether it's known or not
 // can be overridden
