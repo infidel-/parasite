@@ -23,6 +23,7 @@ class FacilityAreaGenerator
         TEMP_WALKWAY => Const.TILE_WALKWAY,
         TEMP_ALLEY => Const.TILE_ALLEY,
         TEMP_GRASS => Const.TILE_GRASS,
+        TEMP_CONCRETE => Const.TILE_FLOOR_CONCRETE,
         TEMP_BUILDING_WALL => Const.TILE_BUILDING,
         TEMP_BUILDING_ROOM => Const.TILE_FLOOR_TILE,
         TEMP_BUILDING_CORRIDOR => Const.TILE_FLOOR_LINO,
@@ -38,6 +39,8 @@ class FacilityAreaGenerator
         TEMP_BUILDING_INNER_WALL => Const.TILE_BUILDING,
 //        TEMP_BUILDING_ROOM_MARKED => Const.TILE_GROUND,
         TEMP_BUILDING_INNER_DOOR => Const.TILE_FLOOR_LINO,
+        TEMP_HANGAR_DOOR => Const.TILE_HANGAR_DOOR,
+        TEMP_HANGAR_SIDE_DOOR => Const.TILE_FLOOR_CONCRETE,
       ];
       var state: _FacilityState = {
         game: game,
@@ -117,7 +120,7 @@ class FacilityAreaGenerator
               continue;
             if (x > bx && x < bx + bw - 1 && y > by && y < by + bh - 1)
               {
-                cells[x][y] = TEMP_BUILDING_ROOM;
+                cells[x][y] = TEMP_CONCRETE;
                 continue;
               }
             if (x < bx || x >= bx + bw || y < by || y >= by + bh)
@@ -129,6 +132,24 @@ class FacilityAreaGenerator
               cells[x][y] = TEMP_BUILDING_WALL;
           }
 
+      // draw fake doors
+      var len = 0;
+      var y = (state.mainRoadNorth ? (by + bh - 1) : by);
+      for (x in bx + 1...bx + bw - 1)
+        {
+          if (len < 0)
+            {
+              len++;
+              continue;
+            }
+          cells[x][y] = TEMP_HANGAR_DOOR;
+          len++;
+          if (len == 3)
+            len = -1;
+        }
+
+      // draw side door
+      cells[bx][by + Std.int(bh / 2)] = TEMP_HANGAR_SIDE_DOOR;
     }
 
 // generate a single building of a given size at given coordinates
@@ -1127,6 +1148,12 @@ class FacilityAreaGenerator
                   Const.ROW_DOORS, Const.FRAME_DOOR_CABINET);
                 state.area.addObject(o);
               }
+            else if (tileID == TEMP_HANGAR_SIDE_DOOR)
+              {
+                var o = new Door(state.game, area.id, x, y,
+                  Const.ROW_DOORS, Const.FRAME_DOOR_METAL);
+                state.area.addObject(o);
+              }
             // randomize greenery
             if (tileID == TEMP_GRASS)
               {
@@ -1171,6 +1198,7 @@ class FacilityAreaGenerator
   static var TEMP_WALKWAY = 1;
   static var TEMP_ALLEY = 2;
   static var TEMP_GRASS = 3;
+  static var TEMP_CONCRETE= 4;
   // first building tile!
   static var TEMP_BUILDING_WALL = 10;
   static var TEMP_BUILDING_ROOM = 11;
@@ -1188,11 +1216,14 @@ class FacilityAreaGenerator
   static var TEMP_BUILDING_WINDOWV2 = 23;
   static var TEMP_BUILDING_WINDOWV3 = 24;
   static var TEMP_BUILDING_TABLE = 25;
+  static var TEMP_HANGAR_DOOR = 26;
+  static var TEMP_HANGAR_SIDE_DOOR = 27;
+
   static var TEMP_BUILDING_ROOM_ID_START = 100;
   static var mapTempTiles = [
     '0', '1', '2', '%', '%', '%', '%', '%', '%', '%',
     '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w', 
-    '<', '-', '>', '^', '|', 'v', '_', 
+    '<', '-', '>', '^', '|', 'v', '_', 'Y', 'Z',
   ];
 }
 

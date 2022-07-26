@@ -213,7 +213,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'The largest object has received a speficic codename for future reference: %shipCode%.'
             ],
           npc: [ 'agent' => 5 ],
-          },
+        },
 
         'alienShipStudy' => {
           name: 'study of an alien ship',
@@ -223,17 +223,16 @@ class ScenarioAlienCrashLanding extends Scenario
             'The technology that produced %shipCode% is much more advanced than the one available to human civilization.',
             'Strange metallic alloy that forms the outer layer of %shipCode% is unknown to science.',
             'Scientists have been unable to determine if it is indeed a flying vessel.'
-            ],
+          ],
           location: {
             type: AREA_FACILITY,
             name: '%facility1%'
-            },
-          npc: [ 'researcher:civilian' => 10, 'agent' => 5 ],
-          onLearnLocation: function (game)
-            {
-              game.goals.complete(SCENARIO_ALIEN_FIND_SHIP);
-            },
           },
+          npc: [ 'researcher:civilian' => 10, 'agent' => 5 ],
+          onLearnLocation: function (game) {
+            game.goals.complete(SCENARIO_ALIEN_FIND_SHIP);
+          },
+        },
 
         'alienCaptureMission' => {
           name: 'alien capture mission',

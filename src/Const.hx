@@ -120,6 +120,8 @@ class Const
   public static var FRAME_DOOR_DOUBLE_OPEN = 3;
   public static var FRAME_DOOR_GLASS = 4;
   public static var FRAME_DOOR_GLASS_OPEN = 5;
+  public static var FRAME_DOOR_METAL = 6;
+  public static var FRAME_DOOR_METAL_OPEN = 7;
 
   public static var ROW_OBJECT_INDOOR = 16;
   public static var FRAME_FLOOR_DRAIN = 0;
@@ -170,6 +172,8 @@ class Const
   public static var TILE_FLOOR_TILE_GRATE3 = OFFSET_ROW3 + 3;
   public static var TILE_FLOOR_LINO = OFFSET_ROW3 + 4;
   public static var TILE_FLOOR_TILE_UNWALKABLE = OFFSET_ROW3 + 5;
+  public static var TILE_FLOOR_CONCRETE = OFFSET_ROW3 + 6;
+  public static var TILE_HANGAR_DOOR = OFFSET_ROW3 + 7;
 
   public static var OFFSET_CITY = 64;
 
@@ -237,7 +241,7 @@ class Const
     // row 2 - roads, indoor
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
     // row 3 - floor
-    1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 
     // row 4+ - region tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -259,7 +263,7 @@ class Const
     // row 2 - roads, indoor
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 3 - floor
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 
     // row 4+ - region tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

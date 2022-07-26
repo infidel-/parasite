@@ -397,34 +397,6 @@ class PlayerArea extends _SaveObject
           return false;
         }
 
-      // frob the object
-      var objs = game.area.getObjectsAt(x + dx, y + dy);
-      for (o in objs)
-        {
-          // 0 - return false
-          // 1 - ok, continue
-          var ret = o.frob(true, player.host);
-          if (ret == 0)
-            return false;
-          else if (ret == 1)
-            1;
-        }
-
-      // frob the AI
-      var ai = game.area.getAI(x + dx, y + dy);
-      if (ai != null)
-        {
-          var ret = frobAIAction(ai);
-          if (!ret)
-            return false;
-
-          postAction(); // post-action call
-          // update AI visibility to player
-          game.area.updateVisibility();
-
-          return true;
-        }
-
       // try to move to the new location
       return moveBy(dx, dy);
     }
@@ -968,9 +940,34 @@ class PlayerArea extends _SaveObject
           var dir = game.area.getRandomDirection(x, y);
           if (dir == -1)
             throw 'nowhere to move!';
-
           nx = x + Const.dirx[dir];
           ny = y + Const.diry[dir];
+        }
+
+      // frob the object
+      var objs = game.area.getObjectsAt(nx, ny);
+      for (o in objs)
+        {
+          // 0 - return false
+          // 1 - ok, continue
+          var ret = o.frob(true, player.host);
+          if (ret == 0)
+            return false;
+          else if (ret == 1)
+            1;
+        }
+
+      // frob the AI
+      var ai = game.area.getAI(nx, ny);
+      if (ai != null)
+        {
+          var ret = frobAIAction(ai);
+          if (!ret)
+            return false;
+          postAction(); // post-action call
+          // update AI visibility to player
+          game.area.updateVisibility();
+          return true;
         }
 
       moveTo(nx, ny, true);
