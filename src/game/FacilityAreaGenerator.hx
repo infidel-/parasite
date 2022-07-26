@@ -19,7 +19,10 @@ class FacilityAreaGenerator
         DIR_DOWN => { x: 0, y: 1 },
       ];
       finalTiles = [
-        TEMP_BLANK => Const.TILE_ROAD,
+        TEMP_ROAD => Const.TILE_ROAD,
+        TEMP_WALKWAY => Const.TILE_WALKWAY,
+        TEMP_ALLEY => Const.TILE_ALLEY,
+        TEMP_GRASS => Const.TILE_GRASS,
         TEMP_BUILDING_WALL => Const.TILE_BUILDING,
         TEMP_BUILDING_ROOM => Const.TILE_FLOOR_TILE,
         TEMP_BUILDING_CORRIDOR => Const.TILE_FLOOR_LINO,
@@ -40,18 +43,59 @@ class FacilityAreaGenerator
         game: game,
         area: area,
         info: info,
+        mainRoadNorth: (Std.random(100) < 50 ? true : false),
         rooms: null,
         doors: null,
       }
       // fill with blank
       var cells = area.getCells();
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          cells[x][y] = TEMP_BLANK;
+      drawBlock(cells, 0, 0, area.width, area.height, TEMP_ALLEY);
+
+      // main road
+      var rw = 4;
+      var ry = (state.mainRoadNorth ? 0 : area.height - rw);
+      drawBlock(cells, 0, ry, area.width, rw, TEMP_ROAD);
+
+      // sidewalk near main road
+      var sidewalkw = 2;
+      var sidewalky = (state.mainRoadNorth ? ry + rw : ry - sidewalkw);
+      drawBlock(cells, 0, sidewalky, area.width, sidewalkw, TEMP_WALKWAY);
+
+      // main building
       var t1 = Sys.time();
-      generateBuilding(state, 1, 1,
-        Std.int(area.width * 0.75),
-        Std.int(area.height * 0.75));
+      var mainw = Std.int(area.width * 0.5),
+        mainh = Std.int(area.height * 0.5);
+      var mainx = Std.int(mainw / 2),
+        mainy = (state.mainRoadNorth ? rw + 2 : area.height - mainh - 2 - rw);
+      generateBuilding(state, mainx, mainy, mainw, mainh);
+      state.rooms = null;
+      state.doors = null;
+
+      // hole in sidewalk for entry to parking lot
+      var hx = mainx + mainw + 10, hy = sidewalky;
+      drawBlock(cells, hx, hy, 4, 2, TEMP_ALLEY);
+
+      // grass
+      var gx = 2, gy = mainy, gw = mainx - 4, gh = mainh;
+      drawBlock(cells, gx, gy, gw, gh, TEMP_GRASS);
+      drawBlock(cells, 0, gy, 2, gh, TEMP_WALKWAY);
+
+      // side building
+      var sidex = 2,
+        sidey = (state.mainRoadNorth ? mainy + mainh + 2 : 2),
+        sidew = Std.int(area.width * 0.4),
+        sideh = (state.mainRoadNorth ? area.height - sidey - 2 : mainy - 4);
+      generateBuilding(state, sidex, sidey, sidew, sideh);
+
+      // hangar
+      var hangarx = sidex + sidew + 16,
+        hangary = (state.mainRoadNorth ? mainy + mainh + 4 : 4),
+        hangarw = Std.int(area.width * 0.2),
+        hangarh = (state.mainRoadNorth ? area.height - sidey - 6 : mainy - 8);
+//      trace(hangarx + ',' + hangary + ' : ' + hangarw + ',' + hangarh);
+      generateHangar(state, hangarx, hangary, hangarw, hangarh);
+
+      // trace area
       AreaGenerator.printArea(state.game, state.area, mapTempTiles);
 
       // convert temp tiles to ingame ones
@@ -59,21 +103,59 @@ class FacilityAreaGenerator
       trace(Std.int((Sys.time() - t1) * 1000) + 'ms');
     }
 
-// generate a single building of a given sizen at given coordinates
+// generate a hangar of a given size at given coordinates
+  static function generateHangar(state: _FacilityState,
+      bx: Int, by: Int, bw: Int, bh: Int)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // draw outer walls
+      for (y in by - 2...by + bh + 2)
+        for (x in bx - 2...bx + bw + 2)
+          {
+            if (x < 0 || y < 0 || x >= area.width || y >= area.height)
+              continue;
+            if (x > bx && x < bx + bw - 1 && y > by && y < by + bh - 1)
+              {
+                cells[x][y] = TEMP_BUILDING_ROOM;
+                continue;
+              }
+            if (x < bx || x >= bx + bw || y < by || y >= by + bh)
+              {
+//                cells[x][y] = TEMP_WALKWAY;
+                continue;
+              }
+            if (x == bx || x == bx + bw - 1 || y == by || y == by + bh - 1)
+              cells[x][y] = TEMP_BUILDING_WALL;
+          }
+
+    }
+
+// generate a single building of a given size at given coordinates
   static function generateBuilding(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
       trace('b: ' + bx + ',' + by + ' sz:' + bw + ',' + bh);
-      // fill with blank
+      // draw outer walls and walkways
       var area = state.area;
       var cells = area.getCells();
-      for (y in by...bh + 1)
-        for (x in bx...bw + 1)
+      for (y in by - 2...by + bh + 2)
+        for (x in bx - 2...bx + bw + 2)
           {
-            var tile = TEMP_BUILDING_ROOM;
+            if (x < 0 || y < 0 || x >= area.width || y >= area.height)
+              continue;
+            if (x > bx && x < bx + bw - 1 && y > by && y < by + bh - 1)
+              {
+                cells[x][y] = TEMP_BUILDING_ROOM;
+                continue;
+              }
+            if (x < bx || x >= bx + bw || y < by || y >= by + bh)
+              {
+                cells[x][y] = TEMP_WALKWAY;
+                continue;
+              }
             if (x == bx || x == bx + bw - 1 || y == by || y == by + bh - 1)
-              tile = TEMP_BUILDING_WALL;
-            cells[x][y] = tile;
+              cells[x][y] = TEMP_BUILDING_WALL;
           }
 
       // pick a wall for a front door
@@ -121,7 +203,7 @@ class FacilityAreaGenerator
             }
           x += delta.x;
           y += delta.y;
-          if (cells[x][y] == TEMP_BLANK)
+          if (cells[x][y] < TEMP_BUILDING_WALL)
             {
               x -= delta.x;
               y -= delta.y;
@@ -186,8 +268,8 @@ class FacilityAreaGenerator
         }
 
       // draw inner walls
-      for (y in by + 1...bh)
-        for (x in bx + 1...bw)
+      for (y in by + 1...by + bh + 1)
+        for (x in bx + 1...bx + bw + 1)
           if (cells[x][y] == TEMP_BUILDING_ROOM &&
               nextTo(cells, x, y, TEMP_BUILDING_CORRIDOR))
             cells[x][y] = TEMP_BUILDING_INNER_WALL;
@@ -225,8 +307,8 @@ class FacilityAreaGenerator
       var area = state.area;
       var cells = area.getCells();
       var rooms = 0;
-      for (y in by + 1...bh)
-        for (x in bx + 1...bw)
+      for (y in by + 1...by + bh)
+        for (x in bx + 1...bx + bw)
           {
             // find next room start spot
             if (cells[x][y] != TEMP_BUILDING_ROOM)
@@ -297,8 +379,8 @@ class FacilityAreaGenerator
       var roomID = TEMP_BUILDING_ROOM_ID_START - 1;
       var doors = [];
       var rooms = [];
-      for (y in by + 1...bh)
-        for (x in bx + 1...bw)
+      for (y in (by + 1)...(by + bh))
+        for (x in (bx + 1)...(bx + bw))
           {
             // find next room start spot
             if (cells[x][y] != TEMP_BUILDING_ROOM)
@@ -309,6 +391,9 @@ class FacilityAreaGenerator
             roomID++;
             room.id = roomID;
             rooms.push(room);
+/*
+            if (roomID < 104)
+              trace(room);*/
 //            trace(room);
 /*
             if (Std.random(100) < 30)
@@ -749,8 +834,8 @@ class FacilityAreaGenerator
   static function replaceTiles(cells: Array<Array<Int>>,
       sx: Int, sy: Int, w: Int, h: Int, from: Int, to: Int)
     {
-      for (y in sy...h + 1)
-        for (x in sx...w + 1)
+      for (y in sy...sy + h + 1)
+        for (x in sx...sx + w + 1)
           if (cells[x][y] == from)
             cells[x][y] = to;
     }
@@ -885,7 +970,7 @@ class FacilityAreaGenerator
             }
           x += delta.x;
           y += delta.y;
-          if (cells[x][y] == TEMP_BLANK)
+          if (cells[x][y] < TEMP_BUILDING_WALL)
             break;
         }
       return len - 1;
@@ -907,7 +992,7 @@ class FacilityAreaGenerator
             }
           x += delta.x;
           y += delta.y;
-          if (cells[x][y] == TEMP_BLANK)
+          if (cells[x][y] < TEMP_BUILDING_WALL)
             {
               x -= delta.x;
               y -= delta.y;
@@ -1042,6 +1127,19 @@ class FacilityAreaGenerator
                   Const.ROW_DOORS, Const.FRAME_DOOR_CABINET);
                 state.area.addObject(o);
               }
+            // randomize greenery
+            if (tileID == TEMP_GRASS)
+              {
+                var rnd = Std.random(100);
+                // trees
+                if (rnd < 10)
+                  cells[x][y] = Const.TILE_TREE1 +
+                    Std.random(Const.TILE_BUSH - Const.TILE_TREE1);
+                else if (rnd < 40)
+                  cells[x][y] = Const.TILE_BUSH;
+                else cells[x][y] = Const.TILE_GRASS;
+                continue;
+              }
 
             //if (tileID >= Const.OFFSET_ROW8)
             if (tileID >= Const.OFFSET_ROW3)
@@ -1069,27 +1167,32 @@ class FacilityAreaGenerator
   static var DIR_DOWN = 2;
 
   static var ROOM_SIZE = 7; // 6 + 1 wall
-  static var TEMP_BLANK = 0;
-  static var TEMP_BUILDING_WALL = 1;
-  static var TEMP_BUILDING_ROOM = 2;
-  static var TEMP_BUILDING_CORRIDOR = 3;
-  static var TEMP_BUILDING_FRONT_DOOR = 4;
-  static var TEMP_BUILDING_SIDE_DOOR = 5;
-  static var TEMP_BUILDING_INNER_WALL = 6;
-  static var TEMP_BUILDING_ROOM_MARKED = 7;
-  static var TEMP_BUILDING_INNER_DOOR = 8;
-  static var TEMP_BUILDING_WINDOW = 9;
-  static var TEMP_BUILDING_WINDOWH1 = 10;
-  static var TEMP_BUILDING_WINDOWH2 = 11;
-  static var TEMP_BUILDING_WINDOWH3 = 12;
-  static var TEMP_BUILDING_WINDOWV1 = 13;
-  static var TEMP_BUILDING_WINDOWV2 = 14;
-  static var TEMP_BUILDING_WINDOWV3 = 15;
-  static var TEMP_BUILDING_TABLE = 16;
+  static var TEMP_ROAD = 0;
+  static var TEMP_WALKWAY = 1;
+  static var TEMP_ALLEY = 2;
+  static var TEMP_GRASS = 3;
+  // first building tile!
+  static var TEMP_BUILDING_WALL = 10;
+  static var TEMP_BUILDING_ROOM = 11;
+  static var TEMP_BUILDING_CORRIDOR = 12;
+  static var TEMP_BUILDING_FRONT_DOOR = 13;
+  static var TEMP_BUILDING_SIDE_DOOR = 14;
+  static var TEMP_BUILDING_INNER_WALL = 15;
+  static var TEMP_BUILDING_ROOM_MARKED = 16;
+  static var TEMP_BUILDING_INNER_DOOR = 17;
+  static var TEMP_BUILDING_WINDOW = 18;
+  static var TEMP_BUILDING_WINDOWH1 = 19;
+  static var TEMP_BUILDING_WINDOWH2 = 20;
+  static var TEMP_BUILDING_WINDOWH3 = 21;
+  static var TEMP_BUILDING_WINDOWV1 = 22;
+  static var TEMP_BUILDING_WINDOWV2 = 23;
+  static var TEMP_BUILDING_WINDOWV3 = 24;
+  static var TEMP_BUILDING_TABLE = 25;
   static var TEMP_BUILDING_ROOM_ID_START = 100;
   static var mapTempTiles = [
-    '0', '#', '2', '.', 'x', '+', '*', '8', 'X', 'w', 
-    '<', '-', '>', '^', '|', 'v', '_'
+    '0', '1', '2', '%', '%', '%', '%', '%', '%', '%',
+    '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w', 
+    '<', '-', '>', '^', '|', 'v', '_', 
   ];
 }
 
@@ -1097,6 +1200,7 @@ typedef _FacilityState = {
   var game: Game;
   var area: AreaGame;
   var info: AreaInfo;
+  var mainRoadNorth: Bool;
 
   // temp state
   var rooms: Array<_Room>;

@@ -146,7 +146,7 @@ class WorldConst
         type: 'facility',
         name: 'Facility',
         width: 75,
-        height: 50,
+        height: 60,
         canEnter: true,
         isInhabited: true,
         commonAI: 5,

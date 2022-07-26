@@ -66,16 +66,18 @@ class AreaView
       for (obj in game.area.getObjects())
         {
           obj.entity.setPosition(obj.x, obj.y);
-          // in parasite mode hide objects outside of vision
+          // hide objects outside of parasite vision
           if (game.player.state != PLR_STATE_HOST)
             {
               if (!obj.sensable() &&
-                  Const.distanceSquared(game.playerArea.x, game.playerArea.y,
+                  Const.distanceSquared(
+                    game.playerArea.x, game.playerArea.y,
                     obj.x, obj.y) > 2)
                 obj.entity.visible = false;
               else obj.entity.visible = true;
             }
-          else obj.entity.visible = true;
+          // host vision
+          else obj.entity.visible = isVisible(obj.x, obj.y);
         }
       for (e in _effects)
         e.setPosition(e.x, e.y);
