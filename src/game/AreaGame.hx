@@ -12,7 +12,7 @@ import entities.RegionEntity;
 class AreaGame extends _SaveObject
 {
   static var _ignoredFields = [ 'region', 'events', 'npc', 'parent',
-    'icons', 'info'
+    'icons', 'info', 'clueSpawnPoints',
   ];
   var game: Game;
   var region: RegionGame;
@@ -57,6 +57,7 @@ class AreaGame extends _SaveObject
   var _ai: List<AI>; // AI list
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
+  var clueSpawnPoints: List<{ x: Int, y: Int }>;
 
 
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
@@ -147,6 +148,9 @@ class AreaGame extends _SaveObject
       else for (o in _objects)
         o.show();
 
+      // reinit spawn points
+      initSpawnPoints();
+
       // enter habitat with active team
       if (isHabitat && game.group.team != null)
         game.group.team.onEnterHabitat();
@@ -176,7 +180,6 @@ class AreaGame extends _SaveObject
             }
         }
 
-      // TODO: fix for loading
       // recreate player host AI entity
       if (game.player.state == PLR_STATE_HOST)
         {
@@ -264,19 +267,9 @@ class AreaGame extends _SaveObject
       for (o in _objects)
         o.show();
 
-/*
-      // TODO: fix for loading
-      // recreate player host AI entity
-      if (game.player.state == PLR_STATE_HOST)
-        {
-          game.playerArea.entity.visible = false;
-          game.player.host.createEntity();
-          game.player.host.entity.setMask(game.scene.entityAtlas
-            [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
-          game.player.host.setPosition(loc.x, loc.y);
-          _ai.add(game.player.host);
-        }
-*/
+      // reinit spawn points
+      initSpawnPoints();
+
       // update area view info
       game.scene.area.update();
 
@@ -285,6 +278,28 @@ class AreaGame extends _SaveObject
 
       // show area
       game.scene.area.show();
+    }
+
+// init spawn points list after generation or loading
+// necessary for more optimal clue spawns in facilities
+  function initSpawnPoints()
+    {
+      if (info.id != AREA_FACILITY)
+        return;
+      clueSpawnPoints = new List();
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            // tables only
+            if (_cells[x][y] < Const.TILE_LABS_TABLE_3X3_7 || 
+                _cells[x][y] > Const.TILE_LABS_TABLE2_1X1)
+              continue;
+            // check if there's an object there
+            if (hasObjectAt(x, y))
+              continue;
+            clueSpawnPoints.add({ x: x, y: y });
+          }
+      trace('clueSpawnPoints len:' + clueSpawnPoints.length);
     }
 
 // leave this area: hide gui, despawn, etc
@@ -365,6 +380,51 @@ class AreaGame extends _SaveObject
 //      game.debug('Area generated.');
     }
 
+// get largest rect from starting tile
+  function getRect(sx: Int, sy: Int): _Room 
+    {
+      var w = 0, h = 0;
+      var startTileID = _cells[sx][sy];
+      while (true)
+        {
+          w++;
+          if (w > 100)
+            {
+              trace('rect too large?');
+              break;
+            }
+
+          if (sx + w > this.width)
+            break;
+          if (_cells[sx + w][sy] != startTileID)
+            break;
+        }
+      while (true)
+        {
+          h++;
+          if (h > 100)
+            {
+              trace('rect too large?');
+              break;
+            }
+
+          if (sy + h > this.height)
+            break;
+          if (_cells[sx][sy + h] != startTileID)
+            break;
+        }
+      w--;
+      h--;
+      return {
+        id: -1,
+        x1: sx,
+        y1: sy,
+        x2: sx + w,
+        y2: sy + h,
+        w: w + 1,
+        h: h + 1,
+      }
+    }
 
 // add event object to area
   public function addEventObject(name: String, infoID: String): EventObject
@@ -373,7 +433,31 @@ class AreaGame extends _SaveObject
       if (!isGenerated)
         generate();
 
-      var loc = findEmptyLocation();
+      var loc = null;
+      if (name == 'spaceship')
+        {
+          // find hangar corner
+          var sx = -1, sy = -1;
+          for (y in 0...height)
+            {
+              for (x in 0...width)
+                if (_cells[x][y] == Const.TILE_FLOOR_CONCRETE)
+                  {
+                    sx = x;
+                    sy = y;
+                    break;
+                  }
+              if (sx != -1)
+                break;
+            }
+          var hangar = getRect(sx, sy);
+          loc = {
+            x: sx + Std.int(hangar.w / 2),
+            y: sy + Std.int(hangar.h / 2),
+          };
+        }
+      // default
+      else loc = findEmptyLocation();
       game.debug('!!! event obj ' + name +
         ' loc: (' + loc.x + ',' + loc.y +
         ') area: (' + x + ',' + y + ')');
@@ -398,7 +482,6 @@ class AreaGame extends _SaveObject
       return _objects.get(id);
     }
 
-
 // check if the area has any objects at (x,y)
   public function hasObjectAt(x: Int, y: Int): Bool
     {
@@ -408,7 +491,6 @@ class AreaGame extends _SaveObject
 
       return false;
     }
-
 
 // get objects list at (x,y)
   public function getObjectsAt(x: Int, y: Int): List<AreaObject>
@@ -509,7 +591,6 @@ class AreaGame extends _SaveObject
 
       return { x: x, y: y };
     }
-
 
 // generic find empty location method with parameters
   public function findLocation(params: {
@@ -731,8 +812,7 @@ class AreaGame extends _SaveObject
 // bresenham copied from wikipedia with one slight modification
   public function isVisible(x1: Int, y1: Int, x2: Int, y2: Int, ?doTrace: Bool)
     {
-      var ox2 = x2;
-      var oy2 = y2;
+      var startx = x1, starty = y1, finx = x2, finy = y2;
       var steep: Bool = (Math.abs(y2 - y1) > Math.abs(x2 - x1));
       var tmp: Int;
       if (steep)
@@ -778,8 +858,10 @@ class AreaGame extends _SaveObject
 //                trace(yy + ',' + xx);
               ok = canSeeThrough(yy, xx);
 
-              // slight modification - even if endpoint is not walkable, it's still visible
-              if (ox2 == yy && oy2 == xx)
+              // always see through start and finish
+              if (startx == yy && starty == xx)
+                ok = true;
+              else if (finx == yy && finy == xx)
                 ok = true;
             }
           else
@@ -788,8 +870,10 @@ class AreaGame extends _SaveObject
 //                trace(xx + ',' + yy);
               ok = canSeeThrough(xx, yy);
 
-              // slight modification - even if endpoint is not walkable, it's still visible
-              if (ox2 == xx && oy2 == yy)
+              // always see through start and finish
+              if (startx == xx && starty == yy)
+                ok = true;
+              else if (finx == xx && finy == yy)
                 ok = true;
             }
 
@@ -932,30 +1016,98 @@ class AreaGame extends _SaveObject
         if (o.item != null && o.item.info.type == 'readable')
           cnt++;
 
-      var maxSpawn = 5 - cnt;
-
-      var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
-      for (i in 0...maxSpawn)
+      // labs
+      if (info.id == AREA_FACILITY)
         {
-          var loc = findUnseenEmptyLocation();
-          if (loc.x < 0)
+          var maxSpawn = 5 - cnt;
+          if (maxSpawn <= 0)
+            return;
+
+          // get all close clue spawn points
+          var spawns = [];
+          var rect = getVisibleRect();
+          for (pt in clueSpawnPoints)
             {
-              trace('Area.turnSpawnClues(): no free spot for another ' +
-                info.id + ', please report');
+              // must be on screen
+              if (!inVisibleRect(pt.x, pt.y))
+                continue;
+
+              // must not be visible to player as a parasite
+              if (game.player.state != PLR_STATE_HOST &&
+                  Const.distanceSquared(game.playerArea.x, game.playerArea.y, pt.x, pt.y) < 6 * 6)
+                continue;
+
+              // must not be visible to player when possessing a host
+              if (game.player.state == PLR_STATE_HOST &&
+                  isVisible(game.playerArea.x, game.playerArea.y, pt.x, pt.y))
+                continue;
+
+              // already an object there
+              if (hasObjectAt(pt.x, pt.y))
+                continue;
+
+              spawns.push(pt);
+            }
+          if (spawns.length == 0)
+            {
+//              trace('cannot spawn clue, no spots');
               return;
             }
 
-          var o: AreaObject = Type.createInstance(info.areaObjectClass,
-            [ game, this.id, loc.x, loc.y ]);
-          o.name = info.names[Std.random(info.names.length)];
-          o.item = {
-            game: game,
-            id: info.id,
-            name: o.name,
-            info: info,
-            event: e
-          };
-          addObject(o);
+          for (i in 0...maxSpawn)
+            {
+              if (spawns.length == 0)
+                return;
+              // TODO books
+              var info = ItemsConst.getInfo('paper');//Std.random(100) < 80 ? 'paper' : 'book');
+
+              // find empty clue location
+              var loc = spawns[Std.random(spawns.length)];
+              spawns.remove(loc);
+
+              // spawn object
+              var tiles = Const.CHEM_LABS_DOCUMENTS[Std.random(Const.CHEM_LABS_DOCUMENTS.length)];
+              var o = new Document(game, this.id, loc.x, loc.y,
+                tiles.row, Std.random(tiles.amount));
+              o.name = info.names[Std.random(info.names.length)];
+              o.item = {
+                game: game,
+                id: info.id,
+                name: o.name,
+                info: info,
+                event: e
+              };
+              addObject(o);
+            }
+        }
+
+      // default - generic algorithm for streets
+      else
+        {
+          var maxSpawn = 5 - cnt;
+          var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
+          for (i in 0...maxSpawn)
+            {
+              var loc = findUnseenEmptyLocation();
+              if (loc.x < 0)
+                {
+                  trace('Area.turnSpawnClues(): no free spot for another ' +
+                    info.id + ', please report');
+                  return;
+                }
+
+              var o: AreaObject = Type.createInstance(info.areaObjectClass,
+                [ game, this.id, loc.x, loc.y ]);
+              o.name = info.names[Std.random(info.names.length)];
+              o.item = {
+                game: game,
+                id: info.id,
+                name: o.name,
+                info: info,
+                event: e
+              };
+              addObject(o);
+            }
         }
     }
 

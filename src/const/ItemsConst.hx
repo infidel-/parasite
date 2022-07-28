@@ -199,7 +199,7 @@ class ItemsConst
     {
       id: 'paper',
       names: [ 'piece of paper', 'report', 'document', 'note', 'dossier',
-        'sheet of paper', 'page' ],
+        'sheet of paper', 'page', 'analysis' ],
       type: 'readable',
       unknown: 'thin object with markings',
       areaObjectClass: Paper,
@@ -212,7 +212,6 @@ class ItemsConst
       unknown: 'object with many markings',
       areaObjectClass: Book,
     },
-
 
     // ========= ******* misc ********* ==========
     {

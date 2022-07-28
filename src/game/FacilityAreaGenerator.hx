@@ -40,7 +40,7 @@ class FacilityAreaGenerator
 //        TEMP_BUILDING_ROOM_MARKED => Const.TILE_GROUND,
         TEMP_BUILDING_INNER_DOOR => Const.TILE_FLOOR_LINO,
         TEMP_HANGAR_DOOR => Const.TILE_HANGAR_DOOR,
-        TEMP_HANGAR_SIDE_DOOR => Const.TILE_FLOOR_CONCRETE,
+        TEMP_HANGAR_SIDE_DOOR => Const.TILE_FLOOR_TILE_CANNOTSEE,
       ];
       var state: _FacilityState = {
         game: game,
@@ -1236,15 +1236,6 @@ typedef _FacilityState = {
   // temp state
   var rooms: Array<_Room>;
   var doors: Array<_Door>;
-}
-typedef _Room = {
-  id: Int,
-  x1: Int,
-  y1: Int,
-  x2: Int,
-  y2: Int,
-  w: Int,
-  h: Int
 }
 typedef _Door = {
   x: Int,

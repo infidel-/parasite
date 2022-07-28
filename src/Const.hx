@@ -105,7 +105,7 @@ class Const
     { row: 9, amount: 12 },
     { row: 10, amount: 12 },
     { row: 11, amount: 12 },
-    { row: 14, amount: 6 },
+    { row: 14, amount: 7 },
   ];
 
   // row 12 - chem laboratory decoration floor (low)
@@ -125,6 +125,11 @@ class Const
 
   public static var ROW_OBJECT_INDOOR = 16;
   public static var FRAME_FLOOR_DRAIN = 0;
+
+  public static var CHEM_LABS_DOCUMENTS = [
+    { row: 17, amount: 12 },
+    { row: 18, amount: 12 },
+  ];
 
   // ==============================================
   // ==============================================
@@ -174,6 +179,7 @@ class Const
   public static var TILE_FLOOR_TILE_UNWALKABLE = OFFSET_ROW3 + 5;
   public static var TILE_FLOOR_CONCRETE = OFFSET_ROW3 + 6;
   public static var TILE_HANGAR_DOOR = OFFSET_ROW3 + 7;
+  public static var TILE_FLOOR_TILE_CANNOTSEE = OFFSET_ROW3 + 8;
 
   public static var OFFSET_CITY = 64;
 
@@ -181,6 +187,7 @@ class Const
   public static var OFFSET_ROW8 = 128;
   public static var OFFSET_ROW9 = 144;
   public static var OFFSET_ROW10 = 160;
+  // NOTE: first table tile! important for clue spawn!
   public static var TILE_LABS_TABLE_3X3_7 = OFFSET_ROW8 + 0;
   public static var TILE_LABS_TABLE_3X3_8 = OFFSET_ROW8 + 1;
   public static var TILE_LABS_TABLE_3X3_9 = OFFSET_ROW8 + 2;
@@ -227,6 +234,8 @@ class Const
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
   public static var TILE_LABS_TABLE2_3X1_2 = OFFSET_ROW11 + 5;
   public static var TILE_LABS_TABLE2_3X1_3 = OFFSET_ROW11 + 6;
+  // NOTE: last table tile! important for clue spawn!
+  // change check in AreaGame.initSpawnPoints() if you add more tables
   public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
 
   // === row 12 -
@@ -263,7 +272,7 @@ class Const
     // row 2 - roads, indoor
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 3 - floor
-    1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
 
     // row 4+ - region tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

@@ -124,7 +124,7 @@ class GoalsAlienCrashLanding
       note: 'Your original host survived. You need to find it.',
       messageReceive: 'My original host still functions. I will need to find it and retrieve it.',
       messageComplete: 'I feel some attachment to it.',
-      },
+    },
 
     SCENARIO_ALIEN_ENTER_SHIP => {
       id: SCENARIO_ALIEN_ENTER_SHIP,
