@@ -130,6 +130,10 @@ class Const
     { row: 17, amount: 12 },
     { row: 18, amount: 12 },
   ];
+  public static var CHEM_LABS_BOOKS = [
+    { row: 19, amount: 12 },
+    { row: 20, amount: 12 },
+  ];
 
   // ==============================================
   // ==============================================

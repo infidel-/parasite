@@ -1011,15 +1011,39 @@ class AreaGame extends _SaveObject
         return;
 
       // get number of clues already spawned
+      // and despawn the ones that are far from player
       var cnt = 0;
+      var radius = game.player.vars.listenRadius;
       for (o in _objects)
         if (o.item != null && o.item.info.type == 'readable')
-          cnt++;
+          {
+            // in radius
+            if (game.playerArea.distanceSquared(o.x, o.y) < radius * radius)
+              {
+                cnt++;
+                continue;
+              }
+            // player sees it
+            if (game.playerArea.sees(o.x, o.y))
+              {
+                cnt++;
+                continue;
+              }
+            // min timeout
+            if (game.turns - o.creationTime < 10)
+              {
+                cnt++;
+                continue;
+              }
+
+            // despawn readable
+            removeObject(o);
+          }
 
       // labs
       if (info.id == AREA_FACILITY)
         {
-          var maxSpawn = 5 - cnt;
+          var maxSpawn = 4 - cnt;
           if (maxSpawn <= 0)
             return;
 
@@ -1058,15 +1082,18 @@ class AreaGame extends _SaveObject
             {
               if (spawns.length == 0)
                 return;
-              // TODO books
-              var info = ItemsConst.getInfo('paper');//Std.random(100) < 80 ? 'paper' : 'book');
+              var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
 
               // find empty clue location
               var loc = spawns[Std.random(spawns.length)];
               spawns.remove(loc);
 
               // spawn object
-              var tiles = Const.CHEM_LABS_DOCUMENTS[Std.random(Const.CHEM_LABS_DOCUMENTS.length)];
+              var tiles = null;
+              if (info.id == 'paper')
+                tiles = Const.CHEM_LABS_DOCUMENTS[Std.random(Const.CHEM_LABS_DOCUMENTS.length)];
+              else if (info.id == 'book')
+                tiles = Const.CHEM_LABS_BOOKS[Std.random(Const.CHEM_LABS_BOOKS.length)];
               var o = new Document(game, this.id, loc.x, loc.y,
                 tiles.row, Std.random(tiles.amount));
               o.name = info.names[Std.random(info.names.length)];

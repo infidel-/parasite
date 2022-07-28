@@ -1032,6 +1032,27 @@ class PlayerArea extends _SaveObject
         player.vars.listenRadius * player.vars.listenRadius);
     }
 
+// does player sees this spot
+  public function sees(xx: Int, yy: Int): Bool
+    {
+      // host vision
+      if (player.state == PLR_STATE_HOST)
+        return game.area.isVisible(x, y, xx, yy);
+      else
+        {
+          // parasite vision
+          if (Math.abs(x - xx) < 2 && Math.abs(y - yy) < 2)
+            return true;
+        }
+      return false;
+    }
+
+// distance from player to point
+  public inline function distanceSquared(xx: Int, yy: Int): Int
+    {
+      return Const.distanceSquared(x, y, xx, yy);
+    }
+
 // set action to repeat continuously
   public function setAction(a: _PlayerAction)
     {
