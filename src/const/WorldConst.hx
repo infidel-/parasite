@@ -160,9 +160,7 @@ class WorldConst
           'civilian' => 90,
           'security' => 10
         ],
-        objects: [
-          { id: 'sewer_hatch', amount: 5 }
-        ]
+        objects: [] // moved to facility generator
       },
 
       // *** habitat

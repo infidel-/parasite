@@ -77,6 +77,19 @@ class FacilityAreaGenerator
       // hole in sidewalk for entry to parking lot
       var hx = mainx + mainw + 10, hy = sidewalky;
       drawBlock(cells, hx, hy, 4, 2, TEMP_ALLEY);
+      // sewer hatches
+      var cnt = 0;
+      var sewersDist = 10 + Std.random(10);
+      for (x in 0...hx)
+        {
+          cnt++;
+          if (cnt < sewersDist)
+            continue;
+          var o = new SewerHatch(game, area.id, x, sidewalky +
+            (state.mainRoadNorth ? 0 : 1));
+          area.addObject(o);
+          cnt = 0;
+        }
 
       // grass
       var gx = 2, gy = mainy, gw = mainx - 4, gh = mainh;
