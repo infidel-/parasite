@@ -124,6 +124,10 @@ class AreaObject extends _SaveObject
   public function sensable(): Bool
     { return false; }
 
+// can be activated when player is next to it?
+  public function canActivateNear(): Bool
+    { return false; }
+
 // get object name considering whether it's known or not
 // can be overridden
   public dynamic function getName(): String

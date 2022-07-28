@@ -32,4 +32,8 @@ class Document extends Pickup
     {
       super.initPost(onLoad);
     }
+
+// can be activated when player is next to it?
+  public override function canActivateNear(): Bool
+    { return true; }
 }

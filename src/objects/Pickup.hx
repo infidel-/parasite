@@ -50,6 +50,11 @@ class Pickup extends AreaObject
       });
     }
 
+// is this item known to player?
+  public override function known(): Bool
+    {
+      return game.player.knowsItem(item.id);
+    }
 
 // ACTION: action handling
   override function onAction(id: String): Bool

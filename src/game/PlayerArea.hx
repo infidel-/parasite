@@ -186,10 +186,14 @@ class PlayerArea extends _SaveObject
         }
 
       // area object actions - need to learn about objects
-      var olist = game.area.getObjectsAt(x, y);
+//      var olist = game.area.getObjectsAt(x, y);
+      var olist = game.area.getObjectsInRadius(x, y, 1, false);
       if (olist != null && game.goals.completed(GOAL_PROBE_BRAIN))
         for (o in olist)
           {
+            // check if object is near and can be activated when near
+            if ((o.x != x || o.y != y) && !o.canActivateNear())
+              continue;
             // player does not know what this is, cannot activate it
             if (state == PLR_STATE_HOST &&
                 !o.known() &&
@@ -202,7 +206,6 @@ class PlayerArea extends _SaveObject
                 energy: 10,
                 obj: o,
               });
-
             // object known - add all actions defined by object
             else if (o.known())
               o.updateActionList();

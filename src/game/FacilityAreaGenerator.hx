@@ -746,7 +746,14 @@ class FacilityAreaGenerator
                           tablelen++;
                         }
                       // add table decoration
-                      if (Std.random(100) < 70)
+                      // NOTE: corner tile always has decoration
+                      // so that we cannot spawn clues there
+                      // because of the clue activation range cross
+                      if (Std.random(100) < 70 ||
+                          (tx == room.x1 && ty == room.y1) ||
+                          (tx == room.x2 && ty == room.y1) ||
+                          (tx == room.x1 && ty == room.y2) ||
+                          (tx == room.x2 && ty == room.y2))
                         addDecoration(state, tx, ty,
                           Const.CHEM_LABS_DECO_TABLE);
                     }
