@@ -1425,6 +1425,8 @@ class Test {
         ai = new AgentAI(game, x, y);
       else if (type == 'team')
         ai = new TeamMemberAI(game, x, y);
+      else if (type == 'scientist')
+        ai = new ScientistAI(game, x, y);
       else throw 'spawnAI(): AI type [' + type + '] unknown';
 
       addAI(ai);

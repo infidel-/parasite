@@ -23,10 +23,10 @@ class Atlas
       femaleAtlas = res.grid(Const.TILE_SIZE_CLEAN);
 
       // nullify empty space (count on last row from the left!)
-      var maleEmpty = 8;
+      var maleEmpty = 3;
       for (i in 0...maleEmpty)
         maleAtlas[9 - i][maleAtlas[0].length - 1] = null;
-      var femaleEmpty = 0;
+      var femaleEmpty = 5;
       for (i in 0...femaleEmpty)
         femaleAtlas[9 - i][femaleAtlas[0].length - 1] = null;
 
@@ -218,7 +218,16 @@ class Atlas
       { x: 0, y: 6 },
       { x: 1, y: 6 },
     ],
+    'scientist' => [
+      { x: 0, y: 7 },
+      { x: 1, y: 7 },
+      { x: 2, y: 7 },
+      { x: 3, y: 7 },
+      { x: 4, y: 7 },
+    ],
+    // NOTE: check start of file for empty tiles code on new row!
   ];
+
   static var specialsMale = [
     'police' => [
       { x: 9, y: 2 },
@@ -249,6 +258,15 @@ class Atlas
     'security' => [
       { x: 1, y: 8 },
     ],
+    'scientist' => [
+      { x: 2, y: 9 },
+      { x: 3, y: 9 },
+      { x: 4, y: 9 },
+      { x: 5, y: 9 },
+      { x: 6, y: 9 },
+    ],
+
+    // NOTE: check start of file for empty tiles code on new row!
   ];
 }
 

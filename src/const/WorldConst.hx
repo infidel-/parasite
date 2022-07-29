@@ -157,7 +157,7 @@ class WorldConst
         lawResponceEnabled: true,
         isHighRisk: true,
         ai: [
-          'civilian' => 90,
+          'scientist' => 90,
           'security' => 10
         ],
         objects: [] // moved to facility generator
