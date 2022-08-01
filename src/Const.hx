@@ -89,6 +89,7 @@ class Const
   public static var FRAME_MASK_CONTROL = 2;
   public static var FRAME_MASK_ATTACHED = 3;
   public static var FRAME_DOT = 4;
+  public static var FRAME_MASK_DEFAULT = 5;
 
   public static var ROW_BIOMINERAL = 5;
   public static var ROW_ASSIMILATION = 6;

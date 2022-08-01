@@ -2,6 +2,10 @@
 
 import h2d.Tile;
 
+#if electron
+import js.node.Fs;
+#end
+
 class Atlas
 {
   var scene: GameScene;
@@ -15,6 +19,11 @@ class Atlas
     {
       scene = s;
 
+/*
+      var file = Fs.readFileSync('resources/app/img/male64-1.png', 'utf8');
+      var bts = haxe.io.Bytes.ofString(file);
+      var res = hxd.res.Any.fromBytes('img/male64-1.png', bts).toTile();
+*/
       var res = hxd.Res.load('graphics/male' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
       maleAtlas = res.grid(Const.TILE_SIZE_CLEAN);

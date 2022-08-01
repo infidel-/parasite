@@ -336,6 +336,19 @@ class AI extends _SaveObject
       if (game.area.getAI(vx, vy) != null && !force)
         return;
 
+      if (!force && game.player.host != this)
+        {
+          // frob objects on this position
+          var objs = game.area.getObjectsAt(vx, vy);
+          for (o in objs)
+            {
+              // 0 - return false
+              // 1 - ok, continue
+              var ret = o.frob(false, this);
+              if (ret == 0)
+                return;
+            }
+        }
       x = vx;
       y = vy;
       entity.setPosition(x, y);

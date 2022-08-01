@@ -947,7 +947,7 @@ class PlayerArea extends _SaveObject
           ny = y + Const.diry[dir];
         }
 
-      // frob the object
+      // frob objects on this position
       var objs = game.area.getObjectsAt(nx, ny);
       for (o in objs)
         {
