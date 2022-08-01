@@ -20,9 +20,24 @@ class TeamMemberAI extends HumanAI
   public override function init()
     {
       super.init();
-      type = 'civilian';
-      name.unknown = 'random civilian';
-      name.unknownCapped = 'Random civilian';
+      if (game.area.typeID == AREA_FACILITY)
+        {
+          type = 'scientist';
+          name.unknown = 'random scientist';
+          name.unknownCapped = 'Random scientist';
+        }
+      else if (game.area.typeID == AREA_MILITARY_BASE)
+        {
+          type = 'soldier';
+          name.unknown = 'soldier';
+          name.unknownCapped = 'Soldier';
+        }
+      else
+        {
+          type = 'civilian';
+          name.unknown = 'random civilian';
+          name.unknownCapped = 'Random civilian';
+        }
       soundsID = 'team';
       isAggressive = true;
 

@@ -228,7 +228,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility1%'
           },
-          npc: [ 'researcher:civilian' => 10, 'agent' => 5 ],
+          npc: [ 'researcher:scientist' => 10, 'agent' => 5 ],
           onLearnLocation: function (game) {
             game.goals.complete(SCENARIO_ALIEN_FIND_SHIP);
           },
@@ -318,7 +318,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher:civilian' => 10, 'agent' => 2 ],
+          npc: [ 'researcher:scientist' => 10, 'agent' => 2 ],
           onLearnNote: function(game, noteID)
             {
               game.goals.complete(GOAL_PROGRESS_TIMELINE);
@@ -344,7 +344,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher:civilian' => 5 ],
+          npc: [ 'researcher:scientist' => 5 ],
           onLearnNote: function(game, noteID)
             {
               game.goals.complete(GOAL_PROGRESS_TIMELINE);
@@ -365,7 +365,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher:civilian' => 5 ],
+          npc: [ 'researcher:scientist' => 5 ],
           },
 
         'parasiteTransportation' => {

@@ -299,7 +299,7 @@ class AreaGame extends _SaveObject
               continue;
             clueSpawnPoints.add({ x: x, y: y });
           }
-      trace('clueSpawnPoints len:' + clueSpawnPoints.length);
+//      trace('clueSpawnPoints len:' + clueSpawnPoints.length);
     }
 
 // leave this area: hide gui, despawn, etc
@@ -1403,8 +1403,8 @@ class Test {
 
 // spawn AI (both from command-line and internally)
   public static var aiTypes = [
-    'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier', 'security (sec)',
-    'agent', 'team',
+    'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier',
+    'security (sec)', 'scientist (sci)', 'agent', 'team',
   ];
   public function spawnAI(type: String, x: Int, y: Int)
     {
@@ -1425,7 +1425,7 @@ class Test {
         ai = new AgentAI(game, x, y);
       else if (type == 'team')
         ai = new TeamMemberAI(game, x, y);
-      else if (type == 'scientist')
+      else if (type == 'scientist' || type == 'sci')
         ai = new ScientistAI(game, x, y);
       else throw 'spawnAI(): AI type [' + type + '] unknown';
 

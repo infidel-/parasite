@@ -112,7 +112,7 @@ class FacilityAreaGenerator
       generateHangar(state, hangarx, hangary, hangarw, hangarh);
 
       // trace area
-      AreaGenerator.printArea(state.game, state.area, mapTempTiles);
+//      AreaGenerator.printArea(state.game, state.area, mapTempTiles);
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
@@ -169,7 +169,7 @@ class FacilityAreaGenerator
   static function generateBuilding(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
-      trace('b: ' + bx + ',' + by + ' sz:' + bw + ',' + bh);
+//      trace('b: ' + bx + ',' + by + ' sz:' + bw + ',' + bh);
       // draw outer walls and walkways
       var area = state.area;
       var cells = area.getCells();
@@ -549,7 +549,7 @@ class FacilityAreaGenerator
           var cluster = [ door.roomID1, door.roomID2 ];
           clusters.push(cluster);
         }
-      trace(clusters);
+//      trace(clusters);
 
       // find room blocks that do not have a corridor exit and make one
       for (c in clusters)
