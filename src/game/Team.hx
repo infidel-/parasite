@@ -332,6 +332,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // reduce max energy
       var maxEnergy = 0;
+      var energyReduction = 0;
       var shock1 = 0; // control
       var shock2 = 0; // attach hold
       if (game.group.difficulty == EASY)
@@ -339,22 +340,25 @@ class Team extends FSM<_TeamState, _TeamFlag>
           maxEnergy = 50;
           shock1 = 10;
           shock2 = 10;
+          energyReduction = 5;
         }
       else if (game.group.difficulty == NORMAL)
         {
           maxEnergy = 30;
           shock1 = 30;
           shock2 = 20;
+          energyReduction = 10;
         }
       else if (game.group.difficulty == HARD)
         {
           maxEnergy = 10;
           shock1 = 50;
           shock2 = 50;
+          energyReduction = 10;
         }
       if (game.player.maxEnergy > maxEnergy)
         {
-          game.player.maxEnergy -= 10;
+          game.player.maxEnergy -= energyReduction;
           game.player.energy = game.player.energy; // clamp current value
         }
 
