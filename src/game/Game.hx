@@ -754,7 +754,10 @@ class Game extends _SaveObject
                       Std.isOfType(el, Float) ||
                       Std.isOfType(el, Bool) ||
                       Std.isOfType(el, String))
-                    dsttmp.push(el);
+                    {
+                      dsttmp.push(el);
+                      continue;
+                    }
                   // NOTE: we only use Array<Array<Int>> currently
                   else if (Std.isOfType(el, Array))
                     {
