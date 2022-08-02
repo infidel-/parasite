@@ -16,6 +16,11 @@ class AgentAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      inventory.addID('pistol');
+      skills.addID(SKILL_PISTOL, 40 + Std.random(25));
+
+      skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+      inventory.addID('smartphone');
       initPost(false);
     }
 
@@ -28,11 +33,6 @@ class AgentAI extends HumanAI
       name.unknownCapped = 'Agent';
       soundsID = 'agent';
       isAggressive = true;
-      inventory.addID('pistol');
-      skills.addID(SKILL_PISTOL, 40 + Std.random(25));
-
-      skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
-      inventory.addID('smartphone');
 
 //      isBackup = false;
 //      isBackupCalled = false;

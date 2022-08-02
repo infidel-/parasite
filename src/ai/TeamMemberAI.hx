@@ -13,34 +13,6 @@ class TeamMemberAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      initPost(false);
-    }
-
-// init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      if (game.area.typeID == AREA_FACILITY)
-        {
-          type = 'scientist';
-          name.unknown = 'random scientist';
-          name.unknownCapped = 'Random scientist';
-        }
-      else if (game.area.typeID == AREA_MILITARY_BASE)
-        {
-          type = 'soldier';
-          name.unknown = 'soldier';
-          name.unknownCapped = 'Soldier';
-        }
-      else
-        {
-          type = 'civilian';
-          name.unknown = 'random civilian';
-          name.unknownCapped = 'Random civilian';
-        }
-      soundsID = 'team';
-      isAggressive = true;
-
       // team level changes loadout
       if (game.group.team.level == 1)
         {
@@ -71,6 +43,33 @@ class TeamMemberAI extends HumanAI
 
       skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
       inventory.addID('smartphone');
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      if (game.area.typeID == AREA_FACILITY)
+        {
+          type = 'scientist';
+          name.unknown = 'random scientist';
+          name.unknownCapped = 'Random scientist';
+        }
+      else if (game.area.typeID == AREA_MILITARY_BASE)
+        {
+          type = 'soldier';
+          name.unknown = 'soldier';
+          name.unknownCapped = 'Soldier';
+        }
+      else
+        {
+          type = 'civilian';
+          name.unknown = 'random civilian';
+          name.unknownCapped = 'Random civilian';
+        }
+      soundsID = 'team';
+      isAggressive = true;
     }
 
 // called after load or creation

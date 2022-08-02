@@ -16,18 +16,6 @@ class SecurityAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      initPost(false);
-    }
-
-// init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      type = 'security';
-      name.unknown = 'security guard';
-      name.unknownCapped = 'Security guard';
-      soundsID = 'security';
-      isAggressive = true;
       if (Std.random(100) < 20)
         {
           inventory.addID('pistol');
@@ -43,7 +31,18 @@ class SecurityAI extends HumanAI
           inventory.addID('smartphone');
         }
       else inventory.addID('mobilePhone');
+      initPost(false);
+    }
 
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      type = 'security';
+      name.unknown = 'security guard';
+      name.unknownCapped = 'Security guard';
+      soundsID = 'security';
+      isAggressive = true;
       isBackup = false;
       isBackupCalled = false;
     }

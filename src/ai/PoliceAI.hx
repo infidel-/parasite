@@ -16,19 +16,6 @@ class PoliceAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      initPost(false);
-    }
-
-// init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      type = 'police';
-      name.unknown = 'police officer';
-      name.unknownCapped = 'Police officer';
-      soundsID = 'police';
-      isAggressive = true;
-
       // chance of having stunner
       var ch = 20;
       if (game.area.info.isHighRisk)
@@ -44,6 +31,18 @@ class PoliceAI extends HumanAI
           skills.addID(SKILL_BATON, 50 + Std.random(25));
         }
       inventory.addID('radio');
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      type = 'police';
+      name.unknown = 'police officer';
+      name.unknownCapped = 'Police officer';
+      soundsID = 'police';
+      isAggressive = true;
 
       isBackup = false;
       isBackupCalled = false;

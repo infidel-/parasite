@@ -13,6 +13,11 @@ class ScientistAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      if (Std.random(100) < 75)
+        {
+          skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
+          inventory.addID('smartphone');
+        }
       initPost(false);
     }
 
@@ -24,12 +29,6 @@ class ScientistAI extends HumanAI
       name.unknown = 'random scientist';
       name.unknownCapped = 'Random scientist';
       soundsID = 'scientist';
-
-      if (Std.random(100) < 75)
-        {
-          skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
-          inventory.addID('smartphone');
-        }
     }
 
 // called after load or creation

@@ -16,6 +16,8 @@ class SoldierAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      inventory.addID('assaultRifle');
+      skills.addID(SKILL_RIFLE, 40 + Std.random(25));
       initPost(false);
     }
 
@@ -28,8 +30,6 @@ class SoldierAI extends HumanAI
       name.unknownCapped = 'Soldier';
       soundsID = 'soldier';
       isAggressive = true;
-      inventory.addID('assaultRifle');
-      skills.addID(SKILL_RIFLE, 40 + Std.random(25));
 
 //      isBackup = false;
 //      isBackupCalled = false;

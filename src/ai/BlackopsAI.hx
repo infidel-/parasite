@@ -16,21 +16,6 @@ class BlackopsAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      initPost(false);
-    }
-
-// init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      type = 'blackops';
-      name.unknown = 'blackops agent';
-      name.unknownCapped = 'Blackops agent';
-      soundsID = 'team';
-      isAggressive = true;
-      isRelentless = true;
-      inventory.clear();
-
       // team level changes loadout
       if (game.group.team.level == 1)
         {
@@ -41,6 +26,7 @@ class BlackopsAI extends HumanAI
           skills.addID(SKILL_PISTOL, 60 + Std.random(25));
           inventory.addID('kevlarArmor', true);
         }
+
       else if (game.group.team.level == 2)
         {
           inventory.addID(
@@ -86,6 +72,20 @@ class BlackopsAI extends HumanAI
           tileAtlasX = tmp.x;
           tileAtlasY = tmp.y;
         }
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      type = 'blackops';
+      name.unknown = 'blackops agent';
+      name.unknownCapped = 'Blackops agent';
+      soundsID = 'team';
+      isAggressive = true;
+      isRelentless = true;
+      inventory.clear();
 
 //      isBackup = false;
 //      isBackupCalled = false;

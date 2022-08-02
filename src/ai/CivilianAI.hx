@@ -13,19 +13,7 @@ class CivilianAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      initPost(false);
-    }
-
-// init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      type = 'civilian';
-      name.unknown = 'random civilian';
-      name.unknownCapped = 'Random civilian';
-      soundsID = 'civilian';
-
-      // civs in higher class areas have a higher chance of having computers
+      // civs in higher class areas have a higher chance of having
       // smartphones
       var chance = 50;
       if (game.area.info.id == AREA_CITY_LOW)
@@ -36,7 +24,6 @@ class CivilianAI extends HumanAI
         chance = 85;
       else if (game.area.info.id == AREA_FACILITY)
         chance = 90;
-
       if (Std.random(100) < chance)
         {
           skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
@@ -57,13 +44,23 @@ class CivilianAI extends HumanAI
             chance = 25;
           else if (game.area.info.id == AREA_FACILITY)
             chance = 30;
-
           if (Std.random(100) < chance)
             {
               skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
               inventory.addID('laptop');
             }
         }
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      type = 'civilian';
+      name.unknown = 'random civilian';
+      name.unknownCapped = 'Random civilian';
+      soundsID = 'civilian';
     }
 
 // called after load or creation
