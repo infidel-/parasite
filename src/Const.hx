@@ -175,18 +175,19 @@ class Const
   public static var TILE_WINDOWV3 = OFFSET_AREA + 9;
 
   // row 3
-  public static var OFFSET_ROW3 = 48;
-  public static var TILE_FLOOR_TILE = OFFSET_ROW3 + 0;
-  public static var TILE_FLOOR_TILE_GRATE1 = OFFSET_ROW3 + 1;
-  public static var TILE_FLOOR_TILE_GRATE2 = OFFSET_ROW3 + 2;
-  public static var TILE_FLOOR_TILE_GRATE3 = OFFSET_ROW3 + 3;
-  public static var TILE_FLOOR_LINO = OFFSET_ROW3 + 4;
-  public static var TILE_FLOOR_TILE_UNWALKABLE = OFFSET_ROW3 + 5;
-  public static var TILE_FLOOR_CONCRETE = OFFSET_ROW3 + 6;
-  public static var TILE_HANGAR_DOOR = OFFSET_ROW3 + 7;
-  public static var TILE_FLOOR_TILE_CANNOTSEE = OFFSET_ROW3 + 8;
+  public static var OFFSET_CITY = 48;
 
-  public static var OFFSET_CITY = 64;
+  // row 4 - chem lab
+  public static var OFFSET_CHEM_LAB = 64;
+  public static var TILE_FLOOR_TILE = OFFSET_CHEM_LAB + 0;
+  public static var TILE_FLOOR_TILE_GRATE1 = OFFSET_CHEM_LAB + 1;
+  public static var TILE_FLOOR_TILE_GRATE2 = OFFSET_CHEM_LAB + 2;
+  public static var TILE_FLOOR_TILE_GRATE3 = OFFSET_CHEM_LAB + 3;
+  public static var TILE_FLOOR_LINO = OFFSET_CHEM_LAB + 4;
+  public static var TILE_FLOOR_TILE_UNWALKABLE = OFFSET_CHEM_LAB + 5;
+  public static var TILE_FLOOR_CONCRETE = OFFSET_CHEM_LAB + 6;
+  public static var TILE_HANGAR_DOOR = OFFSET_CHEM_LAB + 7;
+  public static var TILE_FLOOR_TILE_CANNOTSEE = OFFSET_CHEM_LAB + 8;
 
   // === row 8-10 - tables
   public static var OFFSET_ROW8 = 128;

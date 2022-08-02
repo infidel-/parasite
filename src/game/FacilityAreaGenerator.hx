@@ -1189,7 +1189,7 @@ class FacilityAreaGenerator
               }
 
             //if (tileID >= Const.OFFSET_ROW8)
-            if (tileID >= Const.OFFSET_ROW3)
+            if (tileID >= Const.OFFSET_CHEM_LAB)
               continue;
 /*
             if (tileID >= TEMP_BUILDING_ROOM_ID_START)
