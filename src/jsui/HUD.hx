@@ -324,6 +324,7 @@ class HUD
           '<br/>' + game.playerRegion.currentArea.name + '<br/>');
       buf.add('<hr/>');
 
+      // parasite stats
       var time = (game.location == LOCATION_AREA ? 1 : 5);
       var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
       buf.add('Energy: ' +
@@ -371,14 +372,22 @@ class HUD
             '<font ' + getColor(game.player.hostControl, 100) + '>' + game.player.hostControl + '</font>' +
             '/100<br/>');
 
+          // energy
           var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
           buf.add("Energy: <font " + getColor(host.energy,
             host.maxEnergy) + ">" +
             host.energy + '</font>/' +
             host.maxEnergy);
-          buf.add(' ' + Const.col('gray',
-            Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]')));
+          // energy spending
+          buf.add(' ' +
+            Const.smallgray('[' + (energyPerTurn > 0 ? '+' : '') +
+            energyPerTurn + '/t]'));
+          // time to live
+          if (energyPerTurn < 0)
+            buf.add(' ' +
+              Const.smallgray('[' +
+              Math.ceil(game.player.host.energy / (- energyPerTurn)) + 't]'));
+          // organ growth/evolution
           if (game.player.evolutionManager.isActive)
             {
               buf.add('<br>Evolution direction:<br/>  ');

@@ -120,9 +120,9 @@ class Game extends _SaveObject
           minRadius: 2,
           maxRadius: 5 });
       // TODO: REMOVE TEST!!!
-      area = region.getRandomWithType(AREA_FACILITY, false);
-      player.vars.losEnabled = false;
-      player.vars.godmodeEnabled = true;
+//      area = region.getRandomWithType(AREA_FACILITY, false);
+//      player.vars.losEnabled = false;
+//      player.vars.godmodeEnabled = true;
 //      @:privateAccess testArea.generate();
 
       playerRegion.createEntity(area.x, area.y);

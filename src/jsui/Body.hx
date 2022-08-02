@@ -183,7 +183,7 @@ class Body extends UIWindow
         'You will receive ' + __Math.gpPerTurn() + ' gp per turn. ' +
         'Your host will survive for ' +
           Std.int(game.player.host.energy /
-            game.player.vars.organGrowthEnergyPerTurn) +
+            __Math.growthEnergyPerTurn()) +
         ' turns while growing body features (not counting other spending). ');
       buf.add('</p>');
 
