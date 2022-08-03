@@ -364,7 +364,7 @@ class AI extends _SaveObject
   function seesPosition(xx: Int, yy: Int): Bool
     {
       // too far away
-      var distSqr = Const.getDistSquared(x, y, xx, yy);
+      var distSqr = Const.distanceSquared(x, y, xx, yy);
       if (distSqr > VIEW_DISTANCE * VIEW_DISTANCE)
         return false;
 
@@ -530,7 +530,6 @@ class AI extends _SaveObject
 //      trace('tmp: ' + tmp + ' ai at (' + x + ',' + y + '): dir: ' + direction +
 //        ' n:' + (x + Const.dirx[direction]) + ',' + (y + Const.diry[direction]));
 
-//      var distSqr = Const.getDistSquared(x, y, xx, yy);
       var nx = x + Const.dirx[direction];
       var ny = y + Const.diry[direction];
       setPosition(nx, ny);
@@ -603,7 +602,12 @@ class AI extends _SaveObject
 
       // play weapon sound
       if (weapon.sound != null)
-        game.scene.sounds.play(weapon.sound, true, true);
+        game.scene.sounds.play(weapon.sound, {
+          x: x,
+          y: y,
+          canDelay: true,
+          always: true,
+        });
 
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
@@ -722,8 +726,7 @@ class AI extends _SaveObject
       if (!game.player.vars.invisibilityEnabled &&
           seesPosition(game.playerArea.x, game.playerArea.y))
         {
-          var distance = Const.getDist(x, y, game.playerArea.x, game.playerArea.y);
-
+          var distance = game.playerArea.distance(x, y);
           var baseAlertness = 3;
           var alertnessBonus = 0;
 
@@ -1009,7 +1012,11 @@ class AI extends _SaveObject
           var file = sound.file;
           if (isHuman && !isMale && file.indexOf('male') == 0)
             file = 'fe' + file;
-          game.scene.sounds.play(file, false);
+          game.scene.sounds.play(file, {
+            x: x,
+            y: y,
+            always: false,
+          });
         }
       if (sound.radius <= 0 || sound.alertness <= 0)
         return;
@@ -1056,7 +1063,7 @@ class AI extends _SaveObject
       var file = sound.file;
       if (isHuman && !isMale && file.indexOf('male') == 0)
         file = 'fe' + file;
-      game.scene.sounds.play(file, false);
+      game.scene.sounds.play(file);
 
       // event stuff
       if (npc != null)

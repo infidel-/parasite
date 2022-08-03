@@ -225,16 +225,21 @@ class Sounds
 
 // play given sound from the library
 // add random delay
-  public function play(key: String, always: Bool, ?canDelay: Bool)
+  public function play(key: String, ?opts: _SoundOptions = null)
     {
-      if (canDelay)
-        Browser.window.setTimeout(playNow.bind(key, always),
+      if (opts == null)
+        opts = {
+          canDelay: false,
+          always: true,
+        };
+      if (opts.canDelay)
+        Browser.window.setTimeout(playNow.bind(key, opts),
           Std.random(100));
-      else playNow(key, always);
+      else playNow(key, opts);
     }
 
 // play given sound from the library
-  function playNow(key: String, always: Bool)
+  function playNow(key: String, opts: _SoundOptions)
     {
 #if !free
       var res = sounds[key];
@@ -246,17 +251,26 @@ class Sounds
       if (res[0] != -1)
         key += res[Std.random(res.length)];
       var last = lastPlayedTS[key];
-      if (!always && haxe.Timer.stamp() - lastPlayedTS[key] < 1)
+      if (!opts.always && haxe.Timer.stamp() - lastPlayedTS[key] < 1)
         {
 //          trace('Skipping ' + key);
           return;
         }
       lastPlayedTS[key] = haxe.Timer.stamp();
-      game.debug('Playing sound ' + key + ' (always: ' + always + ')');
+      game.debug('Playing sound ' + key + ' (opts: ' + opts + ')');
+      var volume = game.config.effectsVolume;
+      if (opts.x != null && opts.y != null)
+        {
+          var dist = game.playerArea.distance(opts.x, opts.y);
+          var radius = game.player.vars.listenRadius;// / 2;
+          if (dist < radius)
+            volume = Std.int(volume * (radius - dist) / radius);
+          else volume = Std.int(volume * 0.1); // make silent instead?
+        }
       var sound = SoundManager.createSound({
         id: key,
         url: 'sound/' + key + '.mp3',
-        volume: game.config.effectsVolume,
+        volume: volume,
       });
       sound.play();
 #end
@@ -421,4 +435,14 @@ enum _SoundAmbientState
   SOUND_FADEIN;
   SOUND_PLAYING;
   SOUND_FADEOUT;
+}
+
+typedef _SoundOptions = {
+// always play?
+  @:optional var always: Bool;
+// can be delayed? (small delay to avoid same sounds playing together)
+  @:optional var canDelay: Bool;
+// x,y for in-world sounds
+  @:optional var x: Int;
+  @:optional var y: Int;
 }

@@ -439,7 +439,7 @@ class RegionGame extends _SaveObject
           if (params.type != null && a.info.id != params.type)
             continue;
 
-          var tmpdist = Const.getDistSquared(a.x, a.y, area.x, area.y);
+          var tmpdist = Const.distanceSquared(a.x, a.y, area.x, area.y);
           if (a.x != area.x && a.x != area.y && tmpdist < dist)
             {
               amin = a;

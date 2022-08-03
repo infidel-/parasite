@@ -55,7 +55,12 @@ class Door extends AreaObject
 
       imageCol++; // opened door tile is right next to closed
       updateImage();
-      game.scene.sounds.play('door-' + sound + '-open', true);
+      game.scene.sounds.play('door-' + sound + '-open', {
+        x: x,
+        y: y,
+        canDelay: true,
+        always: true,
+      });
       isOpen = true;
       closeTimer = 2;
       return 1;
@@ -75,7 +80,12 @@ class Door extends AreaObject
       imageCol--; // closed door tile is to the left
       updateImage();
       isOpen = false;
-      game.scene.sounds.play('door-' + sound + '-close', true);
+      game.scene.sounds.play('door-' + sound + '-close', {
+        x: x,
+        y: y,
+        canDelay: true,
+        always: true,
+      });
     }
 
   public override function known(): Bool

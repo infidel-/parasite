@@ -400,7 +400,7 @@ class ConsoleGame
           return;
         }
 
-      game.scene.sounds.play(arr[1], true);
+      game.scene.sounds.play(arr[1]);
     }
 
 

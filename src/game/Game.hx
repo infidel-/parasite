@@ -321,7 +321,7 @@ class Game extends _SaveObject
 #end
 
           // parasite death
-          scene.sounds.play('parasite-die', true);
+          scene.sounds.play('parasite-die');
 
           log(finishText);
         }
@@ -329,7 +329,7 @@ class Game extends _SaveObject
         {
           log('You have completed the game.');
           finishText = text;
-          scene.sounds.play('game-win', true);
+          scene.sounds.play('game-win');
         }
 
       // add to event queue

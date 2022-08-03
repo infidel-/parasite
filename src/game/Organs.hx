@@ -381,7 +381,7 @@ class Organs extends _SaveObject
       var params = getParams(IMP_ACID_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y, game.playerArea.x, game.playerArea.y);
+      var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
@@ -420,7 +420,7 @@ class Organs extends _SaveObject
       var params = getParams(IMP_SLIME_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y, game.playerArea.x, game.playerArea.y);
+      var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
@@ -461,8 +461,7 @@ class Organs extends _SaveObject
       var params = getParams(IMP_PARALYSIS_SPIT);
 
       // check for distance
-      var distance = Const.getDist(ai.x, ai.y,
-        game.playerArea.x, game.playerArea.y);
+      var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);

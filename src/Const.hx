@@ -305,21 +305,6 @@ class Const
   public static var dir4x = [ -1, 0, 0, 1 ];
   public static var dir4y = [ 0, -1, 1, 0 ];
 
-
-// get squared distance between two points
-  public static inline function getDistSquared(x1: Int, y1: Int, x2: Int, y2: Int): Int
-    {
-      return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
-    }
-
-
-// get distance between two points
-  public static inline function getDist(x1: Int, y1: Int, x2: Int, y2: Int): Int
-    {
-      return Std.int(Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
-    }
-
-
 // log all object string and int properties
   public static inline function debugObject(o: Dynamic)
     {
@@ -412,11 +397,16 @@ class Const
       return Math.round(x * 10) / 10;
     }
 
-
 // calc distance squared
   public static inline function distanceSquared(x1: Int, y1: Int, x2: Int, y2: Int)
     {
       return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+    }
+
+// get distance between two points
+  public static inline function distance(x1: Int, y1: Int, x2: Int, y2: Int): Int
+    {
+      return Std.int(Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
     }
 
 

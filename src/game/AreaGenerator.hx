@@ -892,7 +892,7 @@ class AreaGenerator
             // check for close objects
             var ok = true;
             for (old in spawned)
-              if (Const.getDistSquared(pt.x, pt.y, old.x, old.y) < 8 * 8)
+              if (Const.distanceSquared(pt.x, pt.y, old.x, old.y) < 8 * 8)
                 {
                   ok = false;
                   break;

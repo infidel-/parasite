@@ -519,7 +519,7 @@ class PlayerArea extends _SaveObject
 
       // play weapon sound
       if (weapon.sound != null)
-        game.scene.sounds.play(weapon.sound, true);
+        game.scene.sounds.play(weapon.sound);
 
       // +1 from passive when not assimilated, so it becomes 3
       player.host.energy -= 2;
@@ -629,7 +629,7 @@ class PlayerArea extends _SaveObject
 
       log('You have managed to attach to a host.');
 
-      game.scene.sounds.play('parasite-attach', false);
+      game.scene.sounds.play('parasite-attach');
 
       ai.onAttach(); // callback to AI
 
@@ -1050,7 +1050,7 @@ class PlayerArea extends _SaveObject
 // but nobody will probably notice the difference :)
   public inline function hears(xx: Int, yy: Int): Bool
     {
-      return (Const.distanceSquared(x, y, xx, yy) <
+      return (distanceSquared(xx, yy) <
         player.vars.listenRadius * player.vars.listenRadius);
     }
 
@@ -1073,6 +1073,12 @@ class PlayerArea extends _SaveObject
   public inline function distanceSquared(xx: Int, yy: Int): Int
     {
       return Const.distanceSquared(x, y, xx, yy);
+    }
+
+// distance from player to point
+  public inline function distance(xx: Int, yy: Int): Int
+    {
+      return Const.distance(x, y, xx, yy);
     }
 
 // set action to repeat continuously
@@ -1248,7 +1254,7 @@ class PlayerArea extends _SaveObject
       attachHost = null;
       player.host = null;
 
-      game.scene.sounds.play('parasite-detach', false);
+      game.scene.sounds.play('parasite-detach');
     }
 
 
