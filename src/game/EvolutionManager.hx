@@ -82,7 +82,10 @@ class EvolutionManager extends _SaveObject
           if (val > 0)
             {
               if (val == 1)
-                player.log('Your host degrades to a breaking point and might die soon.', COLOR_ALERT);
+                {
+                  player.log('Your host degrades to a breaking point and might expire soon.', COLOR_ALERT);
+                  game.goals.complete(GOAL_TUTORIAL_DEGRADE);
+                }
               else player.log('Your host degrades.');
               game.info(attr + ': ' + val);
             }

@@ -799,14 +799,18 @@ class PlayerArea extends _SaveObject
   public function getProbeBrainActionName()
     {
       var col = 'white';
-      var params: Dynamic = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
-      if (player.host.isNPC && !player.host.npc.memoryKnown)
-        col = 'timeline';
-      else if (player.vars.skillsEnabled && params.hostSkillsMod > 0)
+      if (player.host.isHuman)
         {
-          var hostSkill = player.host.skills.getRandomLearnableSkill();
-          if (hostSkill != null)
-            col = 'skill-title';
+          var params: Dynamic =
+            player.evolutionManager.getParams(IMP_BRAIN_PROBE);
+          if (player.host.isNPC && !player.host.npc.memoryKnown)
+            col = 'timeline';
+          else if (player.vars.skillsEnabled && params.hostSkillsMod > 0)
+            {
+              var hostSkill = player.host.skills.getRandomLearnableSkill();
+              if (hostSkill != null)
+                col = 'skill-title';
+            }
         }
       return Const.col(col, 'Probe Brain');
     }

@@ -65,6 +65,15 @@ class Goals
       messageComplete: "They use devices like these to communicate. I can force the hosts to drop them and deny that.",
     },
 
+    GOAL_TUTORIAL_DEGRADE => {
+      id: GOAL_TUTORIAL_DEGRADE,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "The evolution has almost completely degraded this host. It will expire soon unless I stop.",
+    },
+
     // ========================= main branch
 
     GOAL_INVADE_HOST => {
