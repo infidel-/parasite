@@ -550,7 +550,11 @@ class HUD
             if (action.key != null)
               key += action.key.toUpperCase();
             else key += '' + n;
-            buf.add(Const.key(key) + ': ' + action.name);
+            var name = action.name;
+            // dynamic action color
+            if (action.id == 'probeBrain')
+              name = game.playerArea.getProbeBrainActionName();
+            buf.add(Const.key(key) + ': ' + name);
             if (action.energy != null && action.energy > 0)
               buf.add(' ' + Const.smallgray(
                 '(' + action.energy + ' energy)'));

@@ -795,6 +795,21 @@ class PlayerArea extends _SaveObject
       log('You detach from the potential host.');
     }
 
+// updates probe brain action color
+  public function getProbeBrainActionName()
+    {
+      var col = 'white';
+      var params: Dynamic = player.evolutionManager.getParams(IMP_BRAIN_PROBE);
+      if (player.host.isNPC && !player.host.npc.memoryKnown)
+        col = 'timeline';
+      else if (player.vars.skillsEnabled && params.hostSkillsMod > 0)
+        {
+          var hostSkill = player.host.skills.getRandomLearnableSkill();
+          if (hostSkill != null)
+            col = 'skill-title';
+        }
+      return Const.col(col, 'Probe Brain');
+    }
 
 // action: probe host brain
   function probeBrainAction()
