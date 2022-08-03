@@ -1106,21 +1106,35 @@ class PlayerArea extends _SaveObject
       var prevState = player.state;
       action(currentAction);
       var stop = false;
-      // stop when the player state changes or not enough energy
-      var energy = (currentAction.energyFunc != null ?
-        currentAction.energyFunc(player) : currentAction.energy);
-      if (player.state != prevState ||
-          player.energy < energy)
+      // player changed state
+      if (player.state != prevState)
         stop = true;
-      else if (currentAction.id == 'hardenGrip')
+      // probe brain stops when its color changes
+      else if (currentAction.id == 'probeBrain')
         {
-          if (attachHold >= 100)
+          var actionName = getProbeBrainActionName();
+          if (actionName.indexOf('white') > 0)
             stop = true;
         }
-      else if (currentAction.id == 'reinforceControl')
+      else
         {
-          if (player.hostControl >= 90)
+          // stop when the player state changes or not enough energy
+          var energy = (currentAction.energyFunc != null ?
+            currentAction.energyFunc(player) : currentAction.energy);
+          if (player.energy < energy)
             stop = true;
+          // grip fully hardened
+          else if (currentAction.id == 'hardenGrip')
+            {
+              if (attachHold >= 100)
+                stop = true;
+            }
+          // fully in control
+          else if (currentAction.id == 'reinforceControl')
+            {
+              if (player.hostControl >= 90)
+                stop = true;
+            }
         }
       if (stop)
         {

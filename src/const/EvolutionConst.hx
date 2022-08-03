@@ -611,6 +611,7 @@ class EvolutionConst
           id: 'probeBrain',
           type: ACTION_AREA,
           name: 'Probe Brain',
+          canRepeat: true,
           energyFunc: function (player) {
             if (player.host == null)
               return -1;
