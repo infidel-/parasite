@@ -56,6 +56,15 @@ class Goals
       messageComplete: "This area is getting dangerous to enter. Better to wait until things calm down.",
     },
 
+    GOAL_TUTORIAL_COMMS => {
+      id: GOAL_TUTORIAL_COMMS,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "They use devices like these to communicate. I can force the hosts to drop them and deny that.",
+    },
+
     // ========================= main branch
 
     GOAL_INVADE_HOST => {

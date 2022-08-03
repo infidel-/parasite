@@ -205,6 +205,11 @@ class Inventory extends _SaveObject
 
       // on first learn items
       game.goals.complete(GOAL_LEARN_ITEMS);
+
+      // goal completion
+      if (item.info.type == 'phone' || item.id == 'smartphone' ||
+          item.info.type == 'radio')
+        game.goals.complete(GOAL_TUTORIAL_COMMS);
     }
 
 
