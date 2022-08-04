@@ -257,7 +257,7 @@ class Sounds
           return;
         }
       lastPlayedTS[key] = haxe.Timer.stamp();
-      game.debug('Playing sound ' + key + ' (opts: ' + opts + ')');
+//      game.debug('Playing sound ' + key + ' (opts: ' + opts + ')');
       var volume = game.config.effectsVolume;
       if (opts.x != null && opts.y != null)
         {

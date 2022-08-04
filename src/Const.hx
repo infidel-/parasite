@@ -177,8 +177,8 @@ class Const
   // row 3
   public static var OFFSET_CITY = 48;
 
-  // row 4 - chem lab
-  public static var OFFSET_CHEM_LAB = 64;
+  // row 7 - chem lab
+  public static var OFFSET_CHEM_LAB = 112;
   public static var TILE_FLOOR_TILE = OFFSET_CHEM_LAB + 0;
   public static var TILE_FLOOR_TILE_GRATE1 = OFFSET_CHEM_LAB + 1;
   public static var TILE_FLOOR_TILE_GRATE2 = OFFSET_CHEM_LAB + 2;
@@ -255,14 +255,15 @@ class Const
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
     1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
-    // row 3 - floor
-    1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 
-    // row 4+ - region tiles
+    // row 3+ - city tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+    // row 7 - floor
+    1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 
     // row 8-11 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -277,14 +278,15 @@ class Const
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    // row 3 - floor
-    1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
 
-    // row 4+ - region tiles
+    // row 3+ - region tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+    // row 7 - floor
+    1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
 
     // row 8-11 - table
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

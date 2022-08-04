@@ -376,6 +376,13 @@ class AreaGame extends _SaveObject
       _pathEngine = new aPath.Engine(this, width, height);
 
       isGenerated = true; // mark area as ready for entering
+      // if the player is in different area currently, hide objects
+      // used when area is generated remotely (event object spawn, etc)
+      if (!isEntering)
+        for (o in _objects)
+          if (o.isStatic || isHabitat)
+            o.hide();
+          else removeObject(o);
 
 //      game.debug('Area generated.');
     }
