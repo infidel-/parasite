@@ -12,7 +12,6 @@ electron-mydebug:
 
 electron:
 	cp -f /mnt/e/Projects/Parasite/Ingame/*.png ../assets.paid.web/graphics/ && \
-cp -f /mnt/e/Projects/Parasite/Ingame/*.png ../assets.paid.web/graphics/ && \
 	haxe project_electron.hxml \
       --connect 6000 && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css /mnt/e/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
