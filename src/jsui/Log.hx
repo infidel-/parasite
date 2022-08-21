@@ -34,7 +34,6 @@ class Log extends UIWindow
       addCloseButton();
     }
 
-
 // update text
   override function update()
     {

@@ -312,7 +312,7 @@ class HUD
           buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
             ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
 #if mydebug
-            ' A ' + Math.round(game.area.alertness) +
+            Const.smallgray(' A ' + Math.round(game.area.alertness)) +
 #end
             '<br/>');
       else if (game.location == LOCATION_REGION)

@@ -621,7 +621,7 @@ fieldset {
 #window-mainmenu {
   border: 30px solid;
   width: 25ch;
-  height: 20em;
+  height: 22em;
   pointer-events: all;
 }
 
@@ -950,6 +950,34 @@ input[type=checkbox] {
 #window-organs-actions {
   flex-grow: 1;
   height: 50px;
+}
+
+#window-pedia {
+  border: 39px solid;
+  width: calc(100% - 90px);
+  height: calc(100% - 90px);
+  pointer-events: all;
+  display: flex;
+  flex-direction: row;
+}
+
+#window-pedia-list {
+  margin-bottom: 10px;
+  height: 90%;
+  width: 22ch;
+}
+
+#window-pedia-contents {
+  width: 70%;
+  height: 90%;
+  display: flex;
+  flex-grow: 1;
+}
+
+.window-pedia-group-item {
+}
+
+.window-pedia-topic-item {
 }
 
 .window-contents-wrapper {

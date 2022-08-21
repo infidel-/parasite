@@ -45,7 +45,7 @@ class Timeline extends UIWindow
           // first line (events are always numbered relative to known ones)
           buf.add('<span class=window-timeline-event-title>Event ' + event.num);
 #if mydebug
-          buf.add(' [index: ' + event.index + ']');
+          buf.add(Const.smallgray(' [index: ' + event.index + ']'));
 #end
           if (event.location != null)
             {

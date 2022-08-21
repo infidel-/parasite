@@ -36,6 +36,9 @@ class MainMenu extends UIWindow
       addItem('NEW GAME', newGame);
       loadItem = addItem('LOAD GAME', loadGame);
       saveItem = addItem('SAVE GAME', saveGame);
+      addItem('PEDIA', function(e) {
+        game.ui.state = UISTATE_PEDIA;
+      });
       addItem('OPTIONS', function(e) {
         game.ui.state = UISTATE_OPTIONS;
       });
@@ -90,8 +93,10 @@ class MainMenu extends UIWindow
       else if (index == 3)
         saveGame(null);
       else if (index == 4)
-        game.ui.state = UISTATE_OPTIONS;
+        game.ui.state = UISTATE_PEDIA;
       else if (index == 5)
+        game.ui.state = UISTATE_OPTIONS;
+      else if (index == 6)
 #if electron
         electron.renderer.IpcRenderer.invoke('quit');
 #else
