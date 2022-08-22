@@ -264,8 +264,12 @@ class Goals
       name: 'Probe the host brain',
       note: 'You need to probe the brain of any host.',
       messageComplete: 'Some of the objects the hosts carry can be useful.',
+      onReceive: function (game, player) {
+        game.profile.addPediaArticle('hostBrainProbe');
+      },
       onComplete: function (game, player) {
         game.player.vars.inventoryEnabled = true;
+        game.profile.addPediaArticle('hostInventory');
         game.ui.event({
           type: UIEVENT_HIGHLIGHT,
           state: UISTATE_BODY,
@@ -295,9 +299,12 @@ class Goals
       name: 'Improve the brain probe',
       note: 'Your brain probe is not advanced enough to gain information about host skills. You need to improve it.',
       messageComplete: 'My brain probe has improved significantly.',
+      onReceive: function (game, player) {
+        game.profile.addPediaArticle('hostSkills');
+      },
       onComplete: function (game, player) {
         game.goals.receive(GOAL_LEARN_SKILLS);
-      }
+      },
     },
 
     GOAL_LEARN_SKILLS => {

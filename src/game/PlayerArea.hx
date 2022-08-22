@@ -628,9 +628,8 @@ class PlayerArea extends _SaveObject
       attachHold = params.attachHoldBase;
 
       log('You have managed to attach to a host.');
-
+      game.profile.addPediaArticle('hostInvading');
       game.scene.sounds.play('parasite-attach');
-
       ai.onAttach(); // callback to AI
 
       return true;
@@ -720,6 +719,7 @@ class PlayerArea extends _SaveObject
       // goal completed: human host invaded
       if (player.host.isHuman)
         game.goals.complete(GOAL_INVADE_HUMAN);
+      game.profile.addPediaArticle('hudInfoHost');
     }
 
 

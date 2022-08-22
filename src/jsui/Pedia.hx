@@ -14,11 +14,7 @@ class Pedia extends UIWindow
 {
   var pediaList: DivElement;
   var pediaContents: DivElement;
-  var groupInfos: Array<{
-    isOpen: Bool,
-    element: DivElement,
-    topics: Array<DivElement>,
-  }>;
+  var groupInfos: Array<_GroupInfoUI>;
 
   public function new(g: Game)
     {
@@ -34,7 +30,7 @@ class Pedia extends UIWindow
       for (groupContents in PediaConst.contents)
         {
           var group = Browser.document.createDivElement();
-          var groupInfo = {
+          var groupInfo: _GroupInfoUI = {
             isOpen: false,
             element: group,
             topics: [],
@@ -45,23 +41,40 @@ class Pedia extends UIWindow
             groupInfo.isOpen = !groupInfo.isOpen;
             var sym = (groupInfo.isOpen ? '- ' : '+ ');
             group.innerHTML = sym + groupContents.name;
+            // show topics
             for (t in groupInfo.topics)
-              t.style.display = (groupInfo.isOpen ? 'flex' : 'none');
+              {
+                var isVisible = groupInfo.isOpen;
+                if (isVisible)
+                  {
+                    var state = game.profile.getPediaArticle(t.id);
+                    if (state == null)
+                      continue;
+                    updateTopic(t, (state == 1));
+                  }
+
+                t.element.style.display =
+                  (isVisible ? 'flex' : 'none');
+              }
           }
           pediaList.appendChild(group);
           for (article in groupContents.articles)
             {
               var topic = Browser.document.createDivElement();
               topic.className = 'window-pedia-topic-item actions-item';
-              topic.innerHTML = '&nbsp;&nbsp;<span style="font-size: ' + (article.font != null ? article.font : 100) + '%">' +
-                article.name + '</span>';
               topic.style.display = 'none';
               pediaList.appendChild(topic);
-              groupInfo.topics.push(topic);
+              var topicInfo: _TopicInfoUI = {
+                id: article.id,
+                element: topic,
+              };
+              groupInfo.topics.push(topicInfo);
               topic.onclick = function (e) {
                 pediaContents.innerHTML =
-                  '<h3>' + article.name + '</h3><br>' +
-                  article.text;
+                  Const.col('gray', '<h3>' + article.name + '</h3><br>') +
+                  Const.col('pedia', article.text);
+                updateTopic(topicInfo, false);
+                game.profile.markPediaArticle(topicInfo.id);
               }
             }
         }
@@ -72,6 +85,30 @@ class Pedia extends UIWindow
       }
     }
 
+// show article as new
+  public function newArticle(id: String)
+    {
+      for (g in groupInfos)
+        for (t in g.topics)
+          if (t.id == id)
+            {
+              updateTopic(t, true);
+              t.element.style.display = 'flex';
+              return;
+            }
+    }
+
+// update topic display
+  function updateTopic(t: _TopicInfoUI, isNew: Bool)
+    {
+      var article = PediaConst.getArticle(t.id);
+      t.element.innerHTML =
+        '&nbsp;&nbsp;<span style="font-size: ' +
+        (article.font != null ? article.font : 100) +
+        '%">' +
+        article.name + (isNew ? '&#10069;' : '') + '</span>';
+    }
+
 // update topics list
   override function update()
     {
@@ -79,3 +116,13 @@ class Pedia extends UIWindow
     }
 }
 
+typedef _GroupInfoUI = {
+  isOpen: Bool,
+  element: DivElement,
+  topics: Array<_TopicInfoUI>,
+};
+
+typedef _TopicInfoUI = {
+  id: String,
+  element: DivElement,
+}

@@ -602,4 +602,10 @@ class UI
     {
       return Browser.document.getElementById(id);
     }
+
+// get component by state
+  public inline function getComponent(state: _UIState): UIWindow
+    {
+      return components[state];
+    }
 }

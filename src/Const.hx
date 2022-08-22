@@ -20,14 +20,15 @@ class Const
   // text color strings
   public static var TEXT_COLORS: Map<_TextColor, String> = [
     COLOR_DEFAULT => '#FFFFFF',
-    COLOR_ALERT => '#FC420E',
-    COLOR_ORGAN => '#e0e13a',
-    COLOR_EVOLUTION => '#73f3ff',
     COLOR_DEBUG => '#a7a7a7',
+    COLOR_ALERT => '#FC420E',
+    COLOR_EVOLUTION => '#73f3ff',
+    COLOR_ORGAN => '#e0e13a',
     COLOR_HINT => '#e36767',
     COLOR_TIMELINE => '#f7af46',
     COLOR_MESSAGE => '#30FF6B',
     COLOR_GOAL => '#92B9FF',
+    COLOR_PEDIA => '#c8d8da',
   ];
   // copy-pasted for now
   // TODO: move to TEXT_COLORS
@@ -41,6 +42,7 @@ class Const
     COLOR_TIMELINE => 0xF03378,
     COLOR_MESSAGE => 0x1CD450,
     COLOR_GOAL => 0x4788FF,
+    COLOR_PEDIA => 0xC8D8DA,
   ];
 
   // entity spritemap indexes

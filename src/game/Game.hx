@@ -17,6 +17,7 @@ class Game extends _SaveObject
   ];
   public static var inst: Game;
   public var config: Config; // game config
+  public var profile: Profile; // user profile
   public var scene: GameScene; // ui scene (hashlink OLD)
   public var ui: UI; // new (js)
   public var timeline: Timeline; // scenario timeline
@@ -51,6 +52,7 @@ class Game extends _SaveObject
     {
       inst = this;
       config = new Config(this);
+      profile = new Profile(this);
       ui = new UI(this);
       scene = new GameScene(this);
       console = new ConsoleGame(this);
@@ -147,6 +149,13 @@ class Game extends _SaveObject
       for (goal in const.Goals.map.keys())
         if (const.Goals.map[goal].isStarting)
           goals.receive(goal, silent);
+      // initial pedia articles
+      var articleAdded = false;
+      for (a in const.PediaConst.initialArticles)
+        if (profile.addPediaArticle(a, false))
+          articleAdded = true;
+      if (articleAdded)
+        log(Const.small('New pedia articles available.'), COLOR_PEDIA);
 
       // skip tutorial flag
       if (config.skipTutorial)
