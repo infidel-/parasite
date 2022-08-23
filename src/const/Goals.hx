@@ -105,6 +105,7 @@ class Goals
           type: UIEVENT_HIGHLIGHT,
           state: UISTATE_EVOLUTION,
         });
+        game.profile.addPediaArticle('evolution');
       },
     },
 
@@ -127,6 +128,7 @@ class Goals
           state: UISTATE_DIFFICULTY,
           obj: 'evolution'
         });
+        game.profile.addPediaArticle('hostOrgans');
       }
     },
 
@@ -201,6 +203,9 @@ class Goals
       name: 'Evolve the microhabitat knowledge',
       note: 'You need to evolve the knowledge of microhabitat.',
       messageComplete: 'Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.',
+      onReceive: function (game, player) {
+        game.profile.addPediaArticle('habitat');
+      },
       onComplete: function (game, player) {
 //        player.skills.addID(KNOW_HABITAT, 100);
         game.goals.receive(GOAL_CREATE_HABITAT);
@@ -226,6 +231,9 @@ class Goals
       note: 'You need to evolve, grow and construct a biomineral formation. It can only be constructed in a habitat.',
       messageReceive: 'I can improve it further. But I will need energy for that.',
       messageComplete: 'Ah, yes. I can feel the energy surge. A little more and I can begin the assimilation process.',
+      onReceive: function (game, player) {
+        game.profile.addPediaArticle('habitatBiomineral');
+      },
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_ASSIMILATION);
         game.goals.receive(GOAL_PUT_ASSIMILATION);
@@ -241,6 +249,12 @@ class Goals
       name: 'Construct assimilation cavity',
       note: 'You need to evolve, grow and construct the assimilation cavity. You can only construct it in a habitat.',
       messageComplete: 'Finally. I can begin the host assimilation process.',
+      onReceive: function (game, player) {
+        game.profile.addPediaArticle('habitatCavity');
+      },
+      onComplete: function (game, player) {
+        game.profile.addPediaArticle('hostAssimilation');
+      }
     },
 
     // continued after player learns about the group
@@ -252,6 +266,9 @@ class Goals
       messageReceive: 'They might try to ambush me in the habitat. I will need something to warn me.',
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_WATCHER);
+        game.profile.addPediaArticle('habitatWatcher');
+        // quietly add spoon mode info as late as possible
+        game.profile.addPediaArticle('spoonMode', false);
       },
     },
 
@@ -332,6 +349,7 @@ class Goals
           state: UISTATE_TIMELINE,
         });
         game.goals.receive(GOAL_ENTER_SEWERS);
+        game.profile.addPediaArticle('eventTimeline');
       }
     },
 
@@ -341,6 +359,7 @@ class Goals
       note: 'Find a sewers hatch and enter the sewers.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_TRAVEL_EVENT);
+        game.profile.addPediaArticle('regionMode');
       }
     },
 

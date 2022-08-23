@@ -840,6 +840,7 @@ class PlayerArea extends _SaveObject
             {
               player.host.isAttrsKnown = true;
               log('You have learned the parameters of this host.');
+              game.profile.addPediaArticle('hostAttributes');
 
               // drug addict goal chain
               if (player.host.hasTrait(TRAIT_DRUG_ADDICT))

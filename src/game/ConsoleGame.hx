@@ -1046,6 +1046,7 @@ class ConsoleGame
           npc.ai = ai;
           ai.eventID = ev.id;
           ai.npcID = npc.id;
+          ai.isNPC = true;
           ai.entity.setNPC();
 
           break;

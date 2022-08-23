@@ -375,6 +375,8 @@ class PlayerRegion extends _SaveObject
       // tutorial
       if (game.playerRegion.currentArea.alertness > 20)
         game.goals.complete(GOAL_TUTORIAL_AREA_ALERT);
+      var area = game.region.getXY(x, y);
+      game.profile.addPediaArticle(area.info.pediaArticle);
 
       return true;
     }

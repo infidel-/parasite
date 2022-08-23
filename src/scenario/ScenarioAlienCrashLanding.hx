@@ -311,7 +311,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Preliminary examinations confirmed the extraterrestrial origins of %alienCode% organism.',
             'Studies have shown that %alienCode% actually consists of two separate organisms.',
             'One of the organisms is parasitic in nature. It has received a unique codename: %parasiteCode%.',
-            'It is unclear whether the host organism of %alienCode% has any intelligence.'
+            'It is unclear at this point whether the host organism of %alienCode% has any intelligence.'
             ],
           location: {
             id: 'facility2',
@@ -358,7 +358,7 @@ class ScenarioAlienCrashLanding extends Scenario
           notes: [
             'The decision has been made to try to separate organisms surgically.',
             'Separation was successful and %parasiteCode% was scheduled for transportation to %facility3%.',
-            'The specialist performing the operation speculated that separation was a violent shock for both %alienCode% and %parasiteCode% nervous systems and mental capacity.',
+            'The specialist performing the operation speculated that the process was a violent shock for both %alienCode% and %parasiteCode% nervous systems and mental capacity.',
             ],
           location: { // cannot use sameAs due to branching but it should smartly check if location with this id exists
             id: 'facility2',
@@ -371,7 +371,7 @@ class ScenarioAlienCrashLanding extends Scenario
         'parasiteTransportation' => {
           name: 'parasite transportation',
           notes: [
-            'During %parasiteCode% transportation to %facility3% the containment protocol has been breached and the specimen managed to escape.',
+            'During the transportation of %parasiteCode% to %facility3% the containment protocol has been breached and the specimen has managed to escape.',
             'Current location of %parasiteCode% specimen is unknown, project %projectCode% is on hold until retrieval.',
             'Teams of field specialists have been scrambled to the area.'
             ],

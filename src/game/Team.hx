@@ -375,6 +375,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.playerArea.attachHold -= shock2;
           game.log('You feel your grip slipping.');
         }
+      game.profile.addPediaArticle('habitatDestruction');
     }
 
 

@@ -201,34 +201,18 @@ class Group extends _SaveObject
       if (game.goals.completed(GOAL_CREATE_HABITAT))
         game.goals.receive(GOAL_PUT_WATCHER);
 
-      // show yes/no dialog about manual
       game.ui.event({
         type: UIEVENT_STATE,
-        state: UISTATE_YESNO,
-        obj: {
-          text: 'Do you want to read the manual about The Group?',
-          func: function(yes: Bool)
-            {
-              // open the manual file
-              if (yes)
-                {
-                  var doc = hxd.Res.load('wiki/The-Group.md').toText();
-                  doc = StringTools.replace(doc, "\n", '<br/>');
-                  doc = StringTools.replace(doc, "# ", '');
-                  game.ui.event({
-                    type: UIEVENT_STATE,
-                    state: UISTATE_DOCUMENT,
-                    obj: doc
-                  });
-                }
-              game.ui.event({
-                type: UIEVENT_STATE,
-                state: UISTATE_DIFFICULTY,
-                obj: 'group'
-              });
-            }
-        }
+        state: UISTATE_DIFFICULTY,
+        obj: 'group'
       });
+      // group pedia articles
+      var articleAdded = false;
+      for (a in const.PediaConst.getGroup('group').articles)
+        if (game.profile.addPediaArticle(a.id, false))
+          articleAdded = true;
+      if (articleAdded)
+        game.log(Const.small('New pedia articles about the Group available.'), COLOR_PEDIA);
 
       isKnown = true;
     }

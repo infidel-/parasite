@@ -31,12 +31,13 @@ class Pedia extends UIWindow
         {
           var group = Browser.document.createDivElement();
           var groupInfo: _GroupInfoUI = {
-            isOpen: false,
+            isOpen: true,
             element: group,
             topics: [],
           };
+          groupInfos.push(groupInfo);
           group.className = 'window-pedia-group-item actions-item';
-          group.innerHTML = '+ ' + groupContents.name;
+          group.innerHTML = '- ' + groupContents.name;
           group.onclick = function (e) {
             groupInfo.isOpen = !groupInfo.isOpen;
             var sym = (groupInfo.isOpen ? '- ' : '+ ');
@@ -62,13 +63,18 @@ class Pedia extends UIWindow
             {
               var topic = Browser.document.createDivElement();
               topic.className = 'window-pedia-topic-item actions-item';
-              topic.style.display = 'none';
               pediaList.appendChild(topic);
               var topicInfo: _TopicInfoUI = {
                 id: article.id,
                 element: topic,
               };
               groupInfo.topics.push(topicInfo);
+              var state = game.profile.getPediaArticle(topicInfo.id);
+              if (state != null)
+                {
+                  updateTopic(topicInfo, (state == 1));
+                  topic.style.display = 'flex';
+                }
               topic.onclick = function (e) {
                 pediaContents.innerHTML =
                   Const.col('gray', '<h3>' + article.name + '</h3><br>') +
@@ -93,7 +99,8 @@ class Pedia extends UIWindow
           if (t.id == id)
             {
               updateTopic(t, true);
-              t.element.style.display = 'flex';
+              if (g.isOpen)
+                t.element.style.display = 'flex';
               return;
             }
     }
@@ -106,7 +113,8 @@ class Pedia extends UIWindow
         '&nbsp;&nbsp;<span style="font-size: ' +
         (article.font != null ? article.font : 100) +
         '%">' +
-        article.name + (isNew ? '&#10069;' : '') + '</span>';
+        article.name + 
+        (isNew ? '<span style="font-size: 80%">&nbsp;&#10069;</span>' : '') + '</span>';
     }
 
 // update topics list

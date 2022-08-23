@@ -14,6 +14,7 @@ class WorldConst
         ambient: AMBIENT_WILDERNESS,
         type: 'wilderness',
         name: 'Uninhabited area',
+        pediaArticle: 'areaUninhabited',
         width: 100,
         height: 100,
         canEnter: true,
@@ -37,6 +38,7 @@ class WorldConst
         ambient: AMBIENT_CITY,
         type: 'city',
         name: 'Low-density city area',
+        pediaArticle: 'areaCity',
         width: 100,
         height: 100,
         canEnter: true,
@@ -64,6 +66,7 @@ class WorldConst
         ambient: AMBIENT_CITY,
         type: 'city',
         name: 'Medium-density city area',
+        pediaArticle: 'areaCity',
         width: 100,
         height: 100,
         canEnter: true,
@@ -92,6 +95,7 @@ class WorldConst
         ambient: AMBIENT_CITY,
         type: 'city',
         name: 'High-density city area',
+        pediaArticle: 'areaCity',
         width: 100,
         height: 100,
         canEnter: true,
@@ -120,6 +124,7 @@ class WorldConst
         ambient: AMBIENT_MILITARY,
         type: 'militaryBase',
         name: 'Military base',
+        pediaArticle: 'areaMilitary',
         width: 50,
         height: 50,
         canEnter: true,
@@ -145,6 +150,7 @@ class WorldConst
         ambient: AMBIENT_FACILITY,
         type: 'facility',
         name: 'Facility',
+        pediaArticle: 'areaLab',
         width: 75,
         height: 60,
         canEnter: true,
@@ -169,6 +175,7 @@ class WorldConst
         ambient: AMBIENT_HABITAT,
         type: 'habitat',
         name: 'Habitat area',
+        pediaArticle: 'areaHabitat', // unused
         width: 20,
         height: 20,
         canEnter: true,
@@ -242,6 +249,7 @@ typedef AreaInfo = {
   var isHighRisk: Bool; // is this area type considered high risk?
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info
+  var pediaArticle: String; // pedia article
 };
 
 // region info class

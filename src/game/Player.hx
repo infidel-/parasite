@@ -207,6 +207,7 @@ class Player extends _SaveObject
       game.scene.clearPath();
 
       log(msg);
+      game.profile.addPediaArticle('hostExpiry');
     }
 
 

@@ -172,6 +172,7 @@ class Inventory extends _SaveObject
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
             game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
           else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
+          game.profile.addPediaArticle('msgConcentration');
           return;
         }
 
@@ -230,6 +231,7 @@ class Inventory extends _SaveObject
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
             game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
           else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
+          game.profile.addPediaArticle('msgConcentration');
           return false;
         }
 

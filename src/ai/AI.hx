@@ -749,6 +749,7 @@ class AI extends _SaveObject
             }
           alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance)) +
             alertnessBonus;
+          game.profile.addPediaArticle('npcAlertness');
         }
       else alertness -= 5;
 
@@ -1085,7 +1086,8 @@ class AI extends _SaveObject
       emitRandomSound('' + AI_STATE_DEAD);
 
       game.debug('AI.die[' + id + ']');
-      if (game.player.state != PLR_STATE_HOST || game.player.host != this)
+      if (game.player.state != PLR_STATE_HOST ||
+          game.player.host != this)
         log('dies.');
       onDeath(); // event hook
       setState(AI_STATE_DEAD);

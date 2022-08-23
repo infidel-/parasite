@@ -83,7 +83,7 @@ class Event extends _SaveObject
         COLOR_TIMELINE);
       if (note != null)
         {
-          game.player.log(note.text, COLOR_TIMELINE);
+          game.player.log('<i>' + note.text + '</i>', COLOR_TIMELINE);
 
           // event hook
           var idx = -1;

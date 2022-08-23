@@ -43,6 +43,7 @@ class Game extends _SaveObject
   public var turns: Int; // number of turns passed since game start
   public var isInited: Bool; // is the game initialized?
   public var isStarted: Bool; // has the gameplay started?
+  public var isFirstGame: Bool; // is first game in session?
   public var isFinished: Bool; // is the game finished?
   public var messageList: List<_LogMessage>; // last X messages of log
   public var hudMessageList: List<_LogMessage>; // last X messages of hud log
@@ -63,6 +64,7 @@ class Game extends _SaveObject
       importantMessagesEnabled = true;
       isInited = false;
       isStarted = false;
+      isFirstGame = true;
 
       area = null;
       region = null;
@@ -151,9 +153,10 @@ class Game extends _SaveObject
           goals.receive(goal, silent);
       // initial pedia articles
       var articleAdded = false;
-      for (a in const.PediaConst.initialArticles)
-        if (profile.addPediaArticle(a, false))
-          articleAdded = true;
+      if (!isFirstGame) // kludge: first game is skipped
+        for (a in const.PediaConst.initialArticles)
+          if (profile.addPediaArticle(a, false))
+            articleAdded = true;
       if (articleAdded)
         log(Const.small('New pedia articles available.'), COLOR_PEDIA);
 
@@ -164,6 +167,7 @@ class Game extends _SaveObject
       updateHUD(); // update HUD state
 
       isInited = true;
+      isFirstGame = false;
     }
 
 // skip starting tutorial
