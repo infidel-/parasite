@@ -189,13 +189,80 @@ class AreaView
                   game.playerArea.y, x, y))
               tileID = cells[x][y];
             else tileID = Const.TILE_HIDDEN;
-
-            _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
-              scene.tileAtlas[tileID]);
-            _cache[x][y] = tileID;
+            setTile(x, y, tileID);
           }
+      // additional visibility code, makes walls look better
+      if (game.player.vars.losEnabled)
+        {
+          // go left to right and up/down on each cell
+          for (x in rect.x1...rect.x2)
+            if (isVisible(x, game.playerArea.y))
+              {
+                // check up
+                var y = game.playerArea.y;
+                while (true)
+                  {
+                    y--;
+                    if (y < rect.y1)
+                      break;
+                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                      continue;
+                    setTile(x, y, cells[x][y]);
+                    break;
+                  }
+                // check down
+                var y = game.playerArea.y;
+                while (true)
+                  {
+                    y++;
+                    if (y >= rect.y2)
+                      break;
+                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                      continue;
+                    setTile(x, y, cells[x][y]);
+                    break;
+                  }
+              }
+
+          // go top to bottom and left/right on each cell
+          for (y in rect.y1...rect.y2)
+            if (isVisible(game.playerArea.x, y))
+              {
+                // check left
+                var x = game.playerArea.x;
+                while (true)
+                  {
+                    x--;
+                    if (x < rect.x1)
+                      break;
+                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                      continue;
+                    setTile(x, y, cells[x][y]);
+                    break;
+                  }
+                // check right
+                var x = game.playerArea.x;
+                while (true)
+                  {
+                    x++;
+                    if (x >= rect.x2)
+                      break;
+                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                      continue;
+                    setTile(x, y, cells[x][y]);
+                    break;
+                  }
+              }
+        }
     }
 
+// set tile at x,y
+  function setTile(x: Int, y: Int, tileID: Int)
+    {
+      _tilemap.add(x * Const.TILE_SIZE,
+        y * Const.TILE_SIZE, scene.tileAtlas[tileID]);
+      _cache[x][y] = tileID;
+    }
 
 // update visible area
 // parasite version
