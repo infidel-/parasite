@@ -93,7 +93,10 @@ class Const
   public static var FRAME_DOT = 4;
   public static var FRAME_MASK_DEFAULT = 5;
 
-  public static var ROW_BIOMINERAL = 5;
+  // first growth row
+  public static var ROW_GROWTH1 = 5;
+  public static var FRAME_BIOMINERAL = 0;
+  public static var FRAME_PRESERVATOR = 4;
   public static var ROW_ASSIMILATION = 6;
   public static var ROW_WATCHER = 7;
 

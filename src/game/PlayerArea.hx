@@ -88,7 +88,7 @@ class PlayerArea extends _SaveObject
 
           if (player.hostControl <= 0)
             {
-              player.host.onDetach();
+              player.host.onDetach('default');
               onDetach();
 
               log("You've lost control of the host.");
@@ -286,7 +286,10 @@ class PlayerArea extends _SaveObject
 
       // try to leave current host
       else if (action.id == 'leaveHost')
-        leaveHostAction();
+        {
+          log('You release the host.');
+          leaveHostAction('default');
+        }
 
       // probe host brain
       else if (action.id == 'probeBrain')
@@ -736,10 +739,10 @@ class PlayerArea extends _SaveObject
 
 
 // action: try to leave this AI host
-  function leaveHostAction()
+// NOTE: also called from preservator
+  public function leaveHostAction(src: String)
     {
-      log('You release the host.');
-      player.host.onDetach();
+      player.host.onDetach(src);
       onDetach();
     }
 

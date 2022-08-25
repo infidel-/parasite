@@ -19,8 +19,8 @@ class Biomineral extends HabitatObject
       super.init();
       name = 'biomineral formation';
       spawnMessage = 'The biomineral formation is ready to feed the habitat.';
-      imageRow = Const.ROW_BIOMINERAL;
-      imageCol = level;
+      imageRow = Const.ROW_GROWTH1;
+      imageCol = Const.FRAME_BIOMINERAL + level;
     }
 
 // called after load or creation

@@ -844,7 +844,7 @@ class AI extends _SaveObject
       if (game.player.hostControl < 25 && Std.random(100) < 5)
         {
           log('manages to tear you away.');
-          onDetach();
+          onDetach('default');
           game.playerArea.onDetach(); // notify player
         }
     }
@@ -1148,9 +1148,12 @@ class AI extends _SaveObject
 
 
 // event: parasite detach from this host
-  public inline function onDetach()
+  public inline function onDetach(src: String)
     {
-      setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
+      if (src == 'default')
+        setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
+      else if (src == 'preservator')
+        setState(AI_STATE_PRESERVED, null, 'stands still motionlessly.');
       entity.setMask(null);
     }
 

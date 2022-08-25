@@ -775,7 +775,7 @@ class EvolutionConst
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action only works in habitat.', COLOR_HINT);
+                game.log('This action works only in a habitat.', COLOR_HINT);
                 return false;
               }
             return game.area.habitat.putObject(IMP_BIOMINERAL);
@@ -819,7 +819,7 @@ class EvolutionConst
             parasiteHealthRestored: 3,
             evolutionBonus: 25,
           },
-          ],
+        ],
       },
 
       { // ***
@@ -851,10 +851,10 @@ class EvolutionConst
             energy: 0
           },
           onAction: function(game, player): Bool {
-            // only in habitat
+            // only in a habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action only works in habitat.', COLOR_HINT);
+                game.log('This action works only in a habitat.', COLOR_HINT);
                 return false;
               }
             return game.area.habitat.putObject(IMP_ASSIMILATION);
@@ -895,7 +895,7 @@ class EvolutionConst
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action only works in habitat.', COLOR_HINT);
+                game.log('This action works only in a habitat.', COLOR_HINT);
                 return false;
               }
             return game.area.habitat.putObject(IMP_WATCHER);
@@ -908,39 +908,61 @@ class EvolutionConst
           {},
         ],
       },
-/*
+
       { // ***
         type: TYPE_SPECIAL,
-        id: IMP_,
-        name: '',
-        note: '(todo fluff)',
+        id: IMP_PRESERVATOR,
+        name: 'Host Preservator',
+        note: 'Habitat growth. TODO.',
         maxLevel: 3,
-        organ: {
-          name: '',
-          note: '(todo fluff)',
-          gp: 100,
-          hasTimeout: false,
-          action: {
-            id: '',
-            type: ACTION_ORGAN,
-            name: '',
-            energy: 10
-            },
-          },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return
+            "<br/>Amount of hosts per unit: " +
+            l.hostAmount +
+            (l2 != null ? ' &rarr; ' + l2.hostAmount : '');
+        },
         levelNotes: [
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          '(todo fluff)',
-          ],
+          '',
+          '',
+          '',
+          '',
+        ],
+        organ: {
+          name: 'Preservator mold',
+          note: 'Mold for a host preservator. You can only grow that in a habitat. Host and its inventory will be destroyed!',
+          gp: 120,
+          isMold: true,
+          action: {
+            id: 'formPreservator',
+            type: ACTION_ORGAN,
+            name: 'Produce host preservator',
+            energy: 0
+          },
+          onAction: function(game, player) {
+            // only in habitat
+            if (!game.area.isHabitat)
+              {
+                game.log('This action works only in a habitat.', COLOR_HINT);
+                return false;
+              }
+            return game.area.habitat.putObject(IMP_PRESERVATOR);
+          }
+        },
         levelParams: [
-          {},
-          {},
-          {},
-          {},
-          ],
+          {
+            hostAmount: 0,
+          },
+          {
+            hostAmount: 1,
+          },
+          {
+            hostAmount: 2,
+          },
+          {
+            hostAmount: 4,
+          },
+        ],
       },
-*/
     ];
 
 

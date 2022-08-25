@@ -90,16 +90,17 @@ class Habitat extends _SaveObject
         o = new AssimilationCavity(game, area.id, ai.x, ai.y, level);
       else if (id == IMP_WATCHER)
         o = new Watcher(game, area.id, ai.x, ai.y, level);
+      else if (id == IMP_PRESERVATOR)
+        o = new Preservator(game, area.id, ai.x, ai.y, level);
 
       // remove and kill host
       game.playerArea.onDetach();
       game.area.removeAI(ai);
-
+      // object narrative message
       game.narrative(o.spawnMessage, COLOR_ORGAN);
-
+      // update camera
       game.area.updateVisibility();
       game.scene.updateCamera();
-
       // update habitat stats
       update();
 
