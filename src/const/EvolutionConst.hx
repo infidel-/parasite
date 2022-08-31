@@ -831,7 +831,8 @@ class EvolutionConst
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return
             "Assimilated hosts have 2 more body features<br/>" +
-            "Assimilated hosts can hold 2 more inventory items<br/>";
+            "Assimilated hosts can hold 2 more inventory items<br/>" +
+            "When you invade assimilated hosts, you start with more control over them<br/>";
         },
         levelNotes: [
           '',

@@ -709,7 +709,10 @@ class PlayerArea extends _SaveObject
       // save AI link
       player.host = attachHost;
       player.hostID = attachHostID;
-      player.hostControl = Player.HOST_CONTROL_BASE;
+      player.hostControl = 
+        (attachHost.hasTrait(TRAIT_ASSIMILATED) ?
+        Player.HOST_CONTROL_ASSIMILATED :
+        Player.HOST_CONTROL_BASE);
       entity.visible = false;
       attachHost = null;
       attachHostID = -1;

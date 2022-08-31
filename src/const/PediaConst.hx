@@ -20,7 +20,7 @@ class PediaConst
         {
           id: 'hostAssimilation',
           name: 'Host: Assimilation',
-          text: "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
+          text: "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
         },
         {
           id: 'hostAttributes',
@@ -99,7 +99,7 @@ Alt+0-5 - equals F1-F5<br>
         {
           id: 'habitatCavity',
           name: 'Habitat: Assim. Cavity',
-          text: "The assimilation cavity can be used to turn the normal hosts into the assimilated ones. Assimilation is a process that makes the host more compatible with the needs of the parasite. The most important feature of assimilated hosts is that they do not lose the energy passively, only through actions. If the assimilated host is in a habitat with free energy available, their energy will be restored gradually. Also, assimilated hosts have more body features and inventory slots available.",
+          text: "The assimilation cavity can be used to turn the normal hosts into the assimilated ones. Assimilation is a process that makes the host more compatible with the needs of the parasite. The most important feature of assimilated hosts is that they do not lose the energy passively, only through actions. If the assimilated host is in a habitat with free energy available, their energy will be restored gradually. Also, assimilated hosts have more body features and inventory slots available and you will have more control over them after you invade.",
         },
         {
           id: 'habitatBiomineral',

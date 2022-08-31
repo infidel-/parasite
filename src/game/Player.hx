@@ -253,5 +253,6 @@ class Player extends _SaveObject
 
   // base control on invade
   public static var HOST_CONTROL_BASE = 10;
+  public static var HOST_CONTROL_ASSIMILATED = 50;
 }
 
