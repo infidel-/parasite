@@ -33,6 +33,12 @@ class Preservator extends HabitatObject
   public override function canActivateNear(): Bool
     { return true; }
 
+// return improvement id
+  public override function getImprovementID(): _Improv
+    {
+      return IMP_PRESERVATOR;
+    }
+
 // update actions
   override function updateActionList()
     {
@@ -54,6 +60,26 @@ class Preservator extends HabitatObject
       // preserve host
       if (id == 'preserveHost')
         {
+          if (x == game.playerArea.x && y == game.playerArea.y)
+            {
+              game.log('Move to any free side of the preservator first.', COLOR_HINT);
+              return true;
+            }
+          // count preserved hosts around
+          var cnt = 0;
+          for (i in 0...Const.dir4x.length)
+            {
+              var ai = game.area.getAI(x + Const.dir4x[i], y + Const.dir4y[i]);
+              if (ai != null && ai.state == AI_STATE_PRESERVED)
+                cnt++;
+            }
+          var params = getParams();
+          if (cnt >= params.hostAmount)
+            {
+              game.log('This preservator is full.', COLOR_HINT);
+              return true;
+            }
+
           game.log('You release the host into the cold embrace of the preservator.');
           game.playerArea.leaveHostAction('preservator');
           return true;

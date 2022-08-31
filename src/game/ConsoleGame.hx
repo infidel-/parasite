@@ -96,7 +96,7 @@ class ConsoleGame
             'oa - organ action,<br/>' +
             'snd - play sound, r/restart, ' +
             's - set player stage, ' +
-            'spa - spawn ai' +
+            'spa - spawn ai, ' +
             'save - save game, ' +
             'set - set game variable, ' +
             'quit.');

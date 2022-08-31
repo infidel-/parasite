@@ -422,6 +422,11 @@ class PlayerArea extends _SaveObject
       // push past AI
       else if (state == PLR_STATE_HOST)
         {
+          if (ai.state == AI_STATE_PRESERVED)
+            {
+              log('Your host is unable to budge ' + ai.getName() + '.');
+              return true;
+            }
           // opposing strength check
           if (!__Math.opposingAttr(player.host.strength, ai.strength, 'strength'))
             {
@@ -430,13 +435,9 @@ class PlayerArea extends _SaveObject
             }
 
           var newx = ai.x, newy = ai.y;
-
           ai.setPosition(x, y, true);
-
           moveTo(newx, newy);
-
           log('Your host pushes past ' + ai.getName() + '.');
-
           ret = true;
         }
 
@@ -626,11 +627,19 @@ class PlayerArea extends _SaveObject
       attachHostID = ai.id;
       entity.visible = false;
 
-      // improv: attach efficiency
-      var params = player.evolutionManager.getParams(IMP_ATTACH);
-      attachHold = params.attachHoldBase;
+      if (ai.state == AI_STATE_PRESERVED)
+        {
+          attachHold = 99;
+          log('You smoothly attach to the preserved host.');
+        }
+      else
+        {
+          // improv: attach efficiency
+          var params = player.evolutionManager.getParams(IMP_ATTACH);
+          attachHold = params.attachHoldBase;
+          log('You have managed to attach to the host.');
+        }
 
-      log('You have managed to attach to a host.');
       game.profile.addPediaArticle('hostInvading');
       game.scene.sounds.play('parasite-attach');
       ai.onAttach(); // callback to AI

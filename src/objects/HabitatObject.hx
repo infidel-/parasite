@@ -3,6 +3,7 @@
 package objects;
 
 import game.Game;
+import const.EvolutionConst;
 
 class HabitatObject extends AreaObject
 {
@@ -30,6 +31,18 @@ class HabitatObject extends AreaObject
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+    }
+
+// get improvement ID
+  public function getImprovementID(): _Improv
+    {
+      throw 'must set improvement ID for ' + name;
+    }
+
+// get evolution params
+  public function getParams()
+    {
+      return EvolutionConst.getParams(getImprovementID(), level);
     }
 
 
