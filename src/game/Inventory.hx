@@ -201,8 +201,9 @@ class Inventory extends _SaveObject
     {
       game.log('You probe the brain of the host and learn that this item is a ' +
         item.name + '.');
-
       game.player.addKnownItem(item.id);
+      if (item.info.onLearn != null)
+        item.info.onLearn(game, game.player);
 
       // on first learn items
       game.goals.complete(GOAL_LEARN_ITEMS);

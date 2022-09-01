@@ -128,7 +128,7 @@ class EvolutionManager extends _SaveObject
     }
 
 // add improvement to list
-  public function addImprov(id: _Improv, ?level: Int = 0): Improv
+  public function addImprov(id: _Improv, ?level: Int = 0, ?skipMessage: Bool = false): Improv
     {
       // this improvement already learned
       var tmp = getImprov(id);
@@ -157,7 +157,9 @@ class EvolutionManager extends _SaveObject
       };
       _list.add(imp);
 
-      game.info('Improvement gained: ' + imp.info.name + ' (' + level + ')');
+      game.info('Improvement gained: ' + imp.info.name + ' (' + level + ').');
+      if (!skipMessage && game.importantMessagesEnabled)
+        game.log(Const.small('Improvement gained: ' + imp.info.name + '.'), COLOR_EVOLUTION);
 
       return imp;
     }
@@ -263,7 +265,7 @@ class EvolutionManager extends _SaveObject
     {
       for (info in EvolutionConst.improvements)
         if (info.type == TYPE_BASIC)
-          addImprov(info.id);
+          addImprov(info.id, true);
     }
 
 // gives out X starting improvements according to difficulty
@@ -299,7 +301,7 @@ class EvolutionManager extends _SaveObject
             tmpOrgans.remove(id);
           tmpFull.remove(id);
 
-          addImprov(id);
+          addImprov(id, true);
 
           n--;
         }

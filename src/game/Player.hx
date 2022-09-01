@@ -198,7 +198,7 @@ class Player extends _SaveObject
           if (game.player.host.isHuman)
             {
               game.goals.complete(GOAL_TUTORIAL_BODY_SEWERS);
-              game.goals.complete(GOAL_TUTORIAL_BODY, true);
+              game.goals.complete(GOAL_TUTORIAL_BODY, SILENT_ALL);
             }
           game.playerRegion.onHostDeath();
         }

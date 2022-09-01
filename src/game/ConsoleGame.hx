@@ -449,7 +449,12 @@ class ConsoleGame
           if (game.player.state != PLR_STATE_HOST)
             return;
 
-          game.player.host.inventory.addID(id);
+          try {
+            game.player.host.inventory.addID(id);
+          } catch (e) {
+            game.log(e + '');
+            return;
+          }
           game.log('Item added.');
         }
 

@@ -57,13 +57,14 @@ class Goals extends _SaveObject
 
 
 // receive a new goal
-  public function receive(id: _Goal, ?silent: Bool = false)
+// silent: 0 - no, 1 - 
+  public function receive(id: _Goal, ?silent: _GoalSilent = SILENT_NONE)
     {
       // check if this goal already completed or received
       if (Lambda.has(_listCompleted, id) || Lambda.has(_listCurrent, id))
         return;
       if (!game.importantMessagesEnabled)
-        silent = true;
+        silent = SILENT_ALL;
 
       _listCurrent.add(id);
 
@@ -72,11 +73,11 @@ class Goals extends _SaveObject
         throw "No such goal: " + id;
 
       // message on receiving
-      if (!silent && info.messageReceive != null)
+      if (silent != SILENT_ALL && info.messageReceive != null)
         game.message(info.messageReceive);
 
       if (info.isHidden == null || info.isHidden == false)
-        if (!silent)
+        if (silent == SILENT_NONE)
           game.log('You have received a new goal: ' + info.name + '.',
             COLOR_GOAL);
 
@@ -87,24 +88,24 @@ class Goals extends _SaveObject
 
 
 // complete a goal
-  public function complete(id: _Goal, ?silent: Bool = false)
+  public function complete(id: _Goal, ?silent: _GoalSilent = SILENT_NONE)
     {
       // check if player has this goal
       if (!Lambda.has(_listCurrent, id))
         return;
       if (!game.importantMessagesEnabled)
-        silent = true;
+        silent = SILENT_ALL;
 
       _listCurrent.remove(id);
       _listCompleted.add(id);
 
       var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
-        if (!silent)
+        if (silent == SILENT_NONE)
           game.log('You have completed a goal: ' + info.name + '.',
             COLOR_GOAL);
 
-      if (!silent && info.messageComplete != null) // completion message
+      if (silent != SILENT_ALL && info.messageComplete != null) // completion message
         game.message(info.messageComplete);
 
       // call completion hook
@@ -166,4 +167,11 @@ class Goals extends _SaveObject
       throw 'no such goal: ' + id + " " + Std.isOfType(id, String);
     }
 
+}
+
+enum _GoalSilent
+{
+  SILENT_NONE;
+  SILENT_ALL;
+  SILENT_SYSTEM;
 }

@@ -42,12 +42,12 @@ class HumanAI extends AI
           skills.addID(KNOW_SHOPPING);
           inventory.addID(Std.random(10) < 7 ? 'wallet' : 'money');
         }
+      if (Std.random(100) < 10)
+        inventory.addID('sleepingPills');
 
       // common traits for all humans
       if (Std.random(100) < 10)
-        {
-          addTrait(TRAIT_DRUG_ADDICT);
-        }
+        addTrait(TRAIT_DRUG_ADDICT);
 
       derivedStats();
     }

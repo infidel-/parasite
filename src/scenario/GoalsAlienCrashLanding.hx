@@ -43,8 +43,8 @@ class GoalsAlienCrashLanding
         // auto-complete it
         if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
           {
-            game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, true);
-            game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, true);
+            game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
+            game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
           }
         game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
 

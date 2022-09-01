@@ -240,7 +240,7 @@ class ItemsConst
     },
     {
       id: 'money',
-      name: 'money',
+      name: 'wad of money',
       type: 'junk',
       unknown: 'pack of thin objects',
     },
@@ -252,7 +252,7 @@ class ItemsConst
     },
     {
       id: 'cigarettes',
-      name: 'cigarettes',
+      name: 'pack of cigarettes',
       type: 'junk',
       unknown: 'small container',
     },
@@ -262,6 +262,23 @@ class ItemsConst
       type: 'nutrients',
       unknown: 'uneven dark-red object',
       isKnown: true,
+    },
+    {
+      id: 'sleepingPills',
+      name: 'bottle of sleeping pills',
+      type: 'junk',
+      unknown: 'small plastic container',
+      // maybe later make something like "completeGoalOnLearn" if needed
+      onLearn: function (game, player)
+        {
+          // path 1: on learn pills after creating habitat
+          // path 2: on creating habitat with pills learned
+          if (game.goals.completed(GOAL_CREATE_HABITAT))
+            {
+              game.goals.receive(GOAL_LEARN_PRESERVATOR, SILENT_SYSTEM);
+              game.goals.complete(GOAL_LEARN_PRESERVATOR, SILENT_SYSTEM);
+            }
+        }
     },
   ];
 }

@@ -117,6 +117,11 @@ Alt+0-5 - equals F1-F5<br>
           text: "The primary task of the watcher is to notify the parasite about an ambush in the habitat. When the watcher is of the second level, it can also attract the ambush to the habitat that it is located in.",
         },
         {
+          id: 'habitatPreservator',
+          name: 'Habitat: Preservator',
+          text: "The preservator growth is used to preserve the hosts in a habitat. The amount of hosts depends on the growth level. To preserve the host, move to any free spot near the growth and use the \"Preserve Host\" action that appears in the action list. Note that re-attaching to preserved hosts is much more smooth than to free ones. In addition, if the host is assimilated, the initial control value will be much higher.",
+        },
+        {
           id: 'hostOrgans',
           name: 'Host: Body Features',
           text: "Some of the improvements you evolve will allow you to grow additional organs and body features on the host. You can see the list of body features and start growing new ones in the Body window. These features each give a unique ingame advantage, whether offensive, defensive or utilitarian. Feature growth like everything else requires host energy and you might end up with a half-dead host after you finish growing the feature you desire (or even with a dead one that has died in the process). Moreover, you cannot stop the growth process once started, unlike evolution. That is why growing is best done in the safety of a habitat. There are limits to the amount of features on a host, too.",

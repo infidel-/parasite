@@ -873,7 +873,7 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_WATCHER,
         name: 'Watcher',
-        note: 'Watcher growth. Will warn of the ambush in the habitat',
+        note: 'Watcher growth. Will warn of the ambush in the habitat.',
         maxLevel: 2,
         levelNotes: [
           'Unavailable',
@@ -913,8 +913,8 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_PRESERVATOR,
-        name: 'Host Preservator',
-        note: 'Habitat growth. TODO.',
+        name: 'Host preservator',
+        note: 'Habitat growth. Allows preserving hosts in a suspended state until further need.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return

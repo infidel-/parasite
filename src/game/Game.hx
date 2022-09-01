@@ -150,7 +150,7 @@ class Game extends _SaveObject
       var silent = (config.skipTutorial && config.difficulty > 0);
       for (goal in const.Goals.map.keys())
         if (const.Goals.map[goal].isStarting)
-          goals.receive(goal, silent);
+          goals.receive(goal, silent ? SILENT_ALL : SILENT_NONE);
       // initial pedia articles
       var articleAdded = false;
       if (!isFirstGame) // kludge: first game is skipped

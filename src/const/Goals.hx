@@ -221,6 +221,13 @@ class Goals
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_BIOMINERAL);
         game.goals.receive(GOAL_PUT_BIOMINERAL);
+        // path 1: on learn pills after creating habitat
+        // path 2: on creating habitat with pills learned
+        if (player.knowsItem('sleepingPills'))
+          {
+            game.goals.receive(GOAL_LEARN_PRESERVATOR, SILENT_SYSTEM);
+            game.goals.complete(GOAL_LEARN_PRESERVATOR, SILENT_SYSTEM);
+          }
       }
     },
 
@@ -269,6 +276,19 @@ class Goals
         game.profile.addPediaArticle('habitatWatcher');
         // quietly add spoon mode info as late as possible
         game.profile.addPediaArticle('spoonMode', false);
+      },
+    },
+
+    // fake goal
+    GOAL_LEARN_PRESERVATOR => {
+      id: GOAL_LEARN_PRESERVATOR,
+      isHidden: true,
+      name: '-',
+      note: '-',
+      messageReceive: 'Sleep is very important for hosts. I can exploit that by making a habitat growth inducing the state of deep sleep in hosts to preserve them for later use.',
+      onReceive: function (game, player) {
+        player.evolutionManager.addImprov(IMP_PRESERVATOR);
+        game.profile.addPediaArticle('habitatPreservator');
       },
     },
 
