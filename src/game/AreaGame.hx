@@ -144,9 +144,17 @@ class AreaGame extends _SaveObject
       if (!isGenerated)
         generate();
 
-      // area already generated, show hidden objects
-      else for (o in _objects)
-        o.show();
+      // area already generated
+      else
+        {
+          // show all ai
+          for (ai in _ai)
+            ai.show();
+
+          // show all objects
+          for (o in _objects)
+            o.show();
+        }
 
       // reinit spawn points
       initSpawnPoints();
@@ -330,7 +338,11 @@ class AreaGame extends _SaveObject
 
       // remove all ai
       for (ai in _ai)
-        removeAI(ai);
+        {
+          if (ai.state == AI_STATE_PRESERVED)
+            ai.hide();
+          else removeAI(ai);
+        }
 
       // remove host AI entity link (AI entity already removed above)
       if (game.player.state == PLR_STATE_HOST)
@@ -934,7 +946,6 @@ class AreaGame extends _SaveObject
       for (ai in _ai)
         {
           ai.turn();
-
           if (game.isFinished)
             return;
         }

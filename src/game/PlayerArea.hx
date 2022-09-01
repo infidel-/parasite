@@ -693,7 +693,7 @@ class PlayerArea extends _SaveObject
       player.health -= 1;
       if (player.health == 0)
         {
-          log('The host wrestles with you violently, injuring you fatally.');
+          log('The host violently wrestles with you which results in a fatal injury.');
           return;
         }
       log('Your proboscis painfully penetrates the warm flesh. You are now in control of the host.');
@@ -776,12 +776,23 @@ class PlayerArea extends _SaveObject
                 }
             }
 
-          // no free AI allowed
+          // no free AI allowed with some exceptions
           else if (game.area.hasAnyAI())
             {
-              log('You cannot leave the habitat with outsiders in it!',
-                COLOR_HINT);
-              return;
+              // preserved AI are allowed
+              var ok = true;
+              for (ai in game.area.getAllAI())
+                if (ai.state != AI_STATE_PRESERVED && ai.state != AI_STATE_HOST)
+                  {
+                    ok = false;
+                    break;
+                  }
+              if (!ok)
+                {
+                  log('You cannot leave the habitat with outsiders in it!',
+                    COLOR_HINT);
+                  return;
+                }
             }
 
           // no leaving with any construction molds

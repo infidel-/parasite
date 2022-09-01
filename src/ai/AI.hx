@@ -217,6 +217,20 @@ class AI extends _SaveObject
         }
     }
 
+// show AI graphics
+public function show()
+  {
+    createEntity();
+    if (isNPC)
+      entity.setNPC();
+  }
+
+// hide AI graphics
+  public function hide()
+    {
+      entity.remove();
+      entity = null;
+    }
 
 // does this AI have this trait?
   public inline function hasTrait(t: _AITraitType): Bool
