@@ -134,7 +134,6 @@ class ConsoleGame
             game.restart();
         }
 
-#if mydebug
       // XXX set commands
       else if (char0 == 's')
         {
@@ -142,6 +141,7 @@ class ConsoleGame
           if (arr[0] == 'save' || arr[0] == 'sav' || arr[0] == 'sa')
             game.save(1);
 
+#if mydebug
           // XXX set <variable> <value>
           else if (arr[0] == 'set')
             setVariableCommand(arr);
@@ -155,8 +155,8 @@ class ConsoleGame
             spawnAICommand(arr);
 
           else setCommand(cmd);
-        }
 #end
+        }
 
       // XXX organ action
       else if (char0 == 'o' && cmd.substr(0, 2) == 'oa')
