@@ -95,7 +95,7 @@ class Player extends _SaveObject
                 }
               host = null;
             }
-          if (hostID >= 0)
+          if (state == PLR_STATE_HOST && hostID >= 0)
             {
               host = game.area.getAIByID(hostID);
               host.updateMask(Const.FRAME_MASK_CONTROL);

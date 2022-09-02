@@ -59,7 +59,7 @@ class PlayerArea extends _SaveObject
 // called post-loading game
   public function loadPost()
     {
-      if (attachHostID >= 0)
+      if (state == PLR_STATE_ATTACHED && attachHostID >= 0)
         {
           entity.visible = false;
           attachHost = game.area.getAIByID(attachHostID);
