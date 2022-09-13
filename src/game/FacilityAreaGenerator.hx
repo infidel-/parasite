@@ -856,7 +856,7 @@ class FacilityAreaGenerator
       var info = infos[Std.random(infos.length)];
       var col = Std.random(info.amount);
       var o = new Decoration(state.game, state.area.id,
-          x, y, info.row, col);
+        x, y, info.row, col);
       state.area.addObject(o);
     }
 

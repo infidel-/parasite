@@ -5,18 +5,17 @@ package scenario;
 import const.Goals;
 import objects.EventObject;
 import scenario.Scenario;
-import game.Game;
+import game.*;
+import objects.*;
 
 class GoalsAlienCrashLanding
 {
 // helper: find spaceship object
   static function getSpaceShipObject(game: Game): EventObject
     {
-      // change spaceship action contents
-      var areaID = game.timeline.getIntVar('spaceShipAreaID');
-      var objID = game.timeline.getIntVar('spaceShipObjectID');
-      var area = game.world.get(0).get(areaID);
-      return cast area.getObject(objID);
+      var state: _SpaceshipState = game.timeline.getDynamicVar('spaceshipState');
+      var area = game.world.get(0).get(state.studyAreaID);
+      return cast area.getObject(state.studyObjectID);
     }
 
   static function alienShipLocationFunc(game: Game): String
@@ -102,15 +101,10 @@ class GoalsAlienCrashLanding
           }
         });
 #else
-        // spawn ship on the event location
+        // spawn ship on the event location and add all variables to timeline
         var ev = game.timeline.getEvent('alienShipStudy');
         var area = ev.location.area;
-        var obj = area.addEventObject('spaceship', 'spaceshipStart');
-
-        // store object/area id for later use
-        // NOTE: we cannot store object link since this is not serializable
-        game.timeline.setVar('spaceShipObjectID', obj.id);
-        game.timeline.setVar('spaceShipAreaID', area.id);
+        addSpaceshipStudyObject(game, area);
 #end
       },
       onComplete: function (game, player) {
@@ -279,4 +273,63 @@ class GoalsAlienCrashLanding
         },
       },
 */
+
+// spaceship in lab - spawn in hangar with console and parts around
+  static function addSpaceshipStudyObject(game: Game, area: AreaGame)
+    {
+      // generate area if it's not yet generated
+      if (!area.isGenerated)
+        area.generate();
+
+      // find hangar corner
+      var sx = -1, sy = -1;
+      var cells = area.getCells();
+      for (y in 0...area.height)
+        {
+          for (x in 0...area.width)
+            if (cells[x][y] == Const.TILE_FLOOR_CONCRETE)
+              {
+                sx = x;
+                sy = y;
+                break;
+              }
+          if (sx != -1)
+            break;
+        }
+      var hangar = area.getRect(sx, sy);
+      // ship tile block corner
+      var loc = {
+        x: sx + Std.int(hangar.w / 2),
+        y: sy + Std.int(hangar.h / 2),
+      };
+
+      // spawn the ship itself
+      var block = Const.SPACESHIP_BLOCK;
+      for (y in 0...block.height)
+        for (x in 0...block.width)
+          {
+            var o = new Decoration(game, area.id,
+              x + loc.x, y + loc.y, y + block.row, x + block.col);
+            cells[x + loc.x][y + loc.y] =
+              Const.TILE_FLOOR_CONCRETE_UNWALKABLE;
+            area.addObject(o);
+          }
+      // console
+      var o = area.addEventObject(loc.x + 1, loc.y + 2, 'console', 'spaceshipStart');
+      var spaceshipState: _SpaceshipState = {
+        studyAreaID: area.id,
+        studyObjectID: o.id,
+      }
+
+      // store object/area id for later use
+      // NOTE: we cannot store object link since this is not serializable
+      game.timeline.setVar('spaceshipState', spaceshipState);
+      return o;
+    }
+}
+
+typedef _SpaceshipState = {
+  // spaceship in lab related stuff
+  var studyAreaID: Int;
+  var studyObjectID: Int;
 }

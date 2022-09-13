@@ -367,8 +367,10 @@ class AreaGame extends _SaveObject
     }
 
 // generate a new area map
-  function generate()
+  public function generate()
     {
+      if (isGenerated)
+        return;
 //      game.debug('Area.generate()');
 
       // clear map
@@ -400,7 +402,7 @@ class AreaGame extends _SaveObject
     }
 
 // get largest rect from starting tile
-  function getRect(sx: Int, sy: Int): _Room 
+  public function getRect(sx: Int, sy: Int): _Room 
     {
       var w = 0, h = 0;
       var startTileID = _cells[sx][sy];
@@ -444,56 +446,40 @@ class AreaGame extends _SaveObject
         h: h + 1,
       }
     }
-
+/*
 // add event object to area
-  public function addEventObject(name: String, infoID: String): EventObject
+  public function addEventObject(id: String, infoID: String): EventObject
     {
       // generate area if it's not yet generated
       if (!isGenerated)
         generate();
 
-      var loc = null;
-      if (name == 'spaceship')
-        {
-          // find hangar corner
-          var sx = -1, sy = -1;
-          for (y in 0...height)
-            {
-              for (x in 0...width)
-                if (_cells[x][y] == Const.TILE_FLOOR_CONCRETE)
-                  {
-                    sx = x;
-                    sy = y;
-                    break;
-                  }
-              if (sx != -1)
-                break;
-            }
-          var hangar = getRect(sx, sy);
-          loc = {
-            x: sx + Std.int(hangar.w / 2),
-            y: sy + Std.int(hangar.h / 2),
-          };
-        }
       // default
-      else loc = findEmptyLocation();
-      game.debug('!!! event obj ' + name +
-        ' loc: (' + loc.x + ',' + loc.y +
-        ') area: (' + x + ',' + y + ')');
-      var o = new EventObject(game, this.id, loc.x, loc.y, name, infoID);
-      if (game.area != this) // hide object if it's not in the current area
+      var loc = findEmptyLocation();
+      var o = addEventObjectInternal(loc.x, loc.y, id, infoID);
+      return o;
+    }*/
+
+// add event object (low-level)
+// NOTE: assumes that area was already generated
+  public function addEventObject(ox: Int, oy: Int, name: String, infoID: String): EventObject
+    {
+      game.debug('!!! event obj ' + id +
+        ' loc: (' + ox + ',' + oy +
+        ') area: (' + this.x + ',' + this.y + ')');
+      var o = new EventObject(game, this.id, ox, oy, name, infoID);
+      // hide object if it's not in the current area
+      if (game.area != this)
         o.hide();
       addObject(o);
       return o;
     }
 
-
-// add object to area
+// add object to area (low-level)
   public inline function addObject(o: AreaObject)
     {
       _objects.set(o.id, o);
     }
-
 
 // get object by id
   public inline function getObject(id: Int): AreaObject

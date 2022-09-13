@@ -119,6 +119,7 @@ class Const
     { row: 12, amount: 11 },
   ];
 
+  // row 15 - doors
   public static var ROW_DOORS = 15;
   public static var FRAME_DOOR_CABINET = 0;
   public static var FRAME_DOOR_CABINET_OPEN = 1;
@@ -129,17 +130,24 @@ class Const
   public static var FRAME_DOOR_METAL = 6;
   public static var FRAME_DOOR_METAL_OPEN = 7;
 
+  // row 16 - floor drain
   public static var ROW_OBJECT_INDOOR = 16;
   public static var FRAME_FLOOR_DRAIN = 0;
 
+  // row 17,18 - documents
   public static var CHEM_LABS_DOCUMENTS = [
     { row: 17, amount: 12 },
     { row: 18, amount: 12 },
   ];
+  // row 19,20 - books
   public static var CHEM_LABS_BOOKS = [
     { row: 19, amount: 12 },
     { row: 20, amount: 12 },
   ];
+
+  // row 21,22 - spaceship
+  public static var SPACESHIP_BLOCK: _TileBlock = 
+    { row: 21, col: 0, width: 3, height: 2 };
 
   // ==============================================
   // ==============================================
@@ -193,6 +201,7 @@ class Const
   public static var TILE_FLOOR_CONCRETE = OFFSET_CHEM_LAB + 6;
   public static var TILE_HANGAR_DOOR = OFFSET_CHEM_LAB + 7;
   public static var TILE_FLOOR_TILE_CANNOTSEE = OFFSET_CHEM_LAB + 8;
+  public static var TILE_FLOOR_CONCRETE_UNWALKABLE = OFFSET_CHEM_LAB + 9;
 
   // === row 8-10 - tables
   public static var OFFSET_ROW8 = 128;
@@ -268,7 +277,7 @@ class Const
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
     // row 7 - floor
-    1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1,
 
     // row 8-11 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -474,3 +483,4 @@ class Const
 }
 
 typedef _TileRow = { row: Int, amount: Int }
+typedef _TileBlock = { row: Int, col: Int, width: Int, height: Int }

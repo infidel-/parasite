@@ -591,15 +591,12 @@ should limit player options for guiding purposes
       return (val != null ? val : 0);
     }
 
-
 // get timeline variable value
-/*
-  commented out for now because we can't store links here, they're not serialized properly
+// NOTE: we cannot store links here, they will not be serialized properly
   public inline function getDynamicVar(key: String)
     {
       return _variables.get(key);
-    }*/
-
+    }
 
 // get starting location event
   public inline function getStartEvent(): Event
