@@ -271,7 +271,7 @@ hr {
   border: 20px solid;
   left: 50%;
   transform: translate(-50%, 0);
-  max-width: 31ch;
+  max-width: 33ch;
   bottom: 4em;
   position: fixed;
   margin: 0;

@@ -16,6 +16,8 @@ class ScenarioAlienCrashLanding extends Scenario
       defaultAlertness = 50;
       goals = GoalsAlienCrashLanding.map;
       eventObjectActions = GoalsAlienCrashLanding.eventObjectActions;
+      eventObjectActionsFuncs = GoalsAlienCrashLanding.eventObjectActionsFuncs;
+      eventObjectActionsHooks = GoalsAlienCrashLanding.eventObjectActionsHooks;
 //      onInit = GoalsAlienCrashLanding.onInit;
 
       names = [

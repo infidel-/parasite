@@ -3,8 +3,7 @@
 package scenario;
 
 import const.Goals;
-import game.Game;
-import game.Player;
+import game.*;
 
 class Scenario
 {
@@ -17,6 +16,8 @@ class Scenario
   public var flow: Map<String, EventInfo>; // scenario flow (map of events)
   public var goals: Map<_Goal, GoalInfo>; // scenario goals (link to static map)
   public var eventObjectActions: _EventObjectActionsList;
+  public var eventObjectActionsFuncs: _EventObjectActionsFuncs;
+  public var eventObjectActionsHooks: _EventObjectActionsHooks;
 /// unneeded for now
 //  public var onInit: Game -> Void;
 
@@ -67,4 +68,8 @@ typedef _EventObjectAction = {
   action: _PlayerAction,
   func: Game -> Player -> String -> Void,
 }
+typedef _EventObjectActionsFunc = Game -> Player -> Array<_PlayerAction>;
+typedef _EventObjectActionsHook = Game -> Player -> _PlayerAction -> Bool;
 typedef _EventObjectActionsList = Map<String, Array<_EventObjectAction>>;
+typedef _EventObjectActionsFuncs = Map<String, _EventObjectActionsFunc>;
+typedef _EventObjectActionsHooks = Map<String, _EventObjectActionsHook>;

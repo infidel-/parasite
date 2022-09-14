@@ -2,11 +2,35 @@
 
 package const;
 
+import game.Game;
 import game._ItemInfo;
+import game._Item;
 import objects.*;
 
 class ItemsConst
 {
+// spawn item by id
+  public static function spawnItem(game: Game, id: String): _Item
+    {
+      var info = getInfo(id);
+      if (info == null)
+        {
+          trace('No such item id: ' + id);
+          return null;
+        }
+      var name = info.name;
+      if (info.names != null) // pick a name
+        name = info.names[Std.random(info.names.length)];
+      var item: _Item = {
+        game: game,
+        id: id,
+        info: info,
+        name: name,
+        event: null,
+      };
+      return item;
+    }
+
 // return item info by id
   public static function getInfo(id: String): _ItemInfo
     {
@@ -279,6 +303,21 @@ class ItemsConst
               game.goals.complete(GOAL_LEARN_PRESERVATOR, SILENT_SYSTEM);
             }
         }
+    },
+
+    // ============================================
+    // scenario-related items
+    {
+      id: 'shipPart',
+      names: [ 'engine core', 'power battery', 'flow regulator',
+        'fuel injector port', 'power conduit', 'power relay',
+        'signature suppressor', 'reactor', 'crystal matrix',
+        'wave converter', 'containment unit', 'bypass circuit',
+        'emitter array', 'stabilizer',
+      ],
+      type: 'scenario',
+      unknown: 'strange device',
+      isKnown: true,
     },
   ];
 }

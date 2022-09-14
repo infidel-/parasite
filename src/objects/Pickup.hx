@@ -57,10 +57,10 @@ class Pickup extends AreaObject
     }
 
 // ACTION: action handling
-  override function onAction(id: String): Bool
+  override function onAction(action: _PlayerAction): Bool
     {
       // get stuff from body
-      if (id == 'get')
+      if (action.id == 'get')
         {
           var itemName = (game.player.knowsItem(item.info.id) ?
             item.name : item.info.unknown);

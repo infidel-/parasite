@@ -3,6 +3,7 @@
 package scenario;
 
 import const.Goals;
+import const.ItemsConst;
 import objects.EventObject;
 import scenario.Scenario;
 import game.*;
@@ -11,11 +12,18 @@ import objects.*;
 class GoalsAlienCrashLanding
 {
 // helper: find spaceship object
-  static function getSpaceShipObject(game: Game): EventObject
+  static function getSpaceshipObject(game: Game): EventObject
     {
       var state: _SpaceshipState = game.timeline.getDynamicVar('spaceshipState');
       var area = game.world.get(0).get(state.studyAreaID);
       return cast area.getObject(state.studyObjectID);
+    }
+
+// helper: get full spaceship state
+  static function getSpaceshipState(game: Game): _SpaceshipState
+    {
+      var state: _SpaceshipState = game.timeline.getDynamicVar('spaceshipState');
+      return state;
     }
 
   static function alienShipLocationFunc(game: Game): String
@@ -26,8 +34,84 @@ class GoalsAlienCrashLanding
         'Target location: (' + area.x + ',' + area.y + ')'));
     }
 
+  public static var eventObjectActionsFuncs: _EventObjectActionsFuncs = [
+    'spaceshipStudySlot' => function (game, player)
+      {
+        var inventory = player.host.inventory;
+        var list: Array<_PlayerAction> = [];
+        for (item in inventory.iterator())
+          if (item.id == 'shipPart')
+            list.push({
+              id: 'installPart',
+              type: ACTION_OBJECT,
+              name: 'Install ' + Const.col('inventory-item', item.name),
+              item: item,
+              energy: 10
+              // NOTE: obj field will be set up on init
+            });
+        return list;
+      }
+  ];
+  public static var eventObjectActionsHooks: _EventObjectActionsHooks = [
+    'spaceshipStudySlot' => function (game, player, action)
+      {
+//        trace('install! ' + action.item + ' ' + action.obj.infoID + ' ' + action.obj.id);
+        var state = getSpaceshipState(game);
+        if (action.item.name == state.part1Name && action.obj.id == state.slot1ObjectID)
+          state.part1Installed = true;
+        else if (action.item.name == state.part2Name && action.obj.id == state.slot2ObjectID)
+          state.part2Installed = true;
+        else if (action.item.name == state.part3Name && action.obj.id == state.slot3ObjectID)
+          state.part3Installed = true;
+        else 
+          {
+            player.log('This item does not fit into this slot.');
+            return false;
+          }
+        player.log('You successfully install the ' +
+          Const.col('inventory-item', action.item.name) +
+          ' into the slot.');
+        player.host.inventory.removeItem(action.item);
+        return true;
+      }
+  ];
+
 // NOTE: event objects functions moved here because of save/loading
   public static var eventObjectActions: _EventObjectActionsList = [
+    'spaceshipStudyStart' => [{
+      action: {
+        id: 'startShip',
+        type: ACTION_OBJECT,
+        name: 'Initiate startup sequence',
+        energy: 0
+        // NOTE: obj field will be set up on init
+      },
+      func: function (game, player, id) {
+        // player can stumble on a spaceship without having the goal
+        // in that case we silently give previous goal and
+        // auto-complete it
+        if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
+          {
+            game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
+            game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
+          }
+        var state = getSpaceshipState(game);
+        if (!state.part1Installed || !state.part2Installed || !state.part3Installed)
+          {
+            player.log('The launch sequence fails to start. Not all parts are installed.');
+            return;
+          }
+        game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
+
+        // show first event
+        var ev = game.timeline.getEvent('alienMission');
+        ev.isHidden = false;
+        for (n in ev.notes)
+          n.isKnown = true;
+        game.timeline.update();
+      },
+    }],
+/*
     'spaceshipStart' => [{
       action: {
         id: 'enterShip',
@@ -55,6 +139,8 @@ class GoalsAlienCrashLanding
         game.timeline.update();
       },
     }],
+*/
+
     'spaceshipAbductionSuccess' => [{
       action: {
         id: 'enterShip',
@@ -67,6 +153,7 @@ class GoalsAlienCrashLanding
         game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
       },
     }],
+
     'spaceshipAbductionFailure' => [{
       action: {
         id: 'enterShip',
@@ -126,10 +213,12 @@ class GoalsAlienCrashLanding
       note: 'You need to enter the ship and activate the onboard computer.',
       noteFunc: alienShipLocationFunc,
       messageComplete:
-        'The onboard computer recognizes your signature and allows you to enter the ship. ' +
+        'After initiating the startup sequence you board the ship. ' +
         'Spending some time on the computer you remember what was your initial goal on this planet. ' +
-        'You have a mission. You need to complete it.',
+        'You have a mission. You need to complete it. ' +
+        'You also move the ship away into another location.',
       onComplete: function (game, player) {
+        // TODO
         // get the mission goal
         if (game.timeline.getStringVar('alienMissionType') == 'abduction')
           game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION);
@@ -220,7 +309,7 @@ class GoalsAlienCrashLanding
       },
 
       onReceive: function (game, player) {
-        var obj = getSpaceShipObject(game);
+        var obj = getSpaceshipObject(game);
         obj.infoID = 'spaceshipAbductionSuccess';
       },
 
@@ -244,7 +333,7 @@ class GoalsAlienCrashLanding
 
       onReceive: function (game, player) {
         // change spaceship action contents
-        var obj = getSpaceShipObject(game);
+        var obj = getSpaceshipObject(game);
         obj.infoID = 'spaceshipAbductionFailure';
       },
 
@@ -299,8 +388,8 @@ class GoalsAlienCrashLanding
       var hangar = area.getRect(sx, sy);
       // ship tile block corner
       var loc = {
-        x: sx + Std.int(hangar.w / 2),
-        y: sy + Std.int(hangar.h / 2),
+        x: hangar.x1 + Std.int(hangar.w / 2),
+        y: hangar.y1 + Std.int(hangar.h / 2),
       };
 
       // spawn the ship itself
@@ -315,16 +404,47 @@ class GoalsAlienCrashLanding
             area.addObject(o);
           }
       // console
-      var o = area.addEventObject(loc.x + 1, loc.y + 2, 'console', 'spaceshipStart');
+      var console = area.addEventObject(loc.x + 1, loc.y + 2, 'console', 'spaceshipStudyStart');
+      // slots
+      var slot1 = area.addEventObject(loc.x - 1, loc.y + 1, 'slot', 'spaceshipStudySlot');
+      var slot2 = area.addEventObject(loc.x + 3, loc.y + 1, 'slot', 'spaceshipStudySlot');
+      var slot3 = area.addEventObject(loc.x + 1, loc.y - 1, 'slot', 'spaceshipStudySlot');
+      // parts
+      var parts = [];
+      for (i in 0...3)
+        {
+          // force unique parts
+          var item = null;
+          while (true)
+            {
+              item = ItemsConst.spawnItem(game, 'shipPart');
+              if (Lambda.has(parts, item.name))
+                continue;
+              break;
+            }
+          var x = hangar.x1 + Std.random(Std.int(hangar.w / 2) - 3);
+          var y = hangar.y1 + Std.random(Std.int(hangar.h / 2) - 3);
+          var o = area.addItem(x, y, item);
+          parts.push(item.name);
+        }
+
       var spaceshipState: _SpaceshipState = {
         studyAreaID: area.id,
-        studyObjectID: o.id,
+        studyObjectID: console.id,
+        slot1ObjectID: slot1.id,
+        slot2ObjectID: slot2.id,
+        slot3ObjectID: slot3.id,
+        part1Name: parts[0],
+        part2Name: parts[1],
+        part3Name: parts[2],
+        part1Installed: false,
+        part2Installed: false,
+        part3Installed: false,
       }
 
       // store object/area id for later use
       // NOTE: we cannot store object link since this is not serializable
       game.timeline.setVar('spaceshipState', spaceshipState);
-      return o;
     }
 }
 
@@ -332,4 +452,13 @@ typedef _SpaceshipState = {
   // spaceship in lab related stuff
   var studyAreaID: Int;
   var studyObjectID: Int;
+  var slot1ObjectID: Int;
+  var slot2ObjectID: Int;
+  var slot3ObjectID: Int;
+  var part1Name: String;
+  var part2Name: String;
+  var part3Name: String;
+  var part1Installed: Bool;
+  var part2Installed: Bool;
+  var part3Installed: Bool;
 }

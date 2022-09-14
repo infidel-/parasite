@@ -475,6 +475,23 @@ class AreaGame extends _SaveObject
       return o;
     }
 
+// spawn generic pickup item
+  public function addItem(ox: Int, oy: Int, item: _Item): GenericPickup
+    {
+      var itemName = (game.player.knowsItem(item.info.id) ?
+        item.name : item.info.unknown);
+      var o = new GenericPickup(game, id, ox, oy, Const.FRAME_PICKUP);
+      o.name = itemName;
+      o.item = item;
+      // hide object if it's not in the current area
+      if (game.area != this)
+        o.hide();
+      addObject(o);
+      if (game.area == this)
+        o.entity.setPosition(o.x, o.y);
+      return o;
+    }
+
 // add object to area (low-level)
   public inline function addObject(o: AreaObject)
     {

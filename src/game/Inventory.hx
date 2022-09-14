@@ -320,18 +320,10 @@ class Inventory extends _SaveObject
 // ACTION: drop item
   function dropAction(item: _Item)
     {
+      game.area.addItem(game.playerArea.x, game.playerArea.y, item);
+      _list.remove(item);
       var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
-
-      var o = new GenericPickup(game, game.area.id,
-        game.playerArea.x, game.playerArea.y,
-        Const.FRAME_PICKUP);
-      o.name = itemName;
-      o.item = item;
-      game.area.addObject(o);
-      _list.remove(item);
-      o.entity.setPosition(o.x, o.y);
-
       game.player.log('You drop the ' + Const.col('inventory-item', itemName) + '.');
     }
 
@@ -349,19 +341,25 @@ class Inventory extends _SaveObject
       _list.clear();
     }
 
-
 // checks whether this inventory contains this item ID
   public function has(id: String): Bool
     {
       for (item in _list)
         if (item.id == id)
           return true;
-
       return false;
     }
 
+// returns first item with this id from this inventory
+  public function get(id: String): _Item
+    {
+      for (item in _list)
+        if (item.id == id)
+          return item;
+      return null;
+    }
 
-// remove item
+// remove item by id
   public function remove(id: String)
     {
       for (item in _list)
@@ -372,6 +370,11 @@ class Inventory extends _SaveObject
           }
     }
 
+// remove item
+  public function removeItem(item: _Item)
+    {
+      _list.remove(item);
+    }
 
 // get first item that is a weapon
   public function getFirstWeapon(): _Item
@@ -387,28 +390,11 @@ class Inventory extends _SaveObject
 // add item by id
   public function addID(id: String, ?wear: Bool = false)
     {
-      var info = ItemsConst.getInfo(id);
-      if (info == null)
-        {
-          trace('No such item id: ' + id);
-          return;
-        }
-
-      var name = info.name;
-      if (info.names != null) // pick a name
-        name = info.names[Std.random(info.names.length)];
-      var item: _Item = {
-        game: game,
-        id: id,
-        info: info,
-        name: name,
-        event: null,
-      };
-
+      var item = ItemsConst.spawnItem(game, id);
       // wear/wield item automatically
       if (wear)
         {
-          if (info.type == 'clothing')
+          if (item.info.type == 'clothing')
             clothing = item;
         }
       else _list.add(item);

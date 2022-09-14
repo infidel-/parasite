@@ -55,10 +55,10 @@ class Preservator extends HabitatObject
     }
 
 // ACTION: action handling
-  override function onAction(id: String): Bool
+  override function onAction(action: _PlayerAction): Bool
     {
       // preserve host
-      if (id == 'preserveHost')
+      if (action.id == 'preserveHost')
         {
           if (x == game.playerArea.x && y == game.playerArea.y)
             {

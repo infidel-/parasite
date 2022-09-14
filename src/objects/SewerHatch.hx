@@ -45,7 +45,7 @@ class SewerHatch extends AreaObject
 
 
 // activate sewers - leave area
-  override function onAction(id: String): Bool
+  override function onAction(action: _PlayerAction): Bool
     {
       if (game.player.state == PLR_STATE_HOST && !game.player.host.isHuman)
         {

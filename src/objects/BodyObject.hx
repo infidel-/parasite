@@ -86,15 +86,15 @@ class BodyObject extends AreaObject
 
 
 // ACTION: action handling
-  override function onAction(id: String): Bool
+  override function onAction(action: _PlayerAction): Bool
     {
       // search body for stuff
-      if (id == 'searchBody')
+      if (action.id == 'searchBody')
         searchAction();
 
       // get stuff from body
-      else if (id.substr(0, 4) == 'get.')
-        getAction(id.substr(4));
+      else if (action.id.substr(0, 4) == 'get.')
+        getAction(action.id.substr(4));
 
       return true;
     }

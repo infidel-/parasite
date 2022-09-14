@@ -39,23 +39,46 @@ class EventObject extends AreaObject
 // update actions
   override function updateActionList()
     {
+      // static event object actions
       var actions = game.timeline.scenario.eventObjectActions[infoID];
-      for (info in actions)
+      if (actions != null)
+        for (info in actions)
+          {
+            var action: _PlayerAction = Reflect.copy(info.action);
+            action.obj = this;
+            game.ui.hud.addAction(action);
+          }
+      // player inventory actions
+      // called function returns a list of available player actions
+      var func = game.timeline.scenario.eventObjectActionsFuncs[infoID];
+      if (func != null)
         {
-          var action: _PlayerAction = Reflect.copy(info.action);
-          action.obj = this;
-          game.ui.hud.addAction(action);
+          var list = func(game, game.player);
+          if (list != null)
+            for (action in list)
+              {
+                action.obj = this;
+                game.ui.hud.addAction(action);
+              }
         }
     }
 
 
 // handle special action
-  override function onAction(id: String): Bool
+// returns true on successful action
+  override function onAction(action: _PlayerAction): Bool
     {
+      // static event object actions
       var actions = game.timeline.scenario.eventObjectActions[infoID];
-      for (info in actions)
-        if (info.action.id == id)
-          info.func(game, game.player, id);
+      if (actions != null)
+        for (info in actions)
+          if (info.action.id == action.id)
+            info.func(game, game.player, action.id);
+      // player inventory actions
+      // calling available action hook
+      var func = game.timeline.scenario.eventObjectActionsHooks[infoID];
+      if (func != null)
+        return func(game, game.player, action);
 
       return true;
     }

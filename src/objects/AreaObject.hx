@@ -148,7 +148,7 @@ class AreaObject extends _SaveObject
 // object action
   public function action(a: _PlayerAction)
     {
-      return onAction(a.id); // child callback
+      return onAction(a); // child callback
     }
 
 // dynamic: frob object
@@ -173,7 +173,7 @@ class AreaObject extends _SaveObject
 
 // dynamic: object action callback
 // returns true on successful action
-  public dynamic function onAction(id: String): Bool
+  public dynamic function onAction(action: _PlayerAction): Bool
     { return false; }
 
 // dynamic: when moved onto
