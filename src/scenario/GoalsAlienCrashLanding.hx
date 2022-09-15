@@ -96,9 +96,11 @@ class GoalsAlienCrashLanding
             game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
           }
         var state = getSpaceshipState(game);
-        if (!state.part1Installed || !state.part2Installed || !state.part3Installed)
+        if (!state.part1Installed ||
+            !state.part2Installed ||
+            !state.part3Installed)
           {
-            player.log('The launch sequence fails to start. Not all parts are installed.');
+            player.log('The startup sequence fails to initialize. Not all of the necessary ship parts are installed.');
             return;
           }
         game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
@@ -189,9 +191,7 @@ class GoalsAlienCrashLanding
         });
 #else
         // spawn ship on the event location and add all variables to timeline
-        var ev = game.timeline.getEvent('alienShipStudy');
-        var area = ev.location.area;
-        addSpaceshipStudyObject(game, area);
+        addSpaceshipStudyObject(game);
 #end
       },
       onComplete: function (game, player) {
@@ -216,9 +216,11 @@ class GoalsAlienCrashLanding
         'After initiating the startup sequence you board the ship. ' +
         'Spending some time on the computer you remember what was your initial goal on this planet. ' +
         'You have a mission. You need to complete it. ' +
-        'You also move the ship away into another location.',
+        'You also move the ship away into a safer location.',
       onComplete: function (game, player) {
-        // TODO
+        // move spaceship and player from lab to random wilderness spot
+        moveSpaceship(game);
+
         // get the mission goal
         if (game.timeline.getStringVar('alienMissionType') == 'abduction')
           game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION);
@@ -364,8 +366,10 @@ class GoalsAlienCrashLanding
 */
 
 // spaceship in lab - spawn in hangar with console and parts around
-  static function addSpaceshipStudyObject(game: Game, area: AreaGame)
+  static function addSpaceshipStudyObject(game: Game)
     {
+      var ev = game.timeline.getEvent('alienShipStudy');
+      var area = ev.location.area;
       // generate area if it's not yet generated
       if (!area.isGenerated)
         area.generate();
@@ -392,17 +396,9 @@ class GoalsAlienCrashLanding
         y: hangar.y1 + Std.int(hangar.h / 2),
       };
 
-      // spawn the ship itself
-      var block = Const.SPACESHIP_BLOCK;
-      for (y in 0...block.height)
-        for (x in 0...block.width)
-          {
-            var o = new Decoration(game, area.id,
-              x + loc.x, y + loc.y, y + block.row, x + block.col);
-            cells[x + loc.x][y + loc.y] =
-              Const.TILE_FLOOR_CONCRETE_UNWALKABLE;
-            area.addObject(o);
-          }
+      // create decoration
+      var shipDeco = createShipDecoration(game, area, loc,
+        Const.TILE_FLOOR_CONCRETE_UNWALKABLE);
       // console
       var console = area.addEventObject(loc.x + 1, loc.y + 2, 'console', 'spaceshipStudyStart');
       // slots
@@ -431,6 +427,7 @@ class GoalsAlienCrashLanding
       var spaceshipState: _SpaceshipState = {
         studyAreaID: area.id,
         studyObjectID: console.id,
+        studyDecoration: shipDeco,
         slot1ObjectID: slot1.id,
         slot2ObjectID: slot2.id,
         slot3ObjectID: slot3.id,
@@ -446,12 +443,69 @@ class GoalsAlienCrashLanding
       // NOTE: we cannot store object link since this is not serializable
       game.timeline.setVar('spaceshipState', spaceshipState);
     }
+
+// move spaceship and player from lab to random wilderness spot
+  static function moveSpaceship(game: Game)
+    {
+      var state = getSpaceshipState(game);
+
+      // remove old objects
+      var area = game.region.get(state.studyAreaID);
+      var cells = area.getCells();
+      for (id in state.studyDecoration)
+        {
+          var o = area.getObject(id);
+          area.removeObject(o);
+          cells[o.x][o.y] = Const.TILE_FLOOR_CONCRETE;
+        }
+      for (id in [ state.slot1ObjectID, state.slot2ObjectID, state.slot3ObjectID, state.studyObjectID ])
+        {
+          var o = area.getObject(id);
+          area.removeObject(o);
+        }
+
+      // pick a random wilderness area and respawn ship there
+      var newArea = game.region.getRandomWithType(AREA_GROUND, true);
+      // generate area if it's not yet generated
+      if (!newArea.isGenerated)
+        newArea.generate();
+      // pick a random spot
+      var loc = {
+        x: Std.int(newArea.width / 2),
+        y: Std.int(newArea.height / 2),
+      }
+      // create decoration
+      var shipDeco = createShipDecoration(game, newArea, loc,
+        Const.TILE_GRASS_UNWALKABLE);
+      // TODO event object (maybe give mission on first use instead?)
+      // teleport
+      game.player.teleport(newArea, loc.x + 1, loc.y + 2);
+    }
+
+// helper function for creating ship decoration
+  static function createShipDecoration(game: Game, area: AreaGame, loc, tile: Int): Array<Int>
+    {
+      var block = Const.SPACESHIP_BLOCK;
+      var shipDeco = [];
+      var cells = area.getCells();
+      for (y in 0...block.height)
+        for (x in 0...block.width)
+          {
+            var o = new Decoration(game, area.id,
+              x + loc.x, y + loc.y, y + block.row, x + block.col);
+            cells[x + loc.x][y + loc.y] = tile;
+            area.addObject(o);
+            shipDeco.push(o.id);
+          }
+      return shipDeco;
+    }
 }
 
 typedef _SpaceshipState = {
   // spaceship in lab related stuff
   var studyAreaID: Int;
   var studyObjectID: Int;
+  var studyDecoration: Array<Int>;
   var slot1ObjectID: Int;
   var slot2ObjectID: Int;
   var slot3ObjectID: Int;

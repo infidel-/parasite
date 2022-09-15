@@ -225,6 +225,28 @@ class Player extends _SaveObject
         Lambda.has(knownItems, id));
     }
 
+// helper function to teleport to any area
+// additionally move to spot
+  public function teleport(area: AreaGame, ?x: Int = -1, ?y: Int = -1)
+    {
+      // leave current area
+      if (game.location == LOCATION_AREA)
+        game.setLocation(LOCATION_REGION);
+
+      // move to new location
+      game.playerRegion.moveTo(area.x, area.y);
+
+      // enter area
+      game.setLocation(LOCATION_AREA);
+
+      if (x != -1 && y != -1)
+        game.playerArea.moveTo(x, y);
+
+      game.updateHUD();
+      game.scene.updateCamera();
+      game.area.updateVisibility();
+    }
+
 
 // =================================================================================
 

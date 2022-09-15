@@ -164,6 +164,7 @@ class Const
   public static var TILE_TREE1 = 5;
   public static var TILE_BUSH = 9;
   public static var TILE_GRASS = 10;
+  public static var TILE_GRASS_UNWALKABLE = 11;
 
   // row 1
   public static var OFFSET_REGION = 16;
@@ -264,7 +265,7 @@ class Const
   public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_WALKABLE = [
     // row 0
-    0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+    0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor

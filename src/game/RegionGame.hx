@@ -396,6 +396,7 @@ class RegionGame extends _SaveObject
 
 
 // get random area with this type id
+// noEvent - if true, will find area without any related timeline events
   public function getRandomWithType(t: _AreaType, noEvent: Bool): AreaGame
     {
       var tmp: Array<AreaGame> = Lambda.array(_list);

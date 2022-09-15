@@ -647,16 +647,7 @@ class ConsoleGame
             }
 
           log('Teleporting to area (' + x + ',' + y + ').');
-
-          // leave current area
-          if (game.location == LOCATION_AREA)
-            game.setLocation(LOCATION_REGION);
-
-          // move to new location
-          game.playerRegion.moveTo(area.x, area.y);
-
-          // enter area
-          game.setLocation(LOCATION_AREA);
+          game.player.teleport(area);
         }
 
       // XXX [ge10] go to event X location
@@ -685,16 +676,7 @@ class ConsoleGame
 
           var area = event.location.area;
           game.ui.state = UISTATE_DEFAULT;
-
-          // leave current area
-          if (game.location == LOCATION_AREA)
-            game.setLocation(LOCATION_REGION);
-
-          // move to new location
-          game.playerRegion.moveTo(area.x, area.y);
-
-          // enter area
-          game.setLocation(LOCATION_AREA);
+          game.player.teleport(area);
         }
 
       // XXX [gg10 10] go to location x,y at current location
