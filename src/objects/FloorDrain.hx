@@ -37,7 +37,7 @@ class FloorDrain extends AreaObject
       game.ui.hud.addAction({
         id: 'enterDrain',
         type: ACTION_OBJECT,
-        name: 'Enter Drain',
+        name: 'Enter drain',
         energy: 10,
         obj: this
       });

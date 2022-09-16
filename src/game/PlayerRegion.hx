@@ -62,7 +62,7 @@ class PlayerRegion extends _SaveObject
         game.ui.hud.addAction({
           id: 'enterArea',
           type: ACTION_REGION,
-          name: 'Enter Area',
+          name: 'Enter area',
           energy: 0
         });
 

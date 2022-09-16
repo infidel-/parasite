@@ -37,7 +37,7 @@ class SewerHatch extends AreaObject
         game.ui.hud.addAction({
           id: 'enterSewers',
           type: ACTION_OBJECT,
-          name: 'Enter Sewers',
+          name: 'Enter sewers',
           energy: 10,
           obj: this
         });

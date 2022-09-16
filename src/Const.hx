@@ -174,6 +174,7 @@ class Const
   public static var TILE_CITY_HIGH = OFFSET_REGION + 3;
   public static var TILE_FACILITY1 = OFFSET_REGION + 4;
   public static var TILE_MILITARY_BASE1 = OFFSET_REGION + 8;
+  public static var TILE_SPACESHIP = OFFSET_REGION + 10;
 
   // row 2
   public static var OFFSET_AREA = 32;

@@ -28,8 +28,14 @@ class GoalsAlienCrashLanding
 
   static function alienShipLocationFunc(game: Game): String
     {
-      var ev = game.timeline.getEvent('alienShipStudy');
-      var area = ev.location.area;
+      var state: _SpaceshipState = game.timeline.getDynamicVar('spaceshipState');
+//      var ev = game.timeline.getEvent('alienShipStudy');
+//      var area = ev.location.area;
+      var area = null;
+      if (state.location == 'study')
+        area = game.region.get(state.studyAreaID);
+      else if (state.location == 'hidden')
+        area = game.region.get(state.areaID);
       return Const.col('gray', Const.small(
         'Target location: (' + area.x + ',' + area.y + ')'));
     }
@@ -90,7 +96,7 @@ class GoalsAlienCrashLanding
         // player can stumble on a spaceship without having the goal
         // in that case we silently give previous goal and
         // auto-complete it
-        if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
+        if (!game.goals.has(SCENARIO_ALIEN_STEAL_SHIP))
           {
             game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
             game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
@@ -103,33 +109,23 @@ class GoalsAlienCrashLanding
             player.log('The startup sequence fails to initialize. Not all of the necessary ship parts are installed.');
             return;
           }
-        game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
-
-        // show first event
-        var ev = game.timeline.getEvent('alienMission');
-        ev.isHidden = false;
-        for (n in ev.notes)
-          n.isKnown = true;
-        game.timeline.update();
+        game.goals.complete(SCENARIO_ALIEN_STEAL_SHIP);
       },
     }],
-/*
+
     'spaceshipStart' => [{
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
-        name: 'Enter Spaceship',
+        name: 'Enter spaceship',
         energy: 0
         // NOTE: obj field will be set up on init
       },
       func: function (game, player, id) {
-        // player can stumble on a spaceship without having the goal
-        // in that case we silently give previous goal and
-        // auto-complete it
-        if (!game.goals.has(SCENARIO_ALIEN_ENTER_SHIP))
+        if (game.goals.completed(SCENARIO_ALIEN_ENTER_SHIP))
           {
-            game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
-            game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
+            game.log('You need to complete the mission first.');
+            return;
           }
         game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
 
@@ -141,13 +137,12 @@ class GoalsAlienCrashLanding
         game.timeline.update();
       },
     }],
-*/
 
     'spaceshipAbductionSuccess' => [{
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
-        name: 'Enter Spaceship',
+        name: 'Enter spaceship',
         energy: 0
         // NOTE: obj field will be set up on init
       },
@@ -160,7 +155,7 @@ class GoalsAlienCrashLanding
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
-        name: 'Enter Spaceship',
+        name: 'Enter spaceship',
         energy: 0
         // NOTE: obj field will be set up on init
       },
@@ -195,7 +190,7 @@ class GoalsAlienCrashLanding
 #end
       },
       onComplete: function (game, player) {
-        game.goals.receive(SCENARIO_ALIEN_ENTER_SHIP);
+        game.goals.receive(SCENARIO_ALIEN_STEAL_SHIP);
       },
     },
 
@@ -207,20 +202,30 @@ class GoalsAlienCrashLanding
       messageComplete: 'I feel some attachment to it.',
     },
 
+    SCENARIO_ALIEN_STEAL_SHIP => {
+      id: SCENARIO_ALIEN_STEAL_SHIP,
+      name: 'Relocate the ship',
+      note: 'You need to activate the ship and relocate it to a safer spot.',
+      noteFunc: alienShipLocationFunc,
+      messageComplete:
+        'After initiating the startup sequence you board the ship. ' +
+        'You activate the engine and move the ship away to a safer location.',
+      onComplete: function (game, player) {
+        // move spaceship and player from lab to random wilderness spot
+        moveSpaceship(game);
+        game.goals.receive(SCENARIO_ALIEN_ENTER_SHIP);
+      },
+    },
+
     SCENARIO_ALIEN_ENTER_SHIP => {
       id: SCENARIO_ALIEN_ENTER_SHIP,
       name: 'Enter the ship',
       note: 'You need to enter the ship and activate the onboard computer.',
       noteFunc: alienShipLocationFunc,
       messageComplete:
-        'After initiating the startup sequence you board the ship. ' +
         'Spending some time on the computer you remember what was your initial goal on this planet. ' +
-        'You have a mission. You need to complete it. ' +
-        'You also move the ship away into a safer location.',
+        'You have a mission. You need to complete it.',
       onComplete: function (game, player) {
-        // move spaceship and player from lab to random wilderness spot
-        moveSpaceship(game);
-
         // get the mission goal
         if (game.timeline.getStringVar('alienMissionType') == 'abduction')
           game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION);
@@ -425,6 +430,7 @@ class GoalsAlienCrashLanding
         }
 
       var spaceshipState: _SpaceshipState = {
+        location: 'study',
         studyAreaID: area.id,
         studyObjectID: console.id,
         studyDecoration: shipDeco,
@@ -437,6 +443,7 @@ class GoalsAlienCrashLanding
         part1Installed: false,
         part2Installed: false,
         part3Installed: false,
+        areaID: 0,
       }
 
       // store object/area id for later use
@@ -469,6 +476,7 @@ class GoalsAlienCrashLanding
       // generate area if it's not yet generated
       if (!newArea.isGenerated)
         newArea.generate();
+      var newCells = newArea.getCells();
       // pick a random spot
       var loc = {
         x: Std.int(newArea.width / 2),
@@ -477,9 +485,17 @@ class GoalsAlienCrashLanding
       // create decoration
       var shipDeco = createShipDecoration(game, newArea, loc,
         Const.TILE_GRASS_UNWALKABLE);
-      // TODO event object (maybe give mission on first use instead?)
+      // event object
+      var obj = newArea.addEventObject(loc.x + 1, loc.y + 2, 'spaceship', 'spaceshipStart');
+      // clear tile just in case there is a tree or a rock
+      newCells[loc.x + 1][loc.y + 2] = Const.TILE_GRASS;
       // teleport
       game.player.teleport(newArea, loc.x + 1, loc.y + 2);
+      // make known and mark on region map
+      newArea.isKnown = true;
+      newArea.tileID = Const.TILE_SPACESHIP;
+      state.location = 'hidden';
+      state.areaID = newArea.id;
     }
 
 // helper function for creating ship decoration
@@ -502,7 +518,8 @@ class GoalsAlienCrashLanding
 }
 
 typedef _SpaceshipState = {
-  // spaceship in lab related stuff
+  var location: String;
+  // lab related stuff
   var studyAreaID: Int;
   var studyObjectID: Int;
   var studyDecoration: Array<Int>;
@@ -515,4 +532,6 @@ typedef _SpaceshipState = {
   var part1Installed: Bool;
   var part2Installed: Bool;
   var part3Installed: Bool;
+  // hidden location
+  var areaID: Int;
 }

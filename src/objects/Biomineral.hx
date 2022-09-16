@@ -47,7 +47,7 @@ class Biomineral extends HabitatObject
   override function updateActionsList()
     {
       if (game.player.state != PLR_STATE_ATTACHED)
-        addAction('enterSewers', 'Enter Sewers', 10);
+        addAction('enterSewers', 'Enter sewers', 10);
     }
 
 
