@@ -88,6 +88,7 @@ class ScenarioAlienCrashLanding extends Scenario
 //              var type = tmp[Std.random(tmp.length)];
               var type = 'abduction';
               timeline.setVar('alienMissionType', type);
+              timeline.setVar('alienLanguageID', 1 + Std.random(4));
 
               // change event note on the fly
               var ev = timeline.getEvent('alienMission');

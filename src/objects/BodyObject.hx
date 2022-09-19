@@ -77,7 +77,7 @@ class BodyObject extends AreaObject
             game.ui.hud.addAction({
               id: 'get.' + item.id,
               type: ACTION_OBJECT,
-              name: 'Get ' + name,
+              name: 'Get ' + Const.col('inventory-item', name),
               energy: 5,
               obj: this
             });

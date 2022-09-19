@@ -11,6 +11,12 @@ import objects.*;
 
 class GoalsAlienCrashLanding
 {
+// helper: get alien language id
+  static function getLanguageID(game: Game): Int
+    {
+      return game.timeline.getIntVar('alienLanguageID');
+    }
+
 // helper: find spaceship object
   static function getSpaceshipObject(game: Game): EventObject
     {
@@ -219,10 +225,17 @@ class GoalsAlienCrashLanding
       name: 'Relocate the ship',
       note: 'You need to activate the ship and relocate it to a safer spot.',
       noteFunc: alienShipLocationFunc,
+/*
       messageComplete:
         'After initiating the startup sequence you board the ship. ' +
-        'You activate the engine and move the ship away to a safer location.',
+        'You activate the engine and move the ship away to a safer location.',*/
       onComplete: function (game, player) {
+        // dynamic completion message
+        var languageID = getLanguageID(game);
+        game.message(
+          '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! After initiating the startup sequence you board the ship. ' +
+          'You activate the engine and move the ship away to a safer location.');
+
         // move spaceship and player from lab to random wilderness spot
         moveSpaceship(game);
         game.goals.receive(SCENARIO_ALIEN_ENTER_SHIP);
@@ -389,7 +402,10 @@ class GoalsAlienCrashLanding
       var area = ev.location.area;
       // generate area if it's not yet generated
       if (!area.isGenerated)
-        area.generate();
+        {
+          area.generate();
+          area.initSpawnPoints();
+        }
 
       // find hangar corner
       var sx = -1, sy = -1;
@@ -424,6 +440,7 @@ class GoalsAlienCrashLanding
       var slot3 = area.addEventObject(loc.x + 1, loc.y - 1, 'slot', 'spaceshipStudySlot');
       // parts
       var parts = [];
+      var languageID = getLanguageID(game);
       for (i in 0...3)
         {
           // force unique parts
@@ -437,7 +454,26 @@ class GoalsAlienCrashLanding
             }
           var x = hangar.x1 + Std.random(Std.int(hangar.w / 2) - 3);
           var y = hangar.y1 + Std.random(Std.int(hangar.h / 2) - 3);
-          var o = area.addItem(x, y, item, Const.FRAME_SHIP_PART);
+          // first part spawns in hangars, other on random tables
+          var cnt = 0;
+          if (i > 0)
+            while (true)
+              {
+                var pt = area.clueSpawnPoints[Std.random(area.clueSpawnPoints.length)];
+                x = pt.x;
+                y = pt.y;
+                if (!area.hasObjectAt(x, y))
+                  break;
+                cnt++;
+                if (cnt > 100)
+                  {
+                    trace('cannot find free place for spawn');
+                    break;
+                  }
+              }
+          var o = area.addItem(x, y, item, Const.FRAME_SHIP_PART, true);
+          o.name = '<span class=alien' + languageID + '>' + item.name + '</span>';
+          o.item.name = '<span class=alien' + languageID + '>' + o.item.name + '</span>';
           parts.push(item.name);
         }
 

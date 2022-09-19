@@ -57,7 +57,7 @@ class AreaGame extends _SaveObject
   var _ai: List<AI>; // AI list
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
-  var clueSpawnPoints: List<{ x: Int, y: Int }>;
+  public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
 
 
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
@@ -290,11 +290,12 @@ class AreaGame extends _SaveObject
 
 // init spawn points list after generation or loading
 // necessary for more optimal clue spawns in facilities
-  function initSpawnPoints()
+// NOTE: used from scenario spaceship generation part
+  public function initSpawnPoints()
     {
       if (info.id != AREA_FACILITY)
         return;
-      clueSpawnPoints = new List();
+      clueSpawnPoints = [];
       for (y in 0...height)
         for (x in 0...width)
           {
@@ -305,7 +306,7 @@ class AreaGame extends _SaveObject
             // check if there's an object there
             if (hasObjectAt(x, y))
               continue;
-            clueSpawnPoints.add({ x: x, y: y });
+            clueSpawnPoints.push({ x: x, y: y });
           }
 //      trace('clueSpawnPoints len:' + clueSpawnPoints.length);
     }
@@ -476,13 +477,16 @@ class AreaGame extends _SaveObject
     }
 
 // spawn generic pickup item
-  public function addItem(ox: Int, oy: Int, item: _Item, ?imageID: Int = 0): GenericPickup
+  public function addItem(ox: Int, oy: Int, item: _Item, ?imageID: Int = 0, ?canActivateNear: Bool = false): Pickup
     {
       if (imageID == 0)
         imageID = Const.FRAME_PICKUP;
       var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
-      var o = new GenericPickup(game, id, ox, oy, imageID);
+      var o: Pickup = null;
+      if (canActivateNear)
+        o = untyped new GenericPickupNear(game, id, ox, oy, imageID);
+      else o = untyped new GenericPickup(game, id, ox, oy, imageID);
       o.name = itemName;
       o.item = item;
       // hide object if it's not in the current area

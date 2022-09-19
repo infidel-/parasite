@@ -1,6 +1,10 @@
 :root {
   --text-font-size: 16px;
   --text-font: Orkney-Regular;
+  --text-font-alien1: Green-Martian;
+  --text-font-alien2: Modern-Destronic;
+  --text-font-alien3: Modern-Iaconic;
+  --text-font-alien4: Visitor-Script;
   --text-fg-color: #E1E1E1;
   --text-color-white: #FFFFFF;
   --text-color-yellow: #FFEA0E;
@@ -36,6 +40,42 @@
   src: url(./Orkney-Regular.ttf) format('truetype');
 }
 
+@font-face {
+  font-family: 'Green-Martian';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./Green-Martian.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Modern-Destronic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./Modern-Destronic.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Modern-Iaconic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./Modern-Iaconic.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Visitor-Script';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./Visitor-Script.otf) format('truetype');
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -63,6 +103,26 @@ hr {
 
 .narrative {
   font-style: italic;
+}
+
+.alien1 {
+  font-family: var(--text-font-alien1);
+  font-size: var(--text-font-size);
+}
+
+.alien2 {
+  font-family: var(--text-font-alien2);
+  font-size: var(--text-font-size);
+}
+
+.alien3 {
+  font-family: var(--text-font-alien3);
+  font-size: var(--text-font-size);
+}
+
+.alien4 {
+  font-family: var(--text-font-alien4);
+  font-size: var(--text-font-size);
 }
 
 #webgl {
