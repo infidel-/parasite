@@ -15,8 +15,20 @@ class GoalsAlienCrashLanding
   static function getSpaceshipObject(game: Game): EventObject
     {
       var state: _SpaceshipState = game.timeline.getDynamicVar('spaceshipState');
-      var area = game.world.get(0).get(state.studyAreaID);
-      return cast area.getObject(state.studyObjectID);
+      var areaID = 0;
+      var objID = 0;
+      if (state.location == 'study')
+        {
+          areaID = state.studyAreaID;
+          objID = state.studyObjectID;
+        }
+      else if (state.location == 'hidden')
+        {
+          areaID = state.hiddenAreaID;
+          objID = state.hiddenObjectID;
+        }
+      var area = game.region.get(areaID);
+      return cast area.getObject(objID);
     }
 
 // helper: get full spaceship state
@@ -35,7 +47,7 @@ class GoalsAlienCrashLanding
       if (state.location == 'study')
         area = game.region.get(state.studyAreaID);
       else if (state.location == 'hidden')
-        area = game.region.get(state.areaID);
+        area = game.region.get(state.hiddenAreaID);
       return Const.col('gray', Const.small(
         'Target location: (' + area.x + ',' + area.y + ')'));
     }
@@ -443,7 +455,8 @@ class GoalsAlienCrashLanding
         part1Installed: false,
         part2Installed: false,
         part3Installed: false,
-        areaID: 0,
+        hiddenAreaID: 0,
+        hiddenObjectID: 0,
       }
 
       // store object/area id for later use
@@ -495,7 +508,8 @@ class GoalsAlienCrashLanding
       newArea.isKnown = true;
       newArea.tileID = Const.TILE_SPACESHIP;
       state.location = 'hidden';
-      state.areaID = newArea.id;
+      state.hiddenAreaID = newArea.id;
+      state.hiddenObjectID = obj.id;
     }
 
 // helper function for creating ship decoration
@@ -518,7 +532,7 @@ class GoalsAlienCrashLanding
 }
 
 typedef _SpaceshipState = {
-  var location: String;
+  var location: String; // study, hidden
   // lab related stuff
   var studyAreaID: Int;
   var studyObjectID: Int;
@@ -533,5 +547,6 @@ typedef _SpaceshipState = {
   var part2Installed: Bool;
   var part3Installed: Bool;
   // hidden location
-  var areaID: Int;
+  var hiddenAreaID: Int;
+  var hiddenObjectID: Int;
 }
