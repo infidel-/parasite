@@ -437,7 +437,7 @@ class GoalsAlienCrashLanding
             }
           var x = hangar.x1 + Std.random(Std.int(hangar.w / 2) - 3);
           var y = hangar.y1 + Std.random(Std.int(hangar.h / 2) - 3);
-          var o = area.addItem(x, y, item);
+          var o = area.addItem(x, y, item, Const.FRAME_SHIP_PART);
           parts.push(item.name);
         }
 

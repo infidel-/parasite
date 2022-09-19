@@ -78,6 +78,7 @@ class Const
   public static var FRAME_HUMAN_BODY = 5;
   public static var FRAME_DOG_BODY = 6;
   public static var FRAME_NUTRIENT = 7;
+  public static var FRAME_SHIP_PART = 8;
 
   // effect row frames
   public static var ROW_EFFECT = 3;

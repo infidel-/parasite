@@ -476,11 +476,13 @@ class AreaGame extends _SaveObject
     }
 
 // spawn generic pickup item
-  public function addItem(ox: Int, oy: Int, item: _Item): GenericPickup
+  public function addItem(ox: Int, oy: Int, item: _Item, ?imageID: Int = 0): GenericPickup
     {
+      if (imageID == 0)
+        imageID = Const.FRAME_PICKUP;
       var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
-      var o = new GenericPickup(game, id, ox, oy, Const.FRAME_PICKUP);
+      var o = new GenericPickup(game, id, ox, oy, imageID);
       o.name = itemName;
       o.item = item;
       // hide object if it's not in the current area
