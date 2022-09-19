@@ -452,11 +452,18 @@ class GoalsAlienCrashLanding
                 continue;
               break;
             }
+
+          // first part always spawns in hangar
+          // second always on random table, third random
           var x = hangar.x1 + Std.random(Std.int(hangar.w / 2) - 3);
           var y = hangar.y1 + Std.random(Std.int(hangar.h / 2) - 3);
-          // first part spawns in hangars, other on random tables
+          var randomLocation = false;
+          if (i == 1)
+            randomLocation = true;
+          else if (i == 2 && Std.random(100) < 50)
+            randomLocation = true;
           var cnt = 0;
-          if (i > 0)
+          if (randomLocation)
             while (true)
               {
                 var pt = area.clueSpawnPoints[Std.random(area.clueSpawnPoints.length)];
@@ -471,6 +478,7 @@ class GoalsAlienCrashLanding
                     break;
                   }
               }
+
           var o = area.addItem(x, y, item, Const.FRAME_SHIP_PART, true);
           o.name = '<span class=alien' + languageID + '>' + item.name + '</span>';
           o.item.name = '<span class=alien' + languageID + '>' + o.item.name + '</span>';
