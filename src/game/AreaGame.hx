@@ -1671,6 +1671,12 @@ class Test {
   function set_alertness(v: Float)
     {
       var mod = v - _alertness;
+      // some areas raise alertness faster or slower
+      if (game.isInited)
+        {
+          mod = Std.int(mod * info.alertnessMod);
+          v = _alertness + mod;
+        }
       // save alertness changes for later use
       alertnessMod += v - _alertness;
       _alertness = Const.clampFloat(v, 0, 100.0);

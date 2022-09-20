@@ -15,6 +15,7 @@ class WorldConst
         type: 'wilderness',
         name: 'Uninhabited area',
         pediaArticle: 'areaUninhabited',
+        alertnessMod: 0.50,
         width: 100,
         height: 100,
         canEnter: true,
@@ -39,6 +40,7 @@ class WorldConst
         type: 'city',
         name: 'Low-density city area',
         pediaArticle: 'areaCity',
+        alertnessMod: 0.75,
         width: 100,
         height: 100,
         canEnter: true,
@@ -67,6 +69,7 @@ class WorldConst
         type: 'city',
         name: 'Medium-density city area',
         pediaArticle: 'areaCity',
+        alertnessMod: 1.0,
         width: 100,
         height: 100,
         canEnter: true,
@@ -96,6 +99,7 @@ class WorldConst
         type: 'city',
         name: 'High-density city area',
         pediaArticle: 'areaCity',
+        alertnessMod: 1.25,
         width: 100,
         height: 100,
         canEnter: true,
@@ -125,6 +129,7 @@ class WorldConst
         type: 'militaryBase',
         name: 'Military base',
         pediaArticle: 'areaMilitary',
+        alertnessMod: 1.5,
         width: 50,
         height: 50,
         canEnter: true,
@@ -151,6 +156,7 @@ class WorldConst
         type: 'facility',
         name: 'Facility',
         pediaArticle: 'areaLab',
+        alertnessMod: 2.0,
         width: 75,
         height: 60,
         canEnter: true,
@@ -176,6 +182,7 @@ class WorldConst
         type: 'habitat',
         name: 'Habitat area',
         pediaArticle: 'areaHabitat', // unused
+        alertnessMod: 1.0,
         width: 20,
         height: 20,
         canEnter: true,
@@ -249,6 +256,7 @@ typedef AreaInfo = {
   var isHighRisk: Bool; // is this area type considered high risk?
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info
+  var alertnessMod: Float;
   var pediaArticle: String; // pedia article
 };
 
