@@ -58,6 +58,8 @@ class AreaGame extends _SaveObject
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
+  public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
+  public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
 
 
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
@@ -289,13 +291,15 @@ class AreaGame extends _SaveObject
     }
 
 // init spawn points list after generation or loading
-// necessary for more optimal clue spawns in facilities
-// NOTE: used from scenario spaceship generation part
+// necessary for more optimal clue/guard spawns in facilities
+// NOTE: used in scenario spaceship generation part
   public function initSpawnPoints()
     {
       if (info.id != AREA_FACILITY)
         return;
       clueSpawnPoints = [];
+      guardSpawnPoints = [];
+      importantGuardSpawnPoints = [];
       for (y in 0...height)
         for (x in 0...width)
           {
@@ -309,6 +313,62 @@ class AreaGame extends _SaveObject
             clueSpawnPoints.push({ x: x, y: y });
           }
 //      trace('clueSpawnPoints len:' + clueSpawnPoints.length);
+
+      // check all doors and get guard points outside of the doors to the side
+      for (o in _objects)
+        {
+          if (o.type == 'door')
+            {
+              for (i in 0...Const.dirdiagx.length)
+                {
+                  var x = o.x + Const.dirdiagx[i];
+                  var y = o.y + Const.dirdiagy[i];
+                  if (!isWalkable(x, y))
+                    continue;
+                  var addImp = false, addNormal = false;
+                  // outside hangar door
+                  if (o.imageCol == Const.FRAME_DOOR_METAL &&
+                      _cells[x][y] != Const.TILE_FLOOR_CONCRETE)
+                    addImp = true;
+                  // outside of the building doors
+                  else if (o.imageCol == Const.FRAME_DOOR_DOUBLE &&
+                      _cells[x][y] != Const.TILE_FLOOR_LINO)
+                    addImp = true;
+                  else if (o.imageCol == Const.FRAME_DOOR_GLASS &&
+                      _cells[x][y] != Const.TILE_FLOOR_LINO)
+                    addImp = true;
+                  // outside of the inner doors
+                  else if (o.imageCol == Const.FRAME_DOOR_CABINET &&
+                      _cells[x][y] == Const.TILE_FLOOR_LINO)
+                    addNormal = true;
+                  var pt = { x: x, y: y };
+                  if (addImp)
+                    {
+                      for (tmp in importantGuardSpawnPoints)
+                        if (tmp.x == pt.x && tmp.y == pt.y)
+                          {
+                            addImp = false;
+                            break;
+                          }
+                      if (addImp)
+                        importantGuardSpawnPoints.push(pt);
+                    }
+                  else if (addNormal)
+                    {
+                      for (tmp in guardSpawnPoints)
+                        if (tmp.x == pt.x && tmp.y == pt.y)
+                          {
+                            addNormal = false;
+                            break;
+                          }
+                      if (addNormal)
+                        guardSpawnPoints.push(pt);
+                    }
+                }
+            }
+        }
+//      trace(importantGuardSpawnPoints);
+//      trace(guardSpawnPoints);
     }
 
 // leave this area: hide gui, despawn, etc

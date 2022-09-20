@@ -40,7 +40,6 @@ class Goals extends _SaveObject
       return _listFailed.iterator();
     }
 
-
 // TURN: goals turn functions
   public function turn()
     {
@@ -55,6 +54,20 @@ class Goals extends _SaveObject
         }
     }
 
+// called pre-leave area (by normal means)
+// if it returns false, leaving is not allowed
+  public function leaveAreaPre(): Bool
+    {
+      for (goal in _listCurrent)
+        {
+          var info = getInfo(goal);
+          if (info.leaveAreaPre == null)
+            continue;
+          if (!info.leaveAreaPre(game, game.player, game.area))
+            return false;
+        }
+      return true;
+    }
 
 // receive a new goal
 // silent: 0 - no, 1 - 

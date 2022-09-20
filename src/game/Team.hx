@@ -190,6 +190,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
           // spawn blackops
           state = TEAM_FIGHT;
+          timer = 3; // 3 turns until exit is available (in habitat)
 
           var x = game.playerArea.x;
           var y = game.playerArea.y;

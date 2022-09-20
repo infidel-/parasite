@@ -233,12 +233,41 @@ class GoalsAlienCrashLanding
         // dynamic completion message
         var languageID = getLanguageID(game);
         game.message(
-          '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! After initiating the startup sequence you board the ship. ' +
+          '<span class=alien' + languageID + '>' + 'Glut</span>! After initiating the startup sequence you board the ship. ' +
           'You activate the engine and move the ship away to a safer location.');
 
         // move spaceship and player from lab to random wilderness spot
         moveSpaceship(game);
         game.goals.receive(SCENARIO_ALIEN_ENTER_SHIP);
+      },
+      onTurn: function (game, player) {
+        // when in lab area, check for alertness
+        var state = getSpaceshipState(game);
+        if (state.location != 'study' ||
+            state.alertRaised ||
+            game.area.id != state.studyAreaID)
+          return;
+
+        if (game.area.alertness > 75)
+          {
+            state.alertRaised = true;
+            var languageID = getLanguageID(game);
+            game.message(
+              '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.');
+          }
+      },
+      leaveAreaPre: function (game, player, area) {
+        // when in lab area, disallow on alert raised
+        var state = getSpaceshipState(game);
+        if (state.location != 'study' ||
+            game.area.id != state.studyAreaID)
+          return true;
+        if (state.alertRaised)
+          {
+            game.log('You cannot leave this area without your ship.');
+            return false;
+          }
+        return true;
       },
     },
 
@@ -501,6 +530,7 @@ class GoalsAlienCrashLanding
         part3Installed: false,
         hiddenAreaID: 0,
         hiddenObjectID: 0,
+        alertRaised: false,
       }
 
       // store object/area id for later use
@@ -590,6 +620,8 @@ typedef _SpaceshipState = {
   var part1Installed: Bool;
   var part2Installed: Bool;
   var part3Installed: Bool;
+  var alertRaised: Bool;
+
   // hidden location
   var hiddenAreaID: Int;
   var hiddenObjectID: Int;

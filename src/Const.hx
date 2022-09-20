@@ -323,6 +323,8 @@ class Const
   public static var diry = [ -1, 0, 1, -1, 1, -1, 0, 1 ];
   public static var dir4x = [ -1, 0, 0, 1 ];
   public static var dir4y = [ 0, -1, 1, 0 ];
+  public static var dirdiagx = [ -1, -1, 1, 1 ];
+  public static var dirdiagy = [ -1, 1, -1, 1 ];
 
 // log all object string and int properties
   public static inline function debugObject(o: Dynamic)

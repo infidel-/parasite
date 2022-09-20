@@ -301,7 +301,7 @@ class PlayerArea extends _SaveObject
 
       // try to leave area
       else if (action.id == 'leaveArea')
-        leaveAreaAction();
+        ret = leaveAreaAction();
       else if (action.id == 'skipTurn')
         game.turn();
 
@@ -760,7 +760,7 @@ class PlayerArea extends _SaveObject
 
 
 // action: leave area
-  function leaveAreaAction()
+  function leaveAreaAction(): Bool
     {
       // special checks for habitat
       if (game.area.typeID == AREA_HABITAT)
@@ -772,7 +772,7 @@ class PlayerArea extends _SaveObject
                 {
                   log('You try to leave but the exit is blocked! You can leave the area in ' + game.group.team.timer + ' turns.',
                     COLOR_HINT);
-                  return;
+                  return false;
                 }
             }
 
@@ -791,7 +791,7 @@ class PlayerArea extends _SaveObject
                 {
                   log('You cannot leave the habitat with outsiders in it!',
                     COLOR_HINT);
-                  return;
+                  return false;
                 }
             }
 
@@ -800,14 +800,18 @@ class PlayerArea extends _SaveObject
             {
               log('You cannot leave the habitat with a mold.',
                 COLOR_HINT);
-              return;
+              return false;
             }
         }
+      // scenario-specific checks
+      if (!game.goals.leaveAreaPre())
+        return false;
 
       log("You leave the area.");
       path = null; // clear path
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
+      return true;
     }
 
 
