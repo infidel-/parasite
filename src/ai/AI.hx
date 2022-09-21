@@ -40,6 +40,7 @@ class AI extends _SaveObject
   public var isHuman: Bool; // is it a human?
   public var isCommon: Bool; // is it common AI or spawned by area alertness logic?
   public var isTeamMember: Bool; // is this AI a group team member?
+  public var isGuard: Bool; // is it a guard? (guards do not despawn when unseen)
 
   // history flags
   public var wasAttached: Bool; // was parasite attached to this AI?
@@ -51,8 +52,12 @@ class AI extends _SaveObject
   public static var _maxID: Int = 0; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
-  public var roamTargetX: Int; // target x,y when roaming (resets on state change)
+  // target x,y when roaming or moving to (resets on state change)
+  public var roamTargetX: Int;
   public var roamTargetY: Int;
+  // guarding target (for guards)
+  public var guardTargetX: Int;
+  public var guardTargetY: Int;
   var direction: Int; // direction of movement
 
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
@@ -131,6 +136,8 @@ class AI extends _SaveObject
       sounds = null;
       roamTargetX = -1;
       roamTargetY = -1;
+      guardTargetX = -1;
+      guardTargetY = -1;
       state = AI_STATE_IDLE;
       stateTime = 0;
       reason = REASON_NONE;
@@ -152,6 +159,7 @@ class AI extends _SaveObject
       isAttrsKnown = false;
       isHuman = false;
       isTeamMember = false;
+      isGuard = false;
       wasAttached = false;
       wasInvaded = false;
       wasAlerted = false;
@@ -408,6 +416,7 @@ public function show()
       if (state == vstate)
         return;
 
+//      trace('' + id + ' reason: ' + vreason + ' state:' + vstate);
       state = vstate;
       stateTime = 0;
       reason = vreason;
@@ -424,10 +433,12 @@ public function show()
           timers.alert = ALERTED_TIMER;
           wasAlerted = true;
         }
-
-      // reset roam target on changing state
-      roamTargetX = -1;
-      roamTargetY = -1;
+      // reset roam target on going back to idle
+      else if (state == AI_STATE_IDLE)
+        {
+          roamTargetX = -1;
+          roamTargetY = -1;
+        }
 
       if (msg != null)
         log(msg);
@@ -448,7 +459,7 @@ public function show()
       var alertFrame = Const.FRAME_EMPTY;
       if (state == AI_STATE_ALERT)
         alertFrame = Const.FRAME_ALERTED;
-      else if (state == AI_STATE_IDLE)
+      else if (state == AI_STATE_IDLE || state == AI_STATE_MOVE_TARGET)
         {
           if (alertness > 75)
             alertFrame = Const.FRAME_ALERT3;
@@ -616,12 +627,7 @@ public function show()
 
       // play weapon sound
       if (weapon.sound != null)
-        game.scene.sounds.play(weapon.sound, {
-          x: x,
-          y: y,
-          canDelay: true,
-          always: true,
-        });
+        emitSound(weapon.sound);
 
       // weapon skill level (ai + parasite bonus)
       var roll = __Math.skill({
@@ -730,56 +736,12 @@ public function show()
     }
 
 
-// ===================================  LOGIC =======================================
+// ===============================  LOGIC =============================
 
 
 // state: default idle state handling
   function stateIdle()
     {
-      // alertness update
-      if (!game.player.vars.invisibilityEnabled &&
-          seesPosition(game.playerArea.x, game.playerArea.y))
-        {
-          var distance = game.playerArea.distance(x, y);
-          var baseAlertness = 3;
-          var alertnessBonus = 0;
-
-          // if player is on a host, check for organs
-          if (game.player.state == PLR_STATE_HOST)
-            {
-              // organ: camouflage layer
-              var params = EvolutionConst.getParams(IMP_CAMO_LAYER, 0);
-              var o = organs.get(IMP_CAMO_LAYER);
-              if (o != null)
-                baseAlertness = o.params.alertness;
-              else baseAlertness = params.alertness;
-
-              // organ: protective cover
-              var params = EvolutionConst.getParams(IMP_PROT_COVER, 0);
-              var o = organs.get(IMP_PROT_COVER);
-              if (o != null)
-                alertnessBonus += o.params.alertness;
-              else alertnessBonus += params.alertness;
-            }
-          alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance)) +
-            alertnessBonus;
-          game.profile.addPediaArticle('npcAlertness');
-        }
-      else alertness -= 5;
-
-      // AI has become alerted
-      if (alertness >= 100)
-        {
-          var reason = REASON_PARASITE;
-
-          if (game.player.state == PLR_STATE_HOST &&
-              game.player.host.isHuman)
-            reason = REASON_HOST;
-
-          setState(AI_STATE_ALERT, reason);
-          return;
-        }
-
       // AI vision
       visionIdle();
 
@@ -790,10 +752,32 @@ public function show()
 
       // TODO: i could make hooks here, leaving the alert logic intact
 
+      // guards stand on one spot
+      // someday there might even be patrollers...
+      if (isGuard)
+        1;
       // roam by default
-      logicRoam();
+      else logicRoam();
     }
 
+// state: move to target spot
+  function stateMoveTarget()
+    {
+      // basic AI vision
+      visionIdle();
+
+      // stand and wonder what happened until alertness goes down
+      if (alertness > 0)
+        return;
+
+      logicMoveTo(roamTargetX, roamTargetY);
+      if (x != roamTargetX || y != roamTargetY)
+        return;
+      // spot reached, idling
+      roamTargetY = -1;
+      roamTargetY = -1;
+      setState(AI_STATE_IDLE);
+    }
 
 // state: default alert state handling
   function stateAlert()
@@ -808,7 +792,15 @@ public function show()
       // relentless AI cannot calm down once alerted
       if (timers.alert == 0 && !isRelentless)
         {
-          setState(AI_STATE_IDLE);
+          // guard must return to guard spot
+          if (isGuard && (x != guardTargetX || y != guardTargetY))
+            {
+              setState(AI_STATE_MOVE_TARGET);
+              roamTargetX = guardTargetX;
+              roamTargetY = guardTargetY;
+            }
+          // otherwise become idle
+          else setState(AI_STATE_IDLE);
           alertness = 10;
           return;
         }
@@ -864,9 +856,53 @@ public function show()
     }
 
 
-// AI vision: called only in idle state
+// AI vision: called in idle and movement to target states
   function visionIdle()
     {
+      // player visibility
+      if (!game.player.vars.invisibilityEnabled &&
+          seesPosition(game.playerArea.x, game.playerArea.y))
+        {
+          var distance = game.playerArea.distance(x, y);
+          var baseAlertness = 3;
+          var alertnessBonus = 0;
+
+          // if player is on a host, check for organs
+          if (game.player.state == PLR_STATE_HOST)
+            {
+              // organ: camouflage layer
+              var params = EvolutionConst.getParams(IMP_CAMO_LAYER, 0);
+              var o = organs.get(IMP_CAMO_LAYER);
+              if (o != null)
+                baseAlertness = o.params.alertness;
+              else baseAlertness = params.alertness;
+
+              // organ: protective cover
+              var params = EvolutionConst.getParams(IMP_PROT_COVER, 0);
+              var o = organs.get(IMP_PROT_COVER);
+              if (o != null)
+                alertnessBonus += o.params.alertness;
+              else alertnessBonus += params.alertness;
+            }
+          alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance)) +
+            alertnessBonus;
+          game.profile.addPediaArticle('npcAlertness');
+        }
+      else alertness -= 5;
+
+      // AI has become alerted
+      if (alertness >= 100)
+        {
+          var reason = REASON_PARASITE;
+
+          if (game.player.state == PLR_STATE_HOST &&
+              game.player.host.isHuman)
+            reason = REASON_HOST;
+
+          setState(AI_STATE_ALERT, reason);
+          return;
+        }
+
       // get all objects that this AI sees
       var tmp = game.area.getObjectsInRadius(x, y, VIEW_DISTANCE, true);
 
@@ -924,7 +960,8 @@ public function show()
       _turnsInvisible++;
 
       // remove from area
-      if (_turnsInvisible > DESPAWN_TIMER)
+      // guards do not despawn
+      if (!isGuard && _turnsInvisible > DESPAWN_TIMER)
         game.area.removeAI(this);
     }
 
@@ -965,6 +1002,7 @@ public function show()
       else if (effects.has(EFFECT_PANIC))
         logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
 
+      // idle - roam around or guard, etc
       else if (state == AI_STATE_IDLE)
         stateIdle();
 
@@ -975,6 +1013,14 @@ public function show()
       // controlled by parasite
       else if (state == AI_STATE_HOST)
         stateHost();
+
+      // preserved - do nothing
+      else if (state == AI_STATE_PRESERVED)
+        1;
+
+      // move to target x,y
+      else if (state == AI_STATE_MOVE_TARGET)
+        stateMoveTarget();
 
       // post-detach
       else if (state == AI_STATE_POST_DETACH && stateTime >= 2)
@@ -1012,7 +1058,8 @@ public function show()
   public function emitSound(sound: AISound)
     {
       // check for min alertness
-      if (state == AI_STATE_IDLE && sound.params != null &&
+      if (state == AI_STATE_IDLE &&
+          sound.params != null &&
           sound.params.minAlertness != null &&
           alertness < sound.params.minAlertness)
         return;
@@ -1021,17 +1068,21 @@ public function show()
       if (!game.area.inVisibleRect(x, y))
         return;
 
-      entity.setText(sound.text, 2);
+      if (sound.text != '' && sound.text != null)
+        entity.setText(sound.text, 2);
       if (sound.file != null)
         {
           var file = sound.file;
           if (isHuman && !isMale && file.indexOf('male') == 0)
             file = 'fe' + file;
-          game.scene.sounds.play(file, {
+          var opts: _SoundOptions = {
             x: x,
             y: y,
-            always: false,
-          });
+            canDelay: true,
+            // attack sounds always play
+            always: (file.indexOf('attack') == 0),
+          };
+          game.scene.sounds.play(file, opts);
         }
       if (sound.radius <= 0 || sound.alertness <= 0)
         return;
@@ -1039,11 +1090,15 @@ public function show()
       // get a list of AIs in that radius without los checks and give alertness bonus
       var list = game.area.getAIinRadius(x, y, sound.radius, false);
       for (ai in list)
-        if (ai.state == AI_STATE_IDLE)
-          ai.alertness += sound.alertness;
+        if (ai.state == AI_STATE_IDLE ||
+            ai.state == AI_STATE_MOVE_TARGET)
+          {
+//            trace('' + ai.id + ' ' + ai,type + ' alert ' + ai.alertness + ' +' + sound.alertness);
+            ai.alertness += sound.alertness;
+          }
     }
 
-// ================================ EVENTS =========================================
+// ============================ EVENTS ===============================
 
 
 // event: AI receives damage
@@ -1305,29 +1360,6 @@ enum _AIStateChangeReason
   REASON_DAMAGE;
   REASON_WITNESS;
 }
-
-
-// AI bark with parameters
-
-@:structInit
-class AISound
-{
-  public var text: String; // text to display
-  public var radius: Int; // radius this sound propagates to (can be 0)
-  public var alertness: Int; // amount of alertness that AIs in this radius gain
-  @:optional public var params: Dynamic; // state-specific parameters
-  @:optional public var file: String; // sound files prefix
-
-  public function new(text: String, radius: Int, alertness: Int,
-      ?params: Dynamic, ?file: String)
-    {
-      this.text = text;
-      this.alertness = alertness;
-      this.params = params;
-      this.file = file;
-    }
-}
-
 
 @:structInit
 class _AIName extends _SaveObject

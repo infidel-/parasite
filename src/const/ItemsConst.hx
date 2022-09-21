@@ -57,7 +57,11 @@ class ItemsConst
       verb1: 'punch',
       verb2: 'punches',
       type: WEAPON_BLUNT,
-      sound: 'attack-fists',
+      sound: {
+        file: 'attack-fists',
+        radius: 5,
+        alertness: 5,
+      },
     }
   };
 
@@ -76,7 +80,11 @@ class ItemsConst
       verb2: 'attacks',
       // don't bother with weapon type
       type: WEAPON_BLUNT,
-      sound: 'attack-bite',
+      sound: {
+        file: 'attack-bite',
+        radius: 5,
+        alertness: 3,
+      },
     }
   };
 
@@ -109,7 +117,11 @@ class ItemsConst
         verb1: 'hit',
         verb2: 'hits',
         type: WEAPON_BLUNT,
-        sound: 'attack-baton',
+        sound: {
+          file: 'attack-baton',
+          radius: 5,
+          alertness: 10,
+        },
       }
     },
     {
@@ -125,7 +137,11 @@ class ItemsConst
         verb1: 'stun',
         verb2: 'stuns',
         type: WEAPON_STUN,
-        sound: 'attack-stunner',
+        sound: {
+          file: 'attack-stunner',
+          radius: 3,
+          alertness: 10,
+        },
       }
     },
     {
@@ -141,7 +157,11 @@ class ItemsConst
         verb1: 'shoot',
         verb2: 'shoots',
         type: WEAPON_KINETIC,
-        sound: 'attack-pistol',
+        sound: {
+          file: 'attack-pistol',
+          radius: 15,
+          alertness: 30,
+        },
       }
     },
     {
@@ -157,7 +177,11 @@ class ItemsConst
         verb1: 'shoot',
         verb2: 'shoots',
         type: WEAPON_KINETIC,
-        sound: 'attack-assault-rifle',
+        sound: {
+          file: 'attack-assault-rifle',
+          radius: 15,
+          alertness: 40,
+        },
       }
     },
     {
@@ -173,7 +197,11 @@ class ItemsConst
         verb1: 'shoot',
         verb2: 'shoots',
         type: WEAPON_KINETIC,
-        sound: 'attack-shotgun',
+        sound: {
+          file: 'attack-shotgun',
+          radius: 10,
+          alertness: 30,
+        },
       }
     },
     {
@@ -189,7 +217,11 @@ class ItemsConst
         verb1: 'stun',
         verb2: 'stuns',
         type: WEAPON_STUN,
-        sound: 'attack-stun-rifle',
+        sound: {
+          file: 'attack-stun-rifle',
+          radius: 10,
+          alertness: 20,
+        },
       }
     },
 

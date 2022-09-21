@@ -201,7 +201,7 @@ class AreaManager extends _SaveObject
       var tmp = area.getAIinRadius(x, y,
         (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
       for (ai in tmp)
-        if (ai.state == AI_STATE_IDLE)
+        if (ai.state == AI_STATE_IDLE || ai.state == AI_STATE_MOVE_TARGET)
           ai.setState(AI_STATE_ALERT, REASON_WITNESS);
     }
 
@@ -302,7 +302,7 @@ class AreaManager extends _SaveObject
             near: { x: e.x, y: e.y },
             radius: 5,
             isUnseen: true
-            });
+          });
           if (loc == null)
             {
               Const.todo('Could not find free spot for spawn (law)!');

@@ -98,6 +98,9 @@ class AreaGame extends _SaveObject
       tileID = 0;
       npc = new List();
       _cells = [];
+      clueSpawnPoints = [];
+      guardSpawnPoints = [];
+      importantGuardSpawnPoints = [];
       _ai = new List();
       _objects = new Map();
       _pathEngine = null;
@@ -244,8 +247,9 @@ class AreaGame extends _SaveObject
       // called here because it uses player camera x,y
       if (game.turns != 0)
         {
-          turnSpawnAI(); // spawn AI
+          turnSpawnCommonAI(); // spawn AI
           turnSpawnMoreAI(); // spawn AI related to area alertness
+          spawnGuards(); // spawn guards and such
         }
 
       // update AI and objects visibility to player
@@ -1026,7 +1030,7 @@ class AreaGame extends _SaveObject
       // call turn for area view
       game.scene.area.turn();
 
-      turnSpawnAI(); // spawn AI
+      turnSpawnCommonAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
       turnSpawnNPC(); // spawn NPC AI
       turnSpawnClues(); // spawn clues
@@ -1241,6 +1245,22 @@ class AreaGame extends _SaveObject
       alertness -= 0.1;
     }
 
+// spawn guards (done once on enter)
+// guards stand on their post and do not despawn when unseen
+  function spawnGuards()
+    {
+      // large chance on important points
+      for (pt in importantGuardSpawnPoints)
+        {
+          if (Std.random(100) > 75)
+            continue;
+
+          var ai = spawnAI('security', pt.x, pt.y);
+          ai.isGuard = true;
+          ai.guardTargetX = pt.x;
+          ai.guardTargetY = pt.y;
+        }
+    }
 
 // spawn NPC AI each turn
   function turnSpawnNPC()
@@ -1371,19 +1391,16 @@ class Test {
     }
 
 // spawn new AI, called each turn
-  function turnSpawnAI()
+  function turnSpawnCommonAI()
     {
       if (info.commonAI == 0)
         return;
 
-      // get number of common AI
+      // get number of common AI excluding player
       var cnt = 0;
       for (ai in _ai)
-        if (ai.isCommon)
+        if (ai.isCommon && !ai.isGuard && !ai.parasiteAttached)
           cnt++;
-      // do not count player
-      if (game.player.state == PLR_STATE_HOST)
-        cnt--;
 
       // calc max possible number of AI
       var maxAI = getMaxAI();
@@ -1433,7 +1450,7 @@ class Test {
       // get number of uncommon AI (spawned by alertness logic)
       var cnt = 0;
       for (ai in _ai)
-        if (!ai.isCommon)
+        if (!ai.isCommon && !ai.isGuard && !ai.parasiteAttached)
           cnt++;
 
       // calc max possible number of AI
@@ -1493,7 +1510,7 @@ class Test {
     'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier',
     'security (sec)', 'scientist (sci)', 'agent', 'team',
   ];
-  public function spawnAI(type: String, x: Int, y: Int)
+  public function spawnAI(type: String, x: Int, y: Int): AI
     {
       var ai: AI = null;
       if (type == 'blackops')

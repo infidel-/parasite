@@ -509,6 +509,9 @@ class PlayerArea extends _SaveObject
       // propagate shooting/melee event
       game.managerArea.onAttack(x, y, weapon.isRanged);
 
+      // aggro this AI
+      ai.setState(AI_STATE_ALERT);
+
       ai.onAttack(); // attack event
 
       // weapon skill level (ai + parasite bonus)
@@ -523,7 +526,7 @@ class PlayerArea extends _SaveObject
 
       // play weapon sound
       if (weapon.sound != null)
-        game.scene.sounds.play(weapon.sound);
+        player.host.emitSound(weapon.sound);
 
       // +1 from passive when not assimilated, so it becomes 3
       player.host.energy -= 2;
