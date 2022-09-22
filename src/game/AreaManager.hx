@@ -41,8 +41,9 @@ class AreaManager extends _SaveObject
 #end
 
 // add event originating from x,y
+// NOTE: params must be serializable!
   public inline function add(type: _AreaManagerEventType, x: Int, y: Int,
-      turns: Int, ?params: Dynamic = null)
+      turns: Int, ?params: _SaveObject = null)
     {
       var e: AreaEvent = {
         id: lastEventID++,
@@ -349,8 +350,11 @@ class AreaManager extends _SaveObject
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y, area.info.lawResponceTime,
-        { type: e.ai.type });
+      var params: _AreaManagerEventParamsArriveBackup = {
+        type: e.ai.type,
+      };
+      add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y,
+        area.info.lawResponceTime, params);
     }
 
 
@@ -422,7 +426,7 @@ class AreaManager extends _SaveObject
       game.group.raisePriority(5);
 
       // move on to arriving
-      add(AREAEVENT_ARRIVE_TEAM_BACKUP, e.ai.x, e.ai.y, 3, {});
+      add(AREAEVENT_ARRIVE_TEAM_BACKUP, e.ai.x, e.ai.y, 3, null);
     }
 
 
@@ -493,3 +497,17 @@ class AreaManager extends _SaveObject
     }
 }
 
+
+@:structInit
+class _AreaManagerEventParamsArriveBackup extends _SaveObject
+{
+  public var type: String;
+
+  public function new(type: String)
+    {
+      this.type = type;
+    }
+
+  public function init()
+    {}
+}
