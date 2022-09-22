@@ -69,13 +69,7 @@ class AI extends _SaveObject
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
 
   // various AI timers
-  // TODO: not saved?
-  public var timers: {
-    alert: Int, // alerted, count down until AI calms down
-
-    // alerted and player not visible, count down
-//    alertPlayerNotVisible: Int,
-  };
+  public var timers: _AITimers;
 
   // attrs
   public var baseAttrs: _Attributes; // base attributes
@@ -1375,5 +1369,18 @@ class _AIName extends _SaveObject
       this.realCapped = realCapped;
       this.unknown = unknown;
       this.unknownCapped = unknownCapped;
+    }
+}
+
+@:structInit
+class _AITimers extends _SaveObject
+{
+  public var alert: Int; // alerted, count down until AI calms down
+    // alerted and player not visible, count down
+//    alertPlayerNotVisible: Int,
+
+  public function new(alert: Int)
+    {
+      this.alert = alert;
     }
 }
