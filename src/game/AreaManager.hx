@@ -213,8 +213,10 @@ class AreaManager extends _SaveObject
       if (game.player.difficulty == UNSET ||
           game.player.difficulty == EASY)
         {
-          if ((game.player.state == PLR_STATE_HOST && game.player.host == e.ai) ||
-              (game.player.state == PLR_STATE_ATTACHED && game.playerArea.attachHost == e.ai))
+          if ((game.player.state == PLR_STATE_HOST &&
+                game.player.host == e.ai) ||
+              (game.player.state == PLR_STATE_ATTACHED &&
+               game.playerArea.attachHost == e.ai))
             {
               game.log('You have managed to stop ' + e.ai.getName() + ' from calling the authorities.');
               return;
@@ -276,7 +278,7 @@ class AreaManager extends _SaveObject
       add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
 
       // move on to arriving
-      add(AREAEVENT_ARRIVE_LAW, e.ai.x, e.ai.y, area.info.lawResponceTime);
+      add(AREAEVENT_ARRIVE_LAW, e.ai.x, e.ai.y, area.info.lawResponseTime);
     }
 
 
@@ -294,10 +296,15 @@ class AreaManager extends _SaveObject
 // event: law arrives
   function onArriveLaw(e: AreaEvent)
     {
+      // check for max law
+      var cnt = getLawCount();
+      if (cnt >= area.info.lawResponseMax)
+        return;
+
       log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
         ' arrives on scene!');
 
-      for (i in 0...area.info.lawResponceAmount)
+      for (i in 0...area.info.lawResponseAmount)
         {
           var loc = area.findLocation({
             near: { x: e.x, y: e.y },
@@ -315,7 +322,7 @@ class AreaManager extends _SaveObject
             ai = new SecurityAI(game, loc.x, loc.y);
           else ai = new PoliceAI(game, loc.x, loc.y);
 
-          // set roam target
+          // set move target
           ai.roamTargetX = e.x;
           ai.roamTargetY = e.y;
 
@@ -354,15 +361,34 @@ class AreaManager extends _SaveObject
         type: e.ai.type,
       };
       add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y,
-        area.info.lawResponceTime, params);
+        area.info.lawResponseTime, params);
     }
 
+// helper: get law ai number around player
+// NOTE: the trick is that we're counting the AI near player, not event
+// and we ignore los
+  function getLawCount(): Int
+    {
+      var list = area.getAIinRadius(game.playerArea.x, game.playerArea.y,
+        15, false);
+      var cnt = 0;
+      for (ai in list)
+        if (ai.type == 'police' ||
+            ai.type == 'security' ||
+            ai.type == 'soldier')
+          cnt++;
+      return cnt;
+    }
 
 // event: law enf. backup arrives
   function onArriveBackup(e: AreaEvent)
     {
-      log('Backup arrives on scene!');
+      // check for max law
+      var cnt = getLawCount();
+      if (cnt >= area.info.lawResponseMax)
+        return;
 
+      log('Backup arrives on scene!');
       for (i in 0...2)
         {
           var loc = area.findEmptyLocationNear(e.x, e.y, 5);
@@ -429,6 +455,19 @@ class AreaManager extends _SaveObject
       add(AREAEVENT_ARRIVE_TEAM_BACKUP, e.ai.x, e.ai.y, 3, null);
     }
 
+// helper: get blackops ai number around player
+// NOTE: the trick is that we're counting the AI near player, not event
+// and we ignore los
+  function getTeamCount(): Int
+    {
+      var list = area.getAIinRadius(game.playerArea.x, game.playerArea.y,
+        15, false);
+      var cnt = 0;
+      for (ai in list)
+        if (ai.type == 'blackops')
+          cnt++;
+      return cnt;
+    }
 
 // event: team backup arrives
   function onArriveTeamBackup(e: AreaEvent)
@@ -436,6 +475,13 @@ class AreaManager extends _SaveObject
       // in rare case, team can get deleted by raiseTeamDistance() while backup is on the way
       if (game.group.team == null)
         return;
+      // check for max blackops
+      // NOTE: use law response max number if it is there
+      var cnt = getLawCount();
+      var max = (area.info.lawResponseMax > 0 ? area.info.lawResponseMax : 4);
+      if (cnt >= max)
+        return;
+
       log('Backup arrives on scene!');
 
       for (i in 0...2)

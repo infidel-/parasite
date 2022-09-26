@@ -22,9 +22,10 @@ class WorldConst
         isInhabited: false,
         commonAI: 0,
         uncommonAI: 0,
-        lawResponceTime: 0,
-        lawResponceAmount: 0,
-        lawResponceEnabled: false,
+        lawResponseTime: 0,
+        lawResponseAmount: 0,
+        lawResponseMax: 0,
+        lawResponseEnabled: false,
         isHighRisk: false,
         ai: [
           'dog' => 5
@@ -48,9 +49,10 @@ class WorldConst
         commonAI: 8,
         uncommonAI: 5,
         buildingSize: 1,
-        lawResponceTime: 10,
-        lawResponceAmount: 2,
-        lawResponceEnabled: true,
+        lawResponseTime: 10,
+        lawResponseAmount: 2,
+        lawResponseMax: 4,
+        lawResponseEnabled: true,
         isHighRisk: false,
         ai: [
           'dog' => 20,
@@ -77,9 +79,10 @@ class WorldConst
         commonAI: 12,
         uncommonAI: 8,
         buildingSize: 5,
-        lawResponceTime: 5,
-        lawResponceAmount: 2,
-        lawResponceEnabled: true,
+        lawResponseTime: 5,
+        lawResponseAmount: 2,
+        lawResponseMax: 6,
+        lawResponseEnabled: true,
         isHighRisk: false,
         hasMainRoad: true,
         ai: [
@@ -107,9 +110,10 @@ class WorldConst
         commonAI: 28,
         uncommonAI: 12,
         buildingSize: 10,
-        lawResponceTime: 5,
-        lawResponceAmount: 3,
-        lawResponceEnabled: true,
+        lawResponseTime: 5,
+        lawResponseAmount: 3,
+        lawResponseMax: 8,
+        lawResponseEnabled: true,
         isHighRisk: true,
         hasMainRoad: true,
         ai: [
@@ -137,9 +141,10 @@ class WorldConst
         commonAI: 10,
         uncommonAI: 0,
         buildingChance: 0.006,
-        lawResponceTime: 0,
-        lawResponceAmount: 0,
-        lawResponceEnabled: false,
+        lawResponseTime: 0,
+        lawResponseAmount: 0,
+        lawResponseMax: 0,
+        lawResponseEnabled: false,
         isHighRisk: true,
         ai: [
           'soldier' => 100,
@@ -164,9 +169,10 @@ class WorldConst
         commonAI: 5,
         uncommonAI: 0,
         buildingChance: 0.006,
-        lawResponceTime: 5,
-        lawResponceAmount: 2,
-        lawResponceEnabled: true,
+        lawResponseTime: 5,
+        lawResponseAmount: 2,
+        lawResponseMax: 4,
+        lawResponseEnabled: true,
         isHighRisk: true,
         ai: [
           'scientist' => 90,
@@ -190,9 +196,10 @@ class WorldConst
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0,
-        lawResponceTime: 10,
-        lawResponceAmount: 4,
-        lawResponceEnabled: true,
+        lawResponseTime: 10,
+        lawResponseAmount: 4,
+        lawResponseMax: 4,
+        lawResponseEnabled: true,
         isHighRisk: false,
         ai: new Map(),
         objects: []
@@ -250,9 +257,10 @@ typedef AreaInfo = {
   @:optional var buildingChance: Float; // chance to spawn building (building gen)
   @:optional var buildingSize: Int; // building size x2 (city gen)
   @:optional var hasMainRoad: Bool; // has main road (city gen)
-  var lawResponceTime: Int; // number of turns until backup shows up
-  var lawResponceAmount: Int; // amount of backup ai that shows up
-  var lawResponceEnabled: Bool; // law responce enabled?
+  var lawResponseTime: Int; // number of turns until backup shows up
+  var lawResponseAmount: Int; // amount of backup ai that shows up
+  var lawResponseMax: Int; // maximum amount of law ai on screen during response
+  var lawResponseEnabled: Bool; // law responce enabled?
   var isHighRisk: Bool; // is this area type considered high risk?
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info
