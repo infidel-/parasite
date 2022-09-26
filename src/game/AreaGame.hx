@@ -1254,7 +1254,17 @@ class AreaGame extends _SaveObject
         {
           if (Std.random(100) > 75)
             continue;
+          var ai = spawnAI('security', pt.x, pt.y);
+          ai.isGuard = true;
+          ai.guardTargetX = pt.x;
+          ai.guardTargetY = pt.y;
+        }
 
+      // small chance on normal points
+      for (pt in guardSpawnPoints)
+        {
+          if (Std.random(100) > 10)
+            continue;
           var ai = spawnAI('security', pt.x, pt.y);
           ai.isGuard = true;
           ai.guardTargetX = pt.x;
