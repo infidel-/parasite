@@ -30,7 +30,6 @@ class FloorDrain extends AreaObject
       super.initPost(onLoad);
     }
 
-
 // update actions
   override function updateActionList()
     {
@@ -43,13 +42,11 @@ class FloorDrain extends AreaObject
       });
     }
 
-
-// activate sewers - leave area
+// activate - leave area
   override function onAction(action: _PlayerAction): Bool
     {
       if (game.player.state != PLR_STATE_PARASITE)
         {
-
           game.log("You can only enter the drain without a host.", COLOR_HINT);
           return false;
         }

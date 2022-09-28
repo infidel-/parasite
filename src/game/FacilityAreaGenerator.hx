@@ -41,6 +41,7 @@ class FacilityAreaGenerator
         TEMP_BUILDING_INNER_DOOR => Const.TILE_FLOOR_LINO,
         TEMP_HANGAR_DOOR => Const.TILE_HANGAR_DOOR,
         TEMP_HANGAR_SIDE_DOOR => Const.TILE_FLOOR_TILE_CANNOTSEE,
+        TEMP_BUILDING_VENT => Const.TILE_BUILDING,
       ];
       var state: _FacilityState = {
         game: game,
@@ -693,6 +694,7 @@ class FacilityAreaGenerator
               var x = spot.x, y = spot.y;
               var tx = 0, ty = 0; // table x,y
               var noTable = false;
+              var hasVentSpace = false; // space near window corner
               while (true)
                 {
                   x += delta.x;
@@ -742,11 +744,19 @@ class FacilityAreaGenerator
                               var arr = (Std.random(100) < 50 ?
                                 Const.CHEM_LABS_DECO_FLOOR_HIGH :
                                 Const.CHEM_LABS_DECO_FLOOR_LOW);
-                              if (nextToWindow(cells, tx, ty))
+                              var nextToWindow = nextToWindow(cells, tx, ty);
+                              if (nextToWindow)
                                 arr = Const.CHEM_LABS_DECO_FLOOR_LOW;
-                              addDecoration(state, tx, ty, arr);
-                              // change to unwalkable tile
-                              cells[tx][ty] = Const.TILE_FLOOR_TILE_UNWALKABLE;
+                              // leave space for
+                              if (nextToWindow && Std.random(100) < 70)
+                                hasVentSpace = true;
+                              else
+                                {
+                                  addDecoration(state, tx, ty, arr);
+                                  // change to unwalkable tile
+                                  cells[tx][ty] =
+                                    Const.TILE_FLOOR_TILE_UNWALKABLE;
+                                }
                             }
                         }
                     }
@@ -776,27 +786,19 @@ class FacilityAreaGenerator
               y -= delta.y;
               if (cells[x][y] == TEMP_BUILDING_WINDOWH2)
                 cells[x][y] = TEMP_BUILDING_WINDOWH3;
-/*
-              if (cells[x + delta90.x][y + delta90.y] == Const.TILE_L)
-                cells[x + delta90.x][y + delta90.y] =
-                  Const.TILE_LABS_TABLE_3X1_3;*/
               else if (cells[x][y] == TEMP_BUILDING_WINDOWH1)
                 {
                   cells[x][y] = TEMP_BUILDING_WINDOW;
-//                  cells[x + delta90.x][y + delta90.y] =
-//                    Const.TILE_LABS_TABLE_1X1;
+                  if (Std.random(100) < 30 || hasVentSpace)
+                    cells[x][y] = TEMP_BUILDING_VENT;
                 }
               else if (cells[x][y] == TEMP_BUILDING_WINDOWV2)
-                {
-                  cells[x][y] = TEMP_BUILDING_WINDOWV3;
-//                  cells[x + delta90.x][y + delta90.y] =
-//                    Const.TILE_LABS_TABLE_1X3_3;
-                }
+                cells[x][y] = TEMP_BUILDING_WINDOWV3;
               else if (cells[x][y] == TEMP_BUILDING_WINDOWV1)
                 {
                   cells[x][y] = TEMP_BUILDING_WINDOW;
-//                  cells[x + delta90.x][y + delta90.y] =
-//                    Const.TILE_LABS_TABLE_1X1;
+                  if (Std.random(100) < 30 || hasVentSpace)
+                    cells[x][y] = TEMP_BUILDING_VENT;
                 }
             }
         }
@@ -1174,8 +1176,14 @@ class FacilityAreaGenerator
                   Const.ROW_DOORS, Const.FRAME_DOOR_METAL);
                 state.area.addObject(o);
               }
+            // spawn vent object
+            else if (tileID == TEMP_BUILDING_VENT)
+              {
+                var o = new Vent(state.game, area.id, x, y);
+                state.area.addObject(o);
+              }
             // randomize greenery
-            if (tileID == TEMP_GRASS)
+            else if (tileID == TEMP_GRASS)
               {
                 var rnd = Std.random(100);
                 // trees
@@ -1238,6 +1246,7 @@ class FacilityAreaGenerator
   static var TEMP_BUILDING_TABLE = 25;
   static var TEMP_HANGAR_DOOR = 26;
   static var TEMP_HANGAR_SIDE_DOOR = 27;
+  static var TEMP_BUILDING_VENT = 18;
 
   static var TEMP_BUILDING_ROOM_ID_START = 100;
   static var mapTempTiles = [

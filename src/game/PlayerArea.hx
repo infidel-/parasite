@@ -1146,15 +1146,10 @@ class PlayerArea extends _SaveObject
           game.config.repeatDelay)
         return false;
 
-      actionTS = haxe.Timer.stamp();
-      var prevState = player.state;
-      action(currentAction);
+      // pre-checks
       var stop = false;
-      // player changed state
-      if (player.state != prevState)
-        stop = true;
       // probe brain stops when its color changes
-      else if (currentAction.id == 'probeBrain')
+      if (currentAction.id == 'probeBrain')
         {
           var actionName = getProbeBrainActionName();
           if (actionName.indexOf('white') > 0)
@@ -1170,6 +1165,8 @@ class PlayerArea extends _SaveObject
           // grip fully hardened
           else if (currentAction.id == 'hardenGrip')
             {
+              if (attachHost == null)
+                stop = true;
               if (attachHold >= 100)
                 stop = true;
             }
@@ -1180,6 +1177,14 @@ class PlayerArea extends _SaveObject
                 stop = true;
             }
         }
+
+      actionTS = haxe.Timer.stamp();
+      var prevState = player.state;
+      if (!stop)
+        action(currentAction);
+      // player changed state
+      if (player.state != prevState)
+        stop = true;
       if (stop)
         {
           currentAction = null;

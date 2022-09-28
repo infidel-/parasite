@@ -134,6 +134,7 @@ class Const
   // row 16 - floor drain
   public static var ROW_OBJECT_INDOOR = 16;
   public static var FRAME_FLOOR_DRAIN = 0;
+  public static var FRAME_VENTILATION = 1;
 
   // row 17,18 - documents
   public static var CHEM_LABS_DOCUMENTS = [
@@ -325,6 +326,13 @@ class Const
   public static var dir4y = [ 0, -1, 1, 0 ];
   public static var dirdiagx = [ -1, -1, 1, 1 ];
   public static var dirdiagy = [ -1, 1, -1, 1 ];
+  // dir4 opposites
+  public static var opposite4 = [
+    0 => 4,
+    4 => 0,
+    1 => 2,
+    2 => 1,
+  ];
 
 // log all object string and int properties
   public static inline function debugObject(o: Dynamic)
