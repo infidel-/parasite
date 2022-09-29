@@ -36,10 +36,6 @@ class RegionView
 
 
 // update tilemaps from current region
-  static var ICON_ALERTNESS = 0;
-  static var ICON_EVENT = 1;
-  static var ICON_NPC = 2;
-  static var ICON_HABITAT = 3;
   public function update()
     {
       width = game.region.width;
@@ -80,7 +76,6 @@ class RegionView
   public function updateIconsArea(x: Int, y: Int)
     {
       var a = game.region.getXY(x, y);
-
       var icon = getAlertnessIcon(a);
       setAreaIcon(a, ICON_ALERTNESS, icon);
       icon = getEventIcon(a);
@@ -88,6 +83,7 @@ class RegionView
       icon = getNPCIcon(a);
       setAreaIcon(a, ICON_NPC, icon);
 
+      // habitat icon
       icon = {
         row: Const.ROW_REGION_ICON,
         col: (a.hasHabitat ? Const.FRAME_HABITAT : Const.FRAME_EMPTY)
@@ -99,6 +95,16 @@ class RegionView
           game.group.team.ambushedHabitat.area.id == a.habitatAreaID)
         icon.col = Const.FRAME_HABITAT_AMBUSHED;
       setAreaIcon(a, ICON_HABITAT, icon);
+
+      // ovum icon
+      var o = game.region.getObjectAt(x, y);
+      if (o != null && o.type == 'ovum')
+        {
+          setAreaIcon(a, ICON_OVUM, {
+            row: Const.ROW_REGION_ICON,
+            col: Const.FRAME_OVUM,
+          });
+        }
     }
 
 
@@ -325,6 +331,12 @@ class RegionView
         ((Math.abs(game.playerRegion.x - a.x) < 2 &&
           Math.abs(game.playerRegion.y - a.y) < 2) || a.isKnown);
     }
+
+  static var ICON_ALERTNESS = 0;
+  static var ICON_EVENT = 1;
+  static var ICON_NPC = 2;
+  static var ICON_HABITAT = 3;
+  static var ICON_OVUM = 4;
 }
 
 typedef _Icon = { row: Int, col: Int };

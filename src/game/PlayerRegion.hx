@@ -4,6 +4,7 @@ package game;
 
 import entities.PlayerEntity;
 import const.WorldConst;
+import region.*;
 
 class PlayerRegion extends _SaveObject
 {
@@ -54,7 +55,7 @@ class PlayerRegion extends _SaveObject
 // ==============================   ACTIONS   =======================================
 
 
-// get actions list (area mode)
+// get actions list (region mode)
   public function updateActionList()
     {
       // enter area
@@ -67,6 +68,7 @@ class PlayerRegion extends _SaveObject
         });
 
       // create a new habitat
+      // NOTE: maybe add regionActions to ImprovInfo later?
       if (player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0 &&
           !currentArea.hasHabitat &&
           currentArea.info.isInhabited)
@@ -84,12 +86,36 @@ class PlayerRegion extends _SaveObject
               energy: 10
             });
         }
+      // ovum placement
+      if (player.evolutionManager.getLevel(IMP_OVUM) > 0)
+        {
+          // check if ovum is already on the map
+          var hasOvum = false;
+          for (o in game.region.getObjects())
+            if (o.type == 'ovum')
+              {
+                hasOvum = true;
+                break;
+              }
+          if (!hasOvum)
+            game.ui.hud.addAction({
+              id: 'createOvum',
+              type: ACTION_REGION,
+              name: 'Create ovum',
+              energy: 0
+            });
+        }
 
       if (player.state == PLR_STATE_HOST)
         {
           // evolution manager actions
           player.evolutionManager.updateActionList();
         }
+
+      // object actions
+      var o = game.region.getObjectAt(x, y);
+      if (o != null)
+        o.updateActionList();
 
       // enter habitat
       if (currentArea.hasHabitat)
@@ -114,7 +140,13 @@ class PlayerRegion extends _SaveObject
         }
 
       var ret = true;
-      if (action.id == 'enterArea')
+      // object action
+      if (action.type == ACTION_OBJECT)
+        {
+          var o: RegionObject = action.obj;
+          ret = o.action(action);
+        }
+      else if (action.id == 'enterArea')
         ret = enterAreaAction();
       else if (action.id == 'createHabitat')
         createHabitatAction();
@@ -122,6 +154,8 @@ class PlayerRegion extends _SaveObject
         enterHabitatAction();
       else if (action.id == 'skipTurn')
         game.turn();
+      else if (action.id == 'createOvum')
+        createOvumAction();
 
       // evolution manager action
       else if (action.type == ACTION_EVOLUTION)
@@ -218,6 +252,17 @@ class PlayerRegion extends _SaveObject
       game.setLocation(LOCATION_AREA, habitatArea);
     }
 
+// action: create ovum
+  function createOvumAction()
+    {
+      game.log("You have spawned an ovum in this area.");
+      var o = new region.Ovum(game, x, y);
+      game.region.addObject(o);
+      game.scene.region.updateIconsArea(x, y);
+
+      // complete goal
+//      game.goals.complete(GOAL_CREATE_HABITAT);
+    }
 
 // action: move player by dx,dy
   public function moveAction(dx: Int, dy: Int): Bool
@@ -377,6 +422,11 @@ class PlayerRegion extends _SaveObject
         game.goals.complete(GOAL_TUTORIAL_AREA_ALERT);
       var area = game.region.getXY(x, y);
       game.profile.addPediaArticle(area.info.pediaArticle);
+
+      // run trigger on move to
+      var o = game.region.getObjectAt(x, y);
+      if (o != null)
+        o.onMoveTo();
 
       return true;
     }

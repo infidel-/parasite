@@ -15,6 +15,7 @@ class EvolutionManager extends _SaveObject
   public var isActive: Bool; // is currently evolving?
   public var taskID: String; // string id of currently evolving improvement
   var _list: List<Improv>; // list of known improvements (that can be of level 0)
+  public var ovum: _OvumInfo;
 
   public function new(p: Player, g: Game)
     {
@@ -23,6 +24,10 @@ class EvolutionManager extends _SaveObject
       state = 0;
       isActive = false;
       difficulty = UNSET;
+      ovum = {
+        level: 0,
+        xp: 0,
+      };
 
       _list = new List<Improv>();
       taskID = '';

@@ -11,7 +11,7 @@ class Const
   public static var LAYER_EFFECT = 4; // visual effects layer
   public static var LAYER_PLAYER = 3; // player, enemies, etc layer
   public static var LAYER_AI = 2; // player, enemies, etc layer
-  public static var LAYER_OBJECT = 1; // ground layer - bodies, items
+  public static var LAYER_OBJECT = 1; // area - bodies, items, region - icons and objects
   public static var LAYER_TILES = 0; // tilemap layer
 
   public static var TILE_SIZE_CLEAN = 64; // file tile size
@@ -48,9 +48,6 @@ class Const
   // entity spritemap indexes
   public static var ROW_ALERT = 0;
   public static var FRAME_EMPTY = 0;
-
-  // alert row frames
-  public static var ROW_REGION_ICON = 1;
   public static var FRAME_ALERT1 = 1;
   public static var FRAME_ALERT2 = 2;
   public static var FRAME_ALERT3 = 3;
@@ -60,13 +57,15 @@ class Const
   public static var FRAME_CALLING = 7;
   public static var FRAME_SLIME = 8;
 
-  // region row frames
+  // region icons frames
+  public static var ROW_REGION_ICON = 1;
   public static var FRAME_EVENT_UNKNOWN = 1;
   public static var FRAME_EVENT_KNOWN = 2;
   public static var FRAME_EVENT_NPC = 3;
   public static var FRAME_HABITAT = 4;
   public static var FRAME_EVENT_NPC_AREA = 5;
   public static var FRAME_HABITAT_AMBUSHED = 6;
+  public static var FRAME_OVUM = 7;
 
   // object row frames
   public static var ROW_OBJECT = 2;

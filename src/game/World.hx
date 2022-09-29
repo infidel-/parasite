@@ -5,6 +5,7 @@ package game;
 import const.WorldConst;
 import ai.AI;
 import objects.AreaObject;
+import region.RegionObject;
 
 class World extends _SaveObject
 {
@@ -27,10 +28,16 @@ class World extends _SaveObject
       AreaGame._maxID = 0;
       AreaObject._maxID = 0;
       RegionGame._maxID = 0;
+      RegionObject._maxID = 0;
       for (r in _list)
         {
           if (r.id > RegionGame._maxID)
             RegionGame._maxID = r.id;
+          for (o in @:privateAccess r._objects)
+            {
+              if (o.id > RegionObject._maxID)
+                RegionObject._maxID = r.id;
+            }
           for (a in @:privateAccess r._list)
             {
               a.loadPost();

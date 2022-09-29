@@ -9,7 +9,9 @@ import objects.*;
 
 class EvolutionConst
 {
-  // improvement info
+// ovum levels xp
+  public static var ovumXP = [ 1, 5, 20, 50, 100 ];
+// improvement info
   public static var improvements: Array<ImprovInfo> =
     [
       // =============== BASIC ===================
@@ -964,6 +966,32 @@ class EvolutionConst
           },
         ],
       },
+
+      { // ***
+        type: TYPE_SPECIAL,
+        id: IMP_OVUM,
+        name: 'Ovum ??? TODO',
+        note: 'Knowledge. TODO.',
+        maxLevel: 1,
+        levelNotes: [
+          'TODO',
+          'TODO',
+          '',
+          '',
+        ],
+        levelParams: [
+          {},
+          {},
+          {},
+          {},
+        ],
+        onUpgrade: function(level, game, player) {
+          // complete goals
+//          if (level == 1)
+//            game.goals.complete(GOAL_EVOLVE_DOPAMINE);
+        }
+      },
+
     ];
 
 

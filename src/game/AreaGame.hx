@@ -1697,13 +1697,11 @@ class Test {
       return tmp;
     }
 
-
 // get objects iterator
   public function getObjects(): Iterator<AreaObject>
     {
       return _objects.iterator();
     }
-
 
 // get path from x1, y1 -> x2, y2
   public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node>

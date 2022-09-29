@@ -3,6 +3,7 @@
 package game;
 
 import const.WorldConst;
+import region.*;
 
 class RegionGame extends _SaveObject
 {
@@ -17,6 +18,7 @@ class RegionGame extends _SaveObject
 
   var _array: Array<Array<AreaGame>>; // 2-dim array of areas for quicker access
   var _list: Map<Int, AreaGame>; // hashmap of areas (can include additional areas)
+  var _objects: Map<Int, RegionObject>; // region objects list
 
   public static var _maxID: Int = 0; // region id counter
 
@@ -38,6 +40,7 @@ class RegionGame extends _SaveObject
       _array = [];
       for (i in 0...width)
         _array[i] = [];
+      _objects = new Map();
     }
 
 // called after load or creation
@@ -498,5 +501,27 @@ class RegionGame extends _SaveObject
         return false;
 
       return (Const.TILE_WALKABLE[_array[x][y].tileID] == 1);
+    }
+
+// get objects iterator
+  public function getObjects(): Iterator<RegionObject>
+    {
+      return _objects.iterator();
+    }
+
+// add object to region (low-level)
+  public inline function addObject(o: RegionObject)
+    {
+      _objects.set(o.id, o);
+    }
+
+// get object at (x,y)
+// only one object per tile in region mode
+  public function getObjectAt(x: Int, y: Int): RegionObject
+    {
+      for (o in _objects)
+        if (o.x == x && o.y == y)
+          return o;
+      return null;
     }
 }
