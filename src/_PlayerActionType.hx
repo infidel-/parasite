@@ -9,4 +9,5 @@ enum _PlayerActionType
   ACTION_ORGAN;
   ACTION_EVOLUTION;
   ACTION_INVENTORY;
+  ACTION_UI;
 }

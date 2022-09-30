@@ -68,6 +68,7 @@ class UI
         UISTATE_PEDIA => new Pedia(game),
         UISTATE_MAINMENU => new MainMenu(game),
         UISTATE_SPOON => new Spoon(game),
+        UISTATE_OVUM => new Ovum(game),
       ];
     }
 

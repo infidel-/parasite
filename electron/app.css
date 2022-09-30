@@ -876,6 +876,13 @@ input[type=checkbox] {
   margin: 5px 5px 0px 5px;
 }
 
+#window-ovum {
+  border: 39px solid;
+  width: calc(100% - 90px);
+  height: calc(100% - 90px);
+  pointer-events: all;
+}
+
 .small {
   font-size: 80%;
   line-height: 1.1;

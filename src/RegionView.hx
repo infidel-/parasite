@@ -100,7 +100,7 @@ class RegionView
       var o = game.region.getObjectAt(x, y);
       if (o != null && o.type == 'ovum')
         {
-          setAreaIcon(a, ICON_OVUM, {
+          setAreaIcon(a, ICON_OBJECT, {
             row: Const.ROW_REGION_ICON,
             col: Const.FRAME_OVUM,
           });
@@ -336,7 +336,7 @@ class RegionView
   static var ICON_EVENT = 1;
   static var ICON_NPC = 2;
   static var ICON_HABITAT = 3;
-  static var ICON_OVUM = 4;
+  static var ICON_OBJECT = 4;
 }
 
 typedef _Icon = { row: Int, col: Int };

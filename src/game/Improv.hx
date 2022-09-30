@@ -9,13 +9,15 @@ import const.EvolutionConst;
   public var level: Int; // improvement level
   public var ep: Int; // evolution points
   public var info: ImprovInfo; // improvement info link
+  public var isLocked: Bool; // locked for ovum?
 
-  public function new(id, level, ep, info)
+  public function new(id, level, ep, info, isLocked)
     {
       this.id = id;
       this.level = level;
       this.ep = ep;
       this.info = info;
+      this.isLocked = isLocked;
       init();
       initPost(false);
     }

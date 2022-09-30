@@ -158,7 +158,8 @@ class EvolutionManager extends _SaveObject
         id: id,
         level: level,
         ep: ep,
-        info: EvolutionConst.getInfo(id)
+        info: EvolutionConst.getInfo(id),
+        isLocked: false,
       };
       _list.add(imp);
 

@@ -54,16 +54,13 @@ class Ovum extends RegionObject
   override function onAction(action: _PlayerAction): Bool
     {
       if (action.id == 'setImprovements')
-        return setImprovementsAction(action);
+        {
+          game.ui.state = UISTATE_OVUM;
+          return true;
+        }
       else if (action.id == 'nurtureOvum')
         return nurtureOvumAction(action);
 
-      return true;
-    }
-
-// open improvements interface
-  function setImprovementsAction(action: _PlayerAction): Bool
-    {
       return true;
     }
 
@@ -106,9 +103,14 @@ class Ovum extends RegionObject
       var xpInfo = '';
       if (ovum.level < 5)
         xpInfo = ' (' + ovum.xp + '/' + EvolutionConst.ovumXP[ovum.level] + ' pts)';
-      game.log(Const.col('gray', Const.small('[level ' + ovum.level +
-        xpInfo +
-        ' TODO imps' +
-        ']')));
+      var marked = [];
+      for (imp in game.player.evolutionManager)
+        if (imp.isLocked)
+          marked.push(imp.info.name);
+      var markedstr = 'No improvements are marked for parthenogenesis.';
+      if (marked.length > 0)
+        markedstr = 'Marked for parthenogenesis: ' + marked.join(', ') + '.';
+      game.log(Const.col('gray', Const.small('[Ovum level ' + ovum.level +
+        xpInfo + '. ' + markedstr + ']')));
     }
 }

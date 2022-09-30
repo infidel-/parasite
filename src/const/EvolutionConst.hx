@@ -970,7 +970,7 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_OVUM,
-        name: 'Ovum ??? TODO',
+        name: 'Parthenogenesis',
         note: 'Knowledge. TODO.',
         maxLevel: 1,
         levelNotes: [
