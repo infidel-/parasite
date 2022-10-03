@@ -327,7 +327,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       game.player.vars.habitatsLeft--;
       if (game.player.vars.habitatsLeft == 0)
         {
-          game.finish('lose', 'habitatShock');
+          game.player.death('habitatShock');
           return;
         }
 

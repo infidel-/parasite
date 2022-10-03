@@ -344,19 +344,19 @@ class PlayerArea extends _SaveObject
       // parasite could also be dead
       if (state == PLR_STATE_PARASITE && player.energy <= 0)
         {
-          game.finish('lose', 'noHost');
+          game.player.death('noHost');
           return;
         }
 
       else if (state == PLR_STATE_ATTACHED && player.energy <= 0)
         {
-          game.finish('lose', 'noEnergy');
+          game.player.death('noEnergy');
           return;
         }
 
       else if (player.health <= 0)
         {
-          game.finish('lose', 'noHealth');
+          game.player.death('noHealth');
           return;
         }
 
@@ -1277,7 +1277,7 @@ class PlayerArea extends _SaveObject
       player.health -= damage;
 
       if (player.health <= 0)
-        game.finish('lose', 'noHealth');
+        game.player.death('noHealth');
     }
 
 

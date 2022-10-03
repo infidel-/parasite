@@ -524,4 +524,15 @@ class RegionGame extends _SaveObject
           return o;
       return null;
     }
+
+// get object by type
+// only one object per tile in region mode
+  public function getObjectsWithType(type: String): Array<RegionObject>
+    {
+      var ret = [];
+      for (o in _objects)
+        if (o.type == type)
+          ret.push(o);
+      return ret;
+    }
 }

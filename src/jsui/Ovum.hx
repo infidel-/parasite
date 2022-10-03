@@ -45,7 +45,7 @@ class Ovum extends UIWindow
       if (imp.info.maxLevel > 1)
         buf.add(imp.level);
       if (imp.isLocked)
-        buf.add('&#9745;');
+        buf.add(' &#9745;');
       buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + imp.info.note + '</p>');
 
       // imp notes

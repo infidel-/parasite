@@ -86,12 +86,12 @@ class Ovum extends RegionObject
       game.playerRegion.onHostDeath();
 
       // new level
-      if (ovum.xp <= EvolutionConst.ovumXP[ovum.level])
+      if (ovum.xp < EvolutionConst.ovumXP[ovum.level])
         return true;
       game.log('The ovum blooms with new power.');
       for (i in 0...(EvolutionConst.ovumXP.length - 1))
-        if (ovum.xp > EvolutionConst.ovumXP[i] &&
-            ovum.xp <= EvolutionConst.ovumXP[i + 1])
+        if (ovum.xp >= EvolutionConst.ovumXP[i] &&
+            ovum.xp < EvolutionConst.ovumXP[i + 1])
           ovum.level = i + 1;
       return true;
     }

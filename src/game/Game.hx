@@ -45,6 +45,7 @@ class Game extends _SaveObject
   public var isStarted: Bool; // has the gameplay started?
   public var isFirstGame: Bool; // is first game in session?
   public var isFinished: Bool; // is the game finished?
+  public var isRebirth: Bool; // game "finished" by player rebirth?
   public var messageList: List<_LogMessage>; // last X messages of log
   public var hudMessageList: List<_LogMessage>; // last X messages of hud log
   public var importantMessagesEnabled: Bool; // messages enabled?
@@ -64,6 +65,7 @@ class Game extends _SaveObject
       importantMessagesEnabled = true;
       isInited = false;
       isStarted = false;
+      isRebirth = false;
       isFirstGame = true;
 
       area = null;
@@ -257,9 +259,17 @@ class Game extends _SaveObject
       scene.updateCamera();
     }
 
-
-// game turn ends
+// game turn ends (wrapper)
   public function turn()
+    {
+      turnInternal();
+      // kludge to undo game finish flag
+      if (isFinished && isRebirth)
+        player.rebirthPost();
+    }
+
+// game turn ends (internal)
+  function turnInternal()
     {
       // player turn
       player.turn();
@@ -305,7 +315,6 @@ class Game extends _SaveObject
             return;
         }
     }
-
 
 // game finish
 // result - win, lose

@@ -170,6 +170,14 @@ class EvolutionManager extends _SaveObject
       return imp;
     }
 
+// remove improvement
+  public function removeImprov(id: _Improv, ?skipMessage: Bool = false)
+    {
+      var imp = getImprov(id);
+      _list.remove(imp);
+      if (!skipMessage)
+        game.log(Const.small('Improvement lost: ' + imp.info.name + '.'), COLOR_EVOLUTION);
+    }
 
 // stop the evolution
   public inline function stop()
@@ -292,12 +300,16 @@ class EvolutionManager extends _SaveObject
       for (info in EvolutionConst.improvements)
         if (info.type == TYPE_BASIC)
           {
+            // rebirth: exclude current imps
+            if (getImprov(info.id) != null)
+              continue;
             if (info.organ != null)
               tmpOrgans.push(info.id);
             tmpFull.push(info.id);
           }
 
       // last one must always be an organ (for the tutorial to work correctly)
+      var gained = [];
       while (n > 0)
         {
           // pick a random improv
@@ -308,9 +320,13 @@ class EvolutionManager extends _SaveObject
           tmpFull.remove(id);
 
           addImprov(id, true);
+          var imp = getImprov(id);
+          gained.push(imp.info.name);
 
           n--;
         }
+      if (game.importantMessagesEnabled)
+        game.log(Const.small('Improvements gained: ' + gained.join(', ') + '.'), COLOR_EVOLUTION);
     }
 
 

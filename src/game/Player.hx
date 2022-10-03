@@ -123,7 +123,7 @@ class Player extends _SaveObject
 
           if (state == PLR_STATE_PARASITE && energy <= 0)
             {
-              game.finish('lose', 'noHost');
+              death('noHost');
               return;
             }
         }
@@ -179,6 +179,88 @@ class Player extends _SaveObject
         game.playerRegion.turn();
     }
 
+// parasite death: either rebirth or game over
+  public function death(text: String)
+    {
+      // last life
+      var ovum = evolutionManager.ovum;
+      if (ovum.level == 0)
+        {
+          game.finish('lose', text);
+          return;
+        }
+
+      // rebirth
+      // restore health
+      health = maxHealth;
+      // NOTE: energy is restored in rebirthPost
+      game.turns += 9;
+      // remove old improvements
+      var cntLocked = 0;
+      var degraded = [];
+      var removed = [];
+      for (imp in evolutionManager)
+        {
+          // reset all evolution points in any case
+          if (imp.level > 0)
+            imp.ep = EvolutionConst.epCostImprovement[imp.level - 1];
+          // strong chance of losing a level
+          if (imp.level > 1 && Std.random(100) < 50)
+            {
+              imp.level--;
+              imp.ep = EvolutionConst.epCostImprovement[imp.level - 1];
+              degraded.push(imp.info.name);
+            }
+          // locked in ovum and under its level
+          if (imp.isLocked && cntLocked < ovum.level)
+            {
+              cntLocked++;
+              continue;
+            }
+          // do not touch non-basic imps
+          if (imp.info.type != TYPE_BASIC)
+            continue;
+          evolutionManager.removeImprov(imp.id, true);
+          removed.push(imp.info.name);
+        }
+      if (degraded.length > 0)
+        game.log(Const.small('Improvements degraded: ' + degraded.join(', ') + '.'), COLOR_EVOLUTION);
+      if (removed.length > 0)
+        game.log(Const.small('Improvements lost: ' + removed.join(', ') + '.'), COLOR_EVOLUTION);
+      // add new improvements
+      evolutionManager.giveStartingImprovements();
+      // ovum loses a level (after improvements reset)
+      ovum.level--;
+      if (ovum.level == 0)
+        ovum.xp = 0;
+      else ovum.xp = EvolutionConst.ovumXP[ovum.level - 1];
+
+      // leave area
+      if (game.location == LOCATION_AREA)
+        game.setLocation(LOCATION_REGION);
+      var ovumObj = game.region.getObjectsWithType('ovum')[0];
+      game.playerRegion.moveTo(ovumObj.x, ovumObj.y);
+      // message
+      var msgs = [
+        'I am reborn.',
+        'I live again.',
+        'Birth, death and rebirth. The purifying rhythm of the universe.',
+        'I am alive. Alive.',
+      ];
+      game.message(msgs[Std.random(msgs.length)]);
+      game.isFinished = true; // temp kludge for rebirth
+      game.isRebirth = true;
+    }
+
+// called after turn is over
+  public function rebirthPost()
+    {
+      // clear flags
+      game.isRebirth = false;
+      game.isFinished = false;
+      // restore energy
+      energy = maxEnergy;
+    }
 
 // convenience method for host death
   public inline function onHostDeath(msg: String)
