@@ -387,12 +387,11 @@ class PlayerRegion extends _SaveObject
       var nx = x + dx;
       var ny = y + dy;
 
-      return moveTo(nx, ny);
+      return moveTo(nx, ny, true);
     }
 
-
 // move player to nx, ny
-  public function moveTo(nx, ny): Bool
+  public function moveTo(nx: Int, ny: Int, doTurn: Bool): Bool
     {
       // cell not walkable
       if (!game.region.isWalkable(nx, ny))
@@ -413,7 +412,8 @@ class PlayerRegion extends _SaveObject
           }
 
       entity.setPosition(x, y); // move player entity
-      game.turn(); // new turn
+      if (doTurn)
+        game.turn(); // new turn
       game.updateHUD(); // update HUD info
 
       // tutorial

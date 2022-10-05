@@ -320,6 +320,12 @@ class Game extends _SaveObject
 // result - win, lose
 // condition - noHost, etc
 // if result is win, text is displayed
+  static var deathText = [
+    'noHost' => 'You cannot survive without a host for long.',
+    'noEnergy' => 'Your energy was completely depleted.',
+    'noHealth' => "You have succumbed to injuries. It's not wise to go into the direct confrontation.",
+    'habitatShock' => 'You have received your final shock from the habitat destruction.',
+  ];
   public function finish(result: String, text: String)
     {
       isFinished = true;
@@ -329,16 +335,9 @@ class Game extends _SaveObject
       if (result == 'lose')
         {
           log('You have lost the game.');
-          if (text == 'noHost')
-            finishText = 'You cannot survive without a host for long.';
-          else if (text == 'noEnergy')
-            finishText = 'Your energy was completely depleted.';
-          else if (text == 'noHealth')
-            finishText = "You have succumbed to injuries. It's not wise to go into the direct confrontation.";
-          else if (text == 'habitatShock')
-            finishText = 'You have received your final shock from the habitat destruction.';
+          finishText = deathText[text];
 #if demo
-          else if (text == 'demo')
+          if (text == 'demo')
             finishText = 'Demo finished.';
 #end
 

@@ -190,7 +190,11 @@ class Player extends _SaveObject
           return;
         }
 
-      // rebirth
+      // rebirth process
+      // detach
+      if (state == PLR_STATE_ATTACHED)
+        game.playerArea.detachAction();
+      game.log('You fade into the darkness...');
       // restore health
       health = maxHealth;
       // NOTE: energy is restored in rebirthPost
@@ -235,11 +239,11 @@ class Player extends _SaveObject
         ovum.xp = 0;
       else ovum.xp = EvolutionConst.ovumXP[ovum.level - 1];
 
-      // leave area
+      // leave area and teleport
       if (game.location == LOCATION_AREA)
         game.setLocation(LOCATION_REGION);
       var ovumObj = game.region.getObjectsWithType('ovum')[0];
-      game.playerRegion.moveTo(ovumObj.x, ovumObj.y);
+      game.playerRegion.moveTo(ovumObj.x, ovumObj.y, false);
       // message
       var msgs = [
         'I am reborn.',
@@ -316,7 +320,7 @@ class Player extends _SaveObject
         game.setLocation(LOCATION_REGION);
 
       // move to new location
-      game.playerRegion.moveTo(area.x, area.y);
+      game.playerRegion.moveTo(area.x, area.y, false);
 
       // enter area
       game.setLocation(LOCATION_AREA);

@@ -332,7 +332,8 @@ class PlayerArea extends _SaveObject
     {
       // host death
       if (state == PLR_STATE_HOST &&
-          (player.host.state == AI_STATE_DEAD || player.host.energy <= 0))
+          (player.host.state == AI_STATE_DEAD ||
+           player.host.energy <= 0))
         {
           game.player.onHostDeath('Your host has expired. You have to find a new one.');
 
@@ -819,7 +820,7 @@ class PlayerArea extends _SaveObject
 
 
 // action: remove attached parasite from host
-  function detachAction()
+  public function detachAction()
     {
       attachHost.parasiteAttached = false;
       attachHost.entity.setMask(null);
