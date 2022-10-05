@@ -336,6 +336,18 @@ class ItemsConst
             }
         }
     },
+    {
+      id: 'contraceptives',
+      name: 'pack of contraceptives',
+      type: 'junk',
+      unknown: 'small container',
+      onLearn: function (game, player)
+        {
+          game.message('Humans use these to control their breeding habits. However, there is a way that I can reproduce as well.');
+          player.evolutionManager.addImprov(IMP_OVUM);
+          game.profile.addPediaArticle('impOvum');
+        }
+    },
 
     // ============================================
     // scenario-related items

@@ -67,7 +67,6 @@ class Ovum extends RegionObject
 // feed the current host to ovum
   function nurtureOvumAction(action: _PlayerAction): Bool
     {
-      game.log('You nurture the ovum with the life of your host.');
       var ovum = game.player.evolutionManager.ovum;
       var ovumPoints = [
         'civilian' => 1,
@@ -85,14 +84,21 @@ class Ovum extends RegionObject
       ovum.xp += pts;
       game.playerRegion.onHostDeath();
 
-      // new level
       if (ovum.xp < EvolutionConst.ovumXP[ovum.level])
-        return true;
-      game.log('The ovum blooms with new power.');
+        {
+          // show info
+          game.log('You nurture the ovum with the life of your host.');
+          onMoveTo();
+          return true;
+        }
+      // new level
+      game.log('You nurture the ovum with the life of your host. It blooms with new power.');
       for (i in 0...(EvolutionConst.ovumXP.length - 1))
         if (ovum.xp >= EvolutionConst.ovumXP[i] &&
             ovum.xp < EvolutionConst.ovumXP[i + 1])
           ovum.level = i + 1;
+      // show info
+      onMoveTo();
       return true;
     }
 

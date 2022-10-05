@@ -10,7 +10,7 @@ import objects.*;
 class EvolutionConst
 {
 // ovum levels xp
-  public static var ovumXP = [ 1, 5, 20, 50, 100 ];
+  public static var ovumXP = [ 2, 5, 20, 50, 100 ];
 // improvement info
   public static var improvements: Array<ImprovInfo> =
     [

@@ -259,9 +259,8 @@ class PlayerRegion extends _SaveObject
       var o = new region.Ovum(game, x, y);
       game.region.addObject(o);
       game.scene.region.updateIconsArea(x, y);
-
-      // complete goal
-//      game.goals.complete(GOAL_CREATE_HABITAT);
+      // show info
+      o.onMoveTo();
     }
 
 // action: move player by dx,dy

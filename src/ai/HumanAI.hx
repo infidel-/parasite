@@ -32,7 +32,7 @@ class HumanAI extends AI
       // MATH: health 8-16 (~12), energy 130-210 (~170)
 
       // common stuff for all humans
-      if (Std.random(100) < 20)
+      if (Std.random(100) < 10)
         {
           skills.addID(KNOW_SMOKING);
           inventory.addID('cigarettes');
@@ -44,6 +44,8 @@ class HumanAI extends AI
         }
       if (Std.random(100) < 10)
         inventory.addID('sleepingPills');
+      if (Std.random(100) < 10)
+        inventory.addID('contraceptives');
 
       // common traits for all humans
       if (Std.random(100) < 10)
