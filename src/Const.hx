@@ -327,8 +327,8 @@ class Const
   public static var dirdiagy = [ -1, 1, -1, 1 ];
   // dir4 opposites
   public static var opposite4 = [
-    0 => 4,
-    4 => 0,
+    0 => 3,
+    3 => 0,
     1 => 2,
     2 => 1,
   ];
