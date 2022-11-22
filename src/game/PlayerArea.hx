@@ -295,6 +295,10 @@ class PlayerArea extends _SaveObject
       else if (action.id == 'probeBrain')
         probeBrainAction();
 
+      // plant false memories
+      else if (action.id == 'plantMemories')
+        plantMemoriesAction();
+
       // learn about object
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);
@@ -720,7 +724,7 @@ class PlayerArea extends _SaveObject
       entity.visible = false;
       attachHost = null;
       attachHostID = -1;
-      player.host.onInvade(); // notify ai
+      player.host.onInvadeWrapped(); // notify ai
 
       // disable evolution for dogs - they can die in the same turn
       if (!player.host.isHuman)
@@ -927,14 +931,34 @@ class PlayerArea extends _SaveObject
         mods: [{
           name: 'luck',
           val: params.hostHealthMod,
-          chance: 25 }]
+          chance: 25
+        }]
       });
 
+      player.host.onBrainProbe();
       player.host.onDamage(damage); // damage host
-
       player.host.brainProbed++; // increase counter
     }
 
+// action: plant false memories
+  function plantMemoriesAction()
+    {
+      var isTeamMember = false;
+      if (player.host.isTeamMember || player.host.type == 'blackops')
+        isTeamMember = true;
+      var msg = 'You release the host triggering the pseudocampus.';
+      if (isTeamMember && !player.host.hasFalseMemories)
+        {
+          var params: { distanceBonus: Int } =
+            player.host.organs.getParams(IMP_FALSE_MEMORIES);
+          game.group.raiseTeamDistance(params.distanceBonus);
+          msg += ' A set of implanted false memories about the encounter will help your survival.';
+        }
+      player.host.hasFalseMemories = true;
+      game.log(msg);
+      leaveHostAction('memories');
+      return true;
+    }
 
 // action: learn about area object
   function learnObjectAction(o: AreaObject)

@@ -97,6 +97,13 @@ class BlackopsAI extends HumanAI
       super.initPost(onLoad);
     }
 
+// event: on AI probed
+  public override function onBrainProbe()
+    {
+      if (game.group.isKnown)
+        game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
+    }
+
 /*
 // event: on being attacked
   public override function onAttack()

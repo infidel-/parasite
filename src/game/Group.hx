@@ -6,6 +6,7 @@ class Group extends _SaveObject
 {
   var game: Game;
   public var teamTimeout: Int;
+  public var teamMemberLastNoticed: Int;
   public var teamStartDistance: Float;
   public var team: Team;
   public var knownCount: Int; // probe timer until the group becomes known
@@ -21,6 +22,7 @@ class Group extends _SaveObject
       team = null;
       teamTimeout = 250;
       teamStartDistance = 100.0;
+      teamMemberLastNoticed = 0;
       knownCount = 1 + Std.random(3); // randomized slightly
       isKnown = false;
       difficulty = UNSET;
@@ -145,6 +147,11 @@ class Group extends _SaveObject
 // specifically raise team distance
   public function raiseTeamDistance(mod: Float)
     {
+      if (team == null)
+        {
+          trace('BUG: Trying to raise team distance with no team?');
+          return;
+        }
       team.distance += mod;
 
       if (team.distance < 150)
@@ -209,7 +216,7 @@ class Group extends _SaveObject
       // group pedia articles
       var articleAdded = false;
       for (a in const.PediaConst.getGroup('group').articles)
-        if (game.profile.addPediaArticle(a.id, false))
+        if (a.groupAddFlag && game.profile.addPediaArticle(a.id, false))
           articleAdded = true;
       if (articleAdded)
         game.log(Const.small('New pedia articles about the Group available.'), COLOR_PEDIA);

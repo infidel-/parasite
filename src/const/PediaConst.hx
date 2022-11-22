@@ -242,21 +242,25 @@ Alt+0-5 - equals F1-F5<br>
       articles: [
         {
           id: 'groupBasics',
+          groupAddFlag: true,
           name: 'Group: Basics',
           text: "So, you've just found out about the existence of the group of humans that are actively trying to destroy you. For the simplicity's sake we're gonna call them the Group onwards. This concept requires some explanation since the mechanic is complex enough and mostly hidden. Selecting the difficulty level will change the amount of information available to the player in the skills and knowledges section of the Body window. Choosing easy difficulty will show concrete numbers, normal difficulty will use word descriptions and hard difficulty will not show anything at all.",
         },
         {
           id: 'groupPriority',
+          groupAddFlag: true,
           name: 'Group: Priority',
           text: "The Group is a government conspiracy dedicated to protecting the ordinary citizens from all sorts of unconventional threats: extraterrestrial, paranormal, Mythos, etc. The main game parameter of the Group is \"priority\". That is the priority of parasite threat. Since there are a lot of other threats that the Group has to deal with and its resources are limited (contrary to popular belief ;)), the priority is low at start. Right from the beginning of the game some of the player's actions will raise the priority. The examples of such actions are: someone sees the parasite and alerts the police, body with anomalies was found or the former host runs away and tells everybody that they were possessed by an alien creature. The severity of each action is different but the priority rises.",
         },
         {
           id: 'teamAmbush',
+          groupAddFlag: true,
           name: 'Team: Ambush',
           text: "Once the team distance is sufficiently low, the team will discover one of your habitats if you have them. At this point the team will hide in an ambush. They will wait for some time and then just burn everything cowboy style. Destruction of the habitat is a deeply traumatic event for the parasite and reduces its maximum energy permanently with more temporary drawbacks. If you walk into an ambush, the fight starts. You need to survive for three turns before you can leave the ambushed habitat. Leaving the habitat will also result in its immediate destruction. The only positive thing about this event is that it will increase the team distance giving you some breathing room. Killing the ambushers, while possible, will still result in the habitat destruction. Note that if you don't have any habitats, the logic stays the same, except that the ambush will happen right on the city street and ambush evasion will result in a smaller downtime.",
         },
         {
           id: 'teamBasics',
+          groupAddFlag: true,
           name: 'Team: Basics',
           text: "<p>The priority determines the level of the team of agents that the Group will task with the parasite problem. At the beginning of the game the player has some downtime until the team is spawned and each team wipe will also result in downtime. Once the team is activated, its members will start investigating the weird phenomena and occurences, and instead of raising the Group priority, the described player actions will count towards decreasing the distance between the team and the player. The longer the time the player spends in a given area, the more is the chance of one of the team members spawning around.</p>
 
@@ -264,8 +268,14 @@ Alt+0-5 - equals F1-F5<br>
         },
         {
           id: 'teamDeactivation',
+          groupAddFlag: true,
           name: 'Team: Deactivation',
           text: "Once the distance is raised to a large number, the team is deactivated, the group priority is decreased and the downtime starts. Basically, the threat is considered to be low by the Group and it stops worrying about the parasite for some time. Then again, you're free to attack the team member or possess them. Be prepared for some blackops backup, though. Killing the team member reduces the active team size but increases the group priority. Wiping the whole team out still gives you some downtime but decreases the starting distance of the next team.",
+        },
+        {
+          id: 'impFalseMemories',
+          name: 'Pseudocampus',
+          text: 'Pseudocampus body feature allows the parasite to safely detach from the host confusing them for a short period of time. If you manage to get away before they become alert, it will be the safest option for your survival. In case of the host being a Group team agent, this will also result in a team distance increase.',
         },
       ],
     },
@@ -311,5 +321,6 @@ typedef _PediaArticleInfo = {
   var id: String;
   var name: String;
   var text: String;
+  @:optional var groupAddFlag: Bool; // open with all group articles?
   @:optional var font: Int;
 }

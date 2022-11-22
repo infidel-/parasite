@@ -101,7 +101,6 @@ class TeamMemberAI extends HumanAI
         }
     }
 
-
 // event: despawn live AI
   public override function onRemove()
     {
@@ -118,7 +117,6 @@ class TeamMemberAI extends HumanAI
         game.group.raiseTeamDistance(1);
     }
 
-
 // event: on AI death
   public override function onDeath()
     {
@@ -126,10 +124,20 @@ class TeamMemberAI extends HumanAI
       game.group.teamMemberDeath();
     }
 
+// event: on AI probed
+  public override function onBrainProbe()
+    {
+      if (game.group.isKnown)
+        game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
+    }
 
 // event: on being noticed by player
   public override function onNotice()
     {
+      // do not show too often
+      if (game.turns - game.group.teamMemberLastNoticed < 8 + Std.random(4))
+        return;
+      game.group.teamMemberLastNoticed = game.turns;
       game.log('You feel someone is watching.', COLOR_ALERT);
       game.profile.addPediaArticle('msgWatching');
       game.scene.blinkingText.show(2);

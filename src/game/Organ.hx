@@ -40,6 +40,7 @@ import const.EvolutionConst;
         {
           improvInfo = EvolutionConst.getInfo(id);
           info = improvInfo.organ;
+          params = improvInfo.levelParams[level];
         }
     }
 }

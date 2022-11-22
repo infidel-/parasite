@@ -24,4 +24,5 @@ enum _Improv
   IMP_WATCHER; // special
   IMP_PRESERVATOR; // special
   IMP_OVUM; // special
+  IMP_FALSE_MEMORIES; // special
 }

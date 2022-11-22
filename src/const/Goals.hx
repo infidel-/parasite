@@ -294,6 +294,19 @@ class Goals
 
     // ========================= group branch (?)
 
+    // fake goal
+    GOAL_LEARN_FALSE_MEMORIES => {
+      id: GOAL_LEARN_FALSE_MEMORIES,
+      isHidden: true,
+      name: '-',
+      note: '-',
+      messageReceive: 'This is one of the hosts that are on my trail. If I could implant some false memories about our encounter into their head...',
+      onReceive: function (game, player) {
+        player.evolutionManager.addImprov(IMP_FALSE_MEMORIES);
+        game.profile.addPediaArticle('impFalseMemories');
+      },
+    },
+
     // ========================= main branch
 
     GOAL_PROBE_BRAIN => {

@@ -231,7 +231,6 @@ class EvolutionManager extends _SaveObject
       return null;
     }
 
-
 // get current improvement params
   public function getParams(id: _Improv): Dynamic
     {
@@ -241,10 +240,8 @@ class EvolutionManager extends _SaveObject
           var info = EvolutionConst.getInfo(id);
           return info.levelParams[0];
         }
-
       return imp.info.levelParams[imp.level];
     }
-
 
 // get improvement level
   public function getLevel(id: _Improv): Int

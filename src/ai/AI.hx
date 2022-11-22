@@ -47,6 +47,7 @@ class AI extends _SaveObject
   public var wasInvaded: Bool; // was this AI a host at any point?
   public var wasAlerted: Bool; // was this AI alerted at some point?
   public var wasNoticed: Bool; // was this AI seen by parasite after spawning?
+  public var hasFalseMemories: Bool; // was this AI given false memories?
 
   public var id: Int; // unique AI id
   public static var _maxID: Int = 0; // current max ID
@@ -158,6 +159,7 @@ class AI extends _SaveObject
       wasInvaded = false;
       wasAlerted = false;
       wasNoticed = false;
+      hasFalseMemories = false;
 
       baseAttrs = {
         strength: 1,
@@ -1020,6 +1022,10 @@ public function show()
       else if (state == AI_STATE_POST_DETACH && stateTime >= 2)
         setState(AI_STATE_ALERT, REASON_DETACH);
 
+      // post-detach with false memories
+      else if (state == AI_STATE_POST_DETACH_MEMORIES && stateTime >= 2)
+        setState(AI_STATE_IDLE);
+
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
 
@@ -1194,7 +1200,7 @@ public function show()
     }
 
 // event: parasite invaded this host
-  public inline function onInvade()
+  public inline function onInvadeWrapped()
     {
       setState(AI_STATE_HOST);
       parasiteAttached = false;
@@ -1207,6 +1213,7 @@ public function show()
         points: 5,
         isTimer: true
       });
+      onInvade(); // type-specific hook
     }
 
 
@@ -1217,9 +1224,11 @@ public function show()
         setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
       else if (src == 'preservator')
         setState(AI_STATE_PRESERVED, null, 'stands still motionlessly.');
+      else if (src == 'memories')
+        setState(AI_STATE_POST_DETACH_MEMORIES, null,
+          'feels unsure about their surroundings.');
       entity.setMask(null);
     }
-
 
 // event: on receiving effect
   public inline function onEffect(effect: _AIEffect)
@@ -1229,33 +1238,35 @@ public function show()
       updateEntity(); // update entity graphics
     }
 
-
-// event dynamic: on state change
+// event hook: on state change
   dynamic function onStateChange()
     {}
 
-
-// event dynamic: on being attacked
+// event hook: on being attacked
   public dynamic function onAttack()
     {}
 
+// event hook: when invaded
+  public dynamic function onInvade()
+    {}
 
-// event dynamic: on despawning live AI
+// event hook: on brain probe
+  public dynamic function onBrainProbe()
+    {}
+
+// event hook: on despawning live AI
   public dynamic function onRemove()
     {}
 
-
-// event dynamic: on AI death
+// event hook: on AI death
   public dynamic function onDeath()
     {}
 
-
-// event dynamic: on being noticed by player
+// event hook: on being noticed by player
   public dynamic function onNotice()
     {}
 
-
-// =================================================================================
+// ======================================================================
 
 
 // log

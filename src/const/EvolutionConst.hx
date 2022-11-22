@@ -34,7 +34,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_DECAY_ACCEL,
         name: 'Decay acceleration',
-        note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death. Moreover, the decomposition produces highly nutritional residue',
+        note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death. Moreover, the decomposition produces highly nutritional residue.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Bodies will disappear in " + l.turns +
@@ -43,7 +43,7 @@ class EvolutionConst
         },
         organ: {
           name: 'Decay accelerant cysts',
-          note: 'Cysts of special bacteria and enzymes spread throughout the body to accelerate its decay after death and transform it into a dry nutritional residue',
+          note: 'Cysts of specialized bacteria and enzymes spread throughout the body to accelerate its decay after death and transform it into a dry nutritional residue',
           gp: 50
         },
         levelNotes: [
@@ -64,7 +64,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_PROT_COVER,
         name: 'Protective cover',
-        note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance',
+        note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Host armor bonus (minus to damage): " +
@@ -96,7 +96,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_WOUND_REGEN,
         name: 'Stem cell reservoirs',
-        note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process',
+        note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return l.turns +
@@ -126,7 +126,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_HEALTH,
         name: 'Antibody generators',
-        note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health',
+        note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "+" + l.health +
@@ -156,7 +156,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_ENERGY,
         name: 'Adipose tissue layer',
-        note: 'Body feature. Modifications to metabolism allow for adipose tissue outgrowths on the host body for storing energy surplus',
+        note: 'Body feature. Modifications to metabolism allow for adipose tissue outgrowths on the host body for storing energy surplus.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Host maximum energy multiplier: " + l.hostEnergyMod +
@@ -186,7 +186,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_MUSCLE,
         name: 'Microvascular networks',
-        note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength',
+        note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "+" + l.strength +
@@ -216,7 +216,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_ACID_SPIT,
         name: 'Gastric hypersecretion',
-        note: 'Body feature. Recalibration of gastric glands results in increased potency and volume of produced acid, allowing the host to forcibly eject it as a sort of weapon',
+        note: 'Body feature. Recalibration of gastric glands results in increased potency and volume of produced acid, allowing the host to forcibly eject it as a sort of weapon.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Emesis damage: " + l.minDamage + "-" + l.maxDamage +
@@ -269,7 +269,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_SLIME_SPIT,
         name: 'Mucilaginous fluid',
-        note: 'Body feature. Restructuring of salivary glands and surrounding buccal cavity. Secreted mucosal fluid now exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop',
+        note: 'Body feature. Restructuring of salivary glands and surrounding buccal cavity. Secreted mucosal fluid now exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Mucus strength: " + l.strength +
@@ -318,7 +318,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_PARALYSIS_SPIT,
         name: 'Neurotoxin projectiles',
-        note: 'Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be lethal',
+        note: 'Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be lethal.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Paralysis effect time: " + l.time +
@@ -479,7 +479,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_ATTACH,
         name: 'Sudden leap',
-        note: 'Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows the parasite to gain initial advantage when attaching to it',
+        note: 'Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows the parasite to gain initial advantage when attaching to it.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base attach grip: " + l.attachHoldBase +
@@ -503,7 +503,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_HARDEN_GRIP,
         name: 'Constriction',
-        note: 'Knowledge. Advanced constriction technique allows you to rapidly subdue the host before the invasion process',
+        note: 'Knowledge. Advanced constriction technique allows you to rapidly subdue the host before the invasion process.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base harden grip: " + l.attachHoldBase +
@@ -527,7 +527,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_REINFORCE,
         name: 'Regulated neurotransmission',
-        note: 'Knowledge. Correctly timing the neurotransmitters release allows the parasite to more efficiently control and override the actions of the host',
+        note: 'Knowledge. Correctly timing the neurotransmitters release allows the parasite to more efficiently control and override the actions of the host.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Base reinforce control: " + l.reinforceControlBase +
@@ -554,7 +554,7 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_BRAIN_PROBE,
         name: 'Brain probe',
-        note: 'Knowledge. Temporarily joining with the host consciousness allows to partially learn its contents',
+        note: 'Knowledge. Temporarily joining with the host consciousness allows to partially learn its contents.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' &rarr; ' + l2.humanSociety : '') +
@@ -638,7 +638,7 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_CAMO_LAYER,
         name: 'Camouflage layer',
-        note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing',
+        note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "AI alertness multiplier: " + l.alertness +
@@ -695,6 +695,62 @@ class EvolutionConst
           if (level == 1)
             game.goals.complete(GOAL_EVOLVE_DOPAMINE);
         }
+      },
+
+      { // ***
+        type: TYPE_SPECIAL,
+        id: IMP_FALSE_MEMORIES,
+        name: 'Pseudocampus',
+        note: 'Body feature. A short-term interface into the human brain allows the parasite to engrain the host with false memories also resulting in the short-term host confusion after activation.',
+        maxLevel: 3,
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return "Team distance increase: " + l.distanceBonus +
+            (l2 != null ? ' &rarr; ' + l2.distanceBonus : '');
+        },
+        organ: {
+          name: 'Pseudocampus',
+          note: 'A small interface outgrowth on the side of hippocampus allows for one-time projection of a set of false memories into the host brain',
+          gp: 100,
+/*
+          onGrow: function(game, player) {
+            // complete goals
+            game.goals.complete(GOAL_GROW_CAMO);
+          }*/
+          action: {
+            id: 'plantMemories',
+            type: ACTION_AREA,
+            name: 'Plant Memories',
+            energyFunc: function (player) {
+              if (player.state != PLR_STATE_HOST)
+                return -1;
+              var level = player.evolutionManager.getLevel(IMP_FALSE_MEMORIES);
+              if (level == 0)
+                return -1;
+              return 10;
+            },
+          },
+        },
+        levelNotes: [
+          'No organ',
+          'Low-detail memory design resulting in poor believability',
+          'Advanced memory design allowing for higher believability',
+          'Highly-nuanced and detailed memory design leading to best believability',
+        ],
+        levelParams: [
+          // distance decrease per turn (team level): 0.1, 0.2, 0.5, 1.0
+          // bonus turns (imp level 1): 50, 25, 10, 5
+          // bonus turns (imp level 2): 100, 50, 20, 10
+          { distanceBonus: 0 },
+          { distanceBonus: 5 },
+          { distanceBonus: 10 },
+          { distanceBonus: 20 },
+        ],
+/*
+        onUpgrade: function(level, game, player) {
+          // complete goals
+          if (level == 1)
+            game.goals.complete(GOAL_EVOLVE_CAMO);
+        }*/
       },
 
       { // ***
