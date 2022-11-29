@@ -1012,31 +1012,50 @@ class ConsoleGame
       ai.brainProbed = 0;
       game.group.knownCount = 1;
 
-      // get a random live npc
-      var listEvents = [ 'parasiteRemoval', 'parasiteTransportation' ];
-      for (id in listEvents)
+      if (game.scenarioStringID == 'alien')
         {
-          var ev = game.timeline.getEvent(id);
-          var npc = null;
-          trace(ev.npc);
-          for (n in ev.npc)
-            if (!n.isDead)
-              {
-                npc = n;
-                break;
-              }
-          // all npcs dead, try next event
-          if (npc == null)
-            continue;
+          // get a random live npc and tie it to the host
+          var listEvents = [ 'parasiteRemoval', 'parasiteTransportation' ];
+          for (id in listEvents)
+            {
+              var ev = game.timeline.getEvent(id);
+              var npc = null;
+              trace(ev.npc);
+              for (n in ev.npc)
+                if (!n.isDead)
+                  {
+                    npc = n;
+                    break;
+                  }
+              // all npcs dead, try next event
+              if (npc == null)
+                continue;
 
-          // link host to this npc
-          npc.ai = ai;
-          ai.eventID = ev.id;
-          ai.npcID = npc.id;
-          ai.isNPC = true;
-          ai.entity.setNPC();
+              // link host to this npc
+              npc.ai = ai;
+              ai.eventID = ev.id;
+              ai.npcID = npc.id;
+              ai.isNPC = true;
+              ai.entity.setNPC();
 
-          break;
+              break;
+            }
+        }
+      else
+        {
+          // kill host from stage 1
+          game.playerArea.leaveHostAction('default');
+          ai.die();
+
+          game.group.team = new Team(game);
+          game.group.team.distance = 10;
+
+          // spawn team member AI, attach to it and invade
+          var ai = game.area.spawnAI('team',
+            game.playerArea.x, game.playerArea.y);
+          ai.isTeamMember = true;
+          game.playerArea.debugAttachAndInvadeAction(ai);
+          game.player.hostControl = 100;
         }
     }
 
@@ -1106,10 +1125,13 @@ class ConsoleGame
       game.player.skills.addID(SKILL_COMPUTER, 30);
 
       // forward timeline
-      game.goals.receive(GOAL_LEARN_CLUE);
-      game.timeline.learnClues(game.timeline.getStartEvent(), true);
-      game.timeline.getStartEvent().learnNPC();
-      game.goals.complete(GOAL_LEARN_NPC);
+      if (game.scenarioStringID == 'alien')
+        {
+          game.goals.receive(GOAL_LEARN_CLUE);
+          game.timeline.learnClues(game.timeline.getStartEvent(), true);
+          game.timeline.getStartEvent().learnNPC();
+          game.goals.complete(GOAL_LEARN_NPC);
+        }
     }
 
 
@@ -1204,6 +1226,12 @@ class ConsoleGame
 // stage 3: stage 2.3 + timeline open until scenario goals
   function stage3()
     {
+      if (game.scenarioStringID != 'alien')
+        {
+          log('Different scenario: ' + game.scenarioStringID + '.');
+          return;
+        }
+
       // assimilate current host
       game.player.host.addTrait(TRAIT_ASSIMILATED);
 

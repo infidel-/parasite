@@ -13,6 +13,7 @@ enum _UIState {
   UISTATE_OPTIONS; // options window
   UISTATE_BODY; // new body window
   UISTATE_MAINMENU; // main menu
+  UISTATE_NEWGAME; // new game menu
   UISTATE_SPOON; // spoon mode options
   UISTATE_PEDIA; // pedia windw
   UISTATE_OVUM; // parthenogenesis settings

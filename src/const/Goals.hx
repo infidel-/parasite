@@ -300,7 +300,7 @@ class Goals
       isHidden: true,
       name: '-',
       note: '-',
-      messageReceive: 'This is one of the hosts that are on my trail. If I could implant some false memories about our encounter into their head...',
+      messageReceive: 'This is one of the humans that are on my trail. If I could implant some false memories about our encounter into their head...',
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_FALSE_MEMORIES);
         game.profile.addPediaArticle('impFalseMemories');

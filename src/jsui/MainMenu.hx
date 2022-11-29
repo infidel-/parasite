@@ -33,7 +33,9 @@ class MainMenu extends UIWindow
       contents.id = 'window-mainmenu-contents';
       window.appendChild(contents);
 
-      addItem('NEW GAME', newGame);
+      addItem('NEW GAME', function(e) {
+        game.ui.state = UISTATE_NEWGAME;
+      });
       loadItem = addItem('LOAD GAME', loadGame);
       saveItem = addItem('SAVE GAME', saveGame);
       addItem('PEDIA', function(e) {
@@ -49,16 +51,6 @@ class MainMenu extends UIWindow
       });
       addCloseButton();
       close.style.display = 'none';
-    }
-
-// start new game
-  function newGame(e)
-    {
-      game.isStarted = true;
-      game.ui.closeWindow();
-      game.restart();
-      close.style.display = 'block';
-      game.ui.canvas.style.visibility = 'visible';
     }
 
 // load game
@@ -87,7 +79,7 @@ class MainMenu extends UIWindow
     {
       // skip tutorial
       if (index == 1)
-        newGame(null);
+        game.ui.state = UISTATE_NEWGAME;
       else if (index == 2)
         loadGame(null);
       else if (index == 3)

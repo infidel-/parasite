@@ -100,8 +100,9 @@ class BlackopsAI extends HumanAI
 // event: on AI probed
   public override function onBrainProbe()
     {
-      if (game.group.isKnown)
-        game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
+      // knowledge about group and false memories
+      game.group.brainProbe();
+      game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
     }
 
 /*

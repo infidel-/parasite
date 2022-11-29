@@ -67,6 +67,7 @@ class UI
         UISTATE_OPTIONS => new Options(game),
         UISTATE_PEDIA => new Pedia(game),
         UISTATE_MAINMENU => new MainMenu(game),
+        UISTATE_NEWGAME => new NewGame(game),
         UISTATE_SPOON => new Spoon(game),
         UISTATE_OVUM => new Ovum(game),
       ];
@@ -228,7 +229,9 @@ class UI
           // close windows
           if (key == 'Enter' || key == 'NumpadEnter' || key == 'Escape') 
             {
-              if (_state == UISTATE_OPTIONS || _state == UISTATE_PEDIA)
+              if (_state == UISTATE_OPTIONS ||
+                  _state == UISTATE_PEDIA ||
+                  _state == UISTATE_NEWGAME)
                 state = UISTATE_MAINMENU;
               else if (_state == UISTATE_MAINMENU && !game.isStarted)
                 return true;

@@ -742,6 +742,53 @@ fieldset {
   padding-bottom: 4px;
 }
 
+#window-newgame {
+  border: 30px solid;
+  width: 25ch;
+  height: 23em;
+  pointer-events: all;
+}
+
+#window-newgame-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+#window-newgame-contents {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.window-newgame-cont {
+  justify-content: center;
+  display: flex;
+}
+
+.window-newgame-item {
+  background: #3a4f71;
+  color: white;
+  width: 80%;
+  border-radius: 2px;
+  border: solid 2px #abc4ea;
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.window-newgame-item:hover {
+  background-color: #5f818c;
+  font-weight:bold;
+}
+
+.window-newgame-item:active {
+  color: #879ea3;
+}
+
 .slider-wrapper {
   width: 50%;
 }

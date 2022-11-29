@@ -205,39 +205,12 @@ class Timeline extends _SaveObject
 // unlock event timeline
   public function unlock()
     {
+      // skip in sandbox mode
+      if (game.scenarioStringID == 'sandbox')
+        return;
       // give some starting clues to player
       var e = getStartEvent();
       e.locationKnown = true;
-/*
-let's see how it goes with only the location of starting event known
-should limit player options for guiding purposes
-      var nothingKnown = true;
-      for (npc in e.npc)
-        {
-          // flat 30% chance of knowing name, job+photo or area
-          if (Std.random(100) < 30)
-            {
-              npc.nameKnown = true;
-              nothingKnown = false;
-            }
-
-          else if (Std.random(100) < 30)
-            {
-              npc.jobKnown = true;
-              nothingKnown = false;
-            }
-
-          else if (Std.random(100) < 30)
-            {
-              npc.areaKnown = true;
-              nothingKnown = false;
-            }
-        }
-
-      // if all rolls fail just give out a name of first npc
-      if (nothingKnown)
-        e.npc[0].nameKnown = true;
-*/
       update(); // update event numbering
     }
 
@@ -438,8 +411,13 @@ should limit player options for guiding purposes
 // init a new scenario
   public function create()
     {
-      scenario = new ScenarioAlienCrashLanding();
+      if (game.scenarioStringID == 'alien')
+        scenario = new ScenarioAlienCrashLanding();
+      else if (game.scenarioStringID == 'sandbox')
+        scenario = new ScenarioSandbox();
       scenarioID = untyped Type.getClass(scenario).__name__;
+      if (game.scenarioStringID == 'sandbox') // skip init for sandbox
+        return;
 
       // parse names
       parseNames();

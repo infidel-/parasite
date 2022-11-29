@@ -49,6 +49,7 @@ class Game extends _SaveObject
   public var messageList: List<_LogMessage>; // last X messages of log
   public var hudMessageList: List<_LogMessage>; // last X messages of hud log
   public var importantMessagesEnabled: Bool; // messages enabled?
+  public var scenarioStringID: String; // short name for scenario
 
   public function new()
     {
@@ -67,6 +68,7 @@ class Game extends _SaveObject
       isStarted = false;
       isRebirth = false;
       isFirstGame = true;
+      scenarioStringID = 'alien';
 
       area = null;
       region = null;
@@ -76,7 +78,12 @@ class Game extends _SaveObject
 // init game stuff - called from GameScene.init()
   public function init()
     {
-      var s = 'Parasite v' + Version.getVersion();
+      var scen = '';
+      if (scenarioStringID == 'alien')
+        scen = '[scenario a]';
+      else if (scenarioStringID == 'sandbox')
+        scen = '[sandbox]';
+      var s = 'Parasite v' + Version.getVersion() + ' ' + Const.smallgray(scen);
 //        ' (build: ' + Version.getBuild() + ')';
 #if demo
       log (s + ' DEMO');
@@ -108,23 +115,34 @@ class Game extends _SaveObject
       // set random region (currently only 1 at all)
       region = world.get(0);
 
-      // find random inhabited area near player starting location
-      var event = timeline.getStartEvent();
+      if (scenarioStringID == 'sandbox') // skip init for sandbox
+        {
+          // random low-population area
+          area = region.getRandomWithType(AREA_CITY_LOW, true);
+        }
+      else
+        {
+          // find random inhabited area near player starting location
+          var event = timeline.getStartEvent();
 
-      // at first we try to find low-population area for easier start
-      area = region.getRandomAround(event.location.area, {
-        isInhabited: true,
-        minRadius: 2,
-        maxRadius: 5,
-        type: AREA_CITY_LOW,
-        canReturnNull: true });
+          // at first we try to find low-population area for easier start
+          area = region.getRandomAround(event.location.area, {
+            isInhabited: true,
+            minRadius: 2,
+            maxRadius: 5,
+            type: AREA_CITY_LOW,
+            canReturnNull: true
+          });
 
-      // but if no areas found, backup plan - use any inhabited area
-      if (area == null)
-        area = region.getRandomAround(event.location.area, {
-          isInhabited: true,
-          minRadius: 2,
-          maxRadius: 5 });
+          // but if no areas found, backup plan - use any inhabited area
+          if (area == null)
+            area = region.getRandomAround(event.location.area, {
+              isInhabited: true,
+              minRadius: 2,
+              maxRadius: 5
+            });
+        }
+
       // TODO: REMOVE TEST!!!
 //      area = region.getRandomWithType(AREA_FACILITY, false);
 //      player.vars.losEnabled = false;
