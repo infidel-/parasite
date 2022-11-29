@@ -368,30 +368,39 @@ class Goals
       name: 'Learn more about the human society',
       note: 'Probe host brains to raise the human society knowledge to 25%. This might require multiple hosts.',
       messageReceive: 'The humans have evolved a large and intricate society. I must study it some more.',
-      messageComplete: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.',
       noteFunc: function (game) {
         return Const.col('gray', Const.small('Current level: ' +
           game.player.skills.getLevel(KNOW_SOCIETY) + '%'));
       },
       onComplete: function (game, player) {
-        player.vars.timelineEnabled = true;
         game.player.vars.objectsEnabled = true;
-        game.timeline.unlock();
-        game.ui.event({
-          type: UIEVENT_HIGHLIGHT,
-          state: UISTATE_TIMELINE,
-        });
+        if (game.scenarioStringID == 'alien')
+          {
+            game.message('What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.');
+            player.vars.timelineEnabled = true;
+            game.timeline.unlock();
+            game.ui.event({
+              type: UIEVENT_HIGHLIGHT,
+              state: UISTATE_TIMELINE,
+            });
+            game.profile.addPediaArticle('eventTimeline');
+          }
+        else if (game.scenarioStringID == 'sandbox')
+          game.message('I have learned enough to leave this place.');
         game.goals.receive(GOAL_ENTER_SEWERS);
-        game.profile.addPediaArticle('eventTimeline');
       }
     },
 
+    // finish of the tutorial in sandbox mode
     GOAL_ENTER_SEWERS => {
       id: GOAL_ENTER_SEWERS,
       name: 'Enter the sewers',
       note: 'Find a sewers hatch and enter the sewers.',
       onComplete: function (game, player) {
-        game.goals.receive(GOAL_TRAVEL_EVENT);
+        if (game.scenarioStringID == 'alien')
+          game.goals.receive(GOAL_TRAVEL_EVENT);
+        else if (game.scenarioStringID == 'sandbox')
+          game.message('I am now free to do as I see fit.');
         game.profile.addPediaArticle('regionMode');
       }
     },
@@ -403,8 +412,8 @@ class Goals
       messageComplete: 'I found the location. There should be some clues here.',
       onComplete: function (game, player) {
         game.goals.receive(GOAL_LEARN_CLUE);
-        }
-      },
+      }
+    },
 
     GOAL_LEARN_CLUE => {
       id: GOAL_LEARN_CLUE,
