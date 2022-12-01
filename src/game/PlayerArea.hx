@@ -297,7 +297,7 @@ class PlayerArea extends _SaveObject
 
       // plant false memories
       else if (action.id == 'plantMemories')
-        plantMemoriesAction();
+        ret = plantMemoriesAction();
 
       // learn about object
       else if (action.id == 'learnObject')
@@ -941,16 +941,25 @@ class PlayerArea extends _SaveObject
     }
 
 // action: plant false memories
-  function plantMemoriesAction()
+  function plantMemoriesAction(): Bool
     {
+      if (game.area.isHabitat)
+        {
+          log('You cannot do this in a habitat.', COLOR_HINT);
+          return false;
+        }
       var isTeamMember = false;
-      if (player.host.isTeamMember || player.host.type == 'blackops')
+      if (player.host.isTeamMember ||
+          player.host.type == 'blackops')
         isTeamMember = true;
       var msg = 'You release the host triggering the pseudocampus.';
       if (isTeamMember && !player.host.hasFalseMemories)
         {
           var params: { distanceBonus: Int } =
             player.host.organs.getParams(IMP_FALSE_MEMORIES);
+          var distanceBonus = params.distanceBonus;
+          if (player.host.type == 'blackops')
+            distanceBonus *= 2;
           game.group.raiseTeamDistance(params.distanceBonus);
           msg += ' A set of implanted false memories about the encounter will help your survival.';
         }

@@ -1158,9 +1158,9 @@ public function show()
       if (game.player.state != PLR_STATE_HOST ||
           game.player.host != this)
         log('dies.');
-      onDeath(); // event hook
       setState(AI_STATE_DEAD);
       game.area.removeAI(this);
+      onDeath(); // event hook
       var o = new BodyObject(game, game.area.id, x, y, type);
 
       // decay acceleration
@@ -1259,6 +1259,7 @@ public function show()
     {}
 
 // event hook: on AI death
+// NOTE: called after the AI is removed from the area list!
   public dynamic function onDeath()
     {}
 

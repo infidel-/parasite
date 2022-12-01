@@ -118,10 +118,11 @@ class TeamMemberAI extends HumanAI
     }
 
 // event: on AI death
+// NOTE: called after the AI is removed from the area list!
   public override function onDeath()
     {
       // call group hook
-      game.group.teamMemberDeath();
+      game.group.onTeamMemberDeath();
     }
 
 // event: on AI probed

@@ -1663,21 +1663,33 @@ class Test {
       return tmp[Std.random(tmp.length)];
     }
 
-
 // get all AIs in radius from that x,y
 // los - must have los to that location
   public function getAIinRadius(x: Int, y: Int, dist: Int, los: Bool): List<AI>
     {
       var tmp = new List<AI>();
-
       for (ai in _ai)
         if (Const.distanceSquared(x, y, ai.x, ai.y) <= dist * dist &&
             (!los || isVisible(ai.x, ai.y, x, y)))
           tmp.add(ai);
-
       return tmp;
     }
 
+// get all AIs with a given type excluding player host
+  public function getAIWithType(t: String): List<AI>
+    {
+      var tmp = new List<AI>();
+      for (ai in _ai)
+        {
+          if (ai.type != t)
+            continue;
+          if (game.player.state == PLR_STATE_HOST &&
+              game.player.host == ai)
+            continue;
+          tmp.add(ai);
+        }
+      return tmp;
+    }
 
 // get all AI
   public inline function getAllAI(): List<AI>

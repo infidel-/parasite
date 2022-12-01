@@ -704,8 +704,9 @@ class EvolutionConst
         note: 'Body feature. A short-term interface into the human brain allows the parasite to engrain the host with false memories also resulting in the short-term host confusion after activation.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Team distance increase: " + l.distanceBonus +
-            (l2 != null ? ' &rarr; ' + l2.distanceBonus : '');
+          return "Team timeout/distance increase: " + l.distanceBonus +
+            (l2 != null ? ' &rarr; ' + l2.distanceBonus : '') +
+            '<br/>Double bonus from blackops';
         },
         organ: {
           name: 'Pseudocampus',
@@ -737,6 +738,7 @@ class EvolutionConst
           'Highly-nuanced and detailed memory design leading to best believability',
         ],
         levelParams: [
+          // NOTE: double bonus from blackops
           // distance decrease per turn (team level): 0.1, 0.2, 0.5, 1.0
           // bonus turns (imp level 1): 50, 25, 10, 5
           // bonus turns (imp level 2): 100, 50, 20, 10

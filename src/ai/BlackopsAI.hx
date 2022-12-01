@@ -105,6 +105,14 @@ class BlackopsAI extends HumanAI
       game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
     }
 
+// event hook: on AI death
+// NOTE: called after the AI is removed from the area list!
+  public override function onDeath()
+    {
+      if (game.group.team != null)
+        game.group.team.onBlackopsDeath();
+    }
+
 /*
 // event: on being attacked
   public override function onAttack()

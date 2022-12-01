@@ -265,6 +265,20 @@ class Team extends FSM<_TeamState, _TeamFlag>
         }
     }
 
+// event: blackops dies, could be end of an ambush
+  public function onBlackopsDeath()
+    {
+      // must be during the ambush
+      if (state != TEAM_FIGHT)
+        return;
+      // check how many are left living
+      var ai = game.area.getAIWithType('blackops');
+      if (ai.length > 0)
+        return;
+      // no more free blackops, ambush failed
+      game.message("I've eliminated the aggressors. It will be some time before they will be able to get on my trail again.");
+      game.group.onRepelAmbush();
+    }
 
 // event: player leaves area with an active team
   public function onLeaveArea()
@@ -272,18 +286,20 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (state != TEAM_FIGHT)
         return;
 
-      game.log("You've managed to survive the ambush.");
-
-      // note that we do not care whether the actual ambushers are dead
-      // the habitat is still burned
+      // since blackops deaths should trigger the good outcome
+      // this one is for when some of them are alive - habitat is burned
       if (game.area.isHabitat)
-        destroyHabitat(game.area.parent);
+        {
+          game.log("You've managed to escape the ambush.");
+          destroyHabitat(game.area.parent);
+        }
 
+      // street ambush, avoidance
       else
         {
+          game.log("You've managed to avoid the ambush.");
           // team distance is increased a little providing a buffer
           distance = 10;
-
           // team goes back to search
           state = TEAM_SEARCH;
         }

@@ -256,7 +256,9 @@ Alt+0-5 - equals F1-F5<br>
           id: 'teamAmbush',
           groupAddFlag: true,
           name: 'Team: Ambush',
-          text: "Once the team distance is sufficiently low, the team will discover one of your habitats if you have them. At this point the team will hide in an ambush. They will wait for some time and then just burn everything cowboy style. Destruction of the habitat is a deeply traumatic event for the parasite and reduces its maximum energy permanently with more temporary drawbacks. If you walk into an ambush, the fight starts. You need to survive for three turns before you can leave the ambushed habitat. Leaving the habitat will also result in its immediate destruction. The only positive thing about this event is that it will increase the team distance giving you some breathing room. Killing the ambushers, while possible, will still result in the habitat destruction. Note that if you don't have any habitats, the logic stays the same, except that the ambush will happen right on the city street and ambush evasion will result in a smaller downtime.",
+          text: "<p>Once the team distance is sufficiently low, the team will discover one of your habitats if you have them. At this point the team will hide in an ambush. They will wait for some time and then just burn everything cowboy style. Destruction of the habitat is a deeply traumatic event for the parasite and reduces its maximum energy permanently with more temporary drawbacks. If you walk into an ambush, the fight starts. You need to survive for three turns before you can leave the ambushed habitat. Leaving the habitat will also result in its immediate destruction. The only positive thing about this event is that it will increase the team distance giving you some breathing room.</p>
+
+<p>Killing the ambushers, while possible, is very hard to manage. In this case the habitat will not be destroyed. Instead, the group priority increases but the team timeout restarts. Note that if you don't have any habitats, the logic stays the same, except that the ambush will now happen right on the city street and ambush evasion will result in the same distance increase as when you escape from the habitat ambush.</p>",
         },
         {
           id: 'teamBasics',
@@ -275,7 +277,7 @@ Alt+0-5 - equals F1-F5<br>
         {
           id: 'impFalseMemories',
           name: 'Pseudocampus',
-          text: 'Pseudocampus body feature allows the parasite to safely detach from the host confusing them for a short period of time. If you manage to get away before they become alert, it will be the safest option for your survival. In case of the host being a Group team agent, this will also result in a team distance increase.',
+          text: 'Pseudocampus body feature allows the parasite to safely detach from the host confusing them for a short period of time. If you manage to get away before they become alert, it will be the safest option for your survival. In case of the host being a Group team agent, this will also result in a team distance increase. Blackops agents give double the usual bonus. Note that if the rest of the team was wiped at the time of planting false memories, the team timeout increases instead.',
         },
       ],
     },

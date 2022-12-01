@@ -147,9 +147,10 @@ class Group extends _SaveObject
 // specifically raise team distance
   public function raiseTeamDistance(mod: Float)
     {
+      // could be after repelling the ambush
       if (team == null)
         {
-          trace('BUG: Trying to raise team distance with no team?');
+          teamTimeout += 10 + Std.int(mod);
           return;
         }
       team.distance += mod;
@@ -168,12 +169,12 @@ class Group extends _SaveObject
       game.info('Team deactivated, timeout: ' + teamTimeout + ' turns');
     }
 
-
 // on team member death
-  public function teamMemberDeath()
+  public function onTeamMemberDeath()
     {
       team.size--;
 
+      // team dead, raise priority
       changeOnlyPriority(10);
 
       if (team.size > 0)
@@ -187,8 +188,20 @@ class Group extends _SaveObject
       // team wipe, timeout
       teamTimeout = 50;
       team = null;
-
       game.info('Team wiped, timeout: ' + teamTimeout + ' turns');
+    }
+
+// on repelling an ambush
+  public function onRepelAmbush()
+    {
+      // attack team dead, raise priority (larger)
+      changeOnlyPriority(15);
+
+      // larger timeout and reset starting distance
+      teamStartDistance = 100.0;
+      teamTimeout = 100;
+      team = null;
+      game.info('Team destroyed in ambush, timeout: ' + teamTimeout + ' turns');
     }
 
 
