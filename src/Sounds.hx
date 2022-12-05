@@ -258,7 +258,6 @@ class Sounds
           return;
         }
       lastPlayedTS[key] = haxe.Timer.stamp();
-//      game.debug('Playing sound ' + key + ' (opts: ' + opts + ')');
       var volume = game.config.effectsVolume;
       if (opts.x != null && opts.y != null)
         {
@@ -268,8 +267,11 @@ class Sounds
             volume = Std.int(volume * (radius - dist) / radius);
           else volume = Std.int(volume * 0.1); // make silent instead?
         }
+      var id = key + '|' + Std.random(4); // make it so sounds can repeat
+//      game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')');
+      SoundManager.destroySound(id); // clear previous sound
       var sound = SoundManager.createSound({
-        id: key,
+        id: id,
         url: 'sound/' + key + '.mp3',
         volume: volume,
       });
