@@ -129,6 +129,7 @@ class Ovum extends UIWindow
           action.className = 'actions-item';
           action.innerHTML = buf.toString();
           action.onclick = function (e) {
+            game.scene.sounds.play('click-action');
             runAction(act);
           };
           actions.appendChild(action);

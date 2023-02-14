@@ -50,6 +50,8 @@ class Spoon extends UIWindow
           game.player.evolutionManager.giveAllBasic();
         game.ui.hud.update();
         game.config.save(false);
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
         game.ui.state = UISTATE_MAINMENU;
       }
 

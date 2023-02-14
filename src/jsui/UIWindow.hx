@@ -42,6 +42,8 @@ class UIWindow
       close.innerHTML = 'CLOSE';
       close.style.borderImage = "url('./img/window-common-close.png') 92 fill / 1 / 0 stretch";
       close.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
         game.ui.closeWindow();
       }
       window.appendChild(close);

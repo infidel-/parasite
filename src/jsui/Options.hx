@@ -44,6 +44,8 @@ class Options extends UIWindow
 
       addCloseButton();
       close.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
         game.config.save(false);
         game.ui.state = UISTATE_MAINMENU;
       }

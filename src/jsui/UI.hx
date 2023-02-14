@@ -155,6 +155,7 @@ class UI
                 }
               else
                 {
+                  game.scene.sounds.play('window-open');
                   state = UISTATE_MAINMENU;
                   return;
                 }
@@ -227,8 +228,11 @@ class UI
       if (!Lambda.has(uiNoClose, _state))
         {
           // close windows
-          if (key == 'Enter' || key == 'NumpadEnter' || key == 'Escape') 
+          if (key == 'Enter' ||
+              key == 'NumpadEnter' ||
+              key == 'Escape') 
             {
+              game.scene.sounds.play('window-close');
               if (_state == UISTATE_OPTIONS ||
                   _state == UISTATE_PEDIA ||
                   _state == UISTATE_NEWGAME)
@@ -251,6 +255,7 @@ class UI
       var evolutionPressed = (code == 'Digit5' && altKey) || code == 'F5';
       var optionsPressed = (code == 'Digit6' && altKey) || code == 'F6';
       var exitPressed = (code == 'Digit0' && altKey) || code == 'F10';
+      var vstate = _state;
 
       // open goals window
       if (goalsPressed)
@@ -292,6 +297,8 @@ class UI
             }
           });
         }
+      if (state != vstate)
+        game.scene.sounds.play('window-open');
       return false;
     }
 

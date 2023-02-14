@@ -155,7 +155,11 @@ class HUD
         btn: btn,
       });
       btn.onclick = function (e)
-        { game.ui.state = state; }
+        {
+          game.scene.sounds.play('click-hud');
+          game.scene.sounds.play('window-open');
+          game.ui.state = state; 
+        }
       return btn;
     }
 
@@ -566,6 +570,7 @@ class HUD
             btn.innerHTML = buf.toString();
             btn.className = 'hud-action';
             btn.onclick = function (e) {
+              game.scene.sounds.play('click-action');
               if (untyped e.shiftKey &&
                   game.config.shiftLongActions &&
                   action.canRepeat)

@@ -107,7 +107,10 @@ class MainMenu extends UIWindow
       item.className = 'window-mainmenu-item';
       item.innerHTML = label;
       cont.appendChild(item);
-      item.onclick = f;
+      item.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        f(e);
+      };
       return item;
     }
 

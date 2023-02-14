@@ -87,6 +87,8 @@ class Pedia extends UIWindow
 
       addCloseButton();
       close.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
         game.ui.state = UISTATE_MAINMENU;
       }
     }

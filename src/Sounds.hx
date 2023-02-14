@@ -35,6 +35,7 @@ class Sounds
       };
       Browser.window.setInterval(function () {
         if (game.ui.state == UISTATE_MAINMENU ||
+            game.ui.state == UISTATE_NEWGAME ||
             game.ui.state == UISTATE_OPTIONS ||
             game.ui.state == UISTATE_PEDIA)
           {

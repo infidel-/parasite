@@ -238,6 +238,7 @@ class Body extends UIWindow
           action.innerHTML = Const.key('S-' + n) + ': ' + act.name;
           n++;
           action.onclick = function (e) {
+            game.scene.sounds.play('click-action');
             game.player.host.organs.action(act.id);
             update();
             game.ui.hud.update();
@@ -288,6 +289,7 @@ class Body extends UIWindow
             (act.energy > 0 ? ' ' + Const.smallgray('(' + act.energy + ' energy)') : '');
           n++;
           action.onclick = function (e) {
+            game.scene.sounds.play('click-action');
             game.player.host.inventory.action(act);
             if (game.ui.state == UISTATE_BODY)
               game.ui.closeWindow();

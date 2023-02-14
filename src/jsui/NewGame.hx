@@ -27,13 +27,16 @@ class NewGame extends UIWindow
       window.appendChild(contents);
 
       addItem('SCENARIO A', function (e) {
+        game.scene.sounds.play('click-menu');
         newGame('alien');
       });
       addItem('SANDBOX', function (e) {
+        game.scene.sounds.play('click-menu');
         newGame('sandbox');
       });
       addCloseButton();
       close.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
         game.ui.state = UISTATE_MAINMENU;
       }
     }

@@ -29,6 +29,7 @@ class YesNo extends UIWindow
       yes.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       yes.onclick = function (e) {
         func(true);
+        game.scene.sounds.play('click-menu');
         game.ui.closeWindow();
       }
       window.appendChild(yes);
@@ -40,6 +41,7 @@ class YesNo extends UIWindow
       no.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       no.onclick = function (e) {
         func(false);
+        game.scene.sounds.play('click-menu');
         game.ui.closeWindow();
       }
       window.appendChild(no);
