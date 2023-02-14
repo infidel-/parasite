@@ -39,6 +39,7 @@ class Pedia extends UIWindow
           group.className = 'window-pedia-group-item actions-item';
           group.innerHTML = '- ' + groupContents.name;
           group.onclick = function (e) {
+            game.scene.sounds.play('click-submenu');
             groupInfo.isOpen = !groupInfo.isOpen;
             var sym = (groupInfo.isOpen ? '- ' : '+ ');
             group.innerHTML = sym + groupContents.name;
@@ -76,6 +77,7 @@ class Pedia extends UIWindow
                   topic.style.display = 'flex';
                 }
               topic.onclick = function (e) {
+                game.scene.sounds.play('click-submenu');
                 pediaContents.innerHTML =
                   Const.col('gray', '<h3>' + article.name + '</h3><br>') +
                   Const.col('pedia', article.text);

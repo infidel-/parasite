@@ -39,6 +39,7 @@ class Message extends UIWindow
       if (o.col != null)
         text.innerHTML = "<font style='color:" + o.col + "'>"  + o.text + "</font>";
       else text.innerHTML = o.text;
+      game.scene.sounds.play('message-default');
     }
 }
 
