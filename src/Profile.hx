@@ -47,8 +47,11 @@ class Profile
         return false;
       object.pediaArticles.set(id, 1);
       if (showMessage)
-        game.log(Const.small('New pedia article available: ' +
-          PediaConst.getName(id) + '.'), COLOR_PEDIA);
+        {
+          game.scene.sounds.play('pedia-new');
+          game.log(Const.small('New pedia article available: ' +
+            PediaConst.getName(id) + '.'), COLOR_PEDIA);
+        }
       var pedia: jsui.Pedia = cast game.ui.getComponent(UISTATE_PEDIA);
       pedia.newArticle(id);
       save();

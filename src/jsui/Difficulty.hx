@@ -30,6 +30,7 @@ class Difficulty extends UIWindow
       easy.innerHTML = 'EASY';
       easy.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       easy.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
         action(1);
       }
       easy.onmouseover = function (e) {
@@ -46,6 +47,7 @@ class Difficulty extends UIWindow
       normal.innerHTML = 'NORMAL';
       normal.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       normal.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
         action(2);
       }
       normal.onmouseover = function (e) {
@@ -62,6 +64,7 @@ class Difficulty extends UIWindow
       hard.innerHTML = 'HARD';
       hard.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       hard.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
         action(3);
       }
       hard.onmouseover = function (e) {

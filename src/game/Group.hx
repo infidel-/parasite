@@ -232,7 +232,10 @@ class Group extends _SaveObject
         if (a.groupAddFlag && game.profile.addPediaArticle(a.id, false))
           articleAdded = true;
       if (articleAdded)
-        game.log(Const.small('New pedia articles about the Group available.'), COLOR_PEDIA);
+        {
+          game.scene.sounds.play('pedia-new');
+          game.log(Const.small('New pedia articles about the Group available.'), COLOR_PEDIA);
+        }
 
       isKnown = true;
     }
