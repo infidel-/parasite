@@ -115,6 +115,7 @@ class EvolutionManager extends _SaveObject
   function turnUpgrade(imp: Improv)
     {
       imp.level++;
+      game.scene.sounds.play('evolution-complete');
       player.log('You have improved your understanding of ' + imp.info.name +
         ' to level ' + imp.level + '.', COLOR_EVOLUTION);
 
@@ -165,7 +166,10 @@ class EvolutionManager extends _SaveObject
 
       game.info('Improvement gained: ' + imp.info.name + ' (' + level + ').');
       if (!skipMessage && game.importantMessagesEnabled)
-        game.log(Const.small('Improvement gained: ' + imp.info.name + '.'), COLOR_EVOLUTION);
+        {
+          game.scene.sounds.play('evolution-gained');
+          game.log(Const.small('Improvement gained: ' + imp.info.name + '.'), COLOR_EVOLUTION);
+        }
 
       return imp;
     }
@@ -323,7 +327,10 @@ class EvolutionManager extends _SaveObject
           n--;
         }
       if (game.importantMessagesEnabled)
-        game.log(Const.small('Improvements gained: ' + gained.join(', ') + '.'), COLOR_EVOLUTION);
+        {
+          game.scene.sounds.play('evolution-gained');
+          game.log(Const.small('Improvements gained: ' + gained.join(', ') + '.'), COLOR_EVOLUTION);
+        }
     }
 
 

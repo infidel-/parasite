@@ -138,6 +138,7 @@ class Organs extends _SaveObject
 
       currentOrgan.isActive = true;
       game.log(currentOrgan.info.name + ' growth completed.', COLOR_ORGAN);
+      game.scene.sounds.play('organ-complete');
 
       _ai.recalc(); // recalc all stats and mods
 
