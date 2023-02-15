@@ -214,6 +214,8 @@ class RegionView
 // clear icons (needed on game restart)
   public function clearIcons()
     {
+      if (game.region == null) // first call
+        return;
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)

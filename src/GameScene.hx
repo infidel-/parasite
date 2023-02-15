@@ -150,9 +150,6 @@ class GameScene extends Scene
       // init sound
       sounds = new Sounds(this);
 
-      // init game state
-      game.init();
-
       // update AI hear, view distance
       // clamp so that 4k players do not have it hard
       var xmin = cameraTileX2 - cameraTileX1;

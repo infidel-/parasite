@@ -43,7 +43,6 @@ class Game extends _SaveObject
   public var turns: Int; // number of turns passed since game start
   public var isInited: Bool; // is the game initialized?
   public var isStarted: Bool; // has the gameplay started?
-  public var isFirstGame: Bool; // is first game in session?
   public var isFinished: Bool; // is the game finished?
   public var isRebirth: Bool; // game "finished" by player rebirth?
   public var messageList: List<_LogMessage>; // last X messages of log
@@ -67,7 +66,6 @@ class Game extends _SaveObject
       isInited = false;
       isStarted = false;
       isRebirth = false;
-      isFirstGame = true;
       scenarioStringID = 'alien';
 
       area = null;
@@ -173,10 +171,9 @@ class Game extends _SaveObject
           goals.receive(goal, silent ? SILENT_ALL : SILENT_NONE);
       // initial pedia articles
       var articleAdded = false;
-      if (!isFirstGame) // kludge: first game is skipped
-        for (a in const.PediaConst.initialArticles)
-          if (profile.addPediaArticle(a, false))
-            articleAdded = true;
+      for (a in const.PediaConst.initialArticles)
+        if (profile.addPediaArticle(a, false))
+          articleAdded = true;
       if (articleAdded)
         log(Const.small('New pedia articles available.'), COLOR_PEDIA);
 
@@ -187,7 +184,6 @@ class Game extends _SaveObject
       updateHUD(); // update HUD state
 
       isInited = true;
-      isFirstGame = false;
     }
 
 // skip starting tutorial
