@@ -104,6 +104,7 @@ class ConsoleGame
           log('Available commands: cfg, config, ' +
             'dg - debug: graphics info, ' +
             'dai - debug: ai info, ' +
+            'ds - debug: enable sound info, ' +
             'load - load game, ' +
             'restart, ' +
             'save - save game, ' +
@@ -592,6 +593,12 @@ class ConsoleGame
             ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', ' +
             game.area.getMaxAICoef() + ')]'
           );
+        }
+      // XXX ds - enable debug sound info
+      else if (cmd == 'ds')
+        {
+          game.player.vars.debugSoundEnabled = !game.player.vars.debugSoundEnabled;
+          game.debug('Sound debug toggled.');
         }
 #if mydebug
       else if (cmd == 'dalert')

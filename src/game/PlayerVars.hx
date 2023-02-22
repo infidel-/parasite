@@ -29,6 +29,7 @@ package game;
   public var invisibilityEnabled: Bool; // player invisibility enabled?
   public var godmodeEnabled: Bool; // player godmode enabled?
   public var isSpoonGame: Bool; // spoon mode enabled or was enabled?
+  public var debugSoundEnabled: Bool; // debug sound mode enabled?
 
   public function new(
     inventoryEnabled,
@@ -53,7 +54,8 @@ package game;
     losEnabled,
     invisibilityEnabled,
     godmodeEnabled,
-    isSpoonGame)
+    isSpoonGame,
+    debugSoundEnabled)
     {
       this.inventoryEnabled = inventoryEnabled;
       this.objectsEnabled = objectsEnabled;
@@ -78,5 +80,6 @@ package game;
       this.godmodeEnabled = godmodeEnabled;
       this.savesLeft = savesLeft;
       this.isSpoonGame = isSpoonGame;
+      this.debugSoundEnabled = debugSoundEnabled;
     }
 }

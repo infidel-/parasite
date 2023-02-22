@@ -57,6 +57,7 @@ class SewerHatch extends AreaObject
       if (!game.goals.leaveAreaPre())
         return false;
 
+      game.scene.sounds.play('object-sewers');
       game.log("You enter the damp fetid sewers escaping the prying eyes.");
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);

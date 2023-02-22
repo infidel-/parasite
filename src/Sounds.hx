@@ -269,7 +269,8 @@ class Sounds
           else volume = Std.int(volume * 0.1); // make silent instead?
         }
       var id = key + '|' + Std.random(4); // make it so sounds can repeat
-//      game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')');
+      if (game.player.vars.debugSoundEnabled)
+        game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')');
       SoundManager.destroySound(id); // clear previous sound
       var sound = SoundManager.createSound({
         id: id,

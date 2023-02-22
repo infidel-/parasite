@@ -256,6 +256,12 @@ class AreaManager extends _SaveObject
           pts = 1;
         }
 
+      game.scene.sounds.play('ai-phone', {
+        x: e.ai.x,
+        y: e.ai.y,
+        canDelay: true,
+        always: false,
+      });
       log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
         ' has received reports about ' + sdetails +
         '. Dispatching units to the location.');
@@ -303,6 +309,12 @@ class AreaManager extends _SaveObject
 
       log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
         ' arrives on scene!');
+      game.scene.sounds.play((area.typeID == AREA_FACILITY ? 'ai-arrive-security' : 'ai-arrive-police'), {
+        x: e.x,
+        y: e.y,
+        canDelay: true,
+        always: false,
+      });
 
       for (i in 0...area.info.lawResponseAmount)
         {
@@ -342,6 +354,12 @@ class AreaManager extends _SaveObject
 // event: police/security/army calls for backup
   function onCallBackup(e: AreaEvent)
     {
+      game.scene.sounds.play('ai-radio', {
+        x: e.ai.x,
+        y: e.ai.y,
+        canDelay: true,
+        always: false,
+      });
       log((e.ai.type == 'police' ? 'Officer' : 'Unit') +
         ' calling for backup. Dispatching units to the location.');
 
@@ -389,6 +407,12 @@ class AreaManager extends _SaveObject
         return;
 
       log('Backup arrives on scene!');
+      game.scene.sounds.play('ai-arrive-' + e.params.type, {
+        x: e.x,
+        y: e.y,
+        canDelay: true,
+        always: false,
+      });
       for (i in 0...2)
         {
           var loc = area.findEmptyLocationNear(e.x, e.y, 5);
@@ -444,6 +468,12 @@ class AreaManager extends _SaveObject
 // event: team member calls for backup
   function onCallTeamBackup(e: AreaEvent)
     {
+      game.scene.sounds.play('ai-radio', {
+        x: e.ai.x,
+        y: e.ai.y,
+        canDelay: true,
+        always: false,
+      });
       log('Team member calling for backup. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
@@ -483,6 +513,12 @@ class AreaManager extends _SaveObject
         return;
 
       log('Backup arrives on scene!');
+      game.scene.sounds.play('ai-arrive-security', {
+        x: e.x,
+        y: e.y,
+        canDelay: true,
+        always: false,
+      });
 
       for (i in 0...2)
         {
