@@ -103,6 +103,7 @@ class Habitat extends _SaveObject
       game.scene.updateCamera();
       // update habitat stats
       update();
+      game.scene.sounds.play('object-growth');
 
       return true;
     }

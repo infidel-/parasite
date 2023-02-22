@@ -73,8 +73,19 @@ class Game extends _SaveObject
       __Math.game = this;
     }
 
-// init game stuff - called from GameScene.init()
-  public function init()
+// partial game init to not break stuff
+  public function initFake()
+    {
+      world = new World(this);
+      world.generate();
+      region = world.get(0);
+      area = region.getRandomWithType(AREA_CITY_LOW, true);
+      timeline = new Timeline(this);
+      timeline.create();
+    }
+
+// init game stuff
+  public function init(firstTime: Bool)
     {
       var scen = '';
       if (scenarioStringID == 'alien')
@@ -163,23 +174,26 @@ class Game extends _SaveObject
       location = LOCATION_AREA;
       area.enter();
 
-      // initial goals
-      message('You are alone. You are scared. You need to find a host or you will die soon.');
-      var silent = (config.skipTutorial && config.difficulty > 0);
-      for (goal in const.Goals.map.keys())
-        if (const.Goals.map[goal].isStarting)
-          goals.receive(goal, silent ? SILENT_ALL : SILENT_NONE);
-      // initial pedia articles
-      var articleAdded = false;
-      for (a in const.PediaConst.initialArticles)
-        if (profile.addPediaArticle(a, false))
-          articleAdded = true;
-      if (articleAdded)
-        log(Const.small('New pedia articles available.'), COLOR_PEDIA);
+      if (!firstTime)
+        {
+          // initial goals
+          message('You are alone. You are scared. You need to find a host or you will die soon.');
+          var silent = (config.skipTutorial && config.difficulty > 0);
+          for (goal in const.Goals.map.keys())
+            if (const.Goals.map[goal].isStarting)
+              goals.receive(goal, silent ? SILENT_ALL : SILENT_NONE);
+          // initial pedia articles
+          var articleAdded = false;
+          for (a in const.PediaConst.initialArticles)
+            if (profile.addPediaArticle(a, false))
+              articleAdded = true;
+          if (articleAdded)
+            log(Const.small('New pedia articles available.'), COLOR_PEDIA);
 
-      // skip tutorial flag
-      if (config.skipTutorial)
-        skipTutorial();
+          // skip tutorial flag
+          if (config.skipTutorial)
+            skipTutorial();
+        }
 
       updateHUD(); // update HUD state
 
@@ -238,7 +252,7 @@ class Game extends _SaveObject
   public function restart()
     {
       restartPre();
-      init();
+      init(false);
     }
 
 

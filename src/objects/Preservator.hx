@@ -80,6 +80,7 @@ class Preservator extends HabitatObject
               return true;
             }
 
+          game.scene.sounds.play('object-preservator');
           game.log('You release the host into the cold embrace of the preservator.');
           game.playerArea.leaveHostAction('preservator');
           return true;

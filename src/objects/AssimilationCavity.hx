@@ -49,6 +49,7 @@ class AssimilationCavity extends HabitatObject
   override function onAction(action: _PlayerAction): Bool
     {
       game.narrative("Twisting tendrils wrap around the host, starting the assimilation process.", COLOR_ORGAN);
+      game.scene.sounds.play('object-assimilation');
       game.player.host.emitSound({
         text: '*GASP*',
         radius: 5,
