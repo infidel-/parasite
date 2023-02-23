@@ -190,6 +190,7 @@ class Inventory extends _SaveObject
       if (cnt == 0)
         game.player.log('You have not been able to gain any clues.',
           COLOR_TIMELINE);
+      game.scene.sounds.play('item-' + item.id);
 
       // destroy item
       _list.remove(item);
@@ -272,6 +273,7 @@ class Inventory extends _SaveObject
           return true;
         }
 
+      game.scene.sounds.play('item-' + item.id);
       game.log('You use the ' + item.name + ' to search for known persons data.');
       if (skillLevel < 99)
         game.player.skills.increase(SKILL_COMPUTER, 2);
@@ -325,6 +327,7 @@ class Inventory extends _SaveObject
       var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
       game.player.log('You drop the ' + Const.col('inventory-item', itemName) + '.');
+      game.scene.sounds.play('item-drop');
     }
 
 

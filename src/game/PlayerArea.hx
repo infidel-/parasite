@@ -713,6 +713,7 @@ class PlayerArea extends _SaveObject
     {
       if (!fromInvadeEarly)
         log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
+      game.scene.sounds.play('parasite-invade');
 
       // save AI link
       player.host = attachHost;
