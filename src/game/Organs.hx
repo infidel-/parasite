@@ -375,6 +375,7 @@ class Organs extends _SaveObject
       if (ai == null)
         {
           game.log("Target AI with mouse first.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
@@ -385,6 +386,7 @@ class Organs extends _SaveObject
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
@@ -396,6 +398,7 @@ class Organs extends _SaveObject
       });
       game.log('Your host spits a clot of corrosive substance on ' + ai.getName() +
         ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' howls in pain.');
+      game.scene.sounds.play('action-acid-spit');
 
       ai.onDamage(damage); // damage event
 
@@ -414,6 +417,7 @@ class Organs extends _SaveObject
       if (ai == null)
         {
           game.log("Target AI with mouse first.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
@@ -424,11 +428,13 @@ class Organs extends _SaveObject
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
       game.log('Your host spits a clot of adhesive mucus on ' + ai.getName() +
         '. ' + ai.getNameCapped() + ' desperately tries to tear it away.');
+      game.scene.sounds.play('action-slime-spit');
 
       // set alertness
       if (ai.state == AI_STATE_IDLE)
@@ -438,7 +444,10 @@ class Organs extends _SaveObject
         }
 
       // AI effect event
-      ai.onEffect({ type: EFFECT_SLIME, points: params.strength });
+      ai.onEffect({
+        type: EFFECT_SLIME,
+        points: params.strength
+      });
 
       return true;
     }
@@ -455,6 +464,7 @@ class Organs extends _SaveObject
       if (ai == null)
         {
           game.log("Target AI with mouse first.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
@@ -465,9 +475,11 @@ class Organs extends _SaveObject
       if (distance > params.range)
         {
           game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
+      game.scene.sounds.play('action-paralysis-spit');
       var msg = 'Your host releases a paralyzing projectile on ' +
         ai.getName() + '.';
       var chance = ai.inventory.clothing.info.armor.needleDeathChance;
@@ -506,6 +518,7 @@ class Organs extends _SaveObject
         params.range, false);
 
       game.log('Your host emits a noxious fear-inducing gas cloud.');
+      game.scene.sounds.play('action-gas');
 
       // set timeout
       var o = get(IMP_PANIC_GAS);
@@ -556,6 +569,7 @@ class Organs extends _SaveObject
         params.range, false);
 
       game.log('Your host emits a cloud of paralysis-inducing spores.');
+      game.scene.sounds.play('action-gas');
 
       // set timeout
       var o = get(IMP_PARALYSIS_GAS);

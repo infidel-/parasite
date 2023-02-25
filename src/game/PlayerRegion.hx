@@ -231,6 +231,7 @@ class PlayerRegion extends _SaveObject
       currentArea.habitatAreaID = area.id;
       area.parentID = currentArea.id;
       game.scene.region.updateIconsArea(x, y);
+      game.scene.sounds.play('region-habitat');
 
       // complete goal
       game.goals.complete(GOAL_CREATE_HABITAT);

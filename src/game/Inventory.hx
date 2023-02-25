@@ -268,6 +268,7 @@ class Inventory extends _SaveObject
         });
       if (!ret)
         {
+          game.scene.sounds.play('item-fail');
           game.log('You have failed to use the human device properly. You still gain some insight.');
           game.player.skills.increase(SKILL_COMPUTER, 1);
           return true;
