@@ -54,7 +54,7 @@ class Organs extends _SaveObject
           buf.add("</font> (");
           var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
           buf.add(Math.round(gpLeft / __Math.gpPerTurn()));
-          buf.add(" turns)\n");
+          buf.add(" turns)<br>");
         }
 
       // show organs on timeout
@@ -69,7 +69,7 @@ class Organs extends _SaveObject
           buf.add("<font color='#DDDD00'>" + organ.info.name + "</font>");
           buf.add(' ');
           buf.add(organ.level);
-          buf.add(' (timeout: ' + organ.timeout + ')');
+          buf.add(' (timeout: ' + organ.timeout + ')<br>');
         }
 
       return buf.toString();
@@ -556,6 +556,8 @@ class Organs extends _SaveObject
           // AI effect event
           ai.onEffect({ type: EFFECT_PANIC, points: params.time, isTimer: true });
         }
+      // repaint view with effects
+      game.scene.updateCamera();
 
       return true;
     }
@@ -612,6 +614,8 @@ class Organs extends _SaveObject
             isTimer: true
           });
         }
+      // repaint view with effects
+      game.scene.updateCamera();
 
       return true;
     }
