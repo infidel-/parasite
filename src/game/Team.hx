@@ -77,7 +77,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // set ambush timer
       // if player is currently in habitat, skip timer
       timer = 40 + 10 * Std.random(5);
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
+      if (game.location == LOCATION_AREA &&
+          game.area.isHabitat)
         timer = 0;
 
       // no habitats, skip
@@ -177,6 +178,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
         {
           game.message("Something is wrong here... It's an ambush!",
             COLOR_ALERT);
+          game.scene.sounds.play('event-ambush');
           onEnterHabitat();
           return;
         }
@@ -197,6 +199,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
           game.message("Something is wrong here... They're after me!",
             COLOR_ALERT);
+          game.scene.sounds.play('event-ambush');
           for (i in 0...4)
             {
               var loc = game.area.findLocation({
@@ -327,6 +330,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // SPOON: disable habitat death shock
       if (game.config.spoonHabitats)
         {
+          game.scene.sounds.play('event-habitat-destroy');
           game.message('You sense that the habitat at ' +
             area.x + ',' + area.y + ' was destroyed.', COLOR_ALERT);
           return;
@@ -346,6 +350,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.player.death('habitatShock');
           return;
         }
+      game.scene.sounds.play('event-habitat-destroy');
 
       // reduce max energy
       var maxEnergy = 0;

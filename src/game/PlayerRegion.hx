@@ -257,6 +257,7 @@ class PlayerRegion extends _SaveObject
   function createOvumAction()
     {
       game.log("You have spawned an ovum in this area.");
+      game.scene.sounds.play('region-ovum');
       var o = new region.Ovum(game, x, y);
       game.region.addObject(o);
       game.scene.region.updateIconsArea(x, y);

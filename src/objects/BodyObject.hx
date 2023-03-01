@@ -149,6 +149,7 @@ class BodyObject extends AreaObject
         {
           var o = new Nutrient(game, game.area.id, x, y);
           game.area.addObject(o);
+          game.scene.sounds.play('object-nutrients');
           game.log("The body decays fast leaving nutrients behind.");
         }
     }

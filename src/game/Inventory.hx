@@ -157,6 +157,7 @@ class Inventory extends _SaveObject
       if (item.info.type == 'nutrients')
         {
           game.log('Your host gnaws the delicious nutrients recovering health and energy.');
+          game.scene.sounds.play('item-nutrients');
           game.player.host.health += 10;
           game.player.host.energy += 50;
         }
