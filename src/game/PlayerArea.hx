@@ -861,10 +861,12 @@ class PlayerArea extends _SaveObject
       if (!player.host.isHuman)
         {
           log('This host is not intelligent enough.');
+          game.scene.sounds.play('action-fail');
           return;
         }
 
       log('You probe the brain of the host and learn its contents. The host grows weaker.');
+      game.scene.sounds.play('action-probe');
 
       // skills and knowledge
       var params: Dynamic = player.evolutionManager.getParams(IMP_BRAIN_PROBE);

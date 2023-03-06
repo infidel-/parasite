@@ -253,6 +253,7 @@ class Player extends _SaveObject
         'I am alive. Alive.',
       ];
       game.message(msgs[Std.random(msgs.length)]);
+      game.scene.sounds.play('parasite-rebirth');
       game.isFinished = true; // temp kludge for rebirth
       game.isRebirth = true;
     }

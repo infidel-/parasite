@@ -355,7 +355,7 @@ class ItemsConst
       id: 'shipPart',
       names: [ 'engine core', 'power battery', 'flow regulator',
         'fuel injector port', 'power conduit', 'power relay',
-        'signature suppressor', 'reactor', 'crystal matrix',
+        'sig suppressor', 'reactor', 'crystal matrix',
         'wave converter', 'containment unit', 'bypass circuit',
         'emitter array', 'stabilizer',
       ],

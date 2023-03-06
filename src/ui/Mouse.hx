@@ -10,6 +10,7 @@ import hxd.Key;
 import hxd.Cursor;
 import game.Game;
 import ai.AI;
+import js.html.MouseEvent;
 
 class Mouse
 {
@@ -20,7 +21,6 @@ class Mouse
   var oldy: Float;
   public var atlas: Array<Cursor>;
   public var forceNextUpdate: Int; // kludge for update
-  public var ignoreNextClick: Bool; // kludge for regaining focus and hud buttons
   var oldPos: { x: Int, y: Int };
 
   public function new(g: Game)
@@ -32,7 +32,6 @@ class Mouse
       oldPos = { x: -1, y: -1 };
       sceneState = game.ui.state;
       forceNextUpdate = 0;
-      ignoreNextClick = false;
       atlas = null;
 
       // config - mouse disabled
@@ -60,28 +59,21 @@ class Mouse
         }
     }
 
-
-// mouse click
-  public function onClick(button: Int)
+// mouse click (through canvas directly)
+  public function onClick(e: MouseEvent)
     {
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         return;
 
-      // skip next click once
-      if (ignoreNextClick)
-        {
-          ignoreNextClick = false;
-          return;
-        }
-
       var pos = getXY();
       if (pos.x < 0 || pos.y < 0 ||
-          pos.x >= game.area.width || pos.y >= game.area.height)
+          pos.x >= game.area.width ||
+          pos.y >= game.area.height)
         return;
 #if mydebug
       // debug mode
-      if (button == Key.MOUSE_MIDDLE)
+      if (e.button == 1)
         {
           if (game.location == LOCATION_AREA)
             onClickDebug(pos);
@@ -89,7 +81,8 @@ class Mouse
         }
 #end
       // some window open
-      if (game.isFinished || game.ui.state != UISTATE_DEFAULT)
+      if (game.isFinished ||
+          game.ui.state != UISTATE_DEFAULT)
         return;
 
       // area mode - click moves or attacks

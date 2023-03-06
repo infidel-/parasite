@@ -144,8 +144,6 @@ class GameScene extends Scene
       // add screen-sized tilemap interactive object
       tilemapInt = new h2d.Interactive(win.width, win.height);
       this.add(tilemapInt, Const.LAYER_TILEMAP);
-      tilemapInt.onClick = function (e: hxd.Event)
-        { mouse.onClick(e.button); }
 
       // init sound
       sounds = new Sounds(this);

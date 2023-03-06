@@ -46,6 +46,9 @@ class UI
       canvas.onmousemove = function (e: MouseEvent) {
         hud.onMouseMove(e);
       }
+      canvas.onclick = function (e: MouseEvent) {
+        game.scene.mouse.onClick(e);
+      }
 #if electron
       Browser.window.onerror = onError;
 #end
