@@ -102,6 +102,13 @@ class Player extends _SaveObject
               host.updateMask(Const.FRAME_MASK_CONTROL);
             }
         }
+      // fix player icon from previous game
+      else if (game.location == LOCATION_REGION &&
+          state == PLR_STATE_PARASITE)
+        {
+          // set entity image
+          game.playerRegion.resetEntity();
+        }
       skills.loadPost();
     }
 
@@ -130,7 +137,8 @@ class Player extends _SaveObject
         }
 
       // all states: restore health in habitat
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
+      if (game.location == LOCATION_AREA &&
+          game.area.isHabitat)
         health += game.area.habitat.parasiteHealthRestored * time;
 
       // host state: host energy
