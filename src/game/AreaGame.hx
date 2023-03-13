@@ -1610,9 +1610,11 @@ class Test {
         }
 
       for (obj in _objects)
-        obj.entity.visible =
-          (game.player.vars.losEnabled ?
-            isVisible(game.playerArea.x, game.playerArea.y, obj.x, obj.y) : true);
+        // kludge: possible fix for rebirth exception
+        if (obj.entity != null)
+          obj.entity.visible =
+            (game.player.vars.losEnabled ?
+              isVisible(game.playerArea.x, game.playerArea.y, obj.x, obj.y) : true);
     }
 
 
