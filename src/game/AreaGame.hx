@@ -1771,7 +1771,7 @@ class Test {
       // some areas raise alertness faster or slower
       if (game.isInited)
         {
-          mod = Std.int(mod * info.alertnessMod);
+          mod *= info.alertnessMod;
           v = _alertness + mod;
         }
       // save alertness changes for later use
