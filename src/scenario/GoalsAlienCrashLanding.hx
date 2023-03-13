@@ -118,6 +118,7 @@ class GoalsAlienCrashLanding
         // auto-complete it
         if (!game.goals.has(SCENARIO_ALIEN_STEAL_SHIP))
           {
+            game.goals.complete(GOAL_PROGRESS_TIMELINE);
             game.goals.receive(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
             game.goals.complete(SCENARIO_ALIEN_FIND_SHIP, SILENT_ALL);
           }
