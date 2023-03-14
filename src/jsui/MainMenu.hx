@@ -128,6 +128,8 @@ class MainMenu extends UIWindow
       if (!game.isStarted || game.isFinished)
         saveItem.className = 'window-mainmenu-item-disabled';
       else saveItem.className = 'window-mainmenu-item';
+      if (game.isStarted)
+        close.style.display = 'block';
     }
 }
 

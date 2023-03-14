@@ -14,6 +14,7 @@ class Sounds
   var sounds: Map<String, Array<Int>>;
   var lastPlayedTS: Map<String, Float>;
   var music: SMSound;
+  var menuMusic: SMSound;
   var ambient: _SoundInfo; 
   var ambientNext: _SoundInfo;
   var ambientLocation: _SoundAmbientLocation;
@@ -39,23 +40,34 @@ class Sounds
             game.ui.state == UISTATE_OPTIONS ||
             game.ui.state == UISTATE_PEDIA)
           {
+            if (menuMusic.playState == 0)
+              menuMusic.play();
+            else if (menuMusic.paused)
+              menuMusic.resume();
             if (music.playState == 1 && !music.paused)
               music.pause();
-            if (ambient.state != SOUND_STOPPED && !ambient.sound.muted)
+            if (ambient.state != SOUND_STOPPED &&
+                !ambient.sound.muted)
               ambient.sound.mute();
-            if (ambientNext.state != SOUND_STOPPED && !ambientNext.sound.muted)
+            if (ambientNext.state != SOUND_STOPPED &&
+                !ambientNext.sound.muted)
               ambientNext.sound.mute();
             return;
           }
         else
           {
+            if (menuMusic.playState == 1 &&
+                !menuMusic.paused)
+              menuMusic.pause();
             if (music.playState == 0)
               music.play();
             else if (music.paused)
               music.resume();
-            if (ambient.state != SOUND_STOPPED && ambient.sound.muted)
+            if (ambient.state != SOUND_STOPPED &&
+                ambient.sound.muted)
               ambient.sound.unmute();
-            if (ambientNext.state != SOUND_STOPPED && ambientNext.sound.muted)
+            if (ambientNext.state != SOUND_STOPPED &&
+                ambientNext.sound.muted)
               ambientNext.sound.unmute();
           }
         ambientTick(ambient);
@@ -63,6 +75,7 @@ class Sounds
       }, 15);
       ambientLocation = AMBIENT_NONE;
       music = null;
+      menuMusic = null;
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
@@ -107,6 +120,14 @@ class Sounds
         url: 'sound/music' + musicIdx + '.mp3',
         volume: game.config.musicVolume,
         onfinish: onMusicEnd,
+      });
+      menuMusic = SoundManager.createSound({
+        id: 'menuMusic',
+        url: 'sound/music-menu.mp3',
+        volume: game.config.musicVolume,
+        onfinish: function () {
+          menuMusic.play();
+        },
       });
 #end
     }
@@ -317,6 +338,7 @@ class Sounds
   public inline function musicVolumeChanged()
     {
       music.setVolume(game.config.musicVolume);
+      menuMusic.setVolume(game.config.musicVolume);
     }
 
 

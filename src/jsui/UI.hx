@@ -51,6 +51,13 @@ class UI
       }
 #if electron
       Browser.window.onerror = onError;
+/*
+      Browser.window.onblur = function (){
+        trace('blur!');
+      }
+      Browser.window.onfocus = function (){
+        trace('focus!');
+      };*/
 #end
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
