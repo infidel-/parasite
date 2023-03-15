@@ -524,6 +524,32 @@ fieldset {
   height: 20%;
 }
 
+#window-about {
+  border: 30px solid;
+  width: 40ch;
+  height: 28em;
+  pointer-events: all;
+}
+
+#window-about-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+#window-about-text {
+  transform: translate(-10px, -10px);
+  width: 102%;
+  height: calc(100% - 50px);
+  display: flex;
+  flex-direction: column;
+}
+
+#window-about-fieldset {
+  height: 100%;
+}
+
 #window-log {
   border: 39px solid;
   width: calc(100% - 90px);
@@ -682,7 +708,7 @@ fieldset {
 #window-mainmenu {
   border: 30px solid;
   width: 25ch;
-  height: 23em;
+  height: 26em;
   pointer-events: all;
 }
 

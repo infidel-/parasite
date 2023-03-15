@@ -15,6 +15,7 @@ class Sounds
   var lastPlayedTS: Map<String, Float>;
   var music: SMSound;
   var menuMusic: SMSound;
+  var aboutMusic: SMSound;
   var ambient: _SoundInfo; 
   var ambientNext: _SoundInfo;
   var ambientLocation: _SoundAmbientLocation;
@@ -44,6 +45,9 @@ class Sounds
               menuMusic.play();
             else if (menuMusic.paused)
               menuMusic.resume();
+            if (aboutMusic.playState == 1 &&
+                !aboutMusic.paused)
+              aboutMusic.pause();
             if (music.playState == 1 && !music.paused)
               music.pause();
             if (ambient.state != SOUND_STOPPED &&
@@ -54,11 +58,27 @@ class Sounds
               ambientNext.sound.mute();
             return;
           }
+        else if (game.ui.state == UISTATE_ABOUT)
+          {
+            if (menuMusic.playState == 1 &&
+                !menuMusic.paused)
+              menuMusic.pause();
+            if (music.playState == 1 && !music.paused)
+              music.pause();
+            if (aboutMusic.playState == 0)
+              aboutMusic.play();
+            else if (aboutMusic.paused)
+              aboutMusic.resume();
+            return;
+          }
         else
           {
             if (menuMusic.playState == 1 &&
                 !menuMusic.paused)
               menuMusic.pause();
+            if (aboutMusic.playState == 1 &&
+                !aboutMusic.paused)
+              aboutMusic.pause();
             if (music.playState == 0)
               music.play();
             else if (music.paused)
@@ -76,6 +96,7 @@ class Sounds
       ambientLocation = AMBIENT_NONE;
       music = null;
       menuMusic = null;
+      aboutMusic = null;
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
@@ -127,6 +148,14 @@ class Sounds
         volume: game.config.musicVolume,
         onfinish: function () {
           menuMusic.play();
+        },
+      });
+      aboutMusic = SoundManager.createSound({
+        id: 'aboutMusic',
+        url: 'sound/music-about.mp3',
+        volume: game.config.musicVolume,
+        onfinish: function () {
+          aboutMusic.play();
         },
       });
 #end
@@ -339,15 +368,18 @@ class Sounds
     {
       music.setVolume(game.config.musicVolume);
       menuMusic.setVolume(game.config.musicVolume);
+      aboutMusic.setVolume(game.config.musicVolume);
     }
 
 
 // ambient volume changed from options
   public inline function ambientVolumeChanged()
     {
-      if (ambient.sound != null && ambient.state == SOUND_PLAYING)
+      if (ambient.sound != null &&
+          ambient.state == SOUND_PLAYING)
         ambient.sound.setVolume(game.config.ambientVolume);
-      if (ambientNext.sound != null && ambientNext.state == SOUND_PLAYING)
+      if (ambientNext.sound != null &&
+          ambientNext.state == SOUND_PLAYING)
         ambientNext.sound.setVolume(game.config.ambientVolume);
     }
 #end

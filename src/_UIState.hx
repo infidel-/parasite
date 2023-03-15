@@ -17,6 +17,7 @@ enum _UIState {
   UISTATE_SPOON; // spoon mode options
   UISTATE_PEDIA; // pedia windw
   UISTATE_OVUM; // parthenogenesis settings
+  UISTATE_ABOUT; // about window
 
   UISTATE_DIFFICULTY; // difficulty setting
   UISTATE_YESNO; // yes/no dialog window

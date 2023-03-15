@@ -80,6 +80,7 @@ class UI
         UISTATE_NEWGAME => new NewGame(game),
         UISTATE_SPOON => new Spoon(game),
         UISTATE_OVUM => new Ovum(game),
+        UISTATE_ABOUT => new About(game),
       ];
     }
 
@@ -245,9 +246,11 @@ class UI
               game.scene.sounds.play('window-close');
               if (_state == UISTATE_OPTIONS ||
                   _state == UISTATE_PEDIA ||
+                  _state == UISTATE_ABOUT ||
                   _state == UISTATE_NEWGAME)
                 state = UISTATE_MAINMENU;
-              else if (_state == UISTATE_MAINMENU && !game.isStarted)
+              else if (_state == UISTATE_MAINMENU &&
+                  !game.isStarted)
                 return true;
               else closeWindow();
             }

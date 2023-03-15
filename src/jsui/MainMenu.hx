@@ -44,11 +44,15 @@ class MainMenu extends UIWindow
       addItem('OPTIONS', function(e) {
         game.ui.state = UISTATE_OPTIONS;
       });
+      addItem('ABOUT', function(e) {
+        game.ui.state = UISTATE_ABOUT;
+      });
       addItem('QUIT', function(e) {
 #if electron
         electron.renderer.IpcRenderer.invoke('quit');
 #end
       });
+
       addCloseButton();
       close.style.display = 'none';
     }
