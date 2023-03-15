@@ -30,10 +30,10 @@ class About extends UIWindow
         '<br>' +
         '<br>' +
         'Game design and programming<br>' +
-        '<b>Infidel</b><br>' +
+        '<b>Infidel</b> (www.infidel.rocks)<br>' +
         '<br>' +
         'Music<br>' +
-        '<b>MaxStack</b><br>' +
+        '<b>MaxStack</b> (www.maxstack.rocks)<br>' +
         '<br>' +
         'Additional art and testing<br>' +
         '<b>iwanPlays</b><br>' +
