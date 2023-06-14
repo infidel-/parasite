@@ -12,4 +12,5 @@ enum _TextColor
   COLOR_MESSAGE;
   COLOR_GOAL;
   COLOR_PEDIA;
+  COLOR_SYMBIOSIS;
 }

@@ -68,6 +68,7 @@ class AI extends _SaveObject
   public var stateTime: Int; // turns spent in this state
   public var reason: _AIStateChangeReason; // reason for setting this state
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
+  public var affinity: Int; // affinity to parasite (number of turns spent together)
 
   // various AI timers
   public var timers: _AITimers;
@@ -137,6 +138,7 @@ class AI extends _SaveObject
       stateTime = 0;
       reason = REASON_NONE;
       alertness = 0;
+      affinity = 0;
       brainProbed = 0;
       timers = {
         alert: 0,
@@ -1236,6 +1238,23 @@ public function show()
       effects.add(effect);
 
       updateEntity(); // update entity graphics
+    }
+
+// increase parasite affinity (never goes down)
+  public function gainAffinity(amount: Int)
+    {
+      var old = affinity;
+      affinity += amount;
+      if (affinity > 100)
+        affinity = 100;
+      if (old < 75 && affinity >= 75)
+        {
+          game.log(Const.hl('You feel you are deepening the affinity with this host.'), COLOR_SYMBIOSIS);
+        }
+      else if (old < 100 && affinity == 100)
+        {
+          game.log(Const.hl('You have reached the full affinity with this host.'), COLOR_SYMBIOSIS);
+        }
     }
 
 // event hook: on state change

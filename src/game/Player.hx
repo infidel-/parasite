@@ -167,6 +167,8 @@ class Player extends _SaveObject
           // parasite energy restoration
           var delta = __Math.parasiteEnergyPerTurn(time);
           energy += delta;
+          // increase affinity
+          host.gainAffinity(time);
 
           host.organs.turn(time); // host organ growth
 
@@ -280,10 +282,17 @@ class Player extends _SaveObject
 // convenience method for host death
   public inline function onHostDeath(msg: String)
     {
+      // reduce max energy from affinity
+      if (host.affinity == 100)
+        {
+          msg += ' You feel great pain due to the affinity.';
+          maxEnergy -= 10;
+          energy = energy; // clamp current value
+        }
       if (game.location == LOCATION_AREA)
         {
           // message on first death
-          if (game.player.host.isHuman)
+          if (host.isHuman)
             game.goals.complete(GOAL_TUTORIAL_BODY);
 
           game.playerArea.onHostDeath();
@@ -292,7 +301,7 @@ class Player extends _SaveObject
       else if (game.location == LOCATION_REGION)
         {
           // message on first death
-          if (game.player.host.isHuman)
+          if (host.isHuman)
             {
               game.goals.complete(GOAL_TUTORIAL_BODY_SEWERS);
               game.goals.complete(GOAL_TUTORIAL_BODY, SILENT_ALL);
@@ -302,7 +311,6 @@ class Player extends _SaveObject
 
       // stop moving
       game.scene.clearPath();
-
       log(msg);
       game.profile.addPediaArticle('hostExpiry');
     }

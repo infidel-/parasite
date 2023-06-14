@@ -29,7 +29,9 @@ class Const
     COLOR_MESSAGE => '#30FF6B',
     COLOR_GOAL => '#92B9FF',
     COLOR_PEDIA => '#c8d8da',
+    COLOR_SYMBIOSIS => '#98ff97',
   ];
+/*
   // copy-pasted for now
   // TODO: move to TEXT_COLORS
   public static var TEXT_COLORS_INT: Map<_TextColor, Int> = [
@@ -43,7 +45,8 @@ class Const
     COLOR_MESSAGE => 0x1CD450,
     COLOR_GOAL => 0x4788FF,
     COLOR_PEDIA => 0xC8D8DA,
-  ];
+    COLOR_SYMBIOSIS => 0x98ff97,
+  ];*/
 
   // entity spritemap indexes
   public static var ROW_ALERT = 0;
@@ -456,6 +459,17 @@ class Const
   public static inline function bold(s: String)
     {
       return '<span style="font-weight:bold">' + s + '</span>';
+    }
+
+  public static inline function icon(col: String, s: String)
+    {
+      return "<span class=icon style='color:var(--text-color-" + col + ")'>" +
+        s + '</span>';
+    }
+
+  public static inline function hl(s: String)
+    {
+      return '<span class=highlight-text>' + s + '</span>';
     }
 
   public static inline function small(s: String)

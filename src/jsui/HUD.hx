@@ -357,6 +357,8 @@ class HUD
           var host = game.player.host;
           buf.add('<br/><hr/>');
           buf.add('<b>' + host.getNameCapped() + '</b>');
+          if (host.affinity == 100)
+            buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
           if (host.isJobKnown)
             buf.add(' ' + Const.col('gray',
               Const.small('(' + host.job + ')<br/>')));
