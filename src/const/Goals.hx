@@ -376,7 +376,7 @@ class Goals
         game.player.vars.objectsEnabled = true;
         if (game.scenarioStringID == 'alien')
           {
-            game.message('What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there.');
+            game.message('What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there and learn.');
             player.vars.timelineEnabled = true;
             game.timeline.unlock();
             game.ui.event({

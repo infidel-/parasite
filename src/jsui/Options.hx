@@ -135,6 +135,11 @@ class Options extends UIWindow
       restartText.innerHTML = "The changes you've made will require restart.";
       restartText.style.visibility = 'hidden';
       contents.appendChild(restartText);
+
+      // empty space
+      var space = Browser.document.createDivElement();
+      space.innerHTML = '<br><br>';
+      contents.appendChild(space);
     }
 }
 

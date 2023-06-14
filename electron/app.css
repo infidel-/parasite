@@ -657,8 +657,9 @@ fieldset {
 #window-options {
   border: 30px solid;
   width: 40ch;
-  height: 30em;
   pointer-events: all;
+  display: flex;
+  flex-direction: column;
 }
 
 #window-options-title {
@@ -708,8 +709,9 @@ fieldset {
 #window-mainmenu {
   border: 30px solid;
   width: 25ch;
-  height: 26em;
   pointer-events: all;
+  display: flex;
+  flex-direction: column;
 }
 
 #window-mainmenu-title {

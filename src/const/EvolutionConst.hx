@@ -15,21 +15,6 @@ class EvolutionConst
   public static var improvements: Array<ImprovInfo> =
     [
       // =============== BASIC ===================
-/*
-      { // ***
-        type: TYPE_BASIC;
-        id: IMP_HOST_RELEASE,
-        name: '[TODO] Host release process',
-        note: 'Controls what happens to the host when parasite leaves',
-        levelNotes: [
-          'Host dies with its brain melting and dripping out of its ears',
-          'Host becomes crazy [TODO]',
-          'Host is left intact - alive and conscious with all memory wiped [TODO]',
-          'Host is left alive and conscious, and is implanted with fake memories [TODO]',
-          ],
-        levelParams: []
-      },
-*/
       { // ***
         type: TYPE_BASIC,
         id: IMP_DECAY_ACCEL,

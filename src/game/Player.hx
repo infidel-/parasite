@@ -206,6 +206,7 @@ class Player extends _SaveObject
       game.log('You fade into the darkness...');
       // restore health
       health = maxHealth;
+      energy = maxEnergy; // bug fix?
       // NOTE: energy is restored in rebirthPost
       game.turns += 9;
       // remove old improvements

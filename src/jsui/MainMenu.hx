@@ -55,6 +55,11 @@ class MainMenu extends UIWindow
 
       addCloseButton();
       close.style.display = 'none';
+
+      // empty space
+      var space = Browser.document.createDivElement();
+      space.innerHTML = '<br><br>';
+      contents.appendChild(space);
     }
 
 // load game
