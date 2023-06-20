@@ -13,6 +13,7 @@ class HUD
 {
   var game: Game;
   var ui: UI;
+  public var state: _HUDState;
   var overlay: DivElement;
   var container: DivElement;
   var consoleDiv: DivElement;
@@ -38,6 +39,7 @@ class HUD
     {
       game = g;
       ui = u;
+      state = HUD_DEFAULT;
       actionButtons = new List();
       listActions = new List();
       listKeyActions = new List();
@@ -499,41 +501,43 @@ class HUD
           return;
         }
 
-      if (game.location == LOCATION_AREA)
-        game.playerArea.updateActionList();
-
-      else if (game.location == LOCATION_REGION)
-        game.playerRegion.updateActionList();
-
-      addKeyAction({
-        id: 'skipTurn',
-        type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
-        name: 'Wait',
-        energy: 0,
-        // fake
-        key: 'z'
-      });
-    }
-
-// add player action to numbered list
-  public function addAction(a: _PlayerAction)
-    {
-      if (a.energy != null && a.energy <= game.player.energy)
-        listActions.add(a);
-
-      else if (a.energyFunc != null)
+      // trying to chat
+      if (state == HUD_CHAT)
         {
-          var e = a.energyFunc(game.player);
-          if (e >= 0 && e <= game.player.energy)
-            listActions.add(a);
+          game.player.chat.updateActionList();
+        }
+      else
+        {
+          if (game.location == LOCATION_AREA)
+            game.playerArea.updateActionList();
+
+          else if (game.location == LOCATION_REGION)
+            game.playerRegion.updateActionList();
+
+          addKeyAction({
+            id: 'skipTurn',
+            type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
+            name: 'Wait',
+            energy: 0,
+            // fake
+            key: 'z'
+          });
         }
     }
 
-// add player action to key list
-  public function addKeyAction(a: _PlayerAction)
+// add player action to numbered list
+// NOTE: needs to be the same checks as in Player.acitonEnergy()
+  public function addAction(action: _PlayerAction)
     {
-      if (a.energy <= game.player.energy)
-        listKeyActions.add(a);
+      if (game.player.actionCheckEnergy(action))
+        listActions.add(action);
+    }
+
+// add player action to key list
+  public function addKeyAction(action: _PlayerAction)
+    {
+      if (game.player.actionCheckEnergy(action))
+        listKeyActions.add(action);
     }
 
 // update player actions
@@ -573,21 +577,7 @@ class HUD
             btn.className = 'hud-action';
             btn.onclick = function (e) {
               game.scene.sounds.play('click-action');
-              if (untyped e.shiftKey &&
-                  game.config.shiftLongActions &&
-                  action.canRepeat)
-                {
-                  if (game.location == LOCATION_AREA)
-                    game.playerArea.setAction(action);
-/*
-                  else if (game.location == LOCATION_REGION)
-                    game.playerRegion.action(action);*/
-                  return;
-                }
-              if (game.location == LOCATION_AREA)
-                game.playerArea.action(action);
-              else if (game.location == LOCATION_REGION)
-                game.playerRegion.action(action);
+              doAction(untyped e.shiftKey, action);
             }
             actions.appendChild(btn);
             n++;
@@ -610,6 +600,12 @@ class HUD
           }
       if (action == null)
         return;
+      doAction(withRepeat, action);
+    }
+
+// common action code for keys and mouse clicks
+  function doAction(withRepeat: Bool, action: _PlayerAction)
+    {
       if (withRepeat &&
           game.config.shiftLongActions &&
           action.canRepeat)
@@ -622,7 +618,9 @@ class HUD
           return;
         }
 
-      if (game.location == LOCATION_AREA)
+      if (action.type == ACTION_CHAT)
+        game.player.chat.action(action);
+      else if (game.location == LOCATION_AREA)
         game.playerArea.action(action);
 
       else if (game.location == LOCATION_REGION)

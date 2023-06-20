@@ -10,4 +10,5 @@ enum _PlayerActionType
   ACTION_EVOLUTION;
   ACTION_INVENTORY;
   ACTION_UI;
+  ACTION_CHAT;
 }

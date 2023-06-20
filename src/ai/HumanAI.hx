@@ -3,6 +3,7 @@
 package ai;
 
 import game.Game;
+import const.ChatConst;
 import const.NameConst;
 
 class HumanAI extends AI
@@ -28,6 +29,12 @@ class HumanAI extends AI
       constitution = 4 + Std.random(4);
       intellect = 4 + Std.random(4);
       psyche = 4 + Std.random(4);
+      // chat-related
+      chat.needID = Std.random(
+        ChatConst.needs.length);
+      chat.needStringID = Std.random(
+        ChatConst.needStrings[chat.needID].length);
+      chat.consent = 10;
 
       // MATH: health 8-16 (~12), energy 130-210 (~170)
 

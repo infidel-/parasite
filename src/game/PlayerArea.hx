@@ -161,6 +161,14 @@ class PlayerArea extends _SaveObject
               canRepeat: true,
               energy: 5
             });
+          if (player.host.affinity >= 75 &&
+              player.host.isHuman &&
+              !player.hasConsent())
+            game.ui.hud.addAction({
+              id: 'converseHost',
+              type: ACTION_AREA,
+              name: 'Converse',
+            });
 
           // organ-based actions
           player.host.organs.updateActionList();
@@ -172,17 +180,16 @@ class PlayerArea extends _SaveObject
             id: 'leaveHost',
             type: ACTION_AREA,
             name: 'Leave Host',
-            energy: 0,
             key: 'x'
           });
-        }
 
-      // improvement actions
-      for (imp in player.evolutionManager)
-        {
-          var info = imp.info;
-          if (info.action != null)
-            game.ui.hud.addAction(info.action);
+          // improvement actions
+          for (imp in player.evolutionManager)
+            {
+              var info = imp.info;
+              if (info.action != null)
+                game.ui.hud.addAction(info.action);
+            }
         }
 
       // area object actions - need to learn about objects
@@ -222,7 +229,7 @@ class PlayerArea extends _SaveObject
     }
 
 
-// do a player action by string id
+// do a player action
 // action energy availability is checked when the list is formed
   public function action(action: _PlayerAction)
     {
@@ -250,19 +257,15 @@ class PlayerArea extends _SaveObject
           var ao: AreaObject = action.obj;
           ret = ao.action(action);
         }
-
       // host organ-based action
       else if (action.type == ACTION_ORGAN)
         ret = player.host.organs.areaAction(action);
-
       // evolution manager action
       else if (action.type == ACTION_EVOLUTION)
         ret = player.evolutionManager.action(action);
-
       // harden grip on the victim
       else if (action.id == 'hardenGrip')
         hardenGripAction();
-
       // attach host
       else if (action.id == 'attachHost')
         {
@@ -271,68 +274,50 @@ class PlayerArea extends _SaveObject
 
           game.updateHUD();
         }
-
       // invade host
       else if (action.id == 'invadeHost')
         invadeHostAction(false);
-
       // invade host early
       else if (action.id == 'invadeEarly')
         invadeEarlyAction();
-
       // try to reinforce control over host
       else if (action.id == 'reinforceControl')
         reinforceControlAction();
-
       // try to leave current host
       else if (action.id == 'leaveHost')
         {
           log('You release the host.');
           leaveHostAction('default');
         }
-
       // probe host brain
       else if (action.id == 'probeBrain')
         probeBrainAction();
-
       // plant false memories
       else if (action.id == 'plantMemories')
         ret = plantMemoriesAction();
-
       // learn about object
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);
-
       // try to leave area
       else if (action.id == 'leaveArea')
         ret = leaveAreaAction();
+      // wait
       else if (action.id == 'skipTurn')
         game.turn();
+      else if (action.id == 'converseHost')
+        player.chat.start(player.host);
 
       // action interrupted for some reason
       if (!ret)
         return;
 
-      // spend energy
-      if (action.energy != null)
-        {
-          if (state == PLR_STATE_HOST)
-            player.host.energy -= action.energy;
-          else player.energy -= action.energy;
-        }
-      else if (action.energyFunc != null)
-        {
-          if (state == PLR_STATE_HOST)
-            player.host.energy -= action.energyFunc(player);
-          else player.energy -= action.energyFunc(player);
-        }
-
-      postAction(); // post-action call
+      player.actionEnergy(action); // spend energy
+      actionPost(); // post-action call
     }
 
 
 // post-action call: remove AP and new turn
-  public function postAction()
+  public function actionPost()
     {
       // host death
       if (state == PLR_STATE_HOST &&
@@ -547,7 +532,7 @@ class PlayerArea extends _SaveObject
           if (ai.state == AI_STATE_IDLE)
             ai.setState(AI_STATE_ALERT, REASON_DAMAGE);
 
-          postAction(); // post-action call
+          actionPost(); // post-action call
 
           return;
         }
@@ -610,7 +595,7 @@ class PlayerArea extends _SaveObject
           ai.onDamage(damage); // damage event
         }
 
-      postAction(); // post-action call
+      actionPost(); // post-action call
     }
 
 
@@ -1057,7 +1042,7 @@ class PlayerArea extends _SaveObject
           var ret = frobAIAction(ai);
           if (!ret)
             return false;
-          postAction(); // post-action call
+          actionPost(); // post-action call
           // update AI visibility to player
           game.area.updateVisibility();
           return true;
@@ -1086,7 +1071,7 @@ class PlayerArea extends _SaveObject
       entity.setPosition(x, y); // move player entity (even if invisible)
 
       if (doPost)
-        postAction(); // post-action call
+        actionPost(); // post-action call
 
       // describe objects on the ground
       var s = new StringBuf();

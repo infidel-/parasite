@@ -504,7 +504,7 @@ class Const
 // capitalize string
   public static inline function capitalize(s: String): String
     {
-      return s.substr(0, 1).toUpperCase() + s.substr(1);
+      return s.charAt(0).toUpperCase() + s.substr(1);
     }
 }
 

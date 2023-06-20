@@ -141,11 +141,10 @@ class Inventory extends _SaveObject
       if (ret)
         {
           // spend energy
-          game.player.host.energy -= action.energy;
-
+          game.player.actionEnergy(action);
           // end turn, etc
           if (game.location == LOCATION_AREA)
-            game.playerArea.postAction();
+            game.playerArea.actionPost();
 
           else Const.todo('Inventory.action() in region mode!');
         }

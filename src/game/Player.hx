@@ -7,12 +7,13 @@ import const.*;
 
 class Player extends _SaveObject
 {
-  static var _ignoredFields = [];
+  static var _ignoredFields = [ 'chat' ];
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty
   public var saveDifficulty: _Difficulty; // save difficulty
   public var evolutionManager: EvolutionManager; // main evolution control
+  public var chat: Chat; // chat manager
 
   // state-independent
   public var energy(default, set): Int; // energy left
@@ -37,6 +38,7 @@ class Player extends _SaveObject
       evolutionManager = new EvolutionManager(this, game);
       difficulty = UNSET;
       saveDifficulty = UNSET;
+      chat = new Chat(this, game);
 
       vars = {
         inventoryEnabled: false,
@@ -279,6 +281,53 @@ class Player extends _SaveObject
       energy = maxEnergy;
     }
 
+// returns true if player/host has enough energy for this action
+// NOTE: needs to be the same checks as in actionEnergy()
+  public function actionCheckEnergy(action: _PlayerAction): Bool
+    {
+      var e = 0;
+      if (action.energy != null)
+        e = action.energy;
+      else if (action.energyFunc != null)
+        e = action.energyFunc(game.player);
+
+      // chatting spends parasite energy
+      if (action.type == ACTION_CHAT && energy >= e)
+        return true;
+      else if (state == PLR_STATE_HOST && host.energy >= e)
+        return true;
+      else if (energy >= e)
+        return true;
+      return false;
+    }
+
+// spend energy specified in the action according to player state rules
+// NOTE: needs to be the same checks as in actionCheckEnergy()
+  public function actionEnergy(action: _PlayerAction)
+    {
+      // spend energy
+      if (action.energy != null)
+        {
+          // chatting spends parasite energy
+          if (action.type == ACTION_CHAT)
+            energy -= action.energy;
+          else if (state == PLR_STATE_HOST)
+            host.energy -= action.energy;
+          else energy -= action.energy;
+        }
+      else if (action.energyFunc != null)
+        {
+          // chatting spends parasite energy
+          if (action.type == ACTION_CHAT)
+            energy -= action.energyFunc(this);
+          else if (state == PLR_STATE_HOST)
+            host.energy -= action.energyFunc(this);
+          else energy -= action.energyFunc(this);
+        }
+
+      // NOTE: death from no energy is handled in actionPost()
+    }
+
 // convenience method for host death
   public inline function onHostDeath(msg: String)
     {
@@ -352,6 +401,11 @@ class Player extends _SaveObject
       game.area.updateVisibility();
     }
 
+// returns true if player has consent of the host
+  public inline function hasConsent(): Bool
+    {
+      return (host != null && host.chat.consent >= 100);
+    }
 
 // =================================================================================
 

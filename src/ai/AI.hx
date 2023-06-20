@@ -99,6 +99,7 @@ class AI extends _SaveObject
   public var organs: Organs; // AI organs
   public var effects: Effects; // AI effects
   public var traits: List<_AITraitType>;
+  public var chat: _AIChat; // chat related vars
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
@@ -128,6 +129,16 @@ class AI extends _SaveObject
         realCapped: 'undefined',
         unknown: 'undefined',
         unknownCapped: 'undefined'
+      };
+      chat = {
+        needID: 0,
+        needStringID: 0,
+        clues: 0,
+        consent: 0,
+        stun: 0,
+        fatigue: 0,
+        timeout: 0,
+        turns: 0,
       };
       sounds = null;
       roamTargetX = -1;
@@ -983,6 +994,9 @@ public function show()
 // call AI logic
   public function turn()
     {
+      // chat restoring
+      if (chat.timeout > 0)
+        chat.timeout--;
       stateTime++; // time spent in this state
       if (entity != null)
         entity.turn(); // time passing for entity
@@ -1413,5 +1427,30 @@ class _AITimers extends _SaveObject
   public function new(alert: Int)
     {
       this.alert = alert;
+    }
+}
+
+@:structInit
+class _AIChat extends _SaveObject
+{
+  public var needID: Int;
+  public var needStringID: Int;
+  public var clues: Int;
+  public var consent: Int;
+  public var stun: Int;
+  public var fatigue: Int;
+  public var timeout: Int;
+  public var turns: Int;
+
+  public function new(needID: Int, needStringID: Int, clues: Int, consent: Int, stun: Int, fatigue: Int, timeout: Int, turns: Int)
+    {
+      this.needID = needID;
+      this.needStringID = needStringID;
+      this.clues = clues;
+      this.consent = consent;
+      this.stun = stun;
+      this.fatigue = fatigue;
+      this.timeout = timeout;
+      this.turns = turns;
     }
 }

@@ -168,17 +168,13 @@ class PlayerRegion extends _SaveObject
           return;
         }
 
-      if (player.state == PLR_STATE_PARASITE)
-        player.energy -= action.energy;
-      else if (player.state == PLR_STATE_HOST)
-        player.host.energy -= action.energy;
-
-      postAction(); // post-action call
+      player.actionEnergy(action); // spend energy
+      actionPost(); // post-action call
     }
 
 
 // post-action
-  public function postAction()
+  public function actionPost()
     {
       // host state: check for energy
       if (player.state == PLR_STATE_HOST)

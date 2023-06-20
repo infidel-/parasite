@@ -1,5 +1,4 @@
 // skill info list
-
 package const;
 
 class SkillsConst
@@ -15,40 +14,59 @@ class SkillsConst
       return null;
     }
 
-
 // skill infos
   public static var skills: Array<SkillInfo> = [
-    {
+    { // animal attack, hidden
       id: SKILL_ATTACK,
       name: 'attack',
       defaultLevel: 0,
     },
     {
       id: SKILL_FISTS,
-      name: 'fists',
+      name: 'Combat: fists',
       defaultLevel: 50,
     },
     {
       id: SKILL_BATON,
-      name: 'baton',
+      name: 'Combat: baton',
       defaultLevel: 40,
     },
     {
       id: SKILL_PISTOL,
-      name: 'pistol',
+      name: 'Combat: pistol',
       defaultLevel: 20,
     },
     {
       id: SKILL_RIFLE,
-      name: 'rifle',
+      name: 'Combat: rifle',
       defaultLevel: 25,
     },
     {
       id: SKILL_SHOTGUN,
-      name: 'shotgun',
+      name: 'Combat: shotgun',
       defaultLevel: 30,
     },
 
+    {
+      id: SKILL_PSYCHOLOGY,
+      name: 'human psychology',
+      defaultLevel: 0,
+    },
+    {
+      id: SKILL_DECEPTION,
+      name: 'Manipulation: deception',
+      defaultLevel: 0,
+    },
+    {
+      id: SKILL_COERCION,
+      name: 'Manipulation: coercion',
+      defaultLevel: 0,
+    },
+    {
+      id: SKILL_COAXING,
+      name: 'Manipulation: coaxing',
+      defaultLevel: 0,
+    },
     {
       id: SKILL_COMPUTER,
       name: 'computer use',
@@ -56,7 +74,6 @@ class SkillsConst
     },
 
     // knowledges
-
     {
       id: KNOW_SMOKING,
       name: 'smoking',
@@ -64,7 +81,6 @@ class SkillsConst
       isKnowledge: true,
       isBool: true
     },
-
     {
       id: KNOW_SHOPPING,
       name: 'shopping',
@@ -72,14 +88,13 @@ class SkillsConst
       isKnowledge: true,
       isBool: true
     },
-
     {
       id: KNOW_SOCIETY,
       name: 'human society',
       defaultLevel: 0,
       isKnowledge: true,
     },
-    ];
+  ];
 }
 
 
