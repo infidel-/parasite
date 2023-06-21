@@ -133,6 +133,9 @@ class AI extends _SaveObject
       chat = {
         needID: 0,
         needStringID: 0,
+        aspectID: 0,
+        emotionID: EMOTION_NONE,
+        emotion: 0,
         clues: 0,
         consent: 0,
         stun: 0,
@@ -996,7 +999,12 @@ public function show()
     {
       // chat restoring
       if (chat.timeout > 0)
-        chat.timeout--;
+        {
+          chat.timeout--;
+          chat.consent -= 1 + Std.random(3);
+          if (chat.consent < 0)
+            chat.consent = 0;
+        }
       stateTime++; // time spent in this state
       if (entity != null)
         entity.turn(); // time passing for entity
@@ -1435,6 +1443,9 @@ class _AIChat extends _SaveObject
 {
   public var needID: Int;
   public var needStringID: Int;
+  public var aspectID: Int;
+  public var emotion: Int;
+  public var emotionID: _ChatEmotion;
   public var clues: Int;
   public var consent: Int;
   public var stun: Int;
@@ -1442,10 +1453,13 @@ class _AIChat extends _SaveObject
   public var timeout: Int;
   public var turns: Int;
 
-  public function new(needID: Int, needStringID: Int, clues: Int, consent: Int, stun: Int, fatigue: Int, timeout: Int, turns: Int)
+  public function new(needID: Int, needStringID: Int, aspectID: Int, emotion: Int, emotionID: _ChatEmotion, clues: Int, consent: Int, stun: Int, fatigue: Int, timeout: Int, turns: Int)
     {
       this.needID = needID;
       this.needStringID = needStringID;
+      this.aspectID = aspectID;
+      this.emotion = emotion;
+      this.emotionID = emotionID;
       this.clues = clues;
       this.consent = consent;
       this.stun = stun;

@@ -27,9 +27,10 @@ class Chat
           return;
         }
       target = ai;
-      if (target.chat.consent <= 0)
+      if (target.chat.consent < 10)
         target.chat.consent = 10; // minimum
       target.chat.fatigue = 0;
+      target.chat.emotion = 0;
       turn = 0;
       prevActions = [];
       game.ui.hud.state = HUD_CHAT;
@@ -128,23 +129,40 @@ class Chat
   function analyze()
     {
       // form basic string replacing pronouns
-      var need = 'Analyzing ' + target.getNameCapped() + ' tells you that he ' +
-        ChatConst.needStrings[target.chat.needID]
-          [target.chat.needStringID];
-      if (!target.isMale)
-        {
-          need = StringTools.replace(need, ' he ', ' she ');
-          need = StringTools.replace(need, ' him', ' her');
-        }
+      var msg = 'Analyzing ' + target.getNameCapped() + ' tells you that he ';
+      if (target.chat.aspectID > 0)
+        msg += 'is a ' + ChatConst.aspects[target.chat.aspectID] + ' individual, who ';
+      msg += ChatConst.needStrings[target.chat.needID]
+        [target.chat.needStringID];
+      if (target.chat.emotion > 0)
+        msg += ' He is visibly ' + ChatConst.emotions[target.chat.emotionID] + '.';
 //      var needActions = ChatConst.needActions[target.chat.needID];
 //      trace(needActions);
-      log(need);
+      log(msg);
     }
 
-// try to manipulate
+// manipulate: emotional state
+  function manipulateEmotion(name: String)
+    {
+      // positive action
+      if (Lambda.has([ 'Assure', 'Distort', 'Empathize', 'Lie'], name))
+        {
+          target.chat.emotion--;
+          var msg = ChatConst.actionDesc[name] + ', you observe how ' + target.getNameCapped() + ' calms down ';
+          if (target.chat.emotion == 0)
+            msg += 'completely.';
+          else msg += 'to a degree.';
+          log(msg);
+          return;
+        }
+
+      // negative action - increase emotion
+      increaseEmotion(name.toLowerCase());
+    }
+
+// manipulate: normal state
   function manipulate(name: String)
     {
-      // TODO: roll for skill
       // positive results
       var needActions = ChatConst.needActions[target.chat.needID];
       if (Lambda.has(needActions, name))
@@ -192,6 +210,8 @@ class Chat
 // post-manipulation: fatigue, consent, etc
   function manipulatePost()
     {
+      if (target == null)
+        return;
       target.chat.stun = 0;
       // increase fatigue
       target.chat.fatigue++;
@@ -215,7 +235,7 @@ class Chat
           finish();
         }
       // maximum consent
-      if (target.chat.consent >= 100)
+      else if (target.chat.consent >= 100)
         {
           var msg = 'Inspired by the conversation, ' + target.getNameCapped() + ' gives you his full consent.';
           if (target == player.host)
@@ -233,6 +253,7 @@ class Chat
       game.log(Const.smallgray(
         '[ consent:' + target.chat.consent +
         ', fatigue: ' + target.chat.fatigue +
+        ', emotion: ' + target.chat.emotion +
         ', stun: ' + target.chat.stun + ' ]'));
 #end
     }
@@ -249,9 +270,61 @@ class Chat
       log('You provoke ' + target.getNameCapped() + ' invigorating their desire for more conversation.');
     }
 
+// check for aspect-related logic
+// returns true if it worked
+  function shockAspect(id: String): Bool
+    {
+      // check for aspect-related logic
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      switch (aspect)
+        {
+          case 'normal':
+          case 'jumpy', 'nervous': 
+            if (id == 'scare')
+              target.chat.emotionID = EMOTION_STARTLED;
+        }
+
+      // nothing happened
+      if (target.chat.emotionID == EMOTION_NONE)
+        return false;
+
+      // increase emotion up
+      increaseEmotion(id);
+      return true;
+    }
+
+// increase emotion due to any action
+  function increaseEmotion(id: String)
+    {
+      // target is now emotional
+      target.chat.emotion++;
+      var adj = '';
+      switch (target.chat.emotion)
+        {
+          case 1:
+            adj = 'noticeably';
+          case 2:
+            adj = 'even more';
+          case 3:
+            adj = 'completely';
+        }
+//      log('When you try to ' + id + ' ' + target.getNameCapped() + ', he becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + '.');
+      log(target.getNameCapped() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' from your attempts to communicate.');
+      if (target.chat.emotion >= 3)
+        {
+          log('TODO EMOTION MAX');
+          finish();
+        }
+      return true;
+    }
+
 // threaten, scare, shock - synonyms
   function shock(id: String)
     {
+      // aspect-related logic
+      if (shockAspect(id))
+        return;
+      // base logic
       if (target.chat.stun < 3)
         {
           target.chat.stun++;
@@ -296,7 +369,10 @@ class Chat
             finish();
           // one of the consent actions
           default:
-            manipulate(Const.capitalize(id));
+            var name = Const.capitalize(id);
+            if (target.chat.emotion > 0)
+              manipulateEmotion(name);
+            else manipulate(name);
             manipulatePost();
         }
       actionPost(); // check for fatigue
@@ -314,6 +390,11 @@ class Chat
 // log line + stats
   function log(s: String)
     {
+      if (target != null && !target.isMale)
+        {
+          s = StringTools.replace(s, ' he ', ' she ');
+          s = StringTools.replace(s, ' him', ' her');
+        }
 #if mydebug
 /*
       if (target.chat != null)

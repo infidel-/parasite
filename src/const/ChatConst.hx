@@ -216,4 +216,15 @@ class ChatConst
 	  'seeks a sense of purpose that brings joy and fulfillment to his life.',
     ],
   ];
+
+  public static var aspects = [
+    'normal',
+    'jumpy',
+    'nervous',
+  ];
+  public static var emotions = [
+    'none',
+    'startled',
+    'angry',
+  ];
 }
