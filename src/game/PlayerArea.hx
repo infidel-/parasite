@@ -315,7 +315,6 @@ class PlayerArea extends _SaveObject
       actionPost(); // post-action call
     }
 
-
 // post-action call: remove AP and new turn
   public function actionPost()
     {
@@ -751,7 +750,6 @@ class PlayerArea extends _SaveObject
       player.host.onDetach(src);
       onDetach();
     }
-
 
 // action: leave area
   function leaveAreaAction(): Bool

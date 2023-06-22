@@ -554,7 +554,11 @@ class Organs extends _SaveObject
             }
 
           // AI effect event
-          ai.onEffect({ type: EFFECT_PANIC, points: params.time, isTimer: true });
+          ai.onEffect({
+            type: EFFECT_PANIC,
+            points: params.time,
+            isTimer: true
+          });
         }
       // repaint view with effects
       game.scene.updateCamera();

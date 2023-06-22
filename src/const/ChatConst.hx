@@ -221,10 +221,15 @@ class ChatConst
     'normal',
     'jumpy',
     'nervous',
+    'submissive',
+    'non-confrontational',
+    'timid', // 5
   ];
+  // NOTE: indexes must be the same as in _ChatEmotion
   public static var emotions = [
     'none',
     'startled',
     'angry',
+    'distressed',
   ];
 }

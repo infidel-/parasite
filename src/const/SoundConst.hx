@@ -2,8 +2,9 @@
 
 package const;
 
-import ai.AI;
 import _AIState;
+import _AIEffectType;
+import ai.AI;
 
 class SoundConst
 {
@@ -184,6 +185,36 @@ class SoundConst
       params: null
     },
   ];
+  static var humanCrying: Array<AISound> = [
+    {
+      text: '*sob*',
+      file: 'male-crying',
+      radius: 2,
+      alertness: 5,
+      params: null
+    },
+    {
+      text: '*weep*',
+      file: 'male-crying',
+      radius: 2,
+      alertness: 5,
+      params: null
+    },
+    {
+      text: '*sniff*',
+      file: 'male-crying',
+      radius: 2,
+      alertness: 5,
+      params: null
+    },
+    {
+      text: '*bawl*',
+      file: 'male-crying-loud',
+      radius: 3,
+      alertness: 5,
+      params: null
+    },
+  ];
 
   // civilian sounds
   public static var civilian: Map<String, Array<AISound>> = [
@@ -200,6 +231,7 @@ class SoundConst
     ],
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
+    '' + EFFECT_CRYING => humanCrying,
   ];
 
   // scientist sounds
@@ -217,6 +249,7 @@ class SoundConst
     ],
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
+    '' + EFFECT_CRYING => humanCrying,
   ];
 
   // police officer sounds
@@ -226,6 +259,7 @@ class SoundConst
     '' + AI_STATE_ALERT => genericAlert,
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
+    '' + EFFECT_CRYING => humanCrying,
   ];
 
   // soldier sounds
@@ -296,5 +330,6 @@ class SoundConst
     ],
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
+    '' + EFFECT_CRYING => humanCrying,
   ];
 }

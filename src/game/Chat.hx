@@ -3,6 +3,9 @@ package game;
 
 import const.*;
 import ai.*;
+import ai.AI;
+import _AIEffectType;
+import _ChatEmotion;
 
 class Chat
 {
@@ -36,10 +39,10 @@ class Chat
       game.ui.hud.state = HUD_CHAT;
     }
 
-// finish chat
-  function finish()
+// finish chat setting timeout
+  function finish(?timeout: Int = 10)
     {
-      target.chat.timeout = 10;
+      target.chat.timeout = timeout;
       target = null;
       game.ui.hud.state = HUD_DEFAULT;
     }
@@ -144,6 +147,7 @@ class Chat
 // manipulate: emotional state
   function manipulateEmotion(name: String)
     {
+      var emotionID = target.chat.emotionID;
       // positive action
       if (Lambda.has([ 'Assure', 'Distort', 'Empathize', 'Lie'], name))
         {
@@ -274,19 +278,27 @@ class Chat
 // returns true if it worked
   function shockAspect(id: String): Bool
     {
+      // already emotional
+      if (target.chat.emotionID != EMOTION_NONE)
+        return false;
+
       // check for aspect-related logic
       var aspect = ChatConst.aspects[target.chat.aspectID];
+      var emotionID = EMOTION_NONE;
       switch (aspect)
         {
           case 'normal':
           case 'jumpy', 'nervous': 
-            if (id == 'scare')
-              target.chat.emotionID = EMOTION_STARTLED;
+            if (id == 'scare' || id == 'threaten')
+              emotionID = EMOTION_STARTLED;
+          case 'submissive', 'non-confrontational', 'timid':
+            if (id == 'shock')
+              emotionID = EMOTION_DISTRESSED;
         }
-
       // nothing happened
-      if (target.chat.emotionID == EMOTION_NONE)
+      if (emotionID == EMOTION_NONE)
         return false;
+      target.chat.emotionID = emotionID;
 
       // increase emotion up
       increaseEmotion(id);
@@ -309,13 +321,44 @@ class Chat
             adj = 'completely';
         }
 //      log('When you try to ' + id + ' ' + target.getNameCapped() + ', he becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + '.');
-      log(target.getNameCapped() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' from your attempts to communicate.');
+      log(target.getNameCapped() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' by your attempts to communicate.');
       if (target.chat.emotion >= 3)
-        {
-          log('TODO EMOTION MAX');
-          finish();
-        }
+        maxEmotion();
       return true;
+    }
+
+// max emotion logic - runs when target reaches it
+  function maxEmotion()
+    {
+      var emotion = ChatConst.emotions[target.chat.emotionID];
+      switch (emotion)
+        {
+          // -> panic
+          case 'startled':
+            if (player.host == target)
+              {
+                game.playerArea.leaveHostAction('panic');
+                game.playerArea.onDamage(1 + Std.random(2));
+                target.emitRandomSound('' + REASON_DAMAGE);
+                game.playerArea.actionPost(); // skip turn
+              }
+            else target.setState(AI_STATE_ALERT, null, ' is panicking.');
+            target.onEffect({
+              type: EFFECT_PANIC,
+              points: 5,
+              isTimer: true
+            });
+          // -> tears
+          case 'distressed':
+            target.emitRandomSound('' + EFFECT_CRYING);
+            target.onEffect({
+              type: EFFECT_CRYING,
+              points: 15,
+              isTimer: true
+            });
+        }
+      // larger timeout due to emotions
+      finish(30);
     }
 
 // threaten, scare, shock - synonyms

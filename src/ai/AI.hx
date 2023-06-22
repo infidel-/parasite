@@ -5,6 +5,7 @@ package ai;
 import h2d.Tile;
 import entities.AIEntity;
 import _AIState;
+import _AIEffectType;
 import objects.*;
 import game.*;
 import const.*;
@@ -1055,13 +1056,16 @@ public function show()
 
       // emit random sound if it exists
       // assimilated hosts do not emit random sounds
-      if (state != AI_STATE_HOST || !hasTrait(TRAIT_ASSIMILATED))
+      if (effects.has(EFFECT_CRYING))
+        emitRandomSound('' + EFFECT_CRYING, 30);
+      if (state != AI_STATE_HOST ||
+          !hasTrait(TRAIT_ASSIMILATED))
         emitRandomSound('' + state, 20);
     }
 
 
 // emit random sound for this key
-  function emitRandomSound(key: String, ?chance: Int = 100)
+  public function emitRandomSound(key: String, ?chance: Int = 100)
     {
       var array = sounds[key];
       if (array == null)
@@ -1246,6 +1250,8 @@ public function show()
     {
       if (src == 'default')
         setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
+      else if (src == 'panic')
+        setState(AI_STATE_ALERT, null, 'tears you away in panic. That hurt.');
       else if (src == 'preservator')
         setState(AI_STATE_PRESERVED, null, 'stands still motionlessly.');
       else if (src == 'memories')
@@ -1393,7 +1399,6 @@ public function show()
 
 
 // valid reasons for AI to change state
-
 enum _AIStateChangeReason
 {
   REASON_NONE;
