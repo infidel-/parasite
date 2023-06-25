@@ -166,9 +166,71 @@ class Chat
       log(msg);
     }
 
+// common code for explosive aspect (manipulate, shock)
+  function explosiveAspect(): Bool
+    {
+      if (target.chat.emotion >= 2 ||
+          Std.random(100) > 20)
+        return false;
+      target.chat.stun = 0;
+      target.chat.emotion = 2;
+      target.chat.emotionID = EMOTION_ANGRY;
+      target.log('is suddenly enraged by your words.');
+      return true;
+    }
+
+// common code for temperamental aspect (manipulate, shock)
+  function temperamentalAspect(): Bool
+    {
+      // chance of going into random emotion, often angry
+      if (target.chat.emotion > 0 ||
+          Std.random(100) > 15)
+        return false;
+      var emotions = [
+        'startled',
+        'angry', // higher chance
+        'angry',
+        'angry',
+        'distressed',
+      ];
+      var emotion = emotions[Std.random(emotions.length)];
+      var emotionID = 0;
+      for (i in 0...ChatConst.emotions.length)
+        if (ChatConst.emotions[i] == emotion)
+          {
+            emotionID = i;
+            break;
+          }
+
+      // emotion chosen
+      target.chat.emotion++;
+      target.chat.emotionID = emotionID;
+      target.chat.stun = 0;
+      log(target.getNameCapped() + "'s temperament gets the better of him. He is now noticeably " + emotion + '.');
+      return true;
+    }
+
+// check for aspect-related logic
+// returns true if it worked
+  function manipulateAspect(id: String): Bool
+    {
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      switch (aspect)
+        {
+          case 'explosive':
+            return explosiveAspect();
+          case 'temperamental':
+            return temperamentalAspect();
+        }
+      return false;
+    }
+
 // manipulate: normal state
   function manipulate(name: String)
     {
+      // aspect-related logic
+      if (manipulateAspect(name.toLowerCase()))
+        return;
       // positive results
       var needActions = ChatConst.needActions[target.chat.needID];
       if (Lambda.has(needActions, name))
@@ -298,6 +360,8 @@ class Chat
             adj = 'even more';
           case 3:
             adj = 'completely';
+          default:
+            adj = 'completely';
         }
 //      log('When you try to ' + id + ' ' + target.getNameCapped() + ', he becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + '.');
       log(target.getNameCapped() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' by your attempts to communicate.');
@@ -392,6 +456,10 @@ class Chat
           case 'hot-headed', 'irritable':
             if (Std.random(100) < 85)
               emotionID = EMOTION_ANGRY;
+          case 'explosive':
+            return explosiveAspect();
+          case 'temperamental':
+            return temperamentalAspect();
         }
       // nothing happened
       if (emotionID == EMOTION_NONE)
@@ -474,6 +542,7 @@ class Chat
     {
       if (target != null && !target.isMale)
         {
+          s = StringTools.replace(s, 'He ', 'She ');
           s = StringTools.replace(s, ' he ', ' she ');
           s = StringTools.replace(s, ' him', ' her');
         }
