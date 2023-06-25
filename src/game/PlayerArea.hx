@@ -996,7 +996,6 @@ class PlayerArea extends _SaveObject
         }
     }
 
-
 // move player by dx, dy
 // returns true on success
   public function moveBy(dx: Int, dy: Int): Bool
@@ -1009,7 +1008,8 @@ class PlayerArea extends _SaveObject
       var ny = y + dy;
 
       // random: change movement direction
-      if (state == PLR_STATE_HOST && player.hostControl < 90 &&
+      if (state == PLR_STATE_HOST &&
+          player.hostControl < 90 &&
           Std.random(100) < 0.75 * (100 - player.hostControl))
         {
           log('The host resists your command.');
@@ -1047,10 +1047,18 @@ class PlayerArea extends _SaveObject
         }
 
       moveTo(nx, ny, true);
-
       return true;
     }
 
+// move player to random x, y
+  public function moveToRandom(?doPost: Bool = false): Bool
+    {
+      var dir = game.area.getRandomDirection(x, y);
+      if (dir == -1)
+        return false;
+      return moveTo(x + Const.dirx[dir],
+        y + Const.diry[dir], false);
+    }
 
 // move player to x, y
 // returns true on success

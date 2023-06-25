@@ -74,7 +74,10 @@ class CivilianAI extends HumanAI
   public override function onStateChange()
     {
       // try to call police on next turn if not struggling with parasite
-      if (state == AI_STATE_ALERT && !parasiteAttached)
+      // if berserk, just skip that
+      if (state == AI_STATE_ALERT &&
+          !parasiteAttached &&
+          !effects.has(EFFECT_BERSERK))
         {
           // cannot call police without a phone
           if (!inventory.has('smartphone') &&

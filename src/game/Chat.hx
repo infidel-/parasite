@@ -148,20 +148,22 @@ class Chat
   function manipulateEmotion(name: String)
     {
       var emotionID = target.chat.emotionID;
-      // positive action
-      if (Lambda.has([ 'Assure', 'Distort', 'Empathize', 'Lie'], name))
+      var isPositive =
+        (Lambda.has([ 'Assure', 'Empathize', 'Lie'], name));
+      // negative action - increase emotion
+      if (!isPositive)
         {
-          target.chat.emotion--;
-          var msg = ChatConst.actionDesc[name] + ', you observe how ' + target.getNameCapped() + ' calms down ';
-          if (target.chat.emotion == 0)
-            msg += 'completely.';
-          else msg += 'to a degree.';
-          log(msg);
+          increaseEmotion();
           return;
         }
 
-      // negative action - increase emotion
-      increaseEmotion(name.toLowerCase());
+      // positive action
+      target.chat.emotion--;
+      var msg = ChatConst.actionDesc[name] + ', you observe how ' + target.getNameCapped() + ' calms down ';
+      if (target.chat.emotion == 0)
+        msg += 'completely.';
+      else msg += 'to a degree.';
+      log(msg);
     }
 
 // manipulate: normal state
@@ -265,6 +267,14 @@ class Chat
 // provoke this host
   function provoke()
     {
+      // already emotional
+      if (target.chat.emotionID != EMOTION_NONE)
+        {
+          // increase emotion up
+          increaseEmotion();
+          return;
+        }
+
       // TODO: skill roll
       target.chat.fatigue -= 2 + Std.random(2);
       if (target.chat.fatigue < 0)
@@ -274,39 +284,8 @@ class Chat
       log('You provoke ' + target.getNameCapped() + ' invigorating their desire for more conversation.');
     }
 
-// check for aspect-related logic
-// returns true if it worked
-  function shockAspect(id: String): Bool
-    {
-      // already emotional
-      if (target.chat.emotionID != EMOTION_NONE)
-        return false;
-
-      // check for aspect-related logic
-      var aspect = ChatConst.aspects[target.chat.aspectID];
-      var emotionID = EMOTION_NONE;
-      switch (aspect)
-        {
-          case 'normal':
-          case 'jumpy', 'nervous': 
-            if (id == 'scare' || id == 'threaten')
-              emotionID = EMOTION_STARTLED;
-          case 'submissive', 'non-confrontational', 'timid':
-            if (id == 'shock')
-              emotionID = EMOTION_DISTRESSED;
-        }
-      // nothing happened
-      if (emotionID == EMOTION_NONE)
-        return false;
-      target.chat.emotionID = emotionID;
-
-      // increase emotion up
-      increaseEmotion(id);
-      return true;
-    }
-
 // increase emotion due to any action
-  function increaseEmotion(id: String)
+  function increaseEmotion()
     {
       // target is now emotional
       target.chat.emotion++;
@@ -333,6 +312,21 @@ class Chat
       var emotion = ChatConst.emotions[target.chat.emotionID];
       switch (emotion)
         {
+          // -> attack
+          case 'angry':
+            if (player.host == target)
+              {
+                game.playerArea.leaveHostAction('berserk');
+                game.playerArea.onDamage(2 + Std.random(4));
+                target.emitRandomSound('' + REASON_DAMAGE);
+                game.playerArea.moveToRandom(false);
+              }
+            else target.setState(AI_STATE_ALERT, null, ' is absolutely furious.');
+            target.onEffect({
+              type: EFFECT_BERSERK,
+              points: 10,
+              isTimer: true
+            });
           // -> panic
           case 'startled':
             if (player.host == target)
@@ -340,17 +334,18 @@ class Chat
                 game.playerArea.leaveHostAction('panic');
                 game.playerArea.onDamage(1 + Std.random(2));
                 target.emitRandomSound('' + REASON_DAMAGE);
-                game.playerArea.actionPost(); // skip turn
+                game.playerArea.moveToRandom(false);
               }
             else target.setState(AI_STATE_ALERT, null, ' is panicking.');
             target.onEffect({
               type: EFFECT_PANIC,
-              points: 5,
+              points: 10,
               isTimer: true
             });
           // -> tears
           case 'distressed':
             target.emitRandomSound('' + EFFECT_CRYING);
+            target.log('is crying.');
             target.onEffect({
               type: EFFECT_CRYING,
               points: 15,
@@ -359,6 +354,54 @@ class Chat
         }
       // larger timeout due to emotions
       finish(30);
+    }
+
+// check for aspect-related logic
+// returns true if it worked
+  function shockAspect(id: String): Bool
+    {
+      // already emotional
+      if (target.chat.emotionID != EMOTION_NONE)
+        {
+          // increase emotion up
+          increaseEmotion();
+          return true;
+        }
+
+      // check for aspect-related logic
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      var emotionID = EMOTION_NONE;
+      switch (aspect)
+        {
+          case 'normal':
+          case 'jumpy', 'nervous': 
+            if (id == 'scare' || id == 'threaten')
+              if (Std.random(100) < 90)
+                emotionID = EMOTION_STARTLED;
+          case 'submissive', 'non-confrontational', 'timid':
+            if (id == 'shock' && Std.random(100) < 90)
+              emotionID = EMOTION_DISTRESSED;
+          case 'resilient':
+            if (Std.random(100) < 30)
+              {
+                target.log('seems to be unperturbed by your words.');
+                return true;
+              }
+            if (Std.random(100) < 10)
+              emotionID = EMOTION_ANGRY;
+          case 'hot-headed', 'irritable':
+            if (Std.random(100) < 85)
+              emotionID = EMOTION_ANGRY;
+        }
+      // nothing happened
+      if (emotionID == EMOTION_NONE)
+        return false;
+      target.chat.stun = 0;
+      target.chat.emotionID = emotionID;
+
+      // increase emotion up
+      increaseEmotion();
+      return true;
     }
 
 // threaten, scare, shock - synonyms
@@ -399,11 +442,7 @@ class Chat
             analyze();
           case 'provoke': 
             provoke();
-          case 'threaten': 
-            shock(id);
-          case 'scare': 
-            shock(id);
-          case 'shock': 
+          case 'threaten', 'scare', 'shock': 
             shock(id);
           case 'question': 
             Const.todo('not implemented');
@@ -418,7 +457,7 @@ class Chat
             else manipulate(name);
             manipulatePost();
         }
-      actionPost(); // check for fatigue
+      actionPost(); // check for fatigue/consent
       debugPrint();
       turn++;
       // convo could end

@@ -619,21 +619,27 @@ public function show()
       var weapon = info.weapon;
 
       // check for distance on melee
-      if (!weapon.isRanged && !isNear(game.playerArea.x, game.playerArea.y))
+      if (!weapon.isRanged &&
+          !isNear(game.playerArea.x, game.playerArea.y))
         {
           logicMoveTo(game.playerArea.x, game.playerArea.y);
           return;
         }
 
       // parasite attached to human, do not shoot (blackops are fine)
-      if (isHuman && game.player.state == PLR_STATE_ATTACHED &&
+      if (isHuman &&
+          game.player.state == PLR_STATE_ATTACHED &&
           game.playerArea.attachHost.isHuman &&
           type != 'blackops')
         {
           if (Std.random(100) < 30)
             {
               log('hesitates to attack you.');
-              emitSound({ text: 'Shit!', radius: 5, alertness: 10 });
+              emitSound({
+                text: 'Shit!',
+                radius: 5,
+                alertness: 10
+              });
               return;
             }
         }
@@ -659,7 +665,8 @@ public function show()
       // stun damage
       // when player has a host, stuns the host
       // when player is a parasite, just do regular damage
-      if (weapon.type == WEAPON_STUN && game.player.state == PLR_STATE_HOST)
+      if (weapon.type == WEAPON_STUN &&
+          game.player.state == PLR_STATE_HOST)
         {
           var mods: Array<_DamageBonus> = [];
 
@@ -826,7 +833,9 @@ public function show()
       else
         {
           // aggressive AI - attack player if he is near or search for him
-          if (isAggressive)
+          // same for berserk effect
+          if (isAggressive ||
+              effects.has(EFFECT_BERSERK))
             {
               if (!game.player.vars.invisibilityEnabled)
                 {
@@ -1063,7 +1072,6 @@ public function show()
         emitRandomSound('' + state, 20);
     }
 
-
 // emit random sound for this key
   public function emitRandomSound(key: String, ?chance: Int = 100)
     {
@@ -1252,6 +1260,8 @@ public function show()
         setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
       else if (src == 'panic')
         setState(AI_STATE_ALERT, null, 'tears you away in panic. That hurt.');
+      else if (src == 'berserk')
+        setState(AI_STATE_ALERT, null, ' furiously tears you away. That hurt a lot.');
       else if (src == 'preservator')
         setState(AI_STATE_PRESERVED, null, 'stands still motionlessly.');
       else if (src == 'memories')
