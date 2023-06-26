@@ -305,7 +305,11 @@ class Chat
       // maximum consent
       else if (target.chat.consent >= 100)
         {
-          var msg = 'Inspired by the conversation, ' + target.getNameCapped() + ' gives you his full consent.';
+          var msg = '';
+          if (target.chat.emotionID == EMOTION_DESENSITIZED)
+            msg += 'Shrugging, ';
+          else msg += 'Inspired by the conversation, ';
+          msg += target.getNameCapped() + ' gives you his full consent.';
           if (target == player.host)
             msg += ' You can now speak with other hosts through him.';
           log(msg);
@@ -373,11 +377,12 @@ class Chat
 // max emotion logic - runs when target reaches it
   function maxEmotion()
     {
-      var emotion = ChatConst.emotions[target.chat.emotionID];
-      switch (emotion)
+      switch (target.chat.emotionID)
         {
+          // bug
+          case EMOTION_NONE:
           // -> attack
-          case 'angry':
+          case EMOTION_ANGRY:
             if (player.host == target)
               {
                 game.playerArea.leaveHostAction('berserk');
@@ -392,7 +397,7 @@ class Chat
               isTimer: true
             });
           // -> panic
-          case 'startled':
+          case EMOTION_STARTLED:
             if (player.host == target)
               {
                 game.playerArea.leaveHostAction('panic');
@@ -407,7 +412,7 @@ class Chat
               isTimer: true
             });
           // -> tears
-          case 'distressed':
+          case EMOTION_DISTRESSED:
             target.emitRandomSound('' + EFFECT_CRYING);
             target.log('is crying.');
             target.onEffect({
@@ -415,6 +420,9 @@ class Chat
               points: 15,
               isTimer: true
             });
+          case EMOTION_DESENSITIZED:
+            target.chat.consent = 100;
+            return;
         }
       // larger timeout due to emotions
       finish(30);
@@ -460,6 +468,9 @@ class Chat
             return explosiveAspect();
           case 'temperamental':
             return temperamentalAspect();
+          case 'detached', 'indifferent':
+            if (Std.random(100) < 15)
+              emotionID = EMOTION_DESENSITIZED;
         }
       // nothing happened
       if (emotionID == EMOTION_NONE)

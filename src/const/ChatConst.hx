@@ -229,6 +229,8 @@ class ChatConst
     'irritable',
     'explosive',
     'temperamental', // 10
+    'detached',
+    'indifferent',
   ];
   // NOTE: indexes must be the same as in _ChatEmotion
   public static var emotions = [
@@ -236,5 +238,6 @@ class ChatConst
     'startled',
     'angry',
     'distressed',
+    'desensitized',
   ];
 }
