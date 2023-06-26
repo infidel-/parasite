@@ -231,6 +231,8 @@ class ChatConst
     'temperamental', // 10
     'detached',
     'indifferent',
+    'prone to anger',
+    'impatient',
   ];
   // NOTE: indexes must be the same as in _ChatEmotion
   public static var emotions = [

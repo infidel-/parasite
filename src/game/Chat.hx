@@ -134,7 +134,14 @@ class Chat
       // form basic string replacing pronouns
       var msg = 'Analyzing ' + target.getNameCapped() + ' tells you that he ';
       if (target.chat.aspectID > 0)
-        msg += 'is a ' + ChatConst.aspects[target.chat.aspectID] + ' individual, who ';
+        {
+          var aspect = ChatConst.aspects[target.chat.aspectID];
+          var char0 = aspect.charAt(0);
+          var a = 'a';
+          if ('aeiuo'.indexOf(char0) >= 0)
+            a = 'an';
+          msg += 'is ' + a + ' ' + aspect + ' individual, who ';
+        }
       msg += ChatConst.needStrings[target.chat.needID]
         [target.chat.needStringID];
       if (target.chat.emotion > 0)
@@ -212,15 +219,23 @@ class Chat
 
 // check for aspect-related logic
 // returns true if it worked
-  function manipulateAspect(id: String): Bool
+  function manipulateAspect(id: String, isPositive: Bool): Bool
     {
       var aspect = ChatConst.aspects[target.chat.aspectID];
       switch (aspect)
         {
-          case 'explosive':
+          case 'explosive', 'prone to anger':
             return explosiveAspect();
           case 'temperamental':
             return temperamentalAspect();
+          case 'lacks self-control', 'impatient':
+            if (isPositive && Std.random(100) < 30)
+              {
+                if (target.chat.stun == 0)
+                  target.chat.stun = 1;
+                manipulateNegative(id);
+                return true;
+              }
         }
       return false;
     }
@@ -229,11 +244,12 @@ class Chat
   function manipulate(name: String)
     {
       // aspect-related logic
-      if (manipulateAspect(name.toLowerCase()))
+      var needActions = ChatConst.needActions[target.chat.needID];
+      var isPositive = (Lambda.has(needActions, name));
+      if (manipulateAspect(name.toLowerCase(), isPositive))
         return;
       // positive results
-      var needActions = ChatConst.needActions[target.chat.needID];
-      if (Lambda.has(needActions, name))
+      if (isPositive)
         {
           var adj = '';
           switch (target.chat.stun)
@@ -257,6 +273,12 @@ class Chat
         } 
 
       // negative results
+      manipulateNegative(name.toLowerCase());
+    }
+
+// negative results for manipulation
+  function manipulateNegative(name: String)
+    {
       var adj = '';
       switch (target.chat.stun)
         {
@@ -464,7 +486,7 @@ class Chat
           case 'hot-headed', 'irritable':
             if (Std.random(100) < 85)
               emotionID = EMOTION_ANGRY;
-          case 'explosive':
+          case 'explosive', 'prone to anger':
             return explosiveAspect();
           case 'temperamental':
             return temperamentalAspect();
