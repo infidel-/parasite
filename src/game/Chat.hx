@@ -352,6 +352,12 @@ class Chat
       target.chat.stun = 0;
       // increase fatigue
       target.chat.fatigue++;
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      switch (aspect)
+        {
+          case 'exhausted':
+            target.chat.fatigue += Std.random(3);
+        }
       if (target.chat.fatigue >= 10)
         {
           log('Feeling tired, ' + target.theName() + ' ends the conversation.');
@@ -412,13 +418,28 @@ class Chat
           return;
         }
 
+      // aspect-related logic
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      switch (aspect)
+        {
+          case 'exhausted':
+            if (Std.random(100) < 65)
+              {
+                log('You fail to provoke ' + target.theName() + ' due to his enervation.');
+                return;
+              }
+        }
+
       // TODO: skill roll
-      target.chat.fatigue -= 2 + Std.random(2);
+      var fatigue = 2 + Std.random(3);
+      target.chat.fatigue -= fatigue;
       if (target.chat.fatigue < 0)
         target.chat.fatigue = 0;
-      target.chat.consent -= 5 + Std.random(2);
+      var consent = 5 + Std.random(2);
+      target.chat.consent -= consent;
       target.chat.stun = 0;
-      log('You provoke ' + target.theName() + ' invigorating his desire for more conversation.');
+      log('You provoke ' + target.theName() + ' invigorating his desire for more conversation. ' +
+        (game.config.extendedInfo ? Const.smallgray('[-' + consent + ' consent, -' + fatigue + ' fatigue]') : ''));
     }
 
 // increase emotion due to any action
@@ -554,6 +575,12 @@ class Chat
                 target.chat.stun = 0;
                 return true;
               }
+          case 'exhausted':
+            if (Std.random(100) < 65)
+              {
+                log('You fail to ' + id + ' ' + target.theName() + ' due to his enervation.');
+                return true;
+              }
         }
       // nothing happened
       if (emotionID == EMOTION_NONE)
@@ -576,7 +603,8 @@ class Chat
       if (target.chat.stun < 3)
         {
           target.chat.stun++;
-          target.chat.consent -= 1 + Std.random(5);
+          var consent = 1 + Std.random(5);
+          target.chat.consent -= consent;
           var msg = target.TheName();
           switch (target.chat.stun)
             {
@@ -587,7 +615,8 @@ class Chat
               case 3:
                msg += '  is deeply disturbed by the things you said.';
             }
-          log(msg);
+          log(msg + ' ' + (game.config.extendedInfo ?
+            Const.smallgray('[-' + consent + ' consent, +1 shock]') : ''));
         }
       else
         {
