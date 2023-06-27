@@ -235,6 +235,7 @@ class ChatConst
     'impatient',
     'adaptive', // 15
     'impulsive',
+    'narcissistic',
   ];
   // NOTE: indexes must be the same as in _ChatEmotion
   public static var emotions = [

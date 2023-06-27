@@ -261,6 +261,25 @@ class Chat
       var isPositive = (Lambda.has(needActions, name));
       if (manipulateAspect(name.toLowerCase(), name, isPositive))
         return;
+      // more aspect-related logic
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      switch (aspect)
+        {
+          case 'narcissistic':
+            if (name == 'Flatter' &&
+                Std.random(100) < 85)
+              {
+                isPositive = true;
+                target.chat.stun = 1 + Std.random(3);
+              }
+            else if (name == 'Empathize' &&
+                isPositive &&
+                Std.random(100) < 85)
+              {
+                isPositive = false;
+                target.chat.stun = 1 + Std.random(3);
+              }
+        }
       // lying too much exposes them
       if (isPositive && name == 'Lie' &&
           lies > 2 && Std.random(100) < 5 * lies)
@@ -501,10 +520,10 @@ class Chat
               emotionID = 1 + Std.random(4);
           case 'jumpy', 'nervous': 
             if (id == 'scare' || id == 'threaten')
-              if (Std.random(100) < 90)
+              if (Std.random(100) < 75)
                 emotionID = EMOTION_STARTLED;
           case 'submissive', 'non-confrontational', 'timid':
-            if (id == 'shock' && Std.random(100) < 90)
+            if (id == 'shock' && Std.random(100) < 75)
               emotionID = EMOTION_DISTRESSED;
           case 'resilient':
             if (Std.random(100) < 30)
@@ -557,6 +576,7 @@ class Chat
       if (target.chat.stun < 3)
         {
           target.chat.stun++;
+          target.chat.consent -= 1 + Std.random(5);
           var msg = target.TheName();
           switch (target.chat.stun)
             {
