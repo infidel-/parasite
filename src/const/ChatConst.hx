@@ -17,12 +17,12 @@ class ChatConst
 
   public static var actionDesc = [
     'Assure' => 'Confidently reassuring',
-    'Discuss' => 'While openly discussing the topic',
-    'Distort' => 'As you skillfully distort',
-    'Empathize' => 'When you sincerely empathize',
+    'Discuss' => 'While openly discussing the topic with',
+    'Distort' => 'Skillfully distorting the narrative for',
+    'Empathize' => 'When you sincerely empathize with',
     'Encourage' => 'Actively encouraging',
     'Flatter' => 'While you cynically flatter',
-    'Lie' => 'Flatly lying',
+    'Lie' => 'Flatly lying to',
   ];
 
 // Coaxing - Encourage 6, Assure 7, Discuss 3, Empathize 6
@@ -233,6 +233,8 @@ class ChatConst
     'indifferent',
     'prone to anger',
     'impatient',
+    'adaptive', // 15
+    'impulsive',
   ];
   // NOTE: indexes must be the same as in _ChatEmotion
   public static var emotions = [

@@ -14,11 +14,13 @@ class Chat
   var target: AI;
   var turn: Int;
   var prevActions: Array<String>;
+  var impulsiveFinish: Bool;
 
   public function new(p: Player, g: Game)
     {
       player = p;
       game = g;
+      impulsiveFinish = false;
     }
 
 // start new chat
@@ -35,6 +37,7 @@ class Chat
       target.chat.fatigue = 0;
       target.chat.emotion = 0;
       turn = 0;
+      impulsiveFinish = false;
       prevActions = [];
       game.ui.hud.state = HUD_CHAT;
     }
@@ -166,7 +169,7 @@ class Chat
 
       // positive action
       target.chat.emotion--;
-      var msg = ChatConst.actionDesc[name] + ', you observe how ' + target.getNameCapped() + ' calms down ';
+      var msg = ChatConst.actionDesc[name] + ' ' + target.getName() + ', you observe how he calms down ';
       if (target.chat.emotion == 0)
         msg += 'completely.';
       else msg += 'to a degree.';
@@ -219,7 +222,7 @@ class Chat
 
 // check for aspect-related logic
 // returns true if it worked
-  function manipulateAspect(id: String, isPositive: Bool): Bool
+  function manipulateAspect(id: String, name: String, isPositive: Bool): Bool
     {
       var aspect = ChatConst.aspects[target.chat.aspectID];
       switch (aspect)
@@ -236,6 +239,13 @@ class Chat
                 manipulateNegative(id);
                 return true;
               }
+          case 'impulsive':
+            if (isPositive && Std.random(100) < 20)
+              {
+                target.chat.consent = 100;
+                impulsiveFinish = true;
+                return true;
+              }
         }
       return false;
     }
@@ -246,7 +256,7 @@ class Chat
       // aspect-related logic
       var needActions = ChatConst.needActions[target.chat.needID];
       var isPositive = (Lambda.has(needActions, name));
-      if (manipulateAspect(name.toLowerCase(), isPositive))
+      if (manipulateAspect(name.toLowerCase(), name, isPositive))
         return;
       // positive results
       if (isPositive)
@@ -267,7 +277,7 @@ class Chat
           // stun 3: 4 * (10 - [4-8] + [0-3]) = 4 * [2-7] = 8-28
           var val = (target.chat.stun + 1) * (10 - target.psyche + Std.random(4));
           target.chat.consent += val;
-          log(ChatConst.actionDesc[name] + ', you observe a ' + adj + ' growth in the consent of ' + target.getNameCapped() + '. ' +
+          log(ChatConst.actionDesc[name] + ' ' + target.getName() + ', you observe a ' + adj + ' growth in his consent. ' +
             (game.config.extendedInfo ? Const.smallgray('[+' + val + ' consent]') : ''));
           return;
         } 
@@ -328,7 +338,9 @@ class Chat
       else if (target.chat.consent >= 100)
         {
           var msg = '';
-          if (target.chat.emotionID == EMOTION_DESENSITIZED)
+          if (impulsiveFinish)
+            msg += 'Without thinking, '
+          else if (target.chat.emotionID == EMOTION_DESENSITIZED)
             msg += 'Shrugging, ';
           else msg += 'Inspired by the conversation, ';
           msg += target.getNameCapped() + ' gives you his full consent.';
@@ -493,6 +505,17 @@ class Chat
           case 'detached', 'indifferent':
             if (Std.random(100) < 15)
               emotionID = EMOTION_DESENSITIZED;
+          case 'adaptive':
+            if (Std.random(100) < 30)
+              {
+                var msg = 'Ignoring your attempts to ' + id + ' him, ' + target.getName();
+                if (target.chat.stun == 0)
+                  msg += ' stays calm.';
+                else msg += ' calms down.';
+                log(msg);
+                target.chat.stun = 0;
+                return true;
+              }
         }
       // nothing happened
       if (emotionID == EMOTION_NONE)
