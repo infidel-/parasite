@@ -138,7 +138,7 @@ class Chat
   function analyze()
     {
       // form basic string replacing pronouns
-      var msg = 'Analyzing ' + target.getNameCapped() + ' tells you that he ';
+      var msg = 'Analyzing ' + target.theName() + ' tells you that he ';
       if (target.chat.aspectID > 0)
         {
           var aspect = ChatConst.aspects[target.chat.aspectID];
@@ -172,7 +172,7 @@ class Chat
 
       // positive action
       target.chat.emotion--;
-      var msg = ChatConst.actionDesc[name] + ' ' + target.getName() + ', you observe how he calms down ';
+      var msg = ChatConst.actionDesc[name] + ' ' + target.theName() + ', you observe how he calms down ';
       if (target.chat.emotion == 0)
         msg += 'completely.';
       else msg += 'to a degree.';
@@ -219,7 +219,7 @@ class Chat
       target.chat.emotion++;
       target.chat.emotionID = emotionID;
       target.chat.stun = 0;
-      log(target.getNameCapped() + "'s temperament gets the better of him. He is now noticeably " + emotion + '.');
+      log(target.TheName() + "'s temperament gets the better of him. He is now noticeably " + emotion + '.');
       return true;
     }
 
@@ -288,7 +288,7 @@ class Chat
           // stun 3: 4 * (10 - [4-8] + [0-3]) = 4 * [2-7] = 8-28
           var val = (target.chat.stun + 1) * (10 - target.psyche + Std.random(4));
           target.chat.consent += val;
-          log(ChatConst.actionDesc[name] + ' ' + target.getName() + ', you observe a ' + adj + ' growth in his consent. ' +
+          log(ChatConst.actionDesc[name] + ' ' + target.theName() + ', you observe a ' + adj + ' growth in his consent. ' +
             (game.config.extendedInfo ? Const.smallgray('[+' + val + ' consent]') : ''));
           // count all positive lies
           if (name == 'Lie')
@@ -317,9 +317,9 @@ class Chat
         }
       var val = (target.chat.stun + 1) * (5 + Std.random(5));
       target.chat.consent -= val;
-      var msg = target.getNameCapped() + ' is ' + adj + ' with your attempts to ' + name.toLowerCase() + '. ';
+      var msg = target.TheName() + ' is ' + adj + ' with your attempts to ' + name.toLowerCase() + '. ';
       if (liesFlag)
-        msg = target.getNameCapped() + ' sees through your lies and is ' + adj + '. ';
+        msg = target.TheName() + ' sees through your lies and is ' + adj + '. ';
       msg += (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : '');
       log(msg);
       liesFlag = false;
@@ -335,7 +335,7 @@ class Chat
       target.chat.fatigue++;
       if (target.chat.fatigue >= 10)
         {
-          log('Feeling tired, ' + target.getNameCapped() + ' ends the conversation.');
+          log('Feeling tired, ' + target.theName() + ' ends the conversation.');
           finish();
         }
     }
@@ -349,7 +349,7 @@ class Chat
       // check for minimal consent
       if (target.chat.consent <= 0)
         {
-          log('Frustrated by the conversation, ' + target.getNameCapped() + ' ends it.');
+          log('Frustrated by the conversation, ' + target.theName() + ' ends it.');
           finish();
         }
       // maximum consent
@@ -361,7 +361,7 @@ class Chat
           else if (target.chat.emotionID == EMOTION_DESENSITIZED)
             msg += 'Shrugging, ';
           else msg += 'Inspired by the conversation, ';
-          msg += target.getNameCapped() + ' gives you his full consent.';
+          msg += target.theName() + ' gives you his full consent.';
           if (target == player.host)
             msg += ' You can now speak with other hosts through him.';
           log(msg);
@@ -399,7 +399,7 @@ class Chat
         target.chat.fatigue = 0;
       target.chat.consent -= 5 + Std.random(2);
       target.chat.stun = 0;
-      log('You provoke ' + target.getNameCapped() + ' invigorating their desire for more conversation.');
+      log('You provoke ' + target.theName() + ' invigorating his desire for more conversation.');
     }
 
 // increase emotion due to any action
@@ -419,8 +419,7 @@ class Chat
           default:
             adj = 'completely';
         }
-//      log('When you try to ' + id + ' ' + target.getNameCapped() + ', he becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + '.');
-      log(target.getNameCapped() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' by your attempts to communicate.');
+      log(target.TheName() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' by your attempts to communicate.');
       if (target.chat.emotion >= 3)
         maxEmotion();
       return true;
@@ -498,6 +497,8 @@ class Chat
       switch (aspect)
         {
           case 'normal':
+            if (Std.random(100) < 5)
+              emotionID = 1 + Std.random(4);
           case 'jumpy', 'nervous': 
             if (id == 'scare' || id == 'threaten')
               if (Std.random(100) < 90)
@@ -526,7 +527,7 @@ class Chat
           case 'adaptive':
             if (Std.random(100) < 30)
               {
-                var msg = 'Ignoring your attempts to ' + id + ' him, ' + target.getName();
+                var msg = 'Ignoring your attempts to ' + id + ' him, ' + target.theName();
                 if (target.chat.stun == 0)
                   msg += ' stays calm.';
                 else msg += ' calms down.';
@@ -556,7 +557,7 @@ class Chat
       if (target.chat.stun < 3)
         {
           target.chat.stun++;
-          var msg = target.getNameCapped();
+          var msg = target.TheName();
           switch (target.chat.stun)
             {
               case 1:
@@ -570,7 +571,7 @@ class Chat
         }
       else
         {
-          log('Your words fall on deaf ears, ' + target.getNameCapped() + ' is too stunned already.');
+          log('Your words fall on deaf ears, ' + target.theName() + ' is too stunned already.');
         }
     }
 
@@ -619,6 +620,7 @@ class Chat
           s = StringTools.replace(s, 'He ', 'She ');
           s = StringTools.replace(s, ' he ', ' she ');
           s = StringTools.replace(s, ' him', ' her');
+          s = StringTools.replace(s, ' his', ' her');
         }
 #if mydebug
 /*

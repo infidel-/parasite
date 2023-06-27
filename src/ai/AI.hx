@@ -315,13 +315,11 @@ public function show()
       health = health;
     }
 
-
 // get name depending on whether its known or not
   public inline function getName(): String
     {
       return (isNameKnown ? name.real : name.unknown);
     }
-
 
 // get capped name depending on whether its known or not
   public inline function getNameCapped(): String
@@ -329,6 +327,17 @@ public function show()
       return (isNameKnown ? name.realCapped : name.unknownCapped);
     }
 
+// get name + article depending on whether its known or not
+  public inline function theName(): String
+    {
+      return (isNameKnown ? name.real : 'the ' + name.unknown);
+    }
+
+// get capped name depending on whether its known or not
+  public inline function TheName(): String
+    {
+      return (isNameKnown ? name.realCapped : 'The ' + name.unknown);
+    }
 
 // create entity for this AI
   public function createEntity()
