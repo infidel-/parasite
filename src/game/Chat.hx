@@ -13,14 +13,15 @@ class Chat
   var player: Player;
   var target: AI;
   var turn: Int;
+  var lies: Int;
   var prevActions: Array<String>;
   var impulsiveFinish: Bool;
+  var liesFlag: Bool;
 
   public function new(p: Player, g: Game)
     {
       player = p;
       game = g;
-      impulsiveFinish = false;
     }
 
 // start new chat
@@ -37,6 +38,8 @@ class Chat
       target.chat.fatigue = 0;
       target.chat.emotion = 0;
       turn = 0;
+      lies = 0;
+      liesFlag = false;
       impulsiveFinish = false;
       prevActions = [];
       game.ui.hud.state = HUD_CHAT;
@@ -258,6 +261,14 @@ class Chat
       var isPositive = (Lambda.has(needActions, name));
       if (manipulateAspect(name.toLowerCase(), name, isPositive))
         return;
+      // lying too much exposes them
+      if (isPositive && name == 'Lie' &&
+          lies > 2 && Std.random(100) < 5 * lies)
+        {
+          liesFlag = true;
+          target.chat.stun = 1 + Std.random(3);
+          isPositive = false;
+        }
       // positive results
       if (isPositive)
         {
@@ -279,8 +290,11 @@ class Chat
           target.chat.consent += val;
           log(ChatConst.actionDesc[name] + ' ' + target.getName() + ', you observe a ' + adj + ' growth in his consent. ' +
             (game.config.extendedInfo ? Const.smallgray('[+' + val + ' consent]') : ''));
+          // count all positive lies
+          if (name == 'Lie')
+            lies++;
           return;
-        } 
+        }
 
       // negative results
       manipulateNegative(name.toLowerCase());
@@ -303,8 +317,12 @@ class Chat
         }
       var val = (target.chat.stun + 1) * (5 + Std.random(5));
       target.chat.consent -= val;
-      log(target.getNameCapped() + ' is ' + adj + ' with your attempts to ' + name.toLowerCase() + '. ' +
-        (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : ''));
+      var msg = target.getNameCapped() + ' is ' + adj + ' with your attempts to ' + name.toLowerCase() + '. ';
+      if (liesFlag)
+        msg = target.getNameCapped() + ' sees through your lies and is ' + adj + '. ';
+      msg += (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : '');
+      log(msg);
+      liesFlag = false;
     }
 
 // post-manipulation: fatigue, consent, etc
