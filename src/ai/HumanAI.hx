@@ -35,8 +35,9 @@ class HumanAI extends AI
       chat.needStringID = Std.random(
         ChatConst.needStrings[chat.needID].length);
       chat.consent = 10;
-      chat.aspectID = Std.random(
-        ChatConst.aspects.length);
+      if (Std.random(100) < 70) // 30% normal
+        chat.aspectID = Std.random(
+          ChatConst.aspects.length);
 
       // MATH: health 8-16 (~12), energy 130-210 (~170)
 

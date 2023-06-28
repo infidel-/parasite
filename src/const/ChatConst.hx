@@ -246,4 +246,44 @@ class ChatConst
     'distressed',
     'desensitized',
   ];
+
+  public static var shockSpeechHost = [
+    'I will expose your secret.',
+    'I will harm you and your loved ones.',
+    'I will make your life miserable.',
+    'If you resist, you will suffer the consequences.',
+    "I have ways of making your life a living nightmare.",
+    "I have the power to ruin everything you've worked for.",
+    "I'll haunt your every waking moment.",
+    "I have the power to make your life unravel.",
+    "There's no running from me.",
+    "Your secrets won't stay hidden for long.",
+    "I can make your worst nightmares come true.",
+    "I have ways of making you suffer.",
+    "Resistance is futile.",
+    "I can see into your deepest fears and desires.",
+    "I will consume your mind and leave only darkness.",
+    "You cannot escape my grasp.",
+    "I am always watching.",
+    "Your existence is insignificant.",
+    "Every step you take, I am right behind you.",
+    "Your screams will be music to my ears.",
+    "I will drain your life force until there is nothing left.",
+    "You cannot comprehend the horrors that await you.",
+  ];
+
+  public static var shockSpeech = [
+    "You're not as safe as you think.",
+    "We know everything about you and your past.",
+    "You're just a pawn in a much bigger game. We control your fate.",
+    "We have eyes and ears everywhere.",
+    "Your actions have consequences.",
+    "Your life is a puzzle, and we hold the missing pieces.",
+    "Your secrets will be exposed, and your life will crumble.",
+    "You're being watched at all times.",
+    "We have evidence that can ruin your reputation and career.",
+    "You're walking on thin ice.",
+    "You're playing with fire.",
+    "One wrong move will shatter your world.",
+  ];
 }

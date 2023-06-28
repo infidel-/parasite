@@ -606,6 +606,15 @@ class Chat
           var consent = 1 + Std.random(5);
           target.chat.consent -= consent;
           var msg = target.TheName();
+          if (Std.random(100) < 15)
+            {
+              var speech = ChatConst.shockSpeechHost;
+              if (target != player.host)
+                speech = ChatConst.shockSpeech;
+              game.narrative(
+                speech[Std.random(speech.length)],
+                COLOR_MESSAGE);
+            }
           switch (target.chat.stun)
             {
               case 1:
