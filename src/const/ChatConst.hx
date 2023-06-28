@@ -3,6 +3,20 @@ package const;
 
 class ChatConst
 {
+  public static var actionsSkill: Map<String, _Skill> = [
+    'Analyze' => SKILL_PSYCHOLOGY,
+    'Encourage' => SKILL_COAXING,
+    'Assure' => SKILL_COAXING,
+    'Discuss' => SKILL_COAXING,
+    'Empathize' => SKILL_COAXING,
+    'Provoke' => SKILL_COERCION,
+    'Threaten' => SKILL_COERCION,
+    'Scare' => SKILL_COERCION,
+    'Shock' => SKILL_COERCION,
+    'Lie' => SKILL_DECEPTION,
+    'Distort' => SKILL_DECEPTION,
+    'Flatter' => SKILL_DECEPTION,
+  ];
   public static var needs = [
     'Sense of Belonging', // The need to feel connected, accepted, and valued by others. It involves having meaningful relationships, social support, and a sense of community.
     'Self-Esteem/Competence', // The need for self-respect, self-acceptance, and a positive self-image. It involves having a healthy sense of self-worth and feeling confident in one's abilities and attributes.
@@ -23,6 +37,19 @@ class ChatConst
     'Encourage' => 'Actively encouraging',
     'Flatter' => 'While you cynically flatter',
     'Lie' => 'Flatly lying to',
+  ];
+  public static var actionDescFail = [
+    'Analyze' => 'analyze',
+    'Assure' => 'reassure',
+    'Discuss' => 'discuss the topic with',
+    'Distort' => 'distort the narrative for',
+    'Empathize' => 'empathize with',
+    'Encourage' => 'encourage',
+    'Flatter' => 'flatter',
+    'Lie' => 'lie to',
+    'Scare' => 'scare',
+    'Shock' => 'shock',
+    'Threaten' => 'threaten',
   ];
 
 // Coaxing - Encourage 6, Assure 7, Discuss 3, Empathize 6

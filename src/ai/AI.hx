@@ -1020,9 +1020,12 @@ public function show()
       if (chat.timeout > 0)
         {
           chat.timeout--;
-          chat.consent -= 1 + Std.random(3);
-          if (chat.consent < 0)
-            chat.consent = 0;
+          if (chat.consent < 100)
+            {
+              chat.consent -= 1 + Std.random(3);
+              if (chat.consent < 0)
+                chat.consent = 0;
+            }
         }
       stateTime++; // time spent in this state
       if (entity != null)

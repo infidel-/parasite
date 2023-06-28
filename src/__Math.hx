@@ -206,7 +206,6 @@ class __Math
   public static function skill(p: {
       var id: _Skill; // skill id
       var level: Float; // skill level
-
       // roll mods
       @:optional var mods: Array<{ name: String, val: Float }>;
     }): Bool

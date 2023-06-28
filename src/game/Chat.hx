@@ -636,36 +636,60 @@ class Chat
 // run action
   public function action(action: _PlayerAction)
     {
+      // roll a skill
       var id = action.id.substr(5);
-      switch (id)
+      var name = Const.capitalize(id);
+      var skillID = ChatConst.actionsSkill[name];
+      var roll = true;
+      if (skillID != null)
         {
-          case 'analyze':
-            analyze();
-          case 'provoke': 
-            provoke();
-          case 'threaten', 'scare', 'shock': 
-            shock(id);
-          case 'question': 
-            Const.todo('not implemented');
-          case 'exit':
-            log('You interrupt the conversation.');
-            finish();
-          // one of the consent actions
-          default:
-            var name = Const.capitalize(id);
-            if (target.chat.emotion > 0)
-              manipulateEmotion(name);
-            else manipulate(name);
-            manipulatePost();
+          roll = __Math.skill({
+            id: skillID,
+            level: player.skills.getLevel(skillID),
+            mods: [{
+              name: 'difficulty',
+              val: 10,
+            }],
+          });
+          if (!roll)
+            {
+              var val = 1 + Std.random(3);
+              target.chat.consent -= val;
+              log('You try to ' +
+                ChatConst.actionDescFail[name] + ' ' + target.theName() + ' but fail miserably. ' +
+                (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : ''));
+              player.skills.increase(skillID, 1);
+              target.chat.stun = 0;
+            }
+          else player.skills.increase(skillID, 1 + Std.random(3));
         }
+
+      if (roll)
+        switch (id)
+          {
+            case 'analyze':
+              analyze();
+            case 'provoke':
+              provoke();
+            case 'threaten', 'scare', 'shock':
+              shock(id);
+            case 'question':
+              Const.todo('not implemented');
+            case 'exit':
+              log('You interrupt the conversation.');
+              finish();
+            // one of the consent actions
+            default:
+              if (target.chat.emotion > 0)
+                manipulateEmotion(name);
+              else manipulate(name);
+              manipulatePost();
+          }
       actionPost(); // check for fatigue/consent
       debugPrint();
       turn++;
-      // convo could end
       if (target != null)
-        {
-          target.chat.turns++;
-        }
+        target.chat.turns++;
       player.actionEnergy(action); // spend energy
       game.playerArea.actionPost(); // end turn, etc
     }
