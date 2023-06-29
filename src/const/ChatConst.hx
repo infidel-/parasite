@@ -302,7 +302,8 @@ class ChatConst
   public static var shockSpeech = [
     "You're not as safe as you think.",
     "We know everything about you and your past.",
-    "You're just a pawn in a much bigger game. We control your fate.",
+    "You're just a pawn in a much bigger game.",
+    "We control your fate.",
     "We have eyes and ears everywhere.",
     "Your actions have consequences.",
     "Your life is a puzzle, and we hold the missing pieces.",

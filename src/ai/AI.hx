@@ -137,6 +137,7 @@ class AI extends _SaveObject
         aspectID: 0,
         emotionID: EMOTION_NONE,
         emotion: 0,
+        eventID: null,
         clues: 0,
         consent: 0,
         stun: 0,
@@ -1473,6 +1474,8 @@ class _AIChat extends _SaveObject
   public var aspectID: Int;
   public var emotion: Int;
   public var emotionID: _ChatEmotion;
+  // NOTE: different from AI.eventID to not mess up NPCs
+  public var eventID: String;
   public var clues: Int;
   public var consent: Int;
   public var stun: Int;
@@ -1480,13 +1483,18 @@ class _AIChat extends _SaveObject
   public var timeout: Int;
   public var turns: Int;
 
-  public function new(needID: Int, needStringID: Int, aspectID: Int, emotion: Int, emotionID: _ChatEmotion, clues: Int, consent: Int, stun: Int, fatigue: Int, timeout: Int, turns: Int)
+  public function new(needID: Int, needStringID: Int,
+      aspectID: Int, emotion: Int,
+      emotionID: _ChatEmotion, eventID: String,
+      clues: Int, consent: Int, stun: Int,
+      fatigue: Int, timeout: Int, turns: Int)
     {
       this.needID = needID;
       this.needStringID = needStringID;
       this.aspectID = aspectID;
       this.emotion = emotion;
       this.emotionID = emotionID;
+      this.eventID = eventID;
       this.clues = clues;
       this.consent = consent;
       this.stun = stun;

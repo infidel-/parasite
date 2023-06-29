@@ -73,8 +73,8 @@ class Timeline extends _SaveObject
       return _eventsList.iterator();
     }
 
-
 // get clues according to difficulty for this event
+// NOTE: isPhysical is for readables, adds a full note chance
   public function learnClues(event: Event, isPhysical: Bool): Bool
     {
       var n = 1;
@@ -87,12 +87,12 @@ class Timeline extends _SaveObject
       for (i in 0...n)
         if (learnSingleClue(event, isPhysical))
           ret = true;
-
       return ret;
     }
 
 
 // learn a single clue for this event
+// NOTE: isPhysical is for readables, adds a full note chance
   public function learnSingleClue(event: Event, isPhysical: Bool): Bool
     {
       // we have a chance of gaining clue from other event up or down the timeline
@@ -126,11 +126,9 @@ class Timeline extends _SaveObject
       if (!game.goals.completed(GOAL_LEARN_CLUE))
         {
           ret = e.learnClue();
-
           // goal completed - event clue learned
           if (ret)
             game.goals.complete(GOAL_LEARN_CLUE);
-
           return ret;
         }
 
@@ -138,7 +136,6 @@ class Timeline extends _SaveObject
       var t = null;
       if (e != event && e.location != null && !e.locationKnown)
         t = 'location';
-
       else
         {
           // get a list of things that are still not known for this event
@@ -185,15 +182,12 @@ class Timeline extends _SaveObject
       // learn event location
       if (t == 'location')
         ret = e.learnLocation();
-
       // learn event clue
       else if (t == 'clue')
         ret = e.learnClue();
-
       // npc clues
       else if (t == 'npc')
         ret = e.learnNPC();
-
       // full event note
       else if (t == 'note')
         ret = e.learnNote();
@@ -533,20 +527,17 @@ class Timeline extends _SaveObject
       return arr[Std.random(arr.length)];
     }
 
-
 // get event by index
   public inline function getEventByIndex(idx: Int): Event
     {
       return _eventsList[idx];
     }
 
-
 // get event by id
   public inline function getEvent(id: String): Event
     {
       return _eventsMap[id];
     }
-
 
 // set timeline variable
   public inline function setVar(key: String, value: Dynamic)

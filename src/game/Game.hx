@@ -246,6 +246,7 @@ class Game extends _SaveObject
         region.leave();
       scene.region.clearIcons();
       ui.clearEvents();
+      ui.hud.state = HUD_DEFAULT;
     }
 
 // game restart

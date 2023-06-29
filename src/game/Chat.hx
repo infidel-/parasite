@@ -24,6 +24,28 @@ class Chat
       game = g;
     }
 
+// init clues and event id for this ai
+  public function initClues(ai: AI)
+    {
+      // dogs
+      if (!ai.isHuman)
+        return;
+      // not a timeline location
+      if (game.area.events.length == 0)
+        return;
+      // pick a random event
+      var event = game.area.events[Std.random(game.area.events.length)];
+      // everything already known
+      if (event.npcFullyKnown() &&
+          event.notesKnown())
+        return;
+      // 30% chance
+      if (Std.random(100) > 30)
+        return;
+      ai.chat.eventID = event.id;
+      ai.chat.clues = 1 + Std.random(3);
+    }
+
 // start new chat
   public function start(ai: AI)
     {
@@ -92,6 +114,9 @@ class Chat
           list.push(a);
           possibleActions.remove(a);
         }
+      // check if question is available
+      if (canQuestion())
+        list.push('Question');
       // sort list
       list.sort(function (a,b) {
         if (a > b)
@@ -101,8 +126,6 @@ class Chat
         else return 0;
       });
 //      trace(list);
-      // TODO: Question
-      // TODO: min chance of using a skill is 5%
 
       // add to hud
       for (a in list)
@@ -116,6 +139,8 @@ class Chat
               case 'Shock', 'Threaten', 'Scare': 
                 // MATH: cost = [6-10] / 2 = 3-5
                 cost = Std.int(cost / 2);
+              case 'Question':
+                cost = 10;
             }
           game.ui.hud.addAction({
             id: 'chat.' + a.toLowerCase(),
@@ -150,8 +175,12 @@ class Chat
         }
       msg += ChatConst.needStrings[target.chat.needID]
         [target.chat.needStringID];
+      if (target.chat.clues > 0)
+        msg += ' He knows something.';
+      else msg += ' He knows nothing' + (target.chat.eventID != null ? ' else.' : '.');
       if (target.chat.emotion > 0)
         msg += ' He is visibly ' + ChatConst.emotions[target.chat.emotionID] + '.';
+
 //      var needActions = ChatConst.needActions[target.chat.needID];
 //      trace(needActions);
       log(msg);
@@ -342,56 +371,6 @@ class Chat
       msg += (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : '');
       log(msg);
       liesFlag = false;
-    }
-
-// post-manipulation: fatigue, consent, etc
-  function manipulatePost()
-    {
-      if (target == null)
-        return;
-      target.chat.stun = 0;
-      // increase fatigue
-      target.chat.fatigue++;
-      var aspect = ChatConst.aspects[target.chat.aspectID];
-      switch (aspect)
-        {
-          case 'exhausted':
-            target.chat.fatigue += Std.random(3);
-        }
-      if (target.chat.fatigue >= 10)
-        {
-          log('Feeling tired, ' + target.theName() + ' ends the conversation.');
-          finish();
-        }
-    }
-
-// post for all actions
-  function actionPost()
-    {
-      // chat is over
-      if (target == null)
-        return;
-      // check for minimal consent
-      if (target.chat.consent <= 0)
-        {
-          log('Frustrated by the conversation, ' + target.theName() + ' ends it.');
-          finish();
-        }
-      // maximum consent
-      else if (target.chat.consent >= 100)
-        {
-          var msg = '';
-          if (impulsiveFinish)
-            msg += 'Without thinking, '
-          else if (target.chat.emotionID == EMOTION_DESENSITIZED)
-            msg += 'Shrugging, ';
-          else msg += 'Inspired by the conversation, ';
-          msg += target.theName() + ' gives you his full consent.';
-          if (target == player.host)
-            msg += ' You can now speak with other hosts through him.';
-          log(msg);
-          finish();
-        }
     }
 
   function debugPrint()
@@ -633,6 +612,28 @@ class Chat
         }
     }
 
+// returns true if question can be added to actions
+  function canQuestion(): Bool
+    {
+      // no more clues
+      if (target.chat.clues == 0)
+        return false;
+      if (Std.random(100) > target.chat.consent)
+        return false;
+      return true;
+    }
+
+// learn clues
+  function question()
+    {
+      var event = game.timeline.getEvent(target.chat.eventID);
+      var ret = game.timeline.learnSingleClue(event, false);
+      // no more clues
+      if (!ret)
+        target.chat.clues = 0;
+      else target.chat.clues--;
+    }
+
 // run action
   public function action(action: _PlayerAction)
     {
@@ -674,7 +675,7 @@ class Chat
             case 'threaten', 'scare', 'shock':
               shock(id);
             case 'question':
-              Const.todo('not implemented');
+              question();
             case 'exit':
               log('You interrupt the conversation.');
               finish();
@@ -692,6 +693,56 @@ class Chat
         target.chat.turns++;
       player.actionEnergy(action); // spend energy
       game.playerArea.actionPost(); // end turn, etc
+    }
+
+// post-manipulation: fatigue, consent, etc
+  function manipulatePost()
+    {
+      if (target == null)
+        return;
+      target.chat.stun = 0;
+      // increase fatigue
+      target.chat.fatigue++;
+      var aspect = ChatConst.aspects[target.chat.aspectID];
+      switch (aspect)
+        {
+          case 'exhausted':
+            target.chat.fatigue += Std.random(3);
+        }
+      if (target.chat.fatigue >= 10)
+        {
+          log('Feeling tired, ' + target.theName() + ' ends the conversation.');
+          finish();
+        }
+    }
+
+// post for all actions
+  function actionPost()
+    {
+      // chat is over
+      if (target == null)
+        return;
+      // check for minimal consent
+      if (target.chat.consent <= 0)
+        {
+          log('Frustrated by the conversation, ' + target.theName() + ' ends it.');
+          finish();
+        }
+      // maximum consent
+      else if (target.chat.consent >= 100)
+        {
+          var msg = '';
+          if (impulsiveFinish)
+            msg += 'Without thinking, '
+          else if (target.chat.emotionID == EMOTION_DESENSITIZED)
+            msg += 'Shrugging, ';
+          else msg += 'Inspired by the conversation, ';
+          msg += target.theName() + ' gives you his full consent.';
+          if (target == player.host)
+            msg += ' You can now speak with other hosts through him.';
+          log(msg);
+          finish();
+        }
     }
 
 // log line + stats
