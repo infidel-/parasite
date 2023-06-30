@@ -47,6 +47,7 @@ class ChatConst
     'Encourage' => 'encourage',
     'Flatter' => 'flatter',
     'Lie' => 'lie to',
+    'Provoke' => 'provoke',
     'Scare' => 'scare',
     'Shock' => 'shock',
     'Threaten' => 'threaten',

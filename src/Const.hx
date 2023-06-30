@@ -482,6 +482,11 @@ class Const
       return '<span style="color:var(--text-color-gray)" class=small>' + s + '</span>';
     }
 
+  public static inline function smalldebug(s: String)
+    {
+      return '<span style="color:var(--text-color-debug)" class=small>' + s + '</span>';
+    }
+
   public static inline function narrative(s: String)
     {
       return '<span class=narrative>' + s + '</span>';

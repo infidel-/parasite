@@ -181,6 +181,35 @@ class Chat
       if (target.chat.emotion > 0)
         msg += ' He is visibly ' + ChatConst.emotions[target.chat.emotionID] + '.';
 
+      // print consent and fatigue
+      var skill = player.skills.getLevel(SKILL_PSYCHOLOGY);
+      if (skill >= 30)
+        {
+          var word = '';
+          if (target.chat.consent < 20)
+            word = 'reluctant';
+          else if (target.chat.consent < 40)
+            word = 'tentative';
+          else if (target.chat.consent < 60)
+            word = 'ambivalent';
+          else if (target.chat.consent < 80)
+            word = 'willing';
+          else if (target.chat.consent < 100)
+            word = 'enthusiastic';
+          msg += ' He seems ' + word + ' about the converation';
+          if (skill >= 50)
+            {
+              msg += ', but ';
+              if (target.chat.fatigue < 3)
+                word = 'a little tired.';
+              else if (target.chat.fatigue < 7)
+                word = 'somewhat weary.';
+              else if (target.chat.fatigue < 10)
+                word = 'almost ready to stop.';
+              msg += word;
+            }
+          else msg += '.';
+        }
 //      var needActions = ChatConst.needActions[target.chat.needID];
 //      trace(needActions);
       log(msg);
@@ -337,7 +366,7 @@ class Chat
           var val = (target.chat.stun + 1) * (10 - target.psyche + Std.random(4));
           target.chat.consent += val;
           log(ChatConst.actionDesc[name] + ' ' + target.theName() + ', you observe a ' + adj + ' growth in his consent. ' +
-            (game.config.extendedInfo ? Const.smallgray('[+' + val + ' consent]') : ''));
+            game.infostr('[+' + val + ' consent]'));
           // count all positive lies
           if (name == 'Lie')
             lies++;
@@ -368,7 +397,7 @@ class Chat
       var msg = target.TheName() + ' is ' + adj + ' with your attempts to ' + name.toLowerCase() + '. ';
       if (liesFlag)
         msg = target.TheName() + ' sees through your lies and is ' + adj + '. ';
-      msg += (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : '');
+      msg += game.infostr('[-' + val + ' consent]');
       log(msg);
       liesFlag = false;
     }
@@ -378,11 +407,13 @@ class Chat
       if (target == null)
         return;
 #if mydebug
-      game.log(Const.smallgray(
+/*
+      game.log(Const.smalldebug(
         '[ consent:' + target.chat.consent +
         ', fatigue: ' + target.chat.fatigue +
         ', emotion: ' + target.chat.emotion +
         ', stun: ' + target.chat.stun + ' ]'));
+*/
 #end
     }
 
@@ -418,7 +449,7 @@ class Chat
       target.chat.consent -= consent;
       target.chat.stun = 0;
       log('You provoke ' + target.theName() + ' invigorating his desire for more conversation. ' +
-        (game.config.extendedInfo ? Const.smallgray('[-' + consent + ' consent, -' + fatigue + ' fatigue]') : ''));
+        game.infostr('[-' + consent + ' consent, -' + fatigue + ' fatigue]'));
     }
 
 // increase emotion due to any action
@@ -603,8 +634,7 @@ class Chat
               case 3:
                msg += '  is deeply disturbed by the things you said.';
             }
-          log(msg + ' ' + (game.config.extendedInfo ?
-            Const.smallgray('[-' + consent + ' consent, +1 shock]') : ''));
+          log(msg + ' ' + game.infostr('[-' + consent + ' consent, +1 shock]'));
         }
       else
         {
@@ -662,7 +692,7 @@ class Chat
               target.chat.consent -= val;
               log('You try to ' +
                 ChatConst.actionDescFail[name] + ' ' + target.theName() + ' but fail miserably. ' +
-                (game.config.extendedInfo ? Const.smallgray('[-' + val + ' consent]') : ''));
+                game.infostr('[-' + val + ' consent]'));
               player.skills.increase(skillID, 1);
               target.chat.stun = 0;
             }

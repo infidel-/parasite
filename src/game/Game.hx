@@ -438,6 +438,13 @@ class Game extends _SaveObject
         log(Const.small('INFO ' + s), COLOR_DEBUG);
     }
 
+// return info-styled string
+  public inline function infostr(s: String): String
+    {
+      if (config.extendedInfo)
+        return Const.smalldebug(s);
+      else return '';
+    }
 
 // add debug entry to game log
   public inline function debug(s: String)
