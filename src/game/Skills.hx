@@ -30,6 +30,11 @@ class Skills extends _SaveObject
       return _list.iterator();
     }
 
+// returns true if this has at least one learnable skill
+  public inline function hasLearnableSkills(): Bool
+    {
+      return (getRandomLearnableSkill() != null);
+    }
 
 // get random learnable skill
 // returns null if all parasite skills are better

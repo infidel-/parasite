@@ -183,6 +183,8 @@ class Chat
       else msg += ' He knows nothing' + (target.chat.eventID != null ? ' else.' : '.');
       if (target.chat.emotion > 0)
         msg += ' He is visibly ' + ChatConst.emotions[target.chat.emotionID] + '.';
+      if (target.skills.hasLearnableSkills())
+        msg += ' He has some useful skills.';
 
       // print consent and fatigue
       var skill = player.skills.getLevel(SKILL_PSYCHOLOGY);
@@ -681,7 +683,7 @@ class Chat
       if (!player.vars.skillsEnabled)
         return false;
       // no more skills
-      if (target.skills.getRandomLearnableSkill() == null)
+      if (!target.skills.hasLearnableSkills())
         return false;
       // not too soon
       if (turn < 3)
