@@ -1343,7 +1343,7 @@ public function show()
 // log
   public inline function log(s: String, ?col: _TextColor = null)
     {
-      game.log(getNameCapped() + ' ' + s, col);
+      game.log(TheName() + ' ' + s, col);
     }
 
   public function toString()

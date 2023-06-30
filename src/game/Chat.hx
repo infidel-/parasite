@@ -618,6 +618,10 @@ class Chat
       // no more clues
       if (target.chat.clues == 0)
         return false;
+      // not too soon
+      if (turn < 4)
+        return false;
+      // roll consent
       if (Std.random(100) > target.chat.consent)
         return false;
       return true;
@@ -742,6 +746,15 @@ class Chat
             msg += ' You can now speak with other hosts through him.';
           log(msg);
           finish();
+        }
+      // find name
+      if (target != null &&
+          !target.isNameKnown &&
+          Std.random(100) < 70)
+        {
+          player.host.isNameKnown = true;
+          log('You find out that his name is ' +
+            player.host.getName() + '.');
         }
     }
 
