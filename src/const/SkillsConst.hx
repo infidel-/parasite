@@ -23,27 +23,32 @@ class SkillsConst
     },
     {
       id: SKILL_FISTS,
-      name: 'Combat: fists',
+      group: 'Combat',
+      name: 'fists',
       defaultLevel: 50,
     },
     {
       id: SKILL_BATON,
-      name: 'Combat: baton',
+      group: 'Combat',
+      name: 'baton',
       defaultLevel: 40,
     },
     {
       id: SKILL_PISTOL,
-      name: 'Combat: pistol',
+      group: 'Combat',
+      name: 'pistol',
       defaultLevel: 20,
     },
     {
       id: SKILL_RIFLE,
-      name: 'Combat: rifle',
+      group: 'Combat',
+      name: 'rifle',
       defaultLevel: 25,
     },
     {
       id: SKILL_SHOTGUN,
-      name: 'Combat: shotgun',
+      group: 'Combat',
+      name: 'shotgun',
       defaultLevel: 30,
     },
 
@@ -54,17 +59,20 @@ class SkillsConst
     },
     {
       id: SKILL_DECEPTION,
-      name: 'Manipulation: deception',
+      group: 'Manipulation',
+      name: 'deception',
       defaultLevel: 0,
     },
     {
       id: SKILL_COERCION,
-      name: 'Manipulation: coercion',
+      group: 'Manipulation',
+      name: 'coercion',
       defaultLevel: 0,
     },
     {
       id: SKILL_COAXING,
-      name: 'Manipulation: coaxing',
+      group: 'Manipulation',
+      name: 'coaxing',
       defaultLevel: 0,
     },
     {
@@ -97,12 +105,12 @@ class SkillsConst
   ];
 }
 
-
 // skill info
 
 typedef SkillInfo =
 {
   id: _Skill, // skill id
+  ?group: String, // skill group
   name: String, // skill name
   defaultLevel: Int, // default skill level
   ?isKnowledge: Bool, // is this a knowledge?

@@ -3,6 +3,7 @@
 package game;
 
 import ai.AI;
+import game.Skills;
 import const.*;
 
 class Player extends _SaveObject
@@ -400,6 +401,25 @@ class Player extends _SaveObject
       game.scene.updateCamera();
       game.area.updateVisibility();
     }
+
+// learn skill at that amount (common part for brain probe and chat)
+  public function learnSkill(targetSkill: Skill, amount: Int)
+    {
+      var skill = skills.get(targetSkill.id);
+      if (skill == null)
+        {
+          log('You have learned the basics of ' + targetSkill.info.name + ' skill.');
+          skills.addID(targetSkill.id, amount);
+        }
+      else if (!targetSkill.info.isBool)
+        {
+          log('You have increased your proficiency in ' + targetSkill.info.name +
+            ' skill.');
+          var val = Const.clampFloat(skill.level + amount, 0, targetSkill.level);
+          skills.increase(targetSkill.id, val - skill.level);
+        }
+    }
+  
 
 // returns true if player has consent of the host
   public inline function hasConsent(): Bool

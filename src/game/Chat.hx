@@ -15,6 +15,7 @@ class Chat
   var turn: Int;
   var lies: Int;
   var prevActions: Array<String>;
+  var prevAction: String;
   var impulsiveFinish: Bool;
   var liesFlag: Bool;
 
@@ -117,6 +118,8 @@ class Chat
       // check if question is available
       if (canQuestion())
         list.push('Question');
+      else if (canConsult())
+        list.push('Consult');
       // sort list
       list.sort(function (a,b) {
         if (a > b)
@@ -193,7 +196,7 @@ class Chat
           else if (target.chat.consent < 60)
             word = 'ambivalent';
           else if (target.chat.consent < 80)
-            word = 'willing';
+            word = 'agreeable';
           else if (target.chat.consent < 100)
             word = 'enthusiastic';
           msg += ' He seems ' + word + ' about the converation';
@@ -645,6 +648,9 @@ class Chat
 // returns true if question can be added to actions
   function canQuestion(): Bool
     {
+      // not enabled yet
+      if (!player.vars.timelineEnabled)
+        return false;
       // no more clues
       if (target.chat.clues == 0)
         return false;
@@ -666,6 +672,33 @@ class Chat
       if (!ret)
         target.chat.clues = 0;
       else target.chat.clues--;
+    }
+
+// returns true if consult can be added to actions
+  function canConsult(): Bool
+    {
+      // skills not enabled yet
+      if (!player.vars.skillsEnabled)
+        return false;
+      // no more skills
+      if (target.skills.getRandomLearnableSkill() == null)
+        return false;
+      // not too soon
+      if (turn < 3)
+        return false;
+      // roll consent
+      if (Std.random(100) > target.chat.consent)
+        return false;
+      return true;
+    }
+
+// consult target about random learnable skill
+  function consult()
+    {
+      var skill = target.skills.getRandomLearnableSkill();
+      var amount = Std.int((target.intellect / 10.0) *
+        0.5 * skill.level);
+      game.player.learnSkill(skill, amount);
     }
 
 // run action
@@ -704,6 +737,8 @@ class Chat
           {
             case 'analyze':
               analyze();
+            case 'consult':
+              consult();
             case 'provoke':
               provoke();
             case 'threaten', 'scare', 'shock':
@@ -780,7 +815,8 @@ class Chat
       // find name
       if (target != null &&
           !target.isNameKnown &&
-          Std.random(100) < 70)
+          Std.random(100) < 70 &&
+          turn > 1)
         {
           player.host.isNameKnown = true;
           log('You find out that his name is ' +

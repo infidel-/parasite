@@ -973,27 +973,12 @@ class PlayerArea extends _SaveObject
       if (hostSkill == null)
         return;
 
-      // player already knows this skill better than the host
-      var skill = player.skills.get(hostSkill.id);
-
       // goal completion
       game.goals.complete(GOAL_LEARN_SKILLS);
 
       var amount = Std.int((player.host.intellect / 10.0) *
         hostSkillsMod * hostSkill.level);
-
-      if (skill == null)
-        {
-          log('You have learned the basics of ' + hostSkill.info.name + ' skill.');
-          player.skills.addID(hostSkill.id, amount);
-        }
-      else if (!hostSkill.info.isBool)
-        {
-          log('You have increased your knowledge of ' + hostSkill.info.name +
-            ' skill.');
-          var val = Const.clampFloat(skill.level + amount, 0, hostSkill.level);
-          player.skills.increase(hostSkill.id, val - skill.level);
-        }
+      player.learnSkill(hostSkill, amount);
     }
 
 // move player by dx, dy

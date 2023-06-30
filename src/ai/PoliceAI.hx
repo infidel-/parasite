@@ -64,7 +64,9 @@ class PoliceAI extends HumanAI
 
       // if this ai has not called for backup yet
       // try it on next turn if not struggling with parasite
-      if (!isBackupCalled && state == AI_STATE_ALERT && !parasiteAttached)
+      if (!isBackupCalled &&
+          state == AI_STATE_ALERT &&
+          !parasiteAttached)
         {
           isBackupCalled = true;
           game.managerArea.addAI(this, AREAEVENT_CALL_BACKUP, 1);

@@ -307,8 +307,11 @@ class Body extends UIWindow
       for (skill in game.player.skills)
         {
           n++;
-          buf.add((skill.info.isKnowledge ? 'Knowledge: ' : '') +
-            Const.col('skill-title', skill.info.name));
+          if (skill.info.group != null)
+            buf.add(skill.info.group + ': ');
+          else if (skill.info.isKnowledge)
+            buf.add('Knowledge: ');
+          buf.add(Const.col('skill-title', skill.info.name));
           if (skill.info.isBool == null || !skill.info.isBool)
             buf.add(' ' + skill.level + '%<br/>');
           else buf.add('<br/>');
@@ -341,8 +344,12 @@ class Body extends UIWindow
             continue;
 
           n++;
-          buf.add(Const.col('skill-title', skill.info.name));
-          if (skill.info.isBool == null || !skill.info.isBool)
+          if (skill.info.group != null)
+            buf.add(skill.info.group + ': ');
+          buf.add(Const.col('skill-title',
+            skill.info.name));
+          if (skill.info.isBool == null ||
+              !skill.info.isBool)
             buf.add(' ' + skill.level + '%<br/>');
           else buf.add('<br/>');
         }

@@ -32,6 +32,7 @@ class Skills extends _SaveObject
 
 
 // get random learnable skill
+// returns null if all parasite skills are better
   public function getRandomLearnableSkill(): Skill
     {
       if (_list.length == 0)
@@ -48,14 +49,16 @@ class Skills extends _SaveObject
 
           // skip learned skills
           if (s.info.isBool == null || !s.info.isBool)
-            if (playerSkill != null && playerSkill.level >= s.level)
+            if (playerSkill != null &&
+                playerSkill.level >= s.level)
               continue;
 
           tmp.push(s);
         }
+      if (tmp.length == 0)
+        return null;
       return tmp[Std.random(tmp.length)];
     }
-
 
 // get random skill
   public function getRandomSkill(): Skill
