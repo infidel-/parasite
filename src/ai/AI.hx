@@ -1340,9 +1340,16 @@ public function show()
 // ======================================================================
 
 
-// log
-  public inline function log(s: String, ?col: _TextColor = null)
+// log according to gender
+  public function log(s: String, ?col: _TextColor = null)
     {
+      if (!isMale)
+        {
+          s = StringTools.replace(s, 'He ', 'She ');
+          s = StringTools.replace(s, ' he ', ' she ');
+          s = StringTools.replace(s, ' him', ' her');
+          s = StringTools.replace(s, ' his', ' her');
+        }
       game.log(TheName() + ' ' + s, col);
     }
 

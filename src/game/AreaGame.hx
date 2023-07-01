@@ -1,4 +1,4 @@
-// basic game area info
+// game area
 
 package game;
 

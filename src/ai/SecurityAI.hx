@@ -26,11 +26,8 @@ class SecurityAI extends HumanAI
       skills.addID(SKILL_BATON, 50 + Std.random(25));
 
       if (Std.random(100) < 70)
-        {
-          skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
-          inventory.addID('smartphone');
-        }
-      else inventory.addID('mobilePhone');
+        skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
+      inventory.addID('radio');
       initPost(false);
     }
 
@@ -56,6 +53,10 @@ class SecurityAI extends HumanAI
 // event: on being attacked 
   public override function onAttack()
     {
+      // need radio
+      if (!inventory.has('radio'))
+        return;
+
       // if this ai has not called for backup yet
       // try it on next turn if not struggling with parasite
       if (!isBackupCalled && state == AI_STATE_ALERT && !parasiteAttached)

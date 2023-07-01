@@ -162,8 +162,7 @@ class PlayerArea extends _SaveObject
               energy: 5
             });
           if (player.host.affinity >= 75 &&
-              player.host.isHuman &&
-              !player.hasConsent())
+              player.host.isHuman)
             game.ui.hud.addAction({
               id: 'converseHost',
               type: ACTION_AREA,

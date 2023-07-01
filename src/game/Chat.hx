@@ -16,6 +16,7 @@ class Chat
   var lies: Int;
   var prevActions: Array<String>;
   var prevAction: String;
+  var startConsent: Int;
   var impulsiveFinish: Bool;
   var liesFlag: Bool;
 
@@ -64,6 +65,7 @@ class Chat
       lies = 0;
       liesFlag = false;
       impulsiveFinish = false;
+      startConsent = target.chat.consent;
       prevActions = [];
       game.ui.hud.state = HUD_CHAT;
     }
@@ -71,13 +73,67 @@ class Chat
 // finish chat setting timeout
   function finish(?timeout: Int = 10)
     {
-      target.chat.timeout = timeout;
+      if (target.chat.consent < 100)
+        target.chat.timeout = timeout;
       target = null;
       game.ui.hud.state = HUD_DEFAULT;
     }
 
 // get actions list
   public function updateActionList()
+    {
+      // normal mode is different from max consent
+      var list: Array<String> = null;
+      if (target.chat.consent < 100)
+        list = getActionListNormal();
+      else list = getActionListMax();
+      // sort list
+      list.sort(function (a,b) {
+        if (a > b)
+          return 1;
+        else if (a < b)
+          return -1;
+        else return 0;
+      });
+
+      // add to hud
+      for (a in list)
+        {
+          // MATH: cost = 2 + [4-8] = 6-10
+          var cost = 2 + target.psyche;
+          switch (a)
+            {
+              case 'Analyze':
+                cost = 5;
+              case 'Consult':
+                cost = 15;
+              case 'De-escalate':
+                cost = 10;
+              case 'Shock', 'Threaten', 'Scare': 
+                // MATH: cost = [6-10] / 2 = 3-5
+                cost = Std.int(cost / 2);
+              case 'Question':
+                cost = 10;
+            }
+          game.ui.hud.addAction({
+            id: 'chat.' + a.toLowerCase(),
+            type: ACTION_CHAT,
+            name: a,
+            energy: cost,
+          });
+        }
+      prevActions = list;
+
+      // exit is always last
+      game.ui.hud.addAction({
+        id: 'chat.exit',
+        type: ACTION_CHAT,
+        name: 'Exit',
+      });
+    }
+
+// actions list while consent is not max
+  function getActionListNormal(): Array<String>
     {
       // generate a full list of possible actions
       var possibleActions = [
@@ -115,51 +171,26 @@ class Chat
           list.push(a);
           possibleActions.remove(a);
         }
-      // check if question is available
+      // check if question and consult are available
       if (canQuestion())
         list.push('Question');
       else if (canConsult())
         list.push('Consult');
-      // sort list
-      list.sort(function (a,b) {
-        if (a > b)
-          return 1;
-        else if (a < b)
-          return -1;
-        else return 0;
-      });
 //      trace(list);
+      return list;
+    }
 
-      // add to hud
-      for (a in list)
-        {
-          // MATH: cost = 2 + [4-8] = 6-10
-          var cost = 2 + target.psyche;
-          switch (a)
-            {
-              case 'Analyze':
-                cost = 5;
-              case 'Shock', 'Threaten', 'Scare': 
-                // MATH: cost = [6-10] / 2 = 3-5
-                cost = Std.int(cost / 2);
-              case 'Question':
-                cost = 10;
-            }
-          game.ui.hud.addAction({
-            id: 'chat.' + a.toLowerCase(),
-            type: ACTION_CHAT,
-            name: a,
-            energy: cost,
-          });
-        }
-      prevActions = list;
-
-      // exit is always last
-      game.ui.hud.addAction({
-        id: 'chat.exit',
-        type: ACTION_CHAT,
-        name: 'Exit',
-      });
+// max consent actions list
+  function getActionListMax(): Array<String>
+    {
+      var list = [];
+      if (canQuestion())
+        list.push('Question');
+      if (canConsult())
+        list.push('Consult');
+      if (canDeescalate())
+        list.push('De-escalate');
+      return list;
     }
 
 // analyze (use psychology)
@@ -656,12 +687,15 @@ class Chat
       // no more clues
       if (target.chat.clues == 0)
         return false;
-      // not too soon
-      if (turn < 4)
-        return false;
-      // roll consent
-      if (Std.random(100) > target.chat.consent)
-        return false;
+      if (target.chat.consent < 100)
+        {
+          // not too soon
+          if (turn < 4)
+            return false;
+          // roll consent
+          if (Std.random(100) > target.chat.consent)
+            return false;
+        }
       return true;
     }
 
@@ -685,12 +719,15 @@ class Chat
       // no more skills
       if (!target.skills.hasLearnableSkills())
         return false;
-      // not too soon
-      if (turn < 3)
-        return false;
-      // roll consent
-      if (Std.random(100) > target.chat.consent)
-        return false;
+      if (target.chat.consent < 100)
+        {
+          // not too soon
+          if (turn < 3)
+            return false;
+          // roll consent
+          if (Std.random(100) > target.chat.consent)
+            return false;
+        }
       return true;
     }
 
@@ -701,6 +738,46 @@ class Chat
       var amount = Std.int((target.intellect / 10.0) *
         0.5 * skill.level);
       game.player.learnSkill(skill, amount);
+    }
+
+// returns true if de-escalate can be added to actions
+  function canDeescalate(): Bool
+    {
+      // only law can deescalate
+      if (target.type != 'police' &&
+          target.type != 'security')
+        return false;
+      // police can deescalate in city areas
+      // security in facilities
+      if (game.area.info.ai[target.type] != null)
+        return true;
+      return false;
+    }
+
+// lower area alertness
+  function deescalate()
+    {
+      if (!target.inventory.has('radio'))
+        {
+          target.log('says he does not have a radio on him.');
+          return;
+        }
+      if (game.area.alertness == 0)
+        {
+          target.log('says the area is considered low-risk at the moment.');
+          return;
+        }
+      var val = 10 + Std.random(10);
+      game.scene.sounds.play('ai-radio', {
+        x: target.x,
+        y: target.y,
+        canDelay: true,
+        always: true,
+      });
+      target.log('informs the HQ that the threat has been neutralized. ' + game.infostr('[-' + val + ' alertness]'));
+      game.area.alertness -= val;
+      target.chat.timeout = 20 + 5 * Std.random(5);
+      finish();
     }
 
 // run action
@@ -741,6 +818,8 @@ class Chat
               analyze();
             case 'consult':
               consult();
+            case 'de-escalate':
+              deescalate();
             case 'provoke':
               provoke();
             case 'threaten', 'scare', 'shock':
@@ -799,8 +878,9 @@ class Chat
           log('Frustrated by the conversation, ' + target.theName() + ' ends it.');
           finish();
         }
-      // maximum consent
-      else if (target.chat.consent >= 100)
+      // maximum consent (changed during the convo)
+      else if (target.chat.consent >= 100 &&
+          startConsent < 100)
         {
           var msg = '';
           if (impulsiveFinish)
