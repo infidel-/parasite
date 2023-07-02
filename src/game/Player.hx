@@ -293,8 +293,12 @@ class Player extends _SaveObject
         e = action.energyFunc(game.player);
 
       // chatting spends parasite energy
-      if (action.type == ACTION_CHAT && energy >= e)
-        return true;
+      if (action.type == ACTION_CHAT)
+        {
+          if (energy >= e)
+            return true;
+          else return false;
+        }
       else if (state == PLR_STATE_HOST && host.energy >= e)
         return true;
       else if (energy >= e)

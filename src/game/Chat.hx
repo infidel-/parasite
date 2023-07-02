@@ -209,9 +209,11 @@ class Chat
         }
       msg += ChatConst.needStrings[target.chat.needID]
         [target.chat.needStringID];
-      if (target.chat.clues > 0)
+      if (target.hasClues())
         msg += ' He knows something.';
-      else msg += ' He knows nothing' + (target.chat.eventID != null ? ' else.' : '.');
+      else msg += ' He knows nothing' +
+        ((target.chat.eventID != null || target.isNPC) ?
+         ' else.' : '.');
       if (target.chat.emotion > 0)
         msg += ' He is visibly ' + ChatConst.emotions[target.chat.emotionID] + '.';
       if (target.skills.hasLearnableSkills())
@@ -685,7 +687,7 @@ class Chat
       if (!player.vars.timelineEnabled)
         return false;
       // no more clues
-      if (target.chat.clues == 0)
+      if (!target.hasClues())
         return false;
       if (target.chat.consent < 100)
         {
@@ -702,12 +704,34 @@ class Chat
 // learn clues
   function question()
     {
-      var event = game.timeline.getEvent(target.chat.eventID);
-      var ret = game.timeline.learnSingleClue(event, false);
-      // no more clues
-      if (!ret)
-        target.chat.clues = 0;
-      else target.chat.clues--;
+      // chat clues first
+      if (target.chat.clues > 0)
+        {
+          var event = game.timeline.getEvent(target.chat.eventID);
+          var ret = game.timeline.learnSingleClue(event, false);
+          // no more clues
+          if (!ret)
+            {
+              game.log('You did not learn any new information.', COLOR_TIMELINE);
+              target.chat.clues = 0;
+            }
+          else target.chat.clues--;
+        }
+      // then npc clues
+      else
+        {
+          var ret = game.timeline.learnClues(target.event, true);
+          if (!ret)
+            game.log('You did not learn any new information.', COLOR_TIMELINE);
+          // mark npc as scanned (after 3 times)
+          if (target.brainProbed >= 2 &&
+              !target.npc.memoryKnown)
+            {
+              target.npc.memoryKnown = true;
+              target.log('does not know anything else.', COLOR_TIMELINE);
+            }
+          target.brainProbed++;
+        }
     }
 
 // returns true if consult can be added to actions
@@ -889,8 +913,6 @@ class Chat
             msg += 'Shrugging, ';
           else msg += 'Inspired by the conversation, ';
           msg += target.theName() + ' gives you his full consent.';
-          if (target == player.host)
-            msg += ' You can now speak with other hosts through him.';
           log(msg);
           finish();
         }

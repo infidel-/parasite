@@ -1308,6 +1308,18 @@ public function show()
         }
     }
 
+// returns true if this AI has NPC clues or chat clues
+  public function hasClues(): Bool
+    {
+      // npc clues
+      if (isNPC && !npc.memoryKnown)
+        return true;
+      // chat clues
+      if (chat.clues > 0)
+        return true;
+      return false;
+    }
+
 // event hook: on state change
   dynamic function onStateChange()
     {}
