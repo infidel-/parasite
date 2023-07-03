@@ -482,7 +482,6 @@ class Chat
               }
         }
 
-      // TODO: skill roll
       var fatigue = 2 + Std.random(3);
       target.chat.fatigue -= fatigue;
       if (target.chat.fatigue < 0)
@@ -866,13 +865,25 @@ class Chat
       var roll = true;
       if (skillID != null)
         {
+          var mods = [{
+            name: 'difficulty',
+            val: 10.0,
+          }];
+          // team members are hardened
+          if (target.isTeamMember)
+            mods.push({
+              name: 'team',
+              val: -20,
+            });
+          else if (target.type == 'blackops')
+            mods.push({
+              name: 'blackops',
+              val: -35,
+            });
           roll = __Math.skill({
             id: skillID,
             level: player.skills.getLevel(skillID),
-            mods: [{
-              name: 'difficulty',
-              val: 10,
-            }],
+            mods: mods,
           });
           if (!roll)
             {
