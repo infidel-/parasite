@@ -112,6 +112,8 @@ class Chat
               case 'Shock', 'Threaten', 'Scare': 
                 // MATH: cost = [6-10] / 2 = 3-5
                 cost = Std.int(cost / 2);
+              case 'Subvert':
+                cost = 15;
               case 'Question':
                 cost = 10;
             }
@@ -190,6 +192,8 @@ class Chat
         list.push('Consult');
       if (canDeescalate())
         list.push('De-escalate');
+      if (canSubvert())
+        list.push('Subvert');
       return list;
     }
 
@@ -804,6 +808,54 @@ class Chat
       finish();
     }
 
+// returns true if subvert can be added to actions
+  function canSubvert(): Bool
+    {
+      if (!game.group.isKnown)
+        return false;
+      // only team members can be subverted
+      var isTeamMember = false;
+      if (target.isTeamMember ||
+          target.type == 'blackops')
+        isTeamMember = true;
+      if (!isTeamMember)
+        return false;
+      if (target.hasFalseMemories)
+        return false;
+      return true;
+    }
+
+// raise team distance
+  function subvert()
+    {
+      // need a phone
+      if (!target.inventory.has('smartphone') &&
+          !target.inventory.has('mobilePhone'))
+        {
+          target.log('says he does not have a phone.');
+          return;
+        }
+      // no reception in habitat
+      if (game.area.isHabitat)
+        {
+          log("says there's no reception here.");
+          return;
+        }
+      var val = 5 + Std.random(5);
+      if (target.type == 'blackops')
+        val *= 2;
+      game.group.raiseTeamDistance(val);
+      game.scene.sounds.play('ai-phone', {
+        x: target.x,
+        y: target.y,
+        canDelay: true,
+        always: true,
+      });
+      target.log('informs the team leader that this was a dead end. ' + game.infostr('[+' + val + ' distance]'));
+      target.chat.timeout = 30 + 10 * Std.random(5);
+      finish();
+    }
+
 // run action
   public function action(action: _PlayerAction)
     {
@@ -848,6 +900,8 @@ class Chat
               provoke();
             case 'threaten', 'scare', 'shock':
               shock(id);
+            case 'subvert':
+              subvert();
             case 'question':
               question();
             case 'exit':

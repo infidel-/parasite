@@ -757,7 +757,8 @@ class PlayerArea extends _SaveObject
       if (game.area.typeID == AREA_HABITAT)
         {
           // currently fighting ambush
-          if (game.group.team != null && game.group.team.state == TEAM_FIGHT)
+          if (game.group.team != null &&
+              game.group.team.state == TEAM_FIGHT)
             {
               if (game.group.team.timer > 0)
                 {
@@ -938,7 +939,8 @@ class PlayerArea extends _SaveObject
           player.host.type == 'blackops')
         isTeamMember = true;
       var msg = 'You release the host triggering the pseudocampus.';
-      if (isTeamMember && !player.host.hasFalseMemories)
+      if (isTeamMember &&
+          !player.host.hasFalseMemories)
         {
           var params: { distanceBonus: Int } =
             player.host.organs.getParams(IMP_FALSE_MEMORIES);

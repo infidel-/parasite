@@ -105,7 +105,8 @@ class TeamMemberAI extends HumanAI
   public override function onRemove()
     {
       // when team is in ambush, disable evasion logic
-      if (game.group.team != null && game.group.team.state == TEAM_AMBUSH)
+      if (game.group.team != null &&
+          game.group.team.state == TEAM_AMBUSH)
         return;
 
       // team member was alerted at some point before despawn, raise priority

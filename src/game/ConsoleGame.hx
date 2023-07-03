@@ -41,6 +41,9 @@ class ConsoleGame
           // XXX config|cfg <option> <value>
           if (arr[0] == 'config' || arr[0] == 'cfg')
             configOptionCommand(arr);
+          // XXX chat|ch<stage>
+          else if (arr[0].length >= 2 && arr[0].substr(0, 2) == 'ch')
+            chatCommand(arr);
         }
 
       // XXX debug commands
@@ -71,6 +74,7 @@ class ConsoleGame
             'as - add skill, ' +
             'at - add trait, ' +
             'cfg|config,<br/>' +
+            'ch|chat - set chat stage' +
             'ddemo - debug: finish demo, ' +
             'dg - debug: graphics info, ' +
             'dthrow - debug: throw exception, ' +
@@ -224,6 +228,49 @@ class ConsoleGame
         }
     }
 
+#if mydebug
+// chat<stage>
+// chat
+  function chatCommand(arr: Array<String>)
+    {
+      var cmd = arr[0];
+      if (cmd == 'chat' || cmd == 'ch')
+        {
+          log(';ch1 - affinity + skills<br/>' +
+            ';ch2 - stage 1 + host high consent<br/>' +
+            ';ch3 - stage 1 + host max consent<br/>'
+          );
+          return;
+        }
+      var stage = 0;
+      if (StringTools.startsWith(cmd, 'chat'))
+        stage = Std.parseInt(cmd.substr(4));
+      else if (StringTools.startsWith(cmd, 'ch'))
+        stage = Std.parseInt(cmd.substr(2));
+      
+      switch (stage)
+        {
+          case 1:
+            chatStage1();
+          case 2:
+            chatStage1();
+            game.player.host.chat.consent = 99;
+          case 3:
+            chatStage1();
+            game.player.host.chat.consent = 100;
+        }
+    }
+
+// stage 1: skills + affinity
+  function chatStage1()
+    {
+      game.player.host.affinity = 80;
+      addCommand('as', [ 'as', 'psychology', '80' ]);
+      addCommand('as', [ 'as', 'coaxing', '80' ]);
+      addCommand('as', [ 'as', 'coercion', '80' ]);
+      addCommand('as', [ 'as', 'deception', '80' ]);
+    }
+#end
 
 // config <option> <value>
 // config
