@@ -1320,6 +1320,12 @@ public function show()
       return false;
     }
 
+// returns true if this AI is from the group
+  public inline function isGroup(): Bool
+    {
+      return (isTeamMember || type == 'blackops');
+    }
+
 // event hook: on state change
   dynamic function onStateChange()
     {}

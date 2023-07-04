@@ -316,6 +316,7 @@ class AreaManager extends _SaveObject
         always: false,
       });
 
+      // spawn ai
       for (i in 0...area.info.lawResponseAmount)
         {
           var loc = area.findLocation({
@@ -329,10 +330,15 @@ class AreaManager extends _SaveObject
               return;
             }
 
-          var ai: AI = null;
-          if (area.typeID == AREA_FACILITY)
-            ai = new SecurityAI(game, loc.x, loc.y);
-          else ai = new PoliceAI(game, loc.x, loc.y);
+          var type = '';
+          switch (area.typeID)
+            {
+              case AREA_FACILITY:
+                type = 'security';
+              default:
+                type = 'police';
+            }
+          var ai = area.spawnAI(type, loc.x, loc.y);
 
           // set move target
           ai.roamTargetX = e.x;
@@ -345,8 +351,6 @@ class AreaManager extends _SaveObject
 
           // and arrives already alerted
           ai.alertness = 50;
-
-          area.addAI(ai);
         }
     }
 
@@ -422,13 +426,7 @@ class AreaManager extends _SaveObject
               return;
             }
 
-          var ai: AI = null;
-          if (e.params.type == 'police')
-            ai = new PoliceAI(game, loc.x, loc.y);
-          else if (e.params.type == 'security')
-            ai = new SecurityAI(game, loc.x, loc.y);
-          else if (e.params.type == 'soldier')
-            ai = new SoldierAI(game, loc.x, loc.y);
+          var ai = area.spawnAI(e.params.type, loc.x, loc.y);
           ai.isCommon = false;
 
           // backup has better equipment
@@ -451,7 +449,6 @@ class AreaManager extends _SaveObject
               ai.skills.addID(SKILL_RIFLE, 50 + Std.random(25));
             }
 
-
           // and arrive already alerted
 /*
           ai.alertness = 70;
@@ -459,8 +456,6 @@ class AreaManager extends _SaveObject
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
           untyped ai.isBackup = true;
-
-          area.addAI(ai);
         }
     }
 
@@ -537,17 +532,15 @@ class AreaManager extends _SaveObject
                 }
             }
 
-          var ai = new BlackopsAI(game, loc.x, loc.y);
+          var ai = area.spawnAI('blackops', loc.x, loc.y);
 
-          // and arrive already alerted
+          // arrives already alerted
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
 
           // set roam target
           ai.roamTargetX = e.x;
           ai.roamTargetY = e.y;
-
-          area.addAI(ai);
         }
     }
 

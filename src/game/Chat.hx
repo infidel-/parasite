@@ -32,6 +32,21 @@ class Chat
       // dogs
       if (!ai.isHuman)
         return;
+      // agents know something about a random event
+      if (ai.isGroup())
+        {
+          // make a full list of unknown events that are not hidden
+          var event = game.timeline.getRandomLearnableEvent();
+          if (event == null)
+            return;
+          ai.chat.eventID = event.id;
+          // blackops know more
+          if (ai.type == 'blackops')
+            ai.chat.clues = 3 + Std.random(4);
+          else ai.chat.clues = 1 + Std.random(3);
+          return;
+        }
+
       // not a timeline location
       if (game.area.events.length == 0)
         return;
@@ -813,11 +828,7 @@ class Chat
       if (!game.group.isKnown)
         return false;
       // only team members can be subverted
-      var isTeamMember = false;
-      if (target.isTeamMember ||
-          target.type == 'blackops')
-        isTeamMember = true;
-      if (!isTeamMember)
+      if (!target.isGroup())
         return false;
       if (target.hasFalseMemories)
         return false;

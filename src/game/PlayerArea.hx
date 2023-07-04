@@ -934,12 +934,8 @@ class PlayerArea extends _SaveObject
           log('You cannot do this in a habitat.', COLOR_HINT);
           return false;
         }
-      var isTeamMember = false;
-      if (player.host.isTeamMember ||
-          player.host.type == 'blackops')
-        isTeamMember = true;
       var msg = 'You release the host triggering the pseudocampus.';
-      if (isTeamMember &&
+      if (player.host.isGroup() &&
           !player.host.hasFalseMemories)
         {
           var params: { distanceBonus: Int } =

@@ -217,14 +217,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
                     }
                 }
 
-              var ai = new BlackopsAI(game, loc.x, loc.y);
-
-              // set roam target
+              var ai = game.area.spawnAI('blackops', loc.x, loc.y);
+              // set roam target and alertness
               ai.roamTargetX = x;
               ai.roamTargetY = y;
-
               ai.alertness = 75;
-              game.area.addAI(ai);
             }
 
           return;
@@ -262,9 +259,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
       for (i in 0...4)
         {
           var loc = game.area.findEmptyLocation();
-          var ai = new BlackopsAI(game, loc.x, loc.y);
+          var ai = game.area.spawnAI('blackops', loc.x, loc.y);
           ai.alertness = 75;
-          game.area.addAI(ai);
         }
     }
 

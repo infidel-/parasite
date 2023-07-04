@@ -70,6 +70,7 @@ class TeamMemberAI extends HumanAI
         }
       soundsID = 'team';
       isAggressive = true;
+      isTeamMember = true;
     }
 
 // called after load or creation

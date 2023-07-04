@@ -1212,8 +1212,8 @@ class ConsoleGame
       game.player.host.organs.areaAction(a);
 
       // spawn AI, attach to it and invade
-      var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
-      game.area.addAI(ai);
+      var ai = game.area.spawnAI('civilian',
+        game.playerArea.x, game.playerArea.y);
       game.playerArea.debugAttachAndInvadeAction(ai);
       game.player.hostControl = 100;
     }
@@ -1237,8 +1237,8 @@ class ConsoleGame
       game.player.host.organs.areaAction(a);
 
       // spawn AI, attach to it and invade
-      var ai = new CivilianAI(game, game.playerArea.x, game.playerArea.y);
-      game.area.addAI(ai);
+      var ai = game.area.spawnAI('civilian',
+        game.playerArea.x, game.playerArea.y);
       game.playerArea.debugAttachAndInvadeAction(ai);
       game.player.hostControl = 100;
 

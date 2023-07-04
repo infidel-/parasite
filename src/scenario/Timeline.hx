@@ -527,6 +527,27 @@ class Timeline extends _SaveObject
       return arr[Std.random(arr.length)];
     }
 
+// get random event that can be learned about
+// NOTE: returns null if there is none
+  public function getRandomLearnableEvent(): Event
+    {
+      var tmp = [];
+      for (e in _eventsMap)
+        {
+          // hidden events
+          if (e.isHidden)
+            continue;
+          // everything already known
+          if (e.npcFullyKnown() &&
+              e.notesKnown())
+            continue;
+          tmp.push(e);
+        }
+      if (tmp.length == 0)
+        return null;
+      return tmp[Std.random(tmp.length)];
+    }
+
 // get event by index
   public inline function getEventByIndex(idx: Int): Event
     {
