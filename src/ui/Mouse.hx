@@ -118,6 +118,8 @@ class Mouse
 // on click in area mode
   function onClickArea(pos)
     {
+      if (game.ui.cannotMove())
+        return;
       // attack AI or move
       var ai = game.area.getAI(pos.x, pos.y);
       var isVisible = game.scene.area.isVisible(pos.x, pos.y);

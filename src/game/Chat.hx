@@ -11,7 +11,7 @@ class Chat
 {
   var game: Game;
   var player: Player;
-  var target: AI;
+  public var target: AI;
   var turn: Int;
   var lies: Int;
   var prevActions: Array<String>;
@@ -86,7 +86,8 @@ class Chat
     }
 
 // finish chat setting timeout
-  function finish(?timeout: Int = 10)
+// can be called from AI
+  public function finish(?timeout: Int = 10)
     {
       if (target.chat.consent < 100)
         target.chat.timeout = timeout;
@@ -1031,7 +1032,7 @@ class Chat
           game.ui.hud.addAction({
             id: 'converseHost',
             type: ACTION_AREA,
-            name: 'Converse',
+            name: 'Converse With',
           });
           return;
         }
@@ -1045,7 +1046,7 @@ class Chat
           game.ui.hud.addAction({
             id: 'converseHost',
             type: ACTION_AREA,
-            name: 'Converse',
+            name: 'Converse With',
             isVirtual: true,
           });
           return;
@@ -1056,7 +1057,7 @@ class Chat
           game.ui.hud.addAction({
             id: 'converseMenu',
             type: ACTION_AREA,
-            name: 'Converse...',
+            name: 'Converse With...',
             isVirtual: true,
           });
           return;

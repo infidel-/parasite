@@ -439,6 +439,15 @@ public function show()
       if (state == vstate)
         return;
 
+      // stop the chat
+      if (game.player.chat.target == this)
+        {
+          game.player.chat.finish();
+          if (vstate == AI_STATE_ALERT)
+            log('has become agitated.');
+        }
+      game.ui.hud.resetState();
+
 //      trace('' + id + ' reason: ' + vreason + ' state:' + vstate);
       state = vstate;
       stateTime = 0;

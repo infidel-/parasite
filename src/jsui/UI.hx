@@ -369,7 +369,8 @@ class UI
 
       // actions by key
       ret = hud.keyAction(key);
-      if (_state == UISTATE_DEFAULT)
+      if (_state == UISTATE_DEFAULT &&
+          hud.state == HUD_DEFAULT)
         {
           // skip until end of turn (alternative to z)
           if (code == 'Numpad5' ||// key == 'z' ||
@@ -408,12 +409,28 @@ class UI
       return ret;
     }
 
+// check if player cannot move and return
+  public function cannotMove(): Bool
+    {
+      if (hud.state == HUD_DEFAULT)
+        return false;
+      switch (hud.state)
+        {
+          case HUD_CHAT, HUD_CONVERSE_MENU:
+            game.log('You cannot move during a conversation.', COLOR_HINT);
+          default:
+        }
+      return true;
+    }
+
 // handle player movement
   function handleMovement(key: String, code: String): Bool
     {
       // game finished or window open
       if (game.isFinished ||
           _state != UISTATE_DEFAULT)
+        return false;
+      if (cannotMove())
         return false;
 
       var dx = 0;

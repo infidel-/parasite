@@ -84,6 +84,10 @@ class PlayerArea extends _SaveObject
           else if (player.evolutionManager.getLevel(IMP_DOPAMINE) > 0)
             player.hostControl += 5;
 
+          // also when player has consent
+          else if (player.host.chat.consent == 100)
+            player.hostControl++;
+
           else player.hostControl--;
 
           if (player.hostControl <= 0)
@@ -1250,6 +1254,8 @@ class PlayerArea extends _SaveObject
 // event: on taking damage
   public function onDamage(damage: Int)
     {
+      // reset hud state
+      game.ui.hud.resetState();
       if (player.vars.godmodeEnabled)
         return;
 

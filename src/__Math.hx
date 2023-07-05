@@ -58,12 +58,17 @@ class __Math
       if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
         {
           // energy bonus if there is free biomineral energy and in habitat
-          if (game.location == LOCATION_AREA && game.area.isHabitat)
+          if (game.location == LOCATION_AREA &&
+              game.area.isHabitat)
             energy = game.area.habitat.hostEnergyRestored * time;
 
           // assimilated hosts do not lose energy by default
           else 1;
         }
+
+      // consented hosts do not lose energy, too
+      else if (game.player.host.chat.consent == 100)
+        1;
 
       // lose energy by default
       else energy = - time;

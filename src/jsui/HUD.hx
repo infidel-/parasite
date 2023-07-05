@@ -387,9 +387,10 @@ class HUD
             host.energy + '</font>/' +
             host.maxEnergy);
           // energy spending
-          buf.add(' ' +
-            Const.smallgray('[' + (energyPerTurn > 0 ? '+' : '') +
-            energyPerTurn + '/t]'));
+          if (energyPerTurn != 0)
+            buf.add(' ' +
+              Const.smallgray('[' + (energyPerTurn > 0 ? '+' : '') +
+              energyPerTurn + '/t]'));
           // time to live
           if (energyPerTurn < 0)
             buf.add(' ' +
@@ -650,6 +651,20 @@ class HUD
         game.playerRegion.action(action);
 
       return true;
+    }
+
+// reset hud state to default
+  public function resetState()
+    {
+      switch (state)
+        {
+          case HUD_CHAT:
+            game.player.chat.finish();
+          case HUD_CONVERSE_MENU:
+            state = HUD_DEFAULT;
+          case HUD_DEFAULT:
+            // do nothing
+        }
     }
 }
 
