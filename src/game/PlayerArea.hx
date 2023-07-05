@@ -834,9 +834,13 @@ class PlayerArea extends _SaveObject
         {
           var params: Dynamic =
             player.evolutionManager.getParams(IMP_BRAIN_PROBE);
-          if (player.host.isNPC && !player.host.npc.memoryKnown)
+          if (player.host.isNPC &&
+              !player.host.npc.memoryKnown)
             col = 'timeline';
-          else if (player.vars.skillsEnabled && params.hostSkillsMod > 0)
+          else if (player.host.chat.clues > 0)
+            col = 'timeline';
+          else if (player.vars.skillsEnabled &&
+              params.hostSkillsMod > 0)
             {
               var hostSkill = player.host.skills.getRandomLearnableSkill();
               if (hostSkill != null)
@@ -869,7 +873,8 @@ class PlayerArea extends _SaveObject
             accessSkillsAction(params.hostSkillsMod);
 
           // can access attributes and traits on level 3
-          if (params.hostAttrsMod > 0 && !player.host.isAttrsKnown)
+          if (params.hostAttrsMod > 0 &&
+              !player.host.isAttrsKnown)
             {
               player.host.isAttrsKnown = true;
               log('You have learned the parameters of this host.');
@@ -896,8 +901,22 @@ class PlayerArea extends _SaveObject
       // on first brain probe learn about items and area objects
       game.goals.complete(GOAL_PROBE_BRAIN);
 
-      // get clues
-      if (player.host.isNPC)
+      // get clues (chat first)
+      if (player.host.chat.clues > 0)
+        {
+          var event = game.timeline.getEvent(
+            player.host.chat.eventID);
+          var ret = game.timeline.learnSingleClue(event, false);
+          // no more clues
+          if (!ret)
+            {
+              game.log('You did not learn any new information.', COLOR_TIMELINE);
+              player.host.chat.clues = 0;
+            }
+          else player.host.chat.clues--;
+        }
+      // get clues (npc)
+      else if (player.host.isNPC)
         {
           if (!player.host.npc.memoryKnown)
             {
@@ -917,6 +936,7 @@ class PlayerArea extends _SaveObject
 
               log('This human does not know anything else.', COLOR_TIMELINE);
             }
+          player.host.brainProbed++; // increase counter
         }
 
       // damage
@@ -932,7 +952,6 @@ class PlayerArea extends _SaveObject
 
       player.host.onBrainProbe();
       player.host.onDamage(damage); // damage host
-      player.host.brainProbed++; // increase counter
     }
 
 // action: plant false memories
