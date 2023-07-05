@@ -11,4 +11,5 @@ enum _PlayerActionType
   ACTION_INVENTORY;
   ACTION_UI;
   ACTION_CHAT;
+  ACTION_CONVERSE_MENU;
 }

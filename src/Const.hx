@@ -335,6 +335,16 @@ class Const
     1 => 2,
     2 => 1,
   ];
+  public static var dirnames = [
+    'NW', 'W', 'SW', 'N', 'S', 'NE', 'E', 'SE'
+  ];
+  public static function dirToName(dx: Int, dy: Int): String
+    {
+      for (i in 0...dirx.length)
+        if (dirx[i] == dx && diry[i] == dy)
+          return dirnames[i];
+      return '?';
+    }
 
 // log all object string and int properties
   public static inline function debugObject(o: Dynamic)

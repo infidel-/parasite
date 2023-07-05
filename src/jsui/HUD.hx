@@ -503,9 +503,10 @@ class HUD
 
       // trying to chat
       if (state == HUD_CHAT)
-        {
-          game.player.chat.updateActionList();
-        }
+        game.player.chat.updateActionList();
+      // pick AI to chat with
+      else if (state == HUD_CONVERSE_MENU)
+        game.player.chat.converseMenu();
       else
         {
           if (game.location == LOCATION_AREA)
@@ -620,6 +621,8 @@ class HUD
 
       if (action.type == ACTION_CHAT)
         game.player.chat.action(action);
+      else if (action.type == ACTION_CONVERSE_MENU)
+        game.player.chat.actionConverseMenu(action);
       else if (game.location == LOCATION_AREA)
         game.playerArea.action(action);
 

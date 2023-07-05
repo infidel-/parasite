@@ -254,12 +254,13 @@ class Chat
           else if (target.chat.consent < 100)
             word = 'enthusiastic';
           msg += ' He seems ' + word + ' about the converation';
-          if (skill >= 50)
+          if (skill >= 50 &&
+              target.chat.fatigue >= 3)
             {
               msg += ', but ';
-              if (target.chat.fatigue < 3)
+              if (target.chat.fatigue < 6)
                 word = 'a little tired.';
-              else if (target.chat.fatigue < 7)
+              else if (target.chat.fatigue < 8)
                 word = 'somewhat weary.';
               else if (target.chat.fatigue < 10)
                 word = 'almost ready to stop.';
@@ -866,7 +867,20 @@ class Chat
       finish();
     }
 
-// run action
+// run action (converse menu)
+  public function actionConverseMenu(action: _PlayerAction)
+    {
+      // exit from menu
+      if (action.id == 'converseMenu.exit')
+        {
+          game.ui.hud.state = HUD_DEFAULT;
+          game.updateHUD();
+          return;
+        }
+
+    }
+
+// run action (chat)
   public function action(action: _PlayerAction)
     {
       // roll a skill
@@ -998,10 +1012,87 @@ class Chat
           Std.random(100) < 70 &&
           turn > 1)
         {
-          player.host.isNameKnown = true;
+          target.isNameKnown = true;
           log('You find out that his name is ' +
-            player.host.getName() + '.');
+            target.getName() + '.');
         }
+    }
+
+// add converse menu action into player actions
+  public function addConverseAction()
+    {
+      // not enough affinity or not human host
+      if (player.host.affinity < 75 ||
+          !player.host.isHuman)
+        return;
+      // consent not max: host-only converse
+      if (player.host.chat.consent < 100)
+        {
+          game.ui.hud.addAction({
+            id: 'converseHost',
+            type: ACTION_AREA,
+            name: 'Converse',
+          });
+          return;
+        }
+
+      // host consent is max, can talk to other people
+      // get a list of targets around
+      var list = game.playerArea.getTalkersAround();
+      // no targets
+      if (list.length == 0)
+        {
+          game.ui.hud.addAction({
+            id: 'converseHost',
+            type: ACTION_AREA,
+            name: 'Converse',
+            isVirtual: true,
+          });
+          return;
+        }
+      // any targets (+ host)
+      else
+        {
+          game.ui.hud.addAction({
+            id: 'converseMenu',
+            type: ACTION_AREA,
+            name: 'Converse...',
+            isVirtual: true,
+          });
+          return;
+        }
+    }
+
+// open list of AI that can chat + host
+  public function converseMenu()
+    {
+      game.ui.hud.addAction({
+        id: 'converseHost',
+        type: ACTION_AREA,
+        name: 'Host',
+        isVirtual: true,
+      });
+      // get a list of targets around
+      var list = game.playerArea.getTalkersAround();
+      for (ai in list)
+        game.ui.hud.addAction({
+          id: 'converseMenu.chat',
+          type: ACTION_AREA,
+          name: ai.getNameCapped() + ' ' +
+            Const.smallgray(
+              '[' + Const.dirToName(
+                ai.x - game.playerArea.x,
+                ai.y - game.playerArea.y) + ']'),
+          isVirtual: true,
+          obj: ai,
+        });
+
+      // exit is always last
+      game.ui.hud.addAction({
+        id: 'converseMenu.exit',
+        type: ACTION_CONVERSE_MENU,
+        name: 'Exit',
+      });
     }
 
 // log line + stats

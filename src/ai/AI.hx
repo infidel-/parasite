@@ -482,7 +482,8 @@ public function show()
       var alertFrame = Const.FRAME_EMPTY;
       if (state == AI_STATE_ALERT)
         alertFrame = Const.FRAME_ALERTED;
-      else if (state == AI_STATE_IDLE || state == AI_STATE_MOVE_TARGET)
+      else if (state == AI_STATE_IDLE ||
+          state == AI_STATE_MOVE_TARGET)
         {
           if (alertness > 75)
             alertFrame = Const.FRAME_ALERT3;
@@ -975,7 +976,8 @@ public function show()
   public function checkDespawn()
     {
       // should be in idle state and calmed down
-      if (state != AI_STATE_IDLE || (state == AI_STATE_IDLE && alertness > 25))
+      if (state != AI_STATE_IDLE ||
+          (state == AI_STATE_IDLE && alertness > 25))
         {
           _turnsInvisible = 0;
           return;

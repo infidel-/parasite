@@ -161,13 +161,8 @@ class PlayerArea extends _SaveObject
               canRepeat: true,
               energy: 5
             });
-          if (player.host.affinity >= 75 &&
-              player.host.isHuman)
-            game.ui.hud.addAction({
-              id: 'converseHost',
-              type: ACTION_AREA,
-              name: 'Converse',
-            });
+          // add converse action
+          game.player.chat.addConverseAction();
 
           // organ-based actions
           player.host.organs.updateActionList();
@@ -305,7 +300,17 @@ class PlayerArea extends _SaveObject
         game.turn();
       else if (action.id == 'converseHost')
         player.chat.start(player.host);
+      else if (action.id == 'converseMenu')
+        game.ui.hud.state = HUD_CONVERSE_MENU;
+      else if (action.id == 'converseMenu.chat')
+        player.chat.start(action.obj);
 
+      // virtual actions do not pass time
+      if (action.isVirtual)
+        {
+          game.updateHUD();
+          return;
+        }
       // action interrupted for some reason
       if (!ret)
         return;
@@ -1325,9 +1330,24 @@ class PlayerArea extends _SaveObject
       knownObjects.add(t);
     }
 
+// get all AI that the player can talk to
+  public function getTalkersAround(): Array<AI>
+    {
+      var list = [];
+      for (i in 0...Const.dirx.length)
+        {
+          var ai = game.area.getAI(
+            x + Const.dirx[i],
+            y + Const.diry[i]);
+          if (ai == null || !ai.isHuman ||
+              ai.state != AI_STATE_IDLE)
+            continue;
+          list.push(ai);
+        }
+      return list;
+    }
 
-// =================================================================================
-
+// ===============================================
 
 // log
   public inline function log(s: String, ?col: _TextColor)
