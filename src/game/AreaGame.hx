@@ -1076,7 +1076,8 @@ class AreaGame extends _SaveObject
 // spawn some clues
   function turnSpawnClues()
     {
-      if (!game.player.vars.timelineEnabled || events.length == 0)
+      if (!game.player.vars.timelineEnabled ||
+          events.length == 0)
         return;
 
       // NOTE: hmm, it appears that if player stumbles into event location by
@@ -1088,7 +1089,8 @@ class AreaGame extends _SaveObject
       for (ev in events)
         {
           // all event notes and npcs names/jobs known
-          if (ev.notesKnown() && ev.npcNamesOrJobsKnown())
+          if (ev.notesKnown() &&
+              ev.npcNamesOrJobsKnown())
             continue;
 
           e = ev;
@@ -1105,7 +1107,8 @@ class AreaGame extends _SaveObject
       var cnt = 0;
       var radius = game.player.vars.listenRadius;
       for (o in _objects)
-        if (o.item != null && o.item.info.type == 'readable')
+        if (o.item != null &&
+            o.item.info.type == 'readable')
           {
             // in radius
             if (game.playerArea.distanceSquared(o.x, o.y) < radius * radius)
@@ -1168,6 +1171,7 @@ class AreaGame extends _SaveObject
               return;
             }
 
+          // spawn items
           for (i in 0...maxSpawn)
             {
               if (spawns.length == 0)
@@ -1201,7 +1205,17 @@ class AreaGame extends _SaveObject
       // default - generic algorithm for streets
       else
         {
-          var maxSpawn = 5 - cnt;
+          // streets have minimal amount of clues
+          var maxClues = 5;
+          switch (info.id)
+            {
+              case AREA_CITY_HIGH, AREA_CITY_MEDIUM, AREA_CITY_LOW:
+                maxClues = 0;
+              default:
+                // military bases
+                maxClues = 5;
+            }
+          var maxSpawn = maxClues - cnt;
           var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
           for (i in 0...maxSpawn)
             {
@@ -1227,7 +1241,6 @@ class AreaGame extends _SaveObject
             }
         }
     }
-
 
 // decrease area alertness
   function turnAlertness()
