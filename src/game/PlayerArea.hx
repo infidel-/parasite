@@ -627,7 +627,12 @@ class PlayerArea extends _SaveObject
       attachHostID = ai.id;
       entity.visible = false;
 
-      if (ai.state == AI_STATE_PRESERVED)
+      if (ai.isAgreeable())
+        {
+          attachHold = 99;
+          log('The host is agreeable to your actions.');
+        }
+      else if (ai.state == AI_STATE_PRESERVED)
         {
           attachHold = 99;
           log('You smoothly attach to the preserved host.');
@@ -710,10 +715,10 @@ class PlayerArea extends _SaveObject
       // save AI link
       player.host = attachHost;
       player.hostID = attachHostID;
-      player.hostControl = 
-        (attachHost.hasTrait(TRAIT_ASSIMILATED) ?
-        Player.HOST_CONTROL_ASSIMILATED :
-        Player.HOST_CONTROL_BASE);
+      player.hostControl = Player.HOST_CONTROL_BASE;
+      if (attachHost.hasTrait(TRAIT_ASSIMILATED) ||
+          attachHost.isAgreeable())
+        player.hostControl = Player.HOST_CONTROL_ASSIMILATED;
       entity.visible = false;
       attachHost = null;
       attachHostID = -1;

@@ -847,7 +847,10 @@ public function show()
 
       // parasite attached - try to tear it away
       if (parasiteAttached)
-        logicTearParasiteAway();
+        {
+          if (!isAgreeable())
+            logicTearParasiteAway();
+        }
 
       // call alert logic for this AI type
       else
@@ -897,12 +900,20 @@ public function show()
         }
     }
 
+// returns true if player has both affinity and consent
+  public inline function isAgreeable(): Bool
+    {
+      return (affinity == 100 && chat.consent == 100);
+    }
 
 // AI vision: called in idle and movement to target states
   function visionIdle()
     {
+      // full affinity + consent results in ignore
+      if (isAgreeable())
+        alertness -= 5;
       // player visibility
-      if (!game.player.vars.invisibilityEnabled &&
+      else if (!game.player.vars.invisibilityEnabled &&
           seesPosition(game.playerArea.x, game.playerArea.y))
         {
           var distance = game.playerArea.distance(x, y);
@@ -1077,8 +1088,13 @@ public function show()
         stateMoveTarget();
 
       // post-detach
-      else if (state == AI_STATE_POST_DETACH && stateTime >= 2)
-        setState(AI_STATE_ALERT, REASON_DETACH);
+      else if (state == AI_STATE_POST_DETACH &&
+          stateTime >= 2)
+        {
+          if (isAgreeable())
+            setState(AI_STATE_IDLE);
+          else setState(AI_STATE_ALERT, REASON_DETACH);
+        }
 
       // post-detach with false memories
       else if (state == AI_STATE_POST_DETACH_MEMORIES && stateTime >= 2)
