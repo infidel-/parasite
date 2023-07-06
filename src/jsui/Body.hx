@@ -304,7 +304,7 @@ class Body extends UIWindow
       var buf = new StringBuf();
       // parasite skills
       var n = 0;
-      for (skill in game.player.skills)
+      for (skill in game.player.skills.sorted())
         {
           n++;
           if (skill.info.group != null)
@@ -337,7 +337,7 @@ class Body extends UIWindow
         return '';
       var buf = new StringBuf();
       var n = 0;
-      for (skill in game.player.host.skills)
+      for (skill in game.player.host.skills.sorted())
         {
           // hidden animal attack skill
           if (skill.info.id == SKILL_ATTACK)

@@ -30,6 +30,32 @@ class Skills extends _SaveObject
       return _list.iterator();
     }
 
+// return sorted list of skills
+  public function sorted(): Array<Skill>
+    {
+      var list = [];
+      for (sk in _list)
+        list.push(sk);
+      list.sort(function(a, b) {
+        var agroup = a.info.group,
+          bgroup = b.info.group;
+        if (agroup == null)
+          agroup = '';
+        if (bgroup == null)
+          bgroup = '';
+        var aname = agroup + a.info.name,
+          bname = bgroup + b.info.name;
+        aname = aname.toLowerCase();
+        bname = bname.toLowerCase();
+        if (aname < bname)
+          return -1;
+        else if (aname > bname)
+          return 1;
+        else return 0;
+      });
+      return list;
+    }
+
 // returns true if this has at least one learnable skill
   public inline function hasLearnableSkills(): Bool
     {
