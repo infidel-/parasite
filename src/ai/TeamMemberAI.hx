@@ -40,6 +40,15 @@ class TeamMemberAI extends HumanAI
           if (Std.random(100) < 75)
             inventory.addID('kevlarArmor', true);
         }
+      // team members have somewhat better chat skills
+      if (Std.random(100) < 70)
+        skills.addID(SKILL_PSYCHOLOGY, 30 + Std.random(10));
+      if (Std.random(100) < 60)
+        skills.addID(SKILL_DECEPTION, 30 + Std.random(10));
+      if (Std.random(100) < 70)
+        skills.addID(SKILL_COERCION, 30 + Std.random(10));
+      if (Std.random(100) < 50)
+        skills.addID(SKILL_COAXING, 30 + Std.random(10));
 
       skills.addID(SKILL_COMPUTER, 20 + Std.random(20));
       inventory.addID('smartphone');

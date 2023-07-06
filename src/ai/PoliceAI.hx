@@ -31,6 +31,15 @@ class PoliceAI extends HumanAI
           skills.addID(SKILL_BATON, 50 + Std.random(25));
         }
       inventory.addID('radio');
+      // police have somewhat better chat skills
+      if (Std.random(100) < 60)
+        skills.addID(SKILL_PSYCHOLOGY, 20 + Std.random(10));
+      if (Std.random(100) < 50)
+        skills.addID(SKILL_DECEPTION, 20 + Std.random(10));
+      if (Std.random(100) < 60)
+        skills.addID(SKILL_COERCION, 20 + Std.random(10));
+      if (Std.random(100) < 40)
+        skills.addID(SKILL_COAXING, 20 + Std.random(10));
       initPost(false);
     }
 

@@ -22,7 +22,8 @@ class HumanAI extends AI
       super.init();
       type = 'human';
       isMale = (Std.random(100) < 50 ? true : false);
-      name.real = name.realCapped = const.NameConst.getHumanName(isMale);
+      name.real = name.realCapped =
+        const.NameConst.getHumanName(isMale);
 
       isHuman = true;
       strength = 4 + Std.random(4);
@@ -41,7 +42,7 @@ class HumanAI extends AI
 
       // MATH: health 8-16 (~12), energy 130-210 (~170)
 
-      // common stuff for all humans
+      // common skills for all humans
       if (Std.random(100) < 10)
         {
           skills.addID(KNOW_SMOKING);
@@ -52,6 +53,17 @@ class HumanAI extends AI
           skills.addID(KNOW_SHOPPING);
           inventory.addID(Std.random(10) < 7 ? 'wallet' : 'money');
         }
+      // chat-related
+      if (Std.random(100) < 30)
+        skills.addID(SKILL_PSYCHOLOGY, 10 + Std.random(5));
+      var rnd = Std.random(100);
+      if (rnd < 30)
+        skills.addID(SKILL_DECEPTION, 10 + Std.random(10));
+      else if (rnd < 70)
+        skills.addID(SKILL_COERCION, 10 + Std.random(10));
+      else if (rnd < 100)
+        skills.addID(SKILL_COAXING, 10 + Std.random(10));
+      // items
       if (Std.random(100) < 10)
         inventory.addID('sleepingPills');
       if (Std.random(100) < 10)
