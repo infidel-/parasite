@@ -254,8 +254,11 @@ class ItemsConst
     // ========= ******* readables ********* ==========
     {
       id: 'paper',
-      names: [ 'piece of paper', 'report', 'document', 'note', 'dossier',
-        'sheet of paper', 'page', 'analysis' ],
+      names: [
+        'piece of paper', 'report', 'document',
+        'note', 'dossier', 'sheet of paper',
+        'page', 'analysis', 'receipt', 'article',
+      ],
       type: 'readable',
       unknown: 'thin object with markings',
       areaObjectClass: Paper,

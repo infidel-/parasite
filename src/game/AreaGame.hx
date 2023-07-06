@@ -1209,7 +1209,11 @@ class AreaGame extends _SaveObject
           var maxClues = 5;
           switch (info.id)
             {
-              case AREA_CITY_HIGH, AREA_CITY_MEDIUM, AREA_CITY_LOW:
+              case AREA_CITY_HIGH:
+                maxClues = 2;
+              case AREA_CITY_MEDIUM:
+                maxClues = 1;
+              case AREA_CITY_LOW:
                 maxClues = 0;
               default:
                 // military bases
