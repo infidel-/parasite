@@ -286,7 +286,7 @@ class Body extends UIWindow
           var action = Browser.document.createDivElement();
           action.className = 'actions-item';
           action.innerHTML = Const.key('C-' + n) + ': ' + act.name +
-            (act.energy > 0 ? ' ' + Const.smallgray('(' + act.energy + ' energy)') : '');
+            (act.energy > 0 ? Const.cost(act.energy) : '');
           n++;
           action.onclick = function (e) {
             game.scene.sounds.play('click-action');

@@ -477,6 +477,20 @@ class Const
         s + '</span>';
     }
 
+// energy cost
+  public static inline function cost(energy: Int)
+    {
+      return ' <span style="color:var(--text-color-gray)" class=small>' + 
+        '(' + energy + '</span> <span class=energy>&#127348;</span>' +
+        '<span style="color:var(--text-color-gray)" class=small>)</span>';
+    }
+
+// energy icon
+  public static inline function e()
+    {
+      return ' &#127316;';
+    }
+
   public static inline function hl(s: String)
     {
       return '<span class=highlight-text>' + s + '</span>';

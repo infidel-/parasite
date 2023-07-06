@@ -569,12 +569,11 @@ class HUD
             if (action.id == 'probeBrain')
               name = game.playerArea.getProbeBrainActionName();
             buf.add(Const.key(key) + ': ' + name);
-            if (action.energy != null && action.energy > 0)
-              buf.add(' ' + Const.smallgray(
-                '(' + action.energy + ' energy)'));
+            if (action.energy != null &&
+                action.energy > 0)
+              buf.add(Const.cost(action.energy));
             else if (action.energyFunc != null)
-              buf.add(' ' + Const.smallgray(
-                '(' + action.energyFunc(game.player) + ' energy)'));
+              buf.add(Const.cost(action.energyFunc(game.player)));
 
             var btn = Browser.document.createDivElement();
             btn.innerHTML = buf.toString();
