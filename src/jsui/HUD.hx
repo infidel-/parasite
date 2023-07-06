@@ -361,6 +361,8 @@ class HUD
           buf.add('<b>' + host.getNameCapped() + '</b>');
           if (host.affinity == 100)
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
+          if (host.chat.consent == 100)
+            buf.add(Const.icon('symbiosis', ' &#127282; ')); // 🄲
           if (host.isJobKnown)
             buf.add(' ' + Const.col('gray',
               Const.small('(' + host.job + ')<br/>')));
