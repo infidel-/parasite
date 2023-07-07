@@ -16,6 +16,7 @@ class BlackopsAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      var bonusStat = 1;
       // team level changes loadout
       if (game.group.team.level == 1)
         {
@@ -41,6 +42,7 @@ class BlackopsAI extends HumanAI
 
       else if (game.group.team.level == 3)
         {
+          bonusStat = 2;
           if (Std.random(100) < 75)
             inventory.addID(
               Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
@@ -55,6 +57,7 @@ class BlackopsAI extends HumanAI
 
       else if (game.group.team.level == 4)
         {
+          bonusStat = 3;
           if (Std.random(100) < 50)
             inventory.addID(
               Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
@@ -64,6 +67,11 @@ class BlackopsAI extends HumanAI
           skills.addID(SKILL_PISTOL, 70 + Std.random(25));
           inventory.addID('fullBodyArmor', true);
         }
+      // higher stats that ordinary humans
+      strength = 4 + bonusStat + Std.random(6 - bonusStat);
+      constitution = 4 + bonusStat + Std.random(6 - bonusStat);
+      intellect = 4 + bonusStat + Std.random(6 - bonusStat);
+      psyche = 4 + bonusStat + Std.random(6 - bonusStat);
 
       if (inventory.clothing.id == 'fullBodyArmor')
         {
