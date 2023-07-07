@@ -429,6 +429,8 @@ class Chat
           // count all positive lies
           if (name == 'Lie')
             lies++;
+          // reduce alertness by that amount
+          target.alertness -= val;
           return;
         }
 
@@ -459,6 +461,8 @@ class Chat
       msg += game.infostr('[-' + val + ' consent]');
       log(msg);
       liesFlag = false;
+      // increase alertness by that amount
+      target.alertness += val;
     }
 
   function debugPrint()
@@ -542,15 +546,16 @@ class Chat
           case EMOTION_NONE:
           // -> attack
           case EMOTION_ANGRY:
-            if (player.host == target)
+            var ai = target; // target will clear on set state
+            if (player.host == ai)
               {
                 game.playerArea.leaveHostAction('berserk');
                 game.playerArea.onDamage(2 + Std.random(4));
-                target.emitRandomSound('' + REASON_DAMAGE);
+                ai.emitRandomSound('' + REASON_DAMAGE);
                 game.playerArea.moveToRandom(false);
               }
-            else target.setState(AI_STATE_ALERT, null, ' is absolutely furious.');
-            target.onEffect({
+            else ai.setState(AI_STATE_ALERT, null, ' is absolutely furious.');
+            ai.onEffect({
               type: EFFECT_BERSERK,
               points: 10,
               isTimer: true

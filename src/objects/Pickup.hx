@@ -46,6 +46,7 @@ class Pickup extends AreaObject
         type: ACTION_OBJECT,
         name: 'Get ' + Const.col('inventory-item', itemName),
         energy: 5,
+        isAgreeable: true,
         obj: this
       });
     }

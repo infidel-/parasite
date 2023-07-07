@@ -44,11 +44,16 @@ class PlayerRegion extends _SaveObject
 
 
 // end of turn for player (in region mode)
-  public function turn()
+  public function turn(time: Int)
     {
-      // automatically gain control over host each turn
-      if (player.state == PLR_STATE_HOST && player.hostControl < 100)
-        player.hostControl += 25;
+      if (player.state == PLR_STATE_HOST)
+        {
+          // automatically gain control over host each turn
+          if (player.hostControl < 100)
+            player.hostControl += 25;
+          // time passing for chat
+          player.host.chatTurn(time);
+        }
     }
 
 

@@ -171,7 +171,7 @@ class Player extends _SaveObject
           var delta = __Math.parasiteEnergyPerTurn(time);
           energy += delta;
           // increase affinity
-          host.gainAffinity(time);
+          host.gainAffinity(time * 2);
 
           host.organs.turn(time); // host organ growth
 
@@ -190,7 +190,7 @@ class Player extends _SaveObject
         game.playerArea.turn();
 
       else if (game.location == LOCATION_REGION)
-        game.playerRegion.turn();
+        game.playerRegion.turn(time);
     }
 
 // parasite death: either rebirth or game over
@@ -291,6 +291,8 @@ class Player extends _SaveObject
         e = action.energy;
       else if (action.energyFunc != null)
         e = action.energyFunc(game.player);
+      if (e < 0)
+        return false;
 
       // chatting spends parasite energy
       if (action.type == ACTION_CHAT)
@@ -299,7 +301,8 @@ class Player extends _SaveObject
             return true;
           else return false;
         }
-      else if (state == PLR_STATE_HOST && host.energy >= e)
+      else if (state == PLR_STATE_HOST &&
+          host.energy >= e)
         return true;
       else if (energy >= e)
         return true;
@@ -337,10 +340,10 @@ class Player extends _SaveObject
   public inline function onHostDeath(msg: String)
     {
       // reduce max energy from affinity
-      if (host.affinity == 100)
+      if (host.affinity >= 100)
         {
           msg += ' You feel great pain due to the affinity.';
-          maxEnergy -= 10;
+          maxEnergy -= 5;
           energy = energy; // clamp current value
         }
       if (game.location == LOCATION_AREA)
@@ -423,12 +426,20 @@ class Player extends _SaveObject
           skills.increase(targetSkill.id, val - skill.level);
         }
     }
-  
 
 // returns true if player has consent of the host
   public inline function hasConsent(): Bool
     {
-      return (host != null && host.chat.consent >= 100);
+      return (state == PLR_STATE_HOST &&
+        host != null && 
+        host.chat.consent >= 100);
+    }
+
+// returns true if the host is agreeable
+  public inline function hostAgreeable(): Bool
+    {
+      return (state == PLR_STATE_HOST &&
+        host.isAgreeable());
     }
 
 // =================================================================================

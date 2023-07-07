@@ -66,8 +66,13 @@ class __Math
           else 1;
         }
 
-      // consented hosts do not lose energy, too
-      else if (game.player.host.chat.consent == 100)
+      // consented hosts only lose a little energy in region mode
+      else if (game.player.host.chat.consent >= 100 &&
+          game.location == LOCATION_REGION)
+        energy -= 1;
+
+      // in area mode no loss
+      else if (game.player.host.chat.consent >= 100)
         1;
 
       // lose energy by default

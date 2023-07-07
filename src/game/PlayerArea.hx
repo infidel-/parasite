@@ -85,7 +85,7 @@ class PlayerArea extends _SaveObject
             player.hostControl += 5;
 
           // also when player has consent
-          else if (player.host.chat.consent == 100)
+          else if (player.host.chat.consent >= 100)
             player.hostControl++;
 
           else player.hostControl--;
@@ -209,6 +209,7 @@ class PlayerArea extends _SaveObject
                 type: ACTION_AREA,
                 name: 'Learn About Object',
                 energy: 10,
+                isAgreeable: true,
                 obj: o,
               });
             // object known - add all actions defined by object

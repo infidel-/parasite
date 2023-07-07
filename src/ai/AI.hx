@@ -903,7 +903,7 @@ public function show()
 // returns true if player has both affinity and consent
   public inline function isAgreeable(): Bool
     {
-      return (affinity == 100 && chat.consent == 100);
+      return (affinity >= 100 && chat.consent >= 100);
     }
 
 // AI vision: called in idle and movement to target states
@@ -1035,21 +1035,28 @@ public function show()
       emitRandomSound('' + REASON_DAMAGE, 30); // emit random sound
     }
 
-
-// call AI logic
-  public function turn()
+// turn for chat timers (can be called in region mode)
+  public function chatTurn(time: Int)
     {
       // chat restoring
       if (chat.timeout > 0)
         {
-          chat.timeout--;
+          chat.timeout -= time;
+          if (chat.timeout < 0)
+            chat.timeout = 0;
           if (chat.consent < 100)
             {
-              chat.consent -= 1 + Std.random(3);
+              chat.consent -= time + Std.random(3);
               if (chat.consent < 0)
                 chat.consent = 0;
             }
         }
+    }
+
+// call AI logic
+  public function turn()
+    {
+      chatTurn(1); // time passing for chat
       stateTime++; // time spent in this state
       if (entity != null)
         entity.turn(); // time passing for entity
@@ -1332,7 +1339,7 @@ public function show()
           game.profile.addPediaArticle('hostAffinity');
           game.profile.addPediaArticle('hostConversation');
         }
-      else if (old < 100 && affinity == 100)
+      else if (old < 100 && affinity >= 100)
         {
           game.log(Const.hl('You have reached the full affinity with this host.'), COLOR_SYMBIOSIS);
         }

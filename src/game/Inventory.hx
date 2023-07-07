@@ -58,6 +58,7 @@ class Inventory extends _SaveObject
               type: ACTION_INVENTORY,
               name: 'Learn about ' + Const.col('inventory-item', itemName),
               energy: 10,
+              isAgreeable: true,
               obj: item
             });
 
@@ -71,6 +72,7 @@ class Inventory extends _SaveObject
                   type: ACTION_INVENTORY,
                   name: 'Read ' + Const.col('inventory-item', itemName),
                   energy: 10,
+                  isAgreeable: true,
                   obj: item
                 });
 

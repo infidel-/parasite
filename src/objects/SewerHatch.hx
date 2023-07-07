@@ -39,6 +39,7 @@ class SewerHatch extends AreaObject
           type: ACTION_OBJECT,
           name: 'Enter sewers',
           energy: 10,
+          isAgreeable: true,
           obj: this
         });
     }

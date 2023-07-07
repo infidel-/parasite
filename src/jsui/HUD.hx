@@ -359,9 +359,9 @@ class HUD
           var host = game.player.host;
           buf.add('<br/><hr/>');
           buf.add('<b>' + host.getNameCapped() + '</b>');
-          if (host.affinity == 100)
+          if (host.affinity >= 100)
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
-          if (host.chat.consent == 100)
+          if (host.chat.consent >= 100)
             buf.add(Const.icon('symbiosis', ' &#127282; ')); // 🄲
           if (host.isJobKnown)
             buf.add(' ' + Const.col('gray',
@@ -533,6 +533,10 @@ class HUD
 // NOTE: needs to be the same checks as in Player.acitonEnergy()
   public function addAction(action: _PlayerAction)
     {
+      // reduce cost when host is agreeable
+      if (action.isAgreeable &&
+          game.player.hostAgreeable())
+        action.energy = 1;
       if (game.player.actionCheckEnergy(action))
         listActions.add(action);
     }

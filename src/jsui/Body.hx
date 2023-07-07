@@ -282,6 +282,10 @@ class Body extends UIWindow
       var n = 1;
       for (act in listInventoryActions)
         {
+          // reduce cost when host is agreeable
+          if (act.isAgreeable &&
+              game.player.hostAgreeable())
+            act.energy = 1;
           // html element
           var action = Browser.document.createDivElement();
           action.className = 'actions-item';
