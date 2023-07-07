@@ -1004,6 +1004,7 @@ class Chat
             msg += 'Shrugging, ';
           else msg += 'Inspired by the conversation, ';
           msg += target.theName() + ' gives you his full consent.';
+          game.goals.complete(GOAL_TUTORIAL_CONSENT);
           log(msg);
           finish();
         }

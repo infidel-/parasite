@@ -18,6 +18,11 @@ class PediaConst
       name: 'BASICS',
       articles: [
         {
+          id: 'hostAffinity',
+          name: 'Host: Affinity',
+          text: "TODO",
+        },
+        {
           id: 'hostAssimilation',
           name: 'Host: Assimilation',
           text: "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
@@ -26,6 +31,11 @@ class PediaConst
           id: 'hostAttributes',
           name: 'Host: Attributes',
           text: "Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it. Strength is used for calculating maximum health and energy values (so does the constitution). It also increases melee damage and limits the amount of inventory items. Finally, the host strength decreases the grip and paralysis efficiency and increases the speed with which they free from mucus. Constitution limits the amount of body features. Host intellect increases the efficiency with which the parasite learns the skills and human society knowledge when probing their brain. The remaining attribute, psyche, is a measure of their mental will. High host psyche increases the energy needed to probe their brain and reduces the efficiency of reinforcing control.",
+        },
+        {
+          id: 'hostConversation',
+          name: 'Host: Conversation',
+          text: "TODO",
         },
         {
           id: 'hostExpiry',

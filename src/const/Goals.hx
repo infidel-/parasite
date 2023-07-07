@@ -74,6 +74,24 @@ class Goals
       messageComplete: "The evolution has almost completely degraded this host. It will expire soon unless I stop.",
     },
 
+    GOAL_TUTORIAL_AFFINITY => {
+      id: GOAL_TUTORIAL_AFFINITY,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "My connection with this host allows for meaningful discourse now.",
+    },
+
+    GOAL_TUTORIAL_CONSENT => {
+      id: GOAL_TUTORIAL_CONSENT,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "I have obtained the utmost consent of this host. I can speak with others through their mouth.",
+    },
+
     // ========================= main branch
 
     GOAL_INVADE_HOST => {

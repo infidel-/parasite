@@ -1328,6 +1328,9 @@ public function show()
       if (old < 75 && affinity >= 75)
         {
           game.log(Const.hl('You feel you are deepening the affinity with this host.'), COLOR_SYMBIOSIS);
+          game.goals.complete(GOAL_TUTORIAL_AFFINITY);
+          game.profile.addPediaArticle('hostAffinity');
+          game.profile.addPediaArticle('hostConversation');
         }
       else if (old < 100 && affinity == 100)
         {
