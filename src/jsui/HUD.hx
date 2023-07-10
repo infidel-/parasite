@@ -665,6 +665,7 @@ class HUD
         {
           case HUD_CHAT:
             game.player.chat.finish();
+            game.log('The conversation was interrupted.');
           case HUD_CONVERSE_MENU:
             state = HUD_DEFAULT;
           case HUD_DEFAULT:

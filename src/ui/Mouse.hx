@@ -146,6 +146,9 @@ class Mouse
       var area = game.region.getXY(pos.x, pos.y);
       if (area == null)
         return;
+      if (pos.x == game.playerRegion.x &&
+          pos.y == game.playerRegion.y)
+        return;
       if (!game.scene.region.isKnown(area))
         return;
 
