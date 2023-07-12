@@ -133,6 +133,8 @@ class Difficulty extends UIWindow
             game.player.vars.savesLeft = 1;
           game.save(1);
         }
+      else if (currentChoice.id == 'chat')
+        game.player.chat.difficulty = d;
 
       game.system('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
@@ -187,6 +189,16 @@ class Difficulty extends UIWindow
         'You can save your game anywhere, up to 10 times per one game.',
         'You can only save in region mode, 3 times per game.',
         'You can only save once per game while in region mode.',
+      ]
+    },
+
+    'chat' => {
+      id: 'chat',
+      title: 'Conversation',
+      notes: [
+        'Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss on leaving host with max affinity.',
+        'Medium starting consent. Medium bonus to skilll rolls. Small bonus to consent growth. Tiny max energy loss.',
+        'Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Small max energy loss.',
       ]
     },
   ];

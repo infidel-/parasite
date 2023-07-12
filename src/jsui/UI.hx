@@ -570,7 +570,8 @@ class UI
   public function event(ev: _UIEvent)
     {
       // ignore highlight events on debug
-      if (game.importantMessagesEnabled && ev.type == UIEVENT_HIGHLIGHT)
+      if (game.importantMessagesEnabled &&
+          ev.type == UIEVENT_HIGHLIGHT)
         return;
       uiQueue.add(ev);
 

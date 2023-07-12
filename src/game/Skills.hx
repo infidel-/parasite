@@ -41,8 +41,12 @@ class Skills extends _SaveObject
           bgroup = b.info.group;
         if (agroup == null)
           agroup = '';
+        if (a.info.isKnowledge)
+          agroup = 'Knowledge';
         if (bgroup == null)
           bgroup = '';
+        if (b.info.isKnowledge)
+          bgroup = 'Knowledge';
         var aname = agroup + a.info.name,
           bname = bgroup + b.info.name;
         aname = aname.toLowerCase();

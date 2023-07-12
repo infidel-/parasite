@@ -1336,6 +1336,25 @@ class PlayerArea extends _SaveObject
       // make player entity visible again
       entity.visible = true;
 
+      // max energy loss
+      if (player.host != null &&
+          player.host.affinity >= 100)
+        {
+          game.log('You feel pain due to the affinity.');
+          var val = 0;
+          switch (player.chat.difficulty)
+            {
+              case UNSET:
+              case EASY:
+                val = 0;
+              case NORMAL:
+                val = 1;
+              case HARD:
+                val = 2;
+            }
+          game.player.maxEnergy -= val;
+        }
+
       attachHost = null;
       player.host = null;
 

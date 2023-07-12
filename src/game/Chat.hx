@@ -7,10 +7,13 @@ import ai.AI;
 import _AIEffectType;
 import _ChatEmotion;
 
-class Chat
+class Chat extends _SaveObject
 {
+  static var _ignoredFields = [ 'target', 'player' ];
   var game: Game;
   var player: Player;
+
+  public var difficulty: _Difficulty; // chat difficulty
   public var target: AI;
   var turn: Int;
   var lies: Int;
@@ -24,6 +27,7 @@ class Chat
     {
       player = p;
       game = g;
+      difficulty = UNSET;
     }
 
 // init clues and event id for this ai
@@ -72,8 +76,19 @@ class Chat
           return;
         }
       target = ai;
-      if (target.chat.consent < 10)
-        target.chat.consent = 10; // minimum
+      var minConsent = 0;
+      switch (difficulty)
+        {
+          case UNSET:
+          case EASY:
+            minConsent = 30;
+          case NORMAL:
+            minConsent = 20;
+          case HARD:
+            minConsent = 10;
+        }
+      if (target.chat.consent < minConsent)
+        target.chat.consent = minConsent; // minimum
       target.chat.fatigue = 0;
       target.chat.emotion = 0;
       turn = 0;
@@ -87,9 +102,11 @@ class Chat
 
 // finish chat setting timeout
 // can be called from AI
+// NOTE: target can already be null at that point
   public function finish(?timeout: Int = 10)
     {
-      if (target.chat.consent < 100)
+      if (target != null &&
+          target.chat.consent < 100)
         target.chat.timeout = timeout;
       target = null;
       game.ui.hud.state = HUD_DEFAULT;
@@ -420,9 +437,20 @@ class Chat
               case 3:
                 adj = 'staggering';
             }
+          var diffBonus = 0;
+          switch (difficulty)
+            {
+              case UNSET:
+              case EASY:
+                diffBonus = 2;
+              case NORMAL:
+                diffBonus = 1;
+              case HARD:
+                diffBonus = 0;
+            }
           // psyche: 4-8
           // stun 3: 4 * (10 - [4-8] + [0-3]) = 4 * [2-7] = 8-28
-          var val = (target.chat.stun + 1) * (10 - target.psyche + Std.random(4));
+          var val = (target.chat.stun + 1) * (10 - target.psyche + Std.random(4) + diffBonus);
           target.chat.consent += val;
           log(ChatConst.actionDesc[name] + ' ' + target.theName() + ', you observe a ' + adj + ' growth in his consent. ' +
             game.infostr('[+' + val + ' consent]'));
@@ -430,7 +458,7 @@ class Chat
           if (name == 'Lie')
             lies++;
           // reduce alertness by that amount
-          target.alertness -= val;
+          target.alertness -= Std.int(3 * val);
           return;
         }
 
@@ -745,6 +773,7 @@ class Chat
       // then npc clues
       else
         {
+          // has a chance of full note clue
           var ret = game.timeline.learnClues(target.event, true);
           if (!ret)
             game.log('You did not learn any new information.', COLOR_TIMELINE);
@@ -896,9 +925,20 @@ class Chat
       var roll = true;
       if (skillID != null)
         {
+          var diffBonus = 0.0;
+          switch (difficulty)
+            {
+              case UNSET:
+              case EASY:
+                diffBonus = 20.0;
+              case NORMAL:
+                diffBonus = 10.0;
+              case HARD:
+                diffBonus = 5.0;
+            }
           var mods = [{
             name: 'difficulty',
-            val: 10.0,
+            val: diffBonus,
           }];
           // team members are hardened
           if (target.isTeamMember)

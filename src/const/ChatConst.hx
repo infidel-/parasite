@@ -128,15 +128,15 @@ class ChatConst
   public static var needStrings = [
     // Sense of Belonging
     [
-	  'experiences a sense of isolation and detachment from others.',
+	  'experiences a sense of isolation and estrangement from others.',
 	  'perceives himself as disconnected and distant from those around him.',
 	  'feels socially excluded and out of place in social interactions.',
 	  'has a deep feeling of estrangement and disconnection.',
 	  'senses a lack of belonging and struggles to connect with others.',
 	  'feels like an outsider, not fitting in with the social dynamics.',
-	  'is emotionally detached, finding it difficult to form meaningful connections.',
+	  'is emotionally disconnected, finding it difficult to form meaningful connections.',
 	  'feels isolated and distant from the social fabric.',
-	  'perceives a divide between himself and others, leading to a sense of detachment.',
+	  'perceives a divide between himself and others, leading to a sense of alienation.',
 	  'feels cut off from social connections and experiences a sense of separation.',
     ],
     // Self-Esteem/Competence

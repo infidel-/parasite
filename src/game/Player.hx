@@ -8,7 +8,7 @@ import const.*;
 
 class Player extends _SaveObject
 {
-  static var _ignoredFields = [ 'chat' ];
+  static var _ignoredFields = [];
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty

@@ -77,11 +77,17 @@ class Timeline extends _SaveObject
 // NOTE: isPhysical is for readables, adds a full note chance
   public function learnClues(event: Event, isPhysical: Bool): Bool
     {
-      var n = 1;
-      if (difficulty == EASY)
-        n = 1 + Std.random(3);
-      else if (difficulty == NORMAL)
-        n = 1 + Std.random(2);
+      var n = 0;
+      switch (difficulty)
+        {
+          case UNSET:
+          case EASY:
+            n = 1 + Std.random(3);
+          case NORMAL:
+            n = 1 + Std.random(2);
+          case HARD:
+            n = 1;
+        }
 
       var ret = false;
       for (i in 0...n)

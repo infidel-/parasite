@@ -1151,7 +1151,9 @@ public function show()
       if (!game.area.inVisibleRect(x, y))
         return;
 
-      if (sound.text != '' && sound.text != null)
+      if (sound.text != '' &&
+          sound.text != null &&
+          entity != null)
         entity.setText(sound.text, 2);
       if (sound.file != null)
         {
@@ -1328,6 +1330,9 @@ public function show()
 // increase parasite affinity (never goes down)
   public function gainAffinity(amount: Int)
     {
+      // wait until timeline is enabled
+      if (!game.player.vars.timelineEnabled)
+        return;
       var old = affinity;
       affinity += amount;
       if (affinity > 100)
@@ -1336,6 +1341,12 @@ public function show()
         {
           game.log(Const.hl('You feel you are deepening the affinity with this host.'), COLOR_SYMBIOSIS);
           game.goals.complete(GOAL_TUTORIAL_AFFINITY);
+          if (game.player.chat.difficulty == UNSET)
+            game.ui.event({
+              type: UIEVENT_STATE,
+              state: UISTATE_DIFFICULTY,
+              obj: 'chat'
+            });
           game.profile.addPediaArticle('hostAffinity');
           game.profile.addPediaArticle('hostConversation');
         }
