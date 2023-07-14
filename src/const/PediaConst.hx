@@ -20,7 +20,7 @@ class PediaConst
         {
           id: 'hostAffinity',
           name: 'Host: Affinity',
-          text: "TODO",
+          text: "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green <span class=icon style='color:var(--text-color-symiosis)'>&#127280;</span> icon after it in the HUD in case of the maximum affinity. Leaving a host with full affinity will result in parasite losing some maximum energy. That reduction is small enough. However, if such host dies while the parasite is on it, the loss will be much higher. Therefore if you intend to lose the host, do not kill it.",
         },
         {
           id: 'hostAssimilation',
@@ -35,7 +35,15 @@ class PediaConst
         {
           id: 'hostConversation',
           name: 'Host: Conversation',
-          text: "TODO",
+          text: "<p>Having high affinity with the host opens up the conversation action. The main purpose of the conversation is to gain host consent. Maximum consent is marked with a green &#127282; icon in the HUD near the host name and makes significant changes to the gameplay. Firstly, the agreeable host uses way less energy to do some actions (and movement in region mode). Secondly, passive energy loss in area mode is reduced to zero, which essentially means that movement becomes free. Thirdly, the host control grows by itself every turn for agreeable hosts. Lastly, and most importantly, the host consent gives the parasite an ability to converse with humans using the mouth of the host. The second purpose of the consent is to open up secondary actions. Those include questioning for gathering clues, consulting for learning skills, area alert de-escalation for police officers and subversion for the group members to raise the team distance (if you're bold enough to talk to them). Note that group members always have knowledge about some timeline event.</p>
+
+<p>The conversation uses four skills: psychology, and three skills from the manipulation group: coaxing, coercion and deception. Each of the manipulative actions requires a successful roll to be used properly. Psychology is used to roll for Analyze action. This action will report a textual description of the interlocutor state giving hints on how to progress. Each NPC has a basic need and a character aspect. The need changes which actions are treated as positive or negative for gaining consent. The aspect makes further changes into the basic conversation routine.</p>
+
+<p>Every conversation turn the list of actions is re-rolled. Each of the actions bound to the coaxing and deception skills usually increase or lower consent depending on the interlocutor need. For coaxing these are Assure, Discuss and Encourage actions. For deception skill the list is Distort, Flatter and Lie. There are four more actions in the coercion skill: Threaten, Scare and Shock. These do mostly the same thing if successful, they shake the interlocutor out of balance and act as a multiplier for the next manipulative action, whether the result was positive or negative. The remaining coercion action, Provoke, acts to reduce the conversation fatigue.</p>
+
+<p>Some of the actions (especially the coercive ones) risk making the interlocutor emotional. In this case, some manipulative actions can be used to calm them down. If that does not happen, the emotion will become stronger and eventually result in a negative conversation outcome. Emotions behavior almost always depends on character aspects.</p>
+
+<p>You cannot move or save during the conversation and it will be interrupted if something happens nearby putting it on a timeout. Reaching maximum fatigue will do the same thing. Note that during the conversation the AI is alerted using the same rules as before. However, positive and negative manipulative actions will respectively lower or raise the alertness of the interlocutor allowing them not to become alerted in case of successful conversation. The most important bit of knowledge is saved for last: during the conversation the parasite energy is always used instead of the host energy. That means that you can die during the conversation in the worst-case scenario. Have fun!</p>",
         },
         {
           id: 'hostExpiry',
