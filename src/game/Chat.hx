@@ -590,15 +590,16 @@ class Chat extends _SaveObject
             });
           // -> panic
           case EMOTION_STARTLED:
-            if (player.host == target)
+            var ai = target; // target will clear on set state
+            if (player.host == ai)
               {
                 game.playerArea.leaveHostAction('panic');
                 game.playerArea.onDamage(1 + Std.random(2));
-                target.emitRandomSound('' + REASON_DAMAGE);
+                ai.emitRandomSound('' + REASON_DAMAGE);
                 game.playerArea.moveToRandom(false);
               }
-            else target.setState(AI_STATE_ALERT, null, ' is panicking.');
-            target.onEffect({
+            else ai.setState(AI_STATE_ALERT, null, ' is panicking.');
+            ai.onEffect({
               type: EFFECT_PANIC,
               points: 10,
               isTimer: true
@@ -918,6 +919,9 @@ class Chat extends _SaveObject
 // run action (chat)
   public function action(action: _PlayerAction)
     {
+      // kludge
+      if (action == null)
+        return;
       // roll a skill
       var id = action.id.substr(5);
       var name = Const.capitalize(id);

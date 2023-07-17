@@ -59,6 +59,8 @@ class Spoon extends UIWindow
         'spoonEvolutionBasic', game.config.spoonEvolutionBasic, '-25.6%');
       addCheckbox(contents, 'No energy loss on habitat destruction',
         'spoonHabitats', game.config.spoonHabitats, '-16.7%');
+      addCheckbox(contents, 'No ambushes in habitats',
+        'spoonHabitatAmbush', game.config.spoonHabitatAmbush, '-42.4%');
 
       noteText = Browser.document.createDivElement();
       noteText.style.textAlign = 'center';

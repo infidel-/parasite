@@ -694,7 +694,7 @@ fieldset {
 #window-spoon {
   border: 30px solid;
   width: 40ch;
-  height: 13em;
+  height: 14em;
   pointer-events: all;
 }
 
@@ -1153,7 +1153,7 @@ input[type=checkbox] {
 }
 
 .energy {
-  font-size: 14px;
+  font-size: 80%;
   color: var(--text-color-energy);
 }
 

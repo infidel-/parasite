@@ -51,7 +51,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // called after loading
   public function loadPost()
     {
-      if (state == TEAM_AMBUSH && ambushedHabitatAreaID >= 0)
+      if (state == TEAM_AMBUSH &&
+          ambushedHabitatAreaID >= 0)
         ambushedHabitat = game.world.get(0).get(ambushedHabitatAreaID).habitat;
     }
 
@@ -83,6 +84,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // no habitats, skip
       var cnt = game.region.getHabitatsCount();
+      // SPOON: no ambushes in habitats
+      if (game.config.spoonHabitatAmbush)
+        cnt = 0;
       if (cnt == 0)
         {
           ambushedHabitat = null;
@@ -182,6 +186,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
           onEnterHabitat();
           return;
         }
+      // SPOON: no ambushes in habitats
+      if (game.config.spoonHabitatAmbush &&
+          game.location == LOCATION_AREA &&
+          game.area.isHabitat)
+        return;
 
       // no ambushed habitat, spawn ambush right on player
       if (ambushedHabitat == null)
