@@ -344,10 +344,13 @@ class HUD
         "<font " + getColor(game.player.health, game.player.maxHealth) +
         ">" + game.player.health + "</font>" +
         '/' + game.player.maxHealth);
+      // team distance if close
+      if (!game.group.hudInfo(buf))
+        buf.add('<br/>');
+      buf.add('<hr/>');
 
       if (game.player.state == PLR_STATE_ATTACHED)
         {
-          buf.add('<br/><hr/>');
           buf.add('Grip: ' +
             '<font ' + getColor(game.playerArea.attachHold, 100) + '>' +
             game.playerArea.attachHold + '</font>/100<br/>');
@@ -357,7 +360,6 @@ class HUD
       else if (game.player.state == PLR_STATE_HOST)
         {
           var host = game.player.host;
-          buf.add('<br/><hr/>');
           buf.add('<b>' + host.getNameCapped() + '</b>');
           if (host.affinity >= 100)
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰

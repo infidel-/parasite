@@ -372,6 +372,30 @@ hr {
   color: #879ea3;
 }
 
+.hud-team {
+  animation: 2.5s infinite team-hud;
+  text-align: center;
+  font-size: 50%;
+  font-weight: bold;
+  color: var(--text-color-red);
+  height: var(--text-font-size);
+  padding-top: 8px;
+}
+@keyframes team-hud {
+  from {
+    font-size: 50%;
+    opacity:0.8;
+  }
+  50% {
+    font-size: 55%;
+    opacity:1.0;
+  }
+  to {
+    font-size: 50%;
+    opacity:0.8;
+  }
+}
+
 .window-bg {
   z-index: 105;
   position: fixed;

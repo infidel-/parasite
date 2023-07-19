@@ -35,6 +35,18 @@ class Group extends _SaveObject
         team.loadPost();
     }
 
+// add team distance to hud if close
+  public function hudInfo(buf: StringBuf): Bool
+    {
+      if (difficulty == HARD ||
+          difficulty == UNSET ||
+          team == null ||
+          team.distance > 10)
+        return false;
+      buf.add('<div class=hud-team>TEAM IS VERY CLOSE!</div>');
+      return true;
+    }
+
 // get group and team info according to difficulty
   public function getInfo(buf: StringBuf)
     {
@@ -68,10 +80,9 @@ class Group extends _SaveObject
              numToWord(team.size, 1, team.maxSize)) + '<br/>');
           buf.add(Const.col('group-note', 'Team distance: ') +
             (difficulty == EASY ? Std.int(team.distance) + '' :
-             numToWord(Std.int(team.distance), 0, 150)) + '<br/>');
+             numToWordDistance(Std.int(team.distance), 0, 150)) + '<br/>');
         }
     }
-
 
 // convert number to word description
   function numToWord(val: Int, min: Int, max: Int): String
@@ -88,6 +99,20 @@ class Group extends _SaveObject
       else return Const.col('red', 'very high');
     }
 
+// convert distance number to word description
+  function numToWordDistance(val: Int, min: Int, max: Int): String
+    {
+      var percent = 100.0 * (val - min) / (max - min);
+      if (percent < 20)
+        return Const.col('red', 'very close');
+      else if (percent < 40)
+        return Const.col('red', 'close');
+      else if (percent < 60)
+        return Const.col('yellow', 'medium');
+      else if (percent < 80)
+        return Const.col('white', 'far');
+      else return Const.col('white', 'very far');
+    }
 
 // TURN: new turn logic
   public function turn()
