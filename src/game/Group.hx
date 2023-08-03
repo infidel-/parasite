@@ -197,6 +197,9 @@ class Group extends _SaveObject
 // on team member death
   public function onTeamMemberDeath()
     {
+      // kludge
+      if (team == null)
+        return;
       team.size--;
 
       // team dead, raise priority

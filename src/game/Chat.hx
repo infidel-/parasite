@@ -969,6 +969,9 @@ class Chat extends _SaveObject
                 game.infostr('[-' + val + ' consent]'));
               player.skills.increase(skillID, 1);
               target.chat.stun = 0;
+              // talking to someone else
+              if (target != player.host)
+                player.host.emitRandomSound('CHAT_FAIL', 30);
             }
           else player.skills.increase(skillID, 1 + Std.random(3));
         }

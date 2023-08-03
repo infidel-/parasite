@@ -215,6 +215,15 @@ class SoundConst
       params: null
     },
   ];
+  static var humanChatFail: Array<AISound> = [
+    {
+      text: '*urk*',
+      file: 'male-chat-fail',
+      radius: 3,
+      alertness: 5,
+      params: null
+    },
+  ];
 
   // civilian sounds
   public static var civilian: Map<String, Array<AISound>> = [
@@ -232,6 +241,7 @@ class SoundConst
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
     '' + EFFECT_CRYING => humanCrying,
+    'CHAT_FAIL' => humanChatFail,
   ];
 
   // scientist sounds
@@ -250,6 +260,7 @@ class SoundConst
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
     '' + EFFECT_CRYING => humanCrying,
+    'CHAT_FAIL' => humanChatFail,
   ];
 
   // police officer sounds
@@ -260,6 +271,7 @@ class SoundConst
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
     '' + EFFECT_CRYING => humanCrying,
+    'CHAT_FAIL' => humanChatFail,
   ];
 
   // soldier sounds
@@ -331,5 +343,6 @@ class SoundConst
     '' + AI_STATE_HOST => humanHost,
     '' + AI_STATE_DEAD => humanDie,
     '' + EFFECT_CRYING => humanCrying,
+    'CHAT_FAIL' => humanChatFail,
   ];
 }
