@@ -41,4 +41,26 @@ import const.ItemsConst;
             event = game.timeline.getEvent(eventID);
         }
     }
+
+// name without article
+  public function getName(): String
+    {
+      return (game.player.knowsItem(id) ?
+        name : info.unknown);
+    }
+
+// a name
+  public inline function aName(): String
+    {
+      var n = getName();
+      if ('aeiou'.indexOf(n.charAt(0)) >= 0)
+        return 'an ' + n;
+      else return 'a ' + n;
+    }
+
+// the name
+  public inline function theName(): String
+    {
+      return 'the ' + getName();
+    }
 }

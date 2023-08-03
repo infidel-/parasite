@@ -49,8 +49,7 @@ class Inventory extends _SaveObject
 
       for (item in _list)
         {
-          var itemName =
-            (game.player.knowsItem(item.id) ? item.name : item.info.unknown);
+          var itemName = item.getName();
           // add learning action
           if (!game.player.knowsItem(item.id))
             tmp.push({

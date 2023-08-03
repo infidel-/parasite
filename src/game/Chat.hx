@@ -142,6 +142,8 @@ class Chat extends _SaveObject
                 cost = 15;
               case 'De-escalate':
                 cost = 10;
+              case 'Request':
+                cost = 20;
               case 'Shock', 'Threaten', 'Scare': 
                 // MATH: cost = [6-10] / 2 = 3-5
                 cost = Std.int(cost / 2);
@@ -227,6 +229,8 @@ class Chat extends _SaveObject
         list.push('De-escalate');
       if (canSubvert())
         list.push('Subvert');
+      if (canRequest())
+        list.push('Request');
       return list;
     }
 
@@ -903,6 +907,30 @@ class Chat extends _SaveObject
       finish();
     }
 
+// returns true if request can be added to actions
+  function canRequest(): Bool
+    {
+      if (target.inventory.length() == 0)
+        return false;
+      if (target == player.host)
+        return false;
+      return true;
+    }
+
+// request a random item from the target
+  function request()
+    {
+      var list = [];
+      for (item in target.inventory)
+        list.push(item);
+      var item = list[Std.random(list.length)];
+      log(target.TheName() + ' hands you ' + item.aName() + '.');
+      target.inventory.removeItem(item);
+      player.host.inventory.add(item);
+      target.chat.timeout = 20 + 5 * Std.random(5);
+      finish();
+    }
+
 // run action (converse menu)
   public function actionConverseMenu(action: _PlayerAction)
     {
@@ -955,6 +983,15 @@ class Chat extends _SaveObject
               name: 'blackops',
               val: -35,
             });
+          // requesting items has a penalty
+          else if (id == 'request')
+            {
+              var val = (target.isAggressive ? -50 : -25);
+              mods.push({
+                name: 'request',
+                val: val,
+              });
+            }
           roll = __Math.skill({
             id: skillID,
             level: player.skills.getLevel(skillID),
@@ -987,6 +1024,8 @@ class Chat extends _SaveObject
               deescalate();
             case 'provoke':
               provoke();
+            case 'request':
+              request();
             case 'threaten', 'scare', 'shock':
               shock(id);
             case 'subvert':

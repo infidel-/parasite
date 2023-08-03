@@ -16,6 +16,7 @@ class ChatConst
     'Lie' => SKILL_DECEPTION,
     'Distort' => SKILL_DECEPTION,
     'Flatter' => SKILL_DECEPTION,
+    'Request' => SKILL_DECEPTION,
   ];
   public static var needs = [
     'Sense of Belonging', // The need to feel connected, accepted, and valued by others. It involves having meaningful relationships, social support, and a sense of community.
@@ -48,6 +49,7 @@ class ChatConst
     'Flatter' => 'flatter',
     'Lie' => 'lie to',
     'Provoke' => 'provoke',
+    'Request' => 'request something from',
     'Scare' => 'scare',
     'Shock' => 'shock',
     'Threaten' => 'threaten',
