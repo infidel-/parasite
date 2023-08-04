@@ -1065,6 +1065,11 @@ class Chat extends _SaveObject
           case 'exhausted':
             target.chat.fatigue += Std.random(3);
         }
+      // maximum consent (changed during the convo)
+      // NOTE: return here and properly finish in actionPost()
+      if (target.chat.consent >= 100 &&
+          startConsent < 100)
+        return;
       if (target.chat.fatigue >= 10)
         {
           log('Feeling tired, ' + target.theName() + ' ends the conversation.');

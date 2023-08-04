@@ -41,9 +41,11 @@ class ConsoleGame
           // XXX config|cfg <option> <value>
           if (arr[0] == 'config' || arr[0] == 'cfg')
             configOptionCommand(arr);
+#if mydebug
           // XXX chat|ch<stage>
           else if (arr[0].length >= 2 && arr[0].substr(0, 2) == 'ch')
             chatCommand(arr);
+#end
         }
 
       // XXX debug commands
