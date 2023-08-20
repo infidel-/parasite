@@ -1313,7 +1313,7 @@ class ConsoleGame
 // log function
   inline function log(s: String)
     {
-      game.log(s, COLOR_DEBUG);
+      game.log(Const.small(s), COLOR_DEBUG);
     }
 }
 

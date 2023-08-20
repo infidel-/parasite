@@ -3,6 +3,7 @@
 package game;
 
 import ai.BlackopsAI;
+import const.*;
 
 class Team extends FSM<_TeamState, _TeamFlag>
 {
@@ -316,17 +317,21 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
 // destroy current player habitat
 // called either on ambush timeout or when player leaves ambushed habitat
+// NOTE: area is habitat's parent area
   function destroyHabitat(area: AreaGame)
     {
+      var habitatArea = game.region.get(area.habitatAreaID);
+      var watcherLevel = habitatArea.habitat.watcherLevel;
+
       // team distance is reset providing a buffer
-      distance = 50;
+      // 50, 60, 75
+      distance = 50 + EvolutionConst.getParams(IMP_WATCHER, watcherLevel).distanceBonus;
 
       // team goes back to search
       state = TEAM_SEARCH;
 
       // cleanup habitat links
       area.hasHabitat = false;
-      area.habitat = null;
       ambushedHabitat = null;
       ambushedHabitatAreaID = -1;
       game.region.removeArea(area.habitatAreaID);
@@ -341,7 +346,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
           return;
         }
 
-      var msg = 'You feel great pain as the habitat at ' +
+      var adjective = 'great';
+      if (watcherLevel >= 2)
+        adjective = 'nagging';
+      var msg = 'You feel ' + adjective + ' pain as the habitat at ' +
         area.x + ',' + area.y + ' is destroyed. ';
       if (game.player.vars.habitatsLeft == 1)
         msg += 'This is the end...';
@@ -368,6 +376,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
           shock1 = 10;
           shock2 = 10;
           energyReduction = 5;
+          if (watcherLevel >= 2)
+            energyReduction = 1;
         }
       else if (game.group.difficulty == NORMAL)
         {
@@ -375,6 +385,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
           shock1 = 30;
           shock2 = 20;
           energyReduction = 10;
+          if (watcherLevel >= 2)
+            energyReduction = 2;
         }
       else if (game.group.difficulty == HARD)
         {
@@ -382,6 +394,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
           shock1 = 50;
           shock2 = 50;
           energyReduction = 10;
+          if (watcherLevel >= 2)
+            energyReduction = 5;
         }
       if (game.player.maxEnergy > maxEnergy)
         {

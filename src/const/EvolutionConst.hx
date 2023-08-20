@@ -918,12 +918,12 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_WATCHER,
         name: 'Watcher',
-        note: 'Watcher growth. Will warn of the ambush in the habitat.',
+        note: 'Watcher growth. Will warn of the ambush in the habitat and reduce the max energy loss on habitat destruction.',
         maxLevel: 2,
         levelNotes: [
           'Unavailable',
-          'Watcher will warn about the ambush',
-          'Watcher will attract the ambush',
+          'Watcher will warn about the ambush and give more distance',
+          'Watcher will attract the ambush, reduce max energy loss and give even more distance',
           '',
         ],
         organ: {
@@ -947,11 +947,25 @@ class EvolutionConst
             return game.area.habitat.putObject(IMP_WATCHER);
           }
         },
+        noteFunc: function (l: Dynamic, l2: Dynamic) {
+          return
+            "<br/>Distance bonus: " +
+            l.distanceBonus +
+            (l2 != null ? ' &rarr; ' + l2.distanceBonus: '');
+        },
         levelParams: [
-          {},
-          {},
-          {},
-          {},
+          {
+            distanceBonus: 0,
+          },
+          {
+            distanceBonus: 10,
+          },
+          {
+            distanceBonus: 25,
+          },
+          {
+            distanceBonus: 0,
+          },
         ],
       },
 
