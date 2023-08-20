@@ -41,12 +41,15 @@ class UI
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('webgl');
       canvas.style.visibility = 'hidden';
+      canvas.style.cursor = 'none';
       Browser.document.onkeydown = onKey;
       Browser.document.onkeyup = onKeyUp;
       canvas.onmousemove = function (e: MouseEvent) {
+//        game.scene.mouse.show();
         hud.onMouseMove(e);
       }
       canvas.onclick = function (e: MouseEvent) {
+//        game.scene.mouse.show();
         game.scene.mouse.onClick(e);
       }
 #if electron
@@ -432,6 +435,8 @@ class UI
         return false;
       if (cannotMove())
         return false;
+      // moving with keyboard hides mouse
+//      game.scene.mouse.hide();
 
       var dx = 0;
       var dy = 0;

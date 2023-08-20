@@ -19,6 +19,7 @@ class Mouse
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
+//  public var isHidden: Bool;
   public var atlas: Array<Cursor>;
   public var forceNextUpdate: Int; // kludge for update
   var oldPos: { x: Int, y: Int };
@@ -29,14 +30,11 @@ class Mouse
       cursor = -1;
       oldx = 0;
       oldy = 0;
+//      isHidden = false;
       oldPos = { x: -1, y: -1 };
       sceneState = game.ui.state;
       forceNextUpdate = 0;
       atlas = null;
-
-      // config - mouse disabled
-      if (!game.config.mouseEnabled)
-        return;
 
       var res = hxd.Res.load('graphics/mouse64.png').toImage();
       var bmp = res.toBitmap();
@@ -162,7 +160,13 @@ class Mouse
     {
       // config - mouse disabled
       if (!game.config.mouseEnabled)
-        return;
+        {
+          game.ui.canvas.style.cursor = 'none';
+          game.scene.area.clearPath();
+          return;
+        }
+//      if (isHidden)
+//        return;
 
       if (forceNextUpdate > 0)
         force = true;
@@ -272,7 +276,6 @@ class Mouse
       setCursor(c);
     }
 
-
 // region mode
   function updateRegion(force: Bool)
     {
@@ -324,6 +327,24 @@ class Mouse
       hxd.System.setCursor(atlas[cursor]);
     }
 
+/*
+// show mouse cursor
+  public function show()
+    {
+      isHidden = false;
+      update(true);
+    }
+
+// hide mouse cursor and path
+  public function hide()
+    {
+      if (game.config.mouseEnabled)
+        return;
+      isHidden = true;
+      hxd.System.setCursor(Cursor.Hide);
+      game.scene.area.clearPath();
+      game.ui.canvas.style.cursor = 'none';
+    }*/
 
 // mouse cursor images
   public static var CURSOR_ARROW = 0;

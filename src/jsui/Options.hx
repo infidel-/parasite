@@ -128,6 +128,8 @@ class Options extends UIWindow
         'extendedInfo', game.config.extendedInfo, '-26.9%');
       addCheckbox(contents, 'Shift-click/number repeat action',
         'shiftLongActions', game.config.shiftLongActions, '-24.7%');
+      addCheckbox(contents, 'Show mouse cursor on map',
+        'mouseEnabled', game.config.mouseEnabled, '-36.2%');
 
       restartText = Browser.document.createDivElement();
       restartText.style.textAlign = 'center';

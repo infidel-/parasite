@@ -22,10 +22,10 @@ class DogAI extends AI
       super.init();
       type = 'dog';
       name = {
-        real: 'the dog',
-        realCapped: 'The dog',
-        unknown: 'the dog',
-        unknownCapped: 'The dog'
+        real: 'dog',
+        realCapped: 'dog',
+        unknown: 'dog',
+        unknownCapped: 'dog'
       };
       soundsID = 'dog';
 
