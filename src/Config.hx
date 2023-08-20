@@ -24,6 +24,7 @@ class Config
   public var spoonEvolutionBasic: Bool;
   public var spoonHabitats: Bool;
   public var spoonHabitatAmbush: Bool;
+  public var spoonNoSavesLimit: Bool;
 
   public var fontSize: Int;
   public var hudLogLines: Int;
@@ -56,6 +57,7 @@ class Config
       spoonEvolutionBasic = false;
       spoonHabitats = false;
       spoonHabitatAmbush = false;
+      spoonNoSavesLimit = false;
 
       fontSize = 16;
       hudLogLines = 4;
@@ -79,6 +81,7 @@ class Config
       map['spoonEvolutionBasic'] = '0';
       map['spoonHabitats'] = '0';
       map['spoonHabitatAmbush'] = '0';
+      map['spoonNoSavesLimit'] = '0';
 
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
@@ -144,8 +147,10 @@ class Config
 // check if any spoon vars enabled
   public function isSpoonMode(): Bool
     {
-      return (spoonEvolutionBasic || spoonHabitats ||
-        spoonHabitatAmbush);
+      return (spoonEvolutionBasic ||
+        spoonHabitats ||
+        spoonHabitatAmbush ||
+        spoonNoSavesLimit);
     }
 
 // set option to value and save config
@@ -177,6 +182,8 @@ class Config
         spoonHabitats = (val == '1');
       else if (key == 'spoonHabitatAmbush')
         spoonHabitatAmbush = (val == '1');
+      else if (key == 'spoonNoSavesLimit')
+        spoonNoSavesLimit = (val == '1');
 
       else if (key == 'fontSize')
         {

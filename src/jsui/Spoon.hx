@@ -61,6 +61,8 @@ class Spoon extends UIWindow
         'spoonHabitats', game.config.spoonHabitats, '-16.7%');
       addCheckbox(contents, 'No ambushes in habitats',
         'spoonHabitatAmbush', game.config.spoonHabitatAmbush, '-42.4%');
+      addCheckbox(contents, 'No saves limit',
+        'spoonNoSavesLimit', game.config.spoonNoSavesLimit, '-63%');
 
       noteText = Browser.document.createDivElement();
       noteText.style.textAlign = 'center';

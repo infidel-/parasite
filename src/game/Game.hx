@@ -552,6 +552,9 @@ class Game extends _SaveObject
           return;
         }
       player.vars.savesLeft--;
+      // SPOON: no saves limit
+      if (config.spoonNoSavesLimit)
+        player.vars.savesLeft = 999;
       var o: _SaveGame = {
         game: null,
         version: Version.getVersion(),
