@@ -1353,6 +1353,7 @@ public function show()
       else if (old < 100 && affinity >= 100)
         {
           game.log(Const.hl('You have reached the full affinity with this host.'), COLOR_SYMBIOSIS);
+          game.goals.complete(GOAL_TUTORIAL_MAX_AFFINITY);
         }
     }
 

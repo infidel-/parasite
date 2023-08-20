@@ -83,6 +83,15 @@ class Goals
       messageComplete: "My connection with this host allows for meaningful discourse now.",
     },
 
+    GOAL_TUTORIAL_MAX_AFFINITY => {
+      id: GOAL_TUTORIAL_MAX_AFFINITY,
+      isHidden: true,
+      isStarting: true,
+      name: '',
+      note: '',
+      messageComplete: "I have reached the perfect connection level with this host. I will suffer if it expires while I am attached.",
+    },
+
     GOAL_TUTORIAL_CONSENT => {
       id: GOAL_TUTORIAL_CONSENT,
       isHidden: true,
