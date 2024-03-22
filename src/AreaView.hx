@@ -1,7 +1,7 @@
 // tiled area view
 
+import js.html.CanvasRenderingContext2D;
 import h2d.Bitmap;
-import h2d.TileGroup;
 import entities.EffectEntity;
 import game.Game;
 
@@ -10,7 +10,6 @@ class AreaView
   var game: Game; // game state link
   var scene: GameScene; // ui scene
 
-  var _tilemap: TileGroup;
   var _effects: List<EffectEntity>; // visual effects list
   var _cache: Array<Array<Int>>; // currently drawn tiles
   var _path: Array<Bitmap>; // currently visible path
@@ -38,8 +37,6 @@ class AreaView
 
       _path = null;
       _effects = new List<EffectEntity>();
-      _tilemap = new TileGroup(scene.tileAtlas[Const.TILE_GROUND]);
-      scene.add(_tilemap, Const.LAYER_TILES);
     }
 
 // redraw area map
@@ -47,6 +44,10 @@ class AreaView
     {
 //      trace('draw area');
       var ctx = scene.canvas.getContext('2d');
+
+      // tiles
+      drawTiles(ctx);
+
       // objects
       for (o in game.area.getObjects())
         if (!game.player.vars.losEnabled ||
@@ -69,13 +70,38 @@ class AreaView
           ai.entity.draw(ctx);
     }
 
+// draw area tiles
+  function drawTiles(ctx: CanvasRenderingContext2D)
+    {
+      var rect = game.area.getVisibleRect();
+      var cells = game.area.getCells();
+      var tileID = 0;
+      var icon = null;
+      for (y in rect.y1...rect.y2)
+        for (x in rect.x1...rect.x2)
+          {
+            tileID = _cache[x][y];
+            icon = {
+              row: Std.int(tileID / 16),
+              col: tileID % 16,
+            };
+            ctx.drawImage(scene.images.tileset,
+              icon.col * Const.TILE_SIZE_CLEAN, 
+              icon.row * Const.TILE_SIZE_CLEAN,
+              Const.TILE_SIZE_CLEAN,
+              Const.TILE_SIZE_CLEAN,
+              (x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale,
+              (y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale,
+              Const.TILE_SIZE_CLEAN,
+              Const.TILE_SIZE_CLEAN);
+          }
+    }
+
 // update tilemap, etc from current area
   public function update()
     {
       width = game.area.width;
       height = game.area.height;
-
-      _tilemap.clear(); // clear all tiles left over from last entry
       scene.updateCamera(); // center camera on player
     }
 
@@ -83,9 +109,6 @@ class AreaView
 // update camera
   public function updateCamera(x: Int, y: Int)
     {
-      _tilemap.x = - x;
-      _tilemap.y = - y;
-
       // adjust all entity positions
       for (ai in game.area.getAllAI())
         ai.entity.setPosition(ai.x, ai.y);
@@ -135,11 +158,11 @@ class AreaView
       path.pop();
       for (pos in path)
         {
-          var dot = new Bitmap(game.scene.entityAtlas
+          var dot = new Bitmap(scene.entityAtlas
             [Const.FRAME_DOT][Const.ROW_PARASITE]);
-          dot.x = pos.x * Const.TILE_SIZE - game.scene.cameraX;
-          dot.y = pos.y * Const.TILE_SIZE - game.scene.cameraY;
-          game.scene.add(dot, Const.LAYER_DOT);
+          dot.x = pos.x * Const.TILE_SIZE - scene.cameraX;
+          dot.y = pos.y * Const.TILE_SIZE - scene.cameraY;
+          scene.add(dot, Const.LAYER_DOT);
           _path.push(dot);
         }
     }
@@ -148,7 +171,6 @@ class AreaView
 // show gui
   public function show()
     {
-      _tilemap.visible = true;
       if (game.player.state != PLR_STATE_HOST)
         game.playerArea.entity.visible = true;
     }
@@ -157,7 +179,6 @@ class AreaView
 // hide gui
   public function hide()
     {
-      _tilemap.visible = false;
       game.playerArea.entity.visible = false;
 
       // clear all effects
@@ -202,7 +223,6 @@ class AreaView
       var cells = game.area.getCells();
 
       emptyScreenCells = 0;
-      _tilemap.clear();
       var tileID = 0;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
@@ -284,10 +304,8 @@ class AreaView
     }
 
 // set tile at x,y
-  function setTile(x: Int, y: Int, tileID: Int)
+  inline function setTile(x: Int, y: Int, tileID: Int)
     {
-      _tilemap.add(x * Const.TILE_SIZE,
-        y * Const.TILE_SIZE, scene.tileAtlas[tileID]);
       _cache[x][y] = tileID;
     }
 
@@ -302,7 +320,6 @@ class AreaView
 
       // set visibility for all tiles in that area
       emptyScreenCells = 0;
-      _tilemap.clear();
       var tileID = 0;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
@@ -316,8 +333,6 @@ class AreaView
               tileID = cells[x][y];
             else tileID = Const.TILE_HIDDEN;
 
-            _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
-              scene.tileAtlas[tileID]);
             _cache[x][y] = tileID;
           }
     }

@@ -7,6 +7,7 @@ class Images
   public var entities: Image;
   public var male: Image;
   public var female: Image;
+  public var tileset: Image;
 
   public function new(s: GameScene)
     {
@@ -19,6 +20,8 @@ class Images
       male.src = 'img/male64.png';
       female = new Image();
       female.src = 'img/female64.png';
+      tileset = new Image();
+      tileset.src = 'img/tileset64.png';
     }
 
 // get AI graphics with given params

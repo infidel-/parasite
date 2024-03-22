@@ -3,7 +3,6 @@
 import js.html.CanvasRenderingContext2D;
 import h2d.Bitmap;
 import h2d.TileGroup;
-import h2d.Object;
 import game.*;
 
 class RegionView
@@ -13,7 +12,6 @@ class RegionView
 
   var _tilemap: TileGroup;
   var _path: Array<Bitmap>; // currently visible path
-  public var icons: Object; // all region icons container
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -29,9 +27,6 @@ class RegionView
       scene.add(_tilemap, Const.LAYER_TILES);
       _tilemap.blendMode = None;
       _path = null;
-
-      icons = new Object();
-      scene.add(icons, Const.LAYER_OBJECT);
     }
 
 
@@ -73,8 +68,6 @@ class RegionView
     {
       _tilemap.x = - x;
       _tilemap.y = - y;
-      icons.x = - x;
-      icons.y = - y;
     }
 
 // update alertness icon for this area
@@ -187,11 +180,11 @@ class RegionView
           if (xx == x2 && yy == y2)
             break;
 
-          var dot = new Bitmap(game.scene.entityAtlas
+          var dot = new Bitmap(scene.entityAtlas
             [Const.FRAME_DOT][Const.ROW_PARASITE]);
-          dot.x = xx * Const.TILE_SIZE - game.scene.cameraX;
-          dot.y = yy * Const.TILE_SIZE - game.scene.cameraY;
-          game.scene.add(dot, Const.LAYER_DOT);
+          dot.x = xx * Const.TILE_SIZE - scene.cameraX;
+          dot.y = yy * Const.TILE_SIZE - scene.cameraY;
+          scene.add(dot, Const.LAYER_DOT);
           _path.push(dot);
         }
     }
@@ -225,7 +218,6 @@ class RegionView
       // make all visible
       _tilemap.visible = true;
       ple.visible = true;
-      icons.visible = true;
     }
 
 // redraw region map
@@ -247,17 +239,30 @@ class RegionView
   function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame)
     {
       // area not visible
-      if (area.x < game.scene.cameraTileX1 - 1 ||
-          area.y < game.scene.cameraTileY1 - 1 ||
-          area.x > game.scene.cameraTileX2 + 2 ||
-          area.y > game.scene.cameraTileY2 + 2)
+      if (area.x < scene.cameraTileX1 - 1 ||
+          area.y < scene.cameraTileY1 - 1 ||
+          area.x > scene.cameraTileX2 + 2 ||
+          area.y > scene.cameraTileY2 + 2)
         return;
       var ax =
-        (area.x * Const.TILE_SIZE_CLEAN - game.scene.cameraX) * game.config.mapScale;
+        (area.x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale;
       var ay =
-        (area.y * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale;
+        (area.y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale;
 
-      // TODO: area tile
+      // area tile
+      var tileID = (isKnown(area) ? area.tileID : Const.TILE_HIDDEN);
+      var icon = {
+        row: Std.int(tileID / 16),
+        col: tileID % 16,
+      };
+      ctx.drawImage(scene.images.tileset,
+        icon.col * Const.TILE_SIZE_CLEAN, 
+        icon.row * Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax, ay,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN);
 
       // area icons
       for (i in 0...5)
@@ -302,7 +307,7 @@ class RegionView
             }
           if (icon == null)
             continue;
-          ctx.drawImage(game.scene.images.entities,
+          ctx.drawImage(scene.images.entities,
             icon.col * Const.TILE_SIZE_CLEAN, 
             icon.row * Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
@@ -317,7 +322,6 @@ class RegionView
   public function hide()
     {
       _tilemap.visible = false;
-      icons.visible = false;
       game.playerRegion.entity.visible = false;
 
       // clear path

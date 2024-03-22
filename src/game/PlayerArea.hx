@@ -1142,7 +1142,8 @@ class PlayerArea extends _SaveObject
       else
         {
           // parasite vision
-          if (Math.abs(x - xx) < 2 && Math.abs(y - yy) < 2)
+          if (Math.abs(x - xx) < 4 &&
+              Math.abs(y - yy) < 4)
             return true;
         }
       return false;
