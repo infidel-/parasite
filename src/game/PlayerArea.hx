@@ -11,7 +11,8 @@ import __Math;
 
 class PlayerArea extends _SaveObject
 {
-  static var _ignoredFields = [ 'player', 'entity', 'actionTS',
+  static var _ignoredFields = [
+    'player', 'entity', 'actionTS',
     'currentAction', 'attachHost',
   ];
   var game: Game; // game state link
@@ -826,7 +827,7 @@ class PlayerArea extends _SaveObject
   public function detachAction()
     {
       attachHost.parasiteAttached = false;
-      attachHost.entity.setMask(null);
+      attachHost.entity.setMask(-1);
       onDetach();
 
       log('You detach from the potential host.');

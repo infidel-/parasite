@@ -244,7 +244,6 @@ class Game extends _SaveObject
         area.leave();
       else if (location == LOCATION_REGION)
         region.leave();
-      scene.region.clearIcons();
       ui.clearEvents();
       ui.hud.state = HUD_DEFAULT;
     }

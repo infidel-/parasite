@@ -10,14 +10,13 @@ import game.AreaManager;
 
 class AreaObject extends _SaveObject
 {
-  static var _ignoredFields = [ 'tile', 'entity' ];
+  static var _ignoredFields = [ 'entity' ];
   var game: Game; // game state link
 
   public var entity(default, null): ObjectEntity; // gui entity
   public var type: String; // object type
   public var name: String; // object name
   public var item: _Item; // linked item
-  var tile: Tile; // object image
 
   public var id: Int; // unique object id
   public var areaID: Int;
@@ -50,34 +49,25 @@ class AreaObject extends _SaveObject
       type = 'undefined';
       name = 'undefined';
       isStatic = false;
-      tile = null;
       imageRow = Const.ROW_OBJECT;
     }
 
 // called after load or creation
   public function initPost(onLoad: Bool)
     {
-      tile = game.scene.entityAtlas[imageCol][imageRow];
       // add to current area
       if (!onLoad)
         {
           var area = game.region.get(areaID);
           area.addObject(this);
-//          if (type == 'sewer_hatch')
-//            trace('create entity ' + type + ' ' + x + ',' + y + ' (' + areaID + ')');
-/*
-          if (type == 'paper')
-            Const.traceStack();*/
           createEntity();
-//          @:privateAccess entity._body.visible = false;
         }
     }
 
 // update entity image
   function updateImage()
     {
-      tile = game.scene.entityAtlas[imageCol][imageRow];
-      entity.setImage(tile);
+      entity.setIcon('entities', imageCol, imageRow);
     }
 
 // create entity for this object
@@ -85,14 +75,8 @@ class AreaObject extends _SaveObject
     {
       if (entity != null)
         return;
-/*
-      if (type == 'sewer_hatch')
-        {
-          trace('new object ' + type + ' ' + id + ': ' +
-            x + ',' + y + ' (' + areaID + ')');
-//          Const.traceStack();
-        }*/
-      entity = new ObjectEntity(this, game, x, y, tile);
+      entity = new ObjectEntity(this, game, x, y);
+      entity.setIcon('entities', imageCol, imageRow);
     }
 
 // show object on screen

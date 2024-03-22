@@ -7,18 +7,16 @@ import objects.*;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
-import entities.RegionEntity;
 
 class AreaGame extends _SaveObject
 {
-  static var _ignoredFields = [ 'region', 'events', 'npc', 'parent',
-    'icons', 'info', 'clueSpawnPoints',
+  static var _ignoredFields = [
+    'region', 'events', 'npc', 'parent',
+    'info', 'clueSpawnPoints',
   ];
   var game: Game;
   var region: RegionGame;
   public var regionID: Int;
-
-  public var icons: Array<RegionEntity>; // alert, event, npc, habitat icons
 
   public var id: Int; // area id
   public var name: String; // area name
@@ -80,7 +78,6 @@ class AreaGame extends _SaveObject
     {
       typeID = AREA_GROUND;
       events = [];
-      icons = [ null, null, null, null ];
       isGenerated = false;
       isEntering = false;
       isKnown = false;
@@ -198,8 +195,8 @@ class AreaGame extends _SaveObject
         {
           game.playerArea.entity.visible = false;
           game.player.host.createEntity();
-          game.player.host.entity.setMask(game.scene.entityAtlas
-            [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
+          game.player.host.entity.setMask(
+            Const.FRAME_MASK_CONTROL);
           game.player.host.setPosition(loc.x, loc.y);
           _ai.add(game.player.host);
         }

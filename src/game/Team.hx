@@ -335,7 +335,6 @@ class Team extends FSM<_TeamState, _TeamFlag>
       ambushedHabitat = null;
       ambushedHabitatAreaID = -1;
       game.region.removeArea(area.habitatAreaID);
-      game.scene.region.updateIconsArea(area.x, area.y);
 
       // SPOON: disable habitat death shock
       if (game.config.spoonHabitats)

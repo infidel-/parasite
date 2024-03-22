@@ -1,5 +1,7 @@
 // - has all links to windows and handles input
 
+import js.Browser;
+import js.html.CanvasElement;
 import h2d.Font;
 import h2d.Interactive;
 import h2d.Object;
@@ -8,11 +10,7 @@ import h2d.Tile;
 import hxd.Key;
 import hxd.System;
 import hxd.Window;
-#if js
 import js.Browser;
-#else
-import sys.io.File;
-#end
 
 import ui.*;
 import game.Game;
@@ -29,7 +27,6 @@ class GameScene extends Scene
   public var font: Font;
   public var font40: Font;
   public var sounds: Sounds;
-  public var atlas: Atlas; // AI tiles atlas
   public var entityAtlas: Array<Array<Tile>>; // entity graphics
   public var tileAtlas: Array<Tile>; // tile graphics
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -37,6 +34,10 @@ class GameScene extends Scene
   public var shiftPressed: Bool; // Shift key pressed?
   var isFullScreen: Bool; // game is in fullscreen mode?
   var isFocused: Bool;
+  
+  // new draw
+  public var images: Images;
+  public var canvas: CanvasElement;
 
   // camera x,y
   public var cameraTileX1: Int;
@@ -65,25 +66,6 @@ class GameScene extends Scene
       cameraTileX2 = 0;
       cameraTileY2 = 0;
 
-      // set correct window size and center
-#if !js
-      width = game.config.windowWidth;
-      height = game.config.windowHeight;
-      if (width < 800)
-        width = 800;
-      if (height < 600)
-        height = 600;
-      win.resize(width, height);
-      var x = Std.int((System.width - width) / 2);
-      var y = Std.int((System.height - height) / 2);
-      if (x < 0)
-        x = 0;
-      if (y < 0)
-        y = 0;
-      @:privateAccess win.window.setPosition(x, y);
-#end
-
-#if js
       var os = Browser.navigator.platform;
       if (os.indexOf('Linux') >= 0) // use C-1 on Linux
         controlKey = 'ctrl';
@@ -96,7 +78,6 @@ class GameScene extends Scene
         {
           resize();
         };
-#end
     }
 
 
@@ -107,12 +88,13 @@ class GameScene extends Scene
       if (game.config.mapScale != 1)
         Const.TILE_SIZE =
           Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
+      canvas = cast Browser.document.getElementById("canvas");
 
       // allow repeating keypresses
       Key.ALLOW_KEY_REPEAT = true;
 
       // load all entity images into atlas
-      atlas = new Atlas(this);
+      images = new Images(this);
       var res = hxd.Res.load('graphics/entities' + Const.TILE_SIZE_CLEAN +
         '.png').toTile();
       entityAtlas = res.grid(Const.TILE_SIZE_CLEAN);
@@ -262,6 +244,23 @@ class GameScene extends Scene
 
       // force update mouse and path
       mouse.update(true);
+      // redraw scene
+      draw1();
+    }
+
+// redraw scene
+  public function draw1()
+    {
+      // TODO: temp red color
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (game.location == LOCATION_AREA)
+        game.scene.area.draw();
+
+      else if (game.location == LOCATION_REGION)
+        game.scene.region.draw();
     }
 
 // common clear path (both images and list)
@@ -278,6 +277,8 @@ class GameScene extends Scene
 // handle window resize event
   public function resize()
     {
+      canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
+      canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
       tilemapInt.width = win.width;
       tilemapInt.height = win.height;
       blinkingText.resize();

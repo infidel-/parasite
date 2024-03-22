@@ -48,6 +48,7 @@ class Const
     COLOR_SYMBIOSIS => 0x98ff97,
   ];*/
 
+  // TODO: remove from here
   // entity spritemap indexes
   public static var ROW_ALERT = 0;
   public static var FRAME_EMPTY = 0;

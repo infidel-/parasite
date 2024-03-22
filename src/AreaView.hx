@@ -42,6 +42,32 @@ class AreaView
       scene.add(_tilemap, Const.LAYER_TILES);
     }
 
+// redraw area map
+  public function draw()
+    {
+//      trace('draw area');
+      var ctx = scene.canvas.getContext('2d');
+      // objects
+      for (o in game.area.getObjects())
+        if (!game.player.vars.losEnabled ||
+            (game.playerArea.sees(o.x, o.y) &&
+            o.entity.isVisible()))
+          o.entity.draw(ctx);
+
+      // effects
+      for (e in _effects)
+        if (e.isVisible())
+          e.draw(ctx);
+
+      // ai and player
+      if (game.player.state == PLR_STATE_PARASITE)
+        game.playerArea.entity.draw(ctx);
+      for (ai in @:privateAccess game.area._ai)
+        if (!game.player.vars.losEnabled ||
+            (game.playerArea.sees(ai.x, ai.y) &&
+            ai.entity.isVisible()))
+          ai.entity.draw(ctx);
+    }
 
 // update tilemap, etc from current area
   public function update()
@@ -152,7 +178,8 @@ class AreaView
       if (x >= width || y >= height || x < 0 || y < 0)
         return;
 
-      var effect = new EffectEntity(game, x, y, turns, Const.ROW_EFFECT, frame);
+      var effect = new EffectEntity(game, x, y, turns);
+      effect.setIcon('entities', frame, Const.ROW_EFFECT);
       _effects.add(effect);
     }
 

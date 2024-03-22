@@ -1,10 +1,10 @@
 // tiled region view (each tile corresponds to an area)
 
+import js.html.CanvasRenderingContext2D;
 import h2d.Bitmap;
 import h2d.TileGroup;
 import h2d.Object;
 import game.*;
-import entities.RegionEntity;
 
 class RegionView
 {
@@ -62,51 +62,11 @@ class RegionView
             // update tile
             _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
               scene.tileAtlas[tileID]);
-
-            // update icons
-            updateIconsArea(a.x, a.y);
           }
 
 //      trace('RegionView.update updateCamera()');
       scene.updateCamera(); // center camera on player
     }
-
-
-// update icons on this area
-  public function updateIconsArea(x: Int, y: Int)
-    {
-      var a = game.region.getXY(x, y);
-      var icon = getAlertnessIcon(a);
-      setAreaIcon(a, ICON_ALERTNESS, icon);
-      icon = getEventIcon(a);
-      setAreaIcon(a, ICON_EVENT, icon);
-      icon = getNPCIcon(a);
-      setAreaIcon(a, ICON_NPC, icon);
-
-      // habitat icon
-      icon = {
-        row: Const.ROW_REGION_ICON,
-        col: (a.hasHabitat ? Const.FRAME_HABITAT : Const.FRAME_EMPTY)
-      };
-      if (a.hasHabitat &&
-          game.group.team != null &&
-          game.group.team.ambushedHabitat != null &&
-          game.group.team.ambushedHabitat.hasWatcher &&
-          game.group.team.ambushedHabitat.area.id == a.habitatAreaID)
-        icon.col = Const.FRAME_HABITAT_AMBUSHED;
-      setAreaIcon(a, ICON_HABITAT, icon);
-
-      // ovum icon
-      var o = game.region.getObjectAt(x, y);
-      if (o != null && o.type == 'ovum')
-        {
-          setAreaIcon(a, ICON_OBJECT, {
-            row: Const.ROW_REGION_ICON,
-            col: Const.FRAME_OVUM,
-          });
-        }
-    }
-
 
 // update camera
   public function updateCamera(x: Int, y: Int)
@@ -117,42 +77,19 @@ class RegionView
       icons.y = - y;
     }
 
-
-// set a given area icon
-  function setAreaIcon(a: AreaGame, idx: Int, icon: _Icon)
-    {
-      if (icon == null)
-        return;
-
-      if (icon.col > 0)
-        {
-          if (a.icons[idx] == null)
-            a.icons[idx] =
-              new RegionEntity(scene, a.x, a.y, icon.row, icon.col);
-          else a.icons[idx].setImage(icon.col);
-        }
-      else if (a.icons[idx] != null)
-        {
-          a.icons[idx].remove();
-          a.icons[idx] = null;
-        }
-    }
-
-
 // update alertness icon for this area
   function getAlertnessIcon(a: AreaGame): _Icon
     {
       // update alert icon
+      if (!isKnown(a))
+        return null;
       var frame = Const.FRAME_EMPTY;
-      if (isKnown(a))
-        {
-          if (a.alertness > 75)
-            frame = Const.FRAME_ALERT3;
-          else if (a.alertness > 50)
-            frame = Const.FRAME_ALERT2;
-          else if (a.alertness > 0)
-            frame = Const.FRAME_ALERT1;
-        }
+      if (a.alertness > 75)
+        frame = Const.FRAME_ALERT3;
+      else if (a.alertness > 50)
+        frame = Const.FRAME_ALERT2;
+      else if (a.alertness > 0)
+        frame = Const.FRAME_ALERT1;
 
       return { row: Const.ROW_ALERT, col: frame };
     }
@@ -203,41 +140,14 @@ class RegionView
       for (npc in a.npc)
         if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
           ok = false;
+      if (ok)
+        return null;
 
       return {
         row: Const.ROW_REGION_ICON,
-        col: (ok ? Const.FRAME_EMPTY : Const.FRAME_EVENT_NPC)
+        col: Const.FRAME_EVENT_NPC,
       };
     }
-
-
-// clear icons (needed on game restart)
-  public function clearIcons()
-    {
-      if (game.region == null) // first call
-        return;
-      var cells = game.region.getCells();
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            if (cells[x] == null || cells[x][y] == null)
-              continue;
-
-            for (e in cells[x][y].icons)
-              if (e != null)
-                e.remove();
-          }
-    }
-
-
-// update icons
-  public inline function updateIcons()
-    {
-      for (y in 0...height)
-        for (x in 0...width)
-          updateIconsArea(x, y);
-    }
-
 
 // clears visible path
   public function clearPath(?clearAll: Bool = false)
@@ -251,7 +161,6 @@ class RegionView
         game.playerRegion.clearPath();
       _path = null;
     }
-
 
 // updates visible path
   public function updatePath(x1: Int, y1: Int, x2: Int, y2: Int)
@@ -292,27 +201,117 @@ class RegionView
 // called twice in case player host dies on entering sewers
   public function show()
     {
+      var ple = game.playerRegion.entity;
       // update player image and mask
       if (game.player.host != null)
         {
-          game.playerRegion.entity.tile = game.player.host.tile;
-          game.playerRegion.entity.setMask(game.scene.entityAtlas
-            [Const.FRAME_MASK_CONTROL][Const.ROW_PARASITE]);
+          var ai = game.player.host;
+          ple.setIcon(
+            (ai.isMale ? 'male' : 'female'),
+            ai.tileAtlasX,
+            ai.tileAtlasY);
+          ple.setMask(
+            Const.FRAME_MASK_CONTROL);
         }
       else
         {
-          game.playerRegion.entity.tile = 
-            game.scene.entityAtlas
-              [Const.FRAME_PARASITE][Const.ROW_PARASITE];
-          game.playerRegion.entity.setMask(null);
+          ple.setIcon(
+            'entities',
+            Const.FRAME_PARASITE,
+            Const.ROW_PARASITE);
+          ple.setMask(-1);
         }
 
       // make all visible
       _tilemap.visible = true;
-      game.playerRegion.entity.visible = true;
+      ple.visible = true;
       icons.visible = true;
     }
 
+// redraw region map
+  public function draw()
+    {
+      var ctx = scene.canvas.getContext('2d');
+
+      // draw area tiles and icons
+      var cells = game.region.getCells();
+      for (y in 0...height)
+        for (x in 0...width)
+          drawArea(ctx, cells[x][y]);
+
+      // draw player
+      game.playerRegion.entity.draw(ctx);
+    }
+
+// paint area tile and icons
+  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame)
+    {
+      // area not visible
+      if (area.x < game.scene.cameraTileX1 - 1 ||
+          area.y < game.scene.cameraTileY1 - 1 ||
+          area.x > game.scene.cameraTileX2 + 2 ||
+          area.y > game.scene.cameraTileY2 + 2)
+        return;
+      var ax =
+        (area.x * Const.TILE_SIZE_CLEAN - game.scene.cameraX) * game.config.mapScale;
+      var ay =
+        (area.y * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale;
+
+      // TODO: area tile
+
+      // area icons
+      for (i in 0...5)
+        {
+          var icon = null;
+          switch (i)
+            {
+              // alertness
+              case 0:
+                icon = getAlertnessIcon(area);
+              // event
+              case 1:
+                icon = getEventIcon(area);
+              // npc
+              case 2:
+                icon = getNPCIcon(area);
+              // habitat
+              case 3:
+                if (!area.hasHabitat)
+                  continue;
+                icon = {
+                  row: Const.ROW_REGION_ICON,
+                  col: Const.FRAME_HABITAT,
+                };
+                var team = game.group.team;
+                if (team != null)
+                  {
+                    var hab = team.ambushedHabitat;
+                    if (hab != null &&
+                        hab.hasWatcher &&
+                        hab.area.id == area.habitatAreaID)
+                      icon.col = Const.FRAME_HABITAT_AMBUSHED;
+                  }
+              // ovum
+              case 4:
+                var o = game.region.getObjectAt(area.x, area.y);
+                if (o != null && o.type == 'ovum')
+                  icon = {
+                    row: Const.ROW_REGION_ICON,
+                    col: Const.FRAME_OVUM,
+                  };
+            }
+          if (icon == null)
+            continue;
+          ctx.drawImage(game.scene.images.entities,
+            icon.col * Const.TILE_SIZE_CLEAN, 
+            icon.row * Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            ax, ay,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN);
+        }
+    }
 
 // hide gui
   public function hide()
@@ -333,12 +332,6 @@ class RegionView
         ((Math.abs(game.playerRegion.x - a.x) < 2 &&
           Math.abs(game.playerRegion.y - a.y) < 2) || a.isKnown);
     }
-
-  static var ICON_ALERTNESS = 0;
-  static var ICON_EVENT = 1;
-  static var ICON_NPC = 2;
-  static var ICON_HABITAT = 3;
-  static var ICON_OBJECT = 4;
 }
 
 typedef _Icon = { row: Int, col: Int };

@@ -373,7 +373,7 @@ class Timeline extends _SaveObject
               npc.event = event;
               npc.job = job;
               npc.type = type;
-              var tmp = game.scene.atlas.get(type, npc.isMale);
+              var tmp = game.scene.images.getAI(type, npc.isMale);
               npc.tileAtlasX = tmp.x;
               npc.tileAtlasY = tmp.y;
               var region = game.world.get(0);

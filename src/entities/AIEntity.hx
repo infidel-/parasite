@@ -2,8 +2,7 @@
 
 package entities;
 
-import h2d.Bitmap;
-import h2d.Tile;
+import js.html.CanvasRenderingContext2D;
 
 import ai.AI;
 import game.Game;
@@ -11,55 +10,66 @@ import game.Game;
 class AIEntity extends PawnEntity
 {
   var ai: AI; // AI link
+  // -1, 0: do not draw
+  var alertx: Int; // alert frame (new draw)
+  var isNPC: Bool;
 
-  var _alert: Bitmap; // alerted state icon
-  var _npc: Bitmap; // npc icon
 
-
-  public function new(vai: AI, g: Game, xx: Int, yy: Int, tile: Tile)
+  public function new(vai: AI, g: Game, xx: Int, yy: Int)
     {
-      super(g, xx, yy, tile);
+      super(g, xx, yy);
 
-      _alert = null;
-      _npc = null;
+      alertx = -1;
+      isNPC = false;
       ai = vai;
       type = "ai";
     }
 
 
 // set alert image index
-  public function setAlert(index: Int)
+  public inline function setAlert(index: Int)
     {
-      // no alert, remove image
-      if (index == 0)
-        {
-          if (_alert == null)
-            return;
+      alertx = index;
+    }
 
-          _alert.remove();
-          _alert = null;
-          return;
-        }
+// ai entity draw
+  public override function draw(ctx: CanvasRenderingContext2D)
+    {
+      var x = (mx * Const.TILE_SIZE_CLEAN - game.scene.cameraX) * game.config.mapScale;
+      var y = (my * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale;
 
-      // skip same image
-      var tile = game.scene.entityAtlas[index][Const.ROW_ALERT];
-      if (_alert != null && _alert.tile == tile)
-        return;
+      // draw pawn image (mask -> entity -> text)
+      super.draw(ctx);
 
-      if (_alert != null)
-        _alert.remove();
-      _alert = new Bitmap(tile, _container);
+      // draw alert icon
+      if (alertx > 0)
+        ctx.drawImage(game.scene.images.entities,
+          alertx * Const.TILE_SIZE_CLEAN, 
+          Const.ROW_ALERT * Const.TILE_SIZE_CLEAN,
+          Const.TILE_SIZE_CLEAN,
+          Const.TILE_SIZE_CLEAN,
+          x,
+          y,
+          Const.TILE_SIZE_CLEAN,
+          Const.TILE_SIZE_CLEAN);
+      // draw npc icon
+
+      if (isNPC)
+        ctx.drawImage(game.scene.images.entities,
+          Const.FRAME_EVENT_NPC_AREA * Const.TILE_SIZE_CLEAN, 
+          Const.ROW_REGION_ICON * Const.TILE_SIZE_CLEAN,
+          Const.TILE_SIZE_CLEAN,
+          Const.TILE_SIZE_CLEAN,
+          x,
+          y,
+          Const.TILE_SIZE_CLEAN,
+          Const.TILE_SIZE_CLEAN);
     }
 
 
 // set alert image index
-  public function setNPC()
+  public inline function setNPC()
     {
-      if (_npc != null)
-        return;
-
-      _npc = new Bitmap(
-        game.scene.entityAtlas[Const.FRAME_EVENT_NPC_AREA][Const.ROW_REGION_ICON],
-        _container);
+      isNPC = true;
     }
 }

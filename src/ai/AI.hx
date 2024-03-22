@@ -2,7 +2,6 @@
 
 package ai;
 
-import h2d.Tile;
 import entities.AIEntity;
 import _AIState;
 import _AIEffectType;
@@ -22,9 +21,8 @@ class AI extends _SaveObject
   public var npcID: Int;
   public var npc(get, null): scenario.NPC; // npc link (for scenario npcs)
   public var isNPC: Bool;
-  public var tile(default, null): Tile; // AI tile
-  var tileAtlasX: Int; // tile atlas info
-  var tileAtlasY: Int;
+  public var tileAtlasX: Int; // tile atlas info
+  public var tileAtlasY: Int;
 
   public var type: String; // ai type
   public var job: String; // ai job
@@ -120,7 +118,6 @@ class AI extends _SaveObject
 // init object before loading/post creation
   public function init()
     {
-      tile = null;
       tileAtlasX = -1;
       tileAtlasY = -1;
       type = 'undefined';
@@ -220,7 +217,6 @@ class AI extends _SaveObject
       sounds = SoundConst.getSounds(soundsID);
       if (onLoad)
         {
-          tile = game.scene.atlas.getXY(type, isMale, tileAtlasX, tileAtlasY);
           createEntity();
           if (isNPC)
             entity.setNPC();
@@ -340,6 +336,12 @@ public function show()
       return (isNameKnown ? name.realCapped : 'The ' + name.unknown);
     }
 
+// get capped name depending on whether its known or not
+  public inline function AName(): String
+    {
+      return (isNameKnown ? name.realCapped : 'A ' + name.unknown);
+    }
+
 // create entity for this AI
   public function createEntity()
     {
@@ -348,15 +350,42 @@ public function show()
           updateEntity();
           return;
         }
-      // do not change tile on re-creation (on entering area)
-      if (tile == null)
+
+      // select random icon if not set
+      if (tileAtlasX == -1 &&
+          tileAtlasY == -1 && isHuman)
         {
-          var tmp = game.scene.atlas.get(type, isMale);
-          tile = tmp.tile;
+          var tmp = game.scene.images.getAI(type, isMale);
           tileAtlasX = tmp.x;
           tileAtlasY = tmp.y;
         }
-      entity = new AIEntity(this, game, x, y, tile);
+      // legacy: for loading old saves
+      // specials were saved as specials[tileAtlasX] index number
+      else if (tileAtlasY == -1 && isHuman)
+        {
+          var specials = (isMale ? Images.specialsMale : Images.specialsFemale);
+          var list = specials[type];
+          if (!isMale && list == null)
+            list = Images.specialsMale[type];
+          var row = list[tileAtlasX];
+          tileAtlasX = row.x;
+          tileAtlasY = row.y;
+        }
+
+      // create entity and set correct icon
+      entity = new AIEntity(this, game, x, y);
+      // blackops heavy kludge
+      if (inventory.clothing.id == 'fullBodyArmor')
+        entity.isMaleAtlas = true;
+      else if (!isMale)
+        entity.isMaleAtlas =
+          (!isMale && type != 'civilian' &&
+           Images.specialsFemale[type] == null);
+      if (type == 'dog')
+        entity.setIcon('entities', 1, Const.ROW_PARASITE);
+      else entity.setIcon(
+        (isMale ? 'male' : 'female'),
+        tileAtlasX, tileAtlasY);
 
       updateEntity(); // update icon
     }
@@ -366,8 +395,9 @@ public function show()
     {
       tileAtlasX = x;
       tileAtlasY = y;
-      tile = game.scene.atlas.getXY(type, isMale, tileAtlasX, tileAtlasY);
-      entity.tile = tile;
+      entity.setIcon(
+        (isMale ? 'male' : 'female'),
+        tileAtlasX, tileAtlasY);
     }
 
 
@@ -604,7 +634,7 @@ public function show()
         return;
 
       parasiteAttached = false;
-      entity.setMask(null);
+      entity.setMask(-1);
       log('manages to tear you away.');
       game.playerArea.onDetach(); // notify player
     }
@@ -1281,7 +1311,7 @@ public function show()
 
   public function updateMask(x: Int)
     {
-      entity.setMask(game.scene.entityAtlas[x][Const.ROW_PARASITE]);
+      entity.setMask(x);
     }
 
 // event: parasite invaded this host
@@ -1316,7 +1346,7 @@ public function show()
       else if (src == 'memories')
         setState(AI_STATE_POST_DETACH_MEMORIES, null,
           'feels unsure about their surroundings.');
-      entity.setMask(null);
+      entity.setMask(-1);
     }
 
 // event: on receiving effect

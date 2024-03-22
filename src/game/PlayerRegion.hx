@@ -231,7 +231,6 @@ class PlayerRegion extends _SaveObject
       currentArea.hasHabitat = true;
       currentArea.habitatAreaID = area.id;
       area.parentID = currentArea.id;
-      game.scene.region.updateIconsArea(x, y);
       game.scene.sounds.play('region-habitat');
 
       // complete goal
@@ -261,7 +260,6 @@ class PlayerRegion extends _SaveObject
       game.scene.sounds.play('region-ovum');
       var o = new region.Ovum(game, x, y);
       game.region.addObject(o);
-      game.scene.region.updateIconsArea(x, y);
       // show info
       o.onMoveTo();
     }
@@ -379,8 +377,8 @@ class PlayerRegion extends _SaveObject
   public function resetEntity()
     {
       // set image
-      entity.setMask(null);
-      entity.tile = game.scene.entityAtlas[0][Const.ROW_PARASITE];
+      entity.setMask(-1);
+      entity.setIcon('entities', 0, Const.ROW_PARASITE);
 
       // make player entity visible again
       entity.visible = true;

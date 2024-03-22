@@ -360,7 +360,9 @@ class HUD
       else if (game.player.state == PLR_STATE_HOST)
         {
           var host = game.player.host;
-          buf.add('<b>' + host.getNameCapped() + '</b>');
+          if (host.isHuman)
+            buf.add('<b>' + host.getNameCapped() + '</b>');
+          else buf.add('<b>' + host.AName() + '</b>');
           if (host.affinity >= 100)
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
           if (host.chat.consent >= 100)
