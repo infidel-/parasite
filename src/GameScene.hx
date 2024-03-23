@@ -228,20 +228,6 @@ class GameScene extends Scene
       cameraX = Std.int(x);
       cameraY = Std.int(y);
 
-      // adjust tilemap and player entity position
-      if (game.location == LOCATION_AREA)
-        {
-          game.playerArea.entity.setPosition(
-            game.playerArea.x, game.playerArea.y);
-          area.updateCamera(cameraX, cameraY);
-        }
-      else if (game.location == LOCATION_REGION)
-        {
-          game.playerRegion.entity.setPosition(
-            game.playerRegion.x, game.playerRegion.y);
-          region.updateCamera(cameraX, cameraY);
-        }
-
       // force update mouse and path
       mouse.update(true);
       // redraw scene

@@ -3,17 +3,13 @@
 package entities;
 
 import js.html.CanvasRenderingContext2D;
-import h2d.Object;
-
 import game.Game;
 
 class Entity
 {
   var game: Game; // game state
-  var _container: Object;
   public var type: String;
   public var isMaleAtlas: Bool;
-  public var visible(get, set): Bool;
   // new draw
   // entities image (entities, male, female)
   var imageName: String;
@@ -32,8 +28,6 @@ class Entity
       ix = iy = mx = my = 0;
       type = 'undefined';
       isMaleAtlas = false;
-      _container = new Object();
-      game.scene.add(_container, layer);
     }
 
 // is currently on screen?
@@ -61,8 +55,6 @@ class Entity
     {
       this.mx = mx;
       this.my = my;
-      _container.x = mx * Const.TILE_SIZE - game.scene.cameraX;
-      _container.y = my * Const.TILE_SIZE - game.scene.cameraY;
     }
 
 // draw entity on map
@@ -95,25 +87,5 @@ class Entity
         (my * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale,
         Const.TILE_SIZE_CLEAN,
         Const.TILE_SIZE_CLEAN);
-    }
-
-
-// remove from scene
-  public function remove()
-    {
-      _container.removeChildren();
-      _container.remove();
-      _container = null;
-    }
-
-  function get_visible()
-    {
-      return _container.visible;
-    }
-
-
-  function set_visible(v: Bool)
-    {
-      return _container.visible = v;
     }
 }

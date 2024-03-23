@@ -90,7 +90,6 @@ class AreaObject extends _SaveObject
   public inline function hide()
     {
  //     trace('object ' + type + ' ' + x + ',' + y + ' hide' + ' (' + areaID + ')');
-      entity.remove();
       entity = null;
     }
 

@@ -2,7 +2,6 @@
 
 import js.html.CanvasRenderingContext2D;
 import h2d.Bitmap;
-import h2d.TileGroup;
 import game.*;
 
 class RegionView
@@ -10,7 +9,6 @@ class RegionView
   var game: Game; // game state link
   var scene: GameScene; // scene link
 
-  var _tilemap: TileGroup;
   var _path: Array<Bitmap>; // currently visible path
 
   public var width: Int; // width, height in cells
@@ -23,9 +21,6 @@ class RegionView
       width = 100; // should be larger than any region
       height = 100;
 
-      _tilemap = new TileGroup(scene.tileAtlas[Const.TILE_REGION_GROUND]);
-      scene.add(_tilemap, Const.LAYER_TILES);
-      _tilemap.blendMode = None;
       _path = null;
     }
 
@@ -36,38 +31,7 @@ class RegionView
       width = game.region.width;
       height = game.region.height;
 
-//      trace('update');
-
-      // set tiles
-      // TODO: redoing all tiles on each turn is probably slow...
-      _tilemap.clear();
-      var cells = game.region.getCells();
-      var tileID = 0;
-      var row = 0;
-      var a = null;
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            a = cells[x][y];
-
-            tileID = Const.TILE_HIDDEN;
-            if (isKnown(a))
-              tileID = a.tileID;
-
-            // update tile
-            _tilemap.add(x * Const.TILE_SIZE, y * Const.TILE_SIZE,
-              scene.tileAtlas[tileID]);
-          }
-
-//      trace('RegionView.update updateCamera()');
       scene.updateCamera(); // center camera on player
-    }
-
-// update camera
-  public function updateCamera(x: Int, y: Int)
-    {
-      _tilemap.x = - x;
-      _tilemap.y = - y;
     }
 
 // update alertness icon for this area
@@ -214,10 +178,6 @@ class RegionView
             Const.ROW_PARASITE);
           ple.setMask(-1);
         }
-
-      // make all visible
-      _tilemap.visible = true;
-      ple.visible = true;
     }
 
 // redraw region map
@@ -321,9 +281,6 @@ class RegionView
 // hide gui
   public function hide()
     {
-      _tilemap.visible = false;
-      game.playerRegion.entity.visible = false;
-
       // clear path
       clearPath();
     }

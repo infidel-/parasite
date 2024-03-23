@@ -62,7 +62,6 @@ class PlayerArea extends _SaveObject
     {
       if (state == PLR_STATE_ATTACHED && attachHostID >= 0)
         {
-          entity.visible = false;
           attachHost = game.area.getAIByID(attachHostID);
           attachHost.updateMask(Const.FRAME_MASK_ATTACHED);
         }
@@ -627,7 +626,6 @@ class PlayerArea extends _SaveObject
       state = PLR_STATE_ATTACHED;
       attachHost = ai;
       attachHostID = ai.id;
-      entity.visible = false;
 
       if (ai.isAgreeable())
         {
@@ -721,7 +719,6 @@ class PlayerArea extends _SaveObject
       if (attachHost.hasTrait(TRAIT_ASSIMILATED) ||
           attachHost.isAgreeable())
         player.hostControl = Player.HOST_CONTROL_ASSIMILATED;
-      entity.visible = false;
       attachHost = null;
       attachHostID = -1;
       player.host.onInvadeWrapped(); // notify ai
@@ -1334,9 +1331,6 @@ class PlayerArea extends _SaveObject
     {
       // set state
       state = PLR_STATE_PARASITE;
-
-      // make player entity visible again
-      entity.visible = true;
 
       // max energy loss
       if (player.host != null &&

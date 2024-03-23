@@ -39,7 +39,6 @@ class PlayerRegion extends _SaveObject
       x = vx;
       y = vy;
       entity = new PlayerEntity(game, x, y);
-      entity.visible = false;
     }
 
 
@@ -379,9 +378,6 @@ class PlayerRegion extends _SaveObject
       // set image
       entity.setMask(-1);
       entity.setIcon('entities', 0, Const.ROW_PARASITE);
-
-      // make player entity visible again
-      entity.visible = true;
     }
 
 

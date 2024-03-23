@@ -16,5 +16,7 @@ class ObjectEntity extends Entity
       super(g, Const.LAYER_OBJECT);
       type = 'object';
       object = o;
+      mx = xx;
+      my = yy;
     }
 }

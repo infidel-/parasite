@@ -193,7 +193,6 @@ class AreaGame extends _SaveObject
       // recreate player host AI entity
       if (game.player.state == PLR_STATE_HOST)
         {
-          game.playerArea.entity.visible = false;
           game.player.host.createEntity();
           game.player.host.entity.setMask(
             Const.FRAME_MASK_CONTROL);
@@ -1000,7 +999,6 @@ class AreaGame extends _SaveObject
 
       if (ai.npc != null)
         ai.npc.ai = null;
-      ai.entity.remove();
       ai.entity = null;
       _ai.remove(ai);
     }
@@ -1596,61 +1594,26 @@ class Test {
     }
 
 
-// update AI visibility
+// check AI visibility
   public inline function updateVisibility()
     {
+      // NOTE: only used for "player noticed" check now
       if (game.player.state == PLR_STATE_HOST)
-        updateVisibilityHost();
-      else updateVisibilityParasite();
-
+        for (ai in _ai)
+          {
+            var v = isVisible(game.playerArea.x,
+              game.playerArea.y, ai.x, ai.y);
+            // noticed by player for the first time
+            if (!ai.wasNoticed && v &&
+                inVisibleRect(ai.x, ai.y))
+              {
+                ai.wasNoticed = true;
+                ai.onNotice();
+              }
+          }
+      // change tiles according to los
       game.scene.area.updateVisibility();
     }
-
-
-// update AI, objects visibility
-// host version
-  function updateVisibilityHost()
-    {
-      for (ai in _ai)
-        {
-          var v = isVisible(game.playerArea.x, game.playerArea.y, ai.x, ai.y);
-          // noticed by player for the first time
-          if (!ai.wasNoticed && v && inVisibleRect(ai.x, ai.y))
-            {
-              ai.wasNoticed = true;
-              ai.onNotice();
-            }
-
-          ai.entity.visible = (game.player.vars.losEnabled ? v : true);
-        }
-
-      for (obj in _objects)
-        // kludge: possible fix for rebirth exception
-        if (obj.entity != null)
-          obj.entity.visible =
-            (game.player.vars.losEnabled ?
-              isVisible(game.playerArea.x, game.playerArea.y, obj.x, obj.y) : true);
-    }
-
-
-// update visible area (also AI, objects visibility)
-// parasite version
-// parasite only sees one tile around him but "feels" AIs in a larger radius
-  function updateVisibilityParasite()
-    {
-      for (ai in _ai)
-        if (game.player.vars.losEnabled)
-          ai.entity.visible =
-            (Const.distanceSquared(game.playerArea.x, game.playerArea.y, ai.x, ai.y) < 6 * 6);
-        else ai.entity.visible = true;
-
-      for (obj in _objects)
-        if (game.player.vars.losEnabled)
-          obj.entity.visible =
-            (Const.distanceSquared(game.playerArea.x, game.playerArea.y, obj.x, obj.y) < 6 * 6);
-        else obj.entity.visible = true;
-    }
-
 
 // get random direction to a near empty space
 // returns index of Const.dirx[], Const.diry[]

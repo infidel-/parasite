@@ -10,11 +10,6 @@ class PlayerEntity extends PawnEntity
     {
       super(g, xx, yy);
       setIcon('entities', 0, Const.ROW_PARASITE);
-
-      // re-add to correct layer
-      _container.remove();
-      game.scene.add(_container, Const.LAYER_PLAYER);
-
       type = "player";
     }
 }

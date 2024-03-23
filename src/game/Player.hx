@@ -93,10 +93,7 @@ class Player extends _SaveObject
           if (host != null)
             {
               if (host.entity != null)
-                {
-                  host.entity.remove();
-                  host.entity = null;
-                }
+                host.entity = null;
               host = null;
             }
           if (state == PLR_STATE_HOST && hostID >= 0)

@@ -51,6 +51,8 @@ class AreaView
       // objects
       for (o in game.area.getObjects())
         if (!game.player.vars.losEnabled ||
+            (game.player.state != PLR_STATE_HOST && 
+             o.sensable()) ||
             (game.playerArea.sees(o.x, o.y) &&
             o.entity.isVisible()))
           o.entity.draw(ctx);
@@ -105,34 +107,6 @@ class AreaView
       scene.updateCamera(); // center camera on player
     }
 
-
-// update camera
-  public function updateCamera(x: Int, y: Int)
-    {
-      // adjust all entity positions
-      for (ai in game.area.getAllAI())
-        ai.entity.setPosition(ai.x, ai.y);
-      for (obj in game.area.getObjects())
-        {
-          obj.entity.setPosition(obj.x, obj.y);
-          // hide objects outside of parasite vision
-          if (game.player.state != PLR_STATE_HOST)
-            {
-              if (!obj.sensable() &&
-                  Const.distanceSquared(
-                    game.playerArea.x, game.playerArea.y,
-                    obj.x, obj.y) > 2)
-                obj.entity.visible = false;
-              else obj.entity.visible = true;
-            }
-          // host vision
-          else obj.entity.visible = isVisible(obj.x, obj.y);
-        }
-      for (e in _effects)
-        e.setPosition(e.x, e.y);
-    }
-
-
 // clears visible path
   public function clearPath(?clearAll: Bool = false)
     {
@@ -171,22 +145,15 @@ class AreaView
 // show gui
   public function show()
     {
-      if (game.player.state != PLR_STATE_HOST)
-        game.playerArea.entity.visible = true;
     }
 
 
 // hide gui
   public function hide()
     {
-      game.playerArea.entity.visible = false;
-
       // clear all effects
       for (eff in _effects)
-        {
-          eff.remove();
-          _effects.remove(eff);
-        }
+        _effects.remove(eff);
 
       // clear path
       clearPath();
@@ -354,10 +321,7 @@ class AreaView
         {
           e.turns--;
           if (e.turns <= 0)
-            {
-              e.remove();
-              _effects.remove(e);
-            }
+            _effects.remove(e);
         }
     }
 }

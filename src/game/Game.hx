@@ -253,6 +253,7 @@ class Game extends _SaveObject
     {
       restartPre();
       init(false);
+      scene.area.draw();
     }
 
 

@@ -246,7 +246,6 @@ public function show()
 // hide AI graphics
   public function hide()
     {
-      entity.remove();
       entity = null;
     }
 
