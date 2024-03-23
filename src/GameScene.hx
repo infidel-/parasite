@@ -192,18 +192,18 @@ class GameScene extends Scene
           h = game.region.height;
         }
 
-      x -= win.width / 2;
-      y -= win.height / 2;
+      x -= canvas.width / 2;
+      y -= canvas.height / 2;
       x = Math.ceil(x / Const.TILE_SIZE) * Const.TILE_SIZE;
       y = Math.ceil(y / Const.TILE_SIZE) * Const.TILE_SIZE;
 
       // limit camera x,y by map edges
       if (!game.config.alwaysCenterCamera)
         {
-          if (x + win.width > Const.TILE_SIZE * w)
-            x = Const.TILE_SIZE * w - win.width;
-          if (y + win.height > Const.TILE_SIZE * h)
-            y = Const.TILE_SIZE * h - win.height;
+          if (x + canvas.width > Const.TILE_SIZE * w)
+            x = Const.TILE_SIZE * w - canvas.width;
+          if (y + canvas.height > Const.TILE_SIZE * h)
+            y = Const.TILE_SIZE * h - canvas.height;
           if (x < 0)
             x = 0;
           if (y < 0)
@@ -214,9 +214,9 @@ class GameScene extends Scene
       cameraTileX1 = Std.int(x / Const.TILE_SIZE);
       cameraTileY1 = Std.int(y / Const.TILE_SIZE);
       cameraTileX2 =
-        Std.int((x + win.width) / Const.TILE_SIZE);
+        Std.int((x + canvas.width) / Const.TILE_SIZE);
       cameraTileY2 =
-        Std.int((y + win.height) / Const.TILE_SIZE);
+        Std.int((y + canvas.height) / Const.TILE_SIZE);
       cameraX = Std.int(x);
       cameraY = Std.int(y);
 
@@ -229,9 +229,9 @@ class GameScene extends Scene
 // redraw scene
   public function draw1()
     {
-      // TODO: temp red color
+      // clear canvas
       var ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ff0000';
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (game.location == LOCATION_AREA)

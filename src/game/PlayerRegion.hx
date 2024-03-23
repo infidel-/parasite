@@ -434,6 +434,12 @@ class PlayerRegion extends _SaveObject
       return true;
     }
 
+// called post-loading game
+  public function loadPost()
+    {
+      entity.setPosition(x, y);
+    }
+
 
 // =========================== GETTERS AND SETTERS ==================================
 

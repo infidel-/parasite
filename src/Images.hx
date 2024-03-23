@@ -1,4 +1,7 @@
 // all ingame images access
+import js.html.CanvasElement;
+import js.html.CanvasRenderingContext2D;
+import js.Browser;
 import js.html.Image;
 
 class Images
@@ -8,6 +11,7 @@ class Images
   public var male: Image;
   public var female: Image;
   public var tileset: Image;
+  public var cursors: Array<Image>;
 
   public function new(s: GameScene)
     {
@@ -22,7 +26,16 @@ class Images
       female.src = 'img/female64.png';
       tileset = new Image();
       tileset.src = 'img/tileset64.png';
-    }
+
+      // load mouse cursors
+      cursors = [];
+      for (i in 0...5)
+        {
+          var img = new Image();
+          img.src = 'img/mouse' + i + '.png';
+          cursors.push(img);
+        }
+      }
 
 // get AI graphics with given params
   public function getAI(type: String, isMale: Bool): {

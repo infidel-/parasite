@@ -39,28 +39,19 @@ class UI
       uiQueuePrev = null;
       shiftPressed = false;
       hud = new HUD(this, game);
-      canvas = cast Browser.document.getElementById('webgl');
+      canvas = cast Browser.document.getElementById('canvas');
       canvas.style.visibility = 'hidden';
       canvas.style.cursor = 'none';
       Browser.document.onkeydown = onKey;
       Browser.document.onkeyup = onKeyUp;
       canvas.onmousemove = function (e: MouseEvent) {
-//        game.scene.mouse.show();
         hud.onMouseMove(e);
       }
       canvas.onclick = function (e: MouseEvent) {
-//        game.scene.mouse.show();
         game.scene.mouse.onClick(e);
       }
 #if electron
       Browser.window.onerror = onError;
-/*
-      Browser.window.onblur = function (){
-        trace('blur!');
-      }
-      Browser.window.onfocus = function (){
-        trace('focus!');
-      };*/
 #end
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
@@ -383,22 +374,6 @@ class UI
               game.updateHUD();
               ret = true;
             }
-/*
-          // toggle fullscreen
-          else if (key == 'f')
-            {
-              isFullScreen = !isFullScreen;
-              var doc = js.Browser.document;
-              if (doc.fullscreenEnabled)
-                {
-                  doc.documentElement.requestFullscreen();
-                  if (isFullScreen)
-                    doc.documentElement.requestFullscreen();
-                  else doc.exitFullscreen();
-                }
-              ret = true;
-            }
-*/
         }
 
 /*

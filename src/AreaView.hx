@@ -1,7 +1,6 @@
 // tiled area view
 
 import js.html.CanvasRenderingContext2D;
-import h2d.Bitmap;
 import entities.EffectEntity;
 import game.Game;
 
@@ -11,8 +10,8 @@ class AreaView
   var scene: GameScene; // ui scene
 
   var _effects: List<EffectEntity>; // visual effects list
-  var _cache: Array<Array<Int>>; // currently drawn tiles
-  var _path: Array<Bitmap>; // currently visible path
+  var _cache: Array<Array<Int>>; // tiles drawn on screen
+  var path: Array<aPath.Node>; // currently visible path
 
   public var width: Int; // area width, height in cells
   public var height: Int;
@@ -26,6 +25,7 @@ class AreaView
       width = maxSize; // should be larger than any area
       height = maxSize;
       emptyScreenCells = 0;
+      path = null;
 
       // init tiles cache 
       _cache = [];
@@ -35,7 +35,6 @@ class AreaView
         for (x in 0...width)
           _cache[x][y] = 0;
 
-      _path = null;
       _effects = new List<EffectEntity>();
     }
 
@@ -70,6 +69,20 @@ class AreaView
             (game.playerArea.sees(ai.x, ai.y) &&
             ai.entity.isVisible()))
           ai.entity.draw(ctx);
+
+      // path
+      if (path != null)
+        for (pos in path)
+          ctx.drawImage(scene.images.entities,
+            Const.FRAME_DOT * Const.TILE_SIZE_CLEAN, 
+            Const.ROW_PARASITE * Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+
+            (pos.x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale,
+            (pos.y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN);
     }
 
 // draw area tiles
@@ -110,43 +123,24 @@ class AreaView
 // clears visible path
   public function clearPath(?clearAll: Bool = false)
     {
-      if (_path == null)
+      if (path == null)
         return;
-      for (dot in _path)
-        dot.remove();
-
       if (clearAll)
         game.playerArea.clearPath();
-      _path = null;
+      path = null;
+      scene.draw1();
     }
 
 
 // updates visible path
   public function updatePath(x1: Int, y1: Int, x2: Int, y2: Int)
     {
-      clearPath();
-      _path = [];
-      var path = game.area.getPath(x1, y1, x2, y2);
+      path = game.area.getPath(x1, y1, x2, y2);
       if (path == null)
         return;
       path.pop();
-      for (pos in path)
-        {
-          var dot = new Bitmap(scene.entityAtlas
-            [Const.FRAME_DOT][Const.ROW_PARASITE]);
-          dot.x = pos.x * Const.TILE_SIZE - scene.cameraX;
-          dot.y = pos.y * Const.TILE_SIZE - scene.cameraY;
-          scene.add(dot, Const.LAYER_DOT);
-          _path.push(dot);
-        }
+      scene.draw1();
     }
-
-
-// show gui
-  public function show()
-    {
-    }
-
 
 // hide gui
   public function hide()
@@ -154,9 +148,7 @@ class AreaView
       // clear all effects
       for (eff in _effects)
         _effects.remove(eff);
-
-      // clear path
-      clearPath();
+      path = null;
     }
 
 
@@ -178,6 +170,7 @@ class AreaView
       if (game.player.state == PLR_STATE_HOST)
         updateVisibilityHost();
       else updateVisibilityParasite();
+      scene.draw1();
     }
 
 

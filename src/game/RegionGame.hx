@@ -70,7 +70,6 @@ class RegionGame extends _SaveObject
     {
       game.debug('Region.enter()');
       game.scene.sounds.setAmbient(AMBIENT_REGION);
-
       game.region = this;
 
       // no need to generate region here for now, it's generated in game/World

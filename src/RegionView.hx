@@ -1,7 +1,6 @@
 // tiled region view (each tile corresponds to an area)
 
 import js.html.CanvasRenderingContext2D;
-import h2d.Bitmap;
 import game.*;
 
 class RegionView
@@ -9,7 +8,7 @@ class RegionView
   var game: Game; // game state link
   var scene: GameScene; // scene link
 
-  var _path: Array<Bitmap>; // currently visible path
+  var path: Array<{ x: Int, y: Int }>; // currently visible path
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -20,8 +19,7 @@ class RegionView
       game = scene.game;
       width = 100; // should be larger than any region
       height = 100;
-
-      _path = null;
+      path = null;
     }
 
 
@@ -109,21 +107,18 @@ class RegionView
 // clears visible path
   public function clearPath(?clearAll: Bool = false)
     {
-      if (_path == null)
+      if (path == null)
         return;
-      for (dot in _path)
-        dot.remove();
-
       if (clearAll)
         game.playerRegion.clearPath();
-      _path = null;
+      path = null;
+      scene.draw1();
     }
 
 // updates visible path
   public function updatePath(x1: Int, y1: Int, x2: Int, y2: Int)
     {
-      clearPath();
-      _path = [];
+      path = [];
       var xx = x1;
       var yy = y1;
       var cnt = 0;
@@ -143,14 +138,9 @@ class RegionView
           yy += dy;
           if (xx == x2 && yy == y2)
             break;
-
-          var dot = new Bitmap(scene.entityAtlas
-            [Const.FRAME_DOT][Const.ROW_PARASITE]);
-          dot.x = xx * Const.TILE_SIZE - scene.cameraX;
-          dot.y = yy * Const.TILE_SIZE - scene.cameraY;
-          scene.add(dot, Const.LAYER_DOT);
-          _path.push(dot);
+          path.push({ x: xx, y: yy });
         }
+      scene.draw1();
     }
 
 
@@ -193,6 +183,20 @@ class RegionView
 
       // draw player
       game.playerRegion.entity.draw(ctx);
+
+      // path
+      if (path != null)
+        for (pos in path)
+          ctx.drawImage(scene.images.entities,
+            Const.FRAME_DOT * Const.TILE_SIZE_CLEAN, 
+            Const.ROW_PARASITE * Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+
+            (pos.x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale,
+            (pos.y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN);
     }
 
 // paint area tile and icons

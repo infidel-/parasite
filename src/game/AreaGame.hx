@@ -253,9 +253,6 @@ class AreaGame extends _SaveObject
 
       isEntering = false;
 
-      // show area
-      game.scene.area.show();
-
       // mercifully spawn dog nearby if player has no host
       // not on hard survival difficulty
       if (game.player.state == PLR_STATE_PARASITE &&
@@ -286,8 +283,7 @@ class AreaGame extends _SaveObject
       // update AI and objects visibility to player
       updateVisibility();
 
-      // show area
-      game.scene.area.show();
+      game.scene.area.draw();
     }
 
 // init spawn points list after generation or loading

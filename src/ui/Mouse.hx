@@ -2,12 +2,6 @@
 
 package ui;
 
-import h2d.Anim;
-import h2d.Bitmap;
-import h2d.Tile;
-import hxd.BitmapData;
-import hxd.Key;
-import hxd.Cursor;
 import game.Game;
 import ai.AI;
 import js.html.MouseEvent;
@@ -19,8 +13,6 @@ class Mouse
   var sceneState: _UIState;
   var oldx: Float;
   var oldy: Float;
-//  public var isHidden: Bool;
-  public var atlas: Array<Cursor>;
   public var forceNextUpdate: Int; // kludge for update
   var oldPos: { x: Int, y: Int };
 
@@ -30,31 +22,9 @@ class Mouse
       cursor = -1;
       oldx = 0;
       oldy = 0;
-//      isHidden = false;
       oldPos = { x: -1, y: -1 };
       sceneState = game.ui.state;
       forceNextUpdate = 0;
-      atlas = null;
-
-      var res = hxd.Res.load('graphics/mouse64.png').toImage();
-      var bmp = res.toBitmap();
-      atlas = [];
-      var size = (game.config.mapScale == 1 ? CURSOR_SIZE :
-        Std.int(CURSOR_SIZE * game.config.mapScale));
-      for (i in 0...CURSOR_ATTACK_RANGED + 1)
-        {
-          var tmp = bmp.sub(i * CURSOR_SIZE, 0, CURSOR_SIZE, CURSOR_SIZE);
-          var cursor = Custom(new CustomCursor([ tmp ], 1,
-            i == 0 ? 0 : Std.int(CURSOR_SIZE / 2),
-            i == 0 ? 0 : Std.int(CURSOR_SIZE / 2)));
-          atlas.push(cursor);
-        }
-      hxd.System.setCursor = function(cur)
-        {
-          if (cur == Default)
-            hxd.System.setNativeCursor(atlas[cursor]);
-          else hxd.System.setNativeCursor(cur);
-        }
     }
 
 // mouse click (through canvas directly)
@@ -165,8 +135,6 @@ class Mouse
           game.scene.area.clearPath();
           return;
         }
-//      if (isHidden)
-//        return;
 
       if (forceNextUpdate > 0)
         force = true;
@@ -186,7 +154,8 @@ class Mouse
       oldy = game.scene.mouseY;
 
       // window open, reset state
-      if (game.isFinished || game.ui.state != UISTATE_DEFAULT)
+      if (game.isFinished ||
+          game.ui.state != UISTATE_DEFAULT)
         {
           setCursor(CURSOR_ARROW);
           sceneState = game.ui.state;
@@ -300,6 +269,9 @@ class Mouse
             pos.x, pos.y);
           c = CURSOR_MOVE;
         }
+      if (c == CURSOR_BLOCKED &&
+          game.playerRegion.target == null)
+        game.scene.clearPath();
 
       setCursor(c);
     }
@@ -308,8 +280,8 @@ class Mouse
 // check if player can attack that AI
   inline function canAttack(ai: AI)
     {
-      return (game.player.state == PLR_STATE_HOST && ai != null &&
-        ai != game.player.host);
+      return (game.player.state == PLR_STATE_HOST &&
+        ai != null && ai != game.player.host);
     }
 
 
@@ -324,27 +296,10 @@ class Mouse
         return;
 
       cursor = c;
-      hxd.System.setCursor(atlas[cursor]);
+      game.ui.canvas.style.cursor = 'url(' +
+        'img/mouse' + c + '.png) ' +
+        (c == 0 ? '0 1' : '16 16') + ', auto';
     }
-
-/*
-// show mouse cursor
-  public function show()
-    {
-      isHidden = false;
-      update(true);
-    }
-
-// hide mouse cursor and path
-  public function hide()
-    {
-      if (game.config.mouseEnabled)
-        return;
-      isHidden = true;
-      hxd.System.setCursor(Cursor.Hide);
-      game.scene.area.clearPath();
-      game.ui.canvas.style.cursor = 'none';
-    }*/
 
 // mouse cursor images
   public static var CURSOR_ARROW = 0;

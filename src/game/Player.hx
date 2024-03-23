@@ -110,6 +110,7 @@ class Player extends _SaveObject
           game.playerRegion.resetEntity();
         }
       skills.loadPost();
+      game.playerRegion.loadPost();
     }
 
 // end of turn for player
