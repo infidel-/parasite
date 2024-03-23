@@ -932,6 +932,17 @@ input[type=checkbox] {
   100% { color: #f59393; }
 }
 
+
+#blinking-text {
+  animation: blinking-red-text 2s infinite;
+  transition: opacity 1s ease-in-out;
+  font-size: 200%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
 #window-evolution {
   border: 39px solid;
   width: calc(100% - 90px);

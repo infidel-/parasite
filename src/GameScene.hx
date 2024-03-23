@@ -4,7 +4,6 @@ import js.Browser;
 import js.html.CanvasElement;
 import h2d.Font;
 import h2d.Interactive;
-import h2d.Object;
 import h2d.Scene;
 import h2d.Tile;
 import hxd.Key;
@@ -20,7 +19,6 @@ class GameScene extends Scene
   public var game: Game; // game state link
   public var area: AreaView; // area view
   public var region: RegionView; // region view
-  public var blinkingText: BlinkingText; // blinking text
   var tilemapInt: Interactive; // tilemap interactive
   public var mouse: Mouse; // mouse cursor entity
   public var win: Window;
@@ -48,13 +46,11 @@ class GameScene extends Scene
   public var cameraY: Int;
 
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
-  var _containerBlink: Object;
 
 
   public function new(g: Game)
     {
       super();
-      _containerBlink = new Object();
       isFocused = true; // may not be true but we want the game to play immediately
       win = Window.getInstance();
       isFullScreen = false;
@@ -118,10 +114,6 @@ class GameScene extends Scene
       mouse = new Mouse(game);
       area = new AreaView(this);
       region = new RegionView(this);
-
-      // team member notification
-      blinkingText = new BlinkingText(game, _containerBlink);
-      add(_containerBlink, Const.LAYER_HUD);
 
       // add screen-sized tilemap interactive object
       tilemapInt = new h2d.Interactive(win.width, win.height);
@@ -267,7 +259,6 @@ class GameScene extends Scene
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
       tilemapInt.width = win.width;
       tilemapInt.height = win.height;
-      blinkingText.resize();
       updateCamera();
       if (game.location == LOCATION_AREA)
         {

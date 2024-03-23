@@ -46,7 +46,6 @@ class Main extends hxd.App
     {
       game.scene.mouse.update();
       game.update();
-      game.scene.blinkingText.update(dt);
     }
 
 

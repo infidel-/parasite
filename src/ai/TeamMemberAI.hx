@@ -153,7 +153,7 @@ class TeamMemberAI extends HumanAI
       game.group.teamMemberLastNoticed = game.turns;
       game.log('You feel someone is watching.', COLOR_ALERT);
       game.profile.addPediaArticle('msgWatching');
-      game.scene.blinkingText.show(2);
+      game.ui.hud.showBlinkingText();
       game.scene.sounds.play('team-notify');
     }
 }

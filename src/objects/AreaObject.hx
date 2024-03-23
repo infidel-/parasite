@@ -2,7 +2,6 @@
 
 package objects;
 
-import h2d.Tile;
 import entities.ObjectEntity;
 import game.Game;
 import game._Item;

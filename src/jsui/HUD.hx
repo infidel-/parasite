@@ -14,6 +14,7 @@ class HUD
   var game: Game;
   var ui: UI;
   public var state: _HUDState;
+  var blinkingText: DivElement;
   var overlay: DivElement;
   var container: DivElement;
   var consoleDiv: DivElement;
@@ -43,10 +44,18 @@ class HUD
       actionButtons = new List();
       listActions = new List();
       listKeyActions = new List();
+
       overlay = Browser.document.createDivElement();
       overlay.id = 'overlay';
       overlay.style.visibility = 'hidden';
       Browser.document.body.appendChild(overlay);
+
+      blinkingText = Browser.document.createDivElement();
+      blinkingText.innerHTML = 'You feel someone is watching.';
+      blinkingText.className = 'highlight-text';
+      blinkingText.id = 'blinking-text';
+      blinkingText.style.opacity = '0';
+      Browser.document.body.appendChild(blinkingText);
 
       container = Browser.document.createDivElement();
       container.id = 'hud';
@@ -129,6 +138,15 @@ class HUD
         log,
         goals,
       ];
+    }
+
+// show blinking text and set timeout
+  public function showBlinkingText()
+    {
+      blinkingText.style.opacity = '1';
+      Browser.window.setTimeout(function() {
+        blinkingText.style.opacity = '0';
+      }, 2000);
     }
 
 // show glass wall overlay
