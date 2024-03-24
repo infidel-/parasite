@@ -321,6 +321,9 @@ class PlayerArea extends _SaveObject
 
       player.actionEnergy(action); // spend energy
       actionPost(); // post-action call
+      // kludge to undo game finish flag
+      if (game.isFinished && game.isRebirth)
+        player.rebirthPost();
     }
 
 // post-action call: remove AP and new turn
