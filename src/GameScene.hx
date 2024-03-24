@@ -195,6 +195,7 @@ class GameScene
       var ctx = canvas.getContext('2d');
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.textAlign = 'center';
 
       if (game.location == LOCATION_AREA)
         game.scene.area.draw();

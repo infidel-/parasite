@@ -69,17 +69,17 @@ class PawnEntity extends Entity
       if (text != null)
         {
           // text bg
+          ctx.font = Std.int(14 * game.config.mapScale) + "px " + UI.getVar('--text-font');
           var m = ctx.measureText(text);
           var h = Std.int(14 * game.config.mapScale);
           var tx = x + Const.TILE_SIZE / 2;
           var ty = y + 4;
-          var bgX = tx - m.width/2 - 5;
-          var bgY = y - h/2 - 4;
+          var bgX = tx - m.width / 2 - 5;
+          var bgY = y - h / 2 - 4;
           ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
           ctx.fillRect(bgX, bgY, m.width + 10, h + 3);
 
           // text
-          ctx.font = Std.int(14 * game.config.mapScale) + "px " + UI.getVar('--text-font');
           ctx.fillStyle = 'white';
           ctx.fillText(text, tx, ty);
         }
