@@ -35,8 +35,8 @@ class AIEntity extends PawnEntity
 // ai entity draw
   public override function draw(ctx: CanvasRenderingContext2D)
     {
-      var x = (mx * Const.TILE_SIZE_CLEAN - game.scene.cameraX) * game.config.mapScale;
-      var y = (my * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale;
+      var x = (mx - game.scene.cameraTileX1) * Const.TILE_SIZE;
+      var y = (my - game.scene.cameraTileY1) * Const.TILE_SIZE;
 
       // draw pawn image (mask -> entity -> text)
       super.draw(ctx);
@@ -50,8 +50,8 @@ class AIEntity extends PawnEntity
           Const.TILE_SIZE_CLEAN,
           x,
           y,
-          Const.TILE_SIZE_CLEAN,
-          Const.TILE_SIZE_CLEAN);
+          Const.TILE_SIZE,
+          Const.TILE_SIZE);
       // draw npc icon
 
       if (isNPC)
@@ -62,8 +62,8 @@ class AIEntity extends PawnEntity
           Const.TILE_SIZE_CLEAN,
           x,
           y,
-          Const.TILE_SIZE_CLEAN,
-          Const.TILE_SIZE_CLEAN);
+          Const.TILE_SIZE,
+          Const.TILE_SIZE);
     }
 
 

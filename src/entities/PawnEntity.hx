@@ -48,8 +48,8 @@ class PawnEntity extends Entity
 // draw pawn entity
   public override function draw(ctx: CanvasRenderingContext2D)
     {
-      var x = (mx * Const.TILE_SIZE_CLEAN - game.scene.cameraX) * game.config.mapScale;
-      var y = (my * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale;
+      var x = (mx - game.scene.cameraTileX1) * Const.TILE_SIZE;
+      var y = (my - game.scene.cameraTileY1) * Const.TILE_SIZE;
 
       // draw mask image first
       ctx.drawImage(game.scene.images.entities,
@@ -59,8 +59,8 @@ class PawnEntity extends Entity
         Const.TILE_SIZE_CLEAN,
         x,
         y,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN);
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
 
       // draw entity image
       super.draw(ctx);
@@ -70,7 +70,7 @@ class PawnEntity extends Entity
         {
           // text bg
           var m = ctx.measureText(text);
-          var h = 14;
+          var h = Std.int(14 * game.config.mapScale);
           var tx = x + Const.TILE_SIZE / 2;
           var ty = y + 4;
           var bgX = tx - m.width/2 - 5;
@@ -79,7 +79,7 @@ class PawnEntity extends Entity
           ctx.fillRect(bgX, bgY, m.width + 10, h + 3);
 
           // text
-          ctx.font = "14px " + UI.getVar('--text-font');
+          ctx.font = Std.int(14 * game.config.mapScale) + "px " + UI.getVar('--text-font');
           ctx.fillStyle = 'white';
           ctx.fillText(text, tx, ty);
         }

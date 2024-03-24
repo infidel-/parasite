@@ -176,10 +176,13 @@ class RegionView
       var ctx = scene.canvas.getContext('2d');
 
       // draw area tiles and icons
+      untyped ctx.imageSmoothingEnabled = false;
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
           drawArea(ctx, cells[x][y]);
+      // smooth everything else
+      untyped ctx.imageSmoothingEnabled = true;
 
       // draw player
       game.playerRegion.entity.draw(ctx);
@@ -193,10 +196,10 @@ class RegionView
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
 
-            (pos.x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale,
-            (pos.y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN);
+            (pos.x - scene.cameraTileX1) * Const.TILE_SIZE,
+            (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
+            Const.TILE_SIZE,
+            Const.TILE_SIZE);
     }
 
 // paint area tile and icons
@@ -209,9 +212,9 @@ class RegionView
           area.y > scene.cameraTileY2 + 2)
         return;
       var ax =
-        (area.x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale;
+        (area.x - scene.cameraTileX1) * Const.TILE_SIZE;
       var ay =
-        (area.y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale;
+        (area.y - scene.cameraTileY1) * Const.TILE_SIZE;
 
       // area tile
       var tileID = (isKnown(area) ? area.tileID : Const.TILE_HIDDEN);
@@ -219,16 +222,18 @@ class RegionView
         row: Std.int(tileID / 16),
         col: tileID % 16,
       };
+      untyped ctx.imageSmoothingEnabled = false;
       ctx.drawImage(scene.images.tileset,
         icon.col * Const.TILE_SIZE_CLEAN, 
         icon.row * Const.TILE_SIZE_CLEAN,
         Const.TILE_SIZE_CLEAN,
         Const.TILE_SIZE_CLEAN,
         ax, ay,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN);
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
 
       // area icons
+      untyped ctx.imageSmoothingEnabled = true;
       for (i in 0...5)
         {
           var icon = null;
@@ -277,8 +282,8 @@ class RegionView
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             ax, ay,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN);
+            Const.TILE_SIZE,
+            Const.TILE_SIZE);
         }
     }
 

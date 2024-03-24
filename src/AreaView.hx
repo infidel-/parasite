@@ -45,7 +45,10 @@ class AreaView
       var ctx = scene.canvas.getContext('2d');
 
       // tiles
+      untyped ctx.imageSmoothingEnabled = false;
       drawTiles(ctx);
+      // smooth everything else
+      untyped ctx.imageSmoothingEnabled = true;
 
       // objects
       for (o in game.area.getObjects())
@@ -79,10 +82,10 @@ class AreaView
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
 
-            (pos.x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale,
-            (pos.y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN);
+            (pos.x - scene.cameraTileX1) * Const.TILE_SIZE,
+            (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
+            Const.TILE_SIZE,
+            Const.TILE_SIZE);
     }
 
 // draw area tiles
@@ -105,10 +108,10 @@ class AreaView
               icon.row * Const.TILE_SIZE_CLEAN,
               Const.TILE_SIZE_CLEAN,
               Const.TILE_SIZE_CLEAN,
-              (x * Const.TILE_SIZE_CLEAN - scene.cameraX) * game.config.mapScale,
-              (y * Const.TILE_SIZE_CLEAN - scene.cameraY) * game.config.mapScale,
-              Const.TILE_SIZE_CLEAN,
-              Const.TILE_SIZE_CLEAN);
+              (x - scene.cameraTileX1) * Const.TILE_SIZE,
+              (y - scene.cameraTileY1) * Const.TILE_SIZE,
+              Const.TILE_SIZE,
+              Const.TILE_SIZE);
           }
     }
 

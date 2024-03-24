@@ -77,15 +77,16 @@ class Entity
             return;
         }
       // entity image
+      // kludge: draw one pixel less to avoid scaling bugs
       ctx.drawImage(img,
-        ix * Const.TILE_SIZE_CLEAN, 
-        iy * Const.TILE_SIZE_CLEAN,
+        ix * Const.TILE_SIZE_CLEAN,
+        iy * Const.TILE_SIZE_CLEAN + 1,
         Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN - 1,
 
-        (mx * Const.TILE_SIZE_CLEAN - game.scene.cameraX) * game.config.mapScale,
-        (my * Const.TILE_SIZE_CLEAN - game.scene.cameraY) * game.config.mapScale,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN);
+        (mx - game.scene.cameraTileX1) * Const.TILE_SIZE,
+        (my - game.scene.cameraTileY1) * Const.TILE_SIZE,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
     }
 }

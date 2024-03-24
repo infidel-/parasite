@@ -71,7 +71,11 @@ class Options extends UIWindow
       addSlider(contents, 'Map scale', game.config.mapScale * 100,
         function (v: Float) {
           game.config.set('mapScale', '' + Const.round(v / 100.0), false);
-          restartText.style.visibility = 'inherit';
+//          restartText.style.visibility = 'inherit';
+          Const.TILE_SIZE =
+            Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
+          game.scene.updateCamera();
+          game.scene.draw();
         }, 10, 1000, 10, 'round', '%');
       addSlider(contents, 'Font size', game.config.fontSize,
         function (v: Float) {
