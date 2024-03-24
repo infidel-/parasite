@@ -3,16 +3,17 @@ import game.Game;
 import js.Browser;
 import js.html.CanvasElement;
 
-class Main extends hxd.App
+class Main
 {
   public var game: Game;
-
+  public function new()
+    {
+      Browser.window.setTimeout(init, 1);
+    }
 
 // engine init entry-point
-  override function init()
+  function init()
     {
-      hxd.Res.initEmbed();
-
       // new canvas (no heaps)
       var canvas = Browser.document.createCanvasElement();
       canvas.id = 'canvas';
@@ -24,22 +25,9 @@ class Main extends hxd.App
       canvas.focus();
 
       game = new Game();
-      setScene(game.scene, true);
       game.scene.init();
       game.ui.state = UISTATE_MAINMENU;
     }
-
-// main update tick, check mouse cursor
-  override function update(dt: Float)
-    {
-
-      // TODO
-      var oldcanvas = cast Browser.document.getElementById('webgl');
-      oldcanvas.style.visibility = 'hidden';
-      game.scene.mouse.update();
-      game.update();
-    }
-
 
   public static function main()
     {

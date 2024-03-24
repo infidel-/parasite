@@ -452,8 +452,8 @@ class HUD
       var buf = new StringBuf();
       buf.add(
         'Tile resolution: ' +
-        Std.int(game.scene.win.width / Const.TILE_SIZE) + 'x' +
-        Std.int(game.scene.win.height / Const.TILE_SIZE) +
+        Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
+        Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
         '<br>emptyScreenCells: ' + game.scene.area.emptyScreenCells +
         ', maxAI: ' + game.area.getMaxAI() + '<br>');
       if (!game.group.isKnown)

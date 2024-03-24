@@ -70,7 +70,7 @@ class MainMenu extends UIWindow
       game.load(1);
       game.ui.closeWindow();
       game.ui.hud.update();
-      game.scene.draw1();
+      game.scene.draw();
       close.style.display = 'block';
       game.ui.canvas.style.visibility = 'visible';
     }

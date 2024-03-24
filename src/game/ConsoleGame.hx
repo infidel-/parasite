@@ -620,19 +620,18 @@ class ConsoleGame
       // XXX dg - show graphics objects info
       if (cmd.charAt(1) == 'g')
         {
-          log('Scene children objects: ' + game.scene.numChildren +
-            '<br/>Scene total objects: ' + game.scene.getObjectsCount());
+          log('Disabled for now.');
         }
       // XXX dai - show ai view/hear info
       else if (cmd == 'dai')
         {
           log(
             'Window resolution: ' +
-            game.scene.win.width + 'x' + game.scene.win.height +
+            game.scene.canvas.width + 'x' + game.scene.canvas.height +
             ', scale: ' + (game.config.mapScale * 100) +
             '%, tile resolution: ' +
-            Std.int(game.scene.win.width / Const.TILE_SIZE) + 'x' +
-            Std.int(game.scene.win.height / Const.TILE_SIZE) +
+            Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
+            Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
             ', AI view distance: ' + ai.AI.VIEW_DISTANCE +
             ', AI hear distance: ' + ai.AI.HEAR_DISTANCE +
             '<br>Current area, max AI: ' + game.area.getMaxAI() +

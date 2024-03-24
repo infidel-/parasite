@@ -2,7 +2,6 @@
 
 package game;
 
-import hxd.Key;
 import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;

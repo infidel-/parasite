@@ -4,7 +4,6 @@
 -D resourcesPath=../assets.paid.web/
 -D js-es=6
 -dce no
--lib heaps
 -js ../bin/parasite.js
 -main Main
 

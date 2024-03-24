@@ -2,31 +2,18 @@
 
 import js.Browser;
 import js.html.CanvasElement;
-import h2d.Font;
-import h2d.Interactive;
-import h2d.Scene;
-import h2d.Tile;
-import hxd.Key;
-import hxd.System;
-import hxd.Window;
 import js.Browser;
 
 import ui.*;
 import game.Game;
 
-class GameScene extends Scene
+class GameScene
 {
   public var game: Game; // game state link
   public var area: AreaView; // area view
   public var region: RegionView; // region view
-  var tilemapInt: Interactive; // tilemap interactive
   public var mouse: Mouse; // mouse cursor entity
-  public var win: Window;
-  public var font: Font;
-  public var font40: Font;
   public var sounds: Sounds;
-  public var entityAtlas: Array<Array<Tile>>; // entity graphics
-  public var tileAtlas: Array<Tile>; // tile graphics
   public var controlPressed: Bool; // Ctrl key pressed?
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
@@ -36,6 +23,8 @@ class GameScene extends Scene
   // new draw
   public var images: Images;
   public var canvas: CanvasElement;
+  public var mouseX: Float;
+  public var mouseY: Float;
 
   // camera x,y
   public var cameraTileX1: Int;
@@ -50,9 +39,7 @@ class GameScene extends Scene
 
   public function new(g: Game)
     {
-      super();
       isFocused = true; // may not be true but we want the game to play immediately
-      win = Window.getInstance();
       isFullScreen = false;
       game = g;
       controlPressed = false;
@@ -86,38 +73,10 @@ class GameScene extends Scene
           Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
       canvas = cast Browser.document.getElementById("canvas");
 
-      // allow repeating keypresses
-      Key.ALLOW_KEY_REPEAT = true;
-
-      // load all entity images into atlas
       images = new Images(this);
-      var res = hxd.Res.load('graphics/entities' + Const.TILE_SIZE_CLEAN +
-        '.png').toTile();
-      entityAtlas = res.grid(Const.TILE_SIZE_CLEAN);
-      var res = hxd.Res.load('graphics/tileset' + Const.TILE_SIZE_CLEAN +
-        '.png').toTile();
-      tileAtlas = res.gridFlatten(Const.TILE_SIZE_CLEAN);
-      font = hxd.Res.load('font/OrkneyRegular24.fnt').to(hxd.res.BitmapFont).toFont();
-      font40 = hxd.Res.font.OrkneyRegular40.toFont();
-
-      // scale atlases if needed
-      if (game.config.mapScale != 1)
-        {
-          for (tile in tileAtlas)
-            tile.scaleToSize(Const.TILE_SIZE, Const.TILE_SIZE);
-          for (i in 0...entityAtlas.length)
-            for (j in 0...entityAtlas[i].length)
-              entityAtlas[i][j].scaleToSize(Const.TILE_SIZE,
-                Const.TILE_SIZE);
-        }
-
       mouse = new Mouse(game);
       area = new AreaView(this);
       region = new RegionView(this);
-
-      // add screen-sized tilemap interactive object
-      tilemapInt = new h2d.Interactive(win.width, win.height);
-      this.add(tilemapInt, Const.LAYER_TILEMAP);
 
       // init sound
       sounds = new Sounds(this);
@@ -168,6 +127,9 @@ class GameScene extends Scene
 #end
       // hack: bugs out otherwise
       game.scene.mouse.setCursor(Mouse.CURSOR_MOVE);
+
+      // run game timer
+      Browser.window.setInterval(game.update, 20);
     }
 
 
@@ -223,11 +185,11 @@ class GameScene extends Scene
       // force update mouse and path
       mouse.update(true);
       // redraw scene
-      draw1();
+      draw();
     }
 
 // redraw scene
-  public function draw1()
+  public function draw()
     {
       // clear canvas
       var ctx = canvas.getContext('2d');
@@ -257,8 +219,6 @@ class GameScene extends Scene
     {
       canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
-      tilemapInt.width = win.width;
-      tilemapInt.height = win.height;
       updateCamera();
       if (game.location == LOCATION_AREA)
         {

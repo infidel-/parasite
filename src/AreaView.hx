@@ -128,7 +128,7 @@ class AreaView
       if (clearAll)
         game.playerArea.clearPath();
       path = null;
-      scene.draw1();
+      scene.draw();
     }
 
 
@@ -139,7 +139,7 @@ class AreaView
       if (path == null)
         return;
       path.pop();
-      scene.draw1();
+      scene.draw();
     }
 
 // hide gui
@@ -170,7 +170,7 @@ class AreaView
       if (game.player.state == PLR_STATE_HOST)
         updateVisibilityHost();
       else updateVisibilityParasite();
-      scene.draw1();
+      scene.draw();
     }
 
 

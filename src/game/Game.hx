@@ -253,7 +253,7 @@ class Game extends _SaveObject
     {
       restartPre();
       init(false);
-      scene.draw1();
+      scene.draw();
     }
 
 
@@ -503,6 +503,7 @@ class Game extends _SaveObject
     }
 
 // path movement/continuous actions
+// called from timer
   public function update()
     {
       if (isFinished)

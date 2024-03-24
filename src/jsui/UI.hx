@@ -45,6 +45,9 @@ class UI
       Browser.document.onkeydown = onKey;
       Browser.document.onkeyup = onKeyUp;
       canvas.onmousemove = function (e: MouseEvent) {
+        game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
+        game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
+        game.scene.mouse.update();
         hud.onMouseMove(e);
       }
       canvas.onclick = function (e: MouseEvent) {

@@ -112,7 +112,7 @@ class RegionView
       if (clearAll)
         game.playerRegion.clearPath();
       path = null;
-      scene.draw1();
+      scene.draw();
     }
 
 // updates visible path
@@ -140,7 +140,7 @@ class RegionView
             break;
           path.push({ x: xx, y: yy });
         }
-      scene.draw1();
+      scene.draw();
     }
 
 
