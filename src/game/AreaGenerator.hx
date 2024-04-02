@@ -9,10 +9,24 @@ import game.AreaGame;
 class AreaGenerator
 {
   public var game: Game;
+  public var facility: FacilityAreaGenerator;
+
+  public static var deltaMap: Map<Int, { x: Int, y: Int }>;
+  public static var DIR_UP = 8;
+  public static var DIR_LEFT = 4;
+  public static var DIR_RIGHT = 6;
+  public static var DIR_DOWN = 2;
 
   public function new(g: Game)
     {
       game = g;
+      facility = new FacilityAreaGenerator(game, this);
+      deltaMap = [
+        DIR_LEFT => { x: -1, y: 0 },
+        DIR_RIGHT => { x: 1, y: 0 },
+        DIR_UP => { x: 0, y: -1 },
+        DIR_DOWN => { x: 0, y: 1 },
+      ];
     }
 
 // generate area
@@ -29,7 +43,7 @@ class AreaGenerator
       else if (info.type == 'militaryBase')
         generateBuildings(game, area, info);
       else if (info.type == 'facility')
-        FacilityAreaGenerator.generate(game, area, info);
+        facility.generate(area, info);
       else if (info.type == 'wilderness')
         generateWilderness(game, area, info);
       else if (info.type == 'habitat')
@@ -671,7 +685,6 @@ class AreaGenerator
       return cnt;
     }
 
-
 // fill a square block with tile
   static function fillBlock(area: AreaGame, cells: Array<Array<Int>>,
       x: Int, y: Int, t: Int, w: Int)
@@ -906,6 +919,207 @@ class AreaGenerator
           }
     }
 
+// draw a w,h block at x,y 
+  public static function drawBlock(cells: Array<Array<Int>>, x: Int, y: Int,
+      w: Int, h: Int, tile: Int)
+    {
+      for (i in 0...w)
+        for (j in 0...h)
+          cells[x + i][y + j] = tile;
+    }
+
+// draw a chunk of a line of a given width and direction
+  public static function drawChunk(cells: Array<Array<Int>>, x: Int, y: Int,
+      w: Int, dir: Int, tile: Int)
+    {
+      if (dir == DIR_UP || dir == DIR_DOWN)
+        for (i in 0...w)
+          cells[x + i][y] = tile;
+      else for (i in 0...w)
+        cells[x][y + i] = tile;
+    }
+
+// draw an 2-dim array at x,y 
+  public static function drawArray(cells: Array<Array<Int>>, x: Int, y: Int,
+      block: Array<Array<Int>>)
+    {
+      for (i in 0...block[0].length)
+        for (j in 0...block.length)
+          cells[x + i][y + j] = block[j][i];
+    }
+
+// mark all A tiles to B tiles in rect
+  public static function replaceTiles(cells: Array<Array<Int>>,
+      sx: Int, sy: Int, w: Int, h: Int, from: Int, to: Int)
+    {
+      for (y in sy...sy + h + 1)
+        for (x in sx...sx + w + 1)
+          if (cells[x][y] == from)
+            cells[x][y] = to;
+    }
+
+// draw line from starting position into a given direction
+  public static function drawLine(cells: Array<Array<Int>>,
+      sx: Int, sy: Int, dir: Int, tile: Int): Int
+    {
+      var len = 0, x = sx, y = sy;
+      var delta = deltaMap[dir];
+      var startTile = cells[sx][sy];
+//      trace(startTile);
+      cells[sx][sy] = tile;
+      while (true)
+        {
+          len++;
+          if (len > 100)
+            {
+              trace('long corridor?');
+              break;
+            }
+          x += delta.x;
+          y += delta.y;
+          if (cells[x][y] != startTile)
+            break;
+          cells[x][y] = tile;
+//          trace(x + ',' + y + ' = ' + tile + cells[x][y]);
+        }
+//      trace('len:' + len);
+      return len - 1;
+    }
+
+// get potential door spots in room
+  public static function getRoomDoorSpots(room: _Room): Array<_Spot>
+    {
+      return [
+        {
+          x: room.x1 - 1,
+          y: Std.int(room.y1 + room.h / 2),
+          dir: DIR_LEFT,
+          dir90: 0,
+        },
+        {
+          x: room.x2 + 1,
+          y: Std.int(room.y1 + room.h / 2),
+          dir: DIR_RIGHT,
+          dir90: 0,
+        },
+        {
+          x: Std.int(room.x1 + room.w / 2),
+          y: room.y1 - 1,
+          dir: DIR_UP,
+          dir90: 0,
+        },
+        {
+          x: Std.int(room.x1 + room.w / 2),
+          y: room.y2 + 1,
+          dir: DIR_DOWN,
+          dir90: 0,
+        },
+      ];
+    }
+
+// mark room as sub-divided
+  public static function markRoom(cells: Array<Array<Int>>,
+      room: _Room, tileID: Int)
+    {
+      for (y in room.y1...room.y2 + 1)
+        for (x in room.x1...room.x2 + 1)
+          cells[x][y] = tileID;
+    }
+
+// get room dimensions
+  public static function getRoom(cells: Array<Array<Int>>,
+      sx: Int, sy: Int): _Room 
+    {
+      var w = 0, h = 0;
+      var tile = cells[sx][sy];
+      while (true)
+        {
+          w++;
+          if (w > 100)
+            {
+              trace('room too large?');
+              break;
+            }
+
+          if (cells[sx + w][sy] != tile)
+            break;
+        }
+      while (true)
+        {
+          h++;
+          if (h > 100)
+            {
+              trace('room too large?');
+              break;
+            }
+
+          if (cells[sx][sy + h] != tile)
+            break;
+        }
+      w--;
+      h--;
+      return {
+        id: -1,
+        x1: sx,
+        y1: sy,
+        x2: sx + w,
+        y2: sy + h,
+        w: w + 1,
+        h: h + 1,
+      }
+    }
+
+// check if this cell is next to a tile from a list
+  public static function nextToAny(cells: Array<Array<Int>>,
+      x: Int, y: Int, tiles: Array<Int>): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (Lambda.has(tiles, cells[x + Const.dir4x[i]][y + Const.dir4y[i]]))
+          return true;
+      return false;
+    }
+
+// check if this cell is next to a given tile
+  public static function nextTo(cells: Array<Array<Int>>,
+      x: Int, y: Int, tile: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == tile)
+          return true;
+      return false;
+    }
+
+// get room wall corner spots with wall directions
+  public static function getRoomWallCorners(room: _Room): Array<_Spot>
+    {
+      return [
+        {
+          x: room.x1 - 1,
+          y: room.y1 - 1,
+          dir: DIR_RIGHT,
+          dir90: DIR_DOWN,
+        },
+        {
+          x: room.x1 - 1,
+          y: room.y2 + 1,
+          dir: DIR_RIGHT,
+          dir90: DIR_UP,
+        },
+        {
+          x: room.x1 - 1,
+          y: room.y1 - 1,
+          dir: DIR_DOWN,
+          dir90: DIR_RIGHT,
+        },
+        {
+          x: room.x2 + 1,
+          y: room.y1 - 1,
+          dir: DIR_DOWN,
+          dir90: DIR_LEFT,
+        },
+      ];
+    }
+
   static var TEMP_BUILDING = 0;
   static var TEMP_ROAD = 1;
   static var TEMP_ALLEY = 2;
@@ -928,7 +1142,6 @@ enum _LineDir
   RL;
 }
 
-
 typedef _GeneratorState = {
   alleys: List<{
     x: Int,
@@ -942,7 +1155,6 @@ typedef _GeneratorState = {
   blockSize: Int,
 }
 
-
 typedef _Block = {
   x1: Int,
   y1: Int,
@@ -950,4 +1162,18 @@ typedef _Block = {
   y2: Int,
   w: Int,
   h: Int,
+}
+typedef _Door = {
+  x: Int,
+  y: Int,
+  dir: Int,
+  roomID1: Int,
+  roomID2: Int,
+  skip: Bool,
+}
+typedef _Spot = {
+  x: Int,
+  y: Int,
+  dir: Int,
+  dir90: Int,
 }

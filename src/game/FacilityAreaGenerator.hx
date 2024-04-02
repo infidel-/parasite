@@ -6,18 +6,18 @@ import const.WorldConst;
 import Const;
 import objects.*;
 import game.AreaGame;
+import game.AreaGenerator;
+import game.AreaGenerator.*;
 
 class FacilityAreaGenerator
 {
-// entry-point for facility generation
-  public static function generate(game: Game, area: AreaGame, info: AreaInfo)
+  var game: Game;
+  var gen: AreaGenerator;
+
+  public function new(g: Game, gn: AreaGenerator)
     {
-      deltaMap = [
-        DIR_LEFT => { x: -1, y: 0 },
-        DIR_RIGHT => { x: 1, y: 0 },
-        DIR_UP => { x: 0, y: -1 },
-        DIR_DOWN => { x: 0, y: 1 },
-      ];
+      game = g;
+      gen = gn;
       finalTiles = [
         TEMP_ROAD => Const.TILE_ROAD,
         TEMP_WALKWAY => Const.TILE_WALKWAY,
@@ -43,8 +43,12 @@ class FacilityAreaGenerator
         TEMP_HANGAR_SIDE_DOOR => Const.TILE_FLOOR_TILE_CANNOTSEE,
         TEMP_BUILDING_VENT => Const.TILE_BUILDING,
       ];
+    }
+
+// entry-point for facility generation
+  public function generate(area: AreaGame, info: AreaInfo)
+    {
       var state: _FacilityState = {
-        game: game,
         area: area,
         info: info,
         mainRoadNorth: (Std.random(100) < 50 ? true : false),
@@ -113,7 +117,7 @@ class FacilityAreaGenerator
       generateHangar(state, hangarx, hangary, hangarw, hangarh);
 
       // trace area
-//      AreaGenerator.printArea(state.game, state.area, mapTempTiles);
+//      AreaGenerator.printArea(game, state.area, mapTempTiles);
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
@@ -121,7 +125,7 @@ class FacilityAreaGenerator
     }
 
 // generate a hangar of a given size at given coordinates
-  static function generateHangar(state: _FacilityState,
+  function generateHangar(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
       var area = state.area;
@@ -167,7 +171,7 @@ class FacilityAreaGenerator
     }
 
 // generate a single building of a given size at given coordinates
-  static function generateBuilding(state: _FacilityState,
+  function generateBuilding(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
 //      trace('b: ' + bx + ',' + by + ' sz:' + bw + ',' + bh);
@@ -336,7 +340,7 @@ class FacilityAreaGenerator
 // sub-divide larger rooms
 // if isFinal is true, mark with room ids
 // if it is false, mark with TEMP_BUILDING_ROOM_MARKED
-  static function subdivideLargeRooms(state: _FacilityState,
+  function subdivideLargeRooms(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
       var area = state.area;
@@ -406,7 +410,7 @@ class FacilityAreaGenerator
     }
   
 // make inner wall doors
-  static function makeDoors(state: _FacilityState,
+  function makeDoors(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
       var area = state.area;
@@ -481,7 +485,7 @@ class FacilityAreaGenerator
 
 // remove double doors into the same rooms
 // fix room clusters that have no exit into any corridors
-  static function fixDoors(state: _FacilityState,
+  function fixDoors(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
       var doors = state.doors;
@@ -576,7 +580,7 @@ class FacilityAreaGenerator
     }
 
 // find a wall adjacent to a corridor and make a hole in it
-  static function makeDoorToCorridor(state: _FacilityState, roomID: Int): Bool
+  function makeDoorToCorridor(state: _FacilityState, roomID: Int): Bool
     {
       // find room
       var area = state.area;
@@ -617,7 +621,7 @@ class FacilityAreaGenerator
     }
 
 // make windows
-  static function makeWindows(state: _FacilityState,
+  function makeWindows(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
     {
       var area = state.area;
@@ -805,7 +809,7 @@ class FacilityAreaGenerator
     }
 
 // fill rooms with content
-  static function generateRoomContents(state: _FacilityState)
+  function generateRoomContents(state: _FacilityState)
     {
       for (room in state.rooms)
         {
@@ -814,7 +818,7 @@ class FacilityAreaGenerator
     }
 
 // make this room a chem lab
-  static function roomChemistryLab(state: _FacilityState, room: _Room)
+  function roomChemistryLab(state: _FacilityState, room: _Room)
     {
       var area = state.area;
       var cells = area.getCells();
@@ -825,7 +829,7 @@ class FacilityAreaGenerator
       cells[cx][cy] = Const.TILE_FLOOR_TILE + 1 + Std.random(3);
       if (Std.random(100) < 30)
         {
-          var o = new FloorDrain(state.game, area.id, cx, cy);
+          var o = new FloorDrain(game, area.id, cx, cy);
           state.area.addObject(o);
         }
 
@@ -853,17 +857,17 @@ class FacilityAreaGenerator
     }
 
 // add decoration from a list
-  static function addDecoration(state: _FacilityState, x: Int, y: Int, infos: Array<_TileRow>)
+  function addDecoration(state: _FacilityState, x: Int, y: Int, infos: Array<_TileRow>)
     {
       var info = infos[Std.random(infos.length)];
       var col = Std.random(info.amount);
-      var o = new Decoration(state.game, state.area.id,
+      var o = new Decoration(game, state.area.id,
         x, y, info.row, col);
       state.area.addObject(o);
     }
 
 // check a w,h block at x,y if it is near a door
-  static function isBlockNearDoor(cells: Array<Array<Int>>, x: Int, y: Int,
+  function isBlockNearDoor(cells: Array<Array<Int>>, x: Int, y: Int,
       w: Int, h: Int): Bool
     {
       for (i in -1...w + 1)
@@ -873,107 +877,8 @@ class FacilityAreaGenerator
       return false;
     }
 
-// mark all A tiles to B tiles in rect
-  static function replaceTiles(cells: Array<Array<Int>>,
-      sx: Int, sy: Int, w: Int, h: Int, from: Int, to: Int)
-    {
-      for (y in sy...sy + h + 1)
-        for (x in sx...sx + w + 1)
-          if (cells[x][y] == from)
-            cells[x][y] = to;
-    }
-
-// draw line from starting position into a given direction
-  static function drawLine(cells: Array<Array<Int>>,
-      sx: Int, sy: Int, dir: Int, tile: Int): Int
-    {
-      var len = 0, x = sx, y = sy;
-      var delta = deltaMap[dir];
-      var startTile = cells[sx][sy];
-//      trace(startTile);
-      cells[sx][sy] = tile;
-      while (true)
-        {
-          len++;
-          if (len > 100)
-            {
-              trace('long corridor?');
-              break;
-            }
-          x += delta.x;
-          y += delta.y;
-          if (cells[x][y] != startTile)
-            break;
-          cells[x][y] = tile;
-//          trace(x + ',' + y + ' = ' + tile + cells[x][y]);
-        }
-//      trace('len:' + len);
-      return len - 1;
-    }
-
-// mark room as sub-divided
-  static function markRoom(cells: Array<Array<Int>>,
-      room: _Room, tileID: Int)
-    {
-      for (y in room.y1...room.y2 + 1)
-        for (x in room.x1...room.x2 + 1)
-          cells[x][y] = tileID;
-    }
-
-// get room dimensions
-  static function getRoom(cells: Array<Array<Int>>,
-      sx: Int, sy: Int): _Room 
-    {
-      var w = 0, h = 0;
-      while (true)
-        {
-          w++;
-          if (w > 100)
-            {
-              trace('room too large?');
-              break;
-            }
-
-          if (cells[sx + w][sy] != TEMP_BUILDING_ROOM)
-            break;
-        }
-      while (true)
-        {
-          h++;
-          if (h > 100)
-            {
-              trace('room too large?');
-              break;
-            }
-
-          if (cells[sx][sy + h] != TEMP_BUILDING_ROOM)
-            break;
-        }
-      w--;
-      h--;
-      return {
-        id: -1,
-        x1: sx,
-        y1: sy,
-        x2: sx + w,
-        y2: sy + h,
-        w: w + 1,
-        h: h + 1,
-      }
-    }
-
-// check if this cell is next to a tile from a list
-  static function nextToAny(cells: Array<Array<Int>>,
-      x: Int, y: Int, tiles: Array<Int>): Bool
-    {
-      for (i in 0...Const.dir4x.length)
-        if (Lambda.has(tiles, cells[x + Const.dir4x[i]][y + Const.dir4y[i]]))
-          return true;
-      return false;
-    }
-
 // check if this cell is next to a window
-  static function nextToWindow(cells: Array<Array<Int>>,
+  function nextToWindow(cells: Array<Array<Int>>,
       x: Int, y: Int): Bool
     {
       var tile = 0;
@@ -987,18 +892,8 @@ class FacilityAreaGenerator
       return false;
     }
 
-// check if this cell is next to a given tile
-  static function nextTo(cells: Array<Array<Int>>,
-      x: Int, y: Int, tile: Int): Bool
-    {
-      for (i in 0...Const.dir4x.length)
-        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == tile)
-          return true;
-      return false;
-    }
-
 // calc distance from this point to end of the main corridor
-  static function distanceToFinish(cells: Array<Array<Int>>,
+  function distanceToFinish(cells: Array<Array<Int>>,
       sx: Int, sy: Int, dir: Int): Int
     {
       var len = 0, x = sx, y = sy;
@@ -1020,7 +915,7 @@ class FacilityAreaGenerator
     }
 
 // draw a narrow side corridor
-  static function drawSideCorridor(cells: Array<Array<Int>>,
+  function drawSideCorridor(cells: Array<Array<Int>>,
       sx: Int, sy: Int, dir: Int)
     {
       var len = 0, x = sx, y = sy;
@@ -1051,99 +946,8 @@ class FacilityAreaGenerator
         }
     }
 
-// get potential door spots in room
-  static function getRoomDoorSpots(room: _Room): Array<_Spot>
-    {
-      return [
-        {
-          x: room.x1 - 1,
-          y: Std.int(room.y1 + room.h / 2),
-          dir: DIR_LEFT,
-          dir90: 0,
-        },
-        {
-          x: room.x2 + 1,
-          y: Std.int(room.y1 + room.h / 2),
-          dir: DIR_RIGHT,
-          dir90: 0,
-        },
-        {
-          x: Std.int(room.x1 + room.w / 2),
-          y: room.y1 - 1,
-          dir: DIR_UP,
-          dir90: 0,
-        },
-        {
-          x: Std.int(room.x1 + room.w / 2),
-          y: room.y2 + 1,
-          dir: DIR_DOWN,
-          dir90: 0,
-        },
-      ];
-    }
-
-// get room wall corner spots with wall directions
-  static function getRoomWallCorners(room: _Room): Array<_Spot>
-    {
-      return [
-        {
-          x: room.x1 - 1,
-          y: room.y1 - 1,
-          dir: DIR_RIGHT,
-          dir90: DIR_DOWN,
-        },
-        {
-          x: room.x1 - 1,
-          y: room.y2 + 1,
-          dir: DIR_RIGHT,
-          dir90: DIR_UP,
-        },
-        {
-          x: room.x1 - 1,
-          y: room.y1 - 1,
-          dir: DIR_DOWN,
-          dir90: DIR_RIGHT,
-        },
-        {
-          x: room.x2 + 1,
-          y: room.y1 - 1,
-          dir: DIR_DOWN,
-          dir90: DIR_LEFT,
-        },
-      ];
-    }
-
-// draw a chunk of a line of a given width and direction
-  static function drawChunk(cells: Array<Array<Int>>, x: Int, y: Int,
-      w: Int, dir: Int, tile: Int)
-    {
-      if (dir == DIR_UP || dir == DIR_DOWN)
-        for (i in 0...w)
-          cells[x + i][y] = tile;
-      else for (i in 0...w)
-        cells[x][y + i] = tile;
-    }
-
-// draw a w,h block at x,y 
-  static function drawBlock(cells: Array<Array<Int>>, x: Int, y: Int,
-      w: Int, h: Int, tile: Int)
-    {
-      for (i in 0...w)
-        for (j in 0...h)
-          cells[x + i][y + j] = tile;
-    }
-
-// draw an 2-dim array at x,y 
-  static function drawArray(cells: Array<Array<Int>>, x: Int, y: Int,
-      block: Array<Array<Int>>)
-    {
-      for (i in 0...block[0].length)
-        for (j in 0...block.length)
-          cells[x + i][y + j] = block[j][i];
-    }
-
 // replace all temp tiles into final ones
-  static function finalizeTiles(state: _FacilityState)
+  function finalizeTiles(state: _FacilityState)
     {
       var area = state.area;
       var cells = area.getCells();
@@ -1154,32 +958,32 @@ class FacilityAreaGenerator
             // spawn doors
             if (tileID == TEMP_BUILDING_FRONT_DOOR)
               {
-                var o = new Door(state.game, area.id, x, y,
+                var o = new Door(game, area.id, x, y,
                   Const.ROW_DOORS, Const.FRAME_DOOR_DOUBLE);
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_BUILDING_SIDE_DOOR)
               {
-                var o = new Door(state.game, area.id, x, y,
+                var o = new Door(game, area.id, x, y,
                   Const.ROW_DOORS, Const.FRAME_DOOR_GLASS);
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_BUILDING_INNER_DOOR)
               {
-                var o = new Door(state.game, area.id, x, y,
+                var o = new Door(game, area.id, x, y,
                   Const.ROW_DOORS, Const.FRAME_DOOR_CABINET);
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_HANGAR_SIDE_DOOR)
               {
-                var o = new Door(state.game, area.id, x, y,
+                var o = new Door(game, area.id, x, y,
                   Const.ROW_DOORS, Const.FRAME_DOOR_METAL);
                 state.area.addObject(o);
               }
             // spawn vent object
             else if (tileID == TEMP_BUILDING_VENT)
               {
-                var o = new Vent(state.game, area.id, x, y);
+                var o = new Vent(game, area.id, x, y);
                 state.area.addObject(o);
               }
             // randomize greenery
@@ -1209,24 +1013,13 @@ class FacilityAreaGenerator
     }
 
   static var finalTiles: Map<Int, Int>;
-  static var deltaMap: Map<Int, { x: Int, y: Int }>;/* = [
-    DIR_LEFT => { x: -1, y: 0 },
-    DIR_RIGHT => { x: 1, y: 0 },
-    DIR_UP => { x: 0, y: -1 },
-    DIR_DOWN => { x: 0, y: 1 },
-  ];*/
-
-  static var DIR_UP = 8;
-  static var DIR_LEFT = 4;
-  static var DIR_RIGHT = 6;
-  static var DIR_DOWN = 2;
 
   static var ROOM_SIZE = 7; // 6 + 1 wall
   static var TEMP_ROAD = 0;
   static var TEMP_WALKWAY = 1;
   static var TEMP_ALLEY = 2;
   static var TEMP_GRASS = 3;
-  static var TEMP_CONCRETE= 4;
+  static var TEMP_CONCRETE = 4;
   // first building tile!
   static var TEMP_BUILDING_WALL = 10;
   static var TEMP_BUILDING_ROOM = 11;
@@ -1257,7 +1050,6 @@ class FacilityAreaGenerator
 }
 
 typedef _FacilityState = {
-  var game: Game;
   var area: AreaGame;
   var info: AreaInfo;
   var mainRoadNorth: Bool;
@@ -1265,18 +1057,4 @@ typedef _FacilityState = {
   // temp state
   var rooms: Array<_Room>;
   var doors: Array<_Door>;
-}
-typedef _Door = {
-  x: Int,
-  y: Int,
-  dir: Int,
-  roomID1: Int,
-  roomID2: Int,
-  skip: Bool,
-}
-typedef _Spot = {
-  x: Int,
-  y: Int,
-  dir: Int,
-  dir90: Int,
 }
