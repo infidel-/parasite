@@ -7,19 +7,18 @@ import game.Game;
 
 class RegionObject extends _SaveObject
 {
-//  static var _ignoredFields = [];
+  static var _ignoredFields = [ 'icon' ];
   var game: Game; // game state link
 
   public var type: String; // object type
   public var name: String; // object name
+  public var icon: _Icon; // object icon
 
   public var id: Int; // unique object id
 //  public var areaID: Int;
   public static var _maxID: Int = 1; // current max ID
   public var x: Int; // grid x,y
   public var y: Int;
-//  public var imageRow: Int;
-//  public var imageCol: Int;
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -27,7 +26,7 @@ class RegionObject extends _SaveObject
       id = (_maxID++);
       x = vx;
       y = vy;
-//      imageCol = -1;
+      icon = null;
 
 // will be called by sub-classes
 //      init();
@@ -39,22 +38,11 @@ class RegionObject extends _SaveObject
     {
       type = 'undefined';
       name = 'undefined';
-//      imageRow = Const.ROW_OBJECT;
     }
 
 // called after load or creation
   public function initPost(onLoad: Bool)
-    {
-/*
-      tile = game.scene.entityAtlas[imageCol][imageRow];
-      // add to current area
-      if (!onLoad)
-        {
-          var area = game.region.get(areaID);
-          area.addObject(this);
-          createEntity();
-        }*/
-    }
+    {}
 
 // object action
   public function action(a: _PlayerAction)

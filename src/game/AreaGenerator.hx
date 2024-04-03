@@ -10,6 +10,7 @@ class AreaGenerator
 {
   public var game: Game;
   public var facility: FacilityAreaGenerator;
+  public var corp: CorpAreaGenerator;
 
   public static var deltaMap: Map<Int, { x: Int, y: Int }>;
   public static var DIR_UP = 8;
@@ -21,6 +22,7 @@ class AreaGenerator
     {
       game = g;
       facility = new FacilityAreaGenerator(game, this);
+      corp = new CorpAreaGenerator(game, this);
       deltaMap = [
         DIR_LEFT => { x: -1, y: 0 },
         DIR_RIGHT => { x: 1, y: 0 },
@@ -48,6 +50,8 @@ class AreaGenerator
         generateWilderness(game, area, info);
       else if (info.type == 'habitat')
         generateHabitat(game, area, info);
+      else if (info.type == 'corp')
+        corp.generate(area, info);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
 
       if (info.type == 'city')

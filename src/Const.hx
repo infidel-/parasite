@@ -70,6 +70,7 @@ class Const
   public static var FRAME_EVENT_NPC_AREA = 5;
   public static var FRAME_HABITAT_AMBUSHED = 6;
   public static var FRAME_OVUM = 7;
+  public static var FRAME_CORPHQ = 8;
 
   // object row frames
   public static var ROW_OBJECT = 2;

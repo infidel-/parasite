@@ -270,6 +270,14 @@ class RegionGame extends _SaveObject
       spawnArea(AREA_FACILITY, true);
       spawnArea(AREA_FACILITY, true);
       spawnArea(AREA_FACILITY, true);
+      // spawn 2 corp offices
+      for (i in 0...2)
+        {
+          var a = getRandomWithType(AREA_CITY_HIGH, true);
+          var o = new region.CorpHQ(game, a.x, a.y);
+          addObject(o);
+          a.setType(AREA_CORP);
+        }
     }
 
 

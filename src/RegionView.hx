@@ -234,7 +234,7 @@ class RegionView
 
       // area icons
       untyped ctx.imageSmoothingEnabled = true;
-      for (i in 0...5)
+      for (i in 0...6)
         {
           var icon = null;
           switch (i)
@@ -265,14 +265,11 @@ class RegionView
                         hab.area.id == area.habitatAreaID)
                       icon.col = Const.FRAME_HABITAT_AMBUSHED;
                   }
-              // ovum
+              // region object
               case 4:
                 var o = game.region.getObjectAt(area.x, area.y);
-                if (o != null && o.type == 'ovum')
-                  icon = {
-                    row: Const.ROW_REGION_ICON,
-                    col: Const.FRAME_OVUM,
-                  };
+                if (o != null && area.isKnown)
+                  icon = o.icon;
             }
           if (icon == null)
             continue;
@@ -303,6 +300,4 @@ class RegionView
           Math.abs(game.playerRegion.y - a.y) < 2) || a.isKnown);
     }
 }
-
-typedef _Icon = { row: Int, col: Int };
 

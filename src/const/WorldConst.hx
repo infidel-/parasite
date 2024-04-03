@@ -204,6 +204,34 @@ class WorldConst
         ai: new Map(),
         objects: []
       },
+
+      // *** corpo building floor
+      AREA_CORP => {
+        id: AREA_CORP,
+        // TODO
+        ambient: AMBIENT_FACILITY,
+        type: 'corp',
+        name: 'Corporate HQ',
+        pediaArticle: 'areaCorp',
+        alertnessMod: 1.5,
+        width: 50,
+        height: 50,
+        canEnter: true,
+        isInhabited: true,
+        commonAI: 5,
+        uncommonAI: 0,
+        buildingChance: 0.006,
+        lawResponseTime: 5,
+        lawResponseAmount: 2,
+        lawResponseMax: 4,
+        lawResponseEnabled: true,
+        isHighRisk: true,
+        ai: [
+          'scientist' => 90,
+          'security' => 10
+        ],
+        objects: [] // moved to facility generator
+      },
     ];
 
 
@@ -264,6 +292,9 @@ typedef AreaInfo = {
   var isHighRisk: Bool; // is this area type considered high risk?
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info
+  // area alertness modifier on alertness propagation and increase/decrease
+  // < 1.0 - slow 
+  // > 1.0 - fast
   var alertnessMod: Float;
   var pediaArticle: String; // pedia article
 };

@@ -9,5 +9,6 @@ enum _AreaType
   AREA_MILITARY_BASE;
   AREA_FACILITY;
   AREA_HABITAT;
+  AREA_CORP;
 }
 

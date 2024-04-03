@@ -205,14 +205,19 @@ Alt+0-5 - equals F1-F5<br>
           text: "This is a generic city area that can be of low, medium or high density. The density will change the amount of civilians and police wandering around. Entering the high density area will give the parasite an idea...",
         },
         {
-          id: 'areaLab',
-          name: 'Research Facility',
-          text: "The laboratories and research facilities mostly contain lab equipment and scientists with security patrolling around.",
+          id: 'areaCorp',
+          name: 'Corporate HQ',
+          text: "Corporate HQs have corporate workers and management. TODO",
         },
         {
           id: 'areaMilitary',
           name: 'Military Base',
           text: "All military bases have soldiers and officers walking around.",
+        },
+        {
+          id: 'areaLab',
+          name: 'Research Facility',
+          text: "The laboratories and research facilities mostly contain lab equipment and scientists with security patrolling around.",
         },
         {
           id: 'areaUninhabited',

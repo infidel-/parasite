@@ -757,13 +757,26 @@ class AreaGame extends _SaveObject
       return tmp[Std.random(tmp.length)];
     }
 
+// replace area type and reinit
+  public function setType(t: _AreaType)
+    {
+      typeID = t;
+      info = WorldConst.getAreaInfo(typeID);
+      width = info.width - 10 + 10 * Std.random(2);
+      height = info.height - 10 + 10 * Std.random(2);
+
+      // set name
+      name = info.name;
+      if (typeID == AREA_MILITARY_BASE)
+        name = NameConst.generate('%baseA1% %baseB1%');
+      else if (typeID == AREA_FACILITY)
+        name = NameConst.generate('%tree1% %geo1% %lab1%');
+    }
 
 // update area type after change
   public function updateType()
     {
-      info = WorldConst.getAreaInfo(typeID);
-      width = info.width - 10 + 10 * Std.random(2);
-      height = info.height - 10 + 10 * Std.random(2);
+      setType(typeID);
 
       if (typeID == AREA_GROUND)
         tileID = Const.TILE_REGION_GROUND;
@@ -799,13 +812,6 @@ class AreaGame extends _SaveObject
       else if (typeID == AREA_FACILITY)
         tileID = Const.TILE_FACILITY1 +
           Std.random(Const.TILE_MILITARY_BASE1 - Const.TILE_FACILITY1);
-
-      // set name
-      name = info.name;
-      if (typeID == AREA_MILITARY_BASE)
-        name = NameConst.generate('%baseA1% %baseB1%');
-      else if (typeID == AREA_FACILITY)
-        name = NameConst.generate('%tree1% %geo1% %lab1%');
     }
 
 

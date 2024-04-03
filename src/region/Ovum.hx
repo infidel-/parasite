@@ -26,6 +26,10 @@ class Ovum extends RegionObject
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+      icon = {
+        row: Const.ROW_REGION_ICON,
+        col: Const.FRAME_OVUM,
+      };
     }
 
 // update actions
@@ -50,7 +54,7 @@ class Ovum extends RegionObject
     }
 
 
-// activate sewers - leave area
+// activate ovum - open ovum ui
   override function onAction(action: _PlayerAction): Bool
     {
       if (action.id == 'setImprovements')
