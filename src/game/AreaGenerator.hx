@@ -110,6 +110,7 @@ class AreaGenerator
       var s = 'XX: ';
       for (i in 0...Std.int(cells.length / 10))
         s += '|123456789';
+      js.Browser.console.group();
       js.Browser.console.log(s);
       var list = '';
       var lastRoomID = 0;
@@ -121,6 +122,8 @@ class AreaGenerator
             {
               tileID = cells[x][y];
               var char = mapTiles[cells[x][y]];
+//              if (char == null)
+//                trace(cells[x][y]);
               s += (char != null ? char : '?');
 /*
               // room IDs after
@@ -144,6 +147,7 @@ class AreaGenerator
           js.Browser.console.log((y < 10 ? '0' : '') + y + ': ' + s);
         }
       js.Browser.console.log(list);
+      js.Browser.console.groupEnd();
     }
 
 // generate a city block

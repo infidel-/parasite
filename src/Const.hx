@@ -134,6 +134,8 @@ class Const
   public static var FRAME_DOOR_GLASS_OPEN = 5;
   public static var FRAME_DOOR_METAL = 6;
   public static var FRAME_DOOR_METAL_OPEN = 7;
+  public static var FRAME_DOOR_CORP = 8;
+  public static var FRAME_DOOR_CORP_OPEN = 9;
 
   // row 16 - floor drain
   public static var ROW_OBJECT_INDOOR = 16;
@@ -154,6 +156,49 @@ class Const
   // row 21,22 - spaceship
   public static var SPACESHIP_BLOCK: _TileBlock = 
     { row: 21, col: 0, width: 3, height: 2 };
+
+  // row 23 - corpo decoration
+  public static var CORP_COMPUTERS_BLOCK: _TileBlock = 
+    { row: 23, col: 0, width: 5, height: 1 };
+  public static var CORP_TABLE_MISC = [
+    { row: 23, col: 5, amount: 3 },
+    { row: 27, col: 10, amount: 2 },
+  ];
+  public static var CORP_TABLE_LAMP = [
+    { row: 23, col: 8, amount: 4 },
+  ];
+  public static var CORP_TABLE_PLANTS = [
+    { row: 24, amount: 12 },
+    { row: 25, amount: 6 },
+  ];
+  public static var CORP_TABLE_PHONE = [
+    { row: 25, col: 6, amount: 4 },
+  ];
+  public static var CORP_TABLE_FILES = [
+    { row: 26, amount: 11 },
+  ];
+  public static var CORP_TABLE_STATIONERY = [
+    { row: 27, amount: 10 },
+  ];
+  public static var CORP_TABLE_COFFEE = [
+    { row: 28, amount: 6 },
+  ];
+  public static var CORP_TABLE_PRINTER = [
+    { row: 28, col:6, amount: 5 },
+  ];
+  public static var CORP_TABLE_PROJECTOR = [
+    { row: 29, amount: 5 },
+  ];
+  public static var CORP_TABLE_ROUTER = [
+    { row: 29, col: 5, amount: 3 },
+  ];
+  public static var CORP_TABLE_MISC_LARGE = [
+    { row: 28, col: 11, amount: 1 },
+    { row: 29, col: 8, amount: 4 },
+  ];
+  public static var CORP_CHAIR = [
+    { row: 30, amount: 9 },
+  ];
 
   // ==============================================
   // ==============================================
@@ -251,6 +296,11 @@ class Const
   public static var TILE_LABS_TABLE2_1X3_1 = OFFSET_ROW8 + 7;
   public static var TILE_LABS_TABLE2_1X3_2 = OFFSET_ROW9 + 7;
   public static var TILE_LABS_TABLE2_1X3_3 = OFFSET_ROW10 + 7;
+  public static var LABS_TABLE_1X3 = [
+    TILE_LABS_TABLE_1X3_1,
+    TILE_LABS_TABLE_1X3_2,
+    TILE_LABS_TABLE_1X3_3,
+  ];
 
   // === row 11 - tables
   public static var OFFSET_ROW11 = 176;
@@ -258,6 +308,15 @@ class Const
   public static var TILE_LABS_TABLE_3X1_2 = OFFSET_ROW11 + 1;
   public static var TILE_LABS_TABLE_3X1_3 = OFFSET_ROW11 + 2;
   public static var TILE_LABS_TABLE_1X1 = OFFSET_ROW11 + 3;
+  public static var TILE_CORP_TABLE_3X1_1 = OFFSET_ROW11 + 8;
+  public static var TILE_CORP_TABLE_3X1_2 = OFFSET_ROW11 + 9;
+  public static var TILE_CORP_TABLE_3X1_3 = OFFSET_ROW11 + 10;
+  public static var TILE_CORP_TABLE_1X1 = OFFSET_ROW11 + 11;
+  public static var CORP_TABLE_3X1 = [
+    TILE_CORP_TABLE_3X1_1,
+    TILE_CORP_TABLE_3X1_2,
+    TILE_CORP_TABLE_3X1_3,
+  ];
 
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
   public static var TILE_LABS_TABLE2_3X1_2 = OFFSET_ROW11 + 5;
@@ -266,8 +325,30 @@ class Const
   // change check in AreaGame.initSpawnPoints() if you add more tables
   public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
 
-  // === row 12 -
-  public static var OFFSET_ROW12 = 240;
+  // === row 12 - corpo
+  public static var OFFSET_ROW12 = 192;
+  public static var TILE_CORP_WINDOW1 = OFFSET_ROW12 + 0;
+  public static var TILE_CORP_WINDOWH1 = OFFSET_ROW12 + 1;
+  public static var TILE_CORP_WINDOWH2 = OFFSET_ROW12 + 2;
+  public static var TILE_CORP_WINDOWH3 = OFFSET_ROW12 + 3;
+  public static var TILE_CORP_WINDOWV1 = OFFSET_ROW12 + 4;
+  public static var TILE_CORP_WINDOWV2 = OFFSET_ROW12 + 5;
+  public static var TILE_CORP_WINDOWV3 = OFFSET_ROW12 + 6;
+  public static var TILE_FLOOR_CARPET = OFFSET_ROW12 + 7;
+  public static var TILE_FLOOR_WOOD1 = OFFSET_ROW12 + 8;
+  public static var TILE_FLOOR_WOOD2 = OFFSET_ROW12 + 9;
+  public static var TILE_FLOOR_MARBLE1 = OFFSET_ROW12 + 10;
+  public static var TILE_FLOOR_MARBLE2 = OFFSET_ROW12 + 11;
+
+  // === row 13 - corpo
+  public static var OFFSET_ROW13 = 208;
+  public static var TILE_CORP_INNER_WINDOW1 = OFFSET_ROW13 + 0;
+  public static var TILE_CORP_INNER_WINDOWH1 = OFFSET_ROW13 + 1;
+  public static var TILE_CORP_INNER_WINDOWH2 = OFFSET_ROW13 + 2;
+  public static var TILE_CORP_INNER_WINDOWH3 = OFFSET_ROW13 + 3;
+  public static var TILE_CORP_INNER_WINDOWV1 = OFFSET_ROW13 + 4;
+  public static var TILE_CORP_INNER_WINDOWV2 = OFFSET_ROW13 + 5;
+  public static var TILE_CORP_INNER_WINDOWV3 = OFFSET_ROW13 + 6;
 
   public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_WALKABLE = [
@@ -292,6 +373,10 @@ class Const
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // row 12 - corpo
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 13 - corpo
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -314,6 +399,10 @@ class Const
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 12 - corpo
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 13 - corpo
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock',
@@ -539,5 +628,6 @@ class Const
     }
 }
 
-typedef _TileRow = { row: Int, amount: Int }
+typedef _TileGroup = Array<_TileRow>;
+typedef _TileRow = { row: Int, ?col: Int, amount: Int }
 typedef _TileBlock = { row: Int, col: Int, width: Int, height: Int }
