@@ -280,6 +280,7 @@ class FacilityAreaGenerator
               sideCorridorCount2 = 0;
             }
         }
+
       // side door/window
       if (Std.random(100) < 50)
         {

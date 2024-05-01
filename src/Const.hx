@@ -199,6 +199,68 @@ class Const
   public static var CORP_CHAIR = [
     { row: 30, amount: 9 },
   ];
+  public static var CORP_WHITEBOARD = [
+    { row: 31, amount: 8 },
+  ];
+  public static var CORP_COOLER = [
+    { row: 31, col: 8, amount: 2 },
+  ];
+  public static var CORP_PLANT = [
+    { row: 31, col: 10, amount: 2 },
+  ];
+  public static var CORP_CABINET = [
+    { row: 32, amount: 6 },
+  ];
+  public static var CORP_TRASH = [
+    { row: 32, col: 6, amount: 5 },
+  ];
+  public static var CORP_TAP = [
+    { row: 30, col: 9, amount: 2 },
+    { row: 32, col: 11, amount: 1 },
+  ];
+  public static var CORP_MACHINERY = [
+    { row: 33, amount: 7 },
+  ];
+  public static var CORP_FRIDGE = [
+    { row: 33, col: 7, amount: 5 },
+  ];
+  public static var CORP_VENDING = [
+    { row: 34, amount: 11 },
+  ];
+  public static var CORP_TABLE_CLEANING = [
+    { row: 35, amount: 12 },
+    { row: 36, amount: 4 },
+  ];
+  public static var CORP_TABLE_BLENDER = [
+    { row: 36, col: 4, amount: 7 },
+  ];
+  public static var CORP_TABLE_FRUIT = [
+    { row: 36, col: 11, amount: 1 },
+  ];
+  public static var CORP_TABLE_KETTLE = [
+    { row: 37, amount: 8 },
+  ];
+  public static var CORP_TABLE_MICROWAVE = [
+    { row: 37, col: 8, amount: 4 },
+  ];
+  public static var CORP_TABLE_TOILET_PAPER = [
+    { row: 38, amount: 6 },
+  ];
+  public static var CORP_TABLE_CONTAINER = [
+    { row: 38, col: 6, amount: 2 },
+  ];
+  public static var CORP_TABLE_TISSUE = [
+    { row: 38, col: 8, amount: 4 },
+  ];
+  public static var CORP_TABLE_SAUCES = [
+    { row: 39, amount: 5 },
+  ];
+  public static var CORP_TABLE_SALT = [
+    { row: 39, col: 5, amount: 4 },
+  ];
+  public static var CORP_TABLE_MUG = [
+    { row: 39, col: 9, amount: 3 },
+  ];
 
   // ==============================================
   // ==============================================
@@ -312,10 +374,15 @@ class Const
   public static var TILE_CORP_TABLE_3X1_2 = OFFSET_ROW11 + 9;
   public static var TILE_CORP_TABLE_3X1_3 = OFFSET_ROW11 + 10;
   public static var TILE_CORP_TABLE_1X1 = OFFSET_ROW11 + 11;
+  public static var TILE_CORP_TABLE_1X1_2 = OFFSET_ROW11 + 12;
   public static var CORP_TABLE_3X1 = [
     TILE_CORP_TABLE_3X1_1,
     TILE_CORP_TABLE_3X1_2,
     TILE_CORP_TABLE_3X1_3,
+  ];
+  public static var CORP_TABLE_WOOD1_2X2 = [
+    [ OFFSET_ROW8 + 8, OFFSET_ROW8 + 10 ],
+    [ OFFSET_ROW10 + 8, OFFSET_ROW10 + 10 ],
   ];
 
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
@@ -349,6 +416,11 @@ class Const
   public static var TILE_CORP_INNER_WINDOWV1 = OFFSET_ROW13 + 4;
   public static var TILE_CORP_INNER_WINDOWV2 = OFFSET_ROW13 + 5;
   public static var TILE_CORP_INNER_WINDOWV3 = OFFSET_ROW13 + 6;
+  public static var TILE_FLOOR_CARPET_UNWALKABLE = OFFSET_ROW12 + 7;
+  public static var TILE_FLOOR_WOOD1_UNWALKABLE = OFFSET_ROW12 + 8;
+  public static var TILE_FLOOR_WOOD2_UNWALKABLE = OFFSET_ROW12 + 9;
+  public static var TILE_FLOOR_MARBLE1_UNWALKABLE = OFFSET_ROW12 + 10;
+  public static var TILE_FLOOR_MARBLE2_UNWALKABLE = OFFSET_ROW12 + 11;
 
   public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_WALKABLE = [
@@ -376,7 +448,7 @@ class Const
     // row 12 - corpo
     0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 13 - corpo
-    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0

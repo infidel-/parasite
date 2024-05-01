@@ -274,13 +274,28 @@ class CorpAreaGenerator
 
       // work on individual rooms
       // TODO: meeting room, solo office
-      // TODO: small office ()
+      var numKitchen = 0, numMeeting = 0;
       for (room in state.rooms)
         {
-          // small office
-          if (room.w < 7 || room.h < 7)
-            1; // TODO
-          else roomWork(state, room);
+          //roomMeeting(room);
+          // small room
+          if (room.w < 7)
+            {
+              if (numKitchen < 2 && Std.random(100) < 85)
+                {
+                  numKitchen++;
+                  roomKitchen(room);
+                }
+/*
+              else if (numMeeting < 2 && Std.random(100) < 85)
+                {
+                  numMeeting++;
+                  roomMeeting(room);
+                }*/
+              // TODO: solo office
+              else 1;
+            }
+          else roomWork(room);
         }
 
 //      replaceTiles(cells, bx, by, bw, bh,
@@ -745,8 +760,151 @@ class CorpAreaGenerator
         }
     }
 
+// make this room a small kitchen
+  function roomKitchen(room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
+
+      // tables in the center if there's room
+      if (room.w >= 6 && room.h >= 6)
+        kitchenTables(room);
+
+      // decorate room near walls
+      decorateKitchenWalls(room);
+    }
+
+  function kitchenTables(room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var tx = room.x1 + Std.int(room.w / 2) - 1;
+      var cnt = -1;
+      var decorationFull = [
+        Const.CORP_TABLE_TISSUE,
+        Const.CORP_TABLE_SAUCES,
+        Const.CORP_TABLE_SALT,
+        Const.CORP_TABLE_MUG,
+        Const.CORP_TABLE_FRUIT,
+      ];
+
+      var decoration = decorationFull.copy();
+      // loop in cols adding 2x2 tables
+      while (true)
+        {
+          cnt++;
+          if (cnt > 100)
+            break;
+
+          var ty = cnt * 3 + room.y1 + 2; 
+          if (ty + 2 >= room.y2)
+            break;
+          for (dy in 0...2)
+            for (dx in 0...2)
+              {
+                cells[tx + dx][ty + dy] =
+                  Const.CORP_TABLE_WOOD1_2X2[dy][dx];
+                if (Std.random(100) < 30)
+                  decoration = addDecorationExt(
+                    tx + dx, ty + dy, decoration,
+                    decorationFull);
+              }
+        }
+    }
+
+// decorate kitchen near walls
+  function decorateKitchenWalls(room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // decoration near wall on the small table
+      var decorationFull = [
+        Const.CORP_TABLE_COFFEE,
+        Const.CORP_TABLE_CLEANING,
+        Const.CORP_TABLE_BLENDER,
+        Const.CORP_TABLE_KETTLE,
+        Const.CORP_TABLE_MICROWAVE,
+        Const.CORP_TABLE_TOILET_PAPER,
+        Const.CORP_TABLE_CONTAINER,
+      ];
+      var decoration = decorationFull.copy();
+      var decorationBigFull = [
+        Const.CORP_COOLER,
+        Const.CORP_PLANT,
+        Const.CORP_TRASH,
+        Const.CORP_VENDING,
+        Const.CORP_FRIDGE,
+        Const.CORP_TAP,
+      ];
+      var decorationBig = decorationBigFull.copy();
+      var prevLeft = false, prevRight = false;
+      for (y in room.y1...room.y2 + 1)
+        {
+          // left side
+          var hasLeft = (Std.random(100) < 50);
+          if (cells[room.x1 - 1][y] == BLDG_INNER_DOOR)
+            hasLeft = false;
+          if (prevLeft)
+            {
+              hasLeft = false;
+              prevLeft = false;
+            }
+          if (hasLeft)
+            {
+              prevLeft = true;
+              // on table
+              if (Std.random(100) < 20)
+                {
+                  cells[room.x1][y] = Const.TILE_CORP_TABLE_1X1_2;
+                  decoration = addDecorationExt(
+                    room.x1, y, decoration,
+                    decorationFull);
+                }
+              // full height
+              else 
+                {
+                  cells[room.x1][y] = Const.TILE_FLOOR_WOOD1 + 16;
+                  decorationBig = addDecorationExt(
+                    room.x1, y, decorationBig,
+                    decorationBigFull); 
+                }
+            }
+
+          // right side
+          var hasRight = (Std.random(100) < 50);
+          if (cells[room.x2 + 1][y] == BLDG_INNER_DOOR)
+            hasRight = false;
+          if (prevRight)
+            {
+              hasRight = false;
+              prevRight = false;
+            }
+          if (hasRight)
+            {
+              prevRight = true;
+              // on table
+              if (Std.random(100) < 20)
+                {
+                  cells[room.x2][y] = Const.TILE_CORP_TABLE_1X1_2;
+                  decoration = addDecorationExt(
+                    room.x2, y, decoration,
+                    decorationFull);
+                }
+              // full height
+              else
+                {
+                  cells[room.x2][y] = Const.TILE_FLOOR_WOOD1 + 16;
+                  decorationBig = addDecorationExt(
+                    room.x2, y, decorationBig,
+                    decorationBigFull); 
+                }
+            }
+        }
+    }
+
 // make this room an office
-  function roomWork(state: _CorpState, room: _Room)
+  function roomWork(room: _Room)
     {
       var area = state.area;
       var cells = area.getCells();
@@ -780,14 +938,16 @@ class CorpAreaGenerator
                 break;
               }
           }
-      // one chair for all tables
+      // one chair/computer for all tables
       var chairID = Std.random(Const.CORP_CHAIR[0].amount);
+      var computerID = 
+        Std.random(Const.CORP_COMPUTERS_BLOCK.width);
 
       // loop in rows, cols adding tables
       while (true)
         {
           cnt++;
-          if (cnt++ > 100)
+          if (cnt > 100)
             break;
           // pick new spot
           sx = room.x1 + 2 + (col * xstep);
@@ -827,8 +987,7 @@ class CorpAreaGenerator
                     sx + i, sy,
                     Const.CORP_COMPUTERS_BLOCK.row,
                     Const.CORP_COMPUTERS_BLOCK.col +
-                    Std.random(
-                      Const.CORP_COMPUTERS_BLOCK.width));
+                    computerID);
                   state.area.addObject(o);
                 }
               else if (Std.random(100) < 50)
@@ -843,52 +1002,96 @@ class CorpAreaGenerator
         }
 //      trace(room, lastx);
 
-        // decoration near wall on the small table
-        var decorationFull = [
-          Const.CORP_TABLE_COFFEE,
-          Const.CORP_TABLE_PRINTER,
-          Const.CORP_TABLE_PROJECTOR,
-          Const.CORP_TABLE_ROUTER,
-          Const.CORP_TABLE_MISC_LARGE,
-        ];
-        var decoration = decorationFull.copy();
-        var prevLeft = false, prevRight = false;
-        for (y in room.y1...room.y2 + 1)
-          {
-            // left side
-            var hasLeft = (Std.random(100) < 40);
-            if (cells[room.x1 - 1][y] == BLDG_INNER_DOOR)
-              hasLeft = false;
-            if (prevLeft)
-              {
-                hasLeft = false;
-                prevLeft = false;
-              }
-            if (hasLeft)
-              {
-                prevLeft = true;
-                cells[room.x1][y] = Const.TILE_CORP_TABLE_1X1;
-                decoration = addDecorationExt(
-                  room.x1, y, decoration, decorationFull);
-              }
+      // decorate room near walls
+      decorateWorkWalls(room);
+    }
 
-            // right side
-            var hasRight = (Std.random(100) < 40);
-            if (cells[room.x2 + 1][y] == BLDG_INNER_DOOR)
+// decorate work room near walls
+  function decorateWorkWalls(room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // decoration near wall on the small table
+      var decorationFull = [
+        Const.CORP_TABLE_COFFEE,
+        Const.CORP_TABLE_PRINTER,
+        Const.CORP_TABLE_PROJECTOR,
+        Const.CORP_TABLE_ROUTER,
+        Const.CORP_TABLE_MISC_LARGE,
+      ];
+      var decoration = decorationFull.copy();
+      var decorationBigFull = [
+        Const.CORP_WHITEBOARD,
+        Const.CORP_COOLER,
+        Const.CORP_PLANT,
+        Const.CORP_CABINET,
+        Const.CORP_TRASH,
+        Const.CORP_MACHINERY,
+      ];
+      var decorationBig = decorationBigFull.copy();
+      var prevLeft = false, prevRight = false;
+      for (y in room.y1...room.y2 + 1)
+        {
+          // left side
+          var hasLeft = (Std.random(100) < 40);
+          if (cells[room.x1 - 1][y] == BLDG_INNER_DOOR)
+            hasLeft = false;
+          if (prevLeft)
+            {
+              hasLeft = false;
+              prevLeft = false;
+            }
+          if (hasLeft)
+            {
+              prevLeft = true;
+              // on table
+              if (Std.random(100) < 50)
+                {
+                  cells[room.x1][y] = Const.TILE_CORP_TABLE_1X1;
+                  decoration = addDecorationExt(
+                    room.x1, y, decoration,
+                    decorationFull);
+                }
+              // full height
+              else 
+                {
+                  cells[room.x1][y] = Const.TILE_FLOOR_WOOD2 + 16;
+                  decorationBig = addDecorationExt(
+                    room.x1, y, decorationBig,
+                    decorationBigFull); 
+                }
+            }
+
+          // right side
+          var hasRight = (Std.random(100) < 40);
+          if (cells[room.x2 + 1][y] == BLDG_INNER_DOOR)
+            hasRight = false;
+          if (prevRight)
+            {
               hasRight = false;
-            if (prevRight)
-              {
-                hasRight = false;
-                prevRight = false;
-              }
-            if (hasRight)
-              {
-                prevRight = true;
-                cells[room.x2][y] = Const.TILE_CORP_TABLE_1X1;
-                decoration = addDecorationExt(
-                  room.x2, y, decoration, decorationFull);
-              }
-          }
+              prevRight = false;
+            }
+          if (hasRight)
+            {
+              prevRight = true;
+              // on table
+              if (Std.random(100) < 50)
+                {
+                  cells[room.x2][y] = Const.TILE_CORP_TABLE_1X1;
+                  decoration = addDecorationExt(
+                    room.x2, y, decoration,
+                    decorationFull);
+                }
+              // full height
+              else
+                {
+                  cells[room.x2][y] = Const.TILE_FLOOR_WOOD2 + 16;
+                  decorationBig = addDecorationExt(
+                    room.x2, y, decorationBig,
+                    decorationBigFull); 
+                }
+            }
+        }
     }
 
 // add decoration from a list of decoration groups
