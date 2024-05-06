@@ -158,8 +158,11 @@ class Const
     { row: 21, col: 0, width: 3, height: 2 };
 
   // row 23 - corpo decoration
-  public static var CORP_COMPUTERS_BLOCK: _TileBlock = 
+  public static var CORP_COMPUTERS_BLOCK: _TileBlock =
     { row: 23, col: 0, width: 5, height: 1 };
+  public static var CORP_COMPUTERS = [
+    { row: 23, col: 0, amount: 5 },
+  ];
   public static var CORP_TABLE_MISC = [
     { row: 23, col: 5, amount: 3 },
     { row: 27, col: 10, amount: 2 },
@@ -373,16 +376,27 @@ class Const
   public static var TILE_CORP_TABLE_3X1_1 = OFFSET_ROW11 + 8;
   public static var TILE_CORP_TABLE_3X1_2 = OFFSET_ROW11 + 9;
   public static var TILE_CORP_TABLE_3X1_3 = OFFSET_ROW11 + 10;
-  public static var TILE_CORP_TABLE_1X1 = OFFSET_ROW11 + 11;
-  public static var TILE_CORP_TABLE_1X1_2 = OFFSET_ROW11 + 12;
+  public static var TILE_DARK_TABLE_WOOD2_1X1 = OFFSET_ROW11 + 11;
+  public static var TILE_LIGHT_TABLE_WOOD1_1X1 = OFFSET_ROW11 + 12;
+  public static var TILE_DARK_TABLE_CARPET_1X1 = OFFSET_ROW11 + 13;
+  public static var TILE_DARK_TABLE_MARBLE1_1X1 = OFFSET_ROW11 + 14;
   public static var CORP_TABLE_3X1 = [
     TILE_CORP_TABLE_3X1_1,
     TILE_CORP_TABLE_3X1_2,
     TILE_CORP_TABLE_3X1_3,
   ];
-  public static var CORP_TABLE_WOOD1_2X2 = [
+  public static var LIGHT_TABLE_WOOD1_2X2 = [
     [ OFFSET_ROW8 + 8, OFFSET_ROW8 + 10 ],
     [ OFFSET_ROW10 + 8, OFFSET_ROW10 + 10 ],
+  ];
+  public static var DARK_TABLE_CARPET_2X2 = [
+    [ OFFSET_ROW8 + 11, OFFSET_ROW8 + 13 ],
+    [ OFFSET_ROW10 + 11, OFFSET_ROW10 + 13 ],
+  ];
+  public static var DARK_TABLE_CARPET_3X3 = [
+    [ OFFSET_ROW8 + 11, OFFSET_ROW8 + 12, OFFSET_ROW8 + 13 ],
+    [ OFFSET_ROW9 + 11, OFFSET_ROW9 + 12, OFFSET_ROW9 + 13 ],
+    [ OFFSET_ROW10 + 11, OFFSET_ROW10 + 12, OFFSET_ROW10 + 13 ],
   ];
 
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
@@ -422,6 +436,15 @@ class Const
   public static var TILE_FLOOR_MARBLE1_UNWALKABLE = OFFSET_ROW12 + 10;
   public static var TILE_FLOOR_MARBLE2_UNWALKABLE = OFFSET_ROW12 + 11;
 
+  // 14-16 - table
+  public static var OFFSET_ROW14 = 224;
+  public static var OFFSET_ROW15 = 240;
+  public static var OFFSET_ROW16 = 256;
+  public static var DARK_TABLE_MARBLE1_3X2 = [
+    [ OFFSET_ROW14 + 0, OFFSET_ROW14 + 1, OFFSET_ROW14 + 2 ],
+    [ OFFSET_ROW16 + 0, OFFSET_ROW16 + 1, OFFSET_ROW16 + 2 ],
+  ];
+
   public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_WALKABLE = [
     // row 0
@@ -449,6 +472,10 @@ class Const
     0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 13 - corpo
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+    // row 14-16 - table
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -475,6 +502,10 @@ class Const
     // row 12 - corpo
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 13 - corpo
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 14-16 - table
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock',
