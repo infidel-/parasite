@@ -172,15 +172,15 @@ class AreaGame extends _SaveObject
         loc = findEmptyLocation();
       else
         {
-          // location is inhabited, find random sewer hatch
+          // location is inhabited, find random exit object
           var tmp = [];
           for (o in _objects)
-            if (o.type == 'sewer_hatch')
+            if (o.type == info.exit)
               tmp.push(o);
 
           if (tmp.length == 0)
             {
-              trace('inhabited area with no sewers, weird');
+              trace('inhabited area with no ' + info.exit + ' objects, weird');
               loc = findEmptyLocation();
             }
           else

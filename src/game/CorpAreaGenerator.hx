@@ -133,8 +133,7 @@ class CorpAreaGenerator
               cells[x][y] = BLDG_WALL;
           }
 
-      // TODO: elevators
-      // pick a wall for a front door
+      // pick a wall for elevator
       var outerWalls = [
         { x1: bx, y1: by, x2: bx + bw - 1, y2: by, dir: DIR_DOWN }, // top
         { x1: bx, y1: by, x2: bx, y2: by + bh - 1, dir: DIR_RIGHT }, // left
@@ -157,16 +156,18 @@ class CorpAreaGenerator
         y: Std.int((frontWall.y2 - frontWall.y1) / 2) + frontWall.y1,
       };
 
-      // main doors and wall between them
+      // elevator door
       var corridorWidth = 3;
-      drawChunk(cells, frontDoor.x, frontDoor.y, corridorWidth,
-        frontWall.dir, BLDG_FRONT_DOOR);
-      if (frontWall.dir == DIR_UP || frontWall.dir == DIR_DOWN)
-        cells[frontDoor.x + 1][frontDoor.y] = BLDG_WALL;
-      else cells[frontDoor.x][frontDoor.y + 1] = BLDG_WALL;
+      cells[frontDoor.x][frontDoor.y] = BLDG_FRONT_DOOR;
+      // elevator stuff
+      elevator(frontDoor, frontWall.dir);
 
       // draw main corridor
       var len = 0, x = frontDoor.x, y = frontDoor.y;
+      if (frontWall.dir == DIR_UP ||
+          frontWall.dir == DIR_DOWN)
+        x--;
+      else y--;
       var delta = deltaMap[frontWall.dir];
       var sideCorridorCount1 = 0, sideCorridorCount2 = 0;
       var sideCorridorAmount1 = 0, sideCorridorAmount2 = 0;
@@ -310,6 +311,85 @@ class CorpAreaGenerator
 
 //      replaceTiles(cells, bx, by, bw, bh,
 //        BLDG_ROOM_MARKED, BLDG_ROOM);
+    }
+
+// paint elevator (walls, door, etc)
+  function elevator(door, dir: Int)
+    {
+      // elevator floor coordinates
+      var area = state.area;
+      var cells = area.getCells();
+      var el: _Room = {
+        id: 0,
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+        w: 3,
+        h: 3,
+      };
+      switch (dir)
+        {
+          // top
+          case 2:
+            el.x1 = door.x - 1;
+            el.y1 = door.y - 3;
+          // bottom
+          case 8:
+            el.x1 = door.x - 1;
+            el.y1 = door.y + 1;
+          // left
+          case 6:
+            el.x1 = door.x - 3;
+            el.y1 = door.y - 1;
+          // right
+          case 4:
+            el.x1 = door.x + 1;
+            el.y1 = door.y - 1;
+        }
+      el.x2 = el.x1 + 2;
+      el.y2 = el.y1 + 2;
+
+      // elevator floor (concrete looks good)
+      drawBlock(cells, el.x1, el.y1, el.w, el.h, CONCRETE);
+      // invisible objects
+      for (dy in 0...3)
+        for (dx in 0...3)
+          area.addObject(new Elevator(game, area.id, el.x1 + dx, el.y1 + dy));
+      // wall corners
+      cells[el.x1 - 1][el.y1 - 1] = BLDG_WALL;
+      cells[el.x1 - 1][el.y2 + 1] = BLDG_WALL;
+      cells[el.x2 + 1][el.y1 - 1] = BLDG_WALL;
+      cells[el.x2 + 1][el.y2 + 1] = BLDG_WALL;
+
+      // top wall
+      if (dir != DIR_UP)
+        {
+          cells[el.x1][el.y1 - 1] = BLDG_WINDOWH1;
+          cells[el.x1 + 1][el.y1 - 1] = BLDG_WINDOWH2;
+          cells[el.x1 + 2][el.y1 - 1] = BLDG_WINDOWH3;
+        }
+      // bottom wall
+      if (dir != DIR_DOWN)
+        {
+          cells[el.x1][el.y2 + 1] = BLDG_WINDOWH1;
+          cells[el.x1 + 1][el.y2 + 1] = BLDG_WINDOWH2;
+          cells[el.x1 + 2][el.y2 + 1] = BLDG_WINDOWH3;
+        }
+      // left wall
+      if (dir != DIR_LEFT)
+        {
+          cells[el.x1 - 1][el.y1] = BLDG_WINDOWV1;
+          cells[el.x1 - 1][el.y1 + 1] = BLDG_WINDOWV2;
+          cells[el.x1 - 1][el.y1 + 2] = BLDG_WINDOWV3;
+        }
+      // right wall
+      if (dir != DIR_RIGHT)
+        {
+          cells[el.x2 + 1][el.y1] = BLDG_WINDOWV1;
+          cells[el.x2 + 1][el.y1 + 1] = BLDG_WINDOWV2;
+          cells[el.x2 + 1][el.y1 + 2] = BLDG_WINDOWV3;
+        }
     }
   
 // sub-divide larger rooms

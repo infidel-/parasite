@@ -15,6 +15,7 @@ class WorldConst
         type: 'wilderness',
         name: 'Uninhabited area',
         pediaArticle: 'areaUninhabited',
+        exit: '-',
         alertnessMod: 0.50,
         width: 100,
         height: 100,
@@ -41,6 +42,7 @@ class WorldConst
         type: 'city',
         name: 'Low-density city area',
         pediaArticle: 'areaCity',
+        exit: 'sewer_hatch',
         alertnessMod: 0.75,
         width: 100,
         height: 100,
@@ -71,6 +73,7 @@ class WorldConst
         type: 'city',
         name: 'Medium-density city area',
         pediaArticle: 'areaCity',
+        exit: 'sewer_hatch',
         alertnessMod: 1.0,
         width: 100,
         height: 100,
@@ -102,6 +105,7 @@ class WorldConst
         type: 'city',
         name: 'High-density city area',
         pediaArticle: 'areaCity',
+        exit: 'sewer_hatch',
         alertnessMod: 1.25,
         width: 100,
         height: 100,
@@ -133,6 +137,7 @@ class WorldConst
         type: 'militaryBase',
         name: 'Military base',
         pediaArticle: 'areaMilitary',
+        exit: 'sewer_hatch',
         alertnessMod: 1.5,
         width: 50,
         height: 50,
@@ -161,6 +166,7 @@ class WorldConst
         type: 'facility',
         name: 'Facility',
         pediaArticle: 'areaLab',
+        exit: 'sewer_hatch',
         alertnessMod: 2.0,
         width: 75,
         height: 60,
@@ -188,6 +194,7 @@ class WorldConst
         type: 'habitat',
         name: 'Habitat area',
         pediaArticle: 'areaHabitat', // unused
+        exit: '-',
         alertnessMod: 1.0,
         width: 20,
         height: 20,
@@ -213,6 +220,7 @@ class WorldConst
         type: 'corp',
         name: 'Corporate HQ',
         pediaArticle: 'areaCorp',
+        exit: 'elevator',
         alertnessMod: 1.5,
         width: 75,
         height: 60,
@@ -297,6 +305,7 @@ typedef AreaInfo = {
   // > 1.0 - fast
   var alertnessMod: Float;
   var pediaArticle: String; // pedia article
+  var exit: String; // exit object
 };
 
 // region info class
