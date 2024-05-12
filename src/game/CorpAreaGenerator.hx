@@ -223,30 +223,43 @@ class CorpAreaGenerator
             }
         }
 
-      // TODO: stairs
-      // back door/window
-      if (Std.random(100) < 50)
+      // stairs
+      var stairsx = x, stairsy = y;
+      if (frontWall.dir == DIR_LEFT)
         {
-          if (frontWall.dir == DIR_UP || frontWall.dir == DIR_DOWN)
-            {
-              cells[x][y] = BLDG_WINDOWH1;
-              cells[x + 1][y] = BLDG_WINDOWH2;
-              cells[x + 2][y] = BLDG_WINDOWH3;
-            }
-          else
-            {
-              cells[x][y] = BLDG_WINDOWV1;
-              cells[x][y + 1] = BLDG_WINDOWV2;
-              cells[x][y + 2] = BLDG_WINDOWV3;
-            }
-//        drawChunk(cells, x, y, corridorWidth,
-//          frontWall.dir, BLDG_WINDOW);
+          stairsx++;
+          stairsy++;
+        }
+      if (frontWall.dir == DIR_RIGHT)
+        {
+          stairsx--;
+          stairsy++;
+        }
+      if (frontWall.dir == DIR_UP)
+        {
+          stairsx++;
+          stairsy++;
+        }
+      if (frontWall.dir == DIR_DOWN)
+        {
+          stairsx++;
+          stairsy--;
+        }
+      area.addObject(new Stairs(game, area.id, stairsx, stairsy));
+
+      // back window
+      if (frontWall.dir == DIR_UP ||
+          frontWall.dir == DIR_DOWN)
+        {
+          cells[x][y] = BLDG_WINDOWH1;
+          cells[x + 1][y] = BLDG_WINDOWH2;
+          cells[x + 2][y] = BLDG_WINDOWH3;
         }
       else
         {
-          if (frontWall.dir == DIR_UP || frontWall.dir == DIR_DOWN)
-            cells[x + 1][y] = BLDG_SIDE_DOOR;
-          else cells[x][y + 1] = BLDG_SIDE_DOOR;
+          cells[x][y] = BLDG_WINDOWV1;
+          cells[x][y + 1] = BLDG_WINDOWV2;
+          cells[x][y + 2] = BLDG_WINDOWV3;
         }
 
       // draw inner walls
