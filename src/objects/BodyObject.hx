@@ -57,7 +57,7 @@ class BodyObject extends AreaObject
         game.ui.hud.addAction({
           id: 'searchBody',
           type: ACTION_OBJECT,
-          name: 'Search Body',
+          name: 'Search body',
           energy: 10,
           obj: this
         });

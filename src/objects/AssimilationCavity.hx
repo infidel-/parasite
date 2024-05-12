@@ -38,7 +38,7 @@ class AssimilationCavity extends HabitatObject
         game.ui.hud.addAction({
           id: 'assimilate',
           type: ACTION_OBJECT,
-          name: 'Assimilate Host',
+          name: 'Assimilate host',
           energy: 0,
           obj: this
         });

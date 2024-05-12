@@ -176,7 +176,7 @@ class PlayerArea extends _SaveObject
           game.ui.hud.addKeyAction({
             id: 'leaveHost',
             type: ACTION_AREA,
-            name: 'Leave Host',
+            name: 'Leave host',
             key: 'x'
           });
 
@@ -853,7 +853,7 @@ class PlayerArea extends _SaveObject
                 col = 'skill-title';
             }
         }
-      return Const.col(col, 'Probe Brain');
+      return Const.col(col, 'Probe brain');
     }
 
 // action: probe host brain
