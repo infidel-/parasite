@@ -315,6 +315,8 @@ class Game extends _SaveObject
       if (location == LOCATION_AREA)
         {
           area.turn();
+          scene.area.turn();
+
           if (isFinished)
             return;
 

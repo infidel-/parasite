@@ -20,9 +20,9 @@ class CorpAreaGenerator
       game = g;
       gen = gn;
       finalTiles = [
-        ROAD => Const.TILE_ROAD,
-        WALKWAY => Const.TILE_WALKWAY,
-        ALLEY => Const.TILE_ALLEY,
+        ROAD => Const.TILE_ROAD_UNWALKABLE,
+        WALKWAY => Const.TILE_WALKWAY_UNWALKABLE,
+        ALLEY => Const.TILE_ALLEY_UNWALKABLE,
         GRASS => Const.TILE_GRASS,
         CONCRETE => Const.TILE_FLOOR_CONCRETE,
         CARPET => Const.TILE_FLOOR_CARPET,
@@ -33,8 +33,7 @@ class CorpAreaGenerator
         BLDG_WALL => Const.TILE_BUILDING,
         BLDG_ROOM => Const.TILE_FLOOR_CARPET,
         BLDG_CORRIDOR => Const.TILE_FLOOR_CARPET,
-        BLDG_FRONT_DOOR => Const.TILE_FLOOR_CARPET,
-        BLDG_SIDE_DOOR => Const.TILE_FLOOR_CARPET,
+        BLDG_ELEVATOR_DOOR => Const.TILE_FLOOR_TILE_CANNOTSEE,
         BLDG_WINDOW => Const.TILE_CORP_WINDOW1,
         BLDG_WINDOWH1 => Const.TILE_CORP_WINDOWH1,
         BLDG_WINDOWH2 => Const.TILE_CORP_WINDOWH2,
@@ -43,7 +42,6 @@ class CorpAreaGenerator
         BLDG_WINDOWV2 => Const.TILE_CORP_WINDOWV2,
         BLDG_WINDOWV3 => Const.TILE_CORP_WINDOWV3,
         BLDG_INNER_WALL => Const.TILE_BUILDING,
-//        BLDG_ROOM_MARKED => Const.TILE_GROUND,
         BLDG_INNER_DOOR => Const.TILE_FLOOR_CARPET,
         BLDG_VENT => Const.TILE_BUILDING,
         INNER_WINDOW => Const.TILE_CORP_INNER_WINDOW1,
@@ -158,7 +156,7 @@ class CorpAreaGenerator
 
       // elevator door
       var corridorWidth = 3;
-      cells[frontDoor.x][frontDoor.y] = BLDG_FRONT_DOOR;
+      cells[frontDoor.x][frontDoor.y] = BLDG_ELEVATOR_DOOR;
       // elevator stuff
       elevator(frontDoor, frontWall.dir);
 
@@ -758,8 +756,6 @@ class CorpAreaGenerator
               if (cells[x + delta.x][y + delta.y] == BLDG_INNER_WALL &&
                   Std.random(100) < 70)
                 hasWindow = false;
-              // TODO
-              hasWindow = true;
               while (true)
                 {
                   x += delta.x;
@@ -1515,9 +1511,7 @@ class CorpAreaGenerator
               y -= delta.y;
               drawChunk(cells, x, y, 2, dir, BLDG_WALL);
               var rnd = Std.random(100);
-              if (rnd < 30)
-                cells[x][y] = BLDG_SIDE_DOOR;
-              else if (rnd < 60)
+              if (rnd < 60)
                 cells[x][y] = BLDG_WINDOW;
               break;
             }
@@ -1535,16 +1529,10 @@ class CorpAreaGenerator
           {
             var tileID = cells[x][y];
             // spawn doors
-            if (tileID == BLDG_FRONT_DOOR)
+            if (tileID == BLDG_ELEVATOR_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_DOUBLE);
-                state.area.addObject(o);
-              }
-            else if (tileID == BLDG_SIDE_DOOR)
-              {
-                var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_GLASS);
+                  Const.ROW_DOORS, Const.FRAME_DOOR_ELEVATOR);
                 state.area.addObject(o);
               }
             else if (tileID == BLDG_INNER_DOOR)
@@ -1606,8 +1594,8 @@ class CorpAreaGenerator
   static var BLDG_WALL = 10;
   static var BLDG_ROOM = 11;
   static var BLDG_CORRIDOR = 12;
-  static var BLDG_FRONT_DOOR = 13;
-  static var BLDG_SIDE_DOOR = 14;
+  static var BLDG_ELEVATOR_DOOR = 13;
+//  static var BLDG_SIDE_DOOR = 14;
   static var BLDG_INNER_WALL = 15;
   static var BLDG_ROOM_MARKED = 16;
   static var BLDG_INNER_DOOR = 17;

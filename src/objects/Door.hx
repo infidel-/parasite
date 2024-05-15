@@ -45,6 +45,8 @@ class Door extends AreaObject
         sound = 'metal';
       else if (imageCol < 10)
         sound = 'glass';
+      else if (imageCol < 12)
+        sound = 'elevator';
     }
 
 // open door if possible

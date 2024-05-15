@@ -12,6 +12,7 @@ class AreaView
   var _effects: List<EffectEntity>; // visual effects list
   var _cache: Array<Array<Int>>; // tiles drawn on screen
   var path: Array<aPath.Node>; // currently visible path
+  var fakeHosts: Array<_FakeHost>; // background hosts
 
   public var width: Int; // area width, height in cells
   public var height: Int;
@@ -22,6 +23,7 @@ class AreaView
     {
       scene = s;
       game = scene.game;
+      fakeHosts = [];
       width = maxSize; // should be larger than any area
       height = maxSize;
       emptyScreenCells = 0;
@@ -112,7 +114,49 @@ class AreaView
               (y - scene.cameraTileY1) * Const.TILE_SIZE,
               Const.TILE_SIZE,
               Const.TILE_SIZE);
+
+            // corp has fake people in the background
+            if (game.area.info.id == AREA_CORP)
+              paintFakeHost(ctx, icon, x, y);
           }
+    }
+
+// corp has fake people in the background
+  function paintFakeHost(ctx, icon, x: Int, y: Int)
+    {
+      // TILE_ROAD_UNWALKABLE
+      if (icon.row != 2 || icon.col < 11)
+        return;
+
+      // find host
+      var host = null;
+      for (h in fakeHosts)
+        if (h.x == x && h.y == y)
+          {
+            host = h;
+            break;
+          }
+      if (host == null)
+        return;
+
+      var img = 
+        (host.isMale ?
+         game.scene.images.male :
+         game.scene.images.female);
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(img,
+        host.ix * Const.TILE_SIZE_CLEAN,
+        host.iy * Const.TILE_SIZE_CLEAN + 1,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN - 1,
+
+        (x - scene.cameraTileX1) * Const.TILE_SIZE +
+        Const.TILE_SIZE / 4,
+        (y - scene.cameraTileY1) * Const.TILE_SIZE +
+        Const.TILE_SIZE / 4,
+        Const.TILE_SIZE / 2,
+        Const.TILE_SIZE / 2);
+      ctx.globalAlpha = 1.0;
     }
 
 // update tilemap, etc from current area
@@ -319,5 +363,61 @@ class AreaView
           if (e.turns <= 0)
             _effects.remove(e);
         }
+
+      // fake hosts logic
+      if (game.area.info.id == AREA_CORP)
+        turnCorp(false);
     }
+
+// area entered
+  public function onEnter()
+    {
+      fakeHosts = [];
+      turnCorp(true);
+    }
+
+// corp area turn - fake hosts
+  function turnCorp(force: Bool)
+    {
+      if (game.turns % 3 != 0 && !force)
+        return;
+      var rect = game.area.getVisibleRect();
+      var icon = null;
+      var tileID = 0;
+      // spawn new ones
+      for (y in rect.y1...rect.y2)
+        for (x in rect.x1...rect.x2)
+          {
+            tileID = _cache[x][y];
+            icon = {
+              row: Std.int(tileID / 16),
+              col: tileID % 16,
+            };
+            // TILE_ROAD_UNWALKABLE
+            if (icon.row != 2 || icon.col < 11)
+              continue;
+            if (Std.random(100) < 95)
+              continue;
+            var h: _FakeHost = {
+              x: x,
+              y: y,
+              isMale: (Std.random(100) < 50),
+              ix: Std.random(10),
+              iy: 0,
+            }
+            h.iy = Std.random(h.isMale ? 8 : 6);
+            fakeHosts.push(h);
+            // limit amount
+            if (fakeHosts.length > 10)
+              fakeHosts.shift();
+          }
+    }
+}
+
+typedef _FakeHost = {
+  var x: Int;
+  var y: Int;
+  var isMale: Bool;
+  var ix: Int;
+  var iy: Int;
 }

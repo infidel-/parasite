@@ -137,6 +137,8 @@ class Const
   public static var FRAME_DOOR_METAL_OPEN = 7;
   public static var FRAME_DOOR_CORP = 8;
   public static var FRAME_DOOR_CORP_OPEN = 9;
+  public static var FRAME_DOOR_ELEVATOR = 10;
+  public static var FRAME_DOOR_ELEVATOR_OPEN = 11;
 
   // row 16 - floor drain
   public static var ROW_OBJECT_INDOOR = 16;
@@ -305,6 +307,10 @@ class Const
   public static var TILE_WINDOWV1 = OFFSET_AREA + 7;
   public static var TILE_WINDOWV2 = OFFSET_AREA + 8;
   public static var TILE_WINDOWV3 = OFFSET_AREA + 9;
+  public static var TILE_XXX = OFFSET_AREA + 10;
+  public static var TILE_ROAD_UNWALKABLE = OFFSET_AREA + 11;
+  public static var TILE_ALLEY_UNWALKABLE = OFFSET_AREA + 12;
+  public static var TILE_WALKWAY_UNWALKABLE = OFFSET_AREA + 13;
 
   // row 3
   public static var OFFSET_CITY = 48;
@@ -453,7 +459,7 @@ class Const
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
-    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     // row 3+ - city tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
