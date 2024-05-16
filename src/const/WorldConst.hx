@@ -23,6 +23,7 @@ class WorldConst
         isInhabited: false,
         commonAI: 0,
         uncommonAI: 0,
+        lawType: 'police',
         lawResponseTime: 0,
         lawResponseAmount: 0,
         lawResponseMax: 0,
@@ -51,6 +52,7 @@ class WorldConst
         commonAI: 8,
         uncommonAI: 5,
         buildingSize: 1,
+        lawType: 'police',
         lawResponseTime: 10,
         lawResponseAmount: 2,
         lawResponseMax: 4,
@@ -82,6 +84,7 @@ class WorldConst
         commonAI: 12,
         uncommonAI: 8,
         buildingSize: 5,
+        lawType: 'police',
         lawResponseTime: 5,
         lawResponseAmount: 2,
         lawResponseMax: 6,
@@ -114,6 +117,7 @@ class WorldConst
         commonAI: 28,
         uncommonAI: 12,
         buildingSize: 10,
+        lawType: 'police',
         lawResponseTime: 5,
         lawResponseAmount: 3,
         lawResponseMax: 8,
@@ -146,6 +150,7 @@ class WorldConst
         commonAI: 10,
         uncommonAI: 0,
         buildingChance: 0.006,
+        lawType: 'police',
         lawResponseTime: 0,
         lawResponseAmount: 0,
         lawResponseMax: 0,
@@ -175,6 +180,7 @@ class WorldConst
         commonAI: 5,
         uncommonAI: 0,
         buildingChance: 0.006,
+        lawType: 'security',
         lawResponseTime: 5,
         lawResponseAmount: 2,
         lawResponseMax: 4,
@@ -203,6 +209,7 @@ class WorldConst
         commonAI: 0,
         uncommonAI: 0,
         buildingChance: 0,
+        lawType: 'police',
         lawResponseTime: 10,
         lawResponseAmount: 4,
         lawResponseMax: 4,
@@ -229,13 +236,14 @@ class WorldConst
         commonAI: 5,
         uncommonAI: 0,
         buildingChance: 0.006,
+        lawType: 'security',
         lawResponseTime: 5,
         lawResponseAmount: 2,
         lawResponseMax: 4,
         lawResponseEnabled: true,
         isHighRisk: true,
         ai: [
-          'scientist' => 90,
+          'corpo' => 90,
           'security' => 10
         ],
         objects: [] // moved to facility generator
@@ -293,6 +301,7 @@ typedef AreaInfo = {
   @:optional var buildingChance: Float; // chance to spawn building (building gen)
   @:optional var buildingSize: Int; // building size x2 (city gen)
   @:optional var hasMainRoad: Bool; // has main road (city gen)
+  var lawType: String; // police, security
   var lawResponseTime: Int; // number of turns until backup shows up
   var lawResponseAmount: Int; // amount of backup ai that shows up
   var lawResponseMax: Int; // maximum amount of law ai on screen during response

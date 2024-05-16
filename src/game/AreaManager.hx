@@ -262,7 +262,7 @@ class AreaManager extends _SaveObject
         canDelay: true,
         always: false,
       });
-      log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
+      log(Const.capitalize(area.info.lawType) +
         ' has received reports about ' + sdetails +
         '. Dispatching units to the location.');
 
@@ -273,7 +273,7 @@ class AreaManager extends _SaveObject
           if (game.player.skills.getLevel(KNOW_SOCIETY) < 5)
             e.ai.log('calls someone!');
           else e.ai.log('calls the ' +
-            (area.typeID == AREA_FACILITY ? 'security' : 'police') + '!',
+            area.info.lawType + '!',
             COLOR_ALERT);
         }
 
@@ -307,9 +307,9 @@ class AreaManager extends _SaveObject
       if (cnt >= area.info.lawResponseMax)
         return;
 
-      log((area.typeID == AREA_FACILITY ? 'Security' : 'Police') +
+      log(Const.capitalize(area.info.lawType) +
         ' arrives on scene!');
-      game.scene.sounds.play((area.typeID == AREA_FACILITY ? 'ai-arrive-security' : 'ai-arrive-police'), {
+      game.scene.sounds.play('ai-arrive-' + area.info.lawType, {
         x: e.x,
         y: e.y,
         canDelay: true,
@@ -330,17 +330,8 @@ class AreaManager extends _SaveObject
               return;
             }
 
-          var type = '';
-          switch (area.typeID)
-            {
-              case AREA_FACILITY:
-                type = 'security';
-              default:
-                type = 'police';
-            }
-          var ai = area.spawnAI(type, loc.x, loc.y);
-
-          // set move target
+          // spawn ai, set move target
+          var ai = area.spawnAI(area.info.lawType, loc.x, loc.y);
           ai.roamTargetX = e.x;
           ai.roamTargetY = e.y;
 

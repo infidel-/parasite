@@ -123,6 +123,26 @@ class Images
       { x: 3, y: 7 },
       { x: 4, y: 7 },
     ],
+    'corpo' => [
+      { x: 0, y: 8 },
+      { x: 1, y: 8 },
+      { x: 2, y: 8 },
+      { x: 3, y: 8 },
+      { x: 4, y: 8 },
+      { x: 5, y: 8 },
+      { x: 6, y: 8 },
+      { x: 7, y: 8 },
+    ],
+    'smiler' => [
+      { x: 0, y: 9 },
+      { x: 1, y: 9 },
+      { x: 2, y: 9 },
+      { x: 3, y: 9 },
+      { x: 4, y: 9 },
+      { x: 5, y: 9 },
+      { x: 6, y: 9 },
+      { x: 7, y: 9 },
+    ],
     // NOTE: check start of file for empty tiles code on new row!
   ];
 
@@ -162,6 +182,22 @@ class Images
       { x: 4, y: 9 },
       { x: 5, y: 9 },
       { x: 6, y: 9 },
+    ],
+    'corpo' => [
+      { x: 0, y: 10 },
+      { x: 1, y: 10 },
+      { x: 2, y: 10 },
+      { x: 3, y: 10 },
+      { x: 4, y: 10 },
+      { x: 5, y: 10 },
+      { x: 6, y: 10 },
+      { x: 7, y: 10 },
+    ],
+    'smiler' => [
+      { x: 8, y: 9 },
+      { x: 9, y: 9 },
+      { x: 8, y: 10 },
+      { x: 9, y: 10 },
     ],
 
     // NOTE: check start of file for empty tiles code on new row!

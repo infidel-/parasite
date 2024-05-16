@@ -244,25 +244,6 @@ class SoundConst
     'CHAT_FAIL' => humanChatFail,
   ];
 
-  // scientist sounds
-  public static var scientist: Map<String, Array<AISound>> = [
-    '' + REASON_DAMAGE => humanDamage,
-    '' + AI_STATE_IDLE => humanIdle,
-    '' + AI_STATE_ALERT => [
-      {
-        file: 'male-scream',
-        text: '*SCREAM*',
-        radius: 7,
-        alertness: 15,
-        params: null
-      },
-    ],
-    '' + AI_STATE_HOST => humanHost,
-    '' + AI_STATE_DEAD => humanDie,
-    '' + EFFECT_CRYING => humanCrying,
-    'CHAT_FAIL' => humanChatFail,
-  ];
-
   // police officer sounds
   public static var police: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => humanDamage,

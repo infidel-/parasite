@@ -1,4 +1,4 @@
-// AI for scientists
+// AI for corpo workers
 
 package ai;
 
@@ -7,17 +7,14 @@ import _AIState;
 import game.Game;
 import const.*;
 
-class ScientistAI extends HumanAI
+class CorpoAI extends HumanAI
 {
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
       init();
-      if (Std.random(100) < 75)
-        {
-          skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
-          inventory.addID('smartphone');
-        }
+      skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
+      inventory.addID('smartphone');
       initPost(false);
     }
 
@@ -25,9 +22,9 @@ class ScientistAI extends HumanAI
   public override function init()
     {
       super.init();
-      type = 'scientist';
-      name.unknown = 'random scientist';
-      name.unknownCapped = 'Random scientist';
+      type = 'corpo';
+      name.unknown = 'office worker';
+      name.unknownCapped = 'Office worker';
       soundsID = 'civilian';
     }
 
