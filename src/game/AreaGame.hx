@@ -1557,6 +1557,8 @@ class Test {
         ai = new ScientistAI(game, x, y);
       else if (type == 'corpo')
         ai = new CorpoAI(game, x, y);
+      else if (type == 'smiler')
+        ai = new SmilerAI(game, x, y);
       else throw 'spawnAI(): AI type [' + type + '] unknown';
       // add chat clues
       game.player.chat.initClues(ai);

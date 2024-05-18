@@ -43,27 +43,4 @@ class AgentAI extends HumanAI
     {
       super.initPost(onLoad);
     }
-
-/*
-// event: on being attacked 
-  public override function onAttack()
-    {
-      // if this ai has not called for backup yet
-      // try it on next turn if not struggling with parasite
-      if (!isBackupCalled && state == AI_STATE_ALERT && !parasiteAttached)
-        {
-          isBackupCalled = true;
-          game.area.manager.addAI(this, AreaManager.EVENT_CALL_POLICE_BACKUP, 1);
-        }
-    }
-
-
-// event: on state change
-  public override function onStateChange()
-    {
-      // backup despawns when it loses alert state
-      // i could make it roam around for a bit but it's probably not worth it
-      if (state == AI_STATE_IDLE && isBackup)
-        game.area.removeAI(this);
-    }*/ 
 }

@@ -90,5 +90,35 @@ class HumanAI extends AI
       if (wasInvaded || wasAttached)
         game.managerRegion.onHostDiscovered(game.area, this);
     }
+
+// event: default on state change for any civs (scientists, office workers, etc)
+  function onStateChangeDefault()
+    {
+      // try to call police on next turn if not struggling with parasite
+      // if berserk, just skip that
+      if (state == AI_STATE_ALERT &&
+          !parasiteAttached &&
+          !effects.has(EFFECT_BERSERK))
+        {
+          // cannot call police without a phone
+          if (!inventory.has('smartphone') &&
+              !inventory.has('mobilePhone'))
+            return;
+
+          // no reception in habitat
+          if (game.area.isHabitat)
+            {
+              log('fumbles with something in its hands. "Shit! No reception!"');
+
+              return;
+            }
+
+          var time = 1;
+          if (game.player.difficulty == UNSET ||
+              game.player.difficulty == EASY)
+            time = 2;
+          game.managerArea.addAI(this, AREAEVENT_CALL_LAW, time);
+        }
+    }
 }
 

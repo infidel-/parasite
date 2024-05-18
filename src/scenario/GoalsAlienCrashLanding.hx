@@ -315,7 +315,7 @@ class GoalsAlienCrashLanding
 
       onReceive: function (game, player) {
         // find random area
-        var area = game.region.getRandomWithType(AREA_CITY_HIGH, true);
+        var area = game.region.getRandomWithType(AREA_CORP, true);
 
         // add hidden NPC to it
         // NOTE: all dynamic NPCs should belong to an event anyway
@@ -327,7 +327,7 @@ class GoalsAlienCrashLanding
         npc.tileAtlasY = 4;
         npc.job = 'corporate executive';
         npc.jobKnown = true;
-        npc.type = 'civilian';
+        npc.type = 'corpo';
         npc.areaID = area.id;
         npc.areaKnown = true;
         npc.noEventClues = true; // cannot brain probe for clues

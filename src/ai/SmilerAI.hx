@@ -1,4 +1,4 @@
-// AI for corpo workers
+// AI for smilers
 
 package ai;
 
@@ -7,13 +7,26 @@ import _AIState;
 import game.Game;
 import const.*;
 
-class CorpoAI extends HumanAI
+class SmilerAI extends HumanAI
 {
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
       init();
       skills.addID(SKILL_COMPUTER, 20 + Std.random(30));
+      skills.addID(SKILL_PSYCHOLOGY, 30 + Std.random(5));
+      // 2/3 random chat skills
+      var list: Array<_Skill> = [
+        SKILL_DECEPTION,
+        SKILL_COERCION,
+        SKILL_COAXING
+      ];
+      for (i in 0...2)
+        {
+          var skillID = list[Std.random(list.length)];
+          skills.addID(skillID, 30 + Std.random(20));
+          list.remove(skillID);
+        }
       inventory.addID('smartphone');
       initPost(false);
     }
@@ -22,7 +35,7 @@ class CorpoAI extends HumanAI
   public override function init()
     {
       super.init();
-      type = 'corpo';
+      type = 'smiler';
       name.unknown = 'office worker';
       name.unknownCapped = 'Office worker';
       soundsID = 'civilian';

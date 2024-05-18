@@ -915,7 +915,8 @@ class ConsoleGame
             ';s23 - set player stage 2.3 (stage 2.2 + assimilation)<br/>' +
             ';s24 - set player stage 2.4 (stage 2.1 + group knowledge)<br/>' +
             ';s25 - set player stage 2.5 (stage 2 + ambush)<br/>' +
-            ';s3 - set player stage 3 (stage 2.3 + spaceship)'
+            ';s3 - set player stage 3 (stage 2.3 + spaceship)' +
+            ';s31 - set player stage 3.1 (stage 3 + ready to launch)'
             );
           return;
         }
@@ -1008,6 +1009,18 @@ class ConsoleGame
               stage22();
               stage23();
               stage3();
+            }
+
+          // stage 3.1: 3 + launch ready
+          else if (stage == 31)
+            {
+              stage1();
+              stage2();
+              stage21();
+              stage22();
+              stage23();
+              stage3();
+              stage31();
             }
 
           game.importantMessagesEnabled = true;
@@ -1308,6 +1321,16 @@ class ConsoleGame
       goCommand('gg' + obj.x + ' ' + obj.y);
     }
 
+// stage 3.1: stage 3 + ready to launch
+  function stage31()
+    {
+      game.player.vars.npcEnabled = true;
+      game.player.vars.searchEnabled = true;
+      var state = @:privateAccess scenario.GoalsAlienCrashLanding.getSpaceshipState(game);
+      state.part1Installed = true;
+      state.part2Installed = true;
+      state.part3Installed = true;
+    }
 
 // log function
   inline function log(s: String)

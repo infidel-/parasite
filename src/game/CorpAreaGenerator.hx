@@ -97,7 +97,7 @@ class CorpAreaGenerator
 */
 
       // trace area
-      AreaGenerator.printArea(game, state.area, mapTempTiles);
+//      AreaGenerator.printArea(game, state.area, mapTempTiles);
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
