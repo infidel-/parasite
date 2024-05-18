@@ -239,17 +239,22 @@ class RegionView
           var icon = null;
           switch (i)
             {
-              // alertness
+              // region object (under all other icons)
               case 0:
+                var o = game.region.getObjectAt(area.x, area.y);
+                if (o != null && area.isKnown)
+                  icon = o.icon;
+              // alertness
+              case 1:
                 icon = getAlertnessIcon(area);
               // event
-              case 1:
+              case 2:
                 icon = getEventIcon(area);
               // npc
-              case 2:
+              case 3:
                 icon = getNPCIcon(area);
               // habitat
-              case 3:
+              case 4:
                 if (!area.hasHabitat)
                   continue;
                 icon = {
@@ -265,11 +270,6 @@ class RegionView
                         hab.area.id == area.habitatAreaID)
                       icon.col = Const.FRAME_HABITAT_AMBUSHED;
                   }
-              // region object
-              case 4:
-                var o = game.region.getObjectAt(area.x, area.y);
-                if (o != null && area.isKnown)
-                  icon = o.icon;
             }
           if (icon == null)
             continue;
