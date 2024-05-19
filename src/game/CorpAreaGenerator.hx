@@ -26,6 +26,7 @@ class CorpAreaGenerator
         GRASS => Const.TILE_GRASS,
         CONCRETE => Const.TILE_FLOOR_CONCRETE,
         CARPET => Const.TILE_FLOOR_CARPET,
+        CARPET_MEETING => Const.TILE_FLOOR_CARPET_MEETING,
         WOOD1 => Const.TILE_FLOOR_WOOD1,
         WOOD2 => Const.TILE_FLOOR_WOOD2,
         MARBLE1 => Const.TILE_FLOOR_MARBLE1,
@@ -1075,7 +1076,7 @@ class CorpAreaGenerator
     {
       var area = state.area;
       var cells = area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, CARPET);
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, CARPET_MEETING);
 
       // tables in the center if there's room
       if (room.w >= 6 && room.h >= 6)
@@ -1620,6 +1621,7 @@ class CorpAreaGenerator
   static var WOOD2 = 36;
   static var MARBLE1 = 37;
   static var MARBLE2 = 38;
+  static var CARPET_MEETING = 39;
 
   static var BLDG_ROOM_ID_START = 100;
   static var mapTempTiles = [

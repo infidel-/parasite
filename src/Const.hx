@@ -427,6 +427,7 @@ class Const
   public static var TILE_FLOOR_WOOD2 = OFFSET_ROW12 + 9;
   public static var TILE_FLOOR_MARBLE1 = OFFSET_ROW12 + 10;
   public static var TILE_FLOOR_MARBLE2 = OFFSET_ROW12 + 11;
+  public static var TILE_FLOOR_CARPET_MEETING = OFFSET_ROW12 + 12;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

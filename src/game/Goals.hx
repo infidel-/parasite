@@ -54,6 +54,18 @@ class Goals extends _SaveObject
         }
     }
 
+// called on area enter
+  public function onEnter()
+    {
+      for (goal in _listCurrent)
+        {
+          var info = getInfo(goal);
+          if (info.onEnter == null)
+            continue;
+          info.onEnter(game);
+        }
+    }
+
 // called pre-leave area (by normal means)
 // if it returns false, leaving is not allowed
   public function leaveAreaPre(): Bool

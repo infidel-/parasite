@@ -19,5 +19,6 @@ typedef GoalInfo = {
   ?onReceive: Game -> Player -> Void, // called on receive
   ?onComplete: Game -> Player -> Void, // called on completion
   ?onFailure: Game -> Player -> Void, // called on failure
+  ?onEnter: Game -> Void, // called on entering area
   ?leaveAreaPre: Game -> Player -> AreaGame -> Bool, // runs when player tries to leave any location, if false, player cannot leave
 }

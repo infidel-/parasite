@@ -339,6 +339,65 @@ class GoalsAlienCrashLanding
         game.timeline.setVar('missionTargetAreaID', area.id);
       },
 
+      onEnter: function (game) {
+        // goal active, on enter spawn CEO
+        var areaID = game.timeline.getIntVar('missionTargetAreaID');
+        if (game.area.id != areaID)
+          return;
+        var npcID = game.timeline.getIntVar('missionTargetID');
+
+        // find nearest office (marble floor)
+        // NOTE: there can be no office, then the task is easier
+        // limit by 100 points
+        var solopts = [];
+        var workpts = [];
+        var meetingpts = [];
+        var cells = game.area.getCells();
+        for (y in 0...cells.length)
+          if (solopts.length < 100)
+            {
+              for (x in 0...cells[y].length)
+                if (cells[x][y] == Const.TILE_FLOOR_MARBLE1)
+                  solopts.push({ x: x, y: y });
+                else if (cells[x][y] == Const.TILE_FLOOR_CARPET_MEETING)
+                  meetingpts.push({ x: x, y: y });
+                else if (cells[x][y] == Const.TILE_FLOOR_WOOD2)
+                  workpts.push({ x: x, y: y });
+            }
+          else break;
+
+        // solo office -> meeting room -> work room
+        var pt = null;
+        if (solopts.length > 0)
+          {
+            game.debug('solo office found');
+            pt = solopts[Std.random(solopts.length)];
+          }
+        else if (meetingpts.length > 0)
+          {
+            game.debug('meeting room found');
+            pt = meetingpts[Std.random(meetingpts.length)];
+          }
+        else
+          {
+            game.debug('work room found');
+            pt = workpts[Std.random(workpts.length)];
+          }
+
+        // spawn ceo
+        var npc = null;
+        for (v in game.area.npc)
+          if (v.id == npcID)
+            {
+              npc = v;
+              break;
+            }
+        var ai = game.area.spawnAI('corpo', pt.x, pt.y);
+        game.debug('spawn npc ' + npc.id + ' (ai: ' + ai.id + ')');
+        ai.setNPC(npc);
+        ai.isGuard = true;
+      },
+
       noteFunc: function (game) {
         var areaID = game.timeline.getIntVar('missionTargetAreaID');
         var area = game.world.get(0).get(areaID);

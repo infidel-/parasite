@@ -251,6 +251,8 @@ class AreaGame extends _SaveObject
       // update AI and objects visibility to player
       updateVisibility();
       game.scene.area.onEnter();
+      // timeline goals hooks
+      game.goals.onEnter();
 
       isEntering = false;
 
@@ -1325,18 +1327,7 @@ class AreaGame extends _SaveObject
             if (ai == null)
               break;
             game.debug('spawn npc ' + n.id + ' (ai: ' + ai.id + ')');
-            n.ai = ai;
-            ai.eventID = (n.event != null ? n.event.id : null);
-            ai.job = n.job;
-            ai.npcID = n.id;
-            ai.name.real = n.name;
-            ai.name.realCapped = n.name;
-            ai.isMale = n.isMale;
-            ai.isNameKnown = true;
-            ai.isJobKnown = true;
-            ai.isNPC = true;
-            ai.updateTile(n.tileAtlasX, n.tileAtlasY);
-            ai.entity.setNPC();
+            ai.setNPC(n);
 
             // spawn up to maxSpawn npcs
             i++;

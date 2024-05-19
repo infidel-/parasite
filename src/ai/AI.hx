@@ -862,7 +862,8 @@ public function show()
       if (timers.alert == 0 && !isRelentless)
         {
           // guard must return to guard spot
-          if (isGuard && (x != guardTargetX || y != guardTargetY))
+          if (isGuard &&
+              (x != guardTargetX || y != guardTargetY))
             {
               setState(AI_STATE_MOVE_TARGET);
               roamTargetX = guardTargetX;
@@ -1384,6 +1385,23 @@ public function show()
           game.log(Const.hl('You have reached the full affinity with this host.'), COLOR_SYMBIOSIS);
           game.goals.complete(GOAL_TUTORIAL_MAX_AFFINITY);
         }
+    }
+
+// updates this ai with npc data (and vice versa)
+  public function setNPC(npc: scenario.NPC)
+    {
+      npc.ai = this;
+      this.eventID = (npc.event != null ? npc.event.id : null);
+      this.job = npc.job;
+      this.npcID = npc.id;
+      this.name.real = npc.name;
+      this.name.realCapped = npc.name;
+      this.isMale = npc.isMale;
+      this.isNameKnown = true;
+      this.isJobKnown = true;
+      this.isNPC = true;
+      this.updateTile(npc.tileAtlasX, npc.tileAtlasY);
+      this.entity.setNPC();
     }
 
 // returns true if this AI has NPC clues or chat clues
