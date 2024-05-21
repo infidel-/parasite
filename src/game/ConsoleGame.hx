@@ -757,6 +757,7 @@ class ConsoleGame
           if (game.location == LOCATION_AREA)
             game.playerArea.moveTo(x, y);
           else game.playerRegion.moveTo(x, y, false);
+          game.scene.updateCamera();
           game.scene.draw();
         }
     }

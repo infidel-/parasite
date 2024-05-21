@@ -3,6 +3,7 @@
 package entities;
 
 import js.html.CanvasRenderingContext2D;
+import js.html.Image;
 import game.Game;
 
 class Entity
@@ -41,6 +42,22 @@ class Entity
       else return false;
     }
 
+// draw image at this entity x,y
+  function drawImage(ctx: CanvasRenderingContext2D, img: Image, xx: Int, yy: Int)
+    {
+      // kludge: draw one pixel less to avoid scaling bugs
+      ctx.drawImage(img,
+        xx * Const.TILE_SIZE_CLEAN,
+        yy * Const.TILE_SIZE_CLEAN + 1,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN - 1,
+
+        (mx - game.scene.cameraTileX1) * Const.TILE_SIZE,
+        (my - game.scene.cameraTileY1) * Const.TILE_SIZE,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+    }
+
 // set entity icon
   public function setIcon(img: String, ix: Int, iy: Int)
     {
@@ -77,16 +94,6 @@ class Entity
             return;
         }
       // entity image
-      // kludge: draw one pixel less to avoid scaling bugs
-      ctx.drawImage(img,
-        ix * Const.TILE_SIZE_CLEAN,
-        iy * Const.TILE_SIZE_CLEAN + 1,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN - 1,
-
-        (mx - game.scene.cameraTileX1) * Const.TILE_SIZE,
-        (my - game.scene.cameraTileY1) * Const.TILE_SIZE,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
+      drawImage(ctx, img, ix, iy);
     }
 }

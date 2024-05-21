@@ -340,48 +340,23 @@ class GoalsAlienCrashLanding
       },
 
       onEnter: function (game) {
+        trace('onEnter!');
         // goal active, on enter spawn CEO
         var areaID = game.timeline.getIntVar('missionTargetAreaID');
         if (game.area.id != areaID)
           return;
         var npcID = game.timeline.getIntVar('missionTargetID');
-
-        // find nearest office (marble floor)
-        // NOTE: there can be no office, then the task is easier
-        // limit by 100 points
-        var solopts = [];
-        var workpts = [];
-        var meetingpts = [];
-        var cells = game.area.getCells();
-        for (y in 0...cells.length)
-          if (solopts.length < 100)
-            {
-              for (x in 0...cells[y].length)
-                if (cells[x][y] == Const.TILE_FLOOR_MARBLE1)
-                  solopts.push({ x: x, y: y });
-                else if (cells[x][y] == Const.TILE_FLOOR_CARPET_MEETING)
-                  meetingpts.push({ x: x, y: y });
-                else if (cells[x][y] == Const.TILE_FLOOR_WOOD2)
-                  workpts.push({ x: x, y: y });
-            }
-          else break;
-
-        // solo office -> meeting room -> work room
-        var pt = null;
-        if (solopts.length > 0)
+        var x = game.timeline.getIntVar('missionTargetAreaX');
+        var y = game.timeline.getIntVar('missionTargetAreaY');
+        // first entry - find a spot
+        var firstTime = false;
+        var pt = { x: x, y: y };
+        if (x == 0 && y == 0)
           {
-            game.debug('solo office found');
-            pt = solopts[Std.random(solopts.length)];
-          }
-        else if (meetingpts.length > 0)
-          {
-            game.debug('meeting room found');
-            pt = meetingpts[Std.random(meetingpts.length)];
-          }
-        else
-          {
-            game.debug('work room found');
-            pt = workpts[Std.random(workpts.length)];
+            pt = rollMissionTargetXY(game);
+            game.timeline.setVar('missionTargetAreaX', pt.x);
+            game.timeline.setVar('missionTargetAreaY', pt.y);
+            firstTime = true;
           }
 
         // spawn ceo
@@ -393,9 +368,44 @@ class GoalsAlienCrashLanding
               break;
             }
         var ai = game.area.spawnAI('corpo', pt.x, pt.y);
-        game.debug('spawn npc ' + npc.id + ' (ai: ' + ai.id + ')');
+        game.debug('spawn npc ' + npc.id + ' (ai: ' + ai.id + ', pos: ' + ai.x + ',' + ai.y + ')');
         ai.setNPC(npc);
         ai.isGuard = true;
+
+        // find all doors leading to this room and lock them
+        if (firstTime)
+          {
+            // find room record
+            var generatorInfo = game.area.generatorInfo;
+            var room = generatorInfo.getRoomAt(ai.x, ai.y);
+            if (room == null)
+              {
+                trace('room is null for (' + ai.x + ',' + ai.y + ')!');
+                return;
+              }
+            var doors = [];
+            for (d in generatorInfo.doors)
+              if (d.roomID1 == room.id ||
+                  d.roomID2 == room.id)
+                {
+                  doors.push(d);
+                  break;
+                }
+            // lock all doors with key card
+            trace(doors);
+            for (door in doors)
+              {
+                var objs = game.area.getObjectsAt(door.x, door.y);
+                for (o in objs)
+                  if (o.type == 'door')
+                    {
+                      var d: objects.Door = cast o;
+                      d.isLocked = true;
+                      d.lockID = 'corp-mission';
+                      break;
+                    }
+              }
+          }
       },
 
       noteFunc: function (game) {
@@ -668,6 +678,50 @@ class GoalsAlienCrashLanding
             shipDeco.push(o.id);
           }
       return shipDeco;
+    }
+
+// helper - find new spawn point for corp mission target
+  static function rollMissionTargetXY(game)
+    {
+      // find nearest office (marble floor)
+      // NOTE: there can be no office, then the task is easier
+      // limit by 100 points
+      var solopts = [];
+      var workpts = [];
+      var meetingpts = [];
+      var cells = game.area.getCells();
+      for (y in 0...cells.length)
+        if (solopts.length < 100)
+          {
+            for (x in 0...cells[y].length)
+              if (cells[x][y] == Const.TILE_FLOOR_MARBLE1)
+                solopts.push({ x: x, y: y });
+              else if (cells[x][y] == Const.TILE_FLOOR_CARPET_MEETING)
+                meetingpts.push({ x: x, y: y });
+              else if (cells[x][y] == Const.TILE_FLOOR_WOOD2)
+                workpts.push({ x: x, y: y });
+          }
+        else break;
+
+      // solo office -> meeting room -> work room
+      var pt = null;
+      if (solopts.length > 0)
+        {
+          game.debug('solo office found');
+          pt = solopts[Std.random(solopts.length)];
+        }
+      else if (meetingpts.length > 0)
+        {
+          game.debug('meeting room found');
+          pt = meetingpts[Std.random(meetingpts.length)];
+        }
+      else
+        {
+          game.debug('work room found');
+          pt = workpts[Std.random(workpts.length)];
+        }
+
+      return pt;
     }
 }
 

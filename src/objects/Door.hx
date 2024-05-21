@@ -7,6 +7,8 @@ import game.Game;
 class Door extends AreaObject
 {
   public var isOpen: Bool;
+  public var isLocked: Bool;
+  public var lockID: String;
   var closeTimer: Int;
   var sound: String;
 
@@ -28,6 +30,8 @@ class Door extends AreaObject
       name = 'door';
       isStatic = true;
       isOpen = false;
+      isLocked = false;
+      lockID = null;
       closeTimer = 0;
     }
 

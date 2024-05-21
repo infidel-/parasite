@@ -1,3 +1,4 @@
+// generator - area room info
 typedef _Room = {
   id: Int,
   x1: Int,

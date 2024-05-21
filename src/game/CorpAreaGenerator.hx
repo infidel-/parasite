@@ -13,7 +13,8 @@ class CorpAreaGenerator
 {
   var game: Game;
   var gen: AreaGenerator;
-  var state: _CorpState;
+  // access from the game after generation
+  public var state: _CorpState;
 
   public function new(g: Game, gn: AreaGenerator)
     {
@@ -75,8 +76,8 @@ class CorpAreaGenerator
       var mainx = Std.int(area.width * 0.1),
         mainy = Std.int(area.height * 0.1);
       generateBuilding(state, mainx, mainy, mainw, mainh);
-      state.rooms = null;
-      state.doors = null;
+//      state.rooms = null;
+//      state.doors = null;
 
 /*
       // hole in sidewalk for entry to parking lot
@@ -103,6 +104,10 @@ class CorpAreaGenerator
       // convert temp tiles to ingame ones
       finalizeTiles(state);
       trace(Std.int((Sys.time() - t1) * 1000) + 'ms');
+      state.area.generatorInfo = {
+        rooms: state.rooms,
+        doors: state.doors,
+      };
     }
 
 // generate a single building of a given size at given coordinates
@@ -867,12 +872,16 @@ class CorpAreaGenerator
       var cells = area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE1);
 
-      // tables in the center if there's room
+      // single table
+      var hasTable = false;
       if (room.w >= 6 && room.h >= 6)
-        soloTable(room);
+        {
+          soloTable(room);
+          hasTable = true;
+        }
 
-      // decorate room near walls
-      if (room.w >= 7)
+      // decorate room corners
+      if (room.w >= 7 || !hasTable)
         decorateCorners(room, [
             Const.CORP_TABLE_COFFEE,
             Const.CORP_TABLE_ROUTER,

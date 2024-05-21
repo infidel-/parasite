@@ -121,6 +121,10 @@ class FacilityAreaGenerator
       // convert temp tiles to ingame ones
       finalizeTiles(state);
       trace(Std.int((Sys.time() - t1) * 1000) + 'ms');
+      state.area.generatorInfo = {
+        rooms: state.rooms,
+        doors: state.doors,
+      };
     }
 
 // generate a hangar of a given size at given coordinates

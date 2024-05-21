@@ -84,6 +84,7 @@ class Const
   public static var FRAME_NUTRIENT = 7;
   public static var FRAME_SHIP_PART = 8;
   public static var FRAME_STAIRS = 9;
+  public static var FRAME_LOCKED_ICON = 10;
 
   // effect row frames
   public static var ROW_EFFECT = 3;
