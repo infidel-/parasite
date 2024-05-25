@@ -2,7 +2,6 @@
 package game;
 
 import const.*;
-import ai.*;
 import ai.AI;
 import _AIEffectType;
 import _ChatEmotion;

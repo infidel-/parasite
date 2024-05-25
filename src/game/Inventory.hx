@@ -364,6 +364,16 @@ class Inventory extends _SaveObject
       return null;
     }
 
+// returns all items with this id
+  public function getAll(id: String): Array<_Item>
+    {
+      var ret = [];
+      for (item in _list)
+        if (item.id == id)
+          ret.push(item);
+      return ret;
+    }
+
 // remove item by id
   public function remove(id: String)
     {
@@ -393,7 +403,7 @@ class Inventory extends _SaveObject
 
 
 // add item by id
-  public function addID(id: String, ?wear: Bool = false)
+  public function addID(id: String, ?wear: Bool = false): _Item
     {
       var item = ItemsConst.spawnItem(game, id);
       // wear/wield item automatically
@@ -403,6 +413,7 @@ class Inventory extends _SaveObject
             clothing = item;
         }
       else _list.add(item);
+      return item;
     }
 
 

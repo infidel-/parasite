@@ -60,6 +60,28 @@ class Door extends AreaObject
     {
       if (isOpen)
         return 1;
+      // door locked, check for key card
+      if (isLocked)
+        {
+          // check if player has correct key card
+          var cards = game.player.host.inventory.getAll('keycard');
+          for (item in cards)
+            {
+              if (item.lockID == lockID)
+                {
+                  isLocked = false;
+                  game.log('You command the host to unlock the door.');
+                  return 0;
+                }
+            }
+          // no card found
+          if (isLocked)
+            {
+              if (isPlayer)
+                game.log('The door is locked.', COLOR_HINT);
+              return 0;
+            }
+        }
 
       imageCol++; // opened door tile is right next to closed
       updateImage();

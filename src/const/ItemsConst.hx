@@ -289,7 +289,7 @@ class ItemsConst
       id: 'laptop',
       name: 'laptop',
       type: 'computer',
-      unknown: 'rectangular plastic object',
+      unknown: 'plastic rectangular object',
     },
     {
       id: 'radio',
@@ -365,6 +365,12 @@ class ItemsConst
       type: 'scenario',
       unknown: 'strange device',
       isKnown: true,
+    },
+    {
+      id: 'keycard',
+      name: 'keycard',
+      type: 'key',
+      unknown: 'flat rectangular object',
     },
   ];
 }

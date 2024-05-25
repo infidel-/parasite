@@ -1143,7 +1143,6 @@ class AreaGame extends _SaveObject
 
           // get all close clue spawn points
           var spawns = [];
-          var rect = getVisibleRect();
           for (pt in clueSpawnPoints)
             {
               // must be on screen
@@ -1173,7 +1172,7 @@ class AreaGame extends _SaveObject
             }
 
           // spawn items
-          for (i in 0...maxSpawn)
+          for (_ in 0...maxSpawn)
             {
               if (spawns.length == 0)
                 return;

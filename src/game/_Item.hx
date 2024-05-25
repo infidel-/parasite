@@ -13,7 +13,8 @@ import const.ItemsConst;
   public var info: _ItemInfo; // item info link
   public var event: scenario.Event; // scenario event link (for clues)
   var eventID: String;
-
+  public var lockID: String; // for key cards
+ 
   public function new(game, id, name, info, event)
     {
       this.game = game;
@@ -22,6 +23,7 @@ import const.ItemsConst;
       this.info = info;
       this.event = event;
       this.eventID = (event != null ? event.id : null);
+      this.lockID = null;
       init();
       initPost(false);
     }

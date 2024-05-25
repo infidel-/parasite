@@ -3,8 +3,9 @@ VERSION := $(shell cat VERSION)
 
 all: clean electron-mydebug
 
+#cp -f ~/Projects/Parasite/Ingame/*.png ../assets.paid.web/graphics/ && \
+
 electron-mydebug:
-	cp -f ~/Projects/Parasite/Ingame/*.png ../assets.paid.web/graphics/ && \
 	haxe project_electron.hxml -debug \
       -D mydebug \
       --connect 6000 && \

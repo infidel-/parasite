@@ -500,7 +500,10 @@ class ConsoleGame
             return;
 
           try {
-            game.player.host.inventory.addID(id);
+            var item = game.player.host.inventory.addID(id);
+            // kludge: set keycard lock id for now
+            if (item.name == 'keycard')
+              item.lockID = 'corp-mission';
           } catch (e) {
             game.log(e + '');
             return;

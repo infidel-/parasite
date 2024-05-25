@@ -2,7 +2,6 @@
 
 package scenario;
 
-import const.Goals;
 import const.ItemsConst;
 import objects.EventObject;
 import scenario.Scenario;
@@ -392,7 +391,7 @@ class GoalsAlienCrashLanding
                   break;
                 }
             // lock all doors with key card
-            trace(doors);
+//            trace(doors);
             for (door in doors)
               {
                 var objs = game.area.getObjectsAt(door.x, door.y);
@@ -646,7 +645,7 @@ class GoalsAlienCrashLanding
         y: Std.int(newArea.height / 2),
       }
       // create decoration
-      var shipDeco = createShipDecoration(game, newArea, loc,
+      createShipDecoration(game, newArea, loc,
         Const.TILE_GRASS_UNWALKABLE);
       // event object
       var obj = newArea.addEventObject(loc.x + 1, loc.y + 2, 'spaceship', 'spaceshipStart');
