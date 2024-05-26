@@ -2,7 +2,7 @@
 
 package game;
 
-import const.Goals;
+import ai.AI;
 
 class Goals extends _SaveObject
 {
@@ -79,6 +79,19 @@ class Goals extends _SaveObject
             return false;
         }
       return true;
+    }
+
+// called in ai constructor
+// NOTE: must be inserted manually in all AI classes
+  public function aiInit(ai: AI)
+    {
+      for (goal in _listCurrent)
+        {
+          var info = getInfo(goal);
+          if (info.aiInit == null)
+            continue;
+          info.aiInit(game, ai);
+        }
     }
 
 // receive a new goal

@@ -343,6 +343,17 @@ class GoalsAlienCrashLanding
         game.timeline.setVar('missionState', missionState);
       },
 
+      aiInit: function (game, ai) {
+        if (ai.type != 'smiler')
+          return;
+        // if we're in the mission target area, spawn with key card
+        var missionState = getMissionState(game);
+        if (game.area.id != missionState.areaID)
+          return;
+        var item = ai.inventory.addID('keycard');
+        item.lockID = 'corp-mission';
+      },
+
       onTurn: function (game, player) {
         var missionState = getMissionState(game);
         // if player has target host, complete goal

@@ -2,7 +2,6 @@
 
 package scenario;
 
-import const.Goals;
 import game.*;
 
 class Scenario

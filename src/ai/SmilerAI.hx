@@ -27,13 +27,7 @@ class SmilerAI extends HumanAI
           list.remove(skillID);
         }
       inventory.addID('smartphone');
-      // if we're in the mission target area, spawn with key card
-      var missionState = GoalsAlienCrashLanding.getMissionState(game);
-      if (game.area.id == missionState?.areaID)
-        {
-          var item = inventory.addID('keycard');
-          item.lockID = 'corp-mission';
-        }
+      game.goals.aiInit(this);
       initPost(false);
     }
 
