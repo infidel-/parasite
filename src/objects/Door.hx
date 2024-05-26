@@ -67,7 +67,8 @@ class Door extends AreaObject
           var cards = game.player.host.inventory.getAll('keycard');
           for (item in cards)
             {
-              if (item.lockID == lockID)
+              if (game.player.knowsItem(item.id) &&
+                  item.lockID == lockID)
                 {
                   isLocked = false;
                   game.log('You command the host to unlock the door.');

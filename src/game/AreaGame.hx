@@ -1465,7 +1465,9 @@ class Test {
       // get number of uncommon AI (spawned by alertness logic)
       var cnt = 0;
       for (ai in _ai)
-        if (!ai.isCommon && !ai.isGuard && !ai.parasiteAttached)
+        if (!ai.isCommon &&
+            !ai.isGuard &&
+            !ai.parasiteAttached)
           cnt++;
 
       // calc max possible number of AI
@@ -1498,7 +1500,7 @@ class Test {
       // TODO: i'll probably change this later to reflect different area types
       // and also add stages etc
       // for now let's keep it simple
-      for (i in 0...maxSpawn)
+      for (_ in 0...maxSpawn)
         spawnUnseenAI('police', false);
     }
 

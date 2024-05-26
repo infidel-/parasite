@@ -233,8 +233,8 @@ class WorldConst
         height: 60,
         canEnter: true,
         isInhabited: true,
-        commonAI: 5,
-        uncommonAI: 0,
+        commonAI: 10,
+        uncommonAI: 5,
         buildingChance: 0.006,
         lawType: 'security',
         lawResponseTime: 5,
@@ -243,7 +243,8 @@ class WorldConst
         lawResponseEnabled: true,
         isHighRisk: true,
         ai: [
-          'corpo' => 90,
+          'corpo' => 70,
+          'smiler' => 20,
           'security' => 10
         ],
         objects: [] // moved to facility generator
