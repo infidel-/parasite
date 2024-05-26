@@ -3,7 +3,6 @@
 package scenario;
 
 import scenario.Scenario;
-import const.WorldConst;
 
 class ScenarioAlienCrashLanding extends Scenario
 {

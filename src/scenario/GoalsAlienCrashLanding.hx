@@ -43,6 +43,13 @@ class GoalsAlienCrashLanding
       return state;
     }
 
+// helper: get full mission state 
+  public static function getMissionState(game: Game): _MissionState
+    {
+      var state: _MissionState = game.timeline.getDynamicVar('missionState');
+      return state;
+    }
+
   static function alienShipLocationFunc(game: Game): String
     {
       var state: _SpaceshipState = game.timeline.getDynamicVar('spaceshipState');
@@ -304,14 +311,6 @@ class GoalsAlienCrashLanding
       note: 'You need to locate the target host and invade it.',
       messageComplete: 'Target invaded. I need to return to my spaceship.',
 
-      onTurn: function (game, player) {
-        // if player has target host, complete
-        if (player.state == PLR_STATE_HOST &&
-            player.host.npc != null &&
-            player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
-          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
-      },
-
       onReceive: function (game, player) {
         // find random area
         var area = game.region.getRandomWithType(AREA_CORP, true);
@@ -334,34 +333,74 @@ class GoalsAlienCrashLanding
         game.debug('' + npc);
 
         // store npc id for later use
-        game.timeline.setVar('missionTargetID', npc.id);
-        game.timeline.setVar('missionTargetAreaID', area.id);
+        var missionState: _MissionState = {
+          npcID: npc.id,
+          areaID: area.id,
+          areaX: 0,
+          areaY: 0,
+          alertRaised: false,
+        };
+        game.timeline.setVar('missionState', missionState);
+      },
+
+      onTurn: function (game, player) {
+        var missionState = getMissionState(game);
+        // if player has target host, complete goal
+        if (player.state == PLR_STATE_HOST &&
+            player.host.npc != null &&
+            player.host.npc.id == missionState.npcID)
+          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
+
+        // when in mission area, check for alertness
+        if (missionState.alertRaised ||
+            game.area.id != missionState.areaID)
+          return;
+        if (game.area.alertness > 75)
+          {
+            missionState.alertRaised = true;
+            var languageID = getLanguageID(game);
+            game.message(
+              '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.');
+          }
+      },
+
+      leaveAreaPre: function (game, player, area) {
+        // when in corp area, disallow on alert raised
+        var missionState = getMissionState(game);
+        if (game.area.id != missionState.areaID)
+          return true;
+        if (missionState.alertRaised)
+          {
+            game.log('You cannot leave this area without completing the mission.');
+            game.scene.sounds.play('action-fail');
+            return false;
+          }
+        return true;
       },
 
       onEnter: function (game) {
         trace('onEnter!');
+        var missionState = getMissionState(game);
         // goal active, on enter spawn CEO
-        var areaID = game.timeline.getIntVar('missionTargetAreaID');
-        if (game.area.id != areaID)
+        if (game.area.id != missionState.areaID)
           return;
-        var npcID = game.timeline.getIntVar('missionTargetID');
-        var x = game.timeline.getIntVar('missionTargetAreaX');
-        var y = game.timeline.getIntVar('missionTargetAreaY');
+        var x = missionState.areaX,
+          y = missionState.areaY;
         // first entry - find a spot
         var firstTime = false;
         var pt = { x: x, y: y };
         if (x == 0 && y == 0)
           {
             pt = rollMissionTargetXY(game);
-            game.timeline.setVar('missionTargetAreaX', pt.x);
-            game.timeline.setVar('missionTargetAreaY', pt.y);
+            missionState.areaX = pt.x;
+            missionState.areaY = pt.y;
             firstTime = true;
           }
 
         // spawn ceo
         var npc = null;
         for (v in game.area.npc)
-          if (v.id == npcID)
+          if (v.id == missionState.npcID)
             {
               npc = v;
               break;
@@ -408,8 +447,8 @@ class GoalsAlienCrashLanding
       },
 
       noteFunc: function (game) {
-        var areaID = game.timeline.getIntVar('missionTargetAreaID');
-        var area = game.world.get(0).get(areaID);
+        var missionState = getMissionState(game);
+        var area = game.world.get(0).get(missionState.areaID);
         return Const.col('gray', Const.small(
           'Target location: (' + area.x + ',' + area.y + ')'));
       },
@@ -428,19 +467,11 @@ class GoalsAlienCrashLanding
       messageFailure: 'Mission failed. I will return to the HQ now.',
 
       onTurn: function (game, player) {
-/*
-        // if player is in habitat and has target host, complete mission
-        if (game.location == LOCATION_AREA &&
-            game.area.isHabitat &&
-            player.state == PLR_STATE_HOST &&
-            player.host.npc != null &&
-            player.host.npc.id == game.timeline.getIntVar('missionTargetID'))
-          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
-*/
         // if player does not possess target host, mission failure
+        var missionState = getMissionState(game);
         if (player.state != PLR_STATE_HOST ||
             player.host.npc == null ||
-            player.host.npc.id != game.timeline.getIntVar('missionTargetID'))
+            player.host.npc.id != missionState.npcID)
           game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
       },
 
@@ -589,6 +620,8 @@ class GoalsAlienCrashLanding
           parts.push(item.name);
         }
 
+      // store state for later use
+      // NOTE: we cannot store object link since this is not serializable
       var spaceshipState: _SpaceshipState = {
         location: 'study',
         studyAreaID: area.id,
@@ -607,9 +640,6 @@ class GoalsAlienCrashLanding
         hiddenObjectID: 0,
         alertRaised: false,
       }
-
-      // store object/area id for later use
-      // NOTE: we cannot store object link since this is not serializable
       game.timeline.setVar('spaceshipState', spaceshipState);
     }
 
@@ -744,4 +774,12 @@ typedef _SpaceshipState = {
   // hidden location
   var hiddenAreaID: Int;
   var hiddenObjectID: Int;
+}
+
+typedef _MissionState = {
+  var npcID: Int;
+  var areaID: Int; // mission target area id
+  var alertRaised: Bool;
+  var areaX: Int;
+  var areaY: Int;
 }

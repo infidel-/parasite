@@ -2,10 +2,9 @@
 
 package ai;
 
-import ai.AI;
-import _AIState;
+import scenario.GoalsAlienCrashLanding;
+import scenario.GoalsAlienCrashLanding._MissionState;
 import game.Game;
-import const.*;
 
 class SmilerAI extends HumanAI
 {
@@ -29,8 +28,8 @@ class SmilerAI extends HumanAI
         }
       inventory.addID('smartphone');
       // if we're in the mission target area, spawn with key card
-      var missionTargetAreaID = game.timeline.getIntVar('missionTargetAreaID');
-      if (game.area.id == missionTargetAreaID)
+      var missionState = GoalsAlienCrashLanding.getMissionState(game);
+      if (game.area.id == missionState?.areaID)
         {
           var item = inventory.addID('keycard');
           item.lockID = 'corp-mission';
