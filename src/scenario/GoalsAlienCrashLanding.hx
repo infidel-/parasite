@@ -310,6 +310,7 @@ class GoalsAlienCrashLanding
       name: 'Mission: Abduction',
       note: 'You need to locate the target host and invade it.',
       messageComplete: 'Target invaded. I need to return to my spaceship.',
+      messageFailure: 'Mission failed. I will return to the HQ now.',
 
       onReceive: function (game, player) {
         // find random area
@@ -363,17 +364,36 @@ class GoalsAlienCrashLanding
           game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
 
         // when in mission area, check for alertness
-        if (missionState.alertRaised ||
-            game.area.id != missionState.areaID)
-          return;
-        if (game.area.alertness > 75)
+        if (!missionState.alertRaised &&
+            game.area.id == missionState.areaID &&
+            game.area.alertness > 75)
           {
             missionState.alertRaised = true;
             var languageID = getLanguageID(game);
             game.message(
               '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.');
           }
+
+        // if mission npc is dead, fail the goal
+        var ev = game.timeline.getEvent('alienMission');
+        for (npc in ev.npc)
+          {
+            if (npc.id != missionState.npcID)
+              continue;
+            if (npc.isDead)
+              game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION);
+          }
+
       },
+/*
+      onTurn: function (game, player) {
+        // if player does not possess target host, mission failure
+        var missionState = getMissionState(game);
+        if (player.state != PLR_STATE_HOST ||
+            player.host.npc == null ||
+            player.host.npc.id != missionState.npcID)
+          game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+      }, */
 
       leaveAreaPre: function (game, player, area) {
         // when in corp area, disallow on alert raised
@@ -466,6 +486,10 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+      },
+
+      onFailure: function (game, player) {
+        game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
       },
     },
 
