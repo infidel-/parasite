@@ -55,6 +55,7 @@ class AlienMissionAbduction
       item.lockID = 'corp-mission';
     }
 
+// called every turn
   public static function onTurn(game:Game, player:Player)
     {
       var missionState = getMissionState(game);
@@ -66,13 +67,32 @@ class AlienMissionAbduction
 
       // when in mission area, check for alertness
       if (!missionState.alertRaised &&
-          game.area.id == missionState.areaID &&
-          game.area.alertness > 75)
+          game.area.id == missionState.areaID)
         {
-          missionState.alertRaised = true;
-          var languageID = getLanguageID(game);
-          game.message(
-            '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.');
+          // check if area manager has call law events
+          for (ev in game.managerArea.getList())
+            if (ev.type == AREAEVENT_CALL_LAW ||
+                ev.type == AREAEVENT_ALERT_LAW ||
+                ev.type == AREAEVENT_ARRIVE_LAW)
+              {
+                missionState.alertRaised = true;
+                game.area.alertness = 100;
+                var languageID = getLanguageID(game);
+                game.message(
+                  '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.');
+                break;
+              }
+        }
+      // alert raised
+      if (game.area.id == missionState.areaID &&
+          missionState.alertRaised)
+        {
+          // freeze alertness
+          game.area.alertness = 100;
+/* not really playable
+          // increase AI alertness
+          for (ai in game.area.getAllAI())
+            ai.alertness += 10;*/
         }
 
       // if mission npc is dead, fail the goal

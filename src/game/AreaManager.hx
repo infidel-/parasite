@@ -544,10 +544,6 @@ class AreaManager extends _SaveObject
       area.removeObject(o);
     }
 
-
-// ==================================================================================
-
-
 // log shortcut
   inline function log(s: String)
     {
@@ -556,6 +552,11 @@ class AreaManager extends _SaveObject
       game.debug(s);
     }
 
+// get list of events
+  public function getList(): List<AreaEvent>
+    {
+      return _list;
+    }
 
   function get_area(): AreaGame
     {
