@@ -11,7 +11,7 @@ import objects.*;
 class GoalsAlienCrashLanding
 {
 // helper: get alien language id
-  static function getLanguageID(game: Game): Int
+  public static function getLanguageID(game: Game): Int
     {
       return game.timeline.getIntVar('alienLanguageID');
     }
@@ -241,6 +241,7 @@ class GoalsAlienCrashLanding
       messageComplete:
         'After initiating the startup sequence you board the ship. ' +
         'You activate the engine and move the ship away to a safer location.',*/
+
       onComplete: function (game, player) {
         // dynamic completion message
         var languageID = getLanguageID(game);
@@ -252,6 +253,7 @@ class GoalsAlienCrashLanding
         moveSpaceship(game);
         game.goals.receive(SCENARIO_ALIEN_ENTER_SHIP);
       },
+
       onTurn: function (game, player) {
         // when in lab area, check for alertness
         var state = getSpaceshipState(game);
@@ -268,6 +270,7 @@ class GoalsAlienCrashLanding
               '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.');
           }
       },
+
       leaveAreaPre: function (game, player, area) {
         // when in lab area, disallow on alert raised
         var state = getSpaceshipState(game);
@@ -312,171 +315,11 @@ class GoalsAlienCrashLanding
       messageComplete: 'Target invaded. I need to return to my spaceship.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
 
-      onReceive: function (game, player) {
-        // find random area
-        var area = game.region.getRandomWithType(AREA_CORP, true);
-
-        // add hidden NPC to it
-        // NOTE: all dynamic NPCs should belong to an event anyway
-        var npc = new NPC(game);
-        npc.event = game.timeline.getEvent('alienMission');
-        npc.event.npc.push(npc);
-        npc.isMale = true;
-        npc.tileAtlasX = 3;
-        npc.tileAtlasY = 4;
-        npc.job = 'corporate executive';
-        npc.jobKnown = true;
-        npc.type = 'corpo';
-        npc.areaID = area.id;
-        npc.areaKnown = true;
-        npc.noEventClues = true; // cannot brain probe for clues
-        area.npc.add(npc);
-        game.debug('' + npc);
-
-        // store npc id for later use
-        var missionState: _MissionState = {
-          npcID: npc.id,
-          areaID: area.id,
-          areaX: 0,
-          areaY: 0,
-          alertRaised: false,
-        };
-        game.timeline.setVar('missionState', missionState);
-      },
-
-      aiInit: function (game, ai) {
-        if (ai.type != 'smiler')
-          return;
-        // if we're in the mission target area, spawn with key card
-        var missionState = getMissionState(game);
-        if (game.area.id != missionState.areaID)
-          return;
-        var item = ai.inventory.addID('keycard');
-        item.lockID = 'corp-mission';
-      },
-
-      onTurn: function (game, player) {
-        var missionState = getMissionState(game);
-        // if player has target host, complete goal
-        if (player.state == PLR_STATE_HOST &&
-            player.host.npc != null &&
-            player.host.npc.id == missionState.npcID)
-          game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
-
-        // when in mission area, check for alertness
-        if (!missionState.alertRaised &&
-            game.area.id == missionState.areaID &&
-            game.area.alertness > 75)
-          {
-            missionState.alertRaised = true;
-            var languageID = getLanguageID(game);
-            game.message(
-              '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.');
-          }
-
-        // if mission npc is dead, fail the goal
-        var ev = game.timeline.getEvent('alienMission');
-        for (npc in ev.npc)
-          {
-            if (npc.id != missionState.npcID)
-              continue;
-            if (npc.isDead)
-              game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION);
-          }
-
-      },
-/*
-      onTurn: function (game, player) {
-        // if player does not possess target host, mission failure
-        var missionState = getMissionState(game);
-        if (player.state != PLR_STATE_HOST ||
-            player.host.npc == null ||
-            player.host.npc.id != missionState.npcID)
-          game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
-      }, */
-
-      leaveAreaPre: function (game, player, area) {
-        // when in corp area, disallow on alert raised
-        var missionState = getMissionState(game);
-        if (game.area.id != missionState.areaID)
-          return true;
-        if (missionState.alertRaised)
-          {
-            game.log('You cannot leave this area without completing the mission.');
-            game.scene.sounds.play('action-fail');
-            return false;
-          }
-        return true;
-      },
-
-      onEnter: function (game) {
-        trace('onEnter!');
-        var missionState = getMissionState(game);
-        // goal active, on enter spawn CEO
-        if (game.area.id != missionState.areaID)
-          return;
-        var x = missionState.areaX,
-          y = missionState.areaY;
-        // first entry - find a spot
-        var firstTime = false;
-        var pt = { x: x, y: y };
-        if (x == 0 && y == 0)
-          {
-            pt = rollMissionTargetXY(game);
-            missionState.areaX = pt.x;
-            missionState.areaY = pt.y;
-            firstTime = true;
-          }
-
-        // spawn ceo
-        var npc = null;
-        for (v in game.area.npc)
-          if (v.id == missionState.npcID)
-            {
-              npc = v;
-              break;
-            }
-        var ai = game.area.spawnAI('corpo', pt.x, pt.y);
-        game.debug('spawn npc ' + npc.id + ' (ai: ' + ai.id + ', pos: ' + ai.x + ',' + ai.y + ')');
-        ai.setNPC(npc);
-        ai.isGuard = true;
-
-        // find all doors leading to this room and lock them
-        if (firstTime)
-          {
-            // find room record
-            var generatorInfo = game.area.generatorInfo;
-            var room = generatorInfo.getRoomAt(ai.x, ai.y);
-            if (room == null)
-              {
-                trace('room is null for (' + ai.x + ',' + ai.y + ')!');
-                return;
-              }
-            var doors = [];
-            for (d in generatorInfo.doors)
-              if (d.roomID1 == room.id ||
-                  d.roomID2 == room.id)
-                {
-                  doors.push(d);
-                  break;
-                }
-            // lock all doors with key card
-//            trace(doors);
-            for (door in doors)
-              {
-                var objs = game.area.getObjectsAt(door.x, door.y);
-                for (o in objs)
-                  if (o.type == 'door')
-                    {
-                      var d: objects.Door = cast o;
-                      d.isLocked = true;
-                      d.lockID = 'corp-mission';
-                      break;
-                    }
-              }
-          }
-      },
-
+      aiInit: AlienMissionAbduction.aiInit,
+      leaveAreaPre: AlienMissionAbduction.leaveAreaPre,
+      onEnter: AlienMissionAbduction.onEnter,
+      onReceive: AlienMissionAbduction.onReceive,
+      onTurn: AlienMissionAbduction.onTurn,
       noteFunc: function (game) {
         var missionState = getMissionState(game);
         var area = game.world.get(0).get(missionState.areaID);
@@ -742,50 +585,6 @@ class GoalsAlienCrashLanding
             shipDeco.push(o.id);
           }
       return shipDeco;
-    }
-
-// helper - find new spawn point for corp mission target
-  static function rollMissionTargetXY(game)
-    {
-      // find nearest office (marble floor)
-      // NOTE: there can be no office, then the task is easier
-      // limit by 100 points
-      var solopts = [];
-      var workpts = [];
-      var meetingpts = [];
-      var cells = game.area.getCells();
-      for (y in 0...cells.length)
-        if (solopts.length < 100)
-          {
-            for (x in 0...cells[y].length)
-              if (cells[x][y] == Const.TILE_FLOOR_MARBLE1)
-                solopts.push({ x: x, y: y });
-              else if (cells[x][y] == Const.TILE_FLOOR_CARPET_MEETING)
-                meetingpts.push({ x: x, y: y });
-              else if (cells[x][y] == Const.TILE_FLOOR_WOOD2)
-                workpts.push({ x: x, y: y });
-          }
-        else break;
-
-      // solo office -> meeting room -> work room
-      var pt = null;
-      if (solopts.length > 0)
-        {
-          game.debug('solo office found');
-          pt = solopts[Std.random(solopts.length)];
-        }
-      else if (meetingpts.length > 0)
-        {
-          game.debug('meeting room found');
-          pt = meetingpts[Std.random(meetingpts.length)];
-        }
-      else
-        {
-          game.debug('work room found');
-          pt = workpts[Std.random(workpts.length)];
-        }
-
-      return pt;
     }
 }
 

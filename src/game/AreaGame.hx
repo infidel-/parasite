@@ -1501,7 +1501,7 @@ class Test {
       // and also add stages etc
       // for now let's keep it simple
       for (_ in 0...maxSpawn)
-        spawnUnseenAI('police', false);
+        spawnUnseenAI(info.lawType, false);
     }
 
 
