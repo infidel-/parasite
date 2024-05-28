@@ -616,4 +616,6 @@ typedef _MissionState = {
   var alertRaised: Bool;
   var areaX: Int;
   var areaY: Int;
+  var guardX: Int;
+  var guardY: Int;
 }

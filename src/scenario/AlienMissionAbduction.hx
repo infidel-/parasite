@@ -38,6 +38,8 @@ class AlienMissionAbduction
         areaID: area.id,
         areaX: 0,
         areaY: 0,
+        guardX: 0,
+        guardY: 0,
         alertRaised: false,
       };
       game.timeline.setVar('missionState', missionState);
@@ -127,16 +129,24 @@ class AlienMissionAbduction
       // goal active, on enter spawn CEO
       if (game.area.id != missionState.areaID)
         return;
-      var x = missionState.areaX,
-        y = missionState.areaY;
       // first entry - find a spot
       var firstTime = false;
-      var pt = { x: x, y: y };
-      if (x == 0 && y == 0)
+      var pt = {
+        x: missionState.areaX,
+        y: missionState.areaY
+      };
+      var guardPt = {
+        x: missionState.guardX,
+        y: missionState.guardY
+      }
+      if (pt.x == 0 && pt.y == 0)
         {
+          // find mission target spawn point
           pt = rollMissionTargetXY(game);
           missionState.areaX = pt.x;
           missionState.areaY = pt.y;
+          // find personal guard spawn point
+          guardPt = rollGuardXY(game, pt);
           firstTime = true;
         }
 
@@ -152,6 +162,11 @@ class AlienMissionAbduction
       game.debug('spawn npc ' + npc.id + ' (ai: ' + ai.id + ', pos: ' + ai.x + ',' + ai.y + ')');
       ai.setNPC(npc);
       ai.isGuard = true;
+      if (guardPt != null)
+        {
+          var guard = game.area.spawnAI('security', guardPt.x, guardPt.y);
+          guard.isGuard = true;
+        }
 
       // find all doors leading to this room and lock them
       if (firstTime)
@@ -187,6 +202,21 @@ class AlienMissionAbduction
                   }
             }
         }
+    }
+
+// helper - find new spawn point for personal guard
+  static function rollGuardXY(game, pt)
+    {
+      // get all points around the mission target
+      var pts = [];
+      for (yy in pt.y - 3...pt.y + 3)
+        for (xx in pt.x - 3...pt.x + 3)
+          if (game.area.isWalkable(xx, yy))
+            if (xx != pt.x || yy != pt.y)
+              pts.push({ x: xx, y: yy });
+      if (pts.length == 0)
+        return null;
+      return pts[Std.random(pts.length)];
     }
 
 // helper - find new spawn point for corp mission target
