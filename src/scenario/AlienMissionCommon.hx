@@ -13,7 +13,6 @@ class AlienMissionCommon
   public static function onReceive(game:Game, player:Player)
     {
       // find random area
-      var missionType = game.timeline.getStringVar('alienMissionType');
       var area = game.region.getRandomWithType(AREA_CORP, true);
 
       // add hidden NPC to it
@@ -48,7 +47,6 @@ class AlienMissionCommon
 
   public static function aiInit(game:Game, ai:AI)
     {
-      var missionType = game.timeline.getStringVar('alienMissionType');
       if (ai.type != 'smiler')
         return;
       // if we're in the mission target area, spawn with key card
@@ -72,7 +70,6 @@ class AlienMissionCommon
                 player.host.npc != null &&
                 player.host.npc.id == missionState.npcID)
               game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
-          case 'liquidation':
         }
 
       // when in mission area, check for alertness
@@ -116,6 +113,18 @@ class AlienMissionCommon
           case 'liquidation':
             if (npc.isDead)
               game.goals.complete(SCENARIO_ALIEN_MISSION_LIQUIDATION);
+          case 'intel':
+            if (npc.isDead)
+              game.goals.fail(SCENARIO_ALIEN_MISSION_INTEL);
+            else
+              {
+                var playerHost = player.host;
+                if (playerHost != null &&
+                    playerHost.npc != null &&
+                    playerHost.npc.id == missionState.npcID &&
+                    playerHost.brainProbed > 0)
+                  game.goals.complete(SCENARIO_ALIEN_MISSION_INTEL);
+              }
         }
     }
 
@@ -272,5 +281,14 @@ class AlienMissionCommon
         }
 
       return pt;
+    }
+
+// mission note
+  public static function noteFunc(game:Game): String
+    {
+      var missionState = getMissionState(game);
+      var area = game.world.get(0).get(missionState.areaID);
+      return Const.col('gray', Const.small(
+        'Target location: (' + area.x + ',' + area.y + ')'));
     }
 }

@@ -83,14 +83,20 @@ class ScenarioAlienCrashLanding extends Scenario
           isHidden: true,
           init: function (timeline: scenario.Timeline)
             {
-              var tmp = [ 'abduction', 'liquidation' ];
+              var tmp = [ 'abduction', 'liquidation', 'intel' ];
               var type = tmp[Std.random(tmp.length)];
               timeline.setVar('alienMissionType', type);
               timeline.setVar('alienLanguageID', 1 + Std.random(4));
 
               // change event note on the fly
               var ev = timeline.getEvent('alienMission');
-              ev.notes[0].text += ' The mission type was ' + type + '.';
+              var text = type;
+              switch (type)
+                {
+                  case 'intel':
+                    text = 'intelligence collection';
+                }
+              ev.notes[0].text += ' The mission type was ' + text + '.';
             },
 
           notes: [

@@ -314,6 +314,8 @@ class GoalsAlienCrashLanding
               goalID = SCENARIO_ALIEN_MISSION_ABDUCTION;
             case 'liquidation':
               goalID = SCENARIO_ALIEN_MISSION_LIQUIDATION;
+            case 'intel':
+              goalID = SCENARIO_ALIEN_MISSION_INTEL;
           }
         game.goals.receive(goalID);
       },
@@ -331,12 +333,7 @@ class GoalsAlienCrashLanding
       onEnter: AlienMissionCommon.onEnter,
       onReceive: AlienMissionCommon.onReceive,
       onTurn: AlienMissionCommon.onTurn,
-      noteFunc: function (game) {
-        var missionState = getMissionState(game);
-        var area = game.world.get(0).get(missionState.areaID);
-        return Const.col('gray', Const.small(
-          'Target location: (' + area.x + ',' + area.y + ')'));
-      },
+      noteFunc: AlienMissionCommon.noteFunc,
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
@@ -391,12 +388,30 @@ class GoalsAlienCrashLanding
       onEnter: AlienMissionCommon.onEnter,
       onReceive: AlienMissionCommon.onReceive,
       onTurn: AlienMissionCommon.onTurn,
-      noteFunc: function (game) {
-        var missionState = getMissionState(game);
-        var area = game.world.get(0).get(missionState.areaID);
-        return Const.col('gray', Const.small(
-          'Target location: (' + area.x + ',' + area.y + ')'));
+      noteFunc: AlienMissionCommon.noteFunc,
+
+      onComplete: function (game, player) {
+        game.goals.receive(SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP);
       },
+
+      onFailure: function (game, player) {
+        game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
+      },
+    },
+
+    SCENARIO_ALIEN_MISSION_INTEL => {
+      id: SCENARIO_ALIEN_MISSION_INTEL,
+      name: 'Mission: Intel Collection',
+      note: 'You need to locate the target host and probe its brain.',
+      messageComplete: 'Target scanned. I need to return to my spaceship.',
+      messageFailure: 'Mission failed. I will return to the HQ now.',
+
+      aiInit: AlienMissionCommon.aiInit,
+      leaveAreaPre: AlienMissionCommon.leaveAreaPre,
+      onEnter: AlienMissionCommon.onEnter,
+      onReceive: AlienMissionCommon.onReceive,
+      onTurn: AlienMissionCommon.onTurn,
+      noteFunc: AlienMissionCommon.noteFunc,
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP);
