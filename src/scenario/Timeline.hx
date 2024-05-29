@@ -4,7 +4,6 @@ package scenario;
 
 import scenario.Scenario;
 import game.Game;
-import const.WorldConst;
 import const.NameConst;
 
 class Timeline extends _SaveObject
@@ -566,6 +565,15 @@ class Timeline extends _SaveObject
       return _eventsMap[id];
     }
 
+// get event npc by id
+  public function getEventNPC(id: String, npcID: Int): NPC
+    {
+      var e = getEvent(id);
+      if (e == null)
+        return null;
+      return e.getNPC(npcID);
+    }
+
 // set timeline variable
   public inline function setVar(key: String, value: Dynamic)
     {
@@ -605,6 +613,11 @@ class Timeline extends _SaveObject
   public inline function getGoals()
     {
       return scenario.goals;
+    }
+
+  public inline function debug(s)
+    {
+      game.debug(s);
     }
 }
 

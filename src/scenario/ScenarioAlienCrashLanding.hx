@@ -81,11 +81,10 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien mission',
           next: 'shipSpottedCiv',
           isHidden: true,
-          init: function (timeline)
+          init: function (timeline: scenario.Timeline)
             {
-              var tmp = [ 'abduction', 'infiltration', 'research' ];
-//              var type = tmp[Std.random(tmp.length)];
-              var type = 'abduction';
+              var tmp = [ 'abduction', 'liquidation' ];
+              var type = tmp[Std.random(tmp.length)];
               timeline.setVar('alienMissionType', type);
               timeline.setVar('alienLanguageID', 1 + Std.random(4));
 

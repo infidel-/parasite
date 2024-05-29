@@ -7,12 +7,13 @@ import scenario.GoalsAlienCrashLanding.*;
 import ai.*;
 import game.*;
 
-class AlienMissionAbduction
+class AlienMissionCommon
 {
 // on receive goal
   public static function onReceive(game:Game, player:Player)
     {
       // find random area
+      var missionType = game.timeline.getStringVar('alienMissionType');
       var area = game.region.getRandomWithType(AREA_CORP, true);
 
       // add hidden NPC to it
@@ -47,6 +48,7 @@ class AlienMissionAbduction
 
   public static function aiInit(game:Game, ai:AI)
     {
+      var missionType = game.timeline.getStringVar('alienMissionType');
       if (ai.type != 'smiler')
         return;
       // if we're in the mission target area, spawn with key card
@@ -61,11 +63,17 @@ class AlienMissionAbduction
   public static function onTurn(game:Game, player:Player)
     {
       var missionState = getMissionState(game);
-      // if player has target host, complete goal
-      if (player.state == PLR_STATE_HOST &&
-          player.host.npc != null &&
-          player.host.npc.id == missionState.npcID)
-        game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
+      var missionType = game.timeline.getStringVar('alienMissionType');
+      switch (missionType)
+        {
+          // if player has target host, complete goal
+          case 'abduction':
+            if (player.state == PLR_STATE_HOST &&
+                player.host.npc != null &&
+                player.host.npc.id == missionState.npcID)
+              game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION);
+          case 'liquidation':
+        }
 
       // when in mission area, check for alertness
       if (!missionState.alertRaised &&
@@ -97,14 +105,17 @@ class AlienMissionAbduction
             ai.alertness += 10;*/
         }
 
-      // if mission npc is dead, fail the goal
-      var ev = game.timeline.getEvent('alienMission');
-      for (npc in ev.npc)
+      var npc = game.timeline.getEventNPC('alienMission',
+        missionState.npcID);
+      switch (missionType)
         {
-          if (npc.id != missionState.npcID)
-            continue;
-          if (npc.isDead)
-            game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION);
+          // if mission npc is dead, fail the goal
+          case 'abduction':
+            if (npc.isDead)
+              game.goals.fail(SCENARIO_ALIEN_MISSION_ABDUCTION);
+          case 'liquidation':
+            if (npc.isDead)
+              game.goals.complete(SCENARIO_ALIEN_MISSION_LIQUIDATION);
         }
     }
 

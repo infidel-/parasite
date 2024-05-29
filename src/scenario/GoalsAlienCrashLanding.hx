@@ -168,7 +168,7 @@ class GoalsAlienCrashLanding
       },
     }],
 
-    'spaceshipAbductionSuccess' => [{
+    'spaceshipSuccess' => [{
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
@@ -177,11 +177,21 @@ class GoalsAlienCrashLanding
         // NOTE: obj field will be set up on init
       },
       func: function (game, player, id) {
-        game.goals.complete(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+        var missionType = game.timeline.getStringVar('alienMissionType');
+        var goalID: _Goal = null;
+        switch (missionType)
+          {
+            case 'abduction':
+              goalID = SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP;
+            default:
+              goalID = SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP;
+          }
+        game.goals.complete(goalID);
       },
     }],
 
-    'spaceshipAbductionFailure' => [{
+
+    'spaceshipFailure' => [{
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
@@ -296,15 +306,16 @@ class GoalsAlienCrashLanding
         'Spending some time on the computer you remember what was your initial goal on this planet. ' +
         'You have a mission. You need to complete it.',
       onComplete: function (game, player) {
-        // get the mission goal
-        if (game.timeline.getStringVar('alienMissionType') == 'abduction')
-          game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION);
-/*
-        else if (game.timeline.getStringVar('alienMissionType') == 'infiltration')
-          game.goals.receive(SCENARIO_ALIEN_MISSION_INFILTRATION);
-        else if (game.timeline.getStringVar('alienMissionType') == 'research')
-          game.goals.receive(SCENARIO_ALIEN_MISSION_RESEARCH);
-*/
+        var missionType = game.timeline.getStringVar('alienMissionType');
+        var goalID: _Goal = null;
+        switch (missionType)
+          {
+            case 'abduction':
+              goalID = SCENARIO_ALIEN_MISSION_ABDUCTION;
+            case 'liquidation':
+              goalID = SCENARIO_ALIEN_MISSION_LIQUIDATION;
+          }
+        game.goals.receive(goalID);
       },
     },
 
@@ -315,11 +326,11 @@ class GoalsAlienCrashLanding
       messageComplete: 'Target invaded. I need to return to my spaceship.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
 
-      aiInit: AlienMissionAbduction.aiInit,
-      leaveAreaPre: AlienMissionAbduction.leaveAreaPre,
-      onEnter: AlienMissionAbduction.onEnter,
-      onReceive: AlienMissionAbduction.onReceive,
-      onTurn: AlienMissionAbduction.onTurn,
+      aiInit: AlienMissionCommon.aiInit,
+      leaveAreaPre: AlienMissionCommon.leaveAreaPre,
+      onEnter: AlienMissionCommon.onEnter,
+      onReceive: AlienMissionCommon.onReceive,
+      onTurn: AlienMissionCommon.onTurn,
       noteFunc: function (game) {
         var missionState = getMissionState(game);
         var area = game.world.get(0).get(missionState.areaID);
@@ -355,7 +366,7 @@ class GoalsAlienCrashLanding
 
       onReceive: function (game, player) {
         var obj = getSpaceshipObject(game);
-        obj.infoID = 'spaceshipAbductionSuccess';
+        obj.infoID = 'spaceshipSuccess';
       },
 
       onComplete: function (game, player) {
@@ -368,7 +379,55 @@ class GoalsAlienCrashLanding
       },
     },
 
+    SCENARIO_ALIEN_MISSION_LIQUIDATION => {
+      id: SCENARIO_ALIEN_MISSION_LIQUIDATION,
+      name: 'Mission: Liquidation',
+      note: 'You need to locate the target host and liquidate it.',
+      messageComplete: 'Target liquidated. I need to return to my spaceship.',
+      messageFailure: 'Mission failed. I will return to the HQ now.',
 
+      aiInit: AlienMissionCommon.aiInit,
+      leaveAreaPre: AlienMissionCommon.leaveAreaPre,
+      onEnter: AlienMissionCommon.onEnter,
+      onReceive: AlienMissionCommon.onReceive,
+      onTurn: AlienMissionCommon.onTurn,
+      noteFunc: function (game) {
+        var missionState = getMissionState(game);
+        var area = game.world.get(0).get(missionState.areaID);
+        return Const.col('gray', Const.small(
+          'Target location: (' + area.x + ',' + area.y + ')'));
+      },
+
+      onComplete: function (game, player) {
+        game.goals.receive(SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP);
+      },
+
+      onFailure: function (game, player) {
+        game.goals.receive(SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP);
+      },
+    },
+
+// common success goal for some missions
+    SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP => {
+      id: SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP,
+      name: 'Return to spaceship',
+      note: 'You need to return to the spaceship.',
+      noteFunc: alienShipLocationFunc,
+      messageComplete: 'Returning to the HQ now...',
+
+      onReceive: function (game, player) {
+        // change spaceship action contents
+        var obj = getSpaceshipObject(game);
+        obj.infoID = 'spaceshipSuccess';
+      },
+
+      onComplete: function (game, player) {
+        // finish game
+        game.finish('win', 'You have succeeded in your mission.');
+      },
+    },
+
+// common failure goal for all missions
     SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP => {
       id: SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
       name: 'Return to spaceship',
@@ -379,12 +438,12 @@ class GoalsAlienCrashLanding
       onReceive: function (game, player) {
         // change spaceship action contents
         var obj = getSpaceshipObject(game);
-        obj.infoID = 'spaceshipAbductionFailure';
+        obj.infoID = 'spaceshipFailure';
       },
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'You have failed in your original mission.');
+        game.finish('win', 'You have failed in your mission.');
       },
     },
   ];

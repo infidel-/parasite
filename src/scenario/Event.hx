@@ -47,6 +47,7 @@ class Event extends _SaveObject
     {
     }
 
+// get npc by id
   public function getNPC(id: Int): NPC
     {
       for (n in npc)
