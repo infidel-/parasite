@@ -61,7 +61,7 @@ class Door extends AreaObject
       if (isOpen)
         return 1;
       // door locked, check for key card
-      if (isLocked)
+      if (isPlayer && isLocked)
         {
           // check if player has correct key card
           var cards = game.player.host.inventory.getAll('keycard');
@@ -79,7 +79,10 @@ class Door extends AreaObject
           if (isLocked)
             {
               if (isPlayer)
-                game.log('The door is locked.', COLOR_HINT);
+                {
+                  game.log('The door is locked.', COLOR_HINT);
+                  game.scene.sounds.play('action-fail');
+                }
               return 0;
             }
         }

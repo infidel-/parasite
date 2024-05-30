@@ -2,8 +2,6 @@
 
 package ai;
 
-import scenario.GoalsAlienCrashLanding;
-import scenario.GoalsAlienCrashLanding._MissionState;
 import game.Game;
 
 class SmilerAI extends HumanAI
@@ -51,5 +49,17 @@ class SmilerAI extends HumanAI
   public override function onStateChange()
     {
       onStateChangeDefault();
+    }
+
+// event hook: pre-attach check
+  public override function attachPre(): Bool
+    {
+      if (chat.consent < 100)
+        {
+          game.log('You are dazed by the potency of the smile and pull back.');
+          game.scene.sounds.play('action-fail');
+          return false;
+        }
+      return true;
     }
 }

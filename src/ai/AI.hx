@@ -1451,6 +1451,11 @@ public function show()
   public dynamic function onNotice()
     {}
 
+// event hook: pre-attach check
+// NOTE: returns true if attachment is allowed
+  public dynamic function attachPre(): Bool
+    { return true; }
+
 // ======================================================================
 
 

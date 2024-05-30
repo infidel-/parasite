@@ -4,7 +4,6 @@ package ai;
 
 import game.Game;
 import const.ChatConst;
-import const.NameConst;
 
 class HumanAI extends AI
 {

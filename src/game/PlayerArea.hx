@@ -621,6 +621,10 @@ class PlayerArea extends _SaveObject
           return false;
         }
 
+      // check for pre-attach hook
+      if (!ai.attachPre())
+        return false;
+
       // move to the same spot as AI
       moveTo(ai.x, ai.y);
 
