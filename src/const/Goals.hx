@@ -2,9 +2,6 @@
 
 package const;
 
-import game.Game;
-import game.Player;
-
 class Goals
 {
   public static var map: Map<_Goal, GoalInfo> = [
@@ -319,7 +316,7 @@ class Goals
       },
     },
 
-    // ========================= group branch (?)
+    // ========================= misc mutations branch
 
     // fake goal
     GOAL_LEARN_FALSE_MEMORIES => {
@@ -331,6 +328,19 @@ class Goals
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_FALSE_MEMORIES);
         game.profile.addPediaArticle('impFalseMemories');
+      },
+    },
+
+    // fake goal
+    GOAL_LEARN_ENGRAM => {
+      id: GOAL_LEARN_ENGRAM,
+      isHidden: true,
+      name: '-',
+      note: '-',
+      messageReceive: 'While investigating humans I\'ve used their maps. If I could reliably store that data in the host brain...',
+      onReceive: function (game, player) {
+        player.evolutionManager.addImprov(IMP_ENGRAM);
+//        game.profile.addPediaArticle('impEngram');
       },
     },
 
@@ -486,19 +496,6 @@ class Goals
       name: 'Uncover more events',
       note: 'Continue your progress through the timeline.',
     },
-/*
-
-     => {
-      id: ,
-      name: '',
-      note: '',
-      messageReceive: '',
-      messageComplete: '',
-      onComplete: function (game, player) {
-        game.goals.receive();
-      }
-    },
-*/
     ];
 }
 

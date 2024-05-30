@@ -211,7 +211,8 @@ class Inventory extends _SaveObject
       game.goals.complete(GOAL_LEARN_ITEMS);
 
       // goal completion
-      if (item.info.type == 'phone' || item.id == 'smartphone' ||
+      if (item.info.type == 'phone' ||
+          item.id == 'smartphone' ||
           item.info.type == 'radio')
         game.goals.complete(GOAL_TUTORIAL_COMMS);
     }
@@ -225,6 +226,7 @@ class Inventory extends _SaveObject
       if (skillLevel == 0)
         {
           game.log('You require the computer use skill to do that.', COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
@@ -235,6 +237,7 @@ class Inventory extends _SaveObject
             game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
           else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
           game.profile.addPediaArticle('msgConcentration');
+          game.scene.sounds.play('item-fail');
           return false;
         }
 
@@ -255,6 +258,7 @@ class Inventory extends _SaveObject
       if (allKnown)
         {
           game.log('You have already researched all known persons.', COLOR_HINT);
+          game.scene.sounds.play('item-fail');
           return false;
         }
 
@@ -269,8 +273,8 @@ class Inventory extends _SaveObject
         });
       if (!ret)
         {
-          game.scene.sounds.play('item-fail');
           game.log('You have failed to use the human device properly. You still gain some insight.');
+          game.scene.sounds.play('item-fail');
           game.player.skills.increase(SKILL_COMPUTER, 1);
           return true;
         }
@@ -286,8 +290,9 @@ class Inventory extends _SaveObject
       else if (item.info.name == 'laptop')
         cnt = 3;
 
-      // goal completed - use computer
+      // goals completed
       game.goals.complete(GOAL_USE_COMPUTER);
+      game.goals.receive(GOAL_LEARN_ENGRAM);
 
       // find first event that has some half-known npcs
       for (e in game.timeline)

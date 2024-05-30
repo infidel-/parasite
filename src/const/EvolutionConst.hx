@@ -3,9 +3,7 @@
 package const;
 
 import game.Game;
-import game.Habitat;
 import game.Player;
-import objects.*;
 
 class EvolutionConst
 {
@@ -1033,6 +1031,32 @@ class EvolutionConst
         levelNotes: [
           'No access to ovum',
           'Ability to place ovum in region mode',
+          '',
+          '',
+        ],
+        levelParams: [
+          {},
+          {},
+          {},
+          {},
+        ],
+        onUpgrade: function(level, game, player) {
+          // complete goals
+//          if (level == 1)
+//            game.goals.complete(GOAL_EVOLVE_DOPAMINE);
+        }
+      },
+
+      { // ***
+        type: TYPE_SPECIAL,
+        id: IMP_ENGRAM,
+        name: 'Limited engram encoding',
+        note: "Knowledge. Enhancing synaptic plasticity and integrating targeted engrams allows storage and retrieval of specific information within the host's neural circuits without disrupting normal cognitive functions.",
+
+        maxLevel: 1,
+        levelNotes: [
+          'No additional memory access',
+          'Access to minimap',
           '',
           '',
         ],

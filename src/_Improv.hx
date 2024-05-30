@@ -25,4 +25,5 @@ enum _Improv
   IMP_PRESERVATOR; // special
   IMP_OVUM; // special
   IMP_FALSE_MEMORIES; // special
+  IMP_ENGRAM; // special
 }
