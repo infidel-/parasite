@@ -76,16 +76,27 @@ class Inventory extends _SaveObject
                 });
 
               // use computer
-              else if (item.info.type == 'computer' &&
-                  game.player.vars.searchEnabled)
-                tmp.push({
-                  id: 'search.' + item.id,
-                  type: ACTION_INVENTORY,
-                  name: 'Use ' +
-                    Const.col('inventory-item', itemName) + ' to search',
-                  energy: 10,
-                  obj: item
-                });
+              else if (item.info.type == 'computer')
+                {
+                  if (game.player.evolutionManager.getLevel(IMP_ENGRAM) >= 1 &&
+                      !game.player.vars.mapAbsorbed)
+                    tmp.push({
+                      id: 'absorbMap.' + item.id,
+                      type: ACTION_INVENTORY,
+                      name: 'Absorb regional map',
+                      energy: 15,
+                      obj: item
+                    });
+                  if (game.player.vars.searchEnabled)
+                    tmp.push({
+                      id: 'search.' + item.id,
+                      type: ACTION_INVENTORY,
+                      name: 'Use ' +
+                        Const.col('inventory-item', itemName) + ' to search',
+                      energy: 10,
+                      obj: item
+                    });
+                }
 
               // eat nutrients
               else if (item.info.type == 'nutrients')
@@ -114,29 +125,32 @@ class Inventory extends _SaveObject
 // ACTION: player inventory action
   public function action(action: _PlayerAction)
     {
-      var item: _Item = untyped action.obj;
+      var item: _Item = cast action.obj;
       var actionID = action.id.substr(0, action.id.indexOf('.'));
       var ret = true;
-
-      // learn about item
-      if (actionID == 'learn')
-        learnAction(item);
-
-      // read item
-      else if (actionID == 'read')
-        readAction(item);
-
-      // search for npc with item
-      else if (actionID == 'search')
-        ret = searchAction(item);
-
-      // drop item
-      else if (actionID == 'drop')
-        dropAction(item);
-
-      // generic use item
-      else if (actionID == 'use')
-        ret = useAction(item);
+      switch (actionID)
+        {
+          // read item
+          case 'read':
+            readAction(item);
+          // generic use item
+          case 'use':
+            ret = useAction(item);
+          // search for npc with item
+          case 'search':
+            ret = searchAction(item);
+          // drop item
+          case 'drop':
+            dropAction(item);
+          // learn about item
+          case 'learn':
+            learnAction(item);
+          // absorb regional map
+          case 'absorbMap':
+            absorbMapAction(item);
+          default:
+            Const.todo('no such action: ' + actionID);
+        }
 
       // if action was completed, end turn, etc
       if (ret)
@@ -174,6 +188,7 @@ class Inventory extends _SaveObject
             game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
           else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
           game.profile.addPediaArticle('msgConcentration');
+          game.scene.sounds.play('item-fail');
           return;
         }
 
@@ -226,7 +241,7 @@ class Inventory extends _SaveObject
       if (skillLevel == 0)
         {
           game.log('You require the computer use skill to do that.', COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.scene.sounds.play('item-fail');
           return false;
         }
 
@@ -337,6 +352,12 @@ class Inventory extends _SaveObject
       game.scene.sounds.play('item-drop');
     }
 
+// ACTION: absorb regional map
+  function absorbMapAction(item: _Item)
+    {
+      game.log('You absorb the regional map into the engram.');
+      game.player.vars.mapAbsorbed = true;
+    }
 
 // list iterator
   public function iterator(): Iterator<_Item>

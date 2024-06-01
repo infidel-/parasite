@@ -18,6 +18,7 @@ package game;
   public var evolutionEnergyPerTurnMicrohabitat: Int; // -- in microhabitat
   public var organGrowthEnergyPerTurn: Int; // energy spent per turn when growing organs
   public var organGrowthPointsPerTurn: Int; // organ growth points per turn
+  public var mapAbsorbed: Bool; // region map absorbed
 
   public var areaEnergyPerTurn: Int; // area: energy spent per turn without a host
   public var regionEnergyPerTurn: Int; // region: energy cost per turn without a host
@@ -41,6 +42,7 @@ package game;
     searchEnabled,
     habitatsLeft,
     savesLeft,
+    mapAbsorbed,
     evolutionEnergyPerTurn,
     evolutionEnergyPerTurnMicrohabitat,
     organGrowthEnergyPerTurn,
@@ -66,6 +68,7 @@ package game;
       this.searchEnabled = searchEnabled;
       this.habitatsLeft = habitatsLeft;
       this.evolutionEnergyPerTurn = evolutionEnergyPerTurn;
+      this.mapAbsorbed = mapAbsorbed;
       this.evolutionEnergyPerTurnMicrohabitat = evolutionEnergyPerTurnMicrohabitat;
       this.organGrowthEnergyPerTurn = organGrowthEnergyPerTurn;
       this.organGrowthPointsPerTurn = organGrowthPointsPerTurn;

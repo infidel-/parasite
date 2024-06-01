@@ -29,6 +29,7 @@ class Config
   public var fontSize: Int;
   public var hudLogLines: Int;
   public var mapScale: Float;
+  public var minimapScale: Float;
   public var repeatDelay: Int;
   public var windowHeight: Int;
   public var windowWidth: Int;
@@ -62,6 +63,7 @@ class Config
       fontSize = 16;
       hudLogLines = 4;
       mapScale = 1;
+      minimapScale = 1;
       musicVolume = 30;
       effectsVolume = 40;
       ambientVolume = 30;
@@ -86,6 +88,7 @@ class Config
       map['fontSize'] = '' + fontSize;
       map['hudLogLines'] = '4';
       map['mapScale'] = '1';
+      map['minimapScale'] = '1';
       map['musicVolume'] = '' + musicVolume;
       map['effectsVolume'] = '' + effectsVolume;
       map['ambientVolume'] = '' + ambientVolume;
@@ -193,6 +196,8 @@ class Config
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
       else if (key == 'mapScale')
         mapScale = Const.clampFloat(Std.parseFloat(val), 0.1, 10);
+      else if (key == 'minimapScale')
+        minimapScale = Const.clampFloat(Std.parseFloat(val), 0.1, 10);
       else if (key == 'musicVolume')
         musicVolume = Const.clamp(Std.parseInt(val), 0, 100);
       else if (key == 'effectsVolume')

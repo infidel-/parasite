@@ -208,6 +208,7 @@ class PlayerRegion extends _SaveObject
       if (currentArea.alertness >= 75)
         {
           game.log("This area is too dangerous at the moment.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 

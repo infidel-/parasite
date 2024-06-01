@@ -620,6 +620,8 @@ class UI
         }
 
       state = UISTATE_DEFAULT;
+      if (game.location == LOCATION_AREA)
+        game.scene.area.draw();
     }
 
 // find element

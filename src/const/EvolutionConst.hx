@@ -1056,7 +1056,7 @@ class EvolutionConst
         maxLevel: 1,
         levelNotes: [
           'No additional memory access',
-          'Access to minimap',
+          'Access to minimap (use computer)',
           '',
           '',
         ],

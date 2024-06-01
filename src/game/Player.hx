@@ -51,6 +51,7 @@ class Player extends _SaveObject
         searchEnabled: false,
         habitatsLeft: 1000,
         savesLeft: -1,
+        mapAbsorbed: false,
 
         evolutionEnergyPerTurn: 5,
         evolutionEnergyPerTurnMicrohabitat: 4,

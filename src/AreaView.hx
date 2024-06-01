@@ -1,5 +1,7 @@
 // tiled area view
 
+import js.Browser;
+import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import entities.EffectEntity;
 import game.Game;
@@ -8,6 +10,8 @@ class AreaView
 {
   var game: Game; // game state link
   var scene: GameScene; // ui scene
+  var minimap: CanvasElement; // minimap element
+  var minimapAreaID: Int;
 
   var _effects: List<EffectEntity>; // visual effects list
   var _cache: Array<Array<Int>>; // tiles drawn on screen
@@ -28,6 +32,7 @@ class AreaView
       height = maxSize;
       emptyScreenCells = 0;
       path = null;
+      minimap = null;
 
       // init tiles cache 
       _cache = [];
@@ -45,6 +50,7 @@ class AreaView
     {
 //      trace('draw area');
       var ctx = scene.canvas.getContext('2d');
+      ctx.clearRect(0, 0, scene.canvas.width, scene.canvas.height);
 
       // tiles
       untyped ctx.imageSmoothingEnabled = false;
@@ -88,13 +94,42 @@ class AreaView
             (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
+
+      // regen minimap on first draw for area
+      if (minimapAreaID != game.area.id)
+        {
+          generateMinimap();
+          minimapAreaID = game.area.id;
+        }
+      // minimap
+      if (minimap != null &&
+          (game.ui.hud.isVisible() ||
+           game.ui.state == UISTATE_OPTIONS))
+        {
+          var log = Browser.document.getElementById('hud-log');
+          var rect = log.getBoundingClientRect();
+          var logy = rect.top + Browser.window.scrollY;
+          var mx = 15 * Browser.window.devicePixelRatio;
+          var my = (logy + log.offsetHeight + 10) *
+            Browser.window.devicePixelRatio;
+          ctx.drawImage(minimap, mx, my);
+
+          // draw player dot
+          ctx.fillStyle = '#c441c4';
+          ctx.beginPath();
+          var px = mx + game.playerArea.x * game.config.minimapScale;
+          var py = my + game.playerArea.y * game.config.minimapScale;
+          ctx.arc(px, py, 2 * game.config.minimapScale,
+            0, Math.PI * 2, false);
+          ctx.fill();
+
+        }
     }
 
 // draw area tiles
   function drawTiles(ctx: CanvasRenderingContext2D)
     {
       var rect = game.area.getVisibleRect();
-      var cells = game.area.getCells();
       var tileID = 0;
       var icon = null;
       for (y in rect.y1...rect.y2)
@@ -374,6 +409,46 @@ class AreaView
     {
       fakeHosts = [];
       turnCorp(true);
+    }
+
+// generate minimap from tiles
+  public function generateMinimap()
+    {
+      var scale = game.config.minimapScale;
+      minimap = Browser.document.createCanvasElement();
+      minimap.width = Std.int(game.area.width * scale);
+      minimap.height = Std.int(game.area.height * scale);
+      var ctx = minimap.getContext2d();
+      untyped ctx.imageSmoothingEnabled = true;
+      var tileID = 0;
+      var icon = null;
+      var cells = game.area.getCells();
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, minimap.width, minimap.height);
+      for (y in 0...game.area.height)
+        for (x in 0...game.area.width)
+          {
+            tileID = cells[x][y];
+            icon = {
+              row: Std.int(tileID / 16),
+              col: tileID % 16,
+            };
+      //      trace(icon);
+            ctx.drawImage(scene.images.tileset,
+              icon.col * Const.TILE_SIZE_CLEAN, 
+              icon.row * Const.TILE_SIZE_CLEAN,
+              Const.TILE_SIZE_CLEAN,
+              Const.TILE_SIZE_CLEAN,
+
+              (x) * scale,
+              (y) * scale,
+              scale,
+              scale);
+          }
+      // border
+      ctx.strokeStyle = '#649afb';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0, 0, minimap.width, minimap.height);
     }
 
 // corp area turn - fake hosts

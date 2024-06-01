@@ -213,6 +213,14 @@ class HUD
       if (container.style.visibility == 'visible')
         hide();
       else show();
+      if (game.location == LOCATION_AREA)
+        game.scene.area.draw();
+    }
+
+// returns true if HUD is visible
+  public function isVisible(): Bool
+    {
+      return (container.style.visibility == 'visible');
     }
 
   public function show()

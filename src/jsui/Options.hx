@@ -77,6 +77,16 @@ class Options extends UIWindow
           game.scene.updateCamera();
           game.scene.draw();
         }, 10, 1000, 10, 'round', '%');
+      addSlider(contents, 'Minimap scale',
+        game.config.minimapScale * 100,
+        function (v: Float) {
+          game.config.set('minimapScale', '' + Const.round(v / 100.0), false);
+//          restartText.style.visibility = 'inherit';
+          if (game.location == LOCATION_AREA)
+            game.scene.area.generateMinimap();
+          game.scene.updateCamera();
+          game.scene.draw();
+        }, 60, 1000, 20, 'round', '%');
       addSlider(contents, 'Font size', game.config.fontSize,
         function (v: Float) {
           game.config.set('fontSize', '' + v, false);
