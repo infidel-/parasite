@@ -104,7 +104,8 @@ class AreaView
       // minimap
       if (minimap != null &&
           (game.ui.hud.isVisible() ||
-           game.ui.state == UISTATE_OPTIONS))
+           game.ui.state == UISTATE_OPTIONS) &&
+          game.player.vars.mapAbsorbed)
         {
           var log = Browser.document.getElementById('hud-log');
           var rect = log.getBoundingClientRect();

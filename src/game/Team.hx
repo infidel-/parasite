@@ -2,7 +2,6 @@
 
 package game;
 
-import ai.BlackopsAI;
 import const.*;
 
 class Team extends FSM<_TeamState, _TeamFlag>
@@ -248,6 +247,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // decrease fight timer (to allow player to leave)
       if (timer > 0)
         timer--;
+
+      // check if it is over
+      onBlackopsDeath();
     }
 
 
@@ -283,6 +285,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // check how many are left living
       var ai = game.area.getAIWithType('blackops');
       if (ai.length > 0)
+        return;
+      // last one alive and under control
+      if (ai.length == 1 &&
+          game.player.host == ai.first())
         return;
       // no more free blackops, ambush failed
       game.message("I've eliminated the aggressors. It will be some time before they will be able to get on my trail again.");

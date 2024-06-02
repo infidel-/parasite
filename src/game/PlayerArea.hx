@@ -245,6 +245,7 @@ class PlayerArea extends _SaveObject
           (action.type == ACTION_OBJECT || action.id == 'leaveArea'))
         {
           log('Your host is paralyzed.', COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           game.updateHUD();
           return;
         }
@@ -400,6 +401,7 @@ class PlayerArea extends _SaveObject
       if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
         {
           log('Your host is paralyzed.', COLOR_HINT);
+          game.scene.sounds.play('action-fail');
           return false;
         }
 
