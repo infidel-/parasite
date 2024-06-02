@@ -2,10 +2,7 @@
 
 package ai;
 
-import ai.AI;
-import _AIState;
 import game.Game;
-import const.*;
 
 class TeamMemberAI extends HumanAI
 {

@@ -1044,7 +1044,13 @@ class AreaGame extends _SaveObject
   function turnSpawnTeam()
     {
       var team = game.group.team;
-      if (team == null || isHabitat || !info.isInhabited)
+      if (team == null ||
+          isHabitat ||
+          !info.isInhabited)
+        return;
+
+      // do not spawn team members in the first area (a little help for newbie players)
+      if (!game.goals.completed(GOAL_ENTER_SEWERS))
         return;
 
       // limit spawns by turns spent in this area
