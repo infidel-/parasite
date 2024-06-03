@@ -79,12 +79,20 @@ class Ovum extends RegionObject
         'security' => 4,
         'team' => 4,
         'police' => 5,
+        'smiler' => 7,
         'soldier' => 10,
         'blackops' => 15,
       ];
       var pts = ovumPoints[game.player.host.type];
       if (pts == null)
         pts = 1;
+      var maxxp = EvolutionConst.ovumXP[EvolutionConst.ovumXP.length - 1];
+      if (ovum.xp > maxxp)
+        {
+          game.log('The ovum is fully nurtured.', COLOR_HINT);
+          game.scene.sounds.play('action-fail');
+          return false;
+        }
       ovum.xp += pts;
       game.playerRegion.onHostDeath();
 
