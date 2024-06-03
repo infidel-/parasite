@@ -55,6 +55,7 @@ class HUD
       blinkingText.className = 'highlight-text';
       blinkingText.id = 'blinking-text';
       blinkingText.style.opacity = '0';
+      blinkingText.style.userSelect = 'none';
       Browser.document.body.appendChild(blinkingText);
 
       container = Browser.document.createDivElement();

@@ -463,13 +463,21 @@ class PlayerArea extends _SaveObject
       var item = null;
       var info = null;
 
-      // for now, just get first weapon player knows how to use
-      for (ii in player.host.inventory)
-        if (ii.info.weapon != null && player.knowsItem(ii.id))
-          {
-            item = ii;
-            break;
-          }
+      // check if player has active weapon
+      var inventory = player.host.inventory;
+      if (inventory.weaponID != null &&
+          inventory.has(inventory.weaponID))
+        item = inventory.get(inventory.weaponID);
+
+      // no active weapon, just get first weapon player knows how to use
+      if (item == null)
+        for (ii in inventory)
+          if (ii.info.weapon != null &&
+              player.knowsItem(ii.id))
+            {
+              item = ii;
+              break;
+            }
 
       // use animal attack
       if (!player.host.isHuman)

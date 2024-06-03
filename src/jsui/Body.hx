@@ -9,10 +9,7 @@ import js.html.Element;
 
 import game.Game;
 import game.Improv;
-import game.Organs;
-import game.EvolutionManager;
 import const.*;
-import const.EvolutionConst;
 
 class Body extends UIWindow
 {
@@ -258,12 +255,20 @@ class Body extends UIWindow
         game.player.host.maxItems + ']');
       var buf = new StringBuf();
       var n = 0;
+      var activeMarked = false;
       for (item in game.player.host.inventory)
         {
           n++;
           var knowsItem = game.player.knowsItem(item.id);
           var name = (knowsItem ? item.name : item.info.unknown);
-          buf.add(Const.col('inventory-item', name) + '<br/>');
+          buf.add(Const.col('inventory-item', name));
+          if (item.id == game.player.host.inventory.weaponID &&
+              !activeMarked)
+            {
+              buf.add(Const.smallgray(' [active]'));
+              activeMarked = true;
+            }
+          buf.add('<br/>');
         }
 
       if (n == 0)

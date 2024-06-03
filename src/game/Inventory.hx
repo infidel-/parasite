@@ -9,6 +9,7 @@ class Inventory extends _SaveObject
 {
   var game: Game;
   var _list: List<_Item>; // list of items
+  public var weaponID: String; // currently active weapon
 
   // item slots
   public var clothing(default, null): _Item;
@@ -32,6 +33,7 @@ class Inventory extends _SaveObject
         name: info.name,
         event: null,
       };
+      weaponID = null;
     }
 
 // called after load or creation
@@ -107,6 +109,16 @@ class Inventory extends _SaveObject
                   energy: 0,
                   obj: item
                 });
+
+              // weapons can be marked as active
+              else if (item.info.type == 'weapon')
+                tmp.push({
+                  id: 'active.' + item.id,
+                  type: ACTION_INVENTORY,
+                  name: 'Mark ' + Const.col('inventory-item', itemName) + ' as active',
+                  energy: 0,
+                  obj: item
+                });
             }
 
           // drop item
@@ -148,6 +160,9 @@ class Inventory extends _SaveObject
           // absorb regional map
           case 'absorbMap':
             absorbMapAction(item);
+          // mark as active
+          case 'active':
+            activeAction(item);
           default:
             Const.todo('no such action: ' + actionID);
         }
@@ -163,6 +178,13 @@ class Inventory extends _SaveObject
 
           else Const.todo('Inventory.action() in region mode!');
         }
+    }
+
+// ACTION: mark weapon as active
+  function activeAction(item: _Item)
+    {
+      game.log('You will now attack with ' + item.name + '.');
+      weaponID = item.id;
     }
 
 // ACTION: generic use item
