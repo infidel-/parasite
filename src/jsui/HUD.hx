@@ -660,6 +660,8 @@ class HUD
         game.player.chat.action(action);
       else if (action.type == ACTION_CONVERSE_MENU)
         game.player.chat.actionConverseMenu(action);
+      else if (action.type == ACTION_HOST)
+        game.player.host.action(action);
       else if (game.location == LOCATION_AREA)
         game.playerArea.action(action);
 

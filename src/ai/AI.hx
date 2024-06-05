@@ -521,7 +521,8 @@ public function show()
       if (state == AI_STATE_ALERT)
         alertFrame = Const.FRAME_ALERTED;
       else if (state == AI_STATE_IDLE ||
-          state == AI_STATE_MOVE_TARGET)
+          state == AI_STATE_MOVE_TARGET ||
+          state == AI_STATE_INVESTIGATE)
         {
           if (alertness > 75)
             alertFrame = Const.FRAME_ALERT3;
@@ -848,6 +849,21 @@ public function show()
       setState(AI_STATE_IDLE);
     }
 
+// state: investigate (move to target spot ignoring alertness)
+  function stateInvestigate()
+    {
+      // basic AI vision
+      visionIdle();
+
+      logicMoveTo(roamTargetX, roamTargetY);
+      if (x != roamTargetX || y != roamTargetY)
+        return;
+      // spot reached, idling
+      roamTargetY = -1;
+      roamTargetY = -1;
+      setState(AI_STATE_IDLE);
+    }
+
 // state: default alert state handling
   function stateAlert()
     {
@@ -1124,6 +1140,10 @@ public function show()
       else if (state == AI_STATE_MOVE_TARGET)
         stateMoveTarget();
 
+      // investigate
+      else if (state == AI_STATE_INVESTIGATE)
+        stateInvestigate();
+
       // post-detach
       else if (state == AI_STATE_POST_DETACH &&
           stateTime >= 2)
@@ -1134,7 +1154,8 @@ public function show()
         }
 
       // post-detach with false memories
-      else if (state == AI_STATE_POST_DETACH_MEMORIES && stateTime >= 2)
+      else if (state == AI_STATE_POST_DETACH_MEMORIES &&
+          stateTime >= 2)
         setState(AI_STATE_IDLE);
 
       updateEntity(); // clamp and change entity icons
@@ -1456,6 +1477,14 @@ public function show()
   public dynamic function attachPre(): Bool
     { return true; }
 
+// hook: ai-specific bonus actions
+  public dynamic function updateActionList()
+    {}
+
+// hook: run action
+  public dynamic function action(action: _PlayerAction)
+    {}
+
 // ======================================================================
 
 
@@ -1474,7 +1503,7 @@ public function show()
 
   public function toString()
     {
-      return getName() + ' (' + x + ',' + y + '): ' + type + ', ' + job;
+      return getName() + ' id:' + id + ' (' + x + ',' + y + '): ' + type + ', ' + job;
     }
 
 

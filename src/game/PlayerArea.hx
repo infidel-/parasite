@@ -173,6 +173,9 @@ class PlayerArea extends _SaveObject
           // evolution manager actions
           player.evolutionManager.updateActionList();
 
+          // host-specific actions
+          player.host.updateActionList();
+
           game.ui.hud.addKeyAction({
             id: 'leaveHost',
             type: ACTION_AREA,
