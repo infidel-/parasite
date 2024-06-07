@@ -92,7 +92,7 @@ class Options extends UIWindow
           game.config.set('fontSize', '' + v, false);
           restartText.style.visibility = 'inherit';
         }, 8, 40, 1, 'int', '');
-      addSelect(contents, 'Overall difficulty', 'difficulty', [
+      var div = addSelect(contents, 'Overall difficulty', 'difficulty', [
           {
             title: 'Unset',
             val: '0',
@@ -117,6 +117,22 @@ class Options extends UIWindow
         function (val: String) {
           game.config.set('difficulty', val);
         });
+
+      // presets button
+      div.style.display = 'flex';
+      var presets = Browser.document.createLabelElement();
+      presets.className = 'hud-button';
+      presets.id = 'options-presets';
+      presets.innerHTML = 'PRESETS';
+      div.appendChild(presets);
+      presets.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
+        game.ui.closeWindow();
+        game.config.save(false);
+        game.ui.state = UISTATE_PRESETS;
+      }
+
       addCheckbox(contents, 'Skip tutorial ' +
         Const.smallgray('(needs overall difficulty set)'),
         'skipTutorial', game.config.skipTutorial, '-22.3%');
@@ -156,6 +172,39 @@ class Options extends UIWindow
       var space = Browser.document.createDivElement();
       space.innerHTML = '<br><br>';
       contents.appendChild(space);
+    }
+
+// update difficulty settings
+  override function update()
+    {
+      // base difficulty settings
+      var options = [
+        { title: 'Unset', val: '0', },
+        { title: 'Easy', val: '1', },
+        { title: 'Normal', val: '2', },
+        { title: 'Hard', val: '3', },
+      ];
+      // add presets
+      for (idx => info in game.profile.object.difficultyPresets)
+        options.push({
+          title: info.name,
+          val: '' + (- idx - 1),
+        });
+
+      // add options
+      var el = Browser.document.getElementById('option-difficulty');
+      el.innerHTML = '';
+      for (info in options)
+        {
+          var op = Browser.document.createOptionElement();
+          op.className = 'select-element';
+          op.label = info.title;
+          trace(game.config.difficulty, info.val);
+          if (game.config.difficulty == Std.parseInt(info.val))
+            op.selected = true;
+          op.value = info.val;
+          el.appendChild(op);
+        }
     }
 }
 

@@ -20,6 +20,7 @@ class Profile
       // default values
       object = {
         pediaArticles: {},
+        difficultyPresets: [],
       };
 
       game.debug('profile load');
@@ -74,7 +75,7 @@ class Profile
       return object.pediaArticles.get(id);
     }
 
-// dump current config
+// dump current profile
   public function dump(isHTML: Bool)
     {
       game.log('' + object, COLOR_DEBUG);
@@ -93,4 +94,10 @@ class Profile
 
 typedef _ProfileObject = {
   var pediaArticles: haxe.DynamicAccess<Int>;
+  var difficultyPresets: Array<_Preset>;
+}
+
+typedef _Preset = {
+  var name: String;
+  var settings: haxe.DynamicAccess<Int>;
 }

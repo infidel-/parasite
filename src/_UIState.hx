@@ -22,4 +22,5 @@ enum _UIState {
   UISTATE_DIFFICULTY; // difficulty setting
   UISTATE_YESNO; // yes/no dialog window
   UISTATE_DOCUMENT; // text document window
+  UISTATE_PRESETS; // presets window
 }

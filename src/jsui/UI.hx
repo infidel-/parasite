@@ -78,6 +78,7 @@ class UI
         UISTATE_SPOON => new Spoon(game),
         UISTATE_OVUM => new Ovum(game),
         UISTATE_ABOUT => new About(game),
+        UISTATE_PRESETS => new Presets(game)
       ];
     }
 
@@ -590,6 +591,25 @@ class UI
                   components[ev.state].setParams(ev.obj);
                   var win: jsui.Difficulty = cast components[ev.state];
                   win.action(game.config.difficulty);
+                  return;
+                }
+
+              // overall difficulty: presets
+              else if (ev.state == UISTATE_DIFFICULTY &&
+                  game.config.difficulty < 0)
+                {
+                  var difficulty = game.config.difficulty;
+                  var presets = game.profile.object.difficultyPresets;
+                  var presetID = - difficulty - 1;
+                  if (presets.length > presetID)
+                    difficulty = Reflect.field(
+                      presets[presetID], ev.obj);
+                  else trace('no difficulty preset for ' + difficulty);
+                  if (difficulty == null)
+                    difficulty = 1;
+                  components[ev.state].setParams(ev.obj);
+                  var win: jsui.Difficulty = cast components[ev.state];
+                  win.action(difficulty);
                   return;
                 }
               // set window params and then open window

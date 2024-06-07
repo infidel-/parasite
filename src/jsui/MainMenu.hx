@@ -4,8 +4,6 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
-import js.html.InputElement;
-import js.html.PointerEvent;
 
 import game.Game;
 

@@ -80,9 +80,10 @@ class UIWindow
     }
 
 // add select to options
-  function addSelect(contents: DivElement, label: String, id: String,
+  function addSelect(
+      contents: DivElement, label: String, id: String,
       options: Array<{ title: String, val: String, isSelected: Bool }>,
-      set: String -> Void)
+      set: String -> Void): DivElement
     {
       var cont = Browser.document.createDivElement();
       cont.className = 'select-contents';
@@ -96,7 +97,7 @@ class UIWindow
       var el = Browser.document.createSelectElement();
       el.id = 'option-' + id;
       el.className = 'select-element';
-      title.appendChild(el);
+      cont.appendChild(el);
       el.onclick = function (e: PointerEvent) {
         var select: SelectElement = untyped e.target;
         var op: OptionElement = cast select.options[select.selectedIndex];
@@ -113,6 +114,7 @@ class UIWindow
           op.value = info.val;
           el.appendChild(op);
         }
+      return cont;
     }
 
 // add checkbox to options

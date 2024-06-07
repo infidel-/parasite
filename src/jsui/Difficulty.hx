@@ -141,7 +141,7 @@ class Difficulty extends UIWindow
       game.ui.closeWindow();
     }
 
-  static var choices: Map<String, _Choice> = [
+  public static var choices: Map<String, _Choice> = [
     'survival' => {
       id: 'survival',
       title: 'Survival',
