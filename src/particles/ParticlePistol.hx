@@ -20,6 +20,11 @@ class ParticlePistol extends Particle
       this.dst = dst;
       this.time = 50;
       this.hit = hit;
+      if (!hit)
+        this.dst = {
+          x: dst.x + Const.roll(-2, 2),
+          y: dst.y + Const.roll(-2, 2)
+        };
       game.scene.area.addParticle(this);
     }
 
