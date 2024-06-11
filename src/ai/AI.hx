@@ -8,6 +8,7 @@ import _AIEffectType;
 import objects.*;
 import game.*;
 import const.*;
+import particles.*;
 import __Math;
 
 class AI extends _SaveObject
@@ -704,6 +705,11 @@ public function show()
         // hardcoded animal attack skill level
         level: skills.getLevel(weapon.skill),
       });
+
+      // draw attack effect
+      if (weapon.isRanged)
+        new ParticlePistol(game.scene, x, y,
+          game.playerArea, roll);
 
       // roll skill
       if (!roll)

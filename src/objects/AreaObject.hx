@@ -76,6 +76,14 @@ class AreaObject extends _SaveObject
         return;
       entity = new ObjectEntity(this, game, x, y);
       entity.setIcon('entities', imageCol, imageRow);
+      if (type == 'decorationExt')
+        {
+          var o: DecorationExt = cast this;
+          entity.scale = o.scale;
+          entity.angle = o.angle;
+          entity.dx = o.dx;
+          entity.dy = o.dy;
+        }
     }
 
 // show object on screen

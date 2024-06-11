@@ -1,6 +1,5 @@
 // - has all links to windows and handles input
 
-import js.Browser;
 import js.html.CanvasElement;
 import js.Browser;
 

@@ -3,6 +3,7 @@
 import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
+import particles.Particle;
 import entities.EffectEntity;
 import game.Game;
 
@@ -13,6 +14,7 @@ class AreaView
   var minimap: CanvasElement; // minimap element
   var minimapAreaID: Int;
 
+  var _particles: List<Particle>;
   var _effects: List<EffectEntity>; // visual effects list
   var _cache: Array<Array<Int>>; // tiles drawn on screen
   var path: Array<aPath.Node>; // currently visible path
@@ -22,8 +24,9 @@ class AreaView
   public var height: Int;
   public var emptyScreenCells: Int; // amount of empty cells on screen
   static var maxSize = 120;
+  var drawIntervalID: Int; // if set, draw will be called every 10 ms
 
-  public function new (s: GameScene)
+  public function new(s: GameScene)
     {
       scene = s;
       game = scene.game;
@@ -31,6 +34,7 @@ class AreaView
       width = maxSize; // should be larger than any area
       height = maxSize;
       emptyScreenCells = 0;
+      drawIntervalID = 0;
       path = null;
       minimap = null;
 
@@ -42,12 +46,23 @@ class AreaView
         for (x in 0...width)
           _cache[x][y] = 0;
 
-      _effects = new List<EffectEntity>();
+      _effects = new List();
+      _particles = new List();
+    }
+
+// add particle to list
+  public function addParticle(p: Particle)
+    {
+      _particles.add(p);
+      // set interval to call draw every 10 ms 
+      if (drawIntervalID == 0)
+        drawIntervalID = Browser.window.setInterval(draw, 10);
     }
 
 // redraw area map
   public function draw()
     {
+//      var time = Sys.time();
 //      trace('draw area');
       var ctx = scene.canvas.getContext('2d');
       ctx.clearRect(0, 0, scene.canvas.width, scene.canvas.height);
@@ -80,6 +95,9 @@ class AreaView
             (game.playerArea.sees(ai.x, ai.y) &&
             ai.entity.isVisible()))
           ai.entity.draw(ctx);
+
+      // particles
+      drawParticles(ctx);
 
       // path
       if (path != null)
@@ -125,6 +143,7 @@ class AreaView
           ctx.fill();
 
         }
+//      trace('draw: ' + (Sys.time() - time) + 'ms');
     }
 
 // draw area tiles
@@ -155,6 +174,31 @@ class AreaView
             if (game.area.info.id == AREA_CORP)
               paintFakeHost(ctx, icon, x, y);
           }
+    }
+
+// draw particles
+  function drawParticles(ctx: CanvasRenderingContext2D)
+    {
+      for (p in _particles)
+        {
+          if (p.isDead())
+            {
+              p.onDeath();
+              _particles.remove(p);
+              continue;
+            }
+          var dt = (Sys.time() * 1000 - p.createdTS) / p.time;
+          // most likely final frame
+          if (dt > 0.8)
+            dt = 1.0;
+          p.draw(ctx, dt);
+        }
+      // stop redrawing
+      if (_particles.length == 0)
+        {
+          Browser.window.clearInterval(drawIntervalID);
+          drawIntervalID = 0;
+        }
     }
 
 // corp has fake people in the background

@@ -5,6 +5,8 @@ package entities;
 import js.html.CanvasRenderingContext2D;
 import js.html.Image;
 import game.Game;
+import Const.TILE_SIZE as tile;
+import Const.TILE_SIZE_CLEAN as tileClean;
 
 class Entity
 {
@@ -20,6 +22,11 @@ class Entity
   // map x,y
   var mx: Int;
   var my: Int;
+  public var scale: Float;
+  public var angle: Float;
+  // displacement inside of tile
+  public var dx: Int;
+  public var dy: Int;
 
 
   public function new(g: Game, layer: Int)
@@ -29,6 +36,10 @@ class Entity
       ix = iy = mx = my = 0;
       type = 'undefined';
       isMaleAtlas = false;
+      scale = 1.0;
+      angle = 0.0;
+      dx = 0;
+      dy = 0;
     }
 
 // is currently on screen?
@@ -45,17 +56,52 @@ class Entity
 // draw image at this entity x,y
   function drawImage(ctx: CanvasRenderingContext2D, img: Image, xx: Int, yy: Int)
     {
+      // full display
+      if (scale != 1.0 || angle != 0.0)
+        {
+          drawImageFull(ctx, img, xx, yy);
+          return;
+        }
+
+      // simple tile draw
       // kludge: draw one pixel less to avoid scaling bugs
       ctx.drawImage(img,
-        xx * Const.TILE_SIZE_CLEAN,
-        yy * Const.TILE_SIZE_CLEAN + 1,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN - 1,
+        xx * tileClean,
+        yy * tileClean + 1,
+        tileClean,
+        tileClean - 1,
 
-        (mx - game.scene.cameraTileX1) * Const.TILE_SIZE,
-        (my - game.scene.cameraTileY1) * Const.TILE_SIZE,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
+        (mx - game.scene.cameraTileX1) * tile,
+        (my - game.scene.cameraTileY1) * tile,
+        tile * scale,
+        tile * scale);
+    }
+
+// with scale/rotation/displacement
+  function drawImageFull(ctx: CanvasRenderingContext2D, img: Image, xx: Int, yy: Int)
+    {
+      // apply scale to x,y
+      var ex: Float = (mx - game.scene.cameraTileX1) * tile;
+      var ey: Float = (my - game.scene.cameraTileY1) * tile;
+      if (scale != 1.0)
+        {
+          ex += tile / 2 - tile * scale / 2;
+          ey += tile / 2 - tile * scale / 2;
+        }
+      // apply rotation in place
+      ctx.save();
+      ctx.translate(ex + tile * scale / 2, ey + tile * scale / 2);
+      ctx.rotate(angle);
+      ctx.translate(- tile * scale / 2, - tile * scale / 2);
+
+      // kludge: draw one pixel less to avoid scaling bugs
+      ctx.drawImage(img,
+        xx * tileClean, yy * tileClean + 1,
+        tileClean, tileClean - 1,
+        dx, dy, tile * scale, tile * scale);
+
+      // restore context state
+      ctx.restore();
     }
 
 // set entity icon

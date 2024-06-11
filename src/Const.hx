@@ -268,6 +268,8 @@ class Const
   public static var CORP_TABLE_MUG = [
     { row: 39, col: 9, amount: 3 },
   ];
+  public static var ROW_BLOOD = 40;
+  public static var BLOOD_LARGE = 0;
 
   // ==============================================
   // ==============================================
@@ -653,6 +655,21 @@ class Const
       return Std.int(Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
     }
 
+// get sign of distance between x1,y1 and x2,y2
+  public static inline function distanceSign(x1: Int, y1: Int, x2: Int, y2: Int): { x: Int, y: Int }
+    {
+      var dx = x2 - x1;
+      var dy = y2 - y1;
+      if (dx < 0)
+        dx = -1;
+      else if (dx > 0)
+        dx = 1;
+      if (dy < 0)
+        dy = -1;
+      else if (dy > 0)
+        dy = 1;
+      return { x: dx, y: dy };
+    }
 
 // print stuff
   public static inline function p(s: Dynamic)
@@ -732,6 +749,11 @@ class Const
       trace(haxe.CallStack.toString(haxe.CallStack.callStack()));
     }
 
+// round to 2 decimals
+  public static inline function round2(num: Float)
+    {
+      return Math.round(num * 100) / 100;
+    }
 
 // capitalize string
   public static inline function capitalize(s: String): String

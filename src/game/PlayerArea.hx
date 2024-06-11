@@ -6,6 +6,7 @@ import ai.AI;
 import entities.PlayerEntity;
 import objects.AreaObject;
 import const.*;
+import particles.*;
 import __Math;
 
 class PlayerArea extends _SaveObject
@@ -544,6 +545,10 @@ class PlayerArea extends _SaveObject
       // +1 from passive when not assimilated, so it becomes 3
       player.host.energy -= 2;
 //        (player.host.hasTrait(TRAIT_ASSIMILATED) ? 2 : 2);
+
+      // draw attack effect
+      if (weapon.isRanged)
+        new ParticlePistol(game.scene, x, y, ai, roll);
 
       // roll skill
       if (!roll)
