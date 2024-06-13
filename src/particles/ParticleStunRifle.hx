@@ -1,10 +1,10 @@
-// pistol shot
+// stun rifle shot
 package particles;
 
 import js.html.CanvasRenderingContext2D;
 import Const.TILE_SIZE as tile;
 
-class ParticlePistol extends Particle
+class ParticleStunRifle extends Particle
 {
   // area x,y
   var sx: Int;
@@ -29,6 +29,8 @@ class ParticlePistol extends Particle
           x: dst.x + Const.roll(-2, 2),
           y: dst.y + Const.roll(-2, 2)
         };
+      game.scene.area.addParticle(this);
+
       // find nearest tile edge to target
       var dsrc = Const.distanceSign(
         sx, sy,
@@ -52,26 +54,19 @@ class ParticlePistol extends Particle
         tile / 2 + (xFromCenter ? 0 : ddst.x * tile / 2);
       dsty = (dst.y - scene.cameraTileY1) * tile +
         tile / 2 + (yFromCenter ? 0 : ddst.y * tile / 2);
-
-      game.scene.area.addParticle(this);
     }
 
 // draws a line
   public override function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {
       ctx.beginPath();
+      ctx.setLineDash([15]);
       ctx.moveTo(srcx, srcy);
       ctx.lineTo(srcx + (dstx - srcx) * dt,
         srcy + (dsty - srcy) * dt);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 5;
       ctx.stroke();
-    }
-
-// create splat on death
-  public override function onDeath()
-    {
-      if (hit)
-        new ParticleSplat(scene, dst);
+      ctx.setLineDash([]);
     }
 }

@@ -21,6 +21,12 @@ class Particle
           case 'attack-assault-rifle':
             new ParticleRifle(scene, x, y,
               point, hit);
+          case 'attack-shotgun':
+            new ParticleShotgun(scene, x, y,
+              point, hit);
+          case 'attack-stun-rifle':
+            new ParticleStunRifle(scene, x, y,
+              point, hit);
           default:
             trace('no particle for ' + type);
         }

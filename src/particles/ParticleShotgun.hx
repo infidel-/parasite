@@ -1,10 +1,10 @@
-// rifle shot
+// shotgun shot
 package particles;
 
 import js.html.CanvasRenderingContext2D;
 import Const.TILE_SIZE as tile;
 
-class ParticleRifle extends Particle
+class ParticleShotgun extends Particle
 {
   // area x,y
   var sx: Int;
@@ -13,7 +13,6 @@ class ParticleRifle extends Particle
   var dst: Array<_Point>; // destination point (can be AI or player)
   var delta: Array<_Point>; // slight delta for each shot
   var hit: Bool;
-  var timeOne: Int;
 
   public function new(s: GameScene, sx: Int, sy: Int, pt: _Point, hit: Bool)
     {
@@ -21,21 +20,21 @@ class ParticleRifle extends Particle
       this.sx = sx;
       this.sy = sy;
       this.dst = [];
-      for (i in 0...3)
+      var numShots = 5;
+      for (i in 0...numShots)
         this.dst[i] = pt;
       this.dstreal = pt;
-      this.time = 100;
-      this.timeOne = 50;
+      this.time = 50;
       this.hit = hit;
       if (!hit)
-        for (i in 0...3)
+        for (i in 0...numShots)
           this.dst[i] = {
             x: pt.x + Const.roll(-1, 1),
             y: pt.y + Const.roll(-1, 1)
           };
       this.delta = [];
       var spread = Std.int(tile / 4);
-      for (i in 0...3)
+      for (i in 0...numShots)
         this.delta[i] = {
           x: Const.roll(- spread, spread),
           y: Const.roll(- spread, spread)
@@ -46,21 +45,8 @@ class ParticleRifle extends Particle
 // draws multiple lines
   public override function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {
-      for (i in 0...3)
-        {
-          var dt = dt * time - i * 40;
-          if (dt < 0 || dt > timeOne)
-            continue;
-          dt = dt / timeOne;
-          // most likely final frame
-          if (dt > 0.8)
-            {
-              dt = 1.0;
-              if (hit && i == 0)
-                new ParticleSplat(scene, dst[i]);
-            }
-          drawLine(ctx, dt, dst[i], delta[i]);
-        }
+      for (i in 0...dst.length)
+        drawLine(ctx, dt, dst[i], delta[i]);
     }
 
 // draw one line
@@ -96,5 +82,12 @@ class ParticleRifle extends Particle
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 3;
       ctx.stroke();
+    }
+
+// create splat on death
+  public override function onDeath()
+    {
+      if (hit)
+        new ParticleSplat(scene, dstreal);
     }
 }
