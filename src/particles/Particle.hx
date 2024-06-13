@@ -10,6 +10,22 @@ class Particle
   public var createdTS: Float; // in ms
   public var time: Float; // time to live in ms
 
+// weapon shot particle
+  public static function createShot(type: String, scene: GameScene, x: Int, y: Int, point: _Point, hit: Bool)
+    {
+      switch (type)
+        {
+          case 'attack-pistol':
+            new ParticlePistol(scene, x, y,
+              point, hit);
+          case 'attack-assault-rifle':
+            new ParticleRifle(scene, x, y,
+              point, hit);
+          default:
+            trace('no particle for ' + type);
+        }
+    }
+
   public function new(s: GameScene)
     {
       scene = s;

@@ -548,7 +548,8 @@ class PlayerArea extends _SaveObject
 
       // draw attack effect
       if (weapon.isRanged)
-        new ParticlePistol(game.scene, x, y, ai, roll);
+        Particle.createShot(weapon.sound.file,
+          game.scene, x, y, ai, roll);
 
       // roll skill
       if (!roll)

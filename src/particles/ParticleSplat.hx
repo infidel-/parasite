@@ -37,7 +37,8 @@ class ParticleSplat extends Particle
   public override function onDeath()
     {
       var o = new DecorationExt(game, game.area.id,
-        pt.x, pt.y, Const.ROW_BLOOD, Const.BLOOD_LARGE);
+        pt.x, pt.y, Const.ROW_BLOOD,
+        Const.roll(0, Const.BLOOD_NUM));
       o.isStatic = false;
       game.area.addObject(o);
     }

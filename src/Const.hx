@@ -270,6 +270,7 @@ class Const
   ];
   public static var ROW_BLOOD = 40;
   public static var BLOOD_LARGE = 0;
+  public static var BLOOD_NUM = 5;
 
   // ==============================================
   // ==============================================

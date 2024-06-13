@@ -708,7 +708,8 @@ public function show()
 
       // draw attack effect
       if (weapon.isRanged)
-        new ParticlePistol(game.scene, x, y,
+        Particle.createShot(
+          weapon.sound.file, game.scene, x, y,
           game.playerArea, roll);
 
       // roll skill
