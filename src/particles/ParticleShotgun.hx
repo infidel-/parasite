@@ -4,7 +4,7 @@ package particles;
 import js.html.CanvasRenderingContext2D;
 import Const.TILE_SIZE as tile;
 
-class ParticleShotgun extends Particle
+class ParticleShotgun extends ParticleBullet
 {
   // area x,y
   var sx: Int;
@@ -46,11 +46,11 @@ class ParticleShotgun extends Particle
   public override function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {
       for (i in 0...dst.length)
-        drawLine(ctx, dt, dst[i], delta[i]);
+        drawLine2(ctx, dt, dst[i], delta[i]);
     }
 
 // draw one line
-  function drawLine(ctx: CanvasRenderingContext2D, dt: Float, dst: _Point, delta: _Point)
+  function drawLine2(ctx: CanvasRenderingContext2D, dt: Float, dst: _Point, delta: _Point)
     {
       // find nearest tile edge to target
       var dsrc = Const.distanceSign(
@@ -67,7 +67,6 @@ class ParticleShotgun extends Particle
       if (Math.abs(this.dstreal.y - sy) == 1)
         yFromCenter = true;
 
-      ctx.beginPath();
       var srcx = (sx - scene.cameraTileX1) * tile +
         tile / 2 + (xFromCenter ? 0 : dsrc.x * tile / 2);
       var srcy = (sy - scene.cameraTileY1) * tile +
@@ -76,12 +75,7 @@ class ParticleShotgun extends Particle
         tile / 2 + (xFromCenter ? 0 : ddst.x * tile / 2) + delta.x;
       var dsty = (dst.y - scene.cameraTileY1) * tile +
         tile / 2 + (yFromCenter ? 0 : ddst.y * tile / 2) + delta.y;
-      ctx.moveTo(srcx, srcy);
-      ctx.lineTo(srcx + (dstx - srcx) * dt,
-        srcy + (dsty - srcy) * dt);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      drawLine(ctx, srcx, srcy, dstx, dsty, dt);
     }
 
 // create splat on death
@@ -89,5 +83,12 @@ class ParticleShotgun extends Particle
     {
       if (hit)
         new ParticleSplat(scene, dstreal);
+      game.scene.sounds.play('attack-bullet-' +
+        (hit ? 'hit' : 'miss'), {
+        always: true,
+        delay: (hit ? 60 : 40),
+        x: dstreal.x, 
+        y: dstreal.y
+      });
     }
 }

@@ -920,7 +920,7 @@ class ConsoleGame
             ';s23 - set player stage 2.3 (stage 2.2 + assimilation)<br/>' +
             ';s24 - set player stage 2.4 (stage 2.1 + group knowledge)<br/>' +
             ';s25 - set player stage 2.5 (stage 2 + ambush)<br/>' +
-            ';s3 - set player stage 3 (stage 2.3 + spaceship)' +
+            ';s3 - set player stage 3 (stage 2.3 + spaceship)<br/>' +
             ';s31 - set player stage 3.1 (stage 3 + ready to launch)'
             );
           return;

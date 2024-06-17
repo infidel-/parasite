@@ -4,7 +4,7 @@ package particles;
 import js.html.CanvasRenderingContext2D;
 import Const.TILE_SIZE as tile;
 
-class ParticleStunRifle extends Particle
+class ParticleStunRifle extends ParticleBullet
 {
   // area x,y
   var sx: Int;
@@ -22,6 +22,8 @@ class ParticleStunRifle extends Particle
       this.sx = sx;
       this.sy = sy;
       this.dst = dstp;
+      this.lineWidth = 5;
+      this.lineDash = [ 15 ];
       this.time = 50;
       this.hit = hit;
       if (!hit)
@@ -59,14 +61,17 @@ class ParticleStunRifle extends Particle
 // draws a line
   public override function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {
-      ctx.beginPath();
-      ctx.setLineDash([15]);
-      ctx.moveTo(srcx, srcy);
-      ctx.lineTo(srcx + (dstx - srcx) * dt,
-        srcy + (dsty - srcy) * dt);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 5;
-      ctx.stroke();
-      ctx.setLineDash([]);
+      drawLine(ctx, srcx, srcy, dstx, dsty, dt);
+    }
+
+  public override function onDeath()
+    {
+      if (hit)
+        game.scene.sounds.play('attack-bullet-hit', {
+          always: true,
+          delay: 60,
+          x: dst.x, 
+          y: dst.y
+        });
     }
 }

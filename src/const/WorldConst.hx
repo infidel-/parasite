@@ -222,8 +222,7 @@ class WorldConst
       // *** corpo building floor
       AREA_CORP => {
         id: AREA_CORP,
-        // TODO
-        ambient: AMBIENT_FACILITY,
+        ambient: AMBIENT_CORP,
         type: 'corp',
         name: 'Corporate HQ',
         pediaArticle: 'areaCorp',

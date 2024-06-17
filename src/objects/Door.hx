@@ -72,6 +72,7 @@ class Door extends AreaObject
                 {
                   isLocked = false;
                   game.log('You command the host to unlock the door.');
+                  game.scene.sounds.play('door-keycard-unlock');
                   return 0;
                 }
             }

@@ -457,6 +457,14 @@ class Const
     [ OFFSET_ROW16 + 0, OFFSET_ROW16 + 1, OFFSET_ROW16 + 2 ],
   ];
 
+// is this tile a window tile?
+  public static inline function isWindowTile(tile: Int) {
+    return 
+      (tile >= TILE_WINDOW1 && tile <= TILE_WINDOWV3) ||
+      (tile >= TILE_CORP_WINDOW1 && tile <= TILE_CORP_WINDOWV3) ||
+      (tile >= TILE_CORP_INNER_WINDOW1 && tile <= TILE_CORP_INNER_WINDOWV3);
+  }
+
   public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_WALKABLE = [
     // row 0

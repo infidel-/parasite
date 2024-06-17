@@ -225,6 +225,8 @@ class Sounds
         key = 'ambient-military';
       else if (st == AMBIENT_FACILITY)
         key = 'ambient-facility';
+      else if (st == AMBIENT_CORP)
+        key = 'ambient-corp';
       else key = 'ambient-city';
       var res = sounds[key];
       if (res == null)
@@ -281,12 +283,16 @@ class Sounds
     {
       if (opts == null)
         opts = {
+          delay: 0,
           canDelay: false,
           always: true,
         };
       if (opts.canDelay)
         Browser.window.setTimeout(playNow.bind(key, opts),
           Std.random(100));
+      else if (opts.delay > 0)
+        Browser.window.setTimeout(playNow.bind(key, opts),
+          opts.delay);
       else playNow(key, opts);
     }
 
@@ -486,6 +492,7 @@ enum _SoundAmbientLocation
   AMBIENT_MILITARY;
   AMBIENT_FACILITY;
   AMBIENT_HABITAT;
+  AMBIENT_CORP;
 }
 
 enum _SoundAmbientState

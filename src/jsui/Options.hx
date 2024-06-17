@@ -199,7 +199,7 @@ class Options extends UIWindow
           var op = Browser.document.createOptionElement();
           op.className = 'select-element';
           op.label = info.title;
-          trace(game.config.difficulty, info.val);
+//          trace(game.config.difficulty, info.val);
           if (game.config.difficulty == Std.parseInt(info.val))
             op.selected = true;
           op.value = info.val;

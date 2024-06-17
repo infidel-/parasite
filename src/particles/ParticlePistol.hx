@@ -4,7 +4,7 @@ package particles;
 import js.html.CanvasRenderingContext2D;
 import Const.TILE_SIZE as tile;
 
-class ParticlePistol extends Particle
+class ParticlePistol extends ParticleBullet
 {
   // area x,y
   var sx: Int;
@@ -59,13 +59,7 @@ class ParticlePistol extends Particle
 // draws a line
   public override function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {
-      ctx.beginPath();
-      ctx.moveTo(srcx, srcy);
-      ctx.lineTo(srcx + (dstx - srcx) * dt,
-        srcy + (dsty - srcy) * dt);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      drawLine(ctx, srcx, srcy, dstx, dsty, dt);
     }
 
 // create splat on death
@@ -73,5 +67,12 @@ class ParticlePistol extends Particle
     {
       if (hit)
         new ParticleSplat(scene, dst);
+      game.scene.sounds.play('attack-bullet-' +
+        (hit ? 'hit' : 'miss'), {
+        always: true,
+        delay: (hit ? 60 : 40),
+        x: dst.x, 
+        y: dst.y
+      });
     }
 }
