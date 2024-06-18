@@ -204,7 +204,8 @@ class PlayerRegion extends _SaveObject
   function enterAreaAction(): Bool
     {
       // cannot enter corp as parasite
-      if (player.state == PLR_STATE_PARASITE)
+      if (player.state == PLR_STATE_PARASITE &&
+          currentArea.info.type == 'corp')
         {
           game.log("You cannot enter this area without a host.", COLOR_HINT);
           game.scene.sounds.play('action-fail');
