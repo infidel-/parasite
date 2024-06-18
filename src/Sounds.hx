@@ -1,8 +1,5 @@
 // sounds and music manager
-import ai.AI;
-import game._ItemInfo;
 import game.Game;
-import const.*;
 import js.node.Fs;
 import js.Browser;
 
@@ -13,6 +10,7 @@ class Sounds
   var game: Game;
   var sounds: Map<String, Array<Int>>;
   var lastPlayedTS: Map<String, Float>;
+  var locationType: String;
   var music: SMSound;
   var menuMusic: SMSound;
   var aboutMusic: SMSound;
@@ -25,6 +23,7 @@ class Sounds
       scene = s;
       lastPlayedTS = new Map();
       game = scene.game;
+      locationType = 'none';
       ambient = {
         id: 'ambient',
         sound: null,
@@ -161,6 +160,35 @@ class Sounds
 #end
     }
 
+// after loading game
+  public function loadPost()
+    {
+      onEnterArea();
+    }
+
+// after entering area
+  public function onEnterArea()
+    {
+      var oldType = locationType;
+      // check for area-specific music
+      if (game.location == LOCATION_AREA)
+        {
+          if (game.area.info.type == 'corp')
+            locationType = 'corp';
+          else locationType = 'none';
+        }
+      else locationType = 'none';
+
+      if (oldType != locationType)
+        onMusicEnd();
+    }
+
+// after entering region mode (leaving area)
+  public function onEnterRegion()
+    {
+      onEnterArea();
+    }
+
 // pick new music and queue
   function onMusicEnd()
     {
@@ -175,9 +203,12 @@ class Sounds
 #end
       SoundManager.destroySound('music');
       musicIdx = idx;
+      var url = 'sound/music' + musicIdx + '.mp3';
+      if (locationType == 'corp')
+        url = 'sound/music-corp.mp3';
       music = SoundManager.createSound({
         id: 'music',
-        url: 'sound/music' + musicIdx + '.mp3',
+        url: url,
         volume: game.config.musicVolume,
         onfinish: onMusicEnd,
       });
@@ -308,7 +339,6 @@ class Sounds
         }
       if (res[0] != -1)
         key += res[Std.random(res.length)];
-      var last = lastPlayedTS[key];
       if (!opts.always && haxe.Timer.stamp() - lastPlayedTS[key] < 1)
         {
 //          trace('Skipping ' + key);

@@ -78,6 +78,9 @@ class RegionGame extends _SaveObject
       // update region view info
       game.scene.region.update();
 
+      // update music
+      game.scene.sounds.onEnterRegion();
+
       // show region
       game.scene.region.show();
 

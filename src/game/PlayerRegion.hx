@@ -3,7 +3,6 @@
 package game;
 
 import entities.PlayerEntity;
-import const.WorldConst;
 import region.*;
 
 class PlayerRegion extends _SaveObject
@@ -204,6 +203,14 @@ class PlayerRegion extends _SaveObject
 // action: enter area
   function enterAreaAction(): Bool
     {
+      // cannot enter corp as parasite
+      if (player.state == PLR_STATE_PARASITE)
+        {
+          game.log("You cannot enter this area without a host.", COLOR_HINT);
+          game.scene.sounds.play('action-fail');
+          return false;
+        }
+
       // cannot enter area with high alertness
       if (currentArea.alertness >= 75)
         {

@@ -252,6 +252,7 @@ class AreaGame extends _SaveObject
       // update AI and objects visibility to player
       updateVisibility();
       game.scene.area.onEnter();
+      game.scene.sounds.onEnterArea();
       // timeline goals hooks
       game.goals.onEnter();
 

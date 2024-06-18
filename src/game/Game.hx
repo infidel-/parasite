@@ -775,6 +775,7 @@ class Game extends _SaveObject
       else if (location == LOCATION_REGION)
         region.enter();
       player.loadPost();
+      scene.sounds.loadPost();
       log('Game loaded from slot ' + slotID + '.');
     }
 
