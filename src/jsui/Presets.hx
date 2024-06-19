@@ -154,6 +154,8 @@ class Presets extends UIWindow
       // save button
       saveButton.onclick = function(e) {
         var selectedIndex = presetSelect.selectedIndex;
+        if (selectedIndex < 0)
+          return;
         var preset = game.profile.object.difficultyPresets[selectedIndex];
         preset.name = presetTitleInput.value;
         for (key in Difficulty.choices.keys())

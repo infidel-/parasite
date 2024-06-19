@@ -247,6 +247,8 @@ class UI
                   _state == UISTATE_ABOUT ||
                   _state == UISTATE_NEWGAME)
                 state = UISTATE_MAINMENU;
+              else if (_state == UISTATE_PRESETS)
+                state = UISTATE_OPTIONS;
               else if (_state == UISTATE_MAINMENU &&
                   !game.isStarted)
                 return true;

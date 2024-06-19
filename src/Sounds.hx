@@ -38,7 +38,8 @@ class Sounds
         if (game.ui.state == UISTATE_MAINMENU ||
             game.ui.state == UISTATE_NEWGAME ||
             game.ui.state == UISTATE_OPTIONS ||
-            game.ui.state == UISTATE_PEDIA)
+            game.ui.state == UISTATE_PEDIA ||
+            game.ui.state == UISTATE_PRESETS)
           {
             if (menuMusic.playState == 0)
               menuMusic.play();

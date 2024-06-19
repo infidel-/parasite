@@ -76,7 +76,8 @@ class GoalsAlienCrashLanding
               type: ACTION_OBJECT,
               name: 'Install ' + Const.col('inventory-item', item.name),
               item: item,
-              energy: 10
+              energy: 10,
+              isAgreeable: true,
               // NOTE: obj field will be set up on init
             });
         return list;
