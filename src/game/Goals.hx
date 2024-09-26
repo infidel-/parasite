@@ -111,8 +111,12 @@ class Goals extends _SaveObject
         throw "No such goal: " + id;
 
       // message on receiving
-      if (silent != SILENT_ALL && info.messageReceive != null)
-        game.message(info.messageReceive);
+      if (silent != SILENT_ALL &&
+          info.messageReceive != null)
+        {
+          var img = ('event/' + id + '_receive').toLowerCase();
+          game.message(info.messageReceive, img);
+        }
 
       if (info.isHidden == null || info.isHidden == false)
         if (silent == SILENT_NONE)
@@ -143,8 +147,16 @@ class Goals extends _SaveObject
           game.log('You have completed a goal: ' + info.name + '.',
             COLOR_GOAL);
 
-      if (silent != SILENT_ALL && info.messageComplete != null) // completion message
-        game.message(info.messageComplete);
+      // completion message
+      if (silent != SILENT_ALL &&
+          info.messageComplete != null)
+        {
+          var img = '';
+          if (info.imageComplete != null)
+            img = info.imageComplete;
+          else img = ('event/' + id + '_complete').toLowerCase();
+          game.message(info.messageComplete, img);
+        }
 
       // call completion hook
       if (info.onComplete != null)
@@ -167,7 +179,13 @@ class Goals extends _SaveObject
         game.log('You have failed a goal: ' + info.name + '.', COLOR_GOAL);
 
       if (info.messageFailure != null) // failure message
-        game.message(info.messageFailure);
+        {
+          var img = '';
+          if (info.imageFailure != null)
+            img = info.imageFailure;
+          else img = ('event/' + id + '_failure').toLowerCase();
+          game.message(info.messageFailure, img);
+        }
 
       // call failure hook
       if (info.onFailure != null)

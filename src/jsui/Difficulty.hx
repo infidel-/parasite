@@ -4,14 +4,17 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.SpanElement;
 
 import game.Game;
 
 class Difficulty extends UIWindow
 {
+  var header: DivElement;
   var text: DivElement;
   var func: Bool -> Void;
   var currentChoice: _Choice;
+  var headerText: String;
   var defaultText: String;
 
   public function new(g: Game)
@@ -20,9 +23,18 @@ class Difficulty extends UIWindow
       window.className += ' window-dialog';
       window.style.borderImage = "url('./img/window-difficulty.png') 100 fill / 1 / 0 stretch";
 
+      var outerText = Browser.document.createSpanElement();
+      window.appendChild(outerText);
+
+      header = Browser.document.createDivElement();
+      header.className = 'window-dialog-text';
+      outerText.appendChild(header);
+
       text = Browser.document.createDivElement();
       text.className = 'window-dialog-text';
-      window.appendChild(text);
+      text.style.marginTop = '1em';
+      text.style.minHeight = '4em';
+      outerText.appendChild(text);
 
       var easy = Browser.document.createDivElement();
       easy.className = 'hud-button window-dialog-button';
@@ -81,9 +93,12 @@ class Difficulty extends UIWindow
     {
       var t: String = obj;
       currentChoice = choices[t];
+      header.innerHTML =
+        '<center><h3>Difficulty: ' + currentChoice.title + '</h3><br></center>' +
+        '<img class=message-img src="img/difficulty/' + currentChoice.id + '.jpg">';
+
       defaultText =
-        '<center><h3>Difficulty: ' + currentChoice.title + '</h3><br>' +
-        'Choose difficulty setting.</center>';
+        '<center>Choose difficulty setting.</center>';
       text.innerHTML = defaultText;
     }
 

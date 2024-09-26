@@ -86,7 +86,7 @@ class AlienMissionCommon
                 game.area.alertness = 100;
                 var languageID = getLanguageID(game);
                 game.message(
-                  '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.');
+                  '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.', 'event/security_alert');
                 break;
               }
         }

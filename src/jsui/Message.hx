@@ -35,10 +35,16 @@ class Message extends UIWindow
 // set parameters
   public override function setParams(obj: Dynamic)
     {
-      var o: { text: String, col: String } = cast obj;
+      var o: { text: String, col: String, img: String } = cast obj;
+      var html = '';
+      if (o.img != null)
+        html = '<img class=message-img src="img/' + o.img + '.jpg"><p>';
       if (o.col != null)
-        text.innerHTML = "<font style='color:" + o.col + "'>"  + o.text + "</font>";
-      else text.innerHTML = o.text;
+        html += "<font style='color:" + o.col + "'>"  + o.text + "</font>";
+      else html += o.text;
+      if (o.img != null)
+        html += '</p>';
+      text.innerHTML = html;
       game.scene.sounds.play('message-default');
     }
 }

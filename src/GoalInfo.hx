@@ -14,6 +14,8 @@ typedef GoalInfo = {
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion
   ?messageFailure: String, // message on goal failure
+  ?imageComplete: String, // image on goal completion
+  ?imageFailure: String, // image on goal failure
 
   ?onTurn: Game -> Player -> Void, // called each turn while this goal is active
   ?onReceive: Game -> Player -> Void, // called on receive

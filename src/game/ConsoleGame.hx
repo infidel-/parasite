@@ -53,13 +53,16 @@ class ConsoleGame
         debugCommand(cmd);
 
 #if mydebug
-      // XXX go commands
+      // XXX go, gc, god commands
       else if (char0 == 'g')
         {
           if (cmd == 'god')
             {
               setVariableCommand(['set', 'player.godmode', '1' ]);
             }
+          //
+          else if (cmd == 'gc')
+            completeGoals();
           else goCommand(cmd);
         }
 #end
@@ -84,6 +87,7 @@ class ConsoleGame
             'dleave - debug: leave area, ' +
             // go
             'ga - go and enter area, ' +
+            'gc - complete current goals, ' +
             'ge - go event location, ' +
             'gg - go x,y (region or area mode),<br/>' +
             'god - enable godmode, ' +
@@ -228,6 +232,13 @@ class ConsoleGame
           game.scene.updateCamera();
           game.area.updateVisibility();
         }
+    }
+
+  // complete current player goals
+  function completeGoals()
+    {
+      for (g in @:privateAccess game.goals._listCurrent)
+        game.goals.complete(g);
     }
 
 #if mydebug

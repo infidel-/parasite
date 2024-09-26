@@ -177,7 +177,7 @@ class Game extends _SaveObject
       if (!firstTime)
         {
           // initial goals
-          message('You are alone. You are scared. You need to find a host or you will die soon.');
+          message('You are alone. You are scared. You need to find a host or you will die soon.', 'event/start');
           var silent = (config.skipTutorial && config.difficulty > 0);
           for (goal in const.Goals.map.keys())
             if (const.Goals.map[goal].isStarting)
@@ -357,7 +357,7 @@ class Game extends _SaveObject
     'noHealth' => "You have succumbed to injuries. It's not wise to go into the direct confrontation.",
     'habitatShock' => 'You have received your final shock from the habitat destruction.',
   ];
-  public function finish(result: String, text: String)
+  public function finish(result: String, text: String, ?img: String = null)
     {
       isFinished = true;
       var finishText = '';
@@ -388,7 +388,10 @@ class Game extends _SaveObject
       ui.event({
         type: UIEVENT_STATE,
         state: UISTATE_FINISH,
-        obj: finishText
+        obj: {
+          text: finishText,
+          img: img,
+        }
       });
 
       // update HUD info just in case
@@ -404,7 +407,9 @@ class Game extends _SaveObject
 
 
 // display text message in a window
-  public function message(s: String, ?col: _TextColor)
+  public function message(s: String,
+      ?img: String,
+      ?col: _TextColor)
     {
       if (col == null)
         col = COLOR_MESSAGE;
@@ -419,7 +424,8 @@ class Game extends _SaveObject
         state: UISTATE_MESSAGE,
         obj: {
           text: Const.narrative(s),
-          col: Const.TEXT_COLORS[col]
+          col: Const.TEXT_COLORS[col],
+          img: img,
         }
       });
     }

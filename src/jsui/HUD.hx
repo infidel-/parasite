@@ -76,7 +76,8 @@ class HUD
         else if (e.code == 'Enter')
           {
             game.console.run(console.value);
-            hideConsole();
+            // kludge: needs a timeout or closes the event window
+            Browser.window.setTimeout(hideConsole, 10);
           }
       }
       consoleDiv.appendChild(console);

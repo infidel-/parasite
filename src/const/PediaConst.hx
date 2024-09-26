@@ -74,7 +74,7 @@ Alt+0-5 - equals F1-F5<br>
         {
           id: 'movement',
           name: 'Movement',
-          text: "You can use the numpad or mouse for movement. Moving the mouse cursor around the screen you can see the path that you will take. Clicking the LMB on the screen will start the movement if it is possible. Note that you cannot click and move to the black tiles on the screen. Since movement requires energy, be careful or you might end up dead.",
+          text: "You can use the numpad or mouse for movement. Moving the mouse cursor around the screen you can see the path that you will take. Clicking the LMB on the screen will start the movement if it is possible. Note that you cannot click and move to the black tiles on the screen because what is actually on them is not known to you. Since movement requires energy, be careful or you might end up dead.",
         },
         {
           id: 'npcAlertness',
@@ -202,27 +202,27 @@ Alt+0-5 - equals F1-F5<br>
         {
           id: 'areaCity',
           name: 'City Area',
-          text: "This is a generic city area that can be of low, medium or high density. The density will change the amount of civilians and police wandering around. Entering the high density area will give the parasite an idea...",
+          text: "The city is divided into three distinct area types based on density: low, medium, and high. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. High-density areas are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering the high density area will give the parasite an idea...",
         },
         {
           id: 'areaCorp',
           name: 'Corporate HQ',
-          text: "Corporate HQs have corporate workers and management. TODO",
+          text: "The corporate headquarters floor is a dynamic environment populated by office workers and management. The parasite begins its operations from the elevator, providing a strategic point of entry. Both the elevator and stairs are available for efficient egress, allowing it to navigate the area with agility. Some of the doors might be locked electronically, adding an additional layer of complexity to the environment.",
         },
         {
           id: 'areaMilitary',
           name: 'Military Base',
-          text: "All military bases have soldiers and officers walking around.",
+          text: "All military base areas are actively patrolled by soldiers and officers, ensuring a constant state of vigilance and security. The presence of well-trained personnel underscores the importance of maintaining order and readiness at all times. Routine inspections and drills are conducted to ensure that protocols are strictly followed, contributing to the overall efficiency and preparedness of the base. This disciplined environment is crucial for the effective operation and rapid response capabilities of the military.",
         },
         {
           id: 'areaLab',
           name: 'Research Facility',
-          text: "The laboratories and research facilities mostly contain lab equipment and scientists with security patrolling around.",
+          text: "The laboratories and research facilities are primarily populated with sophisticated lab equipment and highly skilled scientists, all working diligently on advanced projects. Security personnel maintain a vigilant presence, patrolling the premises to ensure the safety and integrity of the sensitive research being conducted. These facilities are designed to foster innovation while adhering to stringent safety and security protocols.",
         },
         {
           id: 'areaUninhabited',
           name: 'Uninhabited Area',
-          text: "This type of area only contains greenery. Be careful, there are no hosts wandering around.",
+          text: "The uninhabited area consists solely of greenery, providing a natural space without any residential or commercial development. This area supports various plant species and serves as a crucial part of the local ecosystem. Its preservation is important for maintaining environmental balance and biodiversity. The lack of human activity helps ensure that the area remains undisturbed and protected. Be careful, there are no hosts wandering around.",
         },
       ],
     },

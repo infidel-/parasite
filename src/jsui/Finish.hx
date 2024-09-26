@@ -38,8 +38,10 @@ class Finish extends UIWindow
     {
       var buf = new StringBuf();
       buf.add('<center><h3>GAME OVER</h3></center><br/>');
-      buf.add(obj);
-      buf.add("<br/><br/>Close the window, then you can restart the game<br/>");
+      if (obj.img != null)
+        buf.add('<img class=message-img src="img/' + obj.img + '.jpg"><p>');
+      buf.add('<center>' + obj.text + '</center>');
+      buf.add("<br/><br/><center>Close the window, then you can restart the game<br/></center>");
       text.innerHTML = buf.toString();
     }
 

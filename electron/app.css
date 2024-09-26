@@ -455,10 +455,21 @@ hr {
 
 #window-difficulty {
   width: 40%;
-  height: 4em;
 }
 
 #window-message {
+  max-width: 30%;
+}
+
+.message-img {
+  animation: fade-in 1.0s;
+  border: solid 2px #6a8aa1;
+  border: solid 2.5px #6a8aa18c;
+  box-shadow: 0 0 0 0.2rem #88c1d81f;
+}
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 .window-dialog-button {

@@ -258,7 +258,7 @@ class GoalsAlienCrashLanding
         var languageID = getLanguageID(game);
         game.message(
           '<span class=alien' + languageID + '>' + 'Glut</span>! After initiating the startup sequence you board the ship. ' +
-          'You activate the engine and move the ship away to a safer location.');
+          'You activate the engine and move the ship away to a safer location.', 'event/scenario_alien_steal_ship_complete');
 
         // move spaceship and player from lab to random wilderness spot
         moveSpaceship(game);
@@ -278,7 +278,7 @@ class GoalsAlienCrashLanding
             state.alertRaised = true;
             var languageID = getLanguageID(game);
             game.message(
-              '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.');
+              '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.', 'event/security_alert');
           }
       },
 
@@ -328,6 +328,8 @@ class GoalsAlienCrashLanding
       note: 'You need to locate the target host and invade it.',
       messageComplete: 'Target invaded. I need to return to my spaceship.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
+      imageComplete: 'event/scenario_alien_return',
+      imageFailure: 'event/scenario_alien_return',
 
       aiInit: AlienMissionCommon.aiInit,
       leaveAreaPre: AlienMissionCommon.leaveAreaPre,
@@ -352,6 +354,8 @@ class GoalsAlienCrashLanding
       noteFunc: alienShipLocationFunc,
       messageComplete: 'Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
+      imageComplete: 'event/scenario_alien_return',
+      imageFailure: 'event/scenario_alien_return',
 
       onTurn: function (game, player) {
         // if player does not possess target host, mission failure
@@ -383,6 +387,8 @@ class GoalsAlienCrashLanding
       note: 'You need to locate the target host and liquidate it.',
       messageComplete: 'Target liquidated. I need to return to my spaceship.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
+      imageComplete: 'event/scenario_alien_return',
+      imageFailure: 'event/scenario_alien_return',
 
       aiInit: AlienMissionCommon.aiInit,
       leaveAreaPre: AlienMissionCommon.leaveAreaPre,
@@ -406,6 +412,8 @@ class GoalsAlienCrashLanding
       note: 'You need to locate the target host and probe its brain.',
       messageComplete: 'Target scanned. I need to return to my spaceship.',
       messageFailure: 'Mission failed. I will return to the HQ now.',
+      imageComplete: 'event/scenario_alien_return',
+      imageFailure: 'event/scenario_alien_return',
 
       aiInit: AlienMissionCommon.aiInit,
       leaveAreaPre: AlienMissionCommon.leaveAreaPre,
@@ -430,6 +438,7 @@ class GoalsAlienCrashLanding
       note: 'You need to return to the spaceship.',
       noteFunc: alienShipLocationFunc,
       messageComplete: 'Returning to the HQ now...',
+      imageComplete: 'event/scenario_alien_mission_complete',
 
       onReceive: function (game, player) {
         // change spaceship action contents
@@ -439,7 +448,7 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'You have succeeded in your mission.');
+        game.finish('win', 'You have succeeded in your mission.', 'event/scenario_alien_finish_win' + (1 + Std.random(5)));
       },
     },
 
@@ -450,6 +459,7 @@ class GoalsAlienCrashLanding
       note: 'You need to return to the spaceship.',
       noteFunc: alienShipLocationFunc,
       messageComplete: 'Returning to the HQ now...',
+      imageComplete: 'event/scenario_alien_mission_complete',
 
       onReceive: function (game, player) {
         // change spaceship action contents

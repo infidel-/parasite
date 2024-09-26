@@ -11,8 +11,9 @@ electron-mydebug:
       --connect 6000 && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
 
+#cp -f ~/Projects/Parasite/Ingame/*.png ../assets.paid.web/graphics/ && \
+
 electron:
-	cp -f ~/Projects/Parasite/Ingame/*.png ../assets.paid.web/graphics/ && \
 	haxe project_electron.hxml \
       --connect 6000 && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/

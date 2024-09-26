@@ -413,7 +413,7 @@ class Goals
         game.player.vars.objectsEnabled = true;
         if (game.scenarioStringID == 'alien')
           {
-            game.message('What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there and learn.');
+            game.message('What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there and learn.', 'event/what_am_i');
             player.vars.timelineEnabled = true;
             game.timeline.unlock();
             game.ui.event({
@@ -423,7 +423,7 @@ class Goals
             game.profile.addPediaArticle('eventTimeline');
           }
         else if (game.scenarioStringID == 'sandbox')
-          game.message('I have learned enough to leave this place.');
+          game.message('I have learned enough to leave this place.', 'event/sandbox');
         game.goals.receive(GOAL_ENTER_SEWERS);
       }
     },
@@ -437,7 +437,7 @@ class Goals
         if (game.scenarioStringID == 'alien')
           game.goals.receive(GOAL_TRAVEL_EVENT);
         else if (game.scenarioStringID == 'sandbox')
-          game.message('I am now free to do as I see fit.');
+          game.message('I am now free to do as I see fit.', 'event/sandbox2');
         game.profile.addPediaArticle('regionMode');
       }
     },

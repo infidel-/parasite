@@ -193,6 +193,7 @@ class Event extends _SaveObject
 // learn location
   public function learnLocation(): Bool
     {
+      trace(id, info.onLearnLocation);
       if (location == null || locationKnown)
         return false;
 
