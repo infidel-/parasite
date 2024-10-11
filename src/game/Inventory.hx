@@ -239,7 +239,7 @@ class Inventory extends _SaveObject
   function learnAction(item: _Item)
     {
       game.log('You probe the brain of the host and learn that this item is a ' +
-        item.name + '.');
+        Const.col('inventory-item', item.name) + '.');
       game.player.addKnownItem(item.id);
       if (item.info.onLearn != null)
         item.info.onLearn(game, game.player);

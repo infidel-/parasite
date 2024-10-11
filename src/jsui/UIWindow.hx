@@ -83,7 +83,7 @@ class UIWindow
 // add select to options
   function addSelect(
       contents: DivElement, label: String, id: String,
-      options: Array<{ title: String, val: String, isSelected: Bool }>,
+      options: Array<{ ?font: String, title: String, val: String, isSelected: Bool }>,
       set: String -> Void): DivElement
     {
       var cont = Browser.document.createDivElement();
@@ -113,6 +113,9 @@ class UIWindow
         {
           var op = Browser.document.createOptionElement();
           op.className = 'select-element';
+          if (info.font != null)
+            op.style.fontFamily = info.font;
+          op.style.fontSize = '150%';
           op.label = info.title;
           if (info.isSelected)
             op.selected = true;

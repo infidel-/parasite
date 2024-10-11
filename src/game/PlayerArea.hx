@@ -1127,7 +1127,7 @@ class PlayerArea extends _SaveObject
           if (!o.visible())
             continue;
           cnt++;
-          s.add(o.getName());
+          s.add(Const.col('inventory-item', o.getName()));
           if (cnt < objs.length)
             s.add(', ');
         }

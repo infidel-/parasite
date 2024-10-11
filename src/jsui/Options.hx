@@ -90,6 +90,7 @@ class Options extends UIWindow
       var fontTitles = [];
       for (f in Config.fontsTitle)
         fontTitles.push({
+          font: f,
           title: f,
           val: f,
           isSelected: (game.config.fontTitle == f),
@@ -103,6 +104,7 @@ class Options extends UIWindow
       var fonts = [];
       for (f in Config.fonts)
         fonts.push({
+          font: f,
           title: f,
           val: f,
           isSelected: (game.config.font == f),

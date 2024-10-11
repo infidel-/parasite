@@ -1216,7 +1216,6 @@ input[type=checkbox] {
   border-radius: 6px;
   color: #303c48;
   font-family: var(--text-font);
-  font-weight: bold;
 }
 
 .highlight-text {
