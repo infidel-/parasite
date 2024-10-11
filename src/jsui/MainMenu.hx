@@ -20,12 +20,13 @@ class MainMenu extends UIWindow
 
       var title = Browser.document.createDivElement();
       title.id = 'window-mainmenu-title';
-      title.innerHTML = 'PARASITE ' + Const.smallgray(
-        'v' + Version.getVersion()
+      title.className = 'window-title';
+      title.innerHTML = 'PARASITE <span style="font-size: 70%;">' + Const.smallgray(
+        'v' + Version.getVersion() +
 #if demo
-        + ' DEMO'
+        + ' DEMO' +
 #end
-      );
+      '</span>');
       window.appendChild(title);
       contents = Browser.document.createDivElement();
       contents.id = 'window-mainmenu-contents';
@@ -112,7 +113,7 @@ class MainMenu extends UIWindow
       contents.appendChild(cont);
 
       var item = Browser.document.createDivElement();
-      item.className = 'window-mainmenu-item';
+      item.className = 'window-mainmenu-item window-title';
       item.innerHTML = label;
       cont.appendChild(item);
       item.onclick = function (e) {
@@ -127,15 +128,16 @@ class MainMenu extends UIWindow
       saveItem.innerHTML = 'SAVE GAME';
       if (game.isStarted && !game.isFinished &&
           game.player.saveDifficulty != UNSET)
-        saveItem.innerHTML += ' ' + Const.smallgray('[' +
-          game.player.vars.savesLeft + ' saves left]');
+        saveItem.innerHTML +=
+          '<br><span style="font-size: 70%;">' + Const.smallgray('[' +
+          game.player.vars.savesLeft + ' saves left]') + '</span>';
 
       if (!game.saveExists(1))
-        loadItem.className = 'window-mainmenu-item-disabled';
-      else loadItem.className = 'window-mainmenu-item';
+        loadItem.className = 'window-mainmenu-item-disabled window-title';
+      else loadItem.className = 'window-mainmenu-item window-title';
       if (!game.isStarted || game.isFinished)
-        saveItem.className = 'window-mainmenu-item-disabled';
-      else saveItem.className = 'window-mainmenu-item';
+        saveItem.className = 'window-mainmenu-item-disabled window-title';
+      else saveItem.className = 'window-mainmenu-item window-title';
       if (game.isStarted)
         close.style.display = 'block';
     }

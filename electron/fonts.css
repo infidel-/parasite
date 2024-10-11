@@ -1,0 +1,245 @@
+@font-face {
+  font-family: 'Orkney-Regular';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/Orkney-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Green-Martian';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/Green-Martian.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Modern-Destronic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/Modern-Destronic.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Modern-Iaconic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/Modern-Iaconic.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Visitor-Script';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/Visitor-Script.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Alternity';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 90%;
+  src: url(./fonts/Alternity.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Brainstorm';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 160%;
+  src: url(./fonts/Brainstorm.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Cruiser2015';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.02em;
+  size-adjust: 90%;
+  src: url(./fonts/Cruiser2015.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'DemunLotion';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 75%;
+  src: url(./fonts/DemunLotion.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Dusty';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 85%;
+  src: url(./fonts/Dusty.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Eurocorp';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 90%;
+  src: url(./fonts/Eurocorp.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'FlipsideBrk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 70%;
+  src: url(./fonts/FlipsideBrk.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Horizon';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 120%;
+  src: url(./fonts/Horizon.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Montalban';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 75%;
+  src: url(./fonts/Montalban.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Probert';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 85%;
+  src: url(./fonts/Probert.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Rapier-Zero';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 90%;
+  src: url(./fonts/Rapier-Zero.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Rebellion';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 85%;
+  src: url(./fonts/Rebellion.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Schnaubelt';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 110%;
+  src: url(./fonts/Schnaubelt.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Sigma-Five-Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 100%;
+  src: url(./fonts/Sigma-Five-Sans.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Sternbach';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 130%;
+  src: url(./fonts/Sternbach.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Twobit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 120%;
+  src: url(./fonts/Twobit.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Virtucorp';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 145%;
+  src: url(./fonts/Virtucorp.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Xball';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 130%;
+  src: url(./fonts/Xball.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Xolonium';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 95%;
+  src: url(./fonts/Xolonium.otf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Zebulon';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  size-adjust: 75%;
+  src: url(./fonts/Zebulon.ttf) format('truetype');
+}
+

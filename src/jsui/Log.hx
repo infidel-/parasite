@@ -4,8 +4,6 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
-import js.html.FieldSetElement;
-import js.html.LegendElement;
 
 import game.Game;
 
@@ -25,6 +23,7 @@ class Log extends UIWindow
       fieldset.id = 'window-log-fieldset';
       cont.appendChild(fieldset);
       var legend = Browser.document.createLegendElement();
+      legend.className = 'window-title';
       legend.innerHTML = 'LOG';
       fieldset.appendChild(legend);
       text = Browser.document.createDivElement();

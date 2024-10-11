@@ -469,7 +469,7 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'You have failed in your mission.');
+        game.finish('win', 'You have failed in your mission.', 'event/scenario_alien_finish_lose');
       },
     },
   ];

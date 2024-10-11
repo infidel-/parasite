@@ -40,7 +40,7 @@ class About extends UIWindow
         '<br>' +
         'This game uses free icons from www.flaticon.com. Full list is available in icons.txt. It also uses sounds from FreeSound (freesound.org) and ZapSplat (www.zapsplat.com). Full list of sounds is available in sounds.txt.<br>' +
         '<br>' +
-        'This game uses fonts from Pixel Sagas (www.pixelsagas.com)<br>' +
+        'This game uses various fonts from Pixel Sagas (www.pixelsagas.com)<br>' +
         '</center>';
 
       addCloseButton();

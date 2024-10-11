@@ -169,7 +169,7 @@ class HUD
     {
       var btn = Browser.document.createDivElement();
       btn.innerHTML = str;
-      btn.className = 'hud-button';
+      btn.className = 'hud-button window-title';
       btn.style.borderImage = "url('./img/hud-button.png') 23 fill / 1 / 0 stretch";
       cont.appendChild(btn);
       menuButtons.push({
@@ -389,8 +389,8 @@ class HUD
         {
           var host = game.player.host;
           if (host.isHuman)
-            buf.add('<b>' + host.getNameCapped() + '</b>');
-          else buf.add('<b>' + host.AName() + '</b>');
+            buf.add('<span class=hud-name>' + host.getNameCapped() + '</span>');
+          else buf.add('<span class=hud-name>' + host.AName() + '</span>');
           if (host.affinity >= 100)
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
           if (host.chat.consent >= 100)

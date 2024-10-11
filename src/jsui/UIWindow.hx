@@ -60,6 +60,7 @@ class UIWindow
       fieldset.id = id;
       cont.appendChild(fieldset);
       var legend = Browser.document.createLegendElement();
+      legend.className = 'window-title';
       legend.innerHTML = title;
       fieldset.appendChild(legend);
       var text = Browser.document.createDivElement();
@@ -89,7 +90,7 @@ class UIWindow
       cont.className = 'select-contents';
       contents.appendChild(cont);
 
-      var title = Browser.document.createLabelElement();
+      var title = Browser.document.createDivElement();
       title.className = 'select-title';
       title.innerHTML = label;
       cont.appendChild(title);
@@ -103,6 +104,10 @@ class UIWindow
         var op: OptionElement = cast select.options[select.selectedIndex];
         set(op.value);
       }
+
+      var padding = Browser.document.createDivElement();
+      padding.className = 'slider-value';
+      cont.appendChild(padding);
 
       for (info in options)
         {

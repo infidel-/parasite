@@ -4,16 +4,17 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.ImageElement;
 
 import game.Game;
 import game.Improv;
-import game.EvolutionManager;
 import const.EvolutionConst;
 
 class Evolution extends UIWindow
 {
   var list: DivElement;
   var info: DivElement;
+  var img: ImageElement;
   var actions: DivElement;
   var listActions: Array<_PlayerAction>;
 
@@ -26,9 +27,23 @@ class Evolution extends UIWindow
       var cont = Browser.document.createDivElement();
       cont.id = 'window-evolution-contents';
       window.appendChild(cont);
+      var bottom = Browser.document.createDivElement();
+      bottom.id = 'window-evolution-bottom';
+      var bottomLeft = Browser.document.createDivElement();
+      bottomLeft.id = 'window-evolution-bottom-left';
+      bottom.appendChild(bottomLeft);
+      var bottomRight = Browser.document.createDivElement();
+      bottomRight.id = 'window-evolution-bottom-right';
+      bottom.appendChild(bottomRight);
+
       list = addBlock(cont, 'window-evolution-list', 'CONTROLLED EVOLUTION: IMPROVEMENTS');
-      info = addBlock(cont, 'window-evolution-info', 'INFO');
-      actions = addBlock(cont, 'window-evolution-actions', 'ACTIONS');
+      cont.appendChild(bottom);
+      info = addBlock(bottomLeft, 'window-evolution-info', 'INFO');
+      actions = addBlock(bottomLeft, 'window-evolution-actions', 'ACTIONS');
+      img = Browser.document.createImageElement();
+      img.className = 'message-img';
+      img.id = 'window-evolution-img';
+      bottomRight.appendChild(img);
       addCloseButton();
     }
 
@@ -191,6 +206,20 @@ class Evolution extends UIWindow
         list: listtext,
         info: infotext,
       });
+      updateImage();
+    }
+
+// update current improvement image
+  function updateImage()
+    {
+      img.style.animation = 'none';
+      img.src = './img/black.jpg';
+      Browser.window.setTimeout(function() {
+        if (game.player.evolutionManager.isActive)
+          img.src = './img/imp/' + game.player.evolutionManager.taskID + '.jpg';
+        else img.src = './img/imp/imp_none.jpg';
+        img.style.animation = '';
+      }, 10);
     }
 
   public override function action(index: Int)

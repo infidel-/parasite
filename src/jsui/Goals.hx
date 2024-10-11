@@ -29,7 +29,7 @@ class Goals extends UIWindow
     {
       var buf = new StringBuf();
 
-      buf.add('<fieldset id="window-goals-current"><legend>CURRENT GOALS</legend><div class=scroller>');
+      buf.add('<fieldset id="window-goals-current"><legend class=window-title>CURRENT GOALS</legend><div class=scroller>');
       for (g in game.goals.iteratorCurrent())
         {
           var info = game.goals.getInfo(g);
@@ -48,7 +48,7 @@ class Goals extends UIWindow
       buf.add('</div>');
       buf.add('</fieldset>');
 
-      buf.add('<fieldset id="window-goals-completed"><legend>COMPLETED GOALS</legend><div class=scroller style="color:var(--text-color-gray)">');
+      buf.add('<fieldset id="window-goals-completed"><legend class=window-title>COMPLETED GOALS</legend><div class=scroller style="color:var(--text-color-gray)">');
       var hasCompletedGoals = false;
       for (g in game.goals.iteratorCompleted())
         {
@@ -68,7 +68,7 @@ class Goals extends UIWindow
       buf.add('</div>');
       buf.add('</fieldset>');
 
-      buf.add('<fieldset id="window-goals-failed"><legend>FAILED GOALS</legend><div class=scroller style="color:var(--text-color-red)">');
+      buf.add('<fieldset id="window-goals-failed"><legend class=window-title>FAILED GOALS</legend><div class=scroller style="color:var(--text-color-red)">');
       var hasFailedGoals = false;
       for (g in game.goals.iteratorFailed())
         {

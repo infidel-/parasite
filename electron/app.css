@@ -1,6 +1,7 @@
 :root {
   --text-font-size: 16px;
   --text-font: Orkney-Regular;
+  --text-font-title: Orkney-Regular;
   --text-font-alien1: Green-Martian;
   --text-font-alien2: Modern-Destronic;
   --text-font-alien3: Modern-Iaconic;
@@ -32,51 +33,6 @@
   --text-color-skill-title: #d969e8;
   --text-color-group-title: #ff7f73;
   --text-color-group-note: #e35c3f;
-}
-
-@font-face {
-  font-family: 'Orkney-Regular';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  letter-spacing: 0.08em;
-  src: url(./Orkney-Regular.ttf) format('truetype');
-}
-
-@font-face {
-  font-family: 'Green-Martian';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  letter-spacing: 0.08em;
-  src: url(./Green-Martian.otf) format('truetype');
-}
-
-@font-face {
-  font-family: 'Modern-Destronic';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  letter-spacing: 0.08em;
-  src: url(./Modern-Destronic.otf) format('truetype');
-}
-
-@font-face {
-  font-family: 'Modern-Iaconic';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  letter-spacing: 0.08em;
-  src: url(./Modern-Iaconic.otf) format('truetype');
-}
-
-@font-face {
-  font-family: 'Visitor-Script';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  letter-spacing: 0.08em;
-  src: url(./Visitor-Script.otf) format('truetype');
 }
 
 html, body {
@@ -245,8 +201,9 @@ hr {
   border: 20px solid;
   max-width: 27%;
   min-height: 1.2em;
-  bottom: 4em;
+  bottom: 5em;
   right: 10px;
+  font-size: 80%;
   position: fixed;
   margin: 0;
   padding: 0;
@@ -296,12 +253,16 @@ hr {
   margin: 0px;
 }
 
+.hud-name {
+  color: #9eceff;
+}
+
 .hud-button {
   opacity: 0.9;
   background-color: #ffffff00;
   border: 11px solid;
   color: #a4d6ff;
-  max-width: 10ch;
+  max-width: 11ch;
   min-height: 1.2em;
   margin: 0px 5px 0px 5px;
   padding: 0;
@@ -701,7 +662,7 @@ fieldset {
 
 #window-options {
   border: 30px solid;
-  width: 40ch;
+  width: 50ch;
   pointer-events: all;
   display: flex;
   flex-direction: column;
@@ -760,7 +721,7 @@ fieldset {
 }
 
 #window-mainmenu-title {
-  font-size: 1.5em;
+  font-size: 2.0em;
   font-weight: bold;
   text-align: center;
   padding-bottom: 10px;
@@ -788,6 +749,7 @@ fieldset {
   text-align: center;
   padding: 8px;
   margin-bottom: 10px;
+  font-size: 1.5em;
 }
 
 .window-mainmenu-item:hover {
@@ -808,12 +770,6 @@ fieldset {
   text-align: center;
   padding: 8px;
   margin-bottom: 10px;
-}
-
-.slider-contents {
-  display: flex;
-  padding-bottom: 4px;
-  align-items: center;
 }
 
 #window-newgame {
@@ -863,6 +819,12 @@ fieldset {
   color: #879ea3;
 }
 
+.slider-contents {
+  display: flex;
+  padding-bottom: 4px;
+  align-items: center;
+}
+
 .slider-wrapper {
   width: 50%;
 }
@@ -890,11 +852,11 @@ fieldset {
 }
 
 .slider-title {
-  width: 36%;
+  flex-basis: 21ch;
 }
 
 .slider-value {
-  width: 16%;
+  width: 7ch;
   text-align: center;
 }
 
@@ -986,6 +948,40 @@ input[type=checkbox] {
   height: 34%;
 }
 
+#window-evolution-bottom {
+  display: flex;
+  flex-direction: row;
+  height: 67%;
+  min-height: 67%;
+}
+
+#window-evolution-bottom-left {
+  width: 70%;
+  height: 94%;
+}
+
+#window-evolution-bottom-right {
+  width: 40%;
+  margin: 10px 0px 0px 0px;
+  padding: 5px 10px 0px 10px;
+}
+
+#window-evolution-img {
+  width: 100%;
+}
+
+#window-evolution-info {
+  height: 30%;
+  max-height: 7.1em;
+  margin-top: 10px;
+}
+
+#window-evolution-actions {
+  margin-top: 10px;
+  flex-grow: 1;
+  height: 59%;
+}
+
 .window-evolution-list-row {
   display: flex;
   flex-direction: row;
@@ -1017,21 +1013,11 @@ input[type=checkbox] {
 }
 
 .small {
+  font-family: var(--text-font);
   font-size: 80%;
   line-height: 1.1;
   letter-spacing: 0.5px;
   margin: 0px;
-}
-
-#window-evolution-info {
-  height: 17%;
-  margin-top: 10px;
-}
-
-#window-evolution-actions {
-  margin-top: 10px;
-  flex-grow: 1;
-  height: 50px;
 }
 
 .actions-item {
@@ -1199,9 +1185,15 @@ input[type=checkbox] {
 
 .select-contents {
   align-items: center;
+  display: flex;
 }
 
 .select-title {
+  flex-basis: 21ch;
+}
+
+.button-container {
+  display: flex;
 }
 
 #options-presets {
@@ -1210,7 +1202,6 @@ input[type=checkbox] {
   color: #c7e6ff;
   border-radius: 3px;
   background: #364967;
-  margin-left: 10px;
 }
 
 .energy {
@@ -1219,8 +1210,7 @@ input[type=checkbox] {
 }
 
 .select-element {
-  margin-left: 8px;
-  width: 49%;
+  width: 50%;
   padding: 1px 3px 0px 3px;
   background: #ccdef4c2;
   border-radius: 6px;
@@ -1290,9 +1280,10 @@ input[type=checkbox] {
   border-radius: 3px;
   border: 2px solid #98aed1;
   color: #c7e6ff;
-  margin: 0px 5px 0px 5px;
+  margin: 0.5em 5px 0px 5px;
   max-width: 10ch;
   min-height: 1.2em;
+  max-height: 2em;
   outline: none;
   padding: 2px 4px 2px 4px;
   pointer-events: auto;
@@ -1395,3 +1386,7 @@ input[type="radio"]:focus {
     text-align: right;
 }
 
+.window-title {
+  font-family: var(--text-font-title);
+  font-size: 1.5em;
+}

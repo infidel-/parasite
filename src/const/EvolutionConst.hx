@@ -252,7 +252,7 @@ class EvolutionConst
         type: TYPE_BASIC,
         id: IMP_SLIME_SPIT,
         name: 'Mucilaginous fluid',
-        note: 'Body feature. Restructuring of salivary glands and surrounding buccal cavity. Secreted mucosal fluid now exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop.',
+        note: 'Body feature. Restructuring of salivary glands and surrounding buccal cavity. Mucosal fluid secreted in open air exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Mucus strength: " + l.strength +

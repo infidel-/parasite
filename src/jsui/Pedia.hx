@@ -4,8 +4,6 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
-import js.html.LegendElement;
-import js.html.Element;
 
 import game.Game;
 import const.PediaConst;
@@ -80,6 +78,10 @@ class Pedia extends UIWindow
                 game.scene.sounds.play('click-submenu');
                 pediaContents.innerHTML =
                   Const.col('gray', '<h3>' + article.name + '</h3><br>') +
+
+                  (article.img != null ?
+                   '<img style="margin-left: 1em;max-width:40%" class=message-img src="img/' +
+                   article.img + '.jpg"><p>' : '') +
                   Const.col('pedia', article.text);
                 updateTopic(topicInfo, false);
                 game.profile.markPediaArticle(topicInfo.id);
@@ -124,7 +126,7 @@ class Pedia extends UIWindow
 // update topics list
   override function update()
     {
-      pediaContents.innerHTML = "Pick an article to read.";
+      pediaContents.innerHTML = "<center>Pick an article to read.</center>";
     }
 }
 

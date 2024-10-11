@@ -10,7 +10,6 @@ import game.Game;
 class Options extends UIWindow
 {
   var contents: DivElement;
-  var restartText: DivElement;
   var spoonString: String;
 
   public function new(g: Game)
@@ -21,6 +20,7 @@ class Options extends UIWindow
 
       var title = Browser.document.createDivElement();
       title.id = 'window-options-title';
+      title.className = 'window-title';
       window.appendChild(title);
       contents = Browser.document.createDivElement();
       contents.id = 'window-options-contents';
@@ -71,7 +71,6 @@ class Options extends UIWindow
       addSlider(contents, 'Map scale', game.config.mapScale * 100,
         function (v: Float) {
           game.config.set('mapScale', '' + Const.round(v / 100.0), false);
-//          restartText.style.visibility = 'inherit';
           Const.TILE_SIZE =
             Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
           game.scene.updateCamera();
@@ -81,17 +80,42 @@ class Options extends UIWindow
         game.config.minimapScale * 100,
         function (v: Float) {
           game.config.set('minimapScale', '' + Const.round(v / 100.0), false);
-//          restartText.style.visibility = 'inherit';
           if (game.location == LOCATION_AREA)
             game.scene.area.generateMinimap();
           game.scene.updateCamera();
           game.scene.draw();
         }, 60, 1000, 20, 'round', '%');
+
+      // title font selector
+      var fontTitles = [];
+      for (f in Config.fontsTitle)
+        fontTitles.push({
+          title: f,
+          val: f,
+          isSelected: (game.config.fontTitle == f),
+        });
+      addSelect(contents, 'Title font', 'fontTitle', fontTitles,
+        function (val: String) {
+          game.config.set('fontTitle', val);
+        });
+
+      // font selector
+      var fonts = [];
+      for (f in Config.fonts)
+        fonts.push({
+          title: f,
+          val: f,
+          isSelected: (game.config.font == f),
+        });
+      addSelect(contents, 'Text font', 'font', fonts,
+        function (val: String) {
+          game.config.set('font', val);
+        });
       addSlider(contents, 'Font size', game.config.fontSize,
         function (v: Float) {
           game.config.set('fontSize', '' + v, false);
-          restartText.style.visibility = 'inherit';
         }, 8, 40, 1, 'int', '');
+
       var div = addSelect(contents, 'Overall difficulty', 'difficulty', [
           {
             title: 'Unset',
@@ -119,11 +143,11 @@ class Options extends UIWindow
         });
 
       // presets button
-      div.style.display = 'flex';
       var presets = Browser.document.createLabelElement();
       presets.className = 'hud-button';
       presets.id = 'options-presets';
       presets.innerHTML = 'PRESETS';
+      div.removeChild(div.lastChild); // remove padding 
       div.appendChild(presets);
       presets.onclick = function (e) {
         game.scene.sounds.play('click-menu');
@@ -135,9 +159,9 @@ class Options extends UIWindow
 
       addCheckbox(contents, 'Skip tutorial ' +
         Const.smallgray('(needs overall difficulty set)'),
-        'skipTutorial', game.config.skipTutorial, '-22.3%');
+        'skipTutorial', game.config.skipTutorial, '-10.7ch');
       addCheckbox(contents, 'Enable fullscreen',
-        'fullscreen', game.config.fullscreen, '-55.6%');
+        'fullscreen', game.config.fullscreen, '-28.5ch');
 
       // advanced options
       var subtitle = Browser.document.createDivElement();
@@ -151,22 +175,15 @@ class Options extends UIWindow
           game.hudMessageList.clear();
         }, 1, 10, 1, 'int', '');
       addCheckbox(contents, 'Center camera on player near map edges',
-        'alwaysCenterCamera', game.config.alwaysCenterCamera, '-9%');
+        'alwaysCenterCamera', game.config.alwaysCenterCamera, '-4.4ch');
       addCheckbox(contents, 'Laptop movement keys (uiojklm,.)',
-        'laptopKeyboard', game.config.laptopKeyboard, '-23.6%');
+        'laptopKeyboard', game.config.laptopKeyboard, '-12.9ch');
       addCheckbox(contents, 'Extended gameplay information',
-        'extendedInfo', game.config.extendedInfo, '-26.9%');
+        'extendedInfo', game.config.extendedInfo, '-15ch');
       addCheckbox(contents, 'Shift-click/number repeat action',
-        'shiftLongActions', game.config.shiftLongActions, '-24.7%');
+        'shiftLongActions', game.config.shiftLongActions, '-13ch');
       addCheckbox(contents, 'Show mouse cursor on map',
-        'mouseEnabled', game.config.mouseEnabled, '-36.2%');
-
-      restartText = Browser.document.createDivElement();
-      restartText.style.textAlign = 'center';
-      restartText.style.fontWeight = 'bold';
-      restartText.innerHTML = "The changes you've made will require restart.";
-      restartText.style.visibility = 'hidden';
-      contents.appendChild(restartText);
+        'mouseEnabled', game.config.mouseEnabled, '-18.5ch');
 
       // empty space
       var space = Browser.document.createDivElement();

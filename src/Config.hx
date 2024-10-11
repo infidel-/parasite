@@ -26,7 +26,9 @@ class Config
   public var spoonHabitatAmbush: Bool;
   public var spoonNoSavesLimit: Bool;
 
+  public var font: String;
   public var fontSize: Int;
+  public var fontTitle: String;
   public var hudLogLines: Int;
   public var mapScale: Float;
   public var minimapScale: Float;
@@ -60,7 +62,9 @@ class Config
       spoonHabitatAmbush = false;
       spoonNoSavesLimit = false;
 
-      fontSize = 16;
+      font = 'Virtucorp';
+      fontSize = 15;
+      fontTitle = 'Cruiser2015';
       hudLogLines = 4;
       mapScale = 1;
       minimapScale = 1;
@@ -85,7 +89,9 @@ class Config
       map['spoonHabitatAmbush'] = '0';
       map['spoonNoSavesLimit'] = '0';
 
+      map['font'] = font;
       map['fontSize'] = '' + fontSize;
+      map['fontTitle'] = fontTitle;
       map['hudLogLines'] = '4';
       map['mapScale'] = '1';
       map['minimapScale'] = '1';
@@ -110,7 +116,9 @@ class Config
           trace(e);
         }
       // apply options
+      jsui.UI.setVar('--text-font', font);
       jsui.UI.setVar('--text-font-size', fontSize + 'px');
+      jsui.UI.setVar('--text-font-title', fontTitle);
 #elseif js
       var str = js.Browser.window.localStorage.getItem('config');
       var obj = {};
@@ -188,9 +196,20 @@ class Config
       else if (key == 'spoonNoSavesLimit')
         spoonNoSavesLimit = (val == '1');
 
+      else if (key == 'font')
+        {
+          font = val;
+          jsui.UI.setVar('--text-font', font);
+        }
       else if (key == 'fontSize')
         {
           fontSize = Std.parseInt(val);
+          jsui.UI.setVar('--text-font-size', fontSize + 'px');
+        }
+      else if (key == 'fontTitle')
+        {
+          fontTitle = val;
+          jsui.UI.setVar('--text-font-title', fontTitle);
         }
       else if (key == 'hudLogLines')
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
@@ -263,4 +282,35 @@ class Config
       sys.io.File.saveContent('parasite.cfg', s.toString());
 #end
     }
+
+  public static var fontsTitle = [
+    'Alternity',
+    'Cruiser2015',
+    'DemunLotion',
+    'Dusty',
+    'FlipsideBrk',
+    'Horizon',
+    'Montalban',
+    'Orkney-Regular',
+    'Probert',
+    'Rapier-Zero',
+    'Rebellion',
+    'Sigma-Five-Sans',
+    'Sternbach',
+    'Twobit',
+    'Xolonium',
+    'Zebulon',
+  ];
+  public static var fonts = [
+    'Brainstorm',
+    'Dusty',
+    'Eurocorp',
+    'Orkney-Regular',
+    'Probert',
+    'Schnaubelt',
+    'Twobit',
+    'Virtucorp',
+    'Xball',
+    'Xolonium',
+  ];
 }
