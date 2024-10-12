@@ -199,7 +199,7 @@ class Player extends _SaveObject
       var ovum = evolutionManager.ovum;
       if (ovum.level == 0)
         {
-          game.finish('lose', text);
+          game.finish('lose', text, 'event/death');
           return;
         }
 

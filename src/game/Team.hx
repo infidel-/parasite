@@ -115,7 +115,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (ambushedHabitat.hasWatcher)
         {
           game.scene.sounds.play('watcher-ambush');
-          game.message("The watcher warns they are waiting for me.",
+          game.message("The watcher warns they are waiting for me.", null,
             COLOR_ALERT);
         }
     }
@@ -161,7 +161,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           prev >= 9.91 && val < 9.91 &&
           game.turns - lastAlertTurn > 10)
         {
-          game.message("They are getting very close to me.", COLOR_ALERT);
+          game.message("They are getting very close to me.", null, COLOR_ALERT);
           lastAlertTurn = game.turns;
         }
     }
@@ -180,7 +180,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           ambushedHabitat != null &&
           game.area.habitat == ambushedHabitat)
         {
-          game.message("Something is wrong here... It's an ambush!",
+          game.message("Something is wrong here... It's an ambush!", null,
             COLOR_ALERT);
           game.scene.sounds.play('event-ambush');
           onEnterHabitat();
@@ -206,7 +206,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           var x = game.playerArea.x;
           var y = game.playerArea.y;
 
-          game.message("Something is wrong here... They're after me!",
+          game.message("Something is wrong here... They're after me!", null,
             COLOR_ALERT);
           game.scene.sounds.play('event-ambush');
           for (i in 0...4)
@@ -359,7 +359,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (game.player.vars.habitatsLeft == 1)
         msg += 'This is the end...';
       else msg += 'This will leave a permanent mark.';
-      game.message(msg, COLOR_ALERT);
+      game.message(msg, null, COLOR_ALERT);
 
       // habitat shock death
       game.player.vars.habitatsLeft--;

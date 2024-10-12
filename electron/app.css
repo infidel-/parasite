@@ -141,6 +141,7 @@ hr {
   top: 10px;
   left: 10px;
   position: fixed;
+  font-size: 80%;
 }
 
 .console-div:before {
@@ -154,7 +155,6 @@ hr {
   opacity: 0.9;
   background-color: #ffffff00;
   width: calc(100% - 20px);
-  height: 1.2em;
   color: var(--text-fg-color);
   background: #202020aa;
   margin: 0;
@@ -163,7 +163,7 @@ hr {
   outline: none;
   appearance: none;
   font-family: var(--text-font);
-  font-size: var(--text-font-size);
+  font-size: 80%;
   letter-spacing: 0.08em;
   resize: none;
 }
@@ -427,10 +427,13 @@ hr {
   border: solid 2px #6a8aa1;
   border: solid 2.5px #6a8aa18c;
   box-shadow: 0 0 0 0.2rem #88c1d81f;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 @keyframes fade-in {
   0% { opacity: 0; }
-  100% { opacity: 1; }
+  100% { opacity: 1;}
 }
 
 .window-dialog-button {
@@ -532,24 +535,31 @@ fieldset {
 
 #window-about {
   border: 30px solid;
-  width: 40ch;
-  height: 28em;
+  width: 60%;
+  min-height: 30em;
   pointer-events: all;
 }
 
 #window-about-title {
-  font-size: 1.5em;
+  font-size: 2em;
   font-weight: bold;
   text-align: center;
   padding-bottom: 10px;
 }
 
-#window-about-text {
-  transform: translate(-10px, -10px);
-  width: 102%;
-  height: calc(100% - 50px);
+#window-about-cont {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+}
+
+#window-about-left {
+  flex: 1;
+  padding-right: 1%;
+}
+
+#window-about-right {
+  flex: 0.8;
+  margin-right: 2%;
 }
 
 #window-about-fieldset {
@@ -669,7 +679,7 @@ fieldset {
 }
 
 #window-options-title {
-  font-size: 1.5em;
+  font-size: 2em;
   font-weight: bold;
   text-align: center;
   padding-bottom: 10px;

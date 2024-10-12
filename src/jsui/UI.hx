@@ -367,18 +367,21 @@ class UI
             }
         }
 
-      // actions by key
-      ret = hud.keyAction(key);
-      if (_state == UISTATE_DEFAULT &&
-          hud.state == HUD_DEFAULT)
+      // no windows open, hud actions
+      if (_state == UISTATE_DEFAULT)
         {
-          // skip until end of turn (alternative to z)
-          if (code == 'Numpad5' ||// key == 'z' ||
-              (game.config.laptopKeyboard && key == 'k'))
+          // actions by key
+          ret = hud.keyAction(key);
+          if (hud.state == HUD_DEFAULT)
             {
-              game.turn();
-              game.updateHUD();
-              ret = true;
+              // skip until end of turn (alternative to z)
+              if (code == 'Numpad5' ||// key == 'z' ||
+                  (game.config.laptopKeyboard && key == 'k'))
+                {
+                  game.turn();
+                  game.updateHUD();
+                  ret = true;
+                }
             }
         }
 

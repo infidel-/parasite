@@ -346,7 +346,7 @@ class ItemsConst
       unknown: 'small container',
       onLearn: function (game, player)
         {
-          game.message('Humans use these to control their breeding habits. However, there is a way that I can reproduce as well.');
+          game.message('Humans use these to control their breeding habits. However, there is a way that I can reproduce as well.', 'event/goal_evolve_dopamine_receive');
           player.evolutionManager.addImprov(IMP_OVUM);
           game.profile.addPediaArticle('impOvum');
         }
