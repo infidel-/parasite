@@ -5,7 +5,6 @@ package objects;
 import entities.ObjectEntity;
 import game.Game;
 import game._Item;
-import game.AreaManager;
 
 class AreaObject extends _SaveObject
 {

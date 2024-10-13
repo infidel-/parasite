@@ -28,7 +28,11 @@ typedef _ItemInfo =
     var needleDeathChance: Int; // chance of paralyzing needles killing
   };
 
-  @:optional var areaObjectClass: Dynamic; // area object class
-  @:optional var onLearn: Game -> Player -> Void; // called on learning about this item
+  // area object class
+  @:optional var areaObjectClass: Dynamic;
+  // called on learning about this item
+  @:optional var onLearn: Game -> Player -> Void;
+  // called on learning about this item
+  @:optional var updateActionList: Game -> _Item -> Void;
 }
 

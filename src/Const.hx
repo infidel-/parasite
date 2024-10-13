@@ -90,6 +90,8 @@ class Const
   public static var ROW_EFFECT = 3;
   public static var FRAME_PANIC_GAS = 0;
   public static var FRAME_PARALYSIS_GAS = 1;
+  public static var FRAME_PARTICLE_MONEY = 2;
+  public static var FRAME_EFFECT_MONEY = 3;
 
   // parasite row frames
   public static var ROW_PARASITE = 4;

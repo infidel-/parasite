@@ -280,14 +280,15 @@ class AreaView
 
 
 // add visual effect entity
-  public function addEffect(x: Int, y: Int, turns: Int, frame: Int)
+  public function addEffect(x: Int, y: Int, turns: Int, frame: Int): EffectEntity
     {
       if (x >= width || y >= height || x < 0 || y < 0)
-        return;
+        return null;
 
       var effect = new EffectEntity(game, x, y, turns);
       effect.setIcon('entities', frame, Const.ROW_EFFECT);
       _effects.add(effect);
+      return effect;
     }
 
 
@@ -439,6 +440,9 @@ class AreaView
       // effect removal
       for (e in _effects)
         {
+          // called on first turn this was created
+          if (game.turns <= e.createdOn + 1)
+            continue;
           e.turns--;
           if (e.turns <= 0)
             _effects.remove(e);

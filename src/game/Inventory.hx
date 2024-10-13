@@ -41,7 +41,7 @@ class Inventory extends _SaveObject
     {
     }
 
-// add available actions to list
+// add available actions to list (body window)
   public function getActions(): Array<_PlayerAction>
     {
       // disable inventory actions in region mode for now
@@ -60,7 +60,7 @@ class Inventory extends _SaveObject
               name: 'Learn about ' + Const.col('inventory-item', itemName),
               energy: 10,
               isAgreeable: true,
-              obj: item
+              item: item
             });
 
           // can do stuff when item is known
@@ -74,7 +74,7 @@ class Inventory extends _SaveObject
                   name: 'Read ' + Const.col('inventory-item', itemName),
                   energy: 10,
                   isAgreeable: true,
-                  obj: item
+                  item: item
                 });
 
               // use computer
@@ -87,7 +87,7 @@ class Inventory extends _SaveObject
                       type: ACTION_INVENTORY,
                       name: 'Absorb regional map',
                       energy: 15,
-                      obj: item
+                      item: item
                     });
                   if (game.player.vars.searchEnabled)
                     tmp.push({
@@ -96,7 +96,7 @@ class Inventory extends _SaveObject
                       name: 'Use ' +
                         Const.col('inventory-item', itemName) + ' to search',
                       energy: 10,
-                      obj: item
+                      item: item
                     });
                 }
 
@@ -107,7 +107,7 @@ class Inventory extends _SaveObject
                   type: ACTION_INVENTORY,
                   name: 'Consume ' + Const.col('inventory-item', itemName),
                   energy: 0,
-                  obj: item
+                  item: item
                 });
 
               // weapons can be marked as active
@@ -117,7 +117,7 @@ class Inventory extends _SaveObject
                   type: ACTION_INVENTORY,
                   name: 'Mark ' + Const.col('inventory-item', itemName) + ' as active',
                   energy: 0,
-                  obj: item
+                  item: item
                 });
             }
 
@@ -127,42 +127,51 @@ class Inventory extends _SaveObject
             type: ACTION_INVENTORY,
             name: 'Drop ' + Const.col('inventory-item', itemName),
             energy: 0,
-            obj: item
+            item: item
           });
         }
       return tmp;
     }
 
+// update actions list (hud)
+  public function updateActionList()
+    {
+      for (item in _list)
+        if (item.info.updateActionList != null)
+          item.info.updateActionList(game, item);
+    }
 
 // ACTION: player inventory action
   public function action(action: _PlayerAction)
     {
-      var item: _Item = cast action.obj;
       var actionID = action.id.substr(0, action.id.indexOf('.'));
       var ret = true;
       switch (actionID)
         {
           // read item
           case 'read':
-            readAction(item);
+            readAction(action.item);
           // generic use item
           case 'use':
-            ret = useAction(item);
+            ret = useAction(action.item);
           // search for npc with item
           case 'search':
-            ret = searchAction(item);
+            ret = searchAction(action.item);
           // drop item
           case 'drop':
-            dropAction(item);
+            dropAction(action.item);
           // learn about item
           case 'learn':
-            learnAction(item);
+            learnAction(action.item);
+          // throw money
+          case 'throwMoney':
+            throwMoneyAction(action.item);
           // absorb regional map
           case 'absorbMap':
-            absorbMapAction(item);
+            absorbMapAction(action.item);
           // mark as active
           case 'active':
-            activeAction(item);
+            activeAction(action.item);
           default:
             Const.todo('no such action: ' + actionID);
         }
@@ -178,6 +187,64 @@ class Inventory extends _SaveObject
 
           else Const.todo('Inventory.action() in region mode!');
         }
+    }
+
+// ACTION: throw money
+  function throwMoneyAction(item: _Item)
+    {
+      var range = 3;
+      var time = 3;
+      var tmp = game.area.getAIinRadius(
+        game.playerArea.x, game.playerArea.y,
+        range, false);
+
+      game.log('Your host throws money around.');
+      game.scene.sounds.play('item-money');
+      removeItem(item);
+
+      // spawn visual effects
+      var xo = game.playerArea.x;
+      var yo = game.playerArea.y;
+      for (yy in yo - range...yo + range)
+        for (xx in xo - range...xo + range)
+          {
+            if (!game.area.isWalkable(xx, yy))
+              continue;
+
+            if (Const.distanceSquared(xo, yo, xx, yy) >
+                range * range)
+              continue;
+
+            new particles.ParticleMoney(game.scene,
+              { x: xx, y: yy });
+          }
+
+      // affect all AI in range
+      for (ai in tmp)
+        {
+          // do not affect self and dogs
+          if (ai == game.player.host ||
+              !ai.isHuman)
+            continue;
+
+          // set alertness
+          if (ai.state == AI_STATE_IDLE)
+            {
+              ai.alertness = 100;
+              ai.setState(AI_STATE_ALERT, REASON_PARASITE);
+            }
+
+          // AI effect event
+          ai.onEffect({
+            type: EFFECT_PARALYSIS,
+            points: time,
+            isTimer: true
+          });
+        }
+      // repaint view with effects
+      game.scene.updateCamera();
+
+      return true;
     }
 
 // ACTION: mark weapon as active

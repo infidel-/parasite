@@ -177,6 +177,9 @@ class PlayerArea extends _SaveObject
           // host-specific actions
           player.host.updateActionList();
 
+          // inventory items-based actions
+          player.host.inventory.updateActionList();
+
           game.ui.hud.addKeyAction({
             id: 'leaveHost',
             type: ACTION_AREA,

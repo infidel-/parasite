@@ -7,6 +7,7 @@ import game.Game;
 class EffectEntity extends Entity
 {
   public var turns: Int; // turns to live
+  public var createdOn: Int; // what turn it was created on
 
   public function new(g: Game, xx: Int, yy: Int, t: Int)
     {
@@ -15,5 +16,6 @@ class EffectEntity extends Entity
       type = 'effect';
       mx = xx;
       my = yy;
+      createdOn = game.turns;
     }
 }

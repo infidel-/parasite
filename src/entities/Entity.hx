@@ -42,6 +42,27 @@ class Entity
       dy = 0;
     }
 
+// randomize scale
+  public inline function randomizeScale(min: Float)
+    {
+      scale = Const.round2(min + (1.0 - min) * Math.random());
+    }
+
+// randomize angle
+  public inline function randomizeAngle()
+    {
+      angle = Const.round2(360 * Math.random() * Math.PI / 180);
+    }
+
+// randomize delta
+  public inline function randomizeDelta()
+    {
+      var min = - Const.TILE_SIZE * (1.0 - scale) / 2.0;
+      var max = Const.TILE_SIZE * (1.0 - scale) / 2.0;
+      dx = Std.int(min + Math.random() * (max - min));
+      dy = Std.int(min + Math.random() * (max - min));
+    }
+
 // is currently on screen?
   public inline function isVisible(): Bool
     {

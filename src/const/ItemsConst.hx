@@ -302,6 +302,17 @@ class ItemsConst
       name: 'wad of money',
       type: 'junk',
       unknown: 'pack of thin objects',
+      updateActionList: function(game: Game, item: _Item) {
+        if (game.player.knowsItem(item.id))
+          game.ui.hud.addAction({
+            id: 'throwMoney.' + item.id,
+            type: ACTION_INVENTORY,
+            item: item,
+            name: 'Throw money',
+            energy: 5,
+            isAgreeable: true,
+          });
+      }
     },
     {
       id: 'wallet',
