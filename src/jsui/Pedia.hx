@@ -19,7 +19,7 @@ class Pedia extends UIWindow
       super(g, 'window-pedia');
       window.style.borderImage = "url('./img/window-log.png') 215 fill / 1 / 0 stretch";
 
-      var ret = addBlockExtended(window, 'window-pedia-list', 'TOPICS');
+      var ret = addBlockExtended(window, 'window-pedia-list', 'TOPICS', 'scroller small');
       pediaList = ret.text;
       pediaContents = addBlock(window, 'window-pedia-contents', 'CONTENTS');
 

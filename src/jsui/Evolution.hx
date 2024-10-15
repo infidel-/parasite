@@ -38,7 +38,7 @@ class Evolution extends UIWindow
 
       list = addBlock(cont, 'window-evolution-list', 'CONTROLLED EVOLUTION: IMPROVEMENTS');
       cont.appendChild(bottom);
-      info = addBlock(bottomLeft, 'window-evolution-info', 'INFO');
+      info = addBlock(bottomLeft, 'window-evolution-info', 'INFO', 'scroller small');
       actions = addBlock(bottomLeft, 'window-evolution-actions', 'ACTIONS');
       img = Browser.document.createImageElement();
       img.className = 'message-img';

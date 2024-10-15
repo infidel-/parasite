@@ -42,6 +42,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  line-height: 1.3em;
   font-family: var(--text-font);
   font-size: var(--text-font-size);
 }
@@ -1011,8 +1012,8 @@ input[type=checkbox] {
 
 .window-evolution-list-notes {
   font-size: 80%;
-  line-height: 1.1;
-  letter-spacing: 0.5px;
+  line-height: 1.2em;
+  letter-spacing: 0.1ch;
   margin: 5px 5px 0px 5px;
 }
 
@@ -1026,8 +1027,8 @@ input[type=checkbox] {
 .small {
   font-family: var(--text-font);
   font-size: 80%;
-  line-height: 1.1;
-  letter-spacing: 0.5px;
+  line-height: 1.2em;
+  letter-spacing: 0.1ch;
   margin: 0px;
 }
 
