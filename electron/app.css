@@ -555,6 +555,7 @@ fieldset {
 #window-about-left {
   flex: 1;
   padding-right: 1%;
+  font-size: 80%;
 }
 
 #window-about-right {

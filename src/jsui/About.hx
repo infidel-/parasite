@@ -4,8 +4,6 @@ package jsui;
 
 import js.Browser;
 import js.html.DivElement;
-import js.html.FieldSetElement;
-import js.html.LegendElement;
 
 import game.Game;
 
@@ -50,7 +48,7 @@ class About extends UIWindow
         '<br>' +
         'This game uses various fonts from Pixel Sagas (www.pixelsagas.com)<br>' +
         '</center>';
-      right.innerHTML = '<img class=message-img src="img/misc/about5.jpg">';
+      right.innerHTML = '<img class=message-img src="img/misc/about' + (1 + Std.random(6)) + '.jpg">';
 
       addCloseButton();
       close.onclick = function (e) {

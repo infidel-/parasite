@@ -115,7 +115,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (ambushedHabitat.hasWatcher)
         {
           game.scene.sounds.play('watcher-ambush');
-          game.message("The watcher warns they are waiting for me.", null,
+          game.message("The watcher warns they are waiting for me.", 'pedia/team_ambush',
             COLOR_ALERT);
         }
     }
@@ -180,7 +180,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           ambushedHabitat != null &&
           game.area.habitat == ambushedHabitat)
         {
-          game.message("Something is wrong here... It's an ambush!", null,
+          game.message("Something is wrong here... It's an ambush!", 'pedia/team_ambush',
             COLOR_ALERT);
           game.scene.sounds.play('event-ambush');
           onEnterHabitat();
@@ -206,7 +206,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           var x = game.playerArea.x;
           var y = game.playerArea.y;
 
-          game.message("Something is wrong here... They're after me!", null,
+          game.message("Something is wrong here... They're after me!", 'pedia/team_basics',
             COLOR_ALERT);
           game.scene.sounds.play('event-ambush');
           for (i in 0...4)
@@ -291,7 +291,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.player.host == ai.first())
         return;
       // no more free blackops, ambush failed
-      game.message("I've eliminated the aggressors. It will be some time before they will be able to get on my trail again.");
+      game.message("I've eliminated the aggressors. It will be some time before they will be able to get on my trail again.", 'pedia/team_deactivation');
       game.group.onRepelAmbush();
     }
 
@@ -347,7 +347,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
         {
           game.scene.sounds.play('event-habitat-destroy');
           game.message('You sense that the habitat at ' +
-            area.x + ',' + area.y + ' was destroyed.', COLOR_ALERT);
+            area.x + ',' + area.y + ' was destroyed.',
+            'pedia/habitat_destruction',
+            COLOR_ALERT);
           return;
         }
 
@@ -356,10 +358,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
         adjective = 'nagging';
       var msg = 'You feel ' + adjective + ' pain as the habitat at ' +
         area.x + ',' + area.y + ' is destroyed. ';
+      var img = 'pedia/habitat_destruction';
       if (game.player.vars.habitatsLeft == 1)
-        msg += 'This is the end...';
+        {
+          msg += 'This is the end...';
+          img = 'event/death';
+        }
       else msg += 'This will leave a permanent mark.';
-      game.message(msg, null, COLOR_ALERT);
+      game.message(msg, img, COLOR_ALERT);
 
       // habitat shock death
       game.player.vars.habitatsLeft--;
