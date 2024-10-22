@@ -15,6 +15,9 @@ class About extends UIWindow
     {
       super(g, 'window-about');
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      var swirl = Browser.document.createDivElement();
+      swirl.className = 'window-swirl';
+      bg.appendChild(swirl);
 
       var title = Browser.document.createDivElement();
       title.id = 'window-about-title';

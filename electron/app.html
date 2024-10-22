@@ -10,6 +10,16 @@
     <link rel="stylesheet" href="./fonts.css">
 </head>
 <body>
+
+<svg display="none">
+  <defs>
+  <filter id="swirl">
+    <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="1" result="turbulence"></feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="10" result="displaced"></feDisplacementMap>
+    <feGaussianBlur in="displaced" stdDeviation="0.5"></feGaussianBlur>
+  </filter>
+  </defs>
+</svg>
 	
 <script src="soundmanager2-nodebug.js"></script>
 <script>

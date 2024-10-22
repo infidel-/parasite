@@ -171,7 +171,7 @@ class Body extends UIWindow
       if (game.player.state != PLR_STATE_HOST)
         return '';
       var buf = new StringBuf();
-      buf.add('<p class=small>');
+      buf.add('<p class="small gray">');
       if (game.location == LOCATION_AREA && game.area.isHabitat)
         buf.add('You are in a microhabitat. ');
       buf.add('Body feature growth costs additional ' +

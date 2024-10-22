@@ -25,6 +25,13 @@ class Profile
 
       game.debug('profile load');
 #if electron
+      if (!Fs.existsSync('profile.json'))
+        {
+          // consider this a first run
+          trace('profile.json not found');
+          game.firstEverRun = true;
+          return;
+        }
       try {
         var s = Fs.readFileSync('profile.json', 'utf8');
         var obj = Json.parse(s);

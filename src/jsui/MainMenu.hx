@@ -17,6 +17,12 @@ class MainMenu extends UIWindow
     {
       super(g, 'window-mainmenu');
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      var swirl = Browser.document.createDivElement();
+      swirl.className = 'window-swirl';
+      bg.appendChild(swirl);
+      // randomize background
+      if (!game.firstEverRun)
+        UI.setVar('--main-menu-bg', 'url(./img/misc/bg' + (1 + Std.random(8)) + '.jpg)');
 
       var title = Browser.document.createDivElement();
       title.id = 'window-mainmenu-title';

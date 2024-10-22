@@ -734,7 +734,7 @@ class Const
 
   public static inline function smallgray(s: String)
     {
-      return '<span style="color:var(--text-color-gray)" class=small>' + s + '</span>';
+      return '<span class="small gray">' + s + '</span>';
     }
 
   public static inline function smalldebug(s: String)

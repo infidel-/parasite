@@ -117,7 +117,9 @@ class Evolution extends UIWindow
 
       // info block
       var buf = new StringBuf();
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
+      buf.add('<span class=gray>');
+      if (game.location == LOCATION_AREA &&
+          game.area.isHabitat)
         buf.add('You are in a microhabitat.<br/>');
       buf.add('Evolving costs additional ' + __Math.evolutionEnergyPerTurn() +
         ' energy per turn.<br/>' +
@@ -125,6 +127,7 @@ class Evolution extends UIWindow
         'Your host will survive for ' +
           Std.int(game.player.host.energy / __Math.evolutionEnergyPerTurn()) +
         ' turns while evolving (not counting other spending).<br/>');
+      buf.add('</span>');
       buf.add('<br/>Current evolution direction: ');
       buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
       var infotext = buf.toString();
@@ -177,10 +180,11 @@ class Evolution extends UIWindow
           buf.add(' ');
           buf.add(imp.level + 1);
           buf.add(' (' + imp.ep + '/' +
-            EvolutionConst.epCostImprovement[imp.level] + ' ep) (');
+            EvolutionConst.epCostImprovement[imp.level] + ' ep) ');
+          buf.add('<span class=gray>(');
           var epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
           buf.add(Math.round(epLeft / __Math.epPerTurn()));
-          buf.add(" turns)<br/>");
+          buf.add(" turns)</span><br/>");
           var act: _PlayerAction = {
             id: 'set.' + imp.id,
             type: ACTION_EVOLUTION,

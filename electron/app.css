@@ -33,6 +33,7 @@
   --text-color-skill-title: #d969e8;
   --text-color-group-title: #ff7f73;
   --text-color-group-note: #e35c3f;
+  --main-menu-bg: url(./img/misc/bg1.jpg);
 }
 
 html, body {
@@ -735,8 +736,10 @@ fieldset {
 #window-mainmenu-title {
   font-size: 2.0em;
   font-weight: bold;
+  font-family: Alternity;
   text-align: center;
   padding-bottom: 10px;
+  color: #d6a5d6;
 }
 
 #window-mainmenu-contents {
@@ -764,9 +767,20 @@ fieldset {
   font-size: 1.5em;
 }
 
+@keyframes button-animation {
+  0%{
+    background-position: left 0%;
+  }
+  100%{
+    background-position: left 100%;
+  }
+}
+
 .window-mainmenu-item:hover {
   background-color: #5f818c;
   font-weight:bold;
+  background: #c4838347 url(./img/event/death.jpg);
+  animation: button-animation 20s linear infinite;
 }
 
 .window-mainmenu-item:active {
@@ -1030,6 +1044,10 @@ input[type=checkbox] {
   line-height: 1.2em;
   letter-spacing: 0.1ch;
   margin: 0px;
+}
+
+.gray {
+  color: var(--text-color-gray);
 }
 
 .actions-item {
@@ -1400,4 +1418,31 @@ input[type="radio"]:focus {
 .window-title {
   font-family: var(--text-font-title);
   font-size: 1.5em;
+  text-shadow: -0.05ch -0.05ch 0px rgb(255 255 255 / 15%), 0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
+}
+
+@keyframes background-animation {
+  0%{
+    transform: scale(1.0);
+  }
+  50%{
+    background-position-x: center;
+    transform: scale(1.2) translate3d(1%, 0%, 1%);
+  }
+  100%{
+    transform: scale(1.1) translate3d(1%, 1%, 1%);
+  }
+}
+
+.window-swirl::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--main-menu-bg);
+  background-size: cover;
+  filter: url(#swirl) brightness(80%) blur(0.5px) saturate(90%);
+  animation: fade-in 5s, background-animation 200s infinite alternate;
 }

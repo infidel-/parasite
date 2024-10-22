@@ -49,6 +49,7 @@ class Game extends _SaveObject
   public var hudMessageList: List<_LogMessage>; // last X messages of hud log
   public var importantMessagesEnabled: Bool; // messages enabled?
   public var scenarioStringID: String; // short name for scenario
+  public var firstEverRun: Bool; // game started for the very first time
 
   public function new()
     {
