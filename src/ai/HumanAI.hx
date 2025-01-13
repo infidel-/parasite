@@ -86,7 +86,8 @@ class HumanAI extends AI
   public override function onRemove()
     {
       // do previous host consequences
-      if (wasInvaded || wasAttached)
+      // agreeable hosts will not be discovered
+      if ((wasInvaded || wasAttached) && !isAgreeable())
         game.managerRegion.onHostDiscovered(game.area, this);
     }
 
