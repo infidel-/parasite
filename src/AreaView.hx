@@ -75,12 +75,13 @@ class AreaView
 
       // objects
       for (o in game.area.getObjects())
-        if (!game.player.vars.losEnabled ||
-            (game.player.state != PLR_STATE_HOST && 
-             o.sensable()) ||
-            (game.playerArea.sees(o.x, o.y) &&
-            o.entity.isVisible()))
-          o.entity.draw(ctx);
+        if (o.entity != null)
+          if (!game.player.vars.losEnabled ||
+              (game.player.state != PLR_STATE_HOST &&
+               o.sensable()) ||
+              (game.playerArea.sees(o.x, o.y) &&
+              o.entity.isVisible()))
+            o.entity.draw(ctx);
 
       // effects
       for (e in _effects)
