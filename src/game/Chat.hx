@@ -32,7 +32,7 @@ class Chat extends _SaveObject
 // init clues and event id for this ai
   public function initClues(ai: AI)
     {
-      // dogs
+      // dogs have no clues
       if (!ai.isHuman)
         return;
       // agents know something about a random event
@@ -59,8 +59,10 @@ class Chat extends _SaveObject
       if (event.npcFullyKnown() &&
           event.notesKnown())
         return;
-      // 30% chance
-      if (Std.random(100) > 30)
+      // 30% chance unless it's police
+      // police always has some clues
+      if (ai.type != 'police' &&
+          Std.random(100) > 30)
         return;
       ai.chat.eventID = event.id;
       ai.chat.clues = 1 + Std.random(3);
