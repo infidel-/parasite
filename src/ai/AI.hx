@@ -1,5 +1,4 @@
 // NPC AI game state
-
 package ai;
 
 import entities.AIEntity;
@@ -874,6 +873,15 @@ public function show()
 // state: default alert state handling
   function stateAlert()
     {
+      // NOTE: must be first check in this function
+      // parasite attached - try to tear it away
+      if (parasiteAttached)
+        {
+          if (!isAgreeable())
+            logicTearParasiteAway();
+          return;
+        }
+
       // alerted timer update
       if (!game.player.vars.invisibilityEnabled &&
           seesPosition(game.playerArea.x, game.playerArea.y))
@@ -898,37 +906,26 @@ public function show()
           return;
         }
 
-      // parasite attached - try to tear it away
-      if (parasiteAttached)
+      // aggressive AI - attack player if he is near or search for him
+      // same for berserk effect
+      if (isAggressive ||
+          effects.has(EFFECT_BERSERK))
         {
-          if (!isAgreeable())
-            logicTearParasiteAway();
-        }
-
-      // call alert logic for this AI type
-      else
-        {
-          // aggressive AI - attack player if he is near or search for him
-          // same for berserk effect
-          if (isAggressive ||
-              effects.has(EFFECT_BERSERK))
+          if (!game.player.vars.invisibilityEnabled)
             {
-              if (!game.player.vars.invisibilityEnabled)
-                {
-                  // search for player
-                  // we cheat a little and follow invisible player
-                  // before alert timer ends
-                  if (!seesPosition(game.playerArea.x, game.playerArea.y))
-                    logicMoveTo(game.playerArea.x, game.playerArea.y);
+              // search for player
+              // we cheat a little and follow invisible player
+              // before alert timer ends
+              if (!seesPosition(game.playerArea.x, game.playerArea.y))
+                logicMoveTo(game.playerArea.x, game.playerArea.y);
 
-                  // try to attack
-                  else logicAttack();
-                }
+              // try to attack
+              else logicAttack();
             }
-
-          // not aggressive AI - try to run away
-          else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
         }
+
+      // not aggressive AI - try to run away
+      else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
     }
 
 
@@ -1125,7 +1122,11 @@ public function show()
 
       // effect: panic, run away
       else if (effects.has(EFFECT_PANIC))
-        logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
+        {
+          if (parasiteAttached)
+            logicTearParasiteAway();
+          else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
+        }
 
       // idle - roam around or guard, etc
       else if (state == AI_STATE_IDLE)

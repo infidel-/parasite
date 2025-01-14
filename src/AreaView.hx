@@ -92,10 +92,11 @@ class AreaView
       if (game.player.state == PLR_STATE_PARASITE)
         game.playerArea.entity.draw(ctx);
       for (ai in @:privateAccess game.area._ai)
-        if (!game.player.vars.losEnabled ||
-            (game.playerArea.sees(ai.x, ai.y) &&
-            ai.entity.isVisible()))
-          ai.entity.draw(ctx);
+        if (ai.entity != null)
+          if (!game.player.vars.losEnabled ||
+              (game.playerArea.sees(ai.x, ai.y) &&
+              ai.entity.isVisible()))
+            ai.entity.draw(ctx);
 
       // particles
       drawParticles(ctx);
