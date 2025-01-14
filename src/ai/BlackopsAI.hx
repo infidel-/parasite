@@ -114,9 +114,15 @@ class BlackopsAI extends HumanAI
   public override function onDeath()
     {
       if (game.group.team != null)
-        game.group.team.onBlackopsDeath();
+        game.group.team.checkFightFinish(true);
     }
 
+// event hook: on despawning live AI
+  public override function onRemove()
+    {
+      if (game.group.team != null)
+        game.group.team.checkFightFinish(false);
+    }
 /*
 // event: on being attacked
   public override function onAttack()

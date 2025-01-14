@@ -249,7 +249,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
         timer--;
 
       // check if it is over
-      onBlackopsDeath();
+      checkFightFinish(false);
     }
 
 
@@ -276,8 +276,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
         }
     }
 
-// event: blackops dies, could be end of an ambush
-  public function onBlackopsDeath()
+// check if ambush is over
+// happens when all blackops are either dead or removed from the area
+  public function checkFightFinish(onDeath: Bool)
     {
       // must be during the ambush
       if (state != TEAM_FIGHT)
@@ -291,7 +292,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.player.host == ai.first())
         return;
       // no more free blackops, ambush failed
-      game.message("I've eliminated the aggressors. It will be some time before they will be able to get on my trail again.", 'pedia/team_deactivation');
+      game.message("I've " + (onDeath ? 'eliminated' : 'successfully evaded') + " the aggressors. It will be some time before they will be able to get on my trail again.", 'pedia/team_deactivation');
       game.group.onRepelAmbush();
     }
 
