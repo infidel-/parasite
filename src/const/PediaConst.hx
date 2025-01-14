@@ -11,6 +11,7 @@ class PediaConst
     'lifeParasite',
     'movement',
     'npcInteraction',
+    'sandboxMode',
   ];
   public static var contents: Array<_PediaGroupInfo> = [
     {
@@ -202,6 +203,11 @@ Alt+0-5 - equals F1-F5<br>
           text: "<p>After you first get into the sewers through the sewers hatch, the game switches into the region mode. Every area you can visit becomes a single tile on a grid. Time passes much faster in this mode, so your host can die quickly leaving you bare. In that case get out of the sewers with the \"Enter Area\" action and find another one. The movement is done the same way as in the area mode, with mouse and keyboard. Note that some areas have a colored ? symbol in the corner (or red ! in some cases). This shows the area alertness. High alertness increases police activity and the amount of armed civilians. If the alertness is close to maximum, you cannot enter this area until it subsides. Every turn the alertness lowers until the area is completely calm.</p>
 
 <p>Some areas might be marked with a ? icon in a gray circle in the middle. This means that the area has clues to the event timeline that you can find. When you gather all the clues in the area, this icon changes to +. If the area has a smiley icon in the upper left corner, it means that there are one or more event NPCs there.</p>",
+        },
+        {
+          id: 'sandboxMode',
+          name: 'Sandbox Mode',
+          text: "You can start the game in sandbox mode instead of the scenario. In this case event timeline is disabled and after you finish the tutorial, you're free to run around the city and do as you will. Clues, clue-related items and event NPCs do not spawn anywhere. There is no defined ending to the game as well. The Group still sends their operatives after you according to normal rules.",
         },
         {
           id: 'spoonMode',
