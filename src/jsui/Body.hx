@@ -283,6 +283,8 @@ class Body extends UIWindow
       inventoryActions.innerHTML = '';
       if (game.player.state != PLR_STATE_HOST)
         return;
+      if (!game.player.vars.inventoryEnabled)
+        return;
       listInventoryActions = game.player.host.inventory.getActions();
       var n = 1;
       for (act in listInventoryActions)
