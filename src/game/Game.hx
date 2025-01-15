@@ -292,6 +292,13 @@ class Game extends _SaveObject
 // game turn ends (wrapper)
   public function turn()
     {
+#if demo
+      if (turns >= 500)
+        {
+          finishDemo();
+          return;
+        }
+#end
       turnInternal();
       // kludge to undo game finish flag
       if (isFinished && isRebirth)
@@ -977,6 +984,21 @@ class Game extends _SaveObject
       return dst;
     }
 
+#if demo
+// finish the demo
+  public function finishDemo()
+    {
+      message('Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.', 'event/sandbox');
+      ui.event({
+        type: UIEVENT_FINISH,
+        state: null,
+        obj: {
+          result: 'lose',
+          condition: 'demo',
+        }
+      });
+    }
+#end
 
   function toString()
     {

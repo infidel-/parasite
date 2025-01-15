@@ -216,15 +216,7 @@ class GoalsAlienCrashLanding
       messageComplete: 'Now I know the location of the ship. I should enter it and find out more about myself.',
       onReceive: function (game, player) {
 #if demo
-        game.message('Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.');
-        game.ui.event({
-          type: UIEVENT_FINISH,
-          state: null,
-          obj: {
-            result: 'lose',
-            condition: 'demo',
-          }
-        });
+        game.finishDemo();
 #else
         // spawn ship on the event location and add all variables to timeline
         addSpaceshipStudyObject(game);

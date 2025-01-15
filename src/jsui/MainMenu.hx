@@ -30,7 +30,7 @@ class MainMenu extends UIWindow
       title.innerHTML = 'PARASITE <span style="font-size: 70%;">' + Const.smallgray(
         'v' + Version.getVersion() +
 #if demo
-        + ' DEMO' +
+        ' <span class=small>DEMO</span>' +
 #end
       '</span>');
       window.appendChild(title);
