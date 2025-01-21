@@ -1,6 +1,8 @@
 // sounds and music manager
 import game.Game;
+#if electron
 import js.node.Fs;
+#end
 import js.Browser;
 
 class Sounds
@@ -17,10 +19,13 @@ class Sounds
   var ambient: _SoundInfo; 
   var ambientNext: _SoundInfo;
   var ambientLocation: _SoundAmbientLocation;
+  var initDone: Bool;
 
   public function new(s: GameScene)
     {
       scene = s;
+      initDone = false;
+      sounds = new Map();
       lastPlayedTS = new Map();
       game = scene.game;
       locationType = 'none';
@@ -35,6 +40,8 @@ class Sounds
         state: SOUND_STOPPED,
       };
       Browser.window.setInterval(function () {
+        if (!initDone)
+          return;
         if (game.ui.state == UISTATE_MAINMENU ||
             game.ui.state == UISTATE_NEWGAME ||
             game.ui.state == UISTATE_OPTIONS ||
@@ -110,6 +117,7 @@ class Sounds
     {
       sounds = new Map();
 #if !free
+#if electron
       // read all existing sound file names
       var files = Fs.readdirSync('resources/app/sound/');
       for (f in files)
@@ -133,6 +141,129 @@ class Sounds
             }
           tmp.push(last);
         }
+#else
+      sounds['action-acid-spit'] = [-1];
+      sounds['action-fail'] = [-1];
+      sounds['action-gas'] = [-1];
+      sounds['action-paralysis-spit'] = [-1];
+      sounds['action-probe'] = [-1];
+      sounds['action-slime-spit'] = [-1];
+      sounds['action-spaceship-install'] = [-1];
+      sounds['action-spaceship-start'] = [-1];
+      sounds['ai-arrive-police'] = [-1];
+      sounds['ai-arrive-security'] = [-1];
+      sounds['ai-arrive-soldier'] = [-1];
+      sounds['ai-phone'] = [-1];
+      sounds['ai-radio'] = [-1];
+      sounds['ambient-city'] = [1];
+      sounds['ambient-corp'] = [1];
+      sounds['ambient-facility'] = [1];
+      sounds['ambient-habitat'] = [1];
+      sounds['ambient-military'] = [1];
+      sounds['ambient-region'] = [1];
+      sounds['ambient-wilderness'] = [1];
+      sounds['attack-assault-rifle'] = [1];
+      sounds['attack-baton'] = [1, 2, 3];
+      sounds['attack-bite'] = [1, 2, 3];
+      sounds['attack-bullet-glass'] = [1, 2, 3];
+      sounds['attack-bullet-hit'] = [1, 2, 3, 4, 5];
+      sounds['attack-bullet-miss'] = [1, 2, 3, 4];
+      sounds['attack-fists'] = [1, 2, 3];
+      sounds['attack-pistol'] = [1, 2];
+      sounds['attack-shotgun'] = [1];
+      sounds['attack-stun-rifle'] = [1, 2];
+      sounds['attack-stunner'] = [1, 2];
+      sounds['click-action'] = [-1];
+      sounds['click-hud'] = [-1];
+      sounds['click-menu'] = [-1];
+      sounds['click-submenu'] = [-1];
+      sounds['dog-bark'] = [1];
+      sounds['dog-die'] = [1];
+      sounds['dog-growl'] = [1];
+      sounds['dog-whimper'] = [1];
+      sounds['dog-whine'] = [1];
+      sounds['dog-yelp'] = [1];
+      sounds['door-cabinet-close'] = [1];
+      sounds['door-cabinet-open'] = [1, 2];
+      sounds['door-double-close'] = [1];
+      sounds['door-double-open'] = [1];
+      sounds['door-elevator-close'] = [1];
+      sounds['door-elevator-open'] = [1];
+      sounds['door-glass-close'] = [1, 2];
+      sounds['door-glass-open'] = [1, 2, 3];
+      sounds['door-keycard-unlock'] = [-1];
+      sounds['door-metal-close'] = [1];
+      sounds['door-metal-open'] = [1];
+      sounds['event-ambush'] = [-1];
+      sounds['event-habitat-destroy'] = [-1];
+      sounds['evolution-complete'] = [-1];
+      sounds['evolution-gained'] = [-1];
+      sounds['female-chat-fail'] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      sounds['female-choke'] = [1, 2, 3];
+      sounds['female-crying-loud'] = [1, 2, 3];
+      sounds['female-crying'] = [1, 2, 3, 4, 5, 6];
+      sounds['female-die'] = [1, 2, 3];
+      sounds['female-gasp'] = [1];
+      sounds['female-grunt'] = [1];
+      sounds['female-huh'] = [1];
+      sounds['female-moan-loud'] = [1, 2, 3];
+      sounds['female-moan'] = [1, 2, 3];
+      sounds['female-ouch'] = [1];
+      sounds['female-scream'] = [1];
+      sounds['female-what'] = [1];
+      sounds['female-whu'] = [1];
+      sounds['game-win'] = [-1];
+      sounds['human-alert'] = [1];
+      sounds['human-stop'] = [1];
+      sounds['item-book'] = [-1];
+      sounds['item-drop'] = [-1];
+      sounds['item-fail'] = [-1];
+      sounds['item-laptop'] = [-1];
+      sounds['item-money'] = [-1];
+      sounds['item-nutrients'] = [-1];
+      sounds['item-paper'] = [-1];
+      sounds['item-smartphone'] = [-1];
+      sounds['male-chat-fail'] = [1, 2, 3, 4, 5, 6];
+      sounds['male-choke'] = [1, 2, 3];
+      sounds['male-crying-loud'] = [1, 2];
+      sounds['male-crying'] = [1, 2, 3, 4, 5, 6];
+      sounds['male-die'] = [1, 2, 3];
+      sounds['male-gasp'] = [1];
+      sounds['male-grunt'] = [1];
+      sounds['male-huh'] = [1];
+      sounds['male-moan-loud'] = [1, 2, 3];
+      sounds['male-moan'] = [1, 2, 3];
+      sounds['male-ouch'] = [1];
+      sounds['male-scream'] = [1];
+      sounds['male-what'] = [1];
+      sounds['male-whu'] = [1];
+      sounds['message-default'] = [-1];
+      sounds['music-about'] = [-1];
+      sounds['music-corp'] = [-1];
+      sounds['music-menu'] = [-1];
+      sounds['music-menu2'] = [-1];
+      sounds['music'] = [1, 2, 3, 4, 5];
+      sounds['object-assimilation'] = [-1];
+      sounds['object-elevator'] = [-1];
+      sounds['object-growth'] = [-1];
+      sounds['object-nutrients'] = [-1];
+      sounds['object-preservator'] = [-1];
+      sounds['object-sewers'] = [-1];
+      sounds['object-stairs'] = [-1];
+      sounds['organ-complete'] = [-1];
+      sounds['parasite-attach'] = [1];
+      sounds['parasite-detach'] = [1];
+      sounds['parasite-die'] = [1, 2];
+      sounds['parasite-invade'] = [-1];
+      sounds['parasite-rebirth'] = [-1];
+      sounds['pedia-new'] = [-1];
+      sounds['region-habitat'] = [-1];
+      sounds['region-ovum'] = [-1];
+      sounds['team-notify'] = [-1];
+      sounds['watcher-ambush'] = [-1];
+      sounds['window-close'] = [-1];
+      sounds['window-open'] = [-1];
+#end
 
       // start playing music
       musicIdx = 1;
@@ -144,7 +275,7 @@ class Sounds
       });
       menuMusic = SoundManager.createSound({
         id: 'menuMusic',
-        url: 'sound/music-menu.mp3',
+        url: 'sound/music-menu2.mp3',
         volume: game.config.musicVolume,
         onfinish: function () {
           menuMusic.play();
@@ -159,6 +290,7 @@ class Sounds
         },
       });
 #end
+      initDone = true;
     }
 
 // after loading game
@@ -194,14 +326,12 @@ class Sounds
   function onMusicEnd()
     {
       var idx = 1;
-#if electron
       var x = sounds['music'];
       var files = [];
       for (f in x)
         if (f != musicIdx)
           files.push(f);
       idx = files[Std.random(files.length)];
-#end
       SoundManager.destroySound('music');
       musicIdx = idx;
       var url = 'sound/music' + musicIdx + '.mp3';

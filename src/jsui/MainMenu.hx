@@ -12,17 +12,22 @@ class MainMenu extends UIWindow
   var contents: DivElement;
   var loadItem: DivElement;
   var saveItem: DivElement;
+  var loadEnabled: Bool;
+  var saveEnabled: Bool;
 
   public function new(g: Game)
     {
       super(g, 'window-mainmenu');
+      loadEnabled = false;
+      saveEnabled = false;
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
       var swirl = Browser.document.createDivElement();
       swirl.className = 'window-swirl';
       bg.appendChild(swirl);
       // randomize background
       if (!game.firstEverRun)
-        UI.setVar('--main-menu-bg', 'url(./img/misc/bg' + (1 + Std.random(8)) + '.jpg)');
+        UI.setVar('--main-menu-bg', 'url(./img/misc/bg' + (1 + Std.random(10)) + '.jpg)');
+//      UI.setVar('--main-menu-bg', 'url(./img/misc/bg13.jpg)');
 
       var title = Browser.document.createDivElement();
       title.id = 'window-mainmenu-title';
@@ -52,11 +57,11 @@ class MainMenu extends UIWindow
       addItem('ABOUT', function(e) {
         game.ui.state = UISTATE_ABOUT;
       });
-      addItem('QUIT', function(e) {
 #if electron
+      addItem('QUIT', function(e) {
         electron.renderer.IpcRenderer.invoke('quit');
-#end
       });
+#end
 
       addCloseButton();
       close.style.display = 'none';
@@ -70,6 +75,8 @@ class MainMenu extends UIWindow
 // load game
   function loadGame(e)
     {
+      if (!loadEnabled)
+        return;
       if (!game.saveExists(1))
         return;
       game.load(1);
@@ -83,6 +90,8 @@ class MainMenu extends UIWindow
 // save game
   function saveGame(e)
     {
+      if (!saveEnabled)
+        return;
       if (!game.isStarted || game.isFinished)
         return;
       game.save(1);
@@ -131,6 +140,8 @@ class MainMenu extends UIWindow
 
   override function update()
     {
+      loadEnabled = false;
+      saveEnabled = false;
       saveItem.innerHTML = 'SAVE GAME';
       if (game.isStarted && !game.isFinished &&
           game.player.saveDifficulty != UNSET)
@@ -138,14 +149,21 @@ class MainMenu extends UIWindow
           '<br><span style="font-size: 70%;">' + Const.smallgray('[' +
           game.player.vars.savesLeft + ' saves left]') + '</span>';
 
-      if (!game.saveExists(1))
-        loadItem.className = 'window-mainmenu-item-disabled window-title';
-      else loadItem.className = 'window-mainmenu-item window-title';
-      if (!game.isStarted || game.isFinished)
-        saveItem.className = 'window-mainmenu-item-disabled window-title';
-      else saveItem.className = 'window-mainmenu-item window-title';
+      loadEnabled = game.saveExists(1);
+      saveEnabled = (game.isStarted && !game.isFinished);
       if (game.isStarted)
         close.style.display = 'block';
+#if !electron
+      loadEnabled = false;
+      saveEnabled = false;
+#end
+      // set button classes
+      if (!loadEnabled)
+        loadItem.className = 'window-mainmenu-item-disabled window-title';
+      else loadItem.className = 'window-mainmenu-item window-title';
+      if (!saveEnabled)
+        saveItem.className = 'window-mainmenu-item-disabled window-title';
+      else saveItem.className = 'window-mainmenu-item window-title';
     }
 }
 

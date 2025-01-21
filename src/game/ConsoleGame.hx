@@ -222,8 +222,6 @@ class ConsoleGame
 // exit game
 #if electron
         electron.renderer.IpcRenderer.invoke('quit');
-#else
-        Sys.exit(0);
 #end
 
       game.updateHUD(); // update HUD state

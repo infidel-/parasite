@@ -96,34 +96,6 @@ class GameScene
       game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear: ' + ai.AI.HEAR_DISTANCE);
 
-#if !electron
-      // focus/blur handling
-      win.addEventTarget(function (e: hxd.Event) {
-        if (e.kind == EFocus)
-          {
-            // skip first focus on web
-            if (isFocused)
-              return;
-
-            // show blur on losing focus
-            // this is needed for web because it's too easy to press Alt, lose it and not notice it
-            loseFocus.hide();
-            sounds.resume();
-            isFocused = true;
-          }
-        else if (e.kind == EFocusLost)
-          {
-            // reset input flags
-            controlPressed = false;
-            shiftPressed = false;
-            mouse.ignoreNextClick = true; // ignore click on screen
-            isFocused = false;
-
-            loseFocus.show();
-            sounds.pause();
-          }
-      });
-#end
       // hack: bugs out otherwise
       game.scene.mouse.setCursor(Mouse.CURSOR_MOVE);
 

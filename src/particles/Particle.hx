@@ -1,6 +1,7 @@
 package particles;
 
 import game.Game;
+import haxe.Timer;
 import js.html.CanvasRenderingContext2D;
 
 class Particle
@@ -36,14 +37,14 @@ class Particle
     {
       scene = s;
       game = scene.game;
-      createdTS = Sys.time() * 1000;
+      createdTS = Timer.stamp() * 1000;
       time = 0;
     }
 
 // check if particle is dead
   public function isDead(): Bool
     {
-      return (Sys.time() * 1000 - createdTS > time);
+      return (Timer.stamp() * 1000 - createdTS > time);
     }
 
 // base drawing function, should be overridden

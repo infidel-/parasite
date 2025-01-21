@@ -1,5 +1,6 @@
 // tiled area view
 
+import haxe.Timer;
 import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
@@ -189,7 +190,7 @@ class AreaView
               _particles.remove(p);
               continue;
             }
-          var dt = (Sys.time() * 1000 - p.createdTS) / p.time;
+          var dt = (Timer.stamp() * 1000 - p.createdTS) / p.time;
           // most likely final frame
           if (dt > 0.8)
             dt = 1.0;

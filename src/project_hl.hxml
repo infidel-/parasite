@@ -1,6 +1,0 @@
--D windowTitle=Parasite
--lib heaps
--lib hldx
--hl ../bin.hl/parasite.hl
--main Main
-

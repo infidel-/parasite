@@ -1,8 +1,6 @@
--lib electron
--D electron
--lib hxnodejs
 -D js-es=6
 -dce no
+-D www
 -js ../bin/parasite.js
 -main Main
 

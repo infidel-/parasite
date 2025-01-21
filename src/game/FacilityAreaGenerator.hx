@@ -9,6 +9,8 @@ import game.AreaGame;
 import game.AreaGenerator;
 import game.AreaGenerator.*;
 
+import haxe.Timer;
+
 class FacilityAreaGenerator
 {
   var game: Game;
@@ -69,7 +71,7 @@ class FacilityAreaGenerator
       drawBlock(cells, 0, sidewalky, area.width, sidewalkw, TEMP_WALKWAY);
 
       // main building
-      var t1 = Sys.time();
+      var t1 = Timer.stamp();
       var mainw = Std.int(area.width * 0.5),
         mainh = Std.int(area.height * 0.5);
       var mainx = Std.int(mainw / 2),
@@ -120,7 +122,7 @@ class FacilityAreaGenerator
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
-      trace(Std.int((Sys.time() - t1) * 1000) + 'ms');
+      trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
       state.area.generatorInfo = {
         rooms: state.rooms,
         doors: state.doors,

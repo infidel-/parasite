@@ -129,6 +129,13 @@ class UI
       if (hud.consoleVisible())
         return;
 //      trace('code:' + e.code + ' alt:' + e.altKey + ' ctrl:' + e.ctrlKey + ' shift:' + e.shiftKey + ' key:' + e.key);
+
+      // prevent F1-F10 from triggering defaults in browser
+      // and 0-9
+      if ((e.keyCode >= 112 && e.keyCode <= 121) ||
+          (e.keyCode >= 48 && e.keyCode <= 57))
+        e.preventDefault();
+
       // default state
       if (_state == UISTATE_DEFAULT)
         {
@@ -304,8 +311,10 @@ class UI
             obj: {
               text: 'Do you want to exit the game?',
               func: function(yes: Bool) {
+#if electron
                 if (yes)
                   electron.renderer.IpcRenderer.invoke('quit');
+#end
               }
             }
           });

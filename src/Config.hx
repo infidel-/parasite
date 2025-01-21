@@ -1,13 +1,12 @@
 // game configuration
 
-#if hl
-import sys.io.File;
-#elseif electron
+#if electron
 import js.node.Fs;
 #end
 import haxe.Json;
 
 import game.Game;
+import jsui.UI;
 
 class Config
 {
@@ -116,10 +115,7 @@ class Config
           trace(e);
         }
       // apply options
-      jsui.UI.setVar('--text-font', font);
-      jsui.UI.setVar('--text-font-size', fontSize + 'px');
-      jsui.UI.setVar('--text-font-title', fontTitle);
-#elseif js
+#else
       var str = js.Browser.window.localStorage.getItem('config');
       var obj = {};
       if (str != null)
@@ -127,32 +123,10 @@ class Config
 
       for (f in Reflect.fields(obj))
         set(f, Reflect.field(obj, f));
-#else
-      var str = '';
-      var arr = [];
-
-      try {
-        str = File.getContent("./parasite.cfg");
-        arr = str.split("\n");
-        }
-      catch (e: Dynamic)
-        {}
-
-      for (line in arr)
-        {
-          line = StringTools.trim(line);
-          if (line.charAt(0) == '#') // comments
-            continue;
-          if (line.length == 0) // empty line
-            continue;
-
-          var tmp = line.split('=');
-          var key = StringTools.trim(tmp[0]);
-          var val = StringTools.trim(tmp[1]);
-
-          set(key, val);
-        }
 #end
+      UI.setVar('--text-font', font);
+      UI.setVar('--text-font-size', fontSize + 'px');
+      UI.setVar('--text-font-title', fontTitle);
     }
 
 // check if any spoon vars enabled
@@ -183,7 +157,9 @@ class Config
       else if (key == 'fullscreen')
         {
           fullscreen = (val == '1');
+#if electron
           electron.renderer.IpcRenderer.invoke('fullscreen' + val);
+#end
         }
       else if (key == 'skipTutorial')
         skipTutorial = (val == '1');

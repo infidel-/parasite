@@ -9,6 +9,8 @@ import game.AreaGame;
 import game.AreaGenerator;
 import game.AreaGenerator.*;
 
+import haxe.Timer;
+
 class CorpAreaGenerator
 {
   var game: Game;
@@ -70,7 +72,7 @@ class CorpAreaGenerator
       drawBlock(cells, 0, 0, area.width, area.height, ALLEY);
 
       // main building
-      var t1 = Sys.time();
+      var t1 = Timer.stamp();
       var mainw = Std.int(area.width * 0.75),
         mainh = Std.int(area.height * 0.75);
       var mainx = Std.int(area.width * 0.1),
@@ -103,7 +105,7 @@ class CorpAreaGenerator
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
-      trace(Std.int((Sys.time() - t1) * 1000) + 'ms');
+      trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
       state.area.generatorInfo = {
         rooms: state.rooms,
         doors: state.doors,
