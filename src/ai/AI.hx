@@ -9,6 +9,7 @@ import game.*;
 import const.*;
 import particles.*;
 import __Math;
+import cult.Cult;
 
 class AI extends _SaveObject
 {
@@ -68,6 +69,9 @@ class AI extends _SaveObject
   public var reason: _AIStateChangeReason; // reason for setting this state
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
   public var affinity: Int; // affinity to parasite (number of turns spent together)
+  // cult-related
+  public var isCultist: Bool;
+  public var cultID: Int;
 
   // various AI timers
   public var timers: _AITimers;
@@ -175,6 +179,8 @@ class AI extends _SaveObject
       wasAlerted = false;
       wasNoticed = false;
       hasFalseMemories = false;
+      isCultist = false;
+      cultID = 0;
 
       baseAttrs = {
         strength: 1,
@@ -1449,6 +1455,13 @@ public function show()
   public inline function isGroup(): Bool
     {
       return (isTeamMember || type == 'blackops');
+    }
+
+// set this AI as a cultist
+  public function setCult(cult: Cult)
+    {
+      isCultist = true;
+      cultID = cult.id;
     }
 
 // event hook: on state change

@@ -391,10 +391,14 @@ class HUD
           if (host.isHuman)
             buf.add('<span class=hud-name>' + host.getNameCapped() + '</span>');
           else buf.add('<span class=hud-name>' + host.AName() + '</span>');
+          // special symbols
           if (host.affinity >= 100)
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
           if (host.chat.consent >= 100)
             buf.add(Const.icon('symbiosis', ' &#127282; ')); // 🄲
+          if (host.isCultist && host.cultID == game.cults[0].id)
+            buf.add(Const.icon('follower', ' &#127285; ')); // 🄵
+
           if (host.isJobKnown)
             buf.add(' ' + Const.col('gray',
               Const.small('(' + host.job + ')<br/>')));

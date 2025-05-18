@@ -8,6 +8,7 @@ import js.node.Fs;
 import haxe.Json;
 import jsui.UI;
 import scenario.Timeline;
+import cult.Cult;
 
 @:expose
 class Game extends _SaveObject
@@ -35,6 +36,7 @@ class Game extends _SaveObject
 
   public var managerRegion: RegionManager; // event manager (region mode)
   public var playerRegion: PlayerRegion; // game player (region mode)
+  public var cults: Array<Cult>; // cults list
 
   public var player: Player; // game player
   public var playerArea: PlayerArea; // game player (area mode)
@@ -112,6 +114,10 @@ class Game extends _SaveObject
       debugArea = new DebugArea(this);
       managerRegion = new RegionManager(this);
       playerRegion = new PlayerRegion(this);
+      cults = [];
+      var cult = new Cult(this);
+      cult.isPlayer = true;
+      cults.push(cult);
 
       // generate world
       world = new World(this);

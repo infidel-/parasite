@@ -143,6 +143,8 @@ class Chat extends _SaveObject
                 cost = 15;
               case 'De-escalate':
                 cost = 10;
+              case 'Recruit':
+                cost = 30;
               case 'Request':
                 cost = 20;
               case 'Shock', 'Threaten', 'Scare': 
@@ -232,6 +234,8 @@ class Chat extends _SaveObject
         list.push('Subvert');
       if (canRequest())
         list.push('Request');
+      if (canRecruit())
+        list.push('Recruit');
       return list;
     }
 
@@ -908,6 +912,35 @@ class Chat extends _SaveObject
       finish();
     }
 
+// returns true if recruit can be added to actions
+  function canRecruit(): Bool
+    {
+      if (target.isCultist)
+        return false;
+      var cult = game.cults[0];
+      if (cult.state != CULT_STATE_ACTIVE)
+        {
+          // smilers can always start or restart cults
+          if (target.type == 'smiler')
+            return true;
+          
+          return false;
+        }
+      if (cult.members.length >= cult.maxSize()) 
+        return false;
+      return true;
+    }
+
+// recruit cult member (or create a new cult)
+  function recruit()
+    {
+      var cult = game.cults[0];
+      if (cult.members.length == 0)
+        cult.addLeader(target);
+      else cult.addMember(target);
+      finish();
+    }
+
 // returns true if request can be added to actions
   function canRequest(): Bool
     {
@@ -1025,6 +1058,8 @@ class Chat extends _SaveObject
               deescalate();
             case 'provoke':
               provoke();
+            case 'recruit':
+              recruit();
             case 'request':
               request();
             case 'threaten', 'scare', 'shock':

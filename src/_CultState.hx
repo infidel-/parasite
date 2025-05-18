@@ -1,0 +1,8 @@
+// cult states
+enum _CultState
+{
+  CULT_STATE_ACTIVE;
+  CULT_STATE_INACTIVE;
+  CULT_STATE_PARALYZED;
+  CULT_STATE_DEAD;
+}
