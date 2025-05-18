@@ -1001,13 +1001,20 @@ class AreaGame extends _SaveObject
 //      if (ai.isNPC)
 //        game.debug('AI remove ' + ai.id);
       // event: despawn live AI
-      if (ai.state != AI_STATE_DEAD && ai != game.player.host)
+      if (ai.state != AI_STATE_DEAD &&
+          ai != game.player.host)
         ai.onRemove();
 
       if (ai.npc != null)
         ai.npc.ai = null;
       ai.entity = null;
       _ai.remove(ai);
+      // cultists need to update the ai data in members
+      if (ai.isCultist)
+        {
+          var cult = game.getCultByID(ai.cultID);
+          cult.onRemoveAI(ai);
+        }
     }
 
 

@@ -4,6 +4,7 @@ package ai;
 
 import game.*;
 
+@:rtti
 class AIData extends _SaveObject
 {
   var game: Game; // game state link
@@ -139,6 +140,31 @@ class AIData extends _SaveObject
       organs = new Organs(game, this);
       effects = new Effects(game, this);
       traits = new List();
+    }
+
+// clones this AI data
+  public function cloneData(): AIData
+    {
+      var data = new AIData(game);
+      for (f in Type.getInstanceFields(AIData))
+        {
+          var val = Reflect.field(this, f);
+          if (Reflect.isFunction(val)) continue;
+          Reflect.setField(data, f, val);
+        }
+      return data;
+    }
+
+// update data in this record from ai
+  public function updateData(ai: AI)
+    {
+      game.debug('ai data ' + ai.id + ' updated');
+      for (f in Type.getInstanceFields(AIData))
+        {
+          var val = Reflect.field(ai, f);
+          if (Reflect.isFunction(val)) continue;
+          Reflect.setField(this, f, val);
+        }
     }
 
 // does this AI have this trait?

@@ -263,6 +263,14 @@ class Game extends _SaveObject
       scene.draw();
     }
 
+// get cult by id
+  public function getCultByID(id: Int): Cult
+    {
+      for (cult in cults)
+        if (cult.id == id)
+          return cult;
+      return null;
+    }
 
 // set location
   public function setLocation(vloc: _LocationType, ?newarea: AreaGame)
