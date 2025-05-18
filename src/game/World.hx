@@ -3,7 +3,7 @@
 package game;
 
 import const.WorldConst;
-import ai.AI;
+import ai.AIData;
 import objects.AreaObject;
 import region.RegionObject;
 
@@ -24,7 +24,7 @@ class World extends _SaveObject
 // post load
   public function loadPost()
     {
-      AI._maxID = 0;
+      AIData._maxID = 0;
       AreaGame._maxID = 0;
       AreaObject._maxID = 0;
       RegionGame._maxID = 0;
@@ -51,7 +51,7 @@ class World extends _SaveObject
       AreaGame._maxID++;
       AreaObject._maxID++;
       RegionGame._maxID++;
-      AI._maxID++;
+      AIData._maxID++;
     }
 
 // generate a new world

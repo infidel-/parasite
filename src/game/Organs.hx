@@ -2,7 +2,7 @@
 
 package game;
 
-import ai.AI;
+import ai.AIData;
 import const.EvolutionConst;
 
 class Organs extends _SaveObject
@@ -10,13 +10,13 @@ class Organs extends _SaveObject
   static var _ignoredFields = [ '_ai', 'currentOrgan' ];
   var game: Game;
   public var isGrowing(get, null): Bool; // is currently growing organ?
-  var _ai: AI; // parent AI link
+  var _ai: AIData; // parent AI link
   var _list: List<Organ>; // list of organs
   var currentOrgan: Organ; // currently grown organ
   var currentOrganID: _Improv;
   var woundRegenTurn: Int; // turns until next HP regens
 
-  public function new(vgame: Game, vai: AI)
+  public function new(vgame: Game, vai: AIData)
     {
       _ai = vai;
       game = vgame;

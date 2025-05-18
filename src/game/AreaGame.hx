@@ -125,8 +125,8 @@ class AreaGame extends _SaveObject
         AreaGame._maxID = id;
       for (ai in _ai)
         {
-          if (ai.id > AI._maxID)
-            AI._maxID = ai.id;
+          if (ai.id > AIData._maxID)
+            AIData._maxID = ai.id;
           ai.loadPost();
         }
       for (o in _objects)

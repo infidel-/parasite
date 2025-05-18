@@ -2,16 +2,16 @@
 
 package game;
 
-import ai.AI;
+import ai.AIData;
 
 class Effects extends _SaveObject
 {
   static var _ignoredFields = [ 'ai' ];
   var game: Game;
-  var ai: AI; // parent AI link
+  var ai: AIData; // parent AI link
   var _list: List<Effect>; // list of effects
 
-  public function new(vgame: Game, vai: AI)
+  public function new(vgame: Game, vai: AIData)
     {
       ai = vai;
       game = vgame;
