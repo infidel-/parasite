@@ -77,6 +77,7 @@ class UI
         UISTATE_NEWGAME => new NewGame(game),
         UISTATE_SPOON => new Spoon(game),
         UISTATE_OVUM => new Ovum(game),
+        UISTATE_CULT => new Cult(game),
         UISTATE_ABOUT => new About(game),
         UISTATE_PRESETS => new Presets(game)
       ];
@@ -273,7 +274,8 @@ class UI
       var logPressed = (code == 'Digit3' && altKey) || code == 'F3';
       var timelinePressed = (code == 'Digit4' && altKey) || code == 'F4';
       var evolutionPressed = (code == 'Digit5' && altKey) || code == 'F5';
-      var optionsPressed = (code == 'Digit6' && altKey) || code == 'F6';
+      var cultPressed = (code == 'Digit6' && altKey) || code == 'F6';
+      var optionsPressed = (code == 'Digit9' && altKey) || code == 'F9';
       var exitPressed = (code == 'Digit0' && altKey) || code == 'F10';
       var vstate = _state;
 
@@ -292,6 +294,10 @@ class UI
           game.player.state == PLR_STATE_HOST &&
           game.player.evolutionManager.state > 0)
         state = UISTATE_EVOLUTION;
+      // open cult details window
+      else if (cultPressed &&
+          game.cults[0].state == CULT_STATE_ACTIVE)
+        state = UISTATE_CULT;
       // open options window
       else if (optionsPressed)
         state = UISTATE_OPTIONS;
@@ -568,9 +574,10 @@ class UI
   public function event(ev: _UIEvent)
     {
       // ignore highlight events on debug
+/*
       if (game.importantMessagesEnabled &&
           ev.type == UIEVENT_HIGHLIGHT)
-        return;
+        return;*/
       uiQueue.add(ev);
 
       // no windows open, work on event immediately

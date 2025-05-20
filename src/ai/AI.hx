@@ -35,7 +35,7 @@ class AI extends AIData
   // guarding target (for guards)
   public var guardTargetX: Int;
   public var guardTargetY: Int;
-  var direction: Int; // direction of movement
+  public var direction: Int; // direction of movement
 
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
   var _turnsInvisible: Int; // number of turns passed since player saw this AI
@@ -220,7 +220,7 @@ public function show()
 
 
 // internal: change direction at random to the empty space
-  inline function changeRandomDirection()
+  public inline function changeRandomDirection()
     {
       direction = game.area.getRandomDirection(x, y);
       if (direction == -1)
@@ -229,7 +229,7 @@ public function show()
 
 
 // does this AI sees this position?
-  function seesPosition(xx: Int, yy: Int): Bool
+  public function seesPosition(xx: Int, yy: Int): Bool
     {
       // too far away
       var distSqr = Const.distanceSquared(x, y, xx, yy);
@@ -434,8 +434,8 @@ public function show()
     }
 
 
-// logic: move to x,y
-  function logicMoveTo(x2: Int, y2: Int)
+// common logic: move to x,y
+  public function logicMoveTo(x2: Int, y2: Int)
     {
       // get path
       var path = game.area.getPath(x, y, x2, y2);
@@ -609,27 +609,6 @@ public function show()
 // ===============================  LOGIC =============================
 
 
-// state: default idle state handling
-  function stateIdle()
-    {
-      // AI vision
-      visionIdle();
-
-      // stand and wonder what happened until alertness go down
-      // if roam target is set, continue moving instead
-      if (alertness > 0 && roamTargetX < 0)
-        return;
-
-      // TODO: i could make hooks here, leaving the alert logic intact
-
-      // guards stand on one spot
-      // someday there might even be patrollers...
-      if (isGuard)
-        1;
-      // roam by default
-      else logicRoam();
-    }
-
 // state: move to target spot
   function stateMoveTarget()
     {
@@ -750,6 +729,7 @@ public function show()
       return (affinity >= 100 && chat.consent >= 100);
     }
 
+// TODO: REMOVE
 // AI vision: called in idle and movement to target states
   function visionIdle()
     {
@@ -922,9 +902,13 @@ public function show()
           else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
         }
 
+      // preserved - do nothing
+      else if (state == AI_STATE_PRESERVED)
+        1;
+
       // idle - roam around or guard, etc
       else if (state == AI_STATE_IDLE)
-        stateIdle();
+        DefaultLogic.stateIdle(this);
 
       // AI alerted - try to run away or attack
       else if (state == AI_STATE_ALERT)
@@ -933,10 +917,6 @@ public function show()
       // controlled by parasite
       else if (state == AI_STATE_HOST)
         stateHost();
-
-      // preserved - do nothing
-      else if (state == AI_STATE_PRESERVED)
-        1;
 
       // move to target x,y
       else if (state == AI_STATE_MOVE_TARGET)
@@ -1315,6 +1295,17 @@ public function show()
       return getName() + ' id:' + id + ' (' + x + ',' + y + '): ' + type + ', ' + job;
     }
 
+// has seen object?
+  public inline function hasSeenObject(id: Int): Bool
+    {
+      return Lambda.has(_objectsSeen, id);
+    }
+
+// marks object as seen
+  public inline function objectSeen(id: Int)
+    {
+      _objectsSeen.add(id);
+    }
 
 // ========================== SETTERS ====================================
 
@@ -1364,8 +1355,21 @@ public function show()
   public static var DESPAWN_TIMER = 5;
 }
 
+@:structInit
+class _AITimers extends _SaveObject
+{
+  public var alert: Int; // alerted, count down until AI calms down
+    // alerted and player not visible, count down
+//    alertPlayerNotVisible: Int,
+
+  public function new(alert: Int)
+    {
+      this.alert = alert;
+    }
+}
 
 // valid reasons for AI to change state
+// NOTE: used in save games, cannot move out
 enum _AIStateChangeReason
 {
   REASON_NONE;
@@ -1378,17 +1382,4 @@ enum _AIStateChangeReason
   REASON_PARASITE;
   REASON_DAMAGE;
   REASON_WITNESS;
-}
-
-@:structInit
-class _AITimers extends _SaveObject
-{
-  public var alert: Int; // alerted, count down until AI calms down
-    // alerted and player not visible, count down
-//    alertPlayerNotVisible: Int,
-
-  public function new(alert: Int)
-    {
-      this.alert = alert;
-    }
 }

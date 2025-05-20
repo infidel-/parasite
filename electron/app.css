@@ -1032,6 +1032,33 @@ input[type=checkbox] {
   margin: 5px 5px 0px 5px;
 }
 
+#window-cult {
+  border: 39px solid;
+  width: calc(100% - 90px);
+  height: calc(100% - 90px);
+  pointer-events: all;
+}
+
+#window-cult-contents {
+  transform: translate(-10px, -10px);
+  width: 102%;
+  height: calc(100% - 30px);
+  display: flex;
+  flex-direction: column;
+}
+
+#window-cult-info {
+  height: 50%;
+  /* max-height: 7.1em;*/
+  margin-top: 10px;
+}
+
+#window-cult-actions {
+  margin-top: 10px;
+  flex-grow: 1;
+  height: 59%;
+}
+
 #window-ovum {
   border: 39px solid;
   width: calc(100% - 90px);

@@ -13,4 +13,5 @@ enum _PlayerActionType
   ACTION_CHAT;
   ACTION_CONVERSE_MENU;
   ACTION_HOST;
+  ACTION_CULT;
 }

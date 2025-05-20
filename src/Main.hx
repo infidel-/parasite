@@ -1,7 +1,6 @@
 import game.Game;
 
 import js.Browser;
-import js.html.CanvasElement;
 
 class Main
 {
@@ -25,6 +24,7 @@ class Main
       canvas.focus();
 
       game = new Game();
+      ai.DefaultLogic.game = game;
       game.scene.init();
       game.ui.state = UISTATE_MAINMENU;
     }

@@ -18,6 +18,7 @@ enum _UIState {
   UISTATE_PEDIA; // pedia windw
   UISTATE_OVUM; // parthenogenesis settings
   UISTATE_ABOUT; // about window
+  UISTATE_CULT; // cult details window
 
   UISTATE_DIFFICULTY; // difficulty setting
   UISTATE_YESNO; // yes/no dialog window

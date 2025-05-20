@@ -31,14 +31,21 @@ class Cult
   public function addLeader(ai: AI)
     {
       state = CULT_STATE_ACTIVE;
+      ai.isNameKnown = true;
       ai.setCult(this);
       members.push(ai.cloneData());
       log('gains a leader: ' + ai.theName());
+      if (isPlayer)
+        game.ui.event({
+          type: UIEVENT_HIGHLIGHT,
+          state: UISTATE_CULT,
+        });
     }
 
 // add new member
   public function addMember(ai: AI)
     {
+      ai.isNameKnown = true;
       ai.setCult(this);
       members.push(ai.cloneData());
       log('gains a new member: ' + ai.theName());
@@ -79,6 +86,39 @@ class Cult
           log(' is destroyed, forgotten by time');
         }
       else log(' is temporarily out of action');
+
+      // clear live ai
+      for (ai in game.area.getAllAI())
+        if (ai.isCultist && ai.cultID == this.id)
+          {
+            ai.isCultist = false;
+            ai.cultID = 0;
+          }
+    }
+
+// run cult action from ui
+  public function action(action: _PlayerAction)
+    {
+      switch (action.id)
+        {
+          case 'callHelp':
+            callHelpAction(action);
+        }
+    }
+
+// returns true if player can call for help
+  public function canCallHelp(): Bool
+    {
+      if (state != CULT_STATE_ACTIVE)
+        return false;
+      return true;
+    }
+
+// call for help
+  function callHelpAction(action: _PlayerAction)
+    {
+      trace('call!');
+      
     }
 
 // cult turn

@@ -2,9 +2,9 @@
 
 package const;
 
+import ai.AI;
 import _AIState;
 import _AIEffectType;
-import ai.AI;
 
 class SoundConst
 {

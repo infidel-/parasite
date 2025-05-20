@@ -122,6 +122,8 @@ class HUD
         Const.key('F4') + ': TIMELINE');
       addMenuButton(buttons, UISTATE_EVOLUTION,
         Const.key('F5') + ': EVO');
+      addMenuButton(buttons, UISTATE_CULT,
+        Const.key('F6') + ': CULT');
 
       // actions
       actions = Browser.document.createDivElement();
@@ -513,6 +515,12 @@ class HUD
             {
               if (game.player.state == PLR_STATE_HOST &&
                   game.player.evolutionManager.state > 0)
+                vis = true;
+            }
+
+          else if (m.state == UISTATE_CULT)
+            {
+              if (game.cults[0].state == CULT_STATE_ACTIVE)
                 vis = true;
             }
           m.btn.style.display = (vis ? 'flex' : 'none');
