@@ -348,7 +348,6 @@ public function show()
 
 // ===================================  LOGIC  =======================================
 
-
 // logic: roam around (default)
   function logicRoam()
     {
@@ -380,9 +379,8 @@ public function show()
       else setPosition(nx, ny);
     }
 
-
-// logic: run away from this x,y
-  function logicRunAwayFrom(xx: Int, yy: Int)
+// common logic: run away from this x,y
+  public function logicRunAwayFrom(xx: Int, yy: Int)
     {
       // form a temp list of dirs that have empty tiles and are as far away
       // from threat as possible
@@ -392,9 +390,10 @@ public function show()
           var nx = x + Const.dirx[i];
           var ny = y + Const.diry[i];
           var ok = (
-            game.area.isWalkable(nx, ny) && !game.area.hasAI(nx, ny) &&
-              (Math.abs(nx - game.playerArea.x) >= Math.abs(x - game.playerArea.x) &&
-               Math.abs(ny - game.playerArea.y) >= Math.abs(y - game.playerArea.y))
+            game.area.isWalkable(nx, ny) &&
+            !game.area.hasAI(nx, ny) &&
+              (Math.abs(nx - xx) >= Math.abs(x - xx) &&
+               Math.abs(ny - yy) >= Math.abs(y - yy))
             );
           if (ok)
             tmp.push(i);
@@ -417,9 +416,8 @@ public function show()
       setPosition(nx, ny);
     }
 
-
-// logic: try to tear parasite away
-  function logicTearParasiteAway()
+// common logic: try to tear parasite away
+  public function logicTearParasiteAway()
     {
       log('tries to tear you away!');
 
@@ -433,7 +431,6 @@ public function show()
       game.playerArea.onDetach(); // notify player
     }
 
-
 // common logic: move to x,y
   public function logicMoveTo(x2: Int, y2: Int)
     {
@@ -446,372 +443,14 @@ public function show()
     }
 
 
-// logic: attack player
-  function logicAttack()
-    {
-      // get current weapon
-      var item = inventory.getFirstWeapon();
-      var info = null;
-
-      // use animal attack
-      if (!isHuman)
-        info = ItemsConst.animal;
-      // use fists
-      else if (item == null)
-        info = ItemsConst.fists;
-      else info = item.info;
-      var weapon = info.weapon;
-
-      // check for distance on melee
-      if (!weapon.isRanged &&
-          !isNear(game.playerArea.x, game.playerArea.y))
-        {
-          logicMoveTo(game.playerArea.x, game.playerArea.y);
-          return;
-        }
-
-      // parasite attached to human, do not shoot (blackops are fine)
-      if (isHuman &&
-          game.player.state == PLR_STATE_ATTACHED &&
-          game.playerArea.attachHost.isHuman &&
-          type != 'blackops')
-        {
-          if (Std.random(100) < 30)
-            {
-              log('hesitates to attack you.');
-              emitSound({
-                text: 'Shit!',
-                radius: 5,
-                alertness: 10
-              });
-              return;
-            }
-        }
-
-      // play weapon sound
-      if (weapon.sound != null)
-        emitSound(weapon.sound);
-
-      // weapon skill level (ai + parasite bonus)
-      var roll = __Math.skill({
-        id: weapon.skill,
-        // hardcoded animal attack skill level
-        level: skills.getLevel(weapon.skill),
-      });
-
-      // draw attack effect
-      if (weapon.isRanged)
-        Particle.createShot(
-          weapon.sound.file, game.scene, x, y,
-          game.playerArea, roll);
-
-      // roll skill
-      if (!roll)
-        {
-          log('tries to ' + weapon.verb1 + ' you, but misses.');
-          return;
-        }
-
-      // stun damage
-      // when player has a host, stuns the host
-      // when player is a parasite, just do regular damage
-      if (weapon.type == WEAPON_STUN &&
-          game.player.state == PLR_STATE_HOST)
-        {
-          var mods: Array<_DamageBonus> = [];
-
-          // protective cover
-          if (game.player.state == PLR_STATE_HOST)
-            {
-              var o = game.player.host.organs.get(IMP_PROT_COVER);
-              if (o != null)
-                mods.push({
-                  name: 'protective cover',
-                  val: - Std.int(o.params.armor)
-                });
-            }
-
-          var roll = __Math.damage({
-            name: 'STUN AI->player',
-            min: weapon.minDamage,
-            max: weapon.maxDamage,
-            mods: mods
-          });
-
-          var resist = __Math.opposingAttr(
-            game.player.host.constitution, roll, 'con/stun');
-          if (resist)
-            roll = Std.int(roll / 2);
-          if (game.config.extendedInfo)
-            game.info('stun for ' + roll + ' rounds, -' + (roll * 2) +
-              ' control.');
-          game.player.hostControl -= roll * 2;
-
-          log(weapon.verb2 + ' your host for ' + roll +
-            " rounds. You're losing control.");
-
-          game.player.host.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: roll,
-            isTimer: true
-          });
-
-          game.playerArea.onDamage(0); // on damage event
-        }
-
-      // normal damage
-      else
-        {
-          var mods: Array<_DamageBonus> = [];
-          // all melee weapons have damage bonus
-          if (!weapon.isRanged && weapon.type == WEAPON_BLUNT)
-            mods.push({
-              name: 'melee 0.5xSTR',
-              min: 0,
-              max: Std.int(strength / 2)
-            });
-
-          // protective cover
-          if (game.player.state == PLR_STATE_HOST)
-            {
-              var o = game.player.host.organs.get(IMP_PROT_COVER);
-              if (o != null)
-                mods.push({
-                  name: 'protective cover',
-                  val: - Std.int(o.params.armor)
-                });
-
-              // armor
-              var clothing = game.player.host.inventory.clothing.info;
-              if (clothing.armor.damage != 0)
-                mods.push({
-                  name: clothing.name,
-                  val: - clothing.armor.damage
-                });
-            }
-
-          var damage = __Math.damage({
-            name: 'AI->player',
-            min: weapon.minDamage,
-            max: weapon.maxDamage,
-            mods: mods
-          });
-
-          log(weapon.verb2 + ' ' +
-            (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
-            ' for ' + damage + ' damage.');
-
-          game.playerArea.onDamage(damage); // on damage event
-        }
-    }
-
-
 // ===============================  LOGIC =============================
 
 
-// state: move to target spot
-  function stateMoveTarget()
-    {
-      // basic AI vision
-      visionIdle();
-
-      // stand and wonder what happened until alertness goes down
-      if (alertness > 0)
-        return;
-
-      logicMoveTo(roamTargetX, roamTargetY);
-      if (x != roamTargetX || y != roamTargetY)
-        return;
-      // spot reached, idling
-      roamTargetY = -1;
-      roamTargetY = -1;
-      setState(AI_STATE_IDLE);
-    }
-
-// state: investigate (move to target spot ignoring alertness)
-  function stateInvestigate()
-    {
-      // basic AI vision
-      visionIdle();
-
-      logicMoveTo(roamTargetX, roamTargetY);
-      if (x != roamTargetX || y != roamTargetY)
-        return;
-      // spot reached, idling
-      roamTargetY = -1;
-      roamTargetY = -1;
-      setState(AI_STATE_IDLE);
-    }
-
-// state: default alert state handling
-  function stateAlert()
-    {
-      // NOTE: must be first check in this function
-      // parasite attached - try to tear it away
-      if (parasiteAttached)
-        {
-          if (!isAgreeable())
-            logicTearParasiteAway();
-          return;
-        }
-
-      // alerted timer update
-      if (!game.player.vars.invisibilityEnabled &&
-          seesPosition(game.playerArea.x, game.playerArea.y))
-        timers.alert = ALERTED_TIMER;
-      else timers.alert--;
-
-      // AI calms down
-      // relentless AI cannot calm down once alerted
-      if (timers.alert == 0 && !isRelentless)
-        {
-          // guard must return to guard spot
-          if (isGuard &&
-              (x != guardTargetX || y != guardTargetY))
-            {
-              setState(AI_STATE_MOVE_TARGET);
-              roamTargetX = guardTargetX;
-              roamTargetY = guardTargetY;
-            }
-          // otherwise become idle
-          else setState(AI_STATE_IDLE);
-          alertness = 10;
-          return;
-        }
-
-      // aggressive AI - attack player if he is near or search for him
-      // same for berserk effect
-      if (isAggressive ||
-          effects.has(EFFECT_BERSERK))
-        {
-          if (!game.player.vars.invisibilityEnabled)
-            {
-              // search for player
-              // we cheat a little and follow invisible player
-              // before alert timer ends
-              if (!seesPosition(game.playerArea.x, game.playerArea.y))
-                logicMoveTo(game.playerArea.x, game.playerArea.y);
-
-              // try to attack
-              else logicAttack();
-            }
-        }
-
-      // not aggressive AI - try to run away
-      else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
-    }
-
-
-// state: host logic
-  function stateHost()
-    {
-      // non-assimilated hosts emit random sounds
-      if (!hasTrait(TRAIT_ASSIMILATED))
-        emitRandomSound('' + AI_STATE_HOST,
-          Std.int((100 - game.player.hostControl) / 3));
-
-      // effect: cannot tear parasite away (given right after invasion)
-      if (effects.has(EFFECT_CANNOT_TEAR_AWAY))
-        return;
-
-      // random: try to tear parasite away
-      if (game.player.hostControl < 25 && Std.random(100) < 5)
-        {
-          log('manages to tear you away.');
-          onDetach('default');
-          game.playerArea.onDetach(); // notify player
-        }
-    }
 
 // returns true if player has both affinity and consent
   public inline function isAgreeable(): Bool
     {
       return (affinity >= 100 && chat.consent >= 100);
-    }
-
-// TODO: REMOVE
-// AI vision: called in idle and movement to target states
-  function visionIdle()
-    {
-      // full affinity + consent results in ignore
-      if (isAgreeable())
-        alertness -= 5;
-      // player visibility
-      else if (!game.player.vars.invisibilityEnabled &&
-          seesPosition(game.playerArea.x, game.playerArea.y))
-        {
-          var distance = game.playerArea.distance(x, y);
-          var baseAlertness = 3;
-          var alertnessBonus = 0;
-
-          // if player is on a host, check for organs
-          if (game.player.state == PLR_STATE_HOST)
-            {
-              // organ: camouflage layer
-              var params = EvolutionConst.getParams(IMP_CAMO_LAYER, 0);
-              var o = organs.get(IMP_CAMO_LAYER);
-              if (o != null)
-                baseAlertness = o.params.alertness;
-              else baseAlertness = params.alertness;
-
-              // organ: protective cover
-              var params = EvolutionConst.getParams(IMP_PROT_COVER, 0);
-              var o = organs.get(IMP_PROT_COVER);
-              if (o != null)
-                alertnessBonus += o.params.alertness;
-              else alertnessBonus += params.alertness;
-            }
-          alertness += Std.int(baseAlertness * (VIEW_DISTANCE + 1 - distance)) +
-            alertnessBonus;
-          game.profile.addPediaArticle('npcAlertness');
-        }
-      else alertness -= 5;
-
-      // AI has become alerted
-      if (alertness >= 100)
-        {
-          var reason = REASON_PARASITE;
-
-          if (game.player.state == PLR_STATE_HOST &&
-              game.player.host.isHuman)
-            reason = REASON_HOST;
-
-          setState(AI_STATE_ALERT, reason);
-          return;
-        }
-
-      // get all objects that this AI sees
-      var tmp = game.area.getObjectsInRadius(x, y, VIEW_DISTANCE, true);
-
-      for (obj in tmp)
-        {
-          // not a body
-          if (obj.type != 'body')
-            continue;
-
-          // object already seen by this AI
-          if (Lambda.has(_objectsSeen, obj.id))
-            continue;
-
-          var body: BodyObject = cast obj;
-
-          // human AI becomes alert on seeing human bodies
-          if (isHuman && body.isHumanBody)
-            {
-              if (!body.wasSeen)
-                {
-                  // mark body as seen by someone to limit the law response
-                  body.wasSeen = true;
-
-                  setState(AI_STATE_ALERT, REASON_BODY);
-                }
-
-              // silent alert - no calling law
-              else setState(AI_STATE_ALERT, REASON_BODY_SILENT);
-            }
-
-          _objectsSeen.add(obj.id);
-        }
     }
 
 
@@ -906,26 +545,6 @@ public function show()
       else if (state == AI_STATE_PRESERVED)
         1;
 
-      // idle - roam around or guard, etc
-      else if (state == AI_STATE_IDLE)
-        DefaultLogic.stateIdle(this);
-
-      // AI alerted - try to run away or attack
-      else if (state == AI_STATE_ALERT)
-        stateAlert();
-
-      // controlled by parasite
-      else if (state == AI_STATE_HOST)
-        stateHost();
-
-      // move to target x,y
-      else if (state == AI_STATE_MOVE_TARGET)
-        stateMoveTarget();
-
-      // investigate
-      else if (state == AI_STATE_INVESTIGATE)
-        stateInvestigate();
-
       // post-detach
       else if (state == AI_STATE_POST_DETACH &&
           stateTime >= 2)
@@ -939,6 +558,9 @@ public function show()
       else if (state == AI_STATE_POST_DETACH_MEMORIES &&
           stateTime >= 2)
         setState(AI_STATE_IDLE);
+
+      // default AI logic
+      else DefaultLogic.turn(this);
 
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
