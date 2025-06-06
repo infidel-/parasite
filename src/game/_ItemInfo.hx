@@ -12,16 +12,7 @@ typedef _ItemInfo =
   var unknown: String; // item name when it's unknown
 
   // weapon-related stats; null if not a weapon
-  @:optional var weapon: {
-    @:optional var sound: AISound; // attack sound
-    var isRanged: Bool; // is this weapon type ranged?
-    var skill: _Skill; // associated skill
-    var minDamage: Int; // min weapon damage
-    var maxDamage: Int; // max weapon damage
-    var verb1: String; // X tries to $verb1 you; but misses.
-    var verb2: String; // X $verb2 you for Y damage.
-    var type: _WeaponType; // weapon damage type
-  };
+  @:optional var weapon: _WeaponInfo;
   @:optional var armor: {
     var canAttach: Bool; // armor can disable parasite attach
     var damage: Int; // value of damage reduced
@@ -36,3 +27,13 @@ typedef _ItemInfo =
   @:optional var updateActionList: Game -> _Item -> Void;
 }
 
+typedef _WeaponInfo = {
+  @:optional var sound: AISound; // attack sound
+  var isRanged: Bool; // is this weapon type ranged?
+  var skill: _Skill; // associated skill
+  var minDamage: Int; // min weapon damage
+  var maxDamage: Int; // max weapon damage
+  var verb1: String; // X tries to $verb1 you; but misses.
+  var verb2: String; // X $verb2 you for Y damage.
+  var type: _WeaponType; // weapon damage type
+};

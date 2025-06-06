@@ -398,7 +398,7 @@ class HUD
             buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
           if (host.chat.consent >= 100)
             buf.add(Const.icon('symbiosis', ' &#127282; ')); // 🄲
-          if (host.isCultist && host.cultID == game.cults[0].id)
+          if (host.isPlayerCultist())
             buf.add(Const.icon('follower', ' &#127285; ')); // 🄵
 
           if (host.isJobKnown)

@@ -24,7 +24,9 @@ class Main
       canvas.focus();
 
       game = new Game();
+      ai.CommonLogic.game = game;
       ai.DefaultLogic.game = game;
+      ai.FollowerLogic.game = game;
       game.scene.init();
       game.ui.state = UISTATE_MAINMENU;
     }

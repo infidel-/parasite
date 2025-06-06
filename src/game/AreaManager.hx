@@ -202,7 +202,8 @@ class AreaManager extends _SaveObject
       var tmp = area.getAIinRadius(x, y,
         (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
       for (ai in tmp)
-        if (ai.state == AI_STATE_IDLE || ai.state == AI_STATE_MOVE_TARGET)
+        if (ai.state == AI_STATE_IDLE ||
+            ai.state == AI_STATE_MOVE_TARGET)
           ai.setState(AI_STATE_ALERT, REASON_WITNESS);
     }
 

@@ -215,7 +215,7 @@ class Mouse
           // attack cursor
           if (canAttack(ai))
             {
-              var weapon = game.playerArea.getWeapon();
+              var weapon = game.playerArea.getCurrentWeapon();
               c = (weapon.isRanged ? CURSOR_ATTACK_RANGED : CURSOR_ATTACK);
               if (!weapon.isRanged &&
                   !ai.isNear(game.playerArea.x, game.playerArea.y))

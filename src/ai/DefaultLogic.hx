@@ -190,8 +190,7 @@ class DefaultLogic
         }
 
       // alerted timer update
-      if (!game.player.vars.invisibilityEnabled &&
-          ai.seesPosition(game.playerArea.x, game.playerArea.y))
+      if (ai.seesAnyEnemy())
         ai.timers.alert = AI.ALERTED_TIMER;
       else ai.timers.alert--;
 
@@ -213,185 +212,34 @@ class DefaultLogic
           return;
         }
 
-      // aggressive AI - attack player if he is near or search for him
+      // aggressive AI - find/attack enemies/player
       // same for berserk effect
       if (ai.isAggressive ||
           ai.effects.has(EFFECT_BERSERK))
-        {
-          if (!game.player.vars.invisibilityEnabled)
-            {
-              // search for player
-              // we cheat a little and follow invisible player
-              // before alert timer ends
-              if (!ai.seesPosition(game.playerArea.x, game.playerArea.y))
-                ai.logicMoveTo(game.playerArea.x, game.playerArea.y);
-
-              // try to attack
-              else logicAttack(ai);
-            }
-        }
+        stateAlertAggressive(ai);
 
       // not aggressive AI - try to run away
-      else ai.logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
+      else ai.logicRunAwayFromEnemies();
     }
 
-// logic: attack player
-  static function logicAttack(ai: AI)
+// state: alert for aggressive AI
+  static function stateAlertAggressive(ai: AI)
     {
-      // get current weapon
-      var item = ai.inventory.getFirstWeapon();
-      var info = null;
-
-      // use animal attack
-      if (!ai.isHuman)
-        info = ItemsConst.animal;
-      // use fists
-      else if (item == null)
-        info = ItemsConst.fists;
-      else info = item.info;
-      var weapon = info.weapon;
-
-      // check for distance on melee
-      if (!weapon.isRanged &&
-          !ai.isNear(game.playerArea.x, game.playerArea.y))
+      // find nearest enemy (and magically know where they are until alert timer runs out)
+      var target = ai.findNearestEnemy();
+      if (target == null)
         {
-          ai.logicMoveTo(game.playerArea.x, game.playerArea.y);
+          ai.setState(AI_STATE_IDLE);
           return;
         }
 
-      // parasite attached to human, do not shoot (blackops are fine)
-      if (ai.isHuman &&
-          game.player.state == PLR_STATE_ATTACHED &&
-          game.playerArea.attachHost.isHuman &&
-          ai.type != 'blackops')
-        {
-          if (Std.random(100) < 30)
-            {
-              ai.log('hesitates to attack you.');
-              ai.emitSound({
-                text: 'Shit!',
-                radius: 5,
-                alertness: 10
-              });
-              return;
-            }
-        }
-
-      // play weapon sound
-      if (weapon.sound != null)
-        ai.emitSound(weapon.sound);
-
-      // weapon skill level (ai + parasite bonus)
-      var roll = __Math.skill({
-        id: weapon.skill,
-        // hardcoded animal attack skill level
-        level: ai.skills.getLevel(weapon.skill),
-      });
-
-      // draw attack effect
-      if (weapon.isRanged)
-        Particle.createShot(
-          weapon.sound.file, game.scene, ai.x, ai.y,
-          game.playerArea, roll);
-
-      // roll skill
-      if (!roll)
-        {
-          ai.log('tries to ' + weapon.verb1 + ' you, but misses.');
-          return;
-        }
-
-      // stun damage
-      // when player has a host, stuns the host
-      // when player is a parasite, just do regular damage
-      if (weapon.type == WEAPON_STUN &&
-          game.player.state == PLR_STATE_HOST)
-        {
-          var mods: Array<_DamageBonus> = [];
-
-          // protective cover
-          if (game.player.state == PLR_STATE_HOST)
-            {
-              var o = game.player.host.organs.get(IMP_PROT_COVER);
-              if (o != null)
-                mods.push({
-                  name: 'protective cover',
-                  val: - Std.int(o.params.armor)
-                });
-            }
-
-          var roll = __Math.damage({
-            name: 'STUN AI->player',
-            min: weapon.minDamage,
-            max: weapon.maxDamage,
-            mods: mods
-          });
-
-          var resist = __Math.opposingAttr(
-            game.player.host.constitution, roll, 'con/stun');
-          if (resist)
-            roll = Std.int(roll / 2);
-          if (game.config.extendedInfo)
-            game.info('stun for ' + roll + ' rounds, -' + (roll * 2) +
-              ' control.');
-          game.player.hostControl -= roll * 2;
-
-          ai.log(weapon.verb2 + ' your host for ' + roll +
-            " rounds. You're losing control.");
-
-          game.player.host.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: roll,
-            isTimer: true
-          });
-
-          game.playerArea.onDamage(0); // on damage event
-        }
-
-      // normal damage
-      else
-        {
-          var mods: Array<_DamageBonus> = [];
-          // all melee weapons have damage bonus
-          if (!weapon.isRanged && weapon.type == WEAPON_BLUNT)
-            mods.push({
-              name: 'melee 0.5xSTR',
-              min: 0,
-              max: Std.int(ai.strength / 2)
-            });
-
-          // protective cover
-          if (game.player.state == PLR_STATE_HOST)
-            {
-              var o = game.player.host.organs.get(IMP_PROT_COVER);
-              if (o != null)
-                mods.push({
-                  name: 'protective cover',
-                  val: - Std.int(o.params.armor)
-                });
-
-              // armor
-              var clothing = game.player.host.inventory.clothing.info;
-              if (clothing.armor.damage != 0)
-                mods.push({
-                  name: clothing.name,
-                  val: - clothing.armor.damage
-                });
-            }
-
-          var damage = __Math.damage({
-            name: 'AI->player',
-            min: weapon.minDamage,
-            max: weapon.maxDamage,
-            mods: mods
-          });
-
-          ai.log(weapon.verb2 + ' ' +
-            (game.player.state == PLR_STATE_HOST ? 'your host' : 'you') +
-            ' for ' + damage + ' damage.');
-
-          game.playerArea.onDamage(damage); // on damage event
-        }
+      // search for target
+      // we cheat a little and follow invisible target
+      // emulating ai memory before alert timer ends
+      if (!ai.seesPosition(target.x, target.y))
+        ai.logicMoveTo(target.x, target.y);
+      // try to attack
+      else CommonLogic.logicAttack(ai, target, false);
     }
 
 // state: host logic

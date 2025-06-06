@@ -1,14 +1,13 @@
 // NPC AI game state (+ visual and ingame state)
 package ai;
 
+import game._ItemInfo._WeaponInfo;
 import entities.AIEntity;
 import _AIState;
 import _AIEffectType;
 import objects.*;
 import game.*;
 import const.*;
-import particles.*;
-import __Math;
 import cult.Cult;
 
 class AI extends AIData
@@ -47,6 +46,8 @@ class AI extends AIData
 
   // various AI timers
   public var timers: _AITimers;
+  // follower - enemies list
+  public var enemies: List<Int>;
 
   // stats
   public var maxOrgans(get, null): Int; // max amount of organs
@@ -83,6 +84,7 @@ class AI extends AIData
         alert: 0,
 //          alertPlayerNotVisible: 0
       };
+      enemies = new List();
       direction = 0;
       parasiteAttached = false;
 
@@ -243,6 +245,11 @@ public function show()
       return true;
     }
 
+// distance from AI to point
+  public inline function distance(xx: Int, yy: Int): Int
+    {
+      return Const.distance(x, y, xx, yy);
+    }
 
 // is this AI near that spot?
   public inline function isNear(xx: Int, yy: Int): Bool
@@ -252,8 +259,8 @@ public function show()
 
 
 // set AI state (plus all vars for this state)
-  public function setState(vstate: _AIState, ?vreason: _AIStateChangeReason,
-      ?msg: String)
+  public function setState(vstate: _AIState,
+      ?vreason: _AIStateChangeReason, ?msg: String)
     {
       if (vreason == null)
         vreason = REASON_NONE;
@@ -271,7 +278,7 @@ public function show()
         }
       game.ui.hud.resetState();
 
-//      trace('' + id + ' reason: ' + vreason + ' state:' + vstate);
+//      trace(id + ' reason: ' + vreason + ' state:' + vstate);
       state = vstate;
       stateTime = 0;
       reason = vreason;
@@ -379,9 +386,33 @@ public function show()
       else setPosition(nx, ny);
     }
 
-// common logic: run away from this x,y
-  public function logicRunAwayFrom(xx: Int, yy: Int)
+// common logic: run away from enemies (including player)
+  public function logicRunAwayFromEnemies()
     {
+      // find rectangle that contains all enemies
+      var x1 = 9999, y1 = 9999, x2 = 0, y2 = 0;
+      for (enemyID in enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          x1 = Std.int(Math.min(x1, enemy.x));
+          y1 = Std.int(Math.min(y1, enemy.y));
+          x2 = Std.int(Math.max(x2, enemy.x));
+          y2 = Std.int(Math.max(y2, enemy.y));
+        }
+      // add player x,y if hostile
+      if (!game.player.vars.invisibilityEnabled &&
+          !isPlayerCultist())
+        {
+          x1 = Std.int(Math.min(x1, game.playerArea.x));
+          y1 = Std.int(Math.min(y1, game.playerArea.y));
+          x2 = Std.int(Math.max(x2, game.playerArea.x));
+          y2 = Std.int(Math.max(y2, game.playerArea.y));
+        }
+
+      // find midpoint of that rectangle
+      var xx = (x1 + x2) / 2;
+      var yy = (y1 + y2) / 2;
+
       // form a temp list of dirs that have empty tiles and are as far away
       // from threat as possible
       var tmp = [];
@@ -538,7 +569,7 @@ public function show()
         {
           if (parasiteAttached)
             logicTearParasiteAway();
-          else logicRunAwayFrom(game.playerArea.x, game.playerArea.y);
+          else logicRunAwayFromEnemies();
         }
 
       // preserved - do nothing
@@ -558,8 +589,12 @@ public function show()
       else if (state == AI_STATE_POST_DETACH_MEMORIES &&
           stateTime >= 2)
         setState(AI_STATE_IDLE);
+      
+      // cultists from player cult have follower logic
+      else if (isPlayerCultist())
+        FollowerLogic.turn(this);
 
-      // default AI logic
+      // default AI logiccultID
       else DefaultLogic.turn(this);
 
       updateEntity(); // clamp and change entity icons
@@ -847,11 +882,160 @@ public function show()
       return (isTeamMember || type == 'blackops');
     }
 
+// is this ai a player host?
+  public inline function isPlayerHost(): Bool
+    {
+      return (game.player.state == PLR_STATE_HOST &&
+        this == game.player.host);
+    }
+
 // set this AI as a cultist
   public function setCult(cult: Cult)
     {
       isCultist = true;
       cultID = cult.id;
+    }
+
+// is this ai in player cult?
+  public inline function isPlayerCultist(): Bool
+    {
+      return (isCultist && cultID == game.cults[0].id);
+    }
+
+// add ai to enemies list
+  public function addEnemy(ai: AI)
+    {
+      if (Lambda.has(enemies, ai.id))
+        return;
+      enemies.add(ai.id);
+    }
+
+// returns true if ai sees any enemy from the list or player (if hostile)
+// NOTE: this is for alert state vision
+  public function seesAnyEnemy(): Bool
+    {
+      // check player first if hostile
+      if (!isPlayerCultist())
+        {
+          if (!game.player.vars.invisibilityEnabled &&
+              seesPosition(game.playerArea.x, game.playerArea.y))
+            return true;
+        }
+
+      // check enemies list
+      if (enemies.length == 0)
+        return false;
+      for (enemyID in enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          if (seesPosition(enemy.x, enemy.y))
+            return true;
+        }
+      return false;
+    }
+
+// returns the nearest enemy (can return player)
+// NOTE: we do not check for visibility here
+  public function findNearestEnemy(): AITarget
+    {
+//      trace(id + ' findNearestEnemy()');
+      // find visible enemies and get closest one
+      var mindst = 1000, closestID = -1;
+      for (enemyID in enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          var dst = distance(enemy.x, enemy.y);
+          if (dst < mindst)
+            {
+              mindst = dst;
+              closestID = enemyID;
+            }
+        }
+
+      // check for parasite
+      if (!game.player.vars.invisibilityEnabled &&
+          !isPlayerCultist())
+        {
+//          trace(id + ' findNearestEnemy(): check for player');
+          
+          // no host or attached
+          if (game.player.state == PLR_STATE_HOST)
+            {
+              var dst = distance(game.playerArea.x, game.playerArea.y);
+              if (dst < mindst)
+                return {
+                  game: game,
+                  ai: game.player.host,
+                  type: TARGET_AI,
+                }
+            }
+          else
+            {
+              var dst = distance(game.playerArea.x, game.playerArea.y);
+              if (dst < mindst)
+                return {
+                  game: game,
+                  ai: null,
+                  type: TARGET_PLAYER,
+                }
+            }
+        }
+
+      if (closestID == -1)
+        return null;
+      var targetAI = game.area.getAIByID(closestID);
+      return {
+        game: game,
+        ai: targetAI,
+        type: TARGET_AI,
+      }
+    }
+
+// this ai was attacked by (player, ai)
+  public function attacked(attacker: { who: String, ai: AI, weapon: _WeaponInfo })
+    {
+      // propagate shooting/melee event
+      game.managerArea.onAttack(x, y,
+        attacker.weapon.isRanged);
+      // hosts are braindead in that regard
+      if (!isPlayerHost())
+        {
+          // alert this AI (fear/aggro)
+          setState(AI_STATE_ALERT);
+          onAttack(); // attack event
+        }
+
+      // update enemies lists
+//      trace('AI ' + id + ' was attacked by ' + attacker.ai.id);
+//      trace(attacker.ai.id + ' attacker is player cultist:' + attacker.ai.isPlayerCultist());
+      for (tmp in game.area.getAllAI())
+        switch (attacker.who)
+          {
+            // player attacks AI
+            case 'player':
+              // add to enemies lists of all followers
+              if (this != tmp && tmp.isPlayerCultist())
+                tmp.addEnemy(this);
+            // AI attacks AI
+            case 'ai':
+//              trace(tmp.id + ' tmp is player cultist:' + tmp.isPlayerCultist());
+              // AI attacks player cultist
+              // add to enemies lists of all followers
+              if (!attacker.ai.isPlayerCultist() &&
+                  attacker.ai != tmp && tmp.isHuman &&
+                  tmp.isPlayerCultist())
+                {
+//                  trace('tmp added enemy: ' + attacker.ai.id);
+                  tmp.addEnemy(attacker.ai);
+                }
+
+              // player cultist attacks other AI
+              // add to enemies lists of non-followers
+              else if (attacker.ai.isPlayerCultist() &&
+                  attacker.ai != tmp && tmp.isHuman &&
+                  !tmp.isPlayerCultist())
+                tmp.addEnemy(attacker.ai);
+          }
     }
 
 // event hook: on state change
@@ -909,7 +1093,7 @@ public function show()
           s = StringTools.replace(s, ' him', ' her');
           s = StringTools.replace(s, ' his', ' her');
         }
-      game.log(TheName() + ' ' + s, col);
+      game.log((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s, col);
     }
 
   public function toString()

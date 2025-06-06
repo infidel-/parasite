@@ -96,9 +96,11 @@ class HumanAI extends AI
     {
       // try to call police on next turn if not struggling with parasite
       // if berserk, just skip that
+      // same with if player cultist
       if (state == AI_STATE_ALERT &&
           !parasiteAttached &&
-          !effects.has(EFFECT_BERSERK))
+          !effects.has(EFFECT_BERSERK) &&
+          !isPlayerCultist())
         {
           // cannot call police without a phone
           if (!inventory.has('smartphone') &&

@@ -1,5 +1,4 @@
 // available player states
-
 enum _PlayerState
 {
   PLR_STATE_PARASITE;

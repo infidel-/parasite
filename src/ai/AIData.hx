@@ -2,6 +2,8 @@
 // This separates everything that needs to be stored for proper respawn of this specific AI
 package ai;
 
+import const.*;
+import game._ItemInfo._WeaponInfo;
 import game.*;
 
 @:rtti
@@ -216,6 +218,22 @@ class AIData extends _SaveObject
 
       // clamp new health if decreased
       health = health;
+    }
+  
+// get current weapon info (returns consts for animals/etc)
+  public function getCurrentWeapon(): _WeaponInfo
+    {
+      var item = inventory.getFirstWeapon();
+      var info = null;
+      // animal attack
+      if (!isHuman)
+        info = ItemsConst.animal;
+      // fists
+      else if (item == null)
+        info = ItemsConst.fists;
+      // item
+      else info = item.info;
+      return info.weapon;
     }
 
 // get name depending on whether its known or not

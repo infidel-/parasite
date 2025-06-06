@@ -2,7 +2,7 @@
 
 package game;
 
-import ai.AI;
+import ai.*;
 import entities.PlayerEntity;
 import objects.AreaObject;
 import const.*;
@@ -464,7 +464,7 @@ class PlayerArea extends _SaveObject
 
 
 // get current player weapon
-  public function getWeapon()
+  public function getCurrentWeapon()
     {
       // get current weapon
       var item = null;
@@ -516,116 +516,13 @@ class PlayerArea extends _SaveObject
       if (!game.area.isVisible(x, y, ai.x, ai.y))
         return;
 
-      // get current weapon
-      var weapon = getWeapon();
-
-      // check for distance on melee
-      if (!weapon.isRanged && !ai.isNear(x, y))
-        return;
-
-      // propagate shooting/melee event
-      game.managerArea.onAttack(x, y, weapon.isRanged);
-
-      // aggro this AI
-      ai.setState(AI_STATE_ALERT);
-
-      ai.onAttack(); // attack event
-
-      // weapon skill level (ai + parasite bonus)
-      var roll = __Math.skill({
-        id: weapon.skill,
-        level: player.host.skills.getLevel(weapon.skill),
-        mods: [{
-          name: '0.5x parasite',
-          val: 0.5 * player.skills.getLevel(weapon.skill)
-        }]
-      });
-
-      // play weapon sound
-      if (weapon.sound != null)
-        player.host.emitSound(weapon.sound);
-
-      // +1 from passive when not assimilated, so it becomes 3
-      player.host.energy -= 2;
-//        (player.host.hasTrait(TRAIT_ASSIMILATED) ? 2 : 2);
-
-      // draw attack effect
-      if (weapon.isRanged)
-        Particle.createShot(weapon.sound.file,
-          game.scene, x, y, ai, roll);
-
-      // roll skill
-      if (!roll)
-        {
-          log('Your host tries to ' + weapon.verb1 + ' ' +
-            ai.getName() + ', but misses.');
-
-          // set alerted state
-          if (ai.state == AI_STATE_IDLE)
-            ai.setState(AI_STATE_ALERT, REASON_DAMAGE);
-
-          actionPost(); // post-action call
-
-          return;
-        }
-
-      // stun damage
-      if (weapon.type == WEAPON_STUN)
-        {
-          var roll = __Math.damage({
-            name: 'STUN player->AI',
-            min: weapon.minDamage,
-            max: weapon.maxDamage,
-          });
-          var resist = __Math.opposingAttr(ai.constitution, roll,
-            'con/stun');
-          if (resist)
-            roll = Std.int(roll / 2);
-          if (game.config.extendedInfo)
-            game.info('stun for ' + roll + ' rounds');
-
-          log('Your host ' + weapon.verb2 + ' ' + ai.getName() +
-            ' for ' + roll + ' rounds.');
-
-          ai.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: roll,
-            isTimer: true
-          });
-          ai.onDamage(0); // damage event (for alert)
-        }
-
-      // normal damage
-      else
-        {
-          var mods: Array<_DamageBonus> = [];
-          // all melee weapons have damage bonus
-          if (!weapon.isRanged)
-            mods.push({
-              name: 'melee 0.5xSTR',
-              min: 0,
-              max: Std.int(player.host.strength / 2)
-            });
-
-          // armor
-          var clothing = ai.inventory.clothing.info;
-          if (clothing.armor.damage != 0)
-            mods.push({
-              name: clothing.name,
-              val: - clothing.armor.damage
-            });
-          var damage = __Math.damage({
-            name: 'player->AI',
-            min: weapon.minDamage,
-            max: weapon.maxDamage,
-            mods: mods
-          });
-
-          log('Your host ' + weapon.verb2 + ' ' + ai.getName() +
-            ' for ' + damage + ' damage.');
-
-          ai.onDamage(damage); // damage event
-        }
+      // use common attack routine
+      var target: AITarget = {
+        game: game,
+        type: TARGET_AI,
+        ai: ai,
+      };
+      CommonLogic.logicAttack(player.host, target, true);
 
       actionPost(); // post-action call
     }

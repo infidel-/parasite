@@ -1015,6 +1015,10 @@ class AreaGame extends _SaveObject
           var cult = game.getCultByID(ai.cultID);
           cult.onRemoveAI(ai);
         }
+      // remove from all enemies lists
+      for (tmp in _ai)
+        if (Lambda.has(tmp.enemies, ai.id))
+          tmp.enemies.remove(ai.id);
     }
 
 
