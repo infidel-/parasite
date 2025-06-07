@@ -102,7 +102,7 @@ class AI extends AIData
 // called after load or creation
   public function initPost(onLoad: Bool)
     {
-      sounds = SoundConst.getSounds(soundsID);
+      sounds = SoundConst.getSounds(isCultist ? 'cultist' : soundsID);
       if (onLoad)
         {
           createEntity();
@@ -894,6 +894,7 @@ public function show()
     {
       isCultist = true;
       cultID = cult.id;
+      sounds = SoundConst.getSounds('cultist');
     }
 
 // is this ai in player cult?

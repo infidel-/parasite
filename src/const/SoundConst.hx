@@ -244,6 +244,40 @@ class SoundConst
     'CHAT_FAIL' => humanChatFail,
   ];
 
+  // cultist sounds
+  public static var cultist: Map<String, Array<AISound>> = [
+    '' + REASON_DAMAGE => [
+      {
+        text: 'More!',
+        file: 'male-ouch',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+      {
+        text: 'YES!',
+        file: 'male-grunt',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+    ],
+    '' + AI_STATE_IDLE => humanIdle,
+    '' + AI_STATE_ALERT => [
+      {
+        file: 'male-scream',
+        text: 'DIE!',
+        radius: 7,
+        alertness: 15,
+        params: null
+      },
+    ],
+    '' + AI_STATE_HOST => humanHost,
+    '' + AI_STATE_DEAD => humanDie,
+    '' + EFFECT_CRYING => humanCrying,
+    'CHAT_FAIL' => humanChatFail,
+  ];
+
   // police officer sounds
   public static var police: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => humanDamage,
