@@ -1,6 +1,7 @@
 // cult structure
 package cult;
 
+import game.AreaEvent;
 import game.Game;
 import ai.AI;
 import ai.AIData;
@@ -11,7 +12,9 @@ class Cult
   public var id: Int;
   public static var _maxID: Int = 0; // current max ID
   public var state: _CultState;
-  // NOTE: cult members will exist both in world and in this list
+  // NOTE: cult members exist both in world and in this list
+  // we updateData() here on despawn
+  // and we use updateData() on spawn, too
   public var members: Array<AIData>;
   public var leader(get, null): AIData;
   public var isPlayer: Bool;
@@ -72,7 +75,7 @@ class Cult
           members.remove(aidata);
         }
 
-      else aidata.updateData(ai);
+      else aidata.updateData(ai, 'on despawn');
     }
 
 // leader is dead - destroy cult
@@ -102,8 +105,11 @@ class Cult
       switch (action.id)
         {
           case 'callHelp':
-            callHelpAction(action);
+            var ret = callHelpAction(action);
+            if (!ret)
+              return;
         }
+      game.playerArea.actionPost(); // post-action call
     }
 
 // returns true if player can call for help
@@ -114,11 +120,95 @@ class Cult
       return true;
     }
 
-// call for help
-  function callHelpAction(action: _PlayerAction)
+// get a list of free cultists
+  function getFreeCultists(): Array<AIData>
     {
-      trace('call!');
-      
+      // get a list of free cultists
+      var free = [];
+      for (ai in members)
+        {
+          // cultist already in this area
+          var tmp = game.area.getAIByID(ai.id);
+          if (tmp != null)
+            continue;
+          free.push(ai);
+        }
+      return free;
+    }
+
+// call for help
+  function callHelpAction(action: _PlayerAction): Bool
+    {
+      // find what cultists are available
+      var free = getFreeCultists();
+      if (free.length == 0)
+        {
+          game.actionFailed('There are no more followers available.');
+          return false;
+        }
+      game.log('You send out a call for help.');
+
+      // roll a number
+      var num = Const.roll(1, 4);
+      if (num > free.length)
+        num = free.length;
+      while (num > 0)
+        {
+          // generate an event
+          num--;
+          game.managerArea.add(AREAEVENT_ARRIVE_CULTIST,
+            game.playerArea.x, game.playerArea.y, 5);
+        }
+      return true;
+    }
+ 
+// area manager: cultist arrives
+  public function onArriveCultist(e: AreaEvent)
+    {
+      // find what cultists are still available
+      var free = getFreeCultists();
+      if (free.length == 0)
+        return;
+
+      // pick a cultist
+      var idx = Std.random(free.length);
+      var aidata = free[idx];
+      game.debug(aidata.TheName() + ' has arrived.');
+//          log('calls for help: ' + ai.theName());
+      game.scene.sounds.play('ai-arrive-security', {
+        x: e.x,
+        y: e.y,
+        canDelay: true,
+        always: false,
+      });
+
+      // find location
+      var loc = game.area.findLocation({
+        near: { x: e.x, y: e.y },
+        radius: 10,
+        isUnseen: true
+      });
+      if (loc == null)
+        {
+          loc = game.area.findEmptyLocationNear(e.x, e.y, 5);
+          if (loc == null)
+            {
+              Const.todo('Could not find free spot for spawn (cultist help)!');
+              return;
+            }
+        }
+
+      // spawn ai and update it from cultist data
+      var ai = game.area.spawnAI(aidata.type, loc.x, loc.y);
+      ai.updateData(aidata, 'on spawn');
+
+      // arrives already alerted
+      ai.timers.alert = 10;
+      ai.state = AI_STATE_ALERT;
+
+      // set roam target
+      ai.roamTargetX = e.x;
+      ai.roamTargetY = e.y;
     }
 
 // cult turn

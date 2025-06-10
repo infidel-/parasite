@@ -251,8 +251,7 @@ class PlayerArea extends _SaveObject
           player.host.effects.has(EFFECT_PARALYSIS) &&
           (action.type == ACTION_OBJECT || action.id == 'leaveArea'))
         {
-          log('Your host is paralyzed.', COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed('Your host is paralyzed.');
           game.updateHUD();
           return;
         }
@@ -407,8 +406,7 @@ class PlayerArea extends _SaveObject
       // cannot move while in paralysis
       if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
         {
-          log('Your host is paralyzed.', COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed('Your host is paralyzed.');
           return false;
         }
 
@@ -508,7 +506,7 @@ class PlayerArea extends _SaveObject
       // cannot attack when paralyzed
       if (player.host.effects.has(EFFECT_PARALYSIS))
         {
-          log('Your host is paralyzed.', COLOR_HINT);
+          game.actionFailed('Your host is paralyzed.');
           return;
         }
 
@@ -535,8 +533,7 @@ class PlayerArea extends _SaveObject
       if (ai.inventory.clothing.info.armor != null &&
           !ai.inventory.clothing.info.armor.canAttach)
         {
-          game.log('You cannot attach to this host due to its clothing.',
-            COLOR_HINT);
+          game.actionFailed('You cannot attach to this host due to its clothing.');
           return false;
         }
 
@@ -700,8 +697,7 @@ class PlayerArea extends _SaveObject
             {
               if (game.group.team.timer > 0)
                 {
-                  log('You try to leave but the exit is blocked! You can leave the area in ' + game.group.team.timer + ' turns.',
-                    COLOR_HINT);
+                  game.actionFailed('You try to leave but the exit is blocked! You can leave the area in ' + game.group.team.timer + ' turns.');
                   return false;
                 }
             }
@@ -719,8 +715,7 @@ class PlayerArea extends _SaveObject
                   }
               if (!ok)
                 {
-                  log('You cannot leave the habitat with outsiders in it!',
-                    COLOR_HINT);
+                  game.actionFailed('You cannot leave the habitat with outsiders in it!');
                   return false;
                 }
             }
@@ -728,8 +723,7 @@ class PlayerArea extends _SaveObject
           // no leaving with any construction molds
           if (state == PLR_STATE_HOST && player.host.organs.hasMold())
             {
-              log('You cannot leave the habitat with a mold.',
-                COLOR_HINT);
+              game.actionFailed('You cannot leave the habitat with a mold.');
               return false;
             }
         }
@@ -737,7 +731,7 @@ class PlayerArea extends _SaveObject
       if (!game.goals.leaveAreaPre())
         return false;
 
-      log("You leave the area.");
+      log('You leave the area.');
       path = null; // clear path
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
@@ -888,7 +882,7 @@ class PlayerArea extends _SaveObject
     {
       if (game.area.isHabitat)
         {
-          log('You cannot do this in a habitat.', COLOR_HINT);
+          game.actionFailed('You cannot do this in a habitat.');
           return false;
         }
       var msg = 'You release the host triggering the pseudocampus.';

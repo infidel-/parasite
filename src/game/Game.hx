@@ -532,6 +532,13 @@ class Game extends _SaveObject
       ui.hud.updateLog();
     }
 
+// wrapper for logging failed action with sound/color
+  public inline function actionFailed(msg: String)
+    {
+      log(msg, COLOR_HINT);
+      scene.sounds.play('action-fail');
+    }
+
 // path movement/continuous actions
 // called from timer
   public function update()

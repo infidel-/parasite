@@ -89,8 +89,7 @@ class Ovum extends RegionObject
       var maxxp = EvolutionConst.ovumXP[EvolutionConst.ovumXP.length - 1];
       if (ovum.xp > maxxp)
         {
-          game.log('The ovum is fully nurtured.', COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed('The ovum is fully nurtured.');
           return false;
         }
       ovum.xp += pts;

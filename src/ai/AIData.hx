@@ -158,9 +158,9 @@ class AIData extends _SaveObject
     }
 
 // update data in this record from ai
-  public function updateData(ai: AI)
+  public function updateData(ai: AIData, src: String)
     {
-      game.debug('ai data ' + ai.id + ' updated');
+      game.debug('ai data ' + ai.id + ' updated ' + src);
       for (f in Type.getInstanceFields(AIData))
         {
           var val = Reflect.field(ai, f);

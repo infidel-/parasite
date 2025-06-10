@@ -42,7 +42,8 @@ class AreaManager extends _SaveObject
 
 // add event originating from x,y
 // NOTE: params must be serializable!
-  public inline function add(type: _AreaManagerEventType, x: Int, y: Int,
+  public inline function add(
+      type: _AreaManagerEventType, x: Int, y: Int,
       turns: Int, ?params: _SaveObject = null)
     {
       var e: AreaEvent = {
@@ -156,38 +157,36 @@ class AreaManager extends _SaveObject
 //      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
 #end
 
-          // someone called the law
-          if (e.type == AREAEVENT_CALL_LAW)
-            onCallLaw(e);
-
-          // law enforcement in area is alerted
-          else if (e.type == AREAEVENT_ALERT_LAW)
-            onAlertLaw(e);
-
-          // law arrives
-          else if (e.type == AREAEVENT_ARRIVE_LAW)
-            onArriveLaw(e);
-
-          // police/security/army called for backup
-          else if (e.type == AREAEVENT_CALL_BACKUP)
-            onCallBackup(e);
-
-          // backup arrives
-          else if (e.type == AREAEVENT_ARRIVE_BACKUP)
-            onArriveBackup(e);
-
-          // team called for backup
-          else if (e.type == AREAEVENT_CALL_TEAM_BACKUP)
-            onCallTeamBackup(e);
-
-          // team backup arrives
-          else if (e.type == AREAEVENT_ARRIVE_TEAM_BACKUP)
-            onArriveTeamBackup(e);
-
-          // object decay
-          else if (e.type == AREAEVENT_OBJECT_DECAY)
-            onObjectDecay(o);
-
+          switch (e.type)
+            {
+              // someone called the law
+              case AREAEVENT_CALL_LAW:
+                onCallLaw(e);
+              // law enforcement in area is alerted
+              case AREAEVENT_ALERT_LAW:
+                onAlertLaw(e);
+              // law arrives
+              case AREAEVENT_ARRIVE_LAW:
+                onArriveLaw(e);
+              // police/security/army called for backup
+              case AREAEVENT_CALL_BACKUP:
+                onCallBackup(e);
+              // backup arrives
+              case AREAEVENT_ARRIVE_BACKUP:
+                onArriveBackup(e);
+              // team called for backup
+              case AREAEVENT_CALL_TEAM_BACKUP:
+                onCallTeamBackup(e);
+              // team backup arrives
+              case AREAEVENT_ARRIVE_TEAM_BACKUP:
+                onArriveTeamBackup(e);
+              // object decay
+              case AREAEVENT_OBJECT_DECAY:
+                onObjectDecay(o);
+              // cultist help arrives
+              case AREAEVENT_ARRIVE_CULTIST:
+                game.cults[0].onArriveCultist(e);
+            }
           _list.remove(e);
         }
     }
@@ -509,7 +508,7 @@ class AreaManager extends _SaveObject
 
       for (i in 0...2)
         {
-          var loc = game.area.findLocation({
+          var loc = area.findLocation({
             near: { x: e.x, y: e.y },
             radius: 10,
             isUnseen: true

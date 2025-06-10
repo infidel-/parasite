@@ -1009,6 +1009,7 @@ class AreaGame extends _SaveObject
         ai.npc.ai = null;
       ai.entity = null;
       _ai.remove(ai);
+      
       // cultists need to update the ai data in members
       if (ai.isCultist)
         {
