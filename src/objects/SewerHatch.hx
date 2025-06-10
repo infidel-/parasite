@@ -51,7 +51,7 @@ class SewerHatch extends AreaObject
       if (game.player.state == PLR_STATE_HOST &&
           !game.player.host.isHuman)
         {
-          game.log("This host cannot open the sewer hatch.", COLOR_HINT);
+          game.actionFailed("This host cannot open the sewer hatch.");
           return false;
         }
       // scenario-specific checks

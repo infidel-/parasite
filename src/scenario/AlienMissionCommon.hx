@@ -136,8 +136,7 @@ class AlienMissionCommon
         return true;
       if (missionState.alertRaised)
         {
-          game.log('You cannot leave this area without completing the mission.');
-          game.scene.sounds.play('action-fail');
+          game.actionFailed('You cannot leave this area without completing the mission.');
           return false;
         }
       return true;

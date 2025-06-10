@@ -96,8 +96,7 @@ class GoalsAlienCrashLanding
           state.part3Installed = true;
         else 
           {
-            player.log('This item does not fit into this slot.');
-            game.scene.sounds.play('action-fail');
+            game.actionFailed('This item does not fit into this slot.');
             return false;
           }
         player.log('You successfully install the ' +
@@ -134,8 +133,7 @@ class GoalsAlienCrashLanding
             !state.part2Installed ||
             !state.part3Installed)
           {
-            player.log('The startup sequence fails to initialize. Not all of the necessary ship parts are installed.');
-            game.scene.sounds.play('action-fail');
+            game.actionFailed('The startup sequence fails to initialize. Not all of the necessary ship parts are installed.');
             return;
           }
         game.goals.complete(SCENARIO_ALIEN_STEAL_SHIP);
@@ -154,8 +152,7 @@ class GoalsAlienCrashLanding
       func: function (game, player, id) {
         if (game.goals.completed(SCENARIO_ALIEN_ENTER_SHIP))
           {
-            game.log('You need to complete the mission first.');
-            game.scene.sounds.play('action-fail');
+            game.actionFailed('You need to complete the mission first.');
             return;
           }
         game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
@@ -282,8 +279,7 @@ class GoalsAlienCrashLanding
           return true;
         if (state.alertRaised)
           {
-            game.log('You cannot leave this area without your ship.');
-            game.scene.sounds.play('action-fail');
+            game.actionFailed('You cannot leave this area without your ship.');
             return false;
           }
         return true;

@@ -572,7 +572,7 @@ class Game extends _SaveObject
         }
       if (ui.hud.state == HUD_CHAT)
         {
-          log('You cannot save during a conversation.', COLOR_HINT);
+          actionFailed('You cannot save during a conversation.');
           return;
         }
       if (player.saveDifficulty == UNSET)
@@ -586,7 +586,7 @@ class Game extends _SaveObject
         }
       if (player.vars.savesLeft < 1)
         {
-          log('You cannot save anymore in this game.', COLOR_HINT);
+          actionFailed('You cannot save anymore in this game.');
           return;
         }
       player.vars.savesLeft--;

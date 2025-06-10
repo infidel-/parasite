@@ -47,7 +47,7 @@ class FloorDrain extends AreaObject
     {
       if (game.player.state != PLR_STATE_PARASITE)
         {
-          game.log("You can only enter the drain without a host.", COLOR_HINT);
+          game.actionFailed("You can only enter the drain without a host.");
           return false;
         }
       // scenario-specific checks

@@ -62,7 +62,7 @@ class Preservator extends HabitatObject
         {
           if (x == game.playerArea.x && y == game.playerArea.y)
             {
-              game.log('Move to any free side of the preservator first.', COLOR_HINT);
+              game.actionFailed('Move to any free side of the preservator first.');
               return true;
             }
           // count preserved hosts around
@@ -76,7 +76,7 @@ class Preservator extends HabitatObject
           var params = getParams();
           if (cnt >= params.hostAmount)
             {
-              game.log('This preservator is full.', COLOR_HINT);
+              game.actionFailed('This preservator is full.');
               return true;
             }
 

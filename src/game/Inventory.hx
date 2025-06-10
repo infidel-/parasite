@@ -274,10 +274,9 @@ class Inventory extends _SaveObject
       if (item.id == 'book' && !game.area.isHabitat)
         {
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
-            game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
-          else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
+            itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
+          else itemFailed("This action requires intense concentration and time. You cannot do it yet.");
           game.profile.addPediaArticle('msgConcentration');
-          game.scene.sounds.play('item-fail');
           return;
         }
 
@@ -329,8 +328,7 @@ class Inventory extends _SaveObject
       var skillLevel = game.player.skills.getLevel(SKILL_COMPUTER);
       if (skillLevel == 0)
         {
-          game.log('You require the computer use skill to do that.', COLOR_HINT);
-          game.scene.sounds.play('item-fail');
+          itemFailed('You require the computer use skill to do that.');
           return false;
         }
 
@@ -338,10 +336,9 @@ class Inventory extends _SaveObject
       if (!game.area.isHabitat)
         {
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
-            game.log("This action requires intense concentration and time. You can only do it in a habitat.", COLOR_HINT);
-          else game.log("This action requires intense concentration and time. You cannot do it yet.", COLOR_HINT);
+            itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
+          else itemFailed("This action requires intense concentration and time. You cannot do it yet.");
           game.profile.addPediaArticle('msgConcentration');
-          game.scene.sounds.play('item-fail');
           return false;
         }
 
@@ -361,8 +358,7 @@ class Inventory extends _SaveObject
 
       if (allKnown)
         {
-          game.log('You have already researched all known persons.', COLOR_HINT);
-          game.scene.sounds.play('item-fail');
+          itemFailed('You have already researched all known persons.');
           return false;
         }
 
@@ -377,8 +373,7 @@ class Inventory extends _SaveObject
         });
       if (!ret)
         {
-          game.log('You have failed to use the human device properly. You still gain some insight.');
-          game.scene.sounds.play('item-fail');
+          itemFailed('You have failed to use the human device properly. You still gain some insight.');
           game.player.skills.increase(SKILL_COMPUTER, 1);
           return true;
         }
@@ -446,6 +441,13 @@ class Inventory extends _SaveObject
     {
       game.log('You absorb the regional map into the engram.');
       game.player.vars.mapAbsorbed = true;
+    }
+
+// item failed log and sound
+  function itemFailed(msg: String)
+    {
+      game.log(msg);
+      game.scene.sounds.play('item-fail');
     }
 
 // list iterator

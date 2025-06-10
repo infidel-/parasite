@@ -56,8 +56,7 @@ class SmilerAI extends HumanAI
     {
       if (chat.consent < 100)
         {
-          game.log('You are dazed by the potency of the smile and pull back.');
-          game.scene.sounds.play('action-fail');
+          game.actionFailed('You are dazed by the potency of the smile and pull back.');
           return false;
         }
       return true;

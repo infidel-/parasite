@@ -419,7 +419,7 @@ class UI
       switch (hud.state)
         {
           case HUD_CHAT, HUD_CONVERSE_MENU:
-            game.log('You cannot move during a conversation.', COLOR_HINT);
+            game.actionFailed('You cannot move during a conversation.');
           default:
         }
       return true;

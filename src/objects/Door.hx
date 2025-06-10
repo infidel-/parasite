@@ -80,10 +80,7 @@ class Door extends AreaObject
           if (isLocked)
             {
               if (isPlayer)
-                {
-                  game.log('The door is locked.', COLOR_HINT);
-                  game.scene.sounds.play('action-fail');
-                }
+                game.actionFailed('The door is locked.');
               return 0;
             }
         }

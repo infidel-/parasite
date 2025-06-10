@@ -374,8 +374,7 @@ class Organs extends _SaveObject
       // no ai found
       if (ai == null)
         {
-          game.log("Target AI with mouse first.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("Target AI with mouse first.");
           return false;
         }
 
@@ -385,8 +384,7 @@ class Organs extends _SaveObject
       var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
-          game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("Maximum range of " + params.range + " exceeded.");
           return false;
         }
 
@@ -416,8 +414,7 @@ class Organs extends _SaveObject
       // no ai found
       if (ai == null)
         {
-          game.log("Target AI with mouse first.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("Target AI with mouse first.");
           return false;
         }
 
@@ -427,8 +424,7 @@ class Organs extends _SaveObject
       var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
-          game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("Maximum range of " + params.range + " exceeded.");
           return false;
         }
 
@@ -463,8 +459,7 @@ class Organs extends _SaveObject
       // no ai found
       if (ai == null)
         {
-          game.log("Target AI with mouse first.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("Target AI with mouse first.");
           return false;
         }
 
@@ -474,8 +469,7 @@ class Organs extends _SaveObject
       var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
-          game.log("Maximum range of " + params.range + " exceeded.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("Maximum range of " + params.range + " exceeded.");
           return false;
         }
 

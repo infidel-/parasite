@@ -207,16 +207,14 @@ class PlayerRegion extends _SaveObject
       if (player.state == PLR_STATE_PARASITE &&
           currentArea.info.type == 'corp')
         {
-          game.log("You cannot enter this area without a host.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("You cannot enter this area without a host.");
           return false;
         }
 
       // cannot enter area with high alertness
       if (currentArea.alertness >= 75)
         {
-          game.log("This area is too dangerous at the moment.", COLOR_HINT);
-          game.scene.sounds.play('action-fail');
+          game.actionFailed("This area is too dangerous at the moment.");
           return false;
         }
 
@@ -280,8 +278,7 @@ class PlayerRegion extends _SaveObject
         {
           if (player.energy < player.vars.regionEnergyPerTurn)
             {
-              game.log("Not enough energy to move in region mode.",
-                COLOR_HINT);
+              game.actionFailed("Not enough energy to move in region mode.");
               return false;
             }
         }

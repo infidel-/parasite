@@ -818,7 +818,7 @@ class EvolutionConst
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action works only in a habitat.', COLOR_HINT);
+                game.actionFailed('This action only works in a habitat.');
                 return false;
               }
             return game.area.habitat.putObject(IMP_BIOMINERAL);
@@ -898,7 +898,7 @@ class EvolutionConst
             // only in a habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action works only in a habitat.', COLOR_HINT);
+                game.actionFailed('This action only works in a habitat.');
                 return false;
               }
             return game.area.habitat.putObject(IMP_ASSIMILATION);
@@ -939,7 +939,7 @@ class EvolutionConst
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action works only in a habitat.', COLOR_HINT);
+                game.actionFailed('This action only works in a habitat.');
                 return false;
               }
             return game.area.habitat.putObject(IMP_WATCHER);
@@ -1000,7 +1000,7 @@ class EvolutionConst
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.log('This action works only in a habitat.', COLOR_HINT);
+                game.actionFailed('This action only works in a habitat.');
                 return false;
               }
             return game.area.habitat.putObject(IMP_PRESERVATOR);

@@ -438,7 +438,7 @@ class Body extends UIWindow
     {
       if (actionPrefix == null)
         {
-          game.log('No prefix selected.', COLOR_HINT);
+          game.actionFailed('No prefix selected.');
         }
       else if (actionPrefix == 'inventory')
         {

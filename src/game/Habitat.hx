@@ -59,15 +59,15 @@ class Habitat extends _SaveObject
       // check for free space
       if (game.area.hasObjectAt(player.host.x, player.host.y))
         {
-          game.log('Not enough free space.', COLOR_HINT);
+          game.actionFailed('Not enough free space.');
           return false;
         }
 
       // check for energy
       if (id != IMP_BIOMINERAL && energyUsed >= energy)
         {
-          game.log('Not enough energy in habitat (' +
-            energyUsed + '/' + energy + ').', COLOR_HINT);
+          game.actionFailed('Not enough energy in habitat (' +
+            energyUsed + '/' + energy + ').');
           return false;
         }
 

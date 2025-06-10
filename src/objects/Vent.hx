@@ -47,7 +47,7 @@ class Vent extends AreaObject
     {
       if (game.player.state != PLR_STATE_PARASITE)
         {
-          game.log("You can only enter the ventilation without a host.", COLOR_HINT);
+          game.actionFailed("You can only enter the ventilation without a host.");
           return false;
         }
 
@@ -68,7 +68,7 @@ class Vent extends AreaObject
         y + Const.dir4y[idxto]);
       if (!ret)
         {
-          game.log("There is something blocking the exit on the other side.", COLOR_HINT);
+          game.actionFailed("There is something blocking the exit on the other side.");
           return false;
         }
       game.log("You quietly slither through the ventilation emerging outside after some time.");

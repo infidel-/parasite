@@ -779,8 +779,7 @@ class PlayerArea extends _SaveObject
       // animals do not have any useful memories
       if (!player.host.isHuman)
         {
-          log('This host is not intelligent enough.');
-          game.scene.sounds.play('action-fail');
+          game.actionFailed('This host is not intelligent enough.');
           return;
         }
 
