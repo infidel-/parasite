@@ -243,3 +243,12 @@
   src: url(./fonts/Zebulon.ttf) format('truetype');
 }
 
+@font-face {
+  font-family: 'FontdinerSwanky';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/FontdinerSwanky.ttf) format('truetype');
+}
+

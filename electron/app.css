@@ -91,6 +91,13 @@ hr {
   font-size: var(--text-font-size);
 }
 
+.cult {
+  font-family: FontdinerSwanky;
+  font-size: 125%;
+  color: #ef84ef;
+  -webkit-text-stroke: 0.03em #2f022fd9;
+}
+
 #canvas {
   top: 0px;
   right: 0px;

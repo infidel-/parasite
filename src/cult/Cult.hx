@@ -220,7 +220,7 @@ class Cult
   public function log(text: String)
     {
       if (isPlayer)
-        game.log(name + ' ' + text + '.');
+        game.log('<span class=cult>' + name + '</span> ' + text + '.');
     }
 
 // max cult size
