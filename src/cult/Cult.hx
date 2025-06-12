@@ -199,8 +199,9 @@ class Cult
         }
 
       // spawn ai and update it from cultist data
-      var ai = game.area.spawnAI(aidata.type, loc.x, loc.y);
+      var ai = game.area.spawnAI(aidata.type, loc.x, loc.y, false);
       ai.updateData(aidata, 'on spawn');
+      game.area.addAI(ai);
 
       // arrives already alerted
       ai.timers.alert = 10;

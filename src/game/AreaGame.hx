@@ -1546,7 +1546,7 @@ class Test {
     'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier',
     'security (sec)', 'scientist (sci)', 'agent', 'team',
   ];
-  public function spawnAI(type: String, x: Int, y: Int): AI
+  public function spawnAI(type: String, x: Int, y: Int, ?doAddAI:Bool = true): AI
     {
       var ai: AI = null;
       if (type == 'blackops')
@@ -1574,8 +1574,8 @@ class Test {
       else throw 'spawnAI(): AI type [' + type + '] unknown';
       // add chat clues
       game.player.chat.initClues(ai);
-
-      addAI(ai);
+      if (doAddAI)
+        addAI(ai);
       return ai;
     }
 
