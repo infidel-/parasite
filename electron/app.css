@@ -96,6 +96,8 @@ hr {
   font-size: 125%;
   color: #ef84ef;
   -webkit-text-stroke: 0.03em #2f022fd9;
+  /*color: #ffb8a6;
+  -webkit-text-stroke: 0.03em #2f0707d9;*/
 }
 
 #canvas {

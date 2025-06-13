@@ -47,6 +47,11 @@ class AIEntity extends PawnEntity
         drawImage(ctx, game.scene.images.entities,
           Const.FRAME_EVENT_NPC_AREA,
           Const.ROW_REGION_ICON);
+      // draw cultist icon
+      if (ai.isPlayerCultist())
+        drawImage(ctx, game.scene.images.entities,
+          Const.FRAME_CULTIST0,
+          Const.ROW_EFFECT);
     }
 
 
