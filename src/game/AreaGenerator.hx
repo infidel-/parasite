@@ -227,8 +227,6 @@ class AreaGenerator
         for (x in 0...area.width)
           cells[x][y] = conv[cells[x][y]];
 
-      return;
-/*
       // crosswalks
       for (y in 0...area.height)
         for (x in 0...area.width)
@@ -269,6 +267,7 @@ class AreaGenerator
                     if (area.getCellType(x, yy) != Const.TILE_ROAD)
                       break;
                     area.setCellType(x, yy, Const.TILE_CROSSWALKV);
+                    trace('v');
                   }
               }
 
@@ -293,10 +292,10 @@ class AreaGenerator
                     if (area.getCellType(xx, y) != Const.TILE_ROAD)
                       break;
                     area.setCellType(xx, y, Const.TILE_CROSSWALKH);
+                    trace('h');
                   }
               }
           }
-*/
     }
 
 

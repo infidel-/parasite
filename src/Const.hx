@@ -318,6 +318,8 @@ class Const
   public static var TILE_ROAD_UNWALKABLE = OFFSET_AREA + 11;
   public static var TILE_ALLEY_UNWALKABLE = OFFSET_AREA + 12;
   public static var TILE_WALKWAY_UNWALKABLE = OFFSET_AREA + 13;
+  public static var TILE_CROSSWALKV = OFFSET_AREA + 14;
+  public static var TILE_CROSSWALKH = OFFSET_AREA + 15;
 
   // row 3
   public static var OFFSET_CITY = 48;
@@ -475,7 +477,7 @@ class Const
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor
-    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 
     // row 3+ - city tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
