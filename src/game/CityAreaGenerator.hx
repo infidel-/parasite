@@ -7,14 +7,15 @@ import Const;
 import objects.*;
 import game.AreaGame;
 import game.AreaGenerator;
-import game.AreaGenerator.*;
 import game.AreaGenerator._GeneratorState;
+import _AreaType;
 
 class CityAreaGenerator
 {
   var game: Game;
   var gen: AreaGenerator;
 
+// store references to the owning game and shared generator helpers
   public function new(g: Game, gn: AreaGenerator)
     {
       game = g;
@@ -165,6 +166,9 @@ class CityAreaGenerator
                   }
               }
           }
+
+      // generate debris
+      placeStreetDebris(area);
     }
 
 // generate objects on city block
@@ -197,6 +201,97 @@ class CityAreaGenerator
           }
     }
 
+// generate street debris tuned by city tier
+  function placeStreetDebris(area: AreaGame)
+    {
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            var tile = area.getCellType(x, y);
+            if (!isStreetTile(tile))
+              continue;
+            if (area.hasObjectAt(x, y))
+              continue;
+
+            var chance = debrisChanceFor(tile, area.typeID);
+            if (chance <= 0)
+              continue;
+            if (Std.random(1000) >= chance)
+              continue;
+
+            if (Std.random(100) < 60)
+              addDecorationTransformable(area, x, y, Const.STREET_DEBRIS_TRANSFORMABLE);
+            else
+              gen.addDecoration(area, x, y, Const.STREET_DEBRIS_STATIC);
+          }
+    }
+
+// Drop a transformable decoration and optionally scatter nearby debris
+  function addDecorationTransformable(area: AreaGame,
+      x: Int, y: Int, infos: Array<_TileRow>)
+    {
+      var centerCount = 3 + Std.random(2);
+      spawnTransformableDecorations(area, x, y, infos, centerCount);
+
+      var radius = 1 + Std.random(2);
+      for (dx in -radius...radius + 1)
+        for (dy in -radius...radius + 1)
+          {
+            if (dx == 0 && dy == 0)
+              continue;
+            if ((dx * dx + dy * dy) > radius * radius)
+              continue;
+            if (Std.random(100) >= 40)
+              continue;
+
+            var nx = x + dx;
+            var ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= area.width || ny >= area.height)
+              continue;
+            if (area.hasObjectAt(nx, ny))
+              continue;
+
+            var tile = area.getCellType(nx, ny);
+            if (!isStreetTile(tile))
+              continue;
+
+            var neighbourCount = 1 + Std.random(4);
+            spawnTransformableDecorations(area, nx, ny, infos, neighbourCount);
+          }
+    }
+
+// Pick random sprites from infos and drop amount of DecorationExt on the tile
+  function spawnTransformableDecorations(area: AreaGame,
+      x: Int, y: Int, infos: Array<_TileRow>, amount: Int)
+    {
+      for (_ in 0...amount)
+        {
+          var info = infos[Std.random(infos.length)];
+          var col = Std.random(info.amount) +
+            (info.col != null ? info.col : 0);
+          var deco = new DecorationExt(game, area.id, x, y, info.row, col);
+          area.addObject(deco);
+        }
+    }
+
+// Resolve debris spawn chance for a tile type given area tier
+  inline function debrisChanceFor(tile: Int, typeID: _AreaType): Int
+    {
+      var isRoad = (tile == Const.TILE_ROAD);
+      return switch (typeID)
+        {
+          case AREA_CITY_LOW:
+            isRoad ? 20 : 40;
+          case AREA_CITY_MEDIUM:
+            isRoad ? 10 : 20;
+          case AREA_CITY_HIGH:
+            isRoad ? 4 : 10;
+          default:
+            isRoad ? 10 : 20;
+        };
+    }
+
+// find the rectangular TEMP block starting at bx,by and mark it consumed
   function markBlock(area: AreaGame, bx: Int, by: Int): _Block
     {
       var cells = area.getCells();
@@ -233,6 +328,7 @@ class CityAreaGenerator
       return block;
     }
 
+// populate a marked block with random buildings and inner courtyards
   function generateBlock(area: AreaGame, info: AreaInfo, block: _Block)
     {
       for (y in block.y1 + 1...block.y2)
@@ -318,6 +414,7 @@ class CityAreaGenerator
           }
     }
 
+// carve out a narrow alley starting from a spawn point
   function addAlley(area: AreaGame, pt, w: Int)
     {
       var cells = area.getCells();
@@ -373,6 +470,7 @@ class CityAreaGenerator
         }
     }
 
+// extend a street in the given direction, spawning alleys and sewers on the way
   function addStreet(state: _GeneratorState, area: AreaGame, cells: Array<Array<Int>>,
       dir: _LineDir, sx: Int, sy: Int, level: Int)
     {
@@ -493,6 +591,7 @@ class CityAreaGenerator
         }
     }
 
+// count how many neighbours around x,y match the tile id t
   function countAround(area: AreaGame, cells: Array<Array<Int>>,
       x: Int, y: Int, t: Int): Int
     {
@@ -514,6 +613,15 @@ class CityAreaGenerator
       return cnt;
     }
 
+// check if tile id represents a street-surface tile
+  inline function isStreetTile(tile: Int): Bool
+    {
+      return tile == Const.TILE_ROAD ||
+        tile == Const.TILE_ALLEY ||
+        tile == Const.TILE_WALKWAY;
+    }
+
+// fill a square block of width w with tile t, clamped to bounds
   function fillBlock(area: AreaGame, cells: Array<Array<Int>>,
       x: Int, y: Int, t: Int, w: Int)
     {
@@ -523,6 +631,7 @@ class CityAreaGenerator
             cells[xx][yy] = t;
     }
 
+// return true if any tile within the block equals t
   function blockHas(area: AreaGame, cells: Array<Array<Int>>,
       x: Int, y: Int, t: Int, w: Int): Bool
     {
@@ -534,6 +643,7 @@ class CityAreaGenerator
       return false;
     }
 
+// count tiles equal to t inside the w-by-w block
   function blockCount(area: AreaGame, cells: Array<Array<Int>>,
       x: Int, y: Int, t: Int, w: Int): Int
     {

@@ -1079,10 +1079,6 @@ class ConsoleGame
       // society knowledge
       game.player.skills.increase(KNOW_SOCIETY, 1);
       game.player.skills.increase(KNOW_SOCIETY, 24);
-
-      // starting improvements
-      game.player.evolutionManager.difficulty = EASY;
-      game.player.evolutionManager.giveStartingImprovements();
     }
 
 

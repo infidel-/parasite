@@ -142,6 +142,17 @@ class AreaGenerator
       area.addObject(o);
     }
 
+// add extended decoration from a list
+  public function addDecorationTransformable(area: AreaGame,
+      x: Int, y: Int, infos: Array<_TileRow>)
+    {
+      var info = infos[Std.random(infos.length)];
+      var col = Std.random(info.amount) +
+        (info.col != null ? info.col : 0);
+      var o = new DecorationExt(game, area.id, x, y, info.row, col);
+      area.addObject(o);
+    }
+
 // print generated area tiles 
   public static function printArea(game: Game, area: AreaGame, mapTiles: Array<String>)
     {
