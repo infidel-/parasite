@@ -3,6 +3,7 @@
 package game;
 
 import const.WorldConst;
+import Const;
 import objects.*;
 import game.AreaGame;
 
@@ -101,6 +102,41 @@ class AreaGenerator
       map.endFill();
       game.scene.add(map, 100);
 */
+    }
+
+// add decoration from a list of decoration groups
+// except the ones used, updating and returning the remaining groups
+// if the array becomes empty, replenish from the full list
+  public function addDecorationExt(area: AreaGame,
+      x: Int, y: Int,
+      groups: Array<_TileGroup>, groupsFull: Array<_TileGroup>): Array<_TileGroup>
+    {
+      if (groups.length == 0)
+        {
+          trace('groups empty!');
+          return groups;
+        }
+      var group = groups[Std.random(groups.length)];
+      groups.remove(group);
+      if (groups.length == 0)
+        groups = groupsFull.copy();
+      var info = group[Std.random(group.length)];
+      var col = Std.random(info.amount) +
+        (info.col != null ? info.col : 0);
+      var o = new Decoration(game, area.id, x, y, info.row, col);
+      area.addObject(o);
+      return groups;
+    }
+
+// add decoration from a list
+  public function addDecoration(area: AreaGame,
+      x: Int, y: Int, infos: Array<_TileRow>)
+    {
+      var info = infos[Std.random(infos.length)];
+      var col = Std.random(info.amount) +
+        (info.col != null ? info.col : 0);
+      var o = new Decoration(game, area.id, x, y, info.row, col);
+      area.addObject(o);
     }
 
 // print generated area tiles 
@@ -267,7 +303,6 @@ class AreaGenerator
                     if (area.getCellType(x, yy) != Const.TILE_ROAD)
                       break;
                     area.setCellType(x, yy, Const.TILE_CROSSWALKV);
-                    trace('v');
                   }
               }
 
@@ -292,7 +327,6 @@ class AreaGenerator
                     if (area.getCellType(xx, y) != Const.TILE_ROAD)
                       break;
                     area.setCellType(xx, y, Const.TILE_CROSSWALKH);
-                    trace('h');
                   }
               }
           }

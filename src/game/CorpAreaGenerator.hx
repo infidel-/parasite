@@ -813,7 +813,7 @@ class CorpAreaGenerator
                                 hasVentSpace = true;
                               else
                                 {
-                                  addDecoration(tx, ty, arr);
+                                  gen.addDecoration(state.area, tx, ty, arr);
                                   // change to unwalkable tile
                                   cells[tx][ty] =
                                     Const.TILE_FLOOR_TILE_UNWALKABLE;
@@ -838,7 +838,7 @@ class CorpAreaGenerator
                           (tx == room.x2 && ty == room.y1) ||
                           (tx == room.x1 && ty == room.y2) ||
                           (tx == room.x2 && ty == room.y2))
-                        addDecoration(tx, ty,
+                        gen.addDecoration(state.area, tx, ty,
                           Const.CHEM_LABS_DECO_TABLE);
                     }
 */
@@ -939,7 +939,7 @@ class CorpAreaGenerator
         cx, cy, Const.CORP_CHAIR[0].row, 1);
       state.area.addObject(o);
       // computer
-      addDecoration(compx, compy, Const.CORP_COMPUTERS);
+      gen.addDecoration(state.area, compx, compy, Const.CORP_COMPUTERS);
 
       // other decoration
       var decorationAmount = decorationFull.length;
@@ -954,7 +954,7 @@ class CorpAreaGenerator
             if (Std.random(100) < 40 &&
                 decorationAmount > 0)
               {
-                decoration = addDecorationExt(
+                decoration = gen.addDecorationExt(state.area, 
                   tx + dx, ty + dy, decoration,
                   decorationFull);
                 decorationAmount--;
@@ -987,7 +987,7 @@ class CorpAreaGenerator
           if (Std.random(100) < tableDecorationChance)
             {
               cells[c.x][c.y] = decorationFloorID;
-              decoration = addDecorationExt(
+              decoration = gen.addDecorationExt(state.area, 
                 c.x, c.y, decoration,
                 decorationFull);
             }
@@ -995,7 +995,7 @@ class CorpAreaGenerator
           else 
             {
               cells[c.x][c.y] = decorationBigFloorID;
-              decorationBig = addDecorationExt(
+              decorationBig = gen.addDecorationExt(state.area, 
                 c.x, c.y, decorationBig,
                 decorationBigFull); 
             }
@@ -1036,7 +1036,7 @@ class CorpAreaGenerator
               if (Std.random(100) < tableDecorationChance)
                 {
                   cells[room.x1][y] = decorationFloorID;
-                  decoration = addDecorationExt(
+                  decoration = gen.addDecorationExt(state.area, 
                     room.x1, y, decoration,
                     decorationFull);
                 }
@@ -1044,7 +1044,7 @@ class CorpAreaGenerator
               else 
                 {
                   cells[room.x1][y] = decorationBigFloorID;
-                  decorationBig = addDecorationExt(
+                  decorationBig = gen.addDecorationExt(state.area, 
                     room.x1, y, decorationBig,
                     decorationBigFull); 
                 }
@@ -1066,7 +1066,7 @@ class CorpAreaGenerator
               if (Std.random(100) < tableDecorationChance)
                 {
                   cells[room.x2][y] = decorationFloorID;
-                  decoration = addDecorationExt(
+                  decoration = gen.addDecorationExt(state.area, 
                     room.x2, y, decoration,
                     decorationFull);
                 }
@@ -1074,7 +1074,7 @@ class CorpAreaGenerator
               else
                 {
                   cells[room.x2][y] = decorationBigFloorID;
-                  decorationBig = addDecorationExt(
+                  decorationBig = gen.addDecorationExt(state.area, 
                     room.x2, y, decorationBig,
                     decorationBigFull); 
                 }
@@ -1145,7 +1145,7 @@ class CorpAreaGenerator
             // 1 decoration item per table per group
             if (Std.random(100) < 20 && decorationAmount > 0)
               {
-                decoration = addDecorationExt(
+                decoration = gen.addDecorationExt(state.area, 
                   tx + dx, ty + dy, decoration,
                   decorationFull);
                 decorationAmount--;
@@ -1218,7 +1218,7 @@ class CorpAreaGenerator
                 cells[tx + dx][ty + dy] =
                   Const.LIGHT_TABLE_WOOD1_2X2[dy][dx];
                 if (Std.random(100) < 30)
-                  decoration = addDecorationExt(
+                  decoration = gen.addDecorationExt(state.area, 
                     tx + dx, ty + dy, decoration,
                     decorationFull);
               }
@@ -1313,7 +1313,7 @@ class CorpAreaGenerator
                   state.area.addObject(o);
                 }
               else if (Std.random(100) < 50)
-                decoration = addDecorationExt(sx + i, sy, decoration, decorationFull);
+                decoration = gen.addDecorationExt(state.area, sx + i, sy, decoration, decorationFull);
             }
 
           var o = new Decoration(game, state.area.id,
@@ -1372,7 +1372,7 @@ class CorpAreaGenerator
               if (Std.random(100) < 50)
                 {
                   cells[room.x1][y] = Const.TILE_DARK_TABLE_WOOD2_1X1;
-                  decoration = addDecorationExt(
+                  decoration = gen.addDecorationExt(state.area, 
                     room.x1, y, decoration,
                     decorationFull);
                 }
@@ -1380,7 +1380,7 @@ class CorpAreaGenerator
               else 
                 {
                   cells[room.x1][y] = Const.TILE_FLOOR_WOOD2 + 16;
-                  decorationBig = addDecorationExt(
+                  decorationBig = gen.addDecorationExt(state.area, 
                     room.x1, y, decorationBig,
                     decorationBigFull); 
                 }
@@ -1402,7 +1402,7 @@ class CorpAreaGenerator
               if (Std.random(100) < 50)
                 {
                   cells[room.x2][y] = Const.TILE_DARK_TABLE_WOOD2_1X1;
-                  decoration = addDecorationExt(
+                  decoration = gen.addDecorationExt(state.area, 
                     room.x2, y, decoration,
                     decorationFull);
                 }
@@ -1410,47 +1410,12 @@ class CorpAreaGenerator
               else
                 {
                   cells[room.x2][y] = Const.TILE_FLOOR_WOOD2 + 16;
-                  decorationBig = addDecorationExt(
+                  decorationBig = gen.addDecorationExt(state.area, 
                     room.x2, y, decorationBig,
                     decorationBigFull); 
                 }
             }
         }
-    }
-
-// add decoration from a list of decoration groups
-// except the ones used
-// update and return the ones used
-// if the array is empty, refill from full
-  function addDecorationExt(x: Int, y: Int, groups: Array<_TileGroup>, groupsFull: Array<_TileGroup>): Array<_TileGroup>
-    {
-      if (groups.length == 0)
-        {
-          trace('groups empty!');
-          return groups;
-        }
-      var group = groups[Std.random(groups.length)];
-      groups.remove(group);
-      if (groups.length == 0)
-        groups = groupsFull.copy();
-      var info = group[Std.random(group.length)];
-      var col = Std.random(info.amount) +
-        (info.col != null ? info.col : 0);
-      var o = new Decoration(game, state.area.id,
-        x, y, info.row, col);
-      state.area.addObject(o);
-      return groups;
-    }
-
-// add decoration from a list
-  function addDecoration(x: Int, y: Int, infos: Array<_TileRow>)
-    {
-      var info = infos[Std.random(infos.length)];
-      var col = Std.random(info.amount) +
-        (info.col != null ? info.col : 0);
-      var o = new Decoration(game, state.area.id,
-        x, y, info.row, col);
-      state.area.addObject(o);
     }
 
 // check a w,h block at x,y if it is near a door

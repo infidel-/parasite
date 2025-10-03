@@ -275,6 +275,19 @@ class Const
   public static var BLOOD_LARGE = 0;
   public static var BLOOD_NUM = 5;
 
+  public static var STREET_DEBRIS_TRANSFORMABLE = [
+    { row: 41, col: 0, amount: 12 },
+    { row: 42, col: 0, amount: 12 },
+    { row: 43, col: 0, amount: 12 },
+    { row: 44, col: 0, amount: 12 },
+    { row: 45, col: 0, amount: 12 },
+    { row: 46, col: 0, amount: 1 },
+  ];
+  public static var STREET_DEBRIS_STATIC = [
+    { row: 46, col: 1, amount: 11 },
+    { row: 47, col: 0, amount: 10 },
+  ];
+
   // ==============================================
   // ==============================================
   // ==============================================
