@@ -3,6 +3,7 @@
 package game;
 
 import const.WorldConst;
+import Const;
 import objects.*;
 import game.AreaGame;
 import game.AreaGenerator;
@@ -195,4 +196,370 @@ class CityAreaGenerator
             area.addObject(o);
           }
     }
+
+  function markBlock(area: AreaGame, bx: Int, by: Int): _Block
+    {
+      var cells = area.getCells();
+      var sx = bx;
+      var sy = by;
+      var xx = bx;
+      while (xx++ < area.width - 1)
+        {
+          if (cells[xx][sy] != TEMP_BUILDING)
+            break;
+        }
+      var w = xx - sx;
+      var yy = by;
+      while (yy++ < area.height - 1)
+        {
+          if (cells[sx][yy] != TEMP_BUILDING)
+            break;
+        }
+      var h = yy - sy;
+
+      var block: _Block = {
+        x1: sx,
+        y1: sy,
+        x2: sx + w,
+        y2: sy + h,
+        w: w,
+        h: h
+      };
+
+      for (yy in sy...sy + h)
+        for (xx in sx...sx + w)
+          cells[xx][yy] = TEMP_BLOCK;
+
+      return block;
+    }
+
+  function generateBlock(area: AreaGame, info: AreaInfo, block: _Block)
+    {
+      for (y in block.y1 + 1...block.y2)
+        for (x in block.x1 + 1...block.x2)
+          {
+            if (Std.random(100) > 30)
+              continue;
+
+            var sx = 6 + 2 * Std.random(info.buildingSize);
+            var sy = 6 + 2 * Std.random(info.buildingSize);
+
+            if (x + sx > block.x2 - 1)
+              sx = block.x2 - 1 - x;
+            if (y + sy > block.y2 - 1)
+              sy = block.y2 - 1 - y;
+
+            if (sx < 4)
+              continue;
+            if (sy < 4)
+              continue;
+
+            var ok = true;
+            for (dy in -2...sy + 3)
+              for (dx in -2...sx + 3)
+                {
+                  if (dx == 0 && dy == 0)
+                    continue;
+                  var cellType = area.getCellType(x + dx, y + dy);
+                  if (cellType == TEMP_ACTUAL_BUILDING)
+                    {
+                      ok = false;
+                      break;
+                    }
+                }
+
+            if (!ok)
+              continue;
+
+            for (dy in 0...sy)
+              for (dx in 0...sx)
+                {
+                  var cellType = area.getCellType(x + dx, y + dy);
+                  if (cellType == -1)
+                    continue;
+
+                  area.setCellType(x + dx, y + dy, TEMP_ACTUAL_BUILDING);
+                }
+
+            if (sx > 6 && sy > 6)
+              {
+                var hw = Std.int(sx / 2);
+                var hh = Std.int(sy / 2);
+                var hx = Std.random(sx - hw);
+                var hy = Std.random(sy - hh);
+                if (hx > 0 && hy > 0)
+                  {
+                    if (Std.random(100) < 50)
+                      hx = 0;
+                    else hy = 0;
+
+                  }
+                if (hx > 0 && hx < 4)
+                  hx = 4;
+                if (hy > 0 && hy < 4)
+                  hy = 4;
+                if (sx - hx - hw < 4)
+                  hw = sx - hx;
+                if (sy - hy - hh < 4)
+                  hh = sy - hy;
+
+                if (Std.random(100) < 50)
+                  {
+                    if (hx == 0)
+                      hx = sx - hw;
+                    else if (hy == 0)
+                      hy = sy - hh;
+                  }
+
+                for (dy in hy...hy + hh)
+                  for (dx in hx...hx + hw)
+                    area.setCellType(x + dx, y + dy, TEMP_BLOCK);
+              }
+          }
+    }
+
+  function addAlley(area: AreaGame, pt, w: Int)
+    {
+      var cells = area.getCells();
+
+      var count = countAround(area, cells, pt.x, pt.y, TEMP_ROAD);
+      if (count > 3)
+        return;
+
+      if (blockCount(area, cells, pt.x - 8, pt.y - 8, TEMP_ROAD, 16) > 100)
+        return;
+
+      if (blockHas(area, cells, pt.x - 8, pt.y - 8, TEMP_ALLEY, 16))
+        return;
+
+      var x = pt.x;
+      var y = pt.y;
+      var dir = pt.t;
+
+      var len = 0;
+      var xx = x;
+      var yy = y;
+
+      var dirChanged = 0;
+      while (true)
+        {
+          fillBlock(area, cells, xx, yy, TEMP_ALLEY, w);
+
+          var dx = 0;
+          var dy = 0;
+          if (dir == TB)
+            dy = w;
+          else if (dir == BT)
+            dy = -w;
+          else if (dir == LR)
+            dx = w;
+          else if (dir == RL)
+            dx = -w;
+
+          if (xx + dx < 0 || yy + dy < 0 ||
+              xx + dx >= area.width || yy + dy >= area.height)
+            break;
+
+          xx += dx;
+          yy += dy;
+          len++;
+
+          if (blockHas(area, cells, xx, yy, TEMP_ROAD, w) ||
+              blockHas(area, cells, xx, yy, TEMP_ALLEY, w)) 
+            break;
+
+          if (len > 100)
+            break;
+        }
+    }
+
+  function addStreet(state: _GeneratorState, area: AreaGame, cells: Array<Array<Int>>,
+      dir: _LineDir, sx: Int, sy: Int, level: Int)
+    {
+      var i = 0;
+      var xx = sx;
+      var yy = sy;
+      var w = 0;
+      var toggle = false;
+      var streetLevel = streetLevels[level];
+      w = streetLevel.w;
+
+      while (true) 
+        {
+          if (xx > area.width || yy > area.height)
+            break;
+
+          if (dir == LR && xx > 0 && xx % state.blockSize == 0) 
+            {
+              if (level > 0 && Std.random(100) < 25)
+                {
+                  fillBlock(area, cells, xx, yy, TEMP_ROAD, w);
+
+                  break;
+                }
+            }
+
+          if (level > 0 && dir == TB &&
+              blockHas(area, cells, xx, yy, TEMP_ROAD, w))
+            {
+              if (Std.random(100) < 10)
+                {
+                  fillBlock(area, cells, xx, yy, TEMP_ROAD, w);
+                  break;
+                }
+            }
+
+          fillBlock(area, cells, xx, yy, TEMP_ROAD, w);
+
+          var dx = 0;
+          var dy = 0;
+          if (dir == TB)
+            dy = w;
+          else if (dir == BT)
+            dy = -w;
+          else if (dir == LR)
+            dx = w;
+          else if (dir == RL)
+            dx = -w;
+
+          if (xx + dx < 0 || yy + dy < 0 ||
+              xx + dx >= area.width || yy + dy >= area.height)
+            {
+              fillBlock(area, cells, xx + dx, yy + dy, TEMP_ROAD, w);
+              break;
+            }
+
+          var bs = 8;
+          if (dir == TB &&
+              ((yy - sy - w) % bs == 0) &&
+              yy != sy)
+            {
+              state.alleys.add({
+                x: xx - 2,
+                y: yy,
+                t: RL
+              });
+              state.alleys.add({
+                x: xx + w,
+                y: yy,
+                t: LR
+              });
+            }
+          else if (dir == LR &&
+              ((xx - sx - w) % bs == 0) &&
+              xx != sx)
+            {
+              state.alleys.add({
+                x: xx,
+                y: yy - 2,
+                t: BT
+              });
+              state.alleys.add({
+                x: xx,
+                y: yy + w,
+                t: TB
+              });
+            }
+
+          var bs2 = 4;
+          if (dir == TB &&
+              ((yy - sy - w) % bs2 == 0) &&
+              yy != sy)
+            {
+              if (area.getCellType(xx - 1, yy) != TEMP_ROAD)
+                state.sewers.add({ x: xx - 1, y: yy });
+              if (area.getCellType(xx + w, yy) != TEMP_ROAD)
+                state.sewers.add({ x: xx + w, y: yy });
+              state.sewers.add({
+                x: xx + streetLevel.half + (toggle ? -1 : 0), y: yy });
+            }
+          else if (dir == LR &&
+              ((xx - sx - w) % bs2 == 0) &&
+              xx != sx)
+            {
+              if (area.getCellType(xx, yy - 1) != TEMP_ROAD)
+                state.sewers.add({ x: xx, y: yy - 1 });
+              if (area.getCellType(xx, yy + w) != TEMP_ROAD)
+                state.sewers.add({ x: xx, y: yy + w });
+              state.sewers.add({
+                x: xx, y: yy + streetLevel.half + (toggle ? -1 : 0) });
+            }
+
+          xx += dx;
+          yy += dy;
+          toggle = !toggle;
+
+          i++;
+        }
+    }
+
+  function countAround(area: AreaGame, cells: Array<Array<Int>>,
+      x: Int, y: Int, t: Int): Int
+    {
+      var cnt = 0;
+      var xx = 0;
+      var yy = 0;
+      for (i in 0...Const.dirx.length)
+        {
+          xx = x + Const.dirx[i];
+          yy = y + Const.diry[i];
+
+          if (xx >= 0 && yy >= 0 && xx < area.width && yy < area.height)
+            {
+              if (cells[xx][yy] == t)
+                cnt++;
+            }
+        }
+
+      return cnt;
+    }
+
+  function fillBlock(area: AreaGame, cells: Array<Array<Int>>,
+      x: Int, y: Int, t: Int, w: Int)
+    {
+      for (yy in y...y + w)
+        for (xx in x...x + w)
+          if (xx >= 0 && yy >= 0 && xx < area.width && yy < area.height)
+            cells[xx][yy] = t;
+    }
+
+  function blockHas(area: AreaGame, cells: Array<Array<Int>>,
+      x: Int, y: Int, t: Int, w: Int): Bool
+    {
+      for (yy in y...y + w)
+        for (xx in x...x + w)
+          if (xx >= 0 && yy >=0 && xx < area.width && yy < area.height && cells[xx][yy] == t)
+            return true;
+
+      return false;
+    }
+
+  function blockCount(area: AreaGame, cells: Array<Array<Int>>,
+      x: Int, y: Int, t: Int, w: Int): Int
+    {
+      var cnt = 0;
+      for (yy in y...y + w)
+        for (xx in x...x + w)
+          if (xx >= 0 && yy >=0 && xx < area.width && yy < area.height && cells[xx][yy] == t)
+            cnt++;
+
+      return cnt;
+    }
+
+  static var streetLevels = [
+    { w: 8, blockSize: 20, half: 4 },
+    { w: 4, blockSize: 16, half: 2 },
+  ];
+
+  public static var TEMP_BUILDING = 0;
+  public static var TEMP_ROAD = 1;
+  public static var TEMP_ALLEY = 2;
+  public static var TEMP_ALLEY_TB = 3;
+  public static var TEMP_ALLEY_BT = 4;
+  public static var TEMP_ALLEY_LR = 5;
+  public static var TEMP_ALLEY_RL = 6;
+  public static var TEMP_ACTUAL_BUILDING = 7;
+  public static var TEMP_WALKWAY = 8;
+  public static var TEMP_BLOCK = 9;
+  public static var TEMP_MARKER = 10;
 }
