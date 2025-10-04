@@ -19,11 +19,7 @@ class BumAI extends HumanAI
         inventory.addID('money');
       // give bums occasional cigarettes for flavor
       if (Std.random(100) < 40)
-        {
-          if (!skills.has(KNOW_SMOKING))
-            skills.addID(KNOW_SMOKING);
-          inventory.addID('cigarettes');
-        }
+        inventory.addID('cigarettes');
       initPost(false);
     }
 

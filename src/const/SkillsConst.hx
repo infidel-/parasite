@@ -82,14 +82,14 @@ class SkillsConst
     },
 
     // knowledges
-    {
+    { // removed
       id: KNOW_SMOKING,
       name: 'smoking',
       defaultLevel: 0,
       isKnowledge: true,
       isBool: true
     },
-    {
+    { // removed
       id: KNOW_SHOPPING,
       name: 'shopping',
       defaultLevel: 0,

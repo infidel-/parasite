@@ -43,15 +43,9 @@ class HumanAI extends AI
 
       // common skills for all humans
       if (Std.random(100) < 10)
-        {
-          skills.addID(KNOW_SMOKING);
-          inventory.addID('cigarettes');
-        }
+        inventory.addID('cigarettes');
       if (Std.random(100) < 75)
-        {
-          skills.addID(KNOW_SHOPPING);
-          inventory.addID(Std.random(10) < 7 ? 'wallet' : 'money');
-        }
+        inventory.addID(Std.random(10) < 7 ? 'wallet' : 'money');
       // chat-related
       if (Std.random(100) < 30)
         skills.addID(SKILL_PSYCHOLOGY, 10 + Std.random(5));
@@ -123,4 +117,3 @@ class HumanAI extends AI
         }
     }
 }
-
