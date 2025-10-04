@@ -2,10 +2,7 @@
 
 package ai;
 
-import ai.AI;
-import _AIState;
 import game.Game;
-import const.*;
 
 class CivilianAI extends HumanAI
 {
@@ -16,14 +13,19 @@ class CivilianAI extends HumanAI
       // civs in higher class areas have a higher chance of having
       // smartphones
       var chance = 50;
-      if (game.area.info.id == AREA_CITY_LOW)
-        chance = 70;
-      else if (game.area.info.id == AREA_CITY_MEDIUM)
-        chance = 75;
-      else if (game.area.info.id == AREA_CITY_HIGH)
-        chance = 85;
-      else if (game.area.info.id == AREA_FACILITY)
-        chance = 90;
+      var areaType = game.area.info.id;
+      switch (areaType)
+        {
+          case AREA_CITY_LOW:
+            chance = 70;
+          case AREA_CITY_MEDIUM:
+            chance = 75;
+          case AREA_CITY_HIGH:
+            chance = 85;
+          case AREA_FACILITY:
+            chance = 90;
+          default:
+        }
       if (Std.random(100) < chance)
         {
           skills.addID(SKILL_COMPUTER, 10 + Std.random(20));
@@ -36,14 +38,18 @@ class CivilianAI extends HumanAI
         {
           // laptops
           var chance = 5;
-          if (game.area.info.id == AREA_CITY_LOW)
-            chance = 10;
-          else if (game.area.info.id == AREA_CITY_MEDIUM)
-            chance = 20;
-          else if (game.area.info.id == AREA_CITY_HIGH)
-            chance = 25;
-          else if (game.area.info.id == AREA_FACILITY)
-            chance = 30;
+          switch (areaType)
+            {
+              case AREA_CITY_LOW:
+                chance = 10;
+              case AREA_CITY_MEDIUM:
+                chance = 20;
+              case AREA_CITY_HIGH:
+                chance = 25;
+              case AREA_FACILITY:
+                chance = 30;
+              default:
+            }
           if (Std.random(100) < chance)
             {
               skills.addID(SKILL_COMPUTER, 20 + Std.random(30));

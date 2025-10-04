@@ -213,7 +213,7 @@ class CityAreaGenerator
             if (area.hasObjectAt(x, y))
               continue;
 
-            var chance = debrisChanceFor(tile, area.typeID);
+            var chance = debrisChanceFor(area, tile);
             if (chance <= 0)
               continue;
             if (Std.random(1000) >= chance)
@@ -275,13 +275,15 @@ class CityAreaGenerator
     }
 
 // Resolve debris spawn chance for a tile type given area tier
-  inline function debrisChanceFor(tile: Int, typeID: _AreaType): Int
+  inline function debrisChanceFor(area: AreaGame, tile: Int): Int
     {
       var isRoad = (tile == Const.TILE_ROAD);
-      return switch (typeID)
+      return switch (area.typeID)
         {
           case AREA_CITY_LOW:
-            isRoad ? 20 : 40;
+            if (area.highCrime)
+              return (isRoad ? 30 : 50);
+            else return (isRoad ? 10 : 20);
           case AREA_CITY_MEDIUM:
             isRoad ? 10 : 20;
           case AREA_CITY_HIGH:

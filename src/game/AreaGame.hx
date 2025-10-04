@@ -1435,7 +1435,9 @@ class Test {
       // get number of common AI excluding player
       var cnt = 0;
       for (ai in _ai)
-        if (ai.isCommon && !ai.isGuard && !ai.parasiteAttached)
+        if (ai.isCommon &&
+            !ai.isGuard &&
+            !ai.parasiteAttached)
           cnt++;
 
       // calc max possible number of AI
@@ -1455,7 +1457,7 @@ class Test {
       if (maxSpawn > 10)
         maxSpawn = 10;
 
-      for (i in 0...maxSpawn)
+      for (_ in 0...maxSpawn)
         {
           // get random ai class id based on probability
           var rnd = Std.random(100);
@@ -1472,7 +1474,8 @@ class Test {
               min += info.ai[key];
             }
 
-          spawnUnseenAI(type, true); // spawns AI at spot unseen by player
+          // spawns AI at spot unseen by player
+          spawnUnseenAI(type, true);
         }
     }
 
@@ -1537,6 +1540,27 @@ class Test {
           return null;
         }
 
+      // special logic for "civilian" type
+      trace(type);
+      if (type == 'civilian' &&
+          (typeID == AREA_CITY_LOW || typeID == AREA_CITY_MEDIUM))
+        {
+          var crimeChance = (typeID == AREA_CITY_LOW ? 30 : 10);
+          if (highCrime)
+            crimeChance += 30;
+          if (Std.random(100) < crimeChance)
+            {
+              // pick specific type
+              var roll = Std.random(100);
+              if (roll < 20) // 20%
+                type = 'prostitute';
+              else if (roll < 50) // 30%
+                type = 'thug';
+              else type = 'bum'; // 50%
+              trace('after ' + type);
+            }
+        }
+
       // spot is empty and invisible to player, spawn ai
       var ai = spawnAI(type, loc.x, loc.y);
       ai.isCommon = isCommon;
@@ -1547,32 +1571,39 @@ class Test {
   public static var aiTypes = [
     'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier',
     'security (sec)', 'scientist (sci)', 'agent', 'team',
+    'bum (hobo)', 'thug', 'prostitute (pro)',
   ];
   public function spawnAI(type: String, x: Int, y: Int, ?doAddAI:Bool = true): AI
     {
       var ai: AI = null;
-      if (type == 'blackops')
+      if (type == 'agent')
+        ai = new AgentAI(game, x, y);
+      else if (type == 'blackops')
         ai = new BlackopsAI(game, x, y);
-      else if (type == 'dog')
-        ai = new DogAI(game, x, y);
+      else if (type == 'bum' || type == 'hobo')
+        ai = new BumAI(game, x, y);
       else if (type == 'civilian' || type == 'civ')
         ai = new CivilianAI(game, x, y);
-      else if (type == 'police' || type == 'cop')
-        ai = new PoliceAI(game, x, y);
-      else if (type == 'soldier')
-        ai = new SoldierAI(game, x, y);
-      else if (type == 'security' || type == 'sec')
-        ai = new SecurityAI(game, x, y);
-      else if (type == 'agent')
-        ai = new AgentAI(game, x, y);
-      else if (type == 'team')
-        ai = new TeamMemberAI(game, x, y);
-      else if (type == 'scientist' || type == 'sci')
-        ai = new ScientistAI(game, x, y);
       else if (type == 'corpo')
         ai = new CorpoAI(game, x, y);
+      else if (type == 'dog')
+        ai = new DogAI(game, x, y);
+      else if (type == 'police' || type == 'cop')
+        ai = new PoliceAI(game, x, y);
+      else if (type == 'prostitute' || type == 'pro')
+        ai = new ProstituteAI(game, x, y);
+      else if (type == 'security' || type == 'sec')
+        ai = new SecurityAI(game, x, y);
+      else if (type == 'scientist' || type == 'sci')
+        ai = new ScientistAI(game, x, y);
       else if (type == 'smiler')
         ai = new SmilerAI(game, x, y);
+      else if (type == 'soldier')
+        ai = new SoldierAI(game, x, y);
+      else if (type == 'team')
+        ai = new TeamMemberAI(game, x, y);
+      else if (type == 'thug')
+        ai = new ThugAI(game, x, y);
       else throw 'spawnAI(): AI type [' + type + '] unknown';
       // add chat clues
       game.player.chat.initClues(ai);

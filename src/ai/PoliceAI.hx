@@ -60,7 +60,6 @@ class PoliceAI extends HumanAI
       super.initPost(onLoad);
     }
 
-
 // event: on being attacked
   public override function onAttack()
     {

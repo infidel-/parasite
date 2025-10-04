@@ -360,4 +360,45 @@ class SoundConst
     '' + EFFECT_CRYING => humanCrying,
     'CHAT_FAIL' => humanChatFail,
   ];
+
+  // thug sounds
+  public static var thug: Map<String, Array<AISound>> = [
+    '' + REASON_DAMAGE => [
+      {
+        text: 'Fuck!',
+        file: 'male-ouch',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+      {
+        text: 'Shit!',
+        file: 'male-grunt',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+    ],
+    '' + AI_STATE_IDLE => humanIdle,
+    '' + AI_STATE_ALERT => [
+      {
+        file: 'male-scream',
+        text: 'Die!',
+        radius: 7,
+        alertness: 15,
+        params: null
+      },
+      {
+        file: 'male-scream',
+        text: 'Bitch!',
+        radius: 7,
+        alertness: 15,
+        params: null
+      },
+    ],
+    '' + AI_STATE_HOST => humanHost,
+    '' + AI_STATE_DEAD => humanDie,
+    '' + EFFECT_CRYING => humanCrying,
+    'CHAT_FAIL' => humanChatFail,
+  ];
 }

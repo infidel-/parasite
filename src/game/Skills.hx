@@ -24,6 +24,12 @@ class Skills extends _SaveObject
         s.info = SkillsConst.getInfo(s.id);
     }
 
+// clear list
+  public function clear()
+    {
+      _list.clear();
+    }
+
 // list iterator
   public function iterator(): Iterator<Skill>
     {
