@@ -352,12 +352,17 @@ class HUD
 #end
             '<br/>');
       else if (game.location == LOCATION_REGION)
-        buf.add(', at (' +
-          game.playerRegion.x + ',' + game.playerRegion.y + ')' +
+        {
+          var area = game.playerRegion.currentArea;
+          buf.add(', at (' +
+            game.playerRegion.x + ',' + game.playerRegion.y + ')' +
 #if mydebug
-            ' A ' + Math.round(game.playerRegion.currentArea.alertness) +
+             ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) +
 #end
-          '<br/>' + game.playerRegion.currentArea.name + '<br/>');
+            '<br/>' +
+            area.name +
+            '<center>' + (area.highCrime ? Const.smallgray('high crime') : '') + '</center>');
+        }
       buf.add('<hr/>');
 
       // parasite stats

@@ -25,6 +25,7 @@ class AreaGame extends _SaveObject
   public var isGenerated: Bool; // has this area been generated?
   public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
+  public var highCrime: Bool; // low density area can become high crime
   public var info: AreaInfo; // area info link
   public var width: Int;
   public var height: Int;
@@ -84,6 +85,7 @@ class AreaGame extends _SaveObject
       isKnown = false;
       isHabitat = false;
       hasHabitat = false;
+      highCrime = false;
       habitat = null;
       name = null;
       parentID = -1;

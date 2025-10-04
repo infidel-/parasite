@@ -267,7 +267,10 @@ class RegionGame extends _SaveObject
             _array[x][y] = a;
           }
 
-      // spawn 2 bases and 3 facilities
+      // add high crime city sections
+      addHighCrime();
+
+      // spawn 2 bases and 3 facilities (on the ground)
       spawnArea(AREA_MILITARY_BASE, true);
       spawnArea(AREA_MILITARY_BASE, true);
       spawnArea(AREA_FACILITY, true);
@@ -280,6 +283,69 @@ class RegionGame extends _SaveObject
           var o = new region.CorpHQ(game, a.x, a.y);
           addObject(o);
           a.setType(AREA_CORP);
+        }
+    }
+
+// adjust low-density city blocks to introduce high-crime pockets
+  function addHighCrime()
+    {
+      // gather low-density city areas
+      var lowAreas = [];
+      for (area in _list)
+        if (area.typeID == AREA_CITY_LOW)
+          lowAreas.push(area);
+      if (lowAreas.length == 0)
+        return;
+
+      // roll for primary high-crime seeds
+      var added = 0;
+      for (area in lowAreas)
+        {
+          if (Std.random(100) >= 20)
+            continue;
+
+          if (!area.highCrime)
+            {
+              area.highCrime = true;
+              added++;
+            }
+
+          // spread high crime to adjacent similar blocks
+          for (yy in (area.y - 1)...(area.y + 2))
+            for (xx in (area.x - 1)...(area.x + 2))
+              {
+                if (xx == area.x && yy == area.y)
+                  continue;
+
+                var neighbor = getXY(xx, yy);
+                if (neighbor == null ||
+                    neighbor.typeID != area.typeID)
+                  continue;
+
+                if (Std.random(100) >= 60)
+                  continue;
+
+                if (!neighbor.highCrime)
+                  {
+                    neighbor.highCrime = true;
+                    added++;
+                  }
+              }
+        }
+
+      // ensure at least a few high-crime hotspots exist
+      if (added > 0)
+        return;
+
+      var fallbackCount =
+         (lowAreas.length > 3 ? 3 : lowAreas.length);
+      for (_ in 0...fallbackCount)
+        {
+          var idx = Std.random(lowAreas.length);
+          var forced = lowAreas[idx];
+          if (!forced.highCrime)
+            forced.highCrime = true;
+          lowAreas.splice(idx, 1);
         }
     }
 

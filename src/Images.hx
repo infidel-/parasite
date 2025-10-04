@@ -1,7 +1,4 @@
 // all ingame images access
-import js.html.CanvasElement;
-import js.html.CanvasRenderingContext2D;
-import js.Browser;
 import js.html.Image;
 
 class Images
@@ -48,14 +45,15 @@ class Images
       if (type == 'civilian')
         {
           // male64.png, female64.png civilians part
+          // NOTE: here
           var w = 10, h = (isMale ? 8 : 6);
-          for (i in 0...100)
+          for (_ in 0...100)
             {
               var x = Std.random(w);
               var y = Std.random(h);
               // check for hitting specials
               var ok = true;
-              for (t => arr in specials)
+              for (_ => arr in specials)
                 {
                   for (tmp in arr)
                     if (tmp.x == x && tmp.y == y)
@@ -112,17 +110,6 @@ class Images
       { x: 8, y: 6 },
       { x: 9, y: 6 },
     ],
-    'police' => [
-      { x: 0, y: 6 },
-      { x: 1, y: 6 },
-    ],
-    'scientist' => [
-      { x: 0, y: 7 },
-      { x: 1, y: 7 },
-      { x: 2, y: 7 },
-      { x: 3, y: 7 },
-      { x: 4, y: 7 },
-    ],
     'corpo' => [
       { x: 0, y: 8 },
       { x: 1, y: 8 },
@@ -132,6 +119,27 @@ class Images
       { x: 5, y: 8 },
       { x: 6, y: 8 },
       { x: 7, y: 8 },
+    ],
+    'hobo' => [
+      { x: 5, y: 7 },
+      { x: 6, y: 7 },
+      { x: 7, y: 7 },
+    ],
+    'police' => [
+      { x: 0, y: 6 },
+      { x: 1, y: 6 },
+    ],
+    'prostitute' => [
+      { x: 7, y: 10 },
+      { x: 8, y: 10 },
+      { x: 9, y: 10 },
+    ],
+    'scientist' => [
+      { x: 0, y: 7 },
+      { x: 1, y: 7 },
+      { x: 2, y: 7 },
+      { x: 3, y: 7 },
+      { x: 4, y: 7 },
     ],
     'smiler' => [
       { x: 0, y: 9 },
@@ -143,18 +151,19 @@ class Images
       { x: 6, y: 9 },
       { x: 7, y: 9 },
     ],
+    'thug' => [
+      { x: 0, y: 10 },
+      { x: 1, y: 10 },
+      { x: 2, y: 10 },
+      { x: 3, y: 10 },
+      { x: 4, y: 10 },
+      { x: 5, y: 10 },
+      { x: 6, y: 10 },
+    ],
     // NOTE: check start of file for empty tiles code on new row!
   ];
 
   public static var specialsMale = [
-    'police' => [
-      { x: 9, y: 2 },
-      { x: 1, y: 4 },
-      { x: 4, y: 7 },
-    ],
-    'soldier' => [
-      { x: 8, y: 7 },
-    ],
     'agent' => [
       { x: 8, y: 1 },
     ],
@@ -173,16 +182,6 @@ class Images
       { x: 0, y: 8 },
       { x: 2, y: 8 },
     ],
-    'security' => [
-      { x: 1, y: 8 },
-    ],
-    'scientist' => [
-      { x: 2, y: 9 },
-      { x: 3, y: 9 },
-      { x: 4, y: 9 },
-      { x: 5, y: 9 },
-      { x: 6, y: 9 },
-    ],
     'corpo' => [
       { x: 0, y: 10 },
       { x: 1, y: 10 },
@@ -193,11 +192,75 @@ class Images
       { x: 6, y: 10 },
       { x: 7, y: 10 },
     ],
+    'hobo' => [
+      { x: 1, y: 13 },
+      { x: 2, y: 13 },
+      { x: 3, y: 13 },
+      { x: 4, y: 13 },
+      { x: 5, y: 13 },
+      { x: 6, y: 13 },
+    ],
+    'police' => [
+      { x: 9, y: 2 },
+      { x: 1, y: 4 },
+      { x: 4, y: 7 },
+    ],
+    'scientist' => [
+      { x: 2, y: 9 },
+      { x: 3, y: 9 },
+      { x: 4, y: 9 },
+      { x: 5, y: 9 },
+      { x: 6, y: 9 },
+    ],
+    'security' => [
+      { x: 1, y: 8 },
+    ],
     'smiler' => [
       { x: 8, y: 9 },
       { x: 9, y: 9 },
       { x: 8, y: 10 },
       { x: 9, y: 10 },
+    ],
+    'soldier' => [
+      { x: 8, y: 7 },
+    ],
+    'thug' => [
+      { x: 0, y: 11 },
+      { x: 1, y: 11 },
+      { x: 2, y: 11 },
+      { x: 3, y: 11 },
+      { x: 4, y: 11 },
+      { x: 5, y: 11 },
+      { x: 6, y: 11 },
+      { x: 7, y: 11 },
+      { x: 8, y: 11 },
+      { x: 9, y: 11 },
+
+      { x: 0, y: 12 },
+      { x: 1, y: 12 },
+      { x: 2, y: 12 },
+      { x: 3, y: 12 },
+      { x: 4, y: 12 },
+      { x: 5, y: 12 },
+      { x: 6, y: 12 },
+      { x: 7, y: 12 },
+      { x: 8, y: 12 },
+      { x: 9, y: 12 },
+
+      { x: 0, y: 13 },
+
+      { x: 0, y: 14 },
+      { x: 1, y: 14 },
+      { x: 2, y: 14 },
+      { x: 3, y: 14 },
+      { x: 4, y: 14 },
+      { x: 5, y: 14 },
+      { x: 6, y: 14 },
+      { x: 7, y: 14 },
+    ],
+    'prostitute' => [
+      { x: 8, y: 14 },
+      { x: 9, y: 14 },
     ],
 
     // NOTE: check start of file for empty tiles code on new row!

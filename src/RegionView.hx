@@ -232,6 +232,21 @@ class RegionView
         Const.TILE_SIZE,
         Const.TILE_SIZE);
 
+      // high crime marker
+      if (area.highCrime && area.isKnown)
+        {
+          ctx.globalAlpha = 0.85;
+          ctx.drawImage(scene.images.entities,
+            Const.FRAME_HIGH_CRIME * Const.TILE_SIZE_CLEAN, 
+            Const.ROW_ALERT * Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            ax, ay,
+            Const.TILE_SIZE,
+            Const.TILE_SIZE);
+          ctx.globalAlpha = 1.0;
+        }
+
       // area icons
       untyped ctx.imageSmoothingEnabled = true;
       for (i in 0...6)
