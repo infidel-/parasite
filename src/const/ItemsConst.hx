@@ -56,7 +56,7 @@ class ItemsConst
       maxDamage: 3,
       verb1: 'punch',
       verb2: 'punches',
-      type: WEAPON_BLUNT,
+      type: WEAPON_MELEE,
       sound: {
         file: 'attack-fists',
         radius: 5,
@@ -79,7 +79,7 @@ class ItemsConst
       verb1: 'attack',
       verb2: 'attacks',
       // don't bother with weapon type
-      type: WEAPON_BLUNT,
+      type: WEAPON_MELEE,
       sound: {
         file: 'attack-bite',
         radius: 5,
@@ -116,9 +116,89 @@ class ItemsConst
         maxDamage: 6,
         verb1: 'hit',
         verb2: 'hits',
-        type: WEAPON_BLUNT,
+        type: WEAPON_MELEE,
         sound: {
           file: 'attack-baton',
+          radius: 5,
+          alertness: 10,
+        },
+      }
+    },
+    {
+      id: 'brassKnuckles',
+      name: 'brass knuckles',
+      type: 'weapon',
+      unknown: 'heavy rings',
+      weapon: {
+        isRanged: false,
+        skill: SKILL_FISTS,
+        minDamage: 2,
+        maxDamage: 5,
+        verb1: 'slug',
+        verb2: 'slugs',
+        type: WEAPON_MELEE,
+        sound: {
+          file: 'attack-fists',
+          radius: 4,
+          alertness: 6,
+        },
+      }
+    },
+    {
+      id: 'knife',
+      name: 'knife',
+      type: 'weapon',
+      unknown: 'small blade',
+      weapon: {
+        isRanged: false,
+        skill: SKILL_ATTACK,
+        minDamage: 1,
+        maxDamage: 6,
+        verb1: 'stab',
+        verb2: 'stabs',
+        type: WEAPON_MELEE,
+        sound: {
+          file: 'attack-knife',
+          radius: 4,
+          alertness: 8,
+        },
+      }
+    },
+    {
+      id: 'baseballBat',
+      name: 'baseball bat',
+      type: 'weapon',
+      unknown: 'wooden club',
+      weapon: {
+        isRanged: false,
+        skill: SKILL_BATON,
+        minDamage: 2,
+        maxDamage: 8,
+        verb1: 'club',
+        verb2: 'clubs',
+        type: WEAPON_MELEE,
+        sound: {
+          file: 'attack-baton',
+          radius: 5,
+          alertness: 10,
+        },
+      }
+    },
+    {
+      id: 'machete',
+      name: 'machete',
+      type: 'weapon',
+      unknown: 'broad blade',
+      weapon: {
+        isRanged: false,
+        skill: SKILL_ATTACK,
+        minDamage: 3,
+        maxDamage: 8,
+        verb1: 'slash',
+        verb2: 'slashes',
+        type: WEAPON_MELEE,
+        sound: {
+          file: 'attack-machete',
           radius: 5,
           alertness: 10,
         },

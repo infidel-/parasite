@@ -162,7 +162,7 @@ class CommonLogic
           var mods: Array<_DamageBonus> = [];
           // all melee weapons have damage bonus
           if (!weapon.isRanged &&
-              weapon.type == WEAPON_BLUNT)
+              weapon.type == WEAPON_MELEE)
             mods.push({
               name: 'melee 0.5xSTR',
               min: 0,

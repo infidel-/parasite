@@ -16,24 +16,49 @@ class ThugAI extends HumanAI
       skills.clear();
       inventory.addID(Std.random(100) < 45 ? 'smartphone' : 'mobilePhone');
       inventory.addID('money');
-      // equip thugs with a mostly guaranteed weapon
-      var roll = Std.random(100);
-      if (roll < 60)
+      // assign a single random weapon loadout
+      var weaponRoll = Std.random(100);
+      var weaponID = 'baseballBat';
+      var weaponSkill: _Skill = SKILL_BATON;
+      var weaponBase = 45;
+      var weaponSpread = 20;
+      if (weaponRoll < 20)
         {
-          inventory.addID('baton');
-          skills.addID(SKILL_BATON, 45 + Std.random(20));
+          weaponID = 'pistol';
+          weaponSkill = SKILL_PISTOL;
+          weaponBase = 40;
+          weaponSpread = 20;
+        }
+      else if (weaponRoll < 40)
+        {
+          weaponID = 'knife';
+          weaponSkill = SKILL_ATTACK;
+          weaponBase = 35;
+          weaponSpread = 15;
+        }
+      else if (weaponRoll < 60)
+        {
+          weaponID = 'machete';
+          weaponSkill = SKILL_ATTACK;
+          weaponBase = 40;
+          weaponSpread = 15;
+        }
+      else if (weaponRoll < 80)
+        {
+          weaponID = 'brassKnuckles';
+          weaponSkill = SKILL_FISTS;
+          weaponBase = 35;
+          weaponSpread = 20;
         }
       else
         {
-          inventory.addID('pistol');
-          skills.addID(SKILL_PISTOL, 40 + Std.random(20));
+          weaponID = 'baseballBat';
+          weaponSkill = SKILL_BATON;
+          weaponBase = 45;
+          weaponSpread = 15;
         }
-      // ensure a fallback weapon exists if RNG failed
-      if (inventory.getFirstWeapon() == null)
-        {
-          inventory.addID('baton');
-          skills.addID(SKILL_BATON, 35 + Std.random(15));
-        }
+      inventory.addID(weaponID);
+      skills.addID(weaponSkill, weaponBase + Std.random(weaponSpread));
       // give thugs a habit-forming vice
       if (Std.random(100) < 60 && !inventory.has('cigarettes'))
         inventory.addID('cigarettes');

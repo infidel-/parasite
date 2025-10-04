@@ -1569,9 +1569,10 @@ class Test {
 
 // spawn AI (both from command-line and internally)
   public static var aiTypes = [
-    'blackops', 'civilian (civ)', 'dog', 'police (cop)', 'soldier',
-    'security (sec)', 'scientist (sci)', 'agent', 'team',
-    'bum (hobo)', 'thug', 'prostitute (pro)',
+    'agent', 'blackops', 'bum (hobo)', 'civilian (civ)',
+    'dog', 'police (cop)', 'prostitute (pro)', 'soldier',
+    'security (sec)', 'scientist (sci)', 'team',
+    'thug',
   ];
   public function spawnAI(type: String, x: Int, y: Int, ?doAddAI:Bool = true): AI
     {
