@@ -2,16 +2,14 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class Paper extends ItemInfo
+class Paper extends Readable
 {
 // builds paper readable info
   public function new(game: Game)
     {
       super(game);
       id = 'paper';
-      type = 'readable';
       unknown = 'thin object with markings';
       names = [
         'piece of paper',

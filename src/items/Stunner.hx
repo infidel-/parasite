@@ -2,9 +2,8 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class Stunner extends ItemInfo
+class Stunner extends Weapon
 {
 // builds stunner weapon info
   public function new(game: Game)
@@ -12,7 +11,6 @@ class Stunner extends ItemInfo
       super(game);
       id = 'stunner';
       name = 'stunner';
-      type = 'weapon';
       unknown = 'elongated object';
       weapon = {
         isRanged: false,

@@ -66,59 +66,9 @@ class Inventory extends _SaveObject
           // can do stuff when item is known
           else
             {
-              // read a readable
-              if (item.info.type == 'readable')
-                tmp.push({
-                  id: 'read.' + item.id,
-                  type: ACTION_INVENTORY,
-                  name: 'Read ' + Const.col('inventory-item', itemName),
-                  energy: 10,
-                  isAgreeable: true,
-                  item: item
-                });
-
-              // use computer
-              else if (item.info.type == 'computer')
-                {
-                  if (game.player.evolutionManager.getLevel(IMP_ENGRAM) >= 1 &&
-                      !game.player.vars.mapAbsorbed)
-                    tmp.push({
-                      id: 'absorbMap.' + item.id,
-                      type: ACTION_INVENTORY,
-                      name: 'Absorb regional map',
-                      energy: 15,
-                      item: item
-                    });
-                  if (game.player.vars.searchEnabled)
-                    tmp.push({
-                      id: 'search.' + item.id,
-                      type: ACTION_INVENTORY,
-                      name: 'Use ' +
-                        Const.col('inventory-item', itemName) + ' to search',
-                      energy: 10,
-                      item: item
-                    });
-                }
-
-              // eat nutrients
-              else if (item.info.type == 'nutrients')
-                tmp.push({
-                  id: 'use.' + item.id,
-                  type: ACTION_INVENTORY,
-                  name: 'Consume ' + Const.col('inventory-item', itemName),
-                  energy: 0,
-                  item: item
-                });
-
-              // weapons can be marked as active
-              else if (item.info.type == 'weapon')
-                tmp.push({
-                  id: 'active.' + item.id,
-                  type: ACTION_INVENTORY,
-                  name: 'Mark ' + Const.col('inventory-item', itemName) + ' as active',
-                  energy: 0,
-                  item: item
-                });
+              var itemActions = item.info.getInventoryActions(item);
+              for (action in itemActions)
+                tmp.push(action);
             }
 
           // drop item
@@ -249,7 +199,7 @@ class Inventory extends _SaveObject
 // ACTION: mark weapon as active
   function activeAction(item: _Item)
     {
-      game.log('You will now attack with ' + item.name + '.');
+      game.log('You will now attack with the ' + item.name + '.');
       weaponID = item.id;
     }
 

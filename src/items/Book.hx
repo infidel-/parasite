@@ -2,16 +2,14 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class Book extends ItemInfo
+class Book extends Readable
 {
 // builds book readable info
   public function new(game: Game)
     {
       super(game);
       id = 'book';
-      type = 'readable';
       unknown = 'object with many markings';
       names = [ 'notebook', 'diary', 'journal', 'logbook', 'organizer', 'book' ];
       areaObjectClass = objects.Book;

@@ -2,9 +2,8 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class CombatShotgun extends ItemInfo
+class CombatShotgun extends Weapon
 {
 // builds combat shotgun weapon info
   public function new(game: Game)
@@ -12,7 +11,6 @@ class CombatShotgun extends ItemInfo
       super(game);
       id = 'combatShotgun';
       name = 'combat shotgun';
-      type = 'weapon';
       unknown = 'elongated metallic object';
       weapon = {
         isRanged: true,

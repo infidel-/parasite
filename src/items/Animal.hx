@@ -2,9 +2,8 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class Animal extends ItemInfo
+class Animal extends Weapon
 {
 // builds animal attack info
   public function new(game: Game)
@@ -12,7 +11,6 @@ class Animal extends ItemInfo
       super(game);
       id = 'animal';
       name = 'animal BUG!!!';
-      type = 'weapon';
       unknown = 'animal BUG!!!';
       weapon = {
         isRanged: false,

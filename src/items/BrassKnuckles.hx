@@ -2,9 +2,8 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class BrassKnuckles extends ItemInfo
+class BrassKnuckles extends Weapon
 {
 // builds brass knuckles weapon info
   public function new(game: Game)
@@ -12,7 +11,6 @@ class BrassKnuckles extends ItemInfo
       super(game);
       id = 'brassKnuckles';
       name = 'brass knuckles';
-      type = 'weapon';
       unknown = 'heavy rings';
       weapon = {
         isRanged: false,

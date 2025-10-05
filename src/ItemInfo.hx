@@ -2,6 +2,7 @@
 
 import game.Game;
 import game._Item;
+import _PlayerAction;
 
 typedef ArmorInfo = {
   var canAttach: Bool;
@@ -53,5 +54,11 @@ class ItemInfo
 // hook: updates inventory action list for this item
   public function updateActionList(item: _Item): Void
     {
+    }
+
+// returns extra inventory actions for known items
+  public function getInventoryActions(item: _Item): Array<_PlayerAction>
+    {
+      return [];
     }
 }

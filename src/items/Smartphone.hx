@@ -2,9 +2,8 @@
 package items;
 
 import game.Game;
-import ItemInfo;
 
-class Smartphone extends ItemInfo
+class Smartphone extends Computer
 {
 // builds smartphone info
   public function new(game: Game)
@@ -12,7 +11,6 @@ class Smartphone extends ItemInfo
       super(game);
       id = 'smartphone';
       name = 'smartphone';
-      type = 'computer';
       unknown = 'small plastic object';
     }
 }
