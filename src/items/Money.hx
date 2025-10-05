@@ -24,7 +24,7 @@ class Money extends ItemInfo
     {
       if (game.player.knowsItem(item.id))
         game.ui.hud.addAction({
-          id: 'throwMoney.' + item.id,
+          id: 'use.' + item.id,
           type: ACTION_INVENTORY,
           item: item,
           name: 'Throw money',
@@ -33,27 +33,12 @@ class Money extends ItemInfo
         });
     }
 
-// builds money-specific inventory actions
-  override public function getInventoryActions(item: _Item): Array<_PlayerAction>
-    {
-      var actions = super.getInventoryActions(item);
-      actions.push({
-        id: 'throwMoney.' + item.id,
-        type: ACTION_INVENTORY,
-        name: 'Throw money',
-        energy: 5,
-        isAgreeable: true,
-        item: item
-      });
-      return actions;
-    }
-
 // handles money-specific inventory actions
   override public function action(actionID: String, item: _Item): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'throwMoney': throwMoneyAction(item);
+          case 'use': throwMoneyAction(item);
           default: super.action(actionID, item);
         };
     }
