@@ -24,28 +24,35 @@ class ThugAI extends HumanAI
       var weaponSkill: _Skill = SKILL_BATON;
       var weaponBase = 45;
       var weaponSpread = 20;
-      if (weaponRoll < 20)
+      if (weaponRoll < 5)
+        {
+          weaponID = 'katana';
+          weaponSkill = SKILL_ATTACK;
+          weaponBase = 55;
+          weaponSpread = 20;
+        }
+      else if (weaponRoll < 25)
         {
           weaponID = 'pistol';
           weaponSkill = SKILL_PISTOL;
           weaponBase = 40;
           weaponSpread = 20;
         }
-      else if (weaponRoll < 40)
+      else if (weaponRoll < 45)
         {
           weaponID = 'knife';
           weaponSkill = SKILL_ATTACK;
           weaponBase = 35;
           weaponSpread = 15;
         }
-      else if (weaponRoll < 60)
+      else if (weaponRoll < 65)
         {
           weaponID = 'machete';
           weaponSkill = SKILL_ATTACK;
           weaponBase = 40;
           weaponSpread = 15;
         }
-      else if (weaponRoll < 80)
+      else if (weaponRoll < 85)
         {
           weaponID = 'brassKnuckles';
           weaponSkill = SKILL_FISTS;

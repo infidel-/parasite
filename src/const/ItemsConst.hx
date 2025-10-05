@@ -22,6 +22,7 @@ class ItemsConst
     Knife,
     BaseballBat,
     Machete,
+    Katana,
     Stunner,
     Pistol,
     AssaultRifle,
