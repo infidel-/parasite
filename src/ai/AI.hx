@@ -793,6 +793,8 @@ public function show()
     {
       if (src == 'default')
         setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
+      else if (src == 'drunk')
+        setState(AI_STATE_ALERT, null, 'feels groggy and confused.');
       else if (src == 'panic')
         setState(AI_STATE_ALERT, null, 'tears you away in panic. That hurt.');
       else if (src == 'berserk')

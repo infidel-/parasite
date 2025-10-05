@@ -47,14 +47,31 @@ class Alcohol extends ItemInfo
 // performs alcohol drinking behavior
   function imbibeAction(item: _Item): Bool
     {
+      var host = game.player.host;
+      if (host == null)
+        return false;
+
       game.scene.sounds.play('item-' + item.id);
-      game.player.host.emitSound({
+      host.emitSound({
         text: '*glug*',
         radius: 2,
         alertness: 2
       });
-      game.player.host.log('takes a few bold swigs, and then the bottle suddenly comes to an end.');
-      game.player.host.inventory.removeItem(item);
+      host.log('takes a few bold swigs, and the bottle quickly comes to an end.');
+      host.inventory.removeItem(item);
+
+      // apply drunk effect stack and evaluate blackout threshold
+      host.onEffect(new effects.Drunk(game, 10));
+      var drunkEffect = host.effects.get(EFFECT_DRUNK);
+
+      // trigger blackout when overindulged
+      if (drunkEffect.points >= 30)
+        {
+          host.onEffect(new effects.Paralysis(game, 5));
+          host.log('staggers, blacks out, and you lose the grip.');
+          host.onDetach('drunk');
+          game.playerArea.onDetach();
+        }
       return true;
     }
 }
