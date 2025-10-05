@@ -145,10 +145,11 @@ class Const
   public static var FRAME_DOOR_ELEVATOR = 10;
   public static var FRAME_DOOR_ELEVATOR_OPEN = 11;
 
-  // row 16 - floor drain
-  public static var ROW_OBJECT_INDOOR = 16;
+  // row 16 - objects
+  public static var ROW_OBJECT2 = 16;
   public static var FRAME_FLOOR_DRAIN = 0;
   public static var FRAME_VENTILATION = 1;
+  public static var FRAME_BURNING_BARREL = 2;
 
   // row 17,18 - documents
   public static var CHEM_LABS_DOCUMENTS = [

@@ -17,7 +17,7 @@ class FloorDrain extends AreaObject
   public override function init()
     {
       super.init();
-      imageRow = Const.ROW_OBJECT_INDOOR;
+      imageRow = Const.ROW_OBJECT2;
       imageCol = Const.FRAME_FLOOR_DRAIN;
       type = 'floor_drain';
       name = 'floor drain';

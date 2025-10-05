@@ -153,6 +153,22 @@ class AreaGenerator
       area.addObject(o);
     }
 
+// adjust walkable street tiles to their unwalkable variants
+  public function makeTileUnwalkable(area: AreaGame, x: Int, y: Int)
+    {
+      var tile = area.getCellType(x, y);
+      var newTile = tile;
+      if (tile == Const.TILE_ROAD)
+        newTile = Const.TILE_ROAD_UNWALKABLE;
+      else if (tile == Const.TILE_ALLEY)
+        newTile = Const.TILE_ALLEY_UNWALKABLE;
+      else if (tile == Const.TILE_WALKWAY)
+        newTile = Const.TILE_WALKWAY_UNWALKABLE;
+
+      if (newTile != tile)
+        area.setCellType(x, y, newTile);
+    }
+
 // print generated area tiles 
   public static function printArea(game: Game, area: AreaGame, mapTiles: Array<String>)
     {

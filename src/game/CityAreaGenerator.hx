@@ -8,7 +8,6 @@ import objects.*;
 import game.AreaGame;
 import game.AreaGenerator;
 import game.AreaGenerator._GeneratorState;
-import _AreaType;
 
 class CityAreaGenerator
 {
@@ -168,7 +167,7 @@ class CityAreaGenerator
           }
 
       // generate debris
-      placeStreetDebris(area);
+      placeStreetDebris(area, cells);
     }
 
 // generate objects on city block
@@ -202,12 +201,12 @@ class CityAreaGenerator
     }
 
 // generate street debris tuned by city tier
-  function placeStreetDebris(area: AreaGame)
+  function placeStreetDebris(area: AreaGame, cells: Array<Array<Int>>)
     {
       for (y in 0...area.height)
         for (x in 0...area.width)
           {
-            var tile = area.getCellType(x, y);
+            var tile = cells[x][y];
             if (!isStreetTile(tile))
               continue;
             if (area.hasObjectAt(x, y))
@@ -226,12 +225,22 @@ class CityAreaGenerator
           }
     }
 
-// Drop a transformable decoration and optionally scatter nearby debris
+// drop a transformable decoration and optionally scatter nearby debris
   function addDecorationTransformable(area: AreaGame,
       x: Int, y: Int, infos: Array<_TileRow>)
     {
       var centerCount = 3 + Std.random(2);
-      spawnTransformableDecorations(area, x, y, infos, centerCount);
+      // add burning barrel
+      if (Std.random(100) < 20)
+        {
+          var o = new Decoration(game, area.id, x, y,
+            Const.ROW_OBJECT2,
+            Const.FRAME_BURNING_BARREL);
+          area.addObject(o);
+          // change to unwalkable tile
+          gen.makeTileUnwalkable(area, x, y);
+        }
+      else spawnTransformableDecorations(area, x, y, infos, centerCount);
 
       var radius = 1 + Std.random(2);
       for (dx in -radius...radius + 1)
@@ -260,7 +269,7 @@ class CityAreaGenerator
           }
     }
 
-// Pick random sprites from infos and drop amount of DecorationExt on the tile
+// pick random sprites from infos and drop amount of DecorationExt on the tile
   function spawnTransformableDecorations(area: AreaGame,
       x: Int, y: Int, infos: Array<_TileRow>, amount: Int)
     {
@@ -274,7 +283,7 @@ class CityAreaGenerator
         }
     }
 
-// Resolve debris spawn chance for a tile type given area tier
+// resolve debris spawn chance for a tile type given area tier
   inline function debrisChanceFor(area: AreaGame, tile: Int): Int
     {
       var isRoad = (tile == Const.TILE_ROAD);
