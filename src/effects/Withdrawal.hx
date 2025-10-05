@@ -16,6 +16,13 @@ class Withdrawal extends Effect
       initPost(false);
     }
 
+// sets effect defaults
+  public override function init()
+    {
+      super.init();
+      name = 'withdrawal';
+    }
+
 // lowers host energy each turn
   public override function turn(ai: AI, time: Int)
     {

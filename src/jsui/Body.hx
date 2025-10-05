@@ -7,6 +7,7 @@ import js.html.DivElement;
 import js.html.LegendElement;
 import js.html.Element;
 
+import game.Effect;
 import game.Game;
 import game.Improv;
 import const.*;
@@ -76,7 +77,7 @@ class Body extends UIWindow
       setParams({
         inventoryList: updateInventoryList(),
         skillsParasite: updateSkillsParasite(),
-        skillsHost: updateSkillsHost(),
+        skillsHost: updateSkillsHost() + updateEffectsHost(),
         organsList: updateOrgansList(),
         organsInfo: updateOrgansInfo(),
         organsAvailable: updateOrgansAvailable(),
@@ -423,6 +424,41 @@ class Body extends UIWindow
             'Reduces the efficiency of reinforcing control<br/>' +
             '</span><br/>');
 
+        }
+      return buf.toString();
+    }
+
+// update host effects
+  function updateEffectsHost(): String
+    {
+      if (game.player.state != PLR_STATE_HOST)
+        return '';
+      var effects = new Array<Effect>();
+      for (effect in game.player.host.effects)
+        {
+          if (effect.isHidden)
+            continue;
+          effects.push(effect);
+        }
+      if (effects.length == 0)
+        return '';
+      effects.sort(function(a: Effect, b: Effect): Int
+        {
+          if (a.name < b.name)
+            return -1;
+          if (a.name > b.name)
+            return 1;
+          return 0;
+        });
+      var buf = new StringBuf();
+      buf.add('<br/>');
+      buf.add('<span class=host-attr-title>Effects</span><br/>');
+      for (effect in effects)
+        {
+          buf.add('<span class=host-attr-notes>' + effect.name);
+          if (effect.isTimer)
+            buf.add(' ' + Const.smallgray('(' + effect.points + ' turns)'));
+          buf.add('</span><br/>');
         }
       return buf.toString();
     }

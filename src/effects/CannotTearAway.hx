@@ -14,4 +14,12 @@ class CannotTearAway extends Effect
       init();
       initPost(false);
     }
+
+// sets effect defaults
+  public override function init()
+    {
+      super.init();
+      name = 'cannot tear away';
+      isHidden = true;
+    }
 }

@@ -14,4 +14,11 @@ class Paralysis extends Effect
       init();
       initPost(false);
     }
+
+// sets effect defaults
+  public override function init()
+    {
+      super.init();
+      name = 'paralysis';
+    }
 }

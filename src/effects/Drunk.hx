@@ -16,6 +16,13 @@ class Drunk extends Effect
       initPost(false);
     }
 
+// sets effect defaults
+  public override function init()
+    {
+      super.init();
+      name = 'drunk';
+    }
+
 // reduces control or scrambles host each turn
   public override function turn(ai: AI, time: Int)
     {

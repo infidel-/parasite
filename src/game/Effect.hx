@@ -10,6 +10,8 @@ class Effect extends _SaveObject
   public var type: _AIEffectType; // effect type
   public var points: Int; // current effect strength
   public var isTimer: Bool; // is this a timer?
+  public var name: String; // effect display name
+  public var isHidden: Bool; // should this effect be hidden from UI
 
 // creates base effect instance
   public function new(game: Game, type: _AIEffectType, points: Int, isTimer: Bool)
@@ -23,6 +25,8 @@ class Effect extends _SaveObject
 // init object before loading/post creation
   public function init()
     {
+      name = '';
+      isHidden = false;
     }
 
 // called after load or creation

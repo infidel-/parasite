@@ -16,6 +16,13 @@ class WhitePowder extends Effect
       initPost(false);
     }
 
+// sets effect defaults
+  public override function init()
+    {
+      super.init();
+      name = 'white powder';
+    }
+
 // restores host energy each turn
   public override function turn(ai: AI, time: Int)
     {
