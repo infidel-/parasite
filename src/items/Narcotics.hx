@@ -47,14 +47,23 @@ class Narcotics extends ItemInfo
 // performs narcotics snorting behavior
   function snortAction(item: _Item): Bool
     {
+      var host = game.player.host;
       game.scene.sounds.play('item-' + item.id);
-      game.player.host.emitSound({
+      host.emitSound({
         text: '*snort*',
         radius: 5,
         alertness: 5
       });
-      game.player.host.log('inhales the powder with unsettling confidence.');
-      game.player.host.inventory.removeItem(item);
+      host.log('inhales the powder with unsettling confidence.');
+      host.inventory.removeItem(item);
+      host.onEffect(new effects.WhitePowder(game, 10));
+
+      var powder = host.effects.get(EFFECT_WHITE_POWDER);
+      if (powder != null && powder.points > 30)
+        {
+          host.log('convulses as the powder overwhelms their body.');
+          game.player.onHostDeath('Your host overdoses on the white powder and perishes.');
+        }
       return true;
     }
 }

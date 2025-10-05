@@ -517,7 +517,7 @@ public function show()
 // logic: slime
   function effectSlime()
     {
-      var free = effects.decrease(EFFECT_SLIME, strength);
+      var free = effects.decrease(EFFECT_SLIME, strength, this);
       if (free)
         log('manages to get free of the mucus.');
       else log('desperately tries to get free of the mucus.');
@@ -554,7 +554,7 @@ public function show()
       stateTime++; // time spent in this state
       if (entity != null)
         entity.turn(); // time passing for entity
-      effects.turn(1); // time passing for effects
+      effects.turn(this, 1); // time passing for effects
 
       // effect: slime, does not allow movement
       if (effects.has(EFFECT_SLIME))

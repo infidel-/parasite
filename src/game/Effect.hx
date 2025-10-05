@@ -2,6 +2,8 @@
 
 package game;
 
+import ai.AI;
+
 class Effect extends _SaveObject
 {
   public var game: Game; // game state link
@@ -25,6 +27,16 @@ class Effect extends _SaveObject
 
 // called after load or creation
   public function initPost(onLoad: Bool)
+    {
+    }
+
+// runs effect-specific turn logic
+  public function turn(ai: AI, time: Int)
+    {
+    }
+
+// runs when effect is removed from AI
+  public function onRemove(ai: AI)
     {
     }
 }

@@ -2,6 +2,7 @@
 
 package game;
 
+import ai.AI;
 import ai.AIData;
 
 class Effects extends _SaveObject
@@ -22,6 +23,15 @@ class Effects extends _SaveObject
 // add new effect
   public function add(effect: Effect)
     {
+      var existing = get(effect.type);
+      if (existing != null)
+        {
+          existing.points += effect.points;
+          if (effect.isTimer && !existing.isTimer)
+            existing.isTimer = true;
+          return;
+        }
+
       _list.add(effect);
     }
 
@@ -50,13 +60,14 @@ class Effects extends _SaveObject
 
 // decrease effect lifetime and remove it if needed
 // note: returns true if effect is removed
-  public function decrease(type: _AIEffectType, pts: Int): Bool
+  public function decrease(type: _AIEffectType, pts: Int, aiRef: AI): Bool
     {
       var e = get(type);
       e.points -= pts;
       if (e.points <= 0)
         {
           _list.remove(e);
+          e.onRemove(aiRef);
           return true;
         }
 
@@ -72,17 +83,22 @@ class Effects extends _SaveObject
 
 
 // passage of time
-  public function turn(time: Int)
+  public function turn(aiRef: AI, time: Int)
     {
       // rot timer effects
       for (e in _list)
         {
+          e.turn(aiRef, time);
+
           if (!e.isTimer)
             continue;
 
           e.points -= time;
           if (e.points <= 0)
-            _list.remove(e);
+            {
+              _list.remove(e);
+              e.onRemove(aiRef);
+            }
         }
     }
 
