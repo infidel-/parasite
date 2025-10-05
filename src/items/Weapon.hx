@@ -30,4 +30,22 @@ class Weapon extends ItemInfo
       });
       return actions;
     }
+
+// handles weapon-specific inventory actions
+  override public function action(actionID: String, item: _Item): Null<Bool>
+    {
+      return switch (actionID)
+        {
+          case 'active': activeAction(item);
+          default: super.action(actionID, item);
+        };
+    }
+
+// marks this weapon as the active choice
+  function activeAction(item: _Item): Bool
+    {
+      game.log('You will now attack with the ' + item.name + '.');
+      game.player.host.inventory.weaponID = item.id;
+      return true;
+    }
 }

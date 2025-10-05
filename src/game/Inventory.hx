@@ -97,32 +97,20 @@ class Inventory extends _SaveObject
       var ret = true;
       switch (actionID)
         {
-          // read item
-          case 'read':
-            readAction(action.item);
-          // generic use item
-          case 'use':
-            ret = useAction(action.item);
-          // search for npc with item
-          case 'search':
-            ret = searchAction(action.item);
           // drop item
           case 'drop':
             dropAction(action.item);
           // learn about item
           case 'learn':
             learnAction(action.item);
-          // throw money
-          case 'throwMoney':
-            throwMoneyAction(action.item);
-          // absorb regional map
-          case 'absorbMap':
-            absorbMapAction(action.item);
-          // mark as active
-          case 'active':
-            activeAction(action.item);
           default:
-            Const.todo('no such action: ' + actionID);
+            {
+              var handled: Null<Bool> = (action.item != null ?
+                action.item.info.action(actionID, action.item) : null);
+              if (handled == null)
+                Const.todo('no such action: ' + actionID);
+              else ret = handled;
+            }
         }
 
       // if action was completed, end turn, etc
@@ -137,118 +125,6 @@ class Inventory extends _SaveObject
           else Const.todo('Inventory.action() in region mode!');
         }
     }
-
-// ACTION: throw money
-  function throwMoneyAction(item: _Item)
-    {
-      var range = 3;
-      var time = 3;
-      var tmp = game.area.getAIinRadius(
-        game.playerArea.x, game.playerArea.y,
-        range, false);
-
-      game.log('Your host throws money around.');
-      game.scene.sounds.play('item-money');
-      removeItem(item);
-
-      // spawn visual effects
-      var xo = game.playerArea.x;
-      var yo = game.playerArea.y;
-      for (yy in yo - range...yo + range)
-        for (xx in xo - range...xo + range)
-          {
-            if (!game.area.isWalkable(xx, yy))
-              continue;
-
-            if (Const.distanceSquared(xo, yo, xx, yy) >
-                range * range)
-              continue;
-
-            new particles.ParticleMoney(game.scene,
-              { x: xx, y: yy });
-          }
-
-      // affect all AI in range
-      for (ai in tmp)
-        {
-          // do not affect self and dogs
-          if (ai == game.player.host ||
-              !ai.isHuman)
-            continue;
-
-          // set alertness
-          if (ai.state == AI_STATE_IDLE)
-            {
-              ai.alertness = 100;
-              ai.setState(AI_STATE_ALERT, REASON_PARASITE);
-            }
-
-          // AI effect event
-          ai.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: time,
-            isTimer: true
-          });
-        }
-      // repaint view with effects
-      game.scene.updateCamera();
-
-      return true;
-    }
-
-// ACTION: mark weapon as active
-  function activeAction(item: _Item)
-    {
-      game.log('You will now attack with the ' + item.name + '.');
-      weaponID = item.id;
-    }
-
-// ACTION: generic use item
-  function useAction(item: _Item): Bool
-    {
-      if (item.info.type == 'nutrients')
-        {
-          game.log('Your host gnaws the delicious nutrients recovering health and energy.');
-          game.scene.sounds.play('item-nutrients');
-          game.player.host.health += 10;
-          game.player.host.energy += 50;
-        }
-      return true;
-    }
-
-// ACTION: read item
-  function readAction(item: _Item)
-    {
-      // can only read books in habitat
-      if (item.id == 'book' && !game.area.isHabitat)
-        {
-          if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
-            itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
-          else itemFailed("This action requires intense concentration and time. You cannot do it yet.");
-          game.profile.addPediaArticle('msgConcentration');
-          return;
-        }
-
-      game.log('You study the contents of the ' + item.name + ' and destroy it.');
-      var cnt = 0;
-      cnt += (game.timeline.learnClues(item.event, true) ? 1 : 0);
-      if (item.id == 'book') // 1 more clue try in books
-        cnt += (game.timeline.learnClues(item.event, true) ? 1 : 0);
-      if (Std.random(100) < 30)
-        cnt += (game.timeline.learnSingleClue(item.event, true) ? 1 : 0);
-      if (Std.random(100) < 10)
-        cnt += (game.timeline.learnSingleClue(item.event, true) ? 1 : 0);
-
-      // no clues learned
-      if (cnt == 0)
-        game.player.log('You have not been able to gain any clues.',
-          COLOR_TIMELINE);
-      game.scene.sounds.play('item-' + item.id);
-
-      // destroy item
-      _list.remove(item);
-    }
-
 
 // ACTION: learn about item
   function learnAction(item: _Item)
@@ -269,110 +145,6 @@ class Inventory extends _SaveObject
     }
 
 
-// ACTION: search for npc information
-  function searchAction(item: _Item): Bool
-    {
-      // player does not have computer skill
-      var skillLevel = game.player.skills.getLevel(SKILL_COMPUTER);
-      if (skillLevel == 0)
-        {
-          itemFailed('You require the computer use skill to do that.');
-          return false;
-        }
-
-      // can only do that in habitat
-      if (!game.area.isHabitat)
-        {
-          if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
-            itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
-          else itemFailed("This action requires intense concentration and time. You cannot do it yet.");
-          game.profile.addPediaArticle('msgConcentration');
-          return false;
-        }
-
-      // check if all npcs researched
-      var allKnown = true;
-      for (e in game.timeline)
-        {
-          if (e.isHidden)
-            continue;
-
-          if (!e.npcCanResearch())
-            continue;
-
-          allKnown = false;
-          break;
-        }
-
-      if (allKnown)
-        {
-          itemFailed('You have already researched all known persons.');
-          return false;
-        }
-
-      // roll for skill
-      var mods = [];
-      if (item.info.name == 'laptop')
-        mods.push({ name: 'laptop', val: 10.0 });
-      var ret = __Math.skill({
-        id: SKILL_COMPUTER,
-        level: skillLevel,
-        mods: mods
-        });
-      if (!ret)
-        {
-          itemFailed('You have failed to use the human device properly. You still gain some insight.');
-          game.player.skills.increase(SKILL_COMPUTER, 1);
-          return true;
-        }
-
-      game.scene.sounds.play('item-' + item.id);
-      game.log('You use the ' + item.name + ' to search for known persons data.');
-      if (skillLevel < 99)
-        game.player.skills.increase(SKILL_COMPUTER, 2);
-
-      var cnt = 1;
-      if (item.info.name == 'smartphone')
-        cnt = 1;
-      else if (item.info.name == 'laptop')
-        cnt = 3;
-
-      // goals completed
-      game.goals.complete(GOAL_USE_COMPUTER);
-      game.goals.receive(GOAL_LEARN_ENGRAM);
-
-      // find first event that has some half-known npcs
-      for (e in game.timeline)
-        for (n in e.npc)
-          {
-            if (!n.nameKnown && !n.jobKnown)
-              continue;
-
-            if (n.fullyKnown())
-              continue;
-
-            // easy difficulty - cnt acts as number npcs to fully research
-            if (game.timeline.difficulty == EASY)
-              {
-                n.researchFull();
-                cnt--;
-                if (cnt <= 0)
-                  return true;
-              }
-            else
-              {
-                // normal, hard difficulty - cnt acts as research tries count
-                while (cnt > 0 && n.research())
-                  cnt--;
-                if (cnt <= 0)
-                  return true;
-              }
-          }
-
-      return true;
-    }
-
-
 // ACTION: drop item
   function dropAction(item: _Item)
     {
@@ -382,20 +154,6 @@ class Inventory extends _SaveObject
         item.name : item.info.unknown);
       game.player.log('You drop the ' + Const.col('inventory-item', itemName) + '.');
       game.scene.sounds.play('item-drop');
-    }
-
-// ACTION: absorb regional map
-  function absorbMapAction(item: _Item)
-    {
-      game.log('You absorb the regional map into the engram.');
-      game.player.vars.mapAbsorbed = true;
-    }
-
-// item failed log and sound
-  function itemFailed(msg: String)
-    {
-      game.log(msg);
-      game.scene.sounds.play('item-fail');
     }
 
 // list iterator

@@ -61,4 +61,17 @@ class ItemInfo
     {
       return [];
     }
+
+// handles inventory action execution for this item
+  public function action(actionID: String, item: _Item): Null<Bool>
+    {
+      return null;
+    }
+
+// logs item failure feedback with sound
+  public function itemFailed(msg: String)
+    {
+      game.log(msg);
+      game.scene.sounds.play('item-fail');
+    }
 }

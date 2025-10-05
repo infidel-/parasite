@@ -34,4 +34,24 @@ class Nutrients extends ItemInfo
       });
       return actions;
     }
+
+// handles nutrient-specific inventory actions
+  override public function action(actionID: String, item: _Item): Null<Bool>
+    {
+      return switch (actionID)
+        {
+          case 'use': useAction(item);
+          default: super.action(actionID, item);
+        };
+    }
+
+// performs nutrient consumption effects
+  function useAction(item: _Item): Bool
+    {
+      game.log('Your host gnaws the delicious nutrients recovering health and energy.');
+      game.scene.sounds.play('item-nutrients');
+      game.player.host.health += 10;
+      game.player.host.energy += 50;
+      return true;
+    }
 }
