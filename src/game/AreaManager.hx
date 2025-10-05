@@ -210,6 +210,7 @@ class AreaManager extends _SaveObject
 // event: civilian calls the law
   function onCallLaw(e: AreaEvent)
     {
+      // attached parasite can stop phone/radio calls
       if (game.player.difficulty == UNSET ||
           game.player.difficulty == EASY)
         {
@@ -222,6 +223,8 @@ class AreaManager extends _SaveObject
               return;
             }
         }
+
+      // pick reason and area alertness/group prio points
       var sdetails;
       var apts = 0;
       var pts = 0;
@@ -262,10 +265,19 @@ class AreaManager extends _SaveObject
         canDelay: true,
         always: false,
       });
+      // high crime area has a chance of not responding
+      if (area.highCrime && Std.random(100) < 80)
+        {
+          log(Const.capitalize(area.info.lawType) +
+            ' has received reports about ' + sdetails +
+            '. Units were not dispatched.');
+          return;
+        }
       log(Const.capitalize(area.info.lawType) +
         ' has received reports about ' + sdetails +
         '. Dispatching units to the location.');
 
+      // raise group priority
       game.group.raisePriority(pts);
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
