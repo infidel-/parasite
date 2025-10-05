@@ -235,6 +235,13 @@ Alt+0-5 - equals F1-F5<br>
           text: "The city is divided into three distinct area types based on density: low, medium, and high. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. High-density areas are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering the high density area will give the parasite an idea...",
         },
         {
+          id: 'areaHighCrime',
+          name: 'High Crime Area',
+          text: "<p>High-crime blocks are choked with uncollected garbage, broken glass and improvised burn barrels. The air is foul and the inhabitants are the city's undesirables: bums staking out doorways, armed thugs guarding their corners and prostitutes trying to survive another night.</p>
+
+<p>The thugs are aggressive and respond immediately if attacked, escalating to lethal force without hesitation. Police patrols are almost non-existent and even if someone manages to call them, the response rarely materializes.</p>",
+        },
+        {
           id: 'areaCorp',
           name: 'Corporate HQ',
           img: 'pedia/area_corphq',

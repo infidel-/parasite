@@ -431,6 +431,8 @@ class PlayerRegion extends _SaveObject
         game.goals.complete(GOAL_TUTORIAL_AREA_ALERT);
       var area = game.region.getXY(x, y);
       game.profile.addPediaArticle(area.info.pediaArticle);
+      if (area.highCrime)
+        game.profile.addPediaArticle('areaHighCrime');
 
       // run trigger on move to
       var o = game.region.getObjectAt(x, y);
