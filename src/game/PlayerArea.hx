@@ -465,8 +465,8 @@ class PlayerArea extends _SaveObject
   public function getCurrentWeapon()
     {
       // get current weapon
-      var item = null;
-      var info = null;
+      var item: _Item = null;
+      var info: ItemInfo = null;
 
       // check if player has active weapon
       var inventory = player.host.inventory;
@@ -486,10 +486,10 @@ class PlayerArea extends _SaveObject
 
       // use animal attack
       if (!player.host.isHuman)
-        info = ItemsConst.animal;
+        info = ItemsConst.getInfo('animal');
       // use fists
       else if (item == null)
-        info = ItemsConst.fists;
+        info = ItemsConst.getInfo('fists');
       else info = item.info;
 
       return info.weapon;

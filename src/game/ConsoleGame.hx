@@ -496,7 +496,9 @@ class ConsoleGame
               var buf = new StringBuf();
               buf.add('Usage: ai [item]<br/>');
               buf.add('Items: ');
-              for (info in ItemsConst.items)
+              if (ItemsConst.infos == null)
+                ItemsConst.init(game);
+              for (info in ItemsConst.infos)
                 buf.add(info.id + ', ');
               var s = buf.toString();
               s = s.substr(0, s.length - 2) + '.';
@@ -1348,4 +1350,3 @@ class ConsoleGame
       game.log(Const.small(s), COLOR_DEBUG);
     }
 }
-

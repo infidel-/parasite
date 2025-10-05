@@ -9,6 +9,7 @@ import haxe.Json;
 import jsui.UI;
 import scenario.Timeline;
 import cult.Cult;
+import const.ItemsConst;
 
 @:expose
 class Game extends _SaveObject
@@ -56,6 +57,7 @@ class Game extends _SaveObject
   public function new()
     {
       inst = this;
+      ItemsConst.init(this);
       config = new Config(this);
       profile = new Profile(this);
       ui = new UI(this);

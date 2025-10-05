@@ -2,6 +2,7 @@
 package game;
 
 import const.ItemsConst;
+import ItemInfo;
 
 @:structInit class _Item extends _SaveObject
 {
@@ -10,7 +11,7 @@ import const.ItemsConst;
   var game: Game;
   public var id: String; // item id
   public var name: String; // actual item name (from a group of names)
-  public var info: _ItemInfo; // item info link
+  public var info: ItemInfo; // item info link
   public var event: scenario.Event; // scenario event link (for clues)
   var eventID: String;
   public var lockID: String; // for key cards

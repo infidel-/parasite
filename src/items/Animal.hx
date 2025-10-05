@@ -1,0 +1,32 @@
+// defines animal attack special weapon
+package items;
+
+import game.Game;
+import ItemInfo;
+
+class Animal extends ItemInfo
+{
+// builds animal attack info
+  public function new(game: Game)
+    {
+      super(game);
+      id = 'animal';
+      name = 'animal BUG!!!';
+      type = 'weapon';
+      unknown = 'animal BUG!!!';
+      weapon = {
+        isRanged: false,
+        skill: SKILL_ATTACK,
+        minDamage: 1,
+        maxDamage: 4,
+        verb1: 'attack',
+        verb2: 'attacks',
+        type: WEAPON_MELEE,
+        sound: {
+          file: 'attack-bite',
+          radius: 5,
+          alertness: 3,
+        },
+      };
+    }
+}

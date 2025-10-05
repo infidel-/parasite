@@ -1,0 +1,32 @@
+// defines combat shotgun ranged weapon
+package items;
+
+import game.Game;
+import ItemInfo;
+
+class CombatShotgun extends ItemInfo
+{
+// builds combat shotgun weapon info
+  public function new(game: Game)
+    {
+      super(game);
+      id = 'combatShotgun';
+      name = 'combat shotgun';
+      type = 'weapon';
+      unknown = 'elongated metallic object';
+      weapon = {
+        isRanged: true,
+        skill: SKILL_SHOTGUN,
+        minDamage: 4,
+        maxDamage: 24,
+        verb1: 'shoot',
+        verb2: 'shoots',
+        type: WEAPON_KINETIC,
+        sound: {
+          file: 'attack-shotgun',
+          radius: 10,
+          alertness: 30,
+        },
+      };
+    }
+}

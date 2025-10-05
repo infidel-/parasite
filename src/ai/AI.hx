@@ -1,7 +1,7 @@
 // NPC AI game state (+ visual and ingame state)
 package ai;
 
-import game._ItemInfo._WeaponInfo;
+import ItemInfo.WeaponInfo;
 import entities.AIEntity;
 import _AIState;
 import _AIEffectType;
@@ -993,7 +993,7 @@ public function show()
     }
 
 // this ai was attacked by (player, ai)
-  public function attacked(attacker: { who: String, ai: AI, weapon: _WeaponInfo })
+  public function attacked(attacker: { who: String, ai: AI, weapon: WeaponInfo })
     {
       // propagate shooting/melee event
       game.managerArea.onAttack(x, y,

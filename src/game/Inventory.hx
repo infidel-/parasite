@@ -25,7 +25,7 @@ class Inventory extends _SaveObject
   public function init()
     {
       _list = new List();
-      var info = ItemsConst.armorNone;
+      var info = ItemsConst.getInfo('armorNone');
       clothing = {
         game: game,
         id: info.id,
@@ -137,8 +137,7 @@ class Inventory extends _SaveObject
   public function updateActionList()
     {
       for (item in _list)
-        if (item.info.updateActionList != null)
-          item.info.updateActionList(game, item);
+        item.info.updateActionList(item);
     }
 
 // ACTION: player inventory action
@@ -307,8 +306,7 @@ class Inventory extends _SaveObject
       game.log('You probe the brain of the host and learn that this item is a ' +
         Const.col('inventory-item', item.name) + '.');
       game.player.addKnownItem(item.id);
-      if (item.info.onLearn != null)
-        item.info.onLearn(game, game.player);
+      item.info.onLearn();
 
       // on first learn items
       game.goals.complete(GOAL_LEARN_ITEMS);
@@ -555,4 +553,3 @@ class Inventory extends _SaveObject
       return tmp.join(', ');
     }
 }
-
