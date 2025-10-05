@@ -55,6 +55,32 @@ class NameConst
     'Research Lab',
     ];
 
+  // thug rapper prefix list
+  public static var thugPrefixes = [
+    'Lil', 'Kid', 'Ya', 'Big', 'Ice', 'Madd', 'Yung',
+    'MC', 'DJ', 'OG', 'JJ', 'J.R.',
+    'Count', 'Baby', 'Boss', 'Dirty', 'Flai', 'Ace', 'King',
+    'Hard', 'Hevy'
+    ];
+
+  // thug rapper word suffix list
+  public static var thugWords = [
+    'Dolla', 'Buck', 'Nite', 'DumDum', 'Boi', 'Stax',
+    'Juce', 'Rydah', 'Bleyz', 'Razur', 'Nok', 'Shade',
+    'Monsta', 'Killa', 'Gangsta', 'Gorilla', 'Gucci',
+    'Flexx', 'Flow', 'Yaboi', 'Gudda', 'Guru', 'Hittman',
+    'Honey', 'Foxx', 'Jamal', 'Jay', 'Bada$$', 'Kardinal',
+    'Kokane', 'Wil', 'Peep', 'Dickbleed', 'Masta', 'Doom',
+    'Dawg', 'Dogg', 'Needlz', 'Necro', 'Malice', 'Nutty',
+    'Tempah', 'Mofo',
+    ];
+
+  // thug rapper jewelry suffix list
+  public static var thugJewelry = [
+    'Chain', 'Bling', 'Ice', 'Jool', 'Jule', 'Jules', 'Gold', 'Dymond', 'Purl', 'Rring', 'Kraun',
+    'Grilz',
+    ];
+
 
 // generates a name by its components
   public static function generate(name: String)
@@ -87,6 +113,36 @@ class NameConst
             }
 
       return name;
+    }
+
+
+// generates a random thug name
+  public static function getThugName(isMale: Bool): String
+    {
+      var prefix = NameConst.thugPrefixes[Std.random(NameConst.thugPrefixes.length)];
+
+      var suffix: String;
+      var suffixChoice = Std.random(4);
+      switch (suffixChoice)
+        {
+          // single letter
+          case 0:
+            suffix = String.fromCharCode(65 + Std.random(26));
+          // word
+          case 1:
+            suffix = NameConst.thugWords[Std.random(NameConst.thugWords.length)];
+
+          // name
+          case 2:
+            var firstPool = isMale ? NameConst.maleFirst : NameConst.femaleThugFirst;
+            suffix = firstPool[Std.random(firstPool.length)];
+
+          // jewelry
+          default:
+            suffix = NameConst.thugJewelry[Std.random(NameConst.thugJewelry.length)];
+        }
+
+      return prefix + ' ' + suffix;
     }
 
 
@@ -164,6 +220,39 @@ class NameConst
     "Sylvia", "Tammy", "Teresa", "Thelma", "Theresa", "Tiffany", "Tina",
     "Tracy", "Valerie", "Vanessa", "Veronica", "Victoria", "Virginia",
     "Vivian", "Wanda", "Wendy", "Yolanda", "Yvonne",
+    ];
+
+  // female thug first names
+  public static var femaleThugFirst = [
+    "Alice", "Lisha", "Alma", "Mandy", "Amber", "Amy", "Ana",
+    "Angela", "Neeta", "Ann", "Annie", "April",
+    "Bo", "Bernice",
+    "Betty", "Beverly", "Bonnie", "Brenda", "Carmen",
+    "Kery", "Candy", "Lotte",
+    "Sheryl", "Cindy",
+    "Crystal", "Dana", "Dani", "Darlene", "Dawn", "Debbie",
+    "Dolores", "Donna",
+    "Doris", "Elaine",
+    "Emma", "Rica",
+    "Eva", "Flo", "Frances", "Gail",
+    "Gloria", "Hazel", "Helen", "Holly",
+    "Jackie", "Jamie", "Jane", "Janet", "Jean",
+    "Jen", "Jesse", "Jill", "Jo",
+    "Juanita", "Judy",
+    "June", "Karen", "Kat",
+    "Katie", "Kelly", "Kim", "Kristy", "Lara",
+    "Lily", "Lisa", "Lois",
+    "Lori", "Lucy", "Lynn", "Margo",
+    "Marj", "Meg",
+    "Michele",
+    "Nancy", "Nico", "Pam", "Pat", "Paula",
+    "Peg", "Gina", "Renee", "Rho",
+    "Rita", "Rosa", "Rose", "Ruby",
+    "Sam", "Sandra", "Sheila",
+    "Sherry", "Stacy", "Sue",
+    "Tammy", "Tina",
+    "Tracy", "Val", "Nessa", "Vicky",
+    "Wanda", "Yolanda",
     ];
 
   // last names

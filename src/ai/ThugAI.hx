@@ -11,6 +11,8 @@ class ThugAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      name.real = name.realCapped =
+        const.NameConst.getThugName(isMale);
       // rebuild thug inventory with mandated gear
       inventory.clear();
       skills.clear();
