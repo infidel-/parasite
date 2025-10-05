@@ -64,6 +64,9 @@ class ThugAI extends HumanAI
       // give thugs a habit-forming vice
       if (Std.random(100) < 60 && !inventory.has('cigarettes'))
         inventory.addID('cigarettes');
+      // keep narcotics on hand for street hustle
+      if (Std.random(100) < 65)
+        inventory.addID('narcotics');
       // street experience helps intimidation
       skills.addID(SKILL_PSYCHOLOGY, 20 + Std.random(20));
       skills.addID(SKILL_COERCION, 30 + Std.random(20));

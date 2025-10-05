@@ -407,6 +407,18 @@ class ItemsConst
       unknown: 'small container',
     },
     {
+      id: 'alcohol',
+      name: 'bottle of alcohol',
+      type: 'junk',
+      unknown: 'glass container of liquid',
+    },
+    {
+      id: 'narcotics',
+      name: 'bag of white powder',
+      type: 'junk',
+      unknown: 'small plastic bag',
+    },
+    {
       id: 'nutrients',
       name: 'nutrients',
       type: 'nutrients',

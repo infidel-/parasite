@@ -33,6 +33,10 @@ class CivilianAI extends HumanAI
         }
       else inventory.addID('mobilePhone');
 
+      // rarely carry illicit narcotics for flavor events
+      if (Std.random(100) < 5)
+        inventory.addID('narcotics');
+
       // these only spawn when they're useful
       if (game.player.vars.searchEnabled)
         {

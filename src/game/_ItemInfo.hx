@@ -23,7 +23,7 @@ typedef _ItemInfo =
   @:optional var areaObjectClass: Dynamic;
   // called on learning about this item
   @:optional var onLearn: Game -> Player -> Void;
-  // called on learning about this item
+  // added actions
   @:optional var updateActionList: Game -> _Item -> Void;
 }
 

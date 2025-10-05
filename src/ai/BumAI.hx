@@ -20,6 +20,9 @@ class BumAI extends HumanAI
       // give bums occasional cigarettes for flavor
       if (Std.random(100) < 40)
         inventory.addID('cigarettes');
+      // stock bums with cheap alcohol for barter
+      if (Std.random(100) < 60)
+        inventory.addID('alcohol');
       initPost(false);
     }
 

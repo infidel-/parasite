@@ -21,6 +21,9 @@ class ProstituteAI extends HumanAI
       // give prostitutes a chance to carry cigarettes
       if (Std.random(100) < 50)
         inventory.addID('cigarettes');
+      // stash narcotics for transactional leverage
+      if (Std.random(100) < 60)
+        inventory.addID('narcotics');
       // lean on social manipulation skills
       skills.addID(SKILL_PSYCHOLOGY, 20 + Std.random(20));
       skills.addID(SKILL_COAXING, 30 + Std.random(20));
