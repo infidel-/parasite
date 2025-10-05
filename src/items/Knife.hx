@@ -14,7 +14,7 @@ class Knife extends Weapon
       unknown = 'small blade';
       weapon = {
         isRanged: false,
-        skill: SKILL_ATTACK,
+        skill: SKILL_KNIFE,
         minDamage: 1,
         maxDamage: 6,
         verb1: 'stab',

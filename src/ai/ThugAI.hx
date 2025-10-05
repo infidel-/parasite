@@ -21,13 +21,13 @@ class ThugAI extends HumanAI
       // assign a single random weapon loadout
       var weaponRoll = Std.random(100);
       var weaponID = 'baseballBat';
-      var weaponSkill: _Skill = SKILL_BATON;
+      var weaponSkill: _Skill = SKILL_CLUB;
       var weaponBase = 45;
       var weaponSpread = 20;
       if (weaponRoll < 5)
         {
           weaponID = 'katana';
-          weaponSkill = SKILL_ATTACK;
+          weaponSkill = SKILL_KATANA;
           weaponBase = 55;
           weaponSpread = 20;
         }
@@ -41,14 +41,14 @@ class ThugAI extends HumanAI
       else if (weaponRoll < 45)
         {
           weaponID = 'knife';
-          weaponSkill = SKILL_ATTACK;
+          weaponSkill = SKILL_KNIFE;
           weaponBase = 35;
           weaponSpread = 15;
         }
       else if (weaponRoll < 65)
         {
           weaponID = 'machete';
-          weaponSkill = SKILL_ATTACK;
+          weaponSkill = SKILL_MACHETE;
           weaponBase = 40;
           weaponSpread = 15;
         }

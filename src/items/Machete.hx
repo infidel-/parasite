@@ -14,7 +14,7 @@ class Machete extends Weapon
       unknown = 'broad blade';
       weapon = {
         isRanged: false,
-        skill: SKILL_ATTACK,
+        skill: SKILL_MACHETE,
         minDamage: 3,
         maxDamage: 8,
         verb1: 'slash',

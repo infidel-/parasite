@@ -34,6 +34,30 @@ class SkillsConst
       defaultLevel: 40,
     },
     {
+      id: SKILL_CLUB,
+      group: 'Combat',
+      name: 'club',
+      defaultLevel: 35,
+    },
+    {
+      id: SKILL_KNIFE,
+      group: 'Combat',
+      name: 'knife',
+      defaultLevel: 30,
+    },
+    {
+      id: SKILL_MACHETE,
+      group: 'Combat',
+      name: 'machete',
+      defaultLevel: 35,
+    },
+    {
+      id: SKILL_KATANA,
+      group: 'Combat',
+      name: 'katana',
+      defaultLevel: 45,
+    },
+    {
       id: SKILL_PISTOL,
       group: 'Combat',
       name: 'pistol',

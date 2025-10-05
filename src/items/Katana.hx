@@ -19,7 +19,7 @@ class Katana extends Weapon
         maxDamage: 10,
         verb1: 'cut',
         verb2: 'cuts',
-        skill: SKILL_ATTACK,
+        skill: SKILL_KATANA,
         type: WEAPON_MELEE,
       };
     }

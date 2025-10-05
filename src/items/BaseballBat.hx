@@ -14,7 +14,7 @@ class BaseballBat extends Weapon
       unknown = 'wooden club';
       weapon = {
         isRanged: false,
-        skill: SKILL_BATON,
+        skill: SKILL_CLUB,
         minDamage: 2,
         maxDamage: 8,
         verb1: 'club',
