@@ -231,7 +231,8 @@ class CityAreaGenerator
     {
       var centerCount = 3 + Std.random(2);
       // add burning barrel
-      if (Std.random(100) < 20)
+      if (Std.random(100) < 20 &&
+          area.typeID == AREA_CITY_LOW)
         {
           var o = new Decoration(game, area.id, x, y,
             Const.ROW_OBJECT2,
@@ -265,6 +266,8 @@ class CityAreaGenerator
               continue;
 
             var neighbourCount = 1 + Std.random(4);
+            if (area.typeID != AREA_CITY_LOW)
+              neighbourCount += 1 + Std.random(2);
             spawnTransformableDecorations(area, nx, ny, infos, neighbourCount);
           }
     }
@@ -283,7 +286,7 @@ class CityAreaGenerator
         }
     }
 
-// resolve debris spawn chance for a tile type given area tier
+// resolve debris spawn chance for a tile type given area tier (out of 1000)
   inline function debrisChanceFor(area: AreaGame, tile: Int): Int
     {
       var isRoad = (tile == Const.TILE_ROAD);
@@ -296,7 +299,7 @@ class CityAreaGenerator
           case AREA_CITY_MEDIUM:
             isRoad ? 10 : 20;
           case AREA_CITY_HIGH:
-            isRoad ? 4 : 10;
+            isRoad ? 2 : 5;
           default:
             isRoad ? 10 : 20;
         };
