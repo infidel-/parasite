@@ -475,17 +475,15 @@ class ConsoleGame
               return;
             }
           var rnd = Std.random(100);
-          var t: _AIEffectType = EFFECT_PANIC;
+          var effect: Effect;
           if (rnd < 30)
-            t = EFFECT_PARALYSIS;
+            effect = new effects.Paralysis(game, 10);
           else if (rnd < 60)
-            t = EFFECT_SLIME;
-          game.player.host.onEffect({
-            type: t,
-            points: 10,
-            isTimer: true
-          });
-          log('Added effect: ' + t);
+            effect = new effects.Slime(game, 10);
+          else
+            effect = new effects.Panic(game, 10);
+          game.player.host.onEffect(effect);
+          log('Added effect: ' + effect.type);
         }
 
       // XXX [ai pistol] add item X

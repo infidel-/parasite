@@ -1,0 +1,30 @@
+// ai effect
+
+package game;
+
+class Effect extends _SaveObject
+{
+  public var game: Game; // game state link
+  public var type: _AIEffectType; // effect type
+  public var points: Int; // current effect strength
+  public var isTimer: Bool; // is this a timer?
+
+// creates base effect instance
+  public function new(game: Game, type: _AIEffectType, points: Int, isTimer: Bool)
+    {
+      this.game = game;
+      this.type = type;
+      this.points = points;
+      this.isTimer = isTimer;
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
+    }
+}

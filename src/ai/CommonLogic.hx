@@ -147,11 +147,7 @@ class CommonLogic
           else ai.log(weapon.verb2 + ' ' +
             target.theName() + ' for ' + roll + " rounds.");
 
-          target.ai.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: roll,
-            isTimer: true
-          });
+          target.ai.onEffect(new effects.Paralysis(game, roll));
           // damage event (for alert)
           target.onDamage(0);
         }

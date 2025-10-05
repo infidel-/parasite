@@ -98,11 +98,7 @@ class Money extends ItemInfo
               ai.setState(AI_STATE_ALERT, REASON_PARASITE);
             }
 
-          ai.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: time,
-            isTimer: true
-          });
+          ai.onEffect(new effects.Paralysis(game, time));
         }
       game.scene.updateCamera();
 

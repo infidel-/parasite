@@ -783,11 +783,7 @@ public function show()
       updateMask(Const.FRAME_MASK_CONTROL);
 
       // add effect marker so that AI can't tear parasite away
-      onEffect({
-        type: EFFECT_CANNOT_TEAR_AWAY,
-        points: 5,
-        isTimer: true
-      });
+      onEffect(new effects.CannotTearAway(game, 5));
       onInvade(); // type-specific hook
     }
 
@@ -810,7 +806,7 @@ public function show()
     }
 
 // event: on receiving effect
-  public inline function onEffect(effect: _AIEffect)
+  public inline function onEffect(effect: Effect)
     {
       effects.add(effect);
 

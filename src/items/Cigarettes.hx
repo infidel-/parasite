@@ -23,11 +23,10 @@ class Cigarettes extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Smoke ' + Const.col('inventory-item', itemName),
+        name: 'Smoke a ' + Const.col('inventory-item', 'cigarette'),
         energy: 0,
         item: item
       });
@@ -49,7 +48,7 @@ class Cigarettes extends ItemInfo
     {
       game.scene.sounds.play('item-' + item.id);
       game.player.host.log('takes a slow drag and exhales a ribbon of smoke.');
-      game.player.host.inventory.removeItem(item);
+      // game.player.host.inventory.removeItem(item);
       return true;
     }
 }

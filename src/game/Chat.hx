@@ -592,11 +592,7 @@ class Chat extends _SaveObject
                 game.playerArea.moveToRandom(false);
               }
             else ai.setState(AI_STATE_ALERT, null, ' is absolutely furious.');
-            ai.onEffect({
-              type: EFFECT_BERSERK,
-              points: 10,
-              isTimer: true
-            });
+            ai.onEffect(new effects.Berserk(game, 10));
           // -> panic
           case EMOTION_STARTLED:
             var ai = target; // target will clear on set state
@@ -608,20 +604,12 @@ class Chat extends _SaveObject
                 game.playerArea.moveToRandom(false);
               }
             else ai.setState(AI_STATE_ALERT, null, ' is panicking.');
-            ai.onEffect({
-              type: EFFECT_PANIC,
-              points: 10,
-              isTimer: true
-            });
+            ai.onEffect(new effects.Panic(game, 10));
           // -> tears
           case EMOTION_DISTRESSED:
             target.emitRandomSound('' + EFFECT_CRYING);
             target.log('is crying.');
-            target.onEffect({
-              type: EFFECT_CRYING,
-              points: 15,
-              isTimer: true
-            });
+            target.onEffect(new effects.Crying(game, 15));
           case EMOTION_DESENSITIZED:
             target.chat.consent = 100;
             return;

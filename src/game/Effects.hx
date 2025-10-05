@@ -20,13 +20,9 @@ class Effects extends _SaveObject
 
 
 // add new effect
-  public function add(eff: _AIEffect)
+  public function add(effect: Effect)
     {
-      _list.add({
-        type: eff.type,
-        points: eff.points,
-        isTimer: (eff.isTimer == true)
-      });
+      _list.add(effect);
     }
 
 
@@ -97,32 +93,5 @@ class Effects extends _SaveObject
       for (e in _list)
         tmp.push(e.type + ' pts:' + e.points);
       return tmp.join(', ');
-    }
-}
-
-
-@:structInit class Effect extends _SaveObject
-{
-  public var type: _AIEffectType; // effect type
-  public var points: Int; // current effect strength
-  public var isTimer: Bool; // is this a timer?
-
-  public function new(type, points, isTimer)
-    {
-      this.type = type;
-      this.points = points;
-      this.isTimer = isTimer;
-      init();
-      initPost(false);
-    }
-
-// init object before loading/post creation
-  public function init()
-    {
-    }
-
-// called after load or creation
-  public function initPost(onLoad: Bool)
-    {
     }
 }

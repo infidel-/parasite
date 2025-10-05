@@ -440,10 +440,7 @@ class Organs extends _SaveObject
         }
 
       // AI effect event
-      ai.onEffect({
-        type: EFFECT_SLIME,
-        points: params.strength
-      });
+      ai.onEffect(new effects.Slime(game, params.strength));
 
       return true;
     }
@@ -494,11 +491,7 @@ class Organs extends _SaveObject
         }
 
       // AI effect event
-      ai.onEffect({
-        type: EFFECT_PARALYSIS,
-        points: params.time,
-        isTimer: true
-      });
+      ai.onEffect(new effects.Paralysis(game, params.time));
 
       return true;
     }
@@ -548,11 +541,7 @@ class Organs extends _SaveObject
             }
 
           // AI effect event
-          ai.onEffect({
-            type: EFFECT_PANIC,
-            points: params.time,
-            isTimer: true
-          });
+          ai.onEffect(new effects.Panic(game, params.time));
         }
       // repaint view with effects
       game.scene.updateCamera();
@@ -606,11 +595,7 @@ class Organs extends _SaveObject
             }
 
           // AI effect event
-          ai.onEffect({
-            type: EFFECT_PARALYSIS,
-            points: params.time,
-            isTimer: true
-          });
+          ai.onEffect(new effects.Paralysis(game, params.time));
         }
       // repaint view with effects
       game.scene.updateCamera();
@@ -652,4 +637,3 @@ class Organs extends _SaveObject
       woundRegenTurn = 0;
     }
 }
-
