@@ -16,6 +16,9 @@ class SecurityAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // skill trait for security guards
+      if (Std.random(100) < 30)
+        addTraitFromGroup('skill');
       if (Std.random(100) < 20)
         {
           inventory.addID('pistol');

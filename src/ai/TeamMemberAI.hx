@@ -10,6 +10,10 @@ class TeamMemberAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // skill traits for team members
+      addTraitFromGroup('skill');
+      if (Std.random(100) < 50)
+        addTraitFromGroup('skill');
       // team level changes loadout
       if (game.group.team.level == 1)
         {

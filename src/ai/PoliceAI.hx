@@ -13,6 +13,10 @@ class PoliceAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // skill traits for police
+      addTraitFromGroup('skill');
+      if (Std.random(100) < 50)
+        addTraitFromGroup('skill');
       // chance of having stunner
       var ch = 20;
       if (game.area.info.isHighRisk)

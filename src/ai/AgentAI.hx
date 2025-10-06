@@ -13,6 +13,10 @@ class AgentAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // skill traits for agents
+      addTraitFromGroup('skill');
+      if (Std.random(100) < 50)
+        addTraitFromGroup('skill');
       inventory.addID('pistol');
       skills.addID(SKILL_PISTOL, 40 + Std.random(25));
 

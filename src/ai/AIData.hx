@@ -4,6 +4,7 @@ package ai;
 
 import const.*;
 import ItemInfo.WeaponInfo;
+import const.TraitsConst._TraitInfo;
 import game.*;
 
 @:rtti
@@ -181,6 +182,24 @@ class AIData extends _SaveObject
       if (hasTrait(t))
         return;
       traits.add(t);
+      var info = TraitsConst.getInfo(t);
+      if (info.onInit != null)
+        info.onInit(game, this);
+    }
+
+// add random trait from group
+  public function addTraitFromGroup(groupID: String)
+    {
+      var group = TraitsConst.getGroup(groupID);
+      if (group == null || group.length == 0)
+        return;
+      var candidates: Array<_TraitInfo> = [];
+      for (entry in group)
+        if (!hasTrait(entry.id))
+          candidates.push(entry);
+      var pool = candidates.length > 0 ? candidates : group;
+      var selection = pool[Std.random(pool.length)];
+      addTrait(selection.id);
     }
 
 // recalculate all stat bonuses

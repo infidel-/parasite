@@ -33,12 +33,14 @@ class ThugAI extends HumanAI
       var weaponSkill: _Skill = SKILL_CLUB;
       var weaponBase = 45;
       var weaponSpread = 20;
+      var weaponTrait: Null<_AITraitType> = null;
       if (weaponRoll < 5)
         {
           weaponID = 'katana';
           weaponSkill = SKILL_KATANA;
           weaponBase = 55;
           weaponSpread = 20;
+          weaponTrait = TRAIT_KENDOKA;
         }
       else if (weaponRoll < 25)
         {
@@ -46,6 +48,7 @@ class ThugAI extends HumanAI
           weaponSkill = SKILL_PISTOL;
           weaponBase = 40;
           weaponSpread = 20;
+          weaponTrait = TRAIT_PISTOL_MARKSMAN;
         }
       else if (weaponRoll < 45)
         {
@@ -53,6 +56,7 @@ class ThugAI extends HumanAI
           weaponSkill = SKILL_KNIFE;
           weaponBase = 35;
           weaponSpread = 15;
+          weaponTrait = TRAIT_KNIFE_EXPERT;
         }
       else if (weaponRoll < 65)
         {
@@ -60,6 +64,7 @@ class ThugAI extends HumanAI
           weaponSkill = SKILL_MACHETE;
           weaponBase = 40;
           weaponSpread = 15;
+          weaponTrait = TRAIT_GUERRERO;
         }
       else if (weaponRoll < 85)
         {
@@ -67,6 +72,7 @@ class ThugAI extends HumanAI
           weaponSkill = SKILL_FISTS;
           weaponBase = 35;
           weaponSpread = 20;
+          weaponTrait = TRAIT_BRUISER;
         }
       else
         {
@@ -74,9 +80,13 @@ class ThugAI extends HumanAI
           weaponSkill = SKILL_BATON;
           weaponBase = 45;
           weaponSpread = 15;
+          weaponTrait = TRAIT_BATON_EXPERT;
         }
       inventory.addID(weaponID);
       skills.addID(weaponSkill, weaponBase + Std.random(weaponSpread));
+      // give thugs a chance to develop weapon specialties
+      if (weaponTrait != null && Std.random(100) < 20)
+        addTrait(weaponTrait);
       // give thugs a habit-forming vice
       if (Std.random(100) < 30 &&
           !inventory.has('cigarettes'))

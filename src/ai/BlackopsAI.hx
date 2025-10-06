@@ -13,6 +13,11 @@ class BlackopsAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // skill traits for blackops agents
+      addTraitFromGroup('skill');
+      addTraitFromGroup('skill');
+      if (Std.random(100) < 50)
+        addTraitFromGroup('skill');
       var bonusStat = 1;
       // team level changes loadout
       if (game.group.team.level == 1)

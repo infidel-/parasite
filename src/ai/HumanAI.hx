@@ -65,6 +65,9 @@ class HumanAI extends AI
       // common traits for all humans
       if (Std.random(100) < 1)
         addTrait(TRAIT_DRUG_ADDICT);
+      // skill trait chance for humans
+      if (Std.random(100) < 5)
+        addTraitFromGroup('skill');
 
       derivedStats();
     }

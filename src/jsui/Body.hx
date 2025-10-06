@@ -387,9 +387,22 @@ class Body extends UIWindow
           if (game.player.host.traits.length > 0)
             {
               buf.add('<br/>');
+              // sort traits alphabetically before listing
+              var traitInfos = [];
               for (t in game.player.host.traits)
+                traitInfos.push(TraitsConst.getInfo(t));
+              traitInfos.sort(function(a, b)
                 {
-                  var info = TraitsConst.getInfo(t);
+                  var aname = a.name.toLowerCase();
+                  var bname = b.name.toLowerCase();
+                  if (aname < bname)
+                    return -1;
+                  else if (aname > bname)
+                    return 1;
+                  return 0;
+                });
+              for (info in traitInfos)
+                {
                   buf.add('<span class=host-attr-title>' +
                     info.name + '</span><br/>');
                   buf.add('<span class=host-attr-notes>' + info.note +
