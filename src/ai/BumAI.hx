@@ -11,6 +11,15 @@ class BumAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // lower all main stats to reflect poorer condition
+      strength = 2 + Std.random(3);
+      constitution = 2 + Std.random(3);
+      intellect = 2 + Std.random(3);
+      psyche = 2 + Std.random(3);
+      // enforce drug addict trait chance for bums
+      if (Std.random(100) < 30)
+        addTrait(TRAIT_DRUG_ADDICT);
+      derivedStats();
       // prune default belongings to match bum loadout
       inventory.clear();
       skills.clear();
@@ -18,10 +27,10 @@ class BumAI extends HumanAI
       if (Std.random(100) < 5)
         inventory.addID('money');
       // give bums occasional cigarettes for flavor
-      if (Std.random(100) < 40)
+      if (Std.random(100) < 30)
         inventory.addID('cigarettes');
       // stock bums with cheap alcohol for barter
-      if (Std.random(100) < 60)
+      if (Std.random(100) < 40)
         inventory.addID('alcohol');
       initPost(false);
     }
@@ -34,15 +43,6 @@ class BumAI extends HumanAI
       name.unknown = 'bum';
       name.unknownCapped = 'Bum';
       soundsID = 'civilian';
-      // lower all main stats to reflect poorer condition
-      strength = 2 + Std.random(3);
-      constitution = 2 + Std.random(3);
-      intellect = 2 + Std.random(3);
-      psyche = 2 + Std.random(3);
-      // enforce drug addict trait chance for bums
-      if (Std.random(100) < 30)
-        addTrait(TRAIT_DRUG_ADDICT);
-      derivedStats();
     }
 
   // handles post-load initialization for bums

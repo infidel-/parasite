@@ -11,6 +11,15 @@ class ThugAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // toughen physical stats while lowering mental ones
+      strength = 6 + Std.random(3);
+      constitution = 5 + Std.random(4);
+      intellect = 2 + Std.random(3);
+      psyche = 3 + Std.random(3);
+      // enforce drug addict trait chance for thugs
+      if (Std.random(100) < 10)
+        addTrait(TRAIT_DRUG_ADDICT);
+      derivedStats();
       name.real = name.realCapped =
         const.NameConst.getThugName(isMale);
       // rebuild thug inventory with mandated gear
@@ -69,10 +78,11 @@ class ThugAI extends HumanAI
       inventory.addID(weaponID);
       skills.addID(weaponSkill, weaponBase + Std.random(weaponSpread));
       // give thugs a habit-forming vice
-      if (Std.random(100) < 60 && !inventory.has('cigarettes'))
+      if (Std.random(100) < 30 &&
+          !inventory.has('cigarettes'))
         inventory.addID('cigarettes');
       // keep narcotics on hand for street hustle
-      if (Std.random(100) < 65)
+      if (Std.random(100) < 35)
         inventory.addID('narcotics');
       // street experience helps intimidation
       skills.addID(SKILL_PSYCHOLOGY, 20 + Std.random(20));
@@ -89,15 +99,6 @@ class ThugAI extends HumanAI
       name.unknownCapped = 'Street thug';
       soundsID = 'thug';
       isAggressive = true;
-      // toughen physical stats while lowering mental ones
-      strength = 6 + Std.random(3);
-      constitution = 5 + Std.random(4);
-      intellect = 2 + Std.random(3);
-      psyche = 3 + Std.random(3);
-      // enforce drug addict trait chance for thugs
-      if (Std.random(100) < 10)
-        addTrait(TRAIT_DRUG_ADDICT);
-      derivedStats();
     }
 
   // handles post-load initialization for thugs

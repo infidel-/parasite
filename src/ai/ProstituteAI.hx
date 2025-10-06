@@ -11,18 +11,26 @@ class ProstituteAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // bias stats toward social aptitude over physical power
+      strength = 3 + Std.random(3);
+      constitution = 3 + Std.random(3);
+      intellect = 4 + Std.random(3);
+      psyche = 4 + Std.random(3);
+      // enforce drug addict trait chance for prostitutes
+      if (Std.random(100) < 20)
+        addTrait(TRAIT_DRUG_ADDICT);
       // tailor belongings to match street-working profile
       inventory.clear();
       inventory.addID(Std.random(100) < 55 ? 'smartphone' : 'mobilePhone');
       inventory.addID('money');
       // provide optional self-care utilities
-      if (Std.random(100) < 50)
+      if (Std.random(100) < 40)
         inventory.addID('contraceptives');
       // give prostitutes a chance to carry cigarettes
-      if (Std.random(100) < 50)
+      if (Std.random(100) < 30)
         inventory.addID('cigarettes');
       // stash narcotics for transactional leverage
-      if (Std.random(100) < 60)
+      if (Std.random(100) < 30)
         inventory.addID('narcotics');
       // lean on social manipulation skills
       skills.addID(SKILL_PSYCHOLOGY, 20 + Std.random(20));
@@ -39,14 +47,6 @@ class ProstituteAI extends HumanAI
       name.unknown = 'sex worker';
       name.unknownCapped = 'Sex worker';
       soundsID = 'civilian';
-      // bias stats toward social aptitude over physical power
-      strength = 3 + Std.random(3);
-      constitution = 3 + Std.random(3);
-      intellect = 4 + Std.random(3);
-      psyche = 4 + Std.random(3);
-      // enforce drug addict trait chance for prostitutes
-      if (Std.random(100) < 20)
-        addTrait(TRAIT_DRUG_ADDICT);
       derivedStats();
     }
 

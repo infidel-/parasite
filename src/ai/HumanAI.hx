@@ -59,7 +59,7 @@ class HumanAI extends AI
       // items
       if (Std.random(100) < 10)
         inventory.addID('sleepingPills');
-      if (Std.random(100) < 10)
+      if (Std.random(100) < 1)
         inventory.addID('contraceptives');
 
       // common traits for all humans
