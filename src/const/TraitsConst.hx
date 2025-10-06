@@ -187,7 +187,6 @@ class TraitsConst
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.intellect -= 2;
-              ai.derivedStats();
             }
         },
         {
@@ -197,7 +196,6 @@ class TraitsConst
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.intellect += 2;
-              ai.derivedStats();
             }
         },
         {
@@ -207,7 +205,6 @@ class TraitsConst
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.psyche -= 2;
-              ai.derivedStats();
             }
         },
         {
@@ -217,7 +214,70 @@ class TraitsConst
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.psyche += 2;
-              ai.derivedStats();
+            }
+        }
+      ]);
+
+      // body trait group definitions
+      map.set('body', [
+        {
+          id: TRAIT_ANOREXIC,
+          name: 'anorexic',
+          note: 'Extremely underweight and frail.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.strength -= 2;
+              ai.baseAttrs.constitution -= 2;
+            }
+        },
+        {
+          id: TRAIT_WEAK,
+          name: 'weak',
+          note: 'Noticeably lacking muscle.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.strength -= 1;
+              ai.baseAttrs.constitution -= 1;
+            }
+        },
+        {
+          id: TRAIT_OBESE,
+          name: 'obese',
+          note: 'Carries significant extra weight.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.strength -= 1;
+              ai.baseAttrs.constitution += 1;
+            }
+        },
+        {
+          id: TRAIT_HEAVILY_OBESE,
+          name: 'heavily obese',
+          note: 'Massively overweight frame.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.strength -= 2;
+              ai.baseAttrs.constitution += 2;
+            }
+        },
+        {
+          id: TRAIT_MUSCULAR,
+          name: 'muscular',
+          note: 'Well-developed physique.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.strength += 1;
+              ai.baseAttrs.constitution += 1;
+            }
+        },
+        {
+          id: TRAIT_HERCULEAN,
+          name: 'herculean',
+          note: 'Peak physical power.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.strength += 2;
+              ai.baseAttrs.constitution += 2;
             }
         }
       ]);

@@ -195,6 +195,8 @@ class AIData extends _SaveObject
         baseAttrs.intellect = 2;
       if (baseAttrs.psyche < 2)
         baseAttrs.psyche = 2;
+      // also just in case
+      derivedStats();
     }
 
 // add random trait from group
