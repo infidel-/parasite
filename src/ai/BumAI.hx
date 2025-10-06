@@ -39,6 +39,9 @@ class BumAI extends HumanAI
       constitution = 2 + Std.random(3);
       intellect = 2 + Std.random(3);
       psyche = 2 + Std.random(3);
+      // enforce drug addict trait chance for bums
+      if (Std.random(100) < 30)
+        addTrait(TRAIT_DRUG_ADDICT);
       derivedStats();
     }
 

@@ -5,7 +5,7 @@ package const;
 class TraitsConst
 {
 // return info by id
-  public static function getInfo(id: _AITraitType): TraitInfo
+  public static function getInfo(id: _AITraitType): _TraitInfo
     {
       for (ii in traits)
         if (ii.id == id)
@@ -17,7 +17,7 @@ class TraitsConst
 
 
 // trait infos
-  public static var traits: Array<TraitInfo> = [
+  public static var traits: Array<_TraitInfo> = [
     {
       id: TRAIT_DRUG_ADDICT,
       name: 'drug addict',
@@ -28,13 +28,13 @@ class TraitsConst
       name: 'assimilated',
       note: 'Has been assimilated.'
     },
-    ];
+  ];
 }
 
 
 // trait info
 
-typedef TraitInfo =
+typedef _TraitInfo =
 {
   id: _AITraitType, // trait id
   name: String, // trait name

@@ -94,6 +94,9 @@ class ThugAI extends HumanAI
       constitution = 5 + Std.random(4);
       intellect = 2 + Std.random(3);
       psyche = 3 + Std.random(3);
+      // enforce drug addict trait chance for thugs
+      if (Std.random(100) < 10)
+        addTrait(TRAIT_DRUG_ADDICT);
       derivedStats();
     }
 

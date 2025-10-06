@@ -6,7 +6,6 @@ import ai.*;
 import entities.PlayerEntity;
 import objects.AreaObject;
 import const.*;
-import particles.*;
 import __Math;
 
 class PlayerArea extends _SaveObject

@@ -63,7 +63,7 @@ class HumanAI extends AI
         inventory.addID('contraceptives');
 
       // common traits for all humans
-      if (Std.random(100) < 10)
+      if (Std.random(100) < 1)
         addTrait(TRAIT_DRUG_ADDICT);
 
       derivedStats();
