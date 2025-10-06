@@ -185,6 +185,16 @@ class AIData extends _SaveObject
       var info = TraitsConst.getInfo(t);
       if (info.onInit != null)
         info.onInit(game, this);
+
+      // clamp base just in case (traits could lower that)
+      if (baseAttrs.strength < 2)
+        baseAttrs.strength = 2;
+      if (baseAttrs.constitution < 2)
+        baseAttrs.constitution = 2;
+      if (baseAttrs.intellect < 2)
+        baseAttrs.intellect = 2;
+      if (baseAttrs.psyche < 2)
+        baseAttrs.psyche = 2;
     }
 
 // add random trait from group
@@ -286,7 +296,7 @@ class AIData extends _SaveObject
     }
 
 // save derived stats (must be called in the end of derived classes constructors)
-  function derivedStats()
+  public function derivedStats()
     {
       recalc();
       energy = maxEnergy;

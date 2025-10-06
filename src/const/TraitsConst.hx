@@ -178,6 +178,50 @@ class TraitsConst
         }
       ]);
 
+      // mind trait group definitions
+      map.set('mind', [
+        {
+          id: TRAIT_DUMB,
+          name: 'dumb',
+          note: 'Slow to process new ideas.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.intellect -= 2;
+              ai.derivedStats();
+            }
+        },
+        {
+          id: TRAIT_GENIUS,
+          name: 'genius',
+          note: 'Exceptionally sharp intellect.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.intellect += 2;
+              ai.derivedStats();
+            }
+        },
+        {
+          id: TRAIT_WEAK_WILLED,
+          name: 'weak-willed',
+          note: 'Struggles with resolve.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.psyche -= 2;
+              ai.derivedStats();
+            }
+        },
+        {
+          id: TRAIT_STRONG_WILLED,
+          name: 'strong-willed',
+          note: 'Mentally resilient.',
+          onInit: function(game: Game, ai: AIData)
+            {
+              ai.baseAttrs.psyche += 2;
+              ai.derivedStats();
+            }
+        }
+      ]);
+
       return map;
     }
 }

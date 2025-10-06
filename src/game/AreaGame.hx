@@ -1541,7 +1541,6 @@ class Test {
         }
 
       // special logic for "civilian" type
-      trace(type);
       if (type == 'civilian' &&
           (typeID == AREA_CITY_LOW || typeID == AREA_CITY_MEDIUM))
         {
@@ -1557,7 +1556,6 @@ class Test {
               else if (roll < 50) // 30%
                 type = 'thug';
               else type = 'bum'; // 50%
-              trace('after ' + type);
             }
         }
 
