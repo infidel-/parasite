@@ -42,6 +42,17 @@ class TraitsConst
           note: 'Addicted to drugs.'
         },
         {
+          id: TRAIT_ALCOHOLIC,
+          name: 'alcoholic',
+          note: 'Years of booze take their toll. Control impossible to maintain fully.',
+          turn: function(game: Game, ai: AIData)
+            {
+              if (game.player.host == ai &&
+                  game.player.hostControl > 80)
+                game.player.hostControl = 80;
+            }
+        },
+        {
           id: TRAIT_ASSIMILATED,
           name: 'assimilated',
           note: 'Has been assimilated.'
@@ -295,4 +306,5 @@ typedef _TraitInfo =
   name: String, // trait name
   note: String, // trait note
   ?onInit: (game: Game, ai: AIData) -> Void,
+  ?turn: (game: Game, ai: AIData) -> Void,
 }

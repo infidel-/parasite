@@ -17,8 +17,11 @@ class BumAI extends HumanAI
       intellect = 2 + Std.random(3);
       psyche = 2 + Std.random(3);
       // enforce drug addict trait chance for bums
-      if (Std.random(100) < 30)
+      if (Std.random(100) < 20)
         addTrait(TRAIT_DRUG_ADDICT);
+      // increase alcoholic trait chance for bums
+      if (Std.random(100) < 20)
+        addTrait(TRAIT_ALCOHOLIC);
       derivedStats();
       // prune default belongings to match bum loadout
       inventory.clear();

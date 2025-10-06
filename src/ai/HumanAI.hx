@@ -65,6 +65,9 @@ class HumanAI extends AI
       // common traits for all humans
       if (Std.random(100) < 1)
         addTrait(TRAIT_DRUG_ADDICT);
+      // alcoholic trait chance for humans
+      if (Std.random(100) < 1)
+        addTrait(TRAIT_ALCOHOLIC);
       // body trait chance for humans
       if (Std.random(100) < 10)
         addTraitFromGroup('body');

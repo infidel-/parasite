@@ -555,6 +555,13 @@ public function show()
       if (entity != null)
         entity.turn(); // time passing for entity
       effects.turn(this, 1); // time passing for effects
+      // let passive traits update over time
+      for (trait in traits)
+        {
+          var info = TraitsConst.getInfo(trait);
+          if (info.turn != null)
+            info.turn(game, this);
+        }
 
       // effect: slime, does not allow movement
       if (effects.has(EFFECT_SLIME))

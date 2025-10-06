@@ -608,22 +608,83 @@ class ConsoleGame
           game.log('Skill/knowledge added.');
         }
 
-      // XXX [at] add random trait
+      // XXX [at] add trait by id
       else if (cmd.charAt(1) == 't')
+        addTraitCommand(arr);
+
+    }
+
+// add trait command handler
+  function addTraitCommand(arr: Array<String>)
+    {
+      if (game.player.state != PLR_STATE_HOST)
         {
-          if (game.player.state != PLR_STATE_HOST)
-            {
-              log('Not on host.');
-              return;
-            }
-          var rnd = Std.random(100);
-          var t: _AITraitType = TRAIT_DRUG_ADDICT;
-          if (rnd < 50)
-            t = TRAIT_ASSIMILATED;
-          game.player.host.addTrait(t);
-          log('Added trait: ' + t);
+          log('Not on host.');
+          return;
         }
 
+      var entries = [];
+      for (trait in Type.allEnums(_AITraitType))
+        {
+          var enumName = Std.string(trait);
+          var key = enumName.substr(6).toLowerCase();
+          entries.push({
+            id: trait,
+            key: key,
+            enumName: enumName
+          });
+        }
+      entries.sort(function(a, b)
+        {
+          if (a.key < b.key) return -1;
+          if (a.key > b.key) return 1;
+          return 0;
+        });
+
+      if (arr.length < 2 || arr[1] == '')
+        {
+          var names = new Array<String>();
+          for (entry in entries)
+            names.push(entry.key);
+          log('Traits: ' + names.join(', '));
+          return;
+        }
+
+      var query = arr[1].toLowerCase();
+      var match = null;
+      for (entry in entries)
+        if (entry.key == query)
+          {
+            match = entry;
+            break;
+          }
+
+      if (match == null)
+        {
+          var matches = [];
+          for (entry in entries)
+            if (StringTools.startsWith(entry.key, query))
+              matches.push(entry);
+          if (matches.length == 1)
+            match = matches[0];
+          else if (matches.length > 1)
+            {
+              var options = new Array<String>();
+              for (entry in matches)
+                options.push(entry.key);
+              log('Ambiguous trait id, matches: ' + options.join(', '));
+              return;
+            }
+        }
+
+      if (match == null)
+        {
+          log('No trait matches id: ' + query);
+          return;
+        }
+
+      game.player.host.addTrait(match.id);
+      log('Added trait: ' + match.enumName);
     }
 
 // debug commands
