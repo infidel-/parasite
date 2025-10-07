@@ -35,6 +35,7 @@
   --text-color-group-title: #ff7f73;
   --text-color-group-note: #e35c3f;
   --main-menu-bg: url(./img/misc/bg1.jpg);
+  --message-img-display: block;
 }
 
 html, body {
@@ -435,6 +436,7 @@ hr {
 }
 
 .message-img {
+  display: var(--message-img-display);
   animation: fade-in 1.0s;
   border: solid 2px #6a8aa1;
   border: solid 2.5px #6a8aa18c;

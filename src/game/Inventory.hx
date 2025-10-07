@@ -3,7 +3,6 @@
 package game;
 
 import const.ItemsConst;
-import objects.*;
 
 class Inventory extends _SaveObject
 {

@@ -14,19 +14,26 @@ class MainMenu extends UIWindow
   var saveItem: DivElement;
   var loadEnabled: Bool;
   var saveEnabled: Bool;
+  static inline var DEFAULT_BG = 1;
+  var currentBackground: Int;
 
   public function new(g: Game)
     {
       super(g, 'window-mainmenu');
+      currentBackground = DEFAULT_BG;
       loadEnabled = false;
       saveEnabled = false;
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
       var swirl = Browser.document.createDivElement();
       swirl.className = 'window-swirl';
       bg.appendChild(swirl);
+      setBackground(currentBackground, game.config.aiArtEnabled);
       // randomize background
       if (!game.firstEverRun)
-        UI.setVar('--main-menu-bg', 'url(./img/misc/bg' + (1 + Std.random(10)) + '.jpg)');
+        {
+          var bgIndex = 1 + Std.random(10);
+          setBackground(bgIndex, game.config.aiArtEnabled);
+        }
 //      UI.setVar('--main-menu-bg', 'url(./img/misc/bg13.jpg)');
 
       var title = Browser.document.createDivElement();
@@ -165,6 +172,24 @@ class MainMenu extends UIWindow
         saveItem.className = 'window-mainmenu-item-disabled window-title';
       else saveItem.className = 'window-mainmenu-item window-title';
     }
+
+// update menu background and apply if AI art is enabled
+  function setBackground(bgValue: Int, isEnabled: Bool)
+    {
+      currentBackground = bgValue;
+      if (isEnabled)
+        UI.setVar('--main-menu-bg', getBackgroundUrl());
+    }
+
+// expose current menu background for config toggles
+  public function getCurrentBackground(): Int
+    {
+      return currentBackground;
+    }
+
+// build css url for current background image
+  public function getBackgroundUrl(): String
+    {
+      return 'url(./img/misc/bg' + currentBackground + '.jpg)';
+    }
 }
-
-

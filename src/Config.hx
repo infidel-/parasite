@@ -7,6 +7,7 @@ import haxe.Json;
 
 import game.Game;
 import jsui.UI;
+import jsui.MainMenu;
 
 class Config
 {
@@ -24,6 +25,7 @@ class Config
   public var spoonHabitats: Bool;
   public var spoonHabitatAmbush: Bool;
   public var spoonNoSavesLimit: Bool;
+  public var aiArtEnabled: Bool;
 
   public var font: String;
   public var fontSize: Int;
@@ -60,6 +62,7 @@ class Config
       spoonHabitats = false;
       spoonHabitatAmbush = false;
       spoonNoSavesLimit = false;
+      aiArtEnabled = true;
 
       font = 'Virtucorp';
       fontSize = 15;
@@ -87,6 +90,7 @@ class Config
       map['spoonHabitats'] = '0';
       map['spoonHabitatAmbush'] = '0';
       map['spoonNoSavesLimit'] = '0';
+      map['aiArtEnabled'] = '1';
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -127,6 +131,7 @@ class Config
       UI.setVar('--text-font', font);
       UI.setVar('--text-font-size', fontSize + 'px');
       UI.setVar('--text-font-title', fontTitle);
+      applyAiArtSetting();
     }
 
 // check if any spoon vars enabled
@@ -171,6 +176,11 @@ class Config
         spoonHabitatAmbush = (val == '1');
       else if (key == 'spoonNoSavesLimit')
         spoonNoSavesLimit = (val == '1');
+      else if (key == 'aiArtEnabled')
+        {
+          aiArtEnabled = (val == '1');
+          applyAiArtSetting();
+        }
 
       else if (key == 'font')
         {
@@ -257,6 +267,23 @@ class Config
         s.add(key + ' = ' + map[key] + '\n');
       sys.io.File.saveContent('parasite.cfg', s.toString());
 #end
+    }
+
+// update css to reflect ai art toggle
+  function applyAiArtSetting()
+    {
+      UI.setVar('--message-img-display', aiArtEnabled ? 'block' : 'none');
+      var bg = 'none';
+      if (aiArtEnabled)
+        {
+          bg = 'url(./img/misc/bg1.jpg)';
+          if (game.ui != null)
+            {
+              var menu: MainMenu = cast game.ui.getComponent(UISTATE_MAINMENU);
+              bg = menu.getBackgroundUrl();
+            }
+        }
+      UI.setVar('--main-menu-bg', bg);
     }
 
   public static var fontsTitle = [

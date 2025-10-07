@@ -2,10 +2,7 @@
 
 package ai;
 
-import ai.AI;
-import _AIState;
 import game.Game;
-import const.*;
 
 class SoldierAI extends HumanAI
 {
@@ -13,7 +10,8 @@ class SoldierAI extends HumanAI
     {
       super(g, vx, vy);
       init();
-      inventory.addID('assaultRifle');
+      if (Std.random(100) < 30)
+        inventory.addID('assaultRifle');
       skills.addID(SKILL_RIFLE, 40 + Std.random(25));
       initPost(false);
     }

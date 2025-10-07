@@ -164,9 +164,11 @@ class Options extends UIWindow
 
       addCheckbox(contents, 'Skip tutorial ' +
         Const.smallgray('(needs overall difficulty set)'),
-        'skipTutorial', game.config.skipTutorial, '-10.7ch');
+        'skipTutorial', game.config.skipTutorial, '-9.7ch');
       addCheckbox(contents, 'Enable fullscreen',
         'fullscreen', game.config.fullscreen, '-28.5ch');
+      addCheckbox(contents, 'Enable AI-generated artwork',
+        'aiArtEnabled', game.config.aiArtEnabled, '-17ch');
 
       // advanced options
       var subtitle = Browser.document.createDivElement();
@@ -229,4 +231,3 @@ class Options extends UIWindow
         }
     }
 }
-
