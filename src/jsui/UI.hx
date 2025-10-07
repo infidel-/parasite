@@ -50,6 +50,9 @@ class UI
         game.scene.mouse.update();
         hud.onMouseMove(e);
       }
+      canvas.onmouseleave = function (_) {
+        hud.onMouseLeave();
+      }
       canvas.onclick = function (e: MouseEvent) {
         game.scene.mouse.onClick(e);
       }

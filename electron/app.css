@@ -243,6 +243,23 @@ hr {
   transition: 0.1s;
 }
 
+#hud-area-info {
+  opacity: 0.95;
+  background-color: #ffffff00;
+  border: 13px solid;
+  min-width: 200px;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  user-select: none;
+  transition: 0.1s;
+  font-size: 80%;
+  pointer-events: none;
+  z-index: 25;
+}
+
 #hud-debug-info {
   opacity: 0.9;
   background-color: #273242d6;

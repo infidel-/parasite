@@ -22,6 +22,9 @@ class HUD
   var log: DivElement;
   var goals: DivElement;
   var info: DivElement;
+  var areaInfoOverlay: DivElement;
+  var areaInfoAreaID: Int;
+  var areaInfoVisible: Bool;
 #if mydebug
   var debugInfo: DivElement;
 #end
@@ -99,6 +102,17 @@ class HUD
       info.id = 'hud-info';
       info.style.borderImage = "url('./img/hud-info-border.png') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
+
+      areaInfoOverlay = Browser.document.createDivElement();
+      areaInfoOverlay.className = 'text';
+      areaInfoOverlay.id = 'hud-area-info';
+      areaInfoOverlay.style.display = 'none';
+      areaInfoOverlay.style.position = 'fixed';
+      areaInfoOverlay.style.pointerEvents = 'none';
+      areaInfoOverlay.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
+      container.appendChild(areaInfoOverlay);
+      areaInfoAreaID = -1;
+      areaInfoVisible = false;
 
 #if mydebug
       debugInfo = Browser.document.createDivElement();
@@ -209,6 +223,197 @@ class HUD
             el.style.opacity = '0.1';
           else el.style.opacity = '0.9';
         }
+
+      if (game.location == LOCATION_REGION &&
+          ui.state == UISTATE_DEFAULT)
+        updateRegionAreaTooltip();
+      else hideRegionAreaTooltip();
+    }
+
+// show region tooltip when hovering known tiles
+  function updateRegionAreaTooltip()
+    {
+      if (game.location != LOCATION_REGION)
+        {
+          hideRegionAreaTooltip();
+          return;
+        }
+      var pos = game.scene.mouse.getXY();
+      if (pos == null)
+        {
+          hideRegionAreaTooltip();
+          return;
+        }
+      var area = game.region.getXY(pos.x, pos.y);
+      if (area == null)
+        {
+          hideRegionAreaTooltip();
+          return;
+        }
+      var areaKnown = game.scene.region.isKnown(area);
+      var eventLines = getRegionEventTooltipLines(area);
+      var npcLines = getRegionNPCTooltipLines(area);
+      if (!areaKnown &&
+          eventLines.length == 0 &&
+          npcLines.length == 0)
+        {
+          hideRegionAreaTooltip();
+          return;
+        }
+      var buf = new StringBuf();
+      if (areaKnown)
+        {
+          buf.add('<span class=hud-name>' + area.name + '</span> ');
+          buf.add(Const.smallgray('(' + area.x + ',' + area.y + ') ') + '<br/>');
+          var alertness = Std.int(area.alertness);
+          var alertColor = getAlertnessColor(alertness);
+          buf.add('Alertness: ' +
+            Const.col(alertColor,
+            getAlertnessLabel(alertness)) + '<br/>');
+          var tags: Array<String> = [];
+          if (area.highCrime)
+            tags.push('high crime');
+          if (area.hasHabitat)
+            tags.push('habitat');
+          if (!area.info.canEnter)
+            tags.push('inaccessible');
+          if (area.info.isHighRisk)
+            tags.push('high risk');
+          if (tags.length > 0)
+            {
+              buf.add(Const.smallgray('[' + tags.join('] [') + ']'));
+              buf.add('<br/>');
+            }
+        }
+      else
+        {
+          buf.add('<span class=hud-name>?</span><br/>');
+        }
+      for (line in eventLines)
+        buf.add(line + '<br/>');
+      for (line in npcLines)
+        buf.add(line + '<br/>');
+      areaInfoOverlay.innerHTML = buf.toString();
+      areaInfoOverlay.style.display = 'block';
+      areaInfoOverlay.style.visibility = 'hidden';
+      areaInfoAreaID = area.id;
+      areaInfoVisible = true;
+      positionRegionAreaTooltip();
+      areaInfoOverlay.style.visibility = 'visible';
+    }
+
+// get alertness color for tooltip
+  inline function getAlertnessColor(alertness: Int): String
+    {
+      if (alertness >= 75)
+        return 'red';
+      if (alertness >= 50)
+        return 'yellow';
+      if (alertness > 0)
+        return 'white';
+      return 'gray';
+    }
+
+// get alertness label for tooltip
+  inline function getAlertnessLabel(alertness: Int): String
+    {
+      if (alertness >= 75)
+        return 'high';
+      if (alertness >= 50)
+        return 'medium';
+      if (alertness > 0)
+        return 'low';
+      return 'none';
+    }
+
+// collect event tooltip lines for region mode
+  function getRegionEventTooltipLines(area: AreaGame): Array<String>
+    {
+      var lines = [];
+      var oneLocationKnown = false;
+      for (event in area.events)
+        {
+          if (event.locationKnown)
+            oneLocationKnown = true;
+        }
+      if (!oneLocationKnown)
+        return lines;
+      for (event in area.events)
+        if (event.locationKnown)
+          lines.push('event ' + event.num);
+      return lines;
+    }
+
+// collect npc tooltip lines for region mode
+  function getRegionNPCTooltipLines(area: AreaGame): Array<String>
+    {
+      var lines = [];
+      if (!game.player.vars.timelineEnabled)
+        return lines;
+      var len = 0;
+      for (_ in area.npc)
+        len++;
+      if (len == 0)
+        return lines;
+      var ok = true;
+      for (npc in area.npc)
+        if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
+          ok = false;
+      if (ok)
+        return lines;
+      for (npc in area.npc)
+        if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
+          {
+            var label = '';
+            if (npc.nameKnown)
+              label = npc.name;
+            else if (npc.jobKnown && npc.job != null)
+              label = npc.job;
+            else label = 'unknown contact';
+            lines.push(Const.smallgray('[event ' + npc.event.num + ']') + ' ' + label);
+          }
+      return lines;
+    }
+
+// align region tooltip above the info panel
+  function positionRegionAreaTooltip()
+    {
+      if (!areaInfoVisible)
+        return;
+      var infoRect = info.getBoundingClientRect();
+      if (infoRect == null)
+        return;
+      var width: Float = info.offsetWidth;
+      if (width <= 0)
+        width = infoRect.width;
+      if (width <= 0)
+        width = info.scrollWidth;
+      if (width <= 0)
+        return;
+      areaInfoOverlay.style.width = Std.string(Math.round(width)) + 'px';
+      areaInfoOverlay.style.left = Std.string(Math.round(infoRect.left)) + 'px';
+      var overlayHeight: Float = areaInfoOverlay.offsetHeight;
+      var top: Float = infoRect.top - overlayHeight - 8;
+      if (top < 10)
+        top = 10;
+      areaInfoOverlay.style.top = Std.string(Math.round(top)) + 'px';
+    }
+
+// hide region tooltip overlay
+  function hideRegionAreaTooltip()
+    {
+      if (!areaInfoVisible)
+        return;
+      areaInfoVisible = false;
+      areaInfoAreaID = -1;
+      areaInfoOverlay.style.display = 'none';
+      areaInfoOverlay.style.visibility = 'hidden';
+    }
+
+// hide overlays when mouse leaves the canvas
+  public function onMouseLeave()
+    {
+      hideRegionAreaTooltip();
     }
 
 // show hide HUD
@@ -237,6 +442,7 @@ class HUD
 
   public function hide()
     {
+      hideRegionAreaTooltip();
       // hack: remove opacity animation
       for (el in listElements)
         el.style.transition = '0s';
@@ -267,6 +473,8 @@ class HUD
 // update HUD state from game state
   public function update()
     {
+      if (game.location != LOCATION_REGION)
+        hideRegionAreaTooltip();
       updateActionList();
       // NOTE: before info because info uses its height
       updateActions();
@@ -459,6 +667,8 @@ class HUD
         buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +
           Const.col('yellow', 'SPOONED') + '</div>');
       info.innerHTML = buf.toString();
+      if (areaInfoVisible)
+        positionRegionAreaTooltip();
       if (game.player.state != PLR_STATE_HOST)
         info.className = 
           (game.player.energy <= 0.5 * game.player.maxEnergy ?
@@ -726,4 +936,3 @@ class HUD
         }
     }
 }
-
