@@ -4,6 +4,7 @@ package game;
 
 import ai.*;
 import const.*;
+import const.EvolutionConst.ImprovInfo;
 import haxe.Json;
 import objects.EventObject;
 #if electron
@@ -14,6 +15,7 @@ class ConsoleGame
 {
   public var game: Game;
   var history: Array<String>;
+  var addConsole: ConsoleAddGame;
 
 
   public function new(g: Game)
@@ -21,6 +23,7 @@ class ConsoleGame
       game = g;
       history = [];
       loadHistory();
+      addConsole = new ConsoleAddGame(this);
     }
 
 
@@ -550,206 +553,18 @@ class ConsoleGame
 // add commands
   function addCommand(cmd: String, arr: Array<String>)
     {
-      // XXX [ae] add random effect
-      if (cmd.charAt(1) == 'e')
-        addEffectCommand(cmd, arr);
-
-      // XXX [ai pistol] add item X
-      else if (cmd.charAt(1) == 'i')
-        addItemCommand(cmd, arr);
-
-      // XXX [ao10] add organ X
-      else if (cmd.charAt(1) == 'o')
-        addOrganCommand(cmd, arr);
-
-      // XXX [as computer 10] add skill X Y
-      else if (cmd.charAt(1) == 's')
-        addSkillCommand(cmd, arr);
-
-      // XXX [at] add trait by id
-      else if (cmd.charAt(1) == 't')
-        addTraitCommand(arr);
-
-    }
-
-// handle adding effects via console command
-  function addEffectCommand(cmd: String, _arr: Array<String>)
-    {
-      var args = (cmd.length > 2 ? StringTools.trim(cmd.substr(2)) : '');
-      var entries = buildEffectEntries();
-      if (args == '')
-        {
-          log('Effects: ' + listEntryNames(entries));
-          return;
-        }
-      var match = selectMatch('effect', args, entries);
-      if (match == null)
-        return;
-      if (game.player.state != PLR_STATE_HOST)
-        {
-          log('Not on host.');
-          return;
-        }
-      var effect: Effect = null;
-      switch (match.value)
-        {
-          case _AIEffectType.EFFECT_PARALYSIS:
-            effect = new effects.Paralysis(game, 10);
-          case _AIEffectType.EFFECT_SLIME:
-            effect = new effects.Slime(game, 10);
-          case _AIEffectType.EFFECT_PANIC:
-            effect = new effects.Panic(game, 10);
-          case _AIEffectType.EFFECT_CANNOT_TEAR_AWAY:
-            effect = new effects.CannotTearAway(game, 10);
-          case _AIEffectType.EFFECT_CRYING:
-            effect = new effects.Crying(game, 10);
-          case _AIEffectType.EFFECT_BERSERK:
-            effect = new effects.Berserk(game, 10);
-          case _AIEffectType.EFFECT_WHITE_POWDER:
-            effect = new effects.WhitePowder(game, 10);
-          case _AIEffectType.EFFECT_WITHDRAWAL:
-            effect = new effects.Withdrawal(game, 10);
-          case _AIEffectType.EFFECT_DRUNK:
-            effect = new effects.Drunk(game, 10);
-        }
-      if (effect == null)
-        {
-          log('Effect handler not implemented: ' + match.name + '.');
-          return;
-        }
-      game.player.host.onEffect(effect);
-      log('Added effect: ' + match.name + '.');
-    }
-
-// handle adding items via console command
-  function addItemCommand(cmd: String, _arr: Array<String>)
-    {
-      var args = (cmd.length > 2 ? StringTools.trim(cmd.substr(2)) : '');
-      if (ItemsConst.infos == null)
-        ItemsConst.init(game);
-      var entries = buildItemEntries();
-      if (args == '')
-        {
-          log('Items: ' + listEntryNames(entries));
-          return;
-        }
-      var match = selectMatch('item', args, entries);
-      if (match == null)
-        return;
-      if (game.player.state != PLR_STATE_HOST)
-        {
-          log('Not on host.');
-          return;
-        }
-      try {
-        var item = game.player.host.inventory.addID(match.value);
-        if (item.name == 'keycard')
-          item.lockID = 'corp-mission';
-      }
-      catch (e: Dynamic)
-        {
-          game.log(e + '');
-          return;
-        }
-      game.log('Item added.');
-    }
-
-// handle adding organs via console command
-  function addOrganCommand(cmd: String, _arr: Array<String>)
-    {
-      var args = (cmd.length > 2 ? StringTools.trim(cmd.substr(2)) : '');
-      var entries = buildOrganEntries();
-      if (args == '')
-        {
-          log('Organs: ' + listEntryNames(entries));
-          return;
-        }
-      var match = selectMatch('organ', args, entries);
-      if (match == null)
-        return;
-      if (game.player.state != PLR_STATE_HOST)
-        {
-          log('Not on host.');
-          return;
-        }
-      var info: EvolutionConst.ImprovInfo = null;
-      try {
-        info = EvolutionConst.getInfo(match.value);
-      }
-      catch (e: Dynamic)
-        {
-          info = null;
-        }
-      if (info == null)
-        {
-          log('Improvement [' + match.name + '] not found.');
-          return;
-        }
-      if (info.organ == null)
-        {
-          log('Improvement [' + match.name + '] has no organ.');
-          return;
-        }
-      game.player.evolutionManager.addImprov(match.value, info.maxLevel);
-      game.player.host.organs.action('set.' + Std.string(match.value));
-      game.player.host.organs.debugCompleteCurrent();
-      game.log('Organ added: ' + info.organ.name + '.');
-    }
-
-// handle adding skills via console command
-  function addSkillCommand(cmd: String, _arr: Array<String>)
-    {
-      var args = (cmd.length > 2 ? StringTools.trim(cmd.substr(2)) : '');
-      var entries = buildSkillEntries();
-      if (args == '')
-        {
-          log('Usage: as [skill] [amount]');
-          log('Skills: ' + listEntryNames(entries));
-          return;
-        }
-      var partsRaw = args.split(' ');
-      var parts = [];
-      for (part in partsRaw)
-        if (part != '')
-          parts.push(part);
-      if (parts.length < 2)
-        {
-          log('Usage: as [skill] [amount]');
-          return;
-        }
-      var amountStr = parts[parts.length - 1];
-      var queryParts = [];
-      for (i in 0...parts.length - 1)
-        queryParts.push(parts[i]);
-      var query = queryParts.join(' ');
-      if (query == '')
-        {
-          log('Usage: as [skill] [amount]');
-          return;
-        }
-      var parsed = Std.parseInt(amountStr);
-      if (parsed == null)
-        {
-          log('Invalid amount: ' + amountStr + '.');
-          return;
-        }
-      var match = selectMatch('skill', query, entries);
-      if (match == null)
-        return;
-      var amount: Int = parsed;
-      game.player.skills.addID(match.value, amount);
-      game.log('Skill/knowledge added: ' + match.name + ' (' + amount + ').');
+      addConsole.run(cmd, arr);
     }
 
 // handle learning improvements via console command
   function learnImprovementCommand(cmd: String)
     {
       var args = (cmd.length > 2 ? StringTools.trim(cmd.substr(2)) : '');
-      var entries = buildImprovementEntries();
+      var entries = addConsole.buildImprovementEntries();
       if (args == '')
         {
           log('Usage: li [name] [level]');
-          log('Improvements: ' + listEntryNames(entries));
+          log('Improvements: ' + addConsole.listEntryNames(entries));
           return;
         }
       var partsRaw = args.split(' ');
@@ -776,10 +591,10 @@ class ConsoleGame
           log('Usage: li [name] [level]');
           return;
         }
-      var match = selectMatch('improvement', query, entries);
+      var match = addConsole.selectMatch('improvement', query, entries);
       if (match == null)
         return;
-      var info: EvolutionConst.ImprovInfo = null;
+      var info: ImprovInfo = null;
       try {
         info = EvolutionConst.getInfo(match.value);
       }
@@ -797,278 +612,6 @@ class ConsoleGame
         targetLevel = info.maxLevel;
       game.player.evolutionManager.addImprov(match.value, targetLevel);
       log('Learned ' + info.name + ' ' + targetLevel);
-    }
-
-// add trait command handler
-  function addTraitCommand(arr: Array<String>)
-    {
-      if (game.player.state != PLR_STATE_HOST)
-        {
-          log('Not on host.');
-          return;
-        }
-
-      var entries = [];
-      for (trait in Type.allEnums(_AITraitType))
-        {
-          var enumName = Std.string(trait);
-          var key = enumName.substr(6).toLowerCase();
-          entries.push({
-            id: trait,
-            key: key,
-            enumName: enumName
-          });
-        }
-      entries.sort(function(a, b)
-        {
-          if (a.key < b.key) return -1;
-          if (a.key > b.key) return 1;
-          return 0;
-        });
-
-      if (arr.length < 2 || arr[1] == '')
-        {
-          var names = [];
-          for (entry in entries)
-            names.push(entry.key);
-          log('Traits: ' + names.join(', '));
-          return;
-        }
-
-      var query = arr[1].toLowerCase();
-      var match = null;
-      for (entry in entries)
-        if (entry.key == query)
-          {
-            match = entry;
-            break;
-          }
-
-      if (match == null)
-        {
-          var matches = [];
-          for (entry in entries)
-            if (StringTools.startsWith(entry.key, query))
-              matches.push(entry);
-          if (matches.length == 1)
-            match = matches[0];
-          else if (matches.length > 1)
-            {
-              var options = new Array<String>();
-              for (entry in matches)
-                options.push(entry.key);
-              log('Ambiguous trait id, matches: ' + options.join(', '));
-              return;
-            }
-        }
-
-      if (match == null)
-        {
-          log('No trait matches id: ' + query);
-          return;
-        }
-
-      game.player.host.addTrait(match.id);
-      log('Added trait: ' + match.enumName);
-    }
-
-// build effect entries for selection
-  function buildEffectEntries(): Array<{ name: String, searchKey: String, value: _AIEffectType, ?aliases: Array<String> }>
-    {
-      var list = [];
-      for (effect in Type.allEnums(_AIEffectType))
-        {
-          var name = Std.string(effect).substr(7).toLowerCase();
-          list.push({
-            name: name,
-            searchKey: normalizeKey(name),
-            value: effect
-          });
-        }
-      list.sort(function(a, b)
-        {
-          return compareStrings(a.name, b.name);
-        });
-      return list;
-    }
-
-// build item entries for selection
-  function buildItemEntries(): Array<{ name: String, searchKey: String, value: String, ?aliases: Array<String> }>
-    {
-      var list = [];
-      for (info in ItemsConst.infos)
-        {
-          var name = info.id;
-          list.push({
-            name: name,
-            searchKey: normalizeKey(name),
-            value: info.id
-          });
-        }
-      list.sort(function(a, b)
-        {
-          return compareStrings(a.name, b.name);
-        });
-      return list;
-    }
-
-// build organ entries for selection
-  function buildOrganEntries(): Array<{ name: String, searchKey: String, value: _Improv, ?aliases: Array<String> }>
-    {
-      var list = [];
-      for (improv in Type.allEnums(_Improv))
-        {
-          var name = Std.string(improv).substr(4).toLowerCase();
-          var info: EvolutionConst.ImprovInfo = null;
-          try {
-            info = EvolutionConst.getInfo(improv);
-          }
-          catch (e: Dynamic)
-            {
-              info = null;
-            }
-          if (info == null || info.organ == null)
-            continue;
-          list.push({
-            name: name,
-            searchKey: normalizeKey(name),
-            value: improv
-          });
-        }
-      list.sort(function(a, b)
-        {
-          return compareStrings(a.name, b.name);
-        });
-      return list;
-    }
-
-// build skill entries for selection
-  function buildSkillEntries(): Array<{ name: String, searchKey: String, value: _Skill, ?aliases: Array<String> }>
-    {
-      var list = [];
-      for (info in SkillsConst.skills)
-        {
-          var name = info.name.toLowerCase();
-          list.push({
-            name: name,
-            searchKey: normalizeKey(name),
-            value: info.id
-          });
-        }
-      list.sort(function(a, b)
-        {
-          return compareStrings(a.name, b.name);
-        });
-      return list;
-    }
-
-// build improvement entries for selection
-  function buildImprovementEntries(): Array<{ name: String, searchKey: String, value: _Improv, ?aliases: Array<String> }>
-    {
-      var list = [];
-      for (improv in Type.allEnums(_Improv))
-        {
-          var info: EvolutionConst.ImprovInfo = null;
-          try {
-            info = EvolutionConst.getInfo(improv);
-          }
-          catch (e: Dynamic)
-            {
-              info = null;
-            }
-          if (info == null)
-            continue;
-          var name = Std.string(improv).substr(4).toLowerCase();
-          list.push({
-            name: name,
-            searchKey: normalizeKey(name),
-            value: improv
-          });
-        }
-      list.sort(function(a, b)
-        {
-          return compareStrings(a.name, b.name);
-        });
-      return list;
-    }
-
-// format entry names for logging
-  function listEntryNames<T>(entries: Array<{ name: String, searchKey: String, value: T, ?aliases: Array<String> }>): String
-    {
-      var names = [];
-      for (entry in entries)
-        names.push(entry.name);
-      names.sort(compareStrings);
-      return names.join(', ');
-    }
-
-// select matching entry for a query
-  function selectMatch<T>(label: String, query: String, entries: Array<{ name: String, searchKey: String, value: T, ?aliases: Array<String> }>)
-    {
-      var normalizedQuery = normalizeKey(query);
-      var exact = [];
-      var partial = [];
-      for (entry in entries)
-        {
-          var keys = [ entry.searchKey ];
-          if (entry.aliases != null)
-            for (alias in entry.aliases)
-              keys.push(alias);
-          var isExact = false;
-          for (key in keys)
-            if (key == normalizedQuery)
-              {
-                exact.push(entry);
-                isExact = true;
-                break;
-              }
-          if (isExact)
-            continue;
-          if (normalizedQuery == '')
-            continue;
-          for (key in keys)
-            if (key.indexOf(normalizedQuery) != -1)
-              {
-                partial.push(entry);
-                break;
-              }
-        }
-      var matches = exact.length > 0 ? exact : partial;
-      if (matches.length == 0)
-        {
-          log('No ' + label + ' matched "' + query + '".');
-          return null;
-        }
-      if (matches.length > 1)
-        {
-          var options = [];
-          for (entry in matches)
-            options.push(entry.name);
-          options.sort(compareStrings);
-          log('Ambiguous ' + label + ' match: ' + options.join(', '));
-          return null;
-        }
-      return matches[0];
-    }
-
-// convert value to a normalized lookup key
-  inline function normalizeKey(value: String): String
-    {
-      var s = StringTools.trim(value).toLowerCase();
-      s = StringTools.replace(s, '_', '');
-      s = StringTools.replace(s, '-', '');
-      s = StringTools.replace(s, ' ', '');
-      return s;
-    }
-
-// compare strings ignoring case
-  inline function compareStrings(a: String, b: String): Int
-    {
-      var la = a.toLowerCase();
-      var lb = b.toLowerCase();
-      if (la < lb) return -1;
-      if (la > lb) return 1;
-      return 0;
     }
 
 // debug commands
@@ -1767,7 +1310,7 @@ class ConsoleGame
     }
 
 // log function
-  inline function log(s: String)
+  public inline function log(s: String)
     {
       game.log(Const.small(s), COLOR_DEBUG);
     }
