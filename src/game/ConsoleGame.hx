@@ -4,16 +4,23 @@ package game;
 
 import ai.*;
 import const.*;
+import haxe.Json;
 import objects.EventObject;
+#if electron
+import js.node.Fs;
+#end
 
 class ConsoleGame
 {
   public var game: Game;
+  var history: Array<String>;
 
 
   public function new(g: Game)
     {
       game = g;
+      history = [];
+      loadHistory();
     }
 
 
@@ -23,6 +30,8 @@ class ConsoleGame
       cmd = StringTools.trim(cmd);
       if (cmd == '')
         return;
+
+      recordHistory(cmd);
 
 //      log('Console command: ' + cmd);
       var arr = cmd.split(' ');
@@ -232,7 +241,83 @@ class ConsoleGame
         }
     }
 
-  // complete current player goals
+// return command history size
+  public function getHistoryLength(): Int
+    {
+      return history.length;
+    }
+
+// return history entry by index
+  public function getHistoryEntry(index: Int): String
+    {
+      if (index < 0 || index >= history.length)
+        return '';
+      return history[index];
+    }
+
+// store command in history
+  function recordHistory(cmd: String)
+    {
+      if (cmd == '')
+        return;
+      if (history.length > 0 && history[history.length - 1] == cmd)
+        return;
+      history.push(cmd);
+      enforceHistoryLimit();
+      saveHistory();
+    }
+
+// keep history within limit
+  function enforceHistoryLimit()
+    {
+      while (history.length > 50)
+        history.shift();
+    }
+
+// load history from disk
+  function loadHistory()
+    {
+      history = [];
+#if electron
+      try {
+        if (!Fs.existsSync('history.json'))
+          return;
+        var raw = Fs.readFileSync('history.json', 'utf8');
+        if (raw != null && StringTools.trim(raw) != '')
+          {
+            var parsed: Dynamic = Json.parse(raw);
+            var list: Array<Dynamic> = cast parsed;
+            for (entry in list)
+              if (Std.isOfType(entry, String))
+                history.push(cast entry);
+          }
+      }
+      catch (e: Dynamic)
+        {
+          trace('console history load failed: ' + e);
+        }
+#end
+      enforceHistoryLimit();
+    }
+
+// save history to disk
+  function saveHistory()
+    {
+#if electron
+      try {
+        Fs.writeFileSync(
+          'history.json',
+          Json.stringify(history, null, '  '),
+          'utf8');
+      }
+      catch (e: Dynamic)
+        {
+          trace('console history save failed: ' + e);
+        }
+#end
+    }
+
+// complete current player goals
   function completeGoals()
     {
       for (g in @:privateAccess game.goals._listCurrent)

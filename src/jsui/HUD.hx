@@ -19,6 +19,8 @@ class HUD
   var container: DivElement;
   var consoleDiv: DivElement;
   var console: TextAreaElement;
+  var consoleHistoryIndex: Int;
+  var consoleHistoryDraft: String;
   var log: DivElement;
   var goals: DivElement;
   var info: DivElement;
@@ -73,16 +75,9 @@ class HUD
 
       console = Browser.document.createTextAreaElement();
       console.id = 'hud-console';
-      console.onkeydown = function(e: KeyboardEvent) {
-        if (e.code == 'Escape')
-          hideConsole();
-        else if (e.code == 'Enter')
-          {
-            game.console.run(console.value);
-            // kludge: needs a timeout or closes the event window
-            Browser.window.setTimeout(hideConsole, 10);
-          }
-      }
+      consoleHistoryIndex = -1;
+      consoleHistoryDraft = '';
+      console.onkeydown = onConsoleKeyDown;
       consoleDiv.appendChild(console);
 
       log = Browser.document.createDivElement();
@@ -462,12 +457,79 @@ class HUD
         console.value = '';
       });
       console.focus();
+      consoleHistoryIndex = -1;
+      consoleHistoryDraft = '';
     }
 
   public function hideConsole()
     {
       consoleDiv.style.visibility = 'hidden';
+      consoleHistoryIndex = -1;
+      consoleHistoryDraft = '';
       ui.focus();
+    }
+
+// handle keyboard input for console
+  function onConsoleKeyDown(e: KeyboardEvent)
+    {
+      // hide console
+      if (e.code == 'Escape')
+        {
+          hideConsole();
+        }
+      // run console command
+      else if (e.code == 'Enter')
+        {
+          game.console.run(console.value);
+          consoleHistoryIndex = -1;
+          consoleHistoryDraft = '';
+          // kludge: needs a timeout or closes the event window
+          Browser.window.setTimeout(hideConsole, 10);
+        }
+      // previous command in history
+      else if (e.code == 'ArrowUp')
+        {
+          if (game.console.getHistoryLength() == 0)
+            return;
+          e.preventDefault();
+          if (consoleHistoryIndex == -1)
+            {
+              consoleHistoryDraft = console.value;
+              consoleHistoryIndex = game.console.getHistoryLength();
+            }
+          if (consoleHistoryIndex > 0)
+            consoleHistoryIndex--;
+          console.value = game.console.getHistoryEntry(consoleHistoryIndex);
+          setConsoleCaretToEnd();
+        }
+      // next command in history
+      else if (e.code == 'ArrowDown')
+        {
+          if (consoleHistoryIndex == -1)
+            return;
+          e.preventDefault();
+          consoleHistoryIndex++;
+          if (consoleHistoryIndex >= game.console.getHistoryLength())
+            {
+              consoleHistoryIndex = -1;
+              console.value = consoleHistoryDraft;
+            }
+          else
+            {
+              console.value = game.console.getHistoryEntry(consoleHistoryIndex);
+            }
+          setConsoleCaretToEnd();
+        }
+    }
+
+// move console caret to the end
+  function setConsoleCaretToEnd()
+    {
+      Browser.window.setTimeout(function () {
+        untyped console.setSelectionRange(
+          console.value.length,
+          console.value.length);
+      });
     }
 
 // update HUD state from game state
