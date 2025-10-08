@@ -4,10 +4,8 @@ package ai;
 import game.Game;
 import const.*;
 import objects.*;
-import particles.*;
 import ai.AI;
 import _AIState;
-import __Math;
 
 class DefaultLogic
 {
@@ -44,6 +42,18 @@ class DefaultLogic
 // AI vision: called in idle and movement to target states
   static function visionIdle(ai: AI)
     {
+      // alert immediately if a tracked enemy is in sight
+      for (enemyID in ai.enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null)
+            continue;
+          if (!ai.seesPosition(enemy.x, enemy.y))
+            continue;
+          ai.setState(AI_STATE_ALERT, REASON_WITNESS);
+          return;
+        }
+
       // full affinity + consent results in ignore
       if (ai.isAgreeable())
         ai.alertness -= 5;

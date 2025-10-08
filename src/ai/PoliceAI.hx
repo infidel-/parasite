@@ -64,6 +64,26 @@ class PoliceAI extends HumanAI
       super.initPost(onLoad);
     }
 
+  // handles per-turn police lookout for criminals
+  public override function turn()
+    {
+      super.turn();
+
+      var seen = game.area.getAIinRadius(x, y, AI.VIEW_DISTANCE, true);
+      for (other in seen)
+        {
+          if (other == this)
+            continue;
+          if (!other.didCrime)
+            continue;
+          if (Std.random(100) >= 80)
+            continue;
+          addEnemy(other);
+          if (state == AI_STATE_IDLE)
+            setState(AI_STATE_ALERT, REASON_WITNESS);
+        }
+    }
+
 // event: on being attacked
   public override function onAttack()
     {

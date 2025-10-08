@@ -25,6 +25,7 @@ class AI extends AIData
   public var wasInvaded: Bool; // was this AI a host at any point?
   public var wasAlerted: Bool; // was this AI alerted at some point?
   public var wasNoticed: Bool; // was this AI seen by parasite after spawning?
+  public var didCrime: Bool; // did this AI attack law or soldiers?
 
   public var x: Int; // grid x,y
   public var y: Int;
@@ -92,6 +93,7 @@ class AI extends AIData
       wasInvaded = false;
       wasAlerted = false;
       wasNoticed = false;
+      didCrime = false;
 
       _objectsSeen = new List();
       _turnsInvisible = 0;
@@ -547,8 +549,13 @@ public function show()
         }
     }
 
-// call AI logic
+// turn hook for child classes to inject per-turn behavior
   public function turn()
+    {
+    }
+
+// call AI logic
+  public function turnInternal()
     {
       chatTurn(1); // time passing for chat
       stateTime++; // time spent in this state
@@ -603,6 +610,9 @@ public function show()
 
       // default AI logiccultID
       else DefaultLogic.turn(this);
+
+      // per-type hook
+      turn();
 
       updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
@@ -1010,6 +1020,14 @@ public function show()
           setState(AI_STATE_ALERT);
           onAttack(); // attack event
         }
+
+      // law marks attacker as criminal
+      var attackerAI = attacker.ai;
+      if (attackerAI != null &&
+          (type == 'police' ||
+           type == 'security' ||
+           type == 'soldier'))
+        attackerAI.didCrime = true;
 
       // update enemies lists
 //      trace('AI ' + id + ' was attacked by ' + attacker.ai.id);

@@ -1034,7 +1034,7 @@ class AreaGame extends _SaveObject
       // AI logic
       for (ai in _ai)
         {
-          ai.turn();
+          ai.turnInternal();
           if (game.isFinished)
             return;
         }

@@ -117,6 +117,33 @@ class ThugAI extends HumanAI
       super.initPost(onLoad);
     }
 
+  // turn hook to let thugs target law enforcement
+  public override function turn()
+    {
+      super.turn();
+
+      var seen = game.area.getAIinRadius(x, y, AI.VIEW_DISTANCE, true);
+      for (other in seen)
+        {
+          if (other == this)
+            continue;
+          if (other.type != 'police' &&
+              other.type != 'security')
+            continue;
+          if (Std.random(100) >= 10)
+            continue;
+          addEnemy(other);
+          // alert this AI (fear/aggro)
+          if (state == AI_STATE_IDLE)
+            setState(AI_STATE_ALERT);
+          emitSound({
+            text: 'PIG!',
+            radius: 5,
+            alertness: 10
+          });
+        }
+    }
+
 // event: on being attacked
   public override function onAttack()
     {
