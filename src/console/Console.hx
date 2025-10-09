@@ -1,21 +1,21 @@
-// game console
+// game console helper
 
-package game;
+package console;
 
-import ai.*;
 import const.*;
 import const.EvolutionConst.ImprovInfo;
+import game.*;
+import game.Team;
 import haxe.Json;
-import objects.EventObject;
 #if electron
 import js.node.Fs;
 #end
 
-class ConsoleGame
+class Console
 {
   public var game: Game;
   var history: Array<String>;
-  var addConsole: ConsoleAddGame;
+  var addConsole: Add;
 
 
   public function new(g: Game)
@@ -23,7 +23,7 @@ class ConsoleGame
       game = g;
       history = [];
       loadHistory();
-      addConsole = new ConsoleAddGame(this);
+      addConsole = new Add(this);
     }
 
 

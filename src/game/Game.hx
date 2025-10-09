@@ -5,6 +5,7 @@ package game;
 #if electron
 import js.node.Fs;
 #end
+import console.Console;
 import haxe.Json;
 import jsui.UI;
 import scenario.Timeline;
@@ -28,7 +29,7 @@ class Game extends _SaveObject
   public var managerWorld: WorldManager; // game world manager
   public var region: RegionGame; // region info link
   public var group: Group; // conspiracy group - antags
-  public var console: ConsoleGame; // game console
+  public var console: Console; // game console
 
   public var areaGenerator: AreaGenerator; // generator link
   public var area: AreaGame; // current area link
@@ -62,7 +63,7 @@ class Game extends _SaveObject
       profile = new Profile(this);
       ui = new UI(this);
       scene = new GameScene(this);
-      console = new ConsoleGame(this);
+      console = new Console(this);
       managerWorld = new WorldManager(this);
       areaGenerator = new AreaGenerator(this);
       messageList = new List();

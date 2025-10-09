@@ -1,10 +1,12 @@
 // console add command helper
-package game;
+package console;
 
 import const.EvolutionConst;
 import const.EvolutionConst.ImprovInfo;
 import const.ItemsConst;
 import const.SkillsConst;
+import game.Effect;
+import game.Game;
 import StringTools;
 import Std;
 import Type;
@@ -17,13 +19,13 @@ typedef ConsoleAddEntry<T> =
   ?aliases: Array<String>,
 }
 
-class ConsoleAddGame
+class Add
 {
-  public var console: ConsoleGame;
+  public var console: Console;
   var game: Game;
 
 // sets up add command helper
-  public function new(c: ConsoleGame)
+  public function new(c: Console)
     {
       console = c;
       game = console.game;
