@@ -107,13 +107,13 @@ class Timeline extends UIWindow
 */
                 buf.add('<li class=window-timeline-event-npc>');
                 buf.add((npc.nameKnown ? npc.name : '?') + ' ');
-                buf.add('(' + (npc.jobKnown ? npc.job : '?') + ') ');
+                buf.add(Const.small('(' + (npc.jobKnown ? npc.job : '?') + ') '));
                 if (npc.areaKnown)
                   buf.add('at (' + npc.area.x + ',' + npc.area.y + ') ');
                 else buf.add('at (?,?) ');
-                buf.add(npc.jobKnown ? '[photo] ' : '[no photo] ');
+                buf.add(Const.small(npc.jobKnown ? '[photo] ' : '[no photo] '));
                 if (!npc.statusKnown)
-                  buf.add('status: unknown');
+                  buf.add(Const.smallgray('status: unknown'));
                 buf.add('<br/>');
               }
           buf.add('</ul>');

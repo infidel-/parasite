@@ -97,7 +97,7 @@ class Console
             'dg - debug: graphics info, ' +
             'dthrow - debug: throw exception, ' +
             'dalert - debug: show alert, ' +
-            'dleave - debug: leave area, ' +
+            'dleave - debug: leave area,<br/>' +
             // go
             'ga - go and enter area, ' +
             'gc - complete current goals, ' +
