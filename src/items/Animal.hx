@@ -25,6 +25,11 @@ class Animal extends Weapon
           radius: 5,
           alertness: 3,
         },
+        soundMiss: {
+          file: 'attack-melee-miss',
+          radius: 5,
+          alertness: 3,
+        },
       };
     }
 }

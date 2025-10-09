@@ -647,6 +647,8 @@ public function show()
 // also handle sound propagation here
   public function emitSound(sound: AISound)
     {
+      if (sound == null)
+        return;
       // check for min alertness
       if (state == AI_STATE_IDLE &&
           sound.params != null &&

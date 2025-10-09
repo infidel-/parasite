@@ -25,6 +25,11 @@ class BaseballBat extends Weapon
           radius: 5,
           alertness: 10,
         },
+        soundMiss: {
+          file: 'attack-melee-miss',
+          radius: 5,
+          alertness: 10,
+        },
       };
     }
 }

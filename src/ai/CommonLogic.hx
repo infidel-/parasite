@@ -61,10 +61,6 @@ class CommonLogic
           });
         }
 
-      // play weapon sound
-      if (weapon.sound != null)
-        ai.emitSound(weapon.sound);
-
       // weapon skill level (ai + parasite bonus)
       var rollMods = [];
       if (isAttackerPlayer)
@@ -83,7 +79,7 @@ class CommonLogic
         ai.energy -= 2;
 //        (ai.hasTrait(TRAIT_ASSIMILATED) ? 2 : 2);
 
-      // draw attack effect
+      // draw attack effects
       if (weapon.isRanged)
         Particle.createShot(
           weapon.sound.file, game.scene, ai.x, ai.y,
@@ -92,6 +88,8 @@ class CommonLogic
       // roll skill
       if (!roll)
         {
+          var sound = (weapon.soundMiss != null ? weapon.soundMiss : weapon.sound);
+          ai.emitSound(sound);
           ai.log('tries to ' + weapon.verb1 + ' ' + target.theName() + ', but misses.');
 
           if (isAttackerPlayer)
@@ -104,6 +102,11 @@ class CommonLogic
             }
           return;
         }
+      else ai.emitSound(weapon.sound);
+
+      // blood effect on hit
+      if (weapon.spawnBlood)
+        new ParticleSplat(game.scene, { x: target.x, y: target.y });
 
       // stun damage on ai - stun the host
       // if target is parasite, works as regular damage

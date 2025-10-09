@@ -21,6 +21,17 @@ class Katana extends Weapon
         verb2: 'cuts',
         skill: SKILL_KATANA,
         type: WEAPON_MELEE,
+        spawnBlood: true,
+        sound: {
+          file: 'attack-machete',
+          radius: 6,
+          alertness: 10,
+        },
+        soundMiss: {
+          file: 'attack-melee-miss',
+          radius: 5,
+          alertness: 10,
+        },
       };
     }
 }

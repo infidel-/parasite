@@ -366,7 +366,7 @@ class Timeline extends _SaveObject
               type = typeExt.substr(typeExt.indexOf(':') + 1);
             }
 
-          for (i in 0...max)
+          for (_ in 0...max)
             {
               var npc = new NPC(game);
               npc.event = event;

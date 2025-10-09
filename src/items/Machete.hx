@@ -20,8 +20,14 @@ class Machete extends Weapon
         verb1: 'slash',
         verb2: 'slashes',
         type: WEAPON_MELEE,
+        spawnBlood: true,
         sound: {
           file: 'attack-machete',
+          radius: 5,
+          alertness: 10,
+        },
+        soundMiss: {
+          file: 'attack-melee-miss',
           radius: 5,
           alertness: 10,
         },

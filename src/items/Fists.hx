@@ -25,6 +25,11 @@ class Fists extends Weapon
           radius: 5,
           alertness: 5,
         },
+        soundMiss: {
+          file: 'attack-melee-miss',
+          radius: 5,
+          alertness: 5,
+        },
       };
     }
 }

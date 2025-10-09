@@ -20,8 +20,14 @@ class Knife extends Weapon
         verb1: 'stab',
         verb2: 'stabs',
         type: WEAPON_MELEE,
+        spawnBlood: true,
         sound: {
           file: 'attack-knife',
+          radius: 4,
+          alertness: 8,
+        },
+        soundMiss: {
+          file: 'attack-melee-miss',
           radius: 4,
           alertness: 8,
         },

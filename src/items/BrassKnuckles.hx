@@ -25,6 +25,11 @@ class BrassKnuckles extends Weapon
           radius: 4,
           alertness: 6,
         },
+        soundMiss: {
+          file: 'attack-melee-miss',
+          radius: 4,
+          alertness: 6,
+        },
       };
     }
 }
