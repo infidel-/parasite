@@ -60,9 +60,17 @@ class Preservator extends HabitatObject
       // preserve host
       if (action.id == 'preserveHost')
         {
-          if (x == game.playerArea.x && y == game.playerArea.y)
+          if (x == game.playerArea.x &&
+              y == game.playerArea.y)
             {
               game.actionFailed('Move to any free side of the preservator first.');
+              return true;
+            }
+          // cannot preserve cultists
+          // NOTE: this brings a bunch of problems: summoning, cult destroying while the player in other area and maybe more
+          if (game.player.host.isCultist)
+            {
+              game.actionFailed('You cannot preserve cultists.');
               return true;
             }
           // count preserved hosts around

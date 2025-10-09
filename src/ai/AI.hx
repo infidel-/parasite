@@ -1079,6 +1079,7 @@ public function show()
     {}
 
 // event hook: on despawning live AI
+// NOTE: will not be called if ai is removed while the player is not in the same area!
   public dynamic function onRemove()
     {}
 

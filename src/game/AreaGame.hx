@@ -1004,7 +1004,9 @@ class AreaGame extends _SaveObject
 //        game.debug('AI remove ' + ai.id);
       // event: despawn live AI
       if (ai.state != AI_STATE_DEAD &&
-          ai != game.player.host)
+          ai != game.player.host &&
+          // only called if player in the same area
+          game.area == this)
         ai.onRemove();
 
       if (ai.npc != null)

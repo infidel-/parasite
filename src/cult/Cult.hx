@@ -2,6 +2,7 @@
 package cult;
 
 import game.AreaEvent;
+import game.AreaGame;
 import game.Game;
 import ai.AI;
 import ai.AIData;
@@ -90,13 +91,11 @@ class Cult
         }
       else log(' is temporarily out of action');
 
-      // clear live ai
-      for (ai in game.area.getAllAI())
-        if (ai.isCultist && ai.cultID == this.id)
-          {
-            ai.isCultist = false;
-            ai.cultID = 0;
-          }
+      // clear live ai in the current area
+      if (game.area != null)
+        clearCultistsInArea(game.area, game.area.isHabitat);
+      // clear cultists from player habitats
+      clearCultistsInHabitats();
     }
 
 // run cult action from ui
@@ -233,5 +232,38 @@ class Cult
   function get_leader(): AIData
     {
       return members[0];
+    }
+
+// clears cultists from provided area
+  function clearCultistsInArea(area: AreaGame, remove: Bool)
+    {
+      if (area == null)
+        return;
+      var list = [];
+      for (ai in area.getAllAI())
+        if (ai.isCultist && ai.cultID == id)
+          list.push(ai);
+      for (ai in list)
+        {
+          ai.isCultist = false;
+          ai.cultID = 0;
+          if (remove)
+            area.removeAI(ai);
+        }
+    }
+
+// clears cultists from all habitats
+  function clearCultistsInHabitats()
+    {
+      var region = game.region;
+      if (region == null)
+        return;
+      var habitats = region.getHabitatsList();
+      for (habitatArea in habitats)
+        {
+          if (habitatArea == game.area)
+            continue;
+          clearCultistsInArea(habitatArea, true);
+        }
     }
 }
