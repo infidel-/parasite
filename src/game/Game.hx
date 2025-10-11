@@ -105,7 +105,7 @@ class Game extends _SaveObject
 #else
       log(s);
 #end
-      log('<font style="font-size: 6px">Into the river of the Green, into the river of Unseen.</font>', COLOR_DEBUG);
+      log('<font style="font-size: 6px">Revulsion is a striking color in my palette.</font>', COLOR_DEBUG);
       turns = 0;
       isFinished = false;
       isInited = false;

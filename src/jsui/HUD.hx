@@ -714,8 +714,8 @@ class HUD
           // organ growth/evolution
           if (game.player.evolutionManager.isActive)
             {
-              buf.add('<br>Evolution direction:<br/>  ');
-              buf.add(game.player.evolutionManager.getEvolutionDirectionInfo());
+              buf.add(Const.small('<br>Evolution direction:<br/>  '));
+              buf.add(Const.small(game.player.evolutionManager.getEvolutionDirectionInfo()));
             }
           var str = host.organs.getInfo();
           if (str != null)

@@ -31,7 +31,7 @@ class MainMenu extends UIWindow
       // randomize background
       if (!game.firstEverRun)
         {
-          var bgIndex = 1 + Std.random(10);
+          var bgIndex = 1 + Std.random(19);
           setBackground(bgIndex, game.config.aiArtEnabled);
         }
 //      UI.setVar('--main-menu-bg', 'url(./img/misc/bg13.jpg)');

@@ -237,6 +237,7 @@ Alt+0-5 - equals F1-F5<br>
         {
           id: 'areaHighCrime',
           name: 'High Crime Area',
+          img: 'pedia/high_crime',
           text: "<p>High-crime blocks are choked with uncollected garbage, broken glass and improvised burn barrels. The air is foul and the inhabitants are the city's undesirables: bums staking out doorways, armed thugs guarding their corners and prostitutes trying to survive another night.</p>
 
 <p>The thugs are aggressive and respond immediately if attacked, escalating to lethal force without hesitation. Police patrols are almost non-existent and even if someone manages to call them, the response rarely materializes.</p>",
