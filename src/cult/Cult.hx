@@ -116,6 +116,8 @@ class Cult
     {
       if (state != CULT_STATE_ACTIVE)
         return false;
+      if (game.location != LOCATION_AREA)
+        return false;
       return true;
     }
 

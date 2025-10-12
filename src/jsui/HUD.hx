@@ -180,6 +180,7 @@ class HUD
     {
       var btn = Browser.document.createDivElement();
       btn.innerHTML = str;
+      // NOTE: must be the same with show/hide buttons at updateMenu()
       btn.className = 'hud-button window-title';
       btn.style.borderImage = "url('./img/hud-button.png') 23 fill / 1 / 0 stretch";
       cont.appendChild(btn);
@@ -802,8 +803,9 @@ class HUD
             }
           m.btn.style.display = (vis ? 'flex' : 'none');
           // clear highlight on hide
+          // NOTE: must be the same with addMenuButton()
           if (!vis && m.btn.className.indexOf('highlight') > 0)
-            m.btn.className = 'hud-button';
+            m.btn.className = 'hud-button window-title';
         }
     }
 
