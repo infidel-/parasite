@@ -43,6 +43,9 @@ class SecurityAI extends HumanAI
       name.unknownCapped = 'Security guard';
       soundsID = 'security';
       isAggressive = true;
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
       isBackup = false;
       isBackupCalled = false;
     }

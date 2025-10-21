@@ -26,6 +26,9 @@ class ScientistAI extends HumanAI
       name.unknown = 'random scientist';
       name.unknownCapped = 'Random scientist';
       soundsID = 'civilian';
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
     }
 
 // called after load or creation

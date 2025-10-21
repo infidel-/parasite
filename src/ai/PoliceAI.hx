@@ -56,6 +56,9 @@ class PoliceAI extends HumanAI
 
       isBackup = false;
       isBackupCalled = false;
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
     }
 
 // called after load or creation

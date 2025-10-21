@@ -16,6 +16,7 @@ class AIData extends _SaveObject
   public static var _maxID: Int = 0; // current max ID
   public var type: String; // ai type
   public var job: String; // ai job
+  public var income: Int; // monthly income
   public var eventID: String; // timeline event
   public var npcID: Int;
   public var isNPC: Bool;
@@ -75,6 +76,7 @@ class AIData extends _SaveObject
     {
       type = 'undefined';
       job = 'undefined';
+      income = 0;
       tileAtlasX = -1;
       tileAtlasY = -1;
       name = {

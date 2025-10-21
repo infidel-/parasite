@@ -78,6 +78,9 @@ class TeamMemberAI extends HumanAI
           name.unknown = 'random civilian';
           name.unknownCapped = 'Random civilian';
         }
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
       soundsID = 'team';
       isAggressive = true;
       isTeamMember = true;

@@ -35,6 +35,10 @@ class AgentAI extends HumanAI
       soundsID = 'agent';
       isAggressive = true;
 
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
+
 //      isBackup = false;
 //      isBackupCalled = false;
     }

@@ -25,6 +25,9 @@ class SoldierAI extends HumanAI
       name.unknownCapped = 'Soldier';
       soundsID = 'soldier';
       isAggressive = true;
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
     }
 
 // called after load or creation

@@ -95,6 +95,9 @@ class BlackopsAI extends HumanAI
       isAggressive = true;
       isRelentless = true;
       inventory.clear();
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
 
 //      isBackup = false;
 //      isBackupCalled = false;

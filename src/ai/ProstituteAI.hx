@@ -47,6 +47,9 @@ class ProstituteAI extends HumanAI
       name.unknown = 'sex worker';
       name.unknownCapped = 'Sex worker';
       soundsID = 'civilian';
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
       derivedStats();
     }
 

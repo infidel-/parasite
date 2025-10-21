@@ -37,6 +37,9 @@ class SmilerAI extends HumanAI
       name.unknown = 'office worker';
       name.unknownCapped = 'Office worker';
       soundsID = 'civilian';
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
     }
 
 // called after load or creation

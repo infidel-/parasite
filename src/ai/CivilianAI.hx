@@ -71,6 +71,9 @@ class CivilianAI extends HumanAI
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
       soundsID = 'civilian';
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
     }
 
 // called after load or creation

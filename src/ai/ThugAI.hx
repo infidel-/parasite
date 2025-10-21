@@ -109,6 +109,9 @@ class ThugAI extends HumanAI
       name.unknownCapped = 'Street thug';
       soundsID = 'thug';
       isAggressive = true;
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
     }
 
   // handles post-load initialization for thugs
