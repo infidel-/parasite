@@ -34,67 +34,213 @@ class Images
         }
       }
 
-// get AI graphics with given params
-  public function getAI(type: String, isMale: Bool): {
+// get random civilian sprite data together with job info
+  public function getRandomCivilianAI(): {
+      x: Int,
+      y: Int,
+      job: String,
+      income: Int,
+      isMale: Bool,
+    }
+    {
+      var isMale = (Std.random(2) == 0);
+      var civilians = (isMale ? civiliansMale : civiliansFemale);
+      if (civilians.length == 0)
+        {
+          trace('no civilian icons available');
+          return {
+            x: 0,
+            y: 0,
+            job: 'unemployed',
+            income: 0,
+            isMale: isMale,
+          };
+        }
+      var civ = civilians[Std.random(civilians.length)];
+      var jobInfo = scene.game.jobs.getRandom(civ.job);
+      return {
+        x: civ.x,
+        y: civ.y,
+        job: jobInfo.name,
+        income: jobInfo.income,
+        isMale: isMale,
+      };
+    }
+
+// get special human sprite for provided type
+  public function getSpecialAI(type: String, isMale: Bool): {
       x: Int,
       y: Int,
     }
     {
       var specials = (isMale ? specialsMale : specialsFemale);
-      // generic civilian
-      if (type == 'civilian')
+      var list = specials[type];
+      // might only be in male atlas (security, etc)
+      if (!isMale && list == null)
+        list = specialsMale[type];
+      if (list == null)
         {
-          // male64.png, female64.png civilians part
-          // NOTE: here
-          var w = 10, h = (isMale ? 8 : 6);
-          for (_ in 0...100)
-            {
-              var x = Std.random(w);
-              var y = Std.random(h);
-              // check for hitting specials
-              var ok = true;
-              for (_ => arr in specials)
-                {
-                  for (tmp in arr)
-                    if (tmp.x == x && tmp.y == y)
-                      {
-                        ok = false;
-                        break;
-                      }
-                  if (!ok)
-                    break;
-                }
-              if (!ok)
-                continue;
-              return {
-                x: x,
-                y: y,
-              }
-            }
-          trace('could not find icon for ' + type + ' ' + isMale);
+          trace('no icons for type ' + type);
           return null;
         }
-
-      // special humans - police, soldier, agent, blackops, security
-      else
-        {
-          var list = specials[type];
-          // might only be in male atlas (security, etc)
-          if (!isMale && list == null)
-            list = specialsMale[type];
-          if (list == null)
-            {
-              trace('no icons for type ' + type);
-              return null;
-            }
-          var tmp = list[Std.random(list.length)];
-          return {
-            x: tmp.x,
-            y: tmp.y,
-          }
-        }
-      return null;
+      var tmp = list[Std.random(list.length)];
+      return {
+        x: tmp.x,
+        y: tmp.y,
+      };
     }
+
+  public static var civiliansFemale = [
+    { x: 0, y: 0, job: 'teacher' },
+    { x: 1, y: 0, job: 'nurse' },
+    { x: 2, y: 0, job: 'casualCivilian' },
+    { x: 3, y: 0, job: 'casualCivilian' },
+    { x: 4, y: 0, job: 'casualCivilian' },
+    { x: 5, y: 0, job: 'formalCivilian' },
+    { x: 6, y: 0, job: 'casualCivilian' },
+    { x: 7, y: 0, job: 'casualCivilian' },
+    { x: 8, y: 0, job: 'formalCivilian' },
+    { x: 9, y: 0, job: 'callCenter' },
+
+    { x: 0, y: 1, job: 'casualCivilian' },
+    { x: 1, y: 1, job: 'casualCivilian' },
+    { x: 2, y: 1, job: 'nurse' },
+    { x: 3, y: 1, job: 'barista' },
+    { x: 4, y: 1, job: 'casualCivilian' },
+    { x: 5, y: 1, job: 'casualCivilian' },
+    { x: 6, y: 1, job: 'teacher' },
+    { x: 7, y: 1, job: 'casualCivilian' },
+    { x: 8, y: 1, job: 'stewardess' },
+    { x: 9, y: 1, job: 'casualCivilian' },
+
+    { x: 0, y: 2, job: 'formalCivilian' },
+    { x: 1, y: 2, job: 'housewife' },
+    { x: 2, y: 2, job: 'waiter' },
+    { x: 3, y: 2, job: 'formalCivilian' },
+    { x: 4, y: 2, job: 'supportSpecialist' },
+    { x: 5, y: 2, job: 'stewardess' },
+    { x: 6, y: 2, job: 'nurse' },
+    { x: 7, y: 2, job: 'casualCivilian' },
+    { x: 8, y: 2, job: 'housewife' },
+    { x: 9, y: 2, job: 'casualCivilian' },
+
+    { x: 0, y: 3, job: 'formalCivilian' },
+    { x: 1, y: 3, job: 'nurse' },
+    { x: 2, y: 3, job: 'nurse' },
+    { x: 3, y: 3, job: 'nun' },
+    { x: 4, y: 3, job: 'callCenter' },
+    { x: 5, y: 3, job: 'formalCivilian' },
+    { x: 6, y: 3, job: 'casualCivilian' },
+    { x: 7, y: 3, job: 'casualCivilian' },
+    { x: 8, y: 3, job: 'casualCivilian' },
+    { x: 9, y: 3, job: 'formalCivilian' },
+
+    { x: 0, y: 4, job: 'casualCivilian' },
+    { x: 1, y: 4, job: 'casualCivilian' },
+    { x: 2, y: 4, job: 'formalCivilian' },
+    { x: 3, y: 4, job: 'casualCivilian' },
+    { x: 4, y: 4, job: 'casualCivilian' },
+    { x: 5, y: 4, job: 'casualCivilian' },
+    { x: 6, y: 4, job: 'casualCivilian' },
+    { x: 7, y: 4, job: 'casualCivilian' },
+    { x: 8, y: 4, job: 'casualCivilian' },
+    { x: 9, y: 4, job: 'doctor' },
+
+    { x: 0, y: 5, job: 'casualCivilian' },
+    { x: 1, y: 5, job: 'casualCivilian' },
+    { x: 2, y: 5, job: 'formalCivilian' },
+    { x: 3, y: 5, job: 'formalCivilian' },
+    { x: 4, y: 5, job: 'casualCivilian' },
+    { x: 5, y: 5, job: 'formalCivilian' },
+    { x: 6, y: 5, job: 'student' },
+    { x: 7, y: 5, job: 'casualCivilian' },
+    { x: 8, y: 5, job: 'callCenter' },
+    { x: 9, y: 5, job: 'nurse' },
+  ];
+
+  public static var civiliansMale = [
+    { x: 0, y: 0, job: 'callCenter' },
+    { x: 1, y: 0, job: 'doctor' },
+    { x: 2, y: 0, job: 'worker' },
+    { x: 3, y: 0, job: 'casualCivilian' },
+    { x: 4, y: 0, job: 'courier' },
+    { x: 5, y: 0, job: 'captain' },
+    { x: 6, y: 0, job: 'firefighter' },
+    { x: 7, y: 0, job: 'cook' },
+    { x: 8, y: 0, job: 'casualCivilian' },
+    { x: 9, y: 0, job: 'painter' },
+
+    { x: 0, y: 1, job: 'formalCivilian' },
+    { x: 1, y: 1, job: 'formalCivilian' },
+    { x: 2, y: 1, job: 'formalCivilian' },
+    { x: 3, y: 1, job: 'casualCivilian' },
+    { x: 4, y: 1, job: 'formalCivilian' },
+    { x: 5, y: 1, job: 'casualCivilian' },
+    { x: 6, y: 1, job: 'preacher' },
+    { x: 7, y: 1, job: 'formalCivilian' },
+    { x: 9, y: 1, job: 'bartender' },
+
+    { x: 0, y: 2, job: 'formalCivilian' },
+    { x: 1, y: 2, job: 'worker' },
+    { x: 2, y: 2, job: 'formalCivilian' },
+    { x: 3, y: 2, job: 'casualCivilian' },
+    { x: 4, y: 2, job: 'formalCivilian' },
+    { x: 5, y: 2, job: 'singer' },
+    { x: 6, y: 2, job: 'formalCivilian' },
+    { x: 7, y: 2, job: 'formalCivilian' },
+    { x: 8, y: 2, job: 'hacker' },
+
+    { x: 0, y: 3, job: 'worker' },
+    { x: 1, y: 3, job: 'preacher' },
+    { x: 2, y: 3, job: 'formalCivilian' },
+    { x: 3, y: 3, job: 'cook' },
+    { x: 4, y: 3, job: 'doctor' },
+    { x: 5, y: 3, job: 'firefighter' },
+    { x: 6, y: 3, job: 'casualCivilian' },
+    { x: 7, y: 3, job: 'preacher' },
+    { x: 8, y: 3, job: 'captain' },
+    { x: 9, y: 3, job: 'callCenter' },
+
+    { x: 0, y: 4, job: 'casualCivilian' },
+    { x: 2, y: 4, job: 'hotelWorker' },
+    { x: 3, y: 4, job: 'formalCivilian' },
+    { x: 4, y: 4, job: 'foreman' },
+    { x: 5, y: 4, job: 'formalCivilian' },
+    { x: 6, y: 4, job: 'worker' },
+    { x: 7, y: 4, job: 'hacker' },
+    { x: 8, y: 4, job: 'hotelWorker' },
+    { x: 9, y: 4, job: 'firefighter' },
+
+    { x: 0, y: 5, job: 'formalCivilian' },
+    { x: 1, y: 5, job: 'captain' },
+    { x: 2, y: 5, job: 'casualCivilian' },
+    { x: 3, y: 5, job: 'formalCivilian' },
+    { x: 4, y: 5, job: 'casualCivilian' },
+    { x: 5, y: 5, job: 'casualCivilian' },
+    { x: 6, y: 5, job: 'doctor' },
+    { x: 7, y: 5, job: 'formalCivilian' },
+    { x: 8, y: 5, job: 'formalCivilian' },
+    { x: 9, y: 5, job: 'formalCivilian' },
+
+    { x: 0, y: 6, job: 'formalCivilian' },
+    { x: 1, y: 6, job: 'formalCivilian' },
+    { x: 2, y: 6, job: 'casualCivilian' },
+    { x: 3, y: 6, job: 'barber' },
+    { x: 4, y: 6, job: 'casualCivilian' },
+    { x: 5, y: 6, job: 'casualCivilian' },
+    { x: 6, y: 6, job: 'firefighter' },
+    { x: 7, y: 6, job: 'formalCivilian' },
+    { x: 8, y: 6, job: 'captain' },
+    { x: 9, y: 6, job: 'worker' },
+
+    { x: 0, y: 7, job: 'formalCivilian' },
+    { x: 2, y: 7, job: 'fireman' },
+    { x: 3, y: 7, job: 'cook' },
+    { x: 5, y: 7, job: 'barman' },
+    { x: 6, y: 7, job: 'hotelWorker' },
+    { x: 7, y: 7, job: 'formalCivilian' },
+    { x: 9, y: 7, job: 'foreman' },
+  ];
 
   public static var specialsFemale = [
     'agent' => [
@@ -266,4 +412,3 @@ class Images
     // NOTE: check start of file for empty tiles code on new row!
   ];
 }
-

@@ -152,9 +152,23 @@ public function show()
       if (tileAtlasX == -1 &&
           tileAtlasY == -1 && isHuman)
         {
-          var tmp = game.scene.images.getAI(type, isMale);
-          tileAtlasX = tmp.x;
-          tileAtlasY = tmp.y;
+          if (type == 'civilian')
+            {
+              var data = game.scene.images.getRandomCivilianAI();
+              tileAtlasX = data.x;
+              tileAtlasY = data.y;
+              isMale = data.isMale;
+              if (job == 'undefined' || job == null)
+                job = data.job;
+              if (income == 0)
+                income = data.income;
+            }
+          else
+            {
+              var tmp = game.scene.images.getSpecialAI(type, isMale);
+              tileAtlasX = tmp.x;
+              tileAtlasY = tmp.y;
+            }
         }
       // legacy: for loading old saves
       // specials were saved as specials[tileAtlasX] index number

@@ -77,7 +77,7 @@ class BlackopsAI extends HumanAI
 
       if (inventory.clothing.id == 'fullBodyArmor')
         {
-          var tmp = game.scene.images.getAI('blackops-heavy', isMale);
+          var tmp = game.scene.images.getSpecialAI('blackops-heavy', isMale);
           tileAtlasX = tmp.x;
           tileAtlasY = tmp.y;
         }

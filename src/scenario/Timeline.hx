@@ -372,9 +372,19 @@ class Timeline extends _SaveObject
               npc.event = event;
               npc.job = job;
               npc.type = type;
-              var tmp = game.scene.images.getAI(type, npc.isMale);
-              npc.tileAtlasX = tmp.x;
-              npc.tileAtlasY = tmp.y;
+              if (type == 'civilian')
+                {
+                  var civData = game.scene.images.getRandomCivilianAI();
+                  npc.tileAtlasX = civData.x;
+                  npc.tileAtlasY = civData.y;
+                  npc.isMale = civData.isMale;
+                }
+              else
+                {
+                  var tmp = game.scene.images.getSpecialAI(type, npc.isMale);
+                  npc.tileAtlasX = tmp.x;
+                  npc.tileAtlasY = tmp.y;
+                }
               var region = game.world.get(0);
 
               // find proper area for this NPC
@@ -620,4 +630,3 @@ class Timeline extends _SaveObject
       game.debug(s);
     }
 }
-
