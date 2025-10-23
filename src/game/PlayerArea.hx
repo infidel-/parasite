@@ -815,8 +815,17 @@ class PlayerArea extends _SaveObject
       if (!player.host.isNameKnown)
         {
           player.host.isNameKnown = true;
-          log('You find out that the name of this host is ' +
-            player.host.getName() + '.');
+          // construct name message and optionally reveal job/income
+          var nameMsg = 'You find out that the name of this host is ' +
+            player.host.getName();
+          if (player.skills.getLevel(KNOW_SOCIETY) > 25)
+            {
+              player.host.isJobKnown = true;
+              nameMsg += ' <span class="small gray">(';
+              nameMsg += player.host.job + ', ';
+              nameMsg += 'income: ' + player.host.income + ')</span>';
+            }
+          log(nameMsg + '.');
         }
 
       // on first brain probe learn about items and area objects
@@ -912,7 +921,7 @@ class PlayerArea extends _SaveObject
     }
 
 
-//  action: access host skills (called from probeBrain)
+// action: access host skills (called from probeBrain)
   function accessSkillsAction(hostSkillsMod: Float)
     {
       var hostSkill = player.host.skills.getRandomLearnableSkill();

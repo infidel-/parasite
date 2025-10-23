@@ -677,10 +677,7 @@ class HUD
           if (host.isPlayerCultist())
             buf.add(Const.icon('follower', ' &#127285; ')); // 🄵
 
-          if (host.isJobKnown)
-            buf.add(' ' + Const.col('gray',
-              Const.small('(' + host.job + ')<br/>')));
-          else buf.add('<br/>');
+          buf.add('<br/>');
           if (host.isAttrsKnown)
             buf.add('STR ' + host.strength +
               ' CON ' + host.constitution +

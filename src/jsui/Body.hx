@@ -348,6 +348,16 @@ class Body extends UIWindow
       if (game.player.state != PLR_STATE_HOST)
         return '';
       var buf = new StringBuf();
+      // show known job and income at top of host knowledge window
+      if (game.player.host.isJobKnown)
+        {
+          buf.add('<span class=small>');
+          buf.add('<span>' +
+            game.player.host.job + '</span>, ');
+          buf.add('<span class=gray>income: ' +
+            game.player.host.income + '</span><br/>');
+          buf.add('</span><br>');
+        }
       var n = 0;
       for (skill in game.player.host.skills.sorted())
         {
@@ -366,7 +376,7 @@ class Body extends UIWindow
           else buf.add('<br/>');
         }
 
-      if (n == 0)
+      if (n == 0 && !game.player.host.isJobKnown)
         buf.add('<center>no useful knowledge</center><br/>');
 
       // host attributes and traits

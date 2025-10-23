@@ -441,7 +441,6 @@ class Jobs
           type: 'formalCivilian',
           names: [
             'atrium concierge',
-            'skybridge courier',
             'ballroom usher',
             'museum docent',
             'event planner',
