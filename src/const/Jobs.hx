@@ -393,19 +393,33 @@ class Jobs
 
         {
           group: GROUP_CIVILIAN,
-          type: 'firefighter',
-          names: [ 'engine operator', 'ladder specialist', 'station responder' ],
+          type: 'fireman',
+          names: [
+            'engine operator',
+            'ladder specialist',
+            'station responder',
+            'hose operator',
+            'brigade rookie',
+            'station tender'
+          ],
           level: 1,
-          minIncome: 3200,
+          minIncome: 3000,
           maxIncome: 3900,
           isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
-          type: 'firefighter',
-          names: [ 'fire captain', 'incident commander', 'rescue coordinator' ],
+          type: 'fireman',
+          names: [
+            'fire captain',
+            'incident commander',
+            'rescue coordinator',
+            'engine lieutenant',
+            'rescue captain',
+            'operations firefighter'
+          ],
           level: 2,
-          minIncome: 5800,
+          minIncome: 5200,
           maxIncome: 7200,
           isRare: true,
         },
@@ -585,24 +599,6 @@ class Jobs
           isRare: false,
         },
 
-        {
-          group: GROUP_CIVILIAN,
-          type: 'fireman',
-          names: [ 'hose operator', 'brigade rookie', 'station tender' ],
-          level: 1,
-          minIncome: 3000,
-          maxIncome: 3600,
-          isRare: true,
-        },
-        {
-          group: GROUP_CIVILIAN,
-          type: 'fireman',
-          names: [ 'engine lieutenant', 'rescue captain', 'operations firefighter' ],
-          level: 2,
-          minIncome: 5200,
-          maxIncome: 6800,
-          isRare: true,
-        },
 
         {
           group: GROUP_CIVILIAN,
