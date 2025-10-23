@@ -374,10 +374,9 @@ class Timeline extends _SaveObject
               npc.type = type;
               if (type == 'civilian')
                 {
-                  var civData = game.scene.images.getRandomCivilianAI();
-                  npc.tileAtlasX = civData.x;
-                  npc.tileAtlasY = civData.y;
-                  npc.isMale = civData.isMale;
+                  var info = game.scene.images.getRandomCivilianAI(npc.isMale);
+                  npc.tileAtlasX = info.x;
+                  npc.tileAtlasY = info.y;
                 }
               else
                 {

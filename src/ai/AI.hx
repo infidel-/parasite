@@ -154,10 +154,9 @@ public function show()
         {
           if (type == 'civilian')
             {
-              var data = game.scene.images.getRandomCivilianAI();
+              var data = game.scene.images.getRandomCivilianAI(isMale);
               tileAtlasX = data.x;
               tileAtlasY = data.y;
-              isMale = data.isMale;
               if (job == 'undefined' || job == null)
                 job = data.job;
               if (income == 0)

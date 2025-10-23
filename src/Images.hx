@@ -35,7 +35,7 @@ class Images
       }
 
 // get random civilian sprite data together with job info
-  public function getRandomCivilianAI(): {
+  public function getRandomCivilianAI(isMale: Bool): {
       x: Int,
       y: Int,
       job: String,
@@ -43,7 +43,6 @@ class Images
       isMale: Bool,
     }
     {
-      var isMale = (Std.random(2) == 0);
       var civilians = (isMale ? civiliansMale : civiliansFemale);
       if (civilians.length == 0)
         {
