@@ -57,6 +57,13 @@ class Images
         }
       var civ = civilians[Std.random(civilians.length)];
       var jobInfo = scene.game.jobs.getRandom(civ.job);
+      // if the picked job is marked rare, there is only a 20% chance to keep it
+      // otherwise pick again
+      if (jobInfo.isRare)
+        {
+          if (Std.random(100) >= 20)
+            jobInfo = scene.game.jobs.getRandom(civ.job);
+        }
       return {
         x: civ.x,
         y: civ.y,

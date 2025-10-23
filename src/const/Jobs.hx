@@ -11,6 +11,7 @@ typedef _JobInfo = {
   var level: Int;
   var minIncome: Int;
   var maxIncome: Int;
+  var isRare: Bool;
 };
 
 class Jobs
@@ -33,36 +34,12 @@ class Jobs
       var infos: Array<_JobInfo> = [
         {
           group: GROUP_CIVILIAN,
-          type: 'civilian',
-          names: [ 'service clerk', 'retail associate', 'customer liaison' ],
-          level: 1,
-          minIncome: 1200,
-          maxIncome: 1500,
-        },
-        {
-          group: GROUP_CIVILIAN,
-          type: 'civilian',
-          names: [ 'district supervisor', 'municipal coordinator', 'ward manager' ],
-          level: 2,
-          minIncome: 3200,
-          maxIncome: 4000,
-        },
-        {
-          group: GROUP_CIVILIAN,
-          type: 'civilian',
-          names: [ 'metropolitan director', 'city executive', 'urban prefect' ],
-          level: 3,
-          minIncome: 20000,
-          maxIncome: 24000,
-        },
-
-        {
-          group: GROUP_CIVILIAN,
           type: 'callCenter',
           names: [ 'customer service rep', 'call center agent', 'support desk associate' ],
           level: 1,
           minIncome: 1800,
           maxIncome: 2300,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -71,6 +48,7 @@ class Jobs
           level: 2,
           minIncome: 3600,
           maxIncome: 4400,
+          isRare: true,
         },
 
         {
@@ -80,6 +58,7 @@ class Jobs
           level: 1,
           minIncome: 2600,
           maxIncome: 3200,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -88,6 +67,7 @@ class Jobs
           level: 2,
           minIncome: 4800,
           maxIncome: 6000,
+          isRare: false,
         },
 
         {
@@ -97,6 +77,7 @@ class Jobs
           level: 1,
           minIncome: 3200,
           maxIncome: 3800,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -105,6 +86,7 @@ class Jobs
           level: 2,
           minIncome: 5400,
           maxIncome: 6800,
+          isRare: true,
         },
 
         {
@@ -114,6 +96,7 @@ class Jobs
           level: 1,
           minIncome: 7800,
           maxIncome: 9200,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -122,6 +105,7 @@ class Jobs
           level: 2,
           minIncome: 13500,
           maxIncome: 16500,
+          isRare: true,
         },
 
         {
@@ -131,6 +115,7 @@ class Jobs
           level: 1,
           minIncome: 1600,
           maxIncome: 2100,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -139,6 +124,7 @@ class Jobs
           level: 2,
           minIncome: 2800,
           maxIncome: 3400,
+          isRare: false,
         },
 
         {
@@ -194,6 +180,7 @@ class Jobs
           level: 1,
           minIncome: 500,
           maxIncome: 1500,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -230,6 +217,7 @@ class Jobs
           level: 2,
           minIncome: 2500,
           maxIncome: 3200,
+          isRare: false,
         },
 
         {
@@ -239,6 +227,7 @@ class Jobs
           level: 1,
           minIncome: 1400,
           maxIncome: 1900,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -247,6 +236,7 @@ class Jobs
           level: 2,
           minIncome: 2600,
           maxIncome: 3200,
+          isRare: true,
         },
 
         {
@@ -256,6 +246,7 @@ class Jobs
           level: 1,
           minIncome: 2800,
           maxIncome: 3400,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -264,6 +255,7 @@ class Jobs
           level: 2,
           minIncome: 5200,
           maxIncome: 6600,
+          isRare: true,
         },
 
         {
@@ -273,6 +265,7 @@ class Jobs
           level: 1,
           minIncome: 1200,
           maxIncome: 1600,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -281,6 +274,7 @@ class Jobs
           level: 2,
           minIncome: 2400,
           maxIncome: 3200,
+          isRare: false,
         },
 
         {
@@ -290,6 +284,7 @@ class Jobs
           level: 1,
           minIncome: 1500,
           maxIncome: 2000,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -298,6 +293,7 @@ class Jobs
           level: 2,
           minIncome: 2600,
           maxIncome: 3200,
+          isRare: true,
         },
 
         {
@@ -307,6 +303,7 @@ class Jobs
           level: 1,
           minIncome: 2100,
           maxIncome: 2700,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -315,6 +312,7 @@ class Jobs
           level: 2,
           minIncome: 4200,
           maxIncome: 5200,
+          isRare: true,
         },
 
         {
@@ -324,6 +322,7 @@ class Jobs
           level: 1,
           minIncome: 1800,
           maxIncome: 2300,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -332,6 +331,7 @@ class Jobs
           level: 2,
           minIncome: 3200,
           maxIncome: 4200,
+          isRare: false,
         },
 
         {
@@ -341,6 +341,7 @@ class Jobs
           level: 1,
           minIncome: 500,
           maxIncome: 900,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -349,6 +350,7 @@ class Jobs
           level: 2,
           minIncome: 900,
           maxIncome: 1500,
+          isRare: true,
         },
 
         {
@@ -358,6 +360,7 @@ class Jobs
           level: 1,
           minIncome: 2200,
           maxIncome: 2800,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -366,6 +369,7 @@ class Jobs
           level: 2,
           minIncome: 4200,
           maxIncome: 5200,
+          isRare: true,
         },
 
         {
@@ -375,6 +379,7 @@ class Jobs
           level: 1,
           minIncome: 5200,
           maxIncome: 6500,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -383,6 +388,7 @@ class Jobs
           level: 2,
           minIncome: 9000,
           maxIncome: 11500,
+          isRare: true,
         },
 
         {
@@ -392,6 +398,7 @@ class Jobs
           level: 1,
           minIncome: 3200,
           maxIncome: 3900,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -400,6 +407,7 @@ class Jobs
           level: 2,
           minIncome: 5800,
           maxIncome: 7200,
+          isRare: true,
         },
 
         {
@@ -409,6 +417,7 @@ class Jobs
           level: 1,
           minIncome: 1800,
           maxIncome: 2400,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -417,6 +426,7 @@ class Jobs
           level: 2,
           minIncome: 3200,
           maxIncome: 7600,
+          isRare: true,
         },
 
         {
@@ -426,6 +436,7 @@ class Jobs
           level: 1,
           minIncome: 1500,
           maxIncome: 2100,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -434,6 +445,7 @@ class Jobs
           level: 2,
           minIncome: 2600,
           maxIncome: 3400,
+          isRare: true,
         },
 
         {
@@ -465,6 +477,7 @@ class Jobs
           level: 1,
           minIncome: 2000,
           maxIncome: 2800,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -493,6 +506,7 @@ class Jobs
           level: 2,
           minIncome: 3600,
           maxIncome: 4500,
+          isRare: false,
         },
 
         {
@@ -502,6 +516,7 @@ class Jobs
           level: 1,
           minIncome: 2200,
           maxIncome: 2800,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -510,6 +525,7 @@ class Jobs
           level: 2,
           minIncome: 4600,
           maxIncome: 5800,
+          isRare: false,
         },
 
         {
@@ -519,6 +535,7 @@ class Jobs
           level: 1,
           minIncome: 1800,
           maxIncome: 2400,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -527,6 +544,7 @@ class Jobs
           level: 2,
           minIncome: 3400,
           maxIncome: 4200,
+          isRare: true,
         },
 
         {
@@ -536,6 +554,7 @@ class Jobs
           level: 1,
           minIncome: 2800,
           maxIncome: 3600,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -544,6 +563,7 @@ class Jobs
           level: 2,
           minIncome: 5200,
           maxIncome: 6800,
+          isRare: false,
         },
 
         {
@@ -553,6 +573,7 @@ class Jobs
           level: 1,
           minIncome: 1900,
           maxIncome: 2500,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -561,6 +582,7 @@ class Jobs
           level: 2,
           minIncome: 3200,
           maxIncome: 4200,
+          isRare: false,
         },
 
         {
@@ -570,6 +592,7 @@ class Jobs
           level: 1,
           minIncome: 3000,
           maxIncome: 3600,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -578,6 +601,7 @@ class Jobs
           level: 2,
           minIncome: 5200,
           maxIncome: 6800,
+          isRare: true,
         },
 
         {
@@ -587,6 +611,7 @@ class Jobs
           level: 1,
           minIncome: 1600,
           maxIncome: 2200,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -595,6 +620,7 @@ class Jobs
           level: 2,
           minIncome: 3000,
           maxIncome: 3800,
+          isRare: true,
         },
 
         {
@@ -604,6 +630,7 @@ class Jobs
           level: 1,
           minIncome: 2600,
           maxIncome: 3400,
+          isRare: false,
         },
         {
           group: GROUP_MEDIA,
@@ -612,6 +639,7 @@ class Jobs
           level: 2,
           minIncome: 5200,
           maxIncome: 6600,
+          isRare: false,
         },
 
         {
@@ -621,6 +649,7 @@ class Jobs
           level: 1,
           minIncome: 1700,
           maxIncome: 2300,
+          isRare: true,
         },
         {
           group: GROUP_CIVILIAN,
@@ -629,6 +658,7 @@ class Jobs
           level: 2,
           minIncome: 3200,
           maxIncome: 4000,
+          isRare: true,
         },
 
         {
@@ -638,6 +668,7 @@ class Jobs
           level: 1,
           minIncome: 5200,
           maxIncome: 6800,
+          isRare: false,
         },
         {
           group: GROUP_CORPORATE,
@@ -646,6 +677,7 @@ class Jobs
           level: 2,
           minIncome: 9000,
           maxIncome: 12000,
+          isRare: false,
         },
 
         {
@@ -655,6 +687,7 @@ class Jobs
           level: 1,
           minIncome: 3200,
           maxIncome: 3800,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -663,6 +696,7 @@ class Jobs
           level: 2,
           minIncome: 7200,
           maxIncome: 8500,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -671,6 +705,7 @@ class Jobs
           level: 3,
           minIncome: 50000,
           maxIncome: 65000,
+          isRare: false,
         },
 
         {
@@ -680,6 +715,7 @@ class Jobs
           level: 1,
           minIncome: 900,
           maxIncome: 1200,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -688,6 +724,7 @@ class Jobs
           level: 2,
           minIncome: 2600,
           maxIncome: 3200,
+          isRare: false,
         },
         {
           group: GROUP_CIVILIAN,
@@ -696,6 +733,7 @@ class Jobs
           level: 3,
           minIncome: 16000,
           maxIncome: 20000,
+          isRare: false,
         },
 
         {
@@ -705,6 +743,7 @@ class Jobs
           level: 1,
           minIncome: 2800,
           maxIncome: 3500,
+          isRare: false,
         },
         {
           group: GROUP_MEDIA,
@@ -713,6 +752,7 @@ class Jobs
           level: 2,
           minIncome: 6500,
           maxIncome: 7800,
+          isRare: false,
         },
         {
           group: GROUP_MEDIA,
@@ -721,6 +761,7 @@ class Jobs
           level: 3,
           minIncome: 42000,
           maxIncome: 52000,
+          isRare: false,
         },
 
         {
@@ -730,6 +771,7 @@ class Jobs
           level: 1,
           minIncome: 2600,
           maxIncome: 3200,
+          isRare: false,
         },
         {
           group: GROUP_CORPORATE,
@@ -738,6 +780,7 @@ class Jobs
           level: 2,
           minIncome: 9000,
           maxIncome: 11000,
+          isRare: false,
         },
         {
           group: GROUP_CORPORATE,
@@ -746,6 +789,7 @@ class Jobs
           level: 3,
           minIncome: 60000,
           maxIncome: 80000,
+          isRare: false,
         },
 
         {
@@ -755,6 +799,7 @@ class Jobs
           level: 1,
           minIncome: 3000,
           maxIncome: 3600,
+          isRare: false,
         },
         {
           group: GROUP_CORPORATE,
@@ -763,6 +808,7 @@ class Jobs
           level: 2,
           minIncome: 7600,
           maxIncome: 9000,
+          isRare: false,
         },
         {
           group: GROUP_CORPORATE,
@@ -771,6 +817,7 @@ class Jobs
           level: 3,
           minIncome: 52000,
           maxIncome: 68000,
+          isRare: false,
         },
 
         {
@@ -780,6 +827,7 @@ class Jobs
           level: 1,
           minIncome: 3200,
           maxIncome: 3800,
+          isRare: false,
         },
         {
           group: GROUP_LAWFARE,
@@ -788,6 +836,7 @@ class Jobs
           level: 2,
           minIncome: 9000,
           maxIncome: 12000,
+          isRare: false,
         },
         {
           group: GROUP_LAWFARE,
@@ -796,6 +845,7 @@ class Jobs
           level: 3,
           minIncome: 60000,
           maxIncome: 82000,
+          isRare: false,
         },
 
         {
@@ -805,6 +855,7 @@ class Jobs
           level: 1,
           minIncome: 2400,
           maxIncome: 3200,
+          isRare: false,
         },
         {
           group: GROUP_POLITICAL,
@@ -813,6 +864,7 @@ class Jobs
           level: 2,
           minIncome: 7000,
           maxIncome: 9000,
+          isRare: false,
         },
         {
           group: GROUP_POLITICAL,
@@ -821,6 +873,7 @@ class Jobs
           level: 3,
           minIncome: 50000,
           maxIncome: 65000,
+          isRare: false,
         },
 
         {
@@ -830,6 +883,7 @@ class Jobs
           level: 1,
           minIncome: 3000,
           maxIncome: 3500,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -838,6 +892,7 @@ class Jobs
           level: 2,
           minIncome: 6000,
           maxIncome: 7000,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -846,6 +901,7 @@ class Jobs
           level: 3,
           minIncome: 40000,
           maxIncome: 45000,
+          isRare: false,
         },
 
         {
@@ -855,6 +911,7 @@ class Jobs
           level: 1,
           minIncome: 1800,
           maxIncome: 2300,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -863,6 +920,7 @@ class Jobs
           level: 2,
           minIncome: 3600,
           maxIncome: 4200,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -871,6 +929,7 @@ class Jobs
           level: 3,
           minIncome: 20000,
           maxIncome: 26000,
+          isRare: false,
         },
 
         {
@@ -880,6 +939,7 @@ class Jobs
           level: 1,
           minIncome: 4800,
           maxIncome: 5400,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -888,6 +948,7 @@ class Jobs
           level: 2,
           minIncome: 9200,
           maxIncome: 11000,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -896,6 +957,7 @@ class Jobs
           level: 3,
           minIncome: 70000,
           maxIncome: 90000,
+          isRare: false,
         },
 
         {
@@ -905,6 +967,7 @@ class Jobs
           level: 1,
           minIncome: 800,
           maxIncome: 1200,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -913,6 +976,7 @@ class Jobs
           level: 2,
           minIncome: 2000,
           maxIncome: 2600,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -921,6 +985,7 @@ class Jobs
           level: 3,
           minIncome: 15000,
           maxIncome: 20000,
+          isRare: false,
         },
 
         {
@@ -930,6 +995,7 @@ class Jobs
           level: 1,
           minIncome: 2800,
           maxIncome: 3200,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -938,6 +1004,7 @@ class Jobs
           level: 2,
           minIncome: 4500,
           maxIncome: 5200,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -946,6 +1013,7 @@ class Jobs
           level: 3,
           minIncome: 28000,
           maxIncome: 34000,
+          isRare: false,
         },
 
         {
@@ -955,6 +1023,7 @@ class Jobs
           level: 1,
           minIncome: 6200,
           maxIncome: 7000,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -963,6 +1032,7 @@ class Jobs
           level: 2,
           minIncome: 12000,
           maxIncome: 15000,
+          isRare: false,
         },
         {
           group: GROUP_COMBAT,
@@ -971,11 +1041,23 @@ class Jobs
           level: 3,
           minIncome: 90000,
           maxIncome: 120000,
+          isRare: false,
         },
       ];
 
       for (info in infos)
         {
+          // mark rare civilian jobs (default: rare), except a few common types
+          if (info.group == GROUP_CIVILIAN)
+            {
+              var common = info.type == 'formalCivilian' ||
+                info.type == 'casualCivilian' ||
+                info.type == 'prostitute' ||
+                info.type == 'scientist';
+              info.isRare = !common;
+            }
+          else info.isRare = false;
+
           var list = jobsByType.get(info.type);
           if (list == null)
             {
@@ -987,11 +1069,11 @@ class Jobs
     }
 
   // returns random job info for the provided type
-  public function getRandom(type: String): { name: String, income: Int }
+  public function getRandom(type: String): { name: String, income: Int, isRare: Bool }
     {
       var infos = jobsByType.get(type);
       if (infos == null || infos.length == 0)
-        return { name: 'unemployed', income: 0 };
+        return { name: 'unemployed', income: 0, isRare: false };
 
       var level1: Array<_JobInfo> = [];
       var level2: Array<_JobInfo> = [];
@@ -1024,6 +1106,6 @@ class Jobs
         income += Std.random(picked.maxIncome - picked.minIncome + 1);
       income = Std.int(income / 100) * 100;
 
-      return { name: pickedName, income: income };
+      return { name: pickedName, income: income, isRare: picked.isRare };
     }
 }
