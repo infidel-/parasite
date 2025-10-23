@@ -7,3 +7,4 @@
 *.map
 _release*
 assets*
+.aider*
