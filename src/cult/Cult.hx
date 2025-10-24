@@ -7,7 +7,7 @@ import game.Game;
 import ai.AI;
 import ai.AIData;
 
-class Cult
+class Cult extends _SaveObject
 {
   public var game: Game;
   public var id: Int;
@@ -20,6 +20,8 @@ class Cult
   public var leader(get, null): AIData;
   public var isPlayer: Bool;
   public var name: String;
+  public var power: _CultPower;
+  public var resources: _CultPower;
 
   public function new(g: Game)
     {
@@ -29,6 +31,34 @@ class Cult
       members = [];
       isPlayer = false;
       name = 'Cult of Flesh';
+      init();
+      initPost(false);
+    }
+
+// init object before loading/post creation
+  public function init()
+    {
+      power = {
+        combat: 0,
+        media: 0,
+        lawfare: 0,
+        corporate: 0,
+        political: 0,
+        money: 0
+      };
+      resources = {
+        combat: 0,
+        media: 0,
+        lawfare: 0,
+        corporate: 0,
+        political: 0,
+        money: 0
+      };
+    }
+
+// called after load or creation
+  public function initPost(onLoad: Bool)
+    {
     }
 
 // create cult (add leader)
@@ -44,6 +74,7 @@ class Cult
           type: UIEVENT_HIGHLIGHT,
           state: UISTATE_CULT,
         });
+      recalc();
     }
 
 // add new member
@@ -53,6 +84,7 @@ class Cult
       ai.setCult(this);
       members.push(ai.cloneData());
       log('gains a new member: ' + ai.theName());
+      recalc();
     }
 
 // when ai is removed from area, we need to update members
@@ -74,6 +106,7 @@ class Cult
           if (members[0].id == aidata.id)
             destroy();
           members.remove(aidata);
+          recalc();
         }
 
       else aidata.updateData(ai, 'on despawn');
@@ -216,6 +249,59 @@ class Cult
 // cult turn
   public function turn()
     {
+    }
+
+// recalculate cult power and resources from members
+  public function recalc()
+    {
+      // reset all values
+      power.combat = 0;
+      power.media = 0;
+      power.lawfare = 0;
+      power.corporate = 0;
+      power.political = 0;
+      power.money = 0;
+
+      // calculate power/income from all members
+      for (member in members)
+        {
+          power.money += member.income;
+
+          // get job info by name
+          var jobInfo = game.jobs.getJobInfo(member.job);
+          if (jobInfo == null)
+            continue;
+
+          // skip civilian jobs
+          if (jobInfo.group == GROUP_CIVILIAN)
+            continue;
+
+          // calculate points based on level
+          var ptsmap = [
+            1 => 1,
+            2 => 3,
+            3 => 10
+          ];
+          var points = ptsmap[jobInfo.level];
+          if (points == null)
+            points = 0;
+
+          // add points to power according to group
+          switch (jobInfo.group)
+            {
+              case GROUP_COMBAT:
+                power.combat += points;
+              case GROUP_MEDIA:
+                power.media += points;
+              case GROUP_LAWFARE:
+                power.lawfare += points;
+              case GROUP_CORPORATE:
+                power.corporate += points;
+              case GROUP_POLITICAL:
+                power.political += points;
+              default:
+            }
+        }
     }
 
 // cult log

@@ -32,7 +32,7 @@ class Add
     }
 
 // handles add command routing
-  public function run(cmd: String, arr: Array<String>): Bool
+  public function run(cmd: String): Bool
     {
       if (cmd.length < 2)
         return false;
@@ -51,7 +51,7 @@ class Add
             addSkillCommand(cmd);
             return true;
           case 't':
-            addTraitCommand(arr);
+            addTraitCommand(cmd);
             return true;
           default:
             return false;
@@ -228,8 +228,9 @@ class Add
     }
 
 // handles adding traits via console command
-  function addTraitCommand(arr: Array<String>)
+  function addTraitCommand(args: String)
     {
+      var arr = args.split(' ');
       if (game.player.state != PLR_STATE_HOST)
         {
           log('Not on host.');

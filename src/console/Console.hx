@@ -44,7 +44,7 @@ class Console
 #if mydebug
       // XXX add commands
       if (char0 == 'a')
-        addCommand(cmd, arr);
+        addConsole.run(cmd);
 
       // XXX config commands
       else
@@ -370,10 +370,10 @@ class Console
   function chatStage1()
     {
       game.player.host.affinity = 80;
-      addCommand('as', [ 'as', 'psychology', '80' ]);
-      addCommand('as', [ 'as', 'coaxing', '80' ]);
-      addCommand('as', [ 'as', 'coercion', '80' ]);
-      addCommand('as', [ 'as', 'deception', '80' ]);
+      addConsole.run('as psychology 80');
+      addConsole.run('as coaxing 80');
+      addConsole.run('as coercion 80');
+      addConsole.run('as deception 80');
     }
 #end
 
@@ -603,13 +603,6 @@ class Console
         }
 
       game.scene.sounds.play(arr[1]);
-    }
-
-
-// add commands
-  function addCommand(cmd: String, arr: Array<String>)
-    {
-      addConsole.run(cmd, arr);
     }
 
 // handle learning improvements via console command

@@ -19,12 +19,14 @@ class Jobs
 {
   var game: Game;
   var jobsByType: Map<String, Array<_JobInfo>>;
+  var jobsByName: Map<String, _JobInfo>;
 
   // sets up jobs helper with game reference
   public function new(g: Game)
     {
       game = g;
       jobsByType = new Map<String, Array<_JobInfo>>();
+      jobsByName = new Map<String, _JobInfo>();
       initJobTable();
     }
 
@@ -1072,7 +1074,19 @@ class Jobs
               jobsByType.set(info.type, list);
             }
           list.push(info);
+
+          // add all names to jobsByName map
+          for (name in info.names)
+            {
+              jobsByName.set(name, info);
+            }
         }
+    }
+
+  // get job info by name
+  public function getJobInfo(name: String): _JobInfo
+    {
+      return jobsByName.get(name);
     }
 
   // returns random job info for the provided type
