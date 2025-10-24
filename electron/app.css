@@ -411,6 +411,55 @@ hr {
   cursor: url(./img/mouse-pointer.png) 0 1, pointer;
 }
 
+/* window initial fade-in from darkness */
+.window-bg.mainmenu-first-show {
+  animation: window-fade-in-dark 2.5s ease-in;
+}
+
+/* window regular fade-in */
+.window-bg.window-fade-in {
+  animation: window-fade-in 0.1s ease-in;
+}
+
+/* window fade-out. must be the same as delay in UIWindow! */
+.window-bg.window-fade-out {
+  animation: window-fade-out 0.1s ease-out forwards;
+}
+
+@keyframes window-fade-in-dark {
+  0% {
+    opacity: 0;
+    background-color: #000000;
+  }
+  100% {
+    opacity: 1;
+    background-color: #00000059;
+    backdrop-filter: saturate(50%) blur(2px);
+  }
+}
+
+@keyframes window-fade-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: saturate(50%) blur(20px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: saturate(50%) blur(2px);
+  }
+}
+
+@keyframes window-fade-out {
+  0% {
+    opacity: 1;
+    backdrop-filter: saturate(50%) blur(2px);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: saturate(50%) blur(20px);
+  }
+}
+
 .window {
   opacity: 0.9;
   z-index: 110;

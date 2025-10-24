@@ -34,6 +34,9 @@ class MainMenu extends UIWindow
           var bgIndex = 1 + Std.random(19);
           setBackground(bgIndex, game.config.aiArtEnabled);
         }
+      // add class for initial fade-in animation
+      if (game.firstEverRun)
+        bg.classList.add('mainmenu-first-show');
 //      UI.setVar('--main-menu-bg', 'url(./img/misc/bg13.jpg)');
 
       var title = Browser.document.createDivElement();
@@ -143,6 +146,15 @@ class MainMenu extends UIWindow
         f(e);
       };
       return item;
+    }
+
+  override function show(?skipAnimation: Bool = false)
+    {
+      update();
+      bg.style.visibility = 'visible';
+      // add animation class for regular fade-in
+      if (!skipAnimation && !bg.classList.contains('mainmenu-first-show'))
+        bg.classList.add('window-fade-in');
     }
 
   override function update()

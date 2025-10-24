@@ -232,15 +232,40 @@ class UIWindow
     {}
 
 // show window
-  public inline function show()
+  public function show(?skipAnimation: Bool = false)
     {
       update();
       bg.style.visibility = 'visible';
+      // add fade-in animation
+      if (!skipAnimation)
+        bg.classList.add('window-fade-in');
+      else
+        {
+          // set backdrop-filter to final state when skipping animation
+          untyped bg.style.backdropFilter = 'saturate(50%) blur(2px)';
+        }
     }
 
 // hide window
-  public inline function hide()
+  public function hide(?skipAnimation: Bool = false)
     {
-      bg.style.visibility = 'hidden';
+      if (!skipAnimation)
+        {
+          // add fade-out animation
+          bg.classList.add('window-fade-out');
+          // hide after animation completes
+          haxe.Timer.delay(function() {
+            bg.style.visibility = 'hidden';
+            bg.classList.remove('window-fade-out');
+          }, 100);
+        }
+      else
+        {
+          // hide immediately when skipping animation
+          bg.style.visibility = 'hidden';
+        }
+      // remove other animation classes
+      bg.classList.remove('window-fade-in');
+      bg.classList.remove('mainmenu-first-show');
     }
 }

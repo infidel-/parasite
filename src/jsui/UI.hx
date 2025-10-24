@@ -543,17 +543,18 @@ class UI
 
 //      trace(vstate);
 //      Const.traceStack();
+      var wasWindowOpen = (_state != UISTATE_DEFAULT);
       if (_state != UISTATE_DEFAULT)
         {
           if (components[_state] != null)
-            components[_state].hide();
+            components[_state].hide(wasWindowOpen);
         }
 
       _state = vstate;
       if (_state != UISTATE_DEFAULT && components[_state] != null)
         {
           if (components[_state] != null)
-            components[_state].show();
+            components[_state].show(wasWindowOpen);
 
           if (_state != UISTATE_LOG)
             components[_state].scrollToBegin();
