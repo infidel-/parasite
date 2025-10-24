@@ -76,6 +76,10 @@ class CivilianAI extends HumanAI
       tileAtlasY = info.y;
       job = info.job;
       income = info.income;
+      
+      // call job init function if present
+      if (info.jobInfo != null && info.jobInfo.init != null)
+        info.jobInfo.init(game, this);
     }
 
 // called after load or creation

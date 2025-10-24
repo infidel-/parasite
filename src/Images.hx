@@ -1,4 +1,5 @@
 // all ingame images access
+import const.Jobs._JobInfo;
 import js.html.Image;
 
 class Images
@@ -41,6 +42,7 @@ class Images
       job: String,
       income: Int,
       isMale: Bool,
+      jobInfo: _JobInfo,
     }
     {
       var civilians = (isMale ? civiliansMale : civiliansFemale);
@@ -53,23 +55,60 @@ class Images
             job: 'unemployed',
             income: 0,
             isMale: isMale,
+            jobInfo: null,
           };
         }
       var civ = civilians[Std.random(civilians.length)];
-      var jobInfo = scene.game.jobs.getRandom(civ.job);
+      var jobData = scene.game.jobs.getRandom(civ.job);
       // if the picked job is marked rare, there is only a 20% chance to keep it
       // otherwise pick again
-      if (jobInfo.isRare)
+      if (jobData.isRare)
         {
           if (Std.random(100) >= 20)
-            jobInfo = scene.game.jobs.getRandom(civ.job);
+            jobData = scene.game.jobs.getRandom(civ.job);
         }
       return {
         x: civ.x,
         y: civ.y,
-        job: jobInfo.name,
-        income: jobInfo.income,
+        job: jobData.name,
+        income: jobData.income,
         isMale: isMale,
+        jobInfo: jobData.jobInfo,
+      };
+    }
+
+// get civilian sprite data for specific job type
+  public function getCivilianAI(type: String, isMale: Bool): {
+      x: Int,
+      y: Int,
+      job: String,
+      income: Int,
+      isMale: Bool,
+      jobInfo: _JobInfo,
+    }
+    {
+      var civilians = (isMale ? civiliansMale : civiliansFemale);
+      // collect all civilians with matching job type
+      var matching = [];
+      for (civ in civilians)
+        {
+          if (civ.job == type)
+            matching.push(civ);
+        }
+      
+      if (matching.length == 0)
+        return null;
+      
+      // pick random from matching records
+      var civ = matching[Std.random(matching.length)];
+      var jobData = scene.game.jobs.getRandom(type);
+      return {
+        x: civ.x,
+        y: civ.y,
+        job: jobData.name,
+        income: jobData.income,
+        isMale: isMale,
+        jobInfo: jobData.jobInfo,
       };
     }
 

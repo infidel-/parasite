@@ -12,6 +12,7 @@ typedef _JobInfo = {
   var minIncome: Int;
   var maxIncome: Int;
   var isRare: Bool;
+  @:optional var init: Game -> ai.AI -> Void;
 };
 
 class Jobs
@@ -665,6 +666,11 @@ class Jobs
           minIncome: 5200,
           maxIncome: 6800,
           isRare: false,
+          init: function(game: Game, ai: ai.AI) {
+            ai.skills.addID(SKILL_COMPUTER, 30 + Std.random(20));
+            if (game.player.vars.searchEnabled)
+              ai.inventory.addID('laptop');
+          },
         },
         {
           group: GROUP_CORPORATE,
@@ -674,6 +680,11 @@ class Jobs
           minIncome: 9000,
           maxIncome: 12000,
           isRare: false,
+          init: function(game: Game, ai: ai.AI) {
+            ai.skills.addID(SKILL_COMPUTER, 50 + Std.random(20));
+            if (game.player.vars.searchEnabled)
+              ai.inventory.addID('laptop');
+          },
         },
 
         {
@@ -1065,11 +1076,16 @@ class Jobs
     }
 
   // returns random job info for the provided type
-  public function getRandom(type: String): { name: String, income: Int, isRare: Bool }
+  public function getRandom(type: String): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
     {
       var infos = jobsByType.get(type);
       if (infos == null || infos.length == 0)
-        return { name: 'unemployed', income: 0, isRare: false };
+        return {
+          name: 'unemployed',
+          income: 0,
+          isRare: false,
+          jobInfo: null
+        };
 
       var level1: Array<_JobInfo> = [];
       var level2: Array<_JobInfo> = [];
@@ -1102,6 +1118,34 @@ class Jobs
         income += Std.random(picked.maxIncome - picked.minIncome + 1);
       income = Std.int(income / 100) * 100;
 
-      return { name: pickedName, income: income, isRare: picked.isRare };
+      return {
+        name: pickedName,
+        income: income,
+        isRare: picked.isRare,
+        jobInfo: picked
+      };
+    }
+
+  // get sorted and unique list of civilian job types
+  public function getCivilianJobTypesList(): Array<String>
+    {
+      var types = new Map<String, Bool>();
+      for (info in jobsByType)
+        {
+          for (jobInfo in info)
+            {
+              if (jobInfo.group == GROUP_CIVILIAN)
+                types.set(jobInfo.type, true);
+            }
+        }
+      var list = [];
+      for (type in types.keys())
+        list.push(type);
+      list.sort(function(a: String, b: String) {
+        if (a > b) return 1;
+        else if (a < b) return -1;
+        return 0;
+      });
+      return list;
     }
 }

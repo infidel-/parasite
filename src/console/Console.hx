@@ -120,6 +120,7 @@ class Console
             'snd - play sound, r/restart, ' +
             's - set player stage, ' +
             'spa - spawn ai, ' +
+            'spc - spawn civilian with job type, ' +
             'save - save game, ' +
             'set - set game variable, ' +
             'quit.');
@@ -177,6 +178,10 @@ class Console
           // XXX spa <ai type>
           else if (arr[0] == 'spa')
             spawnAICommand(arr);
+
+          // XXX spc <job type>
+          else if (arr[0] == 'spc')
+            spawnCivCommand(arr);
 
           else setCommand(cmd);
 #end
@@ -516,6 +521,56 @@ class Console
       var type = arr[1];
       try {
         game.area.spawnAI(type, game.playerArea.x, game.playerArea.y);
+      } catch (e: Dynamic)
+        {
+          log(e);
+        }
+    }
+
+// spc <job type>
+// spc
+  function spawnCivCommand(arr: Array<String>)
+    {
+      if (arr.length < 2)
+        {
+          log('spc [job type] - spawn civilian with job type');
+          log('spc - show job types');
+          var jobTypes = game.jobs.getCivilianJobTypesList();
+          log('Job types: ' + jobTypes.join(', '));
+          return;
+        }
+      if (game.location != LOCATION_AREA)
+        {
+          log('Not in area.');
+          return;
+        }
+      var jobType = arr[1];
+      try {
+        // override job info with specific type
+        var isMale = (Std.random(100) < 50);
+        var info = game.scene.images.getCivilianAI(jobType, isMale);
+        if (info == null)
+          {
+            // try the other gender
+            isMale = !isMale;
+            info = game.scene.images.getCivilianAI(jobType, isMale);
+            if (info == null)
+              {
+                log('Job type [' + jobType + '] not found.');
+                return;
+              }
+          }
+        var ai = game.area.spawnAI('civilian', game.playerArea.x, game.playerArea.y, false);
+        ai.isMale = isMale;
+        ai.tileAtlasX = info.x;
+        ai.tileAtlasY = info.y;
+        ai.job = info.job;
+        ai.income = info.income;
+        game.area.addAI(ai);
+        
+        // call job init function if present
+        if (info.jobInfo != null && info.jobInfo.init != null)
+          info.jobInfo.init(game, ai);
       } catch (e: Dynamic)
         {
           log(e);
