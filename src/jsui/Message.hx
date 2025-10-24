@@ -36,16 +36,32 @@ class Message extends UIWindow
   public override function setParams(obj: Dynamic)
     {
       var o: { text: String, col: String, img: String } = cast obj;
-      var html = '';
+      
+      // preload image if present
       if (o.img != null)
-        html = '<img class=message-img src="img/' + o.img + '.jpg"><p>';
-      if (o.col != null)
-        html += "<font style='color:" + o.col + "'>"  + o.text + "</font>";
-      else html += o.text;
-      if (o.img != null)
-        html += '</p>';
-      text.innerHTML = html;
-      game.scene.sounds.play('message-default');
+        {
+          var img = new js.html.Image();
+          img.onload = function() {
+            // image loaded, now set html
+            var html = '<img class=message-img src="img/' + o.img + '.jpg"><p>';
+            if (o.col != null)
+              html += "<font style='color:" + o.col + "'>"  + o.text + "</font>";
+            else html += o.text;
+            html += '</p>';
+            text.innerHTML = html;
+            game.scene.sounds.play('message-default');
+          };
+          img.src = 'img/' + o.img + '.jpg';
+        }
+      else
+        {
+          // no image, set html immediately
+          var html = '';
+          if (o.col != null)
+            html += "<font style='color:" + o.col + "'>"  + o.text + "</font>";
+          else html += o.text;
+          text.innerHTML = html;
+          game.scene.sounds.play('message-default');
+        }
     }
 }
-

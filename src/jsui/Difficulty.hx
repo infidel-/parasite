@@ -92,9 +92,16 @@ class Difficulty extends UIWindow
     {
       var t: String = obj;
       currentChoice = choices[t];
-      header.innerHTML =
-        '<center><h3>Difficulty: ' + currentChoice.title + '</h3><br></center>' +
-        '<img class=message-img src="img/difficulty/' + currentChoice.id + '.jpg">';
+      
+      // preload image before setting header
+      var img = new js.html.Image();
+      img.onload = function() {
+        // image loaded, now set header html
+        header.innerHTML =
+          '<center><h3>Difficulty: ' + currentChoice.title + '</h3><br></center>' +
+          '<img class=message-img src="img/difficulty/' + currentChoice.id + '.jpg">';
+      };
+      img.src = 'img/difficulty/' + currentChoice.id + '.jpg';
 
       defaultText =
         '<center>Choose difficulty setting.</center>';
