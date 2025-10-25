@@ -22,6 +22,7 @@ class Cult extends _SaveObject
   public var name: String;
   public var power: _CultPower;
   public var resources: _CultPower;
+  public var ordeals: Array<Ordeal>;
   var turnCounter: Int;
 
   public function new(g: Game)
@@ -30,6 +31,7 @@ class Cult extends _SaveObject
       id = (_maxID++);
       state = CULT_STATE_INACTIVE;
       members = [];
+      ordeals = [];
       isPlayer = false;
       name = 'Cult of Flesh';
       init();
