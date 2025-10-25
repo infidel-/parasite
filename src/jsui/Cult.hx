@@ -35,6 +35,38 @@ class Cult extends UIWindow
       var buf = new StringBuf();
       buf.add('<span>');
       var cult = game.cults[0];
+
+      // cult power
+      buf.add('Power: ');
+      buf.add(Const.col('cult-power-title', 'COMBAT') + ' ' + cult.power.combat);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'MEDIA') + ' ' + cult.power.media);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'LAWFARE') + ' ' + cult.power.lawfare);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'CORPORATE') + ' ' + cult.power.corporate);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'POLITICAL') + ' ' + cult.power.political);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'INCOME') + ' ' + cult.power.money);
+
+      // cult resources
+      buf.add('<br/>Resources: ');
+      buf.add(Const.col('cult-power-title', 'COMBAT') + ' ' + cult.resources.combat);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'MEDIA') + ' ' + cult.resources.media);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'LAWFARE') + ' ' + cult.resources.lawfare);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'CORPORATE') + ' ' + cult.resources.corporate);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'POLITICAL') + ' ' + cult.resources.political);
+      buf.add(', ');
+      buf.add(Const.col('cult-power-title', 'MONEY') + ' ' + cult.resources.money);
+      buf.add('<br/>');
+
+      // members list
+      buf.add('<br/>');
       for (i => m in cult.members)
         {
           buf.add(m.TheName());

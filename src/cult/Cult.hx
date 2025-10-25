@@ -44,6 +44,7 @@ class Cult extends _SaveObject
         lawfare: 0,
         corporate: 0,
         political: 0,
+        occult: 0,
         money: 0
       };
       resources = {
@@ -52,6 +53,7 @@ class Cult extends _SaveObject
         lawfare: 0,
         corporate: 0,
         political: 0,
+        occult: 0,
         money: 0
       };
     }

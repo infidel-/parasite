@@ -362,6 +362,7 @@ class Console
             game.player.host.chat.consent = 99;
           case 3:
             chatStage1();
+            game.player.host.affinity = 100;
             game.player.host.chat.consent = 100;
         }
     }

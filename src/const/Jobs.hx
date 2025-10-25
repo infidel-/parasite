@@ -625,7 +625,18 @@ class Jobs
         {
           group: GROUP_MEDIA,
           type: 'singer',
-          names: [ 'lounge vocalist', 'club crooner', 'street busker' ],
+          names: [
+            'lounge vocalist',
+            'club crooner',
+            'street busker',
+            'backup singer',
+            'choir performer',
+            'wedding singer',
+            'karaoke host',
+            'open mic artist',
+            'session vocalist',
+            'jingle singer'
+          ],
           level: 1,
           minIncome: 2600,
           maxIncome: 3400,
@@ -634,7 +645,18 @@ class Jobs
         {
           group: GROUP_MEDIA,
           type: 'singer',
-          names: [ 'recording artist', 'concert performer', 'tour vocalist' ],
+          names: [
+            'recording artist',
+            'concert performer',
+            'tour vocalist',
+            'lead singer',
+            'solo artist',
+            'studio vocalist',
+            'festival headliner',
+            'band frontman',
+            'musical theater lead',
+            'voice actor'
+          ],
           level: 2,
           minIncome: 5200,
           maxIncome: 6600,
@@ -692,7 +714,18 @@ class Jobs
         {
           group: GROUP_CIVILIAN,
           type: 'scientist',
-          names: [ 'lab technician', 'research assistant', 'specimen handler' ],
+          names: [
+            'lab technician',
+            'research assistant',
+            'specimen handler',
+            'data analyst',
+            'field researcher',
+            'laboratory aide',
+            'sample processor',
+            'test coordinator',
+            'clinical assistant',
+            'research associate'
+          ],
           level: 1,
           minIncome: 3200,
           maxIncome: 3800,
@@ -701,7 +734,18 @@ class Jobs
         {
           group: GROUP_CIVILIAN,
           type: 'scientist',
-          names: [ 'research scientist', 'principal investigator', 'systems researcher' ],
+          names: [
+            'research scientist',
+            'principal investigator',
+            'systems researcher',
+            'senior scientist',
+            'project lead',
+            'biochemist',
+            'microbiologist',
+            'geneticist',
+            'laboratory manager',
+            'clinical researcher'
+          ],
           level: 2,
           minIncome: 7200,
           maxIncome: 8500,
@@ -710,7 +754,18 @@ class Jobs
         {
           group: GROUP_CIVILIAN,
           type: 'scientist',
-          names: [ 'institute director', 'chief scientist', 'research chair' ],
+          names: [
+            'institute director',
+            'chief scientist',
+            'research chair',
+            'department head',
+            'chief research officer',
+            'scientific director',
+            'laboratory director',
+            'research dean',
+            'senior fellow',
+            'program director'
+          ],
           level: 3,
           minIncome: 50000,
           maxIncome: 65000,
@@ -748,7 +803,18 @@ class Jobs
         {
           group: GROUP_MEDIA,
           type: 'civilian',
-          names: [ 'journalist', 'field reporter', 'news stringer' ],
+          names: [
+            'journalist',
+            'field reporter',
+            'news stringer',
+            'content writer',
+            'freelance blogger',
+            'copy editor',
+            'community manager',
+            'podcast producer',
+            'video editor',
+            'digital content creator'
+          ],
           level: 1,
           minIncome: 2800,
           maxIncome: 3500,
@@ -757,7 +823,18 @@ class Jobs
         {
           group: GROUP_MEDIA,
           type: 'civilian',
-          names: [ 'public relations manager', 'social media strategist', 'medium influencer' ],
+          names: [
+            'public relations manager',
+            'social media strategist',
+            'medium influencer',
+            'news producer',
+            'broadcast journalist',
+            'communications director',
+            'media consultant',
+            'brand manager',
+            'creative director',
+            'investigative reporter'
+          ],
           level: 2,
           minIncome: 6500,
           maxIncome: 7800,
@@ -766,7 +843,18 @@ class Jobs
         {
           group: GROUP_MEDIA,
           type: 'civilian',
-          names: [ 'news anchor', 'top influencer', 'network personality' ],
+          names: [
+            'news anchor',
+            'top influencer',
+            'network personality',
+            'media mogul',
+            'television executive',
+            'publishing director',
+            'chief editor',
+            'network president',
+            'media conglomerate head',
+            'broadcast executive'
+          ],
           level: 3,
           minIncome: 42000,
           maxIncome: 52000,
@@ -776,7 +864,18 @@ class Jobs
         {
           group: GROUP_CORPORATE,
           type: 'corpo',
-          names: [ 'office clerk', 'data entry specialist', 'customer service agent' ],
+          names: [
+            'office clerk',
+            'data entry specialist',
+            'customer service agent',
+            'junior analyst',
+            'project coordinator',
+            'operations assistant',
+            'business associate',
+            'account rep',
+            'client coordinator',
+            'procurement specialist'
+          ],
           level: 1,
           minIncome: 2600,
           maxIncome: 3200,
@@ -785,7 +884,18 @@ class Jobs
         {
           group: GROUP_CORPORATE,
           type: 'corpo',
-          names: [ 'sales manager', 'product manager', 'human resources manager' ],
+          names: [
+            'sales manager',
+            'product manager',
+            'human resources manager',
+            'operations director',
+            'finance manager',
+            'supply chain manager',
+            'compliance officer',
+            'regional director',
+            'portfolio manager',
+            'business development manager'
+          ],
           level: 2,
           minIncome: 9000,
           maxIncome: 11000,
@@ -794,7 +904,18 @@ class Jobs
         {
           group: GROUP_CORPORATE,
           type: 'corpo',
-          names: [ 'marketing director', 'business analyst lead', 'corporate strategist' ],
+          names: [
+            'marketing director',
+            'business analyst lead',
+            'corporate strategist',
+            'chief financial officer',
+            'chief operating officer',
+            'executive vice president',
+            'division president',
+            'global operations head',
+            'chief strategy officer',
+            'enterprise architect'
+          ],
           level: 3,
           minIncome: 60000,
           maxIncome: 80000,
@@ -804,7 +925,18 @@ class Jobs
         {
           group: GROUP_CORPORATE,
           type: 'smiler',
-          names: [ 'public relations associate', 'social media manager', 'audience curator' ],
+          names: [
+            'public relations associate',
+            'social media manager',
+            'audience curator',
+            'wellness advocate',
+            'community builder',
+            'lifestyle consultant',
+            'happiness coordinator',
+            'synergy specialist',
+            'culture ambassador',
+            'experience designer'
+          ],
           level: 1,
           minIncome: 3000,
           maxIncome: 3600,
@@ -813,7 +945,18 @@ class Jobs
         {
           group: GROUP_CORPORATE,
           type: 'smiler',
-          names: [ 'brand storyteller', 'engagement architect', 'activation planner' ],
+          names: [
+            'brand storyteller',
+            'engagement architect',
+            'activation planner',
+            'transformation coach',
+            'empowerment director',
+            'paradigm shifter',
+            'thought leader',
+            'visionary facilitator',
+            'mindfulness evangelist',
+            'purpose strategist'
+          ],
           level: 2,
           minIncome: 7600,
           maxIncome: 9000,
@@ -822,7 +965,18 @@ class Jobs
         {
           group: GROUP_CORPORATE,
           type: 'smiler',
-          names: [ 'campaign visionary', 'broadcast icon', 'global spokesperson' ],
+          names: [
+            'campaign visionary',
+            'broadcast icon',
+            'global spokesperson',
+            'chief inspiration officer',
+            'movement architect',
+            'enlightenment director',
+            'consciousness curator',
+            'transcendence executive',
+            'awakening orchestrator',
+            'ascension facilitator'
+          ],
           level: 3,
           minIncome: 52000,
           maxIncome: 68000,
@@ -832,7 +986,18 @@ class Jobs
         {
           group: GROUP_LAWFARE,
           type: 'civilian',
-          names: [ 'court clerk', 'legal assistant', 'docket coordinator' ],
+          names: [
+            'court clerk',
+            'legal assistant',
+            'docket coordinator',
+            'paralegal',
+            'case researcher',
+            'file clerk',
+            'court reporter',
+            'legal secretary',
+            'records specialist',
+            'bailiff assistant'
+          ],
           level: 1,
           minIncome: 3200,
           maxIncome: 3800,
@@ -841,7 +1006,18 @@ class Jobs
         {
           group: GROUP_LAWFARE,
           type: 'civilian',
-          names: [ 'attorney', 'prosecutor', 'litigation counsel' ],
+          names: [
+            'attorney',
+            'prosecutor',
+            'litigation counsel',
+            'defense lawyer',
+            'corporate counsel',
+            'district attorney',
+            'public defender',
+            'legal advisor',
+            'trial lawyer',
+            'contract attorney'
+          ],
           level: 2,
           minIncome: 9000,
           maxIncome: 12000,
@@ -850,7 +1026,18 @@ class Jobs
         {
           group: GROUP_LAWFARE,
           type: 'civilian',
-          names: [ 'judge', 'chief prosecutor', 'circuit justice' ],
+          names: [
+            'judge',
+            'chief prosecutor',
+            'circuit justice',
+            'magistrate',
+            'chief counsel',
+            'attorney general',
+            'supreme court justice',
+            'legal director',
+            'chief judge',
+            'solicitor general'
+          ],
           level: 3,
           minIncome: 60000,
           maxIncome: 82000,
@@ -860,7 +1047,18 @@ class Jobs
         {
           group: GROUP_POLITICAL,
           type: 'civilian',
-          names: [ 'public servant', 'bureaucrat', 'constituency aide' ],
+          names: [
+            'public servant',
+            'bureaucrat',
+            'constituency aide',
+            'government clerk',
+            'administrative assistant',
+            'policy analyst',
+            'city hall worker',
+            'civil service employee',
+            'public records officer',
+            'municipal aide'
+          ],
           level: 1,
           minIncome: 2400,
           maxIncome: 3200,
@@ -869,7 +1067,18 @@ class Jobs
         {
           group: GROUP_POLITICAL,
           type: 'civilian',
-          names: [ 'lobbyist', 'councilor', 'policy advocate' ],
+          names: [
+            'lobbyist',
+            'councilor',
+            'policy advocate',
+            'city council member',
+            'state representative',
+            'policy director',
+            'legislative aide',
+            'campaign manager',
+            'political consultant',
+            'district coordinator'
+          ],
           level: 2,
           minIncome: 7000,
           maxIncome: 9000,
@@ -878,7 +1087,18 @@ class Jobs
         {
           group: GROUP_POLITICAL,
           type: 'civilian',
-          names: [ 'politician', 'representative', 'cabinet powerbroker' ],
+          names: [
+            'politician',
+            'representative',
+            'cabinet powerbroker',
+            'senator',
+            'governor',
+            'mayor',
+            'secretary of state',
+            'party chairman',
+            'chief of staff',
+            'presidential advisor'
+          ],
           level: 3,
           minIncome: 50000,
           maxIncome: 65000,
@@ -888,7 +1108,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'police',
-          names: [ 'beat cop', 'patrol officer', 'street sergeant' ],
+          names: [
+            'beat cop',
+            'patrol officer',
+            'street sergeant',
+            'traffic officer',
+            'parking enforcement',
+            'community officer',
+            'dispatch operator',
+            'crime scene tech',
+            'evidence custodian',
+            'police cadet'
+          ],
           level: 1,
           minIncome: 3000,
           maxIncome: 3500,
@@ -897,7 +1128,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'police',
-          names: [ 'detective', 'investigations officer', 'case analyst' ],
+          names: [
+            'detective',
+            'investigations officer',
+            'case analyst',
+            'homicide detective',
+            'narcotics officer',
+            'vice squad member',
+            'forensics specialist',
+            'internal affairs investigator',
+            'gang unit officer',
+            'swat team member'
+          ],
           level: 2,
           minIncome: 6000,
           maxIncome: 7000,
@@ -906,7 +1148,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'police',
-          names: [ 'police chief', 'commissioner', 'public safety director' ],
+          names: [
+            'police chief',
+            'commissioner',
+            'public safety director',
+            'deputy chief',
+            'police captain',
+            'lieutenant colonel',
+            'operations commander',
+            'special operations overseer',
+            'intelligence chief',
+            'federal marshal'
+          ],
           level: 3,
           minIncome: 40000,
           maxIncome: 45000,
@@ -916,7 +1169,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'security',
-          names: [ 'mall guard', 'patrol guard', 'floor sentry' ],
+          names: [
+            'mall guard',
+            'patrol guard',
+            'floor sentry',
+            'night watchman',
+            'gate guard',
+            'parking attendant',
+            'bouncer',
+            'loss prevention officer',
+            'access control guard',
+            'surveillance operator'
+          ],
           level: 1,
           minIncome: 1800,
           maxIncome: 2300,
@@ -925,7 +1189,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'security',
-          names: [ 'security supervisor', 'shift commander', 'watch captain' ],
+          names: [
+            'security supervisor',
+            'shift commander',
+            'watch captain',
+            'head of security',
+            'security manager',
+            'operations supervisor',
+            'team leader',
+            'field supervisor',
+            'security coordinator',
+            'site supervisor'
+          ],
           level: 2,
           minIncome: 3600,
           maxIncome: 4200,
@@ -934,7 +1209,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'security',
-          names: [ 'corporate security director', 'director of protection', 'security strategist' ],
+          names: [
+            'corporate security director',
+            'director of protection',
+            'security strategist',
+            'chief security officer',
+            'vice president of security',
+            'executive protection director',
+            'risk management director',
+            'global security head',
+            'security operations director',
+            'protective services chief'
+          ],
           level: 3,
           minIncome: 20000,
           maxIncome: 26000,
@@ -944,7 +1230,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'agent',
-          names: [ 'field observer', 'case scout', 'liaison operative' ],
+          names: [
+            'field observer',
+            'case scout',
+            'liaison operative',
+            'surveillance specialist',
+            'intelligence analyst',
+            'field agent',
+            'covert operative',
+            'undercover agent',
+            'counterintelligence officer',
+            'investigative agent'
+          ],
           level: 1,
           minIncome: 4800,
           maxIncome: 5400,
@@ -953,7 +1250,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'agent',
-          names: [ 'case officer', 'handler', 'ops coordinator' ],
+          names: [
+            'case officer',
+            'handler',
+            'ops coordinator',
+            'senior field agent',
+            'operations officer',
+            'intelligence officer',
+            'special agent',
+            'task force leader',
+            'operations manager',
+            'field supervisor'
+          ],
           level: 2,
           minIncome: 9200,
           maxIncome: 11000,
@@ -962,7 +1270,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'agent',
-          names: [ 'station chief', 'regional controller', 'intelligence director' ],
+          names: [
+            'station chief',
+            'regional controller',
+            'intelligence director',
+            'deputy director',
+            'assistant director',
+            'division chief',
+            'operations director',
+            'intelligence chief',
+            'field operations director',
+            'executive director'
+          ],
           level: 3,
           minIncome: 70000,
           maxIncome: 90000,
@@ -972,7 +1291,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'thug',
-          names: [ 'gang member', 'street enforcer', 'corner muscle' ],
+          names: [
+            'gang member',
+            'street enforcer',
+            'corner muscle',
+            'street thug',
+            'hoodlum',
+            'common goon',
+            'hired muscle',
+            'street dealer',
+            'gang lookout',
+            'enforcer'
+          ],
           level: 1,
           minIncome: 800,
           maxIncome: 1200,
@@ -981,7 +1311,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'thug',
-          names: [ 'gang lieutenant', 'crew captain', 'operations lieutenant' ],
+          names: [
+            'gang lieutenant',
+            'crew captain',
+            'mob lieutenant',
+            'gang sergeant',
+            'crew leader',
+            'territory boss',
+            'street captain',
+            'hitman',
+            'crew enforcer',
+            'gang coordinator'
+          ],
           level: 2,
           minIncome: 2000,
           maxIncome: 2600,
@@ -990,7 +1331,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'thug',
-          names: [ 'gang boss', 'crime lord', 'block kingpin' ],
+          names: [
+            'gang boss',
+            'crime lord',
+            'block kingpin',
+            'crime boss',
+            'syndicate leader',
+            'underworld kingpin',
+            'crime family head',
+            'mob boss',
+            'cartel leader',
+            'criminal mastermind'
+          ],
           level: 3,
           minIncome: 15000,
           maxIncome: 20000,
@@ -1000,7 +1352,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'soldier',
-          names: [ 'infantry trooper', 'line rifleman', 'field specialist' ],
+          names: [
+            'infantry trooper',
+            'line rifleman',
+            'field specialist',
+            'grunt',
+            'rifleman',
+            'combat soldier',
+            'infantryman',
+            'foot soldier',
+            'ground pounder',
+            'trooper'
+          ],
           level: 1,
           minIncome: 2800,
           maxIncome: 3200,
@@ -1009,7 +1372,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'soldier',
-          names: [ 'platoon sergeant', 'unit leader', 'operations sergeant' ],
+          names: [
+            'platoon sergeant',
+            'unit leader',
+            'operations sergeant',
+            'staff sergeant',
+            'squad leader',
+            'platoon leader',
+            'company sergeant',
+            'first sergeant',
+            'master sergeant',
+            'command sergeant'
+          ],
           level: 2,
           minIncome: 4500,
           maxIncome: 5200,
@@ -1018,7 +1392,18 @@ class Jobs
         {
           group: GROUP_COMBAT,
           type: 'soldier',
-          names: [ 'battalion commander', 'field commander', 'operations colonel' ],
+          names: [
+            'battalion commander',
+            'field commander',
+            'operations colonel',
+            'brigade commander',
+            'division general',
+            'commanding officer',
+            'military strategist',
+            'operations general',
+            'field marshal',
+            'chief of staff'
+          ],
           level: 3,
           minIncome: 28000,
           maxIncome: 34000,

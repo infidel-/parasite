@@ -224,7 +224,7 @@ class Add
         return;
       var amount: Int = parsed;
       game.player.skills.addID(match.value, amount);
-      game.log('Skill/knowledge added: ' + match.name + ' (' + amount + ').');
+      log('Skill/knowledge added: ' + match.name + ' (' + amount + ').');
     }
 
 // handles adding traits via console command
