@@ -730,15 +730,10 @@ class Const
   public static inline function cost(energy: Int)
     {
       return ' <span style="color:var(--text-color-gray)" class=small>' + 
-        '(' + energy + '</span> <span class=energy>&#127348;</span>' +
+        '(' + energy + '</span> ' + Icon.energy +
         '<span style="color:var(--text-color-gray)" class=small>)</span>';
     }
 
-// energy icon
-  public static inline function e()
-    {
-      return ' &#127316;';
-    }
 
   public static inline function hl(s: String)
     {

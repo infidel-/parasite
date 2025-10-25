@@ -17,9 +17,10 @@
   --text-color-goal: #92b9ff;
   --text-color-pedia: #c8d8da;
   --text-color-symbiosis: #98ff97;
-  --text-color-follower: #fd97ff;
+  --text-color-cultist: #fd97ff;
   --text-color-debug: #a7a7a7;
   --text-color-energy: #50d6fe;
+  --text-color-money: #ecd352;
 
   --text-color-evolution-title: #73f3ff;
   --text-color-evolution-note: #5ebee5;
@@ -66,7 +67,36 @@ hr {
 }
 
 .icon {
-  font-size: 120%;
+  font-size: 150%;
+}
+
+.icon-energy {
+  font-size: 100%;
+  color: var(--text-color-energy);
+}
+
+.icon-money {
+  font-size: 150%;
+  font-weight: bold;
+  color: var(--text-color-money);
+}
+
+.icon-affinity {
+  font-size: 150%;
+  font-weight: bold;
+  color: var(--text-color-symbiosis);
+}
+
+.icon-consent {
+  font-size: 150%;
+  font-weight: bold;
+  color: var(--text-color-symbiosis);
+}
+
+.icon-cultist {
+  font-size: 150%;
+  font-weight: bold;
+  color: var(--text-color-cultist);
 }
 
 .narrative {
@@ -1338,11 +1368,6 @@ input[type=checkbox] {
   color: #c7e6ff;
   border-radius: 3px;
   background: #364967;
-}
-
-.energy {
-  font-size: 80%;
-  color: var(--text-color-energy);
 }
 
 .select-element {

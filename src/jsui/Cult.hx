@@ -62,7 +62,7 @@ class Cult extends UIWindow
       buf.add(', ');
       buf.add(Const.col('cult-power-title', 'POLITICAL') + ' ' + cult.resources.political);
       buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'MONEY') + ' ' + cult.resources.money);
+      buf.add(Const.col('cult-power-title', Icon.money) + ' ' + cult.resources.money);
       buf.add('<br/>');
 
       // members list

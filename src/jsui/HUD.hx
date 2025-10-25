@@ -671,11 +671,11 @@ class HUD
           else buf.add('<span class=hud-name>' + host.AName() + '</span>');
           // special symbols
           if (host.affinity >= 100)
-            buf.add(Const.icon('symbiosis', ' &#127280; ')); // 🄰
+            buf.add(' ' + Icon.affinity);
           if (host.chat.consent >= 100)
-            buf.add(Const.icon('symbiosis', ' &#127282; ')); // 🄲
+            buf.add(' ' + Icon.consent);
           if (host.isPlayerCultist())
-            buf.add(Const.icon('follower', ' &#127285; ')); // 🄵
+            buf.add(' ' + Icon.cultist);
 
           buf.add('<br/>');
           if (host.isAttrsKnown)

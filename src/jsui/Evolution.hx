@@ -77,7 +77,7 @@ class Evolution extends UIWindow
         buf.add(' (' + imp.ep + '/' +
           EvolutionConst.epCostImprovement[imp.level] + ' ep)');
       if (imp.isLocked)
-        buf.add(' &#9745;');
+        buf.add(' ' + Icon.checkbox);
       buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + imp.info.note + '</p>');
 
       // imp notes

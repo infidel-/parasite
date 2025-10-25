@@ -39,13 +39,13 @@ class Presets extends UIWindow
 
       // buttons
       var newButton = document.createButtonElement();
-      newButton.innerHTML= "&#10010;";
+      newButton.innerHTML= "&#10010;"; // ✚
       newButton.className = 'basic-button';
       var saveButton = document.createButtonElement();
-      saveButton.innerHTML = "&#128427;";
+      saveButton.innerHTML = "&#128427;"; // 🖫
       saveButton.className = 'basic-button';
       var deleteButton = document.createButtonElement();
-      deleteButton.innerHTML = "&#10006;";
+      deleteButton.innerHTML = "&#10006;"; // ✖
       deleteButton.className = 'basic-button';
 
       buttonContainer.appendChild(presetSelect);

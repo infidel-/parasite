@@ -120,7 +120,7 @@ class Pedia extends UIWindow
         (article.font != null ? article.font : 100) +
         '%">' +
         article.name + 
-        (isNew ? '<span style="font-size: 80%">&nbsp;&#10069;</span>' : '') + '</span>';
+        (isNew ? '<span style="font-size: 80%">&nbsp;&#10069;</span>' : '') + '</span>'; // ❓
     }
 
 // update topics list
