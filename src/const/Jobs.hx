@@ -1475,6 +1475,7 @@ class Jobs
     }
 
   // returns random job info for the provided type
+  // this is intended for street spawns
   public function getRandom(type: String): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
     {
       var infos = jobsByType.get(type);
@@ -1486,9 +1487,9 @@ class Jobs
           jobInfo: null
         };
 
+      // level 3 cannot be spawned on the street by chance
       var level1: Array<_JobInfo> = [];
       var level2: Array<_JobInfo> = [];
-      var level3: Array<_JobInfo> = [];
       for (info in infos)
         {
           switch (info.level)
@@ -1497,19 +1498,18 @@ class Jobs
                 level1.push(info);
               case 2:
                 level2.push(info);
-              case 3:
-                level3.push(info);
               default:
             }
         }
-
       var pool: Array<_JobInfo> = level1;
+      // level 2 has 10% chance to spawn
       if (level2.length > 0 && Std.random(100) < 10)
         pool = level2;
 
       if (pool.length == 0)
         pool = infos;
 
+      // roll for income
       var picked = pool[Std.random(pool.length)];
       var pickedName = picked.names[Std.random(picked.names.length)];
       var income = picked.minIncome;

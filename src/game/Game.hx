@@ -339,6 +339,13 @@ class Game extends _SaveObject
       // conspiracy group logic
       group.turn();
 
+      // cults turn
+      var cultTime = 1;
+      if (location == LOCATION_REGION)
+        cultTime = 5;
+      for (cult in cults)
+        cult.turn(cultTime);
+
       // AI movement
       if (location == LOCATION_AREA)
         {

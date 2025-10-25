@@ -22,6 +22,7 @@ class Cult extends _SaveObject
   public var name: String;
   public var power: _CultPower;
   public var resources: _CultPower;
+  var turnCounter: Int;
 
   public function new(g: Game)
     {
@@ -249,8 +250,33 @@ class Cult extends _SaveObject
     }
 
 // cult turn
-  public function turn()
+  public function turn(time: Int)
     {
+      if (members.length == 0)
+        return;
+      // cult needs 10 player turns to tick
+      turnCounter += time;
+      if (turnCounter < 10)
+        return;
+      turnCounter = 0;
+      
+      // increase resources by 1 for each 3 power of the same type
+      resources.combat += Std.int(power.combat / 3);
+      resources.media += Std.int(power.media / 3);
+      resources.lawfare += Std.int(power.lawfare / 3);
+      resources.corporate += Std.int(power.corporate / 3);
+      resources.political += Std.int(power.political / 3);
+      
+      // money: collect 50% to resources
+      resources.money += Std.int(power.money * 0.5);
+      
+      game.debug(name +
+        ' turn: COM ' + resources.combat +
+        ', MED ' + resources.media +
+        ', LAW ' + resources.lawfare +
+        ', COR ' + resources.corporate +
+        ', POL ' + resources.political +
+        ', MONEY ' + resources.money);
     }
 
 // recalculate cult power and resources from members
