@@ -7,6 +7,7 @@ import _CultPower;
 import _OrdealType;
 import _PlayerAction;
 import Icon;
+import Reflect;
 
 class Ordeal extends _SaveObject
 {
@@ -57,19 +58,46 @@ class Ordeal extends _SaveObject
   public function getActions(): Array<_PlayerAction>
     {
       var actions: Array<_PlayerAction> = [];
+      var powerFields = ['combat', 'media', 'lawfare', 'corporate', 'political'];
       
-      // spend money action
+      for (field in powerFields)
+        {
+          var powerAmount: Int = Reflect.getProperty(power, field);
+          var cultAmount: Int = Reflect.getProperty(cult.resources, field);
+          
+          if (powerAmount > 0 &&
+              cultAmount >= powerAmount)
+            {
+              var displayName = Const.col('cult-power', '' + powerAmount) + ' ' + field + ' power';
+              actions.push({
+                id: 'spend.' + field,
+                type: ACTION_CULT,
+                name: 'Wield ' + displayName,
+                energy: 0,
+                f: function() {
+                  Reflect.setProperty(cult.resources, field, cultAmount - powerAmount);
+                  Reflect.setProperty(power, field, 0);
+                  cult.log('exerted ' + displayName + ' on ' +
+                    Const.col('gray', name) + ' ordeal');
+                  game.ui.updateWindow();
+                }
+              });
+            }
+        }
+      
+      // spend money action (handled separately)
       if (power.money > 0 &&
           cult.resources.money >= power.money)
         {
+          var displayName = Const.col('cult-power', '' + power.money) + Icon.money;
           actions.push({
             id: 'spendMoney',
             type: ACTION_CULT,
-            name: 'Spend money ' + Const.smallgray('(' + power.money + Icon.money + ')'),
+            name: 'Disburse ' + displayName,
             energy: 0,
             f: function() {
               cult.resources.money -= power.money;
-              cult.log('spent ' + Const.col('cult-power', '' + power.money) + Icon.money + ' on ' + Const.col('gray', name) + ' ordeal');
+              cult.log('disbursed ' + displayName + ' on ' + Const.col('gray', name) + ' ordeal');
               game.ui.updateWindow();
             }
           });
