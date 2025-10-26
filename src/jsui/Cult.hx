@@ -123,6 +123,8 @@ class Cult extends UIWindow
         updateActionsRoot();
       else if (menuState == STATE_INITIATE)
         updateActionsInitiate();
+      else if (menuState == STATE_RECRUIT)
+        updateActionsRecruit();
     }
 
 // update actions for root state
@@ -136,7 +138,7 @@ class Cult extends UIWindow
           var a: _PlayerAction = {
             id: 'callHelp',
             type: ACTION_CULT,
-            name: 'Call for help',
+            name: 'Summon the faithful',
             energy: 0,
           }
           a.f = function() {
@@ -180,9 +182,49 @@ class Cult extends UIWindow
       var ordealActions = cult.ordeals.getInitiateOrdealActions();
       for (a in ordealActions)
         {
+          // check if this action opens a submenu before creating closure
+          if (a.obj != null && a.obj.submenu == 'recruit')
+            {
+              a.f = function() {
+                menuState = STATE_RECRUIT;
+                updateActions();
+              }
+            }
+          else
+            {
+              var actionObj = a; // capture the action object
+              a.f = function() {
+                cult.ordeals.action(actionObj);
+                menuState = STATE_ROOT;
+                updateActions();
+              }
+            }
+          addPlayerAction(a);
+        }
+    }
+
+// update actions for recruit state
+  function updateActionsRecruit()
+    {
+      var cult = game.cults[0];
+      
+      // get recruit actions from cult.ordeals
+      var recruitActions = cult.ordeals.getRecruitActions();
+      for (a in recruitActions)
+        {
           a.f = function() {
-            cult.ordeals.action(a);
-            game.ui.closeWindow();
+            // check if this is back action
+            if (a.obj != null && a.obj.submenu == 'back')
+              {
+                menuState = STATE_INITIATE;
+                updateActions();
+              }
+            else
+              {
+                cult.ordeals.action(a);
+                menuState = STATE_ROOT;
+                updateActions();
+              }
           }
           addPlayerAction(a);
         }

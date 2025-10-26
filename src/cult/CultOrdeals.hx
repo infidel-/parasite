@@ -3,11 +3,12 @@ package cult;
 
 import game.Game;
 import _PlayerAction;
-import _PlayerActionType;
 
 class CultOrdeals extends _SaveObject
 {
+  static var _ignoredFields = [ 'cult' ];
   public var game: Game;
+  public var cult: Cult;
   public var list: Array<Ordeal>; // active ordeals
 
   public function new(g: Game)
@@ -19,8 +20,10 @@ class CultOrdeals extends _SaveObject
     }
 
 // init object before loading/post creation
+// NOTE: new object fields should init here!
   public function init()
     {
+      cult = game.cults[0];
     }
 
 // called after load or creation
@@ -31,7 +34,16 @@ class CultOrdeals extends _SaveObject
 // get initiate ordeal actions
   public function getInitiateOrdealActions(): Array<_PlayerAction>
     {
-      var actions = [];
+      var actions: Array<_PlayerAction> = [];
+      
+      // seek the pure action - opens submenu
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Seek the pure',
+        energy: 0,
+        obj: { submenu: 'recruit' }
+      });
       
       // test action 1
       actions.push({
@@ -63,15 +75,84 @@ class CultOrdeals extends _SaveObject
       return actions;
     }
 
+// get recruit submenu actions
+  public function getRecruitActions(): Array<_PlayerAction>
+    {
+      var actions: Array<_PlayerAction> = [];
+      
+      // back button
+      actions.push({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        obj: { submenu: 'back' }
+      });
+      
+      // power type options
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Combat',
+        energy: 0,
+        obj: { type: 'combat' }
+      });
+      
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Media',
+        energy: 0,
+        obj: { type: 'media' }
+      });
+      
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Lawfare',
+        energy: 0,
+        obj: { type: 'lawfare' }
+      });
+      
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Corporate',
+        energy: 0,
+        obj: { type: 'corporate' }
+      });
+      
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Political',
+        energy: 0,
+        obj: { type: 'political' }
+      });
+      
+      return actions;
+    }
+
 // handle action execution
-// returns true if action should close window
-  public function action(action: _PlayerAction): Bool
+// menu returns to root after this action
+  public function action(action: _PlayerAction)
     {
       game.log('CultOrdeals action: ' + action.name);
+      
+      // handle recruit actions
+      if (action.id == 'recruit')
+        {
+          var ordeal = new RecruitFollower(game, cult, action.obj.type);
+          list.push(ordeal);
+          game.log('Created RecruitFollower ordeal for followerType: ' + action.obj.type);
+          return;
+        }
+      
       if (action.obj != null)
         {
           game.log('Action object: ' + Std.string(action.obj));
         }
-      return false;
+      
+      return;
     }
 }

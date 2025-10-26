@@ -9,10 +9,12 @@ import ai.CorpoAI;
 class RecruitFollower extends Ordeal
 {
   public var target: AIData;
+  public var followerType: String; // type of power to seek (combat, media, lawfare, corporate, political)
 
-  public function new(g: Game, c: Cult)
+  public function new(g: Game, c: Cult, ?followerType: String = 'combat')
     {
       super(g, c);
+      this.followerType = followerType;
       init();
       initPost(false);
     }
