@@ -1,5 +1,4 @@
-import game.Player;
-import game._Item;
+import game.*;
 
 typedef _PlayerAction = {
   var id: String; // action id
@@ -14,4 +13,5 @@ typedef _PlayerAction = {
   @:optional var key: String; // keyboard shortcut
   @:optional var isAgreeable: Bool; // agreeable host will reduce cost to 1
   @:optional var isVirtual: Bool; // virtual actions do not pass time
+  @:optional var f: Void -> Void; // action function to run
 }

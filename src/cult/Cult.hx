@@ -22,7 +22,7 @@ class Cult extends _SaveObject
   public var name: String;
   public var power: _CultPower;
   public var resources: _CultPower;
-  public var ordeals: Array<Ordeal>;
+  public var ordeals: CultOrdeals;
   var turnCounter: Int;
 
   public function new(g: Game)
@@ -31,7 +31,6 @@ class Cult extends _SaveObject
       id = (_maxID++);
       state = CULT_STATE_INACTIVE;
       members = [];
-      ordeals = [];
       isPlayer = false;
       name = 'Cult of Flesh';
       init();
@@ -39,8 +38,10 @@ class Cult extends _SaveObject
     }
 
 // init object before loading/post creation
+// NOTE: new object fields should init here!
   public function init()
     {
+      ordeals = new CultOrdeals(game);
       power = {
         combat: 0,
         media: 0,
@@ -137,16 +138,18 @@ class Cult extends _SaveObject
     }
 
 // run cult action from ui
-  public function action(action: _PlayerAction)
+// returns true if action should close window
+  public function action(action: _PlayerAction): Bool
     {
       switch (action.id)
         {
           case 'callHelp':
             var ret = callHelpAction(action);
             if (!ret)
-              return;
+              return true;
         }
       game.playerArea.actionPost(); // post-action call
+      return true;
     }
 
 // returns true if player can call for help

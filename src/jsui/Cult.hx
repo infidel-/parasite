@@ -6,17 +6,20 @@ import js.Browser;
 import js.html.DivElement;
 
 import game.Game;
+import _UICultState;
 
 class Cult extends UIWindow
 {
   var info: DivElement;
   var actions: DivElement;
   var listActions: Array<_PlayerAction>;
+  var menuState: _UICultState; // current state
 
   public function new(g: Game)
     {
       super(g, 'window-cult');
       listActions = [];
+      menuState = STATE_ROOT;
       window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
@@ -26,6 +29,13 @@ class Cult extends UIWindow
       info = addBlock(cont, 'window-cult-info', 'INFO', 'scroller');
       actions = addBlock(cont, 'window-cult-actions', 'ACTIONS');
       addCloseButton();
+    }
+
+// show window and reset state to root
+  public override function show(?skipAnimation: Bool = false)
+    {
+      menuState = STATE_ROOT;
+      super.show(skipAnimation);
     }
 
 // update window contents
@@ -78,52 +88,114 @@ class Cult extends UIWindow
       buf.add('<span class=gray>Members: ' +
         cult.members.length + '/' + cult.maxSize() + '</span><br/>');
       var infotext = buf.toString();
+      setParams({
+        info: infotext,
+      });
 
-      // actions
+      // actions list
+      updateActions();
+    }
+
+// update list of actions
+  function updateActions()
+    {
       listActions = [];
       actions.innerHTML = '';
 
+      if (menuState == STATE_ROOT)
+        updateActionsRoot();
+      else if (menuState == STATE_INITIATE)
+        updateActionsInitiate();
+    }
+
+// update actions for root state
+  function updateActionsRoot()
+    {
+      var cult = game.cults[0];
+      
       // action - call for help
-      var n = 1;
       if (cult.canCallHelp())
         {
-          var act: _PlayerAction = {
+          var a: _PlayerAction = {
             id: 'callHelp',
             type: ACTION_CULT,
             name: 'Call for help',
             energy: 0,
-          };
-          listActions.push(act);
-          var action = Browser.document.createDivElement();
-          action.className = 'actions-item';
-          action.innerHTML = Const.key('' + n) + ': Call for help';
-          action.onclick = function (e) {
-            game.scene.sounds.play('click-action');
-            game.cults[0].action(act);
-    /*
-          update();
-          game.ui.hud.update();*/
+          }
+          a.f = function() {
+            game.cults[0].action(a);
             game.ui.closeWindow();
-          };
-          actions.appendChild(action);
-          n++;
+          }
+          addPlayerAction(a);
         }
-
-      setParams({
-        info: infotext,
+      
+      // action - initiate ordeal
+      addPlayerAction({
+        id: 'initiateOrdeal',
+        type: ACTION_CULT,
+        name: 'Initiate ordeal',
+        energy: 0,
+        f: function() {
+          menuState = STATE_INITIATE;
+          updateActions();
+        }
       });
     }
 
+// update actions for initiate state
+  function updateActionsInitiate()
+    {
+      var cult = game.cults[0];
+      
+      // back button
+      addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          menuState = STATE_ROOT;
+          updateActions();
+        }
+      });
+      
+      // get ordeal actions from cult.ordeals
+      var ordealActions = cult.ordeals.getInitiateOrdealActions();
+      for (a in ordealActions)
+        {
+          a.f = function() {
+            cult.ordeals.action(a);
+            game.ui.closeWindow();
+          }
+          addPlayerAction(a);
+        }
+    }
+
+// add player action helper method
+  function addPlayerAction(action: _PlayerAction)
+    {
+      var n = listActions.length + 1;
+      listActions.push(action);
+      var actionElement = Browser.document.createDivElement();
+      actionElement.className = 'actions-item';
+      actionElement.innerHTML = Const.key('' + n) + ': ' + action.name;
+      actionElement.onclick = function (e) {
+        game.scene.sounds.play('click-action');
+        if (action.f != null)
+          action.f();
+      };
+      actions.appendChild(actionElement);
+    }
+
+// run mouse/key action
   public override function action(index: Int)
     {
       var a = listActions[index - 1];
       if (a == null)
         return;
-      game.cults[0].action(a);
-/*
-      update();
-      game.ui.hud.update();*/
-      game.ui.closeWindow();
+      
+      if (a.f != null)
+        a.f();
     }
 
   public override function setParams(obj: Dynamic)

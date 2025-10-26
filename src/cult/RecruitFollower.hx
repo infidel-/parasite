@@ -3,9 +3,13 @@ package cult;
 
 import game.Game;
 import cult.Cult;
+import ai.AIData;
+import ai.CorpoAI;
 
 class RecruitFollower extends Ordeal
 {
+  public var target: AIData;
+
   public function new(g: Game, c: Cult)
     {
       super(g, c);
@@ -19,6 +23,9 @@ class RecruitFollower extends Ordeal
       super.init();
       name = 'Seek the pure';
       type = ORDEAL_COMMUNAL;
+      // we pick target on creation
+      var ai = new CorpoAI(game, 0, 0);
+      target = ai.cloneData();
     }
 
 // called after load or creation
