@@ -212,7 +212,7 @@ class UIWindow
     {}
 
 // update window contents
-  dynamic function update()
+  public dynamic function update()
     {}
 
 // action handling

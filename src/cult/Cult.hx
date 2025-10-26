@@ -347,7 +347,7 @@ class Cult extends _SaveObject
 // max cult size
   public function maxSize(): Int
     {
-      return 5;
+      return 10;
     }
 
   function get_leader(): AIData

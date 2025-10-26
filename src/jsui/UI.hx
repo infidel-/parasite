@@ -719,4 +719,12 @@ class UI
     {
       return components[state];
     }
+
+// update currently opened window
+  public function updateWindow()
+    {
+      if (_state != UISTATE_DEFAULT &&
+          components[_state] != null)
+        components[_state].update();
+    }
 }

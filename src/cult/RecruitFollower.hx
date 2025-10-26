@@ -11,9 +11,9 @@ class RecruitFollower extends Ordeal
   public var target: AIData;
   public var followerType: String; // type of power to seek (combat, media, lawfare, corporate, political)
 
-  public function new(g: Game, c: Cult, ?followerType: String = 'combat')
+  public function new(g: Game, ?followerType: String = 'combat')
     {
-      super(g, c);
+      super(g);
       this.followerType = followerType;
       init();
       initPost(false);
@@ -28,6 +28,24 @@ class RecruitFollower extends Ordeal
       // we pick target on creation
       var ai = new CorpoAI(game, 0, 0);
       target = ai.cloneData();
+      
+      // set ordeal power based on follower type
+      switch (followerType)
+        {
+          case 'combat':
+            power.combat = 1;
+          case 'media':
+            power.media = 1;
+          case 'lawfare':
+            power.lawfare = 1;
+          case 'corporate':
+            power.corporate = 1;
+          case 'political':
+            power.political = 1;
+          default:
+            power.combat = 1; // default to combat
+        }
+      power.money = 5000;
     }
 
 // called after load or creation

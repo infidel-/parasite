@@ -7,6 +7,7 @@ import js.html.DivElement;
 
 import game.Game;
 import _UICultState;
+import cult.Ordeal;
 
 class Cult extends UIWindow
 {
@@ -14,6 +15,7 @@ class Cult extends UIWindow
   var actions: DivElement;
   var listActions: Array<_PlayerAction>;
   var menuState: _UICultState; // current state
+  var currentOrdeal: Ordeal; // currently selected ordeal
 
   public function new(g: Game)
     {
@@ -50,12 +52,12 @@ class Cult extends UIWindow
       buf.add('<table class="cult-table">');
       buf.add('<tr>');
       buf.add('<th></th>'); // empty header for row labels
-      buf.add('<th>' + Const.col('cult-power-title', 'COMBAT') + '</th>');
-      buf.add('<th>' + Const.col('cult-power-title', 'MEDIA') + '</th>');
-      buf.add('<th>' + Const.col('cult-power-title', 'LAWFARE') + '</th>');
-      buf.add('<th>' + Const.col('cult-power-title', 'CORPORATE') + '</th>');
-      buf.add('<th>' + Const.col('cult-power-title', 'POLITICAL') + '</th>');
-      buf.add('<th>' + Const.col('cult-power-title', Icon.money) + '</th>');
+      buf.add('<th>' + Const.col('cult-power', 'COMBAT') + '</th>');
+      buf.add('<th>' + Const.col('cult-power', 'MEDIA') + '</th>');
+      buf.add('<th>' + Const.col('cult-power', 'LAWFARE') + '</th>');
+      buf.add('<th>' + Const.col('cult-power', 'CORPORATE') + '</th>');
+      buf.add('<th>' + Const.col('cult-power', 'POLITICAL') + '</th>');
+      buf.add('<th>' + Const.col('cult-power', Icon.money) + '</th>');
       buf.add('</tr>');
       
       // power row
@@ -125,6 +127,8 @@ class Cult extends UIWindow
         updateActionsInitiate();
       else if (menuState == STATE_RECRUIT)
         updateActionsRecruit();
+      else if (menuState == STATE_ORDEAL)
+        updateActionsOrdeal();
     }
 
 // update actions for root state
@@ -159,6 +163,27 @@ class Cult extends UIWindow
           updateActions();
         }
       });
+      
+      // list of current ordeals
+      for (ordeal in cult.ordeals.list)
+        {
+          var ordealAction: _PlayerAction = {
+            id: 'ordeal_' + ordeal.name,
+            type: ACTION_CULT,
+            name: Const.smallgray('[Ordeal] ') + ordeal.name,
+            energy: 0,
+            obj: { ordeal: ordeal }
+          };
+          
+          var ordealObj = ordeal; // capture the ordeal object
+          ordealAction.f = function() {
+            currentOrdeal = ordealObj;
+            menuState = STATE_ORDEAL;
+            updateActions();
+          };
+          
+          addPlayerAction(ordealAction);
+        }
     }
 
 // update actions for initiate state
@@ -227,6 +252,34 @@ class Cult extends UIWindow
               }
           }
           addPlayerAction(a);
+        }
+    }
+
+// update actions for individual ordeal state
+  function updateActionsOrdeal()
+    {
+      var cult = game.cults[0];
+      
+      // back button
+      addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          menuState = STATE_ROOT;
+          updateActions();
+        }
+      });
+      
+      // get actions from the current ordeal
+      if (currentOrdeal != null)
+        {
+          var ordealActions = currentOrdeal.getActions();
+          for (action in ordealActions)
+            {
+              addPlayerAction(action);
+            }
         }
     }
 

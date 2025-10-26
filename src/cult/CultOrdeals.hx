@@ -142,7 +142,7 @@ class CultOrdeals extends _SaveObject
       // handle recruit actions
       if (action.id == 'recruit')
         {
-          var ordeal = new RecruitFollower(game, cult, action.obj.type);
+          var ordeal = new RecruitFollower(game, action.obj.type);
           list.push(ordeal);
           game.log('Created RecruitFollower ordeal for followerType: ' + action.obj.type);
           return;
