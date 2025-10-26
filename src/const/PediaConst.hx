@@ -71,7 +71,14 @@ NumPad - movement<br>
 NumPad5, Z - wait a turn<br>
 Alt+0-5 - equals F1-F5<br>
 1-3 - pick option in message/difficulty/yes-no dialog. 1 is close/yes, 2 is no, in case of a difficulty choice it's left to right - easy, normal, hard<br>
-; - opens console (used mostly for debug purposes), type \"help\" and press enter to see what commands are there in the normal build<br>",
+; - opens console (used mostly for debug purposes), type \"help\" and press enter to see what commands are there in the normal build<br><br>
+<b>Quick Actions:</b><br>
+Q + G - Goals window<br>
+Q + B - Body window<br>
+Q + L - Log window<br>
+Q + T - Timeline window<br>
+Q + E - Evolution window<br>
+Q + C - Cult window<br>",
         },
         {
           id: 'lifeParasite',

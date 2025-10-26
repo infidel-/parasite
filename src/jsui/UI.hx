@@ -28,6 +28,7 @@ class UI
   var uiQueuePaused: Bool; // if true, the queue is paused
   var uiQueuePrev: _UIEvent; // previous UI event
   public var shiftPressed: Bool; // true when shift is held
+  var awaitingNextKey: Bool; // true when waiting for second key press for quick menu
 
   public function new(g: Game)
     {
@@ -38,6 +39,7 @@ class UI
       uiQueuePaused = false;
       uiQueuePrev = null;
       shiftPressed = false;
+      awaitingNextKey = false;
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('canvas');
       canvas.style.visibility = 'hidden';
@@ -140,6 +142,15 @@ class UI
           (e.keyCode >= 48 && e.keyCode <= 57))
         e.preventDefault();
 
+      // handle quick menu double key press
+      if (awaitingNextKey)
+        {
+          var handled = handleQuickMenu(e.key);
+          awaitingNextKey = false;
+          if (handled)
+            return;
+        }
+
       // default state
       if (_state == UISTATE_DEFAULT)
         {
@@ -180,6 +191,12 @@ class UI
                   return;
                 }
             }
+          // quick menu - set awaiting next key flag
+          else if (e.key == 'q')
+            {
+              awaitingNextKey = true;
+              return;
+            }
           // shift key - redraw actions list
           else if (e.key == 'Shift' &&
               game.config.shiftLongActions &&
@@ -200,6 +217,29 @@ class UI
       // update camera position
       if (ret)
         game.scene.updateCamera();
+    }
+
+// handle quick menu double key press
+  function handleQuickMenu(key: String): Bool
+    {
+      // simulate the key press that handleWindows expects
+      switch (key)
+        {
+          case 'g': // goals - simulate F1
+            return handleWindows('', 'F1', false, false);
+          case 'b': // body - simulate F2
+            return handleWindows('', 'F2', false, false);
+          case 'l': // log - simulate F3
+            return handleWindows('', 'F3', false, false);
+          case 't': // timeline - simulate F4
+            return handleWindows('', 'F4', false, false);
+          case 'e': // evolution - simulate F5
+            return handleWindows('', 'F5', false, false);
+          case 'c': // cult - simulate F6
+            return handleWindows('', 'F6', false, false);
+          default:
+            return false;
+        }
     }
 
 // handle opening and closing windows
