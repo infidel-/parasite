@@ -46,34 +46,51 @@ class Cult extends UIWindow
       buf.add('<span>');
       var cult = game.cults[0];
 
-      // cult power
-      buf.add('Power: ');
-      buf.add(Const.col('cult-power-title', 'COMBAT') + ' ' + cult.power.combat);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'MEDIA') + ' ' + cult.power.media);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'LAWFARE') + ' ' + cult.power.lawfare);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'CORPORATE') + ' ' + cult.power.corporate);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'POLITICAL') + ' ' + cult.power.political);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'INCOME') + ' ' + cult.power.money);
-
-      // cult resources
-      buf.add('<br/>Resources: ');
-      buf.add(Const.col('cult-power-title', 'COMBAT') + ' ' + cult.resources.combat);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'MEDIA') + ' ' + cult.resources.media);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'LAWFARE') + ' ' + cult.resources.lawfare);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'CORPORATE') + ' ' + cult.resources.corporate);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', 'POLITICAL') + ' ' + cult.resources.political);
-      buf.add(', ');
-      buf.add(Const.col('cult-power-title', Icon.money) + ' ' + cult.resources.money);
-      buf.add('<br/>');
+      // cult power and resources table
+      buf.add('<table class="cult-table">');
+      buf.add('<tr>');
+      buf.add('<th></th>'); // empty header for row labels
+      buf.add('<th>' + Const.col('cult-power-title', 'COMBAT') + '</th>');
+      buf.add('<th>' + Const.col('cult-power-title', 'MEDIA') + '</th>');
+      buf.add('<th>' + Const.col('cult-power-title', 'LAWFARE') + '</th>');
+      buf.add('<th>' + Const.col('cult-power-title', 'CORPORATE') + '</th>');
+      buf.add('<th>' + Const.col('cult-power-title', 'POLITICAL') + '</th>');
+      buf.add('<th>' + Const.col('cult-power-title', Icon.money) + '</th>');
+      buf.add('</tr>');
+      
+      // power row
+      buf.add('<tr>');
+      buf.add('<td class="cult-row-label">Power</td>');
+      buf.add('<td>' + cult.power.combat + '</td>');
+      buf.add('<td>' + cult.power.media + '</td>');
+      buf.add('<td>' + cult.power.lawfare + '</td>');
+      buf.add('<td>' + cult.power.corporate + '</td>');
+      buf.add('<td>' + cult.power.political + '</td>');
+      buf.add('<td>' + cult.power.money + '</td>');
+      buf.add('</tr>');
+      
+      // income row
+      buf.add('<tr class="cult-income">');
+      buf.add('<td class="cult-row-label">Income</td>');
+      buf.add('<td>' + (Std.int(cult.power.combat / 3) > 0 ? '+' + Std.int(cult.power.combat / 3) : '-') + '</td>');
+      buf.add('<td>' + (Std.int(cult.power.media / 3) > 0 ? '+' + Std.int(cult.power.media / 3) : '-') + '</td>');
+      buf.add('<td>' + (Std.int(cult.power.lawfare / 3) > 0 ? '+' + Std.int(cult.power.lawfare / 3) : '-') + '</td>');
+      buf.add('<td>' + (Std.int(cult.power.corporate / 3) > 0 ? '+' + Std.int(cult.power.corporate / 3) : '-') + '</td>');
+      buf.add('<td>' + (Std.int(cult.power.political / 3) > 0 ? '+' + Std.int(cult.power.political / 3) : '-') + '</td>');
+      buf.add('<td>' + (Std.int(cult.power.money * 0.5) > 0 ? '+' + Std.int(cult.power.money * 0.5) : '-') + '</td>');
+      buf.add('</tr>');
+      
+      // resources row
+      buf.add('<tr class="cult-resources">');
+      buf.add('<td class="cult-row-label">Resources</td>');
+      buf.add('<td>' + cult.resources.combat + '</td>');
+      buf.add('<td>' + cult.resources.media + '</td>');
+      buf.add('<td>' + cult.resources.lawfare + '</td>');
+      buf.add('<td>' + cult.resources.corporate + '</td>');
+      buf.add('<td>' + cult.resources.political + '</td>');
+      buf.add('<td>' + cult.resources.money + '</td>');
+      buf.add('</tr>');
+      buf.add('</table>');
 
       // members list
       buf.add('<br/>');

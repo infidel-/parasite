@@ -20,6 +20,7 @@
   --text-color-cultist: #fd97ff;
   --text-color-debug: #a7a7a7;
   --text-color-energy: #50d6fe;
+  --text-color-income: #f5b57e;
   --text-color-money: #ecd352;
 
   --text-color-evolution-title: #73f3ff;
@@ -1576,4 +1577,40 @@ input[type="radio"]:focus {
   background-size: cover;
   filter: url(#swirl) brightness(80%) blur(0.5px) saturate(90%);
   animation: fade-in 5s, background-animation 200s infinite alternate;
+}
+
+/* cult table styling */
+.cult-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.cult-table th,
+.cult-table td {
+  border: 1px solid #4f688e;
+  padding: 8px;
+  text-align: center;
+}
+
+.cult-table th {
+  background-color: #2a3a4a;
+  color: var(--text-color-cult-power-title);
+  font-weight: bold;
+}
+
+.cult-table tr.cult-income td {
+  color: var(--text-color-income);
+}
+
+.cult-table tr.cult-resources td {
+  color: var(--text-color-gray);
+}
+
+.cult-table .cult-row-label {
+  background-color: #2a3a4a;
+  color: var(--text-color-cult-power-title);
+  font-weight: bold;
+  text-align: left;
+  padding-left: 12px;
 }
