@@ -170,7 +170,7 @@ class Cult extends UIWindow
           var ordealAction: _PlayerAction = {
             id: 'ordeal_' + ordeal.name,
             type: ACTION_CULT,
-            name: Const.smallgray('[Ordeal] ') + ordeal.name,
+            name: Const.smallgray('[Ordeal] ') + ordeal.customName(),
             energy: 0,
             obj: { ordeal: ordeal }
           };

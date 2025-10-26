@@ -17,8 +17,8 @@ class Ordeal extends _SaveObject
   public var members: Array<Int>; // cult members involved
   public var power: _CultPower;
   public var type: _OrdealType;
-  
-  // getter for cult
+  public var requiredMembers: Int;
+  public var requiredMemberLevels: Int;
   public var cult(get, never): Cult;
   private function get_cult(): Cult
     {
@@ -29,6 +29,8 @@ class Ordeal extends _SaveObject
     {
       game = g;
       members = [];
+      requiredMembers = 0;
+      requiredMemberLevels = 0;
       power = {
         combat: 0,
         media: 0,
@@ -53,6 +55,22 @@ class Ordeal extends _SaveObject
 // called after load or creation
   public function initPost(onLoad: Bool)
     {}
+
+// add member to ordeal
+  public function addMembers(memberIDs: Array<Int>)
+    {
+      for (memberID in memberIDs)
+        {
+          if (members.indexOf(memberID) == -1)
+            members.push(memberID);
+        }
+    }
+
+// get custom name for display
+  public function customName(): String
+    {
+      return name;
+    }
 
 // get actions available for this ordeal
   public function getActions(): Array<_PlayerAction>

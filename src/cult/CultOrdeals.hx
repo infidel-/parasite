@@ -8,8 +8,12 @@ class CultOrdeals extends _SaveObject
 {
   static var _ignoredFields = [ 'cult' ];
   public var game: Game;
-  public var cult: Cult;
   public var list: Array<Ordeal>; // active ordeals
+  public var cult(get, never): Cult;
+  private function get_cult(): Cult
+    {
+      return game.cults[0];
+    }
 
   public function new(g: Game)
     {
@@ -23,7 +27,6 @@ class CultOrdeals extends _SaveObject
 // NOTE: new object fields should init here!
   public function init()
     {
-      cult = game.cults[0];
     }
 
 // called after load or creation
@@ -36,14 +39,19 @@ class CultOrdeals extends _SaveObject
     {
       var actions: Array<_PlayerAction> = [];
       
-      // seek the pure action - opens submenu
-      actions.push({
-        id: 'recruit',
-        type: ACTION_CULT,
-        name: 'Seek the pure',
-        energy: 0,
-        obj: { submenu: 'recruit' }
-      });
+      // check if there are enough free members for recruit action
+      var freeMembers = cult.getFreeMembers(1);
+      if (freeMembers.length >= 1)
+        {
+          // seek the pure action - opens submenu
+          actions.push({
+            id: 'recruit',
+            type: ACTION_CULT,
+            name: 'Seek the pure',
+            energy: 0,
+            obj: { submenu: 'recruit' }
+          });
+        }
       
       // test action 1
       actions.push({
@@ -143,6 +151,15 @@ class CultOrdeals extends _SaveObject
       if (action.id == 'recruit')
         {
           var ordeal = new RecruitFollower(game, action.obj.type);
+          
+          // add random free member to ordeal
+          var freeMembers = cult.getFreeMembers(1);
+          if (freeMembers.length > 0)
+            {
+              var randomMemberID = freeMembers[Std.random(freeMembers.length)];
+              ordeal.addMembers([randomMemberID]);
+            }
+          
           list.push(ordeal);
           game.log('Created RecruitFollower ordeal for followerType: ' + action.obj.type);
           return;

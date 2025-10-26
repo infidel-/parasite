@@ -2,7 +2,6 @@
 package cult;
 
 import game.Game;
-import cult.Cult;
 import ai.AIData;
 import ai.CorpoAI;
 
@@ -25,6 +24,8 @@ class RecruitFollower extends Ordeal
       super.init();
       name = 'Seek the pure';
       type = ORDEAL_COMMUNAL;
+      requiredMembers = 1;
+      requiredMemberLevels = 1;
       // we pick target on creation
       var ai = new CorpoAI(game, 0, 0);
       target = ai.cloneData();
@@ -52,5 +53,11 @@ class RecruitFollower extends Ordeal
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+    }
+
+// get custom name for display
+  public override function customName(): String
+    {
+      return name + ' - ' + Const.capitalize(followerType);
     }
 }

@@ -178,6 +178,34 @@ class Cult extends _SaveObject
       return free;
     }
 
+// get free members with specified level or higher
+  public function getFreeMembers(level: Int): Array<Int>
+    {
+      var free = [];
+      for (ai in members)
+        {
+          // check if member is already in an ordeal
+          var isInOrdeal = false;
+          for (ordeal in ordeals.list)
+            {
+              if (ordeal.members.indexOf(ai.id) != -1)
+                {
+                  isInOrdeal = true;
+                  break;
+                }
+            }
+          if (isInOrdeal)
+            continue;
+          
+          // check member level
+          var jobInfo = game.jobs.getJobInfo(ai.job);
+          if (jobInfo != null &&
+              jobInfo.level >= level)
+            free.push(ai.id);
+        }
+      return free;
+    }
+
 // call for help
   function callHelpAction(action: _PlayerAction): Bool
     {
