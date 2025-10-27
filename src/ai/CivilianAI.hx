@@ -78,7 +78,8 @@ class CivilianAI extends HumanAI
       income = info.income;
       
       // call job init function if present
-      if (info.jobInfo != null && info.jobInfo.init != null)
+      if (info.jobInfo != null &&
+          info.jobInfo.init != null)
         info.jobInfo.init(game, this);
     }
 

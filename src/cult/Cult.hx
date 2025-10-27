@@ -234,10 +234,10 @@ class Cult extends _SaveObject
       var free = getFreeCultists();
       if (free.length == 0)
         {
-          game.actionFailed('There are no more followers available.');
+          game.actionFailed('There are no more faithful available.');
           return false;
         }
-      game.log('You send out a call for help.');
+      game.log('You send out a call to the faithful.');
 
       // roll a number
       var num = Const.roll(1, 4);

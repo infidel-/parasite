@@ -179,8 +179,6 @@ class CultOrdeals extends _SaveObject
 // menu returns to root after this action
   public function action(action: _PlayerAction)
     {
-      game.log('CultOrdeals action: ' + action.name);
-      
       // handle recruit actions
       if (action.id == 'recruit')
         {
@@ -195,7 +193,6 @@ class CultOrdeals extends _SaveObject
             }
           
           list.push(ordeal);
-          game.log('Created RecruitFollower ordeal for followerType: ' + action.obj.type);
           game.ui.updateWindow();
           return;
         }

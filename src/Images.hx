@@ -2,6 +2,15 @@
 import const.Jobs._JobInfo;
 import js.html.Image;
 
+typedef _CivilianData = {
+  x: Int,
+  y: Int,
+  job: String,
+  income: Int,
+  isMale: Bool,
+  jobInfo: _JobInfo,
+};
+
 class Images
 {
   var scene: GameScene;
@@ -36,14 +45,7 @@ class Images
       }
 
 // get random civilian sprite data together with job info
-  public function getRandomCivilianAI(isMale: Bool): {
-      x: Int,
-      y: Int,
-      job: String,
-      income: Int,
-      isMale: Bool,
-      jobInfo: _JobInfo,
-    }
+  public function getRandomCivilianAI(isMale: Bool): _CivilianData
     {
       var civilians = (isMale ? civiliansMale : civiliansFemale);
       if (civilians.length == 0)
@@ -78,14 +80,7 @@ class Images
     }
 
 // get civilian sprite data for specific job type
-  public function getCivilianAI(type: String, isMale: Bool): {
-      x: Int,
-      y: Int,
-      job: String,
-      income: Int,
-      isMale: Bool,
-      jobInfo: _JobInfo,
-    }
+  public function getCivilianAI(type: String, isMale: Bool): _CivilianData
     {
       var civilians = (isMale ? civiliansMale : civiliansFemale);
       // collect all civilians with matching job type
@@ -102,6 +97,35 @@ class Images
       // pick random from matching records
       var civ = matching[Std.random(matching.length)];
       var jobData = scene.game.jobs.getRandom(type);
+      return {
+        x: civ.x,
+        y: civ.y,
+        job: jobData.name,
+        income: jobData.income,
+        isMale: isMale,
+        jobInfo: jobData.jobInfo,
+      };
+    }
+
+// get formal civilian sprite data for specific job type
+  public function getFormalCivilianAI(type: String, isMale: Bool): _CivilianData
+    {
+      var civilians = (isMale ? civiliansMale : civiliansFemale);
+      // collect all formalCivilian icons
+      var formalCivilians = [];
+      for (civ in civilians)
+        {
+          if (civ.job == 'formalCivilian')
+            formalCivilians.push(civ);
+        }
+      
+      if (formalCivilians.length == 0)
+        return null;
+      
+      // pick random formalCivilian icon
+      var civ = formalCivilians[Std.random(formalCivilians.length)];
+      
+      var jobData = scene.game.jobs.getRandomByGroup(type);
       return {
         x: civ.x,
         y: civ.y,

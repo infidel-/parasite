@@ -110,7 +110,9 @@ class Cult extends UIWindow
         {
           buf.add(m.TheName());
           if (i == 0)
-            buf.add(' (leader)');
+            buf.add(' ' + Const.col('gray', '(leader)'));
+          buf.add(' ');
+          buf.add(Const.smallgray(m.job + ', ' + m.income + Icon.money));
           buf.add('<br/>');
         }
       buf.add('</span><br/>');

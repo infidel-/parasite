@@ -20,6 +20,7 @@ class Jobs
   var game: Game;
   var jobsByType: Map<String, Array<_JobInfo>>;
   var jobsByName: Map<String, _JobInfo>;
+  var jobsByGroup: Map<_AIJobGroup, Array<_JobInfo>>;
 
   // sets up jobs helper with game reference
   public function new(g: Game)
@@ -27,6 +28,7 @@ class Jobs
       game = g;
       jobsByType = new Map<String, Array<_JobInfo>>();
       jobsByName = new Map<String, _JobInfo>();
+      jobsByGroup = new Map<_AIJobGroup, Array<_JobInfo>>();
       initJobTable();
     }
 
@@ -1465,6 +1467,15 @@ class Jobs
             {
               jobsByName.set(name, info);
             }
+          
+          // add to jobsByGroup map
+          var groupList = jobsByGroup.get(info.group);
+          if (groupList == null)
+            {
+              groupList = [];
+              jobsByGroup.set(info.group, groupList);
+            }
+          groupList.push(info);
         }
     }
 
@@ -1517,6 +1528,52 @@ class Jobs
         income += Std.random(picked.maxIncome - picked.minIncome + 1);
       income = Std.int(income / 100) * 100;
 
+      return {
+        name: pickedName,
+        income: income,
+        isRare: picked.isRare,
+        jobInfo: picked
+      };
+    }
+
+  // returns random job info for the provided group string
+  public function getRandomByGroup(type: String): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
+    {
+      // convert string type to job group
+      var group: _AIJobGroup;
+      switch (type)
+        {
+          case 'media':
+            group = GROUP_MEDIA;
+          case 'lawfare':
+            group = GROUP_LAWFARE;
+          case 'political':
+            group = GROUP_POLITICAL;
+          case 'corporate':
+            group = GROUP_CORPORATE;
+          case 'combat':
+            group = GROUP_COMBAT;
+          default:
+            group = GROUP_CIVILIAN; // fallback
+        }
+      
+      var infos = jobsByGroup.get(group);
+      if (infos == null || infos.length == 0)
+        return {
+          name: 'unemployed',
+          income: 0,
+          isRare: false,
+          jobInfo: null
+        };
+      
+      // pick random job from group
+      var picked = infos[Std.random(infos.length)];
+      var pickedName = picked.names[Std.random(picked.names.length)];
+      var income = picked.minIncome;
+      if (picked.maxIncome > picked.minIncome)
+        income += Std.random(picked.maxIncome - picked.minIncome + 1);
+      income = Std.int(income / 100) * 100;
+      
       return {
         name: pickedName,
         income: income,

@@ -2,8 +2,7 @@
 package cult;
 
 import game.Game;
-import ai.AIData;
-import ai.CorpoAI;
+import ai.*;
 
 class RecruitFollower extends Ordeal
 {
@@ -28,9 +27,8 @@ class RecruitFollower extends Ordeal
       requiredMemberLevels = 1;
       actions = 1;
       note = 'Seek out those who hold sway over ' + followerType + ' matters.';
-      // we pick target on creation
-      var ai = new CorpoAI(game, 0, 0);
-      target = ai.cloneData();
+      // we pick target on creation based on follower type
+      selectTarget();
       
       // set ordeal power based on follower type
       switch (followerType)
@@ -55,6 +53,42 @@ class RecruitFollower extends Ordeal
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+    }
+
+// select target based on follower type
+  function selectTarget()
+    {
+      var ai: ai.AI;
+      
+      switch (followerType)
+        {
+          case 'corporate':
+            ai = new CorpoAI(game, 0, 0);
+            
+          case 'combat':
+            // random combat type
+            var combatTypes: Array<Class<ai.AI>> = [AgentAI, PoliceAI, SecurityAI, SoldierAI, ThugAI];
+            var aiClass = combatTypes[Std.random(combatTypes.length)];
+            ai = Type.createInstance(aiClass, [game, 0, 0]);
+            
+          case 'media', 'lawfare', 'political':
+            // create civ and then modify with data
+            ai = new CivilianAI(game, 0, 0);
+            var data = game.scene.images.getFormalCivilianAI(followerType, ai.isMale);
+            if (data != null)
+              {
+                ai.tileAtlasX = data.x;
+                ai.tileAtlasY = data.y;
+                ai.job = data.job;
+                ai.income = data.income;
+              }
+            
+          default:
+            // fallback to combat
+            ai = new AgentAI(game, 0, 0);
+        }
+      
+      target = ai.cloneData();
     }
 
 // get custom name for display
