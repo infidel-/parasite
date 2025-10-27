@@ -90,6 +90,10 @@ class PoliceAI extends HumanAI
 // event: on being attacked
   public override function onAttack()
     {
+      // cultist cops do not call for backup
+      if (isCultist)
+        return;
+
       // need radio
       if (!inventory.has('radio'))
         return;
