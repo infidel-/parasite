@@ -16,6 +16,7 @@ class Console
   var history: Array<String>;
   var addConsole: Add;
   var stageConsole: Stage;
+  var cultConsole: Cult;
 
 
   public function new(g: Game)
@@ -25,6 +26,7 @@ class Console
       loadHistory();
       addConsole = new Add(this);
       stageConsole = new Stage(this);
+      cultConsole = new Cult(this);
     }
 
 
@@ -58,6 +60,9 @@ class Console
           // XXX chat|ch<stage>
           else if (arr[0].length >= 2 && arr[0].substr(0, 2) == 'ch')
             chatCommand(arr);
+          // XXX cult|cu commands
+          else if (arr[0] == 'cu' || arr[0] == 'cult')
+            cultConsole.run(cmd);
 #end
         }
 
