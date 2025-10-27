@@ -60,4 +60,10 @@ class RecruitFollower extends Ordeal
     {
       return name + ' - ' + Const.capitalize(followerType);
     }
+
+// handle member death
+  public override function onDeath(aidata: AIData)
+    {
+      fail();
+    }
 }

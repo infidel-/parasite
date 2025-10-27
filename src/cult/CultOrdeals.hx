@@ -3,6 +3,7 @@ package cult;
 
 import game.Game;
 import _PlayerAction;
+import ai.AIData;
 
 class CultOrdeals extends _SaveObject
 {
@@ -32,6 +33,22 @@ class CultOrdeals extends _SaveObject
 // called after load or creation
   public function initPost(onLoad: Bool)
     {
+    }
+
+// handle member death
+  public function onDeath(aidata: AIData)
+    {
+      for (ordeal in list)
+        {
+          ordeal.onDeath(aidata);
+        }
+    }
+
+// fail an ordeal
+  public function fail(ordeal: Ordeal)
+    {
+      cult.log('ordeal ' + Const.col('gray', ordeal.customName()) + ' has failed');
+      list.remove(ordeal);
     }
 
 // get initiate ordeal actions

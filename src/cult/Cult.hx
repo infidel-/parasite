@@ -108,14 +108,21 @@ class Cult extends _SaveObject
       // ai is dead
       if (ai.state == AI_STATE_DEAD)
         {
-          // leader is dead
-          if (members[0].id == aidata.id)
-            destroy();
-          members.remove(aidata);
-          recalc();
+          onDeath(aidata);
         }
 
       else aidata.updateData(ai, 'on despawn');
+    }
+
+// handle member death
+  public function onDeath(aidata: AIData)
+    {
+      ordeals.onDeath(aidata);
+      // leader is dead
+      if (members[0].id == aidata.id)
+        destroy();
+      members.remove(aidata);
+      recalc();
     }
 
 // leader is dead - destroy cult

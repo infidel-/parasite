@@ -8,6 +8,7 @@ import _OrdealType;
 import _PlayerAction;
 import Icon;
 import Reflect;
+import ai.AIData;
 
 class Ordeal extends _SaveObject
 {
@@ -70,6 +71,17 @@ class Ordeal extends _SaveObject
   public function customName(): String
     {
       return name;
+    }
+
+// handle member death
+  public function onDeath(aidata: AIData)
+    {
+    }
+
+// fail this ordeal
+  public function fail()
+    {
+      cult.ordeals.fail(this);
     }
 
 // get actions available for this ordeal
