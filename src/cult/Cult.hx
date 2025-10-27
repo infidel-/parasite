@@ -86,10 +86,24 @@ class Cult extends _SaveObject
 // add new member
   public function addMember(ai: AI)
     {
-      ai.isNameKnown = true;
-      ai.setCult(this);
-      members.push(ai.cloneData());
-      log('gains a new member: ' + ai.theName());
+      addAIData(ai.cloneData());
+    }
+
+// add member from AIData
+  public function addAIData(aidata: AIData)
+    {
+      // check for max cultists
+      if (members.length >= maxSize())
+        {
+          game.actionFailed('Maximum number of members reached.');
+          return;
+        }
+
+      aidata.isNameKnown = true;
+      aidata.isCultist = true;
+      aidata.cultID = id;
+      members.push(aidata);
+      log('gains a new member: ' + aidata.TheName());
       recalc();
     }
 

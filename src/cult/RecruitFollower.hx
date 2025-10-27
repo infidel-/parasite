@@ -68,4 +68,10 @@ class RecruitFollower extends Ordeal
     {
       fail();
     }
+
+  // handle successful completion
+  public override function onSuccess()
+    {
+      cult.addAIData(target);
+    }
 }

@@ -88,6 +88,28 @@ class Ordeal extends _SaveObject
       cult.ordeals.fail(this);
     }
 
+// check if ordeal is complete
+  public function check()
+    {
+      // check if all powers are at zero
+      if (power.combat == 0 &&
+          power.media == 0 &&
+          power.lawfare == 0 &&
+          power.corporate == 0 &&
+          power.political == 0 &&
+          power.money == 0)
+        {
+          success();
+        }
+    }
+
+// complete an ordeal successfully
+  public function success()
+    {
+      onSuccess();
+      cult.ordeals.success(this);
+    }
+
 // get actions available for this ordeal
   public function getActions(): Array<_PlayerAction>
     {
@@ -118,6 +140,7 @@ class Ordeal extends _SaveObject
                   this.actions++;
                   cult.log('exerted ' + displayName + ' on ' +
                     Const.col('gray', name) + ' ordeal');
+                  check();
                   game.ui.updateWindow();
                 }
               });
@@ -139,6 +162,7 @@ class Ordeal extends _SaveObject
               this.power.money = 0;
               this.actions++;
               cult.log('disbursed ' + displayName + ' on ' + Const.col('gray', name) + ' ordeal');
+              check();
               game.ui.updateWindow();
             }
           });
@@ -146,4 +170,7 @@ class Ordeal extends _SaveObject
       
       return actions;
     }
+
+// hook for when ordeal succeeds (override in subclasses)
+  function onSuccess() {}
 }

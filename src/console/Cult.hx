@@ -30,6 +30,7 @@ class Cult
             {
               log('Cult commands:');
               log('cu/cult gr - give +10 all resources and +100k money');
+              log('cu/cult t - call cult turn');
               return true;
             }
           
@@ -37,6 +38,13 @@ class Cult
           if (arr[1] == 'gr')
             {
               giveResources();
+              return true;
+            }
+          
+          // cu/cult t - advance cult turn
+          if (arr[1] == 't')
+            {
+              advanceTurn();
               return true;
             }
           
@@ -65,6 +73,21 @@ class Cult
       cult.resources.money += 100000;
       
       log('Added +10 to all cult resources and +100k money.');
+    }
+
+// call next cult turn
+  function advanceTurn()
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+      
+      var cult = game.cults[0];
+      cult.turn(10);
+      
+      log('Called next cult turn.');
     }
 
 // log shortcut

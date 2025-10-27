@@ -51,6 +51,13 @@ class CultOrdeals extends _SaveObject
       list.remove(ordeal);
     }
 
+// complete an ordeal successfully
+  public function success(ordeal: Ordeal)
+    {
+      cult.log('ordeal ' + Const.col('gray', ordeal.customName()) + ' completed successfully');
+      list.remove(ordeal);
+    }
+
 // turn processing for ordeals
   public function turn()
     {
