@@ -87,33 +87,6 @@ class CultOrdeals extends _SaveObject
           });
         }
       
-      // test action 1
-      actions.push({
-        id: 'testOrdeal1',
-        type: ACTION_CULT,
-        name: 'Test Ordeal 1',
-        energy: 0,
-        obj: { ordealType: 'test1', description: 'First test ordeal' }
-      });
-      
-      // test action 2
-      actions.push({
-        id: 'testOrdeal2',
-        type: ACTION_CULT,
-        name: 'Test Ordeal 2',
-        energy: 0,
-        obj: { ordealType: 'test2', description: 'Second test ordeal' }
-      });
-      
-      // test action 3
-      actions.push({
-        id: 'testOrdeal3',
-        type: ACTION_CULT,
-        name: 'Test Ordeal 3',
-        energy: 0,
-        obj: { ordealType: 'test3', description: 'Third test ordeal' }
-      });
-      
       return actions;
     }
 

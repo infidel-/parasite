@@ -206,6 +206,9 @@ class Evolution extends UIWindow
           n++;
         }
 
+      // trigger content update animation
+      animate(actions);
+
       setParams({
         list: listtext,
         info: infotext,
