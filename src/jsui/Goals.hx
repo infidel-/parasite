@@ -64,7 +64,7 @@ class Goals extends UIWindow
           hasCompletedGoals = true;
         }
       if (!hasCompletedGoals)
-        buf.add('None so far.');
+        buf.add('<div class="window-empty">None so far</div>');
       buf.add('</div>');
       buf.add('</fieldset>');
 
@@ -84,7 +84,7 @@ class Goals extends UIWindow
           hasFailedGoals = true;
         }
       if (!hasFailedGoals)
-        buf.add('<font style="color:var(--text-color-gray)">None so far.</font>');
+        buf.add('<div class="window-empty">None so far</div>');
       buf.add('</div>');
       buf.add('</fieldset>');
 

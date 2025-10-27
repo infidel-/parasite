@@ -609,6 +609,13 @@ hr {
   transform: translate(-50%, 0);
 }
 
+.window-empty {
+  color: var(--text-color-gray);
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
+}
+
 div::-webkit-scrollbar {
   width: 1em;
 }
@@ -1229,13 +1236,6 @@ input[type=checkbox] {
 .window-cult-ordeals-actions {
   color: var(--text-color-ordeal-params);
   font-size: 0.85em;
-}
-
-.window-cult-ordeals-empty {
-  text-align: center;
-  color: var(--text-color-gray);
-  font-style: italic;
-  padding: 20px;
 }
 
 #window-ovum {

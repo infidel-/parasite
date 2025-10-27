@@ -162,7 +162,7 @@ class Body extends UIWindow
           hasOrgans = true;
         }
       if (!hasOrgans)
-        buf.add('<center>no features available</center><br/>');
+        buf.add('<center class="window-empty">No features available</center><br/>');
       return buf.toString();
     }
 
@@ -349,7 +349,7 @@ class Body extends UIWindow
         return '';
       if (!game.player.vars.skillsEnabled ||
           !game.player.host.isAttrsKnown)
-        return '<center>unknown</center>';
+        return '<center class="window-empty">Unknown</center>';
       var buf = new StringBuf();
       // show known job and income at top of host knowledge window
       if (game.player.host.isJobKnown)

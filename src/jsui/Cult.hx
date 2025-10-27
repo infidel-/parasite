@@ -318,7 +318,7 @@ class Cult extends UIWindow
       
       if (cult.ordeals.list.length == 0)
         {
-          ordeals.innerHTML = '<div class="window-cult-ordeals-empty">No active ordeals</div>';
+          ordeals.innerHTML = '<div class="window-empty">No active ordeals</div>';
           return;
         }
       
