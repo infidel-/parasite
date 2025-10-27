@@ -13,6 +13,7 @@ class Cult extends UIWindow
 {
   var info: DivElement;
   var actions: DivElement;
+  var ordeals: DivElement;
   var listActions: Array<_PlayerAction>;
   var menuState: _UICultState; // current state
   var currentOrdeal: Ordeal; // currently selected ordeal
@@ -29,7 +30,16 @@ class Cult extends UIWindow
       window.appendChild(cont);
 
       info = addBlock(cont, 'window-cult-info', 'INFO', 'scroller');
-      actions = addBlock(cont, 'window-cult-actions', 'ACTIONS');
+      
+      // create bottom section with actions and ordeals
+      var bottom = Browser.document.createDivElement();
+      bottom.id = 'window-cult-bottom';
+      
+      // create actions and ordeals elements inside bottom container
+      actions = addBlock(bottom, 'window-cult-actions', 'ACTIONS');
+      ordeals = addBlock(bottom, 'window-cult-ordeals', 'ORDEALS', 'scroller');
+      
+      cont.appendChild(bottom);
       addCloseButton();
     }
 
@@ -113,6 +123,9 @@ class Cult extends UIWindow
 
       // actions list
       updateActions();
+      
+      // ordeals list
+      updateOrdeals();
     }
 
 // update list of actions
@@ -156,7 +169,7 @@ class Cult extends UIWindow
       addPlayerAction({
         id: 'initiateOrdeal',
         type: ACTION_CULT,
-        name: 'Initiate ordeal',
+        name: 'Initiate communal ordeal',
         energy: 0,
         f: function() {
           menuState = STATE_INITIATE;
@@ -208,7 +221,8 @@ class Cult extends UIWindow
       for (a in ordealActions)
         {
           // check if this action opens a submenu before creating closure
-          if (a.obj != null && a.obj.submenu == 'recruit')
+          if (a.obj != null &&
+              a.obj.submenu == 'recruit')
             {
               a.f = function() {
                 menuState = STATE_RECRUIT;
@@ -237,19 +251,17 @@ class Cult extends UIWindow
       var recruitActions = cult.ordeals.getRecruitActions();
       for (a in recruitActions)
         {
-          a.f = function() {
-            // check if this is back action
-            if (a.obj != null && a.obj.submenu == 'back')
-              {
-                menuState = STATE_INITIATE;
-                updateActions();
-              }
-            else
-              {
-                cult.ordeals.action(a);
-                menuState = STATE_ROOT;
-                updateActions();
-              }
+          // set different f function based on whether obj exists
+          if (a.obj != null &&
+              a.obj.submenu == 'back')
+            a.f = function() {
+              menuState = STATE_INITIATE;
+              updateActions();
+            }
+          else a.f = function() {
+            cult.ordeals.action(a);
+            menuState = STATE_ROOT;
+            updateActions();
           }
           addPlayerAction(a);
         }
@@ -258,8 +270,6 @@ class Cult extends UIWindow
 // update actions for individual ordeal state
   function updateActionsOrdeal()
     {
-      var cult = game.cults[0];
-      
       // back button
       addPlayerAction({
         id: 'back',
@@ -277,9 +287,7 @@ class Cult extends UIWindow
         {
           var ordealActions = currentOrdeal.getActions();
           for (action in ordealActions)
-            {
-              addPlayerAction(action);
-            }
+            addPlayerAction(action);
         }
     }
 
@@ -295,8 +303,112 @@ class Cult extends UIWindow
         game.scene.sounds.play('click-action');
         if (action.f != null)
           action.f();
+        update();
       };
       actions.appendChild(actionElement);
+    }
+
+// update ordeals list
+  function updateOrdeals()
+    {
+      ordeals.innerHTML = '';
+      var cult = game.cults[0];
+      
+      if (cult.ordeals.list.length == 0)
+        {
+          ordeals.innerHTML = '<div class="window-cult-ordeals-empty">No active ordeals</div>';
+          return;
+        }
+      
+      var buf = new StringBuf();
+      var n = 0;
+      for (ordeal in cult.ordeals.list)
+        {
+          addOrdealCard(buf, ordeal, (n % 2 == 0));
+          n++;
+        }
+      ordeals.innerHTML = buf.toString();
+    }
+
+// add ordeal card (col 0 or 1)
+  function addOrdealCard(buf: StringBuf, ordeal: Ordeal, isCol0: Bool)
+    {
+      if (isCol0)
+        buf.add('<div class="window-cult-ordeals-row">');
+      
+      buf.add('<div class="window-cult-ordeals-card">');
+      
+      // title
+      buf.add('<div class="window-cult-ordeals-title">');
+      buf.add(ordeal.customName());
+      buf.add('</div>');
+      
+      // note
+      if (ordeal.note != '')
+        {
+          buf.add('<div class="window-cult-ordeals-note">');
+          buf.add(ordeal.note);
+          buf.add('</div>');
+        }
+      
+      // members
+      buf.add('<div class="window-cult-ordeals-members">');
+      buf.add('Members: ');
+      if (ordeal.members.length == 0)
+        {
+          buf.add('None');
+        }
+      else
+        {
+          var cult = game.cults[0];
+          var memberNames = [];
+          for (memberID in ordeal.members)
+            {
+              var member = null;
+              for (m in cult.members)
+                if (m.id == memberID)
+                  {
+                    member = m;
+                    break;
+                  }
+              if (member != null)
+                memberNames.push(member.TheName());
+            }
+          buf.add(memberNames.join(', '));
+        }
+      buf.add('</div>');
+      
+      // power
+      buf.add('<div class="window-cult-ordeals-power">');
+      var powerParts = [];
+      if (ordeal.power.combat > 0)
+        powerParts.push('COMBAT ' + Const.col('white', '' + ordeal.power.combat));
+      if (ordeal.power.media > 0)
+        powerParts.push('MEDIA ' + Const.col('white', '' + ordeal.power.media));
+      if (ordeal.power.lawfare > 0)
+        powerParts.push('LAWFARE ' + Const.col('white', '' + ordeal.power.lawfare));
+      if (ordeal.power.corporate > 0)
+        powerParts.push('CORPORATE ' + Const.col('white', '' + ordeal.power.corporate));
+      if (ordeal.power.political > 0)
+        powerParts.push('POLITICAL ' + Const.col('white', '' + ordeal.power.political));
+      if (ordeal.power.money > 0)
+        powerParts.push(Const.col('white', '' + ordeal.power.money) + Icon.money);
+      
+      if (powerParts.length > 0)
+        buf.add('Power: ' + powerParts.join(', '));
+      else
+        buf.add('No power requirements');
+      buf.add('</div>');
+      
+      // actions counter
+      buf.add('<div class="window-cult-ordeals-actions">');
+      buf.add('Actions used: ' + ordeal.actions + '/' + ordeal.members.length);
+      buf.add('</div>');
+      
+      buf.add('</div>');
+      
+      if (!isCol0)
+        buf.add('</div>');
     }
 
 // run mouse/key action

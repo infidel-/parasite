@@ -21,6 +21,7 @@ class Ordeal extends _SaveObject
   public var requiredMembers: Int;
   public var requiredMemberLevels: Int;
   public var actions: Int;
+  public var note: String;
   public var cult(get, never): Cult;
   private function get_cult(): Cult
     {
@@ -34,15 +35,7 @@ class Ordeal extends _SaveObject
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
-      power = {
-        combat: 0,
-        media: 0,
-        lawfare: 0,
-        corporate: 0,
-        political: 0,
-        occult: 0,
-        money: 0
-      };
+      note = '';
 
 // will be called by sub-classes
 //      init();
@@ -53,6 +46,15 @@ class Ordeal extends _SaveObject
   public function init()
     {
       type = ORDEAL_COMMUNAL;
+      power = {
+        combat: 0,
+        media: 0,
+        lawfare: 0,
+        corporate: 0,
+        political: 0,
+        occult: 0,
+        money: 0
+      };
     }
 
 // called after load or creation
@@ -134,6 +136,7 @@ class Ordeal extends _SaveObject
             energy: 0,
             f: function() {
               cult.resources.money -= power.money;
+              this.power.money = 0;
               this.actions++;
               cult.log('disbursed ' + displayName + ' on ' + Const.col('gray', name) + ' ordeal');
               game.ui.updateWindow();

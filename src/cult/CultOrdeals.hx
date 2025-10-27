@@ -189,12 +189,8 @@ class CultOrdeals extends _SaveObject
           
           list.push(ordeal);
           game.log('Created RecruitFollower ordeal for followerType: ' + action.obj.type);
+          game.ui.updateWindow();
           return;
-        }
-      
-      if (action.obj != null)
-        {
-          game.log('Action object: ' + Std.string(action.obj));
         }
       
       return;

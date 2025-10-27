@@ -28,6 +28,10 @@
   --text-color-evolution-level-note: #4cd47b;
   --text-color-evolution-params: #13ff65;
 
+  --text-color-ordeal-title: #ffcd73;
+  --text-color-ordeal-note: #d79826;
+  --text-color-ordeal-params: #f98fce;
+
   --text-color-organ-title: #e0e13a;
   --text-color-organ-title-inactive: #e0e13a;
   --text-color-organ-note: #5ebee5;
@@ -1162,10 +1166,76 @@ input[type=checkbox] {
   margin-top: 10px;
 }
 
-#window-cult-actions {
+#window-cult-bottom {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
   margin-top: 10px;
-  flex-grow: 1;
-  height: 59%;
+}
+
+#window-cult-actions {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#window-cult-ordeals {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.window-cult-ordeals-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.window-cult-ordeals-card {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #444;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.window-cult-ordeals-title {
+  font-weight: bold;
+  color: var(--text-color-ordeal-title);
+  margin-bottom: 4px;
+}
+
+.window-cult-ordeals-note {
+  color: var(--text-color-ordeal-note);
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.window-cult-ordeals-members {
+  color: var(--text-color-gray);
+  font-size: 0.85em;
+  margin-bottom: 2px;
+}
+
+.window-cult-ordeals-power {
+  color: var(--text-color-cult-power);
+  font-size: 0.85em;
+  margin-bottom: 2px;
+}
+
+.window-cult-ordeals-actions {
+  color: var(--text-color-ordeal-params);
+  font-size: 0.85em;
+}
+
+.window-cult-ordeals-empty {
+  text-align: center;
+  color: var(--text-color-gray);
+  font-style: italic;
+  padding: 20px;
 }
 
 #window-ovum {
