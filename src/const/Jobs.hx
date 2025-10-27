@@ -1485,6 +1485,25 @@ class Jobs
       return jobsByName.get(name);
     }
 
+  // common helper to roll job info from a pool of job infos
+  function rollJobInfo(pool: Array<_JobInfo>): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
+    {
+      // pick random job from pool
+      var picked = pool[Std.random(pool.length)];
+      var pickedName = picked.names[Std.random(picked.names.length)];
+      var income = picked.minIncome;
+      if (picked.maxIncome > picked.minIncome)
+        income += Std.random(picked.maxIncome - picked.minIncome + 1);
+      income = Std.int(income / 100) * 100;
+      
+      return {
+        name: pickedName,
+        income: income,
+        isRare: picked.isRare,
+        jobInfo: picked
+      };
+    }
+
   // returns random job info for the provided type
   // this is intended for street spawns
   public function getRandom(type: String): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
@@ -1520,20 +1539,7 @@ class Jobs
       if (pool.length == 0)
         pool = infos;
 
-      // roll for income
-      var picked = pool[Std.random(pool.length)];
-      var pickedName = picked.names[Std.random(picked.names.length)];
-      var income = picked.minIncome;
-      if (picked.maxIncome > picked.minIncome)
-        income += Std.random(picked.maxIncome - picked.minIncome + 1);
-      income = Std.int(income / 100) * 100;
-
-      return {
-        name: pickedName,
-        income: income,
-        isRare: picked.isRare,
-        jobInfo: picked
-      };
+      return rollJobInfo(pool);
     }
 
   // returns random job info for the provided group string
@@ -1566,20 +1572,7 @@ class Jobs
           jobInfo: null
         };
       
-      // pick random job from group
-      var picked = infos[Std.random(infos.length)];
-      var pickedName = picked.names[Std.random(picked.names.length)];
-      var income = picked.minIncome;
-      if (picked.maxIncome > picked.minIncome)
-        income += Std.random(picked.maxIncome - picked.minIncome + 1);
-      income = Std.int(income / 100) * 100;
-      
-      return {
-        name: pickedName,
-        income: income,
-        isRare: picked.isRare,
-        jobInfo: picked
-      };
+      return rollJobInfo(infos);
     }
 
   // get sorted and unique list of civilian job types
