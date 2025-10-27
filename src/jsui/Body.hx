@@ -347,6 +347,9 @@ class Body extends UIWindow
     {
       if (game.player.state != PLR_STATE_HOST)
         return '';
+      if (!game.player.vars.skillsEnabled ||
+          !game.player.host.isAttrsKnown)
+        return '<center>unknown</center>';
       var buf = new StringBuf();
       // show known job and income at top of host knowledge window
       if (game.player.host.isJobKnown)
