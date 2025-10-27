@@ -51,6 +51,16 @@ class CultOrdeals extends _SaveObject
       list.remove(ordeal);
     }
 
+// turn processing for ordeals
+  public function turn()
+    {
+      // reset actions counter for all active ordeals
+      for (ordeal in list)
+        {
+          ordeal.actions = 0;
+        }
+    }
+
 // get initiate ordeal actions
   public function getInitiateOrdealActions(): Array<_PlayerAction>
     {

@@ -20,6 +20,7 @@ class Ordeal extends _SaveObject
   public var type: _OrdealType;
   public var requiredMembers: Int;
   public var requiredMemberLevels: Int;
+  public var actions: Int;
   public var cult(get, never): Cult;
   private function get_cult(): Cult
     {
@@ -32,6 +33,7 @@ class Ordeal extends _SaveObject
       members = [];
       requiredMembers = 0;
       requiredMemberLevels = 0;
+      actions = 0;
       power = {
         combat: 0,
         media: 0,
@@ -90,6 +92,10 @@ class Ordeal extends _SaveObject
       var actions: Array<_PlayerAction> = [];
       var powerFields = ['combat', 'media', 'lawfare', 'corporate', 'political'];
       
+      // check if we can still perform actions
+      if (this.actions >= members.length)
+        return actions;
+      
       for (field in powerFields)
         {
           var powerAmount: Int = Reflect.getProperty(power, field);
@@ -107,6 +113,7 @@ class Ordeal extends _SaveObject
                 f: function() {
                   Reflect.setProperty(cult.resources, field, cultAmount - powerAmount);
                   Reflect.setProperty(power, field, 0);
+                  this.actions++;
                   cult.log('exerted ' + displayName + ' on ' +
                     Const.col('gray', name) + ' ordeal');
                   game.ui.updateWindow();
@@ -121,12 +128,13 @@ class Ordeal extends _SaveObject
         {
           var displayName = Const.col('cult-power', '' + power.money) + Icon.money;
           actions.push({
-            id: 'spendMoney',
+            id: 'spend.money',
             type: ACTION_CULT,
             name: 'Disburse ' + displayName,
             energy: 0,
             f: function() {
               cult.resources.money -= power.money;
+              this.actions++;
               cult.log('disbursed ' + displayName + ' on ' + Const.col('gray', name) + ' ordeal');
               game.ui.updateWindow();
             }

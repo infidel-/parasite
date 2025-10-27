@@ -310,6 +310,9 @@ class Cult extends _SaveObject
       // money: collect 50% to resources
       resources.money += Std.int(power.money * 0.5);
       
+      // process ordeals turn
+      ordeals.turn();
+      
       game.debug(name +
         ' turn: COM ' + resources.combat +
         ', MED ' + resources.media +
