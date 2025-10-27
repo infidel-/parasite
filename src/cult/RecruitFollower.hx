@@ -26,7 +26,8 @@ class RecruitFollower extends Ordeal
       type = ORDEAL_COMMUNAL;
       requiredMembers = 1;
       requiredMemberLevels = 1;
-      note = 'Seek out those who wields the powers in ' + followerType + ' matters.';
+      actions = 1;
+      note = 'Seek out those who hold sway over ' + followerType + ' matters.';
       // we pick target on creation
       var ai = new CorpoAI(game, 0, 0);
       target = ai.cloneData();
