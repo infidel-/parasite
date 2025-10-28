@@ -60,8 +60,7 @@ class Profile
           game.log(Const.small('New pedia article available: ' +
             PediaConst.getName(id) + '.'), COLOR_PEDIA);
         }
-      var pedia: jsui.Pedia = cast game.ui.getComponent(UISTATE_PEDIA);
-      pedia.newArticle(id);
+      game.ui.pedia.newArticle(id);
       save();
       return true;
     }

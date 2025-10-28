@@ -50,6 +50,12 @@ class Cult extends UIWindow
       super.show(skipAnimation);
     }
 
+// update state from outside
+  public function setMenuState(s: _UICultState)
+    {
+      menuState = s;
+    }
+
 // update window contents
   override function update()
     {

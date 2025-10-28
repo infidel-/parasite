@@ -279,8 +279,7 @@ class Config
           bg = 'url(./img/misc/bg1.jpg)';
           if (game.ui != null)
             {
-              var menu: MainMenu = cast game.ui.getComponent(UISTATE_MAINMENU);
-              bg = menu.getBackgroundUrl();
+              bg = game.ui.mainMenu.getBackgroundUrl();
             }
         }
       UI.setVar('--main-menu-bg', bg);

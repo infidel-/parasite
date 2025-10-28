@@ -7,7 +7,6 @@ import _CultPower;
 import _OrdealType;
 import _PlayerAction;
 import Icon;
-import Reflect;
 import ai.AIData;
 
 class Ordeal extends _SaveObject
@@ -113,17 +112,15 @@ class Ordeal extends _SaveObject
 // get actions available for this ordeal
   public function getActions(): Array<_PlayerAction>
     {
-      var actions: Array<_PlayerAction> = [];
-      var powerFields = ['combat', 'media', 'lawfare', 'corporate', 'political'];
-      
       // check if we can still perform actions
+      var actions = [];
       if (this.actions >= members.length)
         return actions;
       
-      for (field in powerFields)
+      for (field in _CultPower.names)
         {
-          var powerAmount: Int = Reflect.getProperty(power, field);
-          var cultAmount: Int = Reflect.getProperty(cult.resources, field);
+          var powerAmount: Int = power.get(field);
+          var cultAmount: Int = cult.resources.get(field);
           
           if (powerAmount > 0 &&
               cultAmount >= powerAmount)
@@ -135,8 +132,8 @@ class Ordeal extends _SaveObject
                 name: 'Wield ' + displayName,
                 energy: 0,
                 f: function() {
-                  Reflect.setProperty(cult.resources, field, cultAmount - powerAmount);
-                  Reflect.setProperty(power, field, 0);
+                  cult.resources.dec(field, powerAmount);
+                  power.set(field, 0);
                   this.actions++;
                   cult.log('exerted ' + displayName + ' on ' +
                     Const.col('gray', name) + ' ordeal');
@@ -167,6 +164,19 @@ class Ordeal extends _SaveObject
             }
           });
         }
+      
+      // cancel ordeal
+      actions.push({
+        id: 'annul',
+        type: ACTION_CULT,
+        name: 'Annul ' + Const.smallgray('(results in failure)'),
+        energy: 0,
+        f: function() {
+          fail();
+          game.ui.cult.setMenuState(STATE_ROOT);
+          game.ui.updateWindow();
+        }
+      });
       
       return actions;
     }

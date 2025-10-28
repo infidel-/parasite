@@ -51,7 +51,7 @@ class _CultPower extends _SaveObject
         }
     }
 
-// decrement field value by name
+  // decrement field value by name
   public function dec(power: String, ?val: Int = 1): Void
     {
       switch (power)
@@ -63,6 +63,21 @@ class _CultPower extends _SaveObject
           case 'political': political -= val;
           case 'occult': occult -= val;
           case 'money': money -= val;
+        }
+    }
+
+  // set field value by name
+  public function set(power: String, val: Int): Void
+    {
+      switch (power)
+        {
+          case 'combat': combat = val;
+          case 'media': media = val;
+          case 'lawfare': lawfare = val;
+          case 'corporate': corporate = val;
+          case 'political': political = val;
+          case 'occult': occult = val;
+          case 'money': money = val;
         }
     }
 

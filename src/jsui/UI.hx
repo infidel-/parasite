@@ -11,6 +11,7 @@ import js.node.Fs;
 #end
 
 import game.Game;
+import _UIState;
 
 class UI
 {
@@ -29,6 +30,9 @@ class UI
   var uiQueuePrev: _UIEvent; // previous UI event
   public var shiftPressed: Bool; // true when shift is held
   var awaitingNextKey: Bool; // true when waiting for second key press for quick menu
+  public var cult(get, never): jsui.Cult;
+  public var pedia(get, never): jsui.Pedia;
+  public var mainMenu(get, never): jsui.MainMenu;
 
   public function new(g: Game)
     {
@@ -569,6 +573,21 @@ class UI
   function get_state(): _UIState
     {
       return _state;
+    }
+
+  function get_cult(): jsui.Cult
+    {
+      return cast components[UISTATE_CULT];
+    }
+
+  function get_pedia(): jsui.Pedia
+    {
+      return cast components[UISTATE_PEDIA];
+    }
+
+  function get_mainMenu(): jsui.MainMenu
+    {
+      return cast components[UISTATE_MAINMENU];
     }
 
 // set new GUI state, open and close windows if needed
