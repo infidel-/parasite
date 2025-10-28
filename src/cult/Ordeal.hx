@@ -128,7 +128,7 @@ class Ordeal extends _SaveObject
           if (powerAmount > 0 &&
               cultAmount >= powerAmount)
             {
-              var displayName = Const.col('cult-power', '' + powerAmount) + ' ' + field + ' power';
+              var displayName = Const.col('cult-power', powerAmount) + ' ' + field + ' power';
               actions.push({
                 id: 'spend.' + field,
                 type: ACTION_CULT,
@@ -151,7 +151,7 @@ class Ordeal extends _SaveObject
       if (power.money > 0 &&
           cult.resources.money >= power.money)
         {
-          var displayName = Const.col('cult-power', '' + power.money) + Icon.money;
+          var displayName = Const.col('cult-power', power.money) + Icon.money;
           actions.push({
             id: 'spend.money',
             type: ACTION_CULT,

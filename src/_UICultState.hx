@@ -5,4 +5,7 @@ enum _UICultState
   STATE_INITIATE;
   STATE_RECRUIT;
   STATE_ORDEAL;
+  STATE_TRADE;
 }
+
+

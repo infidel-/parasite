@@ -761,7 +761,7 @@ class Const
     }
 
 // return the string wrapped into color marker
-  public static inline function col(col: String, s: String)
+  public static inline function col(col: String, s: Dynamic)
     {
       return "<span style='color:var(--text-color-" + col + ")'>" +
         s + '</span>';

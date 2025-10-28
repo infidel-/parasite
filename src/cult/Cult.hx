@@ -439,4 +439,26 @@ class Cult extends _SaveObject
           clearCultistsInArea(habitatArea, true);
         }
     }
+
+// trade money for other power types
+  public function trade(powerType: String): Bool
+    {
+      var cost = 10000;
+      if (resources.money < cost)
+        {
+          game.actionFailed('Not enough money for trade.');
+          return false;
+        }
+
+      // deduct money
+      resources.money -= cost;
+      
+      // add power based on type
+      resources.inc(powerType, 1);
+      
+      log('trades ' + Const.col('cult-power', cost) + Icon.money + ' for ' +
+        Const.col('cult-power', '1 ') +
+        powerType + ' power');
+      return true;
+    }
 }

@@ -62,44 +62,36 @@ class Cult extends UIWindow
       buf.add('<table class="cult-table">');
       buf.add('<tr>');
       buf.add('<th></th>'); // empty header for row labels
-      buf.add('<th>' + Const.col('cult-power', 'COMBAT') + '</th>');
-      buf.add('<th>' + Const.col('cult-power', 'MEDIA') + '</th>');
-      buf.add('<th>' + Const.col('cult-power', 'LAWFARE') + '</th>');
-      buf.add('<th>' + Const.col('cult-power', 'CORPORATE') + '</th>');
-      buf.add('<th>' + Const.col('cult-power', 'POLITICAL') + '</th>');
+      for (name in _CultPower.namesUpper)
+        buf.add('<th>' + Const.col('cult-power', name) + '</th>');
       buf.add('<th>' + Const.col('cult-power', Icon.money) + '</th>');
       buf.add('</tr>');
       
       // power row
       buf.add('<tr>');
       buf.add('<td class="cult-row-label">Power</td>');
-      buf.add('<td>' + cult.power.combat + '</td>');
-      buf.add('<td>' + cult.power.media + '</td>');
-      buf.add('<td>' + cult.power.lawfare + '</td>');
-      buf.add('<td>' + cult.power.corporate + '</td>');
-      buf.add('<td>' + cult.power.political + '</td>');
+      for (name in _CultPower.names)
+        buf.add('<td>' + cult.power.get(name) + '</td>');
       buf.add('<td>' + cult.power.money + '</td>');
       buf.add('</tr>');
       
       // income row
       buf.add('<tr class="cult-income">');
       buf.add('<td class="cult-row-label">Income</td>');
-      buf.add('<td>' + (Std.int(cult.power.combat / 3) > 0 ? '+' + Std.int(cult.power.combat / 3) : '-') + '</td>');
-      buf.add('<td>' + (Std.int(cult.power.media / 3) > 0 ? '+' + Std.int(cult.power.media / 3) : '-') + '</td>');
-      buf.add('<td>' + (Std.int(cult.power.lawfare / 3) > 0 ? '+' + Std.int(cult.power.lawfare / 3) : '-') + '</td>');
-      buf.add('<td>' + (Std.int(cult.power.corporate / 3) > 0 ? '+' + Std.int(cult.power.corporate / 3) : '-') + '</td>');
-      buf.add('<td>' + (Std.int(cult.power.political / 3) > 0 ? '+' + Std.int(cult.power.political / 3) : '-') + '</td>');
-      buf.add('<td>' + (Std.int(cult.power.money * 0.5) > 0 ? '+' + Std.int(cult.power.money * 0.5) : '-') + '</td>');
+      for (name in _CultPower.names)
+        {
+          var income = Std.int(cult.power.get(name) / 3);
+          buf.add('<td>' + (income > 0 ? '+' + income : '-') + '</td>');
+        }
+      var moneyIncome = Std.int(cult.power.money * 0.5);
+      buf.add('<td>' + (moneyIncome > 0 ? '+' + moneyIncome : '-') + '</td>');
       buf.add('</tr>');
       
       // resources row
       buf.add('<tr class="cult-resources">');
       buf.add('<td class="cult-row-label">Resources</td>');
-      buf.add('<td>' + cult.resources.combat + '</td>');
-      buf.add('<td>' + cult.resources.media + '</td>');
-      buf.add('<td>' + cult.resources.lawfare + '</td>');
-      buf.add('<td>' + cult.resources.corporate + '</td>');
-      buf.add('<td>' + cult.resources.political + '</td>');
+      for (name in _CultPower.names)
+        buf.add('<td>' + cult.resources.get(name) + '</td>');
       buf.add('<td>' + cult.resources.money + '</td>');
       buf.add('</tr>');
       buf.add('</table>');
@@ -113,7 +105,7 @@ class Cult extends UIWindow
             buf.add(' ' + Const.col('gray', '(leader)'));
           buf.add(' ');
           buf.add(Const.smallgray(m.job + ', ' + 
-            Const.col('white', '' + m.income) + Icon.money));
+            Const.col('white', m.income) + Icon.money));
           buf.add('<br/>');
         }
       buf.add('</span><br/>');
@@ -145,6 +137,8 @@ class Cult extends UIWindow
         updateActionsRecruit();
       else if (menuState == STATE_ORDEAL)
         updateActionsOrdeal();
+      else if (menuState == STATE_TRADE)
+        updateActionsTrade();
       
       // trigger content update animation on the whole actions block
       animate(actions);
@@ -169,6 +163,21 @@ class Cult extends UIWindow
             game.ui.closeWindow();
           }
           addPlayerAction(a);
+        }
+      
+      // action - trade (only show if at least 10k money)
+      if (cult.resources.money >= 10000)
+        {
+          addPlayerAction({
+            id: 'trade',
+            type: ACTION_CULT,
+            name: 'Trade ' + Icon.money,
+            energy: 0,
+            f: function() {
+              menuState = STATE_TRADE;
+              updateActions();
+            }
+          });
         }
       
       // action - initiate ordeal
@@ -202,6 +211,46 @@ class Cult extends UIWindow
           };
           
           addPlayerAction(ordealAction);
+        }
+    }
+
+// update actions for trade state
+  function updateActionsTrade()
+    {
+      // back button
+      addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          menuState = STATE_ROOT;
+          updateActions();
+        }
+      });
+      if (game.cults[0].resources.money < 10000)
+        return;
+      
+      var cult = game.cults[0];
+      var cost = 10000;
+      
+      // trade actions for each power type
+      for (i in 0..._CultPower.names.length)
+        {
+          var power = _CultPower.names[i];
+          var powerType = power; // capture the power type for the closure
+          addPlayerAction({
+            id: 'trade.' + power,
+            type: ACTION_CULT,
+            name: 'To ' + Const.col('cult-power', power) +
+              ' power (' +
+              Const.col('cult-power', cost) + Icon.money + ')',
+            energy: 0,
+            f: function() {
+              cult.trade(powerType);
+              update();
+            }
+          });
         }
     }
 
@@ -394,17 +443,17 @@ class Cult extends UIWindow
       buf.add('<div class="window-cult-ordeals-power">');
       var powerParts = [];
       if (ordeal.power.combat > 0)
-        powerParts.push('COMBAT ' + Const.col('white', '' + ordeal.power.combat));
+        powerParts.push('COMBAT ' + Const.col('white', ordeal.power.combat));
       if (ordeal.power.media > 0)
-        powerParts.push('MEDIA ' + Const.col('white', '' + ordeal.power.media));
+        powerParts.push('MEDIA ' + Const.col('white', ordeal.power.media));
       if (ordeal.power.lawfare > 0)
-        powerParts.push('LAWFARE ' + Const.col('white', '' + ordeal.power.lawfare));
+        powerParts.push('LAWFARE ' + Const.col('white', ordeal.power.lawfare));
       if (ordeal.power.corporate > 0)
-        powerParts.push('CORPORATE ' + Const.col('white', '' + ordeal.power.corporate));
+        powerParts.push('CORPORATE ' + Const.col('white', ordeal.power.corporate));
       if (ordeal.power.political > 0)
-        powerParts.push('POLITICAL ' + Const.col('white', '' + ordeal.power.political));
+        powerParts.push('POLITICAL ' + Const.col('white', ordeal.power.political));
       if (ordeal.power.money > 0)
-        powerParts.push(Const.col('white', '' + ordeal.power.money) + Icon.money);
+        powerParts.push(Const.col('white', ordeal.power.money) + Icon.money);
       
       if (powerParts.length > 0)
         buf.add('Power: ' + powerParts.join(', '));
