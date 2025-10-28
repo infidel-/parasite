@@ -496,6 +496,39 @@ hr {
   }
 }
 
+@keyframes actions-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+@keyframes actions-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes ordeals-rise-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .window {
   opacity: 0.9;
   z-index: 110;
@@ -1188,11 +1221,19 @@ input[type=checkbox] {
   min-height: 0;
 }
 
+.content-updating {
+  animation: actions-fade-in 0.2s ease-out;
+}
+
 #window-cult-ordeals {
   flex: 2;
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+#window-cult-ordeals .ordeals-updating {
+  animation: ordeals-rise-in 0.25s ease-out;
 }
 
 .window-cult-ordeals-row {

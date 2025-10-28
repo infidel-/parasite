@@ -112,7 +112,8 @@ class Cult extends UIWindow
           if (i == 0)
             buf.add(' ' + Const.col('gray', '(leader)'));
           buf.add(' ');
-          buf.add(Const.smallgray(m.job + ', ' + m.income + Icon.money));
+          buf.add(Const.smallgray(m.job + ', ' + 
+            Const.col('white', '' + m.income) + Icon.money));
           buf.add('<br/>');
         }
       buf.add('</span><br/>');
@@ -144,6 +145,9 @@ class Cult extends UIWindow
         updateActionsRecruit();
       else if (menuState == STATE_ORDEAL)
         updateActionsOrdeal();
+      
+      // trigger content update animation on the whole actions block
+      animate(actions);
     }
 
 // update actions for root state
@@ -313,23 +317,29 @@ class Cult extends UIWindow
 // update ordeals list
   function updateOrdeals()
     {
-      ordeals.innerHTML = '';
       var cult = game.cults[0];
+      var previousHTML = ordeals.innerHTML;
+      var newHTML = '';
       
       if (cult.ordeals.list.length == 0)
         {
-          ordeals.innerHTML = '<div class="window-empty">No active ordeals</div>';
-          return;
+          newHTML = '<div class="window-empty">No active ordeals</div>';
+        }
+      else
+        {
+          var buf = new StringBuf();
+          var n = 0;
+          for (ordeal in cult.ordeals.list)
+            {
+              addOrdealCard(buf, ordeal, (n % 2 == 0));
+              n++;
+            }
+          newHTML = buf.toString();
         }
       
-      var buf = new StringBuf();
-      var n = 0;
-      for (ordeal in cult.ordeals.list)
-        {
-          addOrdealCard(buf, ordeal, (n % 2 == 0));
-          n++;
-        }
-      ordeals.innerHTML = buf.toString();
+      ordeals.innerHTML = newHTML;
+      if (newHTML != previousHTML)
+        animate(ordeals, 'ordeals-updating');
     }
 
 // add ordeal card (col 0 or 1)

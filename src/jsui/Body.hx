@@ -244,6 +244,9 @@ class Body extends UIWindow
           organsActions.appendChild(action);
           listOrgansActions.push(act);
         }
+      
+      // trigger content update animation
+      animate(organsActions);
     }
 
 // update inventory list
@@ -308,6 +311,9 @@ class Body extends UIWindow
           };
           inventoryActions.appendChild(action);
         }
+      
+      // trigger content update animation
+      animate(inventoryActions);
     }
 
 // update parasite skills

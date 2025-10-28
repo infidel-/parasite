@@ -231,6 +231,19 @@ class UIWindow
   public dynamic function scrollToEnd()
     {}
 
+// animate element content update
+  function animate(actions: DivElement, ?className: String = 'content-updating')
+    {
+      var actionsBlock = actions;
+      actionsBlock.classList.remove(className);
+      // force a reflow so the animation restarts
+      untyped actionsBlock.offsetHeight;
+      actionsBlock.classList.add(className);
+      haxe.Timer.delay(function() {
+        actionsBlock.classList.remove(className);
+      }, 300);
+    }
+
 // show window
   public function show(?skipAnimation: Bool = false)
     {
