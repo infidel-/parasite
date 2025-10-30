@@ -1725,3 +1725,26 @@ input[type="radio"]:focus {
   text-align: left;
   padding-left: 12px;
 }
+
+/* cult members table styling */
+.cult-members-table {
+  width: 50%;
+  border-collapse: collapse;
+  border: 4px solid rgb(0 0 0 / 0%);
+  background-color: rgb(25 41 67 / 30%);
+}
+
+.cult-members-table th {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid rgba(79, 104, 142, 0.3);
+}
+
+.cult-members-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(79, 104, 142, 0.2);
+}
+
+.cult-members-table tbody tr:last-child td {
+  border-bottom: none;
+}

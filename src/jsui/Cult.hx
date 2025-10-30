@@ -102,21 +102,40 @@ class Cult extends UIWindow
       buf.add('</tr>');
       buf.add('</table>');
 
-      // members list
+      // members list table
       buf.add('<br/>');
+      buf.add('<table class="cult-members-table">');
+      buf.add('<thead>');
+      buf.add('<tr>');
+      buf.add('<th>' + Const.smallgray('name') + '</th>');
+      buf.add('<th>' + Const.smallgray('occupation') + '</th>');
+      buf.add('<th>' + Const.smallgray('income') + '</th>');
+      buf.add('<th>' + Const.smallgray('status') + '</th>');
+      buf.add('</tr>');
+      buf.add('</thead>');
+      buf.add('<tbody>');
       for (i => m in cult.members)
         {
+          buf.add('<tr>');
+          buf.add('<td>');
           buf.add(m.TheName());
           if (i == 0)
             buf.add(' ' + Const.col('gray', '(leader)'));
-          buf.add(' ');
-          buf.add(Const.smallgray(m.job + ', ' + 
-            Const.col('white', m.income) + Icon.money));
+          buf.add('</td>');
+          var jobInfo = game.jobs.getJobInfo(m.job);
+          buf.add('<td>' + Const.smallgray('[' + jobInfo.level + '] ' + m.job) + '</td>');
+          buf.add('<td>' + Const.col('white', m.income) + Icon.money + '</td>');
           var status = cult.getMemberStatus(m.id);
+          buf.add('<td>');
           if (status != '')
-            buf.add(' ' + Const.smallgray(status));
-          buf.add('<br/>');
+            buf.add(Const.smallgray(status));
+          else
+            buf.add(Const.smallgray('-'));
+          buf.add('</td>');
+          buf.add('</tr>');
         }
+      buf.add('</tbody>');
+      buf.add('</table>');
       buf.add('</span><br/>');
       buf.add('<span class=gray>Members: ' +
         cult.members.length + '/' + cult.maxSize() + '</span><br/>');
