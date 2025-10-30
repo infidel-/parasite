@@ -112,6 +112,9 @@ class Cult extends UIWindow
           buf.add(' ');
           buf.add(Const.smallgray(m.job + ', ' + 
             Const.col('white', m.income) + Icon.money));
+          var status = cult.getMemberStatus(m.id);
+          if (status != '')
+            buf.add(' ' + Const.smallgray(status));
           buf.add('<br/>');
         }
       buf.add('</span><br/>');

@@ -238,6 +238,37 @@ class Cult extends _SaveObject
       return null;
     }
 
+// get member status string
+  public function getMemberStatus(memberID: Int): String
+    {
+      var member = getMemberByID(memberID);
+      if (member == null)
+        return '';
+      
+      // check if member is locked in an ordeal
+      var lockedIDs = new Map<Int, Bool>();
+      for (ordeal in ordeals.list)
+        {
+          var locked = ordeal.getLockedCultists();
+          for (id in locked)
+            lockedIDs.set(id, true);
+        }
+      
+      if (lockedIDs.exists(memberID))
+        return '[in ordeal]';
+      
+      // check if cultist is on area
+      if (game.location == LOCATION_AREA &&
+          game.area != null)
+        {
+          var tmp = game.area.getAIByID(memberID);
+          if (tmp != null)
+            return '[on location]';
+        }
+      
+      return '';
+    }
+
 // call for help
   function callHelpAction(action: _PlayerAction): Bool
     {
