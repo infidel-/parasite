@@ -1,3 +1,5 @@
+import _AIJobGroup;
+
 @:structInit
 class _CultPower extends _SaveObject
 {
@@ -78,6 +80,26 @@ class _CultPower extends _SaveObject
           case 'political': political = val;
           case 'occult': occult = val;
           case 'money': money = val;
+        }
+    }
+
+// set field value by job group
+  public function setByGroup(group: _AIJobGroup, val: Int): Void
+    {
+      switch (group)
+        {
+          case GROUP_COMBAT:
+            combat = val;
+          case GROUP_MEDIA:
+            media = val;
+          case GROUP_LAWFARE:
+            lawfare = val;
+          case GROUP_CORPORATE:
+            corporate = val;
+          case GROUP_POLITICAL:
+            political = val;
+          default:
+            combat = val; // default to combat
         }
     }
 

@@ -70,6 +70,12 @@ class Ordeal extends _SaveObject
         }
     }
 
+// get list of cultist IDs locked by this ordeal
+  public function getLockedCultists(): Array<Int>
+    {
+      return members;
+    }
+
 // get custom name for display
   public function customName(): String
     {

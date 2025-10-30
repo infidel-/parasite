@@ -1485,8 +1485,30 @@ class Jobs
       return jobsByName.get(name);
     }
 
+  // get random job by group and level
+  public function getJobByGroupAndLevel(group: _AIJobGroup, level: Int): _JobInfo
+    {
+      var infos = jobsByGroup.get(group);
+      if (infos == null || infos.length == 0)
+        return null;
+      
+      // find jobs with matching level
+      var matchingLevel = [];
+      for (info in infos)
+        {
+          if (info.level == level)
+            matchingLevel.push(info);
+        }
+      
+      if (matchingLevel.length == 0)
+        return null;
+      
+      // return random job of matching level
+      return matchingLevel[Std.random(matchingLevel.length)];
+    }
+
   // common helper to roll job info from a pool of job infos
-  function rollJobInfo(pool: Array<_JobInfo>): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
+  public function rollJobInfo(pool: Array<_JobInfo>): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
     {
       // pick random job from pool
       var picked = pool[Std.random(pool.length)];
@@ -1542,7 +1564,8 @@ class Jobs
       return rollJobInfo(pool);
     }
 
-  // returns random job info for the provided group string
+// returns random job info for the provided group string
+// NOTE: used in recruit follower ordeal, level limited
   public function getRandomByGroup(type: String): { name: String, income: Int, isRare: Bool, jobInfo: _JobInfo }
     {
       // convert string type to job group
@@ -1572,7 +1595,29 @@ class Jobs
           jobInfo: null
         };
       
-      return rollJobInfo(infos);
+      // level 3 cannot be spawned by chance (follows street spawn job level logic)
+      var level1: Array<_JobInfo> = [];
+      var level2: Array<_JobInfo> = [];
+      for (info in infos)
+        {
+          switch (info.level)
+            {
+              case 1:
+                level1.push(info);
+              case 2:
+                level2.push(info);
+              default:
+            }
+        }
+      var pool: Array<_JobInfo> = level1;
+      // level 2 has 10% chance to spawn
+      if (level2.length > 0 && Std.random(100) < 10)
+        pool = level2;
+      
+      if (pool.length == 0)
+        pool = infos;
+      
+      return rollJobInfo(pool);
     }
 
   // get sorted and unique list of civilian job types

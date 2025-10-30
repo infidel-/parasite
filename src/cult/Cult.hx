@@ -64,7 +64,14 @@ class Cult extends _SaveObject
 
 // called after load or creation
   public function initPost(onLoad: Bool)
+    {}
+
+// post load
+  public function loadPost()
     {
+      for (ai in members)
+        if (ai.id > AIData._maxID)
+          AIData._maxID = ai.id;
     }
 
 // create cult (add leader)
@@ -183,40 +190,33 @@ class Cult extends _SaveObject
       return true;
     }
 
-// get a list of free cultists
-  function getFreeCultists(): Array<AIData>
-    {
-      // get a list of free cultists
-      var free = [];
-      for (ai in members)
-        {
-          // cultist already in this area
-          var tmp = game.area.getAIByID(ai.id);
-          if (tmp != null)
-            continue;
-          free.push(ai);
-        }
-      return free;
-    }
-
 // get free members with specified level or higher
   public function getFreeMembers(level: Int): Array<Int>
     {
+      // get map of locked cultist IDs from ordeals
+      var lockedIDs = new Map<Int, Bool>();
+      for (ordeal in ordeals.list)
+        {
+          var locked = ordeal.getLockedCultists();
+          for (id in locked)
+            lockedIDs.set(id, true);
+        }
+      
       var free = [];
       for (ai in members)
         {
-          // check if member is already in an ordeal
-          var isInOrdeal = false;
-          for (ordeal in ordeals.list)
-            {
-              if (ordeal.members.indexOf(ai.id) != -1)
-                {
-                  isInOrdeal = true;
-                  break;
-                }
-            }
-          if (isInOrdeal)
+          // check if member is locked in an ordeal
+          if (lockedIDs.exists(ai.id))
             continue;
+          
+          // check if cultist is already in this area
+          if (game.location == LOCATION_AREA &&
+              game.area != null)
+            {
+              var tmp = game.area.getAIByID(ai.id);
+              if (tmp != null)
+                continue;
+            }
           
           // check member level
           var jobInfo = game.jobs.getJobInfo(ai.job);
@@ -227,11 +227,22 @@ class Cult extends _SaveObject
       return free;
     }
 
+// get member by ID
+  public function getMemberByID(memberID: Int): AIData
+    {
+      for (m in members)
+        {
+          if (m.id == memberID)
+            return m;
+        }
+      return null;
+    }
+
 // call for help
   function callHelpAction(action: _PlayerAction): Bool
     {
       // find what cultists are available
-      var free = getFreeCultists();
+      var free = getFreeMembers(1);
       if (free.length == 0)
         {
           game.actionFailed('There are no more faithful available.');
@@ -256,14 +267,19 @@ class Cult extends _SaveObject
 // area manager: cultist arrives
   public function onArriveCultist(e: AreaEvent)
     {
+      if (game.cults[0].state != CULT_STATE_ACTIVE)
+        return;
       // find what cultists are still available
-      var free = getFreeCultists();
-      if (free.length == 0)
+      var freeIDs = getFreeMembers(1);
+      if (freeIDs.length == 0)
         return;
 
       // pick a cultist
-      var idx = Std.random(free.length);
-      var aidata = free[idx];
+      var idx = Std.random(freeIDs.length);
+      var memberID = freeIDs[idx];
+      var aidata = getMemberByID(memberID);
+      if (aidata == null)
+        return;
       game.debug(aidata.TheName() + ' has arrived.');
 //          log('calls for help: ' + ai.theName());
       game.scene.sounds.play('ai-arrive-security', {

@@ -824,6 +824,8 @@ class Game extends _SaveObject
         region.enter();
       player.loadPost();
       scene.sounds.loadPost();
+      for (cult in cults)
+        cult.loadPost();
       log('Game loaded from slot ' + slotID + '.');
     }
 

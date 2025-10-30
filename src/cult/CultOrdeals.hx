@@ -87,6 +87,19 @@ class CultOrdeals extends _SaveObject
           });
         }
       
+      // check if there are enough free members for upgrade action
+      if (freeMembers.length >= 3) // 2 + target
+        {
+          // elevate the faithful action - opens submenu
+          actions.push({
+            id: 'upgrade',
+            type: ACTION_CULT,
+            name: 'Elevate the faithful',
+            energy: 0,
+            obj: { submenu: 'upgrade' }
+          });
+        }
+      
       return actions;
     }
 
@@ -148,6 +161,55 @@ class CultOrdeals extends _SaveObject
       return actions;
     }
 
+// get upgrade submenu actions
+  public function getUpgradeActions(): Array<_PlayerAction>
+    {
+      var actions: Array<_PlayerAction> = [];
+      
+      // back button
+      actions.push({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        obj: { submenu: 'back' }
+      });
+      
+      // get free members of level 1
+      var freeMembers = cult.getFreeMembers(1);
+      for (memberID in freeMembers)
+        {
+          // find member data
+          var member = null;
+          for (m in cult.members)
+            {
+              if (m.id == memberID)
+                {
+                  member = m;
+                  break;
+                }
+            }
+          if (member == null)
+            continue;
+
+          // only show level 1 members
+          var jobInfo = game.jobs.getJobInfo(member.job);
+          if (jobInfo != null &&
+              jobInfo.level == 1)
+            {
+              actions.push({
+                id: 'upgrade',
+                type: ACTION_CULT,
+                name: member.TheName(),
+                energy: 0,
+                obj: { targetID: memberID }
+              });
+            }
+        }
+      
+      return actions;
+    }
+
 // handle action execution
 // menu returns to root after this action
   public function action(action: _PlayerAction)
@@ -163,6 +225,41 @@ class CultOrdeals extends _SaveObject
             {
               var randomMemberID = freeMembers[Std.random(freeMembers.length)];
               ordeal.addMembers([randomMemberID]);
+            }
+          
+          list.push(ordeal);
+          game.ui.updateWindow();
+          return;
+        }
+      
+      // handle upgrade actions
+      if (action.id == 'upgrade')
+        {
+          var targetID = action.obj.targetID;
+          var ordeal = new UpgradeFollower(game, targetID);
+          
+          // add two random free members of level 1 to ordeal (excluding target)
+          var freeMembers = cult.getFreeMembers(1);
+          var availableMembers = [];
+          for (memberID in freeMembers)
+            {
+              if (memberID != targetID)
+                availableMembers.push(memberID);
+            }
+          
+          if (availableMembers.length >= 2)
+            {
+              // shuffle and take first 2
+              var shuffled = [];
+              for (id in availableMembers)
+                shuffled.push(id);
+              shuffled.sort(function(a, b) return Std.random(3) - 1);
+              ordeal.addMembers([shuffled[0], shuffled[1]]);
+            }
+          else if (availableMembers.length >= 1)
+            {
+              // only one available, use it twice (or handle gracefully)
+              ordeal.addMembers([availableMembers[0]]);
             }
           
           list.push(ordeal);

@@ -108,6 +108,7 @@ class Images
     }
 
 // get formal civilian sprite data for specific job type
+// NOTE: used in recruit follower ordeal, level limited
   public function getFormalCivilianAI(type: String, isMale: Bool): _CivilianData
     {
       var civilians = (isMale ? civiliansMale : civiliansFemale);

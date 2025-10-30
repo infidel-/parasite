@@ -25,27 +25,13 @@ class RecruitFollower extends Ordeal
       type = ORDEAL_COMMUNAL;
       requiredMembers = 1;
       requiredMemberLevels = 1;
-      actions = 1;
+      actions = requiredMembers;
       note = 'Seek out those who hold sway over ' + followerType + ' matters.';
       // we pick target on creation based on follower type
       selectTarget();
       
       // set ordeal power based on follower type
-      switch (followerType)
-        {
-          case 'combat':
-            power.combat = 1;
-          case 'media':
-            power.media = 1;
-          case 'lawfare':
-            power.lawfare = 1;
-          case 'corporate':
-            power.corporate = 1;
-          case 'political':
-            power.political = 1;
-          default:
-            power.combat = 1; // default to combat
-        }
+      power.inc(followerType, 1);
       power.money = 5000;
     }
 

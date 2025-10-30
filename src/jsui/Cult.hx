@@ -135,16 +135,21 @@ class Cult extends UIWindow
       listActions = [];
       actions.innerHTML = '';
 
-      if (menuState == STATE_ROOT)
-        updateActionsRoot();
-      else if (menuState == STATE_INITIATE)
-        updateActionsInitiate();
-      else if (menuState == STATE_RECRUIT)
-        updateActionsRecruit();
-      else if (menuState == STATE_ORDEAL)
-        updateActionsOrdeal();
-      else if (menuState == STATE_TRADE)
-        updateActionsTrade();
+      switch (menuState)
+        {
+          case STATE_ROOT:
+            updateActionsRoot();
+          case STATE_INITIATE:
+            updateActionsInitiate();
+          case STATE_RECRUIT:
+            updateActionsRecruit();
+          case STATE_ORDEAL:
+            updateActionsOrdeal();
+          case STATE_TRADE:
+            updateActionsTrade();
+          case STATE_UPGRADE:
+            updateActionsUpgrade();
+        }
       
       // trigger content update animation on the whole actions block
       animate(actions);
@@ -260,7 +265,7 @@ class Cult extends UIWindow
         }
     }
 
-// update actions for initiate state
+// update actions for initiate ordeal state
   function updateActionsInitiate()
     {
       var cult = game.cults[0];
@@ -281,12 +286,19 @@ class Cult extends UIWindow
       var ordealActions = cult.ordeals.getInitiateOrdealActions();
       for (a in ordealActions)
         {
-          // check if this action opens a submenu before creating closure
           if (a.obj != null &&
               a.obj.submenu == 'recruit')
             {
               a.f = function() {
                 menuState = STATE_RECRUIT;
+                updateActions();
+              }
+            }
+          else if (a.obj != null &&
+                   a.obj.submenu == 'upgrade')
+            {
+              a.f = function() {
+                menuState = STATE_UPGRADE;
                 updateActions();
               }
             }
@@ -324,6 +336,35 @@ class Cult extends UIWindow
             menuState = STATE_ROOT;
             updateActions();
           }
+          addPlayerAction(a);
+        }
+    }
+
+// update actions for upgrade state
+  function updateActionsUpgrade()
+    {
+      var cult = game.cults[0];
+      
+      // get upgrade actions from cult.ordeals
+      var upgradeActions = cult.ordeals.getUpgradeActions();
+      for (a in upgradeActions)
+        {
+          // set different f function based on whether obj exists
+          if (a.obj != null &&
+              a.obj.submenu == 'back')
+            a.f = function() {
+              menuState = STATE_INITIATE;
+              updateActions();
+            }
+          else
+            {
+              var actionObj = a; // capture the action object
+              a.f = function() {
+                cult.ordeals.action(actionObj);
+                menuState = STATE_ROOT;
+                updateActions();
+              }
+            }
           addPlayerAction(a);
         }
     }
