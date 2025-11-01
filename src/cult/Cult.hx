@@ -191,7 +191,7 @@ class Cult extends _SaveObject
     }
 
 // get free members with specified level or higher
-  public function getFreeMembers(level: Int): Array<Int>
+  public function getFreeMembers(level: Int, ?onlyGivenLevel: Bool = false): Array<Int>
     {
       // get map of locked cultist IDs from ordeals
       var lockedIDs = new Map<Int, Bool>();
@@ -220,9 +220,12 @@ class Cult extends _SaveObject
           
           // check member level
           var jobInfo = game.jobs.getJobInfo(ai.job);
-          if (jobInfo != null &&
-              jobInfo.level >= level)
-            free.push(ai.id);
+          if (jobInfo != null)
+            {
+              if ((onlyGivenLevel && jobInfo.level == level) ||
+                  (!onlyGivenLevel && jobInfo.level >= level))
+                free.push(ai.id);
+            }
         }
       return free;
     }

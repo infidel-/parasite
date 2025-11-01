@@ -99,6 +99,19 @@ class CultOrdeals extends _SaveObject
             obj: { submenu: 'upgrade' }
           });
         }
+
+      // check if there are enough free level 2 members for second upgrade
+      var freeLevelTwo = cult.getFreeMembers(2, true);
+      if (freeLevelTwo.length >= 3)
+        {
+          actions.push({
+            id: 'upgrade2',
+            type: ACTION_CULT,
+            name: 'Elevate the faithful II',
+            energy: 0,
+            obj: { submenu: 'upgrade2' }
+          });
+        }
       
       return actions;
     }
@@ -210,6 +223,41 @@ class CultOrdeals extends _SaveObject
       return actions;
     }
 
+// get upgrade II submenu actions
+  public function getUpgrade2Actions(): Array<_PlayerAction>
+    {
+      var actions: Array<_PlayerAction> = [];
+      
+      actions.push({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        obj: { submenu: 'back' }
+      });
+      
+      var freeMembers = cult.getFreeMembers(2, true);
+      if (freeMembers.length < 3)
+        return actions;
+      
+      for (memberID in freeMembers)
+        {
+          var member = cult.getMemberByID(memberID);
+          if (member == null)
+            continue;
+          
+          actions.push({
+            id: 'upgrade2',
+            type: ACTION_CULT,
+            name: member.TheName(),
+            energy: 0,
+            obj: { targetID: memberID }
+          });
+        }
+      
+      return actions;
+    }
+
 // handle action execution
 // menu returns to root after this action
   public function action(action: _PlayerAction)
@@ -261,6 +309,35 @@ class CultOrdeals extends _SaveObject
               // only one available, use it twice (or handle gracefully)
               ordeal.addMembers([availableMembers[0]]);
             }
+          
+          list.push(ordeal);
+          game.ui.updateWindow();
+          return;
+        }
+      
+      if (action.id == 'upgrade2')
+        {
+          var targetID = action.obj.targetID;
+          var ordeal = new UpgradeFollower2(game, targetID);
+          
+          var freeMembers = cult.getFreeMembers(2, true);
+          var availableMembers = [];
+          for (memberID in freeMembers)
+            if (memberID != targetID)
+              availableMembers.push(memberID);
+          
+          if (availableMembers.length < 2)
+            {
+              game.actionFailed('Two additional free level 2 or higher followers are required for the rite.');
+              return;
+            }
+          
+          var firstIdx = Std.random(availableMembers.length);
+          var helperOne = availableMembers[firstIdx];
+          availableMembers.splice(firstIdx, 1);
+          var secondIdx = Std.random(availableMembers.length);
+          var helperTwo = availableMembers[secondIdx];
+          ordeal.addMembers([helperOne, helperTwo]);
           
           list.push(ordeal);
           game.ui.updateWindow();

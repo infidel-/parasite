@@ -81,23 +81,7 @@ class UpgradeFollower extends Ordeal
         return;
 
       // upgrade member level
-      var jobInfo = game.jobs.getJobInfo(targetMember.job);
-      if (jobInfo != null &&
-          jobInfo.level < 3)
-        {
-          // find next level job
-          var nextLevel = jobInfo.level + 1;
-          var job = game.jobs.getJobByGroupAndLevel(jobInfo.group, nextLevel);
-          if (job != null)
-            {
-              // use rollJobInfo to get random name and income
-              var jobData = game.jobs.rollJobInfo([job]);
-              targetMember.job = jobData.name;
-              targetMember.income = jobData.income;
-              cult.log('member ' + targetMember.TheName() + ' has been elevated to level ' + nextLevel);
-              cult.recalc();
-            }
-        }
+      UpgradeFollower.upgradeMember(game, cult, targetMember);
     }
 
 // get custom name for display
@@ -105,5 +89,26 @@ class UpgradeFollower extends Ordeal
     {
       var aidata = cult.getMemberByID(targetID);
       return name + ' - ' + aidata.TheName();
+    }
+
+// upgrade member to next job level if available
+  public static function upgradeMember(game: Game, cult: Cult, member: AIData): Bool
+    {
+      var jobInfo = game.jobs.getJobInfo(member.job);
+      if (jobInfo == null ||
+          jobInfo.level >= 3)
+        return false;
+
+      var nextLevel = jobInfo.level + 1;
+      var job = game.jobs.getJobByGroupAndLevel(jobInfo.group, nextLevel);
+      if (job == null)
+        return false;
+
+      var jobData = game.jobs.rollJobInfo([job]);
+      member.job = jobData.name;
+      member.income = jobData.income;
+      cult.log('member ' + member.TheName() + ' has been elevated to level ' + nextLevel);
+      cult.recalc();
+      return true;
     }
 }

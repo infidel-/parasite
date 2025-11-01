@@ -32,6 +32,7 @@ class UI
   var awaitingNextKey: Bool; // true when waiting for second key press for quick menu
   public var cult(get, never): jsui.Cult;
   public var pedia(get, never): jsui.Pedia;
+  public var difficulty(get, never): jsui.Difficulty;
   public var mainMenu(get, never): jsui.MainMenu;
 
   public function new(g: Game)
@@ -66,13 +67,14 @@ class UI
       Browser.window.onerror = onError;
 #end
 
-      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_YESNO, UISTATE_DOCUMENT ];
-      uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY ];
+      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO, UISTATE_DOCUMENT ];
+      uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY, UISTATE_CHOICE ];
       components = [
         UISTATE_MESSAGE => new Message(game),
         UISTATE_DOCUMENT => new Document(game),
         UISTATE_YESNO => new YesNo(game),
         UISTATE_DIFFICULTY => new Difficulty(game),
+        UISTATE_CHOICE => new Choice(game),
 
         UISTATE_GOALS => new Goals(game),
         UISTATE_LOG => new Log(game),
@@ -585,6 +587,11 @@ class UI
       return cast components[UISTATE_PEDIA];
     }
 
+  function get_difficulty(): jsui.Difficulty
+    {
+      return cast components[UISTATE_DIFFICULTY];
+    }
+
   function get_mainMenu(): jsui.MainMenu
     {
       return cast components[UISTATE_MAINMENU];
@@ -672,9 +679,8 @@ class UI
               if (ev.state == UISTATE_DIFFICULTY &&
                   game.config.difficulty > 0)
                 {
-                  components[ev.state].setParams(ev.obj);
-                  var win: jsui.Difficulty = cast components[ev.state];
-                  win.action(game.config.difficulty);
+                  difficulty.setParams(ev.obj);
+                  difficulty.action(game.config.difficulty);
                   return;
                 }
 
@@ -682,18 +688,17 @@ class UI
               else if (ev.state == UISTATE_DIFFICULTY &&
                   game.config.difficulty < 0)
                 {
-                  var difficulty = game.config.difficulty;
+                  var difficultySetting = game.config.difficulty;
                   var presets = game.profile.object.difficultyPresets;
-                  var presetID = - difficulty - 1;
+                  var presetID = - difficultySetting - 1;
                   if (presets.length > presetID)
-                    difficulty = Reflect.field(
+                    difficultySetting = Reflect.field(
                       presets[presetID], ev.obj);
-                  else trace('no difficulty preset for ' + difficulty);
-                  if (difficulty == null)
-                    difficulty = 1;
-                  components[ev.state].setParams(ev.obj);
-                  var win: jsui.Difficulty = cast components[ev.state];
-                  win.action(difficulty);
+                  else trace('no difficulty preset for ' + difficultySetting);
+                  if (difficultySetting == null)
+                    difficultySetting = 1;
+                  this.difficulty.setParams(ev.obj);
+                  this.difficulty.action(difficultySetting);
                   return;
                 }
               // set window params and then open window

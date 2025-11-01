@@ -7,6 +7,6 @@ enum _UICultState
   STATE_ORDEAL;
   STATE_TRADE;
   STATE_UPGRADE;
+  STATE_UPGRADE_TWO;
 }
-
 

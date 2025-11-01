@@ -41,6 +41,7 @@
   --text-color-group-title: #ff7f73;
   --text-color-group-note: #e35c3f;
   --text-color-cult-power: #52eca5;
+  --text-color-occasio: #f3d28c;
   --main-menu-bg: url(./img/misc/bg1.jpg);
   --message-img-display: block;
 }
@@ -593,7 +594,9 @@ hr {
   left: 50%;
   opacity: 1;
   text-align: center;
-  width: 7ch;
+  padding-left: 1em;
+  padding-right: 1em;
+  white-space: nowrap;
   -webkit-transform: translate3d(-50%, 0, 0);
 }
 
@@ -605,16 +608,36 @@ hr {
   left: 63%;
 }
 
-#window-difficulty-easy {
+.window-choice-1 {
   left: 23%;
 }
 
-#window-difficulty-normal {
+.window-choice-2 {
   left: 49%;
 }
 
-#window-difficulty-hard {
+.window-choice-3 {
   left: 75%;
+}
+
+.window-occasio-text {
+  font-style: italic;
+  color: var(--text-color-occasio);
+  background: rgba(15, 22, 30, 0.3);
+  padding: 0.75em 1em;
+  border-radius: 6px;
+  margin-top: 1em;
+}
+
+.window-choice-notes {
+  margin-top: 1.5em;
+  text-align: center;
+}
+
+.window-choice-note {
+  font-style: italic;
+  opacity: 0.85;
+  margin-top: 0.75em;
 }
 
 #window-goals {

@@ -2,6 +2,7 @@
 package console;
 
 import game.Game;
+import cult.UpgradeFollower;
 
 class Cult
 {
@@ -31,6 +32,7 @@ class Cult
               log('Cult commands:');
               log('cu/cult gr - give +10 all resources and +100k money');
               log('cu/cult t - call cult turn');
+              log('cu/cult u1 - upgrade random level 1 follower to level 2');
               return true;
             }
           
@@ -45,6 +47,13 @@ class Cult
           if (arr[1] == 't')
             {
               advanceTurn();
+              return true;
+            }
+
+          // cu/cult u1 - upgrade random level 1 member
+          if (arr[1] == 'u1')
+            {
+              upgradeRandomLevelOne();
               return true;
             }
           
@@ -88,6 +97,54 @@ class Cult
       cult.turn(10);
       
       log('Called next cult turn.');
+    }
+
+// upgrade random level 1 member to level 2
+  function upgradeRandomLevelOne()
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+
+      var cult = game.cults[0];
+      if (cult.members.length == 0)
+        {
+          log('Cult has no members.');
+          return;
+        }
+
+      var freeIDs = cult.getFreeMembers(1);
+      if (freeIDs.length == 0)
+        {
+          log('No free followers available.');
+          return;
+        }
+
+      var levelOne = [];
+      for (id in freeIDs)
+        {
+          var member = cult.getMemberByID(id);
+          if (member == null)
+            continue;
+          var jobInfo = game.jobs.getJobInfo(member.job);
+          if (jobInfo != null &&
+              jobInfo.level == 1)
+            levelOne.push(member);
+        }
+
+      if (levelOne.length == 0)
+        {
+          log('No free level 1 followers available.');
+          return;
+        }
+
+      var target = levelOne[Std.random(levelOne.length)];
+      if (UpgradeFollower.upgradeMember(game, cult, target))
+        log('Upgraded ' + target.TheName() + ' to level 2.');
+      else
+        log('Failed to upgrade follower.');
     }
 
 // log shortcut

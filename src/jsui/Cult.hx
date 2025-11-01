@@ -171,6 +171,8 @@ class Cult extends UIWindow
             updateActionsTrade();
           case STATE_UPGRADE:
             updateActionsUpgrade();
+          case STATE_UPGRADE_TWO:
+            updateActionsUpgradeTwo();
         }
       
       // trigger content update animation on the whole actions block
@@ -324,6 +326,14 @@ class Cult extends UIWindow
                 updateActions();
               }
             }
+          else if (a.obj != null &&
+                   a.obj.submenu == 'upgrade2')
+            {
+              a.f = function() {
+                menuState = STATE_UPGRADE_TWO;
+                updateActions();
+              }
+            }
           else
             {
               var actionObj = a; // capture the action object
@@ -381,6 +391,33 @@ class Cult extends UIWindow
           else
             {
               var actionObj = a; // capture the action object
+              a.f = function() {
+                cult.ordeals.action(actionObj);
+                menuState = STATE_ROOT;
+                updateActions();
+              }
+            }
+          addPlayerAction(a);
+        }
+    }
+
+// update actions for second tier upgrade state
+  function updateActionsUpgradeTwo()
+    {
+      var cult = game.cults[0];
+      
+      var upgradeActions = cult.ordeals.getUpgrade2Actions();
+      for (a in upgradeActions)
+        {
+          if (a.obj != null &&
+              a.obj.submenu == 'back')
+            a.f = function() {
+              menuState = STATE_INITIATE;
+              updateActions();
+            }
+          else
+            {
+              var actionObj = a;
               a.f = function() {
                 cult.ordeals.action(actionObj);
                 menuState = STATE_ROOT;

@@ -36,8 +36,7 @@ class Difficulty extends UIWindow
       outerText.appendChild(text);
 
       var easy = Browser.document.createDivElement();
-      easy.className = 'hud-button window-dialog-button';
-      easy.id = 'window-difficulty-easy';
+      easy.className = 'hud-button window-dialog-button window-choice-1';
       easy.innerHTML = 'EASY';
       easy.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       easy.onclick = function (e) {
@@ -53,8 +52,7 @@ class Difficulty extends UIWindow
       window.appendChild(easy);
 
       var normal = Browser.document.createDivElement();
-      normal.className = 'hud-button window-dialog-button';
-      normal.id = 'window-difficulty-normal';
+      normal.className = 'hud-button window-dialog-button window-choice-2';
       normal.innerHTML = 'NORMAL';
       normal.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       normal.onclick = function (e) {
@@ -70,8 +68,7 @@ class Difficulty extends UIWindow
       window.appendChild(normal);
 
       var hard = Browser.document.createDivElement();
-      hard.className = 'hud-button window-dialog-button';
-      hard.id = 'window-difficulty-hard';
+      hard.className = 'hud-button window-dialog-button window-choice-3';
       hard.innerHTML = 'HARD';
       hard.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       hard.onclick = function (e) {
@@ -98,7 +95,7 @@ class Difficulty extends UIWindow
       img.onload = function() {
         // image loaded, now set header html
         header.innerHTML =
-          '<center><h3>Difficulty: ' + currentChoice.title + '</h3><br></center>' +
+          '<center><h3>' + Const.col('gray', 'Difficulty: ') + currentChoice.title + '</h3><br></center>' +
           '<img class=message-img src="img/difficulty/' + currentChoice.id + '.jpg">';
       };
       img.src = 'img/difficulty/' + currentChoice.id + '.jpg';

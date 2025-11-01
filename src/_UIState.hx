@@ -21,6 +21,7 @@ enum _UIState {
   UISTATE_CULT; // cult details window
 
   UISTATE_DIFFICULTY; // difficulty setting
+  UISTATE_CHOICE; // occasio choice window
   UISTATE_YESNO; // yes/no dialog window
   UISTATE_DOCUMENT; // text document window
   UISTATE_PRESETS; // presets window
