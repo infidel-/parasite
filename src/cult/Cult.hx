@@ -97,12 +97,29 @@ class Cult extends _SaveObject
     }
 
 // add member from AIData
+// NOTE: this is called from recruit follower/chat
   public function addAIData(aidata: AIData)
     {
       // check for max cultists
       if (members.length >= maxSize())
         {
           game.actionFailed('Maximum number of members reached.');
+          return;
+        }
+
+      // check for max jobs
+      var jobInfo = game.jobs.getJobInfo(aidata.job);
+      if (jobInfo == null)
+        {
+          game.actionFailed('Unknown job.');
+          return;
+        }
+      var level = jobInfo.level;
+      var levelLimit = getLevelLimit(level);
+      if (levelLimit >= 0 &&
+          countMembersAtLevel(level) >= levelLimit)
+        {
+          game.actionFailed('Maximum number of level ' + level + ' members reached.');
           return;
         }
 
@@ -450,6 +467,44 @@ class Cult extends _SaveObject
   public function maxSize(): Int
     {
       return 10;
+    }
+
+// counts current cult members at specified job level
+  function countMembersAtLevel(level: Int): Int
+    {
+      var count = 0;
+      for (member in members)
+        {
+          var memberJob = game.jobs.getJobInfo(member.job);
+          if (memberJob != null && memberJob.level == level)
+            count++;
+        }
+      return count;
+    }
+
+// returns maximum allowed cult members for provided level
+  function getLevelLimit(level: Int): Int
+    {
+      switch (level)
+        {
+          case 3:
+            return 1;
+          case 2:
+            return 3;
+          case 1:
+            return 6;
+          default:
+            return -1;
+        }
+    }
+
+// checks if cult has room for another member at provided level
+  public function canAddMemberAtLevel(level: Int): Bool
+    {
+      var limit = getLevelLimit(level);
+      if (limit < 0)
+        return true;
+      return countMembersAtLevel(level) < limit;
     }
 
   function get_leader(): AIData

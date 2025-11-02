@@ -914,8 +914,15 @@ class Chat extends _SaveObject
           
           return false;
         }
-      if (cult.members.length >= cult.maxSize()) 
+      // check for max cultists
+      if (cult.members.length >= cult.maxSize())
         return false;
+      // check for max jobs
+      var jobInfo = game.jobs.getJobInfo(aidata.job);
+      if (jobInfo == null)
+        return false;
+      if (cult.countMembersAtLevel(jobInfo.level) >=
+          cult.getLevelLimit(jobInfo.level))
       return true;
     }
 

@@ -4,7 +4,6 @@ import game.Game;
 import jsui.Choice._ChoiceParams;
 import Const;
 import _CultEvent;
-import _CultEventChoice;
 import cult.Cult;
 
 class UpgradeFollower2 extends UpgradeFollower

@@ -88,7 +88,8 @@ class CultOrdeals extends _SaveObject
         }
       
       // check if there are enough free members for upgrade action
-      if (freeMembers.length >= 3) // 2 + target
+      if (freeMembers.length >= 3 &&
+          cult.canAddMemberAtLevel(2)) // 2 + target
         {
           // elevate the faithful action - opens submenu
           actions.push({
@@ -102,7 +103,8 @@ class CultOrdeals extends _SaveObject
 
       // check if there are enough free level 2 members for second upgrade
       var freeLevelTwo = cult.getFreeMembers(2, true);
-      if (freeLevelTwo.length >= 3)
+      if (freeLevelTwo.length >= 3 &&
+          cult.canAddMemberAtLevel(3))
         {
           actions.push({
             id: 'upgrade2',
