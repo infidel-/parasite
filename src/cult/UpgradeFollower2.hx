@@ -1,9 +1,11 @@
-// upgrade follower II ordeal
 package cult;
 
 import game.Game;
-import ai.*;
 import jsui.Choice._ChoiceParams;
+import Const;
+import _CultEvent;
+import _CultEventChoice;
+import cult.Cult;
 
 class UpgradeFollower2 extends UpgradeFollower
 {
@@ -42,12 +44,6 @@ class UpgradeFollower2 extends UpgradeFollower
         }
     }
 
-// called after load or creation
-  public override function initPost(onLoad: Bool)
-    {
-      super.initPost(onLoad);
-    }
-
 // handle successful completion
   public override function onSuccess()
     {
@@ -59,27 +55,35 @@ class UpgradeFollower2 extends UpgradeFollower
       // upgrade member level
       UpgradeFollower.upgradeMember(game, cult, targetMember);
 
+      // pick upgrade event
+      var jobInfo = game.jobs.getJobInfo(targetMember.job);
+      var event = UpgradeFollowerEvents.getRandom(jobInfo.group);
+      var payload = {
+        event: event,
+        game: game,
+        cult: cult
+      };
+
+      // create choice window
       var params: _ChoiceParams = {
-        title: Const.col('occasio', 'Occasio: ') + 'Test Rite',
-        text: 'A moment of Occasio follows the ascension, as whispered prayers coil around the sanctum. The faithful gather to debate how best to wield the surge of favor, weighing omen, silver, and secrecy in equal measure. Their verdict will ripple through the cult\'s next hundred turns, shaping how devotion is tithed and where influence takes root.',
-        choices: [
-          'Invoke the blood hymn to gain occult insight.',
-          'Disperse alms among sympathisers to secure wealth.',
-          'Hold a clandestine vigil to steady political ties.'
-        ],
-        buttons: [
-          'Blood Hymn',
-          'Golden Tithe',
-          'Silent Vigil'
-        ],
-        src: this,
+        title: Const.col('occasio', 'Occasio') + ': ' + event.title,
+        text: event.text,
+        choices: [],
+        buttons: [],
+        src: payload,
         textClass: 'window-occasio-text',
         f: function(src: Dynamic, choiceID: Int)
           {
-            var ordeal: UpgradeFollower2 = cast src;
-            ordeal.cult.log('Occasio choice selected: ' + choiceID);
+            var data: { event: _CultEvent, game: Game, cult: Cult } = cast src;
+            var choice = data.event.choices[choiceID];
+            choice.f(data.game, data.cult);
           }
       };
+      for (choice in event.choices)
+        {
+          params.buttons.push(choice.button);
+          params.choices.push(choice.text);
+        }
 
       game.ui.event({
         type: UIEVENT_STATE,
