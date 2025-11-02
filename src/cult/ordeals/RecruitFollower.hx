@@ -1,8 +1,9 @@
 // recruit follower ordeal - seek the pure
-package cult;
+package cult.ordeals;
 
 import game.Game;
 import ai.*;
+import cult.Ordeal;
 
 class RecruitFollower extends Ordeal
 {

@@ -1,10 +1,11 @@
-package cult;
+package cult.ordeals;
 
 import game.Game;
 import jsui.Choice._ChoiceParams;
 import Const;
 import _CultEvent;
 import cult.Cult;
+import cult.UpgradeFollowerEvents;
 
 class UpgradeFollower2 extends UpgradeFollower
 {

@@ -2,7 +2,7 @@
 package console;
 
 import game.Game;
-import cult.UpgradeFollower;
+import cult.ordeals.UpgradeFollower;
 
 class Cult
 {

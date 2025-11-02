@@ -22,7 +22,7 @@ class Cult extends _SaveObject
   public var name: String;
   public var power: _CultPower;
   public var resources: _CultPower;
-  public var ordeals: CultOrdeals;
+  public var ordeals: Ordeals;
   public var effects: Effects;
   var turnCounter: Int;
 
@@ -42,7 +42,7 @@ class Cult extends _SaveObject
 // NOTE: new object fields should init here!
   public function init()
     {
-      ordeals = new CultOrdeals(game);
+      ordeals = new Ordeals(game);
       effects = new Effects(game, this);
       power = {
         combat: 0,

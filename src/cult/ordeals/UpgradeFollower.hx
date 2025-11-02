@@ -1,8 +1,10 @@
 // upgrade follower ordeal - elevate the faithful
-package cult;
+package cult.ordeals;
 
 import game.Game;
 import ai.*;
+import cult.Cult;
+import cult.Ordeal;
 
 class UpgradeFollower extends Ordeal
 {

@@ -4,8 +4,9 @@ package cult;
 import game.Game;
 import _PlayerAction;
 import ai.AIData;
+import cult.ordeals.*;
 
-class CultOrdeals extends _SaveObject
+class Ordeals extends _SaveObject
 {
   static var _ignoredFields = [ 'cult' ];
   public var game: Game;
