@@ -918,11 +918,11 @@ class Chat extends _SaveObject
       if (cult.members.length >= cult.maxSize())
         return false;
       // check for max jobs
-      var jobInfo = game.jobs.getJobInfo(aidata.job);
+      var jobInfo = game.jobs.getJobInfo(target.job);
       if (jobInfo == null)
         return false;
-      if (cult.countMembersAtLevel(jobInfo.level) >=
-          cult.getLevelLimit(jobInfo.level))
+      if (!cult.canAddMemberAtLevel(jobInfo.level))
+        return false;
       return true;
     }
 

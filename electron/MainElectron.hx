@@ -49,7 +49,7 @@ class MainElectron
 #if !mydebug
           win.setMenu(null);
 #end
-          win.on( closed, function() {
+          win.on(closed, function(e) {
               win = null;
           });
           win.loadFile('app.html');
@@ -74,5 +74,7 @@ class MainElectron
       });
       App.commandLine.appendSwitch('in-process-gpu');
       App.commandLine.appendSwitch('disable-direct-composition');
+      App.commandLine.appendSwitch('--show-fps-counter');
+      App.commandLine.appendSwitch('--disable-frame-rate-limit');
     }
 }

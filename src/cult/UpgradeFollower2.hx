@@ -71,10 +71,11 @@ class UpgradeFollower2 extends UpgradeFollower
         buttons: [],
         src: payload,
         textClass: 'window-occasio-text',
+        // choiceID is 1-3
         f: function(src: Dynamic, choiceID: Int)
           {
             var data: { event: _CultEvent, game: Game, cult: Cult } = cast src;
-            var choice = data.event.choices[choiceID];
+            var choice = data.event.choices[choiceID - 1];
             choice.f(data.game, data.cult);
           }
       };

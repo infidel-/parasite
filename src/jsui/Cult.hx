@@ -59,86 +59,10 @@ class Cult extends UIWindow
 // update window contents
   override function update()
     {
-      // info block
       var buf = new StringBuf();
-      buf.add('<span>');
-      var cult = game.cults[0];
-
-      // cult power and resources table
-      buf.add('<table class="cult-table">');
-      buf.add('<tr>');
-      buf.add('<th></th>'); // empty header for row labels
-      for (name in _CultPower.namesUpper)
-        buf.add('<th>' + Const.col('cult-power', name) + '</th>');
-      buf.add('<th>' + Const.col('cult-power', Icon.money) + '</th>');
-      buf.add('</tr>');
-      
-      // power row
-      buf.add('<tr>');
-      buf.add('<td class="cult-row-label">Power</td>');
-      for (name in _CultPower.names)
-        buf.add('<td>' + cult.power.get(name) + '</td>');
-      buf.add('<td>' + cult.power.money + '</td>');
-      buf.add('</tr>');
-      
-      // income row
-      buf.add('<tr class="cult-income">');
-      buf.add('<td class="cult-row-label">Income</td>');
-      for (name in _CultPower.names)
-        {
-          var income = Std.int(cult.power.get(name) / 3);
-          buf.add('<td>' + (income > 0 ? '+' + income : '-') + '</td>');
-        }
-      var moneyIncome = Std.int(cult.power.money * 0.5);
-      buf.add('<td>' + (moneyIncome > 0 ? '+' + moneyIncome : '-') + '</td>');
-      buf.add('</tr>');
-      
-      // resources row
-      buf.add('<tr class="cult-resources">');
-      buf.add('<td class="cult-row-label">Resources</td>');
-      for (name in _CultPower.names)
-        buf.add('<td>' + cult.resources.get(name) + '</td>');
-      buf.add('<td>' + cult.resources.money + '</td>');
-      buf.add('</tr>');
-      buf.add('</table>');
-
-      // members list table
-      buf.add('<br/>');
-      buf.add('<table class="cult-members-table">');
-      buf.add('<thead>');
-      buf.add('<tr>');
-      buf.add('<th>' + Const.smallgray('name') + '</th>');
-      buf.add('<th>' + Const.smallgray('occupation') + '</th>');
-      buf.add('<th>' + Const.smallgray('income') + '</th>');
-      buf.add('<th>' + Const.smallgray('status') + '</th>');
-      buf.add('</tr>');
-      buf.add('</thead>');
-      buf.add('<tbody>');
-      for (i => m in cult.members)
-        {
-          buf.add('<tr>');
-          buf.add('<td>');
-          buf.add(m.TheName());
-          if (i == 0)
-            buf.add(' ' + Const.col('gray', '(leader)'));
-          buf.add('</td>');
-          var jobInfo = game.jobs.getJobInfo(m.job);
-          buf.add('<td>' + Const.smallgray('[' + jobInfo.level + '] ' + m.job) + '</td>');
-          buf.add('<td>' + Const.col('white', m.income) + Icon.money + '</td>');
-          var status = cult.getMemberStatus(m.id);
-          buf.add('<td>');
-          if (status != '')
-            buf.add(Const.smallgray(status));
-          else
-            buf.add(Const.smallgray('-'));
-          buf.add('</td>');
-          buf.add('</tr>');
-        }
-      buf.add('</tbody>');
-      buf.add('</table>');
-      buf.add('</span><br/>');
-      buf.add('<span class=gray>Members: ' +
-        cult.members.length + '/' + cult.maxSize() + '</span><br/>');
+      updatePowerAndResources(buf);
+      updateEffects(buf);
+      updateMembers(buf);
       var infotext = buf.toString();
       setParams({
         info: infotext,
@@ -192,7 +116,8 @@ class Cult extends UIWindow
             type: ACTION_CULT,
             name: 'Summon the faithful',
             energy: 0,
-          }
+          };
+
           a.f = function() {
             game.cults[0].action(a);
             game.ui.closeWindow();
@@ -201,7 +126,8 @@ class Cult extends UIWindow
         }
       
       // action - trade (only show if at least 10k money)
-      if (cult.resources.money >= 10000)
+      if (cult.resources.money >= 10000 &&
+          !cult.effects.has(CULT_EFFECT_NOTRADE))
         {
           addPlayerAction({
             id: 'trade',
@@ -426,6 +352,104 @@ class Cult extends UIWindow
             }
           addPlayerAction(a);
         }
+    }
+
+// builds power and resource summary block
+  function updatePowerAndResources(buf: StringBuf)
+    {
+      var cult = game.cults[0];
+      buf.add('<span>');
+      buf.add('<table class="cult-table">');
+      buf.add('<tr>');
+      buf.add('<th></th>');
+      for (name in _CultPower.namesUpper)
+        buf.add('<th>' + Const.col('cult-power', name) + '</th>');
+      buf.add('<th>' + Const.col('cult-power', Icon.money) + '</th>');
+      buf.add('</tr>');
+
+      buf.add('<tr>');
+      buf.add('<td class="cult-row-label">Power</td>');
+      for (name in _CultPower.names)
+        buf.add('<td>' + cult.power.get(name) + '</td>');
+      buf.add('<td>' + cult.power.money + '</td>');
+      buf.add('</tr>');
+
+      buf.add('<tr class="cult-income">');
+      buf.add('<td class="cult-row-label">Income</td>');
+      for (name in _CultPower.names)
+        {
+          var income = Std.int(cult.power.get(name) / 3);
+          buf.add('<td>' + (income > 0 ? '+' + income : '-') + '</td>');
+        }
+      var moneyIncome = Std.int(cult.power.money * 0.5);
+      buf.add('<td>' + (moneyIncome > 0 ? '+' + moneyIncome : '-') + '</td>');
+      buf.add('</tr>');
+
+      buf.add('<tr class="cult-resources">');
+      buf.add('<td class="cult-row-label">Resources</td>');
+      for (name in _CultPower.names)
+        buf.add('<td>' + cult.resources.get(name) + '</td>');
+      buf.add('<td>' + cult.resources.money + '</td>');
+      buf.add('</tr>');
+      buf.add('</table>');
+    }
+
+// builds members table for cult overview
+  function updateMembers(buf: StringBuf)
+    {
+      var cult = game.cults[0];
+      buf.add('<br/>');
+      buf.add('<table class="cult-members-table">');
+      buf.add('<thead>');
+      buf.add('<tr>');
+      buf.add('<th>' + Const.smallgray('name') + '</th>');
+      buf.add('<th>' + Const.smallgray('occupation') + '</th>');
+      buf.add('<th>' + Const.smallgray('income') + '</th>');
+      buf.add('<th>' + Const.smallgray('status') + '</th>');
+      buf.add('</tr>');
+      buf.add('</thead>');
+      buf.add('<tbody>');
+      for (i => m in cult.members)
+        {
+          buf.add('<tr>');
+          buf.add('<td>');
+          buf.add(m.TheName());
+          if (i == 0)
+            buf.add(' ' + Const.col('gray', '(leader)'));
+          buf.add('</td>');
+          var jobInfo = game.jobs.getJobInfo(m.job);
+          buf.add('<td>' + Const.smallgray('[' + jobInfo.level + '] ' + m.job) + '</td>');
+          buf.add('<td>' + Const.col('white', m.income) + Icon.money + '</td>');
+          var status = cult.getMemberStatus(m.id);
+          buf.add('<td>');
+          if (status != '')
+            buf.add(Const.smallgray(status));
+          else
+            buf.add(Const.smallgray('-'));
+          buf.add('</td>');
+          buf.add('</tr>');
+        }
+      buf.add('</tbody>');
+      buf.add('</table>');
+      buf.add('</span><br/>');
+      buf.add('<span class=gray>Members: ' +
+        cult.members.length + '/' + cult.maxSize() + '</span><br/>');
+    }
+
+// appends list of active cult effects
+  function updateEffects(buf: StringBuf)
+    {
+      var cult = game.cults[0];
+      var effectsText = [];
+      for (effect in cult.effects)
+        {
+          effectsText.push(
+            Const.col('cult-effect', effect.name) + ' ' +
+            Const.smallgray('(' + effect.turns + ' t)'));
+        }
+      if (effectsText.length == 0)
+        return;
+      buf.add('<span>Effects: ' + effectsText.join(', ') + '</span><br/>');
     }
 
 // update actions for individual ordeal state

@@ -23,6 +23,7 @@ class Cult extends _SaveObject
   public var power: _CultPower;
   public var resources: _CultPower;
   public var ordeals: CultOrdeals;
+  public var effects: Effects;
   var turnCounter: Int;
 
   public function new(g: Game)
@@ -42,6 +43,7 @@ class Cult extends _SaveObject
   public function init()
     {
       ordeals = new CultOrdeals(game);
+      effects = new Effects(game, this);
       power = {
         combat: 0,
         media: 0,
@@ -64,7 +66,15 @@ class Cult extends _SaveObject
 
 // called after load or creation
   public function initPost(onLoad: Bool)
-    {}
+    {
+      if (effects == null)
+        effects = new Effects(game, this);
+      else
+        {
+          effects.game = game;
+          effects.cult = this;
+        }
+    }
 
 // post load
   public function loadPost()
@@ -393,6 +403,7 @@ class Cult extends _SaveObject
       
       // process ordeals turn
       ordeals.turn();
+      effects.turn(1);
       
       game.debug(name +
         ' turn: COM ' + resources.combat +
@@ -456,11 +467,17 @@ class Cult extends _SaveObject
         }
     }
 
+// styled cult name
+  public function Name()
+    {
+      return '<span class=cult>' + name + '</span>';
+    }
+
 // cult log
   public function log(text: String)
     {
       if (isPlayer)
-        game.log('<span class=cult>' + name + '</span> ' + text + '.');
+        game.log(Name() + ' ' + text + '.');
     }
 
 // max cult size
@@ -548,6 +565,12 @@ class Cult extends _SaveObject
 // trade money for other power types
   public function trade(powerType: String): Bool
     {
+      if (effects.has(CULT_EFFECT_NOTRADE))
+        {
+          game.actionFailed('Trade rites are sealed at the moment.');
+          return false;
+        }
+
       var cost = 10000;
       if (resources.money < cost)
         {

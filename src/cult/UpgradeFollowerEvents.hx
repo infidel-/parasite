@@ -3,6 +3,7 @@ package cult;
 
 import game.Game;
 import cult.Cult;
+import cult.effects.NoTrade;
 import _AIJobGroup;
 import _CultEvent;
 
@@ -26,6 +27,7 @@ class UpgradeFollowerEvents
               f: function(game: Game, cult: Cult) {
                 cult.resources.combat += 1;
                 cult.log('occurs a militant hymn; combat power swells.');
+                cult.effects.add(new NoTrade(game, 10));
               }
             },
             {
