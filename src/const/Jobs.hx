@@ -1485,6 +1485,47 @@ class Jobs
       return jobsByName.get(name);
     }
 
+  // get next level job info for a given group and job name
+  // finds job info by group+name pair, then gets job info with same group+type and level+1
+  public function getNextJobLevel(group: _AIJobGroup, name: String): _JobInfo
+    {
+      // find job info that matches group and name
+      var currentInfo: _JobInfo = null;
+      var groupJobs = jobsByGroup.get(group);
+      if (groupJobs == null)
+        return null;
+      
+      for (info in groupJobs)
+        {
+          for (jobName in info.names)
+            {
+              if (jobName == name)
+                {
+                  currentInfo = info;
+                  break;
+                }
+            }
+          if (currentInfo != null)
+            break;
+        }
+      
+      if (currentInfo == null)
+        return null;
+      
+      // find job info with same group, same type, and level+1
+      for (info in groupJobs)
+        {
+          if (info.group == group &&
+              info.type == currentInfo.type &&
+              info.level == currentInfo.level + 1)
+            {
+              return info;
+            }
+        }
+      
+      return null;
+    }
+
   // get random job by group and level
   public function getJobByGroupAndLevel(group: _AIJobGroup, level: Int): _JobInfo
     {

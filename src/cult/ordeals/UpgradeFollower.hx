@@ -101,15 +101,14 @@ class UpgradeFollower extends Ordeal
           jobInfo.level >= 3)
         return false;
 
-      var nextLevel = jobInfo.level + 1;
-      var job = game.jobs.getJobByGroupAndLevel(jobInfo.group, nextLevel);
-      if (job == null)
+      var nextJob = game.jobs.getNextJobLevel(jobInfo.group, member.job);
+      if (nextJob == null)
         return false;
 
-      var jobData = game.jobs.rollJobInfo([job]);
+      var jobData = game.jobs.rollJobInfo([nextJob]);
       member.job = jobData.name;
       member.income = jobData.income;
-      cult.log('member ' + member.TheName() + ' has been elevated to level ' + nextLevel);
+      cult.log('member ' + member.TheName() + ' has been elevated to level ' + nextJob.level);
       cult.recalc();
       return true;
     }
