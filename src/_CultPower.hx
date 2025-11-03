@@ -58,13 +58,27 @@ class _CultPower extends _SaveObject
     {
       switch (power)
         {
-          case 'combat': combat -= val;
-          case 'media': media -= val;
-          case 'lawfare': lawfare -= val;
-          case 'corporate': corporate -= val;
-          case 'political': political -= val;
-          case 'occult': occult -= val;
-          case 'money': money -= val;
+          case 'combat':
+            combat -= val;
+            if (combat < 0) combat = 0;
+          case 'media':
+            media -= val;
+            if (media < 0) media = 0;
+          case 'lawfare':
+            lawfare -= val;
+            if (lawfare < 0) lawfare = 0;
+          case 'corporate':
+            corporate -= val;
+            if (corporate < 0) corporate = 0;
+          case 'political':
+            political -= val;
+            if (political < 0) political = 0;
+          case 'occult':
+            occult -= val;
+            if (occult < 0) occult = 0;
+          case 'money':
+            money -= val;
+            if (money < 0) money = 0;
         }
     }
 

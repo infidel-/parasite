@@ -444,7 +444,7 @@ class Cult extends UIWindow
       for (effect in cult.effects)
         {
           effectsText.push(
-            Const.col('cult-effect', effect.name) + ' ' +
+            Const.col('cult-effect', effect.customName()) + ' ' +
             Const.smallgray('(' + effect.turns + ' t)'));
         }
       if (effectsText.length == 0)

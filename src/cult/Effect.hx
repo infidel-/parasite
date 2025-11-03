@@ -46,4 +46,14 @@ class Effect extends _SaveObject
 // updates effect each turn
   public function turn(cult: Cult, time: Int)
     {}
+
+// generic run hook called from where necessary
+  public function run(cult: Cult)
+    {}
+
+// returns custom display name for effect
+  public function customName(): String
+    {
+      return name;
+    }
 }

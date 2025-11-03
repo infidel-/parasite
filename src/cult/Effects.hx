@@ -46,6 +46,7 @@ class Effects extends _SaveObject
 
       list.push(effect);
       effect.onAdd(cult);
+      cult.recalc();
     }
 
 // checks if specific effect is active
@@ -68,11 +69,9 @@ class Effects extends _SaveObject
     }
 
 // advances all effects by provided time
-  public function turn(time: Int)
+  public function turn()
     {
-      if (time <= 0)
-        return;
-
+      var time = 1;
       var expired: Array<Effect> = [];
       for (effect in list)
         {
@@ -81,12 +80,15 @@ class Effects extends _SaveObject
           if (effect.turns <= 0)
             expired.push(effect);
         }
+      if (expired.length == 0)
+        return;
 
       for (effect in expired)
         {
           list.remove(effect);
           effect.onRemove(cult);
         }
+      cult.recalc();
     }
 
 // returns copy of all active effects

@@ -403,7 +403,8 @@ class Cult extends _SaveObject
       
       // process ordeals turn
       ordeals.turn();
-      effects.turn(1);
+      // process active cult effects
+      effects.turn();
       
       game.debug(name +
         ' turn: COM ' + resources.combat +
@@ -464,6 +465,16 @@ class Cult extends _SaveObject
                 power.political += points;
               default:
             }
+        }
+
+      // run effect hooks that modify power/income
+      for (effect in effects)
+        {
+          if (effect.type == CULT_EFFECT_INCREASE_POWER ||
+              effect.type == CULT_EFFECT_DECREASE_POWER ||
+              effect.type == CULT_EFFECT_INCREASE_INCOME ||
+              effect.type == CULT_EFFECT_DECREASE_INCOME)
+            effect.run(this);
         }
     }
 
