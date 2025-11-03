@@ -593,7 +593,7 @@ class Cult extends UIWindow
       
       // actions counter
       buf.add('<div class="window-cult-ordeals-actions">');
-      buf.add('Actions used: ' + ordeal.actions + '/' + ordeal.members.length);
+      buf.add('Actions taken: ' + ordeal.actions + '/' + ordeal.members.length);
       buf.add('</div>');
       
       buf.add('</div>');
