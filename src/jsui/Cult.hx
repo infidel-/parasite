@@ -189,11 +189,11 @@ class Cult extends UIWindow
           updateActions();
         }
       });
-      if (game.cults[0].resources.money < 10000)
-        return;
-      
       var cult = game.cults[0];
-      var cost = 10000;
+      var cost = cult.getTradeCost();
+      
+      if (cult.resources.money < cost)
+        return;
       
       // trade actions for each power type
       for (i in 0..._CultPower.names.length)

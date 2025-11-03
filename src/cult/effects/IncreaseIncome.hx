@@ -7,7 +7,7 @@ import game.Game;
 
 class IncreaseIncome extends Effect
 {
-  var percent: Float;
+  var percent: Int;
 
 // creates increase income effect
   public function new(game: Game, turns: Int)
@@ -23,12 +23,12 @@ class IncreaseIncome extends Effect
       allowMultiple = true;
       
       // calculate random percentage: 10% base, 20% with 25% chance, 30% with 5% chance
-      percent = 0.1;
+      percent = 10;
       var roll = Std.random(100);
       if (roll < 5)
-        percent = 0.3;
+        percent = 30;
       else if (roll < 30)
-        percent = 0.2;
+        percent = 20;
     }
 
 // applies income increase during recalc
@@ -40,14 +40,13 @@ class IncreaseIncome extends Effect
         baseIncome += member.income;
       
       // apply percentage increase
-      var increase = Std.int(baseIncome * percent);
+      var increase = Std.int(baseIncome * percent / 100);
       cult.power.inc('money', increase);
     }
 
 // returns custom display name with percentage
   public override function customName(): String
     {
-      var percentInt = Std.int(percent * 100);
-      return '+' + percentInt + '% ' + Icon.money;
+      return '+' + percent + '% ' + Icon.money;
     }
 }

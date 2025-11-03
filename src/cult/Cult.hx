@@ -6,6 +6,7 @@ import game.AreaGame;
 import game.Game;
 import ai.AI;
 import ai.AIData;
+import cult.effects.*;
 
 class Cult extends _SaveObject
 {
@@ -573,6 +574,34 @@ class Cult extends _SaveObject
         }
     }
 
+// get trade cost with effect modifiers
+  public function getTradeCost(): Int
+    {
+      var baseCost = 10000;
+      var cost = baseCost;
+      
+      // check for trade cost effects
+      for (effect in effects)
+        {
+          if (effect.type == CULT_EFFECT_INCREASE_TRADE_COST)
+            {
+              var increaseEffect = cast(effect, IncreaseTradeCost);
+              cost += Std.int(baseCost * increaseEffect.percent / 100);
+            }
+          else if (effect.type == CULT_EFFECT_DECREASE_TRADE_COST)
+            {
+              var decreaseEffect = cast(effect, DecreaseTradeCost);
+              cost -= Std.int(baseCost * decreaseEffect.percent / 100);
+            }
+        }
+      
+      // ensure cost doesn't go below 1
+      if (cost < 1)
+        cost = 1;
+      
+      return cost;
+    }
+
 // trade money for other power types
   public function trade(powerType: String): Bool
     {
@@ -582,7 +611,7 @@ class Cult extends _SaveObject
           return false;
         }
 
-      var cost = 10000;
+      var cost = getTradeCost();
       if (resources.money < cost)
         {
           game.actionFailed('Not enough money for trade.');
