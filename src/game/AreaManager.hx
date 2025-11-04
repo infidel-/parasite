@@ -2,7 +2,6 @@
 
 package game;
 
-import ai.*;
 import ai.AI;
 import objects.AreaObject;
 

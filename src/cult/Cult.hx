@@ -215,6 +215,14 @@ class Cult extends _SaveObject
         return false;
       if (game.location != LOCATION_AREA)
         return false;
+      // check if another call action is in progress
+      if (game.managerArea != null)
+        {
+          var events = game.managerArea.getList();
+          for (e in events)
+            if (e.type == AREAEVENT_ARRIVE_CULTIST)
+              return false;
+        }
       return true;
     }
 
@@ -331,6 +339,21 @@ class Cult extends _SaveObject
     {
       if (game.cults[0].state != CULT_STATE_ACTIVE)
         return;
+      // check for difficult help effect and roll failure chance
+      if (effects.has(CULT_EFFECT_DIFFICULT_HELP))
+        {
+          var effs = effects.get(CULT_EFFECT_DIFFICULT_HELP);
+          if (effs.length > 0)
+            {
+              var e = cast(effs[0], DifficultHelp);
+              var roll = Std.random(100);
+              if (roll <= e.percent)
+                {
+                  game.logSmallGray('The call has failed to reach some of the faithful.');
+                  return;
+                }
+            }
+        }
       // find what cultists are still available
       var freeIDs = getFreeMembers(1);
       if (freeIDs.length == 0)

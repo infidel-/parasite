@@ -509,6 +509,12 @@ class Game extends _SaveObject
       log(Const.smallgray(s));
     }
 
+// add entry to log (small and gray)
+  public inline function logSmallGray(arg)
+    {
+      log(Const.smallgray(arg));
+    }
+
 // add entry to game log
   public function log(s: String, ?col: _TextColor)
     {
