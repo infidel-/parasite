@@ -74,6 +74,10 @@ class Ordeals extends _SaveObject
     {
       var actions: Array<_PlayerAction> = [];
       
+      // check for block communal effect
+      if (cult.effects.has(CULT_EFFECT_BLOCK_COMMUNAL))
+        return actions;
+      
       // check if there are enough free members for recruit action
       var freeMembers = cult.getFreeMembers(1);
       if (freeMembers.length >= 1)

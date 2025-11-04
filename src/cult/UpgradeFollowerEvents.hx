@@ -27,7 +27,7 @@ class UpgradeFollowerEvents
               f: function(game: Game, cult: Cult) {
                 cult.resources.combat += 1;
                 cult.log('occurs a militant hymn; combat power swells.');
-                cult.effects.add(new DifficultHelp(game, 10));
+                cult.effects.add(new BlockCommunal(game, 10));
               }
             },
             {
