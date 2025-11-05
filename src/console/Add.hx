@@ -298,6 +298,10 @@ class Add
         }
 
       game.player.host.addTrait(match.id);
+      // kludge: if it's a cultist, we need to update cult member record
+      if (game.player.host.isPlayerCultist())
+        game.cults[0].updateData(game.player.host);
+
       log('Added trait: ' + match.enumName);
     }
 

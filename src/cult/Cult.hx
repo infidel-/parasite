@@ -163,6 +163,22 @@ class Cult extends _SaveObject
       else aidata.updateData(ai, 'on despawn');
     }
 
+// update member data from ai
+  public function updateData(ai: AI)
+    {
+      // find member record
+      var aidata = null;
+      for (m in members)
+        if (m.id == ai.id)
+          {
+            aidata = m;
+            break;
+          }
+      if (aidata == null)
+        return;
+      aidata.updateData(ai, 'on update');
+    }
+
 // handle member death
   public function onDeath(aidata: AIData)
     {
