@@ -427,34 +427,16 @@ class Body extends UIWindow
                   buf.add('<span class=host-attr-notes>' + info.note +
                     '</span><br/>');
                 }
-            }
+          }
           buf.add('<br/>');
-          buf.add('<span class=host-attr-title>Strength ' + game.player.host.strength + '</span><br/>');
-          buf.add('<span class=host-attr-notes>' +
-            'Increases health and energy<br/>' +
-            'Increases melee damage<br/>' +
-            'Decreases grip efficiency<br/>' +
-            'Decreases paralysis efficiency<br/>' +
-            'Increases speed of freeing from mucus<br/>' +
-            'Limits the amount of inventory items<br/>' +
-            '</span><br/>');
-
-          buf.add('<span class=host-attr-title>Constitution ' + game.player.host.constitution + '</span><br/>');
-          buf.add('<span class=host-attr-notes>' +
-            'Increases health and energy<br/>' +
-            'Limits the amount of body features<br/>' +
-            '</span><br/>');
-
-          buf.add('<span class=host-attr-title>Intellect ' + game.player.host.intellect + '</span><br/>');
-          buf.add('<span class=host-attr-notes>' +
-            'Increases skills and society knowledge learning efficiency<br/>' +
-            '</span><br/>');
-
-          buf.add('<span class=host-attr-title>Psyche ' + game.player.host.psyche + '</span><br/>');
-          buf.add('<span class=host-attr-notes>' +
-            'Increases energy needed to probe brain<br/>' +
-            'Reduces the efficiency of reinforcing control<br/>' +
-            '</span><br/>');
+          buf.add('<span class=host-attr-title>Strength</span> ' +
+            game.player.host.strength + ' ');
+          buf.add('<span class=host-attr-title>Constitution</span> ' +
+            game.player.host.constitution + ' ');
+          buf.add('<span class=host-attr-title>Intellect</span> ' +
+            game.player.host.intellect + ' ');
+          buf.add('<span class=host-attr-title>Psyche</span> ' +
+            game.player.host.psyche + '<br/>');
 
         }
       return buf.toString();

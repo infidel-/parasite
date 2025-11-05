@@ -2,6 +2,25 @@ package const;
 
 class PediaConst
 {
+  public static inline var hostAttrNoteStrength =
+    '<li>Increases maximum health and energy</li>' +
+    '<li>Increases melee damage</li>' +
+    '<li>Decreases grip efficiency</li>' +
+    '<li>Decreases paralysis efficiency</li>' +
+    '<li>Increases speed of freeing from mucus</li>' +
+    '<li>Limits the amount of inventory items</li>';
+  public static inline var hostAttrNoteConstitution =
+    '<li>Increases maximum health and energy</li>' +
+    '<li>Limits the amount of body features</li>';
+  public static inline var hostAttrNoteIntellect =
+    '<li>Increases skills and society knowledge learning efficiency</li>' +
+    '<li>Boosts skill training when consulting agreeable hosts</li>';
+  public static inline var hostAttrNotePsyche =
+    '<li>Measures host mental will</li>' +
+    '<li>Increases energy needed to probe brain</li>' +
+    '<li>Reduces the efficiency of reinforcing control</li>' +
+    '<li>Makes conversations and gaining consent harder</li>';
+
   public static var initialArticles = [
     'hudActions',
     'hudGoals',
@@ -34,7 +53,11 @@ class PediaConst
           id: 'hostAttributes',
           name: 'Host: Attributes',
           img: 'pedia/attributes',
-          text: "Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it. Strength is used for calculating maximum health and energy values (so does the constitution). It also increases melee damage and limits the amount of inventory items. Finally, the host strength decreases the grip and paralysis efficiency and increases the speed with which they free from mucus. Constitution limits the amount of body features. Host intellect increases the efficiency with which the parasite learns the skills and human society knowledge when probing their brain. The remaining attribute, psyche, is a measure of their mental will. High host psyche increases the energy needed to probe their brain and reduces the efficiency of reinforcing control. High psyche also makes it harder to converse with them and harder to gain their consent.",
+          text: "<p>Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it.</p>" +
+            "<p><b>Strength</b></p><ul>" + hostAttrNoteStrength + "</ul>" +
+            "<p><b>Constitution</b></p><ul>" + hostAttrNoteConstitution + "</ul>" +
+            "<p><b>Intellect</b></p><ul>" + hostAttrNoteIntellect + "</ul>" +
+            "<p><b>Psyche</b></p><ul>" + hostAttrNotePsyche + "</ul>",
         },
         {
           id: 'hostConversation',
