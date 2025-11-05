@@ -123,6 +123,8 @@ class AI extends AIData
           npc.ai = this;
           entity.setNPC();
         }
+      // could be bugs before save?
+      recalc();
     }
 
 // show AI graphics
