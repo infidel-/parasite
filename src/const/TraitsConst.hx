@@ -42,7 +42,16 @@ class TraitsConst
         {
           id: TRAIT_DRUG_ADDICT,
           name: 'drug addict',
-          note: 'Addicted to drugs.'
+          note: 'Addicted to drugs.',
+          turn: function(game: Game, ai: AIData)
+            {
+              if (Std.random(100) > 10)
+                return;
+              var actor = Std.downcast(ai, AI);
+              if (actor == null)
+                return;
+              actor.onEffect(new effects.Withdrawal(game, 5));
+            }
         },
         {
           id: TRAIT_ALCOHOLIC,
