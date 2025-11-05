@@ -238,11 +238,27 @@ class Cult extends _SaveObject
             lockedIDs.set(id, true);
         }
       
+      // get map of blocked cultist IDs from effects
+      var blockedIDs = new Map<Int, Bool>();
+      if (effects.has(CULT_EFFECT_BLOCK_CULTIST))
+        {
+          var blockEffects = effects.get(CULT_EFFECT_BLOCK_CULTIST);
+          for (effect in blockEffects)
+            {
+              var blockEffect = cast(effect, BlockCultist);
+              blockedIDs.set(blockEffect.targetID, true);
+            }
+        }
+      
       var free = [];
       for (ai in members)
         {
           // check if member is locked in an ordeal
           if (lockedIDs.exists(ai.id))
+            continue;
+          
+          // check if member is blocked by effect
+          if (blockedIDs.exists(ai.id))
             continue;
           
           // check if cultist is already in this area
@@ -295,6 +311,18 @@ class Cult extends _SaveObject
       
       if (lockedIDs.exists(memberID))
         return '[in ordeal]';
+      
+      // check if member is blocked by effect
+      if (effects.has(CULT_EFFECT_BLOCK_CULTIST))
+        {
+          var blockEffects = effects.get(CULT_EFFECT_BLOCK_CULTIST);
+          for (effect in blockEffects)
+            {
+              var blockEffect = cast(effect, BlockCultist);
+              if (blockEffect.targetID == memberID)
+                return '[in recessu]';
+            }
+        }
       
       // check if cultist is on area
       if (game.location == LOCATION_AREA &&
