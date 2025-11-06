@@ -299,6 +299,26 @@ class AIData extends _SaveObject
       return (isNameKnown ? name.realCapped : 'A ' + name.unknown);
     }
 
+// is this ai a player host?
+  public inline function isPlayerHost(): Bool
+    {
+      return (game.player.state == PLR_STATE_HOST &&
+        this.id == game.player.host.id);
+    }
+
+// log according to gender
+  public function log(s: String, ?col: _TextColor = null)
+    {
+      if (!isMale)
+        {
+          s = StringTools.replace(s, 'He ', 'She ');
+          s = StringTools.replace(s, ' he ', ' she ');
+          s = StringTools.replace(s, ' him', ' her');
+          s = StringTools.replace(s, ' his', ' her');
+        }
+      game.log((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s, col);
+    }
+
 // save derived stats (must be called in the end of derived classes constructors)
   public function derivedStats()
     {

@@ -29,6 +29,45 @@ class TraitsConst
       return traits.get(id);
     }
 
+// return random trait from a given group
+  public static function getRandom(group: String): _TraitInfo
+    {
+      var groupTraits = traits.get(group);
+      if (groupTraits == null || groupTraits.length == 0)
+        return null;
+      return groupTraits[Std.random(groupTraits.length)];
+    }
+
+// return random negative trait from a given group
+  public static function getRandomNegative(group: String): _TraitInfo
+    {
+      var groupTraits = traits.get(group);
+      if (groupTraits == null)
+        return null;
+      var negativeTraits = [];
+      for (trait in groupTraits)
+        if (trait.isNegative)
+          negativeTraits.push(trait);
+      if (negativeTraits.length == 0)
+        return null;
+      return negativeTraits[Std.random(negativeTraits.length)];
+    }
+
+// return random positive trait from a given group
+  public static function getRandomPositive(group: String): _TraitInfo
+    {
+      var groupTraits = traits.get(group);
+      if (groupTraits == null)
+        return null;
+      var positiveTraits = [];
+      for (trait in groupTraits)
+        if (!trait.isNegative)
+          positiveTraits.push(trait);
+      if (positiveTraits.length == 0)
+        return null;
+      return positiveTraits[Std.random(positiveTraits.length)];
+    }
+
 // trait infos by group
   public static var traits: StringMap<Array<_TraitInfo>> = initTraits();
 
@@ -43,6 +82,7 @@ class TraitsConst
           id: TRAIT_DRUG_ADDICT,
           name: 'drug addict',
           note: 'Addicted to drugs.',
+          isNegative: true,
           turn: function(game: Game, ai: AIData)
             {
               if (Std.random(100) > 10)
@@ -57,6 +97,7 @@ class TraitsConst
           id: TRAIT_ALCOHOLIC,
           name: 'alcoholic',
           note: 'Years of booze take their toll. Control impossible to maintain fully.',
+          isNegative: true,
           turn: function(game: Game, ai: AIData)
             {
               if (game.player.host == ai &&
@@ -67,7 +108,8 @@ class TraitsConst
         {
           id: TRAIT_ASSIMILATED,
           name: 'assimilated',
-          note: 'Has been assimilated.'
+          note: 'Has been assimilated.',
+          isNegative: false
         }
       ]);
 
@@ -77,6 +119,7 @@ class TraitsConst
           id: TRAIT_BRUISER,
           name: 'bruiser',
           note: 'Excels at fists combat.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_FISTS, 25);
@@ -86,6 +129,7 @@ class TraitsConst
           id: TRAIT_KNIFE_EXPERT,
           name: 'knife expert',
           note: 'Practiced in knife combat.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_KNIFE, 25);
@@ -95,6 +139,7 @@ class TraitsConst
           id: TRAIT_BATON_EXPERT,
           name: 'baton expert',
           note: 'Seasoned baton fighter.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_BATON, 25);
@@ -104,6 +149,7 @@ class TraitsConst
           id: TRAIT_BATTER,
           name: 'batter',
           note: 'Experienced with club weapons.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_CLUB, 25);
@@ -113,6 +159,7 @@ class TraitsConst
           id: TRAIT_GUERRERO,
           name: 'guerrero',
           note: 'Practiced with machetes.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_MACHETE, 25);
@@ -122,6 +169,7 @@ class TraitsConst
           id: TRAIT_KENDOKA,
           name: 'kendoka',
           note: 'Trained with katanas.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_KATANA, 25);
@@ -131,6 +179,7 @@ class TraitsConst
           id: TRAIT_PISTOL_MARKSMAN,
           name: 'pistol marksman',
           note: 'Sharpshooter with pistols.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_PISTOL, 25);
@@ -140,6 +189,7 @@ class TraitsConst
           id: TRAIT_RIFLE_MARKSMAN,
           name: 'rifle marksman',
           note: 'Accurate with rifles.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_RIFLE, 25);
@@ -149,6 +199,7 @@ class TraitsConst
           id: TRAIT_BREACHER,
           name: 'breacher',
           note: 'Skilled with shotguns.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_SHOTGUN, 25);
@@ -158,6 +209,7 @@ class TraitsConst
           id: TRAIT_HACKER,
           name: 'hacker',
           note: 'Talented with computers.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_COMPUTER, 25);
@@ -167,6 +219,7 @@ class TraitsConst
           id: TRAIT_COUNSELOR,
           name: 'counselor',
           note: 'Understands psychology.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_PSYCHOLOGY, 25);
@@ -176,6 +229,7 @@ class TraitsConst
           id: TRAIT_NEGOTIATOR,
           name: 'negotiator',
           note: 'Expert at coercion.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_COERCION, 25);
@@ -185,6 +239,7 @@ class TraitsConst
           id: TRAIT_CONSULTANT,
           name: 'consultant',
           note: 'Gifted at coaxing.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_COAXING, 25);
@@ -194,6 +249,7 @@ class TraitsConst
           id: TRAIT_HABITUAL_LIAR,
           name: 'habitual liar',
           note: 'Adept at deception.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_DECEPTION, 25);
@@ -207,6 +263,7 @@ class TraitsConst
           id: TRAIT_DUMB,
           name: 'dumb',
           note: 'Slow to process new ideas.',
+          isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.intellect -= 2;
@@ -216,6 +273,7 @@ class TraitsConst
           id: TRAIT_GENIUS,
           name: 'genius',
           note: 'Exceptionally sharp intellect.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.intellect += 2;
@@ -225,6 +283,7 @@ class TraitsConst
           id: TRAIT_WEAK_WILLED,
           name: 'weak-willed',
           note: 'Struggles with resolve.',
+          isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.psyche -= 2;
@@ -234,6 +293,7 @@ class TraitsConst
           id: TRAIT_STRONG_WILLED,
           name: 'strong-willed',
           note: 'Mentally resilient.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.psyche += 2;
@@ -247,6 +307,7 @@ class TraitsConst
           id: TRAIT_ANOREXIC,
           name: 'anorexic',
           note: 'Extremely underweight and frail.',
+          isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength -= 2;
@@ -257,6 +318,7 @@ class TraitsConst
           id: TRAIT_WEAK,
           name: 'weak',
           note: 'Noticeably lacking muscle.',
+          isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength -= 1;
@@ -267,6 +329,7 @@ class TraitsConst
           id: TRAIT_OBESE,
           name: 'obese',
           note: 'Carries significant extra weight.',
+          isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength -= 1;
@@ -277,6 +340,7 @@ class TraitsConst
           id: TRAIT_HEAVILY_OBESE,
           name: 'heavily obese',
           note: 'Massively overweight frame.',
+          isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength -= 2;
@@ -287,6 +351,7 @@ class TraitsConst
           id: TRAIT_MUSCULAR,
           name: 'muscular',
           note: 'Well-developed physique.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength += 1;
@@ -297,6 +362,7 @@ class TraitsConst
           id: TRAIT_HERCULEAN,
           name: 'herculean',
           note: 'Peak physical power.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength += 2;
@@ -311,6 +377,7 @@ class TraitsConst
           id: TRAIT_DEVOUT_BRUTE,
           name: 'devout brute',
           note: 'Zealous strength overtakes thoughtful study.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength += 2;
@@ -321,6 +388,7 @@ class TraitsConst
           id: TRAIT_PENITENT_BASTION,
           name: 'penitent bastion',
           note: 'Endures rites through sheer fortitude, fraying the mind.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.constitution += 2;
@@ -331,6 +399,7 @@ class TraitsConst
           id: TRAIT_VEILED_SCHOLAR,
           name: 'veiled scholar',
           note: 'Contemplates doctrine instead of honing muscle.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.strength -= 2;
@@ -341,6 +410,7 @@ class TraitsConst
           id: TRAIT_HUSHED_SEER,
           name: 'hushed seer',
           note: 'Withdrawn frame shelters an awakened psyche.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.baseAttrs.constitution -= 2;
@@ -351,6 +421,7 @@ class TraitsConst
           id: TRAIT_TITHE_HUSTLER,
           name: 'tithe hustler',
           note: 'Extracts steady tithes at the cost of fraying nerves.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               if (ai.income <= 0)
@@ -369,6 +440,7 @@ class TraitsConst
           id: TRAIT_VORACIOUS_ACCOUNTS,
           name: 'voracious accounts',
           note: 'Turns offerings into profit, burning through resolve.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               if (ai.income <= 0)
@@ -387,6 +459,7 @@ class TraitsConst
           id: TRAIT_RITUAL_ENFORCER,
           name: 'ritual enforcer',
           note: 'Coerces compliance, neglecting combat drills.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_COERCION, 25);
@@ -406,6 +479,7 @@ class TraitsConst
           id: TRAIT_INFIRM_WHISPERER,
           name: 'infirm whisperer',
           note: 'Specializes in coaxing doubters, letting weapons rust.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_COAXING, 25);
@@ -425,6 +499,7 @@ class TraitsConst
           id: TRAIT_MASKED_LIAR,
           name: 'masked liar',
           note: 'Glides through lies while martial practice withers.',
+          isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
               ai.skills.increase(SKILL_DECEPTION, 25);
@@ -444,6 +519,7 @@ class TraitsConst
           id: TRAIT_VIGOROUS_FLAGELLANT,
           name: 'vigorous flagellant',
           note: 'Refreshes flesh through painful fervor, draining vitality.',
+          isNegative: false,
           turn: function(game: Game, ai: AIData)
             {
               if (ai.health >= ai.maxHealth)
@@ -474,6 +550,7 @@ typedef _TraitInfo =
   id: _AITraitType, // trait id
   name: String, // trait name
   note: String, // trait note
+  isNegative: Bool, // whether trait is negative
   ?onInit: (game: Game, ai: AIData) -> Void,
   ?turn: (game: Game, ai: AIData) -> Void,
 }

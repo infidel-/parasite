@@ -77,7 +77,7 @@ class UpgradeFollower2 extends UpgradeFollower
           {
             var data: { event: _CultEvent, game: Game, cult: Cult } = cast src;
             var choice = data.event.choices[choiceID - 1];
-            choice.f(data.game, data.cult);
+            choice.f(data.game, data.cult, targetID);
           }
       };
       for (choice in event.choices)

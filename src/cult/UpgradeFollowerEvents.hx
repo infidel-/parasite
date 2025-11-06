@@ -24,7 +24,7 @@ class UpgradeFollowerEvents
             {
               button: 'Blood Hymn',
               text: 'Dedicate combat might to future battles (+1 combat resource).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.combat += 1;
                 cult.log('occurs a militant hymn; combat power swells.');
                 var e = BlockCultist.create(game, 10);
@@ -35,7 +35,7 @@ class UpgradeFollowerEvents
             {
               button: 'Gilded Tribute',
               text: 'Convert zeal into funding (+5,000 money).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.money += 5000;
                 cult.log('coins pile at the altar; coffers grow by 5,000.');
               }
@@ -43,7 +43,7 @@ class UpgradeFollowerEvents
             {
               button: 'Silent Watch',
               text: 'Hold position and merely observe (no change).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.log('the sentinels keep silent vigil; nothing shifts.');
               }
             }
@@ -60,7 +60,7 @@ class UpgradeFollowerEvents
             {
               button: 'Broadcast',
               text: 'Seed captivating rumors (+1 media resource).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.media += 1;
                 cult.log('whispers become headlines; media power rises.');
               }
@@ -68,7 +68,7 @@ class UpgradeFollowerEvents
             {
               button: 'Product Placement',
               text: 'Sell branded salvation kits (+5,000 money).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.money += 5000;
                 cult.log('merch tables empty; coffers swell by 5,000.');
               }
@@ -76,7 +76,7 @@ class UpgradeFollowerEvents
             {
               button: 'Low Profile',
               text: 'Let the glow fade for now (no change).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.log('the message is muted; influence holds steady.');
               }
             }
@@ -93,7 +93,7 @@ class UpgradeFollowerEvents
             {
               button: 'Draft Mandate',
               text: 'Codify new doctrine (+1 lawfare resource).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.lawfare += 1;
                 cult.log('a fresh precedent seals; lawfare power grows.');
               }
@@ -101,7 +101,7 @@ class UpgradeFollowerEvents
             {
               button: 'Retainer Fees',
               text: 'Bill sympathetic firms (+5,000 money).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.money += 5000;
                 cult.log('trust accounts overflow; coffers gain 5,000.');
               }
@@ -109,7 +109,7 @@ class UpgradeFollowerEvents
             {
               button: 'Adjourn',
               text: 'Recess without ruling (no change).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.log('the docket clears quietly; balance remains.');
               }
             }
@@ -126,7 +126,7 @@ class UpgradeFollowerEvents
             {
               button: 'Reinvest',
               text: 'Channel profits into new ventures (+1 corporate resource).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.corporate += 1;
                 cult.log('portfolios realign; corporate power increases.');
               }
@@ -134,7 +134,7 @@ class UpgradeFollowerEvents
             {
               button: 'Dividend',
               text: 'Issue celebratory payouts (+5,000 money).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.money += 5000;
                 cult.log('share ledgers bloom; coffers add 5,000.');
               }
@@ -142,7 +142,7 @@ class UpgradeFollowerEvents
             {
               button: 'Gala Night',
               text: 'Toast the upgrade without action (no change).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.log('crystal clinks echo; strategy sleeps.');
               }
             }
@@ -159,7 +159,7 @@ class UpgradeFollowerEvents
             {
               button: 'Fast-Track Bill',
               text: 'Push covert legislation (+1 political resource).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.political += 1;
                 cult.log('votes fall in line; political power deepens.');
               }
@@ -167,7 +167,7 @@ class UpgradeFollowerEvents
             {
               button: 'Fundraisers',
               text: 'Host closed-door dinners (+5,000 money).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.money += 5000;
                 cult.log('envelopes slide under velvet; coffers grow by 5,000.');
               }
@@ -175,7 +175,7 @@ class UpgradeFollowerEvents
             {
               button: 'Backroom Pact',
               text: 'Bank favors for later (no change).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.log('nods are exchanged; momentum holds.');
               }
             }
@@ -192,7 +192,7 @@ class UpgradeFollowerEvents
             {
               button: 'Community Feast',
               text: 'Share humble gifts (+2,500 money).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.money += 2500;
                 cult.log('neighbors empty jars; coffers gain 2,500.');
               }
@@ -200,7 +200,7 @@ class UpgradeFollowerEvents
             {
               button: 'Hidden Shrine',
               text: 'Offer quiet prayers (+1 occult resource).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.resources.occult += 1;
                 cult.log('candle smoke thickens; occult knowledge grows.');
               }
@@ -208,7 +208,7 @@ class UpgradeFollowerEvents
             {
               button: 'Simple Thanks',
               text: 'Bow heads and disperse (no change).',
-              f: function(game: Game, cult: Cult) {
+              f: function(game: Game, cult: Cult, targetID: Int) {
                 cult.log('gratitude lingers; resources remain untouched.');
               }
             }
@@ -233,7 +233,7 @@ class UpgradeFollowerEvents
             {
               button: 'Dismiss',
               text: 'Accept the stillness.',
-              f: function(game: Game, cult: Cult) {}
+              f: function(game: Game, cult: Cult, targetID: Int) {}
             }
           ]
         };

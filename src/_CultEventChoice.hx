@@ -6,5 +6,5 @@ import cult.Cult;
 typedef _CultEventChoice = {
   var button: String;
   var text: String;
-  var f: Game -> Cult -> Void;
+  var f: Game -> Cult -> Int -> Void;
 }

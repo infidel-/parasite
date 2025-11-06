@@ -914,13 +914,6 @@ public function show()
       return (isTeamMember || type == 'blackops');
     }
 
-// is this ai a player host?
-  public inline function isPlayerHost(): Bool
-    {
-      return (game.player.state == PLR_STATE_HOST &&
-        this == game.player.host);
-    }
-
 // set this AI as a cultist
   public function setCult(cult: Cult)
     {
@@ -1123,20 +1116,6 @@ public function show()
     {}
 
 // ======================================================================
-
-
-// log according to gender
-  public function log(s: String, ?col: _TextColor = null)
-    {
-      if (!isMale)
-        {
-          s = StringTools.replace(s, 'He ', 'She ');
-          s = StringTools.replace(s, ' he ', ' she ');
-          s = StringTools.replace(s, ' him', ' her');
-          s = StringTools.replace(s, ' his', ' her');
-        }
-      game.log((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s, col);
-    }
 
   public function toString()
     {
