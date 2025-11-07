@@ -137,18 +137,18 @@ class Choice extends UIWindow
       hideChoiceNotes();
     }
 
-// action
-  public override function action(index: Int)
+// action (1-3)
+  public override function action(id: Int)
     {
       if (params == null ||
           params.f == null ||
-          index < 0 ||
+          id < 1 ||
           params.buttons == null ||
-          index >= params.buttons.length)
+          id > params.buttons.length)
         {
           return;
         }
-      params.f(params.src, index);
+      params.f(params.src, id);
       game.ui.closeWindow();
     }
 }

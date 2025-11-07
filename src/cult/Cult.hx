@@ -559,6 +559,20 @@ class Cult extends _SaveObject
         game.log(Name() + ' ' + text + '.');
     }
 
+// cult log (no dot)
+  public function logNoDot(text: String)
+    {
+      if (isPlayer)
+        game.log(Name() + ' ' + text);
+    }
+
+// cult log (small gray helper)
+  public function logsg(text: String)
+    {
+      if (isPlayer)
+        game.log(Const.smallgray(Name() + ' ' + text));
+    }
+
 // max cult size
   public function maxSize(): Int
     {

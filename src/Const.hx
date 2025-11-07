@@ -665,6 +665,12 @@ class Const
       return min + Std.random(max - min + 1);
     }
 
+// roll d100
+  public static inline function d100(): Int
+    {
+      return Std.random(100);
+    }
+
 
 // round to 1 decimal
   public static inline function round(x: Float): Float

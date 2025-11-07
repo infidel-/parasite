@@ -241,7 +241,8 @@ class Console
         }
 
       // XXX quit game
-      else if (char0 == 'q')
+      else if ((char0 == 'q' && cmd.length == 1) ||
+              cmd == 'quit')
 // exit game
 #if electron
         electron.renderer.IpcRenderer.invoke('quit');

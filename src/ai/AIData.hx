@@ -179,10 +179,11 @@ class AIData extends _SaveObject
     }
 
 // add trait to this AI
-  public function addTrait(t: _AITraitType)
+// returns true if it was really added
+  public function addTrait(t: _AITraitType): Bool
     {
       if (hasTrait(t))
-        return;
+        return false;
       traits.add(t);
       var info = TraitsConst.getInfo(t);
       if (info.onInit != null)
@@ -199,6 +200,7 @@ class AIData extends _SaveObject
         baseAttrs.psyche = 2;
       // also just in case
       derivedStats();
+      return true;
     }
 
 // add random trait from group
@@ -306,8 +308,8 @@ class AIData extends _SaveObject
         this.id == game.player.host.id);
     }
 
-// log according to gender
-  public function log(s: String, ?col: _TextColor = null)
+// prepare log string for gender
+  function prepLog(s: String): String
     {
       if (!isMale)
         {
@@ -316,7 +318,20 @@ class AIData extends _SaveObject
           s = StringTools.replace(s, ' him', ' her');
           s = StringTools.replace(s, ' his', ' her');
         }
+      return s;
+    }
+
+// log according to gender
+  public function log(s: String, ?col: _TextColor = null)
+    {
+      s = prepLog(s);
       game.log((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s, col);
+    }
+
+  public function logsg(s: String)
+    {
+      s = prepLog(s);
+      game.log(Const.smallgray((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s));
     }
 
 // save derived stats (must be called in the end of derived classes constructors)

@@ -22,6 +22,7 @@
   --text-color-energy: #50d6fe;
   --text-color-income: #f5b57e;
   --text-color-money: #ecd352;
+  --text-color-trait: #d8863f;
 
   --text-color-evolution-title: #73f3ff;
   --text-color-evolution-note: #5ebee5;
@@ -1401,6 +1402,17 @@ input[type=checkbox] {
 
 .host-attr-notes {
   color: #a1c66f;
+  font-size: 80%;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
+.host-trait-title {
+  color: var(--text-color-trait);
+}
+
+.host-trait-notes {
+  color: #daa980;
   font-size: 80%;
   line-height: 1.1;
   letter-spacing: 0.5px;

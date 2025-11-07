@@ -77,6 +77,7 @@ class UpgradeFollower2 extends UpgradeFollower
           {
             var data: { event: _CultEvent, game: Game, cult: Cult } = cast src;
             var choice = data.event.choices[choiceID - 1];
+            game.log('You chose ' + Const.col('gray', choice.button) + ' in occasio ' + Const.col('occasio', event.title) + '.');
             choice.f(data.game, data.cult, targetID);
           }
       };
