@@ -9,6 +9,8 @@ import Const;
 import Const.d100;
 import Icon;
 import _CultEvent;
+import _CultEventType;
+import _AITraitType;
 
 class InductionHangar
 {

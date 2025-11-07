@@ -2,9 +2,9 @@
 package cult.events.upgrade;
 
 import game.Game;
-import cult.*;
-import cult.effects.*;
+import cult.Cult;
 import cult.EventHelper.*;
+import cult.effects.*;
 import Const;
 import Const.d100;
 

@@ -18,40 +18,16 @@ class UpgradeFollowerEvents
       map.set(GROUP_COMBAT, [
         RedKnifeVigil.create(),
         InductionHangar.create(),
-        BastionMidnight.create()
+        BastionMidnight.create(),
+        VenaArcanumWake.create(),
+        UterusSusurroDrill.create(),
+        SudorSigillumMass.create()
       ]);
 
       map.set(GROUP_MEDIA, [
-        {
-          type: TYPE_OCCASIO,
-          title: 'Test Rite (Media)',
-          text: 'Screens flicker with curated visions as the cult weighs how loudly to trumpet the ascension of its new Voice.',
-          choices: [
-            {
-              button: 'Broadcast',
-              text: 'Seed captivating rumors (+1 media resource).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.media += 1;
-                cult.log('whispers become headlines; media power rises.');
-              }
-            },
-            {
-              button: 'Product Placement',
-              text: 'Sell branded salvation kits (+5,000 money).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.money += 5000;
-                cult.log('merch tables empty; coffers swell by 5,000.');
-              }
-            },
-            {
-              button: 'Low Profile',
-              text: 'Let the glow fade for now (no change).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.log('the message is muted; influence holds steady.');
-              }
-            }
-          ]
-        }
+        LinguaMareTelecast.create(),
+        CarnisSpeculumFeed.create(),
+        MassaLiturgiaStream.create()
       ]);
 
       map.set(GROUP_LAWFARE, [
