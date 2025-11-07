@@ -27,7 +27,10 @@ class UpgradeFollowerEvents
       map.set(GROUP_MEDIA, [
         LinguaMareTelecast.create(),
         CarnisSpeculumFeed.create(),
-        MassaLiturgiaStream.create()
+        MassaLiturgiaStream.create(),
+        BackchannelLitany.create(),
+        SleeperCourierBrief.create(),
+        InaudiblePremiere.create()
       ]);
 
       map.set(GROUP_LAWFARE, [
