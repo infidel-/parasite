@@ -16,54 +16,30 @@ class UpgradeFollowerEvents
       var map = new Map<_AIJobGroup, Array<_CultEvent>>();
 
       map.set(GROUP_COMBAT, [
-        RedKnifeVigil.create(),
-        InductionHangar.create(),
         BastionMidnight.create(),
-        VenaArcanumWake.create(),
+        InductionHangar.create(),
+        RedKnifeVigil.create(),
+        SudorSigillumMass.create(),
         UterusSusurroDrill.create(),
-        SudorSigillumMass.create()
+        VenaArcanumWake.create(),
       ]);
 
       map.set(GROUP_MEDIA, [
-        LinguaMareTelecast.create(),
-        CarnisSpeculumFeed.create(),
-        MassaLiturgiaStream.create(),
         BackchannelLitany.create(),
+        CarnisSpeculumFeed.create(),
+        InaudiblePremiere.create(),
+        LinguaMareTelecast.create(),
+        MassaLiturgiaStream.create(),
         SleeperCourierBrief.create(),
-        InaudiblePremiere.create()
       ]);
 
       map.set(GROUP_LAWFARE, [
-        {
-          type: TYPE_OCCASIO,
-          title: 'Test Rite (Lawfare)',
-          text: 'Legal tomes fan out across the sanctum as the newly elevated Arbiter weighs which precedent to set.',
-          choices: [
-            {
-              button: 'Draft Mandate',
-              text: 'Codify new doctrine (+1 lawfare resource).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.lawfare += 1;
-                cult.log('a fresh precedent seals; lawfare power grows.');
-              }
-            },
-            {
-              button: 'Retainer Fees',
-              text: 'Bill sympathetic firms (+5,000 money).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.money += 5000;
-                cult.log('trust accounts overflow; coffers gain 5,000.');
-              }
-            },
-            {
-              button: 'Adjourn',
-              text: 'Recess without ruling (no change).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.log('the docket clears quietly; balance remains.');
-              }
-            }
-          ]
-        }
+        EffigyArbitrament.create(),
+        FleshTissueBrief.create(),
+        HushLedgerConvocation.create(),
+        OsNativitasHearing.create(),
+        SealedDocketVigil.create(),
+        VeinPrecedentRitual.create(),
       ]);
 
       map.set(GROUP_CORPORATE, [

@@ -1,14 +1,9 @@
 // event definition for the carnis speculum feed media upgrade
 package cult.events.upgrade;
 
-import game.Game;
-import cult.Cult;
 import cult.EventHelper.*;
 import cult.effects.*;
-import Const;
 import Const.d100;
-import Icon;
-import _CultEvent;
 
 class CarnisSpeculumFeed
 {
@@ -40,7 +35,7 @@ class CarnisSpeculumFeed
     }
 
 // handles the ad buy choice outcome
-  public static function choice1(game: Game, cult: Cult, targetID: Int): Void
+  public static function choice1(game: game.Game, cult: cult.Cult, targetID: Int): Void
     {
       if (d100() < 5)
         {
@@ -55,7 +50,7 @@ class CarnisSpeculumFeed
     }
 
 // handles the pulse loop choice outcome
-  public static function choice2(game: Game, cult: Cult, targetID: Int): Void
+  public static function choice2(game: game.Game, cult: cult.Cult, targetID: Int): Void
     {
       if (d100() < 5)
         {
@@ -72,7 +67,7 @@ class CarnisSpeculumFeed
     }
 
 // handles the saint clip choice outcome
-  public static function choice3(game: Game, cult: Cult, targetID: Int): Void
+  public static function choice3(game: game.Game, cult: cult.Cult, targetID: Int): Void
     {
       if (d100() < 5)
         {

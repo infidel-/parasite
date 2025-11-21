@@ -74,7 +74,5 @@ class MainElectron
       });
       App.commandLine.appendSwitch('in-process-gpu');
       App.commandLine.appendSwitch('disable-direct-composition');
-      App.commandLine.appendSwitch('--show-fps-counter');
-      App.commandLine.appendSwitch('--disable-frame-rate-limit');
     }
 }
