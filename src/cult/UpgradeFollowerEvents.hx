@@ -43,36 +43,9 @@ class UpgradeFollowerEvents
       ]);
 
       map.set(GROUP_CORPORATE, [
-        {
-          type: TYPE_OCCASIO,
-          title: 'Test Rite (Corporate)',
-          text: 'Boardroom candles flare as analysts debate whether to reinvest, redistribute, or simply dine on the victory.',
-          choices: [
-            {
-              button: 'Reinvest',
-              text: 'Channel profits into new ventures (+1 corporate resource).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.corporate += 1;
-                cult.log('portfolios realign; corporate power increases.');
-              }
-            },
-            {
-              button: 'Dividend',
-              text: 'Issue celebratory payouts (+5,000 money).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.money += 5000;
-                cult.log('share ledgers bloom; coffers add 5,000.');
-              }
-            },
-            {
-              button: 'Gala Night',
-              text: 'Toast the upgrade without action (no change).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.log('crystal clinks echo; strategy sleeps.');
-              }
-            }
-          ]
-        }
+        VeinTicker.create(),
+        CarnisBoard.create(),
+        StakeholderFlesh.create(),
       ]);
 
       map.set(GROUP_POLITICAL, [
