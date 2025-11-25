@@ -253,13 +253,31 @@ class Ordeals extends _SaveObject
           if (member == null)
             continue;
           
-          actions.push({
+          var name = member.TheName();
+          
+          // check if member can be upgraded
+          var jobInfo = game.jobs.getJobInfo(member.job);
+          var canUpgrade = (jobInfo != null &&
+                           jobInfo.level < 3 &&
+                           game.jobs.getNextJobLevel(jobInfo.group, member.job) != null);
+          
+          var action: _PlayerAction = {
             id: 'upgrade2',
             type: ACTION_CULT,
-            name: member.TheName(),
+            name: name,
             energy: 0,
             obj: { targetID: memberID }
-          });
+          };
+          
+          if (!canUpgrade)
+            {
+              action.name += Const.smallgray(' [cannot elevate]');
+              action.f = function() {
+                game.actionFailed('This member cannot be elevated further.');
+              };
+            }
+          
+          actions.push(action);
         }
       
       return actions;

@@ -335,20 +335,25 @@ class Cult extends UIWindow
       var upgradeActions = cult.ordeals.getUpgrade2Actions();
       for (a in upgradeActions)
         {
+          // back action
           if (a.obj != null &&
               a.obj.submenu == 'back')
             a.f = function() {
               menuState = STATE_INITIATE;
               updateActions();
             }
+          // member to upgrade
           else
             {
-              var actionObj = a;
-              a.f = function() {
-                cult.ordeals.action(actionObj);
-                menuState = STATE_ROOT;
-                updateActions();
-              }
+              if (a.f == null)
+                {
+                  var actionObj = a;
+                  a.f = function() {
+                    cult.ordeals.action(actionObj);
+                    menuState = STATE_ROOT;
+                    updateActions();
+                  }
+                }
             }
           addPlayerAction(a);
         }
