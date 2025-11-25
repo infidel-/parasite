@@ -44,7 +44,7 @@ class Choice extends UIWindow
       outer.appendChild(text);
 
       note = Browser.document.createDivElement();
-      note.className = 'window-choice-notes small gray';
+      note.className = 'window-choice-notes gray';
       note.style.minHeight = '4em';
       note.style.display = 'block';
       outer.appendChild(note);

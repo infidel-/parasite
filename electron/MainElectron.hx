@@ -49,9 +49,10 @@ class MainElectron
 #if !mydebug
           win.setMenu(null);
 #end
+/*
           win.on(closed, function(e) {
               win = null;
-          });
+          });*/
           win.loadFile('app.html');
 #if mydebug
           win.webContents.openDevTools();

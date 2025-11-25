@@ -3,9 +3,7 @@
 
 package objects;
 
-import scenario.Scenario;
 import game.Game;
-import game.Player;
 
 class EventObject extends AreaObject
 {

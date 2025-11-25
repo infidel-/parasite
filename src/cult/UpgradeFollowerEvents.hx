@@ -46,72 +46,18 @@ class UpgradeFollowerEvents
         VeinTicker.create(),
         CarnisBoard.create(),
         StakeholderFlesh.create(),
+        PulpitVein.create(),
+        FleshPortfolio.create(),
+        ArteryDividend.create(),
       ]);
 
       map.set(GROUP_POLITICAL, [
-        {
-          type: TYPE_OCCASIO,
-          title: 'Test Rite (Political)',
-          text: 'Campaign banners unfurl as the council debates whether to spend influence on legislation, patronage, or future favors.',
-          choices: [
-            {
-              button: 'Fast-Track Bill',
-              text: 'Push covert legislation (+1 political resource).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.political += 1;
-                cult.log('votes fall in line; political power deepens.');
-              }
-            },
-            {
-              button: 'Fundraisers',
-              text: 'Host closed-door dinners (+5,000 money).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.money += 5000;
-                cult.log('envelopes slide under velvet; coffers grow by 5,000.');
-              }
-            },
-            {
-              button: 'Backroom Pact',
-              text: 'Bank favors for later (no change).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.log('nods are exchanged; momentum holds.');
-              }
-            }
-          ]
-        }
-      ]);
-
-      map.set(GROUP_CIVILIAN, [
-        {
-          type: TYPE_OCCASIO,
-          title: 'Test Rite (Civilian)',
-          text: 'Everyday faithful gather with offerings, debating how to celebrate the friend now raised above them.',
-          choices: [
-            {
-              button: 'Community Feast',
-              text: 'Share humble gifts (+2,500 money).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.money += 2500;
-                cult.log('neighbors empty jars; coffers gain 2,500.');
-              }
-            },
-            {
-              button: 'Hidden Shrine',
-              text: 'Offer quiet prayers (+1 occult resource).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.resources.occult += 1;
-                cult.log('candle smoke thickens; occult knowledge grows.');
-              }
-            },
-            {
-              button: 'Simple Thanks',
-              text: 'Bow heads and disperse (no change).',
-              f: function(game: Game, cult: Cult, targetID: Int) {
-                cult.log('gratitude lingers; resources remain untouched.');
-              }
-            }
-          ]
-        }
+        CommitteeFlesh.create(),
+        CaucusSine.create(),
+        FundGraft.create(),
+        PolicyGraft.create(),
+        BillSuture.create(),
+        VoteVein.create(),
       ]);
 
       return map;

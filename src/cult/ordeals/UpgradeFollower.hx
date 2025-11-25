@@ -101,10 +101,12 @@ class UpgradeFollower extends Ordeal
           jobInfo.level >= 3)
         return false;
 
+      // get next job level
       var nextJob = game.jobs.getNextJobLevel(jobInfo.group, member.job);
       if (nextJob == null)
         return false;
 
+      // apply upgrade
       var jobData = game.jobs.rollJobInfo([nextJob]);
       member.job = jobData.name;
       member.income = jobData.income;
