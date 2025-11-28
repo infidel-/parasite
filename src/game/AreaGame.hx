@@ -1237,14 +1237,14 @@ class AreaGame extends _SaveObject
               case AREA_CITY_MEDIUM:
                 maxClues = 1;
               case AREA_CITY_LOW:
-                maxClues = 0;
+                maxClues = 1;
               default:
                 // military bases
                 maxClues = 5;
             }
           var maxSpawn = maxClues - cnt;
           var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
-          for (i in 0...maxSpawn)
+          for (_ in 0...maxSpawn)
             {
               var loc = findUnseenEmptyLocation();
               if (loc.x < 0)

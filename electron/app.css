@@ -533,7 +533,6 @@ hr {
 }
 
 .window {
-  opacity: 0.9;
   z-index: 110;
   position: fixed;
   margin: 0;
