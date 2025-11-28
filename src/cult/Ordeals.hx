@@ -119,6 +119,20 @@ class Ordeals extends _SaveObject
             obj: { submenu: 'upgrade2' }
           });
         }
+
+      // check if there are free level 3 members and timeline is enabled
+      var freeLevelThree = cult.getFreeMembers(3, true);
+      if (freeLevelThree.length >= 1 &&
+          game.player.vars.timelineEnabled)
+        {
+          actions.push({
+            id: 'gatherClues',
+            type: ACTION_CULT,
+            name: 'Anthropomancy',
+            energy: 0,
+            obj: {}
+          });
+        }
       
       return actions;
     }
@@ -258,8 +272,9 @@ class Ordeals extends _SaveObject
           // check if member can be upgraded
           var jobInfo = game.jobs.getJobInfo(member.job);
           var canUpgrade = (jobInfo != null &&
-                           jobInfo.level < 3 &&
-                           game.jobs.getNextJobLevel(jobInfo.group, member.job) != null);
+            jobInfo.level < 3 &&
+            game.jobs.getNextJobLevel(jobInfo.group,
+              member.job) != null);
           
           var action: _PlayerAction = {
             id: 'upgrade2',
@@ -287,88 +302,25 @@ class Ordeals extends _SaveObject
 // menu returns to root after this action
   public function action(action: _PlayerAction)
     {
-      // handle recruit actions
-      if (action.id == 'recruit')
+      var ordeal: Ordeal = null;
+      var o = action.obj;
+      switch (action.id)
         {
-          var ordeal = new RecruitFollower(game, action.obj.type);
-          
-          // add random free member to ordeal
-          var freeMembers = cult.getFreeMembers(1);
-          if (freeMembers.length > 0)
-            {
-              var randomMemberID = freeMembers[Std.random(freeMembers.length)];
-              ordeal.addMembers([randomMemberID]);
-            }
-          
+          case 'recruit':
+            ordeal = new RecruitFollower(game, o.type);
+          case 'upgrade':
+            ordeal = new UpgradeFollower(game, o.targetID, 1);
+          case 'upgrade2':
+            ordeal = new UpgradeFollower2(game, o.targetID);
+          case 'gatherClues':
+            ordeal = new GatherClues(game);
+          default:
+            return;
+        }
+      if (ordeal != null)
+        {
           list.push(ordeal);
           game.ui.updateWindow();
-          return;
         }
-      
-      // handle upgrade actions
-      if (action.id == 'upgrade')
-        {
-          var targetID = action.obj.targetID;
-          var ordeal = new UpgradeFollower(game, targetID);
-          
-          // add two random free members of level 1 to ordeal (excluding target)
-          var freeMembers = cult.getFreeMembers(1);
-          var availableMembers = [];
-          for (memberID in freeMembers)
-            {
-              if (memberID != targetID)
-                availableMembers.push(memberID);
-            }
-          
-          if (availableMembers.length >= 2)
-            {
-              // shuffle and take first 2
-              var shuffled = [];
-              for (id in availableMembers)
-                shuffled.push(id);
-              shuffled.sort(function(a, b) return Std.random(3) - 1);
-              ordeal.addMembers([shuffled[0], shuffled[1]]);
-            }
-          else if (availableMembers.length >= 1)
-            {
-              // only one available, use it twice (or handle gracefully)
-              ordeal.addMembers([availableMembers[0]]);
-            }
-          
-          list.push(ordeal);
-          game.ui.updateWindow();
-          return;
-        }
-      
-      if (action.id == 'upgrade2')
-        {
-          var targetID = action.obj.targetID;
-          var ordeal = new UpgradeFollower2(game, targetID);
-          
-          var freeMembers = cult.getFreeMembers(2, true);
-          var availableMembers = [];
-          for (memberID in freeMembers)
-            if (memberID != targetID)
-              availableMembers.push(memberID);
-          
-          if (availableMembers.length < 2)
-            {
-              game.actionFailed('Two additional free level 2 or higher followers are required for the rite.');
-              return;
-            }
-          
-          var firstIdx = Std.random(availableMembers.length);
-          var helperOne = availableMembers[firstIdx];
-          availableMembers.splice(firstIdx, 1);
-          var secondIdx = Std.random(availableMembers.length);
-          var helperTwo = availableMembers[secondIdx];
-          ordeal.addMembers([helperOne, helperTwo]);
-          
-          list.push(ordeal);
-          game.ui.updateWindow();
-          return;
-        }
-      
-      return;
     }
 }

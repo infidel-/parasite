@@ -11,7 +11,20 @@ class UpgradeFollower2 extends UpgradeFollower
 {
   public function new(g: Game, targetID: Int)
     {
-      super(g, targetID);
+      super(g, targetID, 2);
+      // add two random free level 2+ members to ordeal (excluding target)
+      var free = cult.getFreeMembers(2, true);
+      var avail = [];
+      for (id in free)
+        if (id != targetID)
+          avail.push(id);
+      
+      var idx1 = Std.random(avail.length);
+      var h1 = avail[idx1];
+      avail.splice(idx1, 1);
+      var idx2 = Std.random(avail.length);
+      var h2 = avail[idx2];
+      addMembers([h1, h2]);
     }
 
 // init object before loading/post creation

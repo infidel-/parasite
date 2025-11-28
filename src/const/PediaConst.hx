@@ -153,7 +153,7 @@ Q + C - Cult window<br>",
         {
           id: 'habitat',
           name: 'Habitat',
-          img: 'imp/imp_habitat',
+          img: 'imp/imp_microhabitat',
           text: "Once you grow your first body feature, the parasite realizes that this dangerous process is better done inside of the habitat. This fact opens up the microhabitat knowledge improvement. There is a limit to the amount of habitats that the parasite can have active at any moment. There is also a total amount of habitats that can be created during a single game. Habitats can be created in any area of the game in the region mode with a special action. This does not require any resources and the empty habitat will already give you the ability to read journals and use computers to research event NPCs. To have further uses for a habitat, you must evolve and produce various habitat growths. Each growth mold is a body feature that upon activation converts the host into the habitat growth leaving the parasite without a host.",
         },
         {

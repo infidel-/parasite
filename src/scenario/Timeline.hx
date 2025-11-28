@@ -89,7 +89,7 @@ class Timeline extends _SaveObject
         }
 
       var ret = false;
-      for (i in 0...n)
+      for (_ in 0...n)
         if (learnSingleClue(event, isPhysical))
           ret = true;
       return ret;
@@ -139,7 +139,9 @@ class Timeline extends _SaveObject
 
       // different event, start from its location
       var t = null;
-      if (e != event && e.location != null && !e.locationKnown)
+      if (e != event &&
+          e.location != null &&
+          !e.locationKnown)
         t = 'location';
       else
         {
@@ -542,7 +544,7 @@ class Timeline extends _SaveObject
     }
 
 // get random event that can be learned about
-// NOTE: returns null if there is none
+// NOTE: returns null if there are none
   public function getRandomLearnableEvent(): Event
     {
       var tmp = [];

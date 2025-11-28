@@ -10,12 +10,40 @@ class UpgradeFollower extends Ordeal
 {
   public var targetID: Int;
 
-  public function new(g: Game, targetID: Int)
+  public function new(g: Game, targetID: Int, level: Int)
     {
       super(g);
       this.targetID = targetID;
       init();
       initPost(false);
+
+      // child classes may call this too, so only add members if level 1
+      if (level != 1)
+        return;
+
+      // add two random free members of level 1 to ordeal (excluding target)
+      var free = cult.getFreeMembers(1);
+      var avail = [];
+      for (id in free)
+        {
+          if (id != targetID)
+            avail.push(id);
+        }
+      
+      if (avail.length >= 2)
+        {
+          // shuffle and take first 2
+          var shuf = [];
+          for (id in avail)
+            shuf.push(id);
+          shuf.sort(function(a, b) return Std.random(3) - 1);
+          addMembers([shuf[0], shuf[1]]);
+        }
+      else if (avail.length >= 1)
+        {
+          // only one available, use it
+          addMembers([avail[0]]);
+        }
     }
 
 // init object before loading/post creation

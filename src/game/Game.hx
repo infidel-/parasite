@@ -96,6 +96,7 @@ class Game extends _SaveObject
 // init game stuff
   public function init(firstTime: Bool)
     {
+      trace('init');
       var scen = '';
       if (scenarioStringID == 'alien')
         scen = '[scenario a]';

@@ -16,6 +16,13 @@ class RecruitFollower extends Ordeal
       this.followerType = followerType;
       init();
       initPost(false);
+
+      // add random free member to ordeal
+      var free = cult.getFreeMembers(1);
+      if (free.length == 0)
+        return;
+      var id = free[Std.random(free.length)];
+      addMembers([id]);
     }
 
 // init object before loading/post creation

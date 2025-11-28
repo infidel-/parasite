@@ -1485,6 +1485,26 @@ class Jobs
       return jobsByName.get(name);
     }
 
+  // convert job group enum to string name
+  public function groupToName(group: _AIJobGroup): String
+    {
+      switch (group)
+        {
+          case GROUP_COMBAT:
+            return 'combat';
+          case GROUP_MEDIA:
+            return 'media';
+          case GROUP_LAWFARE:
+            return 'lawfare';
+          case GROUP_CORPORATE:
+            return 'corporate';
+          case GROUP_POLITICAL:
+            return 'political';
+          default:
+            return 'combat';
+        }
+    }
+
   // get next level job info for a given group and job name
   // finds job info by group+name pair, then gets job info with same group+type and level+1
   public function getNextJobLevel(group: _AIJobGroup, name: String): _JobInfo
