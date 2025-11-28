@@ -6,6 +6,7 @@ import Const;
 import _CultEvent;
 import cult.Cult;
 import cult.UpgradeFollowerEvents;
+import _PlayerAction;
 
 class UpgradeFollower2 extends UpgradeFollower
 {
@@ -106,5 +107,76 @@ class UpgradeFollower2 extends UpgradeFollower
         obj: params
       });
       game.ui.closeWindow();
+    }
+
+// static method to add upgrade2 action to actions array
+  public static function initiateAction(cult: Cult, actions: Array<_PlayerAction>): Void
+    {
+      // check if there are enough free level 2 members for second upgrade
+      var free = cult.getFreeMembers(2, true);
+      if (free.length < 3 ||
+          !cult.canAddMemberAtLevel(3))
+        return;
+      
+      actions.push({
+        id: 'upgrade2',
+        type: ACTION_CULT,
+        name: 'Elevate the faithful II',
+        energy: 0,
+        obj: { submenu: 'upgrade2' }
+      });
+    }
+
+// static method to get upgrade2 submenu actions
+  public static function getUpgrade2Actions(cult: Cult, game: Game): Array<_PlayerAction>
+    {
+      var actions: Array<_PlayerAction> = [];
+      
+      actions.push({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        obj: { submenu: 'back' }
+      });
+      
+      var free = cult.getFreeMembers(2, true);
+      if (free.length < 3)
+        return actions;
+      
+      for (mid in free)
+        {
+          var m = cult.getMemberByID(mid);
+          if (m == null)
+            continue;
+          
+          var name = m.TheName();
+          
+          // check if member can be upgraded
+          var job = game.jobs.getJobInfo(m.job);
+          var canUpgrade = (job != null &&
+            job.level < 3 &&
+            game.jobs.getNextJobLevel(job.group, m.job) != null);
+          
+          var action: _PlayerAction = {
+            id: 'upgrade2',
+            type: ACTION_CULT,
+            name: name,
+            energy: 0,
+            obj: { targetID: mid }
+          };
+          
+          if (!canUpgrade)
+            {
+              action.name += Const.smallgray(' [cannot elevate]');
+              action.f = function() {
+                game.actionFailed('This member cannot be elevated further.');
+              };
+            }
+          
+          actions.push(action);
+        }
+      
+      return actions;
     }
 }

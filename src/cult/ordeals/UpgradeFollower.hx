@@ -5,6 +5,7 @@ import game.Game;
 import ai.*;
 import cult.Cult;
 import cult.Ordeal;
+import _PlayerAction;
 
 class UpgradeFollower extends Ordeal
 {
@@ -141,5 +142,65 @@ class UpgradeFollower extends Ordeal
       cult.log('member ' + member.TheName() + ' has been elevated to level ' + nextJob.level);
       cult.recalc();
       return true;
+    }
+
+// static method to add upgrade action to actions array
+  public static function initiateAction(cult: Cult, actions: Array<_PlayerAction>): Void
+    {
+      // check if there are enough free members for upgrade action
+      var free = cult.getFreeMembers(1);
+      if (free.length < 3 ||
+          !cult.canAddMemberAtLevel(2)) // 2 + target
+        return;
+      
+      // elevate the faithful action - opens submenu
+      actions.push({
+        id: 'upgrade',
+        type: ACTION_CULT,
+        name: 'Elevate the faithful',
+        energy: 0,
+        obj: { submenu: 'upgrade' }
+      });
+    }
+
+// static method to get upgrade submenu actions
+  public static function getUpgradeActions(cult: Cult, game: Game): Array<_PlayerAction>
+    {
+      var actions: Array<_PlayerAction> = [];
+      
+      // back button
+      actions.push({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        obj: { submenu: 'back' }
+      });
+      
+      // get free members of level 1
+      var free = cult.getFreeMembers(1);
+      for (mid in free)
+        {
+          // find member data
+          var m = cult.getMemberByID(mid);
+          if (m == null)
+            continue;
+
+          // only show level 1 members
+          var job = game.jobs.getJobInfo(m.job);
+          if (job == null ||
+              job.level != 1)
+            continue;
+          
+          actions.push({
+            id: 'upgrade',
+            type: ACTION_CULT,
+            name: m.TheName(),
+            energy: 0,
+            obj: { targetID: mid }
+          });
+        }
+      
+      return actions;
     }
 }

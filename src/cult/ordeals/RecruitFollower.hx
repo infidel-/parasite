@@ -4,6 +4,8 @@ package cult.ordeals;
 import game.Game;
 import ai.*;
 import cult.Ordeal;
+import cult.Cult;
+import _PlayerAction;
 
 class RecruitFollower extends Ordeal
 {
@@ -101,5 +103,53 @@ class RecruitFollower extends Ordeal
   public override function onSuccess()
     {
       cult.addAIData(target);
+    }
+
+// static method to add recruit action to actions array
+  public static function initiateAction(cult: Cult, actions: Array<_PlayerAction>): Void
+    {
+      // check if there are enough free members for recruit action
+      var free = cult.getFreeMembers(1);
+      if (free.length < 1)
+        return;
+      
+      // seek the pure action - opens submenu
+      actions.push({
+        id: 'recruit',
+        type: ACTION_CULT,
+        name: 'Seek the pure',
+        energy: 0,
+        obj: { submenu: 'recruit' }
+      });
+    }
+
+// static method to get recruit submenu actions
+  public static function getRecruitActions(cult: Cult): Array<_PlayerAction>
+    {
+      var actions: Array<_PlayerAction> = [];
+      
+      // back button
+      actions.push({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        obj: { submenu: 'back' }
+      });
+      
+      // power type options
+      var followerTypes = ['combat', 'media', 'lawfare', 'corporate', 'political'];
+      for (type in followerTypes)
+        {
+          actions.push({
+            id: 'recruit',
+            type: ACTION_CULT,
+            name: Const.capitalize(type),
+            energy: 0,
+            obj: { type: type }
+          });
+        }
+      
+      return actions;
     }
 }

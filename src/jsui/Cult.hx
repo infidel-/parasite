@@ -8,6 +8,9 @@ import js.html.DivElement;
 import game.Game;
 import _UICultState;
 import cult.Ordeal;
+import cult.ordeals.RecruitFollower;
+import cult.ordeals.UpgradeFollower;
+import cult.ordeals.UpgradeFollower2;
 
 class Cult extends UIWindow
 {
@@ -278,8 +281,8 @@ class Cult extends UIWindow
     {
       var cult = game.cults[0];
       
-      // get recruit actions from cult.ordeals
-      var recruitActions = cult.ordeals.getRecruitActions();
+      // get recruit actions from RecruitFollower
+      var recruitActions = RecruitFollower.getRecruitActions(cult);
       for (a in recruitActions)
         {
           // set different f function based on whether obj exists
@@ -304,7 +307,7 @@ class Cult extends UIWindow
       var cult = game.cults[0];
       
       // get upgrade actions from cult.ordeals
-      var upgradeActions = cult.ordeals.getUpgradeActions();
+      var upgradeActions = UpgradeFollower.getUpgradeActions(cult, game);
       for (a in upgradeActions)
         {
           // set different f function based on whether obj exists
@@ -332,7 +335,7 @@ class Cult extends UIWindow
     {
       var cult = game.cults[0];
       
-      var upgradeActions = cult.ordeals.getUpgrade2Actions();
+      var upgradeActions = UpgradeFollower2.getUpgrade2Actions(cult, game);
       for (a in upgradeActions)
         {
           // back action
