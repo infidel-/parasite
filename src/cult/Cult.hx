@@ -315,6 +315,7 @@ class Cult extends _SaveObject
     }
 
 // get member status string
+// NOTE: returns empty string if member is free
   public function getMemberStatus(memberID: Int): String
     {
       var member = getMemberByID(memberID);
@@ -483,6 +484,8 @@ class Cult extends _SaveObject
       ordeals.turn();
       // process active cult effects
       effects.turn();
+      // process member regeneration
+      turnMembers();
       
       game.debug(name +
         ' turn: COM ' + resources.combat +
@@ -491,6 +494,30 @@ class Cult extends _SaveObject
         ', COR ' + resources.corporate +
         ', POL ' + resources.political +
         ', MONEY ' + resources.money);
+    }
+
+// process member regeneration for free members
+  function turnMembers()
+    {
+      for (m in members)
+        {
+          // only process free members
+          if (getMemberStatus(m.id) != '')
+            continue;
+          
+          // add +10 energy up to maximum
+          m.energy += 10;
+          if (m.energy > m.maxEnergy)
+            m.energy = m.maxEnergy;
+          
+          // 10% chance to regen 1 hp
+          if (Std.random(100) < 10)
+            {
+              m.health += 1;
+              if (m.health > m.maxHealth)
+                m.health = m.maxHealth;
+            }
+        }
     }
 
 // recalculate cult power and resources from members

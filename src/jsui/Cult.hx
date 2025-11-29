@@ -413,6 +413,8 @@ class Cult extends UIWindow
       buf.add('<th>' + Const.smallgray('name') + '</th>');
       buf.add('<th>' + Const.smallgray('occupation') + '</th>');
       buf.add('<th>' + Const.smallgray('income') + '</th>');
+      buf.add('<th>' + Const.smallgray('health') + '</th>');
+      buf.add('<th>' + Const.smallgray('energy') + '</th>');
       buf.add('<th>' + Const.smallgray('status') + '</th>');
       buf.add('</tr>');
       buf.add('</thead>');
@@ -428,6 +430,8 @@ class Cult extends UIWindow
           var jobInfo = game.jobs.getJobInfo(m.job);
           buf.add('<td>' + Const.smallgray('[' + jobInfo.level + '] ' + m.job) + '</td>');
           buf.add('<td>' + Const.col('white', m.income) + Icon.money + '</td>');
+          buf.add('<td>' + Const.smallgray(m.health + '/' + m.maxHealth) + '</td>');
+          buf.add('<td>' + Const.smallgray(m.energy + '/' + m.maxEnergy) + '</td>');
           var status = cult.getMemberStatus(m.id);
           buf.add('<td>');
           if (status != '')
