@@ -253,7 +253,7 @@ class Cult extends _SaveObject
           for (id in locked)
             lockedIDs.set(id, true);
         }
-      
+
       // get map of blocked cultist IDs from effects
       var blockedIDs = new Map<Int, Bool>();
       if (effects.has(CULT_EFFECT_BLOCK_CULTIST))
@@ -265,18 +265,18 @@ class Cult extends _SaveObject
               blockedIDs.set(blockEffect.targetID, true);
             }
         }
-      
+
       var free = [];
       for (ai in members)
         {
           // check if member is locked in an ordeal
           if (lockedIDs.exists(ai.id))
             continue;
-          
+
           // check if member is blocked by effect
           if (blockedIDs.exists(ai.id))
             continue;
-          
+
           // check if cultist is already in this area
           if (game.location == LOCATION_AREA &&
               game.area != null)
@@ -285,7 +285,12 @@ class Cult extends _SaveObject
               if (tmp != null)
                 continue;
             }
-          
+
+          // check if cultist is player host (region mostly)
+          if (game.player.state == PLR_STATE_HOST &&
+              game.player.host.id == ai.id)
+            continue;
+
           // check member level
           var jobInfo = game.jobs.getJobInfo(ai.job);
           if (jobInfo != null)
@@ -315,7 +320,7 @@ class Cult extends _SaveObject
       var member = getMemberByID(memberID);
       if (member == null)
         return '';
-      
+
       // check if member is locked in an ordeal
       var lockedIDs = new Map<Int, Bool>();
       for (ordeal in ordeals.list)
@@ -324,10 +329,10 @@ class Cult extends _SaveObject
           for (id in locked)
             lockedIDs.set(id, true);
         }
-      
+
       if (lockedIDs.exists(memberID))
         return '[in ordeal]';
-      
+
       // check if member is blocked by effect
       if (effects.has(CULT_EFFECT_BLOCK_CULTIST))
         {
@@ -339,7 +344,7 @@ class Cult extends _SaveObject
                 return '[in recessu]';
             }
         }
-      
+
       // check if cultist is on area
       if (game.location == LOCATION_AREA &&
           game.area != null)
@@ -348,7 +353,12 @@ class Cult extends _SaveObject
           if (tmp != null)
             return '[on location]';
         }
-      
+
+      // check if cultist is player host (region mostly)
+      if (game.player.state == PLR_STATE_HOST &&
+          game.player.host.id == memberID)
+        return '[host]';
+
       return '';
     }
 
