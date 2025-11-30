@@ -423,7 +423,7 @@ class Cult extends _SaveObject
               var roll = Std.random(100);
               if (roll <= e.percent)
                 {
-                  game.logSmallGray('The call has failed to reach some of the faithful.');
+                  game.logsg('The call has failed to reach some of the faithful.');
                   return;
                 }
             }
@@ -507,6 +507,17 @@ class Cult extends _SaveObject
         return;
       turnCounter = 0;
       
+      // store old resource values for delta calculation
+      var delta: _CultPower = {
+        combat: resources.combat,
+        media: resources.media,
+        lawfare: resources.lawfare,
+        corporate: resources.corporate,
+        political: resources.political,
+        occult: resources.occult,
+        money: resources.money
+      };
+      
       // increase resources by 1 for each 3 power of the same type
       resources.combat += Std.int(power.combat / 3);
       resources.media += Std.int(power.media / 3);
@@ -524,13 +535,22 @@ class Cult extends _SaveObject
       // process member regeneration
       turnMembers();
       
-      game.debug(name +
-        ' turn: COM ' + resources.combat +
-        ', MED ' + resources.media +
-        ', LAW ' + resources.lawfare +
-        ', COR ' + resources.corporate +
-        ', POL ' + resources.political +
-        ', MONEY ' + resources.money);
+      // modify delta in place
+      delta.combat = resources.combat - delta.combat;
+      delta.media = resources.media - delta.media;
+      delta.lawfare = resources.lawfare - delta.lawfare;
+      delta.corporate = resources.corporate - delta.corporate;
+      delta.political = resources.political - delta.political;
+      delta.money = resources.money - delta.money;
+      
+      game.logsg(name +
+        ' turn: COM ' + resources.combat + (delta.combat > 0 ? ' (+' + delta.combat + ')' : '') +
+        ', MED ' + resources.media + (delta.media > 0 ? ' (+' + delta.media + ')' : '') +
+        ', LAW ' + resources.lawfare + (delta.lawfare > 0 ? ' (+' + delta.lawfare + ')' : '') +
+        ', COR ' + resources.corporate + (delta.corporate > 0 ? ' (+' + delta.corporate + ')' : '') +
+        ', POL ' + resources.political + (delta.political > 0 ? ' (+' + delta.political + ')' : '') +
+        ', MONEY ' + resources.money + (delta.money > 0 ? ' (+' + delta.money + ')' : ''));
+      game.scene.sounds.play('click-action');
     }
 
 // process member regeneration for free members
