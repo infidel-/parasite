@@ -40,8 +40,8 @@ class GatherClues extends Ordeal
       note = 'A master haruspex reads the entrails of fate to uncover hidden knowledge.';
       
       // set power based on member type
-      power.inc(memberType, 3);
-      power.money = 50000;
+      power.inc(memberType, 10);
+      power.money = 200000;
     }
 
 // called after load or creation

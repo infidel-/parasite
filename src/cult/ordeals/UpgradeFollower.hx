@@ -69,15 +69,13 @@ class UpgradeFollower extends Ordeal
             }
         }
 
-      power.money = 5000;
+      power.money = 20000;
       if (targetMember != null)
         {
           // civilians will only require money
           var jobInfo = game.jobs.getJobInfo(targetMember.job);
           if (jobInfo != null)
-            power.setByGroup(jobInfo.group, 1);
-
-          else power.money = 5000;
+            power.setByGroup(jobInfo.group, 3);
         }
     }
 

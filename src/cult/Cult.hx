@@ -696,7 +696,7 @@ class Cult extends _SaveObject
           case 2:
             return 3;
           case 1:
-            return 6;
+            return 10;
           default:
             return -1;
         }

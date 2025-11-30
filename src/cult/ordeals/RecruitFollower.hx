@@ -41,8 +41,8 @@ class RecruitFollower extends Ordeal
       selectTarget();
       
       // set ordeal power based on follower type
-      power.inc(followerType, 1);
-      power.money = 5000;
+      power.inc(followerType, 2);
+      power.money = 10000;
     }
 
 // called after load or creation
@@ -111,6 +111,10 @@ class RecruitFollower extends Ordeal
       // check if there are enough free members for recruit action
       var free = cult.getFreeMembers(1);
       if (free.length < 1)
+        return;
+
+      // check max cult size
+      if (cult.members.length >= cult.maxSize())
         return;
       
       // seek the pure action - opens submenu

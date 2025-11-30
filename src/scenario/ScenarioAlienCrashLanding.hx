@@ -237,6 +237,7 @@ class ScenarioAlienCrashLanding extends Scenario
           },
           npc: [ 'researcher:scientist' => 10, 'agent' => 5 ],
           onLearnLocation: function (game) {
+            game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
             game.goals.complete(SCENARIO_ALIEN_FIND_SHIP);
           },
         },

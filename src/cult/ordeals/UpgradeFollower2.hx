@@ -49,12 +49,12 @@ class UpgradeFollower2 extends UpgradeFollower
             }
         }
 
-      power.money = 30000;
+      power.money = 100000;
       if (targetMember != null)
         {
           var jobInfo = game.jobs.getJobInfo(targetMember.job);
           if (jobInfo != null)
-            power.setByGroup(jobInfo.group, 2);
+            power.setByGroup(jobInfo.group, 5);
         }
     }
 
