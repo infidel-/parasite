@@ -213,13 +213,16 @@ class Cult extends _SaveObject
 // returns true if action should close window
   public function action(action: _PlayerAction): Bool
     {
+      var ret = false;
       switch (action.id)
         {
           case 'callHelp':
-            var ret = callHelpAction(action);
-            if (!ret)
-              return true;
+            ret = callHelpAction(action);
+          case 'callMember':
+            ret = callMemberAction(action);
         }
+      if (!ret)
+        return true;
       game.playerArea.actionPost(); // post-action call
       return true;
     }
@@ -388,7 +391,23 @@ class Cult extends _SaveObject
         }
       return true;
     }
- 
+
+// call specific member
+  function callMemberAction(action: _PlayerAction): Bool
+    {
+      var m = getMemberByID(action.obj.memberID);
+      game.log('You summon ' + m.TheName() + ' to your side.');
+
+      // generate event with memberID in details
+      // create a simple params object
+      var paramsObj = new ArriveCultistParams();
+      paramsObj.memberID = action.obj.memberID;
+      game.managerArea.add(AREAEVENT_ARRIVE_CULTIST,
+        game.playerArea.x, game.playerArea.y, 5, paramsObj);
+
+      return true;
+    }
+
 // area manager: cultist arrives
   public function onArriveCultist(e: AreaEvent)
     {
@@ -409,16 +428,34 @@ class Cult extends _SaveObject
                 }
             }
         }
-      // find what cultists are still available
-      var freeIDs = getFreeMembers(1);
-      if (freeIDs.length == 0)
-        return;
 
-      // pick a cultist
-      var idx = Std.random(freeIDs.length);
-      var memberID = freeIDs[idx];
+      // check if memberID is specified in params
+      var memberID: Int = -1;
+      if (e.params != null)
+        {
+          var params = cast(e.params, ArriveCultistParams);
+          memberID = params.memberID;
+        }
+
+      // if no memberID specified, pick a random free cultist
+      if (memberID == -1)
+        {
+          // find what cultists are still available
+          var freeIDs = getFreeMembers(1);
+          if (freeIDs.length == 0)
+            return;
+
+          // pick a cultist
+          var idx = Std.random(freeIDs.length);
+          memberID = freeIDs[idx];
+        }
+      
       var aidata = getMemberByID(memberID);
       if (aidata == null)
+        return;
+      
+      // check if specified member is free
+      if (getMemberStatus(memberID) != '')
         return;
       game.debug(aidata.TheName() + ' has arrived.');
 //          log('calls for help: ' + ai.theName());

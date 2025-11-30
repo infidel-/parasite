@@ -7,6 +7,8 @@ import js.html.DivElement;
 
 import game.Game;
 import _UICultState;
+import _PlayerAction;
+import _PlayerActionType;
 import cult.Ordeal;
 import cult.ordeals.RecruitFollower;
 import cult.ordeals.UpgradeFollower;
@@ -100,6 +102,8 @@ class Cult extends UIWindow
             updateActionsUpgrade();
           case STATE_UPGRADE_TWO:
             updateActionsUpgradeTwo();
+          case STATE_CALL_MEMBER:
+            updateActionsCallMember();
         }
       
       // trigger content update animation on the whole actions block
@@ -110,7 +114,7 @@ class Cult extends UIWindow
   function updateActionsRoot()
     {
       var cult = game.cults[0];
-      
+     
       // action - call for help
       if (cult.canCallHelp())
         {
@@ -126,8 +130,20 @@ class Cult extends UIWindow
             game.ui.closeWindow();
           }
           addPlayerAction(a);
+
+          // action - call member
+          addPlayerAction({
+            id: 'callMember',
+            type: ACTION_CULT,
+            name: 'Summon member',
+            energy: 0,
+            f: function() {
+              menuState = STATE_CALL_MEMBER;
+              updateActions();
+            }
+          });
         }
-      
+
       // action - trade (only show if at least 10k money)
       if (cult.resources.money >= 10000 &&
           !cult.effects.has(CULT_EFFECT_NOTRADE))
@@ -143,7 +159,7 @@ class Cult extends UIWindow
             }
           });
         }
-      
+
       // action - initiate ordeal
       addPlayerAction({
         id: 'initiateOrdeal',
@@ -155,7 +171,7 @@ class Cult extends UIWindow
           updateActions();
         }
       });
-      
+
       // list of current ordeals
       for (ordeal in cult.ordeals.list)
         {
@@ -166,14 +182,14 @@ class Cult extends UIWindow
             energy: 0,
             obj: { ordeal: ordeal }
           };
-          
+
           var ordealObj = ordeal; // capture the ordeal object
           ordealAction.f = function() {
             currentOrdeal = ordealObj;
             menuState = STATE_ORDEAL;
             updateActions();
           };
-          
+
           addPlayerAction(ordealAction);
         }
     }
@@ -359,6 +375,49 @@ class Cult extends UIWindow
                 }
             }
           addPlayerAction(a);
+        }
+    }
+
+// update actions for call member state
+  function updateActionsCallMember()
+    {
+      var cult = game.cults[0];
+      
+      // back button
+      addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          menuState = STATE_ROOT;
+          updateActions();
+        }
+      });
+      
+      // list of free members
+      var free = cult.getFreeMembers(1);
+      for (mid in free)
+        {
+          var m = cult.getMemberByID(mid);
+          var memberID = mid; // capture for closure
+          addPlayerAction({
+            id: 'callMember',
+            type: ACTION_CULT,
+            name: m.TheName(),
+            energy: 0,
+            obj: { memberID: memberID },
+            f: function() {
+              game.cults[0].action({
+                id: 'callMember',
+                type: ACTION_CULT,
+                name: '',
+                energy: 0,
+                obj: { memberID: memberID }
+              });
+              game.ui.closeWindow();
+            }
+          });
         }
     }
 
