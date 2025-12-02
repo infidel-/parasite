@@ -4,12 +4,17 @@ package cult.ordeals.profane;
 import game.Game;
 import cult.ProfaneOrdeal;
 import cult.effects.DecreaseIncome;
+import cult.missions.Kill;
 
 class MediaTest extends ProfaneOrdeal
 {
   public function new(g: Game)
     {
       super(g);
+      addRandomMembers({
+        level: 1,
+        amount: 2
+      });
       init();
       initPost(false);
     }
@@ -25,6 +30,10 @@ class MediaTest extends ProfaneOrdeal
       // add negative effect
       var effect = new DecreaseIncome(game, timer);
       effects.push(effect);
+      
+      // add Kill mission
+      var killMission = new Kill(game);
+      missions.push(killMission);
       
       // set power requirements
       power.media = 15;

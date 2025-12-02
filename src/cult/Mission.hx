@@ -29,4 +29,10 @@ class Mission extends _SaveObject
 // called after load or creation
   public function initPost(onLoad: Bool)
     {}
+
+// get custom name for display
+  public function customName(): String
+    {
+      return name;
+    }
 }

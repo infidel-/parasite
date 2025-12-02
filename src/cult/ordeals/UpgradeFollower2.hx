@@ -14,18 +14,12 @@ class UpgradeFollower2 extends UpgradeFollower
     {
       super(g, targetID, 2);
       // add two random free level 2+ members to ordeal (excluding target)
-      var free = cult.getFreeMembers(2, true);
-      var avail = [];
-      for (id in free)
-        if (id != targetID)
-          avail.push(id);
-      
-      var idx1 = Std.random(avail.length);
-      var h1 = avail[idx1];
-      avail.splice(idx1, 1);
-      var idx2 = Std.random(avail.length);
-      var h2 = avail[idx2];
-      addMembers([h1, h2]);
+      addRandomMembers({
+        level: 2,
+        amount: 2,
+        excluding: targetID,
+        onlyGivenLevel: true
+      });
     }
 
 // init object before loading/post creation

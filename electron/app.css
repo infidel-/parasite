@@ -30,7 +30,7 @@
   --text-color-evolution-params: #13ff65;
 
   --text-color-ordeal-note: #d79826;
-  --text-color-ordeal-params: #f98fce;
+  --text-color-ordeal-actions: #f98fce;
   --text-color-communal-ordeal: #ffcd73;
   --text-color-profane-ordeal: #d68181;
 
@@ -1300,8 +1300,14 @@ input[type=checkbox] {
 }
 
 .window-cult-ordeals-actions {
-  color: var(--text-color-ordeal-params);
+  color: var(--text-color-ordeal-actions);
   font-size: 0.85em;
+}
+
+.window-cult-ordeals-clavis {
+  color: var(--text-color-gray);
+  font-size: 0.85em;
+  margin-top: 2px;
 }
 
 .window-cult-ordeals-timer {

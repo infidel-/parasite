@@ -679,17 +679,29 @@ class Cult extends UIWindow
       buf.add('Actions taken: ' + ordeal.actions + '/' + ordeal.members.length);
       buf.add('</div>');
       
-      // profane ordeal timer
+      // missions list for profane ordeals
       if (ordeal.type == ORDEAL_PROFANE)
         {
-          var profaneOrdeal: ProfaneOrdeal = cast ordeal;
+          var prof: ProfaneOrdeal = cast ordeal;
+          if (prof.missions.length > 0)
+            {
+              buf.add('<div class="window-cult-ordeals-clavis">');
+              buf.add('Claves: ');
+              var clavisNames = [];
+              for (mission in prof.missions)
+                clavisNames.push(Const.col('gray', mission.customName()));
+              buf.add(clavisNames.join(', '));
+              buf.add('</div>');
+            }
+      
+          // profane ordeal timer
           buf.add('<div class="window-cult-ordeals-timer">');
-          buf.add('Time remaining: ' + Const.col('white', profaneOrdeal.timer) + ' turns');
+          buf.add('Time remaining: ' + Const.col('white', prof.timer) + ' turns');
           buf.add('</div>');
         }
-      
+
       buf.add('</div>');
-      
+
       if (!isCol0)
         buf.add('</div>');
     }

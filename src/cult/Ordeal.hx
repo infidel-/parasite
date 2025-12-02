@@ -72,6 +72,39 @@ class Ordeal extends _SaveObject
         }
     }
 
+// add random free members to ordeal
+  public function addRandomMembers(params: {level: Int, amount: Int, ?excluding: Int, ?onlyGivenLevel: Bool})
+    {
+      var free = cult.getFreeMembers(params.level,
+        params.onlyGivenLevel != null ?
+        params.onlyGivenLevel : false);
+      var avail = [];
+      for (id in free)
+        {
+          if (params.excluding == null ||
+              id != params.excluding)
+            avail.push(id);
+        }
+      
+      if (avail.length >= params.amount)
+        {
+          // shuffle and take first amount
+          var shuf = [];
+          for (id in avail)
+            shuf.push(id);
+          shuf.sort(function(a, b) return Std.random(3) - 1);
+          var selected = [];
+          for (i in 0...params.amount)
+            selected.push(shuf[i]);
+          addMembers(selected);
+        }
+      else if (avail.length >= 1)
+        {
+          // use all available
+          addMembers(avail);
+        }
+    }
+
 // get list of cultist IDs locked by this ordeal
   public function getLockedCultists(): Array<Int>
     {
