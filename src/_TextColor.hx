@@ -13,4 +13,5 @@ enum _TextColor
   COLOR_GOAL;
   COLOR_PEDIA;
   COLOR_SYMBIOSIS;
+  COLOR_CULT;
 }

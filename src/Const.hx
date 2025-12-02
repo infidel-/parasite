@@ -30,6 +30,7 @@ class Const
     COLOR_GOAL => '#92B9FF',
     COLOR_PEDIA => '#c8d8da',
     COLOR_SYMBIOSIS => '#98ff97',
+    COLOR_CULT => '#fd97ff',
   ];
 /*
   // copy-pasted for now

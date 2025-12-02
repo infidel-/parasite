@@ -8,11 +8,8 @@ import js.html.DivElement;
 import game.Game;
 import _UICultState;
 import _PlayerAction;
-import _PlayerActionType;
-import cult.Ordeal;
-import cult.ordeals.RecruitFollower;
-import cult.ordeals.UpgradeFollower;
-import cult.ordeals.UpgradeFollower2;
+import cult.*;
+import cult.ordeals.*;
 
 class Cult extends UIWindow
 {
@@ -512,12 +509,27 @@ class Cult extends UIWindow
     {
       var cult = game.cults[0];
       var effectsText = [];
+      
+      // add cult effects
       for (effect in cult.effects)
         {
           effectsText.push(
             Const.col('cult-effect', effect.customName()) + ' ' +
             Const.smallgray('(' + effect.turns + ' t)'));
         }
+      
+      // add ordeal effects
+      for (ordeal in cult.ordeals.list)
+        {
+          for (effect in ordeal.effects)
+            {
+              effectsText.push(
+                Const.col('cult-effect', effect.customName()) + ' ' +
+                Const.smallgray('(' + effect.turns + ' t)') + ' ' +
+                Const.smallgray('[' + ordeal.coloredName() + ']'));
+            }
+        }
+      
       if (effectsText.length == 0)
         return;
       buf.add('<span>Effects: ' + effectsText.join(', ') + '</span><br/>');
@@ -602,7 +614,7 @@ class Cult extends UIWindow
       
       // title
       buf.add('<div class="window-cult-ordeals-title">');
-      buf.add(ordeal.customName());
+      buf.add(ordeal.coloredName());
       buf.add('</div>');
       
       // note
@@ -666,6 +678,15 @@ class Cult extends UIWindow
       buf.add('<div class="window-cult-ordeals-actions">');
       buf.add('Actions taken: ' + ordeal.actions + '/' + ordeal.members.length);
       buf.add('</div>');
+      
+      // profane ordeal timer
+      if (ordeal.type == ORDEAL_PROFANE)
+        {
+          var profaneOrdeal: ProfaneOrdeal = cast ordeal;
+          buf.add('<div class="window-cult-ordeals-timer">');
+          buf.add('Time remaining: ' + Const.col('white', profaneOrdeal.timer) + ' turns');
+          buf.add('</div>');
+        }
       
       buf.add('</div>');
       

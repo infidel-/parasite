@@ -15,6 +15,7 @@ class Ordeal extends _SaveObject
   public var game: Game;
   public var name: String;
   public var members: Array<Int>; // cult members involved
+  public var effects: Array<Effect>;
   public var power: _CultPower;
   public var type: _OrdealType;
   public var requiredMembers: Int;
@@ -31,6 +32,7 @@ class Ordeal extends _SaveObject
     {
       game = g;
       members = [];
+      effects = [];
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
@@ -82,6 +84,19 @@ class Ordeal extends _SaveObject
       return name;
     }
 
+// get colored custom name for display
+  public function coloredName(): String
+    {
+      switch (type)
+        {
+          case ORDEAL_PROFANE:
+            return Const.col('profane-ordeal', customName());
+          case ORDEAL_COMMUNAL:
+            return Const.col('communal-ordeal', customName());
+        }
+      return customName();
+    }
+
 // handle member death
   public function onDeath(aidata: AIData)
     {
@@ -90,8 +105,12 @@ class Ordeal extends _SaveObject
 // fail this ordeal
   public function fail()
     {
+      onFail();
       cult.ordeals.fail(this);
     }
+
+// hook for when ordeal fails (override in subclasses)
+  function onFail() {}
 
 // check if ordeal is complete
   public function check()

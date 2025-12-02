@@ -5,12 +5,15 @@ import game.Game;
 import _PlayerAction;
 import ai.AIData;
 import cult.ordeals.*;
+import cult.ordeals.profane.*;
+import cult.ProfaneOrdeal;
 
 class Ordeals extends _SaveObject
 {
   static var _ignoredFields = [ 'cult' ];
   public var game: Game;
   public var list: Array<Ordeal>; // active ordeals
+  public var profaneTimeout: Int; // timeout after profane ordeal completion/failure
   public var cult(get, never): Cult;
   private function get_cult(): Cult
     {
@@ -29,6 +32,7 @@ class Ordeals extends _SaveObject
 // NOTE: new object fields should init here!
   public function init()
     {
+      profaneTimeout = 0;
     }
 
 // called after load or creation
@@ -48,14 +52,24 @@ class Ordeals extends _SaveObject
 // fail an ordeal
   public function fail(ordeal: Ordeal)
     {
-      cult.log('ordeal ' + Const.col('gray', ordeal.customName()) + ' has failed');
+      cult.log('ordeal ' + ordeal.coloredName() + ' has failed');
+      
+      // increment profane timeout if this was a profane ordeal
+      if (ordeal.type == ORDEAL_PROFANE)
+        profaneTimeout = 10 + Const.roll(1, 4);
+      
       list.remove(ordeal);
     }
 
 // complete an ordeal successfully
   public function success(ordeal: Ordeal)
     {
-      cult.log('ordeal ' + Const.col('gray', ordeal.customName()) + ' completed successfully');
+      cult.log('ordeal ' + ordeal.coloredName() + ' completed successfully');
+      
+      // increment profane timeout if this was a profane ordeal
+      if (ordeal.type == ORDEAL_PROFANE)
+        profaneTimeout = 10 + Const.roll(1, 4);
+      
       list.remove(ordeal);
     }
 
@@ -66,26 +80,89 @@ class Ordeals extends _SaveObject
       for (ordeal in list)
         {
           ordeal.actions = 0;
+
+          // turn effects
+          for (effect in ordeal.effects)
+            effect.turn(cult, 1);
+
+          // handle profane ordeal effects and timer
+          if (ordeal.type == ORDEAL_PROFANE)
+            {
+              var profane: ProfaneOrdeal = cast ordeal;
+              
+              // decrease timer and check for failure
+              profane.timer--;
+              if (profane.timer <= 0)
+                profane.fail();
+            }
         }
+      
+      // decrement profane timeout
+      if (profaneTimeout > 0)
+        profaneTimeout--;
+      
+      // check for spawning new profane ordeals
+      turnSpawnProfane();
+    }
+
+// check for spawning new profane ordeals
+  function turnSpawnProfane()
+    {
+      // check cult size
+      if (cult.members.length < 3)
+        return;
+
+      // count profane ordeals
+      var profaneCount = 0;
+      for (ordeal in list)
+        {
+          if (ordeal.type == ORDEAL_PROFANE)
+            profaneCount++;
+        }
+
+      // check profane ordeal limit based on cult size
+      if (cult.members.length < 6)
+        {
+          // must have 0 profane ordeals
+          if (profaneCount > 0)
+            return;
+        }
+      else
+        {
+          // must have < 2 profane ordeals
+          if (profaneCount >= 2)
+            return;
+        }
+
+      // check random chance
+      if (Const.d100() >= 20)
+        return;
+
+      // check timeout
+      if (profaneTimeout != 0)
+        return;
+
+      // spawn new profane ordeal
+      var newOrdeal: ProfaneOrdeal = new MediaTest(game);
+      list.push(newOrdeal);
+      game.message('A tribulation most foul has descended upon us: ' + newOrdeal.coloredName() + '.', null, COLOR_DEFAULT);
     }
 
 // get initiate ordeal actions
   public function getInitiateOrdealActions(): Array<_PlayerAction>
     {
-      var actions: Array<_PlayerAction> = [];
-      
       // check for block communal effect
+      var actions: Array<_PlayerAction> = [];
       if (cult.effects.has(CULT_EFFECT_BLOCK_COMMUNAL))
         return actions;
-      
+
       RecruitFollower.initiateAction(cult, actions);
       UpgradeFollower.initiateAction(cult, actions);
       UpgradeFollower2.initiateAction(cult, actions);
       GatherClues.initiateAction(game, cult, actions);
-      
+
       return actions;
     }
-
 
 // handle action execution
 // menu returns to root after this action

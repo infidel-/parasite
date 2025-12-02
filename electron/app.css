@@ -29,9 +29,10 @@
   --text-color-evolution-level-note: #4cd47b;
   --text-color-evolution-params: #13ff65;
 
-  --text-color-ordeal-title: #ffcd73;
   --text-color-ordeal-note: #d79826;
   --text-color-ordeal-params: #f98fce;
+  --text-color-communal-ordeal: #ffcd73;
+  --text-color-profane-ordeal: #d68181;
 
   --text-color-organ-title: #e0e13a;
   --text-color-organ-title-inactive: #e0e13a;
@@ -1276,7 +1277,7 @@ input[type=checkbox] {
 
 .window-cult-ordeals-title {
   font-weight: bold;
-  color: var(--text-color-ordeal-title);
+  color: var(--text-color-communal-ordeal);
   margin-bottom: 4px;
 }
 
@@ -1301,6 +1302,13 @@ input[type=checkbox] {
 .window-cult-ordeals-actions {
   color: var(--text-color-ordeal-params);
   font-size: 0.85em;
+}
+
+.window-cult-ordeals-timer {
+  color: var(--text-color-profane-ordeal);
+  font-size: 0.85em;
+  font-weight: bold;
+  margin-top: 2px;
 }
 
 #window-ovum {
