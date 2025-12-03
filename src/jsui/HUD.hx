@@ -2,13 +2,13 @@
 package jsui;
 
 import js.Browser;
+import js.Browser.document;
 import js.html.TextAreaElement;
 import js.html.DivElement;
 import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import game.*;
-import cult.ProfaneOrdeal;
 
 class HUD
 {
@@ -17,17 +17,15 @@ class HUD
   public var state: _HUDState;
   var blinkingText: DivElement;
   var overlay: DivElement;
-  var container: DivElement;
+  public var container: DivElement;
   var consoleDiv: DivElement;
   var console: TextAreaElement;
   var consoleHistoryIndex: Int;
   var consoleHistoryDraft: String;
   var log: DivElement;
   var goals: DivElement;
-  var info: DivElement;
-  var areaInfoOverlay: DivElement;
-  var areaInfoAreaID: Int;
-  var areaInfoVisible: Bool;
+  public var info: DivElement;
+  var regionTooltip: RegionTooltip;
 #if mydebug
   var debugInfo: DivElement;
 #end
@@ -51,74 +49,67 @@ class HUD
       listActions = new List();
       listKeyActions = new List();
 
-      overlay = Browser.document.createDivElement();
+      overlay = document.createDivElement();
       overlay.id = 'overlay';
       overlay.style.visibility = 'hidden';
-      Browser.document.body.appendChild(overlay);
+      document.body.appendChild(overlay);
 
-      blinkingText = Browser.document.createDivElement();
+      blinkingText = document.createDivElement();
       blinkingText.innerHTML = 'You feel someone is watching.';
       blinkingText.className = 'highlight-text';
       blinkingText.id = 'blinking-text';
       blinkingText.style.opacity = '0';
       blinkingText.style.userSelect = 'none';
-      Browser.document.body.appendChild(blinkingText);
+      document.body.appendChild(blinkingText);
 
-      container = Browser.document.createDivElement();
+      container = document.createDivElement();
       container.id = 'hud';
       container.style.visibility = 'visible';
-      Browser.document.body.appendChild(container);
+      document.body.appendChild(container);
 
-      consoleDiv = Browser.document.createDivElement();
+      // initialize region tooltip
+      regionTooltip = new RegionTooltip(game, this);
+
+      consoleDiv = document.createDivElement();
       consoleDiv.className = 'console-div';
       consoleDiv.style.visibility = 'hidden';
       container.appendChild(consoleDiv);
 
-      console = Browser.document.createTextAreaElement();
+      console = document.createTextAreaElement();
       console.id = 'hud-console';
       consoleHistoryIndex = -1;
       consoleHistoryDraft = '';
       console.onkeydown = onConsoleKeyDown;
       consoleDiv.appendChild(console);
 
-      log = Browser.document.createDivElement();
+      log = document.createDivElement();
       log.className = 'text';
       log.id = 'hud-log';
       log.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
 
-      goals = Browser.document.createDivElement();
+      goals = document.createDivElement();
       goals.className = 'text';
       goals.id = 'hud-goals';
       goals.style.borderImage = "url('./img/hud-goals-border.png') 24 fill / 1 / 0 stretch";
       container.appendChild(goals);
 
-      info = Browser.document.createDivElement();
+      info = document.createDivElement();
       info.className = 'text';
       info.id = 'hud-info';
       info.style.borderImage = "url('./img/hud-info-border.png') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
 
-      areaInfoOverlay = Browser.document.createDivElement();
-      areaInfoOverlay.className = 'text';
-      areaInfoOverlay.id = 'hud-area-info';
-      areaInfoOverlay.style.display = 'none';
-      areaInfoOverlay.style.position = 'fixed';
-      areaInfoOverlay.style.pointerEvents = 'none';
-      areaInfoOverlay.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
-      container.appendChild(areaInfoOverlay);
-      areaInfoAreaID = -1;
-      areaInfoVisible = false;
 
 #if mydebug
-      debugInfo = Browser.document.createDivElement();
+      debugInfo = document.createDivElement();
       debugInfo.className = 'text';
       debugInfo.id = 'hud-debug-info';
       container.appendChild(debugInfo);
 #end
 
       // menu
-      var buttons = Browser.document.createDivElement();
+      var buttons = document.createDivElement();
       buttons.id = 'hud-buttons';
       container.appendChild(buttons);
       menuButtons = [];
@@ -136,7 +127,7 @@ class HUD
         Const.key('F6') + ': CULT');
 
       // actions
-      actions = Browser.document.createDivElement();
+      actions = document.createDivElement();
       actions.id = 'hud-actions';
       actions.style.borderImage = "url('./img/hud-actions-border.png') 28 fill / 1 / 0 stretch";
       container.appendChild(actions);
@@ -179,7 +170,7 @@ class HUD
 // add button to menu
   function addMenuButton(cont: DivElement, state: _UIState, str: String): DivElement
     {
-      var btn = Browser.document.createDivElement();
+      var btn = document.createDivElement();
       btn.innerHTML = str;
       // NOTE: must be the same with show/hide buttons at updateMenu()
       btn.className = 'hud-button window-title';
@@ -223,220 +214,16 @@ class HUD
 
       if (game.location == LOCATION_REGION &&
           ui.state == UISTATE_DEFAULT)
-        updateRegionAreaTooltip();
-      else hideRegionAreaTooltip();
+        regionTooltip.update();
+      else regionTooltip.hide();
     }
 
-// show region tooltip when hovering known tiles
-  function updateRegionAreaTooltip()
-    {
-      if (game.location != LOCATION_REGION)
-        {
-          hideRegionAreaTooltip();
-          return;
-        }
-      var pos = game.scene.mouse.getXY();
-      if (pos == null)
-        {
-          hideRegionAreaTooltip();
-          return;
-        }
-      var area = game.region.getXY(pos.x, pos.y);
-      if (area == null)
-        {
-          hideRegionAreaTooltip();
-          return;
-        }
-      var areaKnown = game.scene.region.isKnown(area);
-      var eventLines = getRegionEventTooltipLines(area);
-      var npcLines = getRegionNPCTooltipLines(area);
-      var missionLines = getRegionMissionTooltipLines(area);
-      if (!areaKnown &&
-          eventLines.length == 0 &&
-          npcLines.length == 0 &&
-          missionLines.length == 0)
-        {
-          hideRegionAreaTooltip();
-          return;
-        }
-      var buf = new StringBuf();
-      if (areaKnown)
-        {
-          buf.add('<span class=hud-name>' + area.name + '</span> ');
-          buf.add(Const.smallgray('(' + area.x + ',' + area.y + ') ') + '<br/>');
-          var alertness = Std.int(area.alertness);
-          var alertColor = getAlertnessColor(alertness);
-          buf.add('Alertness: ' +
-            Const.col(alertColor,
-            getAlertnessLabel(alertness)) + '<br/>');
-          var tags: Array<String> = [];
-          if (area.highCrime)
-            tags.push('high crime');
-          if (area.hasHabitat)
-            tags.push('habitat');
-          if (!area.info.canEnter)
-            tags.push('inaccessible');
-          if (area.info.isHighRisk)
-            tags.push('high risk');
-          if (tags.length > 0)
-            {
-              buf.add(Const.smallgray('[' + tags.join('] [') + ']'));
-              buf.add('<br/>');
-            }
-        }
-      else
-        {
-          buf.add('<span class=hud-name>?</span><br/>');
-        }
-      for (line in eventLines)
-        buf.add(line + '<br/>');
-      for (line in npcLines)
-        buf.add(line + '<br/>');
-      for (line in missionLines)
-        buf.add(line + '<br/>');
-      areaInfoOverlay.innerHTML = buf.toString();
-      areaInfoOverlay.style.display = 'block';
-      areaInfoOverlay.style.visibility = 'hidden';
-      areaInfoAreaID = area.id;
-      areaInfoVisible = true;
-      positionRegionAreaTooltip();
-      areaInfoOverlay.style.visibility = 'visible';
-    }
-
-// get alertness color for tooltip
-  inline function getAlertnessColor(alertness: Int): String
-    {
-      if (alertness >= 75)
-        return 'red';
-      if (alertness >= 50)
-        return 'yellow';
-      if (alertness > 0)
-        return 'white';
-      return 'gray';
-    }
-
-// get alertness label for tooltip
-  inline function getAlertnessLabel(alertness: Int): String
-    {
-      if (alertness >= 75)
-        return 'high';
-      if (alertness >= 50)
-        return 'medium';
-      if (alertness > 0)
-        return 'low';
-      return 'none';
-    }
-
-// collect event tooltip lines for region mode
-  function getRegionEventTooltipLines(area: AreaGame): Array<String>
-    {
-      var lines = [];
-      var oneLocationKnown = false;
-      for (event in area.events)
-        {
-          if (event.locationKnown)
-            oneLocationKnown = true;
-        }
-      if (!oneLocationKnown)
-        return lines;
-      for (event in area.events)
-        if (event.locationKnown)
-          lines.push('event ' + event.num);
-      return lines;
-    }
-
-// collect npc tooltip lines for region mode
-  function getRegionNPCTooltipLines(area: AreaGame): Array<String>
-    {
-      var lines = [];
-      if (!game.player.vars.timelineEnabled)
-        return lines;
-      var len = 0;
-      for (_ in area.npc)
-        len++;
-      if (len == 0)
-        return lines;
-      var ok = true;
-      for (npc in area.npc)
-        if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
-          ok = false;
-      if (ok)
-        return lines;
-      for (npc in area.npc)
-        if (!npc.isDead && npc.areaKnown && !npc.memoryKnown)
-          {
-            var label = '';
-            if (npc.nameKnown)
-              label = npc.name;
-            else if (npc.jobKnown && npc.job != null)
-              label = npc.job;
-            else label = 'unknown contact';
-            lines.push(Const.smallgray('[event ' + npc.event.num + ']') + ' ' + label);
-          }
-      return lines;
-    }
-
-// collect mission tooltip lines for region mode
-  function getRegionMissionTooltipLines(area: AreaGame): Array<String>
-    {
-      var lines = [];
-      if (game.cults[0].state != CULT_STATE_ACTIVE)
-        return lines;
-      
-      for (ordeal in game.cults[0].ordeals.list)
-        {
-          if (ordeal.type != ORDEAL_PROFANE)
-            continue;
-          var prof: ProfaneOrdeal = cast ordeal;
-          for (mission in prof.missions)
-            if (mission.x == area.x &&
-                mission.y == area.y)
-              lines.push(Const.col('profane-ordeal',
-                mission.customName()));
-        }
-      return lines;
-    }
-
-// align region tooltip above the info panel
-  function positionRegionAreaTooltip()
-    {
-      if (!areaInfoVisible)
-        return;
-      var infoRect = info.getBoundingClientRect();
-      if (infoRect == null)
-        return;
-      var width: Float = info.offsetWidth;
-      if (width <= 0)
-        width = infoRect.width;
-      if (width <= 0)
-        width = info.scrollWidth;
-      if (width <= 0)
-        return;
-      areaInfoOverlay.style.width = Std.string(Math.round(width)) + 'px';
-      areaInfoOverlay.style.left = Std.string(Math.round(infoRect.left)) + 'px';
-      var overlayHeight: Float = areaInfoOverlay.offsetHeight;
-      var top: Float = infoRect.top - overlayHeight - 8;
-      if (top < 10)
-        top = 10;
-      areaInfoOverlay.style.top = Std.string(Math.round(top)) + 'px';
-    }
-
-// hide region tooltip overlay
-  function hideRegionAreaTooltip()
-    {
-      if (!areaInfoVisible)
-        return;
-      areaInfoVisible = false;
-      areaInfoAreaID = -1;
-      areaInfoOverlay.style.display = 'none';
-      areaInfoOverlay.style.visibility = 'hidden';
-    }
 
 // hide overlays when mouse leaves the canvas
-  public function onMouseLeave()
-    {
-      hideRegionAreaTooltip();
-    }
+public function onMouseLeave()
+  {
+    regionTooltip.hide();
+  }
 
 // show hide HUD
   public function toggle()
@@ -464,7 +251,7 @@ class HUD
 
   public function hide()
     {
-      hideRegionAreaTooltip();
+      regionTooltip.hide();
       // hack: remove opacity animation
       for (el in listElements)
         el.style.transition = '0s';
@@ -563,7 +350,7 @@ class HUD
   public function update()
     {
       if (game.location != LOCATION_REGION)
-        hideRegionAreaTooltip();
+        regionTooltip.hide();
       updateActionList();
       // NOTE: before info because info uses its height
       updateActions();
@@ -753,10 +540,10 @@ class HUD
         buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +
           Const.col('yellow', 'SPOONED') + '</div>');
       info.innerHTML = buf.toString();
-      if (areaInfoVisible)
-        positionRegionAreaTooltip();
+      if (regionTooltip.visible)
+        regionTooltip.updatePosition();
       if (game.player.state != PLR_STATE_HOST)
-        info.className = 
+        info.className =
           (game.player.energy <= 0.5 * game.player.maxEnergy ?
            'text highlight-text' : 'text');
       else info.className = 'text';
@@ -925,7 +712,7 @@ class HUD
             else if (action.energyFunc != null)
               buf.add(Const.cost(action.energyFunc(game.player)));
 
-            var btn = Browser.document.createDivElement();
+            var btn = document.createDivElement();
             btn.innerHTML = buf.toString();
             btn.className = 'hud-action';
             btn.onclick = function (e) {
