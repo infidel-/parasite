@@ -429,12 +429,21 @@ public function onMouseLeave()
       var buf = new StringBuf();
       buf.add('Turn: ' + game.turns);
       if (game.location == LOCATION_AREA)
-          buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
-            ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
+          {
+            buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
+              ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
 #if mydebug
-            Const.smallgray(' A ' + Math.round(game.area.alertness)) +
+              Const.smallgray(' A ' + Math.round(game.area.alertness)) +
 #end
-            '<br/>');
+              '<br/>');
+
+            // check if this is a mission area
+            if (game.cults.length > 0 &&
+                game.cults[0].ordeals.isMissionArea(game.area))
+              {
+                buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
+              }
+          }
       else if (game.location == LOCATION_REGION)
         {
           var area = game.playerRegion.currentArea;
@@ -446,6 +455,13 @@ public function onMouseLeave()
             '<br/>' +
             area.name +
             '<center>' + (area.highCrime ? Const.smallgray('high crime') : '') + '</center>');
+
+          // check if this is a mission area
+          if (game.cults.length > 0 &&
+              game.cults[0].ordeals.isMissionArea(area))
+            {
+              buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
+            }
         }
       buf.add('<hr/>');
 

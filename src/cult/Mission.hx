@@ -39,4 +39,10 @@ class Mission extends _SaveObject
     {
       return name;
     }
+
+// get colored name for display
+  public function coloredName(): String
+    {
+      return Const.col('profane-ordeal', customName());
+    }
 }

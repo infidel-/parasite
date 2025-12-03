@@ -4,7 +4,6 @@ package jsui;
 import js.Browser;
 import js.html.DivElement;
 import game.*;
-import cult.ProfaneOrdeal;
 
 class RegionTooltip
 {
@@ -205,16 +204,10 @@ class RegionTooltip
         return lines;
 
       for (ordeal in game.cults[0].ordeals.list)
-        {
-          if (ordeal.type != ORDEAL_PROFANE)
-            continue;
-          var prof: ProfaneOrdeal = cast ordeal;
-          for (mission in prof.missions)
-            if (mission.x == area.x &&
-                mission.y == area.y)
-              lines.push(Const.col('profane-ordeal',
-                mission.customName()));
-        }
+        for (mission in ordeal.missions)
+          if (mission.x == area.x &&
+              mission.y == area.y)
+            lines.push(mission.coloredName());
       return lines;
     }
 

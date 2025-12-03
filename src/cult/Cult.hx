@@ -795,13 +795,28 @@ class Cult extends _SaveObject
 
       // deduct money
       resources.money -= cost;
-      
+
       // add power based on type
       resources.inc(powerType, 1);
-      
+
       log('trades ' + Const.col('cult-power', cost) + Icon.money + ' for ' +
         Const.col('cult-power', '1 ') +
         powerType + ' power');
       return true;
+    }
+
+  // called when player enters an area
+  public function onEnterArea()
+    {
+      // check if current area is a mission area
+      if (game.location == LOCATION_AREA &&
+          game.area != null)
+        {
+          var mission = ordeals.getAreaMission(game.area);
+          if (mission != null)
+            {
+              game.logsg('This area is a mission area for ' + mission.coloredName() + '.');
+            }
+        }
     }
 }

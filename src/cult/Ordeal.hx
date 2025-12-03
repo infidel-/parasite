@@ -22,6 +22,7 @@ class Ordeal extends _SaveObject
   public var requiredMemberLevels: Int;
   public var actions: Int;
   public var note: String;
+  public var missions: Array<Mission>;
   public var cult(get, never): Cult;
   private function get_cult(): Cult
     {
@@ -37,6 +38,7 @@ class Ordeal extends _SaveObject
       requiredMemberLevels = 0;
       actions = 0;
       note = '';
+      missions = [];
 
 // will be called by sub-classes
 //      init();

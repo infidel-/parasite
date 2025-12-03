@@ -272,6 +272,9 @@ class AreaGame extends _SaveObject
           ai.isCommon = true;
           addAI(ai);
         }
+
+      // notify cult about area entry
+      game.cults[0].onEnterArea();
     }
 
 // partially enter area on load

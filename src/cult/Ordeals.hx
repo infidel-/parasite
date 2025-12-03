@@ -2,6 +2,7 @@
 package cult;
 
 import game.Game;
+import game.AreaGame;
 import _PlayerAction;
 import ai.AIData;
 import cult.ordeals.*;
@@ -188,5 +189,35 @@ class Ordeals extends _SaveObject
           list.push(ordeal);
           game.ui.updateWindow();
         }
+    }
+
+  // check if the provided area is a mission area
+  public function isMissionArea(area: AreaGame): Bool
+    {
+      // check if we have any active ordeals with missions
+      for (ordeal in list)
+        {
+          // check if provided area matches any mission coordinates
+          for (mission in ordeal.missions)
+            if (mission.x == area.x &&
+                mission.y == area.y)
+              return true;
+        }
+      return false;
+    }
+
+  // get mission for the provided area
+  public function getAreaMission(area: AreaGame): Mission
+    {
+      // check if we have any active ordeals with missions
+      for (ordeal in list)
+        {
+          // check if provided area matches any mission coordinates
+          for (mission in ordeal.missions)
+            if (mission.x == area.x &&
+                mission.y == area.y)
+              return mission;
+        }
+      return null;
     }
 }

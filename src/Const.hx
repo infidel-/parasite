@@ -758,6 +758,13 @@ class Const
       return '<span class="small gray">' + s + '</span>';
     }
 
+// return the small string wrapped into color marker
+  public static inline function smallcol(col: String, s: Dynamic)
+    {
+      return "<span class=small style='color:var(--text-color-" + col + ")'>" +
+        s + '</span>';
+    }
+
   public static inline function smalldebug(s: String)
     {
       return '<span style="color:var(--text-color-debug)" class=small>' + s + '</span>';
