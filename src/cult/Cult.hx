@@ -34,7 +34,7 @@ class Cult extends _SaveObject
       state = CULT_STATE_INACTIVE;
       members = [];
       isPlayer = false;
-      name = 'Cult of Flesh';
+      name = 'Cultus Carnis';
       init();
       initPost(false);
     }

@@ -11,6 +11,8 @@ class Mission extends _SaveObject
   public var name: String;
   public var note: String;
   public var type: _MissionType;
+  public var x: Int; // regional position
+  public var y: Int; // regional position
 
   public function new(g: Game)
     {
@@ -24,6 +26,8 @@ class Mission extends _SaveObject
     {
       name = '';
       note = '';
+      x = 0;
+      y = 0;
     }
 
 // called after load or creation

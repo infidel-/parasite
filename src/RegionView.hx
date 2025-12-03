@@ -2,6 +2,7 @@
 
 import js.html.CanvasRenderingContext2D;
 import game.*;
+import cult.ProfaneOrdeal;
 
 class RegionView
 {
@@ -270,21 +271,10 @@ class RegionView
                 icon = getNPCIcon(area);
               // habitat
               case 4:
-                if (!area.hasHabitat)
-                  continue;
-                icon = {
-                  row: Const.ROW_REGION_ICON,
-                  col: Const.FRAME_HABITAT,
-                };
-                var team = game.group.team;
-                if (team != null)
-                  {
-                    var hab = team.ambushedHabitat;
-                    if (hab != null &&
-                        hab.hasWatcher &&
-                        hab.area.id == area.habitatAreaID)
-                      icon.col = Const.FRAME_HABITAT_AMBUSHED;
-                  }
+                icon = drawAreaHabitat(area);
+              // cult mission
+              case 5:
+                icon = drawAreaCultMission(area);
             }
           if (icon == null)
             continue;
@@ -314,5 +304,60 @@ class RegionView
         ((Math.abs(game.playerRegion.x - a.x) < 2 &&
           Math.abs(game.playerRegion.y - a.y) < 2) || a.isKnown);
     }
+
+  // draw cult mission icon for area
+  function drawAreaCultMission(area: AreaGame): { row: Int, col: Int }
+    {
+      // check if cult is active
+      if (game.cults[0].state != CULT_STATE_ACTIVE)
+        return null;
+
+      // check all ordeals for profane missions
+      for (ordeal in game.cults[0].ordeals.list)
+        {
+          // only process profane ordeals
+          if (ordeal.type != ORDEAL_PROFANE)
+            continue;
+
+          var profane: ProfaneOrdeal = cast ordeal;
+          for (mission in profane.missions)
+            if (mission.x == area.x &&
+                mission.y == area.y)
+              return {
+                row: Const.ROW_REGION_ICON,
+                col: Const.FRAME_CULT_MISSION,
+              };
+        }
+
+      return null;
+    }
+
+  // draw habitat icon for area
+  function drawAreaHabitat(area: AreaGame): { row: Int, col: Int }
+    {
+      // check if area has habitat
+      if (!area.hasHabitat)
+        return null;
+
+      var icon = {
+        row: Const.ROW_REGION_ICON,
+        col: Const.FRAME_HABITAT,
+      };
+
+      // check for ambushed habitat
+      var team = game.group.team;
+      if (team == null)
+        return icon;
+      var hab = team.ambushedHabitat;
+      if (hab != null &&
+          hab.hasWatcher &&
+          hab.area.id == area.habitatAreaID)
+        icon.col = Const.FRAME_HABITAT_AMBUSHED;
+
+      return icon;
+    }
 }
+
+
+
 

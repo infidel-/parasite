@@ -73,6 +73,7 @@ class Const
   public static var FRAME_HABITAT_AMBUSHED = 6;
   public static var FRAME_OVUM = 7;
   public static var FRAME_CORPHQ = 8;
+  public static var FRAME_CULT_MISSION = 9;
 
   // object row frames
   public static var ROW_OBJECT = 2;

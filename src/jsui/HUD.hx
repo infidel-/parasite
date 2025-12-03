@@ -8,6 +8,7 @@ import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import game.*;
+import cult.ProfaneOrdeal;
 
 class HUD
 {
@@ -249,9 +250,11 @@ class HUD
       var areaKnown = game.scene.region.isKnown(area);
       var eventLines = getRegionEventTooltipLines(area);
       var npcLines = getRegionNPCTooltipLines(area);
+      var missionLines = getRegionMissionTooltipLines(area);
       if (!areaKnown &&
           eventLines.length == 0 &&
-          npcLines.length == 0)
+          npcLines.length == 0 &&
+          missionLines.length == 0)
         {
           hideRegionAreaTooltip();
           return;
@@ -288,6 +291,8 @@ class HUD
       for (line in eventLines)
         buf.add(line + '<br/>');
       for (line in npcLines)
+        buf.add(line + '<br/>');
+      for (line in missionLines)
         buf.add(line + '<br/>');
       areaInfoOverlay.innerHTML = buf.toString();
       areaInfoOverlay.style.display = 'block';
@@ -368,6 +373,27 @@ class HUD
             else label = 'unknown contact';
             lines.push(Const.smallgray('[event ' + npc.event.num + ']') + ' ' + label);
           }
+      return lines;
+    }
+
+// collect mission tooltip lines for region mode
+  function getRegionMissionTooltipLines(area: AreaGame): Array<String>
+    {
+      var lines = [];
+      if (game.cults[0].state != CULT_STATE_ACTIVE)
+        return lines;
+      
+      for (ordeal in game.cults[0].ordeals.list)
+        {
+          if (ordeal.type != ORDEAL_PROFANE)
+            continue;
+          var prof: ProfaneOrdeal = cast ordeal;
+          for (mission in prof.missions)
+            if (mission.x == area.x &&
+                mission.y == area.y)
+              lines.push(Const.col('profane-ordeal',
+                mission.customName()));
+        }
       return lines;
     }
 

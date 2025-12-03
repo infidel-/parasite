@@ -4,6 +4,7 @@ package cult.missions;
 import game.Game;
 import cult.Mission;
 import ai.*;
+import _AreaType;
 
 class Kill extends Mission
 {
@@ -28,6 +29,14 @@ class Kill extends Mission
       var ai = new CivilianAI(game, 0, 0);
       target = ai.cloneData();
       target.isNameKnown = true;
+      
+      // pick random area position
+      var area = game.region.getRandomWithType(AREA_CITY_HIGH, true);
+      if (area != null)
+        {
+          x = area.x;
+          y = area.y;
+        }
     }
 
 // get custom name for display
