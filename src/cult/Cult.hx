@@ -499,6 +499,11 @@ class Cult extends _SaveObject
 // cult turn
   public function turn(time: Int)
     {
+      // pause passage of time when in mission area
+      if (game.location == LOCATION_AREA &&
+          game.area.isMissionArea())
+        return;
+
       if (members.length == 0)
         return;
       // cult needs 10 player turns to tick
