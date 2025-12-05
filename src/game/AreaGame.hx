@@ -1826,4 +1826,10 @@ class Test {
 
       return _alertness;
     }
+
+ // check if this area is a mission area
+ public function isMissionArea(): Bool
+   {
+     return game.cults[0].ordeals.isMissionArea(this);
+   }
 }

@@ -40,7 +40,7 @@ class Game extends _SaveObject
 
   public var managerRegion: RegionManager; // event manager (region mode)
   public var playerRegion: PlayerRegion; // game player (region mode)
-  public var cults: Array<Cult>; // cults list
+  public var cults: Array<Cult>; // cults list (player cult ALWAYS exists and is cults[0])
 
   public var player: Player; // game player
   public var playerArea: PlayerArea; // game player (area mode)
@@ -599,6 +599,11 @@ class Game extends _SaveObject
       if (ui.hud.state == HUD_CHAT)
         {
           actionFailed('You cannot save during a conversation.');
+          return;
+        }
+      if (area.isMissionArea())
+        {
+          actionFailed('You cannot save your game during a mission.');
           return;
         }
       if (player.saveDifficulty == UNSET)

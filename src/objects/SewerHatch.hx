@@ -54,6 +54,14 @@ class SewerHatch extends AreaObject
           game.actionFailed("This host cannot open the sewer hatch.");
           return false;
         }
+
+      // check if this is a mission area
+      if (game.area.isMissionArea())
+        {
+          game.actionFailed("You cannot leave until you complete the mission.");
+          return false;
+        }
+
       // scenario-specific checks
       if (!game.goals.leaveAreaPre())
         return false;

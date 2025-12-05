@@ -433,14 +433,42 @@ class RegionGame extends _SaveObject
       return null;
     }
 
-
-// get random area
-  public function getRandom(): AreaGame
+  // get random area
+  public function getRandom(?params: {
+    ?noMission: Bool,
+    ?noEvents: Bool,
+    ?type: _AreaType
+  }): AreaGame
     {
       var tmp: Array<AreaGame> = Lambda.array(_list);
-      return tmp[Std.random(tmp.length)];
-    }
+      if (params == null)
+        return tmp[Std.random(tmp.length)];
+      var tmp2 = [];
+      for (a in tmp)
+        {
+          // filter by mission area
+          if (params.noMission &&
+              a.isMissionArea())
+            continue;
 
+          // filter by events
+          if (params.noEvents &&
+              a.events.length > 0)
+            continue;
+
+          // filter by type
+          if (params.type != null &&
+              a.typeID != params.type)
+            continue;
+
+          tmp2.push(a);
+        }
+
+      if (tmp2.length == 0)
+        throw 'cannot find area with specified parameters';
+
+      return tmp2[Std.random(tmp2.length)];
+    }
 
 // get random inhabited area
   public function getRandomInhabited(): AreaGame

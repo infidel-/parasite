@@ -438,8 +438,7 @@ public function onMouseLeave()
               '<br/>');
 
             // check if this is a mission area
-            if (game.cults.length > 0 &&
-                game.cults[0].ordeals.isMissionArea(game.area))
+            if (game.area.isMissionArea())
               {
                 buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
               }

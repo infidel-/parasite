@@ -102,8 +102,7 @@ class MainMenu extends UIWindow
     {
       if (!saveEnabled)
         return;
-      if (!game.isStarted || game.isFinished)
-        return;
+      // all remaining checks done in game.save()
       game.save(1);
       game.ui.closeWindow();
     }
@@ -157,21 +156,32 @@ class MainMenu extends UIWindow
         bg.classList.add('window-fade-in');
     }
 
-  override function update()
-    {
-      loadEnabled = false;
-      saveEnabled = false;
-      saveItem.innerHTML = 'SAVE GAME';
-      if (game.isStarted && !game.isFinished &&
-          game.player.saveDifficulty != UNSET)
+// update menu items based on game state
+override function update()
+  {
+    loadEnabled = false;
+    saveEnabled = false;
+    saveItem.innerHTML = 'SAVE GAME';
+    if (game.isStarted &&
+        !game.isFinished &&
+        game.player.saveDifficulty != UNSET)
+      {
+        // show mission area indicator instead of saves left when in mission area
+        var text = game.player.vars.savesLeft + ' saves left';
+        var col = 'gray';
+        if (game.area.isMissionArea())
+          {
+            text = 'mission area';
+            col = 'red';
+          }
         saveItem.innerHTML +=
-          '<br><span style="font-size: 70%;">' + Const.smallgray('[' +
-          game.player.vars.savesLeft + ' saves left]') + '</span>';
+            '<br><span style="font-size: 70%;">' + Const.smallcol(col, '[' + text + ']') + '</span>';
+      }
 
-      loadEnabled = game.saveExists(1);
-      saveEnabled = (game.isStarted && !game.isFinished);
-      if (game.isStarted)
-        close.style.display = 'block';
+    loadEnabled = game.saveExists(1);
+    saveEnabled = (game.isStarted && !game.isFinished);
+    if (game.isStarted)
+      close.style.display = 'block';
 #if !electron
       loadEnabled = false;
       saveEnabled = false;

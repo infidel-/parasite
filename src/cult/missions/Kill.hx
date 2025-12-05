@@ -4,7 +4,6 @@ package cult.missions;
 import game.Game;
 import cult.Mission;
 import ai.*;
-import _AreaType;
 
 class Kill extends Mission
 {
@@ -31,7 +30,11 @@ class Kill extends Mission
       target.isNameKnown = true;
       
       // pick random area position
-      var area = game.region.getRandomWithType(AREA_CITY_HIGH, true);
+      var area = game.region.getRandom({
+        noMission: true,
+        noEvents: true,
+        type: AREA_CITY_HIGH
+      });
       if (area != null)
         {
           x = area.x;
