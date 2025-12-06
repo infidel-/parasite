@@ -83,6 +83,14 @@ class Cult extends _SaveObject
       for (ai in members)
         if (ai.id > AIData._maxID)
           AIData._maxID = ai.id;
+
+      // set Mission._maxID to maximum mission id + 1
+      var maxMissionID = 0;
+      for (ordeal in ordeals.list)
+        for (mission in ordeal.missions)
+          if (mission.id > maxMissionID)
+            maxMissionID = mission.id;
+      Mission._maxID = maxMissionID + 1;
     }
 
 // create cult (add leader)
@@ -823,5 +831,15 @@ class Cult extends _SaveObject
               game.logsg('This area is a mission area for ' + mission.coloredName() + '.');
             }
         }
+    }
+
+// mission turn processing
+  public function turnMission()
+    {
+      // find the mission for the current area
+      var mission = ordeals.getAreaMission(game.area);
+      if (mission != null &&
+          !mission.isCompleted)
+        mission.turn();
     }
 }

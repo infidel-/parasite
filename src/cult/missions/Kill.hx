@@ -28,7 +28,6 @@ class Kill extends Mission
       var ai = new CivilianAI(game, 0, 0);
       target = ai.cloneData();
       target.isNameKnown = true;
-      
       // pick random area position
       var area = game.region.getRandom({
         noMission: true,
@@ -42,11 +41,47 @@ class Kill extends Mission
         }
     }
 
+// turn hook for kill mission
+  public override function turn()
+    {
+      if (game.location != LOCATION_AREA) return;
+      if (game.area == null) return;
+      if (game.area.x != x || game.area.y != y)
+        return;
+
+      // return if target already spawned
+      var targetAI = game.area.getAIByID(target.id);
+      if (targetAI != null) return;
+
+      // return if cannot find spawn location
+      var loc = game.area.findUnseenEmptyLocation();
+      if (loc.x < 0)
+        loc = game.area.findEmptyLocationNear(
+          game.playerArea.x, game.playerArea.y, 5);
+      if (loc == null) return;
+
+      // spawn target AI
+      var ai = game.area.spawnAI(target.type, loc.x, loc.y, false);
+      ai.updateData(target, 'on spawn');
+      game.area.addAI(ai);
+      ai.entity.setMissionTarget();
+      game.debug('Target ' + target.TheName() + ' has appeared in the mission area.');
+    }
+
+
 // get custom name for display
   public override function customName(): String
     {
       if (target != null)
         return name + ' - ' + target.TheName();
       return name;
+    }
+
+// handle mission target death
+  public override function onMissionDeath(ai: AI)
+    {
+      // check if the dead ai is the target
+      if (ai.id == target.id)
+        success(); // complete the mission
     }
 }

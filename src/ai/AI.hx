@@ -790,6 +790,11 @@ public function show()
           npc.isDead = true;
           npc.statusKnown = true;
         }
+
+      // mission death handling
+      var mission = game.area.getAreaMission();
+      if (mission != null)
+        mission.onMissionDeath(this);
     }
 
 

@@ -32,14 +32,6 @@ class Ordeal extends _SaveObject
   public function new(g: Game)
     {
       game = g;
-      members = [];
-      effects = [];
-      requiredMembers = 0;
-      requiredMemberLevels = 0;
-      actions = 0;
-      note = '';
-      missions = [];
-
 // will be called by sub-classes
 //      init();
 //      initPost(false);
@@ -48,6 +40,13 @@ class Ordeal extends _SaveObject
 // init object before loading/post creation
   public function init()
     {
+      members = [];
+      effects = [];
+      requiredMembers = 0;
+      requiredMemberLevels = 0;
+      actions = 0;
+      note = '';
+      missions = [];
       type = ORDEAL_COMMUNAL;
       power = {
         combat: 0,
@@ -150,6 +149,17 @@ class Ordeal extends _SaveObject
 // check if ordeal is complete
   public function check()
     {
+      // check if all missions are completed
+      var ok = true;
+      for (m in missions)
+        if (!m.isCompleted)
+          {
+            ok = false;
+            break;
+          }
+      if (!ok)
+        return;
+
       // check if all powers are at zero
       if (power.combat == 0 &&
           power.media == 0 &&
@@ -157,9 +167,7 @@ class Ordeal extends _SaveObject
           power.corporate == 0 &&
           power.political == 0 &&
           power.money == 0)
-        {
-          success();
-        }
+        success();
     }
 
 // complete an ordeal successfully

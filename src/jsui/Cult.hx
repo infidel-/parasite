@@ -58,6 +58,13 @@ class Cult extends UIWindow
       menuState = s;
     }
 
+// reset cult UI to root state and update actions
+  public function reset()
+    {
+      menuState = STATE_ROOT;
+      updateActions();
+    }
+
 // update window contents
   override function update()
     {
@@ -689,7 +696,8 @@ class Cult extends UIWindow
               buf.add('Claves: ');
               var clavisNames = [];
               for (mission in prof.missions)
-                clavisNames.push(mission.coloredName());
+                clavisNames.push(mission.coloredName() +
+                  (mission.isCompleted ? Const.col('gray', ' [completed]') : ''));
               buf.add(clavisNames.join(', '));
               buf.add('</div>');
             }

@@ -753,7 +753,8 @@ class AreaGame extends _SaveObject
         for (dx in -radius...radius)
           if (isWalkable(xo + dx, yo + dy) &&
               getAI(xo + dx, yo + dy) == null &&
-              !(game.playerArea.x == xo + dx && game.playerArea.y == yo + dy))
+              !(game.playerArea.x == xo + dx &&
+                game.playerArea.y == yo + dy))
             tmp.push({ x: xo + dx, y: yo + dy });
 
       // no empty cells found
@@ -1057,6 +1058,10 @@ class AreaGame extends _SaveObject
       turnSpawnClues(); // spawn clues
       turnSpawnTeam(); // spawn team agents
       turnAlertness(); // decrease alertness
+
+      // mission turn processing
+      if (isMissionArea())
+        game.cults[0].turnMission();
     }
 
 
@@ -1484,7 +1489,6 @@ class Test {
         }
     }
 
-
 // spawn some more AI related to area alertness
   function turnSpawnMoreAI()
     {
@@ -1533,7 +1537,6 @@ class Test {
         spawnUnseenAI(info.lawType, false);
     }
 
-
 // spawn unseen AI with this type somewhere in screen area
   function spawnUnseenAI(type: String, isCommon: Bool): AI
     {
@@ -1547,7 +1550,8 @@ class Test {
 
       // special logic for "civilian" type
       if (type == 'civilian' &&
-          (typeID == AREA_CITY_LOW || typeID == AREA_CITY_MEDIUM))
+          (typeID == AREA_CITY_LOW ||
+           typeID == AREA_CITY_MEDIUM))
         {
           var crimeChance = (typeID == AREA_CITY_LOW ? 30 : 10);
           if (highCrime)
@@ -1831,5 +1835,11 @@ class Test {
  public function isMissionArea(): Bool
    {
      return game.cults[0].ordeals.isMissionArea(this);
+   }
+
+ // get area mission
+ public function getAreaMission(): cult.Mission
+   {
+     return game.cults[0].ordeals.getAreaMission(this);
    }
 }

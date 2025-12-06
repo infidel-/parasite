@@ -2,7 +2,6 @@
 package cult;
 
 import game.Game;
-import cult.Mission;
 
 class ProfaneOrdeal extends Ordeal
 {

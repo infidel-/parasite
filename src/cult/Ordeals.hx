@@ -16,10 +16,7 @@ class Ordeals extends _SaveObject
   public var list: Array<Ordeal>; // active ordeals
   public var profaneTimeout: Int; // timeout after profane ordeal completion/failure
   public var cult(get, never): Cult;
-  private function get_cult(): Cult
-    {
-      return game.cults[0];
-    }
+  function get_cult() return game.cults[0];
 
   public function new(g: Game)
     {
@@ -45,33 +42,37 @@ class Ordeals extends _SaveObject
   public function onDeath(aidata: AIData)
     {
       for (ordeal in list)
-        {
-          ordeal.onDeath(aidata);
-        }
+        ordeal.onDeath(aidata);
     }
 
 // fail an ordeal
   public function fail(ordeal: Ordeal)
     {
       cult.log('ordeal ' + ordeal.coloredName() + ' has failed');
-      
+
       // increment profane timeout if this was a profane ordeal
       if (ordeal.type == ORDEAL_PROFANE)
         profaneTimeout = 10 + Const.roll(1, 4);
-      
+
       list.remove(ordeal);
+
+      // reset cult UI to root state
+      game.ui.cult.reset();
     }
 
 // complete an ordeal successfully
   public function success(ordeal: Ordeal)
     {
       cult.log('ordeal ' + ordeal.coloredName() + ' completed successfully');
-      
+
       // increment profane timeout if this was a profane ordeal
       if (ordeal.type == ORDEAL_PROFANE)
         profaneTimeout = 10 + Const.roll(1, 4);
-      
+
       list.remove(ordeal);
+
+      // reset cult UI to root state
+      game.ui.cult.reset();
     }
 
 // turn processing for ordeals
@@ -191,33 +192,27 @@ class Ordeals extends _SaveObject
         }
     }
 
-  // check if the provided area is a mission area
+// check if the provided area is a mission area
   public function isMissionArea(area: AreaGame): Bool
     {
-      // check if we have any active ordeals with missions
       for (ordeal in list)
-        {
-          // check if provided area matches any mission coordinates
-          for (mission in ordeal.missions)
-            if (mission.x == area.x &&
-                mission.y == area.y)
-              return true;
-        }
+        for (m in ordeal.missions)
+          if (!m.isCompleted &&
+              m.x == area.x &&
+              m.y == area.y)
+            return true;
       return false;
     }
 
-  // get mission for the provided area
+// get mission for the provided area
   public function getAreaMission(area: AreaGame): Mission
     {
-      // check if we have any active ordeals with missions
       for (ordeal in list)
-        {
-          // check if provided area matches any mission coordinates
-          for (mission in ordeal.missions)
-            if (mission.x == area.x &&
-                mission.y == area.y)
-              return mission;
-        }
+        for (m in ordeal.missions)
+          if (!m.isCompleted &&
+              m.x == area.x &&
+              m.y == area.y)
+            return m;
       return null;
     }
 }
