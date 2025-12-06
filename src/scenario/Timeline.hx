@@ -327,7 +327,7 @@ class Timeline extends _SaveObject
               area.updateType();
             }
         }
-      area = region.getRandomWithType(info.type, true);
+      area = region.getRandom({ type: info.type, noEvents: true });
       if (area == null)
         area = region.spawnArea(info.type, true);
 
@@ -391,7 +391,7 @@ class Timeline extends _SaveObject
               // find proper area for this NPC
               var area = null;
               if (npc.type == 'soldier')
-                area = region.getRandomWithType(AREA_MILITARY_BASE, false);
+                area = region.getRandom({ type: AREA_MILITARY_BASE, noEvents: false });
               else if (event.location != null)
                 area = region.getRandomAround(event.location.area, {
                   isInhabited: true,
@@ -403,7 +403,7 @@ class Timeline extends _SaveObject
                   var tmp: Array<_AreaType> =
                     [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
                   var type = tmp[Std.random(tmp.length)];
-                  area = region.getRandomWithType(type, false);
+                  area = region.getRandom({ type: type, noEvents: false });
                 }
               npc.areaID = area.id;
               area.npc.add(npc);

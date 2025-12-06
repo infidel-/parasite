@@ -615,7 +615,7 @@ class GoalsAlienCrashLanding
         }
 
       // pick a random wilderness area and respawn ship there
-      var newArea = game.region.getRandomWithType(AREA_GROUND, true);
+      var newArea = game.region.getRandom({ type: AREA_GROUND, noEvents: true });
       // generate area if it's not yet generated
       if (!newArea.isGenerated)
         newArea.generate();

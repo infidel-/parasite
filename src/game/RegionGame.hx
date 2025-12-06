@@ -279,7 +279,7 @@ class RegionGame extends _SaveObject
       // spawn 2 corp offices
       for (i in 0...2)
         {
-          var a = getRandomWithType(AREA_CITY_HIGH, true);
+          var a = getRandom({ type: AREA_CITY_HIGH, noEvents: true });
           var o = new region.CorpHQ(game, a.x, a.y);
           addObject(o);
           a.setType(AREA_CORP);
@@ -470,55 +470,6 @@ class RegionGame extends _SaveObject
       return tmp2[Std.random(tmp2.length)];
     }
 
-// get random inhabited area
-  public function getRandomInhabited(): AreaGame
-    {
-      var tmp: Array<AreaGame> = Lambda.array(_list);
-      var tmp2 = [];
-      for (a in tmp)
-        if (a.info.isInhabited)
-          tmp2.push(a);
-
-      if (tmp2.length == 0)
-        throw 'cannot find enterable area';
-
-      return tmp2[Std.random(tmp2.length)];
-    }
-
-
-// get random enterable area
-  public function getRandomEnterable(): AreaGame
-    {
-      var tmp: Array<AreaGame> = Lambda.array(_list);
-      var tmp2 = [];
-      for (a in tmp)
-        if (a.info.canEnter)
-          tmp2.push(a);
-
-      if (tmp2.length == 0)
-        throw 'cannot find enterable area';
-
-      return tmp2[Std.random(tmp2.length)];
-    }
-
-
-// get random area with this type id
-// noEvent - if true, will find area without any related timeline events
-  public function getRandomWithType(t: _AreaType, noEvent: Bool): AreaGame
-    {
-      var tmp: Array<AreaGame> = Lambda.array(_list);
-      var tmp2 = [];
-      for (a in tmp)
-        if (a.typeID == t && (!noEvent || a.events.length == 0))
-          tmp2.push(a);
-
-      if (tmp2.length == 0)
-        return null;
-
-      return tmp2[Std.random(tmp2.length)];
-    }
-
-
 // get random area around this one
   public function getRandomAround(area: AreaGame, params: {
     ?isInhabited: Bool,
@@ -571,16 +522,14 @@ class RegionGame extends _SaveObject
       return amin;
     }
 
-
 // spawn area with this type (actually just change some ground)
   public inline function spawnArea(t: _AreaType, noEvent: Bool): AreaGame
     {
-      var a = getRandomWithType(AREA_GROUND, noEvent);
+      var a = getRandom({ type: AREA_GROUND, noEvents: noEvent });
       a.typeID = t;
       a.updateType();
       return a;
     }
-
 
 // create a new area with this type (not on map, just somewhere in the region)
   public function createArea(t: _AreaType): AreaGame
@@ -590,13 +539,11 @@ class RegionGame extends _SaveObject
       return a;
     }
 
-
 // remove area in this region (only for non-cell areas)
   public function removeArea(areaID: Int)
     {
       _list.remove(areaID);
     }
-
 
 // check if tile is walkable
   public function isWalkable(x: Int, y: Int): Bool

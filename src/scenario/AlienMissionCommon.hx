@@ -13,7 +13,7 @@ class AlienMissionCommon
   public static function onReceive(game:Game, player:Player)
     {
       // find random area
-      var area = game.region.getRandomWithType(AREA_CORP, true);
+      var area = game.region.getRandom({ type: AREA_CORP, noEvents: true });
 
       // add hidden NPC to it
       // NOTE: all dynamic NPCs should belong to an event anyway

@@ -88,7 +88,7 @@ class Game extends _SaveObject
       world = new World(this);
       world.generate();
       region = world.get(0);
-      area = region.getRandomWithType(AREA_CITY_LOW, true);
+      area = region.getRandom({ type: AREA_CITY_LOW, noEvents: true });
       timeline = new Timeline(this);
       timeline.create();
     }
@@ -141,7 +141,7 @@ class Game extends _SaveObject
       if (scenarioStringID == 'sandbox') // skip init for sandbox
         {
           // random low-population area
-          area = region.getRandomWithType(AREA_CITY_LOW, true);
+          area = region.getRandom({ type: AREA_CITY_LOW, noEvents: true });
         }
       else
         {
