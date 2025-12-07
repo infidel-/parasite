@@ -1,11 +1,9 @@
-// kill mission sample
 package cult.missions;
 
 import game.Game;
-import cult.Mission;
 import ai.*;
 
-class Kill extends Mission
+class Persuade extends Mission
 {
   public var target: AIData;
 
@@ -16,14 +14,14 @@ class Kill extends Mission
       initPost(false);
     }
 
-// init object before loading/post creation
+  // init object before loading/post creation
   public override function init()
     {
       super.init();
-      type = MISSION_KILL;
-      name = 'Eliminate Target';
-      note = 'A specific target must be eliminated.';
-      
+      type = MISSION_PERSUADE;
+      name = 'Persuade Target';
+      note = 'A specific target must be persuaded to join your cause.';
+
       // create random civilian AI and clone its data
       var ai = new CivilianAI(game, 0, 0);
       target = ai.cloneData();
@@ -41,7 +39,7 @@ class Kill extends Mission
         }
     }
 
-// turn hook for kill mission
+  // turn hook for persuade mission
   public override function turn()
     {
       if (game.location != LOCATION_AREA) return;
@@ -65,11 +63,10 @@ class Kill extends Mission
       ai.updateData(target, 'on spawn');
       game.area.addAI(ai);
       ai.entity.setMissionTarget();
-      game.debug('Target ' + target.TheName() + ' has appeared in the mission area.');
+      game.debug('Target ' + target.TheName() + ' has appeared.');
     }
 
-
-// get custom name for display
+  // get custom name for display
   public override function customName(): String
     {
       if (target != null)
@@ -77,12 +74,19 @@ class Kill extends Mission
       return name;
     }
 
-// handle mission target death
-  public override function onEventAI(type:_MissionEvent, ai: AI)
+  // handle AI events
+  public override function onEventAI(type: _MissionEvent, ai: AI)
     {
-      if (type != ON_AI_DEATH ||
-          ai.id != target.id)
+      // check if the event is about the target
+      if (ai.id != target.id)
         return;
-      success(); // complete the mission
+
+      switch (type)
+        {
+          case ON_AI_DEATH:
+            fail(); // fail the mission if target dies
+          case ON_AI_MAX_CONSENT:
+            success(); // complete the mission if target reaches max consent
+        }
     }
 }

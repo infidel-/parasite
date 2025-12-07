@@ -5,6 +5,7 @@ import ItemInfo.WeaponInfo;
 import entities.AIEntity;
 import _AIState;
 import _AIEffectType;
+import _MissionEvent;
 import objects.*;
 import game.*;
 import const.*;
@@ -794,7 +795,7 @@ public function show()
       // mission death handling
       var mission = game.area.getAreaMission();
       if (mission != null)
-        mission.onMissionDeath(this);
+        mission.onEventAI(ON_AI_DEATH, this);
     }
 
 

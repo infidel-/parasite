@@ -2,7 +2,6 @@
 package cult;
 
 import game.Game;
-import _MissionType;
 import ai.AI;
 
 class Mission extends _SaveObject
@@ -64,6 +63,18 @@ class Mission extends _SaveObject
         ordeal.check(); // check if ordeal is complete
     }
 
+// called when mission fails
+  public function fail()
+    {
+      onFail(); // call subclass hook
+      if (ordeal != null)
+        ordeal.fail(); // fail the parent ordeal
+    }
+
+// hook for when mission fails (override in subclasses)
+  public function onFail()
+    {}
+
 // turn hook for mission processing
   public function turn()
     {}
@@ -72,8 +83,8 @@ class Mission extends _SaveObject
   public function onSuccess()
     {}
 
-// hook for when mission target dies
-  public function onMissionDeath(ai: AI)
+// hook for AI events
+  public function onEventAI(type: _MissionEvent, ai: AI)
     {}
 
   // get ordeal property

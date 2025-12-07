@@ -14,6 +14,9 @@ class GatherClues extends Ordeal
   public function new(g: Game)
     {
       super(g);
+      init();
+      initPost(false);
+
       // get one random free level 3 member
       var free = cult.getFreeMembers(3, true);
       var mid = free[Std.random(free.length)];
@@ -23,9 +26,6 @@ class GatherClues extends Ordeal
       var job = game.jobs.getJobInfo(m.job);
       this.memberType = (job != null ? game.jobs.groupToName(job.group) : 'combat');
       addMembers([mid]);
-      
-      init();
-      initPost(false);
     }
 
 // init object before loading/post creation

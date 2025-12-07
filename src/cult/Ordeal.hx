@@ -32,7 +32,7 @@ class Ordeal extends _SaveObject
   public function new(g: Game)
     {
       game = g;
-// will be called by sub-classes
+ // will be called by sub-classes (careful with ctor code!)
 //      init();
 //      initPost(false);
     }

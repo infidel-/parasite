@@ -203,11 +203,9 @@ class RegionTooltip
       if (game.cults[0].state != CULT_STATE_ACTIVE)
         return lines;
 
-      for (ordeal in game.cults[0].ordeals.list)
-        for (mission in ordeal.missions)
-          if (mission.x == area.x &&
-              mission.y == area.y)
-            lines.push(mission.coloredName());
+      var mission = game.cults[0].ordeals.getAreaMission(area);
+      if (mission != null)
+        lines.push(mission.coloredName());
       return lines;
     }
 

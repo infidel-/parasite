@@ -2,7 +2,6 @@
 
 import js.html.CanvasRenderingContext2D;
 import game.*;
-import cult.ProfaneOrdeal;
 
 class RegionView
 {
@@ -311,24 +310,12 @@ class RegionView
       // check if cult is active
       if (game.cults[0].state != CULT_STATE_ACTIVE)
         return null;
-
-      // check all ordeals for profane missions
-      for (ordeal in game.cults[0].ordeals.list)
-        {
-          // only process profane ordeals
-          if (ordeal.type != ORDEAL_PROFANE)
-            continue;
-
-          var profane: ProfaneOrdeal = cast ordeal;
-          for (mission in profane.missions)
-            if (mission.x == area.x &&
-                mission.y == area.y)
-              return {
-                row: Const.ROW_REGION_ICON,
-                col: Const.FRAME_CULT_MISSION,
-              };
-        }
-
+      var mission = game.cults[0].ordeals.getAreaMission(area);
+      if (mission != null)
+        return {
+          row: Const.ROW_REGION_ICON,
+          col: Const.FRAME_CULT_MISSION,
+        };
       return null;
     }
 

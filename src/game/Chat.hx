@@ -5,6 +5,8 @@ import const.*;
 import ai.AI;
 import _AIEffectType;
 import _ChatEmotion;
+import _MissionEvent;
+import cult.Mission;
 
 class Chat extends _SaveObject
 {
@@ -1100,7 +1102,13 @@ class Chat extends _SaveObject
       // NOTE: return here and properly finish in actionPost()
       if (target.chat.consent >= 100 &&
           startConsent < 100)
-        return;
+        {
+          // notify mission about max consent event
+          var mission = game.area.getAreaMission();
+          if (mission != null)
+            mission.onEventAI(ON_AI_MAX_CONSENT, target);
+          return;
+        }
       if (target.chat.fatigue >= 10)
         {
           log('Feeling tired, ' + target.theName() + ' ends the conversation.');
