@@ -451,7 +451,11 @@ class AreaGame extends _SaveObject
         for (x in 0...width)
           _cells[x][y] = baseTile;
 
+      // measure generation time
+      var t = Sys.time();
       game.areaGenerator.generate(this, info);
+      var msec = (Sys.time() - t) * 1000.0;
+      trace('Area generated in ' + Std.int(msec) + ' ms');
 
       // set path info
       _pathEngine = new aPath.Engine(this, width, height);
@@ -1076,6 +1080,10 @@ class AreaGame extends _SaveObject
 
       // do not spawn team members in the first area (a little help for newbie players)
       if (!game.goals.completed(GOAL_ENTER_SEWERS))
+        return;
+
+      // do not spawn in mission areas
+      if (isMissionArea())
         return;
 
       // limit spawns by turns spent in this area
