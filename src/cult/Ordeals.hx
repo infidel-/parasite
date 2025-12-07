@@ -114,6 +114,12 @@ class Ordeals extends _SaveObject
       if (cult.members.length < 3)
         return;
 
+      // for now cult must have free members
+      // might change later
+      var free = cult.getFreeMembers(1);
+      if (free.length < 2)
+        return;
+
       // count profane ordeals
       var profaneCount = 0;
       for (ordeal in list)
