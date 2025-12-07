@@ -1038,11 +1038,15 @@ public function show()
         }
 
       // law marks attacker as criminal
+      // unless its also law
       var attackerAI = attacker.ai;
       if (attackerAI != null &&
           (type == 'police' ||
            type == 'security' ||
-           type == 'soldier'))
+           type == 'soldier') &&
+          !(attackerAI.type == 'police' ||
+            attackerAI.type == 'security' ||
+            attackerAI.type == 'soldier'))
         attackerAI.didCrime = true;
 
       // update enemies lists
