@@ -604,6 +604,9 @@ class Cult extends _SaveObject
       // calculate power/income from all members
       for (member in members)
         {
+          var status = getMemberStatus(member.id);
+          if (status != '')
+            continue; // only free members
           power.money += member.income;
 
           // get job info by name
