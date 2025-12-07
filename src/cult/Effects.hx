@@ -8,7 +8,7 @@ class Effects extends _SaveObject
   static var _ignoredFields = [ 'game', 'cult' ];
   public var game: Game;
   public var cult: Cult;
-  var list: Array<Effect>;
+  public var list: Array<Effect>;
 
 // creates effects manager
   public function new(game: Game, cult: Cult)

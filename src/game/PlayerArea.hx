@@ -742,7 +742,8 @@ class PlayerArea extends _SaveObject
   public function detachAction()
     {
       attachHost.parasiteAttached = false;
-      attachHost.entity.setMask(-1);
+      if (attachHost.entity != null)
+        attachHost.entity.setMask(-1);
       onDetach();
 
       log('You detach from the potential host.');

@@ -202,6 +202,8 @@ class Cult extends _SaveObject
   function destroy()
     {
       members = [];
+      effects.list = [];
+      ordeals.list = [];
       state = CULT_STATE_DEAD;
       if (!isPlayer)
         {
@@ -507,6 +509,8 @@ class Cult extends _SaveObject
 // cult turn
   public function turn(time: Int)
     {
+      if (state != CULT_STATE_ACTIVE)
+        return;
       // pause passage of time when in mission area
       if (game.location == LOCATION_AREA &&
           game.area.isMissionArea())
