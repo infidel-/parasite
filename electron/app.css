@@ -1778,7 +1778,7 @@ input[type="radio"]:focus {
 
 /* cult members table styling */
 .cult-members-table {
-  width: 50%;
+  width: 60%;
   border-collapse: collapse;
   border: 4px solid rgb(0 0 0 / 0%);
   background-color: rgb(25 41 67 / 30%);

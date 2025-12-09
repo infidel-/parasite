@@ -64,6 +64,7 @@ class Game extends _SaveObject
       config = new Config(this);
       profile = new Profile(this);
       ui = new UI(this);
+      cult.ordeals.profane.ProfaneConst.init();
       scene = new GameScene(this);
       console = new Console(this);
       jobs = new Jobs(this);

@@ -151,7 +151,7 @@ class Ordeals extends _SaveObject
         return;
 
       // spawn new profane ordeal
-      var newOrdeal: ProfaneOrdeal = new MediaTest(game);
+      var newOrdeal: ProfaneOrdeal = new GenericProfaneOrdeal(game);
       list.push(newOrdeal);
       game.message('A tribulation most foul has descended upon us: ' + newOrdeal.coloredName() + '.', null, COLOR_DEFAULT);
     }
