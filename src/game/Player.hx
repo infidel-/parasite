@@ -265,9 +265,10 @@ class Player extends _SaveObject
         'Birth, death and rebirth. The purifying rhythm of the universe.',
         'I am alive. Alive.',
       ];
-      game.message(
-        '<center>' + msgs[Std.random(msgs.length)] + '</center>',
-        'pedia/parasite');
+      game.message({
+        text: '<center>' + msgs[Std.random(msgs.length)] + '</center>',
+        img: 'pedia/parasite'
+      });
       game.scene.sounds.play('parasite-rebirth');
       game.isFinished = true; // temp kludge for rebirth
       game.isRebirth = true;

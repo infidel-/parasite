@@ -115,8 +115,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (ambushedHabitat.hasWatcher)
         {
           game.scene.sounds.play('watcher-ambush');
-          game.message("The watcher warns they are waiting for me.", 'pedia/team_ambush',
-            COLOR_ALERT);
+          game.message({
+            text: "The watcher warns they are waiting for me.",
+            img: 'pedia/team_ambush',
+            col: 'alert'
+          });
         }
     }
 
@@ -161,7 +164,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
           prev >= 9.91 && val < 9.91 &&
           game.turns - lastAlertTurn > 10)
         {
-          game.message("They are getting very close to me.", null, COLOR_ALERT);
+          game.message({
+            text: "They are getting very close to me.",
+            col: 'alert'
+          });
           lastAlertTurn = game.turns;
         }
     }
@@ -180,8 +186,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
           ambushedHabitat != null &&
           game.area.habitat == ambushedHabitat)
         {
-          game.message("Something is wrong here... It's an ambush!", 'pedia/team_ambush',
-            COLOR_ALERT);
+          game.message({
+            text: "Something is wrong here... It's an ambush!",
+            img: 'pedia/team_ambush',
+            col: 'alert'
+          });
           game.scene.sounds.play('event-ambush');
           onEnterHabitat();
           return;
@@ -206,8 +215,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
           var x = game.playerArea.x;
           var y = game.playerArea.y;
 
-          game.message("Something is wrong here... They're after me!", 'pedia/team_basics',
-            COLOR_ALERT);
+          game.message({
+            text: "Something is wrong here... They're after me!",
+            img: 'pedia/team_basics',
+            col: 'alert'
+          });
           game.scene.sounds.play('event-ambush');
           for (i in 0...4)
             {
@@ -292,7 +304,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.player.host == ai.first())
         return;
       // no more free blackops, ambush failed
-      game.message("I've " + (onDeath ? 'eliminated' : 'successfully evaded') + " the aggressors. It will be some time before they will be able to get on my trail again.", 'pedia/team_deactivation');
+      game.message({
+        text: "I've " + (onDeath ? 'eliminated' : 'successfully evaded') + " the aggressors. It will be some time before they will be able to get on my trail again.",
+        img: 'pedia/team_deactivation'
+      });
       game.group.onRepelAmbush();
     }
 
@@ -347,10 +362,12 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (game.config.spoonHabitats)
         {
           game.scene.sounds.play('event-habitat-destroy');
-          game.message('You sense that the habitat at ' +
+          game.message({
+            text: 'You sense that the habitat at ' +
             area.x + ',' + area.y + ' was destroyed.',
-            'pedia/habitat_destruction',
-            COLOR_ALERT);
+            img: 'pedia/habitat_destruction',
+            col: 'alert'
+          });
           return;
         }
 
@@ -366,7 +383,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
           img = 'event/death';
         }
       else msg += 'This will leave a permanent mark.';
-      game.message(msg, img, COLOR_ALERT);
+      game.message({
+        text: msg,
+        img: img,
+        col: 'alert'
+      });
 
       // habitat shock death
       game.player.vars.habitatsLeft--;

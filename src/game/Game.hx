@@ -192,7 +192,10 @@ class Game extends _SaveObject
       if (!firstTime)
         {
           // initial goals
-          message('You are alone. You are scared. You need to find a host or you will die soon.', 'event/start');
+          message({
+            text: 'You are alone. You are scared. You need to find a host or you will die soon.',
+            img: 'event/start'
+          });
           var silent = (config.skipTutorial && config.difficulty > 0);
           for (goal in const.Goals.map.keys())
             if (const.Goals.map[goal].isStarting)
@@ -435,22 +438,24 @@ class Game extends _SaveObject
       updateHUD();
     }
 
-
 // update HUD state from game state
   public inline function updateHUD()
     {
       ui.hud.update(); // update hud state
     }
 
-
 // display text message in a window
-  public function message(s: String,
-      ?img: String,
-      ?col: _TextColor)
+  public function message(params: _MessageParams)
     {
-      if (col == null)
-        col = COLOR_MESSAGE;
-      narrative(s, col);
+      // set defaults
+      if (params.col == null)
+        params.col = 'message';
+      if (params.title != null &&
+          params.titleCol == null)
+        params.titleCol = 'white';
+
+      // add message to log
+      log('<span class=narrative>' + Const.col(params.col, params.text) + '</span>');
 
       if (!importantMessagesEnabled)
         return;
@@ -459,14 +464,9 @@ class Game extends _SaveObject
       ui.event({
         type: UIEVENT_STATE,
         state: UISTATE_MESSAGE,
-        obj: {
-          text: Const.narrative(s),
-          col: Const.TEXT_COLORS[col],
-          img: img,
-        }
+        obj: params
       });
     }
-
 
 // add info about stat change to game log
   public inline function infoChange(name: String, mod: Float, val: Float)
@@ -1043,7 +1043,10 @@ class Game extends _SaveObject
 // finish the demo
   public function finishDemo()
     {
-      message('Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.', 'event/sandbox');
+      message({
+        text: 'Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.',
+        img: 'event/sandbox'
+      });
       ui.event({
         type: UIEVENT_FINISH,
         state: null,

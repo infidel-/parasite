@@ -115,7 +115,10 @@ class Goals extends _SaveObject
           info.messageReceive != null)
         {
           var img = ('event/' + id + '_receive').toLowerCase();
-          game.message(info.messageReceive, img);
+          game.message({
+            text: info.messageReceive,
+            img: img
+          });
         }
 
       if (info.isHidden == null || info.isHidden == false)
@@ -155,7 +158,10 @@ class Goals extends _SaveObject
           if (info.imageComplete != null)
             img = info.imageComplete;
           else img = ('event/' + id + '_complete').toLowerCase();
-          game.message(info.messageComplete, img);
+          game.message({
+            text: info.messageComplete,
+            img: img
+          });
         }
 
       // call completion hook
@@ -184,7 +190,10 @@ class Goals extends _SaveObject
           if (info.imageFailure != null)
             img = info.imageFailure;
           else img = ('event/' + id + '_failure').toLowerCase();
-          game.message(info.messageFailure, img);
+          game.message({
+            text: info.messageFailure,
+            img: img
+          });
         }
 
       // call failure hook

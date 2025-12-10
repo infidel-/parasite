@@ -245,9 +245,11 @@ class GoalsAlienCrashLanding
       onComplete: function (game, player) {
         // dynamic completion message
         var languageID = getLanguageID(game);
-        game.message(
-          '<span class=alien' + languageID + '>' + 'Glut</span>! After initiating the startup sequence you board the ship. ' +
-          'You activate the engine and move the ship away to a safer location.', 'event/scenario_alien_steal_ship_complete');
+        game.message({
+          text: '<span class=alien' + languageID + '>' + 'Glut</span>! After initiating the startup sequence you board the ship. ' +
+          'You activate the engine and move the ship away to a safer location.',
+          img: 'event/scenario_alien_steal_ship_complete'
+        });
 
         // move spaceship and player from lab to random wilderness spot
         moveSpaceship(game);
@@ -266,8 +268,10 @@ class GoalsAlienCrashLanding
           {
             state.alertRaised = true;
             var languageID = getLanguageID(game);
-            game.message(
-              '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.', 'event/security_alert');
+            game.message({
+              text: '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.',
+              img: 'event/security_alert'
+            });
           }
       },
 

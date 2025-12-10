@@ -465,7 +465,7 @@ class RegionGame extends _SaveObject
         }
 
       if (tmp2.length == 0)
-        throw 'cannot find area with specified parameters';
+        throw 'cannot find area with specified parameters: ' + params;
 
       return tmp2[Std.random(tmp2.length)];
     }

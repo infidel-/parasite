@@ -19,6 +19,12 @@
   --text-color-symbiosis: #98ff97;
   --text-color-cultist: #fd97ff;
   --text-color-debug: #a7a7a7;
+  --text-color-alert: #FC420E;
+  --text-color-evolution: #73f3ff;
+  --text-color-organ: #e0e13a;
+  --text-color-hint: #e36767;
+  --text-color-message: #30FF6B;
+  --text-color-cult: #fd97ff;
   --text-color-energy: #50d6fe;
   --text-color-income: #f5b57e;
   --text-color-money: #ecd352;
@@ -583,6 +589,14 @@ hr {
   margin-left: auto;
   margin-right: auto;
   width: 100%;
+}
+
+.message-title {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  text-shadow: 0 0 5px rgba(48, 255, 107, 0.3);
 }
 @keyframes fade-in {
   0% { opacity: 0; }
@@ -1285,6 +1299,7 @@ input[type=checkbox] {
 .window-cult-ordeals-note {
   color: var(--text-color-ordeal-note);
   font-size: 0.9em;
+  font-style: italic;
   margin-bottom: 4px;
 }
 

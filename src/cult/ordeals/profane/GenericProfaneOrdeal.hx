@@ -70,16 +70,21 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
     var turns = d100() < 5 ? 10 : 5;
     var eff = new LoseResource(game, turns, 'lawfare');
     cult.effects.add(eff);
-    game.message(info.fail, null, COLOR_CULT);
+    game.message({
+      title: 'Ordeal Failed',
+      titleCol: 'red',
+      text: info.fail,
+      col: 'cult'
+    });
   }
 
   // called on ordeal success
   override function onSuccess() {
-    game.message(info.success, null, COLOR_CULT);
-  }
-
-  // called after load or creation
-  public override function initPost(onLoad: Bool) {
-    super.initPost(onLoad);
+    game.message({
+      title: 'Ordeal Succeeded',
+      titleCol: 'white',
+      text: info.success,
+      col: 'cult'
+    });
   }
 }

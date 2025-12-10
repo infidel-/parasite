@@ -6,6 +6,8 @@ import js.Browser;
 import js.html.DivElement;
 
 import game.Game;
+import Const;
+import _MessageParams;
 
 class Message extends UIWindow
 {
@@ -35,33 +37,41 @@ class Message extends UIWindow
 // set parameters
   public override function setParams(obj: Dynamic)
     {
-      var o: { text: String, col: String, img: String } = cast obj;
-      
+      var o: _MessageParams = cast obj;
+      o.text = '<span class=narrative>' + o.text + '</span>';
+
       // preload image if present
       if (o.img != null)
         {
           var img = new js.html.Image();
           img.onload = function() {
-            // image loaded, now set html
-            var html = '<img class=message-img src="img/' + o.img + '.jpg"><p>';
-            if (o.col != null)
-              html += "<font style='color:" + o.col + "'>"  + o.text + "</font>";
-            else html += o.text;
-            html += '</p>';
-            text.innerHTML = html;
-            game.scene.sounds.play('message-default');
+            setParamsInternal(o, true);
           };
           img.src = 'img/' + o.img + '.jpg';
         }
-      else
+      else setParamsInternal(o, false);
+    }
+
+// internal method to set html content
+  function setParamsInternal(o: _MessageParams, hasImage: Bool)
+    {
+      var html = '';
+      if (hasImage)
+        html += '<img class=message-img src="img/' + o.img + '.jpg"><p>';
+      if (o.title != null)
         {
-          // no image, set html immediately
-          var html = '';
-          if (o.col != null)
-            html += "<font style='color:" + o.col + "'>"  + o.text + "</font>";
-          else html += o.text;
-          text.innerHTML = html;
-          game.scene.sounds.play('message-default');
+          var titleText = o.title;
+          if (o.titleCol != null)
+            titleText = Const.col(o.titleCol, o.title);
+          html += "<h3 class='message-title'>" + titleText + "</h3>";
         }
+      if (o.col != null)
+        html += "<font style='color:var(--text-color-" + o.col + ")'>"  + o.text + "</font>";
+      else html += o.text;
+      if (hasImage)
+        html += '</p>';
+
+      text.innerHTML = html;
+      game.scene.sounds.play('message-default');
     }
 }

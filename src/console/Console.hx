@@ -709,7 +709,9 @@ class Console
         game.log('This is a test alert message.', COLOR_ALERT);
       else if (cmd == 'ddemo')
         {
-          game.message('Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.');
+          game.message({
+            text: 'Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.'
+          });
           game.ui.event({
             type: UIEVENT_FINISH,
             state: null,

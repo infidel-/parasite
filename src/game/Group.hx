@@ -249,7 +249,10 @@ class Group extends _SaveObject
         return;
 
       // player becomes aware of the group existence
-      game.message('There is a group of humans that wants to destroy me.', 'pedia/group');
+      game.message({
+        text: 'There is a group of humans that wants to destroy me.',
+        img: 'pedia/group'
+      });
       // receive watcher goal if habitat was created already
       if (game.goals.completed(GOAL_CREATE_HABITAT))
         game.goals.receive(GOAL_PUT_WATCHER);
