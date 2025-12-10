@@ -12,6 +12,9 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
   public var subType: String;
   public var infoID: Int;
   public var info(get, null): _OrdealInfo;
+  function get_info(): _OrdealInfo {
+    return ProfaneConst.getInfo(subType, infoID);
+  }
 
   public function new(g: Game)
     {
@@ -35,7 +38,6 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
 
       // pick random ordeal info based on subtype
       infoID = ProfaneConst.getRandom(subType);
-      var info: _OrdealInfo = ProfaneConst.getInfo(subType, infoID);
 
       name = info.name;
       note = info.note;
@@ -49,9 +51,9 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
       var m: Mission = null;
       switch (info.mission) {
         case MISSION_PERSUADE:
-          m = new Persuade(game);
+          m = new Persuade(game, info.target);
         case MISSION_KILL:
-          m = new Kill(game);
+          m = new Kill(game, info.target);
       }
       missions.push(m);
 
@@ -59,11 +61,6 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
       power.set(subType, 15);
       power.money = 50000;
     }
-
-  // get info property based on subtype
-  function get_info(): _OrdealInfo {
-    return ProfaneConst.getInfo(subType, infoID);
-  }
 
   // called on ordeal failure
   override function onFail() {

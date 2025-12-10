@@ -1,8 +1,9 @@
 // ordeal info type
 typedef _OrdealInfo = {
-  name: String,
-  note: String,
-  success: String,
-  fail: String,
-  mission: _OrdealMissionType
+  var name: String;
+  var note: String;
+  var success: String;
+  var fail: String;
+  var mission: _OrdealMissionType;
+  var ?target: _MissionTarget;
 }

@@ -321,6 +321,18 @@ class AIData extends _SaveObject
       return s;
     }
 
+// apply target info to this AI data
+  public function applyTargetInfo(targetInfo: _MissionTarget)
+    {
+      if (targetInfo == null ||
+          targetInfo.isMale == null)
+        return;
+      
+      isMale = targetInfo.isMale;
+      // reset name if gender was changed
+      name.real = name.realCapped = const.NameConst.getHumanName(isMale);
+    }
+
 // log according to gender
   public function log(s: String, ?col: _TextColor = null)
     {

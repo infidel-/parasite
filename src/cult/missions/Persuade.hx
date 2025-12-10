@@ -6,9 +6,11 @@ import ai.*;
 class Persuade extends Mission
 {
   public var target: AIData;
+  public var targetInfo: _MissionTarget;
 
-  public function new(g: Game)
+  public function new(g: Game, ?targetInfo: _MissionTarget)
     {
+      this.targetInfo = targetInfo;
       super(g);
       init();
       initPost(false);
@@ -26,6 +28,11 @@ class Persuade extends Mission
       var ai = new CivilianAI(game, 0, 0);
       target = ai.cloneData();
       target.isNameKnown = true;
+      
+      // apply target info if provided
+      if (targetInfo != null)
+        target.applyTargetInfo(targetInfo);
+      
       // pick random area position
       var area = game.region.getRandom({
         noMission: true,
