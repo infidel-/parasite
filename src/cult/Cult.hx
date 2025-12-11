@@ -7,6 +7,7 @@ import game.Game;
 import ai.AI;
 import ai.AIData;
 import cult.effects.*;
+import Type;
 
 class Cult extends _SaveObject
 {
@@ -848,5 +849,37 @@ class Cult extends _SaveObject
       if (mission != null &&
           !mission.isCompleted)
         mission.turn();
+    }
+
+  // add random bad effect to cult
+  public function addRandomBadEffect(turns: Int)
+    {
+      // define effect classes and their constructor requirements
+      var effectList: Array<Dynamic> = [
+        { cls: NoTrade, power: false },
+        { cls: LoseResource, power: true },
+        { cls: DecreasePower, power: true },
+        { cls: BlockCommunal, power: false },
+        { cls: OrdealActions, power: false },
+        { cls: DifficultHelp, power: false },
+        { cls: DecreaseIncome, power: false },
+        { cls: IncreaseTradeCost, power: false }
+      ];
+
+      // pick random effect
+      var info = effectList[Std.random(effectList.length)];
+      
+      // create effect instance with appropriate constructor arguments
+      var effect: Effect;
+      if (info.power)
+        {
+          // effects that require power type
+          var powerType = _CultPower.random();
+          effect = Type.createInstance(info.cls, [game, turns, powerType]);
+        }
+      else effect = Type.createInstance(info.cls, [game, turns]);
+      
+      this.effects.add(effect);
+      log('gains a new burden: ' + Const.col('cult-effect', effect.name));
     }
 }

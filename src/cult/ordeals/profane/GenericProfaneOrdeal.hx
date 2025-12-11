@@ -43,9 +43,21 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
       note = info.note;
       timer = 10;
 
-      // add negative effect
-      var effect = new DecreaseIncome(game, timer);
-      effects.push(effect);
+      // add random negative effect
+      var e: Effect;
+      var effectType = Std.random(3); // 0, 1, or 2
+      switch (effectType)
+        {
+          case 0:
+            e = new DecreasePower(game, timer, subType);
+          case 1:
+            e = new DecreaseIncome(game, timer);
+          case 2:
+            e = new BlockCommunal(game, timer);
+          default:
+            e = new DecreaseIncome(game, timer); // fallback
+        }
+      effects.push(e);
 
       // add mission based on info type
       var m: Mission = null;
@@ -64,15 +76,14 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
 
   // called on ordeal failure
   override function onFail() {
-    var turns = d100() < 5 ? 10 : 5;
-    var eff = new LoseResource(game, turns, 'lawfare');
-    cult.effects.add(eff);
     game.message({
       title: 'Ordeal Failed',
       titleCol: 'red',
       text: info.fail,
       col: 'cult'
     });
+    var turns = d100() < 5 ? 10 : 5;
+    cult.addRandomBadEffect(turns);
   }
 
   // called on ordeal success

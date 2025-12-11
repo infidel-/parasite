@@ -28,7 +28,31 @@ class MediaConst extends OrdealConst
           success: "Beast learns. Your flesh-rites become background radiation - auto-played everywhere. Conversion is cache-effect.",
           fail: "Shadowban. <q>Harmful</q> flags bloom. Whistleblowers leak flesh-nets. Reach throttled. Flock starved.",
           mission: MISSION_PERSUADE,
-        }
+        },
+        { 
+          name: "Redline Ritual", 
+          note: "Scar maps in her drafts folder. Witness transcripts auto saving. Six hours to publication. The flesh route she traced leads to your door.",
+          success: "Found in alley, pavement slick. Drafts corrupted into confessions. The flesh route is dead.",
+          fail: "Article live. <q>Network of Flesh</q> trending. Your front doxxed, scar maps viral. Forensics finds your fiber. Flock scatters.",
+          mission: MISSION_KILL,
+          target: { isMale: false },
+        },
+        { 
+          name: "Frame by Frame Analysis", 
+          note: "He found seventeen frames of flesh origami. Slowed them down. Sent sample to chief. Story runs in three hours.",
+          success: "Found before deadline. Sample deleted, timeline corrupted. Seventeen frames loop behind his open-wide eyes.",
+          fail: "Story runs. Seventeen frames analyzed. Flesh origami decoded. Cult exposed in 4K. Flock scatters.",
+          mission: MISSION_KILL,
+          target: { isMale: true },
+        },
+        { 
+          name: "Final Diagnosis", 
+          note: "He autopsied your initiate. Found sigils in bone marrow. Report uploads in three hours. His findings will indict the flock.",
+          success: "Cardiac event before upload. Report corrupted: <q>natural causes</q>. Bone sigils dismissed as pathology. Case closed.",
+          fail: "Report uploads. <q>Ritualistic self mutilation</q> trends. Bone sigils in 4K. Flock quarantined. You are vectors.",
+          mission: MISSION_KILL,
+          target: { isMale: true },
+        },
       ];
     }
 }

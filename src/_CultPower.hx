@@ -121,4 +121,10 @@ class _CultPower extends _SaveObject
   public static var names = ['combat', 'media', 'lawfare', 'corporate', 'political'];
   public static var namesCap = ['Combat', 'Media', 'Lawfare', 'Corporate', 'Political'];
   public static var namesUpper = ['COMBAT', 'MEDIA', 'LAWFARE', 'CORPORATE', 'POLITICAL'];
+
+  // returns random power name (excluding occult and money)
+  public static function random(): String
+    {
+      return names[Std.random(names.length)];
+    }
 }
