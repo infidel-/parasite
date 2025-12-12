@@ -33,7 +33,7 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
       super.init();
 
       // pick random subtype
-      static var availableSubTypes = ['media'];
+      static var availableSubTypes = ['media', 'lawfare'];
       subType = availableSubTypes[Std.random(availableSubTypes.length)];
 
       // pick random ordeal info based on subtype

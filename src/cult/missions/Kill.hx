@@ -28,7 +28,7 @@ class Kill extends Mission
       note = 'A specific target must be eliminated.';
       
       // create random civilian AI and clone its data
-      var ai = new CivilianAI(game, 0, 0);
+      var ai = game.createAI(targetInfo.type, 0, 0);
       target = ai.cloneData();
       target.isNameKnown = true;
       

@@ -12,6 +12,7 @@ import scenario.Timeline;
 import cult.Cult;
 import const.ItemsConst;
 import const.Jobs;
+import ai.*;
 
 @:expose
 class Game extends _SaveObject
@@ -1057,6 +1058,42 @@ class Game extends _SaveObject
       });
     }
 #end
+
+// create AI by type (similar to AreaGame.spawnAI but doesn't add to area)
+  public function createAI(type: String, x: Int, y: Int): AI
+    {
+      var ai: AI = null;
+      if (type == 'agent')
+        ai = new AgentAI(this, x, y);
+      else if (type == 'blackops')
+        ai = new BlackopsAI(this, x, y);
+      else if (type == 'bum' || type == 'hobo')
+        ai = new BumAI(this, x, y);
+      else if (type == 'civilian' || type == 'civ')
+        ai = new CivilianAI(this, x, y);
+      else if (type == 'corpo')
+        ai = new CorpoAI(this, x, y);
+      else if (type == 'dog')
+        ai = new DogAI(this, x, y);
+      else if (type == 'police' || type == 'cop')
+        ai = new PoliceAI(this, x, y);
+      else if (type == 'prostitute' || type == 'pro')
+        ai = new ProstituteAI(this, x, y);
+      else if (type == 'security' || type == 'sec')
+        ai = new SecurityAI(this, x, y);
+      else if (type == 'scientist' || type == 'sci')
+        ai = new ScientistAI(this, x, y);
+      else if (type == 'smiler')
+        ai = new SmilerAI(this, x, y);
+      else if (type == 'soldier')
+        ai = new SoldierAI(this, x, y);
+      else if (type == 'team')
+        ai = new TeamMemberAI(this, x, y);
+      else if (type == 'thug')
+        ai = new ThugAI(this, x, y);
+      else throw 'createAI(): AI type [' + type + '] unknown';
+      return ai;
+    }
 
   function toString()
     {

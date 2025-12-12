@@ -324,13 +324,35 @@ class AIData extends _SaveObject
 // apply target info to this AI data
   public function applyTargetInfo(targetInfo: _MissionTarget)
     {
-      if (targetInfo == null ||
-          targetInfo.isMale == null)
+      if (targetInfo == null)
         return;
-      
-      isMale = targetInfo.isMale;
+     
+      if (targetInfo.isMale != null)
+        isMale = targetInfo.isMale;
       // reset name if gender was changed
-      name.real = name.realCapped = const.NameConst.getHumanName(isMale);
+      name.real = name.realCapped = NameConst.getHumanName(isMale);
+      job = targetInfo.job;
+      
+      // apply job and icon
+      var data: Dynamic = null;
+      if (targetInfo.type == 'civilian')
+        {
+          if (targetInfo.icon == 'formalCivilian')
+            data = game.scene.images.getFormalCivilianAI(targetInfo.job, isMale);
+          else
+            data = game.scene.images.getCivilianAI(targetInfo.job, isMale);
+        }
+      else
+        {
+          data = game.scene.images.getSpecialAI(targetInfo.type, isMale);
+        }
+      
+      if (data != null)
+        {
+          tileAtlasX = data.x;
+          tileAtlasY = data.y;
+        }
+      else trace('Could not find icon for ' + targetInfo);
     }
 
 // log according to gender

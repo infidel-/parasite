@@ -1591,36 +1591,7 @@ class Test {
   ];
   public function spawnAI(type: String, x: Int, y: Int, ?doAddAI:Bool = true): AI
     {
-      var ai: AI = null;
-      if (type == 'agent')
-        ai = new AgentAI(game, x, y);
-      else if (type == 'blackops')
-        ai = new BlackopsAI(game, x, y);
-      else if (type == 'bum' || type == 'hobo')
-        ai = new BumAI(game, x, y);
-      else if (type == 'civilian' || type == 'civ')
-        ai = new CivilianAI(game, x, y);
-      else if (type == 'corpo')
-        ai = new CorpoAI(game, x, y);
-      else if (type == 'dog')
-        ai = new DogAI(game, x, y);
-      else if (type == 'police' || type == 'cop')
-        ai = new PoliceAI(game, x, y);
-      else if (type == 'prostitute' || type == 'pro')
-        ai = new ProstituteAI(game, x, y);
-      else if (type == 'security' || type == 'sec')
-        ai = new SecurityAI(game, x, y);
-      else if (type == 'scientist' || type == 'sci')
-        ai = new ScientistAI(game, x, y);
-      else if (type == 'smiler')
-        ai = new SmilerAI(game, x, y);
-      else if (type == 'soldier')
-        ai = new SoldierAI(game, x, y);
-      else if (type == 'team')
-        ai = new TeamMemberAI(game, x, y);
-      else if (type == 'thug')
-        ai = new ThugAI(game, x, y);
-      else throw 'spawnAI(): AI type [' + type + '] unknown';
+      var ai = game.createAI(type, x, y);
       // add chat clues
       game.player.chat.initClues(ai);
       if (doAddAI)

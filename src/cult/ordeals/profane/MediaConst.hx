@@ -13,6 +13,12 @@ class MediaConst extends OrdealConst
           success: "Clip metastasizes. Viewers wake with sigils carved behind their eyes. Shares multiply like skin grafts. Servers groan.",
           fail: "Debunked as performance art. Algorithm marks gore. Hosts ban accounts, IPs flagged as snuff farms.",
           mission: MISSION_PERSUADE,
+          target: {
+            isMale: false,
+            job: "content moderator",
+            type: "corpo",
+            icon: "corpo",
+          },
         },
         { 
           name: "Anchor's Burden, Unspoken", 
@@ -20,7 +26,12 @@ class MediaConst extends OrdealConst
           success: "She weeps on air, calls her skin <q>a house of fog.</q> You provide surgeon, narrative. Tomorrow she anchors your psalm.",
           fail: "Expos&#233; airs. Company named, flesh-sigils in HD. Credibility shatters. Initiates scatter like flayed tissue.",
           mission: MISSION_PERSUADE,
-          target: { isMale: false }
+          target: {
+            isMale: false,
+            job: 'journalist',
+            icon: 'formalCivilian',
+            type: 'civilian',
+          }
         },
         { 
           name: "Teaching the Algorithm Prayer", 
@@ -28,6 +39,12 @@ class MediaConst extends OrdealConst
           success: "Beast learns. Your flesh-rites become background radiation - auto-played everywhere. Conversion is cache-effect.",
           fail: "Shadowban. <q>Harmful</q> flags bloom. Whistleblowers leak flesh-nets. Reach throttled. Flock starved.",
           mission: MISSION_PERSUADE,
+          target: {
+            isMale: true,
+            job: "algorithm engineer",
+            type: "casualCivilian",
+            icon: "casualCivilian"
+          },
         },
         { 
           name: "Redline Ritual", 
@@ -35,7 +52,12 @@ class MediaConst extends OrdealConst
           success: "Found in alley, pavement slick. Drafts corrupted into confessions. The flesh route is dead.",
           fail: "Article live. <q>Network of Flesh</q> trending. Your front doxxed, scar maps viral. Forensics finds your fiber. Flock scatters.",
           mission: MISSION_KILL,
-          target: { isMale: false },
+          target: {
+            isMale: false,
+            job: 'investigative journalist',
+            icon: 'formalCivilian',
+            type: 'civilian',
+          },
         },
         { 
           name: "Frame by Frame Analysis", 
@@ -43,7 +65,12 @@ class MediaConst extends OrdealConst
           success: "Found before deadline. Sample deleted, timeline corrupted. Seventeen frames loop behind his open-wide eyes.",
           fail: "Story runs. Seventeen frames analyzed. Flesh origami decoded. Cult exposed in 4K. Flock scatters.",
           mission: MISSION_KILL,
-          target: { isMale: true },
+          target: {
+            isMale: true,
+            job: 'video analyst',
+            icon: 'casualCivilian',
+            type: 'civilian',
+          },
         },
         { 
           name: "Final Diagnosis", 
@@ -51,7 +78,12 @@ class MediaConst extends OrdealConst
           success: "Cardiac event before upload. Report corrupted: <q>natural causes</q>. Bone sigils dismissed as pathology. Case closed.",
           fail: "Report uploads. <q>Ritualistic self mutilation</q> trends. Bone sigils in 4K. Flock quarantined. You are vectors.",
           mission: MISSION_KILL,
-          target: { isMale: true },
+          target: {
+            isMale: true,
+            job: 'medical examiner',
+            icon: 'doctor',
+            type: 'civilian',
+          },
         },
       ];
     }

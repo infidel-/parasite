@@ -9,6 +9,7 @@ class ProfaneConst {
   public static function init()
     {
       constMap.set('media', new MediaConst());
+      constMap.set('lawfare', new LawfareConst());
     }
 
 // get random ordeal index for subtype
