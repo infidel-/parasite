@@ -4,29 +4,36 @@ package cult.ordeals.profane;
 class ProfaneConst {
   // map of subtype to their const instances
   public static var constMap: Map<String, OrdealConst> = new Map();
+  // available profane ordeal types
+  public static var availableTypes: Array<String> = ['media', 'lawfare'];
 
   // initialize profane ordeal constants
   public static function init()
     {
-      constMap.set('media', new MediaConst());
-      constMap.set('lawfare', new LawfareConst());
+      for (type in availableTypes)
+        {
+          if (type == 'media')
+            constMap.set(type, new MediaConst());
+          else if (type == 'lawfare')
+            constMap.set(type, new LawfareConst());
+        }
     }
 
 // get random ordeal index for subtype
   public static function getRandom(subType: String): Int
     {
-      var constInstance = constMap.get(subType);
-      if (constInstance != null)
-        return constInstance.getRandom();
+      var cc = constMap.get(subType);
+      if (cc != null)
+        return cc.getRandom();
       return 0;
     }
 
   // get ordeal info for subtype and index
   public static function getInfo(subType: String, index: Int): _OrdealInfo
     {
-      var constInstance = constMap.get(subType);
-    if (constInstance != null)
-      return constInstance.getInfo(index);
+      var cc = constMap.get(subType);
+      if (cc != null)
+        return cc.getInfo(index);
       return {
         name: "Unknown Ordeal",
         note: "This ordeal type is not properly configured.",

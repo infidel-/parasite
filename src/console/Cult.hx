@@ -3,6 +3,7 @@ package console;
 
 import game.Game;
 import cult.ordeals.UpgradeFollower;
+import cult.ordeals.profane.*;
 
 class Cult
 {
@@ -33,6 +34,7 @@ class Cult
               log('cu/cult gr - give +10 all resources and +100k money');
               log('cu/cult t - call cult turn');
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
+              log('cu/cult po [power] [idx] - add profane ordeal');
               return true;
             }
           
@@ -54,6 +56,13 @@ class Cult
           if (arr[1] == 'u1')
             {
               upgradeRandomLevelOne();
+              return true;
+            }
+          
+          // cu/cult po - add profane ordeal
+          if (arr[1] == 'po')
+            {
+              addProfaneOrdeal(arr);
               return true;
             }
           
@@ -145,6 +154,84 @@ class Cult
         log('Upgraded ' + target.TheName() + ' to level 2.');
       else
         log('Failed to upgrade follower.');
+    }
+
+// add profane ordeal to cult
+  function addProfaneOrdeal(arr: Array<String>)
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+      
+      var cult = game.cults[0];
+      
+      // show power list if no arguments provided
+      if (arr.length == 2)
+        {
+          log('Available profane ordeal powers:');
+          for (power in ProfaneConst.availableTypes)
+            {
+              var cc = ProfaneConst.constMap.get(power);
+              var ordealCount = cc.getInfos().length;
+              log(power + ' (' + ordealCount + ' ordeals)');
+            }
+          return;
+        }
+      
+      // show ordeal list for specific power type
+      if (arr.length == 3)
+        {
+          var powerType = arr[2];
+          var cc = ProfaneConst.constMap.get(powerType);
+          
+          if (cc == null)
+            {
+              log('Unknown power type: ' + powerType);
+              log('Available types: ' + ProfaneConst.availableTypes.join(', '));
+              return;
+            }
+
+          log('Available ' + powerType + ' ordeals:');
+          var infos = cc.getInfos();
+          var ordealList = [];
+          for (i in 0...infos.length)
+            ordealList.push(i + ': ' + infos[i].name);
+          log(ordealList.join(', '));
+          return;
+        }
+
+      // add specific profane ordeal
+      if (arr.length >= 4)
+        {
+          var powerType = arr[2];
+          var ordealIndex = Std.parseInt(arr[3]);
+          var cc = ProfaneConst.constMap.get(powerType);
+          if (cc == null)
+            {
+              log('Unknown power type: ' + powerType);
+              return;
+            }
+
+          var infos = cc.getInfos();
+          if (ordealIndex < 0 || ordealIndex >= infos.length)
+            {
+              log('Invalid ordeal index: ' + ordealIndex);
+              log('Valid range: 0-' + (infos.length - 1));
+              return;
+            }
+
+          // create and add the profane ordeal
+          var o = new GenericProfaneOrdeal(game, powerType, ordealIndex);
+          cult.ordeals.list.push(o);
+          log('Added profane ordeal: ' + o.coloredName());
+          game.message({
+            text: 'A tribulation most foul has descended upon us: ' + o.coloredName() + '.',
+            col: 'white'
+          });
+          return;
+        }
     }
 
 // log shortcut

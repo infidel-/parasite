@@ -22,4 +22,10 @@ class OrdealConst
         return infos[0]; // fallback to first info if index is invalid
       return infos[index];
     }
+
+// return all ordeal infos
+  public function getInfos(): Array<_OrdealInfo>
+    {
+      return infos;
+    }
 }

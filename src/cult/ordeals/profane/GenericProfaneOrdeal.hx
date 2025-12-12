@@ -16,8 +16,11 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
     return ProfaneConst.getInfo(subType, infoID);
   }
 
-  public function new(g: Game)
+  public function new(g: Game, ?subType: String, ?infoID: Int)
     {
+      this.subType = subType;
+      this.infoID = infoID;
+      
       super(g);
       init();
       initPost(false);
@@ -32,12 +35,14 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
     {
       super.init();
 
-      // pick random subtype
-      static var availableSubTypes = ['media', 'lawfare'];
-      subType = availableSubTypes[Std.random(availableSubTypes.length)];
-
-      // pick random ordeal info based on subtype
-      infoID = ProfaneConst.getRandom(subType);
+      // only pick random subtype if not already set
+      if (subType == null)
+        {
+          subType = ProfaneConst.availableTypes[Std.random(ProfaneConst.availableTypes.length)];
+        }
+      // only pick random ordeal info if not already set
+      if (infoID == null)
+        infoID = ProfaneConst.getRandom(subType);
 
       name = info.name;
       note = info.note;
