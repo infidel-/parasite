@@ -5,7 +5,7 @@ class ProfaneConst {
   // map of subtype to their const instances
   public static var constMap: Map<String, OrdealConst> = new Map();
   // available profane ordeal types
-  public static var availableTypes: Array<String> = ['media', 'lawfare'];
+  public static var availableTypes: Array<String> = ['media', 'lawfare', 'corpo', 'political'];
 
   // initialize profane ordeal constants
   public static function init()
@@ -16,6 +16,10 @@ class ProfaneConst {
             constMap.set(type, new MediaConst());
           else if (type == 'lawfare')
             constMap.set(type, new LawfareConst());
+          else if (type == 'corpo')
+            constMap.set(type, new CorpoConst());
+          else if (type == 'political')
+            constMap.set(type, new PoliticalConst());
         }
     }
 
