@@ -701,8 +701,13 @@ class Cult extends UIWindow
               buf.add('Claves: ');
               var clavisNames = [];
               for (mission in prof.missions)
-                clavisNames.push(mission.coloredName() +
-                  (mission.isCompleted ? Const.col('gray', ' [completed]') : ''));
+                {
+                  var name = mission.coloredName();
+                  if (mission.isCompleted)
+                    name += Const.col('gray', ' [completed]');
+                  else name += Const.col('gray', ' at (' + mission.x + ', ' + mission.y + ')');
+                  clavisNames.push(name);
+                }
               buf.add(clavisNames.join(', '));
               buf.add('</div>');
             }

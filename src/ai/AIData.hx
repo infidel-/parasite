@@ -338,13 +338,13 @@ class AIData extends _SaveObject
       if (targetInfo.type == 'civilian')
         {
           if (targetInfo.icon == 'formalCivilian')
-            data = game.scene.images.getFormalCivilianAI(targetInfo.job, isMale);
+            data = game.scene.images.getFormalCivilianAI(targetInfo.icon, isMale);
           else
-            data = game.scene.images.getCivilianAI(targetInfo.job, isMale);
+            data = game.scene.images.getCivilianAI(targetInfo.icon, isMale);
         }
       else
         {
-          data = game.scene.images.getSpecialAI(targetInfo.type, isMale);
+          data = game.scene.images.getSpecialAI(targetInfo.icon, isMale);
         }
       
       if (data != null)

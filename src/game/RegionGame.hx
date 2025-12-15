@@ -4,6 +4,7 @@ package game;
 
 import const.WorldConst;
 import region.*;
+import _AreaType;
 
 class RegionGame extends _SaveObject
 {
@@ -433,7 +434,26 @@ class RegionGame extends _SaveObject
       return null;
     }
 
-  // get random area
+// get mission area based on target info
+  public function getMissionArea(target: _MissionTarget): AreaGame
+    {
+      // first try - no events
+      var area = getRandom({
+        noMission: true,
+        noEvents: true,
+        type: target.location,
+      });
+      if (area != null)
+        return area;
+      // second try - allow events (for lack of better options)
+      area = getRandom({
+        noMission: true,
+        type: target.location,
+      });
+      return area;
+    }
+
+// get random area
   public function getRandom(?params: {
     ?noMission: Bool,
     ?noEvents: Bool,

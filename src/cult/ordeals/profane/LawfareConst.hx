@@ -18,6 +18,7 @@ class LawfareConst extends OrdealConst
             job: 'prosecutor',
             icon: 'formalCivilian',
             type: 'civilian',
+            location: AREA_CITY_HIGH,
           },
         },
         { 
@@ -31,6 +32,7 @@ class LawfareConst extends OrdealConst
             job: 'forensic scientist',
             icon: 'scientist',
             type: 'scientist',
+            location: AREA_FACILITY,
           },
         },
         { 
@@ -43,6 +45,7 @@ class LawfareConst extends OrdealConst
             job: 'law clerk',
             icon: 'formalCivilian',
             type: 'civilian',
+            location: AREA_CITY_HIGH,
           },
         },
         {
@@ -55,7 +58,8 @@ class LawfareConst extends OrdealConst
             isMale: true,
             job: "corporate counsel",
             type: "corpo",
-            icon: "corpo"
+            icon: "corpo",
+            location: AREA_CORP,
           }
         },
         {
@@ -68,7 +72,8 @@ class LawfareConst extends OrdealConst
             isMale: false,
             job: "detective",
             type: "police",
-            icon: "police"
+            icon: "police",
+            location: AREA_CITY_MEDIUM,
           }
         },
         {
@@ -81,7 +86,8 @@ class LawfareConst extends OrdealConst
             isMale: false,
             job: "escort",
             type: "prostitute",
-            icon: "prostitute"
+            icon: "prostitute",
+            location: AREA_CITY_LOW,
           }
         }
       ];

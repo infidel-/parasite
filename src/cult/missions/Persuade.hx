@@ -33,12 +33,8 @@ class Persuade extends Mission
       if (targetInfo != null)
         target.applyTargetInfo(targetInfo);
       
-      // pick random area position
-      var area = game.region.getRandom({
-        noMission: true,
-        noEvents: true,
-        type: AREA_CITY_HIGH
-      });
+      // pick area based on target location
+      var area = game.region.getMissionArea(targetInfo);
       if (area != null)
         {
           x = area.x;

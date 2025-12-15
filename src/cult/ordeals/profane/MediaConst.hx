@@ -18,6 +18,7 @@ class MediaConst extends OrdealConst
             job: "content moderator",
             type: "corpo",
             icon: "corpo",
+            location: AREA_CORP,
           },
         },
         { 
@@ -31,6 +32,7 @@ class MediaConst extends OrdealConst
             job: 'journalist',
             icon: 'formalCivilian',
             type: 'civilian',
+            location: AREA_CITY_HIGH,
           }
         },
         { 
@@ -43,7 +45,8 @@ class MediaConst extends OrdealConst
             isMale: true,
             job: "algorithm engineer",
             type: "casualCivilian",
-            icon: "casualCivilian"
+            icon: "casualCivilian",
+            location: AREA_CITY_HIGH,
           },
         },
         { 
@@ -57,6 +60,7 @@ class MediaConst extends OrdealConst
             job: 'investigative journalist',
             icon: 'formalCivilian',
             type: 'civilian',
+            location: AREA_CITY_HIGH,
           },
         },
         { 
@@ -70,6 +74,7 @@ class MediaConst extends OrdealConst
             job: 'video analyst',
             icon: 'casualCivilian',
             type: 'civilian',
+            location: AREA_CITY_MEDIUM,
           },
         },
         { 
@@ -83,6 +88,7 @@ class MediaConst extends OrdealConst
             job: 'medical examiner',
             icon: 'doctor',
             type: 'civilian',
+            location: AREA_FACILITY,
           },
         },
       ];
