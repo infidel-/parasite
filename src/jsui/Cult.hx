@@ -150,7 +150,7 @@ class Cult extends UIWindow
 
       // action - trade (only show if at least 10k money)
       if (cult.resources.money >= 10000 &&
-          !cult.effects.has(CULT_EFFECT_NOTRADE))
+          !cult.hasEffect(CULT_EFFECT_NOTRADE))
         {
           addPlayerAction({
             id: 'trade',

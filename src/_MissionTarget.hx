@@ -1,6 +1,6 @@
 // mission target info
 @:structInit
-class _MissionTarget
+class _MissionTarget extends _SaveObject
 {
   public var isMale: Bool;
   public var job: String;

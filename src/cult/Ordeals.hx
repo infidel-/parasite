@@ -58,6 +58,7 @@ class Ordeals extends _SaveObject
 
       // reset cult UI to root state
       game.ui.cult.reset();
+      cult.recalc();
     }
 
 // complete an ordeal successfully
@@ -73,6 +74,17 @@ class Ordeals extends _SaveObject
 
       // reset cult UI to root state
       game.ui.cult.reset();
+      cult.recalc();
+    }
+
+// returns true is one of the ordeals has effect
+  public function hasEffect(effectID: _CultEffectType): Bool
+    {
+      for (ordeal in list)
+        for (eff in ordeal.effects)
+        if (eff.type == effectID)
+          return true;
+      return false;
     }
 
 // turn processing for ordeals
@@ -164,7 +176,7 @@ class Ordeals extends _SaveObject
     {
       // check for block communal effect
       var actions: Array<_PlayerAction> = [];
-      if (cult.effects.has(CULT_EFFECT_BLOCK_COMMUNAL))
+      if (cult.hasEffect(CULT_EFFECT_BLOCK_COMMUNAL))
         return actions;
 
       RecruitFollower.initiateAction(cult, actions);
@@ -197,6 +209,7 @@ class Ordeals extends _SaveObject
       if (ordeal != null)
         {
           list.push(ordeal);
+          cult.recalc();
           game.ui.updateWindow();
         }
     }

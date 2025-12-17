@@ -441,6 +441,7 @@ class RegionGame extends _SaveObject
       var area = getRandom({
         noMission: true,
         noEvents: true,
+        noThrow: true,
         type: target.location,
       });
       if (area != null)
@@ -448,6 +449,7 @@ class RegionGame extends _SaveObject
       // second try - allow events (for lack of better options)
       area = getRandom({
         noMission: true,
+        noThrow: true,
         type: target.location,
       });
       return area;
@@ -457,6 +459,7 @@ class RegionGame extends _SaveObject
   public function getRandom(?params: {
     ?noMission: Bool,
     ?noEvents: Bool,
+    ?noThrow: Bool,
     ?type: _AreaType
   }): AreaGame
     {
@@ -485,7 +488,11 @@ class RegionGame extends _SaveObject
         }
 
       if (tmp2.length == 0)
-        throw 'cannot find area with specified parameters: ' + params;
+        {
+          if (params.noThrow == true)
+            return null;
+          throw 'cannot find area with specified parameters: ' + params;
+        }
 
       return tmp2[Std.random(tmp2.length)];
     }

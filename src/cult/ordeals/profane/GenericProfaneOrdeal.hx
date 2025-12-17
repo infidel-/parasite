@@ -16,10 +16,10 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
     return ProfaneConst.getInfo(subType, infoID);
   }
 
-  public function new(g: Game, ?subType: String, ?infoID: Int)
+  public function new(g: Game, ?vsubType: String, ?vinfoID: Int)
     {
-      this.subType = subType;
-      this.infoID = infoID;
+      this.subType = vsubType;
+      this.infoID = vinfoID;
       
       super(g);
       init();
@@ -28,25 +28,34 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
         level: 1,
         amount: 2
       });
-    }
 
-  // init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-
-      // only pick random subtype if not already set
-      if (subType == null)
-        {
-          subType = ProfaneConst.availableTypes[Std.random(ProfaneConst.availableTypes.length)];
-        }
-      // only pick random ordeal info if not already set
-      if (infoID == null)
-        infoID = ProfaneConst.getRandom(subType);
-
-      name = info.name;
-      note = info.note;
       timer = 10;
+      // set power requirements using subtype
+      var powerval = 0;
+      if (cult.countMembers(3) > 1)
+        {
+          power.money = 100000;
+          powerval = 25;
+        }
+      else if (cult.countMembers(2) > 1)
+        {
+          power.money = 50000;
+          powerval = 10;
+        }
+      else
+        {
+          power.money = 20000;
+          powerval = 5;
+        }
+      // random 10% value change
+      power.money = Std.int(power.money * (0.9 + (Std.random(21) / 100)));
+      // cap to nearest 1000
+      power.money = Std.int(power.money / 1000) * 1000;
+      // random 10% value change for power
+      powerval = Std.int(powerval * (0.9 + (Std.random(21) / 100)));
+      power.set(subType, powerval);
+
+
 
       // add random negative effect
       var e: Effect;
@@ -73,10 +82,22 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
           m = new Kill(game, info.target);
       }
       missions.push(m);
+    }
 
-      // set power requirements using subtype
-      power.set(subType, 15);
-      power.money = 50000;
+  // init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+
+      // only pick random subtype if not already set
+      if (subType == null)
+        subType = ProfaneConst.availableTypes[Std.random(ProfaneConst.availableTypes.length)];
+      // only pick random ordeal info if not already set
+      if (infoID == null)
+        infoID = ProfaneConst.getRandom(subType);
+
+      name = info.name;
+      note = info.note;
     }
 
   // called on ordeal failure

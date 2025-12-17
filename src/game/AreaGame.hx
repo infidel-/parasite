@@ -431,6 +431,9 @@ class AreaGame extends _SaveObject
 
       // hide gui
       game.scene.area.hide();
+
+      // notify cult about leaving area
+      game.cults[0].onLeaveArea();
     }
 
 // generate a new area map

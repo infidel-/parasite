@@ -17,15 +17,6 @@ class Kill extends Mission
       super(g);
       init();
       initPost(false);
-    }
-
-// init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      type = MISSION_KILL;
-      name = 'Eliminate Target';
-      note = 'A specific target must be eliminated.';
       
       // create random civilian AI and clone its data
       var ai = game.createAI(targetInfo.type, 0, 0);
@@ -43,6 +34,15 @@ class Kill extends Mission
           x = area.x;
           y = area.y;
         }
+    }
+
+// init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      type = MISSION_KILL;
+      name = 'Eliminate Target';
+      note = 'A specific target must be eliminated.';
     }
 
 // turn hook for kill mission

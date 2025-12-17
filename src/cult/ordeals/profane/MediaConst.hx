@@ -44,7 +44,7 @@ class MediaConst extends OrdealConst
           target: {
             isMale: true,
             job: "algorithm engineer",
-            type: "casualCivilian",
+            type: "civilian",
             icon: "casualCivilian",
             location: AREA_CITY_HIGH,
           },

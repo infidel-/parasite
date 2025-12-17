@@ -14,15 +14,6 @@ class Persuade extends Mission
       super(g);
       init();
       initPost(false);
-    }
-
-  // init object before loading/post creation
-  public override function init()
-    {
-      super.init();
-      type = MISSION_PERSUADE;
-      name = 'Persuade Target';
-      note = 'A specific target must be persuaded to join your cause.';
 
       // create random civilian AI and clone its data
       var ai = game.createAI(targetInfo.type, 0, 0);
@@ -40,6 +31,15 @@ class Persuade extends Mission
           x = area.x;
           y = area.y;
         }
+    }
+
+  // init object before loading/post creation
+  public override function init()
+    {
+      super.init();
+      type = MISSION_PERSUADE;
+      name = 'Persuade Target';
+      note = 'A specific target must be persuaded to join your cause.';
     }
 
   // turn hook for persuade mission

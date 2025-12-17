@@ -137,7 +137,7 @@ class Cult extends _SaveObject
       var level = jobInfo.level;
       var levelLimit = getLevelLimit(level);
       if (levelLimit >= 0 &&
-          countMembersAtLevel(level) >= levelLimit)
+          countMembers(level) >= levelLimit)
         {
           game.actionFailed('Maximum number of level ' + level + ' members reached.');
           return;
@@ -524,6 +524,8 @@ class Cult extends _SaveObject
       if (turnCounter < 10)
         return;
       turnCounter = 0;
+      // just in case
+      recalc();
       
       // store old resource values for delta calculation
       var delta: _CultPower = {
@@ -695,7 +697,7 @@ class Cult extends _SaveObject
     }
 
 // counts current cult members at specified job level
-  function countMembersAtLevel(level: Int): Int
+  public function countMembers(level: Int): Int
     {
       var count = 0;
       for (member in members)
@@ -729,7 +731,7 @@ class Cult extends _SaveObject
       var limit = getLevelLimit(level);
       if (limit < 0)
         return true;
-      return countMembersAtLevel(level) < limit;
+      return countMembers(level) < limit;
     }
 
   function get_leader(): AIData
@@ -826,7 +828,7 @@ class Cult extends _SaveObject
       return true;
     }
 
-  // called when player enters an area
+// called when player enters an area
   public function onEnterArea()
     {
       // check if current area is a mission area
@@ -839,6 +841,13 @@ class Cult extends _SaveObject
               game.logsg('This area is a mission area for ' + mission.coloredName() + '.');
             }
         }
+      recalc();
+    }
+
+// called when player leaves the area
+  public function onLeaveArea()
+    {
+      recalc();
     }
 
 // mission turn processing
@@ -881,5 +890,14 @@ class Cult extends _SaveObject
       
       this.effects.add(effect);
       log('gains a new burden: ' + Const.col('cult-effect', effect.name));
+    }
+
+// returns true is cult or one of the ordeals has effect
+  public function hasEffect(effectID: _CultEffectType): Bool
+    {
+      if (ordeals.hasEffect(effectID) ||
+          effects.has(effectID))
+        return true;
+      return false;
     }
 }
