@@ -25,6 +25,10 @@ class RecruitFollower extends Ordeal
         return;
       var id = free[Std.random(free.length)];
       addMembers([id]);
+
+      // set ordeal power based on follower type
+      power.inc(followerType, 2);
+      power.money = 10000;
     }
 
 // init object before loading/post creation
@@ -39,10 +43,6 @@ class RecruitFollower extends Ordeal
       note = 'Seek out those who hold sway over ' + followerType + ' matters.';
       // we pick target on creation based on follower type
       selectTarget();
-      
-      // set ordeal power based on follower type
-      power.inc(followerType, 2);
-      power.money = 10000;
     }
 
 // called after load or creation

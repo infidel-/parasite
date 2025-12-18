@@ -1,4 +1,4 @@
-// gather clues ordeal - haruspicy
+// gather clues ordeal - anthropomancy
 package cult.ordeals;
 
 import game.Game;
@@ -26,6 +26,10 @@ class GatherClues extends Ordeal
       var job = game.jobs.getJobInfo(m.job);
       this.memberType = (job != null ? game.jobs.groupToName(job.group) : 'combat');
       addMembers([mid]);
+      
+      // set power based on member type
+      power.inc(memberType, 10);
+      power.money = 200000;
     }
 
 // init object before loading/post creation
@@ -38,10 +42,6 @@ class GatherClues extends Ordeal
       requiredMemberLevels = 3;
       actions = requiredMembers;
       note = 'A master haruspex reads the entrails of fate to uncover hidden knowledge.';
-      
-      // set power based on member type
-      power.inc(memberType, 10);
-      power.money = 200000;
     }
 
 // called after load or creation

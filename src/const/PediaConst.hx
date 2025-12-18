@@ -31,6 +31,10 @@ class PediaConst
     'movement',
     'npcInteraction',
     'sandboxMode',
+    'cultBasics',
+    'cultPowerResources',
+    'cultCommunalOrdeals',
+    'cultProfaneOrdeals',
   ];
   public static var contents: Array<_PediaGroupInfo> = [
     {
@@ -379,6 +383,52 @@ Q + C - Cult window<br>",
           name: 'Pseudocampus',
           img: 'imp/imp_false_memories',
           text: 'Pseudocampus body feature allows the parasite to implant false memories into the host brain and then safely detach from the host confusing them for a short period of time. If you manage to get away before they become alert, it will be the safest option for your survival. In case of the host being a Group team agent, this will also result in a team distance increase. Blackops agents give double the usual bonus. Note that if the rest of the team was wiped at the time of planting false memories, the team timeout increases instead.',
+        },
+      ],
+    },
+
+    {
+      id: 'cult',
+      name: 'CULT',
+      articles: [
+        {
+          id: 'cultBasics',
+          name: 'Basics',
+          img: 'pedia/cult',
+          text: "<p><span class=cult>Cultus Carnis</span> is a secret organization that the parasite can establish and lead. To create a cult, you must first gain a leader - a host who becomes the founding member. The cult leader is essential; if they die, the cult is destroyed and must be rebuilt from scratch.</p>" +
+            "<p>The cult can have up to 10 members organized into three hierarchical levels based on their job influence. Level 1 members are the most common (up to 10 allowed), level 2 members hold greater sway (up to 3 allowed), and level 3 members wield the highest power (only 1 allowed). Each member's job determines which power type they contribute to: combat, media, lawfare, corporate, or political.</p>" +
+            "<p>Members exist in different states that affect their availability. Free members contribute power to the cult and can be assigned to new ordeals. Locked members are currently participating in an active ordeal and cannot be used elsewhere. Blocked members are temporarily unavailable due to effects - they appear as \"in recessu\" in the cult window. Various temporary effects can modify cult behavior: blocking trade, reducing income, preventing new ordeals, or locking specific members.</p>" +
+            "<p>When in area mode, you can call for help to summon available cultists to your location. This brings a small amount of free members to assist you, though certain effects may cause some calls to fail. You can also summon a specific member if needed.</p>",
+        },
+        {
+          id: 'cultPowerResources',
+          name: 'Power and Resources',
+          img: 'pedia/cult_power',
+          text: "<p>The cult operates on an economy of power and money. There are five power types that correspond to spheres of influence: combat, media, lawfare, corporate, and political. Each free member contributes power based on their job group and level. Level 1 members provide 1 point, level 2 members provide 3 points, and level 3 members provide 10 points to their respective power type. Note that some members (mostly civilians) do not provide any power, only income.</p>" +
+            "<p>Every cult turn (which occurs every 10 player turns outside of mission areas), resources accumulate. For each power type, you gain resources equal to one-third of your total power in that category. Money accumulates at 50% of your total member income. Free members also slowly regenerate energy and health on each cult turn.</p>" +
+            "<p>Resources are spent to complete ordeals. Each ordeal requires specific amounts of power and money to resolve. You can also trade money for other power types at a base cost of 10,000 per point. Some effects can increase or decrease this trade cost, and certain burdens may block trading entirely.</p>" +
+            "<p>The cult window displays your current power levels, accumulated resources, active ordeals, and member roster. Managing your resources efficiently is key to growing the cult and surviving the tribulations that will inevitably arise.</p>",
+        },
+        {
+          id: 'cultCommunalOrdeals',
+          name: 'Communal Ordeals',
+          img: 'pedia/cult_communal',
+          text: "<p>Communal ordeals are rituals you initiate to grow and strengthen the cult. They require free members and resources to complete. While an ordeal is active, the assigned members are locked and cannot contribute power or be used elsewhere.</p>" +
+            "<p><span class=window-cult-ordeals-title>Seek the Pure</span> recruits new members into the cult. You choose which power type to seek, and the ordeal finds a suitable candidate. Requires 1 free member, 2 power of the chosen type, and 10,000 money.</p>" +
+            "<p><span class=window-cult-ordeals-title>Elevate the Faithful</span> promotes a level 1 member to level 2. Two other members must assist in the ritual, so you need 3 free members total (2 helpers plus the target). Costs 3 power matching the target's job group and 20,000 money.</p>" +
+            "<p><span class=window-cult-ordeals-title>Elevate the Faithful II</span> promotes a level 2 member to the highest tier. Requires 3 free level-2 members (2 helpers plus the target). Costs 5 power and 100,000 money. Upon completion, an Occasio event triggers - a narrative moment presenting choices that can grant benefits or impose burdens on the cult.</p>" +
+            "<p><span class=window-cult-ordeals-title>Anthropomancy</span> (only in scenario A) uses a level 3 member to divine hidden knowledge from the timeline. The master haruspex reads the entrails of fate to uncover clues about past events. Requires 1 free level-3 member, 10 power of their type, and 200,000 money. Reveals random timeline event clues.</p>" +
+            "<p>To complete any ordeal, you must spend the required resources by using the \"Wield\" actions in the ordeal menu. Each assigned member allows one action per cult turn. You can also annul an ordeal to cancel it, though this counts as failure.</p>",
+        },
+        {
+          id: 'cultProfaneOrdeals',
+          name: 'Profane Ordeals',
+          img: 'pedia/cult_profane',
+          text: "<p>Profane ordeals are tribulations that descend upon the cult unbidden. They appear periodically as challenges when conditions are met. Larger cults can face up to two simultaneous profane ordeals.</p>" +
+            "<p>Each profane ordeal has a timer in cult turns. If you fail to complete it before time runs out, the ordeal fails and inflicts a random burden on the cult for several turns. While active, profane ordeals also impose negative effects on the cult.</p>" +
+            "<p>Profane ordeals require both resources and a mission to complete. The resource requirements (power and money) scale with your cult's strength - more powerful cults face steeper demands. You must spend these resources through the ordeal menu, just like communal ordeals.</p>" +
+            "<p>The mission component, called a clavis, requires you personal physical action in the game world. Mission areas are marked on the regional map, and the target will spawn when you enter and remain in the area. Note that once you enter the mission area, you cannot save and cannot leave until the mission succeeds or fails. At this point the cult time also stops passing until the mission is over.</p>" +
+            "<p>Both the resource requirements and the mission must be completed to succeed. If the target dies during a persuade mission, or if the timer expires, the ordeal fails. Success removes the ordeal and its negative effects, while failure adds a new burden to the cult.</p>",
         },
       ],
     },

@@ -91,6 +91,20 @@ class CorpoConst extends OrdealConst
             location: AREA_CORP,
           },
         },
+        { 
+          name: "Executive Function", 
+          note: "He holds kill switch for bot farms. Noon board meeting. Server logs hold your fingerprints, encoded in scar tissue.",
+          success: "Cardiac arrest before noon. Logs wiped, switch never thrown. Bot farms breathe. Your prints fade to ghost.",
+          fail: "Board meeting starts. Evidence streams: bot farms, scar codes. Kill switch thrown. Reach zero. You are shadows.",
+          mission: MISSION_KILL,
+          target: {
+            isMale: true,
+            job: "lead programmer",
+            type: "civilian",
+            icon: "hacker",
+            location: AREA_CORP,
+          },
+        },
       ];
     }
 }
