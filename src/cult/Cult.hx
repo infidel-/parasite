@@ -772,31 +772,88 @@ class Cult extends _SaveObject
         }
     }
 
+// helper function to get all active trade effects
+  function getTradeEffects(): Array<Effect>
+    {
+      var list = [];
+      
+      // collect trade effects from cult
+      for (e in effects)
+        if (e.type == CULT_EFFECT_INCREASE_TRADE_COST ||
+            e.type == CULT_EFFECT_DECREASE_TRADE_COST)
+          list.push(e);
+      
+      // collect trade effects from ordeals
+      for (ordeal in ordeals.list)
+        for (e in ordeal.effects)
+          if (e.type == CULT_EFFECT_INCREASE_TRADE_COST ||
+              e.type == CULT_EFFECT_DECREASE_TRADE_COST)
+            list.push(e);
+      
+      return list;
+    }
+
 // get trade cost with effect modifiers
   public function getTradeCost(): Int
     {
-      var baseCost = 10000;
-      var cost = baseCost;
+      var base = 10000;
+      var cost = base;
       
-      // check for trade cost effects
-      for (effect in effects)
+      // apply trade effects
+      for (e in getTradeEffects())
         {
-          if (effect.type == CULT_EFFECT_INCREASE_TRADE_COST)
+          if (e.type == CULT_EFFECT_INCREASE_TRADE_COST)
             {
-              var increaseEffect = cast(effect, IncreaseTradeCost);
-              cost += Std.int(baseCost * increaseEffect.percent / 100);
+              var incEff = cast(e, IncreaseTradeCost);
+              var bonus = Std.int(base * incEff.percent / 100);
+              if (bonus < 1) bonus = 1;
+              cost += bonus;
             }
-          else if (effect.type == CULT_EFFECT_DECREASE_TRADE_COST)
+          else if (e.type == CULT_EFFECT_DECREASE_TRADE_COST)
             {
-              var decreaseEffect = cast(effect, DecreaseTradeCost);
-              cost -= Std.int(baseCost * decreaseEffect.percent / 100);
+              var decEff = cast(e, DecreaseTradeCost);
+              var minus = Std.int(base * decEff.percent / 100);
+              if (minus < 1) minus = 1;
+              cost -= minus;
             }
         }
-      
+
       // ensure cost doesn't go below 1
       if (cost < 1)
         cost = 1;
+
+      return cost;
+    }
+
+// get trade resource cost with effect modifiers
+  public function getTradeResourceCost(): Int
+    {
+      var base = 3;
+      var cost = base;
       
+      // apply trade effects
+      for (e in getTradeEffects())
+        {
+          if (e.type == CULT_EFFECT_INCREASE_TRADE_COST)
+            {
+              var incEff = cast(e, IncreaseTradeCost);
+              var bonus = Std.int(base * incEff.percent / 100);
+              if (bonus < 1) bonus = 1;
+              cost += bonus;
+            }
+          else if (e.type == CULT_EFFECT_DECREASE_TRADE_COST)
+            {
+              var decEff = cast(e, DecreaseTradeCost);
+              var minus = Std.int(base * decEff.percent / 100);
+              if (minus < 1) minus = 1;
+              cost -= minus;
+            }
+        }
+
+      // ensure cost doesn't go below 1
+      if (cost < 1)
+        cost = 1;
+
       return cost;
     }
 
@@ -825,6 +882,34 @@ class Cult extends _SaveObject
       log('trades ' + Const.col('cult-power', cost) + Icon.money + ' for ' +
         Const.col('cult-power', '1 ') +
         powerType + ' power');
+      return true;
+    }
+
+// trade resources between different power types
+  public function tradeResource(from: String, to: String): Bool
+    {
+      if (effects.has(CULT_EFFECT_NOTRADE))
+        {
+          game.actionFailed('Trade rites are sealed at the moment.');
+          return false;
+        }
+
+      var cost = getTradeResourceCost();
+      if (resources.get(from) < cost)
+        {
+          game.actionFailed('Not enough ' + from + ' resources for trade.');
+          return false;
+        }
+
+      // deduct source resource
+      resources.dec(from, cost);
+
+      // add target resource
+      resources.inc(to, 1);
+
+      log('trades ' + Const.col('cult-power', cost) + ' ' +
+        Const.col('cult-power', from) + ' for ' +
+        Const.col('cult-power', '1 ') + to + ' power');
       return true;
     }
 

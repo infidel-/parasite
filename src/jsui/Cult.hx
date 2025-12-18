@@ -19,6 +19,7 @@ class Cult extends UIWindow
   var listActions: Array<_PlayerAction>;
   var menuState: _UICultState; // current state
   var currentOrdeal: Ordeal; // currently selected ordeal
+  var selectedResource: String; // currently selected resource for trading
 
   public function new(g: Game)
     {
@@ -102,6 +103,10 @@ class Cult extends UIWindow
             updateActionsOrdeal();
           case STATE_TRADE:
             updateActionsTrade();
+          case STATE_SELECT_RESOURCE:
+            updateActionsSelectResource();
+          case STATE_TRADE_RESOURCE:
+            updateActionsTradeResource();
           case STATE_UPGRADE:
             updateActionsUpgrade();
           case STATE_UPGRADE_TWO:
@@ -162,6 +167,33 @@ class Cult extends UIWindow
               updateActions();
             }
           });
+        }
+
+      // action - trade resources (only show if at least 3 of any resource and no trade restriction)
+      if (!cult.hasEffect(CULT_EFFECT_NOTRADE))
+        {
+          var hasResources = false;
+          for (name in _CultPower.names)
+            {
+              if (cult.resources.get(name) >=
+                  cult.getTradeResourceCost())
+                {
+                  hasResources = true;
+                  break;
+                }
+            }
+          
+          if (hasResources)
+            addPlayerAction({
+              id: 'tradeResources',
+              type: ACTION_CULT,
+              name: 'Trade resources',
+              energy: 0,
+              f: function() {
+                menuState = STATE_SELECT_RESOURCE;
+                updateActions();
+              }
+            });
         }
 
       // action - initiate ordeal
@@ -227,11 +259,95 @@ class Cult extends UIWindow
             id: 'trade.' + power,
             type: ACTION_CULT,
             name: 'To ' + Const.col('cult-power', power) +
-              ' power (' +
+              ' resource (' +
               Const.col('cult-power', cost) + Icon.money + ')',
             energy: 0,
             f: function() {
               cult.trade(powerType);
+              update();
+            }
+          });
+        }
+    }
+
+// update actions for select resource state
+  function updateActionsSelectResource()
+    {
+      // back button
+      addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          menuState = STATE_ROOT;
+          updateActions();
+        }
+      });
+
+      var cult = game.cults[0];
+      var cost = cult.getTradeResourceCost();
+
+      // resource selection actions
+      for (i in 0..._CultPower.names.length)
+        {
+          var resource = _CultPower.names[i];
+          var resourceType = resource; // capture for closure
+          var amount = cult.resources.get(resource);
+          if (amount >= cost)
+            addPlayerAction({
+              id: 'select.' + resource,
+              type: ACTION_CULT,
+              name: Const.col('cult-power', _CultPower.namesCap[i]) +
+                ' (' + amount + ')',
+              energy: 0,
+              f: function() {
+                selectedResource = resourceType;
+                menuState = STATE_TRADE_RESOURCE;
+                updateActions();
+              }
+            });
+        }
+    }
+
+// update actions for trade resource state
+  function updateActionsTradeResource()
+    {
+      // back button
+      addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          menuState = STATE_SELECT_RESOURCE;
+          updateActions();
+        }
+      });
+
+      var cult = game.cults[0];
+      var cost = cult.getTradeResourceCost();
+      var from = selectedResource;
+      if (cult.resources.get(from) < cost)
+        return;
+
+      // trade actions for each power type (excluding the source resource)
+      for (i in 0..._CultPower.names.length)
+        {
+          var to = _CultPower.names[i];
+          var toType = to; // capture for closure
+          
+          if (to == from)
+            continue;
+          addPlayerAction({
+            id: 'trade.' + from + '.' + to,
+            type: ACTION_CULT,
+            name: 'To ' + Const.col('cult-power', _CultPower.names[i]) +
+              ' resource (' + cost + ' ' + 
+              Const.col('cult-power', from) + ')',
+            energy: 0,
+            f: function() {
+              cult.tradeResource(from, toType);
               update();
             }
           });
