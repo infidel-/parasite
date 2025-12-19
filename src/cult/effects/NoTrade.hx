@@ -19,4 +19,10 @@ class NoTrade extends Effect
       name = 'trade silence';
       allowMultiple = false;
     }
+
+  // returns effect description
+  public override function note(): String
+    {
+      return 'blocks all trading';
+    }
 }

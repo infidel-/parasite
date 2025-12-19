@@ -62,4 +62,10 @@ class BlockCultist extends Effect
         return name;
       return name + ' - ' + member.TheName();
     }
+
+  // returns effect description
+  public override function note(): String
+    {
+      return 'blocks member actions';
+    }
 }

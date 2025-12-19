@@ -19,4 +19,10 @@ class BlockCommunal extends Effect
       name = 'vain probation';
       allowMultiple = false;
     }
+
+  // returns effect description
+  public override function note(): String
+    {
+      return 'blocks communal ordeals';
+    }
 }

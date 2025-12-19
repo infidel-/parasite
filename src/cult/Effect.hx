@@ -56,4 +56,11 @@ class Effect extends _SaveObject
     {
       return name;
     }
+
+  // returns a short note with effect explanation
+  // to be overridden by subclasses
+  public function note(): String
+    {
+      return '';
+    }
 }

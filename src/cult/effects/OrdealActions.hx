@@ -71,4 +71,10 @@ class OrdealActions extends Effect
             ordeal.actions = ordeal.requiredMembers;
         }
     }
+
+  // returns effect description
+  public override function note(): String
+    {
+      return 'progresses random ordeals';
+    }
 }

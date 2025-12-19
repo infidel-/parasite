@@ -637,27 +637,31 @@ class Cult extends UIWindow
     {
       var cult = game.cults[0];
       var effectsText = [];
-      
+
       // add cult effects
-      for (effect in cult.effects)
+      for (e in cult.effects)
         {
-          effectsText.push(
-            Const.col('cult-effect', effect.customName()) + ' ' +
-            Const.smallgray('(' + effect.turns + ' t)'));
+          var t = Const.col('cult-effect', e.customName()) + ' ' +
+            Const.smallgray('(' + e.turns + ' t)');
+          var note = e.note();
+          if (note != '')
+            t += Const.smallgray(' (' + note + ')');
+          effectsText.push(t);
         }
-      
+
       // add ordeal effects
       for (ordeal in cult.ordeals.list)
-        {
-          for (effect in ordeal.effects)
-            {
-              effectsText.push(
-                Const.col('cult-effect', effect.customName()) + ' ' +
-                Const.smallgray('(' + effect.turns + ' t)') + ' ' +
-                Const.smallgray('[' + ordeal.coloredName() + ']'));
-            }
-        }
-      
+        for (e in ordeal.effects)
+          {
+            var t = Const.col('cult-effect', e.customName()) + ' ' +
+              Const.smallgray('(' + e.turns + ' t)');
+            var note = e.note();
+            if (note != '')
+              t += Const.smallgray(' (' + note + ')');
+            t += ' ' + Const.smallgray('[' + ordeal.coloredName() + ']');
+            effectsText.push(t);
+          }
+
       if (effectsText.length == 0)
         return;
       buf.add('<span>Effects: ' + effectsText.join(', ') + '</span><br/>');

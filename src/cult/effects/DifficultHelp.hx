@@ -41,4 +41,10 @@ class DifficultHelp extends Effect
         level = 'impossible';
       return name + ' (' + level + ')';
     }
+
+  // returns effect description
+  public override function note(): String
+    {
+      return 'calling help is harder';
+    }
 }

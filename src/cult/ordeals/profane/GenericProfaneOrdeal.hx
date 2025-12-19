@@ -28,7 +28,7 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
         amount: 2
       });
 
-      timer = 10;
+      timer = 8 + Std.random(5);
       // set power requirements using subtype
       var powerval = 0;
       if (cult.countMembers(3) > 1)
