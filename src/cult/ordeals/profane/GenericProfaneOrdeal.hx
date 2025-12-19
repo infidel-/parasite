@@ -2,7 +2,6 @@ package cult.ordeals.profane;
 
 import game.Game;
 import Const.d100;
-import cult.ProfaneOrdeal;
 import cult.effects.*;
 import cult.missions.*;
 import _OrdealInfo;
@@ -55,8 +54,6 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
       powerval = Std.int(powerval * (0.9 + (Std.random(21) / 100)));
       power.set(subType, powerval);
 
-
-
       // add random negative effect
       var e: Effect;
       var effectType = Std.random(3); // 0, 1, or 2
@@ -92,12 +89,53 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
       // only pick random subtype if not already set
       if (subType == null)
         subType = ProfaneConst.availableTypes[Std.random(ProfaneConst.availableTypes.length)];
+      
       // only pick random ordeal info if not already set
       if (infoID == null)
-        infoID = ProfaneConst.getRandom(subType);
+        {
+          // try to find a unique infoID that doesn't conflict with existing ordeals
+          var maxAttempts = 100;
+          var attempts = 0;
+          var ok = false;
+          while (attempts < maxAttempts && !ok)
+            {
+              var candidateID = ProfaneConst.getRandom(subType);
+              if (isInfoIDUnique(subType, candidateID))
+                {
+                  infoID = candidateID;
+                  ok = true;
+                  break;
+                }
+              attempts++;
+            }
+
+          // if we couldn't find a unique one after max attempts, just use a random one
+          if (!ok)
+            infoID = ProfaneConst.getRandom(subType);
+        }
 
       name = info.name;
       note = info.note;
+    }
+
+// check if the given subtype/infoID is unique
+  function isInfoIDUnique(subType: String, infoID: Int): Bool
+    {
+      // check all active ordeals in the cult
+      for (o in cult.ordeals.list)
+        {
+          if (o == this)
+            continue;
+          
+          if (Reflect.hasField(o, 'subType'))
+            {
+              var other: GenericProfaneOrdeal = cast o;
+              if (other.subType == subType &&
+                  other.infoID == infoID)
+                return false;
+            }
+        }
+      return true;
     }
 
   // called on ordeal failure
