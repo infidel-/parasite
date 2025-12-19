@@ -31,7 +31,7 @@ class MainMenu extends UIWindow
       // randomize background
       if (!game.firstEverRun)
         {
-          var bgIndex = 1 + Std.random(19);
+          var bgIndex = 1 + Std.random(22);
           setBackground(bgIndex, game.config.aiArtEnabled);
         }
       // add class for initial fade-in animation

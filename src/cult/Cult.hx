@@ -113,18 +113,22 @@ class Cult extends _SaveObject
 // add new member
   public function addMember(ai: AI)
     {
-      addAIData(ai.cloneData());
+      var ret = addAIData(ai.cloneData());
+      if (!ret)
+        return;
+      ai.isNameKnown = true;
+      ai.setCult(this);
     }
 
 // add member from AIData
 // NOTE: this is called from recruit follower/chat
-  public function addAIData(aidata: AIData)
+  public function addAIData(aidata: AIData): Bool
     {
       // check for max cultists
       if (members.length >= maxSize())
         {
           game.actionFailed('Maximum number of members reached.');
-          return;
+          return false;
         }
 
       // check for max jobs
@@ -132,7 +136,7 @@ class Cult extends _SaveObject
       if (jobInfo == null)
         {
           game.actionFailed('Unknown job.');
-          return;
+          return false;
         }
       var level = jobInfo.level;
       var levelLimit = getLevelLimit(level);
@@ -140,7 +144,7 @@ class Cult extends _SaveObject
           countMembers(level) >= levelLimit)
         {
           game.actionFailed('Maximum number of level ' + level + ' members reached.');
-          return;
+          return false;
         }
 
       aidata.isNameKnown = true;
@@ -149,6 +153,7 @@ class Cult extends _SaveObject
       members.push(aidata);
       log('gains a new member: ' + aidata.TheName());
       recalc();
+      return true;
     }
 
 // when ai is removed from area, we need to update members
