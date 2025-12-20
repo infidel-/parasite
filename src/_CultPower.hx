@@ -127,4 +127,25 @@ class _CultPower extends _SaveObject
     {
       return names[Std.random(names.length)];
     }
+
+  // returns shortened value for display
+  // if < 999: same value
+  // if >= 1000 && < 1000000: "9.2k" format
+  // if >= 1000000: "3.3m" format
+  public function getShort(power: String): String
+    {
+      var value = get(power);
+      if (value < 999)
+        return '' + value;
+      else if (value < 1000000)
+        {
+          var k = value / 1000.0;
+          return Const.round(k) + 'k';
+        }
+      else
+        {
+          var m = value / 1000000.0;
+          return Const.round(m) + 'm';
+        }
+    }
 }

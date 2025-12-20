@@ -575,8 +575,8 @@ class Cult extends UIWindow
       buf.add('<tr class="cult-resources">');
       buf.add('<td class="cult-row-label">Resources</td>');
       for (name in _CultPower.names)
-        buf.add('<td>' + cult.resources.get(name) + '</td>');
-      buf.add('<td>' + cult.resources.money + '</td>');
+        buf.add('<td>' + cult.resources.getShort(name) + '</td>');
+      buf.add('<td>' + cult.resources.getShort('money') + '</td>');
       buf.add('</tr>');
       buf.add('</table>');
     }

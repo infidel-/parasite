@@ -9,6 +9,7 @@ import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import game.*;
+import cult.*;
 
 class HUD
 {
@@ -423,6 +424,24 @@ public function onMouseLeave()
       return "style='color:var(--text-color-red)' class=blinking-red";
     }
 
+// update cult info
+  function updateCult(buf: StringBuf)
+    {
+      var cult = game.cults[0];
+      if (cult.state != CULT_STATE_ACTIVE)
+        return;
+
+      var r = cult.resources;
+      buf.add('<hr><span style="color:var(--text-color-gray)" class=small><span class=small>' +
+        'COM ' + Const.col('cult-power', r.getShort('combat')) +
+        ', MED ' + Const.col('cult-power', r.getShort('media')) +
+        ', LAW ' + Const.col('cult-power', r.getShort('lawfare')) +
+        ', COR ' + Const.col('cult-power', r.getShort('corporate')) +
+        ', POL ' + Const.col('cult-power', r.getShort('political')) +
+        ', ' + Const.col('cult-power', r.getShort('money')) + Icon.money +
+        '</span></span><br/>');
+    }
+
 // update player info
   function updateInfo()
     {
@@ -550,6 +569,9 @@ public function onMouseLeave()
               buf.add(str);
             }
         }
+
+      // cult info
+      updateCult(buf);
 
       if (game.player.vars.isSpoonGame)
         buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +

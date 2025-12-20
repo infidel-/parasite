@@ -567,7 +567,8 @@ class Cult extends _SaveObject
       delta.corporate = resources.corporate - delta.corporate;
       delta.political = resources.political - delta.political;
       delta.money = resources.money - delta.money;
-      
+
+/*
       game.logsg(name +
         ' turn: COM ' + resources.combat + (delta.combat > 0 ? ' (+' + delta.combat + ')' : '') +
         ', MED ' + resources.media + (delta.media > 0 ? ' (+' + delta.media + ')' : '') +
@@ -576,6 +577,7 @@ class Cult extends _SaveObject
         ', POL ' + resources.political + (delta.political > 0 ? ' (+' + delta.political + ')' : '') +
         ', MONEY ' + resources.money + (delta.money > 0 ? ' (+' + delta.money + ')' : ''));
       game.scene.sounds.play('click-action');
+*/
     }
 
 // process member regeneration for free members
