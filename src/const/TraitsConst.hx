@@ -270,6 +270,12 @@ class TraitsConst
             }
         },
         {
+          id: TRAIT_ILLITERATE,
+          name: 'illiterate',
+          note: 'Unable to read.',
+          isNegative: true
+        },
+        {
           id: TRAIT_GENIUS,
           name: 'genius',
           note: 'Exceptionally sharp intellect.',

@@ -73,7 +73,7 @@ class ItemInfo
 // logs item failure feedback with sound
   public function itemFailed(msg: String)
     {
-      game.log(msg);
+      game.log(msg, COLOR_HINT);
       game.scene.sounds.play('item-fail');
     }
 }

@@ -45,6 +45,13 @@ class Readable extends ItemInfo
 // performs reading logic and clue discovery
   function readAction(item: _Item): Bool
     {
+      // check if player host is illiterate
+      if (game.player.host.hasTrait(TRAIT_ILLITERATE))
+        {
+          itemFailed("This host cannot read.");
+          return false;
+        }
+
       if (item.id == 'book' && !game.area.isHabitat)
         {
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)

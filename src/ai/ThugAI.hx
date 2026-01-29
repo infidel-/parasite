@@ -19,6 +19,9 @@ class ThugAI extends HumanAI
       // enforce drug addict trait chance for thugs
       if (Std.random(100) < 10)
         addTrait(TRAIT_DRUG_ADDICT);
+      // enforce illiterate trait chance for thugs
+      if (Std.random(100) < 30)
+        addTrait(TRAIT_ILLITERATE);
       derivedStats();
       name.real = name.realCapped =
         const.NameConst.getThugName(isMale);
