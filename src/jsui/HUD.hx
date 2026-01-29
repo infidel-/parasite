@@ -9,7 +9,6 @@ import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import game.*;
-import cult.*;
 
 class HUD
 {

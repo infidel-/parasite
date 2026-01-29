@@ -629,6 +629,9 @@ class PlayerArea extends _SaveObject
 // action: try to invade this AI host
   function invadeHostAction(fromInvadeEarly: Bool)
     {
+      // kludge: death in the middle of invade early
+      if (attachHost == null)
+        return;
       if (!fromInvadeEarly)
         log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
       game.scene.sounds.play('parasite-invade');
