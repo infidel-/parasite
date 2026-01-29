@@ -316,8 +316,9 @@ class EvolutionManager extends _SaveObject
           // pick a random improv
           var arr = (n == 1 ? tmpOrgans : tmpFull);
           var id = arr[Std.random(arr.length)];
-          if (n == 1)
-            tmpOrgans.remove(id);
+
+          // remove selected improv from both arrays to prevent duplicates
+          tmpOrgans.remove(id);
           tmpFull.remove(id);
 
           addImprov(id, true);
