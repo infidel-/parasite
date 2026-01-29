@@ -20,6 +20,7 @@ class BaseballBat extends Weapon
         verb1: 'club',
         verb2: 'clubs',
         type: WEAPON_MELEE,
+        canConceal: false,
         sound: {
           file: 'attack-baton',
           radius: 5,

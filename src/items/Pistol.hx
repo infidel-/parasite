@@ -20,6 +20,7 @@ class Pistol extends Weapon
         verb1: 'shoot',
         verb2: 'shoots',
         type: WEAPON_KINETIC,
+        canConceal: true,
         sound: {
           file: 'attack-pistol',
           radius: 15,

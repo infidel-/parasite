@@ -20,6 +20,7 @@ class Stunner extends Weapon
         verb1: 'stun',
         verb2: 'stuns',
         type: WEAPON_STUN,
+        canConceal: true,
         sound: {
           file: 'attack-stunner',
           radius: 3,

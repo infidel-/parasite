@@ -81,6 +81,10 @@ class DefaultLogic
               if (o != null)
                 alertnessBonus += o.params.alertness;
               else alertnessBonus += params.alertness;
+
+              // check if player host has a visible (non-concealable) weapon
+              if (game.player.host.inventory.hasVisibleWeapon())
+                alertnessBonus += 10;
             }
           ai.alertness += Std.int(baseAlertness * (AI.VIEW_DISTANCE + 1 - distance)) +
             alertnessBonus;

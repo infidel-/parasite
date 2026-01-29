@@ -223,6 +223,17 @@ class Inventory extends _SaveObject
       return null;
     }
 
+// check if inventory has a visible (non-concealable) weapon
+  public function hasVisibleWeapon(): Bool
+    {
+      for (item in _list)
+        if (item.info.weapon != null &&
+            !item.info.weapon.canConceal)
+          return true;
+
+      return false;
+    }
+
 
 // add item by id
   public function addID(id: String, ?wear: Bool = false): _Item

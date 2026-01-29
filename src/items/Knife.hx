@@ -21,6 +21,7 @@ class Knife extends Weapon
         verb2: 'stabs',
         type: WEAPON_MELEE,
         spawnBlood: true,
+        canConceal: true,
         sound: {
           file: 'attack-knife',
           radius: 4,

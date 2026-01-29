@@ -20,6 +20,7 @@ class StunRifle extends Weapon
         verb1: 'stun',
         verb2: 'stuns',
         type: WEAPON_STUN,
+        canConceal: false,
         sound: {
           file: 'attack-stun-rifle',
           radius: 10,

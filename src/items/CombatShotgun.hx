@@ -20,6 +20,7 @@ class CombatShotgun extends Weapon
         verb1: 'shoot',
         verb2: 'shoots',
         type: WEAPON_KINETIC,
+        canConceal: false,
         sound: {
           file: 'attack-shotgun',
           radius: 10,

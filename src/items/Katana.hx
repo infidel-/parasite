@@ -22,6 +22,7 @@ class Katana extends Weapon
         skill: SKILL_KATANA,
         type: WEAPON_MELEE,
         spawnBlood: true,
+        canConceal: false,
         sound: {
           file: 'attack-machete',
           radius: 6,

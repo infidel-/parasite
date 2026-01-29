@@ -20,6 +20,7 @@ class AssaultRifle extends Weapon
         verb1: 'shoot',
         verb2: 'shoots',
         type: WEAPON_KINETIC,
+        canConceal: false,
         sound: {
           file: 'attack-assault-rifle',
           radius: 15,

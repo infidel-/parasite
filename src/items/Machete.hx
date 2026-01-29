@@ -21,6 +21,7 @@ class Machete extends Weapon
         verb2: 'slashes',
         type: WEAPON_MELEE,
         spawnBlood: true,
+        canConceal: true,
         sound: {
           file: 'attack-machete',
           radius: 5,

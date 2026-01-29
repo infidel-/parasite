@@ -20,6 +20,7 @@ class Animal extends Weapon
         verb1: 'attack',
         verb2: 'attacks',
         type: WEAPON_MELEE,
+        canConceal: true,
         sound: {
           file: 'attack-bite',
           radius: 5,
