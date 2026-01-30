@@ -163,7 +163,7 @@ override function update()
     saveEnabled = false;
     saveItem.innerHTML = 'SAVE GAME';
     if (game.isStarted &&
-        !game.isFinished &&
+        game.state == GAMESTATE_RUNNING &&
         game.player.saveDifficulty != UNSET)
       {
         // show mission area indicator instead of saves left when in mission area
@@ -179,7 +179,7 @@ override function update()
       }
 
     loadEnabled = game.saveExists(1);
-    saveEnabled = (game.isStarted && !game.isFinished);
+    saveEnabled = (game.isStarted && game.state == GAMESTATE_RUNNING);
     if (game.isStarted)
       close.style.display = 'block';
 #if !electron

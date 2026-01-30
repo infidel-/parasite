@@ -59,11 +59,13 @@ class PlayerArea extends _SaveObject
 // called post-loading game
   public function loadPost()
     {
-      if (state == PLR_STATE_ATTACHED && attachHostID >= 0)
+      if (state == PLR_STATE_ATTACHED &&
+          attachHostID >= 0)
         {
           attachHost = game.area.getAIByID(attachHostID);
           attachHost.updateMask(Const.FRAME_MASK_ATTACHED);
         }
+      entity.setPosition(x, y);
     }
 
 // end of turn for player (in area mode)
@@ -327,9 +329,6 @@ class PlayerArea extends _SaveObject
 
       player.actionEnergy(action); // spend energy
       actionPost(); // post-action call
-      // kludge to undo game finish flag
-      if (game.isFinished && game.isRebirth)
-        player.rebirthPost();
     }
 
 // post-action call: remove AP and new turn
@@ -629,7 +628,9 @@ class PlayerArea extends _SaveObject
 // action: try to invade this AI host
   function invadeHostAction(fromInvadeEarly: Bool)
     {
-      // kludge: death in the middle of invade early
+      // when player health drops to 0 during invadeEarlyAction,
+      // the health setter triggers death() which calls detachAction()
+      // and clears attachHost before we get here
       if (attachHost == null)
         return;
       if (!fromInvadeEarly)

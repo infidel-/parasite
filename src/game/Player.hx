@@ -253,33 +253,13 @@ class Player extends _SaveObject
         ovum.xp = 0;
       else ovum.xp = EvolutionConst.ovumXP[ovum.level - 1];
 
-      // leave area and teleport
-      if (game.location == LOCATION_AREA)
-        game.setLocation(LOCATION_REGION);
-      var ovumObj = game.region.getObjectsWithType('ovum')[0];
-      game.playerRegion.moveTo(ovumObj.x, ovumObj.y, false);
-      // message
-      var msgs = [
-        'I am reborn.',
-        'I live again.',
-        'Birth, death and rebirth. The purifying rhythm of the universe.',
-        'I am alive. Alive.',
-      ];
-      game.message({
-        text: '<center>' + msgs[Std.random(msgs.length)] + '</center>',
-        img: 'pedia/parasite'
-      });
-      game.scene.sounds.play('parasite-rebirth');
-      game.isFinished = true; // temp kludge for rebirth
-      game.isRebirth = true;
+      // start rebirth transition
+      game.beginRebirth();
     }
 
 // called after turn is over
   public function rebirthPost()
     {
-      // clear flags
-      game.isRebirth = false;
-      game.isFinished = false;
       // restore energy
       energy = maxEnergy;
     }
@@ -473,4 +453,3 @@ class Player extends _SaveObject
   public static var HOST_CONTROL_BASE = 10;
   public static var HOST_CONTROL_ASSIMILATED = 50;
 }
-

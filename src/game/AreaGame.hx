@@ -1048,7 +1048,7 @@ class AreaGame extends _SaveObject
       for (ai in _ai)
         {
           ai.turnInternal();
-          if (game.isFinished)
+          if (game.isInputLocked())
             return;
         }
 

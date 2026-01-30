@@ -49,7 +49,7 @@ class Mouse
         }
 #end
       // some window open
-      if (game.isFinished ||
+      if (game.isInputLocked() ||
           game.ui.state != UISTATE_DEFAULT)
         return;
 
@@ -154,7 +154,7 @@ class Mouse
       oldy = game.scene.mouseY;
 
       // window open, reset state
-      if (game.isFinished ||
+      if (game.isInputLocked() ||
           game.ui.state != UISTATE_DEFAULT)
         {
           setCursor(CURSOR_ARROW);

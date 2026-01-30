@@ -50,8 +50,7 @@ class Game extends _SaveObject
   public var turns: Int; // number of turns passed since game start
   public var isInited: Bool; // is the game initialized?
   public var isStarted: Bool; // has the gameplay started?
-  public var isFinished: Bool; // is the game finished?
-  public var isRebirth: Bool; // game "finished" by player rebirth?
+  public var state: _GameState; // current game state
   public var messageList: List<_LogMessage>; // last X messages of log
   public var hudMessageList: List<_LogMessage>; // last X messages of hud log
   public var importantMessagesEnabled: Bool; // messages enabled?
@@ -76,7 +75,7 @@ class Game extends _SaveObject
       importantMessagesEnabled = true;
       isInited = false;
       isStarted = false;
-      isRebirth = false;
+      state = GAMESTATE_RUNNING;
       scenarioStringID = 'alien';
 
       area = null;
@@ -113,7 +112,7 @@ class Game extends _SaveObject
 #end
       log('<font style="font-size: 6px">Revulsion is a striking color in my palette.</font>', COLOR_DEBUG);
       turns = 0;
-      isFinished = false;
+      state = GAMESTATE_RUNNING;
       isInited = false;
 
       player = new Player(this);
@@ -256,6 +255,7 @@ class Game extends _SaveObject
   function restartPre()
     {
       isInited = false;
+      state = GAMESTATE_RUNNING;
       RegionGame._maxID = 0;
       messageList.clear();
       hudMessageList.clear();
@@ -318,6 +318,8 @@ class Game extends _SaveObject
 // game turn ends (wrapper)
   public function turn()
     {
+      if (state != GAMESTATE_RUNNING)
+        return;
 #if demo
       if (turns >= 500)
         {
@@ -326,9 +328,6 @@ class Game extends _SaveObject
         }
 #end
       turnInternal();
-      // kludge to undo game finish flag
-      if (isFinished && isRebirth)
-        player.rebirthPost();
     }
 
 // game turn ends (internal)
@@ -336,7 +335,7 @@ class Game extends _SaveObject
     {
       // player turn
       player.turn();
-      if (isFinished)
+      if (state != GAMESTATE_RUNNING)
         return;
 
       // turns counter
@@ -357,18 +356,17 @@ class Game extends _SaveObject
         {
           area.turn();
           scene.area.turn();
-
-          if (isFinished)
+          if (state != GAMESTATE_RUNNING)
             return;
 
           // area turn
           managerArea.turn();
-          if (isFinished)
+          if (state != GAMESTATE_RUNNING)
             return;
 
           // goals turn
           goals.turn();
-          if (isFinished)
+          if (state != GAMESTATE_RUNNING)
             return;
 
           // update AI visibility to player
@@ -378,14 +376,62 @@ class Game extends _SaveObject
       else if (location == LOCATION_REGION)
         {
           region.turn();
-          if (isFinished)
+          if (state != GAMESTATE_RUNNING)
             return;
 
           // goals turn
           goals.turn();
-          if (isFinished)
+          if (state != GAMESTATE_RUNNING)
             return;
         }
+    }
+
+// returns true when input should be blocked
+  public inline function isInputLocked(): Bool
+    {
+      return state != GAMESTATE_RUNNING;
+    }
+
+// begins rebirth transition and shows the rebirth message
+  public function beginRebirth(): Void
+    {
+      state = GAMESTATE_REBIRTH;
+
+      // clear any active paths
+      scene.area.clearPath(true);
+      scene.region.clearPath(true);
+
+      // rebirth target
+      var ovumObj = region.getObjectsWithType('ovum')[0];
+      var msgs = [
+        'I am reborn.',
+        'I live again.',
+        'Birth, death and rebirth. The purifying rhythm of the universe.',
+        'I am alive. Alive.',
+      ];
+      var msg: _MessageParams = {
+        text: '<center>' + msgs[Std.random(msgs.length)] + '</center>',
+        img: 'pedia/parasite'
+      };
+
+      // move player to ovum in region mode
+      if (location == LOCATION_AREA)
+        setLocation(LOCATION_REGION);
+      playerRegion.moveTo(ovumObj.x, ovumObj.y, false);
+
+      // repaint scene and show message
+      scene.updateCamera();
+      updateHUD();
+      message(msg);
+      scene.sounds.play('parasite-rebirth');
+    }
+
+// ends rebirth and resumes gameplay
+  public function endRebirth(): Void
+    {
+      state = GAMESTATE_RUNNING;
+      player.rebirthPost();
+      updateHUD();
     }
 
 // game finish
@@ -400,7 +446,7 @@ class Game extends _SaveObject
   ];
   public function finish(result: String, text: String, ?img: String = null)
     {
-      isFinished = true;
+      state = GAMESTATE_FINISH;
       var finishText = '';
 
       // game lost
@@ -571,7 +617,7 @@ class Game extends _SaveObject
 // called from timer
   public function update()
     {
-      if (isFinished)
+      if (state != GAMESTATE_RUNNING)
         return;
       // path active, try to move on it
       var ret = false;
@@ -593,7 +639,8 @@ class Game extends _SaveObject
 // save current game into slot
   public function save(slotID: Int)
     {
-      if (!isStarted || isFinished)
+      if (!isStarted ||
+          state != GAMESTATE_RUNNING)
         {
           debug('Not in game.');
           return;
@@ -846,6 +893,7 @@ class Game extends _SaveObject
       scene.sounds.loadPost();
       for (cult in cults)
         cult.loadPost();
+      scene.updateCamera();
       log('Game loaded from slot ' + slotID + '.');
     }
 

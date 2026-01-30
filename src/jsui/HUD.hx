@@ -660,7 +660,7 @@ public function onMouseLeave()
     {
       listActions = new List();
       listKeyActions = new List();
-      if (game.isFinished)
+      if (game.state == GAMESTATE_FINISH)
         {
           addKeyAction({
             id: 'restart',

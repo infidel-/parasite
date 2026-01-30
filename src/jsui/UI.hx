@@ -168,7 +168,7 @@ class UI
             }
 
           // enter restarts the game when it is finished
-          if (game.isFinished &&
+          if (game.state == GAMESTATE_FINISH &&
               (e.key == 'Enter' || e.key == 'r'))
             {
               game.restart();
@@ -383,7 +383,7 @@ class UI
   function handleActions(key: String, code: String, altKey: Bool, ctrlKey: Bool, shiftKey: Bool): Bool
     {
       // game finished
-      if (game.isFinished)
+      if (game.isInputLocked())
         return false;
 
       // action prefix for body window
@@ -478,7 +478,7 @@ class UI
   function handleMovement(key: String, code: String): Bool
     {
       // game finished or window open
-      if (game.isFinished ||
+      if (game.isInputLocked() ||
           _state != UISTATE_DEFAULT)
         return false;
       if (cannotMove())
@@ -729,6 +729,8 @@ class UI
         }
 
       state = UISTATE_DEFAULT;
+      if (game.state == GAMESTATE_REBIRTH)
+        game.endRebirth();
       game.scene.draw();
     }
 
