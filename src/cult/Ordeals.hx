@@ -182,6 +182,7 @@ class Ordeals extends _SaveObject
       RecruitFollower.initiateAction(cult, actions);
       UpgradeFollower.initiateAction(cult, actions);
       UpgradeFollower2.initiateAction(cult, actions);
+      LowerAlertness.initiateAction(game, cult, actions);
 
       // check if correct scenario is running for GatherClues
       if (game.scenarioStringID == 'alien')
@@ -212,6 +213,8 @@ class Ordeals extends _SaveObject
             ordeal = new GatherClues(game);
           case 'groupInterference':
             ordeal = new GroupInterference(game);
+          case 'lowerAlertness':
+            ordeal = new LowerAlertness(game);
           default:
             return;
         }

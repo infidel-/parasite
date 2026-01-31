@@ -1,4 +1,4 @@
-// group interference ordeal - disrupt group operations
+// lower alertness ordeal - placate the realm
 package cult.ordeals;
 
 import game.Game;
@@ -7,7 +7,7 @@ import cult.Ordeal;
 import cult.Cult;
 import _PlayerAction;
 
-class GroupInterference extends Ordeal
+class LowerAlertness extends Ordeal
 {
   public var powerTypes: Array<String>; // selected power types for this ordeal
 
@@ -17,37 +17,37 @@ class GroupInterference extends Ordeal
       init();
       initPost(false);
 
-      // get 3 random free level 2 members
+      // pick 2 random free level 2 members
       var free = cult.getFreeMembers(2, true);
       var selected = [];
       var shuf = [];
       for (id in free)
         shuf.push(id);
       shuf.sort(function(a, b) return Std.random(3) - 1);
-      for (i in 0...3)
+      for (i in 0...2)
         {
           if (i < shuf.length)
             selected.push(shuf[i]);
         }
       addMembers(selected);
 
-      // pick 3 random power types (including money)
-      var allTypes = ['combat', 'media', 'lawfare', 'corporate', 'political', 'money'];
+      // pick 2 random power types (including money)
+      var allTypes = ['media', 'lawfare', 'corporate', 'political', 'money'];
       var shuffled = [];
       for (t in allTypes)
         shuffled.push(t);
       shuffled.sort(function(a, b) return Std.random(3) - 1);
       powerTypes = [];
-      for (i in 0...3)
+      for (i in 0...2)
         powerTypes.push(shuffled[i]);
 
-      // set power requirements (10 each for 3 types, 100k if money is picked)
+      // set power requirements (5 each for 2 types, 100k if money is picked)
       for (type in powerTypes)
         {
           if (type == 'money')
             power.money = 100000;
           else
-            power.inc(type, 10);
+            power.inc(type, 5);
         }
     }
 
@@ -55,12 +55,12 @@ class GroupInterference extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Group interference';
+      name = 'Placate the realm';
       type = ORDEAL_COMMUNAL;
-      requiredMembers = 3;
+      requiredMembers = 2;
       requiredMemberLevels = 2;
       actions = requiredMembers;
-      note = 'Sunder the Group\'s designs to forestall judgment and dim their fervor.';
+      note = 'Two seasoned devotees will still the tumult in the realm.';
     }
 
 // called after load or creation
@@ -78,40 +78,36 @@ class GroupInterference extends Ordeal
 // handle successful completion
   public override function onSuccess()
     {
-      // check if ambush is active
-      if (game.group.team != null &&
-          game.group.team.state == TEAM_AMBUSH)
+      // lower alertness in all areas of the region
+      for (area in game.region.iterator())
         {
-          game.message({
-            text: 'My followers warn someone is waiting for me in ambush.',
-            img: 'pedia/team_ambush',
-            col: 'alert'
-          });
-          return;
+          if (area.alertness > 0)
+            area.alertness -= Const.roll(10, 30);
         }
 
-      // call lowerPriority which will handle team distance or priority
-      game.group.lowerPriority(30);
+      // update region view if currently in region
+      if (game.location == LOCATION_REGION)
+        game.scene.region.update();
 
       // show success message
       game.message({
-        text: 'The Group\'s designs lie sundered. Their fervor wanes.',
+        text: 'The tumult wanes.',
         col: 'cult'
       });
     }
 
-// static method to add groupInterference action to actions array
+// static method to add lowerAlertness action to actions array
   public static function initiateAction(game: Game, cult: Cult, actions: Array<_PlayerAction>): Void
     {
-      // check if there are 3 free level 2 members
+      // check if there are 2 free level 2 members
       var free = cult.getFreeMembers(2, true);
-      if (free.length < 3)
+      if (free.length < 2)
         return;
 
       actions.push({
-        id: 'groupInterference',
+        id: 'lowerAlertness',
         type: ACTION_CULT,
-        name: 'Group interference',
+        name: 'Placate the realm',
         energy: 0,
         obj: {}
       });
