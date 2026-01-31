@@ -2,6 +2,7 @@
 package console;
 
 import game.Game;
+import cult.ordeals.RecruitFollower;
 import cult.ordeals.UpgradeFollower;
 import cult.ordeals.profane.*;
 
@@ -34,6 +35,7 @@ class Cult
               log('cu/cult gr - give +10 all resources and +100k money');
               log('cu/cult t - call cult turn');
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
+              log('cu/cult r [power] - recruit follower (default combat)');
               log('cu/cult po [power] [idx] - add profane ordeal');
               return true;
             }
@@ -58,6 +60,13 @@ class Cult
               upgradeRandomLevelOne();
               return true;
             }
+
+          // cu/cult r - recruit follower
+          if (arr[1] == 'r')
+            {
+              recruitFollower(arr);
+              return true;
+            }
           
           // cu/cult po - add profane ordeal
           if (arr[1] == 'po')
@@ -71,6 +80,40 @@ class Cult
         }
       
       return false;
+    }
+
+// recruit follower by power type
+  function recruitFollower(arr: Array<String>)
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+
+      // resolve power type or default
+      var followerType = 'combat';
+      var followerTypes = ['combat', 'media', 'lawfare', 'corporate', 'political'];
+      if (arr.length >= 3)
+        {
+          followerType = arr[2];
+          if (followerTypes.indexOf(followerType) == -1)
+            {
+              log('Unknown power type: ' + followerType);
+              log('Available types: ' + followerTypes.join(', '));
+              return;
+            }
+        }
+
+      // create a recruit ordeal and run success immediately
+      var cult = game.cults[0];
+      var memberCount = cult.members.length;
+      var ordeal = new RecruitFollower(game, followerType);
+      ordeal.onSuccess();
+      if (cult.members.length > memberCount)
+        log('Recruited a ' + followerType + ' follower.');
+      else
+        log('Failed to recruit follower.');
     }
 
 // give resources to cult

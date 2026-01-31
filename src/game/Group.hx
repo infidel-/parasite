@@ -199,6 +199,19 @@ class Group extends _SaveObject
       game.info('Team deactivated, timeout: ' + teamTimeout + ' turns');
     }
 
+// lower group priority
+// if the team is active, raise distance instead
+  public function lowerPriority(mod: Float)
+    {
+      if (mod == 0)
+        return;
+
+      if (team != null)
+        team.distance += mod;
+      else
+        changeOnlyPriority(-mod);
+    }
+
 // on team member death
   public function onTeamMemberDeath()
     {

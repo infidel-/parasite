@@ -204,7 +204,7 @@ class Ordeal extends _SaveObject
                   power.set(field, 0);
                   this.actions++;
                   cult.log('exerted ' + displayName + ' on ' +
-                    Const.col('gray', name) + ' ordeal');
+                    coloredName() + ' ordeal');
                   check();
                   game.ui.updateWindow();
                 }
@@ -226,7 +226,7 @@ class Ordeal extends _SaveObject
               cult.resources.money -= power.money;
               this.power.money = 0;
               this.actions++;
-              cult.log('disbursed ' + displayName + ' on ' + Const.col('gray', name) + ' ordeal');
+              cult.log('disbursed ' + displayName + ' on ' + coloredName() + ' ordeal');
               check();
               game.ui.updateWindow();
             }

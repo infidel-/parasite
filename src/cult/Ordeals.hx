@@ -182,7 +182,14 @@ class Ordeals extends _SaveObject
       RecruitFollower.initiateAction(cult, actions);
       UpgradeFollower.initiateAction(cult, actions);
       UpgradeFollower2.initiateAction(cult, actions);
-      GatherClues.initiateAction(game, cult, actions);
+
+      // check if correct scenario is running for GatherClues
+      if (game.scenarioStringID == 'alien')
+        {
+          GroupInterference.initiateAction(game, cult, actions);
+          GatherClues.initiateAction(game, cult, actions);
+
+        }
 
       return actions;
     }
@@ -203,6 +210,8 @@ class Ordeals extends _SaveObject
             ordeal = new UpgradeFollower2(game, o.targetID);
           case 'gatherClues':
             ordeal = new GatherClues(game);
+          case 'groupInterference':
+            ordeal = new GroupInterference(game);
           default:
             return;
         }
