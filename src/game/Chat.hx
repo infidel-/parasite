@@ -255,6 +255,18 @@ class Chat extends _SaveObject
         }
       msg += ChatConst.needStrings[target.chat.needID]
         [target.chat.needStringID];
+
+      // mark job as known and add job info
+      var skill = player.skills.getLevel(SKILL_PSYCHOLOGY);
+      if (skill > 50)
+        {
+          target.isJobKnown = true;
+          var jobInfo = game.jobs.getJobInfo(target.job);
+          if (jobInfo != null)
+            msg += ' He works as a ' + target.job +
+              Const.smallgray(' [level ' + jobInfo.level + ']') + '.';
+        }
+
       if (target.hasClues())
         msg += ' He knows something.';
       else msg += ' He knows nothing' +
