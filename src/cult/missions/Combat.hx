@@ -16,13 +16,19 @@ class Combat extends Mission
   public var clusterY: Int;
 
 // create a combat mission with clustered targets
-  public function new(g: Game, ?targetInfo: _MissionTarget, ?template: _CombatMissionTemplate)
+  public function new(g: Game, targetInfo: _MissionTarget, template: _CombatMissionTemplate)
     {
       this.targetInfo = targetInfo;
       this.template = template;
       super(g);
       init();
       initPost(false);
+
+      // pick mission target language if unset
+      if (this.targetInfo.lang == null ||
+          this.targetInfo.lang == '')
+        this.targetInfo.lang = game.lang.getRandomID();
+      lang = this.targetInfo.lang;
 
       // roll difficulty if unset
       if (difficulty == null ||
@@ -42,6 +48,7 @@ class Combat extends Mission
             primaryTarget = ai.cloneData();
             primaryTarget.isNameKnown = true;
             primaryTarget.applyTargetInfo(targetInfo);
+            primaryTarget.lang = lang;
             primaryTarget.isGuard = true;
             applyLoadout(primaryTarget, true);
             targets.push(primaryTarget);
@@ -52,6 +59,7 @@ class Combat extends Mission
               {
                 var guardAI = game.createAI('security', 0, 0);
                 var guard = guardAI.cloneData();
+                guard.lang = lang;
                 guard.isGuard = true;
                 applyLoadout(guard, false);
                 targets.push(guard);

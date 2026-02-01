@@ -12,6 +12,7 @@ class Mission extends _SaveObject
   public var id: Int;
   public var name: String;
   public var note: String;
+  public var lang: String;
   public var type: _MissionType;
   public var difficulty: _Difficulty;
   public var x: Int; // regional position
@@ -33,6 +34,7 @@ class Mission extends _SaveObject
       id = (_maxID++);
       name = '';
       note = '';
+      lang = '';
       x = 0;
       y = 0;
       difficulty = NORMAL;

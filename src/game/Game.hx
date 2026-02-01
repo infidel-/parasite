@@ -12,13 +12,14 @@ import scenario.Timeline;
 import cult.Cult;
 import const.ItemsConst;
 import const.Jobs;
+import const.Lang;
 import ai.*;
 
 @:expose
 class Game extends _SaveObject
 {
   static var _ignoredFields = [ 'importantMessagesEnabled', 'region',
-    'area', 'areaGenerator', 'jobs',
+    'area', 'areaGenerator', 'jobs', 'lang',
   ];
   public static var inst: Game;
   public var config: Config; // game config
@@ -33,6 +34,7 @@ class Game extends _SaveObject
   public var group: Group; // conspiracy group - antags
   public var console: Console; // game console
   public var jobs: Jobs; // job helper
+  public var lang: Lang; // language helper
 
   public var areaGenerator: AreaGenerator; // generator link
   public var area: AreaGame; // current area link
@@ -68,6 +70,7 @@ class Game extends _SaveObject
       scene = new GameScene(this);
       console = new Console(this);
       jobs = new Jobs(this);
+      lang = new Lang(this);
       managerWorld = new WorldManager(this);
       areaGenerator = new AreaGenerator(this);
       messageList = new List();

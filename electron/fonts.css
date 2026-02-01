@@ -252,3 +252,111 @@
   src: url(./fonts/FontdinerSwanky.ttf) format('truetype');
 }
 
+
+@font-face {
+  font-family: 'Noto Sans Phoenician';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansPhoenician-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Egyptian Hieroglyphs';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansEgyptianHieroglyphs-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Cuneiform';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansCuneiform-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Ugaritic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansUgaritic-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Linear B';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansLinearB-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Symbols 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansSymbols2-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Chorasmian';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansChorasmian-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Old Persian';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansOldPersian-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Anatolian Hieroglyphs';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansAnatolianHieroglyphs-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Glagolitic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansGlagolitic-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Cypro Minoan';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansCyproMinoan-Regular.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans Linear A';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  letter-spacing: 0.08em;
+  src: url(./fonts/NotoSansLinearA-Regular.ttf) format('truetype');
+}

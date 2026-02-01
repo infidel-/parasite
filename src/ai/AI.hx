@@ -679,7 +679,7 @@ public function show()
       if (sound.text != '' &&
           sound.text != null &&
           entity != null)
-        entity.setText(sound.text, 2);
+        entity.setText(sound.text, 2, lang);
       if (sound.file != null)
         {
           var file = sound.file;

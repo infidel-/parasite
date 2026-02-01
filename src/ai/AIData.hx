@@ -24,6 +24,7 @@ class AIData extends _SaveObject
   public var tileAtlasY: Int;
   public var name: _AIName; // AI name (can be unique and capitalized)
   var soundsID: String;
+  public var lang: String; // speech language
 
   public var isMale: Bool; // gender
   public var isRelentless: Bool; // will not lose alertness once gained
@@ -85,6 +86,7 @@ class AIData extends _SaveObject
         unknown: 'undefined',
         unknownCapped: 'undefined'
       };
+      lang = '';
       npcID = -1;
       eventID = null;
       isNPC = false;
@@ -332,6 +334,8 @@ class AIData extends _SaveObject
       // reset name if gender was changed
       name.real = name.realCapped = NameConst.getHumanName(isMale);
       job = targetInfo.job;
+      if (targetInfo.lang != null)
+        lang = targetInfo.lang;
       
       // apply job and icon
       var data: Dynamic = null;
