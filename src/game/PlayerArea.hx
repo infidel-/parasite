@@ -225,7 +225,8 @@ class PlayerArea extends _SaveObject
           }
 
       // leave area action
-      if (state != PLR_STATE_ATTACHED && !game.area.info.isInhabited)
+      if (state != PLR_STATE_ATTACHED &&
+          !game.area.info.isInhabited)
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
@@ -724,14 +725,14 @@ class PlayerArea extends _SaveObject
             }
 
           // no leaving with any construction molds
-          if (state == PLR_STATE_HOST && player.host.organs.hasMold())
+          if (state == PLR_STATE_HOST &&
+              player.host.organs.hasMold())
             {
               game.actionFailed('You cannot leave the habitat with a mold.');
               return false;
             }
         }
-      // scenario-specific checks
-      if (!game.goals.leaveAreaPre())
+      if (!game.area.canLeave())
         return false;
 
       log('You leave the area.');

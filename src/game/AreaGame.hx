@@ -1824,4 +1824,21 @@ class Test {
    {
      return game.cults[0].ordeals.getAreaMission(this);
    }
+
+// check if the player can leave this area
+  public function canLeave(): Bool
+    {
+      // block leaving mission areas
+      if (isMissionArea())
+        {
+          game.actionFailed("You cannot leave until you complete the mission.");
+          return false;
+        }
+
+      // scenario-specific checks
+      if (!game.goals.leaveAreaPre())
+        return false;
+
+      return true;
+    }
 }

@@ -40,6 +40,9 @@
   --text-color-ordeal-actions: #f98fce;
   --text-color-communal-ordeal: #ffcd73;
   --text-color-profane-ordeal: #d68181;
+  --text-color-diff-normal: #FFFFFF;
+  --text-color-diff-easy: #7fdc7f;
+  --text-color-diff-hard: #ff6d6d;
 
   --text-color-organ-title: #e0e13a;
   --text-color-organ-title-inactive: #e0e13a;

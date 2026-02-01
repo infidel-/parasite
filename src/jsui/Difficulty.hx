@@ -37,7 +37,7 @@ class Difficulty extends UIWindow
 
       var easy = Browser.document.createDivElement();
       easy.className = 'hud-button window-dialog-button window-choice-1';
-      easy.innerHTML = 'EASY';
+      easy.innerHTML = Const.col('diff-easy', 'EASY');
       easy.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       easy.onclick = function (e) {
         game.scene.sounds.play('click-menu');
@@ -53,7 +53,7 @@ class Difficulty extends UIWindow
 
       var normal = Browser.document.createDivElement();
       normal.className = 'hud-button window-dialog-button window-choice-2';
-      normal.innerHTML = 'NORMAL';
+      normal.innerHTML = Const.col('diff-normal', 'NORMAL');
       normal.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       normal.onclick = function (e) {
         game.scene.sounds.play('click-menu');
@@ -69,7 +69,7 @@ class Difficulty extends UIWindow
 
       var hard = Browser.document.createDivElement();
       hard.className = 'hud-button window-dialog-button window-choice-3';
-      hard.innerHTML = 'HARD';
+      hard.innerHTML = Const.col('diff-hard', 'HARD');
       hard.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
       hard.onclick = function (e) {
         game.scene.sounds.play('click-menu');

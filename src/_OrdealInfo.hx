@@ -6,4 +6,5 @@ typedef _OrdealInfo = {
   var fail: String;
   var mission: _OrdealMissionType;
   var ?target: _MissionTarget;
+  var ?combatTemplate: _CombatMissionTemplate;
 }

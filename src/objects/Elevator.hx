@@ -50,8 +50,7 @@ class Elevator extends AreaObject
 // activate sewers - leave area
   override function onAction(action: _PlayerAction): Bool
     {
-      // scenario-specific checks
-      if (!game.goals.leaveAreaPre())
+      if (!game.area.canLeave())
         return false;
 
       game.scene.sounds.play('object-elevator');

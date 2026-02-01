@@ -13,6 +13,7 @@ class Mission extends _SaveObject
   public var name: String;
   public var note: String;
   public var type: _MissionType;
+  public var difficulty: _Difficulty;
   public var x: Int; // regional position
   public var y: Int; // regional position
   public var ordeal(get, never): Ordeal; // reference to parent ordeal
@@ -34,6 +35,7 @@ class Mission extends _SaveObject
       note = '';
       x = 0;
       y = 0;
+      difficulty = NORMAL;
       isCompleted = false;
     }
 
@@ -50,7 +52,29 @@ class Mission extends _SaveObject
 // get colored name for display
   public function coloredName(): String
     {
-      return Const.col('profane-ordeal', customName());
+      var diffVal = difficulty;
+      if (diffVal == null ||
+          diffVal == UNSET)
+        diffVal = NORMAL;
+      var diffLabel = 'NORMAL';
+      var diffCol = 'diff-normal';
+      switch (diffVal)
+        {
+          case EASY:
+            diffLabel = 'EASY';
+            diffCol = 'diff-easy';
+          case NORMAL:
+            diffLabel = 'NORMAL';
+            diffCol = 'diff-normal';
+          case HARD:
+            diffLabel = 'HARD';
+            diffCol = 'diff-hard';
+          default:
+            diffLabel = 'NORMAL';
+            diffCol = 'diff-normal';
+        }
+      return Const.col('profane-ordeal', customName()) + ' ' +
+        Const.small(Const.col(diffCol, '[' + diffLabel + ']'));
     }
 
 // called when mission is successfully completed

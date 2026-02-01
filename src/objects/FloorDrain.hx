@@ -50,8 +50,7 @@ class FloorDrain extends AreaObject
           game.actionFailed("You can only enter the drain without a host.");
           return false;
         }
-      // scenario-specific checks
-      if (!game.goals.leaveAreaPre())
+      if (!game.area.canLeave())
         return false;
 
       game.log("You slither through the drain escaping the prying eyes.");

@@ -55,15 +55,7 @@ class SewerHatch extends AreaObject
           return false;
         }
 
-      // check if this is a mission area
-      if (game.area.isMissionArea())
-        {
-          game.actionFailed("You cannot leave until you complete the mission.");
-          return false;
-        }
-
-      // scenario-specific checks
-      if (!game.goals.leaveAreaPre())
+      if (!game.area.canLeave())
         return false;
 
       game.scene.sounds.play('object-sewers');
