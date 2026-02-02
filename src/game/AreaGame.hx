@@ -1458,6 +1458,7 @@ class Test {
       for (ai in _ai)
         if (ai.isCommon &&
             !ai.isGuard &&
+            !ai.isCultist &&
             !ai.parasiteAttached)
           cnt++;
 
@@ -1511,6 +1512,7 @@ class Test {
       for (ai in _ai)
         if (!ai.isCommon &&
             !ai.isGuard &&
+            !ai.isCultist &&
             !ai.parasiteAttached)
           cnt++;
 

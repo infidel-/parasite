@@ -53,12 +53,9 @@ class Combat extends Mission
           targetList[0].lang == '')
         targetList[0].lang = game.lang.getRandomID();
       lang = targetList[0].lang;
-      for (i in 1...targetList.length)
-        {
-          if (targetList[i].lang == null ||
-              targetList[i].lang == '')
-            targetList[i].lang = lang;
-        }
+      for (t in targetList)
+        if (t.lang == null || t.lang == '')
+          t.lang = lang;
 
       // roll difficulty if unset
       if (difficulty == null ||
