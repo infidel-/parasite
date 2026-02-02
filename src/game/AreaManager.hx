@@ -421,7 +421,11 @@ class AreaManager extends _SaveObject
       });
       for (i in 0...2)
         {
-          var loc = area.findEmptyLocationNear(e.x, e.y, 5);
+          var loc = area.findLocation({
+            near: { x: e.x, y: e.y },
+            radius: 5,
+            isUnseen: true
+          });
           if (loc == null)
             {
               Const.todo('Could not find free spot for spawn (area)!');
