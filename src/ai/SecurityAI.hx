@@ -59,13 +59,12 @@ class SecurityAI extends HumanAI
 // event: on being attacked 
   public override function onAttack()
     {
-      // need radio
-      if (!inventory.has('radio'))
+      if (!canCallForHelp())
         return;
 
       // if this ai has not called for backup yet
       // try it on next turn if not struggling with parasite
-      if (!isBackupCalled && state == AI_STATE_ALERT && !parasiteAttached)
+      if (!isBackupCalled)
         {
           isBackupCalled = true;
           game.managerArea.addAI(this, AREAEVENT_CALL_BACKUP, 1);

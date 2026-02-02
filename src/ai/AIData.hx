@@ -37,6 +37,7 @@ class AIData extends _SaveObject
   public var isTeamMember: Bool; // is this AI a group team member?
   public var isGuard: Bool; // is it a guard? (guards do not despawn when unseen)
   public var hasFalseMemories: Bool; // was this AI given false memories?
+  public var helpAvailable: Bool; // can this AI call for help?
   public var affinity: Int; // affinity to parasite (number of turns spent together)
   // cult-related
   public var isCultist: Bool;
@@ -119,6 +120,7 @@ class AIData extends _SaveObject
       hasFalseMemories = false;
       isGuard = false;
       isCultist = false;
+      helpAvailable = true;
       cultID = 0;
 
       baseAttrs = {
@@ -331,6 +333,8 @@ class AIData extends _SaveObject
      
       if (targetInfo.isMale != null)
         isMale = targetInfo.isMale;
+      if (targetInfo.helpAvailable != null)
+        helpAvailable = targetInfo.helpAvailable;
       // reset name if gender was changed
       name.real = name.realCapped = NameConst.getHumanName(isMale);
       job = targetInfo.job;

@@ -95,24 +95,10 @@ class TeamMemberAI extends HumanAI
 // event: on state change
   public override function onStateChange()
     {
-      // try to call backup on next turn if not struggling with parasite
-      if (state == AI_STATE_ALERT && !parasiteAttached)
-        {
-          // cannot call backup without a phone
-          if (!inventory.has('smartphone') &&
-              !inventory.has('mobilePhone'))
-            return;
+      if (!canCallForHelp())
+        return;
 
-          // no reception in habitat
-          if (game.area.isHabitat)
-            {
-              log('fumbles with something in its hands. "Shit! No reception!"');
-
-              return;
-            }
-
-          game.managerArea.addAI(this, AREAEVENT_CALL_TEAM_BACKUP, 1);
-        }
+      game.managerArea.addAI(this, AREAEVENT_CALL_TEAM_BACKUP, 1);
     }
 
 // event: despawn live AI

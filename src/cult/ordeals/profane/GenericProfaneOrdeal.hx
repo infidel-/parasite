@@ -78,7 +78,7 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
         case MISSION_KILL:
           m = new Kill(game, info.target);
         case MISSION_COMBAT:
-          m = new Combat(game, info.target, info.combatTemplate);
+          m = new Combat(game, info.target, info.combatTemplate, info.targets);
       }
       missions.push(m);
     }

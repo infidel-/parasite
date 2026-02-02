@@ -5,7 +5,6 @@ import ItemInfo.WeaponInfo;
 import entities.AIEntity;
 import _AIState;
 import _AIEffectType;
-import _MissionEvent;
 import objects.*;
 import game.*;
 import const.*;
@@ -507,6 +506,13 @@ public function show()
 // AI despawns when player has not seen it for X turns in a row and its state is idle
   public function checkDespawn()
     {
+      // player cultists do not despawn
+      if (isPlayerCultist())
+        {
+          _turnsInvisible = 0;
+          return;
+        }
+
       // should be in idle state and calmed down
       if (state != AI_STATE_IDLE ||
           (state == AI_STATE_IDLE && alertness > 25))
@@ -932,6 +938,38 @@ public function show()
   public inline function isPlayerCultist(): Bool
     {
       return (isCultist && cultID == game.cults[0].id);
+    }
+
+// returns true if ai can call for help
+  public function canCallForHelp(): Bool
+    {
+      // help available flag check
+      if (helpAvailable != null &&
+          !helpAvailable)
+        return false;
+      // only in alert state
+      if (state != AI_STATE_ALERT)
+        return false;
+      // parasite attached
+      if (parasiteAttached)
+        return false;
+      // berserk cannot call for help
+      if (effects.has(EFFECT_BERSERK))
+        return false;
+      // cultists cannot call for help
+      if (isCultist)
+        return false;
+      // must be outside habitat
+      if (game.area == null)
+        return false;
+      if (game.area.isHabitat)
+        return false;
+      // must have radio or smartphone
+      if (!inventory.has('radio') &&
+          !inventory.has('smartphone') &&
+          !inventory.has('mobilePhone'))
+        return false;
+      return true;
     }
 
 // add ai to enemies list

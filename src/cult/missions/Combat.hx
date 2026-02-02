@@ -8,6 +8,7 @@ import ai.*;
 class Combat extends Mission
 {
   public var targetInfo: _MissionTarget;
+  public var targetsInfo: Array<_MissionTarget>;
   public var template: _CombatMissionTemplate;
   public var primaryTarget: AIData;
   public var targets: Array<AIData>;
@@ -16,59 +17,80 @@ class Combat extends Mission
   public var clusterY: Int;
 
 // create a combat mission with clustered targets
-  public function new(g: Game, targetInfo: _MissionTarget, template: _CombatMissionTemplate)
+  public function new(g: Game, targetInfo: _MissionTarget, template: _CombatMissionTemplate, targetsInfo: Array<_MissionTarget>)
     {
       this.targetInfo = targetInfo;
       this.template = template;
+      this.targetsInfo = targetsInfo;
       super(g);
       init();
       initPost(false);
 
+      // default template
+      if (this.template == null)
+        this.template = TARGET_WITH_GUARDS;
+
+      // resolve target list and validate template count
+      var targetList: Array<_MissionTarget> = null;
+      if (this.targetsInfo != null &&
+          this.targetsInfo.length > 0)
+        {
+          var expected = getTemplateTargetCount(this.template);
+          if (this.targetsInfo.length != expected)
+            throw 'Combat mission targets mismatch: expected ' + expected +
+              ', got ' + this.targetsInfo.length + '.';
+          targetList = this.targetsInfo;
+        }
+      else
+        {
+          if (this.targetInfo == null)
+            throw 'Combat mission target info not provided.';
+          targetList = [ this.targetInfo ];
+        }
+
       // pick mission target language if unset
-      if (this.targetInfo.lang == null ||
-          this.targetInfo.lang == '')
-        this.targetInfo.lang = game.lang.getRandomID();
-      lang = this.targetInfo.lang;
+      if (targetList[0].lang == null ||
+          targetList[0].lang == '')
+        targetList[0].lang = game.lang.getRandomID();
+      lang = targetList[0].lang;
+      for (i in 1...targetList.length)
+        {
+          if (targetList[i].lang == null ||
+              targetList[i].lang == '')
+            targetList[i].lang = lang;
+        }
 
       // roll difficulty if unset
       if (difficulty == null ||
           difficulty == UNSET)
         difficulty = rollDifficulty();
 
-      // default template
-      if (this.template == null)
-        this.template = TARGET_WITH_GUARDS;
-
       // build targets for the selected template
       switch (this.template)
         {
           case TARGET_WITH_GUARDS:
-            // create primary target
-            var ai = game.createAI(targetInfo.type, 0, 0);
-            primaryTarget = ai.cloneData();
-            primaryTarget.isNameKnown = true;
-            primaryTarget.applyTargetInfo(targetInfo);
-            primaryTarget.lang = lang;
-            primaryTarget.isGuard = true;
-            applyLoadout(primaryTarget, true);
-            targets.push(primaryTarget);
-            targetIDs.push(primaryTarget.id);
-
-            // create guards
-            for (i in 0...2)
+            // create primary target and guards
+            for (i in 0...targetList.length)
               {
-                var guardAI = game.createAI('security', 0, 0);
-                var guard = guardAI.cloneData();
-                guard.lang = lang;
-                guard.isGuard = true;
-                applyLoadout(guard, false);
-                targets.push(guard);
-                targetIDs.push(guard.id);
+                var entry = targetList[i];
+                var ai = game.createAI(entry.type, 0, 0);
+                var data = ai.cloneData();
+                data.applyTargetInfo(entry);
+                data.lang = entry.lang;
+                data.isGuard = true;
+                applyLoadout(data, i == 0);
+                if (i == 0)
+                  {
+                    data.isNameKnown = true;
+                    primaryTarget = data;
+                  }
+                targets.push(data);
+                targetIDs.push(data.id);
               }
         }
 
       // pick area based on target location
-      var area = game.region.getMissionArea(targetInfo);
+      var area = game.region.getMissionArea(targetList[0]);
       if (area != null)
         {
           x = area.x;
@@ -176,6 +198,18 @@ class Combat extends Mission
       return HARD;
     }
 
+// get expected target count for template
+  function getTemplateTargetCount(template: _CombatMissionTemplate): Int
+    {
+      switch (template)
+        {
+          case TARGET_WITH_GUARDS:
+            return 3;
+          default:
+            return 1;
+        }
+    }
+
 // apply difficulty-based loadout to a target
   function applyLoadout(aiData: AIData, isPrimary: Bool)
     {
@@ -183,6 +217,7 @@ class Combat extends Mission
       switch (difficulty)
         {
           case EASY:
+            // guards have no guns on easy
             if (!isPrimary)
               {
                 while (aiData.inventory.has('pistol'))

@@ -16,13 +16,32 @@ class CombatConst extends OrdealConst
           fail: "You are repelled. The head slips away, guards calling backup. The Unaussprechliche Kult grows bold.",
           mission: MISSION_COMBAT,
           combatTemplate: TARGET_WITH_GUARDS,
-          target: {
-            isMale: true,
-            job: "cult head",
-            type: "smiler",
-            icon: "smiler",
-            location: AREA_CORP,
-          }
+          targets: [
+            {
+              isMale: true,
+              job: "cult head",
+              type: "smiler",
+              icon: "smiler",
+              location: AREA_CORP,
+              helpAvailable: false,
+            },
+            {
+              isMale: true,
+              job: "security guard",
+              type: "security",
+              icon: "security",
+              location: AREA_CORP,
+              helpAvailable: false,
+            },
+            {
+              isMale: true,
+              job: "security guard",
+              type: "security",
+              icon: "security",
+              location: AREA_CORP,
+              helpAvailable: false,
+            }
+          ]
         }
       ];
     }
