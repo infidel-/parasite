@@ -6,6 +6,7 @@ import js.Browser;
 import js.html.DivElement;
 
 import game.Game;
+import ai.AIData;
 import _UICultState;
 import _PlayerAction;
 import cult.*;
@@ -20,12 +21,14 @@ class Cult extends UIWindow
   var menuState: _UICultState; // current state
   var currentOrdeal: Ordeal; // currently selected ordeal
   var selectedResource: String; // currently selected resource for trading
+  var bazaar: CultBazaar;
 
   public function new(g: Game)
     {
       super(g, 'window-cult');
       listActions = [];
       menuState = STATE_ROOT;
+      bazaar = new CultBazaar(g, this);
       window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
@@ -86,7 +89,7 @@ class Cult extends UIWindow
     }
 
 // update list of actions
-  function updateActions()
+  public function updateActions()
     {
       listActions = [];
       actions.innerHTML = '';
@@ -113,6 +116,12 @@ class Cult extends UIWindow
             updateActionsUpgradeTwo();
           case STATE_CALL_MEMBER:
             updateActionsCallMember();
+          case STATE_BAZAAR:
+            bazaar.showRoot();
+          case STATE_BAZAAR_MEMBER:
+            bazaar.showMemberList();
+          case STATE_BAZAAR_EQUIP:
+            bazaar.showEquipList();
         }
       
       // trigger content update animation on the whole actions block
@@ -194,6 +203,23 @@ class Cult extends UIWindow
                 updateActions();
               }
             });
+        }
+
+      // action - bazaar
+      if (!cult.hasEffect(CULT_EFFECT_NOTRADE))
+        {
+          var canAfford = bazaar.hasAffordableItems();
+          var label = (canAfford ? 'BazaarNet' : Const.col('gray', 'BazaarNet'));
+          addPlayerAction({
+            id: 'bazaar',
+            type: ACTION_CULT,
+            name: label,
+            energy: 0,
+            f: (canAfford ? function() {
+              menuState = STATE_BAZAAR;
+              updateActions();
+            } : null)
+          });
         }
 
       // action - initiate ordeal
@@ -595,6 +621,7 @@ class Cult extends UIWindow
       buf.add('<th>' + Const.smallgray('health') + '</th>');
       buf.add('<th>' + Const.smallgray('energy') + '</th>');
       buf.add('<th>' + Const.smallgray('status') + '</th>');
+      buf.add('<th>' + Const.smallgray('armor/ranged wpn/melee wpn') + '</th>');
       buf.add('</tr>');
       buf.add('</thead>');
       buf.add('<tbody>');
@@ -609,19 +636,33 @@ class Cult extends UIWindow
           var jobInfo = game.jobs.getJobInfo(m.job);
           buf.add('<td>' + Const.smallgray('[' + jobInfo.level + '] ' + m.job) + '</td>');
           var status = cult.getMemberStatus(m.id);
+          var isHost = (status == '[host]');
           var income = m.income + '';
           if (status != '')
             income = '<s>' + Const.col('gray', income) + '</s>';
           else income = Const.col('white', income);
 
           buf.add('<td>' + income + Icon.money + '</td>');
-          buf.add('<td>' + Const.smallgray(m.health + '/' + m.maxHealth) + '</td>');
-          buf.add('<td>' + Const.smallgray(m.energy + '/' + m.maxEnergy) + '</td>');
+          if (isHost)
+            {
+              buf.add('<td>' + Const.smallgray('-') + '</td>');
+              buf.add('<td>' + Const.smallgray('-') + '</td>');
+            }
+          else
+            {
+              buf.add('<td>' + Const.smallgray(m.health + '/' + m.maxHealth) + '</td>');
+              buf.add('<td>' + Const.smallgray(m.energy + '/' + m.maxEnergy) + '</td>');
+            }
           buf.add('<td>');
           if (status != '')
             buf.add(Const.smallgray(status));
           else
             buf.add(Const.smallgray('-'));
+          buf.add('</td>');
+          buf.add('<td>');
+          if (isHost)
+            buf.add(Const.smallgray('-'));
+          else buf.add(Const.small(getMemberLoadoutShortText(m)));
           buf.add('</td>');
           buf.add('</tr>');
         }
@@ -630,6 +671,34 @@ class Cult extends UIWindow
       buf.add('</span><br/>');
       buf.add('<span class=gray>Members: ' +
         cult.members.length + '/' + cult.maxSize() + '</span><br/>');
+    }
+
+// builds loadout info string for a cult member
+  function getMemberLoadoutShortText(member: AIData): String
+    {
+      var armorName = '-';
+      var clothing = member.inventory.clothing;
+      if (clothing != null &&
+          clothing.id != 'armorNone')
+        armorName = clothing.getName();
+
+      var rangedName = '-';
+      var meleeName = '-';
+      for (item in member.inventory)
+        {
+          if (item.info.weapon == null)
+            continue;
+          if (item.info.weapon.isRanged)
+            {
+              if (rangedName == '-')
+                rangedName = item.getName();
+            }
+          else if (meleeName == '-')
+            meleeName = item.getName();
+        }
+
+      return armorName + Const.col('gray', ' | ') +
+        rangedName + Const.col('gray', ' | ') + meleeName;
     }
 
 // appends list of active cult effects
@@ -692,7 +761,7 @@ class Cult extends UIWindow
     }
 
 // add player action helper method
-  function addPlayerAction(action: _PlayerAction)
+  public function addPlayerAction(action: _PlayerAction)
     {
       var n = listActions.length + 1;
       listActions.push(action);

@@ -358,7 +358,9 @@ class Player extends _SaveObject
 // add item to known list
   public inline function addKnownItem(id: String)
     {
-      return knownItems.add(id);
+      if (Lambda.has(knownItems, id))
+        return;
+      knownItems.add(id);
     }
 
 
