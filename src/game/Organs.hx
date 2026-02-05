@@ -3,6 +3,7 @@
 package game;
 
 import ai.AIData;
+import ai.AI;
 import const.EvolutionConst;
 
 class Organs extends _SaveObject
@@ -367,16 +368,9 @@ class Organs extends _SaveObject
 // action: acid spit
   function actionAcidSpit(): Bool
     {
-      // get ai under mouse cursor
-      var pos = game.scene.mouse.getXY();
-      var ai = game.area.getAI(pos.x, pos.y);
-
-      // no ai found
+      var ai = getActionTargetAI();
       if (ai == null)
-        {
-          game.actionFailed("Target AI with mouse first.");
-          return false;
-        }
+        return false;
 
       var params = getParams(IMP_ACID_SPIT);
 
@@ -407,16 +401,9 @@ class Organs extends _SaveObject
 // action: slime spit
   function actionSlimeSpit(): Bool
     {
-      // get ai under mouse cursor
-      var pos = game.scene.mouse.getXY();
-      var ai = game.area.getAI(pos.x, pos.y);
-
-      // no ai found
+      var ai = getActionTargetAI();
       if (ai == null)
-        {
-          game.actionFailed("Target AI with mouse first.");
-          return false;
-        }
+        return false;
 
       var params = getParams(IMP_SLIME_SPIT);
 
@@ -449,16 +436,9 @@ class Organs extends _SaveObject
 // action: paralysis spit
   function actionParalysisSpit(): Bool
     {
-      // get ai under mouse cursor
-      var pos = game.scene.mouse.getXY();
-      var ai = game.area.getAI(pos.x, pos.y);
-
-      // no ai found
+      var ai = getActionTargetAI();
       if (ai == null)
-        {
-          game.actionFailed("Target AI with mouse first.");
-          return false;
-        }
+        return false;
 
       var params = getParams(IMP_PARALYSIS_SPIT);
 
@@ -494,6 +474,24 @@ class Organs extends _SaveObject
       ai.onEffect(new effects.Paralysis(game, params.time));
 
       return true;
+    }
+
+// pick action target from keyboard or mouse
+  function getActionTargetAI(): AI
+    {
+      var targeting = game.ui.hud.targeting;
+      if (targeting.target != null &&
+          targeting.isTargetVisibleOnScreen())
+        return targeting.target;
+
+      var pos = game.scene.mouse.getXY();
+      var ai = game.area.getAI(pos.x, pos.y);
+      if (ai == null)
+        {
+          game.actionFailed("Select a target (T/Enter) or target with mouse first.");
+          return null;
+        }
+      return ai;
     }
 
 
