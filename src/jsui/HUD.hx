@@ -9,6 +9,7 @@ import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import game.*;
+import ui.Targeting;
 
 class HUD
 {
@@ -33,6 +34,7 @@ class HUD
     state: _UIState,
     btn: DivElement,
   }>;
+  public var targeting: Targeting;
   var actions: DivElement;
   var actionButtons: List<DivElement>; // list of action buttons
   var listActions: List<_PlayerAction>; // list of currently available actions
@@ -48,6 +50,7 @@ class HUD
       actionButtons = new List();
       listActions = new List();
       listKeyActions = new List();
+      targeting = new Targeting(game, this);
 
       overlay = document.createDivElement();
       overlay.id = 'overlay';
@@ -125,7 +128,6 @@ class HUD
         Const.key('F5') + ': EVO');
       addMenuButton(buttons, UISTATE_CULT,
         Const.key('F6') + ': CULT');
-
       // actions
       actions = document.createDivElement();
       actions.id = 'hud-actions';
@@ -611,6 +613,17 @@ public function onMouseLeave()
 // update menu buttons visibility
   function updateMenu()
     {
+      if (state == HUD_TARGETING)
+        {
+          for (m in menuButtons)
+            {
+              m.btn.style.display = 'none';
+              if (m.btn.className.indexOf('highlight') > 0)
+                m.btn.className = 'hud-button window-title';
+            }
+          return;
+        }
+
       var vis = false;
       for (m in menuButtons)
         {
@@ -660,6 +673,8 @@ public function onMouseLeave()
     {
       listActions = new List();
       listKeyActions = new List();
+      if (state == HUD_TARGETING)
+        return;
       if (game.state == GAMESTATE_FINISH)
         {
           addKeyAction({
@@ -695,6 +710,27 @@ public function onMouseLeave()
             // fake
             key: 'z'
           });
+
+          if (game.location == LOCATION_AREA &&
+              game.player.state == PLR_STATE_HOST)
+            {
+              addKeyAction({
+                id: 'targetMode',
+                type: ACTION_AREA,
+                name: 'Target',
+                key: 't',
+                isVirtual: true,
+              });
+
+              if (targeting.canShootTarget())
+                addKeyAction({
+                  id: 'shootTarget',
+                  type: ACTION_AREA,
+                  name: 'Shoot',
+                  key: 's',
+                  isVirtual: true,
+                });
+            }
         }
     }
 
@@ -724,6 +760,23 @@ public function onMouseLeave()
       var n = 1;
       while (actions.firstChild != null)
         actions.removeChild(actions.lastChild);
+      // show targeting help instead of actions
+      if (state == HUD_TARGETING)
+        {
+          var lines = [
+            Const.key('Arrows') + ': Rotate targets',
+            Const.key('Enter/Numpad5') + ': Select target',
+            Const.key('ESC') + ': Clear target',
+          ];
+          for (line in lines)
+            {
+              var btn = document.createDivElement();
+              btn.innerHTML = line;
+              btn.className = 'hud-action';
+              actions.appendChild(btn);
+            }
+          return;
+        }
       var list = [ listActions, listKeyActions ];
       for (l in list)
         for (action in l)
@@ -782,6 +835,19 @@ public function onMouseLeave()
 // common action code for keys and mouse clicks
   function doAction(withRepeat: Bool, action: _PlayerAction)
     {
+      if (state == HUD_TARGETING)
+        return;
+      if (action.id == 'targetMode')
+        {
+          targeting.enter();
+          return;
+        }
+      if (action.id == 'shootTarget')
+        {
+          if (targeting.canShootTarget())
+            game.playerArea.attackAction(targeting.target);
+          return;
+        }
       if (withRepeat &&
           game.config.shiftLongActions &&
           action.canRepeat)
@@ -821,6 +887,9 @@ public function onMouseLeave()
           }
       if (action == null)
         return false;
+      if (action.id == 'targetMode' ||
+          action.id == 'shootTarget')
+        return false;
 
       if (game.location == LOCATION_AREA)
         game.playerArea.action(action);
@@ -841,6 +910,8 @@ public function onMouseLeave()
             game.log('The conversation was interrupted.');
           case HUD_CONVERSE_MENU:
             state = HUD_DEFAULT;
+          case HUD_TARGETING:
+            targeting.exit(false);
           case HUD_DEFAULT:
             // do nothing
         }

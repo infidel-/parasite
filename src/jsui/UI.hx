@@ -123,6 +123,20 @@ class UI
       if (hud.consoleVisible())
         return;
 
+      // enter targeting mode
+      if (e.code == 'KeyT')
+        {
+          if (!game.isInputLocked() &&
+              _state == UISTATE_DEFAULT &&
+              hud.state == HUD_DEFAULT &&
+              game.location == LOCATION_AREA &&
+              game.player.state == PLR_STATE_HOST)
+            {
+              hud.targeting.enter();
+              return;
+            }
+        }
+
       if (_state == UISTATE_DEFAULT)
         {
           // shift key - redraw actions list
@@ -147,6 +161,13 @@ class UI
       if ((e.keyCode >= 112 && e.keyCode <= 121) ||
           (e.keyCode >= 48 && e.keyCode <= 57))
         e.preventDefault();
+
+      // handle targeting mode keys
+      if (hud.state == HUD_TARGETING)
+        {
+          handleTargetingKey(e.key, e.code);
+          return;
+        }
 
       // handle quick menu double key press
       if (awaitingNextKey)
@@ -212,6 +233,18 @@ class UI
               hud.updateActions();
               return;
             }
+
+          // shoot target
+          if (hud.state == HUD_DEFAULT &&
+              (e.key == 's' ||
+               e.key == 'S'))
+            {
+              if (hud.targeting.canShootTarget())
+                {
+                  game.playerArea.attackAction(hud.targeting.target);
+                  return;
+                }
+            }
         }
 
       // try to handle keyboard actions
@@ -223,6 +256,31 @@ class UI
       // update camera position
       if (ret)
         game.scene.updateCamera();
+    }
+
+// handle targeting mode keys
+  function handleTargetingKey(key: String, code: String)
+    {
+      if (code == 'ArrowLeft' ||
+          code == 'ArrowUp' ||
+          code == 'Numpad4' ||
+          code == 'Numpad7' ||
+          code == 'Numpad8' ||
+          code == 'Numpad1')
+        hud.targeting.rotate(-1);
+      else if (code == 'ArrowRight' ||
+          code == 'ArrowDown' ||
+          code == 'Numpad6' ||
+          code == 'Numpad9' ||
+          code == 'Numpad2' ||
+          code == 'Numpad3')
+        hud.targeting.rotate(1);
+      else if (code == 'Enter' ||
+          code == 'NumpadEnter' ||
+          code == 'Numpad5')
+        hud.targeting.confirm();
+      else if (code == 'Escape')
+        hud.targeting.clear();
     }
 
 // handle quick menu double key press
@@ -469,6 +527,8 @@ class UI
         {
           case HUD_CHAT, HUD_CONVERSE_MENU:
             game.actionFailed('You cannot move during a conversation.');
+          case HUD_TARGETING:
+            // no message
           default:
         }
       return true;

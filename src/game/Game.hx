@@ -291,6 +291,13 @@ class Game extends _SaveObject
   public function setLocation(vloc: _LocationType, ?newarea: AreaGame)
     {
       // hide previous gui, despawn area, etc
+      if (location == LOCATION_AREA &&
+          vloc != LOCATION_AREA)
+        {
+          if (ui.hud.state == HUD_TARGETING)
+            ui.hud.targeting.exit(false);
+          ui.hud.targeting.clearTarget();
+        }
       if (location == LOCATION_AREA)
         area.leave();
 
@@ -621,6 +628,8 @@ class Game extends _SaveObject
   public function update()
     {
       if (state != GAMESTATE_RUNNING)
+        return;
+      if (ui.hud.state == HUD_TARGETING)
         return;
       // path active, try to move on it
       var ret = false;

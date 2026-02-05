@@ -776,6 +776,7 @@ public function show()
         log('dies.');
       setState(AI_STATE_DEAD);
       game.area.removeAI(this);
+      game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook
       var o = new BodyObject(game, game.area.id, x, y, type);
 

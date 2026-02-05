@@ -33,6 +33,8 @@ class Mouse
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         return;
+      if (game.ui.hud.state == HUD_TARGETING)
+        return;
 
       var pos = getXY();
       if (pos.x < 0 || pos.y < 0 ||

@@ -37,6 +37,22 @@ class AIEntity extends PawnEntity
 // ai entity draw
   public override function draw(ctx: CanvasRenderingContext2D)
     {
+      // get targeting/target flags
+      var showTargeting = false;
+      var showTarget = false;
+      if (game.ui.hud.state == HUD_TARGETING &&
+          game.ui.hud.targeting.targetingAI == ai)
+        showTargeting = true;
+      if (game.ui.hud.targeting.target == ai &&
+          game.ui.hud.targeting.isTargetVisibleOnScreen())
+        showTarget = true;
+
+      // draw target frame
+      if (showTarget)
+        drawImage(ctx, game.scene.images.entities,
+          Const.FRAME_TARGET_FRAME,
+          Const.ROW_REGION_ICON);
+
       // draw pawn image (mask -> entity -> text)
       super.draw(ctx);
 
@@ -54,6 +70,19 @@ class AIEntity extends PawnEntity
         drawImage(ctx, game.scene.images.entities,
           Const.FRAME_CULTIST0,
           Const.ROW_EFFECT);
+
+      // draw target reticle
+      if (showTargeting)
+        {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+          ctx.shadowBlur = 5;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+          drawImage(ctx, game.scene.images.entities,
+            Const.FRAME_TARGET_RETICLE,
+            Const.ROW_REGION_ICON);
+          ctx.shadowColor = 'transparent';
+        }
     }
 
 
