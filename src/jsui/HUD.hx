@@ -10,6 +10,7 @@ import js.html.MouseEvent;
 
 import game.*;
 import ui.Targeting;
+import ui.Command;
 
 class HUD
 {
@@ -35,6 +36,7 @@ class HUD
     btn: DivElement,
   }>;
   public var targeting: Targeting;
+  public var command: Command;
   var actions: DivElement;
   var actionButtons: List<DivElement>; // list of action buttons
   var listActions: List<_PlayerAction>; // list of currently available actions
@@ -51,6 +53,7 @@ class HUD
       listActions = new List();
       listKeyActions = new List();
       targeting = new Targeting(game, this);
+      command = new Command(game, this);
 
       overlay = document.createDivElement();
       overlay.id = 'overlay';
@@ -687,6 +690,11 @@ public function onMouseLeave()
           });
           return;
         }
+      if (state == HUD_COMMAND_MENU)
+        {
+          command.updateActions();
+          return;
+        }
 
       // trying to chat
       if (state == HUD_CHAT)
@@ -731,7 +739,18 @@ public function onMouseLeave()
                   isVirtual: true,
                 });
             }
+
+          if (game.location == LOCATION_AREA &&
+              command.hasFollowers())
+            addKeyAction({
+              id: 'commandMenu',
+              type: ACTION_AREA,
+              name: 'Command',
+              key: 'c',
+              isVirtual: true,
+            });
         }
+      command.updateActions();
     }
 
 // add player action to numbered list
@@ -760,6 +779,7 @@ public function onMouseLeave()
       var n = 1;
       while (actions.firstChild != null)
         actions.removeChild(actions.lastChild);
+
       // show targeting help instead of actions
       if (state == HUD_TARGETING)
         {
@@ -777,36 +797,41 @@ public function onMouseLeave()
             }
           return;
         }
+
+      // populate action list
       var list = [ listActions, listKeyActions ];
       for (l in list)
-        for (action in l)
+        for (act in l)
           {
             var buf = new StringBuf();
             var key = '';
             if (game.config.shiftLongActions &&
-                action.canRepeat &&
+                act.canRepeat &&
                 ui.shiftPressed)
               key = 'S-';
-            if (action.key != null)
-              key += action.key.toUpperCase();
+            if (act.key != null)
+              key += act.key.toUpperCase();
             else key += '' + n;
-            var name = action.name;
+            var name = act.name;
             // dynamic action color
-            if (action.id == 'probeBrain')
+            if (act.id == 'probeBrain')
               name = game.playerArea.getProbeBrainActionName();
             buf.add(Const.key(key) + ': ' + name);
-            if (action.energy != null &&
-                action.energy > 0)
-              buf.add(Const.cost(action.energy));
-            else if (action.energyFunc != null)
-              buf.add(Const.cost(action.energyFunc(game.player)));
+            if (act.energy != null &&
+                act.energy > 0)
+              buf.add(Const.cost(act.energy));
+            else if (act.energyFunc != null)
+              buf.add(Const.cost(act.energyFunc(game.player)));
 
             var btn = document.createDivElement();
             btn.innerHTML = buf.toString();
             btn.className = 'hud-action';
+            var actionIndex = n;
             btn.onclick = function (e) {
               game.scene.sounds.play('click-action');
-              doAction(untyped e.shiftKey, action);
+              if (state == HUD_COMMAND_MENU)
+                action(actionIndex, untyped e.shiftKey);
+              else doAction(untyped e.shiftKey, act);
             }
             actions.appendChild(btn);
             n++;
@@ -818,6 +843,15 @@ public function onMouseLeave()
 // call numbered action by index
   public function action(index: Int, withRepeat: Bool)
     {
+      if (state == HUD_COMMAND_MENU)
+        {
+          var usedTime = command.action(index);
+          if (usedTime &&
+              game.location == LOCATION_AREA)
+            game.playerArea.actionPost();
+          return;
+        }
+
       // find action name by index
       var i = 1;
       var action = null;
@@ -846,6 +880,11 @@ public function onMouseLeave()
         {
           if (targeting.canShootTarget())
             game.playerArea.attackAction(targeting.target);
+          return;
+        }
+      if (action.id == 'commandMenu')
+        {
+          command.enter();
           return;
         }
       if (withRepeat &&
@@ -887,6 +926,11 @@ public function onMouseLeave()
           }
       if (action == null)
         return false;
+      if (action.id == 'commandMenu')
+        {
+          command.enter();
+          return true;
+        }
       if (action.id == 'targetMode' ||
           action.id == 'shootTarget')
         return false;
@@ -912,6 +956,8 @@ public function onMouseLeave()
             state = HUD_DEFAULT;
           case HUD_TARGETING:
             targeting.exit(false);
+          case HUD_COMMAND_MENU:
+            command.exit();
           case HUD_DEFAULT:
             // do nothing
         }

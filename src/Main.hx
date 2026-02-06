@@ -27,6 +27,7 @@ class Main
       ai.CommonLogic.game = game;
       ai.DefaultLogic.game = game;
       ai.FollowerLogic.game = game;
+      ai.CommandLogic.game = game;
       game.scene.init();
       game.ui.state = UISTATE_MAINMENU;
     }

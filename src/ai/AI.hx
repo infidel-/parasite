@@ -49,6 +49,7 @@ class AI extends AIData
   public var timers: _AITimers;
   // follower - enemies list
   public var enemies: List<Int>;
+  public var command: CommandParams;
 
   // stats
   public var maxOrgans(get, null): Int; // max amount of organs
@@ -86,6 +87,7 @@ class AI extends AIData
 //          alertPlayerNotVisible: 0
       };
       enemies = new List();
+      command = new CommandParams();
       direction = 0;
       parasiteAttached = false;
 
@@ -628,7 +630,10 @@ public function show()
       
       // cultists from player cult have follower logic
       else if (isPlayerCultist())
-        FollowerLogic.turn(this);
+        {
+          if (!CommandLogic.turn(this))
+            FollowerLogic.turn(this);
+        }
 
       // default AI logiccultID
       else DefaultLogic.turn(this);

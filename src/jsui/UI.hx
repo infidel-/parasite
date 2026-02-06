@@ -162,6 +162,13 @@ class UI
           (e.keyCode >= 48 && e.keyCode <= 57))
         e.preventDefault();
 
+      if (hud.state == HUD_COMMAND_MENU &&
+          e.code == 'Escape')
+        {
+          hud.command.exit();
+          return;
+        }
+
       // handle targeting mode keys
       if (hud.state == HUD_TARGETING)
         {
@@ -529,6 +536,8 @@ class UI
             game.actionFailed('You cannot move during a conversation.');
           case HUD_TARGETING:
             // no message
+          case HUD_COMMAND_MENU:
+            game.actionFailed('You cannot move while commanding followers.');
           default:
         }
       return true;

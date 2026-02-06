@@ -25,6 +25,15 @@ class CommonLogic
           return;
         }
 
+      // check for line of sight on ranged
+      if (!isAttackerPlayer &&
+          weapon.isRanged &&
+          !ai.seesPosition(target.x, target.y))
+        {
+          ai.logicMoveTo(target.x, target.y);
+          return;
+        }
+
       // parasite attached to human, do not shoot (blackops are fine)
       if (!isAttackerPlayer &&
           ai.isHuman &&
