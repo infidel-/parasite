@@ -13,7 +13,7 @@ class AIEntity extends PawnEntity
   // -1, 0: do not draw
   var alertx: Int; // alert frame (new draw)
   var isNPC: Bool;
-  var isMissionTarget: Bool;
+  public var isMissionTarget: Bool;
 
 
   public function new(vai: AI, g: Game, xx: Int, yy: Int)

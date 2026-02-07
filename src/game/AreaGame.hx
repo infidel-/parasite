@@ -1447,6 +1447,21 @@ class Test {
           WorldConst.AREA_AI_CELLS, getMaxAICoef()));
     }
 
+// count spawned ai for common/uncommon pools
+  function countSpawnedAI(isCommon: Bool): Int
+    {
+      var cnt = 0;
+      for (ai in _ai)
+        if (ai.isCommon == isCommon &&
+            !ai.isGuard &&
+            !(ai.entity != null &&
+              ai.entity.isMissionTarget) &&
+            !ai.isCultist &&
+            !ai.parasiteAttached)
+          cnt++;
+      return cnt;
+    }
+
 // spawn new AI, called each turn
   function turnSpawnCommonAI()
     {
@@ -1454,13 +1469,7 @@ class Test {
         return;
 
       // get number of common AI excluding player
-      var cnt = 0;
-      for (ai in _ai)
-        if (ai.isCommon &&
-            !ai.isGuard &&
-            !ai.isCultist &&
-            !ai.parasiteAttached)
-          cnt++;
+      var cnt = countSpawnedAI(true);
 
       // calc max possible number of AI
       var maxAI = getMaxAI();
@@ -1508,13 +1517,7 @@ class Test {
         return;
 
       // get number of uncommon AI (spawned by alertness logic)
-      var cnt = 0;
-      for (ai in _ai)
-        if (!ai.isCommon &&
-            !ai.isGuard &&
-            !ai.isCultist &&
-            !ai.parasiteAttached)
-          cnt++;
+      var cnt = countSpawnedAI(false);
 
       // calc max possible number of AI
       var maxAI =
