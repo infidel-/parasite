@@ -120,6 +120,23 @@ class Ordeals extends _SaveObject
     }
 
 // check for spawning new profane ordeals
+// check if profane ordeal with subtype+infoID is already active
+  function hasActiveProfaneDuplicate(subType: String, infoID: Int): Bool
+    {
+      for (ordeal in list)
+        {
+          if (ordeal.type != ORDEAL_PROFANE)
+            continue;
+
+          var other: GenericProfaneOrdeal = cast ordeal;
+          if (other.subType == subType &&
+              other.infoID == infoID)
+            return true;
+        }
+      return false;
+    }
+
+// check for spawning new profane ordeals
   function turnSpawnProfane()
     {
       // check cult size
@@ -163,7 +180,19 @@ class Ordeals extends _SaveObject
         return;
 
       // spawn new profane ordeal
-      var o = new GenericProfaneOrdeal(game);
+      var maxAttempts = 50;
+      var o: GenericProfaneOrdeal = null;
+      for (_ in 0...maxAttempts)
+        {
+          var candidate = new GenericProfaneOrdeal(game);
+          if (hasActiveProfaneDuplicate(candidate.subType, candidate.infoID))
+            continue;
+          o = candidate;
+          break;
+        }
+      if (o == null)
+        return;
+
       list.push(o);
       game.message({
         text: 'A tribulation most foul has descended upon us: ' + o.coloredName() + '.',
