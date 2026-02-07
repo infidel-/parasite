@@ -66,12 +66,12 @@ class Command
       hud.addAction({
         id: 'command.attack',
         type: ACTION_AREA,
-        name: '"Attack!"',
+        name: '"Destroy ' + (hud.targeting.target.isMale ? 'him' : 'her') + '!"',
       });
       hud.addAction({
         id: 'command.leaveArea',
         type: ACTION_AREA,
-        name: '"Leave Area!"',
+        name: '"Leave us!"',
       });
       hud.addAction({
         id: 'command.abort',
