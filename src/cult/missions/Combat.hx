@@ -5,10 +5,13 @@ import game.Game;
 import cult.Mission;
 import ai.*;
 
+private typedef _CombatSpawnTarget = {
+  var target: _MissionTarget;
+  var loadout: Game -> AIData -> _Difficulty -> Void;
+}
+
 class Combat extends Mission
 {
-  public var targetInfo: _MissionTarget;
-  public var targetsInfo: Array<_MissionTarget>;
   public var template: _CombatMissionTemplate;
   public var primaryTarget: AIData;
   public var targets: Array<AIData>;
@@ -17,50 +20,39 @@ class Combat extends Mission
   public var clusterY: Int;
 
 // create a combat mission with clustered targets
-  public function new(g: Game, targetInfo: _MissionTarget, template: _CombatMissionTemplate, targetsInfo: Array<_MissionTarget>)
+  public function new(g: Game, combatInfo: _CombatMissionInfo)
     {
-      this.targetInfo = targetInfo;
-      this.template = template;
-      this.targetsInfo = targetsInfo;
       super(g);
       init();
       initPost(false);
 
+      if (combatInfo == null)
+        throw 'Combat mission info not provided.';
+
       // default template
+      this.template = combatInfo.template;
       if (this.template == null)
         this.template = TARGET_WITH_GUARDS;
-
-      // resolve target list and validate template count
-      var targetList: Array<_MissionTarget> = null;
-      if (this.targetsInfo != null &&
-          this.targetsInfo.length > 0)
-        {
-          var expected = getTemplateTargetCount(this.template);
-          if (this.targetsInfo.length != expected)
-            throw 'Combat mission targets mismatch: expected ' + expected +
-              ', got ' + this.targetsInfo.length + '.';
-          targetList = this.targetsInfo;
-        }
-      else
-        {
-          if (this.targetInfo == null)
-            throw 'Combat mission target info not provided.';
-          targetList = [ this.targetInfo ];
-        }
-
-      // pick mission target language if unset
-      if (targetList[0].lang == null ||
-          targetList[0].lang == '')
-        targetList[0].lang = game.lang.getRandomID();
-      lang = targetList[0].lang;
-      for (t in targetList)
-        if (t.lang == null || t.lang == '')
-          t.lang = lang;
 
       // roll difficulty if unset
       if (difficulty == null ||
           difficulty == UNSET)
         difficulty = rollDifficulty();
+
+      // resolve target list from configured entries and difficulty amounts
+      var targetList = expandTargetsForDifficulty(combatInfo.targets, difficulty);
+      if (targetList.length == 0)
+        throw 'Combat mission has no targets for selected difficulty.';
+
+      // pick mission target language if unset
+      if (targetList[0].target.lang == null ||
+          targetList[0].target.lang == '')
+        targetList[0].target.lang = game.lang.getRandomID();
+      lang = targetList[0].target.lang;
+      for (entry in targetList)
+        if (entry.target.lang == null ||
+            entry.target.lang == '')
+          entry.target.lang = lang;
 
       // build targets for the selected template
       switch (this.template)
@@ -70,12 +62,13 @@ class Combat extends Mission
             for (i in 0...targetList.length)
               {
                 var entry = targetList[i];
-                var ai = game.createAI(entry.type, 0, 0);
+                var ai = game.createAI(entry.target.type, 0, 0);
                 var data = ai.cloneData();
-                data.applyTargetInfo(entry);
-                data.lang = entry.lang;
+                data.applyTargetInfo(entry.target);
+                data.lang = entry.target.lang;
                 data.isGuard = true;
-                applyLoadout(data, i == 0);
+                if (entry.loadout != null)
+                  entry.loadout(game, data, difficulty);
                 if (i == 0)
                   {
                     data.isNameKnown = true;
@@ -87,7 +80,7 @@ class Combat extends Mission
         }
 
       // pick area based on target location
-      var area = game.region.getMissionArea(targetList[0]);
+      var area = game.region.getMissionArea(targetList[0].target);
       if (area != null)
         {
           x = area.x;
@@ -195,49 +188,45 @@ class Combat extends Mission
       return HARD;
     }
 
-// get expected target count for template
-  function getTemplateTargetCount(template: _CombatMissionTemplate): Int
+// expand configured combat target entries for selected difficulty
+  function expandTargetsForDifficulty(entries: Array<_CombatMissionTargetInfo>, difficulty: _Difficulty): Array<_CombatSpawnTarget>
     {
-      switch (template)
-        {
-          case TARGET_WITH_GUARDS:
-            return 3;
-          default:
-            return 1;
-        }
-    }
-
-// apply difficulty-based loadout to a target
-  function applyLoadout(aiData: AIData, isPrimary: Bool)
-    {
-      // adjust inventory and skills per difficulty
+      var expanded = [];
+      var idx = 1;
       switch (difficulty)
         {
           case EASY:
-            // guards have no guns on easy
-            if (!isPrimary)
-              {
-                while (aiData.inventory.has('pistol'))
-                  aiData.inventory.remove('pistol');
-              }
+            idx = 0;
           case NORMAL:
-            1;
+            idx = 1;
           case HARD:
-            if (isPrimary)
-              {
-                if (!aiData.inventory.has('pistol'))
-                  aiData.inventory.addID('pistol');
-                aiData.skills.addID(SKILL_PISTOL, 20 + Std.random(10));
-              }
-            else
-              {
-                if (!aiData.inventory.has('pistol'))
-                  aiData.inventory.addID('pistol');
-                if (aiData.inventory.clothing.id != 'kevlarArmor')
-                  aiData.inventory.addID('kevlarArmor', true);
-                aiData.skills.addID(SKILL_PISTOL, 60 + Std.random(20));
-              }
+            idx = 2;
           default:
+            idx = 1;
         }
+      for (entry in entries)
+        {
+          var amount = entry.amount[idx];
+          for (_ in 0...amount)
+            expanded.push({
+              target: cloneTarget(entry.target),
+              loadout: entry.loadout,
+            });
+        }
+      return expanded;
+    }
+
+// clone target info to avoid mutating constant target data
+  function cloneTarget(target: _MissionTarget): _MissionTarget
+    {
+      return {
+        isMale: target.isMale,
+        job: target.job,
+        icon: target.icon,
+        type: target.type,
+        lang: target.lang,
+        location: target.location,
+        helpAvailable: target.helpAvailable,
+      };
     }
 }
