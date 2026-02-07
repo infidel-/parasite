@@ -934,6 +934,19 @@ public function show()
       return (isTeamMember || type == 'blackops');
     }
 
+// returns true if this AI is law enforcement or operative
+  public inline function isLaw(): Bool
+    {
+      return (
+        isTeamMember ||
+        type == 'police' ||
+        type == 'security' ||
+        type == 'soldier' ||
+        type == 'agent' ||
+        type == 'blackops'
+      );
+    }
+
 // set this AI as a cultist
   public function setCult(cult: Cult)
     {
@@ -946,6 +959,17 @@ public function show()
   public inline function isPlayerCultist(): Bool
     {
       return (isCultist && cultID == game.cults[0].id);
+    }
+
+// returns true if this ai belongs to the same cult as other
+  public inline function isSameCult(other: AI): Bool
+    {
+      return (
+        other != null &&
+        isCultist &&
+        other.isCultist &&
+        cultID == other.cultID
+      );
     }
 
 // returns true if ai can call for help
@@ -983,6 +1007,10 @@ public function show()
 // add ai to enemies list
   public function addEnemy(ai: AI)
     {
+      if (ai == null)
+        return;
+      if (isSameCult(ai))
+        return;
       if (Lambda.has(enemies, ai.id))
         return;
       enemies.add(ai.id);
@@ -1081,6 +1109,8 @@ public function show()
           var enemy = game.area.getAIByID(enemyID);
           if (enemy == null)
             continue;
+          if (isSameCult(enemy))
+            continue;
           var dst = distance(enemy.x, enemy.y);
           if (dst < mindst)
             {
@@ -1144,21 +1174,20 @@ public function show()
           onAttack(); // attack event
         }
 
-      // law marks attacker as criminal
-      // unless its also law
-      var attackerAI = attacker.ai;
-      if (attackerAI != null &&
-          (type == 'police' ||
-           type == 'security' ||
-           type == 'soldier') &&
-          !(attackerAI.type == 'police' ||
-            attackerAI.type == 'security' ||
-            attackerAI.type == 'soldier'))
-        attackerAI.didCrime = true;
 
       // propagate attack aggro for ai attackers
       if (attacker.who == 'ai')
-        propagateAttackAggro(attacker.ai);
+        {
+          // law marks attacker as criminal
+          // unless its also law
+          if (isLaw() &&
+              !attacker.ai.isLaw())
+            attacker.ai.didCrime = true;
+
+          // add attacker to enemies list
+          addEnemy(attacker.ai);
+          propagateAttackAggro(attacker.ai);
+        }
 
       // update enemies lists on player attack
       else if (attacker.who == 'player')

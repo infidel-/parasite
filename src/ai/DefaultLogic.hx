@@ -92,6 +92,28 @@ class DefaultLogic
         }
       else ai.alertness -= 5;
 
+      // nearby ai with visible weapons also raise alertness
+      var nearbyAI = game.area.getAIinRadius(ai.x, ai.y, 3, true);
+      for (other in nearbyAI)
+        {
+          if (other == ai)
+            continue;
+          // player host is handled by dedicated player visibility logic above
+          if (other.isPlayerHost())
+            continue;
+          if (!other.inventory.hasVisibleWeapon())
+            continue;
+          if (other.isLaw())
+            continue;
+          if (ai.isLaw())
+            {
+              ai.alertness += 10;
+              ai.addEnemy(other);
+            }
+          else if (!ai.isAggressive)
+            ai.alertness += 5;
+        }
+
       // AI has become alerted
       if (ai.alertness >= 100)
         {

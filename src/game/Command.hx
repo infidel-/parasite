@@ -142,6 +142,12 @@ class Command
           return false;
         }
 
+      if (target.isPlayerCultist())
+        {
+          game.actionFailed('Followers refuse to attack their own cult.');
+          return false;
+        }
+
       var followers = getFollowers();
       for (ai in followers)
         {
