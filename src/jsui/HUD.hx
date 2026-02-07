@@ -10,7 +10,6 @@ import js.html.MouseEvent;
 
 import game.*;
 import ui.Targeting;
-import ui.Command;
 
 class HUD
 {
@@ -53,7 +52,7 @@ class HUD
       listActions = new List();
       listKeyActions = new List();
       targeting = new Targeting(game, this);
-      command = new Command(game, this);
+      command = null;
 
       overlay = document.createDivElement();
       overlay.id = 'overlay';

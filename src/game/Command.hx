@@ -1,18 +1,19 @@
 // command menu helper
-package ui;
+package game;
 
 import ai.AI;
-import game.Game;
 import jsui.HUD;
 
 class Command
 {
+  var player: Player;
   var game: Game;
   var hud: HUD;
 
 // create command menu handler
-  public function new(g: Game, h: HUD)
+  public function new(p: Player, g: Game, h: HUD)
     {
+      player = p;
       game = g;
       hud = h;
     }
@@ -28,7 +29,7 @@ class Command
         {
           if (!ai.isPlayerCultist() ||
               ai.state == AI_STATE_DEAD ||
-              ai == game.player.host)
+              ai == player.host)
             continue;
           return true;
         }
@@ -112,7 +113,7 @@ class Command
         {
           if (!ai.isPlayerCultist() ||
               ai.state == AI_STATE_DEAD ||
-              ai == game.player.host)
+              ai == player.host)
             continue;
           list.push(ai);
         }

@@ -8,13 +8,14 @@ import const.*;
 
 class Player extends _SaveObject
 {
-  static var _ignoredFields = [];
+  static var _ignoredFields = [ 'command' ];
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty
   public var saveDifficulty: _Difficulty; // save difficulty
   public var evolutionManager: EvolutionManager; // main evolution control
   public var chat: Chat; // chat manager
+  public var command: Command; // command menu manager
 
   // state-independent
   public var energy(default, set): Int; // energy left
@@ -40,6 +41,8 @@ class Player extends _SaveObject
       difficulty = UNSET;
       saveDifficulty = UNSET;
       chat = new Chat(this, game);
+      command = new Command(this, game, game.ui.hud);
+      game.ui.hud.command = command;
 
       vars = {
         inventoryEnabled: false,
@@ -87,6 +90,9 @@ class Player extends _SaveObject
 // called post-loading game
   public function loadPost()
     {
+      command = new Command(this, game, game.ui.hud);
+      game.ui.hud.command = command;
+
       // NOTE: in area mode we rewrite the serialized ai copy replacing it with link
       // in region mode we use serialized ai
       if (game.location == LOCATION_AREA)
