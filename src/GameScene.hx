@@ -32,6 +32,8 @@ class GameScene
   public var cameraTileY2: Int;
   public var cameraX: Int;
   public var cameraY: Int;
+  public var cameraSubX: Int;
+  public var cameraSubY: Int;
 
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
 
@@ -47,6 +49,8 @@ class GameScene
       cameraTileY1 = 0;
       cameraTileX2 = 0;
       cameraTileY2 = 0;
+      cameraSubX = 0;
+      cameraSubY = 0;
 
       var os = Browser.navigator.platform;
       if (os.indexOf('Linux') >= 0) // use C-1 on Linux
@@ -125,22 +129,36 @@ class GameScene
           h = game.region.height;
         }
 
-      x -= canvas.width / 2;
-      y -= canvas.height / 2;
-      x = Math.ceil(x / Const.TILE_SIZE) * Const.TILE_SIZE;
-      y = Math.ceil(y / Const.TILE_SIZE) * Const.TILE_SIZE;
+      var centeredX = x - canvas.width / 2;
+      var centeredY = y - canvas.height / 2;
+      centeredX = Math.ceil(centeredX / Const.TILE_SIZE) * Const.TILE_SIZE;
+      centeredY = Math.ceil(centeredY / Const.TILE_SIZE) * Const.TILE_SIZE;
 
-      // limit camera x,y by map edges
-      if (!game.config.alwaysCenterCamera)
+      var mapWidth = Const.TILE_SIZE * w;
+      var mapHeight = Const.TILE_SIZE * h;
+
+      if (mapWidth <= canvas.width)
+        x = Math.ceil((mapWidth - canvas.width) / 2 / Const.TILE_SIZE) *
+          Const.TILE_SIZE;
+      else
         {
-          if (x + canvas.width > Const.TILE_SIZE * w)
-            x = Const.TILE_SIZE * w - canvas.width;
-          if (y + canvas.height > Const.TILE_SIZE * h)
-            y = Const.TILE_SIZE * h - canvas.height;
+          x = centeredX;
           if (x < 0)
             x = 0;
+          else if (x + canvas.width > mapWidth)
+            x = mapWidth - canvas.width;
+        }
+
+      if (mapHeight <= canvas.height)
+        y = Math.ceil((mapHeight - canvas.height) / 2 / Const.TILE_SIZE) *
+          Const.TILE_SIZE;
+      else
+        {
+          y = centeredY;
           if (y < 0)
             y = 0;
+          else if (y + canvas.height > mapHeight)
+            y = mapHeight - canvas.height;
         }
 
       // update tile x,y
@@ -152,6 +170,8 @@ class GameScene
         Std.int((y + canvas.height) / Const.TILE_SIZE);
       cameraX = Std.int(x);
       cameraY = Std.int(y);
+      cameraSubX = cameraX - cameraTileX1 * Const.TILE_SIZE;
+      cameraSubY = cameraY - cameraTileY1 * Const.TILE_SIZE;
 
       // force update mouse and path
       mouse.update(true);
@@ -201,4 +221,3 @@ class GameScene
         region.update();
     }
 }
-

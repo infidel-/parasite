@@ -65,14 +65,17 @@ class AreaView
     {
 //      var time = Sys.time();
 //      trace('draw area');
-      var ctx = scene.canvas.getContext('2d');
+      var ctx:CanvasRenderingContext2D = scene.canvas.getContext('2d');
       ctx.clearRect(0, 0, scene.canvas.width, scene.canvas.height);
 
+      ctx.save();
+      ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
+
       // tiles
-      untyped ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = false;
       drawTiles(ctx);
       // smooth everything else
-      untyped ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingEnabled = true;
 
       // objects
       for (o in game.area.getObjects())
@@ -115,6 +118,7 @@ class AreaView
             (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
+      ctx.restore();
 
       // regen minimap on first draw for area
       if (minimapAreaID != game.area.id)

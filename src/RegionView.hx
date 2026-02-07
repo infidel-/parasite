@@ -174,6 +174,8 @@ class RegionView
   public function draw()
     {
       var ctx = scene.canvas.getContext('2d');
+      ctx.save();
+      ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
 
       // draw area tiles and icons
       untyped ctx.imageSmoothingEnabled = false;
@@ -200,6 +202,7 @@ class RegionView
             (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
+      ctx.restore();
     }
 
 // paint area tile and icons
@@ -344,7 +347,6 @@ class RegionView
       return icon;
     }
 }
-
 
 
 
