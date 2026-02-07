@@ -750,6 +750,52 @@ class AreaGame extends _SaveObject
       return tmp[Std.random(tmp.length)];
     }
 
+// find location for arrivals with corp elevator priority
+  public function findArriveLocation(params: {
+      near: { x: Int, y: Int }, // near this x, y
+      ?radius: Int, // radius for unseen location search
+      ?fallbackRadius: Int, // radius for empty location fallback, <= 0 disables fallback
+    }): { x: Int, y: Int }
+    {
+      if (params.radius == null)
+        params.radius = 10;
+      if (params.fallbackRadius == null)
+        params.fallbackRadius = 5;
+
+      // always prefer free elevator spawn in corp area
+      if (info.id == AREA_CORP)
+        {
+          var elevatorTiles = [];
+          for (o in getObjects())
+            if (o.type == 'elevator')
+              {
+                if (!isWalkable(o.x, o.y))
+                  continue;
+                if (getAI(o.x, o.y) != null)
+                  continue;
+                if (game.playerArea.x == o.x &&
+                    game.playerArea.y == o.y)
+                  continue;
+                elevatorTiles.push({ x: o.x, y: o.y });
+              }
+          if (elevatorTiles.length > 0)
+            return elevatorTiles[Std.random(elevatorTiles.length)];
+        }
+
+      var loc = findLocation({
+        near: { x: params.near.x, y: params.near.y },
+        radius: params.radius,
+        isUnseen: true
+      });
+      if (loc != null)
+        return loc;
+
+      if (params.fallbackRadius <= 0)
+        return null;
+      return findEmptyLocationNear(params.near.x, params.near.y,
+        params.fallbackRadius);
+    }
+
 
 // find empty location on map near xo,yo (to spawn stuff)
   public function findEmptyLocationNear(xo: Int, yo: Int, radius: Int, ?level: Int = 0): { x: Int, y: Int }

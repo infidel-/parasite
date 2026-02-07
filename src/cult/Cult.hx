@@ -483,44 +483,15 @@ class Cult extends _SaveObject
       });
 
       // find location
-      var loc = null;
-      // try elevator spawn in corp area
-      if (game.area != null &&
-          game.area.info.id == AREA_CORP)
-        {
-          var elevatorTiles = [];
-          for (o in game.area.getObjects())
-            if (o.type == 'elevator')
-              {
-                if (!game.area.isWalkable(o.x, o.y))
-                  continue;
-                if (game.area.getAI(o.x, o.y) != null)
-                  continue;
-                if (game.playerArea.x == o.x &&
-                    game.playerArea.y == o.y)
-                  continue;
-                elevatorTiles.push({ x: o.x, y: o.y });
-              }
-          if (elevatorTiles.length > 0)
-            loc = elevatorTiles[Std.random(elevatorTiles.length)];
-        }
-
+      var loc = game.area.findArriveLocation({
+        near: { x: e.x, y: e.y },
+        radius: 10,
+        fallbackRadius: 5
+      });
       if (loc == null)
         {
-          loc = game.area.findLocation({
-            near: { x: e.x, y: e.y },
-            radius: 10,
-            isUnseen: true
-          });
-          if (loc == null)
-            {
-              loc = game.area.findEmptyLocationNear(e.x, e.y, 5);
-              if (loc == null)
-                {
-                  Const.todo('Could not find free spot for spawn (cultist help)!');
-                  return;
-                }
-            }
+          Const.todo('Could not find free spot for spawn (cultist help)!');
+          return;
         }
 
       // spawn ai and update it from cultist data

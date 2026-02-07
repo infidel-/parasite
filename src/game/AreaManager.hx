@@ -328,12 +328,12 @@ class AreaManager extends _SaveObject
       });
 
       // spawn ai
-      for (i in 0...area.info.lawResponseAmount)
+      for (_ in 0...area.info.lawResponseAmount)
         {
-          var loc = area.findLocation({
+          var loc = area.findArriveLocation({
             near: { x: e.x, y: e.y },
             radius: 5,
-            isUnseen: true
+            fallbackRadius: 0
           });
           if (loc == null)
             {
@@ -421,10 +421,10 @@ class AreaManager extends _SaveObject
       });
       for (i in 0...2)
         {
-          var loc = area.findLocation({
+          var loc = area.findArriveLocation({
             near: { x: e.x, y: e.y },
             radius: 5,
-            isUnseen: true
+            fallbackRadius: 0
           });
           if (loc == null)
             {
@@ -523,19 +523,15 @@ class AreaManager extends _SaveObject
 
       for (i in 0...2)
         {
-          var loc = area.findLocation({
+          var loc = area.findArriveLocation({
             near: { x: e.x, y: e.y },
             radius: 10,
-            isUnseen: true
-            });
+            fallbackRadius: 5
+          });
           if (loc == null)
             {
-              loc = area.findEmptyLocationNear(e.x, e.y, 5);
-              if (loc == null)
-                {
-                  Const.todo('Could not find free spot for spawn (team backup)!');
-                  return;
-                }
+              Const.todo('Could not find free spot for spawn (team backup)!');
+              return;
             }
 
           var ai = area.spawnAI('blackops', loc.x, loc.y);
