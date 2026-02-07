@@ -413,6 +413,8 @@ public function show()
       for (enemyID in enemies)
         {
           var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null)
+            continue;
           x1 = Std.int(Math.min(x1, enemy.x));
           y1 = Std.int(Math.min(y1, enemy.y));
           x2 = Std.int(Math.max(x2, enemy.x));
@@ -1004,6 +1006,8 @@ public function show()
       for (enemyID in enemies)
         {
           var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null)
+            continue;
           if (seesPosition(enemy.x, enemy.y))
             return true;
         }
@@ -1020,6 +1024,8 @@ public function show()
       for (enemyID in enemies)
         {
           var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null)
+            continue;
           var dst = distance(enemy.x, enemy.y);
           if (dst < mindst)
             {
@@ -1060,6 +1066,8 @@ public function show()
       if (closestID == -1)
         return null;
       var targetAI = game.area.getAIByID(closestID);
+      if (targetAI == null)
+        return null;
       return {
         game: game,
         ai: targetAI,

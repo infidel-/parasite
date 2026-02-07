@@ -56,6 +56,8 @@ class FollowerLogic
       for (enemyID in ai.enemies)
         {
           var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null)
+            continue;
           if (ai.seesPosition(enemy.x, enemy.y))
             {
               // enemy is seen, go to alert
