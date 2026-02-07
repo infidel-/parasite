@@ -1,7 +1,7 @@
 package cult.ordeals;
 
 import game.Game;
-import jsui.Choice._ChoiceParams;
+import ui.Choice._ChoiceParams;
 import Const;
 import _CultEvent;
 import cult.Cult;

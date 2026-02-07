@@ -1,6 +1,6 @@
 // body GUI window - inventory/skills/organs
 
-package jsui;
+package ui;
 
 import js.Browser;
 import js.html.DivElement;

@@ -6,8 +6,8 @@ import js.node.Fs;
 import haxe.Json;
 
 import game.Game;
-import jsui.UI;
-import jsui.MainMenu;
+import ui.UI;
+import ui.MainMenu;
 
 class Config
 {
@@ -185,17 +185,17 @@ class Config
       else if (key == 'font')
         {
           font = val;
-          jsui.UI.setVar('--text-font', font);
+          ui.UI.setVar('--text-font', font);
         }
       else if (key == 'fontSize')
         {
           fontSize = Std.parseInt(val);
-          jsui.UI.setVar('--text-font-size', fontSize + 'px');
+          ui.UI.setVar('--text-font-size', fontSize + 'px');
         }
       else if (key == 'fontTitle')
         {
           fontTitle = val;
-          jsui.UI.setVar('--text-font-title', fontTitle);
+          ui.UI.setVar('--text-font-title', fontTitle);
         }
       else if (key == 'hudLogLines')
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);

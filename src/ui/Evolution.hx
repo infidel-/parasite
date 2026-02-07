@@ -1,6 +1,6 @@
 // evolution GUI window
 
-package jsui;
+package ui;
 
 import js.Browser;
 import js.html.DivElement;

@@ -1,6 +1,6 @@
 // cult bazaar menu helper
 
-package jsui;
+package ui;
 
 import ai.AIData;
 import const.Bazaar;

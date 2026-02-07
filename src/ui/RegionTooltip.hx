@@ -1,5 +1,5 @@
 // region tooltip overlay for HUD
-package jsui;
+package ui;
 
 import js.Browser;
 import js.html.DivElement;

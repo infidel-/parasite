@@ -7,7 +7,7 @@ import js.node.Fs;
 #end
 import console.Console;
 import haxe.Json;
-import jsui.UI;
+import ui.UI;
 import scenario.Timeline;
 import cult.Cult;
 import const.ItemsConst;

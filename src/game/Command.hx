@@ -2,7 +2,7 @@
 package game;
 
 import ai.AI;
-import jsui.HUD;
+import ui.HUD;
 
 class Command
 {

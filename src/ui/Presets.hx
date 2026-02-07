@@ -1,4 +1,4 @@
-package jsui;
+package ui;
 
 import game.Game;
 import js.Browser.document;

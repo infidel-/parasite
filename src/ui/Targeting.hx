@@ -3,7 +3,7 @@ package ui;
 
 import ai.AI;
 import game.Game;
-import jsui.HUD;
+import ui.HUD;
 
 class Targeting
 {

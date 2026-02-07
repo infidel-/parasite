@@ -2,7 +2,7 @@
 
 package entities;
 
-import jsui.UI;
+import ui.UI;
 import js.html.CanvasRenderingContext2D;
 import game.Game;
 

@@ -1,6 +1,6 @@
 // generic action GUI window (legacy)
 
-package jsui;
+package ui;
 
 import js.Browser;
 import js.html.DivElement;

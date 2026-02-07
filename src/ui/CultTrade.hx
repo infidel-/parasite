@@ -1,6 +1,6 @@
 // cult trade menu helper
 
-package jsui;
+package ui;
 
 import game.Game;
 

@@ -1,5 +1,5 @@
 // new js ui group
-package jsui;
+package ui;
 
 import js.Browser;
 import js.html.KeyboardEvent;
@@ -30,10 +30,10 @@ class UI
   var uiQueuePrev: _UIEvent; // previous UI event
   public var shiftPressed: Bool; // true when shift is held
   var awaitingNextKey: Bool; // true when waiting for second key press for quick menu
-  public var cult(get, never): jsui.Cult;
-  public var pedia(get, never): jsui.Pedia;
-  public var difficulty(get, never): jsui.Difficulty;
-  public var mainMenu(get, never): jsui.MainMenu;
+  public var cult(get, never): ui.Cult;
+  public var pedia(get, never): ui.Pedia;
+  public var difficulty(get, never): ui.Difficulty;
+  public var mainMenu(get, never): ui.MainMenu;
 
   public function new(g: Game)
     {
@@ -646,22 +646,22 @@ class UI
       return _state;
     }
 
-  function get_cult(): jsui.Cult
+  function get_cult(): ui.Cult
     {
       return cast components[UISTATE_CULT];
     }
 
-  function get_pedia(): jsui.Pedia
+  function get_pedia(): ui.Pedia
     {
       return cast components[UISTATE_PEDIA];
     }
 
-  function get_difficulty(): jsui.Difficulty
+  function get_difficulty(): ui.Difficulty
     {
       return cast components[UISTATE_DIFFICULTY];
     }
 
-  function get_mainMenu(): jsui.MainMenu
+  function get_mainMenu(): ui.MainMenu
     {
       return cast components[UISTATE_MAINMENU];
     }

@@ -1,5 +1,5 @@
 // new js ui hud
-package jsui;
+package ui;
 
 import js.Browser;
 import js.Browser.document;
