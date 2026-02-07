@@ -63,10 +63,15 @@ class Command
       if (hud.state != HUD_COMMAND_MENU)
         return;
 
+      var target = hud.targeting.target;
+      var pronoun = 'them';
+      if (target != null)
+        pronoun = (target.isMale ? 'him' : 'her');
+
       hud.addAction({
         id: 'command.attack',
         type: ACTION_AREA,
-        name: '"Destroy ' + (hud.targeting.target.isMale ? 'him' : 'her') + '!"',
+        name: '"Destroy ' + pronoun + '!"',
       });
       hud.addAction({
         id: 'command.leaveArea',

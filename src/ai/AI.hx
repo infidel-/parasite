@@ -988,6 +988,61 @@ public function show()
       enemies.add(ai.id);
     }
 
+// propagate attack aggro to cultists/law
+  public function propagateAttackAggro(attackerAI: AI)
+    {
+      if (attackerAI == null)
+        return;
+
+      var isLawVictim =
+        (type == 'police' ||
+         type == 'security' ||
+         type == 'soldier');
+      var attackerIsPlayerCultist = attackerAI.isPlayerCultist();
+
+      for (tmp in game.area.getAllAI())
+        {
+          if (tmp == this || tmp == attackerAI)
+            continue;
+
+          // victim is cultist: notify same-cult followers
+          if (isCultist &&
+              tmp.isCultist &&
+              tmp.cultID == cultID)
+            {
+              tmp.addEnemy(attackerAI);
+              continue;
+            }
+
+          // victim is non-cultist law: notify nearby non-cultist law units
+          if (isLawVictim &&
+              !isCultist &&
+              !tmp.isCultist &&
+              (tmp.type == 'police' ||
+               tmp.type == 'security' ||
+               tmp.type == 'soldier') &&
+              Const.distance(x, y, tmp.x, tmp.y) <= 10)
+            {
+              tmp.addEnemy(attackerAI);
+              continue;
+            }
+
+          // AI attacks player cultist: notify all followers
+          if (!attackerIsPlayerCultist &&
+              tmp.isPlayerCultist())
+            {
+              tmp.addEnemy(attackerAI);
+              continue;
+            }
+
+          // player cultist attacks other AI: notify non-followers
+          if (attackerIsPlayerCultist &&
+              tmp.isHuman &&
+              !tmp.isPlayerCultist())
+            tmp.addEnemy(attackerAI);
+        }
+    }
+
 // returns true if ai sees any enemy from the list or player (if hostile)
 // NOTE: this is for alert state vision
   public function seesAnyEnemy(): Bool
@@ -1101,36 +1156,18 @@ public function show()
             attackerAI.type == 'soldier'))
         attackerAI.didCrime = true;
 
-      // update enemies lists
-//      trace('AI ' + id + ' was attacked by ' + attacker.ai.id);
-//      trace(attacker.ai.id + ' attacker is player cultist:' + attacker.ai.isPlayerCultist());
-      for (tmp in game.area.getAllAI())
-        switch (attacker.who)
-          {
-            // player attacks AI
-            case 'player':
-              // add to enemies lists of all followers
-              if (this != tmp && tmp.isPlayerCultist())
-                tmp.addEnemy(this);
-            // AI attacks AI
-            case 'ai':
-//              trace(tmp.id + ' tmp is player cultist:' + tmp.isPlayerCultist());
-              // AI attacks player cultist
-              // add to enemies lists of all followers
-              if (!attacker.ai.isPlayerCultist() &&
-                  attacker.ai != tmp && tmp.isHuman &&
-                  tmp.isPlayerCultist())
-                {
-//                  trace('tmp added enemy: ' + attacker.ai.id);
-                  tmp.addEnemy(attacker.ai);
-                }
+      // propagate attack aggro for ai attackers
+      if (attacker.who == 'ai')
+        propagateAttackAggro(attacker.ai);
 
-              // player cultist attacks other AI
-              // add to enemies lists of non-followers
-              else if (attacker.ai.isPlayerCultist() &&
-                  attacker.ai != tmp && tmp.isHuman &&
-                  !tmp.isPlayerCultist())
-                tmp.addEnemy(attacker.ai);
+      // update enemies lists on player attack
+      else if (attacker.who == 'player')
+        for (tmp in game.area.getAllAI())
+          {
+            // add to enemies lists of all followers
+            if (this != tmp &&
+                tmp.isPlayerCultist())
+              tmp.addEnemy(this);
           }
     }
 
