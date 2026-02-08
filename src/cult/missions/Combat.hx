@@ -152,7 +152,7 @@ class Combat extends Mission
           ai.guardTargetY = loc.y;
           game.area.addAI(ai);
           ai.entity.setMissionTarget();
-          game.debug('Combat target ' + t.TheName() + ' has appeared in the mission area.');
+          game.debug('Combat target ' + t.TheName() + ' has appeared in the mission area at (' + loc.x + ',' + loc.y + ').');
         }
     }
 

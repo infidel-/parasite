@@ -12,6 +12,7 @@ class CombatConst extends OrdealConst
       super();
       // define combat ordeal entries
       infos = [
+
         // first ordeal - strike a corporate cult head guarded by private security
         {
           name: "Unaussprechliche Head",
@@ -47,6 +48,7 @@ class CombatConst extends OrdealConst
             ]
           }
         },
+
         // second ordeal - cleanse a bum kult cell entrenched in the low city
         {
           name: "Unauspr. Bum Litany",
@@ -112,6 +114,76 @@ class CombatConst extends OrdealConst
                 },
                 amount: [0, 1, 2],
                 loadout: loadoutBumFists,
+              }
+            ]
+          }
+        },
+
+        // third ordeal - break a thug syndicate cell in the low city
+        {
+          name: "Unauspr. Thug Syndicate",
+          note: "A street syndicate keeps your enemy's rite alive in crackhouse chapels and shuttered courtyards. Drugged zealots charge first while gunmen cover the flock.",
+          success: "Their block liturgy collapses. The katana priest falls, shooters scatter, and the street altar bleeds out into rainwater.",
+          fail: "You are pinned by crossfire and rushed by howling blades. The thug cult keeps the block and recruits another night.",
+          mission: MISSION_COMBAT,
+          combat: {
+            template: TARGET_WITH_GUARDS,
+            targets: [
+              {
+                target: {
+                  isMale: true,
+                  job: "thug lieutenant",
+                  type: "thug",
+                  icon: "thug",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [1, 1, 1],
+                loadout: loadoutThugLeader,
+              },
+              {
+                target: {
+                  job: "thug bruiser",
+                  type: "thug",
+                  icon: "thug",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [1, 1, 2],
+                loadout: loadoutThugMelee,
+              },
+              {
+                target: {
+                  job: "drugged thug",
+                  type: "thug",
+                  icon: "thug",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [1, 1, 2],
+                loadout: loadoutThugDrugged,
+              },
+              {
+                target: {
+                  job: "thug gunman",
+                  type: "thug",
+                  icon: "thug",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [0, 1, 2],
+                loadout: loadoutThugPistol,
+              },
+              {
+                target: {
+                  job: "thug shooter",
+                  type: "thug",
+                  icon: "thug",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [0, 1, 1],
+                loadout: loadoutThugPistol,
               }
             ]
           }
@@ -197,6 +269,56 @@ class CombatConst extends OrdealConst
     {
       stripAllWeapons(aiData);
       stripRangedWeapons(aiData);
+      aiData.isAggressive = true;
+    }
+
+// apply loadout for thug leader with boosted health
+  static function loadoutThugLeader(game: Game, aiData: AIData, difficulty: _Difficulty)
+    {
+      stripAllWeapons(aiData);
+      aiData.inventory.addID('katana');
+      aiData.skills.addID(SKILL_KATANA, 55 + Std.random(15));
+      aiData.maxHealth += 5;
+      aiData.health = aiData.maxHealth;
+      aiData.isAggressive = true;
+    }
+
+// apply loadout for thug melee fighters
+  static function loadoutThugMelee(game: Game, aiData: AIData, difficulty: _Difficulty)
+    {
+      stripRangedWeapons(aiData);
+      if (aiData.inventory.getFirstWeapon() == null)
+        {
+          var melee = ['brassKnuckles', 'knife', 'baseballBat'];
+          if (difficulty == HARD)
+            melee.push('machete');
+          aiData.inventory.addID(melee[Std.random(melee.length)]);
+        }
+      aiData.isAggressive = true;
+    }
+
+// apply loadout for thug pistol shooters
+  static function loadoutThugPistol(game: Game, aiData: AIData, difficulty: _Difficulty)
+    {
+      if (difficulty == EASY)
+        {
+          loadoutThugMelee(game, aiData, difficulty);
+          return;
+        }
+
+      stripAllWeapons(aiData);
+      aiData.inventory.addID('pistol');
+      aiData.skills.addID(SKILL_PISTOL, 30 + Std.random(15));
+      aiData.isAggressive = true;
+    }
+
+// apply loadout for drugged thug berserkers
+  static function loadoutThugDrugged(game: Game, aiData: AIData, difficulty: _Difficulty)
+    {
+      loadoutThugMelee(game, aiData, difficulty);
+      if (Std.random(100) < 70)
+        return;
+      aiData.effects.add(new effects.Berserk(game, 8 + Std.random(5)));
       aiData.isAggressive = true;
     }
 }
