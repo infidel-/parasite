@@ -26,6 +26,7 @@ class Cult extends _SaveObject
   public var resources: _CultPower;
   public var ordeals: Ordeals;
   public var effects: Effects;
+  public var trainingMemberIDs: Array<Int>; // members locked for training until next cult turn
   var turnCounter: Int;
 
   public function new(g: Game)
@@ -64,6 +65,7 @@ class Cult extends _SaveObject
         occult: 0,
         money: 0
       };
+      trainingMemberIDs = [];
     }
 
 // called after load or creation
@@ -76,6 +78,8 @@ class Cult extends _SaveObject
           effects.game = game;
           effects.cult = this;
         }
+      if (trainingMemberIDs == null)
+        trainingMemberIDs = [];
     }
 
 // post load
@@ -296,6 +300,10 @@ class Cult extends _SaveObject
           if (blockedIDs.exists(ai.id))
             continue;
 
+          // check if member is locked in training
+          if (isTraining(ai.id))
+            continue;
+
           // check if cultist is already in this area
           if (game.location == LOCATION_AREA &&
               game.area != null)
@@ -333,6 +341,29 @@ class Cult extends _SaveObject
       return null;
     }
 
+// checks whether member is currently locked in training
+  public function isTraining(memberID: Int): Bool
+    {
+      return (trainingMemberIDs.indexOf(memberID) >= 0);
+    }
+
+// locks a free member for training
+  public function setTraining(memberID: Int): Bool
+    {
+      if (getMemberStatus(memberID) != '')
+        return false;
+      if (isTraining(memberID))
+        return false;
+      trainingMemberIDs.push(memberID);
+      return true;
+    }
+
+// clears all training member locks
+  public function clearTraining()
+    {
+      trainingMemberIDs = [];
+    }
+
 // get member status string
 // NOTE: returns empty string if member is free
   public function getMemberStatus(memberID: Int): String
@@ -364,6 +395,9 @@ class Cult extends _SaveObject
                 return '[in recessu]';
             }
         }
+
+      if (isTraining(memberID))
+        return '[training]';
 
       // check if cultist is on area
       if (game.location == LOCATION_AREA &&
@@ -525,6 +559,10 @@ class Cult extends _SaveObject
       if (turnCounter < 10)
         return;
       turnCounter = 0;
+
+      // clear previous training locks at cult turn start
+      clearTraining();
+
       // just in case
       recalc();
       

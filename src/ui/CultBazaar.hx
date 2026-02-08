@@ -5,6 +5,20 @@ package ui;
 import ai.AIData;
 import const.Bazaar;
 import game.Game;
+import game._Item;
+
+private typedef _TrainingOption = {
+  var amount: Int;
+  var moneyCost: Int;
+  var combatCost: Int;
+}
+
+private typedef _TrainActionArgs = {
+  var member: AIData;
+  var weapon: _Item;
+  var lane: String;
+  var idPrefix: String;
+}
 
 class CultBazaar
 {
@@ -45,17 +59,28 @@ class CultBazaar
       });
 
       var canAfford = hasAffordableItems();
-      var label = (canAfford ? 'Equip member' :
+      var equipLabel = (canAfford ? 'Equip member' :
         Const.col('gray', 'Equip member'));
       cultWindow.addPlayerAction({
         id: 'bazaarEquip',
         type: ACTION_CULT,
-        name: label,
+        name: equipLabel,
         energy: 0,
         f: (canAfford ? function() {
           cultWindow.setMenuState(STATE_BAZAAR_MEMBER);
           cultWindow.updateActions();
         } : null)
+      });
+
+      cultWindow.addPlayerAction({
+        id: 'bazaarTrain',
+        type: ACTION_CULT,
+        name: 'Train member',
+        energy: 0,
+        f: function() {
+          cultWindow.setMenuState(STATE_BAZAAR_TRAIN_MEMBER);
+          cultWindow.updateActions();
+        }
       });
     }
 
@@ -92,6 +117,272 @@ class CultBazaar
             }
           });
         }
+    }
+
+// builds list of free members to train
+  public function showTrainMemberList()
+    {
+      cultWindow.addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          cultWindow.setMenuState(STATE_BAZAAR);
+          cultWindow.updateActions();
+        }
+      });
+
+      var cult = game.cults[0];
+      for (m in cult.members)
+        {
+          if (cult.getMemberStatus(m.id) != '')
+            continue;
+          var memberID = m.id;
+          cultWindow.addPlayerAction({
+            id: 'bazaarTrainMember',
+            type: ACTION_CULT,
+            name: m.TheName(),
+            energy: 0,
+            obj: { memberID: memberID },
+            f: function() {
+              selectedMemberID = memberID;
+              cultWindow.setMenuState(STATE_BAZAAR_TRAIN_SKILL);
+              cultWindow.updateActions();
+            }
+          });
+        }
+    }
+
+// builds list of trainable weapon skills
+  public function showTrainSkillList()
+    {
+      cultWindow.addPlayerAction({
+        id: 'back',
+        type: ACTION_CULT,
+        name: 'Back',
+        energy: 0,
+        f: function() {
+          cultWindow.setMenuState(STATE_BAZAAR_TRAIN_MEMBER);
+          cultWindow.updateActions();
+        }
+      });
+
+      var cult = game.cults[0];
+      var member = cult.getMemberByID(selectedMemberID);
+      if (member == null)
+        return;
+
+      // melee weapon training options
+      var added = false;
+      var meleeWeapon = member.inventory.getCurrentMeleeWeapon();
+      if (meleeWeapon != null &&
+          meleeWeapon.info.weapon != null)
+        {
+          if (addTrainingActions({
+            member: member,
+            weapon: meleeWeapon,
+            lane: 'melee',
+            idPrefix: 'bazaarTrainMelee'
+          }))
+            added = true;
+        }
+
+      // ranged weapon training options
+      var rangedWeapon = member.inventory.getCurrentRangedWeapon();
+      if (rangedWeapon != null &&
+          rangedWeapon.info.weapon != null)
+        {
+          if (addTrainingActions({
+            member: member,
+            weapon: rangedWeapon,
+            lane: 'ranged',
+            idPrefix: 'bazaarTrainRanged'
+          }))
+            added = true;
+        }
+
+      if (!added)
+        cultWindow.addPlayerAction({
+          id: 'bazaarTrainNone',
+          type: ACTION_CULT,
+          name: Const.col('gray', 'No trainable weapon skills'),
+          energy: 0,
+        });
+    }
+
+// builds training amount options for selected member skill
+  function getTrainingAmountOptions(member: AIData, skillID: _Skill, lane: String): Array<_TrainingOption>
+    {
+      var options: Array<_TrainingOption> = [];
+      if (skillID == null)
+        return options;
+
+      var currentLevel = member.skills.getLevel(skillID);
+      var remaining = 70 - currentLevel;
+      if (remaining <= 0)
+        return options;
+
+      var tiers = [10, 20];
+      for (tier in tiers)
+        {
+          var amount = tier;
+          if (currentLevel + amount > 70)
+            amount = Std.int(Math.ceil(remaining));
+          if (amount <= 0)
+            continue;
+
+          var exists = false;
+          for (entry in options)
+            if (entry.amount == amount)
+              {
+                exists = true;
+                break;
+              }
+          if (exists)
+            continue;
+
+          var costs = getTrainingCosts(lane, tier);
+          options.push({
+            amount: amount,
+            moneyCost: costs.moneyCost,
+            combatCost: costs.combatCost
+          });
+        }
+
+      options.sort(function(a, b) {
+        return a.amount - b.amount;
+      });
+      return options;
+    }
+
+// returns fixed training costs by lane and tier
+  function getTrainingCosts(lane: String, tier: Int): { moneyCost: Int, combatCost: Int }
+    {
+      if (lane == 'melee')
+        {
+          if (tier <= 10)
+            return { moneyCost: 5000, combatCost: 1 };
+          return { moneyCost: 10000, combatCost: 2 };
+        }
+
+      if (tier <= 10)
+        return { moneyCost: 10000, combatCost: 2 };
+      return { moneyCost: 20000, combatCost: 4 };
+    }
+
+// adds one training action entry for melee or ranged weapon skill
+  function addTrainingAction(args: _TrainActionArgs, option: _TrainingOption)
+    {
+      var weaponName = args.weapon.getName();
+      var cult = game.cults[0];
+      var canAfford =
+        (cult.resources.money >= option.moneyCost &&
+         cult.resources.combat >= option.combatCost);
+      var text = weaponName + ' +' + option.amount + '% (' +
+        Const.col('cult-power', option.moneyCost) + Icon.money + ', ' +
+        Const.col('cult-power', option.combatCost) + ' COM)';
+      var label = (canAfford ? text : Const.col('gray', text));
+      cultWindow.addPlayerAction({
+        id: args.idPrefix + '.' + option.amount,
+        type: ACTION_CULT,
+        name: label,
+        energy: 0,
+        f: (canAfford ? function() {
+          trainMemberSkill(args, option);
+          cultWindow.update();
+        } : null)
+      });
+    }
+
+// adds all training action entries for a lane
+  function addTrainingActions(args: _TrainActionArgs): Bool
+    {
+      if (args.weapon == null ||
+          args.weapon.info.weapon == null)
+        return false;
+      var skillID = args.weapon.info.weapon.skill;
+      var options = getTrainingAmountOptions(args.member, skillID, args.lane);
+      if (options.length == 0)
+        return false;
+      for (option in options)
+        addTrainingAction(args, option);
+      return true;
+    }
+
+// trains selected member weapon skill and applies lock
+  function trainMemberSkill(args: _TrainActionArgs, option: _TrainingOption)
+    {
+      var cult = game.cults[0];
+      if (cult.hasEffect(CULT_EFFECT_NOTRADE))
+        {
+          game.actionFailed('Trade rites are sealed at the moment.');
+          return;
+        }
+      if (cult.resources.money < option.moneyCost)
+        {
+          game.actionFailed('Not enough money for training.');
+          return;
+        }
+      if (cult.resources.combat < option.combatCost)
+        {
+          game.actionFailed('Not enough combat resources for training.');
+          return;
+        }
+
+      var member = cult.getMemberByID(args.member.id);
+      if (member == null)
+        {
+          game.actionFailed('No such member.');
+          return;
+        }
+      if (cult.getMemberStatus(args.member.id) != '')
+        {
+          game.actionFailed('Only free members can train.');
+          return;
+        }
+
+      if (args.weapon == null ||
+          args.weapon.info.weapon == null)
+        {
+          game.actionFailed('No valid weapon for training.');
+          return;
+        }
+
+      var skillID = args.weapon.info.weapon.skill;
+      var currentLevel = member.skills.getLevel(skillID);
+      if (currentLevel >= 70)
+        {
+          game.actionFailed('This skill is already at the training cap.');
+          return;
+        }
+      var trainAmount: Float = option.amount;
+      if (currentLevel + trainAmount > 70)
+        trainAmount = 70 - currentLevel;
+      if (trainAmount <= 0)
+        {
+          game.actionFailed('This skill is already at the training cap.');
+          return;
+        }
+
+      if (!cult.setTraining(args.member.id))
+        {
+          game.actionFailed('Only free members can train.');
+          return;
+        }
+
+      // if the skill is missing, start from its default level before applying training
+      if (member.skills.has(skillID))
+        member.skills.increase(skillID, trainAmount);
+      else member.skills.addID(skillID, currentLevel + trainAmount);
+      cult.resources.money -= option.moneyCost;
+      cult.resources.combat -= option.combatCost;
+      cult.recalc();
+      // after training, return to follower picker for quicker consecutive assignments
+      cultWindow.setMenuState(STATE_BAZAAR_TRAIN_MEMBER);
+      cultWindow.updateActions();
+      game.logsg(member.TheName() + ' trains ' + args.weapon.getName() +
+        ' by ' + Std.int(trainAmount) + '%.');
     }
 
 // builds list of equipment options for a member
@@ -262,6 +553,11 @@ class CultBazaar
       if (member == null)
         {
           game.actionFailed('No such member.');
+          return;
+        }
+      if (cult.getMemberStatus(memberID) != '')
+        {
+          game.actionFailed('Only free members can be equipped.');
           return;
         }
 

@@ -223,6 +223,28 @@ class Inventory extends _SaveObject
       return null;
     }
 
+// get first melee weapon from inventory
+  public function getCurrentMeleeWeapon(): _Item
+    {
+      for (item in _list)
+        if (item.info.weapon != null &&
+            !item.info.weapon.isRanged)
+          return item;
+
+      return null;
+    }
+
+// get first ranged weapon from inventory
+  public function getCurrentRangedWeapon(): _Item
+    {
+      for (item in _list)
+        if (item.info.weapon != null &&
+            item.info.weapon.isRanged)
+          return item;
+
+      return null;
+    }
+
 // check if inventory has a visible (non-concealable) weapon
   public function hasVisibleWeapon(): Bool
     {

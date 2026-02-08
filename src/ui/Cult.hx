@@ -123,6 +123,10 @@ class Cult extends UIWindow
             bazaar.showMemberList();
           case STATE_BAZAAR_EQUIP:
             bazaar.showEquipList();
+          case STATE_BAZAAR_TRAIN_MEMBER:
+            bazaar.showTrainMemberList();
+          case STATE_BAZAAR_TRAIN_SKILL:
+            bazaar.showTrainSkillList();
         }
       
       // trigger content update animation on the whole actions block
@@ -568,10 +572,16 @@ class Cult extends UIWindow
           if (item.info.weapon.isRanged)
             {
               if (rangedName == '-')
-                rangedName = item.getName();
+                rangedName = item.getName() + ' ' +
+                  Const.smallgray('[' +
+                    Std.int(member.skills.getLevel(item.info.weapon.skill)) +
+                    '%]');
             }
           else if (meleeName == '-')
-            meleeName = item.getName();
+            meleeName = item.getName() + ' ' +
+              Const.smallgray('[' +
+                Std.int(member.skills.getLevel(item.info.weapon.skill)) +
+                '%]');
         }
 
       return armorName + Const.col('gray', ' | ') +

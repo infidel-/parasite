@@ -149,6 +149,16 @@ class Ordeals extends _SaveObject
       if (free.length < 2)
         return;
 
+      // block all new profane spawns while any combat profane ordeal is active
+      for (ordeal in list)
+        {
+          if (ordeal.type != ORDEAL_PROFANE)
+            continue;
+          if (Reflect.hasField(ordeal, 'subType') &&
+              Reflect.field(ordeal, 'subType') == 'combat')
+            return;
+        }
+
       // count profane ordeals
       var profaneCount = 0;
       for (ordeal in list)
