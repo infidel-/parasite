@@ -1033,6 +1033,8 @@ class Game extends _SaveObject
           else if (Std.isOfType(dstval, _SaveObject))
             {
               loadObject(srcval, dstval, f, depth + 1);
+              if (dstval.initPost != null)
+                dstval.initPost(true);
               Reflect.setField(dst, f, dstval);
             }
           else if (dstval == null)

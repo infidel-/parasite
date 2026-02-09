@@ -16,7 +16,7 @@ class FullBodyArmor extends ItemInfo
       unknown = 'ARMOR BUG!';
       armor = {
         canAttach: false,
-        damage: 4,
+        damage: 8,
         needleDeathChance: 1,
       };
     }

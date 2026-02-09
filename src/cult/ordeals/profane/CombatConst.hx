@@ -131,8 +131,8 @@ class CombatConst extends OrdealConst
             targets: [
               {
                 target: {
-                  isMale: true,
                   job: "thug lieutenant",
+                  isMale: true,
                   type: "thug",
                   icon: "thug",
                   location: AREA_CITY_LOW,
@@ -149,7 +149,7 @@ class CombatConst extends OrdealConst
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
-                amount: [1, 1, 2],
+                amount: [1, 1, 1],
                 loadout: loadoutThugMelee,
               },
               {
@@ -160,7 +160,7 @@ class CombatConst extends OrdealConst
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
-                amount: [1, 1, 2],
+                amount: [1, 1, 1],
                 loadout: loadoutThugDrugged,
               },
               {
@@ -171,7 +171,7 @@ class CombatConst extends OrdealConst
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
-                amount: [0, 1, 2],
+                amount: [0, 1, 1],
                 loadout: loadoutThugPistol,
               },
               {
@@ -182,7 +182,7 @@ class CombatConst extends OrdealConst
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
-                amount: [0, 1, 1],
+                amount: [0, 0, 1],
                 loadout: loadoutThugPistol,
               }
             ]

@@ -16,7 +16,7 @@ class KevlarArmor extends ItemInfo
       unknown = 'ARMOR BUG!';
       armor = {
         canAttach: true,
-        damage: 2,
+        damage: 4,
         needleDeathChance: 5,
       };
     }
