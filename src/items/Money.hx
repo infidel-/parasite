@@ -34,12 +34,12 @@ class Money extends ItemInfo
     }
 
 // handles money-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'use': throwMoneyAction(item);
-          default: super.action(actionID, item);
+          case 'use': throwMoneyAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

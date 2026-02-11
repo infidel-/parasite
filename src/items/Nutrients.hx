@@ -36,12 +36,12 @@ class Nutrients extends ItemInfo
     }
 
 // handles nutrient-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'use': useAction(item);
-          default: super.action(actionID, item);
+          case 'use': useAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

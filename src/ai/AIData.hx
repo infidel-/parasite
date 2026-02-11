@@ -3,8 +3,6 @@
 package ai;
 
 import const.*;
-import ItemInfo.WeaponInfo;
-import const.TraitsConst._TraitInfo;
 import game.*;
 
 @:rtti

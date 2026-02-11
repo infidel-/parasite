@@ -36,12 +36,12 @@ class Wallet extends ItemInfo
     }
 
 // handles wallet inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'use': openWalletAction(item);
-          default: super.action(actionID, item);
+          case 'use': openWalletAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

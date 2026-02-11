@@ -82,6 +82,22 @@ class Effects extends _SaveObject
     }
 
 
+// returns all damage modifiers from active effects for given weapon
+  public function damageMods(weapon: WeaponInfo): Array<_DamageBonus>
+    {
+      var mods = [];
+      for (effect in _list)
+        {
+          var effectMods = effect.damageMods(weapon);
+          if (effectMods == null || effectMods.length == 0)
+            continue;
+          for (mod in effectMods)
+            mods.push(mod);
+        }
+      return mods;
+    }
+
+
 // passage of time
   public function turn(aiRef: AI, time: Int)
     {

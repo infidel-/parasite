@@ -35,12 +35,12 @@ class Alcohol extends ItemInfo
     }
 
 // handles alcohol-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'use': imbibeAction(item);
-          default: super.action(actionID, item);
+          case 'use': imbibeAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

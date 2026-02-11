@@ -6,7 +6,6 @@ import Const.d100;
 import ai.AIData;
 import cult.Cult;
 import const.TraitsConst;
-import const.TraitsConst._TraitInfo;
 
 class EventHelper
 {

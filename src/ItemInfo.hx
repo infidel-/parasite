@@ -10,20 +10,6 @@ typedef ArmorInfo = {
   var needleDeathChance: Int;
 };
 
-typedef WeaponInfo = {
-  @:optional var sound: AISound;
-  @:optional var soundMiss: AISound;
-  var isRanged: Bool;
-  var skill: _Skill;
-  var minDamage: Int;
-  var maxDamage: Int;
-  var verb1: String;
-  var verb2: String;
-  var type: _WeaponType;
-  @:optional var spawnBlood: Bool;
-  var canConceal: Bool;
-};
-
 class ItemInfo
 {
   public var game: Game;
@@ -66,7 +52,7 @@ class ItemInfo
     }
 
 // handles inventory action execution for this item
-  public function action(actionID: String, item: _Item): Null<Bool>
+  public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return null;
     }

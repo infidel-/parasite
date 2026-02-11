@@ -548,15 +548,3 @@ class TraitsConst
     }
 }
 
-
-// trait info
-
-typedef _TraitInfo =
-{
-  id: _AITraitType, // trait id
-  name: String, // trait name
-  note: String, // trait note
-  isNegative: Bool, // whether trait is negative
-  ?onInit: (game: Game, ai: AIData) -> Void,
-  ?turn: (game: Game, ai: AIData) -> Void,
-}

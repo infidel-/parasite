@@ -149,19 +149,8 @@ class CombatConst extends OrdealConst
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
-                amount: [1, 1, 1],
+                amount: [2, 2, 2],
                 loadout: loadoutThugMelee,
-              },
-              {
-                target: {
-                  job: "drugged thug",
-                  type: "thug",
-                  icon: "thug",
-                  location: AREA_CITY_LOW,
-                  helpAvailable: false,
-                },
-                amount: [1, 1, 1],
-                loadout: loadoutThugDrugged,
               },
               {
                 target: {
@@ -171,20 +160,9 @@ class CombatConst extends OrdealConst
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
-                amount: [0, 1, 1],
+                amount: [0, 1, 2],
                 loadout: loadoutThugPistol,
               },
-              {
-                target: {
-                  job: "thug shooter",
-                  type: "thug",
-                  icon: "thug",
-                  location: AREA_CITY_LOW,
-                  helpAvailable: false,
-                },
-                amount: [0, 0, 1],
-                loadout: loadoutThugPistol,
-              }
             ]
           }
         }
@@ -294,6 +272,12 @@ class CombatConst extends OrdealConst
             melee.push('machete');
           aiData.inventory.addID(melee[Std.random(melee.length)]);
         }
+      // 30% chance to have a raw smash for extra melee damage
+      if (Std.random(100) < 30)
+        {
+          if (!aiData.inventory.has('rawSmash'))
+            aiData.inventory.addID('rawSmash');
+        }
       aiData.isAggressive = true;
     }
 
@@ -309,16 +293,6 @@ class CombatConst extends OrdealConst
       stripAllWeapons(aiData);
       aiData.inventory.addID('pistol');
       aiData.skills.addID(SKILL_PISTOL, 30 + Std.random(15));
-      aiData.isAggressive = true;
-    }
-
-// apply loadout for drugged thug berserkers
-  static function loadoutThugDrugged(game: Game, aiData: AIData, difficulty: _Difficulty)
-    {
-      loadoutThugMelee(game, aiData, difficulty);
-      if (Std.random(100) < 70)
-        return;
-      aiData.effects.add(new effects.Berserk(game, 8 + Std.random(5)));
       aiData.isAggressive = true;
     }
 }

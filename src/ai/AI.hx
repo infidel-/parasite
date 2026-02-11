@@ -1,10 +1,9 @@
 // NPC AI game state (+ visual and ingame state)
 package ai;
 
-import ItemInfo.WeaponInfo;
-import entities.AIEntity;
-import _AIState;
 import _AIEffectType;
+import _AIState;
+import entities.AIEntity;
 import objects.*;
 import game.*;
 import const.*;

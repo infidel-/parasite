@@ -1,4 +1,5 @@
 import game.*;
+import ai.AI;
 
 typedef _PlayerAction = {
   var id: String; // action id
@@ -8,6 +9,7 @@ typedef _PlayerAction = {
   @:optional var energy: Int; // energy to complete
   @:optional var obj: Dynamic; // bound object to act on
   @:optional var item: _Item; // bound inventory item to act on
+  @:optional var who: AI; // actor performing this action
   // func that returns energy activation cost (should return < 0 if action is not available)
   @:optional var energyFunc: Player -> Int;
   @:optional var key: String; // keyboard shortcut

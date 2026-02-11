@@ -42,13 +42,13 @@ class Computer extends ItemInfo
     }
 
 // handles computer-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'absorbMap': absorbMapAction(item);
-          case 'search': searchAction(item);
-          default: super.action(actionID, item);
+          case 'absorbMap': absorbMapAction(action.item);
+          case 'search': searchAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

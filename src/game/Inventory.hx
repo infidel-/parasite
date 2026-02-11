@@ -104,8 +104,10 @@ class Inventory extends _SaveObject
             learnAction(action.item);
           default:
             {
+              if (action.who == null)
+                action.who = game.player.host;
               var handled: Null<Bool> = (action.item != null ?
-                action.item.info.action(actionID, action.item) : null);
+                action.item.info.action(actionID, action) : null);
               if (handled == null)
                 Const.todo('no such action: ' + actionID);
               else ret = handled;

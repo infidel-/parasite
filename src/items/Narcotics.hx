@@ -35,12 +35,12 @@ class Narcotics extends ItemInfo
     }
 
 // handles narcotics-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'use': snortAction(item);
-          default: super.action(actionID, item);
+          case 'use': snortAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

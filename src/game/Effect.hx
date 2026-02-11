@@ -43,4 +43,10 @@ class Effect extends _SaveObject
   public function onRemove(ai: AI)
     {
     }
+
+// returns damage modifiers this effect adds for given weapon
+  public function damageMods(weapon: WeaponInfo): Array<_DamageBonus>
+    {
+      return [];
+    }
 }

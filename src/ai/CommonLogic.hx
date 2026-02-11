@@ -4,17 +4,53 @@ package ai;
 import game.Game;
 import particles.*;
 import ai.AI;
+import _PlayerAction;
 import __Math;
 
 class CommonLogic
 {
   public static var game: Game;
 
+// handles first-turn raw smash use for melee AI
+  public static function useRawSmash(ai: AI, weapon: WeaponInfo,
+      isAttackerPlayer: Bool): Bool
+    {
+      if (isAttackerPlayer)
+        return false;
+      if (ai.state != AI_STATE_ALERT ||
+          ai.stateTime != 1)
+        return false;
+      if (weapon.isRanged ||
+          weapon.type != WEAPON_MELEE)
+        return false;
+      if (!ai.inventory.has('rawSmash') ||
+          ai.effects.has(EFFECT_SMASH))
+        return false;
+
+      var item = ai.inventory.get('rawSmash');
+      if (item == null)
+        return false;
+
+      var action: _PlayerAction = {
+        id: 'use.' + item.id,
+        type: ACTION_INVENTORY,
+        name: 'Inject ' + item.getName(),
+        item: item,
+        who: ai
+      };
+      var handled = item.info.action('use', action);
+      return (handled == true);
+    }
+
 // logic: attack target (player or ai)
   public static function logicAttack(ai: AI, target: AITarget, isAttackerPlayer: Bool)
     {
       // get current weapon
       var weapon = (isAttackerPlayer ? game.playerArea.getCurrentWeapon() : ai.getCurrentWeapon());
+
+      // first-turn melee users consume raw smash before attacking
+      if (useRawSmash(ai, weapon, isAttackerPlayer))
+        return;
 
       // check for distance on melee
       if (!weapon.isRanged &&
@@ -195,6 +231,10 @@ class CommonLogic
                   val: - clothing.armor.damage
                 });
             }
+          // effect-driven damage bonuses
+          var effectMods = ai.effects.damageMods(weapon);
+          for (mod in effectMods)
+            mods.push(mod);
 
           var damage = __Math.damage({
             name: (isAttackerPlayer ? 'player' : 'AI') +

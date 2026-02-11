@@ -43,6 +43,7 @@ class ItemsConst
     Cigarettes,
     Alcohol,
     Narcotics,
+    RawSmash,
     Nutrients,
     SleepingPills,
     Contraceptives,

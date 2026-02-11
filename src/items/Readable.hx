@@ -33,12 +33,12 @@ class Readable extends ItemInfo
     }
 
 // handles readable-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'read': readAction(item);
-          default: super.action(actionID, item);
+          case 'read': readAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 

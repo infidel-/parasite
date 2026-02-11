@@ -32,12 +32,12 @@ class Weapon extends ItemInfo
     }
 
 // handles weapon-specific inventory actions
-  override public function action(actionID: String, item: _Item): Null<Bool>
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
     {
       return switch (actionID)
         {
-          case 'active': activeAction(item);
-          default: super.action(actionID, item);
+          case 'active': activeAction(action.item);
+          default: super.action(actionID, action);
         };
     }
 
