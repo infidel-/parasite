@@ -62,6 +62,7 @@ class AIData extends _SaveObject
   public var skills: Skills; // AI skills
   public var organs: Organs; // AI organs
   public var effects: Effects; // AI effects
+  public var abilities: Abilities; // ingrained combat abilities
   public var traits: List<_AITraitType>;
   public var chat: _AIChat; // chat related vars
 
@@ -146,6 +147,7 @@ class AIData extends _SaveObject
       skills = new Skills(game, false);
       organs = new Organs(game, this);
       effects = new Effects(game, this);
+      abilities = new Abilities();
       traits = new List();
     }
 

@@ -42,11 +42,29 @@ class CommonLogic
       return (handled == true);
     }
 
+// handles ingrained ability use before normal attack flow
+  public static function useAttackAbilities(ai: AI, target: AITarget,
+      isAttackerPlayer: Bool): Bool
+    {
+      if (isAttackerPlayer)
+        return false;
+      for (ability in ai.abilities)
+        if (ability.logicAttack(ai, target))
+          return true;
+      return false;
+    }
+
 // logic: attack target (player or ai)
   public static function logicAttack(ai: AI, target: AITarget, isAttackerPlayer: Bool)
     {
       // get current weapon
-      var weapon = (isAttackerPlayer ? game.playerArea.getCurrentWeapon() : ai.getCurrentWeapon());
+      var weapon = (isAttackerPlayer ?
+          game.playerArea.getCurrentWeapon() :
+          ai.getCurrentWeapon());
+
+      // ingrained abilities can consume the attack action
+      if (useAttackAbilities(ai, target, isAttackerPlayer))
+        return;
 
       // first-turn melee users consume raw smash before attacking
       if (useRawSmash(ai, weapon, isAttackerPlayer))

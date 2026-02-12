@@ -62,6 +62,7 @@ class Const
   public static var FRAME_CALLING = 7;
   public static var FRAME_SLIME = 8;
   public static var FRAME_HIGH_CRIME = 9;
+  public static var FRAME_BLEEDING = 10;
 
   // region icons frames
   public static var ROW_REGION_ICON = 1;
