@@ -150,6 +150,9 @@ class Lang
 // ensures a language font is loaded before use
   public function ensureFontLoaded(lang: String, ?size: Int = 14): Bool
     {
+      if (lang == null ||
+          lang == '')
+        return true;
 #if js
       var font = getFont(lang);
       if (font == null ||

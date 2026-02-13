@@ -154,7 +154,10 @@ class AreaGame extends _SaveObject
         {
           // show all ai
           for (ai in _ai)
-            ai.show();
+            {
+              game.lang.ensureFontLoaded(ai.lang);
+              ai.show();
+            }
 
           // show all objects
           for (o in _objects)
@@ -1049,6 +1052,7 @@ class AreaGame extends _SaveObject
 // add AI to map
   public function addAI(ai: AI)
     {
+      game.lang.ensureFontLoaded(ai.lang);
       _ai.add(ai);
       ai.createEntity();
     }
