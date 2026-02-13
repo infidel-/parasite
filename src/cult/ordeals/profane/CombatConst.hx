@@ -64,7 +64,7 @@ class CombatConst extends OrdealConst
                   isMale: true,
                   job: "bum preacher",
                   type: "bum",
-                  icon: "casualCivilian",
+                  icon: "bum",
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
@@ -75,7 +75,7 @@ class CombatConst extends OrdealConst
                 target: {
                   job: "bum shivman",
                   type: "bum",
-                  icon: "casualCivilian",
+                  icon: "bum",
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
@@ -86,7 +86,7 @@ class CombatConst extends OrdealConst
                 target: {
                   job: "bum zealot",
                   type: "bum",
-                  icon: "casualCivilian",
+                  icon: "bum",
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
@@ -97,7 +97,7 @@ class CombatConst extends OrdealConst
                 target: {
                   job: "bum bruiser",
                   type: "bum",
-                  icon: "casualCivilian",
+                  icon: "bum",
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
@@ -108,7 +108,7 @@ class CombatConst extends OrdealConst
                 target: {
                   job: "bum scavenger",
                   type: "bum",
-                  icon: "casualCivilian",
+                  icon: "bum",
                   location: AREA_CITY_LOW,
                   helpAvailable: false,
                 },
