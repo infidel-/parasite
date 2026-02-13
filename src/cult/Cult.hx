@@ -103,6 +103,7 @@ class Cult extends _SaveObject
     {
       state = CULT_STATE_ACTIVE;
       ai.isNameKnown = true;
+      ai.isJobKnown = true;
       ai.setCult(this);
       members.push(ai.cloneData());
       log('gains a leader: ' + ai.theName());
@@ -121,6 +122,7 @@ class Cult extends _SaveObject
       if (!ret)
         return;
       ai.isNameKnown = true;
+      ai.isJobKnown = true;
       ai.setCult(this);
     }
 

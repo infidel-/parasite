@@ -310,6 +310,22 @@ hr {
   z-index: 25;
 }
 
+#hud-ai-info {
+  opacity: 0.95;
+  background-color: #ffffff00;
+  border: 13px solid;
+  min-width: 200px;
+  max-width: min(52vw, 46ch);
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  appearance: none;
+  user-select: none;
+  pointer-events: none;
+  z-index: 26;
+}
+
 #hud-debug-info {
   opacity: 0.9;
   background-color: #273242d6;

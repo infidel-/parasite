@@ -120,6 +120,14 @@ class UI
 // key releases
   function onKeyUp(e: KeyboardEvent)
     {
+      if (e.key == 'Control' &&
+          game.scene.controlPressed)
+        {
+          game.scene.controlPressed = false;
+          game.scene.mouse.update(true);
+          hud.updateAITooltip();
+        }
+
       if (hud.consoleVisible())
         return;
 
@@ -152,6 +160,14 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
+      if (e.key == 'Control' &&
+          !game.scene.controlPressed)
+        {
+          game.scene.controlPressed = true;
+          game.scene.mouse.update(true);
+          hud.updateAITooltip();
+        }
+
       if (hud.consoleVisible())
         return;
 //      trace('code:' + e.code + ' alt:' + e.altKey + ' ctrl:' + e.ctrlKey + ' shift:' + e.shiftKey + ' key:' + e.key);

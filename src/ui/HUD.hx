@@ -27,6 +27,7 @@ class HUD
   var goals: DivElement;
   public var info: DivElement;
   var regionTooltip: RegionTooltip;
+  var aiTooltip: AITooltip;
 #if mydebug
   var debugInfo: DivElement;
 #end
@@ -74,6 +75,8 @@ class HUD
 
       // initialize region tooltip
       regionTooltip = new RegionTooltip(game, this);
+      // initialize area AI tooltip
+      aiTooltip = new AITooltip(game, this);
 
       consoleDiv = document.createDivElement();
       consoleDiv.className = 'console-div';
@@ -216,10 +219,28 @@ class HUD
           else el.style.opacity = '0.9';
         }
 
-      if (game.location == LOCATION_REGION &&
-          ui.state == UISTATE_DEFAULT)
-        regionTooltip.update();
-      else regionTooltip.hide();
+      if (ui.state != UISTATE_DEFAULT)
+        {
+          regionTooltip.hide();
+          aiTooltip.hide();
+          return;
+        }
+
+      if (game.location == LOCATION_REGION)
+        {
+          aiTooltip.hide();
+          regionTooltip.update();
+        }
+      else if (game.location == LOCATION_AREA)
+        {
+          regionTooltip.hide();
+          updateAITooltip();
+        }
+      else
+        {
+          regionTooltip.hide();
+          aiTooltip.hide();
+        }
     }
 
 
@@ -227,7 +248,29 @@ class HUD
 public function onMouseLeave()
   {
     regionTooltip.hide();
+    aiTooltip.hide();
   }
+
+// returns true if area AI inspect mode is active
+  public function isAIInspectMode(): Bool
+    {
+      return (
+        game.location == LOCATION_AREA &&
+        ui.state == UISTATE_DEFAULT &&
+        state == HUD_DEFAULT &&
+        !game.isInputLocked() &&
+        game.scene.controlPressed &&
+        game.config.mouseEnabled
+      );
+    }
+
+// updates area AI tooltip state
+  public function updateAITooltip()
+    {
+      if (isAIInspectMode())
+        aiTooltip.update();
+      else aiTooltip.hide();
+    }
 
 // show hide HUD
   public function toggle()
@@ -256,6 +299,7 @@ public function onMouseLeave()
   public function hide()
     {
       regionTooltip.hide();
+      aiTooltip.hide();
       // hack: remove opacity animation
       for (el in listElements)
         el.style.transition = '0s';
@@ -355,6 +399,8 @@ public function onMouseLeave()
     {
       if (game.location != LOCATION_REGION)
         regionTooltip.hide();
+      if (game.location != LOCATION_AREA)
+        aiTooltip.hide();
       updateActionList();
       // NOTE: before info because info uses its height
       updateActions();
@@ -362,6 +408,7 @@ public function onMouseLeave()
       updateLog();
       updateMenu();
       updateGoals();
+      updateAITooltip();
 #if mydebug
       updateDebugInfo();
 #end

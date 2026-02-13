@@ -201,6 +201,8 @@ class Mouse
         {
           oldPos = pos;
           game.scene.area.clearPath();
+          if (isInspectMode())
+            c = CURSOR_INFO;
           setCursor(c);
           return;
         }
@@ -244,6 +246,9 @@ class Mouse
       // clear path
       else game.scene.area.clearPath();
 
+      if (isInspectMode())
+        c = CURSOR_INFO;
+
       setCursor(c);
     }
 
@@ -286,6 +291,18 @@ class Mouse
         ai != null && ai != game.player.host);
     }
 
+// returns true if area inspect mode is active
+  inline function isInspectMode(): Bool
+    {
+      return (
+        game.location == LOCATION_AREA &&
+        game.ui.state == UISTATE_DEFAULT &&
+        game.ui.hud.state == HUD_DEFAULT &&
+        !game.isInputLocked() &&
+        game.scene.controlPressed
+      );
+    }
+
 
 // set new cursor image
   public function setCursor(c: Int)
@@ -309,6 +326,7 @@ class Mouse
   public static var CURSOR_BLOCKED = 2;
   public static var CURSOR_ATTACK = 3;
   public static var CURSOR_ATTACK_RANGED = 4;
+  public static var CURSOR_INFO = 5;
 
 // size in pixels
   public static var CURSOR_SIZE = 32;
