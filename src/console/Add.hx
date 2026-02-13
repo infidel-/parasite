@@ -93,6 +93,8 @@ class Add
             effect = new effects.Berserk(game, 10);
           case EFFECT_SMASH:
             effect = new effects.Smash(game, 10);
+          case EFFECT_BLEEDING:
+            effect = new effects.Bleeding(game, 10);
           case EFFECT_WHITE_POWDER:
             effect = new effects.WhitePowder(game, 10);
           case EFFECT_WITHDRAWAL:

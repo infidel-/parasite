@@ -4,12 +4,21 @@ package ai;
 import game.Game;
 import particles.*;
 import ai.AI;
+import ItemInfo;
 import _PlayerAction;
 import __Math;
 
 class CommonLogic
 {
   public static var game: Game;
+
+// runs post-hit weapon hook
+  static function logicAttackPost(ai: AI, target: AITarget,
+      isAttackerPlayer: Bool, weaponInfo: ItemInfo)
+    {
+      var weaponItem: items.Weapon = cast weaponInfo;
+      weaponItem.logicAttackPost(ai, target, isAttackerPlayer);
+    }
 
 // handles first-turn raw smash use for melee AI
   public static function useRawSmash(ai: AI, weapon: WeaponInfo,
@@ -58,9 +67,8 @@ class CommonLogic
   public static function logicAttack(ai: AI, target: AITarget, isAttackerPlayer: Bool)
     {
       // get current weapon
-      var weapon = (isAttackerPlayer ?
-          game.playerArea.getCurrentWeapon() :
-          ai.getCurrentWeapon());
+      var weaponInfo = ai.getCurrentWeaponItemInfo();
+      var weapon = weaponInfo.weapon;
 
       // ingrained abilities can consume the attack action
       if (useAttackAbilities(ai, target, isAttackerPlayer))
@@ -269,5 +277,8 @@ class CommonLogic
           // on damage event
           target.onDamage(damage);
         }
+
+      // run weapon-specific post-hit effects
+      logicAttackPost(ai, target, isAttackerPlayer, weaponInfo);
     }
 }

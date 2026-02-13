@@ -366,6 +366,8 @@ public function show()
         alertFrame = Const.FRAME_PARALYSIS;
       else if (effects.has(EFFECT_SLIME))
         alertFrame = Const.FRAME_SLIME;
+      else if (effects.has(EFFECT_BLEEDING))
+        alertFrame = Const.FRAME_BLEEDING;
 
       entity.setAlert(alertFrame);
     }

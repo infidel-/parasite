@@ -225,6 +225,12 @@ class Inventory extends _SaveObject
       return null;
     }
 
+// checks whether this inventory has any weapon
+  public function hasWeapon(): Bool
+    {
+      return (getFirstWeapon() != null);
+    }
+
 // get first melee weapon from inventory
   public function getCurrentMeleeWeapon(): _Item
     {

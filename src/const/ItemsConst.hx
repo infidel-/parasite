@@ -20,6 +20,7 @@ class ItemsConst
     Baton,
     BrassKnuckles,
     Knife,
+    CurvedKnife,
     BaseballBat,
     Machete,
     Katana,

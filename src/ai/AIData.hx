@@ -258,21 +258,41 @@ class AIData extends _SaveObject
       // clamp new health if decreased
       health = health;
     }
-  
-// get current weapon info (returns consts for animals/etc)
-  public function getCurrentWeapon(): WeaponInfo
+
+// get current weapon item info (supports player-host known-item logic)
+  public function getCurrentWeaponItemInfo(): ItemInfo
     {
-      var item = inventory.getFirstWeapon();
-      var info: ItemInfo = null;
+      var item = null;
+
+      // player host
+      if (game.player.state == PLR_STATE_HOST &&
+          this.id == game.player.host.id)
+        {
+          // try active weapon first
+          if (inventory.weaponID != null &&
+              inventory.has(inventory.weaponID))
+            item = inventory.get(inventory.weaponID);
+
+          // try any known weapon from inventory
+          if (item == null)
+            for (ii in inventory)
+              if (ii.info.weapon != null &&
+                  game.player.knowsItem(ii.id))
+                {
+                  item = ii;
+                  break;
+                }
+        }
+      else item = inventory.getFirstWeapon();
+
       // animal attack
       if (!isHuman)
-        info = ItemsConst.getInfo('animal');
+        return ItemsConst.getInfo('animal');
       // fists
-      else if (item == null)
-        info = ItemsConst.getInfo('fists');
+      if (item == null)
+        return ItemsConst.getInfo('fists');
       // item
-      else info = item.info;
-      return info.weapon;
+      return item.info;
     }
 
 // get name depending on whether its known or not

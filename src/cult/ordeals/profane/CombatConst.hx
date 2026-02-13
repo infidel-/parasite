@@ -69,7 +69,7 @@ class CombatConst extends OrdealConst
                   helpAvailable: false,
                 },
                 amount: [1, 1, 1],
-                loadout: loadoutBumMelee,
+                loadout: loadoutBumPreacher,
               },
               {
                 target: {
@@ -282,13 +282,21 @@ class CombatConst extends OrdealConst
   static function loadoutBumMelee(game: Game, aiData: AIData, difficulty: _Difficulty)
     {
       stripRangedWeapons(aiData);
-      if (aiData.inventory.getFirstWeapon() == null)
+      if (!aiData.inventory.hasWeapon())
         {
           var melee = ['brassKnuckles', 'knife', 'baseballBat'];
           if (difficulty == HARD)
             melee.push('machete');
           aiData.inventory.addID(melee[Std.random(melee.length)]);
         }
+      aiData.isAggressive = true;
+    }
+
+// apply loadout for bum preacher with bleeding weapon
+  static function loadoutBumPreacher(game: Game, aiData: AIData, difficulty: _Difficulty)
+    {
+      stripAllWeapons(aiData);
+      aiData.inventory.addID('curvedKnife');
       aiData.isAggressive = true;
     }
 
@@ -315,7 +323,7 @@ class CombatConst extends OrdealConst
   static function loadoutThugMelee(game: Game, aiData: AIData, difficulty: _Difficulty)
     {
       stripRangedWeapons(aiData);
-      if (aiData.inventory.getFirstWeapon() == null)
+      if (!aiData.inventory.hasWeapon())
         {
           var melee = ['brassKnuckles', 'knife', 'baseballBat'];
           if (difficulty == HARD)
@@ -350,7 +358,7 @@ class CombatConst extends OrdealConst
   static function loadoutProstituteCultLeader(game: Game, aiData: AIData, difficulty: _Difficulty)
     {
       stripRangedWeapons(aiData);
-      if (aiData.inventory.getFirstWeapon() == null)
+      if (!aiData.inventory.hasWeapon())
         aiData.inventory.addID('knife');
 
       aiData.maxHealth += 5;
@@ -375,7 +383,7 @@ class CombatConst extends OrdealConst
   static function loadoutProstituteShockEscort(game: Game, aiData: AIData, difficulty: _Difficulty)
     {
       stripRangedWeapons(aiData);
-      if (aiData.inventory.getFirstWeapon() == null)
+      if (!aiData.inventory.hasWeapon())
         {
           var melee = ['brassKnuckles', 'knife'];
           aiData.inventory.addID(melee[Std.random(melee.length)]);
@@ -395,7 +403,7 @@ class CombatConst extends OrdealConst
   static function loadoutProstituteRingBruiser(game: Game, aiData: AIData, difficulty: _Difficulty)
     {
       stripRangedWeapons(aiData);
-      if (aiData.inventory.getFirstWeapon() == null)
+      if (!aiData.inventory.hasWeapon())
         {
           var melee = ['brassKnuckles', 'knife', 'baseballBat'];
           if (difficulty == HARD)

@@ -4,6 +4,8 @@ package items;
 import Const;
 import ItemInfo;
 import _PlayerAction;
+import ai.AI;
+import AITarget;
 import game.Game;
 import game._Item;
 
@@ -47,5 +49,10 @@ class Weapon extends ItemInfo
       game.log('You will now attack with the ' + item.name + '.');
       game.player.host.inventory.weaponID = item.id;
       return true;
+    }
+
+// post-hit combat hook for weapon-specific side effects
+  public function logicAttackPost(ai: AI, target: AITarget, isAttackerPlayer: Bool): Void
+    {
     }
 }
