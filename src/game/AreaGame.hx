@@ -765,34 +765,15 @@ class AreaGame extends _SaveObject
       if (params.fallbackRadius == null)
         params.fallbackRadius = 5;
 
-      // always prefer free elevator spawn in corp area
-      if (info.id == AREA_CORP)
+      // prefer elevator in corp or nearest sewer exit in sewers
+      if (info.id == AREA_CORP ||
+          info.id == AREA_SEWERS)
         {
-          var elevatorTiles = [];
-          for (o in getObjects())
-            if (o.type == 'elevator')
-              {
-                if (!isWalkable(o.x, o.y))
-                  continue;
-                if (getAI(o.x, o.y) != null)
-                  continue;
-                if (game.playerArea.x == o.x &&
-                    game.playerArea.y == o.y)
-                  continue;
-                elevatorTiles.push({ x: o.x, y: o.y });
-              }
-          if (elevatorTiles.length > 0)
-            return elevatorTiles[Std.random(elevatorTiles.length)];
-        }
-
-      // prefer nearest sewer exit in sewers areas
-      if (info.id == AREA_SEWERS)
-        {
-          var best = null;
-          var bestDist = 1000000;
+          var tiles = [];
+          var targetType = (info.id == AREA_CORP ? 'elevator' : 'sewer_exit');
           for (o in getObjects())
             {
-              if (o.type != 'sewer_exit')
+              if (o.type != targetType)
                 continue;
               if (!isWalkable(o.x, o.y))
                 continue;
@@ -801,14 +782,25 @@ class AreaGame extends _SaveObject
               if (game.playerArea.x == o.x &&
                   game.playerArea.y == o.y)
                 continue;
-              var dist = Const.distanceSquared(o.x, o.y, params.near.x, params.near.y);
-              if (dist >= bestDist)
-                continue;
-              bestDist = dist;
-              best = { x: o.x, y: o.y };
+              tiles.push({ x: o.x, y: o.y });
             }
-          if (best != null)
-            return best;
+          if (tiles.length > 0)
+            {
+              if (info.id == AREA_CORP)
+                return tiles[Std.random(tiles.length)];
+              var best = tiles[0];
+              var bestDist = Const.distanceSquared(best.x, best.y, params.near.x, params.near.y);
+              for (t in tiles)
+                {
+                  var dist = Const.distanceSquared(t.x, t.y, params.near.x, params.near.y);
+                  if (dist < bestDist)
+                    {
+                      bestDist = dist;
+                      best = t;
+                    }
+                }
+              return best;
+            }
         }
 
       var loc = findLocation({
