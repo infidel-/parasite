@@ -17,6 +17,8 @@ class Mission extends _SaveObject
   public var difficulty: _Difficulty;
   public var x: Int; // regional position
   public var y: Int; // regional position
+  public var areaID: Int; // actual mission area ID (-1 = use x,y)
+  public var markerAreaID: Int; // region marker area ID (-1 = use x,y)
   public var ordeal(get, never): Ordeal; // reference to parent ordeal
   public var isCompleted: Bool; // mission completion status
 
@@ -37,6 +39,8 @@ class Mission extends _SaveObject
       lang = '';
       x = 0;
       y = 0;
+      areaID = -1;
+      markerAreaID = -1;
       difficulty = NORMAL;
       isCompleted = false;
     }

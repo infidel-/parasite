@@ -49,6 +49,10 @@ class Abilities extends _SaveObject
         {
           case ABILITY_DEADLY_CARESS:
             list.push(new DeadlyCaress());
+          case ABILITY_CHOIR_SILENT_SCREAM:
+            list.push(new ChoirSilentScream());
+          case ABILITY_CHOIR_MELEE:
+            list.push(new ChoirMelee());
         }
     }
 }

@@ -785,6 +785,32 @@ class AreaGame extends _SaveObject
             return elevatorTiles[Std.random(elevatorTiles.length)];
         }
 
+      // prefer nearest sewer exit in sewers areas
+      if (info.id == AREA_SEWERS)
+        {
+          var best = null;
+          var bestDist = 1000000;
+          for (o in getObjects())
+            {
+              if (o.type != 'sewer_exit')
+                continue;
+              if (!isWalkable(o.x, o.y))
+                continue;
+              if (getAI(o.x, o.y) != null)
+                continue;
+              if (game.playerArea.x == o.x &&
+                  game.playerArea.y == o.y)
+                continue;
+              var dist = Const.distanceSquared(o.x, o.y, params.near.x, params.near.y);
+              if (dist >= bestDist)
+                continue;
+              bestDist = dist;
+              best = { x: o.x, y: o.y };
+            }
+          if (best != null)
+            return best;
+        }
+
       var loc = findLocation({
         near: { x: params.near.x, y: params.near.y },
         radius: params.radius,
@@ -1643,7 +1669,7 @@ class Test {
 // spawn AI (both from command-line and internally)
   public static var aiTypes = [
     'agent', 'blackops', 'bum (hobo)', 'civilian (civ)',
-    'dog', 'police (cop)', 'prostitute (pro)', 'soldier',
+    'choir of discord (choir)', 'dog', 'police (cop)', 'prostitute (pro)', 'soldier',
     'security (sec)', 'scientist (sci)', 'team',
     'thug',
   ];

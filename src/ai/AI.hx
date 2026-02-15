@@ -196,6 +196,8 @@ public function show()
            Images.specialsFemale[type] == null);
       if (type == 'dog')
         entity.setIcon('entities', 1, Const.ROW_PARASITE);
+      else if (type == 'choirOfDiscord')
+        entity.setIcon('entities', Const.FRAME_PARASITE, Const.ROW_PARASITE);
       else entity.setIcon(
         (isMale ? 'male' : 'female'),
         tileAtlasX, tileAtlasY);
@@ -558,6 +560,15 @@ public function show()
       emitRandomSound('' + REASON_DAMAGE, 30); // emit random sound
     }
 
+// logic: black noise
+  function effectBlackNoise()
+    {
+      var effect: effects.BlackNoise = cast effects.get(EFFECT_BLACK_NOISE);
+      if (effect == null)
+        return;
+      effect.applyBehavior(this);
+    }
+
 // turn for chat timers (can be called in region mode)
   public function chatTurn(time: Int)
     {
@@ -604,6 +615,10 @@ public function show()
       // effect: paralysis
       else if (effects.has(EFFECT_PARALYSIS))
         1;
+
+      // effect: black noise, hallucinations and self-harm
+      else if (effects.has(EFFECT_BLACK_NOISE))
+        effectBlackNoise();
 
       // effect: panic, run away
       else if (effects.has(EFFECT_PANIC))
@@ -1230,6 +1245,11 @@ public function show()
 // event hook: on being noticed by player
   public dynamic function onNotice()
     {}
+
+// event hook: pre-attach capability check
+// NOTE: returns true if attachment is allowed
+  public dynamic function canAttach(): Bool
+    { return true; }
 
 // event hook: pre-attach check
 // NOTE: returns true if attachment is allowed

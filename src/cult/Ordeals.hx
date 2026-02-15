@@ -270,10 +270,22 @@ class Ordeals extends _SaveObject
     {
       for (ordeal in list)
         for (m in ordeal.missions)
-          if (!m.isCompleted &&
-              m.x == area.x &&
-              m.y == area.y)
-            return true;
+          {
+            // mission completed
+            if (m.isCompleted)
+              continue;
+            // check by area ID if set
+            if (m.areaID >= 0)
+              {
+                if (m.areaID == area.id)
+                  return true;
+                continue;
+              }
+            // check by coordinates
+            if (m.x == area.x &&
+                m.y == area.y)
+              return true;
+          }
       return false;
     }
 
@@ -282,9 +294,55 @@ class Ordeals extends _SaveObject
     {
       for (ordeal in list)
         for (m in ordeal.missions)
-          if (!m.isCompleted &&
-              m.x == area.x &&
-              m.y == area.y)
+          {
+            // mission completed
+            if (m.isCompleted)
+              continue;
+            // check by area ID if set
+            if (m.areaID >= 0)
+              {
+                if (m.areaID == area.id)
+                  return m;
+                continue;
+              }
+            // check by coordinates
+            if (m.x == area.x &&
+                m.y == area.y)
+              return m;
+          }
+      return null;
+    }
+
+// get mission marker for the provided area
+  public function getMarkerMission(area: AreaGame): Mission
+    {
+      for (ordeal in list)
+        for (m in ordeal.missions)
+          {
+            // mission completed
+            if (m.isCompleted)
+              continue;
+            // check by marker area ID if set
+            if (m.markerAreaID >= 0)
+              {
+                if (m.markerAreaID == area.id)
+                  return m;
+                continue;
+              }
+            // check by coordinates
+            if (m.x == area.x &&
+                m.y == area.y)
+              return m;
+          }
+      return null;
+    }
+
+// get mission by ID even if already completed
+  public function getMissionByID(missionID: Int): Mission
+    {
+      for (ordeal in list)
+        for (m in ordeal.missions)
+          if (m.id == missionID)
             return m;
       return null;
     }

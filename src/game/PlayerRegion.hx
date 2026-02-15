@@ -69,6 +69,15 @@ class PlayerRegion extends _SaveObject
           name: 'Enter area',
           energy: 0
         });
+      var mission = game.cults[0].ordeals.getMarkerMission(currentArea);
+      if (mission != null &&
+          mission.areaID >= 0)
+        game.ui.hud.addAction({
+          id: 'enterMissionArea',
+          type: ACTION_REGION,
+          name: 'Enter mission area',
+          energy: 0
+        });
 
       // create a new habitat
       // NOTE: maybe add regionActions to ImprovInfo later?
@@ -151,6 +160,8 @@ class PlayerRegion extends _SaveObject
         }
       else if (action.id == 'enterArea')
         ret = enterAreaAction();
+      else if (action.id == 'enterMissionArea')
+        ret = enterMissionAreaAction();
       else if (action.id == 'createHabitat')
         createHabitatAction();
       else if (action.id == 'enterHabitat')
@@ -223,6 +234,31 @@ class PlayerRegion extends _SaveObject
         "You emerge from the sewers." : "You enter the area.");
       game.setLocation(LOCATION_AREA);
 
+      return true;
+    }
+
+// action: enter mission area from a mission marker
+  function enterMissionAreaAction(): Bool
+    {
+      var mission = game.cults[0].ordeals.getMarkerMission(currentArea);
+      if (mission == null ||
+          mission.isCompleted ||
+          mission.areaID < 0)
+        {
+          game.actionFailed("There is no active mission area here.");
+          return false;
+        }
+
+      var area = game.region.get(mission.areaID);
+      if (area == null)
+        {
+          game.actionFailed("The mission area has collapsed.");
+          return false;
+        }
+
+      target = null;
+      game.log("You head toward the mission site.");
+      game.setLocation(LOCATION_AREA, area);
       return true;
     }
 

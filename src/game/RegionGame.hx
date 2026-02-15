@@ -471,7 +471,9 @@ class RegionGame extends _SaveObject
         {
           // filter by mission area
           if (params.noMission &&
-              a.isMissionArea())
+              (a.isMissionArea() ||
+               (game.cults.length > 0 &&
+                game.cults[0].ordeals.getMarkerMission(a) != null)))
             continue;
 
           // filter by events

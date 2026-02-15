@@ -535,6 +535,11 @@ class PlayerArea extends _SaveObject
           game.actionFailed('You cannot attach to this host due to its clothing.');
           return false;
         }
+      if (!ai.canAttach())
+        {
+          game.actionFailed('You cannot attach to this host.');
+          return false;
+        }
 
       // check for pre-attach hook
       if (!ai.attachPre())

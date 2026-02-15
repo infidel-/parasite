@@ -7,6 +7,7 @@ import Const;
 import objects.*;
 import game.AreaGame;
 import game.CityAreaGenerator;
+import game.SewerAreaGenerator;
 
 class AreaGenerator
 {
@@ -14,6 +15,7 @@ class AreaGenerator
   public var facility: FacilityAreaGenerator;
   public var city: CityAreaGenerator;
   public var corp: CorpAreaGenerator;
+  public var sewers: SewerAreaGenerator;
 
   public static var deltaMap: Map<Int, { x: Int, y: Int }>;
   public static var DIR_UP = 8;
@@ -27,6 +29,7 @@ class AreaGenerator
       facility = new FacilityAreaGenerator(game, this);
       city = new CityAreaGenerator(game, this);
       corp = new CorpAreaGenerator(game, this);
+      sewers = new SewerAreaGenerator(game, this);
       deltaMap = [
         DIR_LEFT => { x: -1, y: 0 },
         DIR_RIGHT => { x: 1, y: 0 },
@@ -56,6 +59,8 @@ class AreaGenerator
         generateHabitat(game, area, info);
       else if (info.type == 'corp')
         corp.generate(area, info);
+      else if (info.type == 'sewers')
+        sewers.generate(area, info);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
 
       if (info.type == 'city')
@@ -374,6 +379,8 @@ class AreaGenerator
             var o: AreaObject = null;
             if (objInfo.id == 'sewer_hatch')
               o = new SewerHatch(game, area.id, loc.x, loc.y);
+            else if (objInfo.id == 'sewer_exit')
+              o = new SewerExit(game, area.id, loc.x, loc.y);
               
             else throw 'unknown object type: ' + objInfo.id;
 

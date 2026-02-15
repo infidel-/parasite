@@ -139,6 +139,7 @@ class AITooltip
             ' PSY ' + ai.psyche;
           buf.add(Const.smalldebug(attrs) + '<br/>');
         }
+      buf.add(Const.smalldebug('[debug] health ' + ai.health + '/' + ai.maxHealth + '<br/>'));
       buf.add('<hr/>');
       buf.add(Const.smalldebug('[debug] id: ' + ai.id) + '<br/>');
       buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');

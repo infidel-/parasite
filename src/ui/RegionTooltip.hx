@@ -203,7 +203,7 @@ class RegionTooltip
       if (game.cults[0].state != CULT_STATE_ACTIVE)
         return lines;
 
-      var mission = game.cults[0].ordeals.getAreaMission(area);
+      var mission = game.cults[0].ordeals.getMarkerMission(area);
       if (mission != null)
         lines.push(mission.coloredName());
       return lines;

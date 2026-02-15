@@ -95,6 +95,8 @@ class Add
             effect = new effects.Smash(game, 10);
           case EFFECT_BLEEDING:
             effect = new effects.Bleeding(game, 10);
+          case EFFECT_BLACK_NOISE:
+            effect = new effects.BlackNoise(game, 10);
           case EFFECT_WHITE_POWDER:
             effect = new effects.WhitePowder(game, 10);
           case EFFECT_WITHDRAWAL:

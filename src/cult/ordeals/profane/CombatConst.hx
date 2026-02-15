@@ -215,6 +215,53 @@ class CombatConst extends OrdealConst
               },
             ]
           }
+        },
+
+        // fifth ordeal - break a summoning ritual in temporary sewer chambers
+        {
+          name: "Unauspr. Sewer Conclave",
+          note: "The Unaussprechliche Kult gathers below the city, chanting around a membrane gate. Cut the circle before the hymn tears through.",
+          success: "The choir gutters out in wet stone darkness. The chamber exhales and the pipes fall quiet.",
+          fail: "You falter in the tunnels. The cadence holds and something answers from the far side.",
+          mission: MISSION_COMBAT,
+          combat: {
+            template: SUMMONING_RITUAL,
+            targets: [
+              {
+                target: {
+                  job: "ritual cantor",
+                  type: "smiler",
+                  icon: "smiler",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [1, 1, 1],
+                loadout: loadoutCultHead,
+              },
+              {
+                target: {
+                  job: "ritual guard",
+                  type: "thug",
+                  icon: "thug",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [1, 2, 2],
+                loadout: loadoutThugMelee,
+              },
+              {
+                target: {
+                  job: "ritual zealot",
+                  type: "bum",
+                  icon: "bum",
+                  location: AREA_CITY_LOW,
+                  helpAvailable: false,
+                },
+                amount: [1, 1, 2],
+                loadout: loadoutBumFists,
+              },
+            ]
+          }
         }
       ];
     }

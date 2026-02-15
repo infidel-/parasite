@@ -313,7 +313,7 @@ class RegionView
       // check if cult is active
       if (game.cults[0].state != CULT_STATE_ACTIVE)
         return null;
-      var mission = game.cults[0].ordeals.getAreaMission(area);
+      var mission = game.cults[0].ordeals.getMarkerMission(area);
       if (mission != null)
         return {
           row: Const.ROW_REGION_ICON,
@@ -347,6 +347,5 @@ class RegionView
       return icon;
     }
 }
-
 
 

@@ -150,6 +150,7 @@ class Sounds
       sounds['action-slime-spit'] = [-1];
       sounds['action-spaceship-install'] = [-1];
       sounds['action-spaceship-start'] = [-1];
+      sounds['ability-silent-scream'] = [-1];
       sounds['ai-arrive-police'] = [-1];
       sounds['ai-arrive-security'] = [-1];
       sounds['ai-arrive-soldier'] = [-1];
@@ -663,4 +664,3 @@ enum _SoundAmbientState
   SOUND_PLAYING;
   SOUND_FADEOUT;
 }
-

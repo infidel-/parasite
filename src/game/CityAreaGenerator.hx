@@ -180,7 +180,8 @@ class CityAreaGenerator
           {
             // check if road or walkway
             var c = area.getCellType(pt.x, pt.y);
-            if (c != Const.TILE_ROAD && c != Const.TILE_WALKWAY)
+            if (c != Const.TILE_ROAD &&
+                c != Const.TILE_WALKWAY)
               continue;
 
             // check for close objects

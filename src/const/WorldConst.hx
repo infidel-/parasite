@@ -193,6 +193,32 @@ class WorldConst
         objects: [] // moved to facility generator
       },
 
+      // *** mission sewers
+      AREA_SEWERS => {
+        id: AREA_SEWERS,
+        ambient: AMBIENT_HABITAT,
+        type: 'sewers',
+        name: 'Sewers',
+        pediaArticle: 'areaHabitat', // unused
+        exit: 'sewer_exit',
+        alertnessMod: 1.0,
+        width: 75,
+        height: 60,
+        canEnter: true,
+        isInhabited: true,
+        commonAI: 0,
+        uncommonAI: 0,
+        buildingChance: 0,
+        lawType: 'police',
+        lawResponseTime: 0,
+        lawResponseAmount: 0,
+        lawResponseMax: 0,
+        lawResponseEnabled: false,
+        isHighRisk: false,
+        ai: new Map(),
+        objects: []
+      },
+
       // *** habitat
       AREA_HABITAT => {
         id: AREA_HABITAT,
@@ -322,4 +348,3 @@ typedef AreaInfo = {
 typedef RegionInfo = {
   var id: String; // region type id
 };
-
