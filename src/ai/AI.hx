@@ -510,7 +510,7 @@ public function show()
 
 
 // checks if this AI should be despawned
-// AI despawns when player has not seen it for X turns in a row and its state is idle
+  // AI despawns when player has not seen it for X turns in a row and its state is idle
   public function checkDespawn()
     {
       // player cultists do not despawn
@@ -544,21 +544,6 @@ public function show()
         game.area.removeAI(this);
     }
 
-
-// logic: slime
-  function effectSlime()
-    {
-      var free = effects.decrease(EFFECT_SLIME, strength, this);
-      if (free)
-        log('manages to get free of the mucus.');
-      else log('desperately tries to get free of the mucus.');
-
-      // set alerted state
-      if (state == AI_STATE_IDLE)
-        setState(AI_STATE_ALERT, REASON_DAMAGE);
-
-      emitRandomSound('' + REASON_DAMAGE, 30); // emit random sound
-    }
 
 // turn for chat timers (can be called in region mode)
   public function chatTurn(time: Int)
@@ -610,20 +595,8 @@ public function show()
 
       if (!skipDefaultLogic)
         {
-          // effect: slime, does not allow movement
-          if (effects.has(EFFECT_SLIME))
-            effectSlime();
-
-          // effect: panic, run away
-          else if (effects.has(EFFECT_PANIC))
-            {
-              if (parasiteAttached)
-                logicTearParasiteAway();
-              else logicRunAwayFromEnemies();
-            }
-
           // preserved - do nothing
-          else if (state == AI_STATE_PRESERVED)
+          if (state == AI_STATE_PRESERVED)
             1;
 
           // post-detach
