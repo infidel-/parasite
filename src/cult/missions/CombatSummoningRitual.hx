@@ -7,17 +7,23 @@ import objects.SewerExit;
 import objects.SummoningPortal;
 import cult.missions.Combat.CombatSpawnTarget;
 
+private enum _RitualState
+{
+  PENDING_INIT;     // waiting for room/portal setup
+  WAITING;          // initialized, player hasn't approached portal
+  WAITING_DAMAGED;  // cultist died before player arrived
+  ACTIVE;           // player approached, countdown running
+  BREAKING;         // ritual interrupted, collapse timer running
+  COMPLETED;        // ritual finished successfully (choir spawned)
+  RESOLVED;         // broken ritual resolved (choir may spawn)
+}
+
 class CombatSummoningRitual extends Combat
 {
-  public var ritualStarted: Bool;
+  public var state: _RitualState;
   public var ritualTimer: Int;
-  public var ritualBroken: Bool;
-  public var ritualBreakPending: Bool;
   public var ritualBreakTimer: Int;
-  public var ritualCompleted: Bool;
-  public var ritualResolved: Bool;
   public var choirSpawned: Bool;
-  public var ritualInitDone: Bool;
   public var ritualPortalObjectID: Int;
   public var ritualPortalX: Int;
   public var ritualPortalY: Int;
@@ -35,15 +41,10 @@ class CombatSummoningRitual extends Combat
       super.init();
       name = 'Stop Ritual';
       note = 'A summoning ritual must be interrupted before it completes.';
-      ritualStarted = false;
+      state = PENDING_INIT;
       ritualTimer = 0;
-      ritualBroken = false;
-      ritualBreakPending = false;
       ritualBreakTimer = 0;
-      ritualCompleted = false;
-      ritualResolved = false;
       choirSpawned = false;
-      ritualInitDone = false;
       ritualPortalObjectID = -1;
       ritualPortalX = -1;
       ritualPortalY = -1;
@@ -70,48 +71,58 @@ class CombatSummoningRitual extends Combat
 // template-specific turn processing
   override function turnTemplate()
     {
-      if (!ritualInitDone)
+      switch (state)
         {
-          initSummoningRitual();
-          if (!ritualInitDone)
-            return;
+          case PENDING_INIT:
+            initSummoningRitual();
+
+          case WAITING, WAITING_DAMAGED:
+            spawnMissingRitualTargets();
+
+          case ACTIVE:
+            spawnMissingRitualTargets();
+            checkAlertBreak();
+            tickRitualTimer();
+
+          case BREAKING:
+            tickBreakTimer();
+
+          case COMPLETED, RESOLVED:
+            {}
         }
+    }
 
-      spawnMissingRitualTargets();
+// check if any ritual participant is alerted
+  function checkAlertBreak()
+    {
+      for (targetID in targetIDs)
+        {
+          var ai = game.area.getAIByID(targetID);
+          if (ai == null ||
+              !ai.wasAlerted)
+            continue;
+          breakRitual();
+          break;
+        }
+    }
 
-      if (!ritualStarted)
-        return;
-
-      if (ritualBreakPending &&
-          !ritualBroken)
-        breakRitual();
-
-      if (!ritualBroken)
-        for (targetID in targetIDs)
-          {
-            var ai = game.area.getAIByID(targetID);
-            if (ai == null ||
-                !ai.wasAlerted)
-              continue;
-            breakRitual();
-            break;
-          }
-
-      if (!ritualBroken &&
-          ritualTimer > 0)
+// tick down ritual completion timer
+  function tickRitualTimer()
+    {
+      if (ritualTimer > 0)
         {
           ritualTimer--;
           if (ritualTimer <= 0)
             completeRitual();
         }
+    }
 
-      if (ritualBroken &&
-          !ritualResolved)
-        {
-          ritualBreakTimer--;
-          if (ritualBreakTimer <= 0)
-            resolveBrokenRitual();
-        }
+// tick down ritual break timer
+  function tickBreakTimer()
+    {
+      ritualBreakTimer--;
+      if (ritualBreakTimer <= 0)
+        resolveBrokenRitual();
     }
 
 // initialize ritual room, portal and participants
@@ -122,6 +133,7 @@ class CombatSummoningRitual extends Combat
           game.area.generatorInfo.rooms.length == 0)
         return;
 
+      // set mission ID on sewer exit objects so they can remove the mission area on use
       for (o in game.area.getObjects())
         if (o.type == 'sewer_exit')
           {
@@ -129,6 +141,7 @@ class CombatSummoningRitual extends Combat
             exit.missionID = id;
           }
 
+      // pick a random room and get its center
       var rooms = game.area.generatorInfo.rooms;
       var room = rooms[Std.random(rooms.length)];
       ritualRoomID = room.id;
@@ -145,41 +158,48 @@ class CombatSummoningRitual extends Combat
             }
         }
 
+      // spawn the summoning portal at the center
       var portal = new SummoningPortal(game, game.area.id, centerX, centerY, id);
       game.area.addObject(portal);
       ritualPortalObjectID = portal.id;
       ritualPortalX = centerX;
       ritualPortalY = centerY;
 
+      // spawn ritual participants around the portal
       spawnMissingRitualTargets();
-      ritualInitDone = true;
+      state = WAITING;
     }
 
 // start the ritual timer when player approaches the portal
   public function onPortalProximity(portal: SummoningPortal)
     {
-      if (ritualStarted)
-        return;
+      switch (state)
+        {
+          case WAITING:
+            state = ACTIVE;
+            ritualTimer = 10;
+            game.message({
+              text: 'The chant tightens around the stone. Completion is near. Fewer cultists alive, weaker chance to break through.',
+              col: 'cult',
+            });
 
-      ritualStarted = true;
-      ritualTimer = 10;
-      if (ritualBreakPending)
-        breakRitual();
-      game.message({
-        text: 'The chant tightens around the stone. Completion is near. Fewer cultists alive, weaker chance to break through.',
-        col: 'cult',
-      });
+          case WAITING_DAMAGED:
+            breakRitual();
+
+          default:
+            {}
+        }
     }
 
 // mark ritual as broken by death or alert
   function breakRitual()
     {
-      if (ritualBroken ||
-          ritualCompleted)
+      if (state != WAITING &&
+          state != WAITING_DAMAGED &&
+          state != ACTIVE)
         return;
 
-      ritualBroken = true;
-      ritualBreakPending = false;
+      state = BREAKING;
       ritualBreakTimer = 2;
       game.message({
         text: 'The ritual flow is broken. Unforeseen consequences gather.',
@@ -190,18 +210,11 @@ class CombatSummoningRitual extends Combat
 // resolve intact ritual completion when timer expires
   function completeRitual()
     {
-      if (ritualCompleted)
+      if (state != ACTIVE)
         return;
-      ritualCompleted = true;
-      ritualResolved = true;
 
-      if (ritualPortalObjectID >= 0)
-        {
-          var portal = game.area.getObject(ritualPortalObjectID);
-          if (portal != null)
-            game.area.removeObject(portal);
-        }
-
+      state = COMPLETED;
+      removePortal();
       spawnChoirOfDiscord();
       game.message({
         text: 'The chant closes. The membrane tears.',
@@ -212,13 +225,8 @@ class CombatSummoningRitual extends Combat
 // resolve broken ritual after delay
   function resolveBrokenRitual()
     {
-      ritualResolved = true;
-      if (ritualPortalObjectID >= 0)
-        {
-          var portal = game.area.getObject(ritualPortalObjectID);
-          if (portal != null)
-            game.area.removeObject(portal);
-        }
+      state = RESOLVED;
+      removePortal();
 
       var chance = brokenRitualChoirChance();
       if (Std.random(100) < chance)
@@ -234,6 +242,17 @@ class CombatSummoningRitual extends Combat
           text: 'The membrane yet holds.',
           col: 'cult',
         });
+    }
+
+// remove portal object from area
+  function removePortal()
+    {
+      if (ritualPortalObjectID >= 0)
+        {
+          var portal = game.area.getObject(ritualPortalObjectID);
+          if (portal != null)
+            game.area.removeObject(portal);
+        }
     }
 
 // count currently living ritual cultists in mission area
@@ -290,6 +309,7 @@ class CombatSummoningRitual extends Combat
           game.area.id != areaID)
         return false;
 
+      // check if choir is already present for some reason
       for (ai in game.area.getAllAI())
         if (ai.type == 'choirOfDiscord' &&
             ai.state != AI_STATE_DEAD)
@@ -298,6 +318,7 @@ class CombatSummoningRitual extends Combat
             return true;
           }
 
+      // spawn choir at portal location or fallback to player area if portal is missing for some reason
       var anchorX = ritualPortalX;
       var anchorY = ritualPortalY;
       if (anchorX < 0 ||
@@ -307,14 +328,13 @@ class CombatSummoningRitual extends Combat
           anchorY = game.playerArea.y;
         }
 
+      // spawn choir a bit away from the portal
       var loc = game.area.findEmptyLocationNear(anchorX, anchorY, 3);
       if (loc == null)
         return false;
 
+      // spawn the choir
       var choir = game.area.spawnAI('choirOfDiscord', loc.x, loc.y, false);
-      choir.isGuard = true;
-      choir.guardTargetX = loc.x;
-      choir.guardTargetY = loc.y;
       game.area.addAI(choir);
       choirSpawned = true;
       return true;
@@ -330,12 +350,16 @@ class CombatSummoningRitual extends Combat
         return;
       targetIDs.splice(idx, 1);
 
-      if (!ritualBroken &&
-          !ritualCompleted)
+      switch (state)
         {
-          if (ritualStarted)
+          case WAITING:
+            state = WAITING_DAMAGED;
+
+          case ACTIVE:
             breakRitual();
-          else ritualBreakPending = true;
+
+          default:
+            {}
         }
 
       if (targetIDs.length == 0)
@@ -353,7 +377,7 @@ class CombatSummoningRitual extends Combat
           if (portal != null)
             game.area.removeObject(portal);
         }
-      if (ritualCompleted)
+      if (state == COMPLETED)
         {
           spawnChoirOfDiscord();
           game.message({
