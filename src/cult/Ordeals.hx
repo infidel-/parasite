@@ -268,25 +268,7 @@ class Ordeals extends _SaveObject
 // check if the provided area is a mission area
   public function isMissionArea(area: AreaGame): Bool
     {
-      for (ordeal in list)
-        for (m in ordeal.missions)
-          {
-            // mission completed
-            if (m.isCompleted)
-              continue;
-            // check by area ID if set
-            if (m.areaID >= 0)
-              {
-                if (m.areaID == area.id)
-                  return true;
-                continue;
-              }
-            // check by coordinates
-            if (m.x == area.x &&
-                m.y == area.y)
-              return true;
-          }
-      return false;
+      return getAreaMission(area) != null;
     }
 
 // get mission for the provided area
