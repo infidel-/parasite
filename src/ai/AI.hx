@@ -560,15 +560,6 @@ public function show()
       emitRandomSound('' + REASON_DAMAGE, 30); // emit random sound
     }
 
-// logic: black noise
-  function effectBlackNoise()
-    {
-      var effect: effects.BlackNoise = cast effects.get(EFFECT_BLACK_NOISE);
-      if (effect == null)
-        return;
-      effect.applyBehavior(this);
-    }
-
 // turn for chat timers (can be called in region mode)
   public function chatTurn(time: Int)
     {
@@ -608,53 +599,57 @@ public function show()
             info.turn(game, this);
         }
 
-      // effect: slime, does not allow movement
-      if (effects.has(EFFECT_SLIME))
-        effectSlime();
+      // check if any effect wants to skip default turn logic
+      var skipDefaultLogic = false;
+      for (effect in effects)
+        if (effect.skipDefaultTurnLogic())
+          {
+            skipDefaultLogic = true;
+            break;
+          }
 
-      // effect: paralysis
-      else if (effects.has(EFFECT_PARALYSIS))
-        1;
-
-      // effect: black noise, hallucinations and self-harm
-      else if (effects.has(EFFECT_BLACK_NOISE))
-        effectBlackNoise();
-
-      // effect: panic, run away
-      else if (effects.has(EFFECT_PANIC))
+      if (!skipDefaultLogic)
         {
-          if (parasiteAttached)
-            logicTearParasiteAway();
-          else logicRunAwayFromEnemies();
-        }
+          // effect: slime, does not allow movement
+          if (effects.has(EFFECT_SLIME))
+            effectSlime();
 
-      // preserved - do nothing
-      else if (state == AI_STATE_PRESERVED)
-        1;
+          // effect: panic, run away
+          else if (effects.has(EFFECT_PANIC))
+            {
+              if (parasiteAttached)
+                logicTearParasiteAway();
+              else logicRunAwayFromEnemies();
+            }
 
-      // post-detach
-      else if (state == AI_STATE_POST_DETACH &&
-          stateTime >= 2)
-        {
-          if (isAgreeable())
+          // preserved - do nothing
+          else if (state == AI_STATE_PRESERVED)
+            1;
+
+          // post-detach
+          else if (state == AI_STATE_POST_DETACH &&
+              stateTime >= 2)
+            {
+              if (isAgreeable())
+                setState(AI_STATE_IDLE);
+              else setState(AI_STATE_ALERT, REASON_DETACH);
+            }
+
+          // post-detach with false memories
+          else if (state == AI_STATE_POST_DETACH_MEMORIES &&
+              stateTime >= 2)
             setState(AI_STATE_IDLE);
-          else setState(AI_STATE_ALERT, REASON_DETACH);
-        }
+          
+          // cultists from player cult have follower logic
+          else if (isPlayerCultist())
+            {
+              if (!CommandLogic.turn(this))
+                FollowerLogic.turn(this);
+            }
 
-      // post-detach with false memories
-      else if (state == AI_STATE_POST_DETACH_MEMORIES &&
-          stateTime >= 2)
-        setState(AI_STATE_IDLE);
-      
-      // cultists from player cult have follower logic
-      else if (isPlayerCultist())
-        {
-          if (!CommandLogic.turn(this))
-            FollowerLogic.turn(this);
+          // default AI logiccultID
+          else DefaultLogic.turn(this);
         }
-
-      // default AI logiccultID
-      else DefaultLogic.turn(this);
 
       // per-type hook
       turn();

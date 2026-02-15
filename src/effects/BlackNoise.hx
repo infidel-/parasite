@@ -33,16 +33,7 @@ class BlackNoise extends Effect
           game.area == null)
         return;
 
-      new ParticleBlackSplat(game.scene, { x: ai.x, y: ai.y });
-    }
-
-// apply one random black-noise behavior to this AI
-  public function applyBehavior(ai: AI)
-    {
-      if (ai == null ||
-          game.area == null)
-        return;
-
+      // apply one random black-noise behavior to this AI
       var roll = Std.random(3);
       switch (roll)
         {
@@ -81,5 +72,14 @@ class BlackNoise extends Effect
             ai.log('stands catatonic, staring into nothingness.');
           default:
         }
+
+      // create splat particle
+      new ParticleBlackSplat(game.scene, { x: ai.x, y: ai.y });
+    }
+
+// returns true if effect should skip default AI turn logic
+  public override function skipDefaultTurnLogic(): Bool
+    {
+      return true;
     }
 }

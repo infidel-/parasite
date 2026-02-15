@@ -49,4 +49,10 @@ class Effect extends _SaveObject
     {
       return [];
     }
+
+// returns true if effect should skip default AI turn logic
+  public function skipDefaultTurnLogic(): Bool
+    {
+      return false;
+    }
 }

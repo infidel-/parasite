@@ -21,4 +21,10 @@ class Paralysis extends Effect
       super.init();
       name = 'paralysis';
     }
+
+// returns true if effect should skip default AI turn logic
+  public override function skipDefaultTurnLogic(): Bool
+    {
+      return true;
+    }
 }
