@@ -281,6 +281,8 @@ class Const
   public static var ROW_BLOOD = 40;
   public static var BLOOD_LARGE = 0;
   public static var BLOOD_NUM = 5;
+  public static var BLACK_BLOOD_LARGE = 5;
+  public static var BLACK_BLOOD_NUM = 5;
 
   public static var STREET_DEBRIS_TRANSFORMABLE = [
     { row: 41, col: 0, amount: 12 },

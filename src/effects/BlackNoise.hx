@@ -6,7 +6,7 @@ import ai.AI;
 import ai.CommonLogic;
 import game.Effect;
 import game.Game;
-import objects.DecorationExt;
+import particles.ParticleBlackSplat;
 
 class BlackNoise extends Effect
 {
@@ -33,11 +33,7 @@ class BlackNoise extends Effect
           game.area == null)
         return;
 
-      var blood = new DecorationExt(game, game.area.id,
-        ai.x, ai.y, Const.ROW_BLOOD,
-        Const.roll(0, Const.BLOOD_NUM));
-      blood.isStatic = false;
-      game.area.addObject(blood);
+      new ParticleBlackSplat(game.scene, { x: ai.x, y: ai.y });
     }
 
 // apply one random black-noise behavior to this AI
