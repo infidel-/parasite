@@ -37,7 +37,7 @@ class ParticleBlackSplat extends Particle
     {
       var o = new DecorationExt(game, game.area.id,
         pt.x, pt.y, Const.ROW_BLOOD,
-        Const.roll(0, Const.BLACK_BLOOD_NUM));
+        Const.roll(0, Const.BLACK_BLOOD_NUM - 1));
       o.isStatic = false;
       game.area.addObject(o);
     }

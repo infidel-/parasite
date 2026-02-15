@@ -78,7 +78,15 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
         case MISSION_KILL:
           m = new Kill(game, info.target);
         case MISSION_COMBAT:
-          m = new Combat(game, info.combat);
+          if (info.combat == null)
+            throw 'Combat mission info not provided for ordeal.';
+          switch (info.combat.template)
+            {
+              case TARGET_WITH_GUARDS:
+                m = new CombatTargetsWithGuards(game, info.combat);
+              case SUMMONING_RITUAL:
+                m = new CombatSummoningRitual(game, info.combat);
+            }
       }
       missions.push(m);
     }

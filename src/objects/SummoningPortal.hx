@@ -3,7 +3,7 @@
 
 package objects;
 
-import cult.missions.Combat;
+import cult.missions.CombatSummoningRitual;
 import game.Game;
 
 class SummoningPortal extends AreaObject
@@ -39,21 +39,17 @@ class SummoningPortal extends AreaObject
 // monitor player proximity to trigger ritual start
   public override function turn()
     {
-      // get mission
       var mission = game.cults[0].ordeals.getMissionByID(missionID);
       if (mission == null ||
           mission.isCompleted ||
           mission.type != MISSION_COMBAT)
         return;
-      var combat: Combat = cast mission;
-      if (combat.template != SUMMONING_RITUAL)
-        return;
+      var ritual: CombatSummoningRitual = cast mission;
 
-      // check player proximity
       if (Const.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) > 10 * 10)
         return;
 
-      combat.onPortalProximity(this);
+      ritual.onPortalProximity(this);
     }
 
   public override function known(): Bool

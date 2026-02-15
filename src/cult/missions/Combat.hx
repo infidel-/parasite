@@ -8,7 +8,7 @@ import game.Game;
 import objects.SewerExit;
 import objects.SummoningPortal;
 
-private typedef _CombatSpawnTarget = {
+typedef CombatSpawnTarget = {
   var target: _MissionTarget;
   var loadout: Game -> AIData -> _Difficulty -> Void;
 }
@@ -22,21 +22,6 @@ class Combat extends Mission
   public var clusterX: Int;
   public var clusterY: Int;
 
-  // ritual state
-  public var ritualStarted: Bool;
-  public var ritualTimer: Int;
-  public var ritualBroken: Bool;
-  public var ritualBreakPending: Bool;
-  public var ritualBreakTimer: Int;
-  public var ritualCompleted: Bool;
-  public var ritualResolved: Bool;
-  public var choirSpawned: Bool;
-  public var ritualInitDone: Bool;
-  public var ritualPortalObjectID: Int;
-  public var ritualPortalX: Int;
-  public var ritualPortalY: Int;
-  public var ritualRoomID: Int;
-
 // create a combat mission with configured template
   public function new(g: Game, combatInfo: _CombatMissionInfo)
     {
@@ -47,22 +32,18 @@ class Combat extends Mission
       if (combatInfo == null)
         throw 'Combat mission info not provided.';
 
-      // default template
       template = combatInfo.template;
       if (template == null)
         template = TARGET_WITH_GUARDS;
 
-      // roll difficulty if unset
       if (difficulty == null ||
           difficulty == UNSET)
         difficulty = rollDifficulty();
 
-      // resolve target list from configured entries and difficulty amounts
       var targetList = expandTargetsForDifficulty(combatInfo.targets, difficulty);
       if (targetList.length == 0)
         throw 'Combat mission has no targets for selected difficulty.';
 
-      // pick mission target language if unset
       if (targetList[0].target.lang == null ||
           targetList[0].target.lang == '')
         targetList[0].target.lang = game.lang.getRandomID();
@@ -72,7 +53,6 @@ class Combat extends Mission
             entry.target.lang == '')
           entry.target.lang = lang;
 
-      // build target records used by both templates
       for (i in 0...targetList.length)
         {
           var entry = targetList[i];
@@ -92,30 +72,7 @@ class Combat extends Mission
           targetIDs.push(data.id);
         }
 
-      // pick mission marker / mission area by template
-      switch (template)
-        {
-          case TARGET_WITH_GUARDS:
-            var area = game.region.getMissionArea(targetList[0].target);
-            if (area != null)
-              {
-                x = area.x;
-                y = area.y;
-              }
-          case SUMMONING_RITUAL:
-            var marker = pickMissionMarkerArea();
-            if (marker == null)
-              throw 'Could not find city marker area for summoning ritual mission.';
-            markerAreaID = marker.id;
-            x = marker.x;
-            y = marker.y;
-
-            var missionArea = game.region.createArea(AREA_SEWERS);
-            missionArea.parentID = marker.id;
-            missionArea.width = 49;
-            missionArea.height = 49;
-            areaID = missionArea.id;
-        }
+      initTemplate(combatInfo, targetList);
     }
 
 // init object before loading/post creation
@@ -130,25 +87,20 @@ class Combat extends Mission
       clusterX = -1;
       clusterY = -1;
       difficulty = UNSET;
-
-      ritualStarted = false;
-      ritualTimer = 0;
-      ritualBroken = false;
-      ritualBreakPending = false;
-      ritualBreakTimer = 0;
-      ritualCompleted = false;
-      ritualResolved = false;
-      choirSpawned = false;
-      ritualInitDone = false;
-      ritualPortalObjectID = -1;
-      ritualPortalX = -1;
-      ritualPortalY = -1;
-      ritualRoomID = -1;
     }
+
+// template-specific initialization (override in subclasses)
+  function initTemplate(combatInfo: _CombatMissionInfo, targetList: Array<CombatSpawnTarget>)
+    {}
+
+// template-specific turn processing (override in subclasses)
+  function turnTemplate()
+    {}
 
 // turn hook for combat mission
   public override function turn()
     {
+      // combat missions are only active in mission area
       if (game.location != LOCATION_AREA)
         return;
       if (game.area == null)
@@ -164,263 +116,7 @@ class Combat extends Mission
       if (targetIDs.length == 0)
         return;
 
-      switch (template)
-        {
-          case TARGET_WITH_GUARDS:
-            turnTargetsWithGuards();
-          case SUMMONING_RITUAL:
-            turnSummoningRitual();
-        }
-    }
-
-// handle clustered guard mission spawn loop
-  function turnTargetsWithGuards()
-    {
-      var missing = getMissingTargets();
-      if (missing.length == 0)
-        return;
-
-      // resolve cluster center
-      if (clusterX < 0 ||
-          clusterY < 0)
-        {
-          var center = game.area.findUnseenEmptyLocation();
-          if (center.x < 0)
-            center = game.area.findEmptyLocationNear(
-              game.playerArea.x, game.playerArea.y, 5);
-          if (center == null)
-            return;
-          clusterX = center.x;
-          clusterY = center.y;
-        }
-
-      // spawn missing targets near the cluster center
-      for (t in missing)
-        {
-          var loc = game.area.findEmptyLocationNear(clusterX, clusterY, 2);
-          if (loc == null)
-            return;
-          spawnMissionTarget(t, loc.x, loc.y);
-        }
-    }
-
-// run summoning ritual mission logic
-  function turnSummoningRitual()
-    {
-      if (!ritualInitDone)
-        {
-          initSummoningRitual();
-          if (!ritualInitDone)
-            return;
-        }
-
-      // keep spawning unresolved targets if initial placement was cramped
-      spawnMissingRitualTargets();
-
-      // ritual can only break after it has started
-      if (!ritualStarted)
-        return;
-
-      if (ritualBreakPending &&
-          !ritualBroken)
-        breakRitual();
-
-      // detect alerted participants
-      if (!ritualBroken)
-        for (targetID in targetIDs)
-          {
-            var ai = game.area.getAIByID(targetID);
-            if (ai == null ||
-                !ai.wasAlerted)
-              continue;
-            breakRitual();
-            break;
-          }
-
-      // count down active ritual timer while intact
-      if (!ritualBroken &&
-          ritualTimer > 0)
-        {
-          ritualTimer--;
-          if (ritualTimer <= 0)
-            completeRitual();
-        }
-
-      // broken flow countdown to portal collapse
-      if (ritualBroken &&
-          !ritualResolved)
-        {
-          ritualBreakTimer--;
-          if (ritualBreakTimer <= 0)
-            resolveBrokenRitual();
-        }
-    }
-
-// initialize ritual room, portal and participants
-  function initSummoningRitual()
-    {
-      if (game.area.generatorInfo == null ||
-          game.area.generatorInfo.rooms == null ||
-          game.area.generatorInfo.rooms.length == 0)
-        return;
-
-      // stamp mission ID onto exits for cleanup after completion
-      for (o in game.area.getObjects())
-        if (o.type == 'sewer_exit')
-          {
-            var exit: SewerExit = cast o;
-            exit.missionID = id;
-          }
-
-      // pick ritual room and portal location
-      var rooms = game.area.generatorInfo.rooms;
-      var room = rooms[Std.random(rooms.length)];
-      ritualRoomID = room.id;
-      var centerX = room.x1 + Std.int(room.w / 2);
-      var centerY = room.y1 + Std.int(room.h / 2);
-      if (!game.area.isWalkable(centerX, centerY) ||
-          game.area.hasAI(centerX, centerY))
-        {
-          var fallback = game.area.findEmptyLocationNear(centerX, centerY, 3);
-          if (fallback != null)
-            {
-              centerX = fallback.x;
-              centerY = fallback.y;
-            }
-        }
-
-      var portal = new SummoningPortal(game, game.area.id, centerX, centerY, id);
-      game.area.addObject(portal);
-      ritualPortalObjectID = portal.id;
-      ritualPortalX = centerX;
-      ritualPortalY = centerY;
-
-      spawnMissingRitualTargets();
-      ritualInitDone = true;
-    }
-
-// start the ritual timer when player approaches the portal
-  public function onPortalProximity(portal: SummoningPortal)
-    {
-      if (ritualStarted)
-        return;
-
-      ritualStarted = true;
-      ritualTimer = 10;
-      if (ritualBreakPending)
-        breakRitual();
-      game.message({
-        text: 'The chant tightens around the stone. Completion is near. Fewer cultists alive, weaker chance to break through.',
-        col: 'cult',
-      });
-    }
-
-// mark ritual as broken by death or alert
-  function breakRitual()
-    {
-      if (ritualBroken ||
-          ritualCompleted)
-        return;
-
-      ritualBroken = true;
-      ritualBreakPending = false;
-      ritualBreakTimer = 2;
-      game.message({
-        text: 'The ritual flow is broken. Unforeseen consequences gather.',
-        col: 'cult',
-      });
-    }
-
-// resolve intact ritual completion when timer expires
-  function completeRitual()
-    {
-      if (ritualCompleted)
-        return;
-      ritualCompleted = true;
-      ritualResolved = true;
-
-      if (ritualPortalObjectID >= 0)
-        {
-          var portal = game.area.getObject(ritualPortalObjectID);
-          if (portal != null)
-            game.area.removeObject(portal);
-        }
-
-      spawnChoirOfDiscord();
-      game.message({
-        text: 'The chant closes. The membrane tears.',
-        col: 'cult',
-      });
-    }
-
-// resolve broken ritual after delay
-  function resolveBrokenRitual()
-    {
-      ritualResolved = true;
-      if (ritualPortalObjectID >= 0)
-        {
-          var portal = game.area.getObject(ritualPortalObjectID);
-          if (portal != null)
-            game.area.removeObject(portal);
-        }
-
-      var chance = brokenRitualChoirChance();
-      if (Std.random(100) < chance)
-        {
-          spawnChoirOfDiscord();
-          game.message({
-            text: 'The membrane tears. A choir of discord spills through.',
-            col: 'cult',
-          });
-        }
-      else
-        game.message({
-          text: 'The membrane yet holds.',
-          col: 'cult',
-        });
-    }
-
-// count currently living ritual cultists in mission area
-  function livingRitualCultists(): Int
-    {
-      if (game.area == null)
-        return 0;
-
-      var living = 0;
-      for (targetID in targetIDs)
-        {
-          var ai = game.area.getAIByID(targetID);
-          if (ai == null ||
-              ai.state == AI_STATE_DEAD)
-            continue;
-          living++;
-        }
-      return living;
-    }
-
-// get choir spawn chance for broken ritual flow
-  function brokenRitualChoirChance(): Int
-    {
-      var chance = 10 + livingRitualCultists() * 10;
-      if (chance > 100)
-        chance = 100;
-      return chance;
-    }
-
-// spawn all currently missing ritual targets around portal
-  function spawnMissingRitualTargets()
-    {
-      if (ritualPortalX < 0 ||
-          ritualPortalY < 0)
-        return;
-
-      for (t in getMissingTargets())
-        {
-          var loc = game.area.findEmptyLocationNear(ritualPortalX, ritualPortalY, 4);
-          if (loc == null)
-            return;
-          spawnMissionTarget(t, loc.x, loc.y);
-        }
+      turnTemplate();
     }
 
 // collect mission targets that should be present but are missing in area
@@ -474,7 +170,6 @@ class Combat extends Mission
       if (candidates.length > 0)
         return candidates[Std.random(candidates.length)];
 
-      // fallback: allow city areas with events
       for (area in game.region)
         {
           if (area.x < 0 ||
@@ -512,87 +207,8 @@ class Combat extends Mission
         return;
       targetIDs.splice(idx, 1);
 
-      if (template == SUMMONING_RITUAL &&
-          !ritualBroken &&
-          !ritualCompleted)
-        {
-          if (ritualStarted)
-            breakRitual();
-          else ritualBreakPending = true;
-        }
-
       if (targetIDs.length == 0)
         success();
-    }
-
-// show ritual-specific completion message
-  public override function onSuccess()
-    {
-      if (template != SUMMONING_RITUAL)
-        return;
-
-      if (ritualPortalObjectID >= 0 &&
-          game.area != null &&
-          game.area.id == areaID)
-        {
-          var portal = game.area.getObject(ritualPortalObjectID);
-          if (portal != null)
-            game.area.removeObject(portal);
-        }
-      if (ritualCompleted)
-        {
-          spawnChoirOfDiscord();
-          game.message({
-            text: 'The ritual is complete. The membrane tears and a discordant hymn spills through.',
-            col: 'cult',
-          });
-        }
-      else
-        game.message({
-          text: 'The circle is silent. The membrane shudders in the dark.',
-          col: 'cult',
-        });
-    }
-
-// spawn choir near the ritual site and keep only one instance per mission
-  function spawnChoirOfDiscord(): Bool
-    {
-      if (choirSpawned)
-        return true;
-      if (game.area == null)
-        return false;
-      if (areaID >= 0 &&
-          game.area.id != areaID)
-        return false;
-
-      for (ai in game.area.getAllAI())
-        if (ai.type == 'choirOfDiscord' &&
-            ai.state != AI_STATE_DEAD)
-          {
-            choirSpawned = true;
-            return true;
-          }
-
-      var anchorX = ritualPortalX;
-      var anchorY = ritualPortalY;
-      if (anchorX < 0 ||
-          anchorY < 0)
-        {
-          anchorX = game.playerArea.x;
-          anchorY = game.playerArea.y;
-        }
-
-      var loc = game.area.findEmptyLocationNear(anchorX, anchorY, 3);
-      if (loc == null)
-        return false;
-
-      var choir = game.area.spawnAI('choirOfDiscord', loc.x, loc.y, false);
-      choir.isGuard = true;
-      choir.guardTargetX = loc.x;
-      choir.guardTargetY = loc.y;
-      game.area.addAI(choir);
-      choirSpawned = true;
-      return true;
     }
 
 // roll mission difficulty based on configured odds
@@ -607,7 +223,7 @@ class Combat extends Mission
     }
 
 // expand configured combat target entries for selected difficulty
-  function expandTargetsForDifficulty(entries: Array<_CombatMissionTargetInfo>, difficulty: _Difficulty): Array<_CombatSpawnTarget>
+  function expandTargetsForDifficulty(entries: Array<_CombatMissionTargetInfo>, difficulty: _Difficulty): Array<CombatSpawnTarget>
     {
       var expanded = [];
       var idx = 1;
