@@ -64,6 +64,10 @@ class SewerAreaGenerator
       // connect room blocks and mark tunnel blocks
       var links = connectRoomBlocks(grid, blockKinds, roomBlocks);
 
+      // add blind paths and alternate connections
+      addBlindPaths(grid, blockKinds, roomBlocks, links);
+      addAlternatePaths(grid, blockKinds, roomBlocks, links);
+
       // carve room/tunnel geometry from block plan
       var rooms = carveFromBlocks(area, grid, blockKinds, roomBlocks, links);
 
@@ -260,6 +264,124 @@ class SewerAreaGenerator
         }
 
       return links;
+    }
+
+// add blind dead-end paths from some rooms
+  function addBlindPaths(grid: _SewerGrid, kinds: Array<Array<Int>>,
+      rooms: Array<_GridPos>, links: Array<_SewerBlockLink>)
+    {
+      if (rooms.length < 3)
+        return;
+
+      // pick 1-3 rooms to extend blind paths from
+      var candidates = [];
+      for (room in rooms)
+        candidates.push(room);
+
+      var toExtend = Std.random(Std.int(Math.min(3, candidates.length))) + 1;
+      for (_ in 0...toExtend)
+        {
+          if (candidates.length == 0)
+            break;
+          var idx = Std.random(candidates.length);
+          var room = candidates[idx];
+          candidates.splice(idx, 1);
+
+          // find an empty direction to extend
+          var dirs = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 },
+          ];
+          while (dirs.length > 0)
+            {
+              var dIdx = Std.random(dirs.length);
+              var dir = dirs[dIdx];
+              dirs.splice(dIdx, 1);
+
+              var nbx = room.bx + dir.dx;
+              var nby = room.by + dir.dy;
+              if (nbx < 0 || nbx >= grid.width || nby < 0 || nby >= grid.height)
+                continue;
+              if (kinds[nby][nbx] != BLOCK_EMPTY)
+                continue;
+
+              // mark as tunnel and add link
+              kinds[nby][nbx] = BLOCK_TUNNEL;
+              addLink(links, room, { bx: nbx, by: nby });
+              break;
+            }
+        }
+    }
+
+// add alternate paths between nearby rooms that aren't directly connected
+  function addAlternatePaths(grid: _SewerGrid, kinds: Array<Array<Int>>,
+      rooms: Array<_GridPos>, links: Array<_SewerBlockLink>)
+    {
+      if (rooms.length < 4)
+        return;
+
+      // find pairs of rooms that are close but not directly linked
+      var pairs = [];
+      for (i in 0...rooms.length)
+        for (j in (i + 1)...rooms.length)
+          {
+            var dist = blockDistance(rooms[i], rooms[j]);
+            if (dist < 2 || dist > 3)
+              continue;
+            if (hasDirectLink(links, rooms[i], rooms[j]))
+              continue;
+            pairs.push({ a: rooms[i], b: rooms[j], dist: dist });
+          }
+
+      if (pairs.length == 0)
+        return;
+
+      // shuffle and pick some to connect
+      for (i in 0...pairs.length)
+        {
+          var j = Std.random(pairs.length);
+          var tmp = pairs[i];
+          pairs[i] = pairs[j];
+          pairs[j] = tmp;
+        }
+
+      var toAdd = Std.random(Std.int(Math.min(pairs.length, 2))) + 1;
+      for (i in 0...toAdd)
+        {
+          if (i >= pairs.length)
+            break;
+          var pair = pairs[i];
+          var path = buildPathByCenters(kinds, pair.a, pair.b);
+          for (k in 0...path.length)
+            {
+              var p = path[k];
+              if (k > 0)
+                addLink(links, path[k - 1], p);
+
+              if (k == 0 || k == path.length - 1)
+                continue;
+
+              if (kinds[p.by][p.bx] == BLOCK_EMPTY)
+                kinds[p.by][p.bx] = BLOCK_TUNNEL;
+            }
+        }
+    }
+
+// check if two blocks have a direct link
+  function hasDirectLink(links: Array<_SewerBlockLink>, a: _GridPos, b: _GridPos): Bool
+    {
+      for (link in links)
+        {
+          var matchA = (link.bx1 == a.bx && link.by1 == a.by) ||
+            (link.bx2 == a.bx && link.by2 == a.by);
+          var matchB = (link.bx1 == b.bx && link.by1 == b.by) ||
+            (link.bx2 == b.bx && link.by2 == b.by);
+          if (matchA && matchB)
+            return true;
+        }
+      return false;
     }
 
 // build orthogonal block path and choose bend order
@@ -460,49 +582,36 @@ class SewerAreaGenerator
           area.setCellType(xx, y, Const.TILE_WALKWAY);
     }
 
-// place sewer exits on tunnel junctions
+// place sewer exits in room centers
   function placeExits(area: AreaGame, rooms: Array<_Room>)
     {
-      var junctions = [];
-      for (y in 1...area.height - 1)
-        for (x in 1...area.width - 1)
-          {
-            if (area.getCellType(x, y) != Const.TILE_WALKWAY)
-              continue;
-            if (isInsideAnyRoom(rooms, x, y))
-              continue;
-
-            var cnt = 0;
-            if (area.getCellType(x - 1, y) == Const.TILE_WALKWAY)
-              cnt++;
-            if (area.getCellType(x + 1, y) == Const.TILE_WALKWAY)
-              cnt++;
-            if (area.getCellType(x, y - 1) == Const.TILE_WALKWAY)
-              cnt++;
-            if (area.getCellType(x, y + 1) == Const.TILE_WALKWAY)
-              cnt++;
-            if (cnt >= 3)
-              junctions.push({ x: x, y: y });
-          }
-
-      if (junctions.length == 0)
-        {
-          var fallback = findFallbackExit(area, rooms);
-          area.addObject(new SewerExit(game, area.id, fallback.x, fallback.y));
-          return;
-        }
+      if (rooms.length == 0)
+        return;
 
       var exitsToPlace = 1;
-      if (junctions.length > 2)
-        exitsToPlace += Std.random(Std.int(Math.min(3, junctions.length)) - 1);
+      if (rooms.length > 2)
+        exitsToPlace += Std.random(Std.int(Math.min(3, rooms.length)) - 1);
 
-      for (_ in 0...exitsToPlace)
+      // shuffle rooms to pick random ones
+      var shuffled = [];
+      for (room in rooms)
+        shuffled.push(room);
+      for (i in 0...shuffled.length)
         {
-          if (junctions.length == 0)
+          var j = Std.random(shuffled.length);
+          var tmp = shuffled[i];
+          shuffled[i] = shuffled[j];
+          shuffled[j] = tmp;
+        }
+
+      for (i in 0...exitsToPlace)
+        {
+          if (i >= shuffled.length)
             return;
-          var pick = junctions[Std.random(junctions.length)];
-          junctions.remove(pick);
-          area.addObject(new SewerExit(game, area.id, pick.x, pick.y));
+          var room = shuffled[i];
+          var cx = room.x1 + Std.int(room.w / 2);
+          var cy = room.y1 + Std.int(room.h / 2);
+          area.addObject(new SewerExit(game, area.id, cx, cy));
         }
     }
 

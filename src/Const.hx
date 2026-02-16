@@ -91,6 +91,7 @@ class Const
   public static var FRAME_SHIP_PART = 8;
   public static var FRAME_STAIRS = 9;
   public static var FRAME_LOCKED_ICON = 10;
+  public static var FRAME_SEWER_EXIT = 11;
 
   // effect row frames
   public static var ROW_EFFECT = 3;

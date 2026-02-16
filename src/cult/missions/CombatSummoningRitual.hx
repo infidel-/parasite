@@ -291,7 +291,18 @@ class CombatSummoningRitual extends Combat
 
       for (t in getMissingTargets())
         {
-          var loc = game.area.findEmptyLocationNear(ritualPortalX, ritualPortalY, 4);
+          var loc = null;
+          var attempts = 0;
+          while (attempts < 10)
+            {
+              loc = game.area.findEmptyLocationNear(ritualPortalX, ritualPortalY, 4);
+              if (loc == null)
+                break;
+              // don't spawn on top of portal
+              if (loc.x != ritualPortalX || loc.y != ritualPortalY)
+                break;
+              attempts++;
+            }
           if (loc == null)
             return;
           spawnMissionTarget(t, loc.x, loc.y);

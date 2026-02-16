@@ -21,7 +21,7 @@ class SewerExit extends AreaObject
     {
       super.init();
       missionID = -1;
-      imageCol = Const.FRAME_SEWER_HATCH;
+      imageCol = Const.FRAME_SEWER_EXIT;
       type = 'sewer_exit';
       name = 'sewer exit';
       isStatic = true;
