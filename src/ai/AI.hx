@@ -729,13 +729,23 @@ public function show()
 
 
 // event: AI receives damage
-  public function onDamage(damage: Int)
+  public function onDamage(damage: Int, ?isFromPlayerArea: Bool = false)
     {
       organs.onDamage(damage); // propagate event to organs
       health -= damage;
       if (health == 0) // AI death
         {
           die();
+          // direct host damage can bypass player host handlers
+          if (!isFromPlayerArea &&
+              game.location == LOCATION_AREA &&
+              game.player.state == PLR_STATE_HOST &&
+              game.player.host == this)
+            {
+              game.playerArea.onDetach();
+              game.scene.clearPath();
+              game.player.log('Your host has died from injuries.');
+            }
 
           return;
         }

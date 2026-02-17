@@ -1025,6 +1025,7 @@ class PlayerArea extends _SaveObject
       if (state == PLR_STATE_HOST)
         player.host.setPosition(x, y);
 
+
       entity.setPosition(x, y); // move player entity (even if invisible)
 
       if (doPost)
@@ -1233,8 +1234,9 @@ class PlayerArea extends _SaveObject
       // stop moving
       game.scene.clearPath();
 
-      player.host.onDamage(damage);
-      if (player.host.state == AI_STATE_DEAD)
+      player.host.onDamage(damage, true);
+      if (player.host != null &&
+          player.host.state == AI_STATE_DEAD)
         {
           onDetach();
 
