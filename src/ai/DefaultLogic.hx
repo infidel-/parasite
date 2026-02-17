@@ -142,8 +142,8 @@ class DefaultLogic
 
           var body: BodyObject = cast obj;
 
-          // human AI becomes alert on seeing human bodies
-          if (ai.isHuman && body.isHumanBody)
+          // human AI becomes alert on seeing dangerous body evidence
+          if (ai.isHuman && body.canAlertHumans())
             {
               if (!body.wasSeen)
                 {

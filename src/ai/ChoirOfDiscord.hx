@@ -27,7 +27,7 @@ class ChoirOfDiscord extends AI
       name.unknownCapped = 'Choir of discord';
       isNameKnown = true;
       isJobKnown = true;
-      soundsID = 'dog';
+      soundsID = 'choir';
       isHuman = false;
       isMale = true;
       isAggressive = true;
@@ -47,6 +47,12 @@ class ChoirOfDiscord extends AI
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+    }
+
+// check if this AI should use "it" pronouns
+  public override function isIt(): Bool
+    {
+      return true;
     }
 
 // cannot be attached by parasite

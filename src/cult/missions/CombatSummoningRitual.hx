@@ -247,12 +247,12 @@ class CombatSummoningRitual extends Combat
 // remove portal object from area
   function removePortal()
     {
-      if (ritualPortalObjectID >= 0)
-        {
-          var portal = game.area.getObject(ritualPortalObjectID);
-          if (portal != null)
-            game.area.removeObject(portal);
-        }
+      var portal = game.area.getObject(ritualPortalObjectID);
+      if (portal == null)
+        return;
+      portal.imageCol = Const.FRAME_BROKEN_PORTAL;
+      portal.updateImage();
+      game.scene.draw();
     }
 
 // count currently living ritual cultists in mission area
@@ -329,23 +329,9 @@ class CombatSummoningRitual extends Combat
             return true;
           }
 
-      // spawn choir at portal location or fallback to player area if portal is missing for some reason
-      var anchorX = ritualPortalX;
-      var anchorY = ritualPortalY;
-      if (anchorX < 0 ||
-          anchorY < 0)
-        {
-          anchorX = game.playerArea.x;
-          anchorY = game.playerArea.y;
-        }
-
-      // spawn choir a bit away from the portal
-      var loc = game.area.findEmptyLocationNear(anchorX, anchorY, 3);
-      if (loc == null)
-        return false;
-
       // spawn the choir
-      var choir = game.area.spawnAI('choirOfDiscord', loc.x, loc.y, false);
+      var choir = game.area.spawnAI('choirOfDiscord',
+        ritualPortalX, ritualPortalY, false);
       game.area.addAI(choir);
       choirSpawned = true;
       return true;

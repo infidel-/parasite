@@ -2,6 +2,7 @@
 
 package objects;
 
+import ai.AI;
 import game.Game;
 import game.Inventory;
 
@@ -11,7 +12,6 @@ class BodyObject extends AreaObject
 
   public var wasSeen: Bool; // was this body seen by someone already? (limit for call law events)
   public var isSearched: Bool; // is this body searched?
-  public var isHumanBody: Bool; // is this a human body?
   public var isDecayAccel: Bool; // is this body with decay acceleration?
   public var organPoints: Int; // amount of organs on this body
   var parentType: String;
@@ -19,8 +19,11 @@ class BodyObject extends AreaObject
   public function new(g: Game, vaid: Int, vx: Int, vy: Int, parentType: String)
     {
       super(g, vaid, vx, vy);
-      this.parentType = parentType;
       init();
+      this.parentType = parentType;
+      var icon = AI.bodyByType(parentType);
+      imageRow = icon.row;
+      imageCol = icon.col;
       initPost(false);
     }
 
@@ -35,15 +38,46 @@ class BodyObject extends AreaObject
       isSearched = false;
       organPoints = 0;
       isDecayAccel = false;
+      parentType = 'civilian';
     }
 
 // called after load or creation
   public override function initPost(onLoad: Bool)
     {
-      isHumanBody = (parentType != 'dog');
-      imageRow = Const.ROW_OBJECT;
-      imageCol = (isHumanBody ? Const.FRAME_HUMAN_BODY : Const.FRAME_DOG_BODY);
+      if (imageCol == -1)
+        {
+          var icon = AI.bodyByType(parentType);
+          imageRow = icon.row;
+          imageCol = icon.col;
+        }
       super.initPost(onLoad);
+    }
+
+// check if this body can be searched for loot
+  public inline function canSearch(): Bool
+    {
+      return (!isDogBody() &&
+        !isChoirBody());
+    }
+
+// check if this body should alert human AIs
+  public inline function canAlertHumans(): Bool
+    {
+      return !isDogBody();
+    }
+
+// check if this is a dog body
+  inline function isDogBody(): Bool
+    {
+      return parentType == 'dog';
+    }
+
+// check if this is a choir body
+  inline function isChoirBody(): Bool
+    {
+      return (parentType == 'choirOfDiscord' ||
+        parentType == 'choir' ||
+        parentType == 'choir of discord');
     }
 
 // update actions
@@ -52,8 +86,8 @@ class BodyObject extends AreaObject
       if (game.player.state != PLR_STATE_HOST)
         return;
 
-      // animals don't have stuff on them
-      if (!isSearched && isHumanBody)
+      // some body types don't have stuff on them
+      if (!isSearched && canSearch())
         game.ui.hud.addAction({
           id: 'searchBody',
           type: ACTION_OBJECT,

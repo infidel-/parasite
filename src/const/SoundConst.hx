@@ -97,6 +97,50 @@ class SoundConst
     ]
   ];
 
+  // choir of discord sounds
+  public static var choir: Map<String, Array<AISound>> = [
+    '' + REASON_DAMAGE => [
+      {
+        text: '***',
+        radius: 4,
+        alertness: 10,
+        params: null
+      },
+    ],
+    '' + AI_STATE_IDLE => [
+      {
+        text: '...',
+        radius: 0,
+        alertness: 0,
+        params: null
+      },
+    ],
+    '' + AI_STATE_ALERT => [
+      {
+        text: '***',
+        radius: 7,
+        alertness: 15,
+        params: null
+      },
+    ],
+    '' + AI_STATE_HOST => [
+      {
+        text: '...',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+    ],
+    '' + AI_STATE_DEAD => [
+      {
+        text: '***',
+        radius: 4,
+        alertness: 10,
+        params: null
+      },
+    ]
+  ];
+
   // common human sounds
   static var humanDamage: Array<AISound> = [
     {

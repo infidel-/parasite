@@ -109,6 +109,8 @@ class Const
   public static var FRAME_MASK_ATTACHED = 3;
   public static var FRAME_DOT = 4;
   public static var FRAME_MASK_DEFAULT = 5;
+  public static var FRAME_CHOIR = 6;
+  public static var FRAME_CHOIR_BODY = 7;
 
   // first growth row
   public static var ROW_GROWTH1 = 5;
@@ -156,6 +158,8 @@ class Const
   public static var FRAME_FLOOR_DRAIN = 0;
   public static var FRAME_VENTILATION = 1;
   public static var FRAME_BURNING_BARREL = 2;
+  public static var FRAME_SUMMONING_PORTAL = 3;
+  public static var FRAME_BROKEN_PORTAL = 4;
 
   // row 17,18 - documents
   public static var CHEM_LABS_DOCUMENTS = [

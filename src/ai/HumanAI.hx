@@ -87,7 +87,6 @@ class HumanAI extends AI
       super.initPost(onLoad);
     }
 
-
 // event: despawn live AI
   public override function onRemove()
     {

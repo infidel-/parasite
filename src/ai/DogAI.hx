@@ -43,6 +43,12 @@ class DogAI extends AI
       super.initPost(onLoad);
     }
 
+// check if this AI should use "it" pronouns
+  public override function isIt(): Bool
+    {
+      return true;
+    }
+
 // hook: ai-specific bonus actions
   public override function updateActionList()
     {

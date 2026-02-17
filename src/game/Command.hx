@@ -66,7 +66,7 @@ class Command
       var target = hud.targeting.target;
       var pronoun = 'them';
       if (target != null)
-        pronoun = (target.isMale ? 'him' : 'her');
+        pronoun = target.prepLog('him');
 
       hud.addAction({
         id: 'command.attack',

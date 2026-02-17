@@ -116,7 +116,7 @@ class AITooltip
       if (ai.isCultist)
         buf.add(' ' + Icon.cultist);
       buf.add('<br/>');
-      if (ai.isJobKnown)
+      if (!ai.isIt() && ai.isJobKnown)
         buf.add('job: ' + ai.job + '<br/>');
       if (ai.isAttrsKnown)
         {

@@ -25,8 +25,8 @@ class SummoningPortal extends AreaObject
       missionID = -1;
       type = 'summoning_portal';
       name = 'summoning portal';
-      imageRow = Const.ROW_OBJECT;
-      imageCol = Const.FRAME_EVENT_OBJECT;
+      imageRow = Const.ROW_OBJECT2;
+      imageCol = Const.FRAME_SUMMONING_PORTAL;
       isStatic = true;
     }
 

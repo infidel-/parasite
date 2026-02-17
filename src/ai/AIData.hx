@@ -332,9 +332,37 @@ class AIData extends _SaveObject
         this.id == game.player.host.id);
     }
 
-// prepare log string for gender
-  function prepLog(s: String): String
+// check if this AI should use "it" pronouns
+  public function isIt(): Bool
     {
+      return false;
+    }
+
+// prepare log string for gender
+  public function prepLog(s: String): String
+    {
+      if (isIt())
+        {
+          // whole-word pronouns
+          if (s == 'he' ||
+              s == 'him')
+            s = 'it';
+          else if (s == 'He')
+            s = 'It';
+          else if (s == 'his')
+            s = 'its';
+
+          // sentence pronouns
+          s = StringTools.replace(s, 'He ', 'It ');
+          s = StringTools.replace(s, ' he ', ' it ');
+          s = StringTools.replace(s, ' him ', ' it ');
+          s = StringTools.replace(s, ' him', ' it');
+          s = StringTools.replace(s, ' his ', ' its ');
+          s = StringTools.replace(s, ' his', ' its');
+          return s;
+        }
+
+      // female pronouns
       if (!isMale)
         {
           s = StringTools.replace(s, 'He ', 'She ');

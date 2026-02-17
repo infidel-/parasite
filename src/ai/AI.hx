@@ -57,6 +57,27 @@ class AI extends AIData
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
 
+// get body tile by AI type
+  public static function bodyByType(aiType: String): _Icon
+    {
+      if (aiType == 'dog')
+        return {
+          row: Const.ROW_OBJECT,
+          col: Const.FRAME_DOG_BODY,
+        };
+      if (aiType == 'choirOfDiscord' ||
+          aiType == 'choir' ||
+          aiType == 'choir of discord')
+        return {
+          row: Const.ROW_PARASITE,
+          col: Const.FRAME_CHOIR_BODY,
+        };
+      return {
+        row: Const.ROW_OBJECT,
+        col: Const.FRAME_HUMAN_BODY,
+      };
+    }
+
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g);
@@ -197,7 +218,7 @@ public function show()
       if (type == 'dog')
         entity.setIcon('entities', 1, Const.ROW_PARASITE);
       else if (type == 'choirOfDiscord')
-        entity.setIcon('entities', Const.FRAME_PARASITE, Const.ROW_PARASITE);
+        entity.setIcon('entities', Const.FRAME_CHOIR, Const.ROW_PARASITE);
       else entity.setIcon(
         (isMale ? 'male' : 'female'),
         tileAtlasX, tileAtlasY);
@@ -214,7 +235,6 @@ public function show()
         (isMale ? 'male' : 'female'),
         tileAtlasX, tileAtlasY);
     }
-
 
 // set position
   public function setPosition(vx: Int, vy: Int, ?force: Bool = false)

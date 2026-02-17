@@ -63,7 +63,7 @@ class AreaObject extends _SaveObject
     }
 
 // update entity image
-  function updateImage()
+  public function updateImage()
     {
       entity.setIcon('entities', imageCol, imageRow);
     }
