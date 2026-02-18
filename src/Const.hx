@@ -63,6 +63,7 @@ class Const
   public static var FRAME_SLIME = 8;
   public static var FRAME_HIGH_CRIME = 9;
   public static var FRAME_BLEEDING = 10;
+  public static var FRAME_BLACK_NOISE = 11;
 
   // region icons frames
   public static var ROW_REGION_ICON = 1;

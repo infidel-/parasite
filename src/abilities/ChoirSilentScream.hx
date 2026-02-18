@@ -3,6 +3,7 @@ package abilities;
 
 import ai.AI;
 import effects.BlackNoise;
+import particles.ParticleSilentScream;
 
 class ChoirSilentScream extends Ability
 {
@@ -47,6 +48,10 @@ class ChoirSilentScream extends Ability
       if (affected == 0)
         return false;
 
+      new ParticleSilentScream(target.game.scene, {
+        x: ai.x,
+        y: ai.y
+      });
       target.game.scene.sounds.play('ability-silent-scream', {
         x: ai.x,
         y: ai.y,
