@@ -32,4 +32,13 @@ class Bleeding extends Effect
 
       ai.onDamage(1 * time);
     }
+
+// returns effect icon for world entity badge
+  public override function icon(): _Icon
+    {
+      return {
+        row: Const.ROW_ALERT,
+        col: Const.FRAME_BLEEDING,
+      };
+    }
 }

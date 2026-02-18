@@ -81,6 +81,30 @@ class Effects extends _SaveObject
       return _list.iterator();
     }
 
+// returns icon for currently active effects
+  public function getIcon(): _Icon
+    {
+      var single: _Icon = null;
+      var count = 0;
+      for (effect in _list)
+        {
+          var icon = effect.icon();
+          if (icon == null)
+            continue;
+
+          count++;
+          if (count >= 2)
+            return {
+              row: Const.ROW_EFFECT,
+              col: Const.FRAME_MULTIPLE_EFFECTS,
+            };
+
+          single = icon;
+        }
+
+      return single;
+    }
+
 
 // returns all damage modifiers from active effects for given weapon
   public function damageMods(weapon: WeaponInfo): Array<_DamageBonus>

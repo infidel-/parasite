@@ -12,6 +12,7 @@ class AIEntity extends PawnEntity
   var ai: AI; // AI link
   // -1, 0: do not draw
   var alertx: Int; // alert frame (new draw)
+  var effectIcon: _Icon; // currently active effect icon
   var isNPC: Bool;
   public var isMissionTarget: Bool;
 
@@ -21,6 +22,7 @@ class AIEntity extends PawnEntity
       super(g, xx, yy);
 
       alertx = -1;
+      effectIcon = null;
       isNPC = false;
       isMissionTarget = false;
       ai = vai;
@@ -32,6 +34,12 @@ class AIEntity extends PawnEntity
   public inline function setAlert(index: Int)
     {
       alertx = index;
+    }
+
+// set effect image index
+  public inline function setEffect(icon: _Icon)
+    {
+      effectIcon = icon;
     }
 
 // ai entity draw
@@ -70,6 +78,11 @@ class AIEntity extends PawnEntity
         drawImage(ctx, game.scene.images.entities,
           Const.FRAME_CULTIST0,
           Const.ROW_EFFECT);
+      // draw effect icon
+      if (effectIcon != null)
+        drawImage(ctx, game.scene.images.entities,
+          effectIcon.col,
+          effectIcon.row);
 
       // draw target reticle
       if (showTargeting)

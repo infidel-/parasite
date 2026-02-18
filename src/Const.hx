@@ -101,6 +101,7 @@ class Const
   public static var FRAME_PARTICLE_MONEY = 2;
   public static var FRAME_EFFECT_MONEY = 3;
   public static var FRAME_CULTIST0 = 4;
+  public static var FRAME_MULTIPLE_EFFECTS = 5;
 
   // parasite row frames
   public static var ROW_PARASITE = 4;

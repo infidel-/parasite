@@ -352,25 +352,14 @@ public function show()
             alertFrame = Const.FRAME_ALERT1;
         }
 
-      // panic state
-      if (effects.has(EFFECT_PANIC))
-        alertFrame = Const.FRAME_PANIC;
-
       // calling
       if (game.managerArea.hasAI(this, AREAEVENT_CALL_LAW) ||
           game.managerArea.hasAI(this, AREAEVENT_CALL_BACKUP) ||
           game.managerArea.hasAI(this, AREAEVENT_CALL_TEAM_BACKUP))
         alertFrame = Const.FRAME_CALLING;
 
-      // paralysis state
-      if (effects.has(EFFECT_PARALYSIS))
-        alertFrame = Const.FRAME_PARALYSIS;
-      else if (effects.has(EFFECT_SLIME))
-        alertFrame = Const.FRAME_SLIME;
-      else if (effects.has(EFFECT_BLEEDING))
-        alertFrame = Const.FRAME_BLEEDING;
-
       entity.setAlert(alertFrame);
+      entity.setEffect(effects.getIcon());
     }
 
 

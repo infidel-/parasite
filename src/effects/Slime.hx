@@ -47,4 +47,13 @@ class Slime extends Effect
     {
       return true;
     }
+
+// returns effect icon for world entity badge
+  public override function icon(): _Icon
+    {
+      return {
+        row: Const.ROW_ALERT,
+        col: Const.FRAME_SLIME,
+      };
+    }
 }

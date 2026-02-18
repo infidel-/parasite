@@ -50,6 +50,12 @@ class Effect extends _SaveObject
       return [];
     }
 
+// returns effect icon for world entity badge
+  public function icon(): _Icon
+    {
+      return null;
+    }
+
 // returns true if effect should skip default AI turn logic
   public function skipDefaultTurnLogic(): Bool
     {
