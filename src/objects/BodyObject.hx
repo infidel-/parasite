@@ -21,7 +21,7 @@ class BodyObject extends AreaObject
       super(g, vaid, vx, vy);
       init();
       this.parentType = parentType;
-      var icon = AI.bodyByType(parentType);
+      var icon = BodyObject.iconByType(parentType);
       imageRow = icon.row;
       imageCol = icon.col;
       initPost(false);
@@ -46,7 +46,7 @@ class BodyObject extends AreaObject
     {
       if (imageCol == -1)
         {
-          var icon = AI.bodyByType(parentType);
+          var icon = iconByType(parentType);
           imageRow = icon.row;
           imageCol = icon.col;
         }
@@ -188,6 +188,26 @@ class BodyObject extends AreaObject
         }
     }
 
+// get body tile by AI type
+  public static function iconByType(aiType: String): _Icon
+    {
+      if (aiType == 'dog')
+        return {
+          row: Const.ROW_OBJECT,
+          col: Const.FRAME_DOG_BODY,
+        };
+      if (aiType == 'choirOfDiscord' ||
+          aiType == 'choir' ||
+          aiType == 'choir of discord')
+        return {
+          row: Const.ROW_PARASITE,
+          col: Const.FRAME_CHOIR_BODY,
+        };
+      return {
+        row: Const.ROW_OBJECT,
+        col: Const.FRAME_HUMAN_BODY,
+      };
+    }
 
   static var DESPAWN_TURNS = 20; // turns until body is despawned (picked up by law etc)
 }
