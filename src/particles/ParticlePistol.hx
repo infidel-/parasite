@@ -11,12 +11,14 @@ class ParticlePistol extends ParticleBullet
   var sy: Int;
   var dst: _Point; // destination point (can be AI or player)
   var hit: Bool;
+  var bloodType: String;
   var srcx: Float;
   var srcy: Float;
   var dstx: Float;
   var dsty: Float;
 
-  public function new(s: GameScene, sx: Int, sy: Int, dstp: _Point, hit: Bool)
+  public function new(s: GameScene, sx: Int, sy: Int, dstp: _Point, hit: Bool,
+      ?bloodType: String = 'red')
     {
       super(s);
       this.sx = sx;
@@ -24,6 +26,7 @@ class ParticlePistol extends ParticleBullet
       this.dst = dstp;
       this.time = 50;
       this.hit = hit;
+      this.bloodType = bloodType;
       if (!hit)
         this.dst = {
           x: dst.x + Const.roll(-2, 2),
@@ -66,7 +69,7 @@ class ParticlePistol extends ParticleBullet
   public override function onDeath()
     {
       if (hit)
-        new ParticleSplat(scene, dst);
+        Particle.createBlood(bloodType, scene, dst);
       game.scene.sounds.play('attack-bullet-' +
         (hit ? 'hit' : 'miss'), {
         always: true,

@@ -13,9 +13,11 @@ class ParticleRifle extends ParticleBullet
   var dst: Array<_Point>; // destination point (can be AI or player)
   var delta: Array<_Point>; // slight delta for each shot
   var hit: Bool;
+  var bloodType: String;
   var timeOne: Int;
 
-  public function new(s: GameScene, sx: Int, sy: Int, pt: _Point, hit: Bool)
+  public function new(s: GameScene, sx: Int, sy: Int, pt: _Point, hit: Bool,
+      ?bloodType: String = 'red')
     {
       super(s);
       this.sx = sx;
@@ -27,6 +29,7 @@ class ParticleRifle extends ParticleBullet
       this.time = 100;
       this.timeOne = 50;
       this.hit = hit;
+      this.bloodType = bloodType;
       if (!hit)
         for (i in 0...3)
           this.dst[i] = {
@@ -57,7 +60,7 @@ class ParticleRifle extends ParticleBullet
             {
               dt = 1.0;
               if (hit && i == 0)
-                new ParticleSplat(scene, dst[i]);
+                Particle.createBlood(bloodType, scene, dst[i]);
               if (i == 0)
                 game.scene.sounds.play('attack-bullet-' +
                   (hit ? 'hit' : 'miss'), {

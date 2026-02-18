@@ -13,8 +13,10 @@ class ParticleShotgun extends ParticleBullet
   var dst: Array<_Point>; // destination point (can be AI or player)
   var delta: Array<_Point>; // slight delta for each shot
   var hit: Bool;
+  var bloodType: String;
 
-  public function new(s: GameScene, sx: Int, sy: Int, pt: _Point, hit: Bool)
+  public function new(s: GameScene, sx: Int, sy: Int, pt: _Point, hit: Bool,
+      ?bloodType: String = 'red')
     {
       super(s);
       this.sx = sx;
@@ -26,6 +28,7 @@ class ParticleShotgun extends ParticleBullet
       this.dstreal = pt;
       this.time = 50;
       this.hit = hit;
+      this.bloodType = bloodType;
       if (!hit)
         for (i in 0...numShots)
           this.dst[i] = {
@@ -82,7 +85,7 @@ class ParticleShotgun extends ParticleBullet
   public override function onDeath()
     {
       if (hit)
-        new ParticleSplat(scene, dstreal);
+        Particle.createBlood(bloodType, scene, dstreal);
       game.scene.sounds.play('attack-bullet-' +
         (hit ? 'hit' : 'miss'), {
         always: true,

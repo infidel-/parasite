@@ -1230,6 +1230,12 @@ public function show()
   public dynamic function action(action: _PlayerAction)
     {}
 
+// hook: returns blood splat type for this AI
+  public function bloodType(): String
+    {
+      return 'red';
+    }
+
 // ======================================================================
 
   public function toString()

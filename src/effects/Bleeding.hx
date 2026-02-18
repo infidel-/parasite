@@ -5,6 +5,7 @@ package effects;
 import ai.AI;
 import game.Effect;
 import game.Game;
+import particles.Particle;
 
 class Bleeding extends Effect
 {
@@ -27,10 +28,15 @@ class Bleeding extends Effect
   public override function turn(ai: AI, time: Int)
     {
       super.turn(ai, time);
-      if (ai == null)
+      if (ai == null ||
+          game.area == null)
         return;
 
       ai.onDamage(1 * time);
+      Particle.createBlood(ai.bloodType(), game.scene, {
+        x: ai.x,
+        y: ai.y
+      });
     }
 
 // returns effect icon for world entity badge

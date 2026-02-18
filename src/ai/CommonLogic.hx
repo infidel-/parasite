@@ -150,11 +150,15 @@ class CommonLogic
         ai.energy -= 2;
 //        (ai.hasTrait(TRAIT_ASSIMILATED) ? 2 : 2);
 
+      var targetBloodType = 'red';
+      if (target.type == TARGET_AI)
+        targetBloodType = target.ai.bloodType();
+
       // draw attack effects
       if (weapon.isRanged)
         Particle.createShot(
           weapon.sound.file, game.scene, ai.x, ai.y,
-          { x: target.x, y: target.y }, roll);
+          { x: target.x, y: target.y }, roll, targetBloodType);
 
       // roll skill
       if (!roll)
@@ -177,7 +181,8 @@ class CommonLogic
 
       // blood effect on hit
       if (weapon.spawnBlood)
-        new ParticleSplat(game.scene, { x: target.x, y: target.y });
+        Particle.createBlood(targetBloodType, game.scene,
+          { x: target.x, y: target.y });
 
       // stun damage on ai - stun the host
       // if target is parasite, works as regular damage

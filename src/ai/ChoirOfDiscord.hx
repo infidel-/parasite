@@ -61,6 +61,12 @@ class ChoirOfDiscord extends AI
       return false;
     }
 
+// returns black blood splats for choir
+  public override function bloodType(): String
+    {
+      return 'black';
+    }
+
 // acquire all visible targets each turn and stay aggressive
   public override function turn()
     {
