@@ -2,7 +2,6 @@
 
 package objects;
 
-import ai.AI;
 import game.Game;
 import game.Inventory;
 
@@ -169,12 +168,31 @@ class BodyObject extends AreaObject
       if (game.turns - creationTime < DESPAWN_TURNS)
         return;
 
+      // do not despawn while player sees this body
+      if (game.playerArea.sees(x, y))
+        return;
+
       // notify world about body discovery by authorities
       // habitat bodies are not discovered
       if (!game.area.isHabitat)
         game.managerRegion.onBodyDiscovered(game.area, organPoints);
 
+      dropInventoryOnDespawn();
       game.area.removeObject(this);
+    }
+
+// drop inventory items as pickups before body despawn
+  function dropInventoryOnDespawn()
+    {
+      var items = [];
+      for (item in inventory)
+        items.push(item);
+
+      for (item in items)
+        {
+          inventory.removeItem(item);
+          game.area.addItem(x, y, item);
+        }
     }
 
   public override function onDecay()
