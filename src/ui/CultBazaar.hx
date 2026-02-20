@@ -37,9 +37,10 @@ class CultBazaar
   public function hasAffordableItems(): Bool
     {
       var cult = game.cults[0];
-      var money = cult.resources.money;
+      var resources = cult.resources;
       for (price in Bazaar.bazaarPrices)
-        if (money >= price)
+        if (resources.money >= price.money &&
+            resources.combat >= price.combat)
           return true;
       return false;
     }
@@ -448,9 +449,12 @@ class CultBazaar
               memberHasItem(member, entry.itemID))
             continue;
 
-          var canAfford = (cult.resources.money >= entry.price);
+          var canAfford =
+            (cult.resources.money >= entry.price.money &&
+             cult.resources.combat >= entry.price.combat);
           var text = entry.name + ' (' +
-            Const.col('cult-power', entry.price) + Icon.money + ')';
+            Const.col('cult-power', entry.price.money) + Icon.money + ', ' +
+            Const.col('cult-power', entry.price.combat) + ' COM)';
           var label = (canAfford ? text : Const.col('gray', text));
           var itemID = entry.itemID;
           var price = entry.price;
@@ -471,11 +475,11 @@ class CultBazaar
     }
 
 // returns price for a bazaar item id
-  function getPrice(itemID: String): Int
+  function getPrice(itemID: String): _CultPower
     {
       var price = Bazaar.bazaarPrices.get(itemID);
       if (price == null)
-        return 0;
+        return new _CultPower();
       return price;
     }
 
@@ -535,7 +539,7 @@ class CultBazaar
     }
 
 // buys a bazaar item for a member
-  function buyItem(memberID: Int, itemID: String, price: Int, slot: String, isRandom: Bool)
+  function buyItem(memberID: Int, itemID: String, price: _CultPower, slot: String, isRandom: Bool)
     {
       var cult = game.cults[0];
       if (cult.hasEffect(CULT_EFFECT_NOTRADE))
@@ -543,9 +547,14 @@ class CultBazaar
           game.actionFailed('Trade rites are sealed at the moment.');
           return;
         }
-      if (cult.resources.money < price)
+      if (cult.resources.money < price.money)
         {
           game.actionFailed('Not enough money for purchase.');
+          return;
+        }
+      if (cult.resources.combat < price.combat)
+        {
+          game.actionFailed('Not enough combat resources for purchase.');
           return;
         }
 
@@ -575,7 +584,8 @@ class CultBazaar
       removeSlotItem(member, slot);
 
       game.player.addKnownItem(finalID);
-      cult.resources.money -= price;
+      cult.resources.money -= price.money;
+      cult.resources.combat -= price.combat;
       if (slot == 'armor')
         member.inventory.addID(finalID, true);
       else member.inventory.addID(finalID);

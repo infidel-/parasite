@@ -21,15 +21,29 @@ class Bazaar
   ];
 
 // price list for bazaar items
-  public static var bazaarPrices: StringMap<Int> = initPrices();
-  static function initPrices(): StringMap<Int>
+  public static var bazaarPrices: StringMap<_CultPower> = initPrices();
+  static function initPrices(): StringMap<_CultPower>
     {
-      var map: StringMap<Int> = [
-        'randomMelee' => randomMeleePrice,
-        'pistol' => 5000,
-        'assaultRifle' => 10000,
-        'combatShotgun' => 10000,
-        'kevlarArmor' => 20000
+      var map: StringMap<_CultPower> = [
+        'randomMelee' => {
+          money: randomMeleePrice
+        },
+        'pistol' => {
+          money: 5000,
+          combat: 1
+        },
+        'assaultRifle' => {
+          money: 10000,
+          combat: 1
+        },
+        'combatShotgun' => {
+          money: 10000,
+          combat: 2
+        },
+        'kevlarArmor' => {
+          money: 20000,
+          combat: 2
+        }
       ];
       return map;
     }

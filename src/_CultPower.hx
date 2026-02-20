@@ -11,7 +11,7 @@ class _CultPower extends _SaveObject
   public var occult: Int;
   public var money: Int;
 
-  public function new(combat: Int, media: Int, lawfare: Int, corporate: Int, political: Int, occult: Int, money: Int)
+  public function new(combat: Int = 0, media: Int = 0, lawfare: Int = 0, corporate: Int = 0, political: Int = 0, occult: Int = 0, money: Int = 0)
     {
       this.combat = combat;
       this.media = media;
