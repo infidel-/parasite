@@ -268,6 +268,18 @@ class UI
                   return;
                 }
             }
+
+          // attack target with melee
+          if (hud.state == HUD_DEFAULT &&
+              (e.key == 'a' ||
+               e.key == 'A'))
+            {
+              if (hud.targeting.canAttackTarget())
+                {
+                  game.playerArea.attackAction(hud.targeting.target, true);
+                  return;
+                }
+            }
         }
 
       // try to handle keyboard actions

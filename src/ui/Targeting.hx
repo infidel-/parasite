@@ -156,6 +156,28 @@ class Targeting
       return isTargetVisibleOnScreen();
     }
 
+// check whether target can be attacked with melee
+  public function canAttackTarget(): Bool
+    {
+      if (game.player.state != PLR_STATE_HOST ||
+          target == null)
+        return false;
+      if (!isTargetVisibleOnScreen())
+        return false;
+      if (!target.isNear(game.playerArea.x, game.playerArea.y))
+        return false;
+
+      if (game.playerArea.getKnownMeleeWeapon() != null)
+        return true;
+
+      // allow melee attack when currently using fists
+      var weaponInfo = game.player.host.getCurrentWeaponItemInfo();
+      if (weaponInfo.id == 'fists')
+        return true;
+
+      return false;
+    }
+
 // build a list of visible ai for targeting
   function buildList(): Array<AI>
     {

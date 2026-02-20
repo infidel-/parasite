@@ -784,6 +784,15 @@ public function onMouseLeave()
                   key: 's',
                   isVirtual: true,
                 });
+
+              if (targeting.canAttackTarget())
+                addKeyAction({
+                  id: 'attackTarget',
+                  type: ACTION_AREA,
+                  name: 'Attack',
+                  key: 'a',
+                  isVirtual: true,
+                });
             }
 
           if (game.location == LOCATION_AREA &&
@@ -928,6 +937,12 @@ public function onMouseLeave()
             game.playerArea.attackAction(targeting.target);
           return;
         }
+      if (action.id == 'attackTarget')
+        {
+          if (targeting.canAttackTarget())
+            game.playerArea.attackAction(targeting.target, true);
+          return;
+        }
       if (action.id == 'commandMenu')
         {
           command.enter();
@@ -978,7 +993,8 @@ public function onMouseLeave()
           return true;
         }
       if (action.id == 'targetMode' ||
-          action.id == 'shootTarget')
+          action.id == 'shootTarget' ||
+          action.id == 'attackTarget')
         return false;
 
       if (game.location == LOCATION_AREA)

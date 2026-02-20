@@ -495,8 +495,21 @@ class PlayerArea extends _SaveObject
     }
 
 
+// get first known melee weapon from inventory
+  public function getKnownMeleeWeapon(): _Item
+    {
+      for (item in player.host.inventory)
+        if (item.info.weapon != null &&
+            !item.info.weapon.isRanged &&
+            player.knowsItem(item.id))
+          return item;
+
+      return null;
+    }
+
+
 // action: attack this ai
-  public function attackAction(ai: AI)
+  public function attackAction(ai: AI, ?preferMelee: Bool = false)
     {
       // not in a host mode
       if (state != PLR_STATE_HOST)
@@ -519,7 +532,17 @@ class PlayerArea extends _SaveObject
         type: TARGET_AI,
         ai: ai,
       };
+
+      var inventory = player.host.inventory;
+      var oldWeaponID = inventory.weaponID;
+      if (preferMelee)
+        {
+          var meleeWeapon = getKnownMeleeWeapon();
+          if (meleeWeapon != null)
+            inventory.weaponID = meleeWeapon.id;
+        }
       CommonLogic.logicAttack(player.host, target, true);
+      inventory.weaponID = oldWeaponID;
 
       actionPost(); // post-action call
     }
