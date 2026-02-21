@@ -55,7 +55,10 @@ class Targeting
       hud.state = HUD_TARGETING;
       game.updateHUD();
       if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
+        {
+          game.scene.mouse.update(true);
+          game.scene.area.draw();
+        }
       return true;
     }
 
@@ -68,6 +71,7 @@ class Targeting
       targetingAI = null;
       if (updateUI)
         {
+          game.scene.mouse.update(true);
           game.updateHUD();
           if (game.location == LOCATION_AREA)
             game.scene.area.draw();
@@ -105,6 +109,63 @@ class Targeting
       if (targetingAI != null)
         target = targetingAI;
       exit();
+    }
+
+// select target by mouse click and exit targeting
+  public function selectByMouse(x: Int, y: Int): Bool
+    {
+      if (hud.state != HUD_TARGETING ||
+          game.location != LOCATION_AREA ||
+          list.length == 0)
+        return false;
+
+      var ai = game.area.getAI(x, y);
+      if (ai == null)
+        return false;
+
+      var i = 0;
+      for (entry in list)
+        {
+          if (entry == ai)
+            {
+              index = i;
+              targetingAI = ai;
+              target = ai;
+              exit();
+              return true;
+            }
+          i++;
+        }
+      return false;
+    }
+
+// update targeting ai from mouse hover
+  public function hoverByMouse(x: Int, y: Int): Bool
+    {
+      if (hud.state != HUD_TARGETING ||
+          game.location != LOCATION_AREA ||
+          list.length == 0)
+        return false;
+
+      var ai = game.area.getAI(x, y);
+      if (ai == null)
+        return false;
+
+      var i = 0;
+      for (entry in list)
+        {
+          if (entry == ai)
+            {
+              if (index == i)
+                return false;
+              index = i;
+              targetingAI = ai;
+              game.scene.area.draw();
+              return true;
+            }
+          i++;
+        }
+      return false;
     }
 
 // clear target and exit targeting

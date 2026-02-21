@@ -33,14 +33,17 @@ class Mouse
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         return;
-      if (game.ui.hud.state == HUD_TARGETING)
-        return;
 
       var pos = getXY();
       if (pos.x < 0 || pos.y < 0 ||
           pos.x >= game.area.width ||
           pos.y >= game.area.height)
         return;
+      if (game.ui.hud.state == HUD_TARGETING)
+        {
+          game.ui.hud.targeting.selectByMouse(pos.x, pos.y);
+          return;
+        }
 #if mydebug
       // debug mode
       if (e.button == 1)
@@ -194,8 +197,22 @@ class Mouse
 // area mode
   function updateArea(force: Bool)
     {
-      var c = CURSOR_BLOCKED;
+      // targeting mode - cursor locked
       var pos = getXY();
+      if (game.ui.hud.state == HUD_TARGETING)
+        {
+          game.scene.area.clearPath();
+          if (pos.x >= 0 &&
+              pos.y >= 0 &&
+              pos.x < game.area.width &&
+              pos.y < game.area.height)
+            game.ui.hud.targeting.hoverByMouse(pos.x, pos.y);
+          setCursor(CURSOR_MOVE);
+          return;
+        }
+
+      // out of bounds check
+      var c = CURSOR_BLOCKED;
       if (pos.x < 0 || pos.y < 0 ||
           pos.x >= game.area.width || pos.y >= game.area.height)
         {
@@ -206,6 +223,8 @@ class Mouse
           setCursor(c);
           return;
         }
+
+      // check if tile position changed
       var posChanged = false;
       if (oldPos.x != pos.x || oldPos.y != pos.y || force)
         {
@@ -246,6 +265,7 @@ class Mouse
       // clear path
       else game.scene.area.clearPath();
 
+      // info cursor
       if (isInspectMode())
         c = CURSOR_INFO;
 
