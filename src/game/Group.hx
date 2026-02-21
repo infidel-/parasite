@@ -118,8 +118,7 @@ class Group extends _SaveObject
   public function turn()
     {
       // pause passage of time when in mission area
-      if (game.location == LOCATION_AREA &&
-          game.area.isMissionArea())
+      if (game.player.inMissionArea())
         return;
 
       // team already spawned

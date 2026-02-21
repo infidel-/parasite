@@ -432,6 +432,14 @@ class Player extends _SaveObject
         host.isAgreeable());
     }
 
+// returns true when player is in mission area
+  public inline function inMissionArea(): Bool
+    {
+      return (game.location == LOCATION_AREA &&
+        game.area != null &&
+        game.area.isMissionArea());
+    }
+
 // =================================================================================
 
 

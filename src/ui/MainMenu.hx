@@ -169,7 +169,7 @@ override function update()
         // show mission area indicator instead of saves left when in mission area
         var text = game.player.vars.savesLeft + ' saves left';
         var col = 'gray';
-        if (game.area.isMissionArea())
+        if (game.player.inMissionArea())
           {
             text = 'mission area';
             col = 'red';

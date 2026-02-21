@@ -137,6 +137,10 @@ class Cult extends UIWindow
   function updateActionsRoot()
     {
       var cult = game.cults[0];
+      var inMissionArea =
+        (game.location == LOCATION_AREA &&
+         game.area != null &&
+         game.area.isMissionArea());
      
       // action - call for help
       if (cult.canCallHelp())
@@ -168,7 +172,8 @@ class Cult extends UIWindow
         }
 
       // action - trade (only show if at least 10k money)
-      if (cult.resources.money >= 10000 &&
+      if (!inMissionArea &&
+          cult.resources.money >= 10000 &&
           !cult.hasEffect(CULT_EFFECT_NOTRADE))
         {
           addPlayerAction({
@@ -184,7 +189,8 @@ class Cult extends UIWindow
         }
 
       // action - trade resources (only show if at least 3 of any resource and no trade restriction)
-      if (!cult.hasEffect(CULT_EFFECT_NOTRADE))
+      if (!inMissionArea &&
+          !cult.hasEffect(CULT_EFFECT_NOTRADE))
         {
           var hasResources = false;
           for (name in _CultPower.names)
@@ -211,7 +217,8 @@ class Cult extends UIWindow
         }
 
       // action - bazaar
-      if (!cult.hasEffect(CULT_EFFECT_NOTRADE))
+      if (!inMissionArea &&
+          !cult.hasEffect(CULT_EFFECT_NOTRADE))
         {
           var canAfford = bazaar.hasAffordableItems();
           var label = (canAfford ? 'BazaarNet' : Const.col('gray', 'BazaarNet'));
@@ -228,37 +235,39 @@ class Cult extends UIWindow
         }
 
       // action - initiate ordeal
-      addPlayerAction({
-        id: 'initiateOrdeal',
-        type: ACTION_CULT,
-        name: 'Initiate communal ordeal',
-        energy: 0,
-        f: function() {
-          menuState = STATE_INITIATE;
-          updateActions();
-        }
-      });
+      if (!inMissionArea)
+        addPlayerAction({
+          id: 'initiateOrdeal',
+          type: ACTION_CULT,
+          name: 'Initiate communal ordeal',
+          energy: 0,
+          f: function() {
+            menuState = STATE_INITIATE;
+            updateActions();
+          }
+        });
 
       // list of current ordeals
-      for (ordeal in cult.ordeals.list)
-        {
-          var ordealAction: _PlayerAction = {
-            id: 'ordeal_' + ordeal.name,
-            type: ACTION_CULT,
-            name: Const.smallgray('[Ordeal] ') + ordeal.customName(),
-            energy: 0,
-            obj: { ordeal: ordeal }
-          };
+      if (!inMissionArea)
+        for (ordeal in cult.ordeals.list)
+          {
+            var ordealAction: _PlayerAction = {
+              id: 'ordeal_' + ordeal.name,
+              type: ACTION_CULT,
+              name: Const.smallgray('[Ordeal] ') + ordeal.customName(),
+              energy: 0,
+              obj: { ordeal: ordeal }
+            };
 
-          var ordealObj = ordeal; // capture the ordeal object
-          ordealAction.f = function() {
-            currentOrdeal = ordealObj;
-            menuState = STATE_ORDEAL;
-            updateActions();
-          };
+            var ordealObj = ordeal; // capture the ordeal object
+            ordealAction.f = function() {
+              currentOrdeal = ordealObj;
+              menuState = STATE_ORDEAL;
+              updateActions();
+            };
 
-          addPlayerAction(ordealAction);
-        }
+            addPlayerAction(ordealAction);
+          }
     }
 
 // update actions for initiate ordeal state

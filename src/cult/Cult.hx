@@ -550,8 +550,7 @@ class Cult extends _SaveObject
       if (state != CULT_STATE_ACTIVE)
         return;
       // pause passage of time when in mission area
-      if (game.location == LOCATION_AREA &&
-          game.area.isMissionArea())
+      if (game.player.inMissionArea())
         return;
 
       if (members.length == 0)
@@ -960,8 +959,7 @@ class Cult extends _SaveObject
   public function onEnterArea()
     {
       // check if current area is a mission area
-      if (game.location == LOCATION_AREA &&
-          game.area != null)
+      if (game.player.inMissionArea())
         {
           var mission = ordeals.getAreaMission(game.area);
           if (mission != null)
