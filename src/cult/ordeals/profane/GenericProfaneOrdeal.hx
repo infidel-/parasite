@@ -86,6 +86,8 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
                 m = new CombatTargetsWithGuards(game, info.combat);
               case SUMMONING_RITUAL:
                 m = new CombatSummoningRitual(game, info.combat);
+              case UNDERGROUND_LAB_PURGE:
+                m = new CombatUndergroundLabPurge(game, info.combat);
             }
       }
       missions.push(m);

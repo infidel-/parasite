@@ -8,6 +8,7 @@ import objects.*;
 import game.AreaGame;
 import game.CityAreaGenerator;
 import game.SewerAreaGenerator;
+import game.UndergroundLabAreaGenerator;
 
 class AreaGenerator
 {
@@ -16,6 +17,7 @@ class AreaGenerator
   public var city: CityAreaGenerator;
   public var corp: CorpAreaGenerator;
   public var sewers: SewerAreaGenerator;
+  public var undergroundLab: UndergroundLabAreaGenerator;
 
   public static var deltaMap: Map<Int, { x: Int, y: Int }>;
   public static var DIR_UP = 8;
@@ -30,6 +32,7 @@ class AreaGenerator
       city = new CityAreaGenerator(game, this);
       corp = new CorpAreaGenerator(game, this);
       sewers = new SewerAreaGenerator(game, this);
+      undergroundLab = new UndergroundLabAreaGenerator(game, this);
       deltaMap = [
         DIR_LEFT => { x: -1, y: 0 },
         DIR_RIGHT => { x: 1, y: 0 },
@@ -61,6 +64,8 @@ class AreaGenerator
         corp.generate(area, info);
       else if (info.type == 'sewers')
         sewers.generate(area, info);
+      else if (info.type == 'undergroundLab')
+        undergroundLab.generate(area, info);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
 
       if (info.type == 'city')

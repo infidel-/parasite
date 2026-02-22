@@ -767,10 +767,11 @@ class AreaGame extends _SaveObject
 
       // prefer elevator in corp or nearest sewer exit in sewers
       if (info.id == AREA_CORP ||
-          info.id == AREA_SEWERS)
+          info.id == AREA_SEWERS ||
+          info.id == AREA_UNDERGROUND_LAB)
         {
           var tiles = [];
-          var targetType = (info.id == AREA_CORP ? 'elevator' : 'sewer_exit');
+          var targetType = (info.id == AREA_SEWERS ? 'sewer_exit' : 'elevator');
           for (o in getObjects())
             {
               if (o.type != targetType)
@@ -786,7 +787,8 @@ class AreaGame extends _SaveObject
             }
           if (tiles.length > 0)
             {
-              if (info.id == AREA_CORP)
+              if (info.id == AREA_CORP ||
+                  info.id == AREA_UNDERGROUND_LAB)
                 return tiles[Std.random(tiles.length)];
               var best = tiles[0];
               var bestDist = Const.distanceSquared(best.x, best.y, params.near.x, params.near.y);

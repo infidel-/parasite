@@ -219,6 +219,32 @@ class WorldConst
         objects: []
       },
 
+      // *** mission underground laboratory
+      AREA_UNDERGROUND_LAB => {
+        id: AREA_UNDERGROUND_LAB,
+        ambient: AMBIENT_FACILITY,
+        type: 'undergroundLab',
+        name: 'Underground Laboratory',
+        pediaArticle: 'areaLab',
+        exit: 'elevator',
+        alertnessMod: 1.0,
+        width: 45,
+        height: 35,
+        canEnter: true,
+        isInhabited: true,
+        commonAI: 0,
+        uncommonAI: 0,
+        buildingChance: 0,
+        lawType: 'security',
+        lawResponseTime: 0,
+        lawResponseAmount: 0,
+        lawResponseMax: 0,
+        lawResponseEnabled: false,
+        isHighRisk: true,
+        ai: new Map(),
+        objects: []
+      },
+
       // *** habitat
       AREA_HABITAT => {
         id: AREA_HABITAT,

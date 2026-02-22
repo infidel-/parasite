@@ -6,10 +6,14 @@ import game.Game;
 
 class Stairs extends AreaObject
 {
-  public function new(g: Game, vaid: Int, vx: Int, vy: Int)
+  public var missionID: Int;
+
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int, ?vmissionID: Int = -1)
     {
       super(g, vaid, vx, vy);
+      missionID = vmissionID;
       init();
+      missionID = vmissionID;
       initPost(false);
     }
 
@@ -17,6 +21,7 @@ class Stairs extends AreaObject
   public override function init()
     {
       super.init();
+      missionID = -1;
       imageCol = Const.FRAME_STAIRS;
       type = 'stairs';
       name = 'stairs';
@@ -51,11 +56,19 @@ class Stairs extends AreaObject
       if (!game.area.canLeave())
         return false;
 
+      var leavingAreaID = game.area.id;
       game.scene.sounds.play('object-stairs');
-      game.log("You leave the corporate building entering the sewers.");
+      if (missionID >= 0)
+        game.log("You leave the mission site.");
+      else
+        game.log("You leave the corporate building entering the sewers.");
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
-      game.goals.complete(GOAL_ENTER_SEWERS);
+
+      if (missionID < 0)
+        game.goals.complete(GOAL_ENTER_SEWERS);
+      else
+        game.region.removeArea(leavingAreaID);
 
       return true;
     }
