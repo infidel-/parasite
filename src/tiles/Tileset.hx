@@ -36,19 +36,13 @@ class Tileset
 // check if tile is walkable
   public function isWalkable(tileID: Int): Bool
     {
-      if (tileID < 0 ||
-          tileID >= Const.TILE_WALKABLE.length)
-        return false;
-      return Const.TILE_WALKABLE[tileID] == 1;
+      return false;
     }
 
 // check if tile can be seen through
   public function canSeeThrough(tileID: Int): Bool
     {
-      if (tileID < 0 ||
-          tileID >= Const.TILE_SEETHROUGH.length)
-        return false;
-      return Const.TILE_SEETHROUGH[tileID] == 1;
+      return false;
     }
 
 // draw one tile icon at screen position

@@ -5,6 +5,7 @@ package game;
 import const.WorldConst;
 import region.*;
 import _AreaType;
+import tiles.Default;
 
 class RegionGame extends _SaveObject
 {
@@ -580,7 +581,7 @@ class RegionGame extends _SaveObject
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
 
-      return (Const.TILE_WALKABLE[_array[x][y].tileID] == 1);
+      return (Default.TILE_WALKABLE[_array[x][y].tileID] == 1);
     }
 
 // get objects iterator
