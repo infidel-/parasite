@@ -9,13 +9,14 @@ import game.AreaGenerator;
 import objects.Elevator;
 import objects.FloorDrain;
 import objects.Stairs;
+import tiles.UndergroundLab;
 
 class UndergroundLabAreaGenerator
 {
-  static var TILE_WALL = Const.TILE_BUILDING;
-  static var TILE_ROOM = Const.TILE_FLOOR_TILE;
-  static var TILE_CORRIDOR = Const.TILE_FLOOR_LINO;
-  static var TILE_ENTRY = Const.TILE_FLOOR_CONCRETE;
+  static var TEMP_VOID = 0;
+  static var TEMP_ROOM = 1;
+  static var TEMP_CORRIDOR = 2;
+  static var TEMP_ENTRY = 3;
 
   var game: Game;
   var gen: AreaGenerator;
@@ -30,17 +31,17 @@ class UndergroundLabAreaGenerator
 // generate compact underground lab area with mission exits
   public function generate(area: AreaGame, info: AreaInfo)
     {
-      // fill map with walls first
+      // fill map with void first
       for (y in 0...area.height)
         for (x in 0...area.width)
-          area.setCellType(x, y, TILE_WALL);
+          area.setCellType(x, y, TEMP_VOID);
 
       var rooms = [];
       var roomID = 0;
 
       // entry room on the left
       var entryRoom = makeRoom(area, rooms, roomID++, 6,
-        Std.int(area.height / 2) - 4, 8, 8, TILE_ROOM);
+        Std.int(area.height / 2) - 4, 8, 8, TEMP_ROOM);
 
       // primary vat chamber on the right
       var vatW = 14;
@@ -48,36 +49,36 @@ class UndergroundLabAreaGenerator
       var vatX = area.width - vatW - 6;
       var vatY = Std.int(area.height / 2) - Std.int(vatH / 2);
       var vatRoom = makeRoom(area, rooms, roomID++,
-        vatX, vatY, vatW, vatH, TILE_ROOM);
+        vatX, vatY, vatW, vatH, TEMP_ROOM);
 
       // top service room connected to the central hall
       var topRoom = makeRoom(area, rooms, roomID++,
         entryRoom.x2 + 3, entryRoom.y1 - 7,
-        10, 5, TILE_ROOM);
+        10, 5, TEMP_ROOM);
 
       // bottom service room connected to the central hall
       var bottomRoom = makeRoom(area, rooms, roomID++,
         entryRoom.x2 + 3, entryRoom.y2 + 3,
-        10, 5, TILE_ROOM);
+        10, 5, TEMP_ROOM);
 
       // central corridor to vat room entry
       var corridorY = Std.int(area.height / 2) - 1;
       carveRect(area, entryRoom.x2 - 1, corridorY,
-        vatRoom.x1 - entryRoom.x2 + 2, 2, TILE_CORRIDOR);
+        vatRoom.x1 - entryRoom.x2 + 2, 2, TEMP_CORRIDOR);
 
       // short side corridors for service rooms
       carveRect(area, topRoom.x1 + Std.int(topRoom.w / 2),
-        topRoom.y2, 2, corridorY - topRoom.y2 + 1, TILE_CORRIDOR);
+        topRoom.y2, 2, corridorY - topRoom.y2 + 1, TEMP_CORRIDOR);
       carveRect(area, bottomRoom.x1 + Std.int(bottomRoom.w / 2),
-        corridorY + 1, 2, bottomRoom.y1 - corridorY, TILE_CORRIDOR);
+        corridorY + 1, 2, bottomRoom.y1 - corridorY, TEMP_CORRIDOR);
 
       // narrow doorway into the vat chamber
-      carveRect(area, vatRoom.x1 - 1, corridorY, 2, 2, TILE_CORRIDOR);
+      carveRect(area, vatRoom.x1 - 1, corridorY, 2, 2, TEMP_CORRIDOR);
 
       // elevator bay in the entry room (corp style 3x3 slab)
       var elevatorX = entryRoom.x1 + 1;
       var elevatorY = entryRoom.y1 + 1;
-      carveRect(area, elevatorX, elevatorY, 3, 3, TILE_ENTRY);
+      carveRect(area, elevatorX, elevatorY, 3, 3, TEMP_ENTRY);
       for (dy in 0...3)
         for (dx in 0...3)
           area.addObject(new Elevator(game, area.id, elevatorX + dx, elevatorY + dy));
@@ -90,6 +91,8 @@ class UndergroundLabAreaGenerator
       // add research-themed decoration and furniture
       decorateLab(area, entryRoom, topRoom, bottomRoom, vatRoom,
         elevatorX, elevatorY, stairsX, stairsY);
+      // convert temp markers to final floor and wall tiles
+      finalizeTiles(area);
 
       area.generatorInfo = {
         rooms: rooms,
@@ -144,8 +147,8 @@ class UndergroundLabAreaGenerator
       stairsX: Int,
       stairsY: Int)
     {
-      decorateChemRoom(area, topRoom, null, false);
-      decorateChemRoom(area, bottomRoom, null, false);
+      decorateChemRoom(area, topRoom, null);
+      decorateChemRoom(area, bottomRoom, null);
 
       decorateChemRoom(area, entryRoom, function(x: Int, y: Int)
         {
@@ -158,7 +161,7 @@ class UndergroundLabAreaGenerator
               Math.abs(y - stairsY) <= 1)
             return true;
           return false;
-        }, false);
+        });
 
       var vatCenterX = vatRoom.x1 + Std.int(vatRoom.w / 2);
       var vatCenterY = vatRoom.y1 + Std.int(vatRoom.h / 2);
@@ -166,20 +169,18 @@ class UndergroundLabAreaGenerator
         {
           return (Math.abs(x - vatCenterX) <= 3 &&
             Math.abs(y - vatCenterY) <= 3);
-        }, true);
+        });
     }
 
 // decorate one room using chemistry lab style
   function decorateChemRoom(area: AreaGame, room: _Room,
-      blocked: Int -> Int -> Bool, skipCenterTable: Bool)
+      blocked: Int -> Int -> Bool)
     {
       placeRoomDrain(area, room, blocked);
       decorateNearWalls(area, room, blocked);
-      if (!skipCenterTable)
-        placeCenterTable(area, room, blocked);
     }
 
-// place a random grate/drain in a room
+// place a random floor drain in a room
   function placeRoomDrain(area: AreaGame, room: _Room, blocked: Int -> Int -> Bool)
     {
       if (room.w < 3 ||
@@ -195,7 +196,6 @@ class UndergroundLabAreaGenerator
           if (!canDecorateCell(area, x, y, blocked))
             continue;
 
-          area.setCellType(x, y, Const.TILE_FLOOR_TILE + 1 + Std.random(3));
           if (Std.random(100) < 30)
             area.addObject(new FloorDrain(game, area.id, x, y));
           return;
@@ -225,47 +225,6 @@ class UndergroundLabAreaGenerator
           }
     }
 
-// place a center lab table block with tabletop decoration
-  function placeCenterTable(area: AreaGame, room: _Room, blocked: Int -> Int -> Bool)
-    {
-      if (room.w < 7 ||
-          room.h < 7)
-        return;
-
-      var block = (Std.random(100) < 50 ? Const.LABS_TABLE_3X2 : Const.LABS_TABLE_2X3);
-      var tableW = block[0].length;
-      var tableH = block.length;
-
-      var sx = room.x1 + Std.int((room.w - tableW) / 2);
-      var sy = room.y1 + Std.int((room.h - tableH) / 2);
-      if (room.w - tableW >= 4)
-        sx += Std.random(3) - 1;
-      if (room.h - tableH >= 4)
-        sy += Std.random(3) - 1;
-
-      sx = Const.clamp(sx, room.x1 + 2, room.x2 - tableW - 1);
-      sy = Const.clamp(sy, room.y1 + 2, room.y2 - tableH - 1);
-
-      for (i in 0...tableH)
-        for (j in 0...tableW)
-          {
-            var x = sx + j;
-            var y = sy + i;
-            if (!canDecorateCell(area, x, y, blocked))
-              return;
-          }
-
-      for (i in 0...tableH)
-        for (j in 0...tableW)
-          {
-            var x = sx + j;
-            var y = sy + i;
-            area.setCellType(x, y, block[i][j]);
-            if (Std.random(100) < 70)
-              gen.addDecoration(area, x, y, Const.CHEM_LABS_DECO_TABLE);
-          }
-    }
-
 // check if a tile can receive room decoration
   function canDecorateCell(area: AreaGame, x: Int, y: Int,
       blocked: Int -> Int -> Bool): Bool
@@ -281,6 +240,142 @@ class UndergroundLabAreaGenerator
           blocked(x, y))
         return false;
       var tile = area.getCellType(x, y);
-      return tile == TILE_ROOM;
+      return tile == TEMP_ROOM;
+    }
+
+// convert temporary room/corridor map to final floor and wall tiles
+  function finalizeTiles(area: AreaGame)
+    {
+      var floorMap: Array<Array<Bool>> = [];
+      for (x in 0...area.width)
+        {
+          floorMap[x] = [];
+          for (y in 0...area.height)
+            floorMap[x][y] = isFloorMarker(area.getCellType(x, y));
+        }
+
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (floorMap[x][y])
+              {
+                area.setCellType(x, y, getFloorTileID(x, y));
+                continue;
+              }
+            if (isWallShell(floorMap, x, y))
+              area.setCellType(x, y, getWallTileID(floorMap, x, y));
+            else
+              area.setCellType(x, y, Const.TILE_HIDDEN);
+          }
+    }
+
+// check whether temporary tile is a floor marker
+  inline function isFloorMarker(tile: Int): Bool
+    {
+      return (tile == TEMP_ROOM ||
+        tile == TEMP_CORRIDOR ||
+        tile == TEMP_ENTRY);
+    }
+
+// pick checkerboard floor tile id
+  inline function getFloorTileID(x: Int, y: Int): Int
+    {
+      if ((x + y) % 2 == 0)
+        return UndergroundLab.TILE_FLOOR_LIGHT;
+      return UndergroundLab.TILE_FLOOR_DARK;
+    }
+
+// check whether this cell should become a wall shell tile
+  inline function isWallShell(floorMap: Array<Array<Bool>>, x: Int, y: Int): Bool
+    {
+      return (getFloor(floorMap, x, y - 1) ||
+        getFloor(floorMap, x, y + 1) ||
+        getFloor(floorMap, x - 1, y) ||
+        getFloor(floorMap, x + 1, y));
+    }
+
+// safely read floor map
+  inline function getFloor(floorMap: Array<Array<Bool>>, x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= floorMap.length ||
+          y >= floorMap[x].length)
+        return false;
+      return floorMap[x][y];
+    }
+
+// map wall shell shape to a wall tile id
+  function getWallTileID(floorMap: Array<Array<Bool>>, x: Int, y: Int): Int
+    {
+      var n = getFloor(floorMap, x, y - 1);
+      var s = getFloor(floorMap, x, y + 1);
+      var w = getFloor(floorMap, x - 1, y);
+      var e = getFloor(floorMap, x + 1, y);
+
+      // inner corners (looking into floor)
+      if (e &&
+          s &&
+          !n &&
+          !w)
+        return UndergroundLab.TILE_WALL_INNER_TOP_LEFT;
+      if (w &&
+          s &&
+          !n &&
+          !e)
+        return UndergroundLab.TILE_WALL_INNER_TOP_RIGHT;
+      if (e &&
+          n &&
+          !s &&
+          !w)
+        return UndergroundLab.TILE_WALL_INNER_BOTTOM_LEFT;
+      if (w &&
+          n &&
+          !s &&
+          !e)
+        return UndergroundLab.TILE_WALL_INNER_BOTTOM_RIGHT;
+
+      // outer corners (looking out the floor)
+      if (n &&
+          w &&
+          !s &&
+          !e)
+        return UndergroundLab.TILE_WALL_OUTER_TOP_LEFT;
+      if (n &&
+          e &&
+          !s &&
+          !w)
+        return UndergroundLab.TILE_WALL_OUTER_TOP_RIGHT;
+      if (s &&
+          w &&
+          !n &&
+          !e)
+        return UndergroundLab.TILE_WALL_OUTER_BOTTOM_LEFT;
+      if (s &&
+          e &&
+          !n &&
+          !w)
+        return UndergroundLab.TILE_WALL_OUTER_BOTTOM_RIGHT;
+
+      // straight wall edges
+      if (s && !n)
+        return UndergroundLab.TILE_WALL_UPPER;
+      if (n && !s)
+        return UndergroundLab.TILE_WALL_LOWER;
+      if (e && !w)
+        return UndergroundLab.TILE_WALL_LEFT;
+      if (w && !e)
+        return UndergroundLab.TILE_WALL_RIGHT;
+
+      // fallback for complex adjacencies
+      if (s)
+        return UndergroundLab.TILE_WALL_UPPER;
+      if (n)
+        return UndergroundLab.TILE_WALL_LOWER;
+      if (e)
+        return UndergroundLab.TILE_WALL_LEFT;
+      if (w)
+        return UndergroundLab.TILE_WALL_RIGHT;
+      return Const.TILE_HIDDEN;
     }
 }

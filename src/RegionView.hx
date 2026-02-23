@@ -2,6 +2,7 @@
 
 import js.html.CanvasRenderingContext2D;
 import game.*;
+import tiles.Tileset;
 
 class RegionView
 {
@@ -179,10 +180,11 @@ class RegionView
 
       // draw area tiles and icons
       untyped ctx.imageSmoothingEnabled = false;
+      var tileset = scene.images.getDefaultTileset();
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
-          drawArea(ctx, cells[x][y]);
+          drawArea(ctx, cells[x][y], tileset);
       // smooth everything else
       untyped ctx.imageSmoothingEnabled = true;
 
@@ -206,7 +208,7 @@ class RegionView
     }
 
 // paint area tile and icons
-  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame)
+  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset)
     {
       // area not visible
       if (area.x < scene.cameraTileX1 - 1 ||
@@ -221,19 +223,9 @@ class RegionView
 
       // area tile
       var tileID = (isKnown(area) ? area.tileID : Const.TILE_HIDDEN);
-      var icon = {
-        row: Std.int(tileID / 16),
-        col: tileID % 16,
-      };
+      var icon = tileset.getIcon(tileID);
       untyped ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(scene.images.tileset,
-        icon.col * Const.TILE_SIZE_CLEAN, 
-        icon.row * Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        ax, ay,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
+      tileset.draw(ctx, icon, ax, ay);
 
       // high crime marker
       if (area.highCrime && area.isKnown)
@@ -347,5 +339,3 @@ class RegionView
       return icon;
     }
 }
-
-

@@ -7,6 +7,7 @@ import js.html.CanvasRenderingContext2D;
 import particles.Particle;
 import entities.EffectEntity;
 import game.Game;
+import tiles.Tileset;
 
 class AreaView
 {
@@ -20,6 +21,8 @@ class AreaView
   var _cache: Array<Array<Int>>; // tiles drawn on screen
   var path: Array<aPath.Node>; // currently visible path
   var fakeHosts: Array<_FakeHost>; // background hosts
+  var _tileset: Tileset;
+  var tileset(get, null): Tileset;
 
   public var width: Int; // area width, height in cells
   public var height: Int;
@@ -38,6 +41,7 @@ class AreaView
       drawIntervalID = 0;
       path = null;
       minimap = null;
+      _tileset = null;
 
       // init tiles cache 
       _cache = [];
@@ -158,24 +162,15 @@ class AreaView
     {
       var rect = game.area.getVisibleRect();
       var tileID = 0;
-      var icon = null;
+      var icon: _Icon = null;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
           {
             tileID = _cache[x][y];
-            icon = {
-              row: Std.int(tileID / 16),
-              col: tileID % 16,
-            };
-            ctx.drawImage(scene.images.tileset,
-              icon.col * Const.TILE_SIZE_CLEAN, 
-              icon.row * Const.TILE_SIZE_CLEAN,
-              Const.TILE_SIZE_CLEAN,
-              Const.TILE_SIZE_CLEAN,
+            icon = tileset.getIcon(tileID);
+            tileset.draw(ctx, icon,
               (x - scene.cameraTileX1) * Const.TILE_SIZE,
-              (y - scene.cameraTileY1) * Const.TILE_SIZE,
-              Const.TILE_SIZE,
-              Const.TILE_SIZE);
+              (y - scene.cameraTileY1) * Const.TILE_SIZE);
 
             // corp has fake people in the background
             if (game.area.info.id == AREA_CORP)
@@ -209,7 +204,7 @@ class AreaView
     }
 
 // corp has fake people in the background
-  function paintFakeHost(ctx, icon, x: Int, y: Int)
+  function paintFakeHost(ctx, icon: _Icon, x: Int, y: Int)
     {
       // TILE_ROAD_UNWALKABLE
       if (icon.row != 2 || icon.col < 11)
@@ -251,6 +246,7 @@ class AreaView
     {
       width = game.area.width;
       height = game.area.height;
+      _tileset = scene.images.getTileset(game.area.typeID);
       scene.updateCamera(); // center camera on player
     }
 
@@ -463,6 +459,7 @@ class AreaView
 // area entered
   public function onEnter()
     {
+      _tileset = scene.images.getTileset(game.area.typeID);
       fakeHosts = [];
       turnCorp(true);
     }
@@ -477,7 +474,7 @@ class AreaView
       var ctx = minimap.getContext2d();
       untyped ctx.imageSmoothingEnabled = true;
       var tileID = 0;
-      var icon = null;
+      var icon: _Icon = null;
       var cells = game.area.getCells();
       ctx.fillStyle = 'red';
       ctx.fillRect(0, 0, minimap.width, minimap.height);
@@ -485,12 +482,8 @@ class AreaView
         for (x in 0...game.area.width)
           {
             tileID = cells[x][y];
-            icon = {
-              row: Std.int(tileID / 16),
-              col: tileID % 16,
-            };
-      //      trace(icon);
-            ctx.drawImage(scene.images.tileset,
+            icon = tileset.getIcon(tileID);
+            ctx.drawImage(tileset.image,
               icon.col * Const.TILE_SIZE_CLEAN, 
               icon.row * Const.TILE_SIZE_CLEAN,
               Const.TILE_SIZE_CLEAN,
@@ -513,17 +506,14 @@ class AreaView
       if (game.turns % 3 != 0 && !force)
         return;
       var rect = game.area.getVisibleRect();
-      var icon = null;
+      var icon: _Icon = null;
       var tileID = 0;
       // spawn new ones
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
           {
             tileID = _cache[x][y];
-            icon = {
-              row: Std.int(tileID / 16),
-              col: tileID % 16,
-            };
+            icon = tileset.getIcon(tileID);
             // TILE_ROAD_UNWALKABLE
             if (icon.row != 2 || icon.col < 11)
               continue;
@@ -542,6 +532,15 @@ class AreaView
             if (fakeHosts.length > 10)
               fakeHosts.shift();
           }
+    }
+
+// get active area tileset with lazy cache
+  function get_tileset(): Tileset
+    {
+      if (_tileset == null &&
+          game.area != null)
+        _tileset = scene.images.getTileset(game.area.typeID);
+      return _tileset;
     }
 }
 

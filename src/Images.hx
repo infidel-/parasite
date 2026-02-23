@@ -1,6 +1,7 @@
 // all ingame images access
 import const.Jobs._JobInfo;
 import js.html.Image;
+import tiles.*;
 
 typedef _CivilianData = {
   x: Int,
@@ -19,6 +20,8 @@ class Images
   public var female: Image;
   public var tileset: Image;
   public var cursors: Array<Image>;
+  var defaultTileset: Default;
+  var undergroundLabTileset: UndergroundLab;
 
   public function new(s: GameScene)
     {
@@ -31,8 +34,9 @@ class Images
       male.src = 'img/male64.png';
       female = new Image();
       female.src = 'img/female64.png';
-      tileset = new Image();
-      tileset.src = 'img/tileset64.png';
+      defaultTileset = new Default();
+      undergroundLabTileset = new UndergroundLab();
+      tileset = defaultTileset.image;
 
       // load mouse cursors
       cursors = [];
@@ -43,6 +47,31 @@ class Images
           cursors.push(img);
         }
       }
+
+// get area-appropriate tileset wrapper
+  public function getTileset(?areaTypeID: _AreaType): Tileset
+    {
+      if (areaTypeID == null)
+        {
+          if (scene.game.area == null)
+            return defaultTileset;
+          areaTypeID = scene.game.area.typeID;
+        }
+
+      switch (areaTypeID)
+        {
+          case AREA_UNDERGROUND_LAB:
+            return undergroundLabTileset;
+          default:
+            return defaultTileset;
+        }
+    }
+
+// get default world tileset wrapper
+  public function getDefaultTileset(): Tileset
+    {
+      return defaultTileset;
+    }
 
 // get random civilian sprite data together with job info
   public function getRandomCivilianAI(isMale: Bool): _CivilianData

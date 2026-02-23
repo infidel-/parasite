@@ -7,6 +7,7 @@ import objects.*;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
+import tiles.Tileset;
 
 class AreaGame extends _SaveObject
 {
@@ -56,6 +57,7 @@ class AreaGame extends _SaveObject
   var _ai: List<AI>; // AI list
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
+  var _tileset: Tileset;
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
@@ -104,6 +106,7 @@ class AreaGame extends _SaveObject
       _ai = new List();
       _objects = new Map();
       _pathEngine = null;
+      _tileset = null;
     }
 
 // called after load or creation
@@ -848,6 +851,7 @@ class AreaGame extends _SaveObject
   public function setType(t: _AreaType)
     {
       typeID = t;
+      _tileset = null;
       info = WorldConst.getAreaInfo(typeID);
       width = info.width - 10 + 10 * Std.random(2);
       height = info.height - 10 + 10 * Std.random(2);
@@ -968,12 +972,27 @@ class AreaGame extends _SaveObject
         _cells[x][y] = index;
     }
 
+// get cached tileset for this area type
+  function getTileset(): Tileset
+    {
+      if (_tileset == null &&
+          game != null &&
+          game.scene != null &&
+          game.scene.images != null)
+        _tileset = game.scene.images.getTileset(typeID);
+      return _tileset;
+    }
+
 // check if you can see through this tile 
   public function canSeeThrough(x: Int, y: Int): Bool
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-      return (Const.TILE_SEETHROUGH[_cells[x][y]] == 1);
+      var tileID = _cells[x][y];
+      var tileset = getTileset();
+      if (tileset != null)
+        return tileset.canSeeThrough(tileID);
+      return false;
     }
 
 // check if tile is walkable
@@ -981,8 +1000,11 @@ class AreaGame extends _SaveObject
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-//      trace(x + ',' + y + ' ' + _cells[x][y]);
-      return (Const.TILE_WALKABLE[_cells[x][y]] == 1);
+      var tileID = _cells[x][y];
+      var tileset = getTileset();
+      if (tileset != null)
+        return tileset.isWalkable(tileID);
+      return false;
     }
 
 // check if x1, y1 sees x2, y2
