@@ -253,6 +253,31 @@ class Inventory extends _SaveObject
       return null;
     }
 
+// remove all ranged weapons from inventory
+  public function stripRangedWeapons()
+    {
+      var toRemove = [];
+      for (item in _list)
+        if (item.info.weapon != null &&
+            item.info.weapon.isRanged)
+          toRemove.push(item);
+
+      for (item in toRemove)
+        _list.remove(item);
+    }
+
+// remove all weapons from inventory
+  public function stripAllWeapons()
+    {
+      var toRemove = [];
+      for (item in _list)
+        if (item.info.weapon != null)
+          toRemove.push(item);
+
+      for (item in toRemove)
+        _list.remove(item);
+    }
+
 // check if inventory has a visible (non-concealable) weapon
   public function hasVisibleWeapon(): Bool
     {
