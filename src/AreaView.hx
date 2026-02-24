@@ -391,7 +391,54 @@ class AreaView
                     break;
                   }
               }
+
+          // if player is inside a room, reveal that room and its perimeter
+          revealCurrentRoom(rect, cells);
         }
+    }
+
+// reveal current room tiles and perimeter using generator room info
+  function revealCurrentRoom(rect: { x1: Int, y1: Int, x2: Int, y2: Int },
+      cells: Array<Array<Int>>)
+    {
+      var info = game.area.generatorInfo;
+      if (info == null ||
+          info.rooms == null ||
+          info.rooms.length == 0)
+        return;
+
+      var room = info.getRoomAt(game.playerArea.x, game.playerArea.y);
+      if (room == null)
+        return;
+
+      revealRoomRect(room, rect, cells);
+    }
+
+// reveal room interior and one-tile perimeter
+  function revealRoomRect(room: _Room,
+      rect: { x1: Int, y1: Int, x2: Int, y2: Int },
+      cells: Array<Array<Int>>)
+    {
+      var sx = room.x1 - 1;
+      var sy = room.y1 - 1;
+      var ex = room.x2 + 1;
+      var ey = room.y2 + 1;
+
+      if (sx < rect.x1)
+        sx = rect.x1;
+      if (sy < rect.y1)
+        sy = rect.y1;
+      if (ex >= rect.x2)
+        ex = rect.x2 - 1;
+      if (ey >= rect.y2)
+        ey = rect.y2 - 1;
+      if (sx > ex ||
+          sy > ey)
+        return;
+
+      for (y in sy...ey + 1)
+        for (x in sx...ex + 1)
+          setTile(x, y, cells[x][y]);
     }
 
 // set tile at x,y

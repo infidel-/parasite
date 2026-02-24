@@ -265,7 +265,12 @@ class UndergroundLabAreaGenerator
             if (isWallShell(floorMap, x, y))
               area.setCellType(x, y, getWallTileID(floorMap, x, y));
             else
-              area.setCellType(x, y, Const.TILE_HIDDEN);
+              {
+                var tileID = getDiagonalCornerTileID(floorMap, x, y);
+                if (tileID == Const.TILE_HIDDEN)
+                  area.setCellType(x, y, Const.TILE_HIDDEN);
+                else area.setCellType(x, y, tileID);
+              }
           }
     }
 
@@ -376,6 +381,45 @@ class UndergroundLabAreaGenerator
         return UndergroundLab.TILE_WALL_LEFT;
       if (w)
         return UndergroundLab.TILE_WALL_RIGHT;
+      return Const.TILE_HIDDEN;
+    }
+
+// map diagonal-only floor adjacency to an outer corner wall tile
+  inline function getDiagonalCornerTileID(floorMap: Array<Array<Bool>>, x: Int, y: Int): Int
+    {
+      // keep normal wall-shell handling for orthogonal floor adjacency
+      var n = getFloor(floorMap, x, y - 1);
+      var s = getFloor(floorMap, x, y + 1);
+      var w = getFloor(floorMap, x - 1, y);
+      var e = getFloor(floorMap, x + 1, y);
+      if (n || s || w || e)
+        return Const.TILE_HIDDEN;
+
+      var nw = getFloor(floorMap, x - 1, y - 1);
+      var ne = getFloor(floorMap, x + 1, y - 1);
+      var sw = getFloor(floorMap, x - 1, y + 1);
+      var se = getFloor(floorMap, x + 1, y + 1);
+      var diagonalFloors = 0;
+      if (nw)
+        diagonalFloors++;
+      if (ne)
+        diagonalFloors++;
+      if (sw)
+        diagonalFloors++;
+      if (se)
+        diagonalFloors++;
+      // only fill single-diagonal void corners to avoid overpainting
+      if (diagonalFloors != 1)
+        return Const.TILE_HIDDEN;
+
+      if (nw)
+        return UndergroundLab.TILE_WALL_OUTER_TOP_LEFT;
+      if (ne)
+        return UndergroundLab.TILE_WALL_OUTER_TOP_RIGHT;
+      if (sw)
+        return UndergroundLab.TILE_WALL_OUTER_BOTTOM_LEFT;
+      if (se)
+        return UndergroundLab.TILE_WALL_OUTER_BOTTOM_RIGHT;
       return Const.TILE_HIDDEN;
     }
 }

@@ -1090,7 +1090,6 @@ class AreaGame extends _SaveObject
       return true;
     }
 
-
 // add AI to map
   public function addAI(ai: AI)
     {
@@ -1098,7 +1097,6 @@ class AreaGame extends _SaveObject
       _ai.add(ai);
       ai.createEntity();
     }
-
 
 // remove AI
   public function removeAI(ai: AI)
@@ -1128,7 +1126,6 @@ class AreaGame extends _SaveObject
         if (Lambda.has(tmp.enemies, ai.id))
           tmp.enemies.remove(ai.id);
     }
-
 
 // TURN: area time passage - ai actions, object events
   public function turn()

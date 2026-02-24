@@ -45,7 +45,7 @@ class Mouse
           return;
         }
 #if mydebug
-      // debug mode
+      // debug mode (middle mouse button)
       if (e.button == 1)
         {
           if (game.location == LOCATION_AREA)

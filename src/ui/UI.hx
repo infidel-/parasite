@@ -63,6 +63,16 @@ class UI
       canvas.onclick = function (e: MouseEvent) {
         game.scene.mouse.onClick(e);
       }
+#if mydebug
+      // middle click is delivered as auxclick in Chromium/Electron
+      untyped canvas.onauxclick = function (e: MouseEvent) {
+        if (e.button == 1)
+          {
+            game.scene.mouse.onClick(e);
+            e.preventDefault();
+          }
+      }
+#end
 #if electron
       Browser.window.onerror = onError;
 #end
