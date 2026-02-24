@@ -33,8 +33,8 @@ class UndergroundLab extends Tileset
     {
       super('img/underground-lab.png');
       voidTile = {
-        col: 3,
-        row: 3,
+        col: 1,
+        row: 1,
       };
       floor = new StringMap<_Icon>();
       floorID = new StringMap<Int>();
@@ -48,11 +48,11 @@ class UndergroundLab extends Tileset
     {
       floor.set('light', {
         col: 1,
-        row: 1,
+        row: 3,
       });
       floor.set('dark', {
         col: 2,
-        row: 1,
+        row: 4,
       });
       floorID.set('light', TILE_FLOOR_LIGHT);
       floorID.set('dark', TILE_FLOOR_DARK);
@@ -64,18 +64,18 @@ class UndergroundLab extends Tileset
   function initWalls()
     {
       walls = {
-        upper: { col: 1, row: 0 },
-        lower: { col: 1, row: 6 },
-        left: { col: 0, row: 1 },
-        right: { col: 6, row: 1 },
-        innerTopLeft: { col: 0, row: 2 },
-        innerTopRight: { col: 6, row: 2 },
-        innerBottomLeft: { col: 0, row: 4 },
-        innerBottomRight: { col: 6, row: 4 },
-        outerTopLeft: { col: 6, row: 6 }, 
-        outerTopRight: { col: 0, row: 6 }, 
-        outerBottomLeft: { col: 6, row: 0 },
-        outerBottomRight: { col: 0, row: 0 },
+        upper: { col: 1, row: 2 },
+        lower: { col: 1, row: 0 },
+        left: { col: 2, row: 1 },
+        right: { col: 0, row: 1 },
+        innerTopLeft: { col: 2, row: 2 },
+        innerTopRight: { col: 0, row: 2 },
+        innerBottomLeft: { col: 2, row: 0 },
+        innerBottomRight: { col: 0, row: 0 },
+        outerTopLeft: { col: 4, row: 2 }, 
+        outerTopRight: { col: 3, row: 2 }, 
+        outerBottomLeft: { col: 4, row: 1 },
+        outerBottomRight: { col: 3, row: 1 },
       };
       wallID = {
         upper: TILE_WALL_UPPER,
