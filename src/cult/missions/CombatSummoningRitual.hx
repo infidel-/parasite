@@ -3,8 +3,8 @@ package cult.missions;
 
 import ai.AI;
 import game.Game;
+import objects.mission.SummoningPortal;
 import objects.SewerExit;
-import objects.SummoningPortal;
 import cult.missions.Combat.CombatSpawnTarget;
 
 private enum _RitualState

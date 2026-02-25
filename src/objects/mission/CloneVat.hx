@@ -1,9 +1,10 @@
 // clone vat object used by underground lab mission
 
-package objects;
+package objects.mission;
 
 import cult.missions.CombatUndergroundLabPurge;
 import game.Game;
+import objects.AreaObject;
 
 class CloneVat extends AreaObject
 {
