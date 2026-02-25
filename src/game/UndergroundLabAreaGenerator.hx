@@ -249,22 +249,10 @@ class UndergroundLabAreaGenerator
   function decorateWalls(area: AreaGame)
     {
       var tileset = game.scene.images.getTileset(area.typeID);
-      var layerCount = tileset.getWallDecorationLayerCount();
-      if (layerCount <= 0)
-        return;
-
       area.initTilesFromCells();
       for (y in 0...area.height)
         for (x in 0...area.width)
-          {
-            var tileID = area.getCellType(x, y);
-            if (!tileset.isWallTile(tileID) ||
-                Std.random(100) >= 30)
-              continue;
-            area.addTileDecoration(x, y, {
-              layerID: Std.random(layerCount),
-            });
-          }
+          tileset.decorateWallTile(area, x, y);
     }
 
 // convert temporary room/corridor map to final floor and wall tiles

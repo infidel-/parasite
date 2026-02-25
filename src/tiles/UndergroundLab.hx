@@ -41,7 +41,11 @@ class UndergroundLab extends Tileset
       iconByTileID = new Map<Int, _Icon>();
       initFloor();
       initWalls();
-      addWallDecorationLayer('img/underground-lab-decoration1.png');
+      addWallDecorationLayer('img/underground-lab-decoration1.png', 30);
+      addWallDecorationLayer('img/underground-lab-decoration2.png', 100);
+      addWallDecorationLayer('img/underground-lab-decoration3.png', 20);
+      addWallDecorationLayer('img/underground-lab-decoration4.png', 20);
+      addWallDecorationLayer('img/underground-lab-decoration5.png', 100);
     }
 
 // initialize floor icon and tile id maps
