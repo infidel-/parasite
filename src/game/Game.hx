@@ -945,38 +945,10 @@ class Game extends _SaveObject
               Std.isOfType(dstval, Array) ||
               Std.isOfType(dstval, List))
             {
-              var dsttmp = new Array<Dynamic>();
+              var dsttmp = [];
               var srctmp: Array<Dynamic> = untyped srcval;
               for (el in srctmp)
-                {
-                  if (Std.isOfType(el, Int) ||
-                      Std.isOfType(el, Float) ||
-                      Std.isOfType(el, Bool) ||
-                      Std.isOfType(el, String))
-                    {
-                      dsttmp.push(el);
-                      continue;
-                    }
-                  // NOTE: we only use Array<Array<Int>> currently
-                  else if (Std.isOfType(el, Array))
-                    {
-                      // assume int atm
-                      dsttmp.push(el);
-                      continue;
-                    }
-                  var elClassID: String = untyped el._classID;
-                  var isEnum: Bool = untyped el._isEnum;
-                  if (elClassID == null)
-                    dsttmp.push(el);
-                  else if (isEnum)
-                    dsttmp.push(initEnum(name, el, depth + 1));
-                  else
-                    {
-                      var dstel = initObject(name + '.' + f + '[][]', el, depth);
-                      dsttmp.push(dstel);
-                    }
-//                  else trace(name + '.' + f + '[][] type is unsupported (' + elClassID + ').');
-                }
+                dsttmp.push(initValue(name + '.' + f + '[]', el, depth + 1));
               if (Std.isOfType(dstval, List))
                 Reflect.setField(dst, f, Lambda.list(dsttmp));
               else Reflect.setField(dst, f, dsttmp);
@@ -989,20 +961,8 @@ class Game extends _SaveObject
                 {
                   var el = Reflect.field(srcval, ff);
                   var key = Std.parseInt(ff);
-                  if (Std.isOfType(el, Int) ||
-                      Std.isOfType(el, Float) ||
-                      Std.isOfType(el, Bool) ||
-                      Std.isOfType(el, String))
-                    dsttmp.set(key, el);
-                  var elClassID: String = untyped el._classID;
-                  if (elClassID == null)
-                    dsttmp.set(key, el);
-                  else
-                    {
-                      var dstel = initObject(name + '[' + ff + ']', el, depth);
-                      dsttmp.set(key, dstel);
-                    }
-//                  else trace(name + '.' + f + '[] type is unsupported (' + elClassID + ').');
+                  dsttmp.set(key,
+                    initValue(name + '[' + ff + ']', el, depth + 1));
                 }
               Reflect.setField(dst, f, dsttmp);
             }
@@ -1013,20 +973,8 @@ class Game extends _SaveObject
               for (ff in Reflect.fields(srcval))
                 {
                   var el = Reflect.field(srcval, ff);
-                  if (Std.isOfType(el, Int) ||
-                      Std.isOfType(el, Float) ||
-                      Std.isOfType(el, Bool) ||
-                      Std.isOfType(el, String))
-                    dsttmp.set(ff, el);
-                  var elClassID: String = untyped el._classID;
-                  if (elClassID == null)
-                    dsttmp.set(ff, el);
-                  else
-                    {
-                      var dstel = initObject(name + '[' + ff + ']', el, depth);
-                      dsttmp.set(ff, dstel);
-                    }
-//                  else trace(name + '.' + f + '[] type is unsupported (' + elClassID + ').');
+                  dsttmp.set(ff,
+                    initValue(name + '[' + ff + ']', el, depth + 1));
                 }
               Reflect.setField(dst, f, dsttmp);
             }
@@ -1059,6 +1007,53 @@ class Game extends _SaveObject
         dst.game = this;
     }
 
+// initialize one dynamic value from serialized data recursively
+  function initValue(name: String, src: Dynamic, depth: Int): Dynamic
+    {
+      if (depth > 20)
+        throw 'Depth too high: ' + depth + ' ' + name;
+
+      // basic types
+      if (src == null ||
+          Std.isOfType(src, Int) ||
+          Std.isOfType(src, Float) ||
+          Std.isOfType(src, Bool) ||
+          Std.isOfType(src, String))
+        return src;
+
+      // enums
+      var isEnum: Bool = untyped src._isEnum;
+      if (isEnum)
+        return initEnum(name, src, depth + 1);
+
+      // arrays and two-dimensional arrays
+      if (Std.isOfType(src, Array))
+        {
+          var ret = [];
+          var arr: Array<Dynamic> = untyped src;
+          for (el in arr)
+            ret.push(initValue(name + '[]', el, depth + 1));
+          return ret;
+        }
+
+      // objects with class ID marker
+      var srcClassID: String = untyped src._classID;
+      if (srcClassID != null)
+        return initObject(name, src, depth + 1);
+
+      // plain object, loop through fields
+      var ret: Dynamic = {};
+      for (f in Reflect.fields(src))
+        {
+          if (f == '_classID' ||
+              f == '_isEnum')
+            continue;
+          Reflect.setField(ret, f,
+            initValue(name + '.' + f, Reflect.field(src, f), depth + 1));
+        }
+      return ret;
+    }
+
 // will init enum from src data { classID, isEnum, val }
   function initEnum(name: String, src: Dynamic, depth: Int): Dynamic
     {
@@ -1084,11 +1079,14 @@ class Game extends _SaveObject
       if (hasGame == null)
         hasGame = false;
 
+      // create new instance of the class
       var srcClassID: String = untyped src._classID;
       var srcClass = Type.resolveClass(srcClassID);
       if (srcClass == null)
         throw 'Could not resolve class ' + srcClassID + ' src:' + src;
       var dst = Type.createEmptyInstance(srcClass);
+
+      // set common fields
       if (hasGame)
         dst.game = this;
       if (hasUI)

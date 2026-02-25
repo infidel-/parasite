@@ -41,18 +41,19 @@ class UndergroundLab extends Tileset
       iconByTileID = new Map<Int, _Icon>();
       initFloor();
       initWalls();
+      addWallDecorationLayer('img/underground-lab-decoration1.png');
     }
 
 // initialize floor icon and tile id maps
   function initFloor()
     {
       floor.set('light', {
-        col: 1,
-        row: 3,
+        col: 4,
+        row: 0,
       });
       floor.set('dark', {
-        col: 2,
-        row: 4,
+        col: 3,
+        row: 0,
       });
       floorID.set('light', TILE_FLOOR_LIGHT);
       floorID.set('dark', TILE_FLOOR_DARK);
@@ -129,5 +130,22 @@ class UndergroundLab extends Tileset
     {
       return (tileID == TILE_FLOOR_LIGHT ||
         tileID == TILE_FLOOR_DARK);
+    }
+
+// check if underground tile id is a wall tile
+  public override function isWallTile(tileID: Int): Bool
+    {
+      return (tileID == TILE_WALL_UPPER ||
+        tileID == TILE_WALL_LOWER ||
+        tileID == TILE_WALL_LEFT ||
+        tileID == TILE_WALL_RIGHT ||
+        tileID == TILE_WALL_INNER_TOP_LEFT ||
+        tileID == TILE_WALL_INNER_TOP_RIGHT ||
+        tileID == TILE_WALL_INNER_BOTTOM_LEFT ||
+        tileID == TILE_WALL_INNER_BOTTOM_RIGHT ||
+        tileID == TILE_WALL_OUTER_TOP_LEFT ||
+        tileID == TILE_WALL_OUTER_TOP_RIGHT ||
+        tileID == TILE_WALL_OUTER_BOTTOM_LEFT ||
+        tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
     }
 }

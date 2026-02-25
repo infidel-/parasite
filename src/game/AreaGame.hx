@@ -54,6 +54,7 @@ class AreaGame extends _SaveObject
   // these are empty until the area has been generated
   // when player leaves the area, ai list is emptied, cells and objects are saved
   var _cells: Array<Array<Int>>; // cell types
+  public var tiles: Array<Array<tiles.Tile>>; // tile ids and layered decoration
   var _ai: List<AI>; // AI list
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
@@ -100,6 +101,7 @@ class AreaGame extends _SaveObject
       tileID = 0;
       npc = new List();
       _cells = [];
+      tiles = [];
       clueSpawnPoints = [];
       guardSpawnPoints = [];
       importantGuardSpawnPoints = [];
@@ -451,6 +453,7 @@ class AreaGame extends _SaveObject
 
       // clear map
       _cells = [];
+      tiles = [];
       var baseTile = Const.TILE_WALKWAY;
       if (typeID == AREA_GROUND)
         baseTile = Const.TILE_GRASS;
@@ -918,6 +921,78 @@ class AreaGame extends _SaveObject
   public function getCells()
     { return _cells; }
 
+// get tiles array with per-cell decoration
+  public function getTiles()
+    {
+      return tiles;
+    }
+
+// ensure tile data mirrors current _cells and has decoration arrays
+  public function initTilesFromCells()
+    {
+      var needsRebuild = (tiles == null ||
+        tiles.length != width);
+      if (!needsRebuild)
+        for (x in 0...width)
+          if (tiles[x] == null ||
+              tiles[x].length != height)
+            {
+              needsRebuild = true;
+              break;
+            }
+
+      if (needsRebuild)
+        {
+          tiles = [];
+          for (x in 0...width)
+            tiles[x] = [];
+        }
+
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var tile = (!needsRebuild ? tiles[x][y] : null);
+            if (tile == null)
+              {
+                tiles[x][y] = {
+                  id: _cells[x][y],
+                  decoration: [],
+                };
+                continue;
+              }
+            tile.id = _cells[x][y];
+            if (tile.decoration == null)
+              tile.decoration = [];
+          }
+    }
+
+// add one decoration descriptor to a tile
+  public function addTileDecoration(x: Int, y: Int,
+      decoration: tiles.Decoration)
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= width ||
+          y >= height)
+        return;
+      if (tiles == null ||
+          tiles.length == 0)
+        initTilesFromCells();
+
+      var tile = tiles[x][y];
+      if (tile == null)
+        {
+          tile = {
+            id: _cells[x][y],
+            decoration: [],
+          };
+          tiles[x][y] = tile;
+        }
+      if (tile.decoration == null)
+        tile.decoration = [];
+      tile.decoration.push(decoration);
+    }
+
 
 // get string cell type of this cell
   public function getCellTypeString(x: Int, y: Int): String
@@ -969,7 +1044,11 @@ class AreaGame extends _SaveObject
   public inline function setCellType(x: Int, y: Int, index: Int)
     {
       if (x >= 0 && y >= 0 && x < width && y < height)
-        _cells[x][y] = index;
+        {
+          _cells[x][y] = index;
+          if (tiles.length > 0)
+            tiles[x][y].id = index;
+        }
     }
 
 // get cached tileset for this area type
