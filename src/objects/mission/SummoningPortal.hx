@@ -1,10 +1,11 @@
 // summoning portal object used by ritual combat mission
 // NOTE: we assume this does not need to be saved/loaded!
 
-package objects;
+package objects.mission;
 
 import cult.missions.CombatSummoningRitual;
 import game.Game;
+import objects.AreaObject;
 
 class SummoningPortal extends AreaObject
 {

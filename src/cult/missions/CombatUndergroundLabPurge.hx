@@ -4,8 +4,8 @@ package cult.missions;
 import ai.AI;
 import ai.AIData;
 import game.Game;
-import objects.CloneVat;
 import objects.Elevator;
+import objects.mission.CloneVat;
 import objects.Stairs;
 import cult.missions.Combat.CombatSpawnTarget;
 

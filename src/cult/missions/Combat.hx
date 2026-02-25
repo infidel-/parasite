@@ -6,7 +6,6 @@ import cult.Mission;
 import game.AreaGame;
 import game.Game;
 import objects.SewerExit;
-import objects.SummoningPortal;
 
 typedef CombatSpawnTarget = {
   var target: _MissionTarget;
