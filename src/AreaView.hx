@@ -161,6 +161,9 @@ class AreaView
   function drawTiles(ctx: CanvasRenderingContext2D)
     {
       var rect = game.area.getVisibleRect();
+      var tiles = game.area.getTiles();
+      var hasTileData = (tiles != null &&
+        tiles.length > 0);
       var tileID = 0;
       var icon: _Icon = null;
       for (y in rect.y1...rect.y2)
@@ -168,9 +171,15 @@ class AreaView
           {
             tileID = _cache[x][y];
             icon = tileset.getIcon(tileID);
+            var sx = (x - scene.cameraTileX1) * Const.TILE_SIZE;
+            var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
             tileset.draw(ctx, icon,
-              (x - scene.cameraTileX1) * Const.TILE_SIZE,
-              (y - scene.cameraTileY1) * Const.TILE_SIZE);
+              sx, sy);
+
+            // draw wall decorations for this tile
+            if (hasTileData)
+              tileset.drawWallDecoration(ctx, icon,
+                tileID, tiles[x][y], sx, sy);
 
             // corp has fake people in the background
             if (game.area.info.id == AREA_CORP)

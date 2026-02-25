@@ -93,6 +93,8 @@ class UndergroundLabAreaGenerator
         elevatorX, elevatorY, stairsX, stairsY);
       // convert temp markers to final floor and wall tiles
       finalizeTiles(area);
+      // add wall decoration metadata for rendering layers
+      decorateWalls(area);
 
       area.generatorInfo = {
         rooms: rooms,
@@ -241,6 +243,28 @@ class UndergroundLabAreaGenerator
         return false;
       var tile = area.getCellType(x, y);
       return tile == TEMP_ROOM;
+    }
+
+// place wall decoration metadata for wall tiles
+  function decorateWalls(area: AreaGame)
+    {
+      var tileset = game.scene.images.getTileset(area.typeID);
+      var layerCount = tileset.getWallDecorationLayerCount();
+      if (layerCount <= 0)
+        return;
+
+      area.initTilesFromCells();
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            var tileID = area.getCellType(x, y);
+            if (!tileset.isWallTile(tileID) ||
+                Std.random(100) >= 30)
+              continue;
+            area.addTileDecoration(x, y, {
+              layerID: Std.random(layerCount),
+            });
+          }
     }
 
 // convert temporary room/corridor map to final floor and wall tiles
