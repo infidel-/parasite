@@ -41,11 +41,11 @@ class UndergroundLab extends Tileset
       iconByTileID = new Map<Int, _Icon>();
       initFloor();
       initWalls();
-      addWallDecorationLayer('img/underground-lab-decoration1.png', 30);
-      addWallDecorationLayer('img/underground-lab-decoration2.png', 100);
-      addWallDecorationLayer('img/underground-lab-decoration3.png', 20);
-      addWallDecorationLayer('img/underground-lab-decoration4.png', 20);
-      addWallDecorationLayer('img/underground-lab-decoration5.png', 100);
+      addWallDecorationLayerRepeat('img/underground-lab-decoration1.png', 4);
+      addWallDecorationLayerChance('img/underground-lab-decoration2.png', 80);
+      addWallDecorationLayerChance('img/underground-lab-decoration3.png', 10);
+      addWallDecorationLayerChance('img/underground-lab-decoration4.png', 20);
+      addWallDecorationLayerRepeat('img/underground-lab-decoration5.png', 2);
     }
 
 // initialize floor icon and tile id maps
@@ -151,5 +151,19 @@ class UndergroundLab extends Tileset
         tileID == TILE_WALL_OUTER_TOP_RIGHT ||
         tileID == TILE_WALL_OUTER_BOTTOM_LEFT ||
         tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
+    }
+
+// check if underground wall tile is horizontal
+  public override function isHorizontalWallTile(tileID: Int): Bool
+    {
+      return (tileID == TILE_WALL_UPPER ||
+        tileID == TILE_WALL_LOWER);
+    }
+
+// check if underground wall tile is vertical
+  public override function isVerticalWallTile(tileID: Int): Bool
+    {
+      return (tileID == TILE_WALL_LEFT ||
+        tileID == TILE_WALL_RIGHT);
     }
 }

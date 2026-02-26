@@ -12,7 +12,8 @@ class Tileset
   public var image: Image;
   public var voidTile: _Icon;
   public var wallDecorationLayers: Array<Image>;
-  public var wallDecorationLayerWeights: Array<Int>;
+  public var wallDecorationLayerRepeatEvery: Array<Int>;
+  public var wallDecorationLayerChance: Array<Int>;
 
 // create tileset from image path
   public function new(path: String)
@@ -24,7 +25,8 @@ class Tileset
         col: 0,
       };
       wallDecorationLayers = [];
-      wallDecorationLayerWeights = [];
+      wallDecorationLayerRepeatEvery = [];
+      wallDecorationLayerChance = [];
     }
 
 // map tile id to icon coordinates
@@ -50,13 +52,24 @@ class Tileset
       return false;
     }
 
-// add one wall decoration image layer
-  public function addWallDecorationLayer(path: String, weight: Int = 100)
+// add one wall decoration image layer with repeat rule
+  public function addWallDecorationLayerRepeat(path: String, repeatEvery: Int)
     {
       var layer = new Image();
       layer.src = path;
       wallDecorationLayers.push(layer);
-      wallDecorationLayerWeights.push(weight);
+      wallDecorationLayerRepeatEvery.push(repeatEvery);
+      wallDecorationLayerChance.push(-1);
+    }
+
+// add one wall decoration image layer with chance rule
+  public function addWallDecorationLayerChance(path: String, chance: Int)
+    {
+      var layer = new Image();
+      layer.src = path;
+      wallDecorationLayers.push(layer);
+      wallDecorationLayerRepeatEvery.push(-1);
+      wallDecorationLayerChance.push(chance);
     }
 
 // get number of wall decoration image layers
@@ -71,52 +84,71 @@ class Tileset
       return false;
     }
 
-// get percent chance to place wall decoration on wall tile
-  public function getWallDecorationChance(): Int
+// check if tile id is a horizontal wall tile
+  public function isHorizontalWallTile(tileID: Int): Bool
     {
-      return 60;
+      return false;
     }
 
-// place one wall decoration descriptor on tile if random checks pass
+// check if tile id is a vertical wall tile
+  public function isVerticalWallTile(tileID: Int): Bool
+    {
+      return false;
+    }
+
+// place one wall decoration descriptor on tile
   public function decorateWallTile(area: AreaGame, x: Int, y: Int)
     {
       if (wallDecorationLayers.length <= 0)
         return;
 
       var tileID = area.getCellType(x, y);
-      if (!isWallTile(tileID) ||
-          Std.random(100) >= getWallDecorationChance())
+      if (!isWallTile(tileID))
         return;
 
-      var layerID = pickWallDecorationLayerID();
+      // first check tile layers with repeat rules
+      var repeatLayerID = -1;
+      for (i in 0...wallDecorationLayers.length)
+        {
+          var repeatEvery = wallDecorationLayerRepeatEvery[i];
+          if (repeatEvery > 0 &&
+              ((isHorizontalWallTile(tileID) &&
+                x % repeatEvery == 0) ||
+               (isVerticalWallTile(tileID) &&
+                y % repeatEvery == 0)))
+            {
+              repeatLayerID = i;
+              break;
+            }
+        }
+
+      // then check tile layers with chance rules
+      var chanceLayerID = -1;
+      for (i in 0...wallDecorationLayers.length)
+        {
+          var chance = wallDecorationLayerChance[i];
+          if (chance > 0 &&
+              Std.random(100) < chance)
+            {
+              chanceLayerID = i;
+              break;
+            }
+        }
+
+      // add repeat layer first
+      var layerID = repeatLayerID;
+      area.addTileDecoration(x, y, {
+        layerID: layerID,
+      });
+
+      // then add chance layer on top of repeat layer
+      if (chanceLayerID >= 0)
+        layerID = chanceLayerID;
       if (layerID < 0)
         return;
       area.addTileDecoration(x, y, {
         layerID: layerID,
       });
-    }
-
-// pick one wall decoration layer index by configured weights
-  function pickWallDecorationLayerID(): Int
-    {
-      var totalWeight = 0;
-      for (layerWeight in wallDecorationLayerWeights)
-        if (layerWeight > 0)
-          totalWeight += layerWeight;
-      if (totalWeight <= 0)
-        return -1;
-
-      var roll = Std.random(totalWeight);
-      for (i in 0...wallDecorationLayerWeights.length)
-        {
-          var layerWeight = wallDecorationLayerWeights[i];
-          if (layerWeight <= 0)
-            continue;
-          if (roll < layerWeight)
-            return i;
-          roll -= layerWeight;
-        }
-      return -1;
     }
 
 // draw one tile icon at screen position
