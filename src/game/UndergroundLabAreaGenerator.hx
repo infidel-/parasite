@@ -93,6 +93,9 @@ class UndergroundLabAreaGenerator
         elevatorX, elevatorY, stairsX, stairsY);
       // convert temp markers to final floor and wall tiles
       finalizeTiles(area);
+      // initialize tile metadata and add floor decoration entries
+      area.initTilesFromCells();
+      decorateFloors(area);
       // add wall decoration metadata for rendering layers
       decorateWalls(area);
 
@@ -249,10 +252,62 @@ class UndergroundLabAreaGenerator
   function decorateWalls(area: AreaGame)
     {
       var tileset = game.scene.images.getTileset(area.typeID);
-      area.initTilesFromCells();
       for (y in 0...area.height)
         for (x in 0...area.width)
           tileset.decorateWallTile(area, x, y);
+    }
+
+// place floor decoration metadata for walkable floor tiles
+  function decorateFloors(area: AreaGame)
+    {
+      var tileset = game.scene.images.getTileset(area.typeID);
+      var tiles = area.getTiles();
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            var tileID = area.getCellType(x, y);
+            if (!tileset.isWalkable(tileID) ||
+                area.hasObjectAt(x, y) ||
+                Std.random(100) >= 10 ||
+                hasAdjacentFloorDecoration(area, tiles, x, y))
+              continue;
+
+            var tile = tiles[x][y];
+            if (tile != null &&
+                tile.decoration != null &&
+                tile.decoration.length > 0)
+              continue;
+
+            tileset.decorateFloor(area, x, y, 0);
+          }
+    }
+
+// check whether this cell has any adjacent floor decoration
+  function hasAdjacentFloorDecoration(area: AreaGame,
+      tiles: Array<Array<tiles.Tile>>, x: Int, y: Int): Bool
+    {
+      for (dy in -1...2)
+        for (dx in -1...2)
+          {
+            if (dx == 0 &&
+                dy == 0)
+              continue;
+
+            var nx = x + dx;
+            var ny = y + dy;
+            if (nx < 0 ||
+                ny < 0 ||
+                nx >= area.width ||
+                ny >= area.height)
+              continue;
+
+            var tile = tiles[nx][ny];
+            if (tile != null &&
+                tile.decoration != null &&
+                tile.decoration.length > 0)
+              return true;
+          }
+      return false;
     }
 
 // convert temporary room/corridor map to final floor and wall tiles
