@@ -11,6 +11,8 @@ class Tileset
 {
   public var image: Image;
   public var voidTile: _Icon;
+  public var floorDecorationLayers: Array<Image>;
+  public var floorDecorationLayerIcons: Array<Array<_Icon>>;
   public var wallDecorationLayers: Array<Image>;
   public var wallDecorationLayerRepeatEvery: Array<Int>;
   public var wallDecorationLayerChance: Array<Int>;
@@ -24,6 +26,8 @@ class Tileset
         row: 0,
         col: 0,
       };
+      floorDecorationLayers = [];
+      floorDecorationLayerIcons = [];
       wallDecorationLayers = [];
       wallDecorationLayerRepeatEvery = [];
       wallDecorationLayerChance = [];
@@ -50,6 +54,60 @@ class Tileset
   public function canSeeThrough(tileID: Int): Bool
     {
       return false;
+    }
+
+// add one floor decoration image layer with source icons and full rows
+  public function addFloorDecorationLayer(path: String, icons: Array<_Icon>,
+      ?rows: Array<Int>)
+    {
+      var layer = new Image();
+      layer.src = path;
+      floorDecorationLayers.push(layer);
+
+      var layerIcons: Array<_Icon> = [];
+      if (icons != null)
+        layerIcons = icons.copy();
+
+      // append all columns from each requested row
+      if (rows != null)
+        for (row in rows)
+          for (col in 0...8)
+            layerIcons.push({
+              row: row,
+              col: col,
+            });
+
+      floorDecorationLayerIcons.push(layerIcons);
+    }
+
+// place one floor decoration descriptor on tile for a chosen layer
+  public function decorateFloor(area: AreaGame, x: Int, y: Int, layerID: Int)
+    {
+      var icon = pickFloorDecorationIcon(layerID);
+      if (icon == null)
+        return;
+
+      area.addTileDecoration(x, y, {
+        layerID: layerID,
+        icon: {
+          row: icon.row,
+          col: icon.col,
+        },
+      });
+    }
+
+// pick one floor decoration icon from a configured layer
+  function pickFloorDecorationIcon(layerID: Int): _Icon
+    {
+      if (layerID < 0 ||
+          layerID >= floorDecorationLayerIcons.length)
+        return null;
+
+      var icons = floorDecorationLayerIcons[layerID];
+      if (icons == null ||
+          icons.length <= 0)
+        return null;
+      return icons[Std.random(icons.length)];
     }
 
 // add one wall decoration image layer with repeat rule
@@ -186,6 +244,40 @@ class Tileset
           ctx.drawImage(layer,
             icon.col * Const.TILE_SIZE_CLEAN,
             icon.row * Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            Const.TILE_SIZE_CLEAN,
+            x,
+            y,
+            Const.TILE_SIZE,
+            Const.TILE_SIZE);
+        }
+    }
+
+// draw all floor decoration icons for this tile at screen position
+  public function drawFloorDecoration(ctx: CanvasRenderingContext2D,
+      tileID: Int, tile: tiles.Tile, x: Int, y: Int)
+    {
+      if (tileID == Const.TILE_HIDDEN ||
+          isWallTile(tileID) ||
+          tile == null ||
+          tile.decoration == null)
+        return;
+      for (decoration in tile.decoration)
+        {
+          var floorIcon = decoration.icon;
+          if (floorIcon == null)
+            continue;
+
+          var layerID = decoration.layerID;
+          if (layerID < 0 ||
+              layerID >= floorDecorationLayers.length)
+            continue;
+          var layer = floorDecorationLayers[layerID];
+          if (layer == null)
+            continue;
+          ctx.drawImage(layer,
+            floorIcon.col * Const.TILE_SIZE_CLEAN,
+            floorIcon.row * Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             x,

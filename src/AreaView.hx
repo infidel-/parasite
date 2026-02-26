@@ -176,6 +176,11 @@ class AreaView
             tileset.draw(ctx, icon,
               sx, sy);
 
+            // draw floor decorations for this tile
+            if (hasTileData)
+              tileset.drawFloorDecoration(ctx,
+                tileID, tiles[x][y], sx, sy);
+
             // draw wall decorations for this tile
             if (hasTileData)
               tileset.drawWallDecoration(ctx, icon,
