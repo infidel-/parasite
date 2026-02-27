@@ -181,7 +181,7 @@ class CommonLogic
 
       // blood effect on hit
       if (weapon.spawnBlood)
-        Particle.createBlood(targetBloodType, game.scene,
+        Particle.createSplat(targetBloodType, game.scene,
           { x: target.x, y: target.y });
 
       // stun damage on ai - stun the host

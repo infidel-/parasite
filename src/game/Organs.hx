@@ -5,6 +5,7 @@ package game;
 import ai.AIData;
 import ai.AI;
 import const.EvolutionConst;
+import particles.Particle;
 
 class Organs extends _SaveObject
 {
@@ -382,6 +383,10 @@ class Organs extends _SaveObject
           return false;
         }
 
+      Particle.createSpit('acidSpit', game.scene,
+        game.playerArea.x, game.playerArea.y,
+        { x: ai.x, y: ai.y });
+
       // roll damage
       var damage = __Math.damage({
         name: 'acid spit',
@@ -414,6 +419,10 @@ class Organs extends _SaveObject
           game.actionFailed("Maximum range of " + params.range + " exceeded.");
           return false;
         }
+
+      Particle.createSpit('slimeSpit', game.scene,
+        game.playerArea.x, game.playerArea.y,
+        { x: ai.x, y: ai.y });
 
       game.log('Your host spits a clot of adhesive mucus on ' + ai.getName() +
         '. ' + ai.getNameCapped() + ' desperately tries to tear it away.');
@@ -449,6 +458,10 @@ class Organs extends _SaveObject
           game.actionFailed("Maximum range of " + params.range + " exceeded.");
           return false;
         }
+
+      Particle.createSpit('paralysisSpit', game.scene,
+        game.playerArea.x, game.playerArea.y,
+        { x: ai.x, y: ai.y });
 
       game.scene.sounds.play('action-paralysis-spit');
       var msg = 'Your host releases a paralyzing projectile on ' +

@@ -60,7 +60,7 @@ class ParticleRifle extends ParticleBullet
             {
               dt = 1.0;
               if (hit && i == 0)
-                Particle.createBlood(bloodType, scene, dst[i]);
+                Particle.createSplat(bloodType, scene, dst[i]);
               if (i == 0)
                 game.scene.sounds.play('attack-bullet-' +
                   (hit ? 'hit' : 'miss'), {

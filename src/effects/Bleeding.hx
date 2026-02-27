@@ -33,7 +33,7 @@ class Bleeding extends Effect
         return;
 
       ai.onDamage(1 * time);
-      Particle.createBlood(ai.bloodType(), game.scene, {
+      Particle.createSplat(ai.bloodType(), game.scene, {
         x: ai.x,
         y: ai.y
       });

@@ -34,15 +34,29 @@ class Particle
         }
     }
 
-// blood splat particle
-  public static function createBlood(type: String, scene: GameScene, pt: _Point)
+// spit projectile particle
+  public static function createSpit(type: String, scene: GameScene, x: Int, y: Int,
+      point: _Point)
     {
       switch (type)
         {
-          case 'black':
-            new ParticleBlackSplat(scene, pt);
+          case 'acidSpit', 'slimeSpit', 'paralysisSpit':
+            new ParticleSpit(scene, type, x, y, point);
           default:
-            new ParticleSplat(scene, pt);
+            trace('no spit particle for ' + type);
+        }
+    }
+
+// splat particle
+  public static function createSplat(type: String, scene: GameScene, pt: _Point)
+    {
+      switch (type)
+        {
+          case 'red', 'black', 'acid', 'slime':
+            new ParticleSplat(scene, type, pt);
+          default:
+            trace('unknown splat type ' + type);
+            new ParticleSplat(scene, 'red', pt);
         }
     }
 
