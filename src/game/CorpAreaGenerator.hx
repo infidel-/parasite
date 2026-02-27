@@ -1509,13 +1509,15 @@ class CorpAreaGenerator
             if (tileID == BLDG_ELEVATOR_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_ELEVATOR);
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_ELEVATOR },
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_ELEVATOR_OPEN });
                 state.area.addObject(o);
               }
             else if (tileID == BLDG_INNER_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_CORP);
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_CORP },
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_CORP_OPEN });
                 state.area.addObject(o);
               }
             // spawn vent object

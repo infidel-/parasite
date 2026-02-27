@@ -7,6 +7,17 @@ import haxe.ds.StringMap;
 
 class UndergroundLab extends Tileset
 {
+  public static var OBJECTS_IMAGE = 'undergroundLabObjects1';
+  public static var OBJECTS_IMAGE_PATH = 'img/underground-lab-objects1.png';
+  public static var DOOR_HORIZONTAL_CLOSED_LEFT: _Icon = { row: 6, col: 0 };
+  public static var DOOR_HORIZONTAL_CLOSED_RIGHT: _Icon = { row: 6, col: 1 };
+  public static var DOOR_HORIZONTAL_OPEN_LEFT: _Icon = { row: 7, col: 0 };
+  public static var DOOR_HORIZONTAL_OPEN_RIGHT: _Icon = { row: 7, col: 1 };
+  public static var DOOR_VERTICAL_CLOSED_UPPER: _Icon = { row: 6, col: 2 };
+  public static var DOOR_VERTICAL_CLOSED_LOWER: _Icon = { row: 7, col: 2 };
+  public static var DOOR_VERTICAL_OPEN_UPPER: _Icon = { row: 6, col: 3 };
+  public static var DOOR_VERTICAL_OPEN_LOWER: _Icon = { row: 7, col: 3 };
+
   public static var TILE_FLOOR_LIGHT = 900;
   public static var TILE_FLOOR_DARK = 901;
   public static var TILE_WALL_UPPER = 910;

@@ -25,6 +25,7 @@ class AreaObject extends _SaveObject
   public var creationTime: Int; // when was this object created (turns since game start)
   public var imageRow: Int;
   public var imageCol: Int;
+  public var imageName: String;
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int)
     {
@@ -48,6 +49,7 @@ class AreaObject extends _SaveObject
       name = 'undefined';
       isStatic = false;
       imageRow = Const.ROW_OBJECT;
+      imageName = 'entities';
     }
 
 // called after load or creation
@@ -65,7 +67,7 @@ class AreaObject extends _SaveObject
 // update entity image
   public function updateImage()
     {
-      entity.setIcon('entities', imageCol, imageRow);
+      entity.setIcon(imageName, imageCol, imageRow);
     }
 
 // create entity for this object
@@ -74,7 +76,7 @@ class AreaObject extends _SaveObject
       if (entity != null)
         return;
       entity = new ObjectEntity(this, game, x, y);
-      entity.setIcon('entities', imageCol, imageRow);
+      entity.setIcon(imageName, imageCol, imageRow);
       if (type == 'decorationExt')
         {
           var o: DecorationExt = cast this;
@@ -168,6 +170,10 @@ class AreaObject extends _SaveObject
 // dynamic: when moved onto
   public dynamic function onMoveTo()
     {}
+
+// dynamic: can line of sight pass through this object?
+  public dynamic function canSeeThrough(): Bool
+    { return true; }
 
   public function toString(): String
     {
