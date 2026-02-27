@@ -965,25 +965,29 @@ class FacilityAreaGenerator
             if (tileID == TEMP_BUILDING_FRONT_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_DOUBLE);
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_DOUBLE },
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_DOUBLE_OPEN });
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_BUILDING_SIDE_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_GLASS);
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_GLASS },
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_GLASS_OPEN });
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_BUILDING_INNER_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_CABINET);
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_CABINET },
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_CABINET_OPEN });
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_HANGAR_SIDE_DOOR)
               {
                 var o = new Door(game, area.id, x, y,
-                  Const.ROW_DOORS, Const.FRAME_DOOR_METAL);
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_METAL },
+                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_METAL_OPEN });
                 state.area.addObject(o);
               }
             // spawn vent object

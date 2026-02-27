@@ -357,7 +357,8 @@ class AreaView
                     y--;
                     if (y < rect.y1)
                       break;
-                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                    if (isVisible(x, y) &&
+                        game.area.canSeeThrough(x, y))
                       continue;
                     setTile(x, y, cells[x][y]);
                     break;
@@ -369,7 +370,8 @@ class AreaView
                     y++;
                     if (y >= rect.y2)
                       break;
-                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                    if (isVisible(x, y) &&
+                        game.area.canSeeThrough(x, y))
                       continue;
                     setTile(x, y, cells[x][y]);
                     break;
@@ -387,7 +389,8 @@ class AreaView
                     x--;
                     if (x < rect.x1)
                       break;
-                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                    if (isVisible(x, y) &&
+                        game.area.canSeeThrough(x, y))
                       continue;
                     setTile(x, y, cells[x][y]);
                     break;
@@ -399,7 +402,8 @@ class AreaView
                     x++;
                     if (x >= rect.x2)
                       break;
-                    if (isVisible(x, y) && game.area.isWalkable(x, y))
+                    if (isVisible(x, y) &&
+                        game.area.canSeeThrough(x, y))
                       continue;
                     setTile(x, y, cells[x][y]);
                     break;

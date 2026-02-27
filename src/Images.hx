@@ -16,6 +16,7 @@ class Images
 {
   var scene: GameScene;
   public var entities: Image;
+  public var undergroundLabObjects1: Image;
   public var male: Image;
   public var female: Image;
   public var tileset: Image;
@@ -30,6 +31,8 @@ class Images
       // load all images
       entities = new Image();
       entities.src = 'img/entities64.png';
+      undergroundLabObjects1 = new Image();
+      undergroundLabObjects1.src = UndergroundLab.OBJECTS_IMAGE_PATH;
       male = new Image();
       male.src = 'img/male64.png';
       female = new Image();

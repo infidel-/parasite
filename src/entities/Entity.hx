@@ -156,10 +156,15 @@ class Entity
             // NOTE: some specials only have male image (security, etc)
             if (isMaleAtlas)
               img = game.scene.images.male;
+          case 'undergroundLabObjects1':
+            img = game.scene.images.undergroundLabObjects1;
           default:
             trace('UNKNOWN IMAGE: ' + imageName);
             return;
         }
+      if (!img.complete ||
+          img.naturalWidth <= 0)
+        return;
       // entity image
       drawImage(ctx, img, ix, iy);
     }

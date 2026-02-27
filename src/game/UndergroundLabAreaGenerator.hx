@@ -6,6 +6,7 @@ import Const;
 import const.WorldConst;
 import game.AreaGame;
 import game.AreaGenerator;
+import objects.Door;
 import objects.Elevator;
 import objects.FloorDrain;
 import objects.Stairs;
@@ -51,15 +52,20 @@ class UndergroundLabAreaGenerator
       var vatRoom = makeRoom(area, rooms, roomID++,
         vatX, vatY, vatW, vatH, TEMP_ROOM);
 
+      var serviceRoomW = 10;
+      var serviceRoomH = 5;
+      var serviceRoomVatGap = 2;
+      var serviceRoomX = vatRoom.x1 - serviceRoomW - serviceRoomVatGap;
+
       // top service room connected to the central hall
       var topRoom = makeRoom(area, rooms, roomID++,
-        entryRoom.x2 + 3, entryRoom.y1 - 7,
-        10, 5, TEMP_ROOM);
+        serviceRoomX, entryRoom.y1 - 7,
+        serviceRoomW, serviceRoomH, TEMP_ROOM);
 
       // bottom service room connected to the central hall
       var bottomRoom = makeRoom(area, rooms, roomID++,
-        entryRoom.x2 + 3, entryRoom.y2 + 3,
-        10, 5, TEMP_ROOM);
+        serviceRoomX, entryRoom.y2 + 3,
+        serviceRoomW, serviceRoomH, TEMP_ROOM);
 
       // central corridor to vat room entry
       var corridorY = Std.int(area.height / 2) - 1;
@@ -87,6 +93,12 @@ class UndergroundLabAreaGenerator
       var stairsX = entryRoom.x2 - 1;
       var stairsY = entryRoom.y2 - 1;
       area.addObject(new Stairs(game, area.id, stairsX, stairsY));
+
+      // spawn linked double doors for all room entrances
+      spawnDoubleDoorVertical(area, entryRoom.x2 + 1, corridorY);
+      spawnDoubleDoorHorizontal(area, topRoom.x1 + Std.int(topRoom.w / 2), topRoom.y2 + 1);
+      spawnDoubleDoorHorizontal(area, bottomRoom.x1 + Std.int(bottomRoom.w / 2), bottomRoom.y1 - 1);
+      spawnDoubleDoorVertical(area, vatRoom.x1 - 1, corridorY);
 
       // add research-themed decoration and furniture
       decorateLab(area, entryRoom, topRoom, bottomRoom, vatRoom,
@@ -121,6 +133,40 @@ class UndergroundLabAreaGenerator
       };
       rooms.push(room);
       return room;
+    }
+
+// spawn linked vertical two-tile door (upper/lower)
+  function spawnDoubleDoorVertical(area: AreaGame, x: Int, yUpper: Int)
+    {
+      var upperDoor = new Door(game, area.id, x, yUpper,
+        UndergroundLab.DOOR_VERTICAL_CLOSED_UPPER,
+        UndergroundLab.DOOR_VERTICAL_OPEN_UPPER,
+        UndergroundLab.OBJECTS_IMAGE);
+      var lowerDoor = new Door(game, area.id, x, yUpper + 1,
+        UndergroundLab.DOOR_VERTICAL_CLOSED_LOWER,
+        UndergroundLab.DOOR_VERTICAL_OPEN_LOWER,
+        UndergroundLab.OBJECTS_IMAGE);
+      upperDoor.linkedDoorID = lowerDoor.id;
+      lowerDoor.linkedDoorID = upperDoor.id;
+      area.addObject(upperDoor);
+      area.addObject(lowerDoor);
+    }
+
+// spawn linked horizontal two-tile door (left/right)
+  function spawnDoubleDoorHorizontal(area: AreaGame, xLeft: Int, y: Int)
+    {
+      var leftDoor = new Door(game, area.id, xLeft, y,
+        UndergroundLab.DOOR_HORIZONTAL_CLOSED_LEFT,
+        UndergroundLab.DOOR_HORIZONTAL_OPEN_LEFT,
+        UndergroundLab.OBJECTS_IMAGE);
+      var rightDoor = new Door(game, area.id, xLeft + 1, y,
+        UndergroundLab.DOOR_HORIZONTAL_CLOSED_RIGHT,
+        UndergroundLab.DOOR_HORIZONTAL_OPEN_RIGHT,
+        UndergroundLab.OBJECTS_IMAGE);
+      leftDoor.linkedDoorID = rightDoor.id;
+      rightDoor.linkedDoorID = leftDoor.id;
+      area.addObject(leftDoor);
+      area.addObject(rightDoor);
     }
 
 // carve rectangular floor patch safely within bounds
