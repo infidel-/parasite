@@ -6,7 +6,7 @@ import ai.AI;
 import ai.CommonLogic;
 import game.Effect;
 import game.Game;
-import particles.ParticleBlackSplat;
+import particles.Particle;
 
 class BlackNoise extends Effect
 {
@@ -74,7 +74,7 @@ class BlackNoise extends Effect
         }
 
       // create splat particle
-      new ParticleBlackSplat(game.scene, { x: ai.x, y: ai.y });
+      Particle.createSplat('black', game.scene, { x: ai.x, y: ai.y });
     }
 
 // returns true if effect should skip default AI turn logic

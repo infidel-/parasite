@@ -102,6 +102,9 @@ class Const
   public static var FRAME_EFFECT_MONEY = 3;
   public static var FRAME_CULTIST0 = 4;
   public static var FRAME_MULTIPLE_EFFECTS = 5;
+  public static var FRAME_PARTICLE_ACID_SPIT = 6;
+  public static var FRAME_PARTICLE_SLIME_SPIT = 7;
+  public static var FRAME_PARTICLE_PARALYSIS_SPIT = 8;
 
   // parasite row frames
   public static var ROW_PARASITE = 4;
@@ -179,6 +182,11 @@ class Const
   // row 21,22 - spaceship
   public static var SPACESHIP_BLOCK: _TileBlock = 
     { row: 21, col: 0, width: 3, height: 2 };
+
+  public static var ROW_SPACESHIP1 = 21;
+  public static var ACID_LARGE = 3;
+  public static var ROW_SPACESHIP2 = 22;
+  public static var SLIME_LARGE = 3;
 
   // row 23 - corpo decoration
   public static var CORP_COMPUTERS_BLOCK: _TileBlock =
@@ -289,9 +297,7 @@ class Const
   ];
   public static var ROW_BLOOD = 40;
   public static var BLOOD_LARGE = 0;
-  public static var BLOOD_NUM = 5;
   public static var BLACK_BLOOD_LARGE = 5;
-  public static var BLACK_BLOOD_NUM = 5;
 
   public static var STREET_DEBRIS_TRANSFORMABLE = [
     { row: 41, col: 0, amount: 12 },
