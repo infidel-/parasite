@@ -278,14 +278,76 @@ class RegionGame extends _SaveObject
       spawnArea(AREA_FACILITY, true);
       spawnArea(AREA_FACILITY, true);
       spawnArea(AREA_FACILITY, true);
+
       // spawn 2 corp offices
-      for (i in 0...2)
+      for (_ in 0...2)
         {
-          var a = getRandom({ type: AREA_CITY_HIGH, noEvents: true });
+          var a = getCorpArea();
+          if (a == null)
+            break;
+
           var o = new region.CorpHQ(game, a.x, a.y);
           addObject(o);
           a.setType(AREA_CORP);
+          ensureHighCityArea();
         }
+
+      ensureHighCityArea();
+    }
+
+// count areas with this type
+  function countAreasByType(type: _AreaType): Int
+    {
+      var n = 0;
+      for (area in _list)
+        if (area.typeID == type)
+          n++;
+      return n;
+    }
+
+// ensure city has at least one high-density area
+  function ensureHighCityArea()
+    {
+      if (countAreasByType(AREA_CITY_HIGH) > 0)
+        return;
+
+      // pick one random medium -> low -> ground area to convert to high
+      var area = getRandom({
+        type: AREA_CITY_MEDIUM,
+        noThrow: true
+      });
+      if (area == null)
+        area = getRandom({
+          type: AREA_CITY_LOW,
+          noThrow: true
+        });
+      if (area == null)
+        area = getRandom({
+          type: AREA_GROUND,
+          noThrow: true
+        });
+      if (area == null)
+        return;
+
+      area.typeID = AREA_CITY_HIGH;
+      area.updateType();
+    }
+
+// get high-density city area for corp office conversion
+  function getCorpArea(): AreaGame
+    {
+      ensureHighCityArea();
+      var area = getRandom({
+        type: AREA_CITY_HIGH,
+        noEvents: true,
+        noThrow: true
+      });
+      if (area == null)
+        area = getRandom({
+          type: AREA_CITY_HIGH,
+          noThrow: true
+        });
+      return area;
     }
 
 // adjust low-density city blocks to introduce high-crime pockets
@@ -555,7 +617,10 @@ class RegionGame extends _SaveObject
 // spawn area with this type (actually just change some ground)
   public inline function spawnArea(t: _AreaType, noEvent: Bool): AreaGame
     {
-      var a = getRandom({ type: AREA_GROUND, noEvents: noEvent });
+      var a = getRandom({
+        type: AREA_GROUND,
+        noEvents: noEvent
+      });
       a.typeID = t;
       a.updateType();
       return a;
