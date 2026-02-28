@@ -9,9 +9,22 @@ class _MissionTarget extends _SaveObject
   public var lang: String;
   public var location: _AreaType;
   public var helpAvailable: Bool;
-  
+
+// initialize mission target fields for load/create
+  public function init()
+    {
+      isMale = null;
+      job = null;
+      icon = null;
+      type = null;
+      lang = null;
+      location = null;
+      helpAvailable = null;
+    }
+
   public function new(?isMale: Bool, ?job: String, ?icon: String, ?type: String, ?lang: String, ?helpAvailable: Bool, location: _AreaType)
     {
+      init();
       this.isMale = isMale;
       this.job = job;
       this.icon = icon;

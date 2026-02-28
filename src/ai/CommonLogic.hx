@@ -182,7 +182,10 @@ class CommonLogic
       // blood effect on hit
       if (weapon.spawnBlood)
         Particle.createSplat(targetBloodType, game.scene,
-          { x: target.x, y: target.y });
+          { x: target.x, y: target.y }, {
+            x: ai.x,
+            y: ai.y,
+          });
 
       // stun damage on ai - stun the host
       // if target is parasite, works as regular damage

@@ -32,6 +32,7 @@ class Loader
           game.ui.onError('load game: ' + e, '', -1, -1, {
             stack: haxe.CallStack.toString(haxe.CallStack.exceptionStack()),
           });
+          return;
         }
 #end
 
@@ -136,6 +137,14 @@ class Loader
               Reflect.setField(dst, f, dsttmp);
             }
 
+          // map plain anonymous objects
+          else if (classID == null &&
+              Type.typeof(srcval) == TObject)
+            {
+              Reflect.setField(dst, f,
+                initValue(game, name + '.' + f, srcval, depth + 1));
+            }
+
           // recursively map save objects
           else if (Std.isOfType(dstval, _SaveObject))
             {
@@ -148,7 +157,7 @@ class Loader
           // initialize missing destination object
           else if (dstval == null)
             {
-              dstval = initObject(game, name + '.' + f, srcval, depth);
+              dstval = initValue(game, name + '.' + f, srcval, depth + 1);
               Reflect.setField(dst, f, dstval);
             }
           else trace(name + '.' + f + ' type is unsupported (' +

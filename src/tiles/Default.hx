@@ -4,6 +4,8 @@ package tiles;
 
 class Default extends Tileset
 {
+  public static var STREET_DEBRIS_LAYER_ID = 0;
+
   public static var TILE_WALKABLE = [
     // row 0
     0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
@@ -71,6 +73,8 @@ class Default extends Tileset
   public function new()
     {
       super('img/tileset64.png');
+      addFloorDecorationLayer('img/entities64.png', []);
+      splatLayerID = floorDecorationLayers.length - 1;
     }
 
 // check if default tile is walkable

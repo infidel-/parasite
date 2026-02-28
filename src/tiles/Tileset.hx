@@ -11,6 +11,7 @@ class Tileset
 {
   public var image: Image;
   public var voidTile: _Icon;
+  public var splatLayerID: Int;
   public var floorDecorationLayers: Array<Image>;
   public var floorDecorationLayerIcons: Array<Array<_Icon>>;
   public var wallDecorationLayers: Array<Image>;
@@ -26,6 +27,7 @@ class Tileset
         row: 0,
         col: 0,
       };
+      splatLayerID = -1;
       floorDecorationLayers = [];
       floorDecorationLayerIcons = [];
       wallDecorationLayers = [];
@@ -275,15 +277,53 @@ class Tileset
           var layer = floorDecorationLayers[layerID];
           if (layer == null)
             continue;
+          var scale = (decoration.scale != null ? decoration.scale : 1.0);
+          var angle = (decoration.angle != null ? decoration.angle : 0.0);
+          var dx = (decoration.dx != null ? decoration.dx : 0);
+          var dy = (decoration.dy != null ? decoration.dy : 0);
+
+          // if no transformation, draw directly for better performance
+          if (scale == 1.0 &&
+              angle == 0.0 &&
+              dx == 0 &&
+              dy == 0)
+            {
+              ctx.drawImage(layer,
+                floorIcon.col * Const.TILE_SIZE_CLEAN,
+                floorIcon.row * Const.TILE_SIZE_CLEAN,
+                Const.TILE_SIZE_CLEAN,
+                Const.TILE_SIZE_CLEAN,
+                x,
+                y,
+                Const.TILE_SIZE,
+                Const.TILE_SIZE);
+              continue;
+            }
+
+          // for transformations, draw with rotation and scaling around tile center, with optional offset
+          var ex: Float = x;
+          var ey: Float = y;
+          if (scale != 1.0)
+            {
+              ex += Const.TILE_SIZE / 2 - Const.TILE_SIZE * scale / 2;
+              ey += Const.TILE_SIZE / 2 - Const.TILE_SIZE * scale / 2;
+            }
+          ctx.save();
+          ctx.translate(ex + Const.TILE_SIZE * scale / 2,
+            ey + Const.TILE_SIZE * scale / 2);
+          ctx.rotate(angle);
+          ctx.translate(-Const.TILE_SIZE * scale / 2,
+            -Const.TILE_SIZE * scale / 2);
           ctx.drawImage(layer,
             floorIcon.col * Const.TILE_SIZE_CLEAN,
             floorIcon.row * Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
-            x,
-            y,
-            Const.TILE_SIZE,
-            Const.TILE_SIZE);
+            dx,
+            dy,
+            Const.TILE_SIZE * scale,
+            Const.TILE_SIZE * scale);
+          ctx.restore();
         }
     }
 }

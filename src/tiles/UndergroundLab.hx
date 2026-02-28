@@ -54,6 +54,8 @@ class UndergroundLab extends Tileset
       initWalls();
       addFloorDecorationLayer('img/underground-lab-decoration-tiles1.png',
         [], [3, 4, 5]);
+      addFloorDecorationLayer('img/entities64.png', []);
+      splatLayerID = floorDecorationLayers.length - 1;
       addWallDecorationLayerRepeat('img/underground-lab-decoration1.png', 4);
       addWallDecorationLayerChance('img/underground-lab-decoration2.png', 80);
       addWallDecorationLayerChance('img/underground-lab-decoration3.png', 10);

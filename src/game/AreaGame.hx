@@ -431,6 +431,7 @@ class AreaGame extends _SaveObject
         if (o.isStatic || isHabitat)
           o.hide();
         else removeObject(o);
+      clearTemporarySplatDecorations();
 
       // leave area with active team
       if (game.group.team != null)
@@ -444,6 +445,40 @@ class AreaGame extends _SaveObject
 
       // notify cult about leaving area
       game.cults[0].onLeaveArea();
+    }
+
+// remove temporary splat decorations from tile data
+  function clearTemporarySplatDecorations()
+    {
+      if (tiles == null ||
+          tiles.length == 0)
+        return;
+
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var tile = tiles[x][y];
+            if (tile == null ||
+                tile.decoration == null ||
+                tile.decoration.length == 0)
+              continue;
+
+            var hasSplat = false;
+            for (decoration in tile.decoration)
+              if (decoration.tag == 'SPLAT')
+                {
+                  hasSplat = true;
+                  break;
+                }
+            if (!hasSplat)
+              continue;
+
+            var filtered = [];
+            for (decoration in tile.decoration)
+              if (decoration.tag != 'SPLAT')
+                filtered.push(decoration);
+            tile.decoration = filtered;
+          }
     }
 
 // generate a new area map

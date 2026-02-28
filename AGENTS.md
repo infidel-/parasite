@@ -3,6 +3,7 @@
 - NEVER detach HEAD! NEVER!
 - ALWAYS respond in English!
 - ALWAYS run tests at the end of each task: cd src/ && make
+- When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant).
 - Use two-space indentation, brace-on-newline, and avoid trailing whitespace. in general, follow the existing code style of the file and repository.
 - Lines without text should NEVER have whitespace.
 - When adding new functions, always add short comment with summary of what it does on top, first letter should be lowercase
