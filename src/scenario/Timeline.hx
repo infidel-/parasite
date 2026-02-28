@@ -300,6 +300,8 @@ class Timeline extends _SaveObject
       if (info.near != null)
         {
           var tmp = getEvent(info.near);
+          if (tmp.location == null)
+            throw '' + info + ': event ' + info.near + ' does not have location.';
 
           // desired type was not set, try to find inhabited area by default
           if (infoTypeWasNull)
@@ -307,6 +309,7 @@ class Timeline extends _SaveObject
               minRadius: 2,
               maxRadius: 5,
               isInhabited: true,
+              canReturnNull: true,
             });
 
           // type was set
@@ -314,20 +317,22 @@ class Timeline extends _SaveObject
             minRadius: 2,
             maxRadius: 5,
             type: info.type,
+            canReturnNull: true,
           });
-
-          // first iteration did not find a good area, pick random and force
-          if (area == null)
-            {
-              area = region.getRandomAround(tmp.location.area, {
-                minRadius: 2,
-                maxRadius: 5,
-              });
-              area.typeID = info.type;
-              area.updateType();
-            }
         }
-      area = region.getRandom({ type: info.type, noEvents: true });
+
+      // fallback to global search if nearby area was not found
+      if (area == null)
+        area = region.getRandom({
+          type: info.type,
+          noEvents: true,
+          noThrow: true
+        });
+      if (area == null)
+        area = region.getRandom({
+          type: info.type,
+          noThrow: true
+        });
       if (area == null)
         area = region.spawnArea(info.type, true);
 
@@ -391,7 +396,10 @@ class Timeline extends _SaveObject
               // find proper area for this NPC
               var area = null;
               if (npc.type == 'soldier')
-                area = region.getRandom({ type: AREA_MILITARY_BASE, noEvents: false });
+                area = region.getRandom({
+                  type: AREA_MILITARY_BASE,
+                  noEvents: false
+                });
               else if (event.location != null)
                 area = region.getRandomAround(event.location.area, {
                   isInhabited: true,
@@ -403,7 +411,10 @@ class Timeline extends _SaveObject
                   var tmp: Array<_AreaType> =
                     [ AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH ];
                   var type = tmp[Std.random(tmp.length)];
-                  area = region.getRandom({ type: type, noEvents: false });
+                  area = region.getRandom({
+                    type: type,
+                    noEvents: false
+                  });
                 }
               npc.areaID = area.id;
               area.npc.add(npc);
