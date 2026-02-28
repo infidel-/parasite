@@ -20,8 +20,9 @@ class Loader
 #if electron
       try {
         var s = Fs.readFileSync(getSavePath(slotID), 'utf8');
-        var o: _SaveGame = Json.parse(s);
-        loadObject(game, o.game, game, 'game', 0);
+        var o: Dynamic = Json.parse(s);
+        var formatVersion = getFormatVersion(o);
+        loadObject(game, o.game, game, 'game', 0, formatVersion);
 
         // restore region and area pointers
         game.region = game.world.get(o.game.regionID);
@@ -63,8 +64,24 @@ class Loader
       return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
     }
 
+// get save format version from top-level save object
+  static function getFormatVersion(src: Dynamic): Int
+    {
+      if (src == null)
+        return 1;
+      var version = Reflect.field(src, 'version');
+      if (!Std.isOfType(version, Int) &&
+          !Std.isOfType(version, Float))
+        return 1;
+      var parsed = Std.int(version);
+      if (parsed < 1)
+        return 1;
+      return parsed;
+    }
+
 // load serialized source object into destination recursively
-  static function loadObject(game: Game, src: Dynamic, dst: Dynamic, name: String, depth: Int)
+  static function loadObject(game: Game, src: Dynamic, dst: Dynamic,
+      name: String, depth: Int, formatVersion: Int)
     {
       for (f in Reflect.fields(src))
         {
@@ -104,7 +121,8 @@ class Loader
               var dsttmp = [];
               var srctmp: Array<Dynamic> = untyped srcval;
               for (el in srctmp)
-                dsttmp.push(initValue(game, name + '.' + f + '[]', el, depth + 1));
+                dsttmp.push(initValue(game, name + '.' + f + '[]', el,
+                  depth + 1, formatVersion));
               if (Std.isOfType(dstval, List))
                 Reflect.setField(dst, f, Lambda.list(dsttmp));
               else Reflect.setField(dst, f, dsttmp);
@@ -119,7 +137,8 @@ class Loader
                   var el = Reflect.field(srcval, ff);
                   var key = Std.parseInt(ff);
                   dsttmp.set(key,
-                    initValue(game, name + '[' + ff + ']', el, depth + 1));
+                    initValue(game, name + '[' + ff + ']', el,
+                      depth + 1, formatVersion));
                 }
               Reflect.setField(dst, f, dsttmp);
             }
@@ -132,7 +151,8 @@ class Loader
                 {
                   var el = Reflect.field(srcval, ff);
                   dsttmp.set(ff,
-                    initValue(game, name + '[' + ff + ']', el, depth + 1));
+                    initValue(game, name + '[' + ff + ']', el,
+                      depth + 1, formatVersion));
                 }
               Reflect.setField(dst, f, dsttmp);
             }
@@ -142,13 +162,15 @@ class Loader
               Type.typeof(srcval) == TObject)
             {
               Reflect.setField(dst, f,
-                initValue(game, name + '.' + f, srcval, depth + 1));
+                initValue(game, name + '.' + f, srcval,
+                  depth + 1, formatVersion));
             }
 
           // recursively map save objects
           else if (Std.isOfType(dstval, _SaveObject))
             {
-              loadObject(game, srcval, dstval, f, depth + 1);
+              loadObject(game, srcval, dstval, f, depth + 1,
+                formatVersion);
               if (dstval.initPost != null)
                 dstval.initPost(true);
               Reflect.setField(dst, f, dstval);
@@ -157,7 +179,8 @@ class Loader
           // initialize missing destination object
           else if (dstval == null)
             {
-              dstval = initValue(game, name + '.' + f, srcval, depth + 1);
+              dstval = initValue(game, name + '.' + f, srcval,
+                depth + 1, formatVersion);
               Reflect.setField(dst, f, dstval);
             }
           else trace(name + '.' + f + ' type is unsupported (' +
@@ -178,7 +201,8 @@ class Loader
     }
 
 // initialize one serialized value recursively
-  static function initValue(game: Game, name: String, src: Dynamic, depth: Int): Dynamic
+  static function initValue(game: Game, name: String, src: Dynamic,
+      depth: Int, formatVersion: Int): Dynamic
     {
       if (depth > 20)
         throw 'Depth too high: ' + depth + ' ' + name;
@@ -202,14 +226,15 @@ class Loader
           var ret = [];
           var arr: Array<Dynamic> = untyped src;
           for (el in arr)
-            ret.push(initValue(game, name + '[]', el, depth + 1));
+            ret.push(initValue(game, name + '[]', el, depth + 1,
+              formatVersion));
           return ret;
         }
 
       // initialize class-backed objects
       var srcClassID: String = untyped src._classID;
       if (srcClassID != null)
-        return initObject(game, name, src, depth + 1);
+        return initObject(game, name, src, depth + 1, formatVersion);
 
       // initialize plain object fields
       var ret: Dynamic = {};
@@ -219,7 +244,8 @@ class Loader
               f == '_isEnum')
             continue;
           Reflect.setField(ret, f,
-            initValue(game, name + '.' + f, Reflect.field(src, f), depth + 1));
+            initValue(game, name + '.' + f, Reflect.field(src, f),
+              depth + 1, formatVersion));
         }
       return ret;
     }
@@ -235,7 +261,8 @@ class Loader
     }
 
 // create class instance and populate it from serialized object
-  static function initObject(game: Game, name: String, src: Dynamic, depth: Int): Dynamic
+  static function initObject(game: Game, name: String, src: Dynamic,
+      depth: Int, formatVersion: Int): Dynamic
     {
       var isEnum: Bool = untyped src._isEnum;
       if (isEnum)
@@ -264,7 +291,16 @@ class Loader
       if (dst.init != null)
         dst.init();
       else trace('no init for ' + name);
-      loadObject(game, src, dst, name, depth + 1);
+
+      // apply class-specific load hook before regular mapping
+      if (srcClassID == 'game.AreaGame')
+        {
+          var loadHook = Reflect.field(dst, 'loadHook');
+          if (loadHook != null)
+            Reflect.callMethod(dst, loadHook, [src, formatVersion]);
+        }
+
+      loadObject(game, src, dst, name, depth + 1, formatVersion);
       if (dst.initPost != null)
         dst.initPost(true);
       return dst;

@@ -9,12 +9,14 @@ import game.Game;
 
 class Saver
 {
+  static var SAVE_FORMAT_VERSION = 2;
+
 // save current game to a slot
   public static function save(game: Game, slotID: Int)
     {
       var o: _SaveGame = {
         game: null,
-        version: Version.getVersion(),
+        version: SAVE_FORMAT_VERSION,
       };
       o.game = saveObject('game', game, 0);
       o.game.regionID = game.region.id;
@@ -98,6 +100,18 @@ class Saver
       var ignoredFields: Array<String> =
         Reflect.field(cl, '_ignoredFields');
 
+      // allow objects to override selected fields before default mapping
+      var customFields: Dynamic = null;
+      var savePreHook = Reflect.field(o, 'savePreHook');
+      if (savePreHook != null)
+        {
+          var custom = Reflect.callMethod(o, savePreHook,
+            [SAVE_FORMAT_VERSION]);
+          if (custom != null &&
+              Type.typeof(custom) == TObject)
+            customFields = custom;
+        }
+
       // walk object fields
       for (f in Reflect.fields(o))
         {
@@ -115,6 +129,15 @@ class Saver
           var fobj: Dynamic = Reflect.field(o, f);
           if (ignoredFields != null && Lambda.has(ignoredFields, f))
             continue;
+
+          // use hook-provided serialized override for this field
+          if (customFields != null &&
+              Reflect.hasField(customFields, f))
+            {
+              Reflect.setField(ret, f,
+                Reflect.field(customFields, f));
+              continue;
+            }
 
           // map field into serializable value
           var fval: Dynamic = null;
@@ -171,6 +194,7 @@ class Saver
           else continue;
           Reflect.setField(ret, f, fval);
         }
+
       return ret;
     }
 }

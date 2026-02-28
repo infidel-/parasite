@@ -1,4 +1,4 @@
 typedef _SaveGame = {
-  var version: String;
+  var version: Int;
   var game: Dynamic;
 }

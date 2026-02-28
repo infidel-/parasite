@@ -959,6 +959,18 @@ class AreaGame extends _SaveObject
       _alertness = Const.clampFloat(v, 0, 100.0);
     }
 
+// provide compact serialized field overrides for saver
+  public function savePreHook(formatVersion: Int): Dynamic
+    {
+      return AreaGameSaver.save(this, formatVersion);
+    }
+
+// transform compact save format data into legacy runtime fields
+  public function loadHook(serialized: Dynamic, formatVersion: Int)
+    {
+      AreaGameSaver.load(this, serialized, formatVersion);
+    }
+
 
 // get cells array
   public function getCells()
