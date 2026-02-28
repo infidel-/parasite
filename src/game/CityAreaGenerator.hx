@@ -8,6 +8,7 @@ import objects.*;
 import game.AreaGame;
 import game.AreaGenerator;
 import game.AreaGenerator._GeneratorState;
+import tiles.Default;
 
 class CityAreaGenerator
 {
@@ -222,7 +223,7 @@ class CityAreaGenerator
             if (Std.random(100) < 60)
               addDecorationTransformable(area, x, y, Const.STREET_DEBRIS_TRANSFORMABLE);
             else
-              gen.addDecoration(area, x, y, Const.STREET_DEBRIS_STATIC);
+              addStaticStreetDebris(area, x, y, Const.STREET_DEBRIS_STATIC);
           }
     }
 
@@ -273,18 +274,129 @@ class CityAreaGenerator
           }
     }
 
-// pick random sprites from infos and drop amount of DecorationExt on the tile
+// add one static debris decoration to tile storage
+  function addStaticStreetDebris(area: AreaGame, x: Int, y: Int,
+      infos: Array<_TileRow>)
+    {
+      addStreetDebris(area, x, y, infos, false);
+    }
+
+// pick random sprites from infos and drop amount of tile decorations
   function spawnTransformableDecorations(area: AreaGame,
       x: Int, y: Int, infos: Array<_TileRow>, amount: Int)
     {
       for (_ in 0...amount)
+        addStreetDebris(area, x, y, infos, true);
+    }
+
+// add one debris decoration entry with optional transform and spillover
+  function addStreetDebris(area: AreaGame, x: Int, y: Int,
+      infos: Array<_TileRow>, isTransformable: Bool)
+    {
+      if (!area.isWalkable(x, y))
+        return;
+
+      var info = infos[Std.random(infos.length)];
+      var col = Std.random(info.amount) +
+        (info.col != null ? info.col : 0);
+
+      var scale = (isTransformable ?
+        Const.round2(0.1 + 0.9 * Math.random()) :
+        1.0);
+      var angle = (isTransformable ?
+        Const.round2(360 * Math.random() * Math.PI / 180) :
+        0.0);
+      var dx = 0;
+      var dy = 0;
+
+      var hasPlacement = false;
+      for (_ in 0...8)
         {
-          var info = infos[Std.random(infos.length)];
-          var col = Std.random(info.amount) +
-            (info.col != null ? info.col : 0);
-          var deco = new DecorationExt(game, area.id, x, y, info.row, col);
-          area.addObject(deco);
+          var candidateDX = randomDebrisOffset();
+          var candidateDY = randomDebrisOffset();
+          if (!canPlaceDebrisWithOffset(area, x, y,
+                candidateDX, candidateDY, scale))
+            continue;
+          dx = candidateDX;
+          dy = candidateDY;
+          hasPlacement = true;
+          break;
         }
+      if (!hasPlacement &&
+          !canPlaceDebrisWithOffset(area, x, y, 0, 0, scale))
+        return;
+
+      area.addTileDecoration(x, y, {
+        layerID: Default.STREET_DEBRIS_LAYER_ID,
+        icon: {
+          row: info.row,
+          col: col,
+        },
+        dx: dx,
+        dy: dy,
+        scale: scale,
+        angle: angle,
+      });
+    }
+
+// get random tile-local offset in +/-50% tile range
+  function randomDebrisOffset(): Int
+    {
+      var half = Std.int(Const.TILE_SIZE / 2);
+      return -half + Std.random(half * 2 + 1);
+    }
+
+// check whether transformed debris stays on walkable neighbouring tiles
+  function canPlaceDebrisWithOffset(area: AreaGame, x: Int, y: Int,
+      dx: Int, dy: Int, scale: Float): Bool
+    {
+      if (!area.isWalkable(x, y))
+        return false;
+
+      var scaledSize = Const.TILE_SIZE * scale;
+      var localX1 = Const.TILE_SIZE / 2 -
+        scaledSize / 2 + dx;
+      var localY1 = Const.TILE_SIZE / 2 -
+        scaledSize / 2 + dy;
+      var localX2 = localX1 + scaledSize;
+      var localY2 = localY1 + scaledSize;
+
+      var touchesLeft = localX1 < 0;
+      var touchesRight = localX2 > Const.TILE_SIZE;
+      var touchesTop = localY1 < 0;
+      var touchesBottom = localY2 > Const.TILE_SIZE;
+
+      if (touchesLeft &&
+          !area.isWalkable(x - 1, y))
+        return false;
+      if (touchesRight &&
+          !area.isWalkable(x + 1, y))
+        return false;
+      if (touchesTop &&
+          !area.isWalkable(x, y - 1))
+        return false;
+      if (touchesBottom &&
+          !area.isWalkable(x, y + 1))
+        return false;
+
+      if (touchesLeft &&
+          touchesTop &&
+          !area.isWalkable(x - 1, y - 1))
+        return false;
+      if (touchesRight &&
+          touchesTop &&
+          !area.isWalkable(x + 1, y - 1))
+        return false;
+      if (touchesLeft &&
+          touchesBottom &&
+          !area.isWalkable(x - 1, y + 1))
+        return false;
+      if (touchesRight &&
+          touchesBottom &&
+          !area.isWalkable(x + 1, y + 1))
+        return false;
+
+      return true;
     }
 
 // resolve debris spawn chance for a tile type given area tier (out of 1000)

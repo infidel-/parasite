@@ -6,6 +6,7 @@ import Const.TILE_SIZE as tile;
 class ParticleSpit extends Particle
 {
   var type: String;
+  var sourceTile: _Point;
   var dstTile: _Point;
   var frame: Int;
   var srcx: Float;
@@ -24,6 +25,10 @@ class ParticleSpit extends Particle
     {
       super(s);
       this.type = type;
+      this.sourceTile = {
+        x: sx,
+        y: sy,
+      };
       this.dstTile = { x: dst.x, y: dst.y };
       time = 150;
       frame = getFrame(type);
@@ -90,9 +95,9 @@ class ParticleSpit extends Particle
       switch (type)
         {
           case 'acidSpit':
-            Particle.createSplat('acid', scene, dstTile);
+            Particle.createSplat('acid', scene, dstTile, sourceTile);
           case 'slimeSpit':
-            Particle.createSplat('slime', scene, dstTile);
+            Particle.createSplat('slime', scene, dstTile, sourceTile);
           default:
         }
     }

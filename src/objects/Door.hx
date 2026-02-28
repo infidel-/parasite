@@ -138,7 +138,7 @@ class Door extends AreaObject
   function resolveDoorSound(): String
     {
       if (closedRow != Const.ROW_DOORS)
-        return 'metal';
+        return 'double';
       if (closedCol < 2)
         return 'cabinet';
       else if (closedCol < 4)

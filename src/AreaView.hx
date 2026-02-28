@@ -166,6 +166,8 @@ class AreaView
         tiles.length > 0);
       var tileID = 0;
       var icon: _Icon = null;
+
+      // draw base tiles first
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
           {
@@ -175,21 +177,42 @@ class AreaView
             var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
             tileset.draw(ctx, icon,
               sx, sy);
+          }
 
-            // draw floor decorations for this tile
-            if (hasTileData)
+      // draw floor decorations on top of all base tiles
+      if (hasTileData)
+        for (y in rect.y1...rect.y2)
+          for (x in rect.x1...rect.x2)
+            {
+              tileID = _cache[x][y];
+              var sx = (x - scene.cameraTileX1) * Const.TILE_SIZE;
+              var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
               tileset.drawFloorDecoration(ctx,
                 tileID, tiles[x][y], sx, sy);
+            }
 
-            // draw wall decorations for this tile
-            if (hasTileData)
+      // draw wall decorations above floor decorations
+      if (hasTileData)
+        for (y in rect.y1...rect.y2)
+          for (x in rect.x1...rect.x2)
+            {
+              tileID = _cache[x][y];
+              icon = tileset.getIcon(tileID);
+              var sx = (x - scene.cameraTileX1) * Const.TILE_SIZE;
+              var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
               tileset.drawWallDecoration(ctx, icon,
                 tileID, tiles[x][y], sx, sy);
+            }
 
-            // corp has fake people in the background
-            if (game.area.info.id == AREA_CORP)
+      // corp has fake people in the background
+      if (game.area.info.id == AREA_CORP)
+        for (y in rect.y1...rect.y2)
+          for (x in rect.x1...rect.x2)
+            {
+              tileID = _cache[x][y];
+              icon = tileset.getIcon(tileID);
               paintFakeHost(ctx, icon, x, y);
-          }
+            }
     }
 
 // draw particles

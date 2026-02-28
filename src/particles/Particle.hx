@@ -48,15 +48,16 @@ class Particle
     }
 
 // splat particle
-  public static function createSplat(type: String, scene: GameScene, pt: _Point)
+  public static function createSplat(type: String, scene: GameScene, pt: _Point,
+      ?source: _Point)
     {
       switch (type)
         {
           case 'red', 'black', 'acid', 'slime':
-            new ParticleSplat(scene, type, pt);
+            new ParticleSplat(scene, type, pt, source);
           default:
             trace('unknown splat type ' + type);
-            new ParticleSplat(scene, 'red', pt);
+            new ParticleSplat(scene, 'red', pt, source);
         }
     }
 

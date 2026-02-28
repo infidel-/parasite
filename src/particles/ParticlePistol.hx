@@ -69,7 +69,10 @@ class ParticlePistol extends ParticleBullet
   public override function onDeath()
     {
       if (hit)
-        Particle.createSplat(bloodType, scene, dst);
+        Particle.createSplat(bloodType, scene, dst, {
+          x: sx,
+          y: sy,
+        });
       game.scene.sounds.play('attack-bullet-' +
         (hit ? 'hit' : 'miss'), {
         always: true,

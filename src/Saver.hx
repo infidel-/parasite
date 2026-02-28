@@ -125,6 +125,8 @@ class Saver
                 _isEnum: true,
                 val: '' + fobj,
               }
+            case TObject:
+              fval = saveObject(f, fobj, depth + 1);
             default:
           }
           if (fval != null)
