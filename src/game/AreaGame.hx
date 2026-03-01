@@ -168,7 +168,7 @@ class AreaGame extends _SaveObject
           for (o in _objects)
             o.show();
         }
-      recalcAllTilesCanSeeThrough();
+      recalcAllTiles();
 
       // reinit spawn points
       initSpawnPoints();
@@ -292,7 +292,7 @@ class AreaGame extends _SaveObject
       game.scene.sounds.setAmbient(info.ambient);
       for (o in _objects)
         o.show();
-      recalcAllTilesCanSeeThrough();
+      recalcAllTiles();
 
       // reinit spawn points
       initSpawnPoints();
@@ -623,7 +623,7 @@ class AreaGame extends _SaveObject
       _objects.set(o.id, o);
       if (tiles != null &&
           tiles.length > 0)
-        recalcTileCanSeeThrough(o.x, o.y);
+        recalcTile(o.x, o.y);
     }
 
 // get object by id
@@ -662,7 +662,7 @@ class AreaGame extends _SaveObject
       _objects.remove(o.id);
       if (tiles != null &&
           tiles.length > 0)
-        recalcTileCanSeeThrough(o.x, o.y);
+        recalcTile(o.x, o.y);
     }
 
 
@@ -985,6 +985,7 @@ class AreaGame extends _SaveObject
 // ensure tile data mirrors current _cells and has decoration arrays
   public function initTilesFromCells()
     {
+      // check if we can reuse existing tiles data, otherwise rebuild it  
       var needsRebuild = (tiles == null ||
         tiles.length != width);
       if (!needsRebuild)
@@ -996,6 +997,7 @@ class AreaGame extends _SaveObject
               break;
             }
 
+      // reinit tiles array
       if (needsRebuild)
         {
           tiles = [];
@@ -1003,6 +1005,7 @@ class AreaGame extends _SaveObject
             tiles[x] = [];
         }
 
+      // rebuild tile data from cells, preserving existing data if possible
       for (y in 0...height)
         for (x in 0...width)
           {
@@ -1012,6 +1015,7 @@ class AreaGame extends _SaveObject
                 tiles[x][y] = {
                   id: _cells[x][y],
                   canSeeThrough: true,
+                  isWalkable: true,
                   decoration: [],
                 };
                 continue;
@@ -1019,14 +1023,16 @@ class AreaGame extends _SaveObject
             tile.id = _cells[x][y];
             if (tile.canSeeThrough == null)
               tile.canSeeThrough = true;
+            if (tile.isWalkable == null)
+              tile.isWalkable = true;
             if (tile.decoration == null)
               tile.decoration = [];
           }
-      recalcAllTilesCanSeeThrough();
+      recalcAllTiles();
     }
 
-// recalculate line-of-sight transparency cache for one tile
-  public function recalcTileCanSeeThrough(x: Int, y: Int)
+// recalculate cached tile stats for one tile
+  public function recalcTile(x: Int, y: Int)
     {
       // out of bounds or no tiles data
       if (x < 0 ||
@@ -1044,18 +1050,22 @@ class AreaGame extends _SaveObject
           tile = {
             id: _cells[x][y],
             canSeeThrough: true,
+            isWalkable: true,
             decoration: [],
           };
           tiles[x][y] = tile;
         }
 
 
-      // check tile itself
+      // check base tile stats
       var tileID = _cells[x][y];
       var tileset = getTileset();
       tile.canSeeThrough = (tileset != null &&
         tileset.canSeeThrough(tileID));
-      if (!tile.canSeeThrough)
+      tile.isWalkable = (tileset != null &&
+        tileset.isWalkable(tileID));
+      if (!tile.canSeeThrough &&
+          !tile.isWalkable)
         return;
 
       // check objects on this tile
@@ -1064,16 +1074,20 @@ class AreaGame extends _SaveObject
           if (o.x != x ||
               o.y != y)
             continue;
-          if (!o.canSeeThrough())
-            {
-              tile.canSeeThrough = false;
-              return;
-            }
+          if (tile.canSeeThrough &&
+              !o.canSeeThrough())
+            tile.canSeeThrough = false;
+          if (tile.isWalkable &&
+              !o.isWalkable())
+            tile.isWalkable = false;
+          if (!tile.canSeeThrough &&
+              !tile.isWalkable)
+            return;
         }
     }
 
-// recalculate line-of-sight transparency cache for all tiles
-  public function recalcAllTilesCanSeeThrough()
+// recalculate cached tile stats for all tiles
+  public function recalcAllTiles()
     {
       // tiles must be initialized
       if (tiles == null ||
@@ -1094,12 +1108,15 @@ class AreaGame extends _SaveObject
                 tile = {
                   id: _cells[x][y],
                   canSeeThrough: true,
+                  isWalkable: true,
                   decoration: [],
                 };
                 tiles[x][y] = tile;
               }
             tile.canSeeThrough = (tileset != null &&
               tileset.canSeeThrough(_cells[x][y]));
+            tile.isWalkable = (tileset != null &&
+              tileset.isWalkable(_cells[x][y]));
           }
 
       // check all objects
@@ -1108,10 +1125,15 @@ class AreaGame extends _SaveObject
           if (o.x < 0 ||
               o.y < 0 ||
               o.x >= width ||
-              o.y >= height ||
-              o.canSeeThrough())
+              o.y >= height)
             continue;
-          tiles[o.x][o.y].canSeeThrough = false;
+          var tile = tiles[o.x][o.y];
+          if (tile.canSeeThrough &&
+              !o.canSeeThrough())
+            tile.canSeeThrough = false;
+          if (tile.isWalkable &&
+              !o.isWalkable())
+            tile.isWalkable = false;
         }
     }
 
@@ -1136,10 +1158,11 @@ class AreaGame extends _SaveObject
           tile = {
             id: _cells[x][y],
             canSeeThrough: true,
+            isWalkable: true,
             decoration: [],
           };
           tiles[x][y] = tile;
-          recalcTileCanSeeThrough(x, y);
+          recalcTile(x, y);
         }
 
       // add decoration
@@ -1204,7 +1227,7 @@ class AreaGame extends _SaveObject
           if (tiles.length > 0)
             {
               tiles[x][y].id = index;
-              recalcTileCanSeeThrough(x, y);
+              recalcTile(x, y);
             }
         }
     }
@@ -1223,21 +1246,28 @@ class AreaGame extends _SaveObject
 // check if you can see through this tile 
   public function canSeeThrough(x: Int, y: Int): Bool
     {
+      // out of bounds
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
+
+      // init tiles if needed
       if (tiles == null ||
           tiles.length == 0)
         initTilesFromCells();
+
+      // if there's no tile data for this cell, create it
       var tile = tiles[x][y];
       if (tile == null)
         {
-          recalcTileCanSeeThrough(x, y);
+          recalcTile(x, y);
           tile = tiles[x][y];
         }
       if (tile == null)
         return false;
+
+      // if tile data is not calculated yet, calculate it
       if (tile.canSeeThrough == null)
-        recalcTileCanSeeThrough(x, y);
+        recalcTile(x, y);
       return tile.canSeeThrough;
     }
 
@@ -1246,11 +1276,20 @@ class AreaGame extends _SaveObject
     {
       if (x < 0 || y < 0 || x >= width || y >= height)
         return false;
-      var tileID = _cells[x][y];
-      var tileset = getTileset();
-      if (tileset != null)
-        return tileset.isWalkable(tileID);
-      return false;
+      if (tiles == null ||
+          tiles.length == 0)
+        initTilesFromCells();
+      var tile = tiles[x][y];
+      if (tile == null)
+        {
+          recalcTile(x, y);
+          tile = tiles[x][y];
+        }
+      if (tile == null)
+        return false;
+      if (tile.isWalkable == null)
+        recalcTile(x, y);
+      return tile.isWalkable;
     }
 
 // check if x1, y1 sees x2, y2

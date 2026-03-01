@@ -4,7 +4,9 @@ package tiles;
 
 typedef Tile = {
   var id: Int;
-  // cached value base d on tile type and objects on it
+  // cached value based on tile type and objects on it
   var canSeeThrough: Bool;
+  // cached walkability based on tile type and objects on it
+  var isWalkable: Bool;
   var decoration: Array<tiles.Decoration>;
 }

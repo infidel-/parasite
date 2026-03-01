@@ -175,6 +175,10 @@ class AreaObject extends _SaveObject
   public dynamic function canSeeThrough(): Bool
     { return true; }
 
+// dynamic: can actors walk through this object tile?
+  public dynamic function isWalkable(): Bool
+    { return true; }
+
   public function toString(): String
     {
       return id + ' (' + x + ',' + y + ') t:' + type + ' n:' + name;

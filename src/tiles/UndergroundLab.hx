@@ -17,6 +17,9 @@ class UndergroundLab extends Tileset
   public static var DOOR_VERTICAL_CLOSED_LOWER: _Icon = { row: 7, col: 2 };
   public static var DOOR_VERTICAL_OPEN_UPPER: _Icon = { row: 6, col: 3 };
   public static var DOOR_VERTICAL_OPEN_LOWER: _Icon = { row: 7, col: 3 };
+  // NOTE: flushed cloning vat is +2 col from regular vat
+  public static var CLONING_VAT: _IconBlock =
+    { row: 6, col: 4, width: 2, height: 3 };
 
   public static var TILE_FLOOR_LIGHT = 900;
   public static var TILE_FLOOR_DARK = 901;

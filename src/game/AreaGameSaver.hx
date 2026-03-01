@@ -272,6 +272,7 @@ class AreaGameSaver
               outCol[y] = {
                 id: readGridCell(cells, x, y, '_cells'),
                 canSeeThrough: true,
+                isWalkable: true,
                 decoration: decorationList,
               };
             }

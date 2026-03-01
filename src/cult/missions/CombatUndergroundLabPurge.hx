@@ -237,24 +237,20 @@ class CombatUndergroundLabPurge extends Combat
         return;
 
       var spots = [
-        { x: vatDoorX - 2, y: vatDoorY - 1 },
-        { x: vatDoorX - 2, y: vatDoorY + 1 },
+        // left of upper/lower vertical door tiles
+        { x: vatDoorX - 1, y: vatDoorY - 1 },
+        { x: vatDoorX - 1, y: vatDoorY },
       ];
 
       for (i in 0...guardData.length)
         {
+          if (i >= spots.length)
+            continue;
+
           var data = guardData[i];
-          var spot: _SpawnSpot = null;
-          if (i < spots.length)
-            {
-              var candidate = spots[i];
-              if (game.area.isWalkable(candidate.x, candidate.y) &&
-                  game.area.getAI(candidate.x, candidate.y) == null)
-                spot = candidate;
-            }
-          if (spot == null)
-            spot = game.area.findEmptyLocationNear(vatDoorX, vatDoorY, 4);
-          if (spot == null)
+          var spot = spots[i];
+          if (!game.area.isWalkable(spot.x, spot.y) ||
+              game.area.getAI(spot.x, spot.y) != null)
             continue;
 
           var ai = game.area.spawnAI(data.type, spot.x, spot.y, false);
@@ -303,30 +299,88 @@ class CombatUndergroundLabPurge extends Combat
   function spawnCloneVats()
     {
       var offsets = [
-        { x: -2, y: -2 },
-        { x: 1, y: -2 },
+        { x: -2, y: -3 },
+        { x: 1, y: -3 },
         { x: -2, y: 1 },
         { x: 1, y: 1 },
       ];
 
       for (offset in offsets)
         {
-          var spawnX = vatCenterX + offset.x;
-          var spawnY = vatCenterY + offset.y;
-          if (!game.area.isWalkable(spawnX, spawnY) ||
-              game.area.hasObjectAt(spawnX, spawnY))
+          var anchorX = vatCenterX + offset.x;
+          var anchorY = vatCenterY + offset.y;
+          if (!canPlaceCloneVatAt(anchorX, anchorY))
             {
-              var fallback = game.area.findEmptyLocationNear(vatCenterX, vatCenterY, 4);
+              var fallback = findCloneVatAnchorNear(vatCenterX, vatCenterY, 4);
               if (fallback != null)
                 {
-                  spawnX = fallback.x;
-                  spawnY = fallback.y;
+                  anchorX = fallback.x;
+                  anchorY = fallback.y;
                 }
             }
 
-          var vat = new CloneVat(game, game.area.id, spawnX, spawnY, id);
-          vatObjectIDs.push(vat.id);
+          if (!canPlaceCloneVatAt(anchorX, anchorY))
+            continue;
+          spawnCloneVatGroup(anchorX, anchorY);
         }
+    }
+
+// check if a 2x3 vat can be placed at top-left tile x,y
+  function canPlaceCloneVatAt(x: Int, y: Int): Bool
+    {
+      for (dy in 0...3)
+        for (dx in 0...2)
+          {
+            var tx = x + dx;
+            var ty = y + dy;
+            if (!game.area.isWalkable(tx, ty) ||
+                game.area.hasObjectAt(tx, ty) ||
+                game.area.getAI(tx, ty) != null ||
+                (game.playerArea.x == tx &&
+                 game.playerArea.y == ty))
+              return false;
+          }
+      return true;
+    }
+
+// find random valid 2x3 vat anchor near x,y
+  function findCloneVatAnchorNear(x: Int, y: Int, radius: Int): _SpawnSpot
+    {
+      var spots = [];
+      for (dy in -radius...radius + 1)
+        for (dx in -radius...radius + 1)
+          {
+            var nx = x + dx;
+            var ny = y + dy;
+            if (!canPlaceCloneVatAt(nx, ny))
+              continue;
+            spots.push({ x: nx, y: ny });
+          }
+      if (spots.length == 0)
+        return null;
+      return spots[Std.random(spots.length)];
+    }
+
+// spawn one linked 2x3 vat and register root ID in mission objective list
+  function spawnCloneVatGroup(x: Int, y: Int)
+    {
+      var vats = [];
+      for (dy in 0...3)
+        for (dx in 0...2)
+          {
+            var partIndex = dy * 2 + dx;
+            vats.push(new CloneVat(game, game.area.id,
+              x + dx, y + dy, id, partIndex));
+          }
+
+      var partObjectIDs = [];
+      for (vat in vats)
+        partObjectIDs.push(vat.id);
+
+      var rootObjectID = vats[0].id;
+      for (vat in vats)
+        vat.setVatGroup(rootObjectID, partObjectIDs);
+      vatObjectIDs.push(rootObjectID);
     }
 
 // choose the largest room from generator metadata
