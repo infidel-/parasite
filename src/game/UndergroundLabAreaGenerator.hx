@@ -98,9 +98,6 @@ class UndergroundLabAreaGenerator
       spawnDoubleDoorHorizontal(area, bottomRoom.x1 + Std.int(bottomRoom.w / 2), bottomRoom.y1 - 1);
       spawnDoubleDoorVertical(area, vatRoom.x1 - 1, corridorY);
 
-      // add research-themed decoration and furniture
-      decorateLab(area, entryRoom, topRoom, bottomRoom, vatRoom,
-        elevatorX, elevatorY);
       // convert temp markers to final floor and wall tiles
       finalizeTiles(area);
       // initialize tile metadata and add floor decoration entries
@@ -182,90 +179,6 @@ class UndergroundLabAreaGenerator
                 y >= area.height - 1)
               continue;
             area.setCellType(x, y, tile);
-          }
-    }
-
-// add facility-style chemistry decoration to rooms
-  function decorateLab(area: AreaGame,
-      entryRoom: _Room,
-      topRoom: _Room,
-      bottomRoom: _Room,
-      vatRoom: _Room,
-      elevatorX: Int,
-      elevatorY: Int)
-    {
-      decorateChemRoom(area, topRoom, null);
-      decorateChemRoom(area, bottomRoom, null);
-
-      decorateChemRoom(area, entryRoom, function(x: Int, y: Int)
-        {
-          if (x >= elevatorX &&
-              x <= elevatorX + 1 &&
-              y >= elevatorY &&
-              y <= elevatorY + 1)
-            return true;
-          return false;
-        });
-
-      var vatCenterX = vatRoom.x1 + Std.int(vatRoom.w / 2);
-      var vatCenterY = vatRoom.y1 + Std.int(vatRoom.h / 2);
-      decorateChemRoom(area, vatRoom, function(x: Int, y: Int)
-        {
-          return (Math.abs(x - vatCenterX) <= 3 &&
-            Math.abs(y - vatCenterY) <= 3);
-        });
-    }
-
-// decorate one room using chemistry lab style
-  function decorateChemRoom(area: AreaGame, room: _Room,
-      blocked: Int -> Int -> Bool)
-    {
-      placeRoomDrain(area, room, blocked);
-      decorateNearWalls(area, room, blocked);
-    }
-
-// place a random floor drain in a room
-  function placeRoomDrain(area: AreaGame, room: _Room, blocked: Int -> Int -> Bool)
-    {
-      if (room.w < 3 ||
-          room.h < 3)
-        return;
-
-      var attempts = 0;
-      while (attempts < 20)
-        {
-          attempts++;
-          var x = room.x1 + 1 + Std.random(room.w - 2);
-          var y = room.y1 + 1 + Std.random(room.h - 2);
-          if (!canDecorateCell(area, x, y, blocked))
-            continue;
-
-          if (Std.random(100) < 30)
-            area.addObject(new FloorDrain(game, area.id, x, y));
-          return;
-        }
-    }
-
-// place floor decoration around room walls
-  function decorateNearWalls(area: AreaGame, room: _Room, blocked: Int -> Int -> Bool)
-    {
-      for (y in room.y1...room.y2 + 1)
-        for (x in room.x1...room.x2 + 1)
-          {
-            var nearWall =
-              (x <= room.x1 + 1 ||
-               x >= room.x2 - 1 ||
-               y <= room.y1 + 1 ||
-               y >= room.y2 - 1);
-            if (!nearWall ||
-                Std.random(100) >= 40 ||
-                !canDecorateCell(area, x, y, blocked))
-              continue;
-
-            if (Std.random(100) < 50)
-              gen.addDecoration(area, x, y, Const.CHEM_LABS_DECO_FLOOR_LOW);
-            else
-              gen.addDecoration(area, x, y, Const.CHEM_LABS_DECO_FLOOR_HIGH);
           }
     }
 

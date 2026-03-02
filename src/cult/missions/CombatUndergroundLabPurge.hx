@@ -364,6 +364,8 @@ class CombatUndergroundLabPurge extends Combat
 // spawn one linked 2x3 vat and register root ID in mission objective list
   function spawnCloneVatGroup(x: Int, y: Int)
     {
+      clearFloorDecorationUnderVat(x, y);
+
       var vats = [];
       for (dy in 0...3)
         for (dx in 0...2)
@@ -381,6 +383,27 @@ class CombatUndergroundLabPurge extends Combat
       for (vat in vats)
         vat.setVatGroup(rootObjectID, partObjectIDs);
       vatObjectIDs.push(rootObjectID);
+    }
+
+// clear floor decoration from vat footprint tiles before vat spawn
+  function clearFloorDecorationUnderVat(x: Int, y: Int)
+    {
+      var tiles = game.area.getTiles();
+      for (dy in 0...3)
+        for (dx in 0...2)
+          {
+            var tile = tiles[x + dx][y + dy];
+            if (tile == null ||
+                tile.decoration == null ||
+                tile.decoration.length == 0)
+              continue;
+
+            var kept = [];
+            for (decoration in tile.decoration)
+              if (decoration.icon == null)
+                kept.push(decoration);
+            tile.decoration = kept;
+          }
     }
 
 // choose the largest room from generator metadata
