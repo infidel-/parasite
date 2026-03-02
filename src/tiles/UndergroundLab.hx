@@ -3,6 +3,7 @@
 package tiles;
 
 import Const;
+import _IconBlock;
 import haxe.ds.StringMap;
 
 class UndergroundLab extends Tileset
@@ -20,6 +21,8 @@ class UndergroundLab extends Tileset
   // NOTE: flushed cloning vat is +2 col from regular vat
   public static var CLONING_VAT: _IconBlock =
     { row: 6, col: 4, width: 2, height: 3 };
+  public static var ELEVATOR: _IconBlock =
+    { row: 8, col: 0, width: 2, height: 2 };
 
   public static var TILE_FLOOR_LIGHT = 900;
   public static var TILE_FLOOR_DARK = 901;

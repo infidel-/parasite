@@ -9,7 +9,6 @@ import game.AreaGenerator;
 import objects.Door;
 import objects.Elevator;
 import objects.FloorDrain;
-import objects.Stairs;
 import tiles.UndergroundLab;
 
 class UndergroundLabAreaGenerator
@@ -81,18 +80,17 @@ class UndergroundLabAreaGenerator
       // narrow doorway into the vat chamber
       carveRect(area, vatRoom.x1 - 1, corridorY, 2, 2, TEMP_CORRIDOR);
 
-      // elevator bay in the entry room (corp style 3x3 slab)
-      var elevatorX = entryRoom.x1 + 1;
-      var elevatorY = entryRoom.y1 + 1;
-      carveRect(area, elevatorX, elevatorY, 3, 3, TEMP_ENTRY);
-      for (dy in 0...3)
-        for (dx in 0...3)
-          area.addObject(new Elevator(game, area.id, elevatorX + dx, elevatorY + dy));
-
-      // stairs exit in the entry room
-      var stairsX = entryRoom.x2 - 1;
-      var stairsY = entryRoom.y2 - 1;
-      area.addObject(new Stairs(game, area.id, stairsX, stairsY));
+      // elevator bay in the entry room
+      var elevatorX = entryRoom.x1;
+      var elevatorY = entryRoom.y1;
+      carveRect(area, elevatorX, elevatorY, 2, 2, TEMP_ENTRY);
+      for (dy in 0...2)
+        for (dx in 0...2)
+          {
+            var partIndex = dy * 2 + dx;
+            area.addObject(new Elevator(game, area.id, elevatorX + dx, elevatorY + dy,
+              -1, partIndex, UndergroundLab.OBJECTS_IMAGE));
+          }
 
       // spawn linked double doors for all room entrances
       spawnDoubleDoorVertical(area, entryRoom.x2 + 1, corridorY);
@@ -102,7 +100,7 @@ class UndergroundLabAreaGenerator
 
       // add research-themed decoration and furniture
       decorateLab(area, entryRoom, topRoom, bottomRoom, vatRoom,
-        elevatorX, elevatorY, stairsX, stairsY);
+        elevatorX, elevatorY);
       // convert temp markers to final floor and wall tiles
       finalizeTiles(area);
       // initialize tile metadata and add floor decoration entries
@@ -194,9 +192,7 @@ class UndergroundLabAreaGenerator
       bottomRoom: _Room,
       vatRoom: _Room,
       elevatorX: Int,
-      elevatorY: Int,
-      stairsX: Int,
-      stairsY: Int)
+      elevatorY: Int)
     {
       decorateChemRoom(area, topRoom, null);
       decorateChemRoom(area, bottomRoom, null);
@@ -204,12 +200,9 @@ class UndergroundLabAreaGenerator
       decorateChemRoom(area, entryRoom, function(x: Int, y: Int)
         {
           if (x >= elevatorX &&
-              x <= elevatorX + 2 &&
+              x <= elevatorX + 1 &&
               y >= elevatorY &&
-              y <= elevatorY + 2)
-            return true;
-          if (Math.abs(x - stairsX) <= 1 &&
-              Math.abs(y - stairsY) <= 1)
+              y <= elevatorY + 1)
             return true;
           return false;
         });
