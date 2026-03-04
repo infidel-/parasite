@@ -11,12 +11,29 @@ import objects.Door;
 import objects.Elevator;
 import tiles.UndergroundLab;
 
+private typedef _MakeRoomArgs = {
+  var roomID: Int;
+  var x1: Int;
+  var y1: Int;
+  var w: Int;
+  var h: Int;
+  var tile: Int;
+  @:optional var role: String;
+  @:optional var templateID: String;
+  @:optional var tags: Array<String>;
+}
+
 class UndergroundLabAreaGenerator
 {
   static var TEMP_VOID = 0;
   static var TEMP_ROOM = 1;
   static var TEMP_CORRIDOR = 2;
   static var TEMP_ENTRY = 3;
+  static var ROOM_ROLE_ENTRANCE = 'entrance';
+  static var ROOM_ROLE_VAT = 'vat';
+  static var ROOM_ROLE_WORKSHOP = 'workshop';
+  static var ROOM_ROLE_STORAGE = 'storage';
+  static var RESERVED_KIND_CLONE_VAT = 'clone-vat';
 
   var game: Game;
   var gen: AreaGenerator;
@@ -40,16 +57,34 @@ class UndergroundLabAreaGenerator
       var roomID = 0;
 
       // entry room on the left
-      var entryRoom = makeRoom(area, rooms, roomID++, 6,
-        Std.int(area.height / 2) - 4, 8, 8, TEMP_ROOM);
+      var entryRoom = makeRoom(area, rooms, {
+        roomID: roomID++,
+        x1: 6,
+        y1: Std.int(area.height / 2) - 4,
+        w: 8,
+        h: 8,
+        tile: TEMP_ROOM,
+        role: ROOM_ROLE_ENTRANCE,
+        templateID: 'entrance-default',
+        tags: ['entry', 'elevator'],
+      });
 
       // primary vat chamber on the right
       var vatW = 14;
       var vatH = 16;
       var vatX = area.width - vatW - 6;
       var vatY = Std.int(area.height / 2) - Std.int(vatH / 2);
-      var vatRoom = makeRoom(area, rooms, roomID++,
-        vatX, vatY, vatW, vatH, TEMP_ROOM);
+      var vatRoom = makeRoom(area, rooms, {
+        roomID: roomID++,
+        x1: vatX,
+        y1: vatY,
+        w: vatW,
+        h: vatH,
+        tile: TEMP_ROOM,
+        role: ROOM_ROLE_VAT,
+        templateID: 'vat-default',
+        tags: ['clone', 'critical'],
+      });
 
       var serviceRoomW = 10;
       var serviceRoomH = 5;
@@ -57,14 +92,30 @@ class UndergroundLabAreaGenerator
       var serviceRoomX = vatRoom.x1 - serviceRoomW - serviceRoomVatGap;
 
       // top service room connected to the central hall
-      var topRoom = makeRoom(area, rooms, roomID++,
-        serviceRoomX, entryRoom.y1 - 7,
-        serviceRoomW, serviceRoomH, TEMP_ROOM);
+      var topRoom = makeRoom(area, rooms, {
+        roomID: roomID++,
+        x1: serviceRoomX,
+        y1: entryRoom.y1 - 7,
+        w: serviceRoomW,
+        h: serviceRoomH,
+        tile: TEMP_ROOM,
+        role: ROOM_ROLE_WORKSHOP,
+        templateID: 'service-top-default',
+        tags: ['service', 'workshop'],
+      });
 
       // bottom service room connected to the central hall
-      var bottomRoom = makeRoom(area, rooms, roomID++,
-        serviceRoomX, entryRoom.y2 + 3,
-        serviceRoomW, serviceRoomH, TEMP_ROOM);
+      var bottomRoom = makeRoom(area, rooms, {
+        roomID: roomID++,
+        x1: serviceRoomX,
+        y1: entryRoom.y2 + 3,
+        w: serviceRoomW,
+        h: serviceRoomH,
+        tile: TEMP_ROOM,
+        role: ROOM_ROLE_STORAGE,
+        templateID: 'service-bottom-default',
+        tags: ['service', 'storage'],
+      });
 
       // central corridor to vat room entry
       var corridorY = Std.int(area.height / 2) - 1;
@@ -98,6 +149,26 @@ class UndergroundLabAreaGenerator
       spawnDoubleDoorHorizontal(area, bottomRoom.x1 + Std.int(bottomRoom.w / 2), bottomRoom.y1 - 1);
       spawnDoubleDoorVertical(area, vatRoom.x1 - 1, corridorY);
 
+      var vatCenterX = vatRoom.x1 + Std.int(vatRoom.w / 2);
+      var vatCenterY = vatRoom.y1 + Std.int(vatRoom.h / 2);
+      var vatDoorX = vatRoom.x1 - 1;
+      var vatDoorY = vatCenterY;
+      var vatAnchors = [
+        { x: vatCenterX - 2, y: vatCenterY - 3 },
+        { x: vatCenterX + 1, y: vatCenterY - 3 },
+        { x: vatCenterX - 2, y: vatCenterY + 1 },
+        { x: vatCenterX + 1, y: vatCenterY + 1 },
+      ];
+      var reservedRects = [];
+      for (anchor in vatAnchors)
+        reservedRects.push({
+          x1: anchor.x,
+          y1: anchor.y,
+          x2: anchor.x + 1,
+          y2: anchor.y + 2,
+          kind: RESERVED_KIND_CLONE_VAT,
+        });
+
       // convert temp markers to final floor and wall tiles
       finalizeTiles(area);
       // initialize tile metadata and add floor decoration entries
@@ -113,23 +184,38 @@ class UndergroundLabAreaGenerator
       area.generatorInfo = {
         rooms: rooms,
         doors: [],
+        missionHints: {
+          vatRoomID: vatRoom.id,
+          vatDoor: {
+            x: vatDoorX,
+            y: vatDoorY,
+          },
+          vatAnchors: vatAnchors,
+          reservedRects: reservedRects,
+        },
       };
     }
 
-// carve a room and append it to generator room list
-  function makeRoom(area: AreaGame, rooms: Array<_Room>, roomID: Int,
-      x1: Int, y1: Int, w: Int, h: Int, tile: Int): _Room
+// carve a room and append it to generator room list with optional metadata
+  function makeRoom(area: AreaGame, rooms: Array<_Room>,
+      args: _MakeRoomArgs): _Room
     {
-      carveRect(area, x1, y1, w, h, tile);
+      carveRect(area, args.x1, args.y1, args.w, args.h, args.tile);
       var room: _Room = {
-        id: roomID,
-        x1: x1,
-        y1: y1,
-        x2: x1 + w - 1,
-        y2: y1 + h - 1,
-        w: w,
-        h: h,
+        id: args.roomID,
+        x1: args.x1,
+        y1: args.y1,
+        x2: args.x1 + args.w - 1,
+        y2: args.y1 + args.h - 1,
+        w: args.w,
+        h: args.h,
       };
+      if (args.role != null)
+        room.role = args.role;
+      if (args.templateID != null)
+        room.templateID = args.templateID;
+      if (args.tags != null)
+        room.tags = args.tags;
       rooms.push(room);
       return room;
     }

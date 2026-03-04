@@ -9,9 +9,11 @@ import objects.mission.CloneVat;
 import objects.Stairs;
 import cult.missions.Combat.CombatSpawnTarget;
 
-private typedef _SpawnSpot = {
-  var x: Int;
-  var y: Int;
+private typedef _MissionHints = {
+  var vatRoomID: Int;
+  var vatDoor: _Point;
+  var vatAnchors: Array<_Point>;
+  var reservedRects: Array<_ReservedRect>;
 }
 
 class CombatUndergroundLabPurge extends Combat
@@ -178,6 +180,14 @@ class CombatUndergroundLabPurge extends Combat
           game.area.generatorInfo.rooms.length == 0)
         return;
 
+      inline function readMissionHints(): _MissionHints
+        {
+          return cast game.area.generatorInfo.missionHints;
+        }
+      var hints: _MissionHints = null;
+      if (game.area.generatorInfo.missionHints != null)
+        hints = readMissionHints();
+
       for (o in game.area.getObjects())
         {
           if (o.type == 'elevator')
@@ -192,12 +202,13 @@ class CombatUndergroundLabPurge extends Combat
             }
         }
 
-      var vatRoom = pickLargestRoom(game.area.generatorInfo.rooms);
+      var vatRoom = pickVatRoomFromHintsOrFallback(game.area.generatorInfo.rooms, hints);
       vatRoomID = vatRoom.id;
       vatCenterX = vatRoom.x1 + Std.int(vatRoom.w / 2);
       vatCenterY = vatRoom.y1 + Std.int(vatRoom.h / 2);
-      vatDoorX = vatRoom.x1 - 1;
-      vatDoorY = vatCenterY;
+      var vatDoor = pickVatDoorFromHintsOrFallback(vatRoom, hints);
+      vatDoorX = vatDoor.x;
+      vatDoorY = vatDoor.y;
 
       if (!game.area.isWalkable(vatDoorX, vatDoorY))
         {
@@ -210,7 +221,7 @@ class CombatUndergroundLabPurge extends Combat
         }
 
       if (vatObjectIDs.length == 0)
-        spawnCloneVats();
+        spawnCloneVats(hints);
 
       isInitialized = true;
     }
@@ -296,19 +307,13 @@ class CombatUndergroundLabPurge extends Combat
     }
 
 // spawn four mission vats in a fixed formation inside the vat room
-  function spawnCloneVats()
+  function spawnCloneVats(hints: _MissionHints)
     {
-      var offsets = [
-        { x: -2, y: -3 },
-        { x: 1, y: -3 },
-        { x: -2, y: 1 },
-        { x: 1, y: 1 },
-      ];
-
-      for (offset in offsets)
+      var anchors = pickVatAnchorsFromHintsOrFallback(hints);
+      for (anchor in anchors)
         {
-          var anchorX = vatCenterX + offset.x;
-          var anchorY = vatCenterY + offset.y;
+          var anchorX = anchor.x;
+          var anchorY = anchor.y;
           if (!canPlaceCloneVatAt(anchorX, anchorY))
             {
               var fallback = findCloneVatAnchorNear(vatCenterX, vatCenterY, 4);
@@ -323,6 +328,64 @@ class CombatUndergroundLabPurge extends Combat
             continue;
           spawnCloneVatGroup(anchorX, anchorY);
         }
+    }
+
+// choose vat room from generator metadata, fallback to largest room
+  function pickVatRoomFromHintsOrFallback(rooms: Array<_Room>,
+      hints: _MissionHints): _Room
+    {
+      if (hints != null)
+        {
+          var room = game.area.generatorInfo.getRoom(hints.vatRoomID);
+          if (room != null)
+            return room;
+        }
+      return pickLargestRoom(rooms);
+    }
+
+// choose vat door from metadata, fallback to default room-side door
+  function pickVatDoorFromHintsOrFallback(vatRoom: _Room,
+      hints: _MissionHints): _Point
+    {
+      var door = {
+        x: vatRoom.x1 - 1,
+        y: vatRoom.y1 + Std.int(vatRoom.h / 2),
+      };
+      if (hints != null)
+        {
+          door.x = hints.vatDoor.x;
+          door.y = hints.vatDoor.y;
+        }
+      return door;
+    }
+
+// choose vat anchors from metadata, fallback to fixed formation
+  function pickVatAnchorsFromHintsOrFallback(hints: _MissionHints): Array<_Point>
+    {
+      if (hints != null &&
+          hints.vatAnchors != null &&
+          hints.vatAnchors.length >= 4)
+        {
+          var anchors = [];
+          for (i in 0...4)
+            anchors.push({
+              x: hints.vatAnchors[i].x,
+              y: hints.vatAnchors[i].y,
+            });
+          return anchors;
+        }
+      return getDefaultVatAnchors();
+    }
+
+// build default 4-vat anchor formation from vat room center
+  function getDefaultVatAnchors(): Array<_Point>
+    {
+      return [
+        { x: vatCenterX - 2, y: vatCenterY - 3 },
+        { x: vatCenterX + 1, y: vatCenterY - 3 },
+        { x: vatCenterX - 2, y: vatCenterY + 1 },
+        { x: vatCenterX + 1, y: vatCenterY + 1 },
+      ];
     }
 
 // check if a 2x3 vat can be placed at top-left tile x,y
@@ -345,7 +408,7 @@ class CombatUndergroundLabPurge extends Combat
     }
 
 // find random valid 2x3 vat anchor near x,y
-  function findCloneVatAnchorNear(x: Int, y: Int, radius: Int): _SpawnSpot
+  function findCloneVatAnchorNear(x: Int, y: Int, radius: Int): _Point
     {
       var spots = [];
       for (dy in -radius...radius + 1)

@@ -1,10 +1,13 @@
 // generator - area room info
 typedef _Room = {
-  id: Int,
-  x1: Int,
-  y1: Int,
-  x2: Int, // last empty space
-  y2: Int,
-  w: Int,
-  h: Int,
+  var id: Int;
+  var x1: Int;
+  var y1: Int;
+  var x2: Int; // last empty space
+  var y2: Int;
+  var w: Int;
+  var h: Int;
+  @:optional var role: String;
+  @:optional var templateID: String;
+  @:optional var tags: Array<String>;
 }
