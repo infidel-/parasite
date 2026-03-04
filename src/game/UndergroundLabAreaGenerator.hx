@@ -3,12 +3,12 @@
 package game;
 
 import Const;
+import _IconBlock;
 import const.WorldConst;
 import game.AreaGame;
 import game.AreaGenerator;
 import objects.Door;
 import objects.Elevator;
-import objects.FloorDrain;
 import tiles.UndergroundLab;
 
 class UndergroundLabAreaGenerator
@@ -105,6 +105,10 @@ class UndergroundLabAreaGenerator
       decorateFloors(area);
       // add wall decoration metadata for rendering layers
       decorateWalls(area);
+      // add near-top wall decoration after base wall pass so it renders on top
+      spawnNearTopWallDecorations(area, rooms);
+      // add decoration objects as the final decoration pass
+      spawnDecorationObj(area, rooms);
 
       area.generatorInfo = {
         rooms: rooms,
@@ -182,24 +186,6 @@ class UndergroundLabAreaGenerator
           }
     }
 
-// check if a tile can receive room decoration
-  function canDecorateCell(area: AreaGame, x: Int, y: Int,
-      blocked: Int -> Int -> Bool): Bool
-    {
-      if (x < 1 ||
-          y < 1 ||
-          x >= area.width - 1 ||
-          y >= area.height - 1)
-        return false;
-      if (area.hasObjectAt(x, y))
-        return false;
-      if (blocked != null &&
-          blocked(x, y))
-        return false;
-      var tile = area.getCellType(x, y);
-      return tile == TEMP_ROOM;
-    }
-
 // place wall decoration metadata for wall tiles
   function decorateWalls(area: AreaGame)
     {
@@ -207,6 +193,250 @@ class UndergroundLabAreaGenerator
       for (y in 0...area.height)
         for (x in 0...area.width)
           tileset.decorateWallTile(area, x, y);
+    }
+
+// spawn near-top wall decorations in each room at 50-80% fill
+  function spawnNearTopWallDecorations(area: AreaGame, rooms: Array<_Room>)
+    {
+      var tileset: UndergroundLab = cast game.scene.images.getTileset(area.typeID);
+      for (room in rooms)
+        {
+          var anchors = collectNearTopWallAnchors(area, room);
+          if (anchors.length == 0)
+            continue;
+
+          var fillPercent = 50 + Std.random(31);
+          var targetCount = Std.int(Math.ceil(anchors.length * fillPercent / 100.0));
+          for (_ in 0...targetCount)
+            {
+              if (anchors.length == 0)
+                break;
+
+              var anchorIndex = Std.random(anchors.length);
+              var anchor = anchors[anchorIndex];
+              anchors.splice(anchorIndex, 1);
+              var block = UndergroundLab.NEAR_TOP_WALL[Std.random(UndergroundLab.NEAR_TOP_WALL.length)];
+
+              area.addTileDecoration(anchor.x, anchor.y, {
+                layerID: tileset.nearTopWallWallLayerID,
+                icon: {
+                  row: block.row,
+                  col: block.col,
+                },
+              });
+              area.addTileDecoration(anchor.x, anchor.y + 1, {
+                layerID: tileset.nearTopWallFloorLayerID,
+                icon: {
+                  row: block.row + 1,
+                  col: block.col,
+                },
+              });
+              area.recalcTile(anchor.x, anchor.y);
+              area.recalcTile(anchor.x, anchor.y + 1);
+            }
+        }
+    }
+
+// collect all valid near-top wall anchors for a room
+  function collectNearTopWallAnchors(area: AreaGame, room: _Room): Array<{x: Int, y: Int}>
+    {
+      var anchors = [];
+      var tileset = game.scene.images.getTileset(area.typeID);
+      var wallY = room.y1 - 1;
+      var floorY = room.y1;
+      if (wallY < 0 ||
+          floorY < 0 ||
+          floorY >= area.height)
+        return anchors;
+
+      for (x in room.x1...room.x2 + 1)
+        {
+          var wallTileID = area.getCellType(x, wallY);
+          var floorTileID = area.getCellType(x, floorY);
+          if (!tileset.isHorizontalWallTile(wallTileID) ||
+              !tileset.isWalkable(floorTileID))
+            continue;
+          if (area.hasObjectAt(x, wallY) ||
+              area.hasObjectAt(x, floorY))
+            continue;
+          anchors.push({
+            x: x,
+            y: wallY,
+          });
+        }
+      return anchors;
+    }
+
+// spawn decoration object blocks on floor with adjacency exclusion
+  function spawnDecorationObj(area: AreaGame, rooms: Array<_Room>)
+    {
+      var tileset: UndergroundLab = cast game.scene.images.getTileset(area.typeID);
+      var tiles = area.getTiles();
+      var doorRects = getDoorFootprints(area);
+      for (room in rooms)
+        for (y in room.y1...room.y2 + 1)
+          for (x in room.x1...room.x2 + 1)
+            {
+              if (Std.random(100) >= 30)
+                continue;
+
+              var block = UndergroundLab.DECORATION_OBJ[Std.random(UndergroundLab.DECORATION_OBJ.length)];
+              if (!canPlaceDecorationObjBlock(area, tileset, tiles, room, x, y, block, doorRects))
+                continue;
+              var groupTag = 'DECO_OBJ:' + x + ':' + y + ':' + Std.random(1000000);
+              for (dy in 0...block.height)
+                for (dx in 0...block.width)
+                  area.addTileDecoration(x + dx, y + dy, {
+                    layerID: tileset.decorationObjFloorLayerID,
+                    icon: {
+                      row: block.row + dy,
+                      col: block.col + dx,
+                    },
+                    tag: groupTag,
+                  });
+            }
+    }
+
+// check if a decoration object block can be placed at top-left x,y
+  function canPlaceDecorationObjBlock(area: AreaGame, tileset: tiles.Tileset,
+      tiles: Array<Array<tiles.Tile>>, room: _Room, x: Int, y: Int, block: _IconBlock,
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>): Bool
+    {
+      if (x + block.width - 1 > room.x2 ||
+          y + block.height - 1 > room.y2)
+        return false;
+
+      for (dy in 0...block.height)
+        for (dx in 0...block.width)
+          {
+            var tx = x + dx;
+            var ty = y + dy;
+            if (!tileset.isWalkable(area.getCellType(tx, ty)) ||
+                area.hasObjectAt(tx, ty) ||
+                hasTileDecoration(tiles, tx, ty))
+              return false;
+          }
+
+      for (ny in y - 1...y + block.height + 1)
+        for (nx in x - 1...x + block.width + 1)
+          {
+            if (nx < 0 ||
+                ny < 0 ||
+                nx >= area.width ||
+                ny >= area.height)
+              continue;
+            if (nx >= x &&
+                nx < x + block.width &&
+                ny >= y &&
+                ny < y + block.height)
+              continue;
+            if (area.hasObjectAt(nx, ny))
+              return false;
+            if (!tileset.isWalkable(area.getCellType(nx, ny)))
+              continue;
+            if (hasTileDecoration(tiles, nx, ny))
+              return false;
+          }
+
+      var decorationRect = {
+        x1: x,
+        y1: y,
+        x2: x + block.width - 1,
+        y2: y + block.height - 1,
+      };
+      if (isTooCloseToAnyDoor(decorationRect, doorRects))
+        return false;
+      return true;
+    }
+
+// collect rectangle footprints for all linked and unlinked doors
+  function getDoorFootprints(area: AreaGame): Array<{x1: Int, y1: Int, x2: Int, y2: Int}>
+    {
+      var doorRects = [];
+      var processedDoorIDs: Map<Int, Bool> = new Map<Int, Bool>();
+      for (o in area.getObjects())
+        {
+          if (o.type != 'door' ||
+              processedDoorIDs[o.id])
+            continue;
+
+          var door: Door = cast o;
+          var x1 = door.x;
+          var y1 = door.y;
+          var x2 = door.x;
+          var y2 = door.y;
+          processedDoorIDs[door.id] = true;
+
+          if (door.linkedDoorID >= 0)
+            {
+              var linked = area.getObject(door.linkedDoorID);
+              if (linked != null &&
+                  linked.type == 'door')
+                {
+                  processedDoorIDs[linked.id] = true;
+                  if (linked.x < x1)
+                    x1 = linked.x;
+                  if (linked.y < y1)
+                    y1 = linked.y;
+                  if (linked.x > x2)
+                    x2 = linked.x;
+                  if (linked.y > y2)
+                    y2 = linked.y;
+                }
+            }
+
+          doorRects.push({
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2,
+          });
+        }
+      return doorRects;
+    }
+
+// check whether rectangle is too close to any door footprint
+  function isTooCloseToAnyDoor(rect: {x1: Int, y1: Int, x2: Int, y2: Int},
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>): Bool
+    {
+      for (doorRect in doorRects)
+        if (getRectEdgeGapChebyshev(rect, doorRect) < 2)
+          return true;
+      return false;
+    }
+
+// calculate chebyshev gap in tiles between two rectangle edges
+  function getRectEdgeGapChebyshev(a: {x1: Int, y1: Int, x2: Int, y2: Int},
+      b: {x1: Int, y1: Int, x2: Int, y2: Int}): Int
+    {
+      var sepX = 0;
+      if (a.x2 < b.x1)
+        sepX = b.x1 - a.x2 - 1;
+      else if (b.x2 < a.x1)
+        sepX = a.x1 - b.x2 - 1;
+
+      var sepY = 0;
+      if (a.y2 < b.y1)
+        sepY = b.y1 - a.y2 - 1;
+      else if (b.y2 < a.y1)
+        sepY = a.y1 - b.y2 - 1;
+
+      return Std.int(Math.max(sepX, sepY));
+    }
+
+// check whether this tile already has decoration metadata entries
+  function hasTileDecoration(tiles: Array<Array<tiles.Tile>>, x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= tiles.length ||
+          tiles[x] == null ||
+          y >= tiles[x].length)
+        return false;
+      var tile = tiles[x][y];
+      return (tile != null &&
+        tile.decoration != null &&
+        tile.decoration.length > 0);
     }
 
 // place floor decoration metadata for walkable floor tiles

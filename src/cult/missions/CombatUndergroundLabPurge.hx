@@ -328,12 +328,13 @@ class CombatUndergroundLabPurge extends Combat
 // check if a 2x3 vat can be placed at top-left tile x,y
   function canPlaceCloneVatAt(x: Int, y: Int): Bool
     {
+      var tileset = game.scene.images.getTileset(game.area.typeID);
       for (dy in 0...3)
         for (dx in 0...2)
           {
             var tx = x + dx;
             var ty = y + dy;
-            if (!game.area.isWalkable(tx, ty) ||
+            if (!tileset.isWalkable(game.area.getCellType(tx, ty)) ||
                 game.area.hasObjectAt(tx, ty) ||
                 game.area.getAI(tx, ty) != null ||
                 (game.playerArea.x == tx &&
@@ -388,7 +389,12 @@ class CombatUndergroundLabPurge extends Combat
 // clear floor decoration from vat footprint tiles before vat spawn
   function clearFloorDecorationUnderVat(x: Int, y: Int)
     {
+      var tileset: tiles.UndergroundLab =
+        cast game.scene.images.getTileset(game.area.typeID);
       var tiles = game.area.getTiles();
+      var tagsToRemove: Map<String, Bool> = new Map<String, Bool>();
+
+      // gather decoration object group tags intersecting vat footprint
       for (dy in 0...3)
         for (dx in 0...2)
           {
@@ -397,12 +403,44 @@ class CombatUndergroundLabPurge extends Combat
                 tile.decoration == null ||
                 tile.decoration.length == 0)
               continue;
-
-            var kept = [];
             for (decoration in tile.decoration)
-              if (decoration.icon == null)
-                kept.push(decoration);
-            tile.decoration = kept;
+              if (decoration.layerID == tileset.decorationObjFloorLayerID &&
+                  decoration.tag != null)
+                tagsToRemove[decoration.tag] = true;
+          }
+
+      // remove all tagged decoration object tiles across the area
+      if (tagsToRemove.keys().hasNext())
+        for (ty in 0...game.area.height)
+          for (tx in 0...game.area.width)
+            {
+              var tile = tiles[tx][ty];
+              if (tile == null ||
+                  tile.decoration == null ||
+                  tile.decoration.length == 0)
+                continue;
+
+              var kept = [];
+              for (decoration in tile.decoration)
+                {
+                  if (decoration.tag != null &&
+                      tagsToRemove[decoration.tag])
+                    continue;
+                  kept.push(decoration);
+                }
+              tile.decoration = kept;
+            }
+
+      // always clear remaining decoration inside the vat footprint
+      for (dy in 0...3)
+        for (dx in 0...2)
+          {
+            var tile = tiles[x + dx][y + dy];
+            if (tile == null ||
+                tile.decoration == null ||
+                tile.decoration.length == 0)
+              continue;
+            tile.decoration = [];
           }
     }
 

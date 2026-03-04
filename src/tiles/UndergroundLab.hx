@@ -10,6 +10,8 @@ class UndergroundLab extends Tileset
 {
   public static var OBJECTS_IMAGE = 'undergroundLabObjects1';
   public static var OBJECTS_IMAGE_PATH = 'img/underground-lab-objects1.png';
+  public static var NEAR_TOP_WALL_IMAGE_PATH = 'img/underground-lab-deco-near-top.png';
+  public static var DECORATION_OBJ_IMAGE_PATH = 'img/underground-lab-deco-obj1.png';
   public static var DOOR_HORIZONTAL_CLOSED_LEFT: _Icon = { row: 6, col: 0 };
   public static var DOOR_HORIZONTAL_CLOSED_RIGHT: _Icon = { row: 6, col: 1 };
   public static var DOOR_HORIZONTAL_OPEN_LEFT: _Icon = { row: 7, col: 0 };
@@ -23,6 +25,21 @@ class UndergroundLab extends Tileset
     { row: 6, col: 4, width: 2, height: 3 };
   public static var ELEVATOR: _IconBlock =
     { row: 8, col: 0, width: 2, height: 2 };
+  public static var NEAR_TOP_WALL: Array<_IconBlock> = [
+    { row: 0, col: 0, width: 1, height: 2 },
+    { row: 0, col: 1, width: 1, height: 2 },
+    { row: 0, col: 2, width: 1, height: 2 },
+    { row: 0, col: 3, width: 1, height: 2 },
+    { row: 0, col: 4, width: 1, height: 2 },
+    { row: 0, col: 5, width: 1, height: 2 },
+  ];
+  public static var DECORATION_OBJ: Array<_IconBlock> = [
+    { row: 2, col: 0, width: 1, height: 1 },
+    { row: 2, col: 1, width: 1, height: 1 },
+    { row: 2, col: 2, width: 1, height: 1 },
+    { row: 2, col: 3, width: 1, height: 1 },
+    { row: 3, col: 0, width: 2, height: 2 },
+  ];
 
   public static var TILE_FLOOR_LIGHT = 900;
   public static var TILE_FLOOR_DARK = 901;
@@ -41,6 +58,9 @@ class UndergroundLab extends Tileset
 
   public var floor: StringMap<_Icon>;
   public var floorID: StringMap<Int>;
+  public var nearTopWallFloorLayerID: Int;
+  public var decorationObjFloorLayerID: Int;
+  public var nearTopWallWallLayerID: Int;
   public var walls: _WallMap;
   public var wallID: _WallMapID;
   var iconByTileID: Map<Int, _Icon>;
@@ -62,11 +82,17 @@ class UndergroundLab extends Tileset
         [], [3, 4, 5]);
       addFloorDecorationLayer('img/entities64.png', []);
       splatLayerID = floorDecorationLayers.length - 1;
+      nearTopWallFloorLayerID = floorDecorationLayers.length;
+      addFloorDecorationLayer(NEAR_TOP_WALL_IMAGE_PATH, []);
+      decorationObjFloorLayerID = floorDecorationLayers.length;
+      addFloorDecorationLayer(DECORATION_OBJ_IMAGE_PATH, []);
       addWallDecorationLayerRepeat('img/underground-lab-decoration1.png', 4);
       addWallDecorationLayerChance('img/underground-lab-decoration2.png', 80);
       addWallDecorationLayerChance('img/underground-lab-decoration3.png', 10);
       addWallDecorationLayerChance('img/underground-lab-decoration4.png', 20);
       addWallDecorationLayerRepeat('img/underground-lab-decoration5.png', 2);
+      nearTopWallWallLayerID = wallDecorationLayers.length;
+      addWallDecorationLayerRepeat(NEAR_TOP_WALL_IMAGE_PATH, -1);
     }
 
 // initialize floor icon and tile id maps
@@ -186,5 +212,13 @@ class UndergroundLab extends Tileset
     {
       return (tileID == TILE_WALL_LEFT ||
         tileID == TILE_WALL_RIGHT);
+    }
+
+// check if a decoration entry should block movement
+  public override function isBlockingDecoration(tileID: Int, decoration: tiles.Decoration): Bool
+    {
+      return (decoration.layerID == nearTopWallFloorLayerID ||
+        decoration.layerID == nearTopWallWallLayerID ||
+        decoration.layerID == decorationObjFloorLayerID);
     }
 }

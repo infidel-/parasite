@@ -1084,6 +1084,17 @@ class AreaGame extends _SaveObject
               !tile.isWalkable)
             return;
         }
+
+      // check blocking decorations on this tile
+      if (tile.isWalkable &&
+          tile.decoration != null)
+        for (decoration in tile.decoration)
+          if (tileset != null &&
+              tileset.isBlockingDecoration(tileID, decoration))
+            {
+              tile.isWalkable = false;
+              break;
+            }
     }
 
 // recalculate cached tile stats for all tiles
@@ -1135,6 +1146,23 @@ class AreaGame extends _SaveObject
               !o.isWalkable())
             tile.isWalkable = false;
         }
+
+      // check blocking decorations
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var tile = tiles[x][y];
+            if (!tile.isWalkable ||
+                tile.decoration == null)
+              continue;
+            for (decoration in tile.decoration)
+              if (tileset != null &&
+                  tileset.isBlockingDecoration(_cells[x][y], decoration))
+                {
+                  tile.isWalkable = false;
+                  break;
+                }
+          }
     }
 
 // add one decoration descriptor to a tile
