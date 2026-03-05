@@ -3,17 +3,23 @@
 package objects;
 
 import game.Game;
+import tiles.UndergroundLab;
 
 class Elevator extends AreaObject
 {
   public var missionID: Int;
+  public var elevatorPartIndex: Int;
 
-  public function new(g: Game, vaid: Int, vx: Int, vy: Int, ?vmissionID: Int = -1)
+  public function new(g: Game, vaid: Int, vx: Int, vy: Int, ?vmissionID: Int = -1,
+      ?velevatorPartIndex: Int = 0, ?vimageName: String = null)
     {
       super(g, vaid, vx, vy);
-      missionID = vmissionID;
       init();
+      elevatorPartIndex = velevatorPartIndex;
       missionID = vmissionID;
+      if (vimageName != null)
+        imageName = vimageName;
+      updateElevatorIcon();
       initPost(false);
     }
 
@@ -22,18 +28,36 @@ class Elevator extends AreaObject
     {
       super.init();
       missionID = -1;
-      // empty tile
-      imageRow = 0;
-      imageCol = 0;
+      elevatorPartIndex = 0;
       type = 'elevator';
       name = 'elevator';
       isStatic = true;
+      updateElevatorIcon();
     }
 
 // called after load or creation
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+      updateElevatorIcon();
+    }
+
+// update icon for default or underground elevator art
+  function updateElevatorIcon()
+    {
+      if (imageName == UndergroundLab.OBJECTS_IMAGE)
+        {
+          var block = UndergroundLab.ELEVATOR;
+          imageRow = block.row + Std.int(elevatorPartIndex / block.width);
+          imageCol = block.col + elevatorPartIndex % block.width;
+        }
+      else
+        {
+          imageRow = 0;
+          imageCol = 0;
+        }
+      if (entity != null)
+        updateImage();
     }
 
 

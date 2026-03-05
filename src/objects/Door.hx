@@ -184,7 +184,7 @@ class Door extends AreaObject
 
       // recalc tile visibility if state changed
       if (changed)
-        game.region.get(areaID).recalcTileCanSeeThrough(x, y);
+        game.region.get(areaID).recalcTile(x, y);
 
       // propagate state change to linked door half
       if (propagate)

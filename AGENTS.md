@@ -15,3 +15,8 @@
 - When updating most of the code, keep changes compact: avoid introducing unnecessary temporary variables, redundant conditionals, or extra formatting helpers unless the existing code already requires them. Temporary variables are fine if they shorten the code or are reused.
 - All enum values should be in ALL_CAPS_SNAKE_CASE (e.g., `enum ActionType { ATTACK, DEFEND, HEAL }`).
 - stop unnecessary defensive checks. Prefer invariant-driven code for internal data structures and hot paths; only add extra null/bounds/type guards at real trust boundaries (user input, save/load migration, external APIs) or when existing local code already uses that guard pattern.
+- for newly introduced internal data contracts (generatorInfo, mission hints, etc.), ALWAYS use explicit typed `typedef`/class fields. DO NOT use `Dynamic` unless the source is truly untyped external input.
+- for metadata written and read by code introduced in the same change, DO NOT add migration/alias parsing helpers (`parse*` scaffolding, legacy key remaps) unless explicitly requested.
+- keep fallback logic minimal and behavior-focused: allow `null`/missing optional fields, then fall back to existing gameplay behavior.
+- compatibility shims are allowed only for real pre-existing persisted formats already in production saves; otherwise reject over-defensive parsing.
+- any `Dynamic` usage in game logic MUST have an inline comment that states the trust boundary and why typed data is not possible.

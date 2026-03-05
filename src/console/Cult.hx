@@ -273,8 +273,47 @@ class Cult
             text: 'A tribulation most foul has descended upon us: ' + o.coloredName() + '.',
             col: 'white'
           });
+          moveToOrdealMissionSpotInRegion(o);
           return;
         }
+    }
+
+// move player to ordeal mission marker spot when in region mode
+  function moveToOrdealMissionSpotInRegion(ordeal: GenericProfaneOrdeal)
+    {
+      if (game.location != LOCATION_REGION ||
+          ordeal == null ||
+          ordeal.missions == null ||
+          ordeal.missions.length == 0)
+        return;
+
+      var mission = ordeal.missions[0];
+      var spotX = mission.x;
+      var spotY = mission.y;
+
+      if (mission.markerAreaID >= 0)
+        {
+          var markerArea = game.region.get(mission.markerAreaID);
+          if (markerArea != null)
+            {
+              spotX = markerArea.x;
+              spotY = markerArea.y;
+            }
+        }
+
+      if (spotX < 0 ||
+          spotY < 0)
+        {
+          log('Ordeal added, but mission spot coordinates are invalid.');
+          return;
+        }
+
+      if (!game.playerRegion.moveTo(spotX, spotY, false))
+        {
+          log('Ordeal added, but could not move to mission spot (' + spotX + ',' + spotY + ').');
+          return;
+        }
+      log('Moved to ordeal mission spot: (' + spotX + ',' + spotY + ').');
     }
 
 // log shortcut

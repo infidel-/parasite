@@ -156,6 +156,12 @@ class Tileset
       return false;
     }
 
+// check if a tile decoration entry blocks movement
+  public function isBlockingDecoration(tileID: Int, decoration: tiles.Decoration): Bool
+    {
+      return false;
+    }
+
 // place one wall decoration descriptor on tile
   public function decorateWallTile(area: AreaGame, x: Int, y: Int)
     {
@@ -243,9 +249,12 @@ class Tileset
           var layer = wallDecorationLayers[layerID];
           if (layer == null)
             continue;
+          var wallIcon = icon;
+          if (decoration.icon != null)
+            wallIcon = decoration.icon;
           ctx.drawImage(layer,
-            icon.col * Const.TILE_SIZE_CLEAN,
-            icon.row * Const.TILE_SIZE_CLEAN,
+            wallIcon.col * Const.TILE_SIZE_CLEAN,
+            wallIcon.row * Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             x,
@@ -275,7 +284,9 @@ class Tileset
               layerID >= floorDecorationLayers.length)
             continue;
           var layer = floorDecorationLayers[layerID];
-          if (layer == null)
+          if (layer == null ||
+              !layer.complete ||
+              layer.naturalWidth <= 0)
             continue;
           var scale = (decoration.scale != null ? decoration.scale : 1.0);
           var angle = (decoration.angle != null ? decoration.angle : 0.0);
