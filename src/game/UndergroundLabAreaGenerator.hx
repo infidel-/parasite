@@ -187,6 +187,8 @@ class UndergroundLabAreaGenerator
       spawnNearTopWallDecorations(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
       // add decoration objects as the final decoration pass
       spawnDecorationObj(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
+      // add corridor floor decorations at lower density
+      decorateCorridorFloors(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
       // add floor decorations last on remaining empty spots
       decorateFloors(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
 
@@ -1122,7 +1124,8 @@ class UndergroundLabAreaGenerator
             var ty = y + dy;
             if (!tileset.isWalkable(area.getCellType(tx, ty)) ||
                 area.hasObjectAt(tx, ty) ||
-                hasBlockingTileDecoration(area, tileset, tiles, tx, ty))
+                hasBlockingTileDecorationForObjectPlacement(area, tileset, tiles,
+                  tx, ty, false))
               return false;
           }
 
@@ -1143,7 +1146,8 @@ class UndergroundLabAreaGenerator
               return false;
             if (!tileset.isWalkable(area.getCellType(nx, ny)))
               continue;
-            if (hasBlockingTileDecoration(area, tileset, tiles, nx, ny))
+            if (hasBlockingTileDecorationForObjectPlacement(area, tileset, tiles,
+              nx, ny, false))
               return false;
           }
 
@@ -1271,6 +1275,43 @@ class UndergroundLabAreaGenerator
       return false;
     }
 
+// check blocking decoration for object placement
+  function hasBlockingTileDecorationForObjectPlacement(area: AreaGame,
+      tileset: tiles.Tileset, tiles: Array<Array<tiles.Tile>>, x: Int, y: Int,
+      ignoreNearTopFloorOverlay: Bool): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= tiles.length ||
+          tiles[x] == null ||
+          y >= tiles[x].length)
+        return false;
+      var tile = tiles[x][y];
+      if (tile == null ||
+          tile.decoration == null ||
+          tile.decoration.length == 0)
+        return false;
+
+      var nearTopFloorLayerID = -1;
+      if (Std.isOfType(tileset, UndergroundLab))
+        {
+          var undergroundLab: UndergroundLab = cast tileset;
+          nearTopFloorLayerID = undergroundLab.nearTopWallFloorLayerID;
+        }
+
+      var tileID = area.getCellType(x, y);
+      for (decoration in tile.decoration)
+        {
+          if (!tileset.isBlockingDecoration(tileID, decoration))
+            continue;
+          if (ignoreNearTopFloorOverlay &&
+              decoration.layerID == nearTopFloorLayerID)
+            continue;
+          return true;
+        }
+      return false;
+    }
+
 // place floor decoration metadata using room role and zone weights
   function decorateFloors(area: AreaGame, rooms: Array<_Room>,
       doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
@@ -1292,13 +1333,11 @@ class UndergroundLabAreaGenerator
                 var tileID = area.getCellType(x, y);
                 if (!tileset.isWalkable(tileID) ||
                     area.hasObjectAt(x, y) ||
+                    hasBlockingTileDecoration(area, tileset, tiles, x, y) ||
                     hasAdjacentFloorDecoration(area, tiles, x, y))
                   continue;
 
-                var tile = tiles[x][y];
-                if (tile != null &&
-                    tile.decoration != null &&
-                    tile.decoration.length > 0)
+                if (hasFloorDecorationAtTile(tiles, x, y))
                   continue;
 
                 var zone = getDecorationZone(context, x, y);
@@ -1322,6 +1361,88 @@ class UndergroundLabAreaGenerator
         }
     }
 
+// place floor decorations on corridor tiles outside room footprints
+  function decorateCorridorFloors(area: AreaGame, rooms: Array<_Room>,
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
+      corridorY: Int, reservedRects: Array<_ReservedRect>)
+    {
+      var tileset = game.scene.images.getTileset(area.typeID);
+      var tiles = area.getTiles();
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (isPointInsideAnyRoom(rooms, x, y))
+              continue;
+
+            var tileID = area.getCellType(x, y);
+            if (!tileset.isWalkable(tileID) ||
+                area.hasObjectAt(x, y) ||
+                hasBlockingTileDecoration(area, tileset, tiles, x, y) ||
+                hasFloorDecorationAtTile(tiles, x, y) ||
+                hasAdjacentFloorDecoration(area, tiles, x, y) ||
+                isPointInAnyReservedRect(x, y, reservedRects))
+              continue;
+
+            var zone = DECOR_ZONE_ROOM_GENERIC;
+            if (isInDoorBufferZone(x, y, doorRects))
+              zone = DECOR_ZONE_DOOR_BUFFER;
+            else if (isInTrafficLaneZone(x, y, corridorY))
+              zone = DECOR_ZONE_TRAFFIC_LANE;
+
+            var baseChance = getPlacementChancePercent(DECOR_LAYER_FLOOR,
+              ROOM_ROLE_ENTRANCE, zone);
+            var chance = Std.int(baseChance * 2 / 3) + 11;
+            chance = Const.clamp(chance, 0, 95);
+            if (chance <= 0 ||
+                Const.roll(1, 100) > chance)
+              continue;
+
+            var floorInfo = pickWeightedFloorDecorMeta(ROOM_ROLE_ENTRANCE, zone);
+            if (floorInfo == null)
+              continue;
+
+            area.addTileDecoration(x, y, {
+              layerID: 0,
+              icon: {
+                row: floorInfo.icon.row,
+                col: floorInfo.icon.col,
+              },
+            });
+          }
+    }
+
+// check whether point is inside any generated room footprint
+  function isPointInsideAnyRoom(rooms: Array<_Room>, x: Int, y: Int): Bool
+    {
+      for (room in rooms)
+        if (x >= room.x1 &&
+            x <= room.x2 &&
+            y >= room.y1 &&
+            y <= room.y2)
+          return true;
+      return false;
+    }
+
+// check whether this tile has a floor decoration entry
+  function hasFloorDecorationAtTile(tiles: Array<Array<tiles.Tile>>, x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= tiles.length ||
+          tiles[x] == null ||
+          y >= tiles[x].length)
+        return false;
+      var tile = tiles[x][y];
+      if (tile == null ||
+          tile.decoration == null ||
+          tile.decoration.length == 0)
+        return false;
+      for (decoration in tile.decoration)
+        if (decoration.layerID == 0)
+          return true;
+      return false;
+    }
+
 // check whether this cell has any adjacent floor decoration
   function hasAdjacentFloorDecoration(area: AreaGame,
       tiles: Array<Array<tiles.Tile>>, x: Int, y: Int): Bool
@@ -1341,10 +1462,7 @@ class UndergroundLabAreaGenerator
                 ny >= area.height)
               continue;
 
-            var tile = tiles[nx][ny];
-            if (tile != null &&
-                tile.decoration != null &&
-                tile.decoration.length > 0)
+            if (hasFloorDecorationAtTile(tiles, nx, ny))
               return true;
           }
       return false;
@@ -1353,17 +1471,20 @@ class UndergroundLabAreaGenerator
 // get role-aware near-top wall fill percentage
   function getNearTopWallFillPercent(role: String): Int
     {
+      var fill = 0;
       if (role == ROOM_ROLE_ENTRANCE)
-        return 35 + Const.roll(0, 15);
-      if (role == ROOM_ROLE_VAT)
-        return 58 + Const.roll(0, 24);
-      if (role == ROOM_ROLE_WORKSHOP)
-        return 56 + Const.roll(0, 21);
-      if (role == ROOM_ROLE_STORAGE)
-        return 50 + Const.roll(0, 21);
-      if (role == ROOM_ROLE_RESEARCH)
-        return 52 + Const.roll(0, 21);
-      return 48 + Const.roll(0, 20);
+        fill = 35 + Const.roll(0, 15);
+      else if (role == ROOM_ROLE_VAT)
+        fill = 58 + Const.roll(0, 24);
+      else if (role == ROOM_ROLE_WORKSHOP)
+        fill = 56 + Const.roll(0, 21);
+      else if (role == ROOM_ROLE_STORAGE)
+        fill = 50 + Const.roll(0, 21);
+      else if (role == ROOM_ROLE_RESEARCH)
+        fill = 52 + Const.roll(0, 21);
+      else fill = 48 + Const.roll(0, 20);
+      fill = Std.int(fill / 2);
+      return Const.clamp(fill, 4, 70);
     }
 
 // get base placement chance for a layer/role/zone combination
@@ -1423,6 +1544,11 @@ class UndergroundLabAreaGenerator
             weights.motifWeight *
             roleAffinity / 100000000);
           weight = Const.clamp(weight, blockInfo.meta.minZoneWeight, blockInfo.meta.maxZoneWeight);
+          if ((role == ROOM_ROLE_VAT ||
+               role == ROOM_ROLE_RESEARCH) &&
+              zone == DECOR_ZONE_WALL_EDGE &&
+              blockInfo.meta.tags.indexOf('table') >= 0)
+            weight = Std.int(weight * 17 / 10);
 
           if (hasUnspawnedLarge &&
               isLargeDecorBlock(blockInfo) &&
@@ -1617,7 +1743,7 @@ class UndergroundLabAreaGenerator
       if (zone == DECOR_ZONE_TRAFFIC_LANE)
         return 10;
       if (zone == DECOR_ZONE_WALL_EDGE)
-        return 125;
+        return 155;
       if (zone == DECOR_ZONE_WORK_CORE)
         return 110;
       return 75;

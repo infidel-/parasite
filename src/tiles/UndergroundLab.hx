@@ -251,9 +251,9 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'vat', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
-        baseWeight: 120,
+        baseWeight: 150,
         minZoneWeight: 0,
-        maxZoneWeight: 280,
+        maxZoneWeight: 340,
       },
     },
     {
@@ -264,9 +264,9 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'vat', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
-        baseWeight: 118,
+        baseWeight: 148,
         minZoneWeight: 0,
-        maxZoneWeight: 280,
+        maxZoneWeight: 340,
       },
     },
     {
