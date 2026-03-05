@@ -467,7 +467,7 @@ class CombatUndergroundLabPurge extends Combat
                 tile.decoration.length == 0)
               continue;
             for (decoration in tile.decoration)
-              if (decoration.layerID == tileset.decorationObjFloorLayerID &&
+              if (tileset.isDecorationObjLayerID(decoration.layerID) &&
                   decoration.tag != null)
                 tagsToRemove[decoration.tag] = true;
           }

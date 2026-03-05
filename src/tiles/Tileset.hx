@@ -284,7 +284,9 @@ class Tileset
               layerID >= floorDecorationLayers.length)
             continue;
           var layer = floorDecorationLayers[layerID];
-          if (layer == null)
+          if (layer == null ||
+              !layer.complete ||
+              layer.naturalWidth <= 0)
             continue;
           var scale = (decoration.scale != null ? decoration.scale : 1.0);
           var angle = (decoration.angle != null ? decoration.angle : 0.0);
