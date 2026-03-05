@@ -35,6 +35,9 @@ class PediaConst
     'cultPowerResources',
     'cultCommunalOrdeals',
     'cultProfaneOrdeals',
+    'cultCombatMissions',
+    'cultBazaarNet',
+    'cultCommands',
   ];
   public static var contents: Array<_PediaGroupInfo> = [
     {
@@ -98,14 +101,24 @@ NumPad - movement<br>
 NumPad5, Z - wait a turn<br>
 Alt+0-5 - equals F1-F5<br>
 1-3 - pick option in message/difficulty/yes-no dialog. 1 is close/yes, 2 is no, in case of a difficulty choice it's left to right - easy, normal, hard<br>
-; - opens console (used mostly for debug purposes), type \"help\" and press enter to see what commands are there in the normal build<br><br>
+; - opens console (used mostly for debug purposes), type \"help\" and press enter to see what commands are there in the normal build<br>
+<br>
 <b>Quick Actions:</b><br>
-Q + G - Goals window<br>
 Q + B - Body window<br>
+Q + C - Cult window<br><br>
+Q + E - Evolution window<br>
+Q + G - Goals window<br>
 Q + L - Log window<br>
 Q + T - Timeline window<br>
-Q + E - Evolution window<br>
-Q + C - Cult window<br>",
+<br>
+<b>Targeting:</b><br>
+T - enter targeting mode while controlling a host in area mode<br>
+Arrows / NumPad - rotate visible targets<br>
+Enter / NumPad5 / LMB on target - confirm selected target<br>
+ESC - clear target<br>
+<br>
+<b>Inspection:</b><br>
+Hold Ctrl + hover over AI - show AI tooltip with known info<br>",
         },
         {
           id: 'lifeParasite',
@@ -428,7 +441,30 @@ Q + C - Cult window<br>",
             "<p>Each profane ordeal has a timer in cult turns. If you fail to complete it before time runs out, the ordeal fails and inflicts a random burden on the cult for several turns. While active, profane ordeals also impose negative effects on the cult.</p>" +
             "<p>Profane ordeals require both resources and a mission to complete. The resource requirements (power and money) scale with your cult's strength - more powerful cults face steeper demands. You must spend these resources through the ordeal menu, just like communal ordeals.</p>" +
             "<p>The mission component, called a clavis, requires you personal physical action in the game world. Mission areas are marked on the regional map, and the target will spawn when you enter and remain in the area. Note that once you enter the mission area, you cannot save and cannot leave until the mission succeeds or fails. At this point the cult time also stops passing until the mission is over.</p>" +
+            "<p>Some claves are combat missions. In those, the ordeal points you at heavily contested objectives where hostile targets must be eliminated or a dangerous operation must be disrupted before it escalates. These missions are less about stealth and more about committing to a decisive strike in a prepared battlefield.</p>" +
             "<p>Both the resource requirements and the mission must be completed to succeed. If the target dies during a persuade mission, or if the timer expires, the ordeal fails. Success removes the ordeal and its negative effects, while failure adds a new burden to the cult.</p>",
+        },
+        {
+          id: 'cultCombatMissions',
+          name: 'Combat Missions',
+          text: "<p>Combat missions are special clavis operations attached to profane ordeals. Instead of persuasion or simple interception, these tasks escalate into direct violence: you are sent to neutralize marked enemies or break a hostile process before it matures.</p>" +
+            "<p>The cult window lists these missions under active ordeals, while the region map marks where to deploy. Once you enter the mission area, you are committed until the operation is resolved. Retreat and save restrictions apply for the duration, and cult time pauses while the mission is active.</p>" +
+            "<p>In practice, combat missions reward preparation: arrive with a stable host, a well-equipped team, and an exit plan. Clearing the mission objective is only one side of success, because the parent ordeal still expects its required resources to be paid through cult actions.</p>",
+        },
+        {
+          id: 'cultBazaarNet',
+          name: 'BazaarNet',
+          text: "<p>BazaarNet is the cult's procurement and training channel inside the Cult window. It is used to shape your followers into reliable field assets by improving their loadouts and sharpening their weapon skills.</p>" +
+            "<p><span class=window-cult-ordeals-title>Equip member</span> lets you pick a free member and purchase gear for key slots. Weapons and armor are handled as practical replacements, so a new purchase can redefine that follower's battlefield role immediately. Note that better equipment will require you to spend combat resources in addition to money.</p>" +
+            "<p><span class=window-cult-ordeals-title>Train member</span> focuses on weapon handling. Training options appear for the member's currently equipped melee and ranged weapons, then apply directly to those skill lanes. This makes equipment choices and training choices tightly linked.</p>" +
+            "<p>BazaarNet spends money and combat resources, and it is unavailable while trade is blocked by cult effects. Keep an eye on member status as well: only free members can be equipped or trained through this menu.</p>",
+        },
+        {
+          id: 'cultCommands',
+          name: 'Cultist Commands',
+          text: "<p>When cult followers are physically present in area mode, you can issue tactical orders through the command menu. This interface is separate from normal actions and is built for quick battlefield coordination.</p>" +
+            "<p>The command set is intentionally compact: order followers to attack the current visible target, order them to leave the area, or abort. Attack orders are refused against fellow cultists, and leave orders clear current aggression so your followers disengage and withdraw.</p>" +
+            "<p>Commanding is strongest when paired with targeting. Select or confirm a target first, then direct the squad to focus it down while you reposition. Remember that movement is blocked while the command menu is open, so issue orders deliberately and exit back to normal control.</p>",
         },
       ],
     },
