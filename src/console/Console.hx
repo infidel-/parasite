@@ -99,7 +99,7 @@ class Console
             'cfg|config,<br/>' +
             'ch|chat - set chat stage' +
             'ddemo - debug: finish demo, ' +
-            'dg - debug: graphics info, ' +
+            'dg - debug: render stats, ' +
             'dthrow - debug: throw exception, ' +
             'dalert - debug: show alert, ' +
             'dleave - debug: leave area,<br/>' +
@@ -131,7 +131,7 @@ class Console
             'quit.');
 #else
           log('Available commands: cfg, config, ' +
-            'dg - debug: graphics info, ' +
+            'dg - debug: render stats, ' +
             'dai - debug: ai info, ' +
             'ds - debug: enable sound info, ' +
             'load - load game, ' +
@@ -673,10 +673,11 @@ class Console
 // debug commands
   function debugCommand(cmd: String)
     {
-      // XXX dg - show graphics objects info
-      if (cmd.charAt(1) == 'g')
+      // XXX dg - show render stats info
+      if (cmd == 'dg')
         {
-          log('Disabled for now.');
+          game.log(game.scene.getRegionRenderStatsText() +
+            '<br/>' + game.scene.getAreaRenderStatsText(), COLOR_DEBUG);
         }
       // XXX dai - show ai view/hear info
       else if (cmd == 'dai')

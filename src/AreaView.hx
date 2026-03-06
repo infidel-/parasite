@@ -67,6 +67,7 @@ class AreaView
 // redraw area map
   public function draw()
     {
+      var renderTS = scene.beginRenderSample();
 //      var time = Sys.time();
 //      trace('draw area');
       var ctx:CanvasRenderingContext2D = scene.canvas.getContext('2d');
@@ -154,6 +155,7 @@ class AreaView
           ctx.fill();
 
         }
+      scene.endRenderSampleArea(renderTS);
 //      trace('draw: ' + (Sys.time() - time) + 'ms');
     }
 
