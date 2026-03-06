@@ -3,6 +3,7 @@
 package tiles;
 
 import Const;
+import _AtmosphereLightMeta;
 import _IconBlock;
 import haxe.ds.StringMap;
 
@@ -12,6 +13,7 @@ typedef _DecorMeta = {
   var motifs: Array<String>;
   var roles: Array<String>;
   @:optional var imageKey: String;
+  @:optional var light: _AtmosphereLightMeta;
   var baseWeight: Int;
   var minZoneWeight: Int;
   var maxZoneWeight: Int;
@@ -26,6 +28,7 @@ typedef _FloorDecorMeta = {
   var icon: _Icon;
   var motifs: Array<String>;
   var roles: Array<String>;
+  @:optional var light: _AtmosphereLightMeta;
   var baseWeight: Int;
 }
 
@@ -51,6 +54,54 @@ class UndergroundLab extends Tileset
     { row: 6, col: 4, width: 2, height: 3 };
   public static var ELEVATOR: _IconBlock =
     { row: 8, col: 0, width: 2, height: 2 };
+  // base darkness alpha applied before light cutouts (higher = darker)
+  public static var ATMOS_BASE_ALPHA = 0.50;
+  // edge darkening alpha used by radial vignette (higher = darker)
+  public static var ATMOS_VIGNETTE_ALPHA = 0.10;
+  public static var ATMOS_LIGHT_RADIUS_SMALL = 1.1;
+  public static var ATMOS_LIGHT_RADIUS_LARGE = 2.4;
+  public static var ATMOS_LIGHT_SMALL_GREEN: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_SMALL,
+    intensity: 0.72,
+    tintR: 0,
+    tintG: 255,
+    tintB: 24,
+  };
+  public static var ATMOS_LIGHT_SMALL_CYAN: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_SMALL,
+    intensity: 0.72,
+    tintR: 0,
+    tintG: 255,
+    tintB: 255,
+  };
+  public static var ATMOS_LIGHT_SMALL_BLUE: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_SMALL,
+    intensity: 0.72,
+    tintR: 0,
+    tintG: 96,
+    tintB: 255,
+  };
+  public static var ATMOS_LIGHT_LARGE_GREEN: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_LARGE,
+    intensity: 0.88,
+    tintR: 0,
+    tintG: 255,
+    tintB: 36,
+  };
+  public static var ATMOS_LIGHT_LARGE_ORANGE: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_LARGE,
+    intensity: 0.88,
+    tintR: 255,
+    tintG: 140,
+    tintB: 0,
+  };
+  public static var ATMOS_LIGHT_LARGE_BLUE: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_LARGE,
+    intensity: 0.88,
+    tintR: 0,
+    tintG: 120,
+    tintB: 255,
+  };
 
   public static var NEAR_TOP_WALL_META: Array<_DecorBlock> = [
     {
@@ -108,6 +159,7 @@ class UndergroundLab extends Tileset
         tags: ['wall', 'plant'],
         motifs: ['furniture'],
         roles: ['entrance', 'research', 'storage'],
+        light: ATMOS_LIGHT_SMALL_BLUE,
         baseWeight: 90,
         minZoneWeight: 0,
         maxZoneWeight: 200,
@@ -160,6 +212,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'research', 'vat'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_SMALL_GREEN,
         baseWeight: 110,
         minZoneWeight: 0,
         maxZoneWeight: 260,
@@ -173,6 +226,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'research', 'vat'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_SMALL_BLUE,
         baseWeight: 108,
         minZoneWeight: 0,
         maxZoneWeight: 260,
@@ -186,6 +240,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'research', 'vat'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_SMALL_GREEN,
         baseWeight: 106,
         minZoneWeight: 0,
         maxZoneWeight: 260,
@@ -199,6 +254,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'research', 'vat'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_SMALL_GREEN,
         baseWeight: 104,
         minZoneWeight: 0,
         maxZoneWeight: 260,
@@ -251,6 +307,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'vat', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_SMALL_CYAN,
         baseWeight: 150,
         minZoneWeight: 0,
         maxZoneWeight: 340,
@@ -264,6 +321,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research'],
         roles: ['workshop', 'vat', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_SMALL_CYAN,
         baseWeight: 148,
         minZoneWeight: 0,
         maxZoneWeight: 340,
@@ -290,6 +348,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research', 'storage'],
         roles: ['storage', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_LARGE_ORANGE,
         baseWeight: 124,
         minZoneWeight: 0,
         maxZoneWeight: 320,
@@ -316,6 +375,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'research', 'storage'],
         roles: ['storage', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_LARGE_GREEN,
         baseWeight: 123,
         minZoneWeight: 0,
         maxZoneWeight: 320,
@@ -329,6 +389,7 @@ class UndergroundLab extends Tileset
         motifs: ['machinery', 'storage', 'research'],
         roles: ['storage', 'research'],
         imageKey: DECORATION_OBJ_IMAGE_KEY_1,
+        light: ATMOS_LIGHT_LARGE_BLUE,
         baseWeight: 121,
         minZoneWeight: 0,
         maxZoneWeight: 320,
@@ -399,9 +460,24 @@ class UndergroundLab extends Tileset
         maxZoneWeight: 340,
       },
     },
+    {
+      block: { row: 0, col: 3, width: 3, height: 3 },
+      meta: {
+        id: 'object-large-machinery-storage-7',
+        tags: ['object', 'machinery', 'large'],
+        motifs: ['machinery', 'storage', 'research'],
+        roles: ['storage', 'research'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_2,
+        light: ATMOS_LIGHT_LARGE_BLUE,
+        baseWeight: 128,
+        minZoneWeight: 0,
+        maxZoneWeight: 340,
+      },
+    },
   ];
+
   public static var FLOOR_DECOR_META: Array<_FloorDecorMeta> = [
-    { icon: { row: 3, col: 0 }, motifs: ['glowing-green-grate', 'machinery'], roles: ['workshop', 'vat', 'research'], baseWeight: 106 },
+    { icon: { row: 3, col: 0 }, motifs: ['glowing-green-grate', 'machinery'], roles: ['workshop', 'vat', 'research'], light: ATMOS_LIGHT_SMALL_GREEN, baseWeight: 106 },
     { icon: { row: 3, col: 1 }, motifs: ['green-puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 98 },
     { icon: { row: 3, col: 2 }, motifs: ['lab-number-marking', 'hazard-marking'], roles: ['vat', 'workshop', 'research', 'entrance'], baseWeight: 108 },
     { icon: { row: 3, col: 3 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 86 },
@@ -478,13 +554,34 @@ class UndergroundLab extends Tileset
       decorationObjFloorLayerID = getDecorationObjLayerID(DECORATION_OBJ_IMAGE_KEY_1);
       registerDecorationObjLayer(DECORATION_OBJ_IMAGE_KEY_2,
         DECORATION_OBJ_IMAGE_PATH_2);
-      addWallDecorationLayerRepeat('img/underground-lab-decoration1.png', 4);
-      addWallDecorationLayerChance('img/underground-lab-decoration2.png', 80);
-      addWallDecorationLayerChance('img/underground-lab-decoration3.png', 10);
-      addWallDecorationLayerChance('img/underground-lab-decoration4.png', 20);
-      addWallDecorationLayerRepeat('img/underground-lab-decoration5.png', 2);
+      addWallDecorationLayerRepeat({
+        path: 'img/underground-lab-decoration1.png',
+        repeatEvery: 4,
+      });
+      addWallDecorationLayerChance({
+        path: 'img/underground-lab-decoration2.png',
+        chance: 80,
+      });
+      addWallDecorationLayerChance({
+        path: 'img/underground-lab-decoration3.png',
+        chance: 10,
+        light: ATMOS_LIGHT_SMALL_CYAN,
+      });
+      addWallDecorationLayerChance({
+        path: 'img/underground-lab-decoration4.png',
+        chance: 20,
+        light: ATMOS_LIGHT_SMALL_CYAN,
+        noCorners: true,
+      });
+      addWallDecorationLayerRepeat({
+        path: 'img/underground-lab-decoration5.png',
+        repeatEvery: 2,
+      });
       nearTopWallWallLayerID = wallDecorationLayers.length;
-      addWallDecorationLayerRepeat(NEAR_TOP_WALL_IMAGE_PATH, -1);
+      addWallDecorationLayerRepeat({
+        path: NEAR_TOP_WALL_IMAGE_PATH,
+        repeatEvery: -1,
+      });
     }
 
 // register one object-decoration image layer and map it by key

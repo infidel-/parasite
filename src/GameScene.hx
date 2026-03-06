@@ -11,6 +11,7 @@ class GameScene
 {
   public var game: Game; // game state link
   public var area: AreaView; // area view
+  public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
@@ -84,6 +85,7 @@ class GameScene
       images = new Images(this);
       mouse = new Mouse(game);
       area = new AreaView(this);
+      areaLighting = new AreaLighting(this);
       region = new RegionView(this);
 
       // init sound

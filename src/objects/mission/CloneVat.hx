@@ -102,6 +102,11 @@ class CloneVat extends AreaObject
           vat.isFlushed = true;
           vat.updateVatIcon();
         }
+      if (game != null &&
+          game.area != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(game.area);
     }
 
 // allow using the vat from adjacent tiles

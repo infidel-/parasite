@@ -610,6 +610,7 @@ class CombatUndergroundLabPurge extends Combat
       var tileset: tiles.UndergroundLab =
         cast game.scene.images.getTileset(game.area.typeID);
       var tiles = game.area.getTiles();
+      var didChange = false;
       var tagsToRemove: Map<String, Bool> = new Map<String, Bool>();
       var ringX1 = x - padding;
       var ringY1 = y - padding;
@@ -659,6 +660,7 @@ class CombatUndergroundLabPurge extends Combat
                 continue;
               tile.decoration = kept;
               game.area.recalcTile(tx, ty);
+              didChange = true;
             }
 
       // clear footprint decorations and blocking ring decorations
@@ -687,9 +689,13 @@ class CombatUndergroundLabPurge extends Combat
                   continue;
                 kept.push(decoration);
               }
+            if (kept.length != tile.decoration.length)
+              didChange = true;
             tile.decoration = kept;
             game.area.recalcTile(tx, ty);
           }
+      if (didChange)
+        game.scene.areaLighting.invalidateArea(game.area);
     }
 
 // choose the largest room from generator metadata

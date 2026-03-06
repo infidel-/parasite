@@ -64,6 +64,33 @@ class ParticleStunRifle extends ParticleBullet
       drawLine(ctx, srcx, srcy, dstx, dsty, dt);
     }
 
+// provide atmospheric light pulses for stun muzzle flash and impact
+  public override function getLightPulses(): Array<_ParticleLightPulse>
+    {
+      var pulses = [{
+        x: sx + 0.5,
+        y: sy + 0.5,
+        radiusTiles: 2.8,
+        intensity: 0.86,
+        tintR: 146,
+        tintG: 216,
+        tintB: 255,
+        durationMs: 120.0,
+      }];
+      if (hit)
+        pulses.push({
+          x: dst.x + 0.5,
+          y: dst.y + 0.5,
+          radiusTiles: 2.2,
+          intensity: 0.56,
+          tintR: 124,
+          tintG: 206,
+          tintB: 255,
+          durationMs: 165.0,
+        });
+      return pulses;
+    }
+
   public override function onDeath()
     {
       if (hit)

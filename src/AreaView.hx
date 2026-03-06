@@ -59,6 +59,7 @@ class AreaView
   public function addParticle(p: Particle)
     {
       _particles.add(p);
+      scene.areaLighting.onParticleAdded(p);
       // set interval to call draw every 10 ms 
       if (drawIntervalID == 0)
         drawIntervalID = Browser.window.setInterval(draw, 10);
@@ -106,6 +107,9 @@ class AreaView
               (game.playerArea.sees(ai.x, ai.y) &&
               ai.entity.isVisible()))
             ai.entity.draw(ctx);
+
+      // atmospheric lighting overlay
+      scene.areaLighting.drawAreaLighting(ctx, _cache);
 
       // particles
       drawParticles(ctx);
@@ -235,11 +239,18 @@ class AreaView
           p.draw(ctx, dt);
         }
       // stop redrawing
-      if (_particles.length == 0)
+      if (_particles.length == 0 &&
+          !scene.areaLighting.hasActiveTransientLights())
         {
           Browser.window.clearInterval(drawIntervalID);
           drawIntervalID = 0;
         }
+    }
+
+// mark atmosphere maps for rebuild
+  public function invalidateAtmosphereLighting()
+    {
+      scene.areaLighting.invalidateCurrentView();
     }
 
 // corp has fake people in the background
@@ -286,6 +297,7 @@ class AreaView
       width = game.area.width;
       height = game.area.height;
       _tileset = scene.images.getTileset(game.area.typeID);
+      invalidateAtmosphereLighting();
       scene.updateCamera(); // center camera on player
     }
 
@@ -318,6 +330,7 @@ class AreaView
       for (eff in _effects)
         _effects.remove(eff);
       path = null;
+      invalidateAtmosphereLighting();
     }
 
 
@@ -551,6 +564,7 @@ class AreaView
     {
       _tileset = scene.images.getTileset(game.area.typeID);
       fakeHosts = [];
+      invalidateAtmosphereLighting();
       turnCorp(true);
     }
 
