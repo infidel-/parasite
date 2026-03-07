@@ -20,3 +20,4 @@
 - keep fallback logic minimal and behavior-focused: allow `null`/missing optional fields, then fall back to existing gameplay behavior.
 - compatibility shims are allowed only for real pre-existing persisted formats already in production saves; otherwise reject over-defensive parsing.
 - any `Dynamic` usage in game logic MUST have an inline comment that states the trust boundary and why typed data is not possible.
+- when I ask you to check, treat it as "investigate thoroughly and report" rather than "fix it". If you find a problem, report it but do not attempt to fix it unless I explicitly ask you to.

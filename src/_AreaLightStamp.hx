@@ -8,4 +8,7 @@ typedef _AreaLightStamp = {
   var tintG: Int;
   var tintB: Int;
   @:optional var kind: String;
+  @:optional var falloffProfile: String;
+  @:optional var saturationBoost: Float;
+  @:optional var sourceGroupID: String;
 }

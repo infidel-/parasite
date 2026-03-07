@@ -15,9 +15,44 @@ import tiles.UndergroundLab._DecorBlock;
 
 class AreaLighting
 {
+// atmosphere lightmap pixels per world tile
   static var ATMOS_LIGHTMAP_TILE_SIZE = 8;
+// minimum interval between dynamic lightmap rebuilds in milliseconds
   static var ATMOS_DYNAMIC_REBUILD_MS = 25;
+// cap for simultaneously tracked transient particle lights
   static var ATMOS_MAX_TRANSIENT_LIGHTS = 14;
+// chance that one generated layout light source is broken
+  static var LAYOUT_LIGHT_BROKEN_CHANCE_PERCENT = 10;
+// spacing in tiles between corridor light anchors
+  static var LAYOUT_LIGHT_CORRIDOR_SPACING = 4;
+// minimum corridor run span required before placing lights
+  static var LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN = 3;
+// radius for the soft outer layout-light pass
+  static var LAYOUT_LIGHT_RADIUS_OUTER = 2.5;
+// radius for the sharper inner layout-light pass
+  static var LAYOUT_LIGHT_RADIUS_INNER = 1.2;
+// cutout intensity used for the outer layout-light pass
+  static var LAYOUT_LIGHT_INTENSITY_OUTER = 0.62;
+// cutout intensity used for the inner layout-light pass
+  static var LAYOUT_LIGHT_INTENSITY_INNER = 0.74;
+// saturation multiplier applied to inner pass tint color
+  static var LAYOUT_LIGHT_INNER_SATURATION_BOOST = 1.35;
+// gate for enabling the temporary outer layout-light pass
+  static var LAYOUT_LIGHT_ENABLE_OUTER_PASS = true;
+// falloff ID for the current smooth radial profile
+  static var FALL_OFF_PROFILE_SMOOTH_CURRENT = 'smooth-current';
+// falloff ID for the legacy sharp radial profile
+  static var FALL_OFF_PROFILE_SHARP_LEGACY = 'sharp-legacy';
+// layout room role ID for entry rooms
+  static var LAYOUT_ROLE_ENTRANCE = 'entrance';
+// layout room role ID for clone-vat rooms
+  static var LAYOUT_ROLE_VAT = 'vat';
+// layout room role ID for workshop rooms
+  static var LAYOUT_ROLE_WORKSHOP = 'workshop';
+// layout room role ID for storage rooms
+  static var LAYOUT_ROLE_STORAGE = 'storage';
+// layout room role ID for research rooms
+  static var LAYOUT_ROLE_RESEARCH = 'research';
 
   var scene: GameScene;
   var game: Game;
@@ -111,6 +146,15 @@ class AreaLighting
       return transientAtmosphereLights.length > 0;
     }
 
+// reset area lighting cache for a freshly entered area
+  public function onAreaEntered()
+    {
+      if (game != null &&
+          game.area != null)
+        areaLightStampsByAreaID.remove(game.area.id);
+      invalidateCurrentView();
+    }
+
 // invalidate cached lighting for one area
   public function invalidateArea(area: AreaGame)
     {
@@ -178,6 +222,7 @@ class AreaLighting
       addNearTopWallDecorationLights(area, stamps, undergroundLab);
       addDecorationObjectLights(area, stamps, undergroundLab);
       addCloneVatLights(area, stamps);
+      addRoomAndCorridorLayoutLights(area, stamps, undergroundLab);
       return stamps;
     }
 
@@ -470,10 +515,402 @@ class AreaLighting
         }
     }
 
+// add role-based room and corridor lights with two-pass profiles
+  function addRoomAndCorridorLayoutLights(area: AreaGame,
+      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
+    {
+      var sources: Array<_LayoutLightSource> = [];
+      addRoomLayoutSources(area, sources);
+      addCorridorLayoutSources(area, sources, undergroundLab);
+      sources = filterAdjacentLayoutSources(sources);
+      for (source in sources)
+        {
+          if (Std.random(100) < LAYOUT_LIGHT_BROKEN_CHANCE_PERCENT)
+            continue;
+          if (LAYOUT_LIGHT_ENABLE_OUTER_PASS)
+            pushCustomLightStamp(area, stamps, source.x, source.y,
+              LAYOUT_LIGHT_RADIUS_OUTER,
+              LAYOUT_LIGHT_INTENSITY_OUTER,
+              source.tintR,
+              source.tintG,
+              source.tintB,
+              source.kind + '-outer',
+              FALL_OFF_PROFILE_SMOOTH_CURRENT,
+              1.0,
+              source.sourceGroupID);
+          pushCustomLightStamp(area, stamps, source.x, source.y,
+            LAYOUT_LIGHT_RADIUS_INNER,
+            LAYOUT_LIGHT_INTENSITY_INNER,
+            source.tintR,
+            source.tintG,
+            source.tintB,
+            source.kind + '-inner',
+            FALL_OFF_PROFILE_SHARP_LEGACY,
+            LAYOUT_LIGHT_INNER_SATURATION_BOOST,
+            source.sourceGroupID);
+        }
+    }
+
+// filter out nearby layout sources in the same kind (including diagonals)
+  function filterAdjacentLayoutSources(
+      sources: Array<_LayoutLightSource>): Array<_LayoutLightSource>
+    {
+      if (sources.length <= 1)
+        return sources;
+
+      var sortedSources = sources.copy();
+      sortedSources.sort((a, b) -> {
+        if (a.kind != b.kind)
+          return (a.kind < b.kind ? -1 : 1);
+        if (a.y != b.y)
+          return a.y - b.y;
+        return a.x - b.x;
+      });
+
+      var filtered: Array<_LayoutLightSource> = [];
+      for (source in sortedSources)
+        {
+          var keep = true;
+          for (existing in filtered)
+            {
+              if (existing.kind != source.kind)
+                continue;
+              var dx = source.x - existing.x;
+              if (dx < 0)
+                dx = -dx;
+              var dy = source.y - existing.y;
+              if (dy < 0)
+                dy = -dy;
+              if (dx <= 1 &&
+                  dy <= 1)
+                {
+                  keep = false;
+                  break;
+                }
+            }
+          if (keep)
+            filtered.push(source);
+        }
+      return filtered;
+    }
+
+// add evenly spaced room light sources based on room dimensions
+  function addRoomLayoutSources(area: AreaGame, sources: Array<_LayoutLightSource>)
+    {
+      if (area.generatorInfo == null ||
+          area.generatorInfo.rooms == null ||
+          area.generatorInfo.rooms.length == 0)
+        return;
+      for (room in area.generatorInfo.rooms)
+        {
+          var xAnchors = buildRoomAxisAnchors(room.x1, room.w);
+          var yAnchors = buildRoomAxisAnchors(room.y1, room.h);
+          var roleLight = getLayoutRoomRoleLight(room.role);
+          for (y in yAnchors)
+            for (x in xAnchors)
+              sources.push({
+                x: x,
+                y: y,
+                tintR: roleLight.tintR,
+                tintG: roleLight.tintG,
+                tintB: roleLight.tintB,
+                kind: 'layout-room',
+                sourceGroupID: 'room-' + room.id,
+              });
+        }
+    }
+
+// add corridor centerline sources from horizontal and vertical runs
+  function addCorridorLayoutSources(area: AreaGame,
+      sources: Array<_LayoutLightSource>, undergroundLab: UndergroundLab)
+    {
+      if (area.generatorInfo == null ||
+          area.generatorInfo.rooms == null)
+        return;
+
+      var roomMask = buildRoomMask(area);
+      var doorMask = buildDoorMask(area);
+      var corridorMask = buildCorridorMask(area, undergroundLab, roomMask,
+        doorMask);
+      var corridorLight = getLayoutCorridorLight();
+
+      for (y in 0...area.height - 1)
+        {
+          var x = 0;
+          while (x < area.width)
+            {
+              if (!(corridorMask[x][y] &&
+                  corridorMask[x][y + 1]))
+                {
+                  x++;
+                  continue;
+                }
+              var runStart = x;
+              while (x < area.width &&
+                  corridorMask[x][y] &&
+                  corridorMask[x][y + 1])
+                x++;
+              var runEnd = x - 1;
+              var runSpan = runEnd - runStart + 1;
+              if (runSpan < LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN)
+                continue;
+              var anchors = buildRunAnchors(runStart, runEnd + 1,
+                LAYOUT_LIGHT_CORRIDOR_SPACING);
+              for (ax in anchors)
+                sources.push({
+                  x: ax,
+                  y: y + 1,
+                  tintR: corridorLight.tintR,
+                  tintG: corridorLight.tintG,
+                  tintB: corridorLight.tintB,
+                  kind: 'layout-corridor',
+                  sourceGroupID: 'corridor',
+                });
+            }
+        }
+
+      for (x in 0...area.width - 1)
+        {
+          var y = 0;
+          while (y < area.height)
+            {
+              if (!(corridorMask[x][y] &&
+                  corridorMask[x + 1][y]))
+                {
+                  y++;
+                  continue;
+                }
+              var runStart = y;
+              while (y < area.height &&
+                  corridorMask[x][y] &&
+                  corridorMask[x + 1][y])
+                y++;
+              var runEnd = y - 1;
+              var runSpan = runEnd - runStart + 1;
+              if (runSpan < LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN)
+                continue;
+              var anchors = buildRunAnchors(runStart, runEnd + 1,
+                LAYOUT_LIGHT_CORRIDOR_SPACING);
+              for (ay in anchors)
+                sources.push({
+                  x: x + 1,
+                  y: ay,
+                  tintR: corridorLight.tintR,
+                  tintG: corridorLight.tintG,
+                  tintB: corridorLight.tintB,
+                  kind: 'layout-corridor',
+                  sourceGroupID: 'corridor',
+                });
+            }
+        }
+    }
+
+// build boolean mask of room tiles from generator room rectangles
+  function buildRoomMask(area: AreaGame): Array<Array<Bool>>
+    {
+      var mask: Array<Array<Bool>> = [];
+      for (x in 0...area.width)
+        {
+          mask[x] = [];
+          for (y in 0...area.height)
+            mask[x][y] = false;
+        }
+
+      for (room in area.generatorInfo.rooms)
+        for (y in room.y1...room.y2 + 1)
+          for (x in room.x1...room.x2 + 1)
+            mask[x][y] = true;
+      return mask;
+    }
+
+// build corridor mask from walkable non-room underground tiles
+  function buildCorridorMask(area: AreaGame, undergroundLab: UndergroundLab,
+      roomMask: Array<Array<Bool>>,
+      doorMask: Array<Array<Bool>>): Array<Array<Bool>>
+    {
+      var mask: Array<Array<Bool>> = [];
+      for (x in 0...area.width)
+        {
+          mask[x] = [];
+          for (y in 0...area.height)
+            {
+              var tileID = area.getCellType(x, y);
+              mask[x][y] = (!roomMask[x][y] &&
+                !doorMask[x][y] &&
+                undergroundLab.isWalkable(tileID));
+            }
+        }
+      return mask;
+    }
+
+// build boolean mask of door object tiles
+  function buildDoorMask(area: AreaGame): Array<Array<Bool>>
+    {
+      var mask: Array<Array<Bool>> = [];
+      for (x in 0...area.width)
+        {
+          mask[x] = [];
+          for (y in 0...area.height)
+            mask[x][y] = false;
+        }
+
+      for (o in area.getObjects())
+        {
+          if (o.type != 'door' ||
+              o.x < 0 ||
+              o.y < 0 ||
+              o.x >= area.width ||
+              o.y >= area.height)
+            continue;
+          mask[o.x][o.y] = true;
+        }
+      return mask;
+    }
+
+// build one room axis anchor sequence by room-size rule
+  function buildRoomAxisAnchors(start: Int, size: Int): Array<Int>
+    {
+      var minPos = start + 1;
+      var maxPos = start + size - 1;
+      if (minPos > maxPos)
+        return [start];
+
+      var count = getRoomAxisAnchorCount(size);
+      if (count <= 1)
+        return [Std.int(Math.round((minPos + maxPos) / 2.0))];
+      if (count == 2)
+        {
+          var pos1 = Std.int(Math.round(start + size * 0.25));
+          var pos2 = Std.int(Math.round(start + size * 0.75));
+          pos1 = Const.clamp(pos1, minPos, maxPos);
+          pos2 = Const.clamp(pos2, minPos, maxPos);
+          if (pos2 <= pos1)
+            pos2 = Const.clamp(pos1 + 1, minPos, maxPos);
+          if (pos1 == pos2)
+            return [pos1];
+          return [pos1, pos2];
+        }
+
+      // for larger dimensions, place one anchor per 4-tile block at block center
+      var blockAnchors: Array<Int> = [];
+      var blockStart = 0;
+      while (blockStart < size)
+        {
+          var blockEnd = blockStart + 4;
+          if (blockEnd > size)
+            blockEnd = size;
+          var pos = Std.int(Math.round(start + (blockStart + blockEnd) / 2.0));
+          pos = Const.clamp(pos, minPos, maxPos);
+          if (blockAnchors.indexOf(pos) < 0)
+            blockAnchors.push(pos);
+          blockStart += 4;
+        }
+      if (blockAnchors.length > 0)
+        {
+          var filteredBlockAnchors: Array<Int> = [];
+          for (pos in blockAnchors)
+            {
+              if (filteredBlockAnchors.length > 0 &&
+                  pos - filteredBlockAnchors[filteredBlockAnchors.length - 1] < 3)
+                continue;
+              filteredBlockAnchors.push(pos);
+            }
+          if (filteredBlockAnchors.length > 0)
+            return filteredBlockAnchors;
+        }
+
+      var anchors: Array<Int> = [];
+      for (i in 0...count)
+        {
+          var t = (i + 1.0) / (count + 1.0);
+          var pos = Std.int(Math.round(minPos + (maxPos - minPos) * t));
+          pos = Const.clamp(pos, minPos, maxPos);
+          if (anchors.indexOf(pos) < 0)
+            anchors.push(pos);
+        }
+      if (anchors.length <= 0)
+        anchors.push(Std.int(Math.round((minPos + maxPos) / 2.0)));
+      return anchors;
+    }
+
+// get room axis anchor count from room dimension
+  function getRoomAxisAnchorCount(size: Int): Int
+    {
+      if (size < 6)
+        return 1;
+      if (size <= 8)
+        return 2;
+      return Std.int(Math.ceil(size / 4.0));
+    }
+
+// build centered run anchors with approximate fixed spacing
+  function buildRunAnchors(start: Int, end: Int, spacing: Int): Array<Int>
+    {
+      var span = end - start;
+      if (span <= 0)
+        return [];
+
+      var count = Std.int(Math.ceil(span / spacing));
+      if (count < 1)
+        count = 1;
+      var anchors: Array<Int> = [];
+      for (i in 0...count)
+        {
+          var t = (i + 0.5) / count;
+          var pos = Std.int(Math.round(start + span * t));
+          pos = Const.clamp(pos, start, end);
+          if (anchors.indexOf(pos) < 0)
+            anchors.push(pos);
+        }
+      return anchors;
+    }
+
+// get room role color profile for layout light sources
+  function getLayoutRoomRoleLight(role: String): _AtmosphereLightMeta
+    {
+      if (role == LAYOUT_ROLE_ENTRANCE)
+        return UndergroundLab.ATMOS_LIGHT_SMALL_CYAN;
+      if (role == LAYOUT_ROLE_VAT)
+        return UndergroundLab.ATMOS_LIGHT_LARGE_GREEN;
+      if (role == LAYOUT_ROLE_WORKSHOP)
+        return UndergroundLab.ATMOS_LIGHT_SMALL_CYAN;
+      if (role == LAYOUT_ROLE_STORAGE)
+        return UndergroundLab.ATMOS_LIGHT_LARGE_ORANGE;
+      if (role == LAYOUT_ROLE_RESEARCH)
+        return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
+      return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
+    }
+
+// get corridor color profile for layout light sources
+  function getLayoutCorridorLight(): _AtmosphereLightMeta
+    {
+      return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
+    }
+
 // append one atmosphere light stamp with short-range deduplication
   function pushLightStamp(area: AreaGame,
       stamps: Array<_AreaLightStamp>,
       x: Float, y: Float, light: _AtmosphereLightMeta, kind: String)
+    {
+      pushCustomLightStamp(area, stamps, x, y,
+        light.radiusTiles,
+        light.intensity,
+        light.tintR,
+        light.tintG,
+        light.tintB,
+        kind);
+    }
+
+// append one atmosphere light stamp with optional profile metadata
+  function pushCustomLightStamp(area: AreaGame,
+      stamps: Array<_AreaLightStamp>,
+      x: Float, y: Float,
+      radiusTiles: Float, intensity: Float,
+      tintR: Int, tintG: Int, tintB: Int,
+      kind: String,
+      ?falloffProfile: String,
+      ?saturationBoost: Float,
+      ?sourceGroupID: String)
     {
       var ix = Std.int(Math.floor(x));
       var iy = Std.int(Math.floor(y));
@@ -487,20 +924,29 @@ class AreaLighting
         {
           var dx = stamp.x - x;
           var dy = stamp.y - y;
-          if (dx * dx + dy * dy < 0.04)
+          if (dx * dx + dy * dy < 0.04 &&
+              stamp.kind == kind &&
+              Math.abs(stamp.radiusTiles - radiusTiles) < 0.04)
             return;
         }
 
-      stamps.push({
+      var stamp: _AreaLightStamp = {
         x: x,
         y: y,
-        radiusTiles: light.radiusTiles,
-        intensity: light.intensity,
-        tintR: light.tintR,
-        tintG: light.tintG,
-        tintB: light.tintB,
+        radiusTiles: radiusTiles,
+        intensity: intensity,
+        tintR: tintR,
+        tintG: tintG,
+        tintB: tintB,
         kind: kind,
-      });
+      };
+      if (falloffProfile != null)
+        stamp.falloffProfile = falloffProfile;
+      if (saturationBoost != null)
+        stamp.saturationBoost = saturationBoost;
+      if (sourceGroupID != null)
+        stamp.sourceGroupID = sourceGroupID;
+      stamps.push(stamp);
     }
 
 // add one short-lived atmosphere pulse light
@@ -784,15 +1230,30 @@ class AreaLighting
       var cx = toMapX(stamp.x);
       var cy = toMapY(stamp.y);
       var radius = stamp.radiusTiles * ATMOS_LIGHTMAP_TILE_SIZE;
+      var falloffProfile = (stamp.falloffProfile != null ?
+        stamp.falloffProfile : FALL_OFF_PROFILE_SMOOTH_CURRENT);
+      var isSharpLegacy = (falloffProfile == FALL_OFF_PROFILE_SHARP_LEGACY);
       var cutAlpha = Const.round2(stamp.intensity);
       mapCtx.save();
       mapCtx.globalCompositeOperation = 'destination-out';
       var cutout = mapCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
       cutout.addColorStop(0, 'rgba(0, 0, 0, ' + cutAlpha + ')');
-      cutout.addColorStop(0.86,
-        'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.68) + ')');
-      cutout.addColorStop(0.96,
-        'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.12) + ')');
+      if (isSharpLegacy)
+        {
+          cutout.addColorStop(0.86,
+            'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.68) + ')');
+          cutout.addColorStop(0.96,
+            'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.12) + ')');
+        }
+      else
+        {
+          cutout.addColorStop(0.42,
+            'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.78) + ')');
+          cutout.addColorStop(0.72,
+            'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.46) + ')');
+          cutout.addColorStop(0.90,
+            'rgba(0, 0, 0, ' + Const.round2(cutAlpha * 0.16) + ')');
+        }
       cutout.addColorStop(1, 'rgba(0, 0, 0, 0)');
       mapCtx.fillStyle = cutout;
       mapCtx.beginPath();
@@ -801,19 +1262,37 @@ class AreaLighting
       mapCtx.restore();
 
       mapCtx.save();
-      var glow = mapCtx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.08);
+      var glowRadiusMul = (isSharpLegacy ? 1.08 : 1.16);
+      var glow = mapCtx.createRadialGradient(cx, cy, 0, cx, cy,
+        radius * glowRadiusMul);
       var glowAlpha = Const.round2(stamp.intensity * 0.38);
-      glow.addColorStop(0, 'rgba(' + stamp.tintR + ', ' + stamp.tintG + ', ' +
-        stamp.tintB + ', ' + glowAlpha + ')');
-      glow.addColorStop(0.78, 'rgba(' + stamp.tintR + ', ' + stamp.tintG + ', ' +
-        stamp.tintB + ', ' + Const.round2(glowAlpha * 0.48) + ')');
-      glow.addColorStop(0.95, 'rgba(' + stamp.tintR + ', ' + stamp.tintG + ', ' +
-        stamp.tintB + ', ' + Const.round2(glowAlpha * 0.06) + ')');
-      glow.addColorStop(1, 'rgba(' + stamp.tintR + ', ' + stamp.tintG + ', ' +
-        stamp.tintB + ', 0)');
+      var saturationBoost = (stamp.saturationBoost != null ?
+        stamp.saturationBoost : 1.0);
+      var tint = getSaturatedTint(stamp.tintR, stamp.tintG, stamp.tintB,
+        saturationBoost);
+      glow.addColorStop(0, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+        tint.b + ', ' + glowAlpha + ')');
+      if (isSharpLegacy)
+        {
+          glow.addColorStop(0.78, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+            tint.b + ', ' + Const.round2(glowAlpha * 0.48) + ')');
+          glow.addColorStop(0.95, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+            tint.b + ', ' + Const.round2(glowAlpha * 0.06) + ')');
+        }
+      else
+        {
+          glow.addColorStop(0.34, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+            tint.b + ', ' + Const.round2(glowAlpha * 0.72) + ')');
+          glow.addColorStop(0.68, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+            tint.b + ', ' + Const.round2(glowAlpha * 0.36) + ')');
+          glow.addColorStop(0.90, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+            tint.b + ', ' + Const.round2(glowAlpha * 0.12) + ')');
+        }
+      glow.addColorStop(1, 'rgba(' + tint.r + ', ' + tint.g + ', ' +
+        tint.b + ', 0)');
       mapCtx.fillStyle = glow;
       mapCtx.beginPath();
-      mapCtx.arc(cx, cy, radius * 1.08, 0, Math.PI * 2, false);
+      mapCtx.arc(cx, cy, radius * glowRadiusMul, 0, Math.PI * 2, false);
       mapCtx.fill();
       mapCtx.restore();
     }
@@ -842,18 +1321,41 @@ class AreaLighting
       var glow = mapCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
       glow.addColorStop(0, 'rgba(' + light.tintR + ', ' + light.tintG + ', ' +
         light.tintB + ', ' + alpha + ')');
-      glow.addColorStop(0.72,
+      glow.addColorStop(0.30,
         'rgba(' + light.tintR + ', ' + light.tintG + ', ' +
-        light.tintB + ', ' + Const.round2(alpha * 0.52) + ')');
-      glow.addColorStop(0.93,
+        light.tintB + ', ' + Const.round2(alpha * 0.72) + ')');
+      glow.addColorStop(0.64,
         'rgba(' + light.tintR + ', ' + light.tintG + ', ' +
-        light.tintB + ', ' + Const.round2(alpha * 0.07) + ')');
+        light.tintB + ', ' + Const.round2(alpha * 0.34) + ')');
+      glow.addColorStop(0.88,
+        'rgba(' + light.tintR + ', ' + light.tintG + ', ' +
+        light.tintB + ', ' + Const.round2(alpha * 0.10) + ')');
       glow.addColorStop(1, 'rgba(' + light.tintR + ', ' + light.tintG + ', ' +
         light.tintB + ', 0)');
       mapCtx.fillStyle = glow;
       mapCtx.beginPath();
       mapCtx.arc(cx, cy, radius, 0, Math.PI * 2, false);
       mapCtx.fill();
+    }
+
+// apply saturation boost to rgb tint around its channel average
+  function getSaturatedTint(r: Int, g: Int, b: Int,
+      saturationBoost: Float): _LightTint
+    {
+      if (saturationBoost == 1.0)
+        return { r: r, g: g, b: b };
+      var avg = (r + g + b) / 3.0;
+      var boostedR = Std.int(Math.round(Const.clampFloat(avg +
+        (r - avg) * saturationBoost, 0, 255)));
+      var boostedG = Std.int(Math.round(Const.clampFloat(avg +
+        (g - avg) * saturationBoost, 0, 255)));
+      var boostedB = Std.int(Math.round(Const.clampFloat(avg +
+        (b - avg) * saturationBoost, 0, 255)));
+      return {
+        r: boostedR,
+        g: boostedG,
+        b: boostedB,
+      };
     }
 
 // convert tile coordinate to atmosphere map x
@@ -889,4 +1391,20 @@ private typedef _TransientAtmosphereLight = {
   var tintB: Int;
   var startTS: Float;
   var endTS: Float;
+}
+
+private typedef _LayoutLightSource = {
+  var x: Int;
+  var y: Int;
+  var tintR: Int;
+  var tintG: Int;
+  var tintB: Int;
+  var kind: String;
+  var sourceGroupID: String;
+}
+
+private typedef _LightTint = {
+  var r: Int;
+  var g: Int;
+  var b: Int;
 }

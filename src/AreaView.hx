@@ -564,7 +564,7 @@ class AreaView
     {
       _tileset = scene.images.getTileset(game.area.typeID);
       fakeHosts = [];
-      invalidateAtmosphereLighting();
+      scene.areaLighting.onAreaEntered();
       turnCorp(true);
     }
 
