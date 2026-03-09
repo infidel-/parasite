@@ -112,8 +112,6 @@ class UndergroundLabAreaGenerator
   static var DECOR_ZONE_WORK_CORE = 'work-core';
   static var DECOR_ZONE_ROOM_GENERIC = 'room-generic';
   static var DECOR_ZONE_MISSION_RESERVED = 'mission-reserved';
-  static var LAYOUT_LIGHT_CORRIDOR_SPACING = 4;
-  static var LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN = 3;
 
   var game: Game;
   var gen: AreaGenerator;
@@ -1123,8 +1121,6 @@ class UndergroundLabAreaGenerator
     {
       var tileset: UndergroundLab = cast game.scene.images.getTileset(area.typeID);
       var tiles = area.getTiles();
-      var layoutLightAnchorMask = buildLayoutLightAnchorMaskForDecor(area,
-        rooms, doorRects, tileset);
       var spawnedLargeDecorIDs = [];
       for (room in rooms)
         {
@@ -1151,8 +1147,7 @@ class UndergroundLabAreaGenerator
                 if (isRectOverlappingReservedRect(x, y, x + block.width - 1,
                     y + block.height - 1, reservedRects))
                   continue;
-                if (!canPlaceDecorationObjBlock(area, tileset, tiles, room, x, y, block, doorRects,
-                    layoutLightAnchorMask))
+                if (!canPlaceDecorationObjBlock(area, tileset, tiles, room, x, y, block, doorRects))
                   continue;
 
                 if (isLargeDecorBlock(blockInfo) &&
@@ -1177,8 +1172,7 @@ class UndergroundLabAreaGenerator
 // check if a decoration object block can be placed at top-left x,y
   function canPlaceDecorationObjBlock(area: AreaGame, tileset: tiles.Tileset,
       tiles: Array<Array<tiles.Tile>>, room: _Room, x: Int, y: Int, block: _IconBlock,
-      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
-      layoutLightAnchorMask: Array<Array<Bool>>): Bool
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>): Bool
     {
       if (x + block.width - 1 > room.x2 ||
           y + block.height - 1 > room.y2)
@@ -1191,7 +1185,6 @@ class UndergroundLabAreaGenerator
             var ty = y + dy;
             if (!tileset.isWalkable(area.getCellType(tx, ty)) ||
                 area.hasObjectAt(tx, ty) ||
-                layoutLightAnchorMask[tx][ty] ||
                 hasBlockingTileDecorationForObjectPlacement(area, tileset, tiles,
                   tx, ty, false))
               return false;
@@ -1228,269 +1221,6 @@ class UndergroundLabAreaGenerator
       if (isTooCloseToAnyDoor(decorationRect, doorRects))
         return false;
       return true;
-    }
-
-// build layout-light anchor mask to keep decoration objects off static room/corridor lights
-  function buildLayoutLightAnchorMaskForDecor(area: AreaGame,
-      rooms: Array<_Room>,
-      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
-      tileset: UndergroundLab): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            mask[x][y] = false;
-        }
-
-      for (room in rooms)
-        {
-          var xAnchors = buildLayoutLightRoomAxisAnchors(room.x1, room.w);
-          var yAnchors = buildLayoutLightRoomAxisAnchors(room.y1, room.h);
-          for (ay in yAnchors)
-            for (ax in xAnchors)
-              {
-                if (ax < 0 ||
-                    ay < 0 ||
-                    ax >= area.width ||
-                    ay >= area.height)
-                  continue;
-                mask[ax][ay] = true;
-              }
-        }
-
-      var roomMask = buildLayoutLightRoomMask(area, rooms);
-      var doorMask = buildLayoutLightDoorMask(area, doorRects);
-      var corridorMask = buildLayoutLightCorridorMask(area, tileset, roomMask,
-        doorMask);
-
-      for (y in 0...area.height - 1)
-        {
-          var x = 0;
-          while (x < area.width)
-            {
-              if (!(corridorMask[x][y] &&
-                  corridorMask[x][y + 1]))
-                {
-                  x++;
-                  continue;
-                }
-              var runStart = x;
-              while (x < area.width &&
-                  corridorMask[x][y] &&
-                  corridorMask[x][y + 1])
-                x++;
-              var runEnd = x - 1;
-              var runSpan = runEnd - runStart + 1;
-              if (runSpan < LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN)
-                continue;
-              var anchors = buildLayoutLightRunAnchors(runStart, runEnd + 1,
-                LAYOUT_LIGHT_CORRIDOR_SPACING);
-              for (ax in anchors)
-                {
-                  if (ax < 0 ||
-                      ax >= area.width)
-                    continue;
-                  mask[ax][y + 1] = true;
-                }
-            }
-        }
-
-      for (x in 0...area.width - 1)
-        {
-          var y = 0;
-          while (y < area.height)
-            {
-              if (!(corridorMask[x][y] &&
-                  corridorMask[x + 1][y]))
-                {
-                  y++;
-                  continue;
-                }
-              var runStart = y;
-              while (y < area.height &&
-                  corridorMask[x][y] &&
-                  corridorMask[x + 1][y])
-                y++;
-              var runEnd = y - 1;
-              var runSpan = runEnd - runStart + 1;
-              if (runSpan < LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN)
-                continue;
-              var anchors = buildLayoutLightRunAnchors(runStart, runEnd + 1,
-                LAYOUT_LIGHT_CORRIDOR_SPACING);
-              for (ay in anchors)
-                {
-                  if (ay < 0 ||
-                      ay >= area.height)
-                    continue;
-                  mask[x + 1][ay] = true;
-                }
-            }
-        }
-
-      return mask;
-    }
-
-// build room mask for layout-light corridor derivation
-  function buildLayoutLightRoomMask(area: AreaGame,
-      rooms: Array<_Room>): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            mask[x][y] = false;
-        }
-
-      for (room in rooms)
-        for (y in room.y1...room.y2 + 1)
-          for (x in room.x1...room.x2 + 1)
-            mask[x][y] = true;
-      return mask;
-    }
-
-// build door mask from linked-door footprint rectangles
-  function buildLayoutLightDoorMask(area: AreaGame,
-      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            mask[x][y] = false;
-        }
-
-      for (rect in doorRects)
-        for (y in rect.y1...rect.y2 + 1)
-          for (x in rect.x1...rect.x2 + 1)
-            {
-              if (x < 0 ||
-                  y < 0 ||
-                  x >= area.width ||
-                  y >= area.height)
-                continue;
-              mask[x][y] = true;
-            }
-      return mask;
-    }
-
-// build corridor mask from walkable non-room non-door tiles
-  function buildLayoutLightCorridorMask(area: AreaGame, tileset: UndergroundLab,
-      roomMask: Array<Array<Bool>>,
-      doorMask: Array<Array<Bool>>): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            {
-              var tileID = area.getCellType(x, y);
-              mask[x][y] = (!roomMask[x][y] &&
-                !doorMask[x][y] &&
-                tileset.isWalkable(tileID));
-            }
-        }
-      return mask;
-    }
-
-// build one room-axis anchor sequence using the same room-size light rule
-  function buildLayoutLightRoomAxisAnchors(start: Int, size: Int): Array<Int>
-    {
-      var minPos = start + 1;
-      var maxPos = start + size - 1;
-      if (minPos > maxPos)
-        return [start];
-
-      var count = getLayoutLightRoomAxisAnchorCount(size);
-      if (count <= 1)
-        return [Std.int(Math.round((minPos + maxPos) / 2.0))];
-      if (count == 2)
-        {
-          var pos1 = Std.int(Math.round(start + size * 0.25));
-          var pos2 = Std.int(Math.round(start + size * 0.75));
-          pos1 = Const.clamp(pos1, minPos, maxPos);
-          pos2 = Const.clamp(pos2, minPos, maxPos);
-          if (pos2 <= pos1)
-            pos2 = Const.clamp(pos1 + 1, minPos, maxPos);
-          if (pos1 == pos2)
-            return [pos1];
-          return [pos1, pos2];
-        }
-
-      var blockAnchors: Array<Int> = [];
-      var blockStart = 0;
-      while (blockStart < size)
-        {
-          var blockEnd = blockStart + 4;
-          if (blockEnd > size)
-            blockEnd = size;
-          var pos = Std.int(Math.round(start + (blockStart + blockEnd) / 2.0));
-          pos = Const.clamp(pos, minPos, maxPos);
-          if (blockAnchors.indexOf(pos) < 0)
-            blockAnchors.push(pos);
-          blockStart += 4;
-        }
-      if (blockAnchors.length > 0)
-        {
-          var filteredBlockAnchors: Array<Int> = [];
-          for (pos in blockAnchors)
-            {
-              if (filteredBlockAnchors.length > 0 &&
-                  pos - filteredBlockAnchors[filteredBlockAnchors.length - 1] < 3)
-                continue;
-              filteredBlockAnchors.push(pos);
-            }
-          if (filteredBlockAnchors.length > 0)
-            return filteredBlockAnchors;
-        }
-
-      var anchors: Array<Int> = [];
-      for (i in 0...count)
-        {
-          var t = (i + 1.0) / (count + 1.0);
-          var pos = Std.int(Math.round(minPos + (maxPos - minPos) * t));
-          pos = Const.clamp(pos, minPos, maxPos);
-          if (anchors.indexOf(pos) < 0)
-            anchors.push(pos);
-        }
-      if (anchors.length <= 0)
-        anchors.push(Std.int(Math.round((minPos + maxPos) / 2.0)));
-      return anchors;
-    }
-
-// get room-axis anchor count by room-size light rule
-  function getLayoutLightRoomAxisAnchorCount(size: Int): Int
-    {
-      if (size <= 8)
-        return 1;
-      return Std.int(Math.ceil(size / 8.0));
-    }
-
-// build centered run anchors with approximate fixed corridor spacing
-  function buildLayoutLightRunAnchors(start: Int, end: Int,
-      spacing: Int): Array<Int>
-    {
-      var span = end - start;
-      if (span <= 0)
-        return [];
-
-      var count = Std.int(Math.ceil(span / spacing));
-      if (count < 1)
-        count = 1;
-      var anchors: Array<Int> = [];
-      for (i in 0...count)
-        {
-          var t = (i + 0.5) / count;
-          var pos = Std.int(Math.round(start + span * t));
-          pos = Const.clamp(pos, start, end);
-          if (anchors.indexOf(pos) < 0)
-            anchors.push(pos);
-        }
-      return anchors;
     }
 
 // collect rectangle footprints for all linked and unlinked doors

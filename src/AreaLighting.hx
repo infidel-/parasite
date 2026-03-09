@@ -677,7 +677,7 @@ class AreaLighting
       return null;
     }
 
-// add clone vat lights with hybrid multi-stamp placement for large vats
+// add one center light per clone vat group
   function addCloneVatLights(area: AreaGame, stamps: Array<_AreaLightStamp>)
     {
       var processedRootIDs = new Map();
@@ -730,21 +730,6 @@ class AreaLighting
                 if (partObj.y > y2)
                   y2 = partObj.y;
               }
-
-          var vatWidth = x2 - x1 + 1;
-          var vatHeight = y2 - y1 + 1;
-          if (vatWidth >= 2 &&
-              vatHeight >= 2)
-            {
-              var centerY = (y1 + y2 + 1) / 2.0;
-              var leftX = x1 + vatWidth * 0.35;
-              var rightX = x1 + vatWidth * 0.65;
-              pushLightStamp(area, stamps, leftX, centerY,
-                UndergroundLab.ATMOS_LIGHT_LARGE_GREEN, 'clone-vat');
-              pushLightStamp(area, stamps, rightX, centerY,
-                UndergroundLab.ATMOS_LIGHT_LARGE_GREEN, 'clone-vat');
-              continue;
-            }
 
           var centerX = (x1 + x2 + 1) / 2.0;
           var centerY = (y1 + y2 + 1) / 2.0;
@@ -1404,6 +1389,9 @@ class AreaLighting
             Math.sqrt(emitterHits.length);
           for (hit in emitterHits)
             {
+              if (caster.layerID != undergroundLab.nearTopWallFloorLayerID &&
+                  isEmitterInsideProjectedShadowCaster(hit.emitter, caster))
+                continue;
               var dist = Math.sqrt(hit.distSq);
               var distanceFalloff = 1.0 -
                 dist / PROJECTED_SHADOW_MAX_DISTANCE_TILES;
@@ -1573,6 +1561,20 @@ class AreaLighting
             }
         }
       return hasPendingAssets;
+    }
+
+// check whether projected-shadow emitter point lies inside caster footprint bounds
+  function isEmitterInsideProjectedShadowCaster(emitter: _LayoutShadowEmitter,
+      caster: _ProjectedShadowCaster): Bool
+    {
+      var x1 = caster.centerX - caster.blockW / 2.0;
+      var y1 = caster.centerY - caster.blockH / 2.0;
+      var x2 = x1 + caster.blockW;
+      var y2 = y1 + caster.blockH;
+      return (emitter.x >= x1 &&
+        emitter.y >= y1 &&
+        emitter.x <= x2 &&
+        emitter.y <= y2);
     }
 
 // collect unique projected-shadow emitters from selected light stamp kinds
