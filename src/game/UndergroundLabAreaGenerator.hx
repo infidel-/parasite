@@ -1010,23 +1010,33 @@ class UndergroundLabAreaGenerator
               if (blockInfo == null)
                 continue;
               var block = blockInfo.block;
+              if (!canPlaceNearTopWallDecorBlock(area, tileset,
+                  anchor.x, anchor.y, block))
+                continue;
 
-              area.addTileDecoration(anchor.x, anchor.y, {
-                layerID: tileset.nearTopWallWallLayerID,
-                icon: {
-                  row: block.row,
-                  col: block.col,
-                },
-              });
-              area.addTileDecoration(anchor.x, anchor.y + 1, {
-                layerID: tileset.nearTopWallFloorLayerID,
-                icon: {
-                  row: block.row + 1,
-                  col: block.col,
-                },
-              });
-              area.recalcTile(anchor.x, anchor.y);
-              area.recalcTile(anchor.x, anchor.y + 1);
+              for (dy in 0...block.height)
+                for (dx in 0...block.width)
+                  {
+                    area.addTileDecoration(anchor.x + dx, anchor.y + dy, {
+                      layerID: (dy == 0 ?
+                        tileset.nearTopWallWallLayerID :
+                        tileset.nearTopWallFloorLayerID),
+                      icon: {
+                        row: block.row + dy,
+                        col: block.col + dx,
+                      },
+                    });
+                    area.recalcTile(anchor.x + dx, anchor.y + dy);
+                  }
+
+              var i = anchors.length - 1;
+              while (i >= 0)
+                {
+                  if (anchors[i].x >= anchor.x &&
+                      anchors[i].x < anchor.x + block.width)
+                    anchors.splice(i, 1);
+                  i -= 1;
+                }
             }
         }
     }
@@ -1059,6 +1069,49 @@ class UndergroundLabAreaGenerator
           });
         }
       return anchors;
+    }
+
+// check whether near-top wall block fits wall/floor tiles without conflicting near-top decorations
+  function canPlaceNearTopWallDecorBlock(area: AreaGame, tileset: UndergroundLab,
+      x: Int, y: Int, block: _IconBlock): Bool
+    {
+      var tiles = area.getTiles();
+      for (dy in 0...block.height)
+        for (dx in 0...block.width)
+          {
+            var tx = x + dx;
+            var ty = y + dy;
+            if (tx < 0 ||
+                ty < 0 ||
+                tx >= area.width ||
+                ty >= area.height)
+              return false;
+
+            var tileID = area.getCellType(tx, ty);
+            if (dy == 0)
+              {
+                if (!tileset.isHorizontalWallTile(tileID))
+                  return false;
+              }
+            else
+              {
+                if (!tileset.isWalkable(tileID))
+                  return false;
+              }
+
+            if (area.hasObjectAt(tx, ty))
+              return false;
+
+            var tile = tiles[tx][ty];
+            if (tile == null ||
+                tile.decoration == null)
+              continue;
+            for (decoration in tile.decoration)
+              if (decoration.layerID == tileset.nearTopWallWallLayerID ||
+                  decoration.layerID == tileset.nearTopWallFloorLayerID)
+                return false;
+          }
+      return true;
     }
 
 // spawn decoration object blocks on floor with semantic weighted placement
