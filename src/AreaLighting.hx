@@ -18,7 +18,7 @@ import tiles.UndergroundLab._DecorBlock;
 class AreaLighting
 {
 // atmosphere lightmap pixels per world tile
-  static var ATMOS_LIGHTMAP_TILE_SIZE = 8;
+  static var ATMOS_LIGHTMAP_TILE_SIZE = 16;
 // minimum interval between dynamic lightmap rebuilds in milliseconds
   static var ATMOS_DYNAMIC_REBUILD_MS = 25;
 // cap for simultaneously tracked transient particle lights
@@ -33,10 +33,10 @@ class AreaLighting
   static var LAYOUT_LIGHT_RADIUS_OUTER = 2.5;
 // radius for the sharper inner layout-light pass
   static var LAYOUT_LIGHT_RADIUS_INNER = 1.2;
-// cutout intensity used for the outer layout-light pass
+// cutout intensity used for the outer layout-light pass (higher = brighter and broader-feeling outer fill)
   static var LAYOUT_LIGHT_INTENSITY_OUTER = 0.62;
-// cutout intensity used for the inner layout-light pass
-  static var LAYOUT_LIGHT_INTENSITY_INNER = 0.74;
+// cutout intensity used for the inner layout-light pass (higher = brighter and more pronounced inner core)
+  static var LAYOUT_LIGHT_INTENSITY_INNER = 0.84;
 // saturation multiplier applied to inner pass tint color
   static var LAYOUT_LIGHT_INNER_SATURATION_BOOST = 1.35;
 // gate for enabling the temporary outer layout-light pass
@@ -59,8 +59,8 @@ class AreaLighting
   static var PROJECTED_SHADOW_MAX_EMITTERS = 4;
 // max emitter distance in tiles to affect one projected shadow
   static var PROJECTED_SHADOW_MAX_DISTANCE_TILES = 4.0;
-// base projected shadow alpha before per-emitter falloff
-  static var PROJECTED_SHADOW_BASE_ALPHA = 0.34;
+// base projected shadow alpha before per-emitter falloff (higher = darker projected shadows overall)
+  static var PROJECTED_SHADOW_BASE_ALPHA = 0.40;
 // small caster max footprint (in tiles) that uses short shadow extension
   static var PROJECTED_SHADOW_SMALL_OBJECT_MAX_TILES = 2;
 // short shadow extension length in tiles for small casters
@@ -176,8 +176,25 @@ class AreaLighting
       fillUnseenBase(area, cache, ctx);
     }
 
-// draw combined projected and ai shadows below sprites in one masked pass
-  public function drawUnderSpriteShadows(ctx: CanvasRenderingContext2D,
+// draw static projected shadows below decorations and sprites
+  public function drawStaticUnderSpriteShadows(ctx: CanvasRenderingContext2D,
+      cache: Array<Array<Int>>)
+    {
+      var area = game.area;
+      if (!hasLighting(area))
+        return;
+
+      syncAreaState(area);
+      ensureMaps(area);
+      if (staticDirty)
+        rebuildStaticMap(area);
+
+      drawMapsMaskedByVis(ctx, area, cache,
+        projectedShadowUnderMap);
+    }
+
+// draw dynamic ai shadows above decorations and below sprites
+  public function drawDynamicUnderSpriteShadows(ctx: CanvasRenderingContext2D,
       cache: Array<Array<Int>>)
     {
       var area = game.area;
@@ -200,7 +217,7 @@ class AreaLighting
         }
 
       drawMapsMaskedByVis(ctx, area, cache,
-        projectedShadowUnderMap, aiShadowMap);
+        aiShadowMap);
     }
 
 // draw bright source markers for all active light emitters
@@ -1057,11 +1074,9 @@ class AreaLighting
 // get room axis anchor count from room dimension
   function getRoomAxisAnchorCount(size: Int): Int
     {
-      if (size < 6)
-        return 1;
       if (size <= 8)
-        return 2;
-      return Std.int(Math.ceil(size / 4.0));
+        return 1;
+      return Std.int(Math.ceil(size / 8.0));
     }
 
 // build centered run anchors with approximate fixed spacing

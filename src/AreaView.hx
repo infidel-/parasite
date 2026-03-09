@@ -82,7 +82,7 @@ class AreaView
       drawTiles(ctx);
       // smooth everything else
       ctx.imageSmoothingEnabled = true;
-      scene.areaLighting.drawUnderSpriteShadows(ctx, _cache);
+      scene.areaLighting.drawDynamicUnderSpriteShadows(ctx, _cache);
 
       // objects
       for (o in game.area.getObjects())
@@ -187,7 +187,13 @@ class AreaView
               sx, sy);
           }
 
-      // draw floor decorations on top of all base tiles
+      // draw static projected shadows above base tiles and below decorations
+      var prevSmoothing = ctx.imageSmoothingEnabled;
+      ctx.imageSmoothingEnabled = true;
+      scene.areaLighting.drawStaticUnderSpriteShadows(ctx, _cache);
+      ctx.imageSmoothingEnabled = prevSmoothing;
+
+      // draw floor decorations on top of base tiles and shadows
       if (hasTileData)
         for (y in rect.y1...rect.y2)
           for (x in rect.x1...rect.x2)
