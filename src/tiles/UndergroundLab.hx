@@ -95,6 +95,20 @@ class UndergroundLab extends Tileset
     tintG: 140,
     tintB: 0,
   };
+  public static var ATMOS_LIGHT_LARGE_RED: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_LARGE,
+    intensity: 0.88,
+    tintR: 255,
+    tintG: 48,
+    tintB: 48,
+  };
+  public static var ATMOS_LIGHT_LARGE_WHITE: _AtmosphereLightMeta = {
+    radiusTiles: ATMOS_LIGHT_RADIUS_LARGE,
+    intensity: 0.88,
+    tintR: 255,
+    tintG: 255,
+    tintB: 255,
+  };
   public static var ATMOS_LIGHT_LARGE_BLUE: _AtmosphereLightMeta = {
     radiusTiles: ATMOS_LIGHT_RADIUS_LARGE,
     intensity: 0.88,

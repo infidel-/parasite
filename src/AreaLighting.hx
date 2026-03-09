@@ -5,6 +5,8 @@ import haxe.ds.IntMap;
 import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
+import js.html.Image;
+import ai.AI;
 import game.AreaGame;
 import game.Game;
 import objects.mission.CloneVat;
@@ -53,17 +55,58 @@ class AreaLighting
   static var LAYOUT_ROLE_STORAGE = 'storage';
 // layout room role ID for research rooms
   static var LAYOUT_ROLE_RESEARCH = 'research';
+// max number of layout emitters that can project one object shadow
+  static var PROJECTED_SHADOW_MAX_EMITTERS = 4;
+// max emitter distance in tiles to affect one projected shadow
+  static var PROJECTED_SHADOW_MAX_DISTANCE_TILES = 4.0;
+// base projected shadow alpha before per-emitter falloff
+  static var PROJECTED_SHADOW_BASE_ALPHA = 0.34;
+// small caster max footprint (in tiles) that uses short shadow extension
+  static var PROJECTED_SHADOW_SMALL_OBJECT_MAX_TILES = 2;
+// short shadow extension length in tiles for small casters
+  static var PROJECTED_SHADOW_LENGTH_SMALL_TILES = 0.5;
+// long shadow extension length in tiles for larger casters
+  static var PROJECTED_SHADOW_LENGTH_LARGE_TILES = 1.0;
+// alpha threshold for considering source sprite pixel as solid
+  static var PROJECTED_SHADOW_MASK_ALPHA_THRESHOLD = 10;
+// sampling step in pixels for projected shadow mask extraction
+  static var PROJECTED_SHADOW_MASK_SAMPLE_STEP_PX = 1;
+// number of segments used to approximate semicircle shadow cap
+  static var PROJECTED_SHADOW_SEMICIRCLE_SEGMENTS = 12;
+// marker radius in tiles for light source debug rendering
+  static var DEBUG_LIGHT_MARKER_RADIUS_TILES = 0.11;
+// marker stroke width in tile fractions for debug rendering
+  static var DEBUG_LIGHT_MARKER_STROKE_WIDTH_TILES = 0.03;
+// marker fill alpha used for light source debug rendering
+  static var DEBUG_LIGHT_MARKER_FILL_ALPHA = 0.28;
+// marker ring alpha used for light source debug rendering
+  static var DEBUG_LIGHT_MARKER_RING_ALPHA = 0.95;
 
   var scene: GameScene;
   var game: Game;
   var staticMap: CanvasElement;
+  var projectedShadowUnderMap: CanvasElement;
   var dynamicMap: CanvasElement;
+  var aiShadowMap: CanvasElement;
   var composeMap: CanvasElement;
-  var visibilityMaskMap: CanvasElement;
+  var visMaskMap: CanvasElement;
+  var shadowWorkMap: CanvasElement;
+  var projectedShadowMaskByKey: Map<String, _ProjectedShadowMask>;
+  var visMaskDirty: Bool;
+  var visMaskAreaID: Int;
+  var visMaskCameraX: Int;
+  var visMaskCameraY: Int;
+  var visMaskSubX: Int;
+  var visMaskSubY: Int;
+  var visMaskScreenW: Int;
+  var visMaskScreenH: Int;
   var mapAreaID: Int;
   var staticDirty: Bool;
   var dynamicDirty: Bool;
+  var aiShadowDirty: Bool;
   var dynamicRebuildTS: Float;
+  var aiShadowRebuildTS: Float;
+  var aiShadowStateKey: String;
   var transientAtmosphereLights: Array<_TransientAtmosphereLight>;
   var areaLightStampsByAreaID: IntMap<Array<_AreaLightStamp>>;
 
@@ -73,13 +116,28 @@ class AreaLighting
       scene = s;
       game = scene.game;
       staticMap = null;
+      projectedShadowUnderMap = null;
       dynamicMap = null;
+      aiShadowMap = null;
       composeMap = null;
-      visibilityMaskMap = null;
+      visMaskMap = null;
+      shadowWorkMap = null;
+      projectedShadowMaskByKey = new Map();
+      visMaskDirty = true;
+      visMaskAreaID = -1;
+      visMaskCameraX = -1;
+      visMaskCameraY = -1;
+      visMaskSubX = -1;
+      visMaskSubY = -1;
+      visMaskScreenW = -1;
+      visMaskScreenH = -1;
       mapAreaID = -1;
       staticDirty = true;
       dynamicDirty = true;
+      aiShadowDirty = true;
       dynamicRebuildTS = 0;
+      aiShadowRebuildTS = 0;
+      aiShadowStateKey = '';
       transientAtmosphereLights = [];
       areaLightStampsByAreaID = new IntMap();
     }
@@ -92,13 +150,7 @@ class AreaLighting
       if (!hasLighting(area))
         return;
 
-      if (mapAreaID != area.id)
-        {
-          mapAreaID = area.id;
-          staticDirty = true;
-          dynamicDirty = true;
-          transientAtmosphereLights = [];
-        }
+      syncAreaState(area);
 
       // make sure atmosphere maps exist and match area size, rebuild if area changed
       ensureMaps(area);
@@ -124,6 +176,80 @@ class AreaLighting
       fillUnseenBase(area, cache, ctx);
     }
 
+// draw combined projected and ai shadows below sprites in one masked pass
+  public function drawUnderSpriteShadows(ctx: CanvasRenderingContext2D,
+      cache: Array<Array<Int>>)
+    {
+      var area = game.area;
+      if (!hasLighting(area))
+        return;
+
+      syncAreaState(area);
+      ensureMaps(area);
+
+      var stateKey = buildAIShadowStateKey(area);
+      if (stateKey != aiShadowStateKey)
+        aiShadowDirty = true;
+
+      var nowTS = Timer.stamp() * 1000;
+      if (aiShadowDirty &&
+          nowTS - aiShadowRebuildTS >= ATMOS_DYNAMIC_REBUILD_MS)
+        {
+          rebuildAIShadowMap(area, nowTS);
+          aiShadowStateKey = stateKey;
+        }
+
+      drawMapsMaskedByVis(ctx, area, cache,
+        projectedShadowUnderMap, aiShadowMap);
+    }
+
+// draw bright source markers for all active light emitters
+  public function drawDebugLightMarkers(ctx: CanvasRenderingContext2D)
+    {
+      if (!game.player.vars.debugLightsEnabled)
+        return;
+
+      var area = game.area;
+      if (!hasLighting(area))
+        return;
+
+      syncAreaState(area);
+      var markers = collectDebugLightMarkers(area);
+      if (markers.length <= 0)
+        return;
+
+      var rect = area.getVisibleRect();
+      var radius = DEBUG_LIGHT_MARKER_RADIUS_TILES * Const.TILE_SIZE;
+      var strokeWidth = DEBUG_LIGHT_MARKER_STROKE_WIDTH_TILES * Const.TILE_SIZE;
+      if (strokeWidth < 1)
+        strokeWidth = 1;
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = strokeWidth;
+      for (marker in markers)
+        {
+          var tileX = Std.int(Math.floor(marker.x));
+          var tileY = Std.int(Math.floor(marker.y));
+          if (tileX < rect.x1 ||
+              tileY < rect.y1 ||
+              tileX >= rect.x2 ||
+              tileY >= rect.y2)
+            continue;
+
+          var sx = (marker.x - scene.cameraTileX1) * Const.TILE_SIZE;
+          var sy = (marker.y - scene.cameraTileY1) * Const.TILE_SIZE;
+          var rgb = (marker.castsShadows ? '0, 0, 0' : '255, 255, 255');
+          ctx.fillStyle = 'rgba(' + rgb + ', ' + DEBUG_LIGHT_MARKER_FILL_ALPHA + ')';
+          ctx.strokeStyle = 'rgba(' + rgb + ', ' + DEBUG_LIGHT_MARKER_RING_ALPHA + ')';
+          ctx.beginPath();
+          ctx.arc(sx, sy, radius, 0, Math.PI * 2, false);
+          ctx.fill();
+          ctx.stroke();
+        }
+      ctx.restore();
+    }
+
 // queue atmosphere light pulses emitted by one particle
   public function onParticleAdded(p: Particle)
     {
@@ -138,6 +264,12 @@ class AreaLighting
 
       for (pulse in pulses)
         addTransientLight(pulse);
+    }
+
+// invalidate cached visibility mask after visibility cache update
+  public function onVisCacheUpdated()
+    {
+      visMaskDirty = true;
     }
 
 // check if transient pulse lights are active
@@ -173,6 +305,28 @@ class AreaLighting
       mapAreaID = -1;
       staticDirty = true;
       dynamicDirty = true;
+      aiShadowDirty = true;
+      aiShadowRebuildTS = 0;
+      aiShadowStateKey = '';
+      visMaskDirty = true;
+      visMaskAreaID = -1;
+      transientAtmosphereLights = [];
+    }
+
+// sync internal caches when active area changed
+  function syncAreaState(area: AreaGame)
+    {
+      if (mapAreaID == area.id)
+        return;
+
+      mapAreaID = area.id;
+      staticDirty = true;
+      dynamicDirty = true;
+      aiShadowDirty = true;
+      aiShadowRebuildTS = 0;
+      aiShadowStateKey = '';
+      visMaskDirty = true;
+      visMaskAreaID = -1;
       transientAtmosphereLights = [];
     }
 
@@ -197,6 +351,47 @@ class AreaLighting
       stamps = buildUndergroundLabLightStamps(area);
       areaLightStampsByAreaID.set(area.id, stamps);
       return stamps;
+    }
+
+// collect deduplicated light source marker centers for debug overlay
+  function collectDebugLightMarkers(
+      area: AreaGame): Array<_DebugLightMarker>
+    {
+      var markers: Array<_DebugLightMarker> = [];
+      var markerByPos: Map<String, _DebugLightMarker> = new Map();
+      for (stamp in getAreaLightStamps(area))
+        {
+          var key = stamp.x + ':' + stamp.y;
+          var marker = markerByPos.get(key);
+          var castsShadows = isProjectedShadowEmitterStamp(stamp);
+          if (marker == null)
+            {
+              marker = {
+                x: stamp.x,
+                y: stamp.y,
+                castsShadows: castsShadows,
+              };
+              markerByPos.set(key, marker);
+              markers.push(marker);
+            }
+          else if (castsShadows)
+            marker.castsShadows = true;
+        }
+
+      for (pulse in transientAtmosphereLights)
+        {
+          var key = pulse.x + ':' + pulse.y;
+          if (markerByPos.exists(key))
+            continue;
+          var marker: _DebugLightMarker = {
+            x: pulse.x,
+            y: pulse.y,
+            castsShadows: false,
+          };
+          markerByPos.set(key, marker);
+          markers.push(marker);
+        }
+      return markers;
     }
 
 // build underground lab atmosphere stamps from placed light sources
@@ -347,11 +542,24 @@ class AreaLighting
       return null;
     }
 
-// add decoration object light stamps by grouped object placement tags
-  function addDecorationObjectLights(area: AreaGame,
-      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
+// get near-top wall block metadata by wall icon coordinates
+  function getNearTopWallDecorationBlock(row: Int, col: Int): _DecorBlock
     {
-      var groups: Map<String, _AtmosphereDecorObjGroup> = new Map();
+      for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
+        {
+          if (blockInfo.block.row != row ||
+              blockInfo.block.col != col)
+            continue;
+          return blockInfo;
+        }
+      return null;
+    }
+
+// collect grouped decoration object bounds keyed by placement tags
+  function collectDecorationObjGroups(area: AreaGame,
+      undergroundLab: UndergroundLab): Array<_AtmosphereDecorObjGroup>
+    {
+      var groupsByTag: Map<String, _AtmosphereDecorObjGroup> = new Map();
       var tiles = area.getTiles();
       for (y in 0...area.height)
         for (x in 0...area.width)
@@ -370,10 +578,10 @@ class AreaLighting
                     !undergroundLab.isDecorationObjLayerID(decoration.layerID))
                   continue;
 
-                var group = groups.get(decoration.tag);
+                var group = groupsByTag.get(decoration.tag);
                 if (group == null)
                   {
-                    groups.set(decoration.tag, {
+                    groupsByTag.set(decoration.tag, {
                       layerID: decoration.layerID,
                       x1: x,
                       y1: y,
@@ -400,9 +608,20 @@ class AreaLighting
               }
           }
 
+      var groups: Array<_AtmosphereDecorObjGroup> = [];
+      for (group in groupsByTag)
+        groups.push(group);
+      return groups;
+    }
+
+// add decoration object light stamps by grouped object placement tags
+  function addDecorationObjectLights(area: AreaGame,
+      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
+    {
+      var groups = collectDecorationObjGroups(area, undergroundLab);
       for (group in groups)
         {
-          var blockInfo = getDecorationObjLightBlock(undergroundLab, group);
+          var blockInfo = getDecorationObjBlock(undergroundLab, group, true);
           if (blockInfo == null ||
               blockInfo.meta.light == null)
             continue;
@@ -415,15 +634,17 @@ class AreaLighting
     }
 
 // get decoration object block info from grouped placement signature
-  function getDecorationObjLightBlock(undergroundLab: UndergroundLab,
-      group: _AtmosphereDecorObjGroup): _DecorBlock
+  function getDecorationObjBlock(undergroundLab: UndergroundLab,
+      group: _AtmosphereDecorObjGroup, requireLight: Bool): _DecorBlock
     {
       var width = group.x2 - group.x1 + 1;
       var height = group.y2 - group.y1 + 1;
       for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
         {
-          if (blockInfo.meta.light == null ||
-              blockInfo.meta.imageKey == null)
+          if (blockInfo.meta.imageKey == null)
+            continue;
+          if (requireLight &&
+              blockInfo.meta.light == null)
             continue;
           if (blockInfo.block.row != group.minIconRow ||
               blockInfo.block.col != group.minIconCol ||
@@ -873,9 +1094,9 @@ class AreaLighting
       if (role == LAYOUT_ROLE_VAT)
         return UndergroundLab.ATMOS_LIGHT_LARGE_GREEN;
       if (role == LAYOUT_ROLE_WORKSHOP)
-        return UndergroundLab.ATMOS_LIGHT_SMALL_CYAN;
-      if (role == LAYOUT_ROLE_STORAGE)
         return UndergroundLab.ATMOS_LIGHT_LARGE_ORANGE;
+      if (role == LAYOUT_ROLE_STORAGE)
+        return UndergroundLab.ATMOS_LIGHT_LARGE_RED;
       if (role == LAYOUT_ROLE_RESEARCH)
         return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
       return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
@@ -884,7 +1105,7 @@ class AreaLighting
 // get corridor color profile for layout light sources
   function getLayoutCorridorLight(): _AtmosphereLightMeta
     {
-      return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
+      return UndergroundLab.ATMOS_LIGHT_LARGE_WHITE;
     }
 
 // append one atmosphere light stamp with short-range deduplication
@@ -993,12 +1214,16 @@ class AreaLighting
     {
       if (staticMap == null)
         staticMap = Browser.document.createCanvasElement();
+      if (projectedShadowUnderMap == null)
+        projectedShadowUnderMap = Browser.document.createCanvasElement();
       if (dynamicMap == null)
         dynamicMap = Browser.document.createCanvasElement();
+      if (aiShadowMap == null)
+        aiShadowMap = Browser.document.createCanvasElement();
       if (composeMap == null)
         composeMap = Browser.document.createCanvasElement();
-      if (visibilityMaskMap == null)
-        visibilityMaskMap = Browser.document.createCanvasElement();
+      if (visMaskMap == null)
+        visMaskMap = Browser.document.createCanvasElement();
 
       var mapWidth = Std.int(Math.ceil(area.width * ATMOS_LIGHTMAP_TILE_SIZE));
       var mapHeight = Std.int(Math.ceil(area.height * ATMOS_LIGHTMAP_TILE_SIZE));
@@ -1011,6 +1236,13 @@ class AreaLighting
           staticMap.height = mapHeight;
           staticDirty = true;
         }
+      if (projectedShadowUnderMap.width != mapWidth ||
+          projectedShadowUnderMap.height != mapHeight)
+        {
+          projectedShadowUnderMap.width = mapWidth;
+          projectedShadowUnderMap.height = mapHeight;
+          staticDirty = true;
+        }
       if (dynamicMap.width != mapWidth ||
           dynamicMap.height != mapHeight)
         {
@@ -1018,18 +1250,52 @@ class AreaLighting
           dynamicMap.height = mapHeight;
           dynamicDirty = true;
         }
+      if (aiShadowMap.width != mapWidth ||
+          aiShadowMap.height != mapHeight)
+        {
+          aiShadowMap.width = mapWidth;
+          aiShadowMap.height = mapHeight;
+          aiShadowDirty = true;
+        }
       if (composeMap.width != screenWidth ||
           composeMap.height != screenHeight)
         {
           composeMap.width = screenWidth;
           composeMap.height = screenHeight;
         }
-      if (visibilityMaskMap.width != screenWidth ||
-          visibilityMaskMap.height != screenHeight)
+      if (visMaskMap.width != screenWidth ||
+          visMaskMap.height != screenHeight)
         {
-          visibilityMaskMap.width = screenWidth;
-          visibilityMaskMap.height = screenHeight;
+          visMaskMap.width = screenWidth;
+          visMaskMap.height = screenHeight;
+          visMaskDirty = true;
         }
+    }
+
+// make sure visibility mask exists and matches current camera/visibility state
+  function ensureVisMask(area: AreaGame, cache: Array<Array<Int>>)
+    {
+      var screenW = scene.canvas.width;
+      var screenH = scene.canvas.height;
+      if (!visMaskDirty &&
+          visMaskAreaID == area.id &&
+          visMaskCameraX == scene.cameraX &&
+          visMaskCameraY == scene.cameraY &&
+          visMaskSubX == scene.cameraSubX &&
+          visMaskSubY == scene.cameraSubY &&
+          visMaskScreenW == screenW &&
+          visMaskScreenH == screenH)
+        return;
+
+      rebuildVisMask(area, cache);
+      visMaskDirty = false;
+      visMaskAreaID = area.id;
+      visMaskCameraX = scene.cameraX;
+      visMaskCameraY = scene.cameraY;
+      visMaskSubX = scene.cameraSubX;
+      visMaskSubY = scene.cameraSubY;
+      visMaskScreenW = screenW;
+      visMaskScreenH = screenH;
     }
 
 // rebuild static atmosphere overlay from area light stamps
@@ -1044,7 +1310,715 @@ class AreaLighting
       var stamps = getAreaLightStamps(area);
       for (stamp in stamps)
         paintStaticLight(mapCtx, stamp);
-      staticDirty = false;
+      var hasPendingProjectedShadowAssets = rebuildProjectedShadowUnderMap(area,
+        stamps);
+      staticDirty = hasPendingProjectedShadowAssets;
+    }
+
+// rebuild static projected-shadow map rendered below sprites
+  function rebuildProjectedShadowUnderMap(area: AreaGame,
+      stamps: Array<_AreaLightStamp>): Bool
+    {
+      var mapCtx = projectedShadowUnderMap.getContext2d();
+      mapCtx.clearRect(0, 0, projectedShadowUnderMap.width,
+        projectedShadowUnderMap.height);
+      return paintProjectedDecorationShadows(area, mapCtx, stamps);
+    }
+
+// rebuild dynamic AI projected shadows from current visible actors
+  function rebuildAIShadowMap(area: AreaGame, nowTS: Float)
+    {
+      var mapCtx = aiShadowMap.getContext2d();
+      mapCtx.clearRect(0, 0, aiShadowMap.width, aiShadowMap.height);
+
+      var tileset = scene.images.getTileset(area.typeID);
+      if (!Std.isOfType(tileset, UndergroundLab))
+        {
+          aiShadowDirty = false;
+          aiShadowRebuildTS = nowTS;
+          return;
+        }
+
+      // collect shadow emitter metadata from area light stamps
+      var undergroundLab: UndergroundLab = cast tileset;
+      var emitters = collectProjectedShadowEmitters(getAreaLightStamps(area));
+      if (emitters.length <= 0)
+        {
+          aiShadowDirty = false;
+          aiShadowRebuildTS = nowTS;
+          return;
+        }
+
+      // collect visible AI shadow casters
+      var casters = collectVisibleAIProjectedShadowCasters(area);
+      if (casters.length <= 0)
+        {
+          aiShadowDirty = false;
+          aiShadowRebuildTS = nowTS;
+          return;
+        }
+
+      // for each visible AI caster, find valid shadow mask and nearby emitters to
+      var hasPendingAssets = false;
+      for (casterInfo in casters)
+        {
+          var layer = casterInfo.layer;
+          if (layer == null ||
+              !layer.complete ||
+              layer.naturalWidth <= 0)
+            {
+              hasPendingAssets = true;
+              continue;
+            }
+
+          // get cached solid-pixel shadow mask points
+          var caster = casterInfo.caster;
+          var mask = getProjectedShadowMaskForSource(casterInfo.maskKey, layer,
+            caster.srcRow, caster.srcCol, caster.blockW, caster.blockH);
+          if (mask == null)
+            continue;
+
+          // find nearby emitters
+          var emitterHits = getNearestLayoutShadowEmitters(area,
+            caster, emitters);
+          if (emitterHits.length <= 0)
+            continue;
+
+          // combine emitter proximity and distance-based falloff for final shadow alpha
+          var perEmitterAlpha = PROJECTED_SHADOW_BASE_ALPHA /
+            Math.sqrt(emitterHits.length);
+          for (hit in emitterHits)
+            {
+              var dist = Math.sqrt(hit.distSq);
+              var distanceFalloff = 1.0 -
+                dist / PROJECTED_SHADOW_MAX_DISTANCE_TILES;
+              if (distanceFalloff <= 0)
+                continue;
+              var alpha = perEmitterAlpha *
+                (0.35 + 0.65 * distanceFalloff);
+              if (alpha <= 0)
+                continue;
+              paintProjectedShadowFromEmitter(area, mapCtx,
+                caster, mask, hit.emitter, alpha);
+            }
+        }
+
+      aiShadowDirty = hasPendingAssets;
+      aiShadowRebuildTS = nowTS;
+    }
+
+// build deterministic state key for visible AI caster set
+  function buildAIShadowStateKey(area: AreaGame): String
+    {
+      var parts: Array<String> = [];
+      for (ai in area.getAllAI())
+        {
+          if (ai.entity == null ||
+              !ai.entity.isVisible())
+            continue;
+          if (game.player.vars.losEnabled &&
+              !game.playerArea.sees(ai.x, ai.y))
+            continue;
+          var sprite = getAIProjectedShadowSpriteSource(ai);
+          if (sprite == null)
+            continue;
+          parts.push(ai.id + ':' + ai.x + ':' + ai.y + ':' +
+            sprite.imageKey + ':' + sprite.srcRow + ':' + sprite.srcCol);
+        }
+      if (parts.length <= 0)
+        return '';
+      parts.sort((a, b) -> {
+        if (a < b)
+          return -1;
+        if (a > b)
+          return 1;
+        return 0;
+      });
+      return parts.join('|');
+    }
+
+// collect visible AI casters with sprite atlas source for shadow masks
+  function collectVisibleAIProjectedShadowCasters(
+      area: AreaGame): Array<_AIShadowCaster>
+    {
+      var casters: Array<_AIShadowCaster> = [];
+      for (ai in area.getAllAI())
+        {
+          if (ai.entity == null ||
+              !ai.entity.isVisible())
+            continue;
+          if (game.player.vars.losEnabled &&
+              !game.playerArea.sees(ai.x, ai.y))
+            continue;
+
+          var sprite = getAIProjectedShadowSpriteSource(ai);
+          if (sprite == null)
+            continue;
+
+          casters.push({
+            caster: {
+              layerID: -1,
+              srcRow: sprite.srcRow,
+              srcCol: sprite.srcCol,
+              blockW: 1,
+              blockH: 1,
+              centerX: ai.x + 0.5,
+              centerY: ai.y + 0.5,
+            },
+            layer: sprite.image,
+            maskKey: 'ai:' + sprite.imageKey + ':' + sprite.srcRow + ':' +
+              sprite.srcCol + ':1:1',
+          });
+        }
+      return casters;
+    }
+
+// resolve current sprite atlas source for one AI shadow caster
+  function getAIProjectedShadowSpriteSource(ai: AI): _AIShadowSpriteSource
+    {
+      if (ai.type == 'dog')
+        return {
+          imageKey: 'entities',
+          image: scene.images.entities,
+          srcRow: Const.ROW_PARASITE,
+          srcCol: 1,
+        };
+      if (ai.type == 'choirOfDiscord')
+        return {
+          imageKey: 'entities',
+          image: scene.images.entities,
+          srcRow: Const.ROW_PARASITE,
+          srcCol: Const.FRAME_CHOIR,
+        };
+      if (ai.tileAtlasX < 0 ||
+          ai.tileAtlasY < 0)
+        return null;
+
+      var useMaleAtlas = (ai.isMale ||
+        (ai.entity != null &&
+         ai.entity.isMaleAtlas));
+      return {
+        imageKey: (useMaleAtlas ? 'male' : 'female'),
+        image: (useMaleAtlas ? scene.images.male : scene.images.female),
+        srcRow: ai.tileAtlasY,
+        srcCol: ai.tileAtlasX,
+      };
+    }
+
+// paint projected decoration shadows using nearby logical layout emitters
+  function paintProjectedDecorationShadows(area: AreaGame,
+      mapCtx: CanvasRenderingContext2D,
+      stamps: Array<_AreaLightStamp>): Bool
+    {
+      var tileset = scene.images.getTileset(area.typeID);
+      if (!Std.isOfType(tileset, UndergroundLab))
+        return false;
+      var undergroundLab: UndergroundLab = cast tileset;
+      var emitters = collectProjectedShadowEmitters(stamps);
+      if (emitters.length <= 0)
+        return false;
+      var casters = collectDecorationProjectedShadowCasters(area, undergroundLab);
+      if (casters.length <= 0)
+        return false;
+
+      var hasPendingAssets = false;
+
+      for (caster in casters)
+        {
+          var layer = undergroundLab.floorDecorationLayers[caster.layerID];
+          if (layer == null ||
+              !layer.complete ||
+              layer.naturalWidth <= 0)
+            {
+              hasPendingAssets = true;
+              continue;
+            }
+          var mask = getProjectedShadowMask(caster, layer);
+          if (mask == null)
+            continue;
+          var emitterHits = getNearestLayoutShadowEmitters(area,
+            caster, emitters);
+          if (emitterHits.length <= 0)
+            continue;
+          var perEmitterAlpha = PROJECTED_SHADOW_BASE_ALPHA /
+            Math.sqrt(emitterHits.length);
+          for (hit in emitterHits)
+            {
+              var dist = Math.sqrt(hit.distSq);
+              var distanceFalloff = 1.0 -
+                dist / PROJECTED_SHADOW_MAX_DISTANCE_TILES;
+              if (distanceFalloff <= 0)
+                continue;
+              var alpha = perEmitterAlpha *
+                (0.35 + 0.65 * distanceFalloff);
+              if (alpha <= 0)
+                continue;
+              paintProjectedShadowFromEmitter(area, mapCtx,
+                caster, mask, hit.emitter, alpha);
+            }
+        }
+      return hasPendingAssets;
+    }
+
+// collect unique projected-shadow emitters from selected light stamp kinds
+  function collectProjectedShadowEmitters(
+      stamps: Array<_AreaLightStamp>): Array<_LayoutShadowEmitter>
+    {
+      var emitters: Array<_LayoutShadowEmitter> = [];
+      var byPos = new Map<String, Bool>();
+      for (stamp in stamps)
+        {
+          if (!isProjectedShadowEmitterStamp(stamp))
+            continue;
+          var key = stamp.x + ':' + stamp.y;
+          if (byPos[key])
+            continue;
+          byPos[key] = true;
+          emitters.push({
+            x: stamp.x,
+            y: stamp.y,
+          });
+        }
+      return emitters;
+    }
+
+// check whether one light stamp acts as projected-shadow emitter
+  function isProjectedShadowEmitterStamp(stamp: _AreaLightStamp): Bool
+    {
+      return (stamp.kind.indexOf('layout-room') == 0 ||
+        stamp.kind.indexOf('layout-corridor') == 0 ||
+        stamp.kind == 'clone-vat');
+    }
+
+// collect projected-shadow casters from grouped decoration object blocks
+  function collectDecorationProjectedShadowCasters(area: AreaGame,
+      undergroundLab: UndergroundLab): Array<_ProjectedShadowCaster>
+    {
+      var casters: Array<_ProjectedShadowCaster> = [];
+      var groups = collectDecorationObjGroups(area, undergroundLab);
+      for (group in groups)
+        {
+          var blockInfo = getDecorationObjBlock(undergroundLab, group, false);
+          if (blockInfo == null)
+            continue;
+          casters.push({
+            layerID: group.layerID,
+            srcRow: blockInfo.block.row,
+            srcCol: blockInfo.block.col,
+            blockW: blockInfo.block.width,
+            blockH: blockInfo.block.height,
+            centerX: (group.x1 + group.x2 + 1) / 2.0,
+            centerY: (group.y1 + group.y2 + 1) / 2.0,
+          });
+        }
+
+      var tiles = area.getTiles();
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            var tile = tiles[x][y];
+            if (tile == null ||
+                tile.decoration == null ||
+                tile.decoration.length == 0)
+              continue;
+            for (decoration in tile.decoration)
+              {
+                if (decoration.layerID != undergroundLab.nearTopWallWallLayerID ||
+                    decoration.icon == null)
+                  continue;
+                var blockInfo = getNearTopWallDecorationBlock(
+                  decoration.icon.row, decoration.icon.col);
+                if (blockInfo == null)
+                  continue;
+                casters.push({
+                  layerID: undergroundLab.nearTopWallFloorLayerID,
+                  srcRow: blockInfo.block.row,
+                  srcCol: blockInfo.block.col,
+                  blockW: blockInfo.block.width,
+                  blockH: blockInfo.block.height,
+                  centerX: x + blockInfo.block.width / 2.0,
+                  centerY: y + blockInfo.block.height / 2.0,
+                });
+              }
+          }
+      return casters;
+    }
+
+// get nearest layout emitters that can cast projected shadows for one caster
+  function getNearestLayoutShadowEmitters(area: AreaGame,
+      caster: _ProjectedShadowCaster,
+      emitters: Array<_LayoutShadowEmitter>): Array<_LayoutShadowEmitterHit>
+    {
+      var maxDistSq = PROJECTED_SHADOW_MAX_DISTANCE_TILES *
+        PROJECTED_SHADOW_MAX_DISTANCE_TILES;
+      var hits: Array<_LayoutShadowEmitterHit> = [];
+      for (emitter in emitters)
+        {
+          var dx = caster.centerX - emitter.x;
+          var dy = caster.centerY - emitter.y;
+          var distSq = dx * dx + dy * dy;
+          if (distSq <= 0.0001 ||
+              distSq > maxDistSq)
+            continue;
+          if (!hasProjectedShadowEmitterLineOfSight(area,
+              emitter.x, emitter.y, caster.centerX, caster.centerY))
+            continue;
+          hits.push({
+            emitter: emitter,
+            distSq: distSq,
+          });
+        }
+      hits.sort((a, b) -> {
+        if (a.distSq < b.distSq)
+          return -1;
+        if (a.distSq > b.distSq)
+          return 1;
+        return 0;
+      });
+      if (hits.length > PROJECTED_SHADOW_MAX_EMITTERS)
+        hits = hits.slice(0, PROJECTED_SHADOW_MAX_EMITTERS);
+      return hits;
+    }
+
+// check line of sight from emitter to caster center for shadow projection
+  function hasProjectedShadowEmitterLineOfSight(area: AreaGame,
+      emitterX: Float, emitterY: Float,
+      targetX: Float, targetY: Float): Bool
+    {
+      var startX = toMapX(emitterX);
+      var startY = toMapY(emitterY);
+      var endX = toMapX(targetX);
+      var endY = toMapY(targetY);
+      var dx = endX - startX;
+      var dy = endY - startY;
+      var lenPx = Math.sqrt(dx * dx + dy * dy);
+      if (lenPx <= 0.0001)
+        return true;
+      var dirX = dx / lenPx;
+      var dirY = dy / lenPx;
+      var stepPx = 1.0;
+      var distPx = stepPx;
+      while (distPx < lenPx - stepPx)
+        {
+          var sampleX = startX + dirX * distPx;
+          var sampleY = startY + dirY * distPx;
+          var tileX = Std.int(Math.floor(sampleX / ATMOS_LIGHTMAP_TILE_SIZE));
+          var tileY = Std.int(Math.floor(sampleY / ATMOS_LIGHTMAP_TILE_SIZE));
+          if (tileX < 0 ||
+              tileY < 0 ||
+              tileX >= area.width ||
+              tileY >= area.height)
+            return false;
+          if (!canProjectedShadowPassTile(area, tileX, tileY))
+            return false;
+          distPx += stepPx;
+        }
+      return true;
+    }
+
+// check whether projected-shadow light can pass through this tile
+  function canProjectedShadowPassTile(area: AreaGame,
+      tileX: Int, tileY: Int): Bool
+    {
+      return area.canSeeThrough(tileX, tileY);
+    }
+
+// get cached solid-pixel shadow mask points for one decoration block sprite
+  function getProjectedShadowMask(caster: _ProjectedShadowCaster,
+      layer: Image): _ProjectedShadowMask
+    {
+      var key = caster.layerID + ':' + caster.srcRow + ':' + caster.srcCol +
+        ':' + caster.blockW + ':' + caster.blockH;
+      return getProjectedShadowMaskForSource(key, layer,
+        caster.srcRow, caster.srcCol, caster.blockW, caster.blockH);
+    }
+
+// get cached solid-pixel shadow mask points for one source sprite region
+  function getProjectedShadowMaskForSource(key: String,
+      layer: Image, srcRow: Int, srcCol: Int,
+      blockW: Int, blockH: Int): _ProjectedShadowMask
+    {
+      var cachedMask = projectedShadowMaskByKey.get(key);
+      if (cachedMask != null)
+        return cachedMask;
+
+      var srcX = srcCol * Const.TILE_SIZE_CLEAN;
+      var srcY = srcRow * Const.TILE_SIZE_CLEAN;
+      var srcW = blockW * Const.TILE_SIZE_CLEAN;
+      var srcH = blockH * Const.TILE_SIZE_CLEAN;
+      var maskW = blockW * ATMOS_LIGHTMAP_TILE_SIZE;
+      var maskH = blockH * ATMOS_LIGHTMAP_TILE_SIZE;
+      if (maskW <= 0 ||
+          maskH <= 0)
+        return null;
+
+      var workMap = getShadowWorkMap(maskW, maskH);
+      var workCtx = workMap.getContext2d();
+      workCtx.clearRect(0, 0, maskW, maskH);
+      workCtx.drawImage(layer,
+        srcX, srcY, srcW, srcH,
+        0, 0, maskW, maskH);
+
+      var data = workCtx.getImageData(0, 0, maskW, maskH).data;
+      var points: Array<_ProjectedShadowMaskPoint> = [];
+      var halfW = maskW / 2.0;
+      var halfH = maskH / 2.0;
+      var sampleStep = PROJECTED_SHADOW_MASK_SAMPLE_STEP_PX;
+      if (sampleStep < 1)
+        sampleStep = 1;
+
+      // iterate mask pixels and collect center points of solid pixels above alpha threshold
+      var py = 0;
+      while (py < maskH)
+        {
+          var rowOffset = py * maskW * 4;
+          var px = 0;
+          while (px < maskW)
+            {
+              var alphaIndex = rowOffset + px * 4 + 3;
+              if (data[alphaIndex] >= PROJECTED_SHADOW_MASK_ALPHA_THRESHOLD)
+                points.push({
+                  x: px + 0.5 - halfW,
+                  y: py + 0.5 - halfH,
+                });
+              px += sampleStep;
+            }
+          py += sampleStep;
+        }
+      if (points.length <= 0)
+        return null;
+
+      // cache mask points by source key for reuse across frames and casters with same source
+      var builtMask: _ProjectedShadowMask = {
+        points: points,
+      };
+      projectedShadowMaskByKey.set(key, builtMask);
+      return builtMask;
+    }
+
+// get silhouette edge pair of solid pixels from one emitter perspective
+  function getProjectedShadowEdgePair(caster: _ProjectedShadowCaster,
+      mask: _ProjectedShadowMask,
+      lightX: Float, lightY: Float): _ProjectedShadowEdgePair
+    {
+      var centerX = toMapX(caster.centerX);
+      var centerY = toMapY(caster.centerY);
+      var axisX = centerX - lightX;
+      var axisY = centerY - lightY;
+      var axisLen = Math.sqrt(axisX * axisX + axisY * axisY);
+      if (axisLen <= 0.0001)
+        return null;
+      axisX /= axisLen;
+      axisY /= axisLen;
+      var perpX = -axisY;
+      var perpY = axisX;
+
+      var minPoint: _ProjectedShadowMaskPoint = null;
+      var maxPoint: _ProjectedShadowMaskPoint = null;
+
+      // pass 0 keeps only positive-depth points for cleaner silhouette; pass 1 falls back to all points to avoid shadow dropouts
+      for (pass in 0...2)
+        {
+          var bestMinSide = 1e20;
+          var bestMaxSide = -1e20;
+          var bestMinDepth = -1e20;
+          var bestMaxDepth = -1e20;
+          minPoint = null;
+          maxPoint = null;
+
+          for (point in mask.points)
+            {
+              var worldX = centerX + point.x;
+              var worldY = centerY + point.y;
+              var relX = worldX - lightX;
+              var relY = worldY - lightY;
+              var depth = relX * axisX + relY * axisY;
+              if (pass == 0 &&
+                  depth <= 0)
+                continue;
+              var side = relX * perpX + relY * perpY;
+
+              if (minPoint == null ||
+                  side < bestMinSide - 0.0001 ||
+                  (Math.abs(side - bestMinSide) <= 0.0001 &&
+                   depth > bestMinDepth))
+                {
+                  bestMinSide = side;
+                  bestMinDepth = depth;
+                  minPoint = {
+                    x: worldX,
+                    y: worldY,
+                  };
+                }
+              if (maxPoint == null ||
+                  side > bestMaxSide + 0.0001 ||
+                  (Math.abs(side - bestMaxSide) <= 0.0001 &&
+                   depth > bestMaxDepth))
+                {
+                  bestMaxSide = side;
+                  bestMaxDepth = depth;
+                  maxPoint = {
+                    x: worldX,
+                    y: worldY,
+                  };
+                }
+            }
+          if (minPoint != null &&
+              maxPoint != null)
+            break;
+        }
+
+      if (minPoint == null ||
+          maxPoint == null)
+        return null;
+      var edgeDX = maxPoint.x - minPoint.x;
+      var edgeDY = maxPoint.y - minPoint.y;
+      if (edgeDX * edgeDX + edgeDY * edgeDY <= 0.25)
+        return null;
+      return {
+        edge1: minPoint,
+        edge2: maxPoint,
+      };
+    }
+
+// paint one geometric trapezoid shadow with semicircle cap from one emitter
+  function paintProjectedShadowFromEmitter(area: AreaGame,
+      mapCtx: CanvasRenderingContext2D,
+      caster: _ProjectedShadowCaster,
+      mask: _ProjectedShadowMask,
+      emitter: _LayoutShadowEmitter, alpha: Float)
+    {
+      var baseAlpha = Const.clampFloat(alpha, 0, 1);
+      if (baseAlpha <= 0)
+        return;
+
+      var lightX = toMapX(emitter.x);
+      var lightY = toMapY(emitter.y);
+      var edges = getProjectedShadowEdgePair(caster, mask, lightX, lightY);
+      if (edges == null)
+        return;
+
+      var edge1 = edges.edge1;
+      var edge2 = edges.edge2;
+      var ray1X = edge1.x - lightX;
+      var ray1Y = edge1.y - lightY;
+      var ray1Len = Math.sqrt(ray1X * ray1X + ray1Y * ray1Y);
+      var ray2X = edge2.x - lightX;
+      var ray2Y = edge2.y - lightY;
+      var ray2Len = Math.sqrt(ray2X * ray2X + ray2Y * ray2Y);
+      if (ray1Len <= 0.0001 ||
+          ray2Len <= 0.0001)
+        return;
+      ray1X /= ray1Len;
+      ray1Y /= ray1Len;
+      ray2X /= ray2Len;
+      ray2Y /= ray2Len;
+
+      var casterTiles = caster.blockW * caster.blockH;
+      var extensionTiles = (casterTiles <= PROJECTED_SHADOW_SMALL_OBJECT_MAX_TILES ?
+        PROJECTED_SHADOW_LENGTH_SMALL_TILES :
+        PROJECTED_SHADOW_LENGTH_LARGE_TILES);
+      var extensionPxMax = extensionTiles * ATMOS_LIGHTMAP_TILE_SIZE;
+      var extension1Px = getProjectedShadowWalkableDistancePx(area,
+        edge1.x, edge1.y, ray1X, ray1Y, extensionPxMax);
+      var extension2Px = getProjectedShadowWalkableDistancePx(area,
+        edge2.x, edge2.y, ray2X, ray2Y, extensionPxMax);
+      if (extension1Px <= 0 &&
+          extension2Px <= 0)
+        return;
+      var cap1X = edge1.x + ray1X * extension1Px;
+      var cap1Y = edge1.y + ray1Y * extension1Px;
+      var cap2X = edge2.x + ray2X * extension2Px;
+      var cap2Y = edge2.y + ray2Y * extension2Px;
+
+      var chordX = cap2X - cap1X;
+      var chordY = cap2Y - cap1Y;
+      var chordLen = Math.sqrt(chordX * chordX + chordY * chordY);
+      if (chordLen <= 0.0001)
+        return;
+      var chordDirX = chordX / chordLen;
+      var chordDirY = chordY / chordLen;
+      var radius = chordLen / 2.0;
+      var capCenterX = (cap1X + cap2X) / 2.0;
+      var capCenterY = (cap1Y + cap2Y) / 2.0;
+      var capNormalX = -chordDirY;
+      var capNormalY = chordDirX;
+      var toCapX = capCenterX - lightX;
+      var toCapY = capCenterY - lightY;
+      if (capNormalX * toCapX + capNormalY * toCapY < 0)
+        {
+          capNormalX = -capNormalX;
+          capNormalY = -capNormalY;
+        }
+
+      var nearMidX = (edge1.x + edge2.x) / 2.0;
+      var nearMidY = (edge1.y + edge2.y) / 2.0;
+      var farMidX = capCenterX + capNormalX * radius;
+      var farMidY = capCenterY + capNormalY * radius;
+      var tailFade = mapCtx.createLinearGradient(nearMidX, nearMidY,
+        farMidX, farMidY);
+      tailFade.addColorStop(0,
+        'rgba(0, 0, 0, ' + Const.round2(baseAlpha) + ')');
+      tailFade.addColorStop(0.84,
+        'rgba(0, 0, 0, ' + Const.round2(baseAlpha * 0.94) + ')');
+      tailFade.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      var segments = PROJECTED_SHADOW_SEMICIRCLE_SEGMENTS;
+      if (segments < 3)
+        segments = 3;
+      var semicircleEnd = segments + 1;
+
+      mapCtx.save();
+      mapCtx.globalCompositeOperation = 'source-over';
+      mapCtx.fillStyle = tailFade;
+      mapCtx.beginPath();
+      mapCtx.moveTo(edge1.x, edge1.y);
+      mapCtx.lineTo(edge2.x, edge2.y);
+      mapCtx.lineTo(cap2X, cap2Y);
+
+      for (i in 1...semicircleEnd)
+        {
+          var t = i / segments;
+          var angle = t * Math.PI;
+          var px = capCenterX +
+            chordDirX * (Math.cos(angle) * radius) +
+            capNormalX * (Math.sin(angle) * radius);
+          var py = capCenterY +
+            chordDirY * (Math.cos(angle) * radius) +
+            capNormalY * (Math.sin(angle) * radius);
+          mapCtx.lineTo(px, py);
+        }
+
+      mapCtx.lineTo(edge1.x, edge1.y);
+      mapCtx.closePath();
+      mapCtx.fill();
+      mapCtx.restore();
+    }
+
+// get max ray travel in lightmap pixels before hitting vision-blocking tile
+  function getProjectedShadowWalkableDistancePx(area: AreaGame,
+      startX: Float, startY: Float,
+      dirX: Float, dirY: Float,
+      maxDistancePx: Float): Float
+    {
+      var stepPx = 1.0;
+      var distPx = 0.0;
+      while (distPx <= maxDistancePx)
+        {
+          var sampleX = startX + dirX * distPx;
+          var sampleY = startY + dirY * distPx;
+          var tileX = Std.int(Math.floor(sampleX / ATMOS_LIGHTMAP_TILE_SIZE));
+          var tileY = Std.int(Math.floor(sampleY / ATMOS_LIGHTMAP_TILE_SIZE));
+          if (tileX < 0 ||
+              tileY < 0 ||
+              tileX >= area.width ||
+              tileY >= area.height)
+            return Const.clampFloat(distPx - stepPx, 0, maxDistancePx);
+          if (!canProjectedShadowPassTile(area, tileX, tileY))
+            return Const.clampFloat(distPx - stepPx, 0, maxDistancePx);
+          distPx += stepPx;
+        }
+      return maxDistancePx;
     }
 
 // rebuild transient atmosphere overlay from active pulse lights
@@ -1098,6 +2072,27 @@ class AreaLighting
       ctx.restore();
     }
 
+// draw one or two lightmaps to world context clipped by current visibility
+  function drawMapsMaskedByVis(ctx: CanvasRenderingContext2D,
+      area: AreaGame, cache: Array<Array<Int>>,
+      map1: CanvasElement, ?map2: CanvasElement)
+    {
+      var composeCtx = composeMap.getContext2d();
+      composeCtx.clearRect(0, 0, composeMap.width,
+        composeMap.height);
+      paintMap(composeCtx, map1, false, 0, 0);
+      if (map2 != null)
+        paintMap(composeCtx, map2, false, 0, 0);
+      ensureVisMask(area, cache);
+      composeCtx.save();
+      composeCtx.globalCompositeOperation = 'destination-in';
+      composeCtx.drawImage(visMaskMap, 0, 0);
+      composeCtx.restore();
+
+      ctx.drawImage(composeMap,
+        scene.cameraSubX, scene.cameraSubY);
+    }
+
 // compose atmosphere overlay and clip it by current visibility mask
   function composeOverlay(area: AreaGame, cache: Array<Array<Int>>)
     {
@@ -1108,19 +2103,19 @@ class AreaLighting
       if (transientAtmosphereLights.length > 0)
         paintMap(composeCtx, dynamicMap, true, 0, 0);
 
-      rebuildVisibilityMask(area, cache);
+      ensureVisMask(area, cache);
       composeCtx.save();
       composeCtx.globalCompositeOperation = 'destination-in';
-      composeCtx.drawImage(visibilityMaskMap, 0, 0);
+      composeCtx.drawImage(visMaskMap, 0, 0);
       composeCtx.restore();
     }
 
 // rebuild screen-space visibility mask from current tile visibility cache
-  function rebuildVisibilityMask(area: AreaGame, cache: Array<Array<Int>>)
+  function rebuildVisMask(area: AreaGame, cache: Array<Array<Int>>)
     {
-      var maskCtx = visibilityMaskMap.getContext2d();
-      maskCtx.clearRect(0, 0, visibilityMaskMap.width,
-        visibilityMaskMap.height);
+      var maskCtx = visMaskMap.getContext2d();
+      maskCtx.clearRect(0, 0, visMaskMap.width,
+        visMaskMap.height);
       maskCtx.fillStyle = '#ffffff';
 
       var rect = area.getVisibleRect();
@@ -1138,16 +2133,16 @@ class AreaLighting
                 }
               if (runStart < 0)
                 continue;
-              fillVisibilityRun(maskCtx, runStart, x, y);
+              fillVisRun(maskCtx, runStart, x, y);
               runStart = -1;
             }
           if (runStart >= 0)
-            fillVisibilityRun(maskCtx, runStart, rect.x2, y);
+            fillVisRun(maskCtx, runStart, rect.x2, y);
         }
     }
 
 // fill one continuous row run in screen-space visibility mask
-  function fillVisibilityRun(maskCtx: CanvasRenderingContext2D,
+  function fillVisRun(maskCtx: CanvasRenderingContext2D,
       x1: Int, x2: Int, y: Int)
     {
       var sx = (x1 - scene.cameraTileX1) * Const.TILE_SIZE - scene.cameraSubX;
@@ -1358,6 +2353,20 @@ class AreaLighting
       };
     }
 
+// get reusable offscreen canvas for projected-shadow mask extraction
+  function getShadowWorkMap(width: Int, height: Int): CanvasElement
+    {
+      if (shadowWorkMap == null)
+        shadowWorkMap = Browser.document.createCanvasElement();
+      if (shadowWorkMap.width != width ||
+          shadowWorkMap.height != height)
+        {
+          shadowWorkMap.width = width;
+          shadowWorkMap.height = height;
+        }
+      return shadowWorkMap;
+    }
+
 // convert tile coordinate to atmosphere map x
   inline function toMapX(tileX: Float): Float
     {
@@ -1379,6 +2388,59 @@ private typedef _AtmosphereDecorObjGroup = {
   var y2: Int;
   var minIconRow: Int;
   var minIconCol: Int;
+}
+
+private typedef _ProjectedShadowCaster = {
+  var layerID: Int;
+  var srcRow: Int;
+  var srcCol: Int;
+  var blockW: Int;
+  var blockH: Int;
+  var centerX: Float;
+  var centerY: Float;
+}
+
+private typedef _ProjectedShadowMaskPoint = {
+  var x: Float;
+  var y: Float;
+}
+
+private typedef _ProjectedShadowMask = {
+  var points: Array<_ProjectedShadowMaskPoint>;
+}
+
+private typedef _ProjectedShadowEdgePair = {
+  var edge1: _ProjectedShadowMaskPoint;
+  var edge2: _ProjectedShadowMaskPoint;
+}
+
+private typedef _LayoutShadowEmitter = {
+  var x: Float;
+  var y: Float;
+}
+
+private typedef _LayoutShadowEmitterHit = {
+  var emitter: _LayoutShadowEmitter;
+  var distSq: Float;
+}
+
+private typedef _DebugLightMarker = {
+  var x: Float;
+  var y: Float;
+  var castsShadows: Bool;
+}
+
+private typedef _AIShadowCaster = {
+  var caster: _ProjectedShadowCaster;
+  var layer: Image;
+  var maskKey: String;
+}
+
+private typedef _AIShadowSpriteSource = {
+  var imageKey: String;
+  var image: Image;
+  var srcRow: Int;
+  var srcCol: Int;
 }
 
 private typedef _TransientAtmosphereLight = {

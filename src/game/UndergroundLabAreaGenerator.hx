@@ -88,6 +88,8 @@ class UndergroundLabAreaGenerator
   static var TEMP_ROOM = 1;
   static var TEMP_CORRIDOR = 2;
   static var TEMP_ENTRY = 3;
+  static var MAIN_CORRIDOR_HEIGHT = 2;
+  static var ROOM_TO_CORRIDOR_MIN_GAP = 2;
   static var MAX_LAYOUT_ATTEMPTS = 30;
   static var ROOM_ROLE_ENTRANCE = 'entrance';
   static var ROOM_ROLE_VAT = 'vat';
@@ -147,7 +149,8 @@ class UndergroundLabAreaGenerator
 
       // carve central circulation and room connectors
       var mainCorridorW = vatRoom.x1 - entryRoom.x2 + 2;
-      carveRect(area, entryRoom.x2 - 1, layout.corridorY, mainCorridorW, 2, TEMP_CORRIDOR);
+      carveRect(area, entryRoom.x2 - 1, layout.corridorY, mainCorridorW,
+        MAIN_CORRIDOR_HEIGHT, TEMP_CORRIDOR);
 
       var topCorridorH = layout.corridorY - topRoom.y2 + 1;
       carveRect(area, layout.topDoorX, topRoom.y2, 2, topCorridorH, TEMP_CORRIDOR);
@@ -262,12 +265,13 @@ class UndergroundLabAreaGenerator
       var bottomX1 = Const.roll(bottomXMin, bottomXMax);
 
       var topYMin = 2;
-      var topYMax = corridorY - topH - 2;
+      var topYMax = corridorY - topH - ROOM_TO_CORRIDOR_MIN_GAP;
       if (topYMin > topYMax)
         return null;
       var topY1 = Const.roll(topYMin, topYMax);
 
-      var bottomYMin = corridorY + 3;
+      var bottomYMin = corridorY + MAIN_CORRIDOR_HEIGHT +
+        ROOM_TO_CORRIDOR_MIN_GAP;
       var bottomYMax = area.height - bottomH - 3;
       if (bottomYMin > bottomYMax)
         return null;
@@ -659,13 +663,17 @@ class UndergroundLabAreaGenerator
         return false;
 
       // validate service room vertical relationship to the main corridor
-      if (getRoomSpecY2(topRoom) >= layout.corridorY ||
-          bottomRoom.y1 <= layout.corridorY)
+      var topRoomMaxY = layout.corridorY - ROOM_TO_CORRIDOR_MIN_GAP - 1;
+      var bottomRoomMinY = layout.corridorY + MAIN_CORRIDOR_HEIGHT +
+        ROOM_TO_CORRIDOR_MIN_GAP;
+      if (getRoomSpecY2(topRoom) > topRoomMaxY ||
+          bottomRoom.y1 < bottomRoomMinY)
         return false;
 
       // validate all carved corridor pieces and door stubs
       var mainCorridorW = vatRoom.x1 - getRoomSpecX2(entryRoom) + 2;
-      if (!canCarveRect(area, getRoomSpecX2(entryRoom) - 1, layout.corridorY, mainCorridorW, 2))
+      if (!canCarveRect(area, getRoomSpecX2(entryRoom) - 1, layout.corridorY,
+        mainCorridorW, MAIN_CORRIDOR_HEIGHT))
         return false;
 
       var topCorridorH = layout.corridorY - getRoomSpecY2(topRoom) + 1;

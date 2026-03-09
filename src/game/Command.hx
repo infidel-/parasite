@@ -64,14 +64,10 @@ class Command
         return;
 
       var target = hud.targeting.target;
-      var pronoun = 'them';
-      if (target != null)
-        pronoun = target.prepLog('him');
-
       hud.addAction({
         id: 'command.attack',
         type: ACTION_AREA,
-        name: '"Destroy ' + pronoun + '!"',
+        name: target.prepLog('"Destroy him!"'),
       });
       hud.addAction({
         id: 'command.leaveArea',

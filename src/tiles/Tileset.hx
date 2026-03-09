@@ -345,6 +345,13 @@ class Tileset
           var angle = (decoration.angle != null ? decoration.angle : 0.0);
           var dx = (decoration.dx != null ? decoration.dx : 0);
           var dy = (decoration.dy != null ? decoration.dy : 0);
+          var smoothSplat = (layerID == splatLayerID);
+          var prevSmoothing = false;
+          if (smoothSplat)
+            {
+              prevSmoothing = ctx.imageSmoothingEnabled;
+              ctx.imageSmoothingEnabled = true;
+            }
 
           // if no transformation, draw directly for better performance
           if (scale == 1.0 &&
@@ -361,6 +368,8 @@ class Tileset
                 y,
                 Const.TILE_SIZE,
                 Const.TILE_SIZE);
+              if (smoothSplat)
+                ctx.imageSmoothingEnabled = prevSmoothing;
               continue;
             }
 
@@ -388,6 +397,8 @@ class Tileset
             Const.TILE_SIZE * scale,
             Const.TILE_SIZE * scale);
           ctx.restore();
+          if (smoothSplat)
+            ctx.imageSmoothingEnabled = prevSmoothing;
         }
     }
 }

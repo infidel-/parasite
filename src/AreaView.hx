@@ -82,6 +82,7 @@ class AreaView
       drawTiles(ctx);
       // smooth everything else
       ctx.imageSmoothingEnabled = true;
+      scene.areaLighting.drawUnderSpriteShadows(ctx, _cache);
 
       // objects
       for (o in game.area.getObjects())
@@ -127,6 +128,7 @@ class AreaView
             (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
+      scene.areaLighting.drawDebugLightMarkers(ctx);
       ctx.restore();
 
       // regen minimap on first draw for area
@@ -353,6 +355,7 @@ class AreaView
       if (game.player.state == PLR_STATE_HOST)
         updateVisibilityHost();
       else updateVisibilityParasite();
+      scene.areaLighting.onVisCacheUpdated();
       scene.draw();
     }
 

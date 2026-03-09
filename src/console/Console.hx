@@ -100,6 +100,7 @@ class Console
             'ch|chat - set chat stage' +
             'ddemo - debug: finish demo, ' +
             'dg - debug: render stats, ' +
+            'dli - debug: toggle light markers, ' +
             'dthrow - debug: throw exception, ' +
             'dalert - debug: show alert, ' +
             'dleave - debug: leave area,<br/>' +
@@ -134,6 +135,7 @@ class Console
             'dg - debug: render stats, ' +
             'dai - debug: ai info, ' +
             'ds - debug: enable sound info, ' +
+            'dli - debug: toggle light markers, ' +
             'load - load game, ' +
             'restart, ' +
             'save - save game, ' +
@@ -704,6 +706,13 @@ class Console
         {
           game.player.vars.debugSoundEnabled = !game.player.vars.debugSoundEnabled;
           game.debug('Sound debug toggled.');
+        }
+      // XXX dli - toggle debug markers for area light sources
+      else if (cmd == 'dli')
+        {
+          game.player.vars.debugLightsEnabled = !game.player.vars.debugLightsEnabled;
+          var state = (game.player.vars.debugLightsEnabled ? 'on' : 'off');
+          game.debug('Light marker debug toggled: ' + state + '.');
         }
 #if mydebug
       else if (cmd == 'dalert')
