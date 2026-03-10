@@ -11,6 +11,7 @@ import objects.Door;
 import objects.Elevator;
 import tiles.UndergroundLab;
 import tiles.UndergroundLab._DecorBlock;
+import tiles.UndergroundLab._DecorPadding;
 import tiles.UndergroundLab._FloorDecorMeta;
 
 private typedef _MakeRoomArgs = {
@@ -73,6 +74,7 @@ private typedef _DecorWeights = {
   var roleWeight: Int;
   var zoneWeight: Int;
   var motifWeight: Int;
+  var tagWeight: Int;
 }
 
 private typedef _RoomDecorContext = {
@@ -80,6 +82,56 @@ private typedef _RoomDecorContext = {
   var doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>;
   var corridorY: Int;
   var reservedRects: Array<_ReservedRect>;
+}
+
+private typedef _RoleGatedDecorCandidates = {
+  var blocks: Array<_DecorBlock>;
+  var usedFallback: Bool;
+}
+
+private typedef _DecorPickResult = {
+  var blockInfo: _DecorBlock;
+  var usedFallback: Bool;
+}
+
+private typedef _RoomDecorRolePickStats = {
+  var roomID: Int;
+  var roomRole: String;
+  var nearTopRoleMatchPicks: Int;
+  var nearTopFallbackPicks: Int;
+  var objectRoleMatchPicks: Int;
+  var objectFallbackPicks: Int;
+}
+
+private typedef _PlacedLargeDecor = {
+  var family: String;
+  var x1: Int;
+  var y1: Int;
+  var x2: Int;
+  var y2: Int;
+}
+
+private typedef _RoomObjectDecorAnchor = {
+  var x: Int;
+  var y: Int;
+  var zone: String;
+}
+
+private typedef _RoomObjectDecorPlan = {
+  var largeTargetCount: Int;
+  var clutterTargetCount: Int;
+}
+
+private typedef _RoomObjectDecorPassResult = {
+  var attempted: Int;
+  var placed: Int;
+  var blockedByLargeFamilySpacing: Int;
+}
+
+private typedef _NearTopWallAnchorRun = {
+  var x1: Int;
+  var x2: Int;
+  var y: Int;
 }
 
 class UndergroundLabAreaGenerator
@@ -112,6 +164,14 @@ class UndergroundLabAreaGenerator
   static var DECOR_ZONE_WORK_CORE = 'work-core';
   static var DECOR_ZONE_ROOM_GENERIC = 'room-generic';
   static var DECOR_ZONE_MISSION_RESERVED = 'mission-reserved';
+  static var DECOR_ROLE_GATING_STRICT = true;
+  static var DECOR_ROLE_GATING_FALLBACK_PICK_CHANCE_PERCENT = 60;
+  static var DEBUG_LOG_DECOR_ROLE_PICK_STATS = false;
+  static var DEBUG_LOG_LARGE_DECOR_BUDGET_STATS = false;
+  static var DEBUG_LOG_OBJECT_DECOR_PASS_STATS = false;
+  static var DEBUG_LOG_OBJECT_ZONE_SIZE_HISTOGRAM = false;
+  static var DEBUG_LOG_DECOR_WEIGHT_BREAKDOWN = false;
+  static var DEBUG_LOG_NEAR_TOP_COVERAGE_STATS = false;
 
   var game: Game;
   var gen: AreaGenerator;
@@ -184,16 +244,20 @@ class UndergroundLabAreaGenerator
       // initialize tile metadata before decoration passes
       area.initTilesFromCells();
       var doorRects = getDoorFootprints(area);
+      var roomDecorRolePickStatsByRoomID = createRoomDecorRolePickStatsByRoomID(rooms);
       // add wall decoration metadata for rendering layers
       decorateWalls(area);
       // add near-top wall decoration after base wall pass so it renders on top
-      spawnNearTopWallDecorations(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
+      spawnNearTopWallDecorations(area, rooms, doorRects, layout.corridorY,
+        layout.reservedRects, roomDecorRolePickStatsByRoomID);
       // add decoration objects as the final decoration pass
-      spawnDecorationObj(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
+      spawnDecorationObj(area, rooms, doorRects, layout.corridorY,
+        layout.reservedRects, roomDecorRolePickStatsByRoomID);
       // add corridor floor decorations at lower density
       decorateCorridorFloors(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
       // add floor decorations last on remaining empty spots
       decorateFloors(area, rooms, doorRects, layout.corridorY, layout.reservedRects);
+      logRoomDecorRolePickStats(roomDecorRolePickStatsByRoomID);
 
       area.generatorInfo = {
         rooms: rooms,
@@ -973,14 +1037,88 @@ class UndergroundLabAreaGenerator
           tileset.decorateWallTile(area, x, y);
     }
 
+// create room-level role-pick counters used for decoration diagnostics
+  function createRoomDecorRolePickStatsByRoomID(rooms: Array<_Room>): Map<Int, _RoomDecorRolePickStats>
+    {
+      var statsByRoomID = new Map<Int, _RoomDecorRolePickStats>();
+      for (room in rooms)
+        {
+          statsByRoomID.set(room.id, {
+            roomID: room.id,
+            roomRole: room.role,
+            nearTopRoleMatchPicks: 0,
+            nearTopFallbackPicks: 0,
+            objectRoleMatchPicks: 0,
+            objectFallbackPicks: 0,
+          });
+        }
+      return statsByRoomID;
+    }
+
+// get room role-pick counter bucket, creating it if missing
+  function getOrCreateRoomDecorRolePickStats(statsByRoomID: Map<Int, _RoomDecorRolePickStats>,
+      room: _Room): _RoomDecorRolePickStats
+    {
+      var stats = statsByRoomID.get(room.id);
+      if (stats != null)
+        return stats;
+      stats = {
+        roomID: room.id,
+        roomRole: room.role,
+        nearTopRoleMatchPicks: 0,
+        nearTopFallbackPicks: 0,
+        objectRoleMatchPicks: 0,
+        objectFallbackPicks: 0,
+      };
+      statsByRoomID.set(room.id, stats);
+      return stats;
+    }
+
+// register one successful decoration pick in per-room diagnostics
+  function registerRoomDecorRolePick(stats: _RoomDecorRolePickStats,
+      layer: String, usedFallback: Bool)
+    {
+      if (layer == DECOR_LAYER_NEAR_TOP_WALL)
+        {
+          if (usedFallback)
+            stats.nearTopFallbackPicks += 1;
+          else stats.nearTopRoleMatchPicks += 1;
+          return;
+        }
+      if (layer == DECOR_LAYER_OBJECT)
+        {
+          if (usedFallback)
+            stats.objectFallbackPicks += 1;
+          else stats.objectRoleMatchPicks += 1;
+        }
+    }
+
+// log room-level role-pick diagnostics when debug flag is enabled
+  function logRoomDecorRolePickStats(statsByRoomID: Map<Int, _RoomDecorRolePickStats>)
+    {
+      if (!DEBUG_LOG_DECOR_ROLE_PICK_STATS)
+        return;
+      js.Browser.console.log('Underground lab decor role-pick stats:');
+      for (stats in statsByRoomID)
+        js.Browser.console.log('roomID=' + stats.roomID +
+          ', role=' + stats.roomRole +
+          ', nearTopRoleMatch=' + stats.nearTopRoleMatchPicks +
+          ', nearTopFallback=' + stats.nearTopFallbackPicks +
+          ', objectRoleMatch=' + stats.objectRoleMatchPicks +
+          ', objectFallback=' + stats.objectFallbackPicks);
+    }
+
 // spawn near-top wall decorations in each room using role and zone weights
   function spawnNearTopWallDecorations(area: AreaGame, rooms: Array<_Room>,
       doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
-      corridorY: Int, reservedRects: Array<_ReservedRect>)
+      corridorY: Int, reservedRects: Array<_ReservedRect>,
+      roomDecorRolePickStatsByRoomID: Map<Int, _RoomDecorRolePickStats>)
     {
       var tileset: UndergroundLab = cast game.scene.images.getTileset(area.typeID);
       for (room in rooms)
         {
+          var roomRolePickStats = getOrCreateRoomDecorRolePickStats(
+            roomDecorRolePickStatsByRoomID, room);
           var context: _RoomDecorContext = {
             room: room,
             doorRects: doorRects,
@@ -990,55 +1128,188 @@ class UndergroundLabAreaGenerator
           var anchors = collectNearTopWallAnchors(area, room);
           if (anchors.length == 0)
             continue;
+          var runs = collectNearTopWallAnchorRuns(anchors);
+          runs.sort(function(a: _NearTopWallAnchorRun, b: _NearTopWallAnchorRun)
+            {
+              return Reflect.compare((b.x2 - b.x1), (a.x2 - a.x1));
+            });
 
           var fillPercent = getNearTopWallFillPercent(room.role);
-          var targetCount = Std.int(Math.ceil(anchors.length * fillPercent / 100.0));
-          for (_ in 0...targetCount)
+          var targetCoverage = Std.int(Math.ceil(anchors.length * fillPercent / 100.0));
+          var continuityTarget = getNearTopWallContinuityTarget(room.role);
+          var filledCoverage = 0;
+          var longestContiguousRun = 0;
+          for (run in runs)
             {
-              if (anchors.length == 0)
+              if (filledCoverage >= targetCoverage)
                 break;
-
-              var anchorIndex = Const.roll(0, anchors.length - 1);
-              var anchor = anchors[anchorIndex];
-              anchors.splice(anchorIndex, 1);
-              var zone = getDecorationZone(context, anchor.x, anchor.y + 1);
-              if (zone == DECOR_ZONE_MISSION_RESERVED)
-                continue;
-
-              var blockInfo = pickWeightedDecorBlock(UndergroundLab.NEAR_TOP_WALL_META,
-                room.role, zone, DECOR_LAYER_NEAR_TOP_WALL);
-              if (blockInfo == null)
-                continue;
-              var block = blockInfo.block;
-              if (!canPlaceNearTopWallDecorBlock(area, tileset,
-                  anchor.x, anchor.y, block))
-                continue;
-
-              for (dy in 0...block.height)
-                for (dx in 0...block.width)
-                  {
-                    area.addTileDecoration(anchor.x + dx, anchor.y + dy, {
-                      layerID: (dy == 0 ?
-                        tileset.nearTopWallWallLayerID :
-                        tileset.nearTopWallFloorLayerID),
-                      icon: {
-                        row: block.row + dy,
-                        col: block.col + dx,
-                      },
-                    });
-                    area.recalcTile(anchor.x + dx, anchor.y + dy);
-                  }
-
-              var i = anchors.length - 1;
-              while (i >= 0)
+              var runX = run.x1;
+              var runStreak = 0;
+              while (runX <= run.x2 &&
+                     filledCoverage < targetCoverage)
                 {
-                  if (anchors[i].x >= anchor.x &&
-                      anchors[i].x < anchor.x + block.width)
-                    anchors.splice(i, 1);
-                  i -= 1;
+                  var zone = getDecorationZone(context, runX, run.y + 1);
+                  if (zone == DECOR_ZONE_MISSION_RESERVED)
+                    {
+                      runX += 1;
+                      runStreak = 0;
+                      continue;
+                    }
+
+                  var maxWidth = run.x2 - runX + 1;
+                  var pickResult = pickNearTopWallDecorBlockWithFallbackWidths(area,
+                    tileset, room.role, zone, runX, run.y, maxWidth);
+                  if (pickResult == null)
+                    {
+                      runX += 1;
+                      runStreak = 0;
+                      continue;
+                    }
+
+                  var blockInfo = pickResult.blockInfo;
+                  var block = blockInfo.block;
+                  for (dy in 0...block.height)
+                    for (dx in 0...block.width)
+                      {
+                        area.addTileDecoration(runX + dx, run.y + dy, {
+                          layerID: (dy == 0 ?
+                            tileset.nearTopWallWallLayerID :
+                            tileset.nearTopWallFloorLayerID),
+                          icon: {
+                            row: block.row + dy,
+                            col: block.col + dx,
+                          },
+                        });
+                        area.recalcTile(runX + dx, run.y + dy);
+                      }
+                  registerRoomDecorRolePick(roomRolePickStats,
+                    DECOR_LAYER_NEAR_TOP_WALL, pickResult.usedFallback);
+
+                  filledCoverage += block.width;
+                  runStreak += block.width;
+                  if (runStreak > longestContiguousRun)
+                    longestContiguousRun = runStreak;
+                  if (runStreak < continuityTarget)
+                    runX += block.width;
+                  else
+                    {
+                      var gap = Const.roll(0, 1);
+                      runX += block.width + gap;
+                      if (gap > 0)
+                        runStreak = 0;
+                    }
                 }
             }
+          logNearTopCoverageStats(room, anchors.length, targetCoverage,
+            filledCoverage, longestContiguousRun, continuityTarget);
         }
+    }
+
+// collect contiguous x-runs from near-top wall anchors
+  function collectNearTopWallAnchorRuns(
+      anchors: Array<{x: Int, y: Int}>): Array<_NearTopWallAnchorRun>
+    {
+      var sortedAnchors = anchors.copy();
+      sortedAnchors.sort(function(a: {x: Int, y: Int}, b: {x: Int, y: Int})
+        {
+          return Reflect.compare(a.x, b.x);
+        });
+      var runs = [];
+      if (sortedAnchors.length == 0)
+        return runs;
+
+      var runX1 = sortedAnchors[0].x;
+      var runX2 = sortedAnchors[0].x;
+      var runY = sortedAnchors[0].y;
+      for (i in 1...sortedAnchors.length)
+        {
+          var anchor = sortedAnchors[i];
+          if (anchor.y == runY &&
+              anchor.x == runX2 + 1)
+            {
+              runX2 = anchor.x;
+              continue;
+            }
+          runs.push({
+            x1: runX1,
+            x2: runX2,
+            y: runY,
+          });
+          runX1 = anchor.x;
+          runX2 = anchor.x;
+          runY = anchor.y;
+        }
+      runs.push({
+        x1: runX1,
+        x2: runX2,
+        y: runY,
+      });
+      return runs;
+    }
+
+// pick one near-top decoration block constrained by available run width
+  function pickNearTopWallDecorBlock(role: String, zone: String,
+      maxWidth: Int): _DecorPickResult
+    {
+      var candidates = [];
+      for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
+        {
+          if (blockInfo.block.width > maxWidth)
+            continue;
+          candidates.push(blockInfo);
+        }
+      if (candidates.length == 0)
+        return null;
+      return pickWeightedDecorBlock(candidates, role, zone,
+        DECOR_LAYER_NEAR_TOP_WALL);
+    }
+
+// pick and place-test near-top block with narrower-width retries
+  function pickNearTopWallDecorBlockWithFallbackWidths(area: AreaGame,
+      tileset: UndergroundLab, role: String, zone: String,
+      x: Int, y: Int, maxWidth: Int): _DecorPickResult
+    {
+      var widthCap = maxWidth;
+      while (widthCap >= 1)
+        {
+          var pickResult = pickNearTopWallDecorBlock(role, zone, widthCap);
+          if (pickResult == null)
+            {
+              widthCap -= 1;
+              continue;
+            }
+          var block = pickResult.blockInfo.block;
+          if (canPlaceNearTopWallDecorBlock(area, tileset, x, y, block))
+            return pickResult;
+          widthCap = block.width - 1;
+        }
+      return null;
+    }
+
+// get room-role near-top continuity target in tiles
+  function getNearTopWallContinuityTarget(role: String): Int
+    {
+      if (role == ROOM_ROLE_ENTRANCE)
+        return 2;
+      if (role == ROOM_ROLE_STORAGE)
+        return 3;
+      return 4;
+    }
+
+// log near-top coverage and continuity metrics when debug is enabled
+  function logNearTopCoverageStats(room: _Room,
+      availableAnchors: Int, targetCoverage: Int, filledCoverage: Int,
+      longestContiguousRun: Int, continuityTarget: Int)
+    {
+      if (!DEBUG_LOG_NEAR_TOP_COVERAGE_STATS)
+        return;
+      js.Browser.console.log('roomID=' + room.id +
+        ', role=' + room.role +
+        ', nearTopAvailable=' + availableAnchors +
+        ', nearTopTarget=' + targetCoverage +
+        ', nearTopFilled=' + filledCoverage +
+        ', nearTopLongestRun=' + longestContiguousRun +
+        ', nearTopContinuityTarget=' + continuityTarget);
     }
 
 // collect all valid near-top wall anchors for a room
@@ -1117,63 +1388,309 @@ class UndergroundLabAreaGenerator
 // spawn decoration object blocks on floor with semantic weighted placement
   function spawnDecorationObj(area: AreaGame, rooms: Array<_Room>,
       doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
-      corridorY: Int, reservedRects: Array<_ReservedRect>)
+      corridorY: Int, reservedRects: Array<_ReservedRect>,
+      roomDecorRolePickStatsByRoomID: Map<Int, _RoomDecorRolePickStats>)
     {
       var tileset: UndergroundLab = cast game.scene.images.getTileset(area.typeID);
       var tiles = area.getTiles();
-      var spawnedLargeDecorIDs = [];
       for (room in rooms)
         {
+          var roomLargeDecorFamilyCounts = new Map<String, Int>();
+          var roomPlacedLargeDecors: Array<_PlacedLargeDecor> = [];
+          var roomObjectZoneSizeHistogram = new Map<String, Int>();
+          var roomRolePickStats = getOrCreateRoomDecorRolePickStats(
+            roomDecorRolePickStatsByRoomID, room);
           var context: _RoomDecorContext = {
             room: room,
             doorRects: doorRects,
             corridorY: corridorY,
             reservedRects: reservedRects,
           };
-          for (y in room.y1...room.y2 + 1)
-            for (x in room.x1...room.x2 + 1)
-              {
-                var zone = getDecorationZone(context, x, y);
-                var chance = getPlacementChancePercent(DECOR_LAYER_OBJECT, room.role, zone);
-                if (chance <= 0 ||
-                    Const.roll(1, 100) > chance)
-                  continue;
-
-                var blockInfo = pickWeightedObjectDecorBlock(room.role, zone, spawnedLargeDecorIDs);
-                if (blockInfo == null)
-                  continue;
-
-                var block = blockInfo.block;
-                if (isRectOverlappingReservedRect(x, y, x + block.width - 1,
-                    y + block.height - 1, reservedRects))
-                  continue;
-                if (!canPlaceDecorationObjBlock(area, tileset, tiles, room, x, y, block, doorRects))
-                  continue;
-
-                if (isLargeDecorBlock(blockInfo) &&
-                    spawnedLargeDecorIDs.indexOf(blockInfo.meta.id) < 0)
-                  spawnedLargeDecorIDs.push(blockInfo.meta.id);
-                var objectLayerID = tileset.getDecorationObjLayerID(blockInfo.meta.imageKey);
-                var groupTag = 'DECO_OBJ:' + x + ':' + y + ':' + Const.roll(0, 999999);
-                for (dy in 0...block.height)
-                  for (dx in 0...block.width)
-                    area.addTileDecoration(x + dx, y + dy, {
-                      layerID: objectLayerID,
-                      icon: {
-                        row: block.row + dy,
-                        col: block.col + dx,
-                      },
-                      tag: groupTag,
-                    });
-              }
+          var plan = buildRoomObjectDecorPlan(room);
+          var allAnchors = collectRoomObjectDecorAnchors(room, context);
+          var anchorPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
+            [DECOR_ZONE_WALL_EDGE],
+            [DECOR_ZONE_ROOM_GENERIC]);
+          var clutterPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
+            [DECOR_ZONE_WORK_CORE, DECOR_ZONE_ROOM_GENERIC],
+            [DECOR_ZONE_WALL_EDGE, DECOR_ZONE_TRAFFIC_LANE]);
+          var anchorPassResult = executeRoomObjectDecorPass(area, tileset, tiles,
+            room, anchorPassAnchors, plan.largeTargetCount,
+            true, true, doorRects, reservedRects, roomLargeDecorFamilyCounts,
+            roomPlacedLargeDecors, roomRolePickStats,
+            roomObjectZoneSizeHistogram);
+          var clutterPassResult = executeRoomObjectDecorPass(area, tileset, tiles,
+            room, clutterPassAnchors, plan.clutterTargetCount,
+            false, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
+            roomPlacedLargeDecors, roomRolePickStats,
+            roomObjectZoneSizeHistogram);
+          logLargeDecorBudgetStats(room, roomLargeDecorFamilyCounts,
+            anchorPassResult.blockedByLargeFamilySpacing +
+            clutterPassResult.blockedByLargeFamilySpacing);
+          logRoomObjectDecorPassStats(room, plan, anchorPassResult, clutterPassResult);
+          logRoomObjectZoneSizeHistogram(room, roomObjectZoneSizeHistogram);
         }
+    }
+
+// build role-aware per-room targets for object decoration passes
+  function buildRoomObjectDecorPlan(room: _Room): _RoomObjectDecorPlan
+    {
+      var roomArea = room.w * room.h;
+      var largeTargetCount = 0;
+      var clutterTargetCount = 0;
+      if (room.role == ROOM_ROLE_ENTRANCE)
+        {
+          largeTargetCount = Const.clamp(Std.int(roomArea / 30), 1, 3);
+          clutterTargetCount = Const.clamp(Std.int(roomArea / 18), 2, 6);
+        }
+      else if (room.role == ROOM_ROLE_VAT)
+        {
+          largeTargetCount = Const.clamp(Std.int(roomArea / 22), 2, 5);
+          clutterTargetCount = Const.clamp(Std.int(roomArea / 16), 3, 8);
+        }
+      else if (room.role == ROOM_ROLE_WORKSHOP)
+        {
+          largeTargetCount = Const.clamp(Std.int(roomArea / 24), 2, 5);
+          clutterTargetCount = Const.clamp(Std.int(roomArea / 16), 3, 7);
+        }
+      else if (room.role == ROOM_ROLE_STORAGE)
+        {
+          largeTargetCount = Const.clamp(Std.int(roomArea / 24), 2, 4);
+          clutterTargetCount = Const.clamp(Std.int(roomArea / 15), 3, 8);
+        }
+      else
+        {
+          largeTargetCount = Const.clamp(Std.int(roomArea / 22), 2, 5);
+          clutterTargetCount = Const.clamp(Std.int(roomArea / 15), 3, 8);
+        }
+      return {
+        largeTargetCount: largeTargetCount,
+        clutterTargetCount: clutterTargetCount,
+      };
+    }
+
+// collect zone-tagged object anchors for a room-level decoration plan
+  function collectRoomObjectDecorAnchors(room: _Room,
+      context: _RoomDecorContext): Array<_RoomObjectDecorAnchor>
+    {
+      var anchors = [];
+      for (y in room.y1...room.y2 + 1)
+        for (x in room.x1...room.x2 + 1)
+          {
+            var zone = getDecorationZone(context, x, y);
+            if (zone == DECOR_ZONE_MISSION_RESERVED ||
+                zone == DECOR_ZONE_DOOR_BUFFER)
+              continue;
+            anchors.push({
+              x: x,
+              y: y,
+              zone: zone,
+            });
+          }
+      return anchors;
+    }
+
+// collect one ordered anchor list using primary then secondary zones
+  function collectRoomObjectDecorPassAnchors(
+      allAnchors: Array<_RoomObjectDecorAnchor>,
+      primaryZones: Array<String>,
+      secondaryZones: Array<String>): Array<_RoomObjectDecorAnchor>
+    {
+      var anchors = [];
+      for (anchor in allAnchors)
+        if (primaryZones.indexOf(anchor.zone) >= 0)
+          anchors.push(anchor);
+      for (anchor in allAnchors)
+        {
+          if (primaryZones.indexOf(anchor.zone) >= 0 ||
+              secondaryZones.indexOf(anchor.zone) < 0)
+            continue;
+          anchors.push(anchor);
+        }
+      return anchors;
+    }
+
+// execute one room-level object decoration pass over a planned anchor queue
+  function executeRoomObjectDecorPass(area: AreaGame, tileset: UndergroundLab,
+      tiles: Array<Array<tiles.Tile>>, room: _Room,
+      passAnchors: Array<_RoomObjectDecorAnchor>, targetCount: Int,
+      requireLarge: Bool, allowLarge: Bool,
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
+      reservedRects: Array<_ReservedRect>,
+      roomLargeDecorFamilyCounts: Map<String, Int>,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      roomRolePickStats: _RoomDecorRolePickStats,
+      roomObjectZoneSizeHistogram: Map<String, Int>): _RoomObjectDecorPassResult
+    {
+      var anchors = passAnchors.copy();
+      var placed = 0;
+      var attempted = 0;
+      var blockedByLargeFamilySpacing = 0;
+      var maxAttempts = Const.clamp(targetCount * 8, 12, 120);
+      while (placed < targetCount &&
+             anchors.length > 0 &&
+             attempted < maxAttempts)
+        {
+          var anchorIndex = Const.roll(0, anchors.length - 1);
+          var anchor = anchors[anchorIndex];
+          anchors.splice(anchorIndex, 1);
+          attempted += 1;
+
+          var pickResult = pickWeightedObjectDecorBlock(room.role, anchor.zone,
+            roomLargeDecorFamilyCounts, requireLarge, allowLarge);
+          if (pickResult == null)
+            continue;
+          var blockInfo = pickResult.blockInfo;
+          var block = blockInfo.block;
+          var largeDecorFamily = null;
+          if (isLargeDecorBlock(blockInfo))
+            {
+              largeDecorFamily = getLargeDecorFamily(blockInfo);
+              if (!canPlaceLargeDecorFamilyWithSpacing(room.role, anchor.x, anchor.y,
+                  block, largeDecorFamily, roomPlacedLargeDecors))
+                {
+                  blockedByLargeFamilySpacing += 1;
+                  continue;
+                }
+            }
+          if (isRectOverlappingReservedRect(anchor.x, anchor.y,
+              anchor.x + block.width - 1, anchor.y + block.height - 1, reservedRects))
+            continue;
+          if (!canPlaceDecorationObjBlock(area, tileset, tiles, room,
+              anchor.x, anchor.y, blockInfo, doorRects))
+            continue;
+
+          if (largeDecorFamily != null)
+            {
+              incrementLargeDecorFamilyCount(roomLargeDecorFamilyCounts,
+                largeDecorFamily);
+              roomPlacedLargeDecors.push({
+                family: largeDecorFamily,
+                x1: anchor.x,
+                y1: anchor.y,
+                x2: anchor.x + block.width - 1,
+                y2: anchor.y + block.height - 1,
+              });
+            }
+          var objectLayerID = tileset.getDecorationObjLayerID(blockInfo.meta.imageKey);
+          var groupTag = 'DECO_OBJ:' + anchor.x + ':' + anchor.y + ':' + Const.roll(0, 999999);
+          for (dy in 0...block.height)
+            for (dx in 0...block.width)
+              area.addTileDecoration(anchor.x + dx, anchor.y + dy, {
+                layerID: objectLayerID,
+                icon: {
+                  row: block.row + dy,
+                  col: block.col + dx,
+                },
+                tag: groupTag,
+              });
+          registerRoomDecorRolePick(roomRolePickStats,
+            DECOR_LAYER_OBJECT, pickResult.usedFallback);
+          incrementRoomObjectZoneSizeHistogram(roomObjectZoneSizeHistogram,
+            anchor.zone, isLargeDecorBlock(blockInfo));
+          placed += 1;
+          pruneRoomObjectDecorAnchors(anchors, anchor.x, anchor.y, block);
+        }
+      return {
+        attempted: attempted,
+        placed: placed,
+        blockedByLargeFamilySpacing: blockedByLargeFamilySpacing,
+      };
+    }
+
+// prune anchors overlapping or immediately hugging a just-placed block
+  function pruneRoomObjectDecorAnchors(anchors: Array<_RoomObjectDecorAnchor>,
+      x: Int, y: Int, block: _IconBlock)
+    {
+      var x2 = x + block.width - 1;
+      var y2 = y + block.height - 1;
+      var i = anchors.length - 1;
+      while (i >= 0)
+        {
+          var anchor = anchors[i];
+          if (anchor.x >= x - 1 &&
+              anchor.x <= x2 + 1 &&
+              anchor.y >= y - 1 &&
+              anchor.y <= y2 + 1)
+            anchors.splice(i, 1);
+          i -= 1;
+        }
+    }
+
+// log room-level pass metrics when object-pass debug flag is enabled
+  function logRoomObjectDecorPassStats(room: _Room, plan: _RoomObjectDecorPlan,
+      anchorPassResult: _RoomObjectDecorPassResult,
+      clutterPassResult: _RoomObjectDecorPassResult)
+    {
+      if (!DEBUG_LOG_OBJECT_DECOR_PASS_STATS)
+        return;
+      js.Browser.console.log('roomID=' + room.id +
+        ', role=' + room.role +
+        ', anchorAttempted=' + anchorPassResult.attempted +
+        ', anchorPlaced=' + anchorPassResult.placed +
+        ', anchorTarget=' + plan.largeTargetCount +
+        ', clutterAttempted=' + clutterPassResult.attempted +
+        ', clutterPlaced=' + clutterPassResult.placed +
+        ', clutterTarget=' + plan.clutterTargetCount);
+    }
+
+// increment zone/size placement histogram for one successful object placement
+  function incrementRoomObjectZoneSizeHistogram(
+      roomObjectZoneSizeHistogram: Map<String, Int>,
+      zone: String, isLarge: Bool)
+    {
+      var key = zone + ':' + (isLarge ? 'large' : 'small');
+      var count = roomObjectZoneSizeHistogram.get(key);
+      if (count == null)
+        count = 0;
+      roomObjectZoneSizeHistogram.set(key, count + 1);
+    }
+
+// log room-level zone/size histogram when debug flag is enabled
+  function logRoomObjectZoneSizeHistogram(room: _Room,
+      roomObjectZoneSizeHistogram: Map<String, Int>)
+    {
+      if (!DEBUG_LOG_OBJECT_ZONE_SIZE_HISTOGRAM)
+        return;
+      var items = [];
+      for (key in roomObjectZoneSizeHistogram.keys())
+        items.push(key + '=' + roomObjectZoneSizeHistogram.get(key));
+      items.sort(function(a: String, b: String)
+        {
+          return Reflect.compare(a, b);
+        });
+      js.Browser.console.log('roomID=' + room.id +
+        ', role=' + room.role +
+        ', objectZoneSizeHistogram=' + items.join(','));
+    }
+
+// log per-room large-decoration budget usage when debug flag is enabled
+  function logLargeDecorBudgetStats(room: _Room,
+      roomLargeDecorFamilyCounts: Map<String, Int>,
+      blockedByLargeFamilySpacing: Int)
+    {
+      if (!DEBUG_LOG_LARGE_DECOR_BUDGET_STATS)
+        return;
+      var placedByFamily = [];
+      for (family in roomLargeDecorFamilyCounts.keys())
+        placedByFamily.push(family + '=' + roomLargeDecorFamilyCounts.get(family));
+      placedByFamily.sort(function(a: String, b: String)
+        {
+          return Reflect.compare(a, b);
+        });
+      js.Browser.console.log('roomID=' + room.id +
+        ', role=' + room.role +
+        ', largePlacedByFamily=' + placedByFamily.join(',') +
+        ', blockedByFamilySpacing=' + blockedByLargeFamilySpacing);
     }
 
 // check if a decoration object block can be placed at top-left x,y
   function canPlaceDecorationObjBlock(area: AreaGame, tileset: tiles.Tileset,
-      tiles: Array<Array<tiles.Tile>>, room: _Room, x: Int, y: Int, block: _IconBlock,
+      tiles: Array<Array<tiles.Tile>>, room: _Room, x: Int, y: Int,
+      blockInfo: _DecorBlock,
       doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>): Bool
     {
+      var block = blockInfo.block;
       if (x + block.width - 1 > room.x2 ||
           y + block.height - 1 > room.y2)
         return false;
@@ -1211,6 +1728,8 @@ class UndergroundLabAreaGenerator
               nx, ny, false))
               return false;
           }
+      if (!isDecorPaddingClear(area, tileset, tiles, room, x, y, blockInfo))
+        return false;
 
       var decorationRect = {
         x1: x,
@@ -1220,6 +1739,78 @@ class UndergroundLabAreaGenerator
       };
       if (isTooCloseToAnyDoor(decorationRect, doorRects))
         return false;
+      return true;
+    }
+
+// normalize optional padding values so negative/null resolves to zero
+  inline function getDecorPaddingValue(value: Null<Int>): Int
+    {
+      if (value == null ||
+          value < 0)
+        return 0;
+      return value;
+    }
+
+// check whether one padding rectangle is fully inside room and clear
+  function isDecorPaddingRectClear(area: AreaGame, tileset: tiles.Tileset,
+      tiles: Array<Array<tiles.Tile>>, room: _Room,
+      x1: Int, y1: Int, x2: Int, y2: Int): Bool
+    {
+      if (x1 > x2 ||
+          y1 > y2)
+        return true;
+      if (x1 < room.x1 ||
+          y1 < room.y1 ||
+          x2 > room.x2 ||
+          y2 > room.y2)
+        return false;
+
+      for (y in y1...y2 + 1)
+        for (x in x1...x2 + 1)
+          {
+            if (!tileset.isWalkable(area.getCellType(x, y)) ||
+                area.hasObjectAt(x, y) ||
+                hasBlockingTileDecorationForObjectPlacement(area, tileset, tiles,
+                  x, y, false))
+              return false;
+          }
+      return true;
+    }
+
+// check whether directional padding around one block is clear
+  function isDecorPaddingClear(area: AreaGame, tileset: tiles.Tileset,
+      tiles: Array<Array<tiles.Tile>>, room: _Room,
+      x: Int, y: Int, blockInfo: _DecorBlock): Bool
+    {
+      var padding: _DecorPadding = blockInfo.meta.padding;
+      if (padding == null)
+        return true;
+
+      var block = blockInfo.block;
+      var padUp = getDecorPaddingValue(padding.up);
+      var padRight = getDecorPaddingValue(padding.right);
+      var padDown = getDecorPaddingValue(padding.down);
+      var padLeft = getDecorPaddingValue(padding.left);
+
+      if (padUp > 0 &&
+          !isDecorPaddingRectClear(area, tileset, tiles, room,
+            x, y - padUp, x + block.width - 1, y - 1))
+        return false;
+      if (padRight > 0 &&
+          !isDecorPaddingRectClear(area, tileset, tiles, room,
+            x + block.width, y, x + block.width + padRight - 1,
+            y + block.height - 1))
+        return false;
+      if (padDown > 0 &&
+          !isDecorPaddingRectClear(area, tileset, tiles, room,
+            x, y + block.height, x + block.width - 1,
+            y + block.height + padDown - 1))
+        return false;
+      if (padLeft > 0 &&
+          !isDecorPaddingRectClear(area, tileset, tiles, room,
+            x - padLeft, y, x - 1, y + block.height - 1))
+        return false;
+
       return true;
     }
 
@@ -1534,18 +2125,17 @@ class UndergroundLabAreaGenerator
     {
       var fill = 0;
       if (role == ROOM_ROLE_ENTRANCE)
-        fill = 35 + Const.roll(0, 15);
+        fill = 28 + Const.roll(0, 18);
       else if (role == ROOM_ROLE_VAT)
-        fill = 58 + Const.roll(0, 24);
+        fill = 56 + Const.roll(0, 24);
       else if (role == ROOM_ROLE_WORKSHOP)
-        fill = 56 + Const.roll(0, 21);
+        fill = 54 + Const.roll(0, 22);
       else if (role == ROOM_ROLE_STORAGE)
-        fill = 50 + Const.roll(0, 21);
+        fill = 50 + Const.roll(0, 22);
       else if (role == ROOM_ROLE_RESEARCH)
-        fill = 52 + Const.roll(0, 21);
+        fill = 52 + Const.roll(0, 22);
       else fill = 48 + Const.roll(0, 20);
-      fill = Std.int(fill / 2);
-      return Const.clamp(fill, 4, 70);
+      return Const.clamp(fill, 8, 88);
     }
 
 // get base placement chance for a layer/role/zone combination
@@ -1558,71 +2148,191 @@ class UndergroundLabAreaGenerator
         baseChance = 34;
       else baseChance = 100;
 
-      var weights = getDecorWeights(layer, role, zone, []);
+      var weights = getDecorWeights(layer, role, zone, [], []);
       var chance = Std.int(baseChance * weights.roleWeight * weights.zoneWeight / 10000);
       return Const.clamp(chance, 0, 95);
     }
 
-// pick weighted decoration block metadata for near-top or object layer
-  function pickWeightedDecorBlock(blocks: Array<_DecorBlock>,
-      role: String, zone: String, layer: String): _DecorBlock
+// check whether block metadata includes the requested room role
+  inline function isRoleMatchedDecorBlock(blockInfo: _DecorBlock, role: String): Bool
     {
-      var weightList = [];
-      for (blockInfo in blocks)
-        {
-          var weights = getDecorWeights(layer, role, zone, blockInfo.meta.motifs);
-          var roleAffinity = (blockInfo.meta.roles.indexOf(role) >= 0 ? 130 : 60);
-          var weight = Std.int(blockInfo.meta.baseWeight *
-            weights.roleWeight *
-            weights.zoneWeight *
-            weights.motifWeight *
-            roleAffinity / 100000000);
-          weight = Const.clamp(weight, blockInfo.meta.minZoneWeight, blockInfo.meta.maxZoneWeight);
-          weightList.push(weight);
-        }
-
-      var index = pickWeightedIndex(weightList);
-      if (index < 0)
-        return null;
-      return blocks[index];
+      return (blockInfo.meta.roles.indexOf(role) >= 0);
     }
 
-// pick weighted object decoration block with large-block anti-repeat cycle
-  function pickWeightedObjectDecorBlock(role: String, zone: String,
-      spawnedLargeDecorIDs: Array<String>): _DecorBlock
+// build role-gated candidate pool for strict and legacy modes
+  function getRoleGatedDecorCandidates(blocks: Array<_DecorBlock>,
+      role: String): _RoleGatedDecorCandidates
     {
-      resetSpawnedLargeDecorIDsIfNeeded(spawnedLargeDecorIDs);
-      var blocks = UndergroundLab.DECORATION_OBJ_META;
-      var hasUnspawnedLarge = hasUnspawnedLargeDecorBlock(spawnedLargeDecorIDs);
-      var weightList = [];
+      if (!DECOR_ROLE_GATING_STRICT)
+        return {
+          blocks: blocks,
+          usedFallback: false,
+        };
+
+      var roleMatchedBlocks = [];
       for (blockInfo in blocks)
+        if (isRoleMatchedDecorBlock(blockInfo, role))
+          roleMatchedBlocks.push(blockInfo);
+      if (roleMatchedBlocks.length > 0)
+        return {
+          blocks: roleMatchedBlocks,
+          usedFallback: false,
+        };
+      return {
+        blocks: blocks,
+        usedFallback: true,
+      };
+    }
+
+// roll explicit fallback penalty gate for strict role-gating mode
+  function isFallbackPickRejected(usedFallback: Bool): Bool
+    {
+      if (!DECOR_ROLE_GATING_STRICT ||
+          !usedFallback)
+        return false;
+      return (Const.roll(1, 100) > DECOR_ROLE_GATING_FALLBACK_PICK_CHANCE_PERCENT);
+    }
+
+// log sampled weight breakdown for one decoration candidate when debug is enabled
+  function logDecorWeightBreakdownSample(layer: String, role: String, zone: String,
+      blockInfo: _DecorBlock, weights: _DecorWeights,
+      roleAffinity: Int, weight: Int)
+    {
+      if (!DEBUG_LOG_DECOR_WEIGHT_BREAKDOWN ||
+          Const.roll(1, 180) != 1)
+        return;
+      js.Browser.console.log('decorWeightSample layer=' + layer +
+        ', role=' + role +
+        ', zone=' + zone +
+        ', decorID=' + blockInfo.meta.id +
+        ', roleWeight=' + weights.roleWeight +
+        ', zoneWeight=' + weights.zoneWeight +
+        ', motifWeight=' + weights.motifWeight +
+        ', tagWeight=' + weights.tagWeight +
+        ', roleAffinity=' + roleAffinity +
+        ', finalWeight=' + weight);
+    }
+
+// pick weighted decoration block metadata for near-top or object layer
+  function pickWeightedDecorBlock(blocks: Array<_DecorBlock>,
+      role: String, zone: String, layer: String): _DecorPickResult
+    {
+      var candidateInfo = getRoleGatedDecorCandidates(blocks, role);
+      if (candidateInfo.blocks.length == 0 ||
+          isFallbackPickRejected(candidateInfo.usedFallback))
+        return null;
+
+      var weightList = [];
+      for (blockInfo in candidateInfo.blocks)
         {
-          var weights = getDecorWeights(DECOR_LAYER_OBJECT, role, zone, blockInfo.meta.motifs);
+          var weights = getDecorWeights(layer, role, zone, blockInfo.meta.motifs,
+            blockInfo.meta.tags);
           var roleAffinity = (blockInfo.meta.roles.indexOf(role) >= 0 ? 130 : 60);
           var weight = Std.int(blockInfo.meta.baseWeight *
             weights.roleWeight *
             weights.zoneWeight *
             weights.motifWeight *
-            roleAffinity / 100000000);
+            weights.tagWeight *
+            roleAffinity / 10000000000);
           weight = Const.clamp(weight, blockInfo.meta.minZoneWeight, blockInfo.meta.maxZoneWeight);
-          if ((role == ROOM_ROLE_VAT ||
-               role == ROOM_ROLE_RESEARCH) &&
-              zone == DECOR_ZONE_WALL_EDGE &&
-              blockInfo.meta.tags.indexOf('table') >= 0)
-            weight = Std.int(weight * 17 / 10);
-
-          if (hasUnspawnedLarge &&
-              isLargeDecorBlock(blockInfo) &&
-              spawnedLargeDecorIDs.indexOf(blockInfo.meta.id) >= 0)
-            weight = 0;
-
+          logDecorWeightBreakdownSample(layer, role, zone, blockInfo,
+            weights, roleAffinity, weight);
           weightList.push(weight);
         }
 
       var index = pickWeightedIndex(weightList);
       if (index < 0)
         return null;
-      return blocks[index];
+      var pickedBlockInfo = candidateInfo.blocks[index];
+      return {
+        blockInfo: pickedBlockInfo,
+        usedFallback: !isRoleMatchedDecorBlock(pickedBlockInfo, role),
+      };
+    }
+
+// pick weighted object decoration block with role/size filters and local budgets
+  function pickWeightedObjectDecorBlock(role: String, zone: String,
+      roomLargeDecorFamilyCounts: Map<String, Int>,
+      requireLarge: Bool, allowLarge: Bool): _DecorPickResult
+    {
+      var blocks = UndergroundLab.DECORATION_OBJ_META;
+      var candidateInfo = getRoleGatedDecorCandidates(blocks, role);
+      if (candidateInfo.blocks.length == 0 ||
+          isFallbackPickRejected(candidateInfo.usedFallback))
+        return null;
+      var weightList = [];
+      for (blockInfo in candidateInfo.blocks)
+        {
+          var isLargeBlock = isLargeDecorBlock(blockInfo);
+          if ((requireLarge &&
+               !isLargeBlock) ||
+              (!allowLarge &&
+               isLargeBlock))
+            {
+              weightList.push(0);
+              continue;
+            }
+          var weights = getDecorWeights(DECOR_LAYER_OBJECT, role, zone,
+            blockInfo.meta.motifs, blockInfo.meta.tags);
+          var roleAffinity = (blockInfo.meta.roles.indexOf(role) >= 0 ? 130 : 60);
+          var weight = Std.int(blockInfo.meta.baseWeight *
+            weights.roleWeight *
+            weights.zoneWeight *
+            weights.motifWeight *
+            weights.tagWeight *
+            roleAffinity / 10000000000);
+          weight = Const.clamp(weight, blockInfo.meta.minZoneWeight, blockInfo.meta.maxZoneWeight);
+          if (zone == DECOR_ZONE_WALL_EDGE &&
+              blockInfo.meta.tags.indexOf('table') >= 0)
+            {
+              if (role == ROOM_ROLE_VAT ||
+                  role == ROOM_ROLE_RESEARCH ||
+                  role == ROOM_ROLE_WORKSHOP)
+                weight = Std.int(weight * 2);
+              else weight = Std.int(weight * 16 / 10);
+              if (blockInfo.meta.padding != null &&
+                  blockInfo.meta.padding.down > 0)
+                weight = Std.int(weight * 15 / 10);
+            }
+          else if (blockInfo.meta.tags.indexOf('table') >= 0 &&
+                   blockInfo.meta.padding != null &&
+                   blockInfo.meta.padding.down > 0)
+            weight = Std.int(weight * 55 / 100);
+
+          if (isLargeBlock)
+            weight = applyLargeDecorFamilyBudgetPenalty(role,
+              getLargeDecorFamily(blockInfo), roomLargeDecorFamilyCounts, weight);
+
+          if (zone == DECOR_ZONE_WALL_EDGE)
+            {
+              if (!isLargeBlock)
+                weight = Std.int(weight * 80 / 100);
+            }
+          else if (zone == DECOR_ZONE_WORK_CORE)
+            {
+              if (isLargeBlock)
+                weight = Std.int(weight * 35 / 100);
+            }
+          else if (zone == DECOR_ZONE_TRAFFIC_LANE)
+            {
+              if (isLargeBlock)
+                weight = Std.int(weight * 12 / 100);
+              else weight = Std.int(weight * 8 / 100);
+            }
+
+          logDecorWeightBreakdownSample(DECOR_LAYER_OBJECT, role, zone,
+            blockInfo, weights, roleAffinity, weight);
+          weightList.push(weight);
+        }
+
+      var index = pickWeightedIndex(weightList);
+      if (index < 0)
+        return null;
+      var pickedBlockInfo = candidateInfo.blocks[index];
+      return {
+        blockInfo: pickedBlockInfo,
+        usedFallback: !isRoleMatchedDecorBlock(pickedBlockInfo, role),
+      };
     }
 
 // check whether decoration block is large
@@ -1632,33 +2342,162 @@ class UndergroundLabAreaGenerator
         blockInfo.block.height > 1);
     }
 
-// check if there is at least one large block that has not spawned yet
-  function hasUnspawnedLargeDecorBlock(spawnedLargeDecorIDs: Array<String>): Bool
+// increment one room-local large-decoration family counter
+  function incrementLargeDecorFamilyCount(roomLargeDecorFamilyCounts: Map<String, Int>,
+      family: String)
     {
-      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
-        {
-          if (!isLargeDecorBlock(blockInfo))
-            continue;
-          if (spawnedLargeDecorIDs.indexOf(blockInfo.meta.id) < 0)
-            return true;
-        }
-      return false;
+      var count = roomLargeDecorFamilyCounts.get(family);
+      if (count == null)
+        count = 0;
+      roomLargeDecorFamilyCounts.set(family, count + 1);
     }
 
-// reset large block spawn cycle once all large variants have spawned
-  function resetSpawnedLargeDecorIDsIfNeeded(spawnedLargeDecorIDs: Array<String>)
+// resolve large-decoration family for room-local repetition budgets
+  function getLargeDecorFamily(blockInfo: _DecorBlock): String
     {
-      var hasLargeBlocks = false;
-      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
+      if (blockInfo.meta.tags.indexOf('table') >= 0)
+        return 'table';
+      if (blockInfo.meta.tags.indexOf('computer') >= 0)
+        return 'computer';
+      if (blockInfo.meta.tags.indexOf('gurney') >= 0)
+        return 'gurney';
+      if (blockInfo.meta.tags.indexOf('crate') >= 0)
+        return 'crate';
+      if (blockInfo.meta.tags.indexOf('machinery') >= 0)
+        return 'machinery';
+      return 'generic';
+    }
+
+// get room-role family budget for large-decoration repetition
+  function getLargeDecorFamilyBudget(role: String, family: String): Int
+    {
+      if (role == ROOM_ROLE_ENTRANCE)
         {
-          if (!isLargeDecorBlock(blockInfo))
-            continue;
-          hasLargeBlocks = true;
-          if (spawnedLargeDecorIDs.indexOf(blockInfo.meta.id) < 0)
-            return;
+          if (family == 'machinery')
+            return 2;
+          if (family == 'crate')
+            return 2;
+          if (family == 'gurney')
+            return 2;
+          if (family == 'table' ||
+              family == 'computer')
+            return 1;
+          return 1;
         }
-      if (hasLargeBlocks)
-        spawnedLargeDecorIDs.splice(0, spawnedLargeDecorIDs.length);
+
+      if (role == ROOM_ROLE_VAT)
+        {
+          if (family == 'machinery')
+            return 4;
+          if (family == 'table' ||
+              family == 'computer')
+            return 3;
+          if (family == 'crate')
+            return 1;
+          if (family == 'gurney')
+            return 0;
+          return 2;
+        }
+
+      if (role == ROOM_ROLE_WORKSHOP)
+        {
+          if (family == 'machinery')
+            return 4;
+          if (family == 'table' ||
+              family == 'computer')
+            return 3;
+          if (family == 'crate')
+            return 2;
+          if (family == 'gurney')
+            return 0;
+          return 2;
+        }
+
+      if (role == ROOM_ROLE_STORAGE)
+        {
+          if (family == 'crate')
+            return 4;
+          if (family == 'machinery')
+            return 3;
+          if (family == 'table' ||
+              family == 'computer')
+            return 1;
+          if (family == 'gurney')
+            return 0;
+          return 2;
+        }
+
+      if (family == 'machinery')
+        return 5;
+      if (family == 'table' ||
+          family == 'computer')
+        return 4;
+      if (family == 'crate')
+        return 1;
+      if (family == 'gurney')
+        return 0;
+      return 2;
+    }
+
+// apply room-local soft penalty once a large family budget is exceeded
+  function applyLargeDecorFamilyBudgetPenalty(role: String, family: String,
+      roomLargeDecorFamilyCounts: Map<String, Int>, weight: Int): Int
+    {
+      var budget = getLargeDecorFamilyBudget(role, family);
+      var count = roomLargeDecorFamilyCounts.get(family);
+      if (count == null)
+        count = 0;
+      if (count < budget)
+        return weight;
+      if (count == budget)
+        return Std.int(weight * 55 / 100);
+      if (count == budget + 1)
+        return Std.int(weight * 35 / 100);
+      return 0;
+    }
+
+// get minimum gap required between large decorations of the same family
+  function getLargeDecorFamilySpacingRadius(role: String, family: String): Int
+    {
+      if (family == 'machinery')
+        {
+          if (role == ROOM_ROLE_WORKSHOP ||
+              role == ROOM_ROLE_RESEARCH)
+            return 2;
+          return 3;
+        }
+      if (family == 'crate')
+        return 2;
+      if (family == 'gurney')
+        return 3;
+      return 2;
+    }
+
+// check whether same-family large decorations keep enough local spacing
+  function canPlaceLargeDecorFamilyWithSpacing(role: String, x: Int, y: Int,
+      block: _IconBlock, family: String,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>): Bool
+    {
+      var minGap = getLargeDecorFamilySpacingRadius(role, family);
+      var candidateRect = {
+        x1: x,
+        y1: y,
+        x2: x + block.width - 1,
+        y2: y + block.height - 1,
+      };
+      for (placedDecor in roomPlacedLargeDecors)
+        {
+          if (placedDecor.family != family)
+            continue;
+          if (getRectEdgeGapChebyshev(candidateRect, {
+              x1: placedDecor.x1,
+              y1: placedDecor.y1,
+              x2: placedDecor.x2,
+              y2: placedDecor.y2,
+            }) < minGap)
+            return false;
+        }
+      return true;
     }
 
 // pick weighted floor decoration icon metadata
@@ -1667,13 +2506,15 @@ class UndergroundLabAreaGenerator
       var weightList = [];
       for (floorInfo in UndergroundLab.FLOOR_DECOR_META)
         {
-          var weights = getDecorWeights(DECOR_LAYER_FLOOR, role, zone, floorInfo.motifs);
+          var weights = getDecorWeights(DECOR_LAYER_FLOOR, role, zone,
+            floorInfo.motifs, []);
           var roleAffinity = (floorInfo.roles.indexOf(role) >= 0 ? 130 : 65);
           var weight = Std.int(floorInfo.baseWeight *
             weights.roleWeight *
             weights.zoneWeight *
             weights.motifWeight *
-            roleAffinity / 100000000);
+            weights.tagWeight *
+            roleAffinity / 10000000000);
           weightList.push(weight);
         }
 
@@ -1712,12 +2553,13 @@ class UndergroundLabAreaGenerator
 
 // get combined role/zone/motif weights for one placement decision
   function getDecorWeights(layer: String, role: String,
-      zone: String, motifs: Array<String>): _DecorWeights
+      zone: String, motifs: Array<String>, tags: Array<String>): _DecorWeights
     {
       return {
         roleWeight: getLayerRoleWeight(layer, role),
         zoneWeight: getLayerZoneWeight(layer, zone),
         motifWeight: getMotifRoleWeight(role, motifs),
+        tagWeight: getTagRoleWeight(role, tags),
       };
     }
 
@@ -1802,12 +2644,12 @@ class UndergroundLabAreaGenerator
       if (zone == DECOR_ZONE_DOOR_BUFFER)
         return 0;
       if (zone == DECOR_ZONE_TRAFFIC_LANE)
-        return 10;
+        return 4;
       if (zone == DECOR_ZONE_WALL_EDGE)
-        return 155;
+        return 190;
       if (zone == DECOR_ZONE_WORK_CORE)
-        return 110;
-      return 75;
+        return 70;
+      return 55;
     }
 
 // get motif affinity weight for the room role
@@ -1865,9 +2707,153 @@ class UndergroundLabAreaGenerator
                 weight += 14;
               else if (role == ROOM_ROLE_ENTRANCE)
                 weight -= 5;
+              continue;
+            }
+          if (motif == 'furniture')
+            {
+              if (role == ROOM_ROLE_ENTRANCE)
+                weight += 16;
+              else if (role == ROOM_ROLE_RESEARCH ||
+                       role == ROOM_ROLE_STORAGE)
+                weight += 6;
+              else if (role == ROOM_ROLE_VAT)
+                weight -= 8;
+              else weight -= 4;
+              continue;
+            }
+          if (motif == 'floor-grate' ||
+              motif == 'floor-hatch' ||
+              motif == 'glowing-green-grate')
+            {
+              if (role == ROOM_ROLE_WORKSHOP ||
+                  role == ROOM_ROLE_VAT ||
+                  role == ROOM_ROLE_RESEARCH)
+                weight += 14;
+              else weight -= 5;
+              continue;
+            }
+          if (motif == 'lab-number-marking' ||
+              motif == 'section-number-marking')
+            {
+              if (role == ROOM_ROLE_ENTRANCE ||
+                  role == ROOM_ROLE_VAT ||
+                  role == ROOM_ROLE_RESEARCH)
+                weight += 10;
+              else weight -= 3;
+              continue;
+            }
+          if (motif == 'biohazard-sign')
+            {
+              if (role == ROOM_ROLE_VAT ||
+                  role == ROOM_ROLE_WORKSHOP)
+                weight += 16;
+              else weight -= 6;
+              continue;
+            }
+          if (motif == 'scratches' ||
+              motif == 'crack')
+            {
+              if (role == ROOM_ROLE_STORAGE ||
+                  role == ROOM_ROLE_WORKSHOP)
+                weight += 8;
+              else if (role == ROOM_ROLE_ENTRANCE)
+                weight -= 6;
+              else weight += 2;
+              continue;
+            }
+          if (motif.indexOf('puddle') >= 0)
+            {
+              if (role == ROOM_ROLE_VAT ||
+                  role == ROOM_ROLE_WORKSHOP)
+                weight += 9;
+              else if (role == ROOM_ROLE_ENTRANCE)
+                weight -= 9;
+              else weight += 3;
             }
         }
       return Const.clamp(weight, 20, 220);
+    }
+
+// get tag affinity weight for the room role
+  function getTagRoleWeight(role: String, tags: Array<String>): Int
+    {
+      var weight = 100;
+      for (tag in tags)
+        {
+          if (tag == 'computer')
+            {
+              if (role == ROOM_ROLE_RESEARCH)
+                weight += 18;
+              else if (role == ROOM_ROLE_VAT ||
+                       role == ROOM_ROLE_WORKSHOP)
+                weight += 12;
+              else if (role == ROOM_ROLE_ENTRANCE)
+                weight -= 8;
+              else weight -= 10;
+              continue;
+            }
+          if (tag == 'table')
+            {
+              if (role == ROOM_ROLE_WORKSHOP ||
+                  role == ROOM_ROLE_RESEARCH ||
+                  role == ROOM_ROLE_VAT)
+                weight += 12;
+              else if (role == ROOM_ROLE_ENTRANCE)
+                weight += 2;
+              else weight -= 6;
+              continue;
+            }
+          if (tag == 'crate')
+            {
+              if (role == ROOM_ROLE_STORAGE)
+                weight += 22;
+              else if (role == ROOM_ROLE_WORKSHOP)
+                weight += 10;
+              else if (role == ROOM_ROLE_ENTRANCE)
+                weight += 4;
+              else weight -= 8;
+              continue;
+            }
+          if (tag == 'gurney')
+            {
+              if (role == ROOM_ROLE_ENTRANCE)
+                weight += 16;
+              else if (role == ROOM_ROLE_VAT)
+                weight += 8;
+              else weight -= 8;
+              continue;
+            }
+          if (tag == 'hazmat')
+            {
+              if (role == ROOM_ROLE_ENTRANCE)
+                weight += 18;
+              else if (role == ROOM_ROLE_VAT)
+                weight += 10;
+              else if (role == ROOM_ROLE_WORKSHOP)
+                weight += 6;
+              else weight -= 6;
+              continue;
+            }
+          if (tag == 'plant' ||
+              tag == 'seats')
+            {
+              if (role == ROOM_ROLE_ENTRANCE)
+                weight += 16;
+              else if (role == ROOM_ROLE_RESEARCH ||
+                       role == ROOM_ROLE_STORAGE)
+                weight += 6;
+              else weight -= 6;
+              continue;
+            }
+          if (tag == 'rack')
+            {
+              if (role == ROOM_ROLE_STORAGE ||
+                  role == ROOM_ROLE_ENTRANCE)
+                weight += 10;
+              else weight -= 3;
+            }
+        }
+      return Const.clamp(weight, 20, 240);
     }
 
 // classify tile by semantic room zone for weighted decoration
