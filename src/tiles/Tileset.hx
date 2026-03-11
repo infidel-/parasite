@@ -305,13 +305,15 @@ class Tileset
           var wallIcon = icon;
           if (decoration.icon != null)
             wallIcon = decoration.icon;
+          var dx = (decoration.dx != null ? decoration.dx : 0);
+          var dy = (decoration.dy != null ? decoration.dy : 0);
           ctx.drawImage(layer,
             wallIcon.col * Const.TILE_SIZE_CLEAN,
             wallIcon.row * Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
-            x,
-            y,
+            x + dx,
+            y + dy,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
         }

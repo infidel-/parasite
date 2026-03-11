@@ -1175,17 +1175,23 @@ class UndergroundLabAreaGenerator
 
                   var blockInfo = pickResult.blockInfo;
                   var block = blockInfo.block;
+                  var nearTopOffsetY = blockInfo.meta.nearTopOffsetY;
                   for (dy in 0...block.height)
                     for (dx in 0...block.width)
                       {
-                        area.addTileDecoration(runX + dx, run.y + dy, {
+                        var decoration: tiles.Decoration = {
                           layerID: tileset.getNearTopDecorationLayerID(
                             blockInfo, dy),
                           icon: {
                             row: block.row + dy,
                             col: block.col + dx,
                           },
-                        });
+                        };
+                        if (nearTopOffsetY != null &&
+                            nearTopOffsetY != 0)
+                          decoration.dy = nearTopOffsetY;
+                        area.addTileDecoration(runX + dx, run.y + dy,
+                          decoration);
                         area.recalcTile(runX + dx, run.y + dy);
                       }
                   registerRoomDecorRolePick(roomRolePickStats,

@@ -3,22 +3,7 @@
 package tiles;
 
 import Const;
-import _AtmosphereLightMeta;
-import _IconBlock;
 import haxe.ds.StringMap;
-
-typedef _DecorMeta = {
-  var id: String;
-  var tags: Array<String>;
-  var motifs: Array<String>;
-  var roles: Array<String>;
-  @:optional var imageKey: String;
-  @:optional var light: _AtmosphereLightMeta;
-  @:optional var padding: _DecorPadding;
-  var baseWeight: Int;
-  var minZoneWeight: Int;
-  var maxZoneWeight: Int;
-}
 
 typedef _DecorPadding = {
   var up: Int;
@@ -2119,6 +2104,7 @@ class UndergroundLab extends Tileset
               roles: blockInfo.meta.roles.copy(),
               imageKey: blockInfo.meta.imageKey,
               light: blockInfo.meta.light,
+              nearTopOffsetY: 13,
               baseWeight: blockInfo.meta.baseWeight,
               minZoneWeight: blockInfo.meta.minZoneWeight,
               maxZoneWeight: blockInfo.meta.maxZoneWeight,
