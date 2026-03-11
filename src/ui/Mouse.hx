@@ -80,6 +80,10 @@ class Mouse
         game.area.isVisible(game.playerArea.x,
           game.playerArea.y, pos.x, pos.y, true) +
         ' walk: ' + game.area.isWalkable(pos.x, pos.y));
+      if (game.scene.areaLighting != null)
+        for (line in game.scene.areaLighting.getTileLightDebugLines(
+            game.area, pos.x, pos.y))
+          trace(line);
       if (game.playerArea.x == pos.x && game.playerArea.y == pos.y)
         Const.debugObject(game.player);
       if (ai != null)

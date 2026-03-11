@@ -267,6 +267,50 @@ class AreaLighting
       ctx.restore();
     }
 
+// collect debug lines for one tile's light stamps and local decoration context
+  public function getTileLightDebugLines(area: AreaGame,
+      x: Int, y: Int): Array<String>
+    {
+      var lines: Array<String> = [];
+      lines.push('lightDebug tile=(' + x + ',' + y + ')');
+      if (!hasLighting(area))
+        {
+          lines.push(' lighting=disabled');
+          return lines;
+        }
+
+      if (area.tiles == null ||
+          area.tiles.length == 0)
+        area.initTilesFromCells();
+
+      var matchingStamps: Array<_AreaLightStamp> = [];
+      for (stamp in getAreaLightStamps(area))
+        if (Std.int(Math.floor(stamp.x)) == x &&
+            Std.int(Math.floor(stamp.y)) == y)
+          matchingStamps.push(stamp);
+
+      lines.push(' stamps=' + matchingStamps.length);
+      for (stamp in matchingStamps)
+        {
+          var sourceGroupID = (stamp.sourceGroupID != null ?
+            stamp.sourceGroupID : '-');
+          var falloffProfile = (stamp.falloffProfile != null ?
+            stamp.falloffProfile : '-');
+          lines.push('  kind=' + stamp.kind +
+            ' pos=' + Const.round2(stamp.x) + ',' + Const.round2(stamp.y) +
+            ' radius=' + Const.round2(stamp.radiusTiles) +
+            ' intensity=' + Const.round2(stamp.intensity) +
+            ' tint=' + stamp.tintR + ',' + stamp.tintG + ',' + stamp.tintB +
+            ' castsShadows=' + isProjectedShadowEmitterStamp(stamp) +
+            ' group=' + sourceGroupID +
+            ' falloff=' + falloffProfile);
+        }
+
+      appendTileLightDebugContext(lines, area, 'tile', x, y);
+      appendTileLightDebugContext(lines, area, 'tileAbove', x, y - 1);
+      return lines;
+    }
+
 // queue atmosphere light pulses emitted by one particle
   public function onParticleAdded(p: Particle)
     {
@@ -353,6 +397,158 @@ class AreaLighting
       return (area != null &&
         area.info != null &&
         area.info.id == AREA_UNDERGROUND_LAB);
+    }
+
+// append local tile decoration and object details for light debugging
+  function appendTileLightDebugContext(lines: Array<String>, area: AreaGame,
+      label: String, x: Int, y: Int)
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= area.width ||
+          y >= area.height)
+        {
+          lines.push(' ' + label + '=out-of-bounds');
+          return;
+        }
+
+      var tileset = scene.images.getTileset(area.typeID);
+      var undergroundLab: UndergroundLab = null;
+      if (Std.isOfType(tileset, UndergroundLab))
+        undergroundLab = cast tileset;
+      var tileID = area.getCellType(x, y);
+      var tile = area.getTiles()[x][y];
+      var decorationInfo: Array<String> = [];
+      if (tile != null &&
+          tile.decoration != null)
+        for (decoration in tile.decoration)
+          decorationInfo.push(getTileLightDebugDecorationInfo(area,
+            undergroundLab, tileID, decoration));
+
+      var objectInfo: Array<String> = [];
+      for (o in area.getObjectsAt(x, y))
+        objectInfo.push(o.type + '#' + o.id);
+
+      lines.push(' ' + label + ' cell=' + tileID +
+        ' ' + area.getCellTypeString(x, y) +
+        ' decor=' + (decorationInfo.length > 0 ?
+          decorationInfo.join(' | ') : '-'));
+      lines.push(' ' + label + ' objects=' + (objectInfo.length > 0 ?
+        objectInfo.join(',') : '-'));
+    }
+
+// build one debug string for a decoration entry using tile-aware layer resolution
+  function getTileLightDebugDecorationInfo(area: AreaGame,
+      undergroundLab: UndergroundLab, tileID: Int,
+      decoration: tiles.Decoration): String
+    {
+      var iconInfo = '-';
+      if (decoration.icon != null)
+        iconInfo = decoration.icon.row + ',' + decoration.icon.col;
+      var tagInfo = (decoration.tag != null ? decoration.tag : '-');
+      var layerKind = 'layer';
+      if (undergroundLab != null)
+        layerKind = (undergroundLab.isWallTile(tileID) ? 'wallLayer' : 'floorLayer');
+      return layerKind + '=' + decoration.layerID +
+        ',icon=' + iconInfo +
+        ',tag=' + tagInfo +
+        ',source=' + getTileLightDebugDecorationSourceID(area,
+          undergroundLab, tileID, decoration);
+    }
+
+// resolve one debug-friendly decoration source id for a tile decoration
+  function getTileLightDebugDecorationSourceID(area: AreaGame,
+      undergroundLab: UndergroundLab, tileID: Int,
+      decoration: tiles.Decoration): String
+    {
+      if (undergroundLab == null ||
+          decoration.icon == null)
+        return '-';
+
+      if (decoration.tag != null &&
+          decoration.tag.indexOf('DECO_OBJ:') == 0)
+        {
+          var objectSourceID = getDecorationObjDebugSourceID(undergroundLab,
+            decoration);
+          if (objectSourceID != null)
+            return objectSourceID;
+        }
+
+      var nearTopSourceID = getNearTopDebugSourceID(undergroundLab, tileID,
+        decoration);
+      if (nearTopSourceID != null)
+        return nearTopSourceID;
+
+      if (decoration.layerID == 0)
+        {
+          var floorSourceID = getFloorDecorDebugSourceID(decoration.icon);
+          if (floorSourceID != null)
+            return floorSourceID;
+        }
+
+      return '-';
+    }
+
+// resolve debug source id for a floor decoration icon
+  function getFloorDecorDebugSourceID(icon: _Icon): String
+    {
+      for (floorMeta in UndergroundLab.FLOOR_DECOR_META)
+        {
+          if (floorMeta.icon.row != icon.row ||
+              floorMeta.icon.col != icon.col)
+            continue;
+          return 'floor:' + floorMeta.motifs.join('+');
+        }
+      return null;
+    }
+
+// resolve debug source id for an object decoration fragment
+  function getDecorationObjDebugSourceID(undergroundLab: UndergroundLab,
+      decoration: tiles.Decoration): String
+    {
+      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
+        {
+          if (blockInfo.meta.imageKey == null)
+            continue;
+          if (undergroundLab.getDecorationObjLayerID(blockInfo.meta.imageKey) !=
+              decoration.layerID)
+            continue;
+          if (decoration.icon.row < blockInfo.block.row ||
+              decoration.icon.row >= blockInfo.block.row + blockInfo.block.height ||
+              decoration.icon.col < blockInfo.block.col ||
+              decoration.icon.col >= blockInfo.block.col + blockInfo.block.width)
+            continue;
+          return 'object:' + blockInfo.meta.id;
+        }
+      return null;
+    }
+
+// resolve debug source id for a near-top decoration fragment on the correct tile namespace
+  function getNearTopDebugSourceID(undergroundLab: UndergroundLab,
+      tileID: Int, decoration: tiles.Decoration): String
+    {
+      if (decoration.icon == null)
+        return null;
+
+      var isWallTile = undergroundLab.isWallTile(tileID);
+      for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
+        {
+          var rowDYs = (isWallTile ? [0] : [1]);
+          for (dy in rowDYs)
+            {
+              if (dy >= blockInfo.block.height)
+                continue;
+              if (undergroundLab.getNearTopDecorationLayerID(blockInfo, dy) !=
+                  decoration.layerID)
+                continue;
+              if (decoration.icon.row != blockInfo.block.row + dy ||
+                  decoration.icon.col < blockInfo.block.col ||
+                  decoration.icon.col >= blockInfo.block.col + blockInfo.block.width)
+                continue;
+              return 'nearTop:' + blockInfo.meta.id;
+            }
+        }
+      return null;
     }
 
 // get cached static atmosphere light stamps for an area
@@ -528,6 +724,9 @@ class AreaLighting
             if (tile == null ||
                 tile.decoration == null ||
                 tile.decoration.length == 0)
+              continue;
+            var tileID = area.getCellType(x, y);
+            if (!undergroundLab.isHorizontalWallTile(tileID))
               continue;
 
             for (decoration in tile.decoration)
@@ -1628,6 +1827,9 @@ class AreaLighting
             if (tile == null ||
                 tile.decoration == null ||
                 tile.decoration.length == 0)
+              continue;
+            var tileID = area.getCellType(x, y);
+            if (!undergroundLab.isHorizontalWallTile(tileID))
               continue;
             for (decoration in tile.decoration)
               {
