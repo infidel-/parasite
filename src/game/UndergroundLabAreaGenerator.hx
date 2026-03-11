@@ -118,6 +118,7 @@ private typedef _RoomObjectDecorAnchor = {
 }
 
 private typedef _RoomObjectDecorPlan = {
+  var topWallTableTargetCount: Int;
   var largeTargetCount: Int;
   var clutterTargetCount: Int;
 }
@@ -1136,6 +1137,12 @@ class UndergroundLabAreaGenerator
 
           var fillPercent = getNearTopWallFillPercent(room.role);
           var targetCoverage = Std.int(Math.ceil(anchors.length * fillPercent / 100.0));
+          var tableReserve = getNearTopWallTableReserve(room);
+          var maxNearTopCoverage = anchors.length - tableReserve;
+          if (maxNearTopCoverage < 0)
+            maxNearTopCoverage = 0;
+          if (targetCoverage > maxNearTopCoverage)
+            targetCoverage = maxNearTopCoverage;
           var continuityTarget = getNearTopWallContinuityTarget(room.role);
           var filledCoverage = 0;
           var longestContiguousRun = 0;
@@ -1158,7 +1165,7 @@ class UndergroundLabAreaGenerator
 
                   var maxWidth = run.x2 - runX + 1;
                   var pickResult = pickNearTopWallDecorBlockWithFallbackWidths(area,
-                    tileset, room.role, zone, runX, run.y, maxWidth);
+                    tileset, room, room.role, zone, runX, run.y, maxWidth);
                   if (pickResult == null)
                     {
                       runX += 1;
@@ -1172,9 +1179,8 @@ class UndergroundLabAreaGenerator
                     for (dx in 0...block.width)
                       {
                         area.addTileDecoration(runX + dx, run.y + dy, {
-                          layerID: (dy == 0 ?
-                            tileset.nearTopWallWallLayerID :
-                            tileset.nearTopWallFloorLayerID),
+                          layerID: tileset.getNearTopDecorationLayerID(
+                            blockInfo, dy),
                           icon: {
                             row: block.row + dy,
                             col: block.col + dx,
@@ -1248,13 +1254,16 @@ class UndergroundLabAreaGenerator
     }
 
 // pick one near-top decoration block constrained by available run width
-  function pickNearTopWallDecorBlock(role: String, zone: String,
-      maxWidth: Int): _DecorPickResult
+  function pickNearTopWallDecorBlock(room: _Room, role: String,
+      zone: String, x: Int, maxWidth: Int): _DecorPickResult
     {
       var candidates = [];
       for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
         {
           if (blockInfo.block.width > maxWidth)
+            continue;
+          if (isNearTopWallPlantDecorBlock(blockInfo) &&
+              !isNearTopWallCornerPlacement(room, x, blockInfo.block))
             continue;
           candidates.push(blockInfo);
         }
@@ -1266,13 +1275,13 @@ class UndergroundLabAreaGenerator
 
 // pick and place-test near-top block with narrower-width retries
   function pickNearTopWallDecorBlockWithFallbackWidths(area: AreaGame,
-      tileset: UndergroundLab, role: String, zone: String,
+      tileset: UndergroundLab, room: _Room, role: String, zone: String,
       x: Int, y: Int, maxWidth: Int): _DecorPickResult
     {
       var widthCap = maxWidth;
       while (widthCap >= 1)
         {
-          var pickResult = pickNearTopWallDecorBlock(role, zone, widthCap);
+          var pickResult = pickNearTopWallDecorBlock(room, role, zone, x, widthCap);
           if (pickResult == null)
             {
               widthCap -= 1;
@@ -1294,6 +1303,15 @@ class UndergroundLabAreaGenerator
       if (role == ROOM_ROLE_STORAGE)
         return 3;
       return 4;
+    }
+
+// get near-top coverage to hold back for top-wall table placements
+  function getNearTopWallTableReserve(room: _Room): Int
+    {
+      var tableTargetCount = getTopWallTableTargetCount(room);
+      if (tableTargetCount <= 0)
+        return 0;
+      return Const.clamp(tableTargetCount * 2 + 1, 0, room.w);
     }
 
 // log near-top coverage and continuity metrics when debug is enabled
@@ -1340,6 +1358,20 @@ class UndergroundLabAreaGenerator
           });
         }
       return anchors;
+    }
+
+// check if a near-top placement is flush with either top room corner
+  function isNearTopWallCornerPlacement(room: _Room,
+      x: Int, block: _IconBlock): Bool
+    {
+      return (x == room.x1 ||
+        x + block.width - 1 == room.x2);
+    }
+
+// check whether one near-top block is a plant variant
+  function isNearTopWallPlantDecorBlock(blockInfo: _DecorBlock): Bool
+    {
+      return (blockInfo.meta.tags.indexOf('plant') >= 0);
     }
 
 // check whether near-top wall block fits wall/floor tiles without conflicting near-top decorations
@@ -1408,26 +1440,34 @@ class UndergroundLabAreaGenerator
           };
           var plan = buildRoomObjectDecorPlan(room);
           var allAnchors = collectRoomObjectDecorAnchors(room, context);
+          var topWallTableAnchors = collectRoomTopWallTableAnchors(allAnchors, room);
           var anchorPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
             [DECOR_ZONE_WALL_EDGE],
             [DECOR_ZONE_ROOM_GENERIC]);
           var clutterPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
             [DECOR_ZONE_WORK_CORE, DECOR_ZONE_ROOM_GENERIC],
             [DECOR_ZONE_WALL_EDGE, DECOR_ZONE_TRAFFIC_LANE]);
+          var topWallTablePassResult = executeRoomObjectDecorPass(area, tileset, tiles,
+            room, topWallTableAnchors, plan.topWallTableTargetCount,
+            true, true, true, doorRects, reservedRects, roomLargeDecorFamilyCounts,
+            roomPlacedLargeDecors, roomRolePickStats,
+            roomObjectZoneSizeHistogram);
           var anchorPassResult = executeRoomObjectDecorPass(area, tileset, tiles,
             room, anchorPassAnchors, plan.largeTargetCount,
-            true, true, doorRects, reservedRects, roomLargeDecorFamilyCounts,
+            true, true, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
             roomPlacedLargeDecors, roomRolePickStats,
             roomObjectZoneSizeHistogram);
           var clutterPassResult = executeRoomObjectDecorPass(area, tileset, tiles,
             room, clutterPassAnchors, plan.clutterTargetCount,
-            false, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
+            false, false, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
             roomPlacedLargeDecors, roomRolePickStats,
             roomObjectZoneSizeHistogram);
           logLargeDecorBudgetStats(room, roomLargeDecorFamilyCounts,
             anchorPassResult.blockedByLargeFamilySpacing +
+            topWallTablePassResult.blockedByLargeFamilySpacing +
             clutterPassResult.blockedByLargeFamilySpacing);
-          logRoomObjectDecorPassStats(room, plan, anchorPassResult, clutterPassResult);
+          logRoomObjectDecorPassStats(room, plan, topWallTablePassResult,
+            anchorPassResult, clutterPassResult);
           logRoomObjectZoneSizeHistogram(room, roomObjectZoneSizeHistogram);
         }
     }
@@ -1436,6 +1476,7 @@ class UndergroundLabAreaGenerator
   function buildRoomObjectDecorPlan(room: _Room): _RoomObjectDecorPlan
     {
       var roomArea = room.w * room.h;
+      var topWallTableTargetCount = getTopWallTableTargetCount(room);
       var largeTargetCount = 0;
       var clutterTargetCount = 0;
       if (room.role == ROOM_ROLE_ENTRANCE)
@@ -1464,9 +1505,31 @@ class UndergroundLabAreaGenerator
           clutterTargetCount = Const.clamp(Std.int(roomArea / 15), 3, 8);
         }
       return {
+        topWallTableTargetCount: topWallTableTargetCount,
         largeTargetCount: largeTargetCount,
         clutterTargetCount: clutterTargetCount,
       };
+    }
+
+// get dedicated top-wall table target count for one room
+  function getTopWallTableTargetCount(room: _Room): Int
+    {
+      if (room.role == ROOM_ROLE_WORKSHOP)
+        {
+          if (room.w >= 10)
+            return 3;
+          return 2;
+        }
+      if (room.role == ROOM_ROLE_VAT ||
+          room.role == ROOM_ROLE_RESEARCH)
+        {
+          if (room.w >= 11)
+            return 3;
+          if (room.w >= 8)
+            return 2;
+          return 1;
+        }
+      return 0;
     }
 
 // collect zone-tagged object anchors for a room-level decoration plan
@@ -1487,6 +1550,21 @@ class UndergroundLabAreaGenerator
               zone: zone,
             });
           }
+      return anchors;
+    }
+
+// collect anchors along the top floor row for padded table placements
+  function collectRoomTopWallTableAnchors(
+      allAnchors: Array<_RoomObjectDecorAnchor>,
+      room: _Room): Array<_RoomObjectDecorAnchor>
+    {
+      var anchors = [];
+      for (anchor in allAnchors)
+        {
+          if (anchor.y != room.y1)
+            continue;
+          anchors.push(anchor);
+        }
       return anchors;
     }
 
@@ -1514,7 +1592,7 @@ class UndergroundLabAreaGenerator
   function executeRoomObjectDecorPass(area: AreaGame, tileset: UndergroundLab,
       tiles: Array<Array<tiles.Tile>>, room: _Room,
       passAnchors: Array<_RoomObjectDecorAnchor>, targetCount: Int,
-      requireLarge: Bool, allowLarge: Bool,
+      requireLarge: Bool, allowLarge: Bool, topWallTableOnly: Bool,
       doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
       reservedRects: Array<_ReservedRect>,
       roomLargeDecorFamilyCounts: Map<String, Int>,
@@ -1526,7 +1604,8 @@ class UndergroundLabAreaGenerator
       var placed = 0;
       var attempted = 0;
       var blockedByLargeFamilySpacing = 0;
-      var maxAttempts = Const.clamp(targetCount * 8, 12, 120);
+      var attemptMultiplier = (topWallTableOnly ? 14 : 8);
+      var maxAttempts = Const.clamp(targetCount * attemptMultiplier, 12, 160);
       while (placed < targetCount &&
              anchors.length > 0 &&
              attempted < maxAttempts)
@@ -1537,7 +1616,8 @@ class UndergroundLabAreaGenerator
           attempted += 1;
 
           var pickResult = pickWeightedObjectDecorBlock(room.role, anchor.zone,
-            roomLargeDecorFamilyCounts, requireLarge, allowLarge);
+            roomLargeDecorFamilyCounts, requireLarge, allowLarge,
+            topWallTableOnly);
           if (pickResult == null)
             continue;
           var blockInfo = pickResult.blockInfo;
@@ -1547,7 +1627,8 @@ class UndergroundLabAreaGenerator
             {
               largeDecorFamily = getLargeDecorFamily(blockInfo);
               if (!canPlaceLargeDecorFamilyWithSpacing(room.role, anchor.x, anchor.y,
-                  block, largeDecorFamily, roomPlacedLargeDecors))
+                  block,
+                  largeDecorFamily, roomPlacedLargeDecors))
                 {
                   blockedByLargeFamilySpacing += 1;
                   continue;
@@ -1619,6 +1700,7 @@ class UndergroundLabAreaGenerator
 
 // log room-level pass metrics when object-pass debug flag is enabled
   function logRoomObjectDecorPassStats(room: _Room, plan: _RoomObjectDecorPlan,
+      topWallTablePassResult: _RoomObjectDecorPassResult,
       anchorPassResult: _RoomObjectDecorPassResult,
       clutterPassResult: _RoomObjectDecorPassResult)
     {
@@ -1626,6 +1708,9 @@ class UndergroundLabAreaGenerator
         return;
       js.Browser.console.log('roomID=' + room.id +
         ', role=' + room.role +
+        ', topWallTableAttempted=' + topWallTablePassResult.attempted +
+        ', topWallTablePlaced=' + topWallTablePassResult.placed +
+        ', topWallTableTarget=' + plan.topWallTableTargetCount +
         ', anchorAttempted=' + anchorPassResult.attempted +
         ', anchorPlaced=' + anchorPassResult.placed +
         ', anchorTarget=' + plan.largeTargetCount +
@@ -1684,6 +1769,14 @@ class UndergroundLabAreaGenerator
         ', blockedByFamilySpacing=' + blockedByLargeFamilySpacing);
     }
 
+// check if one object block is copied into near-top metadata
+  function isNearTopWallCopiedTableObjectBlock(blockInfo: _DecorBlock): Bool
+    {
+      return (blockInfo.block.width == 2 &&
+        blockInfo.block.height == 2 &&
+        blockInfo.meta.tags.indexOf('table') >= 0);
+    }
+
 // check if a decoration object block can be placed at top-left x,y
   function canPlaceDecorationObjBlock(area: AreaGame, tileset: tiles.Tileset,
       tiles: Array<Array<tiles.Tile>>, room: _Room, x: Int, y: Int,
@@ -1693,6 +1786,9 @@ class UndergroundLabAreaGenerator
       var block = blockInfo.block;
       if (x + block.width - 1 > room.x2 ||
           y + block.height - 1 > room.y2)
+        return false;
+      if (y == room.y1 &&
+          isNearTopWallCopiedTableObjectBlock(blockInfo))
         return false;
 
       for (dy in 0...block.height)
@@ -2253,7 +2349,8 @@ class UndergroundLabAreaGenerator
 // pick weighted object decoration block with role/size filters and local budgets
   function pickWeightedObjectDecorBlock(role: String, zone: String,
       roomLargeDecorFamilyCounts: Map<String, Int>,
-      requireLarge: Bool, allowLarge: Bool): _DecorPickResult
+      requireLarge: Bool, allowLarge: Bool,
+      topWallTableOnly: Bool): _DecorPickResult
     {
       var blocks = UndergroundLab.DECORATION_OBJ_META;
       var candidateInfo = getRoleGatedDecorCandidates(blocks, role);
@@ -2264,6 +2361,12 @@ class UndergroundLabAreaGenerator
       for (blockInfo in candidateInfo.blocks)
         {
           var isLargeBlock = isLargeDecorBlock(blockInfo);
+          if (topWallTableOnly &&
+              !isTopWallTableDecorBlock(blockInfo))
+            {
+              weightList.push(0);
+              continue;
+            }
           if ((requireLarge &&
                !isLargeBlock) ||
               (!allowLarge &&
@@ -2335,6 +2438,15 @@ class UndergroundLabAreaGenerator
       };
     }
 
+// check whether one object block is suitable for top-wall table pass
+  function isTopWallTableDecorBlock(blockInfo: _DecorBlock): Bool
+    {
+      return (blockInfo.meta.tags.indexOf('table') >= 0 &&
+        !isNearTopWallCopiedTableObjectBlock(blockInfo) &&
+        blockInfo.meta.padding != null &&
+        getDecorPaddingValue(blockInfo.meta.padding.down) > 0);
+    }
+
 // check whether decoration block is large
   inline function isLargeDecorBlock(blockInfo: _DecorBlock): Bool
     {
@@ -2391,7 +2503,7 @@ class UndergroundLabAreaGenerator
             return 4;
           if (family == 'table' ||
               family == 'computer')
-            return 3;
+            return 4;
           if (family == 'crate')
             return 1;
           if (family == 'gurney')
@@ -2405,7 +2517,7 @@ class UndergroundLabAreaGenerator
             return 4;
           if (family == 'table' ||
               family == 'computer')
-            return 3;
+            return 4;
           if (family == 'crate')
             return 2;
           if (family == 'gurney')
@@ -2459,6 +2571,15 @@ class UndergroundLabAreaGenerator
 // get minimum gap required between large decorations of the same family
   function getLargeDecorFamilySpacingRadius(role: String, family: String): Int
     {
+      if (family == 'table' ||
+          family == 'computer')
+        {
+          if (role == ROOM_ROLE_WORKSHOP ||
+              role == ROOM_ROLE_RESEARCH ||
+              role == ROOM_ROLE_VAT)
+            return 1;
+          return 2;
+        }
       if (family == 'machinery')
         {
           if (role == ROOM_ROLE_WORKSHOP ||

@@ -53,6 +53,8 @@ class UndergroundLab extends Tileset
   public static var DECORATION_OBJ_IMAGE_PATH_3 = 'img/underground-lab-deco-obj3.png';
   public static var DECORATION_OBJ_IMAGE_KEY_4 = 'decor-obj-4';
   public static var DECORATION_OBJ_IMAGE_PATH_4 = 'img/underground-lab-deco-obj4.png';
+  public static var DECORATION_OBJ_IMAGE_KEY_5 = 'decor-obj-5';
+  public static var DECORATION_OBJ_IMAGE_PATH_5 = 'img/underground-lab-deco-obj5.png';
   public static var DOOR_HORIZONTAL_CLOSED_LEFT: _Icon = { row: 6, col: 0 };
   public static var DOOR_HORIZONTAL_CLOSED_RIGHT: _Icon = { row: 6, col: 1 };
   public static var DOOR_HORIZONTAL_OPEN_LEFT: _Icon = { row: 7, col: 0 };
@@ -129,7 +131,9 @@ class UndergroundLab extends Tileset
     tintB: 255,
   };
 
-  public static var NEAR_TOP_WALL_META: Array<_DecorBlock> = [
+  public static var NEAR_TOP_WALL_META(get, never): Array<_DecorBlock>;
+  static var nearTopWallMetaCache: Array<_DecorBlock>;
+  static var NEAR_TOP_WALL_BASE_META: Array<_DecorBlock> = [
     {
       block: { row: 0, col: 0, width: 1, height: 2 },
       meta: {
@@ -1677,6 +1681,234 @@ class UndergroundLab extends Tileset
         maxZoneWeight: 320,
       },
     },
+    {
+      block: { row: 8, col: 6, width: 2, height: 1 },
+      meta: {
+        id: 'object-obj4-workshop-near-wall-table-1',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_4,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 118,
+        minZoneWeight: 0,
+        maxZoneWeight: 300,
+      },
+    },
+    {
+      block: { row: 0, col: 0, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-1',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 126,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 0, col: 2, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-2',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 125,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 0, col: 4, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-3',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 124,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 0, col: 6, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-4',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 123,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 2, col: 0, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-5',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 122,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 2, col: 2, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-6',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 121,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 2, col: 4, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-7',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 120,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 2, col: 6, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-8',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 119,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 4, col: 0, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-9',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 118,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 4, col: 2, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-10',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 117,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
+    {
+      block: { row: 4, col: 4, width: 2, height: 2 },
+      meta: {
+        id: 'object-obj5-workshop-table-11',
+        tags: ['object', 'table', 'large'],
+        motifs: ['machinery'],
+        roles: ['workshop'],
+        imageKey: DECORATION_OBJ_IMAGE_KEY_5,
+        padding: {
+          up: 0,
+          right: 0,
+          down: 1,
+          left: 0,
+        },
+        baseWeight: 116,
+        minZoneWeight: 0,
+        maxZoneWeight: 320,
+      },
+    },
   ];
 
   public static var FLOOR_DECOR_META: Array<_FloorDecorMeta> = [
@@ -1726,6 +1958,8 @@ class UndergroundLab extends Tileset
   public var decorationObjFloorLayerID: Int;
   var decorationObjFloorLayerByImageKey: StringMap<Int>;
   var decorationObjFloorLayerIDs: Array<Int>;
+  var decorationObjWallLayerByImageKey: StringMap<Int>;
+  var decorationObjWallLayerIDs: Array<Int>;
   public var nearTopWallWallLayerID: Int;
   public var walls: _WallMap;
   public var wallID: _WallMapID;
@@ -1743,6 +1977,8 @@ class UndergroundLab extends Tileset
       floorID = new StringMap<Int>();
       decorationObjFloorLayerByImageKey = new StringMap<Int>();
       decorationObjFloorLayerIDs = [];
+      decorationObjWallLayerByImageKey = new StringMap<Int>();
+      decorationObjWallLayerIDs = [];
       iconByTileID = new Map<Int, _Icon>();
       initFloor();
       initWalls();
@@ -1761,6 +1997,8 @@ class UndergroundLab extends Tileset
         DECORATION_OBJ_IMAGE_PATH_3);
       registerDecorationObjLayer(DECORATION_OBJ_IMAGE_KEY_4,
         DECORATION_OBJ_IMAGE_PATH_4);
+      registerDecorationObjLayer(DECORATION_OBJ_IMAGE_KEY_5,
+        DECORATION_OBJ_IMAGE_PATH_5);
       addWallDecorationLayerRepeat({
         path: 'img/underground-lab-decoration1.png',
         repeatEvery: 4,
@@ -1798,6 +2036,7 @@ class UndergroundLab extends Tileset
       addFloorDecorationLayer(path, []);
       decorationObjFloorLayerByImageKey.set(imageKey, layerID);
       decorationObjFloorLayerIDs.push(layerID);
+      registerDecorationObjWallLayer(imageKey, path);
     }
 
 // get object-decoration floor layer id by image key
@@ -1806,10 +2045,113 @@ class UndergroundLab extends Tileset
       return decorationObjFloorLayerByImageKey.get(imageKey);
     }
 
+// get object-decoration wall layer id by image key
+  public function getDecorationObjWallLayerID(imageKey: String): Int
+    {
+      return decorationObjWallLayerByImageKey.get(imageKey);
+    }
+
 // check whether floor layer id is an object-decoration layer
   public function isDecorationObjLayerID(layerID: Int): Bool
     {
       return (decorationObjFloorLayerIDs.indexOf(layerID) >= 0);
+    }
+
+// check whether wall layer id is a copied near-top object layer
+  public function isDecorationObjWallLayerID(layerID: Int): Bool
+    {
+      return (decorationObjWallLayerIDs.indexOf(layerID) >= 0);
+    }
+
+// get wall/floor layer id for one near-top decor row
+  public function getNearTopDecorationLayerID(blockInfo: _DecorBlock, dy: Int): Int
+    {
+      if (blockInfo.meta.imageKey != null)
+        {
+          if (dy == 0)
+            return getDecorationObjWallLayerID(blockInfo.meta.imageKey);
+          return getDecorationObjLayerID(blockInfo.meta.imageKey);
+        }
+      if (dy == 0)
+        return nearTopWallWallLayerID;
+      return nearTopWallFloorLayerID;
+    }
+
+// check whether one wall layer id belongs to near-top wall decoration
+  public function isNearTopWallDecorationWallLayerID(layerID: Int): Bool
+    {
+      return (layerID == nearTopWallWallLayerID ||
+        isDecorationObjWallLayerID(layerID));
+    }
+
+// build cached near-top metadata including copied 2x2 object tables
+  static function get_NEAR_TOP_WALL_META(): Array<_DecorBlock>
+    {
+      if (nearTopWallMetaCache == null)
+        nearTopWallMetaCache = buildNearTopWallMeta();
+      return nearTopWallMetaCache;
+    }
+
+// build near-top metadata by appending copied 2x2 table variants
+  static function buildNearTopWallMeta(): Array<_DecorBlock>
+    {
+      var meta = [];
+      for (blockInfo in NEAR_TOP_WALL_BASE_META)
+        meta.push(blockInfo);
+      for (blockInfo in DECORATION_OBJ_META)
+        {
+          if (!isNearTopWallTableCopySource(blockInfo))
+            continue;
+          var tags = blockInfo.meta.tags.copy();
+          if (tags.indexOf('wall') < 0)
+            tags.unshift('wall');
+          meta.push({
+            block: {
+              row: blockInfo.block.row,
+              col: blockInfo.block.col,
+              width: blockInfo.block.width,
+              height: blockInfo.block.height,
+            },
+            meta: {
+              id: 'near-top-copy-' + blockInfo.meta.id,
+              tags: tags,
+              motifs: blockInfo.meta.motifs.copy(),
+              roles: blockInfo.meta.roles.copy(),
+              imageKey: blockInfo.meta.imageKey,
+              light: blockInfo.meta.light,
+              baseWeight: blockInfo.meta.baseWeight,
+              minZoneWeight: blockInfo.meta.minZoneWeight,
+              maxZoneWeight: blockInfo.meta.maxZoneWeight,
+            },
+          });
+        }
+      return meta;
+    }
+
+// check whether one object block should be copied into near-top metadata
+  static function isNearTopWallTableCopySource(blockInfo: _DecorBlock): Bool
+    {
+      return (blockInfo.block.width == 2 &&
+        blockInfo.block.height == 2 &&
+        blockInfo.meta.tags.indexOf('table') >= 0);
+    }
+
+// register one object image as a wall decoration layer for near-top copies
+  function registerDecorationObjWallLayer(imageKey: String, path: String)
+    {
+      var layer = new js.html.Image();
+      layer.src = path;
+      var layerID = wallDecorationLayers.length;
+      wallDecorationLayers.push(layer);
+      wallDecorationLayerRepeatEvery.push(-1);
+      wallDecorationLayerChance.push(-1);
+      wallDecorationLayerMeta.push({
+        path: path,
+        repeatEvery: -1,
+        chance: -1,
+      });
+      decorationObjWallLayerByImageKey.set(imageKey, layerID);
+      decorationObjWallLayerIDs.push(layerID);
     }
 
 // initialize floor icon and tile id maps

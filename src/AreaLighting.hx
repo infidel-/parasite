@@ -494,7 +494,8 @@ class AreaLighting
             var hasNearTopDecoration = false;
             for (decoration in tile.decoration)
               {
-                if (decoration.layerID == undergroundLab.nearTopWallWallLayerID)
+                if (undergroundLab.isNearTopWallDecorationWallLayerID(
+                    decoration.layerID))
                   {
                     hasNearTopDecoration = true;
                     break;
@@ -531,41 +532,31 @@ class AreaLighting
 
             for (decoration in tile.decoration)
               {
-                if (decoration.layerID != undergroundLab.nearTopWallWallLayerID ||
+                if (!undergroundLab.isNearTopWallDecorationWallLayerID(
+                    decoration.layerID) ||
                     decoration.icon == null)
                   continue;
-
-                var light = getNearTopWallDecorationLight(
-                  decoration.icon.row, decoration.icon.col);
-                if (light == null)
+                var blockInfo = getNearTopWallDecorationBlock(undergroundLab,
+                  decoration.layerID, decoration.icon.row, decoration.icon.col);
+                if (blockInfo == null ||
+                    blockInfo.meta.light == null)
                   continue;
                 pushLightStamp(area, stamps, x + 0.5, y + 1.5,
-                  light, 'near-top-wall');
+                  blockInfo.meta.light, 'near-top-wall');
               }
           }
     }
 
-// get near-top wall light metadata by wall icon coordinates
-  function getNearTopWallDecorationLight(row: Int, col: Int): _AtmosphereLightMeta
-    {
-      for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
-        {
-          if (blockInfo.block.row != row ||
-              blockInfo.block.col != col ||
-              blockInfo.meta.light == null)
-            continue;
-          return blockInfo.meta.light;
-        }
-      return null;
-    }
-
-// get near-top wall block metadata by wall icon coordinates
-  function getNearTopWallDecorationBlock(row: Int, col: Int): _DecorBlock
+// get near-top wall block metadata by layer and wall icon coordinates
+  function getNearTopWallDecorationBlock(undergroundLab: UndergroundLab,
+      layerID: Int, row: Int, col: Int): _DecorBlock
     {
       for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
         {
           if (blockInfo.block.row != row ||
               blockInfo.block.col != col)
+            continue;
+          if (undergroundLab.getNearTopDecorationLayerID(blockInfo, 0) != layerID)
             continue;
           return blockInfo;
         }
@@ -1640,15 +1631,17 @@ class AreaLighting
               continue;
             for (decoration in tile.decoration)
               {
-                if (decoration.layerID != undergroundLab.nearTopWallWallLayerID ||
+                if (!undergroundLab.isNearTopWallDecorationWallLayerID(
+                    decoration.layerID) ||
                     decoration.icon == null)
                   continue;
-                var blockInfo = getNearTopWallDecorationBlock(
-                  decoration.icon.row, decoration.icon.col);
+                var blockInfo = getNearTopWallDecorationBlock(undergroundLab,
+                  decoration.layerID, decoration.icon.row, decoration.icon.col);
                 if (blockInfo == null)
                   continue;
                 casters.push({
-                  layerID: undergroundLab.nearTopWallFloorLayerID,
+                  layerID: undergroundLab.getNearTopDecorationLayerID(
+                    blockInfo, 1),
                   srcRow: blockInfo.block.row,
                   srcCol: blockInfo.block.col,
                   blockW: blockInfo.block.width,
