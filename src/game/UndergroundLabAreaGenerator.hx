@@ -1416,8 +1416,13 @@ class UndergroundLabAreaGenerator
                 tile.decoration == null)
               continue;
             for (decoration in tile.decoration)
-              if (decoration.layerID == tileset.nearTopWallWallLayerID ||
-                  decoration.layerID == tileset.nearTopWallFloorLayerID)
+              if ((dy == 0 &&
+                   tileset.isNearTopWallDecorationWallLayerID(
+                     decoration.layerID)) ||
+                  (dy > 0 &&
+                   (tileset.isNearTopFloorDecorationLayerID(
+                      decoration.layerID) ||
+                    tileset.isDecorationObjLayerID(decoration.layerID))))
                 return false;
           }
       return true;
@@ -2046,21 +2051,19 @@ class UndergroundLabAreaGenerator
           tile.decoration.length == 0)
         return false;
 
-      var nearTopFloorLayerID = -1;
-      if (Std.isOfType(tileset, UndergroundLab))
-        {
-          var undergroundLab: UndergroundLab = cast tileset;
-          nearTopFloorLayerID = undergroundLab.nearTopWallFloorLayerID;
-        }
-
       var tileID = area.getCellType(x, y);
       for (decoration in tile.decoration)
         {
           if (!tileset.isBlockingDecoration(tileID, decoration))
             continue;
           if (ignoreNearTopFloorOverlay &&
-              decoration.layerID == nearTopFloorLayerID)
-            continue;
+              Std.isOfType(tileset, UndergroundLab))
+            {
+              var undergroundLab: UndergroundLab = cast tileset;
+              if (undergroundLab.isNearTopFloorDecorationLayerID(
+                  decoration.layerID))
+                continue;
+            }
           return true;
         }
       return false;

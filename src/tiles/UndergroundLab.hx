@@ -30,6 +30,9 @@ class UndergroundLab extends Tileset
   public static var OBJECTS_IMAGE = 'undergroundLabObjects1';
   public static var OBJECTS_IMAGE_PATH = 'img/underground-lab-objects1.png';
   public static var NEAR_TOP_WALL_IMAGE_PATH = 'img/underground-lab-deco-near-top.png';
+  public static var NEAR_TOP_WALL_IMAGE_KEY_1 = 'near-top-1';
+  public static var NEAR_TOP_WALL_IMAGE_PATH_2 = 'img/underground-lab-deco-near-top2.png';
+  public static var NEAR_TOP_WALL_IMAGE_KEY_2 = 'near-top-2';
   public static var DECORATION_OBJ_IMAGE_KEY_1 = 'decor-obj-1';
   public static var DECORATION_OBJ_IMAGE_PATH_1 = 'img/underground-lab-deco-obj1.png';
   public static var DECORATION_OBJ_IMAGE_KEY_2 = 'decor-obj-2';
@@ -122,10 +125,10 @@ class UndergroundLab extends Tileset
     {
       block: { row: 0, col: 0, width: 1, height: 2 },
       meta: {
-        id: 'near-top-closet-1',
-        tags: ['wall', 'closet', 'storage'],
+        id: 'near-top-bookcase-1',
+        tags: ['wall', 'bookcase', 'storage'],
         motifs: ['storage'],
-        roles: ['storage', 'workshop', 'entrance'],
+        roles: ['storage', 'research', 'entrance'],
         baseWeight: 100,
         minZoneWeight: 0,
         maxZoneWeight: 220,
@@ -134,10 +137,10 @@ class UndergroundLab extends Tileset
     {
       block: { row: 0, col: 1, width: 1, height: 2 },
       meta: {
-        id: 'near-top-closet-2',
-        tags: ['wall', 'closet', 'storage'],
+        id: 'near-top-bookcase-2',
+        tags: ['wall', 'bookcase', 'storage'],
         motifs: ['storage'],
-        roles: ['storage', 'workshop', 'entrance'],
+        roles: ['storage', 'research', 'entrance'],
         baseWeight: 102,
         minZoneWeight: 0,
         maxZoneWeight: 220,
@@ -146,10 +149,10 @@ class UndergroundLab extends Tileset
     {
       block: { row: 0, col: 2, width: 1, height: 2 },
       meta: {
-        id: 'near-top-closet-3',
-        tags: ['wall', 'closet', 'storage'],
+        id: 'near-top-bookcase-3',
+        tags: ['wall', 'bookcase', 'storage'],
         motifs: ['storage'],
-        roles: ['storage', 'workshop', 'entrance'],
+        roles: ['storage', 'research', 'entrance'],
         baseWeight: 98,
         minZoneWeight: 0,
         maxZoneWeight: 220,
@@ -158,10 +161,10 @@ class UndergroundLab extends Tileset
     {
       block: { row: 0, col: 3, width: 1, height: 2 },
       meta: {
-        id: 'near-top-closet-4',
-        tags: ['wall', 'closet', 'storage'],
+        id: 'near-top-bookcase-4',
+        tags: ['wall', 'bookcase', 'storage'],
         motifs: ['storage'],
-        roles: ['storage', 'workshop', 'entrance'],
+        roles: ['storage', 'research', 'entrance'],
         baseWeight: 96,
         minZoneWeight: 0,
         maxZoneWeight: 220,
@@ -253,7 +256,7 @@ class UndergroundLab extends Tileset
       },
     },
     {
-      block: { row: 4, col: 6, width: 2, height: 2 },
+      block: { row: 2, col: 6, width: 2, height: 2 },
       meta: {
         id: 'near-top-locker-wide-4',
         tags: ['wall', 'locker', 'storage'],
@@ -265,12 +268,12 @@ class UndergroundLab extends Tileset
       },
     },
     {
-      block: { row: 4, col: 0, width: 2, height: 2 },
+      block: { row: 4, col: 0, width: 1, height: 2 },
       meta: {
-        id: 'near-top-locker-wide-4',
-        tags: ['wall', 'locker', 'storage'],
+        id: 'near-top-bookcase-5',
+        tags: ['wall', 'bookcase', 'storage'],
         motifs: ['storage'],
-        roles: ['storage', 'workshop', 'entrance'],
+        roles: ['storage', 'research', 'entrance'],
         baseWeight: 100,
         minZoneWeight: 0,
         maxZoneWeight: 220,
@@ -279,13 +282,13 @@ class UndergroundLab extends Tileset
     {
       block: { row: 4, col: 2, width: 1, height: 2 },
       meta: {
-        id: 'near-top-plant-5',
-        tags: ['wall', 'plant'],
-        motifs: ['furniture'],
-        roles: ['entrance', 'research', 'storage'],
+        id: 'near-top-bookcase-6',
+        tags: ['wall', 'bookcase', 'storage'],
+        motifs: ['storage'],
+        roles: ['storage', 'research', 'entrance'],
         baseWeight: 83,
         minZoneWeight: 0,
-        maxZoneWeight: 200,
+        maxZoneWeight: 220,
       },
     },
     {
@@ -431,6 +434,32 @@ class UndergroundLab extends Tileset
         baseWeight: 90,
         minZoneWeight: 0,
         maxZoneWeight: 210,
+      },
+    },
+    {
+      block: { row: 8, col: 6, width: 1, height: 2 },
+      meta: {
+        id: 'near-top-bookcase-7',
+        tags: ['wall', 'bookcase', 'storage'],
+        motifs: ['storage'],
+        roles: ['storage', 'research', 'entrance'],
+        imageKey: NEAR_TOP_WALL_IMAGE_KEY_2,
+        baseWeight: 92,
+        minZoneWeight: 0,
+        maxZoneWeight: 220,
+      },
+    },
+    {
+      block: { row: 8, col: 7, width: 1, height: 2 },
+      meta: {
+        id: 'near-top-bookcase-8',
+        tags: ['wall', 'bookcase', 'storage'],
+        motifs: ['storage'],
+        roles: ['storage', 'research', 'entrance'],
+        imageKey: NEAR_TOP_WALL_IMAGE_KEY_2,
+        baseWeight: 91,
+        minZoneWeight: 0,
+        maxZoneWeight: 220,
       },
     },
   ];
@@ -1940,12 +1969,16 @@ class UndergroundLab extends Tileset
   public var floor: StringMap<_Icon>;
   public var floorID: StringMap<Int>;
   public var nearTopWallFloorLayerID: Int;
+  var nearTopWallFloorLayerByImageKey: StringMap<Int>;
+  var nearTopWallFloorLayerIDs: Array<Int>;
   public var decorationObjFloorLayerID: Int;
   var decorationObjFloorLayerByImageKey: StringMap<Int>;
   var decorationObjFloorLayerIDs: Array<Int>;
   var decorationObjWallLayerByImageKey: StringMap<Int>;
   var decorationObjWallLayerIDs: Array<Int>;
   public var nearTopWallWallLayerID: Int;
+  var nearTopWallWallLayerByImageKey: StringMap<Int>;
+  var nearTopWallWallLayerIDs: Array<Int>;
   public var walls: _WallMap;
   public var wallID: _WallMapID;
   var iconByTileID: Map<Int, _Icon>;
@@ -1960,10 +1993,14 @@ class UndergroundLab extends Tileset
       };
       floor = new StringMap<_Icon>();
       floorID = new StringMap<Int>();
+      nearTopWallFloorLayerByImageKey = new StringMap<Int>();
+      nearTopWallFloorLayerIDs = [];
       decorationObjFloorLayerByImageKey = new StringMap<Int>();
       decorationObjFloorLayerIDs = [];
       decorationObjWallLayerByImageKey = new StringMap<Int>();
       decorationObjWallLayerIDs = [];
+      nearTopWallWallLayerByImageKey = new StringMap<Int>();
+      nearTopWallWallLayerIDs = [];
       iconByTileID = new Map<Int, _Icon>();
       initFloor();
       initWalls();
@@ -1971,8 +2008,12 @@ class UndergroundLab extends Tileset
         [], [3, 4, 5]);
       addFloorDecorationLayer('img/entities64.png', []);
       splatLayerID = floorDecorationLayers.length - 1;
-      nearTopWallFloorLayerID = floorDecorationLayers.length;
-      addFloorDecorationLayer(NEAR_TOP_WALL_IMAGE_PATH, []);
+      nearTopWallFloorLayerID = registerNearTopFloorLayer(
+        NEAR_TOP_WALL_IMAGE_KEY_1,
+        NEAR_TOP_WALL_IMAGE_PATH);
+      registerNearTopFloorLayer(
+        NEAR_TOP_WALL_IMAGE_KEY_2,
+        NEAR_TOP_WALL_IMAGE_PATH_2);
       registerDecorationObjLayer(DECORATION_OBJ_IMAGE_KEY_1,
         DECORATION_OBJ_IMAGE_PATH_1);
       decorationObjFloorLayerID = getDecorationObjLayerID(DECORATION_OBJ_IMAGE_KEY_1);
@@ -2007,11 +2048,53 @@ class UndergroundLab extends Tileset
         path: 'img/underground-lab-decoration5.png',
         repeatEvery: 2,
       });
-      nearTopWallWallLayerID = wallDecorationLayers.length;
+      registerNearTopWallLayer(
+        NEAR_TOP_WALL_IMAGE_KEY_1,
+        NEAR_TOP_WALL_IMAGE_PATH);
+      registerNearTopWallLayer(
+        NEAR_TOP_WALL_IMAGE_KEY_2,
+        NEAR_TOP_WALL_IMAGE_PATH_2);
+      nearTopWallWallLayerID = getNearTopWallLayerID(NEAR_TOP_WALL_IMAGE_KEY_1);
+    }
+
+// register one near-top image as a floor decoration layer
+  function registerNearTopFloorLayer(imageKey: String, path: String): Int
+    {
+      var floorLayerID = floorDecorationLayers.length;
+      addFloorDecorationLayer(path, []);
+      nearTopWallFloorLayerByImageKey.set(imageKey, floorLayerID);
+      nearTopWallFloorLayerIDs.push(floorLayerID);
+      return floorLayerID;
+    }
+
+// register one near-top image as a wall decoration layer
+  function registerNearTopWallLayer(imageKey: String, path: String)
+    {
+      var layerID = wallDecorationLayers.length;
       addWallDecorationLayerRepeat({
-        path: NEAR_TOP_WALL_IMAGE_PATH,
+        path: path,
         repeatEvery: -1,
       });
+      nearTopWallWallLayerByImageKey.set(imageKey, layerID);
+      nearTopWallWallLayerIDs.push(layerID);
+    }
+
+// get near-top floor layer id by image key
+  public function getNearTopFloorLayerID(imageKey: String): Int
+    {
+      return nearTopWallFloorLayerByImageKey.get(imageKey);
+    }
+
+// get near-top wall layer id by image key
+  public function getNearTopWallLayerID(imageKey: String): Int
+    {
+      return nearTopWallWallLayerByImageKey.get(imageKey);
+    }
+
+// check whether floor layer id is a near-top decoration layer
+  public function isNearTopFloorDecorationLayerID(layerID: Int): Bool
+    {
+      return (nearTopWallFloorLayerIDs.indexOf(layerID) >= 0);
     }
 
 // register one object-decoration image layer and map it by key
@@ -2051,6 +2134,13 @@ class UndergroundLab extends Tileset
 // get wall/floor layer id for one near-top decor row
   public function getNearTopDecorationLayerID(blockInfo: _DecorBlock, dy: Int): Int
     {
+      if (blockInfo.meta.imageKey != null &&
+          nearTopWallFloorLayerByImageKey.exists(blockInfo.meta.imageKey))
+        {
+          if (dy == 0)
+            return getNearTopWallLayerID(blockInfo.meta.imageKey);
+          return getNearTopFloorLayerID(blockInfo.meta.imageKey);
+        }
       if (blockInfo.meta.imageKey != null)
         {
           if (dy == 0)
@@ -2065,7 +2155,7 @@ class UndergroundLab extends Tileset
 // check whether one wall layer id belongs to near-top wall decoration
   public function isNearTopWallDecorationWallLayerID(layerID: Int): Bool
     {
-      return (layerID == nearTopWallWallLayerID ||
+      return (nearTopWallWallLayerIDs.indexOf(layerID) >= 0 ||
         isDecorationObjWallLayerID(layerID));
     }
 
@@ -2262,8 +2352,9 @@ class UndergroundLab extends Tileset
 // check if a decoration entry should block movement
   public override function isBlockingDecoration(tileID: Int, decoration: tiles.Decoration): Bool
     {
-      return (decoration.layerID == nearTopWallFloorLayerID ||
-        decoration.layerID == nearTopWallWallLayerID ||
+      if (!isWalkable(tileID))
+        return false;
+      return (isNearTopFloorDecorationLayerID(decoration.layerID) ||
         isDecorationObjLayerID(decoration.layerID));
     }
 }

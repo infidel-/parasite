@@ -1579,7 +1579,7 @@ class AreaLighting
             Math.sqrt(emitterHits.length);
           for (hit in emitterHits)
             {
-              if (caster.layerID != undergroundLab.nearTopWallFloorLayerID &&
+              if (!undergroundLab.isNearTopFloorDecorationLayerID(caster.layerID) &&
                   isEmitterInsideProjectedShadowCaster(hit.emitter, caster))
                 continue;
               var dist = Math.sqrt(hit.distSq);
