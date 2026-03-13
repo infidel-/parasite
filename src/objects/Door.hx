@@ -215,22 +215,34 @@ class Door extends AreaObject
       linked.lockID = lockID;
     }
 
-// check whether any door half is occupied by player or AI
+// check whether any door half is occupied by player, AI, or another object
   function isBlockedByOccupant(): Bool
     {
+      var linked = getLinkedDoor();
       if (game.area.hasAI(x, y) ||
           (game.playerArea.x == x &&
-           game.playerArea.y == y))
+           game.playerArea.y == y) ||
+          hasBlockingObjectAt(x, y, linked))
         return true;
 
       // check linked door half
-      var linked = getLinkedDoor();
       if (linked == null)
         return false;
       if (game.area.hasAI(linked.x, linked.y) ||
           (game.playerArea.x == linked.x &&
-           game.playerArea.y == linked.y))
+           game.playerArea.y == linked.y) ||
+          hasBlockingObjectAt(linked.x, linked.y, linked))
         return true;
+      return false;
+    }
+
+// check whether a door tile has any non-door object on it
+  function hasBlockingObjectAt(vx: Int, vy: Int, linked: Door): Bool
+    {
+      for (o in game.area.getObjectsAt(vx, vy))
+        if (o != this &&
+            o != linked)
+          return true;
       return false;
     }
 
