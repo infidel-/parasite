@@ -9,10 +9,10 @@ class LabCloning
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Unauspr. Clone Cistern",
-        note: "A clandestine laboratory keeps green clone stock alive for the Unaussprechliche Kult. Eliminate the lead science triad and purge every vat.",
+        name: "Vessel Program",
+        note: "The unaussprechliche kult maintains a clandestine cistern of green meat vessels below the city. Their lead science triad tends the clone line while security maintains sterile perimeter. Purge every vat and eliminate the keepers.",
         success: "The clone line collapses in hissing drains. Dead scientists lie among empty glass, and the underground lab goes sterile.",
-        fail: "You are pushed out before the purge finishes. The triad seals their notes and the clone line keeps breathing.",
+        fail: "You are pushed out before the purge finishes. The unaussprechliche kult seals their notes and the vessel program keeps breathing.",
         mission: MISSION_COMBAT,
         combat: {
           template: UNDERGROUND_LAB_PURGE,

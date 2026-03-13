@@ -9,10 +9,10 @@ class BumCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Unauspr. Bum Litany",
-        note: "A gutter cult of bums keeps chanting your enemy's liturgy in a low-city shell. Break their congregation before it hardens into a street crusade.",
-        success: "The alley choir is silenced. Bedroll altars burn, and the low-city flock scatters into static hunger.",
-        fail: "You are driven back through broken glass and rusted carts. The bum cult claims the district and recruits in daylight.",
+        name: "Gutter Choir Sacrament",
+        note: "The unaussprechliche kult has seeded a gutter chapel in the low-city shell. Their congregation chants the wet flesh liturgy among rusted carts and bedroll altars. The membrane bleeds into concrete. Break their sacrament before the street crusade hardens.",
+        success: "The alley choir gutters out. Bedroll altars burn, and the low-city flock scatters into static hunger. The concrete stops bleeding.",
+        fail: "You are driven back through broken glass and rusted carts. The kult claims the district and recruits in daylight, their liturgy echoing louder.",
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,

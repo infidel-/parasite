@@ -9,10 +9,10 @@ class ProstituteCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Unauspr. Shock Ring",
-        note: "A ring of smiling sex workers stalks the alleys in ritual cadence. Their madam carries a predatory sacrament called deadly caress.",
-        success: "The ring shatters. The madam collapses and her escorts flee into neon rain, leaving only lipstick sigils on concrete.",
-        fail: "You are swarmed and pinned against wet brick while the madam's kiss rite leaves you reeling. The ring keeps the block.",
+        name: "Neon Sacrament",
+        note: "The unaussprechliche kult fields a shock ring in neon alleys, their madame carrying the deadly caress sacrament. Predatory liturgy stalks in ritual cadence beneath streetlight halos.",
+        success: "The ring shatters. The madam collapses and her escorts flee into neon rain, leaving only lipstick sigils fading on concrete.",
+        fail: "You are swarmed and pinned against wet brick while the madam's kiss rite leaves you reeling. The kult keeps the block.",
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
