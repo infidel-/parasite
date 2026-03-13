@@ -9,10 +9,10 @@ class ThugCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Unauspr. Thug Syndicate",
-        note: "A street syndicate keeps your enemy's rite alive in crackhouse chapels and shuttered courtyards. Drugged zealots charge first while gunmen cover the flock.",
-        success: "Their block liturgy collapses. The katana priest falls, shooters scatter, and the street altar bleeds out into rainwater.",
-        fail: "You are pinned by crossfire and rushed by howling blades. The thug cult keeps the block and recruits another night.",
+        name: "Block Liturgy",
+        note: "The unaussprechliche kult maintains a street chapel in shuttered courtyards. Their katana priest leads block liturgy while shooters provide overwatch. The membrane grows thick where territory marks flesh.",
+        success: "The block liturgy collapses. The katana priest falls, shooters scatter into static, and the street altar bleeds out into rainwater.",
+        fail: "You are pinned by crossfire and rushed by howling steel. The kult keeps the block and recruits another night, their territory marked in fresh scar.",
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,

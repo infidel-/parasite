@@ -9,10 +9,10 @@ class SewerSummoning
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Unauspr. Sewer Conclave",
-        note: "The Unaussprechliche Kult gathers below the city, chanting around a membrane gate. Cut the circle before the hymn tears through.",
-        success: "The choir gutters out in wet stone darkness. The chamber exhales and the pipes fall quiet.",
-        fail: "You falter in the tunnels. The cadence holds and something answers from the far side.",
+        name: "Subterranean Hymn",
+        note: "The unaussprechliche kult gathers below the city, chanting around a membrane gate in wet stone. Their cantor leads the hymn while zealots guard the circle. Cut the ritual before the membrane tears.",
+        success: "The choir gutters out. The chamber exhales, pipes fall quiet, and the membrane holds.",
+        fail: "You falter in the tunnels. The kult completes their hymn and something answers from the far side.",
         mission: MISSION_COMBAT,
         combat: {
           template: SUMMONING_RITUAL,

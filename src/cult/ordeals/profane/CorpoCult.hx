@@ -9,10 +9,10 @@ class CorpoCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Unaussprechliche Head",
-        note: "The Unaussprechliche Kult keeps its head in a corporate suite, flanked by two armed guards. Strike together or die alone.",
-        success: "Head and guards fall. The kult fractures, rituals collapsing into static. The suite goes dark.",
-        fail: "You are repelled. The head slips away, guards calling backup. The Unaussprechliche Kult grows bold.",
+        name: "C-Suite Sacrament",
+        note: "The unaussprechliche kult keeps its head in a corner office, executing quarterly flesh dividends. Two armed guardians maintain the perimeter. Disrupt the executive function before the merger closes.",
+        success: "The head falls. His vertical integration collapses into static. The boardroom exhales, and the suite goes dark.",
+        fail: "You are repelled through glass doors. The head slips away, calling hostile takeover. The kult absorbs another subsidiary.",
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
