@@ -1464,14 +1464,16 @@ class UndergroundLabAreaGenerator
           var anchorPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
             [DECOR_ZONE_WALL_EDGE],
             [DECOR_ZONE_ROOM_GENERIC]);
-          var clutterPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
-            [DECOR_ZONE_WORK_CORE, DECOR_ZONE_ROOM_GENERIC],
-            [DECOR_ZONE_WALL_EDGE, DECOR_ZONE_TRAFFIC_LANE]);
           var topWallTablePassResult = executeRoomObjectDecorPass(area, tileset, tiles,
             room, topWallTableAnchors, plan.topWallTableTargetCount,
             true, true, true, doorRects, reservedRects, roomLargeDecorFamilyCounts,
             roomPlacedLargeDecors, roomRolePickStats,
             roomObjectZoneSizeHistogram);
+          if (room.role == ROOM_ROLE_VAT)
+            placeVatSouthWallLargeDecors(area, tileset, tiles, room, allAnchors,
+              doorRects, reservedRects, roomLargeDecorFamilyCounts,
+              roomPlacedLargeDecors, roomRolePickStats,
+              roomObjectZoneSizeHistogram);
           var remainingLargeTargetCount = plan.largeTargetCount;
           if (room.role == ROOM_ROLE_ENTRANCE)
             remainingLargeTargetCount = Const.clamp(
@@ -1481,6 +1483,11 @@ class UndergroundLabAreaGenerator
             true, true, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
             roomPlacedLargeDecors, roomRolePickStats,
             roomObjectZoneSizeHistogram);
+          var clutterPassAnchors = filterRoomObjectDecorAnchorsAdjacentToLargeDecorFamily(
+            collectRoomObjectDecorPassAnchors(allAnchors,
+              [DECOR_ZONE_WORK_CORE, DECOR_ZONE_ROOM_GENERIC],
+              [DECOR_ZONE_WALL_EDGE, DECOR_ZONE_TRAFFIC_LANE]),
+            roomPlacedLargeDecors, 'machinery');
           var clutterPassResult = executeRoomObjectDecorPass(area, tileset, tiles,
             room, clutterPassAnchors, plan.clutterTargetCount,
             false, false, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
@@ -1693,7 +1700,8 @@ class UndergroundLabAreaGenerator
                     anchor.x + block.width - 1, anchor.y + block.height - 1,
                     reservedRects) ||
                   !canPlaceDecorationObjBlock(area, tileset, tiles, room,
-                    anchor.x, anchor.y, blockInfo, doorRects))
+                    anchor.x, anchor.y, blockInfo, doorRects,
+                    roomPlacedLargeDecors, false))
                 continue;
 
               incrementLargeDecorFamilyCount(roomLargeDecorFamilyCounts, family);
@@ -1733,6 +1741,150 @@ class UndergroundLabAreaGenerator
       return placed;
     }
 
+// get dedicated vat south-wall large-object target count
+  function getVatSouthWallLargeTargetCount(room: _Room): Int
+    {
+      if (room.w >= 13)
+        return 2;
+      return 1;
+    }
+
+// pick one large machinery block suitable for the vat south wall
+  function pickWeightedVatSouthWallLargeDecorBlock(
+      roomLargeDecorFamilyCounts: Map<String, Int>): _DecorPickResult
+    {
+      var blocks = [];
+      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
+        {
+          if (!isLargeDecorBlock(blockInfo) ||
+              blockInfo.block.height < 2 ||
+              blockInfo.meta.tags.indexOf('machinery') < 0 ||
+              blockInfo.meta.roles.indexOf(ROOM_ROLE_VAT) < 0)
+            continue;
+          if (blockInfo.meta.padding != null &&
+              getDecorPaddingValue(blockInfo.meta.padding.down) > 0)
+            continue;
+          blocks.push(blockInfo);
+        }
+      if (blocks.length == 0)
+        return null;
+
+      var weightList = [];
+      for (blockInfo in blocks)
+        {
+          var weights = getDecorWeights(DECOR_LAYER_OBJECT, ROOM_ROLE_VAT,
+            DECOR_ZONE_WALL_EDGE, blockInfo.meta.motifs, blockInfo.meta.tags);
+          var weight = Std.int(blockInfo.meta.baseWeight *
+            weights.roleWeight *
+            weights.zoneWeight *
+            weights.motifWeight *
+            weights.tagWeight *
+            115 / 10000000000);
+          weight = Const.clamp(weight, blockInfo.meta.minZoneWeight,
+            blockInfo.meta.maxZoneWeight);
+          weight = Std.int(weight * 18 / 10);
+          weight = applyLargeDecorFamilyBudgetPenalty(ROOM_ROLE_VAT,
+            getLargeDecorFamily(blockInfo), roomLargeDecorFamilyCounts, weight);
+          logDecorWeightBreakdownSample(DECOR_LAYER_OBJECT, ROOM_ROLE_VAT,
+            DECOR_ZONE_WALL_EDGE, blockInfo, weights, 115, weight);
+          weightList.push(weight);
+        }
+
+      var index = pickWeightedIndex(weightList);
+      if (index < 0)
+        return null;
+      return {
+        blockInfo: blocks[index],
+        usedFallback: false,
+      };
+    }
+
+// place a few extra large machinery props along the vat room south wall
+  function placeVatSouthWallLargeDecors(area: AreaGame, tileset: UndergroundLab,
+      tiles: Array<Array<tiles.Tile>>, room: _Room,
+      allAnchors: Array<_RoomObjectDecorAnchor>,
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
+      reservedRects: Array<_ReservedRect>,
+      roomLargeDecorFamilyCounts: Map<String, Int>,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      roomRolePickStats: _RoomDecorRolePickStats,
+      roomObjectZoneSizeHistogram: Map<String, Int>)
+    {
+      var targetCount = getVatSouthWallLargeTargetCount(room);
+      var placed = 0;
+      var attempted = 0;
+      var maxAttempts = targetCount * 8;
+      while (placed < targetCount &&
+             attempted < maxAttempts)
+        {
+          attempted += 1;
+          var pickResult = pickWeightedVatSouthWallLargeDecorBlock(
+            roomLargeDecorFamilyCounts);
+          if (pickResult == null)
+            break;
+
+          var blockInfo = pickResult.blockInfo;
+          var block = blockInfo.block;
+          var family = getLargeDecorFamily(blockInfo);
+          var y = room.y2 - block.height + 1;
+          if (y < room.y1)
+            continue;
+
+          var candidateXs = [];
+          for (x in room.x1...room.x2 - block.width + 2)
+            candidateXs.push(x);
+
+          var placedAtX = false;
+          while (candidateXs.length > 0)
+            {
+              var xIndex = Const.roll(0, candidateXs.length - 1);
+              var x = candidateXs[xIndex];
+              candidateXs.splice(xIndex, 1);
+              if (!canPlaceLargeDecorFamilyWithSpacing(ROOM_ROLE_VAT,
+                  x, y, block, family, roomPlacedLargeDecors) ||
+                  isRectOverlappingReservedRect(x, y,
+                    x + block.width - 1, y + block.height - 1,
+                    reservedRects) ||
+                  !canPlaceDecorationObjBlock(area, tileset, tiles, room,
+                    x, y, blockInfo, doorRects, roomPlacedLargeDecors, false))
+                continue;
+
+              incrementLargeDecorFamilyCount(roomLargeDecorFamilyCounts, family);
+              roomPlacedLargeDecors.push({
+                family: family,
+                x1: x,
+                y1: y,
+                x2: x + block.width - 1,
+                y2: y + block.height - 1,
+              });
+              var objectLayerID = tileset.getDecorationObjLayerID(
+                blockInfo.meta.imageKey);
+              var groupTag = 'DECO_OBJ:' + x + ':' + y + ':' +
+                Const.roll(0, 999999);
+              for (dy in 0...block.height)
+                for (dx in 0...block.width)
+                  area.addTileDecoration(x + dx, y + dy, {
+                    layerID: objectLayerID,
+                    icon: {
+                      row: block.row + dy,
+                      col: block.col + dx,
+                    },
+                    tag: groupTag,
+                  });
+              registerRoomDecorRolePick(roomRolePickStats,
+                DECOR_LAYER_OBJECT, pickResult.usedFallback);
+              incrementRoomObjectZoneSizeHistogram(roomObjectZoneSizeHistogram,
+                DECOR_ZONE_WALL_EDGE, true);
+              pruneRoomObjectDecorAnchors(allAnchors, x, y, block);
+              placed += 1;
+              placedAtX = true;
+              break;
+            }
+          if (!placedAtX)
+            continue;
+        }
+    }
+
 // collect one ordered anchor list using primary then secondary zones
   function collectRoomObjectDecorPassAnchors(
       allAnchors: Array<_RoomObjectDecorAnchor>,
@@ -1751,6 +1903,69 @@ class UndergroundLabAreaGenerator
           anchors.push(anchor);
         }
       return anchors;
+    }
+
+// keep only anchors that touch one placed large decoration family
+  function filterRoomObjectDecorAnchorsAdjacentToLargeDecorFamily(
+      anchors: Array<_RoomObjectDecorAnchor>,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      family: String): Array<_RoomObjectDecorAnchor>
+    {
+      var filteredAnchors = [];
+      for (anchor in anchors)
+        if (isAdjacentToPlacedLargeDecorFamily(anchor.x, anchor.y,
+            roomPlacedLargeDecors, family))
+          filteredAnchors.push(anchor);
+      return filteredAnchors;
+    }
+
+// check whether one cell is orthogonally adjacent to a placed large family
+  function isAdjacentToPlacedLargeDecorFamily(x: Int, y: Int,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      family: String): Bool
+    {
+      for (placedDecor in roomPlacedLargeDecors)
+        {
+          if (placedDecor.family != family)
+            continue;
+
+          var dx = 0;
+          if (x < placedDecor.x1)
+            dx = placedDecor.x1 - x;
+          else if (x > placedDecor.x2)
+            dx = x - placedDecor.x2;
+
+          var dy = 0;
+          if (y < placedDecor.y1)
+            dy = placedDecor.y1 - y;
+          else if (y > placedDecor.y2)
+            dy = y - placedDecor.y2;
+
+          if ((dx == 1 &&
+               dy == 0) ||
+              (dx == 0 &&
+               dy == 1))
+            return true;
+        }
+      return false;
+    }
+
+// check whether one cell is inside a placed large decoration family
+  function isInsidePlacedLargeDecorFamily(x: Int, y: Int,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      family: String): Bool
+    {
+      for (placedDecor in roomPlacedLargeDecors)
+        {
+          if (placedDecor.family != family)
+            continue;
+          if (x >= placedDecor.x1 &&
+              x <= placedDecor.x2 &&
+              y >= placedDecor.y1 &&
+              y <= placedDecor.y2)
+            return true;
+        }
+      return false;
     }
 
 // execute one room-level object decoration pass over a planned anchor queue
@@ -1803,7 +2018,9 @@ class UndergroundLabAreaGenerator
               anchor.x + block.width - 1, anchor.y + block.height - 1, reservedRects))
             continue;
           if (!canPlaceDecorationObjBlock(area, tileset, tiles, room,
-              anchor.x, anchor.y, blockInfo, doorRects))
+              anchor.x, anchor.y, blockInfo, doorRects, roomPlacedLargeDecors,
+              (!requireLarge &&
+               !allowLarge)))
             continue;
 
           if (largeDecorFamily != null)
@@ -1946,7 +2163,9 @@ class UndergroundLabAreaGenerator
   function canPlaceDecorationObjBlock(area: AreaGame, tileset: tiles.Tileset,
       tiles: Array<Array<tiles.Tile>>, room: _Room, x: Int, y: Int,
       blockInfo: _DecorBlock,
-      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>): Bool
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      allowAdjacentToMachinery: Bool): Bool
     {
       var block = blockInfo.block;
       if (x + block.width - 1 > room.x2 ||
@@ -1980,6 +2199,10 @@ class UndergroundLabAreaGenerator
                 nx < x + block.width &&
                 ny >= y &&
                 ny < y + block.height)
+              continue;
+            if (allowAdjacentToMachinery &&
+                isInsidePlacedLargeDecorFamily(nx, ny,
+                  roomPlacedLargeDecors, 'machinery'))
               continue;
             if (area.hasObjectAt(nx, ny))
               return false;
