@@ -52,6 +52,33 @@ class ParticleShotgun extends ParticleBullet
         drawLine2(ctx, dt, dst[i], delta[i]);
     }
 
+// provide atmospheric light pulses for muzzle flash and impact
+  public override function getLightPulses(): Array<_ParticleLightPulse>
+    {
+      var pulses = [{
+        x: sx + 0.5,
+        y: sy + 0.5,
+        radiusTiles: 3.0,
+        intensity: 0.95,
+        tintR: 255,
+        tintG: 228,
+        tintB: 176,
+        durationMs: 95.0,
+      }];
+      if (hit)
+        pulses.push({
+          x: dstreal.x + 0.5,
+          y: dstreal.y + 0.5,
+          radiusTiles: 2.4,
+          intensity: 0.58,
+          tintR: 255,
+          tintG: 196,
+          tintB: 146,
+          durationMs: 150.0,
+        });
+      return pulses;
+    }
+
 // draw one line
   function drawLine2(ctx: CanvasRenderingContext2D, dt: Float, dst: _Point, delta: _Point)
     {

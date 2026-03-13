@@ -72,4 +72,19 @@ class ParticleSilentScream extends Particle
           ctx.stroke();
         }
     }
+
+// provide atmospheric light pulse for silent scream cast point
+  public override function getLightPulses(): Array<_ParticleLightPulse>
+    {
+      return [{
+        x: pt.x + 0.5,
+        y: pt.y + 0.5,
+        radiusTiles: 5.8,
+        intensity: 0.62,
+        tintR: 192,
+        tintG: 200,
+        tintB: 220,
+        durationMs: 320.0,
+      }];
+    }
 }

@@ -3,9 +3,18 @@
 package tiles;
 
 import Const;
+import _AtmosphereLightMeta;
 import game.AreaGame;
 import js.html.CanvasRenderingContext2D;
 import js.html.Image;
+
+typedef _WallDecorationLayer = {
+  var path: String;
+  @:optional var repeatEvery: Int;
+  @:optional var chance: Int;
+  @:optional var light: _AtmosphereLightMeta;
+  @:optional var noCorners: Bool;
+}
 
 class Tileset
 {
@@ -17,6 +26,7 @@ class Tileset
   public var wallDecorationLayers: Array<Image>;
   public var wallDecorationLayerRepeatEvery: Array<Int>;
   public var wallDecorationLayerChance: Array<Int>;
+  public var wallDecorationLayerMeta: Array<_WallDecorationLayer>;
 
 // create tileset from image path
   public function new(path: String)
@@ -33,6 +43,7 @@ class Tileset
       wallDecorationLayers = [];
       wallDecorationLayerRepeatEvery = [];
       wallDecorationLayerChance = [];
+      wallDecorationLayerMeta = [];
     }
 
 // map tile id to icon coordinates
@@ -113,29 +124,59 @@ class Tileset
     }
 
 // add one wall decoration image layer with repeat rule
-  public function addWallDecorationLayerRepeat(path: String, repeatEvery: Int)
+  public function addWallDecorationLayerRepeat(layerInfo: _WallDecorationLayer)
     {
       var layer = new Image();
-      layer.src = path;
+      layer.src = layerInfo.path;
+      var repeatEvery = (layerInfo.repeatEvery != null ?
+        layerInfo.repeatEvery : -1);
       wallDecorationLayers.push(layer);
       wallDecorationLayerRepeatEvery.push(repeatEvery);
       wallDecorationLayerChance.push(-1);
+      wallDecorationLayerMeta.push({
+        path: layerInfo.path,
+        repeatEvery: repeatEvery,
+        chance: -1,
+        light: layerInfo.light,
+        noCorners: layerInfo.noCorners,
+      });
     }
 
 // add one wall decoration image layer with chance rule
-  public function addWallDecorationLayerChance(path: String, chance: Int)
+  public function addWallDecorationLayerChance(layerInfo: _WallDecorationLayer)
     {
       var layer = new Image();
-      layer.src = path;
+      layer.src = layerInfo.path;
+      var chance = (layerInfo.chance != null ?
+        layerInfo.chance : -1);
       wallDecorationLayers.push(layer);
       wallDecorationLayerRepeatEvery.push(-1);
       wallDecorationLayerChance.push(chance);
+      wallDecorationLayerMeta.push({
+        path: layerInfo.path,
+        repeatEvery: -1,
+        chance: chance,
+        light: layerInfo.light,
+        noCorners: layerInfo.noCorners,
+      });
     }
 
 // get number of wall decoration image layers
   public function getWallDecorationLayerCount(): Int
     {
       return wallDecorationLayers.length;
+    }
+
+// get optional light metadata for one wall decoration layer
+  public function getWallDecorationLayerLight(layerID: Int): _AtmosphereLightMeta
+    {
+      if (layerID < 0 ||
+          layerID >= wallDecorationLayerMeta.length)
+        return null;
+      var layerMeta = wallDecorationLayerMeta[layerID];
+      if (layerMeta == null)
+        return null;
+      return layerMeta.light;
     }
 
 // check if tile id is a wall tile for decoration painting
@@ -171,11 +212,18 @@ class Tileset
       var tileID = area.getCellType(x, y);
       if (!isWallTile(tileID))
         return;
+      var isCornerWallTile = (!isHorizontalWallTile(tileID) &&
+        !isVerticalWallTile(tileID));
 
       // first check tile layers with repeat rules
       var repeatLayerID = -1;
       for (i in 0...wallDecorationLayers.length)
         {
+          var layerMeta = wallDecorationLayerMeta[i];
+          if (isCornerWallTile &&
+              layerMeta != null &&
+              layerMeta.noCorners == true)
+            continue;
           var repeatEvery = wallDecorationLayerRepeatEvery[i];
           if (repeatEvery > 0 &&
               ((isHorizontalWallTile(tileID) &&
@@ -192,6 +240,11 @@ class Tileset
       var chanceLayerID = -1;
       for (i in 0...wallDecorationLayers.length)
         {
+          var layerMeta = wallDecorationLayerMeta[i];
+          if (isCornerWallTile &&
+              layerMeta != null &&
+              layerMeta.noCorners == true)
+            continue;
           var chance = wallDecorationLayerChance[i];
           if (chance > 0 &&
               Std.random(100) < chance)
@@ -252,13 +305,15 @@ class Tileset
           var wallIcon = icon;
           if (decoration.icon != null)
             wallIcon = decoration.icon;
+          var dx = (decoration.dx != null ? decoration.dx : 0);
+          var dy = (decoration.dy != null ? decoration.dy : 0);
           ctx.drawImage(layer,
             wallIcon.col * Const.TILE_SIZE_CLEAN,
             wallIcon.row * Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
             Const.TILE_SIZE_CLEAN,
-            x,
-            y,
+            x + dx,
+            y + dy,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
         }
@@ -292,6 +347,13 @@ class Tileset
           var angle = (decoration.angle != null ? decoration.angle : 0.0);
           var dx = (decoration.dx != null ? decoration.dx : 0);
           var dy = (decoration.dy != null ? decoration.dy : 0);
+          var smoothSplat = (layerID == splatLayerID);
+          var prevSmoothing = false;
+          if (smoothSplat)
+            {
+              prevSmoothing = ctx.imageSmoothingEnabled;
+              ctx.imageSmoothingEnabled = true;
+            }
 
           // if no transformation, draw directly for better performance
           if (scale == 1.0 &&
@@ -308,6 +370,8 @@ class Tileset
                 y,
                 Const.TILE_SIZE,
                 Const.TILE_SIZE);
+              if (smoothSplat)
+                ctx.imageSmoothingEnabled = prevSmoothing;
               continue;
             }
 
@@ -335,6 +399,8 @@ class Tileset
             Const.TILE_SIZE * scale,
             Const.TILE_SIZE * scale);
           ctx.restore();
+          if (smoothSplat)
+            ctx.imageSmoothingEnabled = prevSmoothing;
         }
     }
 }

@@ -63,6 +63,56 @@ class CommandLogic
       return false;
     }
 
+// check if ai is standing on an exit tile
+  static function isExitTile(ai: AI): Bool
+    {
+      for (o in game.area.getObjectsAt(ai.x, ai.y))
+        {
+          if (o.type == 'elevator' ||
+              o.type == 'stairs')
+            return true;
+        }
+      return false;
+    }
+
+// find nearest reachable exit tile for leave-area command
+  static function getLeaveAreaTarget(ai: AI): { x: Int, y: Int }
+    {
+      var best = null;
+      var bestPathLength = -1;
+
+      for (o in game.area.getObjects())
+        {
+          // only consider elevator and stairs tiles
+          if (o.type != 'elevator' &&
+              o.type != 'stairs')
+            continue;
+          if (!game.area.isWalkable(o.x, o.y))
+            continue;
+
+          // check if the tile is occupied by another ai
+          var occupant = game.area.getAI(o.x, o.y);
+          if (occupant != null &&
+              occupant != ai)
+            continue;
+
+          // check if the tile is reachable
+          var path = game.area.getPath(ai.x, ai.y, o.x, o.y);
+          if (path == null)
+            continue;
+
+          // prefer the closest reachable exit tile
+          if (best == null ||
+              path.length < bestPathLength)
+            {
+              best = { x: o.x, y: o.y };
+              bestPathLength = path.length;
+            }
+        }
+
+      return best;
+    }
+
 // apply leave area command state
   static function commandLeaveArea(ai: AI): Bool
     {
@@ -72,17 +122,40 @@ class CommandLogic
 
       ai.command.leaveAreaTurns++;
 
-      // check despawn conditions
       var isVisible = game.area.isVisible(
         game.playerArea.x, game.playerArea.y, ai.x, ai.y);
-      if (!isVisible ||
-          ai.command.leaveAreaTurns >= 10)
+
+      // despawn immediately after reaching elevator or stairs
+      if (isExitTile(ai))
+        {
+          if (!isVisible)
+            game.area.removeAI(ai);
+          return true;
+        }
+
+      // despawn only after leaving the player's sight
+      if (!isVisible)
         {
           game.area.removeAI(ai);
           return true;
         }
 
-      // move away from the player
+      // move toward the nearest reachable exit tile
+      var target = getLeaveAreaTarget(ai);
+      if (target != null)
+        {
+          ai.logicMoveTo(target.x, target.y);
+          if (isExitTile(ai))
+            {
+              if (!game.area.isVisible(
+                game.playerArea.x, game.playerArea.y, ai.x, ai.y))
+                game.area.removeAI(ai);
+              return true;
+            }
+          return true;
+        }
+
+      // fallback: move away from the player
       var bestDir = -1;
       var bestDist = -1;
       for (i in 0...Const.dirx.length)

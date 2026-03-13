@@ -65,6 +65,33 @@ class ParticlePistol extends ParticleBullet
       drawLine(ctx, srcx, srcy, dstx, dsty, dt);
     }
 
+// provide atmospheric light pulses for muzzle flash and impact
+  public override function getLightPulses(): Array<_ParticleLightPulse>
+    {
+      var pulses = [{
+        x: sx + 0.5,
+        y: sy + 0.5,
+        radiusTiles: 2.3,
+        intensity: 0.72,
+        tintR: 255,
+        tintG: 224,
+        tintB: 172,
+        durationMs: 120.0,
+      }];
+      if (hit)
+        pulses.push({
+          x: dst.x + 0.5,
+          y: dst.y + 0.5,
+          radiusTiles: 1.8,
+          intensity: 0.42,
+          tintR: 255,
+          tintG: 188,
+          tintB: 142,
+          durationMs: 140.0,
+        });
+      return pulses;
+    }
+
 // create splat on death
   public override function onDeath()
     {

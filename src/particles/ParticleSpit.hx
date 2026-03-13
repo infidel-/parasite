@@ -89,6 +89,39 @@ class ParticleSpit extends Particle
       drawBlob(ctx, nx, ny, mainSize, alpha, angle);
     }
 
+// provide atmospheric light pulses for spit impact zone
+  public override function getLightPulses(): Array<_ParticleLightPulse>
+    {
+      var tintR = 120;
+      var tintG = 210;
+      var tintB = 120;
+      var intensity = 0.44;
+      if (type == 'slimeSpit')
+        {
+          tintR = 96;
+          tintG = 190;
+          tintB = 118;
+          intensity = 0.40;
+        }
+      else if (type == 'paralysisSpit')
+        {
+          tintR = 152;
+          tintG = 180;
+          tintB = 240;
+          intensity = 0.34;
+        }
+      return [{
+        x: dstTile.x + 0.5,
+        y: dstTile.y + 0.5,
+        radiusTiles: 2.2,
+        intensity: intensity,
+        tintR: tintR,
+        tintG: tintG,
+        tintB: tintB,
+        durationMs: 190.0,
+      }];
+    }
+
 // spawn splat when projectile reaches target tile
   public override function onDeath()
     {

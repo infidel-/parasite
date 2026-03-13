@@ -174,6 +174,7 @@ class RegionView
 // redraw region map
   public function draw()
     {
+      var renderTS = scene.beginRenderSample();
       var ctx = scene.canvas.getContext('2d');
       ctx.save();
       ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
@@ -205,6 +206,7 @@ class RegionView
             Const.TILE_SIZE,
             Const.TILE_SIZE);
       ctx.restore();
+      scene.endRenderSampleRegion(renderTS);
     }
 
 // paint area tile and icons

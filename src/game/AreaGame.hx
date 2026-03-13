@@ -505,6 +505,10 @@ class AreaGame extends _SaveObject
       game.areaGenerator.generate(this, info);
       var msec = (Sys.time() - t) * 1000.0;
       trace('Area generated in ' + Std.int(msec) + ' ms');
+      if (game != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(this);
 
       // set path info
       _pathEngine = new aPath.Engine(this, width, height);
@@ -624,6 +628,10 @@ class AreaGame extends _SaveObject
       if (tiles != null &&
           tiles.length > 0)
         recalcTile(o.x, o.y);
+      if (game != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(this);
     }
 
 // get object by id
@@ -663,6 +671,10 @@ class AreaGame extends _SaveObject
       if (tiles != null &&
           tiles.length > 0)
         recalcTile(o.x, o.y);
+      if (game != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(this);
     }
 
 
@@ -898,6 +910,10 @@ class AreaGame extends _SaveObject
     {
       typeID = t;
       _tileset = null;
+      if (game != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(this);
       info = WorldConst.getAreaInfo(typeID);
       width = info.width - 10 + 10 * Std.random(2);
       height = info.height - 10 + 10 * Std.random(2);
@@ -969,6 +985,10 @@ class AreaGame extends _SaveObject
   public function loadHook(serialized: Dynamic, formatVersion: Int)
     {
       AreaGameSaver.load(this, serialized, formatVersion);
+      if (game != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(this);
     }
 
 
@@ -1197,6 +1217,10 @@ class AreaGame extends _SaveObject
       if (tile.decoration == null)
         tile.decoration = [];
       tile.decoration.push(decoration);
+      if (game != null &&
+          game.scene != null &&
+          game.scene.areaLighting != null)
+        game.scene.areaLighting.invalidateArea(this);
     }
 
 

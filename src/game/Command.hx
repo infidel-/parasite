@@ -9,6 +9,7 @@ class Command
   var player: Player;
   var game: Game;
   var hud: HUD;
+  var hasAttackAction: Bool;
 
 // create command menu handler
   public function new(p: Player, g: Game, h: HUD)
@@ -16,6 +17,7 @@ class Command
       player = p;
       game = g;
       hud = h;
+      hasAttackAction = false;
     }
 
 // check if player has cult followers in area
@@ -63,16 +65,16 @@ class Command
       if (hud.state != HUD_COMMAND_MENU)
         return;
 
-      var target = hud.targeting.target;
-      var pronoun = 'them';
-      if (target != null)
-        pronoun = target.prepLog('him');
-
-      hud.addAction({
-        id: 'command.attack',
-        type: ACTION_AREA,
-        name: '"Destroy ' + pronoun + '!"',
-      });
+      var target = getAttackTarget();
+      hasAttackAction = (target != null);
+      if (hasAttackAction)
+        {
+          hud.addAction({
+            id: 'command.attack',
+            type: ACTION_AREA,
+            name: target.prepLog('"Destroy him!"'),
+          });
+        }
       hud.addAction({
         id: 'command.leaveArea',
         type: ACTION_AREA,
@@ -92,18 +94,18 @@ class Command
       if (hud.state != HUD_COMMAND_MENU)
         return false;
 
-      switch (index)
+      var i = 1;
+      if (hasAttackAction &&
+          index == i++)
+        return commandAttack();
+      if (index == i++)
+        return commandLeaveArea();
+      if (index == i)
         {
-          case 1:
-            return commandAttack();
-          case 2:
-            return commandLeaveArea();
-          case 3:
-            exit();
-            return false;
-          default:
-            return false;
+          exit();
+          return false;
         }
+      return false;
     }
 
 // get current list of cult followers
@@ -126,17 +128,27 @@ class Command
       return list;
     }
 
-// issue attack command
-  function commandAttack(): Bool
+// get current valid attack target
+  function getAttackTarget(): AI
     {
       if (game.area == null)
-        return false;
+        return null;
 
       var target = hud.targeting.target;
       if (target == null ||
           target.state == AI_STATE_DEAD ||
           !hud.targeting.isTargetVisibleOnScreen() ||
           game.area.getAIByID(target.id) == null)
+        return null;
+
+      return target;
+    }
+
+// issue attack command
+  function commandAttack(): Bool
+    {
+      var target = getAttackTarget();
+      if (target == null)
         {
           game.actionFailed('No visible target.');
           return false;

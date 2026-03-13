@@ -2,6 +2,7 @@
 
 import js.html.CanvasElement;
 import js.Browser;
+import haxe.Timer;
 
 import ui.*;
 import game.Game;
@@ -10,6 +11,7 @@ class GameScene
 {
   public var game: Game; // game state link
   public var area: AreaView; // area view
+  public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
@@ -36,6 +38,8 @@ class GameScene
   public var cameraSubY: Int;
 
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
+  var _renderStatsArea: _RenderStats;
+  var _renderStatsRegion: _RenderStats;
 
 
   public function new(g: Game)
@@ -64,6 +68,8 @@ class GameScene
         {
           resize();
         };
+      _renderStatsArea = createRenderStats();
+      _renderStatsRegion = createRenderStats();
     }
 
 
@@ -79,6 +85,7 @@ class GameScene
       images = new Images(this);
       mouse = new Mouse(game);
       area = new AreaView(this);
+      areaLighting = new AreaLighting(this);
       region = new RegionView(this);
 
       // init sound
@@ -195,6 +202,100 @@ class GameScene
         game.scene.region.draw();
     }
 
+// begin render timing sample
+  public inline function beginRenderSample(): Float
+    {
+      return Timer.stamp() * 1000;
+    }
+
+// add area render timing sample
+  public inline function endRenderSampleArea(startTS: Float)
+    {
+      updateRenderStats(_renderStatsArea,
+        Timer.stamp() * 1000 - startTS);
+    }
+
+// add region render timing sample
+  public inline function endRenderSampleRegion(startTS: Float)
+    {
+      updateRenderStats(_renderStatsRegion,
+        Timer.stamp() * 1000 - startTS);
+    }
+
+// get formatted area render stats text
+  public inline function getAreaRenderStatsText(): String
+    {
+      return formatRenderStats('Area', _renderStatsArea);
+    }
+
+// get formatted region render stats text
+  public inline function getRegionRenderStatsText(): String
+    {
+      return formatRenderStats('Region', _renderStatsRegion);
+    }
+
+// create empty render stats holder
+  function createRenderStats(): _RenderStats
+    {
+      return {
+        samples: [],
+        nextIndex: 0,
+        count: 0,
+        sumMs: 0,
+        maxMs: 0,
+        avgMs: 0,
+        lastMs: 0,
+        fpsHypothetical: 0,
+        hasSamples: false,
+      };
+    }
+
+// update rolling render stats from one sample
+  function updateRenderStats(stats: _RenderStats, duration: Float)
+    {
+      if (duration < 0)
+        duration = 0;
+      if (stats.count < 10)
+        {
+          stats.samples.push(duration);
+          stats.sumMs += duration;
+          stats.count = stats.samples.length;
+        }
+      else
+        {
+          var old = stats.samples[stats.nextIndex];
+          stats.sumMs -= old;
+          stats.samples[stats.nextIndex] = duration;
+          stats.sumMs += duration;
+          stats.nextIndex++;
+          if (stats.nextIndex >= 10)
+            stats.nextIndex = 0;
+        }
+      stats.lastMs = duration;
+      stats.avgMs = stats.sumMs / stats.count;
+      stats.maxMs = 0;
+      for (sample in stats.samples)
+        if (sample > stats.maxMs)
+          stats.maxMs = sample;
+      stats.fpsHypothetical =
+        (stats.avgMs > 0 ? 1000 / stats.avgMs : 0);
+      stats.hasSamples = true;
+    }
+
+// format one render stats block for hud debug output
+  function formatRenderStats(label: String, stats: _RenderStats): String
+    {
+      if (!stats.hasSamples)
+        return Const.small(label + ' frame render time (ms): N/A<br/>' +
+          label + ' hypothetical FPS: N/A');
+      return Const.small(label + ' frame render time (ms): max ' +
+        Const.round2(stats.maxMs) + ' / avg ' +
+        Const.round2(stats.avgMs) + ' / last ' +
+        Const.round2(stats.lastMs) + '<br/>' +
+        label + ' hypothetical FPS: ' +
+        Const.round2(stats.fpsHypothetical));
+    }
+
 // common clear path (both images and list)
   public inline function clearPath()
     {
@@ -220,4 +321,16 @@ class GameScene
       else if (game.location == LOCATION_REGION)
         region.update();
     }
+}
+
+typedef _RenderStats = {
+  var samples: Array<Float>;
+  var nextIndex: Int;
+  var count: Int;
+  var sumMs: Float;
+  var maxMs: Float;
+  var avgMs: Float;
+  var lastMs: Float;
+  var fpsHypothetical: Float;
+  var hasSamples: Bool;
 }

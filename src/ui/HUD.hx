@@ -653,6 +653,8 @@ public function onMouseLeave()
         ', team timeout: ' + game.group.teamTimeout + '<br/>');
       if (game.group.team != null)
         buf.add('Team: ' + game.group.team + '<br/>');
+      buf.add('<br/>' + game.scene.getRegionRenderStatsText() + '<br/>');
+      buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);
       debugInfo.innerHTML = buf.toString();

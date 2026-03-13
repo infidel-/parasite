@@ -77,6 +77,33 @@ class ParticleRifle extends ParticleBullet
         }
     }
 
+// provide atmospheric light pulses for muzzle flash and impact
+  public override function getLightPulses(): Array<_ParticleLightPulse>
+    {
+      var pulses = [{
+        x: sx + 0.5,
+        y: sy + 0.5,
+        radiusTiles: 2.6,
+        intensity: 0.84,
+        tintR: 255,
+        tintG: 230,
+        tintB: 180,
+        durationMs: 110.0,
+      }];
+      if (hit)
+        pulses.push({
+          x: dstreal.x + 0.5,
+          y: dstreal.y + 0.5,
+          radiusTiles: 2.1,
+          intensity: 0.50,
+          tintR: 255,
+          tintG: 196,
+          tintB: 156,
+          durationMs: 150.0,
+        });
+      return pulses;
+    }
+
 // draw one line
   function drawLine2(ctx: CanvasRenderingContext2D, dt: Float, dst: _Point, delta: _Point)
     {
