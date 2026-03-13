@@ -1358,6 +1358,9 @@ class UndergroundLabAreaGenerator
           if (area.hasObjectAt(x, wallY) ||
               area.hasObjectAt(x, floorY))
             continue;
+          if (room.role == ROOM_ROLE_ENTRANCE &&
+              x >= room.x2 - 1)
+            continue;
           anchors.push({
             x: x,
             y: wallY,
@@ -1451,6 +1454,12 @@ class UndergroundLabAreaGenerator
           };
           var plan = buildRoomObjectDecorPlan(room);
           var allAnchors = collectRoomObjectDecorAnchors(room, context);
+          var entranceCornerPlaced = 0;
+          if (room.role == ROOM_ROLE_ENTRANCE)
+            entranceCornerPlaced = placeEntranceCornerLargeDecors(area, tileset,
+              tiles, room, allAnchors, doorRects, reservedRects,
+              roomLargeDecorFamilyCounts, roomPlacedLargeDecors,
+              roomRolePickStats, roomObjectZoneSizeHistogram);
           var topWallTableAnchors = collectRoomTopWallTableAnchors(allAnchors, room);
           var anchorPassAnchors = collectRoomObjectDecorPassAnchors(allAnchors,
             [DECOR_ZONE_WALL_EDGE],
@@ -1463,8 +1472,12 @@ class UndergroundLabAreaGenerator
             true, true, true, doorRects, reservedRects, roomLargeDecorFamilyCounts,
             roomPlacedLargeDecors, roomRolePickStats,
             roomObjectZoneSizeHistogram);
+          var remainingLargeTargetCount = plan.largeTargetCount;
+          if (room.role == ROOM_ROLE_ENTRANCE)
+            remainingLargeTargetCount = Const.clamp(
+              plan.largeTargetCount - entranceCornerPlaced, 0, plan.largeTargetCount);
           var anchorPassResult = executeRoomObjectDecorPass(area, tileset, tiles,
-            room, anchorPassAnchors, plan.largeTargetCount,
+            room, anchorPassAnchors, remainingLargeTargetCount,
             true, true, false, doorRects, reservedRects, roomLargeDecorFamilyCounts,
             roomPlacedLargeDecors, roomRolePickStats,
             roomObjectZoneSizeHistogram);
@@ -1577,6 +1590,147 @@ class UndergroundLabAreaGenerator
           anchors.push(anchor);
         }
       return anchors;
+    }
+
+// collect non-elevator entrance corner anchors for large crate/gurney placement
+  function collectEntranceCornerLargeAnchors(
+      room: _Room): Array<_RoomObjectDecorAnchor>
+    {
+      return [
+        {
+          x: room.x2 - 1,
+          y: room.y1,
+          zone: DECOR_ZONE_WALL_EDGE,
+        },
+        {
+          x: room.x1,
+          y: room.y2 - 1,
+          zone: DECOR_ZONE_WALL_EDGE,
+        },
+        {
+          x: room.x2 - 1,
+          y: room.y2 - 1,
+          zone: DECOR_ZONE_WALL_EDGE,
+        },
+      ];
+    }
+
+// pick one large entrance crate/gurney for a corner anchor
+  function pickWeightedEntranceCornerLargeDecorBlock(
+      roomLargeDecorFamilyCounts: Map<String, Int>): _DecorPickResult
+    {
+      var blocks = [];
+      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
+        {
+          var family = getLargeDecorFamily(blockInfo);
+          if (!isLargeDecorBlock(blockInfo) ||
+              blockInfo.meta.roles.indexOf(ROOM_ROLE_ENTRANCE) < 0 ||
+              (family != 'crate' &&
+               family != 'gurney'))
+            continue;
+          blocks.push(blockInfo);
+        }
+      if (blocks.length == 0)
+        return null;
+
+      var weightList = [];
+      for (blockInfo in blocks)
+        {
+          var weights = getDecorWeights(DECOR_LAYER_OBJECT, ROOM_ROLE_ENTRANCE,
+            DECOR_ZONE_WALL_EDGE, blockInfo.meta.motifs, blockInfo.meta.tags);
+          var weight = Std.int(blockInfo.meta.baseWeight *
+            weights.roleWeight *
+            weights.zoneWeight *
+            weights.motifWeight *
+            weights.tagWeight *
+            130 / 10000000000);
+          weight = Const.clamp(weight, blockInfo.meta.minZoneWeight,
+            blockInfo.meta.maxZoneWeight);
+          weight = applyLargeDecorFamilyBudgetPenalty(ROOM_ROLE_ENTRANCE,
+            getLargeDecorFamily(blockInfo), roomLargeDecorFamilyCounts, weight);
+          logDecorWeightBreakdownSample(DECOR_LAYER_OBJECT, ROOM_ROLE_ENTRANCE,
+            DECOR_ZONE_WALL_EDGE, blockInfo, weights, 130, weight);
+          weightList.push(weight);
+        }
+
+      var index = pickWeightedIndex(weightList);
+      if (index < 0)
+        return null;
+      return {
+        blockInfo: blocks[index],
+        usedFallback: false,
+      };
+    }
+
+// place large crates or gurneys into the three non-elevator entrance corners
+  function placeEntranceCornerLargeDecors(area: AreaGame, tileset: UndergroundLab,
+      tiles: Array<Array<tiles.Tile>>, room: _Room,
+      allAnchors: Array<_RoomObjectDecorAnchor>,
+      doorRects: Array<{x1: Int, y1: Int, x2: Int, y2: Int}>,
+      reservedRects: Array<_ReservedRect>,
+      roomLargeDecorFamilyCounts: Map<String, Int>,
+      roomPlacedLargeDecors: Array<_PlacedLargeDecor>,
+      roomRolePickStats: _RoomDecorRolePickStats,
+      roomObjectZoneSizeHistogram: Map<String, Int>): Int
+    {
+      var placed = 0;
+      var cornerAnchors = collectEntranceCornerLargeAnchors(room);
+      for (anchor in cornerAnchors)
+        {
+          var placedAtCorner = false;
+          for (_ in 0...6)
+            {
+              var pickResult = pickWeightedEntranceCornerLargeDecorBlock(
+                roomLargeDecorFamilyCounts);
+              if (pickResult == null)
+                break;
+              var blockInfo = pickResult.blockInfo;
+              var block = blockInfo.block;
+              var family = getLargeDecorFamily(blockInfo);
+              if (!canPlaceLargeDecorFamilyWithSpacing(ROOM_ROLE_ENTRANCE,
+                  anchor.x, anchor.y, block, family, roomPlacedLargeDecors) ||
+                  isRectOverlappingReservedRect(anchor.x, anchor.y,
+                    anchor.x + block.width - 1, anchor.y + block.height - 1,
+                    reservedRects) ||
+                  !canPlaceDecorationObjBlock(area, tileset, tiles, room,
+                    anchor.x, anchor.y, blockInfo, doorRects))
+                continue;
+
+              incrementLargeDecorFamilyCount(roomLargeDecorFamilyCounts, family);
+              roomPlacedLargeDecors.push({
+                family: family,
+                x1: anchor.x,
+                y1: anchor.y,
+                x2: anchor.x + block.width - 1,
+                y2: anchor.y + block.height - 1,
+              });
+              var objectLayerID = tileset.getDecorationObjLayerID(
+                blockInfo.meta.imageKey);
+              var groupTag = 'DECO_OBJ:' + anchor.x + ':' + anchor.y + ':' +
+                Const.roll(0, 999999);
+              for (dy in 0...block.height)
+                for (dx in 0...block.width)
+                  area.addTileDecoration(anchor.x + dx, anchor.y + dy, {
+                    layerID: objectLayerID,
+                    icon: {
+                      row: block.row + dy,
+                      col: block.col + dx,
+                    },
+                    tag: groupTag,
+                  });
+              registerRoomDecorRolePick(roomRolePickStats,
+                DECOR_LAYER_OBJECT, false);
+              incrementRoomObjectZoneSizeHistogram(roomObjectZoneSizeHistogram,
+                anchor.zone, true);
+              pruneRoomObjectDecorAnchors(allAnchors, anchor.x, anchor.y, block);
+              placed += 1;
+              placedAtCorner = true;
+              break;
+            }
+          if (!placedAtCorner)
+            continue;
+        }
+      return placed;
     }
 
 // collect one ordered anchor list using primary then secondary zones
@@ -2497,9 +2651,9 @@ class UndergroundLabAreaGenerator
           if (family == 'machinery')
             return 2;
           if (family == 'crate')
-            return 2;
+            return 3;
           if (family == 'gurney')
-            return 2;
+            return 3;
           if (family == 'table' ||
               family == 'computer')
             return 1;
@@ -2597,9 +2751,17 @@ class UndergroundLabAreaGenerator
           return 3;
         }
       if (family == 'crate')
-        return 2;
+        {
+          if (role == ROOM_ROLE_ENTRANCE)
+            return 1;
+          return 2;
+        }
       if (family == 'gurney')
-        return 3;
+        {
+          if (role == ROOM_ROLE_ENTRANCE)
+            return 2;
+          return 3;
+        }
       return 2;
     }
 
@@ -2940,14 +3102,14 @@ class UndergroundLabAreaGenerator
               else if (role == ROOM_ROLE_WORKSHOP)
                 weight += 10;
               else if (role == ROOM_ROLE_ENTRANCE)
-                weight += 4;
+                weight += 14;
               else weight -= 8;
               continue;
             }
           if (tag == 'gurney')
             {
               if (role == ROOM_ROLE_ENTRANCE)
-                weight += 16;
+                weight += 24;
               else if (role == ROOM_ROLE_VAT)
                 weight += 8;
               else weight -= 8;
