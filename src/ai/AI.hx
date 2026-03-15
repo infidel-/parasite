@@ -303,6 +303,9 @@ public function show()
       reason = vreason;
       if (state == AI_STATE_ALERT)
         {
+          roamTargetX = -1;
+          roamTargetY = -1;
+
           // message on first alert
           if (isHuman && vreason != REASON_ATTACH)
             game.goals.complete(GOAL_TUTORIAL_ALERT);
@@ -338,7 +341,8 @@ public function show()
         return;
 
       var alertFrame = Const.FRAME_EMPTY;
-      if (state == AI_STATE_ALERT)
+      if (state == AI_STATE_ALERT ||
+          state == AI_STATE_SEARCH_LAST_SEEN)
         alertFrame = Const.FRAME_ALERTED;
       else if (state == AI_STATE_IDLE ||
           state == AI_STATE_MOVE_TARGET ||
@@ -622,9 +626,11 @@ public function show()
       // assimilated hosts do not emit random sounds
       if (effects.has(EFFECT_CRYING))
         emitRandomSound('' + EFFECT_CRYING, 30);
+      var soundState = (state == AI_STATE_SEARCH_LAST_SEEN ?
+        AI_STATE_ALERT : state);
       if (state != AI_STATE_HOST ||
           !hasTrait(TRAIT_ASSIMILATED))
-        emitRandomSound('' + state, 20);
+        emitRandomSound('' + soundState, 20);
     }
 
 // emit random sound for this key
@@ -1077,6 +1083,61 @@ public function show()
             return true;
         }
       return false;
+    }
+
+// returns the nearest currently visible enemy (can return player)
+  public function findNearestVisibleEnemy(): AITarget
+    {
+      var mindst = 1000, closestID = -1;
+      for (enemyID in enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null)
+            continue;
+          if (isSameCult(enemy) ||
+              !seesPosition(enemy.x, enemy.y))
+            continue;
+          var dst = distance(enemy.x, enemy.y);
+          if (dst < mindst)
+            {
+              mindst = dst;
+              closestID = enemyID;
+            }
+        }
+
+      // check for parasite
+      if (!game.player.vars.invisibilityEnabled &&
+          !isPlayerCultist() &&
+          seesPosition(game.playerArea.x, game.playerArea.y))
+        {
+          var dst = distance(game.playerArea.x, game.playerArea.y);
+          if (dst < mindst)
+            {
+              if (game.player.state == PLR_STATE_HOST)
+                return {
+                  game: game,
+                  ai: game.player.host,
+                  type: TARGET_AI,
+                }
+              else
+                return {
+                  game: game,
+                  ai: null,
+                  type: TARGET_PLAYER,
+                }
+            }
+        }
+
+      if (closestID == -1)
+        return null;
+      var targetAI = game.area.getAIByID(closestID);
+      if (targetAI == null)
+        return null;
+      return {
+        game: game,
+        ai: targetAI,
+        type: TARGET_AI,
+      }
     }
 
 // returns the nearest enemy (can return player)

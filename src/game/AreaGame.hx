@@ -1720,7 +1720,8 @@ class AreaGame extends _SaveObject
       // count number of alerted AI
       var cnt = 0;
       for (ai in _ai)
-        if (ai.state == AI_STATE_ALERT)
+        if (ai.state == AI_STATE_ALERT ||
+            ai.state == AI_STATE_SEARCH_LAST_SEEN)
           cnt++;
 
       if (cnt > 0)
