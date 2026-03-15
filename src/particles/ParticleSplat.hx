@@ -143,6 +143,8 @@ class ParticleSplat extends Particle
       // splats are only allowed on floors
       if (!game.area.isWalkable(pt.x, pt.y))
         return false;
+      if (hasObjectAt(pt.x, pt.y))
+        return false;
 
       var scaledSize = tile * scale;
       var halfSize = scaledSize / 2;
@@ -163,36 +165,50 @@ class ParticleSplat extends Particle
 
       // if splat touches tile edge, check that adjacent tile is walkable
       if (touchesLeft &&
-          !game.area.isWalkable(pt.x - 1, pt.y))
+          (!game.area.isWalkable(pt.x - 1, pt.y) ||
+           hasObjectAt(pt.x - 1, pt.y)))
         return false;
       if (touchesRight &&
-          !game.area.isWalkable(pt.x + 1, pt.y))
+          (!game.area.isWalkable(pt.x + 1, pt.y) ||
+           hasObjectAt(pt.x + 1, pt.y)))
         return false;
       if (touchesTop &&
-          !game.area.isWalkable(pt.x, pt.y - 1))
+          (!game.area.isWalkable(pt.x, pt.y - 1) ||
+           hasObjectAt(pt.x, pt.y - 1)))
         return false;
       if (touchesBottom &&
-          !game.area.isWalkable(pt.x, pt.y + 1))
+          (!game.area.isWalkable(pt.x, pt.y + 1) ||
+           hasObjectAt(pt.x, pt.y + 1)))
         return false;
 
       // if splat touches tile corner, check that diagonal tile is walkable
       if (touchesLeft &&
           touchesTop &&
-          !game.area.isWalkable(pt.x - 1, pt.y - 1))
+          (!game.area.isWalkable(pt.x - 1, pt.y - 1) ||
+           hasObjectAt(pt.x - 1, pt.y - 1)))
         return false;
       if (touchesRight &&
           touchesTop &&
-          !game.area.isWalkable(pt.x + 1, pt.y - 1))
+          (!game.area.isWalkable(pt.x + 1, pt.y - 1) ||
+           hasObjectAt(pt.x + 1, pt.y - 1)))
         return false;
       if (touchesLeft &&
           touchesBottom &&
-          !game.area.isWalkable(pt.x - 1, pt.y + 1))
+          (!game.area.isWalkable(pt.x - 1, pt.y + 1) ||
+           hasObjectAt(pt.x - 1, pt.y + 1)))
         return false;
       if (touchesRight &&
           touchesBottom &&
-          !game.area.isWalkable(pt.x + 1, pt.y + 1))
+          (!game.area.isWalkable(pt.x + 1, pt.y + 1) ||
+           hasObjectAt(pt.x + 1, pt.y + 1)))
         return false;
 
       return true;
+    }
+
+// check whether a tile has any area object on it
+  function hasObjectAt(x: Int, y: Int): Bool
+    {
+      return game.area.hasObjectAt(x, y);
     }
 }

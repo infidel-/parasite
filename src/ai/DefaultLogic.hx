@@ -24,6 +24,10 @@ class DefaultLogic
           case AI_STATE_ALERT:
             stateAlert(ai);
 
+          // search the last seen hostile target tile
+          case AI_STATE_SEARCH_LAST_SEEN:
+            stateSearchLastSeen(ai);
+
           // controlled by parasite
           case AI_STATE_HOST:
             stateHost(ai);
@@ -234,17 +238,7 @@ class DefaultLogic
       // relentless AI cannot calm down once alerted
       if (ai.timers.alert == 0 && !ai.isRelentless)
         {
-          // guard must return to guard spot
-          if (ai.isGuard &&
-              (ai.x != ai.guardTargetX || ai.y != ai.guardTargetY))
-            {
-              ai.setState(AI_STATE_MOVE_TARGET);
-              ai.roamTargetX = ai.guardTargetX;
-              ai.roamTargetY = ai.guardTargetY;
-            }
-          // otherwise become idle
-          else ai.setState(AI_STATE_IDLE);
-          ai.alertness = 10;
+          calmFromAlert(ai);
           return;
         }
 
@@ -261,21 +255,22 @@ class DefaultLogic
 // state: alert for aggressive AI
   static function stateAlertAggressive(ai: AI)
     {
-      // find nearest enemy (and magically know where they are until alert timer runs out)
-      var target = ai.findNearestEnemy();
+      // find nearest visible enemy and remember its last seen tile
+      var target = ai.findNearestVisibleEnemy();
       if (target == null)
         {
-          ai.setState(AI_STATE_IDLE);
+          if (ai.roamTargetX >= 0 &&
+              ai.roamTargetY >= 0)
+            {
+              ai.setState(AI_STATE_SEARCH_LAST_SEEN);
+              ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
+            }
           return;
         }
 
-      // search for target
-      // we cheat a little and follow invisible target
-      // emulating ai memory before alert timer ends
-      if (!ai.seesPosition(target.x, target.y))
-        ai.logicMoveTo(target.x, target.y);
-      // try to attack
-      else CommonLogic.logicAttack(ai, target, false);
+      ai.roamTargetX = target.x;
+      ai.roamTargetY = target.y;
+      CommonLogic.logicAttack(ai, target, false);
     }
 
 // state: host logic
@@ -297,6 +292,59 @@ class DefaultLogic
           ai.onDetach('default');
           game.playerArea.onDetach(); // notify player
         }
+    }
+
+// calm alerted ai and resume their normal post-alert behavior
+  static function calmFromAlert(ai: AI)
+    {
+      // guard must return to guard spot
+      if (ai.isGuard &&
+          (ai.x != ai.guardTargetX || ai.y != ai.guardTargetY))
+        {
+          ai.setState(AI_STATE_MOVE_TARGET);
+          ai.roamTargetX = ai.guardTargetX;
+          ai.roamTargetY = ai.guardTargetY;
+        }
+      // otherwise become idle
+      else ai.setState(AI_STATE_IDLE);
+      ai.alertness = 10;
+    }
+
+// state: search the last seen hostile target tile
+  static function stateSearchLastSeen(ai: AI)
+    {
+      // find nearest visible enemy and update last seen tile
+      var target = ai.findNearestVisibleEnemy();
+      if (target != null)
+        {
+          ai.setState(AI_STATE_ALERT);
+          ai.roamTargetX = target.x;
+          ai.roamTargetY = target.y;
+          CommonLogic.logicAttack(ai, target, false);
+          return;
+        }
+
+      // stand and wonder what happened until alertness goes down
+      ai.timers.alert--;
+      if (ai.timers.alert == 0 && !ai.isRelentless)
+        {
+          ai.roamTargetX = -1;
+          ai.roamTargetY = -1;
+          calmFromAlert(ai);
+          return;
+        }
+
+      if (ai.roamTargetX < 0 ||
+          ai.roamTargetY < 0)
+        return;
+
+      // move to last seen tile
+      ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
+      if (ai.x != ai.roamTargetX ||
+          ai.y != ai.roamTargetY)
+        return;
+      ai.roamTargetX = -1;
+      ai.roamTargetY = -1;
     }
 
 // state: move to target spot
