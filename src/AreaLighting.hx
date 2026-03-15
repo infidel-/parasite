@@ -9,11 +9,10 @@ import js.html.Image;
 import ai.AI;
 import game.AreaGame;
 import game.Game;
-import objects.mission.CloneVat;
+import lighting.*;
 import particles.Particle;
 import particles._ParticleLightPulse;
-import tiles.UndergroundLab;
-import tiles.UndergroundLab._DecorBlock;
+import tiles.*;
 
 class AreaLighting
 {
@@ -25,10 +24,6 @@ class AreaLighting
   static var ATMOS_MAX_TRANSIENT_LIGHTS = 14;
 // chance that one generated layout light source is broken
   static var LAYOUT_LIGHT_BROKEN_CHANCE_PERCENT = 10;
-// spacing in tiles between corridor light anchors
-  static var LAYOUT_LIGHT_CORRIDOR_SPACING = 4;
-// minimum corridor run span required before placing lights
-  static var LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN = 3;
 // radius for the soft outer layout-light pass
   static var LAYOUT_LIGHT_RADIUS_OUTER = 2.5;
 // radius for the sharper inner layout-light pass
@@ -45,16 +40,6 @@ class AreaLighting
   static var FALL_OFF_PROFILE_SMOOTH_CURRENT = 'smooth-current';
 // falloff ID for the legacy sharp radial profile
   static var FALL_OFF_PROFILE_SHARP_LEGACY = 'sharp-legacy';
-// layout room role ID for entry rooms
-  static var LAYOUT_ROLE_ENTRANCE = 'entrance';
-// layout room role ID for clone-vat rooms
-  static var LAYOUT_ROLE_VAT = 'vat';
-// layout room role ID for workshop rooms
-  static var LAYOUT_ROLE_WORKSHOP = 'workshop';
-// layout room role ID for storage rooms
-  static var LAYOUT_ROLE_STORAGE = 'storage';
-// layout room role ID for research rooms
-  static var LAYOUT_ROLE_RESEARCH = 'research';
 // max number of layout emitters that can project one object shadow
   static var PROJECTED_SHADOW_MAX_EMITTERS = 4;
 // max emitter distance in tiles to affect one projected shadow
@@ -396,7 +381,8 @@ class AreaLighting
     {
       return (area != null &&
         area.info != null &&
-        area.info.id == AREA_UNDERGROUND_LAB);
+        (area.info.id == AREA_UNDERGROUND_LAB ||
+         area.info.id == AREA_SEWERS));
     }
 
 // append local tile decoration and object details for light debugging
@@ -452,103 +438,20 @@ class AreaLighting
       return layerKind + '=' + decoration.layerID +
         ',icon=' + iconInfo +
         ',tag=' + tagInfo +
-        ',source=' + getTileLightDebugDecorationSourceID(area,
+        ',source=' + getTileLightDebugDecorationSourceID(
           undergroundLab, tileID, decoration);
     }
 
 // resolve one debug-friendly decoration source id for a tile decoration
-  function getTileLightDebugDecorationSourceID(area: AreaGame,
+  function getTileLightDebugDecorationSourceID(
       undergroundLab: UndergroundLab, tileID: Int,
       decoration: tiles.Decoration): String
     {
       if (undergroundLab == null ||
           decoration.icon == null)
         return '-';
-
-      if (decoration.tag != null &&
-          decoration.tag.indexOf('DECO_OBJ:') == 0)
-        {
-          var objectSourceID = getDecorationObjDebugSourceID(undergroundLab,
-            decoration);
-          if (objectSourceID != null)
-            return objectSourceID;
-        }
-
-      var nearTopSourceID = getNearTopDebugSourceID(undergroundLab, tileID,
-        decoration);
-      if (nearTopSourceID != null)
-        return nearTopSourceID;
-
-      if (decoration.layerID == 0)
-        {
-          var floorSourceID = getFloorDecorDebugSourceID(decoration.icon);
-          if (floorSourceID != null)
-            return floorSourceID;
-        }
-
-      return '-';
-    }
-
-// resolve debug source id for a floor decoration icon
-  function getFloorDecorDebugSourceID(icon: _Icon): String
-    {
-      for (floorMeta in UndergroundLab.FLOOR_DECOR_META)
-        {
-          if (floorMeta.icon.row != icon.row ||
-              floorMeta.icon.col != icon.col)
-            continue;
-          return 'floor:' + floorMeta.motifs.join('+');
-        }
-      return null;
-    }
-
-// resolve debug source id for an object decoration fragment
-  function getDecorationObjDebugSourceID(undergroundLab: UndergroundLab,
-      decoration: tiles.Decoration): String
-    {
-      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
-        {
-          if (blockInfo.meta.imageKey == null)
-            continue;
-          if (undergroundLab.getDecorationObjLayerID(blockInfo.meta.imageKey) !=
-              decoration.layerID)
-            continue;
-          if (decoration.icon.row < blockInfo.block.row ||
-              decoration.icon.row >= blockInfo.block.row + blockInfo.block.height ||
-              decoration.icon.col < blockInfo.block.col ||
-              decoration.icon.col >= blockInfo.block.col + blockInfo.block.width)
-            continue;
-          return 'object:' + blockInfo.meta.id;
-        }
-      return null;
-    }
-
-// resolve debug source id for a near-top decoration fragment on the correct tile namespace
-  function getNearTopDebugSourceID(undergroundLab: UndergroundLab,
-      tileID: Int, decoration: tiles.Decoration): String
-    {
-      if (decoration.icon == null)
-        return null;
-
-      var isWallTile = undergroundLab.isWallTile(tileID);
-      for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
-        {
-          var rowDYs = (isWallTile ? [0] : [1]);
-          for (dy in rowDYs)
-            {
-              if (dy >= blockInfo.block.height)
-                continue;
-              if (undergroundLab.getNearTopDecorationLayerID(blockInfo, dy) !=
-                  decoration.layerID)
-                continue;
-              if (decoration.icon.row != blockInfo.block.row + dy ||
-                  decoration.icon.col < blockInfo.block.col ||
-                  decoration.icon.col >= blockInfo.block.col + blockInfo.block.width)
-                continue;
-              return 'nearTop:' + blockInfo.meta.id;
-            }
-        }
-      return null;
+      return UndergroundLabAreaLighting.getDebugDecorationSourceID(
+        undergroundLab, tileID, decoration);
     }
 
 // get cached static atmosphere light stamps for an area
@@ -561,7 +464,12 @@ class AreaLighting
       if (stamps != null)
         return stamps;
 
-      stamps = buildUndergroundLabLightStamps(area);
+      if (area.info.id == AREA_UNDERGROUND_LAB)
+        stamps = UndergroundLabAreaLighting.buildLightStamps(scene, area,
+          this);
+      else if (area.info.id == AREA_SEWERS)
+        stamps = SewerAreaLighting.buildLightStamps(scene, area, this);
+      else stamps = [];
       areaLightStampsByAreaID.set(area.id, stamps);
       return stamps;
     }
@@ -607,334 +515,11 @@ class AreaLighting
       return markers;
     }
 
-// build underground lab atmosphere stamps from placed light sources
-  function buildUndergroundLabLightStamps(area: AreaGame): Array<_AreaLightStamp>
+// convert layout light sources into the two-pass static atmosphere stamps
+  public function addLayoutLightSources(area: AreaGame,
+      stamps: Array<_AreaLightStamp>,
+      sources: Array<_LayoutLightSource>)
     {
-      var stamps = [];
-      if (game == null ||
-          scene == null ||
-          scene.images == null)
-        return stamps;
-
-      var tileset = scene.images.getTileset(area.typeID);
-      if (!Std.isOfType(tileset, UndergroundLab))
-        return stamps;
-
-      if (area.tiles == null ||
-          area.tiles.length == 0)
-        area.initTilesFromCells();
-      var undergroundLab: UndergroundLab = cast tileset;
-
-      addFloorDecorationLights(area, stamps);
-      addWallDecorationLights(area, stamps, undergroundLab);
-      addNearTopWallDecorationLights(area, stamps, undergroundLab);
-      addDecorationObjectLights(area, stamps, undergroundLab);
-      addCloneVatLights(area, stamps);
-      addRoomAndCorridorLayoutLights(area, stamps, undergroundLab);
-      return stamps;
-    }
-
-// add floor decoration light stamps from floor metadata
-  function addFloorDecorationLights(area: AreaGame,
-      stamps: Array<_AreaLightStamp>)
-    {
-      var tiles = area.getTiles();
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          {
-            var tile = tiles[x][y];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-
-            for (decoration in tile.decoration)
-              {
-                if (decoration.layerID != 0 ||
-                    decoration.icon == null)
-                  continue;
-
-                for (floorMeta in UndergroundLab.FLOOR_DECOR_META)
-                  {
-                    if (floorMeta.icon.row != decoration.icon.row ||
-                        floorMeta.icon.col != decoration.icon.col ||
-                        floorMeta.light == null)
-                      continue;
-
-                    pushLightStamp(area, stamps, x + 0.5, y + 0.5,
-                      floorMeta.light,
-                      'floor-decor');
-                    break;
-                  }
-              }
-          }
-    }
-
-// add wall decoration light stamps from wall layer metadata
-  function addWallDecorationLights(area: AreaGame,
-      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
-    {
-      var tiles = area.getTiles();
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          {
-            var tile = tiles[x][y];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-            var tileID = area.getCellType(x, y);
-            if (!undergroundLab.isWallTile(tileID))
-              continue;
-
-            var hasNearTopDecoration = false;
-            for (decoration in tile.decoration)
-              {
-                if (undergroundLab.isNearTopWallDecorationWallLayerID(
-                    decoration.layerID))
-                  {
-                    hasNearTopDecoration = true;
-                    break;
-                  }
-              }
-            if (hasNearTopDecoration)
-              continue;
-
-            for (decoration in tile.decoration)
-              {
-                var light = undergroundLab.getWallDecorationLayerLight(
-                  decoration.layerID);
-                if (light == null)
-                  continue;
-                pushLightStamp(area, stamps, x + 0.5, y + 0.5,
-                  light, 'wall-decor');
-              }
-          }
-    }
-
-// add near-top wall decoration light stamps from near-top metadata
-  function addNearTopWallDecorationLights(area: AreaGame,
-      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
-    {
-      var tiles = area.getTiles();
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          {
-            var tile = tiles[x][y];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-            var tileID = area.getCellType(x, y);
-            if (!undergroundLab.isHorizontalWallTile(tileID))
-              continue;
-
-            for (decoration in tile.decoration)
-              {
-                if (!undergroundLab.isNearTopWallDecorationWallLayerID(
-                    decoration.layerID) ||
-                    decoration.icon == null)
-                  continue;
-                var blockInfo = getNearTopWallDecorationBlock(undergroundLab,
-                  decoration.layerID, decoration.icon.row, decoration.icon.col);
-                if (blockInfo == null ||
-                    blockInfo.meta.light == null)
-                  continue;
-                pushLightStamp(area, stamps, x + 0.5, y + 1.5,
-                  blockInfo.meta.light, 'near-top-wall');
-              }
-          }
-    }
-
-// get near-top wall block metadata by layer and wall icon coordinates
-  function getNearTopWallDecorationBlock(undergroundLab: UndergroundLab,
-      layerID: Int, row: Int, col: Int): _DecorBlock
-    {
-      for (blockInfo in UndergroundLab.NEAR_TOP_WALL_META)
-        {
-          if (blockInfo.block.row != row ||
-              blockInfo.block.col != col)
-            continue;
-          if (undergroundLab.getNearTopDecorationLayerID(blockInfo, 0) != layerID)
-            continue;
-          return blockInfo;
-        }
-      return null;
-    }
-
-// collect grouped decoration object bounds keyed by placement tags
-  function collectDecorationObjGroups(area: AreaGame,
-      undergroundLab: UndergroundLab): Array<_AtmosphereDecorObjGroup>
-    {
-      var groupsByTag: Map<String, _AtmosphereDecorObjGroup> = new Map();
-      var tiles = area.getTiles();
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          {
-            var tile = tiles[x][y];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-
-            for (decoration in tile.decoration)
-              {
-                if (decoration.tag == null ||
-                    decoration.icon == null ||
-                    decoration.tag.indexOf('DECO_OBJ:') != 0 ||
-                    !undergroundLab.isDecorationObjLayerID(decoration.layerID))
-                  continue;
-
-                var group = groupsByTag.get(decoration.tag);
-                if (group == null)
-                  {
-                    groupsByTag.set(decoration.tag, {
-                      layerID: decoration.layerID,
-                      x1: x,
-                      y1: y,
-                      x2: x,
-                      y2: y,
-                      minIconRow: decoration.icon.row,
-                      minIconCol: decoration.icon.col,
-                    });
-                    continue;
-                  }
-
-                if (x < group.x1)
-                  group.x1 = x;
-                if (y < group.y1)
-                  group.y1 = y;
-                if (x > group.x2)
-                  group.x2 = x;
-                if (y > group.y2)
-                  group.y2 = y;
-                if (decoration.icon.row < group.minIconRow)
-                  group.minIconRow = decoration.icon.row;
-                if (decoration.icon.col < group.minIconCol)
-                  group.minIconCol = decoration.icon.col;
-              }
-          }
-
-      var groups: Array<_AtmosphereDecorObjGroup> = [];
-      for (group in groupsByTag)
-        groups.push(group);
-      return groups;
-    }
-
-// add decoration object light stamps by grouped object placement tags
-  function addDecorationObjectLights(area: AreaGame,
-      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
-    {
-      var groups = collectDecorationObjGroups(area, undergroundLab);
-      for (group in groups)
-        {
-          var blockInfo = getDecorationObjBlock(undergroundLab, group, true);
-          if (blockInfo == null ||
-              blockInfo.meta.light == null)
-            continue;
-
-          var centerX = (group.x1 + group.x2 + 1) / 2.0;
-          var centerY = (group.y1 + group.y2 + 1) / 2.0;
-          pushLightStamp(area, stamps, centerX, centerY,
-            blockInfo.meta.light, blockInfo.meta.id);
-        }
-    }
-
-// get decoration object block info from grouped placement signature
-  function getDecorationObjBlock(undergroundLab: UndergroundLab,
-      group: _AtmosphereDecorObjGroup, requireLight: Bool): _DecorBlock
-    {
-      var width = group.x2 - group.x1 + 1;
-      var height = group.y2 - group.y1 + 1;
-      for (blockInfo in UndergroundLab.DECORATION_OBJ_META)
-        {
-          if (blockInfo.meta.imageKey == null)
-            continue;
-          if (requireLight &&
-              blockInfo.meta.light == null)
-            continue;
-          if (blockInfo.block.row != group.minIconRow ||
-              blockInfo.block.col != group.minIconCol ||
-              blockInfo.block.width != width ||
-              blockInfo.block.height != height)
-            continue;
-
-          var layerID = undergroundLab.getDecorationObjLayerID(
-            blockInfo.meta.imageKey);
-          if (layerID == group.layerID)
-            return blockInfo;
-        }
-      return null;
-    }
-
-// add one center light per clone vat group
-  function addCloneVatLights(area: AreaGame, stamps: Array<_AreaLightStamp>)
-    {
-      var processedRootIDs = new Map();
-      for (o in area.getObjects())
-        {
-          if (o.type != 'clone_vat')
-            continue;
-
-          var vat: CloneVat = cast o;
-          var rootID = (vat.vatRootObjectID >= 0 ?
-            vat.vatRootObjectID : vat.id);
-          if (processedRootIDs[rootID])
-            continue;
-          processedRootIDs[rootID] = true;
-
-          var rootVat: CloneVat = vat;
-          if (rootID != vat.id)
-            {
-              var rootObj = area.getObject(rootID);
-              if (rootObj != null &&
-                  rootObj.type == 'clone_vat')
-                rootVat = cast rootObj;
-            }
-          if (rootVat.isFlushed)
-            continue;
-
-          var partObjectIDs = rootVat.vatPartObjectIDs;
-          if (partObjectIDs == null ||
-              partObjectIDs.length == 0)
-            partObjectIDs = vat.vatPartObjectIDs;
-
-          var x1 = rootVat.x;
-          var y1 = rootVat.y;
-          var x2 = rootVat.x;
-          var y2 = rootVat.y;
-          if (partObjectIDs != null &&
-              partObjectIDs.length > 0)
-            for (objectID in partObjectIDs)
-              {
-                var partObj = area.getObject(objectID);
-                if (partObj == null ||
-                    partObj.type != 'clone_vat')
-                  continue;
-                if (partObj.x < x1)
-                  x1 = partObj.x;
-                if (partObj.y < y1)
-                  y1 = partObj.y;
-                if (partObj.x > x2)
-                  x2 = partObj.x;
-                if (partObj.y > y2)
-                  y2 = partObj.y;
-              }
-
-          var centerX = (x1 + x2 + 1) / 2.0;
-          var centerY = (y1 + y2 + 1) / 2.0;
-          pushLightStamp(area, stamps, centerX, centerY,
-            UndergroundLab.ATMOS_LIGHT_LARGE_GREEN, 'clone-vat');
-        }
-    }
-
-// add role-based room and corridor lights with two-pass profiles
-  function addRoomAndCorridorLayoutLights(area: AreaGame,
-      stamps: Array<_AreaLightStamp>, undergroundLab: UndergroundLab)
-    {
-      var sources: Array<_LayoutLightSource> = [];
-      addRoomLayoutSources(area, sources);
-      addCorridorLayoutSources(area, sources, undergroundLab);
       sources = filterAdjacentLayoutSources(sources);
       for (source in sources)
         {
@@ -976,8 +561,8 @@ class AreaLighting
         if (a.kind != b.kind)
           return (a.kind < b.kind ? -1 : 1);
         if (a.y != b.y)
-          return a.y - b.y;
-        return a.x - b.x;
+          return Reflect.compare(a.y, b.y);
+        return Reflect.compare(a.x, b.x);
       });
 
       var filtered: Array<_LayoutLightSource> = [];
@@ -1007,299 +592,8 @@ class AreaLighting
       return filtered;
     }
 
-// add evenly spaced room light sources based on room dimensions
-  function addRoomLayoutSources(area: AreaGame, sources: Array<_LayoutLightSource>)
-    {
-      if (area.generatorInfo == null ||
-          area.generatorInfo.rooms == null ||
-          area.generatorInfo.rooms.length == 0)
-        return;
-      for (room in area.generatorInfo.rooms)
-        {
-          var xAnchors = buildRoomAxisAnchors(room.x1, room.w);
-          var yAnchors = buildRoomAxisAnchors(room.y1, room.h);
-          var roleLight = getLayoutRoomRoleLight(room.role);
-          for (y in yAnchors)
-            for (x in xAnchors)
-              sources.push({
-                x: x,
-                y: y,
-                tintR: roleLight.tintR,
-                tintG: roleLight.tintG,
-                tintB: roleLight.tintB,
-                kind: 'layout-room',
-                sourceGroupID: 'room-' + room.id,
-              });
-        }
-    }
-
-// add corridor centerline sources from horizontal and vertical runs
-  function addCorridorLayoutSources(area: AreaGame,
-      sources: Array<_LayoutLightSource>, undergroundLab: UndergroundLab)
-    {
-      if (area.generatorInfo == null ||
-          area.generatorInfo.rooms == null)
-        return;
-
-      var roomMask = buildRoomMask(area);
-      var doorMask = buildDoorMask(area);
-      var corridorMask = buildCorridorMask(area, undergroundLab, roomMask,
-        doorMask);
-      var corridorLight = getLayoutCorridorLight();
-
-      for (y in 0...area.height - 1)
-        {
-          var x = 0;
-          while (x < area.width)
-            {
-              if (!(corridorMask[x][y] &&
-                  corridorMask[x][y + 1]))
-                {
-                  x++;
-                  continue;
-                }
-              var runStart = x;
-              while (x < area.width &&
-                  corridorMask[x][y] &&
-                  corridorMask[x][y + 1])
-                x++;
-              var runEnd = x - 1;
-              var runSpan = runEnd - runStart + 1;
-              if (runSpan < LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN)
-                continue;
-              var anchors = buildRunAnchors(runStart, runEnd + 1,
-                LAYOUT_LIGHT_CORRIDOR_SPACING);
-              for (ax in anchors)
-                sources.push({
-                  x: ax,
-                  y: y + 1,
-                  tintR: corridorLight.tintR,
-                  tintG: corridorLight.tintG,
-                  tintB: corridorLight.tintB,
-                  kind: 'layout-corridor',
-                  sourceGroupID: 'corridor',
-                });
-            }
-        }
-
-      for (x in 0...area.width - 1)
-        {
-          var y = 0;
-          while (y < area.height)
-            {
-              if (!(corridorMask[x][y] &&
-                  corridorMask[x + 1][y]))
-                {
-                  y++;
-                  continue;
-                }
-              var runStart = y;
-              while (y < area.height &&
-                  corridorMask[x][y] &&
-                  corridorMask[x + 1][y])
-                y++;
-              var runEnd = y - 1;
-              var runSpan = runEnd - runStart + 1;
-              if (runSpan < LAYOUT_LIGHT_CORRIDOR_MIN_RUN_SPAN)
-                continue;
-              var anchors = buildRunAnchors(runStart, runEnd + 1,
-                LAYOUT_LIGHT_CORRIDOR_SPACING);
-              for (ay in anchors)
-                sources.push({
-                  x: x + 1,
-                  y: ay,
-                  tintR: corridorLight.tintR,
-                  tintG: corridorLight.tintG,
-                  tintB: corridorLight.tintB,
-                  kind: 'layout-corridor',
-                  sourceGroupID: 'corridor',
-                });
-            }
-        }
-    }
-
-// build boolean mask of room tiles from generator room rectangles
-  function buildRoomMask(area: AreaGame): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            mask[x][y] = false;
-        }
-
-      for (room in area.generatorInfo.rooms)
-        for (y in room.y1...room.y2 + 1)
-          for (x in room.x1...room.x2 + 1)
-            mask[x][y] = true;
-      return mask;
-    }
-
-// build corridor mask from walkable non-room underground tiles
-  function buildCorridorMask(area: AreaGame, undergroundLab: UndergroundLab,
-      roomMask: Array<Array<Bool>>,
-      doorMask: Array<Array<Bool>>): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            {
-              var tileID = area.getCellType(x, y);
-              mask[x][y] = (!roomMask[x][y] &&
-                !doorMask[x][y] &&
-                undergroundLab.isWalkable(tileID));
-            }
-        }
-      return mask;
-    }
-
-// build boolean mask of door object tiles
-  function buildDoorMask(area: AreaGame): Array<Array<Bool>>
-    {
-      var mask: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          mask[x] = [];
-          for (y in 0...area.height)
-            mask[x][y] = false;
-        }
-
-      for (o in area.getObjects())
-        {
-          if (o.type != 'door' ||
-              o.x < 0 ||
-              o.y < 0 ||
-              o.x >= area.width ||
-              o.y >= area.height)
-            continue;
-          mask[o.x][o.y] = true;
-        }
-      return mask;
-    }
-
-// build one room axis anchor sequence by room-size rule
-  function buildRoomAxisAnchors(start: Int, size: Int): Array<Int>
-    {
-      var minPos = start + 1;
-      var maxPos = start + size - 1;
-      if (minPos > maxPos)
-        return [start];
-
-      var count = getRoomAxisAnchorCount(size);
-      if (count <= 1)
-        return [Std.int(Math.round((minPos + maxPos) / 2.0))];
-      if (count == 2)
-        {
-          var pos1 = Std.int(Math.round(start + size * 0.25));
-          var pos2 = Std.int(Math.round(start + size * 0.75));
-          pos1 = Const.clamp(pos1, minPos, maxPos);
-          pos2 = Const.clamp(pos2, minPos, maxPos);
-          if (pos2 <= pos1)
-            pos2 = Const.clamp(pos1 + 1, minPos, maxPos);
-          if (pos1 == pos2)
-            return [pos1];
-          return [pos1, pos2];
-        }
-
-      // for larger dimensions, place one anchor per 4-tile block at block center
-      var blockAnchors: Array<Int> = [];
-      var blockStart = 0;
-      while (blockStart < size)
-        {
-          var blockEnd = blockStart + 4;
-          if (blockEnd > size)
-            blockEnd = size;
-          var pos = Std.int(Math.round(start + (blockStart + blockEnd) / 2.0));
-          pos = Const.clamp(pos, minPos, maxPos);
-          if (blockAnchors.indexOf(pos) < 0)
-            blockAnchors.push(pos);
-          blockStart += 4;
-        }
-      if (blockAnchors.length > 0)
-        {
-          var filteredBlockAnchors: Array<Int> = [];
-          for (pos in blockAnchors)
-            {
-              if (filteredBlockAnchors.length > 0 &&
-                  pos - filteredBlockAnchors[filteredBlockAnchors.length - 1] < 3)
-                continue;
-              filteredBlockAnchors.push(pos);
-            }
-          if (filteredBlockAnchors.length > 0)
-            return filteredBlockAnchors;
-        }
-
-      var anchors: Array<Int> = [];
-      for (i in 0...count)
-        {
-          var t = (i + 1.0) / (count + 1.0);
-          var pos = Std.int(Math.round(minPos + (maxPos - minPos) * t));
-          pos = Const.clamp(pos, minPos, maxPos);
-          if (anchors.indexOf(pos) < 0)
-            anchors.push(pos);
-        }
-      if (anchors.length <= 0)
-        anchors.push(Std.int(Math.round((minPos + maxPos) / 2.0)));
-      return anchors;
-    }
-
-// get room axis anchor count from room dimension
-  function getRoomAxisAnchorCount(size: Int): Int
-    {
-      if (size <= 8)
-        return 1;
-      return Std.int(Math.ceil(size / 8.0));
-    }
-
-// build centered run anchors with approximate fixed spacing
-  function buildRunAnchors(start: Int, end: Int, spacing: Int): Array<Int>
-    {
-      var span = end - start;
-      if (span <= 0)
-        return [];
-
-      var count = Std.int(Math.ceil(span / spacing));
-      if (count < 1)
-        count = 1;
-      var anchors: Array<Int> = [];
-      for (i in 0...count)
-        {
-          var t = (i + 0.5) / count;
-          var pos = Std.int(Math.round(start + span * t));
-          pos = Const.clamp(pos, start, end);
-          if (anchors.indexOf(pos) < 0)
-            anchors.push(pos);
-        }
-      return anchors;
-    }
-
-// get room role color profile for layout light sources
-  function getLayoutRoomRoleLight(role: String): _AtmosphereLightMeta
-    {
-      if (role == LAYOUT_ROLE_ENTRANCE)
-        return UndergroundLab.ATMOS_LIGHT_SMALL_CYAN;
-      if (role == LAYOUT_ROLE_VAT)
-        return UndergroundLab.ATMOS_LIGHT_LARGE_GREEN;
-      if (role == LAYOUT_ROLE_WORKSHOP)
-        return UndergroundLab.ATMOS_LIGHT_LARGE_ORANGE;
-      if (role == LAYOUT_ROLE_STORAGE)
-        return UndergroundLab.ATMOS_LIGHT_LARGE_RED;
-      if (role == LAYOUT_ROLE_RESEARCH)
-        return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
-      return UndergroundLab.ATMOS_LIGHT_LARGE_BLUE;
-    }
-
-// get corridor color profile for layout light sources
-  function getLayoutCorridorLight(): _AtmosphereLightMeta
-    {
-      return UndergroundLab.ATMOS_LIGHT_LARGE_WHITE;
-    }
-
 // append one atmosphere light stamp with short-range deduplication
-  function pushLightStamp(area: AreaGame,
+  public function pushLightStamp(area: AreaGame,
       stamps: Array<_AreaLightStamp>,
       x: Float, y: Float, light: _AtmosphereLightMeta, kind: String)
     {
@@ -1521,16 +815,7 @@ class AreaLighting
       var mapCtx = aiShadowMap.getContext2d();
       mapCtx.clearRect(0, 0, aiShadowMap.width, aiShadowMap.height);
 
-      var tileset = scene.images.getTileset(area.typeID);
-      if (!Std.isOfType(tileset, UndergroundLab))
-        {
-          aiShadowDirty = false;
-          aiShadowRebuildTS = nowTS;
-          return;
-        }
-
       // collect shadow emitter metadata from area light stamps
-      var undergroundLab: UndergroundLab = cast tileset;
       var emitters = collectProjectedShadowEmitters(getAreaLightStamps(area));
       if (emitters.length <= 0)
         {
@@ -1579,8 +864,7 @@ class AreaLighting
             Math.sqrt(emitterHits.length);
           for (hit in emitterHits)
             {
-              if (!undergroundLab.isNearTopFloorDecorationLayerID(caster.layerID) &&
-                  isEmitterInsideProjectedShadowCaster(hit.emitter, caster))
+              if (isEmitterInsideProjectedShadowCaster(hit.emitter, caster))
                 continue;
               var dist = Math.sqrt(hit.distSq);
               var distanceFalloff = 1.0 -
@@ -1651,12 +935,16 @@ class AreaLighting
           casters.push({
             caster: {
               layerID: -1,
+              image: sprite.image,
+              maskKey: 'ai:' + sprite.imageKey + ':' + sprite.srcRow + ':' +
+                sprite.srcCol + ':1:1',
               srcRow: sprite.srcRow,
               srcCol: sprite.srcCol,
               blockW: 1,
               blockH: 1,
               centerX: ai.x + 0.5,
               centerY: ai.y + 0.5,
+              skipSelfShadow: true,
             },
             layer: sprite.image,
             maskKey: 'ai:' + sprite.imageKey + ':' + sprite.srcRow + ':' +
@@ -1703,14 +991,10 @@ class AreaLighting
       mapCtx: CanvasRenderingContext2D,
       stamps: Array<_AreaLightStamp>): Bool
     {
-      var tileset = scene.images.getTileset(area.typeID);
-      if (!Std.isOfType(tileset, UndergroundLab))
-        return false;
-      var undergroundLab: UndergroundLab = cast tileset;
       var emitters = collectProjectedShadowEmitters(stamps);
       if (emitters.length <= 0)
         return false;
-      var casters = collectDecorationProjectedShadowCasters(area, undergroundLab);
+      var casters = collectProjectedShadowCasters(area);
       if (casters.length <= 0)
         return false;
 
@@ -1718,15 +1002,14 @@ class AreaLighting
 
       for (caster in casters)
         {
-          var layer = undergroundLab.floorDecorationLayers[caster.layerID];
-          if (layer == null ||
-              !layer.complete ||
-              layer.naturalWidth <= 0)
+          if (caster.image == null ||
+              !caster.image.complete ||
+              caster.image.naturalWidth <= 0)
             {
               hasPendingAssets = true;
               continue;
             }
-          var mask = getProjectedShadowMask(caster, layer);
+          var mask = getProjectedShadowMask(caster);
           if (mask == null)
             continue;
           var emitterHits = getNearestLayoutShadowEmitters(area,
@@ -1737,6 +1020,9 @@ class AreaLighting
             Math.sqrt(emitterHits.length);
           for (hit in emitterHits)
             {
+              if (caster.skipSelfShadow &&
+                  isEmitterInsideProjectedShadowCaster(hit.emitter, caster))
+                continue;
               var dist = Math.sqrt(hit.distSq);
               var distanceFalloff = 1.0 -
                 dist / PROJECTED_SHADOW_MAX_DISTANCE_TILES;
@@ -1794,66 +1080,24 @@ class AreaLighting
     {
       return (stamp.kind.indexOf('layout-room') == 0 ||
         stamp.kind.indexOf('layout-corridor') == 0 ||
-        stamp.kind == 'clone-vat');
+        stamp.kind == 'clone-vat' ||
+        stamp.kind == 'summoning-portal' ||
+        stamp.kind == 'sewer-exit');
     }
 
-// collect projected-shadow casters from grouped decoration object blocks
-  function collectDecorationProjectedShadowCasters(area: AreaGame,
-      undergroundLab: UndergroundLab): Array<_ProjectedShadowCaster>
+// collect static projected-shadow casters for the current area tileset
+  function collectProjectedShadowCasters(area: AreaGame): Array<_ProjectedShadowCaster>
     {
-      var casters: Array<_ProjectedShadowCaster> = [];
-      var groups = collectDecorationObjGroups(area, undergroundLab);
-      for (group in groups)
+      var tileset = scene.images.getTileset(area.typeID);
+      if (Std.isOfType(tileset, UndergroundLab))
         {
-          var blockInfo = getDecorationObjBlock(undergroundLab, group, false);
-          if (blockInfo == null)
-            continue;
-          casters.push({
-            layerID: group.layerID,
-            srcRow: blockInfo.block.row,
-            srcCol: blockInfo.block.col,
-            blockW: blockInfo.block.width,
-            blockH: blockInfo.block.height,
-            centerX: (group.x1 + group.x2 + 1) / 2.0,
-            centerY: (group.y1 + group.y2 + 1) / 2.0,
-          });
+          var undergroundLab: UndergroundLab = cast tileset;
+          return UndergroundLabAreaLighting.collectProjectedShadowCasters(area,
+            undergroundLab);
         }
-
-      var tiles = area.getTiles();
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          {
-            var tile = tiles[x][y];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-            var tileID = area.getCellType(x, y);
-            if (!undergroundLab.isHorizontalWallTile(tileID))
-              continue;
-            for (decoration in tile.decoration)
-              {
-                if (!undergroundLab.isNearTopWallDecorationWallLayerID(
-                    decoration.layerID) ||
-                    decoration.icon == null)
-                  continue;
-                var blockInfo = getNearTopWallDecorationBlock(undergroundLab,
-                  decoration.layerID, decoration.icon.row, decoration.icon.col);
-                if (blockInfo == null)
-                  continue;
-                casters.push({
-                  layerID: undergroundLab.getNearTopDecorationLayerID(
-                    blockInfo, 1),
-                  srcRow: blockInfo.block.row,
-                  srcCol: blockInfo.block.col,
-                  blockW: blockInfo.block.width,
-                  blockH: blockInfo.block.height,
-                  centerX: x + blockInfo.block.width / 2.0,
-                  centerY: y + blockInfo.block.height / 2.0,
-                });
-              }
-          }
-      return casters;
+      if (Std.isOfType(tileset, Sewers))
+        return SewerAreaLighting.collectProjectedShadowCasters(scene, area);
+      return [];
     }
 
 // get nearest layout emitters that can cast projected shadows for one caster
@@ -1936,12 +1180,9 @@ class AreaLighting
     }
 
 // get cached solid-pixel shadow mask points for one decoration block sprite
-  function getProjectedShadowMask(caster: _ProjectedShadowCaster,
-      layer: Image): _ProjectedShadowMask
+  function getProjectedShadowMask(caster: _ProjectedShadowCaster): _ProjectedShadowMask
     {
-      var key = caster.layerID + ':' + caster.srcRow + ':' + caster.srcCol +
-        ':' + caster.blockW + ':' + caster.blockH;
-      return getProjectedShadowMaskForSource(key, layer,
+      return getProjectedShadowMaskForSource(caster.maskKey, caster.image,
         caster.srcRow, caster.srcCol, caster.blockW, caster.blockH);
     }
 
@@ -2590,95 +1831,4 @@ class AreaLighting
     {
       return tileY * ATMOS_LIGHTMAP_TILE_SIZE;
     }
-}
-
-private typedef _AtmosphereDecorObjGroup = {
-  var layerID: Int;
-  var x1: Int;
-  var y1: Int;
-  var x2: Int;
-  var y2: Int;
-  var minIconRow: Int;
-  var minIconCol: Int;
-}
-
-private typedef _ProjectedShadowCaster = {
-  var layerID: Int;
-  var srcRow: Int;
-  var srcCol: Int;
-  var blockW: Int;
-  var blockH: Int;
-  var centerX: Float;
-  var centerY: Float;
-}
-
-private typedef _ProjectedShadowMaskPoint = {
-  var x: Float;
-  var y: Float;
-}
-
-private typedef _ProjectedShadowMask = {
-  var points: Array<_ProjectedShadowMaskPoint>;
-}
-
-private typedef _ProjectedShadowEdgePair = {
-  var edge1: _ProjectedShadowMaskPoint;
-  var edge2: _ProjectedShadowMaskPoint;
-}
-
-private typedef _LayoutShadowEmitter = {
-  var x: Float;
-  var y: Float;
-}
-
-private typedef _LayoutShadowEmitterHit = {
-  var emitter: _LayoutShadowEmitter;
-  var distSq: Float;
-}
-
-private typedef _DebugLightMarker = {
-  var x: Float;
-  var y: Float;
-  var castsShadows: Bool;
-}
-
-private typedef _AIShadowCaster = {
-  var caster: _ProjectedShadowCaster;
-  var layer: Image;
-  var maskKey: String;
-}
-
-private typedef _AIShadowSpriteSource = {
-  var imageKey: String;
-  var image: Image;
-  var srcRow: Int;
-  var srcCol: Int;
-}
-
-private typedef _TransientAtmosphereLight = {
-  var x: Float;
-  var y: Float;
-  var radiusTiles: Float;
-  var intensity: Float;
-  var tintR: Int;
-  var tintG: Int;
-  var tintB: Int;
-  var startTS: Float;
-  var endTS: Float;
-}
-
-private typedef _LayoutLightSource = {
-  var x: Int;
-  var y: Int;
-  var tintR: Int;
-  var tintG: Int;
-  var tintB: Int;
-  var kind: String;
-  var sourceGroupID: String;
-}
-
-private typedef _LightTint = {
-  var r: Int;
-  var g: Int;
-  var b: Int;
 }

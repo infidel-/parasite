@@ -16,12 +16,14 @@ class Images
 {
   var scene: GameScene;
   public var entities: Image;
+  public var sewersObjects1: Image;
   public var undergroundLabObjects1: Image;
   public var male: Image;
   public var female: Image;
   public var tileset: Image;
   public var cursors: Array<Image>;
   var defaultTileset: Default;
+  var sewerTileset: Sewers;
   var undergroundLabTileset: UndergroundLab;
 
   public function new(s: GameScene)
@@ -31,6 +33,8 @@ class Images
       // load all images
       entities = new Image();
       entities.src = 'img/entities64.png';
+      sewersObjects1 = new Image();
+      sewersObjects1.src = Sewers.OBJECTS_IMAGE_PATH;
       undergroundLabObjects1 = new Image();
       undergroundLabObjects1.src = UndergroundLab.OBJECTS_IMAGE_PATH;
       male = new Image();
@@ -38,6 +42,7 @@ class Images
       female = new Image();
       female.src = 'img/female64.png';
       defaultTileset = new Default();
+      sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();
       tileset = defaultTileset.image;
 
@@ -63,6 +68,8 @@ class Images
 
       switch (areaTypeID)
         {
+          case AREA_SEWERS:
+            return sewerTileset;
           case AREA_UNDERGROUND_LAB:
             return undergroundLabTileset;
           default:

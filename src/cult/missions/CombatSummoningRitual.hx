@@ -147,27 +147,96 @@ class CombatSummoningRitual extends Combat
       ritualRoomID = room.id;
       var centerX = room.x1 + Std.int(room.w / 2);
       var centerY = room.y1 + Std.int(room.h / 2);
-      if (!game.area.isWalkable(centerX, centerY) ||
-          game.area.hasAI(centerX, centerY))
-        {
-          var fallback = game.area.findEmptyLocationNear(centerX, centerY, 3);
-          if (fallback != null)
-            {
-              centerX = fallback.x;
-              centerY = fallback.y;
-            }
-        }
+      var portalAnchor = findPortalAnchorInRoom(room, centerX, centerY);
+      if (portalAnchor == null)
+        return;
 
-      // spawn the summoning portal at the center
-      var portal = new SummoningPortal(game, game.area.id, centerX, centerY, id);
-      game.area.addObject(portal);
+      // spawn the summoning portal group around the room center
+      var portal = spawnPortalGroup(portalAnchor.x, portalAnchor.y);
       ritualPortalObjectID = portal.id;
-      ritualPortalX = centerX;
-      ritualPortalY = centerY;
+      ritualPortalX = portalAnchor.x + 1;
+      ritualPortalY = portalAnchor.y + 1;
 
       // spawn ritual participants around the portal
       spawnMissingRitualTargets();
       state = WAITING;
+    }
+
+// check whether a 2x2 portal can be placed at top-left tile x,y
+  function canPlacePortalAt(x: Int, y: Int): Bool
+    {
+      for (dy in 0...SummoningPortal.PORTAL_H)
+        for (dx in 0...SummoningPortal.PORTAL_W)
+          {
+            var tx = x + dx;
+            var ty = y + dy;
+            if (!game.area.isWalkable(tx, ty) ||
+                game.area.hasAI(tx, ty) ||
+                game.area.hasObjectAt(tx, ty) ||
+                (game.playerArea.x == tx &&
+                 game.playerArea.y == ty))
+              return false;
+          }
+      return true;
+    }
+
+// find the closest valid 2x2 portal anchor inside one room
+  function findPortalAnchorInRoom(room: _Room,
+      centerX: Int, centerY: Int): { x: Int, y: Int }
+    {
+      var desiredX = centerX - 1;
+      var desiredY = centerY - 1;
+      var spots = [];
+      for (y in room.y1...room.y2 - SummoningPortal.PORTAL_H + 2)
+        for (x in room.x1...room.x2 - SummoningPortal.PORTAL_W + 2)
+          {
+            if (!canPlacePortalAt(x, y))
+              continue;
+            var dx = x - desiredX;
+            var dy = y - desiredY;
+            spots.push({
+              x: x,
+              y: y,
+              d2: dx * dx + dy * dy,
+            });
+          }
+
+      if (spots.length <= 0)
+        return null;
+
+      spots.sort((a, b) -> {
+        if (a.d2 != b.d2)
+          return a.d2 - b.d2;
+        if (a.y != b.y)
+          return a.y - b.y;
+        return a.x - b.x;
+      });
+      return {
+        x: spots[0].x,
+        y: spots[0].y,
+      };
+    }
+
+// spawn one linked 2x2 portal group and return the root object
+  function spawnPortalGroup(x: Int, y: Int): SummoningPortal
+    {
+      var portals = [];
+      for (dy in 0...SummoningPortal.PORTAL_H)
+        for (dx in 0...SummoningPortal.PORTAL_W)
+          {
+            var partIndex = dy * SummoningPortal.PORTAL_W + dx;
+            portals.push(new SummoningPortal(game, game.area.id,
+              x + dx, y + dy, id, partIndex));
+          }
+
+      var partObjectIDs = [];
+      for (portal in portals)
+        partObjectIDs.push(portal.id);
+
+      var rootObjectID = portals[0].id;
+      for (portal in portals)
+        portal.setPortalGroup(rootObjectID, partObjectIDs);
+      return portals[0];
     }
 
 // start the ritual timer when player approaches the portal
@@ -244,14 +313,14 @@ class CombatSummoningRitual extends Combat
         });
     }
 
-// remove portal object from area
+// swap the intact portal group to the broken art state
   function removePortal()
     {
       var portal = game.area.getObject(ritualPortalObjectID);
       if (portal == null)
         return;
-      portal.imageCol = Const.FRAME_BROKEN_PORTAL;
-      portal.updateImage();
+      var summoningPortal: SummoningPortal = cast portal;
+      summoningPortal.breakPortalGroup();
       game.scene.draw();
     }
 
@@ -372,7 +441,10 @@ class CombatSummoningRitual extends Combat
         {
           var portal = game.area.getObject(ritualPortalObjectID);
           if (portal != null)
-            game.area.removeObject(portal);
+            {
+              var summoningPortal: SummoningPortal = cast portal;
+              summoningPortal.removePortalGroup();
+            }
         }
       if (state == COMPLETED)
         {
