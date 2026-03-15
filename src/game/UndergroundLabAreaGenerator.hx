@@ -9,10 +9,10 @@ import game.AreaGame;
 import game.AreaGenerator;
 import objects.Door;
 import objects.Elevator;
+import tiles._DecorBlock;
+import tiles._DecorPadding;
+import tiles._FloorDecorMeta;
 import tiles.UndergroundLab;
-import tiles.UndergroundLab._DecorBlock;
-import tiles.UndergroundLab._DecorPadding;
-import tiles.UndergroundLab._FloorDecorMeta;
 
 private typedef _MakeRoomArgs = {
   var roomID: Int;

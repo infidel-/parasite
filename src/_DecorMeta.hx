@@ -1,4 +1,4 @@
-import tiles.UndergroundLab._DecorPadding;
+import tiles._DecorPadding;
 
 // underground lab decoration metadata shared across decor blocks
 typedef _DecorMeta = {

@@ -1,3 +1,5 @@
+package lighting;
+
 // static atmospheric light stamp metadata in tile-space coordinates
 typedef _AreaLightStamp = {
   var x: Float;

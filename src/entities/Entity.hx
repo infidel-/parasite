@@ -156,6 +156,8 @@ class Entity
             // NOTE: some specials only have male image (security, etc)
             if (isMaleAtlas)
               img = game.scene.images.male;
+          case 'sewersObjects1':
+            img = game.scene.images.sewersObjects1;
           case 'undergroundLabObjects1':
             img = game.scene.images.undergroundLabObjects1;
           default:

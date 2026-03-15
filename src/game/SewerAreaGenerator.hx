@@ -7,6 +7,8 @@ import const.WorldConst;
 import game.AreaGame;
 import game.AreaGenerator;
 import objects.SewerExit;
+import tiles.Sewers;
+import tiles._FloorDecorMeta;
 
 private typedef _GridPos = {
   var bx: Int;
@@ -73,6 +75,14 @@ class SewerAreaGenerator
 
       // place exits on tunnel junctions
       placeExits(area, rooms);
+
+      // convert carved walkway markers to sewer floor and wall tiles
+      finalizeTiles(area);
+      // initialize tile metadata before sewer decoration passes
+      area.initTilesFromCells();
+      // add sparse sewer floor decoration and debris after tile conversion
+      decorateFloors(area, rooms);
+      decorateFloorDebris(area, rooms);
 
       area.generatorInfo = {
         rooms: rooms,
@@ -580,6 +590,489 @@ class SewerAreaGenerator
       for (y in yy1...yy2 + 1)
         for (xx in x1 - 1...x1 + 2)
           area.setCellType(xx, y, Const.TILE_WALKWAY);
+    }
+
+// convert walkway markers into sewer floor and wall shell tiles
+  function finalizeTiles(area: AreaGame)
+    {
+      var floorMap: Array<Array<Bool>> = [];
+      for (x in 0...area.width)
+        {
+          floorMap[x] = [];
+          for (y in 0...area.height)
+            floorMap[x][y] = isFloorMarker(area.getCellType(x, y));
+        }
+
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (floorMap[x][y])
+              {
+                area.setCellType(x, y, Sewers.TILE_FLOOR);
+                continue;
+              }
+            if (isWallShell(floorMap, x, y))
+              area.setCellType(x, y, getWallTileID(floorMap, x, y));
+            else
+              {
+                var tileID = getDiagonalCornerTileID(floorMap, x, y);
+                if (tileID == Const.TILE_HIDDEN)
+                  area.setCellType(x, y, Const.TILE_HIDDEN);
+                else area.setCellType(x, y, tileID);
+              }
+          }
+    }
+
+// check whether current tile is still a pre-finalize floor marker
+  inline function isFloorMarker(tile: Int): Bool
+    {
+      return tile == Const.TILE_WALKWAY;
+    }
+
+// check whether this cell should become a visible wall shell tile
+  inline function isWallShell(floorMap: Array<Array<Bool>>, x: Int, y: Int): Bool
+    {
+      return (getFloor(floorMap, x, y - 1) ||
+        getFloor(floorMap, x, y + 1) ||
+        getFloor(floorMap, x - 1, y) ||
+        getFloor(floorMap, x + 1, y));
+    }
+
+// safely read floor-map occupancy
+  inline function getFloor(floorMap: Array<Array<Bool>>, x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= floorMap.length ||
+          y >= floorMap[x].length)
+        return false;
+      return floorMap[x][y];
+    }
+
+// map wall shell shape to one sewer wall tile id
+  function getWallTileID(floorMap: Array<Array<Bool>>, x: Int, y: Int): Int
+    {
+      var n = getFloor(floorMap, x, y - 1);
+      var s = getFloor(floorMap, x, y + 1);
+      var w = getFloor(floorMap, x - 1, y);
+      var e = getFloor(floorMap, x + 1, y);
+
+      if (e &&
+          s &&
+          !n &&
+          !w)
+        return Sewers.TILE_WALL_INNER_TOP_LEFT;
+      if (w &&
+          s &&
+          !n &&
+          !e)
+        return Sewers.TILE_WALL_INNER_TOP_RIGHT;
+      if (e &&
+          n &&
+          !s &&
+          !w)
+        return Sewers.TILE_WALL_INNER_BOTTOM_LEFT;
+      if (w &&
+          n &&
+          !s &&
+          !e)
+        return Sewers.TILE_WALL_INNER_BOTTOM_RIGHT;
+
+      if (n &&
+          w &&
+          !s &&
+          !e)
+        return Sewers.TILE_WALL_OUTER_TOP_LEFT;
+      if (n &&
+          e &&
+          !s &&
+          !w)
+        return Sewers.TILE_WALL_OUTER_TOP_RIGHT;
+      if (s &&
+          w &&
+          !n &&
+          !e)
+        return Sewers.TILE_WALL_OUTER_BOTTOM_LEFT;
+      if (s &&
+          e &&
+          !n &&
+          !w)
+        return Sewers.TILE_WALL_OUTER_BOTTOM_RIGHT;
+
+      if (s && !n)
+        return Sewers.TILE_WALL_UPPER;
+      if (n && !s)
+        return Sewers.TILE_WALL_LOWER;
+      if (e && !w)
+        return Sewers.TILE_WALL_LEFT;
+      if (w && !e)
+        return Sewers.TILE_WALL_RIGHT;
+
+      if (s)
+        return Sewers.TILE_WALL_UPPER;
+      if (n)
+        return Sewers.TILE_WALL_LOWER;
+      if (e)
+        return Sewers.TILE_WALL_LEFT;
+      if (w)
+        return Sewers.TILE_WALL_RIGHT;
+      return Const.TILE_HIDDEN;
+    }
+
+// map single diagonal floor adjacency to an outer-corner wall tile
+  inline function getDiagonalCornerTileID(
+      floorMap: Array<Array<Bool>>, x: Int, y: Int): Int
+    {
+      var n = getFloor(floorMap, x, y - 1);
+      var s = getFloor(floorMap, x, y + 1);
+      var w = getFloor(floorMap, x - 1, y);
+      var e = getFloor(floorMap, x + 1, y);
+      if (n || s || w || e)
+        return Const.TILE_HIDDEN;
+
+      var nw = getFloor(floorMap, x - 1, y - 1);
+      var ne = getFloor(floorMap, x + 1, y - 1);
+      var sw = getFloor(floorMap, x - 1, y + 1);
+      var se = getFloor(floorMap, x + 1, y + 1);
+      var diagonalFloors = 0;
+      if (nw)
+        diagonalFloors++;
+      if (ne)
+        diagonalFloors++;
+      if (sw)
+        diagonalFloors++;
+      if (se)
+        diagonalFloors++;
+      if (diagonalFloors != 1)
+        return Const.TILE_HIDDEN;
+
+      if (nw)
+        return Sewers.TILE_WALL_OUTER_TOP_LEFT;
+      if (ne)
+        return Sewers.TILE_WALL_OUTER_TOP_RIGHT;
+      if (sw)
+        return Sewers.TILE_WALL_OUTER_BOTTOM_LEFT;
+      if (se)
+        return Sewers.TILE_WALL_OUTER_BOTTOM_RIGHT;
+      return Const.TILE_HIDDEN;
+    }
+
+// place sparse sewer floor decoration in rooms and corridors
+  function decorateFloors(area: AreaGame, rooms: Array<_Room>)
+    {
+      var tiles = area.getTiles();
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (!area.isWalkable(x, y) ||
+                area.hasObjectAt(x, y) ||
+                hasFloorDecorationAtTile(tiles, x, y) ||
+                hasAdjacentFloorDecoration(area, tiles, x, y))
+              continue;
+
+            var isRoomTile = isInsideAnyRoom(rooms, x, y);
+            var chance = (isRoomTile ? 10 : 18);
+            if (Const.roll(1, 100) > chance)
+              continue;
+
+            addFloorDecoration(area, x, y);
+          }
+    }
+
+// add one sewer floor decoration from either themed source layer
+  function addFloorDecoration(area: AreaGame, x: Int, y: Int)
+    {
+      if (Std.random(100) < 40)
+        {
+          var icon = pickRandomExtraFloorDecorIcon();
+          if (icon == null)
+            return;
+
+          area.addTileDecoration(x, y, {
+            layerID: Sewers.FLOOR_DECOR_EXTRA_LAYER_ID,
+            icon: {
+              row: icon.row,
+              col: icon.col,
+            },
+          });
+          return;
+        }
+
+      var floorInfo = pickWeightedFloorDecorMeta();
+      if (floorInfo == null)
+        return;
+
+      area.addTileDecoration(x, y, {
+        layerID: Sewers.FLOOR_DECOR_LAYER_ID,
+        icon: {
+          row: floorInfo.icon.row,
+          col: floorInfo.icon.col,
+        },
+      });
+    }
+
+// pick one sewer floor decoration icon by base weight
+  function pickWeightedFloorDecorMeta(): _FloorDecorMeta
+    {
+      var weightList = [];
+      for (floorInfo in Sewers.FLOOR_DECOR_META)
+        weightList.push(floorInfo.baseWeight);
+
+      var index = pickWeightedIndex(weightList);
+      if (index < 0)
+        return null;
+      return Sewers.FLOOR_DECOR_META[index];
+    }
+
+// pick one extra sewer floor decoration icon from the sewer base image
+  function pickRandomExtraFloorDecorIcon(): _Icon
+    {
+      if (Sewers.FLOOR_DECOR_EXTRA_ICONS.length <= 0)
+        return null;
+      return Sewers.FLOOR_DECOR_EXTRA_ICONS[Std.random(
+        Sewers.FLOOR_DECOR_EXTRA_ICONS.length)];
+    }
+
+// pick one index by integer weights
+  function pickWeightedIndex(weights: Array<Int>): Int
+    {
+      var total = 0;
+      for (weight in weights)
+        {
+          if (weight <= 0)
+            continue;
+          total += weight;
+        }
+      if (total <= 0)
+        return -1;
+
+      var roll = Const.roll(1, total);
+      var cumulative = 0;
+      for (i in 0...weights.length)
+        {
+          var weight = weights[i];
+          if (weight <= 0)
+            continue;
+          cumulative += weight;
+          if (roll <= cumulative)
+            return i;
+        }
+      return -1;
+    }
+
+// check whether this tile already has one base sewer floor decoration
+  function hasFloorDecorationAtTile(tiles: Array<Array<tiles.Tile>>, x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= tiles.length ||
+          tiles[x] == null ||
+          y >= tiles[x].length)
+        return false;
+      var tile = tiles[x][y];
+      if (tile == null ||
+          tile.decoration == null ||
+          tile.decoration.length == 0)
+        return false;
+      for (decoration in tile.decoration)
+        if (isFloorDecorationLayerID(decoration.layerID))
+          return true;
+      return false;
+    }
+
+// check whether a decoration layer belongs to sewer floor clutter
+  inline function isFloorDecorationLayerID(layerID: Int): Bool
+    {
+      return (layerID == Sewers.FLOOR_DECOR_LAYER_ID ||
+        layerID == Sewers.FLOOR_DECOR_EXTRA_LAYER_ID);
+    }
+
+// check neighbouring tiles for existing base floor decoration
+  function hasAdjacentFloorDecoration(area: AreaGame,
+      tiles: Array<Array<tiles.Tile>>, x: Int, y: Int): Bool
+    {
+      for (dy in -1...2)
+        for (dx in -1...2)
+          {
+            if (dx == 0 &&
+                dy == 0)
+              continue;
+
+            var nx = x + dx;
+            var ny = y + dy;
+            if (nx < 0 ||
+                ny < 0 ||
+                nx >= area.width ||
+                ny >= area.height)
+              continue;
+
+            if (hasFloorDecorationAtTile(tiles, nx, ny))
+              return true;
+          }
+      return false;
+    }
+
+// place sparse sewer debris with offset-aware transformable decoration rules
+  function decorateFloorDebris(area: AreaGame, rooms: Array<_Room>)
+    {
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (!area.isWalkable(x, y) ||
+                area.hasObjectAt(x, y))
+              continue;
+
+            var chance = (isInsideAnyRoom(rooms, x, y) ? 8 : 20);
+            if (Std.random(1000) >= chance)
+              continue;
+
+            if (Std.random(100) < 45)
+              addDecorationTransformable(area, x, y,
+                Const.STREET_DEBRIS_TRANSFORMABLE);
+            else
+              addStaticDebris(area, x, y, Const.STREET_DEBRIS_STATIC);
+          }
+    }
+
+// drop one mild transformable debris cluster without special objects
+  function addDecorationTransformable(area: AreaGame,
+      x: Int, y: Int, infos: Array<_TileRow>)
+    {
+      var centerCount = 1 + Std.random(2);
+      spawnTransformableDecorations(area, x, y, infos, centerCount);
+
+      var radius = 1;
+      for (dx in -radius...radius + 1)
+        for (dy in -radius...radius + 1)
+          {
+            if (dx == 0 &&
+                dy == 0)
+              continue;
+            if ((dx * dx + dy * dy) > radius * radius)
+              continue;
+            if (Std.random(100) >= 22)
+              continue;
+
+            var nx = x + dx;
+            var ny = y + dy;
+            if (nx < 0 ||
+                ny < 0 ||
+                nx >= area.width ||
+                ny >= area.height ||
+                area.hasObjectAt(nx, ny) ||
+                !area.isWalkable(nx, ny))
+              continue;
+
+            var neighbourCount = 1 + Std.random(2);
+            spawnTransformableDecorations(area, nx, ny, infos, neighbourCount);
+          }
+    }
+
+// add one static debris decoration entry
+  function addStaticDebris(area: AreaGame, x: Int, y: Int,
+      infos: Array<_TileRow>)
+    {
+      addDebris(area, x, y, infos, false);
+    }
+
+// place multiple transformable debris fragments on one tile
+  function spawnTransformableDecorations(area: AreaGame,
+      x: Int, y: Int, infos: Array<_TileRow>, amount: Int)
+    {
+      for (_ in 0...amount)
+        addDebris(area, x, y, infos, true);
+    }
+
+// add one debris decoration entry with offset-aware placement
+  function addDebris(area: AreaGame, x: Int, y: Int,
+      infos: Array<_TileRow>, isTransformable: Bool)
+    {
+      if (!area.isWalkable(x, y))
+        return;
+
+      var info = infos[Std.random(infos.length)];
+      var col = Std.random(info.amount) +
+        (info.col != null ? info.col : 0);
+
+      var scale = (isTransformable ?
+        Const.round2(0.1 + 0.9 * Math.random()) :
+        1.0);
+      var angle = (isTransformable ?
+        Const.round2(360 * Math.random() * Math.PI / 180) :
+        0.0);
+      var dx = 0;
+      var dy = 0;
+
+      var hasPlacement = false;
+      for (_ in 0...8)
+        {
+          var candidateDX = randomDebrisOffset();
+          var candidateDY = randomDebrisOffset();
+          if (!canPlaceDebrisWithOffset(area, x, y,
+                candidateDX, candidateDY, scale))
+            continue;
+          dx = candidateDX;
+          dy = candidateDY;
+          hasPlacement = true;
+          break;
+        }
+      if (!hasPlacement &&
+          !canPlaceDebrisWithOffset(area, x, y, 0, 0, scale))
+        return;
+
+      area.addTileDecoration(x, y, {
+        layerID: Sewers.DEBRIS_LAYER_ID,
+        icon: {
+          row: info.row,
+          col: col,
+        },
+        dx: dx,
+        dy: dy,
+        scale: scale,
+        angle: angle,
+      });
+    }
+
+// get random tile-local debris offset in +/-50% tile range
+  function randomDebrisOffset(): Int
+    {
+      var half = Std.int(Const.TILE_SIZE / 2);
+      return -half + Std.random(half * 2 + 1);
+    }
+
+// check whether debris with offset stays over walkable neighbouring tiles
+  function canPlaceDebrisWithOffset(area: AreaGame, x: Int, y: Int,
+      dx: Int, dy: Int, scale: Float): Bool
+    {
+      if (!area.isWalkable(x, y))
+        return false;
+
+      var scaledSize = Const.TILE_SIZE * scale;
+      var localX1 = Const.TILE_SIZE / 2 -
+        scaledSize / 2 + dx;
+      var localY1 = Const.TILE_SIZE / 2 -
+        scaledSize / 2 + dy;
+      var localX2 = localX1 + scaledSize;
+      var localY2 = localY1 + scaledSize;
+
+      var touchesLeft = localX1 < 0;
+      var touchesRight = localX2 > Const.TILE_SIZE;
+      var touchesTop = localY1 < 0;
+      var touchesBottom = localY2 > Const.TILE_SIZE;
+
+      if (touchesLeft &&
+          !area.isWalkable(x - 1, y))
+        return false;
+      if (touchesRight &&
+          !area.isWalkable(x + 1, y))
+        return false;
+      if (touchesTop &&
+          !area.isWalkable(x, y - 1))
+        return false;
+      if (touchesBottom &&
+          !area.isWalkable(x, y + 1))
+        return false;
+      return true;
     }
 
 // place sewer exits in room centers

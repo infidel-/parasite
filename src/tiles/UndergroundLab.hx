@@ -5,26 +5,6 @@ package tiles;
 import Const;
 import haxe.ds.StringMap;
 
-typedef _DecorPadding = {
-  var up: Int;
-  var right: Int;
-  var down: Int;
-  var left: Int;
-}
-
-typedef _DecorBlock = {
-  var block: _IconBlock;
-  var meta: _DecorMeta;
-}
-
-typedef _FloorDecorMeta = {
-  var icon: _Icon;
-  var motifs: Array<String>;
-  var roles: Array<String>;
-  @:optional var light: _AtmosphereLightMeta;
-  var baseWeight: Int;
-}
-
 class UndergroundLab extends Tileset
 {
   public static var OBJECTS_IMAGE = 'undergroundLabObjects1';
