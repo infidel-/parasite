@@ -14,6 +14,7 @@ class AIData extends _SaveObject
   public static var _maxID: Int = 0; // current max ID
   public var type: String; // ai type
   public var job: String; // ai job
+  public var iconID: String; // mission icon override ID
   public var income: Int; // monthly income
   public var eventID: String; // timeline event
   public var npcID: Int;
@@ -77,6 +78,7 @@ class AIData extends _SaveObject
     {
       type = 'undefined';
       job = 'undefined';
+      iconID = null;
       income = 0;
       tileAtlasX = -1;
       tileAtlasY = -1;
@@ -386,17 +388,20 @@ class AIData extends _SaveObject
       // reset name if gender was changed
       name.real = name.realCapped = NameConst.getHumanName(isMale);
       job = targetInfo.job;
+      iconID = targetInfo.icon;
       if (targetInfo.lang != null)
         lang = targetInfo.lang;
       
       // apply job and icon
-      var data: Dynamic = null;
+      var data: { x: Int, y: Int } = null;
       if (targetInfo.type == 'civilian')
         {
           if (targetInfo.icon == 'formalCivilian')
             data = game.scene.images.getFormalCivilianAI(targetInfo.icon, isMale);
           else
             data = game.scene.images.getCivilianAI(targetInfo.icon, isMale);
+          if (data == null)
+            data = game.scene.images.getSpecialAI(targetInfo.icon, isMale);
         }
       else
         {

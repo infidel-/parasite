@@ -187,13 +187,17 @@ public function show()
 
       // create entity and set correct icon
       entity = new AIEntity(this, game, x, y);
+      var atlasID = (iconID != null ? iconID : type);
+      var useMaleSpecialAtlas = (
+        !isMale &&
+        Images.specialsMale[atlasID] != null &&
+        Images.specialsFemale[atlasID] == null
+      );
       // blackops heavy kludge
       if (inventory.clothing.id == 'fullBodyArmor')
         entity.isMaleAtlas = true;
-      else if (!isMale)
-        entity.isMaleAtlas =
-          (!isMale && type != 'civilian' &&
-           Images.specialsFemale[type] == null);
+      else
+        entity.isMaleAtlas = useMaleSpecialAtlas;
       if (type == 'dog')
         entity.setIcon('entities', 1, Const.ROW_PARASITE);
       else if (type == 'choirOfDiscord')

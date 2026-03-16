@@ -54,6 +54,7 @@ class CombatSummoningRitual extends Combat
 // template-specific initialization
   override function initTemplate(combatInfo: _CombatMissionInfo, targetList: Array<CombatSpawnTarget>)
     {
+      syncCultistTargetIcons();
       var marker = pickMissionMarkerArea();
       if (marker == null)
         throw 'Could not find city marker area for summoning ritual mission.';
@@ -66,6 +67,33 @@ class CombatSummoningRitual extends Combat
       missionArea.width = 49;
       missionArea.height = 49;
       areaID = missionArea.id;
+    }
+
+// make all ritual cultist targets share one randomly chosen icon
+  function syncCultistTargetIcons()
+    {
+      var sharedIcon: { x: Int, y: Int } = null;
+      for (target in targets)
+        {
+          if (target.iconID != 'cultist')
+            continue;
+          sharedIcon = {
+            x: target.tileAtlasX,
+            y: target.tileAtlasY,
+          };
+          break;
+        }
+
+      if (sharedIcon == null)
+        return;
+
+      for (target in targets)
+        {
+          if (target.iconID != 'cultist')
+            continue;
+          target.tileAtlasX = sharedIcon.x;
+          target.tileAtlasY = sharedIcon.y;
+        }
     }
 
 // template-specific turn processing
@@ -368,7 +396,8 @@ class CombatSummoningRitual extends Combat
               if (loc == null)
                 break;
               // don't spawn on top of portal
-              if (loc.x != ritualPortalX || loc.y != ritualPortalY)
+              if (loc.x != ritualPortalX ||
+                  loc.y != ritualPortalY)
                 break;
               attempts++;
             }

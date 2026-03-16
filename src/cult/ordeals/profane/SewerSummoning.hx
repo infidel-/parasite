@@ -20,8 +20,8 @@ class SewerSummoning
             {
               target: {
                 job: "ritual cantor",
-                type: "smiler",
-                icon: "smiler",
+                type: "civilian",
+                icon: "cultist",
                 location: AREA_CITY_LOW,
                 helpAvailable: false,
               },
@@ -31,8 +31,8 @@ class SewerSummoning
             {
               target: {
                 job: "ritual guard",
-                type: "thug",
-                icon: "thug",
+                type: "civilian",
+                icon: "cultist",
                 location: AREA_CITY_LOW,
                 helpAvailable: false,
               },
@@ -42,8 +42,8 @@ class SewerSummoning
             {
               target: {
                 job: "ritual zealot",
-                type: "bum",
-                icon: "bum",
+                type: "civilian",
+                icon: "cultist",
                 location: AREA_CITY_LOW,
                 helpAvailable: false,
               },
