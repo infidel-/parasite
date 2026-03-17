@@ -351,7 +351,8 @@ class Console
         {
           log(';ch1 - affinity + skills<br/>' +
             ';ch2 - stage 1 + host high consent<br/>' +
-            ';ch3 - stage 1 + host max consent<br/>'
+            ';ch3 - stage 1 + host max consent<br/>' +
+            ';ch4 - active target full consent<br/>'
           );
           return;
         }
@@ -372,6 +373,9 @@ class Console
             chatStage1();
             game.player.host.affinity = 100;
             game.player.host.chat.consent = 100;
+          case 4:
+            if (!game.player.chat.debugGiveFullConsent())
+              log('Need active chat target.');
         }
     }
 
