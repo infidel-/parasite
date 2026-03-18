@@ -238,7 +238,7 @@ class PlayerArea extends _SaveObject
       // leave area action
       if (state != PLR_STATE_ATTACHED &&
           !game.area.info.isInhabited &&
-          !hasHabitatExit)
+          (game.area.isHabitat && !hasHabitatExit))
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
