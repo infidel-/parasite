@@ -9,6 +9,7 @@ import game.AreaGame;
 import game.CityAreaGenerator;
 import game.SewerAreaGenerator;
 import game.UndergroundLabAreaGenerator;
+import objects.mission.SewerExit;
 
 class AreaGenerator
 {
@@ -59,7 +60,7 @@ class AreaGenerator
       else if (info.type == 'wilderness')
         generateWilderness(game, area, info);
       else if (info.type == 'habitat')
-        generateHabitat(game, area, info);
+        sewers.generate(area, info, getHabitatSewerOptions());
       else if (info.type == 'corp')
         corp.generate(area, info);
       else if (info.type == 'sewers')
@@ -226,39 +227,18 @@ class AreaGenerator
       js.Browser.console.groupEnd();
     }
 
-// generate a habitat
-  static function generateHabitat(game: Game, area: AreaGame, info: AreaInfo)
+// get sewer generator options for habitat areas
+  static function getHabitatSewerOptions()
     {
-      // fill with walls
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          area.setCellType(x, y, Const.TILE_WALL);
-
-      // make some rooms
-      for (i in 0...10)
-        {
-          var x1 = 1 + Std.random(area.width - 5);
-          var y1 = 1 + Std.random(area.height - 5);
-          var w = 5 + Std.random(15);
-          var h = 5 + Std.random(15);
-          if (x1 + w >= area.width - 1)
-            w = area.width - x1 - 2;
-          if (y1 + h >= area.height - 1)
-            h = area.height - y1 - 2;
-          makeRoom(area, x1, y1, w, h);
-        }
+      return {
+        blockWidth: 3,
+        blockHeight: 2,
+        minRoomBlocks: 4,
+        maxRoomBlocks: 5,
+        exitCount: 2,
+        useHabitatExits: true,
+      };
     }
-
-
-// helper: make a room
-  static function makeRoom(area: AreaGame, x1: Int, y1: Int, w: Int, h: Int)
-    {
-      for (y in y1...y1 + h)
-        for (x in x1...x1 + w)
-          area.setCellType(x, y, Const.TILE_WALKWAY);
-    }
-
-
 // generate rocks, trees, etc
   static function generateWilderness(game: Game, area: AreaGame, info: AreaInfo)
     {

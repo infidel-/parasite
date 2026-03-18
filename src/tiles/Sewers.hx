@@ -39,6 +39,25 @@ class Sewers extends Tileset
   public static var TILE_WALL_OUTER_BOTTOM_LEFT = 920;
   public static var TILE_WALL_OUTER_BOTTOM_RIGHT = 921;
 
+// check whether tile id belongs to sewer tiles
+  public static function isSewerTileID(tileID: Int): Bool
+    {
+      return (tileID == TILE_FLOOR ||
+        tileID == TILE_FLOOR_ALT ||
+        tileID == TILE_WALL_UPPER ||
+        tileID == TILE_WALL_LOWER ||
+        tileID == TILE_WALL_LEFT ||
+        tileID == TILE_WALL_RIGHT ||
+        tileID == TILE_WALL_INNER_TOP_LEFT ||
+        tileID == TILE_WALL_INNER_TOP_RIGHT ||
+        tileID == TILE_WALL_INNER_BOTTOM_LEFT ||
+        tileID == TILE_WALL_INNER_BOTTOM_RIGHT ||
+        tileID == TILE_WALL_OUTER_TOP_LEFT ||
+        tileID == TILE_WALL_OUTER_TOP_RIGHT ||
+        tileID == TILE_WALL_OUTER_BOTTOM_LEFT ||
+        tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
+    }
+
   public static var FLOOR_DECOR_META: Array<_FloorDecorMeta> = [
     { icon: { row: 3, col: 1 }, motifs: ['green-puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 98 },
     { icon: { row: 3, col: 3 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 86 },

@@ -224,9 +224,21 @@ class PlayerArea extends _SaveObject
               o.updateActionList();
           }
 
+      // new habitat areas have exit object
+      // but old ones might not so we allow leaving the old way
+      var hasHabitatExit = false;
+      if (game.area.isHabitat)
+        for (o in game.area.getObjects())
+          if (o.type == 'habitat_exit')
+            {
+              hasHabitatExit = true;
+              break;
+            }
+
       // leave area action
       if (state != PLR_STATE_ATTACHED &&
-          !game.area.info.isInhabited)
+          !game.area.info.isInhabited &&
+          !hasHabitatExit)
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
@@ -718,7 +730,7 @@ class PlayerArea extends _SaveObject
     }
 
 // action: leave area
-  function leaveAreaAction(): Bool
+  public function leaveAreaAction(): Bool
     {
       // special checks for habitat
       if (game.area.typeID == AREA_HABITAT)

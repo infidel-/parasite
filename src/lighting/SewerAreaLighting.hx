@@ -4,7 +4,6 @@ import _AtmosphereLightMeta;
 import AreaLighting;
 import GameScene;
 import game.AreaGame;
-import objects.SewerExit;
 import objects.mission.SummoningPortal;
 import tiles.*;
 
@@ -19,7 +18,7 @@ class SewerAreaLighting
           scene.images == null)
         return stamps;
 
-      var tileset = scene.images.getTileset(area.typeID);
+      var tileset = scene.images.getTileset(area.getTilesetTypeID());
       if (!Std.isOfType(tileset, Sewers))
         return stamps;
 
@@ -43,86 +42,21 @@ class SewerAreaLighting
           scene.images == null)
         return casters;
 
-      var processedPortalRootIDs = new Map();
       for (o in area.getObjects())
         {
-          if (o.type == 'summoning_portal')
-            {
-              var portal: SummoningPortal = cast o;
-              var rootID = (portal.portalRootObjectID >= 0 ?
-                portal.portalRootObjectID : portal.id);
-              if (processedPortalRootIDs[rootID])
-                continue;
-              processedPortalRootIDs[rootID] = true;
-
-              var rootPortal: SummoningPortal = portal;
-              if (rootID != portal.id)
-                {
-                  var rootObj = area.getObject(rootID);
-                  if (rootObj != null &&
-                      rootObj.type == 'summoning_portal')
-                    rootPortal = cast rootObj;
-                }
-
-              var partObjectIDs = rootPortal.portalPartObjectIDs;
-              if (partObjectIDs == null ||
-                  partObjectIDs.length == 0)
-                partObjectIDs = portal.portalPartObjectIDs;
-
-              var x1 = rootPortal.x;
-              var y1 = rootPortal.y;
-              var x2 = rootPortal.x;
-              var y2 = rootPortal.y;
-              if (partObjectIDs != null &&
-                  partObjectIDs.length > 0)
-                for (objectID in partObjectIDs)
-                  {
-                    var partObj = area.getObject(objectID);
-                    if (partObj == null ||
-                        partObj.type != 'summoning_portal')
-                      continue;
-                    if (partObj.x < x1)
-                      x1 = partObj.x;
-                    if (partObj.y < y1)
-                      y1 = partObj.y;
-                    if (partObj.x > x2)
-                      x2 = partObj.x;
-                    if (partObj.y > y2)
-                      y2 = partObj.y;
-                  }
-
-              var block = (rootPortal.isBroken ?
-                Sewers.BROKEN_PORTAL : Sewers.SUMMONING_PORTAL);
-              casters.push({
-                layerID: -1,
-                image: scene.images.sewersObjects1,
-                maskKey: Sewers.OBJECTS_IMAGE + ':' + block.row + ':' +
-                  block.col + ':' + block.width + ':' + block.height,
-                srcRow: block.row,
-                srcCol: block.col,
-                blockW: block.width,
-                blockH: block.height,
-                centerX: (x1 + x2 + 1) / 2.0,
-                centerY: (y1 + y2 + 1) / 2.0,
-                skipSelfShadow: true,
-              });
-              continue;
-            }
-
           if (o.type != 'sewer_exit')
             continue;
 
-          var exit: SewerExit = cast o;
           casters.push({
             layerID: -1,
             image: scene.images.entities,
-            maskKey: 'entities:' + exit.imageRow + ':' + exit.imageCol + ':1:1',
-            srcRow: exit.imageRow,
-            srcCol: exit.imageCol,
+            maskKey: 'entities:' + o.imageRow + ':' + o.imageCol + ':1:1',
+            srcRow: o.imageRow,
+            srcCol: o.imageCol,
             blockW: 1,
             blockH: 1,
-            centerX: exit.x + 0.5,
-            centerY: exit.y + 0.5,
+            centerX: o.x + 0.5,
+            centerY: o.y + 0.5,
             skipSelfShadow: true,
           });
         }
@@ -199,13 +133,15 @@ class SewerAreaLighting
     {
       for (o in area.getObjects())
         {
-          if (o.type != 'sewer_exit')
+          if (o.type != 'sewer_exit' &&
+              o.type != 'habitat_exit')
             continue;
 
-          var exit: SewerExit = cast o;
+          var stampKind = (o.type == 'habitat_exit' ?
+            'habitat-exit' : 'sewer-exit');
           areaLighting.pushLightStamp(area, stamps,
-            exit.x + 0.5, exit.y + 0.5,
-            UndergroundLab.ATMOS_LIGHT_LARGE_WHITE, 'sewer-exit');
+            o.x + 0.5, o.y + 0.5,
+            UndergroundLab.ATMOS_LIGHT_LARGE_WHITE, stampKind);
         }
     }
 

@@ -6,9 +6,19 @@ import Const;
 import const.WorldConst;
 import game.AreaGame;
 import game.AreaGenerator;
-import objects.SewerExit;
+import objects.mission.HabitatExit;
+import objects.mission.SewerExit;
 import tiles.Sewers;
 import tiles._FloorDecorMeta;
+
+typedef SewerAreaGeneratorOptions = {
+  @:optional var blockWidth: Int;
+  @:optional var blockHeight: Int;
+  @:optional var minRoomBlocks: Int;
+  @:optional var maxRoomBlocks: Int;
+  @:optional var exitCount: Int;
+  @:optional var useHabitatExits: Bool;
+}
 
 private typedef _GridPos = {
   var bx: Int;
@@ -50,7 +60,8 @@ class SewerAreaGenerator
     }
 
 // generate sewer area from aligned 7x7 blocks
-  public function generate(area: AreaGame, info: AreaInfo)
+  public function generate(area: AreaGame, info: AreaInfo,
+      ?options: SewerAreaGeneratorOptions)
     {
       // fill with walls first
       for (y in 0...area.height)
@@ -58,9 +69,9 @@ class SewerAreaGenerator
           area.setCellType(x, y, Const.TILE_WALL);
 
       // build block layout and mark room blocks
-      var grid = buildGrid(area);
+      var grid = buildGrid(area, options);
       var blockKinds = buildBlockKindMap(grid);
-      var roomBlocks = rollRoomBlocks(grid);
+      var roomBlocks = rollRoomBlocks(grid, options);
       markRoomBlocks(blockKinds, roomBlocks);
 
       // connect room blocks and mark tunnel blocks
@@ -74,7 +85,7 @@ class SewerAreaGenerator
       var rooms = carveFromBlocks(area, grid, blockKinds, roomBlocks, links);
 
       // place exits on tunnel junctions
-      placeExits(area, rooms);
+      placeExits(area, rooms, options);
 
       // convert carved walkway markers to sewer floor and wall tiles
       finalizeTiles(area);
@@ -91,7 +102,8 @@ class SewerAreaGenerator
     }
 
 // build 7x7 block grid with no offset
-  function buildGrid(area: AreaGame): _SewerGrid
+  function buildGrid(area: AreaGame,
+      ?options: SewerAreaGeneratorOptions): _SewerGrid
     {
       var gw = Std.int(area.width / BLOCK_SIZE);
       var gh = Std.int(area.height / BLOCK_SIZE);
@@ -99,6 +111,13 @@ class SewerAreaGenerator
         gw = 1;
       if (gh < 1)
         gh = 1;
+
+      if (options != null &&
+          options.blockWidth != null)
+        gw = Std.int(Math.min(gw, options.blockWidth));
+      if (options != null &&
+          options.blockHeight != null)
+        gh = Std.int(Math.min(gh, options.blockHeight));
 
       return {
         startX: 0,
@@ -123,13 +142,14 @@ class SewerAreaGenerator
     }
 
 // roll room block positions first
-  function rollRoomBlocks(grid: _SewerGrid): Array<_GridPos>
+  function rollRoomBlocks(grid: _SewerGrid,
+      ?options: SewerAreaGeneratorOptions): Array<_GridPos>
     {
       var rooms = [];
       var total = grid.width * grid.height;
 
-      var minRooms = Std.int(Math.max(6, Math.ceil(total * 0.16)));
-      var maxRooms = Std.int(Math.max(minRooms, Math.floor(total * 0.28)));
+      var minRooms = getMinRoomBlocks(total, options);
+      var maxRooms = getMaxRoomBlocks(total, minRooms, options);
       if (maxRooms > total)
         maxRooms = total;
       var target = minRooms;
@@ -192,6 +212,27 @@ class SewerAreaGenerator
         }
 
       return rooms;
+    }
+
+// get minimum amount of room blocks to place
+  function getMinRoomBlocks(total: Int,
+      ?options: SewerAreaGeneratorOptions): Int
+    {
+      if (options != null &&
+          options.minRoomBlocks != null)
+        return Std.int(Math.max(0, Math.min(total, options.minRoomBlocks)));
+      return Std.int(Math.max(6, Math.ceil(total * 0.16)));
+    }
+
+// get maximum amount of room blocks to place
+  function getMaxRoomBlocks(total: Int, minRooms: Int,
+      ?options: SewerAreaGeneratorOptions): Int
+    {
+      if (options != null &&
+          options.maxRoomBlocks != null)
+        return Std.int(Math.max(minRooms,
+          Math.min(total, options.maxRoomBlocks)));
+      return Std.int(Math.max(minRooms, Math.floor(total * 0.28)));
     }
 
 // validate candidate room block placement
@@ -1076,14 +1117,17 @@ class SewerAreaGenerator
     }
 
 // place sewer exits in room centers
-  function placeExits(area: AreaGame, rooms: Array<_Room>)
+  function placeExits(area: AreaGame, rooms: Array<_Room>,
+      ?options: SewerAreaGeneratorOptions)
     {
       if (rooms.length == 0)
         return;
 
-      var exitsToPlace = 1;
-      if (rooms.length > 2)
-        exitsToPlace += Std.random(Std.int(Math.min(3, rooms.length)) - 1);
+      var exitsToPlace = getExitCount(rooms.length, options);
+      if (exitsToPlace > rooms.length)
+        exitsToPlace = rooms.length;
+      if (exitsToPlace <= 0)
+        return;
 
       // shuffle rooms to pick random ones
       var shuffled = [];
@@ -1104,8 +1148,35 @@ class SewerAreaGenerator
           var room = shuffled[i];
           var cx = room.x1 + Std.int(room.w / 2);
           var cy = room.y1 + Std.int(room.h / 2);
-          area.addObject(new SewerExit(game, area.id, cx, cy));
+          addExit(area, cx, cy, options);
         }
+    }
+
+// get number of exits to place
+  function getExitCount(roomCount: Int,
+      ?options: SewerAreaGeneratorOptions): Int
+    {
+      if (options != null &&
+          options.exitCount != null)
+        return Std.int(Math.max(0, options.exitCount));
+
+      var exitsToPlace = 1;
+      if (roomCount > 2)
+        exitsToPlace += Std.random(Std.int(Math.min(3, roomCount)) - 1);
+      return exitsToPlace;
+    }
+
+// add one exit object using configured exit behavior
+  function addExit(area: AreaGame, x: Int, y: Int,
+      ?options: SewerAreaGeneratorOptions)
+    {
+      if (options != null &&
+          options.useHabitatExits)
+        {
+          area.addObject(new HabitatExit(game, area.id, x, y));
+          return;
+        }
+      area.addObject(new SewerExit(game, area.id, x, y));
     }
 
 // pick fallback exit tile when no junctions were found

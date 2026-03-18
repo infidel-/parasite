@@ -7,6 +7,7 @@ import objects.*;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
+import tiles.Sewers;
 import tiles.Tileset;
 
 class AreaGame extends _SaveObject
@@ -915,8 +916,16 @@ class AreaGame extends _SaveObject
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
       info = WorldConst.getAreaInfo(typeID);
-      width = info.width - 10 + 10 * Std.random(2);
-      height = info.height - 10 + 10 * Std.random(2);
+      if (typeID == AREA_HABITAT)
+        {
+          width = info.width;
+          height = info.height;
+        }
+      else
+        {
+          width = info.width - 10 + 10 * Std.random(2);
+          height = info.height - 10 + 10 * Std.random(2);
+        }
 
       // set name
       name = info.name;
@@ -1284,6 +1293,36 @@ class AreaGame extends _SaveObject
         }
     }
 
+// get tileset area type for this area
+  public function getTilesetTypeID(): _AreaType
+    {
+      if (typeID == AREA_HABITAT &&
+          usesSewerTileset())
+        return AREA_SEWERS;
+      return typeID;
+    }
+
+// check whether this area should use the sewer tileset
+  public function usesSewerTileset(): Bool
+    {
+      if (typeID == AREA_SEWERS)
+        return true;
+      if (typeID != AREA_HABITAT ||
+          _cells == null)
+        return false;
+
+      // NOTE: this is a solution for support old habitat areas without sewer tileset, which were generated before sewer tileset was added
+      for (column in _cells)
+        {
+          if (column == null)
+            continue;
+          for (tileID in column)
+            if (Sewers.isSewerTileID(tileID))
+              return true;
+        }
+      return false;
+    }
+
 // get cached tileset for this area type
   function getTileset(): Tileset
     {
@@ -1291,7 +1330,7 @@ class AreaGame extends _SaveObject
           game != null &&
           game.scene != null &&
           game.scene.images != null)
-        _tileset = game.scene.images.getTileset(typeID);
+        _tileset = game.scene.images.getTileset(getTilesetTypeID());
       return _tileset;
     }
 
