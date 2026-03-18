@@ -944,7 +944,8 @@ class Chat extends _SaveObject
       var cult = game.cults[0];
       if (cult.members.length == 0)
         cult.addLeader(target);
-      else cult.addMember(target);
+      else if (!cult.addMember(target))
+        return;
       finish();
     }
 

@@ -105,6 +105,8 @@ class Cult extends _SaveObject
       ai.isNameKnown = true;
       ai.isJobKnown = true;
       ai.setCult(this);
+      if (isPlayer)
+        ai.inventory.addKnownItems();
       members.push(ai.cloneData());
       log('gains a leader: ' + ai.theName());
       if (isPlayer)
@@ -116,14 +118,15 @@ class Cult extends _SaveObject
     }
 
 // add new member
-  public function addMember(ai: AI)
+  public function addMember(ai: AI): Bool
     {
       var ret = addAIData(ai.cloneData());
       if (!ret)
-        return;
+        return false;
       ai.isNameKnown = true;
       ai.isJobKnown = true;
       ai.setCult(this);
+      return true;
     }
 
 // add member from AIData
@@ -156,6 +159,8 @@ class Cult extends _SaveObject
       aidata.isNameKnown = true;
       aidata.isCultist = true;
       aidata.cultID = id;
+      if (isPlayer)
+        aidata.inventory.addKnownItems();
       members.push(aidata);
       log('gains a new member: ' + aidata.TheName());
       recalc();
