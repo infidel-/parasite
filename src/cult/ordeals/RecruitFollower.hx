@@ -12,6 +12,16 @@ class RecruitFollower extends Ordeal
   public var target: AIData;
   public var followerType: String; // type of power to seek (combat, media, lawfare, corporate, political)
 
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return Const.smallgray(' (') +
+        Const.col('cult-power', '10k') + Icon.money +
+        Const.smallgray(', ') +
+        Const.col('cult-power', 2) + ' PWR' +
+        Const.smallgray(')');
+    }
+
   public function new(g: Game, ?followerType: String = 'combat')
     {
       super(g);
@@ -121,7 +131,7 @@ class RecruitFollower extends Ordeal
       actions.push({
         id: 'recruit',
         type: ACTION_CULT,
-        name: 'Seek the pure',
+        name: 'Seek the pure' + priceHint(),
         energy: 0,
         obj: { submenu: 'recruit' }
       });
