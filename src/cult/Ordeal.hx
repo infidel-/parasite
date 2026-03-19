@@ -118,6 +118,12 @@ class Ordeal extends _SaveObject
       return name;
     }
 
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return '';
+    }
+
 // get colored custom name for display
   public function coloredName(): String
     {

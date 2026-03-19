@@ -75,6 +75,7 @@ class Ordeals extends _SaveObject
       // reset cult UI to root state
       game.ui.cult.reset();
       cult.recalc();
+      game.ui.hud.update();
     }
 
 // returns true is one of the ordeals has effect

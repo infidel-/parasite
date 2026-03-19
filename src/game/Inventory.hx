@@ -40,6 +40,15 @@ class Inventory extends _SaveObject
     {
     }
 
+// add inventory items to known list
+  public function addKnownItems()
+    {
+      for (item in _list)
+        game.player.addKnownItem(item.id);
+      if (clothing.id != 'armorNone')
+        game.player.addKnownItem(clothing.id);
+    }
+
 // add available actions to list (body window)
   public function getActions(): Array<_PlayerAction>
     {

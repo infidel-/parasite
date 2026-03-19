@@ -4,7 +4,9 @@
 import js.node.Fs;
 #end
 import haxe.Json;
+import haxe.ds.ObjectMap;
 
+import ai.AIData;
 import game.Game;
 
 class Loader
@@ -54,6 +56,7 @@ class Loader
       game.scene.sounds.loadPost();
       for (cult in game.cults)
         cult.loadPost();
+      rebuildAIDataMaxID(game);
       game.scene.updateCamera();
       game.log('Game loaded from slot ' + slotID + '.');
     }
@@ -304,5 +307,99 @@ class Loader
       if (dst.initPost != null)
         dst.initPost(true);
       return dst;
+    }
+
+// rebuild AIData max ID from loaded state
+  static function rebuildAIDataMaxID(game: Game)
+    {
+      var maxID = -1;
+      var visited = new ObjectMap<Dynamic, Bool>();
+
+      // update max from one AIData instance
+      function scanAIData(ai: AIData)
+        {
+          if (ai != null &&
+              ai.id > maxID)
+            maxID = ai.id;
+        }
+
+      // walk cult state and collect nested AIData holders
+      function scanValue(value: Dynamic)
+        {
+          if (value == null)
+            return;
+          if (Std.isOfType(value, AIData))
+            {
+              scanAIData(cast value);
+              return;
+            }
+          if (Std.isOfType(value, Int) ||
+              Std.isOfType(value, Float) ||
+              Std.isOfType(value, Bool) ||
+              Std.isOfType(value, String) ||
+              Reflect.isFunction(value))
+            return;
+          if (Std.isOfType(value, Array))
+            {
+              var arr: Array<Dynamic> = cast value;
+              for (entry in arr)
+                scanValue(entry);
+              return;
+            }
+          if (Std.isOfType(value, List))
+            {
+              var list: List<Dynamic> = cast value;
+              for (entry in list)
+                scanValue(entry);
+              return;
+            }
+          if (Std.isOfType(value, haxe.ds.IntMap) ||
+              Std.isOfType(value, haxe.ds.StringMap))
+            {
+              for (field in Reflect.fields(value))
+                scanValue(Reflect.field(value, field));
+              return;
+            }
+          switch (Type.typeof(value)) {
+            case TObject, TClass(_):
+              if (visited.exists(value))
+                return;
+              visited.set(value, true);
+              for (field in Reflect.fields(value))
+                {
+                  if (field == 'game' ||
+                      field == 'ui')
+                    continue;
+                  scanValue(Reflect.field(value, field));
+                }
+            default:
+          }
+        }
+
+      // scan all loaded AIData instances in world and cult state
+      for (region in @:privateAccess game.world._list)
+        {
+          for (area in @:privateAccess region._list)
+            {
+              for (ai in area.getAllAI())
+                scanAIData(ai);
+              if (area.hasHabitat)
+                {
+                  var habarea = region.get(area.habitatAreaID);
+                  if (habarea != null)
+                    for (ai in habarea.getAllAI())
+                      scanAIData(ai);
+                }
+            }
+        }
+
+      // also scan player and cult state
+      scanAIData(game.player.host);
+      for (cult in game.cults)
+        scanValue(cult);
+
+      AIData._maxID = maxID + 1;
+      if (AIData._maxID < 0)
+        AIData._maxID = 0;
     }
 }

@@ -10,6 +10,16 @@ import _PlayerAction;
 
 class UpgradeFollower2 extends UpgradeFollower
 {
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return Const.smallgray(' (') +
+        Const.col('cult-power', '100k') + Icon.money +
+        Const.smallgray(', ') +
+        Const.col('cult-power', 5) + ' PWR' +
+        Const.smallgray(')');
+    }
+
   public function new(g: Game, targetID: Int)
     {
       super(g, targetID, 2);
@@ -115,7 +125,7 @@ class UpgradeFollower2 extends UpgradeFollower
       actions.push({
         id: 'upgrade2',
         type: ACTION_CULT,
-        name: 'Elevate the faithful II',
+        name: 'Elevate the faithful II' + priceHint(),
         energy: 0,
         obj: { submenu: 'upgrade2' }
       });

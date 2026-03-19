@@ -11,6 +11,16 @@ class GatherClues extends Ordeal
 {
   public var memberType: String; // job type of the member
 
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return Const.smallgray(' (') +
+        Const.col('cult-power', '200k') + Icon.money +
+        Const.smallgray(', ') +
+        Const.col('cult-power', 10) + ' PWR' +
+        Const.smallgray(')');
+    }
+
   public function new(g: Game)
     {
       super(g);
@@ -80,7 +90,7 @@ class GatherClues extends Ordeal
       actions.push({
         id: 'gatherClues',
         type: ACTION_CULT,
-        name: 'Anthropomancy',
+        name: 'Anthropomancy' + priceHint(),
         energy: 0,
         obj: {}
       });

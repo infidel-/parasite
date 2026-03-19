@@ -11,6 +11,16 @@ class UpgradeFollower extends Ordeal
 {
   public var targetID: Int;
 
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return Const.smallgray(' (') +
+        Const.col('cult-power', '20k') + Icon.money +
+        Const.smallgray(', ') +
+        Const.col('cult-power', 3) + ' PWR' +
+        Const.smallgray(')');
+    }
+
   public function new(g: Game, targetID: Int, level: Int)
     {
       super(g);
@@ -135,7 +145,7 @@ class UpgradeFollower extends Ordeal
       actions.push({
         id: 'upgrade',
         type: ACTION_CULT,
-        name: 'Elevate the faithful',
+        name: 'Elevate the faithful' + priceHint(),
         energy: 0,
         obj: { submenu: 'upgrade' }
       });

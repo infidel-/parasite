@@ -11,6 +11,16 @@ class LowerAlertness extends Ordeal
 {
   public var powerTypes: Array<String>; // selected power types for this ordeal
 
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return Const.smallgray(' (') +
+        '2x: ' +
+        Const.col('cult-power', 5) + ' PWR or ' +
+        Const.col('cult-power', '100k') + Icon.money +
+        Const.smallgray(')');
+    }
+
   public function new(g: Game)
     {
       super(g);
@@ -107,7 +117,7 @@ class LowerAlertness extends Ordeal
       actions.push({
         id: 'lowerAlertness',
         type: ACTION_CULT,
-        name: 'Placate the realm',
+        name: 'Placate the realm' + priceHint(),
         energy: 0,
         obj: {}
       });

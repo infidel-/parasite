@@ -828,6 +828,7 @@ class FacilityAreaGenerator
     {
       var area = state.area;
       var cells = area.getCells();
+      var roomDoors = getRoomDoors(state, room);
 
       // put a drain
       var cx = room.x1 + 1 + Std.random(room.w - 2),
@@ -846,12 +847,37 @@ class FacilityAreaGenerator
       var block = Std.random(100) < 50 ? Const.LABS_TABLE_3X2 :
         Const.LABS_TABLE_2X3;
       var tableW = block[0].length, tableH = block.length;
-      var sx = room.x1 + 2 + Std.random(2),
-        sy = room.y1 + 2 + Std.random(2);
-      if (sx + tableW >= room.x2 - 2)
-        sx = room.x1 + 2;
-      if (sy + tableH >= room.y2 - 2)
-        sy = room.y1 + 2;
+      var sx = -1, sy = -1;
+      var xOffsets = [ 2, 3 ];
+      var yOffsets = [ 2, 3 ];
+      if (Std.random(100) < 50)
+        xOffsets = [ 3, 2 ];
+      if (Std.random(100) < 50)
+        yOffsets = [ 3, 2 ];
+      var foundSpot = false;
+      for (xOffset in xOffsets)
+        {
+          var candidateX = room.x1 + xOffset;
+          if (candidateX + tableW >= room.x2 - 2)
+            candidateX = room.x1 + 2;
+          for (yOffset in yOffsets)
+            {
+              var candidateY = room.y1 + yOffset;
+              if (candidateY + tableH >= room.y2 - 2)
+                candidateY = room.y1 + 2;
+              if (!isBigTableSpotValid(state, room, roomDoors,
+                  candidateX, candidateY, tableW, tableH))
+                continue;
+              sx = candidateX;
+              sy = candidateY;
+              foundSpot = true;
+              break;
+            }
+          if (foundSpot)
+            break;
+        }
+      if (!foundSpot)
+        return;
       for (i in 0...tableH)
         for (j in 0...tableW)
           {
@@ -860,6 +886,77 @@ class FacilityAreaGenerator
               addDecoration(state, sx + j, sy + i,
                 Const.CHEM_LABS_DECO_TABLE);
           }
+    }
+
+// get all doors that lead into this room
+  function getRoomDoors(state: _FacilityState, room: _Room): Array<_Door>
+    {
+      var doors = [];
+      for (door in state.doors)
+        if (door.roomID1 == room.id ||
+            door.roomID2 == room.id)
+          doors.push(door);
+      return doors;
+    }
+
+// check if a big table spot keeps room door ingress clear
+  function isBigTableSpotValid(state: _FacilityState, room: _Room,
+      doors: Array<_Door>, x: Int, y: Int, w: Int, h: Int): Bool
+    {
+      var cells = state.area.getCells();
+      for (i in 0...h)
+        for (j in 0...w)
+          if (cells[x + j][y + i] != TEMP_BUILDING_ROOM)
+            return false;
+
+      for (door in doors)
+        {
+          var sx = 0, sy = 0;
+          var dx = 0, dy = 0;
+          var hasIngress = false;
+          if (door.x == room.x1 - 1)
+            {
+              sx = room.x1;
+              sy = door.y;
+              dx = 1;
+              hasIngress = true;
+            }
+          else if (door.x == room.x2 + 1)
+            {
+              sx = room.x2;
+              sy = door.y;
+              dx = -1;
+              hasIngress = true;
+            }
+          else if (door.y == room.y1 - 1)
+            {
+              sx = door.x;
+              sy = room.y1;
+              dy = 1;
+              hasIngress = true;
+            }
+          else if (door.y == room.y2 + 1)
+            {
+              sx = door.x;
+              sy = room.y2;
+              dy = -1;
+              hasIngress = true;
+            }
+          if (!hasIngress)
+            continue;
+
+          for (i in 0...BIG_TABLE_DOOR_CLEARANCE)
+            {
+              var px = sx + dx * i;
+              var py = sy + dy * i;
+              if (px >= x &&
+                  px < x + w &&
+                  py >= y &&
+                  py < y + h)
+                return false;
+            }
+        }
+      return true;
     }
 
 // add decoration from a list
@@ -1025,6 +1122,7 @@ class FacilityAreaGenerator
   static var finalTiles: Map<Int, Int>;
 
   static var ROOM_SIZE = 7; // 6 + 1 wall
+  static var BIG_TABLE_DOOR_CLEARANCE = 3;
   static var TEMP_ROAD = 0;
   static var TEMP_WALKWAY = 1;
   static var TEMP_ALLEY = 2;

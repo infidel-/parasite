@@ -11,6 +11,16 @@ class GroupInterference extends Ordeal
 {
   public var powerTypes: Array<String>; // selected power types for this ordeal
 
+// returns the initiate-menu price hint for this ordeal
+  public static function priceHint(): String
+    {
+      return Const.smallgray(' (') +
+        '3x: ' +
+        Const.col('cult-power', 10) + ' PWR or ' +
+        Const.col('cult-power', '100k') + Icon.money +
+        Const.smallgray(')');
+    }
+
   public function new(g: Game)
     {
       super(g);
@@ -111,7 +121,7 @@ class GroupInterference extends Ordeal
       actions.push({
         id: 'groupInterference',
         type: ACTION_CULT,
-        name: 'Group interference',
+        name: 'Group interference' + priceHint(),
         energy: 0,
         obj: {}
       });
