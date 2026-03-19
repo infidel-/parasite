@@ -131,6 +131,7 @@ class AITooltip
         buf.add(Const.smalldebug('[debug] name: ' + ai.name.real) + '<br/>');
       if (!ai.isJobKnown)
         buf.add(Const.smalldebug('[debug] job: ' + ai.job) + '<br/>');
+      buf.add(Const.smalldebug('[debug] state: ' + ai.state) + '<br/>');
       if (!ai.isAttrsKnown)
         {
           var attrs = '[debug] STR ' + ai.strength +

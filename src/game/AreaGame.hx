@@ -827,13 +827,18 @@ class AreaGame extends _SaveObject
       if (params.fallbackRadius == null)
         params.fallbackRadius = 5;
 
-      // prefer elevator in corp or nearest sewer exit in sewers
+      // prefer entrance tiles in special areas
       if (info.id == AREA_CORP ||
           info.id == AREA_SEWERS ||
-          info.id == AREA_UNDERGROUND_LAB)
+          info.id == AREA_UNDERGROUND_LAB ||
+          info.id == AREA_HABITAT)
         {
           var tiles = [];
-          var targetType = (info.id == AREA_SEWERS ? 'sewer_exit' : 'elevator');
+          var targetType = (
+            info.id == AREA_SEWERS ? 'sewer_exit' :
+            info.id == AREA_HABITAT ? 'habitat_exit' :
+            'elevator'
+          );
           for (o in getObjects())
             {
               if (o.type != targetType)
@@ -1760,7 +1765,8 @@ class AreaGame extends _SaveObject
       var cnt = 0;
       for (ai in _ai)
         if (ai.state == AI_STATE_ALERT ||
-            ai.state == AI_STATE_SEARCH_LAST_SEEN)
+            ai.state == AI_STATE_SEARCH_LAST_SEEN ||
+            ai.state == AI_STATE_SEARCH_AREA)
           cnt++;
 
       if (cnt > 0)

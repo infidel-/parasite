@@ -3,6 +3,7 @@ package ai;
 
 import _AIEffectType;
 import _AIState;
+import _AIStateSearchArea;
 import entities.AIEntity;
 import objects.*;
 import game.*;
@@ -43,6 +44,7 @@ class AI extends AIData
   public var stateTime: Int; // turns spent in this state
   public var reason: _AIStateChangeReason; // reason for setting this state
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
+  public var search: _AIStateSearchArea; // search-around-last-seen state data
 
   // various AI timers
   public var timers: _AITimers;
@@ -81,6 +83,7 @@ class AI extends AIData
       stateTime = 0;
       reason = REASON_NONE;
       alertness = 0;
+      search = null;
       timers = {
         alert: 0,
 //          alertPlayerNotVisible: 0
@@ -305,6 +308,8 @@ public function show()
       state = vstate;
       stateTime = 0;
       reason = vreason;
+      if (state != AI_STATE_SEARCH_AREA)
+        search = null;
       if (state == AI_STATE_ALERT)
         {
           roamTargetX = -1;
@@ -346,7 +351,8 @@ public function show()
 
       var alertFrame = Const.FRAME_EMPTY;
       if (state == AI_STATE_ALERT ||
-          state == AI_STATE_SEARCH_LAST_SEEN)
+          state == AI_STATE_SEARCH_LAST_SEEN ||
+          state == AI_STATE_SEARCH_AREA)
         alertFrame = Const.FRAME_ALERTED;
       else if (state == AI_STATE_IDLE ||
           state == AI_STATE_MOVE_TARGET ||
@@ -630,7 +636,8 @@ public function show()
       // assimilated hosts do not emit random sounds
       if (effects.has(EFFECT_CRYING))
         emitRandomSound('' + EFFECT_CRYING, 30);
-      var soundState = (state == AI_STATE_SEARCH_LAST_SEEN ?
+      var soundState = (state == AI_STATE_SEARCH_LAST_SEEN ||
+        state == AI_STATE_SEARCH_AREA ?
         AI_STATE_ALERT : state);
       if (state != AI_STATE_HOST ||
           !hasTrait(TRAIT_ASSIMILATED))

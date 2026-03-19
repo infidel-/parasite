@@ -2,6 +2,7 @@
 
 package game;
 
+import ai.AI;
 import const.*;
 
 class Team extends FSM<_TeamState, _TeamFlag>
@@ -230,7 +231,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
               });
               if (loc == null)
                 {
-                  loc = game.area.findEmptyLocationNear(x, y, 5);
+                  loc = game.area.findEmptyLocationNear(x, y, 2);
                   if (loc == null)
                     {
                       Const.todo('Could not find free spot for spawn x2!');
@@ -239,9 +240,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
                 }
 
               var ai = game.area.spawnAI('blackops', loc.x, loc.y);
-              // set roam target and alertness
+              // send ambushers to the player's last seen tile immediately
               ai.roamTargetX = x;
               ai.roamTargetY = y;
+              ai.setState(AI_STATE_SEARCH_LAST_SEEN);
+              ai.timers.alert = AI.ALERTED_TIMER;
               ai.alertness = 75;
             }
 
@@ -256,12 +259,41 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // TURN: fight in progress
   function turnFight()
     {
+      updateHabitatFightTargets();
+
       // decrease fight timer (to allow player to leave)
       if (timer > 0)
         timer--;
 
       // check if it is over
       checkFightFinish(false);
+    }
+
+// seed visible player cultists into blackops enemy lists in habitat fights
+  function updateHabitatFightTargets()
+    {
+      if (game.location != LOCATION_AREA ||
+          !game.area.isHabitat)
+        return;
+
+      var blackops = game.area.getAIWithType('blackops');
+      if (blackops.length == 0)
+        return;
+
+      var cultists = [];
+      for (ai in game.area.getAllAI())
+        if (ai.isPlayerCultist())
+          cultists.push(ai);
+      if (cultists.length == 0)
+        return;
+
+      for (blackopsAI in blackops)
+        for (cultist in cultists)
+          {
+            if (!blackopsAI.seesPosition(cultist.x, cultist.y))
+              continue;
+            blackopsAI.addEnemy(cultist);
+          }
     }
 
 
@@ -280,12 +312,75 @@ class Team extends FSM<_TeamState, _TeamFlag>
       timer = 3; // 3 turns until exit is available (in habitat)
 
       // team was in ambush, spawn blackops
+      var exit = getHabitatAmbushExit();
       for (i in 0...4)
         {
-          var loc = game.area.findEmptyLocation();
+          var loc = (exit != null ?
+            game.area.findEmptyLocationNear(exit.x, exit.y, 4) :
+            null);
+          if (loc == null)
+            loc = game.area.findEmptyLocation();
           var ai = game.area.spawnAI('blackops', loc.x, loc.y);
+          // send ambushers to the player's last seen tile immediately
+          ai.roamTargetX = game.playerArea.x;
+          ai.roamTargetY = game.playerArea.y;
+          ai.setState(AI_STATE_SEARCH_LAST_SEEN);
+          ai.timers.alert = AI.ALERTED_TIMER;
           ai.alertness = 75;
         }
+    }
+
+// check whether player can leave current habitat during team activity
+  public function leaveHabitat(): _TeamLeaveHabitatResult
+    {
+      if (state != TEAM_FIGHT)
+        return {
+          canLeave: true,
+          skipOutsiderCheck: false
+        };
+      if (hasHabitatExit())
+        return {
+          canLeave: true,
+          skipOutsiderCheck: true
+        };
+      if (timer > 0)
+        {
+          game.actionFailed('You try to leave but the exit is blocked! You can leave the area in ' + timer + ' turns.');
+          return {
+            canLeave: false,
+            skipOutsiderCheck: true
+          };
+        }
+      return {
+        canLeave: true,
+        skipOutsiderCheck: true
+      };
+    }
+
+// get one random habitat exit to anchor ambush spawns
+  function getHabitatAmbushExit(): { x: Int, y: Int }
+    {
+      var exits = [];
+      for (o in game.area.getObjects())
+        if (o.type == 'habitat_exit')
+          exits.push(o);
+      if (exits.length == 0)
+        return null;
+
+      var exit = exits[Std.random(exits.length)];
+      return {
+        x: exit.x,
+        y: exit.y
+      };
+    }
+
+// check whether current habitat has any habitat exit
+  function hasHabitatExit(): Bool
+    {
+      for (o in game.area.getObjects())
+        if (o.type == 'habitat_exit')
+          return true;
+      return false;
     }
 
 // check if ambush is over
@@ -294,6 +389,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
     {
       // must be during the ambush
       if (state != TEAM_FIGHT)
+        return;
+      // habitat fight should only resolve from actual blackops deaths
+      if (!onDeath &&
+          game.location == LOCATION_AREA &&
+          game.area.isHabitat)
         return;
       // check how many are left living
       var ai = game.area.getAIWithType('blackops');
@@ -478,6 +578,11 @@ class Team extends FSM<_TeamState, _TeamFlag>
       _distance = v;
       return v;
     }
+}
+
+typedef _TeamLeaveHabitatResult = {
+  var canLeave: Bool;
+  var skipOutsiderCheck: Bool;
 }
 
 
