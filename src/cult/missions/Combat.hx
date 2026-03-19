@@ -5,7 +5,6 @@ import ai.*;
 import cult.Mission;
 import game.AreaGame;
 import game.Game;
-import objects.SewerExit;
 
 typedef CombatSpawnTarget = {
   var target: _MissionTarget;

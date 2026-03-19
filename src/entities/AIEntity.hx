@@ -4,6 +4,7 @@ package entities;
 
 import js.html.CanvasRenderingContext2D;
 
+import _AIState;
 import ai.AI;
 import game.Game;
 
@@ -66,8 +67,15 @@ class AIEntity extends PawnEntity
 
       // draw alert icon
       if (alertx > 0)
-        drawImage(ctx, game.scene.images.entities,
-          alertx, Const.ROW_ALERT);
+        {
+          if (ai.state == AI_STATE_SEARCH_LAST_SEEN ||
+              ai.state == AI_STATE_SEARCH_AREA)
+            drawImage(ctx, game.scene.images.entities,
+              Const.FRAME_SEARCH,
+              Const.ROW_EFFECT);
+          else drawImage(ctx, game.scene.images.entities,
+            alertx, Const.ROW_ALERT);
+        }
       // draw npc/mission target icon
       if (isNPC || isMissionTarget)
         drawImage(ctx, game.scene.images.entities,

@@ -4,7 +4,7 @@ package cult.missions;
 import ai.AI;
 import game.Game;
 import objects.mission.SummoningPortal;
-import objects.SewerExit;
+import objects.mission.SewerExit;
 import cult.missions.Combat.CombatSpawnTarget;
 
 private enum _RitualState
@@ -54,6 +54,7 @@ class CombatSummoningRitual extends Combat
 // template-specific initialization
   override function initTemplate(combatInfo: _CombatMissionInfo, targetList: Array<CombatSpawnTarget>)
     {
+      syncCultistTargetIcons();
       var marker = pickMissionMarkerArea();
       if (marker == null)
         throw 'Could not find city marker area for summoning ritual mission.';
@@ -66,6 +67,33 @@ class CombatSummoningRitual extends Combat
       missionArea.width = 49;
       missionArea.height = 49;
       areaID = missionArea.id;
+    }
+
+// make all ritual cultist targets share one randomly chosen icon
+  function syncCultistTargetIcons()
+    {
+      var sharedIcon: { x: Int, y: Int } = null;
+      for (target in targets)
+        {
+          if (target.iconID != 'cultist')
+            continue;
+          sharedIcon = {
+            x: target.tileAtlasX,
+            y: target.tileAtlasY,
+          };
+          break;
+        }
+
+      if (sharedIcon == null)
+        return;
+
+      for (target in targets)
+        {
+          if (target.iconID != 'cultist')
+            continue;
+          target.tileAtlasX = sharedIcon.x;
+          target.tileAtlasY = sharedIcon.y;
+        }
     }
 
 // template-specific turn processing
@@ -141,15 +169,13 @@ class CombatSummoningRitual extends Combat
             exit.missionID = id;
           }
 
-      // pick a random room and get its center
-      var rooms = game.area.generatorInfo.rooms;
-      var room = rooms[Std.random(rooms.length)];
-      ritualRoomID = room.id;
-      var centerX = room.x1 + Std.int(room.w / 2);
-      var centerY = room.y1 + Std.int(room.h / 2);
-      var portalAnchor = findPortalAnchorInRoom(room, centerX, centerY);
-      if (portalAnchor == null)
+      // pick a ritual room that can fit the portal and preferably has no sewer exit
+      var roomInfo = pickRitualRoomInfo(game.area.generatorInfo.rooms);
+      if (roomInfo == null)
         return;
+      var room = roomInfo.room;
+      var portalAnchor = roomInfo.anchor;
+      ritualRoomID = room.id;
 
       // spawn the summoning portal group around the room center
       var portal = spawnPortalGroup(portalAnchor.x, portalAnchor.y);
@@ -160,6 +186,51 @@ class CombatSummoningRitual extends Combat
       // spawn ritual participants around the portal
       spawnMissingRitualTargets();
       state = WAITING;
+    }
+
+// pick ritual room and portal anchor while avoiding sewer exits when possible
+  function pickRitualRoomInfo(rooms: Array<_Room>)
+    {
+      var valid = [];
+      var preferred = [];
+      for (room in rooms)
+        {
+          var centerX = room.x1 + Std.int(room.w / 2);
+          var centerY = room.y1 + Std.int(room.h / 2);
+          var anchor = findPortalAnchorInRoom(room, centerX, centerY);
+          if (anchor == null)
+            continue;
+
+          var info = {
+            room: room,
+            anchor: anchor,
+          };
+          valid.push(info);
+          if (!hasSewerExitInRoom(room))
+            preferred.push(info);
+        }
+
+      var pool = (preferred.length > 0 ? preferred : valid);
+      if (pool.length <= 0)
+        return null;
+      return pool[Std.random(pool.length)];
+    }
+
+// check whether one room contains a sewer exit
+  function hasSewerExitInRoom(room: _Room): Bool
+    {
+      for (o in game.area.getObjects())
+        {
+          if (o.type != 'sewer_exit')
+            continue;
+          if (o.x < room.x1 ||
+              o.x > room.x2 ||
+              o.y < room.y1 ||
+              o.y > room.y2)
+            continue;
+          return true;
+        }
+      return false;
     }
 
 // check whether a 2x2 portal can be placed at top-left tile x,y
@@ -368,7 +439,8 @@ class CombatSummoningRitual extends Combat
               if (loc == null)
                 break;
               // don't spawn on top of portal
-              if (loc.x != ritualPortalX || loc.y != ritualPortalY)
+              if (loc.x != ritualPortalX ||
+                  loc.y != ritualPortalY)
                 break;
               attempts++;
             }

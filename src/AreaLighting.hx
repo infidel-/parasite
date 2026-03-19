@@ -58,15 +58,6 @@ class AreaLighting
   static var PROJECTED_SHADOW_MASK_SAMPLE_STEP_PX = 1;
 // number of segments used to approximate semicircle shadow cap
   static var PROJECTED_SHADOW_SEMICIRCLE_SEGMENTS = 12;
-// marker radius in tiles for light source debug rendering
-  static var DEBUG_LIGHT_MARKER_RADIUS_TILES = 0.11;
-// marker stroke width in tile fractions for debug rendering
-  static var DEBUG_LIGHT_MARKER_STROKE_WIDTH_TILES = 0.03;
-// marker fill alpha used for light source debug rendering
-  static var DEBUG_LIGHT_MARKER_FILL_ALPHA = 0.28;
-// marker ring alpha used for light source debug rendering
-  static var DEBUG_LIGHT_MARKER_RING_ALPHA = 0.95;
-
   var scene: GameScene;
   var game: Game;
   var staticMap: CanvasElement;
@@ -205,97 +196,6 @@ class AreaLighting
         aiShadowMap);
     }
 
-// draw bright source markers for all active light emitters
-  public function drawDebugLightMarkers(ctx: CanvasRenderingContext2D)
-    {
-      if (!game.player.vars.debugLightsEnabled)
-        return;
-
-      var area = game.area;
-      if (!hasLighting(area))
-        return;
-
-      syncAreaState(area);
-      var markers = collectDebugLightMarkers(area);
-      if (markers.length <= 0)
-        return;
-
-      var rect = area.getVisibleRect();
-      var radius = DEBUG_LIGHT_MARKER_RADIUS_TILES * Const.TILE_SIZE;
-      var strokeWidth = DEBUG_LIGHT_MARKER_STROKE_WIDTH_TILES * Const.TILE_SIZE;
-      if (strokeWidth < 1)
-        strokeWidth = 1;
-
-      ctx.save();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.lineWidth = strokeWidth;
-      for (marker in markers)
-        {
-          var tileX = Std.int(Math.floor(marker.x));
-          var tileY = Std.int(Math.floor(marker.y));
-          if (tileX < rect.x1 ||
-              tileY < rect.y1 ||
-              tileX >= rect.x2 ||
-              tileY >= rect.y2)
-            continue;
-
-          var sx = (marker.x - scene.cameraTileX1) * Const.TILE_SIZE;
-          var sy = (marker.y - scene.cameraTileY1) * Const.TILE_SIZE;
-          var rgb = (marker.castsShadows ? '0, 0, 0' : '255, 255, 255');
-          ctx.fillStyle = 'rgba(' + rgb + ', ' + DEBUG_LIGHT_MARKER_FILL_ALPHA + ')';
-          ctx.strokeStyle = 'rgba(' + rgb + ', ' + DEBUG_LIGHT_MARKER_RING_ALPHA + ')';
-          ctx.beginPath();
-          ctx.arc(sx, sy, radius, 0, Math.PI * 2, false);
-          ctx.fill();
-          ctx.stroke();
-        }
-      ctx.restore();
-    }
-
-// collect debug lines for one tile's light stamps and local decoration context
-  public function getTileLightDebugLines(area: AreaGame,
-      x: Int, y: Int): Array<String>
-    {
-      var lines: Array<String> = [];
-      lines.push('lightDebug tile=(' + x + ',' + y + ')');
-      if (!hasLighting(area))
-        {
-          lines.push(' lighting=disabled');
-          return lines;
-        }
-
-      if (area.tiles == null ||
-          area.tiles.length == 0)
-        area.initTilesFromCells();
-
-      var matchingStamps: Array<_AreaLightStamp> = [];
-      for (stamp in getAreaLightStamps(area))
-        if (Std.int(Math.floor(stamp.x)) == x &&
-            Std.int(Math.floor(stamp.y)) == y)
-          matchingStamps.push(stamp);
-
-      lines.push(' stamps=' + matchingStamps.length);
-      for (stamp in matchingStamps)
-        {
-          var sourceGroupID = (stamp.sourceGroupID != null ?
-            stamp.sourceGroupID : '-');
-          var falloffProfile = (stamp.falloffProfile != null ?
-            stamp.falloffProfile : '-');
-          lines.push('  kind=' + stamp.kind +
-            ' pos=' + Const.round2(stamp.x) + ',' + Const.round2(stamp.y) +
-            ' radius=' + Const.round2(stamp.radiusTiles) +
-            ' intensity=' + Const.round2(stamp.intensity) +
-            ' tint=' + stamp.tintR + ',' + stamp.tintG + ',' + stamp.tintB +
-            ' castsShadows=' + isProjectedShadowEmitterStamp(stamp) +
-            ' group=' + sourceGroupID +
-            ' falloff=' + falloffProfile);
-        }
-
-      appendTileLightDebugContext(lines, area, 'tile', x, y);
-      appendTileLightDebugContext(lines, area, 'tileAbove', x, y - 1);
-      return lines;
-    }
-
 // queue atmosphere light pulses emitted by one particle
   public function onParticleAdded(p: Particle)
     {
@@ -382,76 +282,7 @@ class AreaLighting
       return (area != null &&
         area.info != null &&
         (area.info.id == AREA_UNDERGROUND_LAB ||
-         area.info.id == AREA_SEWERS));
-    }
-
-// append local tile decoration and object details for light debugging
-  function appendTileLightDebugContext(lines: Array<String>, area: AreaGame,
-      label: String, x: Int, y: Int)
-    {
-      if (x < 0 ||
-          y < 0 ||
-          x >= area.width ||
-          y >= area.height)
-        {
-          lines.push(' ' + label + '=out-of-bounds');
-          return;
-        }
-
-      var tileset = scene.images.getTileset(area.typeID);
-      var undergroundLab: UndergroundLab = null;
-      if (Std.isOfType(tileset, UndergroundLab))
-        undergroundLab = cast tileset;
-      var tileID = area.getCellType(x, y);
-      var tile = area.getTiles()[x][y];
-      var decorationInfo: Array<String> = [];
-      if (tile != null &&
-          tile.decoration != null)
-        for (decoration in tile.decoration)
-          decorationInfo.push(getTileLightDebugDecorationInfo(area,
-            undergroundLab, tileID, decoration));
-
-      var objectInfo: Array<String> = [];
-      for (o in area.getObjectsAt(x, y))
-        objectInfo.push(o.type + '#' + o.id);
-
-      lines.push(' ' + label + ' cell=' + tileID +
-        ' ' + area.getCellTypeString(x, y) +
-        ' decor=' + (decorationInfo.length > 0 ?
-          decorationInfo.join(' | ') : '-'));
-      lines.push(' ' + label + ' objects=' + (objectInfo.length > 0 ?
-        objectInfo.join(',') : '-'));
-    }
-
-// build one debug string for a decoration entry using tile-aware layer resolution
-  function getTileLightDebugDecorationInfo(area: AreaGame,
-      undergroundLab: UndergroundLab, tileID: Int,
-      decoration: tiles.Decoration): String
-    {
-      var iconInfo = '-';
-      if (decoration.icon != null)
-        iconInfo = decoration.icon.row + ',' + decoration.icon.col;
-      var tagInfo = (decoration.tag != null ? decoration.tag : '-');
-      var layerKind = 'layer';
-      if (undergroundLab != null)
-        layerKind = (undergroundLab.isWallTile(tileID) ? 'wallLayer' : 'floorLayer');
-      return layerKind + '=' + decoration.layerID +
-        ',icon=' + iconInfo +
-        ',tag=' + tagInfo +
-        ',source=' + getTileLightDebugDecorationSourceID(
-          undergroundLab, tileID, decoration);
-    }
-
-// resolve one debug-friendly decoration source id for a tile decoration
-  function getTileLightDebugDecorationSourceID(
-      undergroundLab: UndergroundLab, tileID: Int,
-      decoration: tiles.Decoration): String
-    {
-      if (undergroundLab == null ||
-          decoration.icon == null)
-        return '-';
-      return UndergroundLabAreaLighting.getDebugDecorationSourceID(
-        undergroundLab, tileID, decoration);
+         area.getTilesetTypeID() == AREA_SEWERS));
     }
 
 // get cached static atmosphere light stamps for an area
@@ -467,52 +298,11 @@ class AreaLighting
       if (area.info.id == AREA_UNDERGROUND_LAB)
         stamps = UndergroundLabAreaLighting.buildLightStamps(scene, area,
           this);
-      else if (area.info.id == AREA_SEWERS)
+      else if (area.getTilesetTypeID() == AREA_SEWERS)
         stamps = SewerAreaLighting.buildLightStamps(scene, area, this);
       else stamps = [];
       areaLightStampsByAreaID.set(area.id, stamps);
       return stamps;
-    }
-
-// collect deduplicated light source marker centers for debug overlay
-  function collectDebugLightMarkers(
-      area: AreaGame): Array<_DebugLightMarker>
-    {
-      var markers: Array<_DebugLightMarker> = [];
-      var markerByPos: Map<String, _DebugLightMarker> = new Map();
-      for (stamp in getAreaLightStamps(area))
-        {
-          var key = stamp.x + ':' + stamp.y;
-          var marker = markerByPos.get(key);
-          var castsShadows = isProjectedShadowEmitterStamp(stamp);
-          if (marker == null)
-            {
-              marker = {
-                x: stamp.x,
-                y: stamp.y,
-                castsShadows: castsShadows,
-              };
-              markerByPos.set(key, marker);
-              markers.push(marker);
-            }
-          else if (castsShadows)
-            marker.castsShadows = true;
-        }
-
-      for (pulse in transientAtmosphereLights)
-        {
-          var key = pulse.x + ':' + pulse.y;
-          if (markerByPos.exists(key))
-            continue;
-          var marker: _DebugLightMarker = {
-            x: pulse.x,
-            y: pulse.y,
-            castsShadows: false,
-          };
-          markerByPos.set(key, marker);
-          markers.push(marker);
-        }
-      return markers;
     }
 
 // convert layout light sources into the two-pass static atmosphere stamps
@@ -1082,13 +872,14 @@ class AreaLighting
         stamp.kind.indexOf('layout-corridor') == 0 ||
         stamp.kind == 'clone-vat' ||
         stamp.kind == 'summoning-portal' ||
+        stamp.kind == 'habitat-exit' ||
         stamp.kind == 'sewer-exit');
     }
 
 // collect static projected-shadow casters for the current area tileset
   function collectProjectedShadowCasters(area: AreaGame): Array<_ProjectedShadowCaster>
     {
-      var tileset = scene.images.getTileset(area.typeID);
+      var tileset = scene.images.getTileset(area.getTilesetTypeID());
       if (Std.isOfType(tileset, UndergroundLab))
         {
           var undergroundLab: UndergroundLab = cast tileset;
@@ -1494,34 +1285,19 @@ class AreaLighting
           map.height <= 0)
         return;
 
-      var srcX = scene.cameraX * ATMOS_LIGHTMAP_TILE_SIZE / Const.TILE_SIZE;
-      var srcY = scene.cameraY * ATMOS_LIGHTMAP_TILE_SIZE / Const.TILE_SIZE;
-      var srcW = scene.canvas.width * ATMOS_LIGHTMAP_TILE_SIZE / Const.TILE_SIZE;
-      var srcH = scene.canvas.height * ATMOS_LIGHTMAP_TILE_SIZE / Const.TILE_SIZE;
-      if (srcW > map.width)
-        srcW = map.width;
-      if (srcH > map.height)
-        srcH = map.height;
-      if (srcX < 0)
-        srcX = 0;
-      else if (srcX + srcW > map.width)
-        srcX = map.width - srcW;
-      if (srcY < 0)
-        srcY = 0;
-      else if (srcY + srcH > map.height)
-        srcY = map.height - srcH;
-
-      if (srcW <= 0 ||
-          srcH <= 0)
-        return;
+      var scale = getAtmosMapScreenScale();
+      var drawX = dstX + getAtmosMapScreenX(0);
+      var drawY = dstY + getAtmosMapScreenY(0);
+      var drawW = map.width * scale;
+      var drawH = map.height * scale;
 
       ctx.save();
       if (additive)
         ctx.globalCompositeOperation = 'lighter';
       ctx.drawImage(map,
-        srcX, srcY, srcW, srcH,
-        dstX, dstY,
-        scene.canvas.width, scene.canvas.height);
+        0, 0, map.width, map.height,
+        drawX, drawY,
+        drawW, drawH);
       ctx.restore();
     }
 
@@ -1830,5 +1606,23 @@ class AreaLighting
   inline function toMapY(tileY: Float): Float
     {
       return tileY * ATMOS_LIGHTMAP_TILE_SIZE;
+    }
+
+// get world-to-screen scale for atmosphere lightmap pixels
+  inline function getAtmosMapScreenScale(): Float
+    {
+      return Const.TILE_SIZE / ATMOS_LIGHTMAP_TILE_SIZE;
+    }
+
+// convert one atmosphere map x coordinate to screen x
+  inline function getAtmosMapScreenX(mapX: Float): Float
+    {
+      return mapX * getAtmosMapScreenScale() - scene.cameraX;
+    }
+
+// convert one atmosphere map y coordinate to screen y
+  inline function getAtmosMapScreenY(mapY: Float): Float
+    {
+      return mapY * getAtmosMapScreenScale() - scene.cameraY;
     }
 }

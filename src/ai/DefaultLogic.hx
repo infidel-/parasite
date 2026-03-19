@@ -6,10 +6,12 @@ import const.*;
 import objects.*;
 import ai.AI;
 import _AIState;
+import _Point;
 
 class DefaultLogic
 {
   public static var game: Game;
+  static var SEARCH_AREA_MAX_RADIUS = 3;
 
 // run AI logic turn
   public static function turn(ai: AI)
@@ -27,6 +29,10 @@ class DefaultLogic
           // search the last seen hostile target tile
           case AI_STATE_SEARCH_LAST_SEEN:
             stateSearchLastSeen(ai);
+
+          // search around the last seen hostile target tile
+          case AI_STATE_SEARCH_AREA:
+            stateSearchArea(ai);
 
           // controlled by parasite
           case AI_STATE_HOST:
@@ -310,6 +316,75 @@ class DefaultLogic
       ai.alertness = 10;
     }
 
+// switch to alert state without resetting the current alert timer
+  static function setAlertPreserveTimer(ai: AI)
+    {
+      var timer = ai.timers.alert;
+      ai.setState(AI_STATE_ALERT);
+      ai.timers.alert = timer;
+    }
+
+// build candidate tiles for one search radius ring
+  static function getSearchAreaPoints(originX: Int, originY: Int,
+      radius: Int): Array<_Point>
+    {
+      var points = [];
+      for (dy in -radius...radius + 1)
+        for (dx in -radius...radius + 1)
+          {
+            if (dx != -radius &&
+                dx != radius &&
+                dy != -radius &&
+                dy != radius)
+              continue;
+            points.push({
+              x: originX + dx,
+              y: originY + dy,
+            });
+          }
+      return points;
+    }
+
+// pick the next reachable tile in the active area search pattern
+  static function getSearchAreaTarget(ai: AI): _Point
+    {
+      while (ai.search != null &&
+          ai.search.radius <= SEARCH_AREA_MAX_RADIUS)
+        {
+          // build candidate tiles for current radius
+          var points = getSearchAreaPoints(ai.search.originX,
+            ai.search.originY, ai.search.radius);
+          if (ai.search.pointID >= points.length)
+            {
+              ai.search.radius++;
+              ai.search.pointID = 0;
+              continue;
+            }
+
+          var idx = (ai.search.pointID + ai.id) % points.length;
+          var point = points[idx];
+          ai.search.pointID++;
+
+          // check if tile is walkable and not occupied by player
+          if (!game.area.isWalkable(point.x, point.y))
+            continue;
+          if (game.playerArea.x == point.x &&
+              game.playerArea.y == point.y)
+            continue;
+
+          // check for other AI occupying the tile
+          var occupant = game.area.getAI(point.x, point.y);
+          if (occupant != null &&
+              occupant != ai)
+            continue;
+          // check if the tile is reachable
+          if (game.area.getPath(ai.x, ai.y, point.x, point.y) == null)
+            continue;
+          return point;
+        }
+      return null;
+    }
+
 // state: search the last seen hostile target tile
   static function stateSearchLastSeen(ai: AI)
     {
@@ -343,6 +418,80 @@ class DefaultLogic
       if (ai.x != ai.roamTargetX ||
           ai.y != ai.roamTargetY)
         return;
+
+      // reached the last seen tile, start searching around it
+      ai.search = {
+        originX: ai.roamTargetX,
+        originY: ai.roamTargetY,
+        radius: 1,
+        pointID: 0,
+      };
+      ai.roamTargetX = -1;
+      ai.roamTargetY = -1;
+      ai.setState(AI_STATE_SEARCH_AREA);
+    }
+
+// state: search around the last seen hostile target tile
+  static function stateSearchArea(ai: AI)
+    {
+      // find nearest visible enemy and update last seen tile
+      var target = ai.findNearestVisibleEnemy();
+      if (target != null)
+        {
+          ai.setState(AI_STATE_ALERT);
+          ai.roamTargetX = target.x;
+          ai.roamTargetY = target.y;
+          CommonLogic.logicAttack(ai, target, false);
+          return;
+        }
+
+      // stand and search until the alert timer runs out
+      ai.timers.alert--;
+      if (ai.timers.alert == 0)
+        {
+          ai.roamTargetX = -1;
+          ai.roamTargetY = -1;
+          if (!ai.isRelentless)
+            {
+              calmFromAlert(ai);
+              return;
+            }
+          setAlertPreserveTimer(ai);
+          return;
+        }
+
+      // no last seen tile - should be a bug, but just calm down and return to idle
+      if (ai.search == null)
+        {
+          ai.roamTargetX = -1;
+          ai.roamTargetY = -1;
+          setAlertPreserveTimer(ai);
+          return;
+        }
+
+      // search area target not set, pick the next one
+      if (ai.roamTargetX < 0 ||
+          ai.roamTargetY < 0)
+        {
+          var point = getSearchAreaTarget(ai);
+          if (point == null)
+            {
+              ai.roamTargetX = -1;
+              ai.roamTargetY = -1;
+              setAlertPreserveTimer(ai);
+              return;
+            }
+          ai.roamTargetX = point.x;
+          ai.roamTargetY = point.y;
+        }
+
+      // move to search area target
+      ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
+      if (ai.x != ai.roamTargetX ||
+          ai.y != ai.roamTargetY)
+        return;
+
+      // reached search area target, pick the next one
       ai.roamTargetX = -1;
       ai.roamTargetY = -1;
     }

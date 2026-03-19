@@ -224,9 +224,9 @@ class Cult extends _SaveObject
         }
       else log(' is temporarily out of action');
 
-      // clear live ai in the current area
+      // clear live ai in the current area without removing them mid-turn
       if (game.area != null)
-        clearCultistsInArea(game.area, game.area.isHabitat);
+        clearCultistsInArea(game.area, false);
       // clear cultists from player habitats
       clearCultistsInHabitats();
     }

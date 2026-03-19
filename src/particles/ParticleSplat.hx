@@ -58,7 +58,8 @@ class ParticleSplat extends Particle
 // create ground splat on death
   public override function onDeath()
     {
-      var tileset = game.scene.images.getTileset(game.area.typeID);
+      var tileset = game.scene.images.getTileset(
+        game.area.getTilesetTypeID());
       var layerID = tileset.splatLayerID;
       if (layerID < 0 ||
           !game.area.isWalkable(pt.x, pt.y))

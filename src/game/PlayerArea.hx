@@ -224,9 +224,21 @@ class PlayerArea extends _SaveObject
               o.updateActionList();
           }
 
+      // new habitat areas have exit object
+      // but old ones might not so we allow leaving the old way
+      var hasHabitatExit = false;
+      if (game.area.isHabitat)
+        for (o in game.area.getObjects())
+          if (o.type == 'habitat_exit')
+            {
+              hasHabitatExit = true;
+              break;
+            }
+
       // leave area action
       if (state != PLR_STATE_ATTACHED &&
-          !game.area.info.isInhabited)
+          !game.area.info.isInhabited &&
+          (game.area.isHabitat && !hasHabitatExit))
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
@@ -718,29 +730,29 @@ class PlayerArea extends _SaveObject
     }
 
 // action: leave area
-  function leaveAreaAction(): Bool
+  public function leaveAreaAction(): Bool
     {
       // special checks for habitat
       if (game.area.typeID == AREA_HABITAT)
         {
-          // currently fighting ambush
-          if (game.group.team != null &&
-              game.group.team.state == TEAM_FIGHT)
+          var skipOutsiderCheck = false;
+          if (game.group.team != null)
             {
-              if (game.group.team.timer > 0)
-                {
-                  game.actionFailed('You try to leave but the exit is blocked! You can leave the area in ' + game.group.team.timer + ' turns.');
-                  return false;
-                }
+              var leaveHabitat = game.group.team.leaveHabitat();
+              if (!leaveHabitat.canLeave)
+                return false;
+              skipOutsiderCheck = leaveHabitat.skipOutsiderCheck;
             }
 
           // no free AI allowed with some exceptions
-          else if (game.area.hasAnyAI())
+          if (!skipOutsiderCheck &&
+              game.area.hasAnyAI())
             {
               // preserved AI are allowed
               var ok = true;
               for (ai in game.area.getAllAI())
-                if (ai.state != AI_STATE_PRESERVED && ai.state != AI_STATE_HOST)
+                if (ai.state != AI_STATE_PRESERVED &&
+                    ai.state != AI_STATE_HOST)
                   {
                     ok = false;
                     break;

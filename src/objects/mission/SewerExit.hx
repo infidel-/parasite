@@ -1,8 +1,9 @@
 // sewer exit object used in mission sewer areas
 
-package objects;
+package objects.mission;
 
 import game.Game;
+import objects.AreaObject;
 
 class SewerExit extends AreaObject
 {

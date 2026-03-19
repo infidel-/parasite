@@ -1242,6 +1242,26 @@ class Chat extends _SaveObject
       });
     }
 
+#if mydebug
+// debug: make current chat target give full consent
+  public function debugGiveFullConsent(): Bool
+    {
+      if (target == null)
+        return false;
+
+      target.chat.consent = 100;
+      if (startConsent >= 100)
+        startConsent = 99;
+
+      var mission = game.area.getAreaMission();
+      if (mission != null)
+        mission.onEventAI(ON_AI_MAX_CONSENT, target);
+
+      actionPost();
+      return true;
+    }
+#end
+
 // log line + stats
   function log(s: String)
     {

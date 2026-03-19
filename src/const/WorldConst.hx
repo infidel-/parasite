@@ -254,8 +254,8 @@ class WorldConst
         pediaArticle: 'areaHabitat', // unused
         exit: '-',
         alertnessMod: 1.0,
-        width: 20,
-        height: 20,
+        width: 21,
+        height: 14,
         canEnter: true,
         isInhabited: false,
         commonAI: 0,

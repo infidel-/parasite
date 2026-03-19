@@ -128,7 +128,7 @@ class AreaView
             (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
-      scene.areaLighting.drawDebugLightMarkers(ctx);
+      AreaLightingDebug.drawDebugLightMarkers(scene.areaLighting, ctx);
       ctx.restore();
 
       // regen minimap on first draw for area
@@ -304,7 +304,7 @@ class AreaView
     {
       width = game.area.width;
       height = game.area.height;
-      _tileset = scene.images.getTileset(game.area.typeID);
+      _tileset = scene.images.getTileset(game.area.getTilesetTypeID());
       invalidateAtmosphereLighting();
       scene.updateCamera(); // center camera on player
     }
@@ -571,7 +571,7 @@ class AreaView
 // area entered
   public function onEnter()
     {
-      _tileset = scene.images.getTileset(game.area.typeID);
+      _tileset = scene.images.getTileset(game.area.getTilesetTypeID());
       fakeHosts = [];
       scene.areaLighting.onAreaEntered();
       turnCorp(true);
@@ -652,7 +652,7 @@ class AreaView
     {
       if (_tileset == null &&
           game.area != null)
-        _tileset = scene.images.getTileset(game.area.typeID);
+        _tileset = scene.images.getTileset(game.area.getTilesetTypeID());
       return _tileset;
     }
 }

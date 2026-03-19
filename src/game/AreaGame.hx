@@ -7,6 +7,7 @@ import objects.*;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
+import tiles.Sewers;
 import tiles.Tileset;
 
 class AreaGame extends _SaveObject
@@ -826,13 +827,18 @@ class AreaGame extends _SaveObject
       if (params.fallbackRadius == null)
         params.fallbackRadius = 5;
 
-      // prefer elevator in corp or nearest sewer exit in sewers
+      // prefer entrance tiles in special areas
       if (info.id == AREA_CORP ||
           info.id == AREA_SEWERS ||
-          info.id == AREA_UNDERGROUND_LAB)
+          info.id == AREA_UNDERGROUND_LAB ||
+          info.id == AREA_HABITAT)
         {
           var tiles = [];
-          var targetType = (info.id == AREA_SEWERS ? 'sewer_exit' : 'elevator');
+          var targetType = (
+            info.id == AREA_SEWERS ? 'sewer_exit' :
+            info.id == AREA_HABITAT ? 'habitat_exit' :
+            'elevator'
+          );
           for (o in getObjects())
             {
               if (o.type != targetType)
@@ -915,8 +921,16 @@ class AreaGame extends _SaveObject
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
       info = WorldConst.getAreaInfo(typeID);
-      width = info.width - 10 + 10 * Std.random(2);
-      height = info.height - 10 + 10 * Std.random(2);
+      if (typeID == AREA_HABITAT)
+        {
+          width = info.width;
+          height = info.height;
+        }
+      else
+        {
+          width = info.width - 10 + 10 * Std.random(2);
+          height = info.height - 10 + 10 * Std.random(2);
+        }
 
       // set name
       name = info.name;
@@ -1284,6 +1298,36 @@ class AreaGame extends _SaveObject
         }
     }
 
+// get tileset area type for this area
+  public function getTilesetTypeID(): _AreaType
+    {
+      if (typeID == AREA_HABITAT &&
+          usesSewerTileset())
+        return AREA_SEWERS;
+      return typeID;
+    }
+
+// check whether this area should use the sewer tileset
+  public function usesSewerTileset(): Bool
+    {
+      if (typeID == AREA_SEWERS)
+        return true;
+      if (typeID != AREA_HABITAT ||
+          _cells == null)
+        return false;
+
+      // NOTE: this is a solution for support old habitat areas without sewer tileset, which were generated before sewer tileset was added
+      for (column in _cells)
+        {
+          if (column == null)
+            continue;
+          for (tileID in column)
+            if (Sewers.isSewerTileID(tileID))
+              return true;
+        }
+      return false;
+    }
+
 // get cached tileset for this area type
   function getTileset(): Tileset
     {
@@ -1291,7 +1335,7 @@ class AreaGame extends _SaveObject
           game != null &&
           game.scene != null &&
           game.scene.images != null)
-        _tileset = game.scene.images.getTileset(typeID);
+        _tileset = game.scene.images.getTileset(getTilesetTypeID());
       return _tileset;
     }
 
@@ -1721,7 +1765,8 @@ class AreaGame extends _SaveObject
       var cnt = 0;
       for (ai in _ai)
         if (ai.state == AI_STATE_ALERT ||
-            ai.state == AI_STATE_SEARCH_LAST_SEEN)
+            ai.state == AI_STATE_SEARCH_LAST_SEEN ||
+            ai.state == AI_STATE_SEARCH_AREA)
           cnt++;
 
       if (cnt > 0)
