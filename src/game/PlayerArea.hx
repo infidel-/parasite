@@ -224,21 +224,8 @@ class PlayerArea extends _SaveObject
               o.updateActionList();
           }
 
-      // new habitat areas have exit object
-      // but old ones might not so we allow leaving the old way
-      var hasHabitatExit = false;
-      if (game.area.isHabitat)
-        for (o in game.area.getObjects())
-          if (o.type == 'habitat_exit')
-            {
-              hasHabitatExit = true;
-              break;
-            }
-
       // leave area action
-      if (state != PLR_STATE_ATTACHED &&
-          !game.area.info.isInhabited &&
-          (game.area.isHabitat && !hasHabitatExit))
+      if (canLeaveArea())
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
@@ -246,7 +233,6 @@ class PlayerArea extends _SaveObject
           energy: 0
         });
     }
-
 
 // do a player action
 // action energy availability is checked when the list is formed
@@ -727,6 +713,27 @@ class PlayerArea extends _SaveObject
     {
       player.host.onDetach(src);
       onDetach();
+    }
+
+// check if current habitat has a habitat exit object
+  function hasHabitatExit(): Bool
+    {
+      if (!game.area.isHabitat)
+        return false;
+
+      for (o in game.area.getObjects())
+        if (o.type == 'habitat_exit')
+          return true;
+      return false;
+    }
+
+// check if player can leave current area from the HUD
+// NOTE: this is for displaying the leave area action, the actual checks are done in leaveAreaAction and can be different
+  function canLeaveArea(): Bool
+    {
+      return state != PLR_STATE_ATTACHED &&
+        !game.area.info.isInhabited &&
+        (!game.area.isHabitat || !hasHabitatExit());
     }
 
 // action: leave area
