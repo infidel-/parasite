@@ -658,7 +658,7 @@ class Game extends _SaveObject
           actionFailed('You cannot save during a conversation.');
           return;
         }
-      if (area.isMissionArea())
+      if (player.inMissionArea())
         {
           actionFailed('You cannot save your game during a mission.');
           return;
