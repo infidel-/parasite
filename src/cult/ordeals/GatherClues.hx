@@ -6,9 +6,13 @@ import ai.*;
 import cult.Ordeal;
 import cult.Cult;
 import _PlayerAction;
+import scenario.Event;
 
 class GatherClues extends Ordeal
 {
+  static inline var alienShipReceiveTriesVar = 'gatherCluesAlienShipReceiveTries';
+  static inline var alienShipCompleteTriesVar = 'gatherCluesAlienShipCompleteTries';
+
   public var memberType: String; // job type of the member
 
 // returns the initiate-menu price hint for this ordeal
@@ -69,13 +73,108 @@ class GatherClues extends Ordeal
 // handle successful completion
   public override function onSuccess()
     {
-      // x3: pick a timeline event and learn clues
-      for (i in 0...3)
+      var hadShipGoal = game.goals.has(SCENARIO_ALIEN_FIND_SHIP);
+      var forceSpecificClue = getAlienShipSpecificClue();
+      var clueRolls = (forceSpecificClue != null ? 2 : 3);
+
+      // give the usual random clue bundles first
+      for (i in 0...clueRolls)
+        learnRandomClues();
+
+      // replace the last random bundle with a specific ship clue when needed
+      if (forceSpecificClue != null)
         {
-          var event = game.timeline.getRandomLearnableEvent();
-          if (event != null)
-            game.timeline.learnClues(event, false);
+          if (!applyAlienShipSpecificClue(forceSpecificClue))
+            learnRandomClues();
         }
+
+      // reset pity counters once the ship goal advances naturally or through pity
+      if (!hadShipGoal &&
+          (game.goals.has(SCENARIO_ALIEN_FIND_SHIP) ||
+            game.goals.completed(SCENARIO_ALIEN_FIND_SHIP)))
+        {
+          game.timeline.setVar(alienShipReceiveTriesVar, 0);
+          game.timeline.setVar(alienShipCompleteTriesVar, 0);
+        }
+      else if (hadShipGoal &&
+          game.goals.completed(SCENARIO_ALIEN_FIND_SHIP))
+        game.timeline.setVar(alienShipCompleteTriesVar, 0);
+    }
+
+// learn one random timeline clue bundle
+  function learnRandomClues()
+    {
+      var event = game.timeline.getRandomLearnableEvent();
+      if (event != null)
+        game.timeline.learnClues(event, false);
+    }
+
+// get the next specific ship clue for anthropomancy
+  function getAlienShipSpecificClue(): String
+    {
+      if (game.scenarioStringID != 'alien' ||
+          game.goals.completed(SCENARIO_ALIEN_FIND_SHIP))
+        return null;
+
+      if (game.goals.has(SCENARIO_ALIEN_FIND_SHIP))
+        {
+          var tries = game.timeline.getIntVar(alienShipCompleteTriesVar) + 1;
+          game.timeline.setVar(alienShipCompleteTriesVar, tries);
+
+          if (tries >= 2)
+            return 'complete';
+          return 'shipNote';
+        }
+
+      var tries = game.timeline.getIntVar(alienShipReceiveTriesVar) + 1;
+      game.timeline.setVar(alienShipReceiveTriesVar, tries);
+      if (tries >= 3)
+        return 'receive';
+
+      return null;
+    }
+
+// apply a specific ship clue for anthropomancy
+  function applyAlienShipSpecificClue(type: String): Bool
+    {
+      switch (type)
+        {
+          case 'receive':
+            if (game.goals.has(SCENARIO_ALIEN_FIND_SHIP) ||
+                game.goals.completed(SCENARIO_ALIEN_FIND_SHIP))
+              return false;
+
+            var event = getAlienShipReceiveEvent();
+            return (event != null ? event.learnNote() : false);
+
+          case 'shipNote':
+            if (!game.goals.has(SCENARIO_ALIEN_FIND_SHIP) ||
+                game.goals.completed(SCENARIO_ALIEN_FIND_SHIP))
+              return false;
+
+            var event = game.timeline.getEvent('alienShipStudy');
+            return (event != null ? event.learnNote() : false);
+
+          case 'complete':
+            if (!game.goals.has(SCENARIO_ALIEN_FIND_SHIP) ||
+                game.goals.completed(SCENARIO_ALIEN_FIND_SHIP))
+              return false;
+
+            var event = game.timeline.getEvent('alienShipStudy');
+            return (event != null ? event.learnLocation() : false);
+        }
+
+      return false;
+    }
+
+// get the branch event that can reveal the ship goal
+  function getAlienShipReceiveEvent(): Event
+    {
+      var event = game.timeline.getEvent('liveAlienStudy');
+      if (event != null)
+        return event;
+
+      return game.timeline.getEvent('deadAlienStudy');
     }
 
 // static method to add gatherClues action to actions array
