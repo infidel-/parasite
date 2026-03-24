@@ -16,6 +16,7 @@ class MainMenu extends UIWindow
   var saveEnabled: Bool;
   static inline var DEFAULT_BG = 1;
   var currentBackground: Int;
+  public var menuBg: MenuBackground;
 
   public function new(g: Game)
     {
@@ -24,9 +25,9 @@ class MainMenu extends UIWindow
       loadEnabled = false;
       saveEnabled = false;
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
-      var swirl = Browser.document.createDivElement();
-      swirl.className = 'window-swirl';
-      bg.appendChild(swirl);
+      // create WebGL background canvas (replaces .window-swirl div)
+      menuBg = new MenuBackground();
+      bg.insertBefore(menuBg.getCanvas(), window);
       setBackground(currentBackground, game.config.aiArtEnabled);
       // randomize background
       if (!game.firstEverRun)
@@ -151,9 +152,19 @@ class MainMenu extends UIWindow
     {
       update();
       bg.style.visibility = 'visible';
+      if (game.config.aiArtEnabled)
+        menuBg.show();
       // add animation class for regular fade-in
       if (!skipAnimation && !bg.classList.contains('mainmenu-first-show'))
         bg.classList.add('window-fade-in');
+    }
+
+  override function hide(?skipAnimation: Bool = false)
+    {
+      // set visibility immediately so MenuBackground render loop can detect it
+      bg.style.visibility = 'hidden';
+      menuBg.hide();
+      super.hide(skipAnimation);
     }
 
 // update menu items based on game state
@@ -200,7 +211,7 @@ override function update()
     {
       currentBackground = bgValue;
       if (isEnabled)
-        UI.setVar('--main-menu-bg', getBackgroundUrl());
+        menuBg.setBackground(getBackgroundUrl());
     }
 
 // expose current menu background for config toggles

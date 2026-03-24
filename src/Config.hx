@@ -273,16 +273,14 @@ class Config
   function applyAiArtSetting()
     {
       UI.setVar('--message-img-display', aiArtEnabled ? 'block' : 'none');
-      var bg = 'none';
-      if (aiArtEnabled)
+      if (game.ui != null)
         {
-          bg = 'url(./img/misc/bg1.jpg)';
-          if (game.ui != null)
-            {
-              bg = game.ui.mainMenu.getBackgroundUrl();
-            }
+          var menuBg = game.ui.mainMenu.menuBg;
+          if (aiArtEnabled)
+            menuBg.setBackground(game.ui.mainMenu.getBackgroundUrl());
+          else
+            menuBg.hide();
         }
-      UI.setVar('--main-menu-bg', bg);
     }
 
   public static var fontsTitle = [
