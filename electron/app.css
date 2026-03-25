@@ -256,7 +256,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 }
 
 #hud-goals {
@@ -274,7 +274,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 }
 
 #hud-info {
@@ -291,7 +291,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 }
 
 #hud-area-info {
@@ -305,7 +305,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
   font-size: 80%;
   pointer-events: none;
   z-index: 25;
@@ -342,7 +342,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 
   font-size: 80%;
   line-height: 1.1;
@@ -407,7 +407,7 @@ hr {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition: 0.1s;
+  transition: opacity 0.1s;
   cursor: url(./img/mouse-pointer.png) 0 1, pointer;
 }
 

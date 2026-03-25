@@ -43,6 +43,13 @@ class HUD
   var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
   var listTransparentElements: Array<DivElement>;
   var listElements: Array<DivElement>;
+  var lastMouseX: Float = -1;
+  var lastMouseY: Float = -1;
+  var lastMouseOverAnyElement: Bool = false;
+  var lastRegionTileX: Int = -1;
+  var lastRegionTileY: Int = -1;
+  var cachedRects: Map<DivElement, {x: Float, y: Float, w: Float, h: Float}>;
+  var rectsValid: Bool = false;
 
   public function new(u: UI, g: Game)
     {
@@ -66,6 +73,7 @@ class HUD
       blinkingText.id = 'blinking-text';
       blinkingText.style.opacity = '0';
       blinkingText.style.userSelect = 'none';
+      blinkingText.style.visibility = 'hidden';
       document.body.appendChild(blinkingText);
 
       container = document.createDivElement();
@@ -155,8 +163,10 @@ class HUD
 // show blinking text and set timeout
   public function showBlinkingText()
     {
+      blinkingText.style.visibility = 'visible';
       blinkingText.style.opacity = '1';
       Browser.window.setTimeout(function() {
+        blinkingText.style.visibility = 'hidden';
         blinkingText.style.opacity = '0';
       }, 2000);
     }
@@ -208,28 +218,70 @@ class HUD
 // make hud transparent
   public function onMouseMove(e: MouseEvent)
     {
-      for (el in listTransparentElements)
+      // build rect cache if needed (invalidated on resize)
+      if (!rectsValid)
         {
-          var r = el.getBoundingClientRect();
-          if (r.x < e.clientX &&
-              r.y < e.clientY &&
-              e.clientX < r.x + r.width &&
-              e.clientY < r.y + r.height)
-            el.style.opacity = '0.1';
-          else el.style.opacity = '0.9';
+          cachedRects = new Map();
+          for (el in listTransparentElements)
+            {
+              var r = el.getBoundingClientRect();
+              cachedRects.set(el, { x: r.x, y: r.y, w: r.width, h: r.height });
+            }
+          rectsValid = true;
         }
 
-      if (ui.state != UISTATE_DEFAULT)
+      // check if mouse position changed enough to care
+      var dx = e.clientX - lastMouseX;
+      var dy = e.clientY - lastMouseY;
+      if (dx * dx + dy * dy < 4) // ~2px threshold
+        return; // mouse hasn't moved significantly
+
+      // check if over any element
+      var mouseOverAnyElement = false;
+      for (el in listTransparentElements)
         {
-          regionTooltip.hide();
-          aiTooltip.hide();
-          return;
+          var r = cachedRects.get(el);
+          if (r == null) continue;
+          if (e.clientX >= r.x && e.clientY >= r.y &&
+              e.clientX <= r.x + r.w && e.clientY <= r.y + r.h)
+            mouseOverAnyElement = true;
         }
+
+      // skip if not over any element and wasn't before
+      if (!mouseOverAnyElement && !lastMouseOverAnyElement)
+        return;
+
+      // update opacity styles only if element changed
+      for (el in listTransparentElements)
+        {
+          var r = cachedRects.get(el);
+          if (r == null) continue;
+          var isOver = e.clientX >= r.x && e.clientY >= r.y &&
+                       e.clientX <= r.x + r.w && e.clientY <= r.y + r.h;
+          var wasOver = lastMouseX >= r.x && lastMouseY >= r.y &&
+                        lastMouseX <= r.x + r.w && lastMouseY <= r.y + r.h;
+          if (isOver != wasOver)
+            el.style.opacity = isOver ? '0.1' : '0.9';
+        }
+
+      lastMouseOverAnyElement = mouseOverAnyElement;
+
+      if (ui.state != UISTATE_DEFAULT)
+        return;
 
       if (game.location == LOCATION_REGION)
         {
-          aiTooltip.hide();
-          regionTooltip.update();
+          var pos = game.scene.mouse.getXY();
+          if (pos != null)
+            {
+              var area = game.region.getXY(pos.x, pos.y);
+              if (area != null && (area.x != lastRegionTileX || area.y != lastRegionTileY))
+                {
+                  lastRegionTileX = area.x;
+                  lastRegionTileY = area.y;
+                  regionTooltip.update();
+                }
+            }
         }
       else if (game.location == LOCATION_AREA)
         {
@@ -241,6 +293,9 @@ class HUD
           regionTooltip.hide();
           aiTooltip.hide();
         }
+
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
     }
 
 
