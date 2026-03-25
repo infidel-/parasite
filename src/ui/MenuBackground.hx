@@ -131,6 +131,45 @@ class MenuBackground
       color.rgb *= 0.8;
       float gray = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
       color.rgb = mix(vec3(gray), color.rgb, 0.9);
+      // crush darks — push shadows deeper
+      color.rgb = pow(color.rgb, vec3(1.3));
+
+      // glistening moist effect — image brightness IS the highlight,
+      // noise just gates which bright areas shimmer at any moment
+      float highlight = smoothstep(0.3, 0.6, gray);
+      // slow-shifting noise gate selects which bright regions glisten
+      float gate = snoise(uv * 5.0 + vec2(sin(u_time * 0.12) * 0.4, cos(u_time * 0.09) * 0.4));
+      gate = smoothstep(0.0, 0.4, gate);
+      // finer gate for pinpoint sparkles on brightest spots
+      float fineGate = snoise(uv * 20.0 + vec2(sin(u_time * 0.2 + 1.0) * 0.3));
+      fineGate = smoothstep(0.2, 0.5, fineGate);
+      float brightSpots = smoothstep(0.45, 0.7, gray);
+      float glisten = highlight * gate * 0.25 + brightSpots * fineGate * 0.2;
+      color.rgb += glisten * vec3(1.0, 0.97, 0.95);
+
+      // soft glow on bright areas — multi-radius blur approximation
+      float glow = 0.0;
+      float r1 = 4.0 / u_resolution.x;
+      float r2 = 8.0 / u_resolution.x;
+      vec3 lum = vec3(0.2126, 0.7152, 0.0722);
+      // inner ring
+      glow += dot(texture2D(u_texture, uv + vec2(r1, 0.0)).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(-r1, 0.0)).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(0.0, r1)).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(0.0, -r1)).rgb, lum);
+      // outer ring
+      glow += dot(texture2D(u_texture, uv + vec2(r2, 0.0)).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(-r2, 0.0)).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(0.0, r2)).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(0.0, -r2)).rgb, lum);
+      // diagonal samples
+      glow += dot(texture2D(u_texture, uv + vec2(r1, r1) * 0.707).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(-r1, r1) * 0.707).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(r1, -r1) * 0.707).rgb, lum);
+      glow += dot(texture2D(u_texture, uv + vec2(-r1, -r1) * 0.707).rgb, lum);
+      glow = glow / 12.0;
+      float glowMask = smoothstep(0.25, 0.5, glow);
+      color.rgb += glowMask * 0.3 * vec3(0.95, 0.97, 1.0);
 
       gl_FragColor = color;
     }
