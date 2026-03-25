@@ -13,7 +13,7 @@ import js.html.webgl.Texture;
 import js.html.webgl.UniformLocation;
 
 @:expose
-class MenuBackground
+class MainMenuBackground
 {
   var canvas: CanvasElement;
   var gl: RenderingContext;

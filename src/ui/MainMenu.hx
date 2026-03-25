@@ -16,7 +16,7 @@ class MainMenu extends UIWindow
   var saveEnabled: Bool;
   static inline var DEFAULT_BG = 1;
   var currentBackground: Int;
-  public var menuBg: MenuBackground;
+  public var menuBg: MainMenuBackground;
 
   public function new(g: Game)
     {
@@ -26,7 +26,7 @@ class MainMenu extends UIWindow
       saveEnabled = false;
       window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
       // create WebGL background canvas (replaces .window-swirl div)
-      menuBg = new MenuBackground();
+      menuBg = new MainMenuBackground();
       bg.insertBefore(menuBg.getCanvas(), window);
       setBackground(currentBackground, game.config.aiArtEnabled);
       // randomize background
@@ -161,7 +161,7 @@ class MainMenu extends UIWindow
 
   override function hide(?skipAnimation: Bool = false)
     {
-      // set visibility immediately so MenuBackground render loop can detect it
+      // set visibility immediately so MainMenuBackground render loop can detect it
       bg.style.visibility = 'hidden';
       menuBg.hide();
       super.hide(skipAnimation);
