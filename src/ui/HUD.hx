@@ -166,8 +166,10 @@ class HUD
       blinkingText.style.visibility = 'visible';
       blinkingText.style.opacity = '1';
       Browser.window.setTimeout(function() {
-        blinkingText.style.visibility = 'hidden';
         blinkingText.style.opacity = '0';
+        Browser.window.setTimeout(function() {
+          blinkingText.style.visibility = 'hidden';
+        }, 2000);
       }, 2000);
     }
 
