@@ -49,6 +49,7 @@ typedef RoadPlanGrid = {
   road1Cells: Array<Array<Bool>>,
   road2Cells: Array<Array<Bool>>,
   road2IDs: Array<Array<Int>>,
+  road2AxisMask: Array<Array<Int>>,
 }
 
 typedef RoadWalker = {
@@ -62,6 +63,9 @@ typedef RoadWalker = {
   verticalSign: Int,
   stepsSinceTurn: Int,
   stopLockSteps: Int,
+  groundBlockCount: Int,
+  localStopCount: Int,
+  tSplitCountdown: Int,
   road2ID: Int,
   type: RoadType,
 }
@@ -80,6 +84,13 @@ typedef RoadBranchStart = {
 typedef GridPoint = {
   x: Int,
   y: Int,
+}
+
+typedef ThinRoadStart = {
+  x: Int,
+  y: Int,
+  dx: Int,
+  dy: Int,
 }
 
 typedef Road2Attachment = {

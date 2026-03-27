@@ -154,6 +154,12 @@ class Raster extends Ground
                 paintRoad2TurnCell(xx, yy, cellX, cellY, paintSpan, offset);
                 continue;
               }
+            if (roadMasks.color[xx][yy] == COLOR_ROAD4 ||
+                roadMasks.color[xx][yy] == COLOR_ROAD5)
+              {
+                paintThinRoadJoinCell(xx, yy, cellX, cellY, paintSpan, offset, axis);
+                continue;
+              }
             switch (axis)
               {
                 case 1:
@@ -206,6 +212,34 @@ class Raster extends Ground
         }
     }
 
+// paint one thin road cell with join caps toward facing neighbors
+  function paintThinRoadJoinCell(xx: Int, yy: Int, cellX: Int, cellY: Int,
+      paintSpan: Int, offset: Int, axis: Int)
+    {
+      var left = hasRoadPaintFacingCell(xx - 1, yy, 1, 0);
+      var right = hasRoadPaintFacingCell(xx + 1, yy, -1, 0);
+      var up = hasRoadPaintFacingCell(xx, yy - 1, 0, 1);
+      var down = hasRoadPaintFacingCell(xx, yy + 1, 0, -1);
+      var mid = offset + Std.int(Math.ceil(paintSpan / 2.0));
+
+// paint the current cell core along its stored axis
+      ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
+      if ((axis & 1) != 0)
+        ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+      if ((axis & 2) != 0)
+        ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+
+// extend caps to any facing neighbor so thin tiers visually meet
+      if (left)
+        ctx.fillRect(cellX, cellY + offset, mid, paintSpan);
+      if (right)
+        ctx.fillRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset, paintSpan);
+      if (up)
+        ctx.fillRect(cellX + offset, cellY, paintSpan, mid);
+      if (down)
+        ctx.fillRect(cellX + offset, cellY + offset, paintSpan, PLAN_CELL_SIZE - offset);
+    }
+
 // return whether one nearby cell carries a matching color and axis
   function hasRoadColorAxis(xx: Int, yy: Int, color: Int, axisFlag: Int): Bool
     {
@@ -217,6 +251,29 @@ class Raster extends Ground
       if (roadMasks.color[xx][yy] != color)
         return false;
       return (roadMasks.axis[xx][yy] & axisFlag) != 0;
+    }
+
+// return whether one nearby painted cell reaches this shared edge
+  function hasRoadPaintFacingCell(xx: Int, yy: Int, dx: Int, dy: Int): Bool
+    {
+      if (xx < 0 ||
+          yy < 0 ||
+          xx >= planWidth ||
+          yy >= planHeight)
+        return false;
+      if (roadMasks.color[xx][yy] == 0)
+        return false;
+
+      var paintSpan = roadMasks.paintSpan[xx][yy];
+      if (paintSpan <= 0 ||
+          paintSpan >= PLAN_CELL_SIZE)
+        return true;
+
+      if (dx != 0)
+        return (roadMasks.axis[xx][yy] & 1) != 0;
+      if (dy != 0)
+        return (roadMasks.axis[xx][yy] & 2) != 0;
+      return false;
     }
 
   function getRoadStyle(type: RoadType): RoadStyle
