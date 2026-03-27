@@ -1,0 +1,317 @@
+// road styling, rasterization, and road painting helpers
+
+package map;
+
+import map.RoadType;
+import map.Types.RoadMasks;
+import map.Types.RoadSegment;
+import map.Types.RoadStyle;
+
+class Raster extends Ground
+{
+// return a sortable road-type order
+  function getRoadTypeOrder(type: RoadType): Int
+    {
+      return switch (type) {
+        case ROAD1: 0;
+        case ROAD2: 1;
+        case ROAD3: 2;
+        case ROAD4: 3;
+        case ROAD5: 4;
+      };
+    }
+
+// return one road type from its sortable order
+  function getRoadTypeByOrder(order: Int): RoadType
+    {
+      return switch (order) {
+        case 0: ROAD1;
+        case 1: ROAD2;
+        case 2: ROAD3;
+        case 3: ROAD4;
+        default: ROAD5;
+      };
+    }
+
+// rasterize road centerlines into planning masks
+  function rasterizeRoadMasks(list: Array<RoadSegment>): RoadMasks
+    {
+      var masks: RoadMasks = {
+        width: planWidth,
+        height: planHeight,
+        core: makeFloatGrid(planWidth, planHeight),
+        shoulder: makeFloatGrid(planWidth, planHeight),
+        feather: makeFloatGrid(planWidth, planHeight),
+        occupancy: makeFloatGrid(planWidth, planHeight),
+        color: makeIntGrid(planWidth, planHeight),
+        paintSpan: makeIntGrid(planWidth, planHeight),
+        axis: makeIntGrid(planWidth, planHeight),
+        priority: makeIntGrid(planWidth, planHeight),
+      };
+
+      for (road in list)
+        rasterizeRoad(masks, road);
+
+      return masks;
+    }
+
+// rasterize one road into the planning masks
+  function rasterizeRoad(masks: RoadMasks, road: RoadSegment)
+    {
+      var style = getRoadStyle(road.type);
+      var shoulderRadius = style.coreWidth / 2.0 + style.shoulderWidth;
+      var featherRadius = shoulderRadius + style.featherWidth;
+      var minX = Std.int(Math.floor((Math.min(road.x1, road.x2) - featherRadius) / PLAN_CELL_SIZE));
+      var maxX = Std.int(Math.ceil((Math.max(road.x1, road.x2) + featherRadius) / PLAN_CELL_SIZE));
+      var minY = Std.int(Math.floor((Math.min(road.y1, road.y2) - featherRadius) / PLAN_CELL_SIZE));
+      var maxY = Std.int(Math.ceil((Math.max(road.y1, road.y2) + featherRadius) / PLAN_CELL_SIZE));
+
+      minX = clampInt(minX, 0, planWidth - 1);
+      maxX = clampInt(maxX, 0, planWidth - 1);
+      minY = clampInt(minY, 0, planHeight - 1);
+      maxY = clampInt(maxY, 0, planHeight - 1);
+
+      for (yy in minY...maxY + 1)
+        for (xx in minX...maxX + 1)
+          {
+            var px = xx * PLAN_CELL_SIZE + PLAN_CELL_SIZE / 2.0;
+            var py = yy * PLAN_CELL_SIZE + PLAN_CELL_SIZE / 2.0;
+            var dist = getPointToRoadDistance(px, py, road);
+
+            if (style.featherWidth > 0 &&
+                dist <= featherRadius)
+              {
+                var featherAlpha = (featherRadius - dist) / Math.max(style.featherWidth, 1);
+                if (featherAlpha > 1.0)
+                  featherAlpha = 1.0;
+                masks.feather[xx][yy] = Math.max(masks.feather[xx][yy], featherAlpha);
+              }
+
+            if (dist <= shoulderRadius)
+              {
+                masks.shoulder[xx][yy] = 1.0;
+                masks.occupancy[xx][yy] = 1.0;
+              }
+
+            if (dist <= style.coreWidth / 2.0)
+              masks.core[xx][yy] = 1.0;
+
+            if (dist <= featherRadius &&
+                style.priority >= masks.priority[xx][yy])
+              {
+                var axisFlag = (road.y1 == road.y2 ? 1 : 2);
+                if (style.priority > masks.priority[xx][yy])
+                  {
+                    masks.priority[xx][yy] = style.priority;
+                    masks.color[xx][yy] = style.color;
+                    masks.paintSpan[xx][yy] = getRoadPaintSpan(road.type);
+                    masks.axis[xx][yy] = axisFlag;
+                  }
+                else
+                  {
+                    masks.color[xx][yy] = style.color;
+                    masks.paintSpan[xx][yy] = Std.int(Math.max(masks.paintSpan[xx][yy],
+                      getRoadPaintSpan(road.type)));
+                    masks.axis[xx][yy] = masks.axis[xx][yy] | axisFlag;
+                  }
+              }
+          }
+    }
+
+// paint the rasterized road layers
+  function paintRoads()
+    {
+      for (yy in 0...planHeight)
+        for (xx in 0...planWidth)
+          {
+            var alpha = roadMasks.feather[xx][yy] * 0.16 +
+              roadMasks.shoulder[xx][yy] * 0.26 +
+              roadMasks.core[xx][yy] * 0.72;
+            if (alpha <= 0.0)
+              continue;
+
+            ctx.globalAlpha = clampFloat(alpha, 0.0, 1.0);
+            ctx.fillStyle = '#' + StringTools.hex(getRoadPaintColor(xx, yy), 6);
+            var cellX = xx * PLAN_CELL_SIZE;
+            var cellY = yy * PLAN_CELL_SIZE;
+            var paintSpan = roadMasks.paintSpan[xx][yy];
+            var axis = roadMasks.axis[xx][yy];
+            if (roadMasks.color[xx][yy] == COLOR_ROAD2)
+              {
+                paintRoad2WideCell(xx, yy, cellX, cellY, axis);
+                continue;
+              }
+            if (paintSpan <= 0 || paintSpan >= PLAN_CELL_SIZE)
+              {
+                ctx.fillRect(cellX, cellY, PLAN_CELL_SIZE, PLAN_CELL_SIZE);
+                continue;
+              }
+
+            var offset = Std.int((PLAN_CELL_SIZE - paintSpan) / 2);
+            if (roadMasks.color[xx][yy] == COLOR_ROAD2 &&
+                axis == 3)
+              {
+                paintRoad2TurnCell(xx, yy, cellX, cellY, paintSpan, offset);
+                continue;
+              }
+            switch (axis)
+              {
+                case 1:
+                  ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+                case 2:
+                  ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+                case 3:
+                  ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+                  ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+                default:
+                  ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
+              }
+          }
+      ctx.globalAlpha = 1.0;
+    }
+
+// paint one orange occupied plan cell
+  function paintRoad2WideCell(xx: Int, yy: Int, cellX: Int, cellY: Int, axis: Int)
+    {
+      ctx.fillRect(cellX, cellY, PLAN_CELL_SIZE, PLAN_CELL_SIZE);
+    }
+
+// paint one orange turn cell as an elbow instead of a full cross
+  function paintRoad2TurnCell(xx: Int, yy: Int, cellX: Int, cellY: Int,
+      paintSpan: Int, offset: Int)
+    {
+      var left = hasRoadColorAxis(xx - 1, yy, COLOR_ROAD2, 1);
+      var right = hasRoadColorAxis(xx + 1, yy, COLOR_ROAD2, 1);
+      var up = hasRoadColorAxis(xx, yy - 1, COLOR_ROAD2, 2);
+      var down = hasRoadColorAxis(xx, yy + 1, COLOR_ROAD2, 2);
+      var mid = offset + Std.int(Math.ceil(paintSpan / 2.0));
+
+      ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
+      if (left)
+        ctx.fillRect(cellX, cellY + offset, mid, paintSpan);
+      if (right)
+        ctx.fillRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset, paintSpan);
+      if (up)
+        ctx.fillRect(cellX + offset, cellY, paintSpan, mid);
+      if (down)
+        ctx.fillRect(cellX + offset, cellY + offset, paintSpan, PLAN_CELL_SIZE - offset);
+
+      if (!left &&
+          !right &&
+          !up &&
+          !down)
+        {
+          ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+          ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+        }
+    }
+
+// return whether one nearby cell carries a matching color and axis
+  function hasRoadColorAxis(xx: Int, yy: Int, color: Int, axisFlag: Int): Bool
+    {
+      if (xx < 0 ||
+          yy < 0 ||
+          xx >= planWidth ||
+          yy >= planHeight)
+        return false;
+      if (roadMasks.color[xx][yy] != color)
+        return false;
+      return (roadMasks.axis[xx][yy] & axisFlag) != 0;
+    }
+
+  function getRoadStyle(type: RoadType): RoadStyle
+    {
+      return switch (type) {
+        case ROAD1: {
+          coreWidth: 22,
+          shoulderWidth: 0,
+          featherWidth: 0,
+          color: COLOR_ROAD1,
+          priority: 0,
+        };
+        case ROAD2: {
+          coreWidth: 8,
+          shoulderWidth: 0,
+          featherWidth: 0,
+          color: COLOR_ROAD2,
+          priority: 1,
+        };
+        case ROAD3: {
+          coreWidth: 7,
+          shoulderWidth: 0,
+          featherWidth: 0,
+          color: COLOR_ROAD3,
+          priority: 4,
+        };
+        case ROAD4: {
+          coreWidth: 4,
+          shoulderWidth: 0,
+          featherWidth: 0,
+          color: COLOR_ROAD4,
+          priority: 5,
+        };
+        case ROAD5: {
+          coreWidth: 2,
+          shoulderWidth: 0,
+          featherWidth: 0,
+          color: COLOR_ROAD5,
+          priority: 6,
+        };
+      };
+    }
+
+// return the painted sub-cell span for one road tier
+  function getRoadPaintSpan(type: RoadType): Int
+    {
+      return switch (type) {
+        case ROAD1: PLAN_CELL_SIZE;
+        case ROAD2: 6;
+        case ROAD3: PLAN_CELL_SIZE;
+        case ROAD4: 4;
+        case ROAD5: 2;
+      };
+    }
+
+  function getRoadPaintColor(xx: Int, yy: Int): Int
+    {
+      var color = roadMasks.color[xx][yy];
+      if (color == 0)
+        color = COLOR_ROAD2;
+      var core = roadMasks.core[xx][yy];
+      var shoulder = roadMasks.shoulder[xx][yy];
+      var feather = roadMasks.feather[xx][yy];
+      var variation = 0.92 + hashFloat(xx, yy, 307) * 0.14;
+      var result = adjustColor(color, variation);
+
+      if (shoulder > core)
+        {
+          var shoulderMix = clampFloat((shoulder - core) * 0.70, 0.0, 0.32);
+          result = lerpColor(result, adjustColor(color, 1.10), shoulderMix);
+        }
+
+      if (core > 0.0)
+        {
+          var coreMix = clampFloat(core * 0.14 + hashFloat(xx, yy, 313) * 0.05, 0.0, 0.24);
+          result = lerpColor(result, adjustColor(color, 0.88), coreMix);
+        }
+      else if (feather > 0.0)
+        {
+          var featherMix = clampFloat(feather * 0.16, 0.0, 0.18);
+          result = lerpColor(result, adjustColor(color, 1.12), featherMix);
+        }
+
+      return result;
+    }
+
+// return the distance from a point to an axis-aligned road segment
+  function getPointToRoadDistance(px: Float, py: Float, road: RoadSegment): Float
+    {
+      var tx = clampFloat(px, Math.min(road.x1, road.x2), Math.max(road.x1, road.x2));
+      var ty = clampFloat(py, Math.min(road.y1, road.y2), Math.max(road.y1, road.y2));
+      var dx = px - tx;
+      var dy = py - ty;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+
+}

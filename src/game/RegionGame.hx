@@ -3,13 +3,14 @@
 package game;
 
 import const.WorldConst;
+import map.Image;
 import region.*;
 import _AreaType;
 import tiles.Default;
 
 class RegionGame extends _SaveObject
 {
-  static var _ignoredFields = [ '_array', 'info' ];
+  static var _ignoredFields = [ '_array', 'info', 'regionMapImage' ];
   var game: Game;
 
   public var id: Int; // area id
@@ -17,6 +18,7 @@ class RegionGame extends _SaveObject
   public var info: RegionInfo; // region info link
   public var width: Int;
   public var height: Int;
+  public var regionMapImage: Image; // cached region map image
 
   var _array: Array<Array<AreaGame>>; // 2-dim array of areas for quicker access
   var _list: Map<Int, AreaGame>; // hashmap of areas (can include additional areas)

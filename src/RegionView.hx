@@ -3,6 +3,7 @@
 import js.html.CanvasRenderingContext2D;
 import game.*;
 import tiles.Tileset;
+import map.Image;
 
 class RegionView
 {
@@ -179,15 +180,35 @@ class RegionView
       ctx.save();
       ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
 
-      // draw area tiles and icons
-      untyped ctx.imageSmoothingEnabled = false;
+      // ensure region map image exists
+      if (game.region.regionMapImage == null)
+        {
+          game.region.regionMapImage = new Image(game);
+          var t = Sys.time();
+          trace('Region map image generation started');
+          game.region.regionMapImage.generate();
+          trace('Region map image generated in ' + Std.int((Sys.time() - t) * 1000) + ' ms');
+        }
+
+      // draw region map image (only visible portion)
+      var visibleTilesW = scene.cameraTileX2 - scene.cameraTileX1 + 1;
+      var visibleTilesH = scene.cameraTileY2 - scene.cameraTileY1 + 1;
+      game.region.regionMapImage.drawTo(ctx,
+        scene.cameraTileX1 * Const.TILE_SIZE_CLEAN,
+        scene.cameraTileY1 * Const.TILE_SIZE_CLEAN,
+        visibleTilesW * Const.TILE_SIZE_CLEAN,
+        visibleTilesH * Const.TILE_SIZE_CLEAN,
+        0,
+        0,
+        visibleTilesW * Const.TILE_SIZE,
+        visibleTilesH * Const.TILE_SIZE);
+
+      // draw area icons
       var tileset = scene.images.getDefaultTileset();
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
           drawArea(ctx, cells[x][y], tileset);
-      // smooth everything else
-      untyped ctx.imageSmoothingEnabled = true;
 
       // draw player
       game.playerRegion.entity.draw(ctx);
@@ -209,7 +230,7 @@ class RegionView
       scene.endRenderSampleRegion(renderTS);
     }
 
-// paint area tile and icons
+// paint area icons on top of the region map image
   function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset)
     {
       // area not visible
@@ -223,14 +244,18 @@ class RegionView
       var ay =
         (area.y - scene.cameraTileY1) * Const.TILE_SIZE;
 
-      // area tile
-      var tileID = (isKnown(area) ? area.tileID : Const.TILE_HIDDEN);
-      var icon = tileset.getIcon(tileID);
-      untyped ctx.imageSmoothingEnabled = false;
-      tileset.draw(ctx, icon, ax, ay);
+      // unknown areas are hidden, draw darkened tile
+      if (!isKnown(area))
+        {
+          ctx.fillStyle = '#111111';
+          ctx.globalAlpha = 0.7;
+          ctx.fillRect(ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
+          ctx.globalAlpha = 1.0;
+          return;
+        }
 
       // high crime marker
-      if (area.highCrime && area.isKnown)
+      if (area.highCrime)
         {
           ctx.globalAlpha = 0.85;
           ctx.drawImage(scene.images.entities,
@@ -245,7 +270,6 @@ class RegionView
         }
 
       // area icons
-      untyped ctx.imageSmoothingEnabled = true;
       for (i in 0...6)
         {
           var icon = null;
