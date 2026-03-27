@@ -4,7 +4,9 @@ package map.roadplan;
 
 import map.RoadPlan;
 import map.Types.GridPoint;
+import map.Types.IntRect;
 import map.Types.Road2Attachment;
+import map.Types.Road2CoverageAttachmentState;
 import map.Types.Road2Component;
 import map.Types.Road2Connector;
 import map.Types.RoadPlanGrid;
@@ -56,8 +58,8 @@ class RoadPlanRoad2Network
 // add a second orange coverage pass over city tiles
   public function ensureCityRoad2Coverage(grid: RoadPlanGrid)
     {
-      var road2Attachments = collectRoad2Attachments(grid);
-      var road1Attachments = collectRoad1Attachments(grid);
+      var road1Candidates = collectRoad1AttachmentCandidates(grid);
+      var attachmentState = makeRoad2CoverageAttachmentState(grid);
 
       for (cellY in 0...plan.fullCellHeight)
         for (cellX in 0...plan.fullCellWidth)
@@ -72,40 +74,70 @@ class RoadPlanRoad2Network
             if (start == null)
               continue;
 
-            var target = findNearestRoad2Attachment(road2Attachments, start.x, start.y);
-            var connected = false;
+            plan.addMapProfileCount('road2.ensureCityRoad2Coverage.attempts');
+            var target = findNearestRoad2Attachment(attachmentState.road2Attachments, start.x, start.y);
+            var dirtyRect: IntRect = null;
             if (target != null)
-              connected = connectRoad2Connector(grid, {
-                x: start.x,
-                y: start.y,
-                road2ID: target.road2ID,
-                road1StepX: -1,
-                road1StepY: -1,
-                road1DX: 0,
-                road1DY: 0,
-              }, target, false);
-
-            if (!connected)
               {
-                var road1Target = findNearestRoad1Attachment(road1Attachments, start.x, start.y);
+                dirtyRect = connectRoad2ConnectorAndGetDirtyRect(grid, {
+                  x: start.x,
+                  y: start.y,
+                  road2ID: target.road2ID,
+                  road1StepX: -1,
+                  road1StepY: -1,
+                  road1DX: 0,
+                  road1DY: 0,
+                }, target, false);
+                if (dirtyRect != null)
+                  plan.addMapProfileCount('road2.ensureCityRoad2Coverage.connectedToRoad2');
+              }
+
+            if (dirtyRect == null)
+              {
+                var road1Target = findNearestRoad1Attachment(attachmentState.road1Attachments,
+                  start.x, start.y);
                 if (road1Target != null)
-                  connected = connectRoad2Connector(grid, {
-                    x: start.x,
-                    y: start.y,
-                    road2ID: plan.nextRoad2ID++,
-                    road1StepX: -1,
-                    road1StepY: -1,
-                    road1DX: 0,
-                    road1DY: 0,
-                  }, road1Target, false);
+                  {
+                    dirtyRect = connectRoad2ConnectorAndGetDirtyRect(grid, {
+                      x: start.x,
+                      y: start.y,
+                      road2ID: plan.nextRoad2ID++,
+                      road1StepX: -1,
+                      road1StepY: -1,
+                      road1DX: 0,
+                      road1DY: 0,
+                    }, road1Target, false);
+                    if (dirtyRect != null)
+                      plan.addMapProfileCount('road2.ensureCityRoad2Coverage.connectedToRoad1');
+                  }
               }
 
-            if (connected)
+            if (dirtyRect != null)
               {
-                road2Attachments = collectRoad2Attachments(grid);
-                road1Attachments = collectRoad1Attachments(grid);
+                attachmentState = refreshRoad2CoverageAttachmentState(grid, road1Candidates,
+                  attachmentState, dirtyRect);
+                plan.addMapProfileCount('road2.ensureCityRoad2Coverage.localRefreshes');
               }
+            else
+              plan.addMapProfileCount('road2.ensureCityRoad2Coverage.failed');
           }
+    }
+
+// collect the mutable attachment lists used during ROAD2 coverage
+  function makeRoad2CoverageAttachmentState(grid: RoadPlanGrid): Road2CoverageAttachmentState
+    {
+#if mydebug
+      plan.addMapProfileCount('road2.ensureCityRoad2Coverage.collectRoad2Attachments.rebuilds');
+#end
+      var road2Attachments = collectRoad2Attachments(grid);
+#if mydebug
+      plan.addMapProfileCount('road2.ensureCityRoad2Coverage.collectRoad1Attachments.rebuilds');
+#end
+      var road1Attachments = collectRoad1Attachments(grid);
+      return {
+        road2Attachments: road2Attachments,
+        road1Attachments: road1Attachments,
+      };
     }
 
 // collect connected orange components from the plan grid
@@ -215,17 +247,37 @@ class RoadPlanRoad2Network
   public function connectRoad2Connector(grid: RoadPlanGrid, start: Road2Attachment,
       target: Road2Attachment, allowTargetRoad1: Bool): Bool
     {
-      return tryConnectRoad2Connector(grid, start, target, true, allowTargetRoad1) ||
-        tryConnectRoad2Connector(grid, start, target, false, allowTargetRoad1);
+      return connectRoad2ConnectorAndGetDirtyRect(grid, start, target, allowTargetRoad1) != null;
+    }
+
+// connect one orange start and return the dirty rect when stamping succeeds
+  function connectRoad2ConnectorAndGetDirtyRect(grid: RoadPlanGrid, start: Road2Attachment,
+      target: Road2Attachment, allowTargetRoad1: Bool): IntRect
+    {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
+      var dirtyRect = tryConnectRoad2Connector(grid, start, target, true, allowTargetRoad1);
+      if (dirtyRect == null)
+        dirtyRect = tryConnectRoad2Connector(grid, start, target, false, allowTargetRoad1);
+#if mydebug
+      plan.addMapProfileSample('road2.connectRoad2Connector',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      if (dirtyRect != null)
+        plan.addMapProfileCount('road2.connectRoad2Connector.success');
+      else
+        plan.addMapProfileCount('road2.connectRoad2Connector.failed');
+#end
+      return dirtyRect;
     }
 
 // try one orthogonal connector routing order for orange coverage
   function tryConnectRoad2Connector(grid: RoadPlanGrid, start: Road2Attachment,
-      target: Road2Attachment, horizontalFirst: Bool, allowTargetRoad1: Bool): Bool
+      target: Road2Attachment, horizontalFirst: Bool, allowTargetRoad1: Bool): IntRect
     {
       var path = buildRoad2ConnectorPath(start.x, start.y, target.x, target.y, horizontalFirst);
       if (path.length == 0)
-        return false;
+        return null;
 
       for (i in 0...path.length)
         {
@@ -235,16 +287,54 @@ class RoadPlanRoad2Network
           var isTarget = i == path.length - 1;
           if (!canStampRoad2ConnectorCell(grid, point.x, point.y, start.road2ID,
               ignoreX, ignoreY, isTarget, target, allowTargetRoad1))
-            return false;
+            return null;
         }
 
+      var dirtyRect = getRoad2ConnectorDirtyRect(path, target);
       for (point in path)
         gridOps.addRoad2PlanStamp(grid, point.x, point.y, start.road2ID,
           getRoad2PathAxisMask(path, point));
       if (target.road1StepX >= 0)
         addRoad2Road1Bridge(grid, target.road1StepX, target.road1StepY,
           target.x, target.y, target.road1DX, target.road1DY, start.road2ID);
-      return true;
+      return dirtyRect;
+    }
+
+// return the dirty plan rect touched by one successful orange connector
+  function getRoad2ConnectorDirtyRect(path: Array<GridPoint>, target: Road2Attachment): IntRect
+    {
+      var minX = plan.planWidth - 1;
+      var minY = plan.planHeight - 1;
+      var maxX = 0;
+      var maxY = 0;
+
+      for (point in path)
+        {
+          minX = Std.int(Math.min(minX, point.x));
+          minY = Std.int(Math.min(minY, point.y));
+          maxX = Std.int(Math.max(maxX, point.x + 1));
+          maxY = Std.int(Math.max(maxY, point.y + 1));
+        }
+
+      if (target.road1StepX >= 0)
+        {
+          var bridgeRect = getRoad2Road1BridgeRect(target.road1StepX, target.road1StepY,
+            target.x, target.y, target.road1DX, target.road1DY);
+          if (bridgeRect != null)
+            {
+              minX = Std.int(Math.min(minX, bridgeRect.x));
+              minY = Std.int(Math.min(minY, bridgeRect.y));
+              maxX = Std.int(Math.max(maxX, bridgeRect.x + bridgeRect.width - 1));
+              maxY = Std.int(Math.max(maxY, bridgeRect.y + bridgeRect.height - 1));
+            }
+        }
+
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX + 1,
+        height: maxY - minY + 1,
+      };
     }
 
 // build one orthogonal connector path between two plan cells
@@ -329,46 +419,12 @@ class RoadPlanRoad2Network
   public function canBuildRoad2Road1Bridge(grid: RoadPlanGrid, baseX: Int, baseY: Int,
       planX: Int, planY: Int, dx: Int, dy: Int, road2ID: Int = -1): Bool
     {
-      var startX = planX;
-      var endX = planX - 1;
-      var startY = planY;
-      var endY = planY - 1;
-
-      if (dx < 0)
-        {
-          startX = planX + 2;
-          endX = baseX - 2;
-          startY = planY;
-          endY = planY + 1;
-        }
-      else if (dx > 0)
-        {
-          startX = baseX + 2;
-          endX = planX - 1;
-          startY = planY;
-          endY = planY + 1;
-        }
-      else if (dy < 0)
-        {
-          startX = planX;
-          endX = planX + 1;
-          startY = planY + 2;
-          endY = baseY - 2;
-        }
-      else if (dy > 0)
-        {
-          startX = planX;
-          endX = planX + 1;
-          startY = baseY + 2;
-          endY = planY - 1;
-        }
-
-      if (startX > endX ||
-          startY > endY)
+      var bridgeRect = getRoad2Road1BridgeRect(baseX, baseY, planX, planY, dx, dy);
+      if (bridgeRect == null)
         return true;
 
-      for (yy in startY...endY + 1)
-        for (xx in startX...endX + 1)
+      for (yy in bridgeRect.y...bridgeRect.y + bridgeRect.height)
+        for (xx in bridgeRect.x...bridgeRect.x + bridgeRect.width)
           {
             if (!gridOps.isInPlanBounds(xx, yy) ||
                 grid.road1Cells[xx][yy])
@@ -391,6 +447,24 @@ class RoadPlanRoad2Network
 // stamp one ROAD1 to ROAD2 bridge strip so the start touches the trunk
   public function addRoad2Road1Bridge(grid: RoadPlanGrid, baseX: Int, baseY: Int,
       planX: Int, planY: Int, dx: Int, dy: Int, road2ID: Int)
+    {
+      var bridgeRect = getRoad2Road1BridgeRect(baseX, baseY, planX, planY, dx, dy);
+      if (bridgeRect == null)
+        return;
+
+      var axisMask = gridOps.getRoadAxisMask(dx, dy);
+      for (yy in bridgeRect.y...bridgeRect.y + bridgeRect.height)
+        for (xx in bridgeRect.x...bridgeRect.x + bridgeRect.width)
+          {
+            grid.road2Cells[xx][yy] = true;
+            grid.road2IDs[xx][yy] = road2ID;
+            grid.road2AxisMask[xx][yy] = grid.road2AxisMask[xx][yy] | axisMask;
+          }
+    }
+
+// return the bridge strip bounds between one ROAD1 step and one ROAD2 anchor
+  function getRoad2Road1BridgeRect(baseX: Int, baseY: Int, planX: Int, planY: Int,
+      dx: Int, dy: Int): IntRect
     {
       var startX = planX;
       var endX = planX - 1;
@@ -428,16 +502,14 @@ class RoadPlanRoad2Network
 
       if (startX > endX ||
           startY > endY)
-        return;
+        return null;
 
-      for (yy in startY...endY + 1)
-        for (xx in startX...endX + 1)
-          {
-            grid.road2Cells[xx][yy] = true;
-            grid.road2IDs[xx][yy] = road2ID;
-            grid.road2AxisMask[xx][yy] = grid.road2AxisMask[xx][yy] |
-              gridOps.getRoadAxisMask(dx, dy);
-          }
+      return {
+        x: startX,
+        y: startY,
+        width: endX - startX + 1,
+        height: endY - startY + 1,
+      };
     }
 
 // return the stored axis mask for one ROAD2 connector stamp cell
@@ -471,6 +543,9 @@ class RoadPlanRoad2Network
 // collect all empty cells that can attach to orange roads
   public function collectRoad2Attachments(grid: RoadPlanGrid): Array<Road2Attachment>
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var result = [];
 
       for (xx in 0...plan.planWidth)
@@ -497,12 +572,45 @@ class RoadPlanRoad2Network
           }
         }
 
+#if mydebug
+      plan.addMapProfileSample('road2.collectRoad2Attachments',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      plan.addMapProfileCount('road2.collectRoad2Attachments.resultCount', result.length);
+#end
+      return result;
+    }
+
+// collect all canonical ROAD1 anchor candidates before dynamic filtering
+  function collectRoad1AttachmentCandidates(grid: RoadPlanGrid): Array<Road2Attachment>
+    {
+      var result = [];
+      var used = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
+      var road1Order = plan.getRoadTypeOrder(ROAD1);
+
+      for (xx in 0...plan.planWidth)
+        for (yy in 0...plan.planHeight)
+          {
+            if (grid.horizontal[xx][yy] == road1Order)
+              {
+                addRoad1AttachmentCandidate(result, used, grid, xx, yy, 0, -1, false);
+                addRoad1AttachmentCandidate(result, used, grid, xx, yy, 0, 1, false);
+              }
+            if (grid.vertical[xx][yy] == road1Order)
+              {
+                addRoad1AttachmentCandidate(result, used, grid, xx, yy, -1, 0, false);
+                addRoad1AttachmentCandidate(result, used, grid, xx, yy, 1, 0, false);
+              }
+          }
+
       return result;
     }
 
 // collect all lane-aligned empty cells that can attach to ROAD1
   public function collectRoad1Attachments(grid: RoadPlanGrid): Array<Road2Attachment>
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var result = [];
       var used = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
       var road1Order = plan.getRoadTypeOrder(ROAD1);
@@ -522,17 +630,23 @@ class RoadPlanRoad2Network
               }
           }
 
+#if mydebug
+      plan.addMapProfileSample('road2.collectRoad1Attachments',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      plan.addMapProfileCount('road2.collectRoad1Attachments.resultCount', result.length);
+#end
       return result;
     }
 
 // add one canonical ROAD1 to ROAD2 anchor candidate
   function addRoad1AttachmentCandidate(out: Array<Road2Attachment>, used: Array<Array<Bool>>,
-      grid: RoadPlanGrid, baseX: Int, baseY: Int, dx: Int, dy: Int)
+      grid: RoadPlanGrid, baseX: Int, baseY: Int, dx: Int, dy: Int, requireUsable: Bool = true)
     {
       var anchor = getRoad2AnchorFromRoad1Step(baseX, baseY, dx, dy);
       if (anchor == null ||
           used[anchor.x][anchor.y] ||
-          !canUseRoad2Anchor(grid, baseX, baseY, anchor.x, anchor.y, dx, dy))
+          (requireUsable &&
+          !canUseRoad2Anchor(grid, baseX, baseY, anchor.x, anchor.y, dx, dy)))
         return;
 
       used[anchor.x][anchor.y] = true;
@@ -545,6 +659,148 @@ class RoadPlanRoad2Network
         road1DX: dx,
         road1DY: dy,
       });
+    }
+
+// refresh the mutable ROAD2 coverage attachment lists near one successful connector
+  function refreshRoad2CoverageAttachmentState(grid: RoadPlanGrid,
+      road1Candidates: Array<Road2Attachment>, state: Road2CoverageAttachmentState,
+      dirtyRect: IntRect): Road2CoverageAttachmentState
+    {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
+      var refreshRect = getRoad2CoverageRefreshRect(dirtyRect);
+      var road2Attachments = filterAttachmentsOutsideRect(state.road2Attachments, refreshRect);
+      var road1Attachments = filterAttachmentsOutsideRect(state.road1Attachments, refreshRect);
+
+      appendRoad2AttachmentsInRect(road2Attachments, grid, refreshRect);
+      appendRoad1AttachmentsInRect(road1Attachments, grid, road1Candidates, refreshRect);
+      sortAttachmentsByPlanCell(road2Attachments);
+      sortAttachmentsByPlanCell(road1Attachments);
+#if mydebug
+      plan.addMapProfileSample('road2.refreshCoverageAttachmentState',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      plan.addMapProfileCount('road2.refreshCoverageAttachmentState.road2ScanCells',
+        refreshRect.width * refreshRect.height);
+#end
+      return {
+        road2Attachments: road2Attachments,
+        road1Attachments: road1Attachments,
+      };
+    }
+
+// return the conservative local refresh window for one ROAD2 coverage mutation
+  function getRoad2CoverageRefreshRect(dirtyRect: IntRect): IntRect
+    {
+      return expandPlanRect(dirtyRect, plan.PLAN_CELLS_PER_TILE + plan.ROAD2_GRID_STEP);
+    }
+
+// return one plan-space rect expanded and clamped to bounds
+  function expandPlanRect(rect: IntRect, padding: Int): IntRect
+    {
+      var minX = plan.clampInt(rect.x - padding, 0, plan.planWidth - 1);
+      var minY = plan.clampInt(rect.y - padding, 0, plan.planHeight - 1);
+      var maxX = plan.clampInt(rect.x + rect.width - 1 + padding, 0, plan.planWidth - 1);
+      var maxY = plan.clampInt(rect.y + rect.height - 1 + padding, 0, plan.planHeight - 1);
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX + 1,
+        height: maxY - minY + 1,
+      };
+    }
+
+// return whether one plan cell falls inside one local refresh rect
+  function isPointInRect(planX: Int, planY: Int, rect: IntRect): Bool
+    {
+      return planX >= rect.x &&
+        planY >= rect.y &&
+        planX < rect.x + rect.width &&
+        planY < rect.y + rect.height;
+    }
+
+// keep only the attachments whose anchor lies outside one refresh rect
+  function filterAttachmentsOutsideRect(list: Array<Road2Attachment>,
+      rect: IntRect): Array<Road2Attachment>
+    {
+      var out = [];
+
+      for (entry in list)
+        if (!isPointInRect(entry.x, entry.y, rect))
+          out.push(entry);
+      return out;
+    }
+
+// append the current ROAD2 attachments inside one refresh rect in canonical order
+  function appendRoad2AttachmentsInRect(out: Array<Road2Attachment>,
+      grid: RoadPlanGrid, rect: IntRect)
+    {
+      for (xx in rect.x...rect.x + rect.width)
+        {
+          if ((xx & 1) != 0)
+            continue;
+          for (yy in rect.y...rect.y + rect.height)
+            {
+              if ((yy & 1) != 0)
+                continue;
+              var road2ID = getAdjacentRoad2AttachmentID(grid, xx, yy);
+              if (gridOps.isPlanCellOccupied(grid, xx, yy) ||
+                  road2ID < 0)
+                continue;
+              out.push({
+                x: xx,
+                y: yy,
+                road2ID: road2ID,
+                road1StepX: -1,
+                road1StepY: -1,
+                road1DX: 0,
+                road1DY: 0,
+              });
+            }
+        }
+    }
+
+// append the currently valid ROAD1 attachments inside one refresh rect in canonical order
+  function appendRoad1AttachmentsInRect(out: Array<Road2Attachment>, grid: RoadPlanGrid,
+      candidates: Array<Road2Attachment>, rect: IntRect)
+    {
+      var scanned = 0;
+
+      for (candidate in candidates)
+        {
+          if (!isPointInRect(candidate.x, candidate.y, rect))
+            continue;
+          scanned++;
+          if (!canUseRoad2Anchor(grid, candidate.road1StepX, candidate.road1StepY,
+                candidate.x, candidate.y, candidate.road1DX, candidate.road1DY))
+            continue;
+          out.push(candidate);
+        }
+
+#if mydebug
+      plan.addMapProfileCount('road2.refreshCoverageAttachmentState.road1CandidatesScanned',
+        scanned);
+#end
+    }
+
+// sort attachment anchors in the same x-major order as the full collectors
+  function sortAttachmentsByPlanCell(list: Array<Road2Attachment>)
+    {
+      list.sort(sortAttachmentsByPlanCellOrder);
+    }
+
+// sort two attachment anchors in canonical plan-grid order
+  function sortAttachmentsByPlanCellOrder(a: Road2Attachment, b: Road2Attachment): Int
+    {
+      if (a.x < b.x)
+        return -1;
+      if (a.x > b.x)
+        return 1;
+      if (a.y < b.y)
+        return -1;
+      if (a.y > b.y)
+        return 1;
+      return 0;
     }
 
 // return the canonical orange anchor for one ROAD1 step and branch side
@@ -625,6 +881,9 @@ class RoadPlanRoad2Network
 // find a reasonable empty orange start inside one city tile
   function findTileRoad2Start(grid: RoadPlanGrid, cellX: Int, cellY: Int): GridPoint
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var tileStartX = cellX * plan.PLAN_CELLS_PER_TILE;
       var tileStartY = cellY * plan.PLAN_CELLS_PER_TILE;
       var centerX = tileStartX + Std.int(plan.PLAN_CELLS_PER_TILE / 2) - 1;
@@ -657,6 +916,14 @@ class RoadPlanRoad2Network
           }
         }
 
+#if mydebug
+      plan.addMapProfileSample('road2.findTileRoad2Start',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      if (best != null)
+        plan.addMapProfileCount('road2.findTileRoad2Start.found');
+      else
+        plan.addMapProfileCount('road2.findTileRoad2Start.null');
+#end
       return best;
     }
 

@@ -7,6 +7,7 @@ import map.RoadType;
 import map.Types.GridPoint;
 import map.Types.IntRect;
 import map.Types.RoadPlanGrid;
+import map.Types.ThinAttachmentCache;
 import map.Types.ThinRoadStart;
 
 @:access(map.Core)
@@ -27,6 +28,45 @@ class RoadPlanThinCoverage
       this.branchWalker = branchWalker;
     }
 
+// build one attachment cache for one thin-road tile attempt
+  function makeThinAttachmentCache(searchRect: IntRect): ThinAttachmentCache
+    {
+      return {
+        searchRect: searchRect,
+        buckets: [],
+      };
+    }
+
+// return a stable cache key for one thin-road parent tier set
+  function getThinRoadAttachmentCacheKey(parentTypes: Array<RoadType>): Int
+    {
+      var key = 0;
+
+      for (type in parentTypes)
+        key = key | (1 << plan.getRoadTypeOrder(type));
+      return key;
+    }
+
+// return the local thin-road attachment list for one tier set
+  function getThinRoadAttachmentList(grid: RoadPlanGrid, parentTypes: Array<RoadType>,
+      searchRect: IntRect, cache: ThinAttachmentCache = null): Array<GridPoint>
+    {
+      if (cache == null)
+        return collectThinRoadAttachments(grid, parentTypes, searchRect);
+
+      var key = getThinRoadAttachmentCacheKey(parentTypes);
+      for (bucket in cache.buckets)
+        if (bucket.key == key)
+          return bucket.points;
+
+      var points = collectThinRoadAttachments(grid, parentTypes, cache.searchRect);
+      cache.buckets.push({
+        key: key,
+        points: points,
+      });
+      return points;
+    }
+
 // add a separate green coverage pass over city tiles after orange is settled
   public function ensureCityRoad3Coverage(grid: RoadPlanGrid)
     {
@@ -44,7 +84,9 @@ class RoadPlanThinCoverage
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD3))
               continue;
 
-            spawnThinRoadCoverage(grid, cellX, cellY, ROAD3, parentTypes);
+            plan.addMapProfileCount('thin.coverage.ROAD3.attempts');
+            if (spawnThinRoadCoverage(grid, cellX, cellY, ROAD3, parentTypes))
+              plan.addMapProfileCount('thin.coverage.ROAD3.success');
           }
     }
 
@@ -66,8 +108,10 @@ class RoadPlanThinCoverage
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD4))
               continue;
 
-            spawnBidirectionalThinRoadCoverage(grid, cellX, cellY, ROAD4, parentTypes,
-              targetTypeGroups);
+            plan.addMapProfileCount('thin.coverage.ROAD4.attempts');
+            if (spawnBidirectionalThinRoadCoverage(grid, cellX, cellY, ROAD4, parentTypes,
+                  targetTypeGroups))
+              plan.addMapProfileCount('thin.coverage.ROAD4.success');
           }
     }
 
@@ -89,8 +133,10 @@ class RoadPlanThinCoverage
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD5))
               continue;
 
-            spawnBidirectionalThinRoadCoverage(grid, cellX, cellY, ROAD5, parentTypes,
-              targetTypeGroups);
+            plan.addMapProfileCount('thin.coverage.ROAD5.attempts');
+            if (spawnBidirectionalThinRoadCoverage(grid, cellX, cellY, ROAD5, parentTypes,
+                  targetTypeGroups))
+              plan.addMapProfileCount('thin.coverage.ROAD5.success');
           }
     }
 
@@ -100,13 +146,14 @@ class RoadPlanThinCoverage
       targetTypeGroups: Array<Array<RoadType>> = null): Bool
     {
       var searchRect = getThinRoadSearchRect(cellX, cellY);
+      var cache = makeThinAttachmentCache(searchRect);
       var start = findThinRoadCoverageStart(grid, cellX, cellY, parentTypes, targetTypeGroups,
-        searchRect);
+        searchRect, cache);
       if (start == null)
         return false;
 
       var target = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
-        targetTypeGroups, start.x, start.y, start.dx, start.dy, searchRect);
+        targetTypeGroups, start.x, start.y, start.dx, start.dy, searchRect, cache);
       if (!gridOps.isThinRoadAttachmentCell(grid, start.x, start.y, parentTypes) &&
           target != null &&
           connectThinRoadToTarget(grid, start, target, type, parentTypes))
@@ -123,15 +170,16 @@ class RoadPlanThinCoverage
       targetTypeGroups: Array<Array<RoadType>> = null): Bool
     {
       var searchRect = getThinRoadSearchRect(cellX, cellY);
+      var cache = makeThinAttachmentCache(searchRect);
       var start = findThinRoadCoverageStart(grid, cellX, cellY, parentTypes, targetTypeGroups,
-        searchRect);
+        searchRect, cache);
       if (start == null)
         return false;
 
       var addedForward = spawnThinRoadSide(grid, start.x, start.y, start.dx, start.dy,
-        type, parentTypes, false, targetTypeGroups, searchRect);
+        type, parentTypes, false, targetTypeGroups, searchRect, cache);
       var addedBackward = spawnThinRoadSide(grid, start.x, start.y, -start.dx, -start.dy,
-        type, parentTypes, addedForward, targetTypeGroups, searchRect);
+        type, parentTypes, addedForward, targetTypeGroups, searchRect, cache);
       return addedForward || addedBackward;
     }
 
@@ -153,14 +201,15 @@ class RoadPlanThinCoverage
 // find a usable thin-road coverage start for one city tile
   function findThinRoadCoverageStart(grid: RoadPlanGrid, cellX: Int, cellY: Int,
       parentTypes: Array<RoadType>,
-      targetTypeGroups: Array<Array<RoadType>> = null, searchRect: IntRect = null): ThinRoadStart
+      targetTypeGroups: Array<Array<RoadType>> = null,
+      searchRect: IntRect = null, cache: ThinAttachmentCache = null): ThinRoadStart
     {
       var centerX = cellX * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
       var centerY = cellY * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
       var horizontalScore = getThinRoadCoverageAxisScore(grid, parentTypes, targetTypeGroups,
-        centerX, centerY, 1, searchRect);
+        centerX, centerY, 1, searchRect, cache);
       var verticalScore = getThinRoadCoverageAxisScore(grid, parentTypes, targetTypeGroups,
-        centerX, centerY, 2, searchRect);
+        centerX, centerY, 2, searchRect, cache);
       if (horizontalScore < 0x3FFFFFFF ||
           verticalScore < 0x3FFFFFFF)
         {
@@ -169,38 +218,44 @@ class RoadPlanThinCoverage
           var firstScore = (firstAxisMask == 1 ? horizontalScore : verticalScore);
           var secondScore = (secondAxisMask == 1 ? horizontalScore : verticalScore);
           var axisStart = findThinRoadCoverageStartOnAxis(grid, cellX, cellY, parentTypes,
-            targetTypeGroups, firstAxisMask, searchRect);
+            targetTypeGroups, firstAxisMask, searchRect, cache);
           if (axisStart != null)
             return axisStart;
           if (secondScore < 0x3FFFFFFF)
             {
               axisStart = findThinRoadCoverageStartOnAxis(grid, cellX, cellY, parentTypes,
-                targetTypeGroups, secondAxisMask, searchRect);
+                targetTypeGroups, secondAxisMask, searchRect, cache);
               if (axisStart != null)
                 return axisStart;
             }
           if (firstScore < 0x3FFFFFFF)
-            return null;
+            {
+              plan.addMapProfileCount('thin.findThinRoadCoverageStart.null');
+              return null;
+            }
         }
 
       var preferredTarget = findPreferredThinRoadAttachment(grid, parentTypes, targetTypeGroups,
-        centerX, centerY, searchRect);
+        centerX, centerY, searchRect, cache);
       var start = findTileThinRoadStart(grid, cellX, cellY, preferredTarget, parentTypes);
       if (start == null &&
           preferredTarget != null)
         start = findTileThinRoadStart(grid, cellX, cellY, null, parentTypes);
+      if (start == null)
+        plan.addMapProfileCount('thin.findThinRoadCoverageStart.null');
       return start;
     }
 
 // find a usable thin-road coverage start for one chosen axis
   function findThinRoadCoverageStartOnAxis(grid: RoadPlanGrid, cellX: Int, cellY: Int,
       parentTypes: Array<RoadType>, targetTypeGroups: Array<Array<RoadType>>,
-      axisMask: Int, searchRect: IntRect = null): ThinRoadStart
+      axisMask: Int, searchRect: IntRect = null,
+      cache: ThinAttachmentCache = null): ThinRoadStart
     {
       var centerX = cellX * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
       var centerY = cellY * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
       var preferredTarget = findPreferredThinRoadAttachmentForAxis(grid, parentTypes,
-        targetTypeGroups, centerX, centerY, axisMask, searchRect);
+        targetTypeGroups, centerX, centerY, axisMask, searchRect, cache);
       var start = findTileThinRoadStart(grid, cellX, cellY, preferredTarget, parentTypes,
         axisMask);
       if (start == null &&
@@ -212,14 +267,14 @@ class RoadPlanThinCoverage
 // score one thin-road coverage axis from opposite-side parent targets
   function getThinRoadCoverageAxisScore(grid: RoadPlanGrid, parentTypes: Array<RoadType>,
       targetTypeGroups: Array<Array<RoadType>>, planX: Int, planY: Int, axisMask: Int,
-      searchRect: IntRect = null): Int
+      searchRect: IntRect = null, cache: ThinAttachmentCache = null): Int
     {
       var negativeTarget = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
         targetTypeGroups, planX, planY, axisMask == 1 ? -1 : 0, axisMask == 2 ? -1 : 0,
-        searchRect);
+        searchRect, cache);
       var positiveTarget = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
         targetTypeGroups, planX, planY, axisMask == 1 ? 1 : 0, axisMask == 2 ? 1 : 0,
-        searchRect);
+        searchRect, cache);
       if (negativeTarget == null &&
           positiveTarget == null)
         return 0x3FFFFFFF;
@@ -242,14 +297,14 @@ class RoadPlanThinCoverage
 // return the closer parent attachment on one chosen axis
   function findPreferredThinRoadAttachmentForAxis(grid: RoadPlanGrid, parentTypes: Array<RoadType>,
       targetTypeGroups: Array<Array<RoadType>>, planX: Int, planY: Int, axisMask: Int,
-      searchRect: IntRect = null): GridPoint
+      searchRect: IntRect = null, cache: ThinAttachmentCache = null): GridPoint
     {
       var negativeTarget = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
         targetTypeGroups, planX, planY, axisMask == 1 ? -1 : 0, axisMask == 2 ? -1 : 0,
-        searchRect);
+        searchRect, cache);
       var positiveTarget = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
         targetTypeGroups, planX, planY, axisMask == 1 ? 1 : 0, axisMask == 2 ? 1 : 0,
-        searchRect);
+        searchRect, cache);
       if (negativeTarget == null)
         return positiveTarget;
       if (positiveTarget == null)
@@ -263,7 +318,8 @@ class RoadPlanThinCoverage
 // add one directional thin-road side from a shared start cell
   function spawnThinRoadSide(grid: RoadPlanGrid, startX: Int, startY: Int, dx: Int, dy: Int,
       type: RoadType, parentTypes: Array<RoadType>, allowOccupiedStart: Bool,
-      targetTypeGroups: Array<Array<RoadType>> = null, searchRect: IntRect = null): Bool
+      targetTypeGroups: Array<Array<RoadType>> = null, searchRect: IntRect = null,
+      cache: ThinAttachmentCache = null): Bool
     {
       if (!branchWalker.canUseBranchRoadStart(grid, startX, startY, dx, dy, allowOccupiedStart))
         return false;
@@ -275,7 +331,7 @@ class RoadPlanThinCoverage
         }
 
       var target = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
-        targetTypeGroups, startX, startY, dx, dy, searchRect);
+        targetTypeGroups, startX, startY, dx, dy, searchRect, cache);
       var start: ThinRoadStart = {
         x: startX,
         y: startY,
@@ -295,12 +351,20 @@ class RoadPlanThinCoverage
   function collectThinRoadAttachments(grid: RoadPlanGrid, parentTypes: Array<RoadType>,
       searchRect: IntRect = null): Array<GridPoint>
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var result = [];
-      var used = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
       var minX = (searchRect != null ? searchRect.x : 0);
       var minY = (searchRect != null ? searchRect.y : 0);
       var maxX = (searchRect != null ? searchRect.x + searchRect.width : plan.planWidth);
       var maxY = (searchRect != null ? searchRect.y + searchRect.height : plan.planHeight);
+      var usedWidth = maxX - minX;
+      var usedHeight = maxY - minY;
+      var used = [];
+
+      for (ii in 0...usedWidth * usedHeight)
+        used.push(false);
 
       for (yy in minY...maxY)
         for (xx in minX...maxX)
@@ -312,16 +376,17 @@ class RoadPlanThinCoverage
               {
                 var nx = xx + gridOps.getCardinalDX(dir);
                 var ny = yy + gridOps.getCardinalDY(dir);
+                var localIndex = (nx - minX) * usedHeight + (ny - minY);
                 if (!gridOps.isInPlanBounds(nx, ny) ||
                     (searchRect != null &&
                     (nx < minX ||
                     ny < minY ||
                     nx >= maxX ||
                     ny >= maxY)) ||
-                    used[nx][ny] ||
+                    used[localIndex] ||
                     !gridOps.isThinRoadAttachmentCell(grid, nx, ny, parentTypes))
                   continue;
-                used[nx][ny] = true;
+                used[localIndex] = true;
                 result.push({
                   x: nx,
                   y: ny,
@@ -329,6 +394,13 @@ class RoadPlanThinCoverage
               }
           }
 
+#if mydebug
+      plan.addMapProfileSample('thin.collectThinRoadAttachments',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      plan.addMapProfileCount('thin.collectThinRoadAttachments.resultCount', result.length);
+      plan.addMapProfileCount('thin.collectThinRoadAttachments.searchCells',
+        (maxX - minX) * (maxY - minY));
+#end
       return result;
     }
 
@@ -354,19 +426,20 @@ class RoadPlanThinCoverage
 // find the nearest thin-road parent attachment using tiered target groups when requested
   function findPreferredThinRoadAttachment(grid: RoadPlanGrid, parentTypes: Array<RoadType>,
       targetTypeGroups: Array<Array<RoadType>>, planX: Int, planY: Int,
-      searchRect: IntRect = null): GridPoint
+      searchRect: IntRect = null, cache: ThinAttachmentCache = null): GridPoint
     {
       if (targetTypeGroups != null)
         for (types in targetTypeGroups)
           {
-            var target = findNearestThinRoadAttachment(collectThinRoadAttachments(grid, types,
-                searchRect),
+            var target = findNearestThinRoadAttachment(getThinRoadAttachmentList(grid, types,
+                searchRect, cache),
               planX, planY);
             if (target != null)
               return target;
           }
 
-      return findNearestThinRoadAttachment(collectThinRoadAttachments(grid, parentTypes, searchRect),
+      return findNearestThinRoadAttachment(getThinRoadAttachmentList(grid, parentTypes,
+          searchRect, cache),
         planX, planY);
     }
 
@@ -397,25 +470,29 @@ class RoadPlanThinCoverage
 // find the nearest thin-road parent attachment on one chosen side using tiered target groups
   function findPreferredThinRoadAttachmentInDirection(grid: RoadPlanGrid,
       parentTypes: Array<RoadType>, targetTypeGroups: Array<Array<RoadType>>,
-      planX: Int, planY: Int, dx: Int, dy: Int, searchRect: IntRect = null): GridPoint
+      planX: Int, planY: Int, dx: Int, dy: Int,
+      searchRect: IntRect = null, cache: ThinAttachmentCache = null): GridPoint
     {
       if (targetTypeGroups != null)
         for (types in targetTypeGroups)
           {
             var target = findNearestThinRoadAttachmentInDirection(
-              collectThinRoadAttachments(grid, types, searchRect), planX, planY, dx, dy);
+              getThinRoadAttachmentList(grid, types, searchRect, cache), planX, planY, dx, dy);
             if (target != null)
               return target;
           }
 
       return findNearestThinRoadAttachmentInDirection(
-        collectThinRoadAttachments(grid, parentTypes, searchRect), planX, planY, dx, dy);
+        getThinRoadAttachmentList(grid, parentTypes, searchRect, cache), planX, planY, dx, dy);
     }
 
 // find a reasonable thin-road start and initial direction inside one city tile
   function findTileThinRoadStart(grid: RoadPlanGrid, cellX: Int, cellY: Int,
       target: GridPoint, parentTypes: Array<RoadType>, requiredAxisMask: Int = 0): ThinRoadStart
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var tileStartX = cellX * plan.PLAN_CELLS_PER_TILE;
       var tileStartY = cellY * plan.PLAN_CELLS_PER_TILE;
       var tileEndX = tileStartX + plan.PLAN_CELLS_PER_TILE - 1;
@@ -494,6 +571,14 @@ class RoadPlanThinCoverage
               }
           }
 
+#if mydebug
+      plan.addMapProfileSample('thin.findTileThinRoadStart',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      if (best != null)
+        plan.addMapProfileCount('thin.findTileThinRoadStart.found');
+      else
+        plan.addMapProfileCount('thin.findTileThinRoadStart.null');
+#end
       return best;
     }
 
@@ -563,10 +648,22 @@ class RoadPlanThinCoverage
       target: GridPoint, type: RoadType, parentTypes: Array<RoadType>,
       allowOccupiedStart: Bool = false): Bool
     {
-      return tryConnectThinRoadToTarget(grid, start, target, type, parentTypes,
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
+      var connected = tryConnectThinRoadToTarget(grid, start, target, type, parentTypes,
           true, allowOccupiedStart) ||
         tryConnectThinRoadToTarget(grid, start, target, type, parentTypes,
           false, allowOccupiedStart);
+#if mydebug
+      plan.addMapProfileSample('thin.connectThinRoadToTarget.' + Std.string(type),
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      if (connected)
+        plan.addMapProfileCount('thin.connectThinRoadToTarget.' + Std.string(type) + '.success');
+      else
+        plan.addMapProfileCount('thin.connectThinRoadToTarget.' + Std.string(type) + '.failed');
+#end
+      return connected;
     }
 
 // try one orthogonal routing order for one thin-road connector

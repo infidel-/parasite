@@ -2,6 +2,9 @@
 
 package map;
 
+#if mydebug
+import haxe.ds.StringMap;
+#end
 import map.RoadType;
 import map.Types.RoadPlanGrid;
 import map.Types.RoadSegment;
@@ -18,6 +21,102 @@ class RoadPlan extends Raster
   var branchWalker: RoadPlanBranchWalker;
   var thinCoverage: RoadPlanThinCoverage;
 
+#if mydebug
+  var mapProfileTotalsMS: StringMap<Float>;
+  var mapProfileSampleCounts: StringMap<Int>;
+  var mapProfileCounters: StringMap<Int>;
+
+// reset the aggregated debug profiling state for one road generation
+  function resetMapProfileStats()
+    {
+      mapProfileTotalsMS = new StringMap();
+      mapProfileSampleCounts = new StringMap();
+      mapProfileCounters = new StringMap();
+    }
+
+// accumulate one debug profiling sample
+  function addMapProfileSample(label: String, elapsedMS: Float)
+    {
+      var total = (mapProfileTotalsMS.exists(label) ? mapProfileTotalsMS.get(label) : 0.0);
+      var count = (mapProfileSampleCounts.exists(label) ? mapProfileSampleCounts.get(label) : 0);
+      mapProfileTotalsMS.set(label, total + elapsedMS);
+      mapProfileSampleCounts.set(label, count + 1);
+    }
+
+// accumulate one debug profiling counter
+  function addMapProfileCount(label: String, amount: Int = 1)
+    {
+      var count = (mapProfileCounters.exists(label) ? mapProfileCounters.get(label) : 0);
+      mapProfileCounters.set(label, count + amount);
+    }
+
+// trace one profiling phase and return a fresh timestamp
+  function nextMapProfileTimestamp(label: String, startTS: Float): Float
+    {
+      var nowTS = haxe.Timer.stamp() * 1000.0;
+      trace('MAP PROFILE ' + label + ': ' + Std.int(nowTS - startTS) + ' ms');
+      return nowTS;
+    }
+
+// trace the aggregated debug profiling samples
+  function traceMapProfileSamples()
+    {
+      var labels = [];
+
+      for (label in mapProfileTotalsMS.keys())
+        labels.push(label);
+      labels.sort(sortMapProfileLabels);
+
+      for (label in labels)
+        {
+          var total = mapProfileTotalsMS.get(label);
+          var count = mapProfileSampleCounts.get(label);
+          var avg = Math.round(total * 100.0 / count) / 100.0;
+          trace('MAP PROFILE detail ' + label + ': ' + Std.int(total) +
+            ' ms over ' + count + ' calls avg=' + avg + ' ms');
+        }
+    }
+
+// trace the aggregated debug profiling counters
+  function traceMapProfileCounters()
+    {
+      var labels = [];
+
+      for (label in mapProfileCounters.keys())
+        labels.push(label);
+      labels.sort(sortMapProfileLabels);
+
+      for (label in labels)
+        trace('MAP PROFILE count ' + label + ': ' + mapProfileCounters.get(label));
+    }
+
+// trace one profiling summary line
+  function traceMapProfileSummary(label: String)
+    {
+      trace('MAP PROFILE ' + label);
+    }
+
+// sort two profiling labels for stable debug output
+  function sortMapProfileLabels(a: String, b: String): Int
+    {
+      if (a < b)
+        return -1;
+      if (a > b)
+        return 1;
+      return 0;
+    }
+#else
+// ignore one profiling sample outside debug builds
+  inline function addMapProfileSample(label: String, elapsedMS: Float)
+    {
+    }
+
+// ignore one profiling counter outside debug builds
+  inline function addMapProfileCount(label: String, amount: Int = 1)
+    {
+    }
+#end
+
 // initialize the helper classes used by the road-plan pipeline
   function initRoadPlanHelpers()
     {
@@ -32,9 +131,19 @@ class RoadPlan extends Raster
 
   function generateRoadGraph(): Array<RoadSegment>
     {
+#if mydebug
+      var totalStartTS = haxe.Timer.stamp() * 1000.0;
+      var phaseStartTS = totalStartTS;
+      resetMapProfileStats();
+#end
       initRoadPlanHelpers();
-
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.initRoadPlanHelpers', phaseStartTS);
+#end
       var grid = gridOps.makeRoadPlanGrid();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.makeRoadPlanGrid', phaseStartTS);
+#end
       var primaryHorizontal = rng.nextFloat() < 0.5;
       var primaryLine = pickCenteredRoad1Line(primaryHorizontal);
       var primaryWalker = makePrimaryRoad1Walker(primaryHorizontal, primaryLine);
@@ -42,17 +151,52 @@ class RoadPlan extends Raster
 
       walkRoad1(grid, cloneRoadWalker(primaryWalker));
       walkRoad1(grid, cloneRoadWalker(sideWalker));
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.walkRoad1', phaseStartTS);
+#end
       spawnRoad2AlongRoad1(grid, cloneRoadWalker(primaryWalker));
       spawnRoad2AlongRoad1(grid, cloneRoadWalker(sideWalker));
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.spawnRoad2AlongRoad1', phaseStartTS);
+#end
       road2Network.ensureRoad2Connectivity(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.ensureRoad2Connectivity.initial', phaseStartTS);
+#end
       road2Network.ensureCityRoad2Coverage(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad2Coverage', phaseStartTS);
+#end
       road2Network.ensureRoad2Connectivity(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.ensureRoad2Connectivity.final', phaseStartTS);
+#end
       if (ENABLE_ROAD3_COVERAGE_PASS)
-        thinCoverage.ensureCityRoad3Coverage(grid);
+        {
+          thinCoverage.ensureCityRoad3Coverage(grid);
+#if mydebug
+          phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad3Coverage', phaseStartTS);
+#end
+        }
       thinCoverage.ensureCityRoad4Coverage(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad4Coverage', phaseStartTS);
+#end
       thinCoverage.ensureCityRoad5Coverage(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad5Coverage', phaseStartTS);
+#end
 
-      return gridOps.compressRoadPlanGrid(grid);
+      var result = gridOps.compressRoadPlanGrid(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.compressRoadPlanGrid', phaseStartTS);
+      traceMapProfileSummary('road.summary segments=' + result.length +
+        ' plan=' + planWidth + 'x' + planHeight);
+      traceMapProfileSamples();
+      traceMapProfileCounters();
+      nextMapProfileTimestamp('road.total', totalStartTS);
+#end
+      return result;
     }
 
 // return a centered ROAD1 line with deterministic jitter

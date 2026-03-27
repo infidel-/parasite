@@ -16,20 +16,60 @@ class Image extends Buildings
 // generate the cached region image
   public function generate(): CanvasElement
     {
+#if mydebug
+      var totalStartTS = haxe.Timer.stamp() * 1000.0;
+      var phaseStartTS = totalStartTS;
+#end
       initRegionMetrics();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.initRegionMetrics', phaseStartTS);
+#end
       initCanvas();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.initCanvas', phaseStartTS);
+#end
       initRandom();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.initRandom', phaseStartTS);
+#end
 
       densityField = buildDensityField();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.buildDensityField', phaseStartTS);
+#end
       areaTypes = buildAreaTypeField();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.buildAreaTypeField', phaseStartTS);
+#end
       overallDensity = sampleAverageDensity(0, 0, fullPixelWidth, fullPixelHeight);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.sampleAverageDensity', phaseStartTS);
+#end
       paintGround();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.paintGround', phaseStartTS);
+#end
 
       roads = generateRoadGraph();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.generateRoadGraph', phaseStartTS);
+#end
       roadMasks = rasterizeRoadMasks(roads);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.rasterizeRoadMasks', phaseStartTS);
+#end
       paintRoads();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.paintRoads', phaseStartTS);
+#end
 
       cropVisibleRegion();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion', phaseStartTS);
+      traceMapProfileSummary('image.summary roads=' + roads.length +
+        ' fullPixels=' + fullPixelWidth + 'x' + fullPixelHeight);
+      nextMapProfileTimestamp('image.total', totalStartTS);
+#end
       return canvas;
     }
 

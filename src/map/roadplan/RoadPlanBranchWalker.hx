@@ -249,6 +249,17 @@ class RoadPlanBranchWalker
 // walk one ROAD2 or thin-road branch with turns, stops, and downgrades
   public function walkBranchRoad(grid: RoadPlanGrid, walker: RoadWalker)
     {
+#if mydebug
+      var profileLabel = 'branch.walkBranchRoad.' + Std.string(walker.type);
+      var profileStartTS = haxe.Timer.stamp() * 1000.0;
+
+// flush one branch-walk profiling sample before returning
+      function finishWalkBranchRoadProfile(reason: String)
+        {
+          plan.addMapProfileSample(profileLabel, haxe.Timer.stamp() * 1000.0 - profileStartTS);
+          plan.addMapProfileCount(profileLabel + '.exit.' + reason);
+        }
+#end
       if (walker.type == ROAD2)
         {
           var snapped = road2Network.snapRoad2Anchor(walker.x, walker.y);
@@ -264,14 +275,24 @@ class RoadPlanBranchWalker
           var nextX = walker.x + (walker.type == ROAD2 ? walker.dx * plan.ROAD2_GRID_STEP : walker.dx);
           var nextY = walker.y + (walker.type == ROAD2 ? walker.dy * plan.ROAD2_GRID_STEP : walker.dy);
           if (!gridOps.isInPlanBounds(nextX, nextY))
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('outOfBounds');
+#end
             return;
+            }
           if ((walker.type == ROAD2 &&
               (gridOps.doesRoad2FootprintHitAnyRoad(grid, nextX, nextY, walker.x, walker.y) ||
               gridOps.hasRoad2ClearanceConflict(grid, nextX, nextY, walker.road2ID))) ||
               (walker.type != ROAD2 &&
               (gridOps.isPlanCellOccupied(grid, nextX, nextY) ||
               gridOps.hasParallelRoadFlankConflict(grid, nextX, nextY, walker.dx, walker.dy))))
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('blocked');
+#end
             return;
+            }
           var stopAfterPaint = isThinRoadType(walker.type) &&
             gridOps.hasAdjacentRoadNeighbor(grid, nextX, nextY, walker.x, walker.y);
 
@@ -310,7 +331,12 @@ class RoadPlanBranchWalker
             gridOps.addRoadPlanAxis(grid, walker.x, walker.y, oldDx, oldDy, drawType);
 
           if (stopAfterPaint)
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('stopAfterPaint');
+#end
             return;
+            }
 
           if (walker.tSplitCountdown >= 0)
             {
@@ -318,6 +344,9 @@ class RoadPlanBranchWalker
               if (walker.tSplitCountdown <= 0)
                 {
                   spawnRoad3TSplit(grid, walker);
+ #if mydebug
+                  finishWalkBranchRoadProfile('tSplit');
+#end
                   return;
                 }
             }
@@ -329,7 +358,12 @@ class RoadPlanBranchWalker
             }
           if (walker.type == ROAD2 &&
               road2Network.isRoad2GroundAtPlanCell(nextX, nextY))
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('road2Ground');
+#end
             return;
+            }
           if (isThinRoadType(walker.type))
             {
               if (walker.localStopCount >= 0)
@@ -337,7 +371,12 @@ class RoadPlanBranchWalker
                   walker.localStopCount++;
                   if (plan.rng.nextFloat() < Math.min(1.0,
                       walker.localStopCount * plan.ROAD3_GROUND_STOP_CHANCE_STEP))
+                    {
+#if mydebug
+                      finishWalkBranchRoadProfile('thinLocalStop');
+#end
                     return;
+                    }
                 }
               if (plan.isCityAreaType(nextArea))
                 walker.groundBlockCount = 0;
@@ -346,12 +385,22 @@ class RoadPlanBranchWalker
                   walker.groundBlockCount++;
                   if (plan.rng.nextFloat() < Math.min(1.0,
                       walker.groundBlockCount * plan.ROAD3_GROUND_STOP_CHANCE_STEP))
+                    {
+#if mydebug
+                      finishWalkBranchRoadProfile('thinGroundStop');
+#end
                     return;
+                    }
                 }
               continue;
             }
           if (!plan.isCityAreaType(nextArea))
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('leftCity');
+#end
             return;
+            }
         }
     }
 

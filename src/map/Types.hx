@@ -120,6 +120,21 @@ typedef IntRect = {
   height: Int,
 }
 
+typedef ThinAttachmentBucket = {
+  key: Int,
+  points: Array<GridPoint>,
+}
+
+typedef ThinAttachmentCache = {
+  searchRect: IntRect,
+  buckets: Array<ThinAttachmentBucket>,
+}
+
+typedef Road2CoverageAttachmentState = {
+  road2Attachments: Array<Road2Attachment>,
+  road1Attachments: Array<Road2Attachment>,
+}
+
 typedef BlockComponent = {
   cells: Array<GridPoint>,
   minX: Int,
