@@ -7,6 +7,7 @@ import map.Types.BlockComponent;
 import map.Types.BlockRect;
 import map.Types.BuildingFootprint;
 import map.Types.BuildingRect;
+import map.Types.BuildingShapeType;
 import map.Types.BuildingStyle;
 import map.Types.GridPoint;
 import map.Types.IntRect;
@@ -405,16 +406,11 @@ class Buildings extends LegacyRoads
     {
       if (parcel.density < 0.33)
         {
-          var lowRoll = rng.nextFloat();
-          var lowExtra = 0;
-          if (lowRoll < 0.30) lowExtra = 1;
-          else if (lowRoll < 0.40) lowExtra = 2;
           return {
             buildChance: 1.0,
             margin: 0,
             minRatio: 0.32,
             maxRatio: 0.62,
-            extraRectCount: lowExtra,
             shadowAlpha: 0.16,
             forecourtAlpha: 0.0,
             centered: false,
@@ -423,16 +419,11 @@ class Buildings extends LegacyRoads
 
       if (parcel.density < 0.66)
         {
-          var medRoll = rng.nextFloat();
-          var medExtra = 0;
-          if (medRoll < 0.82) medExtra = 1;
-          else if (medRoll < 0.99) medExtra = 2;
           return {
             buildChance: 1.0,
             margin: 0,
             minRatio: 0.42,
             maxRatio: 0.82,
-            extraRectCount: medExtra,
             shadowAlpha: 0.24,
             forecourtAlpha: 0.0,
             centered: false,
@@ -447,7 +438,6 @@ class Buildings extends LegacyRoads
         margin: (plaza ? PLAN_CELL_SIZE : 1),
         minRatio: (plaza ? 0.20 : 0.66),
         maxRatio: (plaza ? 0.38 : 0.97),
-        extraRectCount: 0,
         shadowAlpha: 0.32,
         forecourtAlpha: (plaza ? 0.34 + rng.nextFloat() * 0.10 : 0.0),
         centered: true,
@@ -517,23 +507,20 @@ class Buildings extends LegacyRoads
           innerHeight < PLAN_CELL_SIZE)
         return null;
 
-      var footprint = [];
-      var mainRect = generatePrimaryBuildingRect(innerX, innerY,
-        innerWidth, innerHeight, style);
-      footprint.push(mainRect);
-
-      var extraRects = style.extraRectCount;
-      for (i in 0...extraRects)
-        {
-          var wing = generateWingRect(mainRect, innerX, innerY,
-            innerWidth, innerHeight);
-          if (wing != null &&
-              wingAddsUsefulArea(mainRect, wing, footprint))
-            footprint.push(wing);
-        }
-
-      if (footprintTouchesRoad(footprint) ||
-          footprintArea(footprint) < mainRect.width * mainRect.height * 0.95)
+      var shape = pickBuildingShape();
+      var footprint = generateBuildingFootprintForShape(shape, innerX, innerY,
+        innerWidth, innerHeight, parcel.density, style);
+      if (footprint == null &&
+          (shape == H_SHAPE ||
+          shape == T_SHAPE))
+        footprint = generateBuildingFootprintForShape(L_SHAPE, innerX, innerY,
+          innerWidth, innerHeight, parcel.density, style);
+      if (footprint == null &&
+          shape != RECT)
+        footprint = generateBuildingFootprintForShape(RECT, innerX, innerY,
+          innerWidth, innerHeight, parcel.density, style);
+      if (footprint == null ||
+          footprintTouchesRoad(footprint))
         return null;
 
       var bounds = getFootprintBounds(footprint);
@@ -562,12 +549,121 @@ class Buildings extends LegacyRoads
       };
     }
 
-// generate the main building mass in a parcel
-  function generatePrimaryBuildingRect(x: Int, y: Int,
-      width: Int, height: Int, style: BuildingStyle): BuildingRect
+// pick one building footprint archetype
+  function pickBuildingShape(): BuildingShapeType
     {
-      var bw = Std.int(width * randomRangeFloat(style.minRatio, style.maxRatio));
-      var bh = Std.int(height * randomRangeFloat(style.minRatio, style.maxRatio));
+      var roll = rng.nextFloat();
+      if (roll < 0.50)
+        return RECT;
+      if (roll < 0.70)
+        return L_SHAPE;
+      if (roll < 0.85)
+        return H_SHAPE;
+      return T_SHAPE;
+    }
+
+// generate one footprint from the requested shape archetype
+  function generateBuildingFootprintForShape(shape: BuildingShapeType,
+      x: Int, y: Int, width: Int, height: Int, density: Float,
+      style: BuildingStyle): Array<BuildingRect>
+    {
+      return switch (shape) {
+        case RECT: generateRectBuildingFootprint(x, y, width, height, style);
+        case L_SHAPE: generateLBuildingFootprint(x, y, width, height, density, style.centered);
+        case H_SHAPE: generateHBuildingFootprint(x, y, width, height, density, style.centered);
+        case T_SHAPE: generateTBuildingFootprint(x, y, width, height, density, style.centered);
+      };
+    }
+
+// generate one rectangular footprint
+  function generateRectBuildingFootprint(x: Int, y: Int,
+      width: Int, height: Int, style: BuildingStyle): Array<BuildingRect>
+    {
+      return [ generatePlacedBuildingRect(x, y, width, height,
+        style.minRatio, style.maxRatio, style.centered) ];
+    }
+
+// generate one L-shaped footprint
+  function generateLBuildingFootprint(x: Int, y: Int,
+      width: Int, height: Int, density: Float, centered: Bool): Array<BuildingRect>
+    {
+      var outer = generatePlacedBuildingRect(x, y, width, height,
+        getLShapeMinRatio(density), getLShapeMaxRatio(density), centered);
+      var cutoutSize = getLShapeCutoutSize(density);
+      var verticalWidth = clampInt(Std.int(outer.width * randomRangeFloat(
+        getLShapeBarMinRatio(density), getLShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), outer.width - cutoutSize);
+      var horizontalHeight = clampInt(Std.int(outer.height * randomRangeFloat(
+        getLShapeBarMinRatio(density), getLShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), outer.height - cutoutSize);
+
+      if (outer.width - verticalWidth < cutoutSize ||
+          outer.height - horizontalHeight < cutoutSize)
+        return null;
+
+      var side = rng.next() % 4;
+      return switch (side) {
+        case 0: [
+          { x: outer.x, y: outer.y, width: verticalWidth, height: outer.height },
+          { x: outer.x, y: outer.y, width: outer.width, height: horizontalHeight },
+        ];
+        case 1: [
+          { x: outer.x, y: outer.y, width: verticalWidth, height: outer.height },
+          { x: outer.x, y: outer.y + outer.height - horizontalHeight,
+            width: outer.width, height: horizontalHeight },
+        ];
+        case 2: [
+          { x: outer.x + outer.width - verticalWidth, y: outer.y,
+            width: verticalWidth, height: outer.height },
+          { x: outer.x, y: outer.y, width: outer.width, height: horizontalHeight },
+        ];
+        default: [
+          { x: outer.x + outer.width - verticalWidth, y: outer.y,
+            width: verticalWidth, height: outer.height },
+          { x: outer.x, y: outer.y + outer.height - horizontalHeight,
+            width: outer.width, height: horizontalHeight },
+        ];
+      };
+    }
+
+// generate one H-shaped footprint
+  function generateHBuildingFootprint(x: Int, y: Int,
+      width: Int, height: Int, density: Float, centered: Bool): Array<BuildingRect>
+    {
+      var outer = generatePlacedBuildingRect(x, y, width, height,
+        getHShapeMinRatio(density), getHShapeMaxRatio(density), centered);
+      var gapSize = getHShapeGapSize(density);
+      var verticalLayout = outer.width >= outer.height;
+      if (Math.abs(outer.width - outer.height) < PLAN_CELL_SIZE)
+        verticalLayout = rng.nextFloat() < 0.5;
+
+      if (verticalLayout)
+        return generateVerticalHFootprint(outer, density, centered, gapSize);
+      return generateHorizontalHFootprint(outer, density, centered, gapSize);
+    }
+
+// generate one T-shaped footprint
+  function generateTBuildingFootprint(x: Int, y: Int,
+      width: Int, height: Int, density: Float, centered: Bool): Array<BuildingRect>
+    {
+      var outer = generatePlacedBuildingRect(x, y, width, height,
+        getHShapeMinRatio(density), getHShapeMaxRatio(density), centered);
+      var verticalLayout = outer.height >= outer.width;
+      if (Math.abs(outer.width - outer.height) < PLAN_CELL_SIZE)
+        verticalLayout = rng.nextFloat() < 0.5;
+
+      if (verticalLayout)
+        return generateVerticalTFootprint(outer, density, centered);
+      return generateHorizontalTFootprint(outer, density, centered);
+    }
+
+// generate one placed building rect inside a parcel
+  function generatePlacedBuildingRect(x: Int, y: Int,
+      width: Int, height: Int, minRatio: Float, maxRatio: Float,
+      centered: Bool): BuildingRect
+    {
+      var bw = Std.int(width * randomRangeFloat(minRatio, maxRatio));
+      var bh = Std.int(height * randomRangeFloat(minRatio, maxRatio));
       bw = clampInt(bw, getMinBuildingPixelSize(), width);
       bh = clampInt(bh, getMinBuildingPixelSize(), height);
 
@@ -575,14 +671,14 @@ class Buildings extends LegacyRoads
       var by = y;
       if (width > bw)
         {
-          if (style.centered)
+          if (centered)
             bx += pickCenteredPlacement(width - bw);
           else
             bx += randomRangeInt(0, width - bw);
         }
       if (height > bh)
         {
-          if (style.centered)
+          if (centered)
             by += pickCenteredPlacement(height - bh);
           else
             by += randomRangeInt(0, height - bh);
@@ -596,61 +692,150 @@ class Buildings extends LegacyRoads
       };
     }
 
-// generate an attached wing rectangle
-  function generateWingRect(mainRect: BuildingRect,
-      parcelX: Int, parcelY: Int, parcelWidth: Int, parcelHeight: Int): BuildingRect
+// generate one vertical H footprint
+  function generateVerticalHFootprint(outer: BuildingRect, density: Float,
+      centered: Bool, gapSize: Int): Array<BuildingRect>
     {
-      if (mainRect.width < CLEAN_TILE_SIZE / 2 ||
-          mainRect.height < CLEAN_TILE_SIZE / 2)
+      var maxBarWidth = Std.int((outer.width - gapSize) / 2);
+      var maxCrossHeight = outer.height - gapSize * 2;
+      if (maxBarWidth < getMinBuildingPixelSize() ||
+          maxCrossHeight < getMinBuildingPixelSize())
         return null;
 
-      var wingWidth = clampInt(Std.int(mainRect.width * randomRangeFloat(0.30, 0.55)),
-        Std.int(CLEAN_TILE_SIZE / 5), mainRect.width);
-      var wingHeight = clampInt(Std.int(mainRect.height * randomRangeFloat(0.25, 0.45)),
-        Std.int(CLEAN_TILE_SIZE / 5), mainRect.height);
-      var side = rng.next() % 4;
-      var wx = mainRect.x;
-      var wy = mainRect.y;
+      var barWidth = clampInt(Std.int(outer.width * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), maxBarWidth);
+      if (outer.width - barWidth * 2 < gapSize)
+        return null;
 
-      switch (side)
+      var crossHeight = clampInt(Std.int(outer.height * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), maxCrossHeight);
+      var crossY = outer.y + gapSize;
+      var crossSpan = outer.height - crossHeight - gapSize * 2;
+      if (crossSpan > 0)
         {
-          case 0:
-            wx = mainRect.x + randomRangeInt(0,
-              Std.int(Math.max(mainRect.width - wingWidth, 0)));
-            wy = mainRect.y - wingHeight + Std.int(CLEAN_TILE_SIZE / 5);
-          case 1:
-            wx = mainRect.x + randomRangeInt(0,
-              Std.int(Math.max(mainRect.width - wingWidth, 0)));
-            wy = mainRect.y + mainRect.height - Std.int(CLEAN_TILE_SIZE / 5);
-          case 2:
-            wx = mainRect.x - wingWidth + Std.int(CLEAN_TILE_SIZE / 5);
-            wy = mainRect.y + randomRangeInt(0,
-              Std.int(Math.max(mainRect.height - wingHeight, 0)));
-          case 3:
-            wx = mainRect.x + mainRect.width - Std.int(CLEAN_TILE_SIZE / 5);
-            wy = mainRect.y + randomRangeInt(0,
-              Std.int(Math.max(mainRect.height - wingHeight, 0)));
+          if (centered)
+            crossY += pickCenteredPlacement(crossSpan);
+          else
+            crossY += randomRangeInt(0, crossSpan);
         }
 
-      if (wy < parcelY)
-        wy = parcelY;
-      if (wy + wingHeight > parcelY + parcelHeight)
-        wy = parcelY + parcelHeight - wingHeight;
-      if (wx < parcelX)
-        wx = parcelX;
-      if (wx + wingWidth > parcelX + parcelWidth)
-        wx = parcelX + parcelWidth - wingWidth;
+      return [
+        { x: outer.x, y: outer.y, width: barWidth, height: outer.height },
+        { x: outer.x + outer.width - barWidth, y: outer.y,
+          width: barWidth, height: outer.height },
+        { x: outer.x, y: crossY, width: outer.width, height: crossHeight },
+      ];
+    }
 
-      if (wingWidth < CLEAN_TILE_SIZE / 5 ||
-          wingHeight < CLEAN_TILE_SIZE / 5)
+// generate one horizontal H footprint
+  function generateHorizontalHFootprint(outer: BuildingRect, density: Float,
+      centered: Bool, gapSize: Int): Array<BuildingRect>
+    {
+      var maxBarHeight = Std.int((outer.height - gapSize) / 2);
+      var maxCrossWidth = outer.width - gapSize * 2;
+      if (maxBarHeight < getMinBuildingPixelSize() ||
+          maxCrossWidth < getMinBuildingPixelSize())
         return null;
 
-      return {
-        x: wx,
-        y: wy,
-        width: wingWidth,
-        height: wingHeight,
-      };
+      var barHeight = clampInt(Std.int(outer.height * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), maxBarHeight);
+      if (outer.height - barHeight * 2 < gapSize)
+        return null;
+
+      var crossWidth = clampInt(Std.int(outer.width * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), maxCrossWidth);
+      var crossX = outer.x + gapSize;
+      var crossSpan = outer.width - crossWidth - gapSize * 2;
+      if (crossSpan > 0)
+        {
+          if (centered)
+            crossX += pickCenteredPlacement(crossSpan);
+          else
+            crossX += randomRangeInt(0, crossSpan);
+        }
+
+      return [
+        { x: outer.x, y: outer.y, width: outer.width, height: barHeight },
+        { x: outer.x, y: outer.y + outer.height - barHeight,
+          width: outer.width, height: barHeight },
+        { x: crossX, y: outer.y, width: crossWidth, height: outer.height },
+      ];
+    }
+
+// generate one vertical T footprint
+  function generateVerticalTFootprint(outer: BuildingRect, density: Float,
+      centered: Bool): Array<BuildingRect>
+    {
+      var capHeight = clampInt(Std.int(outer.height * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), outer.height);
+      var stemWidth = clampInt(Std.int(outer.width * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), outer.width);
+      if (outer.height - capHeight < getMinBuildingPixelSize())
+        return null;
+
+      var stemX = outer.x;
+      var stemSpan = outer.width - stemWidth;
+      if (stemSpan > 0)
+        {
+          if (centered)
+            stemX += pickCenteredPlacement(stemSpan);
+          else
+            stemX += randomRangeInt(0, stemSpan);
+        }
+
+      if (rng.nextFloat() < 0.5)
+        return [
+          { x: outer.x, y: outer.y, width: outer.width, height: capHeight },
+          { x: stemX, y: outer.y, width: stemWidth, height: outer.height },
+        ];
+
+      return [
+        { x: outer.x, y: outer.y + outer.height - capHeight,
+          width: outer.width, height: capHeight },
+        { x: stemX, y: outer.y, width: stemWidth, height: outer.height },
+      ];
+    }
+
+// generate one horizontal T footprint
+  function generateHorizontalTFootprint(outer: BuildingRect, density: Float,
+      centered: Bool): Array<BuildingRect>
+    {
+      var capWidth = clampInt(Std.int(outer.width * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), outer.width);
+      var stemHeight = clampInt(Std.int(outer.height * randomRangeFloat(
+        getHShapeBarMinRatio(density), getHShapeBarMaxRatio(density))),
+        getMinBuildingPixelSize(), outer.height);
+      if (outer.width - capWidth < getMinBuildingPixelSize())
+        return null;
+
+      var stemY = outer.y;
+      var stemSpan = outer.height - stemHeight;
+      if (stemSpan > 0)
+        {
+          if (centered)
+            stemY += pickCenteredPlacement(stemSpan);
+          else
+            stemY += randomRangeInt(0, stemSpan);
+        }
+
+      if (rng.nextFloat() < 0.5)
+        return [
+          { x: outer.x, y: outer.y, width: capWidth, height: outer.height },
+          { x: outer.x, y: stemY, width: outer.width, height: stemHeight },
+        ];
+
+      return [
+        { x: outer.x + outer.width - capWidth, y: outer.y,
+          width: capWidth, height: outer.height },
+        { x: outer.x, y: stemY, width: outer.width, height: stemHeight },
+      ];
     }
 
 // paint all building footprints
@@ -956,6 +1141,106 @@ class Buildings extends LegacyRoads
       return 2;
     }
 
+// return the minimum footprint ratio for one L shape
+  function getLShapeMinRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.38;
+      if (density < 0.66)
+        return 0.60;
+      return 0.82;
+    }
+
+// return the maximum footprint ratio for one L shape
+  function getLShapeMaxRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.58;
+      if (density < 0.66)
+        return 0.82;
+      return 0.98;
+    }
+
+// return the minimum bar ratio for one L shape
+  function getLShapeBarMinRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.24;
+      if (density < 0.66)
+        return 0.30;
+      return 0.36;
+    }
+
+// return the maximum bar ratio for one L shape
+  function getLShapeBarMaxRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.36;
+      if (density < 0.66)
+        return 0.42;
+      return 0.52;
+    }
+
+// return the required cutout size for one L shape
+  function getLShapeCutoutSize(density: Float): Int
+    {
+      if (density < 0.33)
+        return Std.int(PLAN_CELL_SIZE / 2);
+      if (density < 0.66)
+        return Std.int(PLAN_CELL_SIZE * 0.75);
+      return PLAN_CELL_SIZE;
+    }
+
+// return the minimum footprint ratio for one H shape
+  function getHShapeMinRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.46;
+      if (density < 0.66)
+        return 0.68;
+      return 0.86;
+    }
+
+// return the maximum footprint ratio for one H shape
+  function getHShapeMaxRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.66;
+      if (density < 0.66)
+        return 0.88;
+      return 0.98;
+    }
+
+// return the minimum bar ratio for one H shape
+  function getHShapeBarMinRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.20;
+      if (density < 0.66)
+        return 0.26;
+      return 0.32;
+    }
+
+// return the maximum bar ratio for one H shape
+  function getHShapeBarMaxRatio(density: Float): Float
+    {
+      if (density < 0.33)
+        return 0.28;
+      if (density < 0.66)
+        return 0.36;
+      return 0.44;
+    }
+
+// return the required inner gap size for one H shape
+  function getHShapeGapSize(density: Float): Int
+    {
+      if (density < 0.33)
+        return Std.int(PLAN_CELL_SIZE / 2);
+      if (density < 0.66)
+        return PLAN_CELL_SIZE;
+      return PLAN_CELL_SIZE + Std.int(PLAN_CELL_SIZE / 2);
+    }
+
 // return the minimum pixel size for one building rect side
   function getMinBuildingPixelSize(): Int
     {
@@ -1067,68 +1352,6 @@ class Buildings extends LegacyRoads
       if (bottom < minClear)
         minClear = bottom;
       return minClear >= CLEAN_TILE_SIZE / 5;
-    }
-
-// return whether a wing adds enough distinct area to keep
-  function wingAddsUsefulArea(mainRect: BuildingRect, wing: BuildingRect,
-      existing: Array<BuildingRect>): Bool
-    {
-      if (wing == null)
-        return false;
-
-      var overlapMain = getRectOverlapArea(mainRect, wing);
-      var wingArea = wing.width * wing.height;
-      var newArea = wingArea - overlapMain;
-      if (newArea < wingArea * 0.35)
-        return false;
-
-      var extendsPastMain =
-        wing.x < mainRect.x ||
-        wing.y < mainRect.y ||
-        wing.x + wing.width > mainRect.x + mainRect.width ||
-        wing.y + wing.height > mainRect.y + mainRect.height;
-      if (!extendsPastMain)
-        return false;
-
-      for (rect in existing)
-        {
-          if (rect == mainRect)
-            continue;
-          var overlap = getRectOverlapArea(rect, wing);
-          if (overlap > wingArea * 0.55)
-            return false;
-        }
-
-      return true;
-    }
-
-// return the total approximate footprint union area
-  function footprintArea(rects: Array<BuildingRect>): Float
-    {
-      if (rects.length == 0)
-        return 0.0;
-
-      var area = 0.0;
-      for (i in 0...rects.length)
-        {
-          var rect = rects[i];
-          area += rect.width * rect.height;
-          for (j in 0...i)
-            area -= getRectOverlapArea(rect, rects[j]);
-        }
-      return area;
-    }
-
-// return overlap area between two axis-aligned rectangles
-  function getRectOverlapArea(a: BuildingRect, b: BuildingRect): Float
-    {
-      var x1 = Math.max(a.x, b.x);
-      var y1 = Math.max(a.y, b.y);
-      var x2 = Math.min(a.x + a.width, b.x + b.width);
-      var y2 = Math.min(a.y + a.height, b.y + b.height);
-      if (x2 <= x1 || y2 <= y1)
-        return 0.0;
-      return (x2 - x1) * (y2 - y1);
     }
 
 }

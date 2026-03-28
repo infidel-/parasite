@@ -214,12 +214,19 @@ typedef BuildingFootprint = {
   shadowAlpha: Float,
 }
 
+enum BuildingShapeType
+{
+  RECT;
+  L_SHAPE;
+  H_SHAPE;
+  T_SHAPE;
+}
+
 typedef BuildingStyle = {
   buildChance: Float,
   margin: Int,
   minRatio: Float,
   maxRatio: Float,
-  extraRectCount: Int,
   shadowAlpha: Float,
   forecourtAlpha: Float,
   centered: Bool,
