@@ -249,49 +249,43 @@ class HUD
             mouseOverAnyElement = true;
         }
 
-      // skip if not over any element and wasn't before
-      if (!mouseOverAnyElement && !lastMouseOverAnyElement)
-        return;
-
-      // update opacity styles only if element changed
-      for (el in listTransparentElements)
+      // update opacity styles only if hovering one transparent element
+      if (mouseOverAnyElement ||
+          lastMouseOverAnyElement)
         {
-          var r = cachedRects.get(el);
-          if (r == null) continue;
-          var isOver = e.clientX >= r.x && e.clientY >= r.y &&
-                       e.clientX <= r.x + r.w && e.clientY <= r.y + r.h;
-          var wasOver = lastMouseX >= r.x && lastMouseY >= r.y &&
-                        lastMouseX <= r.x + r.w && lastMouseY <= r.y + r.h;
-          if (isOver != wasOver)
-            el.style.opacity = isOver ? '0.1' : '0.9';
+          for (el in listTransparentElements)
+            {
+              var r = cachedRects.get(el);
+              if (r == null) continue;
+              var isOver = e.clientX >= r.x && e.clientY >= r.y &&
+                           e.clientX <= r.x + r.w && e.clientY <= r.y + r.h;
+              var wasOver = lastMouseX >= r.x && lastMouseY >= r.y &&
+                            lastMouseX <= r.x + r.w && lastMouseY <= r.y + r.h;
+              if (isOver != wasOver)
+                el.style.opacity = isOver ? '0.1' : '0.9';
+            }
         }
 
       lastMouseOverAnyElement = mouseOverAnyElement;
 
       if (ui.state != UISTATE_DEFAULT)
-        return;
+        {
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+          return;
+        }
 
       if (game.location == LOCATION_REGION)
-        {
-          var pos = game.scene.mouse.getXY();
-          if (pos != null)
-            {
-              var area = game.region.getXY(pos.x, pos.y);
-              if (area != null && (area.x != lastRegionTileX || area.y != lastRegionTileY))
-                {
-                  lastRegionTileX = area.x;
-                  lastRegionTileY = area.y;
-                  regionTooltip.update();
-                }
-            }
-        }
+        updateRegionTooltipHover();
       else if (game.location == LOCATION_AREA)
         {
+          resetRegionTooltipHover();
           regionTooltip.hide();
           updateAITooltip();
         }
       else
         {
+          resetRegionTooltipHover();
           regionTooltip.hide();
           aiTooltip.hide();
         }
@@ -304,9 +298,61 @@ class HUD
 // hide overlays when mouse leaves the canvas
 public function onMouseLeave()
   {
+    resetRegionTooltipHover();
     regionTooltip.hide();
     aiTooltip.hide();
   }
+
+// reset cached hovered region tile
+  function resetRegionTooltipHover()
+    {
+      lastRegionTileX = -1;
+      lastRegionTileY = -1;
+    }
+
+// refresh region tooltip for the current hovered tile
+  function updateRegionTooltipHover(?refreshVisible: Bool = false)
+    {
+      if (ui.state != UISTATE_DEFAULT ||
+          game.location != LOCATION_REGION)
+        {
+          resetRegionTooltipHover();
+          regionTooltip.hide();
+          return;
+        }
+
+      var pos = game.scene.mouse.getXY();
+      if (pos == null)
+        {
+          resetRegionTooltipHover();
+          regionTooltip.hide();
+          return;
+        }
+
+      var area = game.region.getXY(pos.x, pos.y);
+      if (area == null)
+        {
+          resetRegionTooltipHover();
+          regionTooltip.hide();
+          return;
+        }
+
+      if (!refreshVisible &&
+          area.x == lastRegionTileX &&
+          area.y == lastRegionTileY)
+        return;
+      if (refreshVisible &&
+          area.x == lastRegionTileX &&
+          area.y == lastRegionTileY &&
+          !regionTooltip.visible)
+        return;
+
+      lastRegionTileX = area.x;
+      lastRegionTileY = area.y;
+      regionTooltip.update();
+      if (!regionTooltip.visible)
+        resetRegionTooltipHover();
+    }
 
 // returns true if area AI inspect mode is active
   public function isAIInspectMode(): Bool
@@ -455,7 +501,10 @@ public function onMouseLeave()
   public function update()
     {
       if (game.location != LOCATION_REGION)
-        regionTooltip.hide();
+        {
+          resetRegionTooltipHover();
+          regionTooltip.hide();
+        }
       if (game.location != LOCATION_AREA)
         aiTooltip.hide();
       updateActionList();
@@ -465,6 +514,8 @@ public function onMouseLeave()
       updateLog();
       updateMenu();
       updateGoals();
+      if (game.location == LOCATION_REGION)
+        updateRegionTooltipHover(true);
       updateAITooltip();
 #if mydebug
       updateDebugInfo();
