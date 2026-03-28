@@ -319,6 +319,24 @@ class Raster extends Ground
           paintSpan >= PLAN_CELL_SIZE)
         return true;
 
+      if (roadMasks.color[xx][yy] == COLOR_ROAD4 ||
+          roadMasks.color[xx][yy] == COLOR_ROAD5)
+        {
+          var directionMask = roadMasks.directionMask[xx][yy];
+          if (directionMask != 0)
+            {
+              if (dx < 0)
+                return (directionMask & 1) != 0;
+              if (dx > 0)
+                return (directionMask & 2) != 0;
+              if (dy < 0)
+                return (directionMask & 4) != 0;
+              if (dy > 0)
+                return (directionMask & 8) != 0;
+              return false;
+            }
+        }
+
       if (dx != 0)
         return (roadMasks.axis[xx][yy] & 1) != 0;
       if (dy != 0)

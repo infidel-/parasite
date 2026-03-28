@@ -289,13 +289,18 @@ class RoadPlanBranchWalker
 #end
             return;
             }
+          var nextCellOccupied = walker.type != ROAD2 &&
+            gridOps.isPlanCellOccupied(grid, nextX, nextY);
           if ((walker.type == ROAD2 &&
               (gridOps.doesRoad2FootprintHitAnyRoad(grid, nextX, nextY, walker.x, walker.y) ||
               gridOps.hasRoad2ClearanceConflict(grid, nextX, nextY, walker.road2ID))) ||
               (walker.type != ROAD2 &&
-              (gridOps.isPlanCellOccupied(grid, nextX, nextY) ||
+              (nextCellOccupied ||
               gridOps.hasParallelRoadFlankConflict(grid, nextX, nextY, walker.dx, walker.dy))))
             {
+              if (isThinRoadType(walker.type) &&
+                  nextCellOccupied)
+                addThinRoadBlockedJoin(grid, walker.x, walker.y, nextX, nextY, walker.type);
 #if mydebug
               finishWalkBranchRoadProfile('blocked');
 #end
@@ -337,6 +342,10 @@ class RoadPlanBranchWalker
               walker.dy, drawType);
           else
             gridOps.addRoadPlanAxis(grid, walker.x, walker.y, oldDx, oldDy, drawType);
+
+          if (stopAfterPaint)
+            addThinRoadStopJoins(grid, walker.x, walker.y, walker.x - oldDx, walker.y - oldDy,
+              drawType);
 
           if (stopAfterPaint)
             {
@@ -422,6 +431,56 @@ class RoadPlanBranchWalker
         case ROAD3, ROAD4, ROAD5: true;
         default: false;
       };
+    }
+
+// add any missing side arms on one thin stop cell that touched another road
+  function addThinRoadStopJoins(grid: RoadPlanGrid, planX: Int, planY: Int,
+      prevX: Int, prevY: Int, type: RoadType)
+    {
+      for (dir in 0...4)
+        {
+          var nx = planX + gridOps.getCardinalDX(dir);
+          var ny = planY + gridOps.getCardinalDY(dir);
+          if (!gridOps.isInPlanBounds(nx, ny) ||
+              (nx == prevX &&
+              ny == prevY) ||
+              !doesAnyRoadFaceCell(grid, nx, ny, planX, planY))
+            continue;
+          gridOps.addRoadPlanDirectionMask(grid, planX, planY,
+            gridOps.getRoadDirectionMask(nx - planX, ny - planY), type);
+        }
+    }
+
+// add the missing forward arm when one thin road stops against an occupied road cell
+  function addThinRoadBlockedJoin(grid: RoadPlanGrid, planX: Int, planY: Int,
+      nextX: Int, nextY: Int, type: RoadType)
+    {
+      gridOps.addRoadPlanDirectionMask(grid, planX, planY,
+        gridOps.getRoadDirectionMask(nextX - planX, nextY - planY), type);
+      addThinRoadBlockingCellJoin(grid, nextX, nextY, planX, planY);
+    }
+
+// add the reciprocal arm on one blocking thin-road cell toward the stop
+  function addThinRoadBlockingCellJoin(grid: RoadPlanGrid, roadX: Int, roadY: Int,
+      targetX: Int, targetY: Int)
+    {
+      var mask = gridOps.getRoadDirectionMask(targetX - roadX, targetY - roadY);
+
+      if (gridOps.hasRoadTypeAtPlanCell(grid, roadX, roadY, ROAD4))
+        gridOps.addRoadPlanDirectionMask(grid, roadX, roadY, mask, ROAD4);
+      if (gridOps.hasRoadTypeAtPlanCell(grid, roadX, roadY, ROAD5))
+        gridOps.addRoadPlanDirectionMask(grid, roadX, roadY, mask, ROAD5);
+    }
+
+// return whether one neighboring plan cell reaches the shared edge on any road tier
+  function doesAnyRoadFaceCell(grid: RoadPlanGrid, roadX: Int, roadY: Int,
+      targetX: Int, targetY: Int): Bool
+    {
+      return gridOps.hasRoadTypeFacingCell(grid, roadX, roadY, targetX, targetY, ROAD1) ||
+        gridOps.hasRoadTypeFacingCell(grid, roadX, roadY, targetX, targetY, ROAD2) ||
+        gridOps.hasRoadTypeFacingCell(grid, roadX, roadY, targetX, targetY, ROAD3) ||
+        gridOps.hasRoadTypeFacingCell(grid, roadX, roadY, targetX, targetY, ROAD4) ||
+        gridOps.hasRoadTypeFacingCell(grid, roadX, roadY, targetX, targetY, ROAD5);
     }
 
 // try spawning a branch off one ROAD2 step instead of turning the parent
