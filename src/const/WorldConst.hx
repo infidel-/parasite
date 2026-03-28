@@ -124,6 +124,7 @@ class WorldConst
         lawResponseEnabled: true,
         isHighRisk: true,
         hasMainRoad: true,
+        blocksRegionRoad1: true,
         ai: [
           'dog' => 5,
           'civilian' => 70,
@@ -156,6 +157,7 @@ class WorldConst
         lawResponseMax: 0,
         lawResponseEnabled: false,
         isHighRisk: true,
+        blocksRegionRoad1: true,
         ai: [
           'soldier' => 100,
         ],
@@ -186,6 +188,7 @@ class WorldConst
         lawResponseMax: 4,
         lawResponseEnabled: true,
         isHighRisk: true,
+        blocksRegionRoad1: true,
         ai: [
           'scientist' => 90,
           'security' => 10
@@ -293,6 +296,7 @@ class WorldConst
         lawResponseMax: 4,
         lawResponseEnabled: true,
         isHighRisk: true,
+        blocksRegionRoad1: true,
         ai: [
           'corpo' => 70,
           'smiler' => 20,
@@ -315,6 +319,14 @@ class WorldConst
   public inline static function getAreaInfo(id: _AreaType): AreaInfo
     {
       return areas[id];
+    }
+
+// return whether this area type blocks the region ROAD1 trunk
+  public inline static function blocksRegionRoad1(id: _AreaType): Bool
+    {
+      var info = areas[id];
+      return info != null &&
+        info.blocksRegionRoad1 == true;
     }
 
 
@@ -353,6 +365,7 @@ typedef AreaInfo = {
   @:optional var buildingChance: Float; // chance to spawn building (building gen)
   @:optional var buildingSize: Int; // building size x2 (city gen)
   @:optional var hasMainRoad: Bool; // has main road (city gen)
+  @:optional var blocksRegionRoad1: Bool; // block region ROAD1 trunk/branch (region map gen)
   var lawType: String; // police, security
   var lawResponseTime: Int; // number of turns until backup shows up
   var lawResponseAmount: Int; // amount of backup ai that shows up

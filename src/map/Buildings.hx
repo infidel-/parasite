@@ -2,6 +2,7 @@
 
 package map;
 
+import const.WorldConst;
 import map.Types.BlockComponent;
 import map.Types.BlockRect;
 import map.Types.BuildingFootprint;
@@ -55,8 +56,14 @@ class Buildings extends LegacyRoads
           {
             var px = xx * PLAN_CELL_SIZE + Std.int(PLAN_CELL_SIZE / 2);
             var py = yy * PLAN_CELL_SIZE + Std.int(PLAN_CELL_SIZE / 2);
+            var areaType = areaTypes[
+              clampInt(Std.int(xx / PLAN_CELLS_PER_TILE), 0, fullCellWidth - 1)
+            ][
+              clampInt(Std.int(yy / PLAN_CELLS_PER_TILE), 0, fullCellHeight - 1)
+            ];
             blocked[xx][yy] =
               masks.occupancy[xx][yy] > 0.0 ||
+              !isBuildableAreaType(areaType) ||
               !isBuildableGroundCell(xx, yy, px, py);
           }
 
@@ -117,9 +124,6 @@ class Buildings extends LegacyRoads
                   }
               }
 
-            if (cells.length < 8)
-              continue;
-
             components.push({
               cells: cells,
               minX: minX,
@@ -130,6 +134,14 @@ class Buildings extends LegacyRoads
           }
 
       return components;
+    }
+
+// return whether buildings may appear in this area type
+  function isBuildableAreaType(areaType: _AreaType): Bool
+    {
+      var info = WorldConst.getAreaInfo(areaType);
+      return info != null &&
+        info.isInhabited;
     }
 
 // extract rectangular blocks from one connected component
@@ -168,12 +180,12 @@ class Buildings extends LegacyRoads
           var pixelY = (component.minY + rect.y) * PLAN_CELL_SIZE;
           var pixelWidth = rect.width * PLAN_CELL_SIZE;
           var pixelHeight = rect.height * PLAN_CELL_SIZE;
-          if (pixelWidth < CLEAN_TILE_SIZE ||
-              pixelHeight < CLEAN_TILE_SIZE)
+          if (pixelWidth < PLAN_CELL_SIZE ||
+              pixelHeight < PLAN_CELL_SIZE)
             continue;
 
           var density = sampleAverageDensity(pixelX, pixelY, pixelWidth, pixelHeight);
-          if (density < 0.16)
+          if (density < 0.02)
             continue;
 
           out.push({
@@ -236,9 +248,6 @@ class Buildings extends LegacyRoads
           yy++;
         }
 
-      if (bestArea < 4)
-        return null;
-
       return {
         x: startX,
         y: startY,
@@ -259,8 +268,8 @@ class Buildings extends LegacyRoads
           var innerY = block.y + setback;
           var innerWidth = block.width - setback * 2;
           var innerHeight = block.height - setback * 2;
-          if (innerWidth < CLEAN_TILE_SIZE ||
-              innerHeight < CLEAN_TILE_SIZE)
+          if (innerWidth < PLAN_CELL_SIZE ||
+              innerHeight < PLAN_CELL_SIZE)
             continue;
 
           subdivideParcel(makeParcelRect(innerX, innerY, innerWidth, innerHeight), result, 0);
@@ -296,7 +305,7 @@ class Buildings extends LegacyRoads
         {
           var minSplit = Std.int(parcel.width * getParcelSplitMinRatio(parcel.density));
           var maxSplit = Std.int(parcel.width * getParcelSplitMaxRatio(parcel.density));
-          if (maxSplit - minSplit < CLEAN_TILE_SIZE / 2)
+          if (maxSplit - minSplit < PLAN_CELL_SIZE)
             {
               out.push(finalizeParcel(parcel));
               return;
@@ -318,7 +327,7 @@ class Buildings extends LegacyRoads
 
       var minSplit = Std.int(parcel.height * getParcelSplitMinRatio(parcel.density));
       var maxSplit = Std.int(parcel.height * getParcelSplitMaxRatio(parcel.density));
-      if (maxSplit - minSplit < CLEAN_TILE_SIZE / 2)
+      if (maxSplit - minSplit < PLAN_CELL_SIZE)
         {
           out.push(finalizeParcel(parcel));
           return;
@@ -355,10 +364,10 @@ class Buildings extends LegacyRoads
     {
       var openChance = 0.0;
       if (parcel.density < 0.33)
-        openChance = 0.10;
+        openChance = 0.006;
       else if (parcel.density < 0.66)
-        openChance = 0.03;
-      else openChance = 0.01;
+        openChance = 0.003;
+      else openChance = 0.010;
 
       var centrality = getParcelCentrality(parcel);
       var area = parcel.width * parcel.height;
@@ -366,24 +375,24 @@ class Buildings extends LegacyRoads
           parcel.width > CLEAN_TILE_SIZE * 2 &&
           parcel.height > CLEAN_TILE_SIZE * 2)
         {
-          openChance += 0.01 + centrality * 0.03;
-          if (area >= CLEAN_TILE_SIZE * CLEAN_TILE_SIZE * 6)
-            openChance += 0.02;
+          openChance += 0.006 + centrality * 0.018;
+          if (area >= CLEAN_TILE_SIZE * CLEAN_TILE_SIZE * 10)
+            openChance += 0.010;
         }
 
       if (isSkinnyParcel(parcel))
-        openChance += (parcel.density > 0.66 ? 0.10 : 0.28);
-      if (parcel.width < CLEAN_TILE_SIZE ||
-          parcel.height < CLEAN_TILE_SIZE)
-        openChance += 0.25;
+        openChance += (parcel.density > 0.66 ? 0.03 : 0.06);
+      if (parcel.width < PLAN_CELL_SIZE * 2 ||
+          parcel.height < PLAN_CELL_SIZE * 2)
+        openChance += 0.04;
       if (parcel.density < 0.33 &&
           parcel.width > CLEAN_TILE_SIZE * 3 &&
           parcel.height > CLEAN_TILE_SIZE * 3)
-        openChance += 0.02;
+        openChance += 0.01;
       if (parcel.density < 0.33 &&
           centrality < 0.34 &&
           area >= CLEAN_TILE_SIZE * CLEAN_TILE_SIZE * 4)
-        openChance += 0.02;
+        openChance += 0.01;
 
       openChance = clampFloat(openChance, 0.0, 0.92);
 
@@ -398,13 +407,13 @@ class Buildings extends LegacyRoads
         {
           var lowRoll = rng.nextFloat();
           var lowExtra = 0;
-          if (lowRoll < 0.10) lowExtra = 1;
-          else if (lowRoll < 0.11) lowExtra = 2;
+          if (lowRoll < 0.30) lowExtra = 1;
+          else if (lowRoll < 0.40) lowExtra = 2;
           return {
-            buildChance: 0.96,
-            margin: 4 + rng.next() % 4,
-            minRatio: 0.10,
-            maxRatio: 0.24,
+            buildChance: 1.0,
+            margin: 0,
+            minRatio: 0.32,
+            maxRatio: 0.62,
             extraRectCount: lowExtra,
             shadowAlpha: 0.16,
             forecourtAlpha: 0.0,
@@ -416,13 +425,13 @@ class Buildings extends LegacyRoads
         {
           var medRoll = rng.nextFloat();
           var medExtra = 0;
-          if (medRoll < 0.64) medExtra = 1;
-          else if (medRoll < 0.86) medExtra = 2;
+          if (medRoll < 0.82) medExtra = 1;
+          else if (medRoll < 0.99) medExtra = 2;
           return {
-            buildChance: 0.995,
-            margin: 2 + rng.next() % 3,
-            minRatio: 0.22,
-            maxRatio: 0.46,
+            buildChance: 1.0,
+            margin: 0,
+            minRatio: 0.42,
+            maxRatio: 0.82,
             extraRectCount: medExtra,
             shadowAlpha: 0.24,
             forecourtAlpha: 0.0,
@@ -434,11 +443,11 @@ class Buildings extends LegacyRoads
         parcel.height > CLEAN_TILE_SIZE * 2 &&
         rng.nextFloat() < getHighDensityPlazaChance(parcel);
       return {
-        buildChance: 0.995,
-        margin: (plaza ? 8 + rng.next() % 3 : 1),
-        minRatio: (plaza ? 0.18 : 0.28),
-        maxRatio: (plaza ? 0.34 : 0.52),
-        extraRectCount: (plaza ? 0 : (rng.nextFloat() < 0.04 ? 1 : 0)),
+        buildChance: 0.99,
+        margin: (plaza ? PLAN_CELL_SIZE : 1),
+        minRatio: (plaza ? 0.20 : 0.66),
+        maxRatio: (plaza ? 0.38 : 0.97),
+        extraRectCount: 0,
         shadowAlpha: 0.32,
         forecourtAlpha: (plaza ? 0.34 + rng.nextFloat() * 0.10 : 0.0),
         centered: true,
@@ -471,18 +480,18 @@ class Buildings extends LegacyRoads
           if (!parcel.isOpen)
             continue;
 
-          var inset = 8;
+          var inset = PLAN_CELL_SIZE;
           if (parcel.density < 0.33)
-            inset = 10;
+            inset = PLAN_CELL_SIZE + 2;
           else if (parcel.density > 0.66)
-            inset = 8;
+            inset = PLAN_CELL_SIZE;
 
           var x = parcel.x + inset;
           var y = parcel.y + inset;
           var width = parcel.width - inset * 2;
           var height = parcel.height - inset * 2;
-          if (width < CLEAN_TILE_SIZE / 3 ||
-              height < CLEAN_TILE_SIZE / 3)
+          if (width < PLAN_CELL_SIZE ||
+              height < PLAN_CELL_SIZE)
             continue;
 
           if (parcel.density > 0.66)
@@ -504,8 +513,8 @@ class Buildings extends LegacyRoads
       var innerY = parcel.y + margin;
       var innerWidth = parcel.width - margin * 2;
       var innerHeight = parcel.height - margin * 2;
-      if (innerWidth < CLEAN_TILE_SIZE / 4 ||
-          innerHeight < CLEAN_TILE_SIZE / 4)
+      if (innerWidth < PLAN_CELL_SIZE ||
+          innerHeight < PLAN_CELL_SIZE)
         return null;
 
       var footprint = [];
@@ -559,8 +568,8 @@ class Buildings extends LegacyRoads
     {
       var bw = Std.int(width * randomRangeFloat(style.minRatio, style.maxRatio));
       var bh = Std.int(height * randomRangeFloat(style.minRatio, style.maxRatio));
-      bw = clampInt(bw, Std.int(CLEAN_TILE_SIZE / 5), width);
-      bh = clampInt(bh, Std.int(CLEAN_TILE_SIZE / 5), height);
+      bw = clampInt(bw, getMinBuildingPixelSize(), width);
+      bh = clampInt(bh, getMinBuildingPixelSize(), height);
 
       var bx = x;
       var by = y;
@@ -665,6 +674,8 @@ class Buildings extends LegacyRoads
       ctx.globalAlpha = building.edgeAlpha;
       for (rect in building.rects)
         {
+          if (isSmallBuildingRect(rect))
+            continue;
           ctx.fillRect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4);
         }
 
@@ -672,6 +683,8 @@ class Buildings extends LegacyRoads
       ctx.globalAlpha = building.shadowAlpha;
       for (rect in building.rects)
         {
+          if (isSmallBuildingRect(rect))
+            continue;
           ctx.fillRect(rect.x + building.shadowOffset, rect.y + building.shadowOffset,
             rect.width, rect.height);
         }
@@ -687,6 +700,8 @@ class Buildings extends LegacyRoads
       ctx.globalAlpha = building.roofAlpha;
       for (rect in building.rects)
         {
+          if (isSmallBuildingRect(rect))
+            continue;
           var roofInset = getBuildingRoofInset(rect, building.density);
           var roofWidth = rect.width - roofInset * 2;
           var roofHeight = rect.height - roofInset * 2;
@@ -701,6 +716,8 @@ class Buildings extends LegacyRoads
       ctx.globalAlpha = 0.08 + building.edgeAlpha * 0.45;
       for (rect in building.rects)
         {
+          if (isSmallBuildingRect(rect))
+            continue;
           var edgeWidth = getBuildingEdgeWidth(rect, building.density);
           ctx.fillRect(rect.x, rect.y, rect.width, edgeWidth);
           ctx.fillRect(rect.x, rect.y, edgeWidth, rect.height);
@@ -710,6 +727,8 @@ class Buildings extends LegacyRoads
       ctx.globalAlpha = 0.11 + building.edgeAlpha * 0.55;
       for (rect in building.rects)
         {
+          if (isSmallBuildingRect(rect))
+            continue;
           var edgeWidth = getBuildingEdgeWidth(rect, building.density);
           ctx.fillRect(rect.x, rect.y + rect.height - edgeWidth, rect.width, edgeWidth);
           ctx.fillRect(rect.x + rect.width - edgeWidth, rect.y, edgeWidth, rect.height);
@@ -784,70 +803,70 @@ class Buildings extends LegacyRoads
   function getBlockSetback(density: Float): Int
     {
       if (density < 0.33)
-        return 14;
+        return 0;
       if (density < 0.66)
-        return 8;
-      return 4;
+        return 0;
+      return 1;
     }
 
 // return the target parcel width for a density band
   function getTargetParcelWidth(density: Float): Int
     {
       if (density < 0.33)
-        return Std.int(CLEAN_TILE_SIZE * 2.5);
+        return Std.int(CLEAN_TILE_SIZE * 0.68);
       if (density < 0.66)
-        return Std.int(CLEAN_TILE_SIZE * 1.6);
-      return Std.int(CLEAN_TILE_SIZE * 0.95);
+        return Std.int(CLEAN_TILE_SIZE * 0.54);
+      return Std.int(CLEAN_TILE_SIZE * 1.85);
     }
 
 // return the target parcel height for a density band
   function getTargetParcelHeight(density: Float): Int
     {
       if (density < 0.33)
-        return Std.int(CLEAN_TILE_SIZE * 2.5);
+        return Std.int(CLEAN_TILE_SIZE * 0.68);
       if (density < 0.66)
-        return Std.int(CLEAN_TILE_SIZE * 1.6);
-      return Std.int(CLEAN_TILE_SIZE * 0.95);
+        return Std.int(CLEAN_TILE_SIZE * 0.54);
+      return Std.int(CLEAN_TILE_SIZE * 1.85);
     }
 
 // return the recursion depth limit for parcel subdivision
   function getParcelMaxDepth(density: Float): Int
     {
       if (density < 0.33)
-        return 3;
+        return 7;
       if (density < 0.66)
-        return 5;
-      return 6;
+        return 8;
+      return 5;
     }
 
 // return the parcel split threshold multiplier
   function getParcelSplitThreshold(density: Float): Float
     {
       if (density < 0.33)
-        return 1.45;
+        return 1.0;
       if (density < 0.66)
-        return 1.18;
-      return 1.04;
+        return 0.96;
+      return 1.10;
     }
 
 // return the minimum split ratio for a parcel
   function getParcelSplitMinRatio(density: Float): Float
     {
       if (density < 0.33)
-        return 0.30;
+        return 0.18;
       if (density < 0.66)
-        return 0.34;
-      return 0.38;
+        return 0.22;
+      return 0.36;
     }
 
 // return the maximum split ratio for a parcel
   function getParcelSplitMaxRatio(density: Float): Float
     {
       if (density < 0.33)
-        return 0.70;
+        return 0.82;
       if (density < 0.66)
-        return 0.66;
-      return 0.62;
+        return 0.78;
+      return 0.64;
     }
 
 // return whether a parcel is too skinny to read as a normal lot
@@ -937,6 +956,18 @@ class Buildings extends LegacyRoads
       return 2;
     }
 
+// return the minimum pixel size for one building rect side
+  function getMinBuildingPixelSize(): Int
+    {
+      return 4;
+    }
+
+// return whether one building rect is small enough to skip shading passes
+  function isSmallBuildingRect(rect: BuildingRect): Bool
+    {
+      return Math.min(rect.width, rect.height) <= PLAN_CELL_SIZE;
+    }
+
 // return the roof inset for one building rect
   function getBuildingRoofInset(rect: BuildingRect, density: Float): Int
     {
@@ -979,9 +1010,9 @@ class Buildings extends LegacyRoads
             }
 
           var minX = clampInt(Std.int(Math.floor(checkX1 / PLAN_CELL_SIZE)), 0, planWidth - 1);
-          var maxX = clampInt(Std.int(Math.ceil(checkX2 / PLAN_CELL_SIZE)), 0, planWidth - 1);
+          var maxX = clampInt(Std.int(Math.ceil(checkX2 / PLAN_CELL_SIZE)) - 1, 0, planWidth - 1);
           var minY = clampInt(Std.int(Math.floor(checkY1 / PLAN_CELL_SIZE)), 0, planHeight - 1);
-          var maxY = clampInt(Std.int(Math.ceil(checkY2 / PLAN_CELL_SIZE)), 0, planHeight - 1);
+          var maxY = clampInt(Std.int(Math.ceil(checkY2 / PLAN_CELL_SIZE)) - 1, 0, planHeight - 1);
 
           for (yy in minY...maxY + 1)
             for (xx in minX...maxX + 1)

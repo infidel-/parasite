@@ -2,6 +2,7 @@
 
 package map;
 
+import const.WorldConst;
 #if mydebug
 import haxe.ds.StringMap;
 #end
@@ -199,22 +200,114 @@ class RoadPlan extends Raster
       return result;
     }
 
-// return a centered ROAD1 line with deterministic jitter
+// return a centered ROAD1 line shifted away from blocked area cells
   function pickCenteredRoad1Line(horizontal: Bool): Int
     {
       var limit = (horizontal ? planHeight : planWidth);
       var jitter = clampInt(Std.int(limit / 10), 4, PLAN_CELLS_PER_TILE * 2);
-      return clampInt(Std.int(limit / 2) + randomRangeInt(-jitter, jitter),
-        1, limit - 2);
+      return pickRoad1LineAvoidingBlockedAreas(horizontal, jitter, 'road1.primary');
     }
 
-// return a centered ROAD1 branch coordinate with jitter
-  function pickCenteredRoad1Branch(horizontal: Bool): Int
+// return a centered ROAD1 branch coordinate shifted away from blocked area cells
+  function pickCenteredRoad1Branch(primaryHorizontal: Bool): Int
     {
-      var limit = (horizontal ? planWidth : planHeight);
+      var limit = (primaryHorizontal ? planWidth : planHeight);
       var jitter = clampInt(Std.int(limit / 12), 3, PLAN_CELLS_PER_TILE * 2);
-      return clampInt(Std.int(limit / 2) + randomRangeInt(-jitter, jitter),
+      return pickRoad1LineAvoidingBlockedAreas(!primaryHorizontal, jitter, 'road1.branch');
+    }
+
+// return the nearest centered ROAD1 line that avoids blocked area cells when possible
+  function pickRoad1LineAvoidingBlockedAreas(horizontal: Bool, jitter: Int, profileLabel: String): Int
+    {
+      var limit = (horizontal ? planHeight : planWidth);
+      var targetLine = clampInt(Std.int(limit / 2) + randomRangeInt(-jitter, jitter),
         1, limit - 2);
+      var bestLine = targetLine;
+      var bestHitCount = countRoad1BlockedAreaHits(horizontal, targetLine);
+      var bestOffset = 0;
+
+      if (bestHitCount == 0)
+        return targetLine;
+
+      for (offset in 1...limit)
+        {
+          var lowerLine = targetLine - offset;
+          if (lowerLine >= 1)
+            {
+              var lowerHitCount = countRoad1BlockedAreaHits(horizontal, lowerLine);
+              if (lowerHitCount == 0)
+                {
+#if mydebug
+                  addMapProfileCount(profileLabel + '.blockedAreaRerolls');
+                  addMapProfileCount(profileLabel + '.shiftCells', offset);
+#end
+                  return lowerLine;
+                }
+              if (lowerHitCount < bestHitCount ||
+                  (lowerHitCount == bestHitCount &&
+                  offset < bestOffset))
+                {
+                  bestLine = lowerLine;
+                  bestHitCount = lowerHitCount;
+                  bestOffset = offset;
+                }
+            }
+
+          var upperLine = targetLine + offset;
+          if (upperLine <= limit - 2)
+            {
+              var upperHitCount = countRoad1BlockedAreaHits(horizontal, upperLine);
+              if (upperHitCount == 0)
+                {
+#if mydebug
+                  addMapProfileCount(profileLabel + '.blockedAreaRerolls');
+                  addMapProfileCount(profileLabel + '.shiftCells', offset);
+#end
+                  return upperLine;
+                }
+              if (upperHitCount < bestHitCount ||
+                  (upperHitCount == bestHitCount &&
+                  offset < bestOffset))
+                {
+                  bestLine = upperLine;
+                  bestHitCount = upperHitCount;
+                  bestOffset = offset;
+                }
+            }
+        }
+
+#if mydebug
+      addMapProfileCount(profileLabel + '.fallbacks');
+      addMapProfileCount(profileLabel + '.fallbackBlockedAreaCells', bestHitCount);
+#end
+      return bestLine;
+    }
+
+// count how many blocked-area plan cells a 3-cell-wide ROAD1 line would cross
+  function countRoad1BlockedAreaHits(horizontal: Bool, line: Int): Int
+    {
+      var hitCount = 0;
+
+      if (horizontal)
+        {
+          var minY = clampInt(line - 1, 0, planHeight - 1);
+          var maxY = clampInt(line + 1, 0, planHeight - 1);
+
+          for (xx in 0...planWidth)
+            for (yy in minY...maxY + 1)
+              if (WorldConst.blocksRegionRoad1(gridOps.getAreaTypeAtPlanCell(xx, yy)))
+                hitCount++;
+          return hitCount;
+        }
+
+      var minX = clampInt(line - 1, 0, planWidth - 1);
+      var maxX = clampInt(line + 1, 0, planWidth - 1);
+
+      for (yy in 0...planHeight)
+        for (xx in minX...maxX + 1)
+          if (WorldConst.blocksRegionRoad1(gridOps.getAreaTypeAtPlanCell(xx, yy)))
+            hitCount++;
+      return hitCount;
     }
 
 // build the primary ROAD1 walker configuration

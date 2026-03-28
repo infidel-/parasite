@@ -58,6 +58,26 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.rasterizeRoadMasks', phaseStartTS);
 #end
+      blocks = buildBlocks();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.buildBlocks', phaseStartTS);
+#end
+      parcels = buildParcels(blocks);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.buildParcels', phaseStartTS);
+#end
+      buildings = generateBuildings(parcels);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.generateBuildings', phaseStartTS);
+#end
+      paintOpenParcels(parcels);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.paintOpenParcels', phaseStartTS);
+#end
+      paintBuildings();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.paintBuildings', phaseStartTS);
+#end
       paintRoads();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintRoads', phaseStartTS);
@@ -67,6 +87,9 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion', phaseStartTS);
       traceMapProfileSummary('image.summary roads=' + roads.length +
+        ' blocks=' + blocks.length +
+        ' parcels=' + parcels.length +
+        ' buildings=' + buildings.length +
         ' fullPixels=' + fullPixelWidth + 'x' + fullPixelHeight);
       nextMapProfileTimestamp('image.total', totalStartTS);
 #end
