@@ -90,6 +90,65 @@ class RoadPlanThinCoverage
           }
     }
 
+// remove isolated green components that never touch ROAD1 or ROAD2
+  public function pruneOrphanRoad3Components(grid: RoadPlanGrid)
+    {
+      var visited = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
+
+      for (xx in 0...plan.planWidth)
+        for (yy in 0...plan.planHeight)
+          {
+            if (visited[xx][yy] ||
+                !gridOps.hasRoadTypeAtPlanCell(grid, xx, yy, ROAD3))
+              continue;
+
+            var queue: Array<GridPoint> = [{
+              x: xx,
+              y: yy,
+            }];
+            var cells: Array<GridPoint> = [];
+            var index = 0;
+            var touchesOtherRoad = false;
+
+            visited[xx][yy] = true;
+
+            while (index < queue.length)
+              {
+                var point = queue[index++];
+                cells.push(point);
+                if (doesRoad3CellTouchOtherRoad(grid, point.x, point.y))
+                  touchesOtherRoad = true;
+
+                for (dir in 0...4)
+                  {
+                    var nx = point.x + gridOps.getCardinalDX(dir);
+                    var ny = point.y + gridOps.getCardinalDY(dir);
+                    if (!gridOps.isInPlanBounds(nx, ny) ||
+                        visited[nx][ny] ||
+                        !gridOps.hasRoadTypeAtPlanCell(grid, nx, ny, ROAD3) ||
+                        !doRoad3CellsConnect(grid, point.x, point.y, nx, ny))
+                      continue;
+                    visited[nx][ny] = true;
+                    queue.push({
+                      x: nx,
+                      y: ny,
+                    });
+                  }
+              }
+
+            if (touchesOtherRoad)
+              {
+                plan.addMapProfileCount('thin.pruneOrphanRoad3Components.keptComponents');
+                continue;
+              }
+
+            plan.addMapProfileCount('thin.pruneOrphanRoad3Components.removedComponents');
+            plan.addMapProfileCount('thin.pruneOrphanRoad3Components.removedCells', cells.length);
+            for (cell in cells)
+              gridOps.clearThinRoadTypeAtPlanCell(grid, cell.x, cell.y, ROAD3);
+          }
+    }
+
 // add a separate red coverage pass over city tiles after green is settled
   public function ensureCityRoad4Coverage(grid: RoadPlanGrid)
     {
@@ -113,6 +172,30 @@ class RoadPlanThinCoverage
                   targetTypeGroups))
               plan.addMapProfileCount('thin.coverage.ROAD4.success');
           }
+    }
+
+// return whether two neighboring ROAD3 cells share one real edge connection
+  function doRoad3CellsConnect(grid: RoadPlanGrid, fromX: Int, fromY: Int, toX: Int, toY: Int): Bool
+    {
+      return gridOps.hasRoadTypeFacingCell(grid, fromX, fromY, toX, toY, ROAD3) &&
+        gridOps.hasRoadTypeFacingCell(grid, toX, toY, fromX, fromY, ROAD3);
+    }
+
+// return whether one ROAD3 cell touches ROAD1 or ROAD2 across one shared edge
+  function doesRoad3CellTouchOtherRoad(grid: RoadPlanGrid, planX: Int, planY: Int): Bool
+    {
+      for (dir in 0...4)
+        {
+          var nx = planX + gridOps.getCardinalDX(dir);
+          var ny = planY + gridOps.getCardinalDY(dir);
+          if (!gridOps.isInPlanBounds(nx, ny) ||
+              !gridOps.hasRoadTypeFacingCell(grid, planX, planY, nx, ny, ROAD3))
+            continue;
+          if (gridOps.hasRoadTypeFacingCell(grid, nx, ny, planX, planY, ROAD1) ||
+              gridOps.hasRoadTypeFacingCell(grid, nx, ny, planX, planY, ROAD2))
+            return true;
+        }
+      return false;
     }
 
 // add a separate blue coverage pass over city tiles after red is settled

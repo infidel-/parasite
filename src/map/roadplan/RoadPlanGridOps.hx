@@ -456,6 +456,23 @@ class RoadPlanGridOps
         grid.cornerMask[planX][planY] = grid.cornerMask[planX][planY] | mask;
     }
 
+// clear one thin-road tier from one plan cell without touching stronger tiers
+  public function clearThinRoadTypeAtPlanCell(grid: RoadPlanGrid, planX: Int, planY: Int,
+      type: RoadType)
+    {
+      var order = plan.getRoadTypeOrder(type);
+
+      if (grid.horizontal[planX][planY] == order)
+        grid.horizontal[planX][planY] = -1;
+      if (grid.vertical[planX][planY] == order)
+        grid.vertical[planX][planY] = -1;
+      if (grid.cornerOrder[planX][planY] == order)
+        {
+          grid.cornerOrder[planX][planY] = -1;
+          grid.cornerMask[planX][planY] = 0;
+        }
+    }
+
 // add one orthogonal path to the plan grid using axis and corner cells
   public function addRoadPlanPath(grid: RoadPlanGrid, path: Array<GridPoint>, type: RoadType)
     {

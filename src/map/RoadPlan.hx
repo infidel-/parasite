@@ -178,6 +178,10 @@ class RoadPlan extends Raster
 #if mydebug
           phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad3Coverage', phaseStartTS);
 #end
+          thinCoverage.pruneOrphanRoad3Components(grid);
+#if mydebug
+          phaseStartTS = nextMapProfileTimestamp('road.pruneOrphanRoad3Components', phaseStartTS);
+#end
         }
       thinCoverage.ensureCityRoad4Coverage(grid);
 #if mydebug
