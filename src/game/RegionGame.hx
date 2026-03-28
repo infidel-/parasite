@@ -261,15 +261,16 @@ class RegionGame extends _SaveObject
             var t: _AreaType = AREA_GROUND;
             if (tmp[x][y] == 1)
               t = AREA_CITY_LOW;
-            else if (tmp[x][y] == 2)
+            else if (tmp[x][y] >= 2)
               t = AREA_CITY_MEDIUM;
-            else if (tmp[x][y] == 3)
-              t = AREA_CITY_HIGH;
 
             var a = new AreaGame(game, this, t, x, y);
             _list.set(a.id, a);
             _array[x][y] = a;
           }
+
+      // stamp a few connected downtown pockets over the city core
+      addDowntownClusters();
 
       // add high crime city sections
       addHighCrime();
@@ -295,6 +296,139 @@ class RegionGame extends _SaveObject
         }
 
       ensureHighCityArea();
+    }
+
+// add a few small connected downtown clusters
+  function addDowntownClusters()
+    {
+      var targetClusters = 2 + Std.random(2);
+      var centers = [];
+
+      for (_ in 0...targetClusters)
+        {
+          var seed = pickDowntownSeed(centers);
+          if (seed == null)
+            break;
+
+          stampDowntownCluster(seed, 3 + Std.random(5));
+          centers.push(seed);
+        }
+
+      if (countAreasByType(AREA_CITY_HIGH) == 0)
+        ensureHighCityArea();
+    }
+
+// pick one city seed for a downtown cluster
+  function pickDowntownSeed(existingCenters: Array<AreaGame>): AreaGame
+    {
+      var candidates = collectDowntownSeeds(existingCenters, true, AREA_CITY_MEDIUM);
+      if (candidates.length == 0)
+        candidates = collectDowntownSeeds(existingCenters, true, AREA_CITY_LOW);
+      if (candidates.length == 0)
+        candidates = collectDowntownSeeds(existingCenters, false, AREA_CITY_MEDIUM);
+      if (candidates.length == 0)
+        candidates = collectDowntownSeeds(existingCenters, false, AREA_CITY_LOW);
+      if (candidates.length == 0)
+        return null;
+      return candidates[Std.random(candidates.length)];
+    }
+
+// collect valid downtown seed candidates
+  function collectDowntownSeeds(existingCenters: Array<AreaGame>,
+      centralOnly: Bool, type: _AreaType): Array<AreaGame>
+    {
+      var seeds = [];
+      var minX = Std.int(width / 4);
+      var maxX = width - minX;
+      var minY = Std.int(height / 4);
+      var maxY = height - minY;
+
+      for (area in _list)
+        {
+          if (area.typeID != type)
+            continue;
+          if (centralOnly &&
+              (area.x < minX ||
+              area.x >= maxX ||
+              area.y < minY ||
+              area.y >= maxY))
+            continue;
+          if (!isDowntownSeedFarEnough(area, existingCenters))
+            continue;
+          seeds.push(area);
+        }
+
+      return seeds;
+    }
+
+// return whether one downtown seed is far enough from existing clusters
+  function isDowntownSeedFarEnough(area: AreaGame, existingCenters: Array<AreaGame>): Bool
+    {
+      for (center in existingCenters)
+        if (Const.distanceSquared(area.x, area.y, center.x, center.y) < 16)
+          return false;
+      return true;
+    }
+
+// grow one connected downtown cluster from one seed
+  function stampDowntownCluster(seed: AreaGame, targetSize: Int)
+    {
+      var cluster = [ seed ];
+      var frontier = [ seed ];
+      var used: Map<Int, Bool> = [ seed.id => true ];
+
+      while (cluster.length < targetSize &&
+          frontier.length > 0)
+        {
+          var frontierIndex = Std.random(frontier.length);
+          var base = frontier[frontierIndex];
+          var candidates = [];
+
+          for (dir in 0...4)
+            {
+              var xx = base.x;
+              var yy = base.y;
+              switch (dir)
+                {
+                  case 0: xx--;
+                  case 1: xx++;
+                  case 2: yy--;
+                  case 3: yy++;
+                }
+
+              var neighbor = getXY(xx, yy);
+              if (neighbor == null ||
+                  used[neighbor.id] == true ||
+                  !canUseDowntownClusterArea(neighbor))
+                continue;
+              candidates.push(neighbor);
+            }
+
+          if (candidates.length == 0)
+            {
+              frontier.splice(frontierIndex, 1);
+              continue;
+            }
+
+          var next = candidates[Std.random(candidates.length)];
+          used[next.id] = true;
+          cluster.push(next);
+          frontier.push(next);
+        }
+
+      for (area in cluster)
+        {
+          area.typeID = AREA_CITY_HIGH;
+          area.updateType();
+        }
+    }
+
+// return whether one area may join a downtown cluster
+  inline function canUseDowntownClusterArea(area: AreaGame): Bool
+    {
+      return area.typeID == AREA_CITY_LOW ||
+        area.typeID == AREA_CITY_MEDIUM ||
+        area.typeID == AREA_CITY_HIGH;
     }
 
 // count areas with this type

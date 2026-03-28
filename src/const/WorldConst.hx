@@ -106,7 +106,7 @@ class WorldConst
         id: AREA_CITY_HIGH,
         ambient: AMBIENT_CITY,
         type: 'city',
-        name: 'High-density city area',
+        name: 'Downtown district',
         pediaArticle: 'areaCity',
         exit: 'sewer_hatch',
         alertnessMod: 1.25,

@@ -279,7 +279,7 @@ Hold Ctrl + hover over AI - show AI tooltip with known info<br>",
           id: 'areaCity',
           name: 'City Area',
           img: 'pedia/area_city',
-          text: "The city is divided into three distinct area types based on density: low, medium, and high. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. High-density areas are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering the high density area will give the parasite an idea...",
+          text: "The city is divided into three distinct area types based on density: low, medium, and downtown. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. Downtown districts are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering downtown will give the parasite an idea...",
         },
         {
           id: 'areaHighCrime',
