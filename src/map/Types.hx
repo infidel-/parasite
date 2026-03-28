@@ -67,7 +67,7 @@ typedef RoadWalker = {
   groundBlockCount: Int,
   localStopCount: Int,
   tSplitCountdown: Int,
-  canSpawnRoad4Crossings: Bool,
+  canSpawnThinCrossings: Bool,
   startDirectionMask: Int,
   road2ID: Int,
   type: RoadType,

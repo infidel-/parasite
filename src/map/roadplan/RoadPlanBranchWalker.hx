@@ -29,7 +29,7 @@ class RoadPlanBranchWalker
 
 // build one thin-road walker config from one start and direction
   public function makeThinRoadWalker(startX: Int, startY: Int, dx: Int, dy: Int, type: RoadType,
-      tSplitCountdown: Int = -1, canSpawnRoad4Crossings: Bool = false,
+      tSplitCountdown: Int = -1, canSpawnThinCrossings: Bool = false,
       startDirectionMask: Int = 0): RoadWalker
     {
       return {
@@ -46,7 +46,7 @@ class RoadPlanBranchWalker
         groundBlockCount: 0,
         localStopCount: getThinRoadLocalStopStart(type),
         tSplitCountdown: tSplitCountdown,
-        canSpawnRoad4Crossings: canSpawnRoad4Crossings,
+        canSpawnThinCrossings: canSpawnThinCrossings,
         startDirectionMask: startDirectionMask,
         road2ID: -1,
         type: type,
@@ -175,7 +175,7 @@ class RoadPlanBranchWalker
         groundBlockCount: 0,
         localStopCount: -1,
         tSplitCountdown: -1,
-        canSpawnRoad4Crossings: false,
+        canSpawnThinCrossings: false,
         startDirectionMask: 0,
         road2ID: road2ID,
         type: ROAD2,
@@ -359,8 +359,8 @@ class RoadPlanBranchWalker
                 }
             }
 
-          if (shouldSpawnRoad4Crossing(walker, nextArea))
-            trySpawnRoad4Crossing(grid, walker);
+          if (shouldSpawnThinCrossing(walker, nextArea))
+            trySpawnThinCrossing(grid, walker);
 
           if (walker.stopLockSteps > 0)
             {
@@ -484,7 +484,7 @@ class RoadPlanBranchWalker
             groundBlockCount: 0,
             localStopCount: -1,
             tSplitCountdown: -1,
-            canSpawnRoad4Crossings: false,
+            canSpawnThinCrossings: false,
             startDirectionMask: 0,
             road2ID: walker.road2ID,
             type: ROAD2,
@@ -516,31 +516,33 @@ class RoadPlanBranchWalker
         walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, rightDx, rightDy, ROAD3));
     }
 
-// return whether one parent ROAD4 walker should try spawning a crossing this step
-  function shouldSpawnRoad4Crossing(walker: RoadWalker, nextArea: _AreaType): Bool
+// return whether one parent thin-road walker should try spawning a crossing this step
+  function shouldSpawnThinCrossing(walker: RoadWalker, nextArea: _AreaType): Bool
     {
-      return walker.type == ROAD4 &&
-        walker.canSpawnRoad4Crossings &&
+      return (walker.type == ROAD4 ||
+        walker.type == ROAD5) &&
+        walker.canSpawnThinCrossings &&
         plan.isCityAreaType(nextArea) &&
         walker.stepsSinceTurn > 0 &&
-        walker.stepsSinceTurn % plan.ROAD4_CROSSING_INTERVAL == 0;
+        walker.stepsSinceTurn % plan.THIN_CROSSING_INTERVAL == 0;
     }
 
-// try spawning one ROAD4 crossing branch from the current parent road
-  function trySpawnRoad4Crossing(grid: RoadPlanGrid, walker: RoadWalker): Bool
+// try spawning one thin crossing branch from the current parent road
+  function trySpawnThinCrossing(grid: RoadPlanGrid, walker: RoadWalker): Bool
     {
+      var counterBase = 'branch.walkBranchRoad.' + Std.string(walker.type);
       var roll = plan.rng.nextFloat();
-      if (roll >= plan.ROAD4_CROSSING_RIGHT_CHANCE + plan.ROAD4_CROSSING_LEFT_CHANCE)
+      if (roll >= plan.THIN_CROSSING_RIGHT_CHANCE + plan.THIN_CROSSING_LEFT_CHANCE)
         return false;
 
       var dx = 0;
       var dy = 0;
-      if (roll < plan.ROAD4_CROSSING_RIGHT_CHANCE)
+      if (roll < plan.THIN_CROSSING_RIGHT_CHANCE)
         {
           dx = -walker.dy;
           dy = walker.dx;
 #if mydebug
-          plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingRoll.right');
+          plan.addMapProfileCount(counterBase + '.crossingRoll.right');
 #end
         }
       else
@@ -548,22 +550,22 @@ class RoadPlanBranchWalker
           dx = walker.dy;
           dy = -walker.dx;
 #if mydebug
-          plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingRoll.left');
+          plan.addMapProfileCount(counterBase + '.crossingRoll.left');
 #end
         }
 
       if (!canUseBranchRoadStart(grid, walker.x, walker.y, dx, dy, true))
         {
 #if mydebug
-          plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingBlocked');
+          plan.addMapProfileCount(counterBase + '.crossingBlocked');
 #end
           return false;
         }
 
-      walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, dx, dy, ROAD4, -1, false,
+      walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, dx, dy, walker.type, -1, false,
         gridOps.getRoadDirectionMask(dx, dy)));
 #if mydebug
-      plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingSpawned');
+      plan.addMapProfileCount(counterBase + '.crossingSpawned');
 #end
       return true;
     }
