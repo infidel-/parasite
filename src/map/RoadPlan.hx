@@ -329,6 +329,8 @@ class RoadPlan extends Raster
             groundBlockCount: 0,
             localStopCount: -1,
             tSplitCountdown: -1,
+            canSpawnRoad4Crossings: false,
+            startDirectionMask: 0,
             road2ID: -1,
             type: ROAD1,
           };
@@ -348,6 +350,8 @@ class RoadPlan extends Raster
         groundBlockCount: 0,
         localStopCount: -1,
         tSplitCountdown: -1,
+        canSpawnRoad4Crossings: false,
+        startDirectionMask: 0,
         road2ID: -1,
         type: ROAD1,
       };
@@ -374,6 +378,8 @@ class RoadPlan extends Raster
             groundBlockCount: 0,
             localStopCount: -1,
             tSplitCountdown: -1,
+            canSpawnRoad4Crossings: false,
+            startDirectionMask: 0,
             road2ID: -1,
             type: ROAD1,
           };
@@ -395,6 +401,8 @@ class RoadPlan extends Raster
         groundBlockCount: 0,
         localStopCount: -1,
         tSplitCountdown: -1,
+        canSpawnRoad4Crossings: false,
+        startDirectionMask: 0,
         road2ID: -1,
         type: ROAD1,
       };
@@ -417,6 +425,8 @@ class RoadPlan extends Raster
         groundBlockCount: walker.groundBlockCount,
         localStopCount: walker.localStopCount,
         tSplitCountdown: walker.tSplitCountdown,
+        canSpawnRoad4Crossings: walker.canSpawnRoad4Crossings,
+        startDirectionMask: walker.startDirectionMask,
         road2ID: walker.road2ID,
         type: walker.type,
       };

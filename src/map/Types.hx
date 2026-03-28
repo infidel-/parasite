@@ -36,6 +36,7 @@ typedef RoadMasks = {
   color: Array<Array<Int>>,
   paintSpan: Array<Array<Int>>,
   axis: Array<Array<Int>>,
+  directionMask: Array<Array<Int>>,
   priority: Array<Array<Int>>,
 }
 
@@ -66,6 +67,8 @@ typedef RoadWalker = {
   groundBlockCount: Int,
   localStopCount: Int,
   tSplitCountdown: Int,
+  canSpawnRoad4Crossings: Bool,
+  startDirectionMask: Int,
   road2ID: Int,
   type: RoadType,
 }

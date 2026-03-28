@@ -438,6 +438,24 @@ class RoadPlanGridOps
         grid.cornerMask[planX][planY] = grid.cornerMask[planX][planY] | mask;
     }
 
+// add one directional half-arm mask on an existing road cell
+  public function addRoadPlanDirectionMask(grid: RoadPlanGrid, planX: Int, planY: Int,
+      mask: Int, type: RoadType)
+    {
+      var order = plan.getRoadTypeOrder(type);
+      var current = grid.cornerOrder[planX][planY];
+
+      if (current < 0 ||
+          order < current)
+        {
+          grid.cornerOrder[planX][planY] = order;
+          grid.cornerMask[planX][planY] = mask;
+          return;
+        }
+      if (current == order)
+        grid.cornerMask[planX][planY] = grid.cornerMask[planX][planY] | mask;
+    }
+
 // add one orthogonal path to the plan grid using axis and corner cells
   public function addRoadPlanPath(grid: RoadPlanGrid, path: Array<GridPoint>, type: RoadType)
     {

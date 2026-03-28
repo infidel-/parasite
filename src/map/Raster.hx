@@ -46,6 +46,7 @@ class Raster extends Ground
         color: makeIntGrid(planWidth, planHeight),
         paintSpan: makeIntGrid(planWidth, planHeight),
         axis: makeIntGrid(planWidth, planHeight),
+        directionMask: makeIntGrid(planWidth, planHeight),
         priority: makeIntGrid(planWidth, planHeight),
       };
 
@@ -100,12 +101,14 @@ class Raster extends Ground
                 style.priority >= masks.priority[xx][yy])
               {
                 var axisFlag = (road.y1 == road.y2 ? 1 : 2);
+                var directionMask = getRoadSegmentDirectionMaskForCell(road, xx, yy);
                 if (style.priority > masks.priority[xx][yy])
                   {
                     masks.priority[xx][yy] = style.priority;
                     masks.color[xx][yy] = style.color;
                     masks.paintSpan[xx][yy] = getRoadPaintSpan(road.type);
                     masks.axis[xx][yy] = axisFlag;
+                    masks.directionMask[xx][yy] = directionMask;
                   }
                 else
                   {
@@ -113,9 +116,39 @@ class Raster extends Ground
                     masks.paintSpan[xx][yy] = Std.int(Math.max(masks.paintSpan[xx][yy],
                       getRoadPaintSpan(road.type)));
                     masks.axis[xx][yy] = masks.axis[xx][yy] | axisFlag;
+                    masks.directionMask[xx][yy] = masks.directionMask[xx][yy] | directionMask;
                   }
               }
           }
+    }
+
+// return which sides of one plan cell are touched by one orthogonal segment
+  function getRoadSegmentDirectionMaskForCell(road: RoadSegment, xx: Int, yy: Int): Int
+    {
+      var cellX = xx * PLAN_CELL_SIZE;
+      var cellY = yy * PLAN_CELL_SIZE;
+      var centerX = cellX + Std.int(PLAN_CELL_SIZE / 2);
+      var centerY = cellY + Std.int(PLAN_CELL_SIZE / 2);
+      var mask = 0;
+
+      if (road.y1 == road.y2)
+        {
+          var minX = Std.int(Math.min(road.x1, road.x2));
+          var maxX = Std.int(Math.max(road.x1, road.x2));
+          if (minX < centerX)
+            mask = mask | 1;
+          if (maxX > centerX)
+            mask = mask | 2;
+          return mask;
+        }
+
+      var minY = Std.int(Math.min(road.y1, road.y2));
+      var maxY = Std.int(Math.max(road.y1, road.y2));
+      if (minY < centerY)
+        mask = mask | 4;
+      if (maxY > centerY)
+        mask = mask | 8;
+      return mask;
     }
 
 // paint the rasterized road layers
@@ -220,24 +253,41 @@ class Raster extends Ground
       var right = hasRoadPaintFacingCell(xx + 1, yy, -1, 0);
       var up = hasRoadPaintFacingCell(xx, yy - 1, 0, 1);
       var down = hasRoadPaintFacingCell(xx, yy + 1, 0, -1);
+      var directionMask = roadMasks.directionMask[xx][yy];
       var mid = offset + Std.int(Math.ceil(paintSpan / 2.0));
 
-// paint the current cell core along its stored axis
+// paint the current cell core
       ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
       if ((axis & 1) != 0)
-        ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+        {
+          var paintLeft = (directionMask & 1) != 0 || left;
+          var paintRight = (directionMask & 2) != 0 || right;
+          if (paintLeft ||
+              paintRight)
+            {
+              if (paintLeft)
+                ctx.fillRect(cellX, cellY + offset, mid, paintSpan);
+              if (paintRight)
+                ctx.fillRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset, paintSpan);
+            }
+          else
+            ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+        }
       if ((axis & 2) != 0)
-        ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
-
-// extend caps to any facing neighbor so thin tiers visually meet
-      if (left)
-        ctx.fillRect(cellX, cellY + offset, mid, paintSpan);
-      if (right)
-        ctx.fillRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset, paintSpan);
-      if (up)
-        ctx.fillRect(cellX + offset, cellY, paintSpan, mid);
-      if (down)
-        ctx.fillRect(cellX + offset, cellY + offset, paintSpan, PLAN_CELL_SIZE - offset);
+        {
+          var paintUp = (directionMask & 4) != 0 || up;
+          var paintDown = (directionMask & 8) != 0 || down;
+          if (paintUp ||
+              paintDown)
+            {
+              if (paintUp)
+                ctx.fillRect(cellX + offset, cellY, paintSpan, mid);
+              if (paintDown)
+                ctx.fillRect(cellX + offset, cellY + offset, paintSpan, PLAN_CELL_SIZE - offset);
+            }
+          else
+            ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+        }
     }
 
 // return whether one nearby cell carries a matching color and axis

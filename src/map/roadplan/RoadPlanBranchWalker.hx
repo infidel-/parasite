@@ -29,7 +29,8 @@ class RoadPlanBranchWalker
 
 // build one thin-road walker config from one start and direction
   public function makeThinRoadWalker(startX: Int, startY: Int, dx: Int, dy: Int, type: RoadType,
-      tSplitCountdown: Int = -1): RoadWalker
+      tSplitCountdown: Int = -1, canSpawnRoad4Crossings: Bool = false,
+      startDirectionMask: Int = 0): RoadWalker
     {
       return {
         x: startX,
@@ -45,6 +46,8 @@ class RoadPlanBranchWalker
         groundBlockCount: 0,
         localStopCount: getThinRoadLocalStopStart(type),
         tSplitCountdown: tSplitCountdown,
+        canSpawnRoad4Crossings: canSpawnRoad4Crossings,
+        startDirectionMask: startDirectionMask,
         road2ID: -1,
         type: type,
       };
@@ -172,6 +175,8 @@ class RoadPlanBranchWalker
         groundBlockCount: 0,
         localStopCount: -1,
         tSplitCountdown: -1,
+        canSpawnRoad4Crossings: false,
+        startDirectionMask: 0,
         road2ID: road2ID,
         type: ROAD2,
       });
@@ -268,6 +273,9 @@ class RoadPlanBranchWalker
           gridOps.addRoad2PlanStamp(grid, walker.x, walker.y, walker.road2ID,
             gridOps.getRoadAxisMask(walker.dx, walker.dy));
         }
+      else if (walker.startDirectionMask != 0)
+        gridOps.addRoadPlanDirectionMask(grid, walker.x, walker.y,
+          walker.startDirectionMask, walker.type);
       else
         gridOps.addRoadPlanAxis(grid, walker.x, walker.y, walker.dx, walker.dy, walker.type);
       while (true)
@@ -350,6 +358,9 @@ class RoadPlanBranchWalker
                   return;
                 }
             }
+
+          if (shouldSpawnRoad4Crossing(walker, nextArea))
+            trySpawnRoad4Crossing(grid, walker);
 
           if (walker.stopLockSteps > 0)
             {
@@ -473,6 +484,8 @@ class RoadPlanBranchWalker
             groundBlockCount: 0,
             localStopCount: -1,
             tSplitCountdown: -1,
+            canSpawnRoad4Crossings: false,
+            startDirectionMask: 0,
             road2ID: walker.road2ID,
             type: ROAD2,
           });
@@ -501,6 +514,58 @@ class RoadPlanBranchWalker
         walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, leftDx, leftDy, ROAD3));
       if (canUseBranchRoadStart(grid, walker.x, walker.y, rightDx, rightDy, true))
         walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, rightDx, rightDy, ROAD3));
+    }
+
+// return whether one parent ROAD4 walker should try spawning a crossing this step
+  function shouldSpawnRoad4Crossing(walker: RoadWalker, nextArea: _AreaType): Bool
+    {
+      return walker.type == ROAD4 &&
+        walker.canSpawnRoad4Crossings &&
+        plan.isCityAreaType(nextArea) &&
+        walker.stepsSinceTurn > 0 &&
+        walker.stepsSinceTurn % plan.ROAD4_CROSSING_INTERVAL == 0;
+    }
+
+// try spawning one ROAD4 crossing branch from the current parent road
+  function trySpawnRoad4Crossing(grid: RoadPlanGrid, walker: RoadWalker): Bool
+    {
+      var roll = plan.rng.nextFloat();
+      if (roll >= plan.ROAD4_CROSSING_RIGHT_CHANCE + plan.ROAD4_CROSSING_LEFT_CHANCE)
+        return false;
+
+      var dx = 0;
+      var dy = 0;
+      if (roll < plan.ROAD4_CROSSING_RIGHT_CHANCE)
+        {
+          dx = -walker.dy;
+          dy = walker.dx;
+#if mydebug
+          plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingRoll.right');
+#end
+        }
+      else
+        {
+          dx = walker.dy;
+          dy = -walker.dx;
+#if mydebug
+          plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingRoll.left');
+#end
+        }
+
+      if (!canUseBranchRoadStart(grid, walker.x, walker.y, dx, dy, true))
+        {
+#if mydebug
+          plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingBlocked');
+#end
+          return false;
+        }
+
+      walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, dx, dy, ROAD4, -1, false,
+        gridOps.getRoadDirectionMask(dx, dy)));
+#if mydebug
+      plan.addMapProfileCount('branch.walkBranchRoad.ROAD4.crossingSpawned');
+#end
+      return true;
     }
 
 // return whether one non-ROAD2 branch can start and move one step

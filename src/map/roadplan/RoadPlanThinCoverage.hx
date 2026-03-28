@@ -160,7 +160,8 @@ class RoadPlanThinCoverage
         return true;
 
       branchWalker.walkBranchRoad(grid, branchWalker.makeThinRoadWalker(start.x, start.y,
-        start.dx, start.dy, type, (type == ROAD3 ? plan.ROAD3_T_SPLIT_STEPS : -1)));
+        start.dx, start.dy, type, (type == ROAD3 ? plan.ROAD3_T_SPLIT_STEPS : -1),
+        type == ROAD4));
       return true;
     }
 
@@ -343,7 +344,7 @@ class RoadPlanThinCoverage
         return true;
 
       branchWalker.walkBranchRoad(grid, branchWalker.makeThinRoadWalker(startX, startY,
-        dx, dy, type));
+        dx, dy, type, -1, type == ROAD4));
       return true;
     }
 
