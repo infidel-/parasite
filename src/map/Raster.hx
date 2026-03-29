@@ -399,33 +399,7 @@ class Raster extends Ground
 
   function getRoadPaintColor(xx: Int, yy: Int): Int
     {
-      var color = roadMasks.color[xx][yy];
-      if (color == 0)
-        color = COLOR_ROAD2;
-      var core = roadMasks.core[xx][yy];
-      var shoulder = roadMasks.shoulder[xx][yy];
-      var feather = roadMasks.feather[xx][yy];
-      var variation = 0.92 + hashFloat(xx, yy, 307) * 0.14;
-      var result = adjustColor(color, variation);
-
-      if (shoulder > core)
-        {
-          var shoulderMix = clampFloat((shoulder - core) * 0.70, 0.0, 0.32);
-          result = lerpColor(result, adjustColor(color, 1.10), shoulderMix);
-        }
-
-      if (core > 0.0)
-        {
-          var coreMix = clampFloat(core * 0.14 + hashFloat(xx, yy, 313) * 0.05, 0.0, 0.24);
-          result = lerpColor(result, adjustColor(color, 0.88), coreMix);
-        }
-      else if (feather > 0.0)
-        {
-          var featherMix = clampFloat(feather * 0.16, 0.0, 0.18);
-          result = lerpColor(result, adjustColor(color, 1.12), featherMix);
-        }
-
-      return result;
+      return COLOR_ROAD1;
     }
 
 // return the distance from a point to an axis-aligned road segment

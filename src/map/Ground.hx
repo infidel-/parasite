@@ -55,30 +55,21 @@ class Ground extends Core
 // paint the continuous density-based ground field
   function paintGround()
     {
-      for (yy in 0...fullCellHeight)
-        for (xx in 0...fullCellWidth)
-          {
-            var tileX = xx * CLEAN_TILE_SIZE;
-            var tileY = yy * CLEAN_TILE_SIZE;
-            var areaType = areaTypes[xx][yy];
-            var baseColor = switch (areaType) {
-              case AREA_CITY_LOW: 0x56575d;
-              case AREA_CITY_MEDIUM: 0x676871;
-              case AREA_CITY_HIGH: 0x787a84;
-              default: ((xx + yy) % 2 == 0 ? 0x3b1414 : 0x341111);
-            };
-            var borderColor = switch (areaType) {
-              case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH: 0x25262b;
-              default: 0x1f0808;
-            };
+      var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
+      var data = imageData.data;
+      var index = 0;
 
-            ctx.fillStyle = '#' + StringTools.hex(baseColor, 6);
-            ctx.fillRect(tileX, tileY, CLEAN_TILE_SIZE, CLEAN_TILE_SIZE);
- 
-            ctx.fillStyle = '#' + StringTools.hex(borderColor, 6);
-            ctx.fillRect(tileX, tileY, CLEAN_TILE_SIZE, 1);
-            ctx.fillRect(tileX, tileY, 1, CLEAN_TILE_SIZE);
+      for (py in 0...fullPixelHeight)
+        for (px in 0...fullPixelWidth)
+          {
+            var color = getColorForDensity(sampleDensityAtPixel(px, py));
+            data[index++] = (color >> 16) & 0xFF;
+            data[index++] = (color >> 8) & 0xFF;
+            data[index++] = color & 0xFF;
+            data[index++] = 0xFF;
           }
+
+      ctx.putImageData(imageData, 0, 0);
     }
 
   function sampleDensityAtPixel(px: Int, py: Int): Float
