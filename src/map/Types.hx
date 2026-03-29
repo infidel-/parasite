@@ -200,20 +200,22 @@ typedef BuildingRect = {
 }
 
 typedef BuildingFootprint = {
-  rects: Array<BuildingRect>,
-  color: Int,
-  density: Float,
-  lotX: Int,
-  lotY: Int,
-  lotWidth: Int,
-  lotHeight: Int,
-  forecourtColor: Int,
-  forecourtAlpha: Float,
-  roofColor: Int,
-  roofAlpha: Float,
-  edgeAlpha: Float,
-  shadowOffset: Int,
-  shadowAlpha: Float,
+  var rects: Array<BuildingRect>;
+  @:optional var rooftopRectCount: Int;
+  var color: Int;
+  @:optional var rooftopColor: Int;
+  var density: Float;
+  var lotX: Int;
+  var lotY: Int;
+  var lotWidth: Int;
+  var lotHeight: Int;
+  var forecourtColor: Int;
+  var forecourtAlpha: Float;
+  var roofColor: Int;
+  var roofAlpha: Float;
+  var edgeAlpha: Float;
+  var shadowOffset: Int;
+  var shadowAlpha: Float;
 }
 
 enum BuildingShapeType

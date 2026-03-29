@@ -595,7 +595,9 @@ class Buildings extends LegacyRoads
           if (!footprintHasMinimumRectSize(footprint))
             footprint = null;
         }
+      addRectBuildingRooftopStructure(footprint, sizingDensity);
       if (footprint == null ||
+          !footprintHasMinimumRectSize(footprint) ||
           footprintTouchesRoad(footprint))
         return null;
 
@@ -606,10 +608,13 @@ class Buildings extends LegacyRoads
         forecourtAlpha = 0.0;
 
       var color = pickBuildingColor(parcel.density);
+      var rooftopRectCount = getRooftopRectCount(footprint);
 
       return {
         rects: footprint,
+        rooftopRectCount: rooftopRectCount,
         color: color,
+        rooftopColor: getBuildingRooftopColor(color, parcel.density),
         density: parcel.density,
         lotX: innerX,
         lotY: innerY,
@@ -767,6 +772,96 @@ class Buildings extends LegacyRoads
         y: by,
         width: bw,
         height: bh,
+      };
+    }
+
+// add one smaller rooftop structure on top of one large rectangular building
+  function addRectBuildingRooftopStructure(footprint: Array<BuildingRect>, density: Float)
+    {
+      if (footprint == null ||
+          footprint.length != 1)
+        return;
+
+      var baseRect = footprint[0];
+      if (baseRect.width <= 40 ||
+          baseRect.height <= 40)
+        return;
+
+      var hostRect = getRooftopStructureHostRect(baseRect);
+      var minRatio = 0.36;
+      var maxRatio = 0.54;
+      if (density >= 0.66)
+        {
+          minRatio = 0.44;
+          maxRatio = 0.62;
+        }
+      else if (density >= 0.33)
+        {
+          minRatio = 0.40;
+          maxRatio = 0.58;
+        }
+
+      var rooftopRect = generatePlacedBuildingRect(hostRect.x, hostRect.y,
+        hostRect.width, hostRect.height, minRatio, maxRatio, true);
+      if (rooftopRect.width >= baseRect.width ||
+          rooftopRect.height >= baseRect.height)
+        return;
+
+      footprint.push(rooftopRect);
+    }
+
+// return the host rect used for one rooftop structure
+  function getRooftopStructureHostRect(baseRect: BuildingRect): BuildingRect
+    {
+      var useSplitPlacement = baseRect.width < 100 &&
+        baseRect.height < 100 &&
+        rng.nextFloat() < 0.5;
+      if (!useSplitPlacement)
+        return baseRect;
+
+      var splitVertical = baseRect.width > baseRect.height;
+      if (baseRect.width == baseRect.height)
+        splitVertical = rng.nextFloat() < 0.5;
+
+      if (splitVertical)
+        {
+          var leftWidth = Std.int(baseRect.width / 2);
+          var useRightHalf = rng.nextFloat() < 0.5;
+          if (useRightHalf)
+            {
+              return {
+                x: baseRect.x + leftWidth,
+                y: baseRect.y,
+                width: baseRect.width - leftWidth,
+                height: baseRect.height,
+              };
+            }
+
+          return {
+            x: baseRect.x,
+            y: baseRect.y,
+            width: leftWidth,
+            height: baseRect.height,
+          };
+        }
+
+      var topHeight = Std.int(baseRect.height / 2);
+      var useBottomHalf = rng.nextFloat() < 0.5;
+      if (useBottomHalf)
+        {
+          return {
+            x: baseRect.x,
+            y: baseRect.y + topHeight,
+            width: baseRect.width,
+            height: baseRect.height - topHeight,
+          };
+        }
+
+      return {
+        x: baseRect.x,
+        y: baseRect.y,
+        width: baseRect.width,
+        height: topHeight,
       };
     }
 
@@ -932,43 +1027,84 @@ class Buildings extends LegacyRoads
 // paint one building footprint with a soft edge and shadow
   function paintBuilding(building: BuildingFootprint)
     {
+      var rooftopRectCount = getBuildingRooftopRectCount(building);
+      var baseRectCount = getBuildingBaseRectCount(building);
+      var rooftopColor = getBuildingPaintRooftopColor(building);
       var shadowColor = adjustColor(COLOR_BUILDING_SHADOW, 0.96 + building.density * 0.08);
       var highlightColor = adjustColor(building.roofColor, 1.07);
       var shadeColor = adjustColor(building.color, 0.76);
+      var rooftopRoofColor = adjustColor(building.roofColor, 1.04);
+      var rooftopHighlightColor = adjustColor(building.roofColor, 1.10);
+      var rooftopShadeColor = adjustColor(rooftopColor, 0.80);
 
       if (building.forecourtAlpha > 0.0)
         paintBuildingForecourt(building);
 
       ctx.fillStyle = '#' + StringTools.hex(building.color, 6);
       ctx.globalAlpha = building.edgeAlpha;
-      for (rect in building.rects)
+      for (i in 0...baseRectCount)
         {
+          var rect = building.rects[i];
           if (isSmallBuildingRect(rect))
             continue;
           ctx.fillRect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4);
         }
+      if (rooftopRectCount > 0)
+        {
+          ctx.fillStyle = '#' + StringTools.hex(rooftopColor, 6);
+          for (i in baseRectCount...building.rects.length)
+            {
+              var rect = building.rects[i];
+              if (isSmallBuildingRect(rect))
+                continue;
+              ctx.fillRect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4);
+            }
+        }
 
       ctx.fillStyle = '#' + StringTools.hex(shadowColor, 6);
       ctx.globalAlpha = building.shadowAlpha;
-      for (rect in building.rects)
+      for (i in 0...baseRectCount)
         {
+          var rect = building.rects[i];
           if (isSmallBuildingRect(rect))
             continue;
           ctx.fillRect(rect.x + building.shadowOffset, rect.y + building.shadowOffset,
             rect.width, rect.height);
         }
+      if (rooftopRectCount > 0)
+        {
+          for (i in baseRectCount...building.rects.length)
+            {
+              var rect = building.rects[i];
+              if (isSmallBuildingRect(rect))
+                continue;
+              ctx.fillRect(rect.x + building.shadowOffset, rect.y + building.shadowOffset,
+                rect.width, rect.height);
+            }
+        }
 
       ctx.fillStyle = '#' + StringTools.hex(building.color, 6);
       ctx.globalAlpha = 1.0;
-      for (rect in building.rects)
+      for (i in 0...baseRectCount)
         {
+          var rect = building.rects[i];
           ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
+      if (rooftopRectCount > 0)
+        {
+          ctx.fillStyle = '#' + StringTools.hex(rooftopColor, 6);
+          for (i in baseRectCount...building.rects.length)
+            {
+              var rect = building.rects[i];
+              ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+            }
         }
 
       ctx.fillStyle = '#' + StringTools.hex(building.roofColor, 6);
       ctx.globalAlpha = building.roofAlpha;
-      for (rect in building.rects)
+      for (i in 0...baseRectCount)
         {
+          var rect = building.rects[i];
           if (isSmallBuildingRect(rect))
             continue;
           var roofInset = getBuildingRoofInset(rect, building.density);
@@ -980,27 +1116,73 @@ class Buildings extends LegacyRoads
 
           ctx.fillRect(rect.x + roofInset, rect.y + roofInset, roofWidth, roofHeight);
         }
+      if (rooftopRectCount > 0)
+        {
+          ctx.fillStyle = '#' + StringTools.hex(rooftopRoofColor, 6);
+          for (i in baseRectCount...building.rects.length)
+            {
+              var rect = building.rects[i];
+              if (isSmallBuildingRect(rect))
+                continue;
+              var roofInset = getBuildingRoofInset(rect, building.density);
+              var roofWidth = rect.width - roofInset * 2;
+              var roofHeight = rect.height - roofInset * 2;
+              if (roofWidth < CLEAN_TILE_SIZE / 5 ||
+                  roofHeight < CLEAN_TILE_SIZE / 5)
+                continue;
+
+              ctx.fillRect(rect.x + roofInset, rect.y + roofInset, roofWidth, roofHeight);
+            }
+        }
 
       ctx.fillStyle = '#' + StringTools.hex(highlightColor, 6);
       ctx.globalAlpha = 0.08 + building.edgeAlpha * 0.45;
-      for (rect in building.rects)
+      for (i in 0...baseRectCount)
         {
+          var rect = building.rects[i];
           if (isSmallBuildingRect(rect))
             continue;
           var edgeWidth = getBuildingEdgeWidth(rect, building.density);
           ctx.fillRect(rect.x, rect.y, rect.width, edgeWidth);
           ctx.fillRect(rect.x, rect.y, edgeWidth, rect.height);
         }
+      if (rooftopRectCount > 0)
+        {
+          ctx.fillStyle = '#' + StringTools.hex(rooftopHighlightColor, 6);
+          for (i in baseRectCount...building.rects.length)
+            {
+              var rect = building.rects[i];
+              if (isSmallBuildingRect(rect))
+                continue;
+              var edgeWidth = getBuildingEdgeWidth(rect, building.density);
+              ctx.fillRect(rect.x, rect.y, rect.width, edgeWidth);
+              ctx.fillRect(rect.x, rect.y, edgeWidth, rect.height);
+            }
+        }
 
       ctx.fillStyle = '#' + StringTools.hex(shadeColor, 6);
       ctx.globalAlpha = 0.11 + building.edgeAlpha * 0.55;
-      for (rect in building.rects)
+      for (i in 0...baseRectCount)
         {
+          var rect = building.rects[i];
           if (isSmallBuildingRect(rect))
             continue;
           var edgeWidth = getBuildingEdgeWidth(rect, building.density);
           ctx.fillRect(rect.x, rect.y + rect.height - edgeWidth, rect.width, edgeWidth);
           ctx.fillRect(rect.x + rect.width - edgeWidth, rect.y, edgeWidth, rect.height);
+        }
+      if (rooftopRectCount > 0)
+        {
+          ctx.fillStyle = '#' + StringTools.hex(rooftopShadeColor, 6);
+          for (i in baseRectCount...building.rects.length)
+            {
+              var rect = building.rects[i];
+              if (isSmallBuildingRect(rect))
+                continue;
+              var edgeWidth = getBuildingEdgeWidth(rect, building.density);
+              ctx.fillRect(rect.x, rect.y + rect.height - edgeWidth, rect.width, edgeWidth);
+              ctx.fillRect(rect.x + rect.width - edgeWidth, rect.y, edgeWidth, rect.height);
+            }
         }
 
       ctx.globalAlpha = 1.0;
@@ -1329,6 +1511,37 @@ class Buildings extends LegacyRoads
   function getMinBuildingPixelSize(): Int
     {
       return 4;
+    }
+
+// return the number of rooftop rects stored at the end of one footprint
+  function getRooftopRectCount(rects: Array<BuildingRect>): Int
+    {
+      return rects != null &&
+        rects.length > 1 ? 1 : 0;
+    }
+
+// return the number of rooftop rects stored on one building
+  function getBuildingRooftopRectCount(building: BuildingFootprint): Int
+    {
+      return building.rooftopRectCount != null ? building.rooftopRectCount : 0;
+    }
+
+// return the number of base rects before rooftop add-ons
+  function getBuildingBaseRectCount(building: BuildingFootprint): Int
+    {
+      return building.rects.length - getBuildingRooftopRectCount(building);
+    }
+
+// return the lighter rooftop mass color for one building
+  function getBuildingRooftopColor(baseColor: Int, density: Float): Int
+    {
+      return adjustColor(baseColor, density >= 0.66 ? 1.18 : 1.14);
+    }
+
+// return the rooftop paint color for one building
+  function getBuildingPaintRooftopColor(building: BuildingFootprint): Int
+    {
+      return building.rooftopColor != null ? building.rooftopColor : building.color;
     }
 
 // return whether every rect in one footprint meets the minimum side size
