@@ -2,8 +2,10 @@
 
 package map;
 
+import _AreaType;
 import const.WorldConst;
 import map.Types.BlockComponent;
+import map.Types.BuildingDistrictType;
 import map.Types.BlockRect;
 import map.Types.BuildingFootprint;
 import map.Types.BuildingRect;
@@ -145,6 +147,62 @@ class Buildings extends LegacyRoads
         info.isInhabited;
     }
 
+// return one unblurred building district band for one area type
+  function getBuildingDistrictTypeForAreaType(areaType: _AreaType): BuildingDistrictType
+    {
+      return switch (areaType) {
+        case AREA_CITY_LOW: LOW;
+        case AREA_CITY_MEDIUM: MEDIUM;
+        case AREA_CITY_HIGH, AREA_CORP: DOWNTOWN;
+        default: OTHER;
+      };
+    }
+
+// return one priority rank for one building district band
+  function getBuildingDistrictRank(districtType: BuildingDistrictType): Int
+    {
+      return switch (districtType) {
+        case OTHER: 0;
+        case LOW: 1;
+        case MEDIUM: 2;
+        case DOWNTOWN: 3;
+      };
+    }
+
+// return one sizing density for one building district band
+  function getBuildingDistrictDensity(districtType: BuildingDistrictType): Float
+    {
+      return switch (districtType) {
+        case OTHER, LOW: 0.24;
+        case MEDIUM: 0.58;
+        case DOWNTOWN: 1.0;
+      };
+    }
+
+// return the highest unblurred building district touching one rect
+  function getBuildingDistrictTypeForRect(x: Int, y: Int, width: Int, height: Int): BuildingDistrictType
+    {
+      var minCellX = clampInt(Std.int(x / CLEAN_TILE_SIZE), 0, fullCellWidth - 1);
+      var maxCellX = clampInt(Std.int((x + width - 1) / CLEAN_TILE_SIZE), 0, fullCellWidth - 1);
+      var minCellY = clampInt(Std.int(y / CLEAN_TILE_SIZE), 0, fullCellHeight - 1);
+      var maxCellY = clampInt(Std.int((y + height - 1) / CLEAN_TILE_SIZE), 0, fullCellHeight - 1);
+      var bestType = OTHER;
+      var bestRank = 0;
+
+      for (cellY in minCellY...maxCellY + 1)
+        for (cellX in minCellX...maxCellX + 1)
+          {
+            var districtType = getBuildingDistrictTypeForAreaType(areaTypes[cellX][cellY]);
+            var rank = getBuildingDistrictRank(districtType);
+            if (rank <= bestRank)
+              continue;
+            bestType = districtType;
+            bestRank = rank;
+          }
+
+      return bestType;
+    }
+
 // extract rectangular blocks from one connected component
   function extractBlocksFromComponent(component: BlockComponent, out: Array<BlockRect>)
     {
@@ -186,6 +244,7 @@ class Buildings extends LegacyRoads
             continue;
 
           var density = sampleAverageDensity(pixelX, pixelY, pixelWidth, pixelHeight);
+          var districtType = getBuildingDistrictTypeForRect(pixelX, pixelY, pixelWidth, pixelHeight);
           if (density < 0.02)
             continue;
 
@@ -195,6 +254,7 @@ class Buildings extends LegacyRoads
             width: pixelWidth,
             height: pixelHeight,
             density: density,
+            districtType: districtType,
           });
         }
     }
@@ -264,7 +324,7 @@ class Buildings extends LegacyRoads
 
       for (block in blockList)
         {
-          var setback = getBlockSetback(block.density);
+          var setback = getBlockSetback(getBuildingDistrictDensity(block.districtType));
           var innerX = block.x + setback;
           var innerY = block.y + setback;
           var innerWidth = block.width - setback * 2;
@@ -282,12 +342,13 @@ class Buildings extends LegacyRoads
 // recursively split a parcel candidate into parcel rectangles
   function subdivideParcel(parcel: ParcelRect, out: Array<ParcelRect>, depth: Int)
     {
-      var targetWidth = getTargetParcelWidth(parcel.density);
-      var targetHeight = getTargetParcelHeight(parcel.density);
-      var splitThreshold = getParcelSplitThreshold(parcel.density);
+      var sizingDensity = getBuildingDistrictDensity(parcel.districtType);
+      var targetWidth = getTargetParcelWidth(sizingDensity);
+      var targetHeight = getTargetParcelHeight(sizingDensity);
+      var splitThreshold = getParcelSplitThreshold(sizingDensity);
       var canSplitX = parcel.width > targetWidth * splitThreshold;
       var canSplitY = parcel.height > targetHeight * splitThreshold;
-      var maxDepth = getParcelMaxDepth(parcel.density);
+      var maxDepth = getParcelMaxDepth(sizingDensity);
 
       if (depth >= maxDepth ||
           (!canSplitX && !canSplitY))
@@ -304,8 +365,8 @@ class Buildings extends LegacyRoads
 
       if (splitVertical)
         {
-          var minSplit = Std.int(parcel.width * getParcelSplitMinRatio(parcel.density));
-          var maxSplit = Std.int(parcel.width * getParcelSplitMaxRatio(parcel.density));
+          var minSplit = Std.int(parcel.width * getParcelSplitMinRatio(sizingDensity));
+          var maxSplit = Std.int(parcel.width * getParcelSplitMaxRatio(sizingDensity));
           if (maxSplit - minSplit < PLAN_CELL_SIZE)
             {
               out.push(finalizeParcel(parcel));
@@ -326,8 +387,8 @@ class Buildings extends LegacyRoads
           return;
         }
 
-      var minSplit = Std.int(parcel.height * getParcelSplitMinRatio(parcel.density));
-      var maxSplit = Std.int(parcel.height * getParcelSplitMaxRatio(parcel.density));
+      var minSplit = Std.int(parcel.height * getParcelSplitMinRatio(sizingDensity));
+      var maxSplit = Std.int(parcel.height * getParcelSplitMaxRatio(sizingDensity));
       if (maxSplit - minSplit < PLAN_CELL_SIZE)
         {
           out.push(finalizeParcel(parcel));
@@ -356,6 +417,7 @@ class Buildings extends LegacyRoads
         width: width,
         height: height,
         density: sampleAverageDensity(x, y, width, height),
+        districtType: getBuildingDistrictTypeForRect(x, y, width, height),
         isOpen: false,
       };
     }
@@ -363,16 +425,17 @@ class Buildings extends LegacyRoads
 // finalize a parcel with plaza/open-space chance
   function finalizeParcel(parcel: ParcelRect): ParcelRect
     {
+      var sizingDensity = getBuildingDistrictDensity(parcel.districtType);
       var openChance = 0.0;
-      if (parcel.density < 0.33)
+      if (sizingDensity < 0.33)
         openChance = 0.006;
-      else if (parcel.density < 0.66)
+      else if (sizingDensity < 0.66)
         openChance = 0.003;
       else openChance = 0.010;
 
       var centrality = getParcelCentrality(parcel);
       var area = parcel.width * parcel.height;
-      if (parcel.density > 0.66 &&
+      if (sizingDensity > 0.66 &&
           parcel.width > CLEAN_TILE_SIZE * 2 &&
           parcel.height > CLEAN_TILE_SIZE * 2)
         {
@@ -382,15 +445,15 @@ class Buildings extends LegacyRoads
         }
 
       if (isSkinnyParcel(parcel))
-        openChance += (parcel.density > 0.66 ? 0.03 : 0.06);
+        openChance += (sizingDensity > 0.66 ? 0.03 : 0.06);
       if (parcel.width < PLAN_CELL_SIZE * 2 ||
           parcel.height < PLAN_CELL_SIZE * 2)
         openChance += 0.04;
-      if (parcel.density < 0.33 &&
+      if (sizingDensity < 0.33 &&
           parcel.width > CLEAN_TILE_SIZE * 3 &&
           parcel.height > CLEAN_TILE_SIZE * 3)
         openChance += 0.01;
-      if (parcel.density < 0.33 &&
+      if (sizingDensity < 0.33 &&
           centrality < 0.34 &&
           area >= CLEAN_TILE_SIZE * CLEAN_TILE_SIZE * 4)
         openChance += 0.01;
@@ -404,7 +467,8 @@ class Buildings extends LegacyRoads
 // return the building style for one parcel
   function getBuildingStyle(parcel: ParcelRect): BuildingStyle
     {
-      if (parcel.density < 0.33)
+      var sizingDensity = getBuildingDistrictDensity(parcel.districtType);
+      if (sizingDensity < 0.33)
         {
           return {
             buildChance: 1.0,
@@ -417,7 +481,7 @@ class Buildings extends LegacyRoads
           };
         }
 
-      if (parcel.density < 0.66)
+      if (sizingDensity < 0.66)
         {
           return {
             buildChance: 1.0,
@@ -470,10 +534,11 @@ class Buildings extends LegacyRoads
           if (!parcel.isOpen)
             continue;
 
+          var sizingDensity = getBuildingDistrictDensity(parcel.districtType);
           var inset = PLAN_CELL_SIZE;
-          if (parcel.density < 0.33)
+          if (sizingDensity < 0.33)
             inset = PLAN_CELL_SIZE + 2;
-          else if (parcel.density > 0.66)
+          else if (sizingDensity > 0.66)
             inset = PLAN_CELL_SIZE;
 
           var x = parcel.x + inset;
@@ -484,7 +549,7 @@ class Buildings extends LegacyRoads
               height < PLAN_CELL_SIZE)
             continue;
 
-          if (parcel.density > 0.66)
+          if (sizingDensity > 0.66)
             paintPlaza(x, y, width, height, parcel);
           else
             paintYard(x, y, width, height, parcel);
@@ -494,6 +559,7 @@ class Buildings extends LegacyRoads
 // generate one building footprint for a parcel
   function generateBuildingForParcel(parcel: ParcelRect): BuildingFootprint
     {
+      var sizingDensity = getBuildingDistrictDensity(parcel.districtType);
       var style = getBuildingStyle(parcel);
       if (rng.nextFloat() > style.buildChance)
         return null;
@@ -509,16 +575,26 @@ class Buildings extends LegacyRoads
 
       var shape = pickBuildingShape();
       var footprint = generateBuildingFootprintForShape(shape, innerX, innerY,
-        innerWidth, innerHeight, parcel.density, style);
+        innerWidth, innerHeight, sizingDensity, style);
+      if (!footprintHasMinimumRectSize(footprint))
+        footprint = null;
       if (footprint == null &&
           (shape == H_SHAPE ||
           shape == T_SHAPE))
-        footprint = generateBuildingFootprintForShape(L_SHAPE, innerX, innerY,
-          innerWidth, innerHeight, parcel.density, style);
+        {
+          footprint = generateBuildingFootprintForShape(L_SHAPE, innerX, innerY,
+            innerWidth, innerHeight, sizingDensity, style);
+          if (!footprintHasMinimumRectSize(footprint))
+            footprint = null;
+        }
       if (footprint == null &&
           shape != RECT)
-        footprint = generateBuildingFootprintForShape(RECT, innerX, innerY,
-          innerWidth, innerHeight, parcel.density, style);
+        {
+          footprint = generateBuildingFootprintForShape(RECT, innerX, innerY,
+            innerWidth, innerHeight, sizingDensity, style);
+          if (!footprintHasMinimumRectSize(footprint))
+            footprint = null;
+        }
       if (footprint == null ||
           footprintTouchesRoad(footprint))
         return null;
@@ -605,23 +681,25 @@ class Buildings extends LegacyRoads
       return switch (side) {
         case 0: [
           { x: outer.x, y: outer.y, width: verticalWidth, height: outer.height },
-          { x: outer.x, y: outer.y, width: outer.width, height: horizontalHeight },
+          { x: outer.x + verticalWidth, y: outer.y,
+            width: outer.width - verticalWidth, height: horizontalHeight },
         ];
         case 1: [
           { x: outer.x, y: outer.y, width: verticalWidth, height: outer.height },
-          { x: outer.x, y: outer.y + outer.height - horizontalHeight,
-            width: outer.width, height: horizontalHeight },
+          { x: outer.x + verticalWidth, y: outer.y + outer.height - horizontalHeight,
+            width: outer.width - verticalWidth, height: horizontalHeight },
         ];
         case 2: [
           { x: outer.x + outer.width - verticalWidth, y: outer.y,
             width: verticalWidth, height: outer.height },
-          { x: outer.x, y: outer.y, width: outer.width, height: horizontalHeight },
+          { x: outer.x, y: outer.y,
+            width: outer.width - verticalWidth, height: horizontalHeight },
         ];
         default: [
           { x: outer.x + outer.width - verticalWidth, y: outer.y,
             width: verticalWidth, height: outer.height },
           { x: outer.x, y: outer.y + outer.height - horizontalHeight,
-            width: outer.width, height: horizontalHeight },
+            width: outer.width - verticalWidth, height: horizontalHeight },
         ];
       };
     }
@@ -725,7 +803,8 @@ class Buildings extends LegacyRoads
         { x: outer.x, y: outer.y, width: barWidth, height: outer.height },
         { x: outer.x + outer.width - barWidth, y: outer.y,
           width: barWidth, height: outer.height },
-        { x: outer.x, y: crossY, width: outer.width, height: crossHeight },
+        { x: outer.x + barWidth, y: crossY,
+          width: outer.width - barWidth * 2, height: crossHeight },
       ];
     }
 
@@ -762,7 +841,8 @@ class Buildings extends LegacyRoads
         { x: outer.x, y: outer.y, width: outer.width, height: barHeight },
         { x: outer.x, y: outer.y + outer.height - barHeight,
           width: outer.width, height: barHeight },
-        { x: crossX, y: outer.y, width: crossWidth, height: outer.height },
+        { x: crossX, y: outer.y + barHeight,
+          width: crossWidth, height: outer.height - barHeight * 2 },
       ];
     }
 
@@ -792,13 +872,15 @@ class Buildings extends LegacyRoads
       if (rng.nextFloat() < 0.5)
         return [
           { x: outer.x, y: outer.y, width: outer.width, height: capHeight },
-          { x: stemX, y: outer.y, width: stemWidth, height: outer.height },
+          { x: stemX, y: outer.y + capHeight,
+            width: stemWidth, height: outer.height - capHeight },
         ];
 
       return [
         { x: outer.x, y: outer.y + outer.height - capHeight,
           width: outer.width, height: capHeight },
-        { x: stemX, y: outer.y, width: stemWidth, height: outer.height },
+        { x: stemX, y: outer.y,
+          width: stemWidth, height: outer.height - capHeight },
       ];
     }
 
@@ -828,13 +910,15 @@ class Buildings extends LegacyRoads
       if (rng.nextFloat() < 0.5)
         return [
           { x: outer.x, y: outer.y, width: capWidth, height: outer.height },
-          { x: outer.x, y: stemY, width: outer.width, height: stemHeight },
+          { x: outer.x + capWidth, y: stemY,
+            width: outer.width - capWidth, height: stemHeight },
         ];
 
       return [
         { x: outer.x + outer.width - capWidth, y: outer.y,
           width: capWidth, height: outer.height },
-        { x: outer.x, y: stemY, width: outer.width, height: stemHeight },
+        { x: outer.x, y: stemY,
+          width: outer.width - capWidth, height: stemHeight },
       ];
     }
 
@@ -1245,6 +1329,20 @@ class Buildings extends LegacyRoads
   function getMinBuildingPixelSize(): Int
     {
       return 4;
+    }
+
+// return whether every rect in one footprint meets the minimum side size
+  function footprintHasMinimumRectSize(rects: Array<BuildingRect>): Bool
+    {
+      if (rects == null)
+        return false;
+
+      var minSize = getMinBuildingPixelSize();
+      for (rect in rects)
+        if (rect.width < minSize ||
+            rect.height < minSize)
+          return false;
+      return true;
     }
 
 // return whether one building rect is small enough to skip shading passes

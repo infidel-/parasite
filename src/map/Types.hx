@@ -152,6 +152,7 @@ typedef BlockRect = {
   width: Int,
   height: Int,
   density: Float,
+  districtType: BuildingDistrictType,
 }
 
 typedef CityCoverageCandidate = {
@@ -187,6 +188,7 @@ typedef ParcelRect = {
   width: Int,
   height: Int,
   density: Float,
+  districtType: BuildingDistrictType,
   isOpen: Bool,
 }
 
@@ -220,6 +222,14 @@ enum BuildingShapeType
   L_SHAPE;
   H_SHAPE;
   T_SHAPE;
+}
+
+enum BuildingDistrictType
+{
+  OTHER;
+  LOW;
+  MEDIUM;
+  DOWNTOWN;
 }
 
 typedef BuildingStyle = {

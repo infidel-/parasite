@@ -149,7 +149,7 @@ class Ground extends Core
       return switch (type) {
         case AREA_CITY_LOW: 0.24;
         case AREA_CITY_MEDIUM: 0.58;
-        case AREA_CITY_HIGH: 1.0;
+        case AREA_CITY_HIGH, AREA_CORP: 1.0;
         default: 0.01;
       };
     }
@@ -169,7 +169,7 @@ class Ground extends Core
       return switch (type) {
         case AREA_CITY_LOW: 1;
         case AREA_CITY_MEDIUM: 2;
-        case AREA_CITY_HIGH: 3;
+        case AREA_CITY_HIGH, AREA_CORP: 3;
         default: 0;
       };
     }

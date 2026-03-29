@@ -5,6 +5,9 @@ package map;
 import game.Game;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
+#if electron
+import js.node.Fs;
+#end
 
 class Image extends Buildings
 {
@@ -12,6 +15,34 @@ class Image extends Buildings
     {
       super(g);
     }
+
+#if electron
+// dump the generated building rects for one region map seed
+  function dumpBuildingRects()
+    {
+      var lines = [];
+      lines.push('seed=' + mapSeed);
+      lines.push('buildings=' + buildings.length);
+
+      for (i in 0...buildings.length)
+        {
+          var building = buildings[i];
+          lines.push('building ' + i +
+            ' density=' + building.density +
+            ' lot=' + building.lotX + ',' + building.lotY + ',' +
+            building.lotWidth + 'x' + building.lotHeight +
+            ' rects=' + building.rects.length);
+          for (j in 0...building.rects.length)
+            {
+              var rect = building.rects[j];
+              lines.push('  rect ' + j + ' ' +
+                rect.x + ',' + rect.y + ',' + rect.width + 'x' + rect.height);
+            }
+        }
+
+      Fs.writeFileSync('region_buildings.txt', lines.join('\n') + '\n');
+    }
+#end
 
 // generate the cached region image
   public function generate(): CanvasElement
@@ -31,6 +62,7 @@ class Image extends Buildings
       initRandom();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.initRandom', phaseStartTS);
+      traceMapProfileSummary('image.seed=' + mapSeed);
 #end
 
       densityField = buildDensityField();
@@ -69,6 +101,12 @@ class Image extends Buildings
       buildings = generateBuildings(parcels);
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.generateBuildings', phaseStartTS);
+#end
+#if electron
+      dumpBuildingRects();
+#if mydebug
+      traceMapProfileSummary('image.buildingDump=region_buildings.txt');
+#end
 #end
       paintOpenParcels(parcels);
 #if mydebug

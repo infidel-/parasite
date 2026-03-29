@@ -28,6 +28,21 @@ class RoadPlanThinCoverage
       this.branchWalker = branchWalker;
     }
 
+// return whether one downtown tile should start this thin-road tier
+  function shouldAttemptDowntownThinCoverage(type: RoadType, cellX: Int, cellY: Int): Bool
+    {
+      var chance = switch (type) {
+        case ROAD4: plan.DOWNTOWN_ROAD4_COVERAGE_CHANCE;
+        case ROAD5: plan.DOWNTOWN_ROAD5_COVERAGE_CHANCE;
+        default: 1.0;
+      };
+      if (chance >= 1.0)
+        return true;
+      if (chance <= 0.0)
+        return false;
+      return plan.hashFloat(cellX, cellY, (type == ROAD4 ? 947 : 953)) < chance;
+    }
+
 // build one attachment cache for one thin-road tile attempt
   function makeThinAttachmentCache(searchRect: IntRect): ThinAttachmentCache
     {
@@ -158,7 +173,8 @@ class RoadPlanThinCoverage
       for (cellY in 0...plan.fullCellHeight)
         for (cellX in 0...plan.fullCellWidth)
           {
-            if (!plan.isCityAreaType(plan.areaTypes[cellX][cellY]))
+            var areaType = plan.areaTypes[cellX][cellY];
+            if (!plan.isCityAreaType(areaType))
               continue;
 
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD1))
@@ -166,6 +182,16 @@ class RoadPlanThinCoverage
 
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD4))
               continue;
+
+            if (areaType == AREA_CITY_HIGH)
+              {
+                plan.addMapProfileCount('thin.coverage.ROAD4.attemptsDowntown');
+                if (!shouldAttemptDowntownThinCoverage(ROAD4, cellX, cellY))
+                  {
+                    plan.addMapProfileCount('thin.coverage.ROAD4.skippedDowntown');
+                    continue;
+                  }
+              }
 
             plan.addMapProfileCount('thin.coverage.ROAD4.attempts');
             if (spawnBidirectionalThinRoadCoverage(grid, cellX, cellY, ROAD4, parentTypes,
@@ -207,7 +233,8 @@ class RoadPlanThinCoverage
       for (cellY in 0...plan.fullCellHeight)
         for (cellX in 0...plan.fullCellWidth)
           {
-            if (!plan.isCityAreaType(plan.areaTypes[cellX][cellY]))
+            var areaType = plan.areaTypes[cellX][cellY];
+            if (!plan.isCityAreaType(areaType))
               continue;
 
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD1))
@@ -215,6 +242,16 @@ class RoadPlanThinCoverage
 
             if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD5))
               continue;
+
+            if (areaType == AREA_CITY_HIGH)
+              {
+                plan.addMapProfileCount('thin.coverage.ROAD5.attemptsDowntown');
+                if (!shouldAttemptDowntownThinCoverage(ROAD5, cellX, cellY))
+                  {
+                    plan.addMapProfileCount('thin.coverage.ROAD5.skippedDowntown');
+                    continue;
+                  }
+              }
 
             plan.addMapProfileCount('thin.coverage.ROAD5.attempts');
             if (spawnBidirectionalThinRoadCoverage(grid, cellX, cellY, ROAD5, parentTypes,
@@ -773,6 +810,8 @@ class RoadPlanThinCoverage
         {
           var point = path[i];
           var axisMask = getThinRoadPathAxisMask(path, i);
+          if (!plan.canThinRoadUseAreaType(type, gridOps.getAreaTypeAtPlanCell(point.x, point.y)))
+            return false;
           if (gridOps.isPlanCellOccupied(grid, point.x, point.y) &&
               (!allowOccupiedStart ||
               i != 0 ||

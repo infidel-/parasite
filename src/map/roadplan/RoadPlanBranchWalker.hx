@@ -132,7 +132,7 @@ class RoadPlanBranchWalker
         walker.originX, walker.originY);
       if (start == null)
         return;
-      if (!plan.isCityAreaType(gridOps.getAreaTypeAtPlanCell(start.x, start.y)))
+      if (!road2Network.canRoad2UsePlanCell(start.x, start.y))
         return;
       starts.push({
         start: start,
@@ -246,7 +246,7 @@ class RoadPlanBranchWalker
   function getRoad2BranchChance(planX: Int, planY: Int): Float
     {
       return switch (gridOps.getAreaTypeAtPlanCell(planX, planY)) {
-        case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH: 0.70;
+        case AREA_CITY_LOW, AREA_CITY_MEDIUM: 0.70;
         default: 0.0;
       };
     }
@@ -310,6 +310,14 @@ class RoadPlanBranchWalker
             gridOps.hasAdjacentRoadNeighbor(grid, nextX, nextY, walker.x, walker.y);
 
           var nextArea = gridOps.getAreaTypeAtPlanCell(nextX, nextY);
+          if (isThinRoadType(walker.type) &&
+              !plan.canThinRoadUseAreaType(walker.type, nextArea))
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('blockedArea');
+#end
+              return;
+            }
           var oldDx = walker.dx;
           var oldDy = walker.dy;
           var drawType = walker.type;
@@ -581,6 +589,7 @@ class RoadPlanBranchWalker
       return (walker.type == ROAD4 ||
         walker.type == ROAD5) &&
         walker.canSpawnThinCrossings &&
+        nextArea != AREA_CITY_HIGH &&
         plan.isCityAreaType(nextArea) &&
         walker.stepsSinceTurn > 0 &&
         walker.stepsSinceTurn % plan.THIN_CROSSING_INTERVAL == 0;

@@ -310,7 +310,7 @@ class RegionGame extends _SaveObject
           if (seed == null)
             break;
 
-          stampDowntownCluster(seed, 3 + Std.random(5));
+          stampDowntownCluster(seed, 4 + Std.random(5));
           centers.push(seed);
         }
 
@@ -370,50 +370,91 @@ class RegionGame extends _SaveObject
       return true;
     }
 
+// count current downtown cluster neighbors around one candidate area
+  function countDowntownClusterNeighbors(area: AreaGame, used: Map<Int, Bool>): Int
+    {
+      var count = 0;
+
+      for (dir in 0...4)
+        {
+          var xx = area.x;
+          var yy = area.y;
+          switch (dir)
+            {
+              case 0: xx--;
+              case 1: xx++;
+              case 2: yy--;
+              case 3: yy++;
+            }
+
+          var neighbor = getXY(xx, yy);
+          if (neighbor != null &&
+              used[neighbor.id] == true)
+            count++;
+        }
+
+      return count;
+    }
+
+// pick one compact neighbor for downtown cluster growth
+  function pickDowntownClusterNeighbor(seed: AreaGame, cluster: Array<AreaGame>,
+      used: Map<Int, Bool>): AreaGame
+    {
+      var candidates = [];
+      var seen: Map<Int, Bool> = [];
+      var bestScore = -0x3FFFFFFF;
+
+      for (base in cluster)
+        for (dir in 0...4)
+          {
+            var xx = base.x;
+            var yy = base.y;
+            switch (dir)
+              {
+                case 0: xx--;
+                case 1: xx++;
+                case 2: yy--;
+                case 3: yy++;
+              }
+
+            var neighbor = getXY(xx, yy);
+            if (neighbor == null ||
+                seen[neighbor.id] == true ||
+                used[neighbor.id] == true ||
+                !canUseDowntownClusterArea(neighbor))
+              continue;
+
+            seen[neighbor.id] = true;
+
+            var score = countDowntownClusterNeighbors(neighbor, used) * 8 -
+              Const.distanceSquared(seed.x, seed.y, neighbor.x, neighbor.y);
+            if (score > bestScore)
+              {
+                bestScore = score;
+                candidates = [neighbor];
+              }
+            else if (score == bestScore)
+              candidates.push(neighbor);
+          }
+
+      if (candidates.length == 0)
+        return null;
+      return candidates[Std.random(candidates.length)];
+    }
+
 // grow one connected downtown cluster from one seed
   function stampDowntownCluster(seed: AreaGame, targetSize: Int)
     {
       var cluster = [ seed ];
-      var frontier = [ seed ];
       var used: Map<Int, Bool> = [ seed.id => true ];
 
-      while (cluster.length < targetSize &&
-          frontier.length > 0)
+      while (cluster.length < targetSize)
         {
-          var frontierIndex = Std.random(frontier.length);
-          var base = frontier[frontierIndex];
-          var candidates = [];
-
-          for (dir in 0...4)
-            {
-              var xx = base.x;
-              var yy = base.y;
-              switch (dir)
-                {
-                  case 0: xx--;
-                  case 1: xx++;
-                  case 2: yy--;
-                  case 3: yy++;
-                }
-
-              var neighbor = getXY(xx, yy);
-              if (neighbor == null ||
-                  used[neighbor.id] == true ||
-                  !canUseDowntownClusterArea(neighbor))
-                continue;
-              candidates.push(neighbor);
-            }
-
-          if (candidates.length == 0)
-            {
-              frontier.splice(frontierIndex, 1);
-              continue;
-            }
-
-          var next = candidates[Std.random(candidates.length)];
+          var next = pickDowntownClusterNeighbor(seed, cluster, used);
+          if (next == null)
+            break;
           used[next.id] = true;
           cluster.push(next);
-          frontier.push(next);
         }
 
       for (area in cluster)

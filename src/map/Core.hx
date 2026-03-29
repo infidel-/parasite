@@ -29,6 +29,8 @@ class Core
   var ENABLE_ROAD3_COVERAGE_PASS = true;
   var ROAD3_T_SPLIT_STEPS = 32;
   var ROAD3_GROUND_STOP_CHANCE_STEP = 0.10;
+  var DOWNTOWN_ROAD4_COVERAGE_CHANCE = 0.40;
+  var DOWNTOWN_ROAD5_COVERAGE_CHANCE = 0.0;
   var THIN_CROSSING_INTERVAL = 4;
   var THIN_CROSSING_RIGHT_CHANCE = 0.40;
   var THIN_CROSSING_LEFT_CHANCE = 0.40;
@@ -66,6 +68,7 @@ class Core
   var fullPixelHeight: Int;
   var planWidth: Int;
   var planHeight: Int;
+  var mapSeed: Int;
   var rng: SeededRandom;
   var densityField: DensityField;
   var areaTypes: Array<Array<_AreaType>>;
@@ -113,8 +116,8 @@ class Core
 // initialize deterministic random state
   function initRandom()
     {
-      var seed = Std.random(0x7FFFFFFF);
-      rng = new SeededRandom(seed);
+      mapSeed = Std.random(0x7FFFFFFF);
+      rng = new SeededRandom(mapSeed);
     }
 
   function cropVisibleRegion()

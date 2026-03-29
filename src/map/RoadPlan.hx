@@ -2,6 +2,7 @@
 
 package map;
 
+import _AreaType;
 import const.WorldConst;
 #if mydebug
 import haxe.ds.StringMap;
@@ -202,6 +203,15 @@ class RoadPlan extends Raster
       nextMapProfileTimestamp('road.total', totalStartTS);
 #end
       return result;
+    }
+
+// return whether one thin-road tier may use this area type
+  function canThinRoadUseAreaType(type: RoadType, areaType: _AreaType): Bool
+    {
+      return switch (type) {
+        case ROAD5: areaType != AREA_CITY_HIGH;
+        default: true;
+      };
     }
 
 // return a centered ROAD1 line shifted away from blocked area cells

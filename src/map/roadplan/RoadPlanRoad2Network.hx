@@ -2,6 +2,7 @@
 
 package map.roadplan;
 
+import _AreaType;
 import map.RoadPlan;
 import map.Types.GridPoint;
 import map.Types.IntRect;
@@ -24,6 +25,21 @@ class RoadPlanRoad2Network
     {
       this.plan = plan;
       this.gridOps = gridOps;
+    }
+
+// return whether ROAD2 may use this area type
+  public function canRoad2UseAreaType(areaType: _AreaType): Bool
+    {
+      return switch (areaType) {
+        case AREA_CITY_LOW, AREA_CITY_MEDIUM: true;
+        default: false;
+      };
+    }
+
+// return whether ROAD2 may use this plan cell
+  public function canRoad2UsePlanCell(planX: Int, planY: Int): Bool
+    {
+      return canRoad2UseAreaType(gridOps.getAreaTypeAtPlanCell(planX, planY));
     }
 
 // connect detached orange components back to the road network
@@ -64,7 +80,7 @@ class RoadPlanRoad2Network
       for (cellY in 0...plan.fullCellHeight)
         for (cellX in 0...plan.fullCellWidth)
           {
-            if (!plan.isCityAreaType(plan.areaTypes[cellX][cellY]))
+            if (!canRoad2UseAreaType(plan.areaTypes[cellX][cellY]))
               continue;
 
             if (gridOps.hasRoad2InRegionTile(grid, cellX, cellY))
@@ -399,6 +415,8 @@ class RoadPlanRoad2Network
     {
       if (!gridOps.isInPlanBounds(planX, planY))
         return false;
+      if (!canRoad2UsePlanCell(planX, planY))
+        return false;
       if (isTarget &&
           target != null &&
           planX == target.x &&
@@ -406,8 +424,7 @@ class RoadPlanRoad2Network
         return target.road1StepX < 0 ||
           canBuildRoad2Road1Bridge(grid, target.road1StepX, target.road1StepY,
             planX, planY, target.road1DX, target.road1DY, road2ID);
-      if (!plan.isCityAreaType(gridOps.getAreaTypeAtPlanCell(planX, planY)) &&
-          !(allowRoad1Touch && isRoad1AttachmentCell(grid, planX, planY)) &&
+      if (!(allowRoad1Touch && isRoad1AttachmentCell(grid, planX, planY)) &&
           !isRoad2AttachmentCell(grid, planX, planY))
         return false;
       if (gridOps.doesRoad2FootprintHitAnyRoad(grid, planX, planY, ignoreStampX, ignoreStampY))
@@ -833,7 +850,8 @@ class RoadPlanRoad2Network
   function canUseRoad2Anchor(grid: RoadPlanGrid, baseX: Int, baseY: Int,
       planX: Int, planY: Int, dx: Int, dy: Int): Bool
     {
-      return !gridOps.isPlanCellOccupied(grid, planX, planY) &&
+      return canRoad2UsePlanCell(planX, planY) &&
+        !gridOps.isPlanCellOccupied(grid, planX, planY) &&
         !gridOps.doesRoad2FootprintHitAnyRoad(grid, planX, planY) &&
         !gridOps.hasRoad2ClearanceConflict(grid, planX, planY, -1) &&
         canBuildRoad2Road1Bridge(grid, baseX, baseY, planX, planY, dx, dy) &&
@@ -1065,6 +1083,7 @@ class RoadPlanRoad2Network
       dx: Int, dy: Int, road1StartX: Int, road1StartY: Int, road2ID: Int = -1): Bool
     {
       return isRoad2AnchorAligned(planX, planY) &&
+        canRoad2UsePlanCell(planX, planY) &&
         !gridOps.isPlanCellOccupied(grid, planX, planY) &&
         !gridOps.doesRoad2FootprintHitAnyRoad(grid, planX, planY) &&
         !isNearRoad1StartTile(planX, planY, road1StartX, road1StartY) &&
@@ -1095,13 +1114,16 @@ class RoadPlanRoad2Network
       var nextX = planX + dx * plan.ROAD2_GRID_STEP;
       var nextY = planY + dy * plan.ROAD2_GRID_STEP;
       return gridOps.isInPlanBounds(nextX, nextY) &&
+        canRoad2UsePlanCell(nextX, nextY) &&
         !gridOps.doesRoad2FootprintHitAnyRoad(grid, nextX, nextY) &&
         !gridOps.hasRoad2ClearanceConflict(grid, nextX, nextY, road2ID);
     }
 
-// return whether a ROAD2 step is entering visible ground instead of city mass
+// return whether one ROAD2 step is leaving allowed orange-road area
   public function isRoad2GroundAtPlanCell(planX: Int, planY: Int): Bool
     {
+      if (!canRoad2UsePlanCell(planX, planY))
+        return true;
       var px = planX * plan.PLAN_CELL_SIZE + Std.int(plan.PLAN_CELL_SIZE / 2);
       var py = planY * plan.PLAN_CELL_SIZE + Std.int(plan.PLAN_CELL_SIZE / 2);
       return plan.sampleDensityAtPixel(px, py) < plan.ROAD2_MIN_CITY_DENSITY;
