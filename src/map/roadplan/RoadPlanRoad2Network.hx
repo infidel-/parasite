@@ -114,17 +114,20 @@ class RoadPlanRoad2Network
                   start.x, start.y);
                 if (road1Target != null)
                   {
-                    dirtyRect = connectRoad2ConnectorAndGetDirtyRect(grid, {
-                      x: start.x,
-                      y: start.y,
-                      road2ID: plan.nextRoad2ID++,
-                      road1StepX: -1,
-                      road1StepY: -1,
-                      road1DX: 0,
-                      road1DY: 0,
-                    }, road1Target, false);
-                    if (dirtyRect != null)
-                      plan.addMapProfileCount('road2.ensureCityRoad2Coverage.connectedToRoad1');
+                    if (!isTinyRoad2Road1CoverageConnector(start.x, start.y, road1Target))
+                      {
+                        dirtyRect = connectRoad2ConnectorAndGetDirtyRect(grid, {
+                          x: start.x,
+                          y: start.y,
+                          road2ID: plan.nextRoad2ID++,
+                          road1StepX: -1,
+                          road1StepY: -1,
+                          road1DX: 0,
+                          road1DY: 0,
+                        }, road1Target, false);
+                        if (dirtyRect != null)
+                          plan.addMapProfileCount('road2.ensureCityRoad2Coverage.connectedToRoad1');
+                      }
                   }
               }
 
@@ -895,6 +898,16 @@ class RoadPlanRoad2Network
         }
 
       return best;
+    }
+
+// return whether one city ROAD2 fallback would create only one anchor plus the ROAD1 bridge
+  function isTinyRoad2Road1CoverageConnector(startX: Int, startY: Int,
+      target: Road2Attachment): Bool
+    {
+      var start = snapRoad2Anchor(startX, startY);
+      var snappedTarget = snapRoad2Anchor(target.x, target.y);
+      return start.x == snappedTarget.x &&
+        start.y == snappedTarget.y;
     }
 
 // find a reasonable empty orange start inside one city tile
