@@ -9,6 +9,7 @@ import map.Types.IntRect;
 import map.Types.RoadPlanGrid;
 import map.Types.ThinAttachmentCache;
 import map.Types.ThinRoadStart;
+import map.Types.ThinRoadStartCandidate;
 
 @:access(map.Core)
 @:access(map.Ground)
@@ -80,6 +81,480 @@ class RoadPlanThinCoverage
         points: points,
       });
       return points;
+    }
+
+// add direct and fallback road coverage for military bases and facilities
+  public function ensureSpecialAreaRoadCoverage(grid: RoadPlanGrid)
+    {
+      for (regionY in 0...plan.regionHeight)
+        for (regionX in 0...plan.regionWidth)
+          {
+            var cellX = regionX + plan.HALO_CELLS;
+            var cellY = regionY + plan.HALO_CELLS;
+            var areaType = plan.areaTypes[cellX][cellY];
+            if (!isSpecialAreaType(areaType) ||
+                hasAdjacentCityTile(cellX, cellY) ||
+                (areaType == AREA_MILITARY_BASE &&
+                hasAdjacentRoad1Tile(grid, cellX, cellY)) ||
+                hasAnyRoadInRegionTile(grid, cellX, cellY))
+              continue;
+
+            plan.addMapProfileCount('thin.coverage.special.attempts');
+            if (shouldPreferSpecialAreaCityRoad(grid, cellX, cellY))
+              {
+                if (tryConnectSpecialAreaToNearestCityTile(grid, cellX, cellY))
+                  {
+                    plan.addMapProfileCount('thin.coverage.special.city');
+                    continue;
+                  }
+
+                plan.addMapProfileCount('thin.coverage.special.failed');
+                continue;
+              }
+
+            if (tryConnectSpecialAreaToRoad1(grid, cellX, cellY))
+              {
+                plan.addMapProfileCount('thin.coverage.special.road1');
+                continue;
+              }
+
+            if (tryConnectSpecialAreaToNearestCityTile(grid, cellX, cellY))
+              {
+                plan.addMapProfileCount('thin.coverage.special.city');
+                continue;
+              }
+
+            plan.addMapProfileCount('thin.coverage.special.failed');
+          }
+    }
+
+// return whether one area type uses the special base/facility coverage pass
+  function isSpecialAreaType(areaType: _AreaType): Bool
+    {
+      return areaType == AREA_MILITARY_BASE ||
+        areaType == AREA_FACILITY;
+    }
+
+// return whether one visible region tile already contains any road tier
+  function hasAnyRoadInRegionTile(grid: RoadPlanGrid, cellX: Int, cellY: Int): Bool
+    {
+      return gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD1) ||
+        gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD2) ||
+        gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD3) ||
+        gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD4) ||
+        gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD5);
+    }
+
+// return whether one visible special tile touches any city tile on the cardinal sides
+  function hasAdjacentCityTile(cellX: Int, cellY: Int): Bool
+    {
+      for (dir in 0...4)
+        {
+          var nx = cellX + gridOps.getCardinalDX(dir);
+          var ny = cellY + gridOps.getCardinalDY(dir);
+          if (!isVisibleRegionTile(nx, ny) ||
+              !plan.isCityAreaType(plan.areaTypes[nx][ny]))
+            continue;
+          return true;
+        }
+
+      return false;
+    }
+
+// return whether one visible military base tile touches ROAD1 on the cardinal sides
+  function hasAdjacentRoad1Tile(grid: RoadPlanGrid, cellX: Int, cellY: Int): Bool
+    {
+      for (dir in 0...4)
+        {
+          var nx = cellX + gridOps.getCardinalDX(dir);
+          var ny = cellY + gridOps.getCardinalDY(dir);
+          if (!isVisibleRegionTile(nx, ny) ||
+              !gridOps.hasRoadTypeInRegionTile(grid, nx, ny, ROAD1))
+            continue;
+          return true;
+        }
+
+      return false;
+    }
+
+// return whether one full-grid tile falls inside the visible region
+  function isVisibleRegionTile(cellX: Int, cellY: Int): Bool
+    {
+      return cellX >= plan.HALO_CELLS &&
+        cellY >= plan.HALO_CELLS &&
+        cellX < plan.HALO_CELLS + plan.regionWidth &&
+        cellY < plan.HALO_CELLS + plan.regionHeight;
+    }
+
+// collect thin-road attachments whose owning tile is inside the visible region
+  function collectVisibleThinRoadAttachments(grid: RoadPlanGrid,
+      parentTypes: Array<RoadType>): Array<GridPoint>
+    {
+      var result = [];
+
+      for (point in collectThinRoadAttachments(grid, parentTypes))
+        {
+          var cellX = Std.int(point.x / plan.PLAN_CELLS_PER_TILE);
+          var cellY = Std.int(point.y / plan.PLAN_CELLS_PER_TILE);
+          if (!isVisibleRegionTile(cellX, cellY))
+            continue;
+          result.push(point);
+        }
+
+      return result;
+    }
+
+// return whether one special tile should prefer the nearest roaded city tile over ROAD1
+  function shouldPreferSpecialAreaCityRoad(grid: RoadPlanGrid, cellX: Int, cellY: Int): Bool
+    {
+      var cityTile = findNearestRoadedCityTile(grid, cellX, cellY);
+      if (cityTile == null)
+        return false;
+
+      var road1Distance = findNearestRoad1TileDistance(grid, cellX, cellY);
+      if (road1Distance < 0)
+        return true;
+
+      return getRegionTileManhattanDistance(cellX, cellY, cityTile.x, cityTile.y) < road1Distance;
+    }
+
+// return the distance to the nearest visible region tile that contains ROAD1
+  function findNearestRoad1TileDistance(grid: RoadPlanGrid, cellX: Int, cellY: Int): Int
+    {
+      var result = -1;
+
+      for (regionY in 0...plan.regionHeight)
+        for (regionX in 0...plan.regionWidth)
+          {
+            var xx = regionX + plan.HALO_CELLS;
+            var yy = regionY + plan.HALO_CELLS;
+            if (!gridOps.hasRoadTypeInRegionTile(grid, xx, yy, ROAD1))
+              continue;
+
+            var dist = getRegionTileManhattanDistance(cellX, cellY, xx, yy);
+            if (result < 0 ||
+                dist < result)
+              result = dist;
+          }
+
+      return result;
+    }
+
+// try connecting one special area tile directly to ROAD1 through ground only
+  function tryConnectSpecialAreaToRoad1(grid: RoadPlanGrid, cellX: Int, cellY: Int): Bool
+    {
+      var parentTypes: Array<RoadType> = [ROAD1];
+      var centerX = getRegionTileCenterPlanX(cellX);
+      var centerY = getRegionTileCenterPlanY(cellY);
+      var targets = collectVisibleThinRoadAttachments(grid, parentTypes);
+
+      targets.sort(function(a: GridPoint, b: GridPoint): Int
+        {
+          var distA = Std.int(Math.abs(a.x - centerX) + Math.abs(a.y - centerY));
+          var distB = Std.int(Math.abs(b.x - centerX) + Math.abs(b.y - centerY));
+          return distA - distB;
+        });
+
+      for (target in targets)
+        {
+          if (gridOps.getAreaTypeAtPlanCell(target.x, target.y) != AREA_GROUND)
+            continue;
+
+          if (tryConnectSpecialAreaRoadWithTileStartSearch(grid, cellX, cellY, -1, -1, target,
+                ROAD3,
+                parentTypes))
+            return true;
+        }
+
+      return false;
+    }
+
+// try connecting one special area tile from the nearest city tile that already has a road
+  function tryConnectSpecialAreaToNearestCityTile(grid: RoadPlanGrid, cellX: Int, cellY: Int): Bool
+    {
+      var parentTypes: Array<RoadType> = [ROAD1, ROAD2, ROAD3, ROAD4, ROAD5];
+      var centerX = getRegionTileCenterPlanX(cellX);
+      var centerY = getRegionTileCenterPlanY(cellY);
+      var cityTile = findNearestRoadedCityTile(grid, cellX, cellY);
+      if (cityTile == null)
+        return false;
+
+      var targets = collectRegionTileAttachments(grid, cityTile.x, cityTile.y, parentTypes);
+
+      targets.sort(function(a: GridPoint, b: GridPoint): Int
+        {
+          var distA = Std.int(Math.abs(a.x - centerX) + Math.abs(a.y - centerY));
+          var distB = Std.int(Math.abs(b.x - centerX) + Math.abs(b.y - centerY));
+          return distA - distB;
+        });
+
+      for (target in targets)
+        {
+          if (tryConnectSpecialAreaRoadWithTileStartSearch(grid, cellX, cellY, cityTile.x,
+                cityTile.y,
+                target, ROAD4, parentTypes))
+            return true;
+        }
+
+      var roadTargets = collectRegionTileRoadTargets(grid, cityTile.x, cityTile.y, parentTypes);
+
+      roadTargets.sort(function(a: GridPoint, b: GridPoint): Int
+        {
+          var distA = Std.int(Math.abs(a.x - centerX) + Math.abs(a.y - centerY));
+          var distB = Std.int(Math.abs(b.x - centerX) + Math.abs(b.y - centerY));
+          return distA - distB;
+        });
+
+      for (target in roadTargets)
+        {
+          if (tryConnectSpecialAreaRoadWithTileStartSearch(grid, cellX, cellY, cityTile.x,
+                cityTile.y,
+                target, ROAD4, parentTypes, true))
+            return true;
+        }
+
+      return false;
+    }
+
+// try one special connector using multiple ranked starts inside the source tile
+  function tryConnectSpecialAreaRoadWithTileStartSearch(grid: RoadPlanGrid, sourceCellX: Int,
+      sourceCellY: Int, targetCellX: Int, targetCellY: Int, target: GridPoint,
+      type: RoadType, parentTypes: Array<RoadType>, allowOccupiedTarget: Bool = false): Bool
+    {
+      for (candidate in collectTileThinRoadStarts(grid, sourceCellX, sourceCellY, target,
+          parentTypes))
+        if (connectSpecialAreaRoadToTarget(grid, sourceCellX, sourceCellY, targetCellX,
+              targetCellY, candidate.start, target, type, parentTypes, allowOccupiedTarget))
+          return true;
+
+      return false;
+    }
+
+// find the nearest visible city tile that already has a road
+  function findNearestRoadedCityTile(grid: RoadPlanGrid, cellX: Int, cellY: Int): GridPoint
+    {
+      var result: GridPoint = null;
+      var bestDist = -1;
+
+      for (regionY in 0...plan.regionHeight)
+        for (regionX in 0...plan.regionWidth)
+          {
+            var xx = regionX + plan.HALO_CELLS;
+            var yy = regionY + plan.HALO_CELLS;
+            if (!plan.isCityAreaType(plan.areaTypes[xx][yy]) ||
+                !hasAnyRoadInRegionTile(grid, xx, yy))
+              continue;
+
+            var dist = getRegionTileManhattanDistance(cellX, cellY, xx, yy);
+            if (bestDist >= 0 &&
+                (dist > bestDist ||
+                (dist == bestDist &&
+                (yy > result.y ||
+                (yy == result.y &&
+                xx >= result.x)))))
+              continue;
+
+            bestDist = dist;
+            result = {
+              x: xx,
+              y: yy,
+            };
+          }
+
+      return result;
+    }
+
+// return the manhattan distance between two region tiles
+  function getRegionTileManhattanDistance(fromCellX: Int, fromCellY: Int,
+      toCellX: Int, toCellY: Int): Int
+    {
+      return Std.int(Math.abs(toCellX - fromCellX) + Math.abs(toCellY - fromCellY));
+    }
+
+// collect empty attachment cells that touch a road inside one region tile
+  function collectRegionTileAttachments(grid: RoadPlanGrid, cellX: Int, cellY: Int,
+      parentTypes: Array<RoadType>): Array<GridPoint>
+    {
+      var result = [];
+      var tileStartX = cellX * plan.PLAN_CELLS_PER_TILE;
+      var tileStartY = cellY * plan.PLAN_CELLS_PER_TILE;
+      var tileEndX = tileStartX + plan.PLAN_CELLS_PER_TILE - 1;
+      var tileEndY = tileStartY + plan.PLAN_CELLS_PER_TILE - 1;
+      var used = [];
+
+      for (ii in 0...plan.PLAN_CELLS_PER_TILE * plan.PLAN_CELLS_PER_TILE)
+        used.push(false);
+
+      for (yy in tileStartY...tileEndY + 1)
+        for (xx in tileStartX...tileEndX + 1)
+          {
+            if (!gridOps.hasAnyRoadTypeAtPlanCell(grid, xx, yy, parentTypes))
+              continue;
+
+            for (dir in 0...4)
+              {
+                var nx = xx + gridOps.getCardinalDX(dir);
+                var ny = yy + gridOps.getCardinalDY(dir);
+                if (!gridOps.isInPlanBounds(nx, ny) ||
+                    nx < tileStartX ||
+                    nx > tileEndX ||
+                    ny < tileStartY ||
+                    ny > tileEndY ||
+                    !gridOps.isThinRoadAttachmentCell(grid, nx, ny, parentTypes))
+                  continue;
+
+                var index = (nx - tileStartX) * plan.PLAN_CELLS_PER_TILE + (ny - tileStartY);
+                if (used[index])
+                  continue;
+                used[index] = true;
+                result.push({
+                  x: nx,
+                  y: ny,
+                });
+              }
+          }
+
+      return result;
+    }
+
+// collect occupied road cells inside one region tile for direct city-tile joins
+  function collectRegionTileRoadTargets(grid: RoadPlanGrid, cellX: Int, cellY: Int,
+      parentTypes: Array<RoadType>): Array<GridPoint>
+    {
+      var result = [];
+      var tileStartX = cellX * plan.PLAN_CELLS_PER_TILE;
+      var tileStartY = cellY * plan.PLAN_CELLS_PER_TILE;
+      var tileEndX = tileStartX + plan.PLAN_CELLS_PER_TILE - 1;
+      var tileEndY = tileStartY + plan.PLAN_CELLS_PER_TILE - 1;
+
+      for (yy in tileStartY...tileEndY + 1)
+        for (xx in tileStartX...tileEndX + 1)
+          if (gridOps.hasAnyRoadTypeAtPlanCell(grid, xx, yy, parentTypes))
+            result.push({
+              x: xx,
+              y: yy,
+            });
+
+      return result;
+    }
+
+// connect one special-area start to one target while keeping the off-tile route on ground
+  function connectSpecialAreaRoadToTarget(grid: RoadPlanGrid, sourceCellX: Int,
+      sourceCellY: Int, targetCellX: Int, targetCellY: Int, start: ThinRoadStart,
+      target: GridPoint, type: RoadType, parentTypes: Array<RoadType>,
+      allowOccupiedTarget: Bool = false): Bool
+    {
+      return tryConnectSpecialAreaRoadToTarget(grid, sourceCellX, sourceCellY, targetCellX,
+          targetCellY, start, target, type, parentTypes, allowOccupiedTarget, true) ||
+        tryConnectSpecialAreaRoadToTarget(grid, sourceCellX, sourceCellY, targetCellX,
+          targetCellY, start, target, type, parentTypes, allowOccupiedTarget, false);
+    }
+
+// return whether one special connector may ignore one-cell parallel flank conflicts
+  function shouldRelaxSpecialAreaConnectorFlankConflict(type: RoadType,
+      targetCellX: Int, targetCellY: Int): Bool
+    {
+      return type == ROAD4 &&
+        targetCellX >= 0 &&
+        targetCellY >= 0;
+    }
+
+// try one orthogonal routing order for one special-area connector
+  function tryConnectSpecialAreaRoadToTarget(grid: RoadPlanGrid, sourceCellX: Int,
+      sourceCellY: Int, targetCellX: Int, targetCellY: Int, start: ThinRoadStart,
+      target: GridPoint, type: RoadType, parentTypes: Array<RoadType>,
+      allowOccupiedTarget: Bool, horizontalFirst: Bool): Bool
+    {
+      var path = buildThinRoadConnectorPath(start.x, start.y, target.x, target.y, horizontalFirst);
+      var relaxFlankConflict = shouldRelaxSpecialAreaConnectorFlankConflict(type,
+        targetCellX, targetCellY);
+      if (path.length < 2)
+        return false;
+      if (path[1].x - path[0].x != start.dx ||
+          path[1].y - path[0].y != start.dy)
+        return false;
+
+      for (i in 0...path.length)
+        {
+          var point = path[i];
+          var axisMask = getThinRoadPathAxisMask(path, i);
+          if (!canUseSpecialAreaConnectorCell(grid, sourceCellX, sourceCellY, targetCellX,
+                targetCellY, point.x, point.y) ||
+              (gridOps.isPlanCellOccupied(grid, point.x, point.y) &&
+              (i != 0 ||
+              point.x != start.x ||
+              point.y != start.y) &&
+              (!allowOccupiedTarget ||
+              i != path.length - 1 ||
+              point.x != target.x ||
+              point.y != target.y)) ||
+              (!relaxFlankConflict &&
+              gridOps.hasParallelRoadFlankConflictForAxisMask(grid, point.x, point.y, axisMask)))
+            return false;
+          if (i < path.length - 1 &&
+              gridOps.isThinRoadAttachmentCell(grid, point.x, point.y, parentTypes))
+            return false;
+        }
+      if (!allowOccupiedTarget &&
+          !gridOps.isThinRoadAttachmentCell(grid, target.x, target.y, parentTypes))
+        return false;
+      if (allowOccupiedTarget &&
+          !gridOps.hasAnyRoadTypeAtPlanCell(grid, target.x, target.y, parentTypes))
+        return false;
+
+      gridOps.addRoadPlanPath(grid, path, type);
+      if (allowOccupiedTarget)
+        addSpecialAreaRoadTargetJoin(grid, path[path.length - 2].x, path[path.length - 2].y,
+          target.x, target.y);
+      return true;
+    }
+
+// add the reciprocal arm on one occupied city-tile road target
+  function addSpecialAreaRoadTargetJoin(grid: RoadPlanGrid, fromX: Int, fromY: Int,
+      targetX: Int, targetY: Int)
+    {
+      var mask = gridOps.getRoadDirectionMask(fromX - targetX, fromY - targetY);
+
+      if (gridOps.hasRoadTypeAtPlanCell(grid, targetX, targetY, ROAD3))
+        gridOps.addRoadPlanDirectionMask(grid, targetX, targetY, mask, ROAD3);
+      if (gridOps.hasRoadTypeAtPlanCell(grid, targetX, targetY, ROAD4))
+        gridOps.addRoadPlanDirectionMask(grid, targetX, targetY, mask, ROAD4);
+      if (gridOps.hasRoadTypeAtPlanCell(grid, targetX, targetY, ROAD5))
+        gridOps.addRoadPlanDirectionMask(grid, targetX, targetY, mask, ROAD5);
+    }
+
+// return whether one connector cell stays inside an allowed endpoint tile or ground
+  function canUseSpecialAreaConnectorCell(grid: RoadPlanGrid, sourceCellX: Int,
+      sourceCellY: Int, targetCellX: Int, targetCellY: Int, planX: Int, planY: Int): Bool
+    {
+      if (isPlanCellInRegionTile(planX, planY, sourceCellX, sourceCellY))
+        return true;
+      if (targetCellX >= 0 &&
+          targetCellY >= 0 &&
+          isPlanCellInRegionTile(planX, planY, targetCellX, targetCellY))
+        return true;
+      return gridOps.getAreaTypeAtPlanCell(planX, planY) == AREA_GROUND;
+    }
+
+// return whether one plan cell falls inside one specific region tile
+  function isPlanCellInRegionTile(planX: Int, planY: Int, cellX: Int, cellY: Int): Bool
+    {
+      return planX >= cellX * plan.PLAN_CELLS_PER_TILE &&
+        planX < (cellX + 1) * plan.PLAN_CELLS_PER_TILE &&
+        planY >= cellY * plan.PLAN_CELLS_PER_TILE &&
+        planY < (cellY + 1) * plan.PLAN_CELLS_PER_TILE;
+    }
+
+// return the center plan x coordinate of one region tile
+  function getRegionTileCenterPlanX(cellX: Int): Int
+    {
+      return cellX * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
+    }
+
+// return the center plan y coordinate of one region tile
+  function getRegionTileCenterPlanY(cellY: Int): Int
+    {
+      return cellY * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
     }
 
 // add a separate green coverage pass over city tiles after orange is settled
@@ -614,6 +1089,26 @@ class RoadPlanThinCoverage
 #if mydebug
       var startTS = haxe.Timer.stamp() * 1000.0;
 #end
+      var candidates = collectTileThinRoadStarts(grid, cellX, cellY, target, parentTypes,
+        requiredAxisMask);
+      var best = (candidates.length > 0 ? candidates[0].start : null);
+
+#if mydebug
+      plan.addMapProfileSample('thin.findTileThinRoadStart',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+      if (best != null)
+        plan.addMapProfileCount('thin.findTileThinRoadStart.found');
+      else
+        plan.addMapProfileCount('thin.findTileThinRoadStart.null');
+#end
+      return best;
+    }
+
+// collect ranked thin-road starts inside one tile for one chosen target
+  function collectTileThinRoadStarts(grid: RoadPlanGrid, cellX: Int, cellY: Int,
+      target: GridPoint, parentTypes: Array<RoadType>,
+      requiredAxisMask: Int = 0): Array<ThinRoadStartCandidate>
+    {
       var tileStartX = cellX * plan.PLAN_CELLS_PER_TILE;
       var tileStartY = cellY * plan.PLAN_CELLS_PER_TILE;
       var tileEndX = tileStartX + plan.PLAN_CELLS_PER_TILE - 1;
@@ -629,8 +1124,8 @@ class RoadPlanThinCoverage
           target != null)
         preferredAxisMask = getThinRoadPreferredAxisMaskForTarget(grid, target.x, target.y,
           parentTypes);
-      var best: ThinRoadStart = null;
-      var bestScore = 0x3FFFFFFF;
+      var result: Array<ThinRoadStartCandidate> = [];
+      var order = 0;
 
       for (yy in tileStartY...tileStartY + plan.PLAN_CELLS_PER_TILE)
         for (xx in tileStartX...tileStartX + plan.PLAN_CELLS_PER_TILE)
@@ -679,28 +1174,28 @@ class RoadPlanThinCoverage
                     awayScore > 0)
                   score -= 6;
 
-                if (score < bestScore)
-                  {
-                    bestScore = score;
-                    best = {
+                result.push({
+                  start: {
                       x: xx,
                       y: yy,
                       dx: dx,
                       dy: dy,
-                    };
-                  }
+                    },
+                  score: score,
+                  order: order,
+                });
+                order++;
               }
           }
 
-#if mydebug
-      plan.addMapProfileSample('thin.findTileThinRoadStart',
-        haxe.Timer.stamp() * 1000.0 - startTS);
-      if (best != null)
-        plan.addMapProfileCount('thin.findTileThinRoadStart.found');
-      else
-        plan.addMapProfileCount('thin.findTileThinRoadStart.null');
-#end
-      return best;
+      result.sort(function(a: ThinRoadStartCandidate, b: ThinRoadStartCandidate): Int
+        {
+          if (a.score != b.score)
+            return a.score - b.score;
+          return a.order - b.order;
+        });
+
+      return result;
     }
 
 // return the net direction pointing away from adjacent parent-road cells

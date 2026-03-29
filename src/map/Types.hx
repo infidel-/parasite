@@ -96,6 +96,12 @@ typedef ThinRoadStart = {
   dy: Int,
 }
 
+typedef ThinRoadStartCandidate = {
+  start: ThinRoadStart,
+  score: Int,
+  order: Int,
+}
+
 typedef Road2Attachment = {
   x: Int,
   y: Int,

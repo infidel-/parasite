@@ -147,6 +147,9 @@ class RoadPlan extends Raster
       lines.push('roadSegments=' + segments.length);
       lines.push('areaLegend .=ground l=low m=medium h=downtown b=military f=facility s=sewers u=underground a=habitat c=corp');
       lines.push('roadLegend .=none 1=ROAD1 2=ROAD2 3=ROAD3 4=ROAD4 5=ROAD5 *=overlap');
+      lines.push('attachmentLegend .=none a=empty attachment cell facing any road');
+      lines.push('axisMaskLegend .=none 1=horizontal 2=vertical 3=both');
+      lines.push('directionMaskLegend .=none hex masks use 1=left 2=right 4=up 8=down');
       lines.push('');
       lines.push('[area_types_full_cells]');
       appendAreaTypeDump(lines);
@@ -156,6 +159,21 @@ class RoadPlan extends Raster
       lines.push('');
       lines.push('[road_plan_cells]');
       appendRoadPlanDump(lines, grid);
+      lines.push('');
+      lines.push('[road_plan_attachment_cells]');
+      appendRoadPlanAttachmentDump(lines, grid);
+      lines.push('');
+      lines.push('[road_plan_road2_axis_masks]');
+      appendRoadPlanAxisMaskDump(lines, grid, ROAD2);
+      lines.push('');
+      lines.push('[road_plan_road3_direction_masks]');
+      appendRoadPlanDirectionMaskDump(lines, grid, ROAD3);
+      lines.push('');
+      lines.push('[road_plan_road4_direction_masks]');
+      appendRoadPlanDirectionMaskDump(lines, grid, ROAD4);
+      lines.push('');
+      lines.push('[road_plan_road5_direction_masks]');
+      appendRoadPlanDirectionMaskDump(lines, grid, ROAD5);
       lines.push('');
       lines.push('[road_segments]');
       appendRoadSegmentDump(lines, segments);
@@ -194,6 +212,44 @@ class RoadPlan extends Raster
           var row = [];
           for (xx in 0...planWidth)
             row.push(getRoadDumpPlanChar(grid, xx, yy));
+          lines.push(row.join(''));
+        }
+    }
+
+// append one plan-cell attachment dump for any parent-road tier
+  function appendRoadPlanAttachmentDump(lines: Array<String>, grid: RoadPlanGrid)
+    {
+      var parentTypes: Array<RoadType> = [ROAD1, ROAD2, ROAD3, ROAD4, ROAD5];
+
+      for (yy in 0...planHeight)
+        {
+          var row = [];
+          for (xx in 0...planWidth)
+            row.push(gridOps.isThinRoadAttachmentCell(grid, xx, yy, parentTypes) ? 'a' : '.');
+          lines.push(row.join(''));
+        }
+    }
+
+// append one plan-cell axis-mask dump for one road tier
+  function appendRoadPlanAxisMaskDump(lines: Array<String>, grid: RoadPlanGrid, type: RoadType)
+    {
+      for (yy in 0...planHeight)
+        {
+          var row = [];
+          for (xx in 0...planWidth)
+            row.push(getRoadDumpHexChar(gridOps.getRoadTypeAxisMaskAtPlanCell(grid, xx, yy, type)));
+          lines.push(row.join(''));
+        }
+    }
+
+// append one plan-cell direction-mask dump for one thin-road tier
+  function appendRoadPlanDirectionMaskDump(lines: Array<String>, grid: RoadPlanGrid, type: RoadType)
+    {
+      for (yy in 0...planHeight)
+        {
+          var row = [];
+          for (xx in 0...planWidth)
+            row.push(getRoadDumpDirectionMaskChar(grid, xx, yy, type));
           lines.push(row.join(''));
         }
     }
@@ -247,6 +303,34 @@ class RoadPlan extends Raster
       if (matches.length == 1)
         return matches[0];
       return '*';
+    }
+
+// return one printable direction-mask marker for one plan cell and road tier
+  function getRoadDumpDirectionMaskChar(grid: RoadPlanGrid, planX: Int, planY: Int,
+      type: RoadType): String
+    {
+      var mask = 0;
+
+      if (gridOps.hasRoadTypeDirectionAtPlanCell(grid, planX, planY, -1, 0, type))
+        mask = mask | 1;
+      if (gridOps.hasRoadTypeDirectionAtPlanCell(grid, planX, planY, 1, 0, type))
+        mask = mask | 2;
+      if (gridOps.hasRoadTypeDirectionAtPlanCell(grid, planX, planY, 0, -1, type))
+        mask = mask | 4;
+      if (gridOps.hasRoadTypeDirectionAtPlanCell(grid, planX, planY, 0, 1, type))
+        mask = mask | 8;
+
+      return getRoadDumpHexChar(mask);
+    }
+
+// return one printable hex digit for one small road dump bitmask
+  function getRoadDumpHexChar(mask: Int): String
+    {
+      if (mask <= 0)
+        return '.';
+      if (mask < 10)
+        return Std.string(mask);
+      return String.fromCharCode('a'.code + mask - 10);
     }
 
 // return one printable road-tier marker for one plan cell
@@ -333,6 +417,10 @@ class RoadPlan extends Raster
       thinCoverage.ensureCityRoad5Coverage(grid);
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad5Coverage', phaseStartTS);
+#end
+      thinCoverage.ensureSpecialAreaRoadCoverage(grid);
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('road.ensureSpecialAreaRoadCoverage', phaseStartTS);
 #end
 
       var result = gridOps.compressRoadPlanGrid(grid);
