@@ -310,6 +310,14 @@ class RoadPlanBranchWalker
             gridOps.hasAdjacentRoadNeighbor(grid, nextX, nextY, walker.x, walker.y);
 
           var nextArea = gridOps.getAreaTypeAtPlanCell(nextX, nextY);
+          if (walker.type == ROAD2 &&
+              road2Network.isRoad2GroundAtPlanCell(nextX, nextY))
+            {
+#if mydebug
+              finishWalkBranchRoadProfile('road2Ground');
+#end
+              return;
+            }
           if (isThinRoadType(walker.type) &&
               !plan.canThinRoadUseAreaType(walker.type, nextArea))
             {
@@ -383,14 +391,6 @@ class RoadPlanBranchWalker
             {
               walker.stopLockSteps--;
               continue;
-            }
-          if (walker.type == ROAD2 &&
-              road2Network.isRoad2GroundAtPlanCell(nextX, nextY))
-            {
-#if mydebug
-              finishWalkBranchRoadProfile('road2Ground');
-#end
-            return;
             }
           if (isThinRoadType(walker.type))
             {

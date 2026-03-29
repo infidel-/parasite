@@ -444,6 +444,7 @@ class RoadPlanRoad2Network
         for (xx in bridgeRect.x...bridgeRect.x + bridgeRect.width)
           {
             if (!gridOps.isInPlanBounds(xx, yy) ||
+                !canRoad2UsePlanCell(xx, yy) ||
                 grid.road1Cells[xx][yy])
               return false;
 

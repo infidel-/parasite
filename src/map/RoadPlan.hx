@@ -4,6 +4,9 @@ package map;
 
 import _AreaType;
 import const.WorldConst;
+#if electron
+import js.node.Fs;
+#end
 #if mydebug
 import haxe.ds.StringMap;
 #end
@@ -131,6 +134,145 @@ class RoadPlan extends Raster
       thinCoverage = new RoadPlanThinCoverage(this, gridOps, branchWalker);
     }
 
+#if electron
+// dump the generated road plan and final segments for one region map seed
+  function dumpRoadPlan(grid: RoadPlanGrid, segments: Array<RoadSegment>)
+    {
+      var lines = [];
+      lines.push('seed=' + mapSeed);
+      lines.push('regionCells=' + regionWidth + 'x' + regionHeight);
+      lines.push('fullCells=' + fullCellWidth + 'x' + fullCellHeight);
+      lines.push('planCells=' + planWidth + 'x' + planHeight);
+      lines.push('planCellsPerTile=' + PLAN_CELLS_PER_TILE);
+      lines.push('roadSegments=' + segments.length);
+      lines.push('areaLegend .=ground l=low m=medium h=downtown b=military f=facility s=sewers u=underground a=habitat c=corp');
+      lines.push('roadLegend .=none 1=ROAD1 2=ROAD2 3=ROAD3 4=ROAD4 5=ROAD5 *=overlap');
+      lines.push('');
+      lines.push('[area_types_full_cells]');
+      appendAreaTypeDump(lines);
+      lines.push('');
+      lines.push('[road_tiles]');
+      appendRoadTileDump(lines, grid);
+      lines.push('');
+      lines.push('[road_plan_cells]');
+      appendRoadPlanDump(lines, grid);
+      lines.push('');
+      lines.push('[road_segments]');
+      appendRoadSegmentDump(lines, segments);
+      Fs.writeFileSync('region_roads.txt', lines.join('\n') + '\n');
+    }
+
+// append one full-cell area-type dump to the output lines
+  function appendAreaTypeDump(lines: Array<String>)
+    {
+      for (yy in 0...fullCellHeight)
+        {
+          var row = [];
+          for (xx in 0...fullCellWidth)
+            row.push(getRoadDumpAreaChar(areaTypes[xx][yy]));
+          lines.push(row.join(''));
+        }
+    }
+
+// append one region-tile road coverage dump to the output lines
+  function appendRoadTileDump(lines: Array<String>, grid: RoadPlanGrid)
+    {
+      for (yy in 0...fullCellHeight)
+        {
+          var row = [];
+          for (xx in 0...fullCellWidth)
+            row.push(getRoadDumpTileChar(grid, xx, yy));
+          lines.push(row.join(''));
+        }
+    }
+
+// append one plan-cell road-tier dump to the output lines
+  function appendRoadPlanDump(lines: Array<String>, grid: RoadPlanGrid)
+    {
+      for (yy in 0...planHeight)
+        {
+          var row = [];
+          for (xx in 0...planWidth)
+            row.push(getRoadDumpPlanChar(grid, xx, yy));
+          lines.push(row.join(''));
+        }
+    }
+
+// append one final road-segment list to the output lines
+  function appendRoadSegmentDump(lines: Array<String>, segments: Array<RoadSegment>)
+    {
+      for (i in 0...segments.length)
+        {
+          var segment = segments[i];
+          lines.push(i + ' ' + Std.string(segment.type) + ' ' +
+            segment.x1 + ',' + segment.y1 + ' -> ' + segment.x2 + ',' + segment.y2);
+        }
+    }
+
+// return one printable area-type marker for the road dump
+  function getRoadDumpAreaChar(areaType: _AreaType): String
+    {
+      return switch (areaType) {
+        case AREA_GROUND: '.';
+        case AREA_CITY_LOW: 'l';
+        case AREA_CITY_MEDIUM: 'm';
+        case AREA_CITY_HIGH: 'h';
+        case AREA_MILITARY_BASE: 'b';
+        case AREA_FACILITY: 'f';
+        case AREA_SEWERS: 's';
+        case AREA_UNDERGROUND_LAB: 'u';
+        case AREA_HABITAT: 'a';
+        case AREA_CORP: 'c';
+      };
+    }
+
+// return one printable road-tier marker for one region tile
+  function getRoadDumpTileChar(grid: RoadPlanGrid, cellX: Int, cellY: Int): String
+    {
+      var matches = [];
+
+      if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD1))
+        matches.push('1');
+      if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD2))
+        matches.push('2');
+      if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD3))
+        matches.push('3');
+      if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD4))
+        matches.push('4');
+      if (gridOps.hasRoadTypeInRegionTile(grid, cellX, cellY, ROAD5))
+        matches.push('5');
+
+      if (matches.length == 0)
+        return '.';
+      if (matches.length == 1)
+        return matches[0];
+      return '*';
+    }
+
+// return one printable road-tier marker for one plan cell
+  function getRoadDumpPlanChar(grid: RoadPlanGrid, planX: Int, planY: Int): String
+    {
+      var matches = [];
+
+      if (gridOps.hasRoadTypeAtPlanCell(grid, planX, planY, ROAD1))
+        matches.push('1');
+      if (gridOps.hasRoadTypeAtPlanCell(grid, planX, planY, ROAD2))
+        matches.push('2');
+      if (gridOps.hasRoadTypeAtPlanCell(grid, planX, planY, ROAD3))
+        matches.push('3');
+      if (gridOps.hasRoadTypeAtPlanCell(grid, planX, planY, ROAD4))
+        matches.push('4');
+      if (gridOps.hasRoadTypeAtPlanCell(grid, planX, planY, ROAD5))
+        matches.push('5');
+
+      if (matches.length == 0)
+        return '.';
+      if (matches.length == 1)
+        return matches[0];
+      return '*';
+    }
+#end
+
   function generateRoadGraph(): Array<RoadSegment>
     {
 #if mydebug
@@ -194,8 +336,12 @@ class RoadPlan extends Raster
 #end
 
       var result = gridOps.compressRoadPlanGrid(grid);
+#if electron
+      dumpRoadPlan(grid, result);
+#end
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.compressRoadPlanGrid', phaseStartTS);
+      traceMapProfileSummary('road.dump=region_roads.txt');
       traceMapProfileSummary('road.summary segments=' + result.length +
         ' plan=' + planWidth + 'x' + planHeight);
       traceMapProfileSamples();

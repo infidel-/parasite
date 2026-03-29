@@ -271,6 +271,7 @@ class RegionGame extends _SaveObject
 
       // stamp a few connected downtown pockets over the city core
       addDowntownClusters();
+      promoteDowntownBorderToMedium();
 
       // add high crime city sections
       addHighCrime();
@@ -472,6 +473,34 @@ class RegionGame extends _SaveObject
         area.typeID == AREA_CITY_HIGH;
     }
 
+// convert low-density neighbors around all downtown areas to medium density
+  function promoteDowntownBorderToMedium()
+    {
+      for (area in _list)
+        if (area.typeID == AREA_CITY_HIGH)
+          promoteAdjacentLowDensityToMedium(area);
+    }
+
+// convert one downtown area's adjacent low-density tiles to medium density
+  function promoteAdjacentLowDensityToMedium(area: AreaGame)
+    {
+      for (yy in (area.y - 1)...(area.y + 2))
+        for (xx in (area.x - 1)...(area.x + 2))
+          {
+            if (xx == area.x && yy == area.y)
+              continue;
+
+            var neighbor = getXY(xx, yy);
+            if (neighbor == null ||
+                neighbor.typeID != AREA_CITY_LOW)
+              continue;
+
+            neighbor.highCrime = false;
+            neighbor.typeID = AREA_CITY_MEDIUM;
+            neighbor.updateType();
+          }
+    }
+
 // count areas with this type
   function countAreasByType(type: _AreaType): Int
     {
@@ -508,6 +537,7 @@ class RegionGame extends _SaveObject
 
       area.typeID = AREA_CITY_HIGH;
       area.updateType();
+      promoteAdjacentLowDensityToMedium(area);
     }
 
 // get high-density city area for corp office conversion
