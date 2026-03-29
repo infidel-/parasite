@@ -230,6 +230,20 @@ class RegionView
       scene.endRenderSampleRegion(renderTS);
     }
 
+// draw one special area tile on top of the region map image
+  function drawAreaTileOverlay(ctx: CanvasRenderingContext2D,
+      area: AreaGame, tileset: Tileset, ax: Int, ay: Int)
+    {
+      if (area.typeID != AREA_MILITARY_BASE &&
+          area.typeID != AREA_FACILITY)
+        return;
+
+      var icon = tileset.getIcon(area.tileID);
+      untyped ctx.imageSmoothingEnabled = false;
+      tileset.draw(ctx, icon, ax, ay);
+      untyped ctx.imageSmoothingEnabled = true;
+    }
+
 // paint area icons on top of the region map image
   function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset)
     {
@@ -253,6 +267,8 @@ class RegionView
           ctx.globalAlpha = 1.0;
           return;
         }
+
+      drawAreaTileOverlay(ctx, area, tileset, ax, ay);
 
       // high crime marker
       if (area.highCrime)
