@@ -21,7 +21,7 @@ class Ground extends Core
             values[xx][yy] = getAreaDensityValue(cells[srcX][srcY].typeID);
           }
 
-      for (i in 0...4)
+      for (i in 0...0)
         values = blurDensityValues(values);
 
       return {
@@ -62,7 +62,7 @@ class Ground extends Core
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            var color = getColorForDensity(sampleDensityAtPixel(px, py));
+            var color = getColorForDensity(samplePaintDensityAtPixel(px, py));
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
             data[index++] = color & 0xFF;
@@ -70,6 +70,68 @@ class Ground extends Core
           }
 
       ctx.putImageData(imageData, 0, 0);
+    }
+
+// sample the ground paint density with soft blending only near tile edges
+  function samplePaintDensityAtPixel(px: Int, py: Int): Float
+    {
+      var xBlend = getGroundPaintAxisBlend(px, densityField.width);
+      var yBlend = getGroundPaintAxisBlend(py, densityField.height);
+      var v00 = densityField.values[xBlend.a][yBlend.a];
+      var v10 = densityField.values[xBlend.b][yBlend.a];
+      var v01 = densityField.values[xBlend.a][yBlend.b];
+      var v11 = densityField.values[xBlend.b][yBlend.b];
+      var top = v00 + (v10 - v00) * xBlend.t;
+      var bottom = v01 + (v11 - v01) * xBlend.t;
+      return top + (bottom - top) * yBlend.t;
+    }
+
+// return the edge-band width used for softened ground paint transitions
+  function getGroundPaintEdgeBlend(): Float
+    {
+      return 0.15;
+    }
+
+// return the two density cells and blend factor for one paint axis
+  function getGroundPaintAxisBlend(pixel: Int, cellCount: Int): { a: Int, b: Int, t: Float }
+    {
+      var coord = (pixel + 0.5) / CLEAN_TILE_SIZE;
+      var cell = clampInt(Std.int(Math.floor(coord)), 0, cellCount - 1);
+      var local = coord - cell;
+      var bandHalf = getGroundPaintEdgeBlend();
+
+      if (local < bandHalf &&
+          cell > 0)
+        {
+          return {
+            a: cell - 1,
+            b: cell,
+            t: getGroundPaintEdgeFactor((local + bandHalf) / (bandHalf * 2.0)),
+          };
+        }
+
+      if (local > 1.0 - bandHalf &&
+          cell < cellCount - 1)
+        {
+          return {
+            a: cell,
+            b: cell + 1,
+            t: getGroundPaintEdgeFactor((local - (1.0 - bandHalf)) / (bandHalf * 2.0)),
+          };
+        }
+
+      return {
+        a: cell,
+        b: cell,
+        t: 0.0,
+      };
+    }
+
+// return one smooth blend factor inside the ground paint edge band
+  function getGroundPaintEdgeFactor(v: Float): Float
+    {
+      var t = clampFloat(v, 0.0, 1.0);
+      return t * t * (3.0 - 2.0 * t);
     }
 
   function sampleDensityAtPixel(px: Int, py: Int): Float

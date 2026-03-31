@@ -38,7 +38,7 @@ class Core
   var MIN_CITY_TILE_ROAD_COVERAGE = 0.20;
   var MAX_CITY_COVERAGE_TURN_DISTANCE = 6;
 
-  var COLOR_GROUND = 0x3d4a38;
+  var COLOR_GROUND = 0x2e5e1b;
   var COLOR_LOW = 0x5a5b60;
   var COLOR_MEDIUM = 0x6a6b71;
   var COLOR_HIGH = 0x7b7c84;

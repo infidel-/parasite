@@ -399,7 +399,7 @@ class Raster extends Ground
 
   function getRoadPaintColor(xx: Int, yy: Int): Int
     {
-      return COLOR_ROAD1;
+      return 0x72737a;
     }
 
 // return the distance from a point to an axis-aligned road segment
