@@ -93,7 +93,8 @@ class BuildingsFootprintGenerator
           !plan.hasVisibleForecourt(bounds, innerX, innerY, innerWidth, innerHeight))
         forecourtAlpha = 0.0;
 
-      var color = plan.pickBuildingColor(parcel.density);
+      var color = plan.pickBuildingColor(parcel.density, parcel.districtType,
+        innerX, innerY, innerWidth, innerHeight);
       var rooftopRectCount = plan.getRooftopRectCount(footprint);
 
       return {
@@ -108,7 +109,8 @@ class BuildingsFootprintGenerator
         lotHeight: innerHeight,
         forecourtColor: plan.pickBuildingForecourtColor(parcel.density),
         forecourtAlpha: forecourtAlpha,
-        roofColor: plan.pickBuildingRoofColor(color, parcel.density),
+        roofColor: plan.pickBuildingRoofColor(color, parcel.density, parcel.districtType,
+          innerX, innerY, innerWidth, innerHeight),
         roofAlpha: plan.pickBuildingRoofAlpha(parcel.density),
         edgeAlpha: plan.pickBuildingEdgeAlpha(parcel.density),
         shadowOffset: plan.getBuildingShadowOffset(parcel.density),

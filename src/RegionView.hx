@@ -1,6 +1,9 @@
 // tiled region view (each tile corresponds to an area)
 
+import haxe.ds.IntMap;
 import js.html.CanvasRenderingContext2D;
+import js.html.CanvasElement;
+import js.Browser;
 import game.*;
 import tiles.Tileset;
 import map.Image;
@@ -11,6 +14,7 @@ class RegionView
   var scene: GameScene; // scene link
 
   var path: Array<{ x: Int, y: Int }>; // currently visible path
+  var outlinedEntityIconCache: IntMap<CanvasElement>; // cached black silhouette icons
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -22,6 +26,7 @@ class RegionView
       width = 100; // should be larger than any region
       height = 100;
       path = null;
+      outlinedEntityIconCache = new IntMap();
     }
 
 
@@ -273,16 +278,7 @@ class RegionView
       // high crime marker
       if (area.highCrime)
         {
-          ctx.globalAlpha = 0.85;
-          ctx.drawImage(scene.images.entities,
-            Const.FRAME_HIGH_CRIME * Const.TILE_SIZE_CLEAN, 
-            Const.ROW_ALERT * Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            ax, ay,
-            Const.TILE_SIZE,
-            Const.TILE_SIZE);
-          ctx.globalAlpha = 1.0;
+          drawOutlinedEntityIcon(ctx, Const.FRAME_HIGH_CRIME, Const.ROW_ALERT, ax, ay, 0.85);
         }
 
       // area icons
@@ -323,6 +319,99 @@ class RegionView
             Const.TILE_SIZE,
             Const.TILE_SIZE);
         }
+    }
+
+// draw one entity icon with a small black outline
+  function drawOutlinedEntityIcon(ctx: CanvasRenderingContext2D, col: Int, row: Int,
+      ax: Int, ay: Int, alpha: Float)
+    {
+      var iconCanvas = getOutlinedEntityIconCanvas(col, row);
+      var outlineOffset = 0.5;
+
+      ctx.globalAlpha = alpha * 0.75;
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax - outlineOffset,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax + outlineOffset,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax,
+        ay - outlineOffset,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax,
+        ay + outlineOffset,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+
+// draw the original icon on top of the outline
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(scene.images.entities,
+        col * Const.TILE_SIZE_CLEAN,
+        row * Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.globalAlpha = 1.0;
+    }
+
+// return one cached black silhouette for an entity icon
+  function getOutlinedEntityIconCanvas(col: Int, row: Int): CanvasElement
+    {
+      var key = (row << 16) | col;
+      var iconCanvas = outlinedEntityIconCache.get(key);
+      if (iconCanvas != null)
+        return iconCanvas;
+
+      iconCanvas = Browser.document.createCanvasElement();
+      iconCanvas.width = Const.TILE_SIZE_CLEAN;
+      iconCanvas.height = Const.TILE_SIZE_CLEAN;
+      var iconCtx = iconCanvas.getContext('2d');
+
+// draw the source sprite into a temporary canvas
+      iconCtx.drawImage(scene.images.entities,
+        col * Const.TILE_SIZE_CLEAN,
+        row * Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN);
+
+// convert the sprite silhouette into a black outline source
+      untyped iconCtx.globalCompositeOperation = 'source-in';
+      iconCtx.fillStyle = '#000000';
+      iconCtx.fillRect(0, 0, Const.TILE_SIZE_CLEAN, Const.TILE_SIZE_CLEAN);
+      untyped iconCtx.globalCompositeOperation = 'source-over';
+
+      outlinedEntityIconCache.set(key, iconCanvas);
+      return iconCanvas;
     }
 
 // hide gui

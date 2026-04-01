@@ -443,9 +443,42 @@ class Raster extends Ground
       };
     }
 
+// return the muted tier tint used for one painted road cell
+  function getRoadTierPaintColor(color: Int): Int
+    {
+      return lerpColor(color, 0x50545a, 0.82);
+    }
+
+// return how strongly one road tier should keep its own tint
+  function getRoadTierPaintBlend(color: Int): Float
+    {
+      if (color == COLOR_ROAD1)
+        return 0.70;
+      if (color == COLOR_ROAD2)
+        return 0.60;
+      if (color == COLOR_ROAD3 ||
+          color == COLOR_ROAD4)
+        return 0.58;
+      if (color == COLOR_ROAD5)
+        return 0.56;
+      return 0.62;
+    }
+
   function getRoadPaintColor(xx: Int, yy: Int): Int
     {
-      return 0x42434a;
+      var tierColor = roadMasks.color[xx][yy];
+      if (tierColor == 0)
+        return 0x42434a;
+
+      var centerX = xx * PLAN_CELL_SIZE + Std.int(PLAN_CELL_SIZE / 2);
+      var centerY = yy * PLAN_CELL_SIZE + Std.int(PLAN_CELL_SIZE / 2);
+      var backgroundColor = getColorForDensity(samplePaintDensityAtPixel(centerX, centerY));
+      var mutedTierColor = getRoadTierPaintColor(tierColor);
+      var blend = getRoadTierPaintBlend(tierColor);
+      var color = lerpColor(backgroundColor, mutedTierColor, blend);
+      var variation = getStableNoise(Std.int(xx / 3), Std.int(yy / 3),
+        tierColor, roadMasks.axis[xx][yy], 0x3d5f91);
+      return adjustColor(color, 0.96 + variation * 0.08);
     }
 
 // return the distance from a point to an axis-aligned road segment

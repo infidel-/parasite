@@ -301,8 +301,38 @@ class Buildings extends LegacyRoads
       return clampInt(Std.int(center + jitter), 0, span);
     }
 
-// return the building palette for a density band
-  function pickBuildingColor(density: Float): Int
+// return a deterministic color-variation sample for one building lot
+  function getBuildingColorVariation(x: Int, y: Int, width: Int, height: Int, salt: Int): Float
+    {
+      return getStableNoise(x, y, width, height, salt);
+    }
+
+// return the tint target for one building district band
+  function getBuildingDistrictTintColor(districtType: BuildingDistrictType, variation: Float): Int
+    {
+      return switch (districtType) {
+        case OTHER: lerpColor(0x615c53, 0x6a6357, variation);
+        case LOW: lerpColor(0x6b614e, 0x5d6850, variation);
+        case MEDIUM: lerpColor(0x5f5d59, 0x61666b, variation);
+        case DOWNTOWN: lerpColor(0x475565, 0x5a6bfc, variation);
+      };
+    }
+
+// return the tint strength for one building district band
+  function getBuildingDistrictTintStrength(districtType: BuildingDistrictType,
+      variation: Float): Float
+    {
+      return switch (districtType) {
+        case OTHER: 0.07 + variation * 0.04;
+        case LOW: 0.12 + variation * 0.08;
+        case MEDIUM: 0.10 + variation * 0.07;
+        case DOWNTOWN: 0.18 + variation * 0.10;
+      };
+    }
+
+// return the building palette for one density and district band
+  function pickBuildingColor(density: Float, districtType: BuildingDistrictType,
+      x: Int, y: Int, width: Int, height: Int): Int
     {
       var base = COLOR_BUILDING_LOW;
       if (density >= 0.66)
@@ -315,7 +345,14 @@ class Buildings extends LegacyRoads
         factor = 0.84 + rng.nextFloat() * 0.10;
       else if (density >= 0.33)
         factor = 0.91 + rng.nextFloat() * 0.10;
-      return adjustColor(base, factor);
+
+      var brightnessVariation = getBuildingColorVariation(x, y, width, height, 0x13579b);
+      var tintVariation = getBuildingColorVariation(x, y, width, height, 0x2468ac);
+      var tintStrengthVariation = getBuildingColorVariation(x, y, width, height, 0x5a17c3);
+      var color = adjustColor(base, factor + (brightnessVariation - 0.5) * 0.06);
+      var tintColor = getBuildingDistrictTintColor(districtType, tintVariation);
+      var tintStrength = getBuildingDistrictTintStrength(districtType, tintStrengthVariation);
+      return lerpColor(color, tintColor, tintStrength);
     }
 
 // return a forecourt tone for centered tower parcels
@@ -324,14 +361,20 @@ class Buildings extends LegacyRoads
       return adjustColor(COLOR_PLAZA, 0.92 + density * 0.08 + rng.nextFloat() * 0.04);
     }
 
-// return a roof tone for the current building density
-  function pickBuildingRoofColor(color: Int, density: Float): Int
+// return a roof tone for the current building density and district
+  function pickBuildingRoofColor(color: Int, density: Float,
+      districtType: BuildingDistrictType, x: Int, y: Int, width: Int, height: Int): Int
     {
       var accent = 0xbab3a5;
-      if (density >= 0.66)
+      if (districtType == DOWNTOWN)
+        accent = lerpColor(0x7f9bc6, 0x9bb5e4,
+          getBuildingColorVariation(x, y, width, height, 0x41a7d9));
+      else if (density >= 0.66)
         accent = 0xc5bdae;
       else if (density >= 0.33)
         accent = 0xb8b09f;
+      else
+        accent = 0xb4ad99;
 
       return lerpColor(color, accent, 0.18 + density * 0.10 + rng.nextFloat() * 0.05);
     }

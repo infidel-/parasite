@@ -400,6 +400,19 @@ class Core
       return (r << 16) | (g << 8) | b;
     }
 
+// return deterministic 0..1 noise from a few integer inputs
+  function getStableNoise(a: Int, b: Int, c: Int, d: Int, salt: Int): Float
+    {
+      var hash = salt;
+      hash = hash ^ (a * 73856093);
+      hash = hash ^ (b * 19349663);
+      hash = hash ^ (c * 83492791);
+      hash = hash ^ (d * 265443576);
+      hash = (hash ^ (hash >> 13)) * 1274126177;
+      hash = hash ^ (hash >> 16);
+      return (hash & 0x7FFFFFFF) / 0x7FFFFFFF;
+    }
+
 // allocate a float grid
   function makeFloatGrid(width: Int, height: Int): Array<Array<Float>>
     {
