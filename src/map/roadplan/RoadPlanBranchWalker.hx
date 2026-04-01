@@ -239,7 +239,7 @@ class RoadPlanBranchWalker
 
       var style = plan.getRoadStyle(type);
       var radius = style.coreWidth / 2.0 + style.shoulderWidth + style.featherWidth;
-      return plan.clampInt(Std.int(Math.ceil(radius / plan.PLAN_CELL_SIZE)) + 1, 2, 5);
+      return plan.clampInt(Std.int(Math.ceil(radius / plan.PLAN_CELL_SIZE)), 1, 4);
     }
 
 // return the ROAD2 branch chance for one adjacent plan cell

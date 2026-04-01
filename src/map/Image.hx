@@ -124,6 +124,10 @@ class Image extends Buildings
       cropVisibleRegion();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion', phaseStartTS);
+#end
+      applyFinalImagePostProcess();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.applyFinalImagePostProcess', phaseStartTS);
       traceMapProfileSummary('image.summary roads=' + roads.length +
         ' blocks=' + blocks.length +
         ' parcels=' + parcels.length +

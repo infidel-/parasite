@@ -495,13 +495,13 @@ class RoadPlanRoad2Network
       if (dx < 0)
         {
           startX = planX + 2;
-          endX = baseX - 2;
+          endX = baseX - 1;
           startY = planY;
           endY = planY + 1;
         }
       else if (dx > 0)
         {
-          startX = baseX + 2;
+          startX = baseX + 1;
           endX = planX - 1;
           startY = planY;
           endY = planY + 1;
@@ -511,13 +511,13 @@ class RoadPlanRoad2Network
           startX = planX;
           endX = planX + 1;
           startY = planY + 2;
-          endY = baseY - 2;
+          endY = baseY - 1;
         }
       else if (dy > 0)
         {
           startX = planX;
           endX = planX + 1;
-          startY = baseY + 2;
+          startY = baseY + 1;
           endY = planY - 1;
         }
 
@@ -831,14 +831,14 @@ class RoadPlanRoad2Network
       var planY = floorEven(baseY);
 
       if (dx < 0)
-        planX = floorEven(baseX - 3);
+        planX = floorEven(baseX - 2);
       else if (dx > 0)
-        planX = ceilEven(baseX + 2);
+        planX = ceilEven(baseX + 1);
 
       if (dy < 0)
-        planY = floorEven(baseY - 3);
+        planY = floorEven(baseY - 2);
       else if (dy > 0)
-        planY = ceilEven(baseY + 2);
+        planY = ceilEven(baseY + 1);
 
       if (!gridOps.isInPlanBounds(planX, planY) ||
           !gridOps.isInPlanBounds(planX + 1, planY + 1))

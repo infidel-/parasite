@@ -6,6 +6,8 @@ import game.*;
 import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
+import js.lib.Float32Array;
+import js.lib.Uint8ClampedArray;
 import _AreaType;
 import map.SeededRandom;
 import map.Types.BlockRect;
@@ -13,7 +15,13 @@ import map.Types.BuildingFootprint;
 import map.Types.DensityField;
 import map.Types.ParcelRect;
 import map.Types.RoadMasks;
+import map.Types.RoadPlanGrid;
 import map.Types.RoadSegment;
+
+typedef LanczosKernelTable = {
+  var starts: Array<Int>;
+  var taps: Array<Array<Float>>;
+}
 
 class Core
 {
@@ -21,6 +29,9 @@ class Core
   var CLEAN_TILE_SIZE = Const.TILE_SIZE_CLEAN;
   var PLAN_CELL_SIZE = 8;
   var PLAN_CELLS_PER_TILE = 8;
+  var MAP_LANCZOS_UPSCALE = 2;
+  var MAP_LANCZOS_ROUNDS = 1;
+  var MAP_LANCZOS_RADIUS = 3;
   var ROAD2_GRID_STEP = 2;
   var ROAD2_MIN_SPAWN_GAP = 16;
   var ROAD_BRANCH_MIN_TURN_STEPS = 16;
@@ -75,6 +86,7 @@ class Core
   var overallDensity: Float;
   var roads: Array<RoadSegment>;
   var roadMasks: RoadMasks;
+  var roadPlanGrid: RoadPlanGrid;
   var blocks: Array<BlockRect>;
   var parcels: Array<ParcelRect>;
   var buildings: Array<BuildingFootprint>;
@@ -98,6 +110,7 @@ class Core
       planWidth = Std.int(fullPixelWidth / PLAN_CELL_SIZE);
       planHeight = Std.int(fullPixelHeight / PLAN_CELL_SIZE);
       roads = [];
+      roadPlanGrid = null;
       blocks = [];
       parcels = [];
       buildings = [];
@@ -136,6 +149,199 @@ class Core
 
       canvas = cropCanvas;
       ctx = cropCtx;
+    }
+
+// apply repeated lanczos3 downscale-upscale resampling to the final visible image
+  function applyFinalImagePostProcess()
+    {
+      if (MAP_LANCZOS_ROUNDS <= 0 ||
+          MAP_LANCZOS_UPSCALE <= 1 ||
+          MAP_LANCZOS_RADIUS <= 0)
+        return;
+
+      var workCanvas = canvas;
+      for (i in 0...MAP_LANCZOS_ROUNDS)
+        {
+          var targetWidth = workCanvas.width;
+          var targetHeight = workCanvas.height;
+          var downscaleWidth = Std.int(Math.max(1, Math.round(targetWidth / MAP_LANCZOS_UPSCALE)));
+          var downscaleHeight = Std.int(Math.max(1, Math.round(targetHeight / MAP_LANCZOS_UPSCALE)));
+
+// shrink the final image first to introduce the broad blur
+          workCanvas = resampleCanvasLanczos3(workCanvas, downscaleWidth, downscaleHeight);
+
+// restore the original size with the same filter
+          workCanvas = resampleCanvasLanczos3(workCanvas, targetWidth, targetHeight);
+        }
+
+      canvas = workCanvas;
+      ctx = canvas.getContext2d({});
+    }
+
+// resize one canvas with a separable lanczos3 filter
+  function resampleCanvasLanczos3(srcCanvas: CanvasElement, dstWidth: Int,
+      dstHeight: Int): CanvasElement
+    {
+      var srcWidth = srcCanvas.width;
+      var srcHeight = srcCanvas.height;
+      var srcCtx = srcCanvas.getContext2d({});
+      var srcImage = srcCtx.getImageData(0, 0, srcWidth, srcHeight);
+      var xKernel = buildLanczosKernelTable(srcWidth, dstWidth, MAP_LANCZOS_RADIUS);
+      var yKernel = buildLanczosKernelTable(srcHeight, dstHeight, MAP_LANCZOS_RADIUS);
+      var tmp = resampleLanczos3Horizontal(srcImage.data, srcWidth, srcHeight, xKernel);
+      var dstCanvas = Browser.document.createCanvasElement();
+
+      dstCanvas.width = dstWidth;
+      dstCanvas.height = dstHeight;
+      var dstCtx = dstCanvas.getContext2d({});
+      var dstImage = dstCtx.createImageData(dstWidth, dstHeight);
+      resampleLanczos3Vertical(tmp, dstWidth, srcHeight, yKernel, dstImage.data);
+      dstCtx.putImageData(dstImage, 0, 0);
+      return dstCanvas;
+    }
+
+// build one separable lanczos3 kernel table for one axis
+  function buildLanczosKernelTable(srcSize: Int, dstSize: Int, radius: Int): LanczosKernelTable
+    {
+      var starts = [];
+      var taps = [];
+      var scale = dstSize / srcSize;
+      var support = (scale < 1.0 ? radius / scale : radius);
+
+      for (dst in 0...dstSize)
+        {
+          var center = (dst + 0.5) / scale - 0.5;
+          var start = Std.int(Math.ceil(center - support));
+          var stop = Std.int(Math.floor(center + support));
+          var weights = [];
+          var total = 0.0;
+
+          for (src in start...stop + 1)
+            {
+              var weight = getLanczosWeight(center - src, scale, radius);
+              weights.push(weight);
+              total += weight;
+            }
+
+          if (total <= 0.0)
+            {
+              start = clampInt(Std.int(Math.round(center)), 0, srcSize - 1);
+              weights = [1.0];
+              total = 1.0;
+            }
+
+          for (i in 0...weights.length)
+            weights[i] = weights[i] / total;
+
+          starts.push(start);
+          taps.push(weights);
+        }
+
+      return {
+        starts: starts,
+        taps: taps,
+      };
+    }
+
+// resample one image horizontally with one lanczos3 kernel table
+  function resampleLanczos3Horizontal(src: Uint8ClampedArray, srcWidth: Int, srcHeight: Int,
+      kernel: LanczosKernelTable): Float32Array
+    {
+      var dstWidth = kernel.starts.length;
+      var dst = new Float32Array(dstWidth * srcHeight * 4);
+
+      for (yy in 0...srcHeight)
+        for (xx in 0...dstWidth)
+          {
+            var start = kernel.starts[xx];
+            var weights = kernel.taps[xx];
+            var dstIndex = (yy * dstWidth + xx) * 4;
+            var r = 0.0;
+            var g = 0.0;
+            var b = 0.0;
+            var a = 0.0;
+
+            for (i in 0...weights.length)
+              {
+                var srcX = clampInt(start + i, 0, srcWidth - 1);
+                var srcIndex = (yy * srcWidth + srcX) * 4;
+                var weight = weights[i];
+
+                r += src[srcIndex] * weight;
+                g += src[srcIndex + 1] * weight;
+                b += src[srcIndex + 2] * weight;
+                a += src[srcIndex + 3] * weight;
+              }
+
+            dst[dstIndex] = r;
+            dst[dstIndex + 1] = g;
+            dst[dstIndex + 2] = b;
+            dst[dstIndex + 3] = a;
+          }
+
+      return dst;
+    }
+
+// resample one image vertically with one lanczos3 kernel table
+  function resampleLanczos3Vertical(src: Float32Array, srcWidth: Int, srcHeight: Int,
+      kernel: LanczosKernelTable, dst: Uint8ClampedArray)
+    {
+      var dstHeight = kernel.starts.length;
+
+      for (yy in 0...dstHeight)
+        {
+          var start = kernel.starts[yy];
+          var weights = kernel.taps[yy];
+
+          for (xx in 0...srcWidth)
+            {
+              var dstIndex = (yy * srcWidth + xx) * 4;
+              var r = 0.0;
+              var g = 0.0;
+              var b = 0.0;
+              var a = 0.0;
+
+              for (i in 0...weights.length)
+                {
+                  var srcY = clampInt(start + i, 0, srcHeight - 1);
+                  var srcIndex = (srcY * srcWidth + xx) * 4;
+                  var weight = weights[i];
+
+                  r += src[srcIndex] * weight;
+                  g += src[srcIndex + 1] * weight;
+                  b += src[srcIndex + 2] * weight;
+                  a += src[srcIndex + 3] * weight;
+                }
+
+              dst[dstIndex] = clampInt(Std.int(Math.round(r)), 0, 255);
+              dst[dstIndex + 1] = clampInt(Std.int(Math.round(g)), 0, 255);
+              dst[dstIndex + 2] = clampInt(Std.int(Math.round(b)), 0, 255);
+              dst[dstIndex + 3] = clampInt(Std.int(Math.round(a)), 0, 255);
+            }
+        }
+    }
+
+// return one lanczos sample weight with anti-alias widening on downscale
+  function getLanczosWeight(distance: Float, scale: Float, radius: Int): Float
+    {
+      var x = Math.abs(distance);
+      if (scale < 1.0)
+        x *= scale;
+
+      if (x >= radius)
+        return 0.0;
+      if (x < 0.000001)
+        return 1.0;
+
+      return getSincSample(Math.PI * x) * getSincSample(Math.PI * x / radius);
+    }
+
+// return one normalized sinc sample
+  function getSincSample(x: Float): Float
+    {
+      if (Math.abs(x) < 0.000001)
+        return 1.0;
+      return Math.sin(x) / x;
     }
 
 // return whether a candidate line is far enough from others

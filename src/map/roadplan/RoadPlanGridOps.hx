@@ -390,18 +390,10 @@ class RoadPlanGridOps
           }
     }
 
-// mark one ROAD1 centerline step as a 3-cell-wide occupied band
+// mark one ROAD1 centerline step as an occupied trunk cell
   public function addRoad1PlanStamp(grid: RoadPlanGrid, planX: Int, planY: Int, dx: Int, dy: Int)
     {
-      if (dx != 0)
-        {
-          for (yy in plan.clampInt(planY - 1, 0, plan.planHeight - 1)...plan.clampInt(planY + 2, 0, plan.planHeight))
-            grid.road1Cells[planX][yy] = true;
-          return;
-        }
-
-      for (xx in plan.clampInt(planX - 1, 0, plan.planWidth - 1)...plan.clampInt(planX + 2, 0, plan.planWidth))
-        grid.road1Cells[xx][planY] = true;
+      grid.road1Cells[planX][planY] = true;
     }
 
 // mark one road axis cell while keeping the stronger road tier when overlapping

@@ -169,22 +169,15 @@ class Raster extends Ground
             var cellY = yy * PLAN_CELL_SIZE;
             var paintSpan = roadMasks.paintSpan[xx][yy];
             var axis = roadMasks.axis[xx][yy];
+            var offset = Std.int((PLAN_CELL_SIZE - paintSpan) / 2);
             if (roadMasks.color[xx][yy] == COLOR_ROAD2)
               {
-                paintRoad2WideCell(xx, yy, cellX, cellY, axis);
+                paintRoad2WideCell(xx, yy, cellX, cellY, paintSpan, offset);
                 continue;
               }
             if (paintSpan <= 0 || paintSpan >= PLAN_CELL_SIZE)
               {
-                ctx.fillRect(cellX, cellY, PLAN_CELL_SIZE, PLAN_CELL_SIZE);
-                continue;
-              }
-
-            var offset = Std.int((PLAN_CELL_SIZE - paintSpan) / 2);
-            if (roadMasks.color[xx][yy] == COLOR_ROAD2 &&
-                axis == 3)
-              {
-                paintRoad2TurnCell(xx, yy, cellX, cellY, paintSpan, offset);
+                fillRoadRect(cellX, cellY, PLAN_CELL_SIZE, PLAN_CELL_SIZE);
                 continue;
               }
             if (roadMasks.color[xx][yy] == COLOR_ROAD4 ||
@@ -196,53 +189,104 @@ class Raster extends Ground
             switch (axis)
               {
                 case 1:
-                  ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+                  fillRoadRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
                 case 2:
-                  ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+                  fillRoadRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
                 case 3:
-                  ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
-                  ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+                  fillRoadRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+                  fillRoadRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
                 default:
-                  ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
+                  fillRoadRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
               }
           }
       ctx.globalAlpha = 1.0;
     }
 
-// paint one orange occupied plan cell
-  function paintRoad2WideCell(xx: Int, yy: Int, cellX: Int, cellY: Int, axis: Int)
+// fill one road rect in map canvas space
+  function fillRoadRect(x: Int, y: Int, width: Int, height: Int)
     {
-      ctx.fillRect(cellX, cellY, PLAN_CELL_SIZE, PLAN_CELL_SIZE);
+      ctx.fillRect(x, y, width, height);
     }
 
-// paint one orange turn cell as an elbow instead of a full cross
-  function paintRoad2TurnCell(xx: Int, yy: Int, cellX: Int, cellY: Int,
+// paint one ROAD2 occupied cell using the paired 2-cell road band
+  function paintRoad2WideCell(xx: Int, yy: Int, cellX: Int, cellY: Int,
       paintSpan: Int, offset: Int)
     {
-      var left = hasRoadColorAxis(xx - 1, yy, COLOR_ROAD2, 1);
-      var right = hasRoadColorAxis(xx + 1, yy, COLOR_ROAD2, 1);
-      var up = hasRoadColorAxis(xx, yy - 1, COLOR_ROAD2, 2);
-      var down = hasRoadColorAxis(xx, yy + 1, COLOR_ROAD2, 2);
-      var mid = offset + Std.int(Math.ceil(paintSpan / 2.0));
-
-      ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
-      if (left)
-        ctx.fillRect(cellX, cellY + offset, mid, paintSpan);
-      if (right)
-        ctx.fillRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset, paintSpan);
-      if (up)
-        ctx.fillRect(cellX + offset, cellY, paintSpan, mid);
-      if (down)
-        ctx.fillRect(cellX + offset, cellY + offset, paintSpan, PLAN_CELL_SIZE - offset);
-
-      if (!left &&
-          !right &&
-          !up &&
-          !down)
+      if (roadPlanGrid == null ||
+          !roadPlanGrid.road2Cells[xx][yy])
         {
-          ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
-          ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+          fillRoadRect(cellX, cellY, PLAN_CELL_SIZE, PLAN_CELL_SIZE);
+          return;
         }
+
+      var axisMask = roadPlanGrid.road2AxisMask[xx][yy];
+      if ((axisMask & 1) != 0)
+        paintRoad2HorizontalCell(xx, yy, cellX, cellY, paintSpan, offset);
+      if ((axisMask & 2) != 0)
+        paintRoad2VerticalCell(xx, yy, cellX, cellY, paintSpan, offset);
+      if (axisMask == 0)
+        fillRoadRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
+    }
+
+// paint the horizontal half of one ROAD2 cell inside its 2-row band
+  function paintRoad2HorizontalCell(xx: Int, yy: Int, cellX: Int, cellY: Int,
+      paintSpan: Int, offset: Int)
+    {
+      var topSpan = Std.int(Math.floor(paintSpan / 2.0));
+      var bottomSpan = paintSpan - topSpan;
+
+      if ((yy & 1) == 0 &&
+          hasRoad2AxisPair(xx, yy, xx, yy + 1, 1))
+        {
+          fillRoadRect(cellX, cellY + PLAN_CELL_SIZE - topSpan, PLAN_CELL_SIZE, topSpan);
+          return;
+        }
+      if ((yy & 1) == 1 &&
+          hasRoad2AxisPair(xx, yy, xx, yy - 1, 1))
+        {
+          fillRoadRect(cellX, cellY, PLAN_CELL_SIZE, bottomSpan);
+          return;
+        }
+
+      fillRoadRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+    }
+
+// paint the vertical half of one ROAD2 cell inside its 2-column band
+  function paintRoad2VerticalCell(xx: Int, yy: Int, cellX: Int, cellY: Int,
+      paintSpan: Int, offset: Int)
+    {
+      var leftSpan = Std.int(Math.floor(paintSpan / 2.0));
+      var rightSpan = paintSpan - leftSpan;
+
+      if ((xx & 1) == 0 &&
+          hasRoad2AxisPair(xx, yy, xx + 1, yy, 2))
+        {
+          fillRoadRect(cellX + PLAN_CELL_SIZE - leftSpan, cellY, leftSpan, PLAN_CELL_SIZE);
+          return;
+        }
+      if ((xx & 1) == 1 &&
+          hasRoad2AxisPair(xx, yy, xx - 1, yy, 2))
+        {
+          fillRoadRect(cellX, cellY, rightSpan, PLAN_CELL_SIZE);
+          return;
+        }
+
+      fillRoadRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+    }
+
+// return whether two neighboring ROAD2 cells belong to the same paired band
+  function hasRoad2AxisPair(xx: Int, yy: Int, neighborX: Int, neighborY: Int, axisMask: Int): Bool
+    {
+      if (neighborX < 0 ||
+          neighborY < 0 ||
+          neighborX >= planWidth ||
+          neighborY >= planHeight)
+        return false;
+      if (roadPlanGrid == null ||
+          !roadPlanGrid.road2Cells[neighborX][neighborY] ||
+          roadPlanGrid.road2IDs[neighborX][neighborY] != roadPlanGrid.road2IDs[xx][yy])
+        return false;
+      return (roadPlanGrid.road2AxisMask[neighborX][neighborY] & axisMask) != 0;
     }
 
 // paint one thin road cell with join caps toward facing neighbors
@@ -257,7 +301,7 @@ class Raster extends Ground
       var mid = offset + Std.int(Math.ceil(paintSpan / 2.0));
 
 // paint the current cell core
-      ctx.fillRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
+      fillRoadRect(cellX + offset, cellY + offset, paintSpan, paintSpan);
       if ((axis & 1) != 0)
         {
           var paintLeft = (directionMask & 1) != 0 || left;
@@ -266,12 +310,13 @@ class Raster extends Ground
               paintRight)
             {
               if (paintLeft)
-                ctx.fillRect(cellX, cellY + offset, mid, paintSpan);
+                fillRoadRect(cellX, cellY + offset, mid, paintSpan);
               if (paintRight)
-                ctx.fillRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset, paintSpan);
+                fillRoadRect(cellX + offset, cellY + offset, PLAN_CELL_SIZE - offset,
+                  paintSpan);
             }
           else
-            ctx.fillRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
+            fillRoadRect(cellX, cellY + offset, PLAN_CELL_SIZE, paintSpan);
         }
       if ((axis & 2) != 0)
         {
@@ -281,12 +326,13 @@ class Raster extends Ground
               paintDown)
             {
               if (paintUp)
-                ctx.fillRect(cellX + offset, cellY, paintSpan, mid);
+                fillRoadRect(cellX + offset, cellY, paintSpan, mid);
               if (paintDown)
-                ctx.fillRect(cellX + offset, cellY + offset, paintSpan, PLAN_CELL_SIZE - offset);
+                fillRoadRect(cellX + offset, cellY + offset, paintSpan,
+                  PLAN_CELL_SIZE - offset);
             }
           else
-            ctx.fillRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
+            fillRoadRect(cellX + offset, cellY, paintSpan, PLAN_CELL_SIZE);
         }
     }
 
@@ -348,21 +394,21 @@ class Raster extends Ground
     {
       return switch (type) {
         case ROAD1: {
-          coreWidth: 22,
+          coreWidth: 11,
           shoulderWidth: 0,
           featherWidth: 0,
           color: COLOR_ROAD1,
           priority: 0,
         };
         case ROAD2: {
-          coreWidth: 8,
+          coreWidth: 4,
           shoulderWidth: 0,
           featherWidth: 0,
           color: COLOR_ROAD2,
           priority: 1,
         };
         case ROAD3: {
-          coreWidth: 7,
+          coreWidth: 4,
           shoulderWidth: 0,
           featherWidth: 0,
           color: COLOR_ROAD3,
@@ -390,8 +436,8 @@ class Raster extends Ground
     {
       return switch (type) {
         case ROAD1: PLAN_CELL_SIZE;
-        case ROAD2: 6;
-        case ROAD3: PLAN_CELL_SIZE;
+        case ROAD2: 3;
+        case ROAD3: 3;
         case ROAD4: 4;
         case ROAD5: 2;
       };
@@ -399,7 +445,7 @@ class Raster extends Ground
 
   function getRoadPaintColor(xx: Int, yy: Int): Int
     {
-      return 0x72737a;
+      return 0x42434a;
     }
 
 // return the distance from a point to an axis-aligned road segment

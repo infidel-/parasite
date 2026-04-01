@@ -423,6 +423,7 @@ class RoadPlan extends Raster
       phaseStartTS = nextMapProfileTimestamp('road.ensureSpecialAreaRoadCoverage', phaseStartTS);
 #end
 
+      roadPlanGrid = grid;
       var result = gridOps.compressRoadPlanGrid(grid);
 #if electron
       dumpRoadPlan(grid, result);
