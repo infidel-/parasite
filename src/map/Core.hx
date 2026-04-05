@@ -25,48 +25,96 @@ typedef LanczosKernelTable = {
 
 class Core
 {
-  var HALO_CELLS = 2;
-  var CLEAN_TILE_SIZE = Const.TILE_SIZE_CLEAN;
-  var PLAN_CELL_SIZE = 8;
-  var PLAN_CELLS_PER_TILE = 8;
-  var MAP_LANCZOS_UPSCALE = 2;
-  var MAP_LANCZOS_ROUNDS = 1;
-  var MAP_LANCZOS_RADIUS = 3;
-  var ROAD2_GRID_STEP = 2;
-  var ROAD2_MIN_SPAWN_GAP = 16;
-  var ROAD_BRANCH_MIN_TURN_STEPS = 16;
-  var ROAD_HIT_CONTINUE_STEPS = 8;
-  var ROAD2_MIN_CITY_DENSITY = 0.12;
-  var ENABLE_ROAD3_COVERAGE_PASS = true;
-  var ROAD3_T_SPLIT_STEPS = 32;
-  var ROAD3_GROUND_STOP_CHANCE_STEP = 0.10;
-  var DOWNTOWN_ROAD4_COVERAGE_CHANCE = 0.40;
-  var DOWNTOWN_ROAD5_COVERAGE_CHANCE = 0.0;
-  var THIN_CROSSING_INTERVAL = 4;
-  var THIN_CROSSING_RIGHT_CHANCE = 0.40;
-  var THIN_CROSSING_LEFT_CHANCE = 0.40;
-  var ROAD2_TILE_COVERAGE_DISTANCE = 8;
-  var MIN_CITY_TILE_ROAD_COVERAGE = 0.20;
-  var MAX_CITY_COVERAGE_TURN_DISTANCE = 6;
+  var HALO_CELLS = 2; // halo tile count around the visible region
+  var CLEAN_TILE_SIZE = Const.TILE_SIZE_CLEAN; // source pixel size of one region tile
+  var PLAN_CELL_SIZE = 8; // raster road cell size in pixels
+  var PLAN_CELLS_PER_TILE = 8; // number of road plan cells inside one region tile
+  var MAP_DEBUG_VIEW_NORMAL = 0; // draw the normal cached region map
+  var MAP_DEBUG_VIEW_GROUND = 1; // draw only the ground layer
+  var MAP_DEBUG_VIEW_FOREST_RAW = 2; // draw the raw forest noise field
+  var MAP_DEBUG_VIEW_FOREST_MASK = 3; // draw the final forest mask
+  var MAP_DEBUG_VIEW_WOODS_RAW = 4; // draw the raw dark-woods field
+  var MAP_DEBUG_VIEW_WOODS_MASK = 5; // draw the final dark-woods mask
+  var MAP_DEBUG_VIEW_FOREST_EDGE = 6; // draw the neighborhood edge factor used by forests
+  var MAP_DEBUG_VIEW_WOODS_THRESHOLD = 7; // draw the thresholded dark-woods field before support
+  var MAP_DEBUG_VIEW_WOODS_SUPPORT = 8; // draw the forest support used by dark woods
+  var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_RAW = 9; // draw the raw dark-forest patch field
+  var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_THRESHOLD = 10; // draw the soft-thresholded dark-forest patch field
+  var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_MASK = 11; // draw the final dark-forest patch mask
+  var MAP_DEBUG_DUMP_PNGS = true; // dump debug view images during generation in electron
+  var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
+  var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
+  var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
+  var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius
+  var FOREST_NOISE_SCALE = 7.5; // coarse scale of the base forest field
+  var FOREST_DETAIL_SCALE = 3.0; // finer breakup scale inside the forest field
+  var FOREST_DETAIL_BLEND = 0.30; // amount of fine noise mixed into forest placement
+  var FOREST_PATCH_THRESHOLD = 0.58; // forest field threshold before any edge attenuation
+  var FOREST_PATCH_SOFTNESS = 0.08; // softness band around the forest threshold
+  var FOREST_EDGE_FADE = 0.52; // wilderness-neighborhood width used for forest edge attenuation
+  var FOREST_EDGE_START = 0.02; // wilderness-neighborhood level where forest edge fade begins
+  var FOREST_EDGE_MIN_KEEP = 0.24; // minimum forest strength retained after edge attenuation
+  var FOREST_TEXTURE_THRESHOLD = 0.38; // forest strength where canopy texture starts appearing
+  var FOREST_TEXTURE_FADE = 0.26; // fade width for the canopy texture overlay
+  var WOODS_NOISE_SCALE = 4.8; // coarse scale of the dark-woods field
+  var WOODS_DETAIL_SCALE = 1.9; // finer breakup scale inside the dark-woods field
+  var WOODS_PATCH_THRESHOLD = 0.50; // dark-woods threshold before forest support gating
+  var WOODS_PATCH_SOFTNESS = 0.10; // softness band around the dark-woods threshold
+  var WOODS_MIN_FOREST_STRENGTH = 0.18; // minimum forest support required for dark woods
+  var DARK_FOREST_PATCH_WARP = 2.0; // coordinate warp strength used to bend grove boundaries
+  var DARK_FOREST_PATCH_WARP_SCALE = 7.5; // scale of the warp noise used by dark-forest patches
+  var DARK_FOREST_PATCH_SCALE = 9.0; // coarse scale of the distinct dark-forest patch field
+  var DARK_FOREST_PATCH_DETAIL_SCALE = 3.6; // finer breakup scale inside the dark-forest patch field
+  var DARK_FOREST_PATCH_DETAIL_BLEND = 0.18; // amount of detail mixed into the raw dark-forest field
+  var DARK_FOREST_PATCH_THRESHOLD = 0.56; // dark-forest patch threshold before forest support
+  var DARK_FOREST_PATCH_SOFTNESS = 0.02; // softness band around the dark-forest patch threshold
+  var DARK_FOREST_PATCH_ALPHA = 0.86; // maximum opacity of the dark-forest patch overlay
+  var ROAD2_GRID_STEP = 2; // plan-grid step used by road2 growth
+  var ROAD2_MIN_SPAWN_GAP = 16; // minimum gap between road2 spawns
+  var ROAD_BRANCH_MIN_TURN_STEPS = 16; // minimum branch length before turning
+  var ROAD_HIT_CONTINUE_STEPS = 8; // steps allowed when a branch hits an occupied cell
+  var ROAD2_MIN_CITY_DENSITY = 0.12; // minimum density for spawning road2 coverage
+  var ENABLE_ROAD3_COVERAGE_PASS = true; // enable the supplemental road3 coverage sweep
+  var ROAD3_T_SPLIT_STEPS = 32; // road3 distance between T split opportunities
+  var ROAD3_GROUND_STOP_CHANCE_STEP = 0.10; // chance increment for stopping road3 in ground tiles
+  var DOWNTOWN_ROAD4_COVERAGE_CHANCE = 0.40; // downtown chance to add road4 coverage
+  var DOWNTOWN_ROAD5_COVERAGE_CHANCE = 0.0; // downtown chance to add road5 coverage
+  var THIN_CROSSING_INTERVAL = 4; // step interval for thin crossing attempts
+  var THIN_CROSSING_RIGHT_CHANCE = 0.40; // chance for a thin crossing on the right side
+  var THIN_CROSSING_LEFT_CHANCE = 0.40; // chance for a thin crossing on the left side
+  var ROAD2_TILE_COVERAGE_DISTANCE = 8; // road2 coverage radius measured in tiles
+  var MIN_CITY_TILE_ROAD_COVERAGE = 0.20; // minimum road coverage target for city tiles
+  var MAX_CITY_COVERAGE_TURN_DISTANCE = 6; // maximum turn distance when seeking city coverage
 
-  var COLOR_GROUND = 0x2e5e1b;
-  var COLOR_LOW = 0x5a5b60;
-  var COLOR_MEDIUM = 0x6a6b71;
-  var COLOR_HIGH = 0x7b7c84;
+  var COLOR_GROUND = 0x5a6b34; // base wilderness green
+  var COLOR_GROUND_DARK = 0x1f4512; // darker wilderness variation
+  var COLOR_GROUND_LIGHT = 0x5f8c2f; // lighter wilderness variation
+  var COLOR_GROUND_WARM = 0x76863a; // warmer wilderness accent
+  var COLOR_LOW = 0x5a5b60; // low-density urban ground tone
+  var COLOR_MEDIUM = 0x6a6b71; // medium-density urban ground tone
+  var COLOR_HIGH = 0x7b7c84; // high-density urban ground tone
+  var COLOR_FOREST_DARK = 0x183112; // darkest standard forest canopy tone
+  var COLOR_FOREST_MID = 0x2f5f1d; // mid forest canopy tone
+  var COLOR_FOREST_LIGHT = 0x5f8a35; // lighter forest canopy tone
+  var COLOR_FOREST_WARM = 0x7c8d43; // warm forest canopy accent
+  var COLOR_WOODS_DARK = 0x061005; // darkest dark-woods tone
+  var COLOR_WOODS_LIGHT = 0x16290d; // lighter dark-woods tone
+  var COLOR_DARK_FOREST_PATCH_DARK = 0x003200; // darker distinct dark-forest patch tone
+  var COLOR_DARK_FOREST_PATCH_LIGHT = 0x2c592c; // distinct dark-forest patch highlight tone
 
-  var COLOR_ROAD1 = 0x171716;
-  var COLOR_ROAD2 = 0xd07a23;
-  var COLOR_ROAD3 = 0x3aa354;
-  var COLOR_ROAD4 = 0xa33232;
-  var COLOR_ROAD5 = 0x3f6fd6;
+  var COLOR_ROAD1 = 0x171716; // primary road palette anchor
+  var COLOR_ROAD2 = 0xd07a23; // secondary road palette anchor
+  var COLOR_ROAD3 = 0x3aa354; // tertiary road palette anchor
+  var COLOR_ROAD4 = 0xa33232; // quaternary road palette anchor
+  var COLOR_ROAD5 = 0x3f6fd6; // minor road palette anchor
 
-  var COLOR_BUILDING_LOW = 0x585349;
-  var COLOR_BUILDING_MEDIUM = 0x49453d;
-  var COLOR_BUILDING_HIGH = 0x343333;
-  var COLOR_BUILDING_SHADOW = 0x1a1a1a;
-  var COLOR_PLAZA = 0x6f6b61;
-  var COLOR_PLAZA_EDGE = 0x8b8679;
-  var COLOR_YARD = 0x58694c;
+  var COLOR_BUILDING_LOW = 0x585349; // low-density building base tone
+  var COLOR_BUILDING_MEDIUM = 0x49453d; // medium-density building base tone
+  var COLOR_BUILDING_HIGH = 0x343333; // high-density building base tone
+  var COLOR_BUILDING_SHADOW = 0x1a1a1a; // shared building shadow tone
+  var COLOR_PLAZA = 0x6f6b61; // plaza fill tone
+  var COLOR_PLAZA_EDGE = 0x8b8679; // plaza highlight tone
+  var COLOR_YARD = 0x58694c; // yard fill tone
 
   var game: Game;
   var canvas: CanvasElement;
@@ -83,6 +131,7 @@ class Core
   var rng: SeededRandom;
   var densityField: DensityField;
   var areaTypes: Array<Array<_AreaType>>;
+  var groundNeighborhoodField: Array<Array<Float>>;
   var overallDensity: Float;
   var roads: Array<RoadSegment>;
   var roadMasks: RoadMasks;
@@ -111,6 +160,7 @@ class Core
       planHeight = Std.int(fullPixelHeight / PLAN_CELL_SIZE);
       roads = [];
       roadPlanGrid = null;
+      groundNeighborhoodField = [];
       blocks = [];
       parcels = [];
       buildings = [];
