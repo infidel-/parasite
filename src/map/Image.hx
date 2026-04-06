@@ -233,6 +233,18 @@ class Image extends Buildings
           return canvas;
         }
 
+      if (!ENABLE_REGION_CITY_CONTENT)
+        {
+          cropVisibleRegion();
+#if mydebug
+          phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion.noCity', phaseStartTS);
+          traceMapProfileSummary('image.summary roads=0 blocks=0 parcels=0 buildings=0' +
+            ' fullPixels=' + fullPixelWidth + 'x' + fullPixelHeight);
+          nextMapProfileTimestamp('image.total', totalStartTS);
+#end
+          return canvas;
+        }
+
       roads = generateRoadGraph();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.generateRoadGraph', phaseStartTS);

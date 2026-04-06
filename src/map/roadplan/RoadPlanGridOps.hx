@@ -25,6 +25,9 @@ class RoadPlanGridOps
 // allocate the working road occupancy grid
   public function makeRoadPlanGrid(): RoadPlanGrid
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var horizontal = plan.makeIntGrid(plan.planWidth, plan.planHeight);
       var vertical = plan.makeIntGrid(plan.planWidth, plan.planHeight);
       var cornerOrder = plan.makeIntGrid(plan.planWidth, plan.planHeight);
@@ -33,6 +36,10 @@ class RoadPlanGridOps
       var road2Cells = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
       var road2IDs = plan.makeIntGrid(plan.planWidth, plan.planHeight);
       var road2AxisMask = plan.makeIntGrid(plan.planWidth, plan.planHeight);
+#if mydebug
+      var initStartTS = haxe.Timer.stamp() * 1000.0;
+      plan.addMapProfileSample('grid.makeRoadPlanGrid.alloc', initStartTS - startTS);
+#end
 
       for (xx in 0...plan.planWidth)
         for (yy in 0...plan.planHeight)
@@ -46,6 +53,11 @@ class RoadPlanGridOps
             road2IDs[xx][yy] = -1;
             road2AxisMask[xx][yy] = 0;
           }
+
+#if mydebug
+      plan.addMapProfileSample('grid.makeRoadPlanGrid.init',
+        haxe.Timer.stamp() * 1000.0 - initStartTS);
+#end
 
       return {
         width: plan.planWidth,
@@ -516,6 +528,9 @@ class RoadPlanGridOps
   public function compressRoadPlanGrid(grid: RoadPlanGrid): Array<RoadSegment>
     {
       var result = [];
+#if mydebug
+      var sectionStartTS = haxe.Timer.stamp() * 1000.0;
+#end
 
       for (yy in 0...grid.height)
         {
@@ -545,6 +560,12 @@ class RoadPlanGridOps
             }
         }
 
+#if mydebug
+      var nowTS = haxe.Timer.stamp() * 1000.0;
+      plan.addMapProfileSample('grid.compress.horizontal', nowTS - sectionStartTS);
+      sectionStartTS = nowTS;
+#end
+
       for (xx in 0...grid.width)
         {
           var yy = 0;
@@ -573,6 +594,12 @@ class RoadPlanGridOps
             }
         }
 
+#if mydebug
+      nowTS = haxe.Timer.stamp() * 1000.0;
+      plan.addMapProfileSample('grid.compress.vertical', nowTS - sectionStartTS);
+      sectionStartTS = nowTS;
+#end
+
       for (yy in 0...grid.height)
         for (xx in 0...grid.width)
           {
@@ -582,6 +609,12 @@ class RoadPlanGridOps
             addCornerRoadSegments(result, xx, yy, grid.cornerMask[xx][yy], plan.getRoadTypeByOrder(order));
           }
 
+#if mydebug
+      nowTS = haxe.Timer.stamp() * 1000.0;
+      plan.addMapProfileSample('grid.compress.corners', nowTS - sectionStartTS);
+      sectionStartTS = nowTS;
+#end
+
       for (yy in 0...grid.height)
         for (xx in 0...grid.width)
           {
@@ -589,6 +622,11 @@ class RoadPlanGridOps
               continue;
             addRoad2CellSegment(result, xx, yy);
           }
+
+#if mydebug
+      plan.addMapProfileSample('grid.compress.road2Cells',
+        haxe.Timer.stamp() * 1000.0 - sectionStartTS);
+#end
 
       return result;
     }

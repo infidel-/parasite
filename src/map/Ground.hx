@@ -63,10 +63,9 @@ class Ground extends Core
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            var color = getColorForDensity(samplePaintDensityAtPixel(px, py));
-            var groundSupport = getGroundAreaSupportAtCoord(
-              (px + 0.5) / CLEAN_TILE_SIZE,
-              (py + 0.5) / CLEAN_TILE_SIZE);
+            var color = (ENABLE_REGION_CITY_CONTENT
+              ? getColorForDensity(samplePaintDensityAtPixel(px, py))
+              : getGroundColorAtPixel(px, py, COLOR_GROUND));
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
             data[index++] = color & 0xFF;
@@ -430,6 +429,8 @@ class Ground extends Core
 // return whether one map cell is wilderness ground as a numeric value
   function getGroundAreaValue(cellX: Int, cellY: Int): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 1.0;
       return areaTypes[clampInt(cellX, 0, fullCellWidth - 1)][clampInt(cellY, 0, fullCellHeight - 1)] == AREA_GROUND ? 1.0 : 0.0;
     }
 
@@ -980,6 +981,8 @@ class Ground extends Core
 // return the fraction of nearby tiles that are wilderness ground
   function getGroundNeighborhoodRatio(cellX: Int, cellY: Int, radius: Int): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 1.0;
       var groundCount = 0;
       var total = 0;
 
@@ -992,7 +995,7 @@ class Ground extends Core
                 yy >= fullCellHeight)
               continue;
             total++;
-            if (areaTypes[xx][yy] == AREA_GROUND)
+            if (getGroundAreaValue(xx, yy) > 0.5)
               groundCount++;
           }
 
@@ -1266,6 +1269,8 @@ class Ground extends Core
 // return the density value for an area type
   function getAreaDensityValue(type: _AreaType): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 0.01;
       return switch (type) {
         case AREA_CITY_LOW: 0.24;
         case AREA_CITY_MEDIUM: 0.58;

@@ -74,6 +74,11 @@ class RoadPlanRoad2Network
 // add a second orange coverage pass over city tiles
   public function ensureCityRoad2Coverage(grid: RoadPlanGrid)
     {
+#if mydebug
+      var scanStartTS = haxe.Timer.stamp() * 1000.0;
+      var nearestRoad2AttachmentMS = 0.0;
+      var nearestRoad1AttachmentMS = 0.0;
+#end
       var road1Candidates = collectRoad1AttachmentCandidates(grid);
       var attachmentState = makeRoad2CoverageAttachmentState(grid);
 
@@ -91,7 +96,13 @@ class RoadPlanRoad2Network
               continue;
 
             plan.addMapProfileCount('road2.ensureCityRoad2Coverage.attempts');
+#if mydebug
+            var lookupStartTS = haxe.Timer.stamp() * 1000.0;
+#end
             var target = findNearestRoad2Attachment(attachmentState.road2Attachments, start.x, start.y);
+#if mydebug
+            nearestRoad2AttachmentMS += haxe.Timer.stamp() * 1000.0 - lookupStartTS;
+#end
             var dirtyRect: IntRect = null;
             if (target != null)
               {
@@ -110,8 +121,14 @@ class RoadPlanRoad2Network
 
             if (dirtyRect == null)
               {
+#if mydebug
+                lookupStartTS = haxe.Timer.stamp() * 1000.0;
+#end
                 var road1Target = findNearestRoad1Attachment(attachmentState.road1Attachments,
                   start.x, start.y);
+#if mydebug
+                nearestRoad1AttachmentMS += haxe.Timer.stamp() * 1000.0 - lookupStartTS;
+#end
                 if (road1Target != null)
                   {
                     if (!isTinyRoad2Road1CoverageConnector(start.x, start.y, road1Target))
@@ -140,6 +157,15 @@ class RoadPlanRoad2Network
             else
               plan.addMapProfileCount('road2.ensureCityRoad2Coverage.failed');
           }
+
+#if mydebug
+      plan.addMapProfileSample('road2.ensureCityRoad2Coverage.scanTiles',
+        haxe.Timer.stamp() * 1000.0 - scanStartTS);
+      plan.addMapProfileSample('road2.ensureCityRoad2Coverage.findNearestRoad2Attachment',
+        nearestRoad2AttachmentMS);
+      plan.addMapProfileSample('road2.ensureCityRoad2Coverage.findNearestRoad1Attachment',
+        nearestRoad1AttachmentMS);
+#end
     }
 
 // collect the mutable attachment lists used during ROAD2 coverage
@@ -162,6 +188,9 @@ class RoadPlanRoad2Network
 // collect connected orange components from the plan grid
   function buildRoad2Components(grid: RoadPlanGrid): Array<Road2Component>
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var visited = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
       var result = [];
 
@@ -211,18 +240,31 @@ class RoadPlanRoad2Network
             });
           }
 
+#if mydebug
+      plan.addMapProfileSample('road2.buildRoad2Components',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
       return result;
     }
 
 // find the closest empty connector cell from one orange component to ROAD1
   function findRoad2ComponentConnector(grid: RoadPlanGrid, component: Road2Component): Road2Connector
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var road1Attachments = collectRoad1Attachments(grid);
       var best: Road2Connector = null;
       var bestDist = 0x3FFFFFFF;
 
       if (road1Attachments.length == 0)
-        return null;
+        {
+#if mydebug
+          plan.addMapProfileSample('road2.findRoad2ComponentConnector',
+            haxe.Timer.stamp() * 1000.0 - startTS);
+#end
+          return null;
+        }
 
       for (cell in component.cells)
         {
@@ -259,6 +301,10 @@ class RoadPlanRoad2Network
             }
         }
 
+#if mydebug
+      plan.addMapProfileSample('road2.findRoad2ComponentConnector',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
       return best;
     }
 

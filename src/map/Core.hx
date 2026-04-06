@@ -56,8 +56,10 @@ class Core
   var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_RAW = 9; // draw the raw dark-forest patch field
   var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_THRESHOLD = 10; // draw the soft-thresholded dark-forest patch field
   var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_MASK = 11; // draw the final dark-forest patch mask
-  var MAP_DEBUG_DUMP_PNGS = true; // dump debug view images during generation in electron
+  var MAP_DEBUG_DUMP_PNGS = false; // dump debug view images during generation in electron
   var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
+  var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
+  var ENABLE_REGION_CITY_CONTENT = false; // keep roads, parcels, and buildings disabled while tuning forests
   var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
   var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
   var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius

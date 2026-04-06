@@ -560,6 +560,9 @@ class RoadPlanThinCoverage
 // add a separate green coverage pass over city tiles after orange is settled
   public function ensureCityRoad3Coverage(grid: RoadPlanGrid)
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var parentTypes: Array<RoadType> = [ROAD2];
 
       for (cellY in 0...plan.fullCellHeight)
@@ -578,11 +581,19 @@ class RoadPlanThinCoverage
             if (spawnThinRoadCoverage(grid, cellX, cellY, ROAD3, parentTypes))
               plan.addMapProfileCount('thin.coverage.ROAD3.success');
           }
+
+#if mydebug
+      plan.addMapProfileSample('thin.ensureCityRoad3Coverage',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
     }
 
 // remove isolated green components that never touch ROAD1 or ROAD2
   public function pruneOrphanRoad3Components(grid: RoadPlanGrid)
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var visited = plan.makeBoolGrid(plan.planWidth, plan.planHeight);
 
       for (xx in 0...plan.planWidth)
@@ -637,11 +648,19 @@ class RoadPlanThinCoverage
             for (cell in cells)
               gridOps.clearThinRoadTypeAtPlanCell(grid, cell.x, cell.y, ROAD3);
           }
+
+#if mydebug
+      plan.addMapProfileSample('thin.pruneOrphanRoad3Components',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
     }
 
 // add a separate red coverage pass over city tiles after green is settled
   public function ensureCityRoad4Coverage(grid: RoadPlanGrid)
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var parentTypes: Array<RoadType> = [ROAD3, ROAD2];
       var targetTypeGroups: Array<Array<RoadType>> = [[ROAD3], [ROAD2]];
 
@@ -673,6 +692,11 @@ class RoadPlanThinCoverage
                   targetTypeGroups))
               plan.addMapProfileCount('thin.coverage.ROAD4.success');
           }
+
+#if mydebug
+      plan.addMapProfileSample('thin.ensureCityRoad4Coverage',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
     }
 
 // return whether two neighboring ROAD3 cells share one real edge connection
@@ -702,6 +726,9 @@ class RoadPlanThinCoverage
 // add a separate blue coverage pass over city tiles after red is settled
   public function ensureCityRoad5Coverage(grid: RoadPlanGrid)
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var parentTypes: Array<RoadType> = [ROAD5, ROAD4, ROAD3, ROAD2];
       var targetTypeGroups: Array<Array<RoadType>> = [[ROAD4], [ROAD3], [ROAD2]];
 
@@ -733,6 +760,11 @@ class RoadPlanThinCoverage
                   targetTypeGroups))
               plan.addMapProfileCount('thin.coverage.ROAD5.success');
           }
+
+#if mydebug
+      plan.addMapProfileSample('thin.ensureCityRoad5Coverage',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
     }
 
 // add one one-sided thin-road coverage branch for one city tile
@@ -740,24 +772,41 @@ class RoadPlanThinCoverage
       type: RoadType, parentTypes: Array<RoadType>,
       targetTypeGroups: Array<Array<RoadType>> = null): Bool
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+      var profileLabel = 'thin.spawnThinRoadCoverage.' + Std.string(type);
+#end
       var searchRect = getThinRoadSearchRect(cellX, cellY);
       var cache = makeThinAttachmentCache(searchRect);
       var start = findThinRoadCoverageStart(grid, cellX, cellY, parentTypes, targetTypeGroups,
         searchRect, cache);
+      var added = false;
       if (start == null)
-        return false;
+        {
+#if mydebug
+          plan.addMapProfileSample(profileLabel, haxe.Timer.stamp() * 1000.0 - startTS);
+#end
+          return false;
+        }
 
       var target = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
         targetTypeGroups, start.x, start.y, start.dx, start.dy, searchRect, cache);
       if (!gridOps.isThinRoadAttachmentCell(grid, start.x, start.y, parentTypes) &&
           target != null &&
           connectThinRoadToTarget(grid, start, target, type, parentTypes))
-        return true;
+        added = true;
+      else
+        {
+          branchWalker.walkBranchRoad(grid, branchWalker.makeThinRoadWalker(start.x, start.y,
+            start.dx, start.dy, type, (type == ROAD3 ? plan.ROAD3_T_SPLIT_STEPS : -1),
+            type == ROAD4 || type == ROAD5));
+          added = true;
+        }
 
-      branchWalker.walkBranchRoad(grid, branchWalker.makeThinRoadWalker(start.x, start.y,
-        start.dx, start.dy, type, (type == ROAD3 ? plan.ROAD3_T_SPLIT_STEPS : -1),
-        type == ROAD4 || type == ROAD5));
-      return true;
+#if mydebug
+      plan.addMapProfileSample(profileLabel, haxe.Timer.stamp() * 1000.0 - startTS);
+#end
+      return added;
     }
 
 // add one two-sided thin-road coverage branch for one city tile
@@ -765,18 +814,31 @@ class RoadPlanThinCoverage
       type: RoadType, parentTypes: Array<RoadType>,
       targetTypeGroups: Array<Array<RoadType>> = null): Bool
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+      var profileLabel = 'thin.spawnBidirectionalThinRoadCoverage.' + Std.string(type);
+#end
       var searchRect = getThinRoadSearchRect(cellX, cellY);
       var cache = makeThinAttachmentCache(searchRect);
       var start = findThinRoadCoverageStart(grid, cellX, cellY, parentTypes, targetTypeGroups,
         searchRect, cache);
       if (start == null)
-        return false;
+        {
+#if mydebug
+          plan.addMapProfileSample(profileLabel, haxe.Timer.stamp() * 1000.0 - startTS);
+#end
+          return false;
+        }
 
       var addedForward = spawnThinRoadSide(grid, start.x, start.y, start.dx, start.dy,
         type, parentTypes, false, targetTypeGroups, searchRect, cache);
       var addedBackward = spawnThinRoadSide(grid, start.x, start.y, -start.dx, -start.dy,
         type, parentTypes, addedForward, targetTypeGroups, searchRect, cache);
-      return addedForward || addedBackward;
+      var added = addedForward || addedBackward;
+#if mydebug
+      plan.addMapProfileSample(profileLabel, haxe.Timer.stamp() * 1000.0 - startTS);
+#end
+      return added;
     }
 
 // return the local 3x3 region-tile search window for one thin-road spawn tile
@@ -800,6 +862,9 @@ class RoadPlanThinCoverage
       targetTypeGroups: Array<Array<RoadType>> = null,
       searchRect: IntRect = null, cache: ThinAttachmentCache = null): ThinRoadStart
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var centerX = cellX * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
       var centerY = cellY * plan.PLAN_CELLS_PER_TILE + Std.int(plan.PLAN_CELLS_PER_TILE / 2);
       var horizontalScore = getThinRoadCoverageAxisScore(grid, parentTypes, targetTypeGroups,
@@ -827,6 +892,10 @@ class RoadPlanThinCoverage
           if (firstScore < 0x3FFFFFFF)
             {
               plan.addMapProfileCount('thin.findThinRoadCoverageStart.null');
+#if mydebug
+              plan.addMapProfileSample('thin.findThinRoadCoverageStart',
+                haxe.Timer.stamp() * 1000.0 - startTS);
+#end
               return null;
             }
         }
@@ -839,6 +908,10 @@ class RoadPlanThinCoverage
         start = findTileThinRoadStart(grid, cellX, cellY, null, parentTypes);
       if (start == null)
         plan.addMapProfileCount('thin.findThinRoadCoverageStart.null');
+#if mydebug
+      plan.addMapProfileSample('thin.findThinRoadCoverageStart',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
       return start;
     }
 
@@ -865,6 +938,9 @@ class RoadPlanThinCoverage
       targetTypeGroups: Array<Array<RoadType>>, planX: Int, planY: Int, axisMask: Int,
       searchRect: IntRect = null, cache: ThinAttachmentCache = null): Int
     {
+#if mydebug
+      var startTS = haxe.Timer.stamp() * 1000.0;
+#end
       var negativeTarget = findPreferredThinRoadAttachmentInDirection(grid, parentTypes,
         targetTypeGroups, planX, planY, axisMask == 1 ? -1 : 0, axisMask == 2 ? -1 : 0,
         searchRect, cache);
@@ -873,7 +949,13 @@ class RoadPlanThinCoverage
         searchRect, cache);
       if (negativeTarget == null &&
           positiveTarget == null)
-        return 0x3FFFFFFF;
+        {
+#if mydebug
+          plan.addMapProfileSample('thin.getThinRoadCoverageAxisScore',
+            haxe.Timer.stamp() * 1000.0 - startTS);
+#end
+          return 0x3FFFFFFF;
+        }
 
       var score = 0;
       if (negativeTarget != null)
@@ -887,6 +969,10 @@ class RoadPlanThinCoverage
       if (negativeTarget != null &&
           positiveTarget != null)
         score -= plan.PLAN_CELLS_PER_TILE;
+#if mydebug
+      plan.addMapProfileSample('thin.getThinRoadCoverageAxisScore',
+        haxe.Timer.stamp() * 1000.0 - startTS);
+#end
       return score;
     }
 

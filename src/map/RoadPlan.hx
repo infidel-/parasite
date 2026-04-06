@@ -42,6 +42,8 @@ class RoadPlan extends Raster
 // accumulate one debug profiling sample
   function addMapProfileSample(label: String, elapsedMS: Float)
     {
+      if (!ROAD_PROFILE_VERBOSE)
+        return;
       var total = (mapProfileTotalsMS.exists(label) ? mapProfileTotalsMS.get(label) : 0.0);
       var count = (mapProfileSampleCounts.exists(label) ? mapProfileSampleCounts.get(label) : 0);
       mapProfileTotalsMS.set(label, total + elapsedMS);
@@ -51,6 +53,8 @@ class RoadPlan extends Raster
 // accumulate one debug profiling counter
   function addMapProfileCount(label: String, amount: Int = 1)
     {
+      if (!ROAD_PROFILE_VERBOSE)
+        return;
       var count = (mapProfileCounters.exists(label) ? mapProfileCounters.get(label) : 0);
       mapProfileCounters.set(label, count + amount);
     }
@@ -59,7 +63,7 @@ class RoadPlan extends Raster
   function nextMapProfileTimestamp(label: String, startTS: Float): Float
     {
       var nowTS = haxe.Timer.stamp() * 1000.0;
-      trace('MAP PROFILE ' + label + ': ' + Std.int(nowTS - startTS) + ' ms');
+      trace('MAP PROFILE ROAD ' + label + ': ' + Std.int(nowTS - startTS) + ' ms');
       return nowTS;
     }
 
@@ -77,7 +81,7 @@ class RoadPlan extends Raster
           var total = mapProfileTotalsMS.get(label);
           var count = mapProfileSampleCounts.get(label);
           var avg = Math.round(total * 100.0 / count) / 100.0;
-          trace('MAP PROFILE detail ' + label + ': ' + Std.int(total) +
+          trace('MAP PROFILE ROAD detail ' + label + ': ' + Std.int(total) +
             ' ms over ' + count + ' calls avg=' + avg + ' ms');
         }
     }
@@ -92,13 +96,13 @@ class RoadPlan extends Raster
       labels.sort(sortMapProfileLabels);
 
       for (label in labels)
-        trace('MAP PROFILE count ' + label + ': ' + mapProfileCounters.get(label));
+        trace('MAP PROFILE ROAD count ' + label + ': ' + mapProfileCounters.get(label));
     }
 
 // trace one profiling summary line
   function traceMapProfileSummary(label: String)
     {
-      trace('MAP PROFILE ' + label);
+      trace('MAP PROFILE ROAD ' + label);
     }
 
 // sort two profiling labels for stable debug output
@@ -433,8 +437,11 @@ class RoadPlan extends Raster
       traceMapProfileSummary('road.dump=region_roads.txt');
       traceMapProfileSummary('road.summary segments=' + result.length +
         ' plan=' + planWidth + 'x' + planHeight);
-      traceMapProfileSamples();
-      traceMapProfileCounters();
+      if (ROAD_PROFILE_VERBOSE)
+        {
+          traceMapProfileSamples();
+          traceMapProfileCounters();
+        }
       nextMapProfileTimestamp('road.total', totalStartTS);
 #end
       return result;
