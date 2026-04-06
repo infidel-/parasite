@@ -76,11 +76,12 @@ class Core
   var WOODS_PATCH_THRESHOLD = 0.50; // dark-woods threshold before forest support gating
   var WOODS_PATCH_SOFTNESS = 0.10; // softness band around the dark-woods threshold
   var WOODS_MIN_FOREST_STRENGTH = 0.18; // minimum forest support required for dark woods
-  var GROUND_AREA_GRID_SUBCELLS = 8; // edge-band sharpness factor for continuous irregular city borders
+  var GROUND_AREA_GRID_SUBCELLS = 8; // relative sharpness factor for continuous irregular city borders
   var GROUND_BORDER_WARP_SCALE = 3.4; // scale of seeded warp noise applied to visual city borders
   var GROUND_BORDER_WARP_STRENGTH = 0.42; // coordinate warp strength used to bend visual city borders
   var GROUND_BORDER_BREAKUP_SCALE = 2.8; // scale of seeded breakup noise applied to visual city borders
   var GROUND_BORDER_BREAKUP_STRENGTH = 0.14; // threshold jitter strength applied after warping visual city borders
+  var GROUND_BORDER_SOFTNESS = 0.05; // half-width of the continuous support fade around irregular city borders
   var DARK_FOREST_PATCH_GRID_SUBCELLS = 8; // subcell resolution used when estimating visible dark-forest coverage
   var DARK_FOREST_PATCH_COUNT = 20; // number of seeded dark-forest groves used by the continuous lobe sampler
   var DARK_FOREST_PATCH_MIN_RADIUS = 2.6; // minimum grove lobe radius in tiles
@@ -93,7 +94,7 @@ class Core
   var MIN_DARK_FOREST_MAP_COVERAGE = 0.80; // minimum visible-map dark-forest coverage target
   var MAX_DARK_FOREST_MAP_COVERAGE = 0.90; // maximum visible-map dark-forest coverage target
   var DARK_FOREST_PATCH_THRESHOLD = 0.52; // dark-forest patch threshold before forest support
-  var DARK_FOREST_PATCH_SOFTNESS = 0.24; // softness band around the dark-forest patch threshold
+  var DARK_FOREST_PATCH_SOFTNESS = 0.05; // softness band around the dark-forest patch threshold
   var DARK_FOREST_PATCH_ALPHA = 0.86; // maximum opacity of the dark-forest patch overlay
   var ROAD2_GRID_STEP = 2; // plan-grid step used by road2 growth
   var ROAD2_MIN_SPAWN_GAP = 16; // minimum gap between road2 spawns

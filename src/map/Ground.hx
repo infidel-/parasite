@@ -67,8 +67,6 @@ class Ground extends Core
             var groundSupport = getGroundAreaSupportAtCoord(
               (px + 0.5) / CLEAN_TILE_SIZE,
               (py + 0.5) / CLEAN_TILE_SIZE);
-            if (groundSupport > 0.0)
-              color = lerpColor(color, getGroundColorAtPixel(px, py, color), groundSupport);
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
             data[index++] = color & 0xFF;
@@ -92,7 +90,8 @@ class Ground extends Core
             var forestStrength = getForestStrengthAtPixel(px, py);
             var darkWoodsStrength = getDarkWoodsStrengthAtPixel(px, py, forestStrength);
             var darkForestPatchStrength = getDarkForestPatchStrengthAtPixel(px, py, forestStrength);
-            var forestPaintStrength = forestStrength;
+            var forestPaintStrength = 0.0;
+            darkWoodsStrength = 0.0;
 
             if (forestPaintStrength > 0.0 ||
                 darkWoodsStrength > 0.0 ||
@@ -388,7 +387,7 @@ class Ground extends Core
           {
             var forestStrength = getForestStrengthAtPixel(px, py);
             var strength = clampFloat(getDarkForestPatchStrengthAtPixel(px, py, forestStrength), 0.0, 1.0);
-            var shade = Std.int(Math.pow(strength, 0.5) * 255.0);
+            var shade = Std.int(strength * 255.0);
             data[index++] = shade;
             data[index++] = shade;
             data[index++] = shade;
@@ -758,7 +757,7 @@ class Ground extends Core
 
       var forestBias = clampFloat((Math.max(forestStrength, getForestFieldAtCoord(x, y)) - 0.28) / 0.40, 0.0, 1.0);
       forestBias = forestBias * forestBias * (3.0 - 2.0 * forestBias);
-      var support = groundSupport * (0.55 + forestBias * 0.45);
+      var support = groundSupport * (0.70 + forestBias * 0.30);
       return 0.55 + support * 0.45;
     }
 
@@ -936,7 +935,7 @@ class Ground extends Core
         577);
       var edgeNoise = broadNoise * 0.72 + detailNoise * 0.28;
       var threshold = 0.5 + (edgeNoise - 0.5) * GROUND_BORDER_BREAKUP_STRENGTH;
-      var edgeBand = 0.5 / Math.max(GROUND_AREA_GRID_SUBCELLS, 1);
+      var edgeBand = GROUND_BORDER_SOFTNESS * (8.0 / Math.max(GROUND_AREA_GRID_SUBCELLS, 1));
       var t = clampFloat((base - (threshold - edgeBand)) / Math.max(edgeBand * 2.0, 0.0001), 0.0, 1.0);
       return t * t * (3.0 - 2.0 * t);
     }
