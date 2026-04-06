@@ -23,6 +23,21 @@ typedef LanczosKernelTable = {
   var taps: Array<Array<Float>>;
 }
 
+typedef DarkForestPatchLobe = {
+  var groveIndex: Int;
+  var lobeIndex: Int;
+  var centerX: Float;
+  var centerY: Float;
+  var radiusX: Float;
+  var radiusY: Float;
+  var shapeCos: Float;
+  var shapeSin: Float;
+  var minX: Float;
+  var minY: Float;
+  var maxX: Float;
+  var maxY: Float;
+}
+
 class Core
 {
   var HALO_CELLS = 2; // halo tile count around the visible region
@@ -61,8 +76,13 @@ class Core
   var WOODS_PATCH_THRESHOLD = 0.50; // dark-woods threshold before forest support gating
   var WOODS_PATCH_SOFTNESS = 0.10; // softness band around the dark-woods threshold
   var WOODS_MIN_FOREST_STRENGTH = 0.18; // minimum forest support required for dark woods
-  var DARK_FOREST_PATCH_GRID_SUBCELLS = 4; // occupancy-grid cells per map tile for sharper dark-forest borders
-  var DARK_FOREST_PATCH_COUNT = 5; // number of seeded dark-forest groves to stamp into the occupancy grid
+  var GROUND_AREA_GRID_SUBCELLS = 8; // edge-band sharpness factor for continuous irregular city borders
+  var GROUND_BORDER_WARP_SCALE = 3.4; // scale of seeded warp noise applied to visual city borders
+  var GROUND_BORDER_WARP_STRENGTH = 0.42; // coordinate warp strength used to bend visual city borders
+  var GROUND_BORDER_BREAKUP_SCALE = 2.8; // scale of seeded breakup noise applied to visual city borders
+  var GROUND_BORDER_BREAKUP_STRENGTH = 0.14; // threshold jitter strength applied after warping visual city borders
+  var DARK_FOREST_PATCH_GRID_SUBCELLS = 8; // subcell resolution used when estimating visible dark-forest coverage
+  var DARK_FOREST_PATCH_COUNT = 20; // number of seeded dark-forest groves used by the continuous lobe sampler
   var DARK_FOREST_PATCH_MIN_RADIUS = 2.6; // minimum grove lobe radius in tiles
   var DARK_FOREST_PATCH_MAX_RADIUS = 5.4; // maximum grove lobe radius in tiles
   var DARK_FOREST_PATCH_MIN_LOBES = 2; // minimum number of lobes per seeded grove
@@ -70,8 +90,10 @@ class Core
   var DARK_FOREST_PATCH_LOBE_SPREAD = 1.9; // maximum offset of grove lobes from the seeded grove center
   var DARK_FOREST_PATCH_DETAIL_SCALE = 2.8; // finer breakup scale used to roughen occupancy-grid edges
   var DARK_FOREST_PATCH_DETAIL_BLEND = 0.24; // amount of edge roughness mixed into occupancy-grid stamping
+  var MIN_DARK_FOREST_MAP_COVERAGE = 0.80; // minimum visible-map dark-forest coverage target
+  var MAX_DARK_FOREST_MAP_COVERAGE = 0.90; // maximum visible-map dark-forest coverage target
   var DARK_FOREST_PATCH_THRESHOLD = 0.52; // dark-forest patch threshold before forest support
-  var DARK_FOREST_PATCH_SOFTNESS = 0.04; // softness band around the dark-forest patch threshold
+  var DARK_FOREST_PATCH_SOFTNESS = 0.24; // softness band around the dark-forest patch threshold
   var DARK_FOREST_PATCH_ALPHA = 0.86; // maximum opacity of the dark-forest patch overlay
   var ROAD2_GRID_STEP = 2; // plan-grid step used by road2 growth
   var ROAD2_MIN_SPAWN_GAP = 16; // minimum gap between road2 spawns
@@ -129,8 +151,6 @@ class Core
   var fullCellHeight: Int;
   var fullPixelWidth: Int;
   var fullPixelHeight: Int;
-  var darkForestPatchGridWidth: Int;
-  var darkForestPatchGridHeight: Int;
   var planWidth: Int;
   var planHeight: Int;
   var mapSeed: Int;
@@ -138,7 +158,9 @@ class Core
   var densityField: DensityField;
   var areaTypes: Array<Array<_AreaType>>;
   var groundNeighborhoodField: Array<Array<Float>>;
-  var darkForestPatchGrid: Array<Array<Float>>;
+  var darkForestPatchLobes: Array<DarkForestPatchLobe>;
+  var darkForestPatchCoverageTarget: Float;
+  var darkForestPatchThresholdValue: Float;
   var overallDensity: Float;
   var roads: Array<RoadSegment>;
   var roadMasks: RoadMasks;
@@ -163,14 +185,14 @@ class Core
       fullCellHeight = regionHeight + HALO_CELLS * 2;
       fullPixelWidth = fullCellWidth * CLEAN_TILE_SIZE;
       fullPixelHeight = fullCellHeight * CLEAN_TILE_SIZE;
-      darkForestPatchGridWidth = fullCellWidth * DARK_FOREST_PATCH_GRID_SUBCELLS;
-      darkForestPatchGridHeight = fullCellHeight * DARK_FOREST_PATCH_GRID_SUBCELLS;
       planWidth = Std.int(fullPixelWidth / PLAN_CELL_SIZE);
       planHeight = Std.int(fullPixelHeight / PLAN_CELL_SIZE);
       roads = [];
       roadPlanGrid = null;
       groundNeighborhoodField = [];
-      darkForestPatchGrid = [];
+      darkForestPatchLobes = [];
+      darkForestPatchCoverageTarget = MIN_DARK_FOREST_MAP_COVERAGE;
+      darkForestPatchThresholdValue = DARK_FOREST_PATCH_THRESHOLD;
       blocks = [];
       parcels = [];
       buildings = [];

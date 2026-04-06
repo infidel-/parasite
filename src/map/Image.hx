@@ -195,9 +195,16 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildGroundNeighborhoodField', phaseStartTS);
 #end
-      darkForestPatchGrid = buildDarkForestPatchGrid();
+      darkForestPatchLobes = buildDarkForestPatchLobes();
 #if mydebug
-      phaseStartTS = nextMapProfileTimestamp('image.buildDarkForestPatchGrid', phaseStartTS);
+      phaseStartTS = nextMapProfileTimestamp('image.buildDarkForestPatchLobes', phaseStartTS);
+#end
+      darkForestPatchCoverageTarget = getDarkForestPatchCoverageTarget();
+      darkForestPatchThresholdValue = computeDarkForestPatchThresholdValue();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.computeDarkForestPatchThresholdValue', phaseStartTS);
+      traceMapProfileSummary('image.darkForestPatchCoverageTarget=' + darkForestPatchCoverageTarget);
+      traceMapProfileSummary('image.darkForestPatchThreshold=' + darkForestPatchThresholdValue);
 #end
       overallDensity = sampleAverageDensity(0, 0, fullPixelWidth, fullPixelHeight);
 #if mydebug
