@@ -195,6 +195,10 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildGroundNeighborhoodField', phaseStartTS);
 #end
+      darkForestPatchGrid = buildDarkForestPatchGrid();
+#if mydebug
+      phaseStartTS = nextMapProfileTimestamp('image.buildDarkForestPatchGrid', phaseStartTS);
+#end
       overallDensity = sampleAverageDensity(0, 0, fullPixelWidth, fullPixelHeight);
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.sampleAverageDensity', phaseStartTS);

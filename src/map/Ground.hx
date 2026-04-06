@@ -769,37 +769,35 @@ class Ground extends Core
 // return the blended raw dark-forest patch field at one coordinate
   function getDarkForestPatchFieldAtCoord(x: Float, y: Float): Float
     {
-      var groundSupport = getGroundAreaSupportAtCoord(x, y);
-      if (groundSupport <= 0.0)
-        return 0.0;
-
-// bend the coarse field so grove edges meander instead of following straight contour lines
-      var warpedX = x + (sampleSeededForestValueNoise(
-        x / DARK_FOREST_PATCH_WARP_SCALE, y / DARK_FOREST_PATCH_WARP_SCALE, 971) - 0.5) * DARK_FOREST_PATCH_WARP;
-      var warpedY = y + (sampleSeededForestValueNoise(
-        (x + 41.0) / DARK_FOREST_PATCH_WARP_SCALE, (y - 23.0) / DARK_FOREST_PATCH_WARP_SCALE, 977) - 0.5) * DARK_FOREST_PATCH_WARP;
-
-// build a few broad grove masses from seeded low-frequency fields
-      var broad = sampleSeededForestValueNoise(warpedX / DARK_FOREST_PATCH_SCALE,
-        warpedY / DARK_FOREST_PATCH_SCALE, 911);
-      var lobe = sampleSeededForestValueNoise((warpedX + 37.0) / (DARK_FOREST_PATCH_SCALE * 0.62),
-        (warpedY - 19.0) / (DARK_FOREST_PATCH_SCALE * 0.62), 919);
-      var carve = sampleSeededForestValueNoise((warpedX - 53.0) / (DARK_FOREST_PATCH_SCALE * 0.88),
-        (warpedY + 29.0) / (DARK_FOREST_PATCH_SCALE * 0.88), 929);
-      var field = broad * (0.66 + lobe * 0.34);
-      field -= clampFloat((carve - 0.64) / 0.36, 0.0, 1.0) * 0.16;
-
-// add a little finer seeded breakup so edges do not read as one soft cloud
-      var detail = sampleSeededForestValueNoise(warpedX / DARK_FOREST_PATCH_DETAIL_SCALE,
-        warpedY / DARK_FOREST_PATCH_DETAIL_SCALE, 937);
-      field = field * (1.0 - DARK_FOREST_PATCH_DETAIL_BLEND) + detail * DARK_FOREST_PATCH_DETAIL_BLEND;
-      return clampFloat(field * (0.35 + groundSupport * 0.65), 0.0, 1.0);
+      return sampleDarkForestPatchGridAtCoord(x, y);
     }
 
 // return forest value noise salted with the current map seed
   function sampleSeededForestValueNoise(x: Float, y: Float, salt: Int): Float
     {
       return sampleForestValueNoise(x, y, salt + mapSeed);
+    }
+
+// sample the seeded dark-forest occupancy grid with short support-style smoothing
+  function sampleDarkForestPatchGridAtCoord(x: Float, y: Float): Float
+    {
+      var subcellScale = DARK_FOREST_PATCH_GRID_SUBCELLS;
+      var fx = clampFloat(x * subcellScale - 0.5, 0.0, darkForestPatchGridWidth - 1.001);
+      var fy = clampFloat(y * subcellScale - 0.5, 0.0, darkForestPatchGridHeight - 1.001);
+      var x0 = Std.int(Math.floor(fx));
+      var y0 = Std.int(Math.floor(fy));
+      var x1 = clampInt(x0 + 1, 0, darkForestPatchGridWidth - 1);
+      var y1 = clampInt(y0 + 1, 0, darkForestPatchGridHeight - 1);
+      var tx = fx - x0;
+      var ty = fy - y0;
+      var v00 = darkForestPatchGrid[x0][y0];
+      var v10 = darkForestPatchGrid[x1][y0];
+      var v01 = darkForestPatchGrid[x0][y1];
+      var v11 = darkForestPatchGrid[x1][y1];
+      var top = v00 + (v10 - v00) * tx;
+      var bottom = v01 + (v11 - v01) * tx;
+      var support = top + (bottom - top) * ty;
+      return support * support * (3.0 - 2.0 * support);
     }
 
 // return the forest support used to gate woods on one cell
@@ -877,6 +875,74 @@ class Ground extends Core
         }
 
       return field;
+    }
+
+// build one seeded binary occupancy grid for distinct dark-forest groves
+  function buildDarkForestPatchGrid(): Array<Array<Float>>
+    {
+      var grid = makeFloatGrid(darkForestPatchGridWidth, darkForestPatchGridHeight);
+      var lobeSpan = DARK_FOREST_PATCH_MAX_LOBES - DARK_FOREST_PATCH_MIN_LOBES + 1;
+      var subcellScale = DARK_FOREST_PATCH_GRID_SUBCELLS;
+
+      for (groveIndex in 0...DARK_FOREST_PATCH_COUNT)
+        {
+          var centerX = getStableNoise(mapSeed, groveIndex, fullCellWidth, fullCellHeight, 911) *
+            Math.max(fullCellWidth - 1.0, 0.0);
+          var centerY = getStableNoise(mapSeed, groveIndex, fullCellHeight, fullCellWidth, 919) *
+            Math.max(fullCellHeight - 1.0, 0.0);
+          var baseRadius = DARK_FOREST_PATCH_MIN_RADIUS +
+            getStableNoise(mapSeed, groveIndex, fullCellWidth + fullCellHeight, 1, 929) *
+            (DARK_FOREST_PATCH_MAX_RADIUS - DARK_FOREST_PATCH_MIN_RADIUS);
+          var lobeCount = DARK_FOREST_PATCH_MIN_LOBES +
+            clampInt(Std.int(getStableNoise(mapSeed, groveIndex, 2, fullCellWidth, 937) * lobeSpan),
+              0, lobeSpan - 1);
+
+// stamp a few binary lobes into the per-tile occupancy grid
+          for (lobeIndex in 0...lobeCount)
+            {
+              var lobeAngle = getStableNoise(mapSeed, groveIndex, lobeIndex, 947, 953) * Math.PI * 2.0;
+              var lobeOffset = (lobeIndex == 0
+                ? 0.0
+                : getStableNoise(mapSeed, groveIndex, lobeIndex, 967, 971) * DARK_FOREST_PATCH_LOBE_SPREAD);
+              var lobeCenterX = clampFloat(centerX + Math.cos(lobeAngle) * lobeOffset, 0.0, fullCellWidth - 1.0);
+              var lobeCenterY = clampFloat(centerY + Math.sin(lobeAngle) * lobeOffset, 0.0, fullCellHeight - 1.0);
+              var lobeRadius = baseRadius * (0.58 +
+                getStableNoise(mapSeed, groveIndex, lobeIndex, 977, 983) * 0.52);
+              var minX = clampInt(Std.int(Math.floor((lobeCenterX - lobeRadius - 1.0) * subcellScale)),
+                0, darkForestPatchGridWidth - 1);
+              var minY = clampInt(Std.int(Math.floor((lobeCenterY - lobeRadius - 1.0) * subcellScale)),
+                0, darkForestPatchGridHeight - 1);
+              var maxX = clampInt(Std.int(Math.ceil((lobeCenterX + lobeRadius + 1.0) * subcellScale)),
+                0, darkForestPatchGridWidth - 1);
+              var maxY = clampInt(Std.int(Math.ceil((lobeCenterY + lobeRadius + 1.0) * subcellScale)),
+                0, darkForestPatchGridHeight - 1);
+
+              for (gridY in minY...maxY + 1)
+                for (gridX in minX...maxX + 1)
+                  {
+                    var sampleX = (gridX + 0.5) / subcellScale;
+                    var sampleY = (gridY + 0.5) / subcellScale;
+                    if (getGroundAreaValue(Std.int(Math.floor(sampleX)), Std.int(Math.floor(sampleY))) <= 0.0)
+                      continue;
+
+                    var dx = sampleX - lobeCenterX;
+                    var dy = sampleY - lobeCenterY;
+                    var distance = Math.sqrt(dx * dx + dy * dy) / Math.max(lobeRadius, 0.0001);
+                    if (distance > 1.25)
+                      continue;
+
+                    var edgeNoise = sampleSeededForestValueNoise(
+                      (sampleX + groveIndex * 13 + lobeIndex * 7) / DARK_FOREST_PATCH_DETAIL_SCALE,
+                      (sampleY - groveIndex * 11 + lobeIndex * 5) / DARK_FOREST_PATCH_DETAIL_SCALE,
+                      991 + lobeIndex * 17);
+                    var limit = 0.86 + (edgeNoise - 0.5) * DARK_FOREST_PATCH_DETAIL_BLEND * 1.8;
+                    if (distance <= limit)
+                      grid[gridX][gridY] = 1.0;
+                  }
+            }
+        }
+
+      return grid;
     }
 
 // sample the cached wilderness-neighborhood field at one pixel
