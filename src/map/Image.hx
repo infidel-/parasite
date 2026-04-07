@@ -195,14 +195,22 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildGroundNeighborhoodField', phaseStartTS);
 #end
-      darkForestPatchLobes = buildDarkForestPatchLobes();
-      darkForestPatchLobeBins = buildDarkForestPatchLobeBins();
+      if (ENABLE_TERRAIN_BAND_RENDER)
+        {
+          darkForestPatchLobes = [];
+          darkForestPatchLobeBins = [];
+          darkForestPatchCoverageTarget = MIN_DARK_FOREST_MAP_COVERAGE;
+          darkForestPatchThresholdValue = DARK_FOREST_PATCH_THRESHOLD;
+        }
+      else
+        {
+          darkForestPatchLobes = buildDarkForestPatchLobes();
+          darkForestPatchLobeBins = buildDarkForestPatchLobeBins();
+          darkForestPatchCoverageTarget = getDarkForestPatchCoverageTarget();
+          darkForestPatchThresholdValue = computeDarkForestPatchThresholdValue();
+        }
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildDarkForestPatchLobes', phaseStartTS);
-#end
-      darkForestPatchCoverageTarget = getDarkForestPatchCoverageTarget();
-      darkForestPatchThresholdValue = computeDarkForestPatchThresholdValue();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.computeDarkForestPatchThresholdValue', phaseStartTS);
       traceMapProfileSummary('image.darkForestPatchCoverageTarget=' + darkForestPatchCoverageTarget);
       traceMapProfileSummary('image.darkForestPatchThreshold=' + darkForestPatchThresholdValue);

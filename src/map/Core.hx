@@ -60,9 +60,19 @@ class Core
   var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
   var ENABLE_REGION_CITY_CONTENT = false; // keep roads, parcels, and buildings disabled while tuning forests
+  var ENABLE_TERRAIN_BAND_RENDER = true; // draw terrain from the new three-band perlin field instead of legacy forest overlays
   var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
   var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
   var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius
+
+  var TERRAIN_PERLIN_SCALE = 10.0; // coarse scale of the terrain perlin field in tile space
+  var TERRAIN_PERLIN_OCTAVES = 3; // number of octaves used by the terrain perlin field
+  var TERRAIN_PERLIN_LACUNARITY = 2.0; // frequency multiplier between terrain perlin octaves
+  var TERRAIN_PERLIN_GAIN = 0.5; // amplitude multiplier between terrain perlin octaves
+  var TERRAIN_PERLIN_CONTRAST = 4.0; // linear contrast multiplier applied to the raw terrain field before banding
+
+  var TERRAIN_FOREST_THRESHOLD = -0.5; // terrain field value below which tiles render as forest
+  var TERRAIN_MOUNTAIN_THRESHOLD = 0.5; // terrain field value above which tiles render as mountains
   var FOREST_NOISE_SCALE = 7.5; // coarse scale of the base forest field
   var FOREST_DETAIL_SCALE = 3.0; // finer breakup scale inside the forest field
   var FOREST_DETAIL_BLEND = 0.30; // amount of fine noise mixed into forest placement
@@ -131,6 +141,7 @@ class Core
   var COLOR_WOODS_LIGHT = 0x16290d; // lighter dark-woods tone
   var COLOR_DARK_FOREST_PATCH_DARK = 0x003200; // darker distinct dark-forest patch tone
   var COLOR_DARK_FOREST_PATCH_LIGHT = 0x2c592c; // distinct dark-forest patch highlight tone
+  var COLOR_MOUNTAIN = 0x6f7066; // mountain terrain tone used by the three-band terrain renderer
 
   var COLOR_ROAD1 = 0x171716; // primary road palette anchor
   var COLOR_ROAD2 = 0xd07a23; // secondary road palette anchor

@@ -5,6 +5,7 @@ package map;
 import _AreaType;
 import js.lib.Float32Array;
 import map.Core.DarkForestPatchLobe;
+import map.TerrainNoise;
 import map.Types.DensityField;
 
 class Ground extends Core
@@ -88,9 +89,11 @@ class Ground extends Core
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            var color = (ENABLE_REGION_CITY_CONTENT
-              ? getColorForDensity(samplePaintDensityAtPixel(px, py))
-              : getGroundColorAtPixel(px, py, COLOR_GROUND));
+            var color = ENABLE_TERRAIN_BAND_RENDER
+              ? getTerrainBandColorAtPixel(px, py)
+              : (ENABLE_REGION_CITY_CONTENT
+                ? getColorForDensity(samplePaintDensityAtPixel(px, py))
+                : getGroundColorAtPixel(px, py, COLOR_GROUND));
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
             data[index++] = color & 0xFF;
@@ -100,9 +103,38 @@ class Ground extends Core
       ctx.putImageData(imageData, 0, 0);
     }
 
+// return the terrain band color for one pixel from the new perlin terrain field
+  function getTerrainBandColorAtPixel(px: Int, py: Int): Int
+    {
+      var x = (px + 0.5) / CLEAN_TILE_SIZE;
+      var y = (py + 0.5) / CLEAN_TILE_SIZE;
+      var terrain = TerrainNoise.sampleFractal(
+        mapSeed,
+        x / TERRAIN_PERLIN_SCALE,
+        y / TERRAIN_PERLIN_SCALE,
+        TERRAIN_PERLIN_OCTAVES,
+        TERRAIN_PERLIN_LACUNARITY,
+        TERRAIN_PERLIN_GAIN);
+      terrain = clampFloat(terrain * TERRAIN_PERLIN_CONTRAST, -1.0, 1.0);
+      if (terrain < TERRAIN_FOREST_THRESHOLD)
+        return COLOR_FOREST_MID;
+      if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
+        return COLOR_MOUNTAIN;
+      return COLOR_GROUND;
+    }
+
 // paint forest canopy patches across wilderness ground tiles
   function paintForests()
     {
+      if (ENABLE_TERRAIN_BAND_RENDER)
+        {
+#if mydebug
+          traceForestProfilePhase('paintForests.disabled', 0.0);
+          traceForestProfileSummary('paintForests.summary patchPixels=0 totalPixels=' + (fullPixelWidth * fullPixelHeight));
+          traceForestProfilePhase('paintForests.total', 0.0);
+#end
+          return;
+        }
 #if mydebug
       var totalStartTS = haxe.Timer.stamp() * 1000.0;
 #end
