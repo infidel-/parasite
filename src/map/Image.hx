@@ -54,63 +54,15 @@ class Image extends Buildings
           return;
         }
 
-      if (mode == MAP_DEBUG_VIEW_FOREST_RAW)
+      if (mode == MAP_DEBUG_VIEW_TERRAIN_RAW)
         {
-          paintForestFieldDebug();
+          paintTerrainFieldDebug();
           return;
         }
 
-      if (mode == MAP_DEBUG_VIEW_FOREST_MASK)
+      if (mode == MAP_DEBUG_VIEW_TERRAIN_BANDS)
         {
-          paintForestMaskDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_WOODS_RAW)
-        {
-          paintDarkWoodsFieldDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_WOODS_MASK)
-        {
-          paintDarkWoodsMaskDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_FOREST_EDGE)
-        {
-          paintForestEdgeDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_WOODS_THRESHOLD)
-        {
-          paintDarkWoodsThresholdDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_WOODS_SUPPORT)
-        {
-          paintDarkWoodsSupportDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_DARK_FOREST_PATCH_RAW)
-        {
-          paintDarkForestPatchFieldDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_DARK_FOREST_PATCH_THRESHOLD)
-        {
-          paintDarkForestPatchThresholdDebug();
-          return;
-        }
-
-      if (mode == MAP_DEBUG_VIEW_DARK_FOREST_PATCH_MASK)
-        {
-          paintDarkForestPatchMaskDebug();
+          paintTerrainBandsDebug();
           return;
         }
 
@@ -132,16 +84,8 @@ class Image extends Buildings
       var originalCtx = ctx;
       var views = [
         { mode: MAP_DEBUG_VIEW_GROUND, name: 'ground' },
-        { mode: MAP_DEBUG_VIEW_FOREST_RAW, name: 'forest_raw' },
-        { mode: MAP_DEBUG_VIEW_FOREST_MASK, name: 'forest_mask' },
-        { mode: MAP_DEBUG_VIEW_WOODS_RAW, name: 'woods_raw' },
-        { mode: MAP_DEBUG_VIEW_WOODS_MASK, name: 'woods_mask' },
-        { mode: MAP_DEBUG_VIEW_FOREST_EDGE, name: 'forest_edge' },
-        { mode: MAP_DEBUG_VIEW_WOODS_THRESHOLD, name: 'woods_threshold' },
-        { mode: MAP_DEBUG_VIEW_WOODS_SUPPORT, name: 'woods_support' },
-        { mode: MAP_DEBUG_VIEW_DARK_FOREST_PATCH_RAW, name: 'dark_forest_patch_raw' },
-        { mode: MAP_DEBUG_VIEW_DARK_FOREST_PATCH_THRESHOLD, name: 'dark_forest_patch_threshold' },
-        { mode: MAP_DEBUG_VIEW_DARK_FOREST_PATCH_MASK, name: 'dark_forest_patch_mask' },
+        { mode: MAP_DEBUG_VIEW_TERRAIN_RAW, name: 'terrain_raw' },
+        { mode: MAP_DEBUG_VIEW_TERRAIN_BANDS, name: 'terrain_bands' },
       ];
 
       for (viewIndex in 0...views.length)
@@ -191,30 +135,6 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildAreaTypeField', phaseStartTS);
 #end
-      groundNeighborhoodField = buildGroundNeighborhoodField(1);
-#if mydebug
-      phaseStartTS = nextMapProfileTimestamp('image.buildGroundNeighborhoodField', phaseStartTS);
-#end
-      if (ENABLE_TERRAIN_BAND_RENDER)
-        {
-          darkForestPatchLobes = [];
-          darkForestPatchLobeBins = [];
-          darkForestPatchCoverageTarget = MIN_DARK_FOREST_MAP_COVERAGE;
-          darkForestPatchThresholdValue = DARK_FOREST_PATCH_THRESHOLD;
-        }
-      else
-        {
-          darkForestPatchLobes = buildDarkForestPatchLobes();
-          darkForestPatchLobeBins = buildDarkForestPatchLobeBins();
-          darkForestPatchCoverageTarget = getDarkForestPatchCoverageTarget();
-          darkForestPatchThresholdValue = computeDarkForestPatchThresholdValue();
-        }
-#if mydebug
-      phaseStartTS = nextMapProfileTimestamp('image.buildDarkForestPatchLobes', phaseStartTS);
-      phaseStartTS = nextMapProfileTimestamp('image.computeDarkForestPatchThresholdValue', phaseStartTS);
-      traceMapProfileSummary('image.darkForestPatchCoverageTarget=' + darkForestPatchCoverageTarget);
-      traceMapProfileSummary('image.darkForestPatchThreshold=' + darkForestPatchThresholdValue);
-#end
       overallDensity = sampleAverageDensity(0, 0, fullPixelWidth, fullPixelHeight);
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.sampleAverageDensity', phaseStartTS);
@@ -222,10 +142,6 @@ class Image extends Buildings
       paintGround();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintGround', phaseStartTS);
-#end
-      paintForests();
-#if mydebug
-      phaseStartTS = nextMapProfileTimestamp('image.paintForests', phaseStartTS);
 #end
 #if electron
       if (MAP_DEBUG_DUMP_PNGS)

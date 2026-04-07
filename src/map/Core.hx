@@ -23,21 +23,6 @@ typedef LanczosKernelTable = {
   var taps: Array<Array<Float>>;
 }
 
-typedef DarkForestPatchLobe = {
-  var groveIndex: Int;
-  var lobeIndex: Int;
-  var centerX: Float;
-  var centerY: Float;
-  var radiusX: Float;
-  var radiusY: Float;
-  var shapeCos: Float;
-  var shapeSin: Float;
-  var minX: Float;
-  var minY: Float;
-  var maxX: Float;
-  var maxY: Float;
-}
-
 class Core
 {
   var HALO_CELLS = 2; // halo tile count around the visible region
@@ -46,21 +31,12 @@ class Core
   var PLAN_CELLS_PER_TILE = 8; // number of road plan cells inside one region tile
   var MAP_DEBUG_VIEW_NORMAL = 0; // draw the normal cached region map
   var MAP_DEBUG_VIEW_GROUND = 1; // draw only the ground layer
-  var MAP_DEBUG_VIEW_FOREST_RAW = 2; // draw the raw forest noise field
-  var MAP_DEBUG_VIEW_FOREST_MASK = 3; // draw the final forest mask
-  var MAP_DEBUG_VIEW_WOODS_RAW = 4; // draw the raw dark-woods field
-  var MAP_DEBUG_VIEW_WOODS_MASK = 5; // draw the final dark-woods mask
-  var MAP_DEBUG_VIEW_FOREST_EDGE = 6; // draw the neighborhood edge factor used by forests
-  var MAP_DEBUG_VIEW_WOODS_THRESHOLD = 7; // draw the thresholded dark-woods field before support
-  var MAP_DEBUG_VIEW_WOODS_SUPPORT = 8; // draw the forest support used by dark woods
-  var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_RAW = 9; // draw the raw dark-forest patch field
-  var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_THRESHOLD = 10; // draw the soft-thresholded dark-forest patch field
-  var MAP_DEBUG_VIEW_DARK_FOREST_PATCH_MASK = 11; // draw the final dark-forest patch mask
+  var MAP_DEBUG_VIEW_TERRAIN_RAW = 2; // draw the raw terrain field
+  var MAP_DEBUG_VIEW_TERRAIN_BANDS = 3; // draw the classified terrain bands without city overlays
   var MAP_DEBUG_DUMP_PNGS = false; // dump debug view images during generation in electron
   var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
-  var ENABLE_REGION_CITY_CONTENT = false; // keep roads, parcels, and buildings disabled while tuning forests
-  var ENABLE_TERRAIN_BAND_RENDER = true; // draw terrain from the new three-band perlin field instead of legacy forest overlays
+  var ENABLE_REGION_CITY_CONTENT = true; // enable city backgrounds and the road/building generation pipeline
   var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
   var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
   var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius
@@ -74,42 +50,6 @@ class Core
 
   var TERRAIN_FOREST_THRESHOLD = -0.5; // terrain field value below which tiles render as forest
   var TERRAIN_MOUNTAIN_THRESHOLD = 0.5; // terrain field value above which tiles render as mountains
-  var FOREST_NOISE_SCALE = 7.5; // coarse scale of the base forest field
-  var FOREST_DETAIL_SCALE = 3.0; // finer breakup scale inside the forest field
-  var FOREST_DETAIL_BLEND = 0.30; // amount of fine noise mixed into forest placement
-  var FOREST_PATCH_THRESHOLD = 0.58; // forest field threshold before any edge attenuation
-  var FOREST_PATCH_SOFTNESS = 0.08; // softness band around the forest threshold
-  var FOREST_EDGE_FADE = 0.52; // wilderness-neighborhood width used for forest edge attenuation
-  var FOREST_EDGE_START = 0.02; // wilderness-neighborhood level where forest edge fade begins
-  var FOREST_EDGE_MIN_KEEP = 0.24; // minimum forest strength retained after edge attenuation
-  var FOREST_TEXTURE_THRESHOLD = 0.38; // forest strength where canopy texture starts appearing
-  var FOREST_TEXTURE_FADE = 0.26; // fade width for the canopy texture overlay
-  var WOODS_NOISE_SCALE = 4.8; // coarse scale of the dark-woods field
-  var WOODS_DETAIL_SCALE = 1.9; // finer breakup scale inside the dark-woods field
-  var WOODS_PATCH_THRESHOLD = 0.50; // dark-woods threshold before forest support gating
-  var WOODS_PATCH_SOFTNESS = 0.10; // softness band around the dark-woods threshold
-  var WOODS_MIN_FOREST_STRENGTH = 0.18; // minimum forest support required for dark woods
-  var GROUND_AREA_GRID_SUBCELLS = 8; // relative sharpness factor for continuous irregular city borders
-  var GROUND_BORDER_WARP_SCALE = 3.4; // scale of seeded warp noise applied to visual city borders
-  var GROUND_BORDER_WARP_STRENGTH = 0.42; // coordinate warp strength used to bend visual city borders
-  var GROUND_BORDER_BREAKUP_SCALE = 2.8; // scale of seeded breakup noise applied to visual city borders
-  var GROUND_BORDER_BREAKUP_STRENGTH = 0.14; // threshold jitter strength applied after warping visual city borders
-  var GROUND_BORDER_SOFTNESS = 0.05; // half-width of the continuous support fade around irregular city borders
-  var DARK_FOREST_PATCH_GRID_SUBCELLS = 8; // subcell resolution used when estimating visible dark-forest coverage
-  var DARK_FOREST_PATCH_COUNT = 20; // number of seeded dark-forest groves used by the continuous lobe sampler
-  var DARK_FOREST_PATCH_BIN_SIZE = 4.0; // coarse tile-space bin size used to cull dark-forest lobes during sampling
-  var DARK_FOREST_PATCH_MIN_RADIUS = 2.6; // minimum grove lobe radius in tiles
-  var DARK_FOREST_PATCH_MAX_RADIUS = 5.4; // maximum grove lobe radius in tiles
-  var DARK_FOREST_PATCH_MIN_LOBES = 2; // minimum number of lobes per seeded grove
-  var DARK_FOREST_PATCH_MAX_LOBES = 4; // maximum number of lobes per seeded grove
-  var DARK_FOREST_PATCH_LOBE_SPREAD = 1.9; // maximum offset of grove lobes from the seeded grove center
-  var DARK_FOREST_PATCH_DETAIL_SCALE = 2.8; // finer breakup scale used to roughen occupancy-grid edges
-  var DARK_FOREST_PATCH_DETAIL_BLEND = 0.24; // amount of edge roughness mixed into occupancy-grid stamping
-  var MIN_DARK_FOREST_MAP_COVERAGE = 0.80; // minimum visible-map dark-forest coverage target
-  var MAX_DARK_FOREST_MAP_COVERAGE = 0.90; // maximum visible-map dark-forest coverage target
-  var DARK_FOREST_PATCH_THRESHOLD = 0.52; // dark-forest patch threshold before forest support
-  var DARK_FOREST_PATCH_SOFTNESS = 0.05; // softness band around the dark-forest patch threshold
-  var DARK_FOREST_PATCH_ALPHA = 0.86; // maximum opacity of the dark-forest patch overlay
   var ROAD2_GRID_STEP = 2; // plan-grid step used by road2 growth
   var ROAD2_MIN_SPAWN_GAP = 16; // minimum gap between road2 spawns
   var ROAD_BRANCH_MIN_TURN_STEPS = 16; // minimum branch length before turning
@@ -128,20 +68,10 @@ class Core
   var MAX_CITY_COVERAGE_TURN_DISTANCE = 6; // maximum turn distance when seeking city coverage
 
   var COLOR_GROUND = 0x5a6b34; // base wilderness green
-  var COLOR_GROUND_DARK = 0x1f4512; // darker wilderness variation
-  var COLOR_GROUND_LIGHT = 0x5f8c2f; // lighter wilderness variation
-  var COLOR_GROUND_WARM = 0x76863a; // warmer wilderness accent
   var COLOR_LOW = 0x5a5b60; // low-density urban ground tone
   var COLOR_MEDIUM = 0x6a6b71; // medium-density urban ground tone
   var COLOR_HIGH = 0x7b7c84; // high-density urban ground tone
-  var COLOR_FOREST_DARK = 0x183112; // darkest standard forest canopy tone
   var COLOR_FOREST_MID = 0x2f5f1d; // mid forest canopy tone
-  var COLOR_FOREST_LIGHT = 0x5f8a35; // lighter forest canopy tone
-  var COLOR_FOREST_WARM = 0x7c8d43; // warm forest canopy accent
-  var COLOR_WOODS_DARK = 0x061005; // darkest dark-woods tone
-  var COLOR_WOODS_LIGHT = 0x16290d; // lighter dark-woods tone
-  var COLOR_DARK_FOREST_PATCH_DARK = 0x003200; // darker distinct dark-forest patch tone
-  var COLOR_DARK_FOREST_PATCH_LIGHT = 0x2c592c; // distinct dark-forest patch highlight tone
   var COLOR_MOUNTAIN = 0x6f7066; // mountain terrain tone used by the three-band terrain renderer
 
   var COLOR_ROAD1 = 0x171716; // primary road palette anchor
@@ -173,13 +103,6 @@ class Core
   var rng: SeededRandom;
   var densityField: DensityField;
   var areaTypes: Array<Array<_AreaType>>;
-  var groundNeighborhoodField: Array<Array<Float>>;
-  var darkForestPatchLobes: Array<DarkForestPatchLobe>;
-  var darkForestPatchLobeBins: Array<Array<Int>>;
-  var darkForestPatchLobeBinWidth: Int;
-  var darkForestPatchLobeBinHeight: Int;
-  var darkForestPatchCoverageTarget: Float;
-  var darkForestPatchThresholdValue: Float;
   var overallDensity: Float;
   var roads: Array<RoadSegment>;
   var roadMasks: RoadMasks;
@@ -208,13 +131,6 @@ class Core
       planHeight = Std.int(fullPixelHeight / PLAN_CELL_SIZE);
       roads = [];
       roadPlanGrid = null;
-      groundNeighborhoodField = [];
-      darkForestPatchLobes = [];
-      darkForestPatchLobeBins = [];
-      darkForestPatchLobeBinWidth = 0;
-      darkForestPatchLobeBinHeight = 0;
-      darkForestPatchCoverageTarget = MIN_DARK_FOREST_MAP_COVERAGE;
-      darkForestPatchThresholdValue = DARK_FOREST_PATCH_THRESHOLD;
       blocks = [];
       parcels = [];
       buildings = [];
