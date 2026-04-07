@@ -4,6 +4,7 @@ package map;
 
 import _AreaType;
 import js.lib.Float32Array;
+import js.lib.Uint8ClampedArray;
 import map.Core.DarkForestPatchLobe;
 import map.TerrainNoise;
 import map.Types.DensityField;
@@ -22,6 +23,18 @@ class Ground extends Core
     {
       trace('MAP PROFILE FOREST ' + label);
     }
+
+// trace one perlin profiling phase
+  function tracePerlinProfilePhase(label: String, elapsedMS: Float)
+    {
+      trace('MAP PROFILE PERLIN ' + label + ': ' + Std.int(elapsedMS) + ' ms');
+    }
+
+// trace one perlin profiling summary line
+  function tracePerlinProfileSummary(label: String)
+    {
+      trace('MAP PROFILE PERLIN ' + label);
+    }
 #else
 // ignore one forest profiling phase outside debug builds
   inline function traceForestProfilePhase(label: String, elapsedMS: Float)
@@ -30,6 +43,16 @@ class Ground extends Core
 
 // ignore one forest profiling summary line outside debug builds
   inline function traceForestProfileSummary(label: String)
+    {
+    }
+
+// ignore one perlin profiling phase outside debug builds
+  inline function tracePerlinProfilePhase(label: String, elapsedMS: Float)
+    {
+    }
+
+// ignore one perlin profiling summary line outside debug builds
+  inline function tracePerlinProfileSummary(label: String)
     {
     }
 #end
@@ -82,6 +105,79 @@ class Ground extends Core
 // paint the continuous density-based ground field
   function paintGround()
     {
+#if mydebug
+      if (ENABLE_TERRAIN_BAND_RENDER)
+        {
+          var totalStartTS = haxe.Timer.stamp() * 1000.0;
+          var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
+          var data = imageData.data;
+          var phaseStartTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.createImageData', phaseStartTS - totalStartTS);
+          var terrainRawValues = new Float32Array(fullPixelWidth * fullPixelHeight);
+          var sampleIndex = 0;
+          var minTerrain = 1.0;
+          var maxTerrain = -1.0;
+
+// sample the raw terrain field once per visible pixel
+          for (py in 0...fullPixelHeight)
+            for (px in 0...fullPixelWidth)
+              {
+                var terrain = getTerrainFieldAtCoord(
+                  (px + 0.5) / CLEAN_TILE_SIZE,
+                  (py + 0.5) / CLEAN_TILE_SIZE);
+                terrainRawValues[sampleIndex++] = terrain;
+                if (terrain < minTerrain)
+                  minTerrain = terrain;
+                if (terrain > maxTerrain)
+                  maxTerrain = terrain;
+              }
+
+          var nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.sampleTerrainBase', nowTS - phaseStartTS);
+          phaseStartTS = nowTS;
+          sampleIndex = 0;
+          var forestPixelCount = 0;
+          var groundPixelCount = 0;
+          var mountainPixelCount = 0;
+          var index = 0;
+
+// classify the raw terrain field into the three terrain bands
+          for (i in 0...(fullPixelWidth * fullPixelHeight))
+            {
+              var terrain = terrainRawValues[sampleIndex++];
+              var color = getTerrainBandColorForValue(terrain);
+              if (terrain < TERRAIN_FOREST_THRESHOLD)
+                forestPixelCount++;
+              else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
+                mountainPixelCount++;
+              else
+                groundPixelCount++;
+              data[index++] = (color >> 16) & 0xFF;
+              data[index++] = (color >> 8) & 0xFF;
+              data[index++] = color & 0xFF;
+              data[index++] = 0xFF;
+            }
+
+          nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.applyTerrainBands', nowTS - phaseStartTS);
+          phaseStartTS = nowTS;
+          applyTerrainBandImageBlur(data);
+          nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.applyImageBlur', nowTS - phaseStartTS);
+          phaseStartTS = nowTS;
+          ctx.putImageData(imageData, 0, 0);
+          nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.putImageData', nowTS - phaseStartTS);
+          tracePerlinProfileSummary('paintGround.summary min=' + minTerrain +
+            ' max=' + maxTerrain +
+            ' forestPixels=' + forestPixelCount +
+            ' groundPixels=' + groundPixelCount +
+            ' mountainPixels=' + mountainPixelCount +
+            ' totalPixels=' + (fullPixelWidth * fullPixelHeight));
+          tracePerlinProfilePhase('paintGround.total', nowTS - totalStartTS);
+          return;
+        }
+#end
       var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
       var data = imageData.data;
       var index = 0;
@@ -100,7 +196,20 @@ class Ground extends Core
             data[index++] = 0xFF;
           }
 
+      if (ENABLE_TERRAIN_BAND_RENDER)
+        applyTerrainBandImageBlur(data);
+
       ctx.putImageData(imageData, 0, 0);
+    }
+
+// return the terrain band color for one blurred terrain value
+  function getTerrainBandColorForValue(terrain: Float): Int
+    {
+      if (terrain < TERRAIN_FOREST_THRESHOLD)
+        return COLOR_FOREST_MID;
+      if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
+        return COLOR_MOUNTAIN;
+      return COLOR_GROUND;
     }
 
 // return the terrain band color for one pixel from the new perlin terrain field
@@ -108,6 +217,12 @@ class Ground extends Core
     {
       var x = (px + 0.5) / CLEAN_TILE_SIZE;
       var y = (py + 0.5) / CLEAN_TILE_SIZE;
+      return getTerrainBandColorForValue(getTerrainFieldAtCoord(x, y));
+    }
+
+// return the contrasted raw terrain field at one map-space coordinate
+  function getTerrainFieldAtCoord(x: Float, y: Float): Float
+    {
       var terrain = TerrainNoise.sampleFractal(
         mapSeed,
         x / TERRAIN_PERLIN_SCALE,
@@ -115,12 +230,55 @@ class Ground extends Core
         TERRAIN_PERLIN_OCTAVES,
         TERRAIN_PERLIN_LACUNARITY,
         TERRAIN_PERLIN_GAIN);
-      terrain = clampFloat(terrain * TERRAIN_PERLIN_CONTRAST, -1.0, 1.0);
-      if (terrain < TERRAIN_FOREST_THRESHOLD)
-        return COLOR_FOREST_MID;
-      if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
-        return COLOR_MOUNTAIN;
-      return COLOR_GROUND;
+      return clampFloat(terrain * TERRAIN_PERLIN_CONTRAST, -1.0, 1.0);
+    }
+
+// return the image-space blur offset used for terrain band softening
+  function getTerrainBandImageBlurOffset(): Int
+    {
+      if (TERRAIN_PERLIN_BLUR_RADIUS <= 0.0)
+        return 0;
+      return Std.int(Math.round(TERRAIN_PERLIN_BLUR_RADIUS * CLEAN_TILE_SIZE));
+    }
+
+// apply a small image-space blur to the terrain bands
+  function applyTerrainBandImageBlur(data: Uint8ClampedArray)
+    {
+      var blurOffset = getTerrainBandImageBlurOffset();
+      if (blurOffset <= 0)
+        return;
+
+      var source = new Uint8ClampedArray(data);
+
+// blur the already classified terrain colors with a small cross kernel
+      for (py in 0...fullPixelHeight)
+        for (px in 0...fullPixelWidth)
+          {
+            var leftX = clampInt(px - blurOffset, 0, fullPixelWidth - 1);
+            var rightX = clampInt(px + blurOffset, 0, fullPixelWidth - 1);
+            var topY = clampInt(py - blurOffset, 0, fullPixelHeight - 1);
+            var bottomY = clampInt(py + blurOffset, 0, fullPixelHeight - 1);
+            var index = (py * fullPixelWidth + px) * 4;
+            var leftIndex = (py * fullPixelWidth + leftX) * 4;
+            var rightIndex = (py * fullPixelWidth + rightX) * 4;
+            var topIndex = (topY * fullPixelWidth + px) * 4;
+            var bottomIndex = (bottomY * fullPixelWidth + px) * 4;
+            data[index] = Std.int(source[index] * 0.40 +
+              source[leftIndex] * 0.15 +
+              source[rightIndex] * 0.15 +
+              source[topIndex] * 0.15 +
+              source[bottomIndex] * 0.15);
+            data[index + 1] = Std.int(source[index + 1] * 0.40 +
+              source[leftIndex + 1] * 0.15 +
+              source[rightIndex + 1] * 0.15 +
+              source[topIndex + 1] * 0.15 +
+              source[bottomIndex + 1] * 0.15);
+            data[index + 2] = Std.int(source[index + 2] * 0.40 +
+              source[leftIndex + 2] * 0.15 +
+              source[rightIndex + 2] * 0.15 +
+              source[topIndex + 2] * 0.15 +
+              source[bottomIndex + 2] * 0.15);
+          }
     }
 
 // paint forest canopy patches across wilderness ground tiles
