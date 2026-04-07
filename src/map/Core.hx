@@ -86,6 +86,7 @@ class Core
   var GROUND_BORDER_SOFTNESS = 0.05; // half-width of the continuous support fade around irregular city borders
   var DARK_FOREST_PATCH_GRID_SUBCELLS = 8; // subcell resolution used when estimating visible dark-forest coverage
   var DARK_FOREST_PATCH_COUNT = 20; // number of seeded dark-forest groves used by the continuous lobe sampler
+  var DARK_FOREST_PATCH_BIN_SIZE = 4.0; // coarse tile-space bin size used to cull dark-forest lobes during sampling
   var DARK_FOREST_PATCH_MIN_RADIUS = 2.6; // minimum grove lobe radius in tiles
   var DARK_FOREST_PATCH_MAX_RADIUS = 5.4; // maximum grove lobe radius in tiles
   var DARK_FOREST_PATCH_MIN_LOBES = 2; // minimum number of lobes per seeded grove
@@ -162,6 +163,9 @@ class Core
   var areaTypes: Array<Array<_AreaType>>;
   var groundNeighborhoodField: Array<Array<Float>>;
   var darkForestPatchLobes: Array<DarkForestPatchLobe>;
+  var darkForestPatchLobeBins: Array<Array<Int>>;
+  var darkForestPatchLobeBinWidth: Int;
+  var darkForestPatchLobeBinHeight: Int;
   var darkForestPatchCoverageTarget: Float;
   var darkForestPatchThresholdValue: Float;
   var overallDensity: Float;
@@ -194,6 +198,9 @@ class Core
       roadPlanGrid = null;
       groundNeighborhoodField = [];
       darkForestPatchLobes = [];
+      darkForestPatchLobeBins = [];
+      darkForestPatchLobeBinWidth = 0;
+      darkForestPatchLobeBinHeight = 0;
       darkForestPatchCoverageTarget = MIN_DARK_FOREST_MAP_COVERAGE;
       darkForestPatchThresholdValue = DARK_FOREST_PATCH_THRESHOLD;
       blocks = [];

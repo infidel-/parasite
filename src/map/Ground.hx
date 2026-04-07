@@ -3,11 +3,36 @@
 package map;
 
 import _AreaType;
+import js.lib.Float32Array;
 import map.Core.DarkForestPatchLobe;
 import map.Types.DensityField;
 
 class Ground extends Core
 {
+#if mydebug
+// trace one forest profiling phase
+  function traceForestProfilePhase(label: String, elapsedMS: Float)
+    {
+      trace('MAP PROFILE FOREST ' + label + ': ' + Std.int(elapsedMS) + ' ms');
+    }
+
+// trace one forest profiling summary line
+  function traceForestProfileSummary(label: String)
+    {
+      trace('MAP PROFILE FOREST ' + label);
+    }
+#else
+// ignore one forest profiling phase outside debug builds
+  inline function traceForestProfilePhase(label: String, elapsedMS: Float)
+    {
+    }
+
+// ignore one forest profiling summary line outside debug builds
+  inline function traceForestProfileSummary(label: String)
+    {
+    }
+#end
+
 // build the halo-expanded density field
   function buildDensityField(): DensityField
     {
@@ -78,7 +103,78 @@ class Ground extends Core
 // paint forest canopy patches across wilderness ground tiles
   function paintForests()
     {
+#if mydebug
+      var totalStartTS = haxe.Timer.stamp() * 1000.0;
+#end
       var imageData = ctx.getImageData(0, 0, fullPixelWidth, fullPixelHeight);
+#if mydebug
+      var phaseStartTS = haxe.Timer.stamp() * 1000.0;
+      traceForestProfilePhase('paintForests.getImageData', phaseStartTS - totalStartTS);
+      var sampleStartTS = phaseStartTS;
+      var groundSupports = new Float32Array(fullPixelWidth * fullPixelHeight);
+      var forestFields = new Float32Array(fullPixelWidth * fullPixelHeight);
+      var patchStrengths = new Float32Array(fullPixelWidth * fullPixelHeight);
+      var patchFields = new Float32Array(fullPixelWidth * fullPixelHeight);
+      var patchPixelCount = 0;
+      var patchIndex = 0;
+      var sampleIndex = 0;
+
+// sample the forest support and field across the visible pixel grid
+      for (py in 0...fullPixelHeight)
+        for (px in 0...fullPixelWidth)
+          {
+            var x = (px + 0.5) / CLEAN_TILE_SIZE;
+            var y = (py + 0.5) / CLEAN_TILE_SIZE;
+            var groundSupport = getGroundAreaSupportAtCoord(x, y);
+            groundSupports[sampleIndex] = groundSupport;
+            forestFields[sampleIndex] = getForestFieldAtCoord(x, y);
+            sampleIndex++;
+          }
+
+      var nowTS = haxe.Timer.stamp() * 1000.0;
+      traceForestProfilePhase('paintForests.samplePatchStrength.forestBase', nowTS - phaseStartTS);
+      phaseStartTS = nowTS;
+      sampleIndex = 0;
+
+// sample the raw dark-forest patch field across the visible pixel grid
+      for (py in 0...fullPixelHeight)
+        for (px in 0...fullPixelWidth)
+          {
+            patchFields[sampleIndex] = getDarkForestPatchFieldAtCoord(
+              (px + 0.5) / CLEAN_TILE_SIZE,
+              (py + 0.5) / CLEAN_TILE_SIZE);
+            sampleIndex++;
+          }
+
+      nowTS = haxe.Timer.stamp() * 1000.0;
+      traceForestProfilePhase('paintForests.samplePatchStrength.patchField', nowTS - phaseStartTS);
+      phaseStartTS = nowTS;
+      sampleIndex = 0;
+
+// combine the precomputed forest and patch fields into the final patch mask
+      for (py in 0...fullPixelHeight)
+        for (px in 0...fullPixelWidth)
+          {
+            var x = (px + 0.5) / CLEAN_TILE_SIZE;
+            var y = (py + 0.5) / CLEAN_TILE_SIZE;
+            var groundSupport = groundSupports[sampleIndex];
+            var forestField = forestFields[sampleIndex];
+            var forestStrength = getForestStrengthAtCoordWithGroundSupportAndField(x, y, groundSupport, forestField);
+            var patch = getDarkForestPatchThresholdStrength(patchFields[sampleIndex]);
+            var patchStrength = patch <= 0.0
+              ? 0.0
+              : patch * getDarkForestPatchSupportStrength(forestStrength, forestField, groundSupport);
+            patchStrengths[patchIndex++] = patchStrength;
+            if (patchStrength > 0.0)
+              patchPixelCount++;
+            sampleIndex++;
+          }
+
+      nowTS = haxe.Timer.stamp() * 1000.0;
+      traceForestProfilePhase('paintForests.samplePatchStrength.patchSupport', nowTS - phaseStartTS);
+      traceForestProfilePhase('paintForests.samplePatchStrength', nowTS - sampleStartTS);
+      phaseStartTS = nowTS;
+#end
       var data = imageData.data;
       var index = 0;
 
@@ -86,11 +182,22 @@ class Ground extends Core
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            var forestStrength = getForestStrengthAtPixel(px, py);
-            var darkWoodsStrength = getDarkWoodsStrengthAtPixel(px, py, forestStrength);
-            var darkForestPatchStrength = getDarkForestPatchStrengthAtPixel(px, py, forestStrength);
             var forestPaintStrength = 0.0;
-            darkWoodsStrength = 0.0;
+            var darkWoodsStrength = 0.0;
+            var darkForestPatchStrength = 0.0;
+#if mydebug
+            darkForestPatchStrength = patchStrengths[Std.int(index / 4)];
+#else
+            var x = (px + 0.5) / CLEAN_TILE_SIZE;
+            var y = (py + 0.5) / CLEAN_TILE_SIZE;
+            var groundSupport = getGroundAreaSupportAtCoord(x, y);
+            var forestField = getForestFieldAtCoord(x, y);
+            var forestStrength = getForestStrengthAtCoordWithGroundSupportAndField(x, y, groundSupport, forestField);
+            var patch = getDarkForestPatchThresholdStrength(getDarkForestPatchFieldAtCoord(x, y));
+            darkForestPatchStrength = patch <= 0.0
+              ? 0.0
+              : patch * getDarkForestPatchSupportStrength(forestStrength, forestField, groundSupport);
+#end
 
             if (forestPaintStrength > 0.0 ||
                 darkWoodsStrength > 0.0 ||
@@ -132,7 +239,19 @@ class Ground extends Core
             index += 4;
           }
 
+#if mydebug
+      nowTS = haxe.Timer.stamp() * 1000.0;
+      traceForestProfilePhase('paintForests.applyPatchOverlay', nowTS - phaseStartTS);
+      phaseStartTS = nowTS;
+#end
       ctx.putImageData(imageData, 0, 0);
+#if mydebug
+      nowTS = haxe.Timer.stamp() * 1000.0;
+      traceForestProfilePhase('paintForests.putImageData', nowTS - phaseStartTS);
+      traceForestProfileSummary('paintForests.summary patchPixels=' + patchPixelCount +
+        ' totalPixels=' + (fullPixelWidth * fullPixelHeight));
+      traceForestProfilePhase('paintForests.total', nowTS - totalStartTS);
+#end
     }
 
 // paint one debug visualization of the current wilderness layers
@@ -437,6 +556,8 @@ class Ground extends Core
 // return smoothed wilderness support at one map-space coordinate
   function getGroundAreaSupportAtCoord(x: Float, y: Float): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 1.0;
       return sampleGroundAreaSupportFieldAtCoord(x, y);
     }
 
@@ -546,12 +667,10 @@ class Ground extends Core
   function getForestStrengthAtPixel(px: Int, py: Int): Float
     {
       var groundSupport = getForestGroundSupportAtPixel(px, py);
-      if (groundSupport <= 0.0)
-        return 0.0;
-
-      return getForestStrengthFromBaseAndEdge(
-        getForestBaseStrength(getForestFieldAtPixel(px, py)) * groundSupport,
-        getForestEdgeFactorAtPixel(px, py));
+      return getForestStrengthAtCoordWithGroundSupport(
+        (px + 0.5) / CLEAN_TILE_SIZE,
+        (py + 0.5) / CLEAN_TILE_SIZE,
+        groundSupport);
     }
 
 // return the canopy color for one forested pixel
@@ -658,8 +777,13 @@ class Ground extends Core
           {
             var x = (gridX + 0.5) / subcellScale;
             var y = (gridY + 0.5) / subcellScale;
-            var forestStrength = getForestStrengthAtCoord(x, y);
-            var support = getDarkForestPatchSupportAtCoord(x, y, forestStrength);
+            var groundSupport = getGroundAreaSupportAtCoord(x, y);
+            if (groundSupport <= 0.0)
+              continue;
+
+            var forestField = getForestFieldAtCoord(x, y);
+            var forestStrength = getForestStrengthAtCoordWithGroundSupportAndField(x, y, groundSupport, forestField);
+            var support = getDarkForestPatchSupportStrength(forestStrength, forestField, groundSupport);
             if (support <= 0.0)
               continue;
 
@@ -717,11 +841,24 @@ class Ground extends Core
   function getForestStrengthAtCoord(x: Float, y: Float): Float
     {
       var groundSupport = getGroundAreaSupportAtCoord(x, y);
+      return getForestStrengthAtCoordWithGroundSupportAndField(x, y, groundSupport, getForestFieldAtCoord(x, y));
+    }
+
+// return how strongly one map-space coordinate should read as forest with precomputed support
+  function getForestStrengthAtCoordWithGroundSupport(x: Float, y: Float, groundSupport: Float): Float
+    {
+      return getForestStrengthAtCoordWithGroundSupportAndField(x, y, groundSupport, getForestFieldAtCoord(x, y));
+    }
+
+// return how strongly one map-space coordinate should read as forest with precomputed support and field
+  function getForestStrengthAtCoordWithGroundSupportAndField(x: Float, y: Float, groundSupport: Float,
+      forestField: Float): Float
+    {
       if (groundSupport <= 0.0)
         return 0.0;
 
       return getForestStrengthFromBaseAndEdge(
-        getForestBaseStrength(getForestFieldAtCoord(x, y)) * groundSupport,
+        getForestBaseStrength(forestField) * groundSupport,
         getForestEdgeFactorAtCoord(x, y));
     }
 
@@ -753,10 +890,22 @@ class Ground extends Core
   function getDarkForestPatchSupportAtCoord(x: Float, y: Float, forestStrength: Float): Float
     {
       var groundSupport = getGroundAreaSupportAtCoord(x, y);
+      return getDarkForestPatchSupportAtCoordWithGroundSupport(x, y, forestStrength, groundSupport);
+    }
+
+// return the support mask used to keep dark-forest patches inside plausible forest with precomputed support
+  function getDarkForestPatchSupportAtCoordWithGroundSupport(x: Float, y: Float, forestStrength: Float,
+      groundSupport: Float): Float
+    {
       if (groundSupport <= 0.0)
         return 0.0;
+      return getDarkForestPatchSupportStrength(forestStrength, getForestFieldAtCoord(x, y), groundSupport);
+    }
 
-      var forestBias = clampFloat((Math.max(forestStrength, getForestFieldAtCoord(x, y)) - 0.28) / 0.40, 0.0, 1.0);
+// return the support mask used to keep dark-forest patches inside plausible forest from precomputed values
+  function getDarkForestPatchSupportStrength(forestStrength: Float, forestField: Float, groundSupport: Float): Float
+    {
+      var forestBias = clampFloat((Math.max(forestStrength, forestField) - 0.28) / 0.40, 0.0, 1.0);
       forestBias = forestBias * forestBias * (3.0 - 2.0 * forestBias);
       var support = groundSupport * (0.70 + forestBias * 0.30);
       return 0.55 + support * 0.45;
@@ -805,18 +954,24 @@ class Ground extends Core
 // return the softened forest edge factor from one cell
   function getForestEdgeFactorAtCell(cellX: Int, cellY: Int): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 1.0;
       return getForestEdgeFactorFromNeighborhood(groundNeighborhoodField[cellX][cellY]);
     }
 
 // return the softened forest edge factor from one pixel
   function getForestEdgeFactorAtPixel(px: Int, py: Int): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 1.0;
       return getForestEdgeFactorFromNeighborhood(sampleGroundNeighborhoodAtPixel(px, py));
     }
 
 // return the softened forest edge factor from one map-space coordinate
   function getForestEdgeFactorAtCoord(x: Float, y: Float): Float
     {
+      if (!ENABLE_REGION_CITY_CONTENT)
+        return 1.0;
       return getForestEdgeFactorFromNeighborhood(sampleGroundNeighborhoodAtCoord(x, y));
     }
 
@@ -869,9 +1024,15 @@ class Ground extends Core
   function sampleDarkForestPatchFieldAtCoord(x: Float, y: Float): Float
     {
       var best = 0.0;
+      var binX = clampInt(Std.int(Math.floor(clampFloat(x, 0.0, fullCellWidth - 1.001) / DARK_FOREST_PATCH_BIN_SIZE)),
+        0, darkForestPatchLobeBinWidth - 1);
+      var binY = clampInt(Std.int(Math.floor(clampFloat(y, 0.0, fullCellHeight - 1.001) / DARK_FOREST_PATCH_BIN_SIZE)),
+        0, darkForestPatchLobeBinHeight - 1);
+      var lobeIndices = darkForestPatchLobeBins[binY * darkForestPatchLobeBinWidth + binX];
 
-      for (lobe in darkForestPatchLobes)
+      for (lobeIndex in lobeIndices)
         {
+          var lobe = darkForestPatchLobes[lobeIndex];
           if (x < lobe.minX ||
               x > lobe.maxX ||
               y < lobe.minY ||
@@ -1093,6 +1254,37 @@ class Ground extends Core
         }
 
       return lobes;
+    }
+
+// build coarse lobe bins for faster dark-forest field sampling
+  function buildDarkForestPatchLobeBins(): Array<Array<Int>>
+    {
+      darkForestPatchLobeBinWidth = Std.int(Math.ceil(fullCellWidth / DARK_FOREST_PATCH_BIN_SIZE));
+      darkForestPatchLobeBinHeight = Std.int(Math.ceil(fullCellHeight / DARK_FOREST_PATCH_BIN_SIZE));
+      var bins = [];
+
+      for (i in 0...darkForestPatchLobeBinWidth * darkForestPatchLobeBinHeight)
+        bins.push([]);
+
+      for (lobeIndex in 0...darkForestPatchLobes.length)
+        {
+          var lobe = darkForestPatchLobes[lobeIndex];
+          var minBinX = clampInt(Std.int(Math.floor(lobe.minX / DARK_FOREST_PATCH_BIN_SIZE)), 0,
+            darkForestPatchLobeBinWidth - 1);
+          var maxBinX = clampInt(Std.int(Math.floor(lobe.maxX / DARK_FOREST_PATCH_BIN_SIZE)), 0,
+            darkForestPatchLobeBinWidth - 1);
+          var minBinY = clampInt(Std.int(Math.floor(lobe.minY / DARK_FOREST_PATCH_BIN_SIZE)), 0,
+            darkForestPatchLobeBinHeight - 1);
+          var maxBinY = clampInt(Std.int(Math.floor(lobe.maxY / DARK_FOREST_PATCH_BIN_SIZE)), 0,
+            darkForestPatchLobeBinHeight - 1);
+
+// place each lobe into every overlapping coarse bin
+          for (binY in minBinY...maxBinY + 1)
+            for (binX in minBinX...maxBinX + 1)
+              bins[binY * darkForestPatchLobeBinWidth + binX].push(lobeIndex);
+        }
+
+      return bins;
     }
 
 // sample the cached wilderness-neighborhood field at one pixel

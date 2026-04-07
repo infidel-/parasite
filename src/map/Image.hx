@@ -196,6 +196,7 @@ class Image extends Buildings
       phaseStartTS = nextMapProfileTimestamp('image.buildGroundNeighborhoodField', phaseStartTS);
 #end
       darkForestPatchLobes = buildDarkForestPatchLobes();
+      darkForestPatchLobeBins = buildDarkForestPatchLobeBins();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildDarkForestPatchLobes', phaseStartTS);
 #end
