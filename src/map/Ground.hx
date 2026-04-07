@@ -94,16 +94,12 @@ class Ground extends Core
       var maxTerrain = -1.0;
       var cityPixelCount = 0;
 
-// sample the raw terrain field once per wilderness pixel
+// sample the raw terrain field once per pixel
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
             if (isCityBackgroundPixel(px, py))
-              {
-                terrainRawValues[sampleIndex++] = 0.0;
-                cityPixelCount++;
-                continue;
-              }
+              cityPixelCount++;
 
             var terrain = getTerrainFieldAtCoord(
               (px + 0.5) / CLEAN_TILE_SIZE,
@@ -124,26 +120,18 @@ class Ground extends Core
       var mountainPixelCount = 0;
       var index = 0;
 
-// classify wilderness pixels from perlin and city pixels from density
+// classify terrain pixels and blend city background overlays where needed
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            var color = 0;
-            if (isCityBackgroundPixel(px, py))
-              {
-                color = getColorForDensity(samplePaintDensityAtPixel(px, py));
-              }
+            var terrain = terrainRawValues[sampleIndex];
+            var color = getGroundLayerColorForTerrainAtPixel(px, py, terrain);
+            if (terrain < TERRAIN_FOREST_THRESHOLD)
+              forestPixelCount++;
+            else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
+              mountainPixelCount++;
             else
-              {
-                var terrain = terrainRawValues[sampleIndex];
-                color = getTerrainBandColorForValue(terrain);
-                if (terrain < TERRAIN_FOREST_THRESHOLD)
-                  forestPixelCount++;
-                else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
-                  mountainPixelCount++;
-                else
-                  groundPixelCount++;
-              }
+              groundPixelCount++;
             sampleIndex++;
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
@@ -194,15 +182,31 @@ class Ground extends Core
   function isCityBackgroundPixel(px: Int, py: Int): Bool
     {
       return ENABLE_REGION_CITY_CONTENT &&
+        ENABLE_REGION_CITY_BACKGROUNDS &&
         isCityAreaType(getAreaTypeAtPixel(px, py));
     }
 
 // return the final ground-layer color for one pixel
   function getGroundLayerColorAtPixel(px: Int, py: Int): Int
     {
-      if (isCityBackgroundPixel(px, py))
-        return getColorForDensity(samplePaintDensityAtPixel(px, py));
-      return getTerrainBandColorAtPixel(px, py);
+      var terrainColor = getTerrainBandColorAtPixel(px, py);
+      return getGroundLayerColorForTerrainColorAtPixel(px, py, terrainColor);
+    }
+
+// return the final ground-layer color for one terrain color at one pixel
+  function getGroundLayerColorForTerrainColorAtPixel(px: Int, py: Int, terrainColor: Int): Int
+    {
+      if (!isCityBackgroundPixel(px, py))
+        return terrainColor;
+      return lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
+        REGION_CITY_BACKGROUND_ALPHA);
+    }
+
+// return the final ground-layer color for one terrain value at one pixel
+  function getGroundLayerColorForTerrainAtPixel(px: Int, py: Int, terrain: Float): Int
+    {
+      return getGroundLayerColorForTerrainColorAtPixel(px, py,
+        getTerrainBandColorForValue(terrain));
     }
 
 // return the terrain band color for one blurred terrain value

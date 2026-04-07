@@ -36,7 +36,9 @@ class Core
   var MAP_DEBUG_DUMP_PNGS = false; // dump debug view images during generation in electron
   var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
-  var ENABLE_REGION_CITY_CONTENT = true; // enable city backgrounds and the road/building generation pipeline
+  var ENABLE_REGION_CITY_CONTENT = true; // enable the road/building generation pipeline
+  var ENABLE_REGION_CITY_BACKGROUNDS = true; // draw the legacy density-based city ground as an overlay under roads and buildings
+  var REGION_CITY_BACKGROUND_ALPHA = 0.2; // opacity of the legacy density-based city ground over the terrain bands
   var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
   var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
   var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius
@@ -71,7 +73,7 @@ class Core
   var COLOR_LOW = 0x5a5b60; // low-density urban ground tone
   var COLOR_MEDIUM = 0x6a6b71; // medium-density urban ground tone
   var COLOR_HIGH = 0x7b7c84; // high-density urban ground tone
-  var COLOR_FOREST_MID = 0x2f5f1d; // mid forest canopy tone
+  var COLOR_FOREST_MID = 0x194508; // mid forest canopy tone
   var COLOR_MOUNTAIN = 0x6f7066; // mountain terrain tone used by the three-band terrain renderer
 
   var COLOR_ROAD1 = 0x171716; // primary road palette anchor
