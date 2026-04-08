@@ -89,6 +89,7 @@ class Core
   var COLOR_PLAZA = 0x6f6b61; // plaza fill tone
   var COLOR_PLAZA_EDGE = 0x8b8679; // plaza highlight tone
   var COLOR_YARD = 0x58694c; // yard fill tone
+  var BUILDING_FOOTPRINT_BACKGROUND_ALPHA = 0.5; // opacity of the tight background ring under building footprints
 
   var game: Game;
   var canvas: CanvasElement;

@@ -72,6 +72,8 @@ class BuildingsPainter
       var rooftopHighlightColor = plan.adjustColor(building.roofColor, 1.10);
       var rooftopShadeColor = plan.adjustColor(rooftopColor, 0.80);
 
+      paintBuildingFootprintBackground(building, baseRectCount);
+
       if (building.forecourtAlpha > 0.0)
         paintBuildingForecourt(building);
 
@@ -222,6 +224,20 @@ class BuildingsPainter
         }
 
       plan.ctx.globalAlpha = 1.0;
+    }
+
+// paint one opaque background tightly around the base footprint
+  function paintBuildingFootprintBackground(building: BuildingFootprint, baseRectCount: Int)
+    {
+      plan.ctx.globalAlpha = plan.BUILDING_FOOTPRINT_BACKGROUND_ALPHA;
+      plan.ctx.fillStyle = '#' + StringTools.hex(building.forecourtColor, 6);
+      for (i in 0...baseRectCount)
+        {
+          var rect = building.rects[i];
+          var padding = plan.getBuildingEdgeWidth(rect, building.density) + 2;
+          plan.ctx.fillRect(rect.x - padding, rect.y - padding,
+            rect.width + padding * 2, rect.height + padding * 2);
+        }
     }
 
 // paint a paved forecourt around a centered tower footprint
