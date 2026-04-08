@@ -4,6 +4,7 @@ package map;
 
 import _AreaType;
 import js.lib.Float32Array;
+import js.lib.Uint8Array;
 import js.lib.Uint8ClampedArray;
 import map.TerrainNoise;
 import map.Types.DensityField;
@@ -48,9 +49,6 @@ class Ground extends Core
             values[xx][yy] = getAreaDensityValue(cells[srcX][srcY].typeID);
           }
 
-      for (i in 0...0)
-        values = blurDensityValues(values);
-
       return {
         width: fullCellWidth,
         height: fullCellHeight,
@@ -79,6 +77,64 @@ class Ground extends Core
       return values;
     }
 
+// build cached terrain and city background data used by ground painting
+  function ensureGroundRenderCaches()
+    {
+      if (terrainFieldCache == null)
+        buildTerrainFieldCache();
+      if (cityBackgroundMask == null)
+        buildCityBackgroundMask();
+    }
+
+// build the reduced-resolution cached terrain field
+  function buildTerrainFieldCache()
+    {
+      var step = TERRAIN_CACHE_STEP_PIXELS < 1 ? 1 : TERRAIN_CACHE_STEP_PIXELS;
+      terrainFieldCacheWidth = Std.int(Math.ceil((fullPixelWidth - 1) / step)) + 1;
+      terrainFieldCacheHeight = Std.int(Math.ceil((fullPixelHeight - 1) / step)) + 1;
+      terrainFieldCache = new Float32Array(terrainFieldCacheWidth * terrainFieldCacheHeight);
+      var index = 0;
+
+      for (yy in 0...terrainFieldCacheHeight)
+        {
+          var py = Math.min(yy * step, fullPixelHeight - 1);
+          var y = (py + 0.5) / CLEAN_TILE_SIZE;
+          for (xx in 0...terrainFieldCacheWidth)
+            {
+              var px = Math.min(xx * step, fullPixelWidth - 1);
+              var x = (px + 0.5) / CLEAN_TILE_SIZE;
+              terrainFieldCache[index++] = sampleTerrainFieldRawAtCoord(x, y);
+            }
+        }
+    }
+
+// build the pixel mask used for city background overlays
+  function buildCityBackgroundMask()
+    {
+      cityBackgroundMask = new Uint8Array(fullPixelWidth * fullPixelHeight);
+      cityBackgroundPixelCount = 0;
+      if (!ENABLE_REGION_CITY_CONTENT ||
+          !ENABLE_REGION_CITY_BACKGROUNDS)
+        return;
+
+      for (cellY in 0...fullCellHeight)
+        for (cellX in 0...fullCellWidth)
+          {
+            if (!isCityAreaType(areaTypes[cellX][cellY]))
+              continue;
+
+            var startY = cellY * CLEAN_TILE_SIZE;
+            var startX = cellX * CLEAN_TILE_SIZE;
+            for (localY in 0...CLEAN_TILE_SIZE)
+              {
+                var rowIndex = (startY + localY) * fullPixelWidth + startX;
+                for (localX in 0...CLEAN_TILE_SIZE)
+                  cityBackgroundMask[rowIndex + localX] = 1;
+              }
+            cityBackgroundPixelCount += CLEAN_TILE_SIZE * CLEAN_TILE_SIZE;
+          }
+    }
+
 // paint the mixed city-background and perlin terrain ground field
   function paintGround()
     {
@@ -88,22 +144,19 @@ class Ground extends Core
       var data = imageData.data;
       var phaseStartTS = haxe.Timer.stamp() * 1000.0;
       tracePerlinProfilePhase('paintGround.createImageData', phaseStartTS - totalStartTS);
+      ensureGroundRenderCaches();
       var terrainRawValues = new Float32Array(fullPixelWidth * fullPixelHeight);
       var sampleIndex = 0;
       var minTerrain = 1.0;
       var maxTerrain = -1.0;
-      var cityPixelCount = 0;
+      var cityMask = cityBackgroundMask;
+      var cityPixelCount = cityBackgroundPixelCount;
 
 // sample the raw terrain field once per pixel
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            if (isCityBackgroundPixel(px, py))
-              cityPixelCount++;
-
-            var terrain = getTerrainFieldAtCoord(
-              (px + 0.5) / CLEAN_TILE_SIZE,
-              (py + 0.5) / CLEAN_TILE_SIZE);
+            var terrain = sampleTerrainFieldAtPixel(px, py);
             terrainRawValues[sampleIndex++] = terrain;
             if (terrain < minTerrain)
               minTerrain = terrain;
@@ -119,13 +172,18 @@ class Ground extends Core
       var groundPixelCount = 0;
       var mountainPixelCount = 0;
       var index = 0;
+      sampleIndex = 0;
 
 // classify terrain pixels and blend city background overlays where needed
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
             var terrain = terrainRawValues[sampleIndex];
-            var color = getGroundLayerColorForTerrainAtPixel(px, py, terrain);
+            var terrainColor = getTerrainBandColorForValue(terrain);
+            var color = terrainColor;
+            if (cityMask[sampleIndex] != 0)
+              color = lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
+                REGION_CITY_BACKGROUND_ALPHA);
             if (terrain < TERRAIN_FOREST_THRESHOLD)
               forestPixelCount++;
             else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
@@ -159,54 +217,32 @@ class Ground extends Core
       tracePerlinProfilePhase('paintGround.total', nowTS - totalStartTS);
       return;
 #end
+      ensureGroundRenderCaches();
       var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
       var data = imageData.data;
       var index = 0;
+      var pixelIndex = 0;
+      var cityMask = cityBackgroundMask;
 
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            var color = getGroundLayerColorAtPixel(px, py);
+            var terrain = sampleTerrainFieldAtPixel(px, py);
+            var terrainColor = getTerrainBandColorForValue(terrain);
+            var color = terrainColor;
+            if (cityMask[pixelIndex] != 0)
+              color = lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
+                REGION_CITY_BACKGROUND_ALPHA);
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
             data[index++] = color & 0xFF;
             data[index++] = 0xFF;
+            pixelIndex++;
           }
 
       applyTerrainBandImageBlur(data);
 
       ctx.putImageData(imageData, 0, 0);
-    }
-
-// return whether one pixel should use the legacy city background
-  function isCityBackgroundPixel(px: Int, py: Int): Bool
-    {
-      return ENABLE_REGION_CITY_CONTENT &&
-        ENABLE_REGION_CITY_BACKGROUNDS &&
-        isCityAreaType(getAreaTypeAtPixel(px, py));
-    }
-
-// return the final ground-layer color for one pixel
-  function getGroundLayerColorAtPixel(px: Int, py: Int): Int
-    {
-      var terrainColor = getTerrainBandColorAtPixel(px, py);
-      return getGroundLayerColorForTerrainColorAtPixel(px, py, terrainColor);
-    }
-
-// return the final ground-layer color for one terrain color at one pixel
-  function getGroundLayerColorForTerrainColorAtPixel(px: Int, py: Int, terrainColor: Int): Int
-    {
-      if (!isCityBackgroundPixel(px, py))
-        return terrainColor;
-      return lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
-        REGION_CITY_BACKGROUND_ALPHA);
-    }
-
-// return the final ground-layer color for one terrain value at one pixel
-  function getGroundLayerColorForTerrainAtPixel(px: Int, py: Int, terrain: Float): Int
-    {
-      return getGroundLayerColorForTerrainColorAtPixel(px, py,
-        getTerrainBandColorForValue(terrain));
     }
 
 // return the terrain band color for one blurred terrain value
@@ -222,13 +258,11 @@ class Ground extends Core
 // return the terrain band color for one pixel from the new perlin terrain field
   function getTerrainBandColorAtPixel(px: Int, py: Int): Int
     {
-      var x = (px + 0.5) / CLEAN_TILE_SIZE;
-      var y = (py + 0.5) / CLEAN_TILE_SIZE;
-      return getTerrainBandColorForValue(getTerrainFieldAtCoord(x, y));
+      return getTerrainBandColorForValue(sampleTerrainFieldAtPixel(px, py));
     }
 
-// return the contrasted raw terrain field at one map-space coordinate
-  function getTerrainFieldAtCoord(x: Float, y: Float): Float
+// sample the uncached terrain field at one map-space coordinate
+  function sampleTerrainFieldRawAtCoord(x: Float, y: Float): Float
     {
       var terrain = TerrainNoise.sampleFractal(
         mapSeed,
@@ -238,6 +272,44 @@ class Ground extends Core
         TERRAIN_PERLIN_LACUNARITY,
         TERRAIN_PERLIN_GAIN);
       return clampFloat(terrain * TERRAIN_PERLIN_CONTRAST, -1.0, 1.0);
+    }
+
+// sample the cached terrain field at one map-space coordinate
+  function sampleTerrainFieldCacheAtCoord(x: Float, y: Float): Float
+    {
+      var step = TERRAIN_CACHE_STEP_PIXELS < 1 ? 1 : TERRAIN_CACHE_STEP_PIXELS;
+      var pixelX = clampFloat(x * CLEAN_TILE_SIZE - 0.5, 0.0, fullPixelWidth - 1.0);
+      var pixelY = clampFloat(y * CLEAN_TILE_SIZE - 0.5, 0.0, fullPixelHeight - 1.0);
+      var fx = pixelX / step;
+      var fy = pixelY / step;
+      var x0 = Std.int(Math.floor(fx));
+      var y0 = Std.int(Math.floor(fy));
+      var x1 = clampInt(x0 + 1, 0, terrainFieldCacheWidth - 1);
+      var y1 = clampInt(y0 + 1, 0, terrainFieldCacheHeight - 1);
+      var tx = fx - x0;
+      var ty = fy - y0;
+      var v00 = terrainFieldCache[y0 * terrainFieldCacheWidth + x0];
+      var v10 = terrainFieldCache[y0 * terrainFieldCacheWidth + x1];
+      var v01 = terrainFieldCache[y1 * terrainFieldCacheWidth + x0];
+      var v11 = terrainFieldCache[y1 * terrainFieldCacheWidth + x1];
+      var top = v00 + (v10 - v00) * tx;
+      var bottom = v01 + (v11 - v01) * tx;
+      return top + (bottom - top) * ty;
+    }
+
+// sample the cached terrain field at one pixel center
+  function sampleTerrainFieldAtPixel(px: Int, py: Int): Float
+    {
+      return sampleTerrainFieldCacheAtCoord(
+        (px + 0.5) / CLEAN_TILE_SIZE,
+        (py + 0.5) / CLEAN_TILE_SIZE);
+    }
+
+// return the cached raw terrain field at one map-space coordinate
+  function getTerrainFieldAtCoord(x: Float, y: Float): Float
+    {
+      ensureGroundRenderCaches();
+      return sampleTerrainFieldCacheAtCoord(x, y);
     }
 
 // return the image-space blur offset used for terrain band softening
@@ -251,34 +323,41 @@ class Ground extends Core
 // apply a small image-space blur to the terrain bands
   function applyTerrainBandImageBlur(data: Uint8ClampedArray)
     {
+      ensureGroundRenderCaches();
       var blurOffset = getTerrainBandImageBlurOffset();
       if (blurOffset <= 0)
         return;
 
       var source = new Uint8ClampedArray(data);
+      var cityMask = cityBackgroundMask;
 
 // blur the already classified terrain colors with a small cross kernel
       for (py in 0...fullPixelHeight)
         for (px in 0...fullPixelWidth)
           {
-            if (isCityBackgroundPixel(px, py))
+            var pixelIndex = py * fullPixelWidth + px;
+            if (cityMask[pixelIndex] != 0)
               continue;
 
             var leftX = clampInt(px - blurOffset, 0, fullPixelWidth - 1);
             var rightX = clampInt(px + blurOffset, 0, fullPixelWidth - 1);
             var topY = clampInt(py - blurOffset, 0, fullPixelHeight - 1);
             var bottomY = clampInt(py + blurOffset, 0, fullPixelHeight - 1);
-            var index = (py * fullPixelWidth + px) * 4;
-            var leftIndex = (py * fullPixelWidth + leftX) * 4;
-            var rightIndex = (py * fullPixelWidth + rightX) * 4;
-            var topIndex = (topY * fullPixelWidth + px) * 4;
-            var bottomIndex = (bottomY * fullPixelWidth + px) * 4;
+            var index = pixelIndex * 4;
+            var leftPixelIndex = py * fullPixelWidth + leftX;
+            var rightPixelIndex = py * fullPixelWidth + rightX;
+            var topPixelIndex = topY * fullPixelWidth + px;
+            var bottomPixelIndex = bottomY * fullPixelWidth + px;
+            var leftIndex = leftPixelIndex * 4;
+            var rightIndex = rightPixelIndex * 4;
+            var topIndex = topPixelIndex * 4;
+            var bottomIndex = bottomPixelIndex * 4;
             var weightSum = 0.40;
             var r = source[index] * 0.40;
             var g = source[index + 1] * 0.40;
             var b = source[index + 2] * 0.40;
 
-            if (!isCityBackgroundPixel(leftX, py))
+            if (cityMask[leftPixelIndex] == 0)
               {
                 weightSum += 0.15;
                 r += source[leftIndex] * 0.15;
@@ -286,7 +365,7 @@ class Ground extends Core
                 b += source[leftIndex + 2] * 0.15;
               }
 
-            if (!isCityBackgroundPixel(rightX, py))
+            if (cityMask[rightPixelIndex] == 0)
               {
                 weightSum += 0.15;
                 r += source[rightIndex] * 0.15;
@@ -294,7 +373,7 @@ class Ground extends Core
                 b += source[rightIndex + 2] * 0.15;
               }
 
-            if (!isCityBackgroundPixel(px, topY))
+            if (cityMask[topPixelIndex] == 0)
               {
                 weightSum += 0.15;
                 r += source[topIndex] * 0.15;
@@ -302,7 +381,7 @@ class Ground extends Core
                 b += source[topIndex + 2] * 0.15;
               }
 
-            if (!isCityBackgroundPixel(px, bottomY))
+            if (cityMask[bottomPixelIndex] == 0)
               {
                 weightSum += 0.15;
                 r += source[bottomIndex] * 0.15;
@@ -346,6 +425,7 @@ class Ground extends Core
 // paint the raw terrain field as a grayscale debug image
   function paintTerrainFieldDebug()
     {
+      ensureGroundRenderCaches();
       var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
       var data = imageData.data;
       var index = 0;
@@ -369,6 +449,7 @@ class Ground extends Core
 // paint the classified terrain bands without city overlays
   function paintTerrainBandsDebug()
     {
+      ensureGroundRenderCaches();
       var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
       var data = imageData.data;
       var index = 0;
@@ -539,42 +620,6 @@ class Ground extends Core
         case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH: true;
         default: false;
       };
-    }
-
-// return a small integer density rank for seeding
-  function getAreaDensityRank(type: _AreaType): Int
-    {
-      return switch (type) {
-        case AREA_CITY_LOW: 1;
-        case AREA_CITY_MEDIUM: 2;
-        case AREA_CITY_HIGH, AREA_CORP: 3;
-        default: 0;
-      };
-    }
-
-// blur one density grid pass
-  function blurDensityValues(src: Array<Array<Float>>): Array<Array<Float>>
-    {
-      var dst = makeFloatGrid(fullCellWidth, fullCellHeight);
-
-      for (yy in 0...fullCellHeight)
-        for (xx in 0...fullCellWidth)
-          {
-            var sum = 0.0;
-            var weight = 0.0;
-            for (dy in -1...2)
-              for (dx in -1...2)
-                {
-                  var sx = clampInt(xx + dx, 0, fullCellWidth - 1);
-                  var sy = clampInt(yy + dy, 0, fullCellHeight - 1);
-                  var sampleWeight = (dx == 0 && dy == 0 ? 4 : (dx == 0 || dy == 0 ? 2 : 1));
-                  sum += src[sx][sy] * sampleWeight;
-                  weight += sampleWeight;
-                }
-            dst[xx][yy] = sum / weight;
-          }
-
-      return dst;
     }
 
 // return a density-interpolated ground color

@@ -17,7 +17,7 @@ import map.Types.IntRect;
 import map.Types.ParcelRect;
 import map.Types.RoadMasks;
 
-class Buildings extends LegacyRoads
+class Buildings extends RoadPlan
 {
   var blockBuilder: BuildingsBlockBuilder;
   var parcelBuilder: BuildingsParcelBuilder;

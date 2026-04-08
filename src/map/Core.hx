@@ -7,7 +7,7 @@ import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.lib.Float32Array;
-import js.lib.Uint8ClampedArray;
+import js.lib.Uint8Array;
 import _AreaType;
 import map.SeededRandom;
 import map.Types.BlockRect;
@@ -17,11 +17,6 @@ import map.Types.ParcelRect;
 import map.Types.RoadMasks;
 import map.Types.RoadPlanGrid;
 import map.Types.RoadSegment;
-
-typedef LanczosKernelTable = {
-  var starts: Array<Int>;
-  var taps: Array<Array<Float>>;
-}
 
 class Core
 {
@@ -34,20 +29,19 @@ class Core
   var MAP_DEBUG_VIEW_TERRAIN_RAW = 2; // draw the raw terrain field
   var MAP_DEBUG_VIEW_TERRAIN_BANDS = 3; // draw the classified terrain bands without city overlays
   var MAP_DEBUG_DUMP_PNGS = false; // dump debug view images during generation in electron
+  var MAP_DEBUG_DUMP_BUILDING_RECTS = false; // dump building rectangles during generation in electron
   var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
   var ENABLE_REGION_CITY_CONTENT = true; // enable the road/building generation pipeline
   var ENABLE_REGION_CITY_BACKGROUNDS = true; // draw the legacy density-based city ground as an overlay under roads and buildings
   var REGION_CITY_BACKGROUND_ALPHA = 0.1; // opacity of the legacy density-based city ground over the terrain bands
-  var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
-  var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
-  var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius
 
   var TERRAIN_PERLIN_SCALE = 10.0; // coarse scale of the terrain perlin field in tile space
   var TERRAIN_PERLIN_OCTAVES = 3; // number of octaves used by the terrain perlin field
   var TERRAIN_PERLIN_LACUNARITY = 2.0; // frequency multiplier between terrain perlin octaves
   var TERRAIN_PERLIN_GAIN = 0.5; // amplitude multiplier between terrain perlin octaves
   var TERRAIN_PERLIN_CONTRAST = 4.0; // linear contrast multiplier applied to the raw terrain field before banding
+  var TERRAIN_CACHE_STEP_PIXELS = 4; // pixel spacing used by the cached terrain field sampler
   var TERRAIN_PERLIN_BLUR_RADIUS = 0.02; // tile-space radius used to softly blur terrain-band borders
 
   var TERRAIN_FOREST_THRESHOLD = -0.5; // terrain field value below which tiles render as forest
@@ -107,7 +101,11 @@ class Core
   var rng: SeededRandom;
   var densityField: DensityField;
   var areaTypes: Array<Array<_AreaType>>;
-  var overallDensity: Float;
+  var terrainFieldCache: Float32Array;
+  var terrainFieldCacheWidth: Int;
+  var terrainFieldCacheHeight: Int;
+  var cityBackgroundMask: Uint8Array;
+  var cityBackgroundPixelCount: Int;
   var roads: Array<RoadSegment>;
   var roadMasks: RoadMasks;
   var roadPlanGrid: RoadPlanGrid;
@@ -155,6 +153,11 @@ class Core
     {
       mapSeed = Std.random(0x7FFFFFFF);
       rng = new SeededRandom(mapSeed);
+      terrainFieldCache = null;
+      terrainFieldCacheWidth = 0;
+      terrainFieldCacheHeight = 0;
+      cityBackgroundMask = null;
+      cityBackgroundPixelCount = 0;
     }
 
   function cropVisibleRegion()
@@ -174,221 +177,6 @@ class Core
       canvas = cropCanvas;
       ctx = cropCtx;
     }
-
-// apply repeated lanczos3 downscale-upscale resampling to the final visible image
-  function applyFinalImagePostProcess()
-    {
-      if (MAP_LANCZOS_ROUNDS <= 0 ||
-          MAP_LANCZOS_UPSCALE <= 1 ||
-          MAP_LANCZOS_RADIUS <= 0)
-        return;
-
-      var workCanvas = canvas;
-      for (i in 0...MAP_LANCZOS_ROUNDS)
-        {
-          var targetWidth = workCanvas.width;
-          var targetHeight = workCanvas.height;
-          var downscaleWidth = Std.int(Math.max(1, Math.round(targetWidth / MAP_LANCZOS_UPSCALE)));
-          var downscaleHeight = Std.int(Math.max(1, Math.round(targetHeight / MAP_LANCZOS_UPSCALE)));
-
-// shrink the final image first to introduce the broad blur
-          workCanvas = resampleCanvasLanczos3(workCanvas, downscaleWidth, downscaleHeight);
-
-// restore the original size with the same filter
-          workCanvas = resampleCanvasLanczos3(workCanvas, targetWidth, targetHeight);
-        }
-
-      canvas = workCanvas;
-      ctx = canvas.getContext2d({});
-    }
-
-// resize one canvas with a separable lanczos3 filter
-  function resampleCanvasLanczos3(srcCanvas: CanvasElement, dstWidth: Int,
-      dstHeight: Int): CanvasElement
-    {
-      var srcWidth = srcCanvas.width;
-      var srcHeight = srcCanvas.height;
-      var srcCtx = srcCanvas.getContext2d({});
-      var srcImage = srcCtx.getImageData(0, 0, srcWidth, srcHeight);
-      var xKernel = buildLanczosKernelTable(srcWidth, dstWidth, MAP_LANCZOS_RADIUS);
-      var yKernel = buildLanczosKernelTable(srcHeight, dstHeight, MAP_LANCZOS_RADIUS);
-      var tmp = resampleLanczos3Horizontal(srcImage.data, srcWidth, srcHeight, xKernel);
-      var dstCanvas = Browser.document.createCanvasElement();
-
-      dstCanvas.width = dstWidth;
-      dstCanvas.height = dstHeight;
-      var dstCtx = dstCanvas.getContext2d({});
-      var dstImage = dstCtx.createImageData(dstWidth, dstHeight);
-      resampleLanczos3Vertical(tmp, dstWidth, srcHeight, yKernel, dstImage.data);
-      dstCtx.putImageData(dstImage, 0, 0);
-      return dstCanvas;
-    }
-
-// build one separable lanczos3 kernel table for one axis
-  function buildLanczosKernelTable(srcSize: Int, dstSize: Int, radius: Int): LanczosKernelTable
-    {
-      var starts = [];
-      var taps = [];
-      var scale = dstSize / srcSize;
-      var support = (scale < 1.0 ? radius / scale : radius);
-
-      for (dst in 0...dstSize)
-        {
-          var center = (dst + 0.5) / scale - 0.5;
-          var start = Std.int(Math.ceil(center - support));
-          var stop = Std.int(Math.floor(center + support));
-          var weights = [];
-          var total = 0.0;
-
-          for (src in start...stop + 1)
-            {
-              var weight = getLanczosWeight(center - src, scale, radius);
-              weights.push(weight);
-              total += weight;
-            }
-
-          if (total <= 0.0)
-            {
-              start = clampInt(Std.int(Math.round(center)), 0, srcSize - 1);
-              weights = [1.0];
-              total = 1.0;
-            }
-
-          for (i in 0...weights.length)
-            weights[i] = weights[i] / total;
-
-          starts.push(start);
-          taps.push(weights);
-        }
-
-      return {
-        starts: starts,
-        taps: taps,
-      };
-    }
-
-// resample one image horizontally with one lanczos3 kernel table
-  function resampleLanczos3Horizontal(src: Uint8ClampedArray, srcWidth: Int, srcHeight: Int,
-      kernel: LanczosKernelTable): Float32Array
-    {
-      var dstWidth = kernel.starts.length;
-      var dst = new Float32Array(dstWidth * srcHeight * 4);
-
-      for (yy in 0...srcHeight)
-        for (xx in 0...dstWidth)
-          {
-            var start = kernel.starts[xx];
-            var weights = kernel.taps[xx];
-            var dstIndex = (yy * dstWidth + xx) * 4;
-            var r = 0.0;
-            var g = 0.0;
-            var b = 0.0;
-            var a = 0.0;
-
-            for (i in 0...weights.length)
-              {
-                var srcX = clampInt(start + i, 0, srcWidth - 1);
-                var srcIndex = (yy * srcWidth + srcX) * 4;
-                var weight = weights[i];
-
-                r += src[srcIndex] * weight;
-                g += src[srcIndex + 1] * weight;
-                b += src[srcIndex + 2] * weight;
-                a += src[srcIndex + 3] * weight;
-              }
-
-            dst[dstIndex] = r;
-            dst[dstIndex + 1] = g;
-            dst[dstIndex + 2] = b;
-            dst[dstIndex + 3] = a;
-          }
-
-      return dst;
-    }
-
-// resample one image vertically with one lanczos3 kernel table
-  function resampleLanczos3Vertical(src: Float32Array, srcWidth: Int, srcHeight: Int,
-      kernel: LanczosKernelTable, dst: Uint8ClampedArray)
-    {
-      var dstHeight = kernel.starts.length;
-
-      for (yy in 0...dstHeight)
-        {
-          var start = kernel.starts[yy];
-          var weights = kernel.taps[yy];
-
-          for (xx in 0...srcWidth)
-            {
-              var dstIndex = (yy * srcWidth + xx) * 4;
-              var r = 0.0;
-              var g = 0.0;
-              var b = 0.0;
-              var a = 0.0;
-
-              for (i in 0...weights.length)
-                {
-                  var srcY = clampInt(start + i, 0, srcHeight - 1);
-                  var srcIndex = (srcY * srcWidth + xx) * 4;
-                  var weight = weights[i];
-
-                  r += src[srcIndex] * weight;
-                  g += src[srcIndex + 1] * weight;
-                  b += src[srcIndex + 2] * weight;
-                  a += src[srcIndex + 3] * weight;
-                }
-
-              dst[dstIndex] = clampInt(Std.int(Math.round(r)), 0, 255);
-              dst[dstIndex + 1] = clampInt(Std.int(Math.round(g)), 0, 255);
-              dst[dstIndex + 2] = clampInt(Std.int(Math.round(b)), 0, 255);
-              dst[dstIndex + 3] = clampInt(Std.int(Math.round(a)), 0, 255);
-            }
-        }
-    }
-
-// return one lanczos sample weight with anti-alias widening on downscale
-  function getLanczosWeight(distance: Float, scale: Float, radius: Int): Float
-    {
-      var x = Math.abs(distance);
-      if (scale < 1.0)
-        x *= scale;
-
-      if (x >= radius)
-        return 0.0;
-      if (x < 0.000001)
-        return 1.0;
-
-      return getSincSample(Math.PI * x) * getSincSample(Math.PI * x / radius);
-    }
-
-// return one normalized sinc sample
-  function getSincSample(x: Float): Float
-    {
-      if (Math.abs(x) < 0.000001)
-        return 1.0;
-      return Math.sin(x) / x;
-    }
-
-// return whether a candidate line is far enough from others
-  function isFarFromLines(line: Int, list: Array<Int>, spacing: Int): Bool
-    {
-      for (other in list)
-        if (Math.abs(other - line) < spacing)
-          return false;
-      return true;
-    }
-
-// return a center-biased connector coordinate
-  function pickConnectorCoordinate(min: Int, max: Int, index: Int, count: Int): Int
-    {
-      if (max <= min)
-        return min;
-      var ratio = (index + 1) / (count + 1);
-      var jitter = (rng.nextFloat() - 0.5) * 0.22;
-      var span = max - min;
-      return clampInt(min + Std.int(span * clampFloat(ratio + jitter, 0.15, 0.85)),
-        min, max);
-    }
-
 
   function hashFloat(x: Int, y: Int, salt: Int): Float
     {
