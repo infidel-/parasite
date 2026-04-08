@@ -49,9 +49,6 @@ class Ground extends Core
             values[xx][yy] = getAreaDensityValue(cells[srcX][srcY].typeID);
           }
 
-      for (i in 0...0)
-        values = blurDensityValues(values);
-
       return {
         width: fullCellWidth,
         height: fullCellHeight,
@@ -246,36 +243,6 @@ class Ground extends Core
       applyTerrainBandImageBlur(data);
 
       ctx.putImageData(imageData, 0, 0);
-    }
-
-// return whether one pixel should use the legacy city background
-  function isCityBackgroundPixel(px: Int, py: Int): Bool
-    {
-      ensureGroundRenderCaches();
-      return cityBackgroundMask[py * fullPixelWidth + px] != 0;
-    }
-
-// return the final ground-layer color for one pixel
-  function getGroundLayerColorAtPixel(px: Int, py: Int): Int
-    {
-      var terrainColor = getTerrainBandColorAtPixel(px, py);
-      return getGroundLayerColorForTerrainColorAtPixel(px, py, terrainColor);
-    }
-
-// return the final ground-layer color for one terrain color at one pixel
-  function getGroundLayerColorForTerrainColorAtPixel(px: Int, py: Int, terrainColor: Int): Int
-    {
-      if (!isCityBackgroundPixel(px, py))
-        return terrainColor;
-      return lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
-        REGION_CITY_BACKGROUND_ALPHA);
-    }
-
-// return the final ground-layer color for one terrain value at one pixel
-  function getGroundLayerColorForTerrainAtPixel(px: Int, py: Int, terrain: Float): Int
-    {
-      return getGroundLayerColorForTerrainColorAtPixel(px, py,
-        getTerrainBandColorForValue(terrain));
     }
 
 // return the terrain band color for one blurred terrain value
@@ -653,42 +620,6 @@ class Ground extends Core
         case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH: true;
         default: false;
       };
-    }
-
-// return a small integer density rank for seeding
-  function getAreaDensityRank(type: _AreaType): Int
-    {
-      return switch (type) {
-        case AREA_CITY_LOW: 1;
-        case AREA_CITY_MEDIUM: 2;
-        case AREA_CITY_HIGH, AREA_CORP: 3;
-        default: 0;
-      };
-    }
-
-// blur one density grid pass
-  function blurDensityValues(src: Array<Array<Float>>): Array<Array<Float>>
-    {
-      var dst = makeFloatGrid(fullCellWidth, fullCellHeight);
-
-      for (yy in 0...fullCellHeight)
-        for (xx in 0...fullCellWidth)
-          {
-            var sum = 0.0;
-            var weight = 0.0;
-            for (dy in -1...2)
-              for (dx in -1...2)
-                {
-                  var sx = clampInt(xx + dx, 0, fullCellWidth - 1);
-                  var sy = clampInt(yy + dy, 0, fullCellHeight - 1);
-                  var sampleWeight = (dx == 0 && dy == 0 ? 4 : (dx == 0 || dy == 0 ? 2 : 1));
-                  sum += src[sx][sy] * sampleWeight;
-                  weight += sampleWeight;
-                }
-            dst[xx][yy] = sum / weight;
-          }
-
-      return dst;
     }
 
 // return a density-interpolated ground color

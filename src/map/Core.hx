@@ -178,28 +178,6 @@ class Core
       ctx = cropCtx;
     }
 
-// return whether a candidate line is far enough from others
-  function isFarFromLines(line: Int, list: Array<Int>, spacing: Int): Bool
-    {
-      for (other in list)
-        if (Math.abs(other - line) < spacing)
-          return false;
-      return true;
-    }
-
-// return a center-biased connector coordinate
-  function pickConnectorCoordinate(min: Int, max: Int, index: Int, count: Int): Int
-    {
-      if (max <= min)
-        return min;
-      var ratio = (index + 1) / (count + 1);
-      var jitter = (rng.nextFloat() - 0.5) * 0.22;
-      var span = max - min;
-      return clampInt(min + Std.int(span * clampFloat(ratio + jitter, 0.15, 0.85)),
-        min, max);
-    }
-
-
   function hashFloat(x: Int, y: Int, salt: Int): Float
     {
       var n = x * 374761393 + y * 668265263 + salt * 1442695041;
