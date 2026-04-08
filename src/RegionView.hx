@@ -1,8 +1,12 @@
 // tiled region view (each tile corresponds to an area)
 
+import haxe.ds.IntMap;
 import js.html.CanvasRenderingContext2D;
+import js.html.CanvasElement;
+import js.Browser;
 import game.*;
 import tiles.Tileset;
+import map.Image;
 
 class RegionView
 {
@@ -10,6 +14,7 @@ class RegionView
   var scene: GameScene; // scene link
 
   var path: Array<{ x: Int, y: Int }>; // currently visible path
+  var outlinedEntityIconCache: IntMap<CanvasElement>; // cached black silhouette icons
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -21,6 +26,7 @@ class RegionView
       width = 100; // should be larger than any region
       height = 100;
       path = null;
+      outlinedEntityIconCache = new IntMap();
     }
 
 
@@ -179,15 +185,35 @@ class RegionView
       ctx.save();
       ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
 
-      // draw area tiles and icons
-      untyped ctx.imageSmoothingEnabled = false;
+      // ensure region map image exists
+      if (game.region.regionMapImage == null)
+        {
+          game.region.regionMapImage = new Image(game);
+          var t = Sys.time();
+          trace('Region map image generation started');
+          game.region.regionMapImage.generate();
+          trace('Region map image generated in ' + Std.int((Sys.time() - t) * 1000) + ' ms');
+        }
+
+      // draw region map image (only visible portion)
+      var visibleTilesW = scene.cameraTileX2 - scene.cameraTileX1 + 1;
+      var visibleTilesH = scene.cameraTileY2 - scene.cameraTileY1 + 1;
+      game.region.regionMapImage.drawTo(ctx,
+        scene.cameraTileX1 * Const.TILE_SIZE_CLEAN,
+        scene.cameraTileY1 * Const.TILE_SIZE_CLEAN,
+        visibleTilesW * Const.TILE_SIZE_CLEAN,
+        visibleTilesH * Const.TILE_SIZE_CLEAN,
+        0,
+        0,
+        visibleTilesW * Const.TILE_SIZE,
+        visibleTilesH * Const.TILE_SIZE);
+
+      // draw area icons
       var tileset = scene.images.getDefaultTileset();
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
           drawArea(ctx, cells[x][y], tileset);
-      // smooth everything else
-      untyped ctx.imageSmoothingEnabled = true;
 
       // draw player
       game.playerRegion.entity.draw(ctx);
@@ -209,7 +235,21 @@ class RegionView
       scene.endRenderSampleRegion(renderTS);
     }
 
-// paint area tile and icons
+// draw one special area tile on top of the region map image
+  function drawAreaTileOverlay(ctx: CanvasRenderingContext2D,
+      area: AreaGame, tileset: Tileset, ax: Int, ay: Int)
+    {
+      if (area.typeID != AREA_MILITARY_BASE &&
+          area.typeID != AREA_FACILITY)
+        return;
+
+      var icon = tileset.getIcon(area.tileID);
+      untyped ctx.imageSmoothingEnabled = false;
+      tileset.draw(ctx, icon, ax, ay);
+      untyped ctx.imageSmoothingEnabled = true;
+    }
+
+// paint area icons on top of the region map image
   function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset)
     {
       // area not visible
@@ -223,29 +263,25 @@ class RegionView
       var ay =
         (area.y - scene.cameraTileY1) * Const.TILE_SIZE;
 
-      // area tile
-      var tileID = (isKnown(area) ? area.tileID : Const.TILE_HIDDEN);
-      var icon = tileset.getIcon(tileID);
-      untyped ctx.imageSmoothingEnabled = false;
-      tileset.draw(ctx, icon, ax, ay);
+      // unknown areas are hidden, draw darkened tile
+      if (!isKnown(area))
+        {
+          ctx.fillStyle = '#111111';
+          ctx.globalAlpha = 0.7;
+          ctx.fillRect(ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
+          ctx.globalAlpha = 1.0;
+          return;
+        }
+
+      drawAreaTileOverlay(ctx, area, tileset, ax, ay);
 
       // high crime marker
-      if (area.highCrime && area.isKnown)
+      if (area.highCrime)
         {
-          ctx.globalAlpha = 0.85;
-          ctx.drawImage(scene.images.entities,
-            Const.FRAME_HIGH_CRIME * Const.TILE_SIZE_CLEAN, 
-            Const.ROW_ALERT * Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            ax, ay,
-            Const.TILE_SIZE,
-            Const.TILE_SIZE);
-          ctx.globalAlpha = 1.0;
+          drawOutlinedEntityIcon(ctx, Const.FRAME_HIGH_CRIME, Const.ROW_ALERT, ax, ay, 0.85);
         }
 
       // area icons
-      untyped ctx.imageSmoothingEnabled = true;
       for (i in 0...6)
         {
           var icon = null;
@@ -283,6 +319,99 @@ class RegionView
             Const.TILE_SIZE,
             Const.TILE_SIZE);
         }
+    }
+
+// draw one entity icon with a small black outline
+  function drawOutlinedEntityIcon(ctx: CanvasRenderingContext2D, col: Int, row: Int,
+      ax: Int, ay: Int, alpha: Float)
+    {
+      var iconCanvas = getOutlinedEntityIconCanvas(col, row);
+      var outlineOffset = 0.5;
+
+      ctx.globalAlpha = alpha * 0.75;
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax - outlineOffset,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax + outlineOffset,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax,
+        ay - outlineOffset,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.drawImage(iconCanvas,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax,
+        ay + outlineOffset,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+
+// draw the original icon on top of the outline
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(scene.images.entities,
+        col * Const.TILE_SIZE_CLEAN,
+        row * Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.globalAlpha = 1.0;
+    }
+
+// return one cached black silhouette for an entity icon
+  function getOutlinedEntityIconCanvas(col: Int, row: Int): CanvasElement
+    {
+      var key = (row << 16) | col;
+      var iconCanvas = outlinedEntityIconCache.get(key);
+      if (iconCanvas != null)
+        return iconCanvas;
+
+      iconCanvas = Browser.document.createCanvasElement();
+      iconCanvas.width = Const.TILE_SIZE_CLEAN;
+      iconCanvas.height = Const.TILE_SIZE_CLEAN;
+      var iconCtx = iconCanvas.getContext('2d');
+
+// draw the source sprite into a temporary canvas
+      iconCtx.drawImage(scene.images.entities,
+        col * Const.TILE_SIZE_CLEAN,
+        row * Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        0,
+        0,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN);
+
+// convert the sprite silhouette into a black outline source
+      untyped iconCtx.globalCompositeOperation = 'source-in';
+      iconCtx.fillStyle = '#000000';
+      iconCtx.fillRect(0, 0, Const.TILE_SIZE_CLEAN, Const.TILE_SIZE_CLEAN);
+      untyped iconCtx.globalCompositeOperation = 'source-over';
+
+      outlinedEntityIconCache.set(key, iconCanvas);
+      return iconCanvas;
     }
 
 // hide gui

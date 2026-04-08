@@ -55,7 +55,6 @@
   --text-color-cult-power: #52eca5;
   --text-color-cult-effect: #b59fde;
   --text-color-occasio: #f3d28c;
-  --main-menu-bg: url(./img/misc/bg1.jpg);
   --message-img-display: block;
 }
 
@@ -196,6 +195,8 @@ hr {
   margin: 0;
   padding: 0;
   pointer-events: none;
+  /* promote to own compositor layer to reduce composite overhead */
+  will-change: transform;
 }
 
 .console-div {
@@ -255,7 +256,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 }
 
 #hud-goals {
@@ -273,7 +274,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 }
 
 #hud-info {
@@ -290,7 +291,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 }
 
 #hud-area-info {
@@ -304,7 +305,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
   font-size: 80%;
   pointer-events: none;
   z-index: 25;
@@ -341,7 +342,7 @@ hr {
   outline: none;
   appearance: none;
   user-select: none;
-  transition: 0.1s;
+  transition: opacity 0.1s;
 
   font-size: 80%;
   line-height: 1.1;
@@ -406,7 +407,7 @@ hr {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transition: 0.1s;
+  transition: opacity 0.1s;
   cursor: url(./img/mouse-pointer.png) 0 1, pointer;
 }
 
@@ -470,11 +471,25 @@ hr {
   left: 0px;
   width: 100%;
   height: 100%;
-  backdrop-filter: saturate(50%) blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+}
+
+/* backdrop-filter only for non-main-menu windows */
+.window-bg:not(#window-mainmenu-bg) {
+  backdrop-filter: saturate(50%) blur(2px);
+}
+
+/* WebGL canvas for main menu background */
+.menu-bg-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }
 
 /* window initial fade-in from darkness */
@@ -1580,15 +1595,13 @@ input[type=checkbox] {
 }
 @keyframes text-highlight {
   from {
-    font-size: var(--text-font-size);
     opacity:0.8;
   }
   50% {
-    font-size: 101%;
+    transform: translate(0px, 2%);
     opacity:1.0;
   }
   to {
-    font-size: var(--text-font-size);
     opacity:0.8;
   }
 }
@@ -1748,31 +1761,7 @@ input[type="radio"]:focus {
   text-shadow: -0.05ch -0.05ch 0px rgb(255 255 255 / 15%), 0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
 }
 
-@keyframes background-animation {
-  0%{
-    transform: scale(1.0);
-  }
-  50%{
-    background-position-x: center;
-    transform: scale(1.2) translate3d(1%, 0%, 1%);
-  }
-  100%{
-    transform: scale(1.1) translate3d(1%, 1%, 1%);
-  }
-}
-
-.window-swirl::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: var(--main-menu-bg);
-  background-size: cover;
-  filter: url(#swirl) brightness(80%) blur(0.5px) saturate(90%);
-  animation: fade-in 5s, background-animation 200s infinite alternate;
-}
+/* background-animation and .window-swirl::before removed — replaced by WebGL MenuBackground */
 
 /* cult table styling */
 .cult-table {

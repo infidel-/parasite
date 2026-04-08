@@ -9,6 +9,7 @@ import entities.EffectEntity;
 import game.Game;
 import tiles.Tileset;
 
+@:expose
 class AreaView
 {
   var game: Game; // game state link
