@@ -7,6 +7,7 @@ import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.lib.Float32Array;
+import js.lib.Uint8Array;
 import js.lib.Uint8ClampedArray;
 import _AreaType;
 import map.SeededRandom;
@@ -48,6 +49,7 @@ class Core
   var TERRAIN_PERLIN_LACUNARITY = 2.0; // frequency multiplier between terrain perlin octaves
   var TERRAIN_PERLIN_GAIN = 0.5; // amplitude multiplier between terrain perlin octaves
   var TERRAIN_PERLIN_CONTRAST = 4.0; // linear contrast multiplier applied to the raw terrain field before banding
+  var TERRAIN_CACHE_STEP_PIXELS = 4; // pixel spacing used by the cached terrain field sampler
   var TERRAIN_PERLIN_BLUR_RADIUS = 0.02; // tile-space radius used to softly blur terrain-band borders
 
   var TERRAIN_FOREST_THRESHOLD = -0.5; // terrain field value below which tiles render as forest
@@ -107,6 +109,11 @@ class Core
   var rng: SeededRandom;
   var densityField: DensityField;
   var areaTypes: Array<Array<_AreaType>>;
+  var terrainFieldCache: Float32Array;
+  var terrainFieldCacheWidth: Int;
+  var terrainFieldCacheHeight: Int;
+  var cityBackgroundMask: Uint8Array;
+  var cityBackgroundPixelCount: Int;
   var overallDensity: Float;
   var roads: Array<RoadSegment>;
   var roadMasks: RoadMasks;
@@ -155,6 +162,11 @@ class Core
     {
       mapSeed = Std.random(0x7FFFFFFF);
       rng = new SeededRandom(mapSeed);
+      terrainFieldCache = null;
+      terrainFieldCacheWidth = 0;
+      terrainFieldCacheHeight = 0;
+      cityBackgroundMask = null;
+      cityBackgroundPixelCount = 0;
     }
 
   function cropVisibleRegion()
