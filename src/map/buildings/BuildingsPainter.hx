@@ -72,6 +72,7 @@ class BuildingsPainter
       var rooftopHighlightColor = plan.adjustColor(building.roofColor, 1.10);
       var rooftopShadeColor = plan.adjustColor(rooftopColor, 0.80);
 
+      paintBuildingLotBackground(building);
       paintBuildingFootprintBackground(building, baseRectCount);
 
       if (building.forecourtAlpha > 0.0)
@@ -224,6 +225,14 @@ class BuildingsPainter
         }
 
       plan.ctx.globalAlpha = 1.0;
+    }
+
+// paint one broader lot background under a building footprint
+  function paintBuildingLotBackground(building: BuildingFootprint)
+    {
+      plan.ctx.globalAlpha = plan.BUILDING_LOT_BACKGROUND_ALPHA;
+      plan.ctx.fillStyle = '#' + StringTools.hex(building.forecourtColor, 6);
+      plan.ctx.fillRect(building.lotX, building.lotY, building.lotWidth, building.lotHeight);
     }
 
 // paint one opaque background tightly around the base footprint

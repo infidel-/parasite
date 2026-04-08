@@ -38,7 +38,7 @@ class Core
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
   var ENABLE_REGION_CITY_CONTENT = true; // enable the road/building generation pipeline
   var ENABLE_REGION_CITY_BACKGROUNDS = true; // draw the legacy density-based city ground as an overlay under roads and buildings
-  var REGION_CITY_BACKGROUND_ALPHA = 0.2; // opacity of the legacy density-based city ground over the terrain bands
+  var REGION_CITY_BACKGROUND_ALPHA = 0.1; // opacity of the legacy density-based city ground over the terrain bands
   var MAP_LANCZOS_UPSCALE = 2; // temporary upscale/downscale factor for final postprocess
   var MAP_LANCZOS_ROUNDS = 0; // number of final postprocess rounds
   var MAP_LANCZOS_RADIUS = 3; // lanczos filter radius
@@ -89,6 +89,7 @@ class Core
   var COLOR_PLAZA = 0x6f6b61; // plaza fill tone
   var COLOR_PLAZA_EDGE = 0x8b8679; // plaza highlight tone
   var COLOR_YARD = 0x58694c; // yard fill tone
+  var BUILDING_LOT_BACKGROUND_ALPHA = 0.25; // opacity of the broader lot background under building footprints
   var BUILDING_FOOTPRINT_BACKGROUND_ALPHA = 0.5; // opacity of the tight background ring under building footprints
 
   var game: Game;
