@@ -13,7 +13,6 @@ import map.Types.RoadMasks;
 @:access(map.Ground)
 @:access(map.Raster)
 @:access(map.RoadPlan)
-@:access(map.LegacyRoads)
 @:access(map.Buildings)
 class BuildingsBlockBuilder
 {

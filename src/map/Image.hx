@@ -135,10 +135,6 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildAreaTypeField', phaseStartTS);
 #end
-      overallDensity = sampleAverageDensity(0, 0, fullPixelWidth, fullPixelHeight);
-#if mydebug
-      phaseStartTS = nextMapProfileTimestamp('image.sampleAverageDensity', phaseStartTS);
-#end
       paintGround();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintGround', phaseStartTS);
@@ -191,10 +187,13 @@ class Image extends Buildings
       phaseStartTS = nextMapProfileTimestamp('image.generateBuildings', phaseStartTS);
 #end
 #if electron
-      dumpBuildingRects();
+      if (MAP_DEBUG_DUMP_BUILDING_RECTS)
+        {
+          dumpBuildingRects();
 #if mydebug
-      traceMapProfileSummary('image.buildingDump=region_buildings.txt');
+          traceMapProfileSummary('image.buildingDump=region_buildings.txt');
 #end
+        }
 #end
       paintOpenParcels(parcels);
 #if mydebug
@@ -212,10 +211,6 @@ class Image extends Buildings
       cropVisibleRegion();
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion', phaseStartTS);
-#end
-      applyFinalImagePostProcess();
-#if mydebug
-      phaseStartTS = nextMapProfileTimestamp('image.applyFinalImagePostProcess', phaseStartTS);
       traceMapProfileSummary('image.summary roads=' + roads.length +
         ' blocks=' + blocks.length +
         ' parcels=' + parcels.length +
