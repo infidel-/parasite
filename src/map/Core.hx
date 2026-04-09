@@ -34,7 +34,7 @@ class Core
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
   var ENABLE_REGION_CITY_CONTENT = true; // enable the road/building generation pipeline
   var ENABLE_REGION_CITY_BACKGROUNDS = true; // draw the legacy density-based city ground as an overlay under roads and buildings
-  var REGION_CITY_BACKGROUND_ALPHA = 0.1; // opacity of the legacy density-based city ground over the terrain bands
+  var REGION_CITY_BACKGROUND_ALPHA = 0.15; // opacity of the legacy density-based city ground over the terrain bands
 
   var TERRAIN_PERLIN_SCALE = 10.0; // coarse scale of the terrain perlin field in tile space
   var TERRAIN_PERLIN_OCTAVES = 3; // number of octaves used by the terrain perlin field
@@ -64,9 +64,9 @@ class Core
   var MAX_CITY_COVERAGE_TURN_DISTANCE = 6; // maximum turn distance when seeking city coverage
 
   var COLOR_GROUND = 0x5a6b34; // base wilderness green
-  var COLOR_LOW = 0x5a5b60; // low-density urban ground tone
-  var COLOR_MEDIUM = 0x6a6b71; // medium-density urban ground tone
-  var COLOR_HIGH = 0x7b7c84; // high-density urban ground tone
+  var COLOR_LOW = 0x3a3b40; // low-density urban ground tone
+  var COLOR_MEDIUM = 0x4a4b41; // medium-density urban ground tone
+  var COLOR_HIGH = 0x6b6c64; // high-density urban ground tone
   var COLOR_FOREST_MID = 0x194508; // mid forest canopy tone
   var COLOR_MOUNTAIN = 0x6f7066; // mountain terrain tone used by the three-band terrain renderer
 
@@ -80,11 +80,11 @@ class Core
   var COLOR_BUILDING_MEDIUM = 0x49453d; // medium-density building base tone
   var COLOR_BUILDING_HIGH = 0x343333; // high-density building base tone
   var COLOR_BUILDING_SHADOW = 0x1a1a1a; // shared building shadow tone
-  var COLOR_PLAZA = 0x6f6b61; // plaza fill tone
-  var COLOR_PLAZA_EDGE = 0x8b8679; // plaza highlight tone
-  var COLOR_YARD = 0x58694c; // yard fill tone
+  var COLOR_PLAZA = 0x3f3b31; // plaza fill tone
+  var COLOR_PLAZA_EDGE = 0x5b5649; // plaza highlight tone
+  var COLOR_YARD = 0x38492c; // yard fill tone
   var BUILDING_LOT_BACKGROUND_ALPHA = 0.25; // opacity of the broader lot background under building footprints
-  var BUILDING_FOOTPRINT_BACKGROUND_ALPHA = 0.5; // opacity of the tight background ring under building footprints
+  var BUILDING_FOOTPRINT_BACKGROUND_ALPHA = 0.4; // opacity of the tight background ring under building footprints
 
   var game: Game;
   var canvas: CanvasElement;
