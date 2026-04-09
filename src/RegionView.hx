@@ -249,6 +249,18 @@ class RegionView
       untyped ctx.imageSmoothingEnabled = true;
     }
 
+// draw one alpha feather strip inside one unknown frontier tile
+  function drawUnknownAreaFeather(ctx: CanvasRenderingContext2D,
+      x: Float, y: Float, width: Float, height: Float,
+      x1: Float, y1: Float, x2: Float, y2: Float, alpha: Float)
+    {
+      var gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+      gradient.addColorStop(0, 'rgba(0, 0, 0, ' + alpha + ')');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x, y, width, height);
+    }
+
 // draw one unknown area tile with a softened frontier silhouette
   function drawUnknownAreaTile(ctx: CanvasRenderingContext2D,
       area: AreaGame, ax: Int, ay: Int)
@@ -275,6 +287,8 @@ class RegionView
       var tile = Const.TILE_SIZE;
       var edgeInset = tile * 0.16;
       var cornerInset = tile * 0.10;
+      var featherSize = tile * 0.20;
+      var featherAlpha = 0.35;
       var x1 = ax;
       var y1 = ay;
       var x2 = ax + tile;
@@ -313,6 +327,53 @@ class RegionView
         ctx.lineTo(x1, leftTopY);
       ctx.closePath();
       ctx.fill();
+
+      ctx.clip();
+      untyped ctx.globalCompositeOperation = 'destination-out';
+      if (topKnown)
+        drawUnknownAreaFeather(ctx,
+          ax,
+          ay,
+          tile,
+          featherSize,
+          ax,
+          ay,
+          ax,
+          ay + featherSize,
+          featherAlpha);
+      if (rightKnown)
+        drawUnknownAreaFeather(ctx,
+          ax + tile - featherSize,
+          ay,
+          featherSize,
+          tile,
+          ax + tile,
+          ay,
+          ax + tile - featherSize,
+          ay,
+          featherAlpha);
+      if (bottomKnown)
+        drawUnknownAreaFeather(ctx,
+          ax,
+          ay + tile - featherSize,
+          tile,
+          featherSize,
+          ax,
+          ay + tile,
+          ax,
+          ay + tile - featherSize,
+          featherAlpha);
+      if (leftKnown)
+        drawUnknownAreaFeather(ctx,
+          ax,
+          ay,
+          featherSize,
+          tile,
+          ax,
+          ay,
+          ax + featherSize,
+          ay,
+          featherAlpha);
       ctx.restore();
     }
 
