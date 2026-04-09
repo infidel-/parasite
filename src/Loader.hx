@@ -64,7 +64,12 @@ class Loader
 // build save file path from slot
   static function getSavePath(slotID: Int): String
     {
+#if electron
+      return ElectronPaths.getWritablePath(
+        'save' + (slotID < 10 ? '0' : '') + slotID + '.json');
+#else
       return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
+#end
     }
 
 // get save format version from top-level save object

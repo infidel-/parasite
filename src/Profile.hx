@@ -25,7 +25,7 @@ class Profile
 
       game.debug('profile load');
 #if electron
-      if (!Fs.existsSync('profile.json'))
+      if (!Fs.existsSync(ElectronPaths.getWritablePath('profile.json')))
         {
           // consider this a first run
           trace('profile.json not found');
@@ -33,7 +33,8 @@ class Profile
           return;
         }
       try {
-        var s = Fs.readFileSync('profile.json', 'utf8');
+        var s = Fs.readFileSync(
+          ElectronPaths.getWritablePath('profile.json'), 'utf8');
         var obj = Json.parse(s);
         for (f in Reflect.fields(obj))
           Reflect.setField(object, f,
@@ -92,7 +93,7 @@ class Profile
     {
       game.debug('profile save');
 #if electron
-      Fs.writeFileSync('profile.json',
+      Fs.writeFileSync(ElectronPaths.getWritablePath('profile.json'),
         Json.stringify(object, null, '  '), 'utf8');
 #end
     }

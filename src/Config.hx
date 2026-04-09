@@ -109,7 +109,8 @@ class Config
       game.debug('config load');
 #if electron
       try {
-        var s = Fs.readFileSync('settings.json', 'utf8');
+        var s = Fs.readFileSync(
+          ElectronPaths.getWritablePath('settings.json'), 'utf8');
         var obj = Json.parse(s);
         for (f in Reflect.fields(obj))
           set(f, Reflect.field(obj, f));
@@ -250,7 +251,7 @@ class Config
       var obj = {};
       for (k => v in map)
         Reflect.setField(obj, k, v);
-      Fs.writeFileSync('settings.json',
+      Fs.writeFileSync(ElectronPaths.getWritablePath('settings.json'),
         Json.stringify(obj, null, '  '), 'utf8');
 #elseif js
       var obj = {};

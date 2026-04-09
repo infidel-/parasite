@@ -113,7 +113,8 @@ class UI
       trace(l);
       game.log('An exception has occured and was logged. Please send exceptions.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
       try {
-        Fs.appendFileSync('exceptions.txt', l);
+        Fs.appendFileSync(
+          ElectronPaths.getWritablePath('exceptions.txt'), l);
       }
       catch (e: Dynamic)
         {}
