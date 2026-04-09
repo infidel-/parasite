@@ -29,6 +29,7 @@ class SewerAreaLighting
 
       addSewerExitLights(area, stamps, areaLighting);
       addSummoningPortalLights(area, stamps, areaLighting);
+      addAreaObjectLights(area, stamps, areaLighting);
       addSewerCorridorLayoutLights(area, stamps, sewerTileset, areaLighting);
       return stamps;
     }
@@ -122,7 +123,7 @@ class SewerAreaLighting
           var centerX = (x1 + x2 + 1) / 2.0;
           var centerY = (y1 + y2 + 1) / 2.0;
           areaLighting.pushLightStamp(area, stamps, centerX, centerY,
-            UndergroundLab.ATMOS_LIGHT_LARGE_RED, 'summoning-portal');
+            UndergroundLab.ATMOS_LIGHT_LARGE_RED, 'summoning-portal', true);
         }
     }
 
@@ -141,7 +142,26 @@ class SewerAreaLighting
             'habitat-exit' : 'sewer-exit');
           areaLighting.pushLightStamp(area, stamps,
             o.x + 0.5, o.y + 0.5,
-            UndergroundLab.ATMOS_LIGHT_LARGE_WHITE, stampKind);
+            UndergroundLab.ATMOS_LIGHT_LARGE_WHITE, stampKind, true);
+        }
+    }
+
+// add object-provided light stamps for sewer and habitat area objects
+  static function addAreaObjectLights(area: AreaGame,
+      stamps: Array<_AreaLightStamp>,
+      areaLighting: AreaLighting)
+    {
+      for (o in area.getObjects())
+        {
+          var light = o.getAtmosphereLight();
+          if (light == null)
+            continue;
+
+          areaLighting.pushLightStamp(area, stamps,
+            o.x + 0.5, o.y + 0.5,
+            light,
+            o.getAtmosphereLightKind(),
+            o.isProjectedShadowEmitter());
         }
     }
 

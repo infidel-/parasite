@@ -2,6 +2,7 @@
 
 package objects;
 
+import _AtmosphereLightMeta;
 import entities.ObjectEntity;
 import game.Game;
 import game._Item;
@@ -157,6 +158,18 @@ class AreaObject extends _SaveObject
 // dynamic: current list of object actions
   public dynamic function updateActionList()
     {}
+
+// get static atmosphere light emitted by this object
+  public dynamic function getAtmosphereLight(): _AtmosphereLightMeta
+    { return null; }
+
+// get atmosphere light stamp kind used by this object
+  public dynamic function getAtmosphereLightKind(): String
+    { return type; }
+
+// check whether this object light drives projected shadows
+  public function isProjectedShadowEmitter(): Bool
+    { return getAtmosphereLight() != null; }
 
 // dynamic: called when the object decays by timer
   public dynamic function onDecay()

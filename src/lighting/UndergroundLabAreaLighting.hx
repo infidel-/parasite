@@ -453,7 +453,7 @@ class UndergroundLabAreaLighting
           var centerX = (x1 + x2 + 1) / 2.0;
           var centerY = (y1 + y2 + 1) / 2.0;
           areaLighting.pushLightStamp(area, stamps, centerX, centerY,
-            UndergroundLab.ATMOS_LIGHT_LARGE_GREEN, 'clone-vat');
+            UndergroundLab.ATMOS_LIGHT_LARGE_GREEN, 'clone-vat', true);
         }
     }
 
