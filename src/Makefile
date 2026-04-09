@@ -22,27 +22,31 @@ electron-mydebug: check-port
 	haxe project_electron.hxml -debug \
       -D mydebug \
       --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/ && \
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v41.2.0-win32-ia32-parasite/resources/app/
 
 electron: check-port
 	echo 'Haxe server port =' $(PORT)
 	haxe project_electron.hxml \
       --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/ && \
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v41.2.0-win32-ia32-parasite/resources/app/
 
 electron-mydebug-demo: check-port
 	echo 'Haxe server port =' $(PORT)
 	haxe project_electron.hxml -debug \
       -D mydebug -D demo \
       --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/ && \
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v41.2.0-win32-ia32-parasite/resources/app/
 
 electron-demo: check-port
 	echo 'Haxe server port =' $(PORT)
 	haxe project_electron.hxml \
       -D demo \
       --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/ && \
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ~/Projects/electron-v41.2.0-win32-ia32-parasite/resources/app/
 
 www-mydebug-demo: check-port
 	echo 'Haxe server port =' $(PORT)
