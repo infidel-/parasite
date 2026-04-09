@@ -249,6 +249,80 @@ class RegionView
       untyped ctx.imageSmoothingEnabled = true;
     }
 
+// draw one unknown area tile with a softened frontier silhouette
+  function drawUnknownAreaTile(ctx: CanvasRenderingContext2D,
+      area: AreaGame, ax: Int, ay: Int)
+    {
+      var leftKnown = isAreaKnownAt(area.x - 1, area.y);
+      var rightKnown = isAreaKnownAt(area.x + 1, area.y);
+      var topKnown = isAreaKnownAt(area.x, area.y - 1);
+      var bottomKnown = isAreaKnownAt(area.x, area.y + 1);
+
+      ctx.save();
+      ctx.fillStyle = '#111111';
+      ctx.globalAlpha = 0.7;
+
+      if (!leftKnown &&
+          !rightKnown &&
+          !topKnown &&
+          !bottomKnown)
+        {
+          ctx.fillRect(ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
+          ctx.restore();
+          return;
+        }
+
+      var tile = Const.TILE_SIZE;
+      var edgeInset = tile * 0.16;
+      var cornerInset = tile * 0.10;
+      var x1 = ax;
+      var y1 = ay;
+      var x2 = ax + tile;
+      var y2 = ay + tile;
+      var midX = ax + tile / 2.0;
+      var midY = ay + tile / 2.0;
+      var topLeftX = x1 + (leftKnown ? cornerInset : 0.0);
+      var topRightX = x2 - (rightKnown ? cornerInset : 0.0);
+      var rightTopY = y1 + (topKnown ? cornerInset : 0.0);
+      var rightBottomY = y2 - (bottomKnown ? cornerInset : 0.0);
+      var bottomRightX = x2 - (rightKnown ? cornerInset : 0.0);
+      var bottomLeftX = x1 + (leftKnown ? cornerInset : 0.0);
+      var leftBottomY = y2 - (bottomKnown ? cornerInset : 0.0);
+      var leftTopY = y1 + (topKnown ? cornerInset : 0.0);
+
+      ctx.beginPath();
+      ctx.moveTo(topLeftX, y1);
+      if (topKnown)
+        ctx.quadraticCurveTo(midX, y1 + edgeInset, topRightX, y1);
+      else
+        ctx.lineTo(topRightX, y1);
+      ctx.lineTo(x2, rightTopY);
+      if (rightKnown)
+        ctx.quadraticCurveTo(x2 - edgeInset, midY, x2, rightBottomY);
+      else
+        ctx.lineTo(x2, rightBottomY);
+      ctx.lineTo(bottomRightX, y2);
+      if (bottomKnown)
+        ctx.quadraticCurveTo(midX, y2 - edgeInset, bottomLeftX, y2);
+      else
+        ctx.lineTo(bottomLeftX, y2);
+      ctx.lineTo(x1, leftBottomY);
+      if (leftKnown)
+        ctx.quadraticCurveTo(x1 + edgeInset, midY, x1, leftTopY);
+      else
+        ctx.lineTo(x1, leftTopY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+// return whether one region coordinate is currently known
+  function isAreaKnownAt(x: Int, y: Int): Bool
+    {
+      var area = game.region.getXY(x, y);
+      return area != null && isKnown(area);
+    }
+
 // paint area icons on top of the region map image
   function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset)
     {
@@ -266,10 +340,7 @@ class RegionView
       // unknown areas are hidden, draw darkened tile
       if (!isKnown(area))
         {
-          ctx.fillStyle = '#111111';
-          ctx.globalAlpha = 0.7;
-          ctx.fillRect(ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
-          ctx.globalAlpha = 1.0;
+          drawUnknownAreaTile(ctx, area, ax, ay);
           return;
         }
 
