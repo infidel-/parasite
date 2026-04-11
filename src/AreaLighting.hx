@@ -323,6 +323,7 @@ class AreaLighting
               source.tintG,
               source.tintB,
               source.kind + '-outer',
+              true,
               FALL_OFF_PROFILE_SMOOTH_CURRENT,
               1.0,
               source.sourceGroupID);
@@ -333,6 +334,7 @@ class AreaLighting
             source.tintG,
             source.tintB,
             source.kind + '-inner',
+            true,
             FALL_OFF_PROFILE_SHARP_LEGACY,
             LAYOUT_LIGHT_INNER_SATURATION_BOOST,
             source.sourceGroupID);
@@ -385,7 +387,8 @@ class AreaLighting
 // append one atmosphere light stamp with short-range deduplication
   public function pushLightStamp(area: AreaGame,
       stamps: Array<_AreaLightStamp>,
-      x: Float, y: Float, light: _AtmosphereLightMeta, kind: String)
+      x: Float, y: Float, light: _AtmosphereLightMeta, kind: String,
+      ?isProjectedShadowEmitter: Bool = false)
     {
       pushCustomLightStamp(area, stamps, x, y,
         light.radiusTiles,
@@ -393,7 +396,8 @@ class AreaLighting
         light.tintR,
         light.tintG,
         light.tintB,
-        kind);
+        kind,
+        isProjectedShadowEmitter);
     }
 
 // append one atmosphere light stamp with optional profile metadata
@@ -403,6 +407,7 @@ class AreaLighting
       radiusTiles: Float, intensity: Float,
       tintR: Int, tintG: Int, tintB: Int,
       kind: String,
+      ?isProjectedShadowEmitter: Bool = false,
       ?falloffProfile: String,
       ?saturationBoost: Float,
       ?sourceGroupID: String)
@@ -422,7 +427,11 @@ class AreaLighting
           if (dx * dx + dy * dy < 0.04 &&
               stamp.kind == kind &&
               Math.abs(stamp.radiusTiles - radiusTiles) < 0.04)
-            return;
+            {
+              if (isProjectedShadowEmitter)
+                stamp.isProjectedShadowEmitter = true;
+              return;
+            }
         }
 
       var stamp: _AreaLightStamp = {
@@ -435,6 +444,8 @@ class AreaLighting
         tintB: tintB,
         kind: kind,
       };
+      if (isProjectedShadowEmitter)
+        stamp.isProjectedShadowEmitter = true;
       if (falloffProfile != null)
         stamp.falloffProfile = falloffProfile;
       if (saturationBoost != null)
@@ -843,7 +854,7 @@ class AreaLighting
         emitter.y <= y2);
     }
 
-// collect unique projected-shadow emitters from selected light stamp kinds
+// collect unique projected-shadow emitters from marked light stamps
   function collectProjectedShadowEmitters(
       stamps: Array<_AreaLightStamp>): Array<_LayoutShadowEmitter>
     {
@@ -868,12 +879,7 @@ class AreaLighting
 // check whether one light stamp acts as projected-shadow emitter
   function isProjectedShadowEmitterStamp(stamp: _AreaLightStamp): Bool
     {
-      return (stamp.kind.indexOf('layout-room') == 0 ||
-        stamp.kind.indexOf('layout-corridor') == 0 ||
-        stamp.kind == 'clone-vat' ||
-        stamp.kind == 'summoning-portal' ||
-        stamp.kind == 'habitat-exit' ||
-        stamp.kind == 'sewer-exit');
+      return stamp.isProjectedShadowEmitter == true;
     }
 
 // collect static projected-shadow casters for the current area tileset

@@ -35,6 +35,7 @@ class Core
   var ENABLE_REGION_CITY_CONTENT = true; // enable the road/building generation pipeline
   var ENABLE_REGION_CITY_BACKGROUNDS = true; // draw the legacy density-based city ground as an overlay under roads and buildings
   var REGION_CITY_BACKGROUND_ALPHA = 0.15; // opacity of the legacy density-based city ground over the terrain bands
+  var REGION_CITY_BACKGROUND_EDGE_FADE_PIXELS = 6; // pixel width used to fade city background perimeters
 
   var TERRAIN_PERLIN_SCALE = 10.0; // coarse scale of the terrain perlin field in tile space
   var TERRAIN_PERLIN_OCTAVES = 3; // number of octaves used by the terrain perlin field
@@ -42,7 +43,7 @@ class Core
   var TERRAIN_PERLIN_GAIN = 0.5; // amplitude multiplier between terrain perlin octaves
   var TERRAIN_PERLIN_CONTRAST = 4.0; // linear contrast multiplier applied to the raw terrain field before banding
   var TERRAIN_CACHE_STEP_PIXELS = 4; // pixel spacing used by the cached terrain field sampler
-  var TERRAIN_PERLIN_BLUR_RADIUS = 0.02; // tile-space radius used to softly blur terrain-band borders
+  var TERRAIN_EDGE_ANTIALIAS_WIDTH = 0.005; // terrain-value half-width used to antialias terrain-band borders
 
   var TERRAIN_FOREST_THRESHOLD = -0.5; // terrain field value below which tiles render as forest
   var TERRAIN_MOUNTAIN_THRESHOLD = 0.5; // terrain field value above which tiles render as mountains
