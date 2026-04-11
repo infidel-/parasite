@@ -39,7 +39,12 @@ class Saver
 // build save file path from slot
   static function getSavePath(slotID: Int): String
     {
+#if electron
+      return ElectronPaths.getWritablePath(
+        'save' + (slotID < 10 ? '0' : '') + slotID + '.json');
+#else
       return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
+#end
     }
 
 // save object recursively into dynamic structure

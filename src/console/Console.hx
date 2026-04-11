@@ -297,9 +297,10 @@ class Console
       history = [];
 #if electron
       try {
-        if (!Fs.existsSync('history.json'))
+        if (!Fs.existsSync(ElectronPaths.getWritablePath('history.json')))
           return;
-        var raw = Fs.readFileSync('history.json', 'utf8');
+        var raw = Fs.readFileSync(
+          ElectronPaths.getWritablePath('history.json'), 'utf8');
         if (raw != null && StringTools.trim(raw) != '')
           {
             var parsed: Dynamic = Json.parse(raw);
@@ -323,7 +324,7 @@ class Console
 #if electron
       try {
         Fs.writeFileSync(
-          'history.json',
+          ElectronPaths.getWritablePath('history.json'),
           Json.stringify(history, null, '  '),
           'utf8');
       }

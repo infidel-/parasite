@@ -4,6 +4,7 @@ import haxe.Json;
 import js.Node;
 import js.Node.__dirname;
 import js.node.Fs;
+import js.node.Path;
 import electron.main.App;
 import electron.main.BrowserWindow;
 import electron.main.IpcMain;
@@ -11,14 +12,40 @@ import electron.main.IpcMain;
 class MainElectron
 {
   static var win: BrowserWindow;
+
+// ensure electron user data directory exists
+  static function ensureUserDataPath()
+    {
+      var path = App.getPath('userData');
+      if (!Fs.existsSync(path))
+        Fs.mkdirSync(path);
+    }
+
+// get settings file path from electron user data
+  static function getSettingsPath(): String
+    {
+      if (Node.process.platform != 'darwin')
+        return 'settings.json';
+      ensureUserDataPath();
+      return Path.join(App.getPath('userData'), 'settings.json');
+    }
+
   static function main()
     {
+      IpcMain.on('get-user-data-path', function(e) {
+        if (Node.process.platform == 'darwin')
+          ensureUserDataPath();
+        untyped e.returnValue = App.getPath('userData');
+      });
+      IpcMain.on('get-app-path', function(e) {
+        untyped e.returnValue = App.getAppPath();
+      });
       App.on(ready, function(e)
         {
           // load config
           var obj: { fullscreen: String } = null;
           try {
-            var s = Fs.readFileSync('settings.json', 'utf8');
+            var s = Fs.readFileSync(getSettingsPath(), 'utf8');
             obj = Json.parse(s);
           }
           catch (e: Dynamic)
