@@ -15,6 +15,7 @@ class AreaView
   var game: Game; // game state link
   var scene: GameScene; // ui scene
   var minimap: CanvasElement; // minimap element
+  var losOverlay: CanvasElement; // screen-space los blackout overlay
   var minimapAreaID: Int;
 
   var _particles: List<Particle>;
@@ -29,6 +30,8 @@ class AreaView
   public var height: Int;
   public var emptyScreenCells: Int; // amount of empty cells on screen
   static var maxSize = 120;
+  static inline var LOS_RAY_EPSILON: Float = 0.0001;
+  static inline var LOS_INTERSECTION_EPSILON: Float = 0.0001;
   var drawIntervalID: Int; // if set, draw will be called every 10 ms
 
   public function new(s: GameScene)
@@ -42,6 +45,7 @@ class AreaView
       drawIntervalID = 0;
       path = null;
       minimap = null;
+      losOverlay = null;
       _tileset = null;
 
       // init tiles cache 
@@ -131,6 +135,7 @@ class AreaView
             Const.TILE_SIZE);
       AreaLightingDebug.drawDebugLightMarkers(scene.areaLighting, ctx);
       ctx.restore();
+      drawSmoothLOSOverlay(ctx);
 
       // regen minimap on first draw for area
       if (minimapAreaID != game.area.id)
@@ -170,9 +175,11 @@ class AreaView
   function drawTiles(ctx: CanvasRenderingContext2D)
     {
       var rect = game.area.getVisibleRect();
+      var cells = game.area.getCells();
       var tiles = game.area.getTiles();
       var hasTileData = (tiles != null &&
         tiles.length > 0);
+      var drawRealTiles = shouldDrawSmoothLOSOverlay();
       var tileID = 0;
       var icon: _Icon = null;
 
@@ -180,7 +187,7 @@ class AreaView
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
           {
-            tileID = _cache[x][y];
+            tileID = (drawRealTiles ? cells[x][y] : _cache[x][y]);
             icon = tileset.getIcon(tileID);
             var sx = (x - scene.cameraTileX1) * Const.TILE_SIZE;
             var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
@@ -199,7 +206,7 @@ class AreaView
         for (y in rect.y1...rect.y2)
           for (x in rect.x1...rect.x2)
             {
-              tileID = _cache[x][y];
+              tileID = (drawRealTiles ? cells[x][y] : _cache[x][y]);
               var sx = (x - scene.cameraTileX1) * Const.TILE_SIZE;
               var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
               tileset.drawFloorDecoration(ctx,
@@ -211,7 +218,7 @@ class AreaView
         for (y in rect.y1...rect.y2)
           for (x in rect.x1...rect.x2)
             {
-              tileID = _cache[x][y];
+              tileID = (drawRealTiles ? cells[x][y] : _cache[x][y]);
               icon = tileset.getIcon(tileID);
               var sx = (x - scene.cameraTileX1) * Const.TILE_SIZE;
               var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
@@ -224,10 +231,343 @@ class AreaView
         for (y in rect.y1...rect.y2)
           for (x in rect.x1...rect.x2)
             {
-              tileID = _cache[x][y];
+              tileID = (drawRealTiles ? cells[x][y] : _cache[x][y]);
               icon = tileset.getIcon(tileID);
               paintFakeHost(ctx, icon, x, y);
             }
+    }
+
+// return whether host los should render real tiles under a smooth blackout overlay
+  inline function shouldDrawSmoothLOSOverlay(): Bool
+    {
+      return (game.player.vars.losEnabled &&
+        game.player.state == PLR_STATE_HOST);
+    }
+
+// draw smooth host line-of-sight blackout using one visibility polygon
+  function drawSmoothLOSOverlay(ctx: CanvasRenderingContext2D)
+    {
+      if (!shouldDrawSmoothLOSOverlay())
+        return;
+
+      var rect = game.area.getVisibleRect();
+      var overlay = ensureLOSOverlay();
+      var origin: _LOSPoint = {
+        x: (game.playerArea.x - scene.cameraTileX1) * Const.TILE_SIZE +
+          Const.TILE_SIZE / 2 - scene.cameraSubX,
+        y: (game.playerArea.y - scene.cameraTileY1) * Const.TILE_SIZE +
+          Const.TILE_SIZE / 2 - scene.cameraSubY,
+      };
+      var rayAngles: Array<Float> = [];
+      var segments = buildLOSSegments(rect, origin, rayAngles);
+      var hits = buildLOSVisiblePolygon(origin, rayAngles, segments);
+      if (hits.length < 3)
+        return;
+
+      var overlayCtx = overlay.getContext2d();
+      overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      overlayCtx.save();
+      overlayCtx.fillStyle = '#000000';
+      overlayCtx.fillRect(0, 0, overlay.width, overlay.height);
+      overlayCtx.globalCompositeOperation = 'destination-out';
+      drawLOSVisiblePolygon(overlayCtx, hits);
+      drawLOSHitOpaqueTiles(overlayCtx, hits);
+      drawLOSCurrentRoomPerimeter(overlayCtx, rect);
+      overlayCtx.restore();
+
+      ctx.drawImage(overlay, 0, 0);
+    }
+
+// create or resize screen-space los overlay canvas
+  function ensureLOSOverlay(): CanvasElement
+    {
+      if (losOverlay == null)
+        losOverlay = Browser.document.createCanvasElement();
+      if (losOverlay.width != scene.canvas.width)
+        losOverlay.width = scene.canvas.width;
+      if (losOverlay.height != scene.canvas.height)
+        losOverlay.height = scene.canvas.height;
+      return losOverlay;
+    }
+
+// return whether a screen-space rect overlaps the canvas viewport
+  inline function losRectIntersectsScreen(x1: Float, y1: Float,
+      x2: Float, y2: Float): Bool
+    {
+      return !(x2 <= 0 ||
+        y2 <= 0 ||
+        x1 >= scene.canvas.width ||
+        y1 >= scene.canvas.height);
+    }
+
+// build los blocker and screen-boundary segments for ray intersection
+  function buildLOSSegments(rect: { x1: Int, y1: Int, x2: Int, y2: Int },
+      origin: _LOSPoint, rayAngles: Array<Float>): Array<_LOSSegment>
+    {
+      var segments: Array<_LOSSegment> = [];
+      addLOSRectSegments(segments, rayAngles, origin,
+        0, 0, scene.canvas.width, scene.canvas.height, -1, -1);
+
+      for (y in rect.y1...rect.y2)
+        for (x in rect.x1...rect.x2)
+          {
+            if (!isLOSBoundaryBlocker(x, y))
+              continue;
+
+            var sx1 = (x - scene.cameraTileX1) * Const.TILE_SIZE -
+              scene.cameraSubX;
+            var sy1 = (y - scene.cameraTileY1) * Const.TILE_SIZE -
+              scene.cameraSubY;
+            var sx2 = sx1 + Const.TILE_SIZE;
+            var sy2 = sy1 + Const.TILE_SIZE;
+            if (!losRectIntersectsScreen(sx1, sy1, sx2, sy2))
+              continue;
+            addLOSRectSegments(segments, rayAngles, origin,
+              sx1, sy1, sx2, sy2, x, y);
+          }
+      return segments;
+    }
+
+// return whether one opaque tile touches see-through space
+  function isLOSBoundaryBlocker(x: Int, y: Int): Bool
+    {
+      if (game.area.canSeeThrough(x, y))
+        return false;
+      return (game.area.canSeeThrough(x - 1, y) ||
+        game.area.canSeeThrough(x + 1, y) ||
+        game.area.canSeeThrough(x, y - 1) ||
+        game.area.canSeeThrough(x, y + 1));
+    }
+
+// add rectangle edges and corner ray angles to los polygon inputs
+  function addLOSRectSegments(segments: Array<_LOSSegment>,
+      rayAngles: Array<Float>, origin: _LOSPoint,
+      x1: Float, y1: Float, x2: Float, y2: Float,
+      tileX: Int, tileY: Int)
+    {
+      addLOSSegment(segments, x1, y1, x2, y1, tileX, tileY);
+      addLOSSegment(segments, x2, y1, x2, y2, tileX, tileY);
+      addLOSSegment(segments, x2, y2, x1, y2, tileX, tileY);
+      addLOSSegment(segments, x1, y2, x1, y1, tileX, tileY);
+
+      addLOSRayAngles(rayAngles, origin, x1, y1);
+      addLOSRayAngles(rayAngles, origin, x2, y1);
+      addLOSRayAngles(rayAngles, origin, x2, y2);
+      addLOSRayAngles(rayAngles, origin, x1, y2);
+    }
+
+// add one los line segment
+  inline function addLOSSegment(segments: Array<_LOSSegment>,
+      x1: Float, y1: Float, x2: Float, y2: Float,
+      tileX: Int, tileY: Int)
+    {
+      segments.push({
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2,
+        tileX: tileX,
+        tileY: tileY,
+      });
+    }
+
+// add center, left, and right corner ray angles for robust corner hits
+  function addLOSRayAngles(rayAngles: Array<Float>,
+      origin: _LOSPoint, x: Float, y: Float)
+    {
+      var angle = Math.atan2(y - origin.y, x - origin.x);
+      rayAngles.push(angle - LOS_RAY_EPSILON);
+      rayAngles.push(angle);
+      rayAngles.push(angle + LOS_RAY_EPSILON);
+    }
+
+// build sorted los polygon points from nearest ray-segment intersections
+  function buildLOSVisiblePolygon(origin: _LOSPoint,
+      rayAngles: Array<Float>, segments: Array<_LOSSegment>): Array<_LOSRayHit>
+    {
+      var hits: Array<_LOSRayHit> = [];
+      for (angle in rayAngles)
+        {
+          var hit = castLOSRay(origin, angle, segments);
+          if (hit != null)
+            hits.push(hit);
+        }
+      hits.sort(function(a: _LOSRayHit, b: _LOSRayHit): Int
+        {
+          if (a.angle < b.angle)
+            return -1;
+          if (a.angle > b.angle)
+            return 1;
+          return 0;
+        });
+      return dedupeLOSRayHits(hits);
+    }
+
+// cast one los ray and return the closest segment intersection
+  function castLOSRay(origin: _LOSPoint,
+      angle: Float, segments: Array<_LOSSegment>): _LOSRayHit
+    {
+      var rayX = Math.cos(angle);
+      var rayY = Math.sin(angle);
+      var bestDistance = 1000000.0;
+      var bestHit: _LOSRayHit = null;
+      for (segment in segments)
+        {
+          var hit = intersectLOSRaySegment(origin, rayX, rayY, segment);
+          if (hit == null ||
+              hit.distance >= bestDistance)
+            continue;
+          bestDistance = hit.distance;
+          bestHit = hit;
+        }
+      if (bestHit == null)
+        return null;
+      bestHit.angle = angle;
+      return bestHit;
+    }
+
+// return intersection between one ray and one finite segment
+  function intersectLOSRaySegment(origin: _LOSPoint,
+      rayX: Float, rayY: Float, segment: _LOSSegment): _LOSRayHit
+    {
+      var segX = segment.x2 - segment.x1;
+      var segY = segment.y2 - segment.y1;
+      var dx = segment.x1 - origin.x;
+      var dy = segment.y1 - origin.y;
+      var denom = rayX * segY - rayY * segX;
+      if (Math.abs(denom) < LOS_INTERSECTION_EPSILON)
+        return null;
+
+      var distance = (dx * segY - dy * segX) / denom;
+      var segmentPos = (dx * rayY - dy * rayX) / denom;
+      if (distance < LOS_INTERSECTION_EPSILON ||
+          segmentPos < -LOS_INTERSECTION_EPSILON ||
+          segmentPos > 1 + LOS_INTERSECTION_EPSILON)
+        return null;
+
+      return {
+        angle: 0,
+        point: {
+          x: origin.x + rayX * distance,
+          y: origin.y + rayY * distance,
+        },
+        distance: distance,
+        tileX: segment.tileX,
+        tileY: segment.tileY,
+      };
+    }
+
+// remove adjacent duplicate ray hits before drawing the polygon
+  function dedupeLOSRayHits(hits: Array<_LOSRayHit>): Array<_LOSRayHit>
+    {
+      if (hits.length <= 1)
+        return hits;
+
+      var ret: Array<_LOSRayHit> = [];
+      for (hit in hits)
+        {
+          if (ret.length == 0 ||
+              losPointDistanceSquared(hit.point,
+                ret[ret.length - 1].point) > 0.01)
+            ret.push(hit);
+        }
+      if (ret.length > 1 &&
+          losPointDistanceSquared(ret[0].point,
+            ret[ret.length - 1].point) <= 0.01)
+        ret.pop();
+      return ret;
+    }
+
+// return squared distance between two screen-space points
+  inline function losPointDistanceSquared(a: _LOSPoint, b: _LOSPoint): Float
+    {
+      var dx = a.x - b.x;
+      var dy = a.y - b.y;
+      return dx * dx + dy * dy;
+    }
+
+// cut the visible los polygon out of the black overlay
+  function drawLOSVisiblePolygon(ctx: CanvasRenderingContext2D,
+      hits: Array<_LOSRayHit>)
+    {
+      ctx.beginPath();
+      ctx.moveTo(hits[0].point.x, hits[0].point.y);
+      for (i in 1...hits.length)
+        ctx.lineTo(hits[i].point.x, hits[i].point.y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+// cut opaque tiles directly hit by los rays out of the black overlay
+  function drawLOSHitOpaqueTiles(ctx: CanvasRenderingContext2D,
+      hits: Array<_LOSRayHit>)
+    {
+      var revealed: Map<String, Bool> = new Map();
+      for (hit in hits)
+        {
+          if (hit.tileX < 0 ||
+              hit.tileY < 0)
+            continue;
+
+          var key = hit.tileX + ',' + hit.tileY;
+          if (revealed.exists(key))
+            continue;
+          revealed.set(key, true);
+
+          var sx = (hit.tileX - scene.cameraTileX1) * Const.TILE_SIZE -
+            scene.cameraSubX;
+          var sy = (hit.tileY - scene.cameraTileY1) * Const.TILE_SIZE -
+            scene.cameraSubY;
+          ctx.fillRect(sx, sy, Const.TILE_SIZE, Const.TILE_SIZE);
+        }
+    }
+
+// cut current room perimeter tiles out of the black overlay
+  function drawLOSCurrentRoomPerimeter(ctx: CanvasRenderingContext2D,
+      rect: { x1: Int, y1: Int, x2: Int, y2: Int })
+    {
+      var info = game.area.generatorInfo;
+      if (info == null ||
+          info.rooms == null ||
+          info.rooms.length == 0)
+        return;
+
+      var room = info.getRoomAt(game.playerArea.x, game.playerArea.y);
+      if (room == null)
+        return;
+
+      var sx = room.x1 - 1;
+      var sy = room.y1 - 1;
+      var ex = room.x2 + 1;
+      var ey = room.y2 + 1;
+
+      if (sx < rect.x1)
+        sx = rect.x1;
+      if (sy < rect.y1)
+        sy = rect.y1;
+      if (ex >= rect.x2)
+        ex = rect.x2 - 1;
+      if (ey >= rect.y2)
+        ey = rect.y2 - 1;
+      if (sx > ex ||
+          sy > ey)
+        return;
+
+      for (y in sy...ey + 1)
+        for (x in sx...ex + 1)
+          {
+            if (x > sx &&
+                x < ex &&
+                y > sy &&
+                y < ey)
+              continue;
+
+            var px = (x - scene.cameraTileX1) * Const.TILE_SIZE -
+              scene.cameraSubX;
+            var py = (y - scene.cameraTileY1) * Const.TILE_SIZE -
+              scene.cameraSubY;
+            ctx.fillRect(px, py, Const.TILE_SIZE, Const.TILE_SIZE);
+          }
     }
 
 // draw particles
@@ -664,4 +1004,26 @@ typedef _FakeHost = {
   var isMale: Bool;
   var ix: Int;
   var iy: Int;
+}
+
+typedef _LOSPoint = {
+  var x: Float;
+  var y: Float;
+}
+
+typedef _LOSSegment = {
+  var x1: Float;
+  var y1: Float;
+  var x2: Float;
+  var y2: Float;
+  var tileX: Int;
+  var tileY: Int;
+}
+
+typedef _LOSRayHit = {
+  var angle: Float;
+  var point: _LOSPoint;
+  var distance: Float;
+  var tileX: Int;
+  var tileY: Int;
 }
