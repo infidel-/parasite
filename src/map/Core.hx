@@ -42,7 +42,7 @@ class Core
   var TERRAIN_PERLIN_GAIN = 0.5; // amplitude multiplier between terrain perlin octaves
   var TERRAIN_PERLIN_CONTRAST = 4.0; // linear contrast multiplier applied to the raw terrain field before banding
   var TERRAIN_CACHE_STEP_PIXELS = 4; // pixel spacing used by the cached terrain field sampler
-  var TERRAIN_PERLIN_BLUR_RADIUS = 0.02; // tile-space radius used to softly blur terrain-band borders
+  var TERRAIN_EDGE_ANTIALIAS_WIDTH = 0.005; // terrain-value half-width used to antialias terrain-band borders
 
   var TERRAIN_FOREST_THRESHOLD = -0.5; // terrain field value below which tiles render as forest
   var TERRAIN_MOUNTAIN_THRESHOLD = 0.5; // terrain field value above which tiles render as mountains
