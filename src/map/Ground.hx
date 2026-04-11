@@ -107,7 +107,7 @@ class Ground extends Core
         }
     }
 
-// build the pixel mask used for city background overlays
+// build the pixel alpha mask used for city background overlays
   function buildCityBackgroundMask()
     {
       cityBackgroundMask = new Uint8Array(fullPixelWidth * fullPixelHeight);
@@ -122,16 +122,63 @@ class Ground extends Core
             if (!isCityAreaType(areaTypes[cellX][cellY]))
               continue;
 
-            var startY = cellY * CLEAN_TILE_SIZE;
             var startX = cellX * CLEAN_TILE_SIZE;
+            var startY = cellY * CLEAN_TILE_SIZE;
+            var fadeLeft = !isCityBackgroundAreaTypeAtCell(cellX - 1, cellY);
+            var fadeRight = !isCityBackgroundAreaTypeAtCell(cellX + 1, cellY);
+            var fadeTop = !isCityBackgroundAreaTypeAtCell(cellX, cellY - 1);
+            var fadeBottom = !isCityBackgroundAreaTypeAtCell(cellX, cellY + 1);
             for (localY in 0...CLEAN_TILE_SIZE)
               {
                 var rowIndex = (startY + localY) * fullPixelWidth + startX;
                 for (localX in 0...CLEAN_TILE_SIZE)
-                  cityBackgroundMask[rowIndex + localX] = 1;
+                  cityBackgroundMask[rowIndex + localX] = getCityBackgroundMaskAlpha(localX, localY,
+                    fadeLeft, fadeRight, fadeTop, fadeBottom);
               }
             cityBackgroundPixelCount += CLEAN_TILE_SIZE * CLEAN_TILE_SIZE;
           }
+    }
+
+// return whether one full-grid cell should receive a city background overlay
+  function isCityBackgroundAreaTypeAtCell(cellX: Int, cellY: Int): Bool
+    {
+      if (cellX < 0 ||
+          cellX >= fullCellWidth ||
+          cellY < 0 ||
+          cellY >= fullCellHeight)
+        return false;
+      return isCityAreaType(areaTypes[cellX][cellY]);
+    }
+
+// return the city background alpha mask value for one local tile pixel
+  function getCityBackgroundMaskAlpha(localX: Int, localY: Int, fadeLeft: Bool,
+      fadeRight: Bool, fadeTop: Bool, fadeBottom: Bool): Int
+    {
+      var fadePixels = REGION_CITY_BACKGROUND_EDGE_FADE_PIXELS;
+      if (fadePixels <= 0)
+        return 255;
+
+      var coverage = 1.0;
+      if (fadeLeft)
+        coverage = Math.min(coverage,
+          getCityBackgroundEdgeFactor((localX + 0.5) / fadePixels));
+      if (fadeRight)
+        coverage = Math.min(coverage,
+          getCityBackgroundEdgeFactor((CLEAN_TILE_SIZE - localX - 0.5) / fadePixels));
+      if (fadeTop)
+        coverage = Math.min(coverage,
+          getCityBackgroundEdgeFactor((localY + 0.5) / fadePixels));
+      if (fadeBottom)
+        coverage = Math.min(coverage,
+          getCityBackgroundEdgeFactor((CLEAN_TILE_SIZE - localY - 0.5) / fadePixels));
+      return Std.int(clampFloat(coverage, 0.0, 1.0) * 255.0);
+    }
+
+// return one smooth coverage factor for city background perimeter fade
+  function getCityBackgroundEdgeFactor(v: Float): Float
+    {
+      var t = clampFloat(v, 0.0, 1.0);
+      return t * t * (3.0 - 2.0 * t);
     }
 
 // paint the mixed city-background and perlin terrain ground field
@@ -182,7 +229,7 @@ class Ground extends Core
             var color = terrainColor;
             if (cityMask[sampleIndex] != 0)
               color = lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
-                REGION_CITY_BACKGROUND_ALPHA);
+                getCityBackgroundPaintAlpha(cityMask[sampleIndex]));
             if (terrain < TERRAIN_FOREST_THRESHOLD)
               forestPixelCount++;
             else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
@@ -227,7 +274,7 @@ class Ground extends Core
             var color = terrainColor;
             if (cityMask[pixelIndex] != 0)
               color = lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
-                REGION_CITY_BACKGROUND_ALPHA);
+                getCityBackgroundPaintAlpha(cityMask[pixelIndex]));
             data[index++] = (color >> 16) & 0xFF;
             data[index++] = (color >> 8) & 0xFF;
             data[index++] = color & 0xFF;
@@ -236,6 +283,12 @@ class Ground extends Core
           }
 
       ctx.putImageData(imageData, 0, 0);
+    }
+
+// return the paint alpha for one city background mask value
+  function getCityBackgroundPaintAlpha(maskAlpha: Int): Float
+    {
+      return REGION_CITY_BACKGROUND_ALPHA * (maskAlpha / 255.0);
     }
 
 // return the terrain band color with threshold antialiasing
@@ -540,11 +593,11 @@ class Ground extends Core
       };
     }
 
-// return whether an area type is one of the visible city bands
+// return whether an area type is a city area
   function isCityAreaType(type: _AreaType): Bool
     {
       return switch (type) {
-        case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH: true;
+        case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH, AREA_CORP: true;
         default: false;
       };
     }
