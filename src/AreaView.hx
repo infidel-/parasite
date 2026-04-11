@@ -16,6 +16,7 @@ class AreaView
   var scene: GameScene; // ui scene
   var minimap: CanvasElement; // minimap element
   var losOverlay: CanvasElement; // screen-space los blackout overlay
+  var losRenderStats: _LOSRenderStats; // smooth los overlay render profile
   var minimapAreaID: Int;
 
   var _particles: List<Particle>;
@@ -31,6 +32,7 @@ class AreaView
   public var emptyScreenCells: Int; // amount of empty cells on screen
   static var maxSize = 120;
   static inline var LOS_RAY_EPSILON: Float = 0.0001;
+  static inline var LOS_RAY_DEDUPE_EPSILON: Float = 0.0000001;
   static inline var LOS_INTERSECTION_EPSILON: Float = 0.0001;
   var drawIntervalID: Int; // if set, draw will be called every 10 ms
 
@@ -46,6 +48,7 @@ class AreaView
       path = null;
       minimap = null;
       losOverlay = null;
+      losRenderStats = createLOSRenderStats();
       _tileset = null;
 
       // init tiles cache 
@@ -171,6 +174,53 @@ class AreaView
 //      trace('draw: ' + (Sys.time() - time) + 'ms');
     }
 
+// get formatted smooth los overlay render profiling text
+  public function getSmoothLOSRenderStatsText(): String
+    {
+      if (!losRenderStats.hasSamples)
+        return Const.small('Area smooth LOS overlay render time (ms): N/A<br/>' +
+          'Area smooth LOS overlay counts: N/A');
+      return Const.small('Area smooth LOS overlay render time (ms): max ' +
+        Const.round2(losRenderStats.maxMs) + ' / avg ' +
+        Const.round2(losRenderStats.avgMs) + ' / last ' +
+        Const.round2(losRenderStats.lastMs) + '<br/>' +
+        'Area smooth LOS overlay counts: blockers ' +
+        losRenderStats.lastBlockers +
+        ', segments ' + losRenderStats.lastSegments +
+        ', rays ' + losRenderStats.lastRays +
+        ', hits ' + losRenderStats.lastHits +
+        ', hit tiles ' + losRenderStats.lastHitTiles +
+        ', room tiles ' + losRenderStats.lastRoomTiles);
+    }
+
+// get plain smooth los overlay render profile for browser console copy-paste
+  public function getSmoothLOSRenderStatsConsoleText(): String
+    {
+      if (!losRenderStats.hasSamples)
+        return 'Area smooth LOS overlay: no samples';
+      return 'Area smooth LOS overlay\n' +
+        '  total ms: max ' + Const.round2(losRenderStats.maxMs) +
+        ' / avg ' + Const.round2(losRenderStats.avgMs) +
+        ' / last ' + Const.round2(losRenderStats.lastMs) + '\n' +
+        '  phase ms last: setup ' +
+        Const.round2(losRenderStats.lastSetupMs) +
+        ', segments ' + Const.round2(losRenderStats.lastSegmentsMs) +
+        ', polygon ' + Const.round2(losRenderStats.lastPolygonMs) +
+        ', compose ' + Const.round2(losRenderStats.lastComposeMs) +
+        ', draw ' + Const.round2(losRenderStats.lastDrawMs) + '\n' +
+        '  counts last: blockers ' + losRenderStats.lastBlockers +
+        ', segments ' + losRenderStats.lastSegments +
+        ', rays ' + losRenderStats.lastRays +
+        ', hits ' + losRenderStats.lastHits +
+        ', hit tiles ' + losRenderStats.lastHitTiles +
+        ', room tiles ' + losRenderStats.lastRoomTiles + '\n' +
+        '  canvas: ' + scene.canvas.width + 'x' + scene.canvas.height +
+        ', tiles: ' +
+        Std.int(scene.canvas.width / Const.TILE_SIZE) + 'x' +
+        Std.int(scene.canvas.height / Const.TILE_SIZE) +
+        ', tile size: ' + Const.TILE_SIZE;
+    }
+
 // draw area tiles
   function drawTiles(ctx: CanvasRenderingContext2D)
     {
@@ -250,32 +300,61 @@ class AreaView
       if (!shouldDrawSmoothLOSOverlay())
         return;
 
+      var profileTS = Timer.stamp() * 1000;
+      var phaseTS = profileTS;
       var rect = game.area.getVisibleRect();
-      var overlay = ensureLOSOverlay();
       var origin: _LOSPoint = {
         x: (game.playerArea.x - scene.cameraTileX1) * Const.TILE_SIZE +
           Const.TILE_SIZE / 2 - scene.cameraSubX,
         y: (game.playerArea.y - scene.cameraTileY1) * Const.TILE_SIZE +
           Const.TILE_SIZE / 2 - scene.cameraSubY,
       };
+      var setupMs = Timer.stamp() * 1000 - phaseTS;
       var rayAngles: Array<Float> = [];
-      var segments = buildLOSSegments(rect, origin, rayAngles);
+      phaseTS = Timer.stamp() * 1000;
+      var segmentBuild = buildLOSSegments(rect, origin, rayAngles);
+      var segments = segmentBuild.segments;
+      rayAngles = dedupeLOSRayAngles(rayAngles);
+      var segmentsMs = Timer.stamp() * 1000 - phaseTS;
+      phaseTS = Timer.stamp() * 1000;
       var hits = buildLOSVisiblePolygon(origin, rayAngles, segments);
+      var polygonMs = Timer.stamp() * 1000 - phaseTS;
       if (hits.length < 3)
-        return;
+        {
+          updateSmoothLOSRenderStats(Timer.stamp() * 1000 - profileTS,
+            segmentBuild.blockers, segments.length, rayAngles.length,
+            hits.length, 0, 0, setupMs, segmentsMs, polygonMs, 0, 0);
+          return;
+        }
 
+      phaseTS = Timer.stamp() * 1000;
+      var overlay = ensureLOSOverlay();
       var overlayCtx = overlay.getContext2d();
       overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
       overlayCtx.save();
       overlayCtx.fillStyle = '#000000';
       overlayCtx.fillRect(0, 0, overlay.width, overlay.height);
       overlayCtx.globalCompositeOperation = 'destination-out';
-      drawLOSVisiblePolygon(overlayCtx, hits);
-      drawLOSHitOpaqueTiles(overlayCtx, hits);
-      drawLOSCurrentRoomPerimeter(overlayCtx, rect);
+      overlayCtx.beginPath();
+      addLOSVisiblePolygonPath(overlayCtx, hits);
+      overlayCtx.fill();
+      overlayCtx.beginPath();
+      var hitTiles = addLOSHitOpaqueTilePaths(overlayCtx, hits);
+      overlayCtx.fill();
+      overlayCtx.beginPath();
+      var roomTiles = addLOSCurrentRoomPerimeterPaths(overlayCtx, rect);
+      overlayCtx.fill();
       overlayCtx.restore();
+      var composeMs = Timer.stamp() * 1000 - phaseTS;
 
+      phaseTS = Timer.stamp() * 1000;
       ctx.drawImage(overlay, 0, 0);
+      var drawMs = Timer.stamp() * 1000 - phaseTS;
+
+      updateSmoothLOSRenderStats(Timer.stamp() * 1000 - profileTS,
+        segmentBuild.blockers, segments.length, rayAngles.length, hits.length,
+        hitTiles, roomTiles, setupMs, segmentsMs, polygonMs, composeMs,
+        drawMs);
     }
 
 // create or resize screen-space los overlay canvas
@@ -302,12 +381,13 @@ class AreaView
 
 // build los blocker and screen-boundary segments for ray intersection
   function buildLOSSegments(rect: { x1: Int, y1: Int, x2: Int, y2: Int },
-      origin: _LOSPoint, rayAngles: Array<Float>): Array<_LOSSegment>
+      origin: _LOSPoint, rayAngles: Array<Float>): _LOSSegmentBuild
     {
       var segments: Array<_LOSSegment> = [];
       addLOSRectSegments(segments, rayAngles, origin,
         0, 0, scene.canvas.width, scene.canvas.height, -1, -1);
 
+      var blockers = 0;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
           {
@@ -322,10 +402,14 @@ class AreaView
             var sy2 = sy1 + Const.TILE_SIZE;
             if (!losRectIntersectsScreen(sx1, sy1, sx2, sy2))
               continue;
-            addLOSRectSegments(segments, rayAngles, origin,
+            addLOSBlockerSegments(segments, rayAngles, origin,
               sx1, sy1, sx2, sy2, x, y);
+            blockers++;
           }
-      return segments;
+      return {
+        segments: segments,
+        blockers: blockers,
+      };
     }
 
 // return whether one opaque tile touches see-through space
@@ -356,6 +440,37 @@ class AreaView
       addLOSRayAngles(rayAngles, origin, x1, y2);
     }
 
+// add only see-through-facing blocker edges and their endpoint ray angles
+  function addLOSBlockerSegments(segments: Array<_LOSSegment>,
+      rayAngles: Array<Float>, origin: _LOSPoint,
+      x1: Float, y1: Float, x2: Float, y2: Float,
+      tileX: Int, tileY: Int)
+    {
+      if (game.area.canSeeThrough(tileX, tileY - 1))
+        addLOSEdgeSegment(segments, rayAngles, origin,
+          x1, y1, x2, y1, tileX, tileY);
+      if (game.area.canSeeThrough(tileX + 1, tileY))
+        addLOSEdgeSegment(segments, rayAngles, origin,
+          x2, y1, x2, y2, tileX, tileY);
+      if (game.area.canSeeThrough(tileX, tileY + 1))
+        addLOSEdgeSegment(segments, rayAngles, origin,
+          x2, y2, x1, y2, tileX, tileY);
+      if (game.area.canSeeThrough(tileX - 1, tileY))
+        addLOSEdgeSegment(segments, rayAngles, origin,
+          x1, y2, x1, y1, tileX, tileY);
+    }
+
+// add one exposed blocker edge and rays to both endpoints
+  function addLOSEdgeSegment(segments: Array<_LOSSegment>,
+      rayAngles: Array<Float>, origin: _LOSPoint,
+      x1: Float, y1: Float, x2: Float, y2: Float,
+      tileX: Int, tileY: Int)
+    {
+      addLOSSegment(segments, x1, y1, x2, y2, tileX, tileY);
+      addLOSRayAngles(rayAngles, origin, x1, y1);
+      addLOSRayAngles(rayAngles, origin, x2, y2);
+    }
+
 // add one los line segment
   inline function addLOSSegment(segments: Array<_LOSSegment>,
       x1: Float, y1: Float, x2: Float, y2: Float,
@@ -379,6 +494,32 @@ class AreaView
       rayAngles.push(angle - LOS_RAY_EPSILON);
       rayAngles.push(angle);
       rayAngles.push(angle + LOS_RAY_EPSILON);
+    }
+
+// remove duplicate ray angles created by shared blocker edge endpoints
+  function dedupeLOSRayAngles(rayAngles: Array<Float>): Array<Float>
+    {
+      if (rayAngles.length <= 1)
+        return rayAngles;
+
+      rayAngles.sort(function(a: Float, b: Float): Int
+        {
+          if (a < b)
+            return -1;
+          if (a > b)
+            return 1;
+          return 0;
+        });
+
+      var ret: Array<Float> = [];
+      for (angle in rayAngles)
+        {
+          if (ret.length == 0 ||
+              Math.abs(angle - ret[ret.length - 1]) >
+              LOS_RAY_DEDUPE_EPSILON)
+            ret.push(angle);
+        }
+      return ret;
     }
 
 // build sorted los polygon points from nearest ray-segment intersections
@@ -486,23 +627,22 @@ class AreaView
       return dx * dx + dy * dy;
     }
 
-// cut the visible los polygon out of the black overlay
-  function drawLOSVisiblePolygon(ctx: CanvasRenderingContext2D,
+// add the visible los polygon as a hole in the blackout path
+  function addLOSVisiblePolygonPath(ctx: CanvasRenderingContext2D,
       hits: Array<_LOSRayHit>)
     {
-      ctx.beginPath();
       ctx.moveTo(hits[0].point.x, hits[0].point.y);
       for (i in 1...hits.length)
         ctx.lineTo(hits[i].point.x, hits[i].point.y);
       ctx.closePath();
-      ctx.fill();
     }
 
-// cut opaque tiles directly hit by los rays out of the black overlay
-  function drawLOSHitOpaqueTiles(ctx: CanvasRenderingContext2D,
-      hits: Array<_LOSRayHit>)
+// add opaque tiles directly hit by los rays as holes in the blackout path
+  function addLOSHitOpaqueTilePaths(ctx: CanvasRenderingContext2D,
+      hits: Array<_LOSRayHit>): Int
     {
       var revealed: Map<String, Bool> = new Map();
+      var count = 0;
       for (hit in hits)
         {
           if (hit.tileX < 0 ||
@@ -518,23 +658,25 @@ class AreaView
             scene.cameraSubX;
           var sy = (hit.tileY - scene.cameraTileY1) * Const.TILE_SIZE -
             scene.cameraSubY;
-          ctx.fillRect(sx, sy, Const.TILE_SIZE, Const.TILE_SIZE);
+          ctx.rect(sx, sy, Const.TILE_SIZE, Const.TILE_SIZE);
+          count++;
         }
+      return count;
     }
 
-// cut current room perimeter tiles out of the black overlay
-  function drawLOSCurrentRoomPerimeter(ctx: CanvasRenderingContext2D,
-      rect: { x1: Int, y1: Int, x2: Int, y2: Int })
+// add current room perimeter tiles as holes in the blackout path
+  function addLOSCurrentRoomPerimeterPaths(ctx: CanvasRenderingContext2D,
+      rect: { x1: Int, y1: Int, x2: Int, y2: Int }): Int
     {
       var info = game.area.generatorInfo;
       if (info == null ||
           info.rooms == null ||
           info.rooms.length == 0)
-        return;
+        return 0;
 
       var room = info.getRoomAt(game.playerArea.x, game.playerArea.y);
       if (room == null)
-        return;
+        return 0;
 
       var sx = room.x1 - 1;
       var sy = room.y1 - 1;
@@ -551,8 +693,9 @@ class AreaView
         ey = rect.y2 - 1;
       if (sx > ex ||
           sy > ey)
-        return;
+        return 0;
 
+      var count = 0;
       for (y in sy...ey + 1)
         for (x in sx...ex + 1)
           {
@@ -566,8 +709,81 @@ class AreaView
               scene.cameraSubX;
             var py = (y - scene.cameraTileY1) * Const.TILE_SIZE -
               scene.cameraSubY;
-            ctx.fillRect(px, py, Const.TILE_SIZE, Const.TILE_SIZE);
+            ctx.rect(px, py, Const.TILE_SIZE, Const.TILE_SIZE);
+            count++;
           }
+      return count;
+    }
+
+// create empty smooth los overlay render stats holder
+  function createLOSRenderStats(): _LOSRenderStats
+    {
+      return {
+        samples: [],
+        nextIndex: 0,
+        count: 0,
+        sumMs: 0,
+        maxMs: 0,
+        avgMs: 0,
+        lastMs: 0,
+        lastBlockers: 0,
+        lastSegments: 0,
+        lastRays: 0,
+        lastHits: 0,
+        lastHitTiles: 0,
+        lastRoomTiles: 0,
+        lastSetupMs: 0,
+        lastSegmentsMs: 0,
+        lastPolygonMs: 0,
+        lastComposeMs: 0,
+        lastDrawMs: 0,
+        hasSamples: false,
+      };
+    }
+
+// update rolling smooth los overlay render stats from one sample
+  function updateSmoothLOSRenderStats(duration: Float,
+      blockers: Int, segments: Int, rays: Int, hits: Int,
+      hitTiles: Int, roomTiles: Int, setupMs: Float, segmentsMs: Float,
+      polygonMs: Float, composeMs: Float, drawMs: Float)
+    {
+      if (duration < 0)
+        duration = 0;
+      if (losRenderStats.count < 10)
+        {
+          losRenderStats.samples.push(duration);
+          losRenderStats.sumMs += duration;
+          losRenderStats.count = losRenderStats.samples.length;
+        }
+      else
+        {
+          var old = losRenderStats.samples[losRenderStats.nextIndex];
+          losRenderStats.sumMs -= old;
+          losRenderStats.samples[losRenderStats.nextIndex] = duration;
+          losRenderStats.sumMs += duration;
+          losRenderStats.nextIndex++;
+          if (losRenderStats.nextIndex >= 10)
+            losRenderStats.nextIndex = 0;
+        }
+
+      losRenderStats.lastMs = duration;
+      losRenderStats.avgMs = losRenderStats.sumMs / losRenderStats.count;
+      losRenderStats.maxMs = 0;
+      for (sample in losRenderStats.samples)
+        if (sample > losRenderStats.maxMs)
+          losRenderStats.maxMs = sample;
+      losRenderStats.lastBlockers = blockers;
+      losRenderStats.lastSegments = segments;
+      losRenderStats.lastRays = rays;
+      losRenderStats.lastHits = hits;
+      losRenderStats.lastHitTiles = hitTiles;
+      losRenderStats.lastRoomTiles = roomTiles;
+      losRenderStats.lastSetupMs = setupMs;
+      losRenderStats.lastSegmentsMs = segmentsMs;
+      losRenderStats.lastPolygonMs = polygonMs;
+      losRenderStats.lastComposeMs = composeMs;
+      losRenderStats.lastDrawMs = drawMs;
+      losRenderStats.hasSamples = true;
     }
 
 // draw particles
@@ -1026,4 +1242,31 @@ typedef _LOSRayHit = {
   var distance: Float;
   var tileX: Int;
   var tileY: Int;
+}
+
+typedef _LOSSegmentBuild = {
+  var segments: Array<_LOSSegment>;
+  var blockers: Int;
+}
+
+typedef _LOSRenderStats = {
+  var samples: Array<Float>;
+  var nextIndex: Int;
+  var count: Int;
+  var sumMs: Float;
+  var maxMs: Float;
+  var avgMs: Float;
+  var lastMs: Float;
+  var lastBlockers: Int;
+  var lastSegments: Int;
+  var lastRays: Int;
+  var lastHits: Int;
+  var lastHitTiles: Int;
+  var lastRoomTiles: Int;
+  var lastSetupMs: Float;
+  var lastSegmentsMs: Float;
+  var lastPolygonMs: Float;
+  var lastComposeMs: Float;
+  var lastDrawMs: Float;
+  var hasSamples: Bool;
 }
