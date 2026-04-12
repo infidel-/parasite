@@ -27,6 +27,7 @@ class Computer extends ItemInfo
           id: 'absorbMap.' + item.id,
           type: ACTION_INVENTORY,
           name: 'Absorb regional map',
+          nameClean: 'Absorb map',
           energy: 15,
           item: item
         });
@@ -35,6 +36,7 @@ class Computer extends ItemInfo
           id: 'search.' + item.id,
           type: ACTION_INVENTORY,
           name: 'Use ' + Const.col('inventory-item', itemName) + ' to search',
+          nameClean: 'Search',
           energy: 10,
           item: item
         });

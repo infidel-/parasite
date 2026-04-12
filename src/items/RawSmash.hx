@@ -27,6 +27,7 @@ class RawSmash extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Inject ' + Const.col('inventory-item', itemName),
+        nameClean: 'Inject',
         energy: 0,
         item: item
       });

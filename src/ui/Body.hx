@@ -16,7 +16,6 @@ class Body extends UIWindow
 {
   var inventoryList: DivElement;
   var inventoryTitle: LegendElement;
-  var inventoryActions: DivElement;
   var skillsParasite: DivElement;
   var skillsHost: DivElement;
   var organsList: DivElement;
@@ -48,7 +47,6 @@ class Body extends UIWindow
       var ret = addBlockExtended(cont, 'window-inventory-list', 'ITEMS');
       inventoryList = ret.text;
       inventoryTitle = ret.legend;
-      inventoryActions = addBlock(cont, 'window-inventory-actions', 'ACTIONS');
 
       // skills
       var cont = addBlock(col1, 'window-skills-contents', 'KNOWLEDGE', 'window-contents-wrapper');
@@ -72,10 +70,9 @@ class Body extends UIWindow
 // update window contents
   override function update()
     {
-      updateInventoryActions();
+      updateInventoryTable();
       updateOrgansActions();
       setParams({
-        inventoryList: updateInventoryList(),
         skillsParasite: updateSkillsParasite(),
         skillsHost: updateSkillsHost() + updateEffectsHost(),
         organsList: updateOrgansList(),
@@ -249,71 +246,85 @@ class Body extends UIWindow
       animate(organsActions);
     }
 
-// update inventory list
-  function updateInventoryList(): String
+// update inventory table
+  function updateInventoryTable()
     {
+      inventoryList.innerHTML = '';
+      listInventoryActions = [];
       if (game.player.state != PLR_STATE_HOST)
-        return '';
-      inventoryTitle.innerHTML = 'INVENTORY ' + Const.smallgray('[' +
+        return;
+      inventoryTitle.innerHTML = 'ITEMS ' + Const.smallgray('[' +
         game.player.host.inventory.length() + '/' +
         game.player.host.maxItems + ']');
-      var buf = new StringBuf();
-      var n = 0;
+      var actions: Array<_PlayerAction> = [];
+      if (game.player.vars.inventoryEnabled)
+        actions = game.player.host.inventory.getActions();
       var activeMarked = false;
+      var table = Browser.document.createElement('table');
+      table.className = 'inventory-table';
+      var hasItems = false;
       for (item in game.player.host.inventory)
         {
-          n++;
+          hasItems = true;
+          var row = Browser.document.createElement('tr');
+          row.className = 'inventory-table-row';
+          var itemCell = Browser.document.createElement('td');
+          itemCell.className = 'inventory-table-item';
           var knowsItem = game.player.knowsItem(item.id);
           var name = (knowsItem ? item.name : item.info.unknown);
-          buf.add(Const.col('inventory-item', name));
+          itemCell.innerHTML = Const.col('inventory-item', name);
           if (item.id == game.player.host.inventory.weaponID &&
               !activeMarked)
             {
-              buf.add(Const.smallgray(' [active]'));
+              itemCell.innerHTML += Const.smallgray(' [active]');
               activeMarked = true;
             }
-          buf.add('<br/>');
+          row.appendChild(itemCell);
+
+          var actionCell = Browser.document.createElement('td');
+          actionCell.className = 'inventory-table-actions';
+          var hasActions = false;
+          for (act in actions)
+            {
+              if (act.item != item)
+                continue;
+              if (hasActions)
+                actionCell.appendChild(Browser.document.createTextNode(', '));
+              appendInventoryAction(actionCell, act);
+              hasActions = true;
+            }
+          row.appendChild(actionCell);
+          table.appendChild(row);
         }
 
-      if (n == 0)
-        buf.add('<center>no items</center><br/>');
+      if (!hasItems)
+        inventoryList.innerHTML = '<center>no items</center><br/>';
+      else inventoryList.appendChild(table);
 
-      return buf.toString();
+      animate(inventoryList);
     }
 
-// update inventory actions
-  function updateInventoryActions()
+// add inventory action to a table row
+  function appendInventoryAction(actionCell: Element, act: _PlayerAction)
     {
-      inventoryActions.innerHTML = '';
-      if (game.player.state != PLR_STATE_HOST)
-        return;
-      if (!game.player.vars.inventoryEnabled)
-        return;
-      listInventoryActions = game.player.host.inventory.getActions();
-      var n = 1;
-      for (act in listInventoryActions)
-        {
-          // reduce cost when host is agreeable
-          if (act.isAgreeable &&
-              game.player.hostAgreeable())
-            act.energy = 1;
-          // html element
-          var action = Browser.document.createDivElement();
-          action.className = 'actions-item';
-          action.innerHTML = Const.key('C-' + n) + ': ' + act.name +
-            (act.energy > 0 ? Const.cost(act.energy) : '');
-          n++;
-          action.onclick = function (e) {
-            game.scene.sounds.play('click-action');
-            game.player.host.inventory.action(act);
-            if (game.ui.state == UISTATE_BODY)
-              game.ui.closeWindow();
-          };
-          inventoryActions.appendChild(action);
-        }
-      
-      // trigger content update animation
-      animate(inventoryActions);
+      // reduce cost when host is agreeable
+      if (act.isAgreeable &&
+          game.player.hostAgreeable())
+        act.energy = 1;
+      listInventoryActions.push(act);
+      var n = listInventoryActions.length;
+      var action = Browser.document.createSpanElement();
+      action.className = 'actions-item inventory-table-action';
+      action.innerHTML = Const.key('C-' + n) + ': ' +
+        (act.nameClean != null ? act.nameClean : act.name) +
+        (act.energy > 0 ? Const.cost(act.energy) : '');
+      action.onclick = function (e) {
+        game.scene.sounds.play('click-action');
+        game.player.host.inventory.action(act);
+        if (game.ui.state == UISTATE_BODY)
+          game.ui.closeWindow();
+      };
+      actionCell.appendChild(action);
     }
 
 // update parasite skills
@@ -520,7 +531,6 @@ class Body extends UIWindow
 
   public override function setParams(obj: Dynamic)
     {
-      inventoryList.innerHTML = obj.inventoryList;
       skillsParasite.innerHTML = obj.skillsParasite;
       skillsHost.innerHTML = obj.skillsHost;
       organsList.innerHTML = obj.organsList;
@@ -528,7 +538,6 @@ class Body extends UIWindow
       organsInfo.innerHTML = obj.organsInfo;
       e('window-inventory-contents').className = '';
       e('window-inventory-list').className = '';
-      e('window-inventory-actions').className = '';
       e('window-skills-contents').className = '';
       e('window-skills-parasite').className = '';
       e('window-skills-host').className = '';
@@ -543,7 +552,6 @@ class Body extends UIWindow
         {
           e('window-inventory-contents').className = 'window-disabled';
           e('window-inventory-list').className = 'window-disabled';
-          e('window-inventory-actions').className = 'window-disabled';
         }
       if (!game.player.vars.skillsEnabled)
         {

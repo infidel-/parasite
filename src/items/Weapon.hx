@@ -27,6 +27,7 @@ class Weapon extends ItemInfo
         id: 'active.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Mark ' + Const.col('inventory-item', itemName) + ' as active',
+        nameClean: 'Mark as active',
         energy: 0,
         item: item
       });

@@ -29,6 +29,7 @@ class Nutrients extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Consume ' + Const.col('inventory-item', itemName),
+        nameClean: 'Consume',
         energy: 0,
         item: item
       });

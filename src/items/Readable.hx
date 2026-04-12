@@ -25,6 +25,7 @@ class Readable extends ItemInfo
         id: 'read.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Read ' + Const.col('inventory-item', itemName),
+        nameClean: 'Read',
         energy: 10,
         isAgreeable: true,
         item: item

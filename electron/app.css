@@ -1432,14 +1432,30 @@ input[type=checkbox] {
 }
 
 #window-inventory-list {
-  margin-bottom: 10px;
-  height: 35%;
+  flex-grow: 1;
+  height: 50px;
 }
 
-#window-inventory-actions {
-  height: 30%;
-  display: flex;
-  flex-grow: 1;
+.inventory-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.inventory-table-item {
+  border-right: 1px solid #000;
+  padding-right: 2ch;
+  vertical-align: top;
+  white-space: nowrap;
+  width: 1%;
+}
+
+.inventory-table-actions {
+  padding-left: 2ch;
+  vertical-align: top;
+}
+
+.inventory-table-action {
+  cursor: pointer;
 }
 
 #window-skills-contents {

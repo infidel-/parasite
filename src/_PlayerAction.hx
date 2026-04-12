@@ -5,6 +5,7 @@ typedef _PlayerAction = {
   var id: String; // action id
   var type: _PlayerActionType; // action type
   var name: String; // action name
+  @:optional var nameClean: String; // action name without repeated context
   @:optional var canRepeat: Bool; // can be repeated continuously?
   @:optional var energy: Int; // energy to complete
   @:optional var obj: Dynamic; // bound object to act on
