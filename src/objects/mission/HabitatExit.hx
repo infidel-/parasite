@@ -46,7 +46,7 @@ class HabitatExit extends AreaObject
 // activate habitat exit and leave the area
   override function onAction(action: _PlayerAction): Bool
     {
-      var ret = game.playerArea.leaveAreaAction();
+      var ret = game.playerArea.leaveAreaAction(action);
       if (ret)
         game.scene.sounds.play('object-sewers');
       return ret;

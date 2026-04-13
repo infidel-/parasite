@@ -52,6 +52,8 @@ class FloorDrain extends AreaObject
         }
       if (!game.area.canLeave())
         return false;
+      if (!game.playerArea.cultLeavePre(action))
+        return false;
 
       game.log("You slither through the drain escaping the prying eyes.");
       game.turns++; // manually increase number of turns

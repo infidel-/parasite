@@ -57,6 +57,8 @@ class SewerHatch extends AreaObject
 
       if (!game.area.canLeave())
         return false;
+      if (!game.playerArea.cultLeavePre(action))
+        return false;
 
       game.scene.sounds.play('object-sewers');
       game.log("You enter the damp fetid sewers escaping the prying eyes.");
