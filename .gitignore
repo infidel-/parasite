@@ -11,3 +11,6 @@ assets*
 ObsidianReports
 plans/
 .haxe-port
+.codex
+debug
+src/debug
