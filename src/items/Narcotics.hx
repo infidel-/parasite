@@ -28,6 +28,7 @@ class Narcotics extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Snort ' + Const.col('inventory-item', itemName),
+        nameClean: 'Snort',
         energy: 0,
         item: item
       });

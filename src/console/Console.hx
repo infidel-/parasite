@@ -683,8 +683,8 @@ class Console
       // XXX dg - show render stats info
       if (cmd == 'dg')
         {
-          game.log(game.scene.getRegionRenderStatsText() +
-            '<br/>' + game.scene.getAreaRenderStatsText(), COLOR_DEBUG);
+          game.scene.logRenderStatsToConsole();
+          game.log('Render profile written to browser console.', COLOR_DEBUG);
         }
       // XXX dai - show ai view/hear info
       else if (cmd == 'dai')

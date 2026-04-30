@@ -28,6 +28,7 @@ class Alcohol extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Imbibe ' + Const.col('inventory-item', itemName),
+        nameClean: 'Imbibe',
         energy: 2,
         item: item
       });

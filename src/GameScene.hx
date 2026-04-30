@@ -228,6 +228,38 @@ class GameScene
       return formatRenderStats('Area', _renderStatsArea);
     }
 
+// get formatted area smooth los overlay render stats text
+  public inline function getAreaSmoothLOSRenderStatsText(): String
+    {
+      if (area == null)
+        return Const.small('Area smooth LOS overlay render time (ms): N/A<br/>' +
+          'Area smooth LOS overlay counts: N/A');
+      return area.getSmoothLOSRenderStatsText();
+    }
+
+// get plain render profile text for browser console copy-paste
+  public function getRenderStatsConsoleText(): String
+    {
+      return 'Parasite render profile\n' +
+        formatRenderStatsConsole('Region', _renderStatsRegion) + '\n' +
+        formatRenderStatsConsole('Area', _renderStatsArea) + '\n' +
+        getAreaSmoothLOSRenderStatsConsoleText();
+    }
+
+// log render profile to browser console
+  public inline function logRenderStatsToConsole()
+    {
+      Browser.console.log(getRenderStatsConsoleText());
+    }
+
+// get plain area smooth los overlay profile for browser console copy-paste
+  public inline function getAreaSmoothLOSRenderStatsConsoleText(): String
+    {
+      if (area == null)
+        return 'Area smooth LOS overlay: no samples';
+      return area.getSmoothLOSRenderStatsConsoleText();
+    }
+
 // get formatted region render stats text
   public inline function getRegionRenderStatsText(): String
     {
@@ -294,6 +326,17 @@ class GameScene
         Const.round2(stats.lastMs) + '<br/>' +
         label + ' hypothetical FPS: ' +
         Const.round2(stats.fpsHypothetical));
+    }
+
+// format one render stats block for browser console
+  function formatRenderStatsConsole(label: String, stats: _RenderStats): String
+    {
+      if (!stats.hasSamples)
+        return label + ' frame: no samples';
+      return label + ' frame ms: max ' + Const.round2(stats.maxMs) +
+        ' / avg ' + Const.round2(stats.avgMs) +
+        ' / last ' + Const.round2(stats.lastMs) +
+        ', hypothetical FPS ' + Const.round2(stats.fpsHypothetical);
     }
 
 // common clear path (both images and list)

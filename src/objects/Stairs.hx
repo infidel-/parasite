@@ -55,6 +55,8 @@ class Stairs extends AreaObject
     {
       if (!game.area.canLeave())
         return false;
+      if (!game.playerArea.cultLeavePre(action))
+        return false;
 
       var leavingAreaID = game.area.id;
       game.scene.sounds.play('object-stairs');

@@ -28,6 +28,7 @@ class Wallet extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Open ' + Const.col('inventory-item', itemName),
+        nameClean: 'Open',
         energy: 3,
         isAgreeable: true,
         item: item

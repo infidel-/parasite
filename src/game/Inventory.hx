@@ -66,6 +66,7 @@ class Inventory extends _SaveObject
               id: 'learn.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Learn about ' + Const.col('inventory-item', itemName),
+              nameClean: 'Learn about',
               energy: 10,
               isAgreeable: true,
               item: item
@@ -84,6 +85,7 @@ class Inventory extends _SaveObject
             id: 'drop.' + item.id,
             type: ACTION_INVENTORY,
             name: 'Drop ' + Const.col('inventory-item', itemName),
+            nameClean: 'Drop',
             energy: 0,
             item: item
           });

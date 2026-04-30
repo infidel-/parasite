@@ -13,6 +13,7 @@ class PlayerArea extends _SaveObject
   static var _ignoredFields = [
     'player', 'entity', 'actionTS',
     'currentAction', 'attachHost',
+    'isCultLeaveConfirmed',
   ];
   var game: Game; // game state link
   var player: Player; // state link
@@ -26,6 +27,7 @@ class PlayerArea extends _SaveObject
   public var path(default, null): Array<aPath.Node>; // current player path
   var actionTS: Float; // last time player moved on a path/did action
   public var currentAction(default, null): _PlayerAction; // current continuous action
+  var isCultLeaveConfirmed: Bool; // confirmed leaving followers in combat
 
   // state "parasite"
 
@@ -42,6 +44,7 @@ class PlayerArea extends _SaveObject
       path = null;
       actionTS = 0;
       currentAction = null;
+      isCultLeaveConfirmed = false;
       x = 0;
       y = 0;
       ap = 2;
@@ -305,7 +308,7 @@ class PlayerArea extends _SaveObject
         learnObjectAction(action.obj);
       // try to leave area
       else if (action.id == 'leaveArea')
-        ret = leaveAreaAction();
+        ret = leaveAreaAction(action);
       // wait
       else if (action.id == 'skipTurn')
         game.turn();
@@ -737,7 +740,7 @@ class PlayerArea extends _SaveObject
     }
 
 // action: leave area
-  public function leaveAreaAction(): Bool
+  public function leaveAreaAction(action: _PlayerAction): Bool
     {
       // special checks for habitat
       if (game.area.typeID == AREA_HABITAT)
@@ -781,12 +784,43 @@ class PlayerArea extends _SaveObject
         }
       if (!game.area.canLeave())
         return false;
+      if (!cultLeavePre(action))
+        return false;
 
       log('You leave the area.');
       path = null; // clear path
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
       return true;
+    }
+
+// handles player cult danger before leaving area
+  public function cultLeavePre(action: _PlayerAction): Bool
+    {
+      var cult = game.cults[0];
+      if (!cult.hasFollowersInCombatArea())
+        return true;
+      if (isCultLeaveConfirmed)
+        {
+          cult.leavePre();
+          return true;
+        }
+
+      game.ui.event({
+        type: UIEVENT_STATE,
+        state: UISTATE_YESNO,
+        obj: {
+          text: Const.col('cult', 'There are followers still in combat. If you leave now, they may die. Leave anyway?'),
+          func: function(yes: Bool) {
+            if (!yes)
+              return;
+            isCultLeaveConfirmed = true;
+            game.playerArea.action(action);
+            isCultLeaveConfirmed = false;
+          }
+        }
+      });
+      return false;
     }
 
 

@@ -27,6 +27,7 @@ class Cigarettes extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Smoke a ' + Const.col('inventory-item', 'cigarette'),
+        nameClean: 'Smoke one',
         energy: 0,
         item: item
       });

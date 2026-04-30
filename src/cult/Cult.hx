@@ -981,6 +981,54 @@ class Cult extends _SaveObject
       recalc();
     }
 
+// returns true if player cultists are fighting in current area
+  public function hasFollowersInCombatArea(): Bool
+    {
+      if (!isPlayer ||
+          state != CULT_STATE_ACTIVE ||
+          game.location != LOCATION_AREA ||
+          game.area == null)
+        return false;
+
+      for (ai in game.area.getAllAI())
+        if (isAreaFollower(ai) &&
+            ai.state == AI_STATE_ALERT)
+          return true;
+      return false;
+    }
+
+// called before leaving with followers in combat
+  public function leavePre()
+    {
+      if (!isPlayer ||
+          state != CULT_STATE_ACTIVE ||
+          game.location != LOCATION_AREA ||
+          game.area == null)
+        return;
+
+      var list: Array<AI> = [];
+      for (ai in game.area.getAllAI())
+        if (isAreaFollower(ai))
+          list.push(ai);
+
+      // 10% chance to lose each follower
+      for (ai in list)
+        if (Std.random(100) < 10 &&
+            game.area.getAIByID(ai.id) != null)
+          ai.die();
+    }
+
+// checks if ai is a live follower in this area
+  function isAreaFollower(ai: AI): Bool
+    {
+      return (
+        ai.isCultist &&
+        ai.cultID == id &&
+        ai.state != AI_STATE_DEAD &&
+        ai != game.player.host
+      );
+    }
+
 // mission turn processing
   public function turnMission()
     {
