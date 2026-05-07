@@ -489,7 +489,18 @@ hr {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: 0;
+}
+
+/* 2D canvas for main menu crowd silhouettes (above bg, below window) */
+.menu-crowd-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* window initial fade-in from darkness */

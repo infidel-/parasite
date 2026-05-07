@@ -17,6 +17,7 @@ class MainMenu extends UIWindow
   static inline var DEFAULT_BG = 1;
   var currentBackground: Int;
   public var menuBg: MainMenuBackground;
+  public var menuCrowd: MainMenuCrowd;
 
   public function new(g: Game)
     {
@@ -28,6 +29,9 @@ class MainMenu extends UIWindow
       // create WebGL background canvas (replaces .window-swirl div)
       menuBg = new MainMenuBackground();
       bg.insertBefore(menuBg.getCanvas(), window);
+      // create crowd silhouette overlay (independent of aiArtEnabled)
+      menuCrowd = new MainMenuCrowd();
+      bg.insertBefore(menuCrowd.getCanvas(), window);
       setBackground(currentBackground, game.config.aiArtEnabled);
       // randomize background
       if (!game.firstEverRun)
@@ -154,6 +158,7 @@ class MainMenu extends UIWindow
       bg.style.visibility = 'visible';
       if (game.config.aiArtEnabled)
         menuBg.show();
+      menuCrowd.show();
       // add animation class for regular fade-in
       if (!skipAnimation && !bg.classList.contains('mainmenu-first-show'))
         bg.classList.add('window-fade-in');
@@ -164,6 +169,7 @@ class MainMenu extends UIWindow
       // set visibility immediately so MainMenuBackground render loop can detect it
       bg.style.visibility = 'hidden';
       menuBg.hide();
+      menuCrowd.hide();
       super.hide(skipAnimation);
     }
 
