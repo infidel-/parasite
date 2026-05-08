@@ -1,0 +1,15 @@
+// cult base organ types
+enum _CultBaseOrganType
+{
+  COR_NEFANDUM;
+  RIBWALL;
+  RIBGATE;
+  SPINE_TURRET;
+  BLOOD_TRAP;
+  FLESH_BLOCK;
+  RAT_NEST;
+  CRUSHER;
+  GARBAGE_HEAP;
+  BODY_STORAGE;
+  CAULDRON;
+}

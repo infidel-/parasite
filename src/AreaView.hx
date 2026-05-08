@@ -95,7 +95,8 @@ class AreaView
       // objects
       for (o in game.area.getObjects())
         if (o.entity != null)
-          if (!game.player.vars.losEnabled ||
+          if (isFormaMode() ||
+              !game.player.vars.losEnabled ||
               (game.player.state != PLR_STATE_HOST &&
                o.sensable()) ||
               (game.playerArea.sees(o.x, o.y) &&
@@ -112,7 +113,8 @@ class AreaView
         game.playerArea.entity.draw(ctx);
       for (ai in @:privateAccess game.area._ai)
         if (ai.entity != null)
-          if (!game.player.vars.losEnabled ||
+          if (isFormaMode() ||
+              !game.player.vars.losEnabled ||
               (game.playerArea.sees(ai.x, ai.y) &&
               ai.entity.isVisible()))
             ai.entity.draw(ctx);
@@ -136,6 +138,7 @@ class AreaView
             (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
             Const.TILE_SIZE,
             Const.TILE_SIZE);
+      drawBaseCursorReticle(ctx);
       AreaLightingDebug.drawDebugLightMarkers(scene.areaLighting, ctx);
       ctx.restore();
       drawSmoothLOSOverlay(ctx);
@@ -229,7 +232,7 @@ class AreaView
       var tiles = game.area.getTiles();
       var hasTileData = (tiles != null &&
         tiles.length > 0);
-      var drawRealTiles = shouldDrawSmoothLOSOverlay();
+      var drawRealTiles = isFormaMode() || shouldDrawSmoothLOSOverlay();
       var tileID = 0;
       var icon: _Icon = null;
 
@@ -291,7 +294,14 @@ class AreaView
   inline function shouldDrawSmoothLOSOverlay(): Bool
     {
       return (game.player.vars.losEnabled &&
+        !isFormaMode() &&
         game.player.state == PLR_STATE_HOST);
+    }
+
+// returns true while forma mode is active
+  inline function isFormaMode(): Bool
+    {
+      return game.ui.hud.state == HUD_BASE_BUILDING;
     }
 
 // draw smooth host line-of-sight blackout using one visibility polygon
@@ -520,6 +530,34 @@ class AreaView
             ret.push(angle);
         }
       return ret;
+    }
+
+// draws the forma cursor reticle
+  function drawBaseCursorReticle(ctx: CanvasRenderingContext2D)
+    {
+      if (game.ui.hud.state != HUD_BASE_BUILDING ||
+          game.cults.length == 0 ||
+          game.cults[0].base == null)
+        return;
+
+      var base = game.cults[0].base;
+      if (!game.area.inVisibleRect(base.cursorX, base.cursorY))
+        return;
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 5;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.drawImage(scene.images.entities,
+        Const.FRAME_TARGET_RETICLE * Const.TILE_SIZE_CLEAN,
+        Const.ROW_REGION_ICON * Const.TILE_SIZE_CLEAN + 1,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN - 1,
+        (base.cursorX - scene.cameraTileX1) * Const.TILE_SIZE,
+        (base.cursorY - scene.cameraTileY1) * Const.TILE_SIZE,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
+      ctx.shadowColor = 'transparent';
     }
 
 // build sorted los polygon points from nearest ray-segment intersections

@@ -120,6 +120,18 @@ class PlayerArea extends _SaveObject
 // get actions list (area mode)
   public function updateActionList()
     {
+      var base = (game.cults.length > 0 ? game.cults[0].base : null);
+      if (base != null &&
+          game.area.isHabitat &&
+          base.areaID == game.area.id)
+        game.ui.hud.addAction({
+          id: 'forma',
+          type: ACTION_AREA,
+          name: 'Forma',
+          energy: 0,
+          isVirtual: true
+        });
+
       if (state == PLR_STATE_PARASITE)
         {
           if (game.area.hasAI(x, y))
@@ -259,8 +271,11 @@ class PlayerArea extends _SaveObject
           return;
         }
 
+      // direct action callback
+      if (action.f != null)
+        action.f();
       // area object action
-      if (action.type == ACTION_OBJECT)
+      else if (action.type == ACTION_OBJECT)
         {
           var ao: AreaObject = action.obj;
           ret = ao.action(action);
@@ -306,6 +321,17 @@ class PlayerArea extends _SaveObject
       // learn about object
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);
+      // enter forma
+      else if (action.id == 'forma')
+        {
+          var base = game.cults[0].base;
+          base.cursorX = x;
+          base.cursorY = y;
+          game.ui.hud.state = HUD_BASE_BUILDING;
+          game.updateHUD();
+          game.scene.mouse.update(true);
+          game.scene.area.draw();
+        }
       // try to leave area
       else if (action.id == 'leaveArea')
         ret = leaveAreaAction(action);

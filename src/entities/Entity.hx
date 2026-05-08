@@ -149,6 +149,8 @@ class Entity
         {
           case 'entities':
             img = game.scene.images.entities;
+          case 'cultBase':
+            img = game.scene.images.cultBase;
           case 'male':
             img = game.scene.images.male;
           case 'female':

@@ -176,6 +176,10 @@ class Ordeal extends _SaveObject
         success();
     }
 
+// cult-turn hook for active ordeals
+  public function turn()
+    {}
+
 // complete an ordeal successfully
   public function success()
     {

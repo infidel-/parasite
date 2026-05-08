@@ -615,6 +615,10 @@ public function show()
               stateTime >= 2)
             setState(AI_STATE_IDLE);
           
+          // custodes guard the base instead of following the player
+          else if (isCustos)
+            CustodesLogic.turn(this);
+
           // cultists from player cult have follower logic
           else if (isPlayerCultist())
             {
@@ -622,7 +626,7 @@ public function show()
                 FollowerLogic.turn(this);
             }
 
-          // default AI logiccultID
+          // default AI logic
           else DefaultLogic.turn(this);
         }
 

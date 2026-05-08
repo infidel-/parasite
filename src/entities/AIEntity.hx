@@ -4,7 +4,6 @@ package entities;
 
 import js.html.CanvasRenderingContext2D;
 
-import _AIState;
 import ai.AI;
 import game.Game;
 
@@ -85,6 +84,10 @@ class AIEntity extends PawnEntity
       if (ai.isPlayerCultist())
         drawImage(ctx, game.scene.images.entities,
           Const.FRAME_CULTIST0,
+          Const.ROW_EFFECT);
+      else if (ai.isCultist)
+        drawImage(ctx, game.scene.images.entities,
+          Const.FRAME_CULTIST_UNKNOWN,
           Const.ROW_EFFECT);
       // draw effect icon
       if (effectIcon != null)

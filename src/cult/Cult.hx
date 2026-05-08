@@ -7,6 +7,7 @@ import game.Game;
 import ai.AI;
 import ai.AIData;
 import cult.effects.*;
+import cult.base.CultBase;
 import Type;
 
 class Cult extends _SaveObject
@@ -27,6 +28,13 @@ class Cult extends _SaveObject
   public var ordeals: Ordeals;
   public var effects: Effects;
   public var trainingMemberIDs: Array<Int>; // members locked for training until next cult turn
+  public var level: Int;
+  public var base: CultBase;
+  public var rivalTemplate: String;
+  public var rivalTactic: _RivalCultTactic;
+  public var rivalRevealedLevel: Int;
+  public var rivalBaseAreaID: Int;
+  public var metamorphosisPhaseIComplete: Bool;
   var turnCounter: Int;
 
   public function new(g: Game)
@@ -66,6 +74,14 @@ class Cult extends _SaveObject
         money: 0
       };
       trainingMemberIDs = [];
+      level = 1;
+      base = null;
+      rivalTemplate = '';
+      rivalTactic = RIVAL_NON_COMBAT;
+      rivalRevealedLevel = 0;
+      rivalBaseAreaID = -1;
+      metamorphosisPhaseIComplete = false;
+      turnCounter = 0;
     }
 
 // called after load or creation
@@ -80,11 +96,22 @@ class Cult extends _SaveObject
         }
       if (trainingMemberIDs == null)
         trainingMemberIDs = [];
+      if (level <= 0)
+        level = 1;
+      if (rivalTemplate == null)
+        rivalTemplate = '';
+      if (base != null)
+        {
+          base.game = game;
+          base.initPost(onLoad);
+        }
     }
 
 // post load
   public function loadPost()
     {
+      if (id >= Cult._maxID)
+        Cult._maxID = id + 1;
       for (ai in members)
         if (ai.id > AIData._maxID)
           AIData._maxID = ai.id;
@@ -96,6 +123,11 @@ class Cult extends _SaveObject
           if (mission.id > maxMissionID)
             maxMissionID = mission.id;
       Mission._maxID = maxMissionID + 1;
+      if (base != null)
+        {
+          base.initPost(true);
+          base.loadPost();
+        }
     }
 
 // create cult (add leader)
@@ -597,6 +629,9 @@ class Cult extends _SaveObject
       ordeals.turn();
       // process active cult effects
       effects.turn();
+      // process living base economy and pressure
+      if (base != null)
+        base.turn();
       // process member regeneration
       turnMembers();
       
@@ -714,6 +749,12 @@ class Cult extends _SaveObject
   public function Name()
     {
       return '<span class=cult>' + name + '</span>';
+    }
+
+// returns cult display name
+  public function customName(): String
+    {
+      return name;
     }
 
 // cult log
@@ -973,12 +1014,16 @@ class Cult extends _SaveObject
             }
         }
       recalc();
+      if (base != null)
+        base.onEnterArea();
     }
 
 // called when player leaves the area
   public function onLeaveArea()
     {
       recalc();
+      if (base != null)
+        base.onLeaveArea();
     }
 
 // returns true if player cultists are fighting in current area

@@ -149,7 +149,8 @@ class AreaLighting
       // compose atmosphere overlay from static and dynamic maps, masked by current visibility, and draw it
       composeOverlay(area, cache);
       drawComposed(ctx);
-      fillUnseenBase(area, cache, ctx);
+      if (!isFormaMode())
+        fillUnseenBase(area, cache, ctx);
     }
 
 // draw static projected shadows below decorations and sprites
@@ -694,7 +695,8 @@ class AreaLighting
           if (ai.entity == null ||
               !ai.entity.isVisible())
             continue;
-          if (game.player.vars.losEnabled &&
+          if (!isFormaMode() &&
+              game.player.vars.losEnabled &&
               !game.playerArea.sees(ai.x, ai.y))
             continue;
           var sprite = getAIProjectedShadowSpriteSource(ai);
@@ -725,7 +727,8 @@ class AreaLighting
           if (ai.entity == null ||
               !ai.entity.isVisible())
             continue;
-          if (game.player.vars.losEnabled &&
+          if (!isFormaMode() &&
+              game.player.vars.losEnabled &&
               !game.playerArea.sees(ai.x, ai.y))
             continue;
 
@@ -1318,6 +1321,12 @@ class AreaLighting
       paintMap(composeCtx, map1, false, 0, 0);
       if (map2 != null)
         paintMap(composeCtx, map2, false, 0, 0);
+      if (isFormaMode())
+        {
+          ctx.drawImage(composeMap,
+            scene.cameraSubX, scene.cameraSubY);
+          return;
+        }
       ensureVisMask(area, cache);
       composeCtx.save();
       composeCtx.globalCompositeOperation = 'destination-in';
@@ -1337,12 +1346,20 @@ class AreaLighting
       paintMap(composeCtx, staticMap, false, 0, 0);
       if (transientAtmosphereLights.length > 0)
         paintMap(composeCtx, dynamicMap, true, 0, 0);
+      if (isFormaMode())
+        return;
 
       ensureVisMask(area, cache);
       composeCtx.save();
       composeCtx.globalCompositeOperation = 'destination-in';
       composeCtx.drawImage(visMaskMap, 0, 0);
       composeCtx.restore();
+    }
+
+// returns true while forma mode is active
+  inline function isFormaMode(): Bool
+    {
+      return game.ui.hud.state == HUD_BASE_BUILDING;
     }
 
 // rebuild screen-space visibility mask from current tile visibility cache

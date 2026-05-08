@@ -45,6 +45,11 @@ class Mouse
           game.ui.hud.targeting.selectByMouse(pos.x, pos.y);
           return;
         }
+      if (game.ui.hud.state == HUD_BASE_BUILDING)
+        {
+          onClickBase(pos);
+          return;
+        }
 #if mydebug
       // debug mode (middle mouse button)
       if (e.button == 1)
@@ -117,6 +122,16 @@ class Mouse
           else if (game.area.isWalkable(pos.x, pos.y))
             game.playerArea.setPath(pos.x, pos.y);
         }
+    }
+
+// on click in forma mode
+  function onClickBase(pos)
+    {
+      if (game.location != LOCATION_AREA ||
+          game.cults.length == 0 ||
+          game.cults[0].base == null)
+        return;
+      game.cults[0].base.setCursor(pos.x, pos.y);
     }
 
 
@@ -216,6 +231,22 @@ class Mouse
               pos.y < game.area.height)
             game.ui.hud.targeting.hoverByMouse(pos.x, pos.y);
           setCursor(CURSOR_MOVE);
+          return;
+        }
+
+      // forma mode, no path
+      if (game.ui.hud.state == HUD_BASE_BUILDING)
+        {
+          game.scene.area.clearPath();
+          if (pos.x < 0 ||
+              pos.y < 0 ||
+              pos.x >= game.area.width ||
+              pos.y >= game.area.height ||
+              game.cults.length == 0 ||
+              game.cults[0].base == null ||
+              !game.cults[0].base.canUseCursorTile(pos.x, pos.y))
+            setCursor(CURSOR_BLOCKED);
+          else setCursor(CURSOR_MOVE);
           return;
         }
 

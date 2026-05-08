@@ -5,6 +5,7 @@ class AtmosphereLightProfiles
 {
   public static var OBJECT_LIGHT_RADIUS_LARGE = 2.4;
   public static var OBJECT_LIGHT_INTENSITY_PALE = 0.80;
+  public static var OBJECT_LIGHT_INTENSITY_DIM = 0.45;
 
   public static var HABITAT_WATCHER: _AtmosphereLightMeta = {
     radiusTiles: OBJECT_LIGHT_RADIUS_LARGE,
@@ -36,5 +37,13 @@ class AtmosphereLightProfiles
     tintR: 4,
     tintG: 88,
     tintB: 155,
+  };
+
+  public static var CULT_BASE_HEART: _AtmosphereLightMeta = {
+    radiusTiles: OBJECT_LIGHT_RADIUS_LARGE,
+    intensity: OBJECT_LIGHT_INTENSITY_DIM,
+    tintR: 130,
+    tintG: 12,
+    tintB: 18,
   };
 }

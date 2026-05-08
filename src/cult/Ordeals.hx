@@ -94,7 +94,9 @@ class Ordeals extends _SaveObject
       // reset actions counter for all active ordeals
       for (ordeal in list)
         {
+          // ordeal-specific turn processing
           ordeal.actions = 0;
+          ordeal.turn();
 
           // turn effects
           for (effect in ordeal.effects)
@@ -222,6 +224,11 @@ class Ordeals extends _SaveObject
       RecruitFollower.initiateAction(cult, actions);
       UpgradeFollower.initiateAction(cult, actions);
       UpgradeFollower2.initiateAction(cult, actions);
+      MetamorphosisPhaseI.initiateAction(cult, actions);
+      MetamorphosisPhaseII.initiateAction(cult, actions);
+      ReapTheUnwary.initiateAction(cult, actions);
+      RivalResearch.initiateAction(cult, actions);
+      RivalAttack.initiateAction(cult, actions);
       LowerAlertness.initiateAction(game, cult, actions);
 
       // check if correct scenario is running for GatherClues
@@ -255,6 +262,16 @@ class Ordeals extends _SaveObject
             ordeal = new GroupInterference(game);
           case 'lowerAlertness':
             ordeal = new LowerAlertness(game);
+          case 'metamorphosisPhaseI':
+            ordeal = new MetamorphosisPhaseI(game);
+          case 'metamorphosisPhaseII':
+            ordeal = new MetamorphosisPhaseII(game);
+          case 'reapTheUnwary':
+            ordeal = new ReapTheUnwary(game);
+          case 'rivalResearch':
+            ordeal = new RivalResearch(game, action.obj.rivalCultID);
+          case 'rivalAttack':
+            ordeal = new RivalAttack(game, action.obj.rivalCultID);
           default:
             return;
         }
@@ -296,6 +313,16 @@ class Ordeals extends _SaveObject
       return null;
     }
 
+// get mission by persistent ID
+  public function getMissionByID(missionID: Int): Mission
+    {
+      for (ordeal in list)
+        for (m in ordeal.missions)
+          if (m.id == missionID)
+            return m;
+      return null;
+    }
+
 // get mission marker for the provided area
   public function getMarkerMission(area: AreaGame): Mission
     {
@@ -320,13 +347,4 @@ class Ordeals extends _SaveObject
       return null;
     }
 
-// get mission by ID even if already completed
-  public function getMissionByID(missionID: Int): Mission
-    {
-      for (ordeal in list)
-        for (m in ordeal.missions)
-          if (m.id == missionID)
-            return m;
-      return null;
-    }
 }

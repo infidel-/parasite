@@ -2,8 +2,7 @@
 package console;
 
 import game.Game;
-import cult.ordeals.RecruitFollower;
-import cult.ordeals.UpgradeFollower;
+import cult.ordeals.*;
 import cult.ordeals.profane.*;
 
 class Cult
@@ -33,6 +32,8 @@ class Cult
             {
               log('Cult commands:');
               log('cu/cult gr - give +10 all resources and +100k money');
+              log('cu/cult br [amount] - give base resources (default +100)');
+              log('cu/cult def [cultID] - add rival base defense ordeal');
               log('cu/cult t - call cult turn');
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
               log('cu/cult r [power] - recruit follower (default combat)');
@@ -44,6 +45,20 @@ class Cult
           if (arr[1] == 'gr')
             {
               giveResources();
+              return true;
+            }
+
+          // cu/cult br - give base resources
+          if (arr[1] == 'br')
+            {
+              giveBaseResources(arr);
+              return true;
+            }
+
+          // cu/cult def - add base defense ordeal
+          if (arr[1] == 'def')
+            {
+              addBaseDefenseOrdeal(arr);
               return true;
             }
           
@@ -134,6 +149,113 @@ class Cult
       cult.resources.money += 100000;
       
       log('Added +10 to all cult resources and +100k money.');
+    }
+
+// give resources to the cult base
+  function giveBaseResources(arr: Array<String>)
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+
+      var cult = game.cults[0];
+      if (cult.base == null)
+        {
+          log('Cult has no base.');
+          return;
+        }
+
+      var amount = 100;
+      if (arr.length >= 3)
+        {
+          var parsed = Std.parseInt(arr[2]);
+          if (parsed == null)
+            {
+              log('Invalid base resource amount: ' + arr[2]);
+              return;
+            }
+          amount = parsed;
+        }
+
+      cult.base.resources.flesh += amount;
+      cult.base.resources.blood += amount;
+      cult.base.resources.bone += amount;
+      game.updateHUD();
+
+      log('Added +' + amount + ' flesh, blood, and bone to cult base.');
+    }
+
+// add base defense ordeal to cult
+  function addBaseDefenseOrdeal(arr: Array<String>)
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+
+      var cult = game.cults[0];
+      var base = cult.base;
+      if (base == null)
+        {
+          log('Cult has no base.');
+          return;
+        }
+      if (base.activeDefenseMissionID >= 0)
+        {
+          log('Base defense already active.');
+          return;
+        }
+
+      var rival = getBaseDefenseRival(arr);
+      if (rival == null)
+        return;
+
+      var ordeal = new BaseDefense(game, rival.id);
+      cult.ordeals.list.push(ordeal);
+      base.activeDefenseMissionID = ordeal.missions[0].id;
+      base.activeDefenseTimer = ordeal.timer;
+      game.updateHUD();
+
+      log('Added base defense ordeal: ' + ordeal.coloredName());
+      game.message({
+        text: 'Heretics close on Cor Nefandum. Defend the base before the timer expires.',
+        col: 'alert'
+      });
+    }
+
+// returns rival cult for console-spawned base defense
+  function getBaseDefenseRival(arr: Array<String>): cult.Cult
+    {
+      if (arr.length >= 3)
+        {
+          var cultID = Std.parseInt(arr[2]);
+          if (cultID == null)
+            {
+              log('Invalid rival cult ID.');
+              return null;
+            }
+          var rival = game.getCultByID(cultID);
+          if (rival == null ||
+              rival.isPlayer ||
+              rival.rivalTemplate == '' ||
+              rival.state != CULT_STATE_ACTIVE)
+            {
+              log('No active rival cult with ID ' + cultID + '.');
+              return null;
+            }
+          return rival;
+        }
+
+      var rivals = game.getRivalCults(true);
+      if (rivals.length == 0)
+        {
+          log('No active rival cult found.');
+          return null;
+        }
+      return rivals[Std.random(rivals.length)];
     }
 
 // call next cult turn

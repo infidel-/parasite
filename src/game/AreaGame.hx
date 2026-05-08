@@ -827,52 +827,12 @@ class AreaGame extends _SaveObject
       if (params.fallbackRadius == null)
         params.fallbackRadius = 5;
 
-      // prefer entrance tiles in special areas
-      if (info.id == AREA_CORP ||
-          info.id == AREA_SEWERS ||
-          info.id == AREA_UNDERGROUND_LAB ||
-          info.id == AREA_HABITAT)
-        {
-          var tiles = [];
-          var targetType = (
-            info.id == AREA_SEWERS ? 'sewer_exit' :
-            info.id == AREA_HABITAT ? 'habitat_exit' :
-            'elevator'
-          );
-          for (o in getObjects())
-            {
-              if (o.type != targetType)
-                continue;
-              if (!isWalkable(o.x, o.y))
-                continue;
-              if (getAI(o.x, o.y) != null)
-                continue;
-              if (game.playerArea.x == o.x &&
-                  game.playerArea.y == o.y)
-                continue;
-              tiles.push({ x: o.x, y: o.y });
-            }
-          if (tiles.length > 0)
-            {
-              if (info.id == AREA_CORP ||
-                  info.id == AREA_UNDERGROUND_LAB)
-                return tiles[Std.random(tiles.length)];
-              var best = tiles[0];
-              var bestDist = Const.distanceSquared(best.x, best.y, params.near.x, params.near.y);
-              for (t in tiles)
-                {
-                  var dist = Const.distanceSquared(t.x, t.y, params.near.x, params.near.y);
-                  if (dist < bestDist)
-                    {
-                      bestDist = dist;
-                      best = t;
-                    }
-                }
-              return best;
-            }
-        }
+      // first try to find special arrival location for some area types (elevator, sewer exit, etc)
+      var loc = findSpecialArriveLocation(params);
+      if (loc != null)
+        return loc;
 
-      var loc = findLocation({
+      loc = findLocation({
         near: { x: params.near.x, y: params.near.y },
         radius: params.radius,
         isUnseen: true
@@ -884,6 +844,78 @@ class AreaGame extends _SaveObject
         return null;
       return findEmptyLocationNear(params.near.x, params.near.y,
         params.fallbackRadius);
+    }
+
+// find special area entrance tile or sewer-style overflow anchor
+  function findSpecialArriveLocation(params: {
+      near: { x: Int, y: Int },
+      ?radius: Int,
+      ?fallbackRadius: Int,
+    }): { x: Int, y: Int }
+    {
+      if (info.id != AREA_CORP &&
+          info.id != AREA_SEWERS &&
+          info.id != AREA_UNDERGROUND_LAB &&
+          info.id != AREA_HABITAT)
+        return null;
+
+      var tiles = [];
+      var anchors = [];
+      var targetType = (
+        info.id == AREA_SEWERS ? 'sewer_exit' :
+        info.id == AREA_HABITAT ? 'habitat_exit' :
+        'elevator'
+      );
+      for (o in getObjects())
+        {
+          if (o.type != targetType)
+            continue;
+          if (!isWalkable(o.x, o.y))
+            continue;
+          if (game.playerArea.x == o.x &&
+              game.playerArea.y == o.y)
+            continue;
+          var tile = { x: o.x, y: o.y };
+          anchors.push(tile);
+          if (getAI(o.x, o.y) != null)
+            continue;
+          tiles.push(tile);
+        }
+      if (tiles.length > 0)
+        {
+          if (info.id == AREA_CORP ||
+              info.id == AREA_UNDERGROUND_LAB)
+            return tiles[Std.random(tiles.length)];
+          var best = findNearestArriveTile(tiles, params.near);
+          return best;
+        }
+      if ((info.id == AREA_SEWERS ||
+          info.id == AREA_HABITAT) &&
+          anchors.length > 0 &&
+          params.fallbackRadius > 0)
+        {
+          var best = findNearestArriveTile(anchors, params.near);
+          return findEmptyLocationNear(best.x, best.y, 2);
+        }
+      return null;
+    }
+
+// find nearest arrival tile to target location
+  function findNearestArriveTile(tiles: Array<{ x: Int, y: Int }>,
+      near: { x: Int, y: Int }): { x: Int, y: Int }
+    {
+      var best = tiles[0];
+      var bestDist = Const.distanceSquared(best.x, best.y, near.x, near.y);
+      for (t in tiles)
+        {
+          var dist = Const.distanceSquared(t.x, t.y, near.x, near.y);
+          if (dist < bestDist)
+            {
+              bestDist = dist;
+              best = t;
+            }
+        }
+      return best;
     }
 
 
@@ -1496,6 +1528,10 @@ class AreaGame extends _SaveObject
       ai.entity = null;
       _ai.remove(ai);
       
+      // custodes need to update base roster without cult member sync
+      if (ai.isCustos && game.cults[0].base != null)
+        game.cults[0].base.onRemoveAI(ai);
+
       // cultists need to update the ai data in members
       if (ai.isCultist)
         {
@@ -2065,7 +2101,7 @@ class Test {
 // spawn AI (both from command-line and internally)
   public static var aiTypes = [
     'agent', 'blackops', 'bum (hobo)', 'civilian (civ)',
-    'choir of discord (choir)', 'dog', 'police (cop)', 'prostitute (pro)', 'soldier',
+    'choir of discord (choir)', 'custos', 'dog', 'police (cop)', 'prostitute (pro)', 'soldier',
     'security (sec)', 'scientist (sci)', 'team',
     'thug',
   ];
