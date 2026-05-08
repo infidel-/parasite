@@ -10,6 +10,7 @@ import js.html.CanvasRenderingContext2D;
 import js.html.Image;
 
 typedef _CrowdMember = {
+  id: Int,            // monotonic, reassigned on recycle so parasite can detect host swap
   srcX: Int,          // pixel x in atlas
   srcW: Int,          // pixel width of this cell
   worldX: Float,      // anchor lateral position in world units
@@ -49,6 +50,24 @@ class MainMenuCrowd
   // per-frame trail erase rate (0..1; higher = trail dissolves faster)
   static inline var TRAIL_DECAY = 0.05;
 
+  // parasite face-jumper config
+  static inline var PARASITE_SIT_MIN = 3.0;
+  static inline var PARASITE_SIT_MAX = 5.0;
+  static inline var PARASITE_JUMP_DUR = 0.75;
+  // head anchor as fraction of sprite height from top
+  static inline var PARASITE_HEAD_RATIO = 0.11;
+  // parasite world width (scaled by host's perspective scale)
+  static inline var PARASITE_WORLD_W = 80.0;
+  static inline var PARASITE_NATIVE_W = 80.0;
+  static inline var PARASITE_NATIVE_H = 60.0;
+  // wide 2-person cell width — excluded from target pool
+  static inline var WIDE_CELL_W = 160;
+  static inline var PARASITE_STATE_WAIT = 0;
+  static inline var PARASITE_STATE_RIDE = 1;
+  static inline var PARASITE_STATE_JUMP = 2;
+  // monotonic id counter for crowd members
+  static var nextMemberID = 0;
+
   var canvas: CanvasElement;
   var ctx: CanvasRenderingContext2D;
   var atlasImg: Image;
@@ -64,6 +83,20 @@ class MainMenuCrowd
   var parentEl: js.html.Element;
   var lastDrawn: Int;
   var lastVisible: Int;
+  // parasite icon flying between hosts
+  var parasiteImg: Image;
+  var parasiteSil: CanvasElement;
+  var parasiteLoaded: Bool;
+  var parasiteState: Int;
+  var parasiteTargetID: Int;
+  var parasiteSitTimer: Float;
+  var parasiteJumpT: Float;
+  var parasiteFromX: Float;
+  var parasiteFromY: Float;
+  var parasiteFromScale: Float;
+  var parasiteRenderX: Float;
+  var parasiteRenderY: Float;
+  var parasiteRenderScale: Float;
 
   public function new()
     {
@@ -89,10 +122,25 @@ class MainMenuCrowd
         onAtlasReady();
       };
       atlasImg.src = 'img/full-height.png';
+
+      // load parasite icon for host-jumping animation
+      parasiteLoaded = false;
+      parasiteState = PARASITE_STATE_WAIT;
+      parasiteTargetID = -1;
+      parasiteRenderX = 0;
+      parasiteRenderY = 0;
+      parasiteRenderScale = 1;
+      parasiteImg = new Image();
+      parasiteImg.onload = function() {
+        // bake purple-tinted silhouette so parasite reads as a shadow
+        parasiteSil = bakeSilhouette(parasiteImg, '#613961');
+        parasiteLoaded = true;
+      };
+      parasiteImg.src = 'img/parasite-large.png';
     }
 
-// build a darkened, alpha-preserving copy of the atlas
-  function bakeSilhouette(src: Image): CanvasElement
+// build a tinted, alpha-preserving copy of an image (silhouette in given color)
+  function bakeSilhouette(src: Image, color: String = '#000000'): CanvasElement
     {
       var c = Browser.document.createCanvasElement();
       c.width = src.naturalWidth;
@@ -100,7 +148,7 @@ class MainMenuCrowd
       var bctx = c.getContext2d();
       bctx.drawImage(src, 0, 0);
       bctx.globalCompositeOperation = 'source-in';
-      bctx.fillStyle = '#000000';
+      bctx.fillStyle = color;
       bctx.fillRect(0, 0, c.width, c.height);
       bctx.globalCompositeOperation = 'source-over';
       return c;
@@ -145,6 +193,7 @@ class MainMenuCrowd
       var s = spritePool[Std.random(spritePool.length)];
       var halfWidth = spawnHalfWidth();
       return {
+        id: nextMemberID++,
         srcX: s.srcX,
         srcW: s.srcW,
         worldX: (Math.random() * 2 - 1) * halfWidth,
@@ -179,6 +228,7 @@ class MainMenuCrowd
     {
       var dz = FAR_Z + Math.random() * 30;
       var s = spritePool[Std.random(spritePool.length)];
+      m.id = nextMemberID++;
       m.srcX = s.srcX;
       m.srcW = s.srcW;
       m.worldZ = camZ + dz;
@@ -210,6 +260,9 @@ class MainMenuCrowd
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       // reset timing so paused dt does not produce a giant jump
       lastRender = 0;
+      // reset parasite roaming state on each menu show
+      parasiteState = PARASITE_STATE_WAIT;
+      parasiteTargetID = -1;
       if (!running)
         {
           running = true;
@@ -279,7 +332,9 @@ class MainMenuCrowd
       if (atlasLoaded && members.length > 0)
         {
           step(dt);
+          updateParasite(dt);
           drawCrowd();
+          drawParasite();
           // periodic snapshot
           if (Std.random(120) == 0)
             {
@@ -394,5 +449,178 @@ class MainMenuCrowd
       ctx.globalAlpha = 1.0;
       lastDrawn = drawnCount;
       lastVisible = visibleCount;
+    }
+
+// find a crowd member by id (linear scan — pool is small)
+  function findMemberByID(targetID: Int): _CrowdMember
+    {
+      for (m in members)
+        if (m.id == targetID)
+          return m;
+      return null;
+    }
+
+// pick a non-wide host close to the reference screen point; null if none available
+  function pickParasiteTarget(refX: Float, refY: Float, excludeID: Int): _CrowdMember
+    {
+      var pool = [];
+      for (m in members)
+        {
+          var dz = m.worldZ - camZ;
+          // skip too-near, too-far, the 2-person wide cell, and the current host
+          if (dz < NEAR_Z + 80
+              || dz > FAR_Z - 150
+              || m.srcW >= WIDE_CELL_W
+              || m.id == excludeID)
+            continue;
+          var p = projectFace(m);
+          var dx = p.x - refX;
+          var dy = p.y - refY;
+          pool.push({ m: m, d2: dx * dx + dy * dy });
+        }
+      if (pool.length == 0)
+        return null;
+      // sort ascending by squared screen distance, sample from nearest few
+      pool.sort(function(a, b) {
+        return (a.d2 < b.d2 ? -1 : (a.d2 > b.d2 ? 1 : 0));
+      });
+      var k = (pool.length < 4 ? pool.length : 4);
+      return pool[Std.random(k)].m;
+    }
+
+// project member's head/face anchor to screen space, including hop offset
+  function projectFace(m: _CrowdMember): { x: Float, y: Float, scale: Float }
+    {
+      var dz = m.worldZ - camZ;
+      if (dz < NEAR_Z)
+        dz = NEAR_Z;
+      var scale = FOCAL / dz;
+      var halfW = canvas.width * 0.5;
+      var horizonY = canvas.height * 0.4;
+      var screenX = halfW + m.worldX * scale;
+      var groundY = horizonY + CAM_HEIGHT * scale;
+      var hopY = (m.pauseLeft > 0
+        ? 0
+        : Math.sin(m.stepPhase * Math.PI) * m.hopAmp * scale);
+      var spriteH = SPRITE_WORLD_HEIGHT * scale;
+      var faceY = (groundY - spriteH - hopY) + spriteH * PARASITE_HEAD_RATIO;
+      return { x: screenX, y: faceY, scale: scale };
+    }
+
+// snapshot current render position, pick new host, transition to jump state
+  function startJumpFromCurrent()
+    {
+      var t = pickParasiteTarget(parasiteRenderX, parasiteRenderY, parasiteTargetID);
+      if (t == null)
+        {
+          // no valid target this frame — back to WAIT, retry on next tick
+          parasiteState = PARASITE_STATE_WAIT;
+          parasiteTargetID = -1;
+          return;
+        }
+      parasiteFromX = parasiteRenderX;
+      parasiteFromY = parasiteRenderY;
+      parasiteFromScale = parasiteRenderScale;
+      parasiteTargetID = t.id;
+      parasiteJumpT = 0;
+      parasiteState = PARASITE_STATE_JUMP;
+    }
+
+// advance parasite state machine — handles wait/ride/jump and host recycle
+  function updateParasite(dt: Float)
+    {
+      if (!parasiteLoaded)
+        return;
+      switch (parasiteState)
+        {
+          case PARASITE_STATE_WAIT:
+            // first acquisition: fly in from above the screen, picking a host near top-center
+            var refX = canvas.width * 0.5;
+            var refY = canvas.height * 0.4;
+            var t = pickParasiteTarget(refX, refY, -1);
+            if (t == null)
+              return;
+            parasiteFromX = canvas.width * 0.5;
+            parasiteFromY = -80;
+            parasiteFromScale = 0.5;
+            parasiteRenderX = parasiteFromX;
+            parasiteRenderY = parasiteFromY;
+            parasiteRenderScale = parasiteFromScale;
+            parasiteTargetID = t.id;
+            parasiteJumpT = 0;
+            parasiteState = PARASITE_STATE_JUMP;
+          case PARASITE_STATE_RIDE:
+            // detect host recycle: id will be missing
+            if (findMemberByID(parasiteTargetID) == null)
+              {
+                startJumpFromCurrent();
+                return;
+              }
+            parasiteSitTimer -= dt;
+            if (parasiteSitTimer <= 0)
+              startJumpFromCurrent();
+          case PARASITE_STATE_JUMP:
+            parasiteJumpT += dt / PARASITE_JUMP_DUR;
+            if (parasiteJumpT >= 1.0)
+              {
+                // arrival: confirm target still alive, else re-jump
+                if (findMemberByID(parasiteTargetID) == null)
+                  {
+                    startJumpFromCurrent();
+                    return;
+                  }
+                parasiteState = PARASITE_STATE_RIDE;
+                parasiteJumpT = 0;
+                parasiteSitTimer = PARASITE_SIT_MIN
+                  + Math.random() * (PARASITE_SIT_MAX - PARASITE_SIT_MIN);
+              }
+        }
+    }
+
+// draw parasite icon at current state position; trail-decay produces smear
+  function drawParasite()
+    {
+      if (!parasiteLoaded
+          || parasiteState == PARASITE_STATE_WAIT)
+        return;
+      var m = findMemberByID(parasiteTargetID);
+      if (m == null)
+        return;
+      var p = projectFace(m);
+      var x: Float, y: Float, scale: Float;
+      if (parasiteState == PARASITE_STATE_RIDE)
+        {
+          x = p.x;
+          y = p.y;
+          scale = p.scale;
+        }
+      else
+        {
+          // smoothstep ease for natural in/out
+          var t = parasiteJumpT;
+          if (t > 1) t = 1;
+          var te = t * t * (3 - 2 * t);
+          x = parasiteFromX + (p.x - parasiteFromX) * te;
+          y = parasiteFromY + (p.y - parasiteFromY) * te;
+          // parabolic arc: peak at t=0.5, height grows with horizontal distance
+          var dx = p.x - parasiteFromX;
+          var arcH = 80 + Math.abs(dx) * 0.15;
+          y -= arcH * 4 * te * (1 - te);
+          scale = parasiteFromScale + (p.scale - parasiteFromScale) * te;
+        }
+      parasiteRenderX = x;
+      parasiteRenderY = y;
+      parasiteRenderScale = scale;
+      var w = PARASITE_WORLD_W * scale;
+      var h = w * (PARASITE_NATIVE_H / PARASITE_NATIVE_W);
+      // match host fade, then 20% more transparent so parasite reads slightly lighter
+      var dz = m.worldZ - camZ;
+      var fade = (FAR_Z - dz) / FADE_RANGE;
+      if (fade > 1) fade = 1;
+      if (fade < 0) fade = 0;
+      ctx.globalAlpha = BASE_ALPHA * fade * 0.5;
+      ctx.drawImage(parasiteSil,
+        x - w * 0.5, y - h * 0.5, w, h);
+      ctx.globalAlpha = 1.0;
     }
 }
