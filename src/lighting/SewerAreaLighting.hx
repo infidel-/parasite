@@ -3,9 +3,17 @@ package lighting;
 import _AtmosphereLightMeta;
 import AreaLighting;
 import GameScene;
+import const.CultBaseConst;
 import game.AreaGame;
+import objects.base.BaseOrganObject;
 import objects.mission.SummoningPortal;
 import tiles.*;
+
+typedef _BaseOrganShadowGroup = {
+  var x: Int;
+  var y: Int;
+  var type: _CultBaseOrganType;
+}
 
 class SewerAreaLighting
 {
@@ -61,7 +69,52 @@ class SewerAreaLighting
             skipSelfShadow: true,
           });
         }
+      addCultBaseProjectedShadowCasters(scene, area, casters);
       return casters;
+    }
+
+// add one projected-shadow caster for each cult base organ footprint
+  static function addCultBaseProjectedShadowCasters(scene: GameScene,
+      area: AreaGame, casters: Array<_ProjectedShadowCaster>)
+    {
+      var groups = new Map<Int, _BaseOrganShadowGroup>();
+      for (o in area.getObjects())
+        {
+          if (o.type != 'base_organ')
+            continue;
+
+          var obj: BaseOrganObject = cast o;
+          var organ = obj.getOrgan();
+          if (organ == null ||
+              organ.type == COR_NEFANDUM ||
+              organ.type == RAT_NEST)
+            continue;
+          if (groups.exists(obj.organID))
+            continue;
+          groups.set(obj.organID, {
+            x: organ.x,
+            y: organ.y,
+            type: organ.type,
+          });
+        }
+
+      for (group in groups)
+        {
+          var block = CultBaseConst.block(group.type);
+          casters.push({
+            layerID: -1,
+            image: scene.images.cultBase,
+            maskKey: 'cultBase:' + block.row + ':' + block.col + ':' +
+              block.width + ':' + block.height,
+            srcRow: block.row,
+            srcCol: block.col,
+            blockW: block.width,
+            blockH: block.height,
+            centerX: group.x + block.width / 2.0,
+            centerY: group.y + block.height / 2.0,
+            skipSelfShadow: false,
+          });
+        }
     }
 
 // add one center light per intact summoning portal group

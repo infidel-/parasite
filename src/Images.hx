@@ -1,4 +1,5 @@
 // all ingame images access
+import const.CultBaseConst;
 import const.Jobs._JobInfo;
 import js.html.Image;
 import tiles.*;
@@ -16,6 +17,7 @@ class Images
 {
   var scene: GameScene;
   public var entities: Image;
+  public var cultBase: Image;
   public var sewersObjects1: Image;
   public var undergroundLabObjects1: Image;
   public var male: Image;
@@ -33,6 +35,8 @@ class Images
       // load all images
       entities = new Image();
       entities.src = 'img/entities64.png';
+      cultBase = new Image();
+      cultBase.src = CultBaseConst.IMAGE_PATH;
       sewersObjects1 = new Image();
       sewersObjects1.src = Sewers.OBJECTS_IMAGE_PATH;
       undergroundLabObjects1 = new Image();

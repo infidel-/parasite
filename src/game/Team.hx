@@ -95,8 +95,22 @@ class Team extends FSM<_TeamState, _TeamFlag>
           return;
         }
 
-      // pick random habitat
+      // pick random habitat (not cult base for now)
       var tmp = game.region.getHabitatsList();
+      if (game.cults[0].base != null)
+        {
+          var filtered = [];
+          for (area in tmp)
+            if (area.id != game.cults[0].base.areaID)
+              filtered.push(area);
+          tmp = filtered;
+          if (tmp.length == 0)
+            {
+              ambushedHabitat = null;
+              ambushedHabitatAreaID = -1;
+              return;
+            }
+        }
 
       // L2 watcher attracts ambush
       for (area in tmp)

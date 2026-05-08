@@ -256,6 +256,7 @@ class Game extends _SaveObject
       isInited = false;
       state = GAMESTATE_RUNNING;
       RegionGame._maxID = 0;
+      Cult._maxID = 0;
       messageList.clear();
       hudMessageList.clear();
       if (location == LOCATION_AREA)
@@ -281,6 +282,23 @@ class Game extends _SaveObject
         if (cult.id == id)
           return cult;
       return null;
+    }
+
+// get all non-player rival cults
+  public function getRivalCults(?activeOnly: Bool = false): Array<Cult>
+    {
+      var rivals = [];
+      for (i in 0...cults.length)
+        {
+          var cult = cults[i];
+          if (i == 0)
+            continue;
+          if (!cult.isPlayer &&
+            cult.rivalTemplate != '' &&
+            (!activeOnly || cult.state == CULT_STATE_ACTIVE))
+            rivals.push(cult);
+        }
+      return rivals;
     }
 
 // set location
@@ -449,6 +467,7 @@ class Game extends _SaveObject
     'noEnergy' => 'Your energy was completely depleted.',
     'noHealth' => "You have succumbed to injuries. It's not wise to go into the direct confrontation.",
     'habitatShock' => 'You have received your final shock from the habitat destruction.',
+    'corNefandum' => 'Cor Nefandum is destroyed. Cultus Carnis dies its final death.',
   ];
   public function finish(result: String, text: String, ?img: String = null)
     {
@@ -735,6 +754,8 @@ class Game extends _SaveObject
         ai = new CivilianAI(this, x, y);
       else if (type == 'corpo')
         ai = new CorpoAI(this, x, y);
+      else if (type == 'custos')
+        ai = new CustosAI(this, x, y);
       else if (type == 'choirOfDiscord' ||
           type == 'choir' ||
           type == 'choir of discord')

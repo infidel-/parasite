@@ -589,8 +589,6 @@ class UI
       if (game.isInputLocked() ||
           _state != UISTATE_DEFAULT)
         return false;
-      if (cannotMove())
-        return false;
       // moving with keyboard hides mouse
 //      game.scene.mouse.hide();
 
@@ -646,6 +644,19 @@ class UI
         }
 
       if (dx == 0 && dy == 0)
+        return false;
+
+      // move cursor in base building mode
+      if (hud.state == HUD_BASE_BUILDING)
+        {
+          if (game.location == LOCATION_AREA &&
+              game.cults.length > 0 &&
+              game.cults[0].base != null)
+            return game.cults[0].base.moveCursor(dx, dy);
+          return true;
+        }
+
+      if (cannotMove())
         return false;
 
       // area mode

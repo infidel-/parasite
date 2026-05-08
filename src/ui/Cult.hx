@@ -75,6 +75,7 @@ class Cult extends UIWindow
     {
       var buf = new StringBuf();
       updatePowerAndResources(buf);
+      updateBase(buf);
       updateEffects(buf);
       updateMembers(buf);
       var infotext = buf.toString();
@@ -87,6 +88,29 @@ class Cult extends UIWindow
       
       // ordeals list
       updateOrdeals();
+    }
+
+// builds base and rival summary
+  function updateBase(buf: StringBuf)
+    {
+      var cult = game.cults[0];
+      buf.add('<br/><span class=gray>Cult level: ' + cult.level + '</span><br/>');
+      if (cult.base != null)
+        {
+          buf.add('<span>');
+          buf.add(cult.base.statusText());
+          buf.add('</span><br/>');
+        }
+      var rivals = game.getRivalCults();
+      if (rivals.length > 0)
+        {
+          buf.add('<br/><span class=gray>Rival cults:</span><br/>');
+          for (rival in rivals)
+            buf.add(rival.name + ' ' +
+              Const.smallgray('[revealed ' + rival.rivalRevealedLevel +
+              '/3' + (rival.state == CULT_STATE_DEAD ? ', destroyed' : '') + ']') +
+              '<br/>');
+        }
     }
 
 // update list of actions
@@ -776,27 +800,27 @@ class Cult extends UIWindow
       buf.add('Actions taken: ' + ordeal.actions + '/' + ordeal.members.length);
       buf.add('</div>');
       
-      // missions list for profane ordeals
+      // missions list
+      if (ordeal.missions.length > 0)
+        {
+          buf.add('<div class="window-cult-ordeals-clavis">');
+          buf.add('Claves: ');
+          var missionNames = [];
+          for (mission in ordeal.missions)
+            {
+              var name = mission.coloredName();
+              if (mission.isCompleted)
+                name += Const.col('gray', ' [completed]');
+              else name += Const.col('gray', ' at (' + mission.x + ', ' + mission.y + ')');
+              missionNames.push(name);
+            }
+          buf.add(missionNames.join(', '));
+          buf.add('</div>');
+        }
+
       if (ordeal.type == ORDEAL_PROFANE)
         {
           var prof: ProfaneOrdeal = cast ordeal;
-          if (prof.missions.length > 0)
-            {
-              buf.add('<div class="window-cult-ordeals-clavis">');
-              buf.add('Claves: ');
-              var clavisNames = [];
-              for (mission in prof.missions)
-                {
-                  var name = mission.coloredName();
-                  if (mission.isCompleted)
-                    name += Const.col('gray', ' [completed]');
-                  else name += Const.col('gray', ' at (' + mission.x + ', ' + mission.y + ')');
-                  clavisNames.push(name);
-                }
-              buf.add(clavisNames.join(', '));
-              buf.add('</div>');
-            }
-      
           // profane ordeal timer
           buf.add('<div class="window-cult-ordeals-timer">');
           buf.add('Time remaining: ' + Const.col('white', prof.timer) + ' turns');

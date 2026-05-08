@@ -1,5 +1,5 @@
 // NPC AI data
-// This separates everything that needs to be stored for proper respawn of this specific AI
+// this separates everything that needs to be stored for proper respawn of this specific AI
 package ai;
 
 import const.*;
@@ -41,6 +41,9 @@ class AIData extends _SaveObject
   // cult-related
   public var isCultist: Bool;
   public var cultID: Int;
+  public var isCustos: Bool;
+  public var custosID: Int;
+  public var custosType: _CustosType;
 
   // attrs and stats
   public var baseAttrs: _Attributes; // base attributes
@@ -121,6 +124,9 @@ class AIData extends _SaveObject
       hasFalseMemories = false;
       isGuard = false;
       isCultist = false;
+      isCustos = false;
+      custosID = -1;
+      custosType = FIRMUS;
       helpAvailable = true;
       cultID = 0;
 

@@ -106,6 +106,7 @@ class Const
   public static var FRAME_PARTICLE_SLIME_SPIT = 7;
   public static var FRAME_PARTICLE_PARALYSIS_SPIT = 8;
   public static var FRAME_SEARCH = 9;
+  public static var FRAME_CULTIST_UNKNOWN = 10;
 
   // parasite row frames
   public static var ROW_PARASITE = 4;

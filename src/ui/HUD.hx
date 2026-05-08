@@ -604,6 +604,15 @@ public function onMouseLeave()
   function updateInfo()
     {
       var buf = new StringBuf();
+      if (state == HUD_BASE_BUILDING &&
+          game.cults[0].base != null)
+        {
+          buf.add(game.cults[0].base.hudInfo());
+          info.innerHTML = buf.toString();
+          info.className = 'text';
+          return;
+        }
+
       buf.add('Turn: ' + game.turns);
       if (game.location == LOCATION_AREA)
           {
@@ -834,6 +843,12 @@ public function onMouseLeave()
       listKeyActions = new List();
       if (state == HUD_TARGETING)
         return;
+      if (state == HUD_BASE_BUILDING)
+        {
+          if (game.cults[0].base != null)
+            game.cults[0].base.updateActionList();
+          return;
+        }
       if (game.state == GAMESTATE_FINISH)
         {
           addKeyAction({
@@ -1130,6 +1145,8 @@ public function onMouseLeave()
             targeting.exit(false);
           case HUD_COMMAND_MENU:
             command.exit();
+          case HUD_BASE_BUILDING:
+            state = HUD_DEFAULT;
           case HUD_DEFAULT:
             // do nothing
         }
