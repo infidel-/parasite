@@ -2,6 +2,7 @@
 package cult.base;
 
 import ai.AI;
+import ai.CustosAIData;
 import const.CultBaseConst;
 import cult.ordeals.BaseDefense;
 import game.AreaGame;
@@ -17,7 +18,7 @@ class CultBase extends _SaveObject
   public var income: CultBaseResources;
   public var storedBodies: Int;
   public var organs: Array<CultBaseOrgan>;
-  public var custodes: Array<CustodesData>;
+  public var custodes: Array<CustosAIData>;
   public var attackPressure: Int;
   public var activeDefenseMissionID: Int;
   public var activeDefenseTimer: Int;
@@ -78,9 +79,6 @@ class CultBase extends _SaveObject
       for (organ in organs)
         if (organ.id >= CultBaseOrgan._maxID)
           CultBaseOrgan._maxID = organ.id + 1;
-      for (custos in custodes)
-        if (custos.id >= CustodesData._maxID)
-          CustodesData._maxID = custos.id + 1;
     }
 
 // repairs loaded base organ object parts
@@ -336,10 +334,15 @@ class CultBase extends _SaveObject
           return false;
         }
       resources.spend(cost);
-      var data = new CustodesData(type, areaID, cursorX, cursorY,
-        cursorX, cursorY);
+      var ai = new ai.CustosAI(game, cursorX, cursorY, type);
+      ai.custosID = ai.id;
+      ai.guardTargetX = cursorX;
+      ai.guardTargetY = cursorY;
+      var data = new CustosAIData(game);
+      data.updateFromAI(ai, areaID, cursorX, cursorY,
+        'on custos creation');
       custodes.push(data);
-      spawnCustos(data);
+      game.area.addAI(ai);
       game.log('A new Custos takes shape.');
       game.updateHUD();
       return true;
@@ -355,9 +358,8 @@ class CultBase extends _SaveObject
         custodes.remove(data);
       else
         {
-          data.x = ai.x;
-          data.y = ai.y;
-          data.health = ai.health;
+          data.updateFromAI(ai, areaID, data.anchorX, data.anchorY,
+            'on custos remove');
         }
     }
 
@@ -384,9 +386,8 @@ class CultBase extends _SaveObject
             var data = getCustos(ai.custosID);
             if (data != null)
               {
-                data.x = ai.x;
-                data.y = ai.y;
-                data.health = ai.health;
+                data.updateFromAI(ai, areaID, data.anchorX, data.anchorY,
+                  'on custos despawn');
               }
           }
     }
@@ -786,24 +787,22 @@ class CultBase extends _SaveObject
     }
 
 // spawns one custos AI from stored data
-  function spawnCustos(data: CustodesData)
+  function spawnCustos(data: CustosAIData)
     {
       if (game.area == null ||
           game.area.id != areaID)
         return;
-      var ai = new ai.CustosAI(game, data.x, data.y);
-      ai.custosID = data.id;
-      ai.custosType = data.type;
-      ai.health = data.health;
-      ai.maxHealth = data.maxHealth;
+      var ai = new ai.CustosAI(game, data.x, data.y, data.custosType);
+      ai.updateData(data, 'on custos spawn');
+      ai.x = data.x;
+      ai.y = data.y;
       ai.guardTargetX = data.anchorX;
       ai.guardTargetY = data.anchorY;
-      ai.applyCustosType();
       game.area.addAI(ai);
     }
 
 // returns custos data by ID
-  function getCustos(id: Int): CustodesData
+  function getCustos(id: Int): CustosAIData
     {
       for (data in custodes)
         if (data.id == id)
