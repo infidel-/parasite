@@ -1,5 +1,6 @@
 package objects.base;
 
+import ai.CommonLogic;
 import game.Game;
 
 class SpineTurret extends BaseOrganObject
@@ -24,8 +25,21 @@ class SpineTurret extends BaseOrganObject
       if (organ == null ||
           !organ.isWorking())
         return;
-      var dx = Const.dir4x[organ.direction];
-      var dy = Const.dir4y[organ.direction];
+      var dx = 0;
+      var dy = 0;
+      switch (organ.direction)
+        {
+          case 0:
+            dy = -1;
+          case 1:
+            dx = 1;
+          case 2:
+            dy = 1;
+          case 3:
+            dx = -1;
+          default:
+            dy = -1;
+        }
       var tx = x + dx;
       var ty = y + dy;
       while (tx >= 0 &&
@@ -39,7 +53,28 @@ class SpineTurret extends BaseOrganObject
               !ai.isPlayerCultist() &&
               !ai.isCustos)
             {
-              ai.onDamage(Const.roll(1, 4));
+              var weapon: WeaponInfo = {
+                isRanged: true,
+                skill: SKILL_ATTACK,
+                minDamage: 1,
+                maxDamage: 4,
+                verb1: 'shoot a spine at',
+                verb2: 'shoots a spine at',
+                type: WEAPON_KINETIC,
+                projectile: 'needle',
+                canConceal: false,
+                sound: {
+                  file: 'action-paralysis-spit',
+                  radius: 8,
+                  alertness: 12,
+                },
+              };
+              CommonLogic.logicAttack(
+                Attacker.fromObject(game, this, weapon, 100, true), {
+                  game: game,
+                  type: TARGET_AI,
+                  ai: ai
+                });
               return;
             }
           tx += dx;

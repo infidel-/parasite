@@ -163,12 +163,12 @@ class BaseDefense extends Mission
           var target = getAdjacentAttackTarget(base, ai);
           if (target != null)
             {
-              CommonLogic.logicAttack(ai, {
+              CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
                 game: game,
                 type: TARGET_OBJECT,
                 ai: null,
                 obj: target.obj
-              }, false);
+              });
               continue;
             }
           target = getAttackTarget(base, ai);

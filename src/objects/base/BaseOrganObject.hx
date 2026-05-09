@@ -42,7 +42,12 @@ class BaseOrganObject extends AreaObject
       var block = CultBaseConst.BLOCK_COR_NEFANDUM;
       var organ = getOrgan();
       if (organ != null)
-        block = CultBaseConst.block(organ.type);
+        {
+          if (organ.type == SPINE_TURRET)
+            block = CultBaseConst.spineTurretBlock(organ.direction);
+          else
+            block = CultBaseConst.block(organ.type);
+        }
       imageRow = block.row + Std.int(basePartIndex / block.width);
       imageCol = block.col + basePartIndex % block.width;
     }
@@ -72,9 +77,13 @@ class BaseOrganObject extends AreaObject
       var organ = getOrgan();
       if (organ == null)
         return name;
-      return CultBaseConst.name(organ.type) + ' (level ' + organ.level +
-        ', ' + organ.health + '/' + organ.maxHealth() +
-        (organ.broken ? ', broken' : '') + ')';
+      return CultBaseConst.name(organ.type);
+    }
+
+// returns base organ name without an article
+  public override function theName(): String
+    {
+      return getName();
     }
 
 // update available object actions

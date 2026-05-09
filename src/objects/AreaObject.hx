@@ -131,6 +131,12 @@ class AreaObject extends _SaveObject
       else return 'unknown object';
     }
 
+// get name + article depending on whether its known or not
+  public dynamic function theName(): String
+    {
+      return 'the ' + getName();
+    }
+
 
 // set object decay in X turns
   public inline function setDecay(turns: Int)

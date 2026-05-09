@@ -94,6 +94,6 @@ class FollowerLogic
         }
 
       // try to attack
-      CommonLogic.logicAttack(ai, target, false);
+      CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
     }
 }

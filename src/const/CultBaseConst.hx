@@ -28,8 +28,9 @@ class CultBaseConst
     { row: 0, col: 2, width: 1, height: 1 };
   public static var BLOCK_RIBGATE: _IconBlock =
     { row: 0, col: 3, width: 1, height: 1 };
+  // first tile out of four (up, down, left, right)
   public static var BLOCK_SPINE_TURRET: _IconBlock =
-    { row: 0, col: 4, width: 1, height: 1 };
+    { row: 1, col: 2, width: 1, height: 1 };
   public static var BLOCK_BLOOD_TRAP: _IconBlock =
     { row: 0, col: 5, width: 1, height: 1 };
   public static var BLOCK_FLESH_BLOCK: _IconBlock =
@@ -121,6 +122,24 @@ class CultBaseConst
             return BLOCK_BODY_STORAGE;
           case CAULDRON:
             return BLOCK_CAULDRON;
+        }
+    }
+
+// returns cult base atlas block for one spine turret direction
+  public static function spineTurretBlock(direction: Int): _IconBlock
+    {
+      switch (direction)
+        {
+          case 0:
+            return { row: 1, col: 3, width: 1, height: 1 };
+          case 1:
+            return { row: 1, col: 5, width: 1, height: 1 };
+          case 2:
+            return { row: 1, col: 2, width: 1, height: 1 };
+          case 3:
+            return { row: 1, col: 4, width: 1, height: 1 };
+          default:
+            return { row: 1, col: 3, width: 1, height: 1 };
         }
     }
 

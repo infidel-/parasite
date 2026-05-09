@@ -66,7 +66,7 @@ class AttackTarget
               return 'your host';
             else return (ai.isNameKnown ? ai.name.real : 'the ' + ai.name.unknown);
           case TARGET_OBJECT:
-            return 'the ' + obj.getName();
+            return obj.theName();
           default:
             return 'unknown';
         }

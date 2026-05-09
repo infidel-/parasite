@@ -38,12 +38,21 @@ class Particle
   public static function createSpit(type: String, scene: GameScene, x: Int, y: Int,
       point: _Point)
     {
+      createProjectile(type, scene, x, y, point);
+    }
+
+// generic projectile particle
+  public static function createProjectile(type: String, scene: GameScene, x: Int,
+      y: Int, point: _Point, ?hit: Bool = true, ?bloodType: String = 'red')
+    {
       switch (type)
         {
           case 'acidSpit', 'slimeSpit', 'paralysisSpit':
             new ParticleSpit(scene, type, x, y, point);
+          case 'needle':
+            new ParticleNeedle(scene, x, y, point, hit, bloodType);
           default:
-            trace('no spit particle for ' + type);
+            trace('no projectile particle for ' + type);
         }
     }
 

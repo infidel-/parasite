@@ -13,6 +13,7 @@ typedef _BaseOrganShadowGroup = {
   var x: Int;
   var y: Int;
   var type: _CultBaseOrganType;
+  var direction: Int;
 }
 
 class SewerAreaLighting
@@ -95,12 +96,15 @@ class SewerAreaLighting
             x: organ.x,
             y: organ.y,
             type: organ.type,
+            direction: organ.direction,
           });
         }
 
       for (group in groups)
         {
           var block = CultBaseConst.block(group.type);
+          if (group.type == SPINE_TURRET)
+            block = CultBaseConst.spineTurretBlock(group.direction);
           casters.push({
             layerID: -1,
             image: scene.images.cultBase,
