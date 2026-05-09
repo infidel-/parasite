@@ -20,7 +20,7 @@ class DeadlyCaress extends Ability
     }
 
 // handles deadly caress attack logic
-  public override function logicAttack(ai: AI, target: AITarget): Bool
+  public override function logicAttack(ai: AI, target: AttackTarget): Bool
     {
       // cooldown check
       if (timeout > 0)

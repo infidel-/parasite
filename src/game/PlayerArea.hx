@@ -554,7 +554,7 @@ class PlayerArea extends _SaveObject
         return;
 
       // use common attack routine
-      var target: AITarget = {
+      var target: AttackTarget = {
         game: game,
         type: TARGET_AI,
         ai: ai,

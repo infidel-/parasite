@@ -5,7 +5,7 @@ import Const;
 import ItemInfo;
 import _PlayerAction;
 import ai.AI;
-import AITarget;
+import AttackTarget;
 import game.Game;
 import game._Item;
 
@@ -53,7 +53,7 @@ class Weapon extends ItemInfo
     }
 
 // post-hit combat hook for weapon-specific side effects
-  public function logicAttackPost(ai: AI, target: AITarget, isAttackerPlayer: Bool): Void
+  public function logicAttackPost(ai: AI, target: AttackTarget, isAttackerPlayer: Bool): Void
     {
     }
 }

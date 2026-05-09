@@ -13,7 +13,7 @@ class CommonLogic
   public static var game: Game;
 
 // runs post-hit weapon hook
-  static function logicAttackPost(ai: AI, target: AITarget,
+  static function logicAttackPost(ai: AI, target: AttackTarget,
       isAttackerPlayer: Bool, weaponInfo: ItemInfo)
     {
       var weaponItem: items.Weapon = cast weaponInfo;
@@ -52,7 +52,7 @@ class CommonLogic
     }
 
 // handles ingrained ability use before normal attack flow
-  public static function useAttackAbilities(ai: AI, target: AITarget,
+  public static function useAttackAbilities(ai: AI, target: AttackTarget,
       isAttackerPlayer: Bool): Bool
     {
       if (isAttackerPlayer)
@@ -66,7 +66,7 @@ class CommonLogic
     }
 
 // returns debug label for attack damage rolls
-  static function getTargetDebugName(target: AITarget): String
+  static function getTargetDebugName(target: AttackTarget): String
     {
       switch (target.type)
         {
@@ -80,7 +80,7 @@ class CommonLogic
     }
 
 // logic: attack target (player, ai, or object)
-  public static function logicAttack(ai: AI, target: AITarget, isAttackerPlayer: Bool)
+  public static function logicAttack(ai: AI, target: AttackTarget, isAttackerPlayer: Bool)
     {
       // get current weapon
       var weaponInfo = ai.getCurrentWeaponItemInfo();

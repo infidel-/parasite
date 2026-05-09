@@ -1101,7 +1101,7 @@ public function show()
     }
 
 // returns the nearest currently visible enemy (can return player)
-  public function findNearestVisibleEnemy(): AITarget
+  public function findNearestVisibleEnemy(): AttackTarget
     {
       var mindst = 1000, closestID = -1;
       for (enemyID in enemies)
@@ -1157,7 +1157,7 @@ public function show()
 
 // returns the nearest enemy (can return player)
 // NOTE: we do not check for visibility here
-  public function findNearestEnemy(): AITarget
+  public function findNearestEnemy(): AttackTarget
     {
 //      trace(id + ' findNearestEnemy()');
       // find visible enemies and get closest one

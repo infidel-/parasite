@@ -1,11 +1,11 @@
-// ai attack target (player, AI, or object)
+// attack target (player, AI, or object)
 // helps with stats and events
 import ai.AI;
 import game.Game;
 import objects.AreaObject;
 
 @:structInit
-class AITarget
+class AttackTarget
 {
   public var game: Game;
   public var type: _AITargetType;
