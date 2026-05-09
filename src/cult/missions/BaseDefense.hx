@@ -198,6 +198,8 @@ class BaseDefense extends Mission
               var obj = getOrganObject(organ, pt.x, pt.y);
               if (obj == null)
                 continue;
+              if (!obj.isAttackable())
+                continue;
               var dist = Const.distanceSquared(ai.x, ai.y, pt.x, pt.y);
               if (best == null ||
                   dist < bestDist)
@@ -228,6 +230,8 @@ class BaseDefense extends Mission
             {
               var obj = getOrganObject(organ, pt.x, pt.y);
               if (obj == null)
+                continue;
+              if (!obj.isAttackable())
                 continue;
               for (i in 0...Const.dirx.length)
                 {

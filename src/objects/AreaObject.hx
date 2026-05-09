@@ -197,6 +197,10 @@ class AreaObject extends _SaveObject
   public dynamic function isWalkable(): Bool
     { return true; }
 
+// dynamic: can this object be attacked?
+  public dynamic function isAttackable(): Bool
+    { return true; }
+
   public function toString(): String
     {
       return id + ' (' + x + ',' + y + ') t:' + type + ' n:' + name;

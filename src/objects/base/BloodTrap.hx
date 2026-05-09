@@ -28,7 +28,19 @@ class BloodTrap extends BaseOrganObject
           ai != null &&
           !ai.isPlayerCultist() &&
           !ai.isCustos)
-        ai.onEffect(new Paralysis(game, 1));
+        ai.onEffect(new Paralysis(game, 2));
       return 1;
+    }
+
+// blood traps can be crossed by actors
+  public override function isWalkable(): Bool
+    {
+      return true;
+    }
+
+// blood traps are triggered by movement, not attacks
+  public override function isAttackable(): Bool
+    {
+      return false;
     }
 }
