@@ -1,6 +1,7 @@
 // area object wrapper for cult base organs
 package objects.base;
 
+import ai.AI;
 import const.CultBaseConst;
 import cult.base.CultBaseOrgan;
 import game.Game;
@@ -128,6 +129,12 @@ class BaseOrganObject extends AreaObject
 // damages the linked organ
   public function damage(damage: Int)
     {
+      onDamage(damage);
+    }
+
+// damages the linked organ through combat
+  public override function onDamage(damage: Int, ?attacker: AI)
+    {
       var base = game.cults[0].base;
       var organ = getOrgan();
       if (base != null && organ != null)
@@ -138,7 +145,13 @@ class BaseOrganObject extends AreaObject
   public override function isWalkable(): Bool
     {
       var organ = getOrgan();
-      return organ != null && organ.type == RIBGATE;
+      if (organ == null)
+        return false;
+      if (organ.broken &&
+          (organ.type == RIBWALL ||
+           organ.type == RIBGATE))
+        return true;
+      return organ.type == RIBGATE;
     }
 
 // returns linked organ record

@@ -2,6 +2,7 @@
 
 package objects;
 
+import ai.AI;
 import _AtmosphereLightMeta;
 import entities.ObjectEntity;
 import game.Game;
@@ -182,6 +183,10 @@ class AreaObject extends _SaveObject
 
 // dynamic: when moved onto
   public dynamic function onMoveTo()
+    {}
+
+// dynamic: when damaged by combat
+  public dynamic function onDamage(damage: Int, ?attacker: AI)
     {}
 
 // dynamic: can line of sight pass through this object?

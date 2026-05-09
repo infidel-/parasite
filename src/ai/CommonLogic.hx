@@ -57,13 +57,29 @@ class CommonLogic
     {
       if (isAttackerPlayer)
         return false;
+      if (target.type == TARGET_OBJECT)
+        return false;
       for (ability in ai.abilities)
         if (ability.logicAttack(ai, target))
           return true;
       return false;
     }
 
-// logic: attack target (player or ai)
+// returns debug label for attack damage rolls
+  static function getTargetDebugName(target: AITarget): String
+    {
+      switch (target.type)
+        {
+          case TARGET_AI:
+            return 'AI';
+          case TARGET_OBJECT:
+            return 'object';
+          case TARGET_PLAYER:
+            return 'player';
+        }
+    }
+
+// logic: attack target (player, ai, or object)
   public static function logicAttack(ai: AI, target: AITarget, isAttackerPlayer: Bool)
     {
       // get current weapon
@@ -273,7 +289,7 @@ class CommonLogic
           var damage = __Math.damage({
             name: (isAttackerPlayer ? 'player' : 'AI') +
               '->' +
-              (target.type == TARGET_AI ? 'AI' : 'player'),
+              getTargetDebugName(target),
             min: weapon.minDamage,
             max: weapon.maxDamage,
             mods: mods
@@ -283,7 +299,7 @@ class CommonLogic
             ' for ' + damage + ' damage.');
 
           // on damage event
-          target.onDamage(damage);
+          target.onDamage(damage, ai);
         }
 
       // run weapon-specific post-hit effects

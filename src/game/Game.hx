@@ -467,7 +467,7 @@ class Game extends _SaveObject
     'noEnergy' => 'Your energy was completely depleted.',
     'noHealth' => "You have succumbed to injuries. It's not wise to go into the direct confrontation.",
     'habitatShock' => 'You have received your final shock from the habitat destruction.',
-    'corNefandum' => 'Cor Nefandum is destroyed. Cultus Carnis dies its final death.',
+    'corNefandum' => 'Cor Nefandum is destroyed. <span class=cult>Cultus Carnis</span> dies its final death.',
   ];
   public function finish(result: String, text: String, ?img: String = null)
     {

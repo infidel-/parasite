@@ -1,7 +1,8 @@
-// ai attack target (player or AI)
+// ai attack target (player, AI, or object)
 // helps with stats and events
 import ai.AI;
 import game.Game;
+import objects.AreaObject;
 
 @:structInit
 class AITarget
@@ -9,14 +10,17 @@ class AITarget
   public var game: Game;
   public var type: _AITargetType;
   public var ai: AI;
+  public var obj: AreaObject;
   public var x(get, null): Int;
   public var y(get, null): Int;
 
-  public function new(game: Game, type: _AITargetType, ai: AI)
+  public function new(game: Game, type: _AITargetType, ai: AI,
+      ?obj: AreaObject)
     {
       this.game = game;
       this.type = type;
       this.ai = ai;
+      this.obj = obj;
     }
 
   function get_x(): Int
@@ -27,6 +31,8 @@ class AITarget
             return game.playerArea.x;
           case TARGET_AI:
             return ai.x;
+          case TARGET_OBJECT:
+            return obj.x;
           default:
             return 0;
         }
@@ -40,6 +46,8 @@ class AITarget
             return game.playerArea.y;
           case TARGET_AI:
             return ai.y;
+          case TARGET_OBJECT:
+            return obj.y;
           default:
             return 0;
         }
@@ -57,13 +65,15 @@ class AITarget
                 ai == game.player.host)
               return 'your host';
             else return (ai.isNameKnown ? ai.name.real : 'the ' + ai.name.unknown);
+          case TARGET_OBJECT:
+            return 'the ' + obj.getName();
           default:
             return 'unknown';
         }
     }
 
 // onDamage wrapper
-  public function onDamage(damage: Int)
+  public function onDamage(damage: Int, ?attacker: AI)
     {
       switch (type)
         {
@@ -73,6 +83,8 @@ class AITarget
             if (ai.isPlayerHost())
               game.playerArea.onDamage(damage);
             else ai.onDamage(damage);
+          case TARGET_OBJECT:
+            obj.onDamage(damage, attacker);
           default:
         }
     }

@@ -1,10 +1,17 @@
 // mission that attacks the player cult base
 package cult.missions;
 
-import ai.AI;
-import ai.AIData;
+import ai.*;
+import cult.base.*;
 import cult.Mission;
 import game.Game;
+import objects.base.BaseOrganObject;
+
+typedef BaseDefenseAttackTarget = {
+  var obj: BaseOrganObject;
+  var x: Int;
+  var y: Int;
+}
 
 class BaseDefense extends Mission
 {
@@ -115,6 +122,7 @@ class BaseDefense extends Mission
           ai.setCult(rival);
         }
       ai.isGuard = true;
+      ai.isAggressive = true;
       ai.isRelentless = true;
       ai.setState(AI_STATE_ALERT);
       game.area.addAI(ai);
@@ -138,7 +146,7 @@ class BaseDefense extends Mission
       return members;
     }
 
-// pushes attackers toward Heart and damages adjacent organs
+// pushes attackers toward heart and damages adjacent organs
   function commandAttackers()
     {
       var base = game.cults[0].base;
@@ -152,19 +160,119 @@ class BaseDefense extends Mission
           var ai = game.area.getAIByID(id);
           if (ai == null)
             continue;
-          var organ = base.getNearestWorkingOrgan(ai.x, ai.y);
-          if (organ != null &&
-              Math.abs(ai.x - organ.x) <= 1 &&
-              Math.abs(ai.y - organ.y) <= 1)
+          var target = getAdjacentAttackTarget(base, ai);
+          if (target != null)
             {
-              base.damageOrgan(organ, Const.roll(1, 6));
+              CommonLogic.logicAttack(ai, {
+                game: game,
+                type: TARGET_OBJECT,
+                ai: null,
+                obj: target.obj
+              }, false);
               continue;
             }
-          ai.roamTargetX = heart.x;
-          ai.roamTargetY = heart.y;
-          if (ai.state == AI_STATE_IDLE)
+          target = getAttackTarget(base, ai);
+          if (target == null)
+            continue;
+          if (ai.state != AI_STATE_ALERT)
             ai.setState(AI_STATE_ALERT);
+          ai.roamTargetX = target.x;
+          ai.roamTargetY = target.y;
         }
+    }
+
+// finds a target object part adjacent to the attacker
+  function getAdjacentAttackTarget(base: CultBase, ai: AI): BaseDefenseAttackTarget
+    {
+      var best: BaseDefenseAttackTarget = null;
+      var bestDist = 999999;
+      for (organ in base.organs)
+        {
+          if (!organ.isWorking())
+            continue;
+          for (pt in organ.footprint())
+            {
+              if (Math.abs(ai.x - pt.x) > 1 ||
+                  Math.abs(ai.y - pt.y) > 1)
+                continue;
+              var obj = getOrganObject(organ, pt.x, pt.y);
+              if (obj == null)
+                continue;
+              var dist = Const.distanceSquared(ai.x, ai.y, pt.x, pt.y);
+              if (best == null ||
+                  dist < bestDist)
+                {
+                  best = {
+                    obj: obj,
+                    x: ai.x,
+                    y: ai.y
+                  };
+                  bestDist = dist;
+                }
+            }
+        }
+      return best;
+    }
+
+// finds the closest reachable tile where an attacker can hit an organ
+  function getAttackTarget(base: CultBase, ai: AI): BaseDefenseAttackTarget
+    {
+      var best: BaseDefenseAttackTarget = null;
+      var bestPathLength = -1;
+      var seen = new Map<String, Bool>();
+      for (organ in base.organs)
+        {
+          if (!organ.isWorking())
+            continue;
+          for (pt in organ.footprint())
+            {
+              var obj = getOrganObject(organ, pt.x, pt.y);
+              if (obj == null)
+                continue;
+              for (i in 0...Const.dirx.length)
+                {
+                  var x = pt.x + Const.dirx[i];
+                  var y = pt.y + Const.diry[i];
+                  var key = x + ',' + y;
+                  if (seen.exists(key))
+                    continue;
+                  seen.set(key, true);
+                  if (!game.area.isWalkable(x, y))
+                    continue;
+                  var occupant = game.area.getAI(x, y);
+                  if (occupant != null &&
+                      occupant != ai)
+                    continue;
+                  var path = game.area.getPath(ai.x, ai.y, x, y);
+                  if (path == null)
+                    continue;
+                  if (best == null ||
+                      path.length < bestPathLength)
+                    {
+                      best = {
+                        obj: obj,
+                        x: x,
+                        y: y
+                      };
+                      bestPathLength = path.length;
+                    }
+                }
+            }
+        }
+      return best;
+    }
+
+// returns the base organ object part at a tile
+  function getOrganObject(organ: CultBaseOrgan, x: Int, y: Int): BaseOrganObject
+    {
+      for (o in game.area.getObjectsAt(x, y))
+        if (o.type == 'base_organ')
+          {
+            var obj: BaseOrganObject = cast o;
+            if (obj.organID == organ.id)
+              return obj;
+          }
+      return null;
     }
 
 // completes mission when all attackers are gone
