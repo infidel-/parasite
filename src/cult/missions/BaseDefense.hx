@@ -80,6 +80,7 @@ class BaseDefense extends Mission
       base.activeDefenseMissionID = -1;
       base.activeDefenseTimer = 0;
       base.defensesSurvived++;
+      BaseDefenseLogic.calmAreaAI(game);
       BaseDefenseLogic.loadBodiesIntoStorage(game);
     }
 

@@ -63,6 +63,30 @@ class BaseDefenseLogic
           ' remains; ' + lost + ' are lost.');
     }
 
+// calms living area AI after base defense ends
+  public static function calmAreaAI(game: Game)
+    {
+      if (game.area == null)
+        return;
+      for (ai in game.area.getAllAI())
+        {
+          if (ai.state == AI_STATE_DEAD ||
+              ai.state == AI_STATE_PRESERVED ||
+              ai.isPlayerHost())
+            continue;
+          ai.enemies = new List();
+          ai.alertness = 10;
+          if (ai.command != null)
+            {
+              ai.command.type = CMD_NONE;
+              ai.command.attackTargetID = -1;
+              ai.command.leaveAreaTurns = 0;
+            }
+          if (ai.state != AI_STATE_IDLE)
+            ai.setState(AI_STATE_IDLE);
+        }
+    }
+
 // finds a target object part adjacent to the attacker
   static function getAdjacentAttackTarget(game: Game, base: CultBase,
       ai: AI): BaseDefenseAttackTarget
