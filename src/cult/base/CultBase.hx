@@ -395,14 +395,14 @@ class CultBase extends _SaveObject
 // populates HUD actions while base-building mode is active
   public function updateActionList()
     {
-      game.ui.hud.addAction(action('baseExit', 'Exit Forma', function() {
+      game.ui.hud.addKeyAction(action('baseExit', 'Exit Forma', function() {
         game.ui.hud.state = HUD_DEFAULT;
         game.updateHUD();
         game.scene.mouse.update(true);
         if (game.location == LOCATION_AREA)
           game.scene.area.draw();
         return true;
-      }));
+      }, 'f'));
       var buildableTypes = CultBaseConst.buildableTypes.copy();
       buildableTypes.sort(function(a, b) {
         return Reflect.compare(CultBaseConst.name(a), CultBaseConst.name(b));
@@ -811,7 +811,8 @@ class CultBase extends _SaveObject
     }
 
 // adds one virtual HUD action
-  function action(id: String, name: String, f: Void -> Bool): _PlayerAction
+  function action(id: String, name: String, f: Void -> Bool,
+    ?key: String): _PlayerAction
     {
       return {
         id: id,
@@ -819,6 +820,7 @@ class CultBase extends _SaveObject
         name: name,
         energy: 0,
         isVirtual: true,
+        key: key,
         f: function() {
           f();
         }

@@ -124,12 +124,13 @@ class PlayerArea extends _SaveObject
       if (base != null &&
           game.area.isHabitat &&
           base.areaID == game.area.id)
-        game.ui.hud.addAction({
+        game.ui.hud.addKeyAction({
           id: 'forma',
           type: ACTION_AREA,
           name: 'Forma',
           energy: 0,
-          isVirtual: true
+          isVirtual: true,
+          key: 'f'
         });
 
       if (state == PLR_STATE_PARASITE)
