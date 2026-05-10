@@ -767,8 +767,10 @@ class Game extends _SaveObject
         ai = new CivilianAI(this, x, y);
       else if (type == 'corpo')
         ai = new CorpoAI(this, x, y);
-      else if (type == 'custos')
-        ai = new CustosAI(this, x, y);
+      else if (type == 'firmus')
+        ai = new FirmusCustosAI(this, x, y);
+      else if (type == 'mordax')
+        ai = new MordaxCustosAI(this, x, y);
       else if (type == 'choirOfDiscord' ||
           type == 'choir' ||
           type == 'choir of discord')

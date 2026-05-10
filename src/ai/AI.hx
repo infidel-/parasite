@@ -156,7 +156,19 @@ public function show()
 
       // select random icon if not set
       if (tileAtlasX == -1 &&
-          tileAtlasY == -1 && isHuman)
+          tileAtlasY == -1 &&
+          (type == 'firmus' ||
+           type == 'mordax'))
+        {
+          var icon = (type == 'firmus' ?
+            game.scene.images.getFirmusCustosIcon() :
+            game.scene.images.getMordaxCustosIcon());
+          tileAtlasX = icon.col;
+          tileAtlasY = icon.row;
+        }
+      else if (tileAtlasX == -1 &&
+          tileAtlasY == -1 &&
+          isHuman)
         {
           if (type == 'civilian')
             {
@@ -205,6 +217,9 @@ public function show()
         entity.setIcon('entities', 1, Const.ROW_PARASITE);
       else if (type == 'choirOfDiscord')
         entity.setIcon('entities', Const.FRAME_CHOIR, Const.ROW_PARASITE);
+      else if (type == 'firmus' ||
+          type == 'mordax')
+        entity.setIcon('creatures', tileAtlasX, tileAtlasY);
       else entity.setIcon(
         (isMale ? 'male' : 'female'),
         tileAtlasX, tileAtlasY);

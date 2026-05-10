@@ -42,7 +42,6 @@ class AIData extends _SaveObject
   public var isCultist: Bool;
   public var cultID: Int;
   public var isCustos: Bool;
-  public var custosType: _CustosType;
 
   // attrs and stats
   public var baseAttrs: _Attributes; // base attributes
@@ -124,7 +123,6 @@ class AIData extends _SaveObject
       isGuard = false;
       isCultist = false;
       isCustos = false;
-      custosType = FIRMUS;
       helpAvailable = true;
       cultID = 0;
 

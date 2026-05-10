@@ -309,7 +309,7 @@ class CultBase extends _SaveObject
     }
 
 // creates custos at the cursor
-  public function createCustos(type: _CustosType): Bool
+  public function createCustos(type: String): Bool
     {
       if (!hasWorkingOrgan(CAULDRON))
         {
@@ -334,7 +334,7 @@ class CultBase extends _SaveObject
           return false;
         }
       resources.spend(cost);
-      var ai = new ai.CustosAI(game, cursorX, cursorY, type);
+      var ai = game.createAI(type, cursorX, cursorY);
       ai.guardTargetX = cursorX;
       ai.guardTargetY = cursorY;
       var data = new CustosAIData(game);
@@ -344,6 +344,7 @@ class CultBase extends _SaveObject
       game.area.addAI(ai);
       game.log('A new Custos takes shape.');
       game.updateHUD();
+      game.scene.draw();
       return true;
     }
 
@@ -439,9 +440,9 @@ class CultBase extends _SaveObject
       if (hasWorkingOrgan(CAULDRON))
         {
           game.ui.hud.addAction(action('baseFirmus', 'Craft Firmus',
-            function() return createCustos(FIRMUS)));
+            function() return createCustos('firmus')));
           game.ui.hud.addAction(action('baseMordax', 'Craft Mordax',
-            function() return createCustos(MORDAX)));
+            function() return createCustos('mordax')));
         }
     }
 
@@ -791,7 +792,7 @@ class CultBase extends _SaveObject
       if (game.area == null ||
           game.area.id != areaID)
         return;
-      var ai = new ai.CustosAI(game, data.x, data.y, data.custosType);
+      var ai = game.createAI(data.type, data.x, data.y);
       ai.updateData(data, 'on custos spawn');
       ai.x = data.x;
       ai.y = data.y;
