@@ -1070,6 +1070,25 @@ class Cult extends _SaveObject
         mission.turn();
     }
 
+// mission processing before area AI turns
+  public function turnMissionPreAI()
+    {
+      var mission = ordeals.getAreaMission(game.area);
+      if (mission != null &&
+          !mission.isCompleted)
+        mission.turnPreAI();
+    }
+
+// mission-controlled AI turn processing
+  public function turnMissionAI(ai: AI): Bool
+    {
+      var mission = ordeals.getAreaMission(game.area);
+      if (mission == null ||
+          mission.isCompleted)
+        return false;
+      return mission.turnAI(ai);
+    }
+
   // add random bad effect to cult
   public function addRandomBadEffect(turns: Int)
     {

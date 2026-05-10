@@ -120,6 +120,16 @@ class Mission extends _SaveObject
   public function turn()
     {}
 
+// hook for mission processing before area AI turns
+  public function turnPreAI()
+    {}
+
+// hook for mission-controlled AI turn logic
+  public function turnAI(ai: AI): Bool
+    {
+      return false;
+    }
+
 // hook for when mission succeeds
   public function onSuccess()
     {}

@@ -614,7 +614,11 @@ public function show()
           else if (state == AI_STATE_POST_DETACH_MEMORIES &&
               stateTime >= 2)
             setState(AI_STATE_IDLE);
-          
+
+          // active missions can take over AI behavior
+          else if (game.cults[0].turnMissionAI(this))
+            1;
+
           // custodes guard the base instead of following the player
           else if (isCustos)
             CustodesLogic.turn(this);

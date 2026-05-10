@@ -33,16 +33,32 @@ class BaseDefense extends Mission
       cultID = -1;
     }
 
-// spawn and drive attackers
+// spawns attackers before area AI turns
+  public override function turnPreAI()
+    {
+      if (!spawned)
+        spawnAttackers();
+    }
+
+// drive one base attacker during its AI turn
+  public override function turnAI(ai: AI): Bool
+    {
+      for (id in targetIDs)
+        if (id == ai.id)
+          {
+            BaseDefenseLogic.commandAttacker(game, ai);
+            return true;
+          }
+      return false;
+    }
+
+// check mission progress
   public override function turn()
     {
       if (game.location != LOCATION_AREA ||
           game.area == null ||
           game.area.id != areaID)
         return;
-      if (!spawned)
-        spawnAttackers();
-      BaseDefenseLogic.commandAttackers(game, targetIDs);
       checkComplete();
     }
 

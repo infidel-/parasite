@@ -1550,6 +1550,10 @@ class AreaGame extends _SaveObject
       // turns spent in this area
       turns++;
 
+      // mission setup before AI turns
+      if (isMissionArea())
+        game.cults[0].turnMissionPreAI();
+
       // AI logic
       for (ai in _ai)
         {
