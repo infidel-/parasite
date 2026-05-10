@@ -369,7 +369,7 @@ class MainMenuCrowd
               m.pauseLeft -= dt;
               if (m.pauseLeft <= 0)
                 {
-                  m.stepsLeft = 3 + Std.random(4);
+                  m.stepsLeft = 13 + Std.random(4);
                   m.stepPhase = 0;
                   m.pauseLeft = 0;
                 }

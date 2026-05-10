@@ -109,6 +109,7 @@ class Ordeals extends _SaveObject
               
               // decrease timer and check for failure
               profane.timer--;
+              profane.onTimerTick();
               if (profane.timer <= 0)
                 profane.fail();
             }

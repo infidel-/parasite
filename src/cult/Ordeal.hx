@@ -244,17 +244,18 @@ class Ordeal extends _SaveObject
         }
       
       // cancel ordeal
-      actions.push({
-        id: 'annul',
-        type: ACTION_CULT,
-        name: 'Annul ' + Const.smallgray('(results in failure)'),
-        energy: 0,
-        f: function() {
-          fail();
-          game.ui.cult.setMenuState(STATE_ROOT);
-          game.ui.updateWindow();
-        }
-      });
+      if (type != ORDEAL_PROFANE)
+        actions.push({
+          id: 'annul',
+          type: ACTION_CULT,
+          name: 'Annul ' + Const.smallgray('(results in failure)'),
+          energy: 0,
+          f: function() {
+            fail();
+            game.ui.cult.setMenuState(STATE_ROOT);
+            game.ui.updateWindow();
+          }
+        });
       
       return actions;
     }

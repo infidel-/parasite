@@ -1,14 +1,12 @@
 // timed team base-defense ordeal
 package cult.ordeals;
 
-import cult.Ordeal;
+import cult.ProfaneOrdeal;
 import cult.missions.TeamBaseDefense as TeamBaseDefenseMission;
 import game.Game;
 
-class TeamBaseDefense extends Ordeal
+class TeamBaseDefense extends ProfaneOrdeal
 {
-  public var timer: Int;
-
   public function new(g: Game)
     {
       super(g);
@@ -23,7 +21,6 @@ class TeamBaseDefense extends Ordeal
     {
       super.init();
       name = 'Defend Cor Nefandum (The Group)';
-      type = ORDEAL_COMMUNAL;
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
@@ -31,20 +28,21 @@ class TeamBaseDefense extends Ordeal
       timer = 12;
     }
 
-// decrements timer and handles offscreen failure
-  public override function turn()
+// syncs base status timer after central profane timer tick
+  public override function onTimerTick()
     {
-      timer--;
       if (cult.base != null)
         cult.base.activeDefenseTimer = timer;
-      if (timer > 0)
-        return;
+    }
+
+// destroys Cor Nefandum when timer expires
+  override function onFail()
+    {
       if (cult.base != null)
         {
           var heart = cult.base.getHeart();
           if (heart != null)
             cult.base.damageOrgan(heart, heart.health);
         }
-      fail();
     }
 }
