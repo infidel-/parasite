@@ -22,9 +22,22 @@ class FirmusCustosAI extends BaseCustosAI
       constitution = 12 + Std.random(3) - 1;
       intellect = 2;
       psyche = 7;
+      createIcon();
+    }
+
+// select firmus sprite
+  public override function createIcon()
+    {
       var icon = game.scene.images.getFirmusCustosIcon();
       tileAtlasX = icon.col;
       tileAtlasY = icon.row;
+    }
+
+// set firmus entity icon
+  public override function setIcon(): Bool
+    {
+      entity.setIcon('creatures', tileAtlasX, tileAtlasY);
+      return true;
     }
 
 // called after load or creation

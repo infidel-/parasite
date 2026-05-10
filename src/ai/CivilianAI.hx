@@ -71,16 +71,7 @@ class CivilianAI extends HumanAI
       name.unknown = 'random civilian';
       name.unknownCapped = 'Random civilian';
       soundsID = 'civilian';
-      var info = game.scene.images.getRandomCivilianAI(isMale);
-      tileAtlasX = info.x;
-      tileAtlasY = info.y;
-      job = info.job;
-      income = info.income;
-      
-      // call job init function if present
-      if (info.jobInfo != null &&
-          info.jobInfo.init != null)
-        info.jobInfo.init(game, this);
+      createIcon();
     }
 
 // called after load or creation

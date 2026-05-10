@@ -61,6 +61,13 @@ class ChoirOfDiscord extends AI
       return false;
     }
 
+// set choir entity icon
+  public override function setIcon(): Bool
+    {
+      entity.setIcon('entities', Const.FRAME_CHOIR, Const.ROW_PARASITE);
+      return true;
+    }
+
 // returns black blood splats for choir
   public override function bloodType(): String
     {

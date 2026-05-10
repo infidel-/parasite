@@ -156,37 +156,8 @@ public function show()
 
       // select random icon if not set
       if (tileAtlasX == -1 &&
-          tileAtlasY == -1 &&
-          (type == 'firmus' ||
-           type == 'mordax'))
-        {
-          var icon = (type == 'firmus' ?
-            game.scene.images.getFirmusCustosIcon() :
-            game.scene.images.getMordaxCustosIcon());
-          tileAtlasX = icon.col;
-          tileAtlasY = icon.row;
-        }
-      else if (tileAtlasX == -1 &&
-          tileAtlasY == -1 &&
-          isHuman)
-        {
-          if (type == 'civilian')
-            {
-              var data = game.scene.images.getRandomCivilianAI(isMale);
-              tileAtlasX = data.x;
-              tileAtlasY = data.y;
-              if (job == 'undefined' || job == null)
-                job = data.job;
-              if (income == 0)
-                income = data.income;
-            }
-          else
-            {
-              var tmp = game.scene.images.getSpecialAI(type, isMale);
-              tileAtlasX = tmp.x;
-              tileAtlasY = tmp.y;
-            }
-        }
+          tileAtlasY == -1)
+        createIcon();
       // legacy: for loading old saves
       // specials were saved as specials[tileAtlasX] index number
       else if (tileAtlasY == -1 && isHuman)
@@ -213,18 +184,48 @@ public function show()
         entity.isMaleAtlas = true;
       else
         entity.isMaleAtlas = useMaleSpecialAtlas;
-      if (type == 'dog')
-        entity.setIcon('entities', 1, Const.ROW_PARASITE);
-      else if (type == 'choirOfDiscord')
-        entity.setIcon('entities', Const.FRAME_CHOIR, Const.ROW_PARASITE);
-      else if (type == 'firmus' ||
-          type == 'mordax')
-        entity.setIcon('creatures', tileAtlasX, tileAtlasY);
-      else entity.setIcon(
-        (isMale ? 'male' : 'female'),
-        tileAtlasX, tileAtlasY);
+      // first try to set ai-specific icon
+      if (!setIcon())
+        entity.setIcon(
+          (isMale ? 'male' : 'female'),
+          tileAtlasX, tileAtlasY);
 
       updateEntity(); // update icon
+    }
+
+// select AI icon data before entity creation
+  public dynamic function createIcon()
+    {
+      if (!isHuman)
+        return;
+
+      if (type == 'civilian')
+        {
+          var data = game.scene.images.getRandomCivilianAI(isMale);
+          var applyJob = (job == 'undefined' || job == null);
+          tileAtlasX = data.x;
+          tileAtlasY = data.y;
+          if (applyJob)
+            job = data.job;
+          if (income == 0)
+            income = data.income;
+          if (applyJob &&
+              data.jobInfo != null &&
+              data.jobInfo.init != null)
+            data.jobInfo.init(game, this);
+        }
+      else
+        {
+          var tmp = game.scene.images.getSpecialAI(type, isMale);
+          tileAtlasX = tmp.x;
+          tileAtlasY = tmp.y;
+        }
+    }
+
+// set custom entity icon, returning true when handled
+  public dynamic function setIcon(): Bool
+    {
+      return false;
     }
 
 // update AI tile to a new one

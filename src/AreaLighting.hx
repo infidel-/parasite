@@ -778,6 +778,14 @@ class AreaLighting
       if (ai.tileAtlasX < 0 ||
           ai.tileAtlasY < 0)
         return null;
+      if (ai.type == 'firmus' ||
+          ai.type == 'mordax')
+        return {
+          imageKey: 'creatures',
+          image: scene.images.creatures,
+          srcRow: ai.tileAtlasY,
+          srcCol: ai.tileAtlasX,
+        };
 
       var useMaleAtlas = (ai.isMale ||
         (ai.entity != null &&
