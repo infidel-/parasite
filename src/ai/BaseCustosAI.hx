@@ -20,7 +20,6 @@ class BaseCustosAI extends AI
       isGuard = true;
       isAggressive = true;
       isRelentless = true;
-      soundsID = 'dog';
       name = {
         real: displayName,
         realCapped: Const.capitalize(displayName),

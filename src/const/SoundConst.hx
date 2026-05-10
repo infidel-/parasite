@@ -97,6 +97,146 @@ class SoundConst
     ]
   ];
 
+  // firmus custos sounds
+  public static var firmus: Map<String, Array<AISound>> = [
+    '' + REASON_DAMAGE => [
+      {
+        text: '*HRMM*',
+        file: 'firmus-hrmm',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+      {
+        text: '*HURR*',
+        file: 'firmus-hurr',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+      {
+        text: '*HRRGH*',
+        file: 'firmus-hrrgh',
+        radius: 3,
+        alertness: 5,
+        params: null
+      },
+    ],
+    '' + AI_STATE_IDLE => [
+      {
+        text: '*HRMM*',
+        file: 'firmus-hrmm',
+        radius: 2,
+        alertness: 5,
+        params: { minAlertness: 25 }
+      },
+    ],
+    '' + AI_STATE_ALERT => [
+      {
+        text: '*HURR*',
+        file: 'firmus-hurr',
+        radius: 5,
+        alertness: 10,
+        params: null
+      },
+    ],
+    '' + AI_STATE_HOST => [
+      {
+        text: '*hrmm*',
+        file: 'firmus-hrmm',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+      {
+        text: '*hurr*',
+        file: 'firmus-hurr',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+    ],
+    '' + AI_STATE_DEAD => [
+      {
+        text: '*hrrgh*',
+        file: 'firmus-die',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+    ]
+  ];
+
+  // mordax custos sounds
+  public static var mordax: Map<String, Array<AISound>> = [
+    '' + REASON_DAMAGE => [
+      {
+        text: '*CHUMP*',
+        file: 'mordax-chump',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+      {
+        text: '*CHORR*',
+        file: 'mordax-chorr',
+        radius: 2,
+        alertness: 5,
+        params: null
+      },
+      {
+        text: '*CHOMP*',
+        file: 'mordax-chomp',
+        radius: 3,
+        alertness: 5,
+        params: null
+      },
+    ],
+    '' + AI_STATE_IDLE => [
+      {
+        text: '*CHORR*',
+        file: 'mordax-chorr',
+        radius: 2,
+        alertness: 5,
+        params: { minAlertness: 25 }
+      },
+    ],
+    '' + AI_STATE_ALERT => [
+      {
+        text: '*CHOMP*',
+        file: 'mordax-chomp',
+        radius: 5,
+        alertness: 10,
+        params: null
+      },
+    ],
+    '' + AI_STATE_HOST => [
+      {
+        text: '*chump*',
+        file: 'mordax-chump',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+      {
+        text: '*chorr*',
+        file: 'mordax-chorr',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+    ],
+    '' + AI_STATE_DEAD => [
+      {
+        text: '*chorr*',
+        file: 'mordax-die',
+        radius: 2,
+        alertness: 3,
+        params: null
+      },
+    ]
+  ];
+
   // choir of discord sounds
   public static var choir: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [

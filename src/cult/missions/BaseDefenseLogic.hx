@@ -84,7 +84,7 @@ class BaseDefenseLogic
               ai.isPlayerHost())
             continue;
           ai.enemies = new List();
-          ai.alertness = 10;
+          ai.alertness = 0;
           if (ai.command != null)
             {
               ai.command.type = CMD_NONE;

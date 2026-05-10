@@ -18,6 +18,7 @@ class FirmusCustosAI extends BaseCustosAI
     {
       super.init();
       initCustosBase('firmus', 'firmus');
+      soundsID = 'firmus';
       strength = 8 + Std.random(3) - 1;
       constitution = 12 + Std.random(3) - 1;
       intellect = 2;

@@ -18,6 +18,7 @@ class MordaxCustosAI extends BaseCustosAI
     {
       super.init();
       initCustosBase('mordax', 'mordax');
+      soundsID = 'mordax';
       strength = 10 + Std.random(3) - 1;
       constitution = 7 + Std.random(3) - 1;
       intellect = 2;
