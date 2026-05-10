@@ -49,6 +49,17 @@ class Mission extends _SaveObject
   public function initPost(onLoad: Bool)
     {}
 
+// sets marker area and visible region coordinates
+  public function setMarkerAreaID(areaID: Int)
+    {
+      markerAreaID = areaID;
+      var marker = game.region.get(areaID);
+      if (marker.isHabitat)
+        marker = marker.parent;
+      x = marker.x;
+      y = marker.y;
+    }
+
 // get custom name for display
   public function customName(): String
     {

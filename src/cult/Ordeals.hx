@@ -337,6 +337,9 @@ class Ordeals extends _SaveObject
               {
                 if (m.markerAreaID == area.id)
                   return m;
+                if (area.hasHabitat &&
+                    area.habitatAreaID == m.markerAreaID)
+                  return m;
                 continue;
               }
             // check by coordinates

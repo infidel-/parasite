@@ -17,7 +17,7 @@ class RivalBase extends Mission
       initPost(false);
       this.rivalCultID = rivalCultID;
       this.areaID = areaID;
-      markerAreaID = areaID;
+      setMarkerAreaID(areaID);
     }
 
 // init mission fields

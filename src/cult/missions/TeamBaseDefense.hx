@@ -16,7 +16,7 @@ class TeamBaseDefense extends Mission
       init();
       initPost(false);
       this.areaID = areaID;
-      markerAreaID = areaID;
+      setMarkerAreaID(areaID);
     }
 
 // init mission fields
