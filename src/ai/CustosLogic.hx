@@ -3,7 +3,7 @@ package ai;
 
 import game.Game;
 
-class CustodesLogic
+class CustosLogic
 {
 // run guardian logic
   public static function turn(ai: AI)

@@ -335,7 +335,6 @@ class CultBase extends _SaveObject
         }
       resources.spend(cost);
       var ai = new ai.CustosAI(game, cursorX, cursorY, type);
-      ai.custosID = ai.id;
       ai.guardTargetX = cursorX;
       ai.guardTargetY = cursorY;
       var data = new CustosAIData(game);
@@ -351,7 +350,7 @@ class CultBase extends _SaveObject
 // records custos data when it leaves or dies
   public function onRemoveAI(ai: AI)
     {
-      var data = getCustos(ai.custosID);
+      var data = getCustos(ai.id);
       if (data == null)
         return;
       if (ai.state == AI_STATE_DEAD)
@@ -383,7 +382,7 @@ class CultBase extends _SaveObject
       for (ai in game.area.getAllAI())
         if (ai.isCustos)
           {
-            var data = getCustos(ai.custosID);
+            var data = getCustos(ai.id);
             if (data != null)
               {
                 data.updateFromAI(ai, areaID, data.anchorX, data.anchorY,

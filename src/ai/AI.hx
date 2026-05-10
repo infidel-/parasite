@@ -621,7 +621,7 @@ public function show()
 
           // custodes guard the base instead of following the player
           else if (isCustos)
-            CustodesLogic.turn(this);
+            CustosLogic.turn(this);
 
           // cultists from player cult have follower logic
           else if (isPlayerCultist())
