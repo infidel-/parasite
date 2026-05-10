@@ -25,6 +25,15 @@ class BaseDefenseLogic
       if (heart == null)
         return;
 
+      // if defender has drawn aggro, retaliate before attacking the base
+      var retaliationTarget = getRetaliationTarget(game, ai);
+      if (retaliationTarget != null)
+        {
+          CommonLogic.logicAttack(Attacker.fromAI(game, ai, false),
+            retaliationTarget);
+          return;
+        }
+
       // if adjacent to an organ part, attack it
       var target = getAdjacentAttackTarget(game, base, ai);
       if (target != null)
@@ -85,6 +94,36 @@ class BaseDefenseLogic
           if (ai.state != AI_STATE_IDLE)
             ai.setState(AI_STATE_IDLE);
         }
+    }
+
+// finds the closest visible enemy that has already attacked this attacker
+  static function getRetaliationTarget(game: Game, ai: AI): AttackTarget
+    {
+      var best: AI = null;
+      var bestDist = 999999;
+      for (enemyID in ai.enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null ||
+              enemy.state == AI_STATE_DEAD ||
+              ai.isSameCult(enemy) ||
+              !ai.seesPosition(enemy.x, enemy.y))
+            continue;
+          var dist = Const.distanceSquared(ai.x, ai.y, enemy.x, enemy.y);
+          if (best == null ||
+              dist < bestDist)
+            {
+              best = enemy;
+              bestDist = dist;
+            }
+        }
+      if (best == null)
+        return null;
+      return {
+        game: game,
+        type: TARGET_AI,
+        ai: best
+      };
     }
 
 // finds a target object part adjacent to the attacker
