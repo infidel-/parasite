@@ -6,6 +6,7 @@ import console.Console;
 import ui.UI;
 import scenario.Timeline;
 import cult.Cult;
+import cult.RivalCult;
 import const.ItemsConst;
 import const.Jobs;
 import const.Lang;
@@ -284,19 +285,31 @@ class Game extends _SaveObject
       return null;
     }
 
-// get all non-player rival cults
-  public function getRivalCults(?activeOnly: Bool = false): Array<Cult>
+// get rival cult by ID
+  public function getRivalCultByID(id: Int): RivalCult
     {
-      var rivals = [];
+      for (rival in getRivalCults())
+        if (rival.id == id)
+          return rival;
+      return null;
+    }
+
+// get all non-player rival cults
+  public function getRivalCults(?activeOnly: Bool = false): Array<RivalCult>
+    {
+      var rivals: Array<RivalCult> = [];
       for (i in 0...cults.length)
         {
           var cult = cults[i];
           if (i == 0)
             continue;
-          if (!cult.isPlayer &&
-            cult.rivalTemplate != '' &&
-            (!activeOnly || cult.state == CULT_STATE_ACTIVE))
-            rivals.push(cult);
+          if (!Std.isOfType(cult, RivalCult))
+            continue;
+          var rival: RivalCult = cast cult;
+          if (!rival.isPlayer &&
+              rival.rivalTemplate != '' &&
+              (!activeOnly || rival.state == CULT_STATE_ACTIVE))
+            rivals.push(rival);
         }
       return rivals;
     }
@@ -373,7 +386,7 @@ class Game extends _SaveObject
       if (location == LOCATION_REGION)
         cultTime = 5;
       for (cult in cults)
-        cult.turn(cultTime);
+        cult.turnInternal(cultTime);
 
       // AI movement
       if (location == LOCATION_AREA)

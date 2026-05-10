@@ -30,10 +30,6 @@ class Cult extends _SaveObject
   public var trainingMemberIDs: Array<Int>; // members locked for training until next cult turn
   public var level: Int;
   public var base: CultBase;
-  public var rivalTemplate: String;
-  public var rivalTactic: _RivalCultTactic;
-  public var rivalRevealedLevel: Int;
-  public var rivalBaseAreaID: Int;
   public var metamorphosisPhaseIComplete: Bool;
   var turnCounter: Int;
 
@@ -76,10 +72,6 @@ class Cult extends _SaveObject
       trainingMemberIDs = [];
       level = 1;
       base = null;
-      rivalTemplate = '';
-      rivalTactic = RIVAL_NON_COMBAT;
-      rivalRevealedLevel = 0;
-      rivalBaseAreaID = -1;
       metamorphosisPhaseIComplete = false;
       turnCounter = 0;
     }
@@ -98,8 +90,6 @@ class Cult extends _SaveObject
         trainingMemberIDs = [];
       if (level <= 0)
         level = 1;
-      if (rivalTemplate == null)
-        rivalTemplate = '';
       if (base != null)
         {
           base.game = game;
@@ -581,8 +571,8 @@ class Cult extends _SaveObject
       ai.roamTargetY = e.y;
     }
 
-// cult turn
-  public function turn(time: Int)
+// run cult turn gate
+  public function turnInternal(time: Int)
     {
       if (state != CULT_STATE_ACTIVE)
         return;
@@ -598,6 +588,13 @@ class Cult extends _SaveObject
         return;
       turnCounter = 0;
 
+      // run cult turn (will be overridden for AI cults)
+      turn();
+    }
+
+// run default cult turn
+  function turn()
+    {
       // clear previous training locks at cult turn start
       clearTraining();
 
@@ -642,17 +639,6 @@ class Cult extends _SaveObject
       delta.corporate = resources.corporate - delta.corporate;
       delta.political = resources.political - delta.political;
       delta.money = resources.money - delta.money;
-
-/*
-      game.logsg(name +
-        ' turn: COM ' + resources.combat + (delta.combat > 0 ? ' (+' + delta.combat + ')' : '') +
-        ', MED ' + resources.media + (delta.media > 0 ? ' (+' + delta.media + ')' : '') +
-        ', LAW ' + resources.lawfare + (delta.lawfare > 0 ? ' (+' + delta.lawfare + ')' : '') +
-        ', COR ' + resources.corporate + (delta.corporate > 0 ? ' (+' + delta.corporate + ')' : '') +
-        ', POL ' + resources.political + (delta.political > 0 ? ' (+' + delta.political + ')' : '') +
-        ', MONEY ' + resources.money + (delta.money > 0 ? ' (+' + delta.money + ')' : ''));
-      game.scene.sounds.play('click-action');
-*/
     }
 
 // process member regeneration for free members

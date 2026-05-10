@@ -280,10 +280,8 @@ class Cult
               log('Invalid rival cult ID.');
               return null;
             }
-          var rival = game.getCultByID(cultID);
+          var rival = game.getRivalCultByID(cultID);
           if (rival == null ||
-              rival.isPlayer ||
-              rival.rivalTemplate == '' ||
               rival.state != CULT_STATE_ACTIVE)
             {
               log('No active rival cult with ID ' + cultID + '.');
@@ -311,7 +309,7 @@ class Cult
         }
       
       var cult = game.cults[0];
-      cult.turn(10);
+      cult.turnInternal(10);
       
       log('Called next cult turn.');
     }

@@ -16,7 +16,7 @@ class RivalAttack extends Ordeal
       this.rivalCultID = rivalCultID;
       init();
       initPost(false);
-      var rival = game.getCultByID(rivalCultID);
+      var rival = game.getRivalCultByID(rivalCultID);
       missions.push(new RivalBase(game, rivalCultID,
         rival.rivalBaseAreaID));
     }

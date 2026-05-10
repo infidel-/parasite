@@ -236,7 +236,6 @@ class Ordeals extends _SaveObject
         {
           GroupInterference.initiateAction(game, cult, actions);
           GatherClues.initiateAction(game, cult, actions);
-
         }
 
       return actions;
