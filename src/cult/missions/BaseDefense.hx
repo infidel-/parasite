@@ -1,8 +1,7 @@
 // mission that attacks the player cult base
 package cult.missions;
 
-import ai.AI;
-import ai.AIData;
+import ai.*;
 import cult.Mission;
 import game.Game;
 
@@ -43,7 +42,7 @@ class BaseDefense extends Mission
         return;
       if (!spawned)
         spawnAttackers();
-      commandAttackers();
+      BaseDefenseLogic.commandAttackers(game, targetIDs);
       checkComplete();
     }
 
@@ -65,7 +64,7 @@ class BaseDefense extends Mission
       base.activeDefenseMissionID = -1;
       base.activeDefenseTimer = 0;
       base.defensesSurvived++;
-      loadBodiesIntoStorage();
+      BaseDefenseLogic.loadBodiesIntoStorage(game);
     }
 
 // spawns attackers from sewer-style arrival points
@@ -115,6 +114,7 @@ class BaseDefense extends Mission
           ai.setCult(rival);
         }
       ai.isGuard = true;
+      ai.isAggressive = true;
       ai.isRelentless = true;
       ai.setState(AI_STATE_ALERT);
       game.area.addAI(ai);
@@ -138,35 +138,6 @@ class BaseDefense extends Mission
       return members;
     }
 
-// pushes attackers toward Heart and damages adjacent organs
-  function commandAttackers()
-    {
-      var base = game.cults[0].base;
-      if (base == null)
-        return;
-      var heart = base.getHeart();
-      if (heart == null)
-        return;
-      for (id in targetIDs)
-        {
-          var ai = game.area.getAIByID(id);
-          if (ai == null)
-            continue;
-          var organ = base.getNearestWorkingOrgan(ai.x, ai.y);
-          if (organ != null &&
-              Math.abs(ai.x - organ.x) <= 1 &&
-              Math.abs(ai.y - organ.y) <= 1)
-            {
-              base.damageOrgan(organ, Const.roll(1, 6));
-              continue;
-            }
-          ai.roamTargetX = heart.x;
-          ai.roamTargetY = heart.y;
-          if (ai.state == AI_STATE_IDLE)
-            ai.setState(AI_STATE_ALERT);
-        }
-    }
-
 // completes mission when all attackers are gone
   function checkComplete()
     {
@@ -174,21 +145,5 @@ class BaseDefense extends Mission
           targetIDs.length > 0)
         return;
       success();
-    }
-
-// stores bodies left after defense
-  function loadBodiesIntoStorage()
-    {
-      var base = game.cults[0].base;
-      if (base == null)
-        return;
-      var bodies = 0;
-      for (o in game.area.getObjects())
-        if (o.type == 'body')
-          bodies++;
-      var lost = base.addBodies(bodies);
-      if (bodies > 0)
-        game.logsg('Body storage receives ' + (bodies - lost) +
-          ' remains; ' + lost + ' are lost.');
     }
 }

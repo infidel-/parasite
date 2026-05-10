@@ -3,6 +3,7 @@ package cult.ordeals;
 
 import cult.Cult;
 import cult.Ordeal;
+import cult.RivalCult;
 import cult.base.CultBase;
 import game.Game;
 import _PlayerAction;
@@ -106,9 +107,9 @@ class MetamorphosisPhaseII extends Ordeal
 
 // creates a strategic rival as a real cult
   static function createRivalCult(game: Game, name: String, template: String,
-      tactic: _RivalCultTactic): Cult
+      tactic: _RivalCultTactic): RivalCult
     {
-      var rival = new Cult(game);
+      var rival = new RivalCult(game);
       rival.name = name;
       rival.isPlayer = false;
       rival.state = CULT_STATE_ACTIVE;
@@ -158,7 +159,7 @@ class MetamorphosisPhaseII extends Ordeal
     }
 
 // creates one roster member for a rival cult
-  static function addRivalMember(rival: Cult, type: String)
+  static function addRivalMember(rival: RivalCult, type: String)
     {
       var ai = rival.game.createAI(type, 0, 0);
       ai.setCult(rival);

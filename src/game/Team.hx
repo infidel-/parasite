@@ -4,6 +4,7 @@ package game;
 
 import ai.AI;
 import const.*;
+import cult.ordeals.TeamBaseDefense;
 
 class Team extends FSM<_TeamState, _TeamFlag>
 {
@@ -66,12 +67,44 @@ class Team extends FSM<_TeamState, _TeamFlag>
         turnAmbush();
       else if (state == TEAM_FIGHT)
         turnFight();
+      else if (state == TEAM_BASE_DEFENSE)
+        return;
     }
 
+// spawns team attack as a cult base defense ordeal
+  public function spawnBaseDefenseOrdeal(): Bool
+    {
+      var base = game.cults[0].base;
+      if (base == null ||
+          base.activeDefenseMissionID >= 0)
+        return false;
+
+      state = TEAM_BASE_DEFENSE;
+      ambushedHabitat = null;
+      ambushedHabitatAreaID = -1;
+      timer = 0;
+
+      var ordeal = new TeamBaseDefense(game);
+      game.cults[0].ordeals.list.push(ordeal);
+      base.activeDefenseMissionID = ordeal.missions[0].id;
+      base.activeDefenseTimer = ordeal.timer;
+      game.message({
+        text: 'The team closes on Cor Nefandum. Defend the base before the timer expires.',
+        col: 'alert'
+      });
+      return true;
+    }
 
 // TURN: spawn ambush at random habitat
   function spawnAmbush()
     {
+      // if player has cult base, spawn base defense ordeal instead of regular ambush
+      if (game.cults[0].base != null)
+        {
+          spawnBaseDefenseOrdeal();
+          return;
+        }
+
       state = TEAM_AMBUSH;
       ambushedHabitat = null; // clear just in case
       ambushedHabitatAreaID = -1;
@@ -95,23 +128,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
           return;
         }
 
-      // pick random habitat (not cult base for now)
+      // pick random habitat
       var tmp = game.region.getHabitatsList();
-      if (game.cults[0].base != null)
-        {
-          var filtered = [];
-          for (area in tmp)
-            if (area.id != game.cults[0].base.areaID)
-              filtered.push(area);
-          tmp = filtered;
-          if (tmp.length == 0)
-            {
-              ambushedHabitat = null;
-              ambushedHabitatAreaID = -1;
-              return;
-            }
-        }
-
       // L2 watcher attracts ambush
       for (area in tmp)
         if (area.habitat.watcherLevel >= 2)
@@ -236,7 +254,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
             col: 'alert'
           });
           game.scene.sounds.play('event-ambush');
-          for (i in 0...4)
+          for (_ in 0...4)
             {
               var loc = game.area.findLocation({
                 near: { x: x, y: y },
@@ -327,7 +345,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // team was in ambush, spawn blackops
       var exit = getHabitatAmbushExit();
-      for (i in 0...4)
+      for (_ in 0...4)
         {
           var loc = (exit != null ?
             game.area.findEmptyLocationNear(exit.x, exit.y, 4) :
@@ -599,14 +617,13 @@ typedef _TeamLeaveHabitatResult = {
   var skipOutsiderCheck: Bool;
 }
 
-
 enum _TeamState
 {
   TEAM_SEARCH; // team searching for parasite
   TEAM_AMBUSH; // team lies in ambush in one of the habitats
   TEAM_FIGHT; // team is fighting with parasite
+  TEAM_BASE_DEFENSE; // team attacks the cult base
 }
-
 
 enum _TeamFlag
 {

@@ -19,4 +19,9 @@ class ProfaneOrdeal extends Ordeal
       super.init();
       type = ORDEAL_PROFANE;
     }
+
+// called after profane timer decrements
+  public function onTimerTick()
+    {
+    }
 }

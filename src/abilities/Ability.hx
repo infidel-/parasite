@@ -28,7 +28,7 @@ class Ability extends _SaveObject
     }
 
 // handles ability logic before normal attack resolution
-  public function logicAttack(ai: AI, target: AITarget): Bool
+  public function logicAttack(ai: AI, target: AttackTarget): Bool
     {
       return false;
     }

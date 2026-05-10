@@ -57,11 +57,11 @@ class BlackNoise extends Effect
             else
               {
                 ai.log('lashes out through black static.');
-                CommonLogic.logicAttack(ai, {
+                CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
                   game: game,
                   type: TARGET_AI,
                   ai: nearest,
-                }, false);
+                });
               }
           case 1:
             // clawing own eyes out (direct self-damage)

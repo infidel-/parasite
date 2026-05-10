@@ -177,6 +177,8 @@ class Loader
           // recursively map save objects
           else if (Std.isOfType(dstval, _SaveObject))
             {
+              if (dstval.init != null)
+                dstval.init();
               loadObject(game, srcval, dstval, f, depth + 1,
                 formatVersion);
               if (dstval.initPost != null)

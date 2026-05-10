@@ -2,6 +2,7 @@
 package console;
 
 import game.Game;
+import game.Team;
 import cult.ordeals.*;
 import cult.ordeals.profane.*;
 
@@ -34,6 +35,7 @@ class Cult
               log('cu/cult gr - give +10 all resources and +100k money');
               log('cu/cult br [amount] - give base resources (default +100)');
               log('cu/cult def [cultID] - add rival base defense ordeal');
+              log('cu/cult tdef - add team base defense ordeal');
               log('cu/cult t - call cult turn');
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
               log('cu/cult r [power] - recruit follower (default combat)');
@@ -59,6 +61,13 @@ class Cult
           if (arr[1] == 'def')
             {
               addBaseDefenseOrdeal(arr);
+              return true;
+            }
+
+          // cu/cult tdef - add team base defense ordeal
+          if (arr[1] == 'tdef')
+            {
+              addTeamBaseDefenseOrdeal();
               return true;
             }
           
@@ -226,6 +235,40 @@ class Cult
       });
     }
 
+// add team base defense ordeal to cult
+  function addTeamBaseDefenseOrdeal()
+    {
+      if (game.cults.length == 0)
+        {
+          log('No cult found.');
+          return;
+        }
+
+      var cult = game.cults[0];
+      var base = cult.base;
+      if (base == null)
+        {
+          log('Cult has no base.');
+          return;
+        }
+      if (base.activeDefenseMissionID >= 0)
+        {
+          log('Base defense already active.');
+          return;
+        }
+
+      if (game.group.team == null)
+        game.group.team = new Team(game);
+      if (!game.group.team.spawnBaseDefenseOrdeal())
+        {
+          log('Failed to add team base defense ordeal.');
+          return;
+        }
+
+      game.updateHUD();
+      log('Added team base defense ordeal.');
+    }
+
 // returns rival cult for console-spawned base defense
   function getBaseDefenseRival(arr: Array<String>): cult.Cult
     {
@@ -237,10 +280,8 @@ class Cult
               log('Invalid rival cult ID.');
               return null;
             }
-          var rival = game.getCultByID(cultID);
+          var rival = game.getRivalCultByID(cultID);
           if (rival == null ||
-              rival.isPlayer ||
-              rival.rivalTemplate == '' ||
               rival.state != CULT_STATE_ACTIVE)
             {
               log('No active rival cult with ID ' + cultID + '.');
@@ -268,7 +309,7 @@ class Cult
         }
       
       var cult = game.cults[0];
-      cult.turn(10);
+      cult.turnInternal(10);
       
       log('Called next cult turn.');
     }

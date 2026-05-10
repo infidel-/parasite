@@ -15,11 +15,11 @@ class CustodesLogic
         {
           ai.addEnemy(target);
           ai.setState(AI_STATE_ALERT);
-          CommonLogic.logicAttack(ai, {
+          CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
             game: game,
             type: TARGET_AI,
             ai: target
-          }, false);
+          });
           return;
         }
 

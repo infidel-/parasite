@@ -48,7 +48,7 @@ class RivalResearch extends Ordeal
 // increases reveal level and creates base area when fully known
   public override function onSuccess()
     {
-      var rival = game.getCultByID(rivalCultID);
+      var rival = game.getRivalCultByID(rivalCultID);
       rival.rivalRevealedLevel++;
       if (rival.rivalRevealedLevel >= 3 &&
           rival.rivalBaseAreaID < 0)

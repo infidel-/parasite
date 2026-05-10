@@ -554,7 +554,7 @@ class PlayerArea extends _SaveObject
         return;
 
       // use common attack routine
-      var target: AITarget = {
+      var target: AttackTarget = {
         game: game,
         type: TARGET_AI,
         ai: ai,
@@ -568,7 +568,7 @@ class PlayerArea extends _SaveObject
           if (meleeWeapon != null)
             inventory.weaponID = meleeWeapon.id;
         }
-      CommonLogic.logicAttack(player.host, target, true);
+      CommonLogic.logicAttack(Attacker.fromAI(game, player.host, true), target);
       inventory.weaponID = oldWeaponID;
 
       actionPost(); // post-action call

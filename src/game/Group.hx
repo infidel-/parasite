@@ -18,6 +18,12 @@ class Group extends _SaveObject
   public function new(g: Game)
     {
       game = g;
+      init();
+    }
+
+// init group state before loading/post creation
+  public function init()
+    {
       priority = 0;
       team = null;
       teamTimeout = 250;

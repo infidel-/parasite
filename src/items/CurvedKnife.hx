@@ -37,7 +37,7 @@ class CurvedKnife extends Weapon
     }
 
 // applies bleeding after successful hits
-  public override function logicAttackPost(ai: AI, target: AITarget, isAttackerPlayer: Bool): Void
+  public override function logicAttackPost(ai: AI, target: AttackTarget, isAttackerPlayer: Bool): Void
     {
       switch (target.type)
         {

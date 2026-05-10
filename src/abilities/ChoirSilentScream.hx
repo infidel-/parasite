@@ -21,7 +21,7 @@ class ChoirSilentScream extends Ability
     }
 
 // handle silent scream pulse before regular attacks
-  public override function logicAttack(ai: AI, target: AITarget): Bool
+  public override function logicAttack(ai: AI, target: AttackTarget): Bool
     {
       if (timeout > 0)
         {

@@ -276,7 +276,7 @@ class DefaultLogic
 
       ai.roamTargetX = target.x;
       ai.roamTargetY = target.y;
-      CommonLogic.logicAttack(ai, target, false);
+      CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
     }
 
 // state: host logic
@@ -395,7 +395,7 @@ class DefaultLogic
           ai.setState(AI_STATE_ALERT);
           ai.roamTargetX = target.x;
           ai.roamTargetY = target.y;
-          CommonLogic.logicAttack(ai, target, false);
+          CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
           return;
         }
 
@@ -441,7 +441,7 @@ class DefaultLogic
           ai.setState(AI_STATE_ALERT);
           ai.roamTargetX = target.x;
           ai.roamTargetY = target.y;
-          CommonLogic.logicAttack(ai, target, false);
+          CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
           return;
         }
 

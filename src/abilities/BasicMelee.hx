@@ -28,7 +28,7 @@ class BasicMelee extends Ability
     }
 
 // handles configurable melee attack logic
-  public override function logicAttack(ai: AI, target: AITarget): Bool
+  public override function logicAttack(ai: AI, target: AttackTarget): Bool
     {
       if (!ai.isNear(target.x, target.y))
         return false;

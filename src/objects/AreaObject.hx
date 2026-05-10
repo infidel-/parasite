@@ -2,6 +2,7 @@
 
 package objects;
 
+import ai.AI;
 import _AtmosphereLightMeta;
 import entities.ObjectEntity;
 import game.Game;
@@ -130,6 +131,12 @@ class AreaObject extends _SaveObject
       else return 'unknown object';
     }
 
+// get name + article depending on whether its known or not
+  public dynamic function theName(): String
+    {
+      return 'the ' + getName();
+    }
+
 
 // set object decay in X turns
   public inline function setDecay(turns: Int)
@@ -184,12 +191,20 @@ class AreaObject extends _SaveObject
   public dynamic function onMoveTo()
     {}
 
+// dynamic: when damaged by combat
+  public dynamic function onDamage(damage: Int, ?attacker: AI)
+    {}
+
 // dynamic: can line of sight pass through this object?
   public dynamic function canSeeThrough(): Bool
     { return true; }
 
 // dynamic: can actors walk through this object tile?
   public dynamic function isWalkable(): Bool
+    { return true; }
+
+// dynamic: can this object be attacked?
+  public dynamic function isAttackable(): Bool
     { return true; }
 
   public function toString(): String

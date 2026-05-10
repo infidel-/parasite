@@ -3,8 +3,6 @@ package ai;
 
 import game.Game;
 import particles.*;
-import ai.AI;
-import ItemInfo;
 import _PlayerAction;
 import __Math;
 
@@ -13,19 +11,22 @@ class CommonLogic
   public static var game: Game;
 
 // runs post-hit weapon hook
-  static function logicAttackPost(ai: AI, target: AITarget,
-      isAttackerPlayer: Bool, weaponInfo: ItemInfo)
+  static function logicAttackPost(attacker: Attacker, target: AttackTarget)
     {
-      var weaponItem: items.Weapon = cast weaponInfo;
-      weaponItem.logicAttackPost(ai, target, isAttackerPlayer);
+      if (attacker.weaponInfo == null ||
+          attacker.ai == null)
+        return;
+      var weaponItem: items.Weapon = cast attacker.weaponInfo;
+      weaponItem.logicAttackPost(attacker.ai, target, attacker.isPlayer);
     }
 
 // handles first-turn raw smash use for melee AI
-  public static function useRawSmash(ai: AI, weapon: WeaponInfo,
-      isAttackerPlayer: Bool): Bool
+  public static function useRawSmash(attacker: Attacker,
+      weapon: WeaponInfo): Bool
     {
-      if (isAttackerPlayer)
+      if (!attacker.canUseAttackAbilities())
         return false;
+      var ai = attacker.ai;
       if (ai.state != AI_STATE_ALERT ||
           ai.stateTime != 1)
         return false;
@@ -52,62 +53,78 @@ class CommonLogic
     }
 
 // handles ingrained ability use before normal attack flow
-  public static function useAttackAbilities(ai: AI, target: AITarget,
-      isAttackerPlayer: Bool): Bool
+  public static function useAttackAbilities(attacker: Attacker,
+      target: AttackTarget): Bool
     {
-      if (isAttackerPlayer)
+      if (!attacker.canUseAttackAbilities())
         return false;
-      for (ability in ai.abilities)
-        if (ability.logicAttack(ai, target))
+      if (target.type == TARGET_OBJECT)
+        return false;
+      for (ability in attacker.ai.abilities)
+        if (ability.logicAttack(attacker.ai, target))
           return true;
       return false;
     }
 
-// logic: attack target (player or ai)
-  public static function logicAttack(ai: AI, target: AITarget, isAttackerPlayer: Bool)
+// returns debug label for attack damage rolls
+  static function getTargetDebugName(target: AttackTarget): String
+    {
+      switch (target.type)
+        {
+          case TARGET_AI:
+            return 'AI';
+          case TARGET_OBJECT:
+            return 'object';
+          case TARGET_PLAYER:
+            return 'player';
+        }
+    }
+
+// logic: attack target (player, ai, or object)
+  public static function logicAttack(attacker: Attacker, target: AttackTarget)
     {
       // get current weapon
-      var weaponInfo = ai.getCurrentWeaponItemInfo();
-      var weapon = weaponInfo.weapon;
+      var weapon = attacker.weapon;
 
       // ingrained abilities can consume the attack action
-      if (useAttackAbilities(ai, target, isAttackerPlayer))
+      if (useAttackAbilities(attacker, target))
         return;
 
       // first-turn melee users consume raw smash before attacking
-      if (useRawSmash(ai, weapon, isAttackerPlayer))
+      if (useRawSmash(attacker, weapon))
         return;
 
       // check for distance on melee
       if (!weapon.isRanged &&
-          !ai.isNear(target.x, target.y))
+          !attacker.isNear(target.x, target.y))
         {
-          if (!isAttackerPlayer)
-            ai.logicMoveTo(target.x, target.y);
+          if (attacker.canMoveToTarget())
+            attacker.logicMoveTo(target.x, target.y);
           return;
         }
 
       // check for line of sight on ranged
-      if (!isAttackerPlayer &&
+      if (attacker.needsRangedLineOfSight() &&
           weapon.isRanged &&
-          !ai.seesPosition(target.x, target.y))
+          !attacker.seesPosition(target.x, target.y))
         {
-          ai.logicMoveTo(target.x, target.y);
+          attacker.logicMoveTo(target.x, target.y);
           return;
         }
 
       // parasite attached to human, do not shoot (blackops are fine)
-      if (!isAttackerPlayer &&
-          ai.isHuman &&
+      if (!attacker.isPlayer &&
+          attacker.ai != null &&
+          attacker.ai.isHuman &&
           target.type == TARGET_PLAYER &&
           game.player.state == PLR_STATE_ATTACHED &&
           game.playerArea.attachHost.isHuman &&
-          ai.type != 'blackops')
+          attacker.ai.type != 'blackops')
         {
           if (Std.random(100) < 30)
             {
-              ai.log('hesitates to attack you.');
-              ai.emitSound({
+              attacker.log('hesitates to attack you.');
+              attacker.emitSound({
                 text: 'Shit!',
                 radius: 5,
                 alertness: 10
@@ -119,35 +136,30 @@ class CommonLogic
       // notify target
       if (target.type == TARGET_AI)
         {
-          if (isAttackerPlayer)
-            target.ai.attacked({
-              who: 'player',
-              ai: null,
-              weapon: weapon,
-            });
-          else target.ai.attacked({
-            who: 'ai',
-            ai: ai,
+          target.ai.attacked({
+            who: attacker.getAttackEventWho(),
+            ai: attacker.ai,
             weapon: weapon,
           });
         }
 
       // weapon skill level (ai + parasite bonus)
       var rollMods = [];
-      if (isAttackerPlayer)
+      if (attacker.isPlayer)
         rollMods.push({
           name: '0.5x parasite',
           val: 0.5 * game.player.skills.getLevel(weapon.skill)
         });
-      var roll = __Math.skill({
-        id: weapon.skill,
-        level: ai.skills.getLevel(weapon.skill),
-        mods: rollMods,
-      });
+      var roll = true;
+      if (!attacker.alwaysHits)
+        roll = __Math.skill({
+          id: weapon.skill,
+          level: attacker.skillLevel,
+          mods: rollMods,
+        });
 
       // +1 from passive when not assimilated, so it becomes 3
-      if (isAttackerPlayer)
-        ai.energy -= 2;
+      attacker.spendAttackEnergy();
 //        (ai.hasTrait(TRAIT_ASSIMILATED) ? 2 : 2);
 
       var targetBloodType = 'red';
@@ -156,35 +168,42 @@ class CommonLogic
 
       // draw attack effects
       if (weapon.isRanged)
-        Particle.createShot(
-          weapon.sound.file, game.scene, ai.x, ai.y,
-          { x: target.x, y: target.y }, roll, targetBloodType);
+        {
+          if (weapon.projectile != null)
+            Particle.createProjectile(weapon.projectile, game.scene,
+              attacker.x, attacker.y, { x: target.x, y: target.y },
+              roll, targetBloodType);
+          else Particle.createShot(
+            weapon.sound.file, game.scene, attacker.x, attacker.y,
+            { x: target.x, y: target.y }, roll, targetBloodType);
+        }
 
       // roll skill
       if (!roll)
         {
           var sound = (weapon.soundMiss != null ? weapon.soundMiss : weapon.sound);
-          ai.emitSound(sound);
-          ai.log('tries to ' + weapon.verb1 + ' ' + target.theName() + ', but misses.');
+          attacker.emitSound(sound);
+          attacker.log('tries to ' + weapon.verb1 + ' ' +
+            target.theName() + ', but misses.');
 
-          if (isAttackerPlayer)
+          if (attacker.isPlayer)
             {
               // set alerted state
-              if (ai.state == AI_STATE_IDLE)
-                ai.setState(AI_STATE_ALERT, REASON_DAMAGE);
+              if (attacker.ai.state == AI_STATE_IDLE)
+                attacker.ai.setState(AI_STATE_ALERT, REASON_DAMAGE);
               // post-action call
               game.playerArea.actionPost();
             }
           return;
         }
-      else ai.emitSound(weapon.sound);
+      else attacker.emitSound(weapon.sound);
 
       // blood effect on hit
       if (weapon.spawnBlood)
         Particle.createSplat(targetBloodType, game.scene,
           { x: target.x, y: target.y }, {
-            x: ai.x,
-            y: ai.y,
+            x: attacker.x,
+            y: attacker.y,
           });
 
       // stun damage on ai - stun the host
@@ -203,7 +222,7 @@ class CommonLogic
             });
 
           var roll = __Math.damage({
-            name: 'STUN ' + (isAttackerPlayer ? 'player' : 'AI') + '->AI',
+            name: 'STUN ' + attacker.getDebugName() + '->AI',
             min: weapon.minDamage,
             max: weapon.maxDamage,
             mods: mods
@@ -221,12 +240,12 @@ class CommonLogic
           if (target.ai.isPlayerHost())
             {
               game.player.hostControl -= roll * 2;
-              ai.log(weapon.verb2 + ' your host for ' + roll +
+              attacker.log(weapon.verb2 + ' your host for ' + roll +
                 " rounds. You're losing control.");
               // on damage event
               game.playerArea.onDamage(0);
             }
-          else ai.log(weapon.verb2 + ' ' +
+          else attacker.log(weapon.verb2 + ' ' +
             target.theName() + ' for ' + roll + " rounds.");
 
           target.ai.onEffect(new effects.Paralysis(game, roll));
@@ -244,7 +263,7 @@ class CommonLogic
             mods.push({
               name: 'melee 0.5xSTR',
               min: 0,
-              max: Std.int(ai.strength / 2)
+              max: Std.int(attacker.strength / 2)
             });
 
           // protective cover
@@ -266,27 +285,27 @@ class CommonLogic
                 });
             }
           // effect-driven damage bonuses
-          var effectMods = ai.effects.damageMods(weapon);
+          var effectMods = attacker.damageMods(weapon);
           for (mod in effectMods)
             mods.push(mod);
 
           var damage = __Math.damage({
-            name: (isAttackerPlayer ? 'player' : 'AI') +
+            name: attacker.getDebugName() +
               '->' +
-              (target.type == TARGET_AI ? 'AI' : 'player'),
+              getTargetDebugName(target),
             min: weapon.minDamage,
             max: weapon.maxDamage,
             mods: mods
           });
 
-          ai.log(weapon.verb2 + ' ' + target.theName() +
+          attacker.log(weapon.verb2 + ' ' + target.theName() +
             ' for ' + damage + ' damage.');
 
           // on damage event
-          target.onDamage(damage);
+          target.onDamage(damage, attacker.ai);
         }
 
       // run weapon-specific post-hit effects
-      logicAttackPost(ai, target, isAttackerPlayer, weaponInfo);
+      logicAttackPost(attacker, target);
     }
 }

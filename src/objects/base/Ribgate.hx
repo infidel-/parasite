@@ -18,9 +18,13 @@ class Ribgate extends BaseOrganObject
       name = 'Porta Costarum';
     }
 
-// lets allies through, bites enemies
+// lets allies through and blocks enemies while intact
   public override function frob(isPlayer: Bool, ai: AI): Int
     {
+      var organ = getOrgan();
+      if (organ != null &&
+          organ.broken)
+        return 1;
       if (isPlayer ||
           ai.isPlayerCultist() ||
           ai.isCustos)

@@ -1,6 +1,7 @@
 // area object wrapper for cult base organs
 package objects.base;
 
+import ai.AI;
 import const.CultBaseConst;
 import cult.base.CultBaseOrgan;
 import game.Game;
@@ -41,7 +42,12 @@ class BaseOrganObject extends AreaObject
       var block = CultBaseConst.BLOCK_COR_NEFANDUM;
       var organ = getOrgan();
       if (organ != null)
-        block = CultBaseConst.block(organ.type);
+        {
+          if (organ.type == SPINE_TURRET)
+            block = CultBaseConst.spineTurretBlock(organ.direction);
+          else
+            block = CultBaseConst.block(organ.type);
+        }
       imageRow = block.row + Std.int(basePartIndex / block.width);
       imageCol = block.col + basePartIndex % block.width;
     }
@@ -71,9 +77,13 @@ class BaseOrganObject extends AreaObject
       var organ = getOrgan();
       if (organ == null)
         return name;
-      return CultBaseConst.name(organ.type) + ' (level ' + organ.level +
-        ', ' + organ.health + '/' + organ.maxHealth() +
-        (organ.broken ? ', broken' : '') + ')';
+      return CultBaseConst.name(organ.type);
+    }
+
+// returns base organ name without an article
+  public override function theName(): String
+    {
+      return getName();
     }
 
 // update available object actions
@@ -128,6 +138,12 @@ class BaseOrganObject extends AreaObject
 // damages the linked organ
   public function damage(damage: Int)
     {
+      onDamage(damage);
+    }
+
+// damages the linked organ through combat
+  public override function onDamage(damage: Int, ?attacker: AI)
+    {
       var base = game.cults[0].base;
       var organ = getOrgan();
       if (base != null && organ != null)
@@ -138,7 +154,13 @@ class BaseOrganObject extends AreaObject
   public override function isWalkable(): Bool
     {
       var organ = getOrgan();
-      return organ != null && organ.type == RIBGATE;
+      if (organ == null)
+        return false;
+      if (organ.broken &&
+          (organ.type == RIBWALL ||
+           organ.type == RIBGATE))
+        return true;
+      return organ.type == RIBGATE;
     }
 
 // returns linked organ record

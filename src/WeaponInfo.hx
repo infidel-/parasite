@@ -9,5 +9,6 @@ typedef WeaponInfo = {
   var verb2: String;
   var type: _WeaponType;
   @:optional var spawnBlood: Bool;
+  @:optional var projectile: String;
   var canConceal: Bool;
 };

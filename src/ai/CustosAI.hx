@@ -5,10 +5,15 @@ import game.Game;
 
 class CustosAI extends AI
 {
-  public function new(g: Game, vx: Int, vy: Int)
+  public function new(g: Game, vx: Int, vy: Int,
+      ?variant: _CustosType)
     {
       super(g, vx, vy);
+      if (variant == null)
+        variant = FIRMUS;
       init();
+      custosType = variant;
+      applyCustosType(true);
       initPost(false);
     }
 
@@ -30,11 +35,10 @@ class CustosAI extends AI
         unknownCapped: 'Custos'
       };
       custosType = FIRMUS;
-      applyCustosType();
     }
 
 // applies variant stats to the guardian
-  public function applyCustosType()
+  public function applyCustosType(?fillHealth: Bool = false)
     {
       isCustos = true;
       switch (custosType)
@@ -44,8 +48,6 @@ class CustosAI extends AI
             constitution = 12 + Std.random(3) - 1;
             intellect = 2;
             psyche = 7;
-            maxEnergy = 240;
-            maxHealth = 26;
             name.real = name.realCapped = 'Firmus';
             name.unknown = name.unknownCapped = 'Firmus';
           case MORDAX:
@@ -53,15 +55,15 @@ class CustosAI extends AI
             constitution = 7 + Std.random(3) - 1;
             intellect = 2;
             psyche = 6;
-            maxEnergy = 190;
-            maxHealth = 16;
             name.real = name.realCapped = 'Mordax';
             name.unknown = name.unknownCapped = 'Mordax';
         }
+      recalc();
       energy = maxEnergy;
-      if (health > maxHealth)
+      if (fillHealth ||
+          health <= 0)
         health = maxHealth;
-      if (health <= 0)
+      else if (health > maxHealth)
         health = maxHealth;
       skills.addID(SKILL_ATTACK, 65);
     }
