@@ -323,6 +323,8 @@ class Game extends _SaveObject
         {
           if (ui.hud.state == HUD_TARGETING)
             ui.hud.targeting.exit(false);
+          else if (ui.hud.state == HUD_BASE_BUILDING)
+            ui.hud.state = HUD_DEFAULT;
           ui.hud.targeting.clearTarget();
         }
       if (location == LOCATION_AREA)

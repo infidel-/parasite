@@ -114,10 +114,10 @@ class RegionView
 // clears visible path
   public function clearPath(?clearAll: Bool = false)
     {
-      if (path == null)
-        return;
       if (clearAll)
         game.playerRegion.clearPath();
+      if (path == null)
+        return;
       path = null;
       scene.draw();
     }

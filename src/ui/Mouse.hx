@@ -36,16 +36,22 @@ class Mouse
         return;
 
       var pos = getXY();
-      if (pos.x < 0 || pos.y < 0 ||
-          pos.x >= game.area.width ||
-          pos.y >= game.area.height)
+      if (pos.x < 0 ||
+          pos.y < 0 ||
+          (game.location == LOCATION_AREA &&
+           (pos.x >= game.area.width ||
+            pos.y >= game.area.height)) ||
+          (game.location == LOCATION_REGION &&
+           (pos.x >= game.region.width ||
+            pos.y >= game.region.height)))
         return;
       if (game.ui.hud.state == HUD_TARGETING)
         {
           game.ui.hud.targeting.selectByMouse(pos.x, pos.y);
           return;
         }
-      if (game.ui.hud.state == HUD_BASE_BUILDING)
+      if (game.location == LOCATION_AREA &&
+          game.ui.hud.state == HUD_BASE_BUILDING)
         {
           onClickBase(pos);
           return;

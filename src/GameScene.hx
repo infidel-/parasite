@@ -342,11 +342,8 @@ class GameScene
 // common clear path (both images and list)
   public inline function clearPath()
     {
-      if (game.location == LOCATION_AREA)
-        game.scene.area.clearPath(true);
-
-      else if (game.location == LOCATION_REGION)
-        game.scene.region.clearPath(true);
+      area.clearPath(true);
+      region.clearPath(true);
     }
 
 

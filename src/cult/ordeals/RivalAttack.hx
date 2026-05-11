@@ -32,6 +32,15 @@ class RivalAttack extends Ordeal
       note = 'Destroy the rival sanctum.';
     }
 
+// get custom name for display
+  public override function customName(): String
+    {
+      var rival = game.getRivalCultByID(rivalCultID);
+      if (rival != null)
+        return name + ' (' + rival.customName() + ')';
+      return name;
+    }
+
 // adds attack actions for fully revealed rivals
   public static function initiateAction(cult: Cult, actions: Array<_PlayerAction>)
     {

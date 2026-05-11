@@ -728,6 +728,9 @@ class UI
 
 //      trace(vstate);
 //      Const.traceStack();
+      var stateChanged = (_state != vstate);
+      if (stateChanged)
+        game.scene.clearPath();
       var wasWindowOpen = (_state != UISTATE_DEFAULT);
       if (_state != UISTATE_DEFAULT)
         {
@@ -744,10 +747,6 @@ class UI
           if (_state != UISTATE_LOG)
             components[_state].scrollToBegin();
         }
-
-      // clear old path on opening message window
-      if (_state == UISTATE_MESSAGE)
-        game.scene.clearPath();
 
       if (_state == UISTATE_DEFAULT)
         {
