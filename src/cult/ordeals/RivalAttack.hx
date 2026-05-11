@@ -13,8 +13,8 @@ class RivalAttack extends Ordeal
   public function new(g: game.Game, rivalCultID: Int)
     {
       super(g);
-      this.rivalCultID = rivalCultID;
       init();
+      this.rivalCultID = rivalCultID;
       initPost(false);
       var rival = game.getRivalCultByID(rivalCultID);
       missions.push(new RivalBase(game, rivalCultID,

@@ -12,8 +12,8 @@ class RivalResearch extends Ordeal
   public function new(g: game.Game, rivalCultID: Int)
     {
       super(g);
-      this.rivalCultID = rivalCultID;
       init();
+      this.rivalCultID = rivalCultID;
       initPost(false);
       addRandomMembers({
         level: 1,
@@ -57,21 +57,13 @@ class RivalResearch extends Ordeal
             noMission: true,
             noEvents: true,
             noThrow: true,
-            type: AREA_CITY_LOW
+            type: AREA_CORP
           });
           if (area == null)
             area = game.region.getRandom({
               noMission: true,
-              noEvents: true,
               noThrow: true,
-              type: AREA_CITY_MEDIUM
-            });
-          if (area == null)
-            area = game.region.getRandom({
-              noMission: true,
-              noEvents: true,
-              noThrow: true,
-              type: AREA_CITY_HIGH
+              type: AREA_CORP
             });
           if (area == null)
             return;
