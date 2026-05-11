@@ -5,6 +5,7 @@ import game.Game;
 
 class RivalCult extends Cult
 {
+  public var rivalInfoID: String;
   public var rivalTemplate: String;
   public var rivalTactic: _RivalCultTactic;
   public var rivalRevealedLevel: Int;
@@ -20,6 +21,7 @@ class RivalCult extends Cult
   public override function init()
     {
       super.init();
+      rivalInfoID = '';
       rivalTemplate = '';
       rivalTactic = RIVAL_NON_COMBAT;
       rivalRevealedLevel = 0;
@@ -30,6 +32,8 @@ class RivalCult extends Cult
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+      if (rivalInfoID == null)
+        rivalInfoID = '';
       if (rivalTemplate == null)
         rivalTemplate = '';
     }

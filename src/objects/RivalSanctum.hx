@@ -8,8 +8,6 @@ class RivalSanctum extends AreaObject
 {
   public static inline var SANCTUM_W = 2;
   public static inline var SANCTUM_H = 2;
-  static inline var SANCTUM_IMAGE_ROW = 4;
-  static inline var SANCTUM_IMAGE_COL = 2;
 
   public var missionID: Int;
   public var health: Int;
@@ -18,13 +16,15 @@ class RivalSanctum extends AreaObject
   public var sanctumPartObjectIDs: Array<Int>;
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int,
-      missionID: Int, ?sanctumPartIndex: Int = 0)
+      missionID: Int, ?sanctumPartIndex: Int = 0, ?icon: _Icon)
     {
       super(g, vaid, vx, vy);
       init();
       this.missionID = missionID;
       this.sanctumPartIndex = sanctumPartIndex;
-      updateSanctumIcon();
+      if (icon == null)
+        icon = { row: 4, col: 2 };
+      setSanctumImage(icon);
       initPost(false);
     }
 
@@ -40,15 +40,9 @@ class RivalSanctum extends AreaObject
       sanctumPartIndex = 0;
       sanctumPartObjectIDs = [];
       imageName = CultBaseConst.IMAGE_NAME;
-      updateSanctumIcon();
+      imageRow = 4;
+      imageCol = 2;
       isStatic = true;
-    }
-
-// called after load or creation
-  public override function initPost(onLoad: Bool)
-    {
-      super.initPost(onLoad);
-      updateSanctumIcon();
     }
 
 // assign linked object IDs for a 2x2 sanctum group
@@ -58,12 +52,12 @@ class RivalSanctum extends AreaObject
       sanctumPartObjectIDs = partObjectIDs.copy();
     }
 
-// update icon frame for current sanctum part
-  function updateSanctumIcon()
+// sets icon frame for current sanctum part
+  function setSanctumImage(icon: _Icon)
     {
       imageName = CultBaseConst.IMAGE_NAME;
-      imageRow = SANCTUM_IMAGE_ROW + Std.int(sanctumPartIndex / SANCTUM_W);
-      imageCol = SANCTUM_IMAGE_COL + sanctumPartIndex % SANCTUM_W;
+      imageRow = icon.row + Std.int(sanctumPartIndex / SANCTUM_W);
+      imageCol = icon.col + sanctumPartIndex % SANCTUM_W;
       if (entity != null)
         updateImage();
     }

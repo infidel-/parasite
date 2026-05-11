@@ -5,6 +5,7 @@ import cult.Cult;
 import cult.Ordeal;
 import cult.RivalCult;
 import cult.base.CultBase;
+import const.CultConst;
 import game.Game;
 import _PlayerAction;
 import _PlayerActionType;
@@ -74,10 +75,8 @@ class MetamorphosisPhaseII extends Ordeal
       cult.level = 2;
       cult.base = new CultBase(game, game.area.id,
         game.playerArea.x, game.playerArea.y);
-      game.cults.push(createRivalCult(game, 'Cultus Ferri',
-        'combat', RIVAL_COMBAT));
-      game.cults.push(createRivalCult(game, 'The Choir Below',
-        'occult', RIVAL_NON_COMBAT));
+      game.cults.push(createRivalCult(game, CultConst.RIVAL_CULTUS_FERRI));
+      game.cults.push(createRivalCult(game, CultConst.RIVAL_CHOIR_BELOW));
       game.profile.addPediaArticle('cultBase');
       game.message({
         text: 'Cor Nefandum opens. Cultus Carnis enters its second form.',
@@ -106,21 +105,22 @@ class MetamorphosisPhaseII extends Ordeal
     }
 
 // creates a strategic rival as a real cult
-  static function createRivalCult(game: Game, name: String, template: String,
-      tactic: _RivalCultTactic): RivalCult
+  static function createRivalCult(game: Game, cultInfoID: String): RivalCult
     {
+      var info = CultConst.info(cultInfoID);
       var rival = new RivalCult(game);
-      rival.name = name;
+      rival.name = info.name;
       rival.isPlayer = false;
       rival.state = CULT_STATE_ACTIVE;
       rival.level = 2;
-      rival.rivalTemplate = template;
-      rival.rivalTactic = tactic;
-      if (tactic == RIVAL_COMBAT)
+      rival.rivalInfoID = info.id;
+      rival.rivalTemplate = info.memberTemplate;
+      rival.rivalTactic = info.tactic;
+      if (info.tactic == RIVAL_COMBAT)
         rival.power.combat = 8;
       else
         rival.power.media = 4 + Std.random(3);
-      for (type in rivalMemberTypes(template, tactic))
+      for (type in rivalMemberTypes(info.memberTemplate, info.tactic))
         addRivalMember(rival, type);
       rival.recalc();
       return rival;

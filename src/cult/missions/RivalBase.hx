@@ -1,6 +1,7 @@
 // mission to destroy a simplified rival cult base
 package cult.missions;
 
+import const.CultConst;
 import cult.Mission;
 import game.Game;
 import objects.RivalSanctum;
@@ -236,12 +237,13 @@ class RivalBase extends Mission
   function spawnSanctumGroup(x: Int, y: Int): RivalSanctum
     {
       var sanctums = [];
+      var icon = getSanctumIcon();
       for (dy in 0...RivalSanctum.SANCTUM_H)
         for (dx in 0...RivalSanctum.SANCTUM_W)
           {
             var partIndex = dy * RivalSanctum.SANCTUM_W + dx;
             sanctums.push(new RivalSanctum(game, game.area.id,
-              x + dx, y + dy, id, partIndex));
+              x + dx, y + dy, id, partIndex, icon));
           }
 
       var partObjectIDs = [];
@@ -252,6 +254,13 @@ class RivalBase extends Mission
       for (sanctum in sanctums)
         sanctum.setSanctumGroup(rootObjectID, partObjectIDs);
       return sanctums[0];
+    }
+
+// returns cult-specific sanctum icon
+  function getSanctumIcon(): _Icon
+    {
+      var rival = game.getRivalCultByID(rivalCultID);
+      return CultConst.info(rival.rivalInfoID).sanctumIcon;
     }
 
 // marks rival destroyed
