@@ -1,6 +1,8 @@
 // mission to destroy a simplified rival cult base
 package cult.missions;
 
+import ai.AI;
+import ai.AIData;
 import const.CultConst;
 import cult.Mission;
 import game.Game;
@@ -37,38 +39,140 @@ class RivalBase extends Mission
       spawned = false;
     }
 
-// spawn sanctum and defenders
+// spawn sanctum and update defender hostility
   public override function turn()
     {
-      if (spawned ||
-          game.location != LOCATION_AREA ||
+      if (game.location != LOCATION_AREA ||
           game.area == null ||
           game.area.id != areaID)
         return;
-      setupSewerExits();
-      var loc = findSanctumRoomLocation();
-      if (loc == null)
-        loc = findSanctumLocationNear(game.playerArea.x,
-        game.playerArea.y, 6);
-      if (loc == null)
-        loc = findSanctumLocation();
-      if (loc == null)
-        return;
-      spawned = true;
-      spawnSanctumGroup(loc.x, loc.y);
-      var guardX = loc.x + 1;
-      var guardY = loc.y + 1;
-      for (i in 0...3)
+
+      if (!spawned)
         {
-          var spawn = game.area.findEmptyLocationNear(guardX, guardY, 5);
-          if (spawn == null)
-            continue;
-          var ai = game.area.spawnAI(i == 0 ? 'security' : 'thug',
-            spawn.x, spawn.y);
-          ai.isGuard = true;
-          ai.guardTargetX = guardX;
-          ai.guardTargetY = guardY;
+          setupSewerExits();
+          var loc = findSanctumRoomLocation();
+          if (loc == null)
+            loc = findSanctumLocationNear(game.playerArea.x,
+            game.playerArea.y, 6);
+          if (loc == null)
+            loc = findSanctumLocation();
+          if (loc == null)
+            return;
+          spawned = true;
+          spawnSanctumGroup(loc.x, loc.y);
+          var guardX = loc.x + 1;
+          var guardY = loc.y + 1;
+          var defenders = rivalDefenders();
+          for (data in defenders)
+            {
+              var spawn = game.area.findEmptyLocationNear(guardX, guardY, 5);
+              if (spawn == null)
+                continue;
+              spawnRivalDefender(data, spawn.x, spawn.y, guardX, guardY);
+            }
         }
+
+      updateDefenderEnemies();
+    }
+
+// returns rival cultists available to guard this base
+  function rivalDefenders(): Array<AIData>
+    {
+      var rival = game.getCultByID(rivalCultID);
+      var members = [];
+      for (i in 0...rival.members.length)
+        if (i > 0 ||
+            rival.members.length == 1)
+          members.push(rival.members[i]);
+      members.sort(function(a, b) return Std.random(3) - 1);
+      if (members.length > 4)
+        members.resize(4);
+      return members;
+    }
+
+// spawns one cultist defender near the sanctum
+  function spawnRivalDefender(data: AIData, x: Int, y: Int,
+      guardX: Int, guardY: Int): AI
+    {
+      var rival = game.getCultByID(rivalCultID);
+      var ai = game.area.spawnAI(data.type, x, y, false);
+      ai.updateData(data, 'on rival base spawn');
+      ai.setCult(rival);
+      ai.isAggressive = true;
+      ai.isRelentless = true;
+/*
+      ai.isGuard = true;
+      ai.guardTargetX = guardX;
+      ai.guardTargetY = guardY;*/
+      game.area.addAI(ai);
+      return ai;
+    }
+
+// updates rival defenders with all attackers in the mission area
+  function updateDefenderEnemies()
+    {
+      var attackers = rivalBaseAttackers();
+      if (attackers.length == 0)
+        return;
+
+      for (defender in rivalBaseDefenders())
+        {
+          for (attacker in attackers)
+            defender.addEnemy(attacker);
+          if (defender.state != AI_STATE_ALERT)
+            defender.setState(AI_STATE_ALERT);
+        }
+    }
+
+// returns live rival cultists defending this base
+  function rivalBaseDefenders(): Array<AI>
+    {
+      var defenders = [];
+      for (ai in game.area.getAllAI())
+        if (ai.state != AI_STATE_DEAD &&
+            ai.state != AI_STATE_PRESERVED &&
+            ai.isCultist &&
+            ai.cultID == rivalCultID)
+          defenders.push(ai);
+      return defenders;
+    }
+
+// returns live player-side attackers in this mission area
+  function rivalBaseAttackers(): Array<AI>
+    {
+      var attackers = [];
+      for (ai in game.area.getAllAI())
+        if (isRivalBaseAttacker(ai))
+          attackers.push(ai);
+
+      if (game.player.state == PLR_STATE_HOST &&
+          isRivalBaseHostAttacker(game.player.host) &&
+          attackers.indexOf(game.player.host) < 0)
+        attackers.push(game.player.host);
+      return attackers;
+    }
+
+// checks whether an AI is a player cult attacker
+  function isRivalBaseAttacker(ai: AI): Bool
+    {
+      return (
+        ai != null &&
+        ai.state != AI_STATE_DEAD &&
+        ai.state != AI_STATE_PRESERVED &&
+        ai.isPlayerCultist()
+      );
+    }
+
+// checks whether the current player host should draw defender hostility
+  function isRivalBaseHostAttacker(ai: AI): Bool
+    {
+      return (
+        ai != null &&
+        ai.state != AI_STATE_DEAD &&
+        ai.state != AI_STATE_PRESERVED &&
+        (!ai.isCultist ||
+         ai.cultID != rivalCultID)
+      );
     }
 
 // marks mission sewer exits so completed mission areas are removed

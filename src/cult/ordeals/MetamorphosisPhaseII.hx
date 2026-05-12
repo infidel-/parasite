@@ -75,8 +75,10 @@ class MetamorphosisPhaseII extends Ordeal
       cult.level = 2;
       cult.base = new CultBase(game, game.area.id,
         game.playerArea.x, game.playerArea.y);
-      game.cults.push(createRivalCult(game, CultConst.RIVAL_CULTUS_FERRI));
-      game.cults.push(createRivalCult(game, CultConst.RIVAL_CHOIR_BELOW));
+      game.cults.push(createRivalCult(game,
+        CultConst.randomRivalID(RIVAL_COMBAT)));
+      game.cults.push(createRivalCult(game,
+        CultConst.randomRivalID(RIVAL_NON_COMBAT)));
       game.profile.addPediaArticle('cultBase');
       game.message({
         text: 'Cor Nefandum opens. Cultus Carnis enters its second form.',

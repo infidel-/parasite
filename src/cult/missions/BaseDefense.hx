@@ -130,7 +130,6 @@ class BaseDefense extends Mission
           ai.updateData(data, 'on base defense spawn');
           ai.setCult(rival);
         }
-      ai.isGuard = true;
       ai.isAggressive = true;
       ai.isRelentless = true;
       ai.setState(AI_STATE_ALERT);
