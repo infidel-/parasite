@@ -4,15 +4,21 @@ package cult.missions;
 import ai.AI;
 import ai.AIData;
 import const.CultConst;
+import cult.base.RivalBaseOrgan;
 import cult.Mission;
 import game.Game;
-import objects.RivalSanctum;
+import objects.base.RivalBaseOrganObject;
 import objects.mission.SewerExit;
 
 class RivalBase extends Mission
 {
+  public static inline var SANCTUM_W = 2;
+  public static inline var SANCTUM_H = 2;
+  public static inline var SANCTUM_HEALTH = 30;
+
   public var rivalCultID: Int;
   public var spawned: Bool;
+  public var organs: Array<RivalBaseOrgan>;
 
   public function new(g: Game, rivalCultID: Int, markerAreaID: Int)
     {
@@ -37,6 +43,7 @@ class RivalBase extends Mission
       note = 'Destroy the rival sanctum.';
       rivalCultID = -1;
       spawned = false;
+      organs = [];
     }
 
 // spawn sanctum and update defender hostility
@@ -100,10 +107,9 @@ class RivalBase extends Mission
       ai.setCult(rival);
       ai.isAggressive = true;
       ai.isRelentless = true;
-/*
       ai.isGuard = true;
       ai.guardTargetX = guardX;
-      ai.guardTargetY = guardY;*/
+      ai.guardTargetY = guardY;
       game.area.addAI(ai);
       return ai;
     }
@@ -119,9 +125,41 @@ class RivalBase extends Mission
         {
           for (attacker in attackers)
             defender.addEnemy(attacker);
+        }
+    }
+
+// alerts rival defenders when the sanctum takes combat damage
+  public function onSanctumAttacked(attacker: AI)
+    {
+      if (game.area == null ||
+          game.area.id != areaID)
+        return;
+      for (defender in rivalBaseDefenders())
+        {
+          if (isDefenderInFight(defender))
+            continue;
+          if (attacker != null &&
+              attacker.state != AI_STATE_DEAD)
+            defender.addEnemy(attacker);
           if (defender.state != AI_STATE_ALERT)
             defender.setState(AI_STATE_ALERT);
         }
+    }
+
+// returns whether defender already sees a target it should fight
+  function isDefenderInFight(defender: AI): Bool
+    {
+      for (enemyID in defender.enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null ||
+              enemy.state == AI_STATE_DEAD ||
+              defender.isSameCult(enemy) ||
+              !defender.seesPosition(enemy.x, enemy.y))
+            continue;
+          return true;
+        }
+      return false;
     }
 
 // returns live rival cultists defending this base
@@ -225,8 +263,8 @@ class RivalBase extends Mission
       var desiredX = centerX - 1;
       var desiredY = centerY - 1;
       var spots = [];
-      for (y in room.y1...room.y2 - RivalSanctum.SANCTUM_H + 2)
-        for (x in room.x1...room.x2 - RivalSanctum.SANCTUM_W + 2)
+      for (y in room.y1...room.y2 - SANCTUM_H + 2)
+        for (x in room.x1...room.x2 - SANCTUM_W + 2)
           {
             if (!canPlaceSanctumAt(x, y))
               continue;
@@ -283,8 +321,8 @@ class RivalBase extends Mission
   function findSanctumLocation(): { x: Int, y: Int }
     {
       var spots = [];
-      for (y in 0...game.area.height - RivalSanctum.SANCTUM_H + 1)
-        for (x in 0...game.area.width - RivalSanctum.SANCTUM_W + 1)
+      for (y in 0...game.area.height - SANCTUM_H + 1)
+        for (x in 0...game.area.width - SANCTUM_W + 1)
           {
             if (!canPlaceSanctumAt(x, y))
               continue;
@@ -322,8 +360,8 @@ class RivalBase extends Mission
 // check whether a 2x2 sanctum can be placed at top-left tile x,y
   function canPlaceSanctumAt(x: Int, y: Int): Bool
     {
-      for (dy in 0...RivalSanctum.SANCTUM_H)
-        for (dx in 0...RivalSanctum.SANCTUM_W)
+      for (dy in 0...SANCTUM_H)
+        for (dx in 0...SANCTUM_W)
           {
             var tx = x + dx;
             var ty = y + dy;
@@ -337,27 +375,22 @@ class RivalBase extends Mission
       return true;
     }
 
-// spawn one linked 2x2 sanctum group
-  function spawnSanctumGroup(x: Int, y: Int): RivalSanctum
+// spawn one rival base sanctum organ group
+  function spawnSanctumGroup(x: Int, y: Int): RivalBaseOrgan
     {
-      var sanctums = [];
       var icon = getSanctumIcon();
-      for (dy in 0...RivalSanctum.SANCTUM_H)
-        for (dx in 0...RivalSanctum.SANCTUM_W)
+      var organ = new RivalBaseOrgan(RIVAL_SANCTUM, 'rival sanctum',
+        game.area.id, x, y, SANCTUM_W, SANCTUM_H, SANCTUM_HEALTH, icon);
+      organs.push(organ);
+
+      for (dy in 0...SANCTUM_H)
+        for (dx in 0...SANCTUM_W)
           {
-            var partIndex = dy * RivalSanctum.SANCTUM_W + dx;
-            sanctums.push(new RivalSanctum(game, game.area.id,
-              x + dx, y + dy, id, partIndex, icon));
+            var partIndex = dy * SANCTUM_W + dx;
+            new RivalBaseOrganObject(game, game.area.id,
+              x + dx, y + dy, id, organ.id, partIndex);
           }
-
-      var partObjectIDs = [];
-      for (sanctum in sanctums)
-        partObjectIDs.push(sanctum.id);
-
-      var rootObjectID = sanctums[0].id;
-      for (sanctum in sanctums)
-        sanctum.setSanctumGroup(rootObjectID, partObjectIDs);
-      return sanctums[0];
+      return organ;
     }
 
 // returns cult-specific sanctum icon
@@ -365,6 +398,56 @@ class RivalBase extends Mission
     {
       var rival = game.getRivalCultByID(rivalCultID);
       return CultConst.info(rival.rivalInfoID).sanctumIcon;
+    }
+
+// returns rival organ by ID
+  public function getOrgan(organID: Int): RivalBaseOrgan
+    {
+      for (organ in organs)
+        if (organ.id == organID)
+          return organ;
+      return null;
+    }
+
+// applies combat damage to a rival organ
+  public function damageOrgan(organ: RivalBaseOrgan, damage: Int)
+    {
+      if (organ.destroyed)
+        return;
+      organ.health -= damage;
+      if (organ.health > 0)
+        {
+          refreshOrganObjects(organ);
+          game.log('The sanctum shudders.');
+          return;
+        }
+      organ.health = 0;
+      organ.destroyed = true;
+      refreshOrganObjects(organ);
+      if (!isCompleted)
+        success();
+      game.log('The rival sanctum collapses.');
+    }
+
+// refreshes visible object parts linked to rival organ
+  function refreshOrganObjects(organ: RivalBaseOrgan)
+    {
+      var area = game.region.get(organ.areaID);
+      if (area == null)
+        return;
+      for (o in area.getObjects())
+        if (o.type == 'rival_base_organ')
+          {
+            var obj: RivalBaseOrganObject = cast o;
+            if (obj.missionID != id ||
+                obj.organID != organ.id)
+              continue;
+            obj.destroyed = organ.destroyed;
+            obj.syncOrganImage();
+            if (obj.entity != null)
+              obj.updateImage();
+            area.recalcTile(o.x, o.y);
+          }
     }
 
 // marks rival destroyed

@@ -277,7 +277,10 @@ public function show()
     {
       // too far away
       var distSqr = Const.distanceSquared(x, y, xx, yy);
-      if (distSqr > VIEW_DISTANCE * VIEW_DISTANCE)
+      var viewDistance = VIEW_DISTANCE;
+      if (game.area.info.isSmall == true)
+        viewDistance *= 2;
+      if (distSqr > viewDistance * viewDistance)
         return false;
 
       // check for visibility
@@ -297,6 +300,25 @@ public function show()
   public inline function isNear(xx: Int, yy: Int): Bool
     {
       return (Math.abs(xx - x) <= 1 && Math.abs(yy - y) <= 1);
+    }
+
+// reacts to combat noise by searching around the noise origin
+  public function onHearNoise(xx: Int, yy: Int)
+    {
+      if (!isAggressive)
+        return;
+      if (state != AI_STATE_IDLE &&
+          state != AI_STATE_MOVE_TARGET &&
+          state != AI_STATE_ALERT &&
+          state != AI_STATE_SEARCH_LAST_SEEN &&
+          state != AI_STATE_SEARCH_AREA)
+        return;
+
+      if (state != AI_STATE_ALERT)
+        setState(AI_STATE_ALERT, REASON_WITNESS);
+      timers.alert = ALERTED_TIMER;
+      roamTargetX = xx;
+      roamTargetY = yy;
     }
 
 
@@ -1202,7 +1224,7 @@ public function show()
           !isPlayerCultist())
         {
 //          trace(id + ' findNearestEnemy(): check for player');
-          
+
           // no host or attached
           if (game.player.state == PLR_STATE_HOST)
             {
@@ -1241,9 +1263,6 @@ public function show()
 // this ai was attacked by (player, ai)
   public function attacked(attacker: { who: String, ai: AI, weapon: WeaponInfo })
     {
-      // propagate shooting/melee event
-      game.managerArea.onAttack(x, y,
-        attacker.weapon.isRanged);
       // hosts are braindead in that regard
       if (!isPlayerHost())
         {

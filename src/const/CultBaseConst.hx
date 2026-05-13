@@ -45,6 +45,8 @@ class CultBaseConst
     { row: 2, col: 6, width: 2, height: 2 };
   public static var BLOCK_CAULDRON: _IconBlock =
     { row: 4, col: 0, width: 2, height: 2 };
+  public static var sanctumDestroyedIcon: _Icon =
+    { row: 6, col: 2 };
 
   public static var buildableTypes: Array<_CultBaseOrganType> = [
     RIBWALL,

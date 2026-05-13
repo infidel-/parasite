@@ -194,13 +194,17 @@ class AreaManager extends _SaveObject
 // ===============================  EVENTS  =========================================
 
 
-// event: attack (called immediately)
-  public function onAttack(x: Int, y: Int, isRanged: Bool)
+// event: attack noise (called immediately)
+  public function onNoise(x: Int, y: Int, isRanged: Bool)
     {
-      var tmp = area.getAIinRadius(x, y,
-        (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE), isRanged);
+      var radius = (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE);
+      if (area.info.isSmall == true)
+        radius *= 2;
+      var tmp = area.getAIinRadius(x, y, radius, false);
       for (ai in tmp)
-        if (ai.state == AI_STATE_IDLE ||
+        if (ai.isAggressive)
+          ai.onHearNoise(x, y);
+        else if (ai.state == AI_STATE_IDLE ||
             ai.state == AI_STATE_MOVE_TARGET)
           ai.setState(AI_STATE_ALERT, REASON_WITNESS);
     }
