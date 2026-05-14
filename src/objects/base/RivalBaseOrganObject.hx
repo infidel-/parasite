@@ -52,13 +52,16 @@ class RivalBaseOrganObject extends AreaObject
       if (organ != null)
         {
           destroyed = organ.destroyed;
-          icon = isDestroyed() ?
-            CultBaseConst.sanctumDestroyedIcon :
-            organ.icon;
+          icon = organ.icon;
+          if (isDestroyed())
+            imageName = CultBaseConst.DESTROYED_IMAGE_NAME;
           width = organ.width;
         }
       else if (isDestroyed())
-        icon = CultBaseConst.sanctumDestroyedIcon;
+        {
+          icon = CultBaseConst.sanctumDestroyedIcon;
+          imageName = CultBaseConst.DESTROYED_IMAGE_NAME;
+        }
       imageRow = icon.row + Std.int(basePartIndex / width);
       imageCol = icon.col + basePartIndex % width;
     }

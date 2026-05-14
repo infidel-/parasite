@@ -18,6 +18,7 @@ class Images
   var scene: GameScene;
   public var entities: Image;
   public var cultBase: Image;
+  public var cultBaseDestroyed: Image;
   public var creatures: Image;
   public var sewersObjects1: Image;
   public var undergroundLabObjects1: Image;
@@ -38,6 +39,8 @@ class Images
       entities.src = 'img/entities64.png';
       cultBase = new Image();
       cultBase.src = CultBaseConst.IMAGE_PATH;
+      cultBaseDestroyed = new Image();
+      cultBaseDestroyed.src = CultBaseConst.DESTROYED_IMAGE_PATH;
       creatures = new Image();
       creatures.src = 'img/creatures64.png';
       sewersObjects1 = new Image();

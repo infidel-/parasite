@@ -19,6 +19,8 @@ class CultBaseConst
 {
   public static inline var IMAGE_NAME = 'cultBase';
   public static inline var IMAGE_PATH = 'img/cult-base.png';
+  public static inline var DESTROYED_IMAGE_NAME = 'cultBaseDestroyed';
+  public static inline var DESTROYED_IMAGE_PATH = 'img/cult-base-destroyed.png';
   public static inline var IMAGE_COLS = 8;
   public static inline var IMAGE_ROWS = 6;
 
