@@ -39,7 +39,7 @@ class Default extends Tileset
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
-    0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+    0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 2 - roads, indoor

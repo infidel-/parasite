@@ -493,9 +493,9 @@ class Organs extends _SaveObject
   function getActionTargetAI(): AI
     {
       var targeting = game.ui.hud.targeting;
-      if (targeting.target != null &&
+      if (targeting.getAITarget() != null &&
           targeting.isTargetVisibleOnScreen())
-        return targeting.target;
+        return targeting.getAITarget();
 
       var pos = game.scene.mouse.getXY();
       var ai = game.area.getAI(pos.x, pos.y);

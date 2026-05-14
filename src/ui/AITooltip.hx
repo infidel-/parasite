@@ -116,6 +116,8 @@ class AITooltip
       if (ai.isCultist)
         buf.add(' ' + Icon.cultist);
       buf.add('<br/>');
+      if (ai.isCultist)
+        buf.add(game.getCultByID(ai.cultID).Name() + '<br/>');
       if (!ai.isIt() && ai.isJobKnown)
         buf.add('job: ' + ai.job + '<br/>');
       if (ai.isAttrsKnown)

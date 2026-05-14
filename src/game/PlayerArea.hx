@@ -5,6 +5,7 @@ package game;
 import ai.*;
 import entities.PlayerEntity;
 import objects.AreaObject;
+import objects.base.RivalBaseOrganObject;
 import const.*;
 import __Math;
 
@@ -124,12 +125,13 @@ class PlayerArea extends _SaveObject
       if (base != null &&
           game.area.isHabitat &&
           base.areaID == game.area.id)
-        game.ui.hud.addAction({
+        game.ui.hud.addKeyAction({
           id: 'forma',
           type: ACTION_AREA,
           name: 'Forma',
           energy: 0,
-          isVirtual: true
+          isVirtual: true,
+          key: 'f'
         });
 
       if (state == PLR_STATE_PARASITE)
@@ -535,6 +537,20 @@ class PlayerArea extends _SaveObject
     }
 
 
+// action: attack this target wrapper
+  public function attackTargetAction(target: AttackTarget,
+      ?preferMelee: Bool = false)
+    {
+      switch (target.type)
+        {
+          case TARGET_AI:
+            attackAction(target.ai, preferMelee);
+          case TARGET_OBJECT:
+            attackObjectAction(target.obj, preferMelee);
+          default:
+        }
+    }
+
 // action: attack this ai
   public function attackAction(ai: AI, ?preferMelee: Bool = false)
     {
@@ -572,6 +588,72 @@ class PlayerArea extends _SaveObject
       inventory.weaponID = oldWeaponID;
 
       actionPost(); // post-action call
+    }
+
+// action: attack this object
+  public function attackObjectAction(obj: AreaObject, ?preferMelee: Bool = false)
+    {
+      // not in a host mode
+      if (state != PLR_STATE_HOST)
+        return;
+
+      // cannot attack when paralyzed
+      if (player.host.effects.has(EFFECT_PARALYSIS))
+        {
+          game.actionFailed('Your host is paralyzed.');
+          return;
+        }
+
+      // check if player can see that spot
+      if (!game.area.isVisible(x, y, obj.x, obj.y))
+        return;
+      if (!obj.isAttackable())
+        return;
+
+      var inventory = player.host.inventory;
+      var oldWeaponID = inventory.weaponID;
+      if (preferMelee)
+        {
+          var meleeWeapon = getKnownMeleeWeapon();
+          if (meleeWeapon != null)
+            inventory.weaponID = meleeWeapon.id;
+        }
+      var weapon = player.host.getCurrentWeaponItemInfo().weapon;
+      if (!weapon.isRanged &&
+          !isNearObject(obj))
+        {
+          if (Std.isOfType(obj, RivalBaseOrganObject))
+            {
+              var rivalObj: RivalBaseOrganObject = cast obj;
+              var attackPart = rivalObj.getAttackPartNear(x, y);
+              if (attackPart != null)
+                obj = attackPart;
+            }
+          if (!isNearObject(obj))
+            {
+              inventory.weaponID = oldWeaponID;
+              return;
+            }
+        }
+
+      // use common attack routine
+      var target: AttackTarget = {
+        game: game,
+        type: TARGET_OBJECT,
+        ai: null,
+        obj: obj,
+      };
+
+      CommonLogic.logicAttack(Attacker.fromAI(game, player.host, true), target);
+      inventory.weaponID = oldWeaponID;
+
+      actionPost(); // post-action call
+    }
+
+// checks whether player is near object tile
+  inline function isNearObject(obj: AreaObject): Bool
+    {
+      return (Math.abs(obj.x - x) <= 1 && Math.abs(obj.y - y) <= 1);
     }
 
 
@@ -1203,7 +1285,7 @@ class PlayerArea extends _SaveObject
     {
       currentAction = a;
       game.ui.hud.showOverlay();
-      
+
       // start doing it
       nextAction();
     }

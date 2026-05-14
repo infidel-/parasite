@@ -14,8 +14,9 @@ typedef BaseDefenseAttackTarget = {
 
 class BaseDefenseLogic
 {
-// pushes attackers toward heart and damages adjacent organs
-  public static function commandAttackers(game: Game, targetIDs: Array<Int>)
+// pushes one attacker toward heart or damages an adjacent organ
+// this is called in ai.turnInternal() through mission turnAI() hook
+  public static function commandAttacker(game: Game, ai: AI)
     {
       var base = game.cults[0].base;
       if (base == null)
@@ -23,30 +24,36 @@ class BaseDefenseLogic
       var heart = base.getHeart();
       if (heart == null)
         return;
-      for (id in targetIDs)
+
+      // if defender has drawn aggro, retaliate before attacking the base
+      var retaliationTarget = getRetaliationTarget(game, ai);
+      if (retaliationTarget != null)
         {
-          var ai = game.area.getAIByID(id);
-          if (ai == null)
-            continue;
-          var target = getAdjacentAttackTarget(game, base, ai);
-          if (target != null)
-            {
-              CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
-                game: game,
-                type: TARGET_OBJECT,
-                ai: null,
-                obj: target.obj
-              });
-              continue;
-            }
-          target = getAttackTarget(game, base, ai);
-          if (target == null)
-            continue;
-          if (ai.state != AI_STATE_ALERT)
-            ai.setState(AI_STATE_ALERT);
-          ai.roamTargetX = target.x;
-          ai.roamTargetY = target.y;
+          CommonLogic.logicAttack(Attacker.fromAI(game, ai, false),
+            retaliationTarget);
+          return;
         }
+
+      // if adjacent to an organ part, attack it
+      var target = getAdjacentAttackTarget(game, base, ai);
+      if (target != null)
+        {
+          CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
+            game: game,
+            type: TARGET_OBJECT,
+            ai: null,
+            obj: target.obj
+          });
+          return;
+        }
+
+      // otherwise move toward the closest reachable tile adjacent to an organ part
+      target = getAttackTarget(game, base, ai);
+      if (target == null)
+        return;
+      if (ai.state != AI_STATE_ALERT)
+        ai.setState(AI_STATE_ALERT);
+      ai.logicMoveTo(target.x, target.y);
     }
 
 // stores bodies left after defense
@@ -63,6 +70,62 @@ class BaseDefenseLogic
       if (bodies > 0)
         game.logsg('Body storage receives ' + (bodies - lost) +
           ' remains; ' + lost + ' are lost.');
+    }
+
+// calms living area AI after base defense ends
+  public static function calmAreaAI(game: Game)
+    {
+      if (game.area == null)
+        return;
+      for (ai in game.area.getAllAI())
+        {
+          if (ai.state == AI_STATE_DEAD ||
+              ai.state == AI_STATE_PRESERVED ||
+              ai.isPlayerHost())
+            continue;
+          ai.enemies = new List();
+          ai.alertness = 0;
+          if (ai.command != null)
+            {
+              ai.command.type = CMD_NONE;
+              ai.command.attackTargetType = TARGET_AI;
+              ai.command.attackTargetID = -1;
+              ai.command.attackObjectID = -1;
+              ai.command.leaveAreaTurns = 0;
+            }
+          if (ai.state != AI_STATE_IDLE)
+            ai.setState(AI_STATE_IDLE);
+        }
+    }
+
+// finds the closest visible enemy that has already attacked this attacker
+  static function getRetaliationTarget(game: Game, ai: AI): AttackTarget
+    {
+      var best: AI = null;
+      var bestDist = 999999;
+      for (enemyID in ai.enemies)
+        {
+          var enemy = game.area.getAIByID(enemyID);
+          if (enemy == null ||
+              enemy.state == AI_STATE_DEAD ||
+              ai.isSameCult(enemy) ||
+              !ai.seesPosition(enemy.x, enemy.y))
+            continue;
+          var dist = Const.distanceSquared(ai.x, ai.y, enemy.x, enemy.y);
+          if (best == null ||
+              dist < bestDist)
+            {
+              best = enemy;
+              bestDist = dist;
+            }
+        }
+      if (best == null)
+        return null;
+      return {
+        game: game,
+        type: TARGET_AI,
+        ai: best
+      };
     }
 
 // finds a target object part adjacent to the attacker

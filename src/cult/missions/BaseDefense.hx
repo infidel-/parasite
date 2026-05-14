@@ -18,7 +18,7 @@ class BaseDefense extends Mission
       this.cultID = cultID;
       initPost(false);
       this.areaID = areaID;
-      markerAreaID = areaID;
+      setMarkerAreaID(areaID);
     }
 
 // init mission fields
@@ -33,16 +33,32 @@ class BaseDefense extends Mission
       cultID = -1;
     }
 
-// spawn and drive attackers
+// spawns attackers before area AI turns
+  public override function turnPreAI()
+    {
+      if (!spawned)
+        spawnAttackers();
+    }
+
+// drive one base attacker during its AI turn
+  public override function turnAI(ai: AI): Bool
+    {
+      for (id in targetIDs)
+        if (id == ai.id)
+          {
+            BaseDefenseLogic.commandAttacker(game, ai);
+            return true;
+          }
+      return false;
+    }
+
+// check mission progress
   public override function turn()
     {
       if (game.location != LOCATION_AREA ||
           game.area == null ||
           game.area.id != areaID)
         return;
-      if (!spawned)
-        spawnAttackers();
-      BaseDefenseLogic.commandAttackers(game, targetIDs);
       checkComplete();
     }
 
@@ -64,6 +80,7 @@ class BaseDefense extends Mission
       base.activeDefenseMissionID = -1;
       base.activeDefenseTimer = 0;
       base.defensesSurvived++;
+      BaseDefenseLogic.calmAreaAI(game);
       BaseDefenseLogic.loadBodiesIntoStorage(game);
     }
 
@@ -113,7 +130,6 @@ class BaseDefense extends Mission
           ai.updateData(data, 'on base defense spawn');
           ai.setCult(rival);
         }
-      ai.isGuard = true;
       ai.isAggressive = true;
       ai.isRelentless = true;
       ai.setState(AI_STATE_ALERT);

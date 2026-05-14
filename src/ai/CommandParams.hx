@@ -11,7 +11,9 @@ enum CommandType
 class CommandParams extends _SaveObject
 {
   public var type: CommandType;
+  public var attackTargetType: _AITargetType;
   public var attackTargetID: Int;
+  public var attackObjectID: Int;
   public var leaveAreaTurns: Int;
 
 // create command params
@@ -24,7 +26,9 @@ class CommandParams extends _SaveObject
   public function init()
     {
       type = CMD_NONE;
+      attackTargetType = TARGET_AI;
       attackTargetID = -1;
+      attackObjectID = -1;
       leaveAreaTurns = 0;
     }
 }

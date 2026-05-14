@@ -16,7 +16,7 @@ class TeamBaseDefense extends Mission
       init();
       initPost(false);
       this.areaID = areaID;
-      markerAreaID = areaID;
+      setMarkerAreaID(areaID);
     }
 
 // init mission fields
@@ -30,16 +30,32 @@ class TeamBaseDefense extends Mission
       spawned = false;
     }
 
-// spawn and drive team attackers
+// spawns team attackers before area AI turns
+  public override function turnPreAI()
+    {
+      if (!spawned)
+        spawnAttackers();
+    }
+
+// drive one team attacker during its AI turn
+  public override function turnAI(ai: AI): Bool
+    {
+      for (id in targetIDs)
+        if (id == ai.id)
+          {
+            BaseDefenseLogic.commandAttacker(game, ai);
+            return true;
+          }
+      return false;
+    }
+
+// check mission progress
   public override function turn()
     {
       if (game.location != LOCATION_AREA ||
           game.area == null ||
           game.area.id != areaID)
         return;
-      if (!spawned)
-        spawnAttackers();
-      BaseDefenseLogic.commandAttackers(game, targetIDs);
       checkComplete();
     }
 
@@ -61,6 +77,7 @@ class TeamBaseDefense extends Mission
       base.activeDefenseMissionID = -1;
       base.activeDefenseTimer = 0;
       base.defensesSurvived++;
+      BaseDefenseLogic.calmAreaAI(game);
       BaseDefenseLogic.loadBodiesIntoStorage(game);
       game.group.onRepelAmbush();
     }

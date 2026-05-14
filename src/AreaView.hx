@@ -103,6 +103,11 @@ class AreaView
               o.entity.isVisible()))
             o.entity.draw(ctx);
 
+      // object targeting reticle draws after all objects
+      for (o in game.area.getObjects())
+        if (o.entity != null)
+          o.entity.drawTargetReticle(ctx);
+
       // effects
       for (e in _effects)
         if (e.isVisible())
@@ -907,10 +912,10 @@ class AreaView
 // clears visible path
   public function clearPath(?clearAll: Bool = false)
     {
-      if (path == null)
-        return;
       if (clearAll)
         game.playerArea.clearPath();
+      if (path == null)
+        return;
       path = null;
       scene.draw();
     }

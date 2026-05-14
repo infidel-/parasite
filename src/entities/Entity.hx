@@ -151,6 +151,10 @@ class Entity
             img = game.scene.images.entities;
           case 'cultBase':
             img = game.scene.images.cultBase;
+          case 'cultBaseDestroyed':
+            img = game.scene.images.cultBaseDestroyed;
+          case 'creatures':
+            img = game.scene.images.creatures;
           case 'male':
             img = game.scene.images.male;
           case 'female':

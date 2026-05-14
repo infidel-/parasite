@@ -1,6 +1,8 @@
 package objects.base;
 
 import _AtmosphereLightMeta;
+import ai.AI;
+import ai.CustosLogic;
 import game.Game;
 import lighting.AtmosphereLightProfiles;
 
@@ -27,6 +29,16 @@ class CorNefandum extends BaseOrganObject
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(game.region.get(areaID));
+    }
+
+// alerts custodes when the heart takes combat damage
+  public override function onDamage(damage: Int, ?attacker: AI)
+    {
+      CustosLogic.onHeartAttacked(attacker);
+      var base = game.cults[0].base;
+      var organ = getOrgan();
+      if (base != null && organ != null)
+        base.damageOrgan(organ, damage);
     }
 
 // get creepy red fleshy glow emitted by the heart

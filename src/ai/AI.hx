@@ -156,25 +156,8 @@ public function show()
 
       // select random icon if not set
       if (tileAtlasX == -1 &&
-          tileAtlasY == -1 && isHuman)
-        {
-          if (type == 'civilian')
-            {
-              var data = game.scene.images.getRandomCivilianAI(isMale);
-              tileAtlasX = data.x;
-              tileAtlasY = data.y;
-              if (job == 'undefined' || job == null)
-                job = data.job;
-              if (income == 0)
-                income = data.income;
-            }
-          else
-            {
-              var tmp = game.scene.images.getSpecialAI(type, isMale);
-              tileAtlasX = tmp.x;
-              tileAtlasY = tmp.y;
-            }
-        }
+          tileAtlasY == -1)
+        createIcon();
       // legacy: for loading old saves
       // specials were saved as specials[tileAtlasX] index number
       else if (tileAtlasY == -1 && isHuman)
@@ -201,15 +184,48 @@ public function show()
         entity.isMaleAtlas = true;
       else
         entity.isMaleAtlas = useMaleSpecialAtlas;
-      if (type == 'dog')
-        entity.setIcon('entities', 1, Const.ROW_PARASITE);
-      else if (type == 'choirOfDiscord')
-        entity.setIcon('entities', Const.FRAME_CHOIR, Const.ROW_PARASITE);
-      else entity.setIcon(
-        (isMale ? 'male' : 'female'),
-        tileAtlasX, tileAtlasY);
+      // first try to set ai-specific icon
+      if (!setIcon())
+        entity.setIcon(
+          (isMale ? 'male' : 'female'),
+          tileAtlasX, tileAtlasY);
 
       updateEntity(); // update icon
+    }
+
+// select AI icon data before entity creation
+  public dynamic function createIcon()
+    {
+      if (!isHuman)
+        return;
+
+      if (type == 'civilian')
+        {
+          var data = game.scene.images.getRandomCivilianAI(isMale);
+          var applyJob = (job == 'undefined' || job == null);
+          tileAtlasX = data.x;
+          tileAtlasY = data.y;
+          if (applyJob)
+            job = data.job;
+          if (income == 0)
+            income = data.income;
+          if (applyJob &&
+              data.jobInfo != null &&
+              data.jobInfo.init != null)
+            data.jobInfo.init(game, this);
+        }
+      else
+        {
+          var tmp = game.scene.images.getSpecialAI(type, isMale);
+          tileAtlasX = tmp.x;
+          tileAtlasY = tmp.y;
+        }
+    }
+
+// set custom entity icon, returning true when handled
+  public dynamic function setIcon(): Bool
+    {
+      return false;
     }
 
 // update AI tile to a new one
@@ -261,7 +277,10 @@ public function show()
     {
       // too far away
       var distSqr = Const.distanceSquared(x, y, xx, yy);
-      if (distSqr > VIEW_DISTANCE * VIEW_DISTANCE)
+      var viewDistance = VIEW_DISTANCE;
+      if (game.area.info.isSmall == true)
+        viewDistance *= 2;
+      if (distSqr > viewDistance * viewDistance)
         return false;
 
       // check for visibility
@@ -281,6 +300,25 @@ public function show()
   public inline function isNear(xx: Int, yy: Int): Bool
     {
       return (Math.abs(xx - x) <= 1 && Math.abs(yy - y) <= 1);
+    }
+
+// reacts to combat noise by searching around the noise origin
+  public function onHearNoise(xx: Int, yy: Int)
+    {
+      if (!isAggressive)
+        return;
+      if (state != AI_STATE_IDLE &&
+          state != AI_STATE_MOVE_TARGET &&
+          state != AI_STATE_ALERT &&
+          state != AI_STATE_SEARCH_LAST_SEEN &&
+          state != AI_STATE_SEARCH_AREA)
+        return;
+
+      if (state != AI_STATE_ALERT)
+        setState(AI_STATE_ALERT, REASON_WITNESS);
+      timers.alert = ALERTED_TIMER;
+      roamTargetX = xx;
+      roamTargetY = yy;
     }
 
 
@@ -614,10 +652,14 @@ public function show()
           else if (state == AI_STATE_POST_DETACH_MEMORIES &&
               stateTime >= 2)
             setState(AI_STATE_IDLE);
-          
+
+          // active missions can take over AI behavior
+          else if (game.cults[0].turnMissionAI(this))
+            1;
+
           // custodes guard the base instead of following the player
           else if (isCustos)
-            CustodesLogic.turn(this);
+            CustosLogic.turn(this);
 
           // cultists from player cult have follower logic
           else if (isPlayerCultist())
@@ -1182,7 +1224,7 @@ public function show()
           !isPlayerCultist())
         {
 //          trace(id + ' findNearestEnemy(): check for player');
-          
+
           // no host or attached
           if (game.player.state == PLR_STATE_HOST)
             {
@@ -1221,9 +1263,6 @@ public function show()
 // this ai was attacked by (player, ai)
   public function attacked(attacker: { who: String, ai: AI, weapon: WeaponInfo })
     {
-      // propagate shooting/melee event
-      game.managerArea.onAttack(x, y,
-        attacker.weapon.isRanged);
       // hosts are braindead in that regard
       if (!isPlayerHost())
         {

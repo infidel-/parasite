@@ -1550,6 +1550,10 @@ class AreaGame extends _SaveObject
       // turns spent in this area
       turns++;
 
+      // mission setup before AI turns
+      if (isMissionArea())
+        game.cults[0].turnMissionPreAI();
+
       // AI logic
       for (ai in _ai)
         {
@@ -2101,7 +2105,8 @@ class Test {
 // spawn AI (both from command-line and internally)
   public static var aiTypes = [
     'agent', 'blackops', 'bum (hobo)', 'civilian (civ)',
-    'choir of discord (choir)', 'custos', 'dog', 'police (cop)', 'prostitute (pro)', 'soldier',
+    'choir of discord (choir)', 'dog', 'firmus', 'mordax',
+    'police (cop)', 'prostitute (pro)', 'soldier',
     'security (sec)', 'scientist (sci)', 'team',
     'thug',
   ];

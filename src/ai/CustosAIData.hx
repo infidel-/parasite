@@ -22,7 +22,7 @@ class CustosAIData extends AIData
   public override function init()
     {
       super.init();
-      type = 'custos';
+      type = 'firmus';
       isHuman = false;
       isCustos = true;
       isGuard = true;
@@ -35,7 +35,6 @@ class CustosAIData extends AIData
         unknown: 'custos',
         unknownCapped: 'Custos'
       };
-      custosType = FIRMUS;
       areaID = -1;
       x = 0;
       y = 0;

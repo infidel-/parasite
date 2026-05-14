@@ -188,6 +188,7 @@ class WorldConst
         lawResponseMax: 4,
         lawResponseEnabled: true,
         isHighRisk: true,
+        isSmall: true,
         blocksRegionRoad1: true,
         ai: [
           'scientist' => 90,
@@ -218,6 +219,7 @@ class WorldConst
         lawResponseMax: 0,
         lawResponseEnabled: false,
         isHighRisk: false,
+        isSmall: true,
         ai: new Map(),
         objects: []
       },
@@ -244,6 +246,7 @@ class WorldConst
         lawResponseMax: 0,
         lawResponseEnabled: false,
         isHighRisk: true,
+        isSmall: true,
         ai: new Map(),
         objects: []
       },
@@ -270,6 +273,7 @@ class WorldConst
         lawResponseMax: 4,
         lawResponseEnabled: true,
         isHighRisk: false,
+        isSmall: true,
         ai: new Map(),
         objects: []
       },
@@ -296,6 +300,7 @@ class WorldConst
         lawResponseMax: 4,
         lawResponseEnabled: true,
         isHighRisk: true,
+        isSmall: true,
         blocksRegionRoad1: true,
         ai: [
           'corpo' => 70,
@@ -372,10 +377,11 @@ typedef AreaInfo = {
   var lawResponseMax: Int; // maximum amount of law ai on screen during response
   var lawResponseEnabled: Bool; // law responce enabled?
   var isHighRisk: Bool; // is this area type considered high risk?
+  @:optional var isSmall: Bool; // does this area double AI sight and hearing?
   var ai: Map<String, Int>; // ai spawn probability
   var objects: Array<{ id: String, amount: Int }>; // objects spawn info
   // area alertness modifier on alertness propagation and increase/decrease
-  // < 1.0 - slow 
+  // < 1.0 - slow
   // > 1.0 - fast
   var alertnessMod: Float;
   var pediaArticle: String; // pedia article

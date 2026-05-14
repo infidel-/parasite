@@ -13,8 +13,8 @@ class RivalAttack extends Ordeal
   public function new(g: game.Game, rivalCultID: Int)
     {
       super(g);
-      this.rivalCultID = rivalCultID;
       init();
+      this.rivalCultID = rivalCultID;
       initPost(false);
       var rival = game.getRivalCultByID(rivalCultID);
       missions.push(new RivalBase(game, rivalCultID,
@@ -30,6 +30,15 @@ class RivalAttack extends Ordeal
       actions = 0;
       rivalCultID = -1;
       note = 'Destroy the rival sanctum.';
+    }
+
+// get custom name for display
+  public override function customName(): String
+    {
+      var rival = game.getRivalCultByID(rivalCultID);
+      if (rival != null)
+        return name + ' (' + rival.customName() + ')';
+      return name;
     }
 
 // adds attack actions for fully revealed rivals

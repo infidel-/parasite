@@ -359,6 +359,28 @@ class Cult extends _SaveObject
       return free;
     }
 
+// get random available free members by level filter
+  public function getRandomAvailableMembers(params: {level: Int, amount: Int, ?excluding: Int, onlyGivenLevel: Bool}): Array<Int>
+    {
+      var free = getFreeMembers(params.level, params.onlyGivenLevel);
+      var avail = [];
+      for (id in free)
+        {
+          if (params.excluding == null ||
+              id != params.excluding)
+            avail.push(id);
+        }
+      avail.sort(function(a, b) return Std.random(3) - 1);
+
+      var selected = [];
+      for (i in 0...params.amount)
+        {
+          if (i < avail.length)
+            selected.push(avail[i]);
+        }
+      return selected;
+    }
+
 // get member by ID
   public function getMemberByID(memberID: Int): AIData
     {
@@ -1068,6 +1090,25 @@ class Cult extends _SaveObject
       if (mission != null &&
           !mission.isCompleted)
         mission.turn();
+    }
+
+// mission processing before area AI turns
+  public function turnMissionPreAI()
+    {
+      var mission = ordeals.getAreaMission(game.area);
+      if (mission != null &&
+          !mission.isCompleted)
+        mission.turnPreAI();
+    }
+
+// mission-controlled AI turn processing
+  public function turnMissionAI(ai: AI): Bool
+    {
+      var mission = ordeals.getAreaMission(game.area);
+      if (mission == null ||
+          mission.isCompleted)
+        return false;
+      return mission.turnAI(ai);
     }
 
   // add random bad effect to cult

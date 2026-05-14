@@ -19,6 +19,8 @@ class CultBaseConst
 {
   public static inline var IMAGE_NAME = 'cultBase';
   public static inline var IMAGE_PATH = 'img/cult-base.png';
+  public static inline var DESTROYED_IMAGE_NAME = 'cultBaseDestroyed';
+  public static inline var DESTROYED_IMAGE_PATH = 'img/cult-base-destroyed.png';
   public static inline var IMAGE_COLS = 8;
   public static inline var IMAGE_ROWS = 6;
 
@@ -45,6 +47,8 @@ class CultBaseConst
     { row: 2, col: 6, width: 2, height: 2 };
   public static var BLOCK_CAULDRON: _IconBlock =
     { row: 4, col: 0, width: 2, height: 2 };
+  public static var sanctumDestroyedIcon: _Icon =
+    { row: 6, col: 2 };
 
   public static var buildableTypes: Array<_CultBaseOrganType> = [
     RIBWALL,

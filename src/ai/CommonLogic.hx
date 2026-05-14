@@ -133,6 +133,9 @@ class CommonLogic
             }
         }
 
+      // propagate attacker-side combat noise
+      game.managerArea.onNoise(attacker.x, attacker.y, weapon.isRanged);
+
       // notify target
       if (target.type == TARGET_AI)
         {

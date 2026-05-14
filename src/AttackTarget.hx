@@ -13,6 +13,8 @@ class AttackTarget
   public var obj: AreaObject;
   public var x(get, null): Int;
   public var y(get, null): Int;
+  public var centerX(get, null): Float;
+  public var centerY(get, null): Float;
 
   public function new(game: Game, type: _AITargetType, ai: AI,
       ?obj: AreaObject)
@@ -51,6 +53,42 @@ class AttackTarget
           default:
             return 0;
         }
+    }
+
+  function get_centerX(): Float
+    {
+      switch (type)
+        {
+          case TARGET_PLAYER:
+            return game.playerArea.x + 0.5;
+          case TARGET_AI:
+            return ai.x + 0.5;
+          case TARGET_OBJECT:
+            return obj.getTargetCenterX();
+          default:
+            return 0;
+        }
+    }
+
+  function get_centerY(): Float
+    {
+      switch (type)
+        {
+          case TARGET_PLAYER:
+            return game.playerArea.y + 0.5;
+          case TARGET_AI:
+            return ai.y + 0.5;
+          case TARGET_OBJECT:
+            return obj.getTargetCenterY();
+          default:
+            return 0;
+        }
+    }
+
+// checks whether target is within melee reach of a tile
+  public function isNear(tx: Int, ty: Int): Bool
+    {
+      return (Math.abs(x - tx) <= 1 && Math.abs(y - ty) <= 1);
     }
 
 // get name + article depending on whether its known or not

@@ -49,6 +49,13 @@ class DogAI extends AI
       return true;
     }
 
+// set dog entity icon
+  public override function setIcon(): Bool
+    {
+      entity.setIcon('entities', 1, Const.ROW_PARASITE);
+      return true;
+    }
+
 // hook: ai-specific bonus actions
   public override function updateActionList()
     {

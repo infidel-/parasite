@@ -72,7 +72,8 @@ class Command
           hud.addAction({
             id: 'command.attack',
             type: ACTION_AREA,
-            name: target.prepLog('"Destroy him!"'),
+            name: (target.type == TARGET_AI ?
+              target.ai.prepLog('"Destroy him!"') : '"Destroy that!"'),
           });
         }
       hud.addAction({
@@ -129,18 +130,31 @@ class Command
     }
 
 // get current valid attack target
-  function getAttackTarget(): AI
+  function getAttackTarget(): AttackTarget
     {
       if (game.area == null)
         return null;
 
       var target = hud.targeting.target;
       if (target == null ||
-          target.state == AI_STATE_DEAD ||
-          !hud.targeting.isTargetVisibleOnScreen() ||
-          game.area.getAIByID(target.id) == null)
+          !hud.targeting.isTargetVisibleOnScreen())
         return null;
 
+      switch (target.type)
+        {
+          case TARGET_AI:
+            if (target.ai == null ||
+                target.ai.state == AI_STATE_DEAD ||
+                game.area.getAIByID(target.ai.id) == null)
+              return null;
+          case TARGET_OBJECT:
+            if (target.obj == null ||
+                !target.obj.isAttackable() ||
+                game.area.getObject(target.obj.id) == null)
+              return null;
+          default:
+            return null;
+        }
       return target;
     }
 
@@ -154,7 +168,8 @@ class Command
           return false;
         }
 
-      if (target.isPlayerCultist())
+      if (target.type == TARGET_AI &&
+          target.ai.isPlayerCultist())
         {
           game.actionFailed('Followers refuse to attack their own cult.');
           return false;
@@ -164,9 +179,14 @@ class Command
       for (ai in followers)
         {
           ai.command.type = CMD_ATTACK;
-          ai.command.attackTargetID = target.id;
+          ai.command.attackTargetType = target.type;
+          ai.command.attackTargetID = (
+            target.type == TARGET_AI ? target.ai.id : -1);
+          ai.command.attackObjectID = (
+            target.type == TARGET_OBJECT ? target.obj.id : -1);
           ai.command.leaveAreaTurns = 0;
-          ai.addEnemy(target);
+          if (target.type == TARGET_AI)
+            ai.addEnemy(target.ai);
           if (ai.state != AI_STATE_ALERT)
             ai.setState(AI_STATE_ALERT);
         }
@@ -183,7 +203,9 @@ class Command
       for (ai in followers)
         {
           ai.command.type = CMD_LEAVE_AREA;
+          ai.command.attackTargetType = TARGET_AI;
           ai.command.attackTargetID = -1;
+          ai.command.attackObjectID = -1;
           ai.command.leaveAreaTurns = 0;
           ai.enemies = new List();
           if (ai.state != AI_STATE_IDLE)

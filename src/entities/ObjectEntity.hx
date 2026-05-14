@@ -22,6 +22,15 @@ class ObjectEntity extends Entity
 
   public override function draw(ctx: CanvasRenderingContext2D)
     {
+      // get targeting/target flags
+      var showTarget = game.ui.hud.targeting.isTargetedObject(object);
+
+      // draw target frame
+      if (showTarget)
+        drawTargetImage(ctx,
+          Const.FRAME_TARGET_FRAME,
+          Const.ROW_REGION_ICON);
+
       super.draw(ctx);
       if (object.type == 'door')
         {
@@ -34,7 +43,43 @@ class ObjectEntity extends Entity
         }
       else if (object.type == 'base_organ')
         drawBaseOrganOverlay(ctx);
+    }
 
+// draws target mode reticle at object target center
+  public function drawTargetReticle(ctx: CanvasRenderingContext2D)
+    {
+      if (game.ui.hud.state == HUD_TARGETING &&
+          game.ui.hud.targeting.isTargetingObject(object))
+        {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+          ctx.shadowBlur = 5;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+          drawTargetImage(ctx,
+            Const.FRAME_TARGET_RETICLE,
+            Const.ROW_REGION_ICON);
+          ctx.shadowColor = 'transparent';
+        }
+    }
+
+// draws target UI icon at object target center
+  function drawTargetImage(ctx: CanvasRenderingContext2D, col: Int, row: Int)
+    {
+      var img = game.scene.images.entities;
+      if (!img.complete ||
+          img.naturalWidth <= 0)
+        return;
+      var tile = Const.TILE_SIZE;
+      var clean = Const.TILE_SIZE_CLEAN;
+      ctx.drawImage(img,
+        col * clean,
+        row * clean + 1,
+        clean,
+        clean - 1,
+        (object.getTargetCenterX() - game.scene.cameraTileX1) * tile - tile / 2,
+        (object.getTargetCenterY() - game.scene.cameraTileY1) * tile - tile / 2,
+        tile,
+        tile);
     }
 
 // draws base organ durability overlays

@@ -3,16 +3,18 @@ package ui;
 
 import ai.AI;
 import game.Game;
+import objects.AreaObject;
+import objects.base.RivalBaseOrganObject;
 import ui.HUD;
 
 class Targeting
 {
   var game: Game;
   var hud: HUD;
-  var list: Array<AI>;
+  var list: Array<AttackTarget>;
   var index: Int;
-  public var target: AI;
-  public var targetingAI: AI;
+  public var target: AttackTarget;
+  public var targetingTarget: AttackTarget;
 
   public function new(g: Game, h: HUD)
     {
@@ -21,7 +23,7 @@ class Targeting
       list = [];
       index = -1;
       target = null;
-      targetingAI = null;
+      targetingTarget = null;
     }
 
 // enter targeting mode
@@ -37,16 +39,16 @@ class Targeting
           return false;
         }
       index = 0;
-      targetingAI = list[0];
+      targetingTarget = list[0];
       if (target != null)
         {
           var i = 0;
-          for (ai in list)
+          for (entry in list)
             {
-              if (ai == target)
+              if (sameTarget(entry, target))
                 {
                   index = i;
-                  targetingAI = ai;
+                  targetingTarget = entry;
                   break;
                 }
               i++;
@@ -68,7 +70,7 @@ class Targeting
       hud.state = HUD_DEFAULT;
       list = [];
       index = -1;
-      targetingAI = null;
+      targetingTarget = null;
       if (updateUI)
         {
           game.scene.mouse.update(true);
@@ -96,7 +98,7 @@ class Targeting
           if (index >= list.length)
             index = 0;
         }
-      targetingAI = list[index];
+      targetingTarget = list[index];
       if (game.location == LOCATION_AREA)
         game.scene.area.draw();
     }
@@ -106,8 +108,8 @@ class Targeting
     {
       if (hud.state != HUD_TARGETING)
         return;
-      if (targetingAI != null)
-        target = targetingAI;
+      if (targetingTarget != null)
+        target = targetingTarget;
       exit();
     }
 
@@ -119,27 +121,18 @@ class Targeting
           list.length == 0)
         return false;
 
-      var ai = game.area.getAI(x, y);
-      if (ai == null)
+      var i = getTargetIndexAt(x, y);
+      if (i < 0)
         return false;
 
-      var i = 0;
-      for (entry in list)
-        {
-          if (entry == ai)
-            {
-              index = i;
-              targetingAI = ai;
-              target = ai;
-              exit();
-              return true;
-            }
-          i++;
-        }
-      return false;
+      index = i;
+      targetingTarget = list[index];
+      target = targetingTarget;
+      exit();
+      return true;
     }
 
-// update targeting ai from mouse hover
+// update targeting target from mouse hover
   public function hoverByMouse(x: Int, y: Int): Bool
     {
       if (hud.state != HUD_TARGETING ||
@@ -147,25 +140,15 @@ class Targeting
           list.length == 0)
         return false;
 
-      var ai = game.area.getAI(x, y);
-      if (ai == null)
+      var i = getTargetIndexAt(x, y);
+      if (i < 0 ||
+          index == i)
         return false;
 
-      var i = 0;
-      for (entry in list)
-        {
-          if (entry == ai)
-            {
-              if (index == i)
-                return false;
-              index = i;
-              targetingAI = ai;
-              game.scene.area.draw();
-              return true;
-            }
-          i++;
-        }
-      return false;
+      index = i;
+      targetingTarget = list[index];
+      game.scene.area.draw();
+      return true;
     }
 
 // clear target and exit targeting
@@ -187,10 +170,58 @@ class Targeting
   public function clearTargetIf(ai: AI)
     {
       if (target == null ||
-          target != ai)
+          target.type != TARGET_AI ||
+          target.ai != ai)
         return;
       clearTarget();
       game.updateHUD();
+    }
+
+// returns current target as AI, or null for object targets
+  public function getAITarget(): AI
+    {
+      if (target == null ||
+          target.type != TARGET_AI)
+        return null;
+      return target.ai;
+    }
+
+// checks whether this AI is currently highlighted in targeting mode
+  public function isTargetingAI(ai: AI): Bool
+    {
+      return targetingTarget != null &&
+        targetingTarget.type == TARGET_AI &&
+        targetingTarget.ai == ai;
+    }
+
+// checks whether this AI is the stored target
+  public function isTargetedAI(ai: AI): Bool
+    {
+      return target != null &&
+        target.type == TARGET_AI &&
+        target.ai == ai &&
+        isTargetVisibleOnScreen();
+    }
+
+// checks whether this object is currently highlighted in targeting mode
+  public function isTargetingObject(obj: AreaObject): Bool
+    {
+      if (obj.getTargetObject() != obj)
+        return false;
+      return targetingTarget != null &&
+        targetingTarget.type == TARGET_OBJECT &&
+        targetingTarget.obj.getTargetKey() == obj.getTargetKey();
+    }
+
+// checks whether this object is the stored target
+  public function isTargetedObject(obj: AreaObject): Bool
+    {
+      if (obj.getTargetObject() != obj)
+        return false;
+      return target != null &&
+        target.type == TARGET_OBJECT &&
+        target.obj.getTargetKey() == obj.getTargetKey() &&
+        isTargetVisibleOnScreen();
     }
 
 // check whether target is visible on screen
@@ -201,6 +232,9 @@ class Targeting
       if (game.location != LOCATION_AREA)
         return false;
       if (!game.area.inVisibleRect(target.x, target.y))
+        return false;
+      if (target.type == TARGET_OBJECT &&
+          !target.obj.isAttackable())
         return false;
       return game.playerArea.sees(target.x, target.y);
     }
@@ -225,7 +259,7 @@ class Targeting
         return false;
       if (!isTargetVisibleOnScreen())
         return false;
-      if (!target.isNear(game.playerArea.x, game.playerArea.y))
+      if (!isTargetNear(target))
         return false;
 
       if (game.playerArea.getKnownMeleeWeapon() != null)
@@ -239,10 +273,11 @@ class Targeting
       return false;
     }
 
-// build a list of visible ai for targeting
-  function buildList(): Array<AI>
+// build a list of visible attack targets
+  function buildList(): Array<AttackTarget>
     {
-      var list: Array<{ ai: AI, angle: Float }> = [];
+      var list: Array<{ target: AttackTarget, angle: Float }> = [];
+      var objectTargets = new Map<String, Bool>();
       for (ai in game.area.getAllAI())
         {
           if (ai.state == AI_STATE_DEAD ||
@@ -258,7 +293,39 @@ class Targeting
           if (angle < 0)
             angle += Math.PI * 2;
           list.push({
-            ai: ai,
+            target: {
+              game: game,
+              type: TARGET_AI,
+              ai: ai,
+            },
+            angle: angle,
+          });
+        }
+      for (obj in game.area.getObjects())
+        {
+          if (!obj.isAttackable())
+            continue;
+          if (!game.area.inVisibleRect(obj.x, obj.y))
+            continue;
+          if (!game.playerArea.sees(obj.x, obj.y))
+            continue;
+          var targetObj = obj.getTargetObject();
+          var key = targetObj.getTargetKey();
+          if (objectTargets.exists(key))
+            continue;
+          objectTargets.set(key, true);
+          var dx = targetObj.getTargetCenterX() - (game.playerArea.x + 0.5);
+          var dy = targetObj.getTargetCenterY() - (game.playerArea.y + 0.5);
+          var angle = Math.atan2(dy, dx);
+          if (angle < 0)
+            angle += Math.PI * 2;
+          list.push({
+            target: {
+              game: game,
+              type: TARGET_OBJECT,
+              ai: null,
+              obj: targetObj,
+            },
             angle: angle,
           });
         }
@@ -269,9 +336,69 @@ class Targeting
           return 1;
         return 0;
       });
-      var out: Array<AI> = [];
+      var out: Array<AttackTarget> = [];
       for (entry in list)
-        out.push(entry.ai);
+        out.push(entry.target);
       return out;
+    }
+
+// returns index of target at a tile, preferring AI over objects
+  function getTargetIndexAt(x: Int, y: Int): Int
+    {
+      var ai = game.area.getAI(x, y);
+      if (ai != null)
+        for (i in 0...list.length)
+          {
+            var entry = list[i];
+            if (entry.type == TARGET_AI &&
+                entry.ai == ai)
+              return i;
+          }
+
+      for (obj in game.area.getObjectsAt(x, y))
+        for (i in 0...list.length)
+          {
+            var entry = list[i];
+            if (!obj.isAttackable())
+              continue;
+            if (entry.type == TARGET_OBJECT &&
+                entry.obj.getTargetKey() == obj.getTargetObject().getTargetKey())
+              return i;
+          }
+
+      return -1;
+    }
+
+// checks whether two target wrappers reference the same entity
+  function sameTarget(a: AttackTarget, b: AttackTarget): Bool
+    {
+      if (a == null ||
+          b == null ||
+          a.type != b.type)
+        return false;
+      switch (a.type)
+        {
+          case TARGET_AI:
+            return a.ai == b.ai;
+          case TARGET_OBJECT:
+            return a.obj.getTargetKey() == b.obj.getTargetKey();
+          case TARGET_PLAYER:
+            return true;
+        }
+    }
+
+// checks whether current player host is close enough for melee target attack
+  function isTargetNear(target: AttackTarget): Bool
+    {
+      if (target.isNear(game.playerArea.x, game.playerArea.y))
+        return true;
+      if (target.type == TARGET_OBJECT &&
+          Std.isOfType(target.obj, RivalBaseOrganObject))
+        {
+          var rivalObj: RivalBaseOrganObject = cast target.obj;
+          return rivalObj.getAttackPartNear(
+            game.playerArea.x, game.playerArea.y) != null;
+        }
+      return false;
     }
 }

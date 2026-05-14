@@ -3,6 +3,7 @@ package ai;
 
 import ai.AI;
 import game.Game;
+import objects.AreaObject;
 
 class FollowerLogic
 {
@@ -50,6 +51,12 @@ class FollowerLogic
 // AI idle vision: look for enemies in list
   static function visionIdle(ai: AI)
     {
+      if (findNearestRivalBaseOrgan(ai) != null)
+        {
+          ai.setState(AI_STATE_ALERT);
+          return;
+        }
+
       // find visible enemies
       if (ai.enemies.length == 0)
         return;
@@ -71,7 +78,7 @@ class FollowerLogic
   static function stateAlert(ai: AI)
     {
       // find nearest target
-      var target = ai.findNearestEnemy();
+      var target = findAttackTarget(ai);
       if (target == null)
         {
           ai.setState(AI_STATE_IDLE);
@@ -94,6 +101,58 @@ class FollowerLogic
         }
 
       // try to attack
-      CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
+      var attacker = Attacker.fromAI(game, ai, false);
+      if (RivalBaseOrganAttackLogic.tryAttack(game, ai, attacker, target))
+        return;
+      CommonLogic.logicAttack(attacker, target);
+    }
+
+// finds the follower attack target with rival organs as mission objectives
+  static function findAttackTarget(ai: AI): AttackTarget
+    {
+      var organTarget = findNearestRivalBaseOrgan(ai);
+      if (organTarget == null)
+        return ai.findNearestEnemy();
+
+      var enemyTarget = ai.findNearestVisibleEnemy();
+      if (enemyTarget == null)
+        return organTarget;
+
+      var organDist = Const.distanceSquared(
+        ai.x, ai.y, organTarget.x, organTarget.y);
+      var enemyDist = Const.distanceSquared(
+        ai.x, ai.y, enemyTarget.x, enemyTarget.y);
+      if (organDist < enemyDist)
+        return organTarget;
+      return enemyTarget;
+    }
+
+// finds the nearest visible rival base organ object
+  static function findNearestRivalBaseOrgan(ai: AI): AttackTarget
+    {
+      var best: AreaObject = null;
+      var bestDist = 999999;
+      for (o in game.area.getObjects())
+        {
+          if (o.type != 'rival_base_organ' ||
+              !o.isAttackable() ||
+              !ai.seesPosition(o.x, o.y))
+            continue;
+          var dist = Const.distanceSquared(ai.x, ai.y, o.x, o.y);
+          if (best == null ||
+              dist < bestDist)
+            {
+              best = o;
+              bestDist = dist;
+            }
+        }
+      if (best == null)
+        return null;
+      return {
+        game: game,
+        type: TARGET_OBJECT,
+        ai: null,
+        obj: best
+      };
     }
 }

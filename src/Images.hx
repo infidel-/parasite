@@ -18,6 +18,8 @@ class Images
   var scene: GameScene;
   public var entities: Image;
   public var cultBase: Image;
+  public var cultBaseDestroyed: Image;
+  public var creatures: Image;
   public var sewersObjects1: Image;
   public var undergroundLabObjects1: Image;
   public var male: Image;
@@ -37,6 +39,10 @@ class Images
       entities.src = 'img/entities64.png';
       cultBase = new Image();
       cultBase.src = CultBaseConst.IMAGE_PATH;
+      cultBaseDestroyed = new Image();
+      cultBaseDestroyed.src = CultBaseConst.DESTROYED_IMAGE_PATH;
+      creatures = new Image();
+      creatures.src = 'img/creatures64.png';
       sewersObjects1 = new Image();
       sewersObjects1.src = Sewers.OBJECTS_IMAGE_PATH;
       undergroundLabObjects1 = new Image();
@@ -85,6 +91,18 @@ class Images
   public function getDefaultTileset(): Tileset
     {
       return defaultTileset;
+    }
+
+// get random Firmus custos sprite data
+  public function getFirmusCustosIcon(): _Icon
+    {
+      return firmusCustosIcons[Std.random(firmusCustosIcons.length)];
+    }
+
+// get Mordax custos sprite data
+  public function getMordaxCustosIcon(): _Icon
+    {
+      return mordaxCustosIcons[Std.random(mordaxCustosIcons.length)];
     }
 
 // get random civilian sprite data together with job info
@@ -202,6 +220,20 @@ class Images
         y: tmp.y,
       };
     }
+
+  static var firmusCustosIcons: Array<_Icon> = [
+    { row: 0, col: 0 },
+    { row: 0, col: 1 },
+    { row: 0, col: 2 },
+    { row: 0, col: 3 },
+  ];
+  static var mordaxCustosIcons: Array<_Icon> = [
+    { row: 1, col: 0 },
+    { row: 1, col: 1 },
+    { row: 1, col: 2 },
+    { row: 1, col: 3 },
+    { row: 1, col: 4 },
+  ];
 
   public static var civiliansFemale = [
     { x: 0, y: 0, job: 'teacher' },

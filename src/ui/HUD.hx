@@ -1059,13 +1059,13 @@ public function onMouseLeave()
       if (action.id == 'shootTarget')
         {
           if (targeting.canShootTarget())
-            game.playerArea.attackAction(targeting.target);
+            game.playerArea.attackTargetAction(targeting.target);
           return;
         }
       if (action.id == 'attackTarget')
         {
           if (targeting.canAttackTarget())
-            game.playerArea.attackAction(targeting.target, true);
+            game.playerArea.attackTargetAction(targeting.target, true);
           return;
         }
       if (action.id == 'commandMenu')

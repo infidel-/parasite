@@ -2,10 +2,11 @@
 
 package ui;
 
-import AreaLightingDebug;
 import game.Game;
 import ai.AI;
 import js.html.MouseEvent;
+import objects.AreaObject;
+import objects.base.RivalBaseOrganObject;
 
 class Mouse
 {
@@ -36,16 +37,22 @@ class Mouse
         return;
 
       var pos = getXY();
-      if (pos.x < 0 || pos.y < 0 ||
-          pos.x >= game.area.width ||
-          pos.y >= game.area.height)
+      if (pos.x < 0 ||
+          pos.y < 0 ||
+          (game.location == LOCATION_AREA &&
+           (pos.x >= game.area.width ||
+            pos.y >= game.area.height)) ||
+          (game.location == LOCATION_REGION &&
+           (pos.x >= game.region.width ||
+            pos.y >= game.region.height)))
         return;
       if (game.ui.hud.state == HUD_TARGETING)
         {
           game.ui.hud.targeting.selectByMouse(pos.x, pos.y);
           return;
         }
-      if (game.ui.hud.state == HUD_BASE_BUILDING)
+      if (game.location == LOCATION_AREA &&
+          game.ui.hud.state == HUD_BASE_BUILDING)
         {
           onClickBase(pos);
           return;
@@ -108,6 +115,7 @@ class Mouse
         return;
       // attack AI or move
       var ai = game.area.getAI(pos.x, pos.y);
+      var obj = getAttackableObject(pos.x, pos.y);
       var isVisible = game.scene.area.isVisible(pos.x, pos.y);
       if (isVisible)
         {
@@ -115,6 +123,11 @@ class Mouse
           if (canAttack(ai))
             {
               game.playerArea.attackAction(ai);
+              return;
+            }
+          if (canAttackObject(obj))
+            {
+              game.playerArea.attackObjectAction(obj);
               return;
             }
 
@@ -272,6 +285,7 @@ class Mouse
         }
       var isVisible = game.scene.area.isVisible(pos.x, pos.y);
       var ai = game.area.getAI(pos.x, pos.y);
+      var obj = getAttackableObject(pos.x, pos.y);
       if (isVisible)
         {
           // attack cursor
@@ -281,6 +295,15 @@ class Mouse
               c = (weapon.isRanged ? CURSOR_ATTACK_RANGED : CURSOR_ATTACK);
               if (!weapon.isRanged &&
                   !ai.isNear(game.playerArea.x, game.playerArea.y))
+                c = CURSOR_BLOCKED;
+              game.scene.area.clearPath();
+            }
+          else if (canAttackObject(obj))
+            {
+              var weapon = game.playerArea.getCurrentWeapon();
+              c = (weapon.isRanged ? CURSOR_ATTACK_RANGED : CURSOR_ATTACK);
+              if (!weapon.isRanged &&
+                  !isNearObject(obj))
                 c = CURSOR_BLOCKED;
               game.scene.area.clearPath();
             }
@@ -348,6 +371,38 @@ class Mouse
     {
       return (game.player.state == PLR_STATE_HOST &&
         ai != null && ai != game.player.host);
+    }
+
+// returns attackable object at the tile
+  function getAttackableObject(x: Int, y: Int): AreaObject
+    {
+      for (o in game.area.getObjectsAt(x, y))
+        if (o.isAttackable())
+          return o;
+      return null;
+    }
+
+// check if player can attack that object
+  inline function canAttackObject(obj: AreaObject)
+    {
+      return (game.player.state == PLR_STATE_HOST &&
+        obj != null &&
+        obj.isAttackable());
+    }
+
+// checks whether player is near object tile
+  inline function isNearObject(obj: AreaObject)
+    {
+      if (Math.abs(obj.x - game.playerArea.x) <= 1 &&
+          Math.abs(obj.y - game.playerArea.y) <= 1)
+        return true;
+      if (Std.isOfType(obj, RivalBaseOrganObject))
+        {
+          var rivalObj: RivalBaseOrganObject = cast obj;
+          return rivalObj.getAttackPartNear(
+            game.playerArea.x, game.playerArea.y) != null;
+        }
+      return false;
     }
 
 // returns true if area inspect mode is active

@@ -29,7 +29,9 @@ class CommandLogic
   static function clearCommand(ai: AI)
     {
       ai.command.type = CMD_NONE;
+      ai.command.attackTargetType = TARGET_AI;
       ai.command.attackTargetID = -1;
+      ai.command.attackObjectID = -1;
       ai.command.leaveAreaTurns = 0;
     }
 
@@ -40,6 +42,21 @@ class CommandLogic
           game.area == null)
         return false;
 
+      switch (ai.command.attackTargetType)
+        {
+          case TARGET_AI:
+            return commandAttackAI(ai);
+          case TARGET_OBJECT:
+            return commandAttackObject(ai);
+          case TARGET_PLAYER:
+            clearCommand(ai);
+            return false;
+        }
+    }
+
+// apply attack command state for an ai target
+  static function commandAttackAI(ai: AI): Bool
+    {
       var targetID = ai.command.attackTargetID;
       if (targetID < 0)
         {
@@ -63,6 +80,40 @@ class CommandLogic
       return false;
     }
 
+// apply attack command state for an object target
+  static function commandAttackObject(ai: AI): Bool
+    {
+      var objectID = ai.command.attackObjectID;
+      if (objectID < 0)
+        {
+          clearCommand(ai);
+          return false;
+        }
+
+      var obj = game.area.getObject(objectID);
+      if (obj == null ||
+          !obj.isAttackable())
+        {
+          clearCommand(ai);
+          return false;
+        }
+
+      if (ai.state != AI_STATE_ALERT)
+        ai.setState(AI_STATE_ALERT);
+
+      var attacker = Attacker.fromAI(game, ai, false);
+      var target: AttackTarget = {
+        game: game,
+        type: TARGET_OBJECT,
+        ai: null,
+        obj: obj
+      };
+      if (RivalBaseOrganAttackLogic.tryAttack(game, ai, attacker, target))
+        return true;
+      CommonLogic.logicAttack(attacker, target);
+      return true;
+    }
+
 // check if ai is standing on an exit tile
   static function isExitTile(ai: AI): Bool
     {
@@ -76,9 +127,9 @@ class CommandLogic
     }
 
 // find nearest reachable exit tile for leave-area command
-  static function getLeaveAreaTarget(ai: AI): { x: Int, y: Int }
+  static function getLeaveAreaTarget(ai: AI): _Tile
     {
-      var best = null;
+      var best: _Tile = null;
       var bestPathLength = -1;
 
       for (o in game.area.getObjects())
