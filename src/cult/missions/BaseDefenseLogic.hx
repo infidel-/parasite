@@ -88,7 +88,9 @@ class BaseDefenseLogic
           if (ai.command != null)
             {
               ai.command.type = CMD_NONE;
+              ai.command.attackTargetType = TARGET_AI;
               ai.command.attackTargetID = -1;
+              ai.command.attackObjectID = -1;
               ai.command.leaveAreaTurns = 0;
             }
           if (ai.state != AI_STATE_IDLE)

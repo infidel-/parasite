@@ -537,6 +537,20 @@ class PlayerArea extends _SaveObject
     }
 
 
+// action: attack this target wrapper
+  public function attackTargetAction(target: AttackTarget,
+      ?preferMelee: Bool = false)
+    {
+      switch (target.type)
+        {
+          case TARGET_AI:
+            attackAction(target.ai, preferMelee);
+          case TARGET_OBJECT:
+            attackObjectAction(target.obj, preferMelee);
+          default:
+        }
+    }
+
 // action: attack this ai
   public function attackAction(ai: AI, ?preferMelee: Bool = false)
     {

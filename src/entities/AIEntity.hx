@@ -49,10 +49,9 @@ class AIEntity extends PawnEntity
       var showTargeting = false;
       var showTarget = false;
       if (game.ui.hud.state == HUD_TARGETING &&
-          game.ui.hud.targeting.targetingAI == ai)
+          game.ui.hud.targeting.isTargetingAI(ai))
         showTargeting = true;
-      if (game.ui.hud.targeting.target == ai &&
-          game.ui.hud.targeting.isTargetVisibleOnScreen())
+      if (game.ui.hud.targeting.isTargetedAI(ai))
         showTarget = true;
 
       // draw target frame

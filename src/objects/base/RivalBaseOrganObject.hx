@@ -97,6 +97,51 @@ class RivalBaseOrganObject extends AreaObject
       return getName();
     }
 
+// returns stable key for all parts of this rival organ target
+  public override function getTargetKey(): String
+    {
+      return type + ':' + missionID + ':' + organID;
+    }
+
+// returns top-left part as canonical rival organ target
+  public override function getTargetObject(): AreaObject
+    {
+      if (basePartIndex == 0)
+        return this;
+      var area = game.region.get(areaID);
+      if (area == null)
+        return this;
+      for (o in area.getObjects())
+        {
+          if (o.type != 'rival_base_organ')
+            continue;
+          var obj: RivalBaseOrganObject = cast o;
+          if (obj.missionID == missionID &&
+              obj.organID == organID &&
+              obj.basePartIndex == 0)
+            return obj;
+        }
+      return this;
+    }
+
+// returns rival organ center x coordinate for target markers
+  public override function getTargetCenterX(): Float
+    {
+      var organ = getOrgan();
+      if (organ == null)
+        return x + 0.5;
+      return organ.x + organ.width / 2;
+    }
+
+// returns rival organ center y coordinate for target markers
+  public override function getTargetCenterY(): Float
+    {
+      var organ = getOrgan();
+      if (organ == null)
+        return y + 0.5;
+      return organ.y + organ.height / 2;
+    }
+
 // update available object actions
   override function updateActionList()
     {

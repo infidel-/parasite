@@ -4,12 +4,6 @@ package ai;
 import ai.AI;
 import game.Game;
 import objects.AreaObject;
-import objects.base.RivalBaseOrganObject;
-
-typedef FollowerOrganAttackTile = {
-  var x: Int;
-  var y: Int;
-}
 
 class FollowerLogic
 {
@@ -108,102 +102,9 @@ class FollowerLogic
 
       // try to attack
       var attacker = Attacker.fromAI(game, ai, false);
-      if (attackRivalBaseOrgan(ai, attacker, target))
+      if (RivalBaseOrganAttackLogic.tryAttack(game, ai, attacker, target))
         return;
       CommonLogic.logicAttack(attacker, target);
-    }
-
-// handles melee attacks against multi-tile rival base organs
-  static function attackRivalBaseOrgan(ai: AI, attacker: Attacker,
-      target: AttackTarget): Bool
-    {
-      if (target.type != TARGET_OBJECT ||
-          !Std.isOfType(target.obj, RivalBaseOrganObject) ||
-          attacker.weapon.isRanged)
-        return false;
-
-      var rivalObj: RivalBaseOrganObject = cast target.obj;
-      var attackPart = rivalObj.getAttackPartNear(ai.x, ai.y);
-      if (attackPart != null)
-        {
-          target.obj = attackPart;
-          CommonLogic.logicAttack(attacker, target);
-          return true;
-        }
-
-      var moveTarget = getRivalBaseOrganAttackTile(ai, rivalObj);
-      if (moveTarget != null)
-        {
-          var oldX = ai.x;
-          var oldY = ai.y;
-          ai.logicMoveTo(moveTarget.x, moveTarget.y);
-        }
-      return true;
-    }
-
-// finds the closest reachable tile where a follower can hit a rival organ
-  static function getRivalBaseOrganAttackTile(ai: AI,
-      organObj: RivalBaseOrganObject): FollowerOrganAttackTile
-    {
-      var best: FollowerOrganAttackTile = null;
-      var bestPathLength = -1;
-      var seen = new Map<String, Bool>();
-      var parts = 0;
-      var candidates = 0;
-      var blockedWalk = 0;
-      var occupied = 0;
-      var noPath = 0;
-      var reachable = 0;
-      for (o in game.area.getObjects())
-        {
-          if (o.type != 'rival_base_organ')
-            continue;
-          var obj: RivalBaseOrganObject = cast o;
-          if (obj.missionID != organObj.missionID ||
-              obj.organID != organObj.organID ||
-              !obj.isAttackable())
-            continue;
-          parts++;
-          for (i in 0...Const.dirx.length)
-            {
-              var x = obj.x + Const.dirx[i];
-              var y = obj.y + Const.diry[i];
-              var key = x + ',' + y;
-              if (seen.exists(key))
-                continue;
-              seen.set(key, true);
-              candidates++;
-              if (!game.area.isWalkable(x, y))
-                {
-                  blockedWalk++;
-                  continue;
-                }
-              var occupant = game.area.getAI(x, y);
-              if (occupant != null &&
-                  occupant != ai)
-                {
-                  occupied++;
-                  continue;
-                }
-              var path = game.area.getPath(ai.x, ai.y, x, y);
-              if (path == null)
-                {
-                  noPath++;
-                  continue;
-                }
-              reachable++;
-              if (best == null ||
-                  path.length < bestPathLength)
-                {
-                  best = {
-                    x: x,
-                    y: y
-                  };
-                  bestPathLength = path.length;
-                }
-            }
-        }
-      return best;
     }
 
 // finds the follower attack target with rival organs as mission objectives

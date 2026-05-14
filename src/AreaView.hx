@@ -103,6 +103,11 @@ class AreaView
               o.entity.isVisible()))
             o.entity.draw(ctx);
 
+      // object targeting reticle draws after all objects
+      for (o in game.area.getObjects())
+        if (o.entity != null)
+          o.entity.drawTargetReticle(ctx);
+
       // effects
       for (e in _effects)
         if (e.isVisible())

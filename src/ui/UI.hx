@@ -275,7 +275,7 @@ class UI
             {
               if (hud.targeting.canShootTarget())
                 {
-                  game.playerArea.attackAction(hud.targeting.target);
+                  game.playerArea.attackTargetAction(hud.targeting.target);
                   return;
                 }
             }
@@ -287,7 +287,7 @@ class UI
             {
               if (hud.targeting.canAttackTarget())
                 {
-                  game.playerArea.attackAction(hud.targeting.target, true);
+                  game.playerArea.attackTargetAction(hud.targeting.target, true);
                   return;
                 }
             }

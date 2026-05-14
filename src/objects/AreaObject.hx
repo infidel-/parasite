@@ -137,6 +137,30 @@ class AreaObject extends _SaveObject
       return 'the ' + getName();
     }
 
+// returns stable key for grouped targeting
+  public dynamic function getTargetKey(): String
+    {
+      return type + ':' + id;
+    }
+
+// returns canonical object used by targeting
+  public dynamic function getTargetObject(): AreaObject
+    {
+      return this;
+    }
+
+// returns target center x coordinate for UI markers
+  public dynamic function getTargetCenterX(): Float
+    {
+      return x + 0.5;
+    }
+
+// returns target center y coordinate for UI markers
+  public dynamic function getTargetCenterY(): Float
+    {
+      return y + 0.5;
+    }
+
 
 // set object decay in X turns
   public inline function setDecay(turns: Int)
@@ -205,7 +229,7 @@ class AreaObject extends _SaveObject
 
 // dynamic: can this object be attacked?
   public dynamic function isAttackable(): Bool
-    { return true; }
+    { return false; }
 
   public function toString(): String
     {

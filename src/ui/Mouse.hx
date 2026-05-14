@@ -2,7 +2,6 @@
 
 package ui;
 
-import AreaLightingDebug;
 import game.Game;
 import ai.AI;
 import js.html.MouseEvent;
@@ -374,12 +373,11 @@ class Mouse
         ai != null && ai != game.player.host);
     }
 
-// returns rival base organ object at the tile when it can be attacked
+// returns attackable object at the tile
   function getAttackableObject(x: Int, y: Int): AreaObject
     {
       for (o in game.area.getObjectsAt(x, y))
-        if (o.type == 'rival_base_organ' &&
-            o.isAttackable())
+        if (o.isAttackable())
           return o;
       return null;
     }
