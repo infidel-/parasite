@@ -59,6 +59,16 @@ class FollowerLogic
           return;
         }
 
+      var enemyCultist = ai.findNearestVisibleEnemyCultist();
+      if (enemyCultist != null)
+        {
+          ai.addEnemy(enemyCultist);
+          ai.traceAI('FollowerLogic', 'idle sees enemy cultist ' +
+            enemyCultist.id);
+          ai.setState(AI_STATE_ALERT);
+          return;
+        }
+
       // find visible enemies
       if (ai.enemies.length == 0)
         return;
@@ -123,7 +133,11 @@ class FollowerLogic
       if (organTarget == null)
         {
           ai.traceAI('FollowerLogic', 'use nearest enemy');
-          return ai.findNearestEnemy();
+          var enemyTarget = ai.findNearestEnemy();
+          if (enemyTarget != null &&
+              ai.isEnemyCultist(enemyTarget.ai))
+            ai.traceAI('FollowerLogic', 'use enemy cultist');
+          return enemyTarget;
         }
 
       var enemyTarget = ai.findNearestVisibleEnemy();

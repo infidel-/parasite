@@ -1055,6 +1055,20 @@ public function show()
       );
     }
 
+// returns true if this ai belongs to a hostile cult
+  public inline function isEnemyCultist(other: AI): Bool
+    {
+      return (
+        other != null &&
+        other != this &&
+        state != AI_STATE_DEAD &&
+        other.state != AI_STATE_DEAD &&
+        isCultist &&
+        other.isCultist &&
+        cultID != other.cultID
+      );
+    }
+
 // returns true if ai can call for help
   public function canCallForHelp(): Bool
     {
@@ -1183,6 +1197,7 @@ public function show()
 // returns the nearest currently visible enemy (can return player)
   public function findNearestVisibleEnemy(): AttackTarget
     {
+      // find visible enemies and get closest one
       var mindst = 1000, closestID = -1;
       for (enemyID in enemies)
         {
@@ -1197,6 +1212,18 @@ public function show()
             {
               mindst = dst;
               closestID = enemyID;
+            }
+        }
+
+      // cultists check for visible enemy cultists
+      if (isCultist)
+        {
+          var enemyCultist = findNearestVisibleEnemyCultist();
+          if (enemyCultist != null &&
+              distance(enemyCultist.x, enemyCultist.y) < mindst)
+            {
+              mindst = distance(enemyCultist.x, enemyCultist.y);
+              closestID = enemyCultist.id;
             }
         }
 
@@ -1228,6 +1255,7 @@ public function show()
       var targetAI = game.area.getAIByID(closestID);
       if (targetAI == null)
         return null;
+      addEnemy(targetAI);
       return {
         game: game,
         ai: targetAI,
@@ -1239,7 +1267,6 @@ public function show()
 // NOTE: we do not check for visibility here
   public function findNearestEnemy(): AttackTarget
     {
-//      trace(id + ' findNearestEnemy()');
       // find visible enemies and get closest one
       var mindst = 1000, closestID = -1;
       for (enemyID in enemies)
@@ -1257,12 +1284,26 @@ public function show()
             }
         }
 
+      // cultists check for enemy cultists without checking enemies list
+      if (isCultist)
+        {
+          var visibleCultist = findNearestVisibleEnemyCultist();
+          if (visibleCultist != null &&
+              distance(visibleCultist.x, visibleCultist.y) < mindst)
+            {
+              addEnemy(visibleCultist);
+              return {
+                game: game,
+                ai: visibleCultist,
+                type: TARGET_AI,
+              };
+            }
+        }
+
       // check for parasite
       if (!game.player.vars.invisibilityEnabled &&
           !isPlayerCultist())
         {
-//          trace(id + ' findNearestEnemy(): check for player');
-
           // no host or attached
           if (game.player.state == PLR_STATE_HOST)
             {
@@ -1296,6 +1337,29 @@ public function show()
         ai: targetAI,
         type: TARGET_AI,
       }
+    }
+
+// returns nearest visible different-cult AI
+  public function findNearestVisibleEnemyCultist(): AI
+    {
+      if (!isCultist)
+        return null;
+      var best: AI = null;
+      var bestDist = 1000;
+      for (other in game.area.getAllAI())
+        {
+          if (!isEnemyCultist(other) ||
+              !seesPosition(other.x, other.y))
+            continue;
+          var dst = distance(other.x, other.y);
+          if (best == null ||
+              dst < bestDist)
+            {
+              best = other;
+              bestDist = dst;
+            }
+        }
+      return best;
     }
 
 // this ai was attacked by (player, ai)

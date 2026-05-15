@@ -4,6 +4,7 @@
 - ALWAYS respond in English!
 - ALWAYS run tests at the end of each task: cd src/ && make
 - When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant). Note that you should ask whether it is needed when planning (there might not have been a release yet)
+- When modifying AI logic, see if additional ai traces are needed
 - Use two-space indentation, brace-on-newline, and avoid trailing whitespace. in general, follow the existing code style of the file and repository.
 - Lines without text should NEVER have whitespace.
 - When adding new functions, always add short comment with summary of what it does on top, first letter should be lowercase
@@ -20,4 +21,3 @@
 - keep fallback logic minimal and behavior-focused: allow `null`/missing optional fields, then fall back to existing gameplay behavior.
 - compatibility shims are allowed only for real pre-existing persisted formats already in production saves; otherwise reject over-defensive parsing.
 - any `Dynamic` usage in game logic MUST have an inline comment that states the trust boundary and why typed data is not possible.
-- when I ask you the `CHECK`, `xcheck` or `xlook` keyword, treat it as "investigate thoroughly and report" rather than "fix it". If you find a problem, report it but do not attempt to fix it unless I explicitly ask you to.

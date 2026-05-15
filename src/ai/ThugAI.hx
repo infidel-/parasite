@@ -127,6 +127,8 @@ class ThugAI extends HumanAI
   public override function turn()
     {
       super.turn();
+      if (isCultist)
+        return;
 
       var seen = game.area.getAIinRadius(x, y, AI.VIEW_DISTANCE, true);
       for (other in seen)
