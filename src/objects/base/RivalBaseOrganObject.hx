@@ -148,7 +148,7 @@ class RivalBaseOrganObject extends AreaObject
 // update available object actions
   override function updateActionList()
     {
-      if (!isAttackable())
+      if (!isAttackableByFriend())
         return;
       game.ui.hud.addAction({
         id: 'attackRivalBaseOrgan',
@@ -187,8 +187,8 @@ class RivalBaseOrganObject extends AreaObject
       return false;
     }
 
-// can this object be attacked?
-  public override function isAttackable(): Bool
+// can this object be attacked by player-side actors?
+  public override function isAttackableByFriend(): Bool
     {
       var organ = getOrgan();
       return organ != null && !isDestroyed();
@@ -227,7 +227,7 @@ class RivalBaseOrganObject extends AreaObject
           var obj: RivalBaseOrganObject = cast o;
           if (obj.missionID != missionID ||
               obj.organID != organID ||
-              !obj.isAttackable() ||
+              !obj.isAttackableByFriend() ||
               Math.abs(obj.x - x) > 1 ||
               Math.abs(obj.y - y) > 1)
             continue;

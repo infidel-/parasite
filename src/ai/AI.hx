@@ -9,10 +9,12 @@ import objects.*;
 import game.*;
 import const.*;
 import cult.Cult;
+import js.Browser;
 
 class AI extends AIData
 {
   static var _ignoredFields = [ 'entity', 'event', 'npc', 'sounds',
+    'isTracing',
   ];
   public var entity: AIEntity; // gui entity
   public var event(get, null): scenario.Event; // event link (for scenario npcs)
@@ -58,6 +60,7 @@ class AI extends AIData
 
   // state vars
   public var parasiteAttached: Bool; // is parasite currently attached to this AI
+  public var isTracing: Bool; // browser-console AI turn tracing
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -92,6 +95,7 @@ class AI extends AIData
       command = new CommandParams();
       direction = 0;
       parasiteAttached = false;
+      isTracing = false;
 
       wasAttached = false;
       wasInvaded = false;
@@ -321,6 +325,27 @@ public function show()
       roamTargetY = yy;
     }
 
+// writes one AI trace line to the browser console
+  public function traceAI(file: String, line: String)
+    {
+      if (!isTracing)
+        return;
+      Browser.console.log('ai ' + id + ' [' + traceStateName() + '] ' +
+        file + ': ' + line);
+    }
+
+// returns state name without AI_STATE prefix
+  public function traceStateName(?vstate: _AIState): String
+    {
+      if (vstate == null)
+        vstate = state;
+      var ret = '' + vstate;
+      var prefix = 'AI_STATE_';
+      if (StringTools.startsWith(ret, prefix))
+        ret = ret.substr(prefix.length);
+      return ret;
+    }
+
 
 // set AI state (plus all vars for this state)
   public function setState(vstate: _AIState,
@@ -328,6 +353,9 @@ public function show()
     {
       if (vreason == null)
         vreason = REASON_NONE;
+
+      traceAI('AI', 'setState ' + traceStateName(state) + ' -> ' +
+        traceStateName(vstate) + ' reason ' + vreason);
 
       // AI is already in that state
       if (state == vstate)
@@ -633,16 +661,20 @@ public function show()
             break;
           }
 
-      if (!skipDefaultLogic)
+      if (skipDefaultLogic)
+        traceAI('AI', 'skip default logic');
+      else
         {
+          traceAI('AI', 'turnInternal');
           // preserved - do nothing
           if (state == AI_STATE_PRESERVED)
-            1;
+            traceAI('AI', 'preserved');
 
           // post-detach
           else if (state == AI_STATE_POST_DETACH &&
               stateTime >= 2)
             {
+              traceAI('AI', 'post detach');
               if (isAgreeable())
                 setState(AI_STATE_IDLE);
               else setState(AI_STATE_ALERT, REASON_DETACH);
@@ -651,11 +683,14 @@ public function show()
           // post-detach with false memories
           else if (state == AI_STATE_POST_DETACH_MEMORIES &&
               stateTime >= 2)
-            setState(AI_STATE_IDLE);
+            {
+              traceAI('AI', 'post detach memories');
+              setState(AI_STATE_IDLE);
+            }
 
           // active missions can take over AI behavior
           else if (game.cults[0].turnMissionAI(this))
-            1;
+            traceAI('AI', 'mission logic handled');
 
           // custodes guard the base instead of following the player
           else if (isCustos)
@@ -664,7 +699,9 @@ public function show()
           // cultists from player cult have follower logic
           else if (isPlayerCultist())
             {
-              if (!CommandLogic.turn(this))
+              if (CommandLogic.turn(this))
+                traceAI('AI', 'command logic handled');
+              else
                 FollowerLogic.turn(this);
             }
 
@@ -673,6 +710,7 @@ public function show()
         }
 
       // per-type hook
+      traceAI('AI', '===');
       turn();
 
       updateEntity(); // clamp and change entity icons

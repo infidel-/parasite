@@ -83,21 +83,33 @@ class CommonLogic
 // logic: attack target (player, ai, or object)
   public static function logicAttack(attacker: Attacker, target: AttackTarget)
     {
+      if (attacker.ai != null)
+        attacker.ai.traceAI('CommonLogic', 'logicAttack()');
       // get current weapon
       var weapon = attacker.weapon;
 
       // ingrained abilities can consume the attack action
       if (useAttackAbilities(attacker, target))
-        return;
+        {
+          if (attacker.ai != null)
+            attacker.ai.traceAI('CommonLogic', 'attack ability handled');
+          return;
+        }
 
       // first-turn melee users consume raw smash before attacking
       if (useRawSmash(attacker, weapon))
-        return;
+        {
+          if (attacker.ai != null)
+            attacker.ai.traceAI('CommonLogic', 'raw smash handled');
+          return;
+        }
 
       // check for distance on melee
       if (!weapon.isRanged &&
           !attacker.isNear(target.x, target.y))
         {
+          if (attacker.ai != null)
+            attacker.ai.traceAI('CommonLogic', 'move to melee target');
           if (attacker.canMoveToTarget())
             attacker.logicMoveTo(target.x, target.y);
           return;
@@ -108,6 +120,8 @@ class CommonLogic
           weapon.isRanged &&
           !attacker.seesPosition(target.x, target.y))
         {
+          if (attacker.ai != null)
+            attacker.ai.traceAI('CommonLogic', 'move for ranged line of sight');
           attacker.logicMoveTo(target.x, target.y);
           return;
         }
@@ -124,6 +138,8 @@ class CommonLogic
           if (Std.random(100) < 30)
             {
               attacker.log('hesitates to attack you.');
+              if (attacker.ai != null)
+                attacker.ai.traceAI('CommonLogic', 'hesitates attached human');
               attacker.emitSound({
                 text: 'Shit!',
                 radius: 5,
@@ -184,6 +200,8 @@ class CommonLogic
       // roll skill
       if (!roll)
         {
+          if (attacker.ai != null)
+            attacker.ai.traceAI('CommonLogic', 'attack misses');
           var sound = (weapon.soundMiss != null ? weapon.soundMiss : weapon.sound);
           attacker.emitSound(sound);
           attacker.log('tries to ' + weapon.verb1 + ' ' +
@@ -199,7 +217,12 @@ class CommonLogic
             }
           return;
         }
-      else attacker.emitSound(weapon.sound);
+      else
+        {
+          if (attacker.ai != null)
+            attacker.ai.traceAI('CommonLogic', 'attack hits');
+          attacker.emitSound(weapon.sound);
+        }
 
       // blood effect on hit
       if (weapon.spawnBlood)

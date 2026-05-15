@@ -124,7 +124,8 @@ class PlayerArea extends _SaveObject
       var base = (game.cults.length > 0 ? game.cults[0].base : null);
       if (base != null &&
           game.area.isHabitat &&
-          base.areaID == game.area.id)
+          base.areaID == game.area.id &&
+          !game.area.isMissionArea())
         game.ui.hud.addKeyAction({
           id: 'forma',
           type: ACTION_AREA,
@@ -607,7 +608,7 @@ class PlayerArea extends _SaveObject
       // check if player can see that spot
       if (!game.area.isVisible(x, y, obj.x, obj.y))
         return;
-      if (!obj.isAttackable())
+      if (!obj.isAttackableByFriend())
         return;
 
       var inventory = player.host.inventory;

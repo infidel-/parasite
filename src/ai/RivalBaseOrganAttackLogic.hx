@@ -15,10 +15,12 @@ class RivalBaseOrganAttackLogic
           attacker.weapon.isRanged)
         return false;
 
+      ai.traceAI('RivalBaseOrganAttackLogic', 'tryAttack()');
       var rivalObj: RivalBaseOrganObject = cast target.obj;
       var attackPart = rivalObj.getAttackPartNear(ai.x, ai.y);
       if (attackPart != null)
         {
+          ai.traceAI('RivalBaseOrganAttackLogic', 'attack adjacent part');
           target.obj = attackPart;
           CommonLogic.logicAttack(attacker, target);
           return true;
@@ -26,7 +28,11 @@ class RivalBaseOrganAttackLogic
 
       var moveTarget = getAttackTile(game, ai, rivalObj);
       if (moveTarget != null)
-        ai.logicMoveTo(moveTarget.x, moveTarget.y);
+        {
+          ai.traceAI('RivalBaseOrganAttackLogic', 'move to attack tile');
+          ai.logicMoveTo(moveTarget.x, moveTarget.y);
+        }
+      else ai.traceAI('RivalBaseOrganAttackLogic', 'no attack tile');
       return true;
     }
 
@@ -44,7 +50,7 @@ class RivalBaseOrganAttackLogic
           var obj: RivalBaseOrganObject = cast o;
           if (obj.missionID != organObj.missionID ||
               obj.organID != organObj.organID ||
-              !obj.isAttackable())
+              !obj.isAttackableByFriend())
             continue;
           for (i in 0...Const.dirx.length)
             {

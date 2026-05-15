@@ -13,6 +13,8 @@ class CommandLogic
       if (ai.command == null)
         return false;
 
+      ai.traceAI('CommandLogic', 'turn()');
+      ai.traceAI('CommandLogic', 'command ' + ai.command.type);
       switch (ai.command.type)
         {
           case CMD_ATTACK:
@@ -60,6 +62,7 @@ class CommandLogic
       var targetID = ai.command.attackTargetID;
       if (targetID < 0)
         {
+          ai.traceAI('CommandLogic', 'missing ai target id');
           clearCommand(ai);
           return false;
         }
@@ -68,6 +71,7 @@ class CommandLogic
       if (target == null ||
           target.state == AI_STATE_DEAD)
         {
+          ai.traceAI('CommandLogic', 'ai target gone');
           clearCommand(ai);
           return false;
         }
@@ -77,6 +81,7 @@ class CommandLogic
       if (ai.state != AI_STATE_ALERT)
         ai.setState(AI_STATE_ALERT);
 
+      ai.traceAI('CommandLogic', 'ai target tracked');
       return false;
     }
 
@@ -86,14 +91,16 @@ class CommandLogic
       var objectID = ai.command.attackObjectID;
       if (objectID < 0)
         {
+          ai.traceAI('CommandLogic', 'missing object target id');
           clearCommand(ai);
           return false;
         }
 
       var obj = game.area.getObject(objectID);
       if (obj == null ||
-          !obj.isAttackable())
+          !obj.isAttackableByFriend())
         {
+          ai.traceAI('CommandLogic', 'object target gone');
           clearCommand(ai);
           return false;
         }
@@ -109,7 +116,11 @@ class CommandLogic
         obj: obj
       };
       if (RivalBaseOrganAttackLogic.tryAttack(game, ai, attacker, target))
-        return true;
+        {
+          ai.traceAI('CommandLogic', 'rival organ attack handled');
+          return true;
+        }
+      ai.traceAI('CommandLogic', 'attack object');
       CommonLogic.logicAttack(attacker, target);
       return true;
     }
@@ -179,6 +190,7 @@ class CommandLogic
       // despawn immediately after reaching elevator or stairs
       if (isExitTile(ai))
         {
+          ai.traceAI('CommandLogic', 'leave area exit tile');
           if (!isVisible)
             game.area.removeAI(ai);
           return true;
@@ -187,6 +199,7 @@ class CommandLogic
       // despawn only after leaving the player's sight
       if (!isVisible)
         {
+          ai.traceAI('CommandLogic', 'leave area unseen');
           game.area.removeAI(ai);
           return true;
         }
@@ -195,6 +208,7 @@ class CommandLogic
       var target = getLeaveAreaTarget(ai);
       if (target != null)
         {
+          ai.traceAI('CommandLogic', 'leave area move to exit');
           ai.logicMoveTo(target.x, target.y);
           if (isExitTile(ai))
             {
@@ -226,9 +240,12 @@ class CommandLogic
             }
         }
       if (bestDir >= 0)
-        ai.setPosition(
-          ai.x + Const.dirx[bestDir],
-          ai.y + Const.diry[bestDir]);
+        {
+          ai.traceAI('CommandLogic', 'leave area fallback move');
+          ai.setPosition(
+            ai.x + Const.dirx[bestDir],
+            ai.y + Const.diry[bestDir]);
+        }
 
       return true;
     }

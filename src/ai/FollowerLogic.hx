@@ -12,6 +12,7 @@ class FollowerLogic
 // run AI logic turn
   public static function turn(ai: AI)
     {
+      ai.traceAI('FollowerLogic', 'turn()');
       switch (ai.state)
         {
           // idle - roam around or guard, etc
@@ -53,6 +54,7 @@ class FollowerLogic
     {
       if (findNearestRivalBaseOrgan(ai) != null)
         {
+          ai.traceAI('FollowerLogic', 'idle sees rival organ');
           ai.setState(AI_STATE_ALERT);
           return;
         }
@@ -67,6 +69,7 @@ class FollowerLogic
             continue;
           if (ai.seesPosition(enemy.x, enemy.y))
             {
+              ai.traceAI('FollowerLogic', 'idle sees enemy ' + enemy.id);
               // enemy is seen, go to alert
               ai.setState(AI_STATE_ALERT);
               break;
@@ -81,6 +84,7 @@ class FollowerLogic
       var target = findAttackTarget(ai);
       if (target == null)
         {
+          ai.traceAI('FollowerLogic', 'no attack target');
           ai.setState(AI_STATE_IDLE);
           return;
         }
@@ -94,6 +98,7 @@ class FollowerLogic
       // relentless AI cannot calm down once alerted
       if (ai.timers.alert == 0 && !ai.isRelentless)
         {
+          ai.traceAI('FollowerLogic', 'calm from alert');
           // become idle
           ai.setState(AI_STATE_IDLE);
           ai.alertness = 10;
@@ -103,7 +108,11 @@ class FollowerLogic
       // try to attack
       var attacker = Attacker.fromAI(game, ai, false);
       if (RivalBaseOrganAttackLogic.tryAttack(game, ai, attacker, target))
-        return;
+        {
+          ai.traceAI('FollowerLogic', 'rival organ attack handled');
+          return;
+        }
+      ai.traceAI('FollowerLogic', 'attack target ' + target.type);
       CommonLogic.logicAttack(attacker, target);
     }
 
@@ -112,18 +121,28 @@ class FollowerLogic
     {
       var organTarget = findNearestRivalBaseOrgan(ai);
       if (organTarget == null)
-        return ai.findNearestEnemy();
+        {
+          ai.traceAI('FollowerLogic', 'use nearest enemy');
+          return ai.findNearestEnemy();
+        }
 
       var enemyTarget = ai.findNearestVisibleEnemy();
       if (enemyTarget == null)
-        return organTarget;
+        {
+          ai.traceAI('FollowerLogic', 'use organ target');
+          return organTarget;
+        }
 
       var organDist = Const.distanceSquared(
         ai.x, ai.y, organTarget.x, organTarget.y);
       var enemyDist = Const.distanceSquared(
         ai.x, ai.y, enemyTarget.x, enemyTarget.y);
       if (organDist < enemyDist)
-        return organTarget;
+        {
+          ai.traceAI('FollowerLogic', 'prefer organ target');
+          return organTarget;
+        }
+      ai.traceAI('FollowerLogic', 'prefer enemy target');
       return enemyTarget;
     }
 
@@ -135,7 +154,7 @@ class FollowerLogic
       for (o in game.area.getObjects())
         {
           if (o.type != 'rival_base_organ' ||
-              !o.isAttackable() ||
+              !o.isAttackableByFriend() ||
               !ai.seesPosition(o.x, o.y))
             continue;
           var dist = Const.distanceSquared(ai.x, ai.y, o.x, o.y);

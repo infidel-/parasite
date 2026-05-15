@@ -227,8 +227,12 @@ class AreaObject extends _SaveObject
   public dynamic function isWalkable(): Bool
     { return true; }
 
-// dynamic: can this object be attacked?
-  public dynamic function isAttackable(): Bool
+// dynamic: can this object be attacked by player-side actors?
+  public dynamic function isAttackableByFriend(): Bool
+    { return false; }
+
+// dynamic: can this object be attacked by enemy actors?
+  public dynamic function isAttackableByEnemy(): Bool
     { return false; }
 
   public function toString(): String
