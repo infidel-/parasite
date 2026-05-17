@@ -189,10 +189,10 @@ class RegionView
       if (game.region.regionMapImage == null)
         {
           game.region.regionMapImage = new Image(game);
-          var t = Sys.time();
+          var t = haxe.Timer.stamp();
           trace('Region map image generation started');
           game.region.regionMapImage.generate();
-          trace('Region map image generated in ' + Std.int((Sys.time() - t) * 1000) + ' ms');
+          trace('Region map image generated in ' + Std.int((haxe.Timer.stamp() - t) * 1000) + ' ms');
         }
 
       // draw region map image (only visible portion)

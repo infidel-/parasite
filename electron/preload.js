@@ -1,10 +1,7 @@
 // preload bridge for renderer -> main IPC
-// exposes `window.host`
-// NOTE: contextBridge is gated on contextIsolation:true in Electron 14+.
-// During migration we set window.host directly (transitional).
-// Final-flip commit will enable contextIsolation and switch to contextBridge.
+// exposes `window.host` via contextBridge (contextIsolation:true, sandbox:true)
 
-const { ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 let boot;
 try {
@@ -15,7 +12,7 @@ catch (e) {
   boot = { platform: 'unknown' };
 }
 
-window.host = {
+contextBridge.exposeInMainWorld('host', {
   platform: boot.platform,
 
   settings: {
@@ -52,4 +49,4 @@ window.host = {
     writeRegionBuildings: (text)         => ipcRenderer.sendSync('host:debug:buildings', text),
     writeImage:           (name, base64) => ipcRenderer.sendSync('host:debug:image', name, base64),
   },
-};
+});

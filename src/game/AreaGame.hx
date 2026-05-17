@@ -502,9 +502,9 @@ class AreaGame extends _SaveObject
           _cells[x][y] = baseTile;
 
       // measure generation time
-      var t = Sys.time();
+      var t = haxe.Timer.stamp();
       game.areaGenerator.generate(this, info);
-      var msec = (Sys.time() - t) * 1000.0;
+      var msec = (haxe.Timer.stamp() - t) * 1000.0;
       trace('Area generated in ' + Std.int(msec) + ' ms');
       if (game != null &&
           game.scene != null &&

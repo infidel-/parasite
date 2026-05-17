@@ -293,6 +293,7 @@ class MainElectron
 
   static function main()
     {
+      App.enableSandbox();
       registerHostHandlers();
 
       App.on(ready, function(e)
@@ -324,18 +325,25 @@ class MainElectron
             fullscreen: isFullscreen,
             webPreferences: {
               preload: Path.join(__dirname, 'preload.js'),
-              nodeIntegration: true,
-              contextIsolation: false,
-//              enableRemoteModule: true,
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: true,
+              webSecurity: true,
             }
           });
 #if !mydebug
           win.setMenu(null);
 #end
-/*
-          win.on(closed, function(e) {
-              win = null;
-          });*/
+
+          // block all in-window navigation
+          win.webContents.on('will-navigate', function(e, url) {
+            untyped e.preventDefault();
+          });
+          // deny window.open / target=_blank
+          untyped win.webContents.setWindowOpenHandler(function(details) {
+            return { action: 'deny' };
+          });
+
           win.loadFile('app.html');
 #if mydebug
           win.webContents.openDevTools();
