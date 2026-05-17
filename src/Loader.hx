@@ -1,8 +1,5 @@
 // game load deserialization and state restoration
 
-#if electron
-import js.node.Fs;
-#end
 import haxe.Json;
 import haxe.ds.ObjectMap;
 
@@ -21,7 +18,7 @@ class Loader
 
 #if electron
       try {
-        var s = Fs.readFileSync(getSavePath(slotID), 'utf8');
+        var s = HostBridge.saveRead(slotID);
         var o: Dynamic = Json.parse(s);
         var formatVersion = getFormatVersion(o);
         loadObject(game, o.game, game, 'game', 0, formatVersion);
@@ -59,17 +56,6 @@ class Loader
       rebuildAIDataMaxID(game);
       game.scene.updateCamera();
       game.log('Game loaded from slot ' + slotID + '.');
-    }
-
-// build save file path from slot
-  static function getSavePath(slotID: Int): String
-    {
-#if electron
-      return ElectronPaths.getWritablePath(
-        'save' + (slotID < 10 ? '0' : '') + slotID + '.json');
-#else
-      return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
-#end
     }
 
 // get save format version from top-level save object

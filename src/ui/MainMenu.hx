@@ -74,7 +74,7 @@ class MainMenu extends UIWindow
       });
 #if electron
       addItem('QUIT', function(e) {
-        electron.renderer.IpcRenderer.invoke('quit');
+        HostBridge.quit();
       });
 #end
 
@@ -128,7 +128,7 @@ class MainMenu extends UIWindow
         game.ui.state = UISTATE_OPTIONS;
       else if (index == 6)
 #if electron
-        electron.renderer.IpcRenderer.invoke('quit');
+        HostBridge.quit();
 #else
         1;
 #end

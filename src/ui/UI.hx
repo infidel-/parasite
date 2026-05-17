@@ -6,9 +6,6 @@ import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 import js.html.CanvasElement;
 import js.html.Element;
-#if electron
-import js.node.Fs;
-#end
 
 import game.Game;
 import _UIState;
@@ -113,8 +110,7 @@ class UI
       trace(l);
       game.log('An exception has occured and was logged. Please send exceptions.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
       try {
-        Fs.appendFileSync(
-          ElectronPaths.getWritablePath('exceptions.txt'), l);
+        HostBridge.logAppend(l);
       }
       catch (e: Dynamic)
         {}
@@ -472,7 +468,7 @@ class UI
               func: function(yes: Bool) {
 #if electron
                 if (yes)
-                  electron.renderer.IpcRenderer.invoke('quit');
+                  HostBridge.quit();
 #end
               }
             }

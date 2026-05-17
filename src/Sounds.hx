@@ -1,9 +1,5 @@
 // sounds and music manager
 import game.Game;
-#if electron
-import js.Node;
-import js.node.Fs;
-#end
 import js.Browser;
 
 class Sounds
@@ -120,9 +116,7 @@ class Sounds
 #if !free
 #if electron
       // read all existing sound file names
-      var files = Fs.readdirSync(Node.process.platform == 'darwin'
-        ? ElectronPaths.getAssetPath('sound')
-        : 'resources/app/sound/');
+      var files = HostBridge.listSounds();
       for (f in files)
         {
           if (!StringTools.endsWith(f, '.mp3'))

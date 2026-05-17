@@ -6,10 +6,6 @@ import game.Game;
 import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
-#if electron
-import js.node.Fs;
-import js.Syntax;
-#end
 
 class Image extends Buildings
 {
@@ -18,7 +14,7 @@ class Image extends Buildings
       super(g);
     }
 
-#if electron
+#if (electron && mydebug)
 // dump the generated building rects for one region map seed
   function dumpBuildingRects()
     {
@@ -42,7 +38,7 @@ class Image extends Buildings
             }
         }
 
-      Fs.writeFileSync('region_buildings.txt', lines.join('\n') + '\n');
+      HostBridge.debugWriteRegionBuildings(lines.join('\n') + '\n');
     }
 
 // render one debug mode into the current working canvas
@@ -74,7 +70,7 @@ class Image extends Buildings
     {
       var dataURL = srcCanvas.toDataURL('image/png');
       var base64Data = dataURL.substr(dataURL.indexOf(',') + 1);
-      Fs.writeFileSync(path, Syntax.code("Buffer.from({0}, 'base64')", base64Data));
+      HostBridge.debugWriteImage(path, base64Data);
     }
 
 // dump every map debug view to a cropped png file
@@ -139,7 +135,7 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintGround', phaseStartTS);
 #end
-#if electron
+#if (electron && mydebug)
       if (MAP_DEBUG_DUMP_PNGS)
         dumpDebugViewPNGs();
 #end
@@ -186,13 +182,11 @@ class Image extends Buildings
 #if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.generateBuildings', phaseStartTS);
 #end
-#if electron
+#if (electron && mydebug)
       if (MAP_DEBUG_DUMP_BUILDING_RECTS)
         {
           dumpBuildingRects();
-#if mydebug
           traceMapProfileSummary('image.buildingDump=region_buildings.txt');
-#end
         }
 #end
       paintOpenParcels(parcels);

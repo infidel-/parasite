@@ -1,8 +1,5 @@
 // game configuration
 
-#if electron
-import js.node.Fs;
-#end
 import haxe.Json;
 
 import game.Game;
@@ -109,11 +106,13 @@ class Config
       game.debug('config load');
 #if electron
       try {
-        var s = Fs.readFileSync(
-          ElectronPaths.getWritablePath('settings.json'), 'utf8');
-        var obj = Json.parse(s);
-        for (f in Reflect.fields(obj))
-          set(f, Reflect.field(obj, f));
+        var s = HostBridge.settingsRead();
+        if (s != null)
+          {
+            var obj = Json.parse(s);
+            for (f in Reflect.fields(obj))
+              set(f, Reflect.field(obj, f));
+          }
       }
       catch (e: Dynamic)
         {
@@ -164,7 +163,7 @@ class Config
         {
           fullscreen = (val == '1');
 #if electron
-          electron.renderer.IpcRenderer.invoke('fullscreen' + val);
+          HostBridge.setFullscreen(val == '1');
 #end
         }
       else if (key == 'skipTutorial')
@@ -251,8 +250,7 @@ class Config
       var obj = {};
       for (k => v in map)
         Reflect.setField(obj, k, v);
-      Fs.writeFileSync(ElectronPaths.getWritablePath('settings.json'),
-        Json.stringify(obj, null, '  '), 'utf8');
+      HostBridge.settingsWrite(Json.stringify(obj, null, '  '));
 #elseif js
       var obj = {};
       for (key in map.keys())

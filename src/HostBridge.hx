@@ -4,7 +4,7 @@
 #if electron
 class HostBridge
 {
-  static inline function h(): Dynamic return untyped __js__("window.host");
+  static inline function h(): Dynamic return js.Syntax.code("window.host");
 
 // platform string: 'win32' | 'darwin' | 'linux'
   public static var platform(get, never): String;

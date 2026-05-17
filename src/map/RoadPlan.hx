@@ -4,9 +4,6 @@ package map;
 
 import _AreaType;
 import const.WorldConst;
-#if electron
-import js.node.Fs;
-#end
 #if mydebug
 import haxe.ds.StringMap;
 #end
@@ -138,7 +135,7 @@ class RoadPlan extends Raster
       thinCoverage = new RoadPlanThinCoverage(this, gridOps, branchWalker);
     }
 
-#if electron
+#if (electron && mydebug)
 // dump the generated road plan and final segments for one region map seed
   function dumpRoadPlan(grid: RoadPlanGrid, segments: Array<RoadSegment>)
     {
@@ -181,7 +178,7 @@ class RoadPlan extends Raster
       lines.push('');
       lines.push('[road_segments]');
       appendRoadSegmentDump(lines, segments);
-      Fs.writeFileSync('region_roads.txt', lines.join('\n') + '\n');
+      HostBridge.debugWriteRegionRoads(lines.join('\n') + '\n');
     }
 
 // append one full-cell area-type dump to the output lines
@@ -429,7 +426,7 @@ class RoadPlan extends Raster
 
       roadPlanGrid = grid;
       var result = gridOps.compressRoadPlanGrid(grid);
-#if electron
+#if (electron && mydebug)
       dumpRoadPlan(grid, result);
 #end
 #if mydebug

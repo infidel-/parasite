@@ -30,13 +30,13 @@ class MainElectron
         Fs.mkdirSync(path);
     }
 
-// get settings file path (legacy helper, kept for ready-handler config load)
+// get settings file path
   static function getSettingsPath(): String
     {
       return writablePath('settings.json');
     }
 
-// resolve writable file path (matches old ElectronPaths.getWritablePath semantics)
+// resolve writable file path: darwin uses electron userData, else cwd
   static function writablePath(filename: String): String
     {
       if (Node.process.platform != 'darwin')
@@ -244,7 +244,7 @@ class MainElectron
           }
       });
 
-      // window control (new names, parallel to legacy quit/fullscreen0/fullscreen1)
+      // window control
       IpcMain.handle('host:quit', function(e) {
         App.quit();
       });
@@ -293,26 +293,6 @@ class MainElectron
 
   static function main()
     {
-      // legacy handlers (kept until per-file migration replaces them)
-      IpcMain.on('get-user-data-path', function(e) {
-        if (Node.process.platform == 'darwin')
-          ensureUserDataPath();
-        untyped e.returnValue = App.getPath('userData');
-      });
-      IpcMain.on('get-app-path', function(e) {
-        untyped e.returnValue = App.getAppPath();
-      });
-      IpcMain.handle('quit', function(e) {
-        App.quit();
-      });
-      IpcMain.handle('fullscreen0', function(e) {
-        win.fullScreen = false;
-      });
-      IpcMain.handle('fullscreen1', function(e) {
-        win.fullScreen = true;
-      });
-
-      // new host:* bridge
       registerHostHandlers();
 
       App.on(ready, function(e)

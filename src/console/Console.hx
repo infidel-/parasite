@@ -6,9 +6,6 @@ import const.*;
 import const.EvolutionConst.ImprovInfo;
 import game.*;
 import haxe.Json;
-#if electron
-import js.node.Fs;
-#end
 
 class Console
 {
@@ -247,7 +244,7 @@ class Console
               cmd == 'quit')
 // exit game
 #if electron
-        electron.renderer.IpcRenderer.invoke('quit');
+        HostBridge.quit();
 #end
 
       game.updateHUD(); // update HUD state
@@ -297,10 +294,9 @@ class Console
       history = [];
 #if electron
       try {
-        if (!Fs.existsSync(ElectronPaths.getWritablePath('history.json')))
+        if (!HostBridge.consoleHistoryExists())
           return;
-        var raw = Fs.readFileSync(
-          ElectronPaths.getWritablePath('history.json'), 'utf8');
+        var raw = HostBridge.consoleHistoryRead();
         if (raw != null && StringTools.trim(raw) != '')
           {
             var parsed: Dynamic = Json.parse(raw);
@@ -323,10 +319,7 @@ class Console
     {
 #if electron
       try {
-        Fs.writeFileSync(
-          ElectronPaths.getWritablePath('history.json'),
-          Json.stringify(history, null, '  '),
-          'utf8');
+        HostBridge.consoleHistoryWrite(Json.stringify(history, null, '  '));
       }
       catch (e: Dynamic)
         {

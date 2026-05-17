@@ -1,8 +1,5 @@
 // game save serialization and file storage
 
-#if electron
-import js.node.Fs;
-#end
 import haxe.Json;
 
 import game.Game;
@@ -22,8 +19,7 @@ class Saver
       o.game.regionID = game.region.id;
       o.game.areaID = game.area.id;
 #if electron
-      Fs.writeFileSync(getSavePath(slotID),
-        Json.stringify(o, null, '  '), 'utf8');
+      HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
 #end
     }
 
@@ -31,20 +27,9 @@ class Saver
   public static function exists(slotID: Int): Bool
     {
 #if electron
-      return Fs.existsSync(getSavePath(slotID));
+      return HostBridge.saveExists(slotID);
 #end
       return false;
-    }
-
-// build save file path from slot
-  static function getSavePath(slotID: Int): String
-    {
-#if electron
-      return ElectronPaths.getWritablePath(
-        'save' + (slotID < 10 ? '0' : '') + slotID + '.json');
-#else
-      return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
-#end
     }
 
 // save object recursively into dynamic structure
