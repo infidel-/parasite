@@ -1,9 +1,9 @@
-.bin/*
+bin/
+main.js
 *.swp
 *.n
 *.eot
 *.woff
-*.js
 *.map
 _release*
 assets*
@@ -14,3 +14,4 @@ plans/
 .codex
 debug
 src/debug
+app
