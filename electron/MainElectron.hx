@@ -12,6 +12,9 @@ import electron.main.IpcMain;
 class MainElectron
 {
   static var win: BrowserWindow;
+  // resolved once at App.ready; all session log writes target this file
+  static var logPath: String = null;
+  static var sessionEnded: Bool = false;
 
   // size caps (bytes)
   static inline var CAP_SETTINGS = 256 * 1024;
@@ -139,6 +142,33 @@ class MainElectron
         }
     }
 
+// resolve session log path: log-YYYY-MM-DD.txt (UTC), frozen for session
+  static function initLogSession()
+    {
+      var nowIso: String = js.Syntax.code("new Date().toISOString()");
+      var dateStr = nowIso.substr(0, 10); // YYYY-MM-DD
+      logPath = writablePath('log-' + dateStr + '.txt');
+      try {
+        Fs.appendFileSync(logPath,
+          '--- session start ' + nowIso +
+          ' v' + Version.getVersion() +
+          ' ' + Node.process.platform + '\n');
+      }
+      catch (e: Dynamic) { trace('log start failed: ' + e); }
+    }
+
+// write session end marker; idempotent across before-quit + window-all-closed
+  static function endLogSession()
+    {
+      if (sessionEnded || logPath == null) return;
+      sessionEnded = true;
+      var nowIso: String = js.Syntax.code("new Date().toISOString()");
+      try {
+        Fs.appendFileSync(logPath, '--- session end ' + nowIso + '\n');
+      }
+      catch (e: Dynamic) { trace('log end failed: ' + e); }
+    }
+
 // register all host:* IPC handlers
   static function registerHostHandlers()
     {
@@ -217,14 +247,14 @@ class MainElectron
         untyped e.returnValue = safeExists(writablePath('history.json'));
       });
 
-      // exception log append
+      // exception log append (target file resolved once at App.ready)
       IpcMain.on('host:log:append', function(e: Dynamic, line: Dynamic) {
-        if (!isValidString(line, CAP_LOGLINE)) {
+        if (!isValidString(line, CAP_LOGLINE) || logPath == null) {
           e.returnValue = false;
           return;
         }
         try {
-          Fs.appendFileSync(writablePath('exceptions.txt'), cast line);
+          Fs.appendFileSync(logPath, cast line);
           e.returnValue = true;
         }
         catch (err: Dynamic)
@@ -298,6 +328,8 @@ class MainElectron
 
       App.on(ready, function(e)
         {
+          initLogSession();
+
           // load config
           var obj: { fullscreen: String } = null;
           try {
@@ -351,8 +383,13 @@ class MainElectron
         });
 
       App.on(window_all_closed, function(e) {
+          endLogSession();
           if (Node.process.platform != 'darwin')
             App.quit();
+      });
+
+      untyped App.on('before-quit', function(e) {
+          endLogSession();
       });
 
       App.commandLine.appendSwitch('in-process-gpu');
