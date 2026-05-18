@@ -1,0 +1,8 @@
+{
+  "id": "testmod",
+  "name": "Test Mod",
+  "author": "parasite",
+  "version": "0.1.0",
+  "modApiVersion": 1,
+  "entry": "entry.js"
+}

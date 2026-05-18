@@ -54,15 +54,23 @@ class ItemsConst
 
   public static var infos: StringMap<ItemInfo>;
 
-// prepares item info instances
+// prepares item info instances; built-ins first, then mod-registered (§8.7)
   public static function init(game: Game)
     {
       infos = new StringMap<ItemInfo>();
       for (cls in classes)
-        {
-          var info: ItemInfo = Type.createInstance(cls, [ game ]);
-          infos.set(info.id, info);
-        }
+        addInfo(game, cls);
+      for (cls in mods.ModContentRegistry.items)
+        addInfo(game, cls);
+    }
+
+// instantiate item class and register in infos; id collision = last-wins + log
+  public static function addInfo(game: Game, cls: Class<ItemInfo>)
+    {
+      var info: ItemInfo = Type.createInstance(cls, [ game ]);
+      if (infos.exists(info.id))
+        Const.p('mod content collision on item id: ' + info.id + ' (last-wins)');
+      infos.set(info.id, info);
     }
 
 // spawn item by id

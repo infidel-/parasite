@@ -156,7 +156,7 @@ class MainElectron
       catch (e: Dynamic) {}
     }
 
-// validate manifest mod id: reverse-DNS lowercase, [a-z0-9_], 4-80 chars
+// validate manifest mod id: lowercase [a-z0-9_], optional dot segments, 4-80 chars
   static function isValidModID(s: Dynamic): Bool
     {
       if (!Std.isOfType(s, String))
@@ -164,7 +164,7 @@ class MainElectron
       var str: String = cast s;
       if (str.length < 4 || str.length > 80)
         return false;
-      var re = ~/^[a-z0-9_]+(\.[a-z0-9_]+)+$/;
+      var re = ~/^[a-z0-9_]+(\.[a-z0-9_]+)*$/;
       return re.match(str);
     }
 
@@ -387,8 +387,11 @@ class MainElectron
         catch (e: Dynamic) {
           return js.Syntax.code("new Response('read error', { status: 500 })");
         }
+        // no-store: prevents Chromium from serving stale cached responses across
+        // renderer reloads (Ctrl+F5). Engine loads assets once into JS heap, so
+        // this only affects cold fetches — no per-frame refetch cost
         return js.Syntax.code(
-          "new Response({0}, { status: 200, headers: { 'content-type': {1}, 'access-control-allow-origin': '*' } })",
+          "new Response({0}, { status: 200, headers: { 'content-type': {1}, 'access-control-allow-origin': '*', 'cache-control': 'no-store' } })",
           buf, mime);
       });
     }
@@ -514,8 +517,10 @@ class MainElectron
           }
       });
 
-      // mods list (sideload merge)
+      // mods list (sideload merge); rescan on every call so renderer reload
+      // picks up added/removed mod folders without app restart
       IpcMain.on('host:mods:list', function(e) {
+        scanMods();
         untyped e.returnValue = modsList;
       });
 

@@ -59,6 +59,7 @@ class ModLoader
         host: js.Syntax.code("window.host"),
         hxClasses: js.Syntax.code("$hxClasses"),
         version: Version.getVersion(),
+        api: ModContentApi.forMod(info.id),
       };
 
       var promise: js.lib.Promise<Dynamic> =

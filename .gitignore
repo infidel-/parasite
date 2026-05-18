@@ -15,4 +15,6 @@ plans/
 debug
 src/debug
 app
+examples/*/entry.js
+examples/*/entry.js.map
 dev/

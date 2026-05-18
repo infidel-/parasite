@@ -19,4 +19,6 @@ typedef ModRuntime = {
   var hxClasses: Dynamic;
   // engine version string (Version.getVersion())
   var version: String;
+  // per-mod content registration facade (registerItem, etc.)
+  var api: ModContentApi;
 }

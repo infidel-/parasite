@@ -1,0 +1,6 @@
+-cp src
+-main Entry
+-D js-es=6
+-D mod
+-dce no
+-js entry.js
