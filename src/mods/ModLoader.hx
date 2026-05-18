@@ -18,6 +18,9 @@ class ModLoader
       game = g;
 #if electron
       console.log('[mods] ModLoader.load: requesting list from main');
+      // expose engine $hxClasses registry on window for mod externs to extend engine classes
+      // (mod IIFE shadows local $hxClasses; needs a stable global ref before module-load extends evaluates)
+      js.Syntax.code("window.parasiteHx = $hxClasses");
       var raw = HostBridge.modsList();
       ModRegistry.init(game, raw);
 

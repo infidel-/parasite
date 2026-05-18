@@ -1,0 +1,8 @@
+{
+  "id": "yourmod",
+  "name": "Your Mod",
+  "author": "you",
+  "version": "0.1.0",
+  "modApiVersion": 1,
+  "entry": "entry.js"
+}

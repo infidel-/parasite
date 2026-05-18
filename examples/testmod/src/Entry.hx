@@ -1,5 +1,20 @@
-// testmod entry — verifies init() runs and ModContentApi.registerItem works
+// testmod entry — verifies init() runs and ModContentApi.registerItem works via SDK externs
 package;
+
+import mods.ModRuntime;
+
+// custom item class — extends engine ItemInfo via window.parasiteHx.ItemInfo (SDK extern)
+class ModTestItem extends ItemInfo
+{
+  public function new(game: Dynamic)
+    {
+      super(game);
+      id = 'modtest';
+      type = 'misc';
+      name = 'mod test trinket';
+      unknown = 'odd trinket';
+    }
+}
 
 @:expose("testmod_Entry")
 class Entry
@@ -18,13 +33,7 @@ class Entry
       c.log('[testmod] parasite.game? ' + (parasite.game != null));
       c.log('[testmod] parasite.host? ' + (parasite.host != null));
 
-      // build synthetic ItemInfo subclass via ES6 class extends (ItemInfo compiled with -D js-es=6)
-      // untyped js.Syntax escape until SDK externs land (§14 step 11)
-      var ItemInfo: Dynamic = Reflect.field(parasite.hxClasses, 'ItemInfo');
-      var ctor: Dynamic = js.Syntax.code(
-        "(function(SUPER){var f=class ModTestItem extends SUPER{constructor(g){super(g);this.id='modtest';this.type='misc';this.name='mod test trinket';this.unknown='odd trinket';}};f.__name__='testmod.ModTestItem';return f;})({0})",
-        ItemInfo);
-      parasite.api.registerItem(ctor);
+      parasite.api.registerItem(ModTestItem);
 
       var ItemsConst: Dynamic = Reflect.field(parasite.hxClasses, 'const.ItemsConst');
       c.log('[testmod] modtest in infos? ' + ItemsConst.infos.exists('modtest'));
