@@ -29,7 +29,10 @@ class Main
       ai.FollowerLogic.game = game;
       ai.CommandLogic.game = game;
       game.scene.init();
-      game.ui.state = UISTATE_MAINMENU;
+      mods.ModLoader.load(game).then(function(_) {
+        game.ui.state = UISTATE_MAINMENU;
+        return null;
+      });
     }
 
   public static function main()

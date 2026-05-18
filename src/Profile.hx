@@ -18,6 +18,7 @@ class Profile
       object = {
         pediaArticles: {},
         difficultyPresets: [],
+        disabledMods: [],
       };
 
       game.debug('profile load');
@@ -97,6 +98,7 @@ class Profile
 typedef _ProfileObject = {
   var pediaArticles: haxe.DynamicAccess<Int>;
   var difficultyPresets: Array<_Preset>;
+  var disabledMods: Array<String>;
 }
 
 typedef _Preset = {

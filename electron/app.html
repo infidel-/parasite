@@ -3,12 +3,12 @@
 <head>
     <meta http-equiv="Content-Security-Policy"
       content="default-src 'none';
-               script-src 'self' 'sha256-e0+uF2c7XOBHlpTXl0si1dtiyznyYaP0JsxRs5ATi+M=';
+               script-src 'self' 'sha256-e0+uF2c7XOBHlpTXl0si1dtiyznyYaP0JsxRs5ATi+M=' mod:;
                style-src 'self' 'unsafe-inline';
-               img-src 'self' data:;
-               media-src 'self' data:;
-               font-src 'self' data:;
-               connect-src 'self';
+               img-src 'self' data: mod:;
+               media-src 'self' data: mod:;
+               font-src 'self' data: mod:;
+               connect-src 'self' mod:;
                base-uri 'none';
                form-action 'none'">
 	<meta id="viewport" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />

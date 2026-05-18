@@ -1,6 +1,8 @@
 // renderer-side bridge to main process via window.host (set by preload.js)
 // thin typed wrapper around the contextBridge surface
 
+import mods.ModInfo;
+
 #if electron
 class HostBridge
 {
@@ -34,6 +36,9 @@ class HostBridge
 
 // sound asset directory listing (file names only)
   public static function listSounds(): Array<String> return h().assets.listSounds();
+
+// mod scan list (manifests resolved + validated in main)
+  public static function modsList(): Array<ModInfo> return h().mods.list();
 
 // window control
   public static function quit(): Void h().quit();

@@ -2,6 +2,9 @@ import game.*;
 
 class Const
 {
+  // mod API surface version (bump on breaking change)
+  public static inline var MOD_API_VERSION = 1;
+
   public static var FONTS = [ 16, 24, 32, 40 ];
   public static var LAYER_MOUSE = 10; // mouse cursor layer - highest
   public static var LAYER_UI = 9; // ui windows layer

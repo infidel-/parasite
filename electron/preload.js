@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('host', {
   assets: {
     listSounds: () => ipcRenderer.sendSync('host:assets:listSounds'),
   },
+  mods: {
+    list: () => ipcRenderer.sendSync('host:mods:list'),
+  },
 
   quit:          ()   => ipcRenderer.invoke('host:quit'),
   setFullscreen: (on) => ipcRenderer.invoke(on ? 'host:fullscreen:on' : 'host:fullscreen:off'),
