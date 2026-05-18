@@ -38,6 +38,10 @@ class Config
   public var ambientVolume: Int;
   public var difficulty: Int;
 
+  // raw mod-id → settings bucket (§8.5); read/written via mods.ModSettings facade.
+  // structured JSON (any field types), not the flat string map used by built-in config keys
+  public var mods: Dynamic;
+
   var map: Map<String, String>;
 
   public function new(g: Game)
@@ -74,6 +78,7 @@ class Config
       windowHeight = 768;
       windowWidth = 1024;
       difficulty = 0;
+      mods = {};
 
       map = new Map();
       map['mouseEnabled'] = '1';
@@ -110,8 +115,7 @@ class Config
         if (s != null)
           {
             var obj = Json.parse(s);
-            for (f in Reflect.fields(obj))
-              set(f, Reflect.field(obj, f));
+            loadFromObj(obj);
           }
       }
       catch (e: Dynamic)
@@ -125,13 +129,26 @@ class Config
       if (str != null)
         obj = Json.parse(str);
 
-      for (f in Reflect.fields(obj))
-        set(f, Reflect.field(obj, f));
+      loadFromObj(obj);
 #end
       UI.setVar('--text-font', font);
       UI.setVar('--text-font-size', fontSize + 'px');
       UI.setVar('--text-font-title', fontTitle);
       applyAiArtSetting();
+    }
+
+// apply persisted settings object: mods subtree is structured JSON, rest is flat string map
+  function loadFromObj(obj: Dynamic)
+    {
+      var rawMods = Reflect.field(obj, 'mods');
+      if (rawMods != null)
+        mods = rawMods;
+      for (f in Reflect.fields(obj))
+        {
+          if (f == 'mods')
+            continue;
+          set(f, Reflect.field(obj, f));
+        }
     }
 
 // check if any spoon vars enabled
@@ -250,11 +267,13 @@ class Config
       var obj = {};
       for (k => v in map)
         Reflect.setField(obj, k, v);
+      Reflect.setField(obj, 'mods', mods);
       HostBridge.settingsWrite(Json.stringify(obj, null, '  '));
 #elseif js
       var obj = {};
       for (key in map.keys())
         Reflect.setField(obj, key, map[key]);
+      Reflect.setField(obj, 'mods', mods);
       var str = haxe.Json.stringify(obj);
       js.Browser.window.localStorage.setItem('config', str);
 

@@ -20,4 +20,6 @@ typedef ModRuntime = {
   var version: String;
   // per-mod content registration facade (registerItem, etc.)
   var api: ModContentApi;
+  // per-mod persistent k/v settings (get/set/remove/all); see §8.5
+  var settings: ModSettings;
 }

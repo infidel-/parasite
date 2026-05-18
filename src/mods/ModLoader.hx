@@ -23,6 +23,7 @@ class ModLoader
       js.Syntax.code("window.parasiteHx = $hxClasses");
       var raw = HostBridge.modsList();
       ModRegistry.init(game, raw);
+      ModSettings.init(game);
 
       var enabled = ModRegistry.enabled;
       if (enabled.length == 0) {
@@ -63,6 +64,7 @@ class ModLoader
         hxClasses: js.Syntax.code("$hxClasses"),
         version: Version.getVersion(),
         api: ModContentApi.forMod(info.id),
+        settings: ModSettings.api(info.id),
       };
 
       var promise: js.lib.Promise<Dynamic> =

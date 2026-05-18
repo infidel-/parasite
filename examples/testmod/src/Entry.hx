@@ -37,5 +37,11 @@ class Entry
 
       var ItemsConst: Dynamic = Reflect.field(parasite.hxClasses, 'const.ItemsConst');
       c.log('[testmod] modtest in infos? ' + ItemsConst.infos.exists('modtest'));
+
+      // settings smoke — boot counter; first launch = 1, subsequent = N+1
+      var n = parasite.settings.getInt('boots');
+      parasite.settings.set('boots', n + 1);
+      c.log('[testmod] settings.boots was ' + n + ', now ' +
+        parasite.settings.getInt('boots'));
     }
 }
