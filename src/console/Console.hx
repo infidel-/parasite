@@ -14,6 +14,7 @@ class Console
   var addConsole: Add;
   var stageConsole: Stage;
   var cultConsole: Cult;
+  var modsConsole: Mods;
 
 
   public function new(g: Game)
@@ -24,6 +25,7 @@ class Console
       addConsole = new Add(this);
       stageConsole = new Stage(this);
       cultConsole = new Cult(this);
+      modsConsole = new Mods(this);
     }
 
 
@@ -120,6 +122,7 @@ class Console
             'lt - learn all timeline,<br/>' +
             //
             'oa - organ action,<br/>' +
+            'mods [list|enable <id>|disable <id>|errors],<br/>' +
             'snd - play sound, r/restart, ' +
             's - set player stage, ' +
             'spa - spawn ai, ' +
@@ -134,11 +137,16 @@ class Console
             'ds - debug: enable sound info, ' +
             'dli - debug: toggle light markers, ' +
             'load - load game, ' +
+            'mods [list|enable <id>|disable <id>|errors], ' +
             'restart, ' +
             'save - save game, ' +
             'quit.');
 #end
         }
+
+      // XXX mods commands (release + debug)
+      else if (char0 == 'm')
+        modsConsole.run(arr);
 
 #if mydebug
       // XXX info commands
