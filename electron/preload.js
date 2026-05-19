@@ -41,7 +41,8 @@ contextBridge.exposeInMainWorld('host', {
     listSounds: () => ipcRenderer.sendSync('host:assets:listSounds'),
   },
   mods: {
-    list: () => ipcRenderer.sendSync('host:mods:list'),
+    list:   () => ipcRenderer.sendSync('host:mods:list'),
+    rescan: () => ipcRenderer.sendSync('host:mods:rescan'),
   },
 
   quit:          ()   => ipcRenderer.invoke('host:quit'),

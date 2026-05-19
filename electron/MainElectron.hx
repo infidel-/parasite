@@ -13,6 +13,9 @@ import mods.ModInfo;
 
 class MainElectron
 {
+  // Steam app id — assigned by Valve for "Parasite" on Steam
+  static inline var STEAM_APPID = 1920320;
+
   static var win: BrowserWindow;
   // resolved once at App.ready; all session log writes target this file
   static var logPath: String = null;
@@ -21,6 +24,12 @@ class MainElectron
   // also indexed by id for mod:// protocol handler resolution
   static var modsList: Array<ModInfo> = [];
   static var modsByID: haxe.DynamicAccess<ModInfo> = {};
+  // steamworks.js native module ref + init status. null = module load failed
+  // (missing dep, ABI mismatch); steamClient = null means init failed (no
+  // Steam client running, wrong appid, sandbox refused). sideload path stays
+  // functional regardless — workshop discovery is best-effort
+  static var steamworks: Dynamic = null;
+  static var steamClient: Dynamic = null;
 
   // size caps (bytes)
   static inline var CAP_SETTINGS = 256 * 1024;
@@ -327,8 +336,8 @@ class MainElectron
         }
     }
 
-// scan all mod sources and populates modsList + modsByID
-// dirs: <exeDir>/mods, <exeDir>/dev (sideload)
+// scan all mod sources and populates modsList + modsByID.
+// sideload first (sideload wins id collisions for dev workflow), workshop after
   static function scanMods()
     {
       modsList = [];
@@ -351,9 +360,129 @@ class MainElectron
           scanBaseDir(dir, sub.source, modsList, modsByID);
         }
       }
+      scanWorkshopMods(modsList, modsByID);
       mlog('[mods] scan complete: ' + modsList.length + ' mod(s) discovered');
       for (m in modsList)
         mlog('[mods]   - ' + m.id + ' v' + m.version + ' (' + m.source + ') @ ' + m.rootDir);
+    }
+
+// best-effort require of steamworks.js native module. failure = log + null.
+// expected misses: dep not installed, ABI mismatch with current Electron build.
+// caller must check steamworks != null before steamInit()
+  static function loadSteamworks()
+    {
+      try {
+        steamworks = js.Syntax.code("require('steamworks.js')");
+        mlog('[steam] steamworks.js loaded');
+      }
+      catch (e: Dynamic) {
+        steamworks = null;
+        mlog('[steam] steamworks.js require failed: ' + e + ' (workshop disabled)');
+      }
+    }
+
+// drop steam_appid.txt next to exe so steamworks.init works without
+// Steam client launching the binary (per mod-design.md §12 dev-build note)
+  static function writeSteamAppidFile()
+    {
+      try {
+        var exeDir = Path.dirname(App.getPath('exe'));
+        var p = Path.join(exeDir, 'steam_appid.txt');
+        Fs.writeFileSync(p, '' + STEAM_APPID);
+      }
+      catch (e: Dynamic) {
+        mlog('[steam] steam_appid.txt write failed: ' + e);
+      }
+    }
+
+// init steamworks.js with our app id. on failure (no client, sandbox blocked,
+// missing module) log + skip workshop. sideload still works.
+  static function steamInit()
+    {
+      if (steamworks == null) return;
+      try {
+        steamClient = steamworks.init(STEAM_APPID);
+        mlog('[steam] init OK (appid=' + STEAM_APPID + ')');
+      }
+      catch (e: Dynamic) {
+        steamClient = null;
+        mlog('[steam] init failed: ' + e + ' (workshop disabled)');
+      }
+    }
+
+// enumerate subscribed workshop items via steamworks.js workshop.* surface.
+// not-installed → trigger download + skip this boot; needs-update →
+// trigger download + load current; installed → loadManifest on installInfo().folder
+  static function scanWorkshopMods(out: Array<ModInfo>, byID: haxe.DynamicAccess<ModInfo>)
+    {
+      if (steamClient == null) {
+        mlog('[mods] workshop: skipped (Steam not ready)');
+        return;
+      }
+      var workshop: Dynamic = steamClient.workshop;
+      if (workshop == null) {
+        mlog('[mods] workshop: steamworks.js exposes no workshop surface');
+        return;
+      }
+
+      // getSubscribedItems() → array of published file ids (64-bit ints as strings)
+      var ids: Array<Dynamic>;
+      try { ids = workshop.getSubscribedItems(); }
+      catch (e: Dynamic) {
+        mlog('[mods] workshop: getSubscribedItems threw: ' + e);
+        return;
+      }
+      if (ids == null) ids = [];
+      mlog('[mods] workshop: ' + ids.length + ' subscribed item(s)');
+
+      // ITEM_STATE_INSTALLED=4, NEEDS_UPDATE=8, DOWNLOADING=16
+      for (id in ids)
+        {
+          var idStr: String = '' + id;
+          var state: Int;
+          try { state = workshop.state(id); }
+          catch (e: Dynamic) {
+            mlog('[mods] workshop[' + idStr + ']: state threw: ' + e);
+            continue;
+          }
+          // not installed yet — kick off download, skip this boot
+          if ((state & 4) == 0) {
+            try { workshop.download(id, false); }
+            catch (e: Dynamic) {}
+            mlog('[mods] workshop[' + idStr + ']: not installed, download queued (load next launch)');
+            continue;
+          }
+
+          // stale — load current version, kick update for next boot
+          if ((state & 8) != 0) {
+            try { workshop.download(id, false); }
+            catch (e: Dynamic) {}
+            mlog('[mods] workshop[' + idStr + ']: stale, update queued');
+          }
+
+          // installed — get install info
+          var info: Dynamic;
+          try { info = workshop.installInfo(id); }
+          catch (e: Dynamic) {
+            mlog('[mods] workshop[' + idStr + ']: installInfo threw: ' + e);
+            continue;
+          }
+          if (info == null || info.folder == null) {
+            mlog('[mods] workshop[' + idStr + ']: no installInfo, skip');
+            continue;
+          }
+
+          // load + validate manifest from this folder
+          var mod = loadManifest(info.folder, 'workshop');
+          if (mod == null) continue;
+          if (byID.exists(mod.id)) {
+            mlog('[mods] workshop[' + idStr + ']: duplicate id ' + mod.id +
+              ' (already from ' + byID.get(mod.id).rootDir + '), skip');
+            continue;
+          }
+          byID.set(mod.id, mod);
+          out.push(mod);
+        }
     }
 
 // resolve mod:// request to absolute disk path; null on reject (404/403)
@@ -558,9 +687,14 @@ class MainElectron
           }
       });
 
-      // mods list (sideload merge); rescan on every call so renderer reload
-      // picks up added/removed mod folders without app restart
+      // mods list: returns cached scan from App.ready. Use host:mods:rescan
+      // to refresh from disk (e.g. dev workflow with added/removed folders).
       IpcMain.on('host:mods:list', function(e) {
+        untyped e.returnValue = modsList;
+      });
+
+      // explicit rescan: re-enumerates sideload + workshop, returns fresh list
+      IpcMain.on('host:mods:rescan', function(e) {
         scanMods();
         untyped e.returnValue = modsList;
       });
@@ -632,6 +766,9 @@ class MainElectron
       App.on(ready, function(e)
         {
           initLogSession();
+          loadSteamworks();
+          writeSteamAppidFile();
+          steamInit();
           scanMods();
           registerModProtocolHandler();
 

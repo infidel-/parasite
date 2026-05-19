@@ -10,7 +10,7 @@ entry.js: src/Entry.hx build.hxml
 
 install: entry.js manifest.json
 	mkdir -p $(DEST)
-	cp entry.js manifest.json $(DEST)/
+	cp entry.js manifest.json .workshop-id $(DEST)/
 	rm -rf $(DEST)/assets
 	cp -r assets $(DEST)/
 
