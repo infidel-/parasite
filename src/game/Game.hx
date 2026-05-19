@@ -62,6 +62,9 @@ class Game extends _SaveObject
       ItemsConst.init(this);
       config = new Config(this);
       profile = new Profile(this);
+      // mod asset overrides must populate before UI ctor — UI eagerly builds
+      // every window subclass, baking borderImage url() strings via AssetPath.resolve
+      mods.ModLoader.preInit(this);
       ui = new UI(this);
       cult.ordeals.profane.ProfaneConst.init();
       scene = new GameScene(this);

@@ -28,7 +28,6 @@ class Main
       ai.DefaultLogic.game = game;
       ai.FollowerLogic.game = game;
       ai.CommandLogic.game = game;
-      mods.ModLoader.preInit(game);
       game.scene.init();
       mods.ModLoader.load(game).then(function(_) {
         game.ui.state = UISTATE_MAINMENU;
