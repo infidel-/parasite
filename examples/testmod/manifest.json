@@ -2,7 +2,7 @@
   "id": "testmod",
   "name": "Test Mod",
   "author": "parasite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "modApiVersion": 1,
   "entry": "entry.js"
 }

@@ -108,21 +108,36 @@ class Mods extends UIWindow
 
       var disabled = isDisabled(m.id);
       var failReason = ModRegistry.failed.get(m.id);
+      var shadowed = (m.shadowedBy != null);
       if (failReason != null)
         row.classList.add('mods-row-failed');
+      if (shadowed)
+        row.classList.add('mods-row-shadowed');
 
-      // checkbox
+      // checkbox: hidden input + faux `.checkbox-span` box (matches the
+      // pattern used by addCheckbox in UIWindow; styled by app.css via the
+      // global `[type=checkbox]:checked + span:before` rule). shadowed
+      // entries share an id with the loaded mod, so toggling here would
+      // silently disable the wrong source — disable it.
+      var cbLabel = Browser.document.createLabelElement();
+      cbLabel.className = 'mods-check';
+      row.appendChild(cbLabel);
       var cb = Browser.document.createInputElement();
       cb.type = 'checkbox';
-      cb.className = 'mods-checkbox';
-      cb.checked = !disabled;
-      cb.onclick = function (e: PointerEvent) {
-        toggle(m.id, cb.checked);
-      };
-      row.appendChild(cb);
+      cb.className = 'checkbox-element';
+      cb.checked = !disabled && !shadowed;
+      cb.disabled = shadowed;
+      if (!shadowed)
+        cb.onclick = function (e: PointerEvent) {
+          toggle(m.id, cb.checked);
+        };
+      cbLabel.appendChild(cb);
+      var cbSpan = Browser.document.createSpanElement();
+      cbSpan.className = 'checkbox-span mods-check-span';
+      cbLabel.appendChild(cbSpan);
 
       // name + version
-      var label = Browser.document.createSpanElement();
+      var label = Browser.document.createDivElement();
       label.className = 'mods-label';
       label.innerHTML = m.name + ' ' + Const.smallgray('v' + m.version);
       row.appendChild(label);
@@ -147,6 +162,15 @@ class Mods extends UIWindow
           var reason = Browser.document.createDivElement();
           reason.className = 'mods-reason';
           reason.innerHTML = 'failed: ' + failReason;
+          contents.appendChild(reason);
+        }
+
+      // shadow notice on its own indented line
+      if (shadowed)
+        {
+          var reason = Browser.document.createDivElement();
+          reason.className = 'mods-reason';
+          reason.innerHTML = 'shadowed by ' + m.shadowedBy;
           contents.appendChild(reason);
         }
     }

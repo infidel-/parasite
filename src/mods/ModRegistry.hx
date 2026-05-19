@@ -41,6 +41,13 @@ class ModRegistry
       var engineVer = Version.getVersion();
       for (info in all)
         {
+          // shadowed entries stay in `all` for UI visibility only; not loaded.
+          // the shadowing mod (same id, different source) carries the load.
+          if (info.shadowedBy != null)
+            {
+              console.log('[mods]   skip ' + info.id + ' (shadowed by ' + info.shadowedBy + ')');
+              continue;
+            }
           if (disabled.exists(info.id))
             {
               console.log('[mods]   skip ' + info.id + ' (disabled in profile)');

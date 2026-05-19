@@ -33,4 +33,9 @@ typedef ModInfo = {
   // workshop-only: PublishedFileId of the workshop item (decimal string).
   // null for sideload mods. used by Mods UI for "open on workshop" link.
   @:optional var workshopID: String;
+  // if set, this mod's id collides with another (already-loaded) mod from the
+  // listed source. shadowed mods are kept in registry.all for UI visibility
+  // but skipped from candidates (not loaded). e.g. workshop entry shadowed
+  // by a sideload-dev folder with the same id.
+  @:optional var shadowedBy: String;
 }

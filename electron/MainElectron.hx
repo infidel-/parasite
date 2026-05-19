@@ -172,7 +172,7 @@ class MainElectron
       catch (e: Dynamic) {}
     }
 
-// validate manifest mod id: lowercase [a-z0-9_], optional dot segments, 4-80 chars
+// validate manifest mod id: lowercase [a-z0-9_-], optional dot segments, 4-80 chars
   static function isValidModID(s: Dynamic): Bool
     {
       if (!Std.isOfType(s, String))
@@ -180,7 +180,7 @@ class MainElectron
       var str: String = cast s;
       if (str.length < 4 || str.length > 80)
         return false;
-      var re = ~/^[a-z0-9_]+(\.[a-z0-9_]+)*$/;
+      var re = ~/^[a-z0-9_\-]+(\.[a-z0-9_\-]+)*$/;
       return re.match(str);
     }
 
@@ -498,12 +498,18 @@ class MainElectron
           // load + validate manifest from this folder
           var mod = loadManifest(info.folder, 'workshop');
           if (mod == null) continue;
-          if (byID.exists(mod.id)) {
-            mlog('[mods] workshop[' + idStr + ']: duplicate id ' + mod.id +
-              ' (already from ' + byID.get(mod.id).rootDir + '), skip');
-            continue;
-          }
           mod.workshopID = idStr;
+          // id collision: keep workshop entry visible in UI but mark shadowed.
+          // sideload wins for load (dev workflow); ModRegistry skips shadowed.
+          if (byID.exists(mod.id))
+            {
+              var by = byID.get(mod.id);
+              mod.shadowedBy = by.source;
+              mlog('[mods] workshop[' + idStr + ']: id ' + mod.id +
+                ' shadowed by ' + by.source + ' @ ' + by.rootDir);
+              out.push(mod);
+              continue;
+            }
           byID.set(mod.id, mod);
           out.push(mod);
         }
