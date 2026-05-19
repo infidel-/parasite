@@ -39,7 +39,10 @@ class PediaConst
     'cultBazaarNet',
     'cultCommands',
   ];
-  public static var contents: Array<_PediaGroupInfo> = [
+
+  // engine-bundled pedia groups (source of truth). `contents` is the derived
+  // list consumers read; init() rebuilds it from this + ModContentRegistry.
+  public static var builtinContents: Array<_PediaGroupInfo> = [
     {
       id: 'basics',
       name: 'BASICS',
@@ -469,6 +472,38 @@ Hold Ctrl + hover over AI - show AI tooltip with known info<br>",
       ],
     },
   ];
+
+  // derived list: builtinContents + mod-registered groups.
+  // consumers (getName, getArticle, getGroup, UI) iterate this.
+  public static var contents: Array<_PediaGroupInfo> = builtinContents;
+  public static var inited: Bool = false;
+
+// rebuild contents from builtin + mod registry. called from Game.new before
+// any consumer iterates. id collision = last-wins + log.
+  public static function init(game: game.Game)
+    {
+      contents = [];
+      for (g in builtinContents)
+        contents.push(g);
+      for (g in mods.ModContentRegistry.pediaContents)
+        addGroup(g);
+      inited = true;
+    }
+
+// append/replace a pedia group; id collision = last-wins + log.
+// also used live by ModContentApi after init has run.
+  public static function addGroup(info: _PediaGroupInfo)
+    {
+      for (i in 0...contents.length)
+        if (contents[i].id == info.id)
+          {
+            Const.p('mod content collision on pedia group: ' + info.id +
+              ' (last-wins)');
+            contents[i] = info;
+            return;
+          }
+      contents.push(info);
+    }
 
 // get article name by id
   public static function getName(id: String): String

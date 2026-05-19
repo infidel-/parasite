@@ -24,7 +24,27 @@ class Pedia extends UIWindow
       pediaList = ret.text;
       pediaContents = addBlock(window, 'window-pedia-contents', 'CONTENTS');
 
-      // add topics list items
+      buildList();
+
+      addCloseButton();
+      close.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
+        game.ui.state = UISTATE_MAINMENU;
+      }
+    }
+
+// wipe + re-populate the topics list from PediaConst.contents.
+// public so mod loader can call after registerPediaEntry has appended groups.
+  public function rebuild()
+    {
+      pediaList.innerHTML = '';
+      buildList();
+    }
+
+// (re)builds the topics list DOM from PediaConst.contents
+  function buildList()
+    {
       groupInfos = [];
       for (groupContents in PediaConst.contents)
         {
@@ -89,13 +109,6 @@ class Pedia extends UIWindow
               }
             }
         }
-
-      addCloseButton();
-      close.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        game.scene.sounds.play('window-close');
-        game.ui.state = UISTATE_MAINMENU;
-      }
     }
 
 // show article as new

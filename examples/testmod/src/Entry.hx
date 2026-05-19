@@ -9,7 +9,7 @@ class ModTestItem extends ItemInfo
   public function new(game: Dynamic)
     {
       super(game);
-      id = 'modtest';
+      id = 'mod-testmod-modtest';
       type = 'misc';
       name = 'mod test trinket';
       unknown = 'odd trinket';
@@ -36,7 +36,36 @@ class Entry
       parasite.api.registerItem(ModTestItem);
 
       var ItemsConst: Dynamic = Reflect.field(parasite.hxClasses, 'const.ItemsConst');
-      c.log('[testmod] modtest in infos? ' + ItemsConst.infos.exists('modtest'));
+      c.log('[testmod] mod-testmod-modtest in infos? ' +
+        ItemsConst.infos.exists('mod-testmod-modtest'));
+
+      // pedia registration smoke (§8.7.1 Phase A) — group + article ids
+      // must both start with `mod-testmod-`; missing prefix = rejection
+      parasite.api.registerPediaEntry({
+        id: 'mod-testmod-group',
+        name: 'Testmod',
+        articles: [
+          {
+            id: 'mod-testmod-hello',
+            name: 'Hello from testmod',
+            text: 'this article was added at runtime by testmod via ' +
+              'parasite.api.registerPediaEntry()',
+          },
+        ],
+      });
+      var PediaConst: Dynamic = Reflect.field(parasite.hxClasses,
+        'const.PediaConst');
+      c.log('[testmod] pedia group present? ' +
+        (PediaConst.getGroup('mod-testmod-group') != null));
+      c.log('[testmod] pedia article present? ' +
+        (PediaConst.getArticle('mod-testmod-hello') != null));
+
+      // prefix-rejection smoke — should log a reject, NOT register
+      parasite.api.registerPediaEntry({
+        id: 'badprefix-group',
+        name: 'Bad',
+        articles: [{ id: 'badprefix-art', name: 'x', text: 'x' }],
+      });
 
       // settings smoke — boot counter; first launch = 1, subsequent = N+1
       var n = parasite.settings.getInt('boots');

@@ -60,6 +60,7 @@ class Game extends _SaveObject
     {
       inst = this;
       ItemsConst.init(this);
+      const.PediaConst.init(this);
       config = new Config(this);
       profile = new Profile(this);
       // mod asset overrides must populate before UI ctor — UI eagerly builds

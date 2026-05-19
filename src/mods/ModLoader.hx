@@ -1,9 +1,5 @@
-package mods;
-
 // renderer-side mod loader
-// dynamic-imports each enabled mod entry, builds per-mod parasite object,
-// calls init() in try/catch
-// see mod-design.md §5, §8.1, §8.2, §11
+package mods;
 
 import game.Game;
 import js.Browser.console;
@@ -62,6 +58,10 @@ class ModLoader
         }
       return chain.then(function(_) {
         console.log('[mods] all mod loads complete');
+        // rebuild pedia DOM so mod-registered groups/articles appear
+        // (Pedia ctor ran before mods registered; needs re-population)
+        if (game.ui != null)
+          game.ui.pedia.rebuild();
         return null;
       });
 #else
