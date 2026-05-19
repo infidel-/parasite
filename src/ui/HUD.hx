@@ -1,6 +1,7 @@
 // new js ui hud
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.Browser.document;
 import js.html.TextAreaElement;
@@ -101,19 +102,19 @@ class HUD
       log = document.createDivElement();
       log.className = 'text';
       log.id = 'hud-log';
-      log.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
+      log.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
 
       goals = document.createDivElement();
       goals.className = 'text';
       goals.id = 'hud-goals';
-      goals.style.borderImage = "url('./img/hud-goals-border.png') 24 fill / 1 / 0 stretch";
+      goals.style.borderImage = "url('" + AssetPath.resolve('img/hud-goals-border.png') + "') 24 fill / 1 / 0 stretch";
       container.appendChild(goals);
 
       info = document.createDivElement();
       info.className = 'text';
       info.id = 'hud-info';
-      info.style.borderImage = "url('./img/hud-info-border.png') 36 20 36 fill / 1 / 0 stretch";
+      info.style.borderImage = "url('" + AssetPath.resolve('img/hud-info-border.png') + "') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
 
 
@@ -144,7 +145,7 @@ class HUD
       // actions
       actions = document.createDivElement();
       actions.id = 'hud-actions';
-      actions.style.borderImage = "url('./img/hud-actions-border.png') 28 fill / 1 / 0 stretch";
+      actions.style.borderImage = "url('" + AssetPath.resolve('img/hud-actions-border.png') + "') 28 fill / 1 / 0 stretch";
       container.appendChild(actions);
 
       listTransparentElements = [
@@ -193,7 +194,7 @@ class HUD
       btn.innerHTML = str;
       // NOTE: must be the same with show/hide buttons at updateMenu()
       btn.className = 'hud-button window-title';
-      btn.style.borderImage = "url('./img/hud-button.png') 23 fill / 1 / 0 stretch";
+      btn.style.borderImage = "url('" + AssetPath.resolve('img/hud-button.png') + "') 23 fill / 1 / 0 stretch";
       cont.appendChild(btn);
       menuButtons.push({
         state: state,

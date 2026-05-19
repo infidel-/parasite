@@ -5,6 +5,7 @@ package ui;
 import js.Browser;
 import js.html.DivElement;
 import js.html.ImageElement;
+import mods.AssetPath;
 
 import game.Game;
 import game.Improv;
@@ -22,7 +23,7 @@ class Evolution extends UIWindow
     {
       super(g, 'window-evolution');
       listActions = [];
-      window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-evolution.png') + "') 210 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
       cont.id = 'window-evolution-contents';
@@ -220,11 +221,11 @@ class Evolution extends UIWindow
   function updateImage()
     {
       img.style.animation = 'none';
-      img.src = './img/black.jpg';
+      img.src = AssetPath.resolve('img/black.jpg');
       Browser.window.setTimeout(function() {
         if (game.player.evolutionManager.isActive)
-          img.src = './img/imp/' + game.player.evolutionManager.taskID + '.jpg';
-        else img.src = './img/imp/imp_none.jpg';
+          img.src = AssetPath.resolve('img/imp/' + game.player.evolutionManager.taskID + '.jpg');
+        else img.src = AssetPath.resolve('img/imp/imp_none.jpg');
         img.style.animation = '';
       }, 10);
     }

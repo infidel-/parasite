@@ -2,6 +2,7 @@
 import const.CultBaseConst;
 import const.Jobs._JobInfo;
 import js.html.Image;
+import mods.AssetPath;
 import tiles.*;
 
 typedef _CivilianData = {
@@ -36,21 +37,21 @@ class Images
 
       // load all images
       entities = new Image();
-      entities.src = 'img/entities64.png';
+      entities.src = AssetPath.resolve('img/entities64.png');
       cultBase = new Image();
-      cultBase.src = CultBaseConst.IMAGE_PATH;
+      cultBase.src = AssetPath.resolve(CultBaseConst.IMAGE_PATH);
       cultBaseDestroyed = new Image();
-      cultBaseDestroyed.src = CultBaseConst.DESTROYED_IMAGE_PATH;
+      cultBaseDestroyed.src = AssetPath.resolve(CultBaseConst.DESTROYED_IMAGE_PATH);
       creatures = new Image();
-      creatures.src = 'img/creatures64.png';
+      creatures.src = AssetPath.resolve('img/creatures64.png');
       sewersObjects1 = new Image();
-      sewersObjects1.src = Sewers.OBJECTS_IMAGE_PATH;
+      sewersObjects1.src = AssetPath.resolve(Sewers.OBJECTS_IMAGE_PATH);
       undergroundLabObjects1 = new Image();
-      undergroundLabObjects1.src = UndergroundLab.OBJECTS_IMAGE_PATH;
+      undergroundLabObjects1.src = AssetPath.resolve(UndergroundLab.OBJECTS_IMAGE_PATH);
       male = new Image();
-      male.src = 'img/male64.png';
+      male.src = AssetPath.resolve('img/male64.png');
       female = new Image();
-      female.src = 'img/female64.png';
+      female.src = AssetPath.resolve('img/female64.png');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();
@@ -61,7 +62,7 @@ class Images
       for (i in 0...5)
         {
           var img = new Image();
-          img.src = 'img/mouse' + i + '.png';
+          img.src = AssetPath.resolve('img/mouse' + i + '.png');
           cursors.push(img);
         }
       }

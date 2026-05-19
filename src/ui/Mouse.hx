@@ -5,6 +5,7 @@ package ui;
 import game.Game;
 import ai.AI;
 import js.html.MouseEvent;
+import mods.AssetPath;
 import objects.AreaObject;
 import objects.base.RivalBaseOrganObject;
 
@@ -430,7 +431,7 @@ class Mouse
 
       cursor = c;
       game.ui.canvas.style.cursor = 'url(' +
-        'img/mouse' + c + '.png) ' +
+        AssetPath.resolve('img/mouse' + c + '.png') + ') ' +
         (c == 0 ? '0 1' : '16 16') + ', auto';
     }
 

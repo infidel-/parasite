@@ -10,7 +10,7 @@ typedef ModInfo = {
   var author: String;
   // semver-ish string (digits/letters/dots/hyphens)
   var version: String;
-  // must equal Const.MOD_API_VERSION exactly (§3.1)
+  // must equal Const.MOD_API_VERSION exactly
   var modApiVersion: Int;
   // entry script filename, basename only (no path separators)
   var entry: String;
@@ -26,4 +26,8 @@ typedef ModInfo = {
   @:optional var loadAfter: Array<String>;
   // optional: ordering hint — this mod loads before listed ids
   @:optional var loadBefore: Array<String>;
+  // relative asset paths under <rootDir>/assets/ (forward-slash, no leading slash).
+  // populated by main-process scan via recursive walk; empty array if no assets/ dir.
+  // engine merges into AssetPath at load time for asset override
+  var assets: Array<String>;
 }

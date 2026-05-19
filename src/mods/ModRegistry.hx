@@ -105,6 +105,39 @@ class ModRegistry
       failed.set(id, err);
     }
 
+// engine bundled sound basenames (e.g. 'music1.mp3') ∪ mod-registered sound assets.
+// Sounds.init enumerates this to discover all available sound keys at boot.
+// mod assets stored under canonical key 'sound/<basename>.mp3'; we strip the prefix
+  public static function mergedSoundList(): Array<String>
+    {
+      var out: Array<String> = [];
+      var seen = new Map<String, Bool>();
+#if electron
+      var engineFiles = HostBridge.listSounds();
+      if (engineFiles != null)
+        for (f in engineFiles)
+          {
+            if (!seen.exists(f))
+              {
+                seen.set(f, true);
+                out.push(f);
+              }
+          }
+#end
+      for (key in AssetPath.listByExt('.mp3'))
+        {
+          if (!StringTools.startsWith(key, 'sound/'))
+            continue;
+          var base = key.substr(6);
+          if (!seen.exists(base))
+            {
+              seen.set(base, true);
+              out.push(base);
+            }
+        }
+      return out;
+    }
+
 // look up mod info by id; returns null if unknown
   public static function byID(id: String): ModInfo
     {

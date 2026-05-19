@@ -43,5 +43,11 @@ class Entry
       parasite.settings.set('boots', n + 1);
       c.log('[testmod] settings.boots was ' + n + ', now ' +
         parasite.settings.getInt('boots'));
+
+      // asset override smoke (§8.6) — resolve() should return mod:// URLs for assets we shipped
+      var AP: Dynamic = Reflect.field(parasite.hxClasses, 'mods.AssetPath');
+      c.log('[testmod] resolve(img/mouse0.png) = ' + AP.resolve('img/mouse0.png'));
+      c.log('[testmod] resolve(img/mouse1.png) = ' + AP.resolve('img/mouse1.png'));
+      c.log('[testmod] resolve(sound/action-fail.mp3) = ' + AP.resolve('sound/action-fail.mp3'));
     }
 }

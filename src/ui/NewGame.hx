@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
@@ -16,7 +17,7 @@ class NewGame extends UIWindow
   public function new(g: Game)
     {
       super(g, 'window-newgame');
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
       var title = Browser.document.createDivElement();
       title.id = 'window-newgame-title';

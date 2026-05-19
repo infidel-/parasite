@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -19,7 +20,7 @@ class Ovum extends UIWindow
     {
       super(g, 'window-ovum');
       listActions = [];
-      window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-evolution.png') + "') 210 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
       cont.id = 'window-evolution-contents';

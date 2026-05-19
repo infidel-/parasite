@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -25,7 +26,7 @@ class MainMenu extends UIWindow
       currentBackground = DEFAULT_BG;
       loadEnabled = false;
       saveEnabled = false;
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
       // create WebGL background canvas (replaces .window-swirl div)
       menuBg = new MainMenuBackground();
       bg.insertBefore(menuBg.getCanvas(), window);

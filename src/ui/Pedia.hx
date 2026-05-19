@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -17,7 +18,7 @@ class Pedia extends UIWindow
   public function new(g: Game)
     {
       super(g, 'window-pedia');
-      window.style.borderImage = "url('./img/window-log.png') 215 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-log.png') + "') 215 fill / 1 / 0 stretch";
 
       var ret = addBlockExtended(window, 'window-pedia-list', 'TOPICS', 'scroller small');
       pediaList = ret.text;
@@ -80,8 +81,8 @@ class Pedia extends UIWindow
                   Const.col('gray', '<h3>' + article.name + '</h3><br>') +
 
                   (article.img != null ?
-                   '<img style="margin-left: 1em;max-width:40%" class=message-img src="img/' +
-                   article.img + '.jpg"><p>' : '') +
+                   '<img style="margin-left: 1em;max-width:40%" class=message-img src="' +
+                   AssetPath.resolve('img/' + article.img + '.jpg') + '"><p>' : '') +
                   Const.col('pedia', article.text);
                 updateTopic(topicInfo, false);
                 game.profile.markPediaArticle(topicInfo.id);

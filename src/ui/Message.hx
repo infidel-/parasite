@@ -4,6 +4,7 @@ package ui;
 
 import js.Browser;
 import js.html.DivElement;
+import mods.AssetPath;
 
 import game.Game;
 import Const;
@@ -17,7 +18,7 @@ class Message extends UIWindow
     {
       super(g, 'window-message');
       window.className += ' window-dialog';
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();
       text.className = 'window-dialog-text';
@@ -26,7 +27,7 @@ class Message extends UIWindow
       var close = Browser.document.createDivElement();
       close.className = 'hud-button window-dialog-button';
       close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      close.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       close.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.ui.closeWindow();
@@ -47,7 +48,7 @@ class Message extends UIWindow
           img.onload = function() {
             setParamsInternal(o, true);
           };
-          img.src = 'img/' + o.img + '.jpg';
+          img.src = AssetPath.resolve('img/' + o.img + '.jpg');
         }
       else setParamsInternal(o, false);
     }
@@ -57,7 +58,7 @@ class Message extends UIWindow
     {
       var html = '';
       if (hasImage)
-        html += '<img class=message-img src="img/' + o.img + '.jpg"><p>';
+        html += '<img class=message-img src="' + AssetPath.resolve('img/' + o.img + '.jpg') + '"><p>';
       if (o.title != null)
         {
           var titleText = o.title;

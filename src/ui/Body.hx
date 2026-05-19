@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 import js.html.LegendElement;
@@ -32,7 +33,7 @@ class Body extends UIWindow
       super(g, 'window-body');
       listInventoryActions = [];
       listOrgansActions = [];
-      window.style.borderImage = "url('./img/window-body.png') 234 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-body.png') + "') 234 fill / 1 / 0 stretch";
 
       // columns
       var col1 = Browser.document.createDivElement();

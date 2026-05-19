@@ -12,12 +12,14 @@ class ModLoader
 {
   static var game: Game;
 
-// boot-time entry: request mod list from main, sequentially import + init each enabled mod
-  public static function load(g: Game): js.lib.Promise<Dynamic>
+// sync boot phase: must run before any engine code that resolves an asset path
+// (e.g. Images ctor in scene.init()). populates registry + settings + AssetPath
+// so the later async load() phase only handles dynamic-imports + init() calls
+  public static function preInit(g: Game)
     {
       game = g;
 #if electron
-      console.log('[mods] ModLoader.load: requesting list from main');
+      console.log('[mods] ModLoader.preInit: requesting list from main');
       // expose engine $hxClasses registry on window for mod externs to extend engine classes
       // (mod IIFE shadows local $hxClasses; needs a stable global ref before module-load extends evaluates)
       js.Syntax.code("window.parasiteHx = $hxClasses");
@@ -25,6 +27,25 @@ class ModLoader
       ModRegistry.init(game, raw);
       ModSettings.init(game);
 
+      // populate AssetPath from each enabled mod's assets[] in toposorted order.
+      // last writer wins resolve() lookups — matches load() init() order
+      for (info in ModRegistry.enabled)
+        {
+          if (info.assets == null) continue;
+          for (rel in info.assets)
+            {
+              AssetPath.register(info.id, rel);
+              console.log('[mods] asset override: ' + rel + ' <- ' + info.id);
+            }
+        }
+#end
+    }
+
+// async boot phase: dynamic-import each enabled mod entry, build per-mod parasite
+// object, call init() in try/catch. preInit(g) MUST have already run
+  public static function load(g: Game): js.lib.Promise<Dynamic>
+    {
+#if electron
       var enabled = ModRegistry.enabled;
       if (enabled.length == 0) {
         console.log('[mods] no enabled mods, skipping load phase');

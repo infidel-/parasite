@@ -190,9 +190,49 @@ class MainElectron
         return 'application/json';
       if (StringTools.endsWith(lower, '.png'))
         return 'image/png';
+      if (StringTools.endsWith(lower, '.jpg') ||
+          StringTools.endsWith(lower, '.jpeg'))
+        return 'image/jpeg';
       if (StringTools.endsWith(lower, '.mp3'))
         return 'audio/mpeg';
       return null;
+    }
+
+// recursively walk <rootDir>/assets/ and collect rel forward-slash paths
+// for files with mod-allowed extensions (.png, .mp3). returns [] if no assets dir
+  static function walkAssets(rootDir: String): Array<String>
+    {
+      var out: Array<String> = [];
+      var assetsDir = Path.join(rootDir, 'assets');
+      if (!safeExists(assetsDir))
+        return out;
+      function walk(dir: String, prefix: String)
+        {
+          var entries: Array<String>;
+          try { entries = Fs.readdirSync(dir); }
+          catch (e: Dynamic) { return; }
+          for (name in entries)
+            {
+              var full = Path.join(dir, name);
+              var stat: Dynamic;
+              try { stat = Fs.statSync(full); }
+              catch (e: Dynamic) { continue; }
+              var rel = (prefix.length == 0) ? name : (prefix + '/' + name);
+              if (stat.isDirectory())
+                walk(full, rel);
+              else if (stat.isFile())
+                {
+                  var lower = name.toLowerCase();
+                  if (StringTools.endsWith(lower, '.png') ||
+                      StringTools.endsWith(lower, '.jpg') ||
+                      StringTools.endsWith(lower, '.jpeg') ||
+                      StringTools.endsWith(lower, '.mp3'))
+                    out.push(rel);
+                }
+            }
+        }
+      walk(assetsDir, '');
+      return out;
     }
 
 // parse + validate one mod dir; returns serializable info or null on reject
@@ -247,6 +287,7 @@ class MainElectron
         dependencies: m.dependencies,
         loadAfter: m.loadAfter,
         loadBefore: m.loadBefore,
+        assets: walkAssets(rootDir),
       };
       return info;
     }

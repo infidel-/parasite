@@ -4,6 +4,7 @@ package ui;
 
 import js.Browser;
 import js.html.DivElement;
+import mods.AssetPath;
 
 import game.Game;
 
@@ -20,7 +21,7 @@ class Difficulty extends UIWindow
     {
       super(g, 'window-difficulty');
       window.className += ' window-dialog';
-      window.style.borderImage = "url('./img/window-difficulty.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-difficulty.png') + "') 100 fill / 1 / 0 stretch";
 
       var outerText = Browser.document.createSpanElement();
       window.appendChild(outerText);
@@ -38,7 +39,7 @@ class Difficulty extends UIWindow
       var easy = Browser.document.createDivElement();
       easy.className = 'hud-button window-dialog-button window-choice-1';
       easy.innerHTML = Const.col('diff-easy', 'EASY');
-      easy.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      easy.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       easy.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         action(1);
@@ -54,7 +55,7 @@ class Difficulty extends UIWindow
       var normal = Browser.document.createDivElement();
       normal.className = 'hud-button window-dialog-button window-choice-2';
       normal.innerHTML = Const.col('diff-normal', 'NORMAL');
-      normal.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      normal.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       normal.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         action(2);
@@ -70,7 +71,7 @@ class Difficulty extends UIWindow
       var hard = Browser.document.createDivElement();
       hard.className = 'hud-button window-dialog-button window-choice-3';
       hard.innerHTML = Const.col('diff-hard', 'HARD');
-      hard.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      hard.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       hard.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         action(3);
@@ -92,13 +93,14 @@ class Difficulty extends UIWindow
       
       // preload image before setting header
       var img = new js.html.Image();
+      var imgPath = AssetPath.resolve('img/difficulty/' + currentChoice.id + '.jpg');
       img.onload = function() {
         // image loaded, now set header html
         header.innerHTML =
           '<center><h3>' + Const.col('gray', 'Difficulty: ') + currentChoice.title + '</h3><br></center>' +
-          '<img class=message-img src="img/difficulty/' + currentChoice.id + '.jpg">';
+          '<img class=message-img src="' + imgPath + '">';
       };
-      img.src = 'img/difficulty/' + currentChoice.id + '.jpg';
+      img.src = imgPath;
 
       defaultText =
         '<center>Choose difficulty setting.</center>';
