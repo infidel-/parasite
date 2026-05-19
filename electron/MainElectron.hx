@@ -157,10 +157,16 @@ class MainElectron
         }
     }
 
-// file-only log (no stdout); silently no-ops if logPath not yet resolved
+// pre-ready buffer; flushed by initLogSession once logPath is set
+  static var pendingLog: Array<String> = [];
+
+// file-only log; buffers if logPath not yet resolved (pre-ready path)
   static function mlog(line: String)
     {
-      if (logPath == null) return;
+      if (logPath == null) {
+        pendingLog.push(line);
+        return;
+      }
       try { Fs.appendFileSync(logPath, line + '\n'); }
       catch (e: Dynamic) {}
     }
@@ -395,6 +401,22 @@ class MainElectron
       }
     }
 
+// enable Steam in-game overlay (Shift+Tab). MUST run pre-ready: appends
+// chromium switches (in-process-gpu, disable-direct-composition) consumed
+// before GPU process starts. Also installs a 60Hz frame-invalidator on each
+// BrowserWindow so the overlay repaints over our canvas-driven UI.
+  static function enableSteamOverlay()
+    {
+      if (steamworks == null) return;
+      try {
+        steamworks.electronEnableSteamOverlay();
+        mlog('[steam] overlay enabled');
+      }
+      catch (e: Dynamic) {
+        mlog('[steam] overlay enable failed: ' + e);
+      }
+    }
+
 // init steamworks.js with our app id. on failure (no client, sandbox blocked,
 // missing module) log + skip workshop. sideload still works.
   static function steamInit()
@@ -579,6 +601,12 @@ class MainElectron
           ' ' + Node.process.platform + '\n');
       }
       catch (e: Dynamic) { trace('log start failed: ' + e); }
+      // flush pre-ready buffered mlog lines (steamworks load + overlay enable)
+      for (line in pendingLog) {
+        try { Fs.appendFileSync(logPath, line + '\n'); }
+        catch (e: Dynamic) {}
+      }
+      pendingLog = [];
     }
 
 // write session end marker; idempotent across before-quit + window-all-closed
@@ -762,11 +790,14 @@ class MainElectron
       App.enableSandbox();
       registerModSchemePrivileges();
       registerHostHandlers();
+      // steamworks.js must load + overlay switches must apply before App.ready
+      // (chromium consumes command-line switches before GPU process starts)
+      loadSteamworks();
+      enableSteamOverlay();
 
       App.on(ready, function(e)
         {
           initLogSession();
-          loadSteamworks();
           writeSteamAppidFile();
           steamInit();
           scanMods();
