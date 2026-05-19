@@ -9,6 +9,7 @@ import electron.main.App;
 import electron.main.BrowserWindow;
 import electron.main.IpcMain;
 import electron.main.Protocol;
+import electron.Shell;
 import mods.ModInfo;
 
 class MainElectron
@@ -502,6 +503,7 @@ class MainElectron
               ' (already from ' + byID.get(mod.id).rootDir + '), skip');
             continue;
           }
+          mod.workshopID = idStr;
           byID.set(mod.id, mod);
           out.push(mod);
         }
@@ -727,11 +729,59 @@ class MainElectron
         untyped e.returnValue = modsList;
       });
 
+      // open sideload mods folder in OS file manager.
+      // creates <exeDir>/mods if missing so opening always succeeds.
+      IpcMain.on('host:mods:openFolder', function(e) {
+        try
+          {
+            var exeDir = Path.dirname(App.getPath('exe'));
+            var dir = Path.join(exeDir, 'mods');
+            if (!safeExists(dir))
+              Fs.mkdirSync(dir);
+            Shell.openPath(dir);
+            untyped e.returnValue = true;
+          }
+        catch (err: Dynamic)
+          {
+            mlog('[mods] openFolder failed: ' + err);
+            untyped e.returnValue = false;
+          }
+      });
+
+      // open external url; only steam:// and https://steamcommunity.com/
+      // accepted (used by Mods UI for workshop pages + browse-workshop).
+      IpcMain.on('host:shell:openExternal', function(e, url: Dynamic) {
+        if (!Std.isOfType(url, String))
+          {
+            untyped e.returnValue = false;
+            return;
+          }
+        var s: String = cast url;
+        var ok = StringTools.startsWith(s, 'steam://') ||
+                 StringTools.startsWith(s, 'https://steamcommunity.com/');
+        if (!ok)
+          {
+            untyped e.returnValue = false;
+            return;
+          }
+        try
+          {
+            Shell.openExternal(s);
+            untyped e.returnValue = true;
+          }
+        catch (err: Dynamic)
+          {
+            mlog('[shell] openExternal failed: ' + err);
+            untyped e.returnValue = false;
+          }
+      });
+
       // sound asset listing
       IpcMain.on('host:assets:listSounds', function(e) {
-        try {
-          untyped e.returnValue = Fs.readdirSync(soundDir());
-        }
+        try
+          {
+            untyped e.returnValue = Fs.readdirSync(soundDir());
+          }
         catch (err: Dynamic)
           {
             untyped e.returnValue = [];

@@ -41,8 +41,12 @@ contextBridge.exposeInMainWorld('host', {
     listSounds: () => ipcRenderer.sendSync('host:assets:listSounds'),
   },
   mods: {
-    list:   () => ipcRenderer.sendSync('host:mods:list'),
-    rescan: () => ipcRenderer.sendSync('host:mods:rescan'),
+    list:       () => ipcRenderer.sendSync('host:mods:list'),
+    rescan:     () => ipcRenderer.sendSync('host:mods:rescan'),
+    openFolder: () => ipcRenderer.sendSync('host:mods:openFolder'),
+  },
+  shell: {
+    openExternal: (url) => ipcRenderer.sendSync('host:shell:openExternal', url),
   },
 
   quit:          ()   => ipcRenderer.invoke('host:quit'),

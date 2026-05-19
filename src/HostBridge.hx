@@ -39,6 +39,11 @@ class HostBridge
 
 // mod scan list (manifests resolved + validated in main)
   public static function modsList(): Array<ModInfo> return h().mods.list();
+  public static function modsRescan(): Array<ModInfo> return h().mods.rescan();
+  public static function modsOpenFolder(): Bool return h().mods.openFolder();
+
+// open url in external browser / steam client (whitelisted schemes)
+  public static function shellOpenExternal(url: String): Bool return h().shell.openExternal(url);
 
 // window control
   public static function quit(): Void h().quit();

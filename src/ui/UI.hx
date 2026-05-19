@@ -97,7 +97,10 @@ class UI
         UISTATE_OVUM => new Ovum(game),
         UISTATE_CULT => new Cult(game),
         UISTATE_ABOUT => new About(game),
-        UISTATE_PRESETS => new Presets(game)
+        UISTATE_PRESETS => new Presets(game),
+#if electron
+        UISTATE_MODS => new Mods(game),
+#end
       ];
     }
 
@@ -402,7 +405,8 @@ class UI
               if (_state == UISTATE_OPTIONS ||
                   _state == UISTATE_PEDIA ||
                   _state == UISTATE_ABOUT ||
-                  _state == UISTATE_NEWGAME)
+                  _state == UISTATE_NEWGAME ||
+                  _state == UISTATE_MODS)
                 state = UISTATE_MAINMENU;
               else if (_state == UISTATE_PRESETS)
                 state = UISTATE_OPTIONS;

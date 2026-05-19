@@ -30,4 +30,7 @@ typedef ModInfo = {
   // populated by main-process scan via recursive walk; empty array if no assets/ dir.
   // engine merges into AssetPath at load time for asset override
   var assets: Array<String>;
+  // workshop-only: PublishedFileId of the workshop item (decimal string).
+  // null for sideload mods. used by Mods UI for "open on workshop" link.
+  @:optional var workshopID: String;
 }

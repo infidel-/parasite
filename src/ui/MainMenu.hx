@@ -70,6 +70,11 @@ class MainMenu extends UIWindow
       addItem('OPTIONS', function(e) {
         game.ui.state = UISTATE_OPTIONS;
       });
+#if electron
+      addItem('MODS', function(e) {
+        game.ui.state = UISTATE_MODS;
+      });
+#end
       addItem('ABOUT', function(e) {
         game.ui.state = UISTATE_ABOUT;
       });
@@ -127,11 +132,11 @@ class MainMenu extends UIWindow
         game.ui.state = UISTATE_PEDIA;
       else if (index == 5)
         game.ui.state = UISTATE_OPTIONS;
-      else if (index == 6)
 #if electron
+      else if (index == 6)
+        game.ui.state = UISTATE_MODS;
+      else if (index == 7)
         HostBridge.quit();
-#else
-        1;
 #end
     }
 
