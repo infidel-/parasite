@@ -138,6 +138,46 @@ class ModRegistry
       return out;
     }
 
+// diff save-time mod snapshot vs currently-enabled set
+  public static function diffSaveMods(
+    saveMods: Array<{ id: String, version: String }>):
+    Array<{ kind: String, id: String, saveVersion: String, activeVersion: String }>
+    {
+      var out = [];
+      if (saveMods == null) saveMods = [];
+      var saveByID = new Map<String, String>();
+      for (m in saveMods) saveByID.set(m.id, m.version);
+      var activeByID = new Map<String, String>();
+      for (m in enabled) activeByID.set(m.id, m.version);
+
+      for (m in saveMods)
+        {
+          if (!activeByID.exists(m.id))
+            out.push({
+              kind: 'missing',
+              id: m.id,
+              saveVersion: m.version,
+              activeVersion: null
+            });
+          else if (activeByID.get(m.id) != m.version)
+            out.push({
+              kind: 'mismatch',
+              id: m.id,
+              saveVersion: m.version,
+              activeVersion: activeByID.get(m.id)
+            });
+        }
+      for (m in enabled)
+        if (!saveByID.exists(m.id))
+          out.push({
+            kind: 'added',
+            id: m.id,
+            saveVersion: null,
+            activeVersion: m.version
+          });
+      return out;
+    }
+
 // look up mod info by id; returns null if unknown
   public static function byID(id: String): ModInfo
     {

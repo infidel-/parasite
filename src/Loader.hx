@@ -58,6 +58,37 @@ class Loader
       game.log('Game loaded from slot ' + slotID + '.');
     }
 
+// peek _activeMods array from save slot without performing full load.
+// returns [] if save unreadable / missing field (legacy pre-mod save).
+// caller (Game.load) uses this to diff vs ModRegistry.enabled and prompt user
+  public static function peekActiveMods(slotID: Int): Array<{ id: String, version: String }>
+    {
+#if electron
+      try {
+        var s = HostBridge.saveRead(slotID);
+        if (s == null)
+          return [];
+        var o: Dynamic = Json.parse(s);
+        var raw: Dynamic = Reflect.field(o, '_activeMods');
+        if (raw == null || !Std.isOfType(raw, Array))
+          return [];
+        var arr: Array<Dynamic> = raw;
+        var out: Array<{ id: String, version: String }> = [];
+        for (entry in arr)
+          {
+            var id: String = Reflect.field(entry, 'id');
+            var version: String = Reflect.field(entry, 'version');
+            if (id != null)
+              out.push({ id: id, version: version });
+          }
+        return out;
+      }
+      catch (e: Dynamic) { return []; }
+#else
+      return [];
+#end
+    }
+
 // get save format version from top-level save object
   static function getFormatVersion(src: Dynamic): Int
     {

@@ -3,6 +3,7 @@
 import haxe.Json;
 
 import game.Game;
+import mods.ModRegistry;
 
 class Saver
 {
@@ -18,6 +19,10 @@ class Saver
       o.game = saveObject('game', game, 0);
       o.game.regionID = game.region.id;
       o.game.areaID = game.area.id;
+      o._activeMods = [
+        for (m in ModRegistry.enabled)
+          { id: m.id, version: m.version }
+      ];
 #if electron
       HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
 #end

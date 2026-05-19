@@ -736,7 +736,43 @@ class Game extends _SaveObject
 // load current game from slot
   public function load(slotID: Int)
     {
-      Loader.load(this, slotID);
+      // if save's mod snapshot differs from currently-enabled set, prompt user before destructive load.
+      var saveMods = Loader.peekActiveMods(slotID);
+      var warnings = mods.ModRegistry.diffSaveMods(saveMods);
+      if (warnings.length == 0)
+        {
+          Loader.load(this, slotID);
+          return;
+        }
+
+      // build warning message
+      var buf = new StringBuf();
+      buf.add('This save was made with a different mod set:<br><br>');
+      for (w in warnings)
+        {
+          if (w.kind == 'missing')
+            buf.add(Const.smallgray('- <b>' + w.id + ' v' + w.saveVersion +
+              '</b> was active when saved but is no longer enabled<br>'));
+          else if (w.kind == 'added')
+            buf.add(Const.smallgray('- <b>' + w.id + ' v' + w.activeVersion +
+              '</b> is now enabled but was not when saved<br>'));
+          else if (w.kind == 'mismatch')
+            buf.add(Const.smallgray('- <b>' + w.id + '</b> version differs: save v' +
+              w.saveVersion + ', active v' + w.activeVersion + '<br>'));
+        }
+      buf.add('<br>State may be inconsistent or load may fail. Load anyway?');
+      var self = this;
+      ui.event({
+        type: UIEVENT_STATE,
+        state: UISTATE_YESNO,
+        obj: {
+          text: buf.toString(),
+          func: function(yes: Bool) {
+            if (!yes) return;
+            Loader.load(self, slotID);
+          }
+        }
+      });
     }
 
 #if demo

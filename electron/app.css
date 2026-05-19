@@ -614,7 +614,7 @@ hr {
 
 #window-yesno {
   width: 40%;
-  height: 4em;
+  min-height: 4em;
 }
 
 #window-difficulty {
