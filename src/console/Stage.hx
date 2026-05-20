@@ -134,7 +134,7 @@ class Stage
 // runs console go command helper
   inline function goCommand(cmd: String)
     {
-      console.goCommand(cmd);
+      console.goConsole.run(cmd);
     }
 
 // logs through the console helper
@@ -420,10 +420,10 @@ class Stage
       // go to the spaceship location
       var ev = game.timeline.getEvent('alienShipStudy');
       var area = ev.location.area;
-      goCommand('ga' + area.x + ' ' + area.y);
+      goCommand('go area ' + area.x + ' ' + area.y);
 
       var obj = @:privateAccess GoalsAlienCrashLanding.getSpaceshipObject(game);
-      goCommand('gg' + obj.x + ' ' + obj.y);
+      goCommand('go xy ' + obj.x + ' ' + obj.y);
     }
 
 

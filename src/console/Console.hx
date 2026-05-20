@@ -11,10 +11,15 @@ class Console
 {
   public var game: Game;
   var history: Array<String>;
-  var addConsole: Add;
+  public var giveConsole: Give;
+  public var goConsole: Go;
+  var goalConsole: Goal;
+  var learnConsole: Learn;
+  var debugConsole: Debug;
   var stageConsole: Stage;
   var cultConsole: Cult;
   var modsConsole: Mods;
+  public var completion: ConsoleCompletion;
 
 
   public function new(g: Game)
@@ -22,10 +27,15 @@ class Console
       game = g;
       history = [];
       loadHistory();
-      addConsole = new Add(this);
+      giveConsole = new Give(this);
+      goConsole = new Go(this);
+      goalConsole = new Goal(this);
+      learnConsole = new Learn(this);
+      debugConsole = new Debug(this);
       stageConsole = new Stage(this);
       cultConsole = new Cult(this);
       modsConsole = new Mods(this);
+      completion = new ConsoleCompletion(this);
     }
 
 
@@ -42,15 +52,8 @@ class Console
       var arr = cmd.split(' ');
       var char0 = cmd.charAt(0);
 
-#if mydebug
-      // XXX add commands
-      if (char0 == 'a')
-        addConsole.run(cmd);
-
       // XXX config commands
-      else
-#end
-        if (char0 == 'c')
+      if (char0 == 'c')
         {
           // XXX config|cfg <option> <value>
           if (arr[0] == 'config' || arr[0] == 'cfg')
@@ -65,22 +68,22 @@ class Console
 #end
         }
 
-      // XXX debug commands
+      // XXX debug <sub> commands
       else if (char0 == 'd')
-        debugCommand(cmd);
+        debugConsole.run(cmd);
 
 #if mydebug
-      // XXX go, gc, god commands
+      // XXX give, go, goal, god commands
       else if (char0 == 'g')
         {
-          if (cmd == 'god')
-            {
-              setVariableCommand(['set', 'player.godmode', '1' ]);
-            }
-          //
-          else if (cmd == 'gc')
-            completeGoals();
-          else goCommand(cmd);
+          if (arr[0] == 'give')
+            giveConsole.run(cmd);
+          else if (arr[0] == 'go')
+            goConsole.run(cmd);
+          else if (arr[0] == 'goal')
+            goalConsole.run(cmd);
+          else if (arr[0] == 'god')
+            setVariableCommand(['set', 'player.godmode', '1' ]);
         }
 #end
 
@@ -89,37 +92,40 @@ class Console
         {
 #if mydebug
           log('Available commands: ' +
-            // add
-            'ae [effect] - add effect, ' +
-            'ai [item] - add item, ' +
-            'ao [name] - add organ, ' +
-            'as [skill] [amount] - add skill, ' +
-            'at - add trait, ' +
-            'cfg|config,<br/>' +
-            'ch|chat - set chat stage' +
-            'ddemo - debug: finish demo, ' +
-            'dg - debug: render stats, ' +
-            'dli - debug: toggle light markers, ' +
-            'dthrow - debug: throw exception, ' +
-            'dalert - debug: show alert, ' +
-            'dleave - debug: leave area,<br/>' +
+            // give
+            'give effect [name], ' +
+            'give item [name], ' +
+            'give organ [name], ' +
+            'give skill [name] [amount], ' +
+            'give trait [name], ' +
+            'give evolution [name] [level],<br/>' +
+            'cfg|config, ' +
+            'ch|chat - set chat stage,<br/>' +
+            // debug
+            'debug renderstats, ' +
+            'debug ai, ' +
+            'debug sound, ' +
+            'debug lights, ' +
+            'debug alert, ' +
+            'debug demo, ' +
+            'debug leave, ' +
+            'debug throw,<br/>' +
             // go
-            'ga - go and enter area, ' +
-            'gc - complete current goals, ' +
-            'ge - go event location, ' +
-            'gg - go x,y (region or area mode),<br/>' +
-            'god - enable godmode, ' +
+            'go area [x] [y], ' +
+            'go event [index], ' +
+            'go xy [x] [y], ' +
+            'goal complete, ' +
+            'god - enable godmode,<br/>' +
             // info
             'ie - timeline info (trace), ' +
             'ii - improvements info (trace),<br/>' +
             // learn
-            'lc - learn random clues, ' +
-            'le - learn about event, ' +
-            'load - load game, ' +
-            'lia - learn all improvements, ' +
-            'li [name] [level] - learn improvement, ' +
-            'lr - learn region map, ' +
-            'lt - learn all timeline,<br/>' +
+            'learn clues, ' +
+            'learn event [index], ' +
+            'learn improvements [level], ' +
+            'learn region, ' +
+            'learn timeline, ' +
+            'load - load game,<br/>' +
             //
             'oa - organ action,<br/>' +
             'mods [list|enable <id>|disable <id>|errors],<br/>' +
@@ -132,10 +138,10 @@ class Console
             'quit.');
 #else
           log('Available commands: cfg, config, ' +
-            'dg - debug: render stats, ' +
-            'dai - debug: ai info, ' +
-            'ds - debug: enable sound info, ' +
-            'dli - debug: toggle light markers, ' +
+            'debug renderstats, ' +
+            'debug ai, ' +
+            'debug sound, ' +
+            'debug lights, ' +
             'load - load game, ' +
             'mods [list|enable <id>|disable <id>|errors], ' +
             'restart, ' +
@@ -160,7 +166,7 @@ class Console
           if (arr[0] == 'load' || arr[0] == 'lo')
             game.load(1);
 
-          else learnCommand(cmd);
+          else learnConsole.run(cmd);
         }
 #end
 
@@ -336,12 +342,6 @@ class Console
 #end
     }
 
-// complete current player goals
-  function completeGoals()
-    {
-      for (g in @:privateAccess game.goals._listCurrent)
-        game.goals.complete(g);
-    }
 
 #if mydebug
 // chat<stage>
@@ -385,10 +385,10 @@ class Console
   function chatStage1()
     {
       game.player.host.affinity = 80;
-      addConsole.run('as psychology 80');
-      addConsole.run('as coaxing 80');
-      addConsole.run('as coercion 80');
-      addConsole.run('as deception 80');
+      giveConsole.run('give skill psychology 80');
+      giveConsole.run('give skill coaxing 80');
+      giveConsole.run('give skill coercion 80');
+      giveConsole.run('give skill deception 80');
     }
 #end
 
@@ -620,222 +620,6 @@ class Console
       game.scene.sounds.play(arr[1]);
     }
 
-// handle learning improvements via console command
-  function learnImprovementCommand(cmd: String)
-    {
-      var args = (cmd.length > 2 ? StringTools.trim(cmd.substr(2)) : '');
-      var entries = addConsole.buildImprovementEntries();
-      if (args == '')
-        {
-          log('Usage: li [name] [level]');
-          log('Improvements: ' + addConsole.listEntryNames(entries));
-          return;
-        }
-      var partsRaw = args.split(' ');
-      var parts = [];
-      for (part in partsRaw)
-        if (part != '')
-          parts.push(part);
-      if (parts.length == 0)
-        {
-          log('Usage: li [name] [level]');
-          return;
-        }
-      var level = -1;
-      var tail = parts[parts.length - 1];
-      var maybeLevel = Std.parseInt(tail);
-      if (maybeLevel != null)
-        {
-          level = maybeLevel;
-          parts.pop();
-        }
-      var query = parts.join(' ');
-      if (query == '')
-        {
-          log('Usage: li [name] [level]');
-          return;
-        }
-      var match = addConsole.selectMatch('improvement', query, entries);
-      if (match == null)
-        return;
-      var info: ImprovInfo = null;
-      try {
-        info = EvolutionConst.getInfo(match.value);
-      }
-      catch (e: Dynamic)
-        {
-          info = null;
-        }
-      if (info == null)
-        {
-          log('Improvement info not found.');
-          return;
-        }
-      var targetLevel = level;
-      if (targetLevel < 0 || targetLevel > info.maxLevel)
-        targetLevel = info.maxLevel;
-      game.player.evolutionManager.addImprov(match.value, targetLevel);
-      log('Learned ' + info.name + ' ' + targetLevel);
-    }
-
-// debug commands
-  function debugCommand(cmd: String)
-    {
-      // XXX dg - show render stats info
-      if (cmd == 'dg')
-        {
-          game.scene.logRenderStatsToConsole();
-          game.log('Render profile written to browser console.', COLOR_DEBUG);
-        }
-      // XXX dai - show ai view/hear info
-      else if (cmd == 'dai')
-        {
-          log(
-            'Window resolution: ' +
-            game.scene.canvas.width + 'x' + game.scene.canvas.height +
-            ', scale: ' + (game.config.mapScale * 100) +
-            '%, tile resolution: ' +
-            Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
-            Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
-            ', AI view distance: ' + ai.AI.VIEW_DISTANCE +
-            ', AI hear distance: ' + ai.AI.HEAR_DISTANCE +
-            '<br>Current area, max AI: ' + game.area.getMaxAI() +
-            ' = [common AI: ' + game.area.info.commonAI +
-            ' * pow(' +
-            'emptyScreenCells: ' + game.scene.area.emptyScreenCells +
-            ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', ' +
-            game.area.getMaxAICoef() + ')]'
-          );
-        }
-      // XXX ds - enable debug sound info
-      else if (cmd == 'ds')
-        {
-          game.player.vars.debugSoundEnabled = !game.player.vars.debugSoundEnabled;
-          game.debug('Sound debug toggled.');
-        }
-      // XXX dli - toggle debug markers for area light sources
-      else if (cmd == 'dli')
-        {
-          game.player.vars.debugLightsEnabled = !game.player.vars.debugLightsEnabled;
-          var state = (game.player.vars.debugLightsEnabled ? 'on' : 'off');
-          game.debug('Light marker debug toggled: ' + state + '.');
-        }
-#if mydebug
-      else if (cmd == 'dalert')
-        game.log('This is a test alert message.', COLOR_ALERT);
-      else if (cmd == 'ddemo')
-        {
-          game.message({
-            text: 'Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.'
-          });
-          game.ui.event({
-            type: UIEVENT_FINISH,
-            state: null,
-            obj: {
-              result: 'lose',
-              condition: 'demo',
-            }
-          });
-        }
-      else if (cmd == 'dleave')
-        {
-          if (game.location != LOCATION_AREA)
-            game.log('Not in area.');
-          else game.setLocation(LOCATION_REGION);
-        }
-      else if (cmd == 'dthrow')
-        throw 'test exception';
-#end
-    }
-
-// go commands
-  public function goCommand(cmd: String)
-    {
-      // XXX [ga10 10] go to area and enter it
-      if (cmd.charAt(1) == 'a')
-        {
-          if (cmd.length < 3)
-            {
-              log('Usage: ga[x] [y]');
-              return;
-            }
-          var tmp = cmd.substr(2).split(' ');
-          if (tmp.length < 2 || tmp.length > 2)
-            {
-              log('wrong format');
-              return;
-            }
-
-          var x = Std.parseInt(tmp[0]);
-          var y = Std.parseInt(tmp[1]);
-          var area = game.region.getXY(x, y);
-          if (area == null)
-            {
-              log('wrong location');
-              return;
-            }
-
-          log('Teleporting to area (' + x + ',' + y + ').');
-          game.player.teleport(area);
-        }
-
-      // XXX [ge10] go to event X location
-      else if (cmd.charAt(1) == 'e')
-        {
-          if (cmd.length < 3)
-            {
-              log('Usage: ge[event index]');
-              return;
-            }
-          var idx = Std.parseInt(cmd.substr(2));
-          var event = game.timeline.getEventByIndex(idx);
-          if (event == null)
-            {
-              log('Event ' + idx + ' not found in the timeline.');
-              return;
-            }
-
-          if (event.location == null)
-            {
-              log('Event ' + idx + ' has no location.');
-              return;
-            }
-
-          log('Teleporting to event ' + idx + ' location.');
-
-          var area = event.location.area;
-          game.ui.state = UISTATE_DEFAULT;
-          game.player.teleport(area);
-        }
-
-      // XXX [gg10 10] go to location x,y at current location
-      else if (cmd.charAt(1) == 'g')
-        {
-          if (cmd.length < 3)
-            {
-              log('Usage: gg[x] [y]');
-              return;
-            }
-          var tmp = cmd.substr(2).split(' ');
-          if (tmp.length < 2 || tmp.length > 2)
-            {
-              log('wrong format');
-              return;
-            }
-
-          var x = Std.parseInt(tmp[0]);
-          var y = Std.parseInt(tmp[1]);
-
-          log('Teleporting to location (' + x + ',' + y + ').');
-
-          if (game.location == LOCATION_AREA)
-            game.playerArea.moveTo(x, y);
-          else game.playerRegion.moveTo(x, y, false);
-          game.scene.updateCamera();
-          game.scene.draw();
-        }
-    }
-
 
 // info commands
   function infoCommand(cmd: String)
@@ -863,93 +647,6 @@ class Console
                 s.add(', ');
             }
           log(Const.small(s.toString()));
-        }
-    }
-
-
-// learn commands
-  function learnCommand(cmd: String)
-    {
-      // XXX [lc] learn random clues
-      if (cmd.charAt(1) == 'c')
-        {
-          game.goals.receive(GOAL_LEARN_CLUE);
-          game.goals.complete(GOAL_LEARN_CLUE);
-          for (i in 0...5)
-            game.timeline.learnClues(game.timeline.getRandomEvent(), true);
-        }
-      // XXX [le10] learn everything about event X
-      else if (cmd.charAt(1) == 'e')
-        {
-          if (cmd.length < 3)
-            {
-              log('Usage: le[event index]');
-              return;
-            }
-          var idx = Std.parseInt(cmd.substr(2));
-          var event = game.timeline.getEventByIndex(idx);
-          if (event == null)
-            {
-              log('Event [' + idx + '] not found in the timeline.');
-              return;
-            }
-
-          while (!event.notesKnown())
-            event.learnNote();
-          event.learnLocation();
-        }
-
-      // XXX [lia] learn all improvements
-      else if (cmd.charAt(1) == 'i' && cmd.charAt(2) == 'a')
-        {
-          var level = 3;
-          if (cmd.length > 2)
-            level = Std.parseInt(cmd.substr(3));
-          for (imp in EvolutionConst.improvements)
-            game.player.evolutionManager.addImprov(imp.id, level);
-          log('All improvements learned.');
-
-          game.player.evolutionManager.state = 2;
-        }
-
-      // XXX [li10 1] learn improvement X at level Y
-      else if (cmd.charAt(1) == 'i')
-        learnImprovementCommand(cmd);
-
-      // XXX [lr] learn region map
-      else if (cmd.charAt(1) == 'r')
-        {
-          for (a in game.region)
-            a.isKnown = true;
-          if (game.location == LOCATION_REGION)
-            game.scene.region.update();
-          log('Region map opened.');
-        }
-
-      // XXX [lt] learn all timeline
-      else if (cmd.charAt(1) == 't')
-        {
-          game.log('Timeline opened.');
-          for (e in game.timeline)
-            {
-              e.locationKnown = true;
-              for (n in e.notes)
-                n.isKnown = true;
-
-              for (npc in e.npc)
-                {
-                  npc.nameKnown = true;
-                  npc.jobKnown = true;
-                  npc.areaKnown = true;
-                  npc.statusKnown = true;
-                }
-
-//              e.learnLocation();
-            }
-          game.player.vars.npcEnabled = true;
-          game.player.vars.searchEnabled = true;
-
-          game.timeline.update(); // update event numbering
         }
     }
 
