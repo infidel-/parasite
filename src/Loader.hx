@@ -278,9 +278,20 @@ class Loader
     }
 
 // initialize enum from serialized wrapper
+// also handles legacy wrappers for engine enums that have since been
+// converted to enum-abstract over String for mods
+// old saves wrap the value as {_classID, val,
+// _isEnum}; new saves write the bare string. when classID matches a former
+// enum, return src.val directly so the value lands as a plain String in the
+// destination List/field.
+// TODO once SAVE_FORMAT_VERSION is bumped to 3 (after _Skill + _Improv land),
+// thread formatVersion in here and gate the legacy classID branches on
+// `formatVersion < 3`
   static function initEnum(name: String, src: Dynamic, depth: Int): Dynamic
     {
       var classID: String = untyped src._classID;
+      if (classID == '_AITraitType')
+        return src.val;
       var ee = Type.resolveEnum(classID);
       if (ee == null)
         throw 'No such enum: ' + classID;

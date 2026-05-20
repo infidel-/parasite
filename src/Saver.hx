@@ -7,6 +7,9 @@ import mods.ModRegistry;
 
 class Saver
 {
+  // TODO bump to 3 after _Skill + _Improv enum-abstract conversions land
+  // then thread formatVersion into Loader.initEnum
+  // and gate the legacy `{_classID,val}` shims on `formatVersion < 3`.
   static var SAVE_FORMAT_VERSION = 2;
 
 // save current game to a slot

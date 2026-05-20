@@ -1,10 +1,16 @@
-// AI trait types
+// AI trait type — enum-abstract over String. mods register new trait ids
+// as plain strings (e.g. 'mod-mymod-foo'); engine accepts them anywhere a
+// _AITraitType is expected because of `from String`.
+// the TRAIT_* builtin constants below give mods autocomplete + nominal
+// safety when referencing core traits (e.g. composing with TRAIT_ASSIMILATED).
 
 enum abstract _AITraitType(String) to String from String
 {
+  // misc group
   var TRAIT_DRUG_ADDICT = 'TRAIT_DRUG_ADDICT';
   var TRAIT_ALCOHOLIC = 'TRAIT_ALCOHOLIC';
   var TRAIT_ASSIMILATED = 'TRAIT_ASSIMILATED';
+  // skill group
   var TRAIT_BRUISER = 'TRAIT_BRUISER';
   var TRAIT_KNIFE_EXPERT = 'TRAIT_KNIFE_EXPERT';
   var TRAIT_BATON_EXPERT = 'TRAIT_BATON_EXPERT';
@@ -19,17 +25,20 @@ enum abstract _AITraitType(String) to String from String
   var TRAIT_NEGOTIATOR = 'TRAIT_NEGOTIATOR';
   var TRAIT_CONSULTANT = 'TRAIT_CONSULTANT';
   var TRAIT_HABITUAL_LIAR = 'TRAIT_HABITUAL_LIAR';
+  // mind group
   var TRAIT_DUMB = 'TRAIT_DUMB';
   var TRAIT_ILLITERATE = 'TRAIT_ILLITERATE';
   var TRAIT_GENIUS = 'TRAIT_GENIUS';
   var TRAIT_WEAK_WILLED = 'TRAIT_WEAK_WILLED';
   var TRAIT_STRONG_WILLED = 'TRAIT_STRONG_WILLED';
+  // body group
   var TRAIT_ANOREXIC = 'TRAIT_ANOREXIC';
   var TRAIT_WEAK = 'TRAIT_WEAK';
   var TRAIT_OBESE = 'TRAIT_OBESE';
   var TRAIT_HEAVILY_OBESE = 'TRAIT_HEAVILY_OBESE';
   var TRAIT_MUSCULAR = 'TRAIT_MUSCULAR';
   var TRAIT_HERCULEAN = 'TRAIT_HERCULEAN';
+  // cultBasic group
   var TRAIT_DEVOUT_BRUTE = 'TRAIT_DEVOUT_BRUTE';
   var TRAIT_PENITENT_BASTION = 'TRAIT_PENITENT_BASTION';
   var TRAIT_VEILED_SCHOLAR = 'TRAIT_VEILED_SCHOLAR';

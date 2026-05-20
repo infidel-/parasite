@@ -12,4 +12,14 @@ class ModContentRegistry
   // mod-registered pedia groups (each holds its own articles array);
   // appended after built-ins in PediaConst.init
   public static var pediaContents: Array<_PediaGroupInfo> = [];
+
+  // mod-registered AI traits paired with their target category id;
+  // pushed live into TraitsConst.traits at registration time
+  public static var traits: Array<_RegisteredTrait> = [];
+}
+
+// pending/recorded mod trait registration
+typedef _RegisteredTrait = {
+  var category: String;
+  var info: _TraitInfo;
 }

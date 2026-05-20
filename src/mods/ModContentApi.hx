@@ -101,6 +101,32 @@ class ModContentApi
         game.Game.inst.profile.addPediaArticle(a.id, false);
     }
 
+// register an AI trait under a named category.
+// info.id must start with mod-<modID>-; category is a free-form string that
+// is appended to TraitsConst.traits live. existing builtin categories are
+// 'misc', 'skill', 'mind', 'body', 'cultBasic'; mods may introduce new ones.
+  public function registerTrait(category: String, info: _TraitInfo)
+    {
+      if (info == null)
+        {
+          error('trait', 'info is null');
+          return;
+        }
+      if (category == null || category == '')
+        {
+          error('trait', 'category is empty for id "' + info.id + '"');
+          return;
+        }
+      if (!checkPrefix('trait', info.id))
+        return;
+
+      // all checks passed; record + add live
+      ModContentRegistry.traits.push({ category: category, info: info });
+      console.log('[mods] register trait: ' + modID + '/' + info.id +
+        ' in group "' + category + '"');
+      const.TraitsConst.addTrait(category, info);
+    }
+
 // builds a per-mod api instance; called by ModLoader per import
   public static function forMod(modID: String): ModContentApi
     {

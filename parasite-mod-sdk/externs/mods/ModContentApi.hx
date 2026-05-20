@@ -11,4 +11,8 @@ typedef ModContentApi = {
   function registerItem(cls: Class<ItemInfo>): Void;
   // register a pedia group + its articles; survives PediaConst.init re-runs
   function registerPediaEntry(info: _PediaGroupInfo): Void;
+  // register an AI trait under a category id (e.g. 'misc', 'skill', 'mind',
+  // 'body', 'cultBasic', or a custom mod-defined group). id collision within
+  // the same group = last-wins + log
+  function registerTrait(category: String, info: _TraitInfo): Void;
 }
