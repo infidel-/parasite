@@ -285,10 +285,17 @@ class Loader
       formatVersion: Int): Dynamic
     {
       var classID: String = untyped src._classID;
+      // _AITraitType/_Skill/_Improv converted to enum-abstract at the v3 bump,
+      // so only pre-v3 saves wrap them
       if (formatVersion < 3 &&
           (classID == '_AITraitType' ||
            classID == '_Skill' ||
            classID == '_Improv'))
+        return src.val;
+      // _Goal converted after the v3 bump (still unreleased), so its wrapper
+      // appears in pre-v3 AND interim v3 saves; post-conversion saves write a
+      // bare string and never reach here, so this needs no version gate
+      if (classID == '_Goal')
         return src.val;
       var ee = Type.resolveEnum(classID);
       if (ee == null)

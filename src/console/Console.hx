@@ -114,7 +114,8 @@ class Console
             'go area [x] [y], ' +
             'go event [index], ' +
             'go xy [x] [y], ' +
-            'goal complete, ' +
+            'goal complete [id], ' +
+            'goal receive [id], ' +
             'god - enable godmode,<br/>' +
             // info
             'ie - timeline info (trace), ' +

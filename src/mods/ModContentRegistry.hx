@@ -26,6 +26,9 @@ class ModContentRegistry
   // mod-registered evolution improvements; pushed live into
   // EvolutionConst.improvements at registration time
   public static var improvements: Array<ImprovInfo> = [];
+
+  // mod-registered goals; pushed live into const.Goals.map at registration time
+  public static var goals: Array<GoalInfo> = [];
 }
 
 // pending/recorded mod trait registration

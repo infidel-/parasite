@@ -21,4 +21,7 @@ typedef ModContentApi = {
   // register an evolution improvement; appended to EvolutionConst.improvements
   // live. id collision = last-wins + log
   function registerEvolution(info: _ImprovInfo): Void;
+  // register a custom goal; added to const.Goals.map live.
+  // id collision = last-wins + log
+  function registerGoal(info: _GoalInfo): Void;
 }

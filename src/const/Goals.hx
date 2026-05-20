@@ -4,6 +4,18 @@ package const;
 
 class Goals
 {
+// append a goal info; id collision = last-wins + log. used by
+// ModContentApi.registerGoal and any future engine code that registers goals
+// dynamically. the goals map is built once at class load and never wiped, so a
+// registered goal survives all new-game cycles.
+  public static function addGoal(info: GoalInfo)
+    {
+      if (map.exists(info.id))
+        Const.p('mod content collision on goal id: ' + info.id +
+          ' (last-wins)');
+      map.set(info.id, info);
+    }
+
   public static var map: Map<_Goal, GoalInfo> = [
 
     // ========================= misc goals (tutorials)

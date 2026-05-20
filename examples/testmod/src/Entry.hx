@@ -31,6 +31,7 @@ class Entry
       testTraitRegistration(parasite);
       testSkillRegistration(parasite);
       testEvolutionRegistration(parasite);
+      testGoalRegistration(parasite);
       testSettings(parasite);
       testAssetOverride(parasite);
     }
@@ -191,6 +192,32 @@ class Entry
         maxLevel: 1,
         levelNotes: [ 'x' ],
         levelParams: [ {} ],
+      });
+    }
+
+// registers a mod goal, confirms it landed in const.Goals.map,
+// then fires a bad-prefix one the host must reject
+  static function testGoalRegistration(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+
+      // marker goal; presence verified via Goals.map below (no console grant
+      // command exists — `goal complete` only finishes active goals)
+      parasite.api.registerGoal({
+        id: 'mod-testmod-firstcontact',
+        isStarting: true,
+        name: 'mod first contact',
+        note: 'Mod-registered marker goal. No mechanical effect.',
+      });
+      var Goals: Dynamic = Reflect.field(parasite.hxClasses, 'const.Goals');
+      c.log('[testmod] goal mod-testmod-firstcontact in map? ' +
+        Goals.map.exists('mod-testmod-firstcontact'));
+
+      // prefix-rejection smoke for goal — should log a reject, NOT register
+      parasite.api.registerGoal({
+        id: 'badgoal',
+        name: 'bad',
+        note: 'x',
       });
     }
 

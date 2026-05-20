@@ -165,6 +165,25 @@ class ModContentApi
       const.EvolutionConst.addImprovement(info);
     }
 
+// register a custom goal.
+// info.id must start with mod-<modID>-; added to const.Goals.map live.
+// id collision = last-wins + log.
+  public function registerGoal(info: GoalInfo)
+    {
+      if (info == null)
+        {
+          error('goal', 'info is null');
+          return;
+        }
+      if (!checkPrefix('goal', info.id))
+        return;
+
+      // all checks passed; record + add live
+      ModContentRegistry.goals.push(info);
+      console.log('[mods] register goal: ' + modID + '/' + info.id);
+      const.Goals.addGoal(info);
+    }
+
 // builds a per-mod api instance; called by ModLoader per import
   public static function forMod(modID: String): ModContentApi
     {

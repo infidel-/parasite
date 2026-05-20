@@ -1,12 +1,12 @@
-// player goals
-// enum-abstract over String: builtin GOAL_*/SCENARIO_* constants kept for engine
-// code, mods register plain string ids. used as a Map key in const.Goals.map and
-// scenario goal maps (those become StringMaps) and persisted in Goals as String
-// lists. Loader migrates pre-v3 {_classID:"_Goal",val} save wrappers to bare
-// strings (shared shim with the other converted enums)
+// goal id — enum-abstract over String. mods register new goal ids as plain
+// strings (e.g. 'mod-mymod-foo'); engine accepts them anywhere a _Goal is
+// expected because of `from String`.
+// the GOAL_*/SCENARIO_* builtin constants below give mods autocomplete + nominal
+// safety when referencing core goals (e.g. completing GOAL_INVADE_HOST).
 
 enum abstract _Goal(String) to String from String
 {
+  // tutorial goals (hidden, granted on start)
   var GOAL_TUTORIAL_ALERT = 'GOAL_TUTORIAL_ALERT';
   var GOAL_TUTORIAL_BODY = 'GOAL_TUTORIAL_BODY';
   var GOAL_TUTORIAL_BODY_SEWERS = 'GOAL_TUTORIAL_BODY_SEWERS';
@@ -17,25 +17,25 @@ enum abstract _Goal(String) to String from String
   var GOAL_TUTORIAL_AFFINITY = 'GOAL_TUTORIAL_AFFINITY';
   var GOAL_TUTORIAL_MAX_AFFINITY = 'GOAL_TUTORIAL_MAX_AFFINITY';
   var GOAL_TUTORIAL_CONSENT = 'GOAL_TUTORIAL_CONSENT';
-
+  // main progression branch
   var GOAL_INVADE_HOST = 'GOAL_INVADE_HOST';
   var GOAL_INVADE_HUMAN = 'GOAL_INVADE_HUMAN';
   var GOAL_EVOLVE_PROBE = 'GOAL_EVOLVE_PROBE';
   var GOAL_EVOLVE_ORGAN = 'GOAL_EVOLVE_ORGAN';
   var GOAL_GROW_ORGAN = 'GOAL_GROW_ORGAN';
-
+  // camouflage branch
   var GOAL_EVOLVE_CAMO = 'GOAL_EVOLVE_CAMO';
   var GOAL_GROW_CAMO = 'GOAL_GROW_CAMO';
-
+  // dopamine branch
   var GOAL_EVOLVE_DOPAMINE = 'GOAL_EVOLVE_DOPAMINE';
   var GOAL_LEARN_PRESERVATOR = 'GOAL_LEARN_PRESERVATOR';
-
+  // habitat branch
   var GOAL_EVOLVE_MICROHABITAT = 'GOAL_EVOLVE_MICROHABITAT';
   var GOAL_CREATE_HABITAT = 'GOAL_CREATE_HABITAT';
   var GOAL_PUT_BIOMINERAL = 'GOAL_PUT_BIOMINERAL';
   var GOAL_PUT_ASSIMILATION = 'GOAL_PUT_ASSIMILATION';
   var GOAL_PUT_WATCHER = 'GOAL_PUT_WATCHER';
-
+  // brain probe / society / timeline branch
   var GOAL_PROBE_BRAIN = 'GOAL_PROBE_BRAIN';
   var GOAL_LEARN_ITEMS = 'GOAL_LEARN_ITEMS';
   var GOAL_PROBE_BRAIN_ADVANCED = 'GOAL_PROBE_BRAIN_ADVANCED';
@@ -49,7 +49,6 @@ enum abstract _Goal(String) to String from String
   var GOAL_PROGRESS_TIMELINE = 'GOAL_PROGRESS_TIMELINE';
   var GOAL_LEARN_FALSE_MEMORIES = 'GOAL_LEARN_FALSE_MEMORIES';
   var GOAL_LEARN_ENGRAM = 'GOAL_LEARN_ENGRAM';
-
   // scenario: alien crash landing
   var SCENARIO_ALIEN_FIND_SHIP = 'SCENARIO_ALIEN_FIND_SHIP';
   var SCENARIO_ALIEN_SAVE_ALIEN = 'SCENARIO_ALIEN_SAVE_ALIEN';

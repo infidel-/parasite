@@ -43,6 +43,21 @@ class ConsoleCompletion
             out.push(m.id);
           return out;
         };
+      var goalIDs = function()
+        {
+          var out = [];
+          for (g in const.Goals.map.keys())
+            out.push(Goal.displayID(g));
+          return out;
+        };
+      // only the player's current (active) goals — the completable set
+      var currentGoalIDs = function()
+        {
+          var out = [];
+          for (g in console.game.goals.iteratorCurrent())
+            out.push(Goal.displayID(g));
+          return out;
+        };
 
       var debugSubs: Array<CompNode> = [
         { lit: 'renderstats' },
@@ -72,7 +87,8 @@ class ConsoleCompletion
           { lit: 'xy', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
         ] },
         { lit: 'goal', next: [
-          { lit: 'complete' },
+          { lit: 'complete', next: [ { slot: '<id>', values: currentGoalIDs } ] },
+          { lit: 'receive', next: [ { slot: '<id>', values: goalIDs } ] },
         ] },
         { lit: 'learn', next: [
           { lit: 'clues' },
