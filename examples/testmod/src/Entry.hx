@@ -21,8 +21,20 @@ class Entry
 {
   public static function main() {}
 
-// boot hook — receives per-mod parasite runtime object (mod-design.md §8.2)
+// boot hook — receives per-mod parasite runtime object
+// runs each smoke test in turn; one method per API surface under test
   public static function init(parasite: ModRuntime)
+    {
+      testRuntimeInfo(parasite);
+      testItemRegistration(parasite);
+      testPediaRegistration(parasite);
+      testTraitRegistration(parasite);
+      testSettings(parasite);
+      testAssetOverride(parasite);
+    }
+
+// logs the runtime fields handed to the mod so we can eyeball what the host wired up
+  static function testRuntimeInfo(parasite: ModRuntime)
     {
       var c = js.Browser.console;
       c.log('[testmod] init() called');
@@ -32,15 +44,26 @@ class Entry
       c.log('[testmod] parasite.version = ' + parasite.version);
       c.log('[testmod] parasite.game? ' + (parasite.game != null));
       c.log('[testmod] parasite.host? ' + (parasite.host != null));
+    }
 
+// registers a custom item class, then confirms it landed in ItemsConst.infos
+  static function testItemRegistration(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
       parasite.api.registerItem(ModTestItem);
 
       var ItemsConst: Dynamic = Reflect.field(parasite.hxClasses, 'const.ItemsConst');
       c.log('[testmod] mod-testmod-modtest in infos? ' +
         ItemsConst.infos.exists('mod-testmod-modtest'));
+    }
 
-      // pedia registration smoke (§8.7.1 Phase A) — group + article ids
-      // must both start with `mod-testmod-`; missing prefix = rejection
+// registers a pedia group + article, confirms presence,
+// then fires a bad-prefix entry that the host must reject
+  static function testPediaRegistration(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+
+      // ids must both start with `mod-testmod-`; missing prefix = rejection
       parasite.api.registerPediaEntry({
         id: 'mod-testmod-group',
         name: 'Testmod',
@@ -66,14 +89,54 @@ class Entry
         name: 'Bad',
         articles: [{ id: 'badprefix-art', name: 'x', text: 'x' }],
       });
+    }
 
-      // settings smoke — boot counter; first launch = 1, subsequent = N+1
+// registers a marker trait into the 'misc' group,
+// confirms it landed, then fires a bad-prefix trait the host must reject
+  static function testTraitRegistration(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+
+      // appended to the 'misc' builtin group so `console add trait test-bravery`
+      // can grant it on a host
+      parasite.api.registerTrait('misc', {
+        id: 'mod-testmod-bravery',
+        name: 'test-bravery',
+        note: 'Mod-registered marker trait. No mechanical effect.',
+        isNegative: false,
+      });
+      var TraitsConst: Dynamic = Reflect.field(parasite.hxClasses,
+        'const.TraitsConst');
+      var miscGroup: Array<Dynamic> = TraitsConst.traits.get('misc');
+      var found = false;
+      for (t in miscGroup)
+        if (t.id == 'mod-testmod-bravery')
+          { found = true; break; }
+      c.log('[testmod] trait mod-testmod-bravery in misc group? ' + found);
+
+      // prefix-rejection smoke for trait — should log a reject, NOT register
+      parasite.api.registerTrait('misc', {
+        id: 'badtrait',
+        name: 'bad',
+        note: 'x',
+        isNegative: false,
+      });
+    }
+
+// boot counter persisted via mod settings; first launch = 1, subsequent = N+1
+  static function testSettings(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
       var n = parasite.settings.getInt('boots');
       parasite.settings.set('boots', n + 1);
       c.log('[testmod] settings.boots was ' + n + ', now ' +
         parasite.settings.getInt('boots'));
+    }
 
-      // asset override smoke (§8.6) — resolve() should return mod:// URLs for assets we shipped
+// asset override smoke — resolve() should return mod:// URLs for assets we shipped
+  static function testAssetOverride(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
       var AP: Dynamic = Reflect.field(parasite.hxClasses, 'mods.AssetPath');
       c.log('[testmod] resolve(img/mouse0.png) = ' + AP.resolve('img/mouse0.png'));
       c.log('[testmod] resolve(img/mouse1.png) = ' + AP.resolve('img/mouse1.png'));

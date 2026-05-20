@@ -232,6 +232,26 @@ hr {
   resize: none;
 }
 
+/* gray inline completion hint, overlaid on top of the textarea */
+#hud-console-hint {
+  position: absolute;
+  overflow: hidden;
+  white-space: pre;
+  pointer-events: none;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  opacity: 0.9;
+}
+
+#hud-console-hint .chint-pre {
+  color: transparent;
+}
+
+#hud-console-hint .chint-ghost {
+  color: var(--text-color-gray);
+}
+
 .text {
   color: var(--text-fg-color);
   background: #202020aa;

@@ -1,5 +1,10 @@
 # Repository Guidelines
 
+## Build targets (root Makefile)
+- `make` / `make game-debug`: `cd src && make electron-mydebug`
+- `make testmod`: `cd examples/testmod/ && make`
+- `make main`: `cd electron && make`
+
 - NEVER detach HEAD! NEVER!
 - ALWAYS respond in English!
 - ALWAYS run tests at the end of each task: cd src/ && make
