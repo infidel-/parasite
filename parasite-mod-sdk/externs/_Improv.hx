@@ -1,8 +1,9 @@
-// evolution improvement ids
-// enum abstract over String: builtin IMP_* constants stay usable in engine
-// code (compile-time checked, autocompleted), while the runtime value is a
-// plain String so mods can register new improvement ids at runtime and so
-// persisted save fields hold bare strings (see Loader.initEnum migration).
+// evolution improvement id — enum-abstract over String. mods register new
+// improvement ids as plain strings (e.g. 'mod-mymod-foo'); engine accepts them
+// anywhere an _Improv is expected because of `from String`.
+// the IMP_* builtin constants below give mods autocomplete + nominal safety
+// when referencing core improvements. "special" = unique/non-leveled organ.
+
 enum abstract _Improv(String) to String from String
 {
   var IMP_HOST_RELEASE = 'IMP_HOST_RELEASE';

@@ -1090,6 +1090,23 @@ class EvolutionConst
       return null;
     }
 
+// append an improvement info; id collision = last-wins + log. used by
+// ModContentApi.registerEvolution and any future engine code that wants to
+// register improvements dynamically. the list is built once at class load
+// and never wiped, so a pushed entry survives all new-game cycles.
+  public static function addImprovement(info: ImprovInfo)
+    {
+      for (i in 0...improvements.length)
+        if (improvements[i].id == info.id)
+          {
+            Const.p('mod content collision on improvement id: ' + info.id +
+              ' (last-wins)');
+            improvements[i] = info;
+            return;
+          }
+      improvements.push(info);
+    }
+
 
 // get improvement parameters of the specified level
   public static function getParams(id: _Improv, level: Int): Dynamic

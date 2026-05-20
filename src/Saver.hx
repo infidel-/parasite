@@ -7,10 +7,11 @@ import mods.ModRegistry;
 
 class Saver
 {
-  // TODO bump to 3 after _Skill + _Improv enum-abstract conversions land
-  // then thread formatVersion into Loader.initEnum
-  // and gate the legacy `{_classID,val}` shims on `formatVersion < 3`.
-  static var SAVE_FORMAT_VERSION = 2;
+  // v3: _AITraitType / _Skill / _Improv converted enum -> enum-abstract over
+  // String, so those fields now serialize as bare strings instead of
+  // {_classID,val,_isEnum} wrappers. Loader.initEnum migrates pre-v3 wrappers
+  // (gated on formatVersion < 3). also carries the _activeMods array
+  static var SAVE_FORMAT_VERSION = 3;
 
 // save current game to a slot
   public static function save(game: Game, slotID: Int)

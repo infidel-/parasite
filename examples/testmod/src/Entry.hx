@@ -30,6 +30,7 @@ class Entry
       testPediaRegistration(parasite);
       testTraitRegistration(parasite);
       testSkillRegistration(parasite);
+      testEvolutionRegistration(parasite);
       testSettings(parasite);
       testAssetOverride(parasite);
     }
@@ -151,6 +152,45 @@ class Entry
         id: 'badskill',
         name: 'bad',
         defaultLevel: 0,
+      });
+    }
+
+// registers a mod evolution improvement, confirms it landed in
+// EvolutionConst.improvements, then fires a bad-prefix one the host must reject
+  static function testEvolutionRegistration(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+
+      // grantable via `console give evolution mod-thickskin <level>`
+      // levelNotes/levelParams must cover indices 0..maxLevel (the evolution
+      // UI reads levelNotes[level]); too-short arrays crash on level-up
+      parasite.api.registerEvolution({
+        id: 'mod-testmod-thickskin',
+        type: TYPE_BASIC,
+        name: 'mod thick skin',
+        note: 'Mod-registered marker improvement. No mechanical effect.',
+        maxLevel: 2,
+        levelNotes: [ 'tougher hide', 'thick hide', 'armored hide' ],
+        levelParams: [ {}, {}, {} ],
+      });
+      var EvolutionConst: Dynamic = Reflect.field(parasite.hxClasses,
+        'const.EvolutionConst');
+      var improvements: Array<Dynamic> = EvolutionConst.improvements;
+      var found = false;
+      for (i in improvements)
+        if (i.id == 'mod-testmod-thickskin')
+          { found = true; break; }
+      c.log('[testmod] improvement mod-testmod-thickskin present? ' + found);
+
+      // prefix-rejection smoke — should log a reject, NOT register
+      parasite.api.registerEvolution({
+        id: 'badimprov',
+        type: TYPE_BASIC,
+        name: 'bad',
+        note: 'x',
+        maxLevel: 1,
+        levelNotes: [ 'x' ],
+        levelParams: [ {} ],
       });
     }
 

@@ -121,13 +121,15 @@ class Loader
           // map enum values directly
           switch (Type.typeof(dstval)) {
             case TEnum(e):
-              Reflect.setField(dst, f, initEnum(name, srcval, depth + 1));
+              Reflect.setField(dst, f,
+                initEnum(name, srcval, depth + 1, formatVersion));
               continue;
             default:
           }
           if (isEnum)
             {
-              Reflect.setField(dst, f, initEnum(name, srcval, depth + 1));
+              Reflect.setField(dst, f,
+                initEnum(name, srcval, depth + 1, formatVersion));
               continue;
             }
 
@@ -245,7 +247,7 @@ class Loader
       // initialize enum wrapper
       var isEnum: Bool = untyped src._isEnum;
       if (isEnum)
-        return initEnum(name, src, depth + 1);
+        return initEnum(name, src, depth + 1, formatVersion);
 
       // initialize arrays recursively
       if (Std.isOfType(src, Array))
@@ -278,20 +280,15 @@ class Loader
     }
 
 // initialize enum from serialized wrapper
-// also handles legacy wrappers for engine enums that have since been
-// converted to enum-abstract over String for mods
-// old saves wrap the value as {_classID, val,
-// _isEnum}; new saves write the bare string. when classID matches a former
-// enum, return src.val directly so the value lands as a plain String in the
-// destination List/field.
-// TODO once SAVE_FORMAT_VERSION is bumped to 3 (after _Skill + _Improv land),
-// thread formatVersion in here and gate the legacy classID branches on
-// `formatVersion < 3`
-  static function initEnum(name: String, src: Dynamic, depth: Int): Dynamic
+// also handles legacy wrappers for engine enums
+  static function initEnum(name: String, src: Dynamic, depth: Int,
+      formatVersion: Int): Dynamic
     {
       var classID: String = untyped src._classID;
-      if (classID == '_AITraitType' ||
-          classID == '_Skill')
+      if (formatVersion < 3 &&
+          (classID == '_AITraitType' ||
+           classID == '_Skill' ||
+           classID == '_Improv'))
         return src.val;
       var ee = Type.resolveEnum(classID);
       if (ee == null)
@@ -305,7 +302,7 @@ class Loader
     {
       var isEnum: Bool = untyped src._isEnum;
       if (isEnum)
-        return initEnum(name, src, depth);
+        return initEnum(name, src, depth, formatVersion);
 
       // read common circular reference markers
       var hasUI: Bool = untyped src._hasUI;

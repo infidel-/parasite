@@ -4,6 +4,7 @@ package mods;
 
 import const.PediaConst._PediaGroupInfo;
 import const.SkillsConst.SkillInfo;
+import const.EvolutionConst.ImprovInfo;
 
 class ModContentRegistry
 {
@@ -21,6 +22,10 @@ class ModContentRegistry
   // mod-registered skill/knowledge infos; pushed live into SkillsConst.skills
   // at registration time
   public static var skills: Array<SkillInfo> = [];
+
+  // mod-registered evolution improvements; pushed live into
+  // EvolutionConst.improvements at registration time
+  public static var improvements: Array<ImprovInfo> = [];
 }
 
 // pending/recorded mod trait registration

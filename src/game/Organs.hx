@@ -203,7 +203,7 @@ class Organs extends _SaveObject
       if (actionName != 'set')
         throw(actionName);
 
-      var impID = Type.createEnum(_Improv, actionID);
+      var impID = (actionID : _Improv);
       var imp = game.player.evolutionManager.getImprov(impID);
 
       // if this organ does not exist yet, create it

@@ -67,23 +67,13 @@ class GiveEvolution extends GiveBase
   public function buildEntries(): Array<ConsoleAddEntry<_Improv>>
     {
       var list = [];
-      for (improv in Type.allEnums(_Improv))
+      for (info in EvolutionConst.improvements)
         {
-          var info: ImprovInfo = null;
-          try {
-            info = EvolutionConst.getInfo(improv);
-          }
-          catch (e: Dynamic)
-            {
-              info = null;
-            }
-          if (info == null)
-            continue;
-          var name = Std.string(improv).substr(4).toLowerCase();
+          var name = Std.string(info.id).substr(4).toLowerCase();
           list.push({
             name: name,
             searchKey: normalizeKey(name),
-            value: improv
+            value: info.id
           });
         }
       list.sort(function(a, b)

@@ -18,4 +18,7 @@ typedef ModContentApi = {
   // register a skill/knowledge; appended to SkillsConst.skills live.
   // id collision = last-wins + log
   function registerSkill(info: _SkillInfo): Void;
+  // register an evolution improvement; appended to EvolutionConst.improvements
+  // live. id collision = last-wins + log
+  function registerEvolution(info: _ImprovInfo): Void;
 }

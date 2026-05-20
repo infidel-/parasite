@@ -146,6 +146,25 @@ class ModContentApi
       const.SkillsConst.addSkill(info);
     }
 
+// register an evolution improvement.
+// info.id must start with mod-<modID>-; appended to EvolutionConst.improvements
+// live. id collision = last-wins + log.
+  public function registerEvolution(info: const.EvolutionConst.ImprovInfo)
+    {
+      if (info == null)
+        {
+          error('evolution', 'info is null');
+          return;
+        }
+      if (!checkPrefix('evolution', info.id))
+        return;
+
+      // all checks passed; record + add live
+      ModContentRegistry.improvements.push(info);
+      console.log('[mods] register evolution: ' + modID + '/' + info.id);
+      const.EvolutionConst.addImprovement(info);
+    }
+
 // builds a per-mod api instance; called by ModLoader per import
   public static function forMod(modID: String): ModContentApi
     {
