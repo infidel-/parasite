@@ -290,7 +290,8 @@ class Loader
   static function initEnum(name: String, src: Dynamic, depth: Int): Dynamic
     {
       var classID: String = untyped src._classID;
-      if (classID == '_AITraitType')
+      if (classID == '_AITraitType' ||
+          classID == '_Skill')
         return src.val;
       var ee = Type.resolveEnum(classID);
       if (ee == null)

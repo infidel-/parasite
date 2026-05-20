@@ -29,6 +29,7 @@ class Entry
       testItemRegistration(parasite);
       testPediaRegistration(parasite);
       testTraitRegistration(parasite);
+      testSkillRegistration(parasite);
       testSettings(parasite);
       testAssetOverride(parasite);
     }
@@ -120,6 +121,36 @@ class Entry
         name: 'bad',
         note: 'x',
         isNegative: false,
+      });
+    }
+
+// registers a mod skill, confirms it landed in SkillsConst.skills,
+// then fires a bad-prefix skill the host must reject
+  static function testSkillRegistration(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+
+      // grantable via `console give skill mod-lockpicking <amount>`
+      parasite.api.registerSkill({
+        id: 'mod-testmod-lockpicking',
+        group: 'Combat',
+        name: 'mod lockpicking',
+        defaultLevel: 10,
+      });
+      var SkillsConst: Dynamic = Reflect.field(parasite.hxClasses,
+        'const.SkillsConst');
+      var skills: Array<Dynamic> = SkillsConst.skills;
+      var found = false;
+      for (s in skills)
+        if (s.id == 'mod-testmod-lockpicking')
+          { found = true; break; }
+      c.log('[testmod] skill mod-testmod-lockpicking in skills? ' + found);
+
+      // prefix-rejection smoke for skill — should log a reject, NOT register
+      parasite.api.registerSkill({
+        id: 'badskill',
+        name: 'bad',
+        defaultLevel: 0,
       });
     }
 

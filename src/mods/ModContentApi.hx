@@ -127,6 +127,25 @@ class ModContentApi
       const.TraitsConst.addTrait(category, info);
     }
 
+// register a skill/knowledge.
+// info.id must start with mod-<modID>-; appended to SkillsConst.skills live.
+// set isKnowledge/isBool for knowledge-style entries (see SkillInfo).
+  public function registerSkill(info: const.SkillsConst.SkillInfo)
+    {
+      if (info == null)
+        {
+          error('skill', 'info is null');
+          return;
+        }
+      if (!checkPrefix('skill', info.id))
+        return;
+
+      // all checks passed; record + add live
+      ModContentRegistry.skills.push(info);
+      console.log('[mods] register skill: ' + modID + '/' + info.id);
+      const.SkillsConst.addSkill(info);
+    }
+
 // builds a per-mod api instance; called by ModLoader per import
   public static function forMod(modID: String): ModContentApi
     {

@@ -3,6 +3,7 @@
 package mods;
 
 import const.PediaConst._PediaGroupInfo;
+import const.SkillsConst.SkillInfo;
 
 class ModContentRegistry
 {
@@ -16,6 +17,10 @@ class ModContentRegistry
   // mod-registered AI traits paired with their target category id;
   // pushed live into TraitsConst.traits at registration time
   public static var traits: Array<_RegisteredTrait> = [];
+
+  // mod-registered skill/knowledge infos; pushed live into SkillsConst.skills
+  // at registration time
+  public static var skills: Array<SkillInfo> = [];
 }
 
 // pending/recorded mod trait registration

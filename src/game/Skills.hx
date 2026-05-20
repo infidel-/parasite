@@ -236,6 +236,9 @@ class Skills extends _SaveObject
 
 @:structInit class Skill extends _SaveObject
 {
+  // info is a const-table pointer, rebuilt in Skills.loadPost via
+  // SkillsConst.getInfo(id) — never persist it
+  static var _ignoredFields = [ 'info' ];
   public var id: _Skill; // skill id
   public var level: Float; // skill level
   public var info: SkillInfo; // skill info link

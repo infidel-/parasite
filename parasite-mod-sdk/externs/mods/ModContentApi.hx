@@ -15,4 +15,7 @@ typedef ModContentApi = {
   // 'body', 'cultBasic', or a custom mod-defined group). id collision within
   // the same group = last-wins + log
   function registerTrait(category: String, info: _TraitInfo): Void;
+  // register a skill/knowledge; appended to SkillsConst.skills live.
+  // id collision = last-wins + log
+  function registerSkill(info: _SkillInfo): Void;
 }

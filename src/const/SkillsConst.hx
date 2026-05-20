@@ -14,6 +14,23 @@ class SkillsConst
       return null;
     }
 
+// append a skill info; id collision = last-wins + log. used by
+// ModContentApi.registerSkill and any future engine code that wants to
+// register skills dynamically. the skills list is built once at class load
+// and never wiped, so a pushed entry survives all new-game cycles.
+  public static function addSkill(info: SkillInfo)
+    {
+      for (i in 0...skills.length)
+        if (skills[i].id == info.id)
+          {
+            Const.p('mod content collision on skill id: ' + info.id +
+              ' (last-wins)');
+            skills[i] = info;
+            return;
+          }
+      skills.push(info);
+    }
+
 // skill infos
   public static var skills: Array<SkillInfo> = [
     { // animal attack, hidden
