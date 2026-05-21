@@ -18,15 +18,15 @@ typedef _ImprovInfo = {
   // per-level gameplay parameters, indexed by level; shape is improvement-
   // specific and read by the engine effect that consumes this improvement
   var levelParams: Array<Dynamic>;
-  // optional advanced description builder.
-  // Dynamic: engine (info, level) -> String — typed engine externs pending (§14)
-  @:optional var noteFunc: Dynamic;
+  // optional advanced description builder; receives (info, level) and returns
+  // the description. Dynamic args mirror the engine signature, which leaves
+  // both args untyped (info shape varies per improvement, level is an Int)
+  @:optional var noteFunc: Dynamic -> Dynamic -> String;
   // optional organ grown by this improvement (see _OrganInfo)
   @:optional var organ: _OrganInfo;
-  // optional bound player action added while the improvement is owned.
-  // Dynamic: engine _PlayerAction shape — typed engine externs pending (§14)
-  @:optional var action: Dynamic;
-  // optional callback fired when the improvement is upgraded.
-  // Dynamic: receives (level, game, player) — typed engine externs pending (§14)
-  @:optional var onUpgrade: Dynamic;
+  // optional bound player action added while the improvement is owned
+  @:optional var action: _PlayerAction;
+  // optional callback fired when the improvement is upgraded; receives the new
+  // level, the game, and the player
+  @:optional var onUpgrade: Int -> game.Game -> game.Player -> Void;
 }

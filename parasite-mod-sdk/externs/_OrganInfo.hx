@@ -11,15 +11,13 @@ typedef _OrganInfo = {
   var gp: Int;
   // optional: true marks the organ as a construction mold (placeable)
   @:optional var isMold: Bool;
-  // optional bound player action granted while the organ is active.
-  // Dynamic: engine _PlayerAction shape — typed engine externs pending (§14)
-  @:optional var action: Dynamic;
+  // optional bound player action granted while the organ is active
+  @:optional var action: _PlayerAction;
   // optional: true if the organ's action has an activation timeout
   @:optional var hasTimeout: Bool;
-  // optional callback fired when the organ is grown.
-  // Dynamic: receives engine (game, player) — typed engine externs pending (§14)
-  @:optional var onGrow: Dynamic;
-  // optional callback fired when the organ's action runs; returns Bool success.
-  // Dynamic: receives engine (game, player) — typed engine externs pending (§14)
-  @:optional var onAction: Dynamic;
+  // optional callback fired when the organ is grown; receives the game and player
+  @:optional var onGrow: game.Game -> game.Player -> Void;
+  // optional callback fired when the organ's action runs; receives the game and
+  // player, returns Bool success
+  @:optional var onAction: game.Game -> game.Player -> Bool;
 }

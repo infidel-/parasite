@@ -16,9 +16,9 @@ typedef _GoalInfo = {
   var name: String;
   // static goal note / hint text (shown when goal is selected)
   var note: String;
-  // optional dynamic note builder, called on display.
-  // Dynamic: engine (game) -> String — typed engine externs pending (§14)
-  @:optional var noteFunc: Dynamic;
+  // optional dynamic note builder, called on display; receives the game and
+  // returns the note text
+  @:optional var noteFunc: game.Game -> String;
   // optional message shown when the goal is received
   @:optional var messageReceive: String;
   // optional message shown when the goal is completed
@@ -30,26 +30,22 @@ typedef _GoalInfo = {
   @:optional var imageComplete: String;
   // optional event image override shown with the failure message
   @:optional var imageFailure: String;
-  // optional callback fired each turn while the goal is active.
-  // Dynamic: engine (game, player) -> Void — typed engine externs pending (§14)
-  @:optional var onTurn: Dynamic;
-  // optional callback fired when the goal is received.
-  // Dynamic: engine (game, player) -> Void — typed engine externs pending (§14)
-  @:optional var onReceive: Dynamic;
-  // optional callback fired when the goal is completed.
-  // Dynamic: engine (game, player) -> Void — typed engine externs pending (§14)
-  @:optional var onComplete: Dynamic;
-  // optional callback fired when the goal is failed.
-  // Dynamic: engine (game, player) -> Void — typed engine externs pending (§14)
-  @:optional var onFailure: Dynamic;
-  // optional callback fired when the player enters an area while goal active.
-  // Dynamic: engine (game) -> Void — typed engine externs pending (§14)
-  @:optional var onEnter: Dynamic;
-  // optional callback fired in the AI constructor for each spawned AI.
-  // Dynamic: engine (game, ai) -> Void — typed engine externs pending (§14)
-  @:optional var aiInit: Dynamic;
+  // optional callback fired each turn while the goal is active; receives the
+  // game and player
+  @:optional var onTurn: game.Game -> game.Player -> Void;
+  // optional callback fired when the goal is received; receives the game and player
+  @:optional var onReceive: game.Game -> game.Player -> Void;
+  // optional callback fired when the goal is completed; receives the game and player
+  @:optional var onComplete: game.Game -> game.Player -> Void;
+  // optional callback fired when the goal is failed; receives the game and player
+  @:optional var onFailure: game.Game -> game.Player -> Void;
+  // optional callback fired when the player enters an area while goal active;
+  // receives the game
+  @:optional var onEnter: game.Game -> Void;
+  // optional callback fired in the AI constructor for each spawned AI; receives
+  // the game and the AI
+  @:optional var aiInit: game.Game -> ai.AI -> Void;
   // optional gate run when the player tries to leave an area; return false to
-  // block leaving.
-  // Dynamic: engine (game, player, area) -> Bool — typed engine externs pending (§14)
-  @:optional var leaveAreaPre: Dynamic;
+  // block leaving. receives the game, player, and target area
+  @:optional var leaveAreaPre: game.Game -> game.Player -> game.AreaGame -> Bool;
 }

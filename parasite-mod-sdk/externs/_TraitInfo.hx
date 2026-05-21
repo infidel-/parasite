@@ -1,6 +1,5 @@
 // AI trait info shape (mirrors engine src/_TraitInfo.hx)
-// supplied to ModContentApi.registerTrait. fields with `Dynamic` for game/ai
-// args reflect the engine surface — typed engine externs are pending.
+// supplied to ModContentApi.registerTrait.
 
 typedef _TraitInfo = {
   // trait id; mod-registered ids must start with `mod-<modID>-`
@@ -13,9 +12,9 @@ typedef _TraitInfo = {
   // whether this trait counts as negative (affects random-trait pool filters)
   var isNegative: Bool;
   // optional one-shot effect applied when the trait is granted to an AI
-  // (e.g. boost a skill, adjust base attributes); game = Game.inst, ai = AIData
-  @:optional var onInit: (game: Dynamic, ai: Dynamic) -> Void;
+  // (e.g. boost a skill, adjust base attributes)
+  @:optional var onInit: (game: game.Game, ai: ai.AIData) -> Void;
   // optional per-turn tick run while the AI carries the trait
   // (e.g. addict withdrawal, flagellant self-heal)
-  @:optional var turn: (game: Dynamic, ai: Dynamic) -> Void;
+  @:optional var turn: (game: game.Game, ai: ai.AIData) -> Void;
 }

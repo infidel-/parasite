@@ -83,11 +83,12 @@ class GenExterns
             {
               case TClassdecl(c): emitClass(c);
               case TTypedecl(t): emitTypedef(t);
+              case TAbstractdecl(a): emitAbstract(a);
               default: null;
             }
           if (out == null)
             continue;
-          var path = switch (d) { case TClassdecl(c): c.path; case TTypedecl(t): t.path; default: ''; }
+          var path = switch (d) { case TClassdecl(c): c.path; case TTypedecl(t): t.path; case TAbstractdecl(a): a.path; default: ''; }
           writeType(outDir, path, out);
           count++;
         }
@@ -148,6 +149,17 @@ class GenExterns
                   && !isSubType(td.path, td.file)
                   && td.type.match(CAnonymous(_)))
                 { included.set(td.path, true); out.push(t); }
+            case TAbstractdecl(a):
+              // enum-abstracts over a basic base (String/Int) reproduce as real
+              // Haxe enum abstracts so mods get the named id constants + casts.
+              // non-enum abstracts and abstracts over complex bases → Dynamic
+              if (isEngine(a.file)
+                  && !curated.exists(a.path)
+                  && !blacklisted(a.path)
+                  && !isSubType(a.path, a.file)
+                  && hasMeta(a.meta, ':enum')
+                  && passthrough.exists(ctype(a.athis)))
+                { included.set(a.path, true); out.push(t); }
             default:
           }
     }
@@ -192,11 +204,23 @@ class GenExterns
       return true;
     }
 
-// scrapes the contiguous `//` comment block sitting directly above the source
-// declaration of `name` in `file`. returns the comment text lines (markers
-// stripped), or [] if the file/decl/comment is missing. purely textual — a
-// renamed or duplicated decl can mis-match, acceptable for doc comments
+// scrapes the `//` comment block above the source decl of `name` (a var or
+// function) in `file`. returns comment lines (markers stripped), or []
   static function docFor(file: Null<String>, name: String): Array<String>
+    return scrapeDocAbove(file,
+      new EReg('\\b(var|function)\\s+' + name + '([^A-Za-z0-9_]|$)', ''));
+
+// scrapes the `//` comment block above an abstract's decl line in `file`
+// (`abstract <name>` / `enum abstract <name>`)
+  static function abstractDoc(file: Null<String>, name: String): Array<String>
+    return scrapeDocAbove(file, new EReg('\\babstract\\s+' + name + '([^A-Za-z0-9_]|$)', ''));
+
+// shared doc scraper: loads <file>, finds the first line matching `decl`, then
+// walks upward over contiguous `//` lines (skipping @meta/#cond lines) and
+// returns the comment text with markers stripped, or [] if the file/decl/
+// comment is missing. purely textual — a renamed or duplicated decl can
+// mis-match, acceptable for doc comments
+  static function scrapeDocAbove(file: Null<String>, decl: EReg): Array<String>
     {
       if (file == null || !isEngine(file))
         return [];
@@ -209,15 +233,12 @@ class GenExterns
           lines = File.getContent(path).split('\n');
           srcLines.set(path, lines);
         }
-      // locate the decl line: `var name` / `function name` as a whole word
-      var decl = new EReg('\\b(var|function)\\s+' + name + '([^A-Za-z0-9_]|$)', '');
       var at = -1;
       for (i in 0...lines.length)
         if (decl.match(lines[i]))
           { at = i; break; }
       if (at < 0)
         return [];
-      // walk upward, skipping metadata/preprocessor lines, collecting comments
       var out = [];
       var i = at - 1;
       while (i >= 0)
@@ -285,6 +306,62 @@ class GenExterns
         }
       sb.add('}\n');
       return sb.toString();
+    }
+
+// emits one enum-abstract (e.g. _Goal): the underlying base type, to/from
+// casts, and each named value with its scraped doc comment. plain compile-time
+// abstract (no @:native) — values inline into mod code like the engine source
+  static function emitAbstract(a: Abstractdef): String
+    {
+      var base = ctype(a.athis);
+      var sb = new StringBuf();
+      sb.add('// auto-generated — do not edit. source: ' + a.file + '\n');
+      emitDoc(sb, abstractDoc(a.file, shortName(a.path)), '');
+      // reproduce the implicit casts the engine declares (all engine
+      // enum-abstracts are `to <base> from <base>`)
+      var clause = '';
+      if (a.to != null && a.to.length > 0)
+        clause += ' to ' + base;
+      if (a.from != null && a.from.length > 0)
+        clause += ' from ' + base;
+      sb.add('enum abstract ' + shortName(a.path) + '(' + base + ')' + clause + '\n{\n');
+      // each named value is a public inline static on the abstract's impl class,
+      // tagged with `:enum`; its constant is in the field expr / `:value` meta
+      if (a.impl != null)
+        for (f in a.impl.statics)
+          {
+            if (!f.isPublic || !hasMeta(f.meta, ':enum'))
+              continue;
+            emitDoc(sb, docFor(a.file, f.name), '  ');
+            sb.add('  var ' + safeName(f.name) + ' = ' + abstractValue(f) + ';\n');
+          }
+      sb.add('}\n');
+      return sb.toString();
+    }
+
+// extracts an enum-abstract member's constant from its `:value` meta (falling
+// back to the field expr), stripping the leading `cast ` the rtti emits
+  static function abstractValue(f: ClassField): String
+    {
+      var e = f.expr;
+      for (m in f.meta)
+        if (m.name == ':value' && m.params.length > 0)
+          { e = m.params[0]; break; }
+      if (e == null)
+        return 'null';
+      e = StringTools.trim(e);
+      if (StringTools.startsWith(e, 'cast '))
+        e = StringTools.trim(e.substr(5));
+      return e;
+    }
+
+// true if a metadata list carries an entry named `name`
+  static function hasMeta(meta: MetaData, name: String): Bool
+    {
+      for (m in meta)
+        if (m.name == name)
+          return true;
+      return false;
     }
 
 // writes a single class/static field (var or function) into the buffer,
