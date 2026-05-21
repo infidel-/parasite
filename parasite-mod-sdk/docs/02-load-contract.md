@@ -7,8 +7,8 @@ but never loads, the cause is almost always here.
 
 ```
 <modId>/
-  manifest.json     # required — metadata + entry filename
-  entry.js          # required — Haxe-compiled ES module
+  manifest.json     # required — metadata + entry filename + exportGlobal
+  entry.js          # required — Haxe-compiled entry script
   entry.js.map      # optional — source map
   assets/           # optional — see 06-assets.md
 ```
@@ -37,7 +37,8 @@ Steam Workshop subscriptions are also discovered and merged into the same list.
   "author": "you",
   "version": "1.0.0",
   "modApiVersion": 1,
-  "entry": "entry.js"
+  "entry": "entry.js",
+  "exportGlobal": "yourmod_Entry"
 }
 ```
 
@@ -49,6 +50,7 @@ Steam Workshop subscriptions are also discovered and merged into the same list.
 | `version`       | yes      | semver `major.minor.patch`                                              |
 | `modApiVersion` | yes      | integer; must equal engine `Const.MOD_API_VERSION` exactly (currently `1`). Mismatch = skipped + logged. |
 | `entry`         | yes      | entry JS filename, relative to mod root (almost always `entry.js`)      |
+| `exportGlobal`  | yes      | the `@:expose("...")` name your `Entry.hx` writes to `window`. Single-segment JS identifier (1–64 chars). The loader calls `window[exportGlobal].init`. Mismatch with the source = load fails + logged. |
 | `minGameVersion`| no       | semver; compared `>=` against the engine version. Use when you depend on a feature added in a specific patch. Newer than current engine = skipped + logged. |
 | `description`   | no       | long description; consumed by the publish tool (see 08-publishing.md)   |
 | `dependencies`  | no       | array of `{ id, version }`; missing/mismatched dep = skipped + logged   |
@@ -58,26 +60,23 @@ Steam Workshop subscriptions are also discovered and merged into the same list.
 `Const.MOD_API_VERSION` only on breaking changes; when it does, bump your
 manifest to match. See [versioning](#versioning) below.
 
-## The entry module
+## The entry script
 
-The engine loads your mod with a dynamic `import('mod://<id>/entry.js')` and
-then calls the module's exported `init`:
-
-```js
-modExports.init(parasite);
-```
-
-So `entry.js` must be an **ES module that exports an `init` function**. Haxe's
-`@:expose` puts your class on `window`, not on the module's exports — so the
-template's Makefile appends one line to bridge the two:
+The engine loads your mod with a dynamic `import('mod://<id>/entry.js')` for its
+side effect, then reads the class your `@:expose` put on `window` and calls its
+`init`:
 
 ```js
-export const init = window.yourmod_Entry.init;
+window[manifest.exportGlobal].init(parasite);
 ```
 
-That is why `EXPOSE_NAME` in the Makefile must match the string in
-`@:expose("...")`. If they disagree, `window.<EXPOSE_NAME>` is `undefined` and
-the import throws (visible via `mods errors`).
+Haxe emits `entry.js` as a plain script (not an ES module with a named export):
+`@:expose("yourmod_Entry")` assigns your class to `window.yourmod_Entry` when the
+script runs. So there is **nothing to post-process** — `haxe build.hxml` output
+loads as-is. The only contract is that the manifest's `exportGlobal` matches the
+`@:expose("...")` string in your source. If they disagree,
+`window[exportGlobal]` is `undefined`, the mod is marked failed, and the reason
+is logged (visible via `mods errors`).
 
 ### Entry.hx
 

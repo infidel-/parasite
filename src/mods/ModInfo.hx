@@ -14,6 +14,10 @@ typedef ModInfo = {
   var modApiVersion: Int;
   // entry script filename, basename only (no path separators)
   var entry: String;
+  // global name the mod's @:expose writes to window; loader calls
+  // window[exportGlobal].init(parasite). single-segment JS identifier,
+  // validated in main; must match the @:expose("...") string in the mod source
+  var exportGlobal: String;
   // absolute filesystem path to mod dir; resolved in main process
   var rootDir: String;
   // origin: "sideload-mods" | "sideload-dev" | "workshop"

@@ -92,9 +92,13 @@ class ModLoader
         js.Syntax.code("import({0})", url);
 
       return promise
-        .then(function(mod: Dynamic) {
+        .then(function(_) {
           try {
-            // call init() if exported
+            // import() ran the entry for its side effect: Haxe @:expose put the
+            // mod class on window[exportGlobal]. read it there and call init().
+            // (Haxe emits a plain script, not an ESM with a named export, so the
+            // module namespace is empty — the window global is the contract.)
+            var mod: Dynamic = js.Syntax.code("window[{0}]", info.exportGlobal);
             if (mod != null &&
                 Reflect.isFunction(mod.init)) {
               console.log('[mods] calling init() for ' + info.id);
@@ -102,7 +106,8 @@ class ModLoader
               console.log('[mods] init() returned for ' + info.id);
             }
             else
-              console.warn('[mods] ' + info.id + ': no init() export, nothing to call');
+              fail(info, 'window.' + info.exportGlobal +
+                ' has no init() — exportGlobal must match the @:expose("...") name');
             return null;
           }
           catch (e: Dynamic)

@@ -26,9 +26,9 @@ parasite-mod-sdk/
 ## Quick start
 
 1. Copy `template/` to a new directory.
-2. Edit `manifest.json` — pick a unique `id` (`^[a-z0-9_]+(\.[a-z0-9_]+)*$`).
-3. Edit `Makefile` — set `DEST` to your install's `dev/<your-id>/`, set
-   `EXPOSE_NAME` to match the `@:expose("...")` in `src/Entry.hx`.
+2. Edit `manifest.json` — pick a unique `id` (`^[a-z0-9_]+(\.[a-z0-9_]+)*$`); set
+   `exportGlobal` to match the `@:expose("...")` in `src/Entry.hx`.
+3. Edit `Makefile` — set `DEST` to your install's `dev/<your-id>/`.
 4. Edit `src/Entry.hx` — keep `public static function init(parasite: ModRuntime)`.
 5. `make` — builds `entry.js`, copies it + `manifest.json` to `DEST`.
 6. Launch Parasite. DevTools console shows `[mods] loading ...`; the in-game
@@ -41,7 +41,7 @@ Full walkthrough in [docs/01-getting-started.md](docs/01-getting-started.md).
 | Doc | Covers |
 |-----|--------|
 | [01-getting-started](docs/01-getting-started.md)   | zero to a loading mod |
-| [02-load-contract](docs/02-load-contract.md)       | manifest, `entry.js`, `@:expose`, build flags, versioning |
+| [02-load-contract](docs/02-load-contract.md)       | manifest, `entry.js`, `@:expose`/`exportGlobal`, build flags, versioning |
 | [03-runtime-object](docs/03-runtime-object.md)     | the `parasite` object field by field |
 | [04-registering-content](docs/04-registering-content.md) | items, pedia, traits, skills, evolution, goals |
 | [05-monkey-patching](docs/05-monkey-patching.md)   | changing engine behavior; what survives re-init |
@@ -74,10 +74,10 @@ class Entry
 }
 ```
 
-The template's Makefile appends an ESM wrapper
-(`export const init = window.<EXPOSE_NAME>.init;`) so the `mod://` `import()`
-resolves an `init` export. Details in
-[docs/02-load-contract.md](docs/02-load-contract.md).
+The loader `import()`s `entry.js` for its side effect, then calls
+`window[manifest.exportGlobal].init(parasite)` — `@:expose("yourmod_Entry")`
+puts the class there. No post-processing; just keep `exportGlobal` equal to the
+`@:expose` name. Details in [docs/02-load-contract.md](docs/02-load-contract.md).
 
 ## Versioning
 

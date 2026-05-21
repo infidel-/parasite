@@ -1,5 +1,5 @@
 // hello-world mod entry — engine calls init() at boot with per-mod runtime
-// rename @:expose to match EXPOSE_NAME in Makefile
+// the @:expose name below MUST match "exportGlobal" in manifest.json
 package;
 
 import mods.ModRuntime;

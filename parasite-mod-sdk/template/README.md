@@ -31,19 +31,18 @@ template/
 - `name`, `author`, `version` — your values.
 - `modApiVersion` — leave at the current engine value (`1`); only change on an
   engine API bump.
+- `exportGlobal` — **must** match the string in `@:expose("...")` in `Entry.hx`.
+  The loader calls `window[exportGlobal].init`; if they disagree the mod won't
+  load (reported by `mods errors`).
 - Full field list: [../docs/02-load-contract.md](../docs/02-load-contract.md).
 
 ### 2. `Makefile`
 
 ```make
 DEST = ../../parasite/dev/yourmod
-EXPOSE_NAME = yourmod_Entry
 ```
 
 - `DEST` — point at your install's `dev/<your-id>/`.
-- `EXPOSE_NAME` — **must** match the string in `@:expose("...")` in `Entry.hx`.
-  If they disagree, the mod won't load (the ESM export wrapper resolves
-  `window.<EXPOSE_NAME>`).
 
 ### 3. `src/Entry.hx`
 
@@ -60,7 +59,7 @@ class Entry
 }
 ```
 
-- Rename `@:expose("yourmod_Entry")` to match `EXPOSE_NAME`.
+- Rename `@:expose("yourmod_Entry")` to match the manifest's `exportGlobal`.
 - Keep `init(parasite: ModRuntime)` — it's the engine entry point.
 - `main()` only satisfies `-main Entry`; the engine never calls it.
 
@@ -76,8 +75,8 @@ each flag does.
 make
 ```
 
-Compiles `entry.js`, appends the ESM `export const init = ...` wrapper line, and
-copies `entry.js` + `manifest.json` into `DEST`. Then launch the game and look
+Compiles `entry.js` and copies it + `manifest.json` into `DEST` (no
+post-processing — the Haxe output loads as-is). Then launch the game and look
 for your mod in the `mods` console command.
 
 Full walkthrough: [../docs/01-getting-started.md](../docs/01-getting-started.md).

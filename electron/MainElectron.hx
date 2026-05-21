@@ -184,6 +184,19 @@ class MainElectron
       return re.match(str);
     }
 
+// validate exportGlobal: single-segment JS identifier, 1-64 chars.
+// loader does window[exportGlobal] so dotted paths / separators are rejected
+  static function isValidExportGlobal(s: Dynamic): Bool
+    {
+      if (!Std.isOfType(s, String))
+        return false;
+      var str: String = cast s;
+      if (str.length < 1 || str.length > 64)
+        return false;
+      var re = ~/^[A-Za-z_$][A-Za-z0-9_$]*$/;
+      return re.match(str);
+    }
+
 // validate semver-ish version: digits + dots, 1-32 chars
   static function isValidVersionStr(s: Dynamic): Bool
     {
@@ -290,6 +303,10 @@ class MainElectron
         mlog('[mods] entry file missing: ' + entryAbs);
         return null;
       }
+      if (!isValidExportGlobal(m.exportGlobal)) {
+        mlog('[mods] missing/invalid exportGlobal at ' + manifestPath + ': ' + m.exportGlobal);
+        return null;
+      }
       var info: ModInfo = {
         id: m.id,
         name: (m.name != null ? m.name : m.id),
@@ -297,6 +314,7 @@ class MainElectron
         version: m.version,
         modApiVersion: m.modApiVersion,
         entry: m.entry,
+        exportGlobal: m.exportGlobal,
         rootDir: rootDir,
         source: source,
         minGameVersion: m.minGameVersion,

@@ -4,5 +4,6 @@
   "author": "you",
   "version": "0.1.0",
   "modApiVersion": 1,
-  "entry": "entry.js"
+  "entry": "entry.js",
+  "exportGlobal": "yourmod_Entry"
 }

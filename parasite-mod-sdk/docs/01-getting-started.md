@@ -40,10 +40,11 @@ cd ~/mymod
 1. **`manifest.json`** — pick a unique `id`. It must match
    `^[a-z0-9_]+(\.[a-z0-9_]+)*$` (lowercase, optional dot segments). Reverse-DNS
    (`com.you.mymod`) is recommended for distributed mods; a single segment
-   (`mymod`) is fine for local/private ones.
-2. **`Makefile`** — set `DEST` to your install's `dev/<your-id>/` and set
-   `EXPOSE_NAME` to match the `@:expose("...")` in `Entry.hx`.
-3. **`src/Entry.hx`** — rename `@:expose("yourmod_Entry")` and keep a
+   (`mymod`) is fine for local/private ones. Set `exportGlobal` to match the
+   `@:expose("...")` in `Entry.hx`.
+2. **`Makefile`** — set `DEST` to your install's `dev/<your-id>/`.
+3. **`src/Entry.hx`** — rename `@:expose("yourmod_Entry")` (and keep it equal to
+   the manifest's `exportGlobal`); keep a
    `public static function init(parasite: ModRuntime)` entry point.
 4. **`build.hxml`** — usually no change. It already `-cp`s both extern sets.
 
@@ -56,9 +57,9 @@ and [template/README.md](../template/README.md).
 make
 ```
 
-This compiles `entry.js`, appends the ESM export wrapper line, and copies
-`entry.js` + `manifest.json` into `DEST`. If you don't use `make`, see the load
-contract doc for the two manual steps the Makefile performs.
+This compiles `entry.js` and copies it + `manifest.json` into `DEST`. There is no
+post-processing step — `haxe build.hxml` output loads as-is, so building without
+`make` is just the `haxe build.hxml` line plus copying the two files.
 
 `dev/` is gitignored in the install and scanned by the engine the same way as
 `mods/` — no flag needed.

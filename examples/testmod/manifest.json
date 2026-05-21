@@ -4,5 +4,6 @@
   "author": "parasite",
   "version": "0.1.1",
   "modApiVersion": 1,
-  "entry": "entry.js"
+  "entry": "entry.js",
+  "exportGlobal": "testmod_Entry"
 }
