@@ -18,3 +18,5 @@ app
 examples/*/entry.js
 examples/*/entry.js.map
 dev/
+parasite-mod-sdk/externs-generated/
+parasite
