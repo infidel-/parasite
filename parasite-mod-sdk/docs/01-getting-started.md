@@ -1,0 +1,91 @@
+# Getting started
+
+This walks you from zero to a mod that the engine loads and logs at boot.
+
+## Prerequisites
+
+- **Haxe** compiler (4.x). Mods are written in Haxe and compiled to a JS ES module.
+- A **Parasite** install. You need write access to its `dev/` directory (where
+  in-progress mods are sideloaded from).
+- `make` (the template ships a Makefile; you can build by hand without it).
+
+No Node, no game-engine checkout. The SDK ships the externs you compile against.
+
+## 1. Get the SDK
+
+The SDK is bundled with the game download at `<game>/mod-sdk/parasite-mod-sdk-<version>.zip`.
+Unzip it anywhere. You get:
+
+```
+parasite-mod-sdk/
+  README.md
+  docs/                 # you are here
+  externs/              # hand-curated mod-API externs
+  externs-generated/    # auto-generated engine externs (the full surface)
+  template/             # copy-paste starter mod
+```
+
+See [10-api-reference.md](10-api-reference.md) for what the two extern sets are
+and which wins.
+
+## 2. Copy the template
+
+```sh
+cp -r parasite-mod-sdk/template ~/mymod
+cd ~/mymod
+```
+
+## 3. Edit four things
+
+1. **`manifest.json`** — pick a unique `id`. It must match
+   `^[a-z0-9_]+(\.[a-z0-9_]+)*$` (lowercase, optional dot segments). Reverse-DNS
+   (`com.you.mymod`) is recommended for distributed mods; a single segment
+   (`mymod`) is fine for local/private ones.
+2. **`Makefile`** — set `DEST` to your install's `dev/<your-id>/` and set
+   `EXPOSE_NAME` to match the `@:expose("...")` in `Entry.hx`.
+3. **`src/Entry.hx`** — rename `@:expose("yourmod_Entry")` and keep a
+   `public static function init(parasite: ModRuntime)` entry point.
+4. **`build.hxml`** — usually no change. It already `-cp`s both extern sets.
+
+Full field reference for each file: [02-load-contract.md](02-load-contract.md)
+and [template/README.md](../template/README.md).
+
+## 4. Build and install
+
+```sh
+make
+```
+
+This compiles `entry.js`, appends the ESM export wrapper line, and copies
+`entry.js` + `manifest.json` into `DEST`. If you don't use `make`, see the load
+contract doc for the two manual steps the Makefile performs.
+
+`dev/` is gitignored in the install and scanned by the engine the same way as
+`mods/` — no flag needed.
+
+## 5. Launch and verify
+
+Launch Parasite. Open DevTools console. You should see the loader log:
+
+```
+[mods] loading mymod ...
+```
+
+and your own line from `Entry.init`:
+
+```
+[mymod] hello from mymod v0.1.0
+```
+
+In the in-game console (not DevTools), the `mods` command lists every
+discovered mod and its status; `mods errors` prints per-mod failure reasons.
+See [09-console-reference.md](09-console-reference.md).
+
+## What next
+
+- Add content (items, pedia, traits, skills, evolution, goals):
+  [04-registering-content.md](04-registering-content.md).
+- Change existing engine behavior: [05-monkey-patching.md](05-monkey-patching.md).
+- Replace art/sound: [06-assets.md](06-assets.md).
+- Persist mod state: [07-settings.md](07-settings.md).
+- Ship to Steam Workshop: [08-publishing.md](08-publishing.md).

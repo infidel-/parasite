@@ -1,6 +1,6 @@
 DEST = ../../parasite/dev/testmod
 
-all: entry.js install
+all: clean entry.js install
 
 entry.js: src/Entry.hx build.hxml
 	haxe build.hxml

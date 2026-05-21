@@ -11,7 +11,7 @@ class Entry
 {
   public static function main() {}
 
-// boot hook — receives per-mod parasite runtime (mod-design.md §8.2)
+// boot hook — receives per-mod parasite runtime
   public static function init(parasite: ModRuntime)
     {
       console.log('[yourmod] hello from ' + parasite.modID +

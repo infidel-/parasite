@@ -3,7 +3,6 @@
 package console;
 
 import const.*;
-import const.EvolutionConst.ImprovInfo;
 import game.*;
 import haxe.Json;
 
