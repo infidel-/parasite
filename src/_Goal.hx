@@ -1,10 +1,4 @@
 // player goals
-// enum-abstract over String: builtin GOAL_*/SCENARIO_* constants kept for engine
-// code, mods register plain string ids. used as a Map key in const.Goals.map and
-// scenario goal maps (those become StringMaps) and persisted in Goals as String
-// lists. Loader migrates pre-v3 {_classID:"_Goal",val} save wrappers to bare
-// strings (shared shim with the other converted enums)
-
 enum abstract _Goal(String) to String from String
 {
   var GOAL_TUTORIAL_ALERT = 'GOAL_TUTORIAL_ALERT';

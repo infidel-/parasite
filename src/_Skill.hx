@@ -1,8 +1,4 @@
 // skill / knowledge ids
-// enum abstract over String: builtin SKILL_*/KNOW_* constants stay usable in
-// engine code (compile-time checked, autocompleted), while the runtime value
-// is a plain String so mods can register new skill ids at runtime and so
-// persisted save fields hold bare strings (see Loader.initEnum migration).
 enum abstract _Skill(String) to String from String
 {
   var SKILL_ATTACK = 'SKILL_ATTACK';
