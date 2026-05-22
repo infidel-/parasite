@@ -119,7 +119,7 @@ All cult subcommands act on the first player cult (`game.cults[0]`); they print
 
 - `mods` — confirm your mod is `enabled` (not `failed`/`disabled`).
 - `mods errors` — read the stack if your mod failed to load.
-- `give item mod-mymod-trinket` (debug build) — confirm registered content is
+- `give item mod-mymod-trinket` (with `.debug`) — confirm registered content is
   grantable.
-- `give skill mod-mymod-lockpicking 50` (debug build) — confirm a registered
+- `give skill mod-mymod-lockpicking 50` (with `.debug`) — confirm a registered
   skill.
