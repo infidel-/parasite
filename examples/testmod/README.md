@@ -1,7 +1,7 @@
 # testmod — worked example
 
 A fuller example than the `template/` hello-world. `src/Entry.hx` exercises
-every mod content API plus settings and asset overrides, with a deliberate
+every mod content API plus settings, asset overrides, and event hooks, with a deliberate
 bad-prefix rejection after each registration to demonstrate the `mod-<modID>-`
 prefix enforcement. On boot it logs each check to the DevTools console.
 
@@ -13,6 +13,8 @@ What it covers:
 - `parasite.settings` — a boot counter persisted across launches.
 - `AssetPath.resolve` — asset overrides (`assets/img/mouse0.png`,
   `assets/sound/action-fail.mp3`).
+- `parasite.events` — subscribes to all 5 event hooks (`turn:pre`/`turn:post`/
+  `area:enter`/`area:leave`/`ai:spawn`); each logs once on first fire.
 
 The compiled `entry.js` is included so you can see the build output without
 compiling.

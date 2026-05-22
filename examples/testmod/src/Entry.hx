@@ -34,6 +34,7 @@ class Entry
       testGoalRegistration(parasite);
       testSettings(parasite);
       testAssetOverride(parasite);
+      testEvents(parasite);
     }
 
 // logs the runtime fields handed to the mod so we can eyeball what the host wired up
@@ -239,5 +240,18 @@ class Entry
       c.log('[testmod] resolve(img/mouse0.png) = ' + AP.resolve('img/mouse0.png'));
       c.log('[testmod] resolve(img/mouse1.png) = ' + AP.resolve('img/mouse1.png'));
       c.log('[testmod] resolve(sound/action-fail.mp3) = ' + AP.resolve('sound/action-fail.mp3'));
+    }
+
+// event-bus smoke — subscribe to all 5 hooks; logs every fire so we can confirm
+// payloads are typed and the engine fires at the right moments
+  static function testEvents(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+      parasite.events.onTurnPre(function(e) c.log('[testmod] event turn:pre: turn=' + e.turn));
+      parasite.events.onTurnPost(function(e) c.log('[testmod] event turn:post: turn=' + e.turn));
+      parasite.events.onAreaEnter(function(e) c.log('[testmod] event area:enter: area=' + e.area.id));
+      parasite.events.onAreaLeave(function(e) c.log('[testmod] event area:leave: area=' + e.area.id));
+      parasite.events.onAISpawn(function(e) c.log('[testmod] event ai:spawn: ' + e.ai.id + ' in ' + e.area.id));
+      c.log('[testmod] subscribed to 5 events');
     }
 }

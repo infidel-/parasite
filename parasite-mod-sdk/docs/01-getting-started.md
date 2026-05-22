@@ -87,6 +87,7 @@ See [09-console-reference.md](09-console-reference.md).
 - Add content (items, pedia, traits, skills, evolution, goals):
   [04-registering-content.md](04-registering-content.md).
 - Change existing engine behavior: [05-monkey-patching.md](05-monkey-patching.md).
+- React to turn/area/spawn events: [05-monkey-patching.md#event-hooks](05-monkey-patching.md#event-hooks).
 - Replace art/sound: [06-assets.md](06-assets.md).
 - Persist mod state: [07-settings.md](07-settings.md).
 - Ship to Steam Workshop: [08-publishing.md](08-publishing.md).

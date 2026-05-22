@@ -22,4 +22,6 @@ typedef ModRuntime = {
   var api: ModContentApi;
   // per-mod persistent k/v settings (get/set/remove/all); see §8.5
   var settings: ModSettings;
+  // per-mod event-subscription facade (onTurnPre/onAreaEnter/onAISpawn/etc.)
+  var events: ModEvents;
 }

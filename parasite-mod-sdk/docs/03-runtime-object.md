@@ -17,6 +17,7 @@ typedef ModRuntime = {
   var version: String;
   var api: ModContentApi;
   var settings: ModSettings;
+  var events: ModEvents;
 }
 ```
 
@@ -33,6 +34,7 @@ typedef ModRuntime = {
 | `hxClasses`     | `Dynamic`        | the raw `$hxClasses` registry: a JS map of dotted class name → Haxe class reference. Reach any engine class by name, e.g. `Reflect.field(parasite.hxClasses, 'const.ItemsConst')`. Also published as `window.parasiteHx` for `@:native` extern targets. |
 | `api`           | `ModContentApi`  | your content-registration facade — `registerItem`, `registerPediaEntry`, etc. See [04-registering-content.md](04-registering-content.md). |
 | `settings`      | `ModSettings`    | your persistent key/value store, namespaced under your `modID`. See [07-settings.md](07-settings.md). |
+| `events`        | `ModEvents`      | subscribe to engine event hooks (`onTurnPre`, `onAreaEnter`, `onAISpawn`, …) with typed payloads. See [05-monkey-patching.md](05-monkey-patching.md#event-hooks). |
 
 ## Typed vs untyped fields
 

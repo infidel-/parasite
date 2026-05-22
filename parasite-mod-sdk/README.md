@@ -44,7 +44,7 @@ Full walkthrough in [docs/01-getting-started.md](docs/01-getting-started.md).
 | [02-load-contract](docs/02-load-contract.md)       | manifest, `entry.js`, `@:expose`/`exportGlobal`, build flags, versioning |
 | [03-runtime-object](docs/03-runtime-object.md)     | the `parasite` object field by field |
 | [04-registering-content](docs/04-registering-content.md) | items, pedia, traits, skills, evolution, goals |
-| [05-monkey-patching](docs/05-monkey-patching.md)   | changing engine behavior; what survives re-init |
+| [05-monkey-patching](docs/05-monkey-patching.md)   | changing engine behavior; event hooks; what survives re-init |
 | [06-assets](docs/06-assets.md)                     | shipping/overriding images, sounds, music |
 | [07-settings](docs/07-settings.md)                 | per-mod persistent settings |
 | [08-publishing](docs/08-publishing.md)             | Steam Workshop upload |

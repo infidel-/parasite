@@ -1,5 +1,4 @@
 // per-mod runtime surface — what entry.init(parasite) receives
-// also assigned to window.parasite for direct access from mod code
 package mods;
 
 import game.Game;
@@ -23,4 +22,6 @@ typedef ModRuntime = {
   var api: ModContentApi;
   // per-mod persistent k/v settings facade (get/set/remove/all)
   var settings: ModSettings;
+  // per-mod event-subscription facade (onTurnPre/onAreaEnter/onAISpawn/etc.)
+  var events: ModEvents;
 }

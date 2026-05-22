@@ -86,6 +86,7 @@ class ModLoader
         version: Version.getVersion(),
         api: ModContentApi.forMod(info.id),
         settings: ModSettings.api(info.id),
+        events: ModEvents.forMod(info.id),
       };
 
       var promise: js.lib.Promise<Dynamic> =

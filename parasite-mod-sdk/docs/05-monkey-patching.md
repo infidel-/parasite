@@ -1,9 +1,13 @@
-# Monkey-patching
+# Monkey-patching & event hooks
 
 Registration ([04](04-registering-content.md)) adds new content. To **change
 existing behavior** — or to touch a table not yet wrapped by a registration API
 — you patch engine classes directly. The mod realm has full access; there is no
 capability boundary.
+
+For common moments (turn boundaries, area transitions, AI spawns) you don't
+need to patch at all — subscribe to an **event hook** instead (see
+[Event hooks](#event-hooks) below). Patch when no hook covers what you need.
 
 ## Reaching a class
 
@@ -64,6 +68,49 @@ source list at `init`, last-wins, your call to keep ids namespaced):
 
 For name generation and cultist scream-text, there is intentionally no content
 API — patch the generator method (it's behavior, not a content table).
+
+## Event hooks
+
+`parasite.events` (type `mods.ModEvents`) lets you subscribe to engine moments
+without patching. Each `on<Event>` takes a handler with a typed payload; the
+engine fires it at the matching hook site. Handlers run in mod load order, and a
+throw in one handler is caught, logged, and does **not** break the engine or
+other handlers.
+
+```haxe
+public static function init(parasite: ModRuntime)
+{
+  // payload is typed — completion + checking on e.turn, e.area, e.ai
+  parasite.events.onAISpawn(function(e) {
+    trace('spawned ' + e.ai.id + ' in ' + e.area.id);
+  });
+  parasite.events.onTurnPre(function(e) {
+    trace('turn ' + e.turn + ' starting');
+  });
+}
+```
+
+Five events ship currently:
+
+| Method         | Event       | Fires                                                         | Payload (`mods.ModEvents`) |
+|----------------|-------------|---------------------------------------------------------------|----------------------------|
+| `onTurnPre`    | `turn:pre`  | start of each turn, before the player acts / counter bumps    | `ModTurnEvent { turn: Int }` |
+| `onTurnPost`   | `turn:post` | end of a fully-processed turn; **skipped** if the turn aborts early (game over, scene transition) | `ModTurnEvent { turn: Int }` |
+| `onAreaEnter`  | `area:enter`| after the player enters an area                               | `ModAreaEvent { area: AreaGame }` |
+| `onAreaLeave`  | `area:leave`| as the player leaves an area (before the switch)              | `ModAreaEvent { area: AreaGame }` |
+| `onAISpawn`    | `ai:spawn`  | when an AI actor is added to an area                          | `ModAIEvent { ai: AI, area: AreaGame }` |
+
+Notes:
+
+- **No unsubscribe.** Mods don't reload mid-session, so subscriptions live for
+  the whole run — subscribe once in `init`.
+- **Engine-defined names only.** You subscribe to the listed events; mods can't
+  declare or fire their own event names yet. For mod-to-mod hooks, expose a
+  function on your exported class and let other mods patch/call it.
+- **Additive.** Events coexist with monkey-patching — use a hook where one fits,
+  patch where it doesn't. A patch and a hook on the same moment both run.
+
+Full field docs live in the extern: `externs/mods/ModEvents.hx`.
 
 ## Caution
 

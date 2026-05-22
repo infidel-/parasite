@@ -11,6 +11,7 @@ import const.ItemsConst;
 import const.Jobs;
 import const.Lang;
 import ai.*;
+import mods.ModEventRegistry;
 
 @:expose
 class Game extends _SaveObject
@@ -332,7 +333,14 @@ class Game extends _SaveObject
           ui.hud.targeting.clearTarget();
         }
       if (location == LOCATION_AREA)
-        area.leave();
+        {
+          // mod event: leaving area (fires before location switches)
+          ModEventRegistry.fire(ModEventRegistry.AREA_LEAVE, {
+            game: this,
+            area: area,
+          });
+          area.leave();
+        }
 
       else if (location == LOCATION_REGION)
         region.leave();
@@ -346,6 +354,11 @@ class Game extends _SaveObject
           if (newarea != null) // enter specified area
              area = newarea;
           area.enter();
+          // mod event: entered area
+          ModEventRegistry.fire(ModEventRegistry.AREA_ENTER, {
+            game: this,
+            area: area,
+          });
         }
 
       else if (location == LOCATION_REGION)
@@ -376,6 +389,12 @@ class Game extends _SaveObject
 // game turn ends (internal)
   function turnInternal()
     {
+      // mod event: turn about to run (before player acts / counter increment)
+      ModEventRegistry.fire(ModEventRegistry.TURN_PRE, {
+        game: this,
+        turn: turns,
+      });
+
       // player turn
       player.turn();
       if (state != GAMESTATE_RUNNING)
@@ -427,6 +446,12 @@ class Game extends _SaveObject
           if (state != GAMESTATE_RUNNING)
             return;
         }
+
+      // mod event: turn fully processed (skipped on early-return abort above)
+      ModEventRegistry.fire(ModEventRegistry.TURN_POST, {
+        game: this,
+        turn: turns,
+      });
     }
 
 // returns true when input should be blocked
