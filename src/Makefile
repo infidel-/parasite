@@ -2,7 +2,7 @@
 VERSION := $(shell cat VERSION)
 PORT ?= $(strip $(shell cat ../.haxe-port 2>/dev/null))
 
-all: clean electron-mydebug
+all: clean electron
 
 check-port:
 	@if [ -z "$(PORT)" ]; then \
@@ -18,38 +18,18 @@ check-port:
 		exit 1; \
 	fi
 
-electron-mydebug: check-port
-	haxe project_electron.hxml -debug \
-      -D mydebug \
-      --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../app/
-
 electron: check-port
 	echo 'Haxe server port =' $(PORT)
-	haxe project_electron.hxml \
-      --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../app/
-
-electron-mydebug-demo: check-port
-	echo 'Haxe server port =' $(PORT)
 	haxe project_electron.hxml -debug \
-      -D mydebug -D demo \
       --connect $(PORT) && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../app/
 
 electron-demo: check-port
 	echo 'Haxe server port =' $(PORT)
-	haxe project_electron.hxml \
+	haxe project_electron.hxml -debug \
       -D demo \
       --connect $(PORT) && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../app/
-
-www-mydebug-demo: check-port
-	echo 'Haxe server port =' $(PORT)
-	haxe project_www.hxml -debug \
-      -D mydebug -D demo \
-      --connect $(PORT) && \
-    cp ../bin/parasite.js* ~/ItchDemo/
 
 www-demo: check-port
 	echo 'Haxe server port =' $(PORT)

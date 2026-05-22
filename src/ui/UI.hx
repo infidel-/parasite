@@ -60,8 +60,8 @@ class UI
       canvas.onclick = function (e: MouseEvent) {
         game.scene.mouse.onClick(e);
       }
-#if mydebug
-      // middle click is delivered as auxclick in Chromium/Electron
+      // middle click is delivered as auxclick in Chromium/Electron.
+      // wired always; Mouse.onClick gates debug branch on Const.isDebug
       untyped canvas.onauxclick = function (e: MouseEvent) {
         if (e.button == 1)
           {
@@ -69,7 +69,6 @@ class UI
             e.preventDefault();
           }
       }
-#end
 #if electron
       Browser.window.onerror = onError;
 #end

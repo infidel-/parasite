@@ -380,15 +380,39 @@ Pieces:
 - `src/mods/ModEvents.hx` — per-mod facade (`forMod(modID)`), one typed `on<Event>` method per event, logs each subscription. Holds the payload typedefs.
 - `parasite.events` field added to `ModRuntime` (engine + SDK extern). Pure addition → no `MOD_API_VERSION` bump.
 
-Five v1.1 events (typed payloads):
+Five v1.1 events (typed payloads, all extend `ModEventBase`):
 
-| Event | Hook site | Payload |
-|-------|-----------|---------|
-| `turn:pre` | `Game.turnInternal()` top (before `player.turn()` + counter increment) | `ModTurnEvent { turn: Int }` |
-| `turn:post` | `Game.turnInternal()` end (after counter; **skipped on early-return abort** — game over / transition) | `ModTurnEvent { turn: Int }` |
-| `area:enter` | `Game.setLocation()` after `area.enter()` | `ModAreaEvent { area: AreaGame }` |
-| `area:leave` | `Game.setLocation()` before `area.leave()` | `ModAreaEvent { area: AreaGame }` |
-| `ai:spawn` | `AreaGame.addAI()` after `createEntity()` (funnel sink; catches `spawnAI` callers) | `ModAIEvent { ai: AI, area: AreaGame }` |
+| Event | Hook site | Payload fields (beyond base) |
+|-------|-----------|------------------------------|
+| `turn:pre` | `Game.turnInternal()` top (before `player.turn()` + counter increment) | `turn: Int` |
+| `turn:post` | `Game.turnInternal()` end (after counter; **skipped on early-return abort** — game over / transition) | `turn: Int` |
+| `area:enter` | `Game.setLocation()` after `area.enter()` | `area: AreaGame` |
+| `area:leave` | `Game.setLocation()` before `area.leave()` | `area: AreaGame` |
+| `ai:spawn` | `AreaGame.addAI()` after `createEntity()` (funnel sink; catches `spawnAI` callers) | `ai: AI`, `area: AreaGame` |
+
+**`ModEventBase`** (shared by every payload):
+
+```haxe
+typedef ModEventBase = {
+  // the live engine game instance
+  var game: Game;
+}
+```
+
+Every fire site supplies `game:` directly in the payload literal (`{ game: this, turn: turns }` from `Game`, `{ game: game, ai: ai, area: this }` from `AreaGame`). `ModEventRegistry.fire()` passes the payload through unchanged — no per-subscriber clone, no map lookup. Handlers read `e.game` without closing over the `parasite` parameter from `init()`, which lets mods use static methods as handlers (the closure-vs-method tradeoff).
+
+Mods that also need their `ModRuntime` (for `settings`/`api`/`host`) inside a static handler stash it on a static field at init:
+
+```haxe
+class Mod {
+  static var P: ModRuntime;
+  public static function init(parasite: ModRuntime) {
+    P = parasite;
+    parasite.events.onTurnPost(onTurn);
+  }
+  static function onTurn(e: ModTurnEvent) { /* e.game ... P.settings ... */ }
+}
+```
 
 No unsubscribe API (mods can't reload mid-session — matches §8.7 no-removal). Event names are engine-defined; mods subscribe only, can't define custom events in v1.1 (see §13 open question). Bus is runtime-only — no persisted state, no save-format change.
 

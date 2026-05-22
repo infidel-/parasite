@@ -29,7 +29,6 @@ class AreaManager extends _SaveObject
           ev.ai = area.getAIByID(ev.aiID);
     }
 
-#if mydebug
   public function debugInfo(buf: StringBuf)
     {
       if (_list.length > 0)
@@ -37,7 +36,6 @@ class AreaManager extends _SaveObject
       for (e in _list)
         buf.add(e.type + ': ' + e.turns + '<br>');
     }
-#end
 
 // add event originating from x,y
 // NOTE: params must be serializable!
@@ -56,9 +54,7 @@ class AreaManager extends _SaveObject
         turns: turns,
         params: params
       };
-#if mydebug
 //      Const.p(game.turns + ': AreaManager.add(): ' + e);
-#end
 
       _list.push(e);
     }
@@ -79,9 +75,7 @@ class AreaManager extends _SaveObject
         turns: turns,
         params: null,
       };
-#if mydebug
  //     Const.p(game.turns + ': AreaManager.addObject(): ' + e);
-#end
 
       _list.push(e);
     }
@@ -102,9 +96,7 @@ class AreaManager extends _SaveObject
         turns: turns,
         params: null,
       };
-#if mydebug
 //      Const.p(game.turns + ': AreaManager.addAI(): ' + e);
-#end
 
       _list.push(e);
     }
@@ -152,9 +144,7 @@ class AreaManager extends _SaveObject
             }
 
           // run this event
-#if mydebug
 //      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
-#end
 
           switch (e.type)
             {

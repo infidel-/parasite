@@ -33,16 +33,14 @@ class Debug
             toggleSound();
           case 'lights':
             toggleLights();
-#if mydebug
-          case 'alert':
+          case 'alert' if (Const.isDebug):
             game.log('This is a test alert message.', COLOR_ALERT);
-          case 'demo':
+          case 'demo' if (Const.isDebug):
             finishDemo();
-          case 'leave':
+          case 'leave' if (Const.isDebug):
             leaveArea();
-          case 'throw':
+          case 'throw' if (Const.isDebug):
             throw 'test exception';
-#end
           case '':
             log('Usage: debug [renderstats|ai|sound|lights|alert|demo|leave|throw]');
           default:
@@ -94,7 +92,6 @@ class Debug
       game.debug('Light marker debug toggled: ' + state + '.');
     }
 
-#if mydebug
 // finishes the demo with a lose result
   function finishDemo()
     {
@@ -118,7 +115,6 @@ class Debug
         game.log('Not in area.');
       else game.setLocation(LOCATION_REGION);
     }
-#end
 
 // log shortcut
   inline function log(s: String)

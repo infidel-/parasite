@@ -10,29 +10,21 @@ import map.Types.DensityField;
 
 class Ground extends Core
 {
-#if mydebug
 // trace one perlin profiling phase
   function tracePerlinProfilePhase(label: String, elapsedMS: Float)
     {
+      if (!Const.isDebug)
+        return;
       profile('PERLIN', label + ': ' + Std.int(elapsedMS) + ' ms');
     }
 
 // trace one perlin profiling summary line
   function tracePerlinProfileSummary(label: String)
     {
+      if (!Const.isDebug)
+        return;
       profile('PERLIN', label);
     }
-#else
-// ignore one perlin profiling phase outside debug builds
-  inline function tracePerlinProfilePhase(label: String, elapsedMS: Float)
-    {
-    }
-
-// ignore one perlin profiling summary line outside debug builds
-  inline function tracePerlinProfileSummary(label: String)
-    {
-    }
-#end
 
 // build the halo-expanded density field
   function buildDensityField(): DensityField
@@ -184,81 +176,82 @@ class Ground extends Core
 // paint the mixed city-background and perlin terrain ground field
   function paintGround()
     {
-#if mydebug
-      var totalStartTS = haxe.Timer.stamp() * 1000.0;
-      var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
-      var data = imageData.data;
-      var phaseStartTS = haxe.Timer.stamp() * 1000.0;
-      tracePerlinProfilePhase('paintGround.createImageData', phaseStartTS - totalStartTS);
-      ensureGroundRenderCaches();
-      var terrainRawValues = new Float32Array(fullPixelWidth * fullPixelHeight);
-      var sampleIndex = 0;
-      var minTerrain = 1.0;
-      var maxTerrain = -1.0;
-      var cityMask = cityBackgroundMask;
-      var cityPixelCount = cityBackgroundPixelCount;
+      if (Const.isDebug)
+        {
+          var totalStartTS = haxe.Timer.stamp() * 1000.0;
+          var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
+          var data = imageData.data;
+          var phaseStartTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.createImageData', phaseStartTS - totalStartTS);
+          ensureGroundRenderCaches();
+          var terrainRawValues = new Float32Array(fullPixelWidth * fullPixelHeight);
+          var sampleIndex = 0;
+          var minTerrain = 1.0;
+          var maxTerrain = -1.0;
+          var cityMask = cityBackgroundMask;
+          var cityPixelCount = cityBackgroundPixelCount;
 
-// sample the raw terrain field once per pixel
-      for (py in 0...fullPixelHeight)
-        for (px in 0...fullPixelWidth)
-          {
-            var terrain = sampleTerrainFieldAtPixel(px, py);
-            terrainRawValues[sampleIndex++] = terrain;
-            if (terrain < minTerrain)
-              minTerrain = terrain;
-            if (terrain > maxTerrain)
-              maxTerrain = terrain;
-          }
+          // sample the raw terrain field once per pixel
+          for (py in 0...fullPixelHeight)
+            for (px in 0...fullPixelWidth)
+              {
+                var terrain = sampleTerrainFieldAtPixel(px, py);
+                terrainRawValues[sampleIndex++] = terrain;
+                if (terrain < minTerrain)
+                  minTerrain = terrain;
+                if (terrain > maxTerrain)
+                  maxTerrain = terrain;
+              }
 
-      var nowTS = haxe.Timer.stamp() * 1000.0;
-      tracePerlinProfilePhase('paintGround.sampleTerrainBase', nowTS - phaseStartTS);
-      phaseStartTS = nowTS;
-      sampleIndex = 0;
-      var forestPixelCount = 0;
-      var groundPixelCount = 0;
-      var mountainPixelCount = 0;
-      var index = 0;
-      sampleIndex = 0;
+          var nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.sampleTerrainBase', nowTS - phaseStartTS);
+          phaseStartTS = nowTS;
+          sampleIndex = 0;
+          var forestPixelCount = 0;
+          var groundPixelCount = 0;
+          var mountainPixelCount = 0;
+          var index = 0;
+          sampleIndex = 0;
 
-// classify terrain pixels and blend city background overlays where needed
-      for (py in 0...fullPixelHeight)
-        for (px in 0...fullPixelWidth)
-          {
-            var terrain = terrainRawValues[sampleIndex];
-            var terrainColor = getTerrainBandColorForValue(terrain);
-            var color = terrainColor;
-            if (cityMask[sampleIndex] != 0)
-              color = lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
-                getCityBackgroundPaintAlpha(cityMask[sampleIndex]));
-            if (terrain < TERRAIN_FOREST_THRESHOLD)
-              forestPixelCount++;
-            else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
-              mountainPixelCount++;
-            else
-              groundPixelCount++;
-            sampleIndex++;
-            data[index++] = (color >> 16) & 0xFF;
-            data[index++] = (color >> 8) & 0xFF;
-            data[index++] = color & 0xFF;
-            data[index++] = 0xFF;
-          }
+          // classify terrain pixels and blend city background overlays where needed
+          for (py in 0...fullPixelHeight)
+            for (px in 0...fullPixelWidth)
+              {
+                var terrain = terrainRawValues[sampleIndex];
+                var terrainColor = getTerrainBandColorForValue(terrain);
+                var color = terrainColor;
+                if (cityMask[sampleIndex] != 0)
+                  color = lerpColor(terrainColor, getColorForDensity(samplePaintDensityAtPixel(px, py)),
+                    getCityBackgroundPaintAlpha(cityMask[sampleIndex]));
+                if (terrain < TERRAIN_FOREST_THRESHOLD)
+                  forestPixelCount++;
+                else if (terrain > TERRAIN_MOUNTAIN_THRESHOLD)
+                  mountainPixelCount++;
+                else
+                  groundPixelCount++;
+                sampleIndex++;
+                data[index++] = (color >> 16) & 0xFF;
+                data[index++] = (color >> 8) & 0xFF;
+                data[index++] = color & 0xFF;
+                data[index++] = 0xFF;
+              }
 
-      nowTS = haxe.Timer.stamp() * 1000.0;
-      tracePerlinProfilePhase('paintGround.applyTerrainBands', nowTS - phaseStartTS);
-      phaseStartTS = nowTS;
-      ctx.putImageData(imageData, 0, 0);
-      nowTS = haxe.Timer.stamp() * 1000.0;
-      tracePerlinProfilePhase('paintGround.putImageData', nowTS - phaseStartTS);
-      tracePerlinProfileSummary('paintGround.summary min=' + minTerrain +
-        ' max=' + maxTerrain +
-        ' cityPixels=' + cityPixelCount +
-        ' forestPixels=' + forestPixelCount +
-        ' groundPixels=' + groundPixelCount +
-        ' mountainPixels=' + mountainPixelCount +
-        ' totalPixels=' + (fullPixelWidth * fullPixelHeight));
-      tracePerlinProfilePhase('paintGround.total', nowTS - totalStartTS);
-      return;
-#end
+          nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.applyTerrainBands', nowTS - phaseStartTS);
+          phaseStartTS = nowTS;
+          ctx.putImageData(imageData, 0, 0);
+          nowTS = haxe.Timer.stamp() * 1000.0;
+          tracePerlinProfilePhase('paintGround.putImageData', nowTS - phaseStartTS);
+          tracePerlinProfileSummary('paintGround.summary min=' + minTerrain +
+            ' max=' + maxTerrain +
+            ' cityPixels=' + cityPixelCount +
+            ' forestPixels=' + forestPixelCount +
+            ' groundPixels=' + groundPixelCount +
+            ' mountainPixels=' + mountainPixelCount +
+            ' totalPixels=' + (fullPixelWidth * fullPixelHeight));
+          tracePerlinProfilePhase('paintGround.total', nowTS - totalStartTS);
+          return;
+        }
       ensureGroundRenderCaches();
       var imageData = ctx.createImageData(fullPixelWidth, fullPixelHeight);
       var data = imageData.data;

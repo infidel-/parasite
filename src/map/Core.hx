@@ -311,19 +311,12 @@ class Core
       return a - b;
     }
 
-#if mydebug
-// trace one MAP PROFILE line gated by ROAD_PROFILE
+// trace one MAP PROFILE line gated by ROAD_PROFILE (debug only)
   function profile(prefix: String, msg: String)
     {
-      if (!ROAD_PROFILE)
+      if (!Const.isDebug || !ROAD_PROFILE)
         return;
       trace('MAP PROFILE ' + prefix + ' ' + msg);
     }
-#else
-// ignore one MAP PROFILE line outside debug builds
-  inline function profile(prefix: String, msg: String)
-    {
-    }
-#end
 
 }

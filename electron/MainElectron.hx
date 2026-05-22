@@ -31,6 +31,10 @@ class MainElectron
   // functional regardless — workshop discovery is best-effort
   static var steamworks: Dynamic = null;
   static var steamClient: Dynamic = null;
+  // resolved once at App.ready: true if a .debug sentinel file exists in cwd.
+  // gates devtools, native menu, host:debug:* IPC, and propagates to renderer
+  // via host:boot return for Const.isDebug
+  static var isDebug: Bool = false;
 
   // size caps (bytes)
   static inline var CAP_SETTINGS = 256 * 1024;
@@ -656,6 +660,7 @@ class MainElectron
           ensureUserDataPath();
         untyped e.returnValue = {
           platform: Node.process.platform,
+          isDebug: isDebug,
         };
       });
 
@@ -823,10 +828,11 @@ class MainElectron
         win.fullScreen = false;
       });
 
-#if mydebug
-      // debug-only writes (mydebug builds only)
+      // debug-only writes: handlers always registered, gated at runtime.
+      // when sentinel (.debug) absent, all calls refuse with false
       IpcMain.on('host:debug:roads', function(e: Dynamic, text: Dynamic) {
-        if (!isValidString(text, CAP_DEBUG_TEXT)) {
+        if (!isDebug ||
+            !isValidString(text, CAP_DEBUG_TEXT)) {
           e.returnValue = false;
           return;
         }
@@ -834,7 +840,8 @@ class MainElectron
           Path.join(debugDir(), 'region_roads.txt'), cast text);
       });
       IpcMain.on('host:debug:buildings', function(e: Dynamic, text: Dynamic) {
-        if (!isValidString(text, CAP_DEBUG_TEXT)) {
+        if (!isDebug ||
+            !isValidString(text, CAP_DEBUG_TEXT)) {
           e.returnValue = false;
           return;
         }
@@ -842,7 +849,9 @@ class MainElectron
           Path.join(debugDir(), 'region_buildings.txt'), cast text);
       });
       IpcMain.on('host:debug:image', function(e: Dynamic, name: Dynamic, base64: Dynamic) {
-        if (!isValidBasename(name) || !isValidString(base64, CAP_IMAGE_B64)) {
+        if (!isDebug ||
+            !isValidBasename(name) ||
+            !isValidString(base64, CAP_IMAGE_B64)) {
           e.returnValue = false;
           return;
         }
@@ -856,7 +865,6 @@ class MainElectron
             e.returnValue = false;
           }
       });
-#end
     }
 
   static function main()
@@ -871,6 +879,13 @@ class MainElectron
 
       App.on(ready, function(e)
         {
+          // resolve runtime debug flag: present iff a .debug sentinel file
+          // sits in cwd (game install dir). cached for entire session
+          try {
+            isDebug = Fs.existsSync(Path.join(Node.process.cwd(), '.debug'));
+          }
+          catch (err: Dynamic) { isDebug = false; }
+
           initLogSession();
           writeSteamAppidFile();
           steamInit();
@@ -910,9 +925,8 @@ class MainElectron
               webSecurity: true,
             }
           });
-#if !mydebug
-          win.setMenu(null);
-#end
+          if (!isDebug)
+            win.setMenu(null);
 
           // block all in-window navigation
           win.webContents.on('will-navigate', function(e, url) {
@@ -924,9 +938,8 @@ class MainElectron
           });
 
           win.loadFile('app.html');
-#if mydebug
-          win.webContents.openDevTools();
-#end
+          if (isDebug)
+            win.webContents.openDevTools();
         });
 
       App.on(window_all_closed, function(e) {

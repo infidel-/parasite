@@ -12,6 +12,10 @@ class HostBridge
   public static var platform(get, never): String;
   static function get_platform(): String return h().platform;
 
+// runtime debug flag: true if main found a .debug sentinel file in cwd at boot
+  public static var isDebug(get, never): Bool;
+  static function get_isDebug(): Bool return h().isDebug;
+
 // settings.json read/write (JSON string)
   public static function settingsRead(): String return h().settings.read();
   public static function settingsWrite(data: String): Void h().settings.write(data);
@@ -49,11 +53,9 @@ class HostBridge
   public static function quit(): Void h().quit();
   public static function setFullscreen(on: Bool): Void h().setFullscreen(on);
 
-#if mydebug
-// debug-only writes (registered only in mydebug builds in main)
+// debug-only writes — main refuses with false when sentinel (.debug) is absent
   public static function debugWriteRegionRoads(text: String): Void h().debug.writeRegionRoads(text);
   public static function debugWriteRegionBuildings(text: String): Void h().debug.writeRegionBuildings(text);
   public static function debugWriteImage(name: String, base64: String): Void h().debug.writeImage(name, base64);
-#end
 }
 #end

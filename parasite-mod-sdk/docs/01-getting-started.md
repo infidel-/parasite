@@ -64,7 +64,28 @@ post-processing step — `haxe build.hxml` output loads as-is, so building witho
 `dev/` is gitignored in the install and scanned by the engine the same way as
 `mods/` — no flag needed.
 
-## 5. Launch and verify
+## 5. Enable debug mode (optional)
+
+Mod-author conveniences (verbose in-game console commands, debug HUD, host-side
+debug image/text dumps from `HostBridge.debugWrite*`) are gated at runtime by a
+sentinel file. To turn them on:
+
+1. Quit the game.
+2. Create an empty file named `.debug` in the game install directory (the
+   directory containing the game executable / Electron app cwd).
+3. Launch the game.
+
+The flag is resolved once at startup and cached for the whole session — to
+toggle, restart. Delete (or rename) `.debug` to return to the default release
+surface.
+
+With debug on you also get the expanded in-game console command set described
+in [09-console-reference.md](09-console-reference.md) (`give`, `go`, `goal`,
+`learn`, `set`, `spa`, `spc`, `snd`, etc.). With it off the console still
+exposes the release subset (`load`, `save`, `restart`, `quit`, `mods`,
+`debug renderstats|ai|sound|lights`, `cfg`).
+
+## 6. Launch and verify
 
 Launch Parasite. Open DevTools console. You should see the loader log:
 

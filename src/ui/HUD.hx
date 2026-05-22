@@ -30,9 +30,8 @@ class HUD
   public var info: DivElement;
   var regionTooltip: RegionTooltip;
   var aiTooltip: AITooltip;
-#if mydebug
+  // debug overlay div — created and updated only when Const.isDebug is true
   var debugInfo: DivElement;
-#end
   var menuButtons: Array<{
     state: _UIState,
     btn: DivElement,
@@ -126,12 +125,13 @@ class HUD
       container.appendChild(info);
 
 
-#if mydebug
-      debugInfo = document.createDivElement();
-      debugInfo.className = 'text';
-      debugInfo.id = 'hud-debug-info';
-      container.appendChild(debugInfo);
-#end
+      if (Const.isDebug)
+        {
+          debugInfo = document.createDivElement();
+          debugInfo.className = 'text';
+          debugInfo.id = 'hud-debug-info';
+          container.appendChild(debugInfo);
+        }
 
       // menu
       var buttons = document.createDivElement();
@@ -582,9 +582,8 @@ public function onMouseLeave()
       if (game.location == LOCATION_REGION)
         updateRegionTooltipHover(true);
       updateAITooltip();
-#if mydebug
-      updateDebugInfo();
-#end
+      if (Const.isDebug)
+        updateDebugInfo();
     }
 
 // update log display
@@ -683,9 +682,7 @@ public function onMouseLeave()
           {
             buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
               ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
-#if mydebug
-              Const.smallgray(' A ' + Math.round(game.area.alertness)) +
-#end
+              (Const.isDebug ? Const.smallgray(' A ' + Math.round(game.area.alertness)) : '') +
               '<br/>');
 
             // check if this is a mission area
@@ -699,9 +696,7 @@ public function onMouseLeave()
           var area = game.playerRegion.currentArea;
           buf.add(', at (' +
             game.playerRegion.x + ',' + game.playerRegion.y + ')' +
-#if mydebug
-             ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) +
-#end
+            (Const.isDebug ? ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) : '') +
             '<br/>' +
             area.name +
             '<center>' + (area.highCrime ? Const.smallgray('high crime') : '') + '</center>');
@@ -818,7 +813,6 @@ public function onMouseLeave()
       else info.className = 'text';
     }
 
-#if mydebug
 // debug info
   function updateDebugInfo()
     {
@@ -841,7 +835,6 @@ public function onMouseLeave()
         game.managerArea.debugInfo(buf);
       debugInfo.innerHTML = buf.toString();
     }
-#end
 
 // update menu buttons visibility
   function updateMenu()

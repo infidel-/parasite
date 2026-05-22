@@ -50,10 +50,7 @@ class Config
 
       // default values
       mouseEnabled = true;
-      extendedInfo = false;
-#if mydebug
-      extendedInfo = true;
-#end
+      extendedInfo = Const.isDebug;
       alwaysCenterCamera = true;
       laptopKeyboard = false;
       fullscreen = false;

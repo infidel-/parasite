@@ -3,7 +3,7 @@
 .PHONY: game-debug testmod main report mod-sdk
 
 game-debug:
-	cd src && $(MAKE) electron-mydebug
+	cd src && $(MAKE) electron
 
 testmod:
 	cd examples/testmod/ && $(MAKE)

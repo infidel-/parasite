@@ -518,7 +518,6 @@ class Chat extends _SaveObject
     {
       if (target == null)
         return;
-#if mydebug
 /*
       game.log(Const.smalldebug(
         '[ consent:' + target.chat.consent +
@@ -526,7 +525,6 @@ class Chat extends _SaveObject
         ', emotion: ' + target.chat.emotion +
         ', stun: ' + target.chat.stun + ' ]'));
 */
-#end
     }
 
 // provoke this host
@@ -1243,7 +1241,6 @@ class Chat extends _SaveObject
       });
     }
 
-#if mydebug
 // debug: make current chat target give full consent
   public function debugGiveFullConsent(): Bool
     {
@@ -1261,7 +1258,6 @@ class Chat extends _SaveObject
       actionPost();
       return true;
     }
-#end
 
 // log line + stats
   function log(s: String)
@@ -1273,17 +1269,6 @@ class Chat extends _SaveObject
           s = StringTools.replace(s, ' him', ' her');
           s = StringTools.replace(s, ' his', ' her');
         }
-#if mydebug
-/*
-      if (target.chat != null)
-        game.log(s + ' ' +
-          Const.smallgray(
-            '[ consent:' + target.chat.consent +
-            ', fatigue: ' + target.chat.fatigue +
-            ', stun: ' + target.chat.stun));
-      else */game.log(s);
-#else
       game.log(s);
-#end
     }
 }

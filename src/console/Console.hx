@@ -57,23 +57,23 @@ class Console
           // XXX config|cfg <option> <value>
           if (arr[0] == 'config' || arr[0] == 'cfg')
             configOptionCommand(arr);
-#if mydebug
-          // XXX chat|ch<stage>
-          else if (arr[0].length >= 2 && arr[0].substr(0, 2) == 'ch')
-            chatCommand(arr);
-          // XXX cult|cu commands
-          else if (arr[0] == 'cu' || arr[0] == 'cult')
-            cultConsole.run(cmd);
-#end
+          else if (Const.isDebug)
+            {
+              // XXX chat|ch<stage>
+              if (arr[0].length >= 2 && arr[0].substr(0, 2) == 'ch')
+                chatCommand(arr);
+              // XXX cult|cu commands
+              else if (arr[0] == 'cu' || arr[0] == 'cult')
+                cultConsole.run(cmd);
+            }
         }
 
       // XXX debug <sub> commands
       else if (char0 == 'd')
         debugConsole.run(cmd);
 
-#if mydebug
       // XXX give, go, goal, god commands
-      else if (char0 == 'g')
+      else if (Const.isDebug && char0 == 'g')
         {
           if (arr[0] == 'give')
             giveConsole.run(cmd);
@@ -84,91 +84,88 @@ class Console
           else if (arr[0] == 'god')
             setVariableCommand(['set', 'player.godmode', '1' ]);
         }
-#end
 
       // XXX help
       else if (char0 == 'h')
         {
-#if mydebug
-          log('Available commands: ' +
-            // give
-            'give effect [name], ' +
-            'give item [name], ' +
-            'give organ [name], ' +
-            'give skill [name] [amount], ' +
-            'give trait [name], ' +
-            'give evolution [name] [level],<br/>' +
-            'cfg|config, ' +
-            'ch|chat - set chat stage,<br/>' +
-            // debug
-            'debug renderstats, ' +
-            'debug ai, ' +
-            'debug sound, ' +
-            'debug lights, ' +
-            'debug alert, ' +
-            'debug demo, ' +
-            'debug leave, ' +
-            'debug throw,<br/>' +
-            // go
-            'go area [x] [y], ' +
-            'go event [index], ' +
-            'go xy [x] [y], ' +
-            'goal complete [id], ' +
-            'goal receive [id], ' +
-            'god - enable godmode,<br/>' +
-            // info
-            'ie - timeline info (trace), ' +
-            'ii - improvements info (trace),<br/>' +
-            // learn
-            'learn clues, ' +
-            'learn event [index], ' +
-            'learn improvements [level], ' +
-            'learn region, ' +
-            'learn timeline, ' +
-            'load - load game,<br/>' +
-            //
-            'oa - organ action,<br/>' +
-            'mods [list|enable <id>|disable <id>|errors],<br/>' +
-            'snd - play sound, r/restart, ' +
-            's - set player stage, ' +
-            'spa - spawn ai, ' +
-            'spc - spawn civilian with job type, ' +
-            'save - save game, ' +
-            'set - set game variable, ' +
-            'quit.');
-#else
-          log('Available commands: cfg, config, ' +
-            'debug renderstats, ' +
-            'debug ai, ' +
-            'debug sound, ' +
-            'debug lights, ' +
-            'load - load game, ' +
-            'mods [list|enable <id>|disable <id>|errors], ' +
-            'restart, ' +
-            'save - save game, ' +
-            'quit.');
-#end
+          if (Const.isDebug)
+            log('Available commands: ' +
+              // give
+              'give effect [name], ' +
+              'give item [name], ' +
+              'give organ [name], ' +
+              'give skill [name] [amount], ' +
+              'give trait [name], ' +
+              'give evolution [name] [level],<br/>' +
+              'cfg|config, ' +
+              'ch|chat - set chat stage,<br/>' +
+              // debug
+              'debug renderstats, ' +
+              'debug ai, ' +
+              'debug sound, ' +
+              'debug lights, ' +
+              'debug alert, ' +
+              'debug demo, ' +
+              'debug leave, ' +
+              'debug throw,<br/>' +
+              // go
+              'go area [x] [y], ' +
+              'go event [index], ' +
+              'go xy [x] [y], ' +
+              'goal complete [id], ' +
+              'goal receive [id], ' +
+              'god - enable godmode,<br/>' +
+              // info
+              'ie - timeline info (trace), ' +
+              'ii - improvements info (trace),<br/>' +
+              // learn
+              'learn clues, ' +
+              'learn event [index], ' +
+              'learn improvements [level], ' +
+              'learn region, ' +
+              'learn timeline, ' +
+              'load - load game,<br/>' +
+              //
+              'oa - organ action,<br/>' +
+              'mods [list|enable <id>|disable <id>|errors],<br/>' +
+              'snd - play sound, r/restart, ' +
+              's - set player stage, ' +
+              'spa - spawn ai, ' +
+              'spc - spawn civilian with job type, ' +
+              'save - save game, ' +
+              'set - set game variable, ' +
+              'quit.');
+          else
+            log('Available commands: cfg, config, ' +
+              'debug renderstats, ' +
+              'debug ai, ' +
+              'debug sound, ' +
+              'debug lights, ' +
+              'load - load game, ' +
+              'mods [list|enable <id>|disable <id>|errors], ' +
+              'restart, ' +
+              'save - save game, ' +
+              'quit.');
         }
 
       // XXX mods commands (release + debug)
       else if (char0 == 'm')
         modsConsole.run(arr);
 
-#if mydebug
       // XXX info commands
-      else if (char0 == 'i')
+      else if (Const.isDebug && char0 == 'i')
         infoCommand(cmd);
 
-      // XXX learn commands
+      // XXX load + learn commands
       else if (char0 == 'l')
         {
           // XXX load game
           if (arr[0] == 'load' || arr[0] == 'lo')
             game.load(1);
 
-          else learnConsole.run(cmd);
+          else if (Const.isDebug)
+            learnConsole.run(cmd);
         }
-#end
 
       // XXX restart
       else if (char0 == 'r')
@@ -184,25 +181,26 @@ class Console
           if (arr[0] == 'save' || arr[0] == 'sav' || arr[0] == 'sa')
             game.save(1);
 
-#if mydebug
-          // XXX set <variable> <value>
-          else if (arr[0] == 'set')
-            setVariableCommand(arr);
+          else if (Const.isDebug)
+            {
+              // XXX set <variable> <value>
+              if (arr[0] == 'set')
+                setVariableCommand(arr);
 
-          // XXX snd <file>
-          else if (arr[0] == 'snd')
-            playSoundCommand(arr);
+              // XXX snd <file>
+              else if (arr[0] == 'snd')
+                playSoundCommand(arr);
 
-          // XXX spa <ai type>
-          else if (arr[0] == 'spa')
-            spawnAICommand(arr);
+              // XXX spa <ai type>
+              else if (arr[0] == 'spa')
+                spawnAICommand(arr);
 
-          // XXX spc <job type>
-          else if (arr[0] == 'spc')
-            spawnCivCommand(arr);
+              // XXX spc <job type>
+              else if (arr[0] == 'spc')
+                spawnCivCommand(arr);
 
-          else setCommand(cmd);
-#end
+              else setCommand(cmd);
+            }
         }
 
       // XXX organ action
@@ -343,7 +341,6 @@ class Console
     }
 
 
-#if mydebug
 // chat<stage>
 // chat
   function chatCommand(arr: Array<String>)
@@ -390,7 +387,6 @@ class Console
       giveConsole.run('give skill coercion 80');
       giveConsole.run('give skill deception 80');
     }
-#end
 
 // config <option> <value>
 // config

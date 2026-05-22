@@ -64,39 +64,16 @@ class ConsoleCompletion
         { lit: 'ai' },
         { lit: 'sound' },
         { lit: 'lights' },
-#if mydebug
-        { lit: 'alert' },
-        { lit: 'demo' },
-        { lit: 'leave' },
-        { lit: 'throw' },
-#end
       ];
+      if (Const.isDebug)
+        {
+          debugSubs.push({ lit: 'alert' });
+          debugSubs.push({ lit: 'demo' });
+          debugSubs.push({ lit: 'leave' });
+          debugSubs.push({ lit: 'throw' });
+        }
 
-      root = { next: [
-        { lit: 'give', next: [
-          { lit: 'effect', next: [ { slot: '[effect]', values: effect } ] },
-          { lit: 'item', next: [ { slot: '[item]', values: item } ] },
-          { lit: 'organ', next: [ { slot: '[organ]', values: organ } ] },
-          { lit: 'skill', next: [ { slot: '[skill]', values: skill, next: [ { slot: '[amount]' } ] } ] },
-          { lit: 'trait', next: [ { slot: '[trait]', values: trait } ] },
-          { lit: 'evolution', next: [ { slot: '[name]', values: improv, next: [ { slot: '[level]' } ] } ] },
-        ] },
-        { lit: 'go', next: [
-          { lit: 'area', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
-          { lit: 'event', next: [ { slot: '[index]' } ] },
-          { lit: 'xy', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
-        ] },
-        { lit: 'goal', next: [
-          { lit: 'complete', next: [ { slot: '<id>', values: currentGoalIDs } ] },
-          { lit: 'receive', next: [ { slot: '<id>', values: goalIDs } ] },
-        ] },
-        { lit: 'learn', next: [
-          { lit: 'clues' },
-          { lit: 'event', next: [ { slot: '[index]' } ] },
-          { lit: 'improvements', next: [ { slot: '[level]' } ] },
-          { lit: 'region' },
-          { lit: 'timeline' },
-        ] },
+      var rootChildren: Array<CompNode> = [
         { lit: 'debug', next: debugSubs },
         { lit: 'mods', next: [
           { lit: 'list' },
@@ -104,7 +81,36 @@ class ConsoleCompletion
           { lit: 'disable', next: [ { slot: '<id>', values: modIDs } ] },
           { lit: 'errors' },
         ] },
-      ] };
+      ];
+      if (Const.isDebug)
+        {
+          rootChildren.push({ lit: 'give', next: [
+            { lit: 'effect', next: [ { slot: '[effect]', values: effect } ] },
+            { lit: 'item', next: [ { slot: '[item]', values: item } ] },
+            { lit: 'organ', next: [ { slot: '[organ]', values: organ } ] },
+            { lit: 'skill', next: [ { slot: '[skill]', values: skill, next: [ { slot: '[amount]' } ] } ] },
+            { lit: 'trait', next: [ { slot: '[trait]', values: trait } ] },
+            { lit: 'evolution', next: [ { slot: '[name]', values: improv, next: [ { slot: '[level]' } ] } ] },
+          ] });
+          rootChildren.push({ lit: 'go', next: [
+            { lit: 'area', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
+            { lit: 'event', next: [ { slot: '[index]' } ] },
+            { lit: 'xy', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
+          ] });
+          rootChildren.push({ lit: 'goal', next: [
+            { lit: 'complete', next: [ { slot: '<id>', values: currentGoalIDs } ] },
+            { lit: 'receive', next: [ { slot: '<id>', values: goalIDs } ] },
+          ] });
+          rootChildren.push({ lit: 'learn', next: [
+            { lit: 'clues' },
+            { lit: 'event', next: [ { slot: '[index]' } ] },
+            { lit: 'improvements', next: [ { slot: '[level]' } ] },
+            { lit: 'region' },
+            { lit: 'timeline' },
+          ] });
+        }
+
+      root = { next: rootChildren };
     }
 
 // splits input into non-empty tokens

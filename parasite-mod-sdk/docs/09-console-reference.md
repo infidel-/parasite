@@ -3,12 +3,12 @@
 The in-game console runs developer commands. Open it in-game using ";" key (not DevTools).
 Type `h` or `help` for the list the build itself advertises.
 
-> **Note on "debug":** today the console is split at compile time — many
-> commands exist only in debug builds (`#if mydebug`), so a release build
-> exposes a smaller set. The "Build" column below reflects the current
-> compile-time gating from the command dispatcher. Which commands stay
-> debug-only vs. become always-available may be revised later; treat this table
-> as the current state, not a guarantee.
+> **Note on "debug":** the console is split at runtime — many commands are
+> only dispatched when debug mode is on. Debug mode is toggled by an empty
+> `.debug` file in the game install directory (see
+> [01-getting-started.md §5](01-getting-started.md#5-enable-debug-mode-optional));
+> the flag is resolved once at startup. The "Build" column below means: `all` =
+> always available, `debug` = only with `.debug` present at launch.
 
 ## Mod commands (always available)
 
@@ -38,7 +38,7 @@ not unload an already-loaded mod mid-session.
 | `r` / `restart`                 | all           | restart game                                        |
 | `q` / `quit`                    | all           | quit the app                                        |
 | `oa<index> [level]`             | all           | grant + fire an evolution organ action by index     |
-| `load` (`lo`)                   | debug         | load game (slot 1)                                  |
+| `load` (`lo`)                   | all           | load game (slot 1)                                  |
 | `give effect <name>`            | debug         | grant effect                                        |
 | `give item <name>`              | debug         | grant item                                          |
 | `give organ <name>`             | debug         | grant organ                                         |
@@ -61,10 +61,6 @@ not unload an already-loaded mod mid-session.
 | `spc <job type>`                | debug         | spawn civilian by job (`spc` alone lists types)     |
 | `ch<stage>`                     | debug         | set up host chat/persuasion conditions (`ch` alone lists stages) — see below |
 | `cu` / `cult <sub>`             | debug         | cult subcommands (`cu` alone lists them) — see below |
-
-The release `help` output also advertises `load`, but its handler is currently
-debug-gated — in a release build `load` does nothing. This is a known
-inconsistency in the help text, noted here so it isn't mistaken for a mod bug.
 
 ## Player progression stages (`s<stage>`, debug)
 

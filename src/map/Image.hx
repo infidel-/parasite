@@ -14,7 +14,7 @@ class Image extends Buildings
       super(g);
     }
 
-#if (electron && mydebug)
+#if electron
 // dump the generated building rects for one region map seed
   function dumpBuildingRects()
     {
@@ -105,105 +105,75 @@ class Image extends Buildings
 // generate the cached region image
   public function generate(): CanvasElement
     {
-#if mydebug
-      var totalStartTS = haxe.Timer.stamp() * 1000.0;
-      var phaseStartTS = totalStartTS;
-#end
+      var totalStartTS = 0.0;
+      var phaseStartTS = 0.0;
+      if (Const.isDebug)
+        {
+          totalStartTS = haxe.Timer.stamp() * 1000.0;
+          phaseStartTS = totalStartTS;
+        }
       initRegionMetrics();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.initRegionMetrics', phaseStartTS);
-#end
       initCanvas();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.initCanvas', phaseStartTS);
-#end
       initRandom();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.initRandom', phaseStartTS);
       traceMapProfileSummary('image.seed=' + mapSeed);
-#end
 
       densityField = buildDensityField();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildDensityField', phaseStartTS);
-#end
       areaTypes = buildAreaTypeField();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildAreaTypeField', phaseStartTS);
-#end
       paintGround();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintGround', phaseStartTS);
-#end
-#if (electron && mydebug)
-      if (MAP_DEBUG_DUMP_PNGS)
+#if electron
+      if (Const.isDebug && MAP_DEBUG_DUMP_PNGS)
         dumpDebugViewPNGs();
 #end
       if (paintDebugViewIfRequested())
         {
           cropVisibleRegion();
-#if mydebug
           phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion.debug', phaseStartTS);
           traceMapProfileSummary('image.debugView=' + MAP_DEBUG_VIEW_MODE);
           nextMapProfileTimestamp('image.total.debug', totalStartTS);
-#end
           return canvas;
         }
 
       if (!ENABLE_REGION_CITY_CONTENT)
         {
           cropVisibleRegion();
-#if mydebug
           phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion.noCity', phaseStartTS);
           traceMapProfileSummary('image.summary roads=0 blocks=0 parcels=0 buildings=0' +
             ' fullPixels=' + fullPixelWidth + 'x' + fullPixelHeight);
           nextMapProfileTimestamp('image.total', totalStartTS);
-#end
           return canvas;
         }
 
       roads = generateRoadGraph();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.generateRoadGraph', phaseStartTS);
-#end
       roadMasks = rasterizeRoadMasks(roads);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.rasterizeRoadMasks', phaseStartTS);
-#end
       blocks = buildBlocks();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildBlocks', phaseStartTS);
-#end
       parcels = buildParcels(blocks);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.buildParcels', phaseStartTS);
-#end
       buildings = generateBuildings(parcels);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.generateBuildings', phaseStartTS);
-#end
-#if (electron && mydebug)
-      if (MAP_DEBUG_DUMP_BUILDING_RECTS)
+#if electron
+      if (Const.isDebug && MAP_DEBUG_DUMP_BUILDING_RECTS)
         {
           dumpBuildingRects();
           traceMapProfileSummary('image.buildingDump=region_buildings.txt');
         }
 #end
       paintOpenParcels(parcels);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintOpenParcels', phaseStartTS);
-#end
       paintBuildings();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintBuildings', phaseStartTS);
-#end
       paintRoads();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.paintRoads', phaseStartTS);
-#end
 
       cropVisibleRegion();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion', phaseStartTS);
       traceMapProfileSummary('image.summary roads=' + roads.length +
         ' blocks=' + blocks.length +
@@ -211,7 +181,6 @@ class Image extends Buildings
         ' buildings=' + buildings.length +
         ' fullPixels=' + fullPixelWidth + 'x' + fullPixelHeight);
       nextMapProfileTimestamp('image.total', totalStartTS);
-#end
       return canvas;
     }
 

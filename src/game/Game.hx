@@ -610,9 +610,8 @@ class Game extends _SaveObject
 // add debug entry to game log
   public inline function debug(s: String)
     {
-#if mydebug
-      log(Const.small('DEBUG ' + s), COLOR_DEBUG);
-#end
+      if (Const.isDebug)
+        log(Const.small('DEBUG ' + s), COLOR_DEBUG);
     }
 
 // add narrative entry to game log

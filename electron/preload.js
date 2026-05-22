@@ -9,11 +9,12 @@ try {
 }
 catch (e) {
   console.error('preload: host:boot failed', e);
-  boot = { platform: 'unknown' };
+  boot = { platform: 'unknown', isDebug: false };
 }
 
 contextBridge.exposeInMainWorld('host', {
   platform: boot.platform,
+  isDebug: !!boot.isDebug,
 
   settings: {
     read:  ()     => ipcRenderer.sendSync('host:settings:read'),
