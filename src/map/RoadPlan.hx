@@ -60,7 +60,7 @@ class RoadPlan extends Raster
   function nextMapProfileTimestamp(label: String, startTS: Float): Float
     {
       var nowTS = haxe.Timer.stamp() * 1000.0;
-      trace('MAP PROFILE ROAD ' + label + ': ' + Std.int(nowTS - startTS) + ' ms');
+      profile('ROAD', label + ': ' + Std.int(nowTS - startTS) + ' ms');
       return nowTS;
     }
 
@@ -78,7 +78,7 @@ class RoadPlan extends Raster
           var total = mapProfileTotalsMS.get(label);
           var count = mapProfileSampleCounts.get(label);
           var avg = Math.round(total * 100.0 / count) / 100.0;
-          trace('MAP PROFILE ROAD detail ' + label + ': ' + Std.int(total) +
+          profile('ROAD', 'detail ' + label + ': ' + Std.int(total) +
             ' ms over ' + count + ' calls avg=' + avg + ' ms');
         }
     }
@@ -93,13 +93,13 @@ class RoadPlan extends Raster
       labels.sort(sortMapProfileLabels);
 
       for (label in labels)
-        trace('MAP PROFILE ROAD count ' + label + ': ' + mapProfileCounters.get(label));
+        profile('ROAD', 'count ' + label + ': ' + mapProfileCounters.get(label));
     }
 
 // trace one profiling summary line
   function traceMapProfileSummary(label: String)
     {
-      trace('MAP PROFILE ROAD ' + label);
+      profile('ROAD', label);
     }
 
 // sort two profiling labels for stable debug output

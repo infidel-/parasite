@@ -31,6 +31,7 @@ class Core
   var MAP_DEBUG_DUMP_PNGS = false; // dump debug view images during generation in electron
   var MAP_DEBUG_DUMP_BUILDING_RECTS = false; // dump building rectangles during generation in electron
   var MAP_DEBUG_VIEW_MODE = 0; // active region-map debug view
+  var ROAD_PROFILE = false; // emit MAP PROFILE trace lines via profile()
   var ROAD_PROFILE_VERBOSE = false; // collect and print per-label road profiling detail and counters
   var ENABLE_REGION_CITY_CONTENT = true; // enable the road/building generation pipeline
   var ENABLE_REGION_CITY_BACKGROUNDS = true; // draw the legacy density-based city ground as an overlay under roads and buildings
@@ -309,5 +310,20 @@ class Core
     {
       return a - b;
     }
+
+#if mydebug
+// trace one MAP PROFILE line gated by ROAD_PROFILE
+  function profile(prefix: String, msg: String)
+    {
+      if (!ROAD_PROFILE)
+        return;
+      trace('MAP PROFILE ' + prefix + ' ' + msg);
+    }
+#else
+// ignore one MAP PROFILE line outside debug builds
+  inline function profile(prefix: String, msg: String)
+    {
+    }
+#end
 
 }

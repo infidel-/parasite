@@ -14,13 +14,13 @@ class Ground extends Core
 // trace one perlin profiling phase
   function tracePerlinProfilePhase(label: String, elapsedMS: Float)
     {
-      trace('MAP PROFILE PERLIN ' + label + ': ' + Std.int(elapsedMS) + ' ms');
+      profile('PERLIN', label + ': ' + Std.int(elapsedMS) + ' ms');
     }
 
 // trace one perlin profiling summary line
   function tracePerlinProfileSummary(label: String)
     {
-      trace('MAP PROFILE PERLIN ' + label);
+      profile('PERLIN', label);
     }
 #else
 // ignore one perlin profiling phase outside debug builds
