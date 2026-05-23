@@ -105,6 +105,14 @@ class ParticleSplat extends Particle
         angle: angle,
         tag: SPLAT_TAG,
       });
+      // if you want to spawn deco, you should update camera to redraw (important with timeout)
+      game.scene.updateCameraNextTick();
+
+      // play splat-land sound spatially; mods (or builtin pack) supply effect-splat
+      game.scene.sounds.play('fx-splat', {
+        x: pt.x,
+        y: pt.y,
+      });
     }
 
 // get random tile-local offset in +/-50% tile range

@@ -80,6 +80,7 @@ class ConsoleCompletion
           { lit: 'enable', next: [ { slot: '<id>', values: modIDs } ] },
           { lit: 'disable', next: [ { slot: '<id>', values: modIDs } ] },
           { lit: 'errors' },
+          { lit: 'rescan' },
         ] },
       ];
       if (Const.isDebug)

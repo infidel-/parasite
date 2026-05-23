@@ -219,7 +219,10 @@ class MainElectron
       var lower = p.toLowerCase();
       if (StringTools.endsWith(lower, '.js'))
         return 'text/javascript';
-      if (StringTools.endsWith(lower, '.json'))
+      // .map served as JSON so devtools can fetch entry.js.map and rewrite
+      // mod stacks to Entry.hx:LINE (otherwise 415s and stacks stay as entry.js)
+      if (StringTools.endsWith(lower, '.json') ||
+          StringTools.endsWith(lower, '.map'))
         return 'application/json';
       if (StringTools.endsWith(lower, '.png'))
         return 'image/png';

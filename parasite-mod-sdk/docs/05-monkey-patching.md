@@ -112,6 +112,73 @@ Notes:
 
 Full field docs live in the extern: `externs/mods/ModEvents.hx`.
 
+## Fx system
+
+`parasite.fx` is a named registry plus low-level primitives. The engine owns
+**dispatch + scheduling + the overlay div lifecycle**; the mod owns the actual
+visual effect. The same surface lets any mod fire any other mod's registered
+fx by id (cross-mod reuse) without poking `Browser.document` directly.
+
+### Surface
+
+| Call                                                              | What it does                                                              |
+|-------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `parasite.fx.register(id, impl)`                                  | record an fx under `id` (must start with `mod-<modID>-`). `impl` is `{ play: Dynamic -> Void, ?stop: Void -> Void }`. |
+| `parasite.fx.play(id, params)`                                    | look up and run the fx. Unknown id warns once and is a no-op. `params` is `Dynamic`; the impl decides its shape. |
+| `parasite.fx.stop(id)`                                            | call the registered `stop()` hook, if any. Mods that compose with `tick` can use the optional channel to also cancel in-flight frames. |
+| `parasite.fx.tick(durationMS, frameFn, ?onDone, ?channelID)`      | RAF-based scheduler. `frameFn(t)` runs each frame with `t` in `[0..1]`; `onDone()` fires once after `frameFn(1.0)`. If `channelID` is set, a re-play on the same channel cancels the in-flight tick. RAF pauses on tab blur and resumes on return. |
+| `parasite.fx.canvas()`                                            | `Element` — the game `#canvas` (may be `null` before the scene exists).   |
+| `parasite.fx.overlay()`                                           | `Element` — the engine-owned reusable fullscreen overlay div. Fixed-position, `pointer-events: none`, `z-index: 9999`, initial `opacity: 0`. Mods set their own styles each play; concurrent flashes from different mods stomp each other. |
+
+### Pattern
+
+Register at boot, fire later (from a weapon hook, an event, anywhere). The
+`channelID` lets a re-play interrupt an in-flight tick instead of running
+parallel frame loops, which is what you want for shake / flash / juice fx:
+
+```haxe
+parasite.fx.register('mod-mymod-shake', {
+  play: function(p: Dynamic): Void
+    {
+      var c: Dynamic = parasite.fx.canvas();
+      if (c == null) return;
+      var ms: Int = p.durationMS;
+      var px: Int = p.magnitudePX;
+      parasite.fx.tick(ms, function(t: Float): Void
+        {
+          var decay = 1 - t;
+          var dx = (Math.random() * 2 - 1) * px * decay;
+          var dy = (Math.random() * 2 - 1) * px * decay;
+          c.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+        }, function(): Void
+        {
+          c.style.transform = '';
+        }, 'mod-mymod-shake');
+    },
+});
+
+// later, on a hit:
+parasite.fx.play('mod-mymod-shake', { durationMS: 500, magnitudePX: 8 });
+```
+
+The full chainsaw example (shake + colored fullscreen flash on player hits)
+lives at `examples/chainsaw/src/Entry.hx`.
+
+### Notes
+
+- **Registration is global.** All mods share one id-keyed registry. The
+  `mod-<modID>-` prefix on every id is what keeps mods from clobbering each
+  other. Duplicate registration is last-wins + warns.
+- **Replace-on-replay is opt-in.** A registry-level `play(id)` does **not**
+  cancel an in-flight `play(id)` on its own; if you want that, pass your
+  `id` as the `channelID` to `tick` (as above). Effects that don't use `tick`
+  (pure CSS transitions, etc.) must coordinate state themselves.
+- **No built-in fx.** The engine ships zero entries in the registry — every
+  visible effect is somebody's mod, and the same registration surface lets
+  mods discover and fire each other's fx.
+
+Full field docs live in the extern: `externs/mods/ModFx.hx`.
+
 ## Caution
 
 You are editing live engine internals. Renames between game versions break

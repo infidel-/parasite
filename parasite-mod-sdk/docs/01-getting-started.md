@@ -57,9 +57,10 @@ and [template/README.md](../template/README.md).
 make
 ```
 
-This compiles `entry.js` and copies it + `manifest.json` into `DEST`. There is no
-post-processing step — `haxe build.hxml` output loads as-is, so building without
-`make` is just the `haxe build.hxml` line plus copying the two files.
+This compiles `entry.js` (+ `entry.js.map` for source-mapped stacks) and copies
+them and `manifest.json` into `DEST`. There is no post-processing step — `haxe
+build.hxml` output loads as-is, so building without `make` is just the `haxe
+build.hxml` line plus copying those files.
 
 `dev/` is gitignored in the install and scanned by the engine the same way as
 `mods/` — no flag needed.

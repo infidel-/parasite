@@ -8,6 +8,9 @@ game-debug:
 testmod:
 	cd examples/testmod/ && $(MAKE)
 
+chainsaw:
+	cd examples/chainsaw/ && $(MAKE)
+
 main:
 	cd electron && $(MAKE)
 

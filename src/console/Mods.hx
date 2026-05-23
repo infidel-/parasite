@@ -3,6 +3,8 @@ package console;
 
 import game.Game;
 import mods.ModRegistry;
+import mods.ModInfo;
+import HostBridge;
 
 class Mods
 {
@@ -32,6 +34,8 @@ class Mods
         printMods();
       else if (sub == 'errors' || sub == 'err')
         printModErrors();
+      else if (sub == 'rescan')
+        rescanMods();
       else if (sub == 'enable' || sub == 'disable')
         {
           if (arr.length < 3)
@@ -42,8 +46,90 @@ class Mods
           toggleMod(arr[2], sub == 'enable');
         }
       else
-        log('Usage: mods [list|enable &lt;id&gt;|disable &lt;id&gt;|errors]');
+        log('Usage: mods [list|enable &lt;id&gt;|disable &lt;id&gt;|errors|rescan]');
       return true;
+    }
+
+// re-scan dev/ + mods/ + workshop in main; diff vs current renderer registry
+// (added/removed mods + per-mod asset file changes).
+// reload (Ctrl-F5) still needed to actually load/unload mods or re-init asset
+// caches (sound list, AssetPath overrides) — this just refreshes the main-process
+// cache so the next renderer reload sees fresh state
+  function rescanMods()
+    {
+      var oldByID = new Map<String, ModInfo>();
+      for (info in ModRegistry.all)
+        oldByID.set(info.id, info);
+      var fresh: Array<ModInfo> = HostBridge.modsRescan();
+      if (fresh == null)
+        {
+          log('Rescan failed (host bridge returned null).');
+          return;
+        }
+      var newByID = new Map<String, ModInfo>();
+      for (info in fresh)
+        newByID.set(info.id, info);
+
+      // build added / removed id lists
+      var added = [];
+      for (info in fresh)
+        if (!oldByID.exists(info.id))
+          added.push(info.id);
+      var removed = [];
+      for (id in oldByID.keys())
+        if (!newByID.exists(id))
+          removed.push(id);
+
+      // per-mod asset diff for mods that exist on both sides
+      var assetChanges: Array<String> = [];
+      for (info in fresh)
+        {
+          var prev = oldByID.get(info.id);
+          if (prev == null)
+            continue;
+          var oldSet = new Map<String, Bool>();
+          if (prev.assets != null)
+            for (a in prev.assets) oldSet.set(a, true);
+          var newSet = new Map<String, Bool>();
+          if (info.assets != null)
+            for (a in info.assets) newSet.set(a, true);
+          var addedAssets = [];
+          if (info.assets != null)
+            for (a in info.assets)
+              if (!oldSet.exists(a)) addedAssets.push(a);
+          var removedAssets = [];
+          if (prev.assets != null)
+            for (a in prev.assets)
+              if (!newSet.exists(a)) removedAssets.push(a);
+          if (addedAssets.length == 0 && removedAssets.length == 0)
+            continue;
+          var line = '    ' + info.id + ':';
+          if (addedAssets.length > 0)
+            line += ' +' + addedAssets.length + ' (' + addedAssets.join(', ') + ')';
+          if (removedAssets.length > 0)
+            line += ' -' + removedAssets.length + ' (' + removedAssets.join(', ') + ')';
+          assetChanges.push(line);
+        }
+
+      var buf = new StringBuf();
+      buf.add('Rescan: ' + fresh.length + ' mod(s) discovered.');
+      if (added.length > 0)
+        buf.add('<br/>  added: ' + added.join(', '));
+      if (removed.length > 0)
+        buf.add('<br/>  removed: ' + removed.join(', '));
+      if (assetChanges.length > 0)
+        {
+          buf.add('<br/>  asset changes:');
+          for (line in assetChanges)
+            buf.add('<br/>' + line);
+        }
+      if (added.length == 0 &&
+          removed.length == 0 &&
+          assetChanges.length == 0)
+        buf.add(' No changes.');
+      else
+        buf.add('<br/>Reload (Ctrl-F5) to apply.');
+      log(buf.toString());
     }
 
 // print mod status table (all discovered mods with enabled/disabled/failed)

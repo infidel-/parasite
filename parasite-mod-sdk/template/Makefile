@@ -8,7 +8,7 @@ entry.js: src/Entry.hx build.hxml
 
 install: entry.js manifest.json
 	mkdir -p $(DEST)
-	cp entry.js manifest.json $(DEST)/
+	cp entry.js entry.js.map manifest.json $(DEST)/
 
 clean:
 	rm -f entry.js entry.js.map

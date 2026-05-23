@@ -87,6 +87,7 @@ class ModLoader
         api: ModContentApi.forMod(info.id),
         settings: ModSettings.api(info.id),
         events: ModEvents.forMod(info.id),
+        fx: ModFx.forMod(info.id),
       };
 
       var promise: js.lib.Promise<Dynamic> =
@@ -113,23 +114,31 @@ class ModLoader
           }
           catch (e: Dynamic)
             {
-              fail(info, 'init() threw: ' + e);
+              fail(info, 'init() threw: ' + e, e);
               return null;
             }
         })
         .catchError(function(e: Dynamic) {
-          fail(info, 'import failed: ' + e);
+          fail(info, 'import failed: ' + e, e);
           return null;
         });
     }
 
-// mark mod failed in registry + emit error to devtools console + session log
-  static function fail(info: ModInfo, msg: String)
+// mark mod failed in registry + emit error to devtools console + session log.
+// pass the live error object as `err` so devtools rewrites its stack via the
+// mod's source map (string-only stacks aren't rewritten by devtools)
+  static function fail(info: ModInfo, msg: String, ?err: Dynamic)
     {
       ModRegistry.markFailed(info.id, msg);
-      console.error('[mods] MOD ERROR [' + info.id + '] ' + msg);
+      if (err != null)
+        console.error('[mods] MOD ERROR [' + info.id + '] ' + msg, err);
+      else
+        console.error('[mods] MOD ERROR [' + info.id + '] ' + msg);
 #if electron
-      try { HostBridge.logAppend('MOD ERROR [' + info.id + '] ' + msg + '\n'); }
+      // session log is text-only, so flatten the stack into the message here
+      var stack: Dynamic = (err != null ? err.stack : null);
+      var full = msg + (stack != null ? '\n' + stack : '');
+      try { HostBridge.logAppend('MOD ERROR [' + info.id + '] ' + full + '\n'); }
       catch (e: Dynamic) {}
 #end
     }

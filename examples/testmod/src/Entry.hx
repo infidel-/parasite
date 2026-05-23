@@ -35,6 +35,7 @@ class Entry
       testSettings(parasite);
       testAssetOverride(parasite);
       testEvents(parasite);
+      testFx(parasite);
     }
 
 // logs the runtime fields handed to the mod so we can eyeball what the host wired up
@@ -253,5 +254,53 @@ class Entry
       parasite.events.onAreaLeave(function(e) c.log('[testmod] event area:leave: area=' + e.area.id));
       parasite.events.onAISpawn(function(e) c.log('[testmod] event ai:spawn: ' + e.ai.id + ' in ' + e.area.id));
       c.log('[testmod] subscribed to 5 events');
+    }
+
+// fx facade smoke — register a no-op fx, fire it, exercise primitives,
+// verify prefix rejection + warn-once on missing id
+  static function testFx(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+
+      // register a no-op fx; impl records that play() was called
+      var played = { count: 0, lastParams: (null: Dynamic) };
+      parasite.fx.register('mod-testmod-noop', {
+        play: function(p: Dynamic): Void
+          {
+            played.count++;
+            played.lastParams = p;
+          },
+      });
+      parasite.fx.play('mod-testmod-noop', { hello: 'world' });
+      c.log('[testmod] fx play count = ' + played.count +
+        ', lastParams.hello = ' + played.lastParams.hello);
+
+      // prefix-rejection smoke — should log a reject, NOT register
+      parasite.fx.register('badprefix-fx', {
+        play: function(_): Void {},
+      });
+      parasite.fx.play('badprefix-fx');
+
+      // missing-id warn smoke — first play warns, second is silent (warn-once)
+      parasite.fx.play('mod-testmod-doesnotexist');
+      parasite.fx.play('mod-testmod-doesnotexist');
+
+      // primitives — overlay() must be non-null, canvas() may be null pre-scene,
+      // tick() runs one frame loop with channel for replace semantics
+      var ov = parasite.fx.overlay();
+      c.log('[testmod] fx.overlay() non-null? ' + (ov != null));
+      var cv = parasite.fx.canvas();
+      c.log('[testmod] fx.canvas() (may be null pre-scene) non-null? ' + (cv != null));
+
+      var ticks = { frames: 0, done: false };
+      parasite.fx.tick(50, function(t: Float): Void
+        {
+          ticks.frames++;
+        }, function(): Void
+        {
+          ticks.done = true;
+          c.log('[testmod] fx.tick done; frames=' + ticks.frames);
+        }, 'mod-testmod-ticksmoke');
+      c.log('[testmod] fx smoke scheduled');
     }
 }

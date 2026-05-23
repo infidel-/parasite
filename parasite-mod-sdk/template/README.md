@@ -75,8 +75,9 @@ each flag does.
 make
 ```
 
-Compiles `entry.js` and copies it + `manifest.json` into `DEST` (no
-post-processing — the Haxe output loads as-is). Then launch the game and look
-for your mod in the `mods` console command.
+Compiles `entry.js` (+ `entry.js.map`) and copies them with `manifest.json`
+into `DEST` (no post-processing — the Haxe output loads as-is). The source map
+makes loader `MOD ERROR` stacks resolve to `Entry.hx:LINE` in devtools. Then
+launch the game and look for your mod in the `mods` console command.
 
 Full walkthrough: [../docs/01-getting-started.md](../docs/01-getting-started.md).

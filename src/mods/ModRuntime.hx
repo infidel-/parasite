@@ -24,4 +24,6 @@ typedef ModRuntime = {
   var settings: ModSettings;
   // per-mod event-subscription facade (onTurnPre/onAreaEnter/onAISpawn/etc.)
   var events: ModEvents;
+  // per-mod fx facade — named fx registry + RAF/canvas/overlay primitives
+  var fx: ModFx;
 }

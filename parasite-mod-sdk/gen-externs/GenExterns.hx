@@ -271,7 +271,10 @@ class GenExterns
         sb.add(indent + '// ' + d + '\n');
     }
 
-// emits one extern class with its public instance + static fields
+// emits one extern class with its public instance + static fields.
+// `publicNames` (built per class) lets emitField skip accessor decls when the
+// accessor itself is already in the public field list (otherwise the same
+// `set_x`/`get_x` would be declared twice and fail to compile in the mod)
   static function emitClass(c: Classdef): String
     {
       var sb = new StringBuf();
@@ -283,10 +286,18 @@ class GenExterns
       if (c.superClass != null && included.exists(c.superClass.path))
         sb.add(' extends ' + c.superClass.path + typeArgs(c.superClass.params));
       sb.add('\n{\n');
+      var publicNames = new Map<String, Bool>();
       for (f in c.fields)
-        emitField(sb, f, false, c.file);
+        if (f.isPublic)
+          publicNames.set(f.name, true);
+      var publicStatics = new Map<String, Bool>();
       for (f in c.statics)
-        emitField(sb, f, true, c.file);
+        if (f.isPublic)
+          publicStatics.set(f.name, true);
+      for (f in c.fields)
+        emitField(sb, f, false, c.file, publicNames);
+      for (f in c.statics)
+        emitField(sb, f, true, c.file, publicStatics);
       sb.add('}\n');
       return sb.toString();
     }
@@ -365,8 +376,12 @@ class GenExterns
     }
 
 // writes a single class/static field (var or function) into the buffer,
-// prefixed by its scraped source doc comment if one exists
-  static function emitField(sb: StringBuf, f: ClassField, isStatic: Bool, file: Null<String>)
+// prefixed by its scraped source doc comment if one exists.
+// for var-properties (e.g. `var x(get, null): Int`) emits the property
+// declaration with matching access pair plus declarations for any get_/set_
+// accessor methods, so mod code's `inst.x` compiles to `inst.get_x()` (which
+// is what exists on the runtime engine class — the plain `.x` is absent).
+  static function emitField(sb: StringBuf, f: ClassField, isStatic: Bool, file: Null<String>, publicNames: Map<String, Bool>)
     {
       if (!f.isPublic)
         return;
@@ -381,10 +396,49 @@ class GenExterns
             sb.add('  public ' + stat + 'function ' + safeName(f.name) +
               typeParams(f.params) + '(' + as.join(', ') + '): ' + ctype(ret) + ';\n');
           default:
-            sb.add('  public ' + stat + 'var ' + safeName(f.name) + ': ' +
-              ctype(f.type) + ';\n');
+            // detect property accessors (RCall/RNo/etc.) vs plain field (RNormal/RNormal)
+            var ga = rightsToAccess(f.get, false);
+            var sa = rightsToAccess(f.set, true);
+            if (ga != 'default' || sa != 'default')
+              {
+                // property declaration; include type
+                sb.add('  public ' + stat + 'var ' + safeName(f.name) +
+                  '(' + ga + ', ' + sa + '): ' + ctype(f.type) + ';\n');
+                // emit accessor method externs the property declaration calls.
+                // haxe rtti XML stores RCall as literal "accessor" (it doesn't
+                // preserve the function name), so we reconstruct via convention:
+                // get_<field> for read, set_<field> for write. skip if the
+                // accessor is itself a public field — emitField will emit it
+                // separately in the main loop and we'd double-declare.
+                if (f.get.match(RCall(_)) && !publicNames.exists('get_' + f.name))
+                  sb.add('  ' + stat + 'function get_' + safeName(f.name) +
+                    '(): ' + ctype(f.type) + ';\n');
+                if (f.set.match(RCall(_)) && !publicNames.exists('set_' + f.name))
+                  sb.add('  ' + stat + 'function set_' + safeName(f.name) +
+                    '(v: ' + ctype(f.type) + '): ' + ctype(f.type) + ';\n');
+              }
+            else
+              sb.add('  public ' + stat + 'var ' + safeName(f.name) + ': ' +
+                ctype(f.type) + ';\n');
         }
     }
+
+// maps haxe.rtti.Rights to the Haxe property-access keyword used in source.
+// isSet picks 'set' vs 'get' for the RCall case (property declarations need
+// the side-appropriate keyword)
+  static function rightsToAccess(r: Rights, isSet: Bool): String
+    {
+      return switch (r)
+        {
+          case RNormal: 'default';
+          case RNo: 'null';
+          case RCall(_): (isSet ? 'set' : 'get');
+          case RMethod: 'default';
+          case RDynamic: 'dynamic';
+          case RInline: 'default';
+        };
+    }
+
 
 // writes a single anonymous-typedef field, honoring the :optional marker,
 // prefixed by its scraped source doc comment if one exists

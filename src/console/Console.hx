@@ -127,7 +127,7 @@ class Console
               'load - load game,<br/>' +
               //
               'oa - organ action,<br/>' +
-              'mods [list|enable <id>|disable <id>|errors],<br/>' +
+              'mods [list|enable <id>|disable <id>|errors|rescan],<br/>' +
               'snd - play sound, r/restart, ' +
               's - set player stage, ' +
               'spa - spawn ai, ' +
@@ -142,7 +142,7 @@ class Console
               'debug sound, ' +
               'debug lights, ' +
               'load - load game, ' +
-              'mods [list|enable <id>|disable <id>|errors], ' +
+              'mods [list|enable <id>|disable <id>|errors|rescan], ' +
               'restart, ' +
               'save - save game, ' +
               'quit.');

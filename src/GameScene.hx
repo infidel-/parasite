@@ -114,6 +114,11 @@ class GameScene
       Browser.window.setInterval(game.update, 20);
     }
 
+// update camera next tick
+  public inline function updateCameraNextTick()
+    {
+      Browser.window.setTimeout(updateCamera, 1);
+    }
 
 // update camera position
   public function updateCamera()

@@ -9,9 +9,14 @@ but never loads, the cause is almost always here.
 <modId>/
   manifest.json     # required — metadata + entry filename + exportGlobal
   entry.js          # required — Haxe-compiled entry script
-  entry.js.map      # optional — source map
+  entry.js.map      # strongly recommended — source map for Entry.hx stacks
   assets/           # optional — see 06-assets.md
 ```
+
+Ship `entry.js.map` alongside `entry.js` so the loader's `MOD ERROR` console
+output resolves to `Entry.hx:LINE` instead of `entry.js:LINE`. Maps are
+produced by `-debug` (see [Build flags](#build-flags)) and the template
+Makefile copies them by default.
 
 The engine discovers a mod directory by the presence of `manifest.json`. A
 directory without one is skipped silently.
@@ -127,6 +132,7 @@ The template `build.hxml`:
 -D js-es=6
 -D mod
 -dce no
+-debug
 -js entry.js
 ```
 
@@ -137,6 +143,7 @@ The template `build.hxml`:
 | `-D js-es=6`                  | engine compiled extern classes (e.g. `ItemInfo`) to ES6 `class`; your mod must match to `extends` them |
 | `-D mod`                      | conditional-compile guard for mod-only code                               |
 | `-dce no`                     | keep every symbol — the engine's `$hxClasses` registry depends on it      |
+| `-debug`                      | emit `entry.js.map` (source map). Loader passes thrown errors to `console.error` as objects, so devtools rewrites their stacks to `Entry.hx:LINE` when the map ships alongside `entry.js`. |
 
 ## Error isolation
 
@@ -144,6 +151,11 @@ Each mod is wrapped in try/catch at three points: manifest parse, dynamic
 import, and the `init` call. A failure logs a full stack and marks the mod
 `failed`; the game still boots and other mods still load. Inspect failures with
 the `mods errors` console command.
+
+The loader emits the thrown error as the second argument to `console.error`,
+which lets devtools follow the mod's source map (`entry.js.map`) and rewrite
+frames to `Entry.hx:LINE`. The session-log copy (`HostBridge.logAppend`) is
+text-only — it inlines the raw `entry.js:LINE` stack.
 
 ## Versioning
 

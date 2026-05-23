@@ -20,9 +20,15 @@ The `mods` command (alias `mo`) is available in every build.
 | `mods enable <id>`      | remove `<id>` from `profile.disabledMods`. Takes effect on renderer reload (Ctrl-F5). |
 | `mods disable <id>`     | add `<id>` to `profile.disabledMods`. Takes effect on renderer reload (Ctrl-F5). |
 | `mods errors` / `mods err` | print per-mod failure reasons recorded during scan/import/init.       |
+| `mods rescan`           | re-scan `dev/`, `mods/`, and workshop dirs in the main process; print a diff of added/removed mod ids and per-mod asset file changes (added/removed paths under `assets/`) vs the current renderer registry. Use after dropping in a new mod folder, dropping new assets into an existing mod, or removing files. The renderer registry, `AssetPath` overrides, sound list, and content registrations only refresh on renderer reload (Ctrl-F5), which the command reminds you to do when there are changes. |
 
 Enabling/disabling writes `profile.json` and prints a reload reminder; it does
 not unload an already-loaded mod mid-session.
+
+`mods rescan` only refreshes the main-process mod cache. To actually load a
+newly-added mod or pick up new asset files (sounds, sprites), follow with
+Ctrl-F5 to reload the renderer — that re-runs the mod loader and re-reads
+`AssetPath`, `Sounds.init`, etc. against the fresh list.
 
 ## Other commands
 
