@@ -28,9 +28,7 @@ class Chainsaw extends items.Weapon
         maxDamage: 14,
         verb1: 'rip',
         verb2: 'rips',
-        // live engine `_WeaponType.WEAPON_MELEE`; captured at init() —
-        // CommonLogic compares with `==`, so a stringly value would never match
-        type: Entry.WEAPON_MELEE,
+        type: WEAPON_MELEE,
         spawnBlood: true,
         canConceal: false,
         // engine AISound is @:structInit but the SDK extern strips that, so
@@ -66,9 +64,6 @@ class Chainsaw extends items.Weapon
 @:expose("chainsaw_Entry")
 class Entry
 {
-  // live engine `_WeaponType.WEAPON_MELEE` constructor, captured at init()
-  // from a built-in melee weapon's WeaponInfo
-  public static var WEAPON_MELEE: Dynamic;
   // runtime handle saved at init() — Chainsaw.logicAttackPost reaches fx
   // through this since engine constructs Chainsaw via Type.createInstance
   // and does not thread the parasite arg through
@@ -76,18 +71,10 @@ class Entry
 
   public static function main() {}
 
-// boot hook — capture enum, register skill + item, register fx, hook ai:spawn
+// boot hook — register skill + item, register fx, hook ai:spawn
   public static function init(parasite: ModRuntime): Void
     {
       Entry.parasite = parasite;
-
-      // regular Haxe enums live in the engine IIFE's $hxEnums — not on
-      // parasite.hxClasses (classes only) and not reachable as a window global.
-      // sidestep by pulling the live WEAPON_MELEE constructor off a built-in
-      // melee weapon's WeaponInfo (machete is loaded by ItemsConst.init before
-      // mod init runs, so its .weapon.type is the engine's _WeaponType.WEAPON_MELEE).
-      var ItemsConst: Dynamic = Reflect.field(parasite.hxClasses, 'const.ItemsConst');
-      WEAPON_MELEE = ItemsConst.infos.get('machete').weapon.type;
 
       // skill must register before the item — the item's WeaponInfo references it
       parasite.api.registerSkill({
