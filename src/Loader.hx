@@ -297,6 +297,32 @@ class Loader
       // bare string and never reach here, so this needs no version gate
       if (classID == '_Goal')
         return src.val;
+      // these enums converted to enum-abstract post-v3 (still unreleased);
+      // wrappers appear in pre-v3 AND interim v3 saves only.
+      // _OrdealMissionType was unified into _MissionType in the same pass —
+      // its v2 wrapper value strings (MISSION_KILL/PERSUADE/COMBAT) round-trip
+      // correctly as bare _MissionType strings.
+      if (classID == '_AbilityType' ||
+          classID == '_AIEffectType' ||
+          classID == '_AIState' ||
+          classID == '_AITargetType' ||
+          classID == '_AreaManagerEventType' ||
+          classID == '_AreaType' ||
+          classID == '_CombatMissionTemplate' ||
+          classID == '_CultBaseOrganType' ||
+          classID == '_CultEffectType' ||
+          classID == '_CultState' ||
+          classID == '_Difficulty' ||
+          classID == '_GameState' ||
+          classID == '_LocationType' ||
+          classID == '_MissionType' ||
+          classID == '_OrdealMissionType' ||
+          classID == '_OrdealType' ||
+          classID == '_PlayerState' ||
+          classID == '_RivalBaseOrganType' ||
+          classID == '_RivalCultTactic' ||
+          classID == '_TextColor')
+        return src.val;
       var ee = Type.resolveEnum(classID);
       if (ee == null)
         throw 'No such enum: ' + classID;
