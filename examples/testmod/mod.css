@@ -1,0 +1,6 @@
+/* testmod stylesheet — proves mod.css override path works.
+   loaded after engine app.css, so same-specificity rules win the cascade.
+   here: paint the main menu buttons red (engine default is the blue #3a4f71) */
+.window-mainmenu-item {
+  background: green;
+}

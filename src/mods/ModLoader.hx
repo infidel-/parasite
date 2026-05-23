@@ -35,6 +35,19 @@ class ModLoader
               console.log('[mods] asset override: ' + rel + ' <- ' + info.id);
             }
         }
+
+      // inject mod.css <link>s in load order, appended to <head> after the
+      // engine's static stylesheets so later rules win on equal specificity.
+      // later mods stomp earlier mods (cascade order = load order)
+      for (info in ModRegistry.enabled)
+        {
+          if (!info.hasModCss) continue;
+          var link = js.Browser.document.createLinkElement();
+          link.rel = 'stylesheet';
+          link.href = 'mod://' + info.id + '/mod.css';
+          js.Browser.document.head.appendChild(link);
+          console.log('[mods] mod.css loaded: ' + info.id);
+        }
 #end
     }
 

@@ -58,3 +58,34 @@ override is logged at boot, so users can see which mod replaced what.
 - Asset filenames you *add* (vs. override) should stay namespaced — prefix new
   sounds/images with `mod-<modID>-` to avoid colliding with engine or other-mod
   assets.
+
+## Stylesheet overrides (`mod.css`)
+
+A file at the **root** of your mod named `mod.css` is auto-loaded by the engine
+at boot as a stylesheet — appended to `<head>` *after* the engine's `app.css`,
+so same-specificity rules win the cascade and override engine styles.
+
+```
+mymod/
+  manifest.json
+  entry.js
+  mod.css           <- auto-loaded, after app.css
+  assets/
+    ...
+```
+
+The engine only consults `mod.css` at the mod root — dropping `app.css` into
+the mod dir does nothing. Mods load in toposorted order, so a later mod's
+`mod.css` stomps an earlier mod's same-selector rules.
+
+Example — paint the main-menu buttons red:
+
+```css
+.window-mainmenu-item { background: red; }
+```
+
+To find the right selector, inspect the engine UI in the devtools elements
+panel; selectors are stable across engine versions but not guaranteed.
+
+The `mod:` scheme is whitelisted in the engine CSP for stylesheets, so no
+further setup is needed.

@@ -231,6 +231,8 @@ class MainElectron
         return 'image/jpeg';
       if (StringTools.endsWith(lower, '.mp3'))
         return 'audio/mpeg';
+      if (StringTools.endsWith(lower, '.css'))
+        return 'text/css';
       return null;
     }
 
@@ -329,6 +331,7 @@ class MainElectron
         loadAfter: m.loadAfter,
         loadBefore: m.loadBefore,
         assets: walkAssets(rootDir),
+        hasModCss: safeExists(Path.join(rootDir, 'mod.css')),
       };
       return info;
     }
