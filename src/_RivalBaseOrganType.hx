@@ -1,5 +1,5 @@
 // rival base organ types
-enum _RivalBaseOrganType
+enum abstract _RivalBaseOrganType(String) to String from String
 {
-  RIVAL_SANCTUM;
+  var RIVAL_SANCTUM = 'RIVAL_SANCTUM';
 }
