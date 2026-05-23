@@ -782,6 +782,7 @@ class Game extends _SaveObject
       if (warnings.length == 0)
         {
           Loader.load(this, slotID);
+          applyLoaded();
           return;
         }
 
@@ -810,9 +811,17 @@ class Game extends _SaveObject
           func: function(yes: Bool) {
             if (!yes) return;
             Loader.load(self, slotID);
+            self.applyLoaded();
           }
         }
       });
+    }
+
+// post-load HUD refresh shared by both sync and deferred load paths
+  function applyLoaded()
+    {
+      ui.hud.update();
+      scene.draw();
     }
 
 #if demo
