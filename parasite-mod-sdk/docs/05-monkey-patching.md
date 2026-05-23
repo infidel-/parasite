@@ -42,6 +42,64 @@ public static function init(parasite: ModRuntime)
 `-dce no` (a required build flag) guarantees every engine symbol survives, so
 the method you want to patch is present even if vanilla code never calls it.
 
+## Subclassing an engine class
+
+Most engine externs are emitted as `@:native('window.parasiteHx[...]')` —
+typed views onto live engine classes. You can `extends` them from mod code; Haxe
+emits real prototype-chain inheritance against the engine's class object. The
+engine's loops (item construction, particle draw loop, etc.) virtual-dispatch
+through the prototype, so your overrides run without the engine needing to know
+about your subclass.
+
+Two patterns ship in `examples/chainsaw/`:
+
+- `Chainsaw extends items.Weapon` — engine constructs it via `Type.createInstance`
+  during `ItemsConst.init` (driven by `parasite.api.registerItem`).
+- `ParticleBloodSpurt extends particles.Particle` — mod constructs it directly
+  with `new`; the engine's `AreaView.drawParticles` loop picks up `draw` /
+  `onDeath` overrides by virtual dispatch.
+
+```haxe
+class ParticleBloodSpurt extends particles.Particle
+{
+  public function new(s: GameScene, from: _Point, to: _Point)
+    {
+      super(s);
+      time = 220;
+      // ... precompute trajectory ...
+      s.area.addParticle(this);
+    }
+
+  // engine calls this every ~10ms with dt ∈ [0..1]
+  public override function draw(ctx: Dynamic, dt: Float) { /* draw blob */ }
+
+  // engine calls this once when isDead() returns true
+  public override function onDeath()
+    {
+      Particle.createSplat('red', scene, dstTile, srcTile);
+    }
+}
+```
+
+### Override signatures must match the *extern*, not the engine source
+
+The SDK extern generator falls back to `Dynamic` for any type it cannot resolve
+to a generated extern or a passthrough basic type. Browser DOM/canvas types
+(e.g. `js.html.CanvasRenderingContext2D`) are **not** in the passthrough list,
+so they appear as `Dynamic` in the generated extern. Your override must use
+`Dynamic` for those parameters or the compiler rejects it as a signature
+mismatch:
+
+```
+src/MyParticle.hx:43: Field draw overrides parent class with different or incomplete type
+... error: js.html.CanvasRenderingContext2D should be Dynamic
+```
+
+Rule of thumb: when overriding, copy the parameter types from
+`parasite-mod-sdk/externs-generated/<path>.hx`, not from the engine source. The
+runtime type is whatever JS hands you — your local variables can still be typed
+concretely inside the method body if you cast.
+
 ## What survives engine re-init
 
 The engine rebuilds derived const tables on each `Game.new()`. Whether your

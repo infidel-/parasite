@@ -6,8 +6,10 @@ import js.html.CanvasRenderingContext2D;
 
 class Particle
 {
-  var scene: GameScene;
-  var game: Game;
+  // public so mod-side Particle subclasses inherit a usable scene/game ref
+  // through the extern (package-private fields don't make it into externs)
+  public var scene: GameScene;
+  public var game: Game;
   public var createdTS: Float; // in ms
   public var time: Float; // time to live in ms
 

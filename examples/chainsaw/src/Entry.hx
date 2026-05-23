@@ -38,19 +38,46 @@ class Chainsaw extends items.Weapon
       };
     }
 
-// post-hit hook: spray 4 extra splats around the hit tile, then if the player
-// swung, fire shake + flash fx through the engine facade
+// post-hit hook: spray staggered splats around the hit tile + radial blood
+// spurts from the target, then if the player swung, fire shake + flash fx
   override public function logicAttackPost(ai: ai.AI,
       target: AttackTarget, isAttackerPlayer: Bool): Void
     {
-      for (_ in 0...4)
+      // 4 splats staggered over ~280ms so they read as drips rather than a
+      // single same-frame pop. capture coords now since closures see them later
+      var scene = game.scene;
+      var tx = target.x;
+      var ty = target.y;
+      var sx = ai.x;
+      var sy = ai.y;
+      for (i in 0...4)
         {
-          var rx = target.x + Std.random(3) - 1;
-          var ry = target.y + Std.random(3) - 1;
-          particles.Particle.createSplat('red', game.scene,
-            { x: rx, y: ry },
-            { x: ai.x, y: ai.y });
+          var delay = 20 + i * 80;
+          js.Browser.window.setTimeout(function() {
+            var rx = tx + Std.random(3) - 1;
+            var ry = ty + Std.random(3) - 1;
+            particles.Particle.createSplat('red', scene,
+              { x: rx, y: ry },
+              { x: sx, y: sy });
+          }, delay);
         }
+
+      // 3 blood spurts arc out radially from the target — mod-side particle
+      // subclass; landing triggers a red splat at the destination tile
+      for (i in 0...3)
+        {
+          var angle = Math.random() * Math.PI * 2;
+          var dist = 1 + Std.random(2);
+          var landX = tx + Math.round(Math.cos(angle) * dist);
+          var landY = ty + Math.round(Math.sin(angle) * dist);
+          var delay = i * 70;
+          js.Browser.window.setTimeout(function() {
+            new ParticleBloodSpurt(scene,
+              { x: tx, y: ty },
+              { x: landX, y: landY });
+          }, delay);
+        }
+
       if (isAttackerPlayer)
         {
           Entry.parasite.fx.play('mod-chainsaw-shake',
