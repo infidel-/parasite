@@ -131,6 +131,17 @@ class Entry
           },
       });
 
+      // groovie flavor message + sound when the player learns the chainsaw
+      parasite.events.onItemLearn(function(e) {
+        if (e.item.id != 'mod-chainsaw-chainsaw')
+          return;
+        e.game.message({
+          text: 'Groovie. Aitsu-ra no dare hitori mo yurusenai.',
+          img: 'chainsaw-learn',
+        });
+        e.game.scene.sounds.play('chainsaw-learn');
+      });
+
       // 30% of spawned thugs swap their starter weapon for a chainsaw
       parasite.events.onAISpawn(function(e) {
         if (e.ai.type != 'thug')

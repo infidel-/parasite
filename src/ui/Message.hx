@@ -41,12 +41,16 @@ class Message extends UIWindow
       var o: _MessageParams = cast obj;
       o.text = '<span class=narrative>' + o.text + '</span>';
 
-      // preload image if present
+      // preload image if present. onerror fallback keeps the window from
+      // showing prior message content when the image 404s (mod assets, typos)
       if (o.img != null)
         {
           var img = new js.html.Image();
           img.onload = function() {
             setParamsInternal(o, true);
+          };
+          img.onerror = function(_) {
+            setParamsInternal(o, false);
           };
           img.src = AssetPath.resolve('img/' + o.img + '.jpg');
         }

@@ -3,6 +3,7 @@
 package game;
 
 import const.ItemsConst;
+import mods.ModEventRegistry;
 
 class Inventory extends _SaveObject
 {
@@ -145,6 +146,12 @@ class Inventory extends _SaveObject
         Const.col('inventory-item', item.name) + '.');
       game.player.addKnownItem(item.id);
       item.info.onLearn();
+
+      // mod event: player learned about an item
+      ModEventRegistry.fire(ModEventRegistry.ITEM_LEARN, {
+        game: game,
+        item: item,
+      });
 
       // on first learn items
       game.goals.complete(GOAL_LEARN_ITEMS);

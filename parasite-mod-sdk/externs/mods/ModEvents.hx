@@ -18,6 +18,9 @@ typedef ModEvents = {
   function onAreaLeave(handler: ModAreaEvent -> Void): Void;
   // ai:spawn — fires when an AI actor is added to an area
   function onAISpawn(handler: ModAIEvent -> Void): Void;
+  // item:learn — fires when the player learns about an item (after the
+  // item's info.onLearn() runs and the id is added to known items)
+  function onItemLearn(handler: ModItemLearnEvent -> Void): Void;
 }
 
 // shared base for every mod-event payload; the engine sets `game`
@@ -50,4 +53,11 @@ typedef ModAIEvent = {
   var ai: ai.AI;
   // the area it was added to
   var area: game.AreaGame;
+}
+
+// payload for item:learn
+typedef ModItemLearnEvent = {
+  > ModEventBase,
+  // the item the player just learned about
+  var item: game._Item;
 }

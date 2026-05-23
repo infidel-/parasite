@@ -5,6 +5,7 @@ package mods;
 
 import game.AreaGame;
 import game.Game;
+import game._Item;
 import ai.AI;
 import js.Browser.console;
 
@@ -36,6 +37,11 @@ class ModEvents
 // subscribe to ai:spawn — fires when an AI actor is added to an area
   public function onAISpawn(handler: ModAIEvent -> Void): Void
     { sub(ModEventRegistry.AI_SPAWN, cast handler); }
+
+// subscribe to item:learn — fires when the player learns about an item
+// (after info.onLearn() runs and the id is added to known items)
+  public function onItemLearn(handler: ModItemLearnEvent -> Void): Void
+    { sub(ModEventRegistry.ITEM_LEARN, cast handler); }
 
 // shared: record subscription + log on devtools console
   function sub(event: String, handler: Dynamic -> Void)
@@ -83,4 +89,12 @@ typedef ModAIEvent =
   var ai: AI;
   // the area it was added to
   var area: AreaGame;
+}
+
+// payload for item:learn
+typedef ModItemLearnEvent =
+{
+  > ModEventBase,
+  // the item the player just learned about
+  var item: _Item;
 }

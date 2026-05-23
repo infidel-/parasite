@@ -90,15 +90,16 @@ public static function init(parasite: ModRuntime)
 }
 ```
 
-Five events ship currently:
+Six events ship currently:
 
-| Method         | Event       | Fires                                                         | Payload (`mods.ModEvents`) |
-|----------------|-------------|---------------------------------------------------------------|----------------------------|
-| `onTurnPre`    | `turn:pre`  | start of each turn, before the player acts / counter bumps    | `ModTurnEvent { turn: Int }` |
-| `onTurnPost`   | `turn:post` | end of a fully-processed turn; **skipped** if the turn aborts early (game over, scene transition) | `ModTurnEvent { turn: Int }` |
-| `onAreaEnter`  | `area:enter`| after the player enters an area                               | `ModAreaEvent { area: AreaGame }` |
-| `onAreaLeave`  | `area:leave`| as the player leaves an area (before the switch)              | `ModAreaEvent { area: AreaGame }` |
-| `onAISpawn`    | `ai:spawn`  | when an AI actor is added to an area                          | `ModAIEvent { ai: AI, area: AreaGame }` |
+| Method         | Event        | Fires                                                         | Payload (`mods.ModEvents`) |
+|----------------|--------------|---------------------------------------------------------------|----------------------------|
+| `onTurnPre`    | `turn:pre`   | start of each turn, before the player acts / counter bumps    | `ModTurnEvent { turn: Int }` |
+| `onTurnPost`   | `turn:post`  | end of a fully-processed turn; **skipped** if the turn aborts early (game over, scene transition) | `ModTurnEvent { turn: Int }` |
+| `onAreaEnter`  | `area:enter` | after the player enters an area                               | `ModAreaEvent { area: AreaGame }` |
+| `onAreaLeave`  | `area:leave` | as the player leaves an area (before the switch)              | `ModAreaEvent { area: AreaGame }` |
+| `onAISpawn`    | `ai:spawn`   | when an AI actor is added to an area                          | `ModAIEvent { ai: AI, area: AreaGame }` |
+| `onItemLearn`  | `item:learn` | after the player learns about an item (post `info.onLearn()`, id added to known items) | `ModItemLearnEvent { item: _Item }` |
 
 Notes:
 

@@ -37,9 +37,8 @@ class GiveItem extends GiveBase
       game.log('Item added.');
     }
 
-// builds item entries for selection. matches `give skill` convention:
-// display by info.name (human label, e.g. "mobile phone"); keep info.id as
-// alias so legacy `give item mobilePhone` typing still resolves.
+// builds item entries for selection (keyed by info.id — names can be
+// null/grouped/multi-variant, ids are guaranteed unique + stable)
   public function buildEntries(): Array<ConsoleAddEntry<String>>
     {
       if (ItemsConst.infos == null)
@@ -47,12 +46,11 @@ class GiveItem extends GiveBase
       var list = [];
       for (info in ItemsConst.infos)
         {
-          var name = info.name;
+          var name = info.id;
           list.push({
             name: name,
             searchKey: normalizeKey(name),
-            value: info.id,
-            aliases: [ normalizeKey(info.id) ],
+            value: info.id
           });
         }
       list.sort(function(a, b)

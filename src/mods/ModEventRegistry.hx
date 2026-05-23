@@ -13,6 +13,7 @@ class ModEventRegistry
   public static inline var AREA_ENTER = 'area:enter';
   public static inline var AREA_LEAVE = 'area:leave';
   public static inline var AI_SPAWN = 'ai:spawn';
+  public static inline var ITEM_LEARN = 'item:learn';
 
   // event-name -> ordered list of subscribers (mod load order)
   public static var subscribers: Map<String, Array<ModEventSub>> = new Map();
