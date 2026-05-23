@@ -1,7 +1,7 @@
 // available player states
-enum _PlayerState
+enum abstract _PlayerState(String) to String from String
 {
-  PLR_STATE_PARASITE;
-  PLR_STATE_ATTACHED;
-  PLR_STATE_HOST;
+  var PLR_STATE_PARASITE = 'PLR_STATE_PARASITE';
+  var PLR_STATE_ATTACHED = 'PLR_STATE_ATTACHED';
+  var PLR_STATE_HOST = 'PLR_STATE_HOST';
 }

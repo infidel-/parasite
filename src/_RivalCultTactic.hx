@@ -1,6 +1,6 @@
 // rival cult strategic behavior
-enum _RivalCultTactic
+enum abstract _RivalCultTactic(String) to String from String
 {
-  RIVAL_COMBAT;
-  RIVAL_NON_COMBAT;
+  var RIVAL_COMBAT = 'RIVAL_COMBAT';
+  var RIVAL_NON_COMBAT = 'RIVAL_NON_COMBAT';
 }

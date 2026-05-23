@@ -1,7 +1,7 @@
 // mission type enumeration
-enum _MissionType
+enum abstract _MissionType(String) to String from String
 {
-  MISSION_KILL;
-  MISSION_PERSUADE;
-  MISSION_COMBAT;
+  var MISSION_KILL = 'MISSION_KILL';
+  var MISSION_PERSUADE = 'MISSION_PERSUADE';
+  var MISSION_COMBAT = 'MISSION_COMBAT';
 }
