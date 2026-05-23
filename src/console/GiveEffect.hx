@@ -62,10 +62,15 @@ class GiveEffect extends GiveBase
 // builds effect entries for selection
   public function buildEntries(): Array<ConsoleAddEntry<_AIEffectType>>
     {
+      var all: Array<_AIEffectType> = [
+        EFFECT_PARALYSIS, EFFECT_SLIME, EFFECT_PANIC, EFFECT_CANNOT_TEAR_AWAY,
+        EFFECT_CRYING, EFFECT_BERSERK, EFFECT_SMASH, EFFECT_BLEEDING,
+        EFFECT_BLACK_NOISE, EFFECT_WHITE_POWDER, EFFECT_WITHDRAWAL, EFFECT_DRUNK
+      ];
       var list = [];
-      for (effect in Type.allEnums(_AIEffectType))
+      for (effect in all)
         {
-          var name = Std.string(effect).substr(7).toLowerCase();
+          var name = (effect: String).substr(7).toLowerCase();
           list.push({
             name: name,
             searchKey: normalizeKey(name),
