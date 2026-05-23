@@ -20,8 +20,12 @@ typedef ModRuntime = {
   var version: String;
   // per-mod content registration facade (registerItem, etc.)
   var api: ModContentApi;
-  // per-mod persistent k/v settings facade (get/set/remove/all)
+  // per-mod persistent k/v settings facade (get/set/remove/all). cross-run,
+  // backed by electron config — NOT savegame-scoped
   var settings: ModSettings;
+  // per-mod savegame-scoped k/v facade. persisted as part of game.modData and
+  // reloaded on load — use this for per-playthrough state (counters, flags)
+  var savedata: ModSaveData;
   // per-mod event-subscription facade (onTurnPre/onAreaEnter/onAISpawn/etc.)
   var events: ModEvents;
   // per-mod fx facade — named fx registry + RAF/canvas/overlay primitives

@@ -56,6 +56,10 @@ class Game extends _SaveObject
   public var importantMessagesEnabled: Bool; // messages enabled?
   public var scenarioStringID: String; // short name for scenario
   public var firstEverRun: Bool; // game started for the very first time
+  // per-mod savegame-scoped data buckets; mods read/write via parasite.savedata
+  // (mods.ModSaveData facade). serialized as part of the game save, namespaced
+  // by mod id so two mods never collide
+  public var modData: Dynamic;
 
   public function new()
     {
@@ -85,6 +89,7 @@ class Game extends _SaveObject
 
       area = null;
       region = null;
+      modData = {};
       __Math.game = this;
     }
 
@@ -540,13 +545,23 @@ class Game extends _SaveObject
           scene.sounds.play('game-win');
         }
 
+      // mod event: let mods override finish-screen text/image before the UI
+      // window is shown. payload is mutable; we read back text/img after fire
+      var payload: Dynamic = {
+        game: this,
+        result: result,
+        text: finishText,
+        img: img,
+      };
+      ModEventRegistry.fire(ModEventRegistry.FINISH_PRE, payload);
+
       // add to event queue
       ui.event({
         type: UIEVENT_STATE,
         state: UISTATE_FINISH,
         obj: {
-          text: finishText,
-          img: img,
+          text: payload.text,
+          img: payload.img,
         }
       });
 

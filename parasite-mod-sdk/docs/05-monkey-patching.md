@@ -148,7 +148,7 @@ public static function init(parasite: ModRuntime)
 }
 ```
 
-Six events ship currently:
+These events ship currently:
 
 | Method         | Event        | Fires                                                         | Payload (`mods.ModEvents`) |
 |----------------|--------------|---------------------------------------------------------------|----------------------------|
@@ -157,7 +157,9 @@ Six events ship currently:
 | `onAreaEnter`  | `area:enter` | after the player enters an area                               | `ModAreaEvent { area: AreaGame }` |
 | `onAreaLeave`  | `area:leave` | as the player leaves an area (before the switch)              | `ModAreaEvent { area: AreaGame }` |
 | `onAISpawn`    | `ai:spawn`   | when an AI actor is added to an area                          | `ModAIEvent { ai: AI, area: AreaGame }` |
+| `onAIDie`      | `ai:die`     | when an AI dies in the current area (post `onDeath()` hook); area-mode only | `ModAIEvent { ai: AI, area: AreaGame }` |
 | `onItemLearn`  | `item:learn` | after the player learns about an item (post `info.onLearn()`, id added to known items) | `ModItemLearnEvent { item: _Item }` |
+| `onFinishPre`  | `finish:pre` | inside `Game.finish()` after the engine builds the default finish text, before the UI window is shown. **mutable payload** — handlers may overwrite `e.text` / `e.img` to override the game-over screen | `ModFinishPreEvent { result: String, text: String, img: String }` |
 
 Notes:
 
@@ -168,6 +170,12 @@ Notes:
   function on your exported class and let other mods patch/call it.
 - **Additive.** Events coexist with monkey-patching — use a hook where one fits,
   patch where it doesn't. A patch and a hook on the same moment both run.
+- **`finish:pre` is the one mutable payload.** All other events are
+  fire-and-forget; `finish:pre` reads `e.text` / `e.img` back from the payload
+  after dispatch and sends them to the UI. Handlers run in mod load order, so
+  later subscribers can stomp earlier ones — gate your overwrite on
+  `e.result == 'lose'` (or a `e.text` match) if your mod isn't the only finish
+  customizer in the load set.
 
 Full field docs live in the extern: `externs/mods/ModEvents.hx`.
 

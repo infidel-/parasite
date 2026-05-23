@@ -23,7 +23,7 @@ class Chainsaw extends items.Weapon
       unknown = 'noisy power tool';
       weapon = {
         isRanged: false,
-        skill: cast 'mod-chainsaw-chainsaw-skill',
+        skill: 'mod-chainsaw-chainsaw-skill',
         minDamage: 4,
         maxDamage: 14,
         verb1: 'rip',
@@ -105,12 +105,25 @@ class Entry
 
       // skill must register before the item — the item's WeaponInfo references it
       parasite.api.registerSkill({
-        id: cast 'mod-chainsaw-chainsaw-skill',
+        id: 'mod-chainsaw-chainsaw-skill',
         group: 'Combat',
         name: 'chainsaw',
         defaultLevel: 25,
       });
       parasite.api.registerItem(Chainsaw);
+
+      // register "everyone must pay" goal — granted on chainsaw learn.
+      // noteFunc renders the running kill count read from per-savegame data
+      parasite.api.registerGoal({
+        id: 'mod-chainsaw-everyone-must-pay',
+        name: 'Minna mukui o ukete morau',
+        note: Const.col('red', 'Make them all bleed.'),
+        noteFunc: function(g) {
+          var n = parasite.savedata.getInt('kills', 0);
+          return 'Deaths so far: ' + n + '.';
+        },
+        messageReceive: 'Time to settle the score.',
+      });
 
       // register shake fx — jitters #canvas via CSS transform, decays to 0.
       // channel = id so a fresh play() interrupts the prior shake instead of
@@ -158,15 +171,18 @@ class Entry
           },
       });
 
-      // groovie flavor message + sound when the player learns the chainsaw
+      // flavor message + sound when the player learns the chainsaw.
+      // also grants the "everyone must pay" goal — gated on learn so the goal
+      // only enters the journal once the player actually acquires the weapon
       parasite.events.onItemLearn(function(e) {
         if (e.item.id != 'mod-chainsaw-chainsaw')
           return;
         e.game.message({
-          text: 'Groovie. Aitsu-ra no dare hitori mo yurusenai.',
+          text: 'Gurubie. Aitsu-ra no dare hitori mo yurusenai.',
           img: 'chainsaw-learn',
         });
         e.game.scene.sounds.play('chainsaw-learn');
+        e.game.goals.receive('mod-chainsaw-everyone-must-pay');
       });
 
       // 30% of spawned thugs swap their starter weapon for a chainsaw
@@ -178,8 +194,34 @@ class Entry
         e.ai.inventory.stripAllWeapons();
         e.ai.inventory.addID('mod-chainsaw-chainsaw');
         e.ai.inventory.weaponID = 'mod-chainsaw-chainsaw';
-        e.ai.skills.addID(cast 'mod-chainsaw-chainsaw-skill',
+        e.ai.skills.addID('mod-chainsaw-chainsaw-skill',
           40 + Std.random(20));
+      });
+
+      // kill counter — once the player has the goal, every AI death in the
+      // current area counts. stored per-savegame so reloading a slot rewinds
+      // the tally to the saved point
+      parasite.events.onAIDie(function(e) {
+        if (!e.game.goals.has('mod-chainsaw-everyone-must-pay'))
+          return;
+        var n = parasite.savedata.getInt('kills', 0);
+        parasite.savedata.set('kills', n + 1);
+      });
+
+      // game-over override: replace the engine death text + image with a
+      // chainsaw-flavored sendoff showing how many fell. fires on any 'lose'
+      // result, regardless of the underlying death cause (noHost, noEnergy, …)
+      parasite.events.onFinishPre(function(e) {
+        if (e.result != 'lose')
+          return;
+        if (!e.game.goals.has('mod-chainsaw-everyone-must-pay') &&
+            !e.game.goals.completed('mod-chainsaw-everyone-must-pay'))
+          return;
+        var kills = parasite.savedata.getInt('kills', 0);
+        e.text = 'You took ' + Const.col('gray', kills) +
+          ' with you on the way out.<br>' +
+          Const.col('red', '<i>Mou, minna yurushita.</i>');
+        e.img = 'chainsaw-game-over';
       });
     }
 }

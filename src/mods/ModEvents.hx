@@ -38,10 +38,22 @@ class ModEvents
   public function onAISpawn(handler: ModAIEvent -> Void): Void
     { sub(ModEventRegistry.AI_SPAWN, cast handler); }
 
+// subscribe to ai:die — fires when an AI actor dies in the current area
+// (after the AI's own onDeath() hook runs); area-mode only
+  public function onAIDie(handler: ModAIEvent -> Void): Void
+    { sub(ModEventRegistry.AI_DIE, cast handler); }
+
 // subscribe to item:learn — fires when the player learns about an item
 // (after info.onLearn() runs and the id is added to known items)
   public function onItemLearn(handler: ModItemLearnEvent -> Void): Void
     { sub(ModEventRegistry.ITEM_LEARN, cast handler); }
+
+// subscribe to finish:pre — fires from Game.finish() after the engine builds
+// the default finish text, before the UI window is shown. payload is mutable:
+// handlers may overwrite e.text and e.img to customize the game-over screen.
+// last handler wins; engine reads back e.text / e.img after dispatch.
+  public function onFinishPre(handler: ModFinishPreEvent -> Void): Void
+    { sub(ModEventRegistry.FINISH_PRE, cast handler); }
 
 // shared: record subscription + log on devtools console
   function sub(event: String, handler: Dynamic -> Void)
@@ -97,4 +109,18 @@ typedef ModItemLearnEvent =
   > ModEventBase,
   // the item the player just learned about
   var item: _Item;
+}
+
+// payload for finish:pre — fired before the game-over UI window.
+// `text` and `img` start with engine defaults; handlers may mutate them to
+// override the message and event image shown on the finish screen.
+typedef ModFinishPreEvent =
+{
+  > ModEventBase,
+  // 'win' or 'lose'
+  var result: String;
+  // mutable: finish-screen body text (engine default already filled in)
+  var text: String;
+  // mutable: event image key (engine default may be null on win)
+  var img: String;
 }

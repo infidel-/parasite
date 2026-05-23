@@ -18,9 +18,17 @@ typedef ModEvents = {
   function onAreaLeave(handler: ModAreaEvent -> Void): Void;
   // ai:spawn — fires when an AI actor is added to an area
   function onAISpawn(handler: ModAIEvent -> Void): Void;
+  // ai:die — fires when an AI actor dies in the current area (after the AI's
+  // own onDeath() hook runs); area-mode only
+  function onAIDie(handler: ModAIEvent -> Void): Void;
   // item:learn — fires when the player learns about an item (after the
   // item's info.onLearn() runs and the id is added to known items)
   function onItemLearn(handler: ModItemLearnEvent -> Void): Void;
+  // finish:pre — fires from Game.finish() after the engine builds the default
+  // finish text, before the UI window is shown. payload is mutable: handlers
+  // may overwrite e.text and e.img to customize the game-over screen.
+  // last handler wins; engine reads back e.text / e.img after dispatch
+  function onFinishPre(handler: ModFinishPreEvent -> Void): Void;
 }
 
 // shared base for every mod-event payload; the engine sets `game`
@@ -60,4 +68,17 @@ typedef ModItemLearnEvent = {
   > ModEventBase,
   // the item the player just learned about
   var item: game._Item;
+}
+
+// payload for finish:pre — fired before the game-over UI window.
+// `text` and `img` start with engine defaults; handlers may mutate them to
+// override the message and event image shown on the finish screen.
+typedef ModFinishPreEvent = {
+  > ModEventBase,
+  // 'win' or 'lose'
+  var result: String;
+  // mutable: finish-screen body text (engine default already filled in)
+  var text: String;
+  // mutable: event image key (engine default may be null on win)
+  var img: String;
 }

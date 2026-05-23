@@ -830,6 +830,12 @@ public function show()
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook
+      // mod event: AI actor died in this area
+      mods.ModEventRegistry.fire(mods.ModEventRegistry.AI_DIE, {
+        game: game,
+        ai: this,
+        area: game.area,
+      });
       var o = new BodyObject(game, game.area.id, x, y, type);
 
       // decay acceleration

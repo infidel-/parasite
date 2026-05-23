@@ -22,6 +22,7 @@ class ModLoader
       var raw = HostBridge.modsList();
       ModRegistry.init(game, raw);
       ModSettings.init(game);
+      ModSaveData.init(game);
 
       // populate AssetPath from each enabled mod's assets[] in toposorted order.
       // last writer wins resolve() lookups — matches load() init() order
@@ -86,6 +87,7 @@ class ModLoader
         version: Version.getVersion(),
         api: ModContentApi.forMod(info.id),
         settings: ModSettings.api(info.id),
+        savedata: ModSaveData.api(info.id),
         events: ModEvents.forMod(info.id),
         fx: ModFx.forMod(info.id),
       };
