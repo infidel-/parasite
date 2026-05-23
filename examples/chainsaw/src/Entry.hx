@@ -85,6 +85,15 @@ class Chainsaw extends items.Weapon
           Entry.parasite.fx.play('mod-chainsaw-flash',
             { color: 'rgba(255,0,0,1)', alpha: 0.35, durationMS: 500 });
         }
+
+      // attribute kill to chainsaw and bump the chainsaw skill +1% per kill.
+      // engine flow: CommonLogic.attack -> target.onDamage -> AI.die() (sets
+      // state=DEAD) -> logicAttackPost. so if target.ai.state == DEAD now,
+      // this swing is the kill. Skills.increase clamps to 99 so it caps cleanly
+      if (isAttackerPlayer &&
+          target.ai != null &&
+          Std.string(target.ai.state) == 'AI_STATE_DEAD')
+        game.player.skills.increase('mod-chainsaw-chainsaw-skill', 1);
     }
 }
 
@@ -200,12 +209,16 @@ class Entry
 
       // kill counter — once the player has the goal, every AI death in the
       // current area counts. stored per-savegame so reloading a slot rewinds
-      // the tally to the saved point
+      // the tally to the saved point. when the count reaches 99, fire the
+      // win finish screen directly (no goal completion — finish screen alone)
       parasite.events.onAIDie(function(e) {
         if (!e.game.goals.has('mod-chainsaw-everyone-must-pay'))
           return;
-        var n = parasite.savedata.getInt('kills', 0);
-        parasite.savedata.set('kills', n + 1);
+        var n = parasite.savedata.getInt('kills', 0) + 1;
+        parasite.savedata.set('kills', n);
+        if (n >= 99)
+          e.game.finish('win', Const.col('red', '<i>Subete no mono o yurushita.</i>'),
+            'chainsaw-win');
       });
 
       // game-over override: replace the engine death text + image with a
@@ -221,7 +234,7 @@ class Entry
         e.text = 'You took ' + Const.col('gray', kills) +
           ' with you on the way out.<br>' +
           Const.col('red', '<i>Mou, minna yurushita.</i>');
-        e.img = 'chainsaw-game-over';
+        e.img = 'chainsaw-lose';
       });
     }
 }
