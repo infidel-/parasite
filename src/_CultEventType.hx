@@ -1,6 +1,6 @@
 // cult event types
 
-enum _CultEventType
+enum abstract _CultEventType(String) to String from String
 {
-  TYPE_OCCASIO;
+  var TYPE_OCCASIO = 'TYPE_OCCASIO';
 }
