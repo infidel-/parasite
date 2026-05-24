@@ -1078,6 +1078,12 @@ public function show()
         return;
       if (isSameCult(ai))
         return;
+      // law treats fellow law as friendly unless cultist on either side
+      if (isLaw() &&
+          ai.isLaw() &&
+          !isCultist &&
+          !ai.isCultist)
+        return;
       if (Lambda.has(enemies, ai.id))
         return;
       enemies.add(ai.id);
@@ -1089,10 +1095,7 @@ public function show()
       if (attackerAI == null)
         return;
 
-      var isLawVictim =
-        (type == 'police' ||
-         type == 'security' ||
-         type == 'soldier');
+      var isLawVictim = isLaw();
       var attackerIsPlayerCultist = attackerAI.isPlayerCultist();
 
       for (tmp in game.area.getAllAI())
@@ -1110,12 +1113,12 @@ public function show()
             }
 
           // victim is non-cultist law: notify nearby non-cultist law units
+          // addEnemy already filters law-on-law unless cultist; this still
+          // propagates cultist infiltrators to nearby law
           if (isLawVictim &&
               !isCultist &&
               !tmp.isCultist &&
-              (tmp.type == 'police' ||
-               tmp.type == 'security' ||
-               tmp.type == 'soldier') &&
+              tmp.isLaw() &&
               Const.distance(x, y, tmp.x, tmp.y) <= 10)
             {
               tmp.addEnemy(attackerAI);
@@ -1285,14 +1288,15 @@ public function show()
 // this ai was attacked by (player, ai)
   public function attacked(attacker: { who: String, ai: AI, weapon: WeaponInfo })
     {
-      // hosts are braindead in that regard
-      if (!isPlayerHost())
-        {
-          // alert this AI (fear/aggro)
-          setState(AI_STATE_ALERT);
-          onAttack(); // attack event
-        }
+      // hosts are braindead in that regard; body is player-controlled,
+      // skip alert + aggro propagation entirely so attackers don't poison
+      // the host's enemies list or fan out as enemies to nearby law
+      if (isPlayerHost())
+        return;
 
+      // alert this AI (fear/aggro)
+      setState(AI_STATE_ALERT);
+      onAttack(); // attack event
 
       // propagate attack aggro for ai attackers
       if (attacker.who == 'ai')
