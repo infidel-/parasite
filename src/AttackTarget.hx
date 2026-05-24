@@ -111,7 +111,7 @@ class AttackTarget
     }
 
 // onDamage wrapper
-  public function onDamage(damage: Int, ?attacker: AI)
+  public function onDamage(damage: Int, ?attacker: Attacker)
     {
       switch (type)
         {
@@ -120,9 +120,11 @@ class AttackTarget
           case TARGET_AI:
             if (ai.isPlayerHost())
               game.playerArea.onDamage(damage);
-            else ai.onDamage(damage);
+            else ai.onDamage(damage, attacker);
           case TARGET_OBJECT:
-            obj.onDamage(damage, attacker);
+            // AreaObject.onDamage still uses an AI-typed attacker; pass the
+            // wrapper's ai field (null for object attackers)
+            obj.onDamage(damage, attacker == null ? null : attacker.ai);
           default:
         }
     }

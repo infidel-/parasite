@@ -136,7 +136,7 @@ public static function init(parasite: ModRuntime)
     parasite.savedata.set('kills', n + 1);
   });
 
-  parasite.events.onFinishPre(function(e) {
+  parasite.events.onGameFinishPre(function(e) {
     if (e.result != 'lose') return;
     var kills = parasite.savedata.getInt('kills', 0);
     e.text = 'You took ' + kills + ' with you on the way out.';

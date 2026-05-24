@@ -1418,7 +1418,7 @@ class PlayerArea extends _SaveObject
       // stop moving
       game.scene.clearPath();
 
-      player.host.onDamage(damage, true);
+      player.host.onDamage(damage, null, true);
       if (player.host != null &&
           player.host.state == AI_STATE_DEAD)
         {

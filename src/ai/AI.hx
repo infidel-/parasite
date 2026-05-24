@@ -10,6 +10,8 @@ import game.*;
 import const.*;
 import cult.Cult;
 
+import mods.ModEventRegistry;
+
 class AI extends AIData
 {
   static var _ignoredFields = [ 'entity', 'event', 'npc', 'sounds',
@@ -760,15 +762,20 @@ public function show()
 
 
 // event: AI receives damage
-  public function onDamage(damage: Int, ?isFromPlayerArea: Bool = false)
+// `attacker` is the wrapped attack source for combat-driven damage; null for
+// organ ticks, effect ticks, and other non-combat damage. `skipHostDetach`
+// suppresses the host-detach callback when PlayerArea is already mid-handle
+// (re-entry guard set true by PlayerArea.onDamageHost).
+  public function onDamage(damage: Int, ?attacker: Attacker,
+      ?skipHostDetach: Bool = false)
     {
       organs.onDamage(damage); // propagate event to organs
       health -= damage;
       if (health == 0) // AI death
         {
-          die();
+          die(attacker);
           // direct host damage can bypass player host handlers
-          if (!isFromPlayerArea &&
+          if (!skipHostDetach &&
               game.location == LOCATION_AREA &&
               game.player.state == PLR_STATE_HOST &&
               game.player.host == this)
@@ -813,7 +820,7 @@ public function show()
 
 
 // AI death
-  public function die()
+  public function die(?attacker: Attacker)
     {
       // AI already dead from another call
       if (state == AI_STATE_DEAD)
@@ -827,6 +834,15 @@ public function show()
           game.player.host != this)
         log('dies.');
       setState(AI_STATE_DEAD);
+      // mod event: pre-removeAI. entity ref is still live here; mods may
+      // snapshot icon/state before AreaGame.removeAI nulls ai.entity below
+      ModEventRegistry.fire(ModEventRegistry.AI_DIE_PRE, {
+        game: game,
+        ai: this,
+        area: game.area,
+        entity: entity,
+        attacker: attacker,
+      });
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook

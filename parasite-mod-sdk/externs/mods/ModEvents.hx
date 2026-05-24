@@ -18,17 +18,21 @@ typedef ModEvents = {
   function onAreaLeave(handler: ModAreaEvent -> Void): Void;
   // ai:spawn — fires when an AI actor is added to an area
   function onAISpawn(handler: ModAIEvent -> Void): Void;
+  // ai:die-pre — fires inside AI.die() after the dead state is set but before
+  // AreaGame.removeAI nulls ai.entity. Payload carries the still-live entity
+  // ref (for icon snapshots) plus the attacker if combat-driven
+  function onAIDiePre(handler: ModAIDiePreEvent -> Void): Void;
   // ai:die — fires when an AI actor dies in the current area (after the AI's
-  // own onDeath() hook runs); area-mode only
+  // own onDeath() hook runs); area-mode only. ai.entity is already null here
   function onAIDie(handler: ModAIEvent -> Void): Void;
   // item:learn — fires when the player learns about an item (after the
   // item's info.onLearn() runs and the id is added to known items)
   function onItemLearn(handler: ModItemLearnEvent -> Void): Void;
-  // finish:pre — fires from Game.finish() after the engine builds the default
-  // finish text, before the UI window is shown. payload is mutable: handlers
-  // may overwrite e.text and e.img to customize the game-over screen.
-  // last handler wins; engine reads back e.text / e.img after dispatch
-  function onFinishPre(handler: ModFinishPreEvent -> Void): Void;
+  // game:finish-pre — fires from Game.finish() after the engine builds the
+  // default finish text, before the UI window is shown. payload is mutable:
+  // handlers may overwrite e.text and e.img to customize the game-over
+  // screen. last handler wins; engine reads back e.text / e.img after dispatch
+  function onGameFinishPre(handler: ModGameFinishPreEvent -> Void): Void;
 }
 
 // shared base for every mod-event payload; the engine sets `game`
@@ -70,10 +74,25 @@ typedef ModItemLearnEvent = {
   var item: game._Item;
 }
 
-// payload for finish:pre — fired before the game-over UI window.
+// payload for ai:die-pre — fired before AreaGame.removeAI nulls ai.entity
+typedef ModAIDiePreEvent = {
+  > ModEventBase,
+  // the AI actor about to be removed from the area
+  var ai: ai.AI;
+  // the area it dies in
+  var area: game.AreaGame;
+  // live entity ref captured before removeAI nulls ai.entity; use this for
+  // icon snapshots (imageName/ix/iy/isMaleAtlas live on the entity object)
+  var entity: entities.AIEntity;
+  // attack source if the death was combat-driven; null for organ decay, cult
+  // cull, console kill, and effect ticks (Bleeding, BlackNoise, etc.)
+  var attacker: Null<Attacker>;
+}
+
+// payload for game:finish-pre — fired before the game-over UI window.
 // `text` and `img` start with engine defaults; handlers may mutate them to
 // override the message and event image shown on the finish screen.
-typedef ModFinishPreEvent = {
+typedef ModGameFinishPreEvent = {
   > ModEventBase,
   // 'win' or 'lose'
   var result: String;

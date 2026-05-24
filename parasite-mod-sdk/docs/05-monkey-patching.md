@@ -157,9 +157,10 @@ These events ship currently:
 | `onAreaEnter`  | `area:enter` | after the player enters an area                               | `ModAreaEvent { area: AreaGame }` |
 | `onAreaLeave`  | `area:leave` | as the player leaves an area (before the switch)              | `ModAreaEvent { area: AreaGame }` |
 | `onAISpawn`    | `ai:spawn`   | when an AI actor is added to an area                          | `ModAIEvent { ai: AI, area: AreaGame }` |
-| `onAIDie`      | `ai:die`     | when an AI dies in the current area (post `onDeath()` hook); area-mode only | `ModAIEvent { ai: AI, area: AreaGame }` |
+| `onAIDiePre`   | `ai:die-pre` | inside `AI.die()` after dead state is set but **before** `AreaGame.removeAI` nulls `ai.entity`. carries the live entity ref + attacker (null for non-combat deaths) | `ModAIDiePreEvent { ai: AI, area: AreaGame, entity: AIEntity, attacker: Null<Attacker> }` |
+| `onAIDie`      | `ai:die`     | when an AI dies in the current area (post `onDeath()` hook); area-mode only. `ai.entity` is already `null` here | `ModAIEvent { ai: AI, area: AreaGame }` |
 | `onItemLearn`  | `item:learn` | after the player learns about an item (post `info.onLearn()`, id added to known items) | `ModItemLearnEvent { item: _Item }` |
-| `onFinishPre`  | `finish:pre` | inside `Game.finish()` after the engine builds the default finish text, before the UI window is shown. **mutable payload** — handlers may overwrite `e.text` / `e.img` to override the game-over screen | `ModFinishPreEvent { result: String, text: String, img: String }` |
+| `onGameFinishPre` | `game:finish-pre` | inside `Game.finish()` after the engine builds the default finish text, before the UI window is shown. **mutable payload** — handlers may overwrite `e.text` / `e.img` to override the game-over screen | `ModGameFinishPreEvent { result: String, text: String, img: String }` |
 
 Notes:
 
@@ -170,12 +171,17 @@ Notes:
   function on your exported class and let other mods patch/call it.
 - **Additive.** Events coexist with monkey-patching — use a hook where one fits,
   patch where it doesn't. A patch and a hook on the same moment both run.
-- **`finish:pre` is the one mutable payload.** All other events are
-  fire-and-forget; `finish:pre` reads `e.text` / `e.img` back from the payload
-  after dispatch and sends them to the UI. Handlers run in mod load order, so
-  later subscribers can stomp earlier ones — gate your overwrite on
+- **`game:finish-pre` is the one mutable payload.** All other events are
+  fire-and-forget; `game:finish-pre` reads `e.text` / `e.img` back from the
+  payload after dispatch and sends them to the UI. Handlers run in mod load
+  order, so later subscribers can stomp earlier ones — gate your overwrite on
   `e.result == 'lose'` (or a `e.text` match) if your mod isn't the only finish
   customizer in the load set.
+- **`ai:die-pre` vs `ai:die`.** `ai:die-pre` runs first and is the only event
+  that exposes the dying actor's entity (icon, sprite atlas, visibility) before
+  the engine cleans it up. Use it when you need to read or snapshot visual
+  state at the moment of death; use `ai:die` for plain bookkeeping (kill
+  counters, journal updates) where you don't need the entity.
 
 Full field docs live in the extern: `externs/mods/ModEvents.hx`.
 

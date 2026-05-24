@@ -144,31 +144,11 @@ class Entity
 // draw entity on map
   public function draw(ctx: CanvasRenderingContext2D)
     {
-      var img = null;
-      switch (imageName)
+      var img = game.scene.images.getImage(imageName, isMaleAtlas);
+      if (img == null)
         {
-          case 'entities':
-            img = game.scene.images.entities;
-          case 'cultBase':
-            img = game.scene.images.cultBase;
-          case 'cultBaseDestroyed':
-            img = game.scene.images.cultBaseDestroyed;
-          case 'creatures':
-            img = game.scene.images.creatures;
-          case 'male':
-            img = game.scene.images.male;
-          case 'female':
-            img = game.scene.images.female;
-            // NOTE: some specials only have male image (security, etc)
-            if (isMaleAtlas)
-              img = game.scene.images.male;
-          case 'sewersObjects1':
-            img = game.scene.images.sewersObjects1;
-          case 'undergroundLabObjects1':
-            img = game.scene.images.undergroundLabObjects1;
-          default:
-            trace('UNKNOWN IMAGE: ' + imageName);
-            return;
+          trace('UNKNOWN IMAGE: ' + imageName);
+          return;
         }
       if (!img.complete ||
           img.naturalWidth <= 0)

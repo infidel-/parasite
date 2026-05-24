@@ -553,7 +553,7 @@ class Game extends _SaveObject
         text: finishText,
         img: img,
       };
-      ModEventRegistry.fire(ModEventRegistry.FINISH_PRE, payload);
+      ModEventRegistry.fire(ModEventRegistry.GAME_FINISH_PRE, payload);
 
       // add to event queue
       ui.event({

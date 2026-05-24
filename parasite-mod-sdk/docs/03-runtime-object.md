@@ -37,7 +37,7 @@ typedef ModRuntime = {
 | `api`           | `ModContentApi`  | your content-registration facade — `registerItem`, `registerPediaEntry`, etc. See [04-registering-content.md](04-registering-content.md). |
 | `settings`      | `ModSettings`    | your persistent key/value store, namespaced under your `modID`. Cross-run, backed by `settings.json` — NOT savegame-scoped. See [07-settings.md](07-settings.md). |
 | `savedata`      | `ModSaveData`    | per-mod savegame-scoped k/v storage. Same getter/setter shape as `settings` but persisted as part of the active savegame and reloaded on load. Use for per-playthrough state (counters, story flags). See [07-settings.md](07-settings.md#per-mod-savegame-data-parasitesavedata). |
-| `events`        | `ModEvents`      | subscribe to engine event hooks (`onTurnPre`, `onAreaEnter`, `onAISpawn`, `onAIDie`, `onFinishPre`, …) with typed payloads. See [05-monkey-patching.md](05-monkey-patching.md#event-hooks). |
+| `events`        | `ModEvents`      | subscribe to engine event hooks with typed payloads. See [05-monkey-patching.md](05-monkey-patching.md#event-hooks). |
 | `fx`            | `ModFx`          | named fx registry + RAF/canvas/overlay primitives. Register your effects by id (must start with `mod-<modID>-`), fire them with `parasite.fx.play(id, params)`, compose using `tick` (RAF scheduler), `canvas()` (game `#canvas` el), `overlay()` (engine-owned reusable fullscreen div). See [05-monkey-patching.md](05-monkey-patching.md#fx-system). |
 
 ## Typed vs untyped fields

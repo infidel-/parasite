@@ -1,101 +1,16 @@
 // chainsaw mod — adds a chainsaw melee weapon + matching skill, juicy hit fx
-// (extra blood splats, screen shake, red flash). 30% of spawned thugs get
-// a chainsaw instead of their default weapon.
+// (extra blood splats, screen shake, red flash, split-icon body halves).
+// 30% of spawned thugs get a chainsaw instead of their default weapon.
 //
 // fx are registered against the engine `parasite.fx` facade — the engine owns
 // the RAF scheduler, canvas el, and reusable fullscreen overlay div; this mod
 // only describes what to draw each frame.
+//
+// the Chainsaw weapon class lives in Chainsaw.hx; this file wires registration
+// and the engine event hooks the mod subscribes to
 package;
 
 import mods.ModRuntime;
-
-// custom chainsaw weapon. extends engine items.Weapon via SDK extern.
-// logicAttackPost sprays extra splats around the target and, if the player
-// swung, fires the registered shake + flash fx via parasite.fx.play
-class Chainsaw extends items.Weapon
-{
-// builds chainsaw weapon info
-  public function new(g: game.Game)
-    {
-      super(g);
-      id = 'mod-chainsaw-chainsaw';
-      name = 'chainsaw';
-      unknown = 'noisy power tool';
-      weapon = {
-        isRanged: false,
-        skill: 'mod-chainsaw-chainsaw-skill',
-        minDamage: 4,
-        maxDamage: 14,
-        verb1: 'rip',
-        verb2: 'rips',
-        type: WEAPON_MELEE,
-        spawnBlood: true,
-        canConceal: false,
-        // engine AISound is @:structInit but the SDK extern strips that, so
-        // mods must construct it explicitly. ctor: (?text, radius, alertness, ?params, ?file)
-        sound: new AISound(null, 8, 15, null, 'chainsaw-attack'),
-        soundMiss: new AISound(null, 6, 12, null, 'chainsaw-attack-miss'),
-      };
-    }
-
-// post-hit hook: spray staggered splats around the hit tile + radial blood
-// spurts from the target, then if the player swung, fire shake + flash fx
-  override public function logicAttackPost(ai: ai.AI,
-      target: AttackTarget, isAttackerPlayer: Bool): Void
-    {
-      // 4 splats staggered over ~280ms so they read as drips rather than a
-      // single same-frame pop. capture coords now since closures see them later
-      var scene = game.scene;
-      var tx = target.x;
-      var ty = target.y;
-      var sx = ai.x;
-      var sy = ai.y;
-      for (i in 0...4)
-        {
-          var delay = 20 + i * 80;
-          js.Browser.window.setTimeout(function() {
-            var rx = tx + Std.random(3) - 1;
-            var ry = ty + Std.random(3) - 1;
-            particles.Particle.createSplat('red', scene,
-              { x: rx, y: ry },
-              { x: sx, y: sy });
-          }, delay);
-        }
-
-      // 3 blood spurts arc out radially from the target — mod-side particle
-      // subclass; landing triggers a red splat at the destination tile
-      for (i in 0...3)
-        {
-          var angle = Math.random() * Math.PI * 2;
-          var dist = 1 + Std.random(2);
-          var landX = tx + Math.round(Math.cos(angle) * dist);
-          var landY = ty + Math.round(Math.sin(angle) * dist);
-          var delay = i * 70;
-          js.Browser.window.setTimeout(function() {
-            new ParticleBloodSpurt(scene,
-              { x: tx, y: ty },
-              { x: landX, y: landY });
-          }, delay);
-        }
-
-      if (isAttackerPlayer)
-        {
-          Entry.parasite.fx.play('mod-chainsaw-shake',
-            { durationMS: 500, magnitudePX: 8 });
-          Entry.parasite.fx.play('mod-chainsaw-flash',
-            { color: 'rgba(255,0,0,1)', alpha: 0.35, durationMS: 500 });
-        }
-
-      // attribute kill to chainsaw and bump the chainsaw skill +1% per kill.
-      // engine flow: CommonLogic.attack -> target.onDamage -> AI.die() (sets
-      // state=DEAD) -> logicAttackPost. so if target.ai.state == DEAD now,
-      // this swing is the kill. Skills.increase clamps to 99 so it caps cleanly
-      if (isAttackerPlayer &&
-          target.ai != null &&
-          Std.string(target.ai.state) == 'AI_STATE_DEAD')
-        game.player.skills.increase('mod-chainsaw-chainsaw-skill', 1);
-    }
-}
 
 @:expose("chainsaw_Entry")
 class Entry
@@ -207,6 +122,29 @@ class Entry
           40 + Std.random(20));
       });
 
+      // split-icon kill effect: on player chainsaw kills, slice the target
+      // sprite in two unevenly, fling halves to nearby tiles, hold briefly,
+      // then fade. uses ai:die-pre because ai.entity is still live there;
+      // by the time ai:die fires AreaGame.removeAI has already nulled it
+      parasite.events.onAIDiePre(function(e) {
+        if (e.attacker == null)
+          return;
+        if (!e.attacker.isPlayer)
+          return;
+        if (e.attacker.weaponInfo == null ||
+            e.attacker.weaponInfo.id != 'mod-chainsaw-chainsaw')
+          return;
+        if (e.entity == null)
+          return;
+        var pos: _Point = { x: e.ai.x, y: e.ai.y };
+        var axis = Std.random(2);
+        var splitFrac = 0.30 + Math.random() * 0.20;
+        new ParticleSplitIconHalf(e.game.scene, pos, e.entity,
+          axis, splitFrac, 0);
+        new ParticleSplitIconHalf(e.game.scene, pos, e.entity,
+          axis, splitFrac, 1);
+      });
+
       // kill counter — once the player has the goal, every AI death in the
       // current area counts. stored per-savegame so reloading a slot rewinds
       // the tally to the saved point. when the count reaches 99, fire the
@@ -224,7 +162,7 @@ class Entry
       // game-over override: replace the engine death text + image with a
       // chainsaw-flavored sendoff showing how many fell. fires on any 'lose'
       // result, regardless of the underlying death cause (noHost, noEnergy, …)
-      parasite.events.onFinishPre(function(e) {
+      parasite.events.onGameFinishPre(function(e) {
         if (e.result != 'lose')
           return;
         if (!e.game.goals.has('mod-chainsaw-everyone-must-pay') &&

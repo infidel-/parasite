@@ -305,7 +305,7 @@ class CommonLogic
             ' for ' + damage + ' damage.');
 
           // on damage event
-          target.onDamage(damage, attacker.ai);
+          target.onDamage(damage, attacker);
         }
 
       // run weapon-specific post-hit effects

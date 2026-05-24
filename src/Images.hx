@@ -94,6 +94,26 @@ class Images
       return defaultTileset;
     }
 
+// resolve an entity-atlas name to its loaded Image. mirrors the lookup in
+// Entity.draw and handles the female→male atlas fallback when isMaleAtlas
+// is set (used by specials that only ship a male sprite). returns null on
+// unknown name so callers can decide how to handle it.
+  public function getImage(name: String, ?isMaleAtlas: Bool = false): Image
+    {
+      switch (name)
+        {
+          case 'entities': return entities;
+          case 'cultBase': return cultBase;
+          case 'cultBaseDestroyed': return cultBaseDestroyed;
+          case 'creatures': return creatures;
+          case 'sewersObjects1': return sewersObjects1;
+          case 'undergroundLabObjects1': return undergroundLabObjects1;
+          case 'male': return male;
+          case 'female': return isMaleAtlas ? male : female;
+          default: return null;
+        }
+    }
+
 // get random Firmus custos sprite data
   public function getFirmusCustosIcon(): _Icon
     {
