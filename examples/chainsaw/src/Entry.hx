@@ -137,12 +137,16 @@ class Entry
         if (e.entity == null)
           return;
         var pos: _Point = { x: e.ai.x, y: e.ai.y };
-        var axis = Std.random(2);
-        var splitFrac = 0.30 + Math.random() * 0.20;
+        // random cut: angle in [0, π) covers all unique lines; pivot near
+        // tile center so both halves stay roughly non-degenerate in area
+        var tile = Const.TILE_SIZE;
+        var cutAngle = Math.random() * Math.PI;
+        var cutX = tile * (0.35 + Math.random() * 0.30);
+        var cutY = tile * (0.35 + Math.random() * 0.30);
         new ParticleSplitIconHalf(e.game.scene, pos, e.entity,
-          axis, splitFrac, 0);
+          cutAngle, cutX, cutY, 0);
         new ParticleSplitIconHalf(e.game.scene, pos, e.entity,
-          axis, splitFrac, 1);
+          cutAngle, cutX, cutY, 1);
       });
 
       // kill counter — once the player has the goal, every AI death in the

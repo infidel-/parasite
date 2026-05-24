@@ -1,8 +1,9 @@
-// mod-side particle: one half of a sliced AI sprite. spawned in pairs on
-// chainsaw kills — each half flies to a nearby tile rotating, holds briefly,
-// then fades to transparent. atlas, source tile, and split geometry are
-// snapshot at ctor so engine pixel positions stay stable across the ~900ms
-// lifetime (matches ParticleBloodSpurt's camera-snapshot pattern).
+// mod-side particle: one half of a sliced AI sprite produced by a
+// random-angle chainsaw cut. spawned in pairs sharing the same cut line and
+// pivot point — each half flies outward perpendicular to the cut, rotating,
+// holds briefly, then fades to transparent. atlas, source tile, and polygon
+// geometry are snapshot at ctor so engine pixel positions stay stable across
+// the ~900ms lifetime (matches ParticleBloodSpurt's camera-snapshot pattern).
 package;
 
 import particles.Particle;
@@ -18,21 +19,27 @@ class ParticleSplitIconHalf extends Particle
   var endAngle: Float;
   // atlas image element from scene.images (Dynamic — extern type)
   var img: Dynamic;
-  // atlas subrect for this half
+  // atlas subrect for the full tile
   var srcSubX: Float;
   var srcSubY: Float;
   var srcSubW: Float;
   var srcSubH: Float;
-  // destination draw width/height (tile-scaled)
-  var dstW: Float;
-  var dstH: Float;
+  // destination tile draw size
+  var dstSize: Float;
+  // offset of full tile's top-left in centroid-local pixel space
+  // (= -centroid; placing tile here aligns its centroid with rotation origin)
+  var tileOffX: Float;
+  var tileOffY: Float;
+  // clip polygon for this half in centroid-local pixel space
+  var polyLocal: Array<{ x: Float, y: Float }>;
 
-// constructs one half. `axis` 0 = vertical cut (left/right halves),
-// 1 = horizontal cut (top/bottom). `splitFrac` in (0..1) is the small-half
-// fraction. `half` 0 = small half (left/top), 1 = big half (right/bottom).
-// `ent` is the live AIEntity ref grabbed before AreaGame.removeAI nulled it
+// constructs one half. `cutAngleRad` is the cut line angle (radians).
+// `cutTileX`, `cutTileY` is the point through which the cut line passes,
+// in tile-local pixel space (0..tile). `half` 0 = negative side of the
+// half-plane normal, 1 = positive side. `ent` is the live AIEntity ref
+// grabbed before AreaGame.removeAI nulled it
   public function new(s: GameScene, target: _Point, ent: Dynamic,
-      axis: Int, splitFrac: Float, half: Int)
+      cutAngleRad: Float, cutTileX: Float, cutTileY: Float, half: Int)
     {
       super(s);
 
@@ -48,78 +55,47 @@ class ParticleSplitIconHalf extends Particle
       var isMale: Bool = ent.isMaleAtlas;
       img = s.images.getImage(imageName, isMale);
 
-      // base atlas rect for the full tile (matches Entity.drawImage layout)
-      var fullSx = ix * clean;
-      var fullSy = iy * clean + 1;
-      var fullSw = clean;
-      var fullSh = clean - 1;
+      // full atlas rect (matches Entity.drawImage layout)
+      srcSubX = ix * clean;
+      srcSubY = iy * clean + 1;
+      srcSubW = clean;
+      srcSubH = clean - 1;
+      dstSize = tile;
 
-      // compute the half's atlas subrect + destination size + centroid offset
-      // (offset = where this half's centroid sits relative to the full tile
-      // center, in pixels at destination scale)
-      var halfOffX = 0.0;
-      var halfOffY = 0.0;
-      if (axis == 0)
-        {
-          // vertical cut
-          if (half == 0)
-            {
-              srcSubX = fullSx;
-              srcSubW = fullSw * splitFrac;
-              dstW = tile * splitFrac;
-              halfOffX = - tile * (1 - splitFrac) / 2;
-            }
-          else
-            {
-              srcSubX = fullSx + fullSw * splitFrac;
-              srcSubW = fullSw * (1 - splitFrac);
-              dstW = tile * (1 - splitFrac);
-              halfOffX = tile * splitFrac / 2;
-            }
-          srcSubY = fullSy;
-          srcSubH = fullSh;
-          dstH = tile;
-        }
-      else
-        {
-          // horizontal cut
-          if (half == 0)
-            {
-              srcSubY = fullSy;
-              srcSubH = fullSh * splitFrac;
-              dstH = tile * splitFrac;
-              halfOffY = - tile * (1 - splitFrac) / 2;
-            }
-          else
-            {
-              srcSubY = fullSy + fullSh * splitFrac;
-              srcSubH = fullSh * (1 - splitFrac);
-              dstH = tile * (1 - splitFrac);
-              halfOffY = tile * splitFrac / 2;
-            }
-          srcSubX = fullSx;
-          srcSubW = fullSw;
-          dstW = tile;
-        }
+      // half-plane normal: perpendicular to the cut direction
+      var nx = - Math.sin(cutAngleRad);
+      var ny = Math.cos(cutAngleRad);
+      var sideSign = (half == 0 ? -1.0 : 1.0);
 
-      // full-tile centroid in camera-local pixel space
-      var fullCx = (target.x - s.cameraTileX1) * tile + tile / 2;
-      var fullCy = (target.y - s.cameraTileY1) * tile + tile / 2;
-      srcX = fullCx + halfOffX;
-      srcY = fullCy + halfOffY;
+      // clip the tile rect by the half-plane to get this half's polygon
+      // (vertices in tile-local pixel coords, 0..tile)
+      var poly = clipRectHalfPlane(tile,
+        cutTileX, cutTileY, nx, ny, sideSign);
 
-      // destination: ~1.5 tiles outward in the half's outward direction,
-      // with a small random angular jitter so paired halves don't fly along
-      // a perfectly mirrored line
-      var dirAngle = 0.0;
-      if (axis == 0)
-        dirAngle = (half == 0 ? Math.PI : 0) + (Math.random() - 0.5) * 0.7;
-      else
-        dirAngle = (half == 0 ? - Math.PI / 2 : Math.PI / 2) +
-          (Math.random() - 0.5) * 0.7;
+      // centroid of the polygon — used as rotation pivot and fly origin
+      var c = polyCentroid(poly);
+
+      // store polygon in centroid-local space so clip path is ready to use
+      // directly after the rotate transform at draw time
+      polyLocal = [];
+      for (p in poly)
+        polyLocal.push({ x: p.x - c.x, y: p.y - c.y });
+      tileOffX = - c.x;
+      tileOffY = - c.y;
+
+      // tile top-left in camera-local pixel space, plus centroid offset
+      var tileTLx = (target.x - s.cameraTileX1) * tile;
+      var tileTLy = (target.y - s.cameraTileY1) * tile;
+      srcX = tileTLx + c.x;
+      srcY = tileTLy + c.y;
+
+      // fly direction: outward along the half-plane normal, with small
+      // jitter so paired halves don't fly along a perfectly mirrored line
+      var outAngle = Math.atan2(ny * sideSign, nx * sideSign) +
+        (Math.random() - 0.5) * 0.7;
       var dist = tile * (1.2 + Math.random() * 0.8);
-      dstX = fullCx + Math.cos(dirAngle) * dist;
-      dstY = fullCy + Math.sin(dirAngle) * dist;
+      dstX = srcX + Math.cos(outAngle) * dist;
+      dstY = srcY + Math.sin(outAngle) * dist;
 
       // 1–3 turns of rotation, randomized direction
       endAngle = (Math.random() < 0.5 ? -1 : 1) *
@@ -130,6 +106,73 @@ class ParticleSplitIconHalf extends Particle
       s.area.addParticle(this);
     }
 
+// clips the tile rect by a half-plane { p : ((p - P) · n) * sideSign >= 0 }
+// returns polygon vertices (tile-local) in CCW/CW order following the rect
+  static function clipRectHalfPlane(tile: Float,
+      px: Float, py: Float, nx: Float, ny: Float,
+      sideSign: Float): Array<{ x: Float, y: Float }>
+    {
+      var corners = [
+        { x: 0.0, y: 0.0 },
+        { x: tile, y: 0.0 },
+        { x: tile, y: tile },
+        { x: 0.0, y: tile },
+      ];
+      var out: Array<{ x: Float, y: Float }> = [];
+      for (i in 0...4)
+        {
+          var a = corners[i];
+          var b = corners[(i + 1) % 4];
+          var da = ((a.x - px) * nx + (a.y - py) * ny) * sideSign;
+          var db = ((b.x - px) * nx + (b.y - py) * ny) * sideSign;
+          var aIn = da >= 0;
+          var bIn = db >= 0;
+          if (aIn)
+            out.push(a);
+          // edge crosses the line — emit intersection
+          if (aIn != bIn)
+            {
+              var t = da / (da - db);
+              out.push({
+                x: a.x + t * (b.x - a.x),
+                y: a.y + t * (b.y - a.y),
+              });
+            }
+        }
+      return out;
+    }
+
+// polygon centroid via the shoelace formula; falls back to vertex average
+// for degenerate (zero-area) polygons
+  static function polyCentroid(poly: Array<{ x: Float, y: Float }>):
+      { x: Float, y: Float }
+    {
+      if (poly.length == 0)
+        return { x: 0.0, y: 0.0 };
+      var a = 0.0, cx = 0.0, cy = 0.0;
+      for (i in 0...poly.length)
+        {
+          var p0 = poly[i];
+          var p1 = poly[(i + 1) % poly.length];
+          var cross = p0.x * p1.y - p1.x * p0.y;
+          a += cross;
+          cx += (p0.x + p1.x) * cross;
+          cy += (p0.y + p1.y) * cross;
+        }
+      a *= 0.5;
+      if (Math.abs(a) < 0.001)
+        {
+          var sx = 0.0, sy = 0.0;
+          for (p in poly)
+            {
+              sx += p.x;
+              sy += p.y;
+            }
+          return { x: sx / poly.length, y: sy / poly.length };
+        }
+      return { x: cx / (6 * a), y: cy / (6 * a) };
+    }
+
 // engine-driven draw, dt ∈ [0..1] across the 900ms lifetime.
 // phases: 0..0.30 fly + rotate (ease-out), 0.30..0.65 hold, 0.65..1 fade
   public override function draw(ctx: Dynamic, dt: Float)
@@ -137,6 +180,8 @@ class ParticleSplitIconHalf extends Particle
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)
+        return;
+      if (polyLocal.length < 3)
         return;
 
       var flyEnd = 0.30;
@@ -174,9 +219,19 @@ class ParticleSplitIconHalf extends Particle
       ctx.globalAlpha = curAlpha;
       ctx.translate(curX, curY);
       ctx.rotate(curAngle);
+
+      // clip subsequent draw to this half's polygon (centroid-local)
+      ctx.beginPath();
+      ctx.moveTo(polyLocal[0].x, polyLocal[0].y);
+      for (i in 1...polyLocal.length)
+        ctx.lineTo(polyLocal[i].x, polyLocal[i].y);
+      ctx.closePath();
+      ctx.clip();
+
+      // draw the full atlas tile, offset so its centroid lands on origin
       ctx.drawImage(img,
         srcSubX, srcSubY, srcSubW, srcSubH,
-        - dstW / 2, - dstH / 2, dstW, dstH);
+        tileOffX, tileOffY, dstSize, dstSize);
       ctx.restore();
     }
 }
