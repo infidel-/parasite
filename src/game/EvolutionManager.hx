@@ -50,7 +50,7 @@ class EvolutionManager extends _SaveObject
 
       // evolution is easier while in habitat
       player.host.energy -= __Math.evolutionEnergyPerTurn() * time;
-      var impID = Type.createEnum(_Improv, taskID);
+      var impID = (taskID : _Improv);
       var imp = getImprov(impID);
       imp.ep += 10 * time;
 
@@ -136,6 +136,15 @@ class EvolutionManager extends _SaveObject
 // add improvement to list
   public function addImprov(id: _Improv, ?level: Int = 0, ?skipMessage: Bool = false): Improv
     {
+      // clamp requested level to the improvement's valid range; guards against
+      // console input and mod-registered improvements being set past maxLevel
+      // (the evolution UI indexes levelNotes/levelParams by level)
+      var info = EvolutionConst.getInfo(id);
+      if (level > info.maxLevel)
+        level = info.maxLevel;
+      if (level < 0)
+        level = 0;
+
       // this improvement already learned
       var tmp = getImprov(id);
       if (tmp != null && tmp.level >= level)
@@ -159,7 +168,7 @@ class EvolutionManager extends _SaveObject
         id: id,
         level: level,
         ep: ep,
-        info: EvolutionConst.getInfo(id),
+        info: info,
         isLocked: false,
       };
       _list.add(imp);
@@ -265,10 +274,10 @@ class EvolutionManager extends _SaveObject
 
       var buf = new StringBuf();
       buf.add("<font style='color:var(--text-color-evolution-title)'>");
-      buf.add(EvolutionConst.getInfo(Type.createEnum(_Improv, taskID)).name);
+      buf.add(EvolutionConst.getInfo((taskID : _Improv)).name);
       buf.add("</font> (");
       var epLeft = 0;
-      var imp = getImprov(Type.createEnum(_Improv, taskID));
+      var imp = getImprov((taskID : _Improv));
       epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
       buf.add(Math.round(epLeft / __Math.epPerTurn()));
       buf.add(" turns)");

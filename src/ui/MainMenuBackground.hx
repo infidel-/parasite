@@ -11,6 +11,7 @@ import js.html.webgl.Shader;
 import js.html.webgl.Buffer;
 import js.html.webgl.Texture;
 import js.html.webgl.UniformLocation;
+import mods.AssetPath;
 
 @:expose
 class MainMenuBackground
@@ -299,7 +300,7 @@ class MainMenuBackground
           RenderingContext.TEXTURE_MAG_FILTER, RenderingContext.LINEAR);
         textureLoaded = true;
       };
-      img.src = imgUrl;
+      img.src = AssetPath.resolve(imgUrl);
     }
 
 // get the canvas element for DOM insertion

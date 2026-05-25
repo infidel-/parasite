@@ -11,6 +11,7 @@ import const.ItemsConst;
 import const.Jobs;
 import const.Lang;
 import ai.*;
+import mods.ModEventRegistry;
 
 @:expose
 class Game extends _SaveObject
@@ -55,13 +56,21 @@ class Game extends _SaveObject
   public var importantMessagesEnabled: Bool; // messages enabled?
   public var scenarioStringID: String; // short name for scenario
   public var firstEverRun: Bool; // game started for the very first time
+  // per-mod savegame-scoped data buckets; mods read/write via parasite.savedata
+  // (mods.ModSaveData facade). serialized as part of the game save, namespaced
+  // by mod id so two mods never collide
+  public var modData: Dynamic;
 
   public function new()
     {
       inst = this;
       ItemsConst.init(this);
+      const.PediaConst.init(this);
       config = new Config(this);
       profile = new Profile(this);
+      // mod asset overrides must populate before UI ctor — UI eagerly builds
+      // every window subclass, baking borderImage url() strings via AssetPath.resolve
+      mods.ModLoader.preInit(this);
       ui = new UI(this);
       cult.ordeals.profane.ProfaneConst.init();
       scene = new GameScene(this);
@@ -80,6 +89,7 @@ class Game extends _SaveObject
 
       area = null;
       region = null;
+      modData = {};
       __Math.game = this;
     }
 
@@ -328,7 +338,14 @@ class Game extends _SaveObject
           ui.hud.targeting.clearTarget();
         }
       if (location == LOCATION_AREA)
-        area.leave();
+        {
+          // mod event: leaving area (fires before location switches)
+          ModEventRegistry.fire(ModEventRegistry.AREA_LEAVE, {
+            game: this,
+            area: area,
+          });
+          area.leave();
+        }
 
       else if (location == LOCATION_REGION)
         region.leave();
@@ -342,6 +359,11 @@ class Game extends _SaveObject
           if (newarea != null) // enter specified area
              area = newarea;
           area.enter();
+          // mod event: entered area
+          ModEventRegistry.fire(ModEventRegistry.AREA_ENTER, {
+            game: this,
+            area: area,
+          });
         }
 
       else if (location == LOCATION_REGION)
@@ -372,6 +394,12 @@ class Game extends _SaveObject
 // game turn ends (internal)
   function turnInternal()
     {
+      // mod event: turn about to run (before player acts / counter increment)
+      ModEventRegistry.fire(ModEventRegistry.TURN_PRE, {
+        game: this,
+        turn: turns,
+      });
+
       // player turn
       player.turn();
       if (state != GAMESTATE_RUNNING)
@@ -423,6 +451,12 @@ class Game extends _SaveObject
           if (state != GAMESTATE_RUNNING)
             return;
         }
+
+      // mod event: turn fully processed (skipped on early-return abort above)
+      ModEventRegistry.fire(ModEventRegistry.TURN_POST, {
+        game: this,
+        turn: turns,
+      });
     }
 
 // returns true when input should be blocked
@@ -511,13 +545,23 @@ class Game extends _SaveObject
           scene.sounds.play('game-win');
         }
 
+      // mod event: let mods override finish-screen text/image before the UI
+      // window is shown. payload is mutable; we read back text/img after fire
+      var payload: Dynamic = {
+        game: this,
+        result: result,
+        text: finishText,
+        img: img,
+      };
+      ModEventRegistry.fire(ModEventRegistry.GAME_FINISH_PRE, payload);
+
       // add to event queue
       ui.event({
         type: UIEVENT_STATE,
         state: UISTATE_FINISH,
         obj: {
-          text: finishText,
-          img: img,
+          text: payload.text,
+          img: payload.img,
         }
       });
 
@@ -581,9 +625,8 @@ class Game extends _SaveObject
 // add debug entry to game log
   public inline function debug(s: String)
     {
-#if mydebug
-      log(Const.small('DEBUG ' + s), COLOR_DEBUG);
-#end
+      if (Const.isDebug)
+        log(Const.small('DEBUG ' + s), COLOR_DEBUG);
     }
 
 // add narrative entry to game log
@@ -733,7 +776,52 @@ class Game extends _SaveObject
 // load current game from slot
   public function load(slotID: Int)
     {
-      Loader.load(this, slotID);
+      // if save's mod snapshot differs from currently-enabled set, prompt user before destructive load.
+      var saveMods = Loader.peekActiveMods(slotID);
+      var warnings = mods.ModRegistry.diffSaveMods(saveMods);
+      if (warnings.length == 0)
+        {
+          Loader.load(this, slotID);
+          applyLoaded();
+          return;
+        }
+
+      // build warning message
+      var buf = new StringBuf();
+      buf.add('This save was made with a different mod set:<br><br>');
+      for (w in warnings)
+        {
+          if (w.kind == 'missing')
+            buf.add(Const.smallgray('- <b>' + w.id + ' v' + w.saveVersion +
+              '</b> was active when saved but is no longer enabled<br>'));
+          else if (w.kind == 'added')
+            buf.add(Const.smallgray('- <b>' + w.id + ' v' + w.activeVersion +
+              '</b> is now enabled but was not when saved<br>'));
+          else if (w.kind == 'mismatch')
+            buf.add(Const.smallgray('- <b>' + w.id + '</b> version differs: save v' +
+              w.saveVersion + ', active v' + w.activeVersion + '<br>'));
+        }
+      buf.add('<br>State may be inconsistent or load may fail. Load anyway?');
+      var self = this;
+      ui.event({
+        type: UIEVENT_STATE,
+        state: UISTATE_YESNO,
+        obj: {
+          text: buf.toString(),
+          func: function(yes: Bool) {
+            if (!yes) return;
+            Loader.load(self, slotID);
+            self.applyLoaded();
+          }
+        }
+      });
+    }
+
+// post-load HUD refresh shared by both sync and deferred load paths
+  function applyLoaded()
+    {
+      ui.hud.update();
+      scene.draw();
     }
 
 #if demo

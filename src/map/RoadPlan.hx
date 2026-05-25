@@ -4,12 +4,7 @@ package map;
 
 import _AreaType;
 import const.WorldConst;
-#if electron
-import js.node.Fs;
-#end
-#if mydebug
 import haxe.ds.StringMap;
-#end
 import map.RoadType;
 import map.Types.RoadPlanGrid;
 import map.Types.RoadSegment;
@@ -26,7 +21,6 @@ class RoadPlan extends Raster
   var branchWalker: RoadPlanBranchWalker;
   var thinCoverage: RoadPlanThinCoverage;
 
-#if mydebug
   var mapProfileTotalsMS: StringMap<Float>;
   var mapProfileSampleCounts: StringMap<Int>;
   var mapProfileCounters: StringMap<Int>;
@@ -42,7 +36,7 @@ class RoadPlan extends Raster
 // accumulate one debug profiling sample
   function addMapProfileSample(label: String, elapsedMS: Float)
     {
-      if (!ROAD_PROFILE_VERBOSE)
+      if (!Const.isDebug || !ROAD_PROFILE_VERBOSE)
         return;
       var total = (mapProfileTotalsMS.exists(label) ? mapProfileTotalsMS.get(label) : 0.0);
       var count = (mapProfileSampleCounts.exists(label) ? mapProfileSampleCounts.get(label) : 0);
@@ -53,7 +47,7 @@ class RoadPlan extends Raster
 // accumulate one debug profiling counter
   function addMapProfileCount(label: String, amount: Int = 1)
     {
-      if (!ROAD_PROFILE_VERBOSE)
+      if (!Const.isDebug || !ROAD_PROFILE_VERBOSE)
         return;
       var count = (mapProfileCounters.exists(label) ? mapProfileCounters.get(label) : 0);
       mapProfileCounters.set(label, count + amount);
@@ -62,8 +56,10 @@ class RoadPlan extends Raster
 // trace one profiling phase and return a fresh timestamp
   function nextMapProfileTimestamp(label: String, startTS: Float): Float
     {
+      if (!Const.isDebug)
+        return 0;
       var nowTS = haxe.Timer.stamp() * 1000.0;
-      trace('MAP PROFILE ROAD ' + label + ': ' + Std.int(nowTS - startTS) + ' ms');
+      profile('ROAD', label + ': ' + Std.int(nowTS - startTS) + ' ms');
       return nowTS;
     }
 
@@ -81,7 +77,7 @@ class RoadPlan extends Raster
           var total = mapProfileTotalsMS.get(label);
           var count = mapProfileSampleCounts.get(label);
           var avg = Math.round(total * 100.0 / count) / 100.0;
-          trace('MAP PROFILE ROAD detail ' + label + ': ' + Std.int(total) +
+          profile('ROAD', 'detail ' + label + ': ' + Std.int(total) +
             ' ms over ' + count + ' calls avg=' + avg + ' ms');
         }
     }
@@ -96,13 +92,13 @@ class RoadPlan extends Raster
       labels.sort(sortMapProfileLabels);
 
       for (label in labels)
-        trace('MAP PROFILE ROAD count ' + label + ': ' + mapProfileCounters.get(label));
+        profile('ROAD', 'count ' + label + ': ' + mapProfileCounters.get(label));
     }
 
 // trace one profiling summary line
   function traceMapProfileSummary(label: String)
     {
-      trace('MAP PROFILE ROAD ' + label);
+      profile('ROAD', label);
     }
 
 // sort two profiling labels for stable debug output
@@ -114,17 +110,6 @@ class RoadPlan extends Raster
         return 1;
       return 0;
     }
-#else
-// ignore one profiling sample outside debug builds
-  inline function addMapProfileSample(label: String, elapsedMS: Float)
-    {
-    }
-
-// ignore one profiling counter outside debug builds
-  inline function addMapProfileCount(label: String, amount: Int = 1)
-    {
-    }
-#end
 
 // initialize the helper classes used by the road-plan pipeline
   function initRoadPlanHelpers()
@@ -181,7 +166,7 @@ class RoadPlan extends Raster
       lines.push('');
       lines.push('[road_segments]');
       appendRoadSegmentDump(lines, segments);
-      Fs.writeFileSync('region_roads.txt', lines.join('\n') + '\n');
+      HostBridge.debugWriteRegionRoads(lines.join('\n') + '\n');
     }
 
 // append one full-cell area-type dump to the output lines
@@ -363,19 +348,18 @@ class RoadPlan extends Raster
 
   function generateRoadGraph(): Array<RoadSegment>
     {
-#if mydebug
-      var totalStartTS = haxe.Timer.stamp() * 1000.0;
-      var phaseStartTS = totalStartTS;
-      resetMapProfileStats();
-#end
+      var totalStartTS = 0.0;
+      var phaseStartTS = 0.0;
+      if (Const.isDebug)
+        {
+          totalStartTS = haxe.Timer.stamp() * 1000.0;
+          phaseStartTS = totalStartTS;
+          resetMapProfileStats();
+        }
       initRoadPlanHelpers();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.initRoadPlanHelpers', phaseStartTS);
-#end
       var grid = gridOps.makeRoadPlanGrid();
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.makeRoadPlanGrid', phaseStartTS);
-#end
       var primaryHorizontal = rng.nextFloat() < 0.5;
       var primaryLine = pickCenteredRoad1Line(primaryHorizontal);
       var primaryWalker = makePrimaryRoad1Walker(primaryHorizontal, primaryLine);
@@ -383,67 +367,49 @@ class RoadPlan extends Raster
 
       walkRoad1(grid, cloneRoadWalker(primaryWalker));
       walkRoad1(grid, cloneRoadWalker(sideWalker));
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.walkRoad1', phaseStartTS);
-#end
       spawnRoad2AlongRoad1(grid, cloneRoadWalker(primaryWalker));
       spawnRoad2AlongRoad1(grid, cloneRoadWalker(sideWalker));
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.spawnRoad2AlongRoad1', phaseStartTS);
-#end
       road2Network.ensureRoad2Connectivity(grid);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureRoad2Connectivity.initial', phaseStartTS);
-#end
       road2Network.ensureCityRoad2Coverage(grid);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad2Coverage', phaseStartTS);
-#end
       road2Network.ensureRoad2Connectivity(grid);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureRoad2Connectivity.final', phaseStartTS);
-#end
       if (ENABLE_ROAD3_COVERAGE_PASS)
         {
           thinCoverage.ensureCityRoad3Coverage(grid);
-#if mydebug
           phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad3Coverage', phaseStartTS);
-#end
           thinCoverage.pruneOrphanRoad3Components(grid);
-#if mydebug
           phaseStartTS = nextMapProfileTimestamp('road.pruneOrphanRoad3Components', phaseStartTS);
-#end
         }
       thinCoverage.ensureCityRoad4Coverage(grid);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad4Coverage', phaseStartTS);
-#end
       thinCoverage.ensureCityRoad5Coverage(grid);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureCityRoad5Coverage', phaseStartTS);
-#end
       thinCoverage.ensureSpecialAreaRoadCoverage(grid);
-#if mydebug
       phaseStartTS = nextMapProfileTimestamp('road.ensureSpecialAreaRoadCoverage', phaseStartTS);
-#end
 
       roadPlanGrid = grid;
       var result = gridOps.compressRoadPlanGrid(grid);
 #if electron
-      dumpRoadPlan(grid, result);
+      if (Const.isDebug)
+        dumpRoadPlan(grid, result);
 #end
-#if mydebug
-      phaseStartTS = nextMapProfileTimestamp('road.compressRoadPlanGrid', phaseStartTS);
-      traceMapProfileSummary('road.dump=region_roads.txt');
-      traceMapProfileSummary('road.summary segments=' + result.length +
-        ' plan=' + planWidth + 'x' + planHeight);
-      if (ROAD_PROFILE_VERBOSE)
+      if (Const.isDebug)
         {
-          traceMapProfileSamples();
-          traceMapProfileCounters();
+          phaseStartTS = nextMapProfileTimestamp('road.compressRoadPlanGrid', phaseStartTS);
+          traceMapProfileSummary('road.dump=region_roads.txt');
+          traceMapProfileSummary('road.summary segments=' + result.length +
+            ' plan=' + planWidth + 'x' + planHeight);
+          if (ROAD_PROFILE_VERBOSE)
+            {
+              traceMapProfileSamples();
+              traceMapProfileCounters();
+            }
+          nextMapProfileTimestamp('road.total', totalStartTS);
         }
-      nextMapProfileTimestamp('road.total', totalStartTS);
-#end
       return result;
     }
 
@@ -493,10 +459,8 @@ class RoadPlan extends Raster
               var lowerHitCount = countRoad1BlockedAreaHits(horizontal, lowerLine);
               if (lowerHitCount == 0)
                 {
-#if mydebug
                   addMapProfileCount(profileLabel + '.blockedAreaRerolls');
                   addMapProfileCount(profileLabel + '.shiftCells', offset);
-#end
                   return lowerLine;
                 }
               if (lowerHitCount < bestHitCount ||
@@ -515,10 +479,8 @@ class RoadPlan extends Raster
               var upperHitCount = countRoad1BlockedAreaHits(horizontal, upperLine);
               if (upperHitCount == 0)
                 {
-#if mydebug
                   addMapProfileCount(profileLabel + '.blockedAreaRerolls');
                   addMapProfileCount(profileLabel + '.shiftCells', offset);
-#end
                   return upperLine;
                 }
               if (upperHitCount < bestHitCount ||
@@ -532,10 +494,8 @@ class RoadPlan extends Raster
             }
         }
 
-#if mydebug
       addMapProfileCount(profileLabel + '.fallbacks');
       addMapProfileCount(profileLabel + '.fallbackBlockedAreaCells', bestHitCount);
-#end
       return bestLine;
     }
 

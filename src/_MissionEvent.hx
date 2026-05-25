@@ -1,7 +1,7 @@
 package;
 
-enum _MissionEvent
+enum abstract _MissionEvent(String) to String from String
 {
-  ON_AI_DEATH;
-  ON_AI_MAX_CONSENT;
+  var ON_AI_DEATH = 'ON_AI_DEATH';
+  var ON_AI_MAX_CONSENT = 'ON_AI_MAX_CONSENT';
 }

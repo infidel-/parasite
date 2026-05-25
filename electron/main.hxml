@@ -1,6 +1,6 @@
 -lib electron
 -D electron
-#-cp ./jui/
+-cp ../src
 -dce no
 -debug
 --each

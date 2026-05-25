@@ -13,6 +13,12 @@ class Main
 // engine init entry-point
   function init()
     {
+      // resolve runtime debug flag before any guarded code runs.
+      // Config ctor (via new Game()) reads Const.isDebug
+#if electron
+      Const.isDebug = HostBridge.isDebug;
+#end
+
       // new canvas (no heaps)
       var canvas = Browser.document.createCanvasElement();
       canvas.id = 'canvas';
@@ -29,7 +35,10 @@ class Main
       ai.FollowerLogic.game = game;
       ai.CommandLogic.game = game;
       game.scene.init();
-      game.ui.state = UISTATE_MAINMENU;
+      mods.ModLoader.load(game).then(function(_) {
+        game.ui.state = UISTATE_MAINMENU;
+        return null;
+      });
     }
 
   public static function main()

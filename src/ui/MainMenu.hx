@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -25,7 +26,7 @@ class MainMenu extends UIWindow
       currentBackground = DEFAULT_BG;
       loadEnabled = false;
       saveEnabled = false;
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
       // create WebGL background canvas (replaces .window-swirl div)
       menuBg = new MainMenuBackground();
       bg.insertBefore(menuBg.getCanvas(), window);
@@ -69,12 +70,17 @@ class MainMenu extends UIWindow
       addItem('OPTIONS', function(e) {
         game.ui.state = UISTATE_OPTIONS;
       });
+#if electron
+      addItem('MODS', function(e) {
+        game.ui.state = UISTATE_MODS;
+      });
+#end
       addItem('ABOUT', function(e) {
         game.ui.state = UISTATE_ABOUT;
       });
 #if electron
       addItem('QUIT', function(e) {
-        electron.renderer.IpcRenderer.invoke('quit');
+        HostBridge.quit();
       });
 #end
 
@@ -96,8 +102,6 @@ class MainMenu extends UIWindow
         return;
       game.load(1);
       game.ui.closeWindow();
-      game.ui.hud.update();
-      game.scene.draw();
       close.style.display = 'block';
       game.ui.canvas.style.visibility = 'visible';
     }
@@ -126,11 +130,11 @@ class MainMenu extends UIWindow
         game.ui.state = UISTATE_PEDIA;
       else if (index == 5)
         game.ui.state = UISTATE_OPTIONS;
-      else if (index == 6)
 #if electron
-        electron.renderer.IpcRenderer.invoke('quit');
-#else
-        1;
+      else if (index == 6)
+        game.ui.state = UISTATE_MODS;
+      else if (index == 7)
+        HostBridge.quit();
 #end
     }
 

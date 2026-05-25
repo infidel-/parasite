@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -15,7 +16,7 @@ class Finish extends UIWindow
     {
       super(g, 'window-finish');
       window.className += ' window-dialog';
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();
       text.className = 'window-dialog-text';
@@ -24,7 +25,7 @@ class Finish extends UIWindow
       var close = Browser.document.createDivElement();
       close.className = 'hud-button window-dialog-button';
       close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      close.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       close.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');
@@ -39,7 +40,8 @@ class Finish extends UIWindow
       var buf = new StringBuf();
       buf.add('<center><h3 class=window-title>GAME OVER</h3></center><br/>');
       if (obj.img != null)
-        buf.add('<img class=message-img src="img/' + obj.img + '.jpg"><p>');
+        buf.add('<img class=message-img src="' +
+          AssetPath.resolve('img/' + obj.img + '.jpg') + '"><p>');
       buf.add('<center>' + obj.text + '</center>');
       buf.add("<br/><br/><center>Close the window, then you can restart the game.<br/></center>");
       text.innerHTML = buf.toString();

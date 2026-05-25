@@ -1,6 +1,7 @@
 // new js ui hud
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.Browser.document;
 import js.html.TextAreaElement;
@@ -21,6 +22,7 @@ class HUD
   public var container: DivElement;
   var consoleDiv: DivElement;
   var console: TextAreaElement;
+  var consoleHint: DivElement;
   var consoleHistoryIndex: Int;
   var consoleHistoryDraft: String;
   var log: DivElement;
@@ -28,9 +30,8 @@ class HUD
   public var info: DivElement;
   var regionTooltip: RegionTooltip;
   var aiTooltip: AITooltip;
-#if mydebug
+  // debug overlay div — created and updated only when Const.isDebug is true
   var debugInfo: DivElement;
-#end
   var menuButtons: Array<{
     state: _UIState,
     btn: DivElement,
@@ -96,33 +97,41 @@ class HUD
       consoleHistoryIndex = -1;
       consoleHistoryDraft = '';
       console.onkeydown = onConsoleKeyDown;
+      console.oninput = function(_) updateConsoleHint();
       consoleDiv.appendChild(console);
+
+      // gray inline hint overlay (sits over the textarea, typed part transparent)
+      consoleHint = document.createDivElement();
+      consoleHint.id = 'hud-console-hint';
+      consoleHint.style.display = 'none';
+      consoleDiv.appendChild(consoleHint);
 
       log = document.createDivElement();
       log.className = 'text';
       log.id = 'hud-log';
-      log.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
+      log.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
 
       goals = document.createDivElement();
       goals.className = 'text';
       goals.id = 'hud-goals';
-      goals.style.borderImage = "url('./img/hud-goals-border.png') 24 fill / 1 / 0 stretch";
+      goals.style.borderImage = "url('" + AssetPath.resolve('img/hud-goals-border.png') + "') 24 fill / 1 / 0 stretch";
       container.appendChild(goals);
 
       info = document.createDivElement();
       info.className = 'text';
       info.id = 'hud-info';
-      info.style.borderImage = "url('./img/hud-info-border.png') 36 20 36 fill / 1 / 0 stretch";
+      info.style.borderImage = "url('" + AssetPath.resolve('img/hud-info-border.png') + "') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
 
 
-#if mydebug
-      debugInfo = document.createDivElement();
-      debugInfo.className = 'text';
-      debugInfo.id = 'hud-debug-info';
-      container.appendChild(debugInfo);
-#end
+      if (Const.isDebug)
+        {
+          debugInfo = document.createDivElement();
+          debugInfo.className = 'text';
+          debugInfo.id = 'hud-debug-info';
+          container.appendChild(debugInfo);
+        }
 
       // menu
       var buttons = document.createDivElement();
@@ -144,7 +153,7 @@ class HUD
       // actions
       actions = document.createDivElement();
       actions.id = 'hud-actions';
-      actions.style.borderImage = "url('./img/hud-actions-border.png') 28 fill / 1 / 0 stretch";
+      actions.style.borderImage = "url('" + AssetPath.resolve('img/hud-actions-border.png') + "') 28 fill / 1 / 0 stretch";
       container.appendChild(actions);
 
       listTransparentElements = [
@@ -193,7 +202,7 @@ class HUD
       btn.innerHTML = str;
       // NOTE: must be the same with show/hide buttons at updateMenu()
       btn.className = 'hud-button window-title';
-      btn.style.borderImage = "url('./img/hud-button.png') 23 fill / 1 / 0 stretch";
+      btn.style.borderImage = "url('" + AssetPath.resolve('img/hud-button.png') + "') 23 fill / 1 / 0 stretch";
       cont.appendChild(btn);
       menuButtons.push({
         state: state,
@@ -424,6 +433,7 @@ public function onMouseLeave()
       console.focus();
       consoleHistoryIndex = -1;
       consoleHistoryDraft = '';
+      updateConsoleHint();
     }
 
   public function hideConsole()
@@ -431,6 +441,7 @@ public function onMouseLeave()
       consoleDiv.style.visibility = 'hidden';
       consoleHistoryIndex = -1;
       consoleHistoryDraft = '';
+      consoleHint.style.display = 'none';
       ui.focus();
     }
 
@@ -451,6 +462,20 @@ public function onMouseLeave()
           // kludge: needs a timeout or closes the event window
           Browser.window.setTimeout(hideConsole, 10);
         }
+      // tab completion (longest common prefix; lists ambiguous candidates)
+      else if (e.code == 'Tab')
+        {
+          e.preventDefault();
+          var r = game.console.completion.complete(console.value);
+          if (r.value != console.value)
+            {
+              console.value = r.value;
+              setConsoleCaretToEnd();
+            }
+          if (r.list.length > 0)
+            game.console.log(r.list.join(', '));
+          updateConsoleHint();
+        }
       // previous command in history
       else if (e.code == 'ArrowUp')
         {
@@ -466,6 +491,7 @@ public function onMouseLeave()
             consoleHistoryIndex--;
           console.value = game.console.getHistoryEntry(consoleHistoryIndex);
           setConsoleCaretToEnd();
+          updateConsoleHint();
         }
       // next command in history
       else if (e.code == 'ArrowDown')
@@ -484,7 +510,46 @@ public function onMouseLeave()
               console.value = game.console.getHistoryEntry(consoleHistoryIndex);
             }
           setConsoleCaretToEnd();
+          updateConsoleHint();
         }
+    }
+
+// refresh the gray inline hint overlay from the current console input
+  function updateConsoleHint()
+    {
+      var val = console.value;
+      var h = game.console.completion.hint(val);
+      if (h == '')
+        {
+          consoleHint.style.display = 'none';
+          return;
+        }
+      consoleHint.style.display = '';
+      // align the overlay box exactly over the textarea
+      consoleHint.style.left = console.offsetLeft + 'px';
+      consoleHint.style.top = console.offsetTop + 'px';
+      consoleHint.style.width = console.offsetWidth + 'px';
+      // mirror the textarea's exact computed font so the ghost lines up
+      var cs = Browser.window.getComputedStyle(console);
+      consoleHint.style.fontFamily = cs.fontFamily;
+      consoleHint.style.fontSize = cs.fontSize;
+      consoleHint.style.fontWeight = cs.fontWeight;
+      consoleHint.style.lineHeight = cs.lineHeight;
+      consoleHint.style.letterSpacing = cs.letterSpacing;
+      consoleHint.style.height = cs.height;
+      // transparent copy of typed text pushes the gray hint to the caret position
+      consoleHint.innerHTML =
+        '<span class="chint-pre">' + escapeHTML(val) + '</span>' +
+        '<span class="chint-ghost">' + escapeHTML(h) + '</span>';
+    }
+
+// escapes html special chars for hint rendering
+  function escapeHTML(s: String): String
+    {
+      s = StringTools.replace(s, '&', '&amp;');
+      s = StringTools.replace(s, '<', '&lt;');
+      s = StringTools.replace(s, '>', '&gt;');
+      return s;
     }
 
 // move console caret to the end
@@ -517,9 +582,8 @@ public function onMouseLeave()
       if (game.location == LOCATION_REGION)
         updateRegionTooltipHover(true);
       updateAITooltip();
-#if mydebug
-      updateDebugInfo();
-#end
+      if (Const.isDebug)
+        updateDebugInfo();
     }
 
 // update log display
@@ -618,9 +682,7 @@ public function onMouseLeave()
           {
             buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
               ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
-#if mydebug
-              Const.smallgray(' A ' + Math.round(game.area.alertness)) +
-#end
+              (Const.isDebug ? Const.smallgray(' A ' + Math.round(game.area.alertness)) : '') +
               '<br/>');
 
             // check if this is a mission area
@@ -634,9 +696,7 @@ public function onMouseLeave()
           var area = game.playerRegion.currentArea;
           buf.add(', at (' +
             game.playerRegion.x + ',' + game.playerRegion.y + ')' +
-#if mydebug
-             ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) +
-#end
+            (Const.isDebug ? ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) : '') +
             '<br/>' +
             area.name +
             '<center>' + (area.highCrime ? Const.smallgray('high crime') : '') + '</center>');
@@ -753,7 +813,6 @@ public function onMouseLeave()
       else info.className = 'text';
     }
 
-#if mydebug
 // debug info
   function updateDebugInfo()
     {
@@ -776,7 +835,6 @@ public function onMouseLeave()
         game.managerArea.debugInfo(buf);
       debugInfo.innerHTML = buf.toString();
     }
-#end
 
 // update menu buttons visibility
   function updateMenu()

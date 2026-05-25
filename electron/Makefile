@@ -1,15 +1,10 @@
-all: clean main.js-debug
-.PHONY: main.js main.js-debug
+all: clean main.js
+.PHONY: main.js
 
 main.js:
 	haxe main.hxml && \
-	cp main.js* app.html app.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/ && \
-    cp main.js* app.html app.css ~/Projects/electron-v41.2.0-win32-ia32-parasite/resources/app/
-
-main.js-debug:
-	haxe -D mydebug main.hxml && \
-	cp main.js* app.html app.css ~/Projects/electron-v17.0.1-win32-ia32-parasite/resources/app/ && \
-    cp main.js* app.html app.css ~/Projects/electron-v41.2.0-win32-ia32-parasite/resources/app/
+    cp main.js* app.html app.css preload.js ../app/ && \
+    mkdir -p ../app/tools && cp tools/*.js ../app/tools/
 
 clean:
 	rm -f main.js main.js.map

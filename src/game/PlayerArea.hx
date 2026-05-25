@@ -1419,7 +1419,7 @@ class PlayerArea extends _SaveObject
       // stop moving
       game.scene.clearPath();
 
-      player.host.onDamage(damage, true);
+      player.host.onDamage(damage, null, true);
       if (player.host != null &&
           player.host.state == AI_STATE_DEAD)
         {
@@ -1477,6 +1477,11 @@ class PlayerArea extends _SaveObject
 
       attachHost = null;
       player.host = null;
+
+      // clear any stored attack target — without a host the player has no
+      // weapon/range, and the stale target would still paint a marker on the
+      // scene and survive across host swaps
+      game.ui.hud.targeting.clearTarget();
 
       game.scene.sounds.play('parasite-detach');
     }

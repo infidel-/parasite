@@ -1,5 +1,6 @@
 package ui;
 
+import mods.AssetPath;
 import game.Game;
 import js.Browser.document;
 import js.html.InputElement;
@@ -13,7 +14,7 @@ class Presets extends UIWindow
     {
       super(g, 'window-presets');
 
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
       // title
       var titleDiv = document.createDivElement();

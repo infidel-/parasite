@@ -1,5 +1,10 @@
 # Repository Guidelines
 
+## Build targets (root Makefile)
+- `make` / `make game-debug`: `cd src && make electron`
+- `make testmod`: `cd examples/testmod/ && make`
+- `make main`: `cd electron && make`
+
 - NEVER detach HEAD! NEVER!
 - ALWAYS respond in English!
 - ALWAYS run tests at the end of each task: cd src/ && make
@@ -21,3 +26,5 @@
 - keep fallback logic minimal and behavior-focused: allow `null`/missing optional fields, then fall back to existing gameplay behavior.
 - compatibility shims are allowed only for real pre-existing persisted formats already in production saves; otherwise reject over-defensive parsing.
 - any `Dynamic` usage in game logic MUST have an inline comment that states the trust boundary and why typed data is not possible.
+- when I ask you the `CHECK`, `xcheck` or `xlook` keyword, treat it as "investigate thoroughly and report" rather than "fix it". If you find a problem, report it but do not attempt to fix it unless I explicitly ask you to.
+- in `parasite-mod-sdk/externs/`, ALWAYS comment EVERY field and EVERY function of every typedef/extern (one-line summary above the line; first letter lowercase). Externs are the mod author's primary documentation surface — uncommented fields ship as silent API to third parties.

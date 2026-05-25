@@ -1,10 +1,8 @@
 // sounds and music manager
 import game.Game;
-#if electron
-import js.Node;
-import js.node.Fs;
-#end
 import js.Browser;
+import mods.AssetPath;
+import mods.ModRegistry;
 
 class Sounds
 {
@@ -47,7 +45,8 @@ class Sounds
             game.ui.state == UISTATE_NEWGAME ||
             game.ui.state == UISTATE_OPTIONS ||
             game.ui.state == UISTATE_PEDIA ||
-            game.ui.state == UISTATE_PRESETS)
+            game.ui.state == UISTATE_PRESETS ||
+            game.ui.state == UISTATE_MODS)
           {
             if (menuMusic.playState == 0)
               menuMusic.play();
@@ -119,10 +118,8 @@ class Sounds
       sounds = new Map();
 #if !free
 #if electron
-      // read all existing sound file names
-      var files = Fs.readdirSync(Node.process.platform == 'darwin'
-        ? ElectronPaths.getAssetPath('sound')
-        : 'resources/app/sound/');
+      // engine bundled list merged with mod-registered sound assets
+      var files = ModRegistry.mergedSoundList();
       for (f in files)
         {
           if (!StringTools.endsWith(f, '.mp3'))
@@ -273,13 +270,13 @@ class Sounds
       musicIdx = 1;
       music = SoundManager.createSound({
         id: 'music',
-        url: 'sound/music' + musicIdx + '.mp3',
+        url: AssetPath.resolve('sound/music' + musicIdx + '.mp3'),
         volume: game.config.musicVolume,
         onfinish: onMusicEnd,
       });
       menuMusic = SoundManager.createSound({
         id: 'menuMusic',
-        url: 'sound/music-menu2.mp3',
+        url: AssetPath.resolve('sound/music-menu2.mp3'),
         volume: game.config.musicVolume,
         onfinish: function () {
           menuMusic.play();
@@ -287,7 +284,7 @@ class Sounds
       });
       aboutMusic = SoundManager.createSound({
         id: 'aboutMusic',
-        url: 'sound/music-about.mp3',
+        url: AssetPath.resolve('sound/music-about.mp3'),
         volume: game.config.musicVolume,
         onfinish: function () {
           aboutMusic.play();
@@ -338,9 +335,9 @@ class Sounds
       idx = files[Std.random(files.length)];
       SoundManager.destroySound('music');
       musicIdx = idx;
-      var url = 'sound/music' + musicIdx + '.mp3';
+      var url = AssetPath.resolve('sound/music' + musicIdx + '.mp3');
       if (locationType == 'corp')
-        url = 'sound/music-corp.mp3';
+        url = AssetPath.resolve('sound/music-corp.mp3');
       music = SoundManager.createSound({
         id: 'music',
         url: url,
@@ -403,7 +400,7 @@ class Sounds
       key += res[Std.random(res.length)];
       ambientNext.sound = SoundManager.createSound({
         id: key,
-        url: 'sound/' + key + '.mp3',
+        url: AssetPath.resolve('sound/' + key + '.mp3'),
         volume: 0,
         loops: 10000,
       });
@@ -495,7 +492,7 @@ class Sounds
       SoundManager.destroySound(id); // clear previous sound
       var sound = SoundManager.createSound({
         id: id,
-        url: 'sound/' + key + '.mp3',
+        url: AssetPath.resolve('sound/' + key + '.mp3'),
         volume: volume,
       });
       sound.play();

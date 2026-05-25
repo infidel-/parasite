@@ -5,6 +5,7 @@ package ui;
 import js.Browser;
 import js.html.DivElement;
 import js.html.ImageElement;
+import mods.AssetPath;
 import StringTools;
 
 import game.Game;
@@ -23,7 +24,7 @@ class Choice extends UIWindow
     {
       super(g, 'window-choice');
       window.className += ' window-dialog';
-      window.style.borderImage = "url('./img/window-difficulty.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-difficulty.png') + "') 100 fill / 1 / 0 stretch";
 
       var outer = Browser.document.createSpanElement();
       window.appendChild(outer);
@@ -55,7 +56,7 @@ class Choice extends UIWindow
           var idx = i;
           var btn = Browser.document.createDivElement();
           btn.className = 'hud-button window-dialog-button window-choice-' + (i + 1);
-          btn.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+          btn.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
           btn.onclick = function (_) {
             game.scene.sounds.play('click-menu');
             action(idx + 1);
@@ -100,7 +101,7 @@ class Choice extends UIWindow
 
       if (params.img != null && params.img != '')
         {
-          image.src = params.img;
+          image.src = AssetPath.resolve(params.img);
           image.style.display = 'block';
         }
       else

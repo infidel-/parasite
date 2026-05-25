@@ -1,7 +1,7 @@
 // available attacker source types
-enum _AttackerType
+enum abstract _AttackerType(String) to String from String
 {
-  ATTACKER_AI;
-  ATTACKER_OBJECT;
-  ATTACKER_PLAYER;
+  var ATTACKER_AI = 'ATTACKER_AI';
+  var ATTACKER_OBJECT = 'ATTACKER_OBJECT';
+  var ATTACKER_PLAYER = 'ATTACKER_PLAYER';
 }

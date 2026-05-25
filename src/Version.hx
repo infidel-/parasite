@@ -5,7 +5,9 @@ class Version
 // get current game version from VERSION file
   public static macro function getVersion(): ExprOf<String>
     {
-      var version = StringTools.trim(sys.io.File.getContent("VERSION"));
+      // resolve via classpath so callers compiled from any cwd work
+      var path = haxe.macro.Context.resolvePath("VERSION");
+      var version = StringTools.trim(sys.io.File.getContent(path));
       return macro $v{version};
     }
 

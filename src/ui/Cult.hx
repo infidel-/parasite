@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -30,7 +31,7 @@ class Cult extends UIWindow
       menuState = STATE_ROOT;
       bazaar = new CultBazaar(g, this);
       trade = new CultTrade(g, this);
-      window.style.borderImage = "url('./img/window-evolution.png') 210 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-evolution.png') + "') 210 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
       cont.id = 'window-cult-contents';

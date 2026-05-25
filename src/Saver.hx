@@ -1,15 +1,17 @@
 // game save serialization and file storage
 
-#if electron
-import js.node.Fs;
-#end
 import haxe.Json;
 
 import game.Game;
+import mods.ModRegistry;
 
 class Saver
 {
-  static var SAVE_FORMAT_VERSION = 2;
+  // v3: _AITraitType / _Skill / _Improv converted enum -> enum-abstract over
+  // String, so those fields now serialize as bare strings instead of
+  // {_classID,val,_isEnum} wrappers. Loader.initEnum migrates pre-v3 wrappers
+  // (gated on formatVersion < 3). also carries the _activeMods array
+  static var SAVE_FORMAT_VERSION = 3;
 
 // save current game to a slot
   public static function save(game: Game, slotID: Int)
@@ -18,33 +20,58 @@ class Saver
         game: null,
         version: SAVE_FORMAT_VERSION,
       };
-      o.game = saveObject('game', game, 0);
-      o.game.regionID = game.region.id;
-      o.game.areaID = game.area.id;
+
+      // pre-flight per-mod savedata buckets. one bad mod (cycle, ref back to
+      // game, etc) would otherwise throw inside saveObject/Json.stringify and
+      // nuke the whole slot. probe each bucket in isolation, drop the broken
+      // ones, keep the rest. restored after stringify so live gameplay still
+      // sees the original objects.
+      var originalModData = game.modData;
+      var safeModData: Dynamic = {};
+      for (modID in Reflect.fields(originalModData))
+        {
+          var bucket = Reflect.field(originalModData, modID);
+          try
+            {
+              Json.stringify(bucket);
+              Reflect.setField(safeModData, modID, bucket);
+            }
+          catch (e: Dynamic)
+            {
+              game.log('Mod [' + modID +
+                '] save data dropped (unserializable): ' + e, COLOR_HINT);
+            }
+        }
+      game.modData = safeModData;
+
+      try
+        {
+          o.game = saveObject('game', game, 0);
+          o.game.regionID = game.region.id;
+          o.game.areaID = game.area.id;
+          o._activeMods = [
+            for (m in ModRegistry.enabled)
+              { id: m.id, version: m.version }
+          ];
 #if electron
-      Fs.writeFileSync(getSavePath(slotID),
-        Json.stringify(o, null, '  '), 'utf8');
+          HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
 #end
+        }
+      catch (e: Dynamic)
+        {
+          game.modData = originalModData;
+          throw e;
+        }
+      game.modData = originalModData;
     }
 
 // check if save file exists for slot
   public static function exists(slotID: Int): Bool
     {
 #if electron
-      return Fs.existsSync(getSavePath(slotID));
+      return HostBridge.saveExists(slotID);
 #end
       return false;
-    }
-
-// build save file path from slot
-  static function getSavePath(slotID: Int): String
-    {
-#if electron
-      return ElectronPaths.getWritablePath(
-        'save' + (slotID < 10 ? '0' : '') + slotID + '.json');
-#else
-      return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
-#end
     }
 
 // save object recursively into dynamic structure

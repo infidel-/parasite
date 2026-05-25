@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -14,7 +15,7 @@ class About extends UIWindow
   public function new (g: Game)
     {
       super(g, 'window-about');
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
       var title = Browser.document.createDivElement();
       title.id = 'window-about-title';
@@ -48,7 +49,8 @@ class About extends UIWindow
         '<br>' +
         'This game uses various fonts from Pixel Sagas (www.pixelsagas.com)<br>' +
         '</center>';
-      right.innerHTML = '<img class=message-img src="img/misc/about' + (1 + Std.random(6)) + '.jpg">';
+      right.innerHTML = '<img class=message-img src="' +
+        AssetPath.resolve('img/misc/about' + (1 + Std.random(6)) + '.jpg') + '">';
 
       addCloseButton();
       close.onclick = function (e) {

@@ -1,7 +1,7 @@
 // game location type
 
-enum _LocationType
+enum abstract _LocationType(String) to String from String
 {
-  LOCATION_AREA;
-  LOCATION_REGION;
+  var LOCATION_AREA = 'LOCATION_AREA';
+  var LOCATION_REGION = 'LOCATION_REGION';
 }

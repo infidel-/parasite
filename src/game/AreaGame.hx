@@ -9,6 +9,7 @@ import const.ItemsConst;
 import const.NameConst;
 import tiles.Sewers;
 import tiles.Tileset;
+import mods.ModEventRegistry;
 
 class AreaGame extends _SaveObject
 {
@@ -502,9 +503,9 @@ class AreaGame extends _SaveObject
           _cells[x][y] = baseTile;
 
       // measure generation time
-      var t = Sys.time();
+      var t = haxe.Timer.stamp();
       game.areaGenerator.generate(this, info);
-      var msec = (Sys.time() - t) * 1000.0;
+      var msec = (haxe.Timer.stamp() - t) * 1000.0;
       trace('Area generated in ' + Std.int(msec) + ' ms');
       if (game != null &&
           game.scene != null &&
@@ -1509,6 +1510,12 @@ class AreaGame extends _SaveObject
       game.lang.ensureFontLoaded(ai.lang);
       _ai.add(ai);
       ai.createEntity();
+      // mod event: AI actor added to this area
+      ModEventRegistry.fire(ModEventRegistry.AI_SPAWN, {
+        game: game,
+        ai: ai,
+        area: this,
+      });
     }
 
 // remove AI

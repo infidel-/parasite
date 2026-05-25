@@ -1,8 +1,5 @@
 // game load deserialization and state restoration
 
-#if electron
-import js.node.Fs;
-#end
 import haxe.Json;
 import haxe.ds.ObjectMap;
 
@@ -21,7 +18,7 @@ class Loader
 
 #if electron
       try {
-        var s = Fs.readFileSync(getSavePath(slotID), 'utf8');
+        var s = HostBridge.saveRead(slotID);
         var o: Dynamic = Json.parse(s);
         var formatVersion = getFormatVersion(o);
         loadObject(game, o.game, game, 'game', 0, formatVersion);
@@ -61,14 +58,34 @@ class Loader
       game.log('Game loaded from slot ' + slotID + '.');
     }
 
-// build save file path from slot
-  static function getSavePath(slotID: Int): String
+// peek _activeMods array from save slot without performing full load.
+// returns [] if save unreadable / missing field (legacy pre-mod save).
+// caller (Game.load) uses this to diff vs ModRegistry.enabled and prompt user
+  public static function peekActiveMods(slotID: Int): Array<{ id: String, version: String }>
     {
 #if electron
-      return ElectronPaths.getWritablePath(
-        'save' + (slotID < 10 ? '0' : '') + slotID + '.json');
+      try {
+        var s = HostBridge.saveRead(slotID);
+        if (s == null)
+          return [];
+        var o: Dynamic = Json.parse(s);
+        var raw: Dynamic = Reflect.field(o, '_activeMods');
+        if (raw == null || !Std.isOfType(raw, Array))
+          return [];
+        var arr: Array<Dynamic> = raw;
+        var out: Array<{ id: String, version: String }> = [];
+        for (entry in arr)
+          {
+            var id: String = Reflect.field(entry, 'id');
+            var version: String = Reflect.field(entry, 'version');
+            if (id != null)
+              out.push({ id: id, version: version });
+          }
+        return out;
+      }
+      catch (e: Dynamic) { return []; }
 #else
-      return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
+      return [];
 #end
     }
 
@@ -104,13 +121,15 @@ class Loader
           // map enum values directly
           switch (Type.typeof(dstval)) {
             case TEnum(e):
-              Reflect.setField(dst, f, initEnum(name, srcval, depth + 1));
+              Reflect.setField(dst, f,
+                initEnum(name, srcval, depth + 1, formatVersion));
               continue;
             default:
           }
           if (isEnum)
             {
-              Reflect.setField(dst, f, initEnum(name, srcval, depth + 1));
+              Reflect.setField(dst, f,
+                initEnum(name, srcval, depth + 1, formatVersion));
               continue;
             }
 
@@ -228,7 +247,7 @@ class Loader
       // initialize enum wrapper
       var isEnum: Bool = untyped src._isEnum;
       if (isEnum)
-        return initEnum(name, src, depth + 1);
+        return initEnum(name, src, depth + 1, formatVersion);
 
       // initialize arrays recursively
       if (Std.isOfType(src, Array))
@@ -261,9 +280,49 @@ class Loader
     }
 
 // initialize enum from serialized wrapper
-  static function initEnum(name: String, src: Dynamic, depth: Int): Dynamic
+// also handles legacy wrappers for engine enums
+  static function initEnum(name: String, src: Dynamic, depth: Int,
+      formatVersion: Int): Dynamic
     {
       var classID: String = untyped src._classID;
+      // _AITraitType/_Skill/_Improv converted to enum-abstract at the v3 bump,
+      // so only pre-v3 saves wrap them
+      if (formatVersion < 3 &&
+          (classID == '_AITraitType' ||
+           classID == '_Skill' ||
+           classID == '_Improv'))
+        return src.val;
+      // _Goal converted after the v3 bump (still unreleased), so its wrapper
+      // appears in pre-v3 AND interim v3 saves; post-conversion saves write a
+      // bare string and never reach here, so this needs no version gate
+      if (classID == '_Goal')
+        return src.val;
+      // these enums converted to enum-abstract post-v3 (still unreleased);
+      // wrappers appear in pre-v3 AND interim v3 saves only.
+      // _OrdealMissionType was unified into _MissionType in the same pass —
+      // its v2 wrapper value strings (MISSION_KILL/PERSUADE/COMBAT) round-trip
+      // correctly as bare _MissionType strings.
+      if (classID == '_AbilityType' ||
+          classID == '_AIEffectType' ||
+          classID == '_AIState' ||
+          classID == '_AITargetType' ||
+          classID == '_AreaManagerEventType' ||
+          classID == '_AreaType' ||
+          classID == '_CombatMissionTemplate' ||
+          classID == '_CultBaseOrganType' ||
+          classID == '_CultEffectType' ||
+          classID == '_CultState' ||
+          classID == '_Difficulty' ||
+          classID == '_GameState' ||
+          classID == '_LocationType' ||
+          classID == '_MissionType' ||
+          classID == '_OrdealMissionType' ||
+          classID == '_OrdealType' ||
+          classID == '_PlayerState' ||
+          classID == '_RivalBaseOrganType' ||
+          classID == '_RivalCultTactic' ||
+          classID == '_TextColor')
+        return src.val;
       var ee = Type.resolveEnum(classID);
       if (ee == null)
         throw 'No such enum: ' + classID;
@@ -276,7 +335,7 @@ class Loader
     {
       var isEnum: Bool = untyped src._isEnum;
       if (isEnum)
-        return initEnum(name, src, depth);
+        return initEnum(name, src, depth, formatVersion);
 
       // read common circular reference markers
       var hasUI: Bool = untyped src._hasUI;

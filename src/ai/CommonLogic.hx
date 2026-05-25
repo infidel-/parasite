@@ -150,7 +150,7 @@ class CommonLogic
         }
 
       // propagate attacker-side combat noise
-      game.managerArea.onNoise(attacker.x, attacker.y, weapon.isRanged);
+      game.managerArea.onAttackNoise(attacker);
 
       // notify target
       if (target.type == TARGET_AI)
@@ -328,7 +328,7 @@ class CommonLogic
             ' for ' + damage + ' damage.');
 
           // on damage event
-          target.onDamage(damage, attacker.ai);
+          target.onDamage(damage, attacker);
         }
 
       // run weapon-specific post-hit effects

@@ -11,6 +11,8 @@ import const.*;
 import cult.Cult;
 import js.Browser;
 
+import mods.ModEventRegistry;
+
 class AI extends AIData
 {
   static var _ignoredFields = [ 'entity', 'event', 'npc', 'sounds',
@@ -34,6 +36,9 @@ class AI extends AIData
   // target x,y when roaming or moving to (resets on state change)
   public var roamTargetX: Int;
   public var roamTargetY: Int;
+  // last seen hostile tile, used by alert/search chase
+  public var lastSeenX: Int;
+  public var lastSeenY: Int;
   // guarding target (for guards)
   public var guardTargetX: Int;
   public var guardTargetY: Int;
@@ -80,6 +85,8 @@ class AI extends AIData
       sounds = null;
       roamTargetX = -1;
       roamTargetY = -1;
+      lastSeenX = -1;
+      lastSeenY = -1;
       guardTargetX = -1;
       guardTargetY = -1;
       state = AI_STATE_IDLE;
@@ -318,11 +325,19 @@ public function show()
           state != AI_STATE_SEARCH_AREA)
         return;
 
+      // entering alert from a calm state: use noise origin as initial hint
+      // already alerted with no visual track: noise fills the gap
+      // already alerted with visual track: keep it (avoids friendly-fire
+      // noise poisoning the chase target)
+      var wasCalm = (state == AI_STATE_IDLE || state == AI_STATE_MOVE_TARGET);
       if (state != AI_STATE_ALERT)
         setState(AI_STATE_ALERT, REASON_WITNESS);
       timers.alert = ALERTED_TIMER;
-      roamTargetX = xx;
-      roamTargetY = yy;
+      if (wasCalm || lastSeenX < 0 || lastSeenY < 0)
+        {
+          lastSeenX = xx;
+          lastSeenY = yy;
+        }
     }
 
 // writes one AI trace line to the browser console
@@ -380,6 +395,8 @@ public function show()
         {
           roamTargetX = -1;
           roamTargetY = -1;
+          lastSeenX = -1;
+          lastSeenY = -1;
 
           // message on first alert
           if (isHuman && vreason != REASON_ATTACH)
@@ -397,6 +414,8 @@ public function show()
         {
           roamTargetX = -1;
           roamTargetY = -1;
+          lastSeenX = -1;
+          lastSeenY = -1;
         }
 
       if (msg != null)
@@ -798,15 +817,20 @@ public function show()
 
 
 // event: AI receives damage
-  public function onDamage(damage: Int, ?isFromPlayerArea: Bool = false)
+// `attacker` is the wrapped attack source for combat-driven damage; null for
+// organ ticks, effect ticks, and other non-combat damage. `skipHostDetach`
+// suppresses the host-detach callback when PlayerArea is already mid-handle
+// (re-entry guard set true by PlayerArea.onDamageHost).
+  public function onDamage(damage: Int, ?attacker: Attacker,
+      ?skipHostDetach: Bool = false)
     {
       organs.onDamage(damage); // propagate event to organs
       health -= damage;
       if (health == 0) // AI death
         {
-          die();
+          die(attacker);
           // direct host damage can bypass player host handlers
-          if (!isFromPlayerArea &&
+          if (!skipHostDetach &&
               game.location == LOCATION_AREA &&
               game.player.state == PLR_STATE_HOST &&
               game.player.host == this)
@@ -851,7 +875,7 @@ public function show()
 
 
 // AI death
-  public function die()
+  public function die(?attacker: Attacker)
     {
       // AI already dead from another call
       if (state == AI_STATE_DEAD)
@@ -865,9 +889,24 @@ public function show()
           game.player.host != this)
         log('dies.');
       setState(AI_STATE_DEAD);
+      // mod event: pre-removeAI. entity ref is still live here; mods may
+      // snapshot icon/state before AreaGame.removeAI nulls ai.entity below
+      ModEventRegistry.fire(ModEventRegistry.AI_DIE_PRE, {
+        game: game,
+        ai: this,
+        area: game.area,
+        entity: entity,
+        attacker: attacker,
+      });
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook
+      // mod event: AI actor died in this area
+      mods.ModEventRegistry.fire(mods.ModEventRegistry.AI_DIE, {
+        game: game,
+        ai: this,
+        area: game.area,
+      });
       var o = new BodyObject(game, game.area.id, x, y, type);
 
       // decay acceleration
@@ -1108,6 +1147,12 @@ public function show()
         return;
       if (isSameCult(ai))
         return;
+      // law treats fellow law as friendly unless cultist on either side
+      if (isLaw() &&
+          ai.isLaw() &&
+          !isCultist &&
+          !ai.isCultist)
+        return;
       if (Lambda.has(enemies, ai.id))
         return;
       enemies.add(ai.id);
@@ -1119,10 +1164,7 @@ public function show()
       if (attackerAI == null)
         return;
 
-      var isLawVictim =
-        (type == 'police' ||
-         type == 'security' ||
-         type == 'soldier');
+      var isLawVictim = isLaw();
       var attackerIsPlayerCultist = attackerAI.isPlayerCultist();
 
       for (tmp in game.area.getAllAI())
@@ -1140,12 +1182,12 @@ public function show()
             }
 
           // victim is non-cultist law: notify nearby non-cultist law units
+          // addEnemy already filters law-on-law unless cultist; this still
+          // propagates cultist infiltrators to nearby law
           if (isLawVictim &&
               !isCultist &&
               !tmp.isCultist &&
-              (tmp.type == 'police' ||
-               tmp.type == 'security' ||
-               tmp.type == 'soldier') &&
+              tmp.isLaw() &&
               Const.distance(x, y, tmp.x, tmp.y) <= 10)
             {
               tmp.addEnemy(attackerAI);
@@ -1365,14 +1407,27 @@ public function show()
 // this ai was attacked by (player, ai)
   public function attacked(attacker: { who: String, ai: AI, weapon: WeaponInfo })
     {
-      // hosts are braindead in that regard
-      if (!isPlayerHost())
-        {
-          // alert this AI (fear/aggro)
-          setState(AI_STATE_ALERT);
-          onAttack(); // attack event
-        }
+      // hosts are braindead in that regard; body is player-controlled,
+      // skip alert + aggro propagation entirely so attackers don't poison
+      // the host's enemies list or fan out as enemies to nearby law
+      if (isPlayerHost())
+        return;
 
+      // alert this AI (fear/aggro)
+      setState(AI_STATE_ALERT);
+      onAttack(); // attack event
+
+      // seed last seen so victim has a chase target even without LOS
+      if (attacker.who == 'player')
+        {
+          lastSeenX = game.playerArea.x;
+          lastSeenY = game.playerArea.y;
+        }
+      else if (attacker.who == 'ai' && attacker.ai != null)
+        {
+          lastSeenX = attacker.ai.x;
+          lastSeenY = attacker.ai.y;
+        }
 
       // propagate attack aggro for ai attackers
       if (attacker.who == 'ai')

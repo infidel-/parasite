@@ -2,6 +2,14 @@ import game.*;
 
 class Const
 {
+  // mod API surface version (bump on breaking change)
+  public static inline var MOD_API_VERSION = 1;
+
+  // runtime debug flag — true when main resolved a sentinel (.debug file in cwd) at boot.
+  // gates console cheats, hud debug overlay, profile timers, ai tooltip extras, etc.
+  // populated by Main.init() from HostBridge.isDebug before any guarded code runs
+  public static var isDebug: Bool = false;
+
   public static var FONTS = [ 16, 24, 32, 40 ];
   public static var LAYER_MOUSE = 10; // mouse cursor layer - highest
   public static var LAYER_UI = 9; // ui windows layer

@@ -232,6 +232,26 @@ hr {
   resize: none;
 }
 
+/* gray inline completion hint, overlaid on top of the textarea */
+#hud-console-hint {
+  position: absolute;
+  overflow: hidden;
+  white-space: pre;
+  pointer-events: none;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  opacity: 0.9;
+}
+
+#hud-console-hint .chint-pre {
+  color: transparent;
+}
+
+#hud-console-hint .chint-ghost {
+  color: var(--text-color-gray);
+}
+
 .text {
   color: var(--text-fg-color);
   background: #202020aa;
@@ -614,7 +634,7 @@ hr {
 
 #window-yesno {
   width: 40%;
-  height: 4em;
+  min-height: 4em;
 }
 
 #window-difficulty {
@@ -1035,6 +1055,135 @@ fieldset {
   text-align: center;
   padding: 8px;
   margin-bottom: 10px;
+}
+
+/* sci-fi entrance: title clip-reveal + RGB glitch (skip first-ever-run, which has its own dark fade) */
+.window-fade-in #window-mainmenu-title {
+  animation:
+    title-scan-in 0.55s ease-out backwards,
+    title-glitch 0.45s steps(5) 0.15s;
+}
+
+@keyframes title-scan-in {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+    filter: brightness(2);
+  }
+  60% {
+    filter: brightness(1.4);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes title-glitch {
+  0%, 100% {
+    text-shadow:
+      -0.05ch -0.05ch 0px rgb(255 255 255 / 15%),
+      0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
+  }
+  20% {
+    text-shadow:
+      2px 0 #5ebee5, -2px 0 #fd97ff,
+      -0.05ch -0.05ch 0px rgb(255 255 255 / 15%),
+      0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
+  }
+  40% {
+    text-shadow:
+      -2px 0 #5ebee5, 2px 0 #fd97ff,
+      -0.05ch -0.05ch 0px rgb(255 255 255 / 15%),
+      0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
+  }
+  60% {
+    text-shadow:
+      1px 0 #5ebee5, -1px 0 #fd97ff,
+      -0.05ch -0.05ch 0px rgb(255 255 255 / 15%),
+      0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
+  }
+  80% {
+    text-shadow:
+      -1px 0 #5ebee5, 1px 0 #fd97ff,
+      -0.05ch -0.05ch 0px rgb(255 255 255 / 15%),
+      0.1ch 0.1ch 0px rgb(11 24 36 / 80%);
+  }
+}
+
+/* staggered item slide-in with cyan glow pulse */
+.window-fade-in .window-mainmenu-cont {
+  animation: item-slide-in 0.4s ease-out backwards;
+}
+
+.window-fade-in .window-mainmenu-cont:nth-child(1) { animation-delay: 0.10s; }
+.window-fade-in .window-mainmenu-cont:nth-child(2) { animation-delay: 0.15s; }
+.window-fade-in .window-mainmenu-cont:nth-child(3) { animation-delay: 0.20s; }
+.window-fade-in .window-mainmenu-cont:nth-child(4) { animation-delay: 0.25s; }
+.window-fade-in .window-mainmenu-cont:nth-child(5) { animation-delay: 0.30s; }
+.window-fade-in .window-mainmenu-cont:nth-child(6) { animation-delay: 0.35s; }
+.window-fade-in .window-mainmenu-cont:nth-child(7) { animation-delay: 0.40s; }
+.window-fade-in .window-mainmenu-cont:nth-child(8) { animation-delay: 0.45s; }
+
+@keyframes item-slide-in {
+  0% {
+    transform: translateX(-30px);
+    opacity: 0;
+    box-shadow: 0 0 0 transparent;
+  }
+  60% {
+    transform: translateX(2px);
+    box-shadow:
+      0 0 14px color-mix(in srgb, var(--text-color-energy) 80%, transparent),
+      inset 0 0 8px color-mix(in srgb, var(--text-color-energy) 25%, transparent);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+/* border-image glow pulse */
+.window-fade-in #window-mainmenu {
+  animation: window-glow-pulse 1.0s ease-out backwards;
+}
+
+@keyframes window-glow-pulse {
+  0% {
+    filter:
+      brightness(1.4)
+      drop-shadow(0 0 4px color-mix(in srgb, var(--text-color-energy) 60%, transparent));
+  }
+  40% {
+    filter:
+      brightness(1.1)
+      drop-shadow(0 0 24px color-mix(in srgb, var(--text-color-energy) 85%, transparent));
+  }
+  70% {
+    filter:
+      brightness(1)
+      drop-shadow(0 0 12px color-mix(in srgb, var(--text-color-energy) 40%, transparent));
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* bg + crowd canvases ramp from dim to full */
+.window-fade-in .menu-bg-canvas,
+.window-fade-in .menu-crowd-canvas {
+  animation: canvas-brightness-ramp 0.7s ease-out backwards;
+}
+
+@keyframes canvas-brightness-ramp {
+  0% {
+    filter: brightness(0.15) saturate(0.3);
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+  }
 }
 
 #window-newgame {
@@ -1847,4 +1996,130 @@ input[type="radio"]:focus {
 
 .cult-members-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* MODS window */
+#window-mods {
+  border: 30px solid;
+  width: 56ch;
+  pointer-events: all;
+  display: flex;
+  flex-direction: column;
+}
+
+#window-mods-title {
+  font-size: 2em;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+#window-mods-contents {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mods-section {
+  font-weight: bold;
+  text-align: center;
+  padding-top: 10px;
+  padding-bottom: 5px;
+  opacity: 0.7;
+  letter-spacing: 0.15em;
+}
+
+.mods-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 8px;
+}
+
+.mods-row-failed {
+  opacity: 0.45;
+}
+
+.mods-row-shadowed {
+  opacity: 0.45;
+}
+
+.mods-check {
+  flex: 0 0 auto;
+  display: inline-block;
+  cursor: pointer;
+  padding-right: 4px;
+}
+
+.mods-check-span {
+  top: 0;
+  right: 0;
+}
+
+.mods-row-shadowed .mods-check {
+  cursor: not-allowed;
+}
+
+.mods-label {
+  flex: 1 1 auto;
+}
+
+.mods-link {
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding: 0 6px;
+  opacity: 0.7;
+}
+.mods-link:hover {
+  opacity: 1;
+}
+
+.mods-reason {
+  padding: 0 8px 6px 38px;
+  font-size: 90%;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.mods-empty {
+  text-align: center;
+  padding: 20px 8px;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.mods-notice {
+  text-align: center;
+  padding: 14px 8px 6px 8px;
+  font-size: 90%;
+  opacity: 0.7;
+}
+
+.mods-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 0 4px 0;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.mods-button {
+  background: #3a4f71;
+  color: white;
+  border-radius: 2px;
+  border: solid 2px #abc4ea;
+  text-align: center;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.mods-button:hover {
+  background-color: #5f818c;
+  font-weight: bold;
+}
+
+.mods-button:active {
+  color: #879ea3;
 }

@@ -4,6 +4,7 @@ package tiles;
 
 import Const;
 import haxe.ds.StringMap;
+import mods.AssetPath;
 
 class UndergroundLab extends Tileset
 {
@@ -2339,7 +2340,7 @@ class UndergroundLab extends Tileset
   function registerDecorationObjWallLayer(imageKey: String, path: String)
     {
       var layer = new js.html.Image();
-      layer.src = path;
+      layer.src = AssetPath.resolve(path);
       var layerID = wallDecorationLayers.length;
       wallDecorationLayers.push(layer);
       wallDecorationLayerRepeatEvery.push(-1);

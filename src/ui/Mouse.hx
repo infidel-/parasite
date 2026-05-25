@@ -5,6 +5,7 @@ package ui;
 import game.Game;
 import ai.AI;
 import js.html.MouseEvent;
+import mods.AssetPath;
 import objects.AreaObject;
 import objects.base.RivalBaseOrganObject;
 
@@ -57,15 +58,13 @@ class Mouse
           onClickBase(pos);
           return;
         }
-#if mydebug
-      // debug mode (middle mouse button)
-      if (e.button == 1)
+      // debug mode (middle mouse button) — only honored when debug sentinel active
+      if (Const.isDebug && e.button == 1)
         {
           if (game.location == LOCATION_AREA)
             onClickDebug(pos);
           return;
         }
-#end
       // some window open
       if (game.isInputLocked() ||
           game.ui.state != UISTATE_DEFAULT)
@@ -81,11 +80,9 @@ class Mouse
     }
 
 
-// DEBUG: on click
-#if mydebug
-  function onClickDebug(pos)
+// DEBUG: on click — only invoked when Const.isDebug
+  function onClickDebug(pos: _Point)
     {
-      var ai = game.area.getAI(pos.x, pos.y);
       trace('(' + pos.x + ',' + pos.y + ') ' +
         game.area.getCellType(pos.x, pos.y) + ' ' +
         game.area.getCellTypeString(pos.x, pos.y) +
@@ -105,7 +102,6 @@ class Mouse
             trace(line);
         }
     }
-#end
 
 
 // on click in area mode
@@ -430,7 +426,7 @@ class Mouse
 
       cursor = c;
       game.ui.canvas.style.cursor = 'url(' +
-        'img/mouse' + c + '.png) ' +
+        AssetPath.resolve('img/mouse' + c + '.png') + ') ' +
         (c == 0 ? '0 1' : '16 16') + ', auto';
     }
 

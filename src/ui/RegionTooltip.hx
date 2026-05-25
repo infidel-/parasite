@@ -1,6 +1,7 @@
 // region tooltip overlay for HUD
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 import game.*;
@@ -26,7 +27,7 @@ class RegionTooltip
       overlay.style.display = 'none';
       overlay.style.position = 'fixed';
       overlay.style.pointerEvents = 'none';
-      overlay.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
+      overlay.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
       hud.container.appendChild(overlay);
     }
 

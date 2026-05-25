@@ -29,7 +29,6 @@ class AreaManager extends _SaveObject
           ev.ai = area.getAIByID(ev.aiID);
     }
 
-#if mydebug
   public function debugInfo(buf: StringBuf)
     {
       if (_list.length > 0)
@@ -37,7 +36,6 @@ class AreaManager extends _SaveObject
       for (e in _list)
         buf.add(e.type + ': ' + e.turns + '<br>');
     }
-#end
 
 // add event originating from x,y
 // NOTE: params must be serializable!
@@ -56,9 +54,7 @@ class AreaManager extends _SaveObject
         turns: turns,
         params: params
       };
-#if mydebug
 //      Const.p(game.turns + ': AreaManager.add(): ' + e);
-#end
 
       _list.push(e);
     }
@@ -79,9 +75,7 @@ class AreaManager extends _SaveObject
         turns: turns,
         params: null,
       };
-#if mydebug
  //     Const.p(game.turns + ': AreaManager.addObject(): ' + e);
-#end
 
       _list.push(e);
     }
@@ -102,9 +96,7 @@ class AreaManager extends _SaveObject
         turns: turns,
         params: null,
       };
-#if mydebug
 //      Const.p(game.turns + ': AreaManager.addAI(): ' + e);
-#end
 
       _list.push(e);
     }
@@ -152,9 +144,7 @@ class AreaManager extends _SaveObject
             }
 
           // run this event
-#if mydebug
 //      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
-#end
 
           switch (e.type)
             {
@@ -190,25 +180,32 @@ class AreaManager extends _SaveObject
         }
     }
 
-
-// ===============================  EVENTS  =========================================
-
-
 // event: attack noise (called immediately)
-  public function onNoise(x: Int, y: Int, isRanged: Bool)
+  public function onAttackNoise(attacker: Attacker)
     {
-      var radius = (isRanged ? AI.HEAR_DISTANCE : AI.VIEW_DISTANCE);
+      var radius = (attacker.weapon.isRanged ?
+        AI.HEAR_DISTANCE : AI.VIEW_DISTANCE);
       if (area.info.isSmall == true)
         radius *= 2;
-      var tmp = area.getAIinRadius(x, y, radius, false);
+      var tmp = area.getAIinRadius(attacker.x, attacker.y, radius, false);
       for (ai in tmp)
-        if (ai.isAggressive)
-          ai.onHearNoise(x, y);
-        else if (ai.state == AI_STATE_IDLE ||
-            ai.state == AI_STATE_MOVE_TARGET)
-          ai.setState(AI_STATE_ALERT, REASON_WITNESS);
+        {
+          // skip attacker hearing own shot
+          if (ai == attacker.ai)
+            continue;
+          // same-cult listeners ignore: prevents friendly-fire noise from
+          // dragging cultists to chase each other (law/cops keep helping
+          // each other so noise propagates among them)
+          if (attacker.ai != null &&
+              ai.isSameCult(attacker.ai))
+            continue;
+          if (ai.isAggressive)
+            ai.onHearNoise(attacker.x, attacker.y);
+          else if (ai.state == AI_STATE_IDLE ||
+              ai.state == AI_STATE_MOVE_TARGET)
+            ai.setState(AI_STATE_ALERT, REASON_WITNESS);
+        }
     }
-
 
 // event: civilian calls the law
   function onCallLaw(e: AreaEvent)
@@ -302,7 +299,6 @@ class AreaManager extends _SaveObject
       add(AREAEVENT_ARRIVE_LAW, e.ai.x, e.ai.y, area.info.lawResponseTime);
     }
 
-
 // event: alert law enf. in area
   function onAlertLaw(e: AreaEvent)
     {
@@ -312,7 +308,6 @@ class AreaManager extends _SaveObject
             ai.state == AI_STATE_IDLE)
           ai.setState(AI_STATE_ALERT, REASON_BACKUP);
     }
-
 
 // event: law arrives
   function onArriveLaw(e: AreaEvent)
@@ -359,7 +354,6 @@ class AreaManager extends _SaveObject
           ai.alertness = 50;
         }
     }
-
 
 // event: police/security/army calls for backup
   function onCallBackup(e: AreaEvent)
@@ -469,7 +463,6 @@ class AreaManager extends _SaveObject
         }
     }
 
-
 // event: team member calls for backup
   function onCallTeamBackup(e: AreaEvent)
     {
@@ -544,12 +537,11 @@ class AreaManager extends _SaveObject
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
 
-          // set roam target
-          ai.roamTargetX = e.x;
-          ai.roamTargetY = e.y;
+          // chase call origin as last seen
+          ai.lastSeenX = e.x;
+          ai.lastSeenY = e.y;
         }
     }
-
 
 // event: object decay
 // NOTE: despawn != decay

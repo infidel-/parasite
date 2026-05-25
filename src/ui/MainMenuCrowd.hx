@@ -8,6 +8,7 @@ import js.Browser;
 import js.html.CanvasElement;
 import js.html.CanvasRenderingContext2D;
 import js.html.Image;
+import mods.AssetPath;
 
 typedef _CrowdMember = {
   id: Int,            // monotonic, reassigned on recycle so parasite can detect host swap
@@ -121,7 +122,7 @@ class MainMenuCrowd
         atlasLoaded = true;
         onAtlasReady();
       };
-      atlasImg.src = 'img/full-height.png';
+      atlasImg.src = AssetPath.resolve('img/full-height.png');
 
       // load parasite icon for host-jumping animation
       parasiteLoaded = false;
@@ -136,7 +137,7 @@ class MainMenuCrowd
         parasiteSil = bakeSilhouette(parasiteImg, '#613961');
         parasiteLoaded = true;
       };
-      parasiteImg.src = 'img/parasite-large.png';
+      parasiteImg.src = AssetPath.resolve('img/parasite-large.png');
     }
 
 // build a tinted, alpha-preserving copy of an image (silhouette in given color)

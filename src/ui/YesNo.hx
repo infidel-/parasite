@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -16,7 +17,7 @@ class YesNo extends UIWindow
     {
       super(g, 'window-yesno');
       window.className += ' window-dialog';
-      window.style.borderImage = "url('./img/window-dialog.png') 100 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();
       text.className = 'window-dialog-text';
@@ -26,7 +27,7 @@ class YesNo extends UIWindow
       yes.className = 'hud-button window-dialog-button';
       yes.id = 'window-yesno-yes';
       yes.innerHTML = 'YES';
-      yes.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      yes.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       yes.onclick = function (e) {
         func(true);
         game.scene.sounds.play('click-menu');
@@ -38,7 +39,7 @@ class YesNo extends UIWindow
       no.className = 'hud-button window-dialog-button';
       no.id = 'window-yesno-no';
       no.innerHTML = 'NO';
-      no.style.borderImage = "url('./img/window-dialog-button.png') 14 fill / 1 / 0 stretch";
+      no.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       no.onclick = function (e) {
         func(false);
         game.scene.sounds.play('click-menu');

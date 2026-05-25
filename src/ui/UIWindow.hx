@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
@@ -40,7 +41,7 @@ class UIWindow
       close = Browser.document.createDivElement();
       close.className = 'hud-button window-common-close';
       close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('./img/window-common-close.png') 92 fill / 1 / 0 stretch";
+      close.style.borderImage = "url('" + AssetPath.resolve('img/window-common-close.png') + "') 92 fill / 1 / 0 stretch";
       close.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');

@@ -1,6 +1,7 @@
 // player timeline GUI window
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -13,7 +14,7 @@ class Timeline extends UIWindow
   public function new (g: Game)
     {
       super(g, 'window-timeline');
-      window.style.borderImage = "url('./img/window-timeline.png') 208 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-timeline.png') + "') 208 fill / 1 / 0 stretch";
 
       var cont = Browser.document.createDivElement();
       cont.id = 'window-timeline-text';
@@ -44,9 +45,8 @@ class Timeline extends UIWindow
 
           // first line (events are always numbered relative to known ones)
           buf.add('<span class=window-timeline-event-title>Event ' + event.num);
-#if mydebug
-          buf.add(Const.smallgray(' [index: ' + event.index + ']'));
-#end
+          if (Const.isDebug)
+            buf.add(Const.smallgray(' [index: ' + event.index + ']'));
           if (event.location != null)
             {
               buf.add(': ');

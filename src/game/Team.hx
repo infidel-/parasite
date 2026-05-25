@@ -273,8 +273,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
               var ai = game.area.spawnAI('blackops', loc.x, loc.y);
               // send ambushers to the player's last seen tile immediately
-              ai.roamTargetX = x;
-              ai.roamTargetY = y;
+              ai.lastSeenX = x;
+              ai.lastSeenY = y;
               ai.setState(AI_STATE_SEARCH_LAST_SEEN);
               ai.timers.alert = AI.ALERTED_TIMER;
               ai.alertness = 75;
@@ -354,8 +354,8 @@ class Team extends FSM<_TeamState, _TeamFlag>
             loc = game.area.findEmptyLocation();
           var ai = game.area.spawnAI('blackops', loc.x, loc.y);
           // send ambushers to the player's last seen tile immediately
-          ai.roamTargetX = game.playerArea.x;
-          ai.roamTargetY = game.playerArea.y;
+          ai.lastSeenX = game.playerArea.x;
+          ai.lastSeenY = game.playerArea.y;
           ai.setState(AI_STATE_SEARCH_LAST_SEEN);
           ai.timers.alert = AI.ALERTED_TIMER;
           ai.alertness = 75;

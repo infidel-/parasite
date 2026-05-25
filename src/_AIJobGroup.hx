@@ -1,10 +1,10 @@
 // available ai job groups
-enum _AIJobGroup
+enum abstract _AIJobGroup(String) to String from String
 {
-  GROUP_CIVILIAN;
-  GROUP_COMBAT;
-  GROUP_MEDIA;
-  GROUP_LAWFARE;
-  GROUP_CORPORATE;
-  GROUP_POLITICAL;
+  var GROUP_CIVILIAN = 'GROUP_CIVILIAN';
+  var GROUP_COMBAT = 'GROUP_COMBAT';
+  var GROUP_MEDIA = 'GROUP_MEDIA';
+  var GROUP_LAWFARE = 'GROUP_LAWFARE';
+  var GROUP_CORPORATE = 'GROUP_CORPORATE';
+  var GROUP_POLITICAL = 'GROUP_POLITICAL';
 }

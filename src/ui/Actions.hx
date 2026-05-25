@@ -2,6 +2,7 @@
 
 package ui;
 
+import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 
@@ -17,7 +18,7 @@ class Actions extends UIWindow
     {
       super(g, id);
       actionName = 'action';
-      window.style.borderImage = "url('./img/window-temp.png') 130 fill / 1 / 0 stretch";
+      window.style.borderImage = "url('" + AssetPath.resolve('img/window-temp.png') + "') 130 fill / 1 / 0 stretch";
 
       text = Browser.document.createDivElement();
       text.id = id + '-text';

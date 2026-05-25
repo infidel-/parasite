@@ -1,7 +1,6 @@
 package particles;
 
 import js.html.CanvasRenderingContext2D;
-import js.Browser;
 import Const.TILE_SIZE as tile;
 
 class ParticleMoney extends Particle
@@ -41,6 +40,6 @@ class ParticleMoney extends Particle
       e.randomizeScale(0.9);
       e.randomizeAngle();
       e.randomizeDelta();
-      Browser.window.setTimeout(game.scene.updateCamera, 1);
+      game.scene.updateCameraNextTick();
     }
 }

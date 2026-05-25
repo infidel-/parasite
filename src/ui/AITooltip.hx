@@ -1,6 +1,7 @@
 // area AI tooltip overlay for HUD
 package ui;
 
+import mods.AssetPath;
 import ai.AI;
 import js.Browser;
 import js.html.DivElement;
@@ -27,7 +28,7 @@ class AITooltip
       overlay.style.display = 'none';
       overlay.style.position = 'fixed';
       overlay.style.pointerEvents = 'none';
-      overlay.style.borderImage = "url('./img/hud-log-border.png') 15 fill / 1 / 0 stretch";
+      overlay.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
       hud.container.appendChild(overlay);
     }
 
@@ -128,32 +129,33 @@ class AITooltip
           buf.add(' PSY ' + ai.psyche + '<br/>');
         }
 
-#if mydebug
-      if (!ai.isNameKnown)
-        buf.add(Const.smalldebug('[debug] name: ' + ai.name.real) + '<br/>');
-      if (!ai.isJobKnown)
-        buf.add(Const.smalldebug('[debug] job: ' + ai.job) + '<br/>');
-      buf.add(Const.smalldebug('[debug] state: ' + ai.state) + '<br/>');
-      if (!ai.isAttrsKnown)
+      if (Const.isDebug)
         {
-          var attrs = '[debug] STR ' + ai.strength +
-            ' CON ' + ai.constitution +
-            ' INT ' + ai.intellect +
-            ' PSY ' + ai.psyche;
-          buf.add(Const.smalldebug(attrs) + '<br/>');
+          if (!ai.isNameKnown)
+            buf.add(Const.smalldebug('[debug] name: ' + ai.name.real) + '<br/>');
+          if (!ai.isJobKnown)
+            buf.add(Const.smalldebug('[debug] job: ' + ai.job) + '<br/>');
+          buf.add(Const.smalldebug('[debug] state: ' + ai.state) + '<br/>');
+          if (!ai.isAttrsKnown)
+            {
+              var attrs = '[debug] STR ' + ai.strength +
+                ' CON ' + ai.constitution +
+                ' INT ' + ai.intellect +
+                ' PSY ' + ai.psyche;
+              buf.add(Const.smalldebug(attrs) + '<br/>');
+            }
+          buf.add(Const.smalldebug('[debug] health ' + ai.health + '/' + ai.maxHealth + '<br/>'));
+          buf.add('<hr/>');
+          buf.add(Const.smalldebug('[debug] id: ' + ai.id) + '<br/>');
+          buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');
+          buf.add(Const.smalldebug('[debug] alertness: ' + ai.alertness) + '<br/>');
+          addDebugListRow(buf, 'abilities', getAbilitiesText(ai));
+          addDebugListRow(buf, 'effects', ai.effects.toString());
+          addDebugListRow(buf, 'inventory', ai.inventory.toString());
+          addDebugListRow(buf, 'skills', ai.skills.toString());
+          addDebugListRow(buf, 'organs', ai.organs.toString());
+          addDebugListRow(buf, 'traits', getTraitsText(ai));
         }
-      buf.add(Const.smalldebug('[debug] health ' + ai.health + '/' + ai.maxHealth + '<br/>'));
-      buf.add('<hr/>');
-      buf.add(Const.smalldebug('[debug] id: ' + ai.id) + '<br/>');
-      buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');
-      buf.add(Const.smalldebug('[debug] alertness: ' + ai.alertness) + '<br/>');
-      addDebugListRow(buf, 'abilities', getAbilitiesText(ai));
-      addDebugListRow(buf, 'effects', ai.effects.toString());
-      addDebugListRow(buf, 'inventory', ai.inventory.toString());
-      addDebugListRow(buf, 'skills', ai.skills.toString());
-      addDebugListRow(buf, 'organs', ai.organs.toString());
-      addDebugListRow(buf, 'traits', getTraitsText(ai));
-#end
       return buf.toString();
     }
 

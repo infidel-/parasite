@@ -254,17 +254,17 @@ class RoadPlanBranchWalker
 // walk one ROAD2 or thin-road branch with turns, stops, and downgrades
   public function walkBranchRoad(grid: RoadPlanGrid, walker: RoadWalker)
     {
-#if mydebug
       var profileLabel = 'branch.walkBranchRoad.' + Std.string(walker.type);
       var profileStartTS = haxe.Timer.stamp() * 1000.0;
 
 // flush one branch-walk profiling sample before returning
       function finishWalkBranchRoadProfile(reason: String)
         {
+          if (!Const.isDebug) return;
           plan.addMapProfileSample(profileLabel, haxe.Timer.stamp() * 1000.0 - profileStartTS);
           plan.addMapProfileCount(profileLabel + '.exit.' + reason);
         }
-#end
+
       if (walker.type == ROAD2)
         {
           var snapped = road2Network.snapRoad2Anchor(walker.x, walker.y);
@@ -284,9 +284,7 @@ class RoadPlanBranchWalker
           var nextY = walker.y + (walker.type == ROAD2 ? walker.dy * plan.ROAD2_GRID_STEP : walker.dy);
           if (!gridOps.isInPlanBounds(nextX, nextY))
             {
-#if mydebug
               finishWalkBranchRoadProfile('outOfBounds');
-#end
             return;
             }
           var nextCellOccupied = walker.type != ROAD2 &&
@@ -301,9 +299,7 @@ class RoadPlanBranchWalker
               if (isThinRoadType(walker.type) &&
                   nextCellOccupied)
                 addThinRoadBlockedJoin(grid, walker.x, walker.y, nextX, nextY, walker.type);
-#if mydebug
               finishWalkBranchRoadProfile('blocked');
-#end
             return;
             }
           var stopAfterPaint = isThinRoadType(walker.type) &&
@@ -313,17 +309,13 @@ class RoadPlanBranchWalker
           if (walker.type == ROAD2 &&
               road2Network.isRoad2GroundAtPlanCell(nextX, nextY))
             {
-#if mydebug
               finishWalkBranchRoadProfile('road2Ground');
-#end
               return;
             }
           if (isThinRoadType(walker.type) &&
               !plan.canThinRoadUseAreaType(walker.type, nextArea))
             {
-#if mydebug
               finishWalkBranchRoadProfile('blockedArea');
-#end
               return;
             }
           var oldDx = walker.dx;
@@ -365,9 +357,7 @@ class RoadPlanBranchWalker
 
           if (stopAfterPaint)
             {
-#if mydebug
               finishWalkBranchRoadProfile('stopAfterPaint');
-#end
             return;
             }
 
@@ -377,9 +367,7 @@ class RoadPlanBranchWalker
               if (walker.tSplitCountdown <= 0)
                 {
                   spawnRoad3TSplit(grid, walker);
- #if mydebug
                   finishWalkBranchRoadProfile('tSplit');
-#end
                   return;
                 }
             }
@@ -400,9 +388,7 @@ class RoadPlanBranchWalker
                   if (plan.rng.nextFloat() < Math.min(1.0,
                       walker.localStopCount * plan.ROAD3_GROUND_STOP_CHANCE_STEP))
                     {
-#if mydebug
                       finishWalkBranchRoadProfile('thinLocalStop');
-#end
                     return;
                     }
                 }
@@ -414,9 +400,7 @@ class RoadPlanBranchWalker
                   if (plan.rng.nextFloat() < Math.min(1.0,
                       walker.groundBlockCount * plan.ROAD3_GROUND_STOP_CHANCE_STEP))
                     {
-#if mydebug
                       finishWalkBranchRoadProfile('thinGroundStop');
-#end
                     return;
                     }
                 }
@@ -424,9 +408,7 @@ class RoadPlanBranchWalker
             }
           if (!plan.isCityAreaType(nextArea))
             {
-#if mydebug
               finishWalkBranchRoadProfile('leftCity');
-#end
             return;
             }
         }
@@ -609,32 +591,24 @@ class RoadPlanBranchWalker
         {
           dx = -walker.dy;
           dy = walker.dx;
-#if mydebug
           plan.addMapProfileCount(counterBase + '.crossingRoll.right');
-#end
         }
       else
         {
           dx = walker.dy;
           dy = -walker.dx;
-#if mydebug
           plan.addMapProfileCount(counterBase + '.crossingRoll.left');
-#end
         }
 
       if (!canUseBranchRoadStart(grid, walker.x, walker.y, dx, dy, true))
         {
-#if mydebug
           plan.addMapProfileCount(counterBase + '.crossingBlocked');
-#end
           return false;
         }
 
       walkBranchRoad(grid, makeThinRoadWalker(walker.x, walker.y, dx, dy, walker.type, -1, false,
         gridOps.getRoadDirectionMask(dx, dy)));
-#if mydebug
       plan.addMapProfileCount(counterBase + '.crossingSpawned');
-#end
       return true;
     }
 

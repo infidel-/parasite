@@ -1,6 +1,6 @@
 // ordeal type enumeration
-enum _OrdealType
+enum abstract _OrdealType(String) to String from String
 {
-  ORDEAL_COMMUNAL;
-  ORDEAL_PROFANE;
+  var ORDEAL_COMMUNAL = 'ORDEAL_COMMUNAL';
+  var ORDEAL_PROFANE = 'ORDEAL_PROFANE';
 }

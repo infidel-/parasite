@@ -7,6 +7,7 @@ import _AtmosphereLightMeta;
 import game.AreaGame;
 import js.html.CanvasRenderingContext2D;
 import js.html.Image;
+import mods.AssetPath;
 
 typedef _WallDecorationLayer = {
   var path: String;
@@ -32,7 +33,7 @@ class Tileset
   public function new(path: String)
     {
       image = new Image();
-      image.src = path;
+      image.src = AssetPath.resolve(path);
       voidTile = {
         row: 0,
         col: 0,
@@ -74,7 +75,7 @@ class Tileset
       ?rows: Array<Int>)
     {
       var layer = new Image();
-      layer.src = path;
+      layer.src = AssetPath.resolve(path);
       floorDecorationLayers.push(layer);
 
       var layerIcons: Array<_Icon> = [];
@@ -127,7 +128,7 @@ class Tileset
   public function addWallDecorationLayerRepeat(layerInfo: _WallDecorationLayer)
     {
       var layer = new Image();
-      layer.src = layerInfo.path;
+      layer.src = AssetPath.resolve(layerInfo.path);
       var repeatEvery = (layerInfo.repeatEvery != null ?
         layerInfo.repeatEvery : -1);
       wallDecorationLayers.push(layer);
@@ -146,7 +147,7 @@ class Tileset
   public function addWallDecorationLayerChance(layerInfo: _WallDecorationLayer)
     {
       var layer = new Image();
-      layer.src = layerInfo.path;
+      layer.src = AssetPath.resolve(layerInfo.path);
       var chance = (layerInfo.chance != null ?
         layerInfo.chance : -1);
       wallDecorationLayers.push(layer);

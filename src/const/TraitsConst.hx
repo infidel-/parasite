@@ -68,8 +68,33 @@ class TraitsConst
       return positiveTraits[Std.random(positiveTraits.length)];
     }
 
-// trait infos by group
+// trait infos by group; mod-registered entries are appended live via
+// addTrait. the static initializer pulls builtins only; mods run after this
+// fires (Haxe lazy class init), so they use addTrait to extend the map.
   public static var traits: StringMap<Array<_TraitInfo>> = initTraits();
+
+// append a trait info to a category group, creating the group array if
+// missing. id collision within the same group = last-wins + log. used by
+// ModContentApi.registerTrait and any future engine code that
+// wants to register traits dynamically.
+  public static function addTrait(category: String, info: _TraitInfo)
+    {
+      var group = traits.get(category);
+      if (group == null)
+        {
+          group = [];
+          traits.set(category, group);
+        }
+      for (i in 0...group.length)
+        if (group[i].id == info.id)
+          {
+            Const.p('mod content collision on trait id: ' + info.id +
+              ' in group "' + category + '" (last-wins)');
+            group[i] = info;
+            return;
+          }
+      group.push(info);
+    }
 
 // build trait map data
   static function initTraits(): StringMap<Array<_TraitInfo>>
