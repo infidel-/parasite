@@ -777,7 +777,7 @@ class CultBase extends _SaveObject
       if (rival.rivalTactic == RIVAL_COMBAT)
         {
           addPressure(10, rival.id);
-          game.logsg(rival.name + ' drives fighters toward the base.');
+          game.logsg(rival.name + ' drives heathens toward the base.');
         }
       else
         {
