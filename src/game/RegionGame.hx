@@ -18,6 +18,7 @@ class RegionGame extends _SaveObject
   public var info: RegionInfo; // region info link
   public var width: Int;
   public var height: Int;
+  public var mapSeed: Int; // deterministic seed for cached region map image generation
   public var regionMapImage: Image; // cached region map image
 
   var _array: Array<Array<AreaGame>>; // 2-dim array of areas for quicker access
@@ -31,6 +32,7 @@ class RegionGame extends _SaveObject
       game = g;
       typeID = tv;
       id = _maxID++;
+      mapSeed = 0;
       width = w;
       height = h;
       init();
@@ -125,6 +127,7 @@ class RegionGame extends _SaveObject
 // generate a region
   public function generate()
     {
+      mapSeed = Std.random(0x7FFFFFFF);
       if (typeID == WorldConst.REGION_CITY)
         generateCity();
 

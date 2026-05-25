@@ -47,6 +47,8 @@ class World extends _SaveObject
                   habarea.loadPost();
                 }
             }
+          if (r.mapSeed == null)
+            r.mapSeed = 0;
         }
       AreaGame._maxID++;
       AreaObject._maxID++;

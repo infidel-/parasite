@@ -48,6 +48,8 @@ class MetamorphosisPhaseI extends Ordeal
 // adds initiate action when level 3 follower exists
   public static function initiateAction(cult: Cult, actions: Array<_PlayerAction>)
     {
+      // TODO: CURRENTLY DISABLED FOR 0.22 RELEASE
+      return;
       if (cult.level != 1 ||
           cult.metamorphosisPhaseIComplete ||
           cult.countMembers(3) != 1)
