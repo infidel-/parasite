@@ -234,7 +234,7 @@ class Targeting
       if (!game.area.inVisibleRect(target.x, target.y))
         return false;
       if (target.type == TARGET_OBJECT &&
-          !target.obj.isAttackable())
+          !target.obj.isAttackableByFriend())
         return false;
       return game.playerArea.sees(target.x, target.y);
     }
@@ -303,7 +303,7 @@ class Targeting
         }
       for (obj in game.area.getObjects())
         {
-          if (!obj.isAttackable())
+          if (!obj.isAttackableByFriend())
             continue;
           if (!game.area.inVisibleRect(obj.x, obj.y))
             continue;
@@ -359,7 +359,7 @@ class Targeting
         for (i in 0...list.length)
           {
             var entry = list[i];
-            if (!obj.isAttackable())
+            if (!obj.isAttackableByFriend())
               continue;
             if (entry.type == TARGET_OBJECT &&
                 entry.obj.getTargetKey() == obj.getTargetObject().getTargetKey())

@@ -18,17 +18,25 @@ class BaseDefenseLogic
 // this is called in ai.turnInternal() through mission turnAI() hook
   public static function commandAttacker(game: Game, ai: AI)
     {
+      ai.traceAI('BaseDefenseLogic', 'commandAttacker()');
       var base = game.cults[0].base;
       if (base == null)
-        return;
+        {
+          ai.traceAI('BaseDefenseLogic', 'no base');
+          return;
+        }
       var heart = base.getHeart();
       if (heart == null)
-        return;
+        {
+          ai.traceAI('BaseDefenseLogic', 'no heart');
+          return;
+        }
 
       // if defender has drawn aggro, retaliate before attacking the base
       var retaliationTarget = getRetaliationTarget(game, ai);
       if (retaliationTarget != null)
         {
+          ai.traceAI('BaseDefenseLogic', 'retaliation target');
           CommonLogic.logicAttack(Attacker.fromAI(game, ai, false),
             retaliationTarget);
           return;
@@ -38,6 +46,7 @@ class BaseDefenseLogic
       var target = getAdjacentAttackTarget(game, base, ai);
       if (target != null)
         {
+          ai.traceAI('BaseDefenseLogic', 'adjacent organ target');
           CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
             game: game,
             type: TARGET_OBJECT,
@@ -50,9 +59,13 @@ class BaseDefenseLogic
       // otherwise move toward the closest reachable tile adjacent to an organ part
       target = getAttackTarget(game, base, ai);
       if (target == null)
-        return;
+        {
+          ai.traceAI('BaseDefenseLogic', 'no attack target');
+          return;
+        }
       if (ai.state != AI_STATE_ALERT)
         ai.setState(AI_STATE_ALERT);
+      ai.traceAI('BaseDefenseLogic', 'move to organ target');
       ai.logicMoveTo(target.x, target.y);
     }
 
@@ -146,7 +159,7 @@ class BaseDefenseLogic
               var obj = getOrganObject(game, organ, pt.x, pt.y);
               if (obj == null)
                 continue;
-              if (!obj.isAttackable())
+              if (!obj.isAttackableByEnemy())
                 continue;
               var dist = Const.distanceSquared(ai.x, ai.y, pt.x, pt.y);
               if (best == null ||
@@ -180,7 +193,7 @@ class BaseDefenseLogic
               var obj = getOrganObject(game, organ, pt.x, pt.y);
               if (obj == null)
                 continue;
-              if (!obj.isAttackable())
+              if (!obj.isAttackableByEnemy())
                 continue;
               for (i in 0...Const.dirx.length)
                 {

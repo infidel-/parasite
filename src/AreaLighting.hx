@@ -120,7 +120,7 @@ class AreaLighting
 
 // draw full atmosphere lighting overlay for current area
   public function drawAreaLighting(ctx: CanvasRenderingContext2D,
-      cache: Array<Array<Int>>)
+      cache: Array<Array<Int>>, ?smoothLOSOverlay: Bool = false)
     {
       var area = game.area;
       if (!hasLighting(area))
@@ -147,15 +147,16 @@ class AreaLighting
         rebuildDynamicMap(nowTS);
 
       // compose atmosphere overlay from static and dynamic maps, masked by current visibility, and draw it
-      composeOverlay(area, cache);
+      composeOverlay(area, cache, smoothLOSOverlay);
       drawComposed(ctx);
-      if (!isFormaMode())
+      if (!isFormaMode() &&
+          !smoothLOSOverlay)
         fillUnseenBase(area, cache, ctx);
     }
 
 // draw static projected shadows below decorations and sprites
   public function drawStaticUnderSpriteShadows(ctx: CanvasRenderingContext2D,
-      cache: Array<Array<Int>>)
+      cache: Array<Array<Int>>, ?smoothLOSOverlay: Bool = false)
     {
       var area = game.area;
       if (!hasLighting(area))
@@ -166,13 +167,13 @@ class AreaLighting
       if (staticDirty)
         rebuildStaticMap(area);
 
-      drawMapsMaskedByVis(ctx, area, cache,
+      drawMapsMaskedByVis(ctx, area, cache, smoothLOSOverlay,
         projectedShadowUnderMap);
     }
 
 // draw dynamic ai shadows above decorations and below sprites
   public function drawDynamicUnderSpriteShadows(ctx: CanvasRenderingContext2D,
-      cache: Array<Array<Int>>)
+      cache: Array<Array<Int>>, ?smoothLOSOverlay: Bool = false)
     {
       var area = game.area;
       if (!hasLighting(area))
@@ -193,7 +194,7 @@ class AreaLighting
           aiShadowStateKey = stateKey;
         }
 
-      drawMapsMaskedByVis(ctx, area, cache,
+      drawMapsMaskedByVis(ctx, area, cache, smoothLOSOverlay,
         aiShadowMap);
     }
 
@@ -1320,7 +1321,7 @@ class AreaLighting
 
 // draw one or two lightmaps to world context clipped by current visibility
   function drawMapsMaskedByVis(ctx: CanvasRenderingContext2D,
-      area: AreaGame, cache: Array<Array<Int>>,
+      area: AreaGame, cache: Array<Array<Int>>, smoothLOSOverlay: Bool,
       map1: CanvasElement, ?map2: CanvasElement)
     {
       var composeCtx = composeMap.getContext2d();
@@ -1329,7 +1330,8 @@ class AreaLighting
       paintMap(composeCtx, map1, false, 0, 0);
       if (map2 != null)
         paintMap(composeCtx, map2, false, 0, 0);
-      if (isFormaMode())
+      if (isFormaMode() ||
+          smoothLOSOverlay)
         {
           ctx.drawImage(composeMap,
             scene.cameraSubX, scene.cameraSubY);
@@ -1346,7 +1348,8 @@ class AreaLighting
     }
 
 // compose atmosphere overlay and clip it by current visibility mask
-  function composeOverlay(area: AreaGame, cache: Array<Array<Int>>)
+  function composeOverlay(area: AreaGame, cache: Array<Array<Int>>,
+      smoothLOSOverlay: Bool)
     {
       var composeCtx = composeMap.getContext2d();
       composeCtx.clearRect(0, 0, composeMap.width,
@@ -1354,7 +1357,8 @@ class AreaLighting
       paintMap(composeCtx, staticMap, false, 0, 0);
       if (transientAtmosphereLights.length > 0)
         paintMap(composeCtx, dynamicMap, true, 0, 0);
-      if (isFormaMode())
+      if (isFormaMode() ||
+          smoothLOSOverlay)
         return;
 
       ensureVisMask(area, cache);

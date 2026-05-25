@@ -16,6 +16,7 @@ class DefaultLogic
 // run AI logic turn
   public static function turn(ai: AI)
     {
+      ai.traceAI('DefaultLogic', 'turn()');
       switch (ai.state)
         {
           // idle - roam around or guard, etc
@@ -60,6 +61,7 @@ class DefaultLogic
             continue;
           if (!ai.seesPosition(enemy.x, enemy.y))
             continue;
+          ai.traceAI('DefaultLogic', 'idle sees enemy ' + enemy.id);
           ai.setState(AI_STATE_ALERT, REASON_WITNESS);
           return;
         }
@@ -127,6 +129,7 @@ class DefaultLogic
       // AI has become alerted
       if (ai.alertness >= 100)
         {
+          ai.traceAI('DefaultLogic', 'alertness reached 100');
           var reason = REASON_PARASITE;
 
           if (game.player.state == PLR_STATE_HOST &&
@@ -157,6 +160,7 @@ class DefaultLogic
             {
               if (!body.wasSeen)
                 {
+                  ai.traceAI('DefaultLogic', 'sees body');
                   // mark body as seen by someone to limit the law response
                   body.wasSeen = true;
 
@@ -177,6 +181,7 @@ class DefaultLogic
       // roam target set, move to it
       if (ai.roamTargetX >= 0 && ai.roamTargetY >= 0)
         {
+          ai.traceAI('DefaultLogic', 'roam target');
           ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
           return;
         }
@@ -186,7 +191,10 @@ class DefaultLogic
 
       // nowhere to move - should be a bug
       if (ai.direction == -1)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'no roam direction');
+          return;
+        }
 
       var nx = ai.x + Const.dirx[ai.direction];
       var ny = ai.y + Const.diry[ai.direction];
@@ -196,10 +204,15 @@ class DefaultLogic
          !(game.playerArea.x == nx && game.playerArea.y == ny));
       if (!ok)
         {
+          ai.traceAI('DefaultLogic', 'blocked roam direction');
           ai.changeRandomDirection();
           return;
         }
-      else ai.setPosition(nx, ny);
+      else
+        {
+          ai.traceAI('DefaultLogic', 'roam move');
+          ai.setPosition(nx, ny);
+        }
     }
 
 // state: default idle state handling
@@ -211,14 +224,17 @@ class DefaultLogic
       // stand and wonder what happened until alertness go down
       // if roam target is set, continue moving instead
       if (ai.alertness > 0 && ai.roamTargetX < 0)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'idle waits alertness ' + ai.alertness);
+          return;
+        }
 
       // TODO: i could make hooks here, leaving the alert logic intact
 
       // guards stand on one spot
       // someday there might even be patrollers...
       if (ai.isGuard)
-        1;
+        ai.traceAI('DefaultLogic', 'guard idle');
       // roam by default
       else logicRoam(ai);
     }
@@ -230,6 +246,7 @@ class DefaultLogic
       // parasite attached - try to tear it away
       if (ai.parasiteAttached)
         {
+          ai.traceAI('DefaultLogic', 'tear parasite away');
           if (!ai.isAgreeable())
             ai.logicTearParasiteAway();
           return;
@@ -244,6 +261,7 @@ class DefaultLogic
       // relentless AI cannot calm down once alerted
       if (ai.timers.alert == 0 && !ai.isRelentless)
         {
+          ai.traceAI('DefaultLogic', 'calm from alert');
           calmFromAlert(ai);
           return;
         }
@@ -255,7 +273,11 @@ class DefaultLogic
         stateAlertAggressive(ai);
 
       // not aggressive AI - try to run away
-      else ai.logicRunAwayFromEnemies();
+      else
+        {
+          ai.traceAI('DefaultLogic', 'run away from enemies');
+          ai.logicRunAwayFromEnemies();
+        }
     }
 
 // state: alert for aggressive AI
@@ -265,6 +287,7 @@ class DefaultLogic
       var target = ai.findNearestVisibleEnemy();
       if (target == null)
         {
+          ai.traceAI('DefaultLogic', 'no visible enemy');
           if (ai.roamTargetX >= 0 &&
               ai.roamTargetY >= 0)
             {
@@ -276,6 +299,7 @@ class DefaultLogic
 
       ai.roamTargetX = target.x;
       ai.roamTargetY = target.y;
+      ai.traceAI('DefaultLogic', 'attack target ' + target.type);
       CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
     }
 
@@ -289,7 +313,10 @@ class DefaultLogic
 
       // effect: cannot tear parasite away (given right after invasion)
       if (ai.effects.has(EFFECT_CANNOT_TEAR_AWAY))
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'host cannot tear away');
+          return;
+        }
 
       // random: try to tear parasite away
       if (game.player.hostControl < 25 && Std.random(100) < 5)
@@ -411,13 +438,19 @@ class DefaultLogic
 
       if (ai.roamTargetX < 0 ||
           ai.roamTargetY < 0)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'search last seen without target');
+          return;
+        }
 
       // move to last seen tile
       ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
       if (ai.x != ai.roamTargetX ||
           ai.y != ai.roamTargetY)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'move to last seen');
+          return;
+        }
 
       // reached the last seen tile, start searching around it
       ai.search = {
@@ -429,6 +462,7 @@ class DefaultLogic
       ai.roamTargetX = -1;
       ai.roamTargetY = -1;
       ai.setState(AI_STATE_SEARCH_AREA);
+      ai.traceAI('DefaultLogic', 'start search area');
     }
 
 // state: search around the last seen hostile target tile
@@ -476,6 +510,7 @@ class DefaultLogic
           var point = getSearchAreaTarget(ai);
           if (point == null)
             {
+              ai.traceAI('DefaultLogic', 'no search area target');
               ai.roamTargetX = -1;
               ai.roamTargetY = -1;
               setAlertPreserveTimer(ai);
@@ -489,7 +524,10 @@ class DefaultLogic
       ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
       if (ai.x != ai.roamTargetX ||
           ai.y != ai.roamTargetY)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'move to search area target');
+          return;
+        }
 
       // reached search area target, pick the next one
       ai.roamTargetX = -1;
@@ -504,11 +542,18 @@ class DefaultLogic
 
       // stand and wonder what happened until alertness goes down
       if (ai.alertness > 0)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'move target waits alertness ' +
+            ai.alertness);
+          return;
+        }
 
       ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
       if (ai.x != ai.roamTargetX || ai.y != ai.roamTargetY)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'move target');
+          return;
+        }
       // spot reached, idling
       ai.roamTargetY = -1;
       ai.roamTargetY = -1;
@@ -523,7 +568,10 @@ class DefaultLogic
 
       ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
       if (ai.x != ai.roamTargetX || ai.y != ai.roamTargetY)
-        return;
+        {
+          ai.traceAI('DefaultLogic', 'investigate move');
+          return;
+        }
       // spot reached, idling
       ai.roamTargetY = -1;
       ai.roamTargetY = -1;

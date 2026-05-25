@@ -39,7 +39,7 @@ class BloodTrap extends BaseOrganObject
     }
 
 // blood traps are triggered by movement, not attacks
-  public override function isAttackable(): Bool
+  public override function isAttackableByEnemy(): Bool
     {
       return false;
     }

@@ -34,15 +34,17 @@ class Add
 // handles add command routing
   public function run(cmd: String): Bool
     {
+      if (cmd.substr(0, 2) == 'gi')
+        {
+          addItemCommand(cmd);
+          return true;
+        }
       if (cmd.length < 2)
         return false;
       switch (cmd.charAt(1))
         {
           case 'e':
             addEffectCommand(cmd);
-            return true;
-          case 'i':
-            addItemCommand(cmd);
             return true;
           case 'o':
             addOrganCommand(cmd);

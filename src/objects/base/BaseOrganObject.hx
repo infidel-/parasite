@@ -163,6 +163,13 @@ class BaseOrganObject extends AreaObject
       return organ.type == RIBGATE;
     }
 
+// returns true when hostile actors can attack this organ part
+  public override function isAttackableByEnemy(): Bool
+    {
+      var organ = getOrgan();
+      return organ != null && organ.isWorking();
+    }
+
 // returns linked organ record
   public function getOrgan(): CultBaseOrgan
     {

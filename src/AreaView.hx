@@ -84,19 +84,23 @@ class AreaView
 
       ctx.save();
       ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
+      var drawSmoothLOS = shouldDrawSmoothLOSOverlay();
 
       // tiles
       ctx.imageSmoothingEnabled = false;
-      drawTiles(ctx);
+      drawTiles(ctx, drawSmoothLOS);
       // smooth everything else
       ctx.imageSmoothingEnabled = true;
-      scene.areaLighting.drawDynamicUnderSpriteShadows(ctx, _cache);
+      scene.areaLighting.drawDynamicUnderSpriteShadows(ctx, _cache,
+        drawSmoothLOS);
 
       // objects
       for (o in game.area.getObjects())
         if (o.entity != null)
           if (isFormaMode() ||
               !game.player.vars.losEnabled ||
+              (drawSmoothLOS &&
+               o.entity.isVisible()) ||
               (game.player.state != PLR_STATE_HOST &&
                o.sensable()) ||
               (game.playerArea.sees(o.x, o.y) &&
@@ -125,7 +129,7 @@ class AreaView
             ai.entity.draw(ctx);
 
       // atmospheric lighting overlay
-      scene.areaLighting.drawAreaLighting(ctx, _cache);
+      scene.areaLighting.drawAreaLighting(ctx, _cache, drawSmoothLOS);
 
       // particles
       drawParticles(ctx);
@@ -230,14 +234,14 @@ class AreaView
     }
 
 // draw area tiles
-  function drawTiles(ctx: CanvasRenderingContext2D)
+  function drawTiles(ctx: CanvasRenderingContext2D, drawSmoothLOS: Bool)
     {
       var rect = game.area.getVisibleRect();
       var cells = game.area.getCells();
       var tiles = game.area.getTiles();
       var hasTileData = (tiles != null &&
         tiles.length > 0);
-      var drawRealTiles = isFormaMode() || shouldDrawSmoothLOSOverlay();
+      var drawRealTiles = isFormaMode() || drawSmoothLOS;
       var tileID = 0;
       var icon: _Icon = null;
 
@@ -256,7 +260,8 @@ class AreaView
       // draw static projected shadows above base tiles and below decorations
       var prevSmoothing = ctx.imageSmoothingEnabled;
       ctx.imageSmoothingEnabled = true;
-      scene.areaLighting.drawStaticUnderSpriteShadows(ctx, _cache);
+      scene.areaLighting.drawStaticUnderSpriteShadows(ctx, _cache,
+        drawSmoothLOS);
       ctx.imageSmoothingEnabled = prevSmoothing;
 
       // draw floor decorations on top of base tiles and shadows

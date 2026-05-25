@@ -45,7 +45,11 @@ class Console
 
 #if mydebug
       // XXX add commands
-      if (char0 == 'a')
+      if (arr[0] == 'ai')
+        aiTraceCommand(arr);
+
+      // XXX add commands
+      else if (char0 == 'a')
         addConsole.run(cmd);
 
       // XXX config commands
@@ -74,7 +78,9 @@ class Console
       // XXX go, gc, god commands
       else if (char0 == 'g')
         {
-          if (cmd == 'god')
+          if (arr[0] == 'gi')
+            addConsole.run(cmd);
+          else if (cmd == 'god')
             {
               setVariableCommand(['set', 'player.godmode', '1' ]);
             }
@@ -92,10 +98,11 @@ class Console
           log('Available commands: ' +
             // add
             'ae [effect] - add effect, ' +
-            'ai [item] - add item, ' +
             'ao [name] - add organ, ' +
             'as [skill] [amount] - add skill, ' +
             'at - add trait, ' +
+            'gi [item] - add item, ' +
+            'ai trace|untrace [id] - toggle AI trace, ' +
             'cfg|config,<br/>' +
             'ch|chat - set chat stage' +
             'ddemo - debug: finish demo, ' +
@@ -343,6 +350,40 @@ class Console
     }
 
 #if mydebug
+// ai trace|untrace <id>
+  function aiTraceCommand(arr: Array<String>)
+    {
+      if (arr.length < 3 ||
+          (arr[1] != 'trace' &&
+           arr[1] != 'untrace'))
+        {
+          log('ai trace [id] - enable AI browser-console trace');
+          log('ai untrace [id] - disable AI browser-console trace');
+          return;
+        }
+      if (game.location != LOCATION_AREA ||
+          game.area == null)
+        {
+          log('Not in area.');
+          return;
+        }
+      var id = Std.parseInt(arr[2]);
+      if (id == null)
+        {
+          log('AI ID [' + arr[2] + '] is invalid.');
+          return;
+        }
+      var ai = game.area.getAIByID(id);
+      if (ai == null)
+        {
+          log('AI [' + id + '] not found.');
+          return;
+        }
+      ai.isTracing = (arr[1] == 'trace');
+      log('AI [' + id + '] trace ' + (ai.isTracing ? 'enabled' : 'disabled') +
+        '.');
+    }
+
 // chat<stage>
 // chat
   function chatCommand(arr: Array<String>)

@@ -149,7 +149,7 @@ class Command
               return null;
           case TARGET_OBJECT:
             if (target.obj == null ||
-                !target.obj.isAttackable() ||
+                !target.obj.isAttackableByFriend() ||
                 game.area.getObject(target.obj.id) == null)
               return null;
           default:

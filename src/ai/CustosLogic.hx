@@ -33,11 +33,13 @@ class CustosLogic
 // run guardian logic
   public static function turn(ai: AI)
     {
+      ai.traceAI('CustosLogic', 'turn()');
       // if we see an intruder, attack
       var game = Game.inst;
       var target = findTarget(ai);
       if (target != null)
         {
+          ai.traceAI('CustosLogic', 'attack intruder ' + target.id);
           ai.addEnemy(target);
           ai.setState(AI_STATE_ALERT);
           CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
@@ -55,7 +57,11 @@ class CustosLogic
         {
           var guardTarget = findHeartDefenseTarget(ai, heart);
           if (guardTarget != null)
-            ai.logicMoveTo(guardTarget.x, guardTarget.y);
+            {
+              ai.traceAI('CustosLogic', 'defend heart');
+              ai.logicMoveTo(guardTarget.x, guardTarget.y);
+            }
+          else ai.traceAI('CustosLogic', 'already defending heart');
           return;
         }
 
@@ -63,7 +69,11 @@ class CustosLogic
       if (ai.guardTargetX >= 0 &&
           Const.distanceSquared(ai.x, ai.y,
             ai.guardTargetX, ai.guardTargetY) > 2)
-        ai.logicMoveTo(ai.guardTargetX, ai.guardTargetY);
+        {
+          ai.traceAI('CustosLogic', 'return guard target');
+          ai.logicMoveTo(ai.guardTargetX, ai.guardTargetY);
+        }
+      else ai.traceAI('CustosLogic', 'hold guard target');
     }
 
 // finds nearest visible intruder

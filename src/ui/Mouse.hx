@@ -377,7 +377,7 @@ class Mouse
   function getAttackableObject(x: Int, y: Int): AreaObject
     {
       for (o in game.area.getObjectsAt(x, y))
-        if (o.isAttackable())
+        if (o.isAttackableByFriend())
           return o;
       return null;
     }
@@ -387,7 +387,7 @@ class Mouse
     {
       return (game.player.state == PLR_STATE_HOST &&
         obj != null &&
-        obj.isAttackable());
+        obj.isAttackableByFriend());
     }
 
 // checks whether player is near object tile
