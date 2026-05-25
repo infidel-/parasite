@@ -265,17 +265,17 @@ class DefaultLogic
       var target = ai.findNearestVisibleEnemy();
       if (target == null)
         {
-          if (ai.roamTargetX >= 0 &&
-              ai.roamTargetY >= 0)
+          if (ai.lastSeenX >= 0 &&
+              ai.lastSeenY >= 0)
             {
               ai.setState(AI_STATE_SEARCH_LAST_SEEN);
-              ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
+              ai.logicMoveTo(ai.lastSeenX, ai.lastSeenY);
             }
           return;
         }
 
-      ai.roamTargetX = target.x;
-      ai.roamTargetY = target.y;
+      ai.lastSeenX = target.x;
+      ai.lastSeenY = target.y;
       CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
     }
 
@@ -393,8 +393,8 @@ class DefaultLogic
       if (target != null)
         {
           ai.setState(AI_STATE_ALERT);
-          ai.roamTargetX = target.x;
-          ai.roamTargetY = target.y;
+          ai.lastSeenX = target.x;
+          ai.lastSeenY = target.y;
           CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
           return;
         }
@@ -403,31 +403,27 @@ class DefaultLogic
       ai.timers.alert--;
       if (ai.timers.alert == 0 && !ai.isRelentless)
         {
-          ai.roamTargetX = -1;
-          ai.roamTargetY = -1;
           calmFromAlert(ai);
           return;
         }
 
-      if (ai.roamTargetX < 0 ||
-          ai.roamTargetY < 0)
+      if (ai.lastSeenX < 0 ||
+          ai.lastSeenY < 0)
         return;
 
       // move to last seen tile
-      ai.logicMoveTo(ai.roamTargetX, ai.roamTargetY);
-      if (ai.x != ai.roamTargetX ||
-          ai.y != ai.roamTargetY)
+      ai.logicMoveTo(ai.lastSeenX, ai.lastSeenY);
+      if (ai.x != ai.lastSeenX ||
+          ai.y != ai.lastSeenY)
         return;
 
       // reached the last seen tile, start searching around it
       ai.search = {
-        originX: ai.roamTargetX,
-        originY: ai.roamTargetY,
+        originX: ai.lastSeenX,
+        originY: ai.lastSeenY,
         radius: 1,
         pointID: 0,
       };
-      ai.roamTargetX = -1;
-      ai.roamTargetY = -1;
       ai.setState(AI_STATE_SEARCH_AREA);
     }
 
@@ -439,8 +435,8 @@ class DefaultLogic
       if (target != null)
         {
           ai.setState(AI_STATE_ALERT);
-          ai.roamTargetX = target.x;
-          ai.roamTargetY = target.y;
+          ai.lastSeenX = target.x;
+          ai.lastSeenY = target.y;
           CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), target);
           return;
         }

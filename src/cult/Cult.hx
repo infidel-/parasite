@@ -588,9 +588,9 @@ class Cult extends _SaveObject
       ai.timers.alert = 10;
       ai.state = AI_STATE_ALERT;
 
-      // set roam target
-      ai.roamTargetX = e.x;
-      ai.roamTargetY = e.y;
+      // chase call origin as last seen
+      ai.lastSeenX = e.x;
+      ai.lastSeenY = e.y;
     }
 
 // run cult turn gate

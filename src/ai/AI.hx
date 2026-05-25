@@ -34,6 +34,9 @@ class AI extends AIData
   // target x,y when roaming or moving to (resets on state change)
   public var roamTargetX: Int;
   public var roamTargetY: Int;
+  // last seen hostile tile, used by alert/search chase
+  public var lastSeenX: Int;
+  public var lastSeenY: Int;
   // guarding target (for guards)
   public var guardTargetX: Int;
   public var guardTargetY: Int;
@@ -79,6 +82,8 @@ class AI extends AIData
       sounds = null;
       roamTargetX = -1;
       roamTargetY = -1;
+      lastSeenX = -1;
+      lastSeenY = -1;
       guardTargetX = -1;
       guardTargetY = -1;
       state = AI_STATE_IDLE;
@@ -316,11 +321,19 @@ public function show()
           state != AI_STATE_SEARCH_AREA)
         return;
 
+      // entering alert from a calm state: use noise origin as initial hint
+      // already alerted with no visual track: noise fills the gap
+      // already alerted with visual track: keep it (avoids friendly-fire
+      // noise poisoning the chase target)
+      var wasCalm = (state == AI_STATE_IDLE || state == AI_STATE_MOVE_TARGET);
       if (state != AI_STATE_ALERT)
         setState(AI_STATE_ALERT, REASON_WITNESS);
       timers.alert = ALERTED_TIMER;
-      roamTargetX = xx;
-      roamTargetY = yy;
+      if (wasCalm || lastSeenX < 0 || lastSeenY < 0)
+        {
+          lastSeenX = xx;
+          lastSeenY = yy;
+        }
     }
 
 
@@ -354,6 +367,8 @@ public function show()
         {
           roamTargetX = -1;
           roamTargetY = -1;
+          lastSeenX = -1;
+          lastSeenY = -1;
 
           // message on first alert
           if (isHuman && vreason != REASON_ATTACH)
@@ -371,6 +386,8 @@ public function show()
         {
           roamTargetX = -1;
           roamTargetY = -1;
+          lastSeenX = -1;
+          lastSeenY = -1;
         }
 
       if (msg != null)
@@ -1297,6 +1314,18 @@ public function show()
       // alert this AI (fear/aggro)
       setState(AI_STATE_ALERT);
       onAttack(); // attack event
+
+      // seed last seen so victim has a chase target even without LOS
+      if (attacker.who == 'player')
+        {
+          lastSeenX = game.playerArea.x;
+          lastSeenY = game.playerArea.y;
+        }
+      else if (attacker.who == 'ai' && attacker.ai != null)
+        {
+          lastSeenX = attacker.ai.x;
+          lastSeenY = attacker.ai.y;
+        }
 
       // propagate attack aggro for ai attackers
       if (attacker.who == 'ai')
