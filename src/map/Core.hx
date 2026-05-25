@@ -153,7 +153,7 @@ class Core
 // initialize deterministic random state
   function initRandom()
     {
-      mapSeed = Std.random(0x7FFFFFFF);
+      mapSeed = game.region.mapSeed;
       rng = new SeededRandom(mapSeed);
       terrainFieldCache = null;
       terrainFieldCacheWidth = 0;
