@@ -20,16 +20,49 @@ class Saver
         game: null,
         version: SAVE_FORMAT_VERSION,
       };
-      o.game = saveObject('game', game, 0);
-      o.game.regionID = game.region.id;
-      o.game.areaID = game.area.id;
-      o._activeMods = [
-        for (m in ModRegistry.enabled)
-          { id: m.id, version: m.version }
-      ];
+
+      // pre-flight per-mod savedata buckets. one bad mod (cycle, ref back to
+      // game, etc) would otherwise throw inside saveObject/Json.stringify and
+      // nuke the whole slot. probe each bucket in isolation, drop the broken
+      // ones, keep the rest. restored after stringify so live gameplay still
+      // sees the original objects.
+      var originalModData = game.modData;
+      var safeModData: Dynamic = {};
+      for (modID in Reflect.fields(originalModData))
+        {
+          var bucket = Reflect.field(originalModData, modID);
+          try
+            {
+              Json.stringify(bucket);
+              Reflect.setField(safeModData, modID, bucket);
+            }
+          catch (e: Dynamic)
+            {
+              game.log('Mod [' + modID +
+                '] save data dropped (unserializable): ' + e, COLOR_HINT);
+            }
+        }
+      game.modData = safeModData;
+
+      try
+        {
+          o.game = saveObject('game', game, 0);
+          o.game.regionID = game.region.id;
+          o.game.areaID = game.area.id;
+          o._activeMods = [
+            for (m in ModRegistry.enabled)
+              { id: m.id, version: m.version }
+          ];
 #if electron
-      HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
+          HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
 #end
+        }
+      catch (e: Dynamic)
+        {
+          game.modData = originalModData;
+          throw e;
+        }
+      game.modData = originalModData;
     }
 
 // check if save file exists for slot

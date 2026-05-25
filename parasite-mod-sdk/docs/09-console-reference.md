@@ -21,6 +21,7 @@ The `mods` command (alias `mo`) is available in every build.
 | `mods disable <id>`     | add `<id>` to `profile.disabledMods`. Takes effect on renderer reload (Ctrl-F5). |
 | `mods errors` / `mods err` | print per-mod failure reasons recorded during scan/import/init.       |
 | `mods rescan`           | re-scan `dev/`, `mods/`, and workshop dirs in the main process; print a diff of added/removed mod ids and per-mod asset file changes (added/removed paths under `assets/`) vs the current renderer registry. Use after dropping in a new mod folder, dropping new assets into an existing mod, or removing files. The renderer registry, `AssetPath` overrides, sound list, and content registrations only refresh on renderer reload (Ctrl-F5), which the command reminds you to do when there are changes. |
+| `mods savedata` / `mods sd` | dump per-mod savegame-data buckets to the **browser devtools console** (interactive object tree, expandable). The in-game console only prints a short pointer telling you to look in devtools. No arg: every bucket with key count + JSON byte size, flagging unserializable ones. With an `<id>` arg: that mod's bucket only. See [11-save-data-pitfalls.md](11-save-data-pitfalls.md). |
 
 Enabling/disabling writes `profile.json` and prints a reload reminder; it does
 not unload an already-loaded mod mid-session.

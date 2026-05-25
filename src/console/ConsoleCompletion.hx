@@ -81,6 +81,7 @@ class ConsoleCompletion
           { lit: 'disable', next: [ { slot: '<id>', values: modIDs } ] },
           { lit: 'errors' },
           { lit: 'rescan' },
+          { lit: 'savedata', next: [ { slot: '<id>', values: modIDs } ] },
         ] },
       ];
       if (Const.isDebug)

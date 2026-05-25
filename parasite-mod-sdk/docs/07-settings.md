@@ -116,6 +116,15 @@ The store is namespaced by `modID` under `game.modData`:
 - Starting a new game clears `game.modData` (mod `init()` re-fires; mod's own
   bucket is recreated on first `set` / `get`).
 
+### What you can put in the bucket
+
+Only JSON-safe values (primitives, plain arrays, plain anon objects).
+References to engine objects (`parasite.game`, AIs, cults…), cycles,
+functions, NaN, and Maps will either be dropped at save time (with a
+warning in the log) or silently mangle on reload. Always test your mod
+across a save/load cycle — most savedata bugs only manifest on reload.
+Full rules, patterns, and a testing checklist: [11-save-data-pitfalls.md](11-save-data-pitfalls.md).
+
 ### Compared to `parasite.settings`
 
 | Concern                       | `parasite.settings`            | `parasite.savedata`           |

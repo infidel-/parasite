@@ -50,6 +50,7 @@ Full walkthrough in [docs/01-getting-started.md](docs/01-getting-started.md).
 | [08-publishing](docs/08-publishing.md)             | Steam Workshop upload |
 | [09-console-reference](docs/09-console-reference.md) | console commands |
 | [10-api-reference](docs/10-api-reference.md)       | how the two extern sets work |
+| [11-save-data-pitfalls](docs/11-save-data-pitfalls.md) | what survives `parasite.savedata`; testing your mod across save/load |
 
 ## The entry contract, in one block
 

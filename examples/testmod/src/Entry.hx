@@ -33,6 +33,7 @@ class Entry
       testEvolutionRegistration(parasite);
       testGoalRegistration(parasite);
       testSettings(parasite);
+      testSaveData(parasite);
       testAssetOverride(parasite);
       testEvents(parasite);
       testFx(parasite);
@@ -231,6 +232,74 @@ class Entry
       parasite.settings.set('boots', n + 1);
       c.log('[testmod] settings.boots was ' + n + ', now ' +
         parasite.settings.getInt('boots'));
+    }
+
+// savedata smoke — valid JSON-safe writes round-trip via typed getters;
+// invalid writes (cycles, function refs, live class instances, NaN) must
+// throw at set() time. exercised at boot, before any savegame exists —
+// game.modData is allocated in Game.new() so writes are valid even from init
+  static function testSaveData(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+      var sd = parasite.savedata;
+
+      // clean slate so reruns within the same boot stay idempotent
+      for (k in [ 'kills', 'tags', 'snapshot', 'cycle', 'fn',
+            'gameRef', 'nan', 'gone' ])
+        sd.remove(k);
+
+      // valid writes — int, array, nested anon object
+      sd.set('kills', 17);
+      sd.set('tags', [ 'alpha', 'beta' ]);
+      sd.set('snapshot', { hp: 42, name: 'boss' });
+      c.log('[testmod] savedata kills typed read = ' + sd.getInt('kills', 0));
+      var tags: Array<Dynamic> = sd.get('tags');
+      c.log('[testmod] savedata tags length = ' +
+        (tags != null ? tags.length : -1));
+      var snap: Dynamic = sd.get('snapshot');
+      c.log('[testmod] savedata snapshot.hp = ' +
+        (snap != null ? snap.hp : 'null'));
+
+      // missing key falls back to typed-getter default
+      c.log('[testmod] savedata missing getInt def = ' +
+        sd.getInt('missingKey', 99));
+
+      // remove clears the value
+      sd.set('gone', 1);
+      sd.remove('gone');
+      c.log('[testmod] savedata removed key reads null? ' +
+        (sd.get('gone') == null));
+
+      // negative — cyclic structure must throw
+      var cyc: Dynamic = {};
+      cyc.self = cyc;
+      var caught = false;
+      try { sd.set('cycle', cyc); }
+      catch (e: Dynamic) caught = true;
+      c.log('[testmod] savedata rejects cycle? ' + caught);
+
+      // negative — function reference must throw
+      caught = false;
+      try { sd.set('fn', function() { return 1; }); }
+      catch (e: Dynamic) caught = true;
+      c.log('[testmod] savedata rejects function ref? ' + caught);
+
+      // negative — live engine class instance must throw
+      caught = false;
+      try { sd.set('gameRef', parasite.game); }
+      catch (e: Dynamic) caught = true;
+      c.log('[testmod] savedata rejects live class instance? ' + caught);
+
+      // negative — NaN must throw (Json.stringify would silently coerce to null)
+      caught = false;
+      try { sd.set('nan', Math.NaN); }
+      catch (e: Dynamic) caught = true;
+      c.log('[testmod] savedata rejects NaN? ' + caught);
+
+      // all() returns a shallow copy carrying our valid keys
+      var snapshot: Dynamic = sd.all();
+      c.log('[testmod] savedata all() has kills key? ' +
+        Reflect.hasField(snapshot, 'kills'));
     }
 
 // asset override smoke — resolve() should return mod:// URLs for assets we shipped

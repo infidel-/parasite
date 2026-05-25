@@ -36,6 +36,8 @@ class Mods
         printModErrors();
       else if (sub == 'rescan')
         rescanMods();
+      else if (sub == 'savedata' || sub == 'sd')
+        printSaveData(arr.length >= 3 ? arr[2] : null);
       else if (sub == 'enable' || sub == 'disable')
         {
           if (arr.length < 3)
@@ -46,8 +48,74 @@ class Mods
           toggleMod(arr[2], sub == 'enable');
         }
       else
-        log('Usage: mods [list|enable &lt;id&gt;|disable &lt;id&gt;|errors|rescan]');
+        log('Usage: mods [list|enable &lt;id&gt;|disable &lt;id&gt;|errors|rescan|savedata [&lt;id&gt;]]');
       return true;
+    }
+
+// dump per-mod savedata bucket(s) to the BROWSER devtools console as
+// structured objects (interactive tree, expandable). game console gets a
+// short text pointer so the player knows where the output went. no arg →
+// summary (every bucket); arg → that mod's bucket only
+  function printSaveData(modID: String)
+    {
+      if (game.modData == null
+          || Reflect.fields(game.modData).length == 0)
+        {
+          log('No mod savedata.');
+          return;
+        }
+      var bc = js.Browser.console;
+      // summary mode
+      if (modID == null)
+        {
+          var ids = Reflect.fields(game.modData);
+          var summary: Dynamic = {};
+          for (id in ids)
+            {
+              var bucket = Reflect.field(game.modData, id);
+              var keyCount = Reflect.fields(bucket).length;
+              try
+                {
+                  var size = haxe.Json.stringify(bucket).length;
+                  Reflect.setField(summary, id, {
+                    keys: keyCount,
+                    bytes: size,
+                    bucket: bucket,
+                  });
+                }
+              catch (e: Dynamic)
+                {
+                  Reflect.setField(summary, id, {
+                    keys: keyCount,
+                    error: '' + e,
+                    bucket: bucket,
+                  });
+                }
+            }
+          bc.log('[mods savedata] buckets:', summary);
+          log('Mod savedata summary (' + ids.length +
+            ' bucket(s)) printed to browser devtools console.');
+          return;
+        }
+      // single-mod dump
+      if (!Reflect.hasField(game.modData, modID))
+        {
+          log('No savedata for mod [' + modID + '].');
+          return;
+        }
+      var bucket = Reflect.field(game.modData, modID);
+      bc.log('[mods savedata] ' + modID + ':', bucket);
+      try
+        {
+          var bytes = haxe.Json.stringify(bucket).length;
+          log('Savedata for [' + modID + '] (' + bytes +
+            ' bytes) printed to browser devtools console.');
+        }
+      catch (e: Dynamic)
+        {
+          log('Savedata for [' + modID +
+            '] printed to browser devtools console — UNSERIALIZABLE: ' + e);
+        }
     }
 
 // re-scan dev/ + mods/ + workshop in main; diff vs current renderer registry
