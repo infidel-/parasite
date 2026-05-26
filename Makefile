@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk
+.PHONY: game-debug testmod main report mod-sdk steam-docs
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -13,6 +13,9 @@ chainsaw:
 
 main:
 	cd electron && $(MAKE)
+
+steam-docs:
+	node electron/tools/md-to-steam.js parasite-mod-sdk/docs parasite/docs-steam
 
 report:
 	cp -Rf reports/* ObsidianReports/
