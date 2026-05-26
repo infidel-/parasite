@@ -58,6 +58,7 @@ Steam Workshop subscriptions are also discovered and merged into the same list.
 | `exportGlobal`  | yes      | the `@:expose("...")` name your `Entry.hx` writes to `window`. Single-segment JS identifier (1–64 chars). The loader calls `window[exportGlobal].init`. Mismatch with the source = load fails + logged. |
 | `minGameVersion`| no       | semver; compared `>=` against the engine version. Use when you depend on a feature added in a specific patch. Newer than current engine = skipped + logged. |
 | `description`   | no       | long description; consumed by the publish tool (see 08-publishing.md)   |
+| `preview`       | no       | path (relative to mod dir) to Workshop preview image (PNG/JPG, ≤1MB); consumed by the publish tool. See 08-publishing.md. |
 | `dependencies`  | no       | array of `{ id, version }`; missing/mismatched dep = skipped + logged   |
 | `loadAfter` / `loadBefore` | no | arrays of mod ids; ordering hints fed to a toposort. Cycles = members skipped + logged. |
 
