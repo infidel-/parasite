@@ -23,6 +23,21 @@ class TraitsConst
       return null;
     }
 
+// return trait info by id, or null if missing (used on load when a mod that
+// supplied the trait is no longer enabled — caller scrubs orphan traits)
+  public static function tryGetInfo(id: _AITraitType): _TraitInfo
+    {
+      for (group in traits)
+        for (info in group)
+          if (info.id == id)
+            return info;
+      return null;
+    }
+
+  // counts AI traits scrubbed during a load due to missing mod-supplied info.
+  // Loader resets to 0 before loading and reads after the post-load chain
+  public static var loadOrphanCount: Int = 0;
+
 // return trait group by id
   public static function getGroup(id: String): Array<_TraitInfo>
     {

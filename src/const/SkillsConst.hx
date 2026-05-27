@@ -14,6 +14,16 @@ class SkillsConst
       return null;
     }
 
+// return info by id, or null if missing (used on load when a mod that
+// supplied the skill is no longer enabled — caller scrubs orphan skills)
+  public static function tryGetInfo(id: _Skill): SkillInfo
+    {
+      for (ii in skills)
+        if (ii.id == id)
+          return ii;
+      return null;
+    }
+
 // append a skill info; id collision = last-wins + log. used by
 // ModContentApi.registerSkill and any future engine code that wants to
 // register skills dynamically. the skills list is built once at class load

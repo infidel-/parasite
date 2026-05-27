@@ -7,6 +7,8 @@ import const.PediaConst;
 import const.PediaConst._PediaGroupInfo;
 import js.Browser.console;
 
+// NOTE: adding new content types requires updating game loader to support the state when save game references them but mod isn't present (disabled or removed altogether)
+
 class ModContentApi
 {
   var modID: String;

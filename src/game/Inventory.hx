@@ -7,6 +7,11 @@ import mods.ModEventRegistry;
 
 class Inventory extends _SaveObject
 {
+  // counts items scrubbed during a load due to missing mod-supplied info.
+  // Loader resets to 0 before loading and reads after the post-load chain.
+  // shared by inventory items, clothing slot, and ground pickups.
+  public static var loadOrphanCount: Int = 0;
+
   var game: Game;
   var _list: List<_Item>; // list of items
   public var weaponID: String; // currently active weapon
@@ -37,8 +42,33 @@ class Inventory extends _SaveObject
     }
 
 // called after load or creation
+// on load, scrub items whose info cannot be resolved — happens when a mod
+// that supplied the item id is no longer enabled. clothing falls back to
+// armorNone. stale weaponID is harmless (call sites guard with has()).
   public function initPost(onLoad: Bool)
     {
+      if (!onLoad)
+        return;
+      var orphan: Array<_Item> = [];
+      for (item in _list)
+        if (item.info == null)
+          orphan.push(item);
+      for (item in orphan)
+        _list.remove(item);
+      loadOrphanCount += orphan.length;
+      if (clothing == null || clothing.info == null)
+        {
+          if (clothing != null && clothing.info == null)
+            loadOrphanCount++;
+          var info = ItemsConst.getInfo('armorNone');
+          clothing = {
+            game: game,
+            id: info.id,
+            info: info,
+            name: info.name,
+            event: null,
+          };
+        }
     }
 
 // add inventory items to known list

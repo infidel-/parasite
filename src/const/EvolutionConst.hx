@@ -1090,6 +1090,17 @@ class EvolutionConst
       return null;
     }
 
+// return improvement info by id, or null if missing (used on load when a mod
+// that supplied the improvement is no longer enabled — caller scrubs orphan
+// improvs)
+  public static function tryGetInfo(id: _Improv): ImprovInfo
+    {
+      for (imp in improvements)
+        if (imp.id == id)
+          return imp;
+      return null;
+    }
+
 // append an improvement info; id collision = last-wins + log. used by
 // ModContentApi.registerEvolution and any future engine code that wants to
 // register improvements dynamically. the list is built once at class load
