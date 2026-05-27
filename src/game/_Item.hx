@@ -35,11 +35,14 @@ import ItemInfo;
     }
 
 // called after load or creation
+// on load, info may resolve to null if a mod that supplied this item id is
+// no longer enabled; Inventory.initPost (and AreaGame.loadPost for ground
+// pickups) scrub the orphan _Item before any code dereferences info
   public function initPost(onLoad: Bool)
     {
       if (onLoad)
         {
-          info = ItemsConst.getInfo(id);
+          info = ItemsConst.tryGetInfo(id);
           if (eventID != null)
             event = game.timeline.getEvent(eventID);
         }

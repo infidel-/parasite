@@ -6,6 +6,10 @@ import const.SkillsConst;
 
 class Skills extends _SaveObject
 {
+  // counts skills scrubbed during a load due to missing mod-supplied info.
+  // Loader resets to 0 before loading and reads after the post-load chain
+  public static var loadOrphanCount: Int = 0;
+
   var game: Game;
   var _list: List<Skill>; // list of skills
   var isPlayer: Bool;
@@ -18,10 +22,24 @@ class Skills extends _SaveObject
     }
 
 // called after load
+// scrubs skills whose info cannot be resolved — happens when a mod that
+// registered the skill is no longer enabled at load time
   public function loadPost()
     {
+      var orphan: Array<Skill> = [];
       for (s in _list)
-        s.info = SkillsConst.getInfo(s.id);
+        {
+          var info = SkillsConst.tryGetInfo(s.id);
+          if (info == null)
+            {
+              orphan.push(s);
+              continue;
+            }
+          s.info = info;
+        }
+      for (s in orphan)
+        _list.remove(s);
+      loadOrphanCount += orphan.length;
     }
 
 // clear list
@@ -258,8 +276,11 @@ class Skills extends _SaveObject
     }
 
 // called after load or creation
+// on load, info may resolve to null if a mod that supplied this skill id is
+// no longer enabled; Skills.loadPost scrubs the orphan Skill before any code
+// dereferences info
   public function initPost(onLoad: Bool)
     {
-      info = SkillsConst.getInfo(id);
+      info = SkillsConst.tryGetInfo(id);
     }
 }

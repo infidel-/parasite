@@ -138,9 +138,19 @@ class AreaGame extends _SaveObject
             AIData._maxID = ai.id;
           ai.loadPost();
         }
+      // drop ground pickups whose item info failed to resolve (mod that
+      // supplied the item id is no longer enabled)
+      var orphan: Array<AreaObject> = [];
       for (o in _objects)
-        if (o.id > AreaObject._maxID)
-          AreaObject._maxID = o.id;
+        {
+          if (o.id > AreaObject._maxID)
+            AreaObject._maxID = o.id;
+          if (o.item != null && o.item.info == null)
+            orphan.push(o);
+        }
+      for (o in orphan)
+        _objects.remove(o.id);
+      Inventory.loadOrphanCount += orphan.length;
     }
 
 // enter this area: generate if needed and update view

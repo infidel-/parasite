@@ -105,4 +105,13 @@ class ItemsConst
         throw 'No such item: ' + id;
       return info;
     }
+
+// return item info by id, or null if missing (used on load when a mod that
+// supplied the item is no longer enabled — caller scrubs orphan items)
+  public static function tryGetInfo(id: String): ItemInfo
+    {
+      if (infos == null)
+        return null;
+      return infos.get(id);
+    }
 }

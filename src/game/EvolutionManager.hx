@@ -6,6 +6,10 @@ import const.EvolutionConst;
 
 class EvolutionManager extends _SaveObject
 {
+  // counts improvements scrubbed during a load due to missing mod-supplied
+  // info. Loader resets to 0 before loading and reads after the post-load chain
+  public static var loadOrphanCount: Int = 0;
+
   static var _ignoredFields = [ 'player' ];
   var game: Game;
   var player: Player;
@@ -31,6 +35,28 @@ class EvolutionManager extends _SaveObject
 
       _list = new List<Improv>();
       taskID = '';
+    }
+
+// called after load — scrub improvements whose info cannot be resolved (mod
+// that supplied them is no longer enabled). also clears taskID if it points
+// at a dropped improv
+  public function initPost(onLoad: Bool)
+    {
+      if (!onLoad)
+        return;
+      var orphan: Array<Improv> = [];
+      for (imp in _list)
+        if (imp.info == null)
+          orphan.push(imp);
+      for (imp in orphan)
+        _list.remove(imp);
+      loadOrphanCount += orphan.length;
+      if (taskID != null && taskID != '' &&
+          EvolutionConst.tryGetInfo((taskID : _Improv)) == null)
+        {
+          taskID = '';
+          isActive = false;
+        }
     }
 
 

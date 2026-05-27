@@ -4,7 +4,8 @@ import haxe.Json;
 import haxe.ds.ObjectMap;
 
 import ai.AIData;
-import game.Game;
+import const.TraitsConst;
+import game.*;
 
 class Loader
 {
@@ -15,6 +16,14 @@ class Loader
       trace('====== RESTART PRE ' + game.area.id);
       game.restartPre();
       trace('====== LOAD ' + game.area.id);
+
+      // reset orphan counters — scrub pass during load may bump these when a
+      // mod that supplied items/skills is no longer enabled
+      Inventory.loadOrphanCount = 0;
+      Skills.loadOrphanCount = 0;
+      Goals.loadOrphanCount = 0;
+      EvolutionManager.loadOrphanCount = 0;
+      TraitsConst.loadOrphanCount = 0;
 
 #if electron
       try {
@@ -39,6 +48,7 @@ class Loader
       // run post-load initialization chain
       trace('====== ENTER ' + game.area.id);
       game.timeline.loadPost();
+      game.goals.loadPost();
       game.world.loadPost();
       game.managerArea.loadPost();
       game.group.loadPost();
@@ -56,6 +66,46 @@ class Loader
       rebuildAIDataMaxID(game);
       game.scene.updateCamera();
       game.log('Game loaded from slot ' + slotID + '.');
+
+      // surface scrubbed mod content as a single end-of-load message
+      var orphanItems = Inventory.loadOrphanCount;
+      var orphanSkills = Skills.loadOrphanCount;
+      var orphanGoals = Goals.loadOrphanCount;
+      var orphanImprovs = EvolutionManager.loadOrphanCount;
+      var orphanTraits = TraitsConst.loadOrphanCount;
+      if (orphanItems > 0 ||
+          orphanSkills > 0 ||
+          orphanGoals > 0 ||
+          orphanImprovs > 0 ||
+          orphanTraits > 0)
+        {
+          var parts: Array<String> = [];
+          if (orphanItems > 0)
+            parts.push(orphanItems + ' item' + (orphanItems == 1 ? '' : 's'));
+          if (orphanSkills > 0)
+            parts.push(orphanSkills + ' skill' + (orphanSkills == 1 ? '' : 's'));
+          if (orphanGoals > 0)
+            parts.push(orphanGoals + ' goal' + (orphanGoals == 1 ? '' : 's'));
+          if (orphanImprovs > 0)
+            parts.push(orphanImprovs + ' improvement' + (orphanImprovs == 1 ? '' : 's'));
+          if (orphanTraits > 0)
+            parts.push(orphanTraits + ' AI trait' + (orphanTraits == 1 ? '' : 's'));
+          game.message({
+            text: 'Removed ' + joinAnd(parts) +
+              ' from this save because the mod that supplied them is no longer enabled.',
+          });
+        }
+    }
+
+// join a list with commas and a final "and" — "a", "a and b", "a, b and c"
+  static function joinAnd(parts: Array<String>): String
+    {
+      if (parts.length <= 1)
+        return parts.join('');
+      if (parts.length == 2)
+        return parts[0] + ' and ' + parts[1];
+      return parts.slice(0, parts.length - 1).join(', ') +
+        ' and ' + parts[parts.length - 1];
     }
 
 // peek _activeMods array from save slot without performing full load.

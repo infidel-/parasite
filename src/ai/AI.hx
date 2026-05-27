@@ -133,6 +133,15 @@ class AI extends AIData
     {
       organs.loadPost();
       skills.loadPost();
+      // drop traits whose info cannot be resolved (mod that supplied the
+      // trait id is no longer enabled). count folded into the load summary
+      var orphan: Array<_AITraitType> = [];
+      for (t in traits)
+        if (TraitsConst.tryGetInfo(t) == null)
+          orphan.push(t);
+      for (t in orphan)
+        traits.remove(t);
+      TraitsConst.loadOrphanCount += orphan.length;
       if (npc != null)
         {
           npc.ai = this;

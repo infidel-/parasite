@@ -28,8 +28,11 @@ import const.EvolutionConst;
     }
 
 // called after load or creation
+// on load, info may resolve to null if a mod that supplied this improvement
+// id is no longer enabled; EvolutionManager.initPost scrubs the orphan Improv
+// before any code dereferences info
   public function initPost(onLoad: Bool)
     {
-      info = EvolutionConst.getInfo(id);
+      info = EvolutionConst.tryGetInfo(id);
     }
 }

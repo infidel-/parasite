@@ -232,6 +232,41 @@ class Goals extends _SaveObject
       throw 'no such goal: ' + id + " " + Std.isOfType(id, String);
     }
 
+// return goal info by id, or null if missing (used on load when a mod that
+// supplied the goal is no longer enabled — caller scrubs orphan goals)
+  public function tryGetInfo(id: _Goal): GoalInfo
+    {
+      var info = const.Goals.map.get(id);
+      if (info != null)
+        return info;
+      return game.timeline.getGoals().get(id);
+    }
+
+// called after load — scrub goals whose info cannot be resolved (mod that
+// supplied them is no longer enabled). counted into Inventory.loadOrphanCount
+// pool? no — separate counter so Loader can break it out in the message
+  public function loadPost()
+    {
+      loadOrphanCount += scrubList(_listCurrent);
+      loadOrphanCount += scrubList(_listCompleted);
+      loadOrphanCount += scrubList(_listFailed);
+    }
+
+// drop unresolved goal ids from a list; returns count removed
+  function scrubList(list: List<_Goal>): Int
+    {
+      var orphan: Array<_Goal> = [];
+      for (g in list)
+        if (tryGetInfo(g) == null)
+          orphan.push(g);
+      for (g in orphan)
+        list.remove(g);
+      return orphan.length;
+    }
+
+  // counts goals scrubbed during a load due to missing mod-supplied info.
+  // Loader resets to 0 before loading and reads after the post-load chain
+  public static var loadOrphanCount: Int = 0;
 }
 
 enum _GoalSilent
