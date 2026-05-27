@@ -35,7 +35,7 @@ class HostBridge
   public static function consoleHistoryWrite(data: String): Void h().consoleHistory.write(data);
   public static function consoleHistoryExists(): Bool return h().consoleHistory.exists();
 
-// exception log append (writes one line to exceptions.txt)
+// exception log append (writes one line to session log-YYYY-MM-DD.txt)
   public static function logAppend(line: String): Void h().log.append(line);
 
 // sound asset directory listing (file names only)

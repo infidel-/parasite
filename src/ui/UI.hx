@@ -110,7 +110,7 @@ class UI
       var l = date + ' v' + Version.getVersion() + ' ' + msg + ', ' +
         err.stack + ', line ' + line + ', col ' + col + '\n';
       trace(l);
-      game.log('An exception has occured and was logged. Please send exceptions.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
+      game.log('An exception has occured and was logged. Please send the log-YYYY-MM-DD.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
       try {
         HostBridge.logAppend(l);
       }
