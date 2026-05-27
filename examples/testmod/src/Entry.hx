@@ -37,6 +37,7 @@ class Entry
       testAssetOverride(parasite);
       testEvents(parasite);
       testFx(parasite);
+      testRemoteFetch(parasite);
     }
 
 // logs the runtime fields handed to the mod so we can eyeball what the host wired up
@@ -371,5 +372,23 @@ class Entry
           c.log('[testmod] fx.tick done; frames=' + ticks.frames);
         }, 'mod-testmod-ticksmoke');
       c.log('[testmod] fx smoke scheduled');
+    }
+
+// remote fetch smoke — renderer CSP `connect-src 'self' mod:` must block
+// arbitrary external hosts; fetch to example.com should reject, not resolve
+  static function testRemoteFetch(parasite: ModRuntime)
+    {
+      var c = js.Browser.console;
+      var url = 'https://example.com/';
+      var p: Dynamic = untyped js.Browser.window.fetch(url);
+      p.then(function(resp: Dynamic): Void
+        {
+          c.log('[testmod] remote fetch UNEXPECTEDLY resolved: status=' +
+            resp.status + ' url=' + url);
+        }).catchError(function(err: Dynamic): Void
+        {
+          c.log('[testmod] remote fetch blocked as expected: ' + err);
+        });
+      c.log('[testmod] remote fetch dispatched to ' + url);
     }
 }
