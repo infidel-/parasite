@@ -22,6 +22,8 @@ cd <game>/resources/app
 node tools/publish-workshop.js <mod-dir> [itemId]
 ```
 
+Run with no arguments (or `--help` / `-h`) to print full usage.
+
 - `<mod-dir>`: absolute or relative path to your mod folder (must contain `manifest.json`).
 - `[itemId]`: optional explicit Workshop item id. If omitted, the script reads
   `<mod-dir>/.workshop-id`; if that's absent too, it creates a new item and
@@ -41,9 +43,22 @@ The publish tool uses these manifest fields:
 
 - `name` → Workshop item title (falls back to `id`, then `"Untitled mod"`).
 - `description` → Workshop item description (optional).
+- `preview` → path (relative to the mod dir) to the preview image. Optional.
+  If absent, the tool looks for `preview.png` or `preview.jpg` in the mod dir
+  and uses that automatically.
 
 The whole mod directory is uploaded as the item content. The change note is
 generated automatically (a timestamp).
+
+### Preview image
+
+Steam accepts a single primary preview image per Workshop item:
+
+- PNG or JPG, **≤ 1 MB**. Larger files fail at submit.
+- Must be square dimensions, at least 512x512. Larger images are scaled down by Steam, but smaller images fail at submit.
+- The image is re-uploaded on every run that includes the `preview` field. To
+  push a content-only update without re-uploading the image, use
+  `--fields=` and omit `preview` (see below).
 
 ## Item id stamping
 
@@ -68,7 +83,7 @@ with a comma-separated subset (content is always uploaded):
 node tools/publish-workshop.js /path/to/mymod --fields=title,description
 ```
 
-Valid field names: `title`, `changeNote`, `description`, `visibility`.
+Valid field names: `title`, `changeNote`, `description`, `preview`, `visibility`.
 
 ## Legal agreement
 

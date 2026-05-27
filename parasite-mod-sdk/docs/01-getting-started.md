@@ -8,8 +8,9 @@ This walks you from zero to a mod that the engine loads and logs at boot.
 - A **Parasite** install. You need write access to its `dev/` directory (where
   in-progress mods are sideloaded from).
 - `make` (the template ships a Makefile; you can build by hand without it).
+- You will need Node to publish your mod to Steam Workshop, but you can get started without it.
 
-No Node, no game-engine checkout. The SDK ships the externs you compile against.
+The SDK ships the externs you compile against.
 
 ## 1. Get the SDK
 

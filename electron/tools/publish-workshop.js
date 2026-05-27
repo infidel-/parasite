@@ -13,11 +13,48 @@ const path = require('path');
 
 const APPID = 1920320;
 
-const args = process.argv.slice(2);
-if (args.length < 1) {
-  console.error('Usage: node publish-workshop.js <mod-dir> [itemId]');
-  process.exit(2);
+const argv = process.argv.slice(2);
+// split positional args from --flags so flags can appear anywhere on the line.
+const args = argv.filter(a => !a.startsWith('-'));
+const flags = argv.filter(a => a.startsWith('-'));
+if (args.length < 1 || flags.includes('-h') || flags.includes('--help')) {
+  const help = [
+    'Publish or update a Parasite mod as a Steam Workshop item.',
+    '',
+    'Usage:',
+    '  node publish-workshop.js <mod-dir> [itemId] [--fields=a,b,c]',
+    '',
+    'Arguments:',
+    '  <mod-dir>   path to mod folder (must contain manifest.json)',
+    '  [itemId]    optional Workshop item id override. Otherwise read from',
+    '              <mod-dir>/.workshop-id; if absent, creates a new item and',
+    '              writes the new id to .workshop-id.',
+    '',
+    'Options:',
+    '  --fields=LIST  restrict update payload to listed fields (content is',
+    '                 always uploaded). Valid: title, changeNote, description,',
+    '                 preview, visibility. Default: all available.',
+    '  -h, --help     show this help and exit',
+    '',
+    'Manifest fields used:',
+    '  name         -> Workshop title (falls back to id, then "Untitled mod")',
+    '  description  -> Workshop description (optional)',
+    '  preview      -> path (relative to mod dir) to preview image, PNG/JPG',
+    '                  <=1MB. If absent, preview.png or preview.jpg in the mod',
+    '                  dir is used when present.',
+    '',
+    'Requirements:',
+    '  Steam client running and logged in. App 1920320 must have Workshop',
+    '  enabled in the Steamworks partner backend. Run from app/ so that',
+    '  node_modules/steamworks.js resolves.',
+    '',
+    'New items are created Unlisted (visibility=3); only you see them until',
+    'you change visibility on the Steam Community page.',
+  ].join('\n');
+  console.log(help);
+  process.exit(args.length < 1 ? 2 : 0);
 }
+const fieldsArg = flags.find(a => a.startsWith('--fields='));
 const modDir = path.resolve(args[0]);
 const idFile = path.join(modDir, '.workshop-id');
 
@@ -79,17 +116,22 @@ console.log('[steam] init OK (appid=' + APPID + ')');
   }
 
   // --fields=a,b,c restricts to listed fields. Always includes contentPath.
-  //   valid: title,changeNote,description,visibility
+  //   valid: title,changeNote,description,preview,visibility
   //   default (no flag): all available
-  const fieldsArg = process.argv.find(a => a.startsWith('--fields='));
   const allow = fieldsArg
     ? new Set(fieldsArg.substr(9).split(',').map(s => s.trim()).filter(Boolean))
     : null;
   const want = (k) => allow == null || allow.has(k);
+  // resolve preview image: manifest.preview wins, else preview.png/jpg in mod dir.
+  // steam cap 1MB PNG/JPG. uploads on every call when set; gate via --fields=.
+  const preview = manifest.preview
+    ? path.resolve(modDir, manifest.preview)
+    : ['preview.png', 'preview.jpg'].map(f => path.join(modDir, f)).find(fs.existsSync);
   const update = { contentPath: modDir };
   if (want('title')) update.title = title;
   if (want('changeNote')) update.changeNote = changeNote;
   if (want('description') && description) update.description = description;
+  if (want('preview') && preview) update.previewPath = preview;
   if (want('visibility') && isNew) update.visibility = 3;
   console.log('[workshop] updateItem payload:', JSON.stringify(update));
   // post-createItem Steam item state can be flaky for ~10-30s: SubmitItemUpdate
