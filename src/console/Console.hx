@@ -109,6 +109,7 @@ class Console
               'debug ai, ' +
               'debug sound, ' +
               'debug lights, ' +
+              'debug colors, ' +
               'debug alert, ' +
               'debug demo, ' +
               'debug leave, ' +
@@ -146,6 +147,7 @@ class Console
               'debug ai, ' +
               'debug sound, ' +
               'debug lights, ' +
+              'debug colors, ' +
               'load - load game, ' +
               'mods [list|enable <id>|disable <id>|errors|rescan], ' +
               'restart, ' +

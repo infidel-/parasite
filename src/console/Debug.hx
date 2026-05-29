@@ -33,6 +33,8 @@ class Debug
             toggleSound();
           case 'lights':
             toggleLights();
+          case 'colors':
+            listColors();
           case 'alert' if (Const.isDebug):
             game.log('This is a test alert message.', COLOR_ALERT);
           case 'demo' if (Const.isDebug):
@@ -42,7 +44,7 @@ class Debug
           case 'throw' if (Const.isDebug):
             throw 'test exception';
           case '':
-            log('Usage: debug [renderstats|ai|sound|lights|alert|demo|leave|throw]');
+            log('Usage: debug [renderstats|ai|sound|lights|colors|alert|demo|leave|throw]');
           default:
             log('Unknown debug command: ' + sub + '.');
         }
@@ -106,6 +108,45 @@ class Debug
           condition: 'demo',
         }
       });
+    }
+
+// dumps base + log text colors to game log, one colored line per CSS var
+  function listColors()
+    {
+      var entries = [
+        [ '--text-fg-color', 'default foreground text' ],
+        [ '--text-color-white', 'plain white text' ],
+        [ '--text-color-yellow', 'highlighted yellow text' ],
+        [ '--text-color-red', 'red text / errors' ],
+        [ '--text-color-gray', 'gray / inactive / muted text' ],
+        [ '--text-color-repeat', 'repeated log message counter' ],
+        [ '--text-color-timeline', 'timeline events' ],
+        [ '--text-color-goal', 'goals' ],
+        [ '--text-color-pedia', 'pedia entries' ],
+        [ '--text-color-symbiosis', 'symbiosis / affinity / consent' ],
+        [ '--text-color-cultist', 'cultist references' ],
+        [ '--text-color-debug', 'debug messages' ],
+        [ '--text-color-alert', 'alerts / warnings' ],
+        [ '--text-color-evolution', 'evolution / mutations' ],
+        [ '--text-color-organ', 'organs' ],
+        [ '--text-color-hint', 'gameplay hints' ],
+        [ '--text-color-message', 'story messages' ],
+        [ '--text-color-cult', 'cult references' ],
+        [ '--text-color-energy', 'energy resource' ],
+        [ '--text-color-income', 'income / earnings' ],
+        [ '--text-color-money', 'money resource' ],
+        [ '--text-color-trait', 'host traits' ],
+      ];
+      var buf = new StringBuf();
+      for (e in entries)
+        {
+          buf.add("<span style='color:var(" + e[0] + ")'>");
+          buf.add(e[0]);
+          buf.add(' - ');
+          buf.add(e[1]);
+          buf.add('</span><br/>');
+        }
+      game.log(buf.toString());
     }
 
 // leaves the current area back to the region

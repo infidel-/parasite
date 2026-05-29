@@ -64,6 +64,7 @@ class ConsoleCompletion
         { lit: 'ai' },
         { lit: 'sound' },
         { lit: 'lights' },
+        { lit: 'colors' },
       ];
       if (Const.isDebug)
         {
