@@ -875,7 +875,15 @@ class MainElectron
 
   static function main()
     {
-      App.enableSandbox();
+      // force sandbox on all renderers (mod hardening). the scary opt-out
+      // --dangerous-disable-mod-sandbox is the only user-facing knob: when set
+      // we add Chromium's builtin --no-sandbox ourselves and skip enableSandbox.
+      // (calling enableSandbox() alongside --no-sandbox contradicts the flag and
+      // aborts Chromium sandbox init at startup → silent exit on Windows)
+      if (App.commandLine.hasSwitch('dangerous-disable-mod-sandbox'))
+        App.commandLine.appendSwitch('no-sandbox');
+      else
+        App.enableSandbox();
       registerModSchemePrivileges();
       registerHostHandlers();
       // steamworks.js must load + overlay switches must apply before App.ready
