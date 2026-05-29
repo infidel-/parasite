@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Реакторная панель</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="crt">
+    <div class="crt-inner">
+
+      <header class="hdr">
+        <div class="hdr-l">
+          <div class="title">РЕАКТОРНАЯ ПАНЕЛЬ</div>
+          <div class="subtitle">СЕКТОР Б-4 · ПУЛЬТ ОПЕРАТОРА · СМЕНА 02</div>
+        </div>
+        <div class="hdr-r">
+          <div class="clock" id="clock">00:00:00</div>
+          <div class="date" id="date">--.--.----</div>
+        </div>
+      </header>
+
+      <section class="meter">
+        <div class="meter-label">АКТИВНАЯ ЗОНА · ТЕМПЕРАТУРНЫЙ ПРОФИЛЬ</div>
+        <div class="bars" id="bars"></div>
+      </section>
+
+      <section class="grid">
+        <div class="cell">
+          <div class="cell-label">ТЕМП. АЗ, °C</div>
+          <div class="cell-value" id="v-temp">284</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">МОЩНОСТЬ, МВт</div>
+          <div class="cell-value" id="v-pwr">46</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">РЕАКТИВНОСТЬ, β</div>
+          <div class="cell-value" id="v-react">30.0</div>
+        </div>
+
+        <div class="cell">
+          <div class="cell-label">РАСХОД ТН, кг/с</div>
+          <div class="cell-value" id="v-flow">74</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">НЕЙТР. ПОТОК, н/см²·с</div>
+          <div class="cell-value" id="v-flux">2410</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">БОР В КОНТУРЕ, г/кг</div>
+          <div class="cell-value" id="v-bor">0.8</div>
+        </div>
+      </section>
+
+      <div class="sub-header">ДАВЛЕНИЕ В КОНТУРЕ · ВТОРОЙ КОНТУР</div>
+
+      <section class="grid">
+        <div class="cell">
+          <div class="cell-label">P-1, кПа</div>
+          <div class="cell-value" id="v-p1">1268</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">P-2, кПа</div>
+          <div class="cell-value" id="v-p2">87</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">УРОВЕНЬ ПГ, %</div>
+          <div class="cell-value" id="v-lvl">96</div>
+        </div>
+
+        <div class="cell status">
+          <div class="cell-label">СОСТОЯНИЕ АЗ</div>
+          <div class="cell-value pill" id="s-az">НОРМА</div>
+        </div>
+        <div class="cell status">
+          <div class="cell-label">ТУРБИНА</div>
+          <div class="cell-value pill" id="s-turb">ГОТОВ</div>
+        </div>
+        <div class="cell">
+          <div class="cell-label">ОТКЛОНЕНИЕ, σ</div>
+          <div class="cell-value" id="v-sig">2.2</div>
+        </div>
+      </section>
+
+      <section class="log">
+        <div class="log-label">ЖУРНАЛ СОБЫТИЙ</div>
+        <ul class="log-list" id="log">
+          <li class="ok">12:42:18 · ПОДАЧА ТН-2 СТАБИЛЬНА</li>
+          <li>12:43:04 · РЕГ. СТЕРЖЕНЬ №07 — ПОДЪЁМ 14 СМ</li>
+          <li class="crit">12:44:02 · ВНИМАНИЕ: ДРОБЬ ТЕМП. АЗ +6°С</li>
+          <li class="ok">12:44:51 · ТЕМП. АЗ В ПРЕДЕЛАХ НОРМЫ</li>
+          <li>12:45:27 · СИГНАЛ ОТ Д-9: КОНТРОЛЬ ОК</li>
+        </ul>
+      </section>
+
+      <footer class="btns">
+        <button class="btn" type="button">СТАРТ</button>
+        <button class="btn" type="button">ПРОВЕРКА</button>
+        <button class="btn" type="button">ВВЕСТИ ТУРБИНУ</button>
+        <button class="btn locked" type="button" aria-disabled="true" title="ДОСТУП ЗАБЛОКИРОВАН">АВАРИЙНЫЙ СТОП</button>
+      </footer>
+
+      <div class="flavor">
+        <span>СИСТ. ВЕР. 4.21 · ИНВ. №47-А</span>
+        <span class="sep">·</span>
+        <span>ЦПК «ЗАРЯ-М» · УЧ. №00-218</span>
+        <span class="sep">·</span>
+        <span>КЛЮЧ ОПЕРАТОРА: ВСТАВЛЕН</span>
+        <span class="sep">·</span>
+        <span>СВЯЗЬ С ЦДУ: ОК</span>
+      </div>
+
+    </div>
+
+    <div class="scanlines"></div>
+    <div class="sweep"></div>
+    <div class="noise"></div>
+    <div class="vignette"></div>
+    <div class="flicker"></div>
+    <div class="glare"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

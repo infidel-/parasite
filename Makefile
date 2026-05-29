@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -10,6 +10,17 @@ testmod:
 
 chainsaw:
 	cd examples/chainsaw/ && $(MAKE)
+
+# build the soviet UI overhaul mod and stage it into parasite/dev/soviet/
+soviet:
+	cd examples/soviet/ && $(MAKE)
+
+# stage the standalone browser preview into parasite/soviet/
+soviet-preview:
+	mkdir -p parasite/soviet
+	cp examples/soviet/preview/index.html parasite/soviet/index.html
+	cp examples/soviet/preview/style.css  parasite/soviet/style.css
+	cp examples/soviet/preview/app.js     parasite/soviet/app.js
 
 main:
 	cd electron && $(MAKE)

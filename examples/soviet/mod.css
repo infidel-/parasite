@@ -1,0 +1,692 @@
+/* Soviet CRT UI — mod.css
+   loaded after engine app.css. same-specificity rules win the cascade.
+   palette + glow + brushed buttons + bordered HUD panels + dialog-only CRT */
+
+/* ===== bundled font =====
+   url() resolves against this stylesheet's location (mod://soviet/mod.css),
+   so the relative path lands at mod://soviet/assets/fonts/VT323-Regular.ttf.
+   mod: scheme is whitelisted for fonts in the engine CSP (see docs/06-assets). */
+@font-face {
+  font-family: "VT323";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/VT323-Regular.ttf") format("truetype");
+}
+
+/* ===== palette + font ===== */
+:root {
+  --soviet-green:      #2dff66;
+  --soviet-green-bright: #aaffbf;
+  --soviet-green-dim:  #1aa247;
+  --soviet-green-deep: #0a4a22;
+  --soviet-amber:      #ffb454;
+  --soviet-amber-dim:  #b87a2a;
+  --soviet-red:        #ff4444;
+  --soviet-red-dim:    #aa2222;
+  --soviet-bg:         #050a06;
+
+  /* engine text-color overrides — map every named color through phosphor palette */
+  --text-fg-color:               var(--soviet-green);
+  --text-color-white:            #d7ffe0;
+  --text-color-yellow:           var(--soviet-amber);
+  --text-color-red:              var(--soviet-red);
+  --text-color-gray:             #36ed40cc;
+  --text-color-repeat:           var(--soviet-green-dim);
+  --text-color-timeline:         var(--soviet-amber);
+  --text-color-goal:             var(--soviet-green);
+  --text-color-pedia:            #1ede5e;
+  --text-color-symbiosis:        var(--soviet-green);
+  --text-color-cultist:          var(--soviet-amber);
+  --text-color-debug:            var(--soviet-green-dim);
+  --text-color-alert:            var(--soviet-red);
+  --text-color-evolution:        var(--soviet-green);
+  --text-color-organ:            var(--soviet-amber);
+  --text-color-hint:             var(--soviet-red);
+  --text-color-message:          var(--soviet-green);
+  --text-color-cult:             var(--soviet-amber);
+  --text-color-energy:           var(--soviet-green);
+  --text-color-income:           var(--soviet-amber);
+  --text-color-money:            var(--soviet-amber);
+  --text-color-trait:            var(--soviet-amber);
+  --text-color-evolution-title:  var(--soviet-green);
+  --text-color-evolution-note:   var(--soviet-green-dim);
+  --text-color-evolution-level-note: var(--soviet-green-bright);
+  --text-color-evolution-params: var(--soviet-green);
+  --text-color-ordeal-note:      var(--soviet-amber);
+  --text-color-ordeal-actions:   var(--soviet-amber);
+  --text-color-communal-ordeal:  var(--soviet-amber);
+  --text-color-profane-ordeal:   var(--soviet-red);
+  --text-color-diff-normal:      var(--soviet-green);
+  --text-color-diff-easy:        var(--soviet-green);
+  --text-color-diff-hard:        var(--soviet-red);
+  --text-color-organ-title:      var(--soviet-amber);
+  --text-color-organ-title-inactive: var(--soviet-amber-dim);
+  --text-color-organ-note:       var(--soviet-green-dim);
+  --text-color-inventory-item:   var(--soviet-green);
+  --text-color-skill-title:      var(--soviet-amber);
+  --text-color-group-title:      var(--soviet-amber);
+  --text-color-group-note:       var(--soviet-amber);
+  --text-color-cult-power:       var(--soviet-green);
+  --text-color-cult-effect:      var(--soviet-green-dim);
+  --text-color-occasio:          var(--soviet-amber);
+
+  /* global font swap — terminal monospace.
+     `!important` is required: engine `Config.set('font', ...)` calls
+     `documentElement.style.setProperty('--text-font', ...)` (inline on <html>),
+     which beats normal-priority CSS. `!important` works on custom properties
+     and beats inline non-important. */
+  --text-font:       "VT323", "Share Tech Mono", "IBM Plex Mono", "Courier New", monospace !important;
+  --text-font-title: "VT323", "Share Tech Mono", "Courier New", monospace !important;
+}
+
+html, body {
+  background-color: #000;
+  font-family: var(--text-font);
+  letter-spacing: 0.04em;
+}
+
+/* ===== base text glow ===== */
+.text {
+  color: var(--soviet-green);
+  background: rgba(5, 10, 6, 0.65);
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 0.9),
+    0 0 9px rgba(45, 255, 102, 0.6),
+    0 0 18px rgba(45, 255, 102, 0.3);
+}
+
+.window-title {
+  color: var(--soviet-green);
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 0.9),
+    0 0 9px rgba(45, 255, 102, 0.7);
+  letter-spacing: 0.14em;
+}
+
+/* ===== dialog frames =====
+   engine sets inline `border-image: url(...) N fill / 1 / 0 stretch` in window
+   ctors (src/ui/*.hx). inline beats normal CSS, so we `!important`-wipe it and
+   replace with a flat green bezel + radial bg. */
+.window-dialog,
+#window-mainmenu,
+#window-newgame,
+#window-options,
+#window-presets,
+#window-spoon,
+#window-mods,
+#window-about,
+#window-yesno,
+#window-difficulty,
+#window-message,
+#window-goals,
+#window-log,
+#window-timeline,
+#window-document,
+#window-evolution,
+#window-cult,
+#window-ovum,
+#window-pedia,
+#window-choice,
+#window-finish,
+#window-actions,
+#window-body {
+  background:
+    radial-gradient(ellipse at center, #0a1a10 0%, #04080a 70%, #000 100%);
+  border: 2px solid var(--soviet-green-dim) !important;
+  border-image: none !important;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.9),
+    inset 0 0 120px rgba(0, 60, 20, 0.32),
+    0 0 0 2px var(--soviet-green-deep),
+    0 0 32px rgba(45, 255, 102, 0.15);
+  border-radius: 4px;
+  color: var(--soviet-green);
+}
+
+/* prominent titles glow stronger */
+#window-mainmenu-title,
+#window-options-title,
+#window-mods-title,
+#window-presets-title,
+#window-about-title,
+#window-newgame-title,
+#window-spoon-title {
+  color: var(--soviet-green) !important;
+  font-family: var(--text-font-title);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 1),
+    0 0 8px rgba(45, 255, 102, 0.95),
+    0 0 18px rgba(45, 255, 102, 0.65);
+}
+
+/* ===== buttons — brushed texture + glow ===== */
+.window-mainmenu-item,
+.window-newgame-item,
+.mods-button,
+.basic-button,
+.hud-button,
+.hud-action,
+.window-dialog-button,
+.window-common-close {
+  color: var(--soviet-green);
+  border: 1px solid var(--soviet-green-dim) !important;
+  border-image: none !important;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(45, 255, 102, 0.05) 0px,
+      rgba(45, 255, 102, 0.05) 1px,
+      rgba(0, 0, 0, 0)         1px,
+      rgba(0, 0, 0, 0)         3px),
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.18) 0px,
+      rgba(0, 0, 0, 0.18) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    2px),
+    linear-gradient(180deg,
+      rgba(45, 255, 102, 0.18) 0%,
+      rgba(45, 255, 102, 0.05) 50%,
+      rgba(45, 255, 102, 0.12) 100%);
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 0.9),
+    0 0 8px rgba(45, 255, 102, 0.6);
+  box-shadow:
+    0 0 8px rgba(45, 255, 102, 0.22),
+    inset 0 1px 0 rgba(45, 255, 102, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  font-family: var(--text-font);
+}
+
+.window-mainmenu-item:hover,
+.window-newgame-item:hover,
+.mods-button:hover,
+.basic-button:hover,
+.hud-button:hover,
+.hud-action:hover {
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(0, 0, 0, 0.20) 0px,
+      rgba(0, 0, 0, 0.20) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    3px),
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.20) 0px,
+      rgba(0, 0, 0, 0.20) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    3px),
+    linear-gradient(180deg, #66ff8a 0%, #2fcf5d 100%) !important;
+  color: #03110a !important;
+  border-color: #b6ffc8 !important;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 0 10px var(--soviet-green),
+    0 0 24px rgba(45, 255, 102, 0.65),
+    inset 0 0 16px rgba(255, 255, 255, 0.32),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.4);
+  animation: none !important;
+  font-weight: 700;
+}
+
+.window-mainmenu-item:active,
+.window-newgame-item:active,
+.mods-button:active,
+.basic-button:active,
+.hud-button:active,
+.hud-action:active {
+  color: #03110a !important;
+  transform: translateY(1px);
+}
+
+/* centered buttons (engine `left:50%; transform: translate(-50%,0)`) — preserve
+   horizontal centering when adding the :active press-down nudge, otherwise the
+   button jumps right by half its width on click. */
+.window-dialog-button:active,
+.window-common-close:active {
+  color: #03110a !important;
+  transform: translate(-50%, 1px) !important;
+}
+
+/* disabled — locked red */
+.window-mainmenu-item-disabled,
+button:disabled,
+.window-disabled {
+  color: var(--soviet-red) !important;
+  border: 1px solid var(--soviet-red-dim) !important;
+  cursor: not-allowed !important;
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(255, 68, 68, 0.0)  0px,
+      rgba(255, 68, 68, 0.0)  6px,
+      rgba(255, 68, 68, 0.12) 6px,
+      rgba(255, 68, 68, 0.12) 8px),
+    linear-gradient(180deg,
+      rgba(255, 68, 68, 0.22) 0%,
+      rgba(255, 68, 68, 0.04) 50%,
+      rgba(255, 68, 68, 0.18) 100%) !important;
+  text-shadow:
+    0 0 3px rgba(255, 200, 200, 0.85),
+    0 0 9px rgba(255, 68, 68, 0.7);
+  filter: none !important;
+}
+
+/* ===== HUD panels — bordered glow cells =====
+   HUD.hx assigns inline border-image to #hud-log/#hud-goals/#hud-info/
+   #hud-actions; wipe + replace with solid green border. */
+#hud-log,
+#hud-goals,
+#hud-info,
+#hud-actions,
+#hud-area-info,
+#hud-ai-info {
+  background-color: rgba(5, 10, 6, 0.7);
+  border: 1px solid var(--soviet-green-dim) !important;
+  border-image: none !important;
+  color: var(--soviet-green);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 14px rgba(0, 0, 0, 0.55),
+    0 0 8px rgba(45, 255, 102, 0.18);
+  /* engine sets `border: 13-20px solid; padding: 0` with border-image artwork
+     supplying inner padding. flat 1px border kills that — reserve real padding
+     so text doesn't kiss the green frame. */
+  padding: 6px 10px !important;
+  box-sizing: border-box;
+}
+
+#hud-debug-info {
+  background-color: rgba(5, 10, 6, 0.85);
+  border: 1px solid var(--soviet-green-dim) !important;
+  border-image: none !important;
+  color: var(--soviet-green-dim);
+}
+
+#hud-console,
+#hud-console-hint {
+  color: var(--soviet-green);
+  background: rgba(5, 10, 6, 0.7);
+  /* engine: textarea font-size 80% (compounded inside .console-div 80% =
+     ~64% root). bump to 100% and line-height match container height so single
+     line vertically centers. */
+  font-size: 110% !important;
+  line-height: 1.2em !important;
+}
+
+.hud-name {
+  color: var(--soviet-green-bright);
+}
+
+/* ===== console-div prompt ===== */
+.console-div:before {
+  background: rgba(5, 10, 6, 0.7);
+  color: var(--soviet-green-dim);
+}
+
+/* ===== scrollbars ===== */
+div::-webkit-scrollbar-track {
+  background: rgba(10, 74, 34, 0.2);
+  border: 1px solid var(--soviet-green-deep);
+}
+div::-webkit-scrollbar-thumb {
+  background-color: var(--soviet-green-dim);
+  border: 1px solid var(--soviet-green-deep);
+}
+
+/* ===== form controls ===== */
+input[type="checkbox"] + span,
+.checkbox-span {
+  border-color: var(--soviet-green-dim) !important;
+}
+[type=checkbox]:checked + span:before {
+  color: var(--soviet-green);
+  text-shadow: 0 0 6px rgba(45, 255, 102, 0.65);
+  /* engine puts checkmark at top:-4 / left:2 — calibrated to Orkney glyph
+     baseline. VT323 sits lower, so it floats above the box. center inside
+     the 1em span instead. */
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%);
+  line-height: 1;
+}
+
+/* checkbox layout: engine sets `right: -N.Nch` inline on every span,
+   per-label-tuned for Orkney glyph widths. VT323 is monospace with different
+   widths → spans scatter. flex the label and pin span to row end. hidden
+   input drops out of flex (display:none), leaving [text node, span] → space-
+   between aligns text left, span right. font-agnostic. */
+.checkbox-title {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+.checkbox-span {
+  position: relative !important;
+  right: auto !important;
+  top: 0 !important;
+  margin-left: auto !important;
+  flex-shrink: 0;
+}
+.slider {
+  background: var(--soviet-green-deep) !important;
+}
+.slider::-webkit-slider-thumb {
+  background: var(--soviet-green) !important;
+}
+.select-element,
+.basic-input-text,
+#options-presets {
+  background: rgba(10, 74, 34, 0.3) !important;
+  color: var(--soviet-green) !important;
+  border: 1px solid var(--soviet-green-dim) !important;
+}
+
+/* ===== fieldset / hr ===== */
+fieldset { border-color: var(--soviet-green-dim) !important; }
+hr { border-color: var(--soviet-green-dim) !important; }
+
+/* ===== misc blue accents from engine — repaint green ===== */
+.window-evolution-list-item,
+.window-organs-list-item {
+  border-color: var(--soviet-green-dim) !important;
+}
+.cult-table th,
+.cult-table td {
+  border-color: var(--soviet-green-dim) !important;
+}
+.message-img {
+  border-color: var(--soviet-green-dim) !important;
+  box-shadow: 0 0 0 0.2rem rgba(54, 237, 64, 0.12) !important;
+}
+/* CRT degrade gated to visible bg only: SVG filter + mask promote .message-img
+   to its own compositor layer, which Chrome paints even when ancestor
+   .window-bg has visibility:hidden (the engine's hide path). attribute selector
+   on inline `visibility: visible` keeps effects off until the window opens. */
+.window-bg[style*="visibility: visible"] .message-img {
+  /* chunky scaling: pixelated rendering so any browser resize produces blocky
+     pixels instead of smooth bilinear interpolation. */
+  image-rendering: pixelated;
+  /* SVG chain: turbulence noise (screen blend) → posterize to 5 tonal levels
+     (CRT phosphor banding) → horizontal-only Gaussian bleed (CRT scanline
+     smear). Then CSS chain: soft blur (defocus) → grayscale → sepia+hue-rotate
+     retint phosphor green → contrast/brightness midtone push. */
+  filter:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feMorphology in='SourceGraphic' operator='dilate' radius='1.5' result='morphed'/><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='1' seed='4' result='noise'/><feColorMatrix in='noise' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.35 0' result='whiteNoise'/><feComposite in='whiteNoise' in2='morphed' operator='in' result='masked'/><feBlend in='morphed' in2='masked' mode='screen' result='noisy'/><feComponentTransfer in='noisy' result='posterized'><feFuncR type='discrete' tableValues='0 0.25 0.5 0.75 1'/><feFuncG type='discrete' tableValues='0 0.25 0.5 0.75 1'/><feFuncB type='discrete' tableValues='0 0.25 0.5 0.75 1'/></feComponentTransfer><feGaussianBlur in='posterized' stdDeviation='1 0'/></filter></svg>#n")
+    blur(0.6px) grayscale(1) sepia(1) hue-rotate(70deg) saturate(3.5) contrast(1.25) brightness(0.85)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='a'><feColorMatrix in='SourceGraphic' values='1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0' result='r'/><feColorMatrix in='SourceGraphic' values='0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0' result='g'/><feColorMatrix in='SourceGraphic' values='0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0' result='b'/><feOffset in='r' dx='-1.5' dy='0' result='rOff'/><feOffset in='b' dx='1.5' dy='0' result='bOff'/><feBlend in='rOff' in2='g' mode='screen' result='rg'/><feBlend in='rg' in2='bOff' mode='screen'/></filter></svg>#a");
+  /* scanlines burned into image via mask: every 3rd row dimmed to ~55% alpha */
+  -webkit-mask-image: repeating-linear-gradient(to bottom,
+    rgba(0, 0, 0, 1) 0px,
+    rgba(0, 0, 0, 1) 2px,
+    rgba(0, 0, 0, 0.55) 3px);
+          mask-image: repeating-linear-gradient(to bottom,
+    rgba(0, 0, 0, 1) 0px,
+    rgba(0, 0, 0, 1) 2px,
+    rgba(0, 0, 0, 0.55) 3px);
+}
+
+/* ===== canvas tint ===== */
+/* game 2D canvas: light phosphor green monochrome — readable for gameplay. */
+#canvas {
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(1.6) brightness(0.95) contrast(1.05);
+}
+
+/* scanlines overlay above game canvas (z:auto/0) but below HUD (z:100) and
+   dialogs (z:105+). solid dark-green stripes — no transparency leak. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(to bottom,
+    rgba(0, 0, 0, 0)      0px,
+    rgba(0, 0, 0, 0)      4px,
+    rgba(0, 30, 12, 0.28) 6px);
+}
+
+/* main menu WebGL bg: phosphor green monochrome + soft blur + scanline mask.
+   skipped feTurbulence noise (CPU per-pixel, too costly on 60fps canvas). engine
+   `canvas-brightness-ramp` keyframes set `filter` during 0.7s fade-in and will
+   override this — that's fine, ours applies after animation ends. */
+.menu-bg-canvas {
+  /* heavier blur + contrast crush + brightness drop for murky CRT look.
+     `!important` beats engine `canvas-brightness-ramp` keyframes that set
+     `filter` during the 0.7s window-fade-in animation, so our look applies
+     from frame 0 instead of after the fade completes. */
+  filter: blur(1.2px) grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.8) brightness(0.9) contrast(1.35) !important;
+}
+
+/* CRT phosphor lattice over the main-menu canvas — horizontal scanlines +
+   vertical aperture grille, painted as a solid overlay so it darkens canvas
+   without making it transparent (no game scene leaks through). scoped to
+   #window-mainmenu-bg so dialog backdrops stay readable. */
+#window-mainmenu-bg::after {
+  background:
+    repeating-linear-gradient(to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 30, 12, 0.35) 2px,
+      rgba(0, 30, 12, 0.35) 3px),
+    repeating-linear-gradient(to right,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 30, 12, 0.22) 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.5) 100%) !important;
+  background-size: auto, auto, auto !important;
+  background-repeat: repeat, repeat, no-repeat !important;
+}
+
+/* ===== dialog CRT overlay — sweep + scanlines + noise + vignette + flicker =====
+   split across two layers because dialog buttons (.window-dialog-button) are
+   `position:absolute; bottom:-49px` — they sit OUTSIDE .window's box per engine
+   layout. clipping .window would hide them.
+   - .window-bg::before = sweep band (full screen). .window-bg overflow:hidden
+     bounds it, and .window (position:fixed) escapes that clip naturally since
+     its containing block is the viewport, not .window-bg.
+   - .window::after = scanlines + SVG noise + vignette (static, z:-1 so children
+     paint above). dialog-only, no clip needed.
+   - .window itself = stepped flicker via filter on the dialog only. */
+.window-bg { overflow: hidden; }
+
+.window-bg::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4%;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(45, 255, 102, 0)    0%,
+    rgba(45, 255, 102, 0.07) 50%,
+    rgba(45, 255, 102, 0)    100%);
+  transform: translateY(-100%);
+  will-change: transform;
+  animation: soviet-sweep 9.5s linear infinite;
+}
+
+/* full-screen static CRT over backdrop (main menu, between dialogs). dialog
+   z-index:110 paints above .window-bg's pseudos so this never covers dialogs.
+   alpha-overlay only — WebGL canvas + mix-blend-mode composite layer = unreliable
+   blending. keep alphas low so canvas image reads through. */
+.window-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 0, 0, 0.22) 3px,
+      rgba(0, 0, 0, 0)    4px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 1  0 0 0 0 0.4  0 0 0 0.10 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+  background-size: auto, 120px 120px, auto;
+  background-repeat: repeat, repeat, no-repeat;
+}
+
+.window {
+  animation: soviet-flicker 7.3s steps(1, end) infinite;
+}
+
+.window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* z:-1 pushes static overlay BELOW in-flow content (buttons, text) but above
+     the .window bg — relies on .window being a stacking context (z-index:110). */
+  z-index: -1;
+  background:
+    repeating-linear-gradient(to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 0, 0, 0.35) 3px,
+      rgba(0, 0, 0, 0)    4px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 1  0 0 0 0 0.4  0 0 0 0.16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.7) 100%);
+  background-size: auto, 120px 120px, auto;
+  background-repeat: repeat, repeat, no-repeat;
+}
+
+/* sweep band travels top→bottom; 2500% covers tall dialogs without leak */
+@keyframes soviet-sweep {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(2500%); }
+}
+
+/* intermittent CRT flicker — long stable pauses, brief brightness dips/spikes.
+   steps(1) gates each keyframe to a hard cut, so no smooth interpolation = no
+   per-frame paint between cuts. */
+@keyframes soviet-flicker {
+  0%, 11.9%   { filter: brightness(1); }
+  12.0%       { filter: brightness(0.78); }
+  12.6%       { filter: brightness(1.05); }
+  13.2%       { filter: brightness(1); }
+  46.8%       { filter: brightness(0.82); }
+  47.2%       { filter: brightness(1); }
+  73.4%       { filter: brightness(0.88); }
+  73.8%       { filter: brightness(1); }
+  100%        { filter: brightness(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window,
+  .window-bg::before { animation: none !important; }
+}
+
+/* main-menu hover image is paint-heavy — neutralize */
+.window-mainmenu-item:hover {
+  animation: none !important;
+}
+
+/* ===== layout repair for slim flat border =====
+   engine app.css sizes dialogs assuming a 30px border-image PNG with built-in
+   padding artwork (`.window-dialog { border: 30px solid }`, dialog buttons
+   `bottom: -49px`, common close `bottom: -13px`, `.window-dialog-text` shifted
+   `translate(0,-10px)`). we replaced the PNG with a flat 2px border, so the
+   built-in padding is gone — content kisses the top edge and the buttons fall
+   below the dialog. reserve real padding and pull buttons inside. */
+.window-dialog {
+  padding: 18px 24px 0 24px !important;
+  box-sizing: border-box;
+}
+/* engine sets `height: calc(100% - 30px)` and a -10px translate on the text
+   block (calibrated to the 30px border-image PNG). force height:auto so the
+   block hugs its text, then use margin-bottom to reserve room for the abs-
+   positioned button row (buttons don't occupy flow). this keeps the dialog
+   tight to content while leaving exactly the clearance the button row needs. */
+.window-dialog-text {
+  transform: none !important;
+  height: auto !important;
+  margin-bottom: 56px;
+}
+.window-dialog-button {
+  bottom: 12px !important;
+}
+/* CLOSE: engine width:5ch + my letter-spacing 0.18em pushes the last char past
+   the right edge in monospace VT323. switch to auto width with horizontal
+   padding so the box grows to fit the label and letter-spacing. */
+.window-common-close {
+  width: auto !important;
+  padding: 0 14px !important;
+  bottom: 6px !important;
+}
+
+/* ===== big window internals =====
+   engine sizes content containers with `transform: translate(-10px, -10px)` +
+   `width: 101.5%/102%` — calibrated to reach INTO a 30/39px border-image PNG
+   so its inner artwork would cover the overflow. with our flat 2px border the
+   same offsets paint content past the real border edge.
+   - kill ONLY the offset/overshoot (transform + width). keep `height: calc(...)`
+     so percent-height children (goals/cult/log sub-sections) still resolve.
+   - apply padding ONLY to the wide content windows that exhibited the overflow
+     (goals/log/timeline/evolution/cult). compact dialogs (mainmenu/options/
+     spoon/about/newgame) already use clean padded layouts and would be squashed
+     by extra padding eating into their `25ch`/`50ch` widths. */
+#window-goals,
+#window-log,
+#window-timeline,
+#window-evolution,
+#window-cult,
+#window-body,
+#window-pedia,
+#window-document,
+#window-options,
+#window-spoon,
+#window-mods,
+#window-about,
+#window-newgame,
+#window-presets {
+  padding: 14px 20px !important;
+  box-sizing: border-box;
+}
+
+#window-goals-text,
+#window-log-text,
+#window-timeline-text,
+#window-evolution-text,
+#window-evolution-contents,
+#window-cult-contents {
+  transform: none !important;
+  width: auto !important;
+}
+
+/* evolution improvement image: engine sets only `width: 100%`; in the original
+   layout its natural aspect fit within the 30px border-image art. with padding
+   added, container is shorter — bound the image by container height too. */
+#window-evolution-img {
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* main menu: engine uses `border: 30px solid` (artwork) + fixed `25ch` width;
+   with flat 2px border content hugs edges. add inner padding, drop fixed
+   width so the column sizes to the longest button. */
+#window-mainmenu {
+  padding: 14px !important;
+  width: auto !important;
+}
+
+/* HUD top menu (F1..F6) — engine caps `.hud-button { max-width: 11ch; padding: 0 }`,
+   sized for Orkney + no letter-spacing. with VT323 + 0.18em spacing, "F4: TIMELINE"
+   overflows 11ch and wraps to 2 lines, tall buttons overlap neighbors. scope the
+   override to `#hud-buttons > .hud-button` so dialog buttons (also `.hud-button`)
+   keep their own padding rules. */
+#hud-buttons > .hud-button {
+  max-width: none !important;
+  width: auto !important;
+  padding: 4px 10px !important;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1 !important;
+  background-color: rgba(5, 14, 8, 0.92) !important;
+}

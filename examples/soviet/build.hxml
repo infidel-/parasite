@@ -1,0 +1,9 @@
+-cp src
+-cp ../../parasite-mod-sdk/externs
+-cp ../../parasite-mod-sdk/externs-generated
+-main Entry
+-D js-es=6
+-D mod
+-dce no
+-debug
+-js entry.js
