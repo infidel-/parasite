@@ -22,6 +22,9 @@ soviet-preview:
 	cp examples/soviet/preview/style.css  parasite/soviet/style.css
 	cp examples/soviet/preview/app.js     parasite/soviet/app.js
 
+pickpocket:
+	cd examples/pickpocket/ && $(MAKE)
+
 main:
 	cd electron && $(MAKE)
 
