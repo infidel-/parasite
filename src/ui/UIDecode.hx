@@ -8,7 +8,9 @@ import js.html.Element;
 
 class UIDecode
 {
-  static var GLYPHS = '▒░#@%&╪◊$';
+  // \u escapes (not raw chars) to avoid source-encoding mojibake:
+  // shade blocks, # @ % &, box-cross, lozenge, $
+  static var GLYPHS = "▒░#@%&╪◊$";
 
 // animate an element's text resolving out of glyph noise over ~0.56s.
 // finalText is the plain text; if html is given it is set as innerHTML on finish.
