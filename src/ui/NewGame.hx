@@ -1,45 +1,139 @@
-// new game window
+// new game window — scenario / sandbox selector
 
 package ui;
 
-import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
-import js.html.InputElement;
-import js.html.PointerEvent;
+import js.html.ImageElement;
+import js.html.ButtonElement;
 
 import game.Game;
 
+// one selectable scenario row
+typedef ScenarioInfo =
+{
+  var id: String;       // scenarioStringID passed to newGame()
+  var name: String;     // display name
+  var tag: String;      // small label under the name (may contain markup)
+  var accent: String;   // per-scenario accent color
+  var img: String;      // preview image url
+  var flavor: String;   // flavor text shown under the image
+}
+
 class NewGame extends UIWindow
 {
-  var contents: DivElement;
+  var list: DivElement;
+  var imgEl: ImageElement;
+  var flavorEl: DivElement;
+  var rows: Array<ButtonElement>;
+  var scenarios: Array<ScenarioInfo>;
+  var activeIndex: Int;
 
   public function new(g: Game)
     {
       super(g, 'window-newgame');
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
+      rows = [];
+      activeIndex = 0;
+      scenarios = [
+        {
+          id: 'alien',
+          name: 'Scenario A',
+          tag: '<span class="ng-redact" aria-label="redacted">REDACTED</span> Parasite',
+          accent: '#a45fe0',
+          img: './img/scenario/a.jpg',
+          flavor: 'Something fell from the dark between stars. It wakes in the gut of the city &mdash; hungry, hunted, learning to wear men like coats.'
+        },
+        {
+          id: 'sandbox',
+          name: 'Sandbox',
+          tag: 'Open World',
+          accent: '#3fd6c0',
+          img: './img/scenario/sandbox.jpg',
+          flavor: 'No script. No leash. The whole city to infest at your own pace &mdash; every alley, every host, every quiet experiment.'
+        },
+      ];
+
+      addCorners();
 
       var title = Browser.document.createDivElement();
       title.id = 'window-newgame-title';
+      title.className = 'win-title';
       title.innerHTML = 'SELECT SCENARIO';
       window.appendChild(title);
-      contents = Browser.document.createDivElement();
-      contents.id = 'window-newgame-contents';
-      window.appendChild(contents);
 
-      addItem('SCENARIO A', function (e) {
+      // body: scenario list (left) + preview image & flavor (right)
+      var body = Browser.document.createDivElement();
+      body.className = 'ng-body';
+      window.appendChild(body);
+
+      list = Browser.document.createDivElement();
+      list.className = 'ng-list';
+      body.appendChild(list);
+      for (i in 0...scenarios.length)
+        addRow(i);
+
+      var preview = Browser.document.createDivElement();
+      preview.className = 'ng-preview';
+      body.appendChild(preview);
+      var imgWrap = Browser.document.createDivElement();
+      imgWrap.className = 'ng-img-wrap';
+      preview.appendChild(imgWrap);
+      imgEl = Browser.document.createImageElement();
+      imgEl.className = 'ng-img';
+      imgWrap.appendChild(imgEl);
+      flavorEl = Browser.document.createDivElement();
+      flavorEl.className = 'ng-flavor';
+      preview.appendChild(flavorEl);
+
+      // footer: START launches the selected scenario
+      var foot = Browser.document.createDivElement();
+      foot.className = 'ng-foot';
+      window.appendChild(foot);
+      var start = Browser.document.createButtonElement();
+      start.className = 'ng-start';
+      start.innerHTML = 'START';
+      start.onclick = function (e) {
         game.scene.sounds.play('click-menu');
-        newGame('alien');
-      });
-      addItem('SANDBOX', function (e) {
-        game.scene.sounds.play('click-menu');
-        newGame('sandbox');
-      });
-      addCloseButton();
-      close.onclick = function (e) {
+        newGame(scenarios[activeIndex].id);
+      };
+      foot.appendChild(start);
+
+      // corner-X returns to the main menu
+      addWinClose(function (e) {
         game.scene.sounds.play('click-menu');
         game.ui.state = UISTATE_MAINMENU;
-      }
+      });
+    }
+
+// add a scenario row (button) to the list
+  function addRow(i: Int)
+    {
+      var s = scenarios[i];
+      var row = Browser.document.createButtonElement();
+      row.className = 'ng-row';
+      row.style.setProperty('--ng', s.accent);
+      row.innerHTML = '<span class="ng-row-bar"></span>' +
+        '<span class="ng-row-txt"><span class="ng-name">' + s.name + '</span>' +
+        '<span class="ng-tag">' + s.tag + '</span></span>';
+      row.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        select(i);
+      };
+      list.appendChild(row);
+      rows.push(row);
+    }
+
+// select a scenario: swap the preview image / flavor / accent and mark the row
+  function select(i: Int)
+    {
+      i = (i + scenarios.length) % scenarios.length;
+      activeIndex = i;
+      var s = scenarios[i];
+      for (n in 0...rows.length)
+        rows[n].classList.toggle('active', n == i);
+      imgEl.src = s.img;
+      flavorEl.innerHTML = s.flavor;
+      window.style.setProperty('--ng-accent', s.accent);
     }
 
 // start new game
@@ -52,29 +146,31 @@ class NewGame extends UIWindow
       game.ui.canvas.style.visibility = 'visible';
     }
 
-// action handling
+// in-window keys: arrows pick a scenario, Enter starts the selected one
+  public override function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
+    {
+      if (code == 'ArrowDown')
+        select(activeIndex + 1);
+      else if (code == 'ArrowUp')
+        select(activeIndex - 1);
+      else if (key == 'Enter' ||
+          key == 'NumpadEnter')
+        newGame(scenarios[activeIndex].id);
+      else return false;
+      return true;
+    }
+
+// action handling (number-key dispatch selects a scenario)
   public override function action(index: Int)
     {
-      // skip tutorial
-      if (index == 1)
-        newGame('alien');
-      else if (index == 2)
-        newGame('sandbox');
+      if (index >= 1 &&
+          index <= scenarios.length)
+        select(index - 1);
     }
 
-// add menu item
-  function addItem(label: String, f: Dynamic -> Void): DivElement
+  override function show(?skipAnimation: Bool = false)
     {
-      var cont = Browser.document.createDivElement();
-      cont.className = 'window-newgame-cont';
-      contents.appendChild(cont);
-
-      var item = Browser.document.createDivElement();
-      item.className = 'window-newgame-item';
-      item.innerHTML = label;
-      cont.appendChild(item);
-      item.onclick = f;
-      return item;
+      super.show(skipAnimation);
+      select(activeIndex);
     }
 }
-

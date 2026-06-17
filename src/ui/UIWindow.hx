@@ -50,6 +50,32 @@ class UIWindow
       window.appendChild(close);
     }
 
+// add four decorative corner brackets to the window frame (redesign chrome)
+  function addCorners()
+    {
+      window.insertAdjacentHTML('afterbegin',
+        '<div class="msg-corner tl"></div><div class="msg-corner tr"></div>' +
+        '<div class="msg-corner bl"></div><div class="msg-corner br"></div>');
+    }
+
+// add the corner-X close button with ESC hint; f overrides the default close action
+  function addWinClose(?f: Dynamic -> Void): DivElement
+    {
+      var x = Browser.document.createDivElement();
+      x.className = 'win-x';
+      x.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+        '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>' +
+        '<span class="esc">ESC</span>';
+      x.onclick = (f != null ? f : function(e) {
+        game.scene.sounds.play('click-menu');
+        game.scene.sounds.play('window-close');
+        game.ui.closeWindow();
+      });
+      window.appendChild(x);
+      return x;
+    }
+
 // add scrolled text block wrapped in fieldset
   function addBlockExtended(cont: DivElement, id: String, title: String,
       ?textClassName = 'scroller'): {
