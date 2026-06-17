@@ -1,4 +1,4 @@
-// about GUI window
+// about window — credits roll + specimen hero
 
 package ui;
 
@@ -10,53 +10,53 @@ import game.Game;
 
 class About extends UIWindow
 {
-  var text: DivElement;
-
   public function new (g: Game)
     {
       super(g, 'window-about');
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
 
-      var title = Browser.document.createDivElement();
-      title.id = 'window-about-title';
-      title.className = 'window-title';
-      title.innerHTML = 'ABOUT';
-      window.appendChild(title);
-      var cont = Browser.document.createDivElement();
-      cont.id = 'window-about-cont';
-      window.appendChild(cont);
+      addCorners();
 
-      var left = Browser.document.createDivElement();
-      left.id = 'window-about-left';
-      cont.appendChild(left);
-      var right = Browser.document.createDivElement();
-      right.id = 'window-about-right';
-      cont.appendChild(right);
+      var body = Browser.document.createDivElement();
+      body.className = 'ab-body';
+      window.appendChild(body);
 
-      left.innerHTML = 
-        '<center>' +
-        'Game design and programming<br>' +
-        '<b>Infidel</b>' +
-        '<br><br>' +
-        'Music and sounds<br>' +
-        '<b>MaxStack</b><br>' +
-        'https://www.youtube.com/@MaxStackMusic<br>' +
-        '<br>' +
-        'Additional art and testing<br>' +
-        '<b>iwanPlays</b><br>' +
-        '<br>' +
-        'This game uses free icons from www.flaticon.com. Full list is available in icons.txt. It also uses sounds from FreeSound (freesound.org) and ZapSplat (www.zapsplat.com). Full list of sounds is available in sounds.txt.<br>' +
-        '<br>' +
-        'This game uses various fonts from Pixel Sagas (www.pixelsagas.com)<br>' +
-        '</center>';
-      right.innerHTML = '<img class=message-img src="' +
-        AssetPath.resolve('img/misc/about' + (1 + Std.random(6)) + '.jpg') + '">';
+      // specimen hero: crimson-graded still + scan band + caption
+      var hero = Browser.document.createDivElement();
+      hero.className = 'ab-hero';
+      hero.innerHTML =
+        '<img class="ab-img" src="' + AssetPath.resolve('img/event/what_am_i.jpg') + '" alt="" draggable="false" ' +
+        'onerror="this.closest(\'.ab-hero\').classList.add(\'noimg\')">' +
+        '<div class="ab-scan" aria-hidden="true"></div>' +
+        '<figcaption class="ab-cap">' +
+        '<span class="ab-cap-k">specimen &middot; unclassified</span>' +
+        '<span class="ab-cap-q">WHAT AM I?</span></figcaption>';
+      body.appendChild(hero);
 
-      addCloseButton();
-      close.onclick = function (e) {
+      // credits column
+      var credits = Browser.document.createDivElement();
+      credits.className = 'ab-credits';
+      var tag = 'A biological organism learning to wear the city.';
+      credits.innerHTML =
+        '<header class="ab-head">' +
+        '<div class="ab-titleline"><h2 class="ab-game">PARASITE</h2>' +
+        '<span class="ab-ver">v' + Version.getVersion() + '</span></div>' +
+        '<p class="ab-tag" data-text="' + tag + '">' + tag + '</p></header>' +
+        '<ul class="ab-roll">' +
+        '<li><span class="ab-role">Game design &amp; programming</span><span class="ab-name">Infidel</span></li>' +
+        '<li><span class="ab-role">Music &amp; sound</span><span class="ab-name">MaxStack</span>' +
+        '<a class="ab-link" href="https://www.youtube.com/@MaxStackMusic" target="_blank" rel="noopener">youtube.com/@MaxStackMusic</a></li>' +
+        '<li><span class="ab-role">Additional art &amp; testing</span><span class="ab-name">iwanPlays</span></li>' +
+        '</ul>' +
+        '<div class="ab-colophon">' +
+        '<p>Free icons &mdash; <b>flaticon.com</b> <span>(icons.txt)</span></p>' +
+        '<p>Sounds &mdash; <b>FreeSound</b> &amp; <b>ZapSplat</b> <span>(sounds.txt)</span></p>' +
+        '<p>Fonts &mdash; <b>Pixel Sagas</b></p></div>';
+      body.appendChild(credits);
+
+      addWinClose(function (e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');
         game.ui.state = UISTATE_MAINMENU;
-      }
+      });
     }
 }
