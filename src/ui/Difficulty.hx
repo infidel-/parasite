@@ -217,7 +217,7 @@ class Difficulty extends UIWindow
       title: 'Conversation',
       notes: [
         'Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss on leaving host with max affinity.',
-        'Medium starting consent. Medium bonus to skilll rolls. Small bonus to consent growth. Tiny max energy loss.',
+        'Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Tiny max energy loss.',
         'Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Small max energy loss.',
       ]
     },
