@@ -220,6 +220,13 @@ class UIWindow
   public dynamic function action(index: Int)
     {}
 
+// handle a key press while this window is open; return true if consumed.
+// override per-window for in-window keyboard handling (e.g. menu navigation)
+  public dynamic function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
+    {
+      return false;
+    }
+
 // scroll window up/down
   public dynamic function scroll(n: Int)
     {}

@@ -353,44 +353,10 @@ class UI
 // handle opening and closing windows
   function handleWindows(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
     {
-/*
-      // scrolling text
-      if (_state != UISTATE_DEFAULT)
-        {
-          // get amount of lines
-          var lines = 0;
-          if (key == Key.PGUP ||
-            (key == Key.K && shiftPressed))
-            lines = -20;
-          else if (key == Key.PGDOWN ||
-            (key == Key.J && shiftPressed))
-            lines = 20;
-          else if (key == Key.UP || key == Key.K || key == Key.NUMPAD_8)
-            lines = -1;
-          else if (key == Key.DOWN || key == Key.J || key == Key.NUMPAD_2)
-            lines = 1;
-
-          var win: UIWindow = cast components[_state];
-
-          if (lines != 0)
-            {
-              win.scroll(lines);
-              return false;
-            }
-
-          else if (key == Key.END ||
-            (key == Key.G && shiftPressed))
-            {
-              win.scrollToEnd();
-              return false;
-            }
-
-          else if (key == Key.HOME || key == Key.G)
-            {
-              win.scrollToBegin();
-              return false;
-            }
-        }*/
+      // let the active window consume the key first (e.g. main menu navigation)
+      if (components[_state] != null &&
+          components[_state].handleKey(key, code, altKey, ctrlKey))
+        return true;
 
       // window open
       if (!Lambda.has(uiNoClose, _state))
