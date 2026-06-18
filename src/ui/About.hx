@@ -59,4 +59,9 @@ class About extends UIWindow
         game.ui.state = UISTATE_MAINMENU;
       });
     }
+
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
+    }
 }

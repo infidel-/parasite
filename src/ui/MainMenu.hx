@@ -63,6 +63,14 @@ class MainMenu extends UIWindow
       bg.insertBefore(menuCrowd.getCanvas(), window);
       // decorative layers above the canvas, below the panel
       addDecor();
+      // pause the menu's decorative CSS animations while the app is unfocused
+      Browser.window.addEventListener('blur', function(e) setMenuActive(false));
+      Browser.window.addEventListener('focus', function(e) setMenuActive(true));
+      Browser.document.addEventListener('visibilitychange', function(e) setMenuActive(!Browser.document.hidden));
+#if electron
+      // main-process push (renderer blur/visibilitychange don't fire reliably here)
+      HostBridge.onFocusChange(function(focused) setMenuActive(focused));
+#end
       setBackground(currentBackground, game.config.aiArtEnabled);
       // randomize background
       if (!game.firstEverRun)
@@ -366,6 +374,7 @@ class MainMenu extends UIWindow
   override function show(?skipAnimation: Bool = false)
     {
       update();
+      bg.style.display = '';
       bg.style.visibility = 'visible';
       if (game.config.aiArtEnabled)
         menuBg.show();
@@ -379,13 +388,21 @@ class MainMenu extends UIWindow
 
   override function hide(?skipAnimation: Bool = false)
     {
-      // set visibility immediately so MainMenuBackground render loop can detect it
-      bg.style.visibility = 'hidden';
-      menuBg.hide();
+      // don't detach the WebGL canvas (menuBg.hide removes it from the DOM and the
+      // GL render doesn't survive the reattach -> black bg on reopen). The render
+      // loop self-stops via its own visibility check; show() restarts it.
       menuCrowd.hide();
       bg.classList.remove('mainmenu-open');
       stopGlitch();
-      super.hide(skipAnimation);
+      animatedHide(true); // keep display set: WebGL canvas mustn't go through display:none
+    }
+
+// pause the decorative CSS animations when the app loses focus (leaves the 3D running)
+  function setMenuActive(active: Bool)
+    {
+      if (bg.style.visibility == 'hidden')
+        return;
+      bg.classList.toggle('menu-inactive', !active);
     }
 
 // update menu items based on game state

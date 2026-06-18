@@ -31,6 +31,9 @@ class UIWindow
       window = Browser.document.createDivElement();
       window.id = id;
       bg.style.visibility = 'hidden';
+      // display:none (not just hidden) so a never-opened window's CSS animations
+      // don't run/composite in the background; show() restores it
+      bg.style.display = 'none';
       window.className = 'window text';
       bg.appendChild(window);
     }
@@ -278,10 +281,36 @@ class UIWindow
       }, 300);
     }
 
+// animated close for the redesigned menu windows: a quick pop-out that always
+// plays (ignores the window-swap skip) and lifts above the incoming window so it
+// shrinks away to reveal it. Call from a window's hide() override.
+  function animatedHide(?keepDisplayed: Bool = false)
+    {
+      bg.style.zIndex = '120';
+      bg.style.pointerEvents = 'none';
+      bg.classList.add('win-closing');
+      haxe.Timer.delay(function() {
+        bg.style.visibility = 'hidden';
+        // display:none stops a hidden window's CSS animations, but the menu's
+        // WebGL canvas doesn't survive a display:none cycle on reattach — and the
+        // menu's own anims are already gated on .mainmenu-open, so skip it there
+        if (!keepDisplayed)
+          bg.style.display = 'none';
+        bg.classList.remove('win-closing');
+        bg.classList.remove('window-fade-in');
+        bg.classList.remove('mainmenu-first-show');
+        bg.style.zIndex = '';
+        bg.style.pointerEvents = '';
+      }, 200);
+    }
+
 // show window
   public function show(?skipAnimation: Bool = false)
     {
       update();
+      // restore display: hidden windows are display:none so their CSS animations
+      // (pulses, glitches) don't run + composite on the GPU while closed
+      bg.style.display = '';
       bg.style.visibility = 'visible';
       // add fade-in animation
       if (!skipAnimation)
@@ -303,6 +332,7 @@ class UIWindow
           // hide after animation completes
           haxe.Timer.delay(function() {
             bg.style.visibility = 'hidden';
+            bg.style.display = 'none';
             bg.classList.remove('window-fade-out');
           }, 100);
         }
@@ -310,6 +340,7 @@ class UIWindow
         {
           // hide immediately when skipping animation
           bg.style.visibility = 'hidden';
+          bg.style.display = 'none';
         }
       // remove other animation classes
       bg.classList.remove('window-fade-in');

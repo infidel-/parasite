@@ -339,6 +339,11 @@ class Options extends UIWindow
       return false;
     }
 
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
+    }
+
 // rebuild difficulty select options (adds custom presets)
   override function update()
     {

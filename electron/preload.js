@@ -53,6 +53,9 @@ contextBridge.exposeInMainWorld('host', {
   quit:          ()   => ipcRenderer.invoke('host:quit'),
   setFullscreen: (on) => ipcRenderer.invoke(on ? 'host:fullscreen:on' : 'host:fullscreen:off'),
 
+  // register a renderer callback for OS window focus changes (main pushes host:focus)
+  onFocusChange: (cb) => ipcRenderer.on('host:focus', (_e, focused) => cb(focused)),
+
   debug: {
     writeRegionRoads:     (text)         => ipcRenderer.sendSync('host:debug:roads', text),
     writeRegionBuildings: (text)         => ipcRenderer.sendSync('host:debug:buildings', text),

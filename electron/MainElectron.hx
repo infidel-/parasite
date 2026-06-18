@@ -951,6 +951,11 @@ class MainElectron
             return { action: 'deny' };
           });
 
+          // push OS focus changes to the renderer (window blur/visibilitychange
+          // don't fire reliably here) so the menu can pause its decorative anims
+          untyped win.on('focus', function() win.webContents.send('host:focus', true));
+          untyped win.on('blur', function() win.webContents.send('host:focus', false));
+
           win.loadFile('app.html');
           if (isDebug)
             win.webContents.openDevTools();

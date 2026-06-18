@@ -278,6 +278,11 @@ class Pedia extends UIWindow
       return (~/<[^>]+>/g).replace(s, '');
     }
 
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
+    }
+
   override function update()
     {
       pediaInner.className = 'pedia-inner pedia-empty';

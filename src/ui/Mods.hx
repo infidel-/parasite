@@ -265,6 +265,11 @@ class Mods extends UIWindow
       parent.appendChild(b);
     }
 
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
+    }
+
   override function update()
     {
       rebuild();

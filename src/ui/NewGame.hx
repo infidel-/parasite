@@ -173,4 +173,9 @@ class NewGame extends UIWindow
       super.show(skipAnimation);
       select(activeIndex);
     }
+
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
+    }
 }
