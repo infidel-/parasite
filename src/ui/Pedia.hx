@@ -12,9 +12,9 @@ import const.PediaConst;
 
 class Pedia extends UIWindow
 {
-  var pediaList: DivElement;     // .pd-list (groups + topics)
-  var pediaInner: DivElement;    // .pd-inner (article render target)
-  var crumb: DivElement;         // .pd-crumb breadcrumb
+  var pediaList: DivElement;     // .pedia-list (groups + topics)
+  var pediaInner: DivElement;    // .pedia-inner (article render target)
+  var crumb: DivElement;         // .pedia-crumb breadcrumb
   var search: InputElement;      // search field
   var searchWrap: DivElement;    // wraps search + clear button
   var groupInfos: Array<_GroupInfoUI>;
@@ -28,26 +28,26 @@ class Pedia extends UIWindow
 
       // titlebar with breadcrumb
       var titlebar = Browser.document.createDivElement();
-      titlebar.className = 'pd-titlebar';
-      titlebar.innerHTML = '<span class="pd-title">PEDIA</span>';
+      titlebar.className = 'pedia-titlebar';
+      titlebar.innerHTML = '<span class="pedia-title">PEDIA</span>';
       crumb = Browser.document.createDivElement();
-      crumb.className = 'pd-crumb';
+      crumb.className = 'pedia-crumb';
       titlebar.appendChild(crumb);
       window.appendChild(titlebar);
 
       // body: nav (search + list) + content
       var body = Browser.document.createDivElement();
-      body.className = 'pd-body';
+      body.className = 'pedia-body';
       window.appendChild(body);
 
       var nav = Browser.document.createDivElement();
-      nav.className = 'pd-nav';
+      nav.className = 'pedia-nav';
       body.appendChild(nav);
       searchWrap = Browser.document.createDivElement();
-      searchWrap.className = 'pd-searchwrap';
+      searchWrap.className = 'pedia-searchwrap';
       nav.appendChild(searchWrap);
       search = Browser.document.createInputElement();
-      search.className = 'pd-search';
+      search.className = 'pedia-search';
       search.type = 'text';
       search.placeholder = 'Search topics...';
       search.oninput = function (e) {
@@ -56,7 +56,7 @@ class Pedia extends UIWindow
       };
       searchWrap.appendChild(search);
       var clear = Browser.document.createDivElement();
-      clear.className = 'pd-clear';
+      clear.className = 'pedia-clear';
       clear.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
       clear.onclick = function (e) {
         search.value = '';
@@ -67,13 +67,13 @@ class Pedia extends UIWindow
       searchWrap.appendChild(clear);
 
       pediaList = Browser.document.createDivElement();
-      pediaList.className = 'pd-list';
+      pediaList.className = 'pedia-list';
       nav.appendChild(pediaList);
 
       var content = Browser.document.createDivElement();
-      content.className = 'pd-content';
+      content.className = 'pedia-content';
       pediaInner = Browser.document.createDivElement();
-      pediaInner.className = 'pd-inner pd-empty';
+      pediaInner.className = 'pedia-inner pedia-empty';
       pediaInner.innerHTML = 'Pick an article to read.';
       content.appendChild(pediaInner);
       body.appendChild(content);
@@ -102,11 +102,11 @@ class Pedia extends UIWindow
           var topics: Array<_TopicInfoUI> = [];
           // group header: caret + name + unlocked count
           var header = Browser.document.createDivElement();
-          header.className = 'pd-group';
+          header.className = 'pedia-group';
           var wrap = Browser.document.createDivElement();
-          wrap.className = 'pd-topics';
+          wrap.className = 'pedia-topics';
           var inner = Browser.document.createDivElement();
-          inner.className = 'pd-topics-in';
+          inner.className = 'pedia-topics-in';
           wrap.appendChild(inner);
 
           var groupInfo: _GroupInfoUI = {
@@ -123,7 +123,7 @@ class Pedia extends UIWindow
               i++;
               var num = (i < 10 ? '0' : '') + i;
               var topic = Browser.document.createDivElement();
-              topic.className = 'pd-topic';
+              topic.className = 'pedia-topic';
               var state = game.profile.getPediaArticle(article.id);
               var topicInfo: _TopicInfoUI = {
                 id: article.id,
@@ -142,9 +142,9 @@ class Pedia extends UIWindow
             }
 
           // header markup: count reflects unlocked topics
-          header.innerHTML = '<span class="pd-caret">&rsaquo;</span>' +
-            '<span class="pd-gname">' + groupContents.name + '</span>' +
-            '<span class="pd-count">' + countUnlocked(groupInfo) + '</span>';
+          header.innerHTML = '<span class="pedia-caret">&rsaquo;</span>' +
+            '<span class="pedia-gname">' + groupContents.name + '</span>' +
+            '<span class="pedia-count">' + countUnlocked(groupInfo) + '</span>';
           header.onclick = function (e) {
             if (search.value != '')
               return;
@@ -164,8 +164,8 @@ class Pedia extends UIWindow
       var article = PediaConst.getArticle(t.id);
       var fontStyle = (article.font != null ? ' style="font-size: ' + article.font + '%"' : '');
       t.element.classList.toggle('new', isNew);
-      t.element.innerHTML = '<span class="pd-idx">' + num + '</span>' +
-        '<span class="pd-tname"' + fontStyle + '>' + article.name + '</span>';
+      t.element.innerHTML = '<span class="pedia-idx">' + num + '</span>' +
+        '<span class="pedia-tname"' + fontStyle + '>' + article.name + '</span>';
     }
 
 // render an article into the content pane
@@ -177,19 +177,19 @@ class Pedia extends UIWindow
       t.element.classList.remove('new');
       activeTopic = t.element;
 
-      var html = '<div class="pd-kicker">' + group + ' · ' + num + '</div>' +
-        '<h3 class="pd-h3">' + article.name + '</h3>';
+      var html = '<div class="pedia-kicker">' + group + ' · ' + num + '</div>' +
+        '<h3 class="pedia-h3">' + article.name + '</h3>';
       if (article.img != null)
-        html += '<span class="pd-imgwrap"><img class="pd-img" src="' +
+        html += '<span class="pedia-imgwrap"><img class="pedia-img" src="' +
           AssetPath.resolve('img/' + article.img + '.jpg') +
           '" alt="" onerror="this.parentElement.style.display=\'none\'"></span>';
-      html += '<div class="pd-text">' + article.text + '</div>';
-      pediaInner.classList.remove('pd-empty');
+      html += '<div class="pedia-text">' + article.text + '</div>';
+      pediaInner.classList.remove('pedia-empty');
       pediaInner.innerHTML = html;
       // restart the fade-up entrance
-      pediaInner.classList.remove('pd-anim');
+      pediaInner.classList.remove('pedia-anim');
       untyped pediaInner.offsetWidth;
-      pediaInner.classList.add('pd-anim');
+      pediaInner.classList.add('pedia-anim');
       pediaInner.parentElement.scrollTop = 0;
       crumb.innerHTML = '/ ' + group + ' / <b>' + stripTags(article.name) + '</b>';
 
@@ -260,7 +260,7 @@ class Pedia extends UIWindow
 // refresh a group header's unlocked count chip
   function updateCount(g: _GroupInfoUI)
     {
-      var chip = g.header.querySelector('.pd-count');
+      var chip = g.header.querySelector('.pedia-count');
       if (chip != null)
         chip.innerHTML = '' + countUnlocked(g);
     }
@@ -280,7 +280,7 @@ class Pedia extends UIWindow
 
   override function update()
     {
-      pediaInner.className = 'pd-inner pd-empty';
+      pediaInner.className = 'pedia-inner pedia-empty';
       pediaInner.innerHTML = 'Pick an article to read.';
       crumb.innerHTML = '';
       if (activeTopic != null)

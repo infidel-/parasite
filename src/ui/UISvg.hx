@@ -10,7 +10,7 @@ class UISvg
 // one HUD corner bracket; pos is the placement class (tl/tr/bl/br)
   public static function corner(pos: String): String
     {
-      return '<svg class="mm-corner ' + pos + '" viewBox="0 0 34 34" fill="none">' +
+      return '<svg class="mainmenu-corner ' + pos + '" viewBox="0 0 34 34" fill="none">' +
         '<path d="M2 14 V2 H14"/></svg>';
     }
 
@@ -20,13 +20,13 @@ class UISvg
       return corner('tl') + corner('tr') + corner('bl') + corner('br');
     }
 
-// rotating organism sigil (inner group .mm-sigil-in counter-spins)
+// rotating organism sigil (inner group .mainmenu-sigil-in counter-spins)
   public static function sigil(): String
     {
-      return '<svg class="mm-sigil" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">' +
+      return '<svg class="mainmenu-sigil" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">' +
         '<circle cx="100" cy="100" r="92" stroke-dasharray="2 6" opacity=".7"/>' +
         '<circle cx="100" cy="100" r="74"/>' +
-        '<g class="mm-sigil-in">' +
+        '<g class="mainmenu-sigil-in">' +
         '<circle cx="100" cy="100" r="54" stroke-dasharray="10 8"/>' +
         '<circle cx="100" cy="100" r="30"/>' +
         '<circle cx="100" cy="100" r="4" fill="currentColor" stroke="none"/>' +

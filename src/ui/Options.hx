@@ -12,7 +12,7 @@ import game.Game;
 
 class Options extends UIWindow
 {
-  var body: DivElement;          // .opt-body (holds cards)
+  var body: DivElement;          // .options-body (holds cards)
   var spoonString: String;
   var cards: Array<_OptCardUI>;
   var cardBody: DivElement;      // current card's body while building
@@ -30,10 +30,10 @@ class Options extends UIWindow
 
       // titlebar with clickable OPTIONS letters (SPOON easter egg)
       var titlebar = Browser.document.createDivElement();
-      titlebar.className = 'opt-titlebar';
+      titlebar.className = 'options-titlebar';
       var title = Browser.document.createDivElement();
       title.id = 'window-options-title';
-      title.className = 'opt-title';
+      title.className = 'options-title';
       titlebar.appendChild(title);
       window.appendChild(titlebar);
       for (letter in 'OPTIONS'.split(''))
@@ -52,7 +52,7 @@ class Options extends UIWindow
         }
 
       body = Browser.document.createDivElement();
-      body.className = 'opt-body';
+      body.className = 'options-body';
       window.appendChild(body);
 
       // ---- AUDIO ----
@@ -170,17 +170,17 @@ class Options extends UIWindow
       cardRows = 0;
       var idx = cards.length;
       var card = Browser.document.createDivElement();
-      card.className = 'opt-card';
+      card.className = 'win-card';
       card.style.animationDelay = (0.04 * (idx + 1)) + 's';
       var hd = Browser.document.createDivElement();
-      hd.className = 'opt-card-hd';
-      hd.innerHTML = '<svg class="opt-caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.5 L8 5 L2 8.5 Z" fill="currentColor"/></svg>' +
-        '<span class="opt-cname">' + label + '</span><span class="opt-count">00</span>';
-      cardCount = cast hd.querySelector('.opt-count');
+      hd.className = 'win-card-hd';
+      hd.innerHTML = '<svg class="options-caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.5 L8 5 L2 8.5 Z" fill="currentColor"/></svg>' +
+        '<span class="win-cname">' + label + '</span><span class="win-count">00</span>';
+      cardCount = cast hd.querySelector('.win-count');
       var wrap = Browser.document.createDivElement();
-      wrap.className = 'opt-card-wrap';
+      wrap.className = 'win-card-wrap';
       cardBody = Browser.document.createDivElement();
-      cardBody.className = 'opt-card-bd';
+      cardBody.className = 'win-card-bd';
       wrap.appendChild(cardBody);
       var rec: _OptCardUI = { card: card, wrap: wrap };
       cards.push(rec);
@@ -221,13 +221,13 @@ class Options extends UIWindow
     {
       cardRows++;
       var row = Browser.document.createDivElement();
-      row.className = 'opt-row';
+      row.className = 'options-row';
       var label = Browser.document.createDivElement();
-      label.className = 'opt-label';
+      label.className = 'options-label';
       label.innerHTML = labelHtml;
       row.appendChild(label);
       var ctl = Browser.document.createDivElement();
-      ctl.className = 'opt-ctl';
+      ctl.className = 'options-ctl';
       row.appendChild(ctl);
       cardBody.appendChild(row);
       return ctl;
@@ -239,14 +239,14 @@ class Options extends UIWindow
     {
       var ctl = addRow(label);
       var slider: InputElement = Browser.document.createInputElement();
-      slider.className = 'opt-slider';
+      slider.className = 'options-slider';
       slider.type = 'range';
       slider.min = '' + min;
       slider.max = '' + max;
       slider.step = '' + step;
       slider.value = '' + value;
       var val = Browser.document.createSpanElement();
-      val.className = 'opt-val';
+      val.className = 'options-val';
       var upd = function() {
         var v = slider.valueAsNumber;
         val.innerHTML = fmtValue(v, roundType) + post;
@@ -266,7 +266,7 @@ class Options extends UIWindow
     {
       var ctl = addRow(label);
       var sw = Browser.document.createDivElement();
-      sw.className = 'opt-switch' + (value ? ' on' : '');
+      sw.className = 'win-switch' + (value ? ' on' : '');
       sw.onclick = function (e) {
         var on = !sw.classList.contains('on');
         sw.classList.toggle('on', on);
@@ -282,10 +282,10 @@ class Options extends UIWindow
     {
       var ctl = addRow(label);
       var wrap = Browser.document.createDivElement();
-      wrap.className = 'opt-selwrap';
+      wrap.className = 'options-selwrap';
       var sel: SelectElement = Browser.document.createSelectElement();
       sel.id = 'option-' + id;
-      sel.className = 'opt-select';
+      sel.className = 'options-select';
       for (info in options)
         {
           var op: OptionElement = Browser.document.createOptionElement();
@@ -306,7 +306,7 @@ class Options extends UIWindow
       if (presets)
         {
           var pb = Browser.document.createDivElement();
-          pb.className = 'opt-presets';
+          pb.className = 'options-presets';
           pb.innerHTML = 'Presets';
           pb.onclick = function (e) {
             game.scene.sounds.play('click-menu');

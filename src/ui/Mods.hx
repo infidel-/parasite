@@ -15,8 +15,8 @@ class Mods extends UIWindow
 {
   static inline var BROWSE_URL = 'steam://url/SteamWorkshop/1920320';
 
-  var body: DivElement;       // .mod-body (cards)
-  var stat: DivElement;       // .mod-stat LOADED count
+  var body: DivElement;       // .mods-body (cards)
+  var stat: DivElement;       // .mods-stat LOADED count
 
   public function new(g: Game)
     {
@@ -26,29 +26,29 @@ class Mods extends UIWindow
 
       // titlebar: MODS + subtitle + loaded-count stat
       var titlebar = Browser.document.createDivElement();
-      titlebar.className = 'mod-titlebar';
-      titlebar.innerHTML = '<span class="mod-title">MODS</span>' +
-        '<span class="mod-sub">extensions registry</span>';
+      titlebar.className = 'mods-titlebar';
+      titlebar.innerHTML = '<span class="mods-title">MODS</span>' +
+        '<span class="mods-sub">extensions registry</span>';
       stat = Browser.document.createDivElement();
-      stat.className = 'mod-stat';
+      stat.className = 'mods-stat';
       titlebar.appendChild(stat);
       window.appendChild(titlebar);
 
       body = Browser.document.createDivElement();
-      body.className = 'mod-body';
+      body.className = 'mods-body';
       window.appendChild(body);
 
       // footer: restart notice + action buttons
       var foot = Browser.document.createDivElement();
-      foot.className = 'mod-foot';
+      foot.className = 'mods-foot';
       window.appendChild(foot);
       var notice = Browser.document.createDivElement();
-      notice.className = 'mod-notice';
+      notice.className = 'mods-notice';
       notice.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16"/></svg>' +
         'Toggle changes apply after restart.';
       foot.appendChild(notice);
       var actions = Browser.document.createDivElement();
-      actions.className = 'mod-actions';
+      actions.className = 'mods-actions';
       foot.appendChild(actions);
       addButton(actions,
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9H3z"/></svg>OPEN MODS FOLDER',
@@ -101,15 +101,15 @@ class Mods extends UIWindow
   function addCard(label: String, count: Int): DivElement
     {
       var card = Browser.document.createDivElement();
-      card.className = 'opt-card';
+      card.className = 'win-card';
       var hd = Browser.document.createDivElement();
-      hd.className = 'opt-card-hd mod-card-hd';
-      hd.innerHTML = '<span class="opt-cname">' + label + '</span>' +
-        '<span class="opt-count">' + (count < 10 ? '0' : '') + count + '</span>';
+      hd.className = 'win-card-hd mods-card-hd';
+      hd.innerHTML = '<span class="win-cname">' + label + '</span>' +
+        '<span class="win-count">' + (count < 10 ? '0' : '') + count + '</span>';
       var wrap = Browser.document.createDivElement();
-      wrap.className = 'opt-card-wrap';
+      wrap.className = 'win-card-wrap';
       var bd = Browser.document.createDivElement();
-      bd.className = 'opt-card-bd';
+      bd.className = 'win-card-bd';
       wrap.appendChild(bd);
       card.appendChild(hd);
       card.appendChild(wrap);
@@ -126,7 +126,7 @@ class Mods extends UIWindow
       var locked = (failReason != null || shadowed);
 
       var row = Browser.document.createDivElement();
-      row.className = 'mod-row';
+      row.className = 'mods-row';
       if (failReason != null)
         row.classList.add('failed');
       else if (shadowed)
@@ -135,22 +135,22 @@ class Mods extends UIWindow
         row.classList.add('off');
       parent.appendChild(row);
 
-      // toggle (reuses .opt-switch; #window-mods sets --opt-accent green)
+      // toggle (reuses .win-switch; #window-mods sets --win-accent green)
       var sw = Browser.document.createDivElement();
-      sw.className = 'opt-switch';
+      sw.className = 'win-switch';
       if (!disabled && !locked)
         sw.classList.add('on');
       if (locked)
-        sw.classList.add('mod-sw-lock');
+        sw.classList.add('mods-sw-lock');
       row.appendChild(sw);
 
       // name + version (+ optional reason line)
       var main = Browser.document.createDivElement();
-      main.className = 'mod-main';
+      main.className = 'mods-main';
       var line = Browser.document.createDivElement();
-      line.className = 'mod-line';
-      line.innerHTML = '<span class="mod-name">' + m.name + '</span>' +
-        '<span class="mod-ver">v' + m.version + '</span>';
+      line.className = 'mods-line';
+      line.innerHTML = '<span class="mods-name">' + m.name + '</span>' +
+        '<span class="mods-ver">v' + m.version + '</span>';
       main.appendChild(line);
       if (failReason != null)
         addReason(main, 'failed: ' + failReason);
@@ -160,7 +160,7 @@ class Mods extends UIWindow
 
       // status pill
       var status = Browser.document.createDivElement();
-      status.className = 'mod-status';
+      status.className = 'mods-status';
       if (failReason != null)
         setStatusClass(status, 'st-failed', 'FAILED');
       else if (shadowed)
@@ -185,7 +185,7 @@ class Mods extends UIWindow
           m.workshopID != null)
         {
           var link = Browser.document.createDivElement();
-          link.className = 'mod-link';
+          link.className = 'mods-link';
           link.title = 'Open on Steam Workshop';
           link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
           link.onclick = function (e) {
@@ -199,7 +199,7 @@ class Mods extends UIWindow
   function addReason(main: DivElement, text: String)
     {
       var reason = Browser.document.createDivElement();
-      reason.className = 'mod-reason';
+      reason.className = 'mods-reason';
       reason.innerHTML = text;
       main.appendChild(reason);
     }
@@ -213,7 +213,7 @@ class Mods extends UIWindow
 // apply a status pill class + label, replaying the flip animation
   function setStatusClass(status: DivElement, cls: String, label: String)
     {
-      status.className = 'mod-status ' + cls;
+      status.className = 'mods-status ' + cls;
       status.innerHTML = label;
       status.classList.remove('flip');
       untyped status.offsetWidth;
@@ -256,7 +256,7 @@ class Mods extends UIWindow
   function addButton(parent: DivElement, html: String, onclick: Dynamic -> Void)
     {
       var b = Browser.document.createDivElement();
-      b.className = 'mod-btn';
+      b.className = 'mods-btn';
       b.innerHTML = html;
       b.onclick = function (e) {
         game.scene.sounds.play('click-menu');

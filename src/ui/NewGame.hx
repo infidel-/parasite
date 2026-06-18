@@ -38,7 +38,7 @@ class NewGame extends UIWindow
         {
           id: 'alien',
           name: 'Scenario A',
-          tag: '<span class="ng-redact" aria-label="redacted">REDACTED</span> Parasite',
+          tag: '<span class="newgame-redact" aria-label="redacted">REDACTED</span> Parasite',
           accent: '#a45fe0',
           img: './img/scenario/a.jpg',
           flavor: 'Something fell from the dark between stars. It wakes in the gut of the city &mdash; hungry, hunted, learning to wear men like coats.'
@@ -63,34 +63,34 @@ class NewGame extends UIWindow
 
       // body: scenario list (left) + preview image & flavor (right)
       var body = Browser.document.createDivElement();
-      body.className = 'ng-body';
+      body.className = 'newgame-body';
       window.appendChild(body);
 
       list = Browser.document.createDivElement();
-      list.className = 'ng-list';
+      list.className = 'newgame-list';
       body.appendChild(list);
       for (i in 0...scenarios.length)
         addRow(i);
 
       var preview = Browser.document.createDivElement();
-      preview.className = 'ng-preview';
+      preview.className = 'newgame-preview';
       body.appendChild(preview);
       var imgWrap = Browser.document.createDivElement();
-      imgWrap.className = 'ng-img-wrap';
+      imgWrap.className = 'newgame-img-wrap';
       preview.appendChild(imgWrap);
       imgEl = Browser.document.createImageElement();
-      imgEl.className = 'ng-img';
+      imgEl.className = 'newgame-img';
       imgWrap.appendChild(imgEl);
       flavorEl = Browser.document.createDivElement();
-      flavorEl.className = 'ng-flavor';
+      flavorEl.className = 'newgame-flavor';
       preview.appendChild(flavorEl);
 
       // footer: START launches the selected scenario
       var foot = Browser.document.createDivElement();
-      foot.className = 'ng-foot';
+      foot.className = 'newgame-foot';
       window.appendChild(foot);
       var start = Browser.document.createButtonElement();
-      start.className = 'ng-start';
+      start.className = 'newgame-start';
       start.innerHTML = 'START';
       start.onclick = function (e) {
         game.scene.sounds.play('click-menu');
@@ -110,11 +110,11 @@ class NewGame extends UIWindow
     {
       var s = scenarios[i];
       var row = Browser.document.createButtonElement();
-      row.className = 'ng-row';
-      row.style.setProperty('--ng', s.accent);
-      row.innerHTML = '<span class="ng-row-bar"></span>' +
-        '<span class="ng-row-txt"><span class="ng-name">' + s.name + '</span>' +
-        '<span class="ng-tag">' + s.tag + '</span></span>';
+      row.className = 'newgame-row';
+      row.style.setProperty('--newgame-color', s.accent);
+      row.innerHTML = '<span class="newgame-row-bar"></span>' +
+        '<span class="newgame-row-txt"><span class="newgame-name">' + s.name + '</span>' +
+        '<span class="newgame-tag">' + s.tag + '</span></span>';
       row.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         select(i);
@@ -133,7 +133,7 @@ class NewGame extends UIWindow
         rows[n].classList.toggle('active', n == i);
       imgEl.src = s.img;
       flavorEl.innerHTML = s.flavor;
-      window.style.setProperty('--ng-accent', s.accent);
+      window.style.setProperty('--newgame-accent', s.accent);
     }
 
 // start new game

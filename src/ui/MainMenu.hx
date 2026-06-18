@@ -23,17 +23,18 @@ class MainMenu extends UIWindow
   public var menuCrowd: MainMenuCrowd;
 
   // redesign state
-  var titleName: SpanElement;       // .mm-name, gets per-letter glyph glitch
+  var titleName: SpanElement;       // .mainmenu-name, gets per-letter glyph glitch
   var titleNameText: String;        // the true word ("PARASITE")
-  var cursor: DivElement;           // .mm-cursor sliding highlight bar
-  var items: Array<ButtonElement>;  // .mm-item buttons in display order
-  var labels: Array<Element>;       // matching .mm-label spans
+  var cursor: DivElement;           // .mainmenu-cursor sliding highlight bar
+  var items: Array<ButtonElement>;  // .mainmenu-item buttons in display order
+  var labels: Array<Element>;       // matching .mainmenu-label spans
   var labelTexts: Array<String>;    // matching plain label strings
   var decodeEls: Array<{ el: Element, text: String }>; // text bits that decode on open
   var activeIndex: Int;
   var glitchTimer: Int;
   var restoreTimer: Int;
   var itemCount: Int;
+  var cursorObserver: Dynamic; // ResizeObserver: re-places the highlight bar when rows reflow
 
   public function new(g: Game)
     {
@@ -52,7 +53,7 @@ class MainMenu extends UIWindow
 
       // dark scrim layer behind the WebGL canvas (no-GL fallback base)
       var scrim = Browser.document.createDivElement();
-      scrim.className = 'mm-scrim';
+      scrim.className = 'mainmenu-scrim';
       bg.insertBefore(scrim, window);
       // create WebGL background canvas
       menuBg = new MainMenuBackground();
@@ -84,12 +85,12 @@ class MainMenu extends UIWindow
         + ' DEMO'
 #end
       ;
-      title.innerHTML = '<span class="mm-name" data-text="PARASITE">PARASITE</span>' +
-        '<span class="mm-ver">' + verText + '</span>';
+      title.innerHTML = '<span class="mainmenu-name" data-text="PARASITE">PARASITE</span>' +
+        '<span class="mainmenu-ver">' + verText + '</span>';
       window.appendChild(title);
-      titleName = cast title.querySelector('.mm-name');
+      titleName = cast title.querySelector('.mainmenu-name');
       titleNameText = 'PARASITE';
-      var verEl = title.querySelector('.mm-ver');
+      var verEl = title.querySelector('.mainmenu-ver');
       decodeEls.push({ el: titleName, text: titleNameText });
       decodeEls.push({ el: verEl, text: verText });
 
@@ -98,7 +99,7 @@ class MainMenu extends UIWindow
       contents.id = 'window-mainmenu-contents';
       window.appendChild(contents);
       cursor = Browser.document.createDivElement();
-      cursor.className = 'mm-cursor';
+      cursor.className = 'mainmenu-cursor';
       contents.appendChild(cursor);
 
       addItem('NEW GAME', function(e) {
@@ -133,17 +134,17 @@ class MainMenu extends UIWindow
 // add the decorative overlay layers (sigil, aura, vignette) above the canvas, below the panel
   function addDecor()
     {
-      // rotating organism sigil (inner group counter-spins via .mm-sigil-in)
+      // rotating organism sigil (inner group counter-spins via .mainmenu-sigil-in)
       var tmp = Browser.document.createDivElement();
       tmp.innerHTML = UISvg.sigil();
       bg.insertBefore(tmp.firstElementChild, window);
       // breathing aura
       var aura = Browser.document.createDivElement();
-      aura.className = 'mm-aura';
+      aura.className = 'mainmenu-aura';
       bg.insertBefore(aura, window);
       // vignette
       var vignette = Browser.document.createDivElement();
-      vignette.className = 'mm-vignette';
+      vignette.className = 'mainmenu-vignette';
       bg.insertBefore(vignette, window);
     }
 
@@ -198,11 +199,11 @@ class MainMenu extends UIWindow
       itemCount++;
       var num = (itemCount < 10 ? '0' : '') + itemCount;
       var item = Browser.document.createButtonElement();
-      item.className = 'mm-item';
-      item.innerHTML = '<span class="mm-num">' + num + '</span>' +
-        '<span class="mm-label">' + label + '</span>';
+      item.className = 'mainmenu-item';
+      item.innerHTML = '<span class="mainmenu-num">' + num + '</span>' +
+        '<span class="mainmenu-label">' + label + '</span>';
       contents.appendChild(item);
-      var labelEl = item.querySelector('.mm-label');
+      var labelEl = item.querySelector('.mainmenu-label');
       var idx = items.length;
       items.push(item);
       labels.push(labelEl);
@@ -264,10 +265,10 @@ class MainMenu extends UIWindow
   function navActivate()
     {
       var it = items[activeIndex];
-      if (it.classList.contains('mm-disabled'))
+      if (it.classList.contains('mainmenu-disabled'))
         return;
-      it.classList.add('mm-pulse');
-      Browser.window.setTimeout(function() { it.classList.remove('mm-pulse'); }, 320);
+      it.classList.add('mainmenu-pulse');
+      Browser.window.setTimeout(function() { it.classList.remove('mainmenu-pulse'); }, 320);
       it.click();
     }
 
@@ -345,6 +346,20 @@ class MainMenu extends UIWindow
       Browser.window.requestAnimationFrame(function(t) {
         Browser.window.requestAnimationFrame(function(t2) { placeCursor(); });
       });
+      // rows reflow after first paint (web font load, config font-size applied) and the
+      // early rAF placement lands on stale metrics. A ResizeObserver re-places the bar
+      // whenever a row's size actually changes, so it always settles correctly.
+      if (cursorObserver == null)
+        {
+          var cb = function(entries, obs) {
+            if (isVisible())
+              placeCursor();
+          };
+          cursorObserver = js.Syntax.code("new ResizeObserver({0})", cb);
+          cursorObserver.observe(contents);
+          for (it in items)
+            cursorObserver.observe(it);
+        }
       startGlitch();
     }
 
@@ -355,7 +370,7 @@ class MainMenu extends UIWindow
       if (game.config.aiArtEnabled)
         menuBg.show();
       menuCrowd.show();
-      bg.classList.add('mm-open');
+      bg.classList.add('mainmenu-open');
       // add animation class for regular fade-in
       if (!skipAnimation && !bg.classList.contains('mainmenu-first-show'))
         bg.classList.add('window-fade-in');
@@ -368,7 +383,7 @@ class MainMenu extends UIWindow
       bg.style.visibility = 'hidden';
       menuBg.hide();
       menuCrowd.hide();
-      bg.classList.remove('mm-open');
+      bg.classList.remove('mainmenu-open');
       stopGlitch();
       super.hide(skipAnimation);
     }
@@ -379,7 +394,7 @@ override function update()
     loadEnabled = false;
     saveEnabled = false;
     // refresh the save-game sub-note (saves left / mission area)
-    var sub = saveItem.querySelector('.mm-sub');
+    var sub = saveItem.querySelector('.mainmenu-sub');
     if (sub != null)
       sub.remove();
     if (game.isStarted &&
@@ -395,7 +410,7 @@ override function update()
             col = 'red';
           }
         var note = Browser.document.createSpanElement();
-        note.className = 'mm-sub';
+        note.className = 'mainmenu-sub';
         note.innerHTML = Const.smallcol(col, '[' + text + ']');
         saveItem.appendChild(note);
       }
@@ -409,8 +424,8 @@ override function update()
       saveEnabled = false;
 #end
       // toggle disabled state
-      loadItem.classList.toggle('mm-disabled', !loadEnabled);
-      saveItem.classList.toggle('mm-disabled', !saveEnabled);
+      loadItem.classList.toggle('mainmenu-disabled', !loadEnabled);
+      saveItem.classList.toggle('mainmenu-disabled', !saveEnabled);
     }
 
 // update menu background and apply if AI art is enabled

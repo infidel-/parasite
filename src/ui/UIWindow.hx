@@ -54,8 +54,8 @@ class UIWindow
   function addCorners()
     {
       window.insertAdjacentHTML('afterbegin',
-        '<div class="msg-corner tl"></div><div class="msg-corner tr"></div>' +
-        '<div class="msg-corner bl"></div><div class="msg-corner br"></div>');
+        '<div class="win-corner tl"></div><div class="win-corner tr"></div>' +
+        '<div class="win-corner bl"></div><div class="win-corner br"></div>');
     }
 
 // add the corner-X close button with ESC hint; f overrides the default close action
