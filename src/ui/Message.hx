@@ -1,9 +1,10 @@
-// message window
+// message window — narrative event dialog
 
 package ui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.ImageElement;
 import mods.AssetPath;
 
 import game.Game;
@@ -12,22 +13,30 @@ import _MessageParams;
 
 class Message extends UIWindow
 {
+  var imgWrap: DivElement;
+  var imgEl: ImageElement;
   var text: DivElement;
 
   public function new(g: Game)
     {
       super(g, 'window-message');
-      window.className += ' window-dialog';
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
+      window.classList.add('msg-frame');
+      addCorners();
+
+      // image (with the infected-duotone glitch filter); hidden when no image
+      imgWrap = Browser.document.createDivElement();
+      imgWrap.className = 'msg-img';
+      imgEl = Browser.document.createImageElement();
+      imgWrap.appendChild(imgEl);
+      window.appendChild(imgWrap);
 
       text = Browser.document.createDivElement();
-      text.className = 'window-dialog-text';
+      text.className = 'msg-text';
       window.appendChild(text);
 
       var close = Browser.document.createDivElement();
-      close.className = 'hud-button window-dialog-button';
+      close.className = 'msg-close';
       close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       close.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.ui.closeWindow();
@@ -60,23 +69,26 @@ class Message extends UIWindow
 // internal method to set html content
   function setParamsInternal(o: _MessageParams, hasImage: Bool)
     {
-      var html = '';
+      imgWrap.style.display = (hasImage ? '' : 'none');
       if (hasImage)
-        html += '<img class=message-img src="' + AssetPath.resolve('img/' + o.img + '.jpg') + '"><p>';
+        imgEl.src = AssetPath.resolve('img/' + o.img + '.jpg');
+
+      var html = '';
       if (o.title != null)
         {
-          var titleText = o.title;
-          if (o.titleCol != null)
-            titleText = Const.col(o.titleCol, o.title);
-          html += "<h3 class='message-title'>" + titleText + "</h3>";
+          var titleText = (o.titleCol != null ? Const.col(o.titleCol, o.title) : o.title);
+          html += "<span class='msg-heading'>" + titleText + "</span>";
         }
       if (o.col != null)
-        html += "<font style='color:var(--text-color-" + o.col + ")'>"  + o.text + "</font>";
+        html += "<span style='color:var(--text-color-" + o.col + ")'>" + o.text + "</span>";
       else html += o.text;
-      if (hasImage)
-        html += '</p>';
 
       text.innerHTML = html;
       game.scene.sounds.play('message-default');
+    }
+
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
     }
 }

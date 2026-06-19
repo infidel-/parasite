@@ -20,6 +20,43 @@
 </head>
 <body>
 
+<!-- SVG filter bank for message/dialog imagery (referenced via CSS filter:url(#...)) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="msgGlitch" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceGraphic" operator="dilate" radius="0.5" result="melt"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.010 0.014" numOctaves="3" seed="7" stitchTiles="stitch" result="noise"/>
+    <feDisplacementMap in="melt" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G" result="warp"/>
+    <feColorMatrix in="warp" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/>
+    <feOffset in="r" dx="-2" dy="0" result="rs"/>
+    <feColorMatrix in="warp" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
+    <feColorMatrix in="warp" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/>
+    <feOffset in="b" dx="2" dy="0" result="bs"/>
+    <feBlend in="rs" in2="g" mode="screen" result="rg"/>
+    <feBlend in="rg" in2="bs" mode="screen" result="base"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.016 0.020" numOctaves="4" seed="11" result="rn"/>
+    <feColorMatrix in="rn" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="rmask"/>
+    <feComponentTransfer in="rmask" result="rmaskT">
+      <feFuncA type="discrete" tableValues="0 0 0 0 0 1 1 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="rmaskT" stdDeviation="1.2" result="rmaskB"/>
+    <feFlood flood-color="#4a1f6e" flood-opacity="0.16" result="rotcol"/>
+    <feComposite in="rotcol" in2="rmaskB" operator="in" result="rot"/>
+    <feBlend in="rot" in2="base" mode="multiply" result="rotted"/>
+    <feColorMatrix in="rotted" type="saturate" values="0" result="lum"/>
+    <feComponentTransfer in="lum" result="lumP">
+      <feFuncR type="discrete" tableValues="0 .032 .065 .097 .129 .161 .194 .226 .258 .290 .323 .355 .387 .419 .452 .484 .516 .548 .581 .613 .645 .677 .710 .742 .774 .806 .839 .871 .903 .935 .968 1"/>
+      <feFuncG type="discrete" tableValues="0 .032 .065 .097 .129 .161 .194 .226 .258 .290 .323 .355 .387 .419 .452 .484 .516 .548 .581 .613 .645 .677 .710 .742 .774 .806 .839 .871 .903 .935 .968 1"/>
+      <feFuncB type="discrete" tableValues="0 .032 .065 .097 .129 .161 .194 .226 .258 .290 .323 .355 .387 .419 .452 .484 .516 .548 .581 .613 .645 .677 .710 .742 .774 .806 .839 .871 .903 .935 .968 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="lumP" stdDeviation="0.45" result="lumB"/>
+    <feComponentTransfer in="lumB">
+      <feFuncR type="table" tableValues="0.165 0.705"/>
+      <feFuncG type="table" tableValues="0.059 0.840"/>
+      <feFuncB type="table" tableValues="0.271 0.500"/>
+    </feComponentTransfer>
+  </filter>
+</defs></svg>
+
 <script src="soundmanager2-nodebug.js"></script>
 <script>
   var SoundManager = soundManager;
