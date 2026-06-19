@@ -20,22 +20,21 @@ class Message extends UIWindow
   public function new(g: Game)
     {
       super(g, 'window-message');
-      window.classList.add('msg-frame');
       addCorners();
 
       // image (with the infected-duotone glitch filter); hidden when no image
       imgWrap = Browser.document.createDivElement();
-      imgWrap.className = 'msg-img';
+      imgWrap.className = 'message-img';
       imgEl = Browser.document.createImageElement();
       imgWrap.appendChild(imgEl);
       window.appendChild(imgWrap);
 
       text = Browser.document.createDivElement();
-      text.className = 'msg-text';
+      text.className = 'message-text';
       window.appendChild(text);
 
       var close = Browser.document.createDivElement();
-      close.className = 'msg-close';
+      close.className = 'message-close';
       close.innerHTML = 'CLOSE';
       close.onclick = function (e) {
         game.scene.sounds.play('click-menu');
@@ -77,7 +76,7 @@ class Message extends UIWindow
       if (o.title != null)
         {
           var titleText = (o.titleCol != null ? Const.col(o.titleCol, o.title) : o.title);
-          html += "<span class='msg-heading'>" + titleText + "</span>";
+          html += "<span class='message-heading'>" + titleText + "</span>";
         }
       if (o.col != null)
         html += "<span style='color:var(--text-color-" + o.col + ")'>" + o.text + "</span>";

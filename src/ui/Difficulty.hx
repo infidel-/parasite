@@ -1,110 +1,84 @@
-// difficulty selection window
+// difficulty selection window — triptych (three image stripes = choices)
 
 package ui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.SpanElement;
+import js.html.ImageElement;
 import mods.AssetPath;
 
 import game.Game;
 
 class Difficulty extends UIWindow
 {
-  var header: DivElement;
-  var text: DivElement;
-  var func: Bool -> Void;
+  var diffImg: ImageElement;
+  var noteEasy: SpanElement;
+  var noteNormal: SpanElement;
+  var noteHard: SpanElement;
+  var diffName: SpanElement;
   var currentChoice: _Choice;
-  var headerText: String;
-  var defaultText: String;
 
   public function new(g: Game)
     {
       super(g, 'window-difficulty');
-      window.className += ' window-dialog';
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-difficulty.png') + "') 100 fill / 1 / 0 stretch";
+      addCorners();
 
-      var outerText = Browser.document.createSpanElement();
-      window.appendChild(outerText);
+      // triptych: one photo backdrop, three vertical choice stripes
+      var strips = Browser.document.createDivElement();
+      strips.className = 'difficulty-strips';
+      diffImg = Browser.document.createImageElement();
+      diffImg.className = 'difficulty-bg';
+      strips.appendChild(diffImg);
+      noteEasy = addStrip(strips, 'easy', 'EASY', 1);
+      noteNormal = addStrip(strips, 'normal', 'NORMAL', 2);
+      noteHard = addStrip(strips, 'hard', 'HARD', 3);
+      window.appendChild(strips);
 
-      header = Browser.document.createDivElement();
-      header.className = 'window-dialog-text';
-      outerText.appendChild(header);
-
-      text = Browser.document.createDivElement();
-      text.className = 'window-dialog-text';
-      text.style.marginTop = '1em';
-      text.style.minHeight = '4em';
-      outerText.appendChild(text);
-
-      var easy = Browser.document.createDivElement();
-      easy.className = 'hud-button window-dialog-button window-choice-1';
-      easy.innerHTML = Const.col('diff-easy', 'EASY');
-      easy.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      easy.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        action(1);
-      }
-      easy.onmouseover = function (e) {
-        text.innerHTML = currentChoice.notes[0];
-      }
-      easy.onmouseout = function (e) {
-        text.innerHTML = defaultText;
-      }
-      window.appendChild(easy);
-
-      var normal = Browser.document.createDivElement();
-      normal.className = 'hud-button window-dialog-button window-choice-2';
-      normal.innerHTML = Const.col('diff-normal', 'NORMAL');
-      normal.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      normal.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        action(2);
-      }
-      normal.onmouseover = function (e) {
-        text.innerHTML = currentChoice.notes[1];
-      }
-      normal.onmouseout = function (e) {
-        text.innerHTML = defaultText;
-      }
-      window.appendChild(normal);
-
-      var hard = Browser.document.createDivElement();
-      hard.className = 'hud-button window-dialog-button window-choice-3';
-      hard.innerHTML = Const.col('diff-hard', 'HARD');
-      hard.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      hard.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        action(3);
-      }
-      hard.onmouseover = function (e) {
-        text.innerHTML = currentChoice.notes[2];
-      }
-      hard.onmouseout = function (e) {
-        text.innerHTML = defaultText;
-      }
-      window.appendChild(hard);
+      // window title (with the choice name) glued to the bottom
+      var title = Browser.document.createDivElement();
+      title.className = 'difficulty-title';
+      title.innerHTML = "<span class='difficulty-title-pre'>Difficulty:</span> ";
+      diffName = Browser.document.createSpanElement();
+      title.appendChild(diffName);
+      window.appendChild(title);
     }
 
-// set parameters
+// build one choice stripe (label + note); clicking it picks that difficulty
+  function addStrip(parent: DivElement, cls: String, label: String, index: Int): SpanElement
+    {
+      var strip = Browser.document.createDivElement();
+      strip.className = 'difficulty-strip ' + cls;
+      var lab = Browser.document.createSpanElement();
+      lab.className = 'difficulty-label';
+      lab.innerHTML = label;
+      strip.appendChild(lab);
+      var note = Browser.document.createSpanElement();
+      note.className = 'difficulty-note';
+      strip.appendChild(note);
+      strip.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        action(index);
+      }
+      parent.appendChild(strip);
+      return note;
+    }
+
+// set parameters (obj is the difficulty type key)
   public override function setParams(obj: Dynamic)
     {
       var t: String = obj;
       currentChoice = choices[t];
-      
-      // preload image before setting header
-      var img = new js.html.Image();
-      var imgPath = AssetPath.resolve('img/difficulty/' + currentChoice.id + '.jpg');
-      img.onload = function() {
-        // image loaded, now set header html
-        header.innerHTML =
-          '<center><h3>' + Const.col('gray', 'Difficulty: ') + currentChoice.title + '</h3><br></center>' +
-          '<img class=message-img src="' + imgPath + '">';
-      };
-      img.src = imgPath;
+      diffImg.src = AssetPath.resolve('img/difficulty/' + currentChoice.id + '.jpg');
+      noteEasy.innerHTML = currentChoice.notes[0];
+      noteNormal.innerHTML = currentChoice.notes[1];
+      noteHard.innerHTML = currentChoice.notes[2];
+      diffName.innerHTML = currentChoice.title;
+    }
 
-      defaultText =
-        '<center>Choose difficulty setting.</center>';
-      text.innerHTML = defaultText;
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
     }
 
 // action

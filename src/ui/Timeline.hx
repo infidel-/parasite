@@ -23,7 +23,7 @@ class Timeline extends UIWindow
       window.appendChild(titlebar);
 
       tlScroll = Browser.document.createDivElement();
-      tlScroll.className = 'hud-scroll tl-scroll';
+      tlScroll.className = 'hud-scroll timeline-scroll';
       window.appendChild(tlScroll);
 
       addWinClose();
@@ -56,48 +56,48 @@ class Timeline extends UIWindow
                 totalLeads++;
               }
 
-          var cls = 'tl-event';
+          var cls = 'timeline-event';
           if (redactedEv)
             cls += ' redacted-ev';
           if (hasLeads)
             cls += ' has-leads';
           buf.add("<li class='" + cls + "' style='--i:" + i + "'>");
-          buf.add("<span class='tl-node'></span><div class='tl-card'><div class='tl-fx'></div>");
+          buf.add("<span class='timeline-node'></span><div class='timeline-card'><div class='timeline-fx'></div>");
           if (redactedEv)
-            buf.add("<div class='tl-stamp'>SEALED</div>");
+            buf.add("<div class='timeline-stamp'>SEALED</div>");
 
           // header: event id + location (name + coords, or blackout bar + (?,?))
-          buf.add("<div class='tl-ehead'><span class='tl-en'>EVENT " + event.num + "</span><span class='tl-loc'>");
+          buf.add("<div class='timeline-ehead'><span class='timeline-en'>EVENT " + event.num + "</span><span class='timeline-loc'>");
           if (event.location != null)
             {
               if (event.locationKnown)
                 {
                   if (event.location.hasName)
                     buf.add(event.location.name + " ");
-                  buf.add("<span class='tl-xy'>(" + event.location.area.x + "," + event.location.area.y + ")</span>");
+                  buf.add("<span class='timeline-xy'>(" + event.location.area.x + "," + event.location.area.y + ")</span>");
                 }
-              else buf.add("<span class='tl-bar wide'></span> <span class='tl-xy'>(?,?)</span>");
+              else buf.add("<span class='timeline-bar wide'></span> <span class='timeline-xy'>(?,?)</span>");
             }
           buf.add("</span></div>");
 
           // notes: known = bullet text; unknown w/ clues = ? + 4-pip clue meter
-          buf.add("<ul class='tl-notes'>");
+          buf.add("<ul class='timeline-notes'>");
           for (n in event.notes)
             {
               if (n.isKnown)
-                buf.add("<li class='tl-note'>" + n.text + "</li>");
+                buf.add("<li class='timeline-note'>" + n.text + "</li>");
               else if (n.clues > 0)
                 {
-                  buf.add("<li class='tl-note redacted'><span class='tl-q'>?</span><span class='tl-clues'>");
+                  buf.add("<li class='timeline-note redacted'><span class='timeline-q'>?</span><span class='timeline-clues'>");
                   for (c in 0...4)
                     buf.add(c < n.clues ? "<i class='on'></i>" : "<i></i>");
-                  buf.add("</span><span class='tl-cn'>" + n.clues + "/4</span></li>");
+                  buf.add("</span><span class='timeline-cn'>" + n.clues + "/4</span></li>");
                 }
             }
           buf.add("</ul>");
 
           // participants: per-field redactable ID tags; alive-probed / deceased rolled up
-          buf.add("<div class='tl-parts'><div class='tl-ptitle'>Participants</div>");
+          buf.add("<div class='timeline-parts'><div class='timeline-ptitle'>Participants</div>");
           var numProbed = 0;
           var numDeceased = 0;
           if (npcKnown)
@@ -115,29 +115,29 @@ class Timeline extends UIWindow
                     numProbed++;
                     continue;
                   }
-                buf.add("<div class='tl-row" + (npc.nameKnown ? "" : " redacted") + "'>");
-                buf.add(npc.jobKnown ? "<span class='tl-photo'>" + UISvg.face() + "</span>" : "<span class='tl-photo none'></span>");
-                buf.add("<span class='tl-pname'>" + (npc.nameKnown ? npc.name : "<span class='tl-bar'></span>") + "</span>");
-                buf.add("<span class='tl-job'>" + (npc.jobKnown ? npc.job : "?") + "</span>");
-                buf.add("<span class='tl-pxy'>" + (npc.areaKnown ? "(" + npc.area.x + "," + npc.area.y + ")" : "(?,?)") + "</span>");
+                buf.add("<div class='timeline-row" + (npc.nameKnown ? "" : " redacted") + "'>");
+                buf.add(npc.jobKnown ? "<span class='timeline-photo'>" + UISvg.face() + "</span>" : "<span class='timeline-photo none'></span>");
+                buf.add("<span class='timeline-pname'>" + (npc.nameKnown ? npc.name : "<span class='timeline-bar'></span>") + "</span>");
+                buf.add("<span class='timeline-job'>" + (npc.jobKnown ? npc.job : "?") + "</span>");
+                buf.add("<span class='timeline-pxy'>" + (npc.areaKnown ? "(" + npc.area.x + "," + npc.area.y + ")" : "(?,?)") + "</span>");
                 if (!npc.statusKnown)
-                  buf.add("<span class='tl-status unknown'>status ?</span>");
+                  buf.add("<span class='timeline-status unknown'>status ?</span>");
                 else if (npc.isDead)
-                  buf.add("<span class='tl-status deceased'>deceased</span>");
-                else buf.add("<span class='tl-status ok'>active</span>");
+                  buf.add("<span class='timeline-status deceased'>deceased</span>");
+                else buf.add("<span class='timeline-status ok'>active</span>");
                 buf.add("</div>");
               }
           if (!npcKnown && event.npc.length > 0)
-            buf.add("<div class='tl-none'>unknown</div>");
+            buf.add("<div class='timeline-none'>unknown</div>");
           else if (event.npc.length == 0)
-            buf.add("<div class='tl-none'>none</div>");
+            buf.add("<div class='timeline-none'>none</div>");
           if (numProbed > 0 || numDeceased > 0)
             {
-              buf.add("<div class='tl-roll'>");
+              buf.add("<div class='timeline-roll'>");
               if (numProbed > 0)
-                buf.add("<span class='tl-chip'>+" + numProbed + " probed</span>");
+                buf.add("<span class='timeline-chip'>+" + numProbed + " probed</span>");
               if (numDeceased > 0)
-                buf.add("<span class='tl-chip dead'>+" + numDeceased + " deceased</span>");
+                buf.add("<span class='timeline-chip dead'>+" + numDeceased + " deceased</span>");
               buf.add("</div>");
             }
           buf.add("</div></div></li>");
@@ -145,14 +145,14 @@ class Timeline extends UIWindow
           i++;
         }
 
-      tlScroll.innerHTML = "<ol class='tl-spine'>" + buf.toString() + "</ol>";
+      tlScroll.innerHTML = "<ol class='timeline-spine'>" + buf.toString() + "</ol>";
       // titlebar with live event/lead counts
       var clk = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 7v5l3.5 2'/></svg>";
       var mag = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='16' y1='16' x2='21' y2='21'/></svg>";
       titlebar.innerHTML = "<span class='wt'>TIMELINE</span><span class='win-stats'>" +
-        "<span class='tl-live'>LIVE</span>" +
-        "<span class='statchip tl-ev'>" + clk + eventsShown + "</span>" +
-        "<span class='statchip tl-leads'>" + mag + totalLeads + "</span></span>";
+        "<span class='timeline-live'>LIVE</span>" +
+        "<span class='statchip timeline-ev'>" + clk + eventsShown + "</span>" +
+        "<span class='statchip timeline-leads'>" + mag + totalLeads + "</span></span>";
     }
 
   override function hide(?skipAnimation: Bool = false)

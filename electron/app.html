@@ -55,6 +55,27 @@
       <feFuncB type="table" tableValues="0.271 0.500"/>
     </feComponentTransfer>
   </filter>
+  <!-- carved gray-violet relief for the difficulty select backdrop -->
+  <filter id="msgSlate" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0.05" result="desat"/>
+    <feGaussianBlur in="desat" stdDeviation="0.6" result="smooth"/>
+    <feDiffuseLighting in="smooth" surfaceScale="2.4" diffuseConstant="1.05" lighting-color="#d2cae0" result="relief">
+      <feDistantLight azimuth="235" elevation="52"/>
+    </feDiffuseLighting>
+    <feBlend in="relief" in2="smooth" mode="multiply" result="carved"/>
+    <feColorMatrix in="carved" type="saturate" values="0" result="lum"/>
+    <feComponentTransfer in="lum" result="lumP">
+      <feFuncR type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+      <feFuncG type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+      <feFuncB type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="lumP" stdDeviation="0.85" result="lumB"/>
+    <feComponentTransfer in="lumB">
+      <feFuncR type="table" tableValues="0.10 0.83"/>
+      <feFuncG type="table" tableValues="0.09 0.79"/>
+      <feFuncB type="table" tableValues="0.13 0.89"/>
+    </feComponentTransfer>
+  </filter>
 </defs></svg>
 
 <script src="soundmanager2-nodebug.js"></script>
