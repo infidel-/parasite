@@ -86,6 +86,26 @@ class UISvg
         '</svg>';
     }
 
+// clock glyph, ghosted behind the timeline scrim
+  public static function clock(): String
+    {
+      return '<svg class="hud-glyph" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="48" cy="48" r="40"/>' +
+        '<circle cx="48" cy="48" r="3.2" fill="currentColor" stroke="none"/>' +
+        '<line x1="48" y1="48" x2="48" y2="22"/>' +
+        '<line x1="48" y1="48" x2="66" y2="56"/>' +
+        '<line x1="48" y1="9" x2="48" y2="15"/><line x1="48" y1="81" x2="48" y2="87"/>' +
+        '<line x1="9" y1="48" x2="15" y2="48"/><line x1="81" y1="48" x2="87" y2="48"/>' +
+        '</svg>';
+    }
+
+// face/person icon for participant ID tags
+  public static function face(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+        '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>';
+    }
+
 // rotating organism sigil (inner group .mainmenu-sigil-in counter-spins)
   public static function sigil(): String
     {
