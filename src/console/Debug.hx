@@ -17,6 +17,8 @@ class Debug
     }
 
 // routes a debug command to its sub-handler; returns false if not a debug command
+// NOTE: when adding/changing a debug sub-command, update its hint in
+// ConsoleCompletion.hx (the debugSubs list) so autocomplete stays in sync
   public function run(cmd: String): Bool
     {
       var arr = cmd.split(' ');
@@ -35,6 +37,8 @@ class Debug
             toggleLights();
           case 'colors':
             listColors();
+          case 'difficulty' if (Const.isDebug):
+            openDifficulty(arr[2]);
           case 'alert' if (Const.isDebug):
             game.log('This is a test alert message.', COLOR_ALERT);
           case 'demo' if (Const.isDebug):
@@ -44,7 +48,7 @@ class Debug
           case 'throw' if (Const.isDebug):
             throw 'test exception';
           case '':
-            log('Usage: debug [renderstats|ai|sound|lights|colors|alert|demo|leave|throw]');
+            log('Usage: debug [renderstats|ai|sound|lights|colors|difficulty|alert|demo|leave|throw]');
           default:
             log('Unknown debug command: ' + sub + '.');
         }
@@ -147,6 +151,38 @@ class Debug
           buf.add('</span><br/>');
         }
       game.log(buf.toString());
+    }
+
+// opens the difficulty selection window for a setting key (default survival);
+// 'all' queues every difficulty window one by one
+  function openDifficulty(key: String)
+    {
+      if (key == null)
+        key = 'survival';
+      if (key == 'all')
+        {
+          // queue each difficulty window, with a test message between them
+          for (k in ui.Difficulty.choices.keys())
+            {
+              game.ui.event({
+                type: UIEVENT_STATE,
+                state: UISTATE_DIFFICULTY,
+                obj: k
+              });
+              game.message({ text: 'Test message after difficulty: ' + k });
+            }
+          return;
+        }
+      if (!ui.Difficulty.choices.exists(key))
+        {
+          log('Usage: debug difficulty [all|survival|group|evolution|timeline|save|chat]');
+          return;
+        }
+      game.ui.event({
+        type: UIEVENT_STATE,
+        state: UISTATE_DIFFICULTY,
+        obj: key
+      });
     }
 
 // leaves the current area back to the region

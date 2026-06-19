@@ -699,8 +699,11 @@ hr {
   overflow: hidden;
   border: 1px solid rgba(140,150,170,.35);
   background: #08090e;
-  display: flex;
-  flex-direction: row;
+  /* shared rows: [spacer] [label] [note]. label/note rows size to the tallest
+     column, so labels align on one line and the block fits the longest note */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr auto auto;
 }
 .difficulty-bg {
   position: absolute;
@@ -717,16 +720,14 @@ hr {
 .difficulty-strip {
   position: relative;
   z-index: 1;
-  flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  /* % top-pad anchors every label on the same line (strips share a fixed aspect);
-     note text then grows downward from there */
-  padding: 37% 18px 26px;
+  /* span all three shared rows as a subgrid; the 1fr spacer pushes label+note
+     to the bottom, label/note land in the shared (tallest-column) rows */
+  grid-row: 1 / 4;
+  display: grid;
+  grid-template-rows: subgrid;
+  row-gap: 8px;
+  padding: 0 18px 26px;
   text-align: center;
   border: 0;
   cursor: pointer;
@@ -778,10 +779,12 @@ hr {
   z-index: 2;
 }
 .difficulty-label {
+  grid-row: 2;
+  align-self: end;
   font-family: var(--text-font-title), sans-serif;
   text-transform: uppercase;
   letter-spacing: .16em;
-  font-size: calc(var(--text-font-size) * 1.1);
+  font-size: calc(var(--text-font-size) * 2);
   line-height: 1;
   text-shadow: 0 1px 4px rgba(0,0,0,.85);
   transition: transform .18s ease;
@@ -791,6 +794,7 @@ hr {
 }
 /* note text flows downward from the label line */
 .difficulty-note {
+  grid-row: 3;
   display: flex;
   align-items: flex-start;
   justify-content: center;

@@ -39,6 +39,9 @@ class Console
 
 
 // run console command
+// runs a console command
+// NOTE: when adding/changing/removing a command, update its completion hint in
+// ConsoleCompletion.hx (the rootChildren tree) so autocomplete stays in sync
   public function run(cmd: String)
     {
       cmd = StringTools.trim(cmd);

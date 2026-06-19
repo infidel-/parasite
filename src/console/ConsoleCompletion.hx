@@ -26,6 +26,8 @@ class ConsoleCompletion
   var root: CompNode;
 
 // builds the command grammar tree
+// builds the autocomplete hint tree (rootChildren); keep in sync with the
+// actual commands dispatched in Console.run / Debug.run
   public function new(c: Console)
     {
       console = c;
@@ -68,6 +70,8 @@ class ConsoleCompletion
       ];
       if (Const.isDebug)
         {
+          debugSubs.push({ lit: 'difficulty', next: [
+            { slot: '<key>', values: function() return [ 'all' ].concat([for (k in ui.Difficulty.choices.keys()) k]) } ] });
           debugSubs.push({ lit: 'alert' });
           debugSubs.push({ lit: 'demo' });
           debugSubs.push({ lit: 'leave' });
