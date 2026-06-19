@@ -20,10 +20,10 @@ class UISvg
       return corner('tl') + corner('tr') + corner('bl') + corner('br');
     }
 
-// detailed document glyph, ghosted behind the log/message scrim
+// detailed document glyph, ghosted behind the log scrim
   public static function doc(): String
     {
-      return '<svg class="log-doc-glyph" viewBox="0 0 96 120" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      return '<svg class="hud-glyph" viewBox="0 0 96 120" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         '<path d="M14 8 H66 L82 24 V112 H14 Z"/>' +              // sheet body
         '<path d="M66 8 V24 H82"/>' +                            // dog-ear fold
         '<line x1="22" y1="14" x2="22" y2="106" opacity=".45"/>' + // margin rule
@@ -46,7 +46,7 @@ class UISvg
 // (full-frame SVG, stretched to fit; squigglier than the stage set)
   public static function veins(): String
     {
-      return '<svg class="log-veins" viewBox="0 0 1830 990" preserveAspectRatio="none" aria-hidden="true">' +
+      return '<svg class="hud-veins" viewBox="0 0 1830 990" preserveAspectRatio="none" aria-hidden="true">' +
         '<g stroke="#a45fe0" fill="none" stroke-linecap="round" opacity=".1">' +
         // top-right growth
         '<path stroke-width="4" d="M1842 72 C1806 46 1788 100 1752 78 C1716 56 1700 112 1664 92 C1628 72 1614 126 1578 106 C1542 86 1530 138 1494 122"/>' +
@@ -69,6 +69,21 @@ class UISvg
         '<circle cx="44" cy="1000" r="2.5" fill="#a45fe0" stroke="none"/>' +
         '<circle cx="466" cy="880" r="3" fill="#a45fe0" stroke="none"/>' +
         '</g></svg>';
+    }
+
+// target/reticle glyph, ghosted behind the goals scrim
+  public static function reticle(): String
+    {
+      return '<svg class="hud-glyph" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="48" cy="48" r="38"/>' +
+        '<circle cx="48" cy="48" r="24" stroke-dasharray="5 7" opacity=".7"/>' +
+        '<circle cx="48" cy="48" r="10"/>' +
+        '<circle cx="48" cy="48" r="3" fill="currentColor" stroke="none"/>' +
+        '<line x1="48" y1="2" x2="48" y2="16"/><line x1="48" y1="80" x2="48" y2="94"/>' +
+        '<line x1="2" y1="48" x2="16" y2="48"/><line x1="80" y1="48" x2="94" y2="48"/>' +
+        '<line x1="48" y1="34" x2="48" y2="38" opacity=".7"/><line x1="48" y1="58" x2="48" y2="62" opacity=".7"/>' +
+        '<line x1="34" y1="48" x2="38" y2="48" opacity=".7"/><line x1="58" y1="48" x2="62" y2="48" opacity=".7"/>' +
+        '</svg>';
     }
 
 // rotating organism sigil (inner group .mainmenu-sigil-in counter-spins)

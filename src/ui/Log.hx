@@ -15,24 +15,18 @@ class Log extends UIWindow
     {
       super(g, 'window-log');
 
-      // giant document glyph ghosted on the scrim, behind the frame
-      bg.insertAdjacentHTML('afterbegin', '<div class="log-scrim">' + UISvg.doc() + '</div>');
-
-      addCorners();
-
-      // decorative layer (clipped to the rounded frame): corner veins + ghost watermark
-      window.insertAdjacentHTML('afterbegin',
-        '<div class="log-deco">' + UISvg.veins() + '</div>');
+      // shared HUD chrome: scrim + document glyph, frame, corners, veins, "LOG" watermark
+      addHudChrome('LOG', UISvg.doc());
 
       // Cruiser title with hairline divider
       var title = Browser.document.createDivElement();
-      title.className = 'win-title log-title';
+      title.className = 'win-title';
       title.innerHTML = 'LOG';
       window.appendChild(title);
 
       // scrolling turn ledger
       logScroll = Browser.document.createDivElement();
-      logScroll.className = 'log-scroll';
+      logScroll.className = 'hud-scroll';
       logScroll.onmouseover = groupHover;
       logScroll.onmouseleave = function(e) clearGroup();
       window.appendChild(logScroll);
@@ -106,25 +100,48 @@ class Log extends UIWindow
       // scroll to the newest record here (not in update): update() runs while the
       // window is still display:none, so scrollHeight is 0 and the scroll is a no-op
       logScroll.scrollTop = logScroll.scrollHeight;
-      // decode tail: the two newest message bodies resolve out of glyph noise,
-      // each started ~when its own (top-down) cascade brings it on-screen
-      var msgs = logScroll.querySelectorAll('.log-rl');
-      var n = msgs.length;
-      if (n > 0)
-        decodeMsg(cast msgs.item(n - 1), n - 1, 0);
+
+      var recs = logScroll.querySelectorAll('.log-rec');
+      var n = recs.length;
+      if (n == 0)
+        return;
+      // cascade only the on-screen window, top-down, with an adaptive stagger so the
+      // whole visible cascade always finishes in ~0.3s — never a growing blank pause
+      // no matter how long the log is. Rows scrolled above the fold appear at once.
+      var avgRow = logScroll.scrollHeight / n;
+      var k = Math.ceil(logScroll.clientHeight / avgRow) + 4;
+      if (k > n)
+        k = n;
+      var firstVisible = n - k;
+      var stagger = 0.30 / k;
+      if (stagger > 0.018)
+        stagger = 0.018;
+      for (i in 0...n)
+        {
+          var rec: js.html.Element = cast recs.item(i);
+          if (i >= firstVisible)
+            {
+              rec.classList.remove('instant');
+              (untyped rec.style).animationDelay = (0.06 + (i - firstVisible) * stagger) + 's';
+            }
+          else rec.classList.add('instant');
+        }
+
+      // decode the two newest message bodies out of glyph noise, each started ~when
+      // its row has risen in (delay = its cascade delay + the rise duration)
+      decodeMsg(cast (cast recs.item(n - 1) : js.html.Element).querySelector('.log-rl'),
+        Std.int((0.06 + (k - 1) * stagger) * 1000) + 120);
       if (n > 1)
-        decodeMsg(cast msgs.item(n - 2), n - 2, 120);
+        decodeMsg(cast (cast recs.item(n - 2) : js.html.Element).querySelector('.log-rl'),
+          Std.int((0.06 + (k - 2) * stagger) * 1000) + 240);
     }
 
-// decode one message body once its cascade has brought it on-screen.
-// idx is the record's source index (= its --i); extra staggers the two.
-// cascade delay mirrors the CSS: .12s + min(idx,40)*18ms
-  function decodeMsg(el: js.html.Element, idx: Int, extra: Int)
+// decode one message body out of glyph noise after startMs (keeps colored markup)
+  function decodeMsg(el: js.html.Element, startMs: Int)
     {
       var html = el.innerHTML;
       var txt = el.textContent;
-      var casc = 120 + (idx < 40 ? idx : 40) * 18;
-      haxe.Timer.delay(function() UIDecode.decodeTo(el, txt, html), casc + 120 + extra);
+      haxe.Timer.delay(function() UIDecode.decodeTo(el, txt, html), startMs);
     }
 
   override function hide(?skipAnimation: Bool = false)

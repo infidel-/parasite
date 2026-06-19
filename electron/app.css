@@ -732,20 +732,6 @@ hr {
   margin-top: 0.75em;
 }
 
-#window-goals {
-  border: 39px solid;
-  width: calc(100% - 80px);
-  height: calc(100% - 90px);
-  pointer-events: all;
-}
-
-#window-goals-text {
-  transform: translate(0, -10px);
-  height: calc(100% - 30px);
-  display: flex;
-  flex-direction: column;
-}
-
 .window-common-close {
   border: 11px solid;
   position: absolute;
@@ -788,20 +774,6 @@ fieldset {
   overflow-y: auto;
   width: 100%;
   height: 100%;
-}
-
-#window-goals-current {
-  height: 30%;
-  margin-bottom: 10px;
-}
-
-#window-goals-completed {
-  height: 45%;
-  margin-bottom: 10px;
-}
-
-#window-goals-failed {
-  height: 20%;
 }
 
 /* ===== ABOUT window — credits roll + specimen hero ===== */
@@ -1080,7 +1052,8 @@ fieldset {
   }
 }
 
-#window-log {
+/* ===== shared in-game HUD window chrome (log, goals, evolution, body, timeline, cult) ===== */
+.hud-frame {
   pointer-events: all;
   position: relative;
   width: calc(100% - 90px);
@@ -1091,6 +1064,7 @@ fieldset {
   padding: 22px 28px 28px;
   border-radius: 16px;
   border: 1px solid var(--win-frame);
+  /* depth stack (top->bottom): grain, accent title halo, inner vignette, top-lit ramp */
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
     radial-gradient(80% 220px at 50% 0%, rgba(164,95,224,.05), transparent 70%),
@@ -1098,21 +1072,34 @@ fieldset {
     linear-gradient(rgba(17,21,29,.92), rgba(8,10,14,.93));
   box-shadow: 0 0 0 1px rgba(12,8,20,.5) inset, 0 18px 60px rgba(0,0,0,.62);
 }
-.window-fade-in #window-log {
+.window-fade-in .hud-frame {
   animation: win-pop .42s cubic-bezier(.34,1.4,.64,1);
 }
-/* darker radial scrim, NO backdrop blur: the now-pulse keeps the compositor
-   ticking, so a full-screen blur would re-render every frame (~33% GPU);
-   the darker gradient obscures the game/HUD instead.
-   (.window-bg#... beats the generic .window-bg:not(#mainmenu) blur rule) */
-.window-bg#window-log-bg {
+/* accent hairline along the top edge */
+.hud-frame::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(164,95,224,.6), transparent);
+}
+.hud-frame .win-title {
+  flex: none;
+}
+/* darker radial scrim, NO backdrop blur: the pulses keep the compositor ticking,
+   so a full-screen blur would re-render every frame (~33% GPU); the darker
+   gradient obscures the game/HUD instead */
+.window-bg.hud-bg {
   background-color: transparent;
   background-image: radial-gradient(ellipse at center, rgba(4,2,10,.62), rgba(2,1,6,.86));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-/* giant document glyph ghosted on the scrim behind the frame */
-.log-scrim {
+/* giant identity glyph ghosted on the scrim behind the frame */
+.hud-scrim {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -1122,10 +1109,10 @@ fieldset {
 }
 /* fade the scrim glyph out fast on close so the popping-out frame doesn't
    reveal it hanging behind for the rest of the scrim fade */
-.win-closing .log-scrim {
+.win-closing .hud-scrim {
   opacity: 0;
 }
-.log-doc-glyph {
+.hud-glyph {
   position: absolute;
   right: 5%;
   top: 50%;
@@ -1136,8 +1123,8 @@ fieldset {
   transform: translateY(-50%) rotate(8deg);
   filter: blur(7px);
 }
-/* decorative layer clipped to the rounded frame: corner veins + ghost watermark */
-.log-deco {
+/* decorative layer clipped to the rounded frame: corner veins + ghost watermark (data-wm) */
+.hud-deco {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -1145,8 +1132,8 @@ fieldset {
   overflow: hidden;
   border-radius: 16px;
 }
-.log-deco::after {
-  content: "LOG";
+.hud-deco::after {
+  content: attr(data-wm);
   position: absolute;
   right: 36px;
   bottom: 4px;
@@ -1158,29 +1145,15 @@ fieldset {
   color: rgba(201,168,239,.028);
   filter: blur(6px);
 }
-.log-veins {
+.hud-veins {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
-/* accent hairline along the top edge */
-#window-log::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 24px;
-  right: 24px;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(164,95,224,.6), transparent);
-}
-.log-title {
-  flex: none;
-}
-/* scrolling turn ledger with edge-dissolve masks + themed scrollbar */
-.log-scroll {
+/* scrolling content area: edge-dissolve masks + gray (neutral) scrollbar */
+.hud-scroll {
   position: relative;
   z-index: 1;
   flex: 1;
@@ -1191,23 +1164,22 @@ fieldset {
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
           mask-image: linear-gradient(180deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
 }
-/* scrollbars stay gray/neutral — they recede, never draw the eye with accent */
-.log-scroll::-webkit-scrollbar {
+.hud-scroll::-webkit-scrollbar {
   width: 9px;
 }
-.log-scroll::-webkit-scrollbar-track {
+.hud-scroll::-webkit-scrollbar-track {
   background: transparent;
   border: none;
 }
-.log-scroll::-webkit-scrollbar-thumb {
+.hud-scroll::-webkit-scrollbar-thumb {
   border-radius: 8px;
   border: none;
   background: rgba(140,150,170,.38);
 }
-.log-scroll::-webkit-scrollbar-thumb:hover {
+.hud-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(140,150,170,.6);
 }
-/* one ledger record: turn cell + message; the rail is the message's left border */
+/* ===== LOG window: turn ledger (turn cell + message; rail = message's left border) ===== */
 .log-rec {
   display: grid;
   grid-template-columns: 56px 1fr;
@@ -1217,6 +1189,10 @@ fieldset {
   animation: log-rise .3s ease-out backwards;
   animation-delay: calc(.12s + min(var(--i,0), 40) * 18ms);
   transition: opacity .15s;
+}
+/* rows scrolled above the fold appear at once (only the visible window cascades) */
+.log-rec.instant {
+  animation: none;
 }
 .log-tn {
   text-align: right;
@@ -1236,17 +1212,17 @@ fieldset {
   font-size: 80%;
 }
 /* focus lens + turn-group binding (source order: dim < group < hovered) */
-.log-scroll:hover .log-rec {
+.hud-scroll:hover .log-rec {
   opacity: .5;
 }
-.log-scroll:hover .log-rec.tg {
+.hud-scroll:hover .log-rec.tg {
   opacity: .85;
 }
 .log-rec.tg .log-rl {
   background: rgba(164,95,224,.06);
   border-color: rgba(164,95,224,.45);
 }
-.log-scroll:hover .log-rec:hover {
+.hud-scroll:hover .log-rec:hover {
   opacity: 1;
 }
 .log-rec:hover .log-tn {
@@ -1287,6 +1263,148 @@ fieldset {
     opacity: 0;
     transform: translateY(8px);
   }
+}
+/* ===== GOALS window: current / completed / failed sections ===== */
+.goals-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.goals-sec {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 6px;
+  animation: win-rise .4s ease-out backwards;
+}
+.goals-sec.cur {
+  animation-delay: .12s;
+}
+.goals-sec.done {
+  animation-delay: .2s;
+}
+.goals-sec.fail {
+  animation-delay: .28s;
+}
+.goals-sec .hud-scroll {
+  flex: 1;
+}
+.goals-sectitle {
+  flex: none;
+  font-family: var(--text-font-title), sans-serif;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-size: var(--text-font-size);
+  color: var(--blue-gray);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.goals-cnt {
+  font-family: var(--text-font), sans-serif;
+  font-size: calc(var(--text-font-size) * .73);
+  letter-spacing: .06em;
+  color: var(--dim);
+  background: rgba(255,255,255,.045);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1px 7px;
+  margin-left: 7px;
+  vertical-align: 2px;
+}
+/* goal entry: status tick (::before mask) + name + note; cascades like log records */
+.goals-gl {
+  position: relative;
+  padding-left: 29px;
+  margin-bottom: 16px;
+  transition: opacity .15s;
+  animation: log-rise .3s ease-out backwards;
+  animation-delay: calc(.15s + var(--i,0) * 30ms);
+}
+.goals-gl::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: calc((1.55em - 13px) / 2);
+  width: 13px;
+  height: 13px;
+  background: currentColor;
+  animation: goals-tick-pop .25s ease-out backwards;
+  animation-delay: calc(.22s + var(--i,0) * 30ms);
+}
+@keyframes goals-tick-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+@keyframes goals-tick-pulse {
+  50% {
+    opacity: .45;
+    transform: scale(.82);
+  }
+}
+/* current: gray diamond (purple reserved for the primary goal) */
+.goals-sec.cur .goals-gl::before {
+  color: var(--text-color-gray);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7 1 L13 7 7 13 1 7Z'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7 1 L13 7 7 13 1 7Z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+/* completed: check */
+.goals-sec.done .goals-gl::before {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 8 L6 12 L12 3' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 8 L6 12 L12 3' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+/* failed: cross + struck-through names */
+.goals-sec.fail .goals-gl::before {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 3 L11 11 M11 3 L3 11' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 3 L11 11 M11 3 L3 11' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.goals-sec.fail .goals-gl b,
+.goals-sec.fail .goals-gl .goals-gname {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,91,69,.65);
+  text-decoration-thickness: 1.5px;
+}
+/* primary goal spotlight: first current entry — purple bar + pulsing diamond */
+.goals-sec.cur .goals-gl:first-child {
+  /* 3px border + 26px pad-left = 29px, so tick + text line up with the borderless goals */
+  border-left: 3px solid var(--accent);
+  padding: 6px 8px 6px 26px;
+  background: linear-gradient(90deg, rgba(164,95,224,.09), transparent 72%);
+  border-radius: 0 6px 6px 0;
+}
+.goals-sec.cur .goals-gl:first-child::before {
+  color: var(--accent);
+  left: 4px;
+  top: calc((1.55em - 13px) / 2 + 6px);
+  animation: goals-tick-pop .25s ease-out backwards, goals-tick-pulse 2.4s ease-in-out 1s infinite;
+  animation-delay: calc(.22s + var(--i,0) * 30ms), 1s;
+}
+/* hover focus lens */
+.goals-sec .hud-scroll:hover .goals-gl {
+  opacity: .55;
+}
+.goals-sec .hud-scroll:hover .goals-gl:hover {
+  opacity: 1;
+}
+.goals-gname {
+  font-weight: bold;
+}
+/* names lift toward white in the tinted done/fail sections; notes keep section color */
+.goals-sec .hud-scroll .goals-gl b {
+  color: color-mix(in srgb, currentColor 65%, #fff);
+}
+.goals-opt {
+  color: var(--text-color-gray);
+  font-size: 80%;
+}
+.goals-empty {
+  color: var(--text-color-gray);
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
 }
 
 #window-timeline {
@@ -2204,7 +2322,7 @@ fieldset {
 @keyframes win-pop-out { to { transform: scale(.95); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .win-closing,
-  .win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-log) {
+  .win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, .hud-frame) {
     animation: none;
   }
 }

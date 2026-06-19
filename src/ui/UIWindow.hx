@@ -53,6 +53,20 @@ class UIWindow
       window.appendChild(close);
     }
 
+// build the shared in-game HUD window chrome: darkened scrim with a ghosted
+// identity glyph, the depth-gradient frame, corner brackets, and the clipped
+// decorative layer (corner veins + "wm" ghost watermark). Caller then appends
+// its title (.win-title) + content and calls addWinClose().
+  function addHudChrome(wm: String, glyph: String)
+    {
+      window.classList.add('hud-frame');
+      bg.classList.add('hud-bg');
+      bg.insertAdjacentHTML('afterbegin', '<div class="hud-scrim">' + glyph + '</div>');
+      addCorners();
+      window.insertAdjacentHTML('afterbegin',
+        '<div class="hud-deco" data-wm="' + wm + '">' + UISvg.veins() + '</div>');
+    }
+
 // add four decorative corner brackets to the window frame (redesign chrome)
   function addCorners()
     {
