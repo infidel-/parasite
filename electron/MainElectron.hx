@@ -937,6 +937,7 @@ class MainElectron
               contextIsolation: true,
               sandbox: true,
               webSecurity: true,
+              backgroundThrottling: false,
             }
           });
           if (!isDebug)
@@ -973,5 +974,10 @@ class MainElectron
 
       App.commandLine.appendSwitch('in-process-gpu');
       App.commandLine.appendSwitch('disable-direct-composition');
+      // keep the compositor rendering when the window is occluded/backgrounded so
+      // CDP Page.captureScreenshot works while the game isn't foreground (dev tooling)
+      App.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+      App.commandLine.appendSwitch('disable-renderer-backgrounding');
+      App.commandLine.appendSwitch('disable-background-timer-throttling');
     }
 }
