@@ -20,6 +20,7 @@ class UIWindow
   var bg: DivElement;
   var close: DivElement;
   var state: _UIState; // state this relates to
+  var closeTimer: haxe.Timer; // in-flight animatedHide timer (cancelled on re-show)
 
   public function new(g: Game, id: String)
     {
@@ -303,7 +304,8 @@ class UIWindow
       bg.style.zIndex = '120';
       bg.style.pointerEvents = 'none';
       bg.classList.add('win-closing');
-      haxe.Timer.delay(function() {
+      closeTimer = haxe.Timer.delay(function() {
+        closeTimer = null;
         bg.style.visibility = 'hidden';
         // display:none stops a hidden window's CSS animations, but the menu's
         // WebGL canvas doesn't survive a display:none cycle on reattach — and the
@@ -321,6 +323,16 @@ class UIWindow
 // show window
   public function show(?skipAnimation: Bool = false)
     {
+      // cancel an in-flight close so a fast re-show (e.g. queued same-state
+      // difficulty windows) isn't clobbered by the pending hide timer
+      if (closeTimer != null)
+        {
+          closeTimer.stop();
+          closeTimer = null;
+          bg.classList.remove('win-closing');
+          bg.style.zIndex = '';
+          bg.style.pointerEvents = '';
+        }
       update();
       // restore display: hidden windows are display:none so their CSS animations
       // (pulses, glitches) don't run + composite on the GPU while closed

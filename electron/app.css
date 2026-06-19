@@ -42,9 +42,11 @@
   --text-color-hint: #e36767;
 
   --text-color-evolution-title: #73f3ff;
-  --text-color-evolution-note: #5ebee5;
-  --text-color-evolution-level-note: #4cd47b;
-  --text-color-evolution-params: #13ff65;
+  --text-color-evolution-note: #7f8aa0;
+  --text-color-evolution-level-note: #b9e9ff;
+  --text-color-evolution-params: #5bbfd6;
+  --text-color-ep: #a8e05a;
+  --text-color-time: #e0b34a;
 
   --text-color-ordeal-note: #d79826;
   --text-color-ordeal-actions: #f98fce;
@@ -1573,6 +1575,583 @@ fieldset {
 .statchip svg {
   width: 15px;
   height: 15px;
+}
+.statchip i {
+  font-style: normal;
+  color: var(--text-color-gray);
+  font-size: calc(var(--text-font-size) * 0.87);
+  margin-left: 1px;
+}
+/* reusable themed tooltip: any .evolution-tip[data-tip] gets a bubble + arrow above on hover */
+.evolution-tip {
+  position: relative;
+}
+.evolution-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  right: 0;
+  white-space: nowrap;
+  padding: 6px 11px;
+  border-radius: 7px;
+  font-family: var(--text-font), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.87);
+  letter-spacing: .03em;
+  text-transform: none;
+  color: var(--text-fg-color);
+  background: rgba(12,14,20,.97);
+  border: 1px solid rgba(115,243,255,.28);
+  box-shadow: 0 6px 18px rgba(0,0,0,.55);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity .15s, transform .15s;
+  z-index: 6;
+}
+.evolution-tip::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 16px;
+  border: 5px solid transparent;
+  border-top-color: rgba(12,14,20,.97);
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 6;
+}
+.evolution-tip:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+.evolution-tip:hover::before {
+  opacity: 1;
+}
+
+/* ===== EVOLUTION window: controlled-evolution improvement cards (cyan thermal-scan theme) ===== */
+/* cyan theming overrides on the shared (purple) HUD chrome */
+#window-evolution.hud-frame::before {
+  background: linear-gradient(90deg, transparent, rgba(115,243,255,.5), transparent);
+}
+#window-evolution-bg .hud-glyph {
+  color: rgba(115,243,255,.32);
+}
+#window-evolution .hud-deco::after {
+  color: rgba(115,243,255,.03);
+}
+#window-evolution .hud-veins g {
+  stroke: var(--text-color-evolution);
+}
+#window-evolution .hud-veins circle {
+  fill: var(--text-color-evolution);
+}
+#window-evolution .statchip:hover {
+  border-color: rgba(115,243,255,.4);
+  background: rgba(115,243,255,.05);
+}
+#window-evolution .statchip.energy svg { color: var(--text-color-energy); }
+#window-evolution .statchip.ep svg { color: var(--text-color-ep); }
+#window-evolution .statchip.host svg { color: var(--text-color-time); }
+/* shared inline glyphs: EP star (salad green), time clock (amber) — scale with text */
+.evolution-ico {
+  display: inline-block;
+  vertical-align: -0.15em;
+}
+.evolution-ico-ep {
+  width: 1.05em;
+  height: 1.05em;
+  color: var(--text-color-ep);
+  margin-left: 1px;
+}
+.evolution-ico-time {
+  width: 1.05em;
+  height: 1.05em;
+  color: var(--text-color-time);
+}
+/* improvements list fills the body; stop button docks in the footer */
+.evolution-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  gap: 6px;
+}
+.evolution-list .hud-scroll {
+  flex: 1;
+}
+/* two-column grid of action cards (flex-wrap, not CSS grid — a flex-row card in a grid track
+   mis-reports its content height and clips tall cards; flex-wrap sizes each line to its tallest) */
+.evolution-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  align-content: start;
+  gap: 12px 16px;
+  line-height: 1.35;
+  letter-spacing: .03em;
+}
+/* each card = clickable upgrade button (list entry + action + thumbnail merged) */
+.evolution-card {
+  position: relative;
+  display: flex;
+  gap: 13px;
+  text-align: left;
+  flex: 0 1 calc(50% - 8px);
+  max-width: calc(50% - 8px);
+  min-width: 0;
+  min-height: 136px;
+  padding: 11px;
+  border: 1px solid var(--win-frame);
+  border-radius: 11px;
+  /* opaque bg: a translucent card scrolling over the frame vignette bleeds dark and flickers */
+  background: linear-gradient(180deg, #14171e, #0b0d12);
+  font: inherit;
+  color: inherit;
+  overflow: hidden;
+  cursor: pointer;
+  animation: win-rise .3s ease-out backwards;
+  animation-delay: calc(.14s + var(--i,0) * 22ms);
+  transition: border-color .15s, background .15s, transform .15s, box-shadow .15s;
+}
+.evolution-card:not(.maxed):hover {
+  border-color: rgba(115,243,255,.55);
+  background: rgba(115,243,255,.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.4), 0 0 0 1px rgba(115,243,255,.2);
+}
+.evolution-card:not(.maxed):active:not(:has(.evolution-tg:active)) {
+  transform: translateY(0) scale(.992);
+}
+/* suppress hover-expand mid-scroll (a card under a still cursor would expand/collapse each frame) */
+.evolution-grid.scrolling .evolution-card {
+  pointer-events: none;
+}
+.evolution-thumb {
+  flex: none;
+  width: 112px;
+  height: 112px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(140,150,170,.3);
+  background: #08090e;
+  line-height: 0;
+}
+.evolution-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: url(#msgThermal) brightness(.62) saturate(.7);
+  transition: transform .25s;
+}
+.evolution-card:not(.maxed):hover .evolution-thumb img {
+  transform: scale(1.06);
+}
+.evolution-bodycol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.evolution-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.evolution-name {
+  font-weight: bold;
+  letter-spacing: .07em;
+  font-size: calc(var(--text-font-size) * 1.12);
+  color: var(--text-color-evolution-title);
+}
+.evolution-lv {
+  color: var(--text-fg-color);
+  font-size: calc(var(--text-font-size) * 1.07);
+}
+.evolution-lv .arr {
+  color: var(--text-color-gray);
+}
+.evolution-max {
+  margin-left: auto;
+  color: var(--text-color-evolution);
+  font-size: calc(var(--text-font-size) * 0.93);
+  letter-spacing: .1em;
+  opacity: .85;
+}
+/* collapsed: note clamped to ~2 lines; hover unclamps */
+.evolution-note {
+  flex: none;
+  font-size: var(--text-font-size);
+  line-height: 1.4;
+  color: var(--text-color-evolution-note);
+  overflow: hidden;
+  max-height: 2.8em;
+  transition: max-height .3s ease;
+}
+.evolution-card:hover .evolution-note {
+  max-height: 32em;
+}
+/* per-card level detail: levelNote (state prose) + noteFunc params (mechanical effect) */
+.evolution-detail {
+  flex: none;
+  display: block;
+  padding-top: 6px;
+  border-top: 1px dotted rgba(140,150,170,.22);
+  transition: opacity .13s ease;
+}
+.evolution-detail.swapping {
+  opacity: 0;
+}
+/* func-note rows hidden in the collapsed default; revealed (animated) only when expanded */
+.evolution-card:not(:hover) .evolution-params {
+  max-height: 0;
+  opacity: 0;
+}
+/* no level note in this view -> drop the whole detail strip (and its dotted border) until hover */
+.evolution-card.no-lvl:not(:hover) .evolution-detail {
+  display: none;
+}
+.evolution-lvl-note {
+  display: block;
+  margin-bottom: 3px;
+  font-size: calc(var(--text-font-size) * 0.9);
+  line-height: 1.35;
+  color: var(--text-color-evolution-level-note);
+}
+.evolution-lvl-note .arr {
+  color: var(--text-color-gray);
+  margin: 0 1px;
+}
+.evolution-params {
+  display: block;
+  overflow: hidden;
+  max-height: 14em;
+  opacity: 1;
+  transition: max-height .3s ease, opacity .25s ease .04s;
+  font-family: var(--text-font-mono), monospace;
+  font-size: calc(var(--text-font-size) * 0.87);
+  line-height: 1.4;
+  color: var(--text-color-evolution-params);
+  font-variant-numeric: tabular-nums;
+}
+/* >1 fact -> 2-col grid (a lone fact stays full-width) */
+.evolution-params.multi {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 1px 16px;
+}
+.evolution-params .pp {
+  min-width: 0;
+}
+/* "more available" cue: three down-triangles, shown only collapsed AND with hidden content */
+.evolution-more {
+  position: absolute;
+  right: 11px;
+  bottom: 9px;
+  display: flex;
+  flex-direction: row;
+  gap: 3px;
+  align-items: center;
+  pointer-events: none;
+  color: var(--text-color-evolution);
+  opacity: 0;
+  transition: opacity .25s ease;
+  animation: evolution-more-bob 1.5s ease-in-out infinite;
+}
+.evolution-card.has-more .evolution-more {
+  opacity: .5;
+}
+.evolution-card.has-more:hover .evolution-more {
+  opacity: 0;
+}
+.evolution-more i {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+}
+@keyframes evolution-more-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+/* CUR/NEXT segmented toggle — neutral gray default, accent-fill when active */
+.evolution-tg {
+  margin-left: auto;
+  display: inline-flex;
+  flex: none;
+  align-self: center;
+  border: 1px solid rgba(140,150,170,.3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.evolution-tg .seg {
+  padding: 1px 7px;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.7);
+  letter-spacing: .14em;
+  cursor: pointer;
+  color: rgba(160,170,190,.6);
+  background: transparent;
+  transition: color .12s, background .12s;
+}
+.evolution-tg .seg + .seg {
+  border-left: 1px solid rgba(140,150,170,.3);
+}
+.evolution-tg .seg:hover {
+  color: rgba(195,205,225,.95);
+}
+.evolution-tg .seg.on {
+  color: #04121a;
+  background: var(--text-color-evolution);
+}
+/* footer row of a card: EP bar + cost + turns/hotkey */
+.evolution-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+}
+.evolution-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: rgba(255,255,255,.07);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.5);
+}
+.evolution-bar .fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #2f6f8a, var(--text-color-evolution));
+}
+.evolution-ep {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: calc(var(--text-font-size) * 0.93);
+  color: var(--text-color-gray);
+  font-variant-numeric: tabular-nums;
+}
+.evolution-meta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.evolution-turns {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: calc(var(--text-font-size) * 0.87);
+  letter-spacing: .06em;
+  color: var(--text-color-time);
+}
+.evolution-key {
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--text-font-size) * 0.93);
+  color: #d6cfa0;
+  border: 1px solid var(--win-frame);
+  border-radius: 4px;
+  transition: border-color .15s, color .15s, box-shadow .15s;
+}
+.evolution-card:hover .evolution-key {
+  border-color: var(--text-color-evolution);
+  color: var(--text-color-evolution);
+}
+/* currently-evolving card: cyan glow + breathing border + EVOLVING tag */
+.evolution-card.now {
+  border-color: rgba(115,243,255,.5);
+  background: linear-gradient(180deg, #13212a, #0a141a);
+}
+.evolution-card.now::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(115,243,255,.55), 0 0 24px rgba(115,243,255,.28) inset;
+  will-change: opacity;
+  animation: evolution-breathe 2.8s ease-in-out infinite;
+}
+@keyframes evolution-breathe { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+.evolution-card.now .evolution-bar .fill {
+  position: relative;
+  overflow: hidden;
+}
+/* moving barber-pole sheen — transform-translate (compositor-only) */
+.evolution-card.now .evolution-bar .fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% + 18px);
+  pointer-events: none;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,0) 0 8px, rgba(255,255,255,.26) 8px 16px);
+  will-change: transform;
+  animation: evolution-bar-flow .9s linear infinite;
+}
+/* seamless loop: translate by the gradient's horizontal period (16 / cos25deg = 17.66px) */
+@keyframes evolution-bar-flow { from { transform: translateX(-17.657px); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .evolution-card.now::before,
+  .evolution-card.now .evolution-bar .fill::after {
+    animation: none;
+  }
+}
+/* hover Stop -> dim the field, keep the evolving card lit and flip it red (this is what dies) */
+#window-evolution:has(.evolution-stop:hover) .evolution-grid .evolution-card:not(.maxed) {
+  opacity: .5;
+}
+#window-evolution:has(.evolution-stop:hover) .evolution-card.now {
+  opacity: 1;
+  border-color: rgba(242,106,106,.6);
+  background: rgba(242,106,106,.07);
+}
+#window-evolution:has(.evolution-stop:hover) .evolution-card.now::before {
+  animation: none;
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(242,106,106,.7), 0 0 24px rgba(242,106,106,.3) inset;
+}
+.evolution-tag {
+  position: absolute;
+  top: 9px;
+  right: -30px;
+  transform: rotate(45deg);
+  width: 120px;
+  text-align: center;
+  padding: 2px 0;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.67);
+  letter-spacing: .18em;
+  color: #04121a;
+  background: var(--text-color-evolution);
+  box-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+/* maxed card: inert, dimmed */
+.evolution-card.maxed {
+  opacity: .5;
+  cursor: default;
+  background: #07080b;
+}
+.evolution-card.maxed .evolution-thumb img {
+  filter: url(#msgThermal) brightness(.45) saturate(.4) grayscale(.3);
+}
+/* floating 16:9 preview of a thumbnail on hover (appended to body, fixed coords) */
+.evolution-preview {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  border-radius: 13px;
+  overflow: hidden;
+  background: rgba(10,12,18,.97);
+  border: 1px solid rgba(115,243,255,.38);
+  box-shadow: 0 22px 60px rgba(0,0,0,.62), 0 0 0 1px rgba(115,243,255,.12), 0 0 34px rgba(115,243,255,.16);
+  opacity: 0;
+  transform: translateY(7px) scale(.965);
+  transform-origin: center;
+  transition: opacity .18s ease, transform .2s cubic-bezier(.2,.9,.3,1);
+}
+.evolution-preview.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.evolution-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  filter: url(#msgThermal) brightness(.95) saturate(.85);
+}
+.evolution-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(115,243,255,.05) 0 1px, transparent 1px 3px);
+  mix-blend-mode: screen;
+  opacity: .5;
+}
+.evolution-preview-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 9px 13px 8px;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: var(--text-font-size);
+  letter-spacing: .06em;
+  color: var(--text-color-evolution-title);
+  background: linear-gradient(0deg, rgba(6,8,12,.92), rgba(6,8,12,0));
+}
+/* projection beam: two diagonals + faint fill linking the thumb's facing edge to the preview's */
+.evolution-preview-link {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99998;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+.evolution-preview-link.show {
+  opacity: 1;
+}
+.evolution-preview-link polygon {
+  fill: rgba(115,243,255,.06);
+}
+.evolution-preview-link line {
+  stroke: rgba(115,243,255,.55);
+  stroke-width: 1.5;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.evolution-preview-link.show line {
+  animation: evolution-beam-draw .5s ease forwards;
+}
+@keyframes evolution-beam-draw { to { stroke-dashoffset: 0; } }
+.evolution-preview-link circle {
+  fill: rgba(115,243,255,.95);
+  stroke: rgba(115,243,255,.28);
+  stroke-width: 4;
+}
+/* footer: lone Stop action */
+.evolution-footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-start;
+}
+.evolution-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: calc(var(--text-font-size) * 1.07);
+  cursor: pointer;
+  color: var(--text-color-alert);
+  background: rgba(242,106,106,.06);
+  border: 1px solid rgba(242,106,106,.3);
+  transition: background .15s, box-shadow .15s, border-color .15s;
+}
+.evolution-stop .sq {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.evolution-stop:hover {
+  background: rgba(242,106,106,.13);
+  border-color: rgba(242,106,106,.6);
+  box-shadow: 0 0 14px rgba(242,106,106,.25);
 }
 
 /* ===== TIMELINE window: declassified case-file dossier (amber, redaction signature) ===== */
@@ -3383,13 +3962,6 @@ input[type=checkbox] {
   left: 50%;
   transform: translate(-50%, 0);
   pointer-events: none;
-}
-
-#window-evolution {
-  border: 39px solid;
-  width: calc(100% - 90px);
-  height: calc(100% - 90px);
-  pointer-events: all;
 }
 
 #window-evolution-text {

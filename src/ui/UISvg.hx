@@ -99,6 +99,37 @@ class UISvg
         '</svg>';
     }
 
+// DNA double-helix glyph, ghosted behind the evolution scrim
+  public static function helix(): String
+    {
+      return '<svg class="hud-glyph" viewBox="0 0 96 120" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M30 8 C30 30 66 38 66 60 C66 82 30 90 30 112"/>' +
+        '<path d="M66 8 C66 30 30 38 30 60 C30 82 66 90 66 112"/>' +
+        '<line x1="34" y1="20" x2="62" y2="20"/>' +
+        '<line x1="40" y1="32" x2="56" y2="32"/>' +
+        '<line x1="40" y1="88" x2="56" y2="88"/>' +
+        '<line x1="34" y1="100" x2="62" y2="100"/>' +
+        '</svg>';
+    }
+
+// lightning-bolt glyph (energy stat chip)
+  public static function bolt(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>';
+    }
+
+// four-point star glyph (evolution points); cls sets the svg class
+  public static function star(?cls: String = ''): String
+    {
+      return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2 2-8z"/></svg>';
+    }
+
+// small clock glyph (time / turns); cls sets the svg class
+  public static function clockSmall(?cls: String = ''): String
+    {
+      return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
+    }
+
 // face/person icon for participant ID tags
   public static function face(): String
     {
