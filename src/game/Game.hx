@@ -677,6 +677,7 @@ class Game extends _SaveObject
         msg: s,
         col: col,
         cnt: 1,
+        turn: turns,
       };
       messageList.add(msg);
       if (messageList.length > 100)

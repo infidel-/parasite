@@ -5,12 +5,14 @@
   public var msg: String;
   public var col: _TextColor;
   public var cnt: Int;
+  public var turn: Int; // game turn this message was logged on (for the log ledger)
 
-  public function new(msg, col, cnt)
+  public function new(msg, col, cnt, turn = 0)
     {
       this.msg = msg;
       this.col = col;
       this.cnt = cnt;
+      this.turn = turn;
       init();
       initPost(false);
     }

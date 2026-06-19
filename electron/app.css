@@ -1081,22 +1081,212 @@ fieldset {
 }
 
 #window-log {
-  border: 39px solid;
+  pointer-events: all;
+  position: relative;
   width: calc(100% - 90px);
   height: calc(100% - 90px);
-  pointer-events: all;
-}
-
-#window-log-text {
-  transform: translate(-10px, -10px);
-  width: 102%;
-  height: calc(100% - 50px);
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  padding: 22px 28px 28px;
+  border-radius: 16px;
+  border: 1px solid var(--win-frame);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    radial-gradient(80% 220px at 50% 0%, rgba(164,95,224,.05), transparent 70%),
+    radial-gradient(120% 120% at 50% 50%, transparent 58%, rgba(0,0,0,.2) 100%),
+    linear-gradient(rgba(17,21,29,.92), rgba(8,10,14,.93));
+  box-shadow: 0 0 0 1px rgba(12,8,20,.5) inset, 0 18px 60px rgba(0,0,0,.62);
 }
-
-#window-log-fieldset {
+.window-fade-in #window-log {
+  animation: win-pop .42s cubic-bezier(.34,1.4,.64,1);
+}
+/* darker radial scrim, NO backdrop blur: the now-pulse keeps the compositor
+   ticking, so a full-screen blur would re-render every frame (~33% GPU);
+   the darker gradient obscures the game/HUD instead.
+   (.window-bg#... beats the generic .window-bg:not(#mainmenu) blur rule) */
+.window-bg#window-log-bg {
+  background-color: transparent;
+  background-image: radial-gradient(ellipse at center, rgba(4,2,10,.62), rgba(2,1,6,.86));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* giant document glyph ghosted on the scrim behind the frame */
+.log-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity .12s ease-in;
+}
+/* fade the scrim glyph out fast on close so the popping-out frame doesn't
+   reveal it hanging behind for the rest of the scrim fade */
+.win-closing .log-scrim {
+  opacity: 0;
+}
+.log-doc-glyph {
+  position: absolute;
+  right: 5%;
+  top: 50%;
+  /* scale with the window (viewport-relative); ~680px at the default 991px height */
+  width: 69vh;
+  height: 69vh;
+  color: rgba(201,168,239,.5);
+  transform: translateY(-50%) rotate(8deg);
+  filter: blur(7px);
+}
+/* decorative layer clipped to the rounded frame: corner veins + ghost watermark */
+.log-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.log-deco::after {
+  content: "LOG";
+  position: absolute;
+  right: 36px;
+  bottom: 4px;
+  font-family: var(--text-font-title), sans-serif;
+  /* scale with the window (viewport-relative); ~300px at the default 991px height */
+  font-size: 30vh;
+  line-height: 1;
+  letter-spacing: .08em;
+  color: rgba(201,168,239,.028);
+  filter: blur(6px);
+}
+.log-veins {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
+  pointer-events: none;
+}
+/* accent hairline along the top edge */
+#window-log::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(164,95,224,.6), transparent);
+}
+.log-title {
+  flex: none;
+}
+/* scrolling turn ledger with edge-dissolve masks + themed scrollbar */
+.log-scroll {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 12px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+          mask-image: linear-gradient(180deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+}
+/* scrollbars stay gray/neutral — they recede, never draw the eye with accent */
+.log-scroll::-webkit-scrollbar {
+  width: 9px;
+}
+.log-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+}
+.log-scroll::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: none;
+  background: rgba(140,150,170,.38);
+}
+.log-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(140,150,170,.6);
+}
+/* one ledger record: turn cell + message; the rail is the message's left border */
+.log-rec {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  column-gap: 14px;
+  /* entry cascade on open; --i counts from newest, capped so a full 100-record
+     log still fills fast (visible bottom records appear first) */
+  animation: log-rise .3s ease-out backwards;
+  animation-delay: calc(.12s + min(var(--i,0), 40) * 18ms);
+  transition: opacity .15s;
+}
+.log-tn {
+  text-align: right;
+  font-size: var(--text-font-size);
+  color: var(--blue-gray);
+  opacity: .65;
+  padding-top: 3px;
+}
+.log-rl {
+  border-left: 1px solid var(--border);
+  padding: 1px 0 1px 14px;
+  line-height: 1.35;
+  transition: border-color .15s, background .15s;
+}
+.log-rep {
+  color: var(--text-color-repeat);
+  font-size: 80%;
+}
+/* focus lens + turn-group binding (source order: dim < group < hovered) */
+.log-scroll:hover .log-rec {
+  opacity: .5;
+}
+.log-scroll:hover .log-rec.tg {
+  opacity: .85;
+}
+.log-rec.tg .log-rl {
+  background: rgba(164,95,224,.06);
+  border-color: rgba(164,95,224,.45);
+}
+.log-scroll:hover .log-rec:hover {
+  opacity: 1;
+}
+.log-rec:hover .log-tn {
+  color: var(--accent);
+  opacity: 1;
+}
+.log-rec:hover .log-rl {
+  border-color: rgba(164,95,224,.45);
+}
+/* current-turn marker: newest turn number breathes accent, rail ends in a glowing dot */
+@keyframes log-now-pulse {
+  50% {
+    color: var(--accent);
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(164,95,224,.6);
+  }
+}
+.log-rec.now .log-tn {
+  animation: log-now-pulse 2.4s ease-in-out infinite;
+}
+.log-rec.now .log-rl {
+  position: relative;
+}
+.log-rec.now .log-rl::after {
+  content: "";
+  position: absolute;
+  left: -3.5px;
+  bottom: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 7px rgba(164,95,224,.8);
+  animation: log-now-pulse 2.4s ease-in-out infinite;
+}
+@keyframes log-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 #window-timeline {
@@ -2007,14 +2197,14 @@ fieldset {
   pointer-events: none;
   animation: win-scrim-fade .2s ease-in forwards;
 }
-.win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets) {
+.win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-log) {
   animation: win-pop-out .2s ease-in forwards;
 }
 @keyframes win-scrim-fade { to { opacity: 0; } }
 @keyframes win-pop-out { to { transform: scale(.95); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .win-closing,
-  .win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets) {
+  .win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-log) {
     animation: none;
   }
 }
