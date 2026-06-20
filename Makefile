@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -8,6 +8,10 @@ game-debug:
 # dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
 sshot:
 	node sshot.mjs
+
+# dev: reload the running renderer over CDP to pull in fresh build artifacts (debug port 9300)
+reload:
+	node reload.mjs
 
 testmod:
 	cd examples/testmod/ && $(MAKE)

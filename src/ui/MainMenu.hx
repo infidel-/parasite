@@ -131,11 +131,12 @@ class MainMenu extends UIWindow
       });
 #if electron
       addItem('QUIT', function(e) {
-        HostBridge.quit();
+        confirmQuit();
       });
 #end
 
-      addCloseButton();
+      // corner-X close (only shown in-game; see update()/loadGame())
+      close = addWinClose();
       close.style.display = 'none';
     }
 
@@ -165,7 +166,7 @@ class MainMenu extends UIWindow
         return;
       game.load(1);
       game.ui.closeWindow();
-      close.style.display = 'block';
+      close.style.display = 'flex';
       game.ui.canvas.style.visibility = 'visible';
     }
 
@@ -197,8 +198,28 @@ class MainMenu extends UIWindow
       else if (index == 6)
         game.ui.state = UISTATE_MODS;
       else if (index == 7)
-        HostBridge.quit();
+        confirmQuit();
 #end
+    }
+
+// confirm before quitting to desktop (danger dialog)
+// open directly: ui.event() only auto-drains the queue at UISTATE_DEFAULT,
+// so from the open menu we must set params + state ourselves
+  function confirmQuit()
+    {
+      game.ui.getComponent(UISTATE_YESNO).setParams({
+        text: 'Quit to desktop?',
+        sub: 'This will end your current session.',
+        danger: true,
+        func: function(yes: Bool) {
+#if electron
+          if (yes)
+            HostBridge.quit();
+#end
+        }
+      });
+      game.scene.sounds.play('window-open');
+      game.ui.state = UISTATE_YESNO;
     }
 
 // add menu item (indexed button with number + label, hover sets active)
@@ -420,22 +441,22 @@ override function update()
       {
         // show mission area indicator instead of saves left when in mission area
         var text = game.player.vars.savesLeft + ' saves left';
-        var col = 'gray';
+        var alert = false;
         if (game.player.inMissionArea())
           {
             text = 'mission area';
-            col = 'red';
+            alert = true;
           }
         var note = Browser.document.createSpanElement();
-        note.className = 'mainmenu-sub';
-        note.innerHTML = Const.smallcol(col, '[' + text + ']');
+        note.className = (alert ? 'mainmenu-sub alert' : 'mainmenu-sub');
+        note.textContent = text;
         saveItem.appendChild(note);
       }
 
     loadEnabled = game.saveExists(1);
     saveEnabled = (game.isStarted && game.state == GAMESTATE_RUNNING);
     if (game.isStarted)
-      close.style.display = 'block';
+      close.style.display = 'flex';
 #if !electron
       loadEnabled = false;
       saveEnabled = false;

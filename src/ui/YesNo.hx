@@ -1,59 +1,85 @@
-// yes/no window
+// yes/no confirm dialog (glyph + kicker + prompt + sub; neutral or danger)
 
 package ui;
 
-import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
+import js.html.Element;
 
 import game.Game;
 
 class YesNo extends UIWindow
 {
-  var text: DivElement;
+  var kickerEl: Element;
+  var textEl: Element;
+  var subEl: Element;
   var func: Bool -> Void;
 
   public function new(g: Game)
     {
       super(g, 'window-yesno');
-      window.className += ' window-dialog';
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') + "') 100 fill / 1 / 0 stretch";
+      window.className += ' window-confirm';
 
-      text = Browser.document.createDivElement();
-      text.className = 'window-dialog-text';
-      window.appendChild(text);
+      // corner brackets (shared redesign chrome)
+      addCorners();
 
-      var yes = Browser.document.createDivElement();
-      yes.className = 'hud-button window-dialog-button';
-      yes.id = 'window-yesno-yes';
-      yes.innerHTML = 'YES';
-      yes.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      yes.onclick = function (e) {
-        func(true);
-        game.scene.sounds.play('click-menu');
-        game.ui.closeWindow();
-      }
-      window.appendChild(yes);
+      // glyph in its accent ring (ask glyph default, warn when .danger)
+      var glyph = Browser.document.createDivElement();
+      glyph.className = 'yesno-glyph';
+      glyph.innerHTML = UISvg.confirmGlyphs();
+      window.appendChild(glyph);
+
+      // kicker / prompt / sub-detail
+      kickerEl = Browser.document.createDivElement();
+      kickerEl.className = 'yesno-kicker';
+      window.appendChild(kickerEl);
+      textEl = Browser.document.createDivElement();
+      textEl.className = 'yesno-text';
+      window.appendChild(textEl);
+      subEl = Browser.document.createDivElement();
+      subEl.className = 'yesno-sub';
+      window.appendChild(subEl);
+
+      // actions: NO (neutral) then YES (accent)
+      var actions = Browser.document.createDivElement();
+      actions.className = 'yesno-actions';
+      window.appendChild(actions);
 
       var no = Browser.document.createDivElement();
-      no.className = 'hud-button window-dialog-button';
+      no.className = 'yesno-btn yesno-no';
       no.id = 'window-yesno-no';
       no.innerHTML = 'NO';
-      no.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
       no.onclick = function (e) {
         func(false);
         game.scene.sounds.play('click-menu');
         game.ui.closeWindow();
       }
-      window.appendChild(no);
+      actions.appendChild(no);
+
+      var yes = Browser.document.createDivElement();
+      yes.className = 'yesno-btn yesno-yes';
+      yes.id = 'window-yesno-yes';
+      yes.innerHTML = 'YES';
+      yes.onclick = function (e) {
+        func(true);
+        game.scene.sounds.play('click-menu');
+        game.ui.closeWindow();
+      }
+      actions.appendChild(yes);
     }
 
-// set parameters
+// set parameters: text + handler, optional sub-detail / danger / kicker override
   public override function setParams(obj: Dynamic)
     {
-      var o: { text: String, func: Bool -> Void } = cast obj;
-      text.innerHTML = '<center>' + o.text + '</center>';
+      // trust boundary: event payload is untyped, assembled ad-hoc at call sites
+      var o: { text: String, func: Bool -> Void, ?sub: String, ?danger: Bool, ?kicker: String } = cast obj;
       func = o.func;
+      var danger = (o.danger == true);
+      window.classList.toggle('danger', danger);
+      kickerEl.innerHTML = (o.kicker != null ? o.kicker : (danger ? 'Confirm exit' : 'Confirm'));
+      textEl.innerHTML = o.text;
+      subEl.innerHTML = (o.sub != null ? o.sub : '');
+      subEl.style.display = (o.sub != null ? '' : 'none');
     }
 
 // action
@@ -67,4 +93,3 @@ class YesNo extends UIWindow
       game.ui.closeWindow();
     }
 }
-

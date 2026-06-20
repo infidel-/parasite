@@ -22,6 +22,65 @@
 
 <!-- SVG filter bank for message/dialog imagery (referenced via CSS filter:url(#...)) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="msgSpecimen" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="lum"/>
+    <!-- aged softness -->
+    <feGaussianBlur in="lum" stdDeviation="0.8" result="soft"/>
+    <!-- fine grain: gray noise compressed to a near-white speckle, multiplied in -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch" result="grain"/>
+    <feColorMatrix in="grain" type="saturate" values="0" result="grainG"/>
+    <feComponentTransfer in="grainG" result="grainT">
+      <feFuncR type="linear" slope="0.13" intercept="0.87"/>
+      <feFuncG type="linear" slope="0.13" intercept="0.87"/>
+      <feFuncB type="linear" slope="0.13" intercept="0.87"/>
+    </feComponentTransfer>
+    <feBlend in="grainT" in2="soft" mode="multiply" result="grained"/>
+    <!-- posterize -->
+    <feColorMatrix in="grained" type="saturate" values="0" result="lum2"/>
+    <feComponentTransfer in="lum2" result="lumP">
+      <feFuncR type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+      <feFuncG type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+      <feFuncB type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="lumP" stdDeviation="0.85" result="lumB"/>
+    <!-- garnet duotone: deep garnet shadows -> crimson mids -> hot-pink highlights -->
+    <feComponentTransfer in="lumB" result="duo">
+      <feFuncR type="table" tableValues="0.10 0.55 0.85 1.0"/>
+      <feFuncG type="table" tableValues="0.04 0.13 0.33 0.55"/>
+      <feFuncB type="table" tableValues="0.07 0.18 0.41 0.62"/>
+    </feComponentTransfer>
+    <!-- soft organic bloom: heavily-blurred copy screened back over -->
+    <feGaussianBlur in="duo" stdDeviation="2.6" result="bloom"/>
+    <feComponentTransfer in="bloom" result="bloomD"><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+    <feBlend in="bloomD" in2="duo" mode="screen"/>
+  </filter>
+  <filter id="msgArchive" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="lum"/>
+    <!-- aged softness -->
+    <feGaussianBlur in="lum" stdDeviation="0.8" result="soft"/>
+    <!-- fine paper grain: gray noise compressed to a near-white speckle, multiplied in -->
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" stitchTiles="stitch" result="grain"/>
+    <feColorMatrix in="grain" type="saturate" values="0" result="grainG"/>
+    <feComponentTransfer in="grainG" result="grainT">
+      <feFuncR type="linear" slope="0.13" intercept="0.87"/>
+      <feFuncG type="linear" slope="0.13" intercept="0.87"/>
+      <feFuncB type="linear" slope="0.13" intercept="0.87"/>
+    </feComponentTransfer>
+    <feBlend in="grainT" in2="soft" mode="multiply" result="grained"/>
+    <!-- posterize -> sepia duotone (brown shadows -> cream highlights) -->
+    <feColorMatrix in="grained" type="saturate" values="0" result="lum2"/>
+    <feComponentTransfer in="lum2" result="lumP">
+      <feFuncR type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+      <feFuncG type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+      <feFuncB type="discrete" tableValues="0 .05 .1 .15 .2 .25 .3 .35 .4 .45 .5 .55 .6 .65 .7 .75 .8 .85 .9 .95 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="lumP" stdDeviation="0.85" result="lumB"/>
+    <feComponentTransfer in="lumB">
+      <feFuncR type="table" tableValues="0.173 0.937"/>
+      <feFuncG type="table" tableValues="0.114 0.886"/>
+      <feFuncB type="table" tableValues="0.063 0.753"/>
+    </feComponentTransfer>
+  </filter>
   <filter id="msgGlitch" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
     <feMorphology in="SourceGraphic" operator="dilate" radius="0.5" result="melt"/>
     <feTurbulence type="fractalNoise" baseFrequency="0.010 0.014" numOctaves="3" seed="7" stitchTiles="stitch" result="noise"/>

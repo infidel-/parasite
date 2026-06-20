@@ -433,7 +433,9 @@ class UI
             type: UIEVENT_STATE,
             state: UISTATE_YESNO,
             obj: {
-              text: 'Do you want to exit the game?',
+              text: 'Exit the game?',
+              sub: 'This will end your current session.',
+              danger: true,
               func: function(yes: Bool) {
 #if electron
                 if (yes)

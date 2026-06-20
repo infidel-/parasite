@@ -101,7 +101,7 @@ class HUD
       if (Const.isDebug)
         {
           debugInfo = document.createDivElement();
-          debugInfo.className = 'text';
+          debugInfo.className = 'hud-panel hud-text';
           debugInfo.id = 'hud-debug-info';
           container.appendChild(debugInfo);
         }
@@ -349,6 +349,7 @@ public function onMouseLeave()
   function updateDebugInfo()
     {
       var buf = new StringBuf();
+      buf.add('<div class="hud-eyebrow">Debug</div>');
       buf.add(
         'Tile resolution: ' +
         Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +

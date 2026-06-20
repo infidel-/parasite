@@ -330,6 +330,15 @@ class UISvg
         '<path d="M12 2 22 12 12 22 2 12z"/>' + glint + '</svg>';
     }
 
+// confirm-dialog glyphs (ask + warn); css shows one per danger state
+  public static function confirmGlyphs(): String
+    {
+      return '<svg class="yesno-ico-ask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M9.2 9a2.8 2.8 0 1 1 4 2.5c-.9.5-1.7 1.1-1.7 2.3"/><line x1="11.5" y1="17.5" x2="11.5" y2="17.5"/></svg>' +
+        '<svg class="yesno-ico-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M12 3 22 20H2z"/><line x1="12" y1="10" x2="12" y2="14.5"/><line x1="12" y1="17.5" x2="12" y2="17.5"/></svg>';
+    }
+
 // navbar icon: goals reticle
   public static function hudNavGoals(): String
     {

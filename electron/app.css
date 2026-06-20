@@ -15,6 +15,12 @@
   --narrative: #74e088;
   --border: rgba(120,130,150,.08);
   --win-frame: rgba(120,130,150,.28);
+  /* default cursor (lavender dot + accent ring) — non-hover, inherited from body */
+  --ui-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23c9a8ef'/%3E%3Ccircle cx='12' cy='12' r='8.5' fill='none' stroke='%23a45fe0' stroke-width='2' opacity='.7'/%3E%3C/svg%3E") 12 12, default;
+  /* clickable cursor (white dot + bright ring) shared by HUD + menus */
+  --ui-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%23ffffff'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23c9a8ef' stroke-width='2.2'/%3E%3C/svg%3E") 12 12, pointer;
+  /* disabled cursor (red dot + slashed ring) for unavailable actions/items */
+  --ui-cursor-disabled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23e05a5a'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23e05a5a' stroke-width='1.5' opacity='.85'/%3E%3Cline x1='5.6' y1='18.4' x2='18.4' y2='5.6' stroke='%23e05a5a' stroke-width='1.5' opacity='.85'/%3E%3C/svg%3E") 12 12, not-allowed;
   --dim: #91949b;
   --panel-dark: rgba(11,15,21,.90);
   --text-color-white: #FFFFFF;
@@ -81,6 +87,15 @@ html, body {
   line-height: 1.3em;
   font-family: var(--text-font);
   font-size: var(--text-font-size);
+  /* default ring-dot cursor; inherits everywhere unless a clickable overrides */
+  cursor: var(--ui-cursor-default);
+}
+
+/* no focus outline by default: scrollable panels (pedia, options, ...) otherwise show
+   a persistent white UA ring. higher-specificity rules can still opt back in (e.g. radio). */
+:focus,
+:focus-visible {
+  outline: none;
 }
 
 h3 {
@@ -310,27 +325,25 @@ hr {
   z-index: 26;
 }
 
+/* debug readout: same panel chrome as the rest of the HUD, no animation */
 #hud-debug-info {
-  opacity: 0.9;
-  background-color: #273242d6;
-  color: #9ad1ff;
-  border: 1px solid #a4a4a4;
-  min-width: 200px;
-  max-width: 30ch;
-  min-height: 1.2em;
-  right: 15px;
+  right: 26px;
   top: 200px;
-  position: fixed;
-  padding: 5px;
+  min-width: 200px;
+  max-width: 40ch;
+  min-height: 1.2em;
+  padding: 13px 15px 11px;
+  margin: 0;
   outline: none;
   appearance: none;
-  user-select: none;
-  transition: opacity 0.1s;
-
-  font-size: 80%;
-  line-height: 1.1;
-  letter-spacing: 0.5px;
-  margin: 0px;
+  color: var(--text-color-gray);
+  font-size: calc(var(--text-font-size) * 0.8);
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+}
+/* DEBUG header: spaced eyebrow gives the body room off the top edge */
+#hud-debug-info .hud-eyebrow {
+  margin-bottom: 11px;
 }
 
 /* ============================================================
@@ -347,7 +360,7 @@ hr {
   --hud-control: #a45fe0;
   --hud-track: #101419;
   /* white dot + lavender ring cursor for clickable hud elements */
-  --hud-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%23ffffff'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23c9a8ef' stroke-width='2.2'/%3E%3C/svg%3E") 12 12, pointer;
+  --hud-cursor: var(--ui-cursor);
 }
 
 /* ---- background atmosphere ---- */
@@ -1376,7 +1389,7 @@ hr {
   user-select: none;
   outline: none;
   appearance: none;
-  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  cursor: var(--ui-cursor);
 }
 
 .hud-team {
@@ -1420,7 +1433,7 @@ hr {
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  cursor: var(--ui-cursor-default);
 }
 
 /* backdrop-filter only for non-main-menu windows */
@@ -1541,7 +1554,7 @@ hr {
   position: fixed;
   pointer-events: none;
   background-color: #ffffff00;
-  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  cursor: var(--ui-cursor-default);
 }
 
 .window-dialog {
@@ -1558,9 +1571,156 @@ hr {
   flex-direction: column;
 }
 
+/* ===== confirm dialog (YesNo): glyph + prompt + NO/YES; danger = red ===== */
+#window-yesno-bg {
+  background-color: transparent;
+  background-image: radial-gradient(ellipse at center, rgba(3, 2, 6, 0.55), rgba(1, 1, 3, 0.82));
+}
 #window-yesno {
-  width: 40%;
-  min-height: 4em;
+  --yesno-accent: var(--accent);
+  --yesno-glow: var(--accent-light);
+  pointer-events: all;
+  position: relative;
+  width: min(430px, 42%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 34px 34px 28px;
+  border-radius: 16px;
+  border: 1px solid var(--win-frame);
+  background:
+    radial-gradient(80% 160px at 50% 0%, color-mix(in srgb, var(--yesno-accent) 15%, transparent), transparent 72%),
+    linear-gradient(rgba(17, 16, 22, 0.97), rgba(8, 7, 11, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(10, 8, 16, 0.5) inset,
+    0 20px 64px rgba(0, 0, 0, 0.66),
+    0 0 44px -16px var(--yesno-accent);
+}
+/* danger variant: red accent + warn glyph (quit / risky load) */
+#window-yesno.danger {
+  --yesno-accent: #e0556a;
+  --yesno-glow: #ff8094;
+}
+/* accent top-edge hairline */
+#window-yesno::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--yesno-accent) 60%, transparent), transparent);
+}
+/* glyph in a pulsing accent ring */
+.yesno-glyph {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--yesno-accent);
+  border: 1.5px solid color-mix(in srgb, var(--yesno-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--yesno-accent) 10%, transparent);
+  box-shadow: 0 0 22px -6px var(--yesno-accent);
+}
+.yesno-glyph svg {
+  width: 26px;
+  height: 26px;
+}
+.yesno-glyph::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--yesno-accent) 45%, transparent);
+  animation: yesno-ring 2.1s ease-out infinite;
+}
+@keyframes yesno-ring {
+  0% {
+    transform: scale(0.82);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+/* ask glyph default; warn glyph in danger */
+.yesno-ico-warn {
+  display: none;
+}
+#window-yesno.danger .yesno-ico-ask {
+  display: none;
+}
+#window-yesno.danger .yesno-ico-warn {
+  display: block;
+}
+.yesno-kicker {
+  font-family: var(--text-font), monospace;
+  font-size: calc(var(--text-font-size) * 0.69);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--yesno-accent);
+  margin-bottom: 11px;
+}
+.yesno-text {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 1.5);
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: #fff;
+  margin: 0;
+}
+.yesno-sub {
+  margin: 12px 0 0;
+  font-size: calc(var(--text-font-size) * 0.94);
+  line-height: 1.45;
+  color: var(--blue-gray);
+  max-width: 34ch;
+}
+.yesno-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 26px;
+  width: 100%;
+}
+.yesno-btn {
+  flex: 1;
+  pointer-events: all;
+  font-family: var(--text-font-title), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: calc(var(--text-font-size) * 1.15);
+  padding: 13px 0;
+  border-radius: 10px;
+  cursor: var(--ui-cursor);
+  transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.yesno-no {
+  color: var(--text);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+.yesno-no:hover {
+  border-color: color-mix(in srgb, var(--blue-gray) 45%, var(--border));
+  background: rgba(255, 255, 255, 0.06);
+}
+.yesno-yes {
+  color: #fff;
+  border: 1px solid var(--yesno-accent);
+  background: color-mix(in srgb, var(--yesno-accent) 22%, transparent);
+}
+.yesno-yes:hover {
+  background: color-mix(in srgb, var(--yesno-accent) 38%, transparent);
+  box-shadow: 0 0 24px -4px var(--yesno-accent);
+}
+.yesno-btn:active {
+  transform: scale(0.97);
 }
 
 /* ===== DIFFICULTY window: triptych — one photo backdrop, three choice stripes ===== */
@@ -1646,7 +1806,7 @@ hr {
   padding: 0 18px 26px;
   text-align: center;
   border: 0;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   font-family: inherit;
   /* bottom-heavy scrim: image clear up top, text legible at the bottom */
   background: linear-gradient(180deg, rgba(6,4,12,.22), rgba(6,4,12,.7));
@@ -1740,14 +1900,6 @@ hr {
   -webkit-transform: translate3d(-50%, 0, 0);
 }
 
-#window-yesno-yes {
-  left: 34%;
-}
-
-#window-yesno-no {
-  left: 63%;
-}
-
 .window-choice-1 {
   left: 23%;
 }
@@ -1798,20 +1950,25 @@ hr {
   padding: 20px;
 }
 
+/* default scrollbar: clean, no white border/outline (the no-outline variant is now the default) */
 div::-webkit-scrollbar {
-  width: 1em;
+  width: 9px;
 }
- 
+
 div::-webkit-scrollbar-track {
-  border-radius: 10px;
-  background: rgba(0,0,0,0.1);
-  border: 1px solid #ccc;
+  background: transparent;
 }
- 
+
 div::-webkit-scrollbar-thumb {
-  background-color: #96aebc;
-  border-radius: 10px;
-  border: 1px solid #aaa;
+  background: rgba(140,150,170,.34);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background: rgba(140,150,170,.6);
+  background-clip: padding-box;
 }
 
 fieldset {
@@ -1876,13 +2033,13 @@ fieldset {
   box-shadow: 0 0 40px -14px var(--about-accent), inset 0 0 70px rgba(0,0,0,.5);
   animation: about-rise .5s both .05s;
 }
-/* crimson duotone approximation (the full SVG #msgSpecimen filter is a later pass) */
+/* garnet duotone scan (full SVG filter, ported from ref) */
 .about-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: grayscale(1) contrast(1.05) brightness(.92) sepia(.55) hue-rotate(300deg) saturate(1.7);
+  filter: url(#msgSpecimen);
 }
 .about-hero.noimg .about-img {
   display: none;
@@ -2055,7 +2212,7 @@ fieldset {
   color: var(--about-accent);
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   transition: color .15s, border-color .15s;
 }
 .about-link:hover {
@@ -2621,7 +2778,7 @@ fieldset {
   font: inherit;
   color: inherit;
   overflow: hidden;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   animation: win-rise .3s ease-out backwards;
   animation-delay: calc(.14s + var(--i,0) * 22ms);
   transition: border-color .15s, background .15s, transform .15s, box-shadow .15s;
@@ -2801,7 +2958,7 @@ fieldset {
   font-family: var(--text-font-title), sans-serif;
   font-size: calc(var(--text-font-size) * 0.7);
   letter-spacing: .14em;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   color: rgba(160,170,190,.6);
   background: transparent;
   transition: color .12s, background .12s;
@@ -3050,7 +3207,7 @@ fieldset {
   border-radius: 8px;
   font: inherit;
   font-size: calc(var(--text-font-size) * 1.07);
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   color: var(--text-color-alert);
   background: rgba(242,106,106,.06);
   border: 1px solid rgba(242,106,106,.3);
@@ -3641,7 +3798,7 @@ fieldset {
   text-transform: uppercase;
   font-size: var(--text-font-size);
   color: #b9bcc4;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   padding: 9px 46px;
   background: linear-gradient(180deg, rgba(52,56,66,.30), rgba(30,33,40,.30));
   border: 1px solid rgba(150,158,172,.45);
@@ -3770,7 +3927,7 @@ fieldset {
   color: var(--text);
 }
 .options-title span {
-  cursor: pointer;
+  cursor: var(--ui-cursor);
 }
 .options-body {
   flex: 1;
@@ -3815,7 +3972,7 @@ fieldset {
   box-sizing: border-box;
   width: 100%;
   padding: .846em 16px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   background: linear-gradient(90deg, color-mix(in srgb, var(--win-accent) 10%, transparent), transparent 65%);
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--win-accent) 14%, var(--border));
@@ -3910,7 +4067,7 @@ fieldset {
   height: 27px;
   border-radius: 14px;
   flex: none;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   background: rgba(255,255,255,.05);
   border: 1px solid var(--border);
   transition: background .2s, border-color .2s, box-shadow .2s;
@@ -3950,7 +4107,7 @@ fieldset {
   height: 5px;
   border-radius: 3px;
   outline: none;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   background: linear-gradient(90deg, var(--win-accent) var(--fill,50%), rgba(255,255,255,.09) var(--fill,50%));
 }
 .options-slider::-webkit-slider-thumb {
@@ -3961,7 +4118,7 @@ fieldset {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fff, var(--win-accent));
   border: 0;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 0 12px -2px var(--win-glow);
   transition: box-shadow .15s, transform .1s;
 }
@@ -4011,7 +4168,7 @@ fieldset {
   border-radius: 8px;
   padding: 9px 32px 9px 13px;
   outline: none;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   -webkit-appearance: none;
   appearance: none;
   transition: border-color .18s, box-shadow .18s;
@@ -4039,7 +4196,7 @@ fieldset {
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--win-accent) 50%, var(--border));
   background: color-mix(in srgb, var(--win-accent) 12%, transparent);
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   transition: background .16s, box-shadow .16s, transform .1s;
 }
 .options-presets:hover {
@@ -4363,7 +4520,7 @@ fieldset {
   text-align: left;
   background: none;
   border: 0;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   color: var(--text);
   /* main menu always Cruiser (game identity) — exception to the configured font */
   font-family: 'Cruiser2015', sans-serif;
@@ -4391,9 +4548,30 @@ fieldset {
   text-align: right;
   transition: color .14s, opacity .14s;
 }
+/* save-slot chip: small caps pill, neutral by default, red in a mission area */
 .mainmenu-sub {
-  margin-left: 10px;
-  font-size: 60%;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 14px;
+  transform: translateY(-0.12em);
+  padding: 3px 9px 2px;
+  border: 1px solid rgba(143, 163, 196, 0.28);
+  border-radius: 999px;
+  background: rgba(143, 163, 196, 0.07);
+  font-family: var(--text-font), monospace;
+  font-size: calc(var(--text-font-size) * 0.6);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--blue-gray);
+}
+.mainmenu-sub.alert {
+  border-color: rgba(255, 91, 69, 0.45);
+  background: rgba(255, 91, 69, 0.12);
+  color: var(--text-color-red);
+  box-shadow: 0 0 10px rgba(255, 91, 69, 0.18) inset;
 }
 .mainmenu-item.active {
   color: #fff;
@@ -4409,7 +4587,7 @@ fieldset {
 .mainmenu-disabled, .mainmenu-disabled.active {
   color: var(--blue-gray);
   opacity: .42;
-  cursor: default;
+  cursor: var(--ui-cursor-disabled);
 }
 .mainmenu-item.mainmenu-pulse {
   animation: mainmenu-pulse .3s ease;
@@ -4513,7 +4691,7 @@ fieldset {
   border: none;
   color: var(--blue-gray);
   pointer-events: all;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   transition: color .18s;
 }
 .win-x svg {
@@ -4616,7 +4794,7 @@ fieldset {
   background: rgba(255,255,255,.02);
   border: 1px solid var(--border);
   color: var(--text);
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   transition: border-color .18s, background .18s, box-shadow .18s, transform .12s;
 }
 .newgame-row-bar {
@@ -4751,7 +4929,7 @@ fieldset {
   color: #fff;
   padding: .55em 40px;
   border-radius: 10px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   border: 1px solid var(--newgame-accent);
   background: color-mix(in srgb, var(--newgame-accent) 20%, transparent);
   transition: background .18s, box-shadow .18s, transform .1s;
@@ -4801,7 +4979,7 @@ fieldset {
 .slider::-webkit-slider-thumb {
   border-radius: 50%;
   background: #68b2e5;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   -webkit-appearance: none;
   appearance: none;
   width: 18px;
@@ -4823,12 +5001,12 @@ fieldset {
 }
 
 .checkbox-title {
-  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  cursor: var(--ui-cursor);
   width: 100%;
 }
 
 .checkbox-element {
-  cursor: url(./img/mouse-pointer.png) 0 1, pointer;
+  cursor: var(--ui-cursor);
   width: 16%;
   text-align: center;
   display: none;
@@ -5378,7 +5556,7 @@ input[type=checkbox] {
   color: var(--text);
   padding: 3px 9px;
   border-radius: 7px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   border: 1px solid transparent;
   transition: background .14s, border-color .14s, transform .12s, color .14s;
 }
@@ -5786,7 +5964,7 @@ input[type=checkbox] {
 .body-act {
   display: inline-block;
   color: var(--accent-light);
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   transition: color .12s, text-shadow .12s, transform .08s;
 }
 .body-act:hover {
@@ -6137,7 +6315,7 @@ input[type=checkbox] {
 }
 .body-organ-turns .body-ico-time { width: 14px; height: 14px; }
 /* available (growable) feature acts as a grow action: clickable, S-key brightens */
-.body-organ.avail:not(.now) { cursor: pointer; }
+.body-organ.avail:not(.now) { cursor: var(--ui-cursor); }
 .body-organ.avail:not(.now):hover .body-key {
   border-color: var(--text-color-evolution);
   color: var(--text-color-evolution);
@@ -6313,7 +6491,7 @@ input[type=checkbox] {
   align-items: center;
   justify-content: center;
   color: var(--pedia-accent);
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   opacity: 0;
   pointer-events: none;
   transform: translateY(-50%) scale(.8) rotate(-90deg);
@@ -6358,7 +6536,7 @@ input[type=checkbox] {
   display: flex;
   align-items: center;
   gap: 7px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   font-family: var(--text-font-title), sans-serif;
   text-transform: uppercase;
   letter-spacing: .18em;
@@ -6408,7 +6586,7 @@ input[type=checkbox] {
   display: flex;
   align-items: center;
   gap: 5.5px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   font-size: calc(var(--text-font-size) * 1.2);
   color: var(--blue-gray);
   padding: .444em 10px;
@@ -6537,12 +6715,12 @@ input[type=checkbox] {
   border: 1px solid color-mix(in srgb, var(--pedia-accent) 38%, var(--border));
   box-shadow: 0 8px 26px rgba(0,0,0,.5);
 }
-/* sepia archive treatment (CSS approximation; the full SVG #msgArchive filter is a later pass) */
+/* sepia archive duotone (full SVG filter, ported from ref) */
 .pedia-img {
   display: block;
   width: 100%;
   height: auto;
-  filter: sepia(.55) saturate(.85) contrast(1.02) brightness(.95);
+  filter: url(#msgArchive);
 }
 .pedia-text {
   font-size: calc(var(--text-font-size) * 1.267);
@@ -6767,7 +6945,7 @@ input[type=checkbox] {
   border-radius: 8px;
   padding: 9px 28px 9px 12px;
   outline: none;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   -webkit-appearance: none;
   appearance: none;
   transition: border-color .18s, box-shadow .18s;
@@ -6804,7 +6982,7 @@ input[type=checkbox] {
   width: 38px;
   height: 38px;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   line-height: 1;
   display: flex;
   align-items: center;
@@ -6972,7 +7150,7 @@ input[type=checkbox] {
   position: relative;
   z-index: 1;
   text-align: center;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   font-family: var(--text-font-title), sans-serif;
   text-transform: uppercase;
   letter-spacing: .1em;
@@ -7298,7 +7476,7 @@ input[type="radio"]:focus {
   width: 30px;
   height: 30px;
   border-radius: 7px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   color: var(--blue-gray);
   border: 1px solid transparent;
   transition: color .16s, background .16s, border-color .16s, transform .12s;
@@ -7355,7 +7533,7 @@ input[type="radio"]:focus {
   color: color-mix(in srgb, var(--win-glow) 85%, #fff);
   padding: .909em 16px;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: var(--ui-cursor);
   border: 1px solid color-mix(in srgb, var(--win-accent) 40%, var(--border));
   background: color-mix(in srgb, var(--win-accent) 8%, transparent);
   transition: background .16s, box-shadow .16s, transform .1s;

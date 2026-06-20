@@ -821,6 +821,9 @@ class Game extends _SaveObject
 // post-load HUD refresh shared by both sync and deferred load paths
   function applyLoaded()
     {
+      // a loaded game is a started game (isStarted is not persisted); without this
+      // the main menu's ESC-to-close is suppressed after loading (treated as boot menu)
+      isStarted = true;
       ui.hud.update();
       scene.draw();
     }
