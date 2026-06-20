@@ -71,6 +71,33 @@ class UISvg
         '</g></svg>';
     }
 
+// faint parasite veins for the live HUD; creep in from top-left and
+// bottom-right corners (opacity .07, with nodule circles)
+  public static function hudVeins(): String
+    {
+      return '<svg id="hud-veins" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">' +
+        '<g stroke="#a45fe0" fill="none" stroke-linecap="round" opacity=".07">' +
+        // top-left growth
+        '<path stroke-width="4" d="M-12 64 C90 84 150 70 218 132 S330 232 398 246"/>' +
+        '<path stroke-width="2.5" d="M150 86 C190 40 260 52 312 30"/>' +
+        '<path stroke-width="2" d="M218 132 C246 196 222 260 258 318"/>' +
+        '<path stroke-width="1.4" d="M398 246 C448 258 480 296 492 332"/>' +
+        '<path stroke-width="2.5" d="M86 -10 C96 60 70 110 96 168"/>' +
+        '<circle cx="312" cy="30" r="3.5" fill="#a45fe0" stroke="none"/>' +
+        '<circle cx="258" cy="318" r="3" fill="#a45fe0" stroke="none"/>' +
+        '<circle cx="492" cy="332" r="2.5" fill="#a45fe0" stroke="none"/>' +
+        '<circle cx="96" cy="168" r="3" fill="#a45fe0" stroke="none"/>' +
+        // bottom-right growth
+        '<path stroke-width="4" d="M1932 1006 C1800 988 1740 1014 1668 950 S1556 854 1488 838"/>' +
+        '<path stroke-width="2.5" d="M1770 1000 C1730 1046 1660 1036 1608 1058"/>' +
+        '<path stroke-width="2" d="M1668 950 C1640 886 1664 822 1628 764"/>' +
+        '<path stroke-width="2.5" d="M1834 1092 C1824 1010 1850 962 1824 904"/>' +
+        '<circle cx="1628" cy="764" r="3.5" fill="#a45fe0" stroke="none"/>' +
+        '<circle cx="1488" cy="838" r="3" fill="#a45fe0" stroke="none"/>' +
+        '<circle cx="1824" cy="904" r="2.5" fill="#a45fe0" stroke="none"/>' +
+        '</g></svg>';
+    }
+
 // target/reticle glyph, ghosted behind the goals scrim
   public static function reticle(): String
     {
@@ -244,6 +271,118 @@ class UISvg
       return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>' +
         '<path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 14.2c2.2.5 3.9 2.4 3.9 4.8"/></svg>';
+    }
+
+// map-pin glyph (topbar location)
+  public static function hudPin(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true">' +
+        '<path d="M12 22c5-6 7-9.5 7-13a7 7 0 1 0-14 0c0 3.5 2 7 7 13zM14.6 9a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0z"/></svg>';
+    }
+
+// settings-cog glyph (topbar gear)
+  public static function hudGear(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true">' +
+        '<path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6h-3.8l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h3.8l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>';
+    }
+
+// eye glyph (parasite health bar)
+  public static function hudEye(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>' +
+        '<circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/></svg>';
+    }
+
+// lightning glyph (energy bars)
+  public static function hudBolt(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>';
+    }
+
+// heart glyph (host health bar)
+  public static function hudHeart(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.3 3.6 11.9a4.9 4.9 0 0 1 6.9-6.9l1.5 1.5 1.5-1.5a4.9 4.9 0 0 1 6.9 6.9z"/></svg>';
+    }
+
+// bust glyph (host control / grip bar)
+  public static function hudControl(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7" r="3.4"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7z"/></svg>';
+    }
+
+// energy-coin glyph (action cost; fill set in css)
+  public static function hudCoin(): String
+    {
+      return '<svg class="hud-coin" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2 5 13.5h5.5L9 22l10-13h-6.5z"/></svg>';
+    }
+
+// objective diamond mark; primary carries the sweeping glint sliver
+  public static function hudDiamond(?primary: Bool = false): String
+    {
+      var cls = (primary ? 'hud-mark primary' : 'hud-mark other');
+      var glint = (primary ?
+        '<clipPath id="hud-dclip"><path d="M12 2 22 12 12 22 2 12z"/></clipPath>' +
+        '<g clip-path="url(#hud-dclip)"><rect class="hud-glint" x="0" y="-4" width="5" height="32" fill="#fff" opacity=".9"/></g>' : '');
+      return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+        '<path d="M12 2 22 12 12 22 2 12z"/>' + glint + '</svg>';
+    }
+
+// navbar icon: goals reticle
+  public static function hudNavGoals(): String
+    {
+      return '<svg class="hud-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="7"/>' +
+        '<line x1="12" y1="1.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22.5"/>' +
+        '<line x1="1.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22.5" y2="12"/>' +
+        '<circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>';
+    }
+
+// navbar icon: body figure
+  public static function hudNavBody(): String
+    {
+      return '<svg class="hud-nav-ico body" viewBox="0 0 24 48" fill="currentColor" aria-hidden="true">' +
+        '<circle cx="12" cy="8" r="5.5"/>' +
+        '<rect x="8" y="14" width="8" height="16" rx="3.2"/>' +
+        '<rect x="4.4" y="15" width="3.2" height="14" rx="1.6"/>' +
+        '<rect x="16.4" y="15" width="3.2" height="14" rx="1.6"/>' +
+        '<rect x="8" y="29" width="3.6" height="16.5" rx="1.7"/>' +
+        '<rect x="12.4" y="29" width="3.6" height="16.5" rx="1.7"/></svg>';
+    }
+
+// navbar icon: log document with lines
+  public static function hudNavLog(): String
+    {
+      return '<svg class="hud-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<rect x="5" y="3" width="14" height="18" rx="1.5"/>' +
+        '<line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>';
+    }
+
+// navbar icon: timeline clock
+  public static function hudNavTimeline(): String
+    {
+      return '<svg class="hud-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="8.5"/>' +
+        '<line x1="12" y1="12" x2="12" y2="7"/><line x1="12" y1="12" x2="15.5" y2="13.5"/></svg>';
+    }
+
+// navbar icon: evolution helix
+  public static function hudNavEvo(): String
+    {
+      return '<svg class="hud-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">' +
+        '<path d="M7 3c0 5 10 7 10 12 0 4 0 4 0 6"/><path d="M17 3c0 5-10 7-10 12 0 4 0 4 0 6"/>' +
+        '<line x1="8.5" y1="6" x2="15.5" y2="6"/><line x1="9.5" y1="9.5" x2="14.5" y2="9.5"/>' +
+        '<line x1="9.5" y1="15" x2="14.5" y2="15"/><line x1="8.5" y1="18" x2="15.5" y2="18"/></svg>';
+    }
+
+// navbar icon: cult pentagram
+  public static function hudNavCult(): String
+    {
+      return '<svg class="hud-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9.5"/>' +
+        '<polygon points="12,2.5 17.59,19.69 2.97,9.06 21.03,9.06 6.41,19.69"/></svg>';
     }
 
 // face/person icon for participant ID tags

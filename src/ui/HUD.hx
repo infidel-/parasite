@@ -6,6 +6,8 @@ import js.Browser;
 import js.Browser.document;
 import js.html.TextAreaElement;
 import js.html.DivElement;
+import js.html.SpanElement;
+import js.html.Element;
 import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
@@ -28,6 +30,17 @@ class HUD
   var log: DivElement;
   var goals: DivElement;
   public var info: DivElement;
+  // background atmosphere layer (color grade + grain + veins)
+  public var atmo: DivElement;
+  // topbar: location + turn counter + gear
+  var topbar: DivElement;
+  var topbarName: SpanElement;
+  var topbarCoords: DivElement;
+  var topbarTurn: SpanElement;
+  var topbarPinSvg: Element;
+  var lastTurn: Int = -1;          // detects turn advance for odometer tick
+  var lastLocName: String = '';    // detects area change for decode + pin ping
+  var lastLogKey: String = '';     // detects a genuinely new top log row
   var regionTooltip: RegionTooltip;
   var aiTooltip: AITooltip;
   // debug overlay div — created and updated only when Const.isDebug is true
@@ -42,15 +55,10 @@ class HUD
   var actionButtons: List<DivElement>; // list of action buttons
   var listActions: List<_PlayerAction>; // list of currently available actions
   var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
-  var listTransparentElements: Array<DivElement>;
-  var listElements: Array<DivElement>;
   var lastMouseX: Float = -1;
   var lastMouseY: Float = -1;
-  var lastMouseOverAnyElement: Bool = false;
   var lastRegionTileX: Int = -1;
   var lastRegionTileY: Int = -1;
-  var cachedRects: Map<DivElement, {x: Float, y: Float, w: Float, h: Float}>;
-  var rectsValid: Bool = false;
 
   public function new(u: UI, g: Game)
     {
@@ -82,6 +90,20 @@ class HUD
       container.style.visibility = 'visible';
       document.body.appendChild(container);
 
+      // background atmosphere: purple color-grade + film grain + corner veins.
+      // lives on its own body-level layer (not inside #hud) so toggling the HUD
+      // with space does not hide the world tint.
+      atmo = document.createDivElement();
+      atmo.id = 'hud-atmo';
+      var grade = document.createDivElement();
+      grade.id = 'hud-grade';
+      atmo.appendChild(grade);
+      var veins = document.createDivElement();
+      veins.id = 'hud-veins-wrap';
+      veins.innerHTML = UISvg.hudVeins();
+      atmo.appendChild(veins);
+      document.body.appendChild(atmo);
+
       // initialize region tooltip
       regionTooltip = new RegionTooltip(game, this);
       // initialize area AI tooltip
@@ -106,22 +128,39 @@ class HUD
       consoleHint.style.display = 'none';
       consoleDiv.appendChild(consoleHint);
 
+      // topbar: location (pin + name + coords), turn counter, gear
+      topbar = document.createDivElement();
+      topbar.id = 'hud-topbar';
+      topbar.innerHTML =
+        '<div class="hud-loc">' + UISvg.hudPin() +
+          '<div><div class="hud-loc-name"></div><div class="hud-loc-coords"></div></div></div>' +
+        '<div class="hud-turn">' + UISvg.clockSmall('hud-ico-time') + '<span></span></div>' +
+        '<div class="hud-right"><div class="hud-gear">' + UISvg.hudGear() + '</div></div>';
+      container.appendChild(topbar);
+      topbarName = cast topbar.querySelector('.hud-loc-name');
+      topbarCoords = cast topbar.querySelector('.hud-loc-coords');
+      topbarTurn = cast topbar.querySelector('.hud-turn span');
+      topbarPinSvg = topbar.querySelector('.hud-loc svg');
+      // gear opens options
+      (cast topbar.querySelector('.hud-gear') : DivElement).onclick = function (e)
+        {
+          game.scene.sounds.play('click-hud');
+          game.ui.state = UISTATE_MAINMENU;
+        };
+
       log = document.createDivElement();
-      log.className = 'text';
+      log.className = 'hud-panel hud-text';
       log.id = 'hud-log';
-      log.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
       container.appendChild(log);
 
       goals = document.createDivElement();
-      goals.className = 'text';
+      goals.className = 'hud-panel hud-text';
       goals.id = 'hud-goals';
-      goals.style.borderImage = "url('" + AssetPath.resolve('img/hud-goals-border.png') + "') 24 fill / 1 / 0 stretch";
       container.appendChild(goals);
 
       info = document.createDivElement();
-      info.className = 'text';
+      info.className = 'hud-panel hud-text hud-stats';
       info.id = 'hud-info';
-      info.style.borderImage = "url('" + AssetPath.resolve('img/hud-info-border.png') + "') 36 20 36 fill / 1 / 0 stretch";
       container.appendChild(info);
 
 
@@ -133,40 +172,23 @@ class HUD
           container.appendChild(debugInfo);
         }
 
-      // menu
+      // menu / navbar (membrane strip of icon cells)
       var buttons = document.createDivElement();
       buttons.id = 'hud-buttons';
+      buttons.className = 'hud-panel';
       container.appendChild(buttons);
       menuButtons = [];
-      addMenuButton(buttons, UISTATE_GOALS,
-        Const.key('F1') + ': GOALS');
-      addMenuButton(buttons, UISTATE_BODY,
-        Const.key('F2') + ': BODY');
-      addMenuButton(buttons, UISTATE_LOG,
-        Const.key('F3') + ': LOG');
-      addMenuButton(buttons, UISTATE_TIMELINE,
-        Const.key('F4') + ': TIMELINE');
-      addMenuButton(buttons, UISTATE_EVOLUTION,
-        Const.key('F5') + ': EVO');
-      addMenuButton(buttons, UISTATE_CULT,
-        Const.key('F6') + ': CULT');
+      addMenuButton(buttons, UISTATE_GOALS, UISvg.hudNavGoals(), 'Goals');
+      addMenuButton(buttons, UISTATE_BODY, UISvg.hudNavBody(), 'Body');
+      addMenuButton(buttons, UISTATE_LOG, UISvg.hudNavLog(), 'Log');
+      addMenuButton(buttons, UISTATE_TIMELINE, UISvg.hudNavTimeline(), 'Timeline');
+      addMenuButton(buttons, UISTATE_EVOLUTION, UISvg.hudNavEvo(), 'Evo');
+      addMenuButton(buttons, UISTATE_CULT, UISvg.hudNavCult(), 'Cult');
       // actions
       actions = document.createDivElement();
       actions.id = 'hud-actions';
-      actions.style.borderImage = "url('" + AssetPath.resolve('img/hud-actions-border.png') + "') 28 fill / 1 / 0 stretch";
+      actions.className = 'hud-panel';
       container.appendChild(actions);
-
-      listTransparentElements = [
-        info,
-        log,
-        goals,
-      ];
-      listElements = [
-        info,
-        actions,
-        log,
-        goals,
-      ];
     }
 
 // show blinking text and set timeout
@@ -195,14 +217,14 @@ class HUD
 //      overlay.style.visibility = 'hidden';
     }
 
-// add button to menu
-  function addMenuButton(cont: DivElement, state: _UIState, str: String): DivElement
+// add icon cell to navbar menu
+  function addMenuButton(cont: DivElement, state: _UIState, icon: String, label: String): DivElement
     {
       var btn = document.createDivElement();
-      btn.innerHTML = str;
+      btn.innerHTML = icon + '<span class="hud-nav-label">' + label + '</span>';
+      btn.title = label;
       // NOTE: must be the same with show/hide buttons at updateMenu()
-      btn.className = 'hud-button window-title';
-      btn.style.borderImage = "url('" + AssetPath.resolve('img/hud-button.png') + "') 23 fill / 1 / 0 stretch";
+      btn.className = 'hud-nav-cell';
       cont.appendChild(btn);
       menuButtons.push({
         state: state,
@@ -226,56 +248,14 @@ class HUD
       return null;
     }
 
-// make hud transparent
+// handle mouse move for region/AI tooltips (panels are click-through)
   public function onMouseMove(e: MouseEvent)
     {
-      // build rect cache if needed (invalidated on resize)
-      if (!rectsValid)
-        {
-          cachedRects = new Map();
-          for (el in listTransparentElements)
-            {
-              var r = el.getBoundingClientRect();
-              cachedRects.set(el, { x: r.x, y: r.y, w: r.width, h: r.height });
-            }
-          rectsValid = true;
-        }
-
       // check if mouse position changed enough to care
       var dx = e.clientX - lastMouseX;
       var dy = e.clientY - lastMouseY;
       if (dx * dx + dy * dy < 4) // ~2px threshold
         return; // mouse hasn't moved significantly
-
-      // check if over any element
-      var mouseOverAnyElement = false;
-      for (el in listTransparentElements)
-        {
-          var r = cachedRects.get(el);
-          if (r == null) continue;
-          if (e.clientX >= r.x && e.clientY >= r.y &&
-              e.clientX <= r.x + r.w && e.clientY <= r.y + r.h)
-            mouseOverAnyElement = true;
-        }
-
-      // update opacity styles only if hovering one transparent element
-      if (mouseOverAnyElement ||
-          lastMouseOverAnyElement)
-        {
-          for (el in listTransparentElements)
-            {
-              var r = cachedRects.get(el);
-              if (r == null) continue;
-              var isOver = e.clientX >= r.x && e.clientY >= r.y &&
-                           e.clientX <= r.x + r.w && e.clientY <= r.y + r.h;
-              var wasOver = lastMouseX >= r.x && lastMouseY >= r.y &&
-                            lastMouseX <= r.x + r.w && lastMouseY <= r.y + r.h;
-              if (isOver != wasOver)
-                el.style.opacity = isOver ? '0.1' : '0.9';
-            }
-        }
-
-      lastMouseOverAnyElement = mouseOverAnyElement;
 
       if (ui.state != UISTATE_DEFAULT)
         {
@@ -400,11 +380,14 @@ public function onMouseLeave()
       return (container.style.visibility == 'visible');
     }
 
+// show/hide the background atmosphere layer (kept out of HUD toggle; hidden on main menu)
+  public function setAtmoVisible(v: Bool)
+    {
+      atmo.style.visibility = (v ? 'visible' : 'hidden');
+    }
+
   public function show()
     {
-      // hack: restore opacity animation
-      for (el in listElements)
-        el.style.transition = '0.1s';
       container.style.visibility = 'visible';
     }
 
@@ -412,9 +395,6 @@ public function onMouseLeave()
     {
       regionTooltip.hide();
       aiTooltip.hide();
-      // hack: remove opacity animation
-      for (el in listElements)
-        el.style.transition = '0s';
       container.style.visibility = 'hidden';
     }
 
@@ -579,6 +559,7 @@ public function onMouseLeave()
       updateLog();
       updateMenu();
       updateGoals();
+      updateTopbar();
       if (game.location == LOCATION_REGION)
         updateRegionTooltipHover(true);
       updateAITooltip();
@@ -586,53 +567,133 @@ public function onMouseLeave()
         updateDebugInfo();
     }
 
-// update log display
-  public function updateLog()
+// update topbar: turn counter (odometer tick), location name (decode) + coords
+  function updateTopbar()
     {
-      var buf = new StringBuf();
-      for (l in game.hudMessageList)
+      // turn advance: number rolls over, brackets/word flash (css via .tick)
+      if (game.turns != lastTurn)
         {
-          buf.add('<span ');
-          if (l.col == COLOR_ALERT)
-            buf.add('class=highlight-text ');
-          buf.add("style='color:");
-          buf.add(Const.TEXT_COLORS[l.col]);
-          buf.add("'>");
-          buf.add(l.msg);
-          buf.add("</span>");
-          if (l.cnt > 1)
+          if (lastTurn >= 0)
             {
-              buf.add(" <span class=small style='color:var(--text-color-repeat)'>(x");
-              buf.add(l.cnt);
-              buf.add(")</span>");
+              topbarTurn.className = 'tick';
+              var nv = game.turns;
+              haxe.Timer.delay(function () topbarTurn.textContent = '' + nv, 140);
+              haxe.Timer.delay(function () topbarTurn.className = '', 400);
             }
-          buf.add('<br/>');
+          else topbarTurn.textContent = '' + game.turns;
+          lastTurn = game.turns;
         }
 
+      // location name + coords from current scope
+      var name = '';
+      var coords = '';
+      if (game.location == LOCATION_AREA)
+        {
+          name = game.area.name;
+          coords = game.playerArea.x + ',' + game.playerArea.y;
+        }
+      else if (game.location == LOCATION_REGION)
+        {
+          name = game.playerRegion.currentArea.name;
+          coords = game.playerRegion.x + ',' + game.playerRegion.y;
+        }
+      if (name == null)
+        name = '';
+      topbarCoords.textContent = coords;
+
+      // area change: pin pings, name resolves out of glyph noise
+      if (name != lastLocName)
+        {
+          lastLocName = name;
+          if (topbarPinSvg != null)
+            {
+              topbarPinSvg.classList.remove('ping');
+              topbarPinSvg.getBoundingClientRect(); // reflow to retrigger
+              topbarPinSvg.classList.add('ping');
+            }
+          decodeLocation(name);
+        }
+    }
+
+// resolve a location name left-to-right out of glyph noise (~.56s)
+  function decodeLocation(name: String)
+    {
+      var glyphs = '▒░#@%&╪◊$';
+      var frames = 14;
+      var frame = 0;
+      function step()
+        {
+          var n = Std.int(name.length * frame / frames);
+          var buf = name.substr(0, n);
+          for (i in n...name.length)
+            buf += glyphs.charAt(Std.random(glyphs.length));
+          topbarName.textContent = buf;
+          frame++;
+          if (frame <= frames)
+            haxe.Timer.delay(step, 40);
+          else topbarName.textContent = name;
+        }
+      step();
+    }
+
+// update event log display (newest row first, older rows decay via css)
+  public function updateLog()
+    {
+      var arr = [for (l in game.hudMessageList) l];
+      // newest message sits at the tail of the list; detect a genuinely new top row
+      var topKey = (arr.length > 0 ?
+        arr[arr.length - 1].msg + '|' + arr[arr.length - 1].turn + '|' + arr[arr.length - 1].cnt : '');
+      var isNewTop = (topKey != '' && topKey != lastLogKey);
+      lastLogKey = topKey;
+
+      var buf = new StringBuf();
+      var i = arr.length - 1;
+      var first = true;
+      while (i >= 0)
+        {
+          var l = arr[i];
+          var cls = 'hud-row';
+          if (l.col == COLOR_ALERT)
+            cls += ' highlight-text';
+          if (first && isNewTop)
+            cls += ' hud-row-new';
+          var ts = (l.turn == null || l.turn == 0 ? '-' : '' + l.turn);
+          buf.add('<div class="' + cls + '"><span class="ts">' + ts + '</span>');
+          buf.add('<span class="msg" style="color:' + Const.TEXT_COLORS[l.col] + '">' + l.msg + '</span>');
+          if (l.cnt > 1)
+            buf.add(' <span class="xn">(x' + l.cnt + ')</span>');
+          buf.add('</div>');
+          first = false;
+          i--;
+        }
       log.innerHTML = buf.toString();
     }
 
-// update goals list
+// update objectives list (diamond marks + vein spine connectors)
   function updateGoals()
     {
       var buf = new StringBuf();
+      var primaryAssigned = false;
       for (g in game.goals.iteratorCurrent())
         {
-          var info = game.goals.getInfo(g);
-          if (info.isHidden)
+          var gi = game.goals.getInfo(g);
+          if (gi.isHidden)
             continue;
-
-          buf.add(Const.col('goal', info.name));
-          if (info.isOptional)
-            buf.add(' ' + Const.small(Const.col('gray', '[optional]')));
-          buf.add('<br/>');
-          buf.add(info.note + '<br/>');
-          if (info.noteFunc != null)
-            buf.add(info.noteFunc(game) + '<br/>');
-          buf.add('<br/>');
+          // first non-optional goal is the primary beacon, the rest are secondary
+          var primary = (!primaryAssigned && !gi.isOptional);
+          if (primary)
+            primaryAssigned = true;
+          buf.add('<div class="hud-grp"><div class="hud-obj">');
+          buf.add(UISvg.hudDiamond(primary));
+          buf.add('<div><div class="hud-ot">' + gi.name);
+          if (gi.isOptional)
+            buf.add(' <span class="hud-opt">[optional]</span>');
+          buf.add('</div><div class="hud-od">' + gi.note);
+          if (gi.noteFunc != null)
+            buf.add('<br/>' + gi.noteFunc(game));
+          buf.add('</div></div></div></div>'); // close od, name-wrap, obj, grp
         }
-      var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'
-      goals.innerHTML = s;
+      goals.innerHTML = buf.toString();
     }
 
 // get color for text (red, yellow, white)
@@ -664,7 +725,29 @@ public function onMouseLeave()
         '</span></span><br/>');
     }
 
-// update player info
+// build one stat bar: icon + label + value, track + fill, with warn/dead states
+// stat tags drive per-stat warn color (hc warns purple); fillClass picks the gradient
+  function statBar(stat: String, icon: String, label: String,
+      cur: Int, max: Int, fillClass: String, ?delta: String = ''): String
+    {
+      var pct = (max > 0 ? cur / max * 100 : 0);
+      if (pct < 0)
+        pct = 0;
+      if (pct > 100)
+        pct = 100;
+      var cls = 'hud-bar';
+      if (cur <= 0)
+        cls += ' dead';
+      else if (cur <= 0.25 * max)
+        cls += ' warn';
+      return '<div class="' + cls + '" data-stat="' + stat + '">' +
+        '<div class="hud-bar-lbl"><span class="hud-bar-n">' + icon + label + '</span>' +
+        '<span class="hud-bar-v"><span class="cur">' + cur + '</span>/' + max + delta + '</span></div>' +
+        '<div class="hud-bar-track"><div class="hud-bar-fill ' + fillClass +
+        '" style="width:' + pct + '%"></div></div></div>';
+    }
+
+// update player info: core stats as bars, the rest as text below
   function updateInfo()
     {
       var buf = new StringBuf();
@@ -673,144 +756,115 @@ public function onMouseLeave()
         {
           buf.add(game.cults[0].base.hudInfo());
           info.innerHTML = buf.toString();
-          info.className = 'text';
+          info.className = 'hud-panel hud-text';
           return;
         }
 
-      buf.add('Turn: ' + game.turns);
-      if (game.location == LOCATION_AREA)
-          {
-            buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
-              ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
-              (Const.isDebug ? Const.smallgray(' A ' + Math.round(game.area.alertness)) : '') +
-              '<br/>');
-
-            // check if this is a mission area
-            if (game.area.isMissionArea())
-              {
-                buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
-              }
-          }
-      else if (game.location == LOCATION_REGION)
-        {
-          var area = game.playerRegion.currentArea;
-          buf.add(', at (' +
-            game.playerRegion.x + ',' + game.playerRegion.y + ')' +
-            (Const.isDebug ? ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) : '') +
-            '<br/>' +
-            area.name +
-            '<center>' + (area.highCrime ? Const.smallgray('high crime') : '') + '</center>');
-
-          // check if this is a mission area
-          if (game.cults.length > 0 &&
-              game.cults[0].ordeals.getMarkerMission(area) != null)
-            {
-              buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
-            }
-        }
-      buf.add('<hr/>');
-
-      // parasite stats
       var time = (game.location == LOCATION_AREA ? 1 : 5);
-      var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
-      buf.add('Energy: ' +
-        "<font " + getColor(game.player.energy, game.player.maxEnergy) +
-        ">" + game.player.energy + "</font>" +
-        '/' + game.player.maxEnergy);
-      buf.add(' ' + Const.col('gray',
-        Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
-        energyPerTurn + '/t]')) + '<br/>');
-      buf.add('Health: ' +
-        "<font " + getColor(game.player.health, game.player.maxHealth) +
-        ">" + game.player.health + "</font>" +
-        '/' + game.player.maxHealth);
-      // team distance if close
-      if (!game.group.hudInfo(buf))
-        buf.add('<br/>');
-      buf.add('<hr/>');
 
+      // parasite bars
+      var ppt = __Math.parasiteEnergyPerTurn(time);
+      var pdelta = (ppt != 0 ?
+        '<small class="' + (ppt > 0 ? 'up' : 'down') + '">' + (ppt > 0 ? '+' : '') + ppt + '/t</small>' : '');
+      buf.add('<div class="hud-stats-player">');
+      buf.add('<div class="hud-eyebrow">Parasite</div>');
+      buf.add(statBar('ph', UISvg.hudEye(), 'Health',
+        game.player.health, game.player.maxHealth, 'health'));
+      buf.add(statBar('pe', UISvg.hudBolt(), 'Energy',
+        game.player.energy, game.player.maxEnergy, 'energy', pdelta));
+      buf.add('</div>');
+
+      // attachment grip
       if (game.player.state == PLR_STATE_ATTACHED)
-        {
-          buf.add('Grip: ' +
-            '<font ' + getColor(game.playerArea.attachHold, 100) + '>' +
-            game.playerArea.attachHold + '</font>/100<br/>');
-        }
+        buf.add(statBar('hc', UISvg.hudControl(), 'Grip',
+          game.playerArea.attachHold, 100, 'control'));
 
-      // host stats
+      // host bars
       else if (game.player.state == PLR_STATE_HOST)
         {
           var host = game.player.host;
-          if (host.isHuman)
-            buf.add('<span class=hud-name>' + host.getNameCapped() + '</span>');
-          else buf.add('<span class=hud-name>' + host.AName() + '</span>');
-          // special symbols
+          var hname = (host.isHuman ? host.getNameCapped() : host.AName());
           if (host.affinity >= 100)
-            buf.add(' ' + Icon.affinity);
+            hname += ' ' + Icon.affinity;
           if (host.chat.consent >= 100)
-            buf.add(' ' + Icon.consent);
+            hname += ' ' + Icon.consent;
           if (host.isPlayerCultist())
-            buf.add(' ' + Icon.cultist);
+            hname += ' ' + Icon.cultist;
+          buf.add('<div class="hud-eyebrow">Host</div>');
+          buf.add('<div class="hud-hostname">' + hname + '</div>');
+          buf.add(statBar('hh', UISvg.hudHeart(), 'Health',
+            host.health, host.maxHealth, 'health'));
+          var hpt = __Math.fullHostEnergyPerTurn(time);
+          var hdelta = '';
+          if (hpt != 0)
+            hdelta = '<small class="' + (hpt > 0 ? 'up' : 'down') + '">' + (hpt > 0 ? '+' : '') + hpt + '/t</small>';
+          if (hpt < 0)
+            hdelta += '<small class="down">' + Math.ceil(host.energy / (- hpt)) + 't</small>';
+          buf.add(statBar('he', UISvg.hudBolt(), 'Energy',
+            host.energy, host.maxEnergy, 'energy', hdelta));
+          buf.add(statBar('hc', UISvg.hudControl(), 'Control',
+            game.player.hostControl, 100, 'control'));
+        }
 
-          buf.add('<br/>');
+      // extra textual context below the bars
+      var ex = new StringBuf();
+      // action points / area notes
+      if (game.location == LOCATION_AREA)
+        {
+          ex.add(Const.smallgray('AP ' + game.playerArea.ap) +
+            (Const.isDebug ? Const.smallgray(' A ' + Math.round(game.area.alertness)) : '') + '<br/>');
+          if (game.area.isMissionArea())
+            ex.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
+        }
+      else if (game.location == LOCATION_REGION)
+        {
+          var area = game.playerRegion.currentArea;
+          if (Const.isDebug)
+            ex.add(Const.smallgray('A ' + Math.round(area.alertness)) + '<br/>');
+          if (area.highCrime)
+            ex.add('<center>' + Const.smallgray('high crime') + '</center>');
+          if (game.cults.length > 0 &&
+              game.cults[0].ordeals.getMarkerMission(area) != null)
+            ex.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
+        }
+      // team distance if close
+      game.group.hudInfo(ex);
+      // host attributes, evolution direction, organs
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          var host = game.player.host;
           if (host.isAttrsKnown)
-            buf.add('STR ' + host.strength +
+            ex.add('STR ' + host.strength +
               ' CON ' + host.constitution +
               ' INT ' + host.intellect +
               ' PSY ' + host.psyche + '<br/>');
-          buf.add('Health: ' +
-            '<font ' + getColor(host.health,
-            host.maxHealth) + '>' +
-            host.health + '</font>' +
-            '/' + host.maxHealth + '<br/>');
-
-          buf.add('Control: ' +
-            '<font ' + getColor(game.player.hostControl, 100) + '>' + game.player.hostControl + '</font>' +
-            '/100<br/>');
-
-          // energy
-          var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
-          buf.add("Energy: <font " + getColor(host.energy,
-            host.maxEnergy) + ">" +
-            host.energy + '</font>/' +
-            host.maxEnergy);
-          // energy spending
-          if (energyPerTurn != 0)
-            buf.add(' ' +
-              Const.smallgray('[' + (energyPerTurn > 0 ? '+' : '') +
-              energyPerTurn + '/t]'));
-          // time to live
-          if (energyPerTurn < 0)
-            buf.add(' ' +
-              Const.smallgray('[' +
-              Math.ceil(game.player.host.energy / (- energyPerTurn)) + 't]'));
-          // organ growth/evolution
           if (game.player.evolutionManager.isActive)
             {
-              buf.add(Const.small('<br>Evolution direction:<br/>  '));
-              buf.add(Const.small(game.player.evolutionManager.getEvolutionDirectionInfo()));
+              ex.add(Const.small('Evolution direction:<br/>  '));
+              ex.add(Const.small(game.player.evolutionManager.getEvolutionDirectionInfo()) + '<br/>');
             }
           var str = host.organs.getInfo();
           if (str != null)
-            {
-              buf.add('<br/>');
-              buf.add(str);
-            }
+            ex.add(str);
         }
-
-      // cult info
-      updateCult(buf);
-
+      // cult resources line
+      updateCult(ex);
       if (game.player.vars.isSpoonGame)
-        buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +
+        ex.add("<div style='padding-top:10px;text-align:center;font-weight:bold'>" +
           Const.col('yellow', 'SPOONED') + '</div>');
+      var exStr = ex.toString();
+      if (exStr != '')
+        buf.add('<div class="hud-info-extra">' + exStr + '</div>');
+
       info.innerHTML = buf.toString();
       if (regionTooltip.visible)
         regionTooltip.updatePosition();
+      // low parasite energy pulses the panel when not hosting
       if (game.player.state != PLR_STATE_HOST)
         info.className =
           (game.player.energy <= 0.5 * game.player.maxEnergy ?
-           'text highlight-text' : 'text');
-      else info.className = 'text';
+           'hud-panel hud-text hud-stats highlight-text' : 'hud-panel hud-text hud-stats');
+      else info.className = 'hud-panel hud-text hud-stats';
     }
 
 // debug info
@@ -845,7 +899,7 @@ public function onMouseLeave()
             {
               m.btn.style.display = 'none';
               if (m.btn.className.indexOf('highlight') > 0)
-                m.btn.className = 'hud-button window-title';
+                m.btn.className = 'hud-nav-cell';
             }
           return;
         }
@@ -890,7 +944,7 @@ public function onMouseLeave()
           // clear highlight on hide
           // NOTE: must be the same with addMenuButton()
           if (!vis && m.btn.className.indexOf('highlight') > 0)
-            m.btn.className = 'hud-button window-title';
+            m.btn.className = 'hud-nav-cell';
         }
     }
 
@@ -1022,15 +1076,16 @@ public function onMouseLeave()
       if (state == HUD_TARGETING)
         {
           var lines = [
-            Const.key('Arrows') + ': Rotate targets',
-            Const.key('Enter/Numpad5') + ': Select target',
-            Const.key('ESC') + ': Clear target',
+            { k: 'Arrows', t: 'Rotate targets' },
+            { k: 'Enter/Numpad5', t: 'Select target' },
+            { k: 'ESC', t: 'Clear target' },
           ];
           for (line in lines)
             {
               var btn = document.createDivElement();
-              btn.innerHTML = line;
-              btn.className = 'hud-action';
+              btn.className = 'hud-act hud-act-help';
+              btn.innerHTML = '<span class="hud-key">' + line.k + '</span>' +
+                '<span class="hud-label">' + line.t + '</span>';
               actions.appendChild(btn);
             }
           return;
@@ -1041,12 +1096,13 @@ public function onMouseLeave()
       for (l in list)
         for (act in l)
           {
-            var buf = new StringBuf();
+            // key label: optional S- repeat prefix, then letter key or running number
             var key = '';
             if (game.config.shiftLongActions &&
                 act.canRepeat &&
                 ui.shiftPressed)
               key = 'S-';
+            var numbered = (act.key == null);
             if (act.key != null)
               key += act.key.toUpperCase();
             else key += '' + n;
@@ -1054,16 +1110,21 @@ public function onMouseLeave()
             // dynamic action color
             if (act.id == 'probeBrain')
               name = game.playerArea.getProbeBrainActionName();
-            buf.add(Const.key(key) + ': ' + name);
+            // energy cost (literal or computed)
+            var cost = -1;
             if (act.energy != null &&
                 act.energy > 0)
-              buf.add(Const.cost(act.energy));
+              cost = act.energy;
             else if (act.energyFunc != null)
-              buf.add(Const.cost(act.energyFunc(game.player)));
+              cost = act.energyFunc(game.player);
 
             var btn = document.createDivElement();
-            btn.innerHTML = buf.toString();
-            btn.className = 'hud-action';
+            btn.className = 'hud-act';
+            var html = '<span class="hud-key' + (numbered ? ' num' : '') + '">' + key + '</span>' +
+              '<span class="hud-label">' + name + '</span>';
+            if (cost > 0)
+              html += '<span class="hud-cost">' + cost + UISvg.hudCoin() + '</span>';
+            btn.innerHTML = html;
             var actionIndex = n;
             btn.onclick = function (e) {
               game.scene.sounds.play('click-action');
@@ -1075,7 +1136,7 @@ public function onMouseLeave()
             n++;
           }
       if (n == 1)
-        actions.innerHTML = 'No available actions.';
+        actions.innerHTML = '<div class="hud-act hud-act-none">No available actions.</div>';
     }
 
 // call numbered action by index

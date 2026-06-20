@@ -719,6 +719,8 @@ class UI
           hud.show();
         }
       else hud.hide();
+      // atmosphere stays during gameplay/windows but not over the main menu bg
+      hud.setAtmoVisible(_state != UISTATE_MAINMENU);
 
       return _state;
     }
