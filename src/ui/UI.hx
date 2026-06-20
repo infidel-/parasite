@@ -370,7 +370,8 @@ class UI
                   _state == UISTATE_PEDIA ||
                   _state == UISTATE_ABOUT ||
                   _state == UISTATE_NEWGAME ||
-                  _state == UISTATE_MODS)
+                  _state == UISTATE_MODS ||
+                  _state == UISTATE_SPOON)
                 state = UISTATE_MAINMENU;
               else if (_state == UISTATE_PRESETS)
                 state = UISTATE_OPTIONS;

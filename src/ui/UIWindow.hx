@@ -170,39 +170,6 @@ class UIWindow
       return cont;
     }
 
-// add checkbox to options
-  function addCheckbox(contents: DivElement, label: String, id: String,
-      val: Bool, pos: String): InputElement
-    {
-      var cont = Browser.document.createDivElement();
-      cont.className = 'checkbox-contents';
-      contents.appendChild(cont);
-
-      var title = Browser.document.createLabelElement();
-      title.className = 'checkbox-title';
-      title.innerHTML = label;
-      cont.appendChild(title);
-
-      var cb = Browser.document.createInputElement();
-      cb.id = 'option-' + id;
-      cb.type = 'checkbox';
-      cb.className = 'checkbox-element';
-      cb.checked = val;
-      title.appendChild(cb);
-      cb.onclick = function (e: PointerEvent) {
-        var targetID: String = untyped e.target.id;
-        var el: InputElement = cast game.ui.getElement(targetID);
-        var itemID = targetID.substr(7);
-        game.config.set(itemID, (el.checked ? '1' : '0'), true);
-      };
-
-      var span = Browser.document.createSpanElement();
-      span.className = 'checkbox-span';
-      span.style.right = pos;
-      title.appendChild(span);
-
-      return cb;
-    }
 
 // add slider to options
   function addSlider(contents: DivElement, label: String, val: Float,
