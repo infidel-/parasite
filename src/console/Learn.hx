@@ -8,12 +8,14 @@ class Learn
 {
   public var console: Console;
   var game: Game;
+  var giveEvolution: GiveEvolution; // reused for improvement name matching
 
 // sets up learn command helper
   public function new(c: Console)
     {
       console = c;
       game = console.game;
+      giveEvolution = new GiveEvolution(c);
     }
 
 // routes a learn command to its sub-handler; returns false if not a learn command
@@ -29,14 +31,14 @@ class Learn
             clues();
           case 'event':
             event(arr);
-          case 'improvements':
-            improvements(arr);
+          case 'improvement':
+            improvement(arr);
           case 'region':
             region();
           case 'timeline':
             timeline();
           case '':
-            log('Usage: learn [clues|event [index]|improvements [level]|region|timeline]');
+            log('Usage: learn [clues|event [index]|improvement <name> <level>|region|timeline]');
           default:
             log('Unknown learn command: ' + sub + '.');
         }
@@ -72,16 +74,49 @@ class Learn
       event.learnLocation();
     }
 
-// learns all improvements at a level: learn improvements [level]
-  function improvements(arr: Array<String>)
+// learns an improvement at a level: learn improvement <name> <level> (name=all learns all)
+  function improvement(arr: Array<String>)
     {
-      var level = 3;
-      if (arr.length > 2)
-        level = Std.parseInt(arr[2]);
-      for (imp in EvolutionConst.improvements)
-        game.player.evolutionManager.addImprov(imp.id, level);
-      log('All improvements learned.');
-      game.player.evolutionManager.state = 2;
+      if (arr.length < 3)
+        {
+          log('Usage: learn improvement <name|all> <level>');
+          return;
+        }
+      var name = arr[2];
+      var level = (arr.length > 3 ? Std.parseInt(arr[3]) : -1);
+
+      // learn every improvement (level clamped per improvement)
+      if (name == 'all')
+        {
+          for (imp in EvolutionConst.improvements)
+            {
+              var lv = level;
+              if (lv < 0 || lv > imp.maxLevel)
+                lv = imp.maxLevel;
+              game.player.evolutionManager.addImprov(imp.id, lv);
+            }
+          log('All improvements learned.');
+          game.player.evolutionManager.state = 2;
+          return;
+        }
+
+      // single improvement by name
+      var match = giveEvolution.selectMatch('improvement', name, giveEvolution.buildEntries());
+      if (match == null)
+        return;
+      var info = null;
+      try { info = EvolutionConst.getInfo(match.value); }
+      catch (e: Dynamic) { info = null; }
+      if (info == null)
+        {
+          log('Improvement info not found.');
+          return;
+        }
+      var lv = level;
+      if (lv < 0 || lv > info.maxLevel)
+        lv = info.maxLevel;
+      game.player.evolutionManager.addImprov(match.value, lv);
+      log('Learned ' + info.name + ' ' + lv);
     }
 
 // opens the whole region map

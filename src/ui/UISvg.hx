@@ -130,6 +130,105 @@ class UISvg
       return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
     }
 
+// giant cell glyph, ghosted behind the body scrim (membrane + nucleus + organelles)
+  public static function cell(): String
+    {
+      return '<svg class="hud-glyph" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M48 6 C70 6 90 26 90 48 C90 70 70 90 48 90 C26 90 6 70 6 48 C6 26 26 6 48 6Z" stroke-dasharray="3 6" opacity=".6"/>' + // outer membrane
+        '<path d="M48 13 C66 13 83 30 83 48 C83 66 66 83 48 83 C30 83 13 66 13 48 C13 30 30 13 48 13Z"/>' + // inner membrane
+        '<circle cx="44" cy="46" r="15"/>' +                                  // nucleus ring
+        '<circle cx="44" cy="46" r="5" fill="currentColor" stroke="none" opacity=".8"/>' + // nucleus dot
+        '<circle cx="70" cy="34" r="6"/>' +                                   // organelles
+        '<circle cx="68" cy="64" r="4.5"/>' +
+        '<ellipse cx="30" cy="70" rx="7" ry="4" transform="rotate(-28 30 70)"/>' +
+        '<circle cx="26" cy="30" r="3.5"/>' +
+        '</svg>';
+    }
+
+// duotone inventory-item glyph (generic 3D box; real per-item art slot later)
+  public static function bodyItem(): String
+    {
+      return '<svg class="body-bdi" viewBox="0 0 24 24">' +
+        '<path class="ln" d="M3 7l9-4 9 4v10l-9 4-9-4z"/>' +
+        '<path class="ln" d="M3 7l9 4 9-4M12 11v10"/>' +
+        '<circle class="ac" cx="12" cy="11" r="1.6"/></svg>';
+    }
+
+// duotone skill glyph (generic pulse waveform; skills/knowledges are data-driven)
+  public static function bodySkill(): String
+    {
+      return '<svg class="body-bdi" viewBox="0 0 24 24">' +
+        '<path class="ln" d="M3 12h4l2-5 3 10 2-5h7"/>' +
+        '<circle class="ac" cx="9" cy="7" r="1.6"/></svg>';
+    }
+
+// duotone person glyph (host job line)
+  public static function bodyJob(): String
+    {
+      return '<svg class="body-bdi" viewBox="0 0 24 24">' +
+        '<circle class="ln" cx="12" cy="8" r="4"/>' +
+        '<path class="ln" d="M5 20a7 7 0 0 1 14 0"/>' +
+        '<circle class="ac" cx="12" cy="8" r="1.7"/></svg>';
+    }
+
+// duotone house glyph (habitats-left line, smaller)
+  public static function bodyHabitat(): String
+    {
+      return '<svg class="body-bdi body-sm" viewBox="0 0 24 24">' +
+        '<path class="ln" d="M4 11l8-6 8 6"/>' +
+        '<path class="ln" d="M6 10v9h12v-9"/>' +
+        '<rect class="ac" x="10" y="13" width="4" height="6"/></svg>';
+    }
+
+// duotone merge-rings glyph (host traits; data-driven, one generic shape)
+  public static function bodyTrait(): String
+    {
+      return '<svg class="body-bdi body-tr-ico" viewBox="0 0 24 24">' +
+        '<circle class="ln" cx="9" cy="12" r="4.5"/>' +
+        '<circle class="ln" cx="15" cy="12" r="4.5"/>' +
+        '<circle class="ac" cx="12" cy="12" r="1.8"/></svg>';
+    }
+
+// duotone spark glyph (host effects; data-driven, one generic shape)
+  public static function bodyEffect(): String
+    {
+      return '<svg class="body-bdi" viewBox="0 0 24 24">' +
+        '<path class="ln" d="M13 2 4 14h6l-1 8 9-12h-6z"/>' +
+        '<circle class="ac" cx="11" cy="12" r="1.6"/></svg>';
+    }
+
+// filled attribute-tile glyph: fist (strength)
+  public static function attrStr(): String
+    {
+      return '<svg class="body-atile-ico" viewBox="0 0 24 24" fill="currentColor">' +
+        '<circle cx="8.4" cy="9.3" r="1.5"/><circle cx="11.2" cy="8.5" r="1.6"/>' +
+        '<circle cx="14" cy="8.5" r="1.6"/><circle cx="16.6" cy="9.3" r="1.5"/>' +
+        '<path d="M6.5 11h11v3.3a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4z"/>' +
+        '<path d="M6.5 12.2c-1.4 0-2.3.8-2.3 1.9s.9 1.9 2.3 1.9z"/></svg>';
+    }
+
+// filled attribute-tile glyph: shield (constitution)
+  public static function attrCon(): String
+    {
+      return '<svg class="body-atile-ico" viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M12 2l8 3v6c0 5-3.4 8.2-8 9.5C7.4 19.2 4 16 4 11V5z"/></svg>';
+    }
+
+// filled attribute-tile glyph: lightbulb (intellect)
+  public static function attrInt(): String
+    {
+      return '<svg class="body-atile-ico" viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M12 2a7 7 0 0 0-4 12.8V16h8v-1.2A7 7 0 0 0 12 2zM8.5 17.5h7V19h-7zM9.5 20.5h5V21a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1z"/></svg>';
+    }
+
+// filled attribute-tile glyph: eye (psyche)
+  public static function attrPsy(): String
+    {
+      return '<svg class="body-atile-ico" viewBox="0 0 24 24" fill="currentColor">' +
+        '<path fill-rule="evenodd" d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" clip-rule="evenodd"/>' +
+        '<circle cx="12" cy="12" r="2"/></svg>';
+    }
+
 // face/person icon for participant ID tags
   public static function face(): String
     {

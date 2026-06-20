@@ -1,12 +1,12 @@
-// body GUI window - inventory/skills/organs
+// body GUI window — inventory / knowledge / features dashboard
 
 package ui;
 
-import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
-import js.html.LegendElement;
+import js.html.SpanElement;
 import js.html.Element;
+import mods.AssetPath;
 
 import game.Effect;
 import game.Game;
@@ -15,493 +15,515 @@ import const.*;
 
 class Body extends UIWindow
 {
-  var inventoryList: DivElement;
-  var inventoryTitle: LegendElement;
-  var skillsParasite: DivElement;
-  var skillsHost: DivElement;
-  var organsList: DivElement;
-  var organsTitle: LegendElement;
-  var organsAvailable: DivElement;
-  var organsInfo: DivElement;
-  var organsActions: DivElement;
+  var statsEl: SpanElement;        // titlebar growth stat chips
+  var invBlock: DivElement;        // INVENTORY block (disabled toggle)
+  var invCount: Element;           // INVENTORY count chip
+  var invGrid: DivElement;         // inventory cell grid
+  var parBlock: DivElement;        // PARASITE knowledge block
+  var parScroll: Element;          // parasite skills scroll body
+  var hostBlock: DivElement;       // HOST knowledge block
+  var hostScroll: Element;         // host scroll body
+  var featBlock: DivElement;       // FEATURES block
+  var featCount: Element;          // FEATURES count chip
+  var featScroll: Element;         // features scroll body
   var listInventoryActions: Array<_PlayerAction>;
   var listOrgansActions: Array<_PlayerAction>;
-  var actionPrefix: String; // action prefix: inventory or body
+  var actionPrefix: String;        // action prefix: inventory or body
 
   public function new(g: Game)
     {
       super(g, 'window-body');
       listInventoryActions = [];
       listOrgansActions = [];
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-body.png') + "') 234 fill / 1 / 0 stretch";
 
-      // columns
+      // shared HUD chrome: scrim + cell glyph, frame, corners, veins, "BODY" watermark
+      addHudChrome('BODY', UISvg.cell());
+
+      // title row: name left, growth stat-chip strip right
+      var title = Browser.document.createDivElement();
+      title.className = 'win-title win-titlebar';
+      title.innerHTML = '<span class="wt">BODY</span>';
+      statsEl = Browser.document.createSpanElement();
+      statsEl.className = 'win-stats';
+      title.appendChild(statsEl);
+      window.appendChild(title);
+
+      // three columns by content weight: (inventory+parasite) | host | features
+      var cols = Browser.document.createDivElement();
+      cols.className = 'body-cols';
+      window.appendChild(cols);
+
+      // col 1: INVENTORY (3) over PARASITE knowledge (2)
       var col1 = Browser.document.createDivElement();
-      col1.id = 'window-body-col1';
-      window.appendChild(col1);
+      col1.className = 'body-col';
+      cols.appendChild(col1);
+      invBlock = Browser.document.createDivElement();
+      invBlock.className = 'body-block body-block-inv';
+      invBlock.style.setProperty('--i', '0');
+      invBlock.innerHTML =
+        '<div class="body-block-title">INVENTORY <span class="body-cnt"></span></div>' +
+        '<div class="hud-scroll body-scroll"><div class="body-inv-grid"></div></div>';
+      col1.appendChild(invBlock);
+      invCount = invBlock.querySelector('.body-cnt');
+      invGrid = cast invBlock.querySelector('.body-inv-grid');
+      parBlock = Browser.document.createDivElement();
+      parBlock.className = 'body-block body-block-par';
+      parBlock.style.setProperty('--i', '1');
+      parBlock.innerHTML =
+        '<div class="body-kn-h">PARASITE</div>' +
+        '<div class="hud-scroll body-scroll"></div>';
+      col1.appendChild(parBlock);
+      parScroll = parBlock.querySelector('.body-scroll');
+
+      // col 2: HOST knowledge (the dense mass)
       var col2 = Browser.document.createDivElement();
-      col2.id = 'window-body-col2';
-      window.appendChild(col2);
+      col2.className = 'body-col';
+      cols.appendChild(col2);
+      hostBlock = Browser.document.createDivElement();
+      hostBlock.className = 'body-block';
+      hostBlock.style.setProperty('--i', '2');
+      hostBlock.innerHTML =
+        '<div class="body-block-title">HOST</div>' +
+        '<div class="hud-scroll body-scroll"></div>';
+      col2.appendChild(hostBlock);
+      hostScroll = hostBlock.querySelector('.body-scroll');
 
-      // inventory
-      var cont = addBlock(col1, 'window-inventory-contents', 'INVENTORY', 'window-contents-wrapper');
-      var ret = addBlockExtended(cont, 'window-inventory-list', 'ITEMS');
-      inventoryList = ret.text;
-      inventoryTitle = ret.legend;
+      // col 3: body features (active + available, scroller soaks slack)
+      var col3 = Browser.document.createDivElement();
+      col3.className = 'body-col';
+      cols.appendChild(col3);
+      featBlock = Browser.document.createDivElement();
+      featBlock.className = 'body-block';
+      featBlock.style.setProperty('--i', '3');
+      featBlock.innerHTML =
+        '<div class="body-block-title">FEATURES <span class="body-cnt"></span></div>' +
+        '<div class="hud-scroll body-scroll"></div>';
+      col3.appendChild(featBlock);
+      featCount = featBlock.querySelector('.body-cnt');
+      featScroll = featBlock.querySelector('.body-scroll');
 
-      // skills
-      var cont = addBlock(col1, 'window-skills-contents', 'KNOWLEDGE', 'window-contents-wrapper');
-      skillsParasite = addBlock(cont, 'window-skills-parasite', 'PARASITE');
-      skillsHost = addBlock(cont, 'window-skills-host', 'HOST');
-      skillsHost.innerHTML = 'skills host';
-
-      // organs
-      var cont = addBlock(col2, 'window-organs-contents', 'BODY', 'window-contents-wrapper');
-      var ret = addBlockExtended(cont, 'window-organs-list', 'FEATURES');
-      organsList = ret.text;
-      organsTitle = ret.legend;
-      organsAvailable = addBlock(cont, 'window-organs-available', 'AVAILABLE FEATURES');
-      organsInfo = addBlock(cont, 'window-organs-info', 'INFO');
-      organsActions = addBlock(cont, 'window-organs-actions', 'ACTIONS');
-      organsActions.innerHTML = 'actions list';
-
-      addCloseButton();
+      addWinClose();
+      wire();
     }
 
 // update window contents
   override function update()
     {
-      updateInventoryTable();
-      updateOrgansActions();
-      setParams({
-        skillsParasite: updateSkillsParasite(),
-        skillsHost: updateSkillsHost() + updateEffectsHost(),
-        organsList: updateOrgansList(),
-        organsInfo: updateOrgansInfo(),
-        organsAvailable: updateOrgansAvailable(),
+      updateStats();
+      updateInventory();
+      updateParasite();
+      updateHost();
+      updateFeatures();
+    }
+
+// titlebar growth chips: energy/turn, gp/turn, host survival turns
+  function updateStats()
+    {
+      statsEl.innerHTML = '';
+      if (game.player.state != PLR_STATE_HOST ||
+          !game.player.vars.organsEnabled)
+        return;
+      var energyPT = __Math.growthEnergyPerTurn();
+      var gpPT = __Math.gpPerTurn();
+      var survive = (energyPT > 0 ? Std.int(game.player.host.energy / energyPT) : 0);
+      statsEl.innerHTML =
+        '<span class="statchip evolution-tip energy" data-tip="Energy spent per turn while growing body features">' +
+          UISvg.bolt() + energyPT + '<i>/t</i></span>' +
+        '<span class="statchip evolution-tip gp" data-tip="Growth points gained per turn">' +
+          UISvg.star() + gpPT + '<i>/t</i></span>' +
+        '<span class="statchip evolution-tip host" data-tip="Turns the host survives while growing">' +
+          UISvg.clockSmall() + survive + '</span>';
+    }
+
+// inventory cells: key chip + item thumb + name/[active] + inline actions
+  function updateInventory()
+    {
+      listInventoryActions = [];
+      var disabled = (game.player.state != PLR_STATE_HOST ||
+        !game.player.host.isHuman ||
+        !game.player.vars.inventoryEnabled);
+      invBlock.classList.toggle('disabled', disabled);
+      if (disabled)
+        {
+          invCount.innerHTML = '';
+          invGrid.innerHTML = '<div class="body-empty">Unavailable</div>';
+          return;
+        }
+      var inv = game.player.host.inventory;
+      invCount.innerHTML = inv.length() + '/' + game.player.host.maxItems;
+      var actions = (game.player.vars.inventoryEnabled ? inv.getActions() : []);
+      var buf = new StringBuf();
+      var activeMarked = false;
+      var hasItems = false;
+      for (item in inv)
+        {
+          hasItems = true;
+          var knows = game.player.knowsItem(item.id);
+          var name = (knows ? item.name : item.info.unknown);
+          var isActive = (item.id == inv.weaponID && !activeMarked);
+          if (isActive)
+            activeMarked = true;
+
+          // collect this item's actions; first action index drives the key chip
+          var actBuf = new StringBuf();
+          var firstIdx = 0;
+          var first = true;
+          for (a in actions)
+            {
+              if (a.item != item)
+                continue;
+              // reduce cost when host is agreeable
+              if (a.isAgreeable && game.player.hostAgreeable())
+                a.energy = 1;
+              listInventoryActions.push(a);
+              var idx = listInventoryActions.length;
+              if (firstIdx == 0)
+                firstIdx = idx;
+              if (!first)
+                actBuf.add(', ');
+              first = false;
+              var label = (a.nameClean != null ? a.nameClean : a.name);
+              actBuf.add('<span class="body-act" data-inv="' + idx + '">' + label + '</span>');
+              if (a.energy > 0)
+                actBuf.add(' <span class="body-cost">' + a.energy + '⚡</span>');
+            }
+
+          buf.add('<div class="body-inv-cell">');
+          if (firstIdx > 0)
+            buf.add('<span class="body-key">C-' + firstIdx + '</span>');
+          buf.add('<span class="body-inv-thumb' + (isActive ? ' active' : '') + '">' + UISvg.bodyItem() + '</span>');
+          buf.add('<span class="body-inv-main">');
+          buf.add('<span class="body-inv-item' + (knows ? '' : ' body-inv-unknown') + '">' + name +
+            (isActive ? ' <span class="body-inv-active">[active]</span>' : '') + '</span>');
+          buf.add('<span class="body-inv-acts">' + actBuf.toString() + '</span>');
+          buf.add('</span></div>');
+        }
+      if (!hasItems)
+        buf.add('<div class="body-empty">no items</div>');
+      invGrid.innerHTML = buf.toString();
+    }
+
+// parasite skills/knowledges + habitats + group info
+  function updateParasite()
+    {
+      parBlock.classList.toggle('disabled', !game.player.vars.skillsEnabled);
+      var buf = new StringBuf();
+      var i = 0;
+      for (skill in game.player.skills.sorted())
+        {
+          buf.add(skillRow(skill, true, i));
+          i++;
+        }
+      if (i == 0)
+        buf.add('<div class="body-empty">no skills</div>');
+
+      // habitats remaining
+      if (game.player.evolutionManager.isKnown(IMP_MICROHABITAT) &&
+          game.player.vars.habitatsLeft < 100)
+        buf.add('<div class="body-kn-line hab gray">' + UISvg.bodyHabitat() +
+          ' Habitats left: ' + game.player.vars.habitatsLeft + '</div>');
+
+      // group/team info
+      var gbuf = new StringBuf();
+      game.group.getInfo(gbuf);
+      var gstr = gbuf.toString();
+      if (gstr != '')
+        buf.add('<div class="body-kn-line">' + gstr + '</div>');
+
+      parScroll.innerHTML = buf.toString();
+    }
+
+// host job + skills + traits + attributes + effects
+  function updateHost()
+    {
+      var enabled = (game.player.vars.skillsEnabled);
+      hostBlock.classList.toggle('disabled', !enabled);
+      if (game.player.state != PLR_STATE_HOST ||
+          !enabled ||
+          !game.player.host.isAttrsKnown)
+        {
+          hostScroll.innerHTML = '<div class="body-empty">Unknown</div>';
+          return;
+        }
+      var host = game.player.host;
+      var buf = new StringBuf();
+
+      // job line
+      if (host.isJobKnown)
+        buf.add('<div class="body-host-jobline">' + UISvg.bodyJob() +
+          '<span class="body-host-job">' + host.job + '</span>' +
+          '<span class="gray">&middot; income ' + host.income + '</span></div>');
+
+      // host skills (hidden animal attack skill skipped)
+      var i = 0;
+      for (skill in host.skills.sorted())
+        {
+          if (skill.info.id == SKILL_ATTACK)
+            continue;
+          buf.add(skillRow(skill, false, i));
+          i++;
+        }
+
+      // traits panel (alphabetical)
+      if (host.traits.length > 0)
+        {
+          var infos = [];
+          for (t in host.traits)
+            infos.push(TraitsConst.getInfo(t));
+          infos.sort(function(a, b) {
+            var an = a.name.toLowerCase();
+            var bn = b.name.toLowerCase();
+            return (an < bn ? -1 : (an > bn ? 1 : 0));
+          });
+          buf.add('<div class="body-host-panel">');
+          for (info in infos)
+            buf.add('<div class="body-trait">' + UISvg.bodyTrait() +
+              '<div><div class="body-trait-name">' + info.name + '</div>' +
+              '<div class="body-trait-note">' + info.note + '</div></div></div>');
+          buf.add('</div>');
+        }
+
+      // attribute tiles
+      buf.add('<div class="body-attr-grid">');
+      buf.add(attrTile('str', 'STR', UISvg.attrStr(), host.strength));
+      buf.add(attrTile('con', 'CON', UISvg.attrCon(), host.constitution));
+      buf.add(attrTile('int', 'INT', UISvg.attrInt(), host.intellect));
+      buf.add(attrTile('psy', 'PSY', UISvg.attrPsy(), host.psyche));
+      buf.add('</div>');
+
+      // effects panel
+      var effects = new Array<Effect>();
+      for (effect in host.effects)
+        if (!effect.isHidden)
+          effects.push(effect);
+      if (effects.length > 0)
+        {
+          effects.sort(function(a, b) {
+            return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+          });
+          buf.add('<div class="body-host-panel"><div class="body-eff-h">Effects</div>');
+          for (effect in effects)
+            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+              (effect.isTimer ? '<span class="body-eff-t">' +
+                UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
+              '</div>');
+          buf.add('</div>');
+        }
+
+      hostScroll.innerHTML = buf.toString();
+    }
+
+// one skill/knowledge row: icon + name + micro-bar (skipped for boolean skills) + %
+  function skillRow(skill: Dynamic, parasite: Bool, i: Int): String
+    {
+      var isKnow = (parasite && skill.info.isKnowledge == true);
+      var name = (skill.info.group != null ? skill.info.group + ': ' : '') + skill.info.name;
+      var isBool = (skill.info.isBool != null && skill.info.isBool);
+      var buf = new StringBuf();
+      buf.add('<div class="body-sk' + (isKnow ? ' know' : '') + '" style="--i:' + i + '">');
+      buf.add(UISvg.bodySkill());
+      buf.add('<span class="body-sk-name">' + name + '</span>');
+      if (isKnow)
+        buf.add('<span class="body-sk-tag">KNOW</span>');
+      if (!isBool)
+        buf.add('<span class="body-sk-bar"><span class="fill" style="--p:' + skill.level + '%"></span></span>' +
+          '<span class="body-sk-pct">' + skill.level + '%</span>');
+      buf.add('</div>');
+      return buf.toString();
+    }
+
+// one attribute tile: filled glyph + value + label + 10-segment bar
+  function attrTile(mod: String, label: String, ico: String, v: Int): String
+    {
+      return '<div class="body-atile ' + mod + '">' + ico +
+        '<div class="body-atile-head"><span class="body-atile-v">' + v + '</span>' +
+        '<span class="body-atile-k">' + label + '</span></div>' +
+        '<span class="body-atile-bar" style="--v:' + v + '"><span class="fill"></span></span></div>';
+    }
+
+// features: grown organs (active) + available/growing organs (grow actions)
+  function updateFeatures()
+    {
+      listOrgansActions = [];
+      var disabled = (game.player.state != PLR_STATE_HOST ||
+        !game.player.vars.organsEnabled);
+      featBlock.classList.toggle('disabled', disabled);
+      if (disabled)
+        {
+          featCount.innerHTML = '';
+          featScroll.innerHTML = '<div class="body-empty">Unavailable</div>';
+          return;
+        }
+      var host = game.player.host;
+      featCount.innerHTML = host.organs.length() + '/' + host.maxOrgans;
+      var buf = new StringBuf();
+      var i = 0;
+
+      // grown (active) features
+      var hasActive = false;
+      for (organ in host.organs)
+        {
+          if (!organ.isActive)
+            continue;
+          buf.add(activeCard(game.player.evolutionManager.getImprov(organ.id), organ, i));
+          i++;
+          hasActive = true;
+        }
+      if (!hasActive)
+        buf.add('<div class="body-empty">no body features</div>');
+
+      // available features (grow actions); region mode / full slots disable growing
+      buf.add('<div class="body-sub-h body-sub-h-gap">AVAILABLE FEATURES</div>');
+      var canGrow = !(game.location == LOCATION_REGION ||
+        host.organs.length() >= host.maxOrgans);
+      var hasAvail = false;
+      for (imp in game.player.evolutionManager)
+        {
+          // not available yet or has no organ
+          if (imp.level == 0 || imp.info.organ == null)
+            continue;
+          // already completed
+          if (host.organs.getActive(imp.info.id) != null)
+            continue;
+          var organ = host.organs.get(imp.info.id); // in-progress (not yet active) if non-null
+          var isNow = (organ != null && !organ.isActive);
+          buf.add(availCard(imp, organ, isNow, canGrow, i));
+          i++;
+          hasAvail = true;
+        }
+      if (!hasAvail)
+        buf.add('<div class="body-empty">No features available</div>');
+
+      featScroll.innerHTML = buf.toString();
+    }
+
+// grown feature card: thumbnail + name/level + note + level-note (+ timeout)
+  function activeCard(imp: Improv, organ: Dynamic, i: Int): String
+    {
+      var organInfo = imp.info.organ;
+      var src = AssetPath.resolve('img/imp/' + (organ.id : String).toLowerCase() + '.jpg');
+      var levelNote = cleanLevelNote(imp, organ.level);
+      var buf = new StringBuf();
+      buf.add('<div class="body-organ active" style="--i:' + i + '">');
+      buf.add('<span class="body-organ-thumb"><img src="' + src + '" alt=""></span>');
+      buf.add('<span class="body-organ-body">');
+      buf.add('<span class="body-organ-h"><span class="body-organ-name">' + organInfo.name + '</span>' +
+        '<span class="body-organ-lv">' + organ.level + '</span>');
+      if (organInfo.hasTimeout && organ.timeout > 0)
+        buf.add('<span class="body-organ-turns" style="margin-left:auto">' +
+          UISvg.clockSmall('body-ico body-ico-time') + organ.timeout + '</span>');
+      buf.add('</span>');
+      buf.add('<span class="body-organ-note">' + organInfo.note + '</span>');
+      if (levelNote != '')
+        buf.add('<span class="body-organ-sub">' + levelNote + '</span>');
+      buf.add('</span></div>');
+      return buf.toString();
+    }
+
+// available feature card: thumbnail + name + (GROWING) + note + gp bar / turns / S-key
+  function availCard(imp: Improv, organ: Dynamic, isNow: Bool, canGrow: Bool, i: Int): String
+    {
+      var organInfo = imp.info.organ;
+      var src = AssetPath.resolve('img/imp/' + (imp.id : String).toLowerCase() + '.jpg');
+      var gp = (organ != null ? organ.gp : 0);
+      var gpMax = organInfo.gp;
+      var fill = (gpMax > 0 ? Std.int(gp / gpMax * 100) : 0);
+      var turns = Math.round((gpMax - gp) / __Math.gpPerTurn());
+
+      // growable (not already in progress) becomes an S-key grow action
+      var key = 0;
+      if (canGrow && !isNow)
+        {
+          listOrgansActions.push({
+            id: 'set.' + imp.id,
+            type: ACTION_ORGAN,
+            name: organInfo.name + ' ' + imp.level,
+            energy: 0,
+          });
+          key = listOrgansActions.length;
+        }
+
+      var buf = new StringBuf();
+      buf.add('<div class="body-organ avail' + (isNow ? ' now' : '') + '"' +
+        (key > 0 ? ' data-organ="' + imp.id + '"' : '') +
+        ' style="--i:' + i + '">');
+      buf.add('<span class="body-organ-thumb"><img src="' + src + '" alt=""></span>');
+      buf.add('<span class="body-organ-body">');
+      buf.add('<span class="body-organ-h"><span class="body-organ-name">' + organInfo.name + '</span>' +
+        '<span class="body-organ-lv">' + imp.level + '</span>' +
+        (isNow ? '<span class="body-organ-growing">GROWING</span>' : '') + '</span>');
+      buf.add('<span class="body-organ-note">' + organInfo.note + '</span>');
+      buf.add('<span class="body-organ-foot">');
+      buf.add('<span class="body-organ-bar"><span class="fill" style="width:' + fill + '%"></span></span>');
+      buf.add('<span class="body-organ-gp">' + gp + '/' + gpMax + ' ' +
+        UISvg.star('body-ico body-ico-gp') + '</span>');
+      buf.add('<span class="body-organ-meta"><span class="body-organ-turns">' +
+        UISvg.clockSmall('body-ico body-ico-time') + turns + '</span>' +
+        (key > 0 ? '<span class="body-key">S-' + key + '</span>' : '') + '</span>');
+      buf.add('</span>');
+      buf.add('</span></div>');
+      return buf.toString();
+    }
+
+// level-state prose for the current level (suppressed when empty/fluff/todo)
+  function cleanLevelNote(imp: Improv, level: Int): String
+    {
+      var ln = imp.info.levelNotes[level];
+      if (ln == null)
+        return '';
+      var low = ln.toLowerCase();
+      if (ln == '' || low.indexOf('fluff') >= 0 || low.indexOf('todo') >= 0)
+        return '';
+      return ln;
+    }
+
+// delegate clicks: inventory actions + available-feature grow actions
+  function wire()
+    {
+      window.addEventListener('click', function(e) {
+        var t: Element = cast e.target;
+        // inventory action
+        var act = t.closest('.body-act');
+        if (act != null && act.getAttribute('data-inv') != null)
+          {
+            var idx = Std.parseInt(act.getAttribute('data-inv'));
+            var a = listInventoryActions[idx - 1];
+            if (a != null)
+              {
+                game.scene.sounds.play('click-action');
+                game.player.host.inventory.action(a);
+                if (game.ui.state == UISTATE_BODY)
+                  game.ui.closeWindow();
+              }
+            return;
+          }
+        // available feature -> grow action
+        var organEl = t.closest('.body-organ.avail');
+        if (organEl != null && !organEl.classList.contains('now'))
+          {
+            var id = organEl.getAttribute('data-organ');
+            if (id != null)
+              {
+                game.scene.sounds.play('click-action');
+                game.player.host.organs.action('set.' + id);
+                update();
+                game.ui.hud.update();
+              }
+          }
       });
     }
 
-// add organ or improvement info
-  function addOrgan(buf: StringBuf, imp: Improv)
-    {
-      var impInfo = imp.info;
-      var organInfo = impInfo.organ;
-      // can be null!
-      var organ = game.player.host.organs.get(impInfo.id);
-      var isActive = (organ != null ? organ.isActive : false);
-      var currentGP = 0;
-      if (organ != null)
-        currentGP = organ.gp;
-
-      buf.add('<div class=window-organs-list-item>');
-      buf.add("<span style='color:var(--text-color-organ-title" +
-        (isActive ? '' : '-inactive') + ")'>" +
-        organInfo.name + "</span>");
-      buf.add(' ');
-      var organLevel = (organ != null ? organ.level : imp.level);
-      buf.add(organLevel);
-      if (isActive)
-        {
-          if (organInfo.hasTimeout && organ.timeout > 0)
-            buf.add(' (timeout: ' + organ.timeout + ')');
-        }
-      else buf.add(' (' + currentGP + '/' + organInfo.gp + ' gp)');
-      buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + organInfo.note + '</p>');
-      buf.add('<p class=window-evolution-list-notes>');
-      var levelNote = impInfo.levelNotes[organLevel];
-      if (levelNote.indexOf('fluff') < 0 &&
-        levelNote.indexOf('todo') < 0 &&
-        levelNote != '')
-      buf.add("<span style='color:var(--text-color-evolution-level-note)'>" + levelNote + '</span><br/>');
-      if (impInfo.noteFunc != null)
-        buf.add("<span style='color:var(--text-color-evolution-params)'>" +
-          impInfo.noteFunc(impInfo.levelParams[organLevel], null) +
-          '</span><br/>');
-      buf.add('</p>');
-      buf.add('</div>');
-    }
-
-// update organs list
-  function updateOrgansList(): String
-    {
-      if (game.player.state != PLR_STATE_HOST)
-        return '';
-      organsTitle.innerHTML = 'FEATURES ' + Const.smallgray('[' +
-        game.player.host.organs.length() + '/' +
-        game.player.host.maxOrgans + ']');
-      var buf = new StringBuf();
-      for (organ in game.player.host.organs)
-        addOrgan(buf, game.player.evolutionManager.getImprov(organ.id));
-      if (game.player.host.organs.length() == 0)
-        buf.add('<center>no body features</center>');
-
-      return buf.toString();
-    }
-
-// update available organs list
-  function updateOrgansAvailable(): String
-    {
-      if (game.player.state != PLR_STATE_HOST)
-        return '';
-      var buf = new StringBuf();
-      var hasOrgans = false;
-      for (imp in game.player.evolutionManager)
-        {
-          // improvement not available yet or no organs
-          if (imp.level == 0 || imp.info.organ == null)
-            continue;
-
-          // organ already completed
-          if (game.player.host.organs.getActive(imp.info.id) != null)
-            continue;
-
-          addOrgan(buf, imp);
-          hasOrgans = true;
-        }
-      if (!hasOrgans)
-        buf.add('<center class="window-empty">No features available</center><br/>');
-      return buf.toString();
-    }
-
-// update organs info
-  function updateOrgansInfo(): String
-    {
-      if (game.player.state != PLR_STATE_HOST)
-        return '';
-      var buf = new StringBuf();
-      buf.add('<p class="small gray">');
-      if (game.location == LOCATION_AREA && game.area.isHabitat)
-        buf.add('You are in a microhabitat. ');
-      buf.add('Body feature growth costs additional ' +
-        __Math.growthEnergyPerTurn() +
-        ' energy per turn. ' +
-        'You will receive ' + __Math.gpPerTurn() + ' gp per turn. ' +
-        'Your host will survive for ' +
-          Std.int(game.player.host.energy /
-            __Math.growthEnergyPerTurn()) +
-        ' turns while growing body features (not counting other spending). ');
-      buf.add('</p>');
-
-      buf.add('<span class=small>');
-      buf.add('<br/>Growing body feature: ');
-      buf.add(game.player.host.organs.getGrowInfo());
-      buf.add('</span>');
-      return buf.toString();
-    }
-
-// update organs actions
-  function updateOrgansActions()
-    {
-      listOrgansActions = [];
-      organsActions.innerHTML = '';
-      // disable organs actions in region mode for now
-      if (game.location == LOCATION_REGION ||
-          game.player.state != PLR_STATE_HOST ||
-          game.player.host.organs.length() >= game.player.host.maxOrgans)
-        return;
-
-      var n = 1;
-      for (imp in game.player.evolutionManager)
-        {
-          // improvement not available yet or no organs
-          if (imp.level == 0 || imp.info.organ == null)
-            continue;
-
-          // organ already completed
-          if (game.player.host.organs.getActive(imp.info.id) != null)
-            continue;
-
-          var organInfo = imp.info.organ;
-          // can be null!
-          var organ = game.player.host.organs.get(imp.info.id);
-          var currentGP = 0;
-          if (organ != null)
-            currentGP = organ.gp;
-          var gpLeft = organInfo.gp - currentGP;
-          var act: _PlayerAction = {
-            id: 'set.' + imp.id,
-            type: ACTION_ORGAN,
-            name: Const.col('organ-title', organInfo.name) +
-              ' ' + imp.level + ' (' + organInfo.gp + ' gp) (' +
-              Math.round(gpLeft / __Math.gpPerTurn()) + " turns)",
-            energy: 0,
-          };
-
-          // html element
-          var action = Browser.document.createDivElement();
-          action.className = 'actions-item';
-          action.innerHTML = Const.key('S-' + n) + ': ' + act.name;
-          n++;
-          action.onclick = function (e) {
-            game.scene.sounds.play('click-action');
-            game.player.host.organs.action(act.id);
-            update();
-            game.ui.hud.update();
-          };
-          organsActions.appendChild(action);
-          listOrgansActions.push(act);
-        }
-      
-      // trigger content update animation
-      animate(organsActions);
-    }
-
-// update inventory table
-  function updateInventoryTable()
-    {
-      inventoryList.innerHTML = '';
-      listInventoryActions = [];
-      if (game.player.state != PLR_STATE_HOST)
-        return;
-      inventoryTitle.innerHTML = 'ITEMS ' + Const.smallgray('[' +
-        game.player.host.inventory.length() + '/' +
-        game.player.host.maxItems + ']');
-      var actions: Array<_PlayerAction> = [];
-      if (game.player.vars.inventoryEnabled)
-        actions = game.player.host.inventory.getActions();
-      var activeMarked = false;
-      var table = Browser.document.createElement('table');
-      table.className = 'inventory-table';
-      var hasItems = false;
-      for (item in game.player.host.inventory)
-        {
-          hasItems = true;
-          var row = Browser.document.createElement('tr');
-          row.className = 'inventory-table-row';
-          var itemCell = Browser.document.createElement('td');
-          itemCell.className = 'inventory-table-item';
-          var knowsItem = game.player.knowsItem(item.id);
-          var name = (knowsItem ? item.name : item.info.unknown);
-          itemCell.innerHTML = Const.col('inventory-item', name);
-          if (item.id == game.player.host.inventory.weaponID &&
-              !activeMarked)
-            {
-              itemCell.innerHTML += Const.smallgray(' [active]');
-              activeMarked = true;
-            }
-          row.appendChild(itemCell);
-
-          var actionCell = Browser.document.createElement('td');
-          actionCell.className = 'inventory-table-actions';
-          var hasActions = false;
-          for (act in actions)
-            {
-              if (act.item != item)
-                continue;
-              if (hasActions)
-                actionCell.appendChild(Browser.document.createTextNode(', '));
-              appendInventoryAction(actionCell, act);
-              hasActions = true;
-            }
-          row.appendChild(actionCell);
-          table.appendChild(row);
-        }
-
-      if (!hasItems)
-        inventoryList.innerHTML = '<center>no items</center><br/>';
-      else inventoryList.appendChild(table);
-
-      animate(inventoryList);
-    }
-
-// add inventory action to a table row
-  function appendInventoryAction(actionCell: Element, act: _PlayerAction)
-    {
-      // reduce cost when host is agreeable
-      if (act.isAgreeable &&
-          game.player.hostAgreeable())
-        act.energy = 1;
-      listInventoryActions.push(act);
-      var n = listInventoryActions.length;
-      var action = Browser.document.createSpanElement();
-      action.className = 'actions-item inventory-table-action';
-      action.innerHTML = Const.key('C-' + n) + ': ' +
-        (act.nameClean != null ? act.nameClean : act.name) +
-        (act.energy > 0 ? Const.cost(act.energy) : '');
-      action.onclick = function (e) {
-        game.scene.sounds.play('click-action');
-        game.player.host.inventory.action(act);
-        if (game.ui.state == UISTATE_BODY)
-          game.ui.closeWindow();
-      };
-      actionCell.appendChild(action);
-    }
-
-// update parasite skills
-  function updateSkillsParasite(): String
-    {
-      var buf = new StringBuf();
-      // parasite skills
-      var n = 0;
-      for (skill in game.player.skills.sorted())
-        {
-          n++;
-          if (skill.info.group != null)
-            buf.add(skill.info.group + ': ');
-          else if (skill.info.isKnowledge)
-            buf.add('Knowledge: ');
-          buf.add(Const.col('skill-title', skill.info.name));
-          if (skill.info.isBool == null || !skill.info.isBool)
-            buf.add(' ' + skill.level + '%<br/>');
-          else buf.add('<br/>');
-        }
-
-      if (n == 0)
-        buf.add('<center>no skills</center><br/>');
-
-      if (game.player.evolutionManager.isKnown(IMP_MICROHABITAT) &&
-          game.player.vars.habitatsLeft < 100)
-        buf.add('Habitats left: ' + game.player.vars.habitatsLeft + '<br>');
-
-      // get group/team info
-      game.group.getInfo(buf);
-
-      return buf.toString();
-    }
-
-// update host skills
-  function updateSkillsHost(): String
-    {
-      if (game.player.state != PLR_STATE_HOST)
-        return '';
-      if (!game.player.vars.skillsEnabled ||
-          !game.player.host.isAttrsKnown)
-        return '<center class="window-empty">Unknown</center>';
-      var buf = new StringBuf();
-      // show known job and income at top of host knowledge window
-      if (game.player.host.isJobKnown)
-        {
-          buf.add('<span class=small>');
-          buf.add('<span>' +
-            game.player.host.job + '</span>, ');
-          buf.add('<span class=gray>income: ' +
-            game.player.host.income + '</span><br/>');
-          buf.add('</span><br>');
-        }
-      var n = 0;
-      for (skill in game.player.host.skills.sorted())
-        {
-          // hidden animal attack skill
-          if (skill.info.id == SKILL_ATTACK)
-            continue;
-
-          n++;
-          if (skill.info.group != null)
-            buf.add(skill.info.group + ': ');
-          buf.add(Const.col('skill-title',
-            skill.info.name));
-          if (skill.info.isBool == null ||
-              !skill.info.isBool)
-            buf.add(' ' + skill.level + '%<br/>');
-          else buf.add('<br/>');
-        }
-
-      if (n == 0 && !game.player.host.isJobKnown)
-        buf.add('<center>no useful knowledge</center><br/>');
-
-      // host attributes and traits
-      if (!game.player.host.isAttrsKnown)
-        {
-          if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
-            {
-              var info = TraitsConst.getInfo(TRAIT_ASSIMILATED);
-              buf.add('<br/><span class=host-trait-title>' +
-                info.name + '</span><br/>');
-              buf.add('<span class=host-trait-notes>' + info.note +
-                '</span><br/>');
-            }
-        }
-      else
-        {
-          // traits
-          if (game.player.host.traits.length > 0)
-            {
-              buf.add('<br/>');
-              // sort traits alphabetically before listing
-              var traitInfos = [];
-              for (t in game.player.host.traits)
-                traitInfos.push(TraitsConst.getInfo(t));
-              traitInfos.sort(function(a, b)
-                {
-                  var aname = a.name.toLowerCase();
-                  var bname = b.name.toLowerCase();
-                  if (aname < bname)
-                    return -1;
-                  else if (aname > bname)
-                    return 1;
-                  return 0;
-                });
-              for (info in traitInfos)
-                {
-                  buf.add('<span class=host-trait-title>' +
-                    info.name + '</span><br/>');
-                  buf.add('<span class=host-trait-notes>' + info.note +
-                    '</span><br/>');
-                }
-          }
-          buf.add('<br/>');
-          buf.add('<span class=host-attr-title>Strength</span> ' +
-            game.player.host.strength + ' ');
-          buf.add('<span class=host-attr-title>Constitution</span> ' +
-            game.player.host.constitution + ' ');
-          buf.add('<span class=host-attr-title>Intellect</span> ' +
-            game.player.host.intellect + ' ');
-          buf.add('<span class=host-attr-title>Psyche</span> ' +
-            game.player.host.psyche + '<br/>');
-
-        }
-      return buf.toString();
-    }
-
-// update host effects
-  function updateEffectsHost(): String
-    {
-      if (game.player.state != PLR_STATE_HOST)
-        return '';
-      var effects = new Array<Effect>();
-      for (effect in game.player.host.effects)
-        {
-          if (effect.isHidden)
-            continue;
-          effects.push(effect);
-        }
-      if (effects.length == 0)
-        return '';
-      effects.sort(function(a: Effect, b: Effect): Int
-        {
-          if (a.name < b.name)
-            return -1;
-          if (a.name > b.name)
-            return 1;
-          return 0;
-        });
-      var buf = new StringBuf();
-      buf.add('<br/>');
-      buf.add('<span class=host-attr-title>Effects</span><br/>');
-      for (effect in effects)
-        {
-          buf.add('<span class=host-attr-notes>' + effect.name);
-          if (effect.isTimer)
-            buf.add(' ' + Const.smallgray('(' + effect.points + ' turns)'));
-          buf.add('</span><br/>');
-        }
-      return buf.toString();
-    }
-
-// set action prefix
+// set action prefix (inventory vs body) for keyboard hotkeys
   public function prefix(p: String)
     {
       actionPrefix = p;
     }
 
-// action buttons need to be prefixed
+// keyboard action dispatch: prefix selects inventory (C-n) or features (S-n)
   public override function action(index: Int)
     {
       if (actionPrefix == null)
-        {
-          game.actionFailed('No prefix selected.');
-        }
+        game.actionFailed('No prefix selected.');
       else if (actionPrefix == 'inventory')
         {
           if (!game.player.vars.inventoryEnabled)
@@ -525,49 +547,8 @@ class Body extends UIWindow
       actionPrefix = null;
     }
 
-  function e(id: String): Element
+  override function hide(?skipAnimation: Bool = false)
     {
-      return Browser.document.getElementById(id);
-    }
-
-  public override function setParams(obj: Dynamic)
-    {
-      skillsParasite.innerHTML = obj.skillsParasite;
-      skillsHost.innerHTML = obj.skillsHost;
-      organsList.innerHTML = obj.organsList;
-      organsAvailable.innerHTML = obj.organsAvailable;
-      organsInfo.innerHTML = obj.organsInfo;
-      e('window-inventory-contents').className = '';
-      e('window-inventory-list').className = '';
-      e('window-skills-contents').className = '';
-      e('window-skills-parasite').className = '';
-      e('window-skills-host').className = '';
-      e('window-organs-contents').className = '';
-      e('window-organs-available').className = '';
-      e('window-organs-actions').className = '';
-      e('window-organs-list').className = '';
-      e('window-organs-info').className = '';
-      if (game.player.state != PLR_STATE_HOST ||
-          !game.player.host.isHuman ||
-          !game.player.vars.inventoryEnabled)
-        {
-          e('window-inventory-contents').className = 'window-disabled';
-          e('window-inventory-list').className = 'window-disabled';
-        }
-      if (!game.player.vars.skillsEnabled)
-        {
-          e('window-skills-contents').className = 'window-disabled';
-          e('window-skills-parasite').className = 'window-disabled';
-          e('window-skills-host').className = 'window-disabled';
-        }
-      if (game.player.state != PLR_STATE_HOST ||
-          !game.player.vars.organsEnabled)
-        {
-          e('window-organs-contents').className = 'window-disabled';
-          e('window-organs-available').className = 'window-disabled';
-          e('window-organs-actions').className = 'window-disabled';
-          e('window-organs-list').className = 'window-disabled';
-          e('window-organs-info').className = 'window-disabled';
-        }
+      animatedHide();
     }
 }

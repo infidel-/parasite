@@ -111,8 +111,13 @@ class ConsoleCompletion
           rootChildren.push({ lit: 'learn', next: [
             { lit: 'clues' },
             { lit: 'event', next: [ { slot: '[index]' } ] },
-            { lit: 'improvements', next: [ { slot: '[level]' } ] },
+            { lit: 'improvement', next: [
+              { slot: '<name>', values: function() return [ 'all' ].concat(improv()), next: [ { slot: '<level>' } ] } ] },
             { lit: 'region' },
+            { lit: 'timeline' },
+          ] });
+          rootChildren.push({ lit: 'info', next: [
+            { lit: 'improvements' },
             { lit: 'timeline' },
           ] });
         }

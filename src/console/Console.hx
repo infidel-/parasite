@@ -14,6 +14,7 @@ class Console
   public var goConsole: Go;
   var goalConsole: Goal;
   var learnConsole: Learn;
+  var infoConsole: Info;
   var debugConsole: Debug;
   var stageConsole: Stage;
   var cultConsole: Cult;
@@ -30,6 +31,7 @@ class Console
       goConsole = new Go(this);
       goalConsole = new Goal(this);
       learnConsole = new Learn(this);
+      infoConsole = new Info(this);
       debugConsole = new Debug(this);
       stageConsole = new Stage(this);
       cultConsole = new Cult(this);
@@ -125,12 +127,12 @@ class Console
               'goal receive [id], ' +
               'god - enable godmode,<br/>' +
               // info
-              'ie - timeline info (trace), ' +
-              'ii - improvements info (trace),<br/>' +
+              'info improvements, ' +
+              'info timeline,<br/>' +
               // learn
               'learn clues, ' +
               'learn event [index], ' +
-              'learn improvements [level], ' +
+              'learn improvement <name> <level>, ' +
               'learn region, ' +
               'learn timeline, ' +
               'load - load game,<br/>' +
@@ -164,7 +166,7 @@ class Console
 
       // XXX info commands
       else if (Const.isDebug && char0 == 'i')
-        infoCommand(cmd);
+        infoConsole.run(cmd);
 
       // XXX load + learn commands
       else if (char0 == 'l')
@@ -659,36 +661,6 @@ class Console
         }
 
       game.scene.sounds.play(arr[1]);
-    }
-
-
-// info commands
-  function infoCommand(cmd: String)
-    {
-      // XXX [ie] events info
-      if (cmd.charAt(1) == 'e')
-        {
-          for (ev in game.timeline)
-            Const.p('' + ev);
-        }
-
-      // XXX [ii] improvements info
-      else if (cmd.charAt(1) == 'i')
-        {
-          var s = new StringBuf();
-          for (i in 0...EvolutionConst.improvements.length)
-            {
-              var imp = EvolutionConst.improvements[i];
-
-              s.add(i + ': ' + imp.name + ', ' + imp.id +
-                ' (' + ('' + imp.type).substr(5) + ')');
-              if (imp.organ != null)
-                s.add(' [' + imp.organ.name + ']');
-              if (i < EvolutionConst.improvements.length - 1)
-                s.add(', ');
-            }
-          log(Const.small(s.toString()));
-        }
     }
 
 
