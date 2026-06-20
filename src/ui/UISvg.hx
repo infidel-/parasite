@@ -229,6 +229,23 @@ class UISvg
         '<circle cx="12" cy="12" r="2"/></svg>';
     }
 
+// pentagram glyph, ghosted behind the cult scrim (circle + inscribed star)
+  public static function pentagram(): String
+    {
+      return '<svg class="hud-glyph" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="48" cy="48" r="40"/>' +
+        '<polygon points="48,12 67.02,70.54 17.21,34.36 78.79,34.36 28.98,70.54"/>' +
+        '</svg>';
+    }
+
+// two-person glyph (cult members stat chip)
+  public static function cultMembers(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>' +
+        '<path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17.5 14.2c2.2.5 3.9 2.4 3.9 4.8"/></svg>';
+    }
+
 // face/person icon for participant ID tags
   public static function face(): String
     {

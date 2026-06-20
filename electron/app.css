@@ -4042,112 +4042,626 @@ input[type=checkbox] {
   margin: 5px 5px 0px 5px;
 }
 
-#window-cult {
-  border: 39px solid;
-  width: calc(100% - 90px);
-  height: calc(100% - 90px);
-  pointer-events: all;
-}
-
-#window-cult-contents {
-  transform: translate(-10px, -10px);
-  width: 102%;
-  height: calc(100% - 30px);
-  display: flex;
-  flex-direction: column;
-}
-
-#window-cult-info {
-  height: 50%;
-  /* max-height: 7.1em;*/
-  margin-top: 10px;
-}
-
-#window-cult-bottom {
-  display: flex;
-  gap: 10px;
-  flex: 1;
-  min-height: 0;
-  margin-top: 10px;
-}
-
-#window-cult-actions {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
 .content-updating {
   animation: actions-fade-in 0.2s ease-out;
 }
+.ordeals-updating {
+  animation: ordeals-rise-in 0.25s ease-out;
+}
 
-#window-cult-ordeals {
-  flex: 2;
+/* ===== CULT window — "Cultus Carnis", dark-hippie psychedelia (pink HUD chrome) ===== */
+#window-cult {
+  --cult: #fd97ff;       /* base magenta (matches --text-color-cult) */
+  --cult-hot: #ff5ad8;   /* hotter rose */
+  --cult-deep: #c14de0;  /* deep violet-pink */
+  --cult-acid: #ff9ec4;  /* soft acid pink */
+  --cult-dim: #9a6fa6;   /* muted */
+  --win-frame: rgba(253,151,255,.28);
+  color: var(--text);
+}
+/* pink chrome overrides: plum frame bg, top hairline, scrim glyph, watermark, veins, chips */
+#window-cult.hud-frame {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    radial-gradient(80% 220px at 50% 0%, rgba(253,151,255,.06), transparent 70%),
+    radial-gradient(120% 120% at 50% 50%, transparent 58%, rgba(0,0,0,.25) 100%),
+    linear-gradient(180deg, #160a19, #0d0710);
+}
+#window-cult.hud-frame::before {
+  background: linear-gradient(90deg, transparent, rgba(253,151,255,.42), transparent);
+}
+#window-cult-bg .hud-glyph { color: rgba(253,151,255,.16); }
+#window-cult .hud-deco::after { color: rgba(253,151,255,.03); }
+#window-cult .hud-veins g { stroke: var(--cult); }
+#window-cult .hud-veins circle { fill: var(--cult); }
+#window-cult .statchip:hover {
+  border-color: rgba(253,151,255,.45);
+  background: rgba(253,151,255,.07);
+}
+#window-cult .cult-members svg { color: var(--cult); }
+#window-cult .win-x:hover { color: var(--cult-hot); }
+#window-cult .win-x:hover svg { filter: drop-shadow(0 0 6px rgba(255,90,216,.8)); }
+
+/* ---- insane title: FontdinerSwanky, magenta bloom, per-letter chaotic jitter ---- */
+.cult-name {
+  font-family: FontdinerSwanky, cursive;
+  font-size: calc(var(--text-font-size) * 2);
+  line-height: 1;
+  letter-spacing: .01em;
+  text-transform: none;
+  text-shadow: none;
+  color: var(--cult);
+  filter: drop-shadow(0 0 10px rgba(253,151,255,.45)) drop-shadow(0 0 26px rgba(255,90,216,.22));
+  animation: cult-hue 14s linear infinite;
+  will-change: filter;
+}
+/* each letter jitters on its own clock — disjointed, chaotic */
+.cult-l {
+  display: inline-block;
+  color: var(--cult);
+  -webkit-text-fill-color: currentColor;
+  transform-origin: center bottom;
+  will-change: transform;
+  animation: cult-jit 10.5s ease-in-out infinite;
+  animation-delay: calc(var(--n,0) * -1.65s);
+}
+.cult-l:nth-child(2n) {
+  animation-name: cult-jit2;
+  animation-duration: 12.75s;
+}
+.cult-l:nth-child(3n) {
+  animation-name: cult-jit3;
+  animation-duration: 9s;
+}
+.cult-l:nth-child(4n) {
+  animation-duration: 14.25s;
+  animation-timing-function: ease-in-out;
+}
+.cult-l:nth-child(5n) {
+  animation-name: cult-jit2;
+  animation-duration: 9.75s;
+}
+@keyframes cult-jit { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(5deg); } }
+@keyframes cult-jit2 { 0%,100% { transform: translateY(-4px) rotate(6deg) scale(1.05); } 50% { transform: translateY(5px) rotate(-6deg) scale(.96); } }
+@keyframes cult-jit3 { 0%,100% { transform: translateY(3px) rotate(-7deg); } 50% { transform: translateY(-7px) rotate(3deg) scale(1.03); } }
+@keyframes cult-hue {
+  0% { filter: drop-shadow(0 0 10px rgba(253,151,255,.45)) drop-shadow(0 0 26px rgba(255,90,216,.22)) hue-rotate(0deg); }
+  100% { filter: drop-shadow(0 0 10px rgba(253,151,255,.45)) drop-shadow(0 0 26px rgba(255,90,216,.22)) hue-rotate(360deg); }
+}
+
+/* ---- header pills: glassy LVL + members chips ---- */
+.cult-lvl {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.8);
+  letter-spacing: .2em;
+  color: var(--cult);
+  border: 1px solid rgba(253,151,255,.35);
+  border-radius: 999px;
+  padding: 2px 11px;
+  background: linear-gradient(180deg, rgba(253,151,255,.16), rgba(253,151,255,.05));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 10px rgba(253,151,255,.18);
+  text-shadow: 0 0 8px rgba(253,151,255,.4);
+}
+#window-cult .statchip.cult-members {
+  border-radius: 999px;
+  color: var(--cult-acid);
+  background: linear-gradient(180deg, rgba(253,151,255,.1), rgba(255,255,255,.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* ---- staggered section entrance on open ---- */
+.cult-rise {
+  animation: win-rise .42s ease-out backwards;
+  animation-delay: calc(.1s + var(--i,0) * .07s);
+}
+
+/* ---- scroll surface holds the psychedelic aura behind everything ---- */
+.cult-scroll {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.cult-scroll > * {
+  position: relative;
+  z-index: 1;
+}
+.cult-aura {
+  position: absolute;
+  z-index: 0;
+  inset: 0 -10%;
+  pointer-events: none;
+  opacity: .5;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(farthest-side, transparent 0, #000 24%, #000 55%, transparent 100%);
+          mask-image: radial-gradient(farthest-side, transparent 0, #000 24%, #000 55%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+}
+/* paint conic ONCE, GPU-rotate the oversized square (composited transform = cheap) */
+.cult-aura::before, .cult-aura::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 170%;
+  aspect-ratio: 1;
+  transform: translate(-50%,-50%);
+  transform-origin: center;
+  will-change: transform;
+}
+.cult-aura::before {
+  opacity: .22;
+  background: repeating-conic-gradient(from 0deg, transparent 0deg, rgba(253,151,255,.9) 1deg, rgba(253,151,255,.9) 21deg, transparent 22deg, transparent 40deg);
+  animation: cult-spin 270s linear infinite;
+}
+.cult-aura::after {
+  opacity: .16;
+  background: repeating-radial-gradient(circle, rgba(255,90,216,.7) 0 2px, transparent 2px 26px),
+             conic-gradient(from 0deg, var(--cult-deep), var(--cult-hot), var(--cult), var(--cult-deep));
+  animation: cult-spin 390s linear infinite reverse;
+}
+@keyframes cult-spin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+/* ---- INFO: power/resource ledger + summary + roster ---- */
+.cult-info {
+  margin-bottom: 2px;
+  flex: none;
+}
+
+/* shared glass panel — ledger + roster sit on subtle layered surfaces */
+.cult-panel {
+  position: relative;
+  border: 1px solid rgba(253,151,255,.14);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(253,151,255,.05), rgba(255,255,255,.012));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), inset 0 0 26px rgba(253,151,255,.04), 0 2px 14px rgba(0,0,0,.32);
+}
+.cult-ledger-wrap {
+  padding: 8px 12px 10px;
+  margin-bottom: 8px;
+}
+.cult-ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(var(--text-font-size) * 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.cult-ledger th, .cult-ledger td {
+  padding: 3px 8px;
+  text-align: center;
+}
+.cult-ledger th + th, .cult-ledger td + td { border-left: 1px solid rgba(140,150,170,.09); }
+.cult-ledger .cult-lhead th {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: var(--text-font-size);
+  letter-spacing: .13em;
+  color: var(--cult);
+  border-bottom: 1px solid rgba(253,151,255,.28);
+  font-weight: 400;
+}
+.cult-ledger .cult-lhead .cult-money { color: var(--cult-acid); }
+.cult-rl {
+  text-align: left !important;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.733);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--blue-gray);
+}
+.cult-prow td:not(.cult-rl) {
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 0 9px rgba(253,151,255,.4);
+}
+/* magnitude micro-bar under each power value */
+.cult-prow td:not(.cult-rl)::after {
+  content: "";
+  display: block;
+  height: 3px;
+  width: calc(var(--v,0) * 1%);
+  margin: 3px auto 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--cult-deep), var(--cult-hot));
+  box-shadow: 0 0 6px rgba(253,151,255,.4);
+  opacity: .85;
+}
+.cult-income td:not(.cult-rl) { color: #8fcc9e; }
+.cult-res td:not(.cult-rl) { color: var(--text-color-gray); }
+.cult-ledger tr + tr td { border-top: 1px solid rgba(140,150,170,.1); }
+
+/* ---- summary lines (base / rivals / effects) ---- */
+.cult-summary {
+  font-size: calc(var(--text-font-size) * 0.85);
+  line-height: 1.38;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.cult-line { margin: 1px 0; }
+.cult-k {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.733);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--cult);
+  margin-right: 7px;
+}
+.cult-rival {
+  padding-left: 14px;
+  color: var(--text-color-gray);
+}
+.cult-fx { color: var(--cult-acid); }
+
+/* ---- congregation roster ---- */
+.cult-roster-wrap {
+  padding: 0 12px;
+  max-height: 170px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.cult-roster-wrap::-webkit-scrollbar { width: 9px; }
+.cult-roster-wrap::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+}
+.cult-roster-wrap::-webkit-scrollbar-thumb {
+  background: rgba(140,150,170,.38);
+  border-radius: 8px;
+  border: none;
+}
+.cult-roster-wrap::-webkit-scrollbar-thumb:hover { background: rgba(140,150,170,.6); }
+.cult-roster {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(var(--text-font-size) * 1.133);
+}
+.cult-roster thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.733);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--blue-gray);
+  text-align: left;
+  font-weight: 400;
+  padding: 6px 8px;
+  background: rgba(20,11,25,.72);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(253,151,255,.18);
+}
+.cult-roster td {
+  padding: 3px 8px;
+  border-bottom: 1px solid rgba(140,150,170,.08);
+  vertical-align: top;
+}
+/* pin every non-last column tight so the gear column claims the slack */
+.cult-roster th:not(:last-child), .cult-roster td:not(:last-child) {
+  width: 1%;
+  white-space: nowrap;
+}
+.cult-roster th:last-child, .cult-roster td:last-child { white-space: normal; }
+.cult-roster tbody tr { transition: background .14s; }
+.cult-roster tbody tr:hover { background: rgba(253,151,255,.05); }
+.cult-mn {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: .14em;
+  font-size: calc(var(--text-font-size) * 0.85);
+}
+.cult-roster .cult-w { font-size: calc(var(--text-font-size) * 0.85); }
+.cult-w { color: #fff; }
+.cult-tag {
+  color: var(--text-color-gray);
+  font-size: .82em;
+}
+.cult-st {
+  color: var(--cult-hot);
+  font-size: .85em;
+  letter-spacing: .05em;
+}
+.cult-sg {
+  color: var(--text-color-gray);
+  font-size: .86em;
+}
+.cult-leader td { background: linear-gradient(90deg, rgba(253,151,255,.07), transparent 60%); }
+.cult-leader td:first-child { box-shadow: inset 3px 0 0 var(--cult); }
+.cult-leader .cult-mn::before {
+  content: "\2726";
+  color: var(--cult);
+  margin-right: 6px;
+}
+.cult-host td { opacity: .72; }
+.cult-gear {
+  color: var(--text);
+  font-size: calc(var(--text-font-size) * 0.85);
+}
+.cult-gi { color: #cbb9d6; }
+.cult-gi + .cult-gi { margin-left: 7px; }
+.cult-gi + .cult-gi::before {
+  content: "|";
+  color: rgba(140,150,170,.28);
+  margin-right: 7px;
+}
+.cult-gi.cult-none {
+  color: var(--text-color-gray);
+  opacity: .5;
+}
+.cult-hit {
+  font-style: normal;
+  font-size: .8em;
+  color: var(--cult-acid);
+  font-variant-numeric: tabular-nums;
+}
+.cult-count {
+  margin-top: 4px;
+  font-size: calc(var(--text-font-size) * 0.867);
+  color: var(--text-color-gray);
+  letter-spacing: .05em;
+}
+
+/* ---- ACTIONS + ORDEALS bottom row ---- */
+.cult-bottom {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+.cult-actions-sec {
+  flex: 0 0 36%;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-
-#window-cult-ordeals .ordeals-updating {
-  animation: ordeals-rise-in 0.25s ease-out;
-}
-
-.window-cult-ordeals-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.window-cult-ordeals-card {
+.cult-ordeals {
   flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid #444;
-  padding: 8px;
-  border-radius: 4px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.cult-bk {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.8);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--cult);
+  margin-bottom: 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(253,151,255,.22);
+}
+.cult-coin { color: var(--cult-acid); }
+
+/* keyed action rows (sigil key chip, pink bloom + slide on hover/press) */
+.cult-actions {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+.cult-actions::-webkit-scrollbar { width: 9px; }
+.cult-actions::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+}
+.cult-actions::-webkit-scrollbar-thumb {
+  background: rgba(140,150,170,.38);
+  border-radius: 8px;
+  border: none;
+}
+.cult-actions::-webkit-scrollbar-thumb:hover { background: rgba(140,150,170,.6); }
+.cult-act {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-font-size);
+  color: var(--text);
+  padding: 3px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .14s, border-color .14s, transform .12s, color .14s;
+}
+.cult-act + .cult-act { margin-top: 1px; }
+.cult-act:hover {
+  background: rgba(253,151,255,.08);
+  border-color: rgba(253,151,255,.3);
+  transform: translateX(3px);
+  color: #fff;
+}
+.cult-key {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.8);
+  color: var(--cult);
+  border: 1px solid rgba(253,151,255,.4);
+  border-radius: 5px;
+  background: rgba(253,151,255,.06);
+}
+.cult-act:hover .cult-key {
+  background: var(--cult);
+  color: #1a0a1c;
+  box-shadow: 0 0 12px rgba(253,151,255,.6);
+}
+.cult-act:active {
+  transform: translateX(3px) scale(.985);
+  background: rgba(253,151,255,.18);
+  border-color: var(--cult);
+  color: #fff;
+  box-shadow: inset 0 0 14px rgba(253,151,255,.16);
+}
+.cult-act:active .cult-key {
+  background: var(--cult-hot);
+  color: #1a0a1c;
+  box-shadow: 0 0 14px rgba(255,90,216,.7);
+}
+/* action list cascade — staggered slide-in + key-chip flourish on a click-driven swap */
+.cult-act-anim {
+  animation: cult-act-in .34s cubic-bezier(.4,1,.5,1) backwards;
+  animation-delay: calc(var(--i,0) * .035s);
+}
+@keyframes cult-act-in {
+  0% { opacity: 0; transform: translateX(-16px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.cult-act-anim .cult-key {
+  animation: cult-key-in .42s cubic-bezier(.34,1.5,.6,1) backwards;
+  animation-delay: calc(var(--i,0) * .035s + .04s);
+}
+@keyframes cult-key-in {
+  0% { opacity: 0; transform: scale(.3) rotate(-120deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
 }
 
-.window-cult-ordeals-title {
-  font-weight: bold;
-  color: var(--text-color-communal-ordeal);
-  margin-bottom: 4px;
+/* ordeal "rites" — 2-col cards with a drippy wax top edge; list scrolls past 2 rows */
+.cult-rites {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  grid-auto-rows: max-content;
+  gap: 10px;
+  align-content: start;
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
 }
-
-.window-cult-ordeals-note {
-  color: var(--text-color-ordeal-note);
-  font-size: 0.9em;
+.cult-rites::-webkit-scrollbar { width: 9px; }
+.cult-rites::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+}
+.cult-rites::-webkit-scrollbar-thumb {
+  background: rgba(140,150,170,.38);
+  border-radius: 8px;
+  border: none;
+}
+.cult-rites::-webkit-scrollbar-thumb:hover { background: rgba(140,150,170,.6); }
+.cult-rite {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid rgba(253,151,255,.22);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1c0f20, #120912);
+  padding: 10px 13px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+  transition: transform .16s, box-shadow .16s, border-color .16s;
+}
+.cult-rite::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: radial-gradient(6px 7px at 12% 0, var(--cult-hot) 60%, transparent 62%) repeat-x,
+            linear-gradient(90deg, var(--cult-deep), var(--cult-hot), var(--cult-deep));
+  background-size: 24px 7px, 100% 100%;
+  filter: drop-shadow(0 1px 3px rgba(255,90,216,.5));
+}
+.cult-rite:hover {
+  transform: translateY(-2px);
+  border-color: rgba(253,151,255,.5);
+  box-shadow: 0 10px 26px rgba(0,0,0,.5), 0 0 22px rgba(253,151,255,.12);
+}
+/* a freshly-summoned rite materializes: rise + overshoot + magenta bloom flash */
+.cult-rite-new {
+  animation: cult-rite-in .55s cubic-bezier(.34,1.4,.64,1) backwards;
+}
+@keyframes cult-rite-in {
+  0% { opacity: 0; transform: translateY(18px) scale(.88); box-shadow: 0 0 0 rgba(255,90,216,0); }
+  55% { box-shadow: 0 0 30px rgba(255,90,216,.55); }
+  100% { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 2px 12px rgba(0,0,0,.4); }
+}
+/* the wax edge drips down then retracts as the card settles */
+.cult-rite-new::before {
+  animation: cult-wax-in .6s ease-out backwards;
+}
+@keyframes cult-wax-in {
+  0% { transform: scaleY(2.4); transform-origin: top; filter: drop-shadow(0 0 9px rgba(255,90,216,.9)) drop-shadow(0 1px 3px rgba(255,90,216,.5)); }
+  100% { transform: scaleY(1); transform-origin: top; filter: drop-shadow(0 1px 3px rgba(255,90,216,.5)); }
+}
+/* a consumed rite dissolves out: collapse + fade + blur, edge flares once */
+.cult-rite-out {
+  pointer-events: none;
+  animation: cult-rite-out .42s ease-in forwards;
+}
+@keyframes cult-rite-out {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  35% { box-shadow: 0 0 26px rgba(255,90,216,.5); }
+  100% { opacity: 0; transform: translateY(-12px) scale(.86); filter: blur(3px); }
+}
+.cult-profane { border-color: rgba(255,90,216,.4); }
+.cult-rt {
+  font-family: FontdinerSwanky, cursive;
+  font-size: calc(var(--text-font-size) * 1.2);
+  color: var(--cult);
+  text-shadow: 0 0 12px rgba(253,151,255,.4);
+  margin-bottom: 5px;
+  letter-spacing: .08em;
+}
+.cult-rnote {
+  font-size: calc(var(--text-font-size) * 0.85);
   font-style: italic;
-  margin-bottom: 4px;
+  color: var(--cult-acid);
+  line-height: 1.35;
+  margin-bottom: 6px;
+  opacity: .92;
 }
-
-.window-cult-ordeals-members {
-  color: var(--text-color-gray);
-  font-size: 0.85em;
-  margin-bottom: 2px;
-}
-
-.window-cult-ordeals-power {
-  color: var(--text-color-cult-power);
-  font-size: 0.85em;
-  margin-bottom: 2px;
-}
-
-.window-cult-ordeals-actions {
-  color: var(--text-color-ordeal-actions);
-  font-size: 0.85em;
-}
-
-.window-cult-ordeals-clavis {
-  color: var(--text-color-gray);
-  font-size: 0.85em;
+/* detail rows as a 2-col table — label | value */
+.cult-rtab {
+  border-collapse: collapse;
+  font-size: calc(var(--text-font-size) * 0.85);
+  line-height: 1.4;
   margin-top: 2px;
+  width: 100%;
+}
+.cult-rtab th {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.667);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--blue-gray);
+  text-align: left;
+  vertical-align: baseline;
+  font-weight: 400;
+  white-space: nowrap;
+  width: 1%;
+  padding: 1px 12px 1px 0;
+}
+.cult-rtab td {
+  color: var(--text);
+  vertical-align: baseline;
+  padding: 1px 0;
+}
+.cult-rtab tr.cult-timer th { color: var(--cult-hot); }
+.cult-empty {
+  color: var(--text-color-gray);
+  font-style: italic;
+  padding: 8px 2px;
 }
 
-.window-cult-ordeals-timer {
-  color: var(--text-color-profane-ordeal);
-  font-size: 0.85em;
-  font-weight: bold;
-  margin-top: 2px;
+@media (prefers-reduced-motion: reduce) {
+  .cult-name, .cult-l { animation: none; }
+  .cult-aura::before, .cult-aura::after { animation: none; }
+  .cult-rise { animation: none; }
+  .cult-act-anim, .cult-act-anim .cult-key { animation: none; }
+  .cult-rite-new, .cult-rite-new::before { animation: none; }
+  .cult-rite-out { animation: none; }
 }
 
 #window-ovum {
@@ -5677,64 +6191,6 @@ input[type="radio"]:focus {
 /* background-animation and .window-swirl::before removed — replaced by WebGL MenuBackground */
 
 /* cult table styling */
-.cult-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 10px 0;
-}
-
-.cult-table th,
-.cult-table td {
-  border: 1px solid #4f688e;
-  padding: 8px;
-  text-align: center;
-}
-
-.cult-table th {
-  background-color: #2a3a4a;
-  color: var(--text-color-cult-power-title);
-  font-weight: bold;
-}
-
-.cult-table tr.cult-income td {
-  color: var(--text-color-income);
-}
-
-.cult-table tr.cult-resources td {
-  color: var(--text-color-gray);
-}
-
-.cult-table .cult-row-label {
-  background-color: #2a3a4a;
-  color: var(--text-color-cult-power-title);
-  font-weight: bold;
-  text-align: left;
-  padding-left: 12px;
-}
-
-/* cult members table styling */
-.cult-members-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 4px solid rgb(0 0 0 / 0%);
-  background-color: rgb(25 41 67 / 30%);
-}
-
-.cult-members-table th {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid rgba(79, 104, 142, 0.3);
-}
-
-.cult-members-table td {
-  padding: 6px 8px;
-  border-bottom: 1px solid rgba(79, 104, 142, 0.2);
-}
-
-.cult-members-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
 /* MODS window */
 /* ===== MODS window — registry (reuses .win-card + .win-switch, lime accent) ===== */
 #window-mods {
