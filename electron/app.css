@@ -5160,76 +5160,6 @@ fieldset {
   flex-direction: column;
 }
 
-#window-evolution-contents {
-  transform: translate(-10px, -10px);
-  width: 102%;
-  height: calc(100% - 30px);
-  display: flex;
-  flex-direction: column;
-}
-
-#window-evolution-list {
-  display: flex;
-  height: 34%;
-}
-
-#window-evolution-bottom {
-  display: flex;
-  flex-direction: row;
-  height: 67%;
-  min-height: 67%;
-}
-
-#window-evolution-bottom-left {
-  width: 70%;
-  height: 94%;
-}
-
-#window-evolution-bottom-right {
-  width: 40%;
-  margin: 10px 0px 0px 0px;
-  padding: 5px 10px 0px 10px;
-}
-
-#window-evolution-img {
-  width: 100%;
-}
-
-#window-evolution-info {
-  height: 30%;
-  max-height: 7.1em;
-  margin-top: 10px;
-}
-
-#window-evolution-actions {
-  margin-top: 10px;
-  flex-grow: 1;
-  height: 59%;
-}
-
-.window-evolution-list-row {
-  display: flex;
-  flex-direction: row;
-  margin: 5px;
-  padding: 5px;
-}
-
-.window-evolution-list-item {
-  width: 47.5%;
-  margin: 0px 5px 0px 5px;
-  padding: 5px;
-  border: solid 2px;
-  border-radius: 6px;
-  border-color: #4f688e;
-}
-
-.window-evolution-list-notes {
-  font-size: 80%;
-  line-height: 1.2em;
-  letter-spacing: 0.1ch;
-  margin: 5px 5px 0px 5px;
-}
-
 .content-updating {
   animation: actions-fade-in 0.2s ease-out;
 }
@@ -5852,13 +5782,6 @@ fieldset {
   .cult-rite-out { animation: none; }
 }
 
-#window-ovum {
-  border: 39px solid;
-  width: calc(100% - 90px);
-  height: calc(100% - 90px);
-  pointer-events: all;
-}
-
 .small {
   font-family: var(--text-font);
   font-size: 80%;
@@ -5871,18 +5794,108 @@ fieldset {
   color: var(--text-color-gray);
 }
 
-.actions-item {
+/* ===== OVUM window: parthenogenesis selector (reuses evolution cards, amber theme) ===== */
+#window-ovum {
+  --ovum-accent: #f0a850;
+  --ovum-glow: #ffd089;
 }
-
-.actions-item:hover {
-  background-color: #5f818c;
-  color: white;
-  opacity: 1;
-  font-weight:bold;
+/* amber theming overrides on the shared (purple) HUD chrome */
+#window-ovum.hud-frame::before {
+  background: linear-gradient(90deg, transparent, rgba(240,168,80,.5), transparent);
 }
-
-.actions-item:active {
-  color: #879ea3;
+#window-ovum .hud-deco::after {
+  color: rgba(240,168,80,.03);
+}
+#window-ovum .hud-veins g {
+  stroke: var(--ovum-accent);
+}
+#window-ovum .hud-veins circle {
+  fill: var(--ovum-accent);
+}
+#window-ovum .statchip:hover {
+  border-color: rgba(240,168,80,.4);
+  background: rgba(240,168,80,.05);
+}
+#window-ovum .statchip.ovum-lvl svg {
+  color: var(--ovum-accent);
+  width: 1em;
+  height: 1em;
+}
+#window-ovum .statchip.ovum-mark {
+  color: var(--ovum-glow);
+  border-color: rgba(240,168,80,.32);
+}
+/* faint ovum image ghosted behind the cards (replaces the identity glyph) */
+#window-ovum .ovum-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 16px;
+}
+#window-ovum .ovum-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .14;
+  filter: sepia(.6) saturate(1.5) hue-rotate(-14deg) brightness(.5) blur(2px);
+}
+#window-ovum .ovum-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 120% at 50% 40%, transparent 40%, rgba(8,6,4,.7));
+}
+/* amber card hover/glow (overrides the cyan evolution defaults in this window) */
+#window-ovum .evolution-card:not(.maxed):hover {
+  border-color: rgba(240,168,80,.55);
+  background: rgba(240,168,80,.06);
+  box-shadow: 0 8px 22px rgba(0,0,0,.4), 0 0 0 1px rgba(240,168,80,.2);
+}
+#window-ovum .evolution-name {
+  color: #f3cf95;
+}
+/* lots of vertical room here: show full notes instead of the 2-line evolution clamp */
+#window-ovum .evolution-note {
+  max-height: none;
+  overflow: visible;
+}
+/* a mark toggle rebuilds the grid without the entrance stagger; only the changed card pulses */
+#window-ovum .evolution-grid.no-rise .evolution-card {
+  animation: none;
+}
+#window-ovum .evolution-grid.no-rise .evolution-card.pulse {
+  animation: ovum-pulse .18s ease-out;
+}
+@keyframes ovum-pulse {
+  0% { opacity: .65; }
+  100% { opacity: 1; }
+}
+/* amber posterize+blur thermal grade on the improvement thumbs (warm twin of evolution's #msgThermal) */
+#window-ovum .evolution-thumb img {
+  filter: url(#imgOvum) brightness(.62) saturate(.85);
+}
+/* marked = selected for parthenogenesis: amber border + glow */
+#window-ovum .evolution-card.marked {
+  border-color: var(--ovum-accent);
+  background: rgba(240,168,80,.08);
+  box-shadow: 0 0 0 1px rgba(240,168,80,.35), 0 0 24px -8px rgba(240,168,80,.55);
+}
+#window-ovum .evolution-card.marked .evolution-thumb {
+  border-color: rgba(240,168,80,.6);
+}
+/* head badge: hotkey chip (unmarked) or MARKED tag (marked), pinned right */
+#window-ovum .ovum-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+}
+#window-ovum .evolution-card.marked .ovum-badge {
+  color: var(--ovum-accent);
+  font-size: calc(var(--text-font-size) * 0.82);
+  font-weight: bold;
+  letter-spacing: .12em;
 }
 
 /* ===== BODY window: inventory / knowledge / features dashboard (purple HUD chrome) ===== */

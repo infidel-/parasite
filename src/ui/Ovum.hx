@@ -1,166 +1,182 @@
-// ovum settings GUI window
+// ovum GUI window — parthenogenesis improvement selector (evolution-style cards, amber)
 
 package ui;
 
 import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
+import js.html.Element;
+import js.html.SpanElement;
 
 import game.Game;
 import game.Improv;
+import const.EvolutionConst;
 
 class Ovum extends UIWindow
 {
-  var list: DivElement;
-  var info: DivElement;
-  var actions: DivElement;
+  var stats: SpanElement;
+  var grid: DivElement;
   var listActions: Array<_PlayerAction>;
+  // imp by string id, so delegated card handlers can toggle without index threading
+  var impByID: Map<String, Improv>;
+  // a toggle rebuild suppresses the entrance stagger and pulses only the changed card
+  var suppressRise: Bool;
+  var pulseID: String;
 
   public function new(g: Game)
     {
       super(g, 'window-ovum');
       listActions = [];
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-evolution.png') + "') 210 fill / 1 / 0 stretch";
+      impByID = new Map();
 
-      var cont = Browser.document.createDivElement();
-      cont.id = 'window-evolution-contents';
-      window.appendChild(cont);
-      list = addBlock(cont, 'window-evolution-list', 'PARTHENOGENESIS: IMPROVEMENTS');
-      info = addBlock(cont, 'window-evolution-info', 'INFO');
-      actions = addBlock(cont, 'window-evolution-actions', 'ACTIONS');
-      addCloseButton();
-    }
+      // shared HUD chrome (amber), faint ovum image backdrop in place of the glyph
+      addHudChrome('OVA', '');
+      window.insertAdjacentHTML('afterbegin',
+        '<div class="ovum-backdrop"><img src="' + AssetPath.resolve('img/imp/imp_ovum.jpg') + '" alt=""></div>');
 
-// add improvement (col 0 or 1)
-  function addImp(buf: StringBuf, imp: Improv, isCol0: Bool)
-    {
-      if (isCol0)
-        buf.add('<div class=window-evolution-list-row>');
+      // title row: name left, ovum stat pills right
+      var title = Browser.document.createDivElement();
+      title.className = 'win-title win-titlebar';
+      title.innerHTML = '<span class="wt">PARTHENOGENESIS</span>';
+      stats = Browser.document.createSpanElement();
+      stats.className = 'win-stats';
+      title.appendChild(stats);
+      window.appendChild(title);
 
-      // title line
-      buf.add('<div class=window-evolution-list-item>');
-      buf.add("<span style='color:var(--text-color-evolution-title)'>" + imp.info.name + "</span>");
-      buf.add(' ');
-      if (imp.info.maxLevel > 1)
-        buf.add(imp.level);
-      if (imp.isLocked)
-        buf.add(' ' + Icon.checkbox);
-      buf.add("<p class=small style='color:var(--text-color-evolution-note);margin: 0px;'>" + imp.info.note + '</p>');
+      // improvement card grid fills the body
+      var listEl = Browser.document.createDivElement();
+      listEl.className = 'evolution-list';
+      grid = Browser.document.createDivElement();
+      grid.className = 'hud-scroll evolution-grid';
+      listEl.appendChild(grid);
+      window.appendChild(listEl);
 
-      // imp notes
-      buf.add('<p class=window-evolution-list-notes>');
-      var levelNote = imp.info.levelNotes[imp.level];
-      var nextLevelNote = '';
-      if (levelNote.indexOf('fluff') < 0 &&
-          levelNote.indexOf('todo') < 0 &&
-          levelNote != '')
-        buf.add("<span style='color:var(--text-color-evolution-level-note)'>" + levelNote + '</span><br/>');
-/*
-      if (imp.info.noteFunc != null)
-        buf.add("<span style='color:var(--text-color-evolution-params)'>" +
-          imp.info.noteFunc(imp.info.levelParams[imp.level],
-            (isMaxLevel ? null : imp.info.levelParams[imp.level + 1])) + '</span><br/>');
-*/
-      buf.add('</p>');
-      buf.add('</div>');
-      if (!isCol0)
-        buf.add('</div>');
+      addWinClose();
+      wireGrid();
     }
 
 // update window contents
   override function update()
     {
-      // improvements list
-      var buf = new StringBuf();
-      var n = 0;
+      var ovum = game.player.evolutionManager.ovum;
+
+      // count basic improvements marked for parthenogenesis
       var cntLocked = 0;
       for (imp in game.player.evolutionManager)
-        {
-          // only basic improvements
-          if (imp.info.type != TYPE_BASIC)
-            continue;
-          addImp(buf, imp, (n % 2 == 0));
-          n++;
-          if (imp.isLocked)
-            cntLocked++;
-        }
-      if (n == 0)
-        buf.add('  --- empty ---<br/>');
-      var listtext = buf.toString();
+        if (imp.info.type == TYPE_BASIC
+            && imp.isLocked)
+          cntLocked++;
+      var cap = ovum.level;
 
-      // info block
-      var buf = new StringBuf();
-      var ovum = game.player.evolutionManager.ovum;
-      buf.add(cntLocked + '/' + ovum.level + ' improvements marked for parthenogenesis.');
-      var infotext = buf.toString();
+      // info pills: ovum level + points (xp/next) + marked/cap
+      var pts = (ovum.level < 5
+        ? ovum.xp + '/' + EvolutionConst.ovumXP[ovum.level]
+        : 'MAX');
+      stats.innerHTML =
+        '<span class="statchip evolution-tip ovum-lvl" data-tip="Ovum level — how many improvements you may mark">' + UISvg.star() + 'LVL ' + ovum.level + '</span>' +
+        '<span class="statchip evolution-tip ovum-pts" data-tip="Nurture points toward the next ovum level">' + pts + ' pts</span>' +
+        '<span class="statchip evolution-tip ovum-mark" data-tip="Improvements marked to carry through parthenogenesis">' + cntLocked + '/' + cap + ' marked</span>';
 
-      // actions
+      // cards: every basic improvement, click toggles its mark (capped at ovum level)
+      impByID = new Map();
       listActions = [];
-      actions.innerHTML = '';
-      var n = 1;
-      // add available improvements
+      var buf = new StringBuf();
+      var i = 0;
       for (imp in game.player.evolutionManager)
         {
-          // only basic improvements
           if (imp.info.type != TYPE_BASIC)
             continue;
-          // limit reached
-          if (!imp.isLocked && cntLocked >= ovum.level)
-            continue;
+          impByID.set(imp.id, imp);
+          var marked = imp.isLocked;
+          // unmarked cards are locked out once the cap is reached
+          var lockedOut = (!marked && cntLocked >= cap);
 
-          var buf = new StringBuf();
-          buf.add(Const.key('' + n) + ': ');
-          buf.add(imp.isLocked ? 'Unlock ' : 'Lock ');
-          buf.add("<span style='color:var(--text-color-evolution-title)'>" + imp.info.name + "</span>");
-          buf.add(' ');
-          buf.add(imp.level);
-//          buf.add("<br/>");
-          var act: _PlayerAction = {
-            id: 'toggle.' + imp.id,
-            type: ACTION_UI,
-            name: buf.toString(),
-            energy: 0,
-            obj: imp,
-          };
-          listActions.push(act);
-          // html element
-          var action = Browser.document.createDivElement();
-          action.className = 'actions-item';
-          action.innerHTML = buf.toString();
-          action.onclick = function (e) {
-            game.scene.sounds.play('click-action');
-            runAction(act);
-          };
-          actions.appendChild(action);
-          n++;
+          // actionable cards get a hotkey + an action entry
+          var key = 0;
+          if (!lockedOut)
+            {
+              listActions.push({ id: 'toggle.' + imp.id, type: ACTION_UI, name: imp.info.name, energy: 0, obj: imp });
+              key = listActions.length;
+            }
+
+          var cls = 'evolution-card ovum-card'
+            + (marked ? ' marked' : '')
+            + (lockedOut ? ' maxed' : '');
+          buf.add('<button class="' + cls + '" data-imp="' + imp.id + '" style="--i:' + i + '"' + (lockedOut ? ' disabled' : '') + '>');
+          var src = AssetPath.resolve('img/imp/' + (imp.id : String).toLowerCase() + '.jpg');
+          buf.add('<span class="evolution-thumb"><img src="' + src + '" alt=""></span>');
+          buf.add('<span class="evolution-bodycol">');
+
+          // head: name + level + marked tag / hotkey
+          buf.add('<span class="evolution-head"><span class="evolution-name">' + imp.info.name + '</span>');
+          if (imp.info.maxLevel > 1)
+            buf.add('<span class="evolution-lv">Lv ' + imp.level + '</span>');
+          buf.add('<span class="ovum-badge">' +
+            (marked ? '&#10003; MARKED' : (key > 0 ? '<span class="evolution-key">' + key + '</span>' : '')) +
+            '</span>');
+          buf.add('</span>');
+
+          buf.add('<span class="evolution-note">' + imp.info.note + '</span>');
+          buf.add('</span>'); // bodycol
+          buf.add('</button>');
+          i++;
         }
+      if (i == 0)
+        buf.add('<div class="evolution-empty">No improvements available.</div>');
+      grid.innerHTML = buf.toString();
 
-      setParams({
-        list: listtext,
-        info: infotext,
-      });
+      // a toggle rebuild skips the entrance stagger; only the changed card pulses
+      grid.classList.toggle('no-rise', suppressRise);
+      if (suppressRise
+          && pulseID != null)
+        {
+          var c = grid.querySelector('.evolution-card[data-imp="' + pulseID + '"]');
+          if (c != null)
+            c.classList.add('pulse');
+        }
     }
 
+// delegate card clicks to a mark toggle (locked-out cards ignored)
+  function wireGrid()
+    {
+      grid.onclick = function(e) {
+        var t: Element = cast e.target;
+        var card = t.closest('.evolution-card');
+        if (card == null
+            || card.classList.contains('maxed'))
+          return;
+        var imp = impByID.get(card.getAttribute('data-imp'));
+        if (imp == null)
+          return;
+        toggle(imp);
+      };
+    }
+
+// keyboard hotkey dispatch (1..N)
   public override function action(index: Int)
     {
       var a = listActions[index - 1];
       if (a == null)
         return;
-      runAction(a);
+      toggle(a.obj);
     }
 
-  function runAction(a: _PlayerAction)
+// flip an improvement's parthenogenesis mark and refresh
+  function toggle(imp: Improv)
     {
-      var imp: Improv = a.obj;
+      game.scene.sounds.play('click-action');
       imp.isLocked = !imp.isLocked;
+      // in-place refresh: no entrance stagger, pulse the toggled card only
+      suppressRise = true;
+      pulseID = imp.id;
       update();
+      suppressRise = false;
+      pulseID = null;
       game.ui.hud.update();
     }
 
-  public override function setParams(obj: Dynamic)
+  override function hide(?skipAnimation: Bool = false)
     {
-      list.innerHTML = obj.list;
-      info.innerHTML = obj.info;
-//      text.scrollTop = 10000;
+      animatedHide();
     }
 }

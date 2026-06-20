@@ -151,8 +151,8 @@ class Timeline extends UIWindow
       var mag = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='16' y1='16' x2='21' y2='21'/></svg>";
       titlebar.innerHTML = "<span class='wt'>TIMELINE</span><span class='win-stats'>" +
         "<span class='timeline-live'>LIVE</span>" +
-        "<span class='statchip timeline-ev'>" + clk + eventsShown + "</span>" +
-        "<span class='statchip timeline-leads'>" + mag + totalLeads + "</span></span>";
+        "<span class='statchip evolution-tip timeline-ev' data-tip='Timeline events revealed'>" + clk + eventsShown + "</span>" +
+        "<span class='statchip evolution-tip timeline-leads' data-tip='Leads still open to investigate'>" + mag + totalLeads + "</span></span>";
     }
 
   override function hide(?skipAnimation: Bool = false)
