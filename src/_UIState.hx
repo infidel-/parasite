@@ -24,7 +24,6 @@ enum abstract _UIState(String) to String from String
   var UISTATE_DIFFICULTY = 'UISTATE_DIFFICULTY'; // difficulty setting
   var UISTATE_CHOICE = 'UISTATE_CHOICE'; // occasio choice window
   var UISTATE_YESNO = 'UISTATE_YESNO'; // yes/no dialog window
-  var UISTATE_DOCUMENT = 'UISTATE_DOCUMENT'; // text document window
   var UISTATE_PRESETS = 'UISTATE_PRESETS'; // presets window
   var UISTATE_MODS = 'UISTATE_MODS'; // mods management window
 }

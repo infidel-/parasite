@@ -211,6 +211,7 @@ class MainMenu extends UIWindow
         text: 'Quit to desktop?',
         sub: 'This will end your current session.',
         danger: true,
+        back: _UIState.UISTATE_MAINMENU,
         func: function(yes: Bool) {
 #if electron
           if (yes)

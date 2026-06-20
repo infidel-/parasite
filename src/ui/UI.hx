@@ -73,11 +73,10 @@ class UI
       Browser.window.onerror = onError;
 #end
 
-      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO, UISTATE_DOCUMENT ];
+      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY, UISTATE_CHOICE ];
       components = [
         UISTATE_MESSAGE => new Message(game),
-        UISTATE_DOCUMENT => new Document(game),
         UISTATE_YESNO => new YesNo(game),
         UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_CHOICE => new Choice(game),

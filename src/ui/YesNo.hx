@@ -14,6 +14,7 @@ class YesNo extends UIWindow
   var textEl: Element;
   var subEl: Element;
   var func: Bool -> Void;
+  var backState: _UIState; // state to return to on close (DEFAULT unless opened over another window)
 
   public function new(g: Game)
     {
@@ -45,17 +46,6 @@ class YesNo extends UIWindow
       actions.className = 'yesno-actions';
       window.appendChild(actions);
 
-      var no = Browser.document.createDivElement();
-      no.className = 'yesno-btn yesno-no';
-      no.id = 'window-yesno-no';
-      no.innerHTML = 'NO';
-      no.onclick = function (e) {
-        func(false);
-        game.scene.sounds.play('click-menu');
-        game.ui.closeWindow();
-      }
-      actions.appendChild(no);
-
       var yes = Browser.document.createDivElement();
       yes.className = 'yesno-btn yesno-yes';
       yes.id = 'window-yesno-yes';
@@ -63,17 +53,29 @@ class YesNo extends UIWindow
       yes.onclick = function (e) {
         func(true);
         game.scene.sounds.play('click-menu');
-        game.ui.closeWindow();
+        dismiss();
       }
       actions.appendChild(yes);
+
+      var no = Browser.document.createDivElement();
+      no.className = 'yesno-btn yesno-no';
+      no.id = 'window-yesno-no';
+      no.innerHTML = 'NO';
+      no.onclick = function (e) {
+        func(false);
+        game.scene.sounds.play('click-menu');
+        dismiss();
+      }
+      actions.appendChild(no);
     }
 
 // set parameters: text + handler, optional sub-detail / danger / kicker override
   public override function setParams(obj: Dynamic)
     {
       // trust boundary: event payload is untyped, assembled ad-hoc at call sites
-      var o: { text: String, func: Bool -> Void, ?sub: String, ?danger: Bool, ?kicker: String } = cast obj;
+      var o: { text: String, func: Bool -> Void, ?sub: String, ?danger: Bool, ?kicker: String, ?back: _UIState } = cast obj;
       func = o.func;
+      backState = (o.back != null ? o.back : UISTATE_DEFAULT);
       var danger = (o.danger == true);
       window.classList.toggle('danger', danger);
       kickerEl.innerHTML = (o.kicker != null ? o.kicker : (danger ? 'Confirm exit' : 'Confirm'));
@@ -82,14 +84,18 @@ class YesNo extends UIWindow
       subEl.style.display = (o.sub != null ? '' : 'none');
     }
 
+// close: return to the opener state (DEFAULT drains the event queue; otherwise reopen that window)
+  function dismiss()
+    {
+      if (backState != UISTATE_DEFAULT)
+        game.ui.state = backState;
+      else game.ui.closeWindow();
+    }
+
 // action
   public override function action(index: Int)
     {
-      var yes = false;
-      if (index == 1)
-        yes = true;
-
-      func(yes);
-      game.ui.closeWindow();
+      func(index == 1);
+      dismiss();
     }
 }

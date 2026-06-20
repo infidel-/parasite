@@ -223,6 +223,8 @@ hr {
   margin: 0;
   padding: 0;
   pointer-events: none;
+  /* not selectable: ctrl-a must not highlight hud/action text */
+  user-select: none;
   /* promote to own compositor layer to reduce composite overhead */
   will-change: transform;
 }
@@ -3861,18 +3863,6 @@ fieldset {
 }
 
 #window-organs-text {
-  transform: translate(0, -10px);
-  height: 94%;
-}
-
-#window-document {
-  border: 39px solid;
-  width: 90%;
-  height: 90%;
-  pointer-events: all;
-}
-
-#window-document-text {
   transform: translate(0, -10px);
   height: 94%;
 }
