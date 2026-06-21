@@ -1,35 +1,14 @@
-// area AI tooltip overlay for HUD
+// area AI tooltip overlay for HUD (content + visibility; beam/placement in BeamTooltip)
 package ui;
 
-import mods.AssetPath;
 import ai.AI;
-import js.Browser;
-import js.html.DivElement;
 import game.Game;
 
-class AITooltip
+class AITooltip extends BeamTooltip
 {
-  var game: Game;
-  var hud: HUD;
-  public var overlay: DivElement;
-  public var visible: Bool;
-  public var aiID: Int;
-
   public function new(g: Game, h: HUD)
     {
-      game = g;
-      hud = h;
-      visible = false;
-      aiID = -1;
-
-      overlay = Browser.document.createDivElement();
-      overlay.className = 'text small';
-      overlay.id = 'hud-ai-info';
-      overlay.style.display = 'none';
-      overlay.style.position = 'fixed';
-      overlay.style.pointerEvents = 'none';
-      overlay.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
-      hud.container.appendChild(overlay);
+      super(g, h, 'hud-ai-info', 'ai-tip');
     }
 
 // show area AI tooltip when inspect mode is active
@@ -64,99 +43,72 @@ class AITooltip
           return;
         }
 
-      overlay.innerHTML = getTooltipText(ai);
-      overlay.style.display = 'block';
-      overlay.style.visibility = 'hidden';
-      visible = true;
-      aiID = ai.id;
-      updatePosition();
-      overlay.style.visibility = 'visible';
-    }
-
-// update tooltip position near mouse and clamp to viewport
-  public function updatePosition()
-    {
-      if (!visible)
-        return;
-
-      var ratio = Browser.window.devicePixelRatio;
-      var left = game.scene.mouseX / ratio + 16;
-      var top = game.scene.mouseY / ratio + 24;
-      var width = overlay.offsetWidth;
-      var height = overlay.offsetHeight;
-      var maxX = Browser.window.innerWidth - width - 4;
-      var maxY = Browser.window.innerHeight - height - 4;
-      if (left > maxX)
-        left = maxX;
-      if (top > maxY)
-        top = maxY;
-      if (left < 4)
-        left = 4;
-      if (top < 4)
-        top = 4;
-      overlay.style.left = Std.string(Math.round(left)) + 'px';
-      overlay.style.top = Std.string(Math.round(top)) + 'px';
-    }
-
-// hide area AI tooltip overlay
-  public function hide()
-    {
-      if (!visible)
-        return;
-      visible = false;
-      aiID = -1;
-      overlay.style.display = 'none';
-      overlay.style.visibility = 'hidden';
+      showBeam(ai.x, ai.y, ai.id, getTooltipText(ai));
     }
 
 // get tooltip HTML for hovered AI
   function getTooltipText(ai: AI): String
     {
       var buf = new StringBuf();
-      buf.add('<span class=hud-name>' + ai.getNameCapped() + '</span>');
+      // header: name + optional cultist mark
+      buf.add('<div class="ai-tip-head"><span class="ai-tip-name">' + ai.getNameCapped() + '</span>');
       if (ai.isCultist)
-        buf.add(' ' + Icon.cultist);
-      buf.add('<br/>');
+        buf.add('<span class="ai-tip-cultmark">' + Icon.cultist + '</span>');
+      buf.add('</div>');
+
+      // sub rows: cult affiliation, job
       if (ai.isCultist)
-        buf.add(game.getCultByID(ai.cultID).Name() + '<br/>');
+        buf.add('<div class="ai-tip-sub">' + game.getCultByID(ai.cultID).Name() + '</div>');
       if (!ai.isIt() && ai.isJobKnown)
-        buf.add('job: ' + ai.job + '<br/>');
+        buf.add('<div class="ai-tip-row"><span class="ai-tip-rk">job</span>' + ai.job + '</div>');
+
+      // attribute pills
       if (ai.isAttrsKnown)
-        {
-          buf.add('STR ' + ai.strength);
-          buf.add(' CON ' + ai.constitution);
-          buf.add(' INT ' + ai.intellect);
-          buf.add(' PSY ' + ai.psyche + '<br/>');
-        }
+        buf.add(attrPills(ai.strength, ai.constitution, ai.intellect, ai.psyche));
 
       if (Const.isDebug)
-        {
-          if (!ai.isNameKnown)
-            buf.add(Const.smalldebug('[debug] name: ' + ai.name.real) + '<br/>');
-          if (!ai.isJobKnown)
-            buf.add(Const.smalldebug('[debug] job: ' + ai.job) + '<br/>');
-          buf.add(Const.smalldebug('[debug] state: ' + ai.state) + '<br/>');
-          if (!ai.isAttrsKnown)
-            {
-              var attrs = '[debug] STR ' + ai.strength +
-                ' CON ' + ai.constitution +
-                ' INT ' + ai.intellect +
-                ' PSY ' + ai.psyche;
-              buf.add(Const.smalldebug(attrs) + '<br/>');
-            }
-          buf.add(Const.smalldebug('[debug] health ' + ai.health + '/' + ai.maxHealth + '<br/>'));
-          buf.add('<hr/>');
-          buf.add(Const.smalldebug('[debug] id: ' + ai.id) + '<br/>');
-          buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');
-          buf.add(Const.smalldebug('[debug] alertness: ' + ai.alertness) + '<br/>');
-          addDebugListRow(buf, 'abilities', getAbilitiesText(ai));
-          addDebugListRow(buf, 'effects', ai.effects.toString());
-          addDebugListRow(buf, 'inventory', ai.inventory.toString());
-          addDebugListRow(buf, 'skills', ai.skills.toString());
-          addDebugListRow(buf, 'organs', ai.organs.toString());
-          addDebugListRow(buf, 'traits', getTraitsText(ai));
-        }
+        addDebugBlock(buf, ai);
       return buf.toString();
+    }
+
+// build the STR/CON/INT/PSY pill row
+  function attrPills(str: Int, con: Int, int: Int, psy: Int): String
+    {
+      return '<div class="ai-tip-attrs">' +
+        '<span class="ai-tip-attr">STR<b>' + str + '</b></span>' +
+        '<span class="ai-tip-attr">CON<b>' + con + '</b></span>' +
+        '<span class="ai-tip-attr">INT<b>' + int + '</b></span>' +
+        '<span class="ai-tip-attr">PSY<b>' + psy + '</b></span></div>';
+    }
+
+// append the debug detail block
+  function addDebugBlock(buf: StringBuf, ai: AI)
+    {
+      buf.add('<div class="ai-tip-debug">');
+      if (!ai.isNameKnown)
+        buf.add(Const.smalldebug('[debug] name: ' + ai.name.real) + '<br/>');
+      if (!ai.isJobKnown)
+        buf.add(Const.smalldebug('[debug] job: ' + ai.job) + '<br/>');
+      buf.add(Const.smalldebug('[debug] state: ' + ai.state) + '<br/>');
+      if (!ai.isAttrsKnown)
+        {
+          var attrs = '[debug] STR ' + ai.strength +
+            ' CON ' + ai.constitution +
+            ' INT ' + ai.intellect +
+            ' PSY ' + ai.psyche;
+          buf.add(Const.smalldebug(attrs) + '<br/>');
+        }
+      buf.add(Const.smalldebug('[debug] health ' + ai.health + '/' + ai.maxHealth) + '<br/>');
+      buf.add(Const.smalldebug('[debug] id: ' + ai.id) + '<br/>');
+      buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');
+      buf.add(Const.smalldebug('[debug] alertness: ' + ai.alertness) + '<br/>');
+      addDebugListRow(buf, 'abilities', getAbilitiesText(ai));
+      addDebugListRow(buf, 'effects', ai.effects.toString());
+      addDebugListRow(buf, 'inventory', ai.inventory.toString());
+      addDebugListRow(buf, 'skills', ai.skills.toString());
+      addDebugListRow(buf, 'organs', ai.organs.toString());
+      addDebugListRow(buf, 'traits', getTraitsText(ai));
+      buf.add('</div>');
     }
 
 // get abilities text for debug tooltip

@@ -312,8 +312,8 @@ hr {
 
 /* #hud-log, #hud-goals, #hud-info styled in the HUD redesign block below */
 
-/* region map tile tooltip: dark glass panel + projection beam to the tile */
-#hud-area-info {
+/* beam-anchored tooltip shell: dark glass panel (region map + area AI inspect) */
+.beam-tip {
   position: fixed;
   margin: 0;
   padding: 11px 14px 12px;
@@ -335,14 +335,14 @@ hr {
   transform: translateY(4px);
   transition: opacity 0.16s ease, transform 0.16s ease, left 0.18s ease, top 0.18s ease;
 }
-/* fade + slide in/out, toggled from RegionTooltip */
-#hud-area-info.visible {
+/* fade + slide in/out, toggled from BeamTooltip */
+.beam-tip.visible {
   opacity: 1;
   transform: none;
 }
 /* corner accent ticks (tl + br) */
-#hud-area-info::before,
-#hud-area-info::after {
+.beam-tip::before,
+.beam-tip::after {
   content: "";
   position: absolute;
   width: 9px;
@@ -351,13 +351,13 @@ hr {
   opacity: 0.8;
   pointer-events: none;
 }
-#hud-area-info::before {
+.beam-tip::before {
   top: 5px;
   left: 5px;
   border-right: 0;
   border-bottom: 0;
 }
-#hud-area-info::after {
+.beam-tip::after {
   bottom: 5px;
   right: 5px;
   border-left: 0;
@@ -493,8 +493,8 @@ hr {
 .region-tip-npcname {
   color: #f7af46;
 }
-/* projection beam: tile dot -> tooltip panel */
-.region-tip-link {
+/* projection beam: tile dot -> tooltip panel (shared by region + AI tooltips) */
+.beam-link {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -502,10 +502,10 @@ hr {
   opacity: 0;
   transition: opacity 0.18s ease;
 }
-.region-tip-link.show {
+.beam-link.show {
   opacity: 1;
 }
-.region-tip-link line {
+.beam-link line {
   stroke: var(--accent-light);
   stroke-width: 1.4;
   stroke-dasharray: 1;
@@ -513,49 +513,97 @@ hr {
   filter: drop-shadow(0 0 3px rgba(164, 95, 224, 0.7));
   transition: x1 0.18s ease, y1 0.18s ease, x2 0.18s ease, y2 0.18s ease;
 }
-.region-tip-link circle {
+.beam-link circle {
   transition: cx 0.18s ease, cy 0.18s ease;
 }
-/* both the incoming (beamLine) and outgoing (rt-old) beams are driven by inline
-   animation from RegionTooltip, so no .show rule here (it would hit both lines) */
-@keyframes region-beam-draw {
+/* both the incoming (beamLine) and outgoing (beam-old) beams are driven by inline
+   animation from BeamTooltip, so no .show rule here (it would hit both lines) */
+@keyframes beam-draw {
   from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
 }
 /* outgoing beam retracts + fades at the old tile */
-@keyframes region-beam-undraw {
+@keyframes beam-undraw {
   from { stroke-dashoffset: 0; opacity: 1; }
   to { stroke-dashoffset: 1; opacity: 0; }
 }
-.region-tip-link .rt-dot {
+.beam-link .beam-dot {
   fill: var(--accent-light);
   filter: drop-shadow(0 0 4px var(--accent));
 }
-.region-tip-link .rt-ping {
+.beam-link .beam-ping {
   fill: none;
   stroke: var(--accent-light);
   stroke-width: 1.4;
-  animation: region-ping 1.5s ease-out infinite;
+  animation: beam-pulse 1.5s ease-out infinite;
 }
-@keyframes region-ping {
+@keyframes beam-pulse {
   0% { r: 3.5; opacity: 0.8; }
   100% { r: 15; opacity: 0; }
 }
 
+/* area AI inspect tooltip content (panel shell from .beam-tip) */
 #hud-ai-info {
-  opacity: 0.95;
-  background-color: #ffffff00;
-  border: 13px solid;
-  min-width: 200px;
-  max-width: min(52vw, 46ch);
-  position: fixed;
-  margin: 0;
-  padding: 0;
-  outline: none;
-  appearance: none;
-  user-select: none;
-  pointer-events: none;
-  z-index: 26;
+  max-width: min(44vw, 40ch);
+}
+.ai-tip-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ai-tip-name {
+  font-family: var(--text-font-title), sans-serif;
+  letter-spacing: 0.04em;
+  color: #cdb6ef;
+}
+.ai-tip-cultmark {
+  color: var(--text-color-cultist);
+  filter: drop-shadow(0 0 5px rgba(253, 151, 255, 0.6));
+}
+.ai-tip-sub {
+  margin-top: 3px;
+  font-size: calc(var(--text-font-size) * 0.8);
+  letter-spacing: 0.04em;
+  color: var(--text-color-cultist);
+}
+.ai-tip-row {
+  margin-top: 5px;
+  font-size: calc(var(--text-font-size) * 0.85);
+  color: #aeb3bd;
+}
+/* small uppercase key label before a value */
+.ai-tip-rk {
+  font-size: calc(var(--text-font-size) * 0.72);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7c8088;
+  margin-right: 7px;
+}
+.ai-tip-attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.ai-tip-attr {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.7);
+  letter-spacing: 0.1em;
+  color: #7c8088;
+  background: rgba(164, 95, 224, 0.1);
+  border: 1px solid rgba(164, 95, 224, 0.28);
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+.ai-tip-attr b {
+  color: #cdb6ef;
+  font-weight: 600;
+  margin-left: 5px;
+}
+.ai-tip-debug {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(164, 95, 224, 0.16);
 }
 
 /* debug readout: same panel chrome as the rest of the HUD, no animation */

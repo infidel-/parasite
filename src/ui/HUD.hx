@@ -22,7 +22,7 @@ class HUD
   public var atmo: DivElement;
   // tooltips (shared by mouse glue and the stats block)
   public var regionTooltip: RegionTooltip;
-  var aiTooltip: AITooltip;
+  public var aiTooltip: AITooltip;
   // debug overlay div — created and updated only when Const.isDebug is true
   var debugInfo: DivElement;
   public var targeting: Targeting;

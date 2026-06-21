@@ -174,6 +174,8 @@ class InfoHud
       info.innerHTML = buf.toString();
       if (hud.regionTooltip.visible)
         hud.regionTooltip.updatePosition();
+      if (hud.aiTooltip.visible)
+        hud.aiTooltip.updatePosition();
       // low parasite energy pulses the panel when not hosting
       if (game.player.state != PLR_STATE_HOST)
         info.className =
