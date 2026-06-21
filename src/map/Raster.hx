@@ -2,6 +2,7 @@
 
 package map;
 
+import js.Browser;
 import map.RoadType;
 import map.Types.RoadMasks;
 import map.Types.RoadSegment;
@@ -206,6 +207,38 @@ class Raster extends Ground
   function fillRoadRect(x: Int, y: Int, width: Int, height: Int)
     {
       ctx.fillRect(x, y, width, height);
+    }
+
+// overlay a deterministic fine grain to break up flat color banding
+  function paintGrainOverlay()
+    {
+      // build one seeded 128px noise tile (mid-gray for overlay blend)
+      var size = 128;
+      var noiseCanvas = Browser.document.createCanvasElement();
+      noiseCanvas.width = size;
+      noiseCanvas.height = size;
+      var nctx = noiseCanvas.getContext2d({});
+      var img = nctx.createImageData(size, size);
+      var d = img.data;
+      var i = 0;
+      for (n in 0...size * size)
+        {
+          var v = 110 + Std.int(rng.nextFloat() * 36);
+          d[i++] = v;
+          d[i++] = v;
+          d[i++] = v;
+          d[i++] = 255;
+        }
+      nctx.putImageData(img, 0, 0);
+
+      // tile it across the whole image at low opacity in overlay mode
+      var pattern = ctx.createPattern(noiseCanvas, 'repeat');
+      ctx.save();
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = 0.06;
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, fullPixelWidth, fullPixelHeight);
+      ctx.restore();
     }
 
 // paint one ROAD2 occupied cell using the paired 2-cell road band

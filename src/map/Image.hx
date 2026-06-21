@@ -172,6 +172,8 @@ class Image extends Buildings
       phaseStartTS = nextMapProfileTimestamp('image.paintBuildings', phaseStartTS);
       paintRoads();
       phaseStartTS = nextMapProfileTimestamp('image.paintRoads', phaseStartTS);
+      paintGrainOverlay();
+      phaseStartTS = nextMapProfileTimestamp('image.paintGrainOverlay', phaseStartTS);
 
       cropVisibleRegion();
       phaseStartTS = nextMapProfileTimestamp('image.cropVisibleRegion', phaseStartTS);
