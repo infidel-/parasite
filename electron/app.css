@@ -232,7 +232,7 @@ hr {
 .console-div {
   width: calc(100% - 20px);
   height: 1.2em;
-  top: 66px;
+  top: 52px;
   left: 10px;
   position: fixed;
   font-size: 80%;
@@ -294,21 +294,234 @@ hr {
 
 /* #hud-log, #hud-goals, #hud-info styled in the HUD redesign block below */
 
+/* region map tile tooltip: dark glass panel + projection beam to the tile */
 #hud-area-info {
-  opacity: 0.95;
-  background-color: #ffffff00;
-  border: 13px solid;
-  min-width: 200px;
   position: fixed;
   margin: 0;
-  padding: 0;
+  padding: 11px 14px 12px;
+  min-width: 0;
+  max-width: min(40vw, 34ch);
+  border: 1px solid rgba(164, 95, 224, 0.34);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(20, 14, 28, 0.96), rgba(11, 9, 16, 0.97));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(3px);
   outline: none;
   appearance: none;
   user-select: none;
-  transition: opacity 0.1s;
-  font-size: 80%;
   pointer-events: none;
-  z-index: 25;
+  font-size: calc(var(--text-font-size) * 0.92);
+  line-height: 1.4;
+  z-index: 40; /* above the HUD panels (z30) */
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease, left 0.18s ease, top 0.18s ease;
+}
+/* fade + slide in/out, toggled from RegionTooltip */
+#hud-area-info.visible {
+  opacity: 1;
+  transform: none;
+}
+/* corner accent ticks (tl + br) */
+#hud-area-info::before,
+#hud-area-info::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--accent);
+  opacity: 0.8;
+  pointer-events: none;
+}
+#hud-area-info::before {
+  top: 5px;
+  left: 5px;
+  border-right: 0;
+  border-bottom: 0;
+}
+#hud-area-info::after {
+  bottom: 5px;
+  right: 5px;
+  border-left: 0;
+  border-top: 0;
+}
+.region-tip-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.region-tip-name {
+  font-family: var(--text-font-title), sans-serif;
+  letter-spacing: 0.04em;
+  color: #cdb6ef;
+}
+.region-tip-name.unknown {
+  color: var(--text-color-gray);
+}
+.region-tip-xy {
+  font-size: calc(var(--text-font-size) * 0.74);
+  color: #b3a0d4;
+  letter-spacing: 0.08em;
+  background: rgba(164, 95, 224, 0.1);
+  border: 1px solid rgba(164, 95, 224, 0.28);
+  border-radius: 999px;
+  padding: 1px 9px;
+}
+.region-tip-alert {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.72);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7c8088;
+}
+.region-tip-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 7px currentColor;
+}
+.region-tip-aval {
+  color: #b7bcc4;
+  letter-spacing: 0.1em;
+}
+.alert-red {
+  color: #e0594f;
+}
+.alert-yellow {
+  color: #d7b34a;
+}
+.alert-white {
+  color: #b7bcc4;
+}
+.alert-gray {
+  color: #6b7078;
+}
+.alert-red .region-tip-aval {
+  color: #e0594f;
+}
+.alert-yellow .region-tip-aval {
+  color: #d7b34a;
+}
+.region-tip-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.region-tip-tag {
+  font-size: calc(var(--text-font-size) * 0.72);
+  letter-spacing: 0.04em;
+  color: #9aa0aa;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(164, 95, 224, 0.22);
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+.region-tip-leads {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(164, 95, 224, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.region-tip-row {
+  position: relative;
+  padding-left: 13px;
+  font-size: calc(var(--text-font-size) * 0.85);
+  color: #aeb3bd;
+}
+.region-tip-row::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.region-tip-row.ord::before {
+  background: #e0594f;
+  box-shadow: 0 0 6px #e0594f;
+}
+.region-tip-row.npc::before {
+  background: #5081bc;
+}
+/* event row uses the timeline amber pill instead of a bullet */
+.region-tip-row.ev {
+  padding-left: 0;
+}
+.region-tip-row.ev::before {
+  display: none;
+}
+.region-tip-evpill {
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.74);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f7af46;
+  border: 1px solid rgba(247, 175, 70, 0.3);
+  background: rgba(247, 175, 70, 0.07);
+  border-radius: 5px;
+  padding: 1px 7px;
+}
+/* npc name carries the timeline accent */
+.region-tip-npcname {
+  color: #f7af46;
+}
+/* projection beam: tile dot -> tooltip panel */
+.region-tip-link {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1; /* under the HUD panels, above the map canvas */
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.region-tip-link.show {
+  opacity: 1;
+}
+.region-tip-link line {
+  stroke: var(--accent-light);
+  stroke-width: 1.4;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 3px rgba(164, 95, 224, 0.7));
+  transition: x1 0.18s ease, y1 0.18s ease, x2 0.18s ease, y2 0.18s ease;
+}
+.region-tip-link circle {
+  transition: cx 0.18s ease, cy 0.18s ease;
+}
+/* both the incoming (beamLine) and outgoing (rt-old) beams are driven by inline
+   animation from RegionTooltip, so no .show rule here (it would hit both lines) */
+@keyframes region-beam-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+/* outgoing beam retracts + fades at the old tile */
+@keyframes region-beam-undraw {
+  from { stroke-dashoffset: 0; opacity: 1; }
+  to { stroke-dashoffset: 1; opacity: 0; }
+}
+.region-tip-link .rt-dot {
+  fill: var(--accent-light);
+  filter: drop-shadow(0 0 4px var(--accent));
+}
+.region-tip-link .rt-ping {
+  fill: none;
+  stroke: var(--accent-light);
+  stroke-width: 1.4;
+  animation: region-ping 1.5s ease-out infinite;
+}
+@keyframes region-ping {
+  0% { r: 3.5; opacity: 0.8; }
+  100% { r: 15; opacity: 0; }
 }
 
 #hud-ai-info {
@@ -412,7 +625,7 @@ hr {
   height: 100%;
 }
 
-/* ---- shared panel signature ---- */
+/* panels sit above the region tooltip beam/panel (which use z-index ≤ 25) */
 .hud-panel {
   position: fixed;
   box-sizing: border-box;
@@ -421,6 +634,7 @@ hr {
   border-radius: 6px;
   backdrop-filter: var(--hud-panel-blur);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+  z-index: 30;
 }
 /* accent hairline along the top edge, fading at both ends */
 .hud-panel::before {
