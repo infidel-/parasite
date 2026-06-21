@@ -287,7 +287,12 @@ class CultBase extends _SaveObject
       organ.health = 0;
       if (organ.type == COR_NEFANDUM)
         {
-          game.finish('lose', 'corNefandum', 'event/death');
+          game.finish({
+            result: 'lose',
+            text: 'corNefandum',
+            img: 'event/death',
+            filter: 'cult'
+          });
           return;
         }
       organ.broken = true;

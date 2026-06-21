@@ -518,18 +518,18 @@ class Game extends _SaveObject
     'habitatShock' => 'You have received your final shock from the habitat destruction.',
     'corNefandum' => 'Cor Nefandum is destroyed. <span class=cult>Cultus Carnis</span> dies its final death.',
   ];
-  public function finish(result: String, text: String, ?img: String = null)
+  public function finish(p: _FinishParams)
     {
       state = GAMESTATE_FINISH;
       var finishText = '';
 
       // game lost
-      if (result == 'lose')
+      if (p.result == 'lose')
         {
           log('You have lost the game.');
-          finishText = deathText[text];
+          finishText = deathText[p.text];
 #if demo
-          if (text == 'demo')
+          if (p.text == 'demo')
             finishText = 'Demo finished.';
 #end
 
@@ -541,7 +541,7 @@ class Game extends _SaveObject
       else
         {
           log('You have completed the game.');
-          finishText = text;
+          finishText = p.text;
           scene.sounds.play('game-win');
         }
 
@@ -549,9 +549,10 @@ class Game extends _SaveObject
       // window is shown. payload is mutable; we read back text/img after fire
       var payload: Dynamic = {
         game: this,
-        result: result,
+        result: p.result,
         text: finishText,
-        img: img,
+        img: p.img,
+        filter: p.filter,
       };
       ModEventRegistry.fire(ModEventRegistry.GAME_FINISH_PRE, payload);
 
@@ -560,8 +561,10 @@ class Game extends _SaveObject
         type: UIEVENT_STATE,
         state: UISTATE_FINISH,
         obj: {
+          result: p.result,
           text: payload.text,
           img: payload.img,
+          filter: payload.filter,
         }
       });
 

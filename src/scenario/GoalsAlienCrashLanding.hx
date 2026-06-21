@@ -365,7 +365,11 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'You have completed your mission.');
+        game.finish({
+          result: 'win',
+          text: 'You have completed your mission.',
+          filter: 'alien'
+        });
       },
 
       onFailure: function (game, player) {
@@ -440,7 +444,12 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'You have succeeded in your mission.', 'event/scenario_alien_finish_win' + (1 + Std.random(5)));
+        game.finish({
+          result: 'win',
+          text: 'You have succeeded in your mission.',
+          img: 'event/scenario_alien_finish_win' + (1 + Std.random(5)),
+          filter: 'alien'
+        });
       },
     },
 
@@ -461,7 +470,12 @@ class GoalsAlienCrashLanding
 
       onComplete: function (game, player) {
         // finish game
-        game.finish('win', 'You have failed in your mission.', 'event/scenario_alien_finish_lose');
+        game.finish({
+          result: 'win',
+          text: 'You have failed in your mission.',
+          img: 'event/scenario_alien_finish_lose',
+          filter: 'alien'
+        });
       },
     },
   ];

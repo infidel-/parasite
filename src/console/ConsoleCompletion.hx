@@ -134,6 +134,12 @@ class ConsoleCompletion
           ];
           rootChildren.push({ lit: 'cult', next: cultSubs });
           rootChildren.push({ lit: 'cu', next: cultSubs });
+          // finish <lose|alien|cult> - show game-over window
+          rootChildren.push({ lit: 'finish', next: [
+            { lit: 'lose' },
+            { lit: 'alien' },
+            { lit: 'cult' },
+          ] });
         }
 
       root = { next: rootChildren };

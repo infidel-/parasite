@@ -81,6 +81,10 @@ class Console
       else if (char0 == 'd')
         debugConsole.run(cmd);
 
+      // XXX finish <lose|alien|cult> - show game-over window for testing
+      else if (Const.isDebug && arr[0] == 'finish')
+        finishCommand(arr);
+
       // XXX give, go, goal, god commands
       else if (Const.isDebug && char0 == 'g')
         {
@@ -354,6 +358,24 @@ class Console
 
 
 // ai trace|untrace <id> - toggle browser-console turn trace for one AI
+// finish <lose|alien|cult> - show game-over window with a sample preset
+  function finishCommand(arr: Array<String>)
+    {
+      var presets: Map<String, _FinishParams> = [
+        'lose' => { result: 'lose', text: 'noHealth', img: 'event/death', filter: 'lose' },
+        'alien' => { result: 'win', text: 'You have succeeded in your mission.', img: 'event/scenario_alien_finish_win1', filter: 'alien' },
+        'cult' => { result: 'lose', text: 'corNefandum', img: 'event/death', filter: 'cult' },
+      ];
+      var p = (arr.length >= 2) ? presets[arr[1]] : null;
+      if (p == null)
+        {
+          log('finish <lose|alien|cult> - show game-over window');
+          return;
+        }
+      game.finish(p);
+    }
+
+
   function aiTraceCommand(arr: Array<String>)
     {
       if (arr.length < 3 ||

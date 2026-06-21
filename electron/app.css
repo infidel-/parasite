@@ -1850,13 +1850,6 @@ hr {
   min-height: 1.2em;
 }
 
-.window-dialog-text {
-  transform: translate(0, -10px);
-  height: calc(100% - 30px);
-  display: flex;
-  flex-direction: column;
-}
-
 /* ===== confirm dialog (YesNo): glyph + prompt + NO/YES; danger = red ===== */
 #window-yesno-bg {
   background-color: transparent;
@@ -2172,20 +2165,6 @@ hr {
   100% { opacity: 1;}
 }
 
-.window-dialog-button {
-  border: 11px solid;
-  position: absolute;
-  bottom: -49px;
-  color: white;
-  left: 50%;
-  opacity: 1;
-  text-align: center;
-  padding-left: 1em;
-  padding-right: 1em;
-  white-space: nowrap;
-  -webkit-transform: translate3d(-50%, 0, 0);
-}
-
 /* ===== occasio choice window: psychedelic-pink occasion picker ===== */
 #window-choice {
   --cult: #fd97ff;       /* base magenta */
@@ -2371,6 +2350,129 @@ hr {
   50% {
     filter: url(#imgCult) hue-rotate(16deg);
   }
+}
+
+/* ===== game finish (game over) window: neutral glass, image carries the mood ===== */
+#window-finish {
+  --finish-edge: rgba(206, 190, 184, 0.18);  /* warm bone hairline */
+  --finish-glow: rgba(214, 120, 96, 0.12);   /* faint ember bloom */
+}
+
+/* drop the legacy border-image chrome; the card carries all styling */
+#window-finish.window-dialog {
+  border: 0;
+  min-width: 0;
+  max-width: none;
+  width: min(480px, 92vw);
+  background: none;
+}
+
+.finish-card {
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  border-radius: 14px;
+  border: 1px solid var(--finish-edge);
+  background: linear-gradient(180deg, #14100f, #0a0807);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.65),
+    0 0 36px var(--finish-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  /* opacity-only: a translate here would seam the filtered hero image */
+  animation: fade-in 0.42s ease-out backwards;
+}
+
+/* top hairline bloom */
+.finish-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 120, 96, 0.45), transparent);
+  pointer-events: none;
+}
+
+/* hero: filtered image (filter set per-outcome from code) + scrim + title */
+.finish-hero {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+}
+
+.finish-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  will-change: filter;
+}
+
+/* darken toward the body so the title reads */
+.finish-hero-grad {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(214, 120, 96, 0.10), transparent 60%),
+    linear-gradient(180deg, transparent 30%, rgba(10, 8, 7, 0.6) 74%, #0a0807 100%);
+  pointer-events: none;
+}
+
+.finish-title {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 12px;
+  font-family: 'Cruiser2015', sans-serif;
+  font-size: calc(var(--text-font-size) * 3);
+  line-height: 1.05;
+  letter-spacing: 0.1em;
+  text-align: center;
+  color: #ece2dc;
+  text-shadow: 0 0 14px rgba(214, 120, 96, 0.4), 0 2px 6px rgba(0, 0, 0, 0.9);
+  animation: win-rise 0.45s ease-out backwards 0.1s;
+}
+
+/* cor nefandum death: psychedelic swanky title to match the cult image grade */
+.finish-title-cult {
+  font-family: FontdinerSwanky, cursive;
+}
+
+.finish-body {
+  padding: 16px 22px 20px;
+  text-align: center;
+  animation: win-rise 0.45s ease-out backwards 0.14s;
+}
+
+.finish-text {
+  color: var(--text);
+  font-size: calc(var(--text-font-size) * 1.0);
+  line-height: 1.55;
+}
+
+.finish-hint {
+  margin-top: 14px;
+  font-size: calc(var(--text-font-size) * 0.82);
+  color: var(--text-color-gray);
+}
+
+.finish-close {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 9px 26px;
+  border-radius: 9px;
+  border: 1px solid rgba(206, 190, 184, 0.24);
+  background: linear-gradient(180deg, rgba(206, 190, 184, 0.06), rgba(255, 255, 255, 0.015));
+  color: var(--text);
+  letter-spacing: 0.08em;
+  cursor: var(--ui-cursor);
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease;
+}
+
+.finish-close:hover {
+  border-color: rgba(214, 120, 96, 0.55);
+  background: linear-gradient(180deg, rgba(214, 120, 96, 0.14), rgba(214, 120, 96, 0.04));
+  transform: translateY(-2px);
 }
 
 .window-common-close {
@@ -5296,14 +5398,14 @@ fieldset {
   pointer-events: none;
   animation: win-scrim-fade .2s ease-in forwards;
 }
-.win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-message, #window-difficulty, #window-spoon, .hud-frame) {
+.win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-message, #window-difficulty, #window-spoon, #window-finish, .hud-frame) {
   animation: win-pop-out .2s ease-in forwards;
 }
 @keyframes win-scrim-fade { to { opacity: 0; } }
 @keyframes win-pop-out { to { transform: scale(.95); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .win-closing,
-  .win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-message, #window-difficulty, #window-spoon, .hud-frame) {
+  .win-closing :is(#window-mainmenu, #window-newgame, #window-pedia, #window-options, #window-mods, #window-about, #window-presets, #window-message, #window-difficulty, #window-spoon, #window-finish, .hud-frame) {
     animation: none;
   }
 }

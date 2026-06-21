@@ -810,7 +810,12 @@ class UI
           // finish the game
           else if (ev.type == UIEVENT_FINISH)
             {
-              game.finish(ev.obj.result, ev.obj.condition);
+              game.finish({
+                result: ev.obj.result,
+                text: ev.obj.condition,
+                img: ev.obj.img,
+                filter: ev.obj.filter,
+              });
             }
           return;
         }

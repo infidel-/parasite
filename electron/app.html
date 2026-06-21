@@ -191,6 +191,23 @@
     <feGaussianBlur in="split" stdDeviation="2.6" result="glow"/>
     <feBlend in="glow" in2="split" mode="screen"/>
   </filter>
+  <!-- cold crimson death grade for the game-over (lose) image -->
+  <filter id="imgFinishLose" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="lum"/>
+    <feComponentTransfer in="lum" result="lumP">
+      <feFuncR type="discrete" tableValues="0 .083 .167 .25 .333 .417 .5 .583 .667 .75 .833 .917 1"/>
+      <feFuncG type="discrete" tableValues="0 .083 .167 .25 .333 .417 .5 .583 .667 .75 .833 .917 1"/>
+      <feFuncB type="discrete" tableValues="0 .083 .167 .25 .333 .417 .5 .583 .667 .75 .833 .917 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="lumP" stdDeviation="0.85" result="lumB"/>
+    <feComponentTransfer in="lumB" result="blood">
+      <feFuncR type="table" tableValues="0.10 0.34 0.62 0.86 1.0"/>
+      <feFuncG type="table" tableValues="0.10 0.13 0.18 0.24 0.34"/>
+      <feFuncB type="table" tableValues="0.16 0.18 0.20 0.22 0.28"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="blood" stdDeviation="2.2" result="glow"/>
+    <feBlend in="glow" in2="blood" mode="screen"/>
+  </filter>
 </defs></svg>
 
 <script src="soundmanager2-nodebug.js"></script>
