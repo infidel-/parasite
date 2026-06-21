@@ -230,36 +230,54 @@ hr {
 }
 
 .console-div {
-  width: calc(100% - 20px);
-  height: 1.2em;
-  top: 52px;
-  left: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  top: 48px;
+  left: 0;
   position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  border-top: 1px solid rgba(164,95,224,.30);
+  border-bottom: 1px solid rgba(164,95,224,.30);
+  background: linear-gradient(180deg, rgba(20,14,28,.93), rgba(11,9,16,.95));
+  backdrop-filter: blur(3px);
+  box-shadow: 0 2px 10px rgba(0,0,0,.4);
   font-size: 80%;
 }
 
+/* accent prompt glyph, aligned with the input row */
 .console-div:before {
-  content: '> ';
-  background: #202020aa;
-  color: #A09e99;
-  vertical-align: top;
+  content: '>';
+  color: var(--accent-light);
+  font-family: var(--text-font);
+  font-weight: bold;
+  opacity: .85;
+  flex: 0 0 auto;
 }
 
 #hud-console {
-  opacity: 0.9;
-  background-color: #ffffff00;
-  width: calc(100% - 20px);
+  flex: 1 1 auto;
+  opacity: 0.95;
   color: var(--text-fg-color);
-  background: #202020aa;
+  background: transparent;
+  height: 1.4em;
+  line-height: 1.4em;
   margin: 0;
   padding: 0;
   border: none;
   outline: none;
   appearance: none;
   font-family: var(--text-font);
-  font-size: 80%;
+  font-size: 100%;
   letter-spacing: 0.08em;
+  white-space: pre;
+  overflow: hidden;
   resize: none;
+  /* stylish block caret in accent color */
+  caret-shape: block;
+  caret-color: var(--accent-light);
 }
 
 /* gray inline completion hint, overlaid on top of the textarea */
