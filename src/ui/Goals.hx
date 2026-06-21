@@ -64,7 +64,7 @@ class Goals extends UIWindow
               entries.add(info.name);
               entries.add("</span>");
               if (info.isOptional == true)
-                entries.add(" <span class='goals-opt'>[optional]</span>");
+                entries.add(" <span class='goals-opt'>optional</span>");
             }
           else
             {

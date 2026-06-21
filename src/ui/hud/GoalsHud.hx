@@ -33,7 +33,7 @@ class GoalsHud
       buf.add(UISvg.hudDiamond(primary));
       buf.add('<div><div class="hud-ot">' + gi.name);
       if (gi.isOptional)
-        buf.add(' <span class="hud-opt">[optional]</span>');
+        buf.add(' <span class="hud-opt">optional</span>');
       buf.add('</div><div class="hud-od">' + gi.note);
       if (gi.noteFunc != null)
         buf.add('<br/>' + gi.noteFunc(game));
