@@ -1561,6 +1561,127 @@ hr {
   margin-top: 4px;
   line-height: 1.3;
 }
+/* goal appears: row slides + flashes in from the panel edge, diamond pops */
+@keyframes hud-goal-arrive {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes hud-goal-arrive-flash {
+  0% {
+    background: rgba(164, 95, 224, 0.25);
+  }
+  100% {
+    background: transparent;
+  }
+}
+@keyframes hud-mark-arrive {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+#hud-goals .hud-grp.goal-new .hud-obj {
+  animation: hud-goal-arrive 0.4s ease-out backwards,
+    hud-goal-arrive-flash 1.2s ease-out 0.25s backwards;
+}
+#hud-goals .hud-grp.goal-new .hud-mark {
+  animation: hud-mark-arrive 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s backwards;
+}
+/* strike line that draws across a finishing goal's title (hidden until done/fail) */
+#hud-goals .hud-ot::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 55%;
+  height: 2px;
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.35s ease-out 0.15s;
+}
+/* goal completes: green flash + diamond spin-pops + green strike + dim */
+@keyframes hud-mark-done {
+  50% {
+    transform: scale(1.5) rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes hud-goal-done-flash {
+  0% {
+    background: rgba(116, 224, 136, 0.18);
+  }
+  100% {
+    background: transparent;
+  }
+}
+#hud-goals .hud-obj.done {
+  animation: hud-goal-done-flash 1s ease-out;
+}
+#hud-goals .hud-obj.done .hud-mark {
+  color: var(--narrative);
+  animation: hud-mark-done 0.5s ease;
+}
+#hud-goals .hud-obj.done .hud-glint {
+  display: none;
+}
+#hud-goals .hud-obj.done .hud-ot {
+  color: #8aa890;
+}
+#hud-goals .hud-obj.done .hud-ot::after {
+  background: rgba(116, 224, 136, 0.55);
+  transform: scaleX(1);
+}
+#hud-goals .hud-obj.done .hud-od {
+  opacity: 0.55;
+}
+/* goal fails: red flash + red strike + dim (no spin) */
+@keyframes hud-goal-fail-flash {
+  0% {
+    background: rgba(224, 90, 90, 0.18);
+  }
+  100% {
+    background: transparent;
+  }
+}
+#hud-goals .hud-obj.fail {
+  animation: hud-goal-fail-flash 1s ease-out;
+}
+#hud-goals .hud-obj.fail .hud-mark {
+  color: #e05a5a;
+}
+#hud-goals .hud-obj.fail .hud-glint {
+  display: none;
+}
+#hud-goals .hud-obj.fail .hud-ot {
+  color: #c08585;
+}
+#hud-goals .hud-obj.fail .hud-ot::after {
+  background: rgba(224, 90, 90, 0.6);
+  transform: scaleX(1);
+}
+#hud-goals .hud-obj.fail .hud-od {
+  opacity: 0.55;
+}
+/* finished row collapses away (JS pins px height first so it can transition to 0) */
+#hud-goals .hud-grp.goal-clear {
+  overflow: hidden;
+  opacity: 0;
+  height: 0 !important;
+  margin-bottom: 0;
+  transform: translateX(-12px);
+  transition: height 0.4s ease-in, opacity 0.4s ease-in,
+    margin-bottom 0.4s ease-in, transform 0.4s ease-in;
+}
 
 /* ---- navbar (membrane strip of icon cells) ---- */
 #hud-buttons {

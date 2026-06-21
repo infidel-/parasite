@@ -30,7 +30,7 @@ class HUD
   // per-block sub-classes (each owns its DOM, appended to container)
   var topbar: TopbarHud;
   var log: LogHud;
-  var goals: GoalsHud;
+  public var goals: GoalsHud;
   public var infoHud: InfoHud;
   var navbar: NavbarHud;
   var console: ConsoleHud;

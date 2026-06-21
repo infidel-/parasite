@@ -746,6 +746,7 @@ class UI
   public inline function clearEvents()
     {
       uiQueue.clear();
+      hud.goals.clearQueue();
     }
 
 // close the current window
@@ -821,6 +822,8 @@ class UI
         }
 
       state = UISTATE_DEFAULT;
+      // UI is idle again: play any goal animations deferred while windows were up
+      hud.goals.flush();
       if (game.state == GAMESTATE_REBIRTH)
         game.endRebirth();
       game.scene.draw();

@@ -223,6 +223,7 @@ class Game extends _SaveObject
             skipTutorial();
         }
 
+      ui.hud.goals.rebuild(); // show starting goals instantly (no animation)
       updateHUD(); // update HUD state
 
       isInited = true;
@@ -827,6 +828,7 @@ class Game extends _SaveObject
       // a loaded game is a started game (isStarted is not persisted); without this
       // the main menu's ESC-to-close is suppressed after loading (treated as boot menu)
       isStarted = true;
+      ui.hud.goals.rebuild(); // resync goal rows to the loaded model (no animation)
       ui.hud.update();
       scene.draw();
     }
