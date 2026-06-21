@@ -2,7 +2,6 @@
 
 package ui;
 
-import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
@@ -18,7 +17,7 @@ class UIWindow
   var game: Game;
   var window: DivElement;
   var bg: DivElement;
-  var close: DivElement;
+  var close: DivElement; // corner-X close button (set by addWinClose), referenced by some windows
   var state: _UIState; // state this relates to
   var closeTimer: haxe.Timer; // in-flight animatedHide timer (cancelled on re-show)
 
@@ -37,21 +36,6 @@ class UIWindow
       bg.style.display = 'none';
       window.className = 'window text';
       bg.appendChild(window);
-    }
-
-// add standard close button
-  function addCloseButton()
-    {
-      close = Browser.document.createDivElement();
-      close.className = 'hud-button window-common-close';
-      close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('" + AssetPath.resolve('img/window-common-close.png') + "') 92 fill / 1 / 0 stretch";
-      close.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        game.scene.sounds.play('window-close');
-        game.ui.closeWindow();
-      }
-      window.appendChild(close);
     }
 
 // build the shared in-game HUD window chrome: darkened scrim with a ghosted

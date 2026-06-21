@@ -1668,16 +1668,6 @@ hr {
   color: #9eceff;
 }
 
-/* shared clickable base for window buttons (yes/no, choice, finish, close-X);
-   they rely on this for pointer-events since their window is click-through */
-.hud-button {
-  pointer-events: auto;
-  user-select: none;
-  outline: none;
-  appearance: none;
-  cursor: var(--ui-cursor);
-}
-
 .hud-team {
   animation: 2.5s infinite team-hud;
   text-align: center;
@@ -2473,17 +2463,6 @@ hr {
   border-color: rgba(214, 120, 96, 0.55);
   background: linear-gradient(180deg, rgba(214, 120, 96, 0.14), rgba(214, 120, 96, 0.04));
   transform: translateY(-2px);
-}
-
-.window-common-close {
-  border: 11px solid;
-  position: absolute;
-  bottom: -13px;
-  left: 50%;
-  opacity: 1;
-  text-align: center;
-  width: 5ch;
-  transform: translate(-50%, 0);
 }
 
 .window-empty {
