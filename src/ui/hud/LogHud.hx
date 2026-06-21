@@ -10,7 +10,9 @@ class LogHud
 {
   var game: Game;
   var log: DivElement;
-  var lastLogKey: String = '';     // detects a genuinely new top log row
+  var lastSig: String = '';        // full row signature; unchanged => skip rebuild
+  var lastTopMsg: String = '';     // top row msg|turn (no count) => detects a new message
+  var lastTopCnt: Int = 0;         // top row count => detects a repeat bump
 
   public function new(g: Game, h: HUD)
     {
@@ -25,11 +27,28 @@ class LogHud
   public function update()
     {
       var arr = [for (l in game.hudMessageList) l];
-      // newest message sits at the tail of the list; detect a genuinely new top row
-      var topKey = (arr.length > 0 ?
-        arr[arr.length - 1].msg + '|' + arr[arr.length - 1].turn + '|' + arr[arr.length - 1].cnt : '');
-      var isNewTop = (topKey != '' && topKey != lastLogKey);
-      lastLogKey = topKey;
+      // signature of all displayed rows; if unchanged, skip the rebuild so an
+      // in-flight arrival/pop animation on the freshly-inserted top row survives
+      var sig = new StringBuf();
+      for (l in arr)
+        {
+          sig.add(l.msg); sig.add('|'); sig.add('' + l.turn); sig.add('|');
+          sig.add('' + l.cnt); sig.add('|'); sig.add('' + l.col); sig.add('\n');
+        }
+      var sigStr = sig.toString();
+      if (sigStr == lastSig)
+        return;
+      lastSig = sigStr;
+
+      // newest message sits at the tail; a changed msg|turn is a new row (slides in),
+      // same msg|turn with a higher count is a repeat (pops the [xN] counter instead)
+      var newest = (arr.length > 0 ? arr[arr.length - 1] : null);
+      var topMsg = (newest != null ? newest.msg + '|' + newest.turn : '');
+      var topCnt = (newest != null ? newest.cnt : 0);
+      var isNewTop = (topMsg != '' && topMsg != lastTopMsg);
+      var isRepeatTop = (!isNewTop && topCnt > lastTopCnt);
+      lastTopMsg = topMsg;
+      lastTopCnt = topCnt;
 
       var buf = new StringBuf();
       var i = arr.length - 1;
@@ -46,11 +65,49 @@ class LogHud
           buf.add('<div class="' + cls + '"><span class="ts">' + ts + '</span>');
           buf.add('<span class="msg" style="color:' + Const.TEXT_COLORS[l.col] + '">' + l.msg + '</span>');
           if (l.cnt > 1)
-            buf.add(' <span class="xn">(x' + l.cnt + ')</span>');
+            buf.add(' <span class="xn' + (first && isRepeatTop ? ' pop' : '') + '">(x' + l.cnt + ')</span>');
           buf.add('</div>');
           first = false;
           i--;
         }
       log.innerHTML = buf.toString();
+
+      // typewriter: reveal the newest row's text char-by-char on arrival.
+      // skipped for messages carrying markup (slicing raw html breaks tags)
+      if (isNewTop
+          && newest != null
+          && newest.msg.indexOf('<') < 0)
+        {
+          var topRow: js.html.Element = cast log.firstElementChild;
+          var msgEl = (topRow != null ? topRow.querySelector('.msg') : null);
+          if (msgEl != null)
+            typewrite(msgEl, newest.msg, newest.col == COLOR_ALERT);
+        }
+    }
+
+  static var GLYPHS = '#$%&@▒░╪◊'; // wrong-glyph flicker set
+
+// type a message into the row's .msg element one char at a time; alert rows
+// flicker a random glyph at the writing head before each char settles
+  function typewrite(el: js.html.Element, text: String, isAlert: Bool)
+    {
+      var ti = 0;
+      function step()
+        {
+          if (ti >= text.length)
+            {
+              el.textContent = text;
+              return;
+            }
+          ti++;
+          var t = text.substr(0, ti);
+          if (isAlert
+              && ti < text.length
+              && Std.random(100) < 18)
+            t = t.substr(0, t.length - 1) + GLYPHS.charAt(Std.random(GLYPHS.length));
+          el.textContent = t;
+          haxe.Timer.delay(step, 14);
+        }
+      step();
     }
 }

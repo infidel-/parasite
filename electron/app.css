@@ -1032,6 +1032,23 @@ hr {
   font-size: calc(var(--text-font-size) * 0.93);
   align-self: center;
 }
+/* repeat collapse: a duplicate event bumps [xN] instead of adding a row */
+@keyframes hud-xn-pop {
+  0% {
+    transform: scale(1.7);
+    color: #cfa3ee;
+  }
+  60% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+#hud-log .hud-row .xn.pop {
+  animation: hud-xn-pop 0.45s ease-out;
+  display: inline-block;
+}
 
 /* ---- stats panel ---- */
 #hud-info {
