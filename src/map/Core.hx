@@ -65,18 +65,19 @@ class Core
   var MIN_CITY_TILE_ROAD_COVERAGE = 0.20; // minimum road coverage target for city tiles
   var MAX_CITY_COVERAGE_TURN_DISTANCE = 6; // maximum turn distance when seeking city coverage
 
-  var COLOR_GROUND = 0x5a6b34; // base wilderness green
-  var COLOR_LOW = 0x3a3b40; // low-density urban ground tone
-  var COLOR_MEDIUM = 0x4a4b41; // medium-density urban ground tone
-  var COLOR_HIGH = 0x6b6c64; // high-density urban ground tone
-  var COLOR_FOREST_MID = 0x194508; // mid forest canopy tone
-  var COLOR_MOUNTAIN = 0x6f7066; // mountain terrain tone used by the three-band terrain renderer
+  var COLOR_GROUND = 0x57663b; // base wilderness green (muted modern sage)
+  var COLOR_LOW = 0x34373d; // low-density urban ground tone (cool slate)
+  var COLOR_MEDIUM = 0x434650; // medium-density urban ground tone (cool slate)
+  var COLOR_HIGH = 0x5d616b; // high-density urban ground tone (cool slate)
+  var COLOR_FOREST_MID = 0x24402e; // mid forest canopy tone (deep muted pine)
+  var COLOR_MOUNTAIN = 0x6c6e6a; // mountain terrain tone used by the three-band terrain renderer (neutral stone)
 
-  var COLOR_ROAD1 = 0x171716; // primary road palette anchor
-  var COLOR_ROAD2 = 0xd07a23; // secondary road palette anchor
-  var COLOR_ROAD3 = 0x3aa354; // tertiary road palette anchor
-  var COLOR_ROAD4 = 0xa33232; // quaternary road palette anchor
-  var COLOR_ROAD5 = 0x3f6fd6; // minor road palette anchor
+  // road tiers: hierarchy by value + width, single warm amber accent (no rainbow)
+  var COLOR_ROAD1 = 0x20242b; // primary road palette anchor (dark cool asphalt)
+  var COLOR_ROAD2 = 0xcf933a; // secondary road palette anchor (warm amber arterial)
+  var COLOR_ROAD3 = 0x9aa0a8; // tertiary road palette anchor (light neutral street)
+  var COLOR_ROAD4 = 0x7c828b; // quaternary road palette anchor (mid neutral street)
+  var COLOR_ROAD5 = 0x676d76; // minor road palette anchor (dim neutral lane)
 
   var COLOR_BUILDING_LOW = 0x585349; // low-density building base tone
   var COLOR_BUILDING_MEDIUM = 0x49453d; // medium-density building base tone

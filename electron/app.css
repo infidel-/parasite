@@ -615,6 +615,10 @@ hr {
     linear-gradient(rgba(96, 48, 150, 0.12), rgba(28, 14, 52, 0.34));
   animation: hud-grade-breathe 38s ease-in-out infinite;
 }
+/* region mode: drop purple color-grade so true map colors show */
+#hud-atmo.region #hud-grade {
+  display: none;
+}
 @keyframes hud-grade-breathe {
   50% {
     transform: scale(1.035);

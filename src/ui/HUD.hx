@@ -303,6 +303,8 @@ public function onMouseLeave()
 // update HUD state from game state
   public function update()
     {
+      // drop the purple color-grade in region mode so map colors read true
+      atmo.classList.toggle('region', game.location == LOCATION_REGION);
       if (game.location != LOCATION_REGION)
         {
           resetRegionTooltipHover();
