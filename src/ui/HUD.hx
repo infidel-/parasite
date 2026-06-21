@@ -31,7 +31,7 @@ class HUD
   var topbar: TopbarHud;
   var log: LogHud;
   var goals: GoalsHud;
-  var infoHud: InfoHud;
+  public var infoHud: InfoHud;
   var navbar: NavbarHud;
   var console: ConsoleHud;
   var actions: ActionsHud;

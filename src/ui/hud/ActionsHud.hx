@@ -203,6 +203,13 @@ class ActionsHud
             if (cost > 0)
               html += '<span class="hud-cost">' + cost + UISvg.hudCoin() + '</span>';
             btn.innerHTML = html;
+            // hover previews this action's energy cost on the matching bar
+            if (cost > 0)
+              {
+                var costStat = (game.player.state == PLR_STATE_HOST ? 'he' : 'pe');
+                btn.onmouseenter = function (e) hud.infoHud.previewCost(costStat, cost);
+                btn.onmouseleave = function (e) hud.infoHud.clearCostPreview();
+              }
             var actionIndex = n;
             btn.onclick = function (e) {
               game.scene.sounds.play('click-action');

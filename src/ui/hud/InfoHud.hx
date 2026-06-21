@@ -11,6 +11,8 @@ class InfoHud
   var game: Game;
   var hud: HUD;
   public var info: DivElement; // exposed: region tooltip measures against it
+  var prevStat: Map<String, Int> = new Map(); // last rendered value per data-stat (change diff)
+  var statMax: Map<String, Int> = new Map(); // last rendered max per data-stat (cost preview)
 
   public function new(g: Game, h: HUD)
     {
@@ -50,6 +52,28 @@ class InfoHud
         pct = 0;
       if (pct > 100)
         pct = 100;
+      // change since last render drives the spend/gain trail + floating number
+      var prev = (prevStat.exists(stat) ? prevStat.get(stat) : cur);
+      var change = cur - prev;
+      var oldPct = (max > 0 ? prev / max * 100 : 0);
+      if (oldPct < 0)
+        oldPct = 0;
+      if (oldPct > 100)
+        oldPct = 100;
+      prevStat.set(stat, cur);
+      statMax.set(stat, max);
+      // ghost overlay on the changed segment (drains on spend, flashes on gain)
+      var ghost = '';
+      if (change < 0)
+        ghost = '<div class="hud-bar-ghost spend" style="left:' + pct +
+          '%;width:' + (oldPct - pct) + '%"></div>';
+      else if (change > 0)
+        ghost = '<div class="hud-bar-ghost gain" style="left:' + oldPct +
+          '%;width:' + (pct - oldPct) + '%"></div>';
+      // floating ±N near the value readout
+      var floatNum = (change != 0 ?
+        '<span class="hud-bar-float ' + (change > 0 ? 'up' : 'down') + '">' +
+        (change > 0 ? '+' : '') + change + '</span>' : '');
       var cls = 'hud-bar';
       if (cur <= 0)
         cls += ' dead';
@@ -59,7 +83,7 @@ class InfoHud
         '<div class="hud-bar-lbl"><span class="hud-bar-n">' + icon + label + '</span>' +
         '<span class="hud-bar-v"><span class="cur">' + cur + '</span>/' + max + delta + '</span></div>' +
         '<div class="hud-bar-track"><div class="hud-bar-fill ' + fillClass +
-        '" style="width:' + pct + '%"></div></div></div>';
+        '" style="width:' + pct + '%"></div>' + ghost + '</div>' + floatNum + '</div>';
     }
 
 // update player info: core stats as bars, the rest as text below
@@ -182,5 +206,36 @@ class InfoHud
           (game.player.energy <= 0.5 * game.player.maxEnergy ?
            'hud-panel hud-text hud-stats highlight-text' : 'hud-panel hud-text hud-stats');
       else info.className = 'hud-panel hud-text hud-stats';
+    }
+
+// hover cost preview: hatch the segment a costed action would spend on its bar.
+// pokes the live DOM directly (no rebuild happens while an action is hovered)
+  public function previewCost(stat: String, cost: Int)
+    {
+      clearCostPreview();
+      if (cost <= 0 ||
+          !statMax.exists(stat))
+        return;
+      var max = statMax.get(stat);
+      var cur = prevStat.get(stat);
+      if (max <= 0)
+        return;
+      var track = info.querySelector('.hud-bar[data-stat="' + stat + '"] .hud-bar-track');
+      if (track == null)
+        return;
+      var lo = (cur - cost < 0 ? 0 : cur - cost);
+      var el = document.createDivElement();
+      el.className = 'hud-bar-cost';
+      el.style.left = (lo / max * 100) + '%';
+      el.style.width = ((cur - lo) / max * 100) + '%';
+      track.appendChild(el);
+    }
+
+// remove the hover cost-preview hatch
+  public function clearCostPreview()
+    {
+      var el = info.querySelector('.hud-bar-cost');
+      if (el != null)
+        el.remove();
     }
 }
