@@ -86,10 +86,11 @@ class UpgradeFollower2 extends UpgradeFollower
       var params: _ChoiceParams = {
         title: Const.col('occasio', 'Occasio') + ': ' + event.title,
         text: event.text,
+        img: 'img/cult/occasio.jpg',
         choices: [],
         buttons: [],
         src: payload,
-        textClass: 'window-occasio-text',
+        textClass: 'choice-occasio',
         // choiceID is 1-3
         f: function(src: Dynamic, choiceID: Int)
           {

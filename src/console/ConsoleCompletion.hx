@@ -120,6 +120,20 @@ class ConsoleCompletion
             { lit: 'improvements' },
             { lit: 'timeline' },
           ] });
+          // cult sub-commands (shared by the cu/cult aliases)
+          var cultSubs: Array<CompNode> = [
+            { lit: 'gr' },
+            { lit: 'br', next: [ { slot: '[amount]' } ] },
+            { lit: 'def', next: [ { slot: '[cultID]' } ] },
+            { lit: 'tdef' },
+            { lit: 't' },
+            { lit: 'u1' },
+            { lit: 'r', next: [ { slot: '[power]' } ] },
+            { lit: 'po', next: [ { slot: '[power]', next: [ { slot: '[idx]' } ] } ] },
+            { lit: 'occasio' },
+          ];
+          rootChildren.push({ lit: 'cult', next: cultSubs });
+          rootChildren.push({ lit: 'cu', next: cultSubs });
         }
 
       root = { next: rootChildren };

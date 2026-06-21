@@ -168,6 +168,29 @@
     <feGaussianBlur in="heat" stdDeviation="2.4" result="glow"/>
     <feBlend in="glow" in2="heat" mode="screen"/>
   </filter>
+  <filter id="imgCult" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="lum"/>
+    <feComponentTransfer in="lum" result="lumP">
+      <feFuncR type="discrete" tableValues="0 .083 .167 .25 .333 .417 .5 .583 .667 .75 .833 .917 1"/>
+      <feFuncG type="discrete" tableValues="0 .083 .167 .25 .333 .417 .5 .583 .667 .75 .833 .917 1"/>
+      <feFuncB type="discrete" tableValues="0 .083 .167 .25 .333 .417 .5 .583 .667 .75 .833 .917 1"/>
+    </feComponentTransfer>
+    <feGaussianBlur in="lumP" stdDeviation="0.85" result="lumB"/>
+    <feComponentTransfer in="lumB" result="pink">
+      <feFuncR type="table" tableValues="0.20 0.52 0.88 1.0 1.0"/>
+      <feFuncG type="table" tableValues="0.04 0.16 0.44 0.68 0.92"/>
+      <feFuncB type="table" tableValues="0.32 0.56 0.80 0.96 1.0"/>
+    </feComponentTransfer>
+    <feOffset in="pink" dx="1.4" dy="0" result="pinkR"/>
+    <feColorMatrix in="pinkR" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="rOnly"/>
+    <feOffset in="pink" dx="-1.4" dy="0" result="pinkB"/>
+    <feColorMatrix in="pinkB" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="bOnly"/>
+    <feColorMatrix in="pink" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="gOnly"/>
+    <feBlend in="rOnly" in2="gOnly" mode="screen" result="rg"/>
+    <feBlend in="rg" in2="bOnly" mode="screen" result="split"/>
+    <feGaussianBlur in="split" stdDeviation="2.6" result="glow"/>
+    <feBlend in="glow" in2="split" mode="screen"/>
+  </filter>
 </defs></svg>
 
 <script src="soundmanager2-nodebug.js"></script>
