@@ -290,11 +290,10 @@ class Config
       UI.setVar('--message-img-display', aiArtEnabled ? 'block' : 'none');
       if (game.ui != null)
         {
-          var menuBg = game.ui.mainMenu.menuBg;
+          var menuGL = game.ui.mainMenu.menuGL;
+          menuGL.setBgEnabled(aiArtEnabled);
           if (aiArtEnabled)
-            menuBg.setBackground(game.ui.mainMenu.getBackgroundUrl());
-          else
-            menuBg.hide();
+            menuGL.setBackground(game.ui.mainMenu.getBackgroundUrl());
         }
     }
 

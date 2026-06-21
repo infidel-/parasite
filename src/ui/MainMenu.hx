@@ -19,8 +19,7 @@ class MainMenu extends UIWindow
   var saveEnabled: Bool;
   static inline var DEFAULT_BG = 1;
   var currentBackground: Int;
-  public var menuBg: MainMenuBackground;
-  public var menuCrowd: MainMenuCrowd;
+  public var menuGL: MainMenuGL; // unified bg + env + crowd + parasite scene
 
   // redesign state
   var titleName: SpanElement;       // .mainmenu-name, gets per-letter glyph glitch
@@ -55,12 +54,9 @@ class MainMenu extends UIWindow
       var scrim = Browser.document.createDivElement();
       scrim.className = 'mainmenu-scrim';
       bg.insertBefore(scrim, window);
-      // create WebGL background canvas
-      menuBg = new MainMenuBackground();
-      bg.insertBefore(menuBg.getCanvas(), window);
-      // create crowd silhouette overlay (independent of aiArtEnabled)
-      menuCrowd = new MainMenuCrowd();
-      bg.insertBefore(menuCrowd.getCanvas(), window);
+      // create the unified WebGL scene canvas (bg + environment + crowd + parasite)
+      menuGL = new MainMenuGL();
+      bg.insertBefore(menuGL.getCanvas(), window);
       // decorative layers above the canvas, below the panel
       addDecor();
       // pause the menu's decorative CSS animations while the app is unfocused
@@ -398,9 +394,8 @@ class MainMenu extends UIWindow
       update();
       bg.style.display = '';
       bg.style.visibility = 'visible';
-      if (game.config.aiArtEnabled)
-        menuBg.show();
-      menuCrowd.show();
+      menuGL.setBgEnabled(game.config.aiArtEnabled);
+      menuGL.show();
       bg.classList.add('mainmenu-open');
       // add animation class for regular fade-in
       if (!skipAnimation && !bg.classList.contains('mainmenu-first-show'))
@@ -410,10 +405,8 @@ class MainMenu extends UIWindow
 
   override function hide(?skipAnimation: Bool = false)
     {
-      // don't detach the WebGL canvas (menuBg.hide removes it from the DOM and the
-      // GL render doesn't survive the reattach -> black bg on reopen). The render
-      // loop self-stops via its own visibility check; show() restarts it.
-      menuCrowd.hide();
+      // render loop self-stops via its visibility check; show() restarts it
+      menuGL.hide();
       bg.classList.remove('mainmenu-open');
       stopGlitch();
       animatedHide(true); // keep display set: WebGL canvas mustn't go through display:none
@@ -471,8 +464,9 @@ override function update()
   function setBackground(bgValue: Int, isEnabled: Bool)
     {
       currentBackground = bgValue;
+      menuGL.setBgEnabled(isEnabled);
       if (isEnabled)
-        menuBg.setBackground(getBackgroundUrl());
+        menuGL.setBackground(getBackgroundUrl());
     }
 
 // expose current menu background for config toggles
