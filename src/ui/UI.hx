@@ -421,12 +421,17 @@ class UI
       // open options window
       else if (optionsPressed)
         state = UISTATE_OPTIONS;
-      // open body window
+      // toggle body window: re-pressing its key while open closes it
       else if (bodyPressed &&
               (game.player.vars.inventoryEnabled ||
                game.player.vars.skillsEnabled ||
                game.player.vars.organsEnabled))
-        state = UISTATE_BODY;
+        {
+          if (_state == UISTATE_BODY)
+            closeWindow();
+          else
+            state = UISTATE_BODY;
+        }
       // exit button
       else if (exitPressed)
         {

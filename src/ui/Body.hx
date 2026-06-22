@@ -386,7 +386,10 @@ class Body extends UIWindow
           if (host.organs.getActive(imp.info.id) != null)
             continue;
           var organ = host.organs.get(imp.info.id); // in-progress (not yet active) if non-null
-          var isNow = (organ != null && !organ.isActive);
+          // only the single currently-grown organ shows GROWING; others are re-selectable
+          var isNow = (organ != null
+            && !organ.isActive
+            && imp.info.id == host.organs.getCurrentID());
           buf.add(availCard(imp, organ, isNow, canGrow, i));
           i++;
           hasAvail = true;
@@ -506,7 +509,9 @@ class Body extends UIWindow
               {
                 game.scene.sounds.play('click-action');
                 game.player.host.organs.action('set.' + id);
-                update();
+                // refresh only the parts that change (no full-window re-animation)
+                updateFeatures();
+                updateStats();
                 game.ui.hud.update();
               }
           }
@@ -541,10 +546,20 @@ class Body extends UIWindow
           if (a == null)
             return;
           game.player.host.organs.action(a.id);
-          update();
+          updateFeatures();
+          updateStats();
           game.ui.hud.update();
         }
       actionPrefix = null;
+    }
+
+  override function show(?skipAnimation: Bool = false)
+    {
+      // entrance rise is gated on .body-intro (added before update builds the
+      // cards); drop it after the cascade so later refreshes don't re-animate
+      window.classList.add('body-intro');
+      super.show(skipAnimation);
+      Browser.window.setTimeout(function() window.classList.remove('body-intro'), 1000);
     }
 
   override function hide(?skipAnimation: Bool = false)

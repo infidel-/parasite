@@ -3213,10 +3213,10 @@ fieldset {
 }
 /* focus lens + turn-group binding (source order: dim < group < hovered) */
 .hud-scroll:hover .log-rec {
-  opacity: .5;
+  opacity: .72;
 }
 .hud-scroll:hover .log-rec.tg {
-  opacity: .85;
+  opacity: .9;
 }
 .log-rec.tg .log-rl {
   background: rgba(164,95,224,.06);
@@ -4277,7 +4277,7 @@ fieldset {
   background: rgba(107,86,88,.08);
 }
 .timeline-loc {
-  font-size: calc(var(--text-font-size) * 1.23);
+  font-size: calc(var(--text-font-size) * 1.15);
   letter-spacing: .07em;
   color: #f5d59a;
   font-weight: 600;
@@ -6774,8 +6774,20 @@ select {
   flex-direction: column;
   min-height: 0;
   gap: 8px;
+}
+/* entrance rise plays only during the open intro window; content refreshes
+   (e.g. picking a feature to grow) rebuild without re-animating */
+.body-intro .body-block {
   animation: win-rise .4s ease-out backwards;
   animation-delay: calc(.12s + var(--i,0) * .06s);
+}
+.body-intro .body-sk {
+  animation: log-rise .3s ease-out backwards;
+  animation-delay: calc(.2s + var(--i,0) * 35ms);
+}
+.body-intro .body-organ {
+  animation: log-rise .3s ease-out backwards;
+  animation-delay: calc(.16s + var(--i,0) * 40ms);
 }
 .body-block.disabled {
   opacity: .4;
@@ -6960,8 +6972,6 @@ select {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  animation: log-rise .3s ease-out backwards;
-  animation-delay: calc(.2s + var(--i,0) * 35ms);
 }
 .body-sk .body-bdi {
   width: 16px;
@@ -7174,8 +7184,6 @@ select {
   overflow: hidden;
   background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.14));
   transition: border-color .15s, background .15s, opacity .15s;
-  animation: log-rise .3s ease-out backwards;
-  animation-delay: calc(.16s + var(--i,0) * 40ms);
 }
 .body-organ.active { border-left: 2px solid rgba(115,243,255,.4); }
 .body-scroll:hover .body-organ { opacity: .6; }

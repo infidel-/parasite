@@ -227,6 +227,13 @@ class Organs extends _SaveObject
     }
 
 
+// id of the organ currently being grown (null if none) — only one grows at a time
+  public function getCurrentID(): _Improv
+    {
+      return currentOrganID;
+    }
+
+
 // has this organ?
   public function has(id: _Improv): Bool
     {
