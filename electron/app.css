@@ -77,6 +77,12 @@
   --message-img-display: block;
 }
 
+/* themed text-selection highlight (replace the OS blue) */
+::selection {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: #fff;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -843,12 +849,12 @@ hr {
 #hud-topbar .hud-loc-name {
   font-family: var(--text-font-title), sans-serif;
   letter-spacing: 0.14em;
-  font-size: calc(var(--text-font-size) * 1.13);
+  font-size: calc(var(--text-font-size) * 1.2);
   text-transform: uppercase;
   color: var(--text);
 }
 #hud-topbar .hud-loc-coords {
-  font-size: calc(var(--text-font-size) * 0.8);
+  font-size: calc(var(--text-font-size) * 0.7);
   color: var(--dim);
   margin-top: 2px;
 }
@@ -858,7 +864,7 @@ hr {
   transform: translateX(-50%);
   font-family: var(--text-font-title), sans-serif;
   letter-spacing: 0.2em;
-  font-size: calc(var(--text-font-size) * 1.07);
+  font-size: calc(var(--text-font-size) * 1.2);
   color: #e6e8ec;
   text-transform: uppercase;
   padding: 3px 11px;
@@ -1064,7 +1070,7 @@ hr {
   align-items: center;
   gap: 10px;
   font-family: var(--text-font-title), sans-serif;
-  font-size: calc(var(--text-font-size) * 0.67);
+  font-size: calc(var(--text-font-size) * 0.77);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: #6b7078;
@@ -1105,7 +1111,7 @@ hr {
   gap: 8px;
   font-family: var(--text-font-title), sans-serif;
   letter-spacing: 0.12em;
-  font-size: calc(var(--text-font-size) * 0.87);
+  font-size: var(--text-font-size);
   color: var(--dim);
 }
 .hud-bar-n svg {
@@ -1118,7 +1124,7 @@ hr {
   color: var(--accent-light);
 }
 .hud-bar-v {
-  font-size: var(--text-font-size);
+  font-size: calc(var(--text-font-size) * 0.8);
   color: var(--text);
 }
 .hud-bar-v small {
@@ -5859,6 +5865,23 @@ select {
   pointer-events: none;
   background: linear-gradient(180deg, transparent 55%, rgba(4,2,10,.6));
 }
+/* sandbox recon-grid overlay: diagonal wave of flashing cells on selection */
+.newgame-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: grid;
+  gap: 3px;
+  padding: 2px;
+}
+.newgame-grid .gc {
+  border-radius: 2px;
+  opacity: 0;
+  background: color-mix(in srgb, var(--newgame-accent) 60%, #fff);
+  box-shadow: 0 0 10px 1px var(--newgame-accent);
+}
+@keyframes newgame-gc-flash { 0% { opacity: 0; } 22% { opacity: .92; } 100% { opacity: 0; } }
 .newgame-flavor {
   margin: 0;
   font-size: var(--text-font-size);
@@ -5903,7 +5926,7 @@ select {
   color: var(--newgame-accent);
 }
 @media (prefers-reduced-motion: reduce) {
-  #window-newgame, .newgame-img, .newgame-flavor, .newgame-redact {
+  #window-newgame, .newgame-img, .newgame-flavor, .newgame-redact, .newgame-grid .gc {
     animation: none;
   }
 }
