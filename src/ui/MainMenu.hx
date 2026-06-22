@@ -313,6 +313,20 @@ class MainMenu extends UIWindow
       titleName.style.width = titleName.offsetWidth + 'px';
     }
 
+// pin each menu label to its real text width so the hover decode-scramble
+// (random glyphs, different advance widths) spills via overflow:visible
+// instead of reflowing the centered list — same trick as pinTitleWidth
+  function pinLabelWidths()
+    {
+      for (i in 0...labels.length)
+        {
+          var el = labels[i];
+          el.style.width = 'auto';
+          el.textContent = labelTexts[i];
+          el.style.width = el.offsetWidth + 'px';
+        }
+    }
+
 // flicker one or two random letters of the title to glyph noise, then restore
   function letterGlitch()
     {
@@ -339,8 +353,9 @@ class MainMenu extends UIWindow
     {
       Browser.window.clearTimeout(glitchTimer);
       pinTitleWidth();
+      pinLabelWidths();
       // re-pin after the web font swaps in
-      Browser.window.setTimeout(function() { if (isVisible()) pinTitleWidth(); }, 500);
+      Browser.window.setTimeout(function() { if (isVisible()) { pinTitleWidth(); pinLabelWidths(); } }, 500);
       glitchTimer = Browser.window.setTimeout(letterGlitch, 900);
     }
 

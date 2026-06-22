@@ -399,43 +399,33 @@ class UI
       var exitPressed = (code == 'Digit0' && altKey) || code == 'F10';
       var vstate = _state;
 
-      // open goals window
+      // resolve the pressed window key to a target state (guards gate availability)
+      var target = vstate;
+      var keyed = true;
       if (goalsPressed)
-        state = UISTATE_GOALS;
-      // open message log window
+        target = UISTATE_GOALS;
       else if (logPressed)
-        state = UISTATE_LOG;
-      // open timeline window
+        target = UISTATE_LOG;
       else if (timelinePressed &&
           game.player.vars.timelineEnabled)
-        state = UISTATE_TIMELINE;
-      // open evolution window (if enabled)
+        target = UISTATE_TIMELINE;
       else if (evolutionPressed &&
           game.player.state == PLR_STATE_HOST &&
           game.player.evolutionManager.state > 0)
-        state = UISTATE_EVOLUTION;
-      // open cult details window
+        target = UISTATE_EVOLUTION;
       else if (cultPressed &&
           game.cults[0].state == CULT_STATE_ACTIVE)
-        state = UISTATE_CULT;
-      // open options window
+        target = UISTATE_CULT;
       else if (optionsPressed)
-        state = UISTATE_OPTIONS;
-      // toggle body window: re-pressing its key while open closes it
+        target = UISTATE_OPTIONS;
       else if (bodyPressed &&
               (game.player.vars.inventoryEnabled ||
                game.player.vars.skillsEnabled ||
                game.player.vars.organsEnabled))
-        {
-          if (_state == UISTATE_BODY)
-            closeWindow();
-          else
-            state = UISTATE_BODY;
-        }
-      // exit button
+        target = UISTATE_BODY;
+      // exit button: confirm dialog
       else if (exitPressed)
         {
-          // show exit yes/no dialog
           game.ui.event({
             type: UIEVENT_STATE,
             state: UISTATE_YESNO,
@@ -451,9 +441,24 @@ class UI
               }
             }
           });
+          return false;
         }
-      if (state != vstate)
-        game.scene.sounds.play('window-open');
+      else keyed = false;
+
+      // a window key resolved: re-pressing its own key while open toggles it shut
+      if (keyed)
+        {
+          if (target == _state)
+            {
+              game.scene.sounds.play('window-close');
+              closeWindow();
+            }
+          else
+            {
+              state = target;
+              game.scene.sounds.play('window-open');
+            }
+        }
       return false;
     }
 

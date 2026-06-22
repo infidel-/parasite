@@ -941,19 +941,22 @@ class MainElectron
             }
           });
           // no app menu in any build: removes the default Ctrl+W "close window"
-          // accelerator (Ctrl+W is repurposed as console word-delete). dev
-          // shortcuts (devtools / reload) are re-bound below for debug
+          // accelerator (Ctrl+W is repurposed as console word-delete). the menu
+          // also carried F11 fullscreen + dev shortcuts, so rebind them here:
+          // F11 in all builds, devtools / reload only in debug
           win.setMenu(null);
-          if (isDebug)
-            untyped win.webContents.on('before-input-event', function(e, input) {
-              if (input.type != 'keyDown')
-                return;
-              var k = ('' + input.key).toLowerCase();
-              if (k == 'f12' || (input.control && input.shift && k == 'i'))
-                win.webContents.toggleDevTools();
-              else if (input.control && k == 'r')
-                win.webContents.reload();
-            });
+          untyped win.webContents.on('before-input-event', function(e, input) {
+            if (input.type != 'keyDown')
+              return;
+            var k = ('' + input.key).toLowerCase();
+            if (k == 'f11')
+              win.fullScreen = !win.fullScreen;
+            else if (isDebug &&
+                (k == 'f12' || (input.control && input.shift && k == 'i')))
+              win.webContents.toggleDevTools();
+            else if (isDebug && input.control && k == 'r')
+              win.webContents.reload();
+          });
 
           // block all in-window navigation
           win.webContents.on('will-navigate', function(e, url) {
