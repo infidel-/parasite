@@ -63,7 +63,7 @@ class Config
       aiArtEnabled = true;
 
       font = 'Virtucorp';
-      fontSize = 12;
+      fontSize = 14;
       fontTitle = 'Cruiser2015';
       hudLogLines = 4;
       mapScale = 1;

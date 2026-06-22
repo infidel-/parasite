@@ -433,17 +433,19 @@ override function update()
         game.state == GAMESTATE_RUNNING &&
         game.player.saveDifficulty != UNSET)
       {
-        // show mission area indicator instead of saves left when in mission area
-        var text = game.player.vars.savesLeft + ' saves left';
+        // saves-left chip uses a floppy glyph + count; mission area shows alert text
+        var html = UISvg.floppy('mainmenu-sub-ico') + ' ' + game.player.vars.savesLeft;
         var alert = false;
         if (game.player.inMissionArea())
           {
-            text = 'mission area';
+            html = 'mission area';
             alert = true;
           }
         var note = Browser.document.createSpanElement();
-        note.className = (alert ? 'mainmenu-sub alert' : 'mainmenu-sub');
-        note.textContent = text;
+        // themed css tooltip (native title is swallowed by the menu-item hover)
+        note.className = (alert ? 'mainmenu-sub alert evolution-tip' : 'mainmenu-sub evolution-tip');
+        note.innerHTML = html;
+        note.setAttribute('data-tip', game.player.vars.savesLeft + ' saves left');
         saveItem.appendChild(note);
       }
 

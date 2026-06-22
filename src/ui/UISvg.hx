@@ -151,6 +151,12 @@ class UISvg
       return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2 2-8z"/></svg>';
     }
 
+// floppy-disk glyph (saves left); cls sets the svg class
+  public static function floppy(?cls: String = ''): String
+    {
+      return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h7V3"/><rect x="7" y="13" width="10" height="6" rx="1"/></svg>';
+    }
+
 // small clock glyph (time / turns); cls sets the svg class
   public static function clockSmall(?cls: String = ''): String
     {

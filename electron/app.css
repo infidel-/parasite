@@ -4938,6 +4938,11 @@ fieldset {
   box-shadow: inset 0 1px 3px rgba(0,0,0,.5), 0 0 8px -3px var(--win-glow);
   text-shadow: 0 0 6px color-mix(in srgb, var(--win-glow) 60%, transparent);
 }
+/* every native select gets a dark dropdown popup (white-bg/blue-hl is the light
+   color-scheme default; option{background} is ignored in the OS popup listbox) */
+select {
+  color-scheme: dark;
+}
 /* select (styled native) */
 .options-selwrap {
   position: relative;
@@ -5350,11 +5355,12 @@ fieldset {
   display: inline-block;
   white-space: nowrap;
   overflow: visible;
-  font-size: calc(var(--text-font-size) * 2.8);
+  font-size: calc(var(--text-font-size) * 3.8);
   letter-spacing: .42em;
   color: var(--text);
   text-shadow: 0 0 20px rgba(164,95,224,.45);
-  padding-left: .42em;
+  /* cancel trailing letter-spacing so the ink centers symmetrically */
+  margin-right: -.42em;
 }
 /* periodic RGB-split glitch: cyan/magenta ghosts keep the true word readable behind glyph swaps */
 .mainmenu-name::before, .mainmenu-name::after {
@@ -5364,7 +5370,6 @@ fieldset {
   right: 0;
   top: 0;
   text-align: center;
-  padding-left: .42em;
   opacity: 0;
   pointer-events: none;
   mix-blend-mode: screen;
@@ -5466,7 +5471,7 @@ fieldset {
   font-family: 'Cruiser2015', sans-serif;
   text-transform: uppercase;
   letter-spacing: .14em;
-  font-size: calc(var(--text-font-size) * 1.6);
+  font-size: calc(var(--text-font-size) * 2.3);
   white-space: nowrap;
   line-height: 1.3;
   padding: .1em 22px;
@@ -5506,6 +5511,15 @@ fieldset {
   line-height: 1;
   white-space: nowrap;
   color: var(--blue-gray);
+}
+/* floppy glyph inside the saves chip: oversized, accent-tinted with a soft glow */
+.mainmenu-sub-ico {
+  width: 2.25em;
+  height: 2.25em;
+  vertical-align: -0.78em;
+  margin-right: 0.3em;
+  color: var(--accent-light);
+  filter: drop-shadow(0 0 4px rgba(164, 95, 224, 0.55));
 }
 .mainmenu-sub.alert {
   border-color: rgba(255, 91, 69, 0.45);
