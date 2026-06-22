@@ -4,7 +4,7 @@ const HOST = '172.18.208.1:9300';
 const expr = process.argv[2] || '1';
 
 const targets = await (await fetch(`http://${HOST}/json`)).json();
-const page = targets.find(t => t.type === 'page' && t.url.includes('app.html'));
+const page = targets.find(t => t.type === 'page' && t.url.startsWith('file:') && t.url.includes('app.html'));
 if (!page) { console.error('no app.html page target'); process.exit(1); }
 
 const ws = new WebSocket(page.webSocketDebuggerUrl);

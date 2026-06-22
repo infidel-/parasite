@@ -25,6 +25,10 @@
   --ui-cursor-disabled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23e05a5a'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23e05a5a' stroke-width='1.5' opacity='.85'/%3E%3Cline x1='5.6' y1='18.4' x2='18.4' y2='5.6' stroke='%23e05a5a' stroke-width='1.5' opacity='.85'/%3E%3C/svg%3E") 12 12, not-allowed;
   --dim: #91949b;
   --panel-dark: rgba(11,15,21,.90);
+  /* navbar membrane tokens live at :root (not #hud): #hud-buttons is reparented to
+     <body> to stack above the window scrim, so it can't inherit hud-scoped vars */
+  --hud-panel: rgba(12, 14, 19, 0.7);
+  --hud-panel-blur: blur(1.5px);
   --text-color-white: #FFFFFF;
   --text-color-yellow: #FFEA0E;
   --text-color-red: #ff5b45;
@@ -639,10 +643,8 @@ hr {
    HUD REDESIGN ("infected instrument panel")
    ============================================================ */
 
-/* hud-scoped tokens (inherit down to every panel) */
+/* hud-scoped tokens (inherit down to every panel); --hud-panel/-blur hoisted to :root for the reparented navbar */
 #hud {
-  --hud-panel: rgba(12, 14, 19, 0.7);
-  --hud-panel-blur: blur(1.5px);
   --hud-sel-bg: rgba(86, 52, 110, 0.55);
   --hud-health: #52a05e;
   --hud-energy: #5081bc;
@@ -5364,11 +5366,11 @@ select {
   white-space: nowrap;
   overflow: visible;
   font-size: calc(var(--text-font-size) * 3.8);
-  letter-spacing: .42em;
+  letter-spacing: 0.15em;
   color: var(--text);
   text-shadow: 0 0 20px rgba(164,95,224,.45);
   /* cancel trailing letter-spacing so the ink centers symmetrically */
-  margin-right: -.42em;
+  margin-right: -0.15em;
 }
 /* periodic RGB-split glitch: cyan/magenta ghosts keep the true word readable behind glyph swaps */
 .mainmenu-name::before, .mainmenu-name::after {
@@ -5431,6 +5433,9 @@ select {
 .mainmenu-ver {
   display: block;
   font-size: calc(var(--text-font-size) * 0.8);
+  /* reserve the line box so the open-decode (starts empty) doesn't grow the title and jump the panel height */
+  line-height: 1.2;
+  min-height: 1.2em;
   letter-spacing: .32em;
   color: var(--blue-gray);
   margin-top: 9px;
