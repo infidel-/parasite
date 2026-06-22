@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -12,6 +12,13 @@ sshot:
 # dev: reload the running renderer over CDP to pull in fresh build artifacts (debug port 9300)
 reload:
 	node reload.mjs
+
+# dev: show working-tree diff (stat + full) without a pager
+git-diff:
+	@git --no-pager diff --stat HEAD
+	@echo ---
+	@git --no-pager diff HEAD
+	@git --no-pager status --short
 
 testmod:
 	cd examples/testmod/ && $(MAKE)
