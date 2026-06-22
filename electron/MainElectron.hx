@@ -940,8 +940,20 @@ class MainElectron
               backgroundThrottling: false,
             }
           });
-          if (!isDebug)
-            win.setMenu(null);
+          // no app menu in any build: removes the default Ctrl+W "close window"
+          // accelerator (Ctrl+W is repurposed as console word-delete). dev
+          // shortcuts (devtools / reload) are re-bound below for debug
+          win.setMenu(null);
+          if (isDebug)
+            untyped win.webContents.on('before-input-event', function(e, input) {
+              if (input.type != 'keyDown')
+                return;
+              var k = ('' + input.key).toLowerCase();
+              if (k == 'f12' || (input.control && input.shift && k == 'i'))
+                win.webContents.toggleDevTools();
+              else if (input.control && k == 'r')
+                win.webContents.reload();
+            });
 
           // block all in-window navigation
           win.webContents.on('will-navigate', function(e, url) {

@@ -85,6 +85,25 @@ class ConsoleHud
           // kludge: needs a timeout or closes the event window
           Browser.window.setTimeout(hide, 10);
         }
+      // ctrl-w: delete the word before the caret (electron's close-window
+      // accelerator on this chord is disabled in the host so it can't fire)
+      else if (e.ctrlKey
+          && e.code == 'KeyW')
+        {
+          e.preventDefault();
+          var val = console.value;
+          var caret = console.selectionStart;
+          var i = caret;
+          // skip whitespace immediately left of the caret, then the word itself
+          while (i > 0 && val.charAt(i - 1) == ' ')
+            i--;
+          while (i > 0 && val.charAt(i - 1) != ' ')
+            i--;
+          console.value = val.substring(0, i) + val.substring(caret);
+          console.selectionStart = i;
+          console.selectionEnd = i;
+          updateConsoleHint();
+        }
       // tab completion (longest common prefix; lists ambiguous candidates)
       else if (e.code == 'Tab')
         {

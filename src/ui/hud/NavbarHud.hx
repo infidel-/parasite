@@ -23,7 +23,11 @@ class NavbarHud
       buttons = document.createDivElement();
       buttons.id = 'hud-buttons';
       buttons.className = 'hud-panel';
-      h.container.appendChild(buttons);
+      // navbar lives on <body>, not inside #hud: it must paint above the window
+      // scrim/frame as a tab row, and survive hud.hide() on window open. starts
+      // hidden (game opens on the main menu)
+      document.body.appendChild(buttons);
+      buttons.style.visibility = 'hidden';
       menuButtons = [];
       addMenuButton(UISTATE_GOALS, UISvg.hudNavGoals(), 'Goals');
       addMenuButton(UISTATE_BODY, UISvg.hudNavBody(), 'Body');
@@ -48,6 +52,9 @@ class NavbarHud
       });
       btn.onclick = function (e)
         {
+          // already on this window: ignore (no reopen)
+          if (game.ui.state == state)
+            return;
           game.scene.sounds.play('click-hud');
           game.scene.sounds.play('window-open');
           game.ui.state = state;
@@ -62,6 +69,41 @@ class NavbarHud
         if (b.state == state)
           return b.btn;
       return null;
+    }
+
+// show navbar in its gameplay position (no tab-row lift)
+  public function show()
+    {
+      buttons.classList.remove('tabrow');
+      buttons.style.visibility = 'visible';
+    }
+
+// hide navbar entirely
+  public function hide()
+    {
+      buttons.classList.remove('tabrow');
+      buttons.style.visibility = 'hidden';
+      for (m in menuButtons)
+        m.btn.classList.remove('active');
+    }
+
+// position navbar for a UI state: gameplay (default), tab-row lifted above the
+// window with the open cell marked active, or hidden (menu / message / modal).
+// final authority over show()/hide(), called last from UI.set_state
+  public function applyState(state: _UIState)
+    {
+      for (m in menuButtons)
+        m.btn.classList.remove('active');
+      if (state == UISTATE_DEFAULT)
+        show();
+      // one of the six window cells: lift to a tab row, mark the open one active
+      else if (getMenuButton(state) != null)
+        {
+          buttons.classList.add('tabrow');
+          buttons.style.visibility = 'visible';
+          getMenuButton(state).classList.add('active');
+        }
+      else hide();
     }
 
 // update menu buttons visibility

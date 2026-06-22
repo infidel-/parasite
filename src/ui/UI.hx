@@ -168,8 +168,10 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
+      // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
       if (e.key == 'Control' &&
-          !game.scene.controlPressed)
+          !game.scene.controlPressed &&
+          !hud.consoleVisible())
         {
           game.scene.controlPressed = true;
           game.scene.mouse.update(true);
@@ -721,6 +723,9 @@ class UI
           hud.show();
         }
       else hud.hide();
+      // navbar persists as a tab row over the six window states (set last, it
+      // overrides the hud.show()/hide() navbar toggle above)
+      hud.applyNavbarState(_state);
       // atmosphere stays during gameplay/windows but not over the main menu bg
       hud.setAtmoVisible(_state != UISTATE_MAINMENU);
 

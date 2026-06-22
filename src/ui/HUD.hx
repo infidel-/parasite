@@ -281,6 +281,7 @@ public function onMouseLeave()
   public function show()
     {
       container.style.visibility = 'visible';
+      navbar.show();
     }
 
   public function hide()
@@ -288,6 +289,13 @@ public function onMouseLeave()
       regionTooltip.hide();
       aiTooltip.hide();
       container.style.visibility = 'hidden';
+      navbar.hide();
+    }
+
+// position the navbar for a UI state (delegates to the navbar block)
+  public function applyNavbarState(state: _UIState)
+    {
+      navbar.applyState(state);
     }
 
 // console block delegates

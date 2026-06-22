@@ -1706,6 +1706,60 @@ hr {
   display: flex;
   background-color: var(--hud-panel);
   pointer-events: auto;
+  user-select: none;
+}
+/* window open: navbar lifts above the scrim/frame and reads as a raised tab row */
+#hud-buttons.tabrow {
+  z-index: 115; /* above .window (110) and .window-bg (105) */
+  background: var(--panel-dark);
+  border-color: rgba(164, 95, 224, 0.3);
+  /* relief: lit top bevel, dark bottom bevel, shadow pooling onto the scrim */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.55),
+    0 7px 20px rgba(0, 0, 0, 0.65),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+}
+/* calm mode: dock pop-scale suspended while a window is open */
+#hud-buttons.tabrow .hud-nav-cell:hover,
+#hud-buttons.tabrow .hud-nav-cell:active,
+#hud-buttons.tabrow .hud-nav-cell:hover + .hud-nav-cell,
+#hud-buttons.tabrow .hud-nav-cell:has(+ .hud-nav-cell:hover) {
+  transform: none;
+}
+/* the open window's cell is inert: no hover anim (scale / vein / svg) and no
+   re-click — :hover never fires, so every hover-scoped rule stays dormant */
+#hud-buttons.tabrow .hud-nav-cell.active {
+  pointer-events: none;
+}
+/* active tab: hover look made persistent + accent indicator bar on the top edge */
+.hud-nav-cell.active {
+  color: var(--accent);
+  border-radius: 6px;
+  background:
+    radial-gradient(70% 75% at 50% 62%, rgba(164, 95, 224, 0.22), transparent 78%),
+    var(--hud-panel);
+}
+.hud-nav-cell.active .hud-nav-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hud-nav-cell.active .hud-nav-ico {
+  transform: translateY(-6px);
+}
+.hud-nav-cell.active .hud-nav-ico.body {
+  transform: translateY(-5px);
+}
+.hud-nav-cell.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 0 8px rgba(164, 95, 224, 0.7);
 }
 .hud-nav-cell {
   flex: 0 0 60px;
@@ -2992,11 +3046,12 @@ fieldset {
   pointer-events: all;
   position: relative;
   width: calc(100% - 90px);
-  height: calc(100% - 90px);
+  height: calc(100% - 140px);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 22px 28px 28px;
+  /* fat bottom: the lifted navbar tab-row overlaps the frame's bottom-left ~31px */
+  padding: 22px 28px 52px;
   border-radius: 16px;
   border: 1px solid var(--win-frame);
   /* depth stack (top->bottom): grain, accent title halo, inner vignette, top-lit ramp */
@@ -3032,6 +3087,10 @@ fieldset {
   background-image: radial-gradient(ellipse at center, rgba(4,2,10,.62), rgba(2,1,6,.86));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  /* capture the pointer so the scrim shows the svg ring-dot cursor instead of
+     falling through to the map canvas's old png arrow */
+  pointer-events: auto;
+  cursor: var(--ui-cursor-default);
 }
 /* giant identity glyph ghosted on the scrim behind the frame */
 .hud-scrim {
