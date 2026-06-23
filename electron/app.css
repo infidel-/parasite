@@ -39,6 +39,7 @@
   --text-color-goal: #92b9ff;
   --text-color-pedia: #c8d8da;
   --text-color-symbiosis: #98ff97;
+  --text-color-consent: #5fe6c4;
   --text-color-cultist: #fd97ff;
   --text-color-debug: #a7a7a7;
   --text-color-alert: #f26a6a;
@@ -129,8 +130,11 @@ hr {
 }
 
 .icon-energy {
-  font-size: 100%;
   color: var(--text-color-energy);
+}
+.icon-energy svg {
+  width: 1.05em;
+  height: 1.05em;
 }
 
 .icon-money {
@@ -139,22 +143,39 @@ hr {
   color: var(--text-color-money);
 }
 
+/* host-status badges: inline svg sized to the surrounding text */
+.icon-svg {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.icon-svg svg {
+  width: 1.9em;
+  height: 1.9em;
+}
+
 .icon-affinity {
-  font-size: 150%;
-  font-weight: bold;
   color: var(--text-color-symbiosis);
+}
+.icon-affinity svg {
+  width: 1.7em;
+  height: 1.7em;
 }
 
 .icon-consent {
-  font-size: 150%;
-  font-weight: bold;
-  color: var(--text-color-symbiosis);
+  color: var(--text-color-consent);
+}
+.icon-consent svg {
+  width: 1.5em;
+  height: 1.5em;
 }
 
 .icon-cultist {
-  font-size: 150%;
-  font-weight: bold;
   color: var(--text-color-cultist);
+}
+.icon-cultist svg {
+  width: 1.6em;
+  height: 1.6em;
 }
 
 .narrative {

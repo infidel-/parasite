@@ -407,6 +407,32 @@ class UISvg
         '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>';
     }
 
+// host-status badge: interlocking rings (affinity / symbiosis bond)
+  public static function badgeAffinity(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="9" cy="12" r="5.4"/><circle cx="15" cy="12" r="5.4"/>' +
+        '<circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>';
+    }
+
+// host-status badge: open mouth (consent, freely given) — based on 👄
+// lip ring with the cavity cut as an evenodd void = open mouth interior
+  public static function badgeConsent(): String
+    {
+      return '<svg viewBox="60 313 720 423" fill="currentColor" fill-rule="evenodd" aria-hidden="true">' +
+        '<path d="M70 503C150 450 205 345 295 331 345 323 386 355 419 355 452 355 493 323 543 331 633 345 688 450 768 503 720 574 661 673 548 704 468 726 368 726 290 704 177 673 118 574 70 503Z' + // lips (outer)
+        'M112 515C226 496 309 460 367 460 406 460 433 470 461 470 488 470 514 460 553 460 611 460 694 496 726 515 608 540 522 568 461 568 399 568 314 540 112 515Z"/></svg>'; // parted seam (void, widened)
+    }
+
+// host-status badge: hooded figure (cultist / cult allegiance)
+// pointed cowl over robe shoulders; face cut as an evenodd void = shadowed face
+  public static function badgeCultist(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true">' +
+        '<path d="M12 1.5C14.8 2.3 17.5 5 17.5 8.6 17.5 10.2 16.8 11.6 15.6 12.6 18.2 13.8 20.6 16.8 20.6 20.5L20.6 21.8 3.4 21.8 3.4 20.5C3.4 16.8 5.8 13.8 8.4 12.6 7.2 11.6 6.5 10.2 6.5 8.6 6.5 5 9.2 2.3 12 1.5Z' + // hood + robe silhouette
+        'M12 6.6C9.8 6.6 8.6 8.4 8.6 10.4 8.6 12.4 10 13.8 12 13.8 14 13.8 15.4 12.4 15.4 10.4 15.4 8.4 14.2 6.6 12 6.6Z"/></svg>'; // shadowed face void
+    }
+
 // rotating organism sigil (inner group .mainmenu-sigil-in counter-spins)
   public static function sigil(): String
     {

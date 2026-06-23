@@ -686,31 +686,6 @@ class Const
 #end
     }
 
-  public static inline function key(s: String)
-    {
-      return '<span style="font-weight:bold; color:var(--text-color-gray)">' + s + '</span>';
-    }
-
-  public static inline function bold(s: String)
-    {
-      return '<span style="font-weight:bold">' + s + '</span>';
-    }
-
-  public static inline function icon(col: String, s: String)
-    {
-      return "<span class=icon style='color:var(--text-color-" + col + ")'>" +
-        s + '</span>';
-    }
-
-// energy cost
-  public static inline function cost(energy: Int)
-    {
-      return ' <span style="color:var(--text-color-gray)" class=small>' + 
-        '(' + energy + '</span> ' + Icon.energy +
-        '<span style="color:var(--text-color-gray)" class=small>)</span>';
-    }
-
-
   public static inline function hl(s: String)
     {
       return '<span class=highlight-text>' + s + '</span>';
