@@ -1202,16 +1202,9 @@ hr {
   border-radius: 1px;
   background: rgba(255, 255, 255, 0.4);
 }
-/* health breathes: slow pulse with glow */
-@keyframes hud-breathe {
-  50% {
-    filter: brightness(1.5) drop-shadow(0 0 5px currentColor);
-  }
-}
 .hud-bar-fill.health {
   color: var(--hud-health);
   background: linear-gradient(90deg, #3a7a46, var(--hud-health));
-  animation: hud-breathe 7s ease-in-out infinite;
 }
 .hud-bar-fill.energy {
   background: linear-gradient(90deg, #365f86, var(--hud-energy));
@@ -1326,6 +1319,32 @@ hr {
     transform: translateY(-12px);
   }
 }
+/* value pulse on change (the change feedback in compact, where the float is hidden) */
+.hud-bar-v .cur {
+  display: inline-block;
+  transform-origin: right center;
+}
+@keyframes hud-num-flash-up {
+  0% { color: var(--narrative); transform: scale(1.25); }
+}
+@keyframes hud-num-flash-down {
+  0% { color: #d67a7a; transform: scale(1.25); }
+}
+.hud-bar-v.flash-up .cur {
+  animation: hud-num-flash-up 0.45s ease-out;
+}
+.hud-bar-v.flash-down .cur {
+  animation: hud-num-flash-down 0.45s ease-out;
+}
+/* generic one-shot change pulse (cult resources, evo/organ turn pills) */
+@keyframes hud-pulse-change {
+  0% { transform: scale(1.3); filter: brightness(1.7); }
+}
+.hud-cult .v.hud-pulse,
+.hud-turn-pill.hud-pulse {
+  animation: hud-pulse-change 0.4s ease-out;
+  transform-origin: center;
+}
 /* hover cost-preview: hatched segment the action would spend */
 .hud-bar-cost {
   position: absolute;
@@ -1384,14 +1403,14 @@ hr {
 .hud-feat-organ { color: var(--text-color-organ); }
 /* evolution strip: full-bleed cyan band behind evo + organ rows */
 .hud-evo-strip {
-  margin: 12px -14px 0;
-  padding: 7px 14px;
+  margin: 9px -14px 0;
+  padding: 4px 14px;
   background: linear-gradient(90deg, rgba(115, 243, 255, 0.11), rgba(115, 243, 255, 0.03) 55%, transparent 92%);
   border-top: 1px solid rgba(115, 243, 255, 0.15);
   border-bottom: 1px solid rgba(115, 243, 255, 0.08);
   box-shadow: inset 2px 0 0 rgba(115, 243, 255, 0.45);
 }
-.hud-evo-strip .hud-feat { margin: 5px 0; }
+.hud-evo-strip .hud-feat { margin: 3px 0; }
 .hud-evo-strip .hud-feat:first-child { margin-top: 0; }
 .hud-evo-strip .hud-feat:last-child { margin-bottom: 0; }
 /* turn count pill: number + clock, inherits a neutral chrome tint */
@@ -1455,6 +1474,179 @@ hr {
   line-height: 1;
   position: relative;
   top: -1px;
+}
+
+/* spoon marker */
+.hud-spoon {
+  padding-top: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* compact-mode toggle button (top-right of the info panel) */
+.hud-compact-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: var(--dim);
+  opacity: 0.5;
+  cursor: var(--hud-cursor);
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  z-index: 2;
+  pointer-events: auto; /* #hud is pointer-events:none; re-enable the toggle */
+}
+.hud-compact-btn:hover {
+  opacity: 1;
+  background: rgba(120, 130, 150, 0.12);
+}
+.hud-compact-btn svg {
+  width: 15px;
+  height: 15px;
+  transition: transform 0.25s ease;
+}
+.hud-compact-btn.active {
+  color: var(--accent-light);
+  opacity: 0.95;
+}
+/* compact on: flip the chevron to point right (expand) */
+.hud-compact-btn.active svg {
+  transform: rotate(180deg);
+}
+
+/* ===== compact mode: dense vertical layout ===== */
+/* animatable props on the bits that morph or collapse on toggle */
+#hud-info {
+  transition: padding 0.3s ease, width 0.3s ease;
+}
+.hud-bar,
+.hud-bar-lbl,
+.hud-bar-track,
+.hud-bar-fill {
+  transition: margin 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+.hud-eyebrow,
+.hud-hostname-text,
+.hud-bar-lbl-txt,
+.hud-bar-max,
+.hud-feat-name,
+.hud-cult {
+  transition: opacity 0.2s ease, max-height 0.25s ease, margin 0.25s ease;
+}
+
+#hud-info.hud-compact {
+  /* fixed (not max-content) so the width can animate on toggle */
+  width: 100px;
+  padding: 28px 12px 8px;
+}
+/* everything compact mode drops -> display:none. (collapsing via opacity/
+   max-width leaves the hidden text overflowing, which still drives the panel's
+   max-content width and shoves numbers around — must remove from layout) */
+#hud-info.hud-compact .hud-eyebrow,
+#hud-info.hud-compact .hud-hostname-text,
+#hud-info.hud-compact .hud-feat-name,
+#hud-info.hud-compact .hud-bar-v small,
+#hud-info.hud-compact .hud-bar-float,
+#hud-info.hud-compact .hud-bar-lbl-txt,
+#hud-info.hud-compact .hud-bar-max {
+  display: none;
+}
+/* fully removed in compact (display:none, else its wide chips would still
+   drive the panel's max-content width even when collapsed) */
+#hud-info.hud-compact .hud-cult {
+  display: none;
+}
+
+/* parasite section: tighter */
+#hud-info.hud-compact .hud-stats-player {
+  margin-bottom: 8px;
+}
+/* each stat -> one dense row: icon | number (right-aligned col) | gauge */
+#hud-info.hud-compact .hud-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 5px 0;
+}
+#hud-info.hud-compact .hud-bar-lbl {
+  flex: none;
+  margin: 0;
+  gap: 7px;
+  justify-content: flex-start;
+}
+#hud-info.hud-compact .hud-bar-n {
+  flex: none;
+  width: 16px;
+  justify-content: center;
+}
+#hud-info.hud-compact .hud-bar-v {
+  display: inline-block;
+  min-width: 26px;
+  text-align: right;
+  font-size: calc(var(--text-font-size) * 0.92);
+}
+/* upright gauge, fills from the bottom */
+#hud-info.hud-compact .hud-bar-track {
+  flex: none;
+  width: 6px;
+  height: 22px;
+  border-radius: 3px;
+}
+#hud-info.hud-compact .hud-bar-track::after {
+  display: none;
+}
+#hud-info.hud-compact .hud-bar-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  top: auto;
+  width: 100% !important;
+  height: var(--pct);
+  transition: height 0.2s ease-out;
+}
+#hud-info.hud-compact .hud-bar-fill::after {
+  display: none;
+}
+
+/* host section: drop name spacing, lay badges out as a triangle */
+#hud-info.hud-compact .hud-hostname {
+  margin: 3px 0 5px;
+}
+/* host badges: centered horizontal strip on a full-bleed tinted band that
+   doubles as the parasite/host separator (no border lines, just a soft fill) */
+#hud-info.hud-compact .hud-hostname-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 0 -12px;
+  padding: 5px 0;
+  background: linear-gradient(90deg, transparent, rgba(164, 95, 224, 0.17) 28%, rgba(164, 95, 224, 0.19) 50%, rgba(164, 95, 224, 0.17) 72%, transparent);
+}
+#hud-info.hud-compact .hud-hostname-badges:empty {
+  display: none;
+}
+#hud-info.hud-compact .hud-hostname-badges .icon-svg {
+  width: 14px;
+  height: 14px;
+  margin: 0 !important;
+}
+
+/* evo/organ rows: icon + turn pill only, flattened strip.
+   keep it tighter than normal mode (margin -12 matches compact panel padding) */
+#hud-info.hud-compact .hud-evo-strip {
+  margin: 6px -12px 0;
+  padding: 3px 12px;
+  background: rgba(115, 243, 255, 0.05);
+}
+#hud-info.hud-compact .hud-feat {
+  margin: 2px 0;
+  gap: 7px;
 }
 
 /* ---- action menu ---- */

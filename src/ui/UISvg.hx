@@ -178,6 +178,14 @@ class UISvg
         '<circle cx="17" cy="8" r="1.4" fill="currentColor" stroke="none"/></svg>';
     }
 
+// compact-toggle glyph: thick double chevron pointing left (collapse the panel)
+  public static function hudCompact(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M13 5l-6 7 6 7"/>' +
+        '<path d="M19 5l-6 7 6 7"/></svg>';
+    }
+
 // giant cell glyph, ghosted behind the body scrim (membrane + nucleus + organelles)
   public static function cell(): String
     {
