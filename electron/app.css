@@ -3915,6 +3915,10 @@ fieldset {
   animation-delay: calc(.14s + var(--i,0) * 22ms);
   transition: border-color .15s, background .15s, transform .15s, box-shadow .15s;
 }
+/* action-driven refreshes rebuild the grid; don't replay the entry rise then */
+.evolution-grid.no-anim .evolution-card {
+  animation: none;
+}
 .evolution-card:not(.maxed):hover {
   border-color: rgba(115,243,255,.55);
   background: rgba(115,243,255,.05);

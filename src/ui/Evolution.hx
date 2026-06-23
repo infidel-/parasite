@@ -38,6 +38,7 @@ class Evolution extends UIWindow
   var trackID: Int;
   var trackThumb: Element;
   var scrollTimer: Int;
+  var introPending: Bool = false; // play card entry animation on next update (open only)
 
   public function new(g: Game)
     {
@@ -233,6 +234,14 @@ class Evolution extends UIWindow
         }
       if (i == 0)
         buf.add('<div class="evolution-empty">No improvements available.</div>');
+      // entry animation only on open; action-driven refreshes rebuild the grid
+      // too, so suppress the staggered rise then (else clicking repaints all)
+      if (introPending)
+        {
+          grid.classList.remove('no-anim');
+          introPending = false;
+        }
+      else grid.classList.add('no-anim');
       grid.innerHTML = buf.toString();
 
       // footer stop button (shown while evolving)
@@ -253,12 +262,58 @@ class Evolution extends UIWindow
       });
     }
 
+// update only the selection state in place (now/EVOLVING tag, hotkey numbers,
+// footer). avoids rebuilding the grid, which would replay the card rise + the
+// hovered card's expand transition on every click
+  function refreshSelection()
+    {
+      var em = game.player.evolutionManager;
+      var isActive = em.isActive;
+      // rebuild action list + hotkey map ('stop' takes key 1 while evolving,
+      // shifting every card's number)
+      listActions = [];
+      if (isActive)
+        listActions.push({ id: 'stop', type: ACTION_EVOLUTION, name: 'Stop evolution', energy: 0 });
+      var keyMap = new Map<String, Int>();
+      for (imp in em)
+        if (imp.level < maxLevelOf(imp))
+          {
+            listActions.push({ id: 'set.' + imp.id, type: ACTION_EVOLUTION, name: imp.info.name, energy: 0 });
+            keyMap.set(imp.id, listActions.length);
+          }
+      // poke each card's now/tag/key in place
+      var cards = grid.querySelectorAll('.evolution-card');
+      for (i in 0...cards.length)
+        {
+          var card: Element = cast cards.item(i);
+          var id = card.getAttribute('data-imp');
+          var isNow = isActive && em.taskID == id;
+          card.classList.toggle('now', isNow);
+          var tag = card.querySelector('.evolution-tag');
+          if (isNow && tag == null)
+            {
+              var t = Browser.document.createSpanElement();
+              t.className = 'evolution-tag';
+              t.textContent = 'EVOLVING';
+              card.appendChild(t);
+            }
+          else if (!isNow && tag != null)
+            tag.remove();
+          var keyEl = card.querySelector('.evolution-key');
+          if (keyEl != null && keyMap.exists(id))
+            keyEl.textContent = '' + keyMap.get(id);
+        }
+      // footer stop button (shown while evolving)
+      footer.innerHTML = (isActive ?
+        '<button class="evolution-stop"><span class="sq"></span>Stop evolution</button>' : '');
+    }
+
 // run an upgrade/stop action and refresh
   function runAction(a: _PlayerAction)
     {
       game.scene.sounds.play('click-action');
       game.player.evolutionManager.action(a);
-      update();
+      refreshSelection();
       game.ui.hud.update();
     }
 
@@ -478,6 +533,12 @@ class Evolution extends UIWindow
       trackThumb = null;
       prevEl.classList.remove('show');
       linkEl.classList.remove('show');
+    }
+
+  override function show(?skipAnimation: Bool = false)
+    {
+      introPending = true;
+      super.show(skipAnimation);
     }
 
   override function hide(?skipAnimation: Bool = false)
