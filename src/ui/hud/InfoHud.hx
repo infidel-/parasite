@@ -32,14 +32,18 @@ class InfoHud
         return;
 
       var r = cult.resources;
-      buf.add('<hr><span style="color:var(--text-color-gray)" class=small><span class=small>' +
-        'COM ' + Const.col('cult-power', r.getShort('combat')) +
-        ', MED ' + Const.col('cult-power', r.getShort('media')) +
-        ', LAW ' + Const.col('cult-power', r.getShort('lawfare')) +
-        ', COR ' + Const.col('cult-power', r.getShort('corporate')) +
-        ', POL ' + Const.col('cult-power', r.getShort('political')) +
-        ', ' + Const.col('cult-power', r.getShort('money')) + Icon.money +
-        '</span></span><br/>');
+      // cult resources inline: dim label + magenta value, dot-separated, centered
+      function res(lbl: String, v: String): String
+        return '<span class="r">' + (lbl != '' ? '<span class="l">' + lbl + '</span>' : '') +
+          '<span class="v">' + v + '</span></span>';
+      buf.add('<div class="hud-cult">' +
+        res('COM', r.getShort('combat')) +
+        res('MED', r.getShort('media')) +
+        res('LAW', r.getShort('lawfare')) +
+        res('COR', r.getShort('corporate')) +
+        res('POL', r.getShort('political')) +
+        res('', r.getShort('money') + Icon.money) +
+        '</div>');
     }
 
 // build one stat bar: icon + label + value, track + fill, with warn/dead states
@@ -124,11 +128,11 @@ class InfoHud
           var host = game.player.host;
           var hname = (host.isHuman ? host.getNameCapped() : host.AName());
           if (host.affinity >= 100)
-            hname += ' ' + Icon.affinity;
+            hname += Icon.affinity;
           if (host.chat.consent >= 100)
-            hname += ' ' + Icon.consent;
+            hname += Icon.consent;
           if (host.isPlayerCultist())
-            hname += ' ' + Icon.cultist;
+            hname += Icon.cultist;
           buf.add('<div class="hud-eyebrow">Host</div>');
           buf.add('<div class="hud-hostname">' + hname + '</div>');
           buf.add(statBar('hh', UISvg.hudHeart(), 'Health',
@@ -150,16 +154,12 @@ class InfoHud
       // action points / area notes
       if (game.location == LOCATION_AREA)
         {
-          ex.add(Const.smallgray('AP ' + game.playerArea.ap) +
-            (Const.isDebug ? Const.smallgray(' A ' + Math.round(game.area.alertness)) : '') + '<br/>');
           if (game.area.isMissionArea())
             ex.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
         }
       else if (game.location == LOCATION_REGION)
         {
           var area = game.playerRegion.currentArea;
-          if (Const.isDebug)
-            ex.add(Const.smallgray('A ' + Math.round(area.alertness)) + '<br/>');
           if (area.highCrime)
             ex.add('<center>' + Const.smallgray('high crime') + '</center>');
           if (game.cults.length > 0 &&
@@ -168,23 +168,18 @@ class InfoHud
         }
       // team distance if close
       game.group.hudInfo(ex);
-      // host attributes, evolution direction, organs
+      // host attributes, evolution direction, organs -> evolution strip
       if (game.player.state == PLR_STATE_HOST)
         {
           var host = game.player.host;
-          if (host.isAttrsKnown)
-            ex.add('STR ' + host.strength +
-              ' CON ' + host.constitution +
-              ' INT ' + host.intellect +
-              ' PSY ' + host.psyche + '<br/>');
+          var feat = new StringBuf();
           if (game.player.evolutionManager.isActive)
-            {
-              ex.add(Const.small('Evolution direction:<br/>  '));
-              ex.add(Const.small(game.player.evolutionManager.getEvolutionDirectionInfo()) + '<br/>');
-            }
+            feat.add(game.player.evolutionManager.getEvolutionDirectionInfo());
           var str = host.organs.getInfo();
           if (str != null)
-            ex.add(str);
+            feat.add(str);
+          if (feat.length > 0)
+            ex.add('<div class="hud-evo-strip">' + feat.toString() + '</div>');
         }
       // cult resources line
       updateCult(ex);

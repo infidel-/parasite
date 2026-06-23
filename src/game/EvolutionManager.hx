@@ -298,16 +298,13 @@ class EvolutionManager extends _SaveObject
       if (!isActive)
         return "<font style='color:var(--text-color-red)'>None</font>";
 
-      var buf = new StringBuf();
-      buf.add("<font style='color:var(--text-color-evolution-title)'>");
-      buf.add(EvolutionConst.getInfo((taskID : _Improv)).name);
-      buf.add("</font> (");
-      var epLeft = 0;
+      // evolution feature row: helix glyph + name + turn-eta pill
       var imp = getImprov((taskID : _Improv));
-      epLeft = EvolutionConst.epCostImprovement[imp.level] - imp.ep;
-      buf.add(Math.round(epLeft / __Math.epPerTurn()));
-      buf.add(" turns)");
-      return buf.toString();
+      var turns = Math.round((EvolutionConst.epCostImprovement[imp.level] - imp.ep) / __Math.epPerTurn());
+      return '<div class="hud-feat hud-feat-evo">' +
+        '<span class="hud-feat-ic">' + ui.UISvg.hudNavEvo() + '</span>' +
+        '<span class="hud-feat-name">' + EvolutionConst.getInfo((taskID : _Improv)).name + '</span>' +
+        ui.UISvg.turnPill(turns) + '</div>';
     }
 
 // SPOON: give all basic imps

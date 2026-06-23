@@ -163,6 +163,21 @@ class UISvg
       return '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
     }
 
+// turn-count pill: number + small clock glyph (evolution / organ growth eta)
+  public static function turnPill(n: Int): String
+    {
+      return '<span class="hud-turn-pill">' + n + clockSmall() + '</span>';
+    }
+
+// small cell glyph (growing body feature / organ): membrane ring + nucleus + organelle
+  public static function featOrgan(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9"/>' +
+        '<circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/>' +
+        '<circle cx="17" cy="8" r="1.4" fill="currentColor" stroke="none"/></svg>';
+    }
+
 // giant cell glyph, ghosted behind the body scrim (membrane + nucleus + organelles)
   public static function cell(): String
     {

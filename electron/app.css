@@ -1114,6 +1114,9 @@ hr {
   color: var(--blue-gray);
   margin-bottom: 12px;
 }
+/* status badges sit snug after the name, tight to each other */
+.hud-hostname .icon-svg { margin-left: 1px; }
+.hud-hostname .icon-svg:first-of-type { margin-left: 5px; }
 .hud-stats-player {
   margin-bottom: 18px;
 }
@@ -1352,6 +1355,106 @@ hr {
 }
 .hud-info-extra hr {
   margin: 6px 0;
+}
+
+/* feature row: leading glyph + name + turn-eta pill (evolution / organ growth) */
+.hud-feat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+}
+.hud-feat-ic {
+  display: inline-flex;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  opacity: 0.9;
+}
+.hud-feat-ic svg { width: 16px; height: 16px; }
+.hud-feat-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.hud-feat-evo { color: var(--text-color-evolution-title); }
+.hud-feat-organ { color: var(--text-color-organ); }
+/* evolution strip: full-bleed cyan band behind evo + organ rows */
+.hud-evo-strip {
+  margin: 12px -14px 0;
+  padding: 7px 14px;
+  background: linear-gradient(90deg, rgba(115, 243, 255, 0.11), rgba(115, 243, 255, 0.03) 55%, transparent 92%);
+  border-top: 1px solid rgba(115, 243, 255, 0.15);
+  border-bottom: 1px solid rgba(115, 243, 255, 0.08);
+  box-shadow: inset 2px 0 0 rgba(115, 243, 255, 0.45);
+}
+.hud-evo-strip .hud-feat { margin: 5px 0; }
+.hud-evo-strip .hud-feat:first-child { margin-top: 0; }
+.hud-evo-strip .hud-feat:last-child { margin-bottom: 0; }
+/* turn count pill: number + clock, inherits a neutral chrome tint */
+.hud-turn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  padding: 1px 7px 1px 8px;
+  border-radius: 999px;
+  background: rgba(120, 130, 150, 0.12);
+  border: 1px solid rgba(120, 130, 150, 0.22);
+  color: var(--blue-gray);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(var(--text-font-size) * 0.8);
+  line-height: 1;
+}
+.hud-turn-pill svg { width: 11px; height: 11px; }
+
+/* cult resources line: pink chips echoing the Cultus Carnis window */
+/* cult strip: full-bleed pink band echoing the Cultus Carnis window */
+.hud-cult {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px 5px;
+  margin: 10px -14px 0;
+  padding: 4px 14px;
+  background: linear-gradient(90deg, transparent, rgba(253, 151, 255, 0.1) 25%, rgba(253, 151, 255, 0.13) 50%, rgba(253, 151, 255, 0.1) 75%, transparent);
+  border-top: 1px solid rgba(253, 151, 255, 0.15);
+  border-bottom: 1px solid rgba(253, 151, 255, 0.08);
+}
+.hud-cult .r {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-size: calc(var(--text-font-size) * 0.78);
+}
+.hud-cult .r:not(:last-child)::after {
+  content: "\00b7";
+  margin-left: 5px;
+  color: rgba(253, 151, 255, 0.4);
+}
+.hud-cult .l {
+  font-family: var(--text-font-title), sans-serif;
+  letter-spacing: 0.06em;
+  font-size: 0.85em;
+  color: #9a6fa6;
+}
+.hud-cult .v {
+  color: var(--text-color-cult);
+  display: inline-flex;
+  align-items: center;
+}
+/* mercury glyph runs big + low; shrink and lift to sit on the row centerline */
+.hud-cult .icon-money {
+  font-size: 118%;
+  line-height: 1;
+  position: relative;
+  top: -1px;
 }
 
 /* ---- action menu ---- */
