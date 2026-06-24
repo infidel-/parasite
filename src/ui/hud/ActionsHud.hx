@@ -13,6 +13,8 @@ class ActionsHud
   var actions: DivElement;
   var listActions: List<_PlayerAction>; // list of currently available actions
   var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
+  var listButtons: Array<DivElement> = []; // rendered action buttons, indexed by hotkey (1-based)
+  var listSig = ''; // signature of the last rendered action set (drives change animation)
 
   public function new(g: Game, h: HUD)
     {
@@ -147,6 +149,7 @@ class ActionsHud
     {
       // clear old items
       var n = 1;
+      listButtons = [];
       while (actions.firstChild != null)
         actions.removeChild(actions.lastChild);
 
@@ -169,7 +172,9 @@ class ActionsHud
           return;
         }
 
-      // populate action list
+      // populate action list; listButtons keeps each row by hotkey index, plus a
+      // signature so we only replay the entrance cascade when the set changes
+      var sig = '';
       var list = [ listActions, listKeyActions ];
       for (l in list)
         for (act in l)
@@ -196,8 +201,10 @@ class ActionsHud
             else if (act.energyFunc != null)
               cost = act.energyFunc(game.player);
 
+            sig += act.id + ':' + key + '|';
             var btn = document.createDivElement();
             btn.className = 'hud-act';
+            btn.style.setProperty('--i', '' + (n - 1));
             var html = '<span class="hud-key' + (numbered ? ' num' : '') + '">' + key + '</span>' +
               '<span class="hud-label">' + name + '</span>';
             if (cost > 0)
@@ -218,10 +225,27 @@ class ActionsHud
               else doAction(untyped e.shiftKey, act);
             }
             actions.appendChild(btn);
+            listButtons.push(btn);
             n++;
           }
       if (n == 1)
         actions.innerHTML = '<div class="hud-act hud-act-none">No available actions.</div>';
+
+      // action set changed -> play the staggered entrance cascade once
+      if (sig != listSig)
+        for (btn in listButtons)
+          btn.classList.add('hud-act-in');
+      listSig = sig;
+    }
+
+// press the nth on-screen action button (1-based), as if clicked, so a
+// keyboard shortcut animates and plays sound via the button's own onclick
+  public function pressAction(index: Int, shift: Bool)
+    {
+      if (index < 1 ||
+          index > listButtons.length ||
+          !ui.UI.pressButton(listButtons[index - 1], shift))
+        action(index, shift); // not on screen: keep old direct behavior
     }
 
 // call numbered action by index

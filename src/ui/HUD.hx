@@ -352,6 +352,9 @@ public function onMouseLeave()
   public function action(index: Int, withRepeat: Bool)
     actions.action(index, withRepeat);
 
+  public function pressAction(index: Int, shift: Bool)
+    actions.pressAction(index, shift);
+
   public function keyAction(key: String): Bool
     return actions.keyAction(key);
 

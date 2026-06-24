@@ -215,6 +215,10 @@ class UIWindow
   public dynamic function action(index: Int)
     {}
 
+// dom element for a 1-based shortcut index (null = no element, caller falls back to action())
+  public dynamic function getButton(index: Int): js.html.Element
+    return null;
+
 // handle a key press while this window is open; return true if consumed.
 // override per-window for in-window keyboard handling (e.g. menu navigation)
   public dynamic function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool

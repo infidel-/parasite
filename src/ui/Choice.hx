@@ -173,6 +173,15 @@ class Choice extends UIWindow
       params.f(params.src, id);
       game.ui.closeWindow();
     }
+
+// dom button for a 1-based index, so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index < 1 ||
+          index > buttons.length)
+        return null;
+      return buttons[index - 1];
+    }
 }
 
 typedef _ChoiceParams = {

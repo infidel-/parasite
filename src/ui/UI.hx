@@ -453,13 +453,33 @@ class UI
               game.scene.sounds.play('window-close');
               closeWindow();
             }
-          else
+          // route through the navbar cell so it clicks/animates like the mouse;
+          // options/exit have no nav cell, so fall back to a direct state set
+          else if (!pressButton(hud.getMenuButton(target)))
             {
               state = target;
               game.scene.sounds.play('window-open');
             }
         }
       return false;
+    }
+
+// simulate a mouse click on a button: brief press visual, then a real click event.
+// the click is deferred so the press paints before the action rebuilds/replaces
+// the element (most action buttons clear their container on activation). this also
+// matches real mouse feel, where :active shows during mousedown before click fires.
+// returns false when there is no element so callers can fall back to direct logic.
+  public static function pressButton(el: js.html.Element, shift = false): Bool
+    {
+      if (el == null)
+        return false;
+      el.classList.add('pressed');
+      Browser.window.setTimeout(function() {
+        el.classList.remove('pressed');
+        el.dispatchEvent(new js.html.MouseEvent('click',
+          { bubbles: true, cancelable: true, shiftKey: shift }));
+      }, 130);
+      return true;
     }
 
 // handle player actions
@@ -493,8 +513,9 @@ class UI
               n += 10;
 
             if (_state == UISTATE_DEFAULT)
-              hud.action(n, shiftKey);
-            else if (components[_state] != null)
+              hud.pressAction(n, shiftKey);
+            else if (components[_state] != null &&
+                !pressButton(components[_state].getButton(n), shiftKey))
               components[_state].action(n);
             return true;
           }
@@ -509,7 +530,8 @@ class UI
             n = 2;
           if (n > 0)
             {
-              components[_state].action(n);
+              if (!pressButton(components[_state].getButton(n)))
+                components[_state].action(n);
               return true;
             }
         }

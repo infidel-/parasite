@@ -221,6 +221,15 @@ class NewGame extends UIWindow
         select(index - 1);
     }
 
+// dom row for a 1-based index, so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index < 1 ||
+          index > rows.length)
+        return null;
+      return rows[index - 1];
+    }
+
   override function show(?skipAnimation: Bool = false)
     {
       super.show(skipAnimation);

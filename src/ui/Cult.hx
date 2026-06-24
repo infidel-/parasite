@@ -20,6 +20,7 @@ class Cult extends UIWindow
   var actions: DivElement;  // ACTIONS list container
   var ordeals: DivElement;  // ORDEALS rite-cards grid
   var listActions: Array<_PlayerAction>;
+  var listButtons: Array<DivElement> = []; // action rows, in lockstep with listActions (1-based hotkey)
   var animateActions: Bool = false; // true only during a click-driven rebuild (action cascade)
   var ordealsSeen: Array<Ordeal>; // ordeals whose entrance animation already finished
   var ordealsPending: Array<Ordeal>; // ordeals mid-entrance (keep the .new class across rebuilds)
@@ -191,6 +192,7 @@ class Cult extends UIWindow
   public function updateActions()
     {
       listActions = [];
+      listButtons = [];
       actions.innerHTML = '';
 
       switch (menuState)
@@ -774,6 +776,7 @@ class Cult extends UIWindow
         animateActions = false;
       };
       actions.appendChild(actionElement);
+      listButtons.push(actionElement);
     }
 
 // update ordeals list (2-col "rite" cards)
@@ -910,9 +913,18 @@ class Cult extends UIWindow
       var a = listActions[index - 1];
       if (a == null)
         return;
-      
+
       if (a.f != null)
         a.f();
+    }
+
+// nth action button (1-based), so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index < 1 ||
+          index > listButtons.length)
+        return null;
+      return listButtons[index - 1];
     }
 
   override function hide(?skipAnimation: Bool = false)

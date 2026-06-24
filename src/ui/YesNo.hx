@@ -98,4 +98,10 @@ class YesNo extends UIWindow
       func(index == 1);
       dismiss();
     }
+
+// dom button for a 1-based index (1 = yes, 2 = no), so keyboard clicks/animates it
+  public override function getButton(index: Int): js.html.Element
+    {
+      return Browser.document.getElementById(index == 1 ? 'window-yesno-yes' : 'window-yesno-no');
+    }
 }

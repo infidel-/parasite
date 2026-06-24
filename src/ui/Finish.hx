@@ -16,6 +16,7 @@ class Finish extends UIWindow
   var image: ImageElement;
   var titleEl: DivElement;
   var text: DivElement;
+  var closeBtn: DivElement; // the CLOSE button (keyboard shortcut clicks it)
 
   // filter-name -> svg filter id used to grade the finish image
   static var filters: Map<String, String> = [
@@ -62,15 +63,15 @@ class Finish extends UIWindow
       hint.innerHTML = 'Close the window to restart the game.';
       body.appendChild(hint);
 
-      var close = Browser.document.createDivElement();
-      close.className = 'finish-close';
-      close.innerHTML = 'CLOSE';
-      close.onclick = function (e) {
+      closeBtn = Browser.document.createDivElement();
+      closeBtn.className = 'finish-close';
+      closeBtn.innerHTML = 'CLOSE';
+      closeBtn.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');
         game.ui.closeWindow();
       }
-      body.appendChild(close);
+      body.appendChild(closeBtn);
     }
 
 // set parameters
@@ -97,6 +98,14 @@ class Finish extends UIWindow
         hero.style.display = 'none';
 
       text.innerHTML = (p.text != null) ? p.text : '';
+    }
+
+// the close button, so a keyboard shortcut clicks/animates it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index != 1)
+        return null;
+      return closeBtn;
     }
 
 // action

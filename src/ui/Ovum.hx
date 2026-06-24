@@ -161,6 +161,16 @@ class Ovum extends UIWindow
       toggle(a.obj);
     }
 
+// the card for hotkey index, so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      var a = listActions[index - 1];
+      if (a == null)
+        return null;
+      // 'toggle.<impID>' -> the matching card
+      return grid.querySelector('.evolution-card[data-imp="' + a.id.substr(7) + '"]');
+    }
+
 // flip an improvement's parthenogenesis mark and refresh
   function toggle(imp: Improv)
     {

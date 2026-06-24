@@ -326,6 +326,18 @@ class Evolution extends UIWindow
       runAction(a);
     }
 
+// dom element for hotkey index, so keyboard shortcuts click/animate the card
+  public override function getButton(index: Int): js.html.Element
+    {
+      var a = listActions[index - 1];
+      if (a == null)
+        return null;
+      if (a.id == 'stop')
+        return footer.querySelector('.evolution-stop');
+      // 'set.<impID>' -> the matching card
+      return grid.querySelector('.evolution-card[data-imp="' + a.id.substr(4) + '"]');
+    }
+
 // delegate card clicks (upgrade), CUR/NEXT toggle, thumbnail preview, scroll suppression
   function wireGrid()
     {

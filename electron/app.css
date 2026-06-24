@@ -1698,8 +1698,28 @@ hr {
   flex: 1;
   transition: transform 0.08s;
 }
-.hud-act:active .hud-label {
+.hud-act:active .hud-label,
+.hud-act.pressed .hud-label {
   transform: translateX(6px);
+}
+/* entrance cascade, replayed only when the action set changes: each row wipes in
+   from the left (echoing the hover charge-wipe), key chip pops a beat later */
+@keyframes hud-act-in {
+  0% { opacity: 0; transform: translateX(-14px); clip-path: inset(0 100% 0 0); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+}
+@keyframes hud-key-in {
+  0% { opacity: 0; transform: scale(0.4); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.hud-act.hud-act-in {
+  animation: hud-act-in 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+.hud-act.hud-act-in .hud-key {
+  animation: hud-key-in 0.3s ease-out backwards;
+  animation-delay: calc(var(--i, 0) * 40ms + 70ms);
 }
 .hud-key {
   position: relative;
@@ -2139,7 +2159,8 @@ hr {
   height: 36px;
   transform: translateY(2px);
 }
-.hud-nav-cell:active {
+.hud-nav-cell:active,
+.hud-nav-cell.pressed {
   transform: scale(1.15) translateY(4px);
 }
 .hud-nav-cell:hover .hud-nav-ico {
@@ -2576,7 +2597,8 @@ hr {
   background: color-mix(in srgb, var(--yesno-accent) 38%, transparent);
   box-shadow: 0 0 24px -4px var(--yesno-accent);
 }
-.yesno-btn:active {
+.yesno-btn:active,
+.yesno-btn.pressed {
   transform: scale(0.97);
 }
 
@@ -2700,10 +2722,12 @@ hr {
   opacity: .85;
   transition: height .18s ease, box-shadow .18s ease;
 }
-.difficulty-strip:hover {
+.difficulty-strip:hover,
+.difficulty-strip.pressed {
   background: linear-gradient(180deg, rgba(6,4,12,.1), rgba(6,4,12,.6));
 }
-.difficulty-strip:hover::before {
+.difficulty-strip:hover::before,
+.difficulty-strip.pressed::before {
   height: 7px;
   box-shadow: 0 0 12px currentColor;
 }
@@ -2868,7 +2892,8 @@ hr {
   animation-delay: calc(0.12s + var(--i, 0) * 0.06s);
 }
 
-.choice-btn:hover {
+.choice-btn:hover,
+.choice-btn.pressed {
   border-color: rgba(253, 151, 255, 0.55);
   background: linear-gradient(180deg, rgba(253, 151, 255, 0.14), rgba(253, 151, 255, 0.04));
   transform: translateY(-2px);
@@ -3047,7 +3072,8 @@ hr {
   transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease;
 }
 
-.finish-close:hover {
+.finish-close:hover,
+.finish-close.pressed {
   border-color: rgba(214, 120, 96, 0.55);
   background: linear-gradient(180deg, rgba(214, 120, 96, 0.14), rgba(214, 120, 96, 0.04));
   transform: translateY(-2px);
@@ -3928,6 +3954,10 @@ fieldset {
   animation: win-rise .3s ease-out backwards;
   animation-delay: calc(.14s + var(--i,0) * 22ms);
   transition: border-color .15s, background .15s, transform .15s, box-shadow .15s;
+}
+/* keyboard press feedback (no :active on cards; click is dispatched, not pointer) */
+.evolution-card.pressed {
+  transform: scale(.98);
 }
 /* action-driven refreshes rebuild the grid; don't replay the entry rise then */
 .evolution-grid.no-anim .evolution-card {
@@ -6131,7 +6161,8 @@ select {
   border-color: color-mix(in srgb, var(--newgame-color) 45%, var(--border));
   background: rgba(255,255,255,.045);
 }
-.newgame-row:active {
+.newgame-row:active,
+.newgame-row.pressed {
   transform: translateX(1px) scale(.995);
 }
 .newgame-row.active {
@@ -6794,14 +6825,16 @@ select {
   color: #1a0a1c;
   box-shadow: 0 0 12px rgba(253,151,255,.6);
 }
-.cult-act:active {
+.cult-act:active,
+.cult-act.pressed {
   transform: translateX(3px) scale(.985);
   background: rgba(253,151,255,.18);
   border-color: var(--cult);
   color: #fff;
   box-shadow: inset 0 0 14px rgba(253,151,255,.16);
 }
-.cult-act:active .cult-key {
+.cult-act:active .cult-key,
+.cult-act.pressed .cult-key {
   background: var(--cult-hot);
   color: #1a0a1c;
   box-shadow: 0 0 14px rgba(255,90,216,.7);
@@ -7275,7 +7308,8 @@ select {
   text-shadow: 0 0 8px rgba(164,95,224,.5);
   text-decoration: underline;
 }
-.body-act:active {
+.body-act:active,
+.body-act.pressed {
   color: #fff;
   text-shadow: 0 0 10px rgba(201,168,239,.9);
   text-decoration: underline;
@@ -7615,7 +7649,8 @@ select {
 .body-organ-turns .body-ico-time { width: 14px; height: 14px; }
 /* available (growable) feature acts as a grow action: clickable, S-key brightens */
 .body-organ.avail:not(.now) { cursor: var(--ui-cursor); }
-.body-organ.avail:not(.now):hover .body-key {
+.body-organ.avail:not(.now):hover .body-key,
+.body-organ.avail:not(.now).pressed .body-key {
   border-color: var(--text-color-evolution);
   color: var(--text-color-evolution);
 }

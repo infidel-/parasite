@@ -558,6 +558,25 @@ class Body extends UIWindow
       actionPrefix = null;
     }
 
+// dom element for the active prefix's nth hotkey, so keyboard clicks/animates it.
+// consumes actionPrefix on a hit, mirroring action()'s reset
+  public override function getButton(index: Int): js.html.Element
+    {
+      var el = null;
+      if (actionPrefix == 'inventory')
+        el = window.querySelector('.body-act[data-inv="' + index + '"]');
+      else if (actionPrefix == 'body')
+        {
+          var a = listOrgansActions[index - 1];
+          if (a != null)
+            el = window.querySelector('.body-organ.avail:not(.now)[data-organ="' +
+              (StringTools.startsWith(a.id, 'set.') ? a.id.substr(4) : a.id) + '"]');
+        }
+      if (el != null)
+        actionPrefix = null;
+      return el;
+    }
+
   override function show(?skipAnimation: Bool = false)
     {
       // entrance rise is gated on .body-intro (added before update builds the

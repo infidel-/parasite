@@ -16,6 +16,7 @@ class Difficulty extends UIWindow
   var noteEasy: SpanElement;
   var noteNormal: SpanElement;
   var noteHard: SpanElement;
+  var stripButtons: Array<DivElement> = []; // choice stripes by 1-based index (easy/normal/hard)
   var diffName: SpanElement;
   var currentChoice: _Choice;
 
@@ -61,6 +62,7 @@ class Difficulty extends UIWindow
         action(index);
       }
       parent.appendChild(strip);
+      stripButtons[index - 1] = strip;
       return note;
     }
 
@@ -79,6 +81,15 @@ class Difficulty extends UIWindow
   override function hide(?skipAnimation: Bool = false)
     {
       animatedHide();
+    }
+
+// dom strip for a 1-based index, so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index < 1 ||
+          index > stripButtons.length)
+        return null;
+      return stripButtons[index - 1];
     }
 
 // action
