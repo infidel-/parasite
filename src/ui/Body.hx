@@ -16,6 +16,7 @@ import const.*;
 class Body extends UIWindow
 {
   var statsEl: SpanElement;        // titlebar growth stat chips
+  var nameEl: SpanElement;         // titlebar host name
   var invBlock: DivElement;        // INVENTORY block (disabled toggle)
   var invCount: Element;           // INVENTORY count chip
   var invGrid: DivElement;         // inventory cell grid
@@ -42,7 +43,8 @@ class Body extends UIWindow
       // title row: name left, growth stat-chip strip right
       var title = Browser.document.createDivElement();
       title.className = 'win-title win-titlebar';
-      title.innerHTML = '<span class="wt">BODY</span>';
+      title.innerHTML = '<span class="wt">BODY</span><span class="body-host-name"></span>';
+      nameEl = cast title.querySelector('.body-host-name');
       statsEl = Browser.document.createSpanElement();
       statsEl.className = 'win-stats';
       title.appendChild(statsEl);
@@ -109,6 +111,9 @@ class Body extends UIWindow
 // update window contents
   override function update()
     {
+      // titlebar host name (empty when not hosting)
+      nameEl.innerHTML = (game.player.state == PLR_STATE_HOST ?
+        game.player.host.theName() : '');
       updateStats();
       updateInventory();
       updateParasite();

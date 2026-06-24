@@ -3755,6 +3755,20 @@ fieldset {
 .win-titlebar .wt {
   flex: none;
 }
+.win-titlebar .body-host-name {
+  flex: none;
+  font-family: var(--text-font-title), sans-serif;
+  letter-spacing: .06em;
+  color: var(--blue-gray);
+}
+.win-titlebar .body-host-name:empty {
+  display: none;
+}
+.win-titlebar .body-host-name::before {
+  content: '\00b7';
+  opacity: .5;
+  margin: 0 .5em;
+}
 .win-stats {
   display: flex;
   align-items: center;
