@@ -402,6 +402,9 @@ class RegionView
       if (!isKnown(area))
         {
           drawUnknownAreaTile(ctx, area, ax, ay);
+          // still surface timeline intel known independent of area exploration
+          drawIcon(ctx, getEventIcon(area), ax, ay);
+          drawIcon(ctx, getNPCIcon(area), ax, ay);
           return;
         }
 
@@ -440,17 +443,23 @@ class RegionView
               case 5:
                 icon = drawAreaCultMission(area);
             }
-          if (icon == null)
-            continue;
-          ctx.drawImage(scene.images.entities,
-            icon.col * Const.TILE_SIZE_CLEAN, 
-            icon.row * Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            ax, ay,
-            Const.TILE_SIZE,
-            Const.TILE_SIZE);
+          drawIcon(ctx, icon, ax, ay);
         }
+    }
+
+// draw one area icon from the entities sprite sheet
+  function drawIcon(ctx: CanvasRenderingContext2D, icon: _Icon, ax: Int, ay: Int)
+    {
+      if (icon == null)
+        return;
+      ctx.drawImage(scene.images.entities,
+        icon.col * Const.TILE_SIZE_CLEAN,
+        icon.row * Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        Const.TILE_SIZE_CLEAN,
+        ax, ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
     }
 
 // draw one entity icon with a small black outline
