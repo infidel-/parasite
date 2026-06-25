@@ -1,117 +1,130 @@
-// difficulty selection window
+// difficulty selection window — triptych (three image stripes = choices)
 
 package ui;
 
 import js.Browser;
 import js.html.DivElement;
+import js.html.SpanElement;
+import js.html.ImageElement;
 import mods.AssetPath;
 
 import game.Game;
 
 class Difficulty extends UIWindow
 {
-  var header: DivElement;
-  var text: DivElement;
-  var func: Bool -> Void;
+  var diffImg: ImageElement;
+  var noteEasy: SpanElement;
+  var noteNormal: SpanElement;
+  var noteHard: SpanElement;
+  var stripButtons: Array<DivElement> = []; // choice stripes by 1-based index (easy/normal/hard)
+  var noobStrip: DivElement; // NOOB wedge overlaid on the EASY strip (save category only)
+  var noobNote: SpanElement; // NOOB wedge note text
+  var diffName: SpanElement;
   var currentChoice: _Choice;
-  var headerText: String;
-  var defaultText: String;
 
   public function new(g: Game)
     {
       super(g, 'window-difficulty');
-      window.className += ' window-dialog';
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-difficulty.png') + "') 100 fill / 1 / 0 stretch";
+      addCorners();
 
-      var outerText = Browser.document.createSpanElement();
-      window.appendChild(outerText);
-
-      header = Browser.document.createDivElement();
-      header.className = 'window-dialog-text';
-      outerText.appendChild(header);
-
-      text = Browser.document.createDivElement();
-      text.className = 'window-dialog-text';
-      text.style.marginTop = '1em';
-      text.style.minHeight = '4em';
-      outerText.appendChild(text);
-
-      var easy = Browser.document.createDivElement();
-      easy.className = 'hud-button window-dialog-button window-choice-1';
-      easy.innerHTML = Const.col('diff-easy', 'EASY');
-      easy.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      easy.onclick = function (e) {
+      // triptych: one photo backdrop, three vertical choice stripes
+      var strips = Browser.document.createDivElement();
+      strips.className = 'difficulty-strips';
+      diffImg = Browser.document.createImageElement();
+      diffImg.className = 'difficulty-bg';
+      strips.appendChild(diffImg);
+      noteEasy = addStrip(strips, 'easy', 'EASY', 1);
+      noteNormal = addStrip(strips, 'normal', 'NORMAL', 2);
+      noteHard = addStrip(strips, 'hard', 'HARD', 3);
+      // NOOB wedge: diagonal split of the EASY strip, shown only for the save category
+      noobStrip = Browser.document.createDivElement();
+      noobStrip.className = 'difficulty-noob';
+      noobStrip.innerHTML = '<span class="difficulty-label">NOOB</span>' +
+        '<span class="difficulty-note"></span>';
+      noobNote = cast noobStrip.querySelector('.difficulty-note');
+      noobStrip.onclick = function (e) {
+        e.stopPropagation(); // don't bubble to the EASY strip's onclick
         game.scene.sounds.play('click-menu');
-        action(1);
+        action(0);
       }
-      easy.onmouseover = function (e) {
-        text.innerHTML = currentChoice.notes[0];
-      }
-      easy.onmouseout = function (e) {
-        text.innerHTML = defaultText;
-      }
-      window.appendChild(easy);
+      noobStrip.style.display = 'none';
+      stripButtons[0].appendChild(noobStrip);
+      // inclined divider line on the EASY strip (visible only in split mode via CSS)
+      var divide = Browser.document.createDivElement();
+      divide.className = 'difficulty-divide';
+      stripButtons[0].appendChild(divide);
+      window.appendChild(strips);
 
-      var normal = Browser.document.createDivElement();
-      normal.className = 'hud-button window-dialog-button window-choice-2';
-      normal.innerHTML = Const.col('diff-normal', 'NORMAL');
-      normal.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      normal.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        action(2);
-      }
-      normal.onmouseover = function (e) {
-        text.innerHTML = currentChoice.notes[1];
-      }
-      normal.onmouseout = function (e) {
-        text.innerHTML = defaultText;
-      }
-      window.appendChild(normal);
-
-      var hard = Browser.document.createDivElement();
-      hard.className = 'hud-button window-dialog-button window-choice-3';
-      hard.innerHTML = Const.col('diff-hard', 'HARD');
-      hard.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
-      hard.onclick = function (e) {
-        game.scene.sounds.play('click-menu');
-        action(3);
-      }
-      hard.onmouseover = function (e) {
-        text.innerHTML = currentChoice.notes[2];
-      }
-      hard.onmouseout = function (e) {
-        text.innerHTML = defaultText;
-      }
-      window.appendChild(hard);
+      // window title (with the choice name) glued to the bottom
+      var title = Browser.document.createDivElement();
+      title.className = 'difficulty-title';
+      title.innerHTML = "<span class='difficulty-title-pre'>Difficulty:</span> ";
+      diffName = Browser.document.createSpanElement();
+      title.appendChild(diffName);
+      window.appendChild(title);
     }
 
-// set parameters
+// build one choice stripe (label + note); clicking it picks that difficulty
+  function addStrip(parent: DivElement, cls: String, label: String, index: Int): SpanElement
+    {
+      var strip = Browser.document.createDivElement();
+      strip.className = 'difficulty-strip ' + cls;
+      var lab = Browser.document.createSpanElement();
+      lab.className = 'difficulty-label';
+      lab.innerHTML = label;
+      strip.appendChild(lab);
+      var note = Browser.document.createSpanElement();
+      note.className = 'difficulty-note';
+      strip.appendChild(note);
+      strip.onclick = function (e) {
+        game.scene.sounds.play('click-menu');
+        action(index);
+      }
+      parent.appendChild(strip);
+      stripButtons[index - 1] = strip;
+      return note;
+    }
+
+// set parameters (obj is the difficulty type key)
   public override function setParams(obj: Dynamic)
     {
       var t: String = obj;
       currentChoice = choices[t];
-      
-      // preload image before setting header
-      var img = new js.html.Image();
-      var imgPath = AssetPath.resolve('img/difficulty/' + currentChoice.id + '.jpg');
-      img.onload = function() {
-        // image loaded, now set header html
-        header.innerHTML =
-          '<center><h3>' + Const.col('gray', 'Difficulty: ') + currentChoice.title + '</h3><br></center>' +
-          '<img class=message-img src="' + imgPath + '">';
-      };
-      img.src = imgPath;
+      diffImg.src = AssetPath.resolve('img/difficulty/' + currentChoice.id + '.jpg');
+      noteEasy.innerHTML = currentChoice.notes[0];
+      noteNormal.innerHTML = currentChoice.notes[1];
+      noteHard.innerHTML = currentChoice.notes[2];
+      diffName.innerHTML = currentChoice.title;
+      // NOOB only applies to the save category; reveal its wedge there
+      var isSave = (currentChoice.id == 'save');
+      stripButtons[0].classList.toggle('split', isSave);
+      noobStrip.style.display = (isSave ? '' : 'none');
+      if (isSave &&
+          currentChoice.notes.length > 3)
+        noobNote.innerHTML = currentChoice.notes[3];
+    }
 
-      defaultText =
-        '<center>Choose difficulty setting.</center>';
-      text.innerHTML = defaultText;
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
+    }
+
+// dom strip for a 1-based index, so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index < 1 ||
+          index > stripButtons.length)
+        return null;
+      return stripButtons[index - 1];
     }
 
 // action
   public override function action(index: Int)
     {
       var d: _Difficulty = UNSET;
-      if (index == 1)
+      if (index == 0)
+        d = NOOB;
+      else if (index == 1)
         d = EASY;
       else if (index == 2)
         d = NORMAL;
@@ -145,7 +158,9 @@ class Difficulty extends UIWindow
       else if (currentChoice.id == 'save')
         {
           game.player.saveDifficulty = d;
-          if (game.player.saveDifficulty == EASY)
+          if (game.player.saveDifficulty == NOOB)
+            game.player.vars.savesLeft = 999; // unused: Game.save bypasses the cap for NOOB
+          else if (game.player.saveDifficulty == EASY)
             game.player.vars.savesLeft = 10;
           else if (game.player.saveDifficulty == NORMAL)
             game.player.vars.savesLeft = 3;
@@ -209,6 +224,7 @@ class Difficulty extends UIWindow
         'You can save your game anywhere, up to 10 times per one game.',
         'You can only save in region mode, 3 times per game.',
         'You can only save once per game while in region mode.',
+        'Save anywhere, as many times as you like. Unlimited saves.',
       ]
     },
 
@@ -217,7 +233,7 @@ class Difficulty extends UIWindow
       title: 'Conversation',
       notes: [
         'Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss on leaving host with max affinity.',
-        'Medium starting consent. Medium bonus to skilll rolls. Small bonus to consent growth. Tiny max energy loss.',
+        'Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Tiny max energy loss.',
         'Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Small max energy loss.',
       ]
     },

@@ -126,6 +126,12 @@ class Goals extends _SaveObject
           game.log('You have received a new goal: ' + info.name + '.',
             COLOR_GOAL);
 
+      // queue the HUD appear animation (plays after any event message closes);
+      // boot/load-time goals are shown instantly by GoalsHud.rebuild() instead
+      if (game.isInited &&
+          (info.isHidden == null || info.isHidden == false))
+        game.ui.hud.goals.queue('added', id);
+
       // call receive hook
       if (info.onReceive != null)
         info.onReceive(game, game.player);
@@ -164,6 +170,11 @@ class Goals extends _SaveObject
           });
         }
 
+      // queue the HUD completion animation (plays after the message closes)
+      if (game.isInited &&
+          (info.isHidden == null || info.isHidden == false))
+        game.ui.hud.goals.queue('completed', id);
+
       // call completion hook
       if (info.onComplete != null)
         info.onComplete(game, game.player);
@@ -195,6 +206,11 @@ class Goals extends _SaveObject
             img: img
           });
         }
+
+      // queue the HUD failure animation (plays after the message closes)
+      if (game.isInited &&
+          (info.isHidden == null || info.isHidden == false))
+        game.ui.hud.goals.queue('failed', id);
 
       // call failure hook
       if (info.onFailure != null)

@@ -46,17 +46,14 @@ class Organs extends _SaveObject
     {
       var buf = new StringBuf();
 
-      // current growing organ info
+      // current growing organ: feature row (cell glyph + name + turn-eta pill)
       if (currentOrgan != null)
         {
-          buf.add('Body feature:<br/>  ');
-          var col: _TextColor = COLOR_ORGAN;
-          buf.add("<font color='" + Const.TEXT_COLORS[col] + "'>");
-          buf.add(currentOrgan.info.name);
-          buf.add("</font> (");
-          var gpLeft = currentOrgan.info.gp - currentOrgan.gp;
-          buf.add(Math.round(gpLeft / __Math.gpPerTurn()));
-          buf.add(" turns)<br>");
+          var turns = Math.round((currentOrgan.info.gp - currentOrgan.gp) / __Math.gpPerTurn());
+          buf.add('<div class="hud-feat hud-feat-organ">' +
+            '<span class="hud-feat-ic">' + ui.UISvg.featOrgan() + '</span>' +
+            '<span class="hud-feat-name">' + currentOrgan.info.name + '</span>' +
+            ui.UISvg.turnPill(turns) + '</div>');
         }
 
       // show organs on timeout
@@ -224,6 +221,13 @@ class Organs extends _SaveObject
         }
       else currentOrgan = o;
       currentOrganID = currentOrgan.id;
+    }
+
+
+// id of the organ currently being grown (null if none) — only one grows at a time
+  public function getCurrentID(): _Improv
+    {
+      return currentOrganID;
     }
 
 

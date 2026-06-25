@@ -1,0 +1,539 @@
+:root {
+  --bg: #050a06;
+  --green: #2dff66;
+  --green-bright: #aaffbf;
+  --green-dim: #1aa247;
+  --green-deep: #0a4a22;
+  --amber: #ffb454;
+  --amber-dim: #b87a2a;
+  --red: #ff4444;
+  --red-dim: #aa2222;
+  --line: rgba(45, 255, 102, 0.22);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #000;
+  font-family: "VT323", "Share Tech Mono", "IBM Plex Mono", "Courier New", monospace;
+  color: var(--green);
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* CRT shell — outer bezel with bowed corners and a faint emissive rim */
+.crt {
+  position: relative;
+  width: min(1100px, 96vw);
+  aspect-ratio: 4 / 3;
+  background:
+    radial-gradient(ellipse at center, #0a1a10 0%, #04080a 70%, #000 100%);
+  border-radius: 36px / 26px;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.9),
+    inset 0 0 120px rgba(0, 60, 20, 0.35),
+    0 0 0 6px #0a0e0a,
+    0 0 0 8px #1a1f1a,
+    0 0 80px rgba(45, 255, 102, 0.08);
+  overflow: hidden;
+  filter: contrast(1.05) saturate(1.1);
+}
+
+/* inner padding + faint barrel distortion via subtle scale on edges */
+.crt-inner {
+  position: absolute;
+  inset: 36px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-shadow:
+    0 0 2px rgba(45, 255, 102, 0.9),
+    0 0 6px rgba(45, 255, 102, 0.45),
+    0 0 14px rgba(45, 255, 102, 0.25);
+  letter-spacing: 0.06em;
+  z-index: 1;
+}
+
+/* Header */
+.hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+.title {
+  font-size: 24px;
+  letter-spacing: 0.18em;
+  color: var(--green);
+  font-weight: 700;
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 1),
+    0 0 8px rgba(45, 255, 102, 0.95),
+    0 0 18px rgba(45, 255, 102, 0.7),
+    0 0 36px rgba(45, 255, 102, 0.35);
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--green-dim);
+  letter-spacing: 0.22em;
+  margin-top: 2px;
+}
+.hdr-r {
+  text-align: right;
+  line-height: 1.1;
+}
+.clock {
+  font-size: 24px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 1),
+    0 0 8px rgba(45, 255, 102, 0.95),
+    0 0 18px rgba(45, 255, 102, 0.7),
+    0 0 36px rgba(45, 255, 102, 0.35);
+}
+.date {
+  font-size: 12px;
+  color: var(--green-dim);
+  letter-spacing: 0.2em;
+}
+
+/* Segmented bar meter */
+.meter-label {
+  font-size: 11px;
+  color: var(--green-dim);
+  letter-spacing: 0.22em;
+  margin-bottom: 4px;
+}
+.bars {
+  display: grid;
+  grid-template-columns: repeat(60, 1fr);
+  gap: 2px;
+  height: 22px;
+}
+.bars span {
+  display: block;
+  background: var(--green-deep);
+  border-radius: 1px;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.5);
+}
+.bars span.on {
+  background: var(--green);
+  box-shadow:
+    0 0 4px var(--green),
+    0 0 10px rgba(45, 255, 102, 0.5);
+}
+.bars span.warn { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+.bars span.crit { background: var(--red);   box-shadow: 0 0 4px var(--red); }
+
+/* Readout grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 6px 0;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--green-dim);
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg,
+      rgba(45, 255, 102, 0.04) 0%,
+      rgba(45, 255, 102, 0.0)  100%);
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.cell-label {
+  font-size: 11px;
+  color: var(--green-dim);
+  letter-spacing: 0.18em;
+}
+.cell-value {
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 1),
+    0 0 9px rgba(45, 255, 102, 0.95),
+    0 0 18px rgba(45, 255, 102, 0.55);
+}
+.cell.status .cell-value.pill {
+  display: inline-block;
+  padding: 2px 12px;
+  border: 1px solid var(--green);
+  border-radius: 2px;
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  width: max-content;
+  background: rgba(45, 255, 102, 0.08);
+  font-weight: 700;
+  box-shadow:
+    0 0 8px rgba(45, 255, 102, 0.45),
+    inset 0 0 10px rgba(45, 255, 102, 0.2);
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 1),
+    0 0 9px rgba(45, 255, 102, 0.95),
+    0 0 22px rgba(45, 255, 102, 0.6);
+}
+.cell.status .cell-value.pill.warn {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: rgba(255, 180, 84, 0.08);
+}
+
+.sub-header {
+  font-size: 11px;
+  color: var(--green-dim);
+  letter-spacing: 0.22em;
+  padding-top: 2px;
+}
+
+/* Log */
+.log {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  min-height: 0;
+}
+.log-label {
+  font-size: 11px;
+  color: var(--green-dim);
+  letter-spacing: 0.22em;
+}
+.log-list {
+  list-style: none;
+  font-size: 14px;
+  color: var(--amber);
+  text-shadow:
+    0 0 2px rgba(255, 180, 84, 0.9),
+    0 0 6px rgba(255, 180, 84, 0.4);
+  overflow: hidden;
+  flex: 1;
+  letter-spacing: 0.1em;
+}
+.log-list li { padding: 1px 0; }
+.log-list li.ok {
+  color: var(--green);
+  text-shadow:
+    0 0 2px rgba(45, 255, 102, 0.95),
+    0 0 6px rgba(45, 255, 102, 0.5),
+    0 0 14px rgba(45, 255, 102, 0.25);
+}
+.log-list li.crit {
+  color: var(--red);
+  text-shadow:
+    0 0 2px rgba(255, 68, 68, 0.95),
+    0 0 6px rgba(255, 68, 68, 0.55),
+    0 0 14px rgba(255, 68, 68, 0.3);
+}
+
+/* Buttons */
+.btns {
+  display: flex;
+  gap: 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  justify-content: center;
+}
+.btn {
+  position: relative;
+  flex: 1;
+  max-width: 240px;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  padding: 10px 16px;
+  color: var(--green);
+  border: 1px solid var(--green-dim);
+  border-radius: 2px;
+  cursor: pointer;
+  /* layered texture: brushed verticals + faint horizontal scan + inner glow */
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(45, 255, 102, 0.05) 0px,
+      rgba(45, 255, 102, 0.05) 1px,
+      rgba(0, 0, 0, 0)        1px,
+      rgba(0, 0, 0, 0)        3px),
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.18) 0px,
+      rgba(0, 0, 0, 0.18) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    2px),
+    linear-gradient(180deg,
+      rgba(45, 255, 102, 0.18) 0%,
+      rgba(45, 255, 102, 0.05) 50%,
+      rgba(45, 255, 102, 0.12) 100%);
+  text-shadow:
+    0 0 3px rgba(180, 255, 200, 0.9),
+    0 0 8px rgba(45, 255, 102, 0.7),
+    0 0 18px rgba(45, 255, 102, 0.35);
+  box-shadow:
+    0 0 8px rgba(45, 255, 102, 0.25),
+    inset 0 1px 0 rgba(45, 255, 102, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 18px rgba(0, 0, 0, 0.55);
+  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.btn:hover, .btn:focus-visible {
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(0, 0, 0, 0.18) 0px,
+      rgba(0, 0, 0, 0.18) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    3px),
+    linear-gradient(180deg, #66ff8a 0%, #2fcf5d 100%);
+  color: #03110a;
+  border-color: #b6ffc8;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 0 10px var(--green),
+    0 0 28px rgba(45, 255, 102, 0.75),
+    inset 0 0 18px rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+.btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 0 6px var(--green),
+    0 0 16px rgba(45, 255, 102, 0.5),
+    inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Locked red button — destructive action, cannot press */
+.btn.locked {
+  color: var(--red);
+  border-color: #8a2020;
+  cursor: not-allowed;
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(255, 80, 80, 0.0)  0px,
+      rgba(255, 80, 80, 0.0)  6px,
+      rgba(255, 80, 80, 0.12) 6px,
+      rgba(255, 80, 80, 0.12) 8px),
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.22) 0px,
+      rgba(0, 0, 0, 0.22) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    2px),
+    linear-gradient(180deg,
+      rgba(255, 80, 80, 0.22) 0%,
+      rgba(255, 80, 80, 0.04) 50%,
+      rgba(255, 80, 80, 0.18) 100%);
+  text-shadow:
+    0 0 3px rgba(255, 200, 200, 0.9),
+    0 0 9px rgba(255, 80, 80, 0.85),
+    0 0 22px rgba(255, 80, 80, 0.5);
+  box-shadow:
+    0 0 10px rgba(255, 80, 80, 0.35),
+    inset 0 1px 0 rgba(255, 120, 120, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(0, 0, 0, 0.6);
+  animation: red-pulse 1.6s ease-in-out infinite;
+}
+.btn.locked:hover, .btn.locked:focus-visible {
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(255, 80, 80, 0.0)  0px,
+      rgba(255, 80, 80, 0.0)  6px,
+      rgba(255, 80, 80, 0.12) 6px,
+      rgba(255, 80, 80, 0.12) 8px),
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.22) 0px,
+      rgba(0, 0, 0, 0.22) 1px,
+      rgba(0, 0, 0, 0)    1px,
+      rgba(0, 0, 0, 0)    2px),
+    linear-gradient(180deg,
+      rgba(255, 80, 80, 0.22) 0%,
+      rgba(255, 80, 80, 0.04) 50%,
+      rgba(255, 80, 80, 0.18) 100%);
+  color: var(--red);
+  border-color: #8a2020;
+  transform: none;
+}
+.btn.locked:active { transform: none; }
+@keyframes red-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(255, 80, 80, 0.35),
+      inset 0 1px 0 rgba(255, 120, 120, 0.3),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+      inset 0 0 20px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(255, 80, 80, 0.7),
+      0 0 32px rgba(255, 80, 80, 0.35),
+      inset 0 1px 0 rgba(255, 120, 120, 0.4),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+      inset 0 0 22px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Flavor strip under button row */
+.flavor {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--green-dim);
+}
+.flavor span { white-space: nowrap; }
+.flavor .sep { color: var(--green-deep); }
+
+/* Scanlines overlay */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.0) 0px,
+      rgba(0, 0, 0, 0.0) 2px,
+      rgba(0, 0, 0, 0.35) 3px,
+      rgba(0, 0, 0, 0.0) 4px
+    );
+  mix-blend-mode: multiply;
+  z-index: 2;
+}
+
+/* Vignette / corner darkening */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.85) 100%);
+  z-index: 3;
+}
+
+/* Subtle flicker — slow droop + fast scintillation via ::before */
+.flicker {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(45, 255, 102, 0.02);
+  animation: flicker 5.6s infinite;
+  z-index: 4;
+}
+.flicker::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(45, 255, 102, 0.012);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: flicker-fast 11s steps(1, end) infinite;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  3%       { opacity: 0.82; }
+  6%       { opacity: 1; }
+  47%      { opacity: 0.94; }
+  48%      { opacity: 1; }
+  72%      { opacity: 0.78; }
+  73%      { opacity: 1; }
+}
+/* mostly off, two brief scintillation bursts per loop */
+@keyframes flicker-fast {
+  0%,    27%   { opacity: 0; }
+  27.3%        { opacity: 0.9; }
+  27.6%        { opacity: 0.2; }
+  27.9%        { opacity: 0.8; }
+  28.2%        { opacity: 0.3; }
+  28.5%, 71%   { opacity: 0; }
+  71.3%        { opacity: 0.7; }
+  71.5%        { opacity: 0.25; }
+  71.8%        { opacity: 0.95; }
+  72.1%        { opacity: 0.4; }
+  72.4%, 100%  { opacity: 0; }
+}
+
+/* Soft top glare like phosphor curvature */
+.glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(255, 255, 255, 0.06), transparent 60%);
+  z-index: 5;
+}
+
+/* Slow bright scanline sweep top->bottom — like CRT vertical refresh artifact
+   compositor-only: a thin band animated with transform, no per-frame paint */
+.sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 4;
+}
+.sweep::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4%;
+  background: linear-gradient(
+    to bottom,
+    rgba(45, 255, 102, 0)     0%,
+    rgba(45, 255, 102, 0.03) 35%,
+    rgba(180, 255, 200, 0.06) 50%,
+    rgba(45, 255, 102, 0.03) 65%,
+    rgba(45, 255, 102, 0)     100%);
+  mix-blend-mode: screen;
+  will-change: transform;
+  animation: sweep 7.4s linear infinite;
+}
+@keyframes sweep {
+  0%   { transform: translateY(-100%); }   /* just above panel top */
+  100% { transform: translateY(2500%); }   /* 25 * 4% = 100% panel height past start */
+}
+
+/* Animated grain — SVG fractal noise, two layered scales drifting different speeds */
+.noise {
+  position: absolute;
+  inset: -8px;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 1  0 0 0 0 0.4  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+  opacity: 0.18;
+  mix-blend-mode: screen;
+  animation: noise-shift 0.7s steps(6) infinite;
+  z-index: 4;
+}
+@keyframes noise-shift {
+  0%   { background-position:   0   0; }
+  20%  { background-position: -40 -20; }
+  40%  { background-position:  30  60; }
+  60%  { background-position: -70  30; }
+  80%  { background-position:  50 -50; }
+  100% { background-position:   0   0; }
+}
+
+/* Reduced motion: kill heavy animations */
+@media (prefers-reduced-motion: reduce) {
+  .sweep, .noise, .flicker { animation: none; }
+}

@@ -73,11 +73,10 @@ class UI
       Browser.window.onerror = onError;
 #end
 
-      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO, UISTATE_DOCUMENT ];
+      uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO ];
       uiNoClose = [ UISTATE_DEFAULT, UISTATE_YESNO, UISTATE_DIFFICULTY, UISTATE_CHOICE ];
       components = [
         UISTATE_MESSAGE => new Message(game),
-        UISTATE_DOCUMENT => new Document(game),
         UISTATE_YESNO => new YesNo(game),
         UISTATE_DIFFICULTY => new Difficulty(game),
         UISTATE_CHOICE => new Choice(game),
@@ -169,8 +168,10 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
+      // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
       if (e.key == 'Control' &&
-          !game.scene.controlPressed)
+          !game.scene.controlPressed &&
+          !hud.consoleVisible())
         {
           game.scene.controlPressed = true;
           game.scene.mouse.update(true);
@@ -353,44 +354,10 @@ class UI
 // handle opening and closing windows
   function handleWindows(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
     {
-/*
-      // scrolling text
-      if (_state != UISTATE_DEFAULT)
-        {
-          // get amount of lines
-          var lines = 0;
-          if (key == Key.PGUP ||
-            (key == Key.K && shiftPressed))
-            lines = -20;
-          else if (key == Key.PGDOWN ||
-            (key == Key.J && shiftPressed))
-            lines = 20;
-          else if (key == Key.UP || key == Key.K || key == Key.NUMPAD_8)
-            lines = -1;
-          else if (key == Key.DOWN || key == Key.J || key == Key.NUMPAD_2)
-            lines = 1;
-
-          var win: UIWindow = cast components[_state];
-
-          if (lines != 0)
-            {
-              win.scroll(lines);
-              return false;
-            }
-
-          else if (key == Key.END ||
-            (key == Key.G && shiftPressed))
-            {
-              win.scrollToEnd();
-              return false;
-            }
-
-          else if (key == Key.HOME || key == Key.G)
-            {
-              win.scrollToBegin();
-              return false;
-            }
-        }*/
+      // let the active window consume the key first (e.g. main menu navigation)
+      if (components[_state] != null &&
+          components[_state].handleKey(key, code, altKey, ctrlKey))
+        return true;
 
       // window open
       if (!Lambda.has(uiNoClose, _state))
@@ -405,7 +372,8 @@ class UI
                   _state == UISTATE_PEDIA ||
                   _state == UISTATE_ABOUT ||
                   _state == UISTATE_NEWGAME ||
-                  _state == UISTATE_MODS)
+                  _state == UISTATE_MODS ||
+                  _state == UISTATE_SPOON)
                 state = UISTATE_MAINMENU;
               else if (_state == UISTATE_PRESETS)
                 state = UISTATE_OPTIONS;
@@ -431,43 +399,40 @@ class UI
       var exitPressed = (code == 'Digit0' && altKey) || code == 'F10';
       var vstate = _state;
 
-      // open goals window
+      // resolve the pressed window key to a target state (guards gate availability)
+      var target = vstate;
+      var keyed = true;
       if (goalsPressed)
-        state = UISTATE_GOALS;
-      // open message log window
+        target = UISTATE_GOALS;
       else if (logPressed)
-        state = UISTATE_LOG;
-      // open timeline window
+        target = UISTATE_LOG;
       else if (timelinePressed &&
           game.player.vars.timelineEnabled)
-        state = UISTATE_TIMELINE;
-      // open evolution window (if enabled)
+        target = UISTATE_TIMELINE;
       else if (evolutionPressed &&
           game.player.state == PLR_STATE_HOST &&
           game.player.evolutionManager.state > 0)
-        state = UISTATE_EVOLUTION;
-      // open cult details window
+        target = UISTATE_EVOLUTION;
       else if (cultPressed &&
           game.cults[0].state == CULT_STATE_ACTIVE)
-        state = UISTATE_CULT;
-      // open options window
+        target = UISTATE_CULT;
       else if (optionsPressed)
-        state = UISTATE_OPTIONS;
-      // open body window
+        target = UISTATE_OPTIONS;
       else if (bodyPressed &&
               (game.player.vars.inventoryEnabled ||
                game.player.vars.skillsEnabled ||
                game.player.vars.organsEnabled))
-        state = UISTATE_BODY;
-      // exit button
+        target = UISTATE_BODY;
+      // exit button: confirm dialog
       else if (exitPressed)
         {
-          // show exit yes/no dialog
           game.ui.event({
             type: UIEVENT_STATE,
             state: UISTATE_YESNO,
             obj: {
-              text: 'Do you want to exit the game?',
+              text: 'Exit the game?',
+              sub: 'This will end your current session.',
+              danger: true,
               func: function(yes: Bool) {
 #if electron
                 if (yes)
@@ -476,10 +441,45 @@ class UI
               }
             }
           });
+          return false;
         }
-      if (state != vstate)
-        game.scene.sounds.play('window-open');
+      else keyed = false;
+
+      // a window key resolved: re-pressing its own key while open toggles it shut
+      if (keyed)
+        {
+          if (target == _state)
+            {
+              game.scene.sounds.play('window-close');
+              closeWindow();
+            }
+          // route through the navbar cell so it clicks/animates like the mouse;
+          // options/exit have no nav cell, so fall back to a direct state set
+          else if (!pressButton(hud.getMenuButton(target)))
+            {
+              state = target;
+              game.scene.sounds.play('window-open');
+            }
+        }
       return false;
+    }
+
+// simulate a mouse click on a button: brief press visual, then a real click event.
+// the click is deferred so the press paints before the action rebuilds/replaces
+// the element (most action buttons clear their container on activation). this also
+// matches real mouse feel, where :active shows during mousedown before click fires.
+// returns false when there is no element so callers can fall back to direct logic.
+  public static function pressButton(el: js.html.Element, shift = false): Bool
+    {
+      if (el == null)
+        return false;
+      el.classList.add('pressed');
+      Browser.window.setTimeout(function() {
+        el.classList.remove('pressed');
+        el.dispatchEvent(new js.html.MouseEvent('click',
+          { bubbles: true, cancelable: true, shiftKey: shift }));
+      }, 130);
+      return true;
     }
 
 // handle player actions
@@ -513,8 +513,9 @@ class UI
               n += 10;
 
             if (_state == UISTATE_DEFAULT)
-              hud.action(n, shiftKey);
-            else if (components[_state] != null)
+              hud.pressAction(n, shiftKey);
+            else if (components[_state] != null &&
+                !pressButton(components[_state].getButton(n), shiftKey))
               components[_state].action(n);
             return true;
           }
@@ -529,7 +530,8 @@ class UI
             n = 2;
           if (n > 0)
             {
-              components[_state].action(n);
+              if (!pressButton(components[_state].getButton(n)))
+                components[_state].action(n);
               return true;
             }
         }
@@ -753,6 +755,11 @@ class UI
           hud.show();
         }
       else hud.hide();
+      // navbar persists as a tab row over the six window states (set last, it
+      // overrides the hud.show()/hide() navbar toggle above)
+      hud.applyNavbarState(_state);
+      // atmosphere stays during gameplay/windows but not over the main menu bg
+      hud.setAtmoVisible(_state != UISTATE_MAINMENU);
 
       return _state;
     }
@@ -776,6 +783,7 @@ class UI
   public inline function clearEvents()
     {
       uiQueue.clear();
+      hud.goals.clearQueue();
     }
 
 // close the current window
@@ -840,12 +848,19 @@ class UI
           // finish the game
           else if (ev.type == UIEVENT_FINISH)
             {
-              game.finish(ev.obj.result, ev.obj.condition);
+              game.finish({
+                result: ev.obj.result,
+                text: ev.obj.condition,
+                img: ev.obj.img,
+                filter: ev.obj.filter,
+              });
             }
           return;
         }
 
       state = UISTATE_DEFAULT;
+      // UI is idle again: play any goal animations deferred while windows were up
+      hud.goals.flush();
       if (game.state == GAMESTATE_REBIRTH)
         game.endRebirth();
       game.scene.draw();

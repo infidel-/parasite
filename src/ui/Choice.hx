@@ -1,4 +1,4 @@
-// occasio choice window
+// occasio choice window (psychedelic-pink occasion picker)
 
 package ui;
 
@@ -12,10 +12,13 @@ import game.Game;
 
 class Choice extends UIWindow
 {
-  var header: DivElement;
-  var text: DivElement;
+  var card: DivElement;
+  var hero: DivElement;
   var image: ImageElement;
+  var titleEl: DivElement;
+  var text: DivElement;
   var note: DivElement;
+  var buttonsEl: DivElement;
   var params: _ChoiceParams;
   var defaultText: String;
   var buttons: Array<DivElement>;
@@ -23,61 +26,76 @@ class Choice extends UIWindow
   public function new(g: Game)
     {
       super(g, 'window-choice');
-      window.className += ' window-dialog';
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-difficulty.png') + "') 100 fill / 1 / 0 stretch";
+      window.className += ' window-dialog choice-win';
 
-      var outer = Browser.document.createSpanElement();
-      window.appendChild(outer);
+      // slick glass card holding the whole occasio
+      card = Browser.document.createDivElement();
+      card.className = 'choice-card';
+      window.appendChild(card);
 
-      header = Browser.document.createDivElement();
-      header.className = 'window-dialog-text';
-      outer.appendChild(header);
-
+      // hero: filtered image + scrim + overlaid title
+      hero = Browser.document.createDivElement();
+      hero.className = 'choice-hero';
       image = Browser.document.createImageElement();
-      image.className = 'message-img';
-      image.style.marginTop = '0.5em';
-      outer.appendChild(image);
+      image.className = 'choice-img';
+      hero.appendChild(image);
+      var grad = Browser.document.createDivElement();
+      grad.className = 'choice-hero-grad';
+      hero.appendChild(grad);
+      titleEl = Browser.document.createDivElement();
+      titleEl.className = 'choice-title';
+      hero.appendChild(titleEl);
+      card.appendChild(hero);
+
+      // body: prose + choice rows + hover note
+      var body = Browser.document.createDivElement();
+      body.className = 'choice-body';
+      card.appendChild(body);
 
       text = Browser.document.createDivElement();
-      text.className = 'window-dialog-text';
-      text.style.marginTop = '1em';
-      text.style.minHeight = '4em';
-      outer.appendChild(text);
+      text.className = 'choice-text';
+      body.appendChild(text);
+
+      buttonsEl = Browser.document.createDivElement();
+      buttonsEl.className = 'choice-buttons';
+      body.appendChild(buttonsEl);
 
       note = Browser.document.createDivElement();
-      note.className = 'window-choice-notes gray';
-      note.style.minHeight = '4em';
-      note.style.display = 'block';
-      outer.appendChild(note);
+      note.className = 'choice-note';
+      body.appendChild(note);
 
       buttons = [];
       for (i in 0...3)
         {
           var idx = i;
           var btn = Browser.document.createDivElement();
-          btn.className = 'hud-button window-dialog-button window-choice-' + (i + 1);
-          btn.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog-button.png') + "') 14 fill / 1 / 0 stretch";
+          btn.className = 'choice-btn';
+          btn.style.setProperty('--i', '' + i);
           btn.onclick = function (_) {
             game.scene.sounds.play('click-menu');
             action(idx + 1);
           }
           btn.onmouseover = function (_) {
+            game.scene.sounds.play('click-action');
             showChoiceNote(idx);
           }
           btn.onmouseout = function (_) {
             hideChoiceNotes();
           }
-          window.appendChild(btn);
+          buttonsEl.appendChild(btn);
           buttons.push(btn);
         }
       hideChoiceNotes();
     }
 
+// reset the note row to its empty placeholder
   function hideChoiceNotes()
     {
       note.innerHTML = '&nbsp;';
+      note.classList.remove('on');
     }
 
+// show the hovered choice's outcome hint
   function showChoiceNote(index: Int)
     {
       if (params == null ||
@@ -87,6 +105,7 @@ class Choice extends UIWindow
         return;
 
       note.innerHTML = params.choices[index];
+      note.classList.add('on');
     }
 
 // set parameters
@@ -97,21 +116,21 @@ class Choice extends UIWindow
       if (params == null)
         return;
 
-      header.innerHTML = '<center><h3>' + params.title + '</h3></center>';
+      titleEl.innerHTML = params.title;
 
       if (params.img != null && params.img != '')
         {
           image.src = AssetPath.resolve(params.img);
-          image.style.display = 'block';
+          hero.style.display = 'block';
         }
       else
         {
           image.src = '';
           image.removeAttribute('src');
-          image.style.display = 'none';
+          hero.style.display = 'none';
         }
 
-      text.className = 'window-dialog-text';
+      text.className = 'choice-text';
       if (params.textClass != null &&
           StringTools.trim(params.textClass) != '')
         text.className += ' ' + params.textClass;
@@ -125,8 +144,10 @@ class Choice extends UIWindow
           var btn = buttons[i];
           if (i < buttonCount)
             {
-              btn.style.display = 'block';
-              btn.innerHTML = params.buttons[i];
+              btn.style.display = 'flex';
+              btn.innerHTML =
+                '<span class="choice-key">' + (i + 1) + '</span>' +
+                '<span class="choice-label">' + params.buttons[i] + '</span>';
             }
           else
             {
@@ -151,6 +172,15 @@ class Choice extends UIWindow
         }
       params.f(params.src, id);
       game.ui.closeWindow();
+    }
+
+// dom button for a 1-based index, so keyboard shortcuts click/animate it
+  public override function getButton(index: Int): js.html.Element
+    {
+      if (index < 1 ||
+          index > buttons.length)
+        return null;
+      return buttons[index - 1];
     }
 }
 

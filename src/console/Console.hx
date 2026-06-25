@@ -14,6 +14,7 @@ class Console
   public var goConsole: Go;
   var goalConsole: Goal;
   var learnConsole: Learn;
+  var infoConsole: Info;
   var debugConsole: Debug;
   var stageConsole: Stage;
   var cultConsole: Cult;
@@ -30,6 +31,7 @@ class Console
       goConsole = new Go(this);
       goalConsole = new Goal(this);
       learnConsole = new Learn(this);
+      infoConsole = new Info(this);
       debugConsole = new Debug(this);
       stageConsole = new Stage(this);
       cultConsole = new Cult(this);
@@ -39,6 +41,9 @@ class Console
 
 
 // run console command
+// runs a console command
+// NOTE: when adding/changing/removing a command, update its completion hint in
+// ConsoleCompletion.hx (the rootChildren tree) so autocomplete stays in sync
   public function run(cmd: String)
     {
       cmd = StringTools.trim(cmd);
@@ -76,6 +81,10 @@ class Console
       else if (char0 == 'd')
         debugConsole.run(cmd);
 
+      // XXX finish <lose|alien|cult> - show game-over window for testing
+      else if (Const.isDebug && arr[0] == 'finish')
+        finishCommand(arr);
+
       // XXX give, go, goal, god commands
       else if (Const.isDebug && char0 == 'g')
         {
@@ -109,6 +118,7 @@ class Console
               'debug ai, ' +
               'debug sound, ' +
               'debug lights, ' +
+              'debug colors, ' +
               'debug alert, ' +
               'debug demo, ' +
               'debug leave, ' +
@@ -121,12 +131,12 @@ class Console
               'goal receive [id], ' +
               'god - enable godmode,<br/>' +
               // info
-              'ie - timeline info (trace), ' +
-              'ii - improvements info (trace),<br/>' +
+              'info improvements, ' +
+              'info timeline,<br/>' +
               // learn
               'learn clues, ' +
               'learn event [index], ' +
-              'learn improvements [level], ' +
+              'learn improvement <name> <level>, ' +
               'learn region, ' +
               'learn timeline, ' +
               'load - load game,<br/>' +
@@ -146,6 +156,7 @@ class Console
               'debug ai, ' +
               'debug sound, ' +
               'debug lights, ' +
+              'debug colors, ' +
               'load - load game, ' +
               'mods [list|enable <id>|disable <id>|errors|rescan], ' +
               'restart, ' +
@@ -159,7 +170,7 @@ class Console
 
       // XXX info commands
       else if (Const.isDebug && char0 == 'i')
-        infoCommand(cmd);
+        infoConsole.run(cmd);
 
       // XXX load + learn commands
       else if (char0 == 'l')
@@ -347,6 +358,24 @@ class Console
 
 
 // ai trace|untrace <id> - toggle browser-console turn trace for one AI
+// finish <lose|alien|cult> - show game-over window with a sample preset
+  function finishCommand(arr: Array<String>)
+    {
+      var presets: Map<String, _FinishParams> = [
+        'lose' => { result: 'lose', text: 'noHealth', img: 'event/death', filter: 'lose' },
+        'alien' => { result: 'win', text: 'You have succeeded in your mission.', img: 'event/scenario_alien_finish_win1', filter: 'alien' },
+        'cult' => { result: 'lose', text: 'corNefandum', img: 'event/death', filter: 'cult' },
+      ];
+      var p = (arr.length >= 2) ? presets[arr[1]] : null;
+      if (p == null)
+        {
+          log('finish <lose|alien|cult> - show game-over window');
+          return;
+        }
+      game.finish(p);
+    }
+
+
   function aiTraceCommand(arr: Array<String>)
     {
       if (arr.length < 3 ||
@@ -654,36 +683,6 @@ class Console
         }
 
       game.scene.sounds.play(arr[1]);
-    }
-
-
-// info commands
-  function infoCommand(cmd: String)
-    {
-      // XXX [ie] events info
-      if (cmd.charAt(1) == 'e')
-        {
-          for (ev in game.timeline)
-            Const.p('' + ev);
-        }
-
-      // XXX [ii] improvements info
-      else if (cmd.charAt(1) == 'i')
-        {
-          var s = new StringBuf();
-          for (i in 0...EvolutionConst.improvements.length)
-            {
-              var imp = EvolutionConst.improvements[i];
-
-              s.add(i + ': ' + imp.name + ', ' + imp.id +
-                ' (' + ('' + imp.type).substr(5) + ')');
-              if (imp.organ != null)
-                s.add(' [' + imp.organ.name + ']');
-              if (i < EvolutionConst.improvements.length - 1)
-                s.add(', ');
-            }
-          log(Const.small(s.toString()));
-        }
     }
 
 

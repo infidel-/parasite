@@ -1,15 +1,44 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff
 
 game-debug:
 	cd src && $(MAKE) electron
+
+# dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
+sshot:
+	node sshot.mjs
+
+# dev: reload the running renderer over CDP to pull in fresh build artifacts (debug port 9300)
+reload:
+	node reload.mjs
+
+# dev: show working-tree diff (stat + full) without a pager
+git-diff:
+	@git --no-pager diff --stat HEAD
+	@echo ---
+	@git --no-pager diff HEAD
+	@git --no-pager status --short
 
 testmod:
 	cd examples/testmod/ && $(MAKE)
 
 chainsaw:
 	cd examples/chainsaw/ && $(MAKE)
+
+# build the soviet UI overhaul mod and stage it into parasite/dev/soviet/
+soviet:
+	cd examples/soviet/ && $(MAKE)
+
+# stage the standalone browser preview into parasite/soviet/
+soviet-preview:
+	mkdir -p parasite/soviet
+	cp examples/soviet/preview/index.html parasite/soviet/index.html
+	cp examples/soviet/preview/style.css  parasite/soviet/style.css
+	cp examples/soviet/preview/app.js     parasite/soviet/app.js
+
+pickpocket:
+	cd examples/pickpocket/ && $(MAKE)
 
 main:
 	cd electron && $(MAKE)

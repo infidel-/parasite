@@ -53,6 +53,9 @@ class HostBridge
   public static function quit(): Void h().quit();
   public static function setFullscreen(on: Bool): Void h().setFullscreen(on);
 
+// register a callback fired on OS window focus/blur (focused: Bool)
+  public static function onFocusChange(cb: Bool -> Void): Void h().onFocusChange(cb);
+
 // debug-only writes — main refuses with false when sentinel (.debug) is absent
   public static function debugWriteRegionRoads(text: String): Void h().debug.writeRegionRoads(text);
   public static function debugWriteRegionBuildings(text: String): Void h().debug.writeRegionBuildings(text);

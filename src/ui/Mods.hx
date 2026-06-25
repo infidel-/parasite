@@ -1,8 +1,7 @@
-// mods management window
+// mods management window — extensions registry
 
 package ui;
 
-import mods.AssetPath;
 import mods.ModInfo;
 import mods.ModRegistry;
 import js.Browser;
@@ -16,169 +15,229 @@ class Mods extends UIWindow
 {
   static inline var BROWSE_URL = 'steam://url/SteamWorkshop/1920320';
 
-  var contents: DivElement;
+  var body: DivElement;       // .mods-body (cards)
+  var stat: DivElement;       // .mods-stat LOADED count
 
   public function new(g: Game)
     {
       super(g, 'window-mods');
-      window.style.borderImage = "url('" + AssetPath.resolve('img/window-dialog.png') +
-        "') 100 fill / 1 / 0 stretch";
 
-      var title = Browser.document.createDivElement();
-      title.id = 'window-mods-title';
-      title.className = 'window-title';
-      title.innerHTML = 'MODS';
-      window.appendChild(title);
+      addCorners();
 
-      contents = Browser.document.createDivElement();
-      contents.id = 'window-mods-contents';
-      window.appendChild(contents);
+      // titlebar: MODS + subtitle + loaded-count stat
+      var titlebar = Browser.document.createDivElement();
+      titlebar.className = 'mods-titlebar';
+      titlebar.innerHTML = '<span class="mods-title">MODS</span>' +
+        '<span class="mods-sub">extensions registry</span>';
+      stat = Browser.document.createDivElement();
+      stat.className = 'mods-stat';
+      titlebar.appendChild(stat);
+      window.appendChild(titlebar);
 
-      addCloseButton();
-      close.onclick = function (e) {
+      body = Browser.document.createDivElement();
+      body.className = 'mods-body';
+      window.appendChild(body);
+
+      // footer: restart notice + action buttons
+      var foot = Browser.document.createDivElement();
+      foot.className = 'mods-foot';
+      window.appendChild(foot);
+      var notice = Browser.document.createDivElement();
+      notice.className = 'mods-notice';
+      notice.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16"/></svg>' +
+        'Toggle changes apply after restart.';
+      foot.appendChild(notice);
+      var actions = Browser.document.createDivElement();
+      actions.className = 'mods-actions';
+      foot.appendChild(actions);
+      addButton(actions,
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9H3z"/></svg>OPEN MODS FOLDER',
+        function(e) { HostBridge.modsOpenFolder(); });
+      addButton(actions,
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>BROWSE WORKSHOP',
+        function(e) { HostBridge.shellOpenExternal(BROWSE_URL); });
+
+      addWinClose(function (e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');
         game.ui.state = UISTATE_MAINMENU;
-      }
+      });
 
       rebuild();
     }
 
-// re-render the list + footer; called on show() and after rescan
+// re-render the card list; called on show() and after rescan
   function rebuild()
     {
-      contents.innerHTML = '';
-
+      body.innerHTML = '';
       var local = ModRegistry.all.filter(function(m) return m.source != 'workshop');
       var workshop = ModRegistry.all.filter(function(m) return m.source == 'workshop');
 
-      if (local.length == 0 && workshop.length == 0)
+      if (local.length == 0 &&
+          workshop.length == 0)
         {
           var empty = Browser.document.createDivElement();
-          empty.className = 'mods-empty';
+          empty.className = 'win-empty';
           empty.innerHTML = 'No mods installed. Use the buttons below to add some.';
-          contents.appendChild(empty);
+          body.appendChild(empty);
         }
 
       if (local.length > 0)
         {
-          addSection('LOCAL');
-          for (m in local) addRow(m);
+          var bd = addCard('LOCAL', local.length);
+          for (m in local)
+            addRow(bd, m);
         }
       if (workshop.length > 0)
         {
-          addSection('WORKSHOP');
-          for (m in workshop) addRow(m);
+          var bd = addCard('WORKSHOP', workshop.length);
+          for (m in workshop)
+            addRow(bd, m);
         }
-
-      // footer notice + buttons
-      var notice = Browser.document.createDivElement();
-      notice.className = 'mods-notice';
-      notice.innerHTML = 'Toggle changes apply after restart.';
-      contents.appendChild(notice);
-
-      var bar = Browser.document.createDivElement();
-      bar.className = 'mods-buttons';
-      contents.appendChild(bar);
-
-      addButton(bar, 'OPEN MODS FOLDER', function(e) {
-        HostBridge.modsOpenFolder();
-      });
-      addButton(bar, 'BROWSE WORKSHOP', function(e) {
-        HostBridge.shellOpenExternal(BROWSE_URL);
-      });
+      refreshStat();
     }
 
-// section header (LOCAL / WORKSHOP)
-  function addSection(label: String)
+// a registry section card; returns its body element for rows
+  function addCard(label: String, count: Int): DivElement
     {
-      var sec = Browser.document.createDivElement();
-      sec.className = 'mods-section';
-      sec.innerHTML = label;
-      contents.appendChild(sec);
+      var card = Browser.document.createDivElement();
+      card.className = 'win-card';
+      var hd = Browser.document.createDivElement();
+      hd.className = 'win-card-hd mods-card-hd';
+      hd.innerHTML = '<span class="win-cname">' + label + '</span>' +
+        '<span class="win-count">' + (count < 10 ? '0' : '') + count + '</span>';
+      var wrap = Browser.document.createDivElement();
+      wrap.className = 'win-card-wrap';
+      var bd = Browser.document.createDivElement();
+      bd.className = 'win-card-bd';
+      wrap.appendChild(bd);
+      card.appendChild(hd);
+      card.appendChild(wrap);
+      body.appendChild(card);
+      return bd;
     }
 
-// single mod row: checkbox + name v0.0.0 + optional workshop arrow
-// failed mods rendered grayed with reason on the next line
-  function addRow(m: ModInfo)
+// one mod row: toggle + name/version (+reason) + status pill + workshop link
+  function addRow(parent: DivElement, m: ModInfo)
     {
-      var row = Browser.document.createDivElement();
-      row.className = 'mods-row';
-      contents.appendChild(row);
-
       var disabled = isDisabled(m.id);
       var failReason = ModRegistry.failed.get(m.id);
       var shadowed = (m.shadowedBy != null);
+      var locked = (failReason != null || shadowed);
+
+      var row = Browser.document.createDivElement();
+      row.className = 'mods-row';
       if (failReason != null)
-        row.classList.add('mods-row-failed');
-      if (shadowed)
-        row.classList.add('mods-row-shadowed');
+        row.classList.add('failed');
+      else if (shadowed)
+        row.classList.add('shadowed');
+      else if (disabled)
+        row.classList.add('off');
+      parent.appendChild(row);
 
-      // checkbox: hidden input + faux `.checkbox-span` box (matches the
-      // pattern used by addCheckbox in UIWindow; styled by app.css via the
-      // global `[type=checkbox]:checked + span:before` rule). shadowed
-      // entries share an id with the loaded mod, so toggling here would
-      // silently disable the wrong source — disable it.
-      var cbLabel = Browser.document.createLabelElement();
-      cbLabel.className = 'mods-check';
-      row.appendChild(cbLabel);
-      var cb = Browser.document.createInputElement();
-      cb.type = 'checkbox';
-      cb.className = 'checkbox-element';
-      cb.checked = !disabled && !shadowed;
-      cb.disabled = shadowed;
-      if (!shadowed)
-        cb.onclick = function (e: PointerEvent) {
-          toggle(m.id, cb.checked);
+      // toggle (reuses .win-switch; #window-mods sets --win-accent green)
+      var sw = Browser.document.createDivElement();
+      sw.className = 'win-switch';
+      if (!disabled && !locked)
+        sw.classList.add('on');
+      if (locked)
+        sw.classList.add('mods-sw-lock');
+      row.appendChild(sw);
+
+      // name + version (+ optional reason line)
+      var main = Browser.document.createDivElement();
+      main.className = 'mods-main';
+      var line = Browser.document.createDivElement();
+      line.className = 'mods-line';
+      line.innerHTML = '<span class="mods-name">' + m.name + '</span>' +
+        '<span class="mods-ver">v' + m.version + '</span>';
+      main.appendChild(line);
+      if (failReason != null)
+        addReason(main, 'failed: ' + failReason);
+      else if (shadowed)
+        addReason(main, 'shadowed by ' + m.shadowedBy);
+      row.appendChild(main);
+
+      // status pill
+      var status = Browser.document.createDivElement();
+      status.className = 'mods-status';
+      if (failReason != null)
+        setStatusClass(status, 'st-failed', 'FAILED');
+      else if (shadowed)
+        setStatusClass(status, 'st-shadowed', 'SHADOWED');
+      else
+        setStatus(status, !disabled);
+      row.appendChild(status);
+
+      // wire the toggle now that the status pill exists
+      if (!locked)
+        sw.onclick = function (e: PointerEvent) {
+          var on = !sw.classList.contains('on');
+          sw.classList.toggle('on', on);
+          row.classList.toggle('off', !on);
+          toggle(m.id, on);
+          setStatus(status, on);
+          refreshStat();
         };
-      cbLabel.appendChild(cb);
-      var cbSpan = Browser.document.createSpanElement();
-      cbSpan.className = 'checkbox-span mods-check-span';
-      cbLabel.appendChild(cbSpan);
 
-      // name + version
-      var label = Browser.document.createDivElement();
-      label.className = 'mods-label';
-      label.innerHTML = m.name + ' ' + Const.smallgray('v' + m.version);
-      row.appendChild(label);
-
-      // workshop "→" link
-      if (m.source == 'workshop' && m.workshopID != null)
+      // workshop link
+      if (m.source == 'workshop' &&
+          m.workshopID != null)
         {
-          var link = Browser.document.createSpanElement();
+          var link = Browser.document.createDivElement();
           link.className = 'mods-link';
-          link.innerHTML = '&rarr;';
           link.title = 'Open on Steam Workshop';
+          link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
           link.onclick = function (e) {
-            HostBridge.shellOpenExternal(
-              'steam://url/CommunityFilePage/' + m.workshopID);
+            HostBridge.shellOpenExternal('steam://url/CommunityFilePage/' + m.workshopID);
           };
           row.appendChild(link);
         }
+    }
 
-      // failure reason on its own indented line
-      if (failReason != null)
-        {
-          var reason = Browser.document.createDivElement();
-          reason.className = 'mods-reason';
-          reason.innerHTML = 'failed: ' + failReason;
-          contents.appendChild(reason);
-        }
+// indented reason / shadow line
+  function addReason(main: DivElement, text: String)
+    {
+      var reason = Browser.document.createDivElement();
+      reason.className = 'mods-reason';
+      reason.innerHTML = text;
+      main.appendChild(reason);
+    }
 
-      // shadow notice on its own indented line
-      if (shadowed)
-        {
-          var reason = Browser.document.createDivElement();
-          reason.className = 'mods-reason';
-          reason.innerHTML = 'shadowed by ' + m.shadowedBy;
-          contents.appendChild(reason);
-        }
+// set the status pill to active/off (with flip animation)
+  function setStatus(status: DivElement, on: Bool)
+    {
+      setStatusClass(status, (on ? 'st-active' : 'st-off'), (on ? 'ACTIVE' : 'OFF'));
+    }
+
+// apply a status pill class + label, replaying the flip animation
+  function setStatusClass(status: DivElement, cls: String, label: String)
+    {
+      status.className = 'mods-status ' + cls;
+      status.innerHTML = label;
+      status.classList.remove('flip');
+      untyped status.offsetWidth;
+      status.classList.add('flip');
+    }
+
+// update the titlebar LOADED count (active = enabled, not failed/shadowed)
+  function refreshStat()
+    {
+      var total = ModRegistry.all.length;
+      var loaded = 0;
+      for (m in ModRegistry.all)
+        if (!isDisabled(m.id) &&
+            ModRegistry.failed.get(m.id) == null &&
+            m.shadowedBy == null)
+          loaded++;
+      stat.innerHTML = loaded + ' / ' + total + ' LOADED';
     }
 
   function isDisabled(id: String): Bool
     {
       for (d in game.profile.object.disabledMods)
-        if (d == id) return true;
+        if (d == id)
+          return true;
       return false;
     }
 
@@ -194,16 +253,21 @@ class Mods extends UIWindow
       game.profile.save();
     }
 
-  function addButton(parent: DivElement, text: String, onclick: Dynamic -> Void)
+  function addButton(parent: DivElement, html: String, onclick: Dynamic -> Void)
     {
       var b = Browser.document.createDivElement();
-      b.className = 'mods-button';
-      b.innerHTML = text;
+      b.className = 'mods-btn';
+      b.innerHTML = html;
       b.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         onclick(e);
       };
       parent.appendChild(b);
+    }
+
+  override function hide(?skipAnimation: Bool = false)
+    {
+      animatedHide();
     }
 
   override function update()

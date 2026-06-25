@@ -81,7 +81,7 @@ class Chat extends _SaveObject
       switch (difficulty)
         {
           case UNSET:
-          case EASY:
+          case EASY | NOOB:
             minConsent = 30;
           case NORMAL:
             minConsent = 20;
@@ -462,7 +462,7 @@ class Chat extends _SaveObject
           switch (difficulty)
             {
               case UNSET:
-              case EASY:
+              case EASY | NOOB:
                 diffBonus = 2;
               case NORMAL:
                 diffBonus = 1;
@@ -1001,7 +1001,7 @@ class Chat extends _SaveObject
           switch (difficulty)
             {
               case UNSET:
-              case EASY:
+              case EASY | NOOB:
                 diffBonus = 20.0;
               case NORMAL:
                 diffBonus = 10.0;

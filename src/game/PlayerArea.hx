@@ -1465,7 +1465,7 @@ class PlayerArea extends _SaveObject
           switch (player.chat.difficulty)
             {
               case UNSET:
-              case EASY:
+              case EASY | NOOB:
                 val = 0;
               case NORMAL:
                 val = 1;

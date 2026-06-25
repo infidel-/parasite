@@ -5,6 +5,9 @@ import game.Game;
 import game.Team;
 import cult.ordeals.*;
 import cult.ordeals.profane.*;
+import cult.UpgradeFollowerEvents;
+import ui.Choice._ChoiceParams;
+import _CultEvent;
 
 class Cult
 {
@@ -40,6 +43,7 @@ class Cult
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
               log('cu/cult r [power] - recruit follower (default combat)');
               log('cu/cult po [power] [idx] - add profane ordeal');
+              log('cu/cult occasio - open a random occasio choice window (no cult needed)');
               return true;
             }
           
@@ -98,7 +102,14 @@ class Cult
               addProfaneOrdeal(arr);
               return true;
             }
-          
+
+          // cu/cult occasio - open a random occasio choice window for testing
+          if (arr[1] == 'occasio' || arr[1] == 'occ')
+            {
+              showRandomOccasio();
+              return true;
+            }
+
           log('Unknown cult command: ' + arr[1]);
           return true;
         }
@@ -477,6 +488,52 @@ class Cult
           return;
         }
       log('Moved to ordeal mission spot: (' + spotX + ',' + spotY + ').');
+    }
+
+// open a random occasio choice window from the predefined event pool.
+// choices are replaced with a log-only handler, so no real cult is needed
+  function showRandomOccasio()
+    {
+      // flatten the predefined occasio events across all job groups
+      var pool: Array<_CultEvent> = [];
+      for (events in UpgradeFollowerEvents.list)
+        for (e in events)
+          pool.push(e);
+      if (pool.length == 0)
+        {
+          log('No occasio events available.');
+          return;
+        }
+      var event = pool[Std.random(pool.length)];
+
+      // build choice params; f only logs (no cult side effects)
+      var params: _ChoiceParams = {
+        title: Const.col('occasio', 'Occasio') + ': ' + event.title,
+        text: event.text,
+        img: 'img/cult/occasio.jpg',
+        choices: [],
+        buttons: [],
+        textClass: 'choice-occasio',
+        src: event,
+        f: function(src: Dynamic, choiceID: Int)
+          {
+            var e: _CultEvent = cast src;
+            var choice = e.choices[choiceID - 1];
+            game.log('You chose ' + Const.col('gray', choice.button) +
+              ' in occasio ' + Const.col('occasio', e.title) + '.');
+          }
+      };
+      for (choice in event.choices)
+        {
+          params.buttons.push(choice.button);
+          params.choices.push(choice.text);
+        }
+
+      game.ui.event({
+        type: UIEVENT_STATE,
+        state: UISTATE_CHOICE,
+        obj: params
+      });
     }
 
 // log shortcut

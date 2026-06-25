@@ -80,7 +80,7 @@ class Timeline extends _SaveObject
       switch (difficulty)
         {
           case UNSET:
-          case EASY:
+          case EASY | NOOB:
             n = 1 + Std.random(3);
           case NORMAL:
             n = 1 + Std.random(2);

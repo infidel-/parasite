@@ -875,7 +875,15 @@ class MainElectron
 
   static function main()
     {
-      App.enableSandbox();
+      // force sandbox on all renderers (mod hardening). the scary opt-out
+      // --dangerous-disable-mod-sandbox is the only user-facing knob: when set
+      // we add Chromium's builtin --no-sandbox ourselves and skip enableSandbox.
+      // (calling enableSandbox() alongside --no-sandbox contradicts the flag and
+      // aborts Chromium sandbox init at startup → silent exit on Windows)
+      if (App.commandLine.hasSwitch('dangerous-disable-mod-sandbox'))
+        App.commandLine.appendSwitch('no-sandbox');
+      else
+        App.enableSandbox();
       registerModSchemePrivileges();
       registerHostHandlers();
       // steamworks.js must load + overlay switches must apply before App.ready
@@ -929,10 +937,26 @@ class MainElectron
               contextIsolation: true,
               sandbox: true,
               webSecurity: true,
+              backgroundThrottling: false,
             }
           });
-          if (!isDebug)
-            win.setMenu(null);
+          // no app menu in any build: removes the default Ctrl+W "close window"
+          // accelerator (Ctrl+W is repurposed as console word-delete). the menu
+          // also carried F11 fullscreen + dev shortcuts, so rebind them here:
+          // F11 in all builds, devtools / reload only in debug
+          win.setMenu(null);
+          untyped win.webContents.on('before-input-event', function(e, input) {
+            if (input.type != 'keyDown')
+              return;
+            var k = ('' + input.key).toLowerCase();
+            if (k == 'f11')
+              win.fullScreen = !win.fullScreen;
+            else if (isDebug &&
+                (k == 'f12' || (input.control && input.shift && k == 'i')))
+              win.webContents.toggleDevTools();
+            else if (isDebug && input.control && k == 'r')
+              win.webContents.reload();
+          });
 
           // block all in-window navigation
           win.webContents.on('will-navigate', function(e, url) {
@@ -942,6 +966,11 @@ class MainElectron
           untyped win.webContents.setWindowOpenHandler(function(details) {
             return { action: 'deny' };
           });
+
+          // push OS focus changes to the renderer (window blur/visibilitychange
+          // don't fire reliably here) so the menu can pause its decorative anims
+          untyped win.on('focus', function() win.webContents.send('host:focus', true));
+          untyped win.on('blur', function() win.webContents.send('host:focus', false));
 
           win.loadFile('app.html');
           if (isDebug)
@@ -960,5 +989,10 @@ class MainElectron
 
       App.commandLine.appendSwitch('in-process-gpu');
       App.commandLine.appendSwitch('disable-direct-composition');
+      // keep the compositor rendering when the window is occluded/backgrounded so
+      // CDP Page.captureScreenshot works while the game isn't foreground (dev tooling)
+      App.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+      App.commandLine.appendSwitch('disable-renderer-backgrounding');
+      App.commandLine.appendSwitch('disable-background-timer-throttling');
     }
 }

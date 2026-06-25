@@ -1,16 +1,14 @@
-// new js ui hud
+// new js ui hud — orchestrates per-block sub-classes in ui/hud/
 package ui;
 
-import mods.AssetPath;
 import js.Browser;
 import js.Browser.document;
-import js.html.TextAreaElement;
 import js.html.DivElement;
-import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import game.*;
 import ui.Targeting;
+import ui.hud.*;
 
 class HUD
 {
@@ -20,46 +18,38 @@ class HUD
   var blinkingText: DivElement;
   var overlay: DivElement;
   public var container: DivElement;
-  var consoleDiv: DivElement;
-  var console: TextAreaElement;
-  var consoleHint: DivElement;
-  var consoleHistoryIndex: Int;
-  var consoleHistoryDraft: String;
-  var log: DivElement;
-  var goals: DivElement;
-  public var info: DivElement;
-  var regionTooltip: RegionTooltip;
-  var aiTooltip: AITooltip;
+  // background atmosphere layer (color grade + grain + veins)
+  public var atmo: DivElement;
+  // tooltips (shared by mouse glue and the stats block)
+  public var regionTooltip: RegionTooltip;
+  public var aiTooltip: AITooltip;
   // debug overlay div — created and updated only when Const.isDebug is true
   var debugInfo: DivElement;
-  var menuButtons: Array<{
-    state: _UIState,
-    btn: DivElement,
-  }>;
   public var targeting: Targeting;
   public var command: Command;
-  var actions: DivElement;
-  var actionButtons: List<DivElement>; // list of action buttons
-  var listActions: List<_PlayerAction>; // list of currently available actions
-  var listKeyActions: List<_PlayerAction>; // list of currently available keyboard actions
-  var listTransparentElements: Array<DivElement>;
-  var listElements: Array<DivElement>;
+  // per-block sub-classes (each owns its DOM, appended to container)
+  var topbar: TopbarHud;
+  var log: LogHud;
+  public var goals: GoalsHud;
+  public var infoHud: InfoHud;
+  var navbar: NavbarHud;
+  var console: ConsoleHud;
+  var actions: ActionsHud;
   var lastMouseX: Float = -1;
   var lastMouseY: Float = -1;
-  var lastMouseOverAnyElement: Bool = false;
   var lastRegionTileX: Int = -1;
   var lastRegionTileY: Int = -1;
-  var cachedRects: Map<DivElement, {x: Float, y: Float, w: Float, h: Float}>;
-  var rectsValid: Bool = false;
+
+  // exposed for the region tooltip, which measures against the stats panel
+  public var info(get, never): DivElement;
+  inline function get_info(): DivElement
+    return infoHud.info;
 
   public function new(u: UI, g: Game)
     {
       game = g;
       ui = u;
       state = HUD_DEFAULT;
-      actionButtons = new List();
-      listActions = new List();
-      listKeyActions = new List();
       targeting = new Targeting(game, this);
       command = null;
 
@@ -82,91 +72,42 @@ class HUD
       container.style.visibility = 'visible';
       document.body.appendChild(container);
 
+      // background atmosphere: purple color-grade + film grain + corner veins.
+      // lives on its own body-level layer (not inside #hud) so toggling the HUD
+      // with space does not hide the world tint.
+      atmo = document.createDivElement();
+      atmo.id = 'hud-atmo';
+      var grade = document.createDivElement();
+      grade.id = 'hud-grade';
+      atmo.appendChild(grade);
+      var veins = document.createDivElement();
+      veins.id = 'hud-veins-wrap';
+      veins.innerHTML = UISvg.hudVeins();
+      atmo.appendChild(veins);
+      document.body.appendChild(atmo);
+
       // initialize region tooltip
       regionTooltip = new RegionTooltip(game, this);
       // initialize area AI tooltip
       aiTooltip = new AITooltip(game, this);
 
-      consoleDiv = document.createDivElement();
-      consoleDiv.className = 'console-div';
-      consoleDiv.style.visibility = 'hidden';
-      container.appendChild(consoleDiv);
-
-      console = document.createTextAreaElement();
-      console.id = 'hud-console';
-      consoleHistoryIndex = -1;
-      consoleHistoryDraft = '';
-      console.onkeydown = onConsoleKeyDown;
-      console.oninput = function(_) updateConsoleHint();
-      consoleDiv.appendChild(console);
-
-      // gray inline hint overlay (sits over the textarea, typed part transparent)
-      consoleHint = document.createDivElement();
-      consoleHint.id = 'hud-console-hint';
-      consoleHint.style.display = 'none';
-      consoleDiv.appendChild(consoleHint);
-
-      log = document.createDivElement();
-      log.className = 'text';
-      log.id = 'hud-log';
-      log.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
-      container.appendChild(log);
-
-      goals = document.createDivElement();
-      goals.className = 'text';
-      goals.id = 'hud-goals';
-      goals.style.borderImage = "url('" + AssetPath.resolve('img/hud-goals-border.png') + "') 24 fill / 1 / 0 stretch";
-      container.appendChild(goals);
-
-      info = document.createDivElement();
-      info.className = 'text';
-      info.id = 'hud-info';
-      info.style.borderImage = "url('" + AssetPath.resolve('img/hud-info-border.png') + "') 36 20 36 fill / 1 / 0 stretch";
-      container.appendChild(info);
-
+      // per-block sub-classes
+      console = new ConsoleHud(game, this);
+      topbar = new TopbarHud(game, this);
+      log = new LogHud(game, this);
+      goals = new GoalsHud(game, this);
+      infoHud = new InfoHud(game, this);
 
       if (Const.isDebug)
         {
           debugInfo = document.createDivElement();
-          debugInfo.className = 'text';
+          debugInfo.className = 'hud-panel hud-text';
           debugInfo.id = 'hud-debug-info';
           container.appendChild(debugInfo);
         }
 
-      // menu
-      var buttons = document.createDivElement();
-      buttons.id = 'hud-buttons';
-      container.appendChild(buttons);
-      menuButtons = [];
-      addMenuButton(buttons, UISTATE_GOALS,
-        Const.key('F1') + ': GOALS');
-      addMenuButton(buttons, UISTATE_BODY,
-        Const.key('F2') + ': BODY');
-      addMenuButton(buttons, UISTATE_LOG,
-        Const.key('F3') + ': LOG');
-      addMenuButton(buttons, UISTATE_TIMELINE,
-        Const.key('F4') + ': TIMELINE');
-      addMenuButton(buttons, UISTATE_EVOLUTION,
-        Const.key('F5') + ': EVO');
-      addMenuButton(buttons, UISTATE_CULT,
-        Const.key('F6') + ': CULT');
-      // actions
-      actions = document.createDivElement();
-      actions.id = 'hud-actions';
-      actions.style.borderImage = "url('" + AssetPath.resolve('img/hud-actions-border.png') + "') 28 fill / 1 / 0 stretch";
-      container.appendChild(actions);
-
-      listTransparentElements = [
-        info,
-        log,
-        goals,
-      ];
-      listElements = [
-        info,
-        actions,
-        log,
-        goals,
-      ];
+      navbar = new NavbarHud(game, this);
+      actions = new ActionsHud(game, this);
     }
 
 // show blinking text and set timeout
@@ -195,87 +136,18 @@ class HUD
 //      overlay.style.visibility = 'hidden';
     }
 
-// add button to menu
-  function addMenuButton(cont: DivElement, state: _UIState, str: String): DivElement
-    {
-      var btn = document.createDivElement();
-      btn.innerHTML = str;
-      // NOTE: must be the same with show/hide buttons at updateMenu()
-      btn.className = 'hud-button window-title';
-      btn.style.borderImage = "url('" + AssetPath.resolve('img/hud-button.png') + "') 23 fill / 1 / 0 stretch";
-      cont.appendChild(btn);
-      menuButtons.push({
-        state: state,
-        btn: btn,
-      });
-      btn.onclick = function (e)
-        {
-          game.scene.sounds.play('click-hud');
-          game.scene.sounds.play('window-open');
-          game.ui.state = state; 
-        }
-      return btn;
-    }
-
-// get menu button
+// get menu button (delegates to navbar block)
   public function getMenuButton(state: _UIState): DivElement
-    {
-      for (b in menuButtons)
-        if (b.state == state)
-          return b.btn;
-      return null;
-    }
+    return navbar.getMenuButton(state);
 
-// make hud transparent
+// handle mouse move for region/AI tooltips (panels are click-through)
   public function onMouseMove(e: MouseEvent)
     {
-      // build rect cache if needed (invalidated on resize)
-      if (!rectsValid)
-        {
-          cachedRects = new Map();
-          for (el in listTransparentElements)
-            {
-              var r = el.getBoundingClientRect();
-              cachedRects.set(el, { x: r.x, y: r.y, w: r.width, h: r.height });
-            }
-          rectsValid = true;
-        }
-
       // check if mouse position changed enough to care
       var dx = e.clientX - lastMouseX;
       var dy = e.clientY - lastMouseY;
       if (dx * dx + dy * dy < 4) // ~2px threshold
         return; // mouse hasn't moved significantly
-
-      // check if over any element
-      var mouseOverAnyElement = false;
-      for (el in listTransparentElements)
-        {
-          var r = cachedRects.get(el);
-          if (r == null) continue;
-          if (e.clientX >= r.x && e.clientY >= r.y &&
-              e.clientX <= r.x + r.w && e.clientY <= r.y + r.h)
-            mouseOverAnyElement = true;
-        }
-
-      // update opacity styles only if hovering one transparent element
-      if (mouseOverAnyElement ||
-          lastMouseOverAnyElement)
-        {
-          for (el in listTransparentElements)
-            {
-              var r = cachedRects.get(el);
-              if (r == null) continue;
-              var isOver = e.clientX >= r.x && e.clientY >= r.y &&
-                           e.clientX <= r.x + r.w && e.clientY <= r.y + r.h;
-              var wasOver = lastMouseX >= r.x && lastMouseY >= r.y &&
-                            lastMouseX <= r.x + r.w && lastMouseY <= r.y + r.h;
-              if (isOver != wasOver)
-                el.style.opacity = isOver ? '0.1' : '0.9';
-            }
-        }
-
-      lastMouseOverAnyElement = mouseOverAnyElement;
 
       if (ui.state != UISTATE_DEFAULT)
         {
@@ -400,171 +272,47 @@ public function onMouseLeave()
       return (container.style.visibility == 'visible');
     }
 
+// show/hide the background atmosphere layer (kept out of HUD toggle; hidden on main menu)
+  public function setAtmoVisible(v: Bool)
+    {
+      atmo.style.visibility = (v ? 'visible' : 'hidden');
+    }
+
   public function show()
     {
-      // hack: restore opacity animation
-      for (el in listElements)
-        el.style.transition = '0.1s';
       container.style.visibility = 'visible';
+      navbar.show();
     }
 
   public function hide()
     {
       regionTooltip.hide();
       aiTooltip.hide();
-      // hack: remove opacity animation
-      for (el in listElements)
-        el.style.transition = '0s';
       container.style.visibility = 'hidden';
+      navbar.hide();
     }
 
-  public function consoleVisible(): Bool
+// position the navbar for a UI state (delegates to the navbar block)
+  public function applyNavbarState(state: _UIState)
     {
-      return (consoleDiv.style.visibility == 'visible');
+      navbar.applyState(state);
     }
+
+// console block delegates
+  public function consoleVisible(): Bool
+    return console.visible();
 
   public function showConsole()
-    {
-      consoleDiv.style.visibility = 'visible';
-      console.value = '';
-      Browser.window.setTimeout(function () {
-        console.value = '';
-      });
-      console.focus();
-      consoleHistoryIndex = -1;
-      consoleHistoryDraft = '';
-      updateConsoleHint();
-    }
+    console.show();
 
   public function hideConsole()
-    {
-      consoleDiv.style.visibility = 'hidden';
-      consoleHistoryIndex = -1;
-      consoleHistoryDraft = '';
-      consoleHint.style.display = 'none';
-      ui.focus();
-    }
-
-// handle keyboard input for console
-  function onConsoleKeyDown(e: KeyboardEvent)
-    {
-      // hide console
-      if (e.code == 'Escape')
-        {
-          hideConsole();
-        }
-      // run console command
-      else if (e.code == 'Enter')
-        {
-          game.console.run(console.value);
-          consoleHistoryIndex = -1;
-          consoleHistoryDraft = '';
-          // kludge: needs a timeout or closes the event window
-          Browser.window.setTimeout(hideConsole, 10);
-        }
-      // tab completion (longest common prefix; lists ambiguous candidates)
-      else if (e.code == 'Tab')
-        {
-          e.preventDefault();
-          var r = game.console.completion.complete(console.value);
-          if (r.value != console.value)
-            {
-              console.value = r.value;
-              setConsoleCaretToEnd();
-            }
-          if (r.list.length > 0)
-            game.console.log(r.list.join(', '));
-          updateConsoleHint();
-        }
-      // previous command in history
-      else if (e.code == 'ArrowUp')
-        {
-          if (game.console.getHistoryLength() == 0)
-            return;
-          e.preventDefault();
-          if (consoleHistoryIndex == -1)
-            {
-              consoleHistoryDraft = console.value;
-              consoleHistoryIndex = game.console.getHistoryLength();
-            }
-          if (consoleHistoryIndex > 0)
-            consoleHistoryIndex--;
-          console.value = game.console.getHistoryEntry(consoleHistoryIndex);
-          setConsoleCaretToEnd();
-          updateConsoleHint();
-        }
-      // next command in history
-      else if (e.code == 'ArrowDown')
-        {
-          if (consoleHistoryIndex == -1)
-            return;
-          e.preventDefault();
-          consoleHistoryIndex++;
-          if (consoleHistoryIndex >= game.console.getHistoryLength())
-            {
-              consoleHistoryIndex = -1;
-              console.value = consoleHistoryDraft;
-            }
-          else
-            {
-              console.value = game.console.getHistoryEntry(consoleHistoryIndex);
-            }
-          setConsoleCaretToEnd();
-          updateConsoleHint();
-        }
-    }
-
-// refresh the gray inline hint overlay from the current console input
-  function updateConsoleHint()
-    {
-      var val = console.value;
-      var h = game.console.completion.hint(val);
-      if (h == '')
-        {
-          consoleHint.style.display = 'none';
-          return;
-        }
-      consoleHint.style.display = '';
-      // align the overlay box exactly over the textarea
-      consoleHint.style.left = console.offsetLeft + 'px';
-      consoleHint.style.top = console.offsetTop + 'px';
-      consoleHint.style.width = console.offsetWidth + 'px';
-      // mirror the textarea's exact computed font so the ghost lines up
-      var cs = Browser.window.getComputedStyle(console);
-      consoleHint.style.fontFamily = cs.fontFamily;
-      consoleHint.style.fontSize = cs.fontSize;
-      consoleHint.style.fontWeight = cs.fontWeight;
-      consoleHint.style.lineHeight = cs.lineHeight;
-      consoleHint.style.letterSpacing = cs.letterSpacing;
-      consoleHint.style.height = cs.height;
-      // transparent copy of typed text pushes the gray hint to the caret position
-      consoleHint.innerHTML =
-        '<span class="chint-pre">' + escapeHTML(val) + '</span>' +
-        '<span class="chint-ghost">' + escapeHTML(h) + '</span>';
-    }
-
-// escapes html special chars for hint rendering
-  function escapeHTML(s: String): String
-    {
-      s = StringTools.replace(s, '&', '&amp;');
-      s = StringTools.replace(s, '<', '&lt;');
-      s = StringTools.replace(s, '>', '&gt;');
-      return s;
-    }
-
-// move console caret to the end
-  function setConsoleCaretToEnd()
-    {
-      Browser.window.setTimeout(function () {
-        untyped console.setSelectionRange(
-          console.value.length,
-          console.value.length);
-      });
-    }
+    console.hide();
 
 // update HUD state from game state
   public function update()
     {
+      // drop the purple color-grade in region mode so map colors read true
+      atmo.classList.toggle('region', game.location == LOCATION_REGION);
       if (game.location != LOCATION_REGION)
         {
           resetRegionTooltipHover();
@@ -572,13 +320,14 @@ public function onMouseLeave()
         }
       if (game.location != LOCATION_AREA)
         aiTooltip.hide();
-      updateActionList();
+      actions.updateList();
       // NOTE: before info because info uses its height
-      updateActions();
-      updateInfo();
-      updateLog();
-      updateMenu();
-      updateGoals();
+      actions.updateActions();
+      infoHud.update();
+      log.update();
+      navbar.update();
+      goals.update();
+      topbar.update();
       if (game.location == LOCATION_REGION)
         updateRegionTooltipHover(true);
       updateAITooltip();
@@ -586,237 +335,34 @@ public function onMouseLeave()
         updateDebugInfo();
     }
 
-// update log display
+// event log block delegate
   public function updateLog()
-    {
-      var buf = new StringBuf();
-      for (l in game.hudMessageList)
-        {
-          buf.add('<span ');
-          if (l.col == COLOR_ALERT)
-            buf.add('class=highlight-text ');
-          buf.add("style='color:");
-          buf.add(Const.TEXT_COLORS[l.col]);
-          buf.add("'>");
-          buf.add(l.msg);
-          buf.add("</span>");
-          if (l.cnt > 1)
-            {
-              buf.add(" <span class=small style='color:var(--text-color-repeat)'>(x");
-              buf.add(l.cnt);
-              buf.add(")</span>");
-            }
-          buf.add('<br/>');
-        }
+    log.update();
 
-      log.innerHTML = buf.toString();
-    }
+// action block delegates
+  public function addAction(action: _PlayerAction)
+    actions.addAction(action);
 
-// update goals list
-  function updateGoals()
-    {
-      var buf = new StringBuf();
-      for (g in game.goals.iteratorCurrent())
-        {
-          var info = game.goals.getInfo(g);
-          if (info.isHidden)
-            continue;
+  public function addKeyAction(action: _PlayerAction)
+    actions.addKeyAction(action);
 
-          buf.add(Const.col('goal', info.name));
-          if (info.isOptional)
-            buf.add(' ' + Const.small(Const.col('gray', '[optional]')));
-          buf.add('<br/>');
-          buf.add(info.note + '<br/>');
-          if (info.noteFunc != null)
-            buf.add(info.noteFunc(game) + '<br/>');
-          buf.add('<br/>');
-        }
-      var s = buf.toString().substr(0, buf.length - 10); // remove last two br's'
-      goals.innerHTML = s;
-    }
+  public function updateActions()
+    actions.updateActions();
 
-// get color for text (red, yellow, white)
-  function getColor(val: Float, max: Float): String
-    {
-      if (val > 0.7 * max)
-        return "style='color:var(--text-color-white)'";
-      else if (val > 0.3 * max)
-        return "style='color:var(--text-color-yellow)'";
+  public function action(index: Int, withRepeat: Bool)
+    actions.action(index, withRepeat);
 
-      return "style='color:var(--text-color-red)' class=blinking-red";
-    }
+  public function pressAction(index: Int, shift: Bool)
+    actions.pressAction(index, shift);
 
-// update cult info
-  function updateCult(buf: StringBuf)
-    {
-      var cult = game.cults[0];
-      if (cult.state != CULT_STATE_ACTIVE)
-        return;
-
-      var r = cult.resources;
-      buf.add('<hr><span style="color:var(--text-color-gray)" class=small><span class=small>' +
-        'COM ' + Const.col('cult-power', r.getShort('combat')) +
-        ', MED ' + Const.col('cult-power', r.getShort('media')) +
-        ', LAW ' + Const.col('cult-power', r.getShort('lawfare')) +
-        ', COR ' + Const.col('cult-power', r.getShort('corporate')) +
-        ', POL ' + Const.col('cult-power', r.getShort('political')) +
-        ', ' + Const.col('cult-power', r.getShort('money')) + Icon.money +
-        '</span></span><br/>');
-    }
-
-// update player info
-  function updateInfo()
-    {
-      var buf = new StringBuf();
-      if (state == HUD_BASE_BUILDING &&
-          game.cults[0].base != null)
-        {
-          buf.add(game.cults[0].base.hudInfo());
-          info.innerHTML = buf.toString();
-          info.className = 'text';
-          return;
-        }
-
-      buf.add('Turn: ' + game.turns);
-      if (game.location == LOCATION_AREA)
-          {
-            buf.add(Const.smallgray(' [' + game.playerArea.ap + ']') +
-              ', at (' + game.playerArea.x + ',' + game.playerArea.y + ')' +
-              (Const.isDebug ? Const.smallgray(' A ' + Math.round(game.area.alertness)) : '') +
-              '<br/>');
-
-            // check if this is a mission area
-            if (game.area.isMissionArea())
-              {
-                buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
-              }
-          }
-      else if (game.location == LOCATION_REGION)
-        {
-          var area = game.playerRegion.currentArea;
-          buf.add(', at (' +
-            game.playerRegion.x + ',' + game.playerRegion.y + ')' +
-            (Const.isDebug ? ' ' + Const.smallgray('A ' + Math.round(game.playerRegion.currentArea.alertness)) : '') +
-            '<br/>' +
-            area.name +
-            '<center>' + (area.highCrime ? Const.smallgray('high crime') : '') + '</center>');
-
-          // check if this is a mission area
-          if (game.cults.length > 0 &&
-              game.cults[0].ordeals.getMarkerMission(area) != null)
-            {
-              buf.add('<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>');
-            }
-        }
-      buf.add('<hr/>');
-
-      // parasite stats
-      var time = (game.location == LOCATION_AREA ? 1 : 5);
-      var energyPerTurn = __Math.parasiteEnergyPerTurn(time);
-      buf.add('Energy: ' +
-        "<font " + getColor(game.player.energy, game.player.maxEnergy) +
-        ">" + game.player.energy + "</font>" +
-        '/' + game.player.maxEnergy);
-      buf.add(' ' + Const.col('gray',
-        Const.small('[' + (energyPerTurn > 0 ? '+' : '') +
-        energyPerTurn + '/t]')) + '<br/>');
-      buf.add('Health: ' +
-        "<font " + getColor(game.player.health, game.player.maxHealth) +
-        ">" + game.player.health + "</font>" +
-        '/' + game.player.maxHealth);
-      // team distance if close
-      if (!game.group.hudInfo(buf))
-        buf.add('<br/>');
-      buf.add('<hr/>');
-
-      if (game.player.state == PLR_STATE_ATTACHED)
-        {
-          buf.add('Grip: ' +
-            '<font ' + getColor(game.playerArea.attachHold, 100) + '>' +
-            game.playerArea.attachHold + '</font>/100<br/>');
-        }
-
-      // host stats
-      else if (game.player.state == PLR_STATE_HOST)
-        {
-          var host = game.player.host;
-          if (host.isHuman)
-            buf.add('<span class=hud-name>' + host.getNameCapped() + '</span>');
-          else buf.add('<span class=hud-name>' + host.AName() + '</span>');
-          // special symbols
-          if (host.affinity >= 100)
-            buf.add(' ' + Icon.affinity);
-          if (host.chat.consent >= 100)
-            buf.add(' ' + Icon.consent);
-          if (host.isPlayerCultist())
-            buf.add(' ' + Icon.cultist);
-
-          buf.add('<br/>');
-          if (host.isAttrsKnown)
-            buf.add('STR ' + host.strength +
-              ' CON ' + host.constitution +
-              ' INT ' + host.intellect +
-              ' PSY ' + host.psyche + '<br/>');
-          buf.add('Health: ' +
-            '<font ' + getColor(host.health,
-            host.maxHealth) + '>' +
-            host.health + '</font>' +
-            '/' + host.maxHealth + '<br/>');
-
-          buf.add('Control: ' +
-            '<font ' + getColor(game.player.hostControl, 100) + '>' + game.player.hostControl + '</font>' +
-            '/100<br/>');
-
-          // energy
-          var energyPerTurn = __Math.fullHostEnergyPerTurn(time);
-          buf.add("Energy: <font " + getColor(host.energy,
-            host.maxEnergy) + ">" +
-            host.energy + '</font>/' +
-            host.maxEnergy);
-          // energy spending
-          if (energyPerTurn != 0)
-            buf.add(' ' +
-              Const.smallgray('[' + (energyPerTurn > 0 ? '+' : '') +
-              energyPerTurn + '/t]'));
-          // time to live
-          if (energyPerTurn < 0)
-            buf.add(' ' +
-              Const.smallgray('[' +
-              Math.ceil(game.player.host.energy / (- energyPerTurn)) + 't]'));
-          // organ growth/evolution
-          if (game.player.evolutionManager.isActive)
-            {
-              buf.add(Const.small('<br>Evolution direction:<br/>  '));
-              buf.add(Const.small(game.player.evolutionManager.getEvolutionDirectionInfo()));
-            }
-          var str = host.organs.getInfo();
-          if (str != null)
-            {
-              buf.add('<br/>');
-              buf.add(str);
-            }
-        }
-
-      // cult info
-      updateCult(buf);
-
-      if (game.player.vars.isSpoonGame)
-        buf.add("<div style='padding-top:10px;text-align:center;font-size:40%;font-weight:bold'>" +
-          Const.col('yellow', 'SPOONED') + '</div>');
-      info.innerHTML = buf.toString();
-      if (regionTooltip.visible)
-        regionTooltip.updatePosition();
-      if (game.player.state != PLR_STATE_HOST)
-        info.className =
-          (game.player.energy <= 0.5 * game.player.maxEnergy ?
-           'text highlight-text' : 'text');
-      else info.className = 'text';
-    }
+  public function keyAction(key: String): Bool
+    return actions.keyAction(key);
 
 // debug info
   function updateDebugInfo()
     {
       var buf = new StringBuf();
+      buf.add('<div class="hud-eyebrow">Debug</div>');
       buf.add(
         'Tile resolution: ' +
         Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
@@ -834,359 +380,6 @@ public function onMouseLeave()
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);
       debugInfo.innerHTML = buf.toString();
-    }
-
-// update menu buttons visibility
-  function updateMenu()
-    {
-      if (state == HUD_TARGETING)
-        {
-          for (m in menuButtons)
-            {
-              m.btn.style.display = 'none';
-              if (m.btn.className.indexOf('highlight') > 0)
-                m.btn.className = 'hud-button window-title';
-            }
-          return;
-        }
-
-      var vis = false;
-      for (m in menuButtons)
-        {
-          vis = false;
-          if (m.state == UISTATE_GOALS ||
-              m.state == UISTATE_LOG ||
-              m.state == UISTATE_OPTIONS ||
-              m.state == UISTATE_DEBUG ||
-              m.state == UISTATE_YESNO) // exit
-            vis = true;
-
-          else if (m.state == UISTATE_BODY)
-            {
-              if (game.player.vars.inventoryEnabled ||
-                  game.player.vars.skillsEnabled ||
-                  game.player.vars.organsEnabled)
-                vis = true;
-            }
-          else if (m.state == UISTATE_TIMELINE)
-            {
-              if (game.player.vars.timelineEnabled)
-                vis = true;
-            }
-
-          else if (m.state == UISTATE_EVOLUTION)
-            {
-              if (game.player.state == PLR_STATE_HOST &&
-                  game.player.evolutionManager.state > 0)
-                vis = true;
-            }
-
-          else if (m.state == UISTATE_CULT)
-            {
-              if (game.cults[0].state == CULT_STATE_ACTIVE)
-                vis = true;
-            }
-          m.btn.style.display = (vis ? 'flex' : 'none');
-          // clear highlight on hide
-          // NOTE: must be the same with addMenuButton()
-          if (!vis && m.btn.className.indexOf('highlight') > 0)
-            m.btn.className = 'hud-button window-title';
-        }
-    }
-
-// update player actions list
-  inline function updateActionList()
-    {
-      listActions = new List();
-      listKeyActions = new List();
-      if (state == HUD_TARGETING)
-        return;
-      if (state == HUD_BASE_BUILDING)
-        {
-          if (game.cults[0].base != null)
-            game.cults[0].base.updateActionList();
-          return;
-        }
-      if (game.state == GAMESTATE_FINISH)
-        {
-          addKeyAction({
-            id: 'restart',
-            type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
-            name: Const.col('red', 'RESTART'),
-            energy: 0,
-            // fake
-            key: 'r'
-          });
-          return;
-        }
-      if (state == HUD_COMMAND_MENU)
-        {
-          command.updateActions();
-          return;
-        }
-
-      // trying to chat
-      if (state == HUD_CHAT)
-        game.player.chat.updateActionList();
-      // pick AI to chat with
-      else if (state == HUD_CONVERSE_MENU)
-        game.player.chat.converseMenu();
-      else
-        {
-          if (game.location == LOCATION_AREA)
-            game.playerArea.updateActionList();
-
-          else if (game.location == LOCATION_REGION)
-            game.playerRegion.updateActionList();
-
-          addKeyAction({
-            id: 'skipTurn',
-            type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
-            name: 'Wait',
-            energy: 0,
-            // fake
-            key: 'z'
-          });
-
-          if (game.location == LOCATION_AREA &&
-              game.player.state == PLR_STATE_HOST)
-            {
-              addKeyAction({
-                id: 'targetMode',
-                type: ACTION_AREA,
-                name: 'Target',
-                key: 't',
-                isVirtual: true,
-              });
-
-              if (targeting.canShootTarget())
-                addKeyAction({
-                  id: 'shootTarget',
-                  type: ACTION_AREA,
-                  name: 'Shoot',
-                  key: 's',
-                  isVirtual: true,
-                });
-
-              if (targeting.canAttackTarget())
-                addKeyAction({
-                  id: 'attackTarget',
-                  type: ACTION_AREA,
-                  name: 'Attack',
-                  key: 'a',
-                  isVirtual: true,
-                });
-            }
-
-          if (game.location == LOCATION_AREA &&
-              command.hasFollowers())
-            addKeyAction({
-              id: 'commandMenu',
-              type: ACTION_AREA,
-              name: 'Command',
-              key: 'c',
-              isVirtual: true,
-            });
-        }
-      command.updateActions();
-    }
-
-// add player action to numbered list
-// NOTE: needs to be the same checks as in Player.acitonEnergy()
-  public function addAction(action: _PlayerAction)
-    {
-      // reduce cost when host is agreeable
-      if (action.isAgreeable &&
-          game.player.hostAgreeable())
-        action.energy = 1;
-      if (game.player.actionCheckEnergy(action))
-        listActions.add(action);
-    }
-
-// add player action to key list
-  public function addKeyAction(action: _PlayerAction)
-    {
-      if (game.player.actionCheckEnergy(action))
-        listKeyActions.add(action);
-    }
-
-// update player actions
-  public function updateActions()
-    {
-      // clear old items
-      var n = 1;
-      while (actions.firstChild != null)
-        actions.removeChild(actions.lastChild);
-
-      // show targeting help instead of actions
-      if (state == HUD_TARGETING)
-        {
-          var lines = [
-            Const.key('Arrows') + ': Rotate targets',
-            Const.key('Enter/Numpad5') + ': Select target',
-            Const.key('ESC') + ': Clear target',
-          ];
-          for (line in lines)
-            {
-              var btn = document.createDivElement();
-              btn.innerHTML = line;
-              btn.className = 'hud-action';
-              actions.appendChild(btn);
-            }
-          return;
-        }
-
-      // populate action list
-      var list = [ listActions, listKeyActions ];
-      for (l in list)
-        for (act in l)
-          {
-            var buf = new StringBuf();
-            var key = '';
-            if (game.config.shiftLongActions &&
-                act.canRepeat &&
-                ui.shiftPressed)
-              key = 'S-';
-            if (act.key != null)
-              key += act.key.toUpperCase();
-            else key += '' + n;
-            var name = act.name;
-            // dynamic action color
-            if (act.id == 'probeBrain')
-              name = game.playerArea.getProbeBrainActionName();
-            buf.add(Const.key(key) + ': ' + name);
-            if (act.energy != null &&
-                act.energy > 0)
-              buf.add(Const.cost(act.energy));
-            else if (act.energyFunc != null)
-              buf.add(Const.cost(act.energyFunc(game.player)));
-
-            var btn = document.createDivElement();
-            btn.innerHTML = buf.toString();
-            btn.className = 'hud-action';
-            var actionIndex = n;
-            btn.onclick = function (e) {
-              game.scene.sounds.play('click-action');
-              if (state == HUD_COMMAND_MENU)
-                action(actionIndex, untyped e.shiftKey);
-              else doAction(untyped e.shiftKey, act);
-            }
-            actions.appendChild(btn);
-            n++;
-          }
-      if (n == 1)
-        actions.innerHTML = 'No available actions.';
-    }
-
-// call numbered action by index
-  public function action(index: Int, withRepeat: Bool)
-    {
-      if (state == HUD_COMMAND_MENU)
-        {
-          var usedTime = command.action(index);
-          if (usedTime &&
-              game.location == LOCATION_AREA)
-            game.playerArea.actionPost();
-          return;
-        }
-
-      // find action name by index
-      var i = 1;
-      var action = null;
-      for (a in listActions)
-        if (i++ == index)
-          {
-            action = a;
-            break;
-          }
-      if (action == null)
-        return;
-      doAction(withRepeat, action);
-    }
-
-// common action code for keys and mouse clicks
-  function doAction(withRepeat: Bool, action: _PlayerAction)
-    {
-      if (state == HUD_TARGETING)
-        return;
-      if (action.id == 'targetMode')
-        {
-          targeting.enter();
-          return;
-        }
-      if (action.id == 'shootTarget')
-        {
-          if (targeting.canShootTarget())
-            game.playerArea.attackTargetAction(targeting.target);
-          return;
-        }
-      if (action.id == 'attackTarget')
-        {
-          if (targeting.canAttackTarget())
-            game.playerArea.attackTargetAction(targeting.target, true);
-          return;
-        }
-      if (action.id == 'commandMenu')
-        {
-          command.enter();
-          return;
-        }
-      if (withRepeat &&
-          game.config.shiftLongActions &&
-          action.canRepeat)
-        {
-          if (game.location == LOCATION_AREA)
-            game.playerArea.setAction(action);
-/*
-          else if (game.location == LOCATION_REGION)
-            game.playerRegion.action(action);*/
-          return;
-        }
-
-      if (action.type == ACTION_CHAT)
-        game.player.chat.action(action);
-      else if (action.type == ACTION_CONVERSE_MENU)
-        game.player.chat.actionConverseMenu(action);
-      else if (action.type == ACTION_HOST)
-        game.player.host.action(action);
-      else if (action.type == ACTION_INVENTORY)
-        game.player.host.inventory.action(action);
-      else if (game.location == LOCATION_AREA)
-        game.playerArea.action(action);
-
-      else if (game.location == LOCATION_REGION)
-        game.playerRegion.action(action);
-    }
-
-// call action by key
-  public function keyAction(key: String): Bool
-    {
-      var action = null;
-      for (a in listKeyActions)
-        if (a.key == key)
-          {
-            action = a;
-            break;
-          }
-      if (action == null)
-        return false;
-      if (action.id == 'commandMenu')
-        {
-          command.enter();
-          return true;
-        }
-      if (action.id == 'targetMode' ||
-          action.id == 'shootTarget' ||
-          action.id == 'attackTarget')
-        return false;
-
-      if (game.location == LOCATION_AREA)
-        game.playerArea.action(action);
-
-      else if (game.location == LOCATION_REGION)
-        game.playerRegion.action(action);
-
-      return true;
     }
 
 // reset hud state to default

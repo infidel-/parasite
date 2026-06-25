@@ -2,7 +2,6 @@
 
 package ui;
 
-import mods.AssetPath;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
@@ -18,8 +17,9 @@ class UIWindow
   var game: Game;
   var window: DivElement;
   var bg: DivElement;
-  var close: DivElement;
+  var close: DivElement; // corner-X close button (set by addWinClose), referenced by some windows
   var state: _UIState; // state this relates to
+  var closeTimer: haxe.Timer; // in-flight animatedHide timer (cancelled on re-show)
 
   public function new(g: Game, id: String)
     {
@@ -31,23 +31,51 @@ class UIWindow
       window = Browser.document.createDivElement();
       window.id = id;
       bg.style.visibility = 'hidden';
+      // display:none (not just hidden) so a never-opened window's CSS animations
+      // don't run/composite in the background; show() restores it
+      bg.style.display = 'none';
       window.className = 'window text';
       bg.appendChild(window);
     }
 
-// add standard close button
-  function addCloseButton()
+// build the shared in-game HUD window chrome: darkened scrim with a ghosted
+// identity glyph, the depth-gradient frame, corner brackets, and the clipped
+// decorative layer (corner veins + "wm" ghost watermark). Caller then appends
+// its title (.win-title) + content and calls addWinClose().
+  function addHudChrome(wm: String, glyph: String)
     {
-      close = Browser.document.createDivElement();
-      close.className = 'hud-button window-common-close';
-      close.innerHTML = 'CLOSE';
-      close.style.borderImage = "url('" + AssetPath.resolve('img/window-common-close.png') + "') 92 fill / 1 / 0 stretch";
-      close.onclick = function (e) {
+      window.classList.add('hud-frame');
+      bg.classList.add('hud-bg');
+      bg.insertAdjacentHTML('afterbegin', '<div class="hud-scrim">' + glyph + '</div>');
+      addCorners();
+      window.insertAdjacentHTML('afterbegin',
+        '<div class="hud-deco" data-wm="' + wm + '">' + UISvg.veins() + '</div>');
+    }
+
+// add four decorative corner brackets to the window frame (redesign chrome)
+  function addCorners()
+    {
+      window.insertAdjacentHTML('afterbegin',
+        '<div class="win-corner tl"></div><div class="win-corner tr"></div>' +
+        '<div class="win-corner bl"></div><div class="win-corner br"></div>');
+    }
+
+// add the corner-X close button with ESC hint; f overrides the default close action
+  function addWinClose(?f: Dynamic -> Void): DivElement
+    {
+      var x = Browser.document.createDivElement();
+      x.className = 'win-x';
+      x.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+        '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>' +
+        '<span class="esc">ESC</span>';
+      x.onclick = (f != null ? f : function(e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');
         game.ui.closeWindow();
-      }
-      window.appendChild(close);
+      });
+      window.appendChild(x);
+      return x;
     }
 
 // add scrolled text block wrapped in fieldset
@@ -126,39 +154,6 @@ class UIWindow
       return cont;
     }
 
-// add checkbox to options
-  function addCheckbox(contents: DivElement, label: String, id: String,
-      val: Bool, pos: String): InputElement
-    {
-      var cont = Browser.document.createDivElement();
-      cont.className = 'checkbox-contents';
-      contents.appendChild(cont);
-
-      var title = Browser.document.createLabelElement();
-      title.className = 'checkbox-title';
-      title.innerHTML = label;
-      cont.appendChild(title);
-
-      var cb = Browser.document.createInputElement();
-      cb.id = 'option-' + id;
-      cb.type = 'checkbox';
-      cb.className = 'checkbox-element';
-      cb.checked = val;
-      title.appendChild(cb);
-      cb.onclick = function (e: PointerEvent) {
-        var targetID: String = untyped e.target.id;
-        var el: InputElement = cast game.ui.getElement(targetID);
-        var itemID = targetID.substr(7);
-        game.config.set(itemID, (el.checked ? '1' : '0'), true);
-      };
-
-      var span = Browser.document.createSpanElement();
-      span.className = 'checkbox-span';
-      span.style.right = pos;
-      title.appendChild(span);
-
-      return cb;
-    }
 
 // add slider to options
   function addSlider(contents: DivElement, label: String, val: Float,
@@ -220,6 +215,17 @@ class UIWindow
   public dynamic function action(index: Int)
     {}
 
+// dom element for a 1-based shortcut index (null = no element, caller falls back to action())
+  public dynamic function getButton(index: Int): js.html.Element
+    return null;
+
+// handle a key press while this window is open; return true if consumed.
+// override per-window for in-window keyboard handling (e.g. menu navigation)
+  public dynamic function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
+    {
+      return false;
+    }
+
 // scroll window up/down
   public dynamic function scroll(n: Int)
     {}
@@ -245,10 +251,47 @@ class UIWindow
       }, 300);
     }
 
+// animated close for the redesigned menu windows: a quick pop-out that always
+// plays (ignores the window-swap skip) and lifts above the incoming window so it
+// shrinks away to reveal it. Call from a window's hide() override.
+  function animatedHide(?keepDisplayed: Bool = false)
+    {
+      bg.style.zIndex = '120';
+      bg.style.pointerEvents = 'none';
+      bg.classList.add('win-closing');
+      closeTimer = haxe.Timer.delay(function() {
+        closeTimer = null;
+        bg.style.visibility = 'hidden';
+        // display:none stops a hidden window's CSS animations, but the menu's
+        // WebGL canvas doesn't survive a display:none cycle on reattach — and the
+        // menu's own anims are already gated on .mainmenu-open, so skip it there
+        if (!keepDisplayed)
+          bg.style.display = 'none';
+        bg.classList.remove('win-closing');
+        bg.classList.remove('window-fade-in');
+        bg.classList.remove('mainmenu-first-show');
+        bg.style.zIndex = '';
+        bg.style.pointerEvents = '';
+      }, 200);
+    }
+
 // show window
   public function show(?skipAnimation: Bool = false)
     {
+      // cancel an in-flight close so a fast re-show (e.g. queued same-state
+      // difficulty windows) isn't clobbered by the pending hide timer
+      if (closeTimer != null)
+        {
+          closeTimer.stop();
+          closeTimer = null;
+          bg.classList.remove('win-closing');
+          bg.style.zIndex = '';
+          bg.style.pointerEvents = '';
+        }
       update();
+      // restore display: hidden windows are display:none so their CSS animations
+      // (pulses, glitches) don't run + composite on the GPU while closed
+      bg.style.display = '';
       bg.style.visibility = 'visible';
       // add fade-in animation
       if (!skipAnimation)
@@ -270,6 +313,7 @@ class UIWindow
           // hide after animation completes
           haxe.Timer.delay(function() {
             bg.style.visibility = 'hidden';
+            bg.style.display = 'none';
             bg.classList.remove('window-fade-out');
           }, 100);
         }
@@ -277,6 +321,7 @@ class UIWindow
         {
           // hide immediately when skipping animation
           bg.style.visibility = 'hidden';
+          bg.style.display = 'none';
         }
       // remove other animation classes
       bg.classList.remove('window-fade-in');

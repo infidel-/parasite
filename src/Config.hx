@@ -17,6 +17,7 @@ class Config
   public var fullscreen: Bool;
   public var skipTutorial: Bool;
   public var shiftLongActions: Bool;
+  public var compactHud: Bool;
   // NOTE: new spoon vars will require fixing isSpoonMode() check!
   public var spoonEvolutionBasic: Bool;
   public var spoonHabitats: Bool;
@@ -56,6 +57,7 @@ class Config
       fullscreen = false;
       skipTutorial = false;
       shiftLongActions = true;
+      compactHud = false;
       spoonEvolutionBasic = false;
       spoonHabitats = false;
       spoonHabitatAmbush = false;
@@ -63,7 +65,7 @@ class Config
       aiArtEnabled = true;
 
       font = 'Virtucorp';
-      fontSize = 15;
+      fontSize = 14;
       fontTitle = 'Cruiser2015';
       hudLogLines = 4;
       mapScale = 1;
@@ -83,6 +85,7 @@ class Config
       map['alwaysCenterCamera'] = '1';
       map['laptopKeyboard'] = '0';
       map['shiftLongActions'] = '1';
+      map['compactHud'] = '0';
       map['fullscreen'] = '0';
       map['skipTutorial'] = '0';
       map['spoonEvolutionBasic'] = '0';
@@ -173,6 +176,8 @@ class Config
         laptopKeyboard = (val == '1');
       else if (key == 'shiftLongActions')
         shiftLongActions = (val == '1');
+      else if (key == 'compactHud')
+        compactHud = (val == '1');
       else if (key == 'fullscreen')
         {
           fullscreen = (val == '1');
@@ -290,11 +295,10 @@ class Config
       UI.setVar('--message-img-display', aiArtEnabled ? 'block' : 'none');
       if (game.ui != null)
         {
-          var menuBg = game.ui.mainMenu.menuBg;
+          var menuGL = game.ui.mainMenu.menuGL;
+          menuGL.setBgEnabled(aiArtEnabled);
           if (aiArtEnabled)
-            menuBg.setBackground(game.ui.mainMenu.getBackgroundUrl());
-          else
-            menuBg.hide();
+            menuGL.setBackground(game.ui.mainMenu.getBackgroundUrl());
         }
     }
 

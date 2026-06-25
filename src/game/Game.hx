@@ -223,6 +223,7 @@ class Game extends _SaveObject
             skipTutorial();
         }
 
+      ui.hud.goals.rebuild(); // show starting goals instantly (no animation)
       updateHUD(); // update HUD state
 
       isInited = true;
@@ -518,18 +519,18 @@ class Game extends _SaveObject
     'habitatShock' => 'You have received your final shock from the habitat destruction.',
     'corNefandum' => 'Cor Nefandum is destroyed. <span class=cult>Cultus Carnis</span> dies its final death.',
   ];
-  public function finish(result: String, text: String, ?img: String = null)
+  public function finish(p: _FinishParams)
     {
       state = GAMESTATE_FINISH;
       var finishText = '';
 
       // game lost
-      if (result == 'lose')
+      if (p.result == 'lose')
         {
           log('You have lost the game.');
-          finishText = deathText[text];
+          finishText = deathText[p.text];
 #if demo
-          if (text == 'demo')
+          if (p.text == 'demo')
             finishText = 'Demo finished.';
 #end
 
@@ -541,7 +542,7 @@ class Game extends _SaveObject
       else
         {
           log('You have completed the game.');
-          finishText = text;
+          finishText = p.text;
           scene.sounds.play('game-win');
         }
 
@@ -549,9 +550,10 @@ class Game extends _SaveObject
       // window is shown. payload is mutable; we read back text/img after fire
       var payload: Dynamic = {
         game: this,
-        result: result,
+        result: p.result,
         text: finishText,
-        img: img,
+        img: p.img,
+        filter: p.filter,
       };
       ModEventRegistry.fire(ModEventRegistry.GAME_FINISH_PRE, payload);
 
@@ -560,8 +562,10 @@ class Game extends _SaveObject
         type: UIEVENT_STATE,
         state: UISTATE_FINISH,
         obj: {
+          result: p.result,
           text: payload.text,
           img: payload.img,
+          filter: payload.filter,
         }
       });
 
@@ -677,6 +681,7 @@ class Game extends _SaveObject
         msg: s,
         col: col,
         cnt: 1,
+        turn: turns,
       };
       messageList.add(msg);
       if (messageList.length > 100)
@@ -749,16 +754,24 @@ class Game extends _SaveObject
           });
           return;
         }
-      if (player.vars.savesLeft < 1)
+      // NOOB save difficulty: unlimited saves (no cap, no decrement)
+      if (player.saveDifficulty != NOOB &&
+          player.vars.savesLeft < 1)
         {
           actionFailed('You cannot save anymore in this game.');
           return;
         }
-      player.vars.savesLeft--;
+      if (player.saveDifficulty != NOOB)
+        player.vars.savesLeft--;
       // SPOON: no saves limit
       if (config.spoonNoSavesLimit)
         player.vars.savesLeft = 999;
       Saver.save(this, slotID);
+      if (player.saveDifficulty == NOOB)
+        {
+          log('Game saved to slot ' + slotID + '. Unlimited saves.');
+          return;
+        }
       var remaining = player.vars.savesLeft + ' saves';
       if (player.vars.savesLeft == 0)
         remaining = 'No saves';
@@ -820,6 +833,10 @@ class Game extends _SaveObject
 // post-load HUD refresh shared by both sync and deferred load paths
   function applyLoaded()
     {
+      // a loaded game is a started game (isStarted is not persisted); without this
+      // the main menu's ESC-to-close is suppressed after loading (treated as boot menu)
+      isStarted = true;
+      ui.hud.goals.rebuild(); // resync goal rows to the loaded model (no animation)
       ui.hud.update();
       scene.draw();
     }

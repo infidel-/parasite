@@ -1,34 +1,13 @@
-// region tooltip overlay for HUD
+// region tooltip overlay for HUD (content + visibility; beam/placement in BeamTooltip)
 package ui;
 
-import mods.AssetPath;
-import js.Browser;
-import js.html.DivElement;
 import game.*;
 
-class RegionTooltip
+class RegionTooltip extends BeamTooltip
 {
-  var game: Game;
-  var hud: HUD;
-  public var overlay: DivElement;
-  public var areaID: Int;
-  public var visible: Bool;
-
   public function new(g: Game, h: HUD)
     {
-      game = g;
-      hud = h;
-
-      areaID = -1;
-      visible = false;
-      overlay = Browser.document.createDivElement();
-      overlay.className = 'text';
-      overlay.id = 'hud-area-info';
-      overlay.style.display = 'none';
-      overlay.style.position = 'fixed';
-      overlay.style.pointerEvents = 'none';
-      overlay.style.borderImage = "url('" + AssetPath.resolve('img/hud-log-border.png') + "') 15 fill / 1 / 0 stretch";
-      hud.container.appendChild(overlay);
+      super(g, h, 'hud-area-info', 'region-tip');
     }
 
   // show region tooltip when hovering known tiles
@@ -41,7 +20,7 @@ class RegionTooltip
           return;
         }
 
-      // get mouse position and aread
+      // get mouse position and area
       var pos = game.scene.mouse.getXY();
       if (pos == null)
         {
@@ -69,17 +48,16 @@ class RegionTooltip
           return;
         }
 
-      // update tooltip content
+      // header: name + coords, alertness pip, situational tags
       var buf = new StringBuf();
       if (areaKnown)
         {
-          buf.add('<span class=hud-name>' + area.name + '</span> ');
-          buf.add(Const.smallgray('(' + area.x + ',' + area.y + ') ') + '<br/>');
+          buf.add('<div class="region-tip-head"><span class="region-tip-name">' + area.name + '</span>');
+          buf.add('<span class="region-tip-xy">' + area.x + ',' + area.y + '</span></div>');
           var alertness = Std.int(area.alertness);
-          var alertColor = getAlertnessColor(alertness);
-          buf.add('Alertness: ' +
-            Const.col(alertColor,
-            getAlertnessLabel(alertness)) + '<br/>');
+          buf.add('<div class="region-tip-alert alert-' + getAlertnessColor(alertness) + '">');
+          buf.add('<span class="region-tip-pip"></span><span class="region-tip-alabel">alertness</span>');
+          buf.add('<span class="region-tip-aval">' + getAlertnessLabel(alertness) + '</span></div>');
           var tags: Array<String> = [];
           if (area.highCrime)
             tags.push('high crime');
@@ -93,27 +71,30 @@ class RegionTooltip
             tags.push('ordeal');
           if (tags.length > 0)
             {
-              buf.add(Const.smallgray('[' + tags.join('] [') + ']'));
-              buf.add('<br/>');
+              buf.add('<div class="region-tip-tags">');
+              for (t in tags)
+                buf.add('<span class="region-tip-tag">' + t + '</span>');
+              buf.add('</div>');
             }
         }
-      else
+      else buf.add('<div class="region-tip-head"><span class="region-tip-name unknown">?</span></div>');
+
+      // leads: timeline events / unknown npcs / cult ordeal, each a marked row
+      if (eventLines.length > 0 ||
+          npcLines.length > 0 ||
+          missionLines.length > 0)
         {
-          buf.add('<span class=hud-name>?</span><br/>');
+          buf.add('<div class="region-tip-leads">');
+          for (line in eventLines)
+            buf.add('<div class="region-tip-row ev"><span class="region-tip-evpill">' + line + '</span></div>');
+          for (line in npcLines)
+            buf.add('<div class="region-tip-row npc">' + line + '</div>');
+          for (line in missionLines)
+            buf.add('<div class="region-tip-row ord">' + line + '</div>');
+          buf.add('</div>');
         }
-      for (line in eventLines)
-        buf.add(line + '<br/>');
-      for (line in npcLines)
-        buf.add(line + '<br/>');
-      for (line in missionLines)
-        buf.add(line + '<br/>');
-      overlay.innerHTML = buf.toString();
-      overlay.style.display = 'block';
-      overlay.style.visibility = 'hidden';
-      areaID = area.id;
-      visible = true;
-      updatePosition();
-      overlay.style.visibility = 'visible';
+
+      showBeam(area.x, area.y, area.id, buf.toString());
     }
 
   // get alertness color for tooltip
@@ -192,7 +173,7 @@ class RegionTooltip
             else if (npc.jobKnown && npc.job != null)
               label = npc.job;
             else label = 'unknown contact';
-            lines.push(Const.smallgray('[event ' + npc.event.num + ']') + ' ' + label);
+            lines.push(Const.smallgray('[event ' + npc.event.num + ']') + ' <span class="region-tip-npcname">' + label + '</span>');
           }
       return lines;
     }
@@ -208,40 +189,5 @@ class RegionTooltip
       if (mission != null)
         lines.push(mission.coloredName());
       return lines;
-    }
-
-  // align region tooltip above the info panel
-  public function updatePosition()
-    {
-      if (!visible)
-        return;
-      var infoRect = hud.info.getBoundingClientRect();
-      if (infoRect == null)
-        return;
-      var width: Float = hud.info.offsetWidth;
-      if (width <= 0)
-        width = infoRect.width;
-      if (width <= 0)
-        width = hud.info.scrollWidth;
-      if (width <= 0)
-        return;
-      overlay.style.width = Std.string(Math.round(width)) + 'px';
-      overlay.style.left = Std.string(Math.round(infoRect.left)) + 'px';
-      var overlayHeight: Float = overlay.offsetHeight;
-      var top: Float = infoRect.top - overlayHeight - 8;
-      if (top < 10)
-        top = 10;
-      overlay.style.top = Std.string(Math.round(top)) + 'px';
-    }
-
-  // hide region tooltip overlay
-  public function hide()
-    {
-      if (!visible)
-        return;
-      visible = false;
-      areaID = -1;
-      overlay.style.display = 'none';
-      overlay.style.visibility = 'hidden';
     }
 }

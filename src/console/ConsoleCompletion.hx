@@ -26,6 +26,8 @@ class ConsoleCompletion
   var root: CompNode;
 
 // builds the command grammar tree
+// builds the autocomplete hint tree (rootChildren); keep in sync with the
+// actual commands dispatched in Console.run / Debug.run
   public function new(c: Console)
     {
       console = c;
@@ -64,9 +66,12 @@ class ConsoleCompletion
         { lit: 'ai' },
         { lit: 'sound' },
         { lit: 'lights' },
+        { lit: 'colors' },
       ];
       if (Const.isDebug)
         {
+          debugSubs.push({ lit: 'difficulty', next: [
+            { slot: '<key>', values: function() return [ 'all' ].concat([for (k in ui.Difficulty.choices.keys()) k]) } ] });
           debugSubs.push({ lit: 'alert' });
           debugSubs.push({ lit: 'demo' });
           debugSubs.push({ lit: 'leave' });
@@ -106,9 +111,34 @@ class ConsoleCompletion
           rootChildren.push({ lit: 'learn', next: [
             { lit: 'clues' },
             { lit: 'event', next: [ { slot: '[index]' } ] },
-            { lit: 'improvements', next: [ { slot: '[level]' } ] },
+            { lit: 'improvement', next: [
+              { slot: '<name>', values: function() return [ 'all' ].concat(improv()), next: [ { slot: '<level>' } ] } ] },
             { lit: 'region' },
             { lit: 'timeline' },
+          ] });
+          rootChildren.push({ lit: 'info', next: [
+            { lit: 'improvements' },
+            { lit: 'timeline' },
+          ] });
+          // cult sub-commands (shared by the cu/cult aliases)
+          var cultSubs: Array<CompNode> = [
+            { lit: 'gr' },
+            { lit: 'br', next: [ { slot: '[amount]' } ] },
+            { lit: 'def', next: [ { slot: '[cultID]' } ] },
+            { lit: 'tdef' },
+            { lit: 't' },
+            { lit: 'u1' },
+            { lit: 'r', next: [ { slot: '[power]' } ] },
+            { lit: 'po', next: [ { slot: '[power]', next: [ { slot: '[idx]' } ] } ] },
+            { lit: 'occasio' },
+          ];
+          rootChildren.push({ lit: 'cult', next: cultSubs });
+          rootChildren.push({ lit: 'cu', next: cultSubs });
+          // finish <lose|alien|cult> - show game-over window
+          rootChildren.push({ lit: 'finish', next: [
+            { lit: 'lose' },
+            { lit: 'alien' },
+            { lit: 'cult' },
           ] });
         }
 

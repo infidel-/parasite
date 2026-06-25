@@ -425,9 +425,16 @@ class Mouse
         return;
 
       cursor = c;
+      // window-open arrow: clear inline style so the themed --ui-cursor-default
+      // (set on #canvas in CSS) shows, instead of the legacy mouse0.png pointer
+      if (c == CURSOR_ARROW)
+        {
+          game.ui.canvas.style.cursor = '';
+          return;
+        }
       game.ui.canvas.style.cursor = 'url(' +
         AssetPath.resolve('img/mouse' + c + '.png') + ') ' +
-        (c == 0 ? '0 1' : '16 16') + ', auto';
+        '16 16, auto';
     }
 
 // mouse cursor images
