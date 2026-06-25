@@ -7378,7 +7378,7 @@ select {
   gap: 1px;
 }
 .body-inv-item {
-  color: var(--text);
+  color: var(--text-color-inventory-item);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
