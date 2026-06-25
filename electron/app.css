@@ -1821,13 +1821,21 @@ hr {
 .hud-act:hover .hud-coin {
   animation: hud-bolt-crackle 1.5s linear infinite;
 }
-.hud-act-help {
+.hud-act-hint {
+  padding: 4px 20px;
+  color: var(--dim);
+  font-size: calc(var(--text-font-size) * 0.95);
   cursor: default;
+  white-space: nowrap;
 }
-.hud-act-help:hover::before {
+.hud-act-hint b {
+  font-weight: normal;
+  color: #c3c6ce;
+}
+.hud-act-hint:hover::before {
   opacity: 0;
 }
-.hud-act-help:hover {
+.hud-act-hint:hover {
   box-shadow: none;
 }
 .hud-act-none {

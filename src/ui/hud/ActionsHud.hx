@@ -156,19 +156,10 @@ class ActionsHud
       // show targeting help instead of actions
       if (hud.state == HUD_TARGETING)
         {
-          var lines = [
-            { k: 'Arrows', t: 'Rotate targets' },
-            { k: 'Enter/Numpad5', t: 'Select target' },
-            { k: 'ESC', t: 'Clear target' },
-          ];
-          for (line in lines)
-            {
-              var btn = document.createDivElement();
-              btn.className = 'hud-act hud-act-help';
-              btn.innerHTML = '<span class="hud-key">' + line.k + '</span>' +
-                '<span class="hud-label">' + line.t + '</span>';
-              actions.appendChild(btn);
-            }
+          var btn = document.createDivElement();
+          btn.className = 'hud-act hud-act-hint';
+          btn.innerHTML = '<b>↑↓</b> Rotate · <b>Enter</b> Select · <b>Esc</b> Clear';
+          actions.appendChild(btn);
           return;
         }
 
