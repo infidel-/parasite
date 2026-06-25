@@ -10,8 +10,10 @@ import js.html.SelectElement;
 
 class Presets extends UIWindow
 {
-  static var LVL = [ 'easy', 'norm', 'hard' ];
-  static var LVLNAME = [ 'EASY', 'NORMAL', 'HARD' ];
+  // level columns (ascending difficulty); NOOB (value 0) is save-category only
+  static var LVL = [ 'noob', 'easy', 'norm', 'hard' ];
+  static var LVLNAME = [ 'NOOB', 'EASY', 'NORMAL', 'HARD' ];
+  static var LVLVAL = [ 0, 1, 2, 3 ];
   // verdict thresholds on the 0..2 average severity
   static var VERDICTS: Array<{ t: Float, n: String }> = [
     { t: 0.4, n: 'MERCIFUL' }, { t: 0.9, n: 'LENIENT' }, { t: 1.4, n: 'BALANCED' },
@@ -120,7 +122,8 @@ class Presets extends UIWindow
       var head = Browser.document.createDivElement();
       head.className = 'presets-head';
       head.innerHTML = '<span></span><div class="presets-head-cols">' +
-        '<span class="lv-easy">EASY</span><span class="lv-norm">NORMAL</span><span class="lv-hard">HARD</span></div>';
+        '<span class="lv-noob">NOOB</span><span class="lv-easy">EASY</span>' +
+        '<span class="lv-norm">NORMAL</span><span class="lv-hard">HARD</span></div>';
       grid.appendChild(head);
 
       for (key in Difficulty.choices.keys())
@@ -134,15 +137,26 @@ class Presets extends UIWindow
           row.appendChild(name);
           var seg = Browser.document.createDivElement();
           seg.className = 'presets-seg';
-          for (i in 0...3)
+          for (i in 0...LVL.length)
             {
+              // NOOB column is only a real option for the save category; otherwise an empty placeholder
+              if (LVLVAL[i] == 0 &&
+                  key != 'save')
+                {
+                  var empty = Browser.document.createDivElement();
+                  empty.className = 'presets-opt presets-opt-empty';
+                  seg.appendChild(empty);
+                  continue;
+                }
               var opt = Browser.document.createLabelElement();
               opt.className = 'presets-opt lv-' + LVL[i];
-              opt.innerHTML = '<input type="radio" name="preset-' + key + '" value="' + i + '">' + LVLNAME[i];
-              var ii = i;
+              opt.innerHTML = '<input type="radio" name="preset-' + key + '" value="' + LVLVAL[i] + '">' + LVLNAME[i];
+              var vv = LVLVAL[i];
               var kk = key;
-              cast(opt.querySelector('input'), InputElement).onchange = function (e) setSeg(kk, ii);
-              opt.addEventListener('pointerenter', function(e) note(choice.notes[ii]));
+              // note text follows the level value: easy/norm/hard -> notes[0..2], noob -> notes[3]
+              var ni = (vv == 0 ? 3 : vv - 1);
+              cast(opt.querySelector('input'), InputElement).onchange = function (e) setSeg(kk, vv);
+              opt.addEventListener('pointerenter', function(e) note(choice.notes[ni]));
               opt.addEventListener('pointerleave', function(e) note(null));
               seg.appendChild(opt);
             }
@@ -151,18 +165,19 @@ class Presets extends UIWindow
         }
     }
 
-// select a level for a category, store it (1-based) on the current preset
-  function setSeg(key: String, i: Int)
+// select a level for a category by its value (0..3), store it on the current preset
+  function setSeg(key: String, val: Int)
     {
       var inputs = grid.querySelectorAll('input[name="preset-' + key + '"]');
       for (n in 0...inputs.length)
         {
           var inp: InputElement = cast inputs.item(n);
-          inp.checked = (n == i);
-          inp.parentElement.classList.toggle('sel', n == i);
+          var sel = (Std.parseInt(inp.value) == val);
+          inp.checked = sel;
+          inp.parentElement.classList.toggle('sel', sel);
         }
       if (current >= 0)
-        game.profile.object.difficultyPresets[current].settings.set(key, i + 1);
+        game.profile.object.difficultyPresets[current].settings.set(key, val);
       severity();
     }
 
@@ -178,7 +193,7 @@ class Presets extends UIWindow
         }
     }
 
-// load a preset's settings into the grid (settings are 1-based)
+// load a preset's settings into the grid (level value per category: 0 noob .. 3 hard)
   function load(idx: Int)
     {
       current = idx;
@@ -197,7 +212,7 @@ class Presets extends UIWindow
           var v = p.settings.get(key);
           if (v == null)
             clearSeg(key);
-          else setSeg(key, v - 1);
+          else setSeg(key, v);
         }
       severity();
     }
@@ -220,7 +235,11 @@ class Presets extends UIWindow
           var v = s.get(key);
           if (v != null)
             {
-              sum += (v - 1);
+              // clamp NOOB (0) to the easy floor so it sits at the gentle end of the meter
+              var sv = v - 1;
+              if (sv < 0)
+                sv = 0;
+              sum += sv;
               c++;
             }
         }

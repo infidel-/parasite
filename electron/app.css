@@ -66,6 +66,7 @@
   --text-color-ordeal-actions: #f98fce;
   --text-color-communal-ordeal: #ffcd73;
   --text-color-profane-ordeal: #d68181;
+  --text-color-difficulty-noob: #6fd3d0;
   --text-color-difficulty-easy: #8fcc9e;
   --text-color-difficulty-normal: #c9cfe0;
   --text-color-difficulty-hard: #d97a86;
@@ -2760,6 +2761,90 @@ hr {
   color: var(--text-color-gray);
   text-align: center;
   text-shadow: 0 1px 3px rgba(0,0,0,.9);
+}
+/* NOOB wedge: near-horizontal split across the top of the EASY strip (save category only) */
+.difficulty-noob {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  color: var(--text-color-difficulty-noob);
+  clip-path: polygon(0 0, 100% 0, 100% 30%, 0 40%);
+  cursor: var(--ui-cursor);
+  background: linear-gradient(180deg, rgba(6,4,12,.5), rgba(6,4,12,.2));
+}
+/* NOOB tint wash on hover (mirrors .difficulty-strip::after) */
+.difficulty-noob::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity .18s ease;
+  pointer-events: none;
+}
+.difficulty-noob:hover::after,
+.difficulty-noob.pressed::after {
+  opacity: .22;
+}
+/* NOOB label + note pinned to the upper-left of the top wedge */
+.difficulty-noob .difficulty-label {
+  position: absolute;
+  top: 7%;
+  left: 0;
+  right: 0;
+  grid-row: auto;
+  align-self: auto;
+  text-align: center;
+  font-size: calc(var(--text-font-size) * 1.5);
+}
+.difficulty-noob .difficulty-note {
+  position: absolute;
+  top: calc(7% + 2.7em);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  display: block;
+  text-align: center;
+  font-size: calc(var(--text-font-size) * 0.7);
+}
+.difficulty-noob:hover .difficulty-label {
+  transform: scale(1.06);
+}
+/* near-horizontal divider line tracing the wedge edge (shown only in split mode) */
+.difficulty-divide {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  pointer-events: none;
+  clip-path: polygon(0 38%, 100% 28%, 100% 30%, 0 40%);
+  background: rgba(220,240,250,.85);
+  box-shadow: 0 0 10px rgba(160,220,240,.7);
+}
+.difficulty-strip.easy.split .difficulty-divide {
+  display: block;
+}
+/* keep EASY's hover wash in the lower region, clear of the NOOB wedge */
+.difficulty-strip.easy.split::after {
+  clip-path: polygon(0 40%, 100% 30%, 100% 100%, 0 100%);
+}
+/* EASY hover must not scale the NOOB label */
+.difficulty-strip.easy.split:hover .difficulty-noob:not(:hover) .difficulty-label {
+  transform: none;
+}
+/* hovering the NOOB wedge must not light up the EASY strip */
+.difficulty-strip.easy.split:has(.difficulty-noob:hover) {
+  background: linear-gradient(180deg, rgba(6,4,12,.22), rgba(6,4,12,.7));
+}
+.difficulty-strip.easy.split:has(.difficulty-noob:hover)::after {
+  opacity: 0;
+}
+.difficulty-strip.easy.split:has(.difficulty-noob:hover)::before {
+  height: 4px;
+  box-shadow: none;
+}
+.difficulty-strip.easy.split:has(.difficulty-noob:hover) > .difficulty-label {
+  transform: none;
 }
 
 @keyframes fade-in {
@@ -8191,6 +8276,7 @@ select {
 
 /* ===== CUSTOM DIFFICULTY (presets) window ===== */
 #window-presets {
+  --presets-noob: #6fd3d0;
   --presets-easy: #8fcc9e;
   --presets-norm: #c9cfe0;
   --presets-hard: #d97a86;
@@ -8420,7 +8506,7 @@ select {
 }
 .presets-head {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 360px;
   align-items: center;
   padding: 4px 2px 6px;
   margin-bottom: 2px;
@@ -8428,13 +8514,16 @@ select {
 }
 .presets-head-cols {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+  grid-template-columns: repeat(4,1fr);
 }
 .presets-head-cols span {
   text-align: center;
   font-family: var(--text-font), monospace;
   font-size: calc(var(--text-font-size) * 0.733);
   letter-spacing: .16em;
+}
+.presets-head-cols .lv-noob {
+  color: color-mix(in srgb, var(--presets-noob) 80%, var(--blue-gray));
 }
 .presets-head-cols .lv-easy {
   color: color-mix(in srgb, var(--presets-easy) 80%, var(--blue-gray));
@@ -8447,7 +8536,7 @@ select {
 }
 .presets-row {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 360px;
   align-items: center;
   gap: 18px;
   padding: 2px;
@@ -8466,7 +8555,7 @@ select {
 .presets-seg {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+  grid-template-columns: repeat(4,1fr);
   border-radius: 9px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -8478,7 +8567,7 @@ select {
   inset: 0;
   pointer-events: none;
   opacity: .16;
-  background: linear-gradient(90deg, var(--presets-easy), var(--presets-norm) 50%, var(--presets-hard));
+  background: linear-gradient(90deg, var(--presets-noob), var(--presets-easy) 33%, var(--presets-norm) 66%, var(--presets-hard));
 }
 .presets-opt {
   position: relative;
@@ -8505,6 +8594,16 @@ select {
 .presets-opt:hover {
   color: var(--text);
   background: rgba(255,255,255,.05);
+}
+/* empty NOOB cell on non-save rows: inert, no hover/selection */
+.presets-opt-empty {
+  pointer-events: none;
+}
+.presets-opt.lv-noob.sel {
+  color: #04140f;
+  background: var(--presets-noob);
+  text-shadow: none;
+  box-shadow: 0 0 18px -4px var(--presets-noob);
 }
 .presets-opt.lv-easy.sel {
   color: #06140b;

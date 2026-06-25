@@ -754,16 +754,24 @@ class Game extends _SaveObject
           });
           return;
         }
-      if (player.vars.savesLeft < 1)
+      // NOOB save difficulty: unlimited saves (no cap, no decrement)
+      if (player.saveDifficulty != NOOB &&
+          player.vars.savesLeft < 1)
         {
           actionFailed('You cannot save anymore in this game.');
           return;
         }
-      player.vars.savesLeft--;
+      if (player.saveDifficulty != NOOB)
+        player.vars.savesLeft--;
       // SPOON: no saves limit
       if (config.spoonNoSavesLimit)
         player.vars.savesLeft = 999;
       Saver.save(this, slotID);
+      if (player.saveDifficulty == NOOB)
+        {
+          log('Game saved to slot ' + slotID + '. Unlimited saves.');
+          return;
+        }
       var remaining = player.vars.savesLeft + ' saves';
       if (player.vars.savesLeft == 0)
         remaining = 'No saves';

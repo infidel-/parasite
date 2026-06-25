@@ -17,6 +17,8 @@ class Difficulty extends UIWindow
   var noteNormal: SpanElement;
   var noteHard: SpanElement;
   var stripButtons: Array<DivElement> = []; // choice stripes by 1-based index (easy/normal/hard)
+  var noobStrip: DivElement; // NOOB wedge overlaid on the EASY strip (save category only)
+  var noobNote: SpanElement; // NOOB wedge note text
   var diffName: SpanElement;
   var currentChoice: _Choice;
 
@@ -34,6 +36,23 @@ class Difficulty extends UIWindow
       noteEasy = addStrip(strips, 'easy', 'EASY', 1);
       noteNormal = addStrip(strips, 'normal', 'NORMAL', 2);
       noteHard = addStrip(strips, 'hard', 'HARD', 3);
+      // NOOB wedge: diagonal split of the EASY strip, shown only for the save category
+      noobStrip = Browser.document.createDivElement();
+      noobStrip.className = 'difficulty-noob';
+      noobStrip.innerHTML = '<span class="difficulty-label">NOOB</span>' +
+        '<span class="difficulty-note"></span>';
+      noobNote = cast noobStrip.querySelector('.difficulty-note');
+      noobStrip.onclick = function (e) {
+        e.stopPropagation(); // don't bubble to the EASY strip's onclick
+        game.scene.sounds.play('click-menu');
+        action(0);
+      }
+      noobStrip.style.display = 'none';
+      stripButtons[0].appendChild(noobStrip);
+      // inclined divider line on the EASY strip (visible only in split mode via CSS)
+      var divide = Browser.document.createDivElement();
+      divide.className = 'difficulty-divide';
+      stripButtons[0].appendChild(divide);
       window.appendChild(strips);
 
       // window title (with the choice name) glued to the bottom
@@ -76,6 +95,13 @@ class Difficulty extends UIWindow
       noteNormal.innerHTML = currentChoice.notes[1];
       noteHard.innerHTML = currentChoice.notes[2];
       diffName.innerHTML = currentChoice.title;
+      // NOOB only applies to the save category; reveal its wedge there
+      var isSave = (currentChoice.id == 'save');
+      stripButtons[0].classList.toggle('split', isSave);
+      noobStrip.style.display = (isSave ? '' : 'none');
+      if (isSave &&
+          currentChoice.notes.length > 3)
+        noobNote.innerHTML = currentChoice.notes[3];
     }
 
   override function hide(?skipAnimation: Bool = false)
@@ -96,7 +122,9 @@ class Difficulty extends UIWindow
   public override function action(index: Int)
     {
       var d: _Difficulty = UNSET;
-      if (index == 1)
+      if (index == 0)
+        d = NOOB;
+      else if (index == 1)
         d = EASY;
       else if (index == 2)
         d = NORMAL;
@@ -130,7 +158,9 @@ class Difficulty extends UIWindow
       else if (currentChoice.id == 'save')
         {
           game.player.saveDifficulty = d;
-          if (game.player.saveDifficulty == EASY)
+          if (game.player.saveDifficulty == NOOB)
+            game.player.vars.savesLeft = 999; // unused: Game.save bypasses the cap for NOOB
+          else if (game.player.saveDifficulty == EASY)
             game.player.vars.savesLeft = 10;
           else if (game.player.saveDifficulty == NORMAL)
             game.player.vars.savesLeft = 3;
@@ -194,6 +224,7 @@ class Difficulty extends UIWindow
         'You can save your game anywhere, up to 10 times per one game.',
         'You can only save in region mode, 3 times per game.',
         'You can only save once per game while in region mode.',
+        'Save anywhere, as many times as you like. Unlimited saves.',
       ]
     },
 

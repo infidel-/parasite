@@ -448,8 +448,12 @@ override function update()
         game.state == GAMESTATE_RUNNING &&
         game.player.saveDifficulty != UNSET)
       {
-        // saves-left chip uses a floppy glyph + count; mission area shows alert text
-        var html = UISvg.floppy('mainmenu-sub-ico') + ' ' + game.player.vars.savesLeft;
+        // saves-left chip uses a floppy glyph + count; NOOB shows an infinity glyph (display font lacks ∞); mission area shows alert text
+        var noob = (game.player.saveDifficulty == NOOB);
+        var savesText = (noob ?
+          '<svg class="mainmenu-sub-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z"/></svg>' :
+          '' + game.player.vars.savesLeft);
+        var html = UISvg.floppy('mainmenu-sub-ico') + ' ' + savesText;
         var alert = false;
         if (game.player.inMissionArea())
           {
@@ -460,7 +464,7 @@ override function update()
         // themed css tooltip (native title is swallowed by the menu-item hover)
         note.className = (alert ? 'mainmenu-sub alert evolution-tip' : 'mainmenu-sub evolution-tip');
         note.innerHTML = html;
-        note.setAttribute('data-tip', game.player.vars.savesLeft + ' saves left');
+        note.setAttribute('data-tip', noob ? 'Unlimited saves' : game.player.vars.savesLeft + ' saves left');
         saveItem.appendChild(note);
       }
 
