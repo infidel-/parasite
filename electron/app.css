@@ -219,7 +219,7 @@ hr {
   height: 100%;
   filter: saturate(0.9);
   position: absolute;
-  cursor: url(img/mouse0.png) 0 1, auto;
+  cursor: var(--ui-cursor-default);
 }
 
 #tint {
