@@ -2,6 +2,7 @@
 package console;
 
 import mods.ModRegistry;
+import game.AreaGame;
 
 // one grammar node: either a literal token (lit) or a value slot (slot).
 // next = alternatives for the following token position.
@@ -109,6 +110,12 @@ class ConsoleCompletion
           ] });
           rootChildren.push({ lit: 'set', next: [
             { slot: '<var>', values: setVars, next: [ { slot: '<value>' } ] },
+          ] });
+          rootChildren.push({ lit: 'spa', next: [
+            { slot: '[ai type]', values: function() return AreaGame.aiTypes },
+          ] });
+          rootChildren.push({ lit: 'spc', next: [
+            { slot: '[job type]', values: function() return console.game.jobs.getCivilianJobTypesList() },
           ] });
           rootChildren.push({ lit: 'go', next: [
             { lit: 'area', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
