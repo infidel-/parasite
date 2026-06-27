@@ -199,7 +199,7 @@ class ActionsHud
             var html = '<span class="hud-key' + (numbered ? ' num' : '') + '">' + key + '</span>' +
               '<span class="hud-label">' + name + '</span>';
             if (cost > 0)
-              html += '<span class="hud-cost">' + cost + UISvg.hudCoin() + '</span>';
+              html += '<span class="hud-cost">' + cost + UISvg.hudEnergy() + '</span>';
             btn.innerHTML = html;
             // hover previews this action's energy cost on the matching bar
             if (cost > 0)

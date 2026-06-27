@@ -1809,11 +1809,11 @@ hr {
   font-size: calc(var(--text-font-size) * 1.05);
   transition: color 0.12s, text-shadow 0.12s;
 }
-.hud-coin {
+.hud-energy {
   width: 20px;
   height: 20px;
 }
-.hud-coin path {
+.hud-energy path {
   fill: #6fb3ec;
 }
 /* cost energizes on hover: number glows, pops once, bolt crackles alive */
@@ -1822,7 +1822,7 @@ hr {
   text-shadow: 0 0 8px rgba(95, 160, 236, 0.6);
   animation: hud-cost-pop 0.3s ease-out 1;
 }
-.hud-act:hover .hud-coin path {
+.hud-act:hover .hud-energy path {
   fill: #8fc6f4;
 }
 @keyframes hud-cost-pop {
@@ -1852,7 +1852,7 @@ hr {
     filter: brightness(1.25) drop-shadow(0 0 3px currentColor);
   }
 }
-.hud-act:hover .hud-coin {
+.hud-act:hover .hud-energy {
   animation: hud-bolt-crackle 1.5s linear infinite;
 }
 .hud-act-hint {
@@ -7513,7 +7513,8 @@ select {
   text-decoration: underline;
   transform: translateY(1px);
 }
-.body-cost { color: var(--blue-gray); font-size: 84%; }
+.body-cost { display: inline-flex; align-items: center; gap: 1px; color: var(--blue-gray); font-size: 84%; }
+.body-cost .hud-energy { width: 1.3em; height: 1.3em; }
 
 /* knowledge sub-heads (PARASITE col-head, AVAILABLE FEATURES divider) */
 .body-sub-h {

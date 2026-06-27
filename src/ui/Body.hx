@@ -190,7 +190,7 @@ class Body extends UIWindow
               var label = (a.nameClean != null ? a.nameClean : a.name);
               actBuf.add('<span class="body-act" data-inv="' + idx + '">' + label + '</span>');
               if (a.energy > 0)
-                actBuf.add(' <span class="body-cost">' + a.energy + UISvg.hudCoin() + '</span>');
+                actBuf.add(' <span class="body-cost">' + a.energy + UISvg.hudEnergy() + '</span>');
             }
 
           buf.add('<div class="body-inv-cell">');
