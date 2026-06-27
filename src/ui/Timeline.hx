@@ -72,8 +72,7 @@ class Timeline extends UIWindow
             {
               if (event.locationKnown)
                 {
-                  if (event.location.hasName)
-                    buf.add(event.location.name + " ");
+                  buf.add(event.location.area.getDisplayName() + " ");
                   buf.add("<span class='timeline-xy'>(" + event.location.area.x + "," + event.location.area.y + ")</span>");
                 }
               else buf.add("<span class='timeline-bar wide'></span> <span class='timeline-xy'>(?,?)</span>");

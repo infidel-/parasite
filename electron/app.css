@@ -397,6 +397,10 @@ hr {
   border-left: 0;
   border-top: 0;
 }
+/* region tip: wider cap so long district names (e.g. "Garment District - Sec. 12") fit */
+.beam-tip.region-tip {
+  max-width: min(48vw, 46ch);
+}
 .region-tip-head {
   display: flex;
   align-items: baseline;
@@ -878,6 +882,35 @@ hr {
   font-size: calc(var(--text-font-size) * 1.2);
   text-transform: uppercase;
   color: var(--text);
+  /* fast ease into the motion-blur smear (no hard snap), eased back out for the decode */
+  transition: filter 0.13s ease, opacity 0.13s ease, letter-spacing 0.13s ease, transform 0.13s ease;
+}
+/* fast region travel: name smears (motion blur) while moving, then decodes on stop */
+#hud-topbar .hud-loc-name.loc-blur {
+  filter: blur(4px);
+  opacity: 0.4;
+  letter-spacing: 0.32em;
+  transform: skewX(-9deg) scaleX(1.05);
+  transform-origin: left center;
+}
+/* area/sector portion of the name tints with alertness (district stays neutral) */
+#hud-topbar .hud-loc-name .loc-area {
+  transition: color 0.35s ease;
+}
+/* high alert: subtle breathing glow on the area/sector label */
+@keyframes hud-loc-alert-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 0 rgba(224, 89, 79, 0);
+    opacity: 1;
+  }
+  50% {
+    text-shadow: 0 0 7px rgba(224, 89, 79, 0.55);
+    opacity: 0.82;
+  }
+}
+#hud-topbar .hud-loc-name .loc-area.alert-red {
+  animation: hud-loc-alert-pulse 1.7s ease-in-out infinite;
 }
 #hud-topbar .hud-loc-coords {
   font-size: calc(var(--text-font-size) * 0.7);
@@ -999,7 +1032,8 @@ hr {
   top: 78px;
   left: 26px;
   width: fit-content;
-  max-width: 760px;
+  /* grow horizontally with long lines, bounded by the window edge */
+  max-width: calc(100vw - 52px);
   padding: 8px 11px;
   background-color: var(--hud-panel);
 }
@@ -4589,7 +4623,7 @@ fieldset {
   content: "";
   position: absolute;
   left: -25px;
-  top: 12px;
+  top: 15px;
   width: 22px;
   height: 2px;
   background: linear-gradient(90deg, rgba(247,175,70,.55), rgba(247,175,70,.12));
@@ -4600,7 +4634,7 @@ fieldset {
 /* node: solid = known, hollow + ring = leads, crosshatch = redacted */
 .timeline-node {
   position: absolute;
-  left: -32px;
+  left: -34px;
   top: 6px;
   width: 15px;
   height: 15px;

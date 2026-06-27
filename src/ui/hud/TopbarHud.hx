@@ -19,6 +19,9 @@ class TopbarHud
   var topbarPinSvg: Element;
   var lastTurn: Int = -1;          // detects turn advance for odometer tick
   var lastLocName: String = '';    // detects area change for decode + pin ping
+  var decodeGen: Int = 0;          // generation token: cancels stale in-flight decode loops
+  var settleTimer: haxe.Timer;     // movement-settle: blur smears while moving, decode fires on rest
+  static inline var SETTLE_MS = 120; // ms the location must hold before name decodes
 
   public function new(g: Game, h: HUD)
     {
@@ -62,55 +65,105 @@ class TopbarHud
           lastTurn = game.turns;
         }
 
-      // location name + coords from current scope
-      var name = '';
+      // resolve the named area + coords for the current scope
+      var area: AreaGame = null;
       var coords = '';
       if (game.location == LOCATION_AREA)
         {
-          name = game.area.name;
+          area = game.area;
           coords = game.playerArea.x + ',' + game.playerArea.y;
         }
       else if (game.location == LOCATION_REGION)
         {
-          name = game.playerRegion.currentArea.name;
+          area = game.playerRegion.currentArea;
           coords = game.playerRegion.x + ',' + game.playerRegion.y;
         }
-      if (name == null)
-        name = '';
       topbarCoords.textContent = coords;
 
+      // split name: plain district prefix + alert-tinted area/sector label
+      var district = (area != null ? area.getDistrictLabel() : '');
+      var areaLabel = (area != null ? area.getAreaLabel() : '');
+      // calm areas keep the normal name color; tint only escalates with alertness
+      var color = (area != null ? area.alertColor() : 'gray');
+      var alertClass = (color == 'gray' ? '' : 'alert-' + color);
+      var fullName = district + areaLabel;
+
       // area change: pin pings, name resolves out of glyph noise
-      if (name != lastLocName)
+      if (fullName != lastLocName)
         {
-          lastLocName = name;
+          lastLocName = fullName;
           if (topbarPinSvg != null)
             {
               topbarPinSvg.classList.remove('ping');
               topbarPinSvg.getBoundingClientRect(); // reflow to retrigger
               topbarPinSvg.classList.add('ping');
             }
-          decodeLocation(name);
+          blurTo(district, areaLabel, alertClass);
+        }
+      // same area: refresh the tint live as alertness rises/falls (no re-decode)
+      else
+        {
+          var areaEl = topbarName.querySelector('.loc-area');
+          if (areaEl != null)
+            areaEl.className = 'loc-area' + (alertClass != '' ? ' ' + alertClass : '');
         }
     }
 
-// resolve a location name left-to-right out of glyph noise (~.56s)
-  function decodeLocation(name: String)
+// fast region travel: show the destination name smeared (motion blur) instantly,
+// then decode it once movement settles (no per-tile decode thrash)
+  function blurTo(district: String, areaLabel: String, alertClass: String)
     {
+      // kill any in-flight decode loop
+      decodeGen++;
+      // show the real name immediately, blurred — cheap, no glyph loop per tile
+      renderLocation(district, areaLabel, alertClass);
+      topbarName.classList.add('loc-blur');
+      // restart settle timer: a fresh move keeps the blur, only rest triggers decode
+      if (settleTimer != null)
+        settleTimer.stop();
+      settleTimer = haxe.Timer.delay(function ()
+        {
+          topbarName.classList.remove('loc-blur');
+          decodeLocation(district, areaLabel, alertClass);
+        }, SETTLE_MS);
+    }
+
+// resolve a location name left-to-right out of glyph noise (~.56s), then settle
+// into a plain district prefix + alert-tinted area span
+  function decodeLocation(district: String, areaLabel: String, alertClass: String)
+    {
+      var name = district + areaLabel;
       var glyphs = '▒░#@%&╪◊$';
       var frames = 14;
       var frame = 0;
+      // invalidate any in-flight decode: fast moves stop overlapping glyph loops
+      var gen = ++decodeGen;
       function step()
         {
+          if (gen != decodeGen)
+            return;
+          if (frame > frames)
+            {
+              renderLocation(district, areaLabel, alertClass);
+              return;
+            }
           var n = Std.int(name.length * frame / frames);
           var buf = name.substr(0, n);
           for (i in n...name.length)
             buf += glyphs.charAt(Std.random(glyphs.length));
           topbarName.textContent = buf;
           frame++;
-          if (frame <= frames)
-            haxe.Timer.delay(step, 40);
-          else topbarName.textContent = name;
+          haxe.Timer.delay(step, 40);
         }
       step();
+    }
+
+// render the settled name: plain district prefix + alert-tinted area span
+  function renderLocation(district: String, areaLabel: String, alertClass: String)
+    {
+      topbarName.innerHTML =
+        '<span class="loc-district">' + StringTools.htmlEscape(district) + '</span>' +
+        '<span class="loc-area' + (alertClass != '' ? ' ' + alertClass : '') + '">' +
+          StringTools.htmlEscape(areaLabel) + '</span>';
     }
 }

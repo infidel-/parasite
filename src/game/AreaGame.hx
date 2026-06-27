@@ -23,6 +23,8 @@ class AreaGame extends _SaveObject
 
   public var id: Int; // area id
   public var name: String; // area name
+  public var districtName: String; // thematic district name (city areas only, null otherwise)
+  public var districtSector: Int; // 1-based sector number within district (0 if none)
   public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated?
@@ -93,6 +95,8 @@ class AreaGame extends _SaveObject
       highCrime = false;
       habitat = null;
       name = null;
+      districtName = null;
+      districtSector = 0;
       parentID = -1;
       width = -1;
       height = -1;
@@ -981,6 +985,54 @@ class AreaGame extends _SaveObject
         name = NameConst.generate('%baseA1% %baseB1%');
       else if (typeID == AREA_FACILITY)
         name = NameConst.generate('%tree1% %geo1% %lab1%');
+    }
+
+// whether the parasite knows human area names yet (gated on society knowledge)
+  public function isNameKnown(): Bool
+    {
+      // early game: society knowledge below 10% hides all area names
+      return game.player.skills.getLevel(KNOW_SOCIETY) >= 10;
+    }
+
+// human-readable name: district+sector for city areas, else the type/proc name
+// ponytail: stale districtName persists if a city area is re-typed post-gen; areas
+// don't re-type except habitat sub-areas, so not guarded
+  public function getDisplayName(?abbrev: Bool = false): String
+    {
+      return getDistrictLabel() + getAreaLabel(abbrev);
+    }
+
+// non-tinted name prefix shown before the area label (district, or empty)
+  public function getDistrictLabel(): String
+    {
+      if (!isNameKnown() ||
+          districtName == null)
+        return '';
+      return districtName + ' - ';
+    }
+
+// the area/sector portion of the name (alert-tinted in the top bar)
+// abbrev shortens "Sector" -> "Sec." for tight panels (region tooltip)
+  public function getAreaLabel(?abbrev: Bool = false): String
+    {
+      if (!isNameKnown())
+        return 'unknown location';
+      if (districtName != null)
+        return (abbrev ? 'Sec. ' : 'Sector ') + districtSector;
+      return name;
+    }
+
+// alertness severity color word (red/yellow/white/gray) for name tint + tooltip
+  public function alertColor(): String
+    {
+      var a = alertness;
+      if (a >= 75)
+        return 'red';
+      if (a >= 50)
+        return 'yellow';
+      if (a > 0)
+        return 'white';
+      return 'gray';
     }
 
 // update area type after change

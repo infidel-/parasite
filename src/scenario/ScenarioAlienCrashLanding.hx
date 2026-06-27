@@ -23,7 +23,6 @@ class ScenarioAlienCrashLanding extends Scenario
         'facility1' => [ '%tree1% %geo1% %lab1%' ],
         'facility2' => [ '%tree1% %geo1% %lab1%' ],
         'facility3' => [ '%tree1% %geo1% %lab1%' ],
-        'base1' => [ 'Area %num1%%num2%', '%baseA1% %baseB1%' ],
         'shipCode' => [
           'OBJ-%num1%%num2%',
           'UFO-%num1%%num2%-%greek1%',
@@ -134,7 +133,6 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             type: AREA_MILITARY_BASE,
             id: 'base1',
-            name: '%base1%',
             near: 'shipSpottedCiv'
             },
           npc: [ 'soldier' => 20 ],

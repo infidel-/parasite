@@ -6,7 +6,8 @@ class NameConst
 {
   // available types
   public static var types = [
-    'greek', 'tree', 'geo', 'lab', 'baseA', 'baseB'
+    'greek', 'tree', 'geo', 'lab', 'baseA', 'baseB',
+    'corpA', 'corpB', 'forestName', 'forestSuffix', 'rock', 'hillSuffix'
     ];
 
   // greek letters
@@ -53,6 +54,75 @@ class NameConst
     'Testing Grounds',
     'Research Center',
     'Research Lab',
+    ];
+
+  // city district names - default/plains pool (US neighborhood style; CSS uppercases)
+  // no baked-in compass/elevation/water geography: districts land anywhere, so a
+  // directional/terrain name would contradict the actual placement
+  public static var districtNames = [
+    'Corktown', 'Pullman', 'Brewerytown', 'Kensington', 'Germantown',
+    'Logan Square', 'Old Town', 'Fairview', 'Jackson Park', 'Franklin',
+    'Bushwick', 'Ironbound', 'The Flats', 'Packingtown', 'Steel Yards',
+    'Dogtown', 'Bronzeville', 'Little Italy', 'Greektown', 'Sunset Park',
+    'Astoria', 'Harlem', 'Chelsea', 'Gramercy', 'Bowery',
+    'The Loop', 'Garment District', 'Meatpacking', 'Tenderloin', 'Five Points',
+    'Mott Haven', 'Fordham', 'Brighton', 'Pilsen', 'Frogtown',
+    'Cabbagetown', 'Bucktown',
+    ];
+
+  // city district names - poor/crime-ridden slum pool
+  public static var districtNamesSlum = [
+    'The Pit', 'Skid Row', 'The Bottoms', 'The Trenches', 'Rat Alley',
+    'Gutterside', 'The Hollows', 'Needle Park', 'Ashtown', 'Slag End',
+    'The Shambles', 'Tar Flats', 'The Warrens', 'Hooverville', 'Murder Mile',
+    'Smokestack', 'The Gutter', 'Knuckle', 'The Bricks', 'Vice Row',
+    ];
+
+  // city district names - forest-terrain pool
+  public static var districtNamesForest = [
+    'Cedar Grove', 'Forest Hills', 'Pinecrest', 'Oakdale', 'Glenwood',
+    'Maplewood', 'Woodside', 'Sherwood', 'Ferndale', 'Elmhurst',
+    'Birchwood', 'Greenpoint', 'Lakewood', 'The Thicket',
+    ];
+
+  // city district names - hill/mountain-terrain pool
+  public static var districtNamesHills = [
+    'Highland Park', 'Rockridge', 'Stonecliff', 'Summit', 'Crestview',
+    'Hilltop', 'Granite Heights', 'Ridgewood', 'Eagle Rock', 'Overlook',
+    'Cliffside', 'Boulder Crest',
+    ];
+
+  // corporation name parts (corp HQ area names)
+  public static var corpA = [
+    'Hex', 'Vantage', 'Apex', 'Nexus', 'Meridian', 'Cygnus', 'Orion',
+    'Vertex', 'Helix', 'Onyx', 'Atlas', 'Veridian', 'Borealis', 'Kestrel',
+    'Pylon', 'Sable', 'Synth', 'Drax',
+    ];
+
+  public static var corpB = [
+    'Corp', 'Industries', 'Dynamics', 'Holdings', 'Systems', 'Global',
+    'Technologies', 'Group', 'Solutions', 'Incorporated',
+    ];
+
+  // forest ground name prefixes (evocative, non-species, non -wood)
+  public static var forestName = [
+    'Black', 'Shadow', 'Raven', 'Hollow', 'Briar', 'Mist', 'Grey', 'Wild',
+    'Fox', 'Wolf', 'Thorn', 'Elder', 'Gloom', 'Tangle', 'Hunter', 'Crow',
+    'Stag', 'Fern', 'Moss', 'Bramble', 'Whisper', 'Dusk',
+    ];
+
+  // forest ground name suffixes
+  public static var forestSuffix = [
+    'Woods', 'Forest', 'Grove', 'Thicket',
+    ];
+
+  // hill/mountain ground name parts
+  public static var rock = [
+    'Granite', 'Iron', 'Stone', 'Bald', 'Black', 'Flint', 'Slate',
+    ];
+
+  public static var hillSuffix = [
+    'Hills', 'Ridge', 'Heights', 'Bluffs', 'Peak', 'Mountain',
     ];
 
   // thug rapper prefix list

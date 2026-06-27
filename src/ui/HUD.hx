@@ -37,8 +37,12 @@ class HUD
   var actions: ActionsHud;
   var lastMouseX: Float = -1;
   var lastMouseY: Float = -1;
-  var lastRegionTileX: Int = -1;
+  var lastRegionTileX: Int = -1;       // committed (shown) hovered tile
   var lastRegionTileY: Int = -1;
+  var hoverRegionTileX: Int = -1;      // last tile seen under the cursor (pre-settle)
+  var hoverRegionTileY: Int = -1;
+  var regionHoverTimer: haxe.Timer;    // settle timer: collapses fast sweeps to one resolve
+  static inline var REGION_HOVER_SETTLE = 80; // ms the cursor must rest before the tip commits
 
   // exposed for the region tooltip, which measures against the stats panel
   public var info(get, never): DivElement;
@@ -184,11 +188,18 @@ public function onMouseLeave()
     aiTooltip.hide();
   }
 
-// reset cached hovered region tile
+// reset cached hovered region tile (and cancel any pending settle)
   function resetRegionTooltipHover()
     {
+      if (regionHoverTimer != null)
+        {
+          regionHoverTimer.stop();
+          regionHoverTimer = null;
+        }
       lastRegionTileX = -1;
       lastRegionTileY = -1;
+      hoverRegionTileX = -1;
+      hoverRegionTileY = -1;
     }
 
 // refresh region tooltip for the current hovered tile
@@ -218,18 +229,51 @@ public function onMouseLeave()
           return;
         }
 
-      if (!refreshVisible &&
-          area.x == lastRegionTileX &&
-          area.y == lastRegionTileY)
-        return;
-      if (refreshVisible &&
-          area.x == lastRegionTileX &&
-          area.y == lastRegionTileY &&
-          !regionTooltip.visible)
-        return;
+      // forced in-place refresh (camera/state sync): commit now, no settle
+      if (refreshVisible)
+        {
+          if (area.x == lastRegionTileX &&
+              area.y == lastRegionTileY &&
+              !regionTooltip.visible)
+            return;
+          commitRegionTooltipHover();
+          return;
+        }
 
+      // same tile already seen since the last move -> nothing to schedule
+      if (area.x == hoverRegionTileX &&
+          area.y == hoverRegionTileY)
+        return;
+      hoverRegionTileX = area.x;
+      hoverRegionTileY = area.y;
+
+      // settle/debounce: a fast sweep keeps changing tiles and restarting this
+      // timer, so the tooltip only resolves once the cursor rests on a tile -
+      // no per-tile content/beam thrash mid-sweep
+      if (regionHoverTimer != null)
+        regionHoverTimer.stop();
+      regionHoverTimer = haxe.Timer.delay(function()
+        {
+          regionHoverTimer = null;
+          commitRegionTooltipHover();
+        }, REGION_HOVER_SETTLE);
+    }
+
+// commit the tooltip to the tile currently under the cursor
+  function commitRegionTooltipHover()
+    {
+      var pos = game.scene.mouse.getXY();
+      var area = (pos != null ? game.region.getXY(pos.x, pos.y) : null);
+      if (area == null)
+        {
+          resetRegionTooltipHover();
+          regionTooltip.hide();
+          return;
+        }
       lastRegionTileX = area.x;
       lastRegionTileY = area.y;
+      hoverRegionTileX = area.x;
+      hoverRegionTileY = area.y;
       regionTooltip.update();
       if (!regionTooltip.visible)
         resetRegionTooltipHover();
