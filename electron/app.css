@@ -4747,6 +4747,77 @@ fieldset {
   padding: 2px 14px;
   opacity: .7;
 }
+/* anonymous REDACTED placeholder block: a sealed gap, no amber, emptier than a SEALED card */
+.redacted-block .timeline-card {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(107,86,88,.4);
+  border-left-color: var(--timeline-redact);
+  background:
+    repeating-linear-gradient(45deg, rgba(58,46,47,.5) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #100c0d, #090707);
+}
+.redacted-block .timeline-card::before {
+  background: linear-gradient(90deg, transparent, rgba(107,86,88,.35), transparent);
+}
+/* brown connector elbow, like a redacted event */
+.redacted-block.timeline-event::before {
+  background: linear-gradient(90deg, rgba(107,86,88,.6), transparent);
+}
+/* brown crosshatch node, no amber glow */
+.redacted-block .timeline-node {
+  border-color: var(--timeline-redact);
+  box-shadow: 0 0 0 3px #08090e;
+}
+.redacted-block .timeline-node::before {
+  opacity: 1;
+  background: repeating-linear-gradient(45deg, #3a2e2f 0 2px, transparent 2px 4px);
+}
+/* stamp is the focal element, centered over the empty body */
+.redacted-block .timeline-stamp {
+  position: relative;
+  transform: rotate(-4deg);
+  z-index: 1;
+}
+/* light band reading the redacted word + frame, left edge -> right edge, on hover */
+.redacted-block .timeline-stamp::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 6px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: linear-gradient(90deg, transparent 38%, rgba(247,190,110,.8) 50%, transparent 62%);
+  opacity: 0;
+}
+.redacted-block:hover .timeline-stamp::after {
+  animation: redacted-scan .8s ease;
+}
+@keyframes redacted-scan {
+  0% { transform: translateX(-50%); opacity: 1; }
+  100% { transform: translateX(50%); opacity: 0; }
+}
+.redacted-block .timeline-fx::before,
+.redacted-block .timeline-fx::after {
+  border-color: rgba(107,86,88,.32);
+}
+/* faint static filler bars behind the stamp (sweep lives on the stamp now) */
+.redacted-block-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  opacity: .28;
+  pointer-events: none;
+}
+.redacted-block-bars .timeline-bar::after {
+  display: none;
+}
 .timeline-ehead {
   display: flex;
   align-items: center;
