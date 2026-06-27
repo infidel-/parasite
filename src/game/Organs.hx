@@ -203,6 +203,14 @@ class Organs extends _SaveObject
       var impID = (actionID : _Improv);
       var imp = game.player.evolutionManager.getImprov(impID);
 
+      // drop every not-yet-started (0 gp) organ except the one being picked;
+      // unstarted picks never hold a slot, only a real in-progress organ does
+      for (o in [for (x in _list) x])
+        if (o.id != imp.id
+            && !o.isActive
+            && o.gp == 0)
+          _list.remove(o);
+
       // if this organ does not exist yet, create it
       var o = get(imp.id);
       if (o == null)

@@ -372,7 +372,8 @@ class Body extends UIWindow
     }
 
 // features: grown organs (active) + available/growing organs (grow actions)
-  function updateFeatures()
+// reform=true replays the staggered card settle (used when switching grow target)
+  function updateFeatures(?reform: Bool = false)
     {
       listOrgansActions = [];
       var disabled = (game.player.state != PLR_STATE_HOST ||
@@ -389,45 +390,53 @@ class Body extends UIWindow
       var buf = new StringBuf();
       var i = 0;
 
-      // grown (active) features
-      var hasActive = false;
+      // grown + in-progress organs both occupy body slots -> shown together up top
+      var notRegion = (game.location != LOCATION_REGION);
+      var hasFeature = false;
       for (organ in host.organs)
         {
-          if (!organ.isActive)
-            continue;
-          buf.add(activeCard(game.player.evolutionManager.getImprov(organ.id), organ, i));
+          var imp = game.player.evolutionManager.getImprov(organ.id);
+          if (organ.isActive)
+            buf.add(activeCard(imp, organ, i));
+          // in-progress (currently growing or half-grown); resume needs no free slot
+          else
+            buf.add(availCard(imp, organ,
+              organ.id == host.organs.getCurrentID(), notRegion, i));
           i++;
-          hasActive = true;
+          hasFeature = true;
         }
-      if (!hasActive)
+      if (!hasFeature)
         buf.add('<div class="body-empty">no body features</div>');
 
-      // available features (grow actions); region mode / full slots disable growing
+      // available features not yet started; a free slot is required to begin.
+      // a 0-gp in-progress organ counts as free (replacing it prunes it on switch)
       buf.add('<div class="body-sub-h body-sub-h-gap">AVAILABLE FEATURES</div>');
-      var canGrow = !(game.location == LOCATION_REGION ||
-        host.organs.length() >= host.maxOrgans);
-      var hasAvail = false;
-      for (imp in game.player.evolutionManager)
+      var cur = host.organs.getCurrentID();
+      var freeable = (cur != null && host.organs.get(cur).gp == 0);
+      if (host.organs.length() >= host.maxOrgans && !freeable)
+        buf.add('<div class="body-empty">all slots taken</div>');
+      else
         {
-          // not available yet or has no organ
-          if (imp.level == 0 || imp.info.organ == null)
-            continue;
-          // already completed
-          if (host.organs.getActive(imp.info.id) != null)
-            continue;
-          var organ = host.organs.get(imp.info.id); // in-progress (not yet active) if non-null
-          // only the single currently-grown organ shows GROWING; others are re-selectable
-          var isNow = (organ != null
-            && !organ.isActive
-            && imp.info.id == host.organs.getCurrentID());
-          buf.add(availCard(imp, organ, isNow, canGrow, i));
-          i++;
-          hasAvail = true;
+          var hasAvail = false;
+          for (imp in game.player.evolutionManager)
+            {
+              // not available yet or has no organ
+              if (imp.level == 0 || imp.info.organ == null)
+                continue;
+              // already grown or in progress (shown above)
+              if (host.organs.get(imp.info.id) != null)
+                continue;
+              buf.add(availCard(imp, null, false, notRegion, i));
+              i++;
+              hasAvail = true;
+            }
+          if (!hasAvail)
+            buf.add('<div class="body-empty">No features available</div>');
         }
-      if (!hasAvail)
-        buf.add('<div class="body-empty">No features available</div>');
 
       featScroll.innerHTML = buf.toString();
+      // replay the cascade only on a grow-target switch (open uses .body-intro)
+      featScroll.classList.toggle('body-feat-reform', reform);
     }
 
 // grown feature card: thumbnail + name/level + note + level-note (+ timeout)
@@ -539,8 +548,8 @@ class Body extends UIWindow
               {
                 game.scene.sounds.play('click-action');
                 game.player.host.organs.action('set.' + id);
-                // refresh only the parts that change (no full-window re-animation)
-                updateFeatures();
+                // refresh the changed parts; reform replays the feature cascade
+                updateFeatures(true);
                 updateStats();
                 game.ui.hud.update();
               }
@@ -576,7 +585,7 @@ class Body extends UIWindow
           if (a == null)
             return;
           game.player.host.organs.action(a.id);
-          updateFeatures();
+          updateFeatures(true);
           updateStats();
           game.ui.hud.update();
         }
