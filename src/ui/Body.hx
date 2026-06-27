@@ -85,7 +85,7 @@ class Body extends UIWindow
       hostBlock.className = 'body-block';
       hostBlock.style.setProperty('--i', '2');
       hostBlock.innerHTML =
-        '<div class="body-block-title">HOST</div>' +
+        '<div class="body-block-title">HOST <span class="body-cnt" style="visibility:hidden">0</span></div>' +
         '<div class="hud-scroll body-scroll"></div>';
       col2.appendChild(hostBlock);
       hostScroll = hostBlock.querySelector('.body-scroll');
@@ -190,7 +190,7 @@ class Body extends UIWindow
               var label = (a.nameClean != null ? a.nameClean : a.name);
               actBuf.add('<span class="body-act" data-inv="' + idx + '">' + label + '</span>');
               if (a.energy > 0)
-                actBuf.add(' <span class="body-cost">' + a.energy + '⚡</span>');
+                actBuf.add(' <span class="body-cost">' + a.energy + UISvg.hudCoin() + '</span>');
             }
 
           buf.add('<div class="body-inv-cell">');
@@ -239,81 +239,105 @@ class Body extends UIWindow
     }
 
 // host job + skills + traits + attributes + effects
+// blocks always render; gated data falls back to unknown/- placeholders
   function updateHost()
     {
-      var enabled = (game.player.vars.skillsEnabled);
-      hostBlock.classList.toggle('disabled', !enabled);
-      if (game.player.state != PLR_STATE_HOST ||
-          !enabled ||
-          !game.player.host.isAttrsKnown)
-        {
-          hostScroll.innerHTML = '<div class="body-empty">Unknown</div>';
-          return;
-        }
-      var host = game.player.host;
+      hostBlock.classList.toggle('disabled', !game.player.vars.skillsEnabled);
+      // host is null when floating; attrs/job gated behind brain probe levels
+      var host = (game.player.state == PLR_STATE_HOST ? game.player.host : null);
+      var attrsKnown = (host != null && host.isAttrsKnown);
+      var jobKnown = (host != null && host.isJobKnown);
       var buf = new StringBuf();
 
-      // job line
-      if (host.isJobKnown)
+      // job + income line
+      buf.add('<div class="body-sub-h">JOB</div>');
+      if (jobKnown)
         buf.add('<div class="body-host-jobline">' + UISvg.bodyJob() +
           '<span class="body-host-job">' + host.job + '</span>' +
           '<span class="gray">&middot; income ' + host.income + '</span></div>');
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
       // host skills (hidden animal attack skill skipped)
-      var i = 0;
-      for (skill in host.skills.sorted())
+      buf.add('<div class="body-sub-h body-sub-h-gap">SKILLS</div>');
+      if (attrsKnown)
         {
-          if (skill.info.id == SKILL_ATTACK)
-            continue;
-          buf.add(skillRow(skill, false, i));
-          i++;
+          var i = 0;
+          for (skill in host.skills.sorted())
+            {
+              if (skill.info.id == SKILL_ATTACK)
+                continue;
+              buf.add(skillRow(skill, false, i));
+              i++;
+            }
+          if (i == 0)
+            buf.add('<div class="body-empty">none</div>');
         }
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
       // traits panel (alphabetical)
-      if (host.traits.length > 0)
+      buf.add('<div class="body-sub-h body-sub-h-gap">TRAITS</div>');
+      if (attrsKnown)
         {
-          var infos = [];
-          for (t in host.traits)
-            infos.push(TraitsConst.getInfo(t));
-          infos.sort(function(a, b) {
-            var an = a.name.toLowerCase();
-            var bn = b.name.toLowerCase();
-            return (an < bn ? -1 : (an > bn ? 1 : 0));
-          });
-          buf.add('<div class="body-host-panel">');
-          for (info in infos)
-            buf.add('<div class="body-trait">' + UISvg.bodyTrait() +
-              '<div><div class="body-trait-name">' + info.name + '</div>' +
-              '<div class="body-trait-note">' + info.note + '</div></div></div>');
-          buf.add('</div>');
+          if (host.traits.length > 0)
+            {
+              var infos = [];
+              for (t in host.traits)
+                infos.push(TraitsConst.getInfo(t));
+              infos.sort(function(a, b) {
+                var an = a.name.toLowerCase();
+                var bn = b.name.toLowerCase();
+                return (an < bn ? -1 : (an > bn ? 1 : 0));
+              });
+              buf.add('<div class="body-host-panel">');
+              for (info in infos)
+                buf.add('<div class="body-trait">' + UISvg.bodyTrait() +
+                  '<div><div class="body-trait-name">' + info.name + '</div>' +
+                  '<div class="body-trait-note">' + info.note + '</div></div></div>');
+              buf.add('</div>');
+            }
+          else
+            buf.add('<div class="body-empty">none</div>');
         }
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
-      // attribute tiles
+      // attribute tiles (always shown; '-' when not probed)
+      buf.add('<div class="body-sub-h body-sub-h-gap">ATTRIBUTES</div>');
       buf.add('<div class="body-attr-grid">');
-      buf.add(attrTile('str', 'STR', UISvg.attrStr(), host.strength));
-      buf.add(attrTile('con', 'CON', UISvg.attrCon(), host.constitution));
-      buf.add(attrTile('int', 'INT', UISvg.attrInt(), host.intellect));
-      buf.add(attrTile('psy', 'PSY', UISvg.attrPsy(), host.psyche));
+      buf.add(attrTile('str', 'STR', UISvg.attrStr(), (host != null ? host.strength : 0), attrsKnown));
+      buf.add(attrTile('con', 'CON', UISvg.attrCon(), (host != null ? host.constitution : 0), attrsKnown));
+      buf.add(attrTile('int', 'INT', UISvg.attrInt(), (host != null ? host.intellect : 0), attrsKnown));
+      buf.add(attrTile('psy', 'PSY', UISvg.attrPsy(), (host != null ? host.psyche : 0), attrsKnown));
       buf.add('</div>');
 
       // effects panel
-      var effects = new Array<Effect>();
-      for (effect in host.effects)
-        if (!effect.isHidden)
-          effects.push(effect);
-      if (effects.length > 0)
+      buf.add('<div class="body-eff-h body-sub-h-gap">EFFECTS</div>');
+      if (attrsKnown)
         {
-          effects.sort(function(a, b) {
-            return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
-          });
-          buf.add('<div class="body-host-panel"><div class="body-eff-h">Effects</div>');
-          for (effect in effects)
-            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
-              (effect.isTimer ? '<span class="body-eff-t">' +
-                UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
-              '</div>');
-          buf.add('</div>');
+          var effects = new Array<Effect>();
+          for (effect in host.effects)
+            if (!effect.isHidden)
+              effects.push(effect);
+          if (effects.length > 0)
+            {
+              effects.sort(function(a, b) {
+                return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+              });
+              buf.add('<div class="body-host-panel">');
+              for (effect in effects)
+                buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+                  (effect.isTimer ? '<span class="body-eff-t">' +
+                    UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
+                  '</div>');
+              buf.add('</div>');
+            }
+          else
+            buf.add('<div class="body-empty">none</div>');
         }
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
       hostScroll.innerHTML = buf.toString();
     }
@@ -338,12 +362,13 @@ class Body extends UIWindow
     }
 
 // one attribute tile: filled glyph + value + label + 10-segment bar
-  function attrTile(mod: String, label: String, ico: String, v: Int): String
+// known=false renders '-' value with an empty bar (not yet brain-probed)
+  function attrTile(mod: String, label: String, ico: String, v: Int, known: Bool = true): String
     {
       return '<div class="body-atile ' + mod + '">' + ico +
-        '<div class="body-atile-head"><span class="body-atile-v">' + v + '</span>' +
+        '<div class="body-atile-head"><span class="body-atile-v">' + (known ? '' + v : '-') + '</span>' +
         '<span class="body-atile-k">' + label + '</span></div>' +
-        '<span class="body-atile-bar" style="--v:' + v + '"><span class="fill"></span></span></div>';
+        '<span class="body-atile-bar" style="--v:' + (known ? v : 0) + '"><span class="fill"></span></span></div>';
     }
 
 // features: grown organs (active) + available/growing organs (grow actions)
