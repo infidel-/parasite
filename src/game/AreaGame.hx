@@ -2179,6 +2179,13 @@ class Test {
     'security (sec)', 'scientist (sci)', 'team',
     'thug',
   ];
+
+// built-in AI types plus any mod-registered ones (console spawn hint list)
+  public static function allAITypes(): Array<String>
+    {
+      return aiTypes.concat(
+        [for (k in mods.ModContentRegistry.aiTypes.keys()) k]);
+    }
   public function spawnAI(type: String, x: Int, y: Int, ?doAddAI:Bool = true): AI
     {
       var ai = game.createAI(type, x, y);

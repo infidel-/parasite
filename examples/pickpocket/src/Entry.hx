@@ -19,6 +19,8 @@ class Entry
   // shared content ids
   public static inline var SKILL = 'mod-pickpocket-pickpocket';
   public static inline var CIGAR = 'mod-pickpocket-cigar';
+  // Burglar King AI spawn type (also his serialized class registry key)
+  public static inline var AI_BURGLAR = 'mod-pickpocket-burglarKing';
 
   public static function main() {}
 
@@ -37,13 +39,9 @@ class Entry
       });
       parasite.api.registerItem(GoldPlatedCigar);
 
-      // register the Burglar King class into the engine class registry under
-      // its serialized name. the engine reconstructs saved AIs via
-      // Type.resolveClass(__name__) + createEmptyInstance (Loader.initObject),
-      // and mod classes are otherwise invisible to that lookup — without this a
-      // save taken while he is present would throw "Could not resolve class".
-      Reflect.setField(parasite.hxClasses,
-        Type.getClassName(BurglarKingAI), BurglarKingAI);
+      // register the Burglar King as a custom AI type: makes saved instances
+      // resolve on load and lets area.spawnAI(AI_BURGLAR, ...) build him
+      parasite.api.registerAI(AI_BURGLAR, BurglarKingAI);
 
       // inject the Pickpocket area action: wrap updateActionList so our action
       // is appended after the engine builds its list on each HUD refresh.
@@ -88,7 +86,7 @@ class Entry
         return;
       if (Std.string(area.typeID) != 'AREA_CITY_LOW')
         return;
-      if (area.getAIWithType('burglarKing').length > 0)
+      if (area.getAIWithType(AI_BURGLAR).length > 0)
         return;
       if (Std.random(100) >= 5)
         return;
@@ -97,8 +95,6 @@ class Entry
       var loc: Dynamic = area.findUnseenEmptyLocation();
       if (loc.x < 0)
         return;
-      var ai = new BurglarKingAI(game, loc.x, loc.y);
-      game.player.chat.initClues(ai);
-      area.addAI(ai);
+      area.spawnAI(AI_BURGLAR, loc.x, loc.y);
     }
 }

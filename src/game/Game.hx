@@ -900,7 +900,14 @@ class Game extends _SaveObject
         ai = new TeamMemberAI(this, x, y);
       else if (type == 'thug')
         ai = new ThugAI(this, x, y);
-      else throw 'createAI(): AI type [' + type + '] unknown';
+      else
+        {
+          // fall through to mod-registered AI types (api.registerAI)
+          var cls = mods.ModContentRegistry.aiTypes.get(type);
+          if (cls == null)
+            throw 'createAI(): AI type [' + type + '] unknown';
+          ai = Type.createInstance(cls, [this, x, y]);
+        }
       return ai;
     }
 

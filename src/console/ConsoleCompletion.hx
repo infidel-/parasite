@@ -112,7 +112,7 @@ class ConsoleCompletion
             { slot: '<var>', values: setVars, next: [ { slot: '<value>' } ] },
           ] });
           rootChildren.push({ lit: 'spa', next: [
-            { slot: '[ai type]', values: function() return AreaGame.aiTypes },
+            { slot: '[ai type]', values: function() return AreaGame.allAITypes() },
           ] });
           rootChildren.push({ lit: 'spc', next: [
             { slot: '[job type]', values: function() return console.game.jobs.getCivilianJobTypesList() },

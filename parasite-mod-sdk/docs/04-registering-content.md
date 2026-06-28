@@ -44,6 +44,7 @@ typedef ModContentApi = {
   function registerSkill(info: _SkillInfo): Void;
   function registerEvolution(info: _ImprovInfo): Void;
   function registerGoal(info: _GoalInfo): Void;
+  function registerAI(type: String, cls: Class<AI>): Void;
 }
 ```
 
@@ -170,6 +171,51 @@ parasite.api.registerGoal({
 `onReceive`, `onComplete`, `onFailure`, `onEnter`, `aiInit`, `leaveAreaPre`) and
 message/image overrides — see `externs/_GoalInfo.hx`.
 
+### registerAI
+
+Registers a custom AI subclass under a spawn **type string** (prefix-gated like
+every other id). This does two things: injects the class into the engine class
+registry so saved instances resolve on load (the loader rebuilds AIs by class
+name), and records the type so `area.spawnAI(type, x, y)` /
+`game.createAI(type, x, y)` can build it by string.
+
+```haxe
+class MyAI extends ai.HumanAI
+{
+  public function new(g: game.Game, vx: Int, vy: Int)
+    { super(g, vx, vy); init(); initPost(false); }
+
+  override public function init(): Void
+    { super.init(); type = 'mod-mymod-myai'; isAggressive = false; }
+
+  // public dynamic event hooks on ai.AI are real override points:
+  override public function canAttach(): Bool { return false; }
+  override public function onStateChange(): Void { /* ... */ }
+}
+
+class Entry
+{
+  public static function init(parasite: ModRuntime)
+    {
+      parasite.api.registerAI('mod-mymod-myai', MyAI);
+      // later, in an area:
+      parasite.game.area.spawnAI('mod-mymod-myai', x, y);
+    }
+}
+```
+
+Two reconstruction paths matter:
+
+- **Spawn** (`spawnAI`/`createAI`) runs your real constructor.
+- **Save load** runs `Type.createEmptyInstance` (no constructor) then `init()` +
+  `initPost(true)`. So put identity in serialized fields (set in `init()`) and
+  behavior in real override methods — both survive load; constructor-only state
+  does not. See [05-monkey-patching.md](05-monkey-patching.md).
+
+Set the same prefixed type both in `registerAI(...)` and in the instance's
+`type` field (in `init()`) so lookups (`getAIWithType`, the `onAISpawn` event)
+stay consistent. `examples/pickpocket` (the Burglar King) is a full reference.
+
 ## Verifying a registration
 
 Read the derived table back through `hxClasses` to confirm your content landed:
@@ -187,4 +233,5 @@ bad-prefix rejection for each — a useful reference.
 Replacing a built-in item id, changing built-in behavior, and tables not yet
 wrapped (chat, jobs, AI sounds, world areas/regions) are not registration-API
 operations. Use monkey-patching for those — see
-[05-monkey-patching.md](05-monkey-patching.md).
+[05-monkey-patching.md](05-monkey-patching.md). (Custom **AI types** are now
+covered — see `registerAI` above.)

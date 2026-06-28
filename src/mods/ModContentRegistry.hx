@@ -29,6 +29,10 @@ class ModContentRegistry
 
   // mod-registered goals; pushed live into const.Goals.map at registration time
   public static var goals: Array<GoalInfo> = [];
+
+  // mod-registered AI spawn types: type string -> AI subclass; consulted by
+  // game.createAI as a fall-through after the built-in types
+  public static var aiTypes: Map<String, Class<ai.AI>> = [];
 }
 
 // pending/recorded mod trait registration
