@@ -250,6 +250,10 @@ class PlayerArea extends _SaveObject
           name: 'Leave Area',
           energy: 0
         });
+
+      // mod-registered area actions (api.registerAreaAction)
+      for (fn in mods.ModContentRegistry.areaActions)
+        fn(game);
     }
 
 // do a player action

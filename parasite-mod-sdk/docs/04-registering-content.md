@@ -45,6 +45,7 @@ typedef ModContentApi = {
   function registerEvolution(info: _ImprovInfo): Void;
   function registerGoal(info: _GoalInfo): Void;
   function registerAI(type: String, cls: Class<AI>): Void;
+  function registerAreaAction(id: String, fn: Game -> Void): Void;
 }
 ```
 
@@ -215,6 +216,41 @@ Two reconstruction paths matter:
 Set the same prefixed type both in `registerAI(...)` and in the instance's
 `type` field (in `init()`) so lookups (`getAIWithType`, the `onAISpawn` event)
 stay consistent. `examples/pickpocket` (the Burglar King) is a full reference.
+
+### registerAreaAction
+
+Contributes a player **area action** (the numbered actions in the HUD) without
+patching the engine. Your callback runs at the tail of
+`PlayerArea.updateActionList` on every HUD refresh: gate it yourself, then call
+`game.ui.hud.addAction(...)`. The action self-dispatches through its
+`_PlayerAction.f` callback, so no dispatch wiring is needed. The `id` is
+prefix-gated and dedupes last-wins.
+
+```haxe
+class Entry
+{
+  public static function init(parasite: ModRuntime)
+    {
+      parasite.api.registerAreaAction('mod-mymod-action', contribute);
+    }
+
+  static function contribute(game: game.Game): Void
+    {
+      if (Std.string(game.player.state) != 'PLR_STATE_HOST')
+        return; // your own gating
+      game.ui.hud.addAction({
+        id: 'mod-mymod-action',
+        type: 'ACTION_AREA',
+        name: 'Do Thing',
+        energy: 0,
+        isVirtual: true,        // virtual = does not auto-spend the turn
+        f: function() run(game), // the action body
+      });
+    }
+}
+```
+
+`examples/pickpocket` (the Pickpocket action) is a full reference.
 
 ## Verifying a registration
 

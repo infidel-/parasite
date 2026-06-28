@@ -204,6 +204,20 @@ class ModContentApi
         ' (' + name + ')');
     }
 
+// register a callback that contributes player area actions. id must start with
+// mod-<modID>-. invoked at the tail of PlayerArea.updateActionList each HUD
+// refresh; the callback does its own gating and calls game.ui.hud.addAction.
+// replaces prototype-patching updateActionList. last-wins per id.
+  public function registerAreaAction(id: String, fn: game.Game -> Void)
+    {
+      if (!checkPrefix('areaAction', id))
+        return;
+
+      // all checks passed; record for the updateActionList tail loop
+      ModContentRegistry.areaActions.set(id, fn);
+      console.log('[mods] register area action: ' + modID + '/' + id);
+    }
+
 // builds a per-mod api instance; called by ModLoader per import
   public static function forMod(modID: String): ModContentApi
     {

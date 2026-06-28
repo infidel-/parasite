@@ -33,6 +33,10 @@ class ModContentRegistry
   // mod-registered AI spawn types: type string -> AI subclass; consulted by
   // game.createAI as a fall-through after the built-in types
   public static var aiTypes: Map<String, Class<ai.AI>> = [];
+
+  // mod-registered area-action contributors: id -> callback; each is invoked at
+  // the tail of PlayerArea.updateActionList and adds its own action(s)
+  public static var areaActions: Map<String, game.Game -> Void> = [];
 }
 
 // pending/recorded mod trait registration

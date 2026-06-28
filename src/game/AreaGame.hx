@@ -695,7 +695,7 @@ class AreaGame extends _SaveObject
 
 
 // find unseen empty location on map (to spawn stuff)
-  public function findUnseenEmptyLocation(): { x: Int, y: Int }
+  public function findUnseenEmptyLocation(): _Point
     {
       // calculate visible rectangle
       var rect = getVisibleRect();
@@ -745,7 +745,7 @@ class AreaGame extends _SaveObject
 
 
 // find empty location on map (to spawn stuff)
-  public function findEmptyLocation(): { x: Int, y: Int }
+  public function findEmptyLocation(): _Point
     {
       var x = -1;
       var y = -1;
@@ -935,7 +935,7 @@ class AreaGame extends _SaveObject
 
 
 // find empty location on map near xo,yo (to spawn stuff)
-  public function findEmptyLocationNear(xo: Int, yo: Int, radius: Int, ?level: Int = 0): { x: Int, y: Int }
+  public function findEmptyLocationNear(xo: Int, yo: Int, radius: Int, ?level: Int = 0): _Point
     {
       // make a temp list of empty spots in square radius 3
       var tmp = [];

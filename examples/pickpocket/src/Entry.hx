@@ -3,9 +3,9 @@
 // cannot be attached to, vanishes in a gas poof if alerted, teaches the maxed
 // pickpocket skill via chat consult, and carries a smokable gold-plated cigar.
 //
-// the pickpocket action is injected by wrapping PlayerArea.updateActionList
-// (no engine hook exists for area actions yet); it self-dispatches through the
-// _PlayerAction.f callback so PlayerArea.action() needs no patch.
+// the pickpocket action is contributed via api.registerAreaAction; it
+// self-dispatches through the _PlayerAction.f callback so PlayerArea.action()
+// needs no patch.
 package;
 
 import mods.ModRuntime;
@@ -43,18 +43,10 @@ class Entry
       // resolve on load and lets area.spawnAI(AI_BURGLAR, ...) build him
       parasite.api.registerAI(AI_BURGLAR, BurglarKingAI);
 
-      // inject the Pickpocket area action: wrap updateActionList so our action
-      // is appended after the engine builds its list on each HUD refresh.
-      // hxClasses is the raw JS class registry (Dynamic) — prototype patching
-      // has no typed surface, so the class ref stays Dynamic
-      var PlayerArea: Dynamic =
-        Reflect.field(parasite.hxClasses, 'game.PlayerArea');
-      var origUpdate = PlayerArea.prototype.updateActionList;
-      PlayerArea.prototype.updateActionList = function()
-        {
-          origUpdate.call(js.Lib.nativeThis);
-          Pickpocket.injectAction(parasite.game);
-        };
+      // contribute the Pickpocket area action: invoked at the tail of the area
+      // action list each HUD refresh. injectAction does its own gating and adds
+      // the action, which self-dispatches via its _PlayerAction.f callback
+      parasite.api.registerAreaAction('mod-pickpocket-action', Pickpocket.injectAction);
 
       // seed thugs / bums / prostitutes with a chance of the pickpocket skill
       parasite.events.onAISpawn(function(e)
@@ -90,9 +82,7 @@ class Entry
         return;
       if (Std.random(100) >= 5)
         return;
-      // findUnseenEmptyLocation() is typed Dynamic in the extern (engine returns
-      // a bare {x,y} location object) — read its coords directly
-      var loc: Dynamic = area.findUnseenEmptyLocation();
+      var loc = area.findUnseenEmptyLocation();
       if (loc.x < 0)
         return;
       area.spawnAI(AI_BURGLAR, loc.x, loc.y);
