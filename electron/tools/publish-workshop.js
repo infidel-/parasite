@@ -33,7 +33,7 @@ if (args.length < 1 || flags.includes('-h') || flags.includes('--help')) {
     'Options:',
     '  --fields=LIST  restrict update payload to listed fields (content is',
     '                 always uploaded). Valid: title, changeNote, description,',
-    '                 preview, visibility. Default: all available.',
+    '                 preview, tags, visibility. Default: all available.',
     '  -h, --help     show this help and exit',
     '',
     'Manifest fields used:',
@@ -42,6 +42,9 @@ if (args.length < 1 || flags.includes('-h') || flags.includes('--help')) {
     '  preview      -> path (relative to mod dir) to preview image, PNG/JPG',
     '                  <=1MB. If absent, preview.png or preview.jpg in the mod',
     '                  dir is used when present.',
+    '  tags         -> array of Workshop tags. Must match this app\'s',
+    '                  Ready-to-Use Item Tags defined in the Steamworks backend;',
+    '                  invalid tags are rejected at submit. Optional.',
     '',
     'Requirements:',
     '  Steam client running and logged in. App 1920320 must have Workshop',
@@ -66,6 +69,11 @@ if (!fs.existsSync(manifestPath)) {
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 const title = manifest.name || manifest.id || 'Untitled mod';
 const description = manifest.description || null;
+// workshop tags must be pre-defined in Steamworks backend (Ready-to-Use Item
+// Tags) for this app; invalid tags are rejected at submit. empty/missing = skip.
+const tags = Array.isArray(manifest.tags) && manifest.tags.length
+  ? manifest.tags
+  : null;
 const changeNote = 'Published via publish-workshop.js at ' + new Date().toISOString();
 
 let existingItemId = null;
@@ -116,7 +124,7 @@ console.log('[steam] init OK (appid=' + APPID + ')');
   }
 
   // --fields=a,b,c restricts to listed fields. Always includes contentPath.
-  //   valid: title,changeNote,description,preview,visibility
+  //   valid: title,changeNote,description,preview,tags,visibility
   //   default (no flag): all available
   const allow = fieldsArg
     ? new Set(fieldsArg.substr(9).split(',').map(s => s.trim()).filter(Boolean))
@@ -132,6 +140,8 @@ console.log('[steam] init OK (appid=' + APPID + ')');
   if (want('changeNote')) update.changeNote = changeNote;
   if (want('description') && description) update.description = description;
   if (want('preview') && preview) update.previewPath = preview;
+  // SetItemTags replaces the full tag list each call, so always send all of them.
+  if (want('tags') && tags) update.tags = tags;
   if (want('visibility') && isNew) update.visibility = 3;
   console.log('[workshop] updateItem payload:', JSON.stringify(update));
   // post-createItem Steam item state can be flaky for ~10-30s: SubmitItemUpdate
