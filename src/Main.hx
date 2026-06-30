@@ -30,6 +30,13 @@ class Main
       canvas.focus();
 
       game = new Game();
+      // exit-save: flush a forced autosave on any graceful exit (in-game quit,
+      // OS window close, reload). saveWrite is sync IPC so it completes here.
+#if electron
+      Browser.window.addEventListener('beforeunload', function(_) {
+        game.autosave(true);
+      });
+#end
       ai.CommonLogic.game = game;
       ai.DefaultLogic.game = game;
       ai.FollowerLogic.game = game;

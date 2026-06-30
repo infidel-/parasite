@@ -98,6 +98,7 @@ class UI
         UISTATE_PRESETS => new Presets(game),
 #if electron
         UISTATE_MODS => new Mods(game),
+        UISTATE_SAVES => new Saves(game),
 #end
       ];
     }
@@ -373,6 +374,7 @@ class UI
                   _state == UISTATE_ABOUT ||
                   _state == UISTATE_NEWGAME ||
                   _state == UISTATE_MODS ||
+                  _state == UISTATE_SAVES ||
                   _state == UISTATE_SPOON)
                 state = UISTATE_MAINMENU;
               else if (_state == UISTATE_PRESETS)

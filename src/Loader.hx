@@ -139,6 +139,24 @@ class Loader
 #end
     }
 
+// peek slot preview meta from the tiny sidecar (no full save parse).
+// returns null if slot empty / sidecar missing (legacy save) / unreadable.
+  public static function peekMeta(slotID: Int): Null<_SaveMeta>
+    {
+#if electron
+      try {
+        var s = HostBridge.saveReadMeta(slotID);
+        if (s == null)
+          return null;
+        var m: _SaveMeta = Json.parse(s);
+        return m;
+      }
+      catch (e: Dynamic) { return null; }
+#else
+      return null;
+#end
+    }
+
 // get save format version from top-level save object
   static function getFormatVersion(src: Dynamic): Int
     {

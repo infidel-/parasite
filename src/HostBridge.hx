@@ -29,6 +29,11 @@ class HostBridge
   public static function saveRead(slotID: Int): String return h().save.read(slotID);
   public static function saveWrite(slotID: Int, data: String): Void h().save.write(slotID, data);
   public static function saveExists(slotID: Int): Bool return h().save.exists(slotID);
+// save meta sidecar read/write (tiny slot-list preview, file is save<NN>.meta.json)
+  public static function saveReadMeta(slotID: Int): String return h().save.readMeta(slotID);
+  public static function saveWriteMeta(slotID: Int, data: String): Void h().save.writeMeta(slotID, data);
+// delete a slot (removes both the save and its meta sidecar)
+  public static function saveDelete(slotID: Int): Void h().save.delete(slotID);
 
 // console history.json read/write/exists
   public static function consoleHistoryRead(): String return h().consoleHistory.read();

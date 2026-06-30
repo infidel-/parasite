@@ -48,6 +48,8 @@ class Game extends _SaveObject
   public var location(default, null): _LocationType; // player location type - area, region, world
 
   public var turns: Int; // number of turns passed since game start
+  public var lastAutosaveTurn: Int = 0; // turns value at last autosave (throttle)
+  public var saveSlotPending: Int = 1; // slot awaiting the first-save difficulty pick
   public var isInited: Bool; // is the game initialized?
   public var isStarted: Bool; // has the gameplay started?
   public var state: _GameState; // current game state
@@ -345,6 +347,7 @@ class Game extends _SaveObject
             game: this,
             area: area,
           });
+          autosave(); // exit-save safety net (throttled)
           area.leave();
         }
 
@@ -365,6 +368,7 @@ class Game extends _SaveObject
             game: this,
             area: area,
           });
+          autosave(); // exit-save safety net (throttled)
         }
 
       else if (location == LOCATION_REGION)
@@ -523,6 +527,11 @@ class Game extends _SaveObject
     {
       state = GAMESTATE_FINISH;
       var finishText = '';
+
+      // run is over: drop the exit-save so it can't be reloaded post-death
+#if electron
+      HostBridge.saveDelete(AUTOSAVE_SLOT);
+#end
 
       // game lost
       if (p.result == 'lose')
@@ -747,6 +756,8 @@ class Game extends _SaveObject
         }
       if (player.saveDifficulty == UNSET)
         {
+          // remember which slot this save targets; restored after the pick
+          saveSlotPending = slotID;
           ui.event({
             type: UIEVENT_STATE,
             state: UISTATE_DIFFICULTY,
@@ -778,6 +789,30 @@ class Game extends _SaveObject
       else if (player.vars.savesLeft == 1)
         remaining = 'Last save';
       log('Game saved to slot ' + slotID + '. ' + remaining + ' remaining.');
+    }
+
+// reserved autosave slot (exit-save safety net); manual slots are 1..MANUAL_SLOTS
+  public static inline var AUTOSAVE_SLOT = 0;
+  public static inline var MANUAL_SLOTS = 8;
+  static inline var AUTOSAVE_THROTTLE = 20; // min turns between throttled autosaves
+
+// autosave to the reserved slot (area enter/leave, quit). difficulty-independent:
+// bypasses the savesLeft economy entirely so it works even on NOOB. throttled to
+// AUTOSAVE_THROTTLE turns unless force=true (quit). respects the same
+// not-allowed-to-save states as manual save (mission/chat/not-running).
+  public function autosave(force: Bool = false)
+    {
+      if (!isStarted ||
+          state != GAMESTATE_RUNNING ||
+          ui.hud.state == HUD_CHAT ||
+          player.inMissionArea())
+        return;
+      if (!force &&
+          turns - lastAutosaveTurn < AUTOSAVE_THROTTLE)
+        return;
+      Saver.save(this, AUTOSAVE_SLOT);
+      lastAutosaveTurn = turns;
+      log('Autosaved.', COLOR_HINT);
     }
 
 // check if save exists

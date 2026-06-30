@@ -41,6 +41,7 @@ class MainElectron
   static inline var CAP_PROFILE  = 1024 * 1024;
   static inline var CAP_HISTORY  = 256 * 1024;
   static inline var CAP_SAVE     = 32 * 1024 * 1024;
+  static inline var CAP_META     = 64 * 1024;
   static inline var CAP_LOGLINE  = 4 * 1024;
   static inline var CAP_IMAGE_B64 = 16 * 1024 * 1024;
   static inline var CAP_DEBUG_TEXT = 16 * 1024 * 1024;
@@ -124,6 +125,12 @@ class MainElectron
       return 'save' + (slotID < 10 ? '0' : '') + slotID + '.json';
     }
 
+// compose save meta sidecar file name from slot id
+  static function saveMetaFileName(slotID: Int): String
+    {
+      return 'save' + (slotID < 10 ? '0' : '') + slotID + '.meta.json';
+    }
+
 // safe file read returning null on any failure
   static function safeReadFile(path: String): String
     {
@@ -158,6 +165,21 @@ class MainElectron
       catch (e: Dynamic)
         {
           trace('write failed for ' + path + ': ' + e);
+          return false;
+        }
+    }
+
+// safe delete returning true/false; missing file counts as success
+  static function safeDelete(path: String): Bool
+    {
+      try {
+        if (Fs.existsSync(path))
+          Fs.unlinkSync(path);
+        return true;
+      }
+      catch (e: Dynamic)
+        {
+          trace('delete failed for ' + path + ': ' + e);
           return false;
         }
     }
@@ -719,6 +741,32 @@ class MainElectron
           return;
         }
         e.returnValue = safeExists(writablePath(saveFileName(cast slotID)));
+      });
+      // tiny meta sidecar (slot-list preview) read/write
+      IpcMain.on('host:save:readMeta', function(e: Dynamic, slotID: Dynamic) {
+        if (!isValidSlotID(slotID)) {
+          e.returnValue = null;
+          return;
+        }
+        e.returnValue = safeReadFile(writablePath(saveMetaFileName(cast slotID)));
+      });
+      IpcMain.on('host:save:writeMeta', function(e: Dynamic, slotID: Dynamic, data: Dynamic) {
+        if (!isValidSlotID(slotID) || !isValidString(data, CAP_META)) {
+          e.returnValue = false;
+          return;
+        }
+        e.returnValue = safeWriteFile(
+          writablePath(saveMetaFileName(cast slotID)), cast data);
+      });
+      // delete slot: removes both the save and its meta sidecar
+      IpcMain.on('host:save:delete', function(e: Dynamic, slotID: Dynamic) {
+        if (!isValidSlotID(slotID)) {
+          e.returnValue = false;
+          return;
+        }
+        var ok = safeDelete(writablePath(saveFileName(cast slotID)));
+        safeDelete(writablePath(saveMetaFileName(cast slotID)));
+        e.returnValue = ok;
       });
 
       // console history
