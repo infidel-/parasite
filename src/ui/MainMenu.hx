@@ -266,9 +266,11 @@ class MainMenu extends UIWindow
 // handle in-menu keys: arrows move the highlight, Enter activates it
   public override function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
     {
-      if (code == 'ArrowDown')
+      if (code == 'ArrowDown' ||
+          key == 'ArrowDown')
         navMove(1);
-      else if (code == 'ArrowUp')
+      else if (code == 'ArrowUp' ||
+          key == 'ArrowUp')
         navMove(-1);
       else if (key == 'Enter' ||
           key == 'NumpadEnter')
