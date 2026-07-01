@@ -4,12 +4,6 @@ import game.Game;
 import game._Item;
 import _PlayerAction;
 
-typedef ArmorInfo = {
-  var canAttach: Bool;
-  var damage: Int;
-  var needleDeathChance: Int;
-};
-
 class ItemInfo
 {
   public var game: Game;

@@ -48,7 +48,7 @@ class GenExterns
     'Void' => true, 'Dynamic' => true, 'Any' => true, 'Array' => true,
     'Null' => true, 'Map' => true, 'haxe.ds.Map' => true,
     'haxe.ds.StringMap' => true, 'haxe.ds.IntMap' => true, 'Date' => true,
-    'EReg' => true, 'List' => true, 'haxe.ds.List' => true,
+    'EReg' => true, 'List' => true, 'haxe.ds.List' => true, 'Iterator' => true,
   ];
 
   static function main()

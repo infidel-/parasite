@@ -8,7 +8,7 @@ import game.*;
 @:rtti
 class AIData extends _SaveObject
 {
-  var game: Game; // game state link
+  public var game: Game; // game state link
 
   public var id: Int; // unique AI id
   public static var _maxID: Int = 0; // current max ID
@@ -22,7 +22,7 @@ class AIData extends _SaveObject
   public var tileAtlasX: Int; // tile atlas info
   public var tileAtlasY: Int;
   public var name: _AIName; // AI name (can be unique and capitalized)
-  var soundsID: String;
+  public var soundsID: String; // sound set id (e.g. 'civilian')
   public var lang: String; // speech language
 
   public var isMale: Bool; // gender

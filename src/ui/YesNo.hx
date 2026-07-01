@@ -3,7 +3,6 @@
 package ui;
 
 import js.Browser;
-import js.html.DivElement;
 import js.html.Element;
 
 import game.Game;
@@ -73,7 +72,7 @@ class YesNo extends UIWindow
   public override function setParams(obj: Dynamic)
     {
       // trust boundary: event payload is untyped, assembled ad-hoc at call sites
-      var o: { text: String, func: Bool -> Void, ?sub: String, ?danger: Bool, ?kicker: String, ?back: _UIState } = cast obj;
+      var o: _YesNoParams = cast obj;
       func = o.func;
       backState = (o.back != null ? o.back : UISTATE_DEFAULT);
       var danger = (o.danger == true);

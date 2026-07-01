@@ -85,7 +85,7 @@ class Body extends UIWindow
       hostBlock.className = 'body-block';
       hostBlock.style.setProperty('--i', '2');
       hostBlock.innerHTML =
-        '<div class="body-block-title">HOST</div>' +
+        '<div class="body-block-title">HOST <span class="body-cnt" style="visibility:hidden">0</span></div>' +
         '<div class="hud-scroll body-scroll"></div>';
       col2.appendChild(hostBlock);
       hostScroll = hostBlock.querySelector('.body-scroll');
@@ -190,7 +190,7 @@ class Body extends UIWindow
               var label = (a.nameClean != null ? a.nameClean : a.name);
               actBuf.add('<span class="body-act" data-inv="' + idx + '">' + label + '</span>');
               if (a.energy > 0)
-                actBuf.add(' <span class="body-cost">' + a.energy + '⚡</span>');
+                actBuf.add(' <span class="body-cost">' + a.energy + UISvg.hudEnergy() + '</span>');
             }
 
           buf.add('<div class="body-inv-cell">');
@@ -239,81 +239,105 @@ class Body extends UIWindow
     }
 
 // host job + skills + traits + attributes + effects
+// blocks always render; gated data falls back to unknown/- placeholders
   function updateHost()
     {
-      var enabled = (game.player.vars.skillsEnabled);
-      hostBlock.classList.toggle('disabled', !enabled);
-      if (game.player.state != PLR_STATE_HOST ||
-          !enabled ||
-          !game.player.host.isAttrsKnown)
-        {
-          hostScroll.innerHTML = '<div class="body-empty">Unknown</div>';
-          return;
-        }
-      var host = game.player.host;
+      hostBlock.classList.toggle('disabled', !game.player.vars.skillsEnabled);
+      // host is null when floating; attrs/job gated behind brain probe levels
+      var host = (game.player.state == PLR_STATE_HOST ? game.player.host : null);
+      var attrsKnown = (host != null && host.isAttrsKnown);
+      var jobKnown = (host != null && host.isJobKnown);
       var buf = new StringBuf();
 
-      // job line
-      if (host.isJobKnown)
+      // job + income line
+      buf.add('<div class="body-sub-h">JOB</div>');
+      if (jobKnown)
         buf.add('<div class="body-host-jobline">' + UISvg.bodyJob() +
           '<span class="body-host-job">' + host.job + '</span>' +
           '<span class="gray">&middot; income ' + host.income + '</span></div>');
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
       // host skills (hidden animal attack skill skipped)
-      var i = 0;
-      for (skill in host.skills.sorted())
+      buf.add('<div class="body-sub-h body-sub-h-gap">SKILLS</div>');
+      if (attrsKnown)
         {
-          if (skill.info.id == SKILL_ATTACK)
-            continue;
-          buf.add(skillRow(skill, false, i));
-          i++;
+          var i = 0;
+          for (skill in host.skills.sorted())
+            {
+              if (skill.info.id == SKILL_ATTACK)
+                continue;
+              buf.add(skillRow(skill, false, i));
+              i++;
+            }
+          if (i == 0)
+            buf.add('<div class="body-empty">none</div>');
         }
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
       // traits panel (alphabetical)
-      if (host.traits.length > 0)
+      buf.add('<div class="body-sub-h body-sub-h-gap">TRAITS</div>');
+      if (attrsKnown)
         {
-          var infos = [];
-          for (t in host.traits)
-            infos.push(TraitsConst.getInfo(t));
-          infos.sort(function(a, b) {
-            var an = a.name.toLowerCase();
-            var bn = b.name.toLowerCase();
-            return (an < bn ? -1 : (an > bn ? 1 : 0));
-          });
-          buf.add('<div class="body-host-panel">');
-          for (info in infos)
-            buf.add('<div class="body-trait">' + UISvg.bodyTrait() +
-              '<div><div class="body-trait-name">' + info.name + '</div>' +
-              '<div class="body-trait-note">' + info.note + '</div></div></div>');
-          buf.add('</div>');
+          if (host.traits.length > 0)
+            {
+              var infos = [];
+              for (t in host.traits)
+                infos.push(TraitsConst.getInfo(t));
+              infos.sort(function(a, b) {
+                var an = a.name.toLowerCase();
+                var bn = b.name.toLowerCase();
+                return (an < bn ? -1 : (an > bn ? 1 : 0));
+              });
+              buf.add('<div class="body-host-panel">');
+              for (info in infos)
+                buf.add('<div class="body-trait">' + UISvg.bodyTrait() +
+                  '<div><div class="body-trait-name">' + info.name + '</div>' +
+                  '<div class="body-trait-note">' + info.note + '</div></div></div>');
+              buf.add('</div>');
+            }
+          else
+            buf.add('<div class="body-empty">none</div>');
         }
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
-      // attribute tiles
+      // attribute tiles (always shown; '-' when not probed)
+      buf.add('<div class="body-sub-h body-sub-h-gap">ATTRIBUTES</div>');
       buf.add('<div class="body-attr-grid">');
-      buf.add(attrTile('str', 'STR', UISvg.attrStr(), host.strength));
-      buf.add(attrTile('con', 'CON', UISvg.attrCon(), host.constitution));
-      buf.add(attrTile('int', 'INT', UISvg.attrInt(), host.intellect));
-      buf.add(attrTile('psy', 'PSY', UISvg.attrPsy(), host.psyche));
+      buf.add(attrTile('str', 'STR', UISvg.attrStr(), (host != null ? host.strength : 0), attrsKnown));
+      buf.add(attrTile('con', 'CON', UISvg.attrCon(), (host != null ? host.constitution : 0), attrsKnown));
+      buf.add(attrTile('int', 'INT', UISvg.attrInt(), (host != null ? host.intellect : 0), attrsKnown));
+      buf.add(attrTile('psy', 'PSY', UISvg.attrPsy(), (host != null ? host.psyche : 0), attrsKnown));
       buf.add('</div>');
 
       // effects panel
-      var effects = new Array<Effect>();
-      for (effect in host.effects)
-        if (!effect.isHidden)
-          effects.push(effect);
-      if (effects.length > 0)
+      buf.add('<div class="body-eff-h body-sub-h-gap">EFFECTS</div>');
+      if (attrsKnown)
         {
-          effects.sort(function(a, b) {
-            return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
-          });
-          buf.add('<div class="body-host-panel"><div class="body-eff-h">Effects</div>');
-          for (effect in effects)
-            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
-              (effect.isTimer ? '<span class="body-eff-t">' +
-                UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
-              '</div>');
-          buf.add('</div>');
+          var effects = new Array<Effect>();
+          for (effect in host.effects)
+            if (!effect.isHidden)
+              effects.push(effect);
+          if (effects.length > 0)
+            {
+              effects.sort(function(a, b) {
+                return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+              });
+              buf.add('<div class="body-host-panel">');
+              for (effect in effects)
+                buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+                  (effect.isTimer ? '<span class="body-eff-t">' +
+                    UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
+                  '</div>');
+              buf.add('</div>');
+            }
+          else
+            buf.add('<div class="body-empty">none</div>');
         }
+      else
+        buf.add('<div class="body-empty">unknown</div>');
 
       hostScroll.innerHTML = buf.toString();
     }
@@ -338,16 +362,18 @@ class Body extends UIWindow
     }
 
 // one attribute tile: filled glyph + value + label + 10-segment bar
-  function attrTile(mod: String, label: String, ico: String, v: Int): String
+// known=false renders '-' value with an empty bar (not yet brain-probed)
+  function attrTile(mod: String, label: String, ico: String, v: Int, known: Bool = true): String
     {
       return '<div class="body-atile ' + mod + '">' + ico +
-        '<div class="body-atile-head"><span class="body-atile-v">' + v + '</span>' +
+        '<div class="body-atile-head"><span class="body-atile-v">' + (known ? '' + v : '-') + '</span>' +
         '<span class="body-atile-k">' + label + '</span></div>' +
-        '<span class="body-atile-bar" style="--v:' + v + '"><span class="fill"></span></span></div>';
+        '<span class="body-atile-bar" style="--v:' + (known ? v : 0) + '"><span class="fill"></span></span></div>';
     }
 
 // features: grown organs (active) + available/growing organs (grow actions)
-  function updateFeatures()
+// reform=true replays the staggered card settle (used when switching grow target)
+  function updateFeatures(?reform: Bool = false)
     {
       listOrgansActions = [];
       var disabled = (game.player.state != PLR_STATE_HOST ||
@@ -364,45 +390,53 @@ class Body extends UIWindow
       var buf = new StringBuf();
       var i = 0;
 
-      // grown (active) features
-      var hasActive = false;
+      // grown + in-progress organs both occupy body slots -> shown together up top
+      var notRegion = (game.location != LOCATION_REGION);
+      var hasFeature = false;
       for (organ in host.organs)
         {
-          if (!organ.isActive)
-            continue;
-          buf.add(activeCard(game.player.evolutionManager.getImprov(organ.id), organ, i));
+          var imp = game.player.evolutionManager.getImprov(organ.id);
+          if (organ.isActive)
+            buf.add(activeCard(imp, organ, i));
+          // in-progress (currently growing or half-grown); resume needs no free slot
+          else
+            buf.add(availCard(imp, organ,
+              organ.id == host.organs.getCurrentID(), notRegion, i));
           i++;
-          hasActive = true;
+          hasFeature = true;
         }
-      if (!hasActive)
+      if (!hasFeature)
         buf.add('<div class="body-empty">no body features</div>');
 
-      // available features (grow actions); region mode / full slots disable growing
+      // available features not yet started; a free slot is required to begin.
+      // a 0-gp in-progress organ counts as free (replacing it prunes it on switch)
       buf.add('<div class="body-sub-h body-sub-h-gap">AVAILABLE FEATURES</div>');
-      var canGrow = !(game.location == LOCATION_REGION ||
-        host.organs.length() >= host.maxOrgans);
-      var hasAvail = false;
-      for (imp in game.player.evolutionManager)
+      var cur = host.organs.getCurrentID();
+      var freeable = (cur != null && host.organs.get(cur).gp == 0);
+      if (host.organs.length() >= host.maxOrgans && !freeable)
+        buf.add('<div class="body-empty">all slots taken</div>');
+      else
         {
-          // not available yet or has no organ
-          if (imp.level == 0 || imp.info.organ == null)
-            continue;
-          // already completed
-          if (host.organs.getActive(imp.info.id) != null)
-            continue;
-          var organ = host.organs.get(imp.info.id); // in-progress (not yet active) if non-null
-          // only the single currently-grown organ shows GROWING; others are re-selectable
-          var isNow = (organ != null
-            && !organ.isActive
-            && imp.info.id == host.organs.getCurrentID());
-          buf.add(availCard(imp, organ, isNow, canGrow, i));
-          i++;
-          hasAvail = true;
+          var hasAvail = false;
+          for (imp in game.player.evolutionManager)
+            {
+              // not available yet or has no organ
+              if (imp.level == 0 || imp.info.organ == null)
+                continue;
+              // already grown or in progress (shown above)
+              if (host.organs.get(imp.info.id) != null)
+                continue;
+              buf.add(availCard(imp, null, false, notRegion, i));
+              i++;
+              hasAvail = true;
+            }
+          if (!hasAvail)
+            buf.add('<div class="body-empty">No features available</div>');
         }
-      if (!hasAvail)
-        buf.add('<div class="body-empty">No features available</div>');
 
       featScroll.innerHTML = buf.toString();
+      // replay the cascade only on a grow-target switch (open uses .body-intro)
+      featScroll.classList.toggle('body-feat-reform', reform);
     }
 
 // grown feature card: thumbnail + name/level + note + level-note (+ timeout)
@@ -514,8 +548,8 @@ class Body extends UIWindow
               {
                 game.scene.sounds.play('click-action');
                 game.player.host.organs.action('set.' + id);
-                // refresh only the parts that change (no full-window re-animation)
-                updateFeatures();
+                // refresh the changed parts; reform replays the feature cascade
+                updateFeatures(true);
                 updateStats();
                 game.ui.hud.update();
               }
@@ -551,7 +585,7 @@ class Body extends UIWindow
           if (a == null)
             return;
           game.player.host.organs.action(a.id);
-          updateFeatures();
+          updateFeatures(true);
           updateStats();
           game.ui.hud.update();
         }

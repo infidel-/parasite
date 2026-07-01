@@ -28,10 +28,10 @@ class BurglarKingAI extends HumanAI
   override public function init(): Void
     {
       super.init();
-      type = 'burglarKing';
+      type = Entry.AI_BURGLAR;
       isMale = true;
       isAggressive = false;
-      untyped this.soundsID = 'civilian';
+      soundsID = 'civilian';
       name.unknown = 'dapper stranger';
       name.unknownCapped = 'Dapper stranger';
       name.real = name.realCapped = 'Burglar King';
@@ -52,10 +52,8 @@ class BurglarKingAI extends HumanAI
     }
 
 // if anything ever drives him to alert, he disappears in a puff of gas.
-// not marked override: the engine declares onStateChange as a dynamic hook the
-// SDK extern does not surface, so we define it fresh — at JS load it lands on
-// our prototype and the engine dispatches into it
-  public function onStateChange(): Void
+// onStateChange is a public dynamic event hook on ai.AI — override it directly
+  override public function onStateChange(): Void
     {
       if (Std.string(state) != 'AI_STATE_ALERT')
         return;
@@ -64,18 +62,12 @@ class BurglarKingAI extends HumanAI
 
 // gas-poof exit: spawn drifting clouds where he stood, play the gas sound,
 // then remove him from the area. removal is deferred a tick so it does not
-// reenter the in-progress setState() that triggered this. `game` is a live
-// engine field not surfaced by the extern — reach it through a cast
+// reenter the in-progress setState() that triggered this
   function vanish(): Void
     {
-      var g: game.Game = (this : Dynamic).game;
-      var scene = g.scene;
-      var bx = x;
-      var by = y;
       for (i in 0...6)
-        new ParticlePoof(scene, bx, by, i);
-      scene.sounds.play('action-gas', ({ x: bx, y: by } : _SoundOptions));
-      var self = this;
-      js.Browser.window.setTimeout(function() g.area.removeAI(self), 10);
+        new ParticlePoof(game.scene, x, y, i);
+      game.scene.sounds.play('action-gas', { x: x, y: y });
+      js.Browser.window.setTimeout(function() game.area.removeAI(this), 10);
     }
 }

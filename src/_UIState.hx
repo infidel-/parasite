@@ -26,4 +26,5 @@ enum abstract _UIState(String) to String from String
   var UISTATE_YESNO = 'UISTATE_YESNO'; // yes/no dialog window
   var UISTATE_PRESETS = 'UISTATE_PRESETS'; // presets window
   var UISTATE_MODS = 'UISTATE_MODS'; // mods management window
+  var UISTATE_SAVES = 'UISTATE_SAVES'; // save/load slot picker window
 }

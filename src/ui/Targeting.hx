@@ -262,15 +262,12 @@ class Targeting
       if (!isTargetNear(target))
         return false;
 
+      // any known melee weapon in inventory works
       if (game.playerArea.getKnownMeleeWeapon() != null)
         return true;
 
-      // allow melee attack when currently using fists
-      var weaponInfo = game.player.host.getCurrentWeaponItemInfo();
-      if (weaponInfo.id == 'fists')
-        return true;
-
-      return false;
+      // or the current weapon is melee (fists, animal attack, equipped melee)
+      return !game.playerArea.getCurrentWeapon().isRanged;
     }
 
 // build a list of visible attack targets

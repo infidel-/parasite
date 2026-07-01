@@ -590,7 +590,7 @@ class Console
         {
           log('spa [ai type] - spawn AI');
           log('spa - show AI types');
-          log('AI types: ' + AreaGame.aiTypes.join(', '));
+          log('AI types: ' + AreaGame.allAITypes().join(', '));
           return;
         }
       if (game.location != LOCATION_AREA)

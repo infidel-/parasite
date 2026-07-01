@@ -3,7 +3,9 @@
 package game;
 
 import const.WorldConst;
+import const.NameConst;
 import map.Image;
+import map.Terrain;
 import region.*;
 import _AreaType;
 import tiles.Default;
@@ -300,6 +302,223 @@ class RegionGame extends _SaveObject
         }
 
       ensureHighCityArea();
+
+      // name all areas once all area types are finalized
+      assignAreaNames();
+    }
+
+// name all areas: terrain-themed ground + corp HQ names, then city districts
+  public function assignAreaNames()
+    {
+      // name contiguous forest/hill ground blobs once (one shared name per blob)
+      var seen: Map<Int, Bool> = [];
+      for (a in _list)
+        {
+          if (a.typeID != AREA_GROUND ||
+              a.x < 0 ||
+              seen[a.id] == true)
+            continue;
+          var band = Terrain.bandAtArea(mapSeed, a.x, a.y);
+          // plains ground keeps the generic "Uninhabited area"
+          if (band == TERRAIN_PLAINS)
+            {
+              seen[a.id] = true;
+              continue;
+            }
+          // forest (e.g. "Black Forest") / hill (e.g. "Granite Ridge")
+          var blob = floodGroundBlob(a, band, seen);
+          var name = (band == TERRAIN_FOREST
+            ? NameConst.generate('%forestName1% %forestSuffix1%')
+            : NameConst.generate('%rock1% %hillSuffix1%'));
+          for (b in blob)
+            b.name = name;
+        }
+
+      // corp HQ company names
+      for (a in _list)
+        if (a.typeID == AREA_CORP)
+          a.name = NameConst.generate('%corpA1% %corpB1%');
+
+      assignDistricts();
+    }
+
+// collect contiguous AREA_GROUND tiles sharing one terrain band (4-connectivity)
+// ponytail: one name per contiguous component; no max-size split for huge blobs
+  function floodGroundBlob(start: AreaGame, band: _TerrainBand,
+      seen: Map<Int, Bool>): Array<AreaGame>
+    {
+      var blob = [];
+      var stack = [ start ];
+      seen[start.id] = true;
+      while (stack.length > 0)
+        {
+          var a = stack.pop();
+          blob.push(a);
+          for (dir in 0...4)
+            {
+              var xx = a.x;
+              var yy = a.y;
+              switch (dir)
+                {
+                  case 0: xx--;
+                  case 1: xx++;
+                  case 2: yy--;
+                  case 3: yy++;
+                }
+              var n = getXY(xx, yy);
+              if (n == null ||
+                  seen[n.id] == true ||
+                  n.typeID != AREA_GROUND)
+                continue;
+              if (Terrain.bandAtArea(mapSeed, n.x, n.y) != band)
+                continue;
+              seen[n.id] = true;
+              stack.push(n);
+            }
+        }
+      return blob;
+    }
+
+// cluster city areas into districts with numbered sectors (terrain-slanted names)
+// ponytail: nearest-seed Voronoi grouping; upgrade to flood-fill if districts
+// must be strictly contiguous
+  function assignDistricts()
+    {
+      // collect city areas
+      var cityAreas: Array<AreaGame> = [];
+      for (a in _list)
+        if (isCityArea(a))
+          cityAreas.push(a);
+      if (cityAreas.length == 0)
+        return;
+
+      // one district per ~8 city areas, capped by total available unique names
+      var maxNames = NameConst.districtNames.length +
+        NameConst.districtNamesForest.length +
+        NameConst.districtNamesHills.length +
+        NameConst.districtNamesSlum.length;
+      var n = Std.int(cityAreas.length / 8);
+      if (n < 1)
+        n = 1;
+      if (n > maxNames)
+        n = maxNames;
+
+      // pick n unique seed areas (shuffled copy)
+      var seeds = cityAreas.copy();
+      for (i in 0...seeds.length)
+        {
+          var j = Std.random(seeds.length);
+          var tmp = seeds[i];
+          seeds[i] = seeds[j];
+          seeds[j] = tmp;
+        }
+      seeds = seeds.slice(0, n);
+
+      // assign each city area to nearest seed; collect district members
+      var members: Array<Array<AreaGame>> = [];
+      for (i in 0...n)
+        members[i] = [];
+      for (a in cityAreas)
+        {
+          var best = 0;
+          var bestDist = 0x7fffffff;
+          for (i in 0...n)
+            {
+              var d = Std.int(Math.abs(a.x - seeds[i].x) +
+                Math.abs(a.y - seeds[i].y));
+              if (d < bestDist)
+                {
+                  bestDist = d;
+                  best = i;
+                }
+            }
+          members[best].push(a);
+        }
+
+      // name each district (crime takes precedence over terrain), unique region-wide
+      var used: Map<String, Bool> = [];
+      for (i in 0...n)
+        {
+          // count high-crime members
+          var crimeCount = 0;
+          for (a in members[i])
+            if (a.highCrime)
+              crimeCount++;
+
+          // crime-ridden district (>= ~1/3 high-crime members) -> slum names
+          // ponytail: 1/3 threshold, tune if too many/few slums
+          var pool = NameConst.districtNames;
+          if (crimeCount * 3 >= members[i].length)
+            pool = NameConst.districtNamesSlum;
+          else switch (Terrain.bandAtArea(mapSeed, seeds[i].x, seeds[i].y))
+            {
+              case TERRAIN_FOREST:
+                pool = NameConst.districtNamesForest;
+              case TERRAIN_MOUNTAIN:
+                pool = NameConst.districtNamesHills;
+              case TERRAIN_PLAINS:
+            }
+          var name = pickName(pool, used);
+          for (a in members[i])
+            a.districtName = name;
+        }
+
+      // number sectors within each district (stable order: y then x)
+      for (i in 0...n)
+        {
+          members[i].sort(function(p, q) {
+            if (p.y != q.y)
+              return p.y - q.y;
+            return p.x - q.x;
+          });
+          var sector = 1;
+          for (a in members[i])
+            {
+              a.districtSector = sector;
+              sector++;
+            }
+        }
+    }
+
+// pick an unused name from a pool, falling back to the default pool, then a repeat
+  function pickName(pool: Array<String>, used: Map<String, Bool>): String
+    {
+      var name = pickUnused(pool, used);
+      if (name == null)
+        name = pickUnused(NameConst.districtNames, used);
+      if (name == null) // all pools exhausted (huge city) - allow a repeat
+        name = pool[Std.random(pool.length)];
+      used[name] = true;
+      return name;
+    }
+
+// return one random unused name from a pool, or null if all used
+  function pickUnused(pool: Array<String>, used: Map<String, Bool>): String
+    {
+      var free = [];
+      for (s in pool)
+        if (used[s] != true)
+          free.push(s);
+      if (free.length == 0)
+        return null;
+      return free[Std.random(free.length)];
+    }
+
+// whether this area is a named-district city area
+  inline function isCityArea(a: AreaGame): Bool
+    {
+      return a.typeID == AREA_CITY_LOW ||
+        a.typeID == AREA_CITY_MEDIUM ||
+        a.typeID == AREA_CITY_HIGH;
+    }
+
+// whether any city area lacks a district name (old saves backfill)
+  public function needsAreaNames(): Bool
+    {
+      for (a in _list)
+        if (isCityArea(a) && a.districtName == null)
+          return true;
+      return false;
     }
 
 // add a few small connected downtown clusters

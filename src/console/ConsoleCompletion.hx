@@ -2,6 +2,7 @@
 package console;
 
 import mods.ModRegistry;
+import game.AreaGame;
 
 // one grammar node: either a literal token (lit) or a value slot (slot).
 // next = alternatives for the following token position.
@@ -60,6 +61,14 @@ class ConsoleCompletion
             out.push(Goal.displayID(g));
           return out;
         };
+      // settable game variable names for `set <var>` (canonical, no short aliases)
+      var setVars = function() return [
+        'area.alertness',
+        'host.energy', 'host.maxEnergy', 'host.health', 'host.maxHealth',
+        'group.knownCount', 'group.priority',
+        'player.habitats', 'player.health', 'player.godmode', 'player.invisible', 'player.los',
+        'team.distance', 'team.level', 'team.size', 'team.timeout', 'team.timer',
+      ];
 
       var debugSubs: Array<CompNode> = [
         { lit: 'renderstats' },
@@ -98,6 +107,15 @@ class ConsoleCompletion
             { lit: 'skill', next: [ { slot: '[skill]', values: skill, next: [ { slot: '[amount]' } ] } ] },
             { lit: 'trait', next: [ { slot: '[trait]', values: trait } ] },
             { lit: 'evolution', next: [ { slot: '[name]', values: improv, next: [ { slot: '[level]' } ] } ] },
+          ] });
+          rootChildren.push({ lit: 'set', next: [
+            { slot: '<var>', values: setVars, next: [ { slot: '<value>' } ] },
+          ] });
+          rootChildren.push({ lit: 'spa', next: [
+            { slot: '[ai type]', values: function() return AreaGame.allAITypes() },
+          ] });
+          rootChildren.push({ lit: 'spc', next: [
+            { slot: '[job type]', values: function() return console.game.jobs.getCivilianJobTypesList() },
           ] });
           rootChildren.push({ lit: 'go', next: [
             { lit: 'area', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },

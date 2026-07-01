@@ -397,6 +397,10 @@ hr {
   border-left: 0;
   border-top: 0;
 }
+/* region tip: wider cap so long district names (e.g. "Garment District - Sec. 12") fit */
+.beam-tip.region-tip {
+  max-width: min(48vw, 46ch);
+}
 .region-tip-head {
   display: flex;
   align-items: baseline;
@@ -878,6 +882,35 @@ hr {
   font-size: calc(var(--text-font-size) * 1.2);
   text-transform: uppercase;
   color: var(--text);
+  /* fast ease into the motion-blur smear (no hard snap), eased back out for the decode */
+  transition: filter 0.13s ease, opacity 0.13s ease, letter-spacing 0.13s ease, transform 0.13s ease;
+}
+/* fast region travel: name smears (motion blur) while moving, then decodes on stop */
+#hud-topbar .hud-loc-name.loc-blur {
+  filter: blur(4px);
+  opacity: 0.4;
+  letter-spacing: 0.32em;
+  transform: skewX(-9deg) scaleX(1.05);
+  transform-origin: left center;
+}
+/* area/sector portion of the name tints with alertness (district stays neutral) */
+#hud-topbar .hud-loc-name .loc-area {
+  transition: color 0.35s ease;
+}
+/* high alert: subtle breathing glow on the area/sector label */
+@keyframes hud-loc-alert-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 0 rgba(224, 89, 79, 0);
+    opacity: 1;
+  }
+  50% {
+    text-shadow: 0 0 7px rgba(224, 89, 79, 0.55);
+    opacity: 0.82;
+  }
+}
+#hud-topbar .hud-loc-name .loc-area.alert-red {
+  animation: hud-loc-alert-pulse 1.7s ease-in-out infinite;
 }
 #hud-topbar .hud-loc-coords {
   font-size: calc(var(--text-font-size) * 0.7);
@@ -999,7 +1032,8 @@ hr {
   top: 78px;
   left: 26px;
   width: fit-content;
-  max-width: 760px;
+  /* grow horizontally with long lines, bounded by the window edge */
+  max-width: calc(100vw - 52px);
   padding: 8px 11px;
   background-color: var(--hud-panel);
 }
@@ -1775,11 +1809,11 @@ hr {
   font-size: calc(var(--text-font-size) * 1.05);
   transition: color 0.12s, text-shadow 0.12s;
 }
-.hud-coin {
+.hud-energy {
   width: 20px;
   height: 20px;
 }
-.hud-coin path {
+.hud-energy path {
   fill: #6fb3ec;
 }
 /* cost energizes on hover: number glows, pops once, bolt crackles alive */
@@ -1788,7 +1822,7 @@ hr {
   text-shadow: 0 0 8px rgba(95, 160, 236, 0.6);
   animation: hud-cost-pop 0.3s ease-out 1;
 }
-.hud-act:hover .hud-coin path {
+.hud-act:hover .hud-energy path {
   fill: #8fc6f4;
 }
 @keyframes hud-cost-pop {
@@ -1818,16 +1852,24 @@ hr {
     filter: brightness(1.25) drop-shadow(0 0 3px currentColor);
   }
 }
-.hud-act:hover .hud-coin {
+.hud-act:hover .hud-energy {
   animation: hud-bolt-crackle 1.5s linear infinite;
 }
-.hud-act-help {
+.hud-act-hint {
+  padding: 4px 20px;
+  color: var(--dim);
+  font-size: calc(var(--text-font-size) * 0.95);
   cursor: default;
+  white-space: nowrap;
 }
-.hud-act-help:hover::before {
+.hud-act-hint b {
+  font-weight: normal;
+  color: #c3c6ce;
+}
+.hud-act-hint:hover::before {
   opacity: 0;
 }
-.hud-act-help:hover {
+.hud-act-hint:hover {
   box-shadow: none;
 }
 .hud-act-none {
@@ -4581,7 +4623,7 @@ fieldset {
   content: "";
   position: absolute;
   left: -25px;
-  top: 12px;
+  top: 15px;
   width: 22px;
   height: 2px;
   background: linear-gradient(90deg, rgba(247,175,70,.55), rgba(247,175,70,.12));
@@ -4592,7 +4634,7 @@ fieldset {
 /* node: solid = known, hollow + ring = leads, crosshatch = redacted */
 .timeline-node {
   position: absolute;
-  left: -32px;
+  left: -34px;
   top: 6px;
   width: 15px;
   height: 15px;
@@ -4704,6 +4746,77 @@ fieldset {
   border-radius: 6px;
   padding: 2px 14px;
   opacity: .7;
+}
+/* anonymous REDACTED placeholder block: a sealed gap, no amber, emptier than a SEALED card */
+.redacted-block .timeline-card {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(107,86,88,.4);
+  border-left-color: var(--timeline-redact);
+  background:
+    repeating-linear-gradient(45deg, rgba(58,46,47,.5) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #100c0d, #090707);
+}
+.redacted-block .timeline-card::before {
+  background: linear-gradient(90deg, transparent, rgba(107,86,88,.35), transparent);
+}
+/* brown connector elbow, like a redacted event */
+.redacted-block.timeline-event::before {
+  background: linear-gradient(90deg, rgba(107,86,88,.6), transparent);
+}
+/* brown crosshatch node, no amber glow */
+.redacted-block .timeline-node {
+  border-color: var(--timeline-redact);
+  box-shadow: 0 0 0 3px #08090e;
+}
+.redacted-block .timeline-node::before {
+  opacity: 1;
+  background: repeating-linear-gradient(45deg, #3a2e2f 0 2px, transparent 2px 4px);
+}
+/* stamp is the focal element, centered over the empty body */
+.redacted-block .timeline-stamp {
+  position: relative;
+  transform: rotate(-4deg);
+  z-index: 1;
+}
+/* light band reading the redacted word + frame, left edge -> right edge, on hover */
+.redacted-block .timeline-stamp::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 6px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: linear-gradient(90deg, transparent 38%, rgba(247,190,110,.8) 50%, transparent 62%);
+  opacity: 0;
+}
+.redacted-block:hover .timeline-stamp::after {
+  animation: redacted-scan .8s ease;
+}
+@keyframes redacted-scan {
+  0% { transform: translateX(-50%); opacity: 1; }
+  100% { transform: translateX(50%); opacity: 0; }
+}
+.redacted-block .timeline-fx::before,
+.redacted-block .timeline-fx::after {
+  border-color: rgba(107,86,88,.32);
+}
+/* faint static filler bars behind the stamp (sweep lives on the stamp now) */
+.redacted-block-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  opacity: .28;
+  pointer-events: none;
+}
+.redacted-block-bars .timeline-bar::after {
+  display: none;
 }
 .timeline-ehead {
   display: flex;
@@ -7370,7 +7483,7 @@ select {
   gap: 1px;
 }
 .body-inv-item {
-  color: var(--text);
+  color: var(--text-color-inventory-item);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7400,7 +7513,8 @@ select {
   text-decoration: underline;
   transform: translateY(1px);
 }
-.body-cost { color: var(--blue-gray); font-size: 84%; }
+.body-cost { display: inline-flex; align-items: center; gap: 1px; color: var(--blue-gray); font-size: 84%; }
+.body-cost .hud-energy { width: 1.3em; height: 1.3em; }
 
 /* knowledge sub-heads (PARASITE col-head, AVAILABLE FEATURES divider) */
 .body-sub-h {
@@ -7780,6 +7894,34 @@ select {
 }
 @media (prefers-reduced-motion: reduce) {
   .body-organ.now::before, .body-organ.now .body-organ-bar .fill::after { animation: none; }
+}
+
+/* grow-target switch: feature cards settle back in (staggered), the new target ignites cyan */
+@keyframes body-feat-settle {
+  from { opacity: 0; transform: translateY(7px) scale(.985); filter: brightness(1.35); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+.body-feat-reform .body-organ {
+  animation: body-feat-settle .32s cubic-bezier(.4,1,.5,1) backwards;
+  animation-delay: calc(var(--i,0) * 36ms);
+}
+@keyframes body-feat-ignite {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.body-feat-reform .body-organ.now::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  pointer-events: none;
+  background: radial-gradient(125% 85% at 50% 0%, rgba(115,243,255,.36), rgba(115,243,255,0) 70%);
+  animation: body-feat-ignite .68s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .body-feat-reform .body-organ { animation: none; }
+  .body-feat-reform .body-organ.now::after { animation: none; opacity: 0; }
 }
 
 /* hotkey chip — gold, shared by inventory (C-n) and growable features (S-n) */
@@ -8994,6 +9136,114 @@ input[type="radio"]:focus {
 }
 @media (prefers-reduced-motion: reduce) {
   #window-mods, .mods-status.flip {
+    animation: none;
+  }
+}
+
+/* ===== SAVES window — slot picker (reuses .mods-* rows, warm amber accent) ===== */
+#window-saves {
+  --win-accent: #e0a85f;
+  --win-glow: #ffcf94;
+  pointer-events: all;
+  position: relative;
+  width: min(680px, 50%);
+  height: auto;
+  max-height: 84%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 26px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--win-frame);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E"),
+    radial-gradient(70% 220px at 50% 0%, color-mix(in srgb, var(--win-accent) 12%, transparent), transparent 70%),
+    radial-gradient(120% 120% at 50% 50%, transparent 58%, rgba(0,0,0,.24) 100%),
+    linear-gradient(rgba(20,16,11,.95), rgba(11,8,5,.96));
+  box-shadow: 0 0 0 1px rgba(14,10,6,.5) inset, 0 18px 60px rgba(0,0,0,.62);
+}
+.window-fade-in #window-saves {
+  animation: win-pop .42s cubic-bezier(.34,1.4,.64,1);
+}
+#window-saves::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--win-accent) 55%, transparent), transparent);
+}
+#window-saves .win-x {
+  top: 16px;
+  right: 16px;
+}
+#window-saves .win-x:hover {
+  color: var(--win-accent);
+}
+#window-saves .win-x:hover svg {
+  filter: drop-shadow(0 0 6px var(--win-glow));
+}
+/* slot rows are clickable (unlike mod rows) */
+.saves-row {
+  cursor: var(--ui-cursor);
+  padding-left: 6px;
+  padding-right: 8px;
+  border-radius: 9px;
+  transition: background .15s, box-shadow .15s, transform .1s;
+}
+.saves-row:hover {
+  background: color-mix(in srgb, var(--win-accent) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--win-accent) 30%, transparent);
+}
+.saves-row:active, .saves-row.pressed {
+  transform: scale(.99);
+  background: color-mix(in srgb, var(--win-accent) 14%, transparent);
+}
+/* leading slot number / clock badge */
+.saves-num {
+  flex: none;
+  width: 2.2em;
+  height: 2.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.95);
+  letter-spacing: .06em;
+  color: var(--win-glow);
+  border: 1px solid color-mix(in srgb, var(--win-accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--win-accent) 8%, transparent);
+}
+.saves-num svg {
+  width: 16px;
+  height: 16px;
+}
+/* empty manual slot reads as a faint placeholder */
+.saves-row.saves-empty {
+  opacity: .72;
+}
+.saves-row.saves-empty .saves-num {
+  color: var(--blue-gray);
+  border-style: dashed;
+  border-color: var(--border);
+  background: rgba(255,255,255,.015);
+}
+.saves-row.saves-empty .mods-name {
+  color: var(--blue-gray);
+}
+/* autosave row: subtle living glow so it feels active */
+.saves-row.saves-auto .saves-num {
+  animation: saves-breathe 3.2s ease-in-out infinite;
+}
+@keyframes saves-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 14px -3px var(--win-glow); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #window-saves, .saves-row.saves-auto .saves-num {
     animation: none;
   }
 }

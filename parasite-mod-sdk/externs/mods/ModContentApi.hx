@@ -5,6 +5,8 @@
 package mods;
 
 import const.PediaConst._PediaGroupInfo;
+import ai.AI;
+import game.Game;
 
 typedef ModContentApi = {
   // register a custom item class; survives ItemsConst.init re-runs
@@ -24,4 +26,14 @@ typedef ModContentApi = {
   // register a custom goal; added to const.Goals.map live.
   // id collision = last-wins + log
   function registerGoal(info: _GoalInfo): Void;
+  // register a custom AI subclass under a spawn type string (must start with
+  // mod-<modID>-); injects it into the engine class registry so saved
+  // instances resolve on load, and lets area.spawnAI(type) / game.createAI(type)
+  // build it by string. id collision = last-wins + log
+  function registerAI(type: String, cls: Class<AI>): Void;
+  // register a callback contributing player area actions (id must start with
+  // mod-<modID>-); invoked each HUD refresh at the tail of the area action list,
+  // the callback gates itself and calls game.ui.hud.addAction. replaces patching
+  // updateActionList. id collision = last-wins + log
+  function registerAreaAction(id: String, fn: Game -> Void): Void;
 }

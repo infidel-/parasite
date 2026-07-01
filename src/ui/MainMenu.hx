@@ -153,27 +153,22 @@ class MainMenu extends UIWindow
       bg.insertBefore(vignette, window);
     }
 
-// load game
+// load game: open the slot picker in load mode
   function loadGame(e)
     {
       if (!loadEnabled)
         return;
-      if (!game.saveExists(1))
-        return;
-      game.load(1);
-      game.ui.closeWindow();
-      close.style.display = 'flex';
-      game.ui.canvas.style.visibility = 'visible';
+      game.ui.getComponent(UISTATE_SAVES).setParams({ mode: 'load' });
+      game.ui.state = UISTATE_SAVES;
     }
 
-// save game
+// save game: open the slot picker in save mode
   function saveGame(e)
     {
       if (!saveEnabled)
         return;
-      // all remaining checks done in game.save()
-      game.save(1);
-      game.ui.closeWindow();
+      game.ui.getComponent(UISTATE_SAVES).setParams({ mode: 'save' });
+      game.ui.state = UISTATE_SAVES;
     }
 
 // action handling (number-key dispatch)
@@ -203,7 +198,7 @@ class MainMenu extends UIWindow
 // so from the open menu we must set params + state ourselves
   function confirmQuit()
     {
-      game.ui.getComponent(UISTATE_YESNO).setParams({
+      var p: _YesNoParams = {
         text: 'Quit to desktop?',
         sub: 'This will end your current session.',
         danger: true,
@@ -214,7 +209,8 @@ class MainMenu extends UIWindow
             HostBridge.quit();
 #end
         }
-      });
+      };
+      game.ui.getComponent(UISTATE_YESNO).setParams(p);
       game.scene.sounds.play('window-open');
       game.ui.state = UISTATE_YESNO;
     }
@@ -468,7 +464,14 @@ override function update()
         saveItem.appendChild(note);
       }
 
-    loadEnabled = game.saveExists(1);
+    // load enabled if any slot (autosave or manual) holds a save
+    loadEnabled = false;
+    for (slot in Game.AUTOSAVE_SLOT...Game.MANUAL_SLOTS + 1)
+      if (game.saveExists(slot))
+        {
+          loadEnabled = true;
+          break;
+        }
     saveEnabled = (game.isStarted && game.state == GAMESTATE_RUNNING);
     if (game.isStarted)
       close.style.display = 'flex';
@@ -479,6 +482,43 @@ override function update()
       // toggle disabled state
       loadItem.classList.toggle('mainmenu-disabled', !loadEnabled);
       saveItem.classList.toggle('mainmenu-disabled', !saveEnabled);
+
+#if electron
+      // boot offer: if an exit-autosave survives, ask to resume (once per launch)
+      if (!autosavePrompted &&
+          !game.isStarted &&
+          game.saveExists(Game.AUTOSAVE_SLOT))
+        {
+          autosavePrompted = true;
+          Browser.window.setTimeout(promptAutosave, 1);
+        }
+#end
+    }
+
+  var autosavePrompted: Bool = false; // boot autosave offer shown this launch
+
+// offer to resume from the exit-autosave slot.
+// back=MAINMENU handles cancel; the load is deferred one tick so it runs after
+// YesNo's dismiss() (which would otherwise force us back to the menu).
+  function promptAutosave()
+    {
+      var p: _YesNoParams = {
+        text: 'Autosave exists. Load?',
+        sub: 'Resume from where you last left off.',
+        back: _UIState.UISTATE_MAINMENU,
+        func: function(yes: Bool) {
+          if (!yes)
+            return;
+          Browser.window.setTimeout(function() {
+            game.load(Game.AUTOSAVE_SLOT);
+            game.ui.closeWindow();
+            game.ui.canvas.style.visibility = 'visible';
+          }, 0);
+        }
+      };
+      game.ui.getComponent(UISTATE_YESNO).setParams(p);
+      game.scene.sounds.play('window-open');
+      game.ui.state = UISTATE_YESNO;
     }
 
 // update menu background and apply if AI art is enabled

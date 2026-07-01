@@ -52,10 +52,10 @@ class RegionTooltip extends BeamTooltip
       var buf = new StringBuf();
       if (areaKnown)
         {
-          buf.add('<div class="region-tip-head"><span class="region-tip-name">' + area.name + '</span>');
+          buf.add('<div class="region-tip-head"><span class="region-tip-name">' + area.getDisplayName(true) + '</span>');
           buf.add('<span class="region-tip-xy">' + area.x + ',' + area.y + '</span></div>');
           var alertness = Std.int(area.alertness);
-          buf.add('<div class="region-tip-alert alert-' + getAlertnessColor(alertness) + '">');
+          buf.add('<div class="region-tip-alert alert-' + area.alertColor() + '">');
           buf.add('<span class="region-tip-pip"></span><span class="region-tip-alabel">alertness</span>');
           buf.add('<span class="region-tip-aval">' + getAlertnessLabel(alertness) + '</span></div>');
           var tags: Array<String> = [];
@@ -95,18 +95,6 @@ class RegionTooltip extends BeamTooltip
         }
 
       showBeam(area.x, area.y, area.id, buf.toString());
-    }
-
-  // get alertness color for tooltip
-  inline function getAlertnessColor(alertness: Int): String
-    {
-      if (alertness >= 75)
-        return 'red';
-      if (alertness >= 50)
-        return 'yellow';
-      if (alertness > 0)
-        return 'white';
-      return 'gray';
     }
 
   // get alertness label for tooltip

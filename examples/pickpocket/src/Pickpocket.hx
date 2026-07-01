@@ -7,7 +7,8 @@ package;
 class Pickpocket
 {
 // appends the Pickpocket action when the player (in a host) stands next to a
-// human. called at the tail of the wrapped PlayerArea.updateActionList
+// human. registered via api.registerAreaAction, called at the tail of
+// PlayerArea.updateActionList
   public static function injectAction(game: game.Game): Void
     {
       if (Std.string(game.player.state) != 'PLR_STATE_HOST')
@@ -101,13 +102,8 @@ class Pickpocket
       // build pickable list — loose items only (clothing/armor lives in a
       // separate slot and is never yielded here); skip non-concealable weapons
       var pick: Array<game._Item> = [];
-      // Inventory.iterator() is typed Dynamic in the extern (engine returns a
-      // bare hasNext/next iterator object) — the only untyped surface here; the
-      // yielded items are cast back to the typed _Item
-      var it: Dynamic = target.inventory.iterator();
-      while (it.hasNext())
+      for (item in target.inventory)
         {
-          var item: game._Item = it.next();
           if (item.info.weapon != null &&
               !item.info.weapon.canConceal)
             continue;

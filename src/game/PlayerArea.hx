@@ -250,6 +250,10 @@ class PlayerArea extends _SaveObject
           name: 'Leave Area',
           energy: 0
         });
+
+      // mod-registered area actions (api.registerAreaAction)
+      for (fn in mods.ModContentRegistry.areaActions)
+        fn(game);
     }
 
 // do a player action
@@ -1011,17 +1015,17 @@ class PlayerArea extends _SaveObject
       if (!player.host.isNameKnown)
         {
           player.host.isNameKnown = true;
-          // construct name message and optionally reveal job/income
-          var nameMsg = 'You find out that the name of this host is ' +
-            player.host.getName();
-          if (player.skills.getLevel(KNOW_SOCIETY) > 25)
-            {
-              player.host.isJobKnown = true;
-              nameMsg += ' <span class="small gray">(';
-              nameMsg += player.host.job + ', ';
-              nameMsg += 'income: ' + player.host.income + ')</span>';
-            }
-          log(nameMsg + '.');
+          log('You find out that the name of this host is ' +
+            player.host.getName() + '.');
+        }
+
+      // learn job/income once society knowledge is high enough (independent of name)
+      if (!player.host.isJobKnown &&
+          player.skills.getLevel(KNOW_SOCIETY) > 25)
+        {
+          player.host.isJobKnown = true;
+          log('You find out that this host works as ' + player.host.job +
+            ' <span class="small gray">(income: ' + player.host.income + ')</span>.');
         }
 
       // on first brain probe learn about items and area objects

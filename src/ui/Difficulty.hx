@@ -166,7 +166,7 @@ class Difficulty extends UIWindow
             game.player.vars.savesLeft = 3;
           else if (game.player.saveDifficulty == HARD)
             game.player.vars.savesLeft = 1;
-          game.save(1);
+          game.save(game.saveSlotPending);
         }
       else if (currentChoice.id == 'chat')
         game.player.chat.difficulty = d;

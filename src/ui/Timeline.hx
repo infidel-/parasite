@@ -36,15 +36,29 @@ class Timeline extends UIWindow
       var eventsShown = 0;
       var totalLeads = 0;
       var i = 0;
+      // pending run of non-hidden, fully-undiscovered events -> one REDACTED block
+      var pendingRedacted = false;
       for (event in game.timeline)
         {
+          // system-hidden events leave no trace
           if (event.isHidden)
             continue;
           var npcKnown = event.npcSomethingKnown();
           var notesKnown = event.notesSomethingKnown();
-          // nothing known at all -> skip
+          // nothing known at all -> accrue into a redacted run, render nothing yet
           if (!event.locationKnown && !npcKnown && !notesKnown)
-            continue;
+            {
+              pendingRedacted = true;
+              continue;
+            }
+
+          // a visible event is about to render: flush any pending redacted run first
+          if (pendingRedacted)
+            {
+              buf.add(redactedBlockHtml(i));
+              i++;
+              pendingRedacted = false;
+            }
 
           // event state: fully-redacted (location + notes blacked out) / open leads
           var redactedEv = !event.locationKnown && !notesKnown;
@@ -72,8 +86,7 @@ class Timeline extends UIWindow
             {
               if (event.locationKnown)
                 {
-                  if (event.location.hasName)
-                    buf.add(event.location.name + " ");
+                  buf.add(event.location.area.getDisplayName() + " ");
                   buf.add("<span class='timeline-xy'>(" + event.location.area.x + "," + event.location.area.y + ")</span>");
                 }
               else buf.add("<span class='timeline-bar wide'></span> <span class='timeline-xy'>(?,?)</span>");
@@ -144,6 +157,12 @@ class Timeline extends UIWindow
           eventsShown++;
           i++;
         }
+      // trailing run after the last visible event (or whole-timeline sealed)
+      if (pendingRedacted)
+        {
+          buf.add(redactedBlockHtml(i));
+          i++;
+        }
 
       tlScroll.innerHTML = "<ol class='timeline-spine'>" + buf.toString() + "</ol>";
       // titlebar with live event/lead counts
@@ -153,6 +172,17 @@ class Timeline extends UIWindow
         "<span class='timeline-live'>LIVE</span>" +
         "<span class='statchip evolution-tip timeline-ev' data-tip='Timeline events revealed'>" + clk + eventsShown + "</span>" +
         "<span class='statchip evolution-tip timeline-leads' data-tip='Leads still open to investigate'>" + mag + totalLeads + "</span></span>";
+    }
+
+// anonymous, event-sized REDACTED placeholder for a run of undiscovered events
+  function redactedBlockHtml(i: Int): String
+    {
+      return "<li class='timeline-event redacted-block' style='--i:" + i + "'>" +
+        "<span class='timeline-node'></span>" +
+        "<div class='timeline-card'><div class='timeline-fx'></div>" +
+        "<div class='timeline-stamp'>REDACTED</div>" +
+        "<div class='redacted-block-bars'><span class='timeline-bar wide'></span><span class='timeline-bar'></span></div>" +
+        "</div></li>";
     }
 
   override function hide(?skipAnimation: Bool = false)

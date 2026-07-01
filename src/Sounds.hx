@@ -11,6 +11,7 @@ class Sounds
   var game: Game;
   var sounds: Map<String, Array<Int>>;
   var lastPlayedTS: Map<String, Float>;
+  var lastVariant: Map<String, Int>; // last variant index played per base key (anti-repeat)
   var locationType: String;
   var music: SMSound;
   var menuMusic: SMSound;
@@ -26,6 +27,7 @@ class Sounds
       initDone = false;
       sounds = new Map();
       lastPlayedTS = new Map();
+      lastVariant = new Map();
       game = scene.game;
       locationType = 'none';
       ambient = {
@@ -470,7 +472,21 @@ class Sounds
           return;
         }
       if (res[0] != -1)
-        key += res[Std.random(res.length)];
+        {
+          // pick a variant, excluding the last one played for this key
+          var variant = res[0];
+          if (res.length > 1)
+            {
+              var last = lastVariant[key];
+              var cand = [];
+              for (v in res)
+                if (v != last)
+                  cand.push(v);
+              variant = cand[Std.random(cand.length)];
+            }
+          lastVariant[key] = variant;
+          key += variant;
+        }
       if (!opts.always && haxe.Timer.stamp() - lastPlayedTS[key] < 1)
         {
 //          trace('Skipping ' + key);

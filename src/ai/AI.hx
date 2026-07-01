@@ -1464,7 +1464,7 @@ public function show()
     }
 
 // event hook: on state change
-  dynamic function onStateChange()
+  public dynamic function onStateChange()
     {}
 
 // event hook: on being attacked

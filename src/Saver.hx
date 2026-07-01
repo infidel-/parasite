@@ -55,6 +55,15 @@ class Saver
           ];
 #if electron
           HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
+          // tiny preview sidecar for the slot list (additive; never blocks save)
+          var meta: _SaveMeta = {
+            scenario: game.timeline.scenario.name,
+            scenarioID: game.scenarioStringID,
+            area: game.area.getDisplayName(),
+            turns: game.turns,
+            time: Date.now().getTime(),
+          };
+          HostBridge.saveWriteMeta(slotID, Json.stringify(meta));
 #end
         }
       catch (e: Dynamic)

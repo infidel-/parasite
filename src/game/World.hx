@@ -49,6 +49,9 @@ class World extends _SaveObject
             }
           if (r.mapSeed == null)
             r.mapSeed = 0;
+          // pre-district saves: generate area/district names for areas that lack them
+          if (r.needsAreaNames())
+            r.assignAreaNames();
         }
       AreaGame._maxID++;
       AreaObject._maxID++;

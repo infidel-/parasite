@@ -186,6 +186,38 @@ class ModContentApi
       const.Goals.addGoal(info);
     }
 
+// register a custom AI subclass under a spawn type string. type must start
+// with mod-<modID>- (same prefix gate as every other register*). injects the
+// class into the engine class registry so saved instances resolve on load
+// (Loader uses Type.resolveClass(__name__)), and records the type so
+// game.createAI / area.spawnAI(type) can build it by string.
+  public function registerAI(type: String, cls: Class<ai.AI>)
+    {
+      if (!checkPrefix('ai', type))
+        return;
+
+      // all checks passed; register for save/load resolve + spawn factory
+      var name = Type.getClassName(cls);
+      Reflect.setField(js.Syntax.code("$hxClasses"), name, cls);
+      ModContentRegistry.aiTypes.set(type, cls);
+      console.log('[mods] register AI: ' + modID + '/' + type +
+        ' (' + name + ')');
+    }
+
+// register a callback that contributes player area actions. id must start with
+// mod-<modID>-. invoked at the tail of PlayerArea.updateActionList each HUD
+// refresh; the callback does its own gating and calls game.ui.hud.addAction.
+// replaces prototype-patching updateActionList. last-wins per id.
+  public function registerAreaAction(id: String, fn: game.Game -> Void)
+    {
+      if (!checkPrefix('areaAction', id))
+        return;
+
+      // all checks passed; record for the updateActionList tail loop
+      ModContentRegistry.areaActions.set(id, fn);
+      console.log('[mods] register area action: ' + modID + '/' + id);
+    }
+
 // builds a per-mod api instance; called by ModLoader per import
   public static function forMod(modID: String): ModContentApi
     {

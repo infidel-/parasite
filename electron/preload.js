@@ -26,9 +26,12 @@ contextBridge.exposeInMainWorld('host', {
     exists: ()     => ipcRenderer.sendSync('host:profile:exists'),
   },
   save: {
-    read:   (slotID)       => ipcRenderer.sendSync('host:save:read', slotID),
-    write:  (slotID, data) => ipcRenderer.sendSync('host:save:write', slotID, data),
-    exists: (slotID)       => ipcRenderer.sendSync('host:save:exists', slotID),
+    read:      (slotID)       => ipcRenderer.sendSync('host:save:read', slotID),
+    write:     (slotID, data) => ipcRenderer.sendSync('host:save:write', slotID, data),
+    exists:    (slotID)       => ipcRenderer.sendSync('host:save:exists', slotID),
+    readMeta:  (slotID)       => ipcRenderer.sendSync('host:save:readMeta', slotID),
+    writeMeta: (slotID, data) => ipcRenderer.sendSync('host:save:writeMeta', slotID, data),
+    delete:    (slotID)       => ipcRenderer.sendSync('host:save:delete', slotID),
   },
   consoleHistory: {
     read:   ()     => ipcRenderer.sendSync('host:console:read'),
