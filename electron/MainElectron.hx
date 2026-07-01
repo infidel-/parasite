@@ -255,6 +255,15 @@ class MainElectron
         return 'audio/mpeg';
       if (StringTools.endsWith(lower, '.css'))
         return 'text/css';
+      // fonts — bundled mod webfonts loaded via @font-face url() in mod.css
+      if (StringTools.endsWith(lower, '.ttf'))
+        return 'font/ttf';
+      if (StringTools.endsWith(lower, '.otf'))
+        return 'font/otf';
+      if (StringTools.endsWith(lower, '.woff2'))
+        return 'font/woff2';
+      if (StringTools.endsWith(lower, '.woff'))
+        return 'font/woff';
       return null;
     }
 
