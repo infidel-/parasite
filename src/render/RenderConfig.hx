@@ -93,7 +93,11 @@ class RenderConfig {
   public static inline var BLOOM_THRESHOLD = 0.9;  // luminance above which pixels bloom
 
   // camera: ~20deg tilt from vertical, trailing slightly to +Z (south)
-  public static final CAMERA = { offset: { x: 0.0, y: 60.0, z: 22.0 }, fov: 45.0, follow: 0.9 }; // tan(20deg) ≈ 0.36 → 22/60; follow = per-frame lerp (higher = tighter)
+  public static final CAMERA = {
+    offset: { x: 0.0, y: 60.0, z: 22.0 },
+    fov: 45.0,
+    follow: 1.0
+  }; // tan(20deg) ≈ 0.36 → 22/60; follow = per-frame lerp (higher = tighter)
   public static inline var MOVE_MS = 150;          // per-cell slide duration
 
   // texture paths, grouped by role; arrays indexed by facade variant [concrete, brick]
