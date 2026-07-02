@@ -1,0 +1,232 @@
+package render.world;
+
+import three.Three;
+import citygen.CityConfig;
+import citygen.CityConfig.cellToWorld;
+import render.RenderConfig;
+import render.RenderConfig.TEXTURES;
+import render.Textures;
+import render.Poly.tag;
+
+// per-building box construction: the wall/roof box, storefront overlay, metal-warehouse
+// door, near-ground grime band, and (Buildings.addGround) the ground-floor storefront
+// band. Parapets and gable roofs are delegated to Roofs; face/worn/front classification
+// to Geom. Sets window.__grime for live grime-opacity tuning.
+class Buildings {
+  static inline var CELL = CityConfig.CELL;
+  static inline var GROUND_H = CityConfig.GROUND_H;
+
+  static inline function imax(a:Float, b:Float):Float return a > b ? a : b;
+
+  public static function build(scene:Scene):Void {
+    var buildings = WorldCtx.buildings;
+
+    var roofBases = [for (p in TEXTURES.roofBases) Textures.loadTexture(p, 'roof')];
+    var wallTex = [for (p in TEXTURES.walls) Textures.loadTexture(p, 'wall')];
+    var wornTex = [for (p in TEXTURES.wornWalls) Textures.loadTexture(p, 'wall')];
+    var metalWallTex = [for (p in TEXTURES.metalWalls) Textures.loadTexture(p, 'wall')]; // per-building metal variants
+    var metalWornTex = [for (p in TEXTURES.metalWorn) Textures.loadTexture(p, 'wall')];
+    var copingTex = Textures.loadCroppedTexture(TEXTURES.coping, 1, 0.42);
+    var shopWornTex = Textures.loadTexture(TEXTURES.shopWorn, 'wall');           // shop box wall
+    var shopCopingTex = Textures.loadCroppedTexture(TEXTURES.shopCoping, 1, 0.42); // shop parapet cap
+    // storefront images by type [diner,corner,garage,laundromat]; door + door-less, lit/unlit
+    var shopFrontLit   = [for (p in TEXTURES.shopFrontLit) Textures.loadTexture(p, 'wall')];
+    var shopFront      = [for (p in TEXTURES.shopFront) Textures.loadTexture(p, 'wall')];
+    var shopFrontNdLit = [for (p in TEXTURES.shopFrontNdLit) Textures.loadTexture(p, 'wall')];
+    var shopFrontNd    = [for (p in TEXTURES.shopFrontNd) Textures.loadTexture(p, 'wall')];
+    var grimeTex = [for (p in TEXTURES.grime) Textures.loadTexture(p, 'wall')]; // near-ground street grime (alpha hand-painted into the source)
+    // premultiplied alpha: the hand-painted grime sources carry saturated junk RGB under
+    // near-transparent texels (paint-editor leftover); with straight alpha, bilinear/minified
+    // filtering bleeds that colour in as vivid cyan/magenta specks on dark walls at distance.
+    // premultiply zeroes a transparent texel's colour contribution, killing the bleed.
+    for (g in grimeTex) { untyped g.premultiplyAlpha = true; g.wrapT = THREE.ClampToEdgeWrapping; g.needsUpdate = true; }
+    // ONE shared material per grime variant (no per-face texture clone). Horizontal tiling is
+    // baked into each quad's UVs instead of texture.repeat.
+    var grimeMat = [for (gv in 0...grimeTex.length)
+      tag(new MeshStandardMaterial({ map: grimeTex[gv], roughness: 1, metalness: 0, transparent: true, premultipliedAlpha: true, depthWrite: false,
+        opacity: RenderConfig.GRIME_OPACITY,
+        polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+        'grime-${gv + 1}', 'street grime', TEXTURES.grime[gv])];
+    untyped js.Browser.window.__grime = grimeMat; // tuning: __grime.forEach(m=>m.opacity=0.5) to set strength live. keep.
+    var doorTex = Textures.loadTexture(TEXTURES.doorMetal, 'wall'); // closed warehouse door (metal facade)
+    doorTex.wrapS = doorTex.wrapT = THREE.ClampToEdgeWrapping;       // single image per door, no tiling
+    var roofMetalTex = Textures.loadTexture(TEXTURES.roofMetal, 'wall'); // gable-roof slopes (metal warehouse)
+
+    for (bi in 0...buildings.length) {
+      var b = buildings[bi];
+      var wWorld = b.w * CELL;
+      var dWorld = b.d * CELL;
+      var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+
+      var roof = roofBases[b.facade % roofBases.length].clone();
+      roof.needsUpdate = true;
+      // world-aligned roof tiling: a global ROOF_TILE grid with world-position phase,
+      // so abutting same-height strips of a T/L building share one continuous grid
+      // instead of each tiling from its own corner at its own rounded tile size
+      roof.wrapS = roof.wrapT = THREE.RepeatWrapping;
+      roof.repeat.set(wWorld / RenderConfig.ROOF_TILE, dWorld / RenderConfig.ROOF_TILE);
+      roof.offset.set((center.x - wWorld / 2) / RenderConfig.ROOF_TILE, -(center.z + dWorld / 2) / RenderConfig.ROOF_TILE);
+
+      var wallH = imax(1, Math.round(b.h / RenderConfig.WALL_TILE));
+      var clean = wallTex[b.facade % wallTex.length];
+      var worn = wornTex[b.facade % wornTex.length];
+      var cleanPath = TEXTURES.walls[b.facade % TEXTURES.walls.length];
+      var wornPath = TEXTURES.wornWalls[b.facade % TEXTURES.wornWalls.length];
+      if (b.facade == 3) { // metal warehouse: pick a corrugated-steel variant per-building (deterministic by footprint)
+        var mv = ((b.col * 31 + b.row * 17) % metalWallTex.length + metalWallTex.length) % metalWallTex.length;
+        clean = metalWallTex[mv]; worn = metalWornTex[mv];
+        cleanPath = TEXTURES.metalWalls[mv]; wornPath = TEXTURES.metalWorn[mv];
+      }
+      var masonry = b.facade == 1 || b.facade == 2; // brick + stone: wall-continuation parapet (concrete + metal get thin rim)
+      var k = RenderConfig.FACADE_NAMES[b.facade];
+      function faceMat(dir:Int, faceLen:Float):MeshStandardMaterial {
+        var isWorn = Geom.isWornFace(b, dir);
+        var base = isWorn ? worn : clean;
+        var t = base.clone(); t.needsUpdate = true;
+        t.repeat.set(imax(1, Math.round(faceLen / RenderConfig.WALL_TILE)), wallH);
+        var mat = new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 });
+        return tag(mat, 'wall-$k' + (isWorn ? '-worn' : ''), '$k wall' + (isWorn ? ' (worn)' : ''),
+          isWorn ? wornPath : cleanPath);
+      }
+      // single-story shop: TEST PASS — box is plain worn wall on every face; a single
+      // aspect-fitted 16:9 storefront image is overlaid on each street face below.
+      // (per-cell nd tiling + per-cell door overlay are dormant for this test)
+      var shop = b.shop >= 0;
+      function shopFace(dir:Int, faceLen:Float):MeshStandardMaterial {
+        var t = shopWornTex.clone(); t.needsUpdate = true;
+        t.repeat.set(imax(1, Math.round(faceLen / RenderConfig.WALL_TILE)), wallH);
+        return tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
+          'shop-worn', 'shop wall (worn)', TEXTURES.shopWorn);
+      }
+      var px = shop ? shopFace(2, dWorld) : faceMat(2, dWorld), nx = shop ? shopFace(3, dWorld) : faceMat(3, dWorld);
+      var pz = shop ? shopFace(0, wWorld) : faceMat(0, wWorld), nz = shop ? shopFace(1, wWorld) : faceMat(1, wWorld);
+      var top = tag(new MeshStandardMaterial({ map: roof, roughness: 1, metalness: 0 }),
+        'roof-$k', '$k roof', TEXTURES.roofBases[b.facade % TEXTURES.roofBases.length]);
+      var box = new Mesh(new BoxGeometry(wWorld, b.h, dWorld), [px, nx, top, px, pz, nz]);
+      box.position.set(center.x, b.h / 2, center.z);
+      box.userData.b = b; box.userData.bidx = bi; // Inspector: alt+click → record
+      scene.add(box);
+
+      // storefront overlay: tile 2-cell-wide 16:9 bays across each street face. One bay per
+      // face carries the entrance door (chosen from shopDoor), the rest are the door-less
+      // continuation; lit (open) vs unlit (closed) by shopOpen. b.h = SHOP_H makes each bay
+      // exact 16:9 → no distortion, fills width AND height. MeshBasic = full-bright, so open
+      // fronts read lit and closed fronts stay dark by the image's own values (bloom at night).
+      if (shop) {
+        var type = b.shop;
+        var lit = b.shopOpen;
+        var doorTex = lit ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length];
+        var ndTex   = lit ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length];
+        var bayW = CELL * 2;
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
+          if (!Geom.faceIsStreet(b, f.dir)) continue;
+          var n = Std.int(imax(1, Math.round(f.faceW / bayW)));
+          var doorBay = (b.shopDoor + f.dir) % n; // which bay holds the door on this face
+          for (i in 0...n) {
+            var mat = new MeshBasicMaterial({ map: (i == doorBay) ? doorTex : ndTex,
+              polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+            var mesh = new Mesh(new PlaneGeometry(bayW, b.h), mat);
+            mesh.rotation.y = f.rotY;
+            var off = (i - (n - 1) / 2) * bayW; // bay centre offset along the face
+            if (f.dir < 2) mesh.position.set(f.fx + off, b.h / 2, f.fz);
+            else mesh.position.set(f.fx, b.h / 2, f.fz + off);
+            scene.add(mesh);
+          }
+        }
+      }
+
+      var gable = !shop && b.facade == 3; // citygen guarantees all metal is a standalone rectangle
+
+      // metal warehouse: one big closed roll-up door, centred and glued to the ground.
+      // prefer a street-facing GABLE-END wall (door "under the angle"); but if neither gable
+      // end faces a street, fall back to the street-facing long side so the warehouse always
+      // has a door (better than a doorless box).
+      if (gable) {
+        var endDirs = wWorld >= dWorld ? [2, 3] : [0, 1]; // gable-end faces (perpendicular to ridge)
+        var endStreet = false;
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, 0))
+          if (endDirs.indexOf(f.dir) >= 0 && Geom.faceIsStreet(b, f.dir)) { endStreet = true; break; }
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
+          if (!Geom.faceIsStreet(b, f.dir)) continue;
+          if (endStreet && endDirs.indexOf(f.dir) < 0) continue; // gable end available → don't door the long sides
+          var doorW = Math.min(f.faceW * 0.55, CELL * 3); // centred, leaves wall margins
+          var doorH = Math.min(b.h * 0.7, CELL * 1.8);    // tall roll-up, wall left above
+          var mat = tag(new MeshStandardMaterial({ map: doorTex, roughness: 1, metalness: 0,
+            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+            'door-metal', 'metal door', TEXTURES.doorMetal);
+          var mesh = new Mesh(new PlaneGeometry(doorW, doorH), mat);
+          mesh.rotation.y = f.rotY;
+          mesh.position.set(f.fx, doorH / 2, f.fz);
+          scene.add(mesh);
+        }
+      }
+
+      // ground grime band on the WORN wall faces (back/alley walls), glued to the ground,
+      // world-tiled horizontally, fading up. Skipped where a storefront band already owns
+      // the ground floor (street faces) so the storefront reads solo. non-metal, non-shop.
+      // (per-face quad like shop-front/door overlays; if draws bite, merge into one
+      // BufferGeometry per variant like Ground.build.)
+      if (!shop && b.facade != 3) {
+        var gv = ((b.col * 7 + b.row * 13) % grimeTex.length + grimeTex.length) % grimeTex.length;
+        inline function hasStorefront(dir:Int):Bool
+          return Geom.faceIsStreet(b, dir)
+            && !(b.winForce != null && b.winForce.indexOf(dir) >= 0)
+            && !(b.winBlock != null && b.winBlock.indexOf(dir) >= 0);
+        var bandH = Math.min(RenderConfig.GRIME_H, b.h - 0.5);
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
+          if (hasStorefront(f.dir)) continue; // storefront owns the ground floor here — leave it solo
+          var rx = imax(1, Math.round(f.faceW / RenderConfig.GRIME_TILE)); // horizontal repeats
+          var geo = new PlaneGeometry(f.faceW, bandH);
+          var uv:Dynamic = untyped geo.attributes.uv; // bake horizontal tiling into U (shared texture, no clone)
+          var n:Int = uv.count;
+          for (i in 0...n) uv.setX(i, uv.getX(i) * rx);
+          uv.needsUpdate = true;
+          var mesh = new Mesh(geo, grimeMat[gv]);
+          mesh.rotation.y = f.rotY;
+          mesh.position.set(f.fx, bandH / 2, f.fz);
+          scene.add(mesh);
+        }
+      }
+
+      // roof: metal warehouses get a gable (no parapet); everyone else keeps their parapet
+      if (gable) {
+        Roofs.addGableRoof(scene, b, center, wWorld, dWorld, clean, worn, roofMetalTex);
+      } else {
+        Roofs.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
+      }
+    }
+  }
+
+  // ground-floor storefront band on street-facing walls
+  public static function addGround(scene:Scene):Void {
+    var buildings = WorldCtx.buildings;
+    var texes = [for (p in TEXTURES.storefronts) Textures.loadTexture(p, 'wall')];
+    for (b in buildings) {
+      if (b.shop >= 0 || b.facade == 3) continue; // shop face is its own storefront; metal warehouse has doors, no band
+      var fi = Geom.frontInfo(b);
+      if (fi.simple && !fi.store) continue; // plain/small building: no storefront band (entrance + maybe windows instead)
+      var wWorld = b.w * CELL;
+      var dWorld = b.d * CELL;
+      var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+      var base = texes[b.facade % texes.length];
+      var k = RenderConfig.FACADE_NAMES[b.facade];
+      for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
+        if ((b.winForce != null && b.winForce.indexOf(f.dir) >= 0) || (b.winBlock != null && b.winBlock.indexOf(f.dir) >= 0)) continue;
+        if (!Geom.faceIsStreet(b, f.dir)) continue;
+        var t = base.clone();
+        t.needsUpdate = true;
+        t.repeat.set(f.faceW / GROUND_H, 1);
+        var mesh = new Mesh(
+          new PlaneGeometry(f.faceW, GROUND_H),
+          tag(new MeshStandardMaterial({
+            map: t, roughness: 1, metalness: 0,
+            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+          }), 'storefront-$k', '$k storefront', TEXTURES.storefronts[b.facade % TEXTURES.storefronts.length]));
+        mesh.position.set(f.fx, GROUND_H / 2, f.fz);
+        mesh.rotation.y = f.rotY;
+        scene.add(mesh);
+        WorldCtx.bandSeen.set(b, true); // checklist: this building rendered a storefront band
+      }
+    }
+  }
+}

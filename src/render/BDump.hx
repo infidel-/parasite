@@ -23,7 +23,7 @@ class BDump {
     // z=zMax/zMin; dir 2/3 along z at x=xMax/xMin. an edge fully listed = no wall;
     // empty = full wall+shadow; partial = wall+shadow only on the exposed gaps
     inline function ivs(a:Array<{a:Float, b:Float}>):String return a.length == 0 ? 'none' : [for (iv in a) '${Math.round(iv.a)}..${Math.round(iv.b)}'].join('+');
-    var cov = World.coveredEdges(b);
+    var cov = render.world.Geom.coveredEdges(b);
     var shadow = ' shadowCut[+z=${ivs(cov[0])} -z=${ivs(cov[1])} +x=${ivs(cov[2])} -x=${ivs(cov[3])}]';
     return '#$i col=${b.col} row=${b.row} w=${b.w} d=${b.d} floors=$floors facade=${b.facade % 2 == 1 ? 'brick' : 'plain'} roof=${b.roof} shapeKeep=${b.shapeKeep} winForce=${arr(b.winForce)} winBlock=${arr(b.winBlock)} skipWindowFloor=${b.skipWindowFloor} shop=${b.shop} open=${b.shopOpen} door=${b.shopDoor}$shadow';
   }
