@@ -124,7 +124,7 @@ class Options extends UIWindow
 
       // ---- GAMEPLAY ----
       addCard('Gameplay');
-      addOptToggle('Skip tutorial ' + Const.smallgray('(needs overall difficulty set)'),
+      addOptToggle('Skip tutorial <span class="evolution-tip opt-help" data-tip="Needs overall difficulty set">?</span>',
         'skipTutorial', game.config.skipTutorial);
       addOptToggle('Enable fullscreen', 'fullscreen', game.config.fullscreen);
       addOptToggle('Enable AI-generated artwork', 'aiArtEnabled', game.config.aiArtEnabled);

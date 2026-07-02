@@ -23,6 +23,8 @@
   --ui-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%23ffffff'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23c9a8ef' stroke-width='2.2'/%3E%3C/svg%3E") 12 12, pointer;
   /* disabled cursor (red dot + slashed ring) for unavailable actions/items */
   --ui-cursor-disabled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23e05a5a'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23e05a5a' stroke-width='1.5' opacity='.85'/%3E%3Cline x1='5.6' y1='18.4' x2='18.4' y2='5.6' stroke='%23e05a5a' stroke-width='1.5' opacity='.85'/%3E%3C/svg%3E") 12 12, not-allowed;
+  /* help cursor (cyan reticle + white "?" glyph) for info badges/tooltips */
+  --ui-cursor-help: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%2373f3ff' stroke-width='2.2' opacity='.9'/%3E%3Cpath d='M9.7 9.2 A2.5 2.5 0 1 1 12 11.9 L12 13.4' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='15.7' r='1.15' fill='%23ffffff'/%3E%3C/svg%3E") 12 12, help;
   --dim: #91949b;
   --panel-dark: rgba(11,15,21,.90);
   /* navbar membrane tokens live at :root (not #hud): #hud-buttons is reparented to
@@ -4012,6 +4014,42 @@ fieldset {
   opacity: 1;
 }
 
+/* inline help badge: small "?" disc that reveals its .evolution-tip bubble on hover;
+   themed with the host window accent so it blends into whatever window it sits in */
+.opt-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin-left: .4em;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--win-accent) 55%, transparent);
+  color: color-mix(in srgb, var(--win-accent) 85%, #fff);
+  font-family: var(--text-font-title), sans-serif;
+  font-size: .7em;
+  line-height: 1;
+  cursor: var(--ui-cursor-help);
+  vertical-align: middle;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.opt-help:hover {
+  border-color: var(--win-accent);
+  background: color-mix(in srgb, var(--win-accent) 12%, transparent);
+  color: #fff;
+}
+/* badge sits on the window's left side: grow the bubble rightward (not off the left
+   edge) and center the arrow under the disc */
+.opt-help::after {
+  left: 0;
+  right: auto;
+}
+.opt-help::before {
+  left: 50%;
+  right: auto;
+  margin-left: -5px;
+}
+
 /* ===== EVOLUTION window: controlled-evolution improvement cards (cyan thermal-scan theme) ===== */
 /* cyan theming overrides on the shared (purple) HUD chrome */
 #window-evolution.hud-frame::before {
@@ -5408,6 +5446,16 @@ fieldset {
   overflow: hidden;
   min-height: 0;
   padding: .1em 16px .2em;
+}
+/* let a help bubble escape the card's clip + stacking context while hovered
+   (cards clip for the collapse animation; drop it only for the hovered card) */
+.win-card:has(.opt-help:hover) {
+  overflow: visible;
+  position: relative;
+  z-index: 20;
+}
+.win-card:has(.opt-help:hover) .win-card-bd {
+  overflow: visible;
 }
 /* one row: label flexes, control pins to a locked right-aligned column */
 .options-row {
