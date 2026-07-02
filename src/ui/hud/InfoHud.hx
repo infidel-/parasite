@@ -45,6 +45,8 @@ class InfoHud
   var regionCache: Map<String, String> = new Map(); // last html per region (skip unchanged writes)
   var prevCultVals: Array<String> = []; // last cult resource value texts (change pulse)
   var prevEvo: Map<String, String> = new Map(); // last evo/organ turn-eta per row name (change pulse)
+  var onExpandEnd: js.html.Event -> Void = null; // pending expand-reveal handler (see setCompact)
+  var onRevealEnd: js.html.Event -> Void = null; // clears the FLIP height animation once done
 
   public function new(g: Game, h: HUD)
     {
@@ -65,7 +67,7 @@ class InfoHud
           var v = !game.config.compactHud;
           game.config.set('compactHud', v ? '1' : '0', true);
           game.scene.sounds.play('click-hud');
-          info.classList.toggle('hud-compact', v);
+          setCompact(v);
           compactBtn.classList.toggle('active', v);
         }
       info.appendChild(compactBtn);
@@ -126,6 +128,77 @@ class InfoHud
       extraWrap.appendChild(cultLine);
       extraWrap.appendChild(spoonMark);
       info.appendChild(extraWrap);
+
+      // once the widen transition ends, drop compact/expanding so full content
+      // lays out at full width (never wrapped in the still-narrow box), then
+      // FLIP-animate the panel height so the reveal grows in instead of popping
+      onExpandEnd = function (e)
+        {
+          if ((cast e : js.html.TransitionEvent).propertyName != 'width')
+            return;
+          info.removeEventListener('transitionend', onExpandEnd);
+          // drop lingering ±N floats: their display:none->shown flip on reveal
+          // would restart the finished float animation (energy floats every turn)
+          var floats = info.querySelectorAll('.hud-bar-float');
+          for (i in 0...floats.length)
+            (cast floats.item(i) : Element).remove();
+          // freeze child transitions so bars/tracks/padding snap to final size
+          // now -- else the target height is measured mid-transition (tracks
+          // still tall, padding still fat) and the panel overshoots then jumps
+          // down ~1 row as those finish
+          info.classList.add('hud-revealing');
+          var from = info.offsetHeight; // compact-layout height
+          info.classList.remove('hud-compact');
+          info.classList.remove('hud-expanding');
+          info.style.transition = 'none'; // kill padding/width interpolation for the measure
+          var to = info.offsetHeight; // true full-layout height (all snapped)
+          // start at old height with content clipped, ease to new
+          info.style.overflow = 'hidden';
+          info.style.height = from + 'px';
+          info.getBoundingClientRect(); // force reflow so the start height sticks
+          info.style.transition = 'height 0.35s ease';
+          info.style.height = to + 'px';
+          info.addEventListener('transitionend', onRevealEnd);
+        };
+      // reveal done: drop the inline overrides so layout stays auto
+      onRevealEnd = function (e)
+        {
+          if ((cast e : js.html.TransitionEvent).propertyName != 'height')
+            return;
+          info.style.height = '';
+          info.style.overflow = '';
+          info.style.transition = '';
+          info.classList.remove('hud-revealing');
+          info.removeEventListener('transitionend', onRevealEnd);
+        };
+    }
+
+// toggle compact mode. collapse is instant-content + width slide down;
+// expand holds the compact layout while the box widens, then reveals full
+// content at transitionend -- else full-width text wraps in the narrow box
+// mid-slide and overshoots the panel height
+  function setCompact(v: Bool)
+    {
+      if (v)
+        {
+          // collapse: cancel any pending expand reveal / height animation,
+          // clear its inline overrides, then slide width down
+          info.removeEventListener('transitionend', onExpandEnd);
+          info.removeEventListener('transitionend', onRevealEnd);
+          info.style.height = '';
+          info.style.overflow = '';
+          info.style.transition = '';
+          info.classList.remove('hud-revealing');
+          info.classList.remove('hud-expanding');
+          info.classList.add('hud-compact');
+        }
+      // expand: widen box under compact layout, reveal when wide
+      else if (info.classList.contains('hud-compact')
+               && !info.classList.contains('hud-expanding'))
+        {
+          info.classList.add('hud-expanding');
+          info.addEventListener('transitionend', onExpandEnd);
+        }
     }
 
 // build one persistent stat bar: icon + label, value, track + fill.
@@ -413,7 +486,9 @@ class InfoHud
       if (game.player.state != PLR_STATE_HOST &&
           game.player.energy <= 0.5 * game.player.maxEnergy)
         info.classList.add('highlight-text');
-      info.classList.toggle('hud-compact', game.config.compactHud);
+      // don't yank the class mid-expand (setCompact drives that animation)
+      if (!info.classList.contains('hud-expanding'))
+        info.classList.toggle('hud-compact', game.config.compactHud);
       compactBtn.classList.toggle('active', game.config.compactHud);
 
       if (hud.regionTooltip.visible)

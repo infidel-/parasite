@@ -1579,6 +1579,21 @@ hr {
   width: 100px;
   padding: 28px 12px 8px;
 }
+/* mid-expand: box widens to full while the compact layout is still applied,
+   so full-width text never wraps in the still-narrow panel (which overshot
+   height). content swaps to full layout at transitionend (InfoHud.setCompact) */
+#hud-info.hud-compact.hud-expanding {
+  width: 360px;
+}
+/* during the height-reveal FLIP: freeze child transitions so bars/tracks snap
+   to their final size instantly, so the measured target height is accurate
+   (else the panel overshoots then jumps down ~1 row as they finish) */
+#hud-info.hud-revealing .hud-bar,
+#hud-info.hud-revealing .hud-bar-lbl,
+#hud-info.hud-revealing .hud-bar-track,
+#hud-info.hud-revealing .hud-bar-fill {
+  transition: none;
+}
 /* everything compact mode drops -> display:none. (collapsing via opacity/
    max-width leaves the hidden text overflowing, which still drives the panel's
    max-content width and shoves numbers around — must remove from layout) */
