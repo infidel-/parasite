@@ -28,6 +28,7 @@ class AreaGame extends _SaveObject
   public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated?
+  public var cityGenSeed: Int; // seed for the 3D city generator (city areas); -1 = none/old save
   public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
   public var highCrime: Bool; // low density area can become high crime
@@ -88,6 +89,7 @@ class AreaGame extends _SaveObject
       typeID = AREA_GROUND;
       events = [];
       isGenerated = false;
+      cityGenSeed = -1;
       isEntering = false;
       isKnown = false;
       isHabitat = false;

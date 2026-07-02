@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -19,6 +19,16 @@ git-diff:
 	@echo ---
 	@git --no-pager diff HEAD
 	@git --no-pager status --short
+
+# 3D street-view texture pipeline: downscale/bake textures-src/ 1024px sources
+# straight into the app dir (app/textures/, per textures.json). textures-src is a
+# symlink to the asset store; sources are NOT committed.
+tex:
+	python3 tools/textures.py
+
+# adopt freshly generated gpt drops into textures-src/ without baking
+adopt:
+	python3 tools/textures.py --rename
 
 testmod:
 	cd examples/testmod/ && $(MAKE)

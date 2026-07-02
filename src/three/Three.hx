@@ -1,0 +1,277 @@
+package three;
+
+// hand-written minimal three.js externs — only the API this renderer uses.
+// bound to a single vendored global `THREE` (app/three.global.js, an iife bundle
+// of three core + the postprocessing addons, re-exported onto one namespace).
+// Params that three takes as option-objects are typed Dynamic (pass anonymous
+// structs). No ES modules / genes: the game bundle is a classic script.
+
+@:native("THREE") extern class THREE {
+  static var SRGBColorSpace:Dynamic;
+  static var NoColorSpace:Dynamic;
+  static var RepeatWrapping:Dynamic;
+  static var ClampToEdgeWrapping:Dynamic;
+  static var DoubleSide:Dynamic;
+  static var ACESFilmicToneMapping:Dynamic;
+  static var NoToneMapping:Dynamic;
+}
+
+@:native("THREE.Vector2") extern class Vector2 {
+  public function new(?x:Float, ?y:Float);
+  public var x:Float;
+  public var y:Float;
+  public function set(x:Float, y:Float):Vector2;
+}
+
+@:native("THREE.Vector3") extern class Vector3 {
+  public function new(?x:Float, ?y:Float, ?z:Float);
+  public var x:Float;
+  public var y:Float;
+  public var z:Float;
+  public function set(x:Float, y:Float, z:Float):Vector3;
+  public function copy(v:Vector3):Vector3;
+  public function add(v:Vector3):Vector3;
+  public function addScaledVector(v:Vector3, s:Float):Vector3;
+  public function applyQuaternion(q:Quaternion):Vector3;
+  public function lerp(v:Vector3, a:Float):Vector3;
+  public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
+}
+
+@:native("THREE.Euler") extern class Euler {
+  public function new(?x:Float, ?y:Float, ?z:Float, ?order:String);
+  public var x:Float;
+  public var y:Float;
+  public var z:Float;
+  public function set(x:Float, y:Float, z:Float, ?order:String):Euler;
+  public function setFromQuaternion(q:Quaternion, ?order:String):Euler;
+}
+
+@:native("THREE.Quaternion") extern class Quaternion {
+  public function new();
+  public function setFromAxisAngle(axis:Vector3, angle:Float):Quaternion;
+  public function setFromEuler(e:Euler):Quaternion;
+  public function multiply(q:Quaternion):Quaternion;
+  public function copy(q:Quaternion):Quaternion;
+}
+
+@:native("THREE.Matrix4") extern class Matrix4 {
+  public function new();
+  public function compose(pos:Vector3, quat:Quaternion, scl:Vector3):Matrix4;
+}
+
+@:native("THREE.Color") extern class Color {
+  public function new(?hex:Int);
+}
+
+@:native("THREE.Object3D") extern class Object3D {
+  public var position:Vector3;
+  public var rotation:Euler;
+  public var quaternion:Quaternion;
+  public var scale:Vector3;
+  public var visible:Bool;
+  public var renderOrder:Float;
+  public var matrixWorld:Matrix4;
+  public var userData:Dynamic;
+  public var name:String;
+  public var children:Array<Object3D>;
+  public var geometry:Dynamic;   // present on meshes; Dynamic for editor traversal
+  public var material:Dynamic;
+  public var isInstancedMesh:Bool;
+  public function add(o:Object3D):Void;
+  public function remove(o:Object3D):Void;
+  public function traverse(cb:Object3D->Void):Void;
+  public function applyMatrix4(m:Matrix4):Void;
+  public function lookAt(v:Vector3):Void;
+}
+
+@:native("THREE.Scene") extern class Scene extends Object3D {
+  public function new();
+  public var background:Dynamic;
+  public var fog:Dynamic;
+}
+
+@:native("THREE.Fog") extern class Fog {
+  public function new(color:Int, near:Float, far:Float);
+}
+
+@:native("THREE.PerspectiveCamera") extern class PerspectiveCamera extends Object3D {
+  public function new(fov:Float, aspect:Float, near:Float, far:Float);
+  public var aspect:Float;
+  public function updateProjectionMatrix():Void;
+}
+
+@:native("THREE.WebGLRenderer") extern class WebGLRenderer {
+  public function new(params:Dynamic);
+  public var domElement:Dynamic;
+  public var outputColorSpace:Dynamic;
+  public var toneMapping:Dynamic;
+  public var toneMappingExposure:Float;
+  public var shadowMap:Dynamic;
+  public var info:RendererInfo;
+  public var autoClear:Bool;
+  public function setPixelRatio(r:Float):Void;
+  public function setSize(w:Float, h:Float):Void;
+  public function clearDepth():Void;
+  public function setViewport(x:Float, y:Float, w:Float, h:Float):Void;
+  public function setScissor(x:Float, y:Float, w:Float, h:Float):Void;
+  public function setScissorTest(on:Bool):Void;
+  public function render(scene:Scene, camera:Dynamic):Void;
+}
+
+@:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {
+  public function new(left:Float, right:Float, top:Float, bottom:Float, near:Float, far:Float);
+  public function updateProjectionMatrix():Void;
+}
+
+@:native("THREE.AxesHelper") extern class AxesHelper extends Object3D {
+  public function new(size:Float);
+}
+
+typedef RendererInfo = {
+  var autoReset:Bool;
+  function reset():Void;
+  var render:{ var triangles:Int; var calls:Int; };
+  var memory:{ var textures:Int; };
+};
+
+@:native("THREE.AmbientLight") extern class AmbientLight extends Object3D {
+  public function new(color:Int, intensity:Float);
+}
+@:native("THREE.HemisphereLight") extern class HemisphereLight extends Object3D {
+  public function new(sky:Int, ground:Int, intensity:Float);
+}
+@:native("THREE.DirectionalLight") extern class DirectionalLight extends Object3D {
+  public function new(color:Int, intensity:Float);
+}
+@:native("THREE.PointLight") extern class PointLight extends Object3D {
+  public function new(color:Int, intensity:Float, ?distance:Float, ?decay:Float);
+}
+
+@:native("THREE.BoxGeometry") extern class BoxGeometry {
+  public function new(w:Float, h:Float, d:Float);
+}
+@:native("THREE.PlaneGeometry") extern class PlaneGeometry {
+  public function new(w:Float, h:Float);
+}
+@:native("THREE.RingGeometry") extern class RingGeometry {
+  public function new(inner:Float, outer:Float, seg:Int);
+}
+@:native("THREE.SphereGeometry") extern class SphereGeometry {
+  public function new(r:Float, wseg:Int, hseg:Int, ?phiStart:Float, ?phiLength:Float, ?thetaStart:Float, ?thetaLength:Float);
+  public function rotateX(a:Float):SphereGeometry; // bakes rotation into vertices (from BufferGeometry)
+  public function scale(x:Float, y:Float, z:Float):SphereGeometry; // bakes scale into vertices
+}
+@:native("THREE.CylinderGeometry") extern class CylinderGeometry {
+  public function new(rt:Float, rb:Float, h:Float, ?radial:Int, ?heightSeg:Int, ?openEnded:Bool, ?thetaStart:Float, ?thetaLength:Float);
+  public function rotateZ(a:Float):CylinderGeometry; // bakes rotation into vertices (from BufferGeometry)
+  public function scale(x:Float, y:Float, z:Float):CylinderGeometry;
+}
+@:native("THREE.EdgesGeometry") extern class EdgesGeometry {
+  public function new(geo:Dynamic, ?thresholdAngle:Float);
+}
+
+@:native("THREE.BufferGeometry") extern class BufferGeometry {
+  public function new();
+  public var groups:Array<{ var start:Int; var count:Int; var materialIndex:Int; }>;
+  public var index:Dynamic;       // .getX(i)
+  public var attributes:Dynamic;  // .position.getX/getY/getZ
+  public function setAttribute(name:String, attr:Dynamic):Void;
+  public function setIndex(idx:Array<Int>):Void;
+  public function computeVertexNormals():Void;
+  public function dispose():Void;
+}
+
+@:native("THREE.Float32BufferAttribute") extern class Float32BufferAttribute {
+  public function new(arr:Array<Float>, itemSize:Int);
+}
+
+@:native("THREE.MeshStandardMaterial") extern class MeshStandardMaterial {
+  public function new(params:Dynamic);
+  public var map:Texture;
+  public var emissive:Color;
+  public var emissiveMap:Texture;
+  public var emissiveIntensity:Float;
+  public var userData:Dynamic;
+}
+@:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
+  public function new(params:Dynamic);
+}
+@:native("THREE.LineBasicMaterial") extern class LineBasicMaterial {
+  public function new(params:Dynamic);
+}
+@:native("THREE.SpriteMaterial") extern class SpriteMaterial {
+  public function new(params:Dynamic);
+}
+
+@:native("THREE.Mesh") extern class Mesh extends Object3D {
+  public function new(geo:Dynamic, mat:Dynamic);
+}
+@:native("THREE.InstancedMesh") extern class InstancedMesh extends Object3D {
+  public function new(geo:Dynamic, mat:Dynamic, count:Int);
+  public var instanceMatrix:Dynamic;
+  public function setMatrixAt(i:Int, m:Matrix4):Void;
+}
+@:native("THREE.LineSegments") extern class LineSegments extends Object3D {
+  public function new(geo:Dynamic, mat:Dynamic);
+}
+@:native("THREE.Group") extern class Group extends Object3D {
+  public function new();
+}
+@:native("THREE.Sprite") extern class Sprite extends Object3D {
+  public function new(mat:Dynamic);
+}
+
+@:native("THREE.Texture") extern class Texture {
+  public function new();
+  public var uuid:String;
+  public var image:Dynamic;
+  public var needsUpdate:Bool;
+  public var colorSpace:Dynamic;
+  public var wrapS:Dynamic;
+  public var wrapT:Dynamic;
+  public var repeat:Vector2;
+  public var offset:Vector2;
+  public var center:Vector2;
+  public var rotation:Float;
+  public var anisotropy:Int;
+  public function clone():Texture;
+}
+@:native("THREE.CanvasTexture") extern class CanvasTexture extends Texture {
+  public function new(canvas:Dynamic);
+}
+@:native("THREE.TextureLoader") extern class TextureLoader {
+  public function new();
+  public function load(path:String, ?onLoad:Dynamic, ?onProgress:Dynamic, ?onError:Dynamic):Texture;
+}
+
+typedef Intersection = {
+  var object:Object3D;
+  @:optional var face:{ var materialIndex:Int; };
+  @:optional var faceIndex:Int;
+  @:optional var instanceId:Int;
+  var distance:Float;
+};
+
+@:native("THREE.Raycaster") extern class Raycaster {
+  public function new();
+  public function setFromCamera(ndc:Vector2, cam:Object3D):Void;
+  public function intersectObjects(objs:Array<Object3D>, recursive:Bool):Array<Intersection>;
+}
+
+// --- postprocessing addons (re-exported onto the same THREE global by the vendor bundle) ---
+@:native("THREE.EffectComposer") extern class EffectComposer {
+  public function new(renderer:WebGLRenderer);
+  public function addPass(p:Dynamic):Void;
+  public function render():Void;
+  public function setSize(w:Float, h:Float):Void;
+}
+@:native("THREE.RenderPass") extern class RenderPass {
+  public function new(scene:Scene, camera:Object3D);
+}
+@:native("THREE.UnrealBloomPass") extern class UnrealBloomPass {
+  public function new(resolution:Vector2, strength:Float, radius:Float, threshold:Float);
+  public var enabled:Bool;
+}
+@:native("THREE.OutputPass") extern class OutputPass {
+  public function new();
+}

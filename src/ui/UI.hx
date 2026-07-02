@@ -662,6 +662,12 @@ class UI
       if (cannotMove())
         return false;
 
+      // street-debug mode owns numpad/arrows for the 3D fly camera
+      if (game.location == LOCATION_AREA &&
+          game.scene.city3d != null &&
+          game.scene.city3d.debugActive())
+        return false;
+
       // area mode
       if (game.location == LOCATION_AREA)
         game.playerArea.moveAction(dx, dy);

@@ -271,6 +271,9 @@
 <script>
   var SoundManager = soundManager;
 </script>
+<!-- vendored three.js global (core + postprocessing addons) — must load before parasite.js
+     so the compiled 3D street renderer can bind window.THREE -->
+<script src="three.global.js"></script>
 <script type="text/javascript" src="parasite.js"></script>
 
 </body>

@@ -6,6 +6,7 @@ import haxe.Timer;
 
 import ui.*;
 import game.Game;
+import citygen.CityModel.Tile;
 
 class GameScene
 {
@@ -13,6 +14,7 @@ class GameScene
   public var area: AreaView; // area view
   public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
+  public var city3d: render.StreetView; // 3D street view (city areas only)
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -37,6 +39,7 @@ class GameScene
   public var cameraSubX: Int;
   public var cameraSubY: Int;
 
+  var _city3dArea: Int = -1; // id of the area currently shown in the 3D view
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
   var _renderStatsArea: _RenderStats;
   var _renderStatsRegion: _RenderStats;
@@ -87,6 +90,7 @@ class GameScene
       area = new AreaView(this);
       areaLighting = new AreaLighting(this);
       region = new RegionView(this);
+      city3d = new render.StreetView(game);
 
       // init sound
       sounds = new Sounds(this);
@@ -200,11 +204,70 @@ class GameScene
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.textAlign = 'center';
 
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
+      if (game.location == LOCATION_AREA && isCityArea())
+        drawCity3D();
+
+      else if (game.location == LOCATION_AREA)
+        {
+          hideCity3D();
+          game.scene.area.draw();
+        }
 
       else if (game.location == LOCATION_REGION)
-        game.scene.region.draw();
+        {
+          hideCity3D();
+          game.scene.region.draw();
+        }
+    }
+
+// is the current area a 3D-rendered city area?
+  inline function isCityArea(): Bool
+    {
+      return game.area != null &&
+        game.area.info.type == 'city';
+    }
+
+// show/refresh the 3D street view for the current city area (skips 2D area draw).
+// (re)builds only when the shown area changes; seeded areas regenerate from the
+// seed, old seedless saves reconstruct plain boxes from the saved tile grid
+  function drawCity3D()
+    {
+      if (game.area.id == _city3dArea && city3d.running)
+        return;
+      _city3dArea = game.area.id;
+      if (game.area.cityGenSeed >= 0)
+        city3d.show(game.area.cityGenSeed);
+      else city3d.showCity(reconstructCity());
+    }
+
+// hide the 3D view and forget the shown area (so re-entry rebuilds)
+  inline function hideCity3D()
+    {
+      _city3dArea = -1;
+      city3d.hide();
+    }
+
+// rebuild a citygen City from the saved game tile grid (old saves without a seed)
+  function reconstructCity(): citygen.CityModel.City
+    {
+      var cells = game.area.getCells();
+      var g = citygen.CityConfig.GRID;
+      var tiles = [for (r in 0...g) [for (c in 0...g) gameTileToCity(cells[c][r])]];
+      return citygen.CityGen.fromTiles(tiles);
+    }
+
+// map a game tile constant to the matching citygen Tile
+  inline function gameTileToCity(t: Int): citygen.CityModel.Tile
+    {
+      if (t == Const.TILE_ROAD ||
+          t == Const.TILE_CROSSWALKV ||
+          t == Const.TILE_CROSSWALKH)
+        return Road;
+      if (t == Const.TILE_ALLEY)
+        return Alley;
+      if (t == Const.TILE_BUILDING)
+        return Building;
+      return Walkway;
     }
 
 // begin render timing sample
@@ -357,6 +420,8 @@ class GameScene
     {
       canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
+      if (city3d != null)
+        city3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
       updateCamera();
       if (game.location == LOCATION_AREA)
         {
