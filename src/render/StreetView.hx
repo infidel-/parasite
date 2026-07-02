@@ -8,6 +8,15 @@ import citygen.CityModel.City;
 import game.Game;
 import entities.Entity;
 
+// smoothed grid->world position for one moving actor (and the camera target): last
+// target cell, slide origin, live interpolated x/z, and tween progress (1 = settled)
+typedef Slide = {
+  col:Int, row:Int,          // last target grid cell
+  fromX:Float, fromZ:Float,  // slide origin (world)
+  x:Float, z:Float,          // current interpolated world pos
+  t:Float                    // tween progress 0..1
+};
+
 // controller for the 3D street view. Owns a persistent renderer/camera on its own
 // WebGL canvas and a per-city scene + bloom composer; runs its own rAF loop while a
 // city area is shown. The game drives it directly (show/hide/resize) — no bridge.
@@ -31,6 +40,10 @@ class StreetView {
   var ring:Mesh;
   var pool:Array<Mesh> = [];                              // reused billboard meshes
   var texCache:Map<String, CanvasTexture> = new Map();    // atlas-crop -> texture
+  // per-actor slide state, keyed by entity identity. ponytail: dead AI entities linger
+  // here until the area rebuild clears the map — bounded per area, not worth pruning
+  var slides:haxe.ds.ObjectMap<Entity, Slide> = new haxe.ds.ObjectMap();
+  var camSlide:Slide;                                     // camera target (player cell) slide
 
   var freeCam:FreeCam;
   var toolsAttached = false;
@@ -166,6 +179,9 @@ class StreetView {
     actorGroup = new Group();
     scene.add(actorGroup);
     pool = [];
+    // fresh area: drop stale slides so actors snap to their start cells
+    slides = new haxe.ds.ObjectMap();
+    camSlide = null;
 
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
@@ -177,7 +193,7 @@ class StreetView {
     composer.addPass(new OutputPass());
 
     offset.set(RenderConfig.CAMERA.offset.x, RenderConfig.CAMERA.offset.y, RenderConfig.CAMERA.offset.z);
-    updatePlayerWorld();
+    updatePlayerWorld(0);
     camera.position.copy(pWorld).add(offset);
     camera.lookAt(pWorld);
 
@@ -211,10 +227,45 @@ class StreetView {
     if (composer != null) composer.setSize(w, h);
   }
 
-// world position of the game player's grid cell (camera target)
-  inline function updatePlayerWorld():Void {
-    var w = CityConfig.cellToWorld(game.playerArea.x, game.playerArea.y);
-    pWorld.set(w.x, 0, w.z);
+// advance the camera target toward the player's grid cell (smoothed slide)
+  function updatePlayerWorld(dtMs:Float):Void {
+    camSlide = slideTo(camSlide, game.playerArea.x, game.playerArea.y, dtMs);
+    pWorld.set(camSlide.x, 0, camSlide.z);
+  }
+
+// per-cell smoothstep slide toward grid (col,row): teleports (>~2 cells) snap, else the
+// sprite slides from where it is now over MOVE_MS. mutates+returns s (null => settled at
+// the cell). advances by dtMs each call; restarting mid-slide keeps motion continuous
+  function slideTo(s:Slide, col:Int, row:Int, dtMs:Float):Slide {
+    var w = CityConfig.cellToWorld(col, row);
+    if (s == null)
+      return { col: col, row: row, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1 };
+    // cell changed: snap on a big jump (area entry, stairs), else start a fresh slide
+    if (col != s.col || row != s.row)
+      {
+        var dx = w.x - s.x, dz = w.z - s.z;
+        var lim = CityConfig.CELL * 1.9;
+        if (dx * dx + dz * dz > lim * lim)
+          { s.x = w.x; s.z = w.z; s.t = 1; }
+        else
+          { s.fromX = s.x; s.fromZ = s.z; s.t = 0; }
+        s.col = col; s.row = row;
+      }
+    if (s.t < 1)
+      {
+        s.t = Math.min(1, s.t + dtMs / RenderConfig.MOVE_MS);
+        var e = s.t * s.t * (3 - 2 * s.t); // smoothstep
+        s.x = s.fromX + (w.x - s.fromX) * e;
+        s.z = s.fromZ + (w.z - s.fromZ) * e;
+      }
+    return s;
+  }
+
+// fetch/advance the slide for an actor entity, keyed by identity
+  function actorSlide(e:Entity, dtMs:Float):Slide {
+    var s = slideTo(slides.get(e), @:privateAccess e.mx, @:privateAccess e.my, dtMs);
+    slides.set(e, s);
+    return s;
   }
 
 // crop one atlas cell (imageName, ix, iy) into a cached texture
@@ -237,8 +288,8 @@ class StreetView {
     return tex;
   }
 
-// place/reuse a billboard mesh at grid cell (mx,my) with texture tex; returns next index
-  function billboard(idx:Int, mx:Int, my:Int, tex:CanvasTexture):Int {
+// place/reuse a billboard mesh at world (wx,wz) with texture tex; returns next index
+  function billboard(idx:Int, wx:Float, wz:Float, tex:CanvasTexture):Int {
     if (tex == null) return idx;
     var m = pool[idx];
     if (m == null) {
@@ -250,29 +301,35 @@ class StreetView {
     var mat:Dynamic = m.material;
     mat.map = tex;
     mat.needsUpdate = true;
-    var w = CityConfig.cellToWorld(mx, my);
-    m.position.set(w.x, BILLBOARD * 0.5, w.z);
+    m.position.set(wx, BILLBOARD * 0.5, wz);
     // Y-billboard: stand upright, yaw to face the camera
-    m.rotation.y = Math.atan2(camera.position.x - w.x, camera.position.z - w.z);
+    m.rotation.y = Math.atan2(camera.position.x - wx, camera.position.z - wz);
     m.visible = true;
     return idx + 1;
   }
 
-// rebuild all actor billboards (player + AI + objects) from live game state
-  function updateActors():Void {
+// rebuild all actor billboards (player + AI + objects) from live game state; moving
+// actors slide between cells, static objects snap to their cell
+  function updateActors(dtMs:Float):Void {
     var n = 0;
-    // objects (sewer hatches etc.)
+    // objects (sewer hatches etc.) — static, no slide
     for (o in game.area.getObjects())
       if (o.entity != null)
-        n = billboard(n, @:privateAccess o.entity.mx, @:privateAccess o.entity.my, texFor(o.entity));
+        {
+          var w = CityConfig.cellToWorld(@:privateAccess o.entity.mx, @:privateAccess o.entity.my);
+          n = billboard(n, w.x, w.z, texFor(o.entity));
+        }
     // AI
     for (ai in @:privateAccess game.area._ai)
       if (ai.entity != null)
-        n = billboard(n, @:privateAccess ai.entity.mx, @:privateAccess ai.entity.my, texFor(ai.entity));
+        {
+          var s = actorSlide(ai.entity, dtMs);
+          n = billboard(n, s.x, s.z, texFor(ai.entity));
+        }
     // player (only drawn as parasite; in a host the host AI carries the sprite)
     if (game.player.state == _PlayerState.PLR_STATE_PARASITE) {
-      var e = game.playerArea.entity;
-      n = billboard(n, @:privateAccess e.mx, @:privateAccess e.my, texFor(e));
+      var s = actorSlide(game.playerArea.entity, dtMs);
+      n = billboard(n, s.x, s.z, texFor(game.playerArea.entity));
     }
     // hide leftover pooled meshes
     for (i in n...pool.length)
@@ -288,9 +345,9 @@ class StreetView {
     var dtMs = last == 0 ? frameMs : t - last;
     last = t;
 
-    updatePlayerWorld();
+    updatePlayerWorld(dtMs);
     ring.position.set(pWorld.x, 0.06, pWorld.z);
-    updateActors();
+    updateActors(dtMs);
 
     // free cam owns the camera while active; otherwise follow the player
     if (freeCam != null && freeCam.active)
