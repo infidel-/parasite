@@ -28,7 +28,7 @@ class HUD
   public var targeting: Targeting;
   public var command: Command;
   // per-block sub-classes (each owns its DOM, appended to container)
-  var topbar: TopbarHud;
+  public var topbar: TopbarHud;
   var log: LogHud;
   public var goals: GoalsHud;
   public var infoHud: InfoHud;

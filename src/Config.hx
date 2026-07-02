@@ -24,6 +24,7 @@ class Config
   public var spoonHabitatAmbush: Bool;
   public var spoonNoSavesLimit: Bool;
   public var aiArtEnabled: Bool;
+  public var showFps: Bool;
 
   public var font: String;
   public var fontSize: Int;
@@ -63,6 +64,7 @@ class Config
       spoonHabitatAmbush = false;
       spoonNoSavesLimit = false;
       aiArtEnabled = true;
+      showFps = false;
 
       font = 'Virtucorp';
       fontSize = 14;
@@ -93,6 +95,7 @@ class Config
       map['spoonHabitatAmbush'] = '0';
       map['spoonNoSavesLimit'] = '0';
       map['aiArtEnabled'] = '1';
+      map['showFps'] = '0';
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -172,6 +175,8 @@ class Config
         extendedInfo = (val == '1');
       else if (key == 'alwaysCenterCamera')
         alwaysCenterCamera = (val == '1');
+      else if (key == 'showFps')
+        showFps = (val == '1');
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
       else if (key == 'shiftLongActions')

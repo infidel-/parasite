@@ -141,6 +141,8 @@ class Options extends UIWindow
       addOptToggle('Extended gameplay information', 'extendedInfo', game.config.extendedInfo);
       addOptToggle('Shift-click/number repeat action', 'shiftLongActions', game.config.shiftLongActions);
       addOptToggle('Show mouse cursor on map', 'mouseEnabled', game.config.mouseEnabled);
+      addOptToggle('Show FPS counter', 'showFps', game.config.showFps,
+        function (on) game.ui.hud.topbar.ensureFps());
 
       finishCard();
       // start with only the first MAX_OPEN cards expanded
@@ -261,8 +263,9 @@ class Options extends UIWindow
       ctl.appendChild(val);
     }
 
-// toggle switch row (replaces the offset-checkbox)
-  function addOptToggle(label: String, id: String, value: Bool)
+// toggle switch row (replaces the offset-checkbox). optional onSet runs after the
+// config write, for toggles that need to act immediately (e.g. start the FPS meter)
+  function addOptToggle(label: String, id: String, value: Bool, ?onSet: Bool -> Void)
     {
       var ctl = addRow(label);
       var sw = Browser.document.createDivElement();
@@ -271,6 +274,8 @@ class Options extends UIWindow
         var on = !sw.classList.contains('on');
         sw.classList.toggle('on', on);
         game.config.set(id, (on ? '1' : '0'), true);
+        if (onSet != null)
+          onSet(on);
       };
       ctl.appendChild(sw);
     }

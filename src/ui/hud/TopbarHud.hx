@@ -17,6 +17,10 @@ class TopbarHud
   var topbarCoords: DivElement;
   var topbarTurn: SpanElement;
   var topbarPinSvg: Element;
+  var fpsEl: SpanElement;          // FPS readout (left of the gear); shown only when config.showFps
+  var fpsFrames: Int = 0;          // frames counted in the current sample window
+  var fpsSample: Float = 0;        // rAF timestamp of the current sample window start (0 = fresh)
+  var fpsRunning: Bool = false;    // is the rAF meter loop live?
   var lastTurn: Int = -1;          // detects turn advance for odometer tick
   var lastLocName: String = '';    // detects area change for decode + pin ping
   var decodeGen: Int = 0;          // generation token: cancels stale in-flight decode loops
@@ -34,23 +38,62 @@ class TopbarHud
         '<div class="hud-loc">' + UISvg.hudPin() +
           '<div><div class="hud-loc-name"></div><div class="hud-loc-coords"></div></div></div>' +
         '<div class="hud-turn">' + UISvg.clockSmall('hud-ico-time') + '<span></span></div>' +
-        '<div class="hud-right"><div class="hud-gear">' + UISvg.hudGear() + '</div></div>';
+        '<div class="hud-right"><span class="hud-fps" style="font-family:monospace;font-size:11px;color:var(--dim);align-self:center;margin-right:8px;display:none"></span><div class="hud-gear">' + UISvg.hudGear() + '</div></div>';
       hud.container.appendChild(topbar);
       topbarName = cast topbar.querySelector('.hud-loc-name');
       topbarCoords = cast topbar.querySelector('.hud-loc-coords');
       topbarTurn = cast topbar.querySelector('.hud-turn span');
       topbarPinSvg = topbar.querySelector('.hud-loc svg');
+      fpsEl = cast topbar.querySelector('.hud-fps');
       // gear opens options
       (cast topbar.querySelector('.hud-gear') : DivElement).onclick = function (e)
         {
           game.scene.sounds.play('click-hud');
           game.ui.state = UISTATE_MAINMENU;
         };
+      ensureFps();
+    }
+
+// start the rAF FPS meter if enabled and not already running; sync span visibility.
+// called from the constructor, update(), and the Advanced toggle (immediate response)
+  public function ensureFps()
+    {
+      fpsEl.style.display = (game.config.showFps ? '' : 'none');
+      if (game.config.showFps && !fpsRunning)
+        {
+          fpsRunning = true;
+          fpsFrames = 0;
+          fpsSample = 0;
+          js.Browser.window.requestAnimationFrame(fpsTick);
+        }
+    }
+
+// per-frame meter: count rAF callbacks, report averaged FPS every ~500ms. self-stops
+// (and hides) when config.showFps turns off, so it costs nothing while disabled
+  function fpsTick(now: Float)
+    {
+      if (!game.config.showFps)
+        {
+          fpsRunning = false;
+          fpsEl.style.display = 'none';
+          return;
+        }
+      fpsFrames++;
+      if (fpsSample == 0)
+        fpsSample = now;
+      else if (now - fpsSample >= 500)
+        {
+          fpsEl.textContent = Math.round(fpsFrames * 1000 / (now - fpsSample)) + ' FPS';
+          fpsFrames = 0;
+          fpsSample = now;
+        }
+      js.Browser.window.requestAnimationFrame(fpsTick);
     }
 
 // update topbar: turn counter (odometer tick), location name (decode) + coords
   public function update()
     {
+      ensureFps(); // pick up a config toggle (also (re)starts the meter after a HUD rebuild)
       // turn advance: number rolls over, brackets/word flash (css via .tick)
       if (game.turns != lastTurn)
         {
