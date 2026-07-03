@@ -709,7 +709,10 @@ class PlayerArea extends _SaveObject
         }
 
       game.profile.addPediaArticle('hostInvading');
-      game.scene.sounds.play('parasite-attach');
+      // the 3D leap plays the attach sound on landing; play it here only when that view
+      // isn't running (other area types / debug) so it isn't doubled or lost
+      if (!game.scene.city3d.running)
+        game.scene.sounds.play('parasite-attach');
       ai.onAttach(); // callback to AI
 
       return true;

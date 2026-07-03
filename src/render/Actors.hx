@@ -4,6 +4,8 @@ import three.Three;
 import js.Browser;
 import citygen.CityConfig;
 import render.ActorAnim;
+import render.anim.Effect;
+import render.anim.JumpOnFace;
 import game.Game;
 import entities.Entity;
 
@@ -22,36 +24,43 @@ class Actors {
   // until the area rebuild drops this whole object — bounded per area, not worth pruning
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
 
-  // scratch written by applyAnim (single-threaded, one actor at a time — no alloc)
-  var fxOffX:Float = 0;
-  var fxOffY:Float = 0;
-  var fxOffZ:Float = 0;
-  var fxScale:Float = 1.0;
+  var lastState:_PlayerState;                            // prev-frame player state (attach transition)
 
   static inline var BILLBOARD = CityConfig.CELL * 0.85; // actor sprite world size
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
+  static inline var TILT = 0.6;                        // radians the billboard leans back toward the overhead camera (0 = upright)
+  static inline var ATTACH_HEAD_Y = BILLBOARD * 0.1;  // attached parasite rides this far above the host's ground center (its head)
+  static inline var ATTACH_SCALE = 1.0;                // attached parasite is drawn this much smaller (sits on the head)
 
   public function new(game:Game, actorGroup:Group, camera:PerspectiveCamera)
     {
       this.game = game;
       this.actorGroup = actorGroup;
       this.camera = camera;
+      lastState = game.player.state;
     }
 
-// trigger a transient effect on an actor's billboard. called by game logic when the
-// triggering feature fires (JUMP_ON_FACE on infect, SHAKE on damage, ATTACK_LUNGE on
-// melee); no-op if the actor has no live billboard state yet
-  public function playFx(e:Entity, kind:AnimKind, ms:Float, px:Float, py:Float, pz:Float):Void
+// attach a transient effect to an actor's billboard (build it from render.anim.*, e.g.
+// new Shake(BASE_MS, amp) on damage, new Lunge(...) on melee); no-op if the actor has no
+// live billboard state yet
+  public function playFx(e:Entity, fx:Effect):Void
     {
       var a = actors.get(e);
       if (a == null) return;
-      a.fx = { kind: kind, t: 0, ms: ms, px: px, py: py, pz: pz };
+      a.fx = fx;
     }
 
 // rebuild all actor billboards from live game state; actors slide + fade, effects layer
 // on top. objects/AI gated on player fog/LOS to match the 2D view
   public function update(dtMs:Float):Void
     {
+      // detect the parasite->attached transition and launch the jump-onto-host leap
+      var st = game.player.state;
+      if (st == _PlayerState.PLR_STATE_ATTACHED &&
+          lastState == _PlayerState.PLR_STATE_PARASITE)
+        startJumpOnFace();
+      lastState = st;
+
       var n = 0;
       // objects (sewer hatches etc.): static, but still fade. parasite keeps seeing
       // sensable objects outside LOS
@@ -73,29 +82,50 @@ class Actors {
               game.playerArea.sees(ai.x, ai.y);
             n = drawActor(n, ai.entity, vis, dtMs);
           }
-      // player (only drawn as parasite; in a host the host AI carries the sprite)
-      if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
+      // player billboard: free parasite draws its own sprite; while attached it rides on
+      // the host's head (the host itself is still drawn by the AI loop above); once in a
+      // host the parasite is hidden inside it and only the ring marks the player
+      if (st == _PlayerState.PLR_STATE_PARASITE)
         n = drawActor(n, game.playerArea.entity, true, dtMs);
+      else if (st == _PlayerState.PLR_STATE_ATTACHED)
+        n = drawActor(n, game.playerArea.entity, true, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
       // hide leftover pooled meshes
       for (i in n...pool.length)
         if (pool[i] != null) pool[i].visible = false;
     }
 
 // advance one actor's anim state and place its billboard; returns the next pool index
-// (unchanged if the actor is fully faded out with no effect running)
-  function drawActor(n:Int, e:Entity, vis:Bool, dtMs:Float):Int
+// (unchanged if the actor is fully faded out with no effect running). baseY/baseScale set
+// the resting pose (nonzero for the attached parasite riding a host's head)
+  function drawActor(n:Int, e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0):Int
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
           a.fx == null)
         return n;
-      var wy = BILLBOARD * 0.5;
+      var wy = BILLBOARD * 0.5 + baseY;
       if (a.fx != null)
-        {
-          applyAnim(a.fx);
-          return billboard(n, a.x + fxOffX, wy + fxOffY, a.z + fxOffZ, texFor(e), a.op, fxScale);
-        }
-      return billboard(n, a.x, wy, a.z, texFor(e), a.op, 1.0);
+        return billboard(n, a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale);
+      return billboard(n, a.x, wy, a.z, texFor(e), a.op, baseScale);
+    }
+
+// launch the parasite's leap onto the host's head: snap its slide onto the host cell so
+// the effect owns the whole visible travel, then arc it in from where it stood on the
+// ground. called once on the parasite->attached transition
+  function startJumpOnFace():Void
+    {
+      var pe = game.playerArea.entity;
+      var a = actors.get(pe);
+      if (a == null) return;
+      // where the free parasite currently stands (approach cell, ground)
+      var startX = a.x, startZ = a.z;
+      // snap the base slide onto the host cell (the effect renders the leap)
+      var w = CityConfig.cellToWorld(pe.mx, pe.my);
+      a.col = pe.mx; a.row = pe.my;
+      a.fromX = w.x; a.fromZ = w.z; a.x = w.x; a.z = w.z; a.t = 1;
+      // offsets are relative to the resting head pose (decay to 0 on landing); the effect
+      // owns its launch/landing sounds
+      a.fx = new JumpOnFace(game, RenderConfig.BASE_MS, startX - w.x, -ATTACH_HEAD_Y, startZ - w.z, BILLBOARD * 0.5);
     }
 
 // get/create an actor's anim state and advance it one frame (position slide, opacity
@@ -119,42 +149,11 @@ class Actors {
       var opStep = step * FADE_SPEED;
       if (a.op < a.opTarget) a.op = Math.min(a.opTarget, a.op + opStep);
       else if (a.op > a.opTarget) a.op = Math.max(a.opTarget, a.op - opStep);
-      // transient effect: advance over its own duration, clear when done
-      if (a.fx != null)
-        {
-          a.fx.t += dtMs * RenderConfig.ANIM_SPEED / a.fx.ms;
-          if (a.fx.t >= 1) a.fx = null;
-        }
+      // transient effect: advance it (computes its offsets, fires onFinish), clear when done
+      if (a.fx != null &&
+          a.fx.advance(dtMs))
+        a.fx = null;
       return a;
-    }
-
-// write the current-frame offset/scale of a transient effect into the fx* scratch, from
-// its progress k (0..1). add a kind = add a case (see ActorAnim.AnimKind)
-  function applyAnim(fx:Anim):Void
-    {
-      var k = fx.t;
-      fxOffX = 0; fxOffY = 0; fxOffZ = 0; fxScale = 1.0;
-      switch (fx.kind)
-        {
-          case POP:
-            // scale small -> overshoot -> 1 (settles at 1 when k=1)
-            fxScale = 0.4 + 0.6 * (k * k * (3 - 2 * k)) + 0.15 * Math.sin(Math.PI * k);
-          case JUMP_ON_FACE:
-            // horizontal lerp to the (px,pz) delta + parabolic arc up (py = peak height)
-            fxOffX = fx.px * k;
-            fxOffZ = fx.pz * k;
-            fxOffY = 4 * fx.py * k * (1 - k);
-          case SHAKE:
-            // decaying positional jitter, amplitude py (zero at k=1)
-            var d = (1 - k) * fx.py;
-            fxOffX = d * Math.sin(k * 40);
-            fxOffZ = d * Math.cos(k * 37);
-          case ATTACK_LUNGE:
-            // there-and-back toward (px,pz): zero at k=0 and k=1, peak mid
-            var m = Math.sin(Math.PI * k);
-            fxOffX = fx.px * m;
-            fxOffZ = fx.pz * m;
-        }
     }
 
 // crop one atlas cell (imageName, ix, iy) into a cached texture; null until decoded
@@ -202,8 +201,10 @@ class Actors {
       mat.needsUpdate = true;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
-      // Y-billboard: stand upright, yaw to face the camera
-      m.rotation.y = Math.atan2(camera.position.x - wx, camera.position.z - wz);
+      // yaw to face the camera, then lean the top back toward the overhead camera (world-X
+      // tilt applied first in XYZ order = a uniform lean) so the sprite reads flatter to it.
+      // rotation.set resets x/z each frame so the lean never accumulates
+      m.rotation.set(-TILT, Math.atan2(camera.position.x - wx, camera.position.z - wz), 0);
       m.visible = true;
       return idx + 1;
     }

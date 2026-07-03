@@ -1,9 +1,11 @@
 package render;
 
 import citygen.CityConfig;
+import render.anim.Effect;
 
 // per-actor 3D animation data + the shared position-slide helper. behavior lives in
-// render.Actors; StreetView reuses PosSlide + slideTo for the camera target.
+// render.Actors; transient effects live in render.anim.*; StreetView reuses PosSlide +
+// slideTo for the camera target.
 
 // position channel: smoothstep slide toward a grid cell (also used for the camera)
 typedef PosSlide = {
@@ -17,24 +19,8 @@ typedef PosSlide = {
 typedef Actor = {
   > PosSlide,
   op:Float, opTarget:Float,  // opacity channel: eased toward want-visible (1/0)
-  fx:Anim                    // one-shot transient effect, null = none
+  fx:Effect                  // one-shot transient effect (render.anim.*), null = none
 };
-
-// a transient one-shot effect layered on a billboard; advances t 0..1 then auto-clears.
-// px,py,pz are a generic param (delta-to-target / direction / amplitude), meaning per kind
-typedef Anim = {
-  kind:AnimKind,
-  t:Float, ms:Float,
-  px:Float, py:Float, pz:Float
-};
-
-// effect kinds. add a case here + a branch in Actors.applyAnim to add an animation
-enum AnimKind {
-  POP;           // spawn bounce: scale small->overshoot->1 (no offset)
-  JUMP_ON_FACE;  // parasite leap: horizontal lerp to (px,pz) + parabolic arc up (py = peak height)
-  SHAKE;         // decaying positional jitter, amplitude py
-  ATTACK_LUNGE;  // there-and-back toward (px,pz), zero at k=0 and k=1
-}
 
 class ActorAnim {
 // advance a position slide toward grid cell (col,row) by tween-progress `step`: a big

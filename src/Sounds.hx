@@ -465,13 +465,23 @@ class Sounds
   function playNow(key: String, opts: _SoundOptions)
     {
 #if !free
+      // explicit variant: caller passed a name ending in a digit (e.g. 'fx-splat3') whose
+      // digit-stripped base is a library key — play that exact file, no random pick
+      var lastCh = key.charCodeAt(key.length - 1);
+      var explicit =
+        lastCh >= 48 &&
+        lastCh <= 57 &&
+        sounds[key] == null &&
+        sounds[key.substr(0, key.length - 1)] != null;
       var res = sounds[key];
-      if (res == null)
+      if (res == null &&
+          !explicit)
         {
           game.log('Sound [' + key + '] not found.');
           return;
         }
-      if (res[0] != -1)
+      if (!explicit &&
+          res[0] != -1)
         {
           // pick a variant, excluding the last one played for this key
           var variant = res[0];
