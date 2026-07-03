@@ -5,7 +5,6 @@ import js.Browser;
 import citygen.CityGen;
 import citygen.CityConfig;
 import citygen.CityModel.City;
-import render.ActorAnim;
 import game.Game;
 
 // controller for the 3D street view. Owns a persistent renderer/camera on its own
@@ -30,7 +29,7 @@ class StreetView {
   var actorGroup:Group;
   var ring:Mesh;
   var actors:Actors;                                      // the billboard actor layer
-  var camSlide:PosSlide;                                  // camera target (player cell) slide
+  var rig:CameraRig;                                      // the follow camera + zoom
 
   var freeCam:FreeCam;
   var toolsAttached = false;
@@ -40,11 +39,6 @@ class StreetView {
   public var running(default, null):Bool = false;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
-
-  var offset = new Vector3();
-  var desired = new Vector3();
-  var lookAt = new Vector3();
-  var pWorld = new Vector3(); // current player world position (camera target)
 
   static inline var FPS = 30;
 
@@ -58,6 +52,11 @@ class StreetView {
       if (e.code == 'Backquote') setDebug(!debugOn);
       else if (debugOn && e.code == 'Digit1' && toggleLighting != null)
         bloomPass.enabled = !toggleLighting();
+    });
+    // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
+    Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
+      if (!running || debugOn || rig == null) return;
+      rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
   }
 
@@ -110,6 +109,7 @@ class StreetView {
     core = SceneSetup.createCore(canvas);
     renderer = core.renderer;
     camera = core.camera;
+    rig = new CameraRig(game, camera);
   }
 
 // attach the debug tools once (camera is persistent; scene/city read via getters)
@@ -172,7 +172,6 @@ class StreetView {
     scene.add(actorGroup);
     // fresh area: new actor layer so billboards/slides/effects start clean
     actors = new Actors(game, actorGroup, camera);
-    camSlide = null;
 
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
@@ -183,10 +182,7 @@ class StreetView {
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
 
-    offset.set(RenderConfig.CAMERA.offset.x, RenderConfig.CAMERA.offset.y, RenderConfig.CAMERA.offset.z);
-    updatePlayerWorld(0);
-    camera.position.copy(pWorld).add(offset);
-    camera.lookAt(pWorld);
+    rig.reset();
 
     canvas.style.display = 'block';
     if (!running) {
@@ -218,14 +214,7 @@ class StreetView {
     if (composer != null) composer.setSize(w, h);
   }
 
-// advance the camera target toward the player's grid cell (smoothed slide)
-  function updatePlayerWorld(dtMs:Float):Void {
-    var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
-    camSlide = ActorAnim.slideTo(camSlide, game.playerArea.x, game.playerArea.y, step);
-    pWorld.set(camSlide.x, 0, camSlide.z);
-  }
-
-// rAF loop: mirror actors, follow the player (or fly), render the bloom frame
+// rAF loop: follow the player (or fly), mirror actors, render the bloom frame
   function loop(t:Float):Void {
     if (!running) return;
     Browser.window.requestAnimationFrame(loop);
@@ -234,20 +223,13 @@ class StreetView {
     var dtMs = last == 0 ? frameMs : t - last;
     last = t;
 
-    updatePlayerWorld(dtMs);
-    ring.position.set(pWorld.x, 0.06, pWorld.z);
+    // free cam owns the camera while active; the rig still tracks the player so the ring follows
+    var freeing = freeCam != null && freeCam.active;
+    rig.update(dtMs, !freeing);
+    if (freeing) freeCam.update(dtMs);
+    var p = rig.playerWorld();
+    ring.position.set(p.x, 0.06, p.z);
     actors.update(dtMs);
-
-    // free cam owns the camera while active; otherwise follow the player
-    if (freeCam != null && freeCam.active)
-      freeCam.update(dtMs);
-    else {
-      desired.copy(pWorld).add(offset);
-      camera.position.lerp(desired, RenderConfig.CAMERA.follow);
-      lookAt.copy(pWorld);
-      lookAt.y += 1.5;
-      camera.lookAt(lookAt);
-    }
 
     composer.render();
   }
