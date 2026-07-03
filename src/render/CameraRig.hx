@@ -64,7 +64,10 @@ class CameraRig {
           zoomTarget = targetFor(st);
           lastState = st;
         }
-      zoom += (zoomTarget - zoom) * RenderConfig.CAMERA.zoomLerp;
+      // frame-rate-independent smoothing: zoomLerp is tuned per 30fps frame, dt-compensated
+      // so the ease feels identical at any render rate (exact exponential decay)
+      var k = 1 - Math.pow(1 - RenderConfig.CAMERA.zoomLerp, dtMs / (1000 / 30));
+      zoom += (zoomTarget - zoom) * k;
       applyOffset();
       if (!followCamera) return;
       desired.copy(pWorld).add(offset);

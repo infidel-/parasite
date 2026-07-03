@@ -24,12 +24,13 @@ class Config
   public var spoonHabitatAmbush: Bool;
   public var spoonNoSavesLimit: Bool;
   public var aiArtEnabled: Bool;
-  public var showFps: Bool;
+  public var vidShowFps: Bool;
 
   public var font: String;
   public var fontSize: Int;
   public var fontTitle: String;
   public var hudLogLines: Int;
+  public var vidFpsCap: Int;
   public var mapScale: Float;
   public var minimapScale: Float;
   public var repeatDelay: Int;
@@ -64,7 +65,8 @@ class Config
       spoonHabitatAmbush = false;
       spoonNoSavesLimit = false;
       aiArtEnabled = true;
-      showFps = false;
+      vidShowFps = false;
+      vidFpsCap = 60;
 
       font = 'Virtucorp';
       fontSize = 14;
@@ -95,7 +97,8 @@ class Config
       map['spoonHabitatAmbush'] = '0';
       map['spoonNoSavesLimit'] = '0';
       map['aiArtEnabled'] = '1';
-      map['showFps'] = '0';
+      map['vidShowFps'] = '0';
+      map['vidFpsCap'] = '60';
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -175,8 +178,17 @@ class Config
         extendedInfo = (val == '1');
       else if (key == 'alwaysCenterCamera')
         alwaysCenterCamera = (val == '1');
-      else if (key == 'showFps')
-        showFps = (val == '1');
+      else if (key == 'vidShowFps')
+        vidShowFps = (val == '1');
+      // settings.json is user-editable (trust boundary): guard the frame cap so a bad
+      // value can't become 1000/0 = Infinity and stall the street-view render loop
+      else if (key == 'vidFpsCap')
+        {
+          vidFpsCap = Std.parseInt(val);
+          if (vidFpsCap == null ||
+              vidFpsCap <= 0)
+            vidFpsCap = 60;
+        }
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
       else if (key == 'shiftLongActions')
@@ -270,16 +282,19 @@ class Config
   public function save(needRestart: Bool)
     {
       game.debug('config save');
+      // sorted keys so settings.json is stable/diffable (mods subtree appended last)
+      var keys = [for (k in map.keys()) k];
+      keys.sort(Reflect.compare);
 #if electron
       var obj = {};
-      for (k => v in map)
-        Reflect.setField(obj, k, v);
+      for (k in keys)
+        Reflect.setField(obj, k, map[k]);
       Reflect.setField(obj, 'mods', mods);
       HostBridge.settingsWrite(Json.stringify(obj, null, '  '));
 #elseif js
       var obj = {};
-      for (key in map.keys())
-        Reflect.setField(obj, key, map[key]);
+      for (k in keys)
+        Reflect.setField(obj, k, map[k]);
       Reflect.setField(obj, 'mods', mods);
       var str = haxe.Json.stringify(obj);
       js.Browser.window.localStorage.setItem('config', str);
@@ -288,8 +303,8 @@ class Config
         game.log('Config saved. Reload page to apply new settings.');
 #else
       var s = new StringBuf();
-      for (key in map.keys())
-        s.add(key + ' = ' + map[key] + '\n');
+      for (k in keys)
+        s.add(k + ' = ' + map[k] + '\n');
       sys.io.File.saveContent('parasite.cfg', s.toString());
 #end
     }

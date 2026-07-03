@@ -40,7 +40,6 @@ class StreetView {
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
 
-  static inline var FPS = 30;
 
   public function new(game:Game) {
     this.game = game;
@@ -218,8 +217,10 @@ class StreetView {
   function loop(t:Float):Void {
     if (!running) return;
     Browser.window.requestAnimationFrame(loop);
-    var frameMs = 1000 / FPS;
-    if (t - last < frameMs) return;
+    var frameMs = 1000 / game.config.vidFpsCap; // render cap (options: Video > FPS cap)
+    // render up to the cap; small slack so a near-miss vsync frame (16.6ms vs a 16.67 budget)
+    // isn't dropped to half-rate
+    if (t - last < frameMs - 2) return;
     var dtMs = last == 0 ? frameMs : t - last;
     last = t;
 

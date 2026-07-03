@@ -17,7 +17,7 @@ class TopbarHud
   var topbarCoords: DivElement;
   var topbarTurn: SpanElement;
   var topbarPinSvg: Element;
-  var fpsEl: SpanElement;          // FPS readout (left of the gear); shown only when config.showFps
+  var fpsEl: SpanElement;          // FPS readout (left of the gear); shown only when config.vidShowFps
   var fpsFrames: Int = 0;          // frames counted in the current sample window
   var fpsSample: Float = 0;        // rAF timestamp of the current sample window start (0 = fresh)
   var fpsRunning: Bool = false;    // is the rAF meter loop live?
@@ -55,11 +55,11 @@ class TopbarHud
     }
 
 // start the rAF FPS meter if enabled and not already running; sync span visibility.
-// called from the constructor, update(), and the Advanced toggle (immediate response)
+// called from the constructor, update(), and the Video toggle (immediate response)
   public function ensureFps()
     {
-      fpsEl.style.display = (game.config.showFps ? '' : 'none');
-      if (game.config.showFps && !fpsRunning)
+      fpsEl.style.display = (game.config.vidShowFps ? '' : 'none');
+      if (game.config.vidShowFps && !fpsRunning)
         {
           fpsRunning = true;
           fpsFrames = 0;
@@ -69,10 +69,10 @@ class TopbarHud
     }
 
 // per-frame meter: count rAF callbacks, report averaged FPS every ~500ms. self-stops
-// (and hides) when config.showFps turns off, so it costs nothing while disabled
+// (and hides) when config.vidShowFps turns off, so it costs nothing while disabled
   function fpsTick(now: Float)
     {
-      if (!game.config.showFps)
+      if (!game.config.vidShowFps)
         {
           fpsRunning = false;
           fpsEl.style.display = 'none';

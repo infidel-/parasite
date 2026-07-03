@@ -72,6 +72,13 @@ class Options extends UIWindow
           game.scene.sounds.ambientVolumeChanged();
         });
 
+      // ---- VIDEO ----
+      addCard('Video');
+      addOptRadio('FPS cap', [30, 60, 75, 90, 144], game.config.vidFpsCap,
+        function (v) game.config.set('vidFpsCap', '' + v, true));
+      addOptToggle('Show FPS counter', 'vidShowFps', game.config.vidShowFps,
+        function (on) game.ui.hud.topbar.ensureFps());
+
       // ---- INTERFACE ----
       addCard('Interface');
       addOptSlider('Repeat delay', game.config.repeatDelay, 0, 500, 10, 'int', 'ms',
@@ -141,8 +148,6 @@ class Options extends UIWindow
       addOptToggle('Extended gameplay information', 'extendedInfo', game.config.extendedInfo);
       addOptToggle('Shift-click/number repeat action', 'shiftLongActions', game.config.shiftLongActions);
       addOptToggle('Show mouse cursor on map', 'mouseEnabled', game.config.mouseEnabled);
-      addOptToggle('Show FPS counter', 'showFps', game.config.showFps,
-        function (on) game.ui.hud.topbar.ensureFps());
 
       finishCard();
       // start with only the first MAX_OPEN cards expanded
@@ -278,6 +283,30 @@ class Options extends UIWindow
           onSet(on);
       };
       ctl.appendChild(sw);
+    }
+
+// segmented radio row: one lit button per int value. onSet gets the picked value
+  function addOptRadio(label: String, values: Array<Int>, selected: Int, onSet: Int -> Void)
+    {
+      var ctl = addRow(label);
+      var seg = Browser.document.createDivElement();
+      seg.className = 'options-seg';
+      var btns: Array<DivElement> = [];
+      for (v in values)
+        {
+          var b = Browser.document.createDivElement();
+          b.className = 'options-seg-btn' + (v == selected ? ' on' : '');
+          b.innerHTML = '' + v;
+          b.onclick = function (e) {
+            for (x in btns)
+              x.classList.remove('on');
+            b.classList.add('on');
+            onSet(v);
+          };
+          btns.push(b);
+          seg.appendChild(b);
+        }
+      ctl.appendChild(seg);
     }
 
 // select row (styled native); presets adds the inline PRESETS button (difficulty)

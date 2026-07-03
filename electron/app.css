@@ -5619,6 +5619,34 @@ select {
   background: #11151b;
   color: var(--text);
 }
+/* segmented radio (FPS cap) — one lit button per value, mimics .win-switch.on accent */
+.options-seg {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.28);
+  border: 1px solid var(--border);
+}
+.options-seg-btn {
+  font-family: var(--text-font), monospace;
+  font-size: calc(var(--text-font-size) * 0.867);
+  letter-spacing: .04em;
+  color: var(--blue-gray);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: var(--ui-cursor);
+  transition: background .16s, color .16s, box-shadow .16s;
+}
+.options-seg-btn:hover {
+  color: var(--text);
+  background: rgba(255,255,255,.05);
+}
+.options-seg-btn.on {
+  color: #fff;
+  background: color-mix(in srgb, var(--win-accent) 30%, transparent);
+  box-shadow: 0 0 14px -4px var(--win-accent), inset 0 0 0 1px color-mix(in srgb, var(--win-accent) 35%, transparent);
+}
 /* inline PRESETS button on the difficulty row */
 .options-presets {
   font-family: var(--text-font-title), sans-serif;
