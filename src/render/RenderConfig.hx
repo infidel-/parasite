@@ -98,7 +98,8 @@ class RenderConfig {
     fov: 45.0,
     follow: 1.0
   }; // tan(20deg) ≈ 0.36 → 22/60; follow = per-frame lerp (higher = tighter)
-  public static inline var MOVE_MS = 150;          // per-cell slide duration
+  public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
+  public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt
 
   // texture paths, grouped by role; arrays indexed by facade variant [concrete, brick]
   public static final TEXTURES = {
