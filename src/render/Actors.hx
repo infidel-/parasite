@@ -6,6 +6,7 @@ import citygen.CityConfig;
 import render.ActorAnim;
 import render.anim.Effect;
 import render.anim.JumpOnFace;
+import render.anim.LeaveHost;
 import game.Game;
 import entities.Entity;
 
@@ -54,11 +55,15 @@ class Actors {
 // on top. objects/AI gated on player fog/LOS to match the 2D view
   public function update(dtMs:Float):Void
     {
-      // detect the parasite->attached transition and launch the jump-onto-host leap
+      // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
           lastState == _PlayerState.PLR_STATE_PARASITE)
         startJumpOnFace();
+      else if (st == _PlayerState.PLR_STATE_PARASITE &&
+               (lastState == _PlayerState.PLR_STATE_ATTACHED ||
+                lastState == _PlayerState.PLR_STATE_HOST))
+        startLeaveHost();
       lastState = st;
 
       var n = 0;
@@ -126,6 +131,29 @@ class Actors {
       // offsets are relative to the resting head pose (decay to 0 on landing); the effect
       // owns its launch/landing sounds
       a.fx = new JumpOnFace(game, RenderConfig.BASE_MS, startX - w.x, -ATTACH_HEAD_Y, startZ - w.z, BILLBOARD * 0.5);
+    }
+
+// launch the parasite's leap off the host back to the ground: arc down from the head to the
+// resting ground pose. called on the leave->parasite transition (detach, leave host, death)
+  function startLeaveHost():Void
+    {
+      var pe = game.playerArea.entity;
+      var a = actors.get(pe);
+      if (a == null) return;
+      var w = CityConfig.cellToWorld(pe.mx, pe.my);
+      // coming from ATTACHED the parasite tracked the host, so leap horizontally from where
+      // it sat to the destination cell (no teleport); from HOST it wasn't drawn, so its slide
+      // is stale — just drop straight down in place
+      var px = 0.0, pz = 0.0;
+      if (lastState == _PlayerState.PLR_STATE_ATTACHED)
+        {
+          px = a.x - w.x;
+          pz = a.z - w.z;
+        }
+      a.col = pe.mx; a.row = pe.my;
+      a.fromX = w.x; a.fromZ = w.z; a.x = w.x; a.z = w.z; a.t = 1;
+      // starts at the head (offset up + horizontal) and lands on the resting ground pose
+      a.fx = new LeaveHost(game, RenderConfig.BASE_MS, px, ATTACH_HEAD_Y, pz, BILLBOARD * 0.5);
     }
 
 // get/create an actor's anim state and advance it one frame (position slide, opacity

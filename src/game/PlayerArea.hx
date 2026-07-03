@@ -1490,7 +1490,10 @@ class PlayerArea extends _SaveObject
       // scene and survive across host swaps
       game.ui.hud.targeting.clearTarget();
 
-      game.scene.sounds.play('parasite-detach');
+      // the 3D leap-off plays the detach sound on launch; play it here only when that view
+      // isn't running (other area types / debug) so it isn't doubled or lost
+      if (!game.scene.city3d.running)
+        game.scene.sounds.play('parasite-detach');
     }
 
 
