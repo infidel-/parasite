@@ -172,7 +172,13 @@ class StreetView {
     // player marker ring + the group holding all actor billboards
     ring = new Mesh(
       new RingGeometry(CityConfig.CELL * 0.42, CityConfig.CELL * 0.52, 40),
-      new MeshBasicMaterial({ color: 0xb46bff, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+      new MeshBasicMaterial({
+        color: 0xb46bff,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      }));
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.06;
     scene.add(ring);
@@ -263,25 +269,26 @@ class StreetView {
 
 // fetch/advance the slide for an actor entity, keyed by identity
   function actorSlide(e:Entity, dtMs:Float):Slide {
-    var s = slideTo(slides.get(e), @:privateAccess e.mx, @:privateAccess e.my, dtMs);
+    var s = slideTo(slides.get(e), e.mx, e.my, dtMs);
     slides.set(e, s);
     return s;
   }
 
 // crop one atlas cell (imageName, ix, iy) into a cached texture
   function texFor(e:Entity):CanvasTexture {
-    var name = @:privateAccess e.imageName;
-    var ix = @:privateAccess e.ix;
-    var iy = @:privateAccess e.iy;
-    var key = name + ':' + ix + ':' + iy + ':' + e.isMaleAtlas;
+    var key = e.imageName + ':' + e.ix + ':' + e.iy + ':' + e.isMaleAtlas;
     if (texCache.exists(key)) return texCache.get(key);
-    var img:Dynamic = game.scene.images.getImage(name, e.isMaleAtlas);
-    if (img == null || !img.complete || img.naturalWidth <= 0) return null; // retry next frame
+    var img:Dynamic = game.scene.images.getImage(e.imageName, e.isMaleAtlas);
+    // retry next frame if the atlas image isn't decoded yet
+    if (img == null ||
+        !img.complete ||
+        img.naturalWidth <= 0)
+      return null;
     var t = Const.TILE_SIZE_CLEAN;
     var cv:Dynamic = Browser.document.createElement('canvas');
     cv.width = t; cv.height = t;
     // mirror Entity.drawImage crop (the +1/-1 kludge avoids atlas bleed)
-    cv.getContext('2d').drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+    cv.getContext('2d').drawImage(img, e.ix * t, e.iy * t + 1, t, t - 1, 0, 0, t, t);
     var tex = new CanvasTexture(cv);
     tex.colorSpace = THREE.SRGBColorSpace;
     texCache.set(key, tex);
@@ -294,7 +301,11 @@ class StreetView {
     var m = pool[idx];
     if (m == null) {
       m = new Mesh(new PlaneGeometry(BILLBOARD, BILLBOARD),
-        new MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+        new MeshBasicMaterial({
+          transparent: true,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }));
       pool[idx] = m;
       actorGroup.add(m);
     }
@@ -312,16 +323,21 @@ class StreetView {
 // actors slide between cells, static objects snap to their cell
   function updateActors(dtMs:Float):Void {
     var n = 0;
-    // objects (sewer hatches etc.) — static, no slide
+    // objects (sewer hatches etc.) — static, no slide. gated on player fog/LOS to match
+    // the 2D view (parasite still sees sensable objects outside LOS)
     for (o in game.area.getObjects())
-      if (o.entity != null)
+      if (o.entity != null &&
+          (!game.player.vars.losEnabled ||
+           game.playerArea.sees(o.x, o.y) ||
+           (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable())))
         {
-          var w = CityConfig.cellToWorld(@:privateAccess o.entity.mx, @:privateAccess o.entity.my);
+          var w = CityConfig.cellToWorld(o.entity.mx, o.entity.my);
           n = billboard(n, w.x, w.z, texFor(o.entity));
         }
-    // AI
-    for (ai in @:privateAccess game.area._ai)
-      if (ai.entity != null)
+    // AI — gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
+    for (ai in game.area.getAllAI())
+      if (ai.entity != null &&
+          (!game.player.vars.losEnabled || game.playerArea.sees(ai.x, ai.y)))
         {
           var s = actorSlide(ai.entity, dtMs);
           n = billboard(n, s.x, s.z, texFor(ai.entity));

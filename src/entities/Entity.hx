@@ -15,13 +15,13 @@ class Entity
   public var isMaleAtlas: Bool;
   // new draw
   // entities image (entities, male, female)
-  var imageName: String;
+  public var imageName: String;
   // image tile x,y
-  var ix: Int;
-  var iy: Int;
+  public var ix: Int;
+  public var iy: Int;
   // map x,y
-  var mx: Int;
-  var my: Int;
+  public var mx: Int;
+  public var my: Int;
   public var scale: Float;
   public var angle: Float;
   // displacement inside of tile
