@@ -308,7 +308,11 @@ class Roofs {
       geo.computeVertexNormals();
       var t = tex.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping;
       var m = tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0, side: THREE.DoubleSide }), nm, desc, path);
-      scene.add(new Mesh(geo, m));
+      // geometry is baked in world coords (mesh stays at origin), so tag the building
+      // explicitly — Occlusion's position bucketing can't place an origin-anchored mesh
+      var mesh = new Mesh(geo, m);
+      mesh.userData.b = b;
+      scene.add(mesh);
     }
     mesh(sP, sU, roofTex, 'roof-gable-metal', 'metal gable roof', RenderConfig.TEXTURES.roofMetal);
     var aWorn = Geom.isWornFace(b, aDir), bWorn = Geom.isWornFace(b, bDir);
@@ -403,12 +407,12 @@ class Roofs {
   public static function addRoofDetails(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
     var sprites = [for (t in DETAIL_TYPES) Textures.loadKeyedTexture(t.tex, t.crop, RenderConfig.DETAIL_BOX_COLOR)];
-    var decalM:Array<Array<Matrix4>> = [for (t in DETAIL_TYPES) []];
     var q = new Quaternion();
     var qx = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
     var up = new Vector3(0, 1, 0);
     var pos = new Vector3();
     var scl = new Vector3();
+    var decalGeo = new PlaneGeometry(1, 1);
 
     for (b in buildings) {
       if (b.facade == 3) continue; // metal warehouses have a gable roof — no rooftop details
@@ -432,6 +436,8 @@ class Roofs {
         var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
         i--;
       }
+      // per-building matrices, grouped by detail type
+      var decalM:Array<Array<Matrix4>> = [for (t in DETAIL_TYPES) []];
       var pick = 0;
       for (ci in 0...cols) {
         for (cj in 0...rows) {
@@ -446,16 +452,23 @@ class Roofs {
           decalM[t].push(new Matrix4().compose(pos, q, scl));
         }
       }
-    }
-
-    var decalGeo = new PlaneGeometry(1, 1);
-    for (t in 0...DETAIL_TYPES.length) {
-      if (decalM[t].length == 0) continue;
-      var mat = new MeshStandardMaterial({ map: sprites[t], roughness: 1, metalness: 0, transparent: false, alphaTest: 0.5, side: THREE.DoubleSide });
-      var decals = new InstancedMesh(decalGeo, mat, decalM[t].length);
-      for (k in 0...decalM[t].length) decals.setMatrixAt(k, decalM[t][k]);
-      decals.instanceMatrix.needsUpdate = true;
-      scene.add(decals);
+      // one instanced mesh per used type, tagged with the building so Occlusion fades them too
+      for (t in 0...DETAIL_TYPES.length) {
+        if (decalM[t].length == 0) continue;
+        var mat = new MeshStandardMaterial({
+          map: sprites[t],
+          roughness: 1,
+          metalness: 0,
+          transparent: false,
+          alphaTest: 0.5,
+          side: THREE.DoubleSide,
+        });
+        var decals = new InstancedMesh(decalGeo, mat, decalM[t].length);
+        for (k in 0...decalM[t].length) decals.setMatrixAt(k, decalM[t][k]);
+        decals.instanceMatrix.needsUpdate = true;
+        decals.userData.b = b;
+        scene.add(decals);
+      }
     }
   }
 }

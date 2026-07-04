@@ -30,6 +30,7 @@ class StreetView {
   var ring:Mesh;
   var actors:Actors;                                      // the billboard actor layer
   var rig:CameraRig;                                      // the follow camera + zoom
+  var occlusion:Occlusion;                                // fades buildings blocking the player
 
   var freeCam:FreeCam;
   var toolsAttached = false;
@@ -161,6 +162,7 @@ class StreetView {
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     World.build(scene, city);
+    occlusion = new Occlusion(scene, city.buildings);
 
     // player marker ring + the group holding all actor billboards
     ring = new Mesh(
@@ -209,6 +211,7 @@ class StreetView {
     actorGroup = null;
     ring = null;
     actors = null;
+    occlusion = null;
     if (canvas != null) canvas.style.display = 'none';
   }
 
@@ -238,6 +241,7 @@ class StreetView {
     if (freeing) freeCam.update(dtMs);
     var p = rig.playerWorld();
     ring.position.set(p.x, 0.06, p.z);
+    if (!freeing) occlusion.update(camera.position, p, dtMs);
     actors.update(dtMs);
 
     composer.render();

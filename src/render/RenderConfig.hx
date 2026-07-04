@@ -104,6 +104,13 @@ class RenderConfig {
     parasiteZoom: 0.30,   // parasite + attached: cap AND resting target (much smaller than max)
     hostZoom: 0.60        // host: auto pull-out target on invade (cap stays 1.0 = far/max)
   };
+  // occlusion fade: a building between camera and player eases to this opacity so the player
+  // stays visible, then eases back to solid when it no longer blocks the sightline
+  public static final OCCLUSION = {
+    fade: 0.22,   // opacity an occluding building fades to (0 = invisible, 1 = solid)
+    lerp: 0.15,   // per-30fps-frame ease of fade toward its target (dt-compensated)
+    margin: 1.0   // XZ expansion when bucketing face-proud decals into their building
+  };
   public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt
 

@@ -25,7 +25,10 @@ class Windows {
     var lit = [for (i in 0...TEXTURES.litWindows.length) spriteTex(TEXTURES.litWindows[i], i)];
     var variants = dark.length;
 
-    var buckets:Array<Array<Array<Matrix4>>> = [for (i in 0...variants) [[], []]];
+    // one shared unit quad; windows are instanced PER BUILDING (own material) so the occlusion
+    // fade can turn a single building's windows transparent without touching the rest of the city
+    var geo = new PlaneGeometry(1, 1);
+    var litColor = new Color(RenderConfig.WINDOW_LIT_COLOR);
     var q = new Quaternion();
     var pos = new Vector3();
 
@@ -34,6 +37,7 @@ class Windows {
       if (b.facade == 3) continue; // metal warehouses: no windows (closed doors instead)
       if (Geom.frontInfo(b).simple && !Geom.frontInfo(b).windows) continue; // plain (window-roll fail) or small building: no windows
       var v = b.facade % variants;
+      var buckets:Array<Array<Matrix4>> = [[], []]; // this building's [dark, lit] instance matrices
       var crop = RenderConfig.WINDOW_SPRITE_CROP[v];
       var winH = RenderConfig.WIN_W * (crop.y / crop.x);
       var scl = new Vector3(RenderConfig.WIN_W, winH, 1);
@@ -65,7 +69,7 @@ class Windows {
             pos.set(p.x, y, p.z);
             var m = new Matrix4().compose(pos, q, scl);
             var isLit = Math.random() < RenderConfig.LIT_RATIO ? 1 : 0;
-            buckets[v][isLit].push(m);
+            buckets[isLit].push(m);
           }
         }
         // forced courtyard wall: own centred grid, inset from the face edges
@@ -94,16 +98,19 @@ class Windows {
           for (cx in Geom.centeredCols(extA, extB)) if (cx >= runA - 0.01 && cx < runB - 0.01) emit(cx);
         }
       }
-    }
 
-    var geo = new PlaneGeometry(1, 1);
-    var litColor = new Color(RenderConfig.WINDOW_LIT_COLOR);
-    for (v in 0...variants) {
+      // one instanced mesh per lit state actually used, tagged with the building so Occlusion
+      // fades its windows along with the rest of the building box
       for (l in 0...2) {
-        var mats = buckets[v][l];
+        var mats = buckets[l];
         if (mats.length == 0) continue;
         var tex = l == 1 ? lit[v] : dark[v];
-        var mat = new MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0, alphaTest: 0.5 });
+        var mat = new MeshStandardMaterial({
+          map: tex,
+          roughness: 1,
+          metalness: 0,
+          alphaTest: 0.5,
+        });
         tag(mat, l == 1 ? 'window-lit-${v + 1}' : 'window-${v + 1}',
           l == 1 ? 'lit window ${v + 1}' : 'window ${v + 1}',
           (l == 1 ? TEXTURES.litWindows : TEXTURES.windows)[v]);
@@ -115,6 +122,7 @@ class Windows {
         var inst = new InstancedMesh(geo, mat, mats.length);
         for (k in 0...mats.length) inst.setMatrixAt(k, mats[k]);
         inst.instanceMatrix.needsUpdate = true;
+        inst.userData.b = b;
         scene.add(inst);
       }
     }
