@@ -131,6 +131,40 @@ class RenderConfig {
     scaleMax: 0.9,       // landed splat max scale
     splatMax: 80,        // per-area SPLAT decoration cap (oldest evicted)
   };
+  // 3D gun-shot choreography: a blooming tracer streak races muzzle->impact, a muzzle flash +
+  // transient point light pop at the shooter, impact sparks + blood on a hit, and (player only)
+  // a small camera recoil. per-weapon pellet counts mirror the 2D shot feel. sizes marked
+  // "cells" are fractions of CityConfig.CELL; ms are durations; colors are warm muzzle tones
+  public static final SHOT = {
+    tracerWidth: 0.03,      // tracer quad width (cells)
+    tailFrac: 0.55,         // streak visible length as a fraction of the full muzzle->impact run
+    travelMs: 55.0,         // time the tracer head takes to race to the target
+    tracerColor: 0xfff2c8,  // warm-white tracer
+    flashSize: 0.1,         // muzzle flash quad size (cells)
+    flashMs: 70.0,          // muzzle flash fade time
+    flashColor: 0xffdf9c,   // muzzle flash tint
+    lightIntensity: 42.0,   // muzzle point-light peak intensity
+    lightDistance: 24.0,    // muzzle point-light reach (world units, ~6 cells)
+    lightMs: 90.0,          // muzzle point-light decay time
+    lightColor: 0xffc474,   // muzzle point-light tint (matches the lamps' warm)
+    lightPool: 5,           // fixed muzzle-light count (always in the scene, idle at intensity 0
+                            // so NUM_POINT_LIGHTS never changes -> no shader recompile on a shot)
+    lightRangeCells: 14,    // only shots within this many cells of the player claim a muzzle light
+    sparkCount: 5,          // impact shards on a hit
+    sparkSize: 0.22,        // impact shard size (cells)
+    sparkMs: 130.0,         // impact shard life
+    sparkSpeed: 3.2,        // impact shard speed (cells/sec)
+    sparkColor: 0xfff0d0,   // impact shard tint
+    recoilAmp: 0.9,         // player-shot camera kick (world units, back along the shot)
+    recoilMs: 160.0,        // camera recoil settle time
+    // per-weapon: pellets fired, target jitter (cells), stagger between pellets (ms)
+    kinds: {
+      pistol:  { pellets: 1, spread: 0.0,  stagger: 0.0 },
+      rifle:   { pellets: 3, spread: 0.15, stagger: 45.0 },
+      shotgun: { pellets: 5, spread: 0.5,  stagger: 0.0 },
+    },
+  };
+
   public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt
 

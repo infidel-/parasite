@@ -43,6 +43,7 @@ class StreetView {
   public var running(default, null):Bool = false;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
+  var _lastProgs = 0;     // shader program count last frame; a jump == a (re)compile stall (perf street)
 
 
   public function new(game:Game) {
@@ -278,6 +279,58 @@ class StreetView {
       return true;
     }
 
+// gun-shot choreography: a blooming tracer races muzzle->impact with a muzzle flash + light,
+// and on landing fires the impact beat (blood + hit/miss sound). fires per-weapon pellets
+// (pistol 1, rifle 3 staggered, shotgun 5 spread); only the first pellet carries the beat so
+// blood/sound happen once. player shots kick the camera. returns true if the view took over
+// (caller then skips the 2D tracer); false when no city view / no shooter actor
+  public function playShot(atkE:Entity, sx:Int, sy:Int, tx:Int, ty:Int,
+      hit:Bool, spawnBlood:Bool, bloodRow:Int, bloodCol:Int, soundKind:String, byPlayer:Bool):Bool
+    {
+      if (!running ||
+          actors == null ||
+          atkE == null)
+        return false;
+      var S = RenderConfig.SHOT;
+      var C = CityConfig.CELL;
+      // muzzle + impact at chest height (the blood-burst convention)
+      var mw = CityConfig.cellToWorld(sx, sy);
+      var iw = CityConfig.cellToWorld(tx, ty);
+      var muzzleY = render.world.WorldCtx.floorY(sx, sy) + render.particles.Sprites.SIZE * 0.4;
+      var impactY = render.world.WorldCtx.floorY(tx, ty) + render.particles.Sprites.SIZE * 0.4;
+      var muzzle = new Vector3(mw.x, muzzleY, mw.z);
+      // muzzle light only for near-camera shots (pooled, constant count); distant shots in a
+      // 50-NPC firefight get just the emissive flash quad, no light
+      if (Math.abs(sx - game.playerArea.x) <= S.lightRangeCells &&
+          Math.abs(sy - game.playerArea.y) <= S.lightRangeCells)
+        actors.muzzleFlash(mw.x, muzzleY, mw.z);
+      // the impact beat: blood away from the shooter + the impact hit/miss sound
+      var onImpact = function() {
+        if (hit)
+          {
+            if (spawnBlood)
+              actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
+            game.scene.sounds.play('attack-bullet-hit', { always: true, x: tx, y: ty });
+          }
+        else game.scene.sounds.play('attack-bullet-miss', { always: true, x: tx, y: ty });
+      };
+      // per-weapon pellet pattern
+      var kind = (soundKind == 'attack-shotgun' ? S.kinds.shotgun :
+        (soundKind == 'attack-assault-rifle' ? S.kinds.rifle : S.kinds.pistol));
+      for (i in 0...kind.pellets)
+        {
+          // spread jitters each pellet's visual impact (blood still lands on the true tile)
+          var jx = kind.spread * C * (Math.random() - 0.5);
+          var jz = kind.spread * C * (Math.random() - 0.5);
+          var impact = new Vector3(iw.x + jx, impactY, iw.z + jz);
+          actors.shot(muzzle, impact, i * kind.stagger, hit, i == 0 ? onImpact : null);
+        }
+      // recoil: kick the camera back along the shot (player's own shots only)
+      if (byPlayer)
+        rig.kick(sx - tx, sy - ty);
+      return true;
+    }
+
 // snapshot a dying actor into a fade-out ghost (before its entity is nulled)
   public function playDeathFade(e:Entity):Void
     {
@@ -326,6 +379,20 @@ class StreetView {
     if (!freeing) occlusion.update(camera.position, p, dtMs);
     actors.update(dtMs);
 
+    // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
+    // turn/street-actor profilers — catch it here. a jump in the program count == a compile
+    var tR = haxe.Timer.stamp();
     composer.render();
+    if (render.Actors.DEBUG_PERF)
+      {
+        var ms = (haxe.Timer.stamp() - tR) * 1000;
+        var progs = (renderer.info.programs != null ? renderer.info.programs.length : 0);
+        var compiled = progs - _lastProgs;
+        if (ms > 8 ||
+            compiled != 0)
+          trace('[street-render] render=' + (Std.int(ms * 100) / 100) + 'ms programs=' + progs +
+            (compiled != 0 ? ' (COMPILE ' + (compiled > 0 ? '+' : '') + compiled + ')' : ''));
+        _lastProgs = progs;
+      }
   }
 }

@@ -30,8 +30,8 @@ class DeathFade3D extends Particle3D {
     }
 
 // draw the fading ghost upright
-  override public function draw(g:Sprites):Void
+  override public function draw(p:Paint3D):Void
     {
-      g.paint(x, y, z, tex, op, scale, false);
+      p.sprites.paint(x, y, z, tex, op, scale, false);
     }
 }

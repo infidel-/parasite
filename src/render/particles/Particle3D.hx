@@ -11,8 +11,8 @@ class Particle3D {
   public function tick(dtMs:Float):Bool
     return true;
 
-// draw this frame onto the shared paint surface
-  public function draw(g:Sprites):Void {}
+// draw this frame onto the shared paint surfaces (p.sprites lit billboards, p.beams bright FX)
+  public function draw(p:Paint3D):Void {}
 
 // fired once when the particle is culled (e.g. a landed droplet commits a ground decal)
   public function onDeath():Void {}

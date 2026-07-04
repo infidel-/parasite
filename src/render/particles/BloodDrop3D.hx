@@ -64,8 +64,9 @@ class BloodDrop3D extends Particle3D {
     }
 
 // draw the in-flight droplet as a small flat quad
-  override public function draw(g:Sprites):Void
+  override public function draw(p:Paint3D):Void
     {
+      var g = p.sprites;
       g.paint(x, y, z, g.tex('entities', ix, iy, false), 1.0, RenderConfig.BLOOD.dropScale, false);
     }
 

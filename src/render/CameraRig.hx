@@ -21,6 +21,7 @@ class CameraRig {
   var zoom = 1.0;                                          // current normalized zoom 0..1
   var zoomTarget = 1.0;                                    // eased-toward zoom
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
+  var recoil = new Vector3();                              // transient player-shot camera kick, decays to 0
 
   public function new(game:Game, camera:PerspectiveCamera)
     {
@@ -47,6 +48,17 @@ class CameraRig {
     {
       zoomTarget = Math.max(0, Math.min(maxFor(game.player.state),
         zoomTarget + dir * RenderConfig.CAMERA.zoomStep));
+    }
+
+// punch the camera back along a shot direction (world dx,dz), plus a slight upward jolt;
+// player's own shots only. decays back to zero in update()
+  public function kick(dx:Float, dz:Float):Void
+    {
+      var len = Math.sqrt(dx * dx + dz * dz);
+      if (len < 0.001)
+        { dx = 0; dz = -1; len = 1; }
+      var a = RenderConfig.SHOT.recoilAmp;
+      recoil.set(dx / len * a, a * 0.4, dz / len * a);
     }
 
 // advance the follow target + zoom one frame; drive the camera only when followCamera
@@ -77,6 +89,17 @@ class CameraRig {
       if (!followCamera) return;
       desired.copy(pWorld).add(offset);
       camera.position.lerp(desired, RenderConfig.CAMERA.follow);
+      // player-shot recoil: a transient offset added post-follow, easing back to zero
+      if (recoil.x != 0 ||
+          recoil.y != 0 ||
+          recoil.z != 0)
+        {
+          camera.position.add(recoil);
+          var keep = Math.exp(-dtMs / RenderConfig.SHOT.recoilMs);
+          recoil.set(recoil.x * keep, recoil.y * keep, recoil.z * keep);
+          if (Math.abs(recoil.x) + Math.abs(recoil.y) + Math.abs(recoil.z) < 0.001)
+            recoil.set(0, 0, 0);
+        }
       lookAt.copy(pWorld);
       lookAt.y += 1.5;
       camera.lookAt(lookAt);

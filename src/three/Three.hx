@@ -132,6 +132,7 @@ typedef RendererInfo = {
   function reset():Void;
   var render:{ var triangles:Int; var calls:Int; };
   var memory:{ var textures:Int; };
+  var programs:Array<Dynamic>;   // compiled shader programs; length jumps == a (re)compile happened
 };
 
 @:native("THREE.AmbientLight") extern class AmbientLight extends Object3D {

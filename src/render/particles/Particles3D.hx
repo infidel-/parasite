@@ -13,7 +13,7 @@ class Particles3D {
 
 // advance every particle one frame, draw the survivors, cull + finalize the finished ones.
 // iterate backwards so splice during the walk is safe
-  public function update(dtMs:Float, g:Sprites):Void
+  public function update(dtMs:Float, paint:Paint3D):Void
     {
       var i = list.length;
       while (i-- > 0)
@@ -25,7 +25,7 @@ class Particles3D {
               list.splice(i, 1);
               continue;
             }
-          p.draw(g);
+          p.draw(paint);
         }
     }
 

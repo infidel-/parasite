@@ -8,9 +8,13 @@ import render.anim.Effect;
 import render.anim.JumpOnFace;
 import render.anim.LeaveHost;
 import render.particles.Sprites;
+import render.particles.Beams;
+import render.particles.MuzzleLights;
+import render.particles.Paint3D;
 import render.particles.Particles3D;
 import render.particles.BloodDrop3D;
 import render.particles.DeathFade3D;
+import render.particles.Shot3D;
 import game.Game;
 import entities.Entity;
 import ai.AI;
@@ -24,9 +28,13 @@ import objects.AreaObject;
 class Actors {
   var game:Game;
   var camera:PerspectiveCamera;                           // read live for billboard yaw (future)
+  var actorGroup:Group;                                   // scene group; shots attach their own meshes to it
 
-  var sprites:Sprites;                                    // the shared paint surface (quad pool + atlas cache)
-  var particles:Particles3D;                              // transient 3D FX (blood droplets, death ghosts)
+  var sprites:Sprites;                                    // lit billboard/decal paint surface (quad pool + atlas cache)
+  var beams:Beams;                                        // unlit additive bright-FX pool (gun tracers, sparks)
+  var muzzleLights:MuzzleLights;                          // fixed muzzle-light pool (constant scene light count)
+  var paint:Paint3D;                                      // the two surfaces handed to each particle each frame
+  var particles:Particles3D;                              // transient 3D FX (blood, death crossfade, gun shots)
   // per-actor anim state, keyed by entity identity. ponytail: dead entities linger here
   // until the area rebuild drops this whole object — bounded per area, not worth pruning
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
@@ -48,7 +56,13 @@ class Actors {
     {
       this.game = game;
       this.camera = camera;
+      this.actorGroup = actorGroup;
       sprites = new Sprites(game, actorGroup);
+      beams = new Beams(actorGroup);
+      // created here (before the first render) so the muzzle lights are in NUM_POINT_LIGHTS from
+      // frame one — the scene compiles once at the full count, never recompiles on a shot
+      muzzleLights = new MuzzleLights(actorGroup);
+      paint = { sprites: sprites, beams: beams };
       particles = new Particles3D();
       lastState = game.player.state;
     }
@@ -69,6 +83,8 @@ class Actors {
   public function update(dtMs:Float):Void
     {
       sprites.begin();
+      beams.begin();
+      muzzleLights.update(dtMs);
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
@@ -118,11 +134,12 @@ class Actors {
       // vis=false so it fades out smoothly instead of popping; once faded drawActor drops it
       else if (st == _PlayerState.PLR_STATE_HOST)
         drawActor(game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
-      // persisted blood decals on the ground, then transient FX (in-flight droplets, death ghosts)
+      // persisted blood decals on the ground, then transient FX (blood, death ghosts, gun shots)
       drawSplatDecals();
-      particles.update(dtMs, sprites);
+      particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
+      beams.end();
       if (DEBUG_PERF)
         perfLog(tp, tObj, tAI);
     }
@@ -251,6 +268,19 @@ class Actors {
   public function burst(tgtCol:Int, tgtRow:Int, awayX:Float, awayZ:Float, bloodRow:Int, bloodFirstCol:Int):Void
     {
       BloodDrop3D.burst(particles, game, tgtCol, tgtRow, awayX, awayZ, bloodRow, bloodFirstCol);
+    }
+
+// spawn one 3D gun-shot pellet (tracer + flash + sparks); blood + impact sound fire via the
+// onImpact closure when the tracer lands (null for extra pellets so it fires once)
+  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, hit:Bool, onImpact:Void->Void):Void
+    {
+      particles.add(new Shot3D(muzzle, impact, startDelay, hit, onImpact));
+    }
+
+// pulse a pooled muzzle light at the shooter (constant scene light count, no recompile)
+  public function muzzleFlash(x:Float, y:Float, z:Float):Void
+    {
+      muzzleLights.flash(x, y, z);
     }
 
 // snapshot a dying actor's sprite into a fade-out ghost (called before the AI entity is

@@ -185,23 +185,36 @@ class CommonLogic
       if (target.type == TARGET_AI)
         targetBloodType = target.ai.bloodType();
 
+      // entities + blood icon for the 3D combat bridges (melee lunge / ranged shot)
+      var atkE = (attacker.ai != null ? attacker.ai.entity : null);
+      var tgtE = (target.type == TARGET_AI ? target.ai.entity : null);
+      var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
+
       // draw attack effects
+      var handledShot = false;
       if (weapon.isRanged)
         {
           if (weapon.projectile != null)
             Particle.createProjectile(weapon.projectile, game.scene,
               attacker.x, attacker.y, { x: target.x, y: target.y },
               roll, targetBloodType);
-          else Particle.createShot(
-            weapon.sound.file, game.scene, attacker.x, attacker.y,
-            { x: target.x, y: target.y }, roll, targetBloodType);
+          else
+            {
+              // 3D gun-shot choreography; when the view handles it, skip the 2D tracer (it is
+              // hidden under the street view) so blood/impact aren't doubled
+              handledShot = game.scene.city3d != null &&
+                game.scene.city3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
+                  roll, weapon.spawnBlood, bloodIc.row, bloodIc.col,
+                  weapon.sound.file, attacker.isPlayer);
+              if (!handledShot)
+                Particle.createShot(
+                  weapon.sound.file, game.scene, attacker.x, attacker.y,
+                  { x: target.x, y: target.y }, roll, targetBloodType);
+            }
         }
 
       // 3D melee choreography: the attacker lunges and the hit sound fires on impact (not
       // now). blood/shake are added on a hit below. handled => the view took over the audio
-      var atkE = (attacker.ai != null ? attacker.ai.entity : null);
-      var tgtE = (target.type == TARGET_AI ? target.ai.entity : null);
-      var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
       inline function melee(sound: AISound, hit: Bool): Bool
         {
           if (weapon.isRanged ||
@@ -245,7 +258,8 @@ class CommonLogic
       // blood effect on hit (2D). skipped when the 3D melee handled it — the lunge's blood
       // burst writes the same SPLAT decorations on impact instead (no double splat)
       if (weapon.spawnBlood &&
-          !handledHit)
+          !handledHit &&
+          !handledShot)
         Particle.createSplat(targetBloodType, game.scene,
           { x: target.x, y: target.y }, {
             x: attacker.x,
