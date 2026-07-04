@@ -38,8 +38,22 @@ class Targeting
           game.actionFailed('No visible targets.');
           return false;
         }
+      // no active target: start on the closest target, not the smallest-angle entry
+      // (list is angle-sorted for rotate order, so list[0] isn't the nearest)
       index = 0;
-      targetingTarget = list[0];
+      var best = 1e9;
+      for (i in 0...list.length)
+        {
+          var dx = list[i].centerX - (game.playerArea.x + 0.5);
+          var dy = list[i].centerY - (game.playerArea.y + 0.5);
+          var d = dx * dx + dy * dy;
+          if (d < best)
+            {
+              best = d;
+              index = i;
+            }
+        }
+      targetingTarget = list[index];
       if (target != null)
         {
           var i = 0;

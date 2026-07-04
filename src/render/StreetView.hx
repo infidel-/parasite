@@ -169,7 +169,7 @@ class StreetView {
 
     // player marker ring + the group holding all actor billboards
     ring = new Mesh(
-      new RingGeometry(CityConfig.CELL * 0.42, CityConfig.CELL * 0.52, 40),
+      new RingGeometry(CityConfig.CELL * 0.398, CityConfig.CELL * 0.448, 40),
       new MeshBasicMaterial({
         color: 0xb46bff,
         transparent: true,

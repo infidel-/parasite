@@ -13,6 +13,8 @@ import render.particles.BloodDrop3D;
 import render.particles.DeathFade3D;
 import game.Game;
 import entities.Entity;
+import ai.AI;
+import objects.AreaObject;
 
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
 // position slide + opacity fade + optional transient effect. owns the per-actor anim state and
@@ -38,6 +40,7 @@ class Actors {
   var _decalScan = 0; var _decalDraw = 0;              // last decal pass: cells visited / quads drawn
 
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
+  static inline var TARGET_SCALE = 1.15;               // targeting frame/reticle ground-quad scale (~one cell)
   static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
   static inline var ATTACH_SCALE = 1.0;                // attached parasite is drawn this much smaller (sits on the head)
 
@@ -88,6 +91,8 @@ class Actors {
               game.playerArea.sees(o.x, o.y) ||
               (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable());
             drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
+            if (vis)
+              drawObjTarget(o);
           }
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
@@ -98,6 +103,8 @@ class Actors {
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
             drawActor(ai.entity, vis, dtMs);
+            if (vis)
+              drawAITarget(ai);
           }
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
@@ -198,6 +205,45 @@ class Actors {
             }
         }
       _decalScan = scan; _decalDraw = draw;
+    }
+
+// paint the targeting markers under a visible AI: the stored-target frame and/or the
+// currently-cycled reticle (mirrors the 2D FRAME/RETICLE sprites, laid flat on the ground)
+  function drawAITarget(ai:AI):Void
+    {
+      var tg = game.ui.hud.targeting;
+      paintTargetMarker(ai.entity,
+        tg.isTargetedAI(ai),
+        game.ui.hud.state == HUD_TARGETING && tg.isTargetingAI(ai));
+    }
+
+// same for a visible attackable object
+  function drawObjTarget(obj:AreaObject):Void
+    {
+      var tg = game.ui.hud.targeting;
+      paintTargetMarker(obj.entity,
+        tg.isTargetedObject(obj),
+        game.ui.hud.state == HUD_TARGETING && tg.isTargetingObject(obj));
+    }
+
+// lay the target frame (framed) and/or targeting reticle (cursor) as flat ground quads under
+// an entity's slide pos; reticle a hair higher so it wins the ground z-order over the frame
+  function paintTargetMarker(e:Entity, framed:Bool, cursor:Bool):Void
+    {
+      if (!framed && !cursor)
+        return;
+      var a = actors.get(e);
+      if (a == null)
+        return;
+      var floor = WorldCtx.floorY(a.col, a.row);
+      if (framed)
+        sprites.paint(a.x, floor + 0.05, a.z,
+          sprites.tex('entities', Const.FRAME_TARGET_FRAME, Const.ROW_REGION_ICON, false),
+          1.0, TARGET_SCALE, true);
+      if (cursor)
+        sprites.paint(a.x, floor + 0.06, a.z,
+          sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false),
+          1.0, TARGET_SCALE, true);
     }
 
 // throw a burst of blood from a target cell, biased away from the attacker; drops arc and
