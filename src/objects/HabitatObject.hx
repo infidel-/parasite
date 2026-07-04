@@ -33,6 +33,10 @@ class HabitatObject extends AreaObject
       super.initPost(onLoad);
     }
 
+// habitat structures stand upright in the 3D view, not flat on the ground
+  public override function isGroundDecal(): Bool
+    { return false; }
+
 // get improvement ID
   public function getImprovementID(): _Improv
     {

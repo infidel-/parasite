@@ -18,4 +18,16 @@ class WorldCtx {
   public static var doorSeen:haxe.ds.ObjectMap<Building, Bool>;
   public static var bandSeen:haxe.ds.ObjectMap<Building, Bool>;
   public static var noBackDoor:Array<Building>; // had an open back wall but no side door fit (clearance)
+
+// ground surface height at grid cell (col,row): walkway tops sit a curb above road/alley, so
+// actors/decals/the ring rest on this instead of sinking through the raised pavement
+  public static function floorY(col:Int, row:Int):Float
+    {
+      if (row < 0 ||
+          col < 0 ||
+          row >= tiles.length ||
+          col >= tiles[row].length)
+        return 0.0;
+      return tiles[row][col] == Tile.Walkway ? render.RenderConfig.CURB_H : 0.0;
+    }
 }

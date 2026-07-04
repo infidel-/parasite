@@ -6,6 +6,8 @@ import citygen.CityGen;
 import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
+import entities.Entity;
+import render.anim.Shake;
 
 // controller for the 3D street view. Owns a persistent renderer/camera on its own
 // WebGL canvas and a per-city scene + bloom composer; runs its own rAF loop while a
@@ -215,6 +217,18 @@ class StreetView {
     if (canvas != null) canvas.style.display = 'none';
   }
 
+// grip-struggle shake: jitter the parasite and its host out of phase (different amplitude,
+// duration and wave phase) so they read as wrestling. no-op unless a city view is live
+  public function playGripStruggle(parasite:Entity, host:Entity):Void
+    {
+      if (!running ||
+          actors == null)
+        return;
+      var amp = CityConfig.CELL * 0.09;
+      actors.playFx(parasite, new Shake(RenderConfig.BASE_MS, amp, 0));
+      actors.playFx(host, new Shake(RenderConfig.BASE_MS * 1.3, amp * 0.7, Math.PI));
+    }
+
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
     if (renderer == null) return;
@@ -240,7 +254,9 @@ class StreetView {
     rig.update(dtMs, !freeing);
     if (freeing) freeCam.update(dtMs);
     var p = rig.playerWorld();
-    ring.position.set(p.x, 0.06, p.z);
+    // rest the ring on the player cell's ground surface (raised on walkways) so it doesn't sink
+    var pe = game.playerArea.entity;
+    ring.position.set(p.x, render.world.WorldCtx.floorY(pe.mx, pe.my) + 0.06, p.z);
     if (!freeing) occlusion.update(camera.position, p, dtMs);
     actors.update(dtMs);
 

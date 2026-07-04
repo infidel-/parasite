@@ -25,5 +25,9 @@ class GenericPickup extends Pickup
     {
       super.initPost(onLoad);
     }
+
+// stand upright in the 3D view
+  public override function isGroundDecal(): Bool
+    { return false; }
 }
 

@@ -724,6 +724,9 @@ class PlayerArea extends _SaveObject
     {
       log('You harden your grip on the host.');
 
+      // 3D street view: parasite + host shake against each other (the struggle)
+      game.scene.city3d.playGripStruggle(entity, attachHost.entity);
+
       // improv: harden grip bonus
       var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
 

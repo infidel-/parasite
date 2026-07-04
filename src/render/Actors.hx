@@ -4,6 +4,7 @@ import three.Three;
 import js.Browser;
 import citygen.CityConfig;
 import render.ActorAnim;
+import render.world.WorldCtx;
 import render.anim.Effect;
 import render.anim.JumpOnFace;
 import render.anim.LeaveHost;
@@ -76,7 +77,7 @@ class Actors {
               !game.player.vars.losEnabled ||
               game.playerArea.sees(o.x, o.y) ||
               (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable());
-            n = drawActor(n, o.entity, vis, dtMs);
+            n = drawActor(n, o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
           }
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
       for (ai in game.area.getAllAI())
@@ -94,6 +95,10 @@ class Actors {
         n = drawActor(n, game.playerArea.entity, true, dtMs);
       else if (st == _PlayerState.PLR_STATE_ATTACHED)
         n = drawActor(n, game.playerArea.entity, true, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
+      // just invaded (now inside the host): keep drawing the parasite on the host's head with
+      // vis=false so it fades out smoothly instead of popping; once faded drawActor drops it
+      else if (st == _PlayerState.PLR_STATE_HOST)
+        n = drawActor(n, game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
       // hide leftover pooled meshes
       for (i in n...pool.length)
         if (pool[i] != null) pool[i].visible = false;
@@ -101,17 +106,21 @@ class Actors {
 
 // advance one actor's anim state and place its billboard; returns the next pool index
 // (unchanged if the actor is fully faded out with no effect running). baseY/baseScale set
-// the resting pose (nonzero for the attached parasite riding a host's head)
-  function drawActor(n:Int, e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0):Int
+// the resting pose (nonzero for the attached parasite riding a host's head). flat lays the
+// sprite on the ground as a decal instead of standing it up
+  function drawActor(n:Int, e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false):Int
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
           a.fx == null)
         return n;
-      var wy = BILLBOARD * 0.5 + baseY;
+      // rest on the cell's ground surface (walkway tops sit a curb above the road)
+      var floor = WorldCtx.floorY(a.col, a.row);
+      // decals hug the ground; upright billboards centre at half their height
+      var wy = flat ? floor + 0.05 : floor + BILLBOARD * 0.5 + baseY;
       if (a.fx != null)
-        return billboard(n, a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale);
-      return billboard(n, a.x, wy, a.z, texFor(e), a.op, baseScale);
+        return billboard(n, a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat);
+      return billboard(n, a.x, wy, a.z, texFor(e), a.op, baseScale, flat);
     }
 
 // launch the parasite's leap onto the host's head: snap its slide onto the host cell so
@@ -207,18 +216,23 @@ class Actors {
     }
 
 // place/reuse a billboard mesh at world (wx,wy,wz) with texture tex, opacity op, uniform
-// scale; returns the next pool index (unchanged if the atlas isn't ready yet)
-  function billboard(idx:Int, wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float):Int
+// scale; flat lays it on the ground as a decal. returns the next pool index (unchanged if
+// the atlas isn't ready yet)
+  function billboard(idx:Int, wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false):Int
     {
       if (tex == null) return idx;
       var m = pool[idx];
       if (m == null)
         {
+          // MeshStandard (not Basic) so actors take the scene lights — ambient/moon/lamp glow —
+          // instead of rendering full-bright and reading pasted-on over the lit world
           m = new Mesh(new PlaneGeometry(BILLBOARD, BILLBOARD),
-            new MeshBasicMaterial({
+            new MeshStandardMaterial({
               transparent: true,
               depthWrite: false,
               side: THREE.DoubleSide,
+              roughness: 1,
+              metalness: 0,
             }));
           pool[idx] = m;
           actorGroup.add(m);
@@ -229,10 +243,12 @@ class Actors {
       mat.needsUpdate = true;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
-      // yaw to face the camera, then lean the top back toward the overhead camera (world-X
-      // tilt applied first in XYZ order = a uniform lean) so the sprite reads flatter to it.
-      // rotation.set resets x/z each frame so the lean never accumulates
-      m.rotation.set(-TILT, Math.atan2(camera.position.x - wx, camera.position.z - wz), 0);
+      // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
+      // tracking) leaned back toward the overhead camera by TILT so it reads flatter
+      if (flat)
+        m.rotation.set(-Math.PI / 2, 0, 0);
+      else
+        m.rotation.set(-TILT, 0, 0);
       m.visible = true;
       return idx + 1;
     }

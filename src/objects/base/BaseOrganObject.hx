@@ -35,6 +35,10 @@ class BaseOrganObject extends AreaObject
       syncOrganImage();
     }
 
+// base organs stand upright in the 3D view, not flat on the ground
+  public override function isGroundDecal(): Bool
+    { return false; }
+
 // refresh base organ atlas coordinates
   public function syncOrganImage()
     {
