@@ -43,6 +43,7 @@ class StreetView {
 
   public function new(game:Game) {
     this.game = game;
+    filterTextureWarning();
     ensureCanvas();
     injectDebugHud();
     // global debug hotkeys: ` toggles street-debug mode, 1 toggles WYSIWYG lighting
@@ -57,6 +58,13 @@ class StreetView {
       if (!running || debugOn || rig == null) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
+  }
+
+// drop one benign three.js warning: world tile textures load async, so their per-building
+// clones briefly render before the source image decodes (version>0, image==null) each area
+// build — three warns every such frame. filter just that exact line, once, keep the rest
+  function filterTextureWarning():Void {
+    js.Syntax.code("(function(){ if (window.__texWarnFiltered) return; window.__texWarnFiltered = true; var w = console.warn.bind(console); console.warn = function(m){ if (typeof m === 'string' && m.indexOf('Texture marked for update but no image data') >= 0) return; return w.apply(console, arguments); }; })()");
   }
 
 // is street-debug mode active? (the game suppresses movement input while it is)
