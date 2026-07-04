@@ -154,12 +154,12 @@ class Attacker
       return (Math.abs(tx - x) <= 1 && Math.abs(ty - y) <= 1);
     }
 
-// checks whether attacker sees a target tile
-  public function seesPosition(tx: Int, ty: Int): Bool
+// checks whether attacker sees a target tile (strict: block sight through wall corners, gun-fire)
+  public function seesPosition(tx: Int, ty: Int, ?strict: Bool): Bool
     {
       if (ai != null)
-        return ai.seesPosition(tx, ty);
-      return game.area.isVisible(x, y, tx, ty);
+        return ai.seesPosition(tx, ty, strict);
+      return game.area.isVisible(x, y, tx, ty, null, strict);
     }
 
 // moves attacker toward a target tile when possible

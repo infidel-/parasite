@@ -123,9 +123,9 @@ class RenderConfig {
   public static final BLOOD = {
     drops: 7,            // droplets thrown per bloody hit
     dropMs: 260.0,       // droplet flight time before it lands as a decal
-    speed: 0.9,          // horizontal launch speed spread (cells worth, away from attacker)
-    up: 2.4,             // upward launch impulse
-    gravity: 9.0,        // downward accel pulling drops back to the ground
+    speed: 3.6,          // horizontal launch speed spread (cells worth, away from attacker)
+    up: 9.6,             // upward launch impulse
+    gravity: 144.0,      // downward accel pulling drops back to the ground
     dropScale: 0.3,      // in-flight droplet quad scale (of a billboard)
     scaleMin: 0.35,      // landed splat min scale
     scaleMax: 0.9,       // landed splat max scale
@@ -151,17 +151,18 @@ class RenderConfig {
                             // so NUM_POINT_LIGHTS never changes -> no shader recompile on a shot)
     lightRangeCells: 14,    // only shots within this many cells of the player claim a muzzle light
     sparkCount: 5,          // impact shards on a hit
-    sparkSize: 0.22,        // impact shard size (cells)
-    sparkMs: 130.0,         // impact shard life
-    sparkSpeed: 3.2,        // impact shard speed (cells/sec)
+    sparkSize: 0.12,        // impact shard size (cells)
+    sparkMs: 70.0,         // impact shard life
+    sparkSpeed: 6.0,        // impact shard speed (cells/sec)
     sparkColor: 0xfff0d0,   // impact shard tint
     recoilAmp: 0.9,         // player-shot camera kick (world units, back along the shot)
     recoilMs: 160.0,        // camera recoil settle time
-    // per-weapon: pellets fired, target jitter (cells), stagger between pellets (ms)
+    // per-weapon: pellets fired, target jitter (cells), stagger between pellets (ms), and the
+    // max tiles a missed bullet flies before it fades off-camera (shotgun stops short)
     kinds: {
-      pistol:  { pellets: 1, spread: 0.0,  stagger: 0.0 },
-      rifle:   { pellets: 3, spread: 0.15, stagger: 45.0 },
-      shotgun: { pellets: 5, spread: 0.5,  stagger: 0.0 },
+      pistol:  { pellets: 1, spread: 0.0,  stagger: 0.0,  range: 14 },
+      rifle:   { pellets: 3, spread: 0.15, stagger: 45.0, range: 14 },
+      shotgun: { pellets: 5, spread: 0.5,  stagger: 0.0,  range: 5 },
     },
   };
 

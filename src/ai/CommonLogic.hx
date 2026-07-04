@@ -115,10 +115,10 @@ class CommonLogic
           return;
         }
 
-      // check for line of sight on ranged
+      // check for line of sight on ranged (strict: no shooting through a solid wall corner)
       if (attacker.needsRangedLineOfSight() &&
           weapon.isRanged &&
-          !attacker.seesPosition(target.x, target.y))
+          !attacker.seesPosition(target.x, target.y, true))
         {
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'move for ranged line of sight');

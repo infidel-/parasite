@@ -292,8 +292,8 @@ public function show()
     }
 
 
-// does this AI sees this position?
-  public function seesPosition(xx: Int, yy: Int): Bool
+// does this AI sees this position? (strict: block sight through solid wall corners, for gun-fire)
+  public function seesPosition(xx: Int, yy: Int, ?strict: Bool): Bool
     {
       // too far away
       var distSqr = Const.distanceSquared(x, y, xx, yy);
@@ -304,7 +304,7 @@ public function show()
         return false;
 
       // check for visibility
-      if (!game.area.isVisible(x, y, xx, yy))
+      if (!game.area.isVisible(x, y, xx, yy, null, strict))
         return false;
 
       return true;

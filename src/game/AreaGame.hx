@@ -1558,8 +1558,9 @@ class AreaGame extends _SaveObject
     }
 
 // check if x1, y1 sees x2, y2
-// bresenham copied from wikipedia with one slight modification
-  public function isVisible(x1: Int, y1: Int, x2: Int, y2: Int, ?doTrace: Bool)
+// bresenham copied from wikipedia with one slight modification.
+// strict (used by AI gun-fire): a diagonal step may not cut through a solid wall corner
+  public function isVisible(x1: Int, y1: Int, x2: Int, y2: Int, ?doTrace: Bool, ?strict: Bool)
     {
       var startx = x1, starty = y1, finx = x2, finy = y2;
       var steep: Bool = (Math.abs(y2 - y1) > Math.abs(x2 - x1));
@@ -1632,12 +1633,52 @@ class AreaGame extends _SaveObject
           error -= dy;
           if (error < 0)
             {
+              // strict corner block: the line steps diagonally from (xx,yy) to (xx+1,yy+ystep);
+              // if BOTH tiles straddling that corner are opaque, it's a solid corner -> no sight
+              if (strict == true)
+                {
+                  var ny = yy + ystep;
+                  var a = (steep ? canSeeThrough(ny, xx) : canSeeThrough(xx, ny));
+                  var b = (steep ? canSeeThrough(yy, xx + 1) : canSeeThrough(xx + 1, yy));
+                  if (!a && !b)
+                    return false;
+                }
               yy = yy + ystep;
               error = error + dx;
             }
         }
 
       return true;
+    }
+
+// walk a straight ray from (sx,sy) toward (tx,ty) and return the first wall tile hit within
+// maxTiles (wall=true), else the last in-bounds tile reached (wall=false, faded off-camera).
+// used to stop a missed bullet's tracer at a wall (spark) or let it fade at range (no spark)
+  public function rayToWall(sx: Int, sy: Int, tx: Int, ty: Int, maxTiles: Int): { col: Int, row: Int, wall: Bool }
+    {
+      var dx = tx - sx, dy = ty - sy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 0.001)
+        return { col: sx, row: sy, wall: false };
+      var stepX = dx / dist, stepY = dy / dist;   // unit step, ~one tile per iteration
+      var lastCol = sx, lastRow = sy;
+      var i = 1;
+      while (i <= maxTiles)
+        {
+          var col = Math.round(sx + stepX * i);
+          var row = Math.round(sy + stepY * i);
+          if (col != lastCol || row != lastRow)
+            {
+              // off the map: fade there, no spark
+              if (col < 0 || col >= width || row < 0 || row >= height)
+                return { col: lastCol, row: lastRow, wall: false };
+              if (!canSeeThrough(col, row))
+                return { col: col, row: row, wall: true };
+              lastCol = col; lastRow = row;
+            }
+          i++;
+        }
+      return { col: lastCol, row: lastRow, wall: false };
     }
 
 // add AI to map

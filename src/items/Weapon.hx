@@ -44,12 +44,12 @@ class Weapon extends ItemInfo
         };
     }
 
-// marks this weapon as the active choice
+// marks this weapon as the active choice; virtual (returns false so no energy/turn is spent)
   function activeAction(item: _Item): Bool
     {
       game.log('You will now attack with the ' + item.name + '.');
       game.player.host.inventory.weaponID = item.id;
-      return true;
+      return false;
     }
 
 // post-hit combat hook for weapon-specific side effects

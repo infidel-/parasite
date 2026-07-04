@@ -272,9 +272,9 @@ class Actors {
 
 // spawn one 3D gun-shot pellet (tracer + flash + sparks); blood + impact sound fire via the
 // onImpact closure when the tracer lands (null for extra pellets so it fires once)
-  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, hit:Bool, onImpact:Void->Void):Void
+  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, spark:Bool, onImpact:Void->Void):Void
     {
-      particles.add(new Shot3D(muzzle, impact, startDelay, hit, onImpact));
+      particles.add(new Shot3D(muzzle, impact, startDelay, spark, onImpact));
     }
 
 // pulse a pooled muzzle light at the shooter (constant scene light count, no recompile)

@@ -1034,8 +1034,8 @@ hr {
   top: 78px;
   left: 26px;
   width: fit-content;
-  /* grow horizontally with long lines, bounded by the window edge */
-  max-width: calc(100vw - 52px);
+  /* grow horizontally with long lines, capped so a long hint truncates instead of overflowing */
+  max-width: min(48ch, calc(100vw - 52px));
   padding: 8px 11px;
   background-color: var(--hud-panel);
 }
@@ -1088,6 +1088,10 @@ hr {
 }
 #hud-log .hud-row .msg {
   color: #c3c6ce;
+  /* let the flex item shrink and cut a too-long line with an ellipsis */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* log messages arrive pre-wrapped in .small/.smallgray spans; keep them at the
    row size so bright colored lines don't shrink to a ghosting size */

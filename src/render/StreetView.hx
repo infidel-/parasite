@@ -304,12 +304,12 @@ class StreetView {
       if (Math.abs(sx - game.playerArea.x) <= S.lightRangeCells &&
           Math.abs(sy - game.playerArea.y) <= S.lightRangeCells)
         actors.muzzleFlash(mw.x, muzzleY, mw.z);
-      // the impact beat: blood away from the shooter + the impact hit/miss sound
+      // the impact beat: on a hit, blood away from the shooter (guns always draw blood, like the
+      // old 2D shot) + the hit sound; on a miss, just the miss sound (spark handled per-pellet)
       var onImpact = function() {
         if (hit)
           {
-            if (spawnBlood)
-              actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
+            actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
             game.scene.sounds.play('attack-bullet-hit', { always: true, x: tx, y: ty });
           }
         else game.scene.sounds.play('attack-bullet-miss', { always: true, x: tx, y: ty });
@@ -317,13 +317,34 @@ class StreetView {
       // per-weapon pellet pattern
       var kind = (soundKind == 'attack-shotgun' ? S.kinds.shotgun :
         (soundKind == 'attack-assault-rifle' ? S.kinds.rifle : S.kinds.pistol));
+      // base impact: a hit stops at the target cell (flesh, no spark); a miss flies on to the
+      // first wall along its path (spark there) or fades at max range (off-camera, no spark)
+      var baseX = iw.x, baseY = impactY, baseZ = iw.z;
+      var sparkAtEnd = false;
+      if (!hit)
+        {
+          var e = game.area.rayToWall(sx, sy, tx, ty, kind.range);
+          var ew = CityConfig.cellToWorld(e.col, e.row);
+          baseX = ew.x; baseZ = ew.z;
+          baseY = render.world.WorldCtx.floorY(e.col, e.row) + render.particles.Sprites.SIZE * 0.4;
+          sparkAtEnd = e.wall;
+          // a wall tile's center sits inside the opaque wall (occludes the spark) -> pull the
+          // endpoint back half a cell along the ray so the tracer/spark land on the near face
+          if (e.wall)
+            {
+              var dxm = baseX - mw.x, dzm = baseZ - mw.z;
+              var dl = Math.sqrt(dxm * dxm + dzm * dzm);
+              if (dl > 0.001)
+                { baseX -= dxm / dl * C * 0.5; baseZ -= dzm / dl * C * 0.5; }
+            }
+        }
       for (i in 0...kind.pellets)
         {
           // spread jitters each pellet's visual impact (blood still lands on the true tile)
           var jx = kind.spread * C * (Math.random() - 0.5);
           var jz = kind.spread * C * (Math.random() - 0.5);
-          var impact = new Vector3(iw.x + jx, impactY, iw.z + jz);
-          actors.shot(muzzle, impact, i * kind.stagger, hit, i == 0 ? onImpact : null);
+          var impact = new Vector3(baseX + jx, baseY, baseZ + jz);
+          actors.shot(muzzle, impact, i * kind.stagger, sparkAtEnd, i == 0 ? onImpact : null);
         }
       // recoil: kick the camera back along the shot (player's own shots only)
       if (byPlayer)
