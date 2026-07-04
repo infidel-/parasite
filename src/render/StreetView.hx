@@ -298,7 +298,9 @@ class StreetView {
       var iw = CityConfig.cellToWorld(tx, ty);
       var muzzleY = render.world.WorldCtx.floorY(sx, sy) + render.particles.Sprites.SIZE * 0.4;
       var impactY = render.world.WorldCtx.floorY(tx, ty) + render.particles.Sprites.SIZE * 0.4;
-      var muzzle = new Vector3(mw.x, muzzleY, mw.z);
+      // small random offset applied to both tracer ends (full on x/z, half on y) so pellets/shots
+      // don't all share one exact muzzle->impact line
+      var jit = function() return S.tracerJitter * C * (Math.random() - 0.5);
       // muzzle light only for near-camera shots (pooled, constant count); distant shots in a
       // 50-NPC firefight get just the emissive flash quad, no light
       if (Math.abs(sx - game.playerArea.x) <= S.lightRangeCells &&
@@ -343,8 +345,13 @@ class StreetView {
           // spread jitters each pellet's visual impact (blood still lands on the true tile)
           var jx = kind.spread * C * (Math.random() - 0.5);
           var jz = kind.spread * C * (Math.random() - 0.5);
-          var impact = new Vector3(baseX + jx, baseY, baseZ + jz);
-          actors.shot(muzzle, impact, i * kind.stagger, sparkAtEnd, i == 0 ? onImpact : null);
+          var muz = new Vector3(mw.x + jit(), muzzleY + jit() * 0.5, mw.z + jit());
+          var ex = baseX + jx + jit(), ez = baseZ + jz + jit();
+          var impact = new Vector3(ex, baseY + jit() * 0.5, ez);
+          actors.shot(muz, impact, i * kind.stagger, i == 0 ? onImpact : null);
+          // wall strike: spray sparks back off the wall once the tracer arrives
+          if (sparkAtEnd)
+            actors.sparkBurst(ex, baseY, ez, mw.x - ex, mw.z - ez, i * kind.stagger + S.travelMs);
         }
       // recoil: kick the camera back along the shot (player's own shots only)
       if (byPlayer)

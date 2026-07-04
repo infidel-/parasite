@@ -137,6 +137,7 @@ class RenderConfig {
   // "cells" are fractions of CityConfig.CELL; ms are durations; colors are warm muzzle tones
   public static final SHOT = {
     tracerWidth: 0.03,      // tracer quad width (cells)
+    tracerJitter: 0.1,      // random offset on both tracer ends so shots don't share one exact line (cells)
     tailFrac: 0.55,         // streak visible length as a fraction of the full muzzle->impact run
     travelMs: 55.0,         // time the tracer head takes to race to the target
     tracerColor: 0xfff2c8,  // warm-white tracer
@@ -150,11 +151,14 @@ class RenderConfig {
     lightPool: 5,           // fixed muzzle-light count (always in the scene, idle at intensity 0
                             // so NUM_POINT_LIGHTS never changes -> no shader recompile on a shot)
     lightRangeCells: 14,    // only shots within this many cells of the player claim a muzzle light
-    sparkCount: 5,          // impact shards on a hit
-    sparkSize: 0.12,        // impact shard size (cells)
-    sparkMs: 70.0,         // impact shard life
-    sparkSpeed: 6.0,        // impact shard speed (cells/sec)
-    sparkColor: 0xfff0d0,   // impact shard tint
+    sparkCount: 7,          // impact embers per wall strike
+    sparkMs: 100.0,         // ember life
+    sparkSpeed: 6.0,        // ember launch speed (cells/sec)
+    sparkCone: 1.8,         // spray cone width around the back-off-wall direction (radians)
+    sparkGravity: 20.0,     // ember downward accel (cells/sec^2), gives the arc
+    sparkWidth: 0.05,       // ember streak width (cells)
+    sparkStreak: 0.03,      // ember streak length = speed * this (seconds of travel drawn)
+    sparkColor: 0xfff0d0,   // ember tint
     recoilAmp: 0.9,         // player-shot camera kick (world units, back along the shot)
     recoilMs: 160.0,        // camera recoil settle time
     // per-weapon: pellets fired, target jitter (cells), stagger between pellets (ms), and the

@@ -9,12 +9,14 @@ import render.anim.JumpOnFace;
 import render.anim.LeaveHost;
 import render.particles.Sprites;
 import render.particles.Beams;
+import render.particles.Sparks;
 import render.particles.MuzzleLights;
 import render.particles.Paint3D;
 import render.particles.Particles3D;
 import render.particles.BloodDrop3D;
 import render.particles.DeathFade3D;
 import render.particles.Shot3D;
+import render.particles.SparkBurst3D;
 import game.Game;
 import entities.Entity;
 import ai.AI;
@@ -31,7 +33,8 @@ class Actors {
   var actorGroup:Group;                                   // scene group; shots attach their own meshes to it
 
   var sprites:Sprites;                                    // lit billboard/decal paint surface (quad pool + atlas cache)
-  var beams:Beams;                                        // unlit additive bright-FX pool (gun tracers, sparks)
+  var beams:Beams;                                        // unlit additive bright-FX pool (gun tracers, muzzle flash)
+  var sparks:Sparks;                                      // camera-facing soft-ember pool (impact sprays)
   var muzzleLights:MuzzleLights;                          // fixed muzzle-light pool (constant scene light count)
   var paint:Paint3D;                                      // the two surfaces handed to each particle each frame
   var particles:Particles3D;                              // transient 3D FX (blood, death crossfade, gun shots)
@@ -59,10 +62,11 @@ class Actors {
       this.actorGroup = actorGroup;
       sprites = new Sprites(game, actorGroup);
       beams = new Beams(actorGroup);
+      sparks = new Sparks(actorGroup, camera);
       // created here (before the first render) so the muzzle lights are in NUM_POINT_LIGHTS from
       // frame one — the scene compiles once at the full count, never recompiles on a shot
       muzzleLights = new MuzzleLights(actorGroup);
-      paint = { sprites: sprites, beams: beams };
+      paint = { sprites: sprites, beams: beams, sparks: sparks };
       particles = new Particles3D();
       lastState = game.player.state;
     }
@@ -84,6 +88,7 @@ class Actors {
     {
       sprites.begin();
       beams.begin();
+      sparks.begin();
       muzzleLights.update(dtMs);
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
@@ -140,6 +145,7 @@ class Actors {
       // hide leftover pooled meshes
       sprites.end();
       beams.end();
+      sparks.end();
       if (DEBUG_PERF)
         perfLog(tp, tObj, tAI);
     }
@@ -270,11 +276,18 @@ class Actors {
       BloodDrop3D.burst(particles, game, tgtCol, tgtRow, awayX, awayZ, bloodRow, bloodFirstCol);
     }
 
-// spawn one 3D gun-shot pellet (tracer + flash + sparks); blood + impact sound fire via the
+// spawn one 3D gun-shot pellet (tracer + muzzle flash); blood + impact sound fire via the
 // onImpact closure when the tracer lands (null for extra pellets so it fires once)
-  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, spark:Bool, onImpact:Void->Void):Void
+  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, onImpact:Void->Void):Void
     {
-      particles.add(new Shot3D(muzzle, impact, startDelay, spark, onImpact));
+      particles.add(new Shot3D(muzzle, impact, startDelay, onImpact));
+    }
+
+// spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
+// startDelay defers it until the tracer arrives
+  public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void
+    {
+      particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay));
     }
 
 // pulse a pooled muzzle light at the shooter (constant scene light count, no recompile)
