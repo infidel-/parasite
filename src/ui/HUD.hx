@@ -440,6 +440,8 @@ public function onMouseLeave()
             targeting.exit(false);
           case HUD_COMMAND_MENU:
             command.exit();
+          case HUD_PICKUP_MENU:
+            state = HUD_DEFAULT;
           case HUD_BASE_BUILDING:
             state = HUD_DEFAULT;
           case HUD_DEFAULT:

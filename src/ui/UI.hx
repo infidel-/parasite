@@ -196,6 +196,15 @@ class UI
           return;
         }
 
+      // Escape closes the ground-items submenu
+      if (hud.state == HUD_PICKUP_MENU &&
+          e.code == 'Escape')
+        {
+          hud.state = HUD_DEFAULT;
+          game.updateHUD();
+          return;
+        }
+
       // handle targeting mode keys
       if (hud.state == HUD_TARGETING)
         {
@@ -580,6 +589,8 @@ class UI
             // no message
           case HUD_COMMAND_MENU:
             game.actionFailed('You cannot move while commanding followers.');
+          case HUD_PICKUP_MENU:
+            game.actionFailed('You cannot move while picking up items.');
           default:
         }
       return true;

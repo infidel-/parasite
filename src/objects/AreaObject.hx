@@ -195,6 +195,11 @@ class AreaObject extends _SaveObject
   public dynamic function updateActionList()
     {}
 
+// item-pickup actions this object offers on the player's tile (loose pickup, body loot, ...).
+// collected across the tile and grouped into the pickup submenu when several exist. default none
+  public dynamic function getItemActions(): Array<_PlayerAction>
+    { return []; }
+
 // get static atmosphere light emitted by this object
   public dynamic function getAtmosphereLight(): _AtmosphereLightMeta
     { return null; }

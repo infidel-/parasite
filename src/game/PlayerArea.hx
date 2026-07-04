@@ -237,10 +237,24 @@ class PlayerArea extends _SaveObject
                 isAgreeable: true,
                 obj: o,
               });
-            // object known - add all actions defined by object
+            // object known - add all actions defined by object. item-pickup actions (body
+            // loot, loose pickups) are grouped into one action / submenu after the loop
             else if (o.known())
               o.updateActionList();
           }
+
+      // gettable items on the player's tile: one -> a single Get action (as before);
+      // several -> one action that opens the pickup submenu (full list)
+      var items = getTileItemActions();
+      if (items.length == 1)
+        game.ui.hud.addAction(items[0]);
+      else if (items.length > 1)
+        game.ui.hud.addAction({
+          id: 'pickupMenu',
+          type: ACTION_AREA,
+          name: 'Pick up items… ' + Const.col('inventory-item', '(' + items.length + ')'),
+          isVirtual: true,
+        });
 
       // leave area action
       if (canLeaveArea())
@@ -258,6 +272,19 @@ class PlayerArea extends _SaveObject
 
 // do a player action
 // action energy availability is checked when the list is formed
+// all item-pickup actions offered by objects on the player's own tile (body loot + loose
+// pickups). used both to group them (one Get vs submenu) and to fill the open submenu
+  public function getTileItemActions(): Array<_PlayerAction>
+    {
+      // no known() gate: unknown items are grabbable too (they show as their unknown name,
+      // same as loot on a searched body). each object's getItemActions() applies its own rule
+      var list: Array<_PlayerAction> = [];
+      for (o in game.area.getObjectsAt(x, y))
+        for (a in o.getItemActions())
+          list.push(a);
+      return list;
+    }
+
   public function action(action: _PlayerAction)
     {
       // restart
@@ -325,6 +352,18 @@ class PlayerArea extends _SaveObject
       // plant false memories
       else if (action.id == 'plantMemories')
         ret = plantMemoriesAction();
+      // open the ground-items submenu (several pickups on the tile)
+      else if (action.id == 'pickupMenu')
+        {
+          game.ui.hud.state = HUD_PICKUP_MENU;
+          game.updateHUD();
+        }
+      // close the ground-items submenu (Back)
+      else if (action.id == 'pickupMenu.abort')
+        {
+          game.ui.hud.state = HUD_DEFAULT;
+          game.updateHUD();
+        }
       // learn about object
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);

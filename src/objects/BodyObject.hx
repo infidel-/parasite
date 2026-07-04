@@ -85,7 +85,8 @@ class BodyObject extends AreaObject
       if (game.player.state != PLR_STATE_HOST)
         return;
 
-      // some body types don't have stuff on them
+      // some body types don't have stuff on them. the loot get.* actions are supplied by
+      // getItemActions() so PlayerArea can group them into the pickup submenu
       if (!isSearched && canSearch())
         game.ui.hud.addAction({
           id: 'searchBody',
@@ -94,27 +95,35 @@ class BodyObject extends AreaObject
           energy: 10,
           obj: this
         });
+    }
 
-      if (isSearched)
-        for (item in inventory)
-          {
-            // atm can't take clothing/armor
-            if (item.info.type == 'clothing')
-              continue;
-            if (game.player.host.inventory.length() >=
-                game.player.host.maxItems)
-              continue;
+// loot pickup actions (one per takeable item), grouped by PlayerArea into the pickup submenu
+  public override function getItemActions(): Array<_PlayerAction>
+    {
+      var list: Array<_PlayerAction> = [];
+      if (game.player.state != PLR_STATE_HOST ||
+          !isSearched)
+        return list;
+      for (item in inventory)
+        {
+          // atm can't take clothing/armor
+          if (item.info.type == 'clothing')
+            continue;
+          if (game.player.host.inventory.length() >=
+              game.player.host.maxItems)
+            continue;
 
-            var name = (game.player.knowsItem(item.id) ?
-              item.name : item.info.unknown);
-            game.ui.hud.addAction({
-              id: 'get.' + item.id,
-              type: ACTION_OBJECT,
-              name: 'Get ' + Const.col('inventory-item', name),
-              energy: 5,
-              obj: this
-            });
-          }
+          var name = (game.player.knowsItem(item.id) ?
+            item.name : item.info.unknown);
+          list.push({
+            id: 'get.' + item.id,
+            type: ACTION_OBJECT,
+            name: 'Get ' + Const.col('inventory-item', name),
+            energy: 5,
+            obj: this
+          });
+        }
+      return list;
     }
 
 
