@@ -97,6 +97,11 @@ class ConsoleCompletion
           { lit: 'rescan' },
           { lit: 'savedata', next: [ { slot: '<id>', values: modIDs } ] },
         ] },
+        // perf profiler toggles (available in release too)
+        { lit: 'perf', next: [
+          { lit: 'turn' },
+          { lit: 'street' },
+        ] },
       ];
       if (Const.isDebug)
         {
