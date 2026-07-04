@@ -466,6 +466,12 @@ class AreaManager extends _SaveObject
 // event: team member calls for backup
   function onCallTeamBackup(e: AreaEvent)
     {
+      // team already at full strength on the field: ignore the call (no dispatch, no radio
+      // spam). the hard cap is re-checked on arrival below
+      if (game.group.team == null ||
+          getGroupCount() >= game.group.team.size)
+        return;
+
       game.scene.sounds.play('ai-radio', {
         x: e.ai.x,
         y: e.ai.y,
@@ -497,17 +503,28 @@ class AreaManager extends _SaveObject
       return cnt;
     }
 
+// count group units (team member + blackops) on the field, for the team-size backup cap.
+// mirrors the team-member spawn cap in AreaGame (excludes parasite-attached units)
+  function getGroupCount(): Int
+    {
+      var cnt = 0;
+      for (ai in area.getAllAI())
+        if (ai.isGroup() &&
+            !ai.parasiteAttached)
+          cnt++;
+      return cnt;
+    }
+
 // event: team backup arrives
   function onArriveTeamBackup(e: AreaEvent)
     {
       // in rare case, team can get deleted by raiseTeamDistance() while backup is on the way
       if (game.group.team == null)
         return;
-      // check for max blackops
-      // NOTE: use law response max number if it is there
-      var cnt = getLawCount();
-      var max = (area.info.lawResponseMax > 0 ? area.info.lawResponseMax : 4);
-      if (cnt >= max)
+      // hard cap: never exceed team.size group units (team member + blackops) on the field.
+      // only fill the remaining slots (was mistakenly counting law units vs a flat 4)
+      var free = game.group.team.size - getGroupCount();
+      if (free <= 0)
         return;
 
       log('Backup arrives on scene!');
@@ -518,7 +535,7 @@ class AreaManager extends _SaveObject
         always: false,
       });
 
-      for (i in 0...2)
+      for (i in 0...(free < 2 ? free : 2))
         {
           var loc = area.findArriveLocation({
             near: { x: e.x, y: e.y },
