@@ -775,7 +775,7 @@ public function show()
 
 // emit specific sound (both visual and audio if it exists)
 // also handle sound propagation here
-  public function emitSound(sound: AISound)
+  public function emitSound(sound: AISound, ?playAudio: Bool = true)
     {
       if (sound == null)
         return;
@@ -794,7 +794,10 @@ public function show()
           sound.text != null &&
           entity != null)
         entity.setText(sound.text, 2, lang);
-      if (sound.file != null)
+      // playAudio=false defers only the audible SFX (the 3D melee lunge plays it on impact);
+      // alert propagation + bark text below still run
+      if (playAudio &&
+          sound.file != null)
         {
           var file = sound.file;
           if (isHuman && !isMale && file.indexOf('male') == 0)
@@ -907,6 +910,9 @@ public function show()
         entity: entity,
         attacker: attacker,
       });
+      // 3D: fade the dying billboard out (entity still live here) so it crossfades into the
+      // body that spawns just below, instead of the sprite hard-cutting to the corpse
+      game.scene.city3d.playDeathFade(entity);
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook
@@ -917,6 +923,8 @@ public function show()
         area: game.area,
       });
       var o = new BodyObject(game, game.area.id, x, y, type);
+      // 3D: fade the body in from transparent (crossfades with the dying billboard above)
+      game.scene.city3d.fadeInEntity(o.entity);
 
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);

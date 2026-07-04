@@ -20,6 +20,7 @@ class Game extends _SaveObject
     'area', 'areaGenerator', 'jobs', 'lang',
   ];
   public static var inst: Game;
+  public static var DEBUG_TURN = false; // log slow turn phases to console (toggle: `perf turn`)
   public var config: Config; // game config
   public var profile: Profile; // user profile
   public var scene: GameScene; // ui scene (hashlink OLD)
@@ -426,23 +427,45 @@ class Game extends _SaveObject
       // AI movement
       if (location == LOCATION_AREA)
         {
+          // turn profiler: time each area phase to find turn lag (toggle: game.Game.DEBUG_TURN)
+          var dp = Game.DEBUG_TURN;
+          var t0 = dp ? haxe.Timer.stamp() : 0.0;
           area.turn();
+          var tArea = dp ? haxe.Timer.stamp() : 0.0;
           scene.area.turn();
+          var tScene = dp ? haxe.Timer.stamp() : 0.0;
           if (state != GAMESTATE_RUNNING)
             return;
 
           // area turn
           managerArea.turn();
+          var tMgr = dp ? haxe.Timer.stamp() : 0.0;
           if (state != GAMESTATE_RUNNING)
             return;
 
           // goals turn
           goals.turn();
+          var tGoals = dp ? haxe.Timer.stamp() : 0.0;
           if (state != GAMESTATE_RUNNING)
             return;
 
           // update AI visibility to player
           area.updateVisibility();
+          if (dp)
+            {
+              var tVis = haxe.Timer.stamp();
+              var tot = (tVis - t0) * 1000;
+              // only log slow turns; break down + growth-suspect counts
+              if (tot > 6.0)
+                trace('[turn-perf] ' + Std.int(tot) + 'ms' +
+                  ' area(ai)=' + Std.int((tArea - t0) * 1000) +
+                  ' scene=' + Std.int((tScene - tArea) * 1000) +
+                  ' mgr=' + Std.int((tMgr - tScene) * 1000) +
+                  ' goals=' + Std.int((tGoals - tMgr) * 1000) +
+                  ' vis=' + Std.int((tVis - tGoals) * 1000) +
+                  ' | ai=' + Lambda.count(area.getAllAI()) +
+                  ' splats=' + area.splatCount());
+            }
         }
 
       else if (location == LOCATION_REGION)

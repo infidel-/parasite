@@ -15,7 +15,7 @@ class AreaGame extends _SaveObject
 {
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
-    'info', 'clueSpawnPoints',
+    'info', 'clueSpawnPoints', '_splatCells',
   ];
   var game: Game;
   var region: RegionGame;
@@ -64,6 +64,7 @@ class AreaGame extends _SaveObject
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
   var _tileset: Tileset;
+  var _splatCells: Array<{ x: Int, y: Int }>; // transient FIFO of blood-splat cells (cap eviction; not saved)
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
@@ -117,6 +118,7 @@ class AreaGame extends _SaveObject
       _objects = new Map();
       _pathEngine = null;
       _tileset = null;
+      _splatCells = [];
     }
 
 // called after load or creation
@@ -1360,10 +1362,48 @@ class AreaGame extends _SaveObject
       if (tile.decoration == null)
         tile.decoration = [];
       tile.decoration.push(decoration);
+      // cap blood splats: FIFO-evict the oldest tracked splat once past the per-area max so a
+      // long killing spree can't grow tiles/save unbounded (transient tracker, rebuilt post-load)
+      if (decoration.tag == 'SPLAT')
+        {
+          if (_splatCells == null) // transient: null on freshly-loaded areas
+            _splatCells = [];
+          _splatCells.push({ x: x, y: y });
+          if (_splatCells.length > render.RenderConfig.BLOOD.splatMax)
+            {
+              var old = _splatCells.shift();
+              removeOneSplatAt(old.x, old.y);
+            }
+        }
       if (game != null &&
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
+    }
+
+// current tracked blood-splat count (debug/instrumentation; session-added only)
+  public function splatCount(): Int
+    {
+      return (_splatCells != null ? _splatCells.length : 0);
+    }
+
+// remove a single SPLAT decoration from a cell (oldest-first FIFO eviction)
+  function removeOneSplatAt(x: Int, y: Int)
+    {
+      if (tiles == null ||
+          x < 0 || y < 0 ||
+          x >= width || y >= height)
+        return;
+      var tile = tiles[x][y];
+      if (tile == null ||
+          tile.decoration == null)
+        return;
+      for (d in tile.decoration)
+        if (d.tag == 'SPLAT')
+          {
+            tile.decoration.remove(d);
+            return;
+          }
     }
 
 
@@ -1458,7 +1498,7 @@ class AreaGame extends _SaveObject
     }
 
 // get cached tileset for this area type
-  function getTileset(): Tileset
+  public function getTileset(): Tileset
     {
       if (_tileset == null &&
           game != null &&

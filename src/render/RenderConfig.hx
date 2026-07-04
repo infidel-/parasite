@@ -111,6 +111,26 @@ class RenderConfig {
     lerp: 0.15,   // per-30fps-frame ease of fade toward its target (dt-compensated)
     margin: 1.0   // XZ expansion when bucketing face-proud decals into their building
   };
+  // melee choreography + 3D blood. lunge = attacker there-and-back reach; on lunge finish the
+  // impact sound + target shake + blood burst fire. drops arc ballistically and land as SPLAT
+  // ground decorations (rendered flat, persisted + cleared on area exit like 2D splats)
+  public static final MELEE = {
+    lungeMs: 200.0,      // lunge duration (ms); sound/shake/blood fire at its end
+    lungeReach: 0.55,    // lunge peak reach toward the target, as a fraction of a CELL
+    shakeMs: 150.0,      // target hit-shake duration
+    shakeAmp: 0.10,      // target hit-shake amplitude, as a fraction of a CELL
+  };
+  public static final BLOOD = {
+    drops: 7,            // droplets thrown per bloody hit
+    dropMs: 260.0,       // droplet flight time before it lands as a decal
+    speed: 0.9,          // horizontal launch speed spread (cells worth, away from attacker)
+    up: 2.4,             // upward launch impulse
+    gravity: 9.0,        // downward accel pulling drops back to the ground
+    dropScale: 0.3,      // in-flight droplet quad scale (of a billboard)
+    scaleMin: 0.35,      // landed splat min scale
+    scaleMax: 0.9,       // landed splat max scale
+    splatMax: 80,        // per-area SPLAT decoration cap (oldest evicted)
+  };
   public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt
 

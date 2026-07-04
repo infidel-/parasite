@@ -8,6 +8,7 @@ import citygen.CityModel.City;
 import game.Game;
 import entities.Entity;
 import render.anim.Shake;
+import render.anim.MeleeLunge;
 
 // controller for the 3D street view. Owns a persistent renderer/camera on its own
 // WebGL canvas and a per-city scene + bloom composer; runs its own rAF loop while a
@@ -237,6 +238,61 @@ class StreetView {
           actors == null)
         return;
       actors.playFx(e, new Shake(RenderConfig.BASE_MS, CityConfig.CELL * 0.07, 0));
+    }
+
+// melee choreography: attacker lunges toward the target and, on the lunge landing, fires the
+// impact beat — plays the attack sound, shakes the target, and throws blood (bloody weapons).
+// returns true if it took over the sound (caller then stays silent to avoid a double play);
+// false when no city view / no attacker actor, so the caller plays the sound itself
+  public function playMelee(atkE:Entity, tgtE:Entity,
+      atkCol:Int, atkRow:Int, tgtCol:Int, tgtRow:Int,
+      soundFile:String, spawnBlood:Bool, bloodRow:Int, bloodFirstCol:Int):Bool
+    {
+      if (!running ||
+          actors == null ||
+          atkE == null)
+        return false;
+      // lunge reach: unit vector attacker->target, scaled to a fraction of a cell
+      var a = CityConfig.cellToWorld(atkCol, atkRow);
+      var b = CityConfig.cellToWorld(tgtCol, tgtRow);
+      var dx = b.x - a.x, dz = b.z - a.z;
+      var len = Math.sqrt(dx * dx + dz * dz);
+      if (len < 0.001)
+        { dx = 0; dz = 1; len = 1; }
+      var reach = RenderConfig.MELEE.lungeReach * CityConfig.CELL;
+      // the impact beat, fired when the lunge lands
+      var onDone = function() {
+        if (soundFile != null)
+          game.scene.sounds.play(soundFile, { x: tgtCol, y: tgtRow });
+        if (tgtE != null)
+          actors.playFx(tgtE, new Shake(RenderConfig.MELEE.shakeMs,
+            RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
+        if (spawnBlood)
+          actors.burst(tgtCol, tgtRow, dx, dz, bloodRow, bloodFirstCol);
+      };
+      var lunge = new MeleeLunge(RenderConfig.MELEE.lungeMs,
+        dx / len * reach, dz / len * reach, onDone);
+      // if the attacker has no live billboard (off-screen), fire the beat now so nothing is lost
+      if (!actors.playFx(atkE, lunge))
+        onDone();
+      return true;
+    }
+
+// snapshot a dying actor into a fade-out ghost (before its entity is nulled)
+  public function playDeathFade(e:Entity):Void
+    {
+      if (running &&
+          actors != null)
+        actors.startDeathFade(e);
+    }
+
+// fade a freshly-spawned entity (the body) in from transparent instead of popping
+  public function fadeInEntity(e:Entity):Void
+    {
+      if (running &&
+          actors != null &&
+          e != null)
+        actors.seedFadeIn(e);
     }
 
 // forward a resize to the renderer/camera

@@ -170,15 +170,16 @@ class Attacker
     }
 
 // emits attacker sound and alertness
-  public function emitSound(sound: AISound)
+  public function emitSound(sound: AISound, ?playAudio: Bool = true)
     {
       if (ai != null)
         {
-          ai.emitSound(sound);
+          ai.emitSound(sound, playAudio);
           return;
         }
 
-      if (sound.file != null)
+      if (playAudio &&
+          sound.file != null)
         game.scene.sounds.play(sound.file, {
           x: x,
           y: y,

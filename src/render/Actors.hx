@@ -1,61 +1,71 @@
 package render;
 
 import three.Three;
-import js.Browser;
 import citygen.CityConfig;
 import render.ActorAnim;
 import render.world.WorldCtx;
 import render.anim.Effect;
 import render.anim.JumpOnFace;
 import render.anim.LeaveHost;
+import render.particles.Sprites;
+import render.particles.Particles3D;
+import render.particles.BloodDrop3D;
+import render.particles.DeathFade3D;
 import game.Game;
 import entities.Entity;
 
-// the 3D actor billboard layer: mirrors the game's objects/AI/player as pooled billboard
-// meshes, each with a position slide + opacity fade + optional transient effect. owns the
-// mesh pool + atlas texture cache + per-actor anim state. StreetView builds one per city
-// and drives it each frame via update(); game logic triggers effects via playFx().
+// the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
+// position slide + opacity fade + optional transient effect. owns the per-actor anim state and
+// paints through a shared Billboards surface; transient FX (blood, death crossfade) live in a
+// Particles3D. StreetView builds one per city and drives it each frame via update(); game logic
+// triggers effects via playFx() and the melee/death bridges
 class Actors {
   var game:Game;
-  var actorGroup:Group;                                   // scene group holding all billboards
-  var camera:PerspectiveCamera;                           // read live for billboard yaw
+  var camera:PerspectiveCamera;                           // read live for billboard yaw (future)
 
-  var pool:Array<Mesh> = [];                              // reused billboard meshes
-  var texCache:Map<String, CanvasTexture> = new Map();    // atlas-crop -> texture
+  var sprites:Sprites;                                    // the shared paint surface (quad pool + atlas cache)
+  var particles:Particles3D;                              // transient 3D FX (blood droplets, death ghosts)
   // per-actor anim state, keyed by entity identity. ponytail: dead entities linger here
   // until the area rebuild drops this whole object — bounded per area, not worth pruning
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
 
-  static inline var BILLBOARD = CityConfig.CELL * 0.85; // actor sprite world size
+  // --- frame profiler (toggle from devtools or `perf street`) ---
+  public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
+  var _pf = 0;                                          // frames since last summary
+  var _pObj = 0.0; var _pAI = 0.0; var _pPass = 0.0;   // accumulated ms: objects, AI, my passes
+  var _decalScan = 0; var _decalDraw = 0;              // last decal pass: cells visited / quads drawn
+
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
-  static inline var TILT = 0.6;                        // radians the billboard leans back toward the overhead camera (0 = upright)
-  static inline var ATTACH_HEAD_Y = BILLBOARD * 0.1;  // attached parasite rides this far above the host's ground center (its head)
+  static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
   static inline var ATTACH_SCALE = 1.0;                // attached parasite is drawn this much smaller (sits on the head)
 
   public function new(game:Game, actorGroup:Group, camera:PerspectiveCamera)
     {
       this.game = game;
-      this.actorGroup = actorGroup;
       this.camera = camera;
+      sprites = new Sprites(game, actorGroup);
+      particles = new Particles3D();
       lastState = game.player.state;
     }
 
 // attach a transient effect to an actor's billboard (build it from render.anim.*, e.g.
 // new Shake(BASE_MS, amp) on damage, new Lunge(...) on melee); no-op if the actor has no
 // live billboard state yet
-  public function playFx(e:Entity, fx:Effect):Void
+  public function playFx(e:Entity, fx:Effect):Bool
     {
       var a = actors.get(e);
-      if (a == null) return;
+      if (a == null) return false;
       a.fx = fx;
+      return true;
     }
 
-// rebuild all actor billboards from live game state; actors slide + fade, effects layer
+// rebuild all actor sprites from live game state; actors slide + fade, effects layer
 // on top. objects/AI gated on player fog/LOS to match the 2D view
   public function update(dtMs:Float):Void
     {
+      sprites.begin();
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
@@ -67,7 +77,7 @@ class Actors {
         startLeaveHost();
       lastState = st;
 
-      var n = 0;
+      var tp = haxe.Timer.stamp();
       // objects (sewer hatches etc.): static, but still fade. parasite keeps seeing
       // sensable objects outside LOS
       for (o in game.area.getObjects())
@@ -77,8 +87,9 @@ class Actors {
               !game.player.vars.losEnabled ||
               game.playerArea.sees(o.x, o.y) ||
               (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable());
-            n = drawActor(n, o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
+            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
           }
+      var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
       for (ai in game.area.getAllAI())
         if (ai.entity != null)
@@ -86,41 +97,158 @@ class Actors {
             var vis =
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
-            n = drawActor(n, ai.entity, vis, dtMs);
+            drawActor(ai.entity, vis, dtMs);
           }
+      var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
       // host the parasite is hidden inside it and only the ring marks the player
       if (st == _PlayerState.PLR_STATE_PARASITE)
-        n = drawActor(n, game.playerArea.entity, true, dtMs);
+        drawActor(game.playerArea.entity, true, dtMs);
       else if (st == _PlayerState.PLR_STATE_ATTACHED)
-        n = drawActor(n, game.playerArea.entity, true, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
+        drawActor(game.playerArea.entity, true, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
       // just invaded (now inside the host): keep drawing the parasite on the host's head with
       // vis=false so it fades out smoothly instead of popping; once faded drawActor drops it
       else if (st == _PlayerState.PLR_STATE_HOST)
-        n = drawActor(n, game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
+        drawActor(game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
+      // persisted blood decals on the ground, then transient FX (in-flight droplets, death ghosts)
+      drawSplatDecals();
+      particles.update(dtMs, sprites);
       // hide leftover pooled meshes
-      for (i in n...pool.length)
-        if (pool[i] != null) pool[i].visible = false;
+      sprites.end();
+      if (DEBUG_PERF)
+        perfLog(tp, tObj, tAI);
     }
 
-// advance one actor's anim state and place its billboard; returns the next pool index
-// (unchanged if the actor is fully faded out with no effect running). baseY/baseScale set
-// the resting pose (nonzero for the attached parasite riding a host's head). flat lays the
-// sprite on the ground as a decal instead of standing it up
-  function drawActor(n:Int, e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false):Int
+// frame profiler: accumulate per-pass ms, warn on a spike, log a summary each ~second.
+// objects/AI passes vs my added passes (decals + particles), plus live counts
+  function perfLog(t0:Float, tObj:Float, tAI:Float):Void
+    {
+      var tEnd = haxe.Timer.stamp();
+      var msObj = (tObj - t0) * 1000;
+      var msAI = (tAI - tObj) * 1000;
+      var msPass = (tEnd - tAI) * 1000; // decals + particles (+ pool hide)
+      _pObj += msObj; _pAI += msAI; _pPass += msPass;
+      // count the live actor-anim entries (leak check)
+      var na = 0;
+      for (_ in actors.keys()) na++;
+      // spike: a single update pass over ~half a 60fps frame budget
+      if ((tEnd - t0) * 1000 > 8.0)
+        trace('[street-perf] SPIKE ' + Std.int((tEnd - t0) * 1000) + 'ms' +
+          ' obj=' + Std.int(msObj) + ' ai=' + Std.int(msAI) + ' pass=' + Std.int(msPass) +
+          ' | decalScan=' + _decalScan + ' decalDraw=' + _decalDraw +
+          ' particles=' + particles.count() + ' quads=' + sprites.count() + ' actors=' + na);
+      _pf++;
+      if (_pf >= 60)
+        {
+          trace('[street-perf] avg/frame obj=' + fix(_pObj / _pf) + 'ms ai=' + fix(_pAI / _pf) +
+            'ms pass=' + fix(_pPass / _pf) + 'ms' +
+            ' | decalScan=' + _decalScan + ' decalDraw=' + _decalDraw +
+            ' particles=' + particles.count() + ' quads=' + sprites.count() + ' actors=' + na);
+          _pf = 0; _pObj = 0; _pAI = 0; _pPass = 0;
+        }
+    }
+
+// two-decimal ms for logs
+  inline function fix(v:Float):String
+    return '' + Std.int(v * 100) / 100;
+
+// draw persisted SPLAT tile decorations as flat ground quads (blood). scans the tile grid
+// (sparse + capped), skipping non-blood floor decorations which stay 2D-only
+  function drawSplatDecals():Void
+    {
+      var tiles = game.area.tiles;
+      if (tiles == null)
+        return;
+      var los = game.player.vars.losEnabled;
+      var t = Const.TILE_SIZE; // dx/dy are pixel offsets in +/-tile/2 (matches 2D splats)
+      var scan = 0, draw = 0;
+      for (x in 0...game.area.width)
+        {
+          if (tiles[x] == null)
+            continue;
+          for (y in 0...game.area.height)
+            {
+              scan++;
+              var tile = tiles[x][y];
+              if (tile == null ||
+                  tile.decoration == null ||
+                  tile.decoration.length == 0)
+                continue;
+              // fog: don't reveal blood through walls
+              if (los &&
+                  !game.playerArea.sees(x, y))
+                continue;
+              for (d in tile.decoration)
+                {
+                  if (d.tag != 'SPLAT' ||
+                      d.icon == null)
+                    continue;
+                  var dx = (d.dx != null ? d.dx : 0) / t;
+                  var dy = (d.dy != null ? d.dy : 0) / t;
+                  var w = CityConfig.cellToWorld(x + dx, y + dy);
+                  var tex = sprites.tex('entities', d.icon.col, d.icon.row, false);
+                  if (tex == null)
+                    continue;
+                  var sc = (d.scale != null ? d.scale : 1.0);
+                  sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, 1.0, sc, true,
+                    (d.angle != null ? d.angle : 0.0));
+                  draw++;
+                }
+            }
+        }
+      _decalScan = scan; _decalDraw = draw;
+    }
+
+// throw a burst of blood from a target cell, biased away from the attacker; drops arc and
+// land as SPLAT ground decals. bloodRow/bloodFirstCol pick the blood variant by type
+  public function burst(tgtCol:Int, tgtRow:Int, awayX:Float, awayZ:Float, bloodRow:Int, bloodFirstCol:Int):Void
+    {
+      BloodDrop3D.burst(particles, game, tgtCol, tgtRow, awayX, awayZ, bloodRow, bloodFirstCol);
+    }
+
+// snapshot a dying actor's sprite into a fade-out ghost (called before the AI entity is
+// nulled), so the billboard eases out instead of hard-cutting to the corpse
+  public function startDeathFade(e:Entity):Void
+    {
+      var a = actors.get(e);
+      if (a == null)
+        return;
+      var tex = texFor(e);
+      if (tex == null)
+        return;
+      particles.add(new DeathFade3D(tex,
+        a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z,
+        1.0, a.op));
+    }
+
+// seed a new entity's actor at zero opacity so it fades in (the body appearing on death)
+  public function seedFadeIn(e:Entity):Void
+    {
+      if (actors.get(e) != null)
+        return;
+      var w = CityConfig.cellToWorld(e.mx, e.my);
+      actors.set(e, { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
+                      op: 0.0, opTarget: 1.0, fx: null });
+    }
+
+// advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
+// running). baseY/baseScale set the resting pose (nonzero for the attached parasite riding a
+// host's head). flat lays the sprite on the ground as a decal instead of standing it up
+  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false):Void
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
           a.fx == null)
-        return n;
+        return;
       // rest on the cell's ground surface (walkway tops sit a curb above the road)
       var floor = WorldCtx.floorY(a.col, a.row);
-      // decals hug the ground; upright billboards centre at half their height
-      var wy = flat ? floor + 0.05 : floor + BILLBOARD * 0.5 + baseY;
+      // decals hug the ground; upright sprites centre at half their height
+      var wy = flat ? floor + 0.05 : floor + Sprites.SIZE * 0.5 + baseY;
       if (a.fx != null)
-        return billboard(n, a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat);
-      return billboard(n, a.x, wy, a.z, texFor(e), a.op, baseScale, flat);
+        sprites.paint(a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat);
+      else
+        sprites.paint(a.x, wy, a.z, texFor(e), a.op, baseScale, flat);
     }
 
 // launch the parasite's leap onto the host's head: snap its slide onto the host cell so
@@ -139,7 +267,7 @@ class Actors {
       a.fromX = w.x; a.fromZ = w.z; a.x = w.x; a.z = w.z; a.t = 1;
       // offsets are relative to the resting head pose (decay to 0 on landing); the effect
       // owns its launch/landing sounds
-      a.fx = new JumpOnFace(game, RenderConfig.BASE_MS, startX - w.x, -ATTACH_HEAD_Y, startZ - w.z, BILLBOARD * 0.5);
+      a.fx = new JumpOnFace(game, RenderConfig.BASE_MS, startX - w.x, -ATTACH_HEAD_Y, startZ - w.z, Sprites.SIZE * 0.5);
     }
 
 // launch the parasite's leap off the host back to the ground: arc down from the head to the
@@ -162,7 +290,7 @@ class Actors {
       a.col = pe.mx; a.row = pe.my;
       a.fromX = w.x; a.fromZ = w.z; a.x = w.x; a.z = w.z; a.t = 1;
       // starts at the head (offset up + horizontal) and lands on the resting ground pose
-      a.fx = new LeaveHost(game, RenderConfig.BASE_MS, px, ATTACH_HEAD_Y, pz, BILLBOARD * 0.5);
+      a.fx = new LeaveHost(game, RenderConfig.BASE_MS, px, ATTACH_HEAD_Y, pz, Sprites.SIZE * 0.5);
     }
 
 // get/create an actor's anim state and advance it one frame (position slide, opacity
@@ -197,63 +325,7 @@ class Actors {
       return a;
     }
 
-// crop one atlas cell (imageName, ix, iy) into a cached texture; null until decoded
+// texture for an entity's current atlas cell
   function texFor(e:Entity):CanvasTexture
-    {
-      var key = e.imageName + ':' + e.ix + ':' + e.iy + ':' + e.isMaleAtlas;
-      if (texCache.exists(key)) return texCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(e.imageName, e.isMaleAtlas);
-      // retry next frame if the atlas image isn't decoded yet
-      if (img == null ||
-          !img.complete ||
-          img.naturalWidth <= 0)
-        return null;
-      var t = Const.TILE_SIZE_CLEAN;
-      var cv:Dynamic = Browser.document.createElement('canvas');
-      cv.width = t; cv.height = t;
-      // mirror Entity.drawImage crop (the +1/-1 kludge avoids atlas bleed)
-      cv.getContext('2d').drawImage(img, e.ix * t, e.iy * t + 1, t, t - 1, 0, 0, t, t);
-      var tex = new CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      texCache.set(key, tex);
-      return tex;
-    }
-
-// place/reuse a billboard mesh at world (wx,wy,wz) with texture tex, opacity op, uniform
-// scale; flat lays it on the ground as a decal. returns the next pool index (unchanged if
-// the atlas isn't ready yet)
-  function billboard(idx:Int, wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false):Int
-    {
-      if (tex == null) return idx;
-      var m = pool[idx];
-      if (m == null)
-        {
-          // MeshStandard (not Basic) so actors take the scene lights — ambient/moon/lamp glow —
-          // instead of rendering full-bright and reading pasted-on over the lit world
-          m = new Mesh(new PlaneGeometry(BILLBOARD, BILLBOARD),
-            new MeshStandardMaterial({
-              transparent: true,
-              depthWrite: false,
-              side: THREE.DoubleSide,
-              roughness: 1,
-              metalness: 0,
-            }));
-          pool[idx] = m;
-          actorGroup.add(m);
-        }
-      var mat:Dynamic = m.material;
-      mat.map = tex;
-      mat.opacity = op;
-      mat.needsUpdate = true;
-      m.position.set(wx, wy, wz);
-      m.scale.set(scale, scale, scale);
-      // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
-      // tracking) leaned back toward the overhead camera by TILT so it reads flatter
-      if (flat)
-        m.rotation.set(-Math.PI / 2, 0, 0);
-      else
-        m.rotation.set(-TILT, 0, 0);
-      m.visible = true;
-      return idx + 1;
-    }
+    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas);
 }

@@ -197,13 +197,29 @@ class CommonLogic
             { x: target.x, y: target.y }, roll, targetBloodType);
         }
 
+      // 3D melee choreography: the attacker lunges and the hit sound fires on impact (not
+      // now). blood/shake are added on a hit below. handled => the view took over the audio
+      var atkE = (attacker.ai != null ? attacker.ai.entity : null);
+      var tgtE = (target.type == TARGET_AI ? target.ai.entity : null);
+      var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
+      inline function melee(sound: AISound, hit: Bool): Bool
+        {
+          if (weapon.isRanged ||
+              game.scene.city3d == null)
+            return false;
+          return game.scene.city3d.playMelee(atkE, hit ? tgtE : null,
+            attacker.x, attacker.y, target.x, target.y,
+            sound != null ? sound.file : null,
+            hit && weapon.spawnBlood, bloodIc.row, bloodIc.col);
+        }
+
       // roll skill
       if (!roll)
         {
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'attack misses');
           var sound = (weapon.soundMiss != null ? weapon.soundMiss : weapon.sound);
-          attacker.emitSound(sound);
+          attacker.emitSound(sound, !melee(sound, false));
           attacker.log('tries to ' + weapon.verb1 + ' ' +
             target.theName() + ', but misses.');
 
@@ -217,15 +233,19 @@ class CommonLogic
             }
           return;
         }
-      else
+      var handledHit = false;
+      if (roll)
         {
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'attack hits');
-          attacker.emitSound(weapon.sound);
+          handledHit = melee(weapon.sound, true);
+          attacker.emitSound(weapon.sound, !handledHit);
         }
 
-      // blood effect on hit
-      if (weapon.spawnBlood)
+      // blood effect on hit (2D). skipped when the 3D melee handled it — the lunge's blood
+      // burst writes the same SPLAT decorations on impact instead (no double splat)
+      if (weapon.spawnBlood &&
+          !handledHit)
         Particle.createSplat(targetBloodType, game.scene,
           { x: target.x, y: target.y }, {
             x: attacker.x,
