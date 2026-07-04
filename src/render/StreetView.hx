@@ -229,6 +229,16 @@ class StreetView {
       actors.playFx(host, new Shake(RenderConfig.BASE_MS * 1.3, amp * 0.7, Math.PI));
     }
 
+// resist shake: jitter an actor as it lurches off in a direction the parasite didn't
+// command (host resisting control mid-move). no-op unless a city view is live
+  public function playResistShake(e:Entity):Void
+    {
+      if (!running ||
+          actors == null)
+        return;
+      actors.playFx(e, new Shake(RenderConfig.BASE_MS, CityConfig.CELL * 0.07, 0));
+    }
+
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
     if (renderer == null) return;

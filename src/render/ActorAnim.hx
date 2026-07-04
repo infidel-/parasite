@@ -12,7 +12,9 @@ typedef PosSlide = {
   col:Int, row:Int,          // last target grid cell
   fromX:Float, fromZ:Float,  // slide origin (world)
   x:Float, z:Float,          // current interpolated world pos
-  t:Float                    // tween progress 0..1 (1 = settled)
+  t:Float,                   // tween progress 0..1 (1 = settled)
+  ?bx:Float, ?bz:Float       // optional L-path bend waypoint (world): set for a diagonal
+                             // step past a building corner, null = straight slide
 };
 
 // one animated billboard: position channel + opacity channel + optional transient effect
@@ -23,10 +25,31 @@ typedef Actor = {
 };
 
 class ActorAnim {
+// L-path bend for a one-step diagonal move from (fc,fr) to (tc,tr): if exactly one shoulder
+// cell is a wall, returns the open shoulder to route the slide through; null = go straight.
+// keeps the camera follow and the actor slide bending the same way past a building corner
+  public static function cornerBend(area:game.AreaGame, fc:Int, fr:Int, tc:Int, tr:Int):{ col:Int, row:Int }
+    {
+      var dc = tc - fc, dr = tr - fr;
+      if (dc < -1 || dc > 1 ||
+          dr < -1 || dr > 1 ||
+          dc == 0 || dr == 0)
+        return null;
+      var hOpen = area.isWalkable(tc, fr); // move-col-first shoulder
+      var vOpen = area.isWalkable(fc, tr); // move-row-first shoulder
+      if (hOpen && !vOpen)
+        return { col: tc, row: fr };
+      if (vOpen && !hOpen)
+        return { col: fc, row: tr };
+      return null;
+    }
+
 // advance a position slide toward grid cell (col,row) by tween-progress `step`: a big
 // jump (area entry, stairs) snaps, else it slides from where it is now. mutates+returns s
-// (null => fresh settled slide at the cell). restarting mid-slide keeps motion continuous
-  public static function slideTo(s:PosSlide, col:Int, row:Int, step:Float):PosSlide
+// (null => fresh settled slide at the cell). restarting mid-slide keeps motion continuous.
+// bendCol/bendRow (>=0) route a diagonal step through an intermediate cell as an L-path so
+// the sprite doesn't cut across a building corner
+  public static function slideTo(s:PosSlide, col:Int, row:Int, step:Float, bendCol:Int = -1, bendRow:Int = -1):PosSlide
     {
       var w = CityConfig.cellToWorld(col, row);
       if (s == null)
@@ -38,17 +61,42 @@ class ActorAnim {
           var dx = w.x - s.x, dz = w.z - s.z;
           var lim = CityConfig.CELL * 1.9;
           if (dx * dx + dz * dz > lim * lim)
-            { s.x = w.x; s.z = w.z; s.t = 1; }
+            { s.x = w.x; s.z = w.z; s.t = 1; s.bx = null; }
           else
-            { s.fromX = s.x; s.fromZ = s.z; s.t = 0; }
+            {
+              s.fromX = s.x; s.fromZ = s.z; s.t = 0;
+              // arm the L-path bend for this slide (cleared for a straight move)
+              if (bendCol >= 0)
+                { var b = CityConfig.cellToWorld(bendCol, bendRow); s.bx = b.x; s.bz = b.z; }
+              else s.bx = null;
+            }
           s.col = col; s.row = row;
         }
       if (s.t < 1)
         {
           s.t = Math.min(1, s.t + step);
           var e = s.t * s.t * (3 - 2 * s.t); // smoothstep
-          s.x = s.fromX + (w.x - s.fromX) * e;
-          s.z = s.fromZ + (w.z - s.fromZ) * e;
+          // bent slide: first half origin->bend, second half bend->target (two orthogonal legs)
+          if (s.bx != null)
+            {
+              if (e < 0.5)
+                {
+                  var u = e / 0.5;
+                  s.x = s.fromX + (s.bx - s.fromX) * u;
+                  s.z = s.fromZ + (s.bz - s.fromZ) * u;
+                }
+              else
+                {
+                  var u = (e - 0.5) / 0.5;
+                  s.x = s.bx + (w.x - s.bx) * u;
+                  s.z = s.bz + (w.z - s.bz) * u;
+                }
+            }
+          else
+            {
+              s.x = s.fromX + (w.x - s.fromX) * e;
+              s.z = s.fromZ + (w.z - s.fromZ) * e;
+            }
         }
       return s;
     }

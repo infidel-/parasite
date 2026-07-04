@@ -1203,6 +1203,8 @@ class PlayerArea extends _SaveObject
             throw 'nowhere to move!';
           nx = x + Const.dirx[dir];
           ny = y + Const.diry[dir];
+          // shake the host as it lurches off the commanded path
+          game.scene.city3d.playResistShake(player.host.entity);
         }
 
       // frob objects on this position

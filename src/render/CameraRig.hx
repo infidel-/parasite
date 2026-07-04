@@ -53,9 +53,14 @@ class CameraRig {
 // (free-cam owns it otherwise, but pWorld still tracks the player so the ring follows)
   public function update(dtMs:Float, followCamera:Bool):Void
     {
-      // follow target: ease toward the player's grid cell
+      // follow target: ease toward the player's grid cell, bending past building corners the
+      // same way the player billboard does so the camera never cuts diagonally through a wall
       var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
-      camSlide = ActorAnim.slideTo(camSlide, game.playerArea.x, game.playerArea.y, step);
+      var bend = (camSlide != null ?
+        ActorAnim.cornerBend(game.area, camSlide.col, camSlide.row, game.playerArea.x, game.playerArea.y) : null);
+      camSlide = ActorAnim.slideTo(camSlide, game.playerArea.x, game.playerArea.y, step,
+        bend != null ? bend.col : -1,
+        bend != null ? bend.row : -1);
       pWorld.set(camSlide.x, 0, camSlide.z);
       // state drives the auto zoom target: close as a parasite, pulled out as a host
       var st = game.player.state;

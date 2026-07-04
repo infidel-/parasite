@@ -179,8 +179,12 @@ class Actors {
           actors.set(e, a);
           return a;
         }
-      // position channel
-      ActorAnim.slideTo(a, e.mx, e.my, step);
+      // position channel. a one-step diagonal move sharing a corner with a building clips
+      // that corner; route it through the open shoulder as an L-path (double orthogonal move)
+      var bend = ActorAnim.cornerBend(game.area, a.col, a.row, e.mx, e.my);
+      ActorAnim.slideTo(a, e.mx, e.my, step,
+        bend != null ? bend.col : -1,
+        bend != null ? bend.row : -1);
       // opacity channel: ease toward the visibility target (LOS fade, slower than moves)
       a.opTarget = vis ? 1.0 : 0.0;
       var opStep = step * FADE_SPEED;
