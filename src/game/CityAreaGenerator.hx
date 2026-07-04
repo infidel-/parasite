@@ -84,6 +84,22 @@ class CityAreaGenerator
           }
     }
 
+// save migration: rebuild the city tile grid to the area's current (full) size from the
+// stored seed. older saves shrank the walkable grid below the CityGen size, leaving 3D
+// streets visible but unreachable. objects (sewer hatches, etc) are left untouched
+  public function rebuildCells(area: AreaGame)
+    {
+      var city = CityGen.generate(area.cityGenSeed);
+      var cells = area.getCells();
+      for (x in 0...area.width)
+        if (cells[x] == null)
+          cells[x] = [];
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          cells[x][y] = tileToGame(city.tiles[y][x]);
+      addCrosswalks(area);
+    }
+
 // map a citygen Tile to the matching game tile constant
   inline function tileToGame(t: Tile): Int
     {

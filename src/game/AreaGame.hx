@@ -157,6 +157,26 @@ class AreaGame extends _SaveObject
       for (o in orphan)
         _objects.remove(o.id);
       Inventory.loadOrphanCount += orphan.length;
+
+      migrateCityGrid();
+    }
+
+// save migration: older saves shrank city areas below the CityGen grid (GRID=100), leaving
+// visible-but-unreachable streets past the cut. rebuild the tile grid to full size from the
+// stored seed so the player can walk the whole block again. objects are untouched
+  function migrateCityGrid()
+    {
+      if (!isCity() ||
+          cityGenSeed == -1 ||
+          !isGenerated ||
+          (width >= info.width && height >= info.height))
+        return;
+      width = info.width;
+      height = info.height;
+      game.areaGenerator.city.rebuildCells(this);
+      // grid grew: drop the cached tile mirror + path engine so they rebuild at the new size
+      tiles = null;
+      _pathEngine = new aPath.Engine(this, width, height);
     }
 
 // enter this area: generate if needed and update view
@@ -970,7 +990,11 @@ class AreaGame extends _SaveObject
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
       info = WorldConst.getAreaInfo(typeID);
-      if (typeID == AREA_HABITAT)
+      // habitat and city areas use exact info dims. city especially: the 3D street renderer
+      // rebuilds the full CityGen grid (GRID=100) from the seed, so shrinking the walkable
+      // grid would leave visible-but-unreachable streets past the cut edge
+      if (typeID == AREA_HABITAT ||
+          isCity())
         {
           width = info.width;
           height = info.height;
@@ -987,6 +1011,14 @@ class AreaGame extends _SaveObject
         name = NameConst.generate('%baseA1% %baseB1%');
       else if (typeID == AREA_FACILITY)
         name = NameConst.generate('%tree1% %geo1% %lab1%');
+    }
+
+// is this one of the procedural city area types?
+  public inline function isCity(): Bool
+    {
+      return typeID == AREA_CITY_LOW ||
+        typeID == AREA_CITY_MEDIUM ||
+        typeID == AREA_CITY_HIGH;
     }
 
 // whether the parasite knows human area names yet (gated on society knowledge)
