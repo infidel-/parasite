@@ -22,6 +22,8 @@ class Debug {
   var getSeed:Void->Int;
   var el:js.html.Element;
   var toolsAttached = false;
+  var cycRefresh:Array<Void->Void> = []; // per-cycler label/index resets, run on every rebuild
+  var hudWasVisible = false; // game HUD state before debug hid it (restored on exit)
 
   // shape-cycler rows (debug HUD): label + copy button + locator list of the current city
   static var CYCLERS:Array<{ key:String, label:String, copy:Bool, spots:City->Array<PShape> }> = [
@@ -47,15 +49,25 @@ class Debug {
 // is the free cam currently owning the camera?
   public inline function flying():Bool return freeCam != null && freeCam.active;
 
+// a new city was built (area change/restart): reset cycler indices + refresh counts
+  public function onRebuild():Void {
+    for (f in cycRefresh) f();
+  }
+
 // enter/leave street-debug mode (fly/editor/inspector + HUD)
   public function set(o:Bool):Void {
     on = o;
     if (o) attachTools();
     Tools.enabled = o;
     if (o && freeCam != null) freeCam.activate(); // auto-enter fly with debug (toggle off with F)
-    if (!o) {
+    // the game HUD makes way for the debug overlay; restored to its prior state on exit
+    if (o) {
+      hudWasVisible = game.ui.hud.isVisible();
+      if (hudWasVisible) game.ui.hud.hide();
+    } else {
       if (freeCam != null) freeCam.deactivate();
       Tools.setMode('none');
+      if (hudWasVisible) game.ui.hud.show();
     }
     if (el != null) el.style.display = o ? 'block' : 'none';
   }
@@ -124,7 +136,11 @@ class Debug {
       function label(n:Int) cnt.textContent = '${c.label}: ${idx + 1}/$n';
       function go(d:Int):Void {
         var spots = c.spots(getCity());
-        if (spots.length == 0) return;
+        if (spots.length == 0) {
+          idx = -1;
+          label(0);
+          return;
+        }
         idx = (idx + d + spots.length) % spots.length;
         var p = spots[idx];
         if (p.front != null) {
@@ -149,7 +165,12 @@ class Debug {
           Inspector.emit(Browser.document.getElementById('binfo'), '[${c.label}]',
             BDump.shape(c.label, getCity(), getSeed(), p.x, p.z, p.r));
         });
-      label(c.spots(getCity()).length);
+      function refresh() {
+        idx = -1;
+        label(c.spots(getCity()).length);
+      }
+      cycRefresh.push(refresh);
+      refresh();
     }
   }
 

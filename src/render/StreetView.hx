@@ -127,6 +127,7 @@ class StreetView {
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     World.build(scene, city);
+    debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings);
 
     // player marker ring + the group holding all actor billboards
