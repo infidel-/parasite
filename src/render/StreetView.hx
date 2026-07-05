@@ -45,6 +45,8 @@ class StreetView {
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
   var _lastProgs = 0;     // shader program count last frame; a jump == a (re)compile stall (perf street)
+  public static var lastCalls = 0; // draw calls last frame (HUD counter, when vidShowFps)
+  public static var lastTris = 0;  // triangles drawn last frame (HUD counter, when vidShowFps)
 
 
   public function new(game:Game) {
@@ -203,6 +205,9 @@ class StreetView {
       RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD);
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
+    // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
+    // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
+    renderer.info.autoReset = false;
 
     rig.reset();
 
@@ -561,9 +566,27 @@ class StreetView {
     actors.update(dtMs);
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
-    // turn/street-actor profilers — catch it here. a jump in the program count == a compile
+    // turn/street-actor profilers — catch it here. a jump in the program count == a compile.
+    // while profiling, first do a standalone base-scene render to expose per-frame draw-call /
+    // triangle counts (composer's OutputPass resets renderer.info, so it can't show scene stats)
+    // and to split base-scene cost from post-FX (bloom+output) cost — this doubles the scene
+    // render, so it's gated behind the toggle and its cost is excluded from the reported numbers
+    var baseMs = 0.0, calls = 0, tris = 0;
+    if (render.Actors.DEBUG_PERF)
+      {
+        // standalone base-scene render for the split; reset first so the counts are scene-only
+        renderer.info.reset();
+        var tB = haxe.Timer.stamp();
+        renderer.render(scene, camera);
+        baseMs = (haxe.Timer.stamp() - tB) * 1000;
+        calls = renderer.info.render.calls;
+        tris = renderer.info.render.triangles;
+      }
+    renderer.info.reset(); // manual per-frame reset (autoReset off); total accumulates over the passes
     var tR = haxe.Timer.stamp();
     composer.render();
+    lastCalls = renderer.info.render.calls; // scene + a few post-FX quads — HUD draw-call readout
+    lastTris = renderer.info.render.triangles;
     if (render.Actors.DEBUG_PERF)
       {
         var ms = (haxe.Timer.stamp() - tR) * 1000;
@@ -571,9 +594,18 @@ class StreetView {
         var compiled = progs - _lastProgs;
         if (ms > 8 ||
             compiled != 0)
-          trace('[street-render] render=' + (Std.int(ms * 100) / 100) + 'ms programs=' + progs +
+          // full=composer total, base=scene-only, post=bloom+output, calls/tris=scene draw load
+          trace('[street-render] full=' + r2(ms) + 'ms base=' + r2(baseMs) +
+            ' post=' + r2(ms - baseMs) + ' calls=' + calls + ' tris=' + tris +
+            ' programs=' + progs +
             (compiled != 0 ? ' (COMPILE ' + (compiled > 0 ? '+' : '') + compiled + ')' : ''));
         _lastProgs = progs;
       }
   }
+
+// round a float to 2 decimals for perf logging
+  static inline function r2(v: Float): Float
+    {
+      return Std.int(v * 100) / 100;
+    }
 }

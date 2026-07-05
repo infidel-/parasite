@@ -36,7 +36,11 @@ class Roofs {
     var ix = halfX - T / 2, iz = halfZ - T / 2;
     inline function add(w:Float, d:Float, x:Float, z:Float, post:Bool, outDir:Int) {
       var role:Role = { post: post, outDir: outDir, cx: x, cz: z };
-      var m = new Mesh(new BoxGeometry(w, rimH, d), matsFor(w, rimH, d, role));
+      var geo = new BoxGeometry(w, rimH, d);
+      var mats:Array<Dynamic> = cast matsFor(w, rimH, d, role);
+      // single-tex coping collapses to one draw call (baked UVs); mixed-tex brick keeps its array
+      var single = render.Poly.flattenBox(geo, mats, 'parapet-coping', 'parapet coping', 'textures/coping.png');
+      var m = new Mesh(geo, single != null ? single : mats);
       m.position.set(x, yMid, z);
       scene.add(m);
     }
@@ -169,8 +173,11 @@ class Roofs {
       along:Float, across:Float, inset:Float):Void {
     inline function block(bx:Float, bz:Float, bw:Float, bd:Float) {
       var role:Role = { post: true, outDir: -1, cx: bx, cz: bz };
-      var m = new Mesh(new BoxGeometry(bw, capBoxH, bd),
-        copingMats(tex, 8, 0, 'coping-cap', 'cap coping')(bw, capBoxH, bd, role));
+      var geo = new BoxGeometry(bw, capBoxH, bd);
+      var mats:Array<Dynamic> = cast copingMats(tex, 8, 0, 'coping-cap', 'cap coping')(bw, capBoxH, bd, role);
+      // single coping texture -> collapse the cap block to one draw call
+      var single = render.Poly.flattenBox(geo, mats, 'coping-cap', 'cap coping', 'textures/coping.png');
+      var m = new Mesh(geo, single != null ? single : mats);
       m.position.set(bx, capY + 0.004, bz);
       scene.add(m);
     }

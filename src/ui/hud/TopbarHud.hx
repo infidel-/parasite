@@ -83,7 +83,12 @@ class TopbarHud
         fpsSample = now;
       else if (now - fpsSample >= 500)
         {
-          fpsEl.textContent = Math.round(fpsFrames * 1000 / (now - fpsSample)) + ' FPS';
+          var txt = Math.round(fpsFrames * 1000 / (now - fpsSample)) + ' FPS';
+          // in the 3D street view, append the live draw-call / triangle load
+          if (game.location == LOCATION_AREA)
+            txt += '  ' + render.StreetView.lastCalls + 'dc  ' +
+              (Math.round(render.StreetView.lastTris / 100) / 10) + 'k tri';
+          fpsEl.textContent = txt;
           fpsFrames = 0;
           fpsSample = now;
         }

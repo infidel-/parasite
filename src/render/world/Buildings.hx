@@ -102,7 +102,11 @@ class Buildings {
       var pz = shop ? shopFace(0, wWorld) : faceMat(0, wWorld), nz = shop ? shopFace(1, wWorld) : faceMat(1, wWorld);
       var top = tag(new MeshStandardMaterial({ map: roof, roughness: 1, metalness: 0 }),
         'roof-$k', '$k roof', TEXTURES.roofBases[b.facade % TEXTURES.roofBases.length]);
-      var box = new Mesh(new BoxGeometry(wWorld, b.h, dWorld), [px, nx, top, px, pz, nz]);
+      // collapse the 6-material box to one draw call per distinct image (walls clean/worn + roof
+      // -> ~3, from 6) by baking each face's UV transform; walls stay pixel-identical
+      var boxGeo = new BoxGeometry(wWorld, b.h, dWorld);
+      var boxMats:Array<Dynamic> = [px, nx, top, px, pz, nz];
+      var box = new Mesh(boxGeo, render.Poly.flattenBox(boxGeo, boxMats, 'wall-$k', '$k wall', cleanPath));
       box.position.set(center.x, b.h / 2, center.z);
       box.userData.b = b; box.userData.bidx = bi; // Inspector: alt+click → record
       scene.add(box);

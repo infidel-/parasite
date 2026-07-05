@@ -31,10 +31,14 @@ class SceneSetup {
     renderer.toneMappingExposure = 1.5;
     renderer.shadowMap.enabled = false;
 
+    // far plane clipped to just past the fog wall (fog is opaque at span*1.2): beyond it every
+    // building is solid fog yet still drawn, so a shallow/parallel camera would render the whole
+    // far half of the city for nothing. clipping there lets three.js frustum-cull the invisible half
+    var far = CityConfig.CELL * CityConfig.GRID * 1.25;
     var camera = new PerspectiveCamera(
       RenderConfig.CAMERA.fov,
       Browser.window.innerWidth / Browser.window.innerHeight,
-      0.1, 1000);
+      0.1, far);
 
     Browser.window.addEventListener('resize', function(_) {
       camera.aspect = Browser.window.innerWidth / Browser.window.innerHeight;
