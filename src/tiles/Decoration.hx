@@ -11,4 +11,8 @@ typedef Decoration = {
   @:optional var scale: Float;
   @:optional var angle: Float;
   @:optional var tag: String;
+  // wall decals (bullet holes): the face dir 0-3 the decal stands on (absent = flat ground
+  // decal), and its world Y up the wall. angle doubles as the in-plane roll
+  @:optional var face: Int;
+  @:optional var height: Float;
 }

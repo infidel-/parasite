@@ -241,7 +241,10 @@ class AreaGameSaver
       var tag: Dynamic = dec.tag;
       if (!Std.isOfType(tag, String))
         tag = null;
-      return [layerID, iconRow, iconCol, dx, dy, scale, angle, tag];
+      // wall decals (bullet holes) append face dir + world height; -1 face = flat ground decal
+      var face = getHookInt(dec.face, -1);
+      var height = getHookFloat(dec.height, 0.0);
+      return [layerID, iconRow, iconCol, dx, dy, scale, angle, tag, face, height];
     }
 
 // decode compact tuple grid into runtime tile objects
@@ -289,7 +292,9 @@ class AreaGameSaver
         throw 'tiles tuple malformed at x=' + x + ' y=' + y;
 
       var values: Array<Dynamic> = untyped tuple;
-      if (values.length != 8)
+      // old saves are 8-tuples (no wall fields); new saves append face + height -> 10
+      if (values.length != 8 &&
+          values.length != 10)
         throw 'tiles tuple length malformed at x=' + x + ' y=' + y;
 
       var layerID = getHookInt(values[0], -1);
@@ -318,6 +323,16 @@ class AreaGameSaver
         };
       if (tag != null)
         decoration.tag = tag;
+      // wall decal: restore the face dir + height (older 8-tuples decode as ground decals)
+      if (values.length >= 10)
+        {
+          var face = getHookInt(values[8], -1);
+          if (face >= 0)
+            {
+              decoration.face = face;
+              decoration.height = getHookFloat(values[9], 0.0);
+            }
+        }
       return decoration;
     }
 }
@@ -342,6 +357,8 @@ typedef _DecorationSaveData = {
   var scale: Dynamic;
   var angle: Dynamic;
   var tag: Dynamic;
+  @:optional var face: Dynamic;
+  @:optional var height: Dynamic;
 }
 
 typedef _IconSaveData = {

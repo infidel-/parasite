@@ -232,6 +232,26 @@ class Geom {
     return fi.simple ? fi.windows : true; // composite (winForce/winBlock) forces windows
   }
 
+  // standing-quad Y-rotation for a wall face dir (matches the rotY buildingFaces emits): a
+  // decal quad set to this rotation.y faces outward along dir. shared by the static wall-decal
+  // pass and the bullet-hole paint
+  public static inline function faceRotY(dir:Int):Float
+    return switch (dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; }
+
+  // which wall face dir a cell is struck on, given (ddx,ddy) = shooter - wallcell: the side
+  // facing the shooter, chosen by the dominant axis. shared by the bullet-hole placement
+  public static inline function faceToward(ddx:Int, ddy:Int):Int
+    return (Math.abs(ddx) >= Math.abs(ddy)) ? (ddx > 0 ? 2 : 3) : (ddy > 0 ? 0 : 1);
+
+  // self-check: faceRotY agrees with the rotY buildingFaces emits for all 4 dirs, and
+  // faceToward picks the shooter-facing side on each axis
+  public static function demo():Bool {
+    for (f in buildingFaces({ x: 0.0, z: 0.0 }, 4, 4, 0))
+      if (Math.abs(faceRotY(f.dir) - f.rotY) > 1e-9) return false;
+    return faceToward(3, 0) == 2 && faceToward(-3, 0) == 3
+      && faceToward(0, 3) == 0 && faceToward(0, -3) == 1;
+  }
+
   // face placement: [faceWidth, rotationY, dir, faceCenterX, faceCenterZ]
   public static function buildingFaces(center:{x:Float, z:Float}, wWorld:Float, dWorld:Float, eps:Float):Array<{faceW:Float, rotY:Float, dir:Int, fx:Float, fz:Float}> {
     return [

@@ -43,6 +43,7 @@ class Actors {
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
+  var holeTex:Array<Texture> = null;                     // bullet-hole wall textures (lazy-loaded once)
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
@@ -139,8 +140,9 @@ class Actors {
       // vis=false so it fades out smoothly instead of popping; once faded drawActor drops it
       else if (st == _PlayerState.PLR_STATE_HOST)
         drawActor(game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
-      // persisted blood decals on the ground, then transient FX (blood, death ghosts, gun shots)
-      drawSplatDecals();
+      // persisted decals (ground blood + wall bullet holes), then transient FX (blood, death
+      // ghosts, gun shots)
+      drawDecals();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
@@ -183,9 +185,10 @@ class Actors {
   inline function fix(v:Float):String
     return '' + Std.int(v * 100) / 100;
 
-// draw persisted SPLAT tile decorations as flat ground quads (blood). scans the tile grid
-// (sparse + capped), skipping non-blood floor decorations which stay 2D-only
-  function drawSplatDecals():Void
+// draw persisted tile decorations: SPLAT blood as flat ground quads, WALLHOLE bullet holes as
+// upright quads on their wall face. scans the tile grid (sparse + capped); non-3D floor
+// decorations stay 2D-only
+  function drawDecals():Void
     {
       var tiles = game.area.tiles;
       if (tiles == null)
@@ -205,29 +208,66 @@ class Actors {
                   tile.decoration == null ||
                   tile.decoration.length == 0)
                 continue;
-              // fog: don't reveal blood through walls
-              if (los &&
-                  !game.playerArea.sees(x, y))
-                continue;
               for (d in tile.decoration)
                 {
-                  if (d.tag != 'SPLAT' ||
-                      d.icon == null)
-                    continue;
-                  var dx = (d.dx != null ? d.dx : 0) / t;
-                  var dy = (d.dy != null ? d.dy : 0) / t;
-                  var w = CityConfig.cellToWorld(x + dx, y + dy);
-                  var tex = sprites.tex('entities', d.icon.col, d.icon.row, false);
-                  if (tex == null)
-                    continue;
-                  var sc = (d.scale != null ? d.scale : 1.0);
-                  sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, 1.0, sc, true,
-                    (d.angle != null ? d.angle : 0.0));
-                  draw++;
+                  // ground blood: fog-gate on this cell, lay flat
+                  if (d.tag == 'SPLAT')
+                    {
+                      if (d.icon == null ||
+                          (los && !game.playerArea.sees(x, y)))
+                        continue;
+                      var dx = (d.dx != null ? d.dx : 0) / t;
+                      var dy = (d.dy != null ? d.dy : 0) / t;
+                      var w = CityConfig.cellToWorld(x + dx, y + dy);
+                      var tex = sprites.tex('entities', d.icon.col, d.icon.row, false);
+                      if (tex == null)
+                        continue;
+                      var sc = (d.scale != null ? d.scale : 1.0);
+                      sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, 1.0, sc, true,
+                        (d.angle != null ? d.angle : 0.0));
+                      draw++;
+                    }
+                  // bullet hole: stand it on its wall face, fog-gate on the open cell in front
+                  else if (d.tag == 'WALLHOLE' &&
+                           d.face != null)
+                    {
+                      var hts = holeTextures();
+                      if (hts.length == 0)
+                        continue;
+                      var fdir:Int = d.face;
+                      var dv = render.world.Geom.DIRV[fdir];
+                      if (los && !game.playerArea.sees(x + dv[0], y + dv[1]))
+                        continue;
+                      var w = CityConfig.cellToWorld(x + (d.dx != null ? d.dx : 0) / t,
+                        y + (d.dy != null ? d.dy : 0) / t);
+                      var roll = (d.angle != null ? d.angle : 0.0);
+                      // fold the stored roll into the variant so co-cell holes differ (reload-stable)
+                      var variant = ((x * 31 + y * 17 + Std.int(roll * 10)) % hts.length + hts.length) % hts.length;
+                      var sc = (d.scale != null ? d.scale : RenderConfig.WALLHOLE.scale);
+                      var wy = (d.height != null ? d.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
+                      // nudge proud of the wall face along the outward normal (clears the opaque
+                      // face so the hole isn't depth-culled; no z-fight since depthWrite is off)
+                      sprites.paintWall(w.x + dv[0] * 0.12, wy, w.z + dv[1] * 0.12,
+                        hts[variant], 1.0, sc, render.world.Geom.faceRotY(fdir), roll);
+                      draw++;
+                    }
                 }
             }
         }
       _decalScan = scan; _decalDraw = draw;
+    }
+
+// lazily load the bullet-hole wall textures once (clamp-wrapped, alpha PNGs)
+  function holeTextures():Array<Texture>
+    {
+      if (holeTex == null)
+        holeTex = [for (p in RenderConfig.TEXTURES.bulletHoles)
+          {
+            var tx = render.Textures.loadTexture(p, 'wall');
+            tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping;
+            tx;
+          }];
+      return holeTex;
     }
 
 // paint the targeting markers under a visible AI: the stored-target frame and/or the

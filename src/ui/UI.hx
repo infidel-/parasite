@@ -169,6 +169,14 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
+      // street-debug mode owns the keyboard (fly cam / editor / inspector, on their own window
+      // listeners) — suppress ALL game input while it is active. backtick toggles it off via
+      // StreetView's own listener, so exiting still works
+      if (game.location == LOCATION_AREA &&
+          game.scene.city3d != null &&
+          game.scene.city3d.debugActive())
+        return;
+
       // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
       if (e.key == 'Control' &&
           !game.scene.controlPressed &&

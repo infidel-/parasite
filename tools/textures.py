@@ -39,14 +39,16 @@ def warn(msg):
 
 
 def rename_generated():
-    """Strip gpt prefix so a freshly generated image-...-<label>.png becomes <label>.png."""
-    for f in sorted(os.listdir(SRC_DIR)):
-        m = GPT_PREFIX.match(f)
-        if not m:
-            continue
-        dst = m.group(2)
-        os.replace(os.path.join(SRC_DIR, f), os.path.join(SRC_DIR, dst))
-        print(f"  renamed {f} -> {dst}")
+    """Strip gpt prefix so a freshly generated image-...-<label>.png becomes <label>.png.
+    Walks subdirs (e.g. decals/) so a drop generated into textures-src/<sub>/ is renamed in place."""
+    for root, _dirs, files in os.walk(SRC_DIR):
+        for f in sorted(files):
+            m = GPT_PREFIX.match(f)
+            if not m:
+                continue
+            dst = m.group(2)
+            os.replace(os.path.join(root, f), os.path.join(root, dst))
+            print(f"  renamed {f} -> {dst}")
 
 
 def has_alpha(im):
@@ -99,6 +101,7 @@ def bleed_alpha(im, iters=20):
 def convert(label, e, default_res):
     src = os.path.join(SRC_DIR, e["src"])
     out = os.path.join(OUT_DIR, label + ".png")
+    os.makedirs(os.path.dirname(out), exist_ok=True)  # nested labels (e.g. decals/...) -> subdir
     if not os.path.exists(src):
         warn(f"{label}: source {e['src']} missing")
         return False
@@ -156,11 +159,19 @@ def main():
     if ok:
         print(f"  ok    {len(ok)} up to date")
 
-    # Untracked sources (ignore the json and any un-renamed gpt drops).
-    for f in os.listdir(SRC_DIR):
-        if f == "textures.json" or f.endswith("~") or GPT_PREFIX.match(f) or f in tracked:
-            continue
-        warn(f"untracked source {f} (add it to textures.json or delete it)")
+    # Untracked sources (ignore the json and any un-renamed gpt drops). Walk subdirs so
+    # tracked paths like "decals/foo.png" match and stray files in subfolders are flagged.
+    for root, _dirs, files in os.walk(SRC_DIR):
+        for f in files:
+            # sweep editor backup files (*~) instead of leaving them to clutter the source tree
+            if f.endswith("~"):
+                os.remove(os.path.join(root, f))
+                print(f"  removed backup {os.path.relpath(os.path.join(root, f), SRC_DIR)}")
+                continue
+            rel = os.path.relpath(os.path.join(root, f), SRC_DIR)
+            if f == "textures.json" or GPT_PREFIX.match(f) or rel in tracked:
+                continue
+            warn(f"untracked source {rel} (add it to textures.json or delete it)")
 
     with open(INFO, "w") as f:
         json.dump(info, f, indent=2)

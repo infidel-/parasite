@@ -172,6 +172,22 @@ class RenderConfig {
     },
   };
 
+  // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
+  // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
+  // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none
+  public static final WALLHOLE = {
+    max: 60,           // per-area bullet-hole cap (oldest evicted)
+    scale: 0.13,       // hole quad scale (of Sprites.SIZE)
+    scaleVar: 0.04,    // +/- random scale spread
+    spread: 0.35,      // horizontal wall-miss scatter (cells): tracer end + spark + hole SHARE it,
+                       // so repeated shots at one wall spread out (and stay aligned) instead of stacking
+    vspread: 0.12,     // vertical scatter (cells): kept small so holes cluster near aim height
+                       // (full `spread` vertically would range knee->head and read as random)
+  };
+  // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
+  // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)
+  public static inline var WALLDECAL_PCT = 35;
+
   public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt
 
@@ -217,5 +233,12 @@ class RenderConfig {
     doorCovers: ['textures/door-cover-concrete.png', 'textures/door-cover-brick.png', 'textures/door-cover-stone.png'],
     roofMetal: 'textures/roof-metal.png',       // metal warehouse gable-roof slopes (distinct from the wall)
     player: 'textures/player.png',              // player billboard sprite
+    // wall decals (alpha PNGs, bg removed). bullet holes are spawned dynamically on wall hits;
+    // graffiti/posters/cracks are placed statically on bare walls at city build. missing files
+    // fall back to a procedural canvas (opaque) until real art is supplied
+    bulletHoles: ['textures/decals/bullet-hole-1.png', 'textures/decals/bullet-hole-2.png'],
+    graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
+    posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
+    cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
   };
 }

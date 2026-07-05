@@ -34,12 +34,18 @@ class Perf
             render.Actors.DEBUG_PERF = !render.Actors.DEBUG_PERF;
             log('Street render profiler ' + onOff(render.Actors.DEBUG_PERF) +
               ' (logs 3D pass timings to the browser console).');
+          // wall-hole tracer: logs each bullet-hole placement decision (cell/face/ray/build)
+          case 'hole':
+            render.StreetView.DEBUG_HOLES = !render.StreetView.DEBUG_HOLES;
+            log('Wall-hole trace ' + onOff(render.StreetView.DEBUG_HOLES) +
+              ' (logs each wall bullet-hole placement to the browser console).');
           case '':
-            log('Usage: perf [turn|street] - toggle profiler. ' +
+            log('Usage: perf [turn|street|hole] - toggle profiler. ' +
               'turn=' + onOff(Game.DEBUG_TURN) +
-              ', street=' + onOff(render.Actors.DEBUG_PERF) + '.');
+              ', street=' + onOff(render.Actors.DEBUG_PERF) +
+              ', hole=' + onOff(render.StreetView.DEBUG_HOLES) + '.');
           default:
-            log('Unknown perf target: ' + sub + '. Use turn|street.');
+            log('Unknown perf target: ' + sub + '. Use turn|street|hole.');
         }
       return true;
     }

@@ -15,7 +15,7 @@ class AreaGame extends _SaveObject
 {
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
-    'info', 'clueSpawnPoints', '_splatCells',
+    'info', 'clueSpawnPoints', '_splatCells', '_wallHoleCells',
   ];
   var game: Game;
   var region: RegionGame;
@@ -65,6 +65,7 @@ class AreaGame extends _SaveObject
   var _pathEngine: aPath.Engine;
   var _tileset: Tileset;
   var _splatCells: Array<{ x: Int, y: Int }>; // transient FIFO of blood-splat cells (cap eviction; not saved)
+  var _wallHoleCells: Array<{ x: Int, y: Int }>; // transient FIFO of bullet-hole cells (cap eviction; not saved)
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
@@ -119,6 +120,7 @@ class AreaGame extends _SaveObject
       _pathEngine = null;
       _tileset = null;
       _splatCells = [];
+      _wallHoleCells = [];
     }
 
 // called after load or creation
@@ -471,7 +473,7 @@ class AreaGame extends _SaveObject
         if (o.isStatic || isHabitat)
           o.hide();
         else removeObject(o);
-      clearTemporarySplatDecorations();
+      clearTemporaryDecorations();
 
       // leave area with active team
       if (game.group.team != null)
@@ -487,8 +489,8 @@ class AreaGame extends _SaveObject
       game.cults[0].onLeaveArea();
     }
 
-// remove temporary splat decorations from tile data
-  function clearTemporarySplatDecorations()
+// remove temporary decorations (blood splats + bullet holes) from tile data on area exit
+  function clearTemporaryDecorations()
     {
       if (tiles == null ||
           tiles.length == 0)
@@ -503,19 +505,21 @@ class AreaGame extends _SaveObject
                 tile.decoration.length == 0)
               continue;
 
-            var hasSplat = false;
+            var hasTemp = false;
             for (decoration in tile.decoration)
-              if (decoration.tag == 'SPLAT')
+              if (decoration.tag == 'SPLAT' ||
+                  decoration.tag == 'WALLHOLE')
                 {
-                  hasSplat = true;
+                  hasTemp = true;
                   break;
                 }
-            if (!hasSplat)
+            if (!hasTemp)
               continue;
 
             var filtered = [];
             for (decoration in tile.decoration)
-              if (decoration.tag != 'SPLAT')
+              if (decoration.tag != 'SPLAT' &&
+                  decoration.tag != 'WALLHOLE')
                 filtered.push(decoration);
             tile.decoration = filtered;
           }
@@ -1372,7 +1376,19 @@ class AreaGame extends _SaveObject
           if (_splatCells.length > render.RenderConfig.BLOOD.splatMax)
             {
               var old = _splatCells.shift();
-              removeOneSplatAt(old.x, old.y);
+              removeOneDecorAt(old.x, old.y, 'SPLAT');
+            }
+        }
+      // bullet holes on walls: same FIFO cap so a firefight can't grow tiles/save unbounded
+      else if (decoration.tag == 'WALLHOLE')
+        {
+          if (_wallHoleCells == null) // transient: null on freshly-loaded areas
+            _wallHoleCells = [];
+          _wallHoleCells.push({ x: x, y: y });
+          if (_wallHoleCells.length > render.RenderConfig.WALLHOLE.max)
+            {
+              var old = _wallHoleCells.shift();
+              removeOneDecorAt(old.x, old.y, 'WALLHOLE');
             }
         }
       if (game != null &&
@@ -1387,8 +1403,8 @@ class AreaGame extends _SaveObject
       return (_splatCells != null ? _splatCells.length : 0);
     }
 
-// remove a single SPLAT decoration from a cell (oldest-first FIFO eviction)
-  function removeOneSplatAt(x: Int, y: Int)
+// remove a single decoration with the given tag from a cell (oldest-first FIFO eviction)
+  function removeOneDecorAt(x: Int, y: Int, tag: String)
     {
       if (tiles == null ||
           x < 0 || y < 0 ||
@@ -1399,7 +1415,7 @@ class AreaGame extends _SaveObject
           tile.decoration == null)
         return;
       for (d in tile.decoration)
-        if (d.tag == 'SPLAT')
+        if (d.tag == tag)
           {
             tile.decoration.remove(d);
             return;
@@ -1653,13 +1669,14 @@ class AreaGame extends _SaveObject
 
 // walk a straight ray from (sx,sy) toward (tx,ty) and return the first wall tile hit within
 // maxTiles (wall=true), else the last in-bounds tile reached (wall=false, faded off-camera).
-// used to stop a missed bullet's tracer at a wall (spark) or let it fade at range (no spark)
-  public function rayToWall(sx: Int, sy: Int, tx: Int, ty: Int, maxTiles: Int): { col: Int, row: Int, wall: Bool }
+// fromCol/fromRow = the last OPEN cell before the hit (the exposed face the ray entered through),
+// used to place a bullet hole on the real surface. used to stop a missed bullet's tracer at a wall
+  public function rayToWall(sx: Int, sy: Int, tx: Int, ty: Int, maxTiles: Int): { col: Int, row: Int, wall: Bool, fromCol: Int, fromRow: Int }
     {
       var dx = tx - sx, dy = ty - sy;
       var dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 0.001)
-        return { col: sx, row: sy, wall: false };
+        return { col: sx, row: sy, wall: false, fromCol: sx, fromRow: sy };
       var stepX = dx / dist, stepY = dy / dist;   // unit step, ~one tile per iteration
       var lastCol = sx, lastRow = sy;
       var i = 1;
@@ -1671,14 +1688,14 @@ class AreaGame extends _SaveObject
             {
               // off the map: fade there, no spark
               if (col < 0 || col >= width || row < 0 || row >= height)
-                return { col: lastCol, row: lastRow, wall: false };
+                return { col: lastCol, row: lastRow, wall: false, fromCol: lastCol, fromRow: lastRow };
               if (!canSeeThrough(col, row))
-                return { col: col, row: row, wall: true };
+                return { col: col, row: row, wall: true, fromCol: lastCol, fromRow: lastRow };
               lastCol = col; lastRow = row;
             }
           i++;
         }
-      return { col: lastCol, row: lastRow, wall: false };
+      return { col: lastCol, row: lastRow, wall: false, fromCol: lastCol, fromRow: lastRow };
     }
 
 // add AI to map

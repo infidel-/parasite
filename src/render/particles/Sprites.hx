@@ -37,6 +37,34 @@ class Sprites {
   public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0):Void
     {
       if (tex == null) return;
+      var m = slot(tex, op, wx, wy, wz, scale);
+      // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
+      // tracking) leaned back toward the overhead camera by TILT so it reads flatter
+      if (flat)
+        m.rotation.set(-Math.PI / 2, 0, yaw);
+      else
+        m.rotation.set(-TILT, 0, 0);
+      m.visible = true;
+      idx++;
+    }
+
+// place/reuse a quad standing on a wall face at world (wx,wy,wz): its normal points outward
+// along faceRotY (see Geom.faceRotY), spun in-plane by roll. same pool as paint(); used for
+// bullet-hole decals
+  public function paintWall(wx:Float, wy:Float, wz:Float, tex:Texture, op:Float, scale:Float, faceRotY:Float, roll:Float):Void
+    {
+      if (tex == null) return;
+      var m = slot(tex, op, wx, wy, wz, scale);
+      // roll about the plane's own normal (local Z), then yaw to face the wall dir (Y). default
+      // Euler XYZ applies Z before Y, so the roll stays about the reoriented outward normal
+      m.rotation.set(0, faceRotY, roll);
+      m.visible = true;
+      idx++;
+    }
+
+// get (or lazily create) the next pooled quad, set its texture/opacity/position/scale
+  inline function slot(tex:Texture, op:Float, wx:Float, wy:Float, wz:Float, scale:Float):Mesh
+    {
       var m = pool[idx];
       if (m == null)
         {
@@ -59,14 +87,7 @@ class Sprites {
       mat.needsUpdate = true;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
-      // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
-      // tracking) leaned back toward the overhead camera by TILT so it reads flatter
-      if (flat)
-        m.rotation.set(-Math.PI / 2, 0, yaw);
-      else
-        m.rotation.set(-TILT, 0, 0);
-      m.visible = true;
-      idx++;
+      return m;
     }
 
 // crop one atlas cell (imageName, ix, iy) into a cached texture; null until the image decodes
