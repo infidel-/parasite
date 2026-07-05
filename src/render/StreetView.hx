@@ -31,6 +31,7 @@ class StreetView {
 
   var actorGroup:Group;
   var ring:Mesh;
+  var ringY:Float = 0;                                    // eased ring floor height (curb step)
   var actors:Actors;                                      // the billboard actor layer
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
@@ -498,9 +499,25 @@ class StreetView {
     rig.update(dtMs, !freeing);
     if (freeing) debug.freeCam.update(dtMs);
     var p = rig.playerWorld();
-    // rest the ring on the player cell's ground surface (raised on walkways) so it doesn't sink
-    var pe = game.playerArea.entity;
-    ring.position.set(p.x, render.world.WorldCtx.floorY(pe.mx, pe.my) + 0.06, p.z);
+    // rest the ring on the ground under its *smooth* position, at the HIGHEST floor its whole
+    // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it
+    // straddles gets its overhanging arc buried and blinks. floating over the lower side reads
+    // fine; sinking under the higher side does not. ease Y to soften the step.
+    var rr = CityConfig.CELL * 0.448;                       // ring outer radius
+    function fY(ox:Float, oz:Float):Float
+      {
+        var c = CityConfig.worldToCell(p.x + ox, p.z + oz);
+        return render.world.WorldCtx.floorY(c.col, c.row);
+      }
+    var tgtY = Math.max(Math.max(fY(-rr, -rr), fY(rr, -rr)),
+                        Math.max(fY(rr, rr), fY(-rr, rr))) + 0.06;
+    // ease *down* (soft curb step) but snap *up* instantly: a lagging rise would leave the ring
+    // buried under the walkway it just climbed onto
+    if (tgtY > ringY)
+      ringY = tgtY;
+    else
+      ringY += (tgtY - ringY) * (1 - Math.pow(1 - 0.4, dtMs / (1000 / 30)));
+    ring.position.set(p.x, ringY, p.z);
     // fade buildings in front of the target: the live pick while aiming (wide corridor), else the
     // confirmed target so its occluders stay clear out of targeting mode too
     var aiming = game.ui.hud.state == HUD_TARGETING;

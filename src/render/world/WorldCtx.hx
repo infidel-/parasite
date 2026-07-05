@@ -28,6 +28,29 @@ class WorldCtx {
           row >= tiles.length ||
           col >= tiles[row].length)
         return 0.0;
-      return tiles[row][col] == Tile.Walkway ? render.RenderConfig.CURB_H : 0.0;
+      return (tiles[row][col] == Tile.Walkway || beveled(col, row)) ? render.RenderConfig.CURB_H : 0.0;
     }
+
+// is (col,row) a walkway-corner bevel: a Road cell with exactly one convex walkway corner
+// (two adjacent walkway edge-neighbours), which render.world.Ground paves with a raised
+// half-tile of walkway. mirrors Ground.bevelAt — keep the rule in sync
+  static function beveled(col:Int, row:Int):Bool
+    {
+      if (tiles[row][col] != Tile.Road)
+        return false;
+      var n = 0;
+      if (isWk(col + 1, row) && isWk(col, row + 1)) n++; // SE
+      if (isWk(col - 1, row) && isWk(col, row + 1)) n++; // SW
+      if (isWk(col + 1, row) && isWk(col, row - 1)) n++; // NE
+      if (isWk(col - 1, row) && isWk(col, row - 1)) n++; // NW
+      return n == 1;
+    }
+
+// walkway tile at (col,row), bounds-safe
+  static inline function isWk(col:Int, row:Int):Bool
+    return row >= 0 &&
+      col >= 0 &&
+      row < tiles.length &&
+      col < tiles[row].length &&
+      tiles[row][col] == Tile.Walkway;
 }

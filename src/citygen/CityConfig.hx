@@ -62,6 +62,12 @@ class CityConfig {
     return { x: (col - GRID / 2 + 0.5) * CELL, z: (row - GRID / 2 + 0.5) * CELL };
   }
 
+  // inverse of cellToWorld: nearest grid cell for a world x/z (unclamped)
+  public static inline function worldToCell(x:Float, z:Float):{col:Int, row:Int} {
+    return { col: Std.int(Math.round(x / CELL + GRID / 2 - 0.5)),
+             row: Std.int(Math.round(z / CELL + GRID / 2 - 0.5)) };
+  }
+
   // walkability grid: true = walkable (road/walkway/alley, not building)
   public static function buildWalkable(tiles:Array<Array<Tile>>):Array<Array<Bool>> {
     return [for (row in tiles) [for (t in row) t != Tile.Building]];
