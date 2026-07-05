@@ -101,6 +101,7 @@ class ConsoleCompletion
         { lit: 'perf', next: [
           { lit: 'turn' },
           { lit: 'street' },
+          { lit: 'hole' },
         ] },
       ];
       if (Const.isDebug)

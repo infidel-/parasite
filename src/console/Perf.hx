@@ -16,6 +16,8 @@ class Perf
     }
 
 // routes a perf command to its toggle; returns false if not a perf command
+// NOTE: when adding/changing a perf sub-command, update its hint in
+// ConsoleCompletion.hx (the perf next list) so autocomplete stays in sync
   public function run(cmd: String): Bool
     {
       var arr = cmd.split(' ');
