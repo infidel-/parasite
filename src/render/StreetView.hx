@@ -483,6 +483,7 @@ class StreetView {
           tag: 'WALLHOLE',
           face: dir,
           height: hy,
+          metal: b.facade == 3, // metal warehouse -> steel-dent hole set
           angle: Math.random() * Math.PI * 2,
           scale: W.scale + (Math.random() - 0.5) * 2 * W.scaleVar,
           dx: dx,

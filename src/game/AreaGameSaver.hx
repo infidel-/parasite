@@ -241,10 +241,11 @@ class AreaGameSaver
       var tag: Dynamic = dec.tag;
       if (!Std.isOfType(tag, String))
         tag = null;
-      // wall decals (bullet holes) append face dir + world height; -1 face = flat ground decal
+      // wall decals (bullet holes) append face dir + world height + metal-wall flag; -1 face = ground decal
       var face = getHookInt(dec.face, -1);
       var height = getHookFloat(dec.height, 0.0);
-      return [layerID, iconRow, iconCol, dx, dy, scale, angle, tag, face, height];
+      var metal = (dec.metal == true) ? 1 : 0;
+      return [layerID, iconRow, iconCol, dx, dy, scale, angle, tag, face, height, metal];
     }
 
 // decode compact tuple grid into runtime tile objects
@@ -292,9 +293,10 @@ class AreaGameSaver
         throw 'tiles tuple malformed at x=' + x + ' y=' + y;
 
       var values: Array<Dynamic> = untyped tuple;
-      // old saves are 8-tuples (no wall fields); new saves append face + height -> 10
+      // old saves are 8-tuples (no wall fields); face+height -> 10; +metal-wall flag -> 11
       if (values.length != 8 &&
-          values.length != 10)
+          values.length != 10 &&
+          values.length != 11)
         throw 'tiles tuple length malformed at x=' + x + ' y=' + y;
 
       var layerID = getHookInt(values[0], -1);
@@ -323,7 +325,7 @@ class AreaGameSaver
         };
       if (tag != null)
         decoration.tag = tag;
-      // wall decal: restore the face dir + height (older 8-tuples decode as ground decals)
+      // wall decal: restore the face dir + height + metal flag (older 8-tuples decode as ground decals)
       if (values.length >= 10)
         {
           var face = getHookInt(values[8], -1);
@@ -331,6 +333,9 @@ class AreaGameSaver
             {
               decoration.face = face;
               decoration.height = getHookFloat(values[9], 0.0);
+              if (values.length >= 11 &&
+                  getHookInt(values[10], 0) == 1)
+                decoration.metal = true;
             }
         }
       return decoration;
@@ -359,6 +364,7 @@ typedef _DecorationSaveData = {
   var tag: Dynamic;
   @:optional var face: Dynamic;
   @:optional var height: Dynamic;
+  @:optional var metal: Dynamic;
 }
 
 typedef _IconSaveData = {

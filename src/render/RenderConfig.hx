@@ -237,6 +237,8 @@ class RenderConfig {
     // graffiti/posters/cracks are placed statically on bare walls at city build. missing files
     // fall back to a procedural canvas (opaque) until real art is supplied
     bulletHoles: ['textures/decals/bullet-hole-1.png', 'textures/decals/bullet-hole-2.png'],
+    // corrugated-steel dents/punctures for hits on metal-warehouse walls (facade 3)
+    bulletHolesMetal: ['textures/decals/bullet-hole-metal-1.png', 'textures/decals/bullet-hole-metal-2.png'],
     graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],

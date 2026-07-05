@@ -162,11 +162,17 @@ def main():
     # Untracked sources (ignore the json and any un-renamed gpt drops). Walk subdirs so
     # tracked paths like "decals/foo.png" match and stray files in subfolders are flagged.
     for root, _dirs, files in os.walk(SRC_DIR):
+        # skip the unused/ shelf: retired sources parked out of the pipeline, not deleted
+        if "unused" in _dirs:
+            _dirs.remove("unused")
         for f in files:
             # sweep editor backup files (*~) instead of leaving them to clutter the source tree
             if f.endswith("~"):
                 os.remove(os.path.join(root, f))
                 print(f"  removed backup {os.path.relpath(os.path.join(root, f), SRC_DIR)}")
+                continue
+            # skip Krita working files silently (editable source, not a texture)
+            if f.endswith(".kra"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), SRC_DIR)
             if f == "textures.json" or GPT_PREFIX.match(f) or rel in tracked:

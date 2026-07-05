@@ -32,7 +32,8 @@ class Actors {
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
-  var holeTex:Array<Texture> = null;                     // bullet-hole wall textures (lazy-loaded once)
+  var holeTex:Array<Texture> = null;                     // masonry bullet-hole wall textures (lazy-loaded once)
+  var holeTexMetal:Array<Texture> = null;                // metal-wall bullet-hole textures (lazy-loaded once)
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
@@ -230,7 +231,7 @@ class Actors {
       else if (d.tag == 'WALLHOLE' &&
                d.face != null)
         {
-          var hts = holeTextures();
+          var hts = holeTextures(d.metal == true);
           if (hts.length == 0)
             return false;
           var fdir:Int = d.face;
@@ -253,17 +254,29 @@ class Actors {
       return false;
     }
 
-// lazily load the bullet-hole wall textures once (clamp-wrapped, alpha PNGs)
-  function holeTextures():Array<Texture>
+// lazily load the bullet-hole wall textures once, per material (masonry vs metal-warehouse)
+  function holeTextures(metal:Bool):Array<Texture>
     {
+      if (metal)
+        {
+          if (holeTexMetal == null)
+            holeTexMetal = loadHoleTex(RenderConfig.TEXTURES.bulletHolesMetal);
+          return holeTexMetal;
+        }
       if (holeTex == null)
-        holeTex = [for (p in RenderConfig.TEXTURES.bulletHoles)
-          {
-            var tx = render.Textures.loadTexture(p, 'wall');
-            tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping;
-            tx;
-          }];
+        holeTex = loadHoleTex(RenderConfig.TEXTURES.bulletHoles);
       return holeTex;
+    }
+
+// load a set of clamp-wrapped alpha hole PNGs
+  function loadHoleTex(paths:Array<String>):Array<Texture>
+    {
+      return [for (p in paths)
+        {
+          var tx = render.Textures.loadTexture(p, 'wall');
+          tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping;
+          tx;
+        }];
     }
 
 // paint the targeting markers under a visible AI: the stored-target frame and/or the

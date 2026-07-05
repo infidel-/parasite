@@ -15,4 +15,6 @@ typedef Decoration = {
   // decal), and its world Y up the wall. angle doubles as the in-plane roll
   @:optional var face: Int;
   @:optional var height: Float;
+  // bullet hole on a metal-warehouse wall -> use the steel-dent texture set (absent/false = masonry)
+  @:optional var metal: Bool;
 }
