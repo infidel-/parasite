@@ -99,20 +99,37 @@ class Occlusion {
         curT: (m.transparent == true) });
     }
 
-// per frame: target-fade the occluders, ease every non-resting building toward its target
-  public function update(camPos:Vector3, player:Vector3, dtMs:Float):Void
+// per frame: fade buildings blocking the camera->player sightline; while aiming (wide) widen
+// the corridor so flanking buildings fade too, and always clear the camera->target line (nullable
+// target). only foreground buildings (nearer the camera than the endpoint) fade — never the
+// background. ease every non-resting building toward its target
+  public function update(camPos:Vector3, player:Vector3, target:Vector3, wide:Bool, dtMs:Float):Void
     {
       // frame-rate-independent smoothing (same exponential decay as CameraRig zoom)
       var k = 1 - Math.pow(1 - RenderConfig.OCCLUSION.lerp, dtMs / (1000 / 30));
+      var grow = wide ? RenderConfig.OCCLUSION.aimGrow * CELL : 0.0;
       for (o in occ)
         {
-          o.target = segHitsBox(camPos.x, camPos.y, camPos.z, player.x, player.y, player.z,
-            o.minX, o.maxX, o.minZ, o.maxZ, o.maxY) ? RenderConfig.OCCLUSION.fade : 1.0;
+          var blocked = occludes(o, camPos, player, grow)
+            || (target != null && occludes(o, camPos, target, grow));
+          o.target = blocked ? RenderConfig.OCCLUSION.fade : 1.0;
           if (o.fade == o.target && o.target == 1.0) continue; // solid and staying solid
           o.fade += (o.target - o.fade) * k;
           if (Math.abs(o.fade - o.target) < 0.003) o.fade = o.target;
           apply(o);
         }
+    }
+
+// building o blocks camera->endpoint? only counts if o is in FRONT of the endpoint (its centre
+// projects nearer the camera than the endpoint) so a grown corridor never fades the background
+  inline function occludes(o:Occ, cam:Vector3, e:Vector3, grow:Float):Bool
+    {
+      var dx = e.x - cam.x, dz = e.z - cam.z, d2 = dx * dx + dz * dz;
+      if (d2 < 1e-6) return false;
+      var proj = ((o.cx - cam.x) * dx + (o.cz - cam.z) * dz) / d2; // 0=camera, 1=endpoint
+      if (proj >= 1.0) return false;                               // at/behind endpoint = background
+      return segHitsBox(cam.x, cam.y, cam.z, e.x, e.y, e.z,
+        o.minX, o.maxX, o.minZ, o.maxZ, o.maxY, grow);
     }
 
 // push the current fade onto a building's materials (opacity + see-through depth + bloom cut)
@@ -132,14 +149,15 @@ class Occlusion {
         }
     }
 
-// does segment a->b pass through the box (strictly between the endpoints)? slab clip
+// does segment a->b pass through the box (strictly between the endpoints)? slab clip. grow
+// inflates the XZ slabs, widening the corridor (used to fade near-line, not just strict, hits)
   static function segHitsBox(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
-    x0:Float, x1:Float, z0:Float, z1:Float, y1:Float):Bool
+    x0:Float, x1:Float, z0:Float, z1:Float, y1:Float, grow:Float = 0.0):Bool
     {
       var t = [0.0, 1.0];
-      if (!clip(ax, bx, x0, x1, t)) return false;
+      if (!clip(ax, bx, x0 - grow, x1 + grow, t)) return false;
       if (!clip(ay, by, 0, y1, t)) return false;
-      if (!clip(az, bz, z0, z1, t)) return false;
+      if (!clip(az, bz, z0 - grow, z1 + grow, t)) return false;
       return t[1] > 0.001 && t[0] < 0.999 && t[0] <= t[1];
     }
 

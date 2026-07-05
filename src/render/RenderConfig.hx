@@ -107,9 +107,11 @@ class RenderConfig {
   // occlusion fade: a building between camera and player eases to this opacity so the player
   // stays visible, then eases back to solid when it no longer blocks the sightline
   public static final OCCLUSION = {
-    fade: 0.22,   // opacity an occluding building fades to (0 = invisible, 1 = solid)
-    lerp: 0.15,   // per-30fps-frame ease of fade toward its target (dt-compensated)
-    margin: 1.0   // XZ expansion when bucketing face-proud decals into their building
+    fade: 0.22,    // opacity an occluding building fades to (0 = invisible, 1 = solid)
+    lerp: 0.15,    // per-30fps-frame ease of fade toward its target (dt-compensated)
+    margin: 1.0,   // XZ expansion when bucketing face-proud decals into their building
+    aimGrow: 1.5   // targeting-mode: cells of lateral slack, so buildings flanking the
+                   // cam->player / cam->target line fade too (not just strict occluders)
   };
   // melee choreography + 3D blood. lunge = attacker there-and-back reach; on lunge finish the
   // impact sound + target shake + blood burst fire. drops arc ballistically and land as SPLAT

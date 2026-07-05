@@ -404,7 +404,17 @@ class StreetView {
     // rest the ring on the player cell's ground surface (raised on walkways) so it doesn't sink
     var pe = game.playerArea.entity;
     ring.position.set(p.x, render.world.WorldCtx.floorY(pe.mx, pe.my) + 0.06, p.z);
-    if (!freeing) occlusion.update(camera.position, p, dtMs);
+    // fade buildings in front of the target: the live pick while aiming (wide corridor), else the
+    // confirmed target so its occluders stay clear out of targeting mode too
+    var aiming = game.ui.hud.state == HUD_TARGETING;
+    var tt = aiming ? game.ui.hud.targeting.targetingTarget : game.ui.hud.targeting.target;
+    var tgtPos:Vector3 = null;
+    if (tt != null)
+      {
+        var w = CityConfig.cellToWorld(tt.x, tt.y);
+        tgtPos = new Vector3(w.x, p.y, w.z);
+      }
+    if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
     actors.update(dtMs);
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
