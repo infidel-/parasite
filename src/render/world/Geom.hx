@@ -236,7 +236,13 @@ class Geom {
   // decal quad set to this rotation.y faces outward along dir. shared by the static wall-decal
   // pass and the bullet-hole paint
   public static inline function faceRotY(dir:Int):Float
-    return switch (dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; }
+    return switch (dir)
+      {
+        case 0: 0.0;
+        case 1: Math.PI;
+        case 2: Math.PI / 2;
+        default: -Math.PI / 2;
+      }
 
   // which wall face dir a cell is struck on, given (ddx,ddy) = shooter - wallcell: the side
   // facing the shooter, chosen by the dominant axis. shared by the bullet-hole placement

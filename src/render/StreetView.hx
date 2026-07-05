@@ -268,7 +268,11 @@ class StreetView {
       var dx = b.x - a.x, dz = b.z - a.z;
       var len = Math.sqrt(dx * dx + dz * dz);
       if (len < 0.001)
-        { dx = 0; dz = 1; len = 1; }
+        {
+          dx = 0;
+          dz = 1;
+          len = 1;
+        }
       var reach = RenderConfig.MELEE.lungeReach * CityConfig.CELL;
       // the impact beat, fired when the lunge lands
       var onDone = function() {
@@ -350,7 +354,10 @@ class StreetView {
               var dxm = baseX - mw.x, dzm = baseZ - mw.z;
               var dl = Math.sqrt(dxm * dxm + dzm * dzm);
               if (dl > 0.001)
-                { baseX -= dxm / dl * C * 0.5; baseZ -= dzm / dl * C * 0.5; }
+                {
+                  baseX -= dxm / dl * C * 0.5;
+                  baseZ -= dzm / dl * C * 0.5;
+                }
               wallCol = e.col; wallRow = e.row;
               wallFromCol = e.fromCol; wallFromRow = e.fromRow;
             }
@@ -413,7 +420,10 @@ class StreetView {
             wcol < bb.col + bb.w &&
             wrow >= bb.row &&
             wrow < bb.row + bb.d)
-          { b = bb; break; }
+          {
+            b = bb;
+            break;
+          }
       var dbg = holeDebug();
       var where = 'cell(' + wcol + ',' + wrow + ') dir=' + dir + ' [0=+z 1=-z 2=+x 3=-x]';
       // holes land on any masonry wall that isn't glass: skip single-story shops and the
@@ -421,7 +431,8 @@ class StreetView {
       // both qualify — holes sit at chest height, below the upper-floor windows
       if (b == null)
         {
-          if (dbg) trace('[wallhole] ' + where + ' -> SKIP: no building owns this cell (opaque tile/object, not a building)');
+          if (dbg)
+            trace('[wallhole] ' + where + ' -> SKIP: no building owns this cell (opaque tile/object, not a building)');
           return;
         }
       var bc = CityConfig.cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
@@ -431,9 +442,17 @@ class StreetView {
         + ' storefront=' + render.world.Geom.storefrontFace(b, dir) + ') box x['
         + fnum(bc.x - hw) + '..' + fnum(bc.x + hw) + '] z[' + fnum(bc.z - hd) + '..' + fnum(bc.z + hd) + ']';
       if (b.shop >= 0)
-        { if (dbg) trace('[wallhole] ' + where + info + ' -> SKIP: single-story shop'); return; }
+        {
+          if (dbg)
+            trace('[wallhole] ' + where + info + ' -> SKIP: single-story shop');
+          return;
+        }
       if (render.world.Geom.storefrontFace(b, dir))
-        { if (dbg) trace('[wallhole] ' + where + info + ' -> SKIP: storefront (glass) face'); return; }
+        {
+          if (dbg)
+            trace('[wallhole] ' + where + info + ' -> SKIP: storefront (glass) face');
+          return;
+        }
       // intersect the pellet-0 tracer segment (muz -> impact) with the struck cell's OUTER face
       // plane: this is where the trail visually enters the wall — correct for angled shots, unlike
       // snapping the normal axis while keeping the impact's (ray-pulled-back) tangential coord

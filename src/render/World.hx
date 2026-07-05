@@ -19,7 +19,13 @@ class World {
   static var checked = false;
 
   public static function build(scene:Scene, city:City):Void {
-    if (!checked) { checked = true; if (!render.world.Geom.demo()) js.Browser.console.warn('[walldecal] geom self-check FAILED'); }
+    // one-time geometry self-check (face-dir/rotation invariants)
+    if (!checked)
+      {
+        checked = true;
+        if (!render.world.Geom.demo())
+          js.Browser.console.warn('[walldecal] geom self-check FAILED');
+      }
     WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
     WorldCtx.winSeen = new haxe.ds.ObjectMap();

@@ -16,6 +16,7 @@
 - When generating code, comment each large block with a short summary, first letter should be lowercase
 - NEVER write var x = new Array<...>(), just write var x = []
 - When writing if statements with multiple conditions, format each condition on a new line for better readability
+- NEVER pack multiple statements onto one line. No inline `{ a; b; }` blocks, no `if (x) { y; return; }`. Each statement on its own line, brace-on-newline (opening brace indented on the next line, body inside). A single-statement body may stay on its own line unbraced. This applies everywhere — guard clauses, loop bodies, self-check blocks, ternary arms.
 - Method comments should ALWAYS start from the line start (no indentation)
 - When creating variables or method names that have "id" in their name, use ID (e.g., memberID instead of memberId, getMemberID() instead of getMemberId()). Note: This applies to variable and method names only, not object properties like <object>.id which remain lowercase.
 - When updating most of the code, keep changes compact: avoid introducing unnecessary temporary variables, redundant conditionals, or extra formatting helpers unless the existing code already requires them. Temporary variables are fine if they shorten the code or are reused.
