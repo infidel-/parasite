@@ -118,25 +118,31 @@ class Buildings {
       // fronts read lit and closed fronts stay dark by the image's own values (bloom at night).
       if (shop) {
         var type = b.shop;
-        var lit = b.shopOpen;
-        var doorTex = lit ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length];
-        var ndTex   = lit ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length];
-        var bayW = CELL * 2;
+        var open = b.shopOpen;
+        var doorTex = open ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length];
+        var ndTex   = open ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length];
+        var bayW:Float = CELL * 2;
+        // collect all bays, then merge into two draw calls per shop (door image + plain image)
+        var doorQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
+        var ndQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
         for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
           if (!Geom.faceIsStreet(b, f.dir)) continue;
           var n = Std.int(imax(1, Math.round(f.faceW / bayW)));
           var doorBay = (b.shopDoor + f.dir) % n; // which bay holds the door on this face
           for (i in 0...n) {
-            var mat = new MeshBasicMaterial({ map: (i == doorBay) ? doorTex : ndTex,
-              polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
-            var mesh = new Mesh(new PlaneGeometry(bayW, b.h), mat);
-            mesh.rotation.y = f.rotY;
             var off = (i - (n - 1) / 2) * bayW; // bay centre offset along the face
-            if (f.dir < 2) mesh.position.set(f.fx + off, b.h / 2, f.fz);
-            else mesh.position.set(f.fx, b.h / 2, f.fz + off);
-            scene.add(mesh);
+            var fx = (f.dir < 2) ? f.fx + off : f.fx;
+            var fz = (f.dir < 2) ? f.fz : f.fz + off;
+            var q = { fw: bayW, h: b.h, fx: fx, fz: fz, rotY: f.rotY, rx: 1.0 };
+            if (i == doorBay) doorQ.push(q);
+            else ndQ.push(q);
           }
         }
+        inline function bayMat(tx:Dynamic):MeshBasicMaterial
+          return new MeshBasicMaterial({ map: tx,
+            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+        mergeBand(scene, doorQ, bayMat(doorTex), b, false);
+        mergeBand(scene, ndQ, bayMat(ndTex), b, false);
       }
 
       var gable = !shop && b.facade == 3; // citygen guarantees all metal is a standalone rectangle
@@ -177,19 +183,14 @@ class Buildings {
             && !(b.winForce != null && b.winForce.indexOf(dir) >= 0)
             && !(b.winBlock != null && b.winBlock.indexOf(dir) >= 0);
         var bandH = Math.min(RenderConfig.GRIME_H, b.h - 0.5);
+        // one merged grime mesh per building (was one draw call per worn face)
+        var gq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
         for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
           if (hasStorefront(f.dir)) continue; // storefront owns the ground floor here — leave it solo
           var rx = imax(1, Math.round(f.faceW / RenderConfig.GRIME_TILE)); // horizontal repeats
-          var geo = new PlaneGeometry(f.faceW, bandH);
-          var uv:Dynamic = untyped geo.attributes.uv; // bake horizontal tiling into U (shared texture, no clone)
-          var n:Int = uv.count;
-          for (i in 0...n) uv.setX(i, uv.getX(i) * rx);
-          uv.needsUpdate = true;
-          var mesh = new Mesh(geo, grimeMat[gv]);
-          mesh.rotation.y = f.rotY;
-          mesh.position.set(f.fx, bandH / 2, f.fz);
-          scene.add(mesh);
+          gq.push({ fw: f.faceW, h: bandH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: rx });
         }
+        mergeBand(scene, gq, grimeMat[gv], b, true);
       }
 
       // roof: metal warehouses get a gable (no parapet); everyone else keeps their parapet
@@ -201,10 +202,61 @@ class Buildings {
     }
   }
 
+  // merge upright wall-band quads that all share ONE material into a single mesh (one draw
+  // call): each quad is fw×h, centred at world (fx, h/2, fz), rotated rotY about Y, with
+  // horizontal UV repeat rx. rotation+position baked into verts; a +z-rotated face normal is
+  // written when the material is lit (MeshStandard). userData.b keeps Occlusion fading it
+  static function mergeBand(scene:Scene,
+      quads:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }>,
+      mat:Dynamic, b:Dynamic, lit:Bool):Void {
+    if (quads.length == 0) return;
+    var gpos:Array<Float> = [];
+    var gnrm:Array<Float> = [];
+    var guv:Array<Float> = [];
+    var gidx:Array<Int> = [];
+    for (q in quads) {
+      var geo = new PlaneGeometry(q.fw, q.h);
+      var pos:Dynamic = untyped geo.attributes.position;
+      var uv:Dynamic = untyped geo.attributes.uv;
+      var idx:Dynamic = untyped geo.index;
+      var cosR = Math.cos(q.rotY), sinR = Math.sin(q.rotY);
+      var vbase = Std.int(gpos.length / 3);
+      for (i in 0...(pos.count:Int)) {
+        var x:Float = pos.getX(i), y:Float = pos.getY(i), z:Float = pos.getZ(i);
+        gpos.push(x * cosR + z * sinR + q.fx); // rotateY(rotY) then translate to the face
+        gpos.push(y + q.h / 2);
+        gpos.push(-x * sinR + z * cosR + q.fz);
+        if (lit) {
+          gnrm.push(sinR); // rotateY(rotY) of the plane's +z normal
+          gnrm.push(0);
+          gnrm.push(cosR);
+        }
+        guv.push(uv.getX(i) * q.rx);
+        guv.push(uv.getY(i));
+      }
+      for (k in 0...(idx.count:Int)) gidx.push(vbase + idx.getX(k));
+    }
+    var g = new BufferGeometry();
+    g.setAttribute('position', new Float32BufferAttribute(gpos, 3));
+    if (lit) g.setAttribute('normal', new Float32BufferAttribute(gnrm, 3));
+    g.setAttribute('uv', new Float32BufferAttribute(guv, 2));
+    g.setIndex(gidx);
+    var mesh = new Mesh(g, mat);
+    mesh.userData.b = b;
+    scene.add(mesh);
+  }
+
   // ground-floor storefront band on street-facing walls
   public static function addGround(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
     var texes = [for (p in TEXTURES.storefronts) Textures.loadTexture(p, 'wall')];
+    // one shared band material per facade; horizontal tiling is baked into the merged quad UVs
+    // (so no per-face texture clone), matching the old per-face texture.repeat
+    var mats = [for (i in 0...texes.length)
+      tag(new MeshStandardMaterial({ map: texes[i], roughness: 1, metalness: 0,
+        polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
+        'storefront-' + RenderConfig.FACADE_NAMES[i % RenderConfig.FACADE_NAMES.length],
+        'storefront band', TEXTURES.storefronts[i])];
     for (b in buildings) {
       if (b.shop >= 0 || b.facade == 3) continue; // shop face is its own storefront; metal warehouse has doors, no band
       var fi = Geom.frontInfo(b);
@@ -212,25 +264,15 @@ class Buildings {
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
-      var base = texes[b.facade % texes.length];
-      var k = RenderConfig.FACADE_NAMES[b.facade];
+      // one merged band mesh per building (was one draw call per street face)
+      var q:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
       for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
         if ((b.winForce != null && b.winForce.indexOf(f.dir) >= 0) || (b.winBlock != null && b.winBlock.indexOf(f.dir) >= 0)) continue;
         if (!Geom.faceIsStreet(b, f.dir)) continue;
-        var t = base.clone();
-        t.needsUpdate = true;
-        t.repeat.set(f.faceW / GROUND_H, 1);
-        var mesh = new Mesh(
-          new PlaneGeometry(f.faceW, GROUND_H),
-          tag(new MeshStandardMaterial({
-            map: t, roughness: 1, metalness: 0,
-            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
-          }), 'storefront-$k', '$k storefront', TEXTURES.storefronts[b.facade % TEXTURES.storefronts.length]));
-        mesh.position.set(f.fx, GROUND_H / 2, f.fz);
-        mesh.rotation.y = f.rotY;
-        scene.add(mesh);
+        q.push({ fw: f.faceW, h: (GROUND_H : Float), fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / GROUND_H });
         WorldCtx.bandSeen.set(b, true); // checklist: this building rendered a storefront band
       }
+      mergeBand(scene, q, mats[b.facade % texes.length], b, true);
     }
   }
 }
