@@ -6,6 +6,7 @@ package render;
 class Tools {
   public static var enabled:Bool = false; // master gate: street-debug mode active?
   public static var mode:String = 'none'; // 'select' | 'edit' | 'none'
+  public static var freeCam:FreeCam = null; // set when the debug tools attach (used by __check.goto)
 
   static var listeners:Array<Void->Void> = [];
   public static function listen(f:Void->Void):Void listeners.push(f);

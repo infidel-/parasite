@@ -55,7 +55,8 @@ class Inspector {
     emit(out, '[bldg]', BDump.shape('building', city, seed, cw.x, cw.z, r));
   }
 
-  static function emit(out:js.html.Element, tag:String, s:String):Void {
+// log + show + copy a report: console, the given HUD element, and the clipboard
+  public static function emit(out:js.html.Element, tag:String, s:String):Void {
     Browser.console.log(tag + '\n' + s);
     if (out != null) out.textContent = s;
     // clipboard rejects when the document is unfocused; skip then, and swallow any

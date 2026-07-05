@@ -1,7 +1,9 @@
 package render.world;
 
+import citygen.CityConfig;
 import render.RenderConfig;
 import render.BDump;
+import render.Tools;
 
 // post-generation checklist. Runs after every World.build(): compares each building's
 // intended front-role (Geom) against what the render passes ACTUALLY emitted
@@ -55,6 +57,18 @@ class Check {
     untyped js.Browser.window.__check = {
       pass: pass, fails: fails, windowless: windowless, doorless: doorless, noBackDoor: noBack, blank: blank,
       counts: { bldgs: buildings.length, simple: nSimple, store: nStore, plain: nPlain, small: nSmall, storePct: share },
+      // drill-down: fly the free-cam to a flagged building (needs street-debug tools attached)
+      goto: function(id:Int) {
+        if (Tools.freeCam == null) {
+          js.Browser.console.warn('[check] enable street-debug (backquote) first');
+          return;
+        }
+        var b = buildings[id];
+        if (b == null) return;
+        var cw = CityConfig.cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+        var r = (b.w > b.d ? b.w : b.d) * CityConfig.CELL / 2;
+        Tools.freeCam.focus(cw.x, b.h / 2, cw.z, r);
+      },
     };
   }
 }

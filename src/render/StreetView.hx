@@ -35,11 +35,8 @@ class StreetView {
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
 
-  var freeCam:FreeCam;
-  var toolsAttached = false;
-  var debugOn = false;
+  var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
   public static var DEBUG_HOLES = false; // [wallhole] trace each wall tracer impact + hole decision (toggle: `perf hole`)
-  var debugEl:js.html.Element;
 
   public var running(default, null):Bool = false;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
@@ -53,17 +50,18 @@ class StreetView {
     this.game = game;
     filterTextureWarning();
     ensureCanvas();
-    injectDebugHud();
+    debug = new Debug(game, canvas, function() return camera,
+      function() return scene, function() return city, function() return shownSeed);
     // global debug hotkeys: ` toggles street-debug mode, 1 toggles WYSIWYG lighting
     Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
       if (!running) return;
-      if (e.code == 'Backquote') setDebug(!debugOn);
-      else if (debugOn && e.code == 'Digit1' && toggleLighting != null)
+      if (e.code == 'Backquote') setDebug(!debug.on);
+      else if (debug.on && e.code == 'Digit1' && toggleLighting != null)
         bloomPass.enabled = !toggleLighting();
     });
     // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
-      if (!running || debugOn || rig == null) return;
+      if (!running || debug.on || rig == null) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
   }
@@ -76,7 +74,10 @@ class StreetView {
   }
 
 // is street-debug mode active? (the game suppresses movement input while it is)
-  public inline function debugActive():Bool return debugOn;
+  public inline function debugActive():Bool return debug.on;
+
+// enter/leave street-debug mode (fly/editor/inspector + HUD — see render.Debug)
+  public inline function setDebug(on:Bool):Void debug.set(on);
 
 // create the overlay WebGL canvas if absent (above the 2D #canvas, below the DOM HUD)
   function ensureCanvas():Void {
@@ -95,36 +96,6 @@ class StreetView {
     Browser.document.body.appendChild(canvas);
   }
 
-// inject the debug HUD elements the ported tools reference (hidden until debug on)
-  function injectDebugHud():Void {
-    if (Browser.document.getElementById('streetview-debug') != null) {
-      debugEl = Browser.document.getElementById('streetview-debug');
-      return;
-    }
-    var d = Browser.document.createElement('div');
-    d.id = 'streetview-debug';
-    d.style.display = 'none';
-    // inline styling so it reads without the prototype's stylesheet
-    d.innerHTML =
-      '<div style="position:fixed;inset:0;z-index:300;pointer-events:none;font-family:monospace;color:#fff">' +
-      '<div style="position:absolute;top:4px;left:8px;font-size:12px"><span id="mode"></span> <span id="editind"></span></div>' +
-      '<div id="binfo" style="position:absolute;top:26px;left:8px;white-space:pre;font-size:11px;color:#9f9;max-width:44vw"></div>' +
-      '<div id="poly" style="position:absolute;top:26px;right:8px;background:#000c;padding:6px;font-size:12px;pointer-events:auto;display:none"></div>' +
-      '<div id="polybar" style="position:absolute;bottom:6px;right:8px;font-size:12px">' +
-      '<span id="poly-dirty" style="display:none;color:#fc6">CLASSES UPDATED — Ctrl+C to copy</span> ' +
-      '<span id="poly-check" style="display:none;color:#6f6">✓ copied</span></div>' +
-      // controls legend (bottom-left), shown whenever street-debug mode is on
-      '<div id="help" style="position:absolute;bottom:6px;left:8px;font-size:11px;line-height:1.6;color:#cde;background:#000a;padding:6px 8px;white-space:pre;pointer-events:none">' +
-      '`  toggle debug off     F  fly on/off\n' +
-      'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
-      'B  inspect building / ground spot (report → clipboard)\n' +
-      'E  UV editor   ·   in E-mode: wheel = offset, Ctrl+C copy, R reset\n' +
-      '1  lighting (bloom) toggle</div>' +
-      '</div>';
-    Browser.document.body.appendChild(d);
-    debugEl = d;
-  }
-
 // lazily create the persistent renderer/camera (one WebGL context, reused)
   function ensureCore():Void {
     if (core != null) return;
@@ -132,28 +103,6 @@ class StreetView {
     renderer = core.renderer;
     camera = core.camera;
     rig = new CameraRig(game, camera);
-  }
-
-// attach the debug tools once (camera is persistent; scene/city read via getters)
-  function attachTools():Void {
-    if (toolsAttached) return;
-    freeCam = new FreeCam(camera, canvas);
-    Editor.attach(function() return scene, camera, canvas);
-    Inspector.attach(function() return scene, camera, canvas, function() return city, function() return shownSeed);
-    toolsAttached = true;
-  }
-
-// enter/leave street-debug mode (fly/editor/inspector + HUD)
-  public function setDebug(on:Bool):Void {
-    debugOn = on;
-    if (on) attachTools();
-    Tools.enabled = on;
-    if (on && freeCam != null) freeCam.activate(); // auto-enter fly with debug (toggle off with F)
-    if (!on) {
-      if (freeCam != null) freeCam.deactivate();
-      Tools.setMode('none');
-    }
-    if (debugEl != null) debugEl.style.display = on ? 'block' : 'none';
   }
 
 // show a city generated from a seed (new areas)
@@ -223,7 +172,7 @@ class StreetView {
   public function hide():Void {
     running = false;
     shownSeed = -2;
-    if (debugOn) setDebug(false);
+    if (debug.on) setDebug(false);
     scene = null;
     composer = null;
     actorGroup = null;
@@ -545,9 +494,9 @@ class StreetView {
     last = t;
 
     // free cam owns the camera while active; the rig still tracks the player so the ring follows
-    var freeing = freeCam != null && freeCam.active;
+    var freeing = debug.flying();
     rig.update(dtMs, !freeing);
-    if (freeing) freeCam.update(dtMs);
+    if (freeing) debug.freeCam.update(dtMs);
     var p = rig.playerWorld();
     // rest the ring on the player cell's ground surface (raised on walkways) so it doesn't sink
     var pe = game.playerArea.entity;
@@ -587,6 +536,7 @@ class StreetView {
     composer.render();
     lastCalls = renderer.info.render.calls; // scene + a few post-FX quads — HUD draw-call readout
     lastTris = renderer.info.render.triangles;
+    if (debug.on) Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
     if (render.Actors.DEBUG_PERF)
       {
         var ms = (haxe.Timer.stamp() - tR) * 1000;
