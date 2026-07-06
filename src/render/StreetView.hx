@@ -126,7 +126,7 @@ class StreetView {
     var bundle = SceneSetup.buildScene(renderer, city);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
-    World.build(scene, city);
+    World.build(scene, city, seed);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings);
 

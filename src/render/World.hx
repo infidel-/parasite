@@ -18,7 +18,7 @@ import render.world.Check;
 class World {
   static var checked = false;
 
-  public static function build(scene:Scene, city:City):Void {
+  public static function build(scene:Scene, city:City, seed:Int = -1):Void {
     // one-time geometry self-check (face-dir/rotation invariants)
     if (!checked)
       {
@@ -28,6 +28,7 @@ class World {
       }
     WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
+    WorldCtx.seed = seed;
     WorldCtx.winSeen = new haxe.ds.ObjectMap();
     WorldCtx.doorSeen = new haxe.ds.ObjectMap();
     WorldCtx.bandSeen = new haxe.ds.ObjectMap();

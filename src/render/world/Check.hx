@@ -12,6 +12,8 @@ import render.Tools;
 // to find it. FAIL = a guarantee broke; INFO = intended (blank-by-design). Loud HUD badge
 // + console + window.__check (drill-down + goto, wired in the debug HUD).
 class Check {
+  public static var lastFails = 0; // issue count of the latest run (topbar badge)
+
   public static function run():Void {
     var buildings = WorldCtx.buildings;
     var winSeen = WorldCtx.winSeen;
@@ -39,7 +41,8 @@ class Check {
     var noBack = [for (b in noBackDoor) buildings.indexOf(b)];
     var pass = fails.length == 0;
 
-    var summary = '[check] ${pass ? "PASS" : "FAIL"} — ${buildings.length} bldgs · doorless ${doorless.length} · winless ${windowless.length} · blank-by-design ${blank.length} · noBackDoor ${noBack.length} · store $share%';
+    lastFails = fails.length;
+    var summary = '[check] ${pass ? "PASS" : "FAIL"} seed ${WorldCtx.seed} — ${buildings.length} bldgs · doorless ${doorless.length} · winless ${windowless.length} · blank-by-design ${blank.length} · noBackDoor ${noBack.length} · store $share%';
     if (pass) js.Browser.console.log(summary);
     else {
       js.Browser.console.error(summary);

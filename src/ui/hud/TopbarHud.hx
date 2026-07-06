@@ -84,11 +84,17 @@ class TopbarHud
       else if (now - fpsSample >= 500)
         {
           var txt = Math.round(fpsFrames * 1000 / (now - fpsSample)) + ' FPS';
-          // in the 3D street view, append the live draw-call / triangle load
+          // in the 3D street view, append the live draw-call / triangle load,
+          // and a red badge when the post-gen checklist found issues
           if (game.location == LOCATION_AREA)
-            txt += '  ' + render.StreetView.lastCalls + 'dc  ' +
-              (Math.round(render.StreetView.lastTris / 100) / 10) + 'k tri';
-          fpsEl.textContent = txt;
+            {
+              txt += '  ' + render.StreetView.lastCalls + 'dc  ' +
+                (Math.round(render.StreetView.lastTris / 100) / 10) + 'k tri';
+              if (render.world.Check.lastFails > 0)
+                txt += '  <span style="color:#f66">✗' +
+                  render.world.Check.lastFails + ' CHECK</span>';
+            }
+          fpsEl.innerHTML = txt;
           fpsFrames = 0;
           fpsSample = now;
         }

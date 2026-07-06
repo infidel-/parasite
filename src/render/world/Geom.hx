@@ -126,11 +126,34 @@ class Geom {
     }
     if (runStart >= 0) pushRun(runStart, hi - 1);
     // whole face open (alley back wall, or an L/T/+ notch arm) → always window. a
-    // PARTIAL face (part abutting a neighbour) is windowed only when it's a notch
-    // inner wall citygen flagged via winBlock (allowPartial). otherwise it's just
-    // an incidental wall half-buried by an unrelated neighbour → no half-window
-    if (!buried) return runs;
-    return allowPartial ? runs : [];
+    // PARTIAL face (part abutting a neighbour) is windowed when it's a notch inner
+    // wall citygen flagged via winBlock (allowPartial), or when the open stretch
+    // fronts the street — a half-buried wall whose exposed part faces a road/walkway
+    // still reads as frontage (a blank wall there is a checklist FAIL). alley-facing
+    // partial runs stay blank (incidental neighbour burial → no half-window)
+    if (!buried || allowPartial) return runs;
+    return [for (run in runs) if (runFrontsStreet(b, dir, run)) run];
+  }
+
+  // does every cell of face run [lo,hi] front a road/walkway one step out?
+  static function runFrontsStreet(b:Building, dir:Int, run:{lo:Int, hi:Int}):Bool {
+    var tiles = WorldCtx.tiles;
+    var dc = DIRV[dir][0], dr = DIRV[dir][1];
+    for (idx in run.lo...run.hi + 1) {
+      var t:Tile;
+      if (dc != 0) {
+        var col = dc > 0 ? b.col + b.w : b.col - 1;
+        if (col < 0 || col >= GRID) continue;
+        t = tiles[idx][col];
+      } else {
+        var row = dr > 0 ? b.row + b.d : b.row - 1;
+        if (row < 0 || row >= GRID) continue;
+        t = tiles[row][idx];
+      }
+      if (t != Tile.Road &&
+          t != Tile.Walkway) return false;
+    }
+    return true;
   }
 
   // tile-index runs of face `dir` whose cell ONE step straight out is open (not a Building) —
