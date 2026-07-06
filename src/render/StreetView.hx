@@ -149,6 +149,10 @@ class StreetView {
     scene.add(actorGroup);
     // fresh area: new actor layer so billboards/slides/effects start clean
     actors = new Actors(game, actorGroup, camera);
+    // seed-derived street debris (render-only, deterministic from the seed — no save cost); old
+    // seedless saves (seed -1) skip it
+    if (seed != -1)
+      actors.setDebris(render.world.Debris.build(seed, city.tiles, game.area.typeID, game.area.highCrime));
 
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
@@ -345,6 +349,13 @@ class StreetView {
                 }
               wallCol = e.col; wallRow = e.row;
               wallFromCol = e.fromCol; wallFromRow = e.fromRow;
+              // wall-hit sound at impact time: corrugated steel (facade 3) rings metal, all
+              // masonry (concrete/brick/stone) reads as one stone thud
+              var metal = wallFacade(e.col, e.row) == 3;
+              if (holeDebug())
+                trace('[wallhit] cell(' + e.col + ',' + e.row + ') facade=' + wallFacade(e.col, e.row) + ' sound=' + (metal ? 'fx-wall-metal' : 'fx-wall-stone'));
+              game.scene.sounds.play(metal ? 'fx-wall-metal' : 'fx-wall-stone',
+                { always: true, delay: Std.int(S.travelMs), x: e.col, y: e.row });
             }
         }
       for (i in 0...kind.pellets)
@@ -378,6 +389,19 @@ class StreetView {
       if (byPlayer)
         rig.kick(sx - tx, sy - ty);
       return true;
+    }
+
+// facade material (0 concrete,1 brick,2 stone,3 metal) of the building owning wall cell (col,row);
+// -1 if no building owns it. used to pick the wall-hit sound
+  function wallFacade(col:Int, row:Int):Int
+    {
+      for (b in render.world.WorldCtx.buildings)
+        if (col >= b.col &&
+            col < b.col + b.w &&
+            row >= b.row &&
+            row < b.row + b.d)
+          return b.facade;
+      return -1;
     }
 
 // leave a persisted bullet-hole decal on the wall cell (wcol,wrow) struck by a shot. (muz,impact)

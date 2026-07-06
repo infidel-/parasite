@@ -42,6 +42,10 @@ class Building {
 
 typedef Cell = { col:Int, row:Int };
 
+// a carved inner-courtyard rect (cell coords, inclusive): an enclosed open pocket ringed by
+// buildings. used by the game layer to place clutter that must not block a through-corridor
+typedef CourtRect = { x0:Int, y0:Int, x1:Int, y1:Int };
+
 // debug locator for a П-shaped building: world centre + framing radius
 // x/z/r = locator center + radius (overhead camera focus). `front`, when present, is
 // the street cell directly outside the building's street face — the debug cycler
@@ -68,4 +72,5 @@ typedef City = {
   tshapes:Array<PShape>,
   plusshapes:Array<PShape>,
   shopspots:Array<PShape>,
+  courtyards:Array<CourtRect>,
 };

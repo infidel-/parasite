@@ -22,7 +22,7 @@ typedef Turn = { sx0:Int, sy0:Int, sx1:Int, sy1:Int, cx0:Int, cy0:Int, cx1:Int, 
 class CityGen {
   static inline function imul(a:Int, b:Int):Int return js.Syntax.code("Math.imul({0}, {1})", a, b);
 
-  static function mulberry32(seed:Int):Void->Float {
+  public static function mulberry32(seed:Int):Void->Float {
     var a = seed;
     return function():Float {
       a = a | 0; a = (a + 0x6D2B79F5) | 0;
@@ -309,7 +309,7 @@ class CityGen {
 
   // try to carve a central courtyard from an already-composed block. Returns the
   // new building list, or null if no carve leaves every CLIPPED building >= 3
-  static function carveCourtyard(blockBuildings:Array<Building>, x0:Int, y0:Int, x1:Int, y1:Int, rng:Void->Float):Array<Building> {
+  static function carveCourtyard(blockBuildings:Array<Building>, x0:Int, y0:Int, x1:Int, y1:Int, rng:Void->Float, courtOut:Array<CourtRect>):Array<Building> {
     var maxCw = (x1 - x0 + 1) - 2 * COURT_RING;
     var maxCh = (y1 - y0 + 1) - 2 * COURT_RING;
     if (maxCw < COURT_MIN || maxCh < COURT_MIN) return null;
@@ -331,7 +331,7 @@ class CityGen {
         }
         if (!ok) break;
       }
-      if (ok && carved) return result;
+      if (ok && carved) { courtOut.push({ x0: cx0, y0: cy0, x1: cx1, y1: cy1 }); return result; }
     }
     return null;
   }
@@ -473,6 +473,7 @@ class CityGen {
     // courtyard. Iterate row-bands so a dead-ended vertical road (absent in its
     // dropped band) simply isn't a cut there — its two neighbour blocks merge
     var buildings:Array<Building> = [];
+    var courtyards:Array<CourtRect> = []; // carved inner-courtyard rects (enclosed open pockets)
     var pgroups:Array<PGroup> = []; // every П candidate (leaf U-courtyards + reshaped), validated later
     var lgroups:Array<ShapeGroup> = [], tgroups:Array<ShapeGroup> = [], plusgroups:Array<ShapeGroup> = []; // composite candidates, validated later
     for (hi in 0...hroads.length) {
@@ -494,7 +495,7 @@ class CityGen {
         var blockP:Array<PGroup> = [];
         var blockL:Array<ShapeGroup> = [], blockT:Array<ShapeGroup> = [], blockPlus:Array<ShapeGroup> = [];
         subdivide(x0, y0, x1, y1, SUBDIV_DEPTH, rng, block, blockP, blockL, blockT, blockPlus, nearMaxStreet, nearestStreetSide);
-        var carved = rng() < COURTYARD_BLOCK_CHANCE ? carveCourtyard(block, x0, y0, x1, y1, rng) : null;
+        var carved = rng() < COURTYARD_BLOCK_CHANCE ? carveCourtyard(block, x0, y0, x1, y1, rng, courtyards) : null;
         // a carved block re-subtracts its buildings, so leaf-shape pieces may change
         // identity — only trust their locators when the block wasn't carved
         if (carved != null) for (b in carved) buildings.push(b);
@@ -700,6 +701,7 @@ class CityGen {
       tshapes: tshapes,
       plusshapes: plusshapes,
       shopspots: shopspots,
+      courtyards: courtyards,
     };
   }
 
@@ -733,7 +735,7 @@ class CityGen {
     return {
       tiles: tiles, buildings: buildings, lamps: [], start: start,
       deadends: 0, turns: 0,
-      pshapes: [], turnspots: [], lshapes: [], tshapes: [], plusshapes: [], shopspots: [],
+      pshapes: [], turnspots: [], lshapes: [], tshapes: [], plusshapes: [], shopspots: [], courtyards: [],
     };
   }
 }

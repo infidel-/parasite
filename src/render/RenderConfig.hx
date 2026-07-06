@@ -131,9 +131,17 @@ class RenderConfig {
     up: 9.6,             // upward launch impulse
     gravity: 144.0,      // downward accel pulling drops back to the ground
     dropScale: 0.3,      // in-flight droplet quad scale (of a billboard)
-    scaleMin: 0.35,      // landed splat min scale
-    scaleMax: 0.9,       // landed splat max scale
+    scaleMin: 0.15,      // landed splat min scale
+    scaleMax: 0.5,       // landed splat max scale
     splatMax: 80,        // per-area SPLAT decoration cap (oldest evicted)
+  };
+  // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the
+  // lit 3D rig (full ambient+hemisphere+moon on an up-facing quad) it reads too bright. multiply the
+  // 3D texture crop down so decals sit in the road instead of glowing on top. 2D is unaffected
+  // (it draws from the source image, not these crops). blood stays a touch more vivid than debris
+  public static final DECAL = {
+    bloodMul: 0.6,       // blood-splat crop darken factor
+    debrisMul: 0.55,     // street-debris crop darken factor
   };
   // 3D gun-shot choreography: a blooming tracer streak races muzzle->impact, a muzzle flash +
   // transient point light pop at the shooter, impact sparks + blood on a hit, and (player only)

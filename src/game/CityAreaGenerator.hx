@@ -20,6 +20,8 @@ class CityAreaGenerator
 {
   var game: Game;
   var gen: AreaGenerator;
+  // carved inner-courtyard rects from the last generate() (enclosed open pockets); barrels go here
+  var courtyards: Array<citygen.CityModel.CourtRect> = [];
 
 // store references to the owning game and shared generator helpers
   public function new(g: Game, gn: AreaGenerator)
@@ -34,6 +36,8 @@ class CityAreaGenerator
       // pick and store the seed so the 3D renderer regenerates identical geometry
       area.cityGenSeed = Std.random(0x7FFFFFFF);
       var city = CityGen.generate(area.cityGenSeed);
+      // keep the carved inner courtyards for the object pass (barrel placement)
+      courtyards = city.courtyards;
 
       // translate the pure Tile grid into game tiles
       // (city grid is [row][col]; game cells are [x][y])
@@ -82,6 +86,62 @@ class CityAreaGenerator
             spawned.add(pt);
             area.addObject(o);
           }
+
+      // impassable burning barrels on low-tier streets
+      placeBurningBarrels(area);
+    }
+
+// place impassable burning barrels inside low-tier carved inner courtyards: enclosed open pockets
+// (ringed by buildings), so a barrel here never blocks a through-corridor. one barrel per courtyard
+// at most, at an open interior cell. persisted objects (round-trip by class)
+  function placeBurningBarrels(area: AreaGame)
+    {
+      if (area.typeID != AREA_CITY_LOW)
+        return;
+
+      for (c in courtyards)
+        {
+          // not every courtyard gets one
+          if (Std.random(100) >= 60)
+            continue;
+
+          // prefer the courtyard centre, else scan for the first open interior cell
+          var cx = Std.int((c.x0 + c.x1) / 2);
+          var cy = Std.int((c.y0 + c.y1) / 2);
+          if (tryPlaceBarrel(area, cx, cy))
+            continue;
+
+          var placed = false;
+          for (y in c.y0...c.y1 + 1)
+            {
+              for (x in c.x0...c.x1 + 1)
+                if (tryPlaceBarrel(area, x, y))
+                  {
+                    placed = true;
+                    break;
+                  }
+              if (placed)
+                break;
+            }
+        }
+    }
+
+// place one burning barrel on an open alley cell if free; also flip the tile unwalkable. returns
+// true on success
+  function tryPlaceBarrel(area: AreaGame, x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= area.width ||
+          y >= area.height)
+        return false;
+      if (area.getCellType(x, y) != Const.TILE_ALLEY ||
+          area.hasObjectAt(x, y))
+        return false;
+
+      area.addObject(new BurningBarrel(game, area.id, x, y));
+      gen.makeTileUnwalkable(area, x, y);
+      return true;
     }
 
 // save migration: rebuild the city tile grid to the area's current (full) size from the

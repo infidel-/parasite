@@ -34,6 +34,7 @@ class Actors {
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var holeTex:Array<Texture> = null;                     // masonry bullet-hole wall textures (lazy-loaded once)
   var holeTexMetal:Array<Texture> = null;                // metal-wall bullet-hole textures (lazy-loaded once)
+  var debris:Array<render.world.Debris.DebrisSpot> = null; // seed-derived street debris (render-only, not persisted)
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
@@ -130,8 +131,9 @@ class Actors {
       // vis=false so it fades out smoothly instead of popping; once faded drawActor drops it
       else if (st == _PlayerState.PLR_STATE_HOST)
         drawActor(game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
-      // persisted decals (ground blood + wall bullet holes), then transient FX (blood, death
-      // ghosts, gun shots)
+      // seed-derived street debris (render-only), then persisted decals (ground blood + wall
+      // bullet holes), then transient FX (blood, death ghosts, gun shots)
+      drawDebris();
       drawDecals();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
@@ -174,6 +176,32 @@ class Actors {
 // two-decimal ms for logs
   inline function fix(v:Float):String
     return '' + Std.int(v * 100) / 100;
+
+// set the seed-derived debris scatter for the current city (render-only, rebuilt per show)
+  public function setDebris(list:Array<render.world.Debris.DebrisSpot>):Void
+    {
+      debris = list;
+    }
+
+// draw the seed-derived street debris as content-cropped flat ground quads, fog-gated per cell
+// like the blood decals. render-only — these are not game-area decorations, so they never persist
+  function drawDebris():Void
+    {
+      if (debris == null)
+        return;
+      var los = game.player.vars.losEnabled;
+      for (s in debris)
+        {
+          if (los &&
+              !game.playerArea.sees(s.col, s.row))
+            continue;
+          var gs = sprites.texContent('entities', s.ix, s.iy, false, RenderConfig.DECAL.debrisMul);
+          if (gs == null)
+            continue;
+          var w = CityConfig.cellToWorld(s.col + s.dx, s.row + s.dy);
+          sprites.paintGround(w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z, gs, 1.0, s.scale, s.angle);
+        }
+    }
 
 // draw persisted tile decorations: SPLAT blood as flat ground quads, WALLHOLE bullet holes as
 // upright quads on their wall face. scans the tile grid (sparse + capped); non-3D floor
@@ -219,7 +247,7 @@ class Actors {
           var dx = (d.dx != null ? d.dx : 0) / t;
           var dy = (d.dy != null ? d.dy : 0) / t;
           var w = CityConfig.cellToWorld(x + dx, y + dy);
-          var tex = sprites.tex('entities', d.icon.col, d.icon.row, false);
+          var tex = sprites.tex('entities', d.icon.col, d.icon.row, false, RenderConfig.DECAL.bloodMul);
           if (tex == null)
             return false;
           var sc = (d.scale != null ? d.scale : 1.0);
