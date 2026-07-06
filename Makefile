@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -29,6 +29,15 @@ tex:
 # adopt freshly generated gpt drops into textures-src/ without baking
 adopt:
 	python3 tools/textures.py --rename
+
+# 3D model pipeline: one-time install of the node bake tooling (gltf-transform + meshopt + sharp)
+model-deps:
+	npm --prefix tools install
+
+# 3D model pipeline: decimate + shrink embedded textures of models-src/ .glb sources
+# straight into app/models/ (per models.json). models-src is a symlink; sources are NOT committed.
+models:
+	node tools/models.mjs
 
 testmod:
 	cd examples/testmod/ && $(MAKE)

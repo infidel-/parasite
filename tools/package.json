@@ -1,0 +1,14 @@
+{
+  "name": "parasite-model-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "offline glb bake: decimate + shrink embedded texture into app/models/",
+  "type": "module",
+  "dependencies": {
+    "@gltf-transform/core": "^4.1.0",
+    "@gltf-transform/extensions": "^4.1.0",
+    "@gltf-transform/functions": "^4.1.0",
+    "meshoptimizer": "^0.22.0",
+    "sharp": "^0.33.5"
+  }
+}

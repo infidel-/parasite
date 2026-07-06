@@ -28,3 +28,8 @@ sshot.jpg
 # 3D street-view: textures-src is a symlink to the asset store; baked runtime
 # textures are written straight into the app dir by `make tex`. Neither is tracked.
 textures-src
+
+# 3D models: models-src is a symlink to the asset store; baked runtime glbs are
+# written into the app dir by `make models`. tools/node_modules is local bake tooling.
+models-src
+tools/node_modules
