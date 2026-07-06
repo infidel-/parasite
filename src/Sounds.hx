@@ -16,8 +16,9 @@ class Sounds
   var music: SMSound;
   var menuMusic: SMSound;
   var aboutMusic: SMSound;
-  var ambient: _SoundInfo; 
+  var ambient: _SoundInfo;
   var ambientNext: _SoundInfo;
+  var fireLoop: SMSound; // looping positional fire sound near burning barrels (volume set per frame)
   var ambientLocation: _SoundAmbientLocation;
   var initDone: Bool;
 
@@ -65,6 +66,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 !ambientNext.sound.muted)
               ambientNext.sound.mute();
+            if (fireLoop != null &&
+                !fireLoop.muted)
+              fireLoop.mute();
             return;
           }
         else if (game.ui.state == UISTATE_ABOUT)
@@ -98,6 +102,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 ambientNext.sound.muted)
               ambientNext.sound.unmute();
+            if (fireLoop != null &&
+                fireLoop.muted)
+              fireLoop.unmute();
           }
         ambientTick(ambient);
         ambientTick(ambientNext);
@@ -106,6 +113,7 @@ class Sounds
       music = null;
       menuMusic = null;
       aboutMusic = null;
+      fireLoop = null;
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
@@ -305,6 +313,9 @@ class Sounds
 // after entering area
   public function onEnterArea()
     {
+      // barrels are per-area; silence any fire loop so it does not bleed into the next area/region
+      if (fireLoop != null)
+        fireLoop.setVolume(0);
       var oldType = locationType;
       // check for area-specific music
       if (game.location == LOCATION_AREA)
@@ -440,6 +451,30 @@ class Sounds
           info.sound.stop();
           info.sound.setVolume(info.sound.volume + 1);
         }
+    }
+
+// drive the looping fire sound from the render loop: frac is 0 (silent, out of range) .. 1 (full,
+// on top of a barrel); lazy-creates the loop on first audible frame, keeps it looping silently
+// otherwise so there is no start/stop thrash as the player crosses the radius
+  public function updateFireLoop(frac: Float)
+    {
+#if !free
+      if (fireLoop == null)
+        {
+          if (frac <= 0)
+            return;
+          fireLoop = SoundManager.createSound({
+            id: 'ambient-fire',
+            url: AssetPath.resolve('sound/ambient-fire.mp3'),
+            volume: 0,
+            loops: 10000,
+          });
+          fireLoop.play();
+        }
+      var vol = frac <= 0 ? 0 : Std.int(game.config.effectsVolume * frac);
+      if (fireLoop.volume != vol)
+        fireLoop.setVolume(vol);
+#end
     }
 
 // play given sound from the library

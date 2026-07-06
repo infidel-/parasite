@@ -184,6 +184,7 @@ class RenderConfig {
     shadowSoftPx: 3,        // blur radius baked into the black crop for the soft edge
     shadowFade: 0.3,        // outer fraction of the range over which a shadow eases to 0 (smooth
                             // enter/leave as the actor slides across the radius — motion is the anim)
+    soundRangeCells: 4,     // looping fire sound fades to silent at this world-cell distance
   };
   // 3D gun-shot choreography: a blooming tracer streak races muzzle->impact, a muzzle flash +
   // transient point light pop at the shooter, impact sparks + blood on a hit, and (player only)

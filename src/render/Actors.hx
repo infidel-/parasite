@@ -154,6 +154,7 @@ class Actors {
       // AFTER the decals above so they darken blood/debris, and below the actor/marker layers
       // (renderOrder) so the icon + selection ring stay on top
       flameBodyAndShadows(dtMs);
+      driveFireLoop();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
@@ -236,6 +237,30 @@ class Actors {
             curBarrels.push({ x: w.x, z: w.z, floor: WorldCtx.floorY(o.x, o.y),
               col: o.x, row: o.y, phase: o.x * 12.9898 + o.y * 78.233 });
           }
+    }
+
+// drive the looping fire sound off the nearest visible barrel: world distance from the player's
+// smooth pose to the closest barrel, mapped to 0 (>= soundRangeCells away) .. 1 (on top of it).
+// called every frame so it silences on walk-away; lazy no-op when no barrel has ever been near
+  function driveFireLoop():Void
+    {
+      var range = RenderConfig.FLAME.soundRangeCells * CityConfig.CELL;
+      var pa = actors.get(game.playerArea.entity);
+      var frac = 0.0;
+      if (pa != null)
+        for (b in curBarrels)
+          {
+            var dx = pa.x - b.x;
+            var dz = pa.z - b.z;
+            var d = Math.sqrt(dx * dx + dz * dz);
+            if (d < range)
+              {
+                var f = 1 - d / range;
+                if (f > frac)
+                  frac = f;
+              }
+          }
+      game.scene.sounds.updateFireLoop(frac);
     }
 
 // warm emissive intensity a nearby barrel throws onto an actor at pose a: strongest barrel within
