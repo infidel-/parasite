@@ -143,6 +143,48 @@ class RenderConfig {
     bloodMul: 0.6,       // blood-splat crop darken factor
     debrisMul: 0.55,     // street-debris crop darken factor
   };
+  // burning barrels that actually burn (low-tier only): a pooled warm point light (MuzzleLights
+  // pattern, constant NUM_POINT_LIGHTS), an uneven flicker, a soft additive flame body + rising
+  // embers, and fake projected-silhouette shadows cast from nearby actors onto the ground. no real
+  // shadow maps. distances in "cells" are * CityConfig.CELL; ms are durations; colors are warm tones
+  public static final FLAME = {
+    lightPool: 5,           // fixed warm point-light count (idle at 0, never toggled -> no recompile)
+    lightColor: 0xff7a1e,   // flame point-light tint
+    lightIntensity: 26.0,   // base peak intensity (flicker modulates it)
+    lightDistance: 24.0,    // point-light reach (world units, ~6 cells)
+    lightRangeCells: 10,    // only barrels within this many cells of the player claim a pool light
+    rimY: 2.2,              // flame + light height above the barrel's ground (world units)
+    // flicker: two summed sines on a raw-dt clock, per-barrel phase (freqs are per-ms)
+    flickFreqA: 0.017,
+    flickFreqB: 0.031,
+    flickMin: 0.55,         // dimmest the flicker pulls the light/flame to (fraction of peak)
+    // flame body: a camera-facing flame sprite (static art, code-animated) over a soft glow halo
+    bodyRise: 2.3,          // flame sprite height at rest (world units; flicker stretches it)
+    bodyW: 1.2,             // flame sprite width (world units; flicker breathes it)
+    bodyAlpha: 0.25,        // flame sprite base opacity (additive; flicker + layer scale it)
+    glowW: 2.2,             // soft glow halo width (world units)
+    glowAlpha: 0.1,         // soft glow halo opacity (additive underlay, centered on the rim)
+    colorHot: 0xffd070,     // hot tint (inner flame layer + glow)
+    colorTip: 0xd83400,     // cooler tint (outer flame layer)
+    // warm flicker the flame throws onto nearby actors (emissive on their own sprite, shaped + fading
+    // with distance, pulsing with the flicker) — on top of the pooled point light's lit flicker
+    litColor: 0xff8434,     // warm emissive tint on a lit actor
+    litStrength: 0.7,       // peak emissive intensity (0 = off); scales by flicker * distance falloff
+    // embers: one FlameEmber3D spawned ~every emberMs per visible barrel
+    emberMs: 130.0,         // avg ms between ember spawns per barrel
+    emberLife: 750.0,       // ember lifetime (ms)
+    emberRise: 1.2,         // ember upward speed (cells/sec)
+    emberColor: 0xffb050,   // ember tint
+    emberW: 0.05,           // ember dot width (cells)
+    // fake shadows: black soft-edged silhouettes stretched away from each nearby barrel
+    shadowMax: 4,           // at most this many shadows per actor (its nearest barrels)
+    shadowRangeCells: 4,    // a barrel this many or more cells away casts no shadow on the actor
+    shadowOp: 0.9,          // per-shadow opacity (stacks where several overlap near the feet)
+    shadowLenMul: 1.4,      // shadow length = sprite world-height * this * distance falloff
+    shadowSoftPx: 3,        // blur radius baked into the black crop for the soft edge
+    shadowFade: 0.3,        // outer fraction of the range over which a shadow eases to 0 (smooth
+                            // enter/leave as the actor slides across the radius — motion is the anim)
+  };
   // 3D gun-shot choreography: a blooming tracer streak races muzzle->impact, a muzzle flash +
   // transient point light pop at the shooter, impact sparks + blood on a hit, and (player only)
   // a small camera recoil. per-weapon pellet counts mirror the 2D shot feel. sizes marked
@@ -243,6 +285,7 @@ class RenderConfig {
     doorCovers: ['textures/door-cover-concrete.png', 'textures/door-cover-brick.png', 'textures/door-cover-stone.png'],
     roofMetal: 'textures/roof-metal.png',       // metal warehouse gable-roof slopes (distinct from the wall)
     player: 'textures/player.png',              // player billboard sprite
+    flame: 'textures/flame.png',                // burning-barrel flame sprite (chroma-keyed alpha)
     // wall decals (alpha PNGs, bg removed). bullet holes are spawned dynamically on wall hits;
     // graffiti/posters/cracks are placed statically on bare walls at city build. missing files
     // fall back to a procedural canvas (opaque) until real art is supplied

@@ -3,6 +3,7 @@ package render.particles;
 import three.Three;
 import js.Browser;
 import citygen.CityConfig;
+import render.RenderConfig;
 import game.Game;
 
 // a content-cropped atlas cell: texture trimmed to the cell's opaque bounding box, plus that
@@ -17,13 +18,26 @@ typedef GroundSprite = { tex:CanvasTexture, fw:Float, fh:Float };
 class Sprites {
   public static inline var SIZE = CityConfig.CELL * 0.85; // base quad size (scale multiplies it)
   static inline var TILT = 0.6;                        // radians an upright sprite leans back toward the overhead camera
+  // transparent draw layering (higher = on top): ground decals < fake shadow < target markers <
+  // upright actor icon. all these share this pool + depthWrite:false, so renderOrder (not Y) fixes
+  // their stacking deterministically at any camera angle
+  public static inline var ORD_DECAL = 0;              // blood/debris/flat ground-decal objects
+  public static inline var ORD_SHADOW = 1;             // fake cast shadow (above decals -> darkens them)
+  public static inline var ORD_MARK = 2;               // targeting frame / reticle (above the shadow)
+  public static inline var ORD_ACTOR = 3;              // upright actor billboard (above its own shadow)
 
   var game:Game;                                        // for the sprite-atlas image provider
   var actorGroup:Group;                                 // scene group holding all sprite quads
   var pool:Array<Mesh> = [];                            // reused quad meshes
   var texCache:Map<String, CanvasTexture> = new Map();  // atlas-crop -> texture
   var contentCache:Map<String, GroundSprite> = new Map(); // atlas-crop -> content-trimmed sprite
+  var shadowCache:Map<String, GroundSprite> = new Map();  // atlas-crop -> black soft-edged silhouette
   var idx:Int = 0;                                      // next free pool slot this frame
+  // scratch reused by paintShadow so a shadow pass allocates nothing
+  var _sa:Vector3 = new Vector3();
+  var _sb:Vector3 = new Vector3();
+  var _sc:Vector3 = new Vector3();
+  var _smtx:Matrix4 = new Matrix4();
 
   public function new(game:Game, actorGroup:Group)
     {
@@ -40,7 +54,7 @@ class Sprites {
 // place/reuse a sprite quad at world (wx,wy,wz): texture tex, opacity op, uniform scale (of
 // SIZE); flat lays it on the ground as a decal (yaw rotates it there). no-op if the atlas
 // isn't decoded yet (tex == null) — the slot is not consumed
-  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0):Void
+  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0):Void
     {
       if (tex == null) return;
       var m = slot(tex, op, wx, wy, wz, scale);
@@ -50,6 +64,12 @@ class Sprites {
         m.rotation.set(-Math.PI / 2, 0, yaw);
       else
         m.rotation.set(-TILT, 0, 0);
+      m.renderOrder = order;
+      // warm self-glow (flame flickering on a nearby actor): emissiveMap = the sprite, so the glow
+      // is shaped by the sprite and flickers with emissiveInt. default 0 = no glow (unchanged path)
+      var mat:Dynamic = m.material;
+      untyped mat.emissive.setHex(emissive);
+      mat.emissiveIntensity = emissiveInt;
       m.visible = true;
       idx++;
     }
@@ -57,7 +77,7 @@ class Sprites {
 // paint a content-cropped ground sprite (from texContent) flat on the ground, sized to its real
 // pixel footprint (fw/fh of a cell) * scale and centered on the point, yaw-rotated in-plane. used
 // for debris so a small off-centre atlas sprite lands at its true size where we place it
-  public function paintGround(wx:Float, wy:Float, wz:Float, gs:GroundSprite, op:Float, scale:Float, yaw:Float):Void
+  public function paintGround(wx:Float, wy:Float, wz:Float, gs:GroundSprite, op:Float, scale:Float, yaw:Float, order:Int = 0):Void
     {
       if (gs == null || gs.tex == null) return;
       var m = slot(gs.tex, op, wx, wy, wz, scale);
@@ -65,6 +85,34 @@ class Sprites {
       // matches the trimmed sprite's true aspect + size
       m.scale.set(gs.fw * scale, gs.fh * scale, 1);
       m.rotation.set(-Math.PI / 2, 0, yaw);
+      m.renderOrder = order;
+      m.visible = true;
+      idx++;
+    }
+
+// paint a fake cast shadow: a flat black silhouette (from shadowContent) rooted at the feet
+// (feetX,feetZ) on the ground and stretched lenWorld along (dirX,dirZ) — the direction away from
+// the light — widWorld across. no shadow map; just an oriented, darkened, alpha-shaped copy of the
+// sprite laid on the road (dir is the away-from-barrel unit vector; len/wid are world units)
+  public function paintShadow(feetX:Float, floorY:Float, feetZ:Float, gs:GroundSprite, dirX:Float, dirZ:Float, lenWorld:Float, widWorld:Float, op:Float, order:Int = 0):Void
+    {
+      if (gs == null || gs.tex == null) return;
+      // rooted at the feet: centre sits half the length out along the away direction
+      var cx = feetX + dirX * lenWorld * 0.5;
+      var cz = feetZ + dirZ * lenWorld * 0.5;
+      var m = slot(gs.tex, op, cx, floorY, cz, 1.0);
+      // basis: sprite local +Y (image up / head) -> length dir (so the silhouette lies head-away,
+      // feet-near), local +X (image width) -> perpendicular, local +Z (normal) -> world up
+      // right-handed basis (det +1) so setFromRotationMatrix stays a proper rotation and the quad
+      // lies FLAT: local +Y -> length dir, local +X -> width (mirrored, harmless), local +Z -> up
+      _sa.set(-dirZ, 0, dirX);
+      _sb.set(dirX, 0, dirZ);
+      _sc.set(0, 1, 0);
+      untyped _smtx.makeBasis(_sa, _sb, _sc);
+      untyped m.quaternion.setFromRotationMatrix(_smtx);
+      // geometry is SIZE square; scale each axis so the quad spans the world width/length
+      m.scale.set(widWorld / SIZE, lenWorld / SIZE, 1);
+      m.renderOrder = order;
       m.visible = true;
       idx++;
     }
@@ -98,6 +146,10 @@ class Sprites {
               side: THREE.DoubleSide,
               roughness: 1,
               metalness: 0,
+              // emissiveMap present from creation so the define is stable (no recompile when an
+              // actor later flickers a warm emissive glow onto its own sprite — see paint())
+              map: tex,
+              emissiveMap: tex,
             }));
           pool[idx] = m;
           actorGroup.add(m);
@@ -106,6 +158,12 @@ class Sprites {
       mat.map = tex;
       mat.opacity = op;
       mat.needsUpdate = true;
+      // reset per-frame overridables to their defaults; specialized paints re-set as needed. keeps
+      // pool reuse from leaking one call's emissive/renderOrder into the next slot user
+      untyped mat.emissiveMap = tex;
+      untyped mat.emissive.setHex(0);
+      mat.emissiveIntensity = 0;
+      m.renderOrder = 0;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
       return m;
@@ -201,6 +259,34 @@ class Sprites {
       tex.colorSpace = THREE.SRGBColorSpace;
       var gs:GroundSprite = { tex: tex, fw: cw / t, fh: ch / t };
       contentCache.set(key, gs);
+      return gs;
+    }
+
+// build a black, soft-edged silhouette of an atlas cell for a fake cast shadow. reuses texContent
+// with mul=0 (black RGB, sprite alpha kept), then blurs that tight crop into a padded canvas so the
+// edge is soft (shadowSoftPx). cached per cell; null until the atlas image decodes
+  public function shadowContent(imageName:String, ix:Int, iy:Int, male:Bool):GroundSprite
+    {
+      var key = imageName + ':' + ix + ':' + iy + ':' + male;
+      if (shadowCache.exists(key)) return shadowCache.get(key);
+      // black tight silhouette (mul=0 -> RGB 0, alpha preserved)
+      var base = texContent(imageName, ix, iy, male, 0.0);
+      if (base == null)
+        return null;
+      var tx:Dynamic = base.tex;
+      var src:Dynamic = tx.image;                        // the tight crop canvas (cw x ch)
+      var pad = RenderConfig.FLAME.shadowSoftPx * 2;      // blur bleeds beyond the edge -> pad so it isn't clipped
+      var bc:Dynamic = Browser.document.createElement('canvas');
+      bc.width = src.width + pad * 2;
+      bc.height = src.height + pad * 2;
+      var bcx = bc.getContext('2d');
+      bcx.filter = 'blur(' + RenderConfig.FLAME.shadowSoftPx + 'px)';
+      bcx.drawImage(src, pad, pad);
+      var tex = new CanvasTexture(bc);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      var t = Const.TILE_SIZE_CLEAN;
+      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t };
+      shadowCache.set(key, gs);
       return gs;
     }
 

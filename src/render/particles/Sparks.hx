@@ -90,6 +90,40 @@ class Sparks {
       idx++;
     }
 
+// draw a Y-axis-billboard textured quad at (cx,cy,cz): width w, height h; keeps world-up vertical
+// and yaws to face the camera in the ground plane, so an upright texture (flame) reads upright.
+// tinted color, additive at opacity op. shares this pool with streak() — the flame body sprite
+  public function flameQuad(cx:Float, cy:Float, cz:Float, w:Float, h:Float, texture:Texture, color:Int, op:Float):Void
+    {
+      var m = pool[idx];
+      if (m == null)
+        {
+          m = new Mesh(new PlaneGeometry(1, 1),
+            new MeshBasicMaterial({
+              map: texture,
+              color: 0xffffff,
+              transparent: true,
+              opacity: 1.0,
+              depthWrite: false,
+              side: THREE.DoubleSide,
+              blending: untyped THREE.AdditiveBlending,
+            }));
+          pool[idx] = m;
+          actorGroup.add(m);
+        }
+      var mat:Dynamic = m.material;
+      mat.opacity = op;
+      untyped mat.color.setHex(color);
+      untyped mat.map = texture;
+      // yaw about world up to face the camera; world-up stays the quad's vertical axis
+      var yaw = Math.atan2(camera.position.x - cx, camera.position.z - cz);
+      m.position.set(cx, cy, cz);
+      m.rotation.set(0, yaw, 0);
+      m.scale.set(w, h, 1);
+      m.visible = true;
+      idx++;
+    }
+
 // end a frame: hide every pool quad left untouched this frame
   public function end():Void
     {

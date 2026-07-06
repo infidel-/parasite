@@ -6,6 +6,7 @@ import render.ActorAnim;
 import render.world.WorldCtx;
 import render.anim.*;
 import render.particles.*;
+import render.particles.FlameLights.FlameBarrel;
 import game.Game;
 import entities.Entity;
 import ai.AI;
@@ -35,6 +36,10 @@ class Actors {
   var holeTex:Array<Texture> = null;                     // masonry bullet-hole wall textures (lazy-loaded once)
   var holeTexMetal:Array<Texture> = null;                // metal-wall bullet-hole textures (lazy-loaded once)
   var debris:Array<render.world.Debris.DebrisSpot> = null; // seed-derived street debris (render-only, not persisted)
+  var flameLights:FlameLights = null;                   // pooled warm barrel lights (low-tier only; null elsewhere)
+  var flameT:Float = 0.0;                               // shared flame clock (ms, raw dt) — flicker/embers/shadows sync to it
+  var flameTex:Texture = null;                          // barrel flame sprite (lazy-loaded once)
+  var curBarrels:Array<FlameBarrel> = [];               // this frame's visible barrels (gathered once, reused by lit/body/shadow)
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
@@ -58,6 +63,11 @@ class Actors {
       // created here (before the first render) so the muzzle lights are in NUM_POINT_LIGHTS from
       // frame one — the scene compiles once at the full count, never recompiles on a shot
       muzzleLights = new MuzzleLights(actorGroup);
+      // burning-barrel flame lights: only low-tier cities spawn barrels, so only there do we add to
+      // NUM_POINT_LIGHTS (built here so the scene compiles once at the full count, never recompiles).
+      // ponytail: no barrels elsewhere -> no flame pool, no per-fragment light cost elsewhere
+      if (game.area.typeID == AREA_CITY_LOW)
+        flameLights = new FlameLights(actorGroup);
       paint = { sprites: sprites, beams: beams, sparks: sparks };
       particles = new Particles3D();
       lastState = game.player.state;
@@ -82,6 +92,11 @@ class Actors {
       beams.begin();
       sparks.begin();
       muzzleLights.update(dtMs);
+      // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
+      // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
+      gatherBarrels();
+      if (curBarrels.length > 0)
+        flameT += dtMs;
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
@@ -135,6 +150,10 @@ class Actors {
       // bullet holes), then transient FX (blood, death ghosts, gun shots)
       drawDebris();
       drawDecals();
+      // burning barrels: flame lights + soft flame body/embers + fake cast shadows. shadows draw
+      // AFTER the decals above so they darken blood/debris, and below the actor/marker layers
+      // (renderOrder) so the icon + selection ring stay on top
+      flameBodyAndShadows(dtMs);
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
@@ -200,6 +219,169 @@ class Actors {
             continue;
           var w = CityConfig.cellToWorld(s.col + s.dx, s.row + s.dy);
           sprites.paintGround(w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z, gs, 1.0, s.scale, s.angle);
+        }
+    }
+
+// gather this frame's visible burning barrels into curBarrels (world rim pos + flicker phase). one
+// getObjects scan, reused by the actor-glow (drawActor), the flame body, and the shadow pass
+  function gatherBarrels():Void
+    {
+      curBarrels = [];
+      var los = game.player.vars.losEnabled;
+      for (o in game.area.getObjects())
+        if (o.type == 'burning_barrel' &&
+            (!los || game.playerArea.sees(o.x, o.y)))
+          {
+            var w = CityConfig.cellToWorld(o.x, o.y);
+            curBarrels.push({ x: w.x, z: w.z, floor: WorldCtx.floorY(o.x, o.y),
+              col: o.x, row: o.y, phase: o.x * 12.9898 + o.y * 78.233 });
+          }
+    }
+
+// warm emissive intensity a nearby barrel throws onto an actor at pose a: strongest barrel within
+// light range, pulsing with the flicker, fading to 0 at the range edge. 0 when none in range
+  function flameLit(a:Actor):Float
+    {
+      if (curBarrels.length == 0)
+        return 0.0;
+      var F = RenderConfig.FLAME;
+      var range = F.lightRangeCells * CityConfig.CELL;
+      var best = 0.0;
+      for (b in curBarrels)
+        {
+          var dx = a.x - b.x;
+          var dz = a.z - b.z;
+          var d = Math.sqrt(dx * dx + dz * dz);
+          if (d >= range)
+            continue;
+          var v = F.litStrength * FlameLights.flicker(flameT, b.phase) * (1 - d / range);
+          if (v > best)
+            best = v;
+        }
+      return best;
+    }
+
+// drive the flame-light pool + draw the flame body/embers + cast fake shadows, all off the
+// pre-gathered curBarrels. no-op when no barrel is in view, so non-low-tier cities pay nothing
+  function flameBodyAndShadows(dtMs:Float):Void
+    {
+      if (curBarrels.length == 0)
+        return;
+      var F = RenderConfig.FLAME;
+      // pooled warm lights follow the nearest barrels to the player
+      var pe = game.playerArea.entity;
+      if (flameLights != null)
+        flameLights.update(flameT, curBarrels, pe.mx, pe.my);
+      // flame body + the odd ember, per visible barrel
+      for (b in curBarrels)
+        {
+          drawFlameBody(b);
+          if (Math.random() < dtMs / F.emberMs)
+            particles.add(new FlameEmber3D(b.x, b.floor + F.rimY, b.z, b.phase));
+        }
+      castShadows(curBarrels);
+    }
+
+// draw one barrel's flame: a short column of warm camera-facing soft dots rising off the rim,
+// tapering + swaying, breathing with the shared flicker (hot core at the base, cooler tip)
+  function drawFlameBody(b:FlameBarrel):Void
+    {
+      var F = RenderConfig.FLAME;
+      // lazy-load the flame sprite (clamp-wrapped alpha PNG) once
+      if (flameTex == null)
+        {
+          flameTex = render.Textures.loadTexture(RenderConfig.TEXTURES.flame, 'wall');
+          flameTex.wrapS = flameTex.wrapT = THREE.ClampToEdgeWrapping;
+        }
+      var fl = FlameLights.flicker(flameT, b.phase);
+      var fl2 = FlameLights.flicker(flameT, b.phase + 2.3);   // inner layer flickers on its own beat
+      var baseY = b.floor + F.rimY;
+      // soft glow halo at the rim (low additive alpha, centered — no sway)
+      sparks.streak(b.x, baseY + F.bodyRise * 0.2, b.z, 0, 1, 0,
+        F.glowW, F.glowW, F.colorHot, F.glowAlpha * (0.6 + 0.4 * fl));
+      // outer flame layer: cooler + bigger, gentle vertical bob, base pinned at the rim
+      var hO = F.bodyRise * 1.1 * (0.8 + 0.35 * fl);
+      var wO = F.bodyW * 1.15 * (0.75 + 0.4 * fl);
+      var bobO = Math.sin(flameT * 0.012 + b.phase) * 0.05 * F.bodyRise;
+      sparks.flameQuad(b.x, baseY + hO * 0.5 + bobO, b.z, wO, hO, flameTex, F.colorTip,
+        F.bodyAlpha * (0.5 + 0.4 * fl) * 0.8);
+      // inner flame layer: hotter + smaller + shorter, faster bob
+      var hI = F.bodyRise * 0.72 * (0.85 + 0.4 * fl2);
+      var wI = F.bodyW * 0.7 * (0.7 + 0.5 * fl2);
+      var bobI = Math.sin(flameT * 0.02 + b.phase * 1.7) * 0.06 * F.bodyRise;
+      sparks.flameQuad(b.x, baseY + hI * 0.5 + bobI, b.z, wI, hI, flameTex, F.colorHot,
+        F.bodyAlpha * (0.6 + 0.4 * fl2));
+    }
+
+// fake cast shadows: for every visible upright actor near a barrel, lay a black soft-edged copy of
+// its sprite on the ground, stretched away from each of its nearest (up to shadowMax) barrels. drawn
+// after the ground decals so a shadow darkens the blood/debris it crosses instead of floating over it
+  function castShadows(barrels:Array<FlameBarrel>):Void
+    {
+      // AI + non-flat objects (skip the barrels themselves) + a free parasite are the casters
+      for (ai in game.area.getAllAI())
+        if (ai.entity != null)
+          actorShadow(ai.entity, barrels);
+      for (o in game.area.getObjects())
+        if (o.entity != null &&
+            !o.isGroundDecal() &&
+            o.type != 'burning_barrel')
+          actorShadow(o.entity, barrels);
+      if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
+        actorShadow(game.playerArea.entity, barrels);
+    }
+
+// cast one actor's shadows from its nearest barrels (cell-distance gated by shadowRangeCells).
+// direction is away from the barrel, length grows with distance + the sprite height, opacity fades
+// with the actor's LOS opacity and pulses with the flame flicker
+  function actorShadow(e:Entity, barrels:Array<FlameBarrel>):Void
+    {
+      var a = actors.get(e);
+      if (a == null ||
+          a.op < 0.05)
+        return;
+      var gs = sprites.shadowContent(e.imageName, e.ix, e.iy, e.isMaleAtlas);
+      if (gs == null)
+        return;
+      var F = RenderConfig.FLAME;
+      var floor = WorldCtx.floorY(a.col, a.row) + 0.06;   // just above the splat/debris plane (+0.04)
+      var rangeWorld = F.shadowRangeCells * CityConfig.CELL;
+      var widWorld = gs.fw * Sprites.SIZE;
+      var baseLen = gs.fh * Sprites.SIZE * F.shadowLenMul;
+      // nearest barrels within range by WORLD distance (smooth), capped to shadowMax. world distance
+      // (not cell) so the edge fade below eases continuously as the actor slides across the radius
+      var near:Array<{ b:FlameBarrel, d:Float }> = [];
+      for (b in barrels)
+        {
+          var dx = a.x - b.x;
+          var dz = a.z - b.z;
+          var d = Math.sqrt(dx * dx + dz * dz);
+          if (d < rangeWorld)
+            near.push({ b: b, d: d });
+        }
+      near.sort(function(p, q)
+        {
+          return p.d < q.d ? -1 : (p.d > q.d ? 1 : 0);
+        });
+      var n = near.length < F.shadowMax ? near.length : F.shadowMax;
+      for (i in 0...n)
+        {
+          var b = near[i].b;
+          var dh = near[i].d;
+          if (dh < 0.001)
+            continue;
+          var dx = (a.x - b.x) / dh;
+          var dz = (a.z - b.z) / dh;
+          var len = baseLen * (0.5 + dh / rangeWorld);
+          // smooth edge fade: 1 well inside the radius, easing to 0 at its rim over the outer
+          // shadowFade fraction, so the shadow fades in/out as the actor walks in/out (no pop)
+          var edge = (rangeWorld - dh) / (rangeWorld * F.shadowFade);
+          if (edge > 1)
+            edge = 1;
+          // fade with distance from the light: darker close to the barrel, more transparent far off
+          var distFade = 1 - dh / rangeWorld;
+          var op = F.shadowOp * a.op * edge * distFade * (0.7 + 0.3 * FlameLights.flicker(flameT, b.phase));
+          sprites.paintShadow(a.x, floor, a.z, gs, dx, dz, len, widWorld, op, Sprites.ORD_SHADOW);
         }
     }
 
@@ -339,11 +521,11 @@ class Actors {
       if (framed)
         sprites.paint(a.x, floor + 0.05, a.z,
           sprites.tex('entities', Const.FRAME_TARGET_FRAME, Const.ROW_REGION_ICON, false),
-          1.0, TARGET_SCALE, true);
+          1.0, TARGET_SCALE, true, 0.0, Sprites.ORD_MARK);
       if (cursor)
         sprites.paint(a.x, floor + 0.06, a.z,
           sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false),
-          1.0, TARGET_SCALE, true);
+          1.0, TARGET_SCALE, true, 0.0, Sprites.ORD_MARK);
     }
 
 // throw a burst of blood from a target cell, biased away from the attacker; drops arc and
@@ -411,10 +593,14 @@ class Actors {
       var floor = WorldCtx.floorY(a.col, a.row);
       // decals hug the ground; upright sprites centre at half their height
       var wy = flat ? floor + 0.05 : floor + Sprites.SIZE * 0.5 + baseY;
+      // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
+      // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
+      var order = flat ? Sprites.ORD_DECAL : Sprites.ORD_ACTOR;
+      var emInt = flat ? 0.0 : flameLit(a);
       if (a.fx != null)
-        sprites.paint(a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat);
+        sprites.paint(a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt);
       else
-        sprites.paint(a.x, wy, a.z, texFor(e), a.op, baseScale, flat);
+        sprites.paint(a.x, wy, a.z, texFor(e), a.op, baseScale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt);
     }
 
 // launch the parasite's leap onto the host's head: snap its slide onto the host cell so
