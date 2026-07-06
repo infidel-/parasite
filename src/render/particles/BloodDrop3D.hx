@@ -36,7 +36,7 @@ class BloodDrop3D extends Particle3D {
       if (len < 0.001)
         { awayX = 1; awayZ = 0; len = 1; }
       awayX /= len; awayZ /= len;
-      for (i in 0...RenderConfig.BLOOD.drops)
+      for (_ in 0...RenderConfig.BLOOD.drops)
         {
           // spread each drop around the away direction with a random sideways kick + speed
           var side = (Math.random() - 0.5) * 1.4;
