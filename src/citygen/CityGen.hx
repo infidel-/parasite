@@ -97,7 +97,7 @@ class CityGen {
         return;
       }
       // L-shape with a back-courtyard notch (non-full-block leaves only)
-      if (!full && w >= 8 && d >= 8 && rng() < L_CHANCE) {
+      if (!full && w >= 7 && d >= 7 && rng() < L_CHANCE) {
         var right = rng() < 0.5;
         var bottom = rng() < 0.5;
         var nw = 3 + Std.int(rng() * (w - 5));
@@ -230,7 +230,7 @@ class CityGen {
 
     var big = w > SPLIT_OVER || d > SPLIT_OVER;
     var capW = w > MAX_BUILDING, capD = d > MAX_BUILDING; // hard cap on either axis
-    if (!capW && !capD && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < 0.2))) { leaf(); return; }
+    if (!capW && !capD && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < EARLY_LEAF_CHANCE))) { leaf(); return; }
     // force a split along any over-cap axis (wider one first); else normal big-block split
     if (capW || (!capD && w >= d && w >= 7)) {
       var cut = x0 + 3 + Std.int(rng() * (w - 6));
@@ -594,6 +594,8 @@ class CityGen {
     }
     // a П survives only if all three strips face the street; if any wouldn't, the rest
     // are a degenerate || — mark the whole group to drop and skip the locator entry
+    // (an any-outer relaxation was tried and reverted: it kept П's buried against
+    // neighbours, which read as broken blocks, not courtyards)
     var pshapes:Array<PShape> = [];
     for (g in pgroups) {
       var whole = true;

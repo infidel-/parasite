@@ -16,13 +16,14 @@ class CityConfig {
   public static inline var MIN_BLOCK = 8;               // block size varies in [MIN_BLOCK, MAX_BLOCK] cells (road pitch = ROAD_W + this)
   public static inline var MAX_BLOCK = 20;              // upper bound of that block-size range
   public static inline var SUBDIV_DEPTH = 5;            // recursion depth (enough for force-split to resolve big blocks)
+  public static inline var EARLY_LEAF_CHANCE = 0.3;     // chance a mid-size splittable block stops subdividing (big leaves feed the shaped-building rolls)
   public static inline var SPLIT_OVER = 12;             // blocks wider/deeper than this MUST split (no full-block giants)
   public static inline var MAX_BUILDING = 8;            // hard cap: no building/shape piece bigger than this on either axis
   public static inline var COURTYARD_CHANCE = 0.3;      // chance a big-enough leaf becomes a U-shaped courtyard
   public static inline var COURTYARD_WALL = 2;          // courtyard wall-strip thickness (cells)
   public static inline var L_CHANCE = 0.35;             // chance a big non-full-block leaf becomes an L (back courtyard)
-  public static inline var T_CHANCE = 0.5;             // chance a big leaf becomes a T (crossbar + shorter centred stem)
-  public static inline var PLUS_CHANCE = 0.5;          // chance a big leaf becomes a + (crossing bars, optional taller centre)
+  public static inline var T_CHANCE = 0.6;             // chance a big leaf becomes a T (crossbar + shorter centred stem)
+  public static inline var PLUS_CHANCE = 0.85;         // chance a big leaf becomes a + (crossing bars, optional taller centre; rolled last, so high)
   public static inline var COURTYARD_BLOCK_CHANCE = 0.35; // chance to try carving a central courtyard out of a finished block
   public static inline var COURT_RING = 3;             // min cells kept between the courtyard and the block edge
   public static inline var COURT_MIN = 3;              // min courtyard side
