@@ -32,6 +32,8 @@ class StreetView {
   var actorGroup:Group;
   var ring:Mesh;
   var ringY:Float = 0;                                    // eased ring floor height (curb step)
+  var exiting = false;                                    // playing the leave zoom-in outro over the frozen last frame
+  var exitDone:Void->Void = null;                         // runs when the outro completes (fade orchestration hook), else teardown
   var actors:Actors;                                      // the billboard actor layer
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
@@ -160,7 +162,9 @@ class StreetView {
     // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
     renderer.info.autoReset = false;
 
+    exiting = false;   // cancel any in-flight outro from a prior area
     rig.reset();
+    rig.startIntro();  // enter effect: start closest, zoom out to the resting target
 
     canvas.style.display = 'block';
     if (!running) {
@@ -170,9 +174,34 @@ class StreetView {
     }
   }
 
-// stop rendering and hide the overlay (scene left for GC; renderer kept for reuse)
-  public function hide():Void {
+// begin leaving: play the zoom-in outro over the frozen last frame, then hand off. the game
+// area is already despawned by the time this fires (so the outro reads no game state). called
+// every frame while the region shows — a no-op once the outro is already running. onExitDone
+// (if given) runs when the outro completes INSTEAD of teardown, so the caller can cover to
+// black first and tear the view down under it (see GameScene.onCityExitDone)
+  public function hide(?onExitDone:Void->Void):Void {
+    if (!running || exiting) return;
+    exiting = true;
+    exitDone = onExitDone;
+    rig.zoomTweenTo(0, RenderConfig.CAMERA.exitMult, false, onOutroDone); // ungated: outro runs regardless of any window
+  }
+
+// outro tween finished: hand off to the exit-fade orchestrator if one was provided (it covers
+// to black then calls teardown() under black), else tear down immediately
+  function onOutroDone():Void {
+    if (exitDone != null)
+      {
+        var cb = exitDone;
+        exitDone = null;
+        cb();
+      }
+    else teardown();
+  }
+
+// stop rendering and release the scene (fires when the outro completes, or under the exit fade)
+  public function teardown():Void {
     running = false;
+    exiting = false;
     shownSeed = -2;
     if (debug.on) setDebug(false);
     scene = null;
@@ -494,6 +523,25 @@ class StreetView {
     if (t - last < frameMs - 2) return;
     var dtMs = last == 0 ? frameMs : t - last;
     last = t;
+    // clamp a hitch: a build/texture-decode stall spikes dt, and dt-proportional tweens (zoom
+    // intro/outro, slide) would fast-forward = a visible skip. cap it so one bad frame steps at
+    // most ~2 frames of anim; the anim runs a hair behind real time instead of jumping
+    if (dtMs > frameMs * 2)
+      dtMs = frameMs * 2;
+
+    // leaving: play the frozen zoom-in outro (no game reads) until its tween tears the view
+    // down. teardown may fire mid-drift (nulls composer) — guard the render on it
+    if (exiting) {
+      rig.driftZoom(dtMs);
+      // keep fading buildings that slide between the zooming-in camera and the (frozen) player,
+      // so the marker stays visible through the outro (occlusion reads no game state)
+      occlusion.update(camera.position, rig.playerWorld(), null, false, dtMs);
+      if (running && composer != null) {
+        renderer.info.reset();
+        composer.render();
+      }
+      return;
+    }
 
     // free cam owns the camera while active; the rig still tracks the player so the ring follows
     var freeing = debug.flying();

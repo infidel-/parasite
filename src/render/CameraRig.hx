@@ -3,6 +3,7 @@ package render;
 import three.Three;
 import render.ActorAnim;
 import game.Game;
+import _UIState;
 
 // the street view's follow camera: eases a target toward the player's cell, holds a
 // state-driven zoom (parasite close, host pulled out) and derives the camera offset +
@@ -20,6 +21,8 @@ class CameraRig {
 
   var zoom = 1.0;                                          // current normalized zoom 0..1
   var zoomTarget = 1.0;                                    // eased-toward zoom
+  var zt:{ from:Float, to:Float, dur:Float, p:Float, gated:Bool } = null; // active fixed-duration zoom tween (intro/outro); dur in BASE_MS multiples; gated holds while a UI window is up
+  var ztDone:Void->Void = null;                           // fires once when the active tween completes
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
   var recoil = new Vector3();                              // transient player-shot camera kick, decays to 0
 
@@ -33,10 +36,75 @@ class CameraRig {
   public function reset():Void
     {
       camSlide = null;
+      zt = null;
+      ztDone = null;
       lastState = game.player.state;
       zoom = zoomTarget = targetFor(lastState);
       update(0, true);
       camera.position.copy(pWorld).add(offset);
+    }
+
+// enter effect: snap to the closest zoom then tween back out to the resting target
+  public function startIntro():Void
+    {
+      zoom = 0;
+      applyOffset();
+      camera.position.copy(pWorld).add(offset);
+      zoomTweenTo(zoomTarget, RenderConfig.CAMERA.introMult, true); // gated: hold under the opening message window
+    }
+
+// start a fixed-duration zoom tween (dur in BASE_MS multiples, scaled by ANIM_SPEED); onDone
+// fires once it completes. gated holds the tween while a UI window is up (enter intro under
+// the opening message). used for the enter zoom-out and the leave zoom-in outro
+  public function zoomTweenTo(to:Float, mult:Float, gated = false, ?onDone:Void->Void):Void
+    {
+      zt = { from: zoom, to: to, dur: mult, p: 0.0, gated: gated };
+      ztDone = onDone;
+    }
+
+// leave outro: advance ONLY the zoom (tween) and reframe the camera from the last follow
+// target. reads no game state — the game area is already torn down by the time this runs
+  public function driftZoom(dtMs:Float):Void
+    {
+      tickZoom(dtMs);
+      applyOffset();
+      camera.position.copy(pWorld).add(offset);
+      lookAt.copy(pWorld);
+      lookAt.y += 1.5;
+      camera.lookAt(lookAt);
+    }
+
+// advance the zoom one frame: a fixed-duration tween if active (intro/outro), else the
+// exponential ease toward zoomTarget. the tween's completion callback fires here
+  function tickZoom(dtMs:Float):Void
+    {
+      if (zt != null)
+        {
+          // hold a gated tween (enter intro) at its start until the UI is idle, so it doesn't
+          // count down under the opening message window / any other modal
+          if (zt.gated &&
+              game.ui.state != UISTATE_DEFAULT)
+            return;
+          zt.p += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+          var t = zt.p / zt.dur;
+          if (t > 1)
+            t = 1;
+          zoom = zt.from + (zt.to - zt.from) * (1 - Math.pow(1 - t, 3)); // ease-out cubic: decelerates into the end
+          zoomTarget = zt.to;
+          if (t >= 1)
+            {
+              var cb = ztDone;
+              zt = null;
+              ztDone = null;
+              if (cb != null)
+                cb();
+            }
+        }
+      else
+        {
+          var k = 1 - Math.pow(1 - RenderConfig.CAMERA.zoomLerp, dtMs / (1000 / 30));
+          zoom += (zoomTarget - zoom) * k;
+        }
     }
 
 // the current follow-target world pos (the ring tracks this)
@@ -81,10 +149,8 @@ class CameraRig {
           zoomTarget = targetFor(st);
           lastState = st;
         }
-      // frame-rate-independent smoothing: zoomLerp is tuned per 30fps frame, dt-compensated
-      // so the ease feels identical at any render rate (exact exponential decay)
-      var k = 1 - Math.pow(1 - RenderConfig.CAMERA.zoomLerp, dtMs / (1000 / 30));
-      zoom += (zoomTarget - zoom) * k;
+      // ease the zoom (fixed-duration intro/outro tween, else exponential toward zoomTarget)
+      tickZoom(dtMs);
       applyOffset();
       if (!followCamera) return;
       desired.copy(pWorld).add(offset);

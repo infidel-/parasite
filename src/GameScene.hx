@@ -39,7 +39,10 @@ class GameScene
   public var cameraSubX: Int;
   public var cameraSubY: Int;
 
+  var fader: Fader; // full-screen black fade masking area<->region transition stalls
   var _city3dArea: Int = -1; // id of the area currently shown in the 3D view
+  var _cityEnter: Bool = false; // an enter-city fade+build is in flight (guard re-entry)
+  static inline var FADE_MS = 150; // transition fade duration (1x BASE_MS)
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
   var _renderStatsArea: _RenderStats;
   var _renderStatsRegion: _RenderStats;
@@ -91,6 +94,7 @@ class GameScene
       areaLighting = new AreaLighting(this);
       region = new RegionView(this);
       city3d = new render.StreetView(game);
+      fader = new Fader();
 
       // init sound
       sounds = new Sounds(this);
@@ -215,6 +219,15 @@ class GameScene
 
       else if (game.location == LOCATION_REGION)
         {
+          // leaving a city area: let the zoom-in outro finish (it covers the region); its
+          // completion (onCityExitDone) covers to black, then draws/generates the region under
+          // black. don't draw the region now — that would run the heavy first-draw gen stall
+          // straight into the outro's frames
+          if (city3d.running)
+            {
+              hideCity3D();
+              return;
+            }
           hideCity3D();
           game.scene.region.draw();
         }
@@ -232,19 +245,42 @@ class GameScene
 // seed, old seedless saves reconstruct plain boxes from the saved tile grid
   function drawCity3D()
     {
+      if (_cityEnter)
+        return;
       if (game.area.id == _city3dArea && city3d.running)
         return;
+      // cover to black, then build the city + arm the zoom-out intro UNDER black (the geometry
+      // build + async texture decode is the enter stall), then reveal as the intro plays
+      _cityEnter = true;
       _city3dArea = game.area.id;
-      if (game.area.cityGenSeed >= 0)
-        city3d.show(game.area.cityGenSeed);
-      else city3d.showCity(reconstructCity());
+      fader.cover(FADE_MS, function()
+        {
+          if (game.area.cityGenSeed >= 0)
+            city3d.show(game.area.cityGenSeed);
+          else city3d.showCity(reconstructCity());
+          _cityEnter = false;
+          fader.reveal(FADE_MS);
+        });
     }
 
-// hide the 3D view and forget the shown area (so re-entry rebuilds)
+// hide the 3D view and forget the shown area (so re-entry rebuilds). the outro plays first;
+// onCityExitDone then reveals the region
   inline function hideCity3D()
     {
       _city3dArea = -1;
-      city3d.hide();
+      city3d.hide(onCityExitDone);
+    }
+
+// city-area exit outro finished: cover to black, tear the 3D view down and draw the region
+// (its first-draw map gen is a heavy synchronous stall) UNDER black, then reveal the region
+  function onCityExitDone()
+    {
+      fader.cover(FADE_MS, function()
+        {
+          city3d.teardown();
+          game.scene.region.draw();
+          fader.reveal(FADE_MS);
+        });
     }
 
 // rebuild a citygen City from the saved game tile grid (old saves without a seed)

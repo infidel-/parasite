@@ -102,7 +102,9 @@ class RenderConfig {
     zoomLerp: 0.12,       // per-frame ease of zoom toward its target (the smoothing)
     zoomStep: 0.12,       // zoom delta per wheel notch
     parasiteZoom: 0.30,   // parasite + attached: cap AND resting target (much smaller than max)
-    hostZoom: 0.60        // host: auto pull-out target on invade (cap stays 1.0 = far/max)
+    hostZoom: 0.60,       // host: auto pull-out target on invade (cap stays 1.0 = far/max)
+    introMult: 6.0,       // enter effect: zoom-out from closest to resting target, BASE_MS multiples
+    exitMult: 6.0         // leave effect: zoom-in to closest over the frozen last frame, then tear down
   };
   // occlusion fade: a building between camera and player eases to this opacity so the player
   // stays visible, then eases back to solid when it no longer blocks the sightline
