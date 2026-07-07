@@ -250,6 +250,10 @@ class RenderConfig {
   // we decimate hard, so full strength lights faces that turn away. 0 = ignore (flat geo normals),
   // 1 = full. tune down until the artifact clears
   public static inline var MODEL_NORMAL_SCALE = 1.0;
+  // DEBUG toggle: recompute smooth vertex normals on loaded glb props. meshopt-decimated meshes keep
+  // hi-poly vertex normals that light faces turning away (shading artifacts); recomputing smooths
+  // them (fixes the artifact but loses hard-edge detail). true = smooth, false = keep authored normals
+  public static inline var MODEL_SMOOTH_NORMALS = false;
   // baked glb props (make models -> app/models/), loaded via render.Models
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',
@@ -262,8 +266,8 @@ class RenderConfig {
   // lamp model (different geometry = different bulb); SceneSetup pairs the placed model with a block
   public static final LAMP_LIGHT = {         // pairs with MODELS.streetLamp
     yMul: 1.4,   // light height = CityConfig.CELL * this
-    dx: -0.7,     // local +X offset toward the bulb (world units)
-    dz: 0.0,     // local +Z offset toward the bulb (world units)
+    dx: 0.0,     // local +X offset toward the bulb (world units)
+    dz: 0.7,     // local +Z offset toward the bulb (world units)
     angle: Math.PI / 5,  // cone half-angle (radians)
     penumbra: 0.2,       // soft-edge fraction 0..1
     tdx: 0.0,    // ground-target local +X offset (aim the pool along the street)

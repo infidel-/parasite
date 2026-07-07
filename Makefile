@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models model-export
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -38,6 +38,11 @@ model-deps:
 # straight into app/models/ (per models.json). models-src is a symlink; sources are NOT committed.
 models:
 	node tools/models.mjs
+
+# dump a source glb's embedded textures to models-src/ (base -> <label>-base.png etc) for authoring
+# an emissive/edited map off them. usage: make model-export label=street-lamp
+model-export:
+	node tools/models.mjs --export $(label)
 
 testmod:
 	cd examples/testmod/ && $(MAKE)

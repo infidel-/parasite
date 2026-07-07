@@ -42,6 +42,11 @@ class Models {
               if (o.material == null)
                 return;
               o.material.side = THREE.FrontSide;
+              // DEBUG: smooth away the decimation shading artifact (see MODEL_SMOOTH_NORMALS). recomputes
+              // per-vertex normals from the coarse geometry, dropping the mismatched authored normals
+              if (RenderConfig.MODEL_SMOOTH_NORMALS &&
+                  o.geometry != null)
+                o.geometry.computeVertexNormals();
               // the glbs carry a hi-poly normal map but no tangents, and we decimate hard — the
               // derived tangents perturb shading normals wrongly (lights polys that face away). scale
               // the normal map down (0 = ignore it, flat shading from geometry only)

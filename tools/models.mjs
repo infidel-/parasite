@@ -7,7 +7,7 @@ import { ALL_EXTENSIONS, KHRMaterialsEmissiveStrength } from '@gltf-transform/ex
 import { weld, simplify, textureCompress, prune, dedup } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import sharp from 'sharp';
-import { readFileSync, writeFileSync, existsSync, statSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, statSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
@@ -15,6 +15,24 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'models-src');
 const OUT = join(ROOT, 'parasite/resources/app/models');
 const INFO = join(SRC, 'models.json');
+
+// delete Krita/editor backup files (name ends with ~) under a dir, recursively (mirrors textures.py)
+function sweepBackups(dir)
+{
+  let n = 0;
+  for (const ent of readdirSync(dir, { withFileTypes: true }))
+    {
+      const p = join(dir, ent.name);
+      if (ent.isDirectory())
+        n += sweepBackups(p);
+      else if (ent.name.endsWith('~'))
+        {
+          unlinkSync(p);
+          n++;
+        }
+    }
+  return n;
+}
 
 // total triangles across every mesh primitive in a document
 function countTris(doc)
@@ -30,6 +48,60 @@ function countTris(doc)
   return Math.round(tris);
 }
 
+// dump the embedded textures of a source glb to models-src/ as PNGs, so an emissive map can be
+// traced off the base color (mirrors the street-lamp2 base+emissive workflow). base color goes to
+// <label>-base.png (a reference, not the texSrc override), other maps to <label>-<role>.png.
+// usage: node tools/models.mjs --export <label>
+async function exportTextures(label)
+{
+  if (!existsSync(INFO))
+    {
+      console.error('missing ' + INFO);
+      process.exit(1);
+    }
+  const info = JSON.parse(readFileSync(INFO, 'utf8'));
+  const e = info.models[label];
+  if (e == null)
+    {
+      console.error('no model "' + label + '" in models.json');
+      process.exit(1);
+    }
+  const src = join(SRC, e.src);
+  if (!existsSync(src))
+    {
+      console.error('missing source ' + e.src + ' for ' + label);
+      process.exit(1);
+    }
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+  const doc = await io.read(src);
+  // resolve each texture to a role suffix via the material slot that references it (first wins)
+  const roles = new Map();
+  for (const m of doc.getRoot().listMaterials())
+    for (const [suffix, t] of [
+      ['-base', m.getBaseColorTexture()],
+      ['-normal', m.getNormalTexture()],
+      ['-mr', m.getMetallicRoughnessTexture()],
+      ['-emissive-embedded', m.getEmissiveTexture()],
+      ['-ao', m.getOcclusionTexture()],
+    ])
+      if (t != null && !roles.has(t))
+        roles.set(t, suffix);
+  let n = 0;
+  for (const [t, suffix] of roles)
+    {
+      const img = t.getImage();
+      if (img == null)
+        continue;
+      const outName = label + suffix + '.png';
+      // re-encode to png (glb may store jpeg) so Krita opens it straight
+      await sharp(Buffer.from(img)).png().toFile(join(SRC, outName));
+      const meta = await sharp(Buffer.from(img)).metadata();
+      console.log('   exported  ' + outName + '  ' + meta.width + 'x' + meta.height);
+      n++;
+    }
+  console.log('export: ' + n + ' textures from ' + e.src + ' -> models-src/');
+}
+
 async function main()
 {
   if (!existsSync(INFO))
@@ -37,6 +109,9 @@ async function main()
       console.error('missing ' + INFO);
       process.exit(1);
     }
+  const swept = sweepBackups(SRC);
+  if (swept > 0)
+    console.log('   swept       ' + swept + ' backup (~) file(s)');
   const info = JSON.parse(readFileSync(INFO, 'utf8'));
   const defaultTris = info.default_tris ?? 200;
   const defaultTex = info.default_tex ?? 256;
@@ -79,7 +154,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-');
+      const sig = target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -118,14 +193,28 @@ async function main()
             }
           console.log('     emissive  <- ' + emiSrc + ' (' + Math.round(ebytes.length / 1024) + 'KB, x' + emiStrength + ')');
         }
+      // optional: strip the metallic-roughness map (temp — kills unwanted metal/gloss reflections);
+      // fall back to matte non-metal factors so the prop reads flat like the game art. prune() below
+      // drops the now-orphaned image from the glb
+      if (e.dropMR)
+        {
+          for (const m of doc.getRoot().listMaterials())
+            {
+              m.setMetallicRoughnessTexture(null);
+              m.setMetallicFactor(0);
+              m.setRoughnessFactor(1);
+            }
+          console.log('     metallic-roughness map dropped (matte 0/1)');
+        }
       // decimate only when the target is below the source count; otherwise leave the geometry (and
       // its authored normals/hard edges) untouched — meshopt would keep hi-poly normals that mismatch
       // a coarser surface. always shrink the texture + clean up
       const steps = [];
-      if (before > target)
+      // tris: -1 explicitly keeps full geometry (no decimate); otherwise decimate when above target
+      if (target >= 0 && before > target)
         steps.push(weld(), simplify({ simplifier: MeshoptSimplifier, ratio, error }));
       else
-        console.log('     geometry kept full (' + before + ' tris, target ' + target + ')');
+        console.log('     geometry kept full (' + before + ' tris' + (target >= 0 ? ', target ' + target : ', decimate off') + ')');
       steps.push(textureCompress({ encoder: sharp, resize: [tex, tex], targetFormat: 'png' }), prune(), dedup());
       await doc.transform(...steps);
       await io.write(out, doc);
@@ -151,4 +240,9 @@ async function main()
   console.log('models: ' + built + ' built, ' + fresh + ' up to date');
 }
 
-main();
+// --export <label> dumps embedded textures for authoring; no arg runs the normal bake
+const exportIdx = process.argv.indexOf('--export');
+if (exportIdx >= 0)
+  exportTextures(process.argv[exportIdx + 1]);
+else
+  main();
