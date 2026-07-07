@@ -107,9 +107,11 @@ class Debug {
       '`  toggle debug off     F  fly on/off\n' +
       'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
       'B  inspect building / ground spot (report → clipboard)\n' +
+      'P  probe polygon: click a face → highlight + texture/UV view (upper-right)\n' +
       'E  UV editor   ·   in E-mode: wheel = offset, Ctrl+C copy, R reset\n' +
       '1  WYSIWYG lighting (bloom) toggle\n' +
-      '2  ambient   3  hemisphere   4  moon   (fill)   5  lamp point lights</div>' +
+      '2  ambient   3  hemisphere   4  moon   (fill)   5  lamp point lights\n' +
+      '0  all lights on/off</div>' +
       '</div>';
     Browser.document.body.appendChild(d);
     el = d;
@@ -122,6 +124,7 @@ class Debug {
     Tools.freeCam = freeCam; // __check.goto resolves the fly-cam through this
     Editor.attach(getScene, getCamera(), canvas);
     Inspector.attach(getScene, getCamera(), canvas, getCity, getSeed);
+    PolyProbe.attach(getScene, getCamera(), canvas);
     wireCyclers();
     attachDbg();
     toolsAttached = true;

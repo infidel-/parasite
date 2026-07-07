@@ -29,6 +29,7 @@ class StreetView {
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
   var pointLights:Array<Object3D>; // per-lamp point lights (debug 5 toggle)
+  var lightsOff = false; // debug 0: master off-state for all fill + point lights
   var city:City;
 
   var actorGroup:Group;
@@ -70,6 +71,12 @@ class StreetView {
       }
       else if (debug.on && e.code == 'Digit5' && pointLights != null)
         for (p in pointLights) p.visible = !p.visible;
+      // 0: master toggle — flip every fill + point light to one shared on/off state
+      else if (debug.on && e.code == 'Digit0' && fill != null && pointLights != null) {
+        lightsOff = !lightsOff;
+        for (f in fill) f.visible = !lightsOff;
+        for (p in pointLights) p.visible = !lightsOff;
+      }
     });
     // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
