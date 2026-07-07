@@ -27,6 +27,8 @@ class StreetView {
   var composer:EffectComposer;
   var bloomPass:UnrealBloomPass;
   var toggleLighting:Void->Bool;
+  var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
+  var pointLights:Array<Object3D>; // per-lamp point lights (debug 5 toggle)
   var city:City;
 
   var actorGroup:Group;
@@ -55,12 +57,19 @@ class StreetView {
     ensureCanvas();
     debug = new Debug(game, canvas, function() return camera,
       function() return scene, function() return city, function() return shownSeed);
-    // global debug hotkeys: ` toggles street-debug mode, 1 toggles WYSIWYG lighting
+    // global debug hotkeys: ` toggles street-debug mode, 1 toggles WYSIWYG lighting,
+    // 2/3/4 toggle the ambient / hemisphere / moon fill lights individually (isolate the point lights)
     Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
       if (!running) return;
       if (e.code == 'Backquote') setDebug(!debug.on);
       else if (debug.on && e.code == 'Digit1' && toggleLighting != null)
         bloomPass.enabled = !toggleLighting();
+      else if (debug.on && fill != null && (e.code == 'Digit2' || e.code == 'Digit3' || e.code == 'Digit4')) {
+        var i = e.code == 'Digit2' ? 0 : (e.code == 'Digit3' ? 1 : 2);
+        fill[i].visible = !fill[i].visible;
+      }
+      else if (debug.on && e.code == 'Digit5' && pointLights != null)
+        for (p in pointLights) p.visible = !p.visible;
     });
     // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
@@ -128,6 +137,8 @@ class StreetView {
     var bundle = SceneSetup.buildScene(renderer, city);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
+    fill = bundle.fill;
+    pointLights = bundle.pointLights;
     World.build(scene, city, seed);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings);

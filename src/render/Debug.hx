@@ -108,7 +108,8 @@ class Debug {
       'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
       'B  inspect building / ground spot (report → clipboard)\n' +
       'E  UV editor   ·   in E-mode: wheel = offset, Ctrl+C copy, R reset\n' +
-      '1  lighting (bloom) toggle</div>' +
+      '1  WYSIWYG lighting (bloom) toggle\n' +
+      '2  ambient   3  hemisphere   4  moon   (fill)   5  lamp point lights</div>' +
       '</div>';
     Browser.document.body.appendChild(d);
     el = d;

@@ -82,6 +82,18 @@ package three;
   public function traverse(cb:Object3D->Void):Void;
   public function applyMatrix4(m:Matrix4):Void;
   public function lookAt(v:Vector3):Void;
+  public function clone(?recursive:Bool):Object3D; // deep-copy (recursive default true)
+  public function updateMatrixWorld(?force:Bool):Void;
+}
+
+// axis-aligned bounding box (used to normalize loaded model scale/placement)
+@:native("THREE.Box3") extern class Box3 {
+  public function new();
+  public var min:Vector3;
+  public var max:Vector3;
+  public function setFromObject(o:Object3D):Box3;
+  public function getSize(target:Vector3):Vector3;
+  public function getCenter(target:Vector3):Vector3;
 }
 
 @:native("THREE.Scene") extern class Scene extends Object3D {
@@ -146,6 +158,16 @@ typedef RendererInfo = {
 }
 @:native("THREE.PointLight") extern class PointLight extends Object3D {
   public function new(color:Int, intensity:Float, ?distance:Float, ?decay:Float);
+}
+// conical light: emits from position within a cone aimed at `target` (must be in the scene graph
+// for its world matrix to update). angle = cone half-angle (rad), penumbra = soft edge 0..1
+@:native("THREE.SpotLight") extern class SpotLight extends Object3D {
+  public function new(color:Int, ?intensity:Float, ?distance:Float, ?angle:Float, ?penumbra:Float, ?decay:Float);
+  public var target:Object3D;   // the point the cone aims at
+  public var angle:Float;       // cone half-angle in radians
+  public var penumbra:Float;    // soft-edge fraction (0 = hard, 1 = fully soft)
+  public var distance:Float;    // falloff end
+  public var intensity:Float;
 }
 
 @:native("THREE.BoxGeometry") extern class BoxGeometry {
@@ -276,3 +298,11 @@ typedef Intersection = {
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();
 }
+// glb loader (re-exported onto the THREE global by the vendor bundle); gltf.scene is the root Group
+@:native("THREE.GLTFLoader") extern class GLTFLoader {
+  public function new();
+  public function load(url:String, onLoad:GLTF -> Void, ?onProgress:Dynamic -> Void, ?onError:Dynamic -> Void):Void;
+}
+typedef GLTF = {
+  var scene:Object3D; // root node of the loaded model
+};

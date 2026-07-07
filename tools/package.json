@@ -10,5 +10,9 @@
     "@gltf-transform/functions": "^4.1.0",
     "meshoptimizer": "^0.22.0",
     "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "three": "0.160.1"
   }
 }

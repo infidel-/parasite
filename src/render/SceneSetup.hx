@@ -17,6 +17,8 @@ typedef SceneBundle = {
   scene:Scene,
   toggleLighting:Void->Bool,
   setLightsOff:Void->Void,
+  fill:Array<Object3D>, // [ambient, hemisphere, moon] — the global fill lights (debug 2/3/4 toggles)
+  pointLights:Array<Object3D>, // per-lamp point lights (debug 5 toggle)
 };
 
 class SceneSetup {
@@ -60,18 +62,38 @@ class SceneSetup {
     var lights:Array<Object3D> = [];
     function add(l:Object3D):Object3D { lights.push(l); scene.add(l); return l; }
 
-    add(new AmbientLight(0x4a5874, 1.6));
-    add(new HemisphereLight(0x5a6a92, 0x1a2030, 1.3));
+    var pts:Array<Object3D> = []; // lamp point lights, kept as refs for the debug 5 toggle
+    // the global fill lights, kept as refs so debug hotkeys (2/3/4) can toggle them individually
+    var ambient = add(new AmbientLight(0x4a5874, 1.6));
+    var hemi = add(new HemisphereLight(0x5a6a92, 0x1a2030, 1.3));
     var moon = add(new DirectionalLight(0x8294c0, 0.8));
     moon.position.set(-1, 2, 1.5);
 
     for (lamp in city.lamps) {
       var w = CityConfig.cellToWorld(lamp.col, lamp.row);
-      var light = add(new PointLight(0xffb866, 45, CityConfig.CELL * 12, 1.6));
-      light.position.set(w.x, CityConfig.CELL * 1.6, w.z);
-      var bulb = new Mesh(new SphereGeometry(0.25, 8, 8), new MeshBasicMaterial({ color: 0xffd9a0 }));
-      bulb.position.copy(light.position);
-      scene.add(bulb);
+      var yaw = 0.0; // TODO: per-lamp facing (rotate model + light offset together)
+      // physical lamp post model, sized so its head sits near the light height
+      Models.place(scene, RenderConfig.MODELS.streetLamp, w.x, w.z, CityConfig.CELL * 1.6, yaw);
+      // conical spotlight at the bulb, aimed at a ground target so the cone is a downward street
+      // pool (not an omni glow on the post). bulb pos + ground target both use the local dx/dz|tdx/tdz
+      // knobs rotated by the lamp yaw
+      var L = RenderConfig.LAMP_LIGHT; // pairs with MODELS.streetLamp2 placed above
+      var cos = Math.cos(yaw), sin = Math.sin(yaw);
+      var light = new SpotLight(0xffb866, 45, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
+      light.position.set(w.x + L.dx * cos + L.dz * sin, CityConfig.CELL * L.yMul, w.z - L.dx * sin + L.dz * cos);
+      // aim target on the ground; must be in the scene graph for its world matrix to update
+      var tgt = new Group();
+      tgt.position.set(w.x + L.tdx * cos + L.tdz * sin, 0, w.z - L.tdx * sin + L.tdz * cos);
+      scene.add(tgt);
+      light.target = tgt;
+      add(light);
+      pts.push(light);
+      // tuning marker: small bright sphere at the light position to gauge it vs the model
+      if (L.markerVisible) {
+        var marker = new Mesh(new SphereGeometry(0.15, 8, 8), new MeshBasicMaterial({ color: 0xff2020 }));
+        marker.position.copy(light.position);
+        scene.add(marker);
+      }
     }
 
     // debug full-bright WYSIWYG: ambient intensity = π so albedo×1 = raw texel
@@ -88,6 +110,6 @@ class SceneSetup {
     };
     var setLightsOff = function():Void { for (l in lights) l.visible = false; };
 
-    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff };
+    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff, fill: [ambient, hemi, moon], pointLights: pts };
   }
 }

@@ -245,6 +245,40 @@ class RenderConfig {
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt
 
   // texture paths, grouped by role; arrays indexed by facade variant [concrete, brick]
+  // normal-map influence on loaded glb props: the maps are baked for hi-poly + have no tangents, and
+  // we decimate hard, so full strength lights faces that turn away. 0 = ignore (flat geo normals),
+  // 1 = full. tune down until the artifact clears
+  public static inline var MODEL_NORMAL_SCALE = 1.0;
+  // baked glb props (make models -> app/models/), loaded via render.Models
+  public static final MODELS = {
+    streetLamp: 'models/street-lamp.glb',
+    streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
+  };
+  // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
+  // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
+  // target offset by tdx/tdz (also local, rotated) — so the cone is a downward street pool, not an
+  // omni glow on the post. angle = cone half-angle (rad), penumbra = soft edge 0..1. one block per
+  // lamp model (different geometry = different bulb); SceneSetup pairs the placed model with a block
+  public static final LAMP_LIGHT = {         // pairs with MODELS.streetLamp
+    yMul: 1.4,   // light height = CityConfig.CELL * this
+    dx: -0.7,     // local +X offset toward the bulb (world units)
+    dz: 0.0,     // local +Z offset toward the bulb (world units)
+    angle: Math.PI / 5,  // cone half-angle (radians)
+    penumbra: 0.2,       // soft-edge fraction 0..1
+    tdx: 0.0,    // ground-target local +X offset (aim the pool along the street)
+    tdz: 0.0,    // ground-target local +Z offset
+    markerVisible: true, // draw a small red sphere at the light position (tuning aid)
+  };
+  public static final LAMP_LIGHT2 = {        // pairs with MODELS.streetLamp2 (PBR)
+    yMul: 1.4,
+    dx: 1.0,
+    dz: 0.0,
+    angle: Math.PI / 5,
+    penumbra: 0.1,
+    tdx: 0.0,
+    tdz: 0.0,
+    markerVisible: true,
+  };
   public static final TEXTURES = {
     asphalt: 'textures/ground-asphalt.png',     // road surface (no markings yet)
     walkway: 'textures/ground-walkway.png',     // sidewalk / plaza paving
