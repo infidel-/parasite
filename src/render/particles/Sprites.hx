@@ -17,7 +17,7 @@ typedef GroundSprite = { tex:CanvasTexture, fw:Float, fh:Float };
 // role the 2D CanvasRenderingContext2D plays for particles.Particle
 class Sprites {
   public static inline var SIZE = CityConfig.CELL * 0.85; // base quad size (scale multiplies it)
-  static inline var TILT = 0.6;                        // radians an upright sprite leans back toward the overhead camera
+  public static inline var TILT = 0.6;                 // radians an upright sprite leans back toward the overhead camera
   // transparent draw layering (higher = on top): ground decals < fake shadow < target markers <
   // upright actor icon. all these share this pool + depthWrite:false, so renderOrder (not Y) fixes
   // their stacking deterministically at any camera angle

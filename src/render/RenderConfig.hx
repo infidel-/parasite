@@ -151,8 +151,9 @@ class RenderConfig {
     lightPool: 5,           // fixed warm point-light count (idle at 0, never toggled -> no recompile)
     lightColor: 0xff7a1e,   // flame point-light tint
     lightIntensity: 26.0,   // base peak intensity (flicker modulates it)
-    lightDistance: 24.0,    // point-light reach (world units, ~6 cells)
+    lightDistance: 16.0,    // point-light reach (world units, 4 cells): falls to 0 by here (decay curve)
     lightRangeCells: 10,    // only barrels within this many cells of the player claim a pool light
+    litRangeCells: 4,       // an actor this many or more cells from a barrel gets no warm flicker glow (like shadows)
     rimY: 2.2,              // flame + light height above the barrel's ground (world units)
     // flicker: two summed sines on a raw-dt clock, per-barrel phase (freqs are per-ms)
     flickFreqA: 0.017,
@@ -169,7 +170,7 @@ class RenderConfig {
     // warm flicker the flame throws onto nearby actors (emissive on their own sprite, shaped + fading
     // with distance, pulsing with the flicker) — on top of the pooled point light's lit flicker
     litColor: 0xff8434,     // warm emissive tint on a lit actor
-    litStrength: 0.7,       // peak emissive intensity (0 = off); scales by flicker * distance falloff
+    litStrength: 0.3,       // peak emissive intensity (0 = off); scales by flicker * distance falloff
     // embers: one FlameEmber3D spawned ~every emberMs per visible barrel
     emberMs: 130.0,         // avg ms between ember spawns per barrel
     emberLife: 750.0,       // ember lifetime (ms)

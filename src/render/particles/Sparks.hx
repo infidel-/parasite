@@ -35,7 +35,7 @@ class Sparks {
 
 // draw a soft additive ember at (cx,cy,cz): the quad faces the camera and stretches `len` along
 // world velocity (vx,vy,vz), `width` across; tinted color at opacity op. len<=width => round dot
-  public function streak(cx:Float, cy:Float, cz:Float, vx:Float, vy:Float, vz:Float, len:Float, width:Float, color:Int, op:Float):Void
+  public function streak(cx:Float, cy:Float, cz:Float, vx:Float, vy:Float, vz:Float, len:Float, width:Float, color:Int, op:Float, order:Int = 0):Void
     {
       var m = pool[idx];
       if (m == null)
@@ -86,14 +86,16 @@ class Sparks {
       untyped m.quaternion.setFromRotationMatrix(mtx);
       m.position.set(cx, cy, cz);
       m.scale.set(len, width, 1);
+      m.renderOrder = order;
       m.visible = true;
       idx++;
     }
 
-// draw a Y-axis-billboard textured quad at (cx,cy,cz): width w, height h; keeps world-up vertical
-// and yaws to face the camera in the ground plane, so an upright texture (flame) reads upright.
+// draw an upright textured quad at (cx,cy,cz): width w, height h; fixed front-facing (no camera
+// yaw) and leaned back by Sprites.TILT toward the overhead camera, exactly like the actor sprites,
+// so the flame stays coplanar with — and glued to — its barrel from every camera angle.
 // tinted color, additive at opacity op. shares this pool with streak() — the flame body sprite
-  public function flameQuad(cx:Float, cy:Float, cz:Float, w:Float, h:Float, texture:Texture, color:Int, op:Float):Void
+  public function flameQuad(cx:Float, cy:Float, cz:Float, w:Float, h:Float, texture:Texture, color:Int, op:Float, order:Int = 0):Void
     {
       var m = pool[idx];
       if (m == null)
@@ -115,11 +117,15 @@ class Sparks {
       mat.opacity = op;
       untyped mat.color.setHex(color);
       untyped mat.map = texture;
-      // yaw about world up to face the camera; world-up stays the quad's vertical axis
-      var yaw = Math.atan2(camera.position.x - cx, camera.position.z - cz);
-      m.position.set(cx, cy, cz);
-      m.rotation.set(0, yaw, 0);
+      // fixed front-facing, leaned back by TILT — matches render.particles.Sprites upright actors.
+      // the tall flame is pivoted at its BASE (not center): shift the center so the base stays pinned
+      // to the barrel rim through the lean, or the top swings the base off the barrel
+      var half = h * 0.5;
+      var c = Math.cos(Sprites.TILT), s = Math.sin(Sprites.TILT);
+      m.position.set(cx, cy - half * (1 - c), cz - half * s);
+      m.rotation.set(-Sprites.TILT, 0, 0);
       m.scale.set(w, h, 1);
+      m.renderOrder = order;
       m.visible = true;
       idx++;
     }

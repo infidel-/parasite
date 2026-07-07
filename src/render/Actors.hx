@@ -270,7 +270,7 @@ class Actors {
       if (curBarrels.length == 0)
         return 0.0;
       var F = RenderConfig.FLAME;
-      var range = F.lightRangeCells * CityConfig.CELL;
+      var range = F.litRangeCells * CityConfig.CELL;
       var best = 0.0;
       for (b in curBarrels)
         {
@@ -323,19 +323,19 @@ class Actors {
       var baseY = b.floor + F.rimY;
       // soft glow halo at the rim (low additive alpha, centered — no sway)
       sparks.streak(b.x, baseY + F.bodyRise * 0.2, b.z, 0, 1, 0,
-        F.glowW, F.glowW, F.colorHot, F.glowAlpha * (0.6 + 0.4 * fl));
+        F.glowW, F.glowW, F.colorHot, F.glowAlpha * (0.6 + 0.4 * fl), Sprites.ORD_ACTOR);
       // outer flame layer: cooler + bigger, gentle vertical bob, base pinned at the rim
       var hO = F.bodyRise * 1.1 * (0.8 + 0.35 * fl);
       var wO = F.bodyW * 1.15 * (0.75 + 0.4 * fl);
       var bobO = Math.sin(flameT * 0.012 + b.phase) * 0.05 * F.bodyRise;
       sparks.flameQuad(b.x, baseY + hO * 0.5 + bobO, b.z, wO, hO, flameTex, F.colorTip,
-        F.bodyAlpha * (0.5 + 0.4 * fl) * 0.8);
+        F.bodyAlpha * (0.5 + 0.4 * fl) * 0.8, Sprites.ORD_ACTOR);
       // inner flame layer: hotter + smaller + shorter, faster bob
       var hI = F.bodyRise * 0.72 * (0.85 + 0.4 * fl2);
       var wI = F.bodyW * 0.7 * (0.7 + 0.5 * fl2);
       var bobI = Math.sin(flameT * 0.02 + b.phase * 1.7) * 0.06 * F.bodyRise;
       sparks.flameQuad(b.x, baseY + hI * 0.5 + bobI, b.z, wI, hI, flameTex, F.colorHot,
-        F.bodyAlpha * (0.6 + 0.4 * fl2));
+        F.bodyAlpha * (0.6 + 0.4 * fl2), Sprites.ORD_ACTOR);
     }
 
 // fake cast shadows: for every visible upright actor near a barrel, lay a black soft-edged copy of
