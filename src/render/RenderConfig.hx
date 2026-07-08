@@ -272,7 +272,31 @@ class RenderConfig {
     penumbra: 0.2,       // soft-edge fraction 0..1
     tdx: 0.0,    // ground-target local +X offset (aim the pool along the street)
     tdz: 0.0,    // ground-target local +Z offset
-    markerVisible: true, // draw a small red sphere at the light position (tuning aid)
+    markerVisible: false, // draw a small red sphere at the light position (tuning aid)
+  };
+  // volumetric shaft (render.LightCone): a hollow additive amber cone hung under the bulb, faking
+  // the cone of lit air the SpotLight can't render. radius = bulb height * tan(LAMP_LIGHT.angle) *
+  // radiusMul (matches the real cone). topA/botA = alpha fade down the shell (bulb -> ground)
+  public static final LAMP_CONE = {
+    opacity: 0.03,      // overall additive strength (keep under bloom threshold 0.9 * this)
+    color: 0xffb866,    // amber, matches the SpotLight color
+    topR: 0.2,         // min top radius — small so it reads as a cone, not a tube
+    radiusMul: 0.9,     // scale on the geometric ground radius (height * tan(angle)) to match the lit circle
+    startFrac: -0.1,     // where the shaft starts along the bulb->ground axis: 0 = at the bulb, 0.2 = a
+                        // fifth of the way down (lifts the top below the lamp fixture)
+    seg: 20,            // radial segments (roundness of the shell)
+    topA: 0.9,          // alpha at the top (brightest)
+    botA: 0.05,         // alpha at the ground (faintest)
+  };
+  // fake shadows cast from lamps (render.particles.CastShadows), mirroring the barrel shadow block
+  // above. overhead light -> short shadows, small pool: an actor this many cells from the lamp base
+  // casts none. steady (no flicker)
+  public static final LAMP_SHADOW = {
+    max: 2,             // at most this many lamp shadows per actor (its nearest lamps)
+    rangeCells: 2,      // a lamp this many or more cells away casts no shadow on the actor
+    lenMul: 0.6,        // shadow length = sprite world-height * this * distance falloff (overhead = short)
+    op: 0.8,            // per-shadow opacity
+    fade: 0.3,          // outer fraction of the range over which a shadow eases to 0
   };
   public static final LAMP_LIGHT2 = {        // pairs with MODELS.streetLamp2 (PBR)
     yMul: 1.4,

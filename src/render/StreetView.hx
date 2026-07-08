@@ -167,6 +167,7 @@ class StreetView {
     scene.add(actorGroup);
     // fresh area: new actor layer so billboards/slides/effects start clean
     actors = new Actors(game, actorGroup, camera);
+    actors.setLamps(pointLights); // lamps cast fake shadows too (mirrors barrels)
     // seed-derived street debris (render-only, deterministic from the seed — no save cost); old
     // seedless saves (seed -1) skip it
     if (seed != -1)

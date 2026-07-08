@@ -50,6 +50,7 @@ package three;
 @:native("THREE.Quaternion") extern class Quaternion {
   public function new();
   public function setFromAxisAngle(axis:Vector3, angle:Float):Quaternion;
+  public function setFromUnitVectors(from:Vector3, to:Vector3):Quaternion;
   public function setFromEuler(e:Euler):Quaternion;
   public function multiply(q:Quaternion):Quaternion;
   public function copy(q:Quaternion):Quaternion;

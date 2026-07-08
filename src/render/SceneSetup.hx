@@ -88,6 +88,10 @@ class SceneSetup {
       light.target = tgt;
       add(light);
       pts.push(light);
+      // volumetric shaft: hollow additive cone aimed down the same bulb->target axis as the light,
+      // so its base matches the lit circle. parented to the light, so it toggles with it
+      var lh = CityConfig.CELL * L.yMul;
+      LightCone.add(light, tgt.position.x, tgt.position.z, lh * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul);
       // tuning marker: small bright sphere at the light position to gauge it vs the model
       if (L.markerVisible) {
         var marker = new Mesh(new SphereGeometry(0.15, 8, 8), new MeshBasicMaterial({ color: 0xff2020 }));
