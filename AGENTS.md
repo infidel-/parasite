@@ -5,6 +5,10 @@
 - `make testmod`: `cd examples/testmod/ && make`
 - `make main`: `cd electron && make`
 
+## Driving the running game (CDP / smoke-test)
+- The Electron app runs with `--remote-debugging-port=9300`; the `chrome-devtools` MCP is wired to it (`172.18.208.1:9300`, WSL→Windows host). After `make reload`, drive/inspect the live app with `mcp__chrome-devtools__*` (`list_pages` → `evaluate_script` / `click` / `list_console_messages`) to smoke-test clicks and catch runtime exceptions.
+- `list_pages` shows both the game (`file:.../app.html`) and, if open, DevTools — match `file:` + `app.html`. First MCP call may transient-fail; retry once.
+
 - NEVER detach HEAD! NEVER!
 - ALWAYS respond in English!
 - ALWAYS run tests at the end of each task: cd src/ && make

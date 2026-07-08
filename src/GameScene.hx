@@ -99,13 +99,11 @@ class GameScene
       // init sound
       sounds = new Sounds(this);
 
-      // partial game init
-      game.init(true);
-
       // update AI hear, view distance
       // clamp so that 4k players do not have it hard
-      var xmin = cameraTileX2 - cameraTileX1;
-      var ymin = cameraTileY2 - cameraTileY1;
+      // derive visible span from canvas (no area yet: world builds on New Game/Load)
+      var xmin = Std.int(canvas.width / Const.TILE_SIZE);
+      var ymin = Std.int(canvas.height / Const.TILE_SIZE);
       ai.AI.VIEW_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) / 2.5);
       ai.AI.HEAR_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) * 1.5 / 2.5);
       if (ai.AI.VIEW_DISTANCE > 6)
@@ -446,6 +444,8 @@ class GameScene
 // common clear path (both images and list)
   public inline function clearPath()
     {
+      if (!game.isInited)
+        return;
       area.clearPath(true);
       region.clearPath(true);
     }
