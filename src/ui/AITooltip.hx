@@ -14,6 +14,11 @@ class AITooltip extends BeamTooltip
 // show area AI tooltip when inspect mode is active
   public function update()
     {
+      // the 3D street view drives its own hover tooltip (projected anchor via StreetView.loop);
+      // the 2D tile mapping is wrong under the perspective camera, so stand down there
+      if (game.scene.city3d != null &&
+          game.scene.city3d.running)
+        return;
       if (!hud.isAIInspectMode())
         {
           hide();
@@ -46,8 +51,8 @@ class AITooltip extends BeamTooltip
       showBeam(ai.x, ai.y, ai.id, getTooltipText(ai));
     }
 
-// get tooltip HTML for hovered AI
-  function getTooltipText(ai: AI): String
+// get tooltip HTML for hovered AI (public: the 3D street-view hover driver reuses it verbatim)
+  public function getTooltipText(ai: AI): String
     {
       var buf = new StringBuf();
       // header: name + optional cultist mark

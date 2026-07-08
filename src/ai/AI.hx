@@ -471,6 +471,68 @@ public function show()
     }
 
 
+// ordered active entity badges (alert / npc / cultist / effect) for the world entity. shared
+// source for the 3D street-view badge pass; mirrors the 2D AIEntity.draw ordering + updateEntity's
+// alert-frame pick. alert + npc carry a UISvg glyph key (scalable 3D render); effect + cultist are
+// left as PNG atlas cells (svg == null)
+  public function getBadges(): Array<_Badge>
+    {
+      var out: Array<_Badge> = [];
+      // alert badge: same pick as updateEntity, then the search-state glyph override
+      var alertFrame = Const.FRAME_EMPTY;
+      if (state == AI_STATE_ALERT ||
+          state == AI_STATE_SEARCH_LAST_SEEN ||
+          state == AI_STATE_SEARCH_AREA)
+        alertFrame = Const.FRAME_ALERTED;
+      else if (state == AI_STATE_IDLE ||
+          state == AI_STATE_MOVE_TARGET ||
+          state == AI_STATE_INVESTIGATE)
+        {
+          if (alertness > 75)
+            alertFrame = Const.FRAME_ALERT3;
+          else if (alertness > 50)
+            alertFrame = Const.FRAME_ALERT2;
+          else if (alertness > 0)
+            alertFrame = Const.FRAME_ALERT1;
+        }
+      if (game.managerArea.hasAI(this, AREAEVENT_CALL_LAW) ||
+          game.managerArea.hasAI(this, AREAEVENT_CALL_BACKUP) ||
+          game.managerArea.hasAI(this, AREAEVENT_CALL_TEAM_BACKUP))
+        alertFrame = Const.FRAME_CALLING;
+      if (alertFrame != Const.FRAME_EMPTY)
+        {
+          if (state == AI_STATE_SEARCH_LAST_SEEN ||
+              state == AI_STATE_SEARCH_AREA)
+            out.push({ col: Const.FRAME_SEARCH, row: Const.ROW_EFFECT, svg: 'search' });
+          else out.push({ col: alertFrame, row: Const.ROW_ALERT, svg: alertSvg(alertFrame) });
+        }
+      // npc / mission-target marker
+      if (isNPC || entity.isMissionTarget)
+        out.push({ col: Const.FRAME_EVENT_NPC_AREA, row: Const.ROW_REGION_ICON, svg: 'npc' });
+      // cultist mark (png)
+      if (isPlayerCultist())
+        out.push({ col: Const.FRAME_CULTIST0, row: Const.ROW_EFFECT });
+      else if (isCultist)
+        out.push({ col: Const.FRAME_CULTIST_UNKNOWN, row: Const.ROW_EFFECT });
+      // active effect icon (png; single or MULTIPLE)
+      var eff = effects.getIcon();
+      if (eff != null)
+        out.push({ col: eff.col, row: eff.row });
+      return out;
+    }
+
+// map an alert atlas frame to its UISvg glyph key (3D scalable render)
+  inline function alertSvg(frame: Int): String
+    {
+      if (frame == Const.FRAME_ALERT1) return 'alert1';
+      if (frame == Const.FRAME_ALERT2) return 'alert2';
+      if (frame == Const.FRAME_ALERT3) return 'alert3';
+      if (frame == Const.FRAME_ALERTED) return 'alerted';
+      if (frame == Const.FRAME_CALLING) return 'calling';
+      return null;
+    }
+
+
 // ===================================  LOGIC  =======================================
 
 // logic: roam around (default)

@@ -34,6 +34,7 @@ package three;
   public function addScaledVector(v:Vector3, s:Float):Vector3;
   public function applyQuaternion(q:Quaternion):Vector3;
   public function applyMatrix4(m:Matrix4):Vector3;
+  public function project(cam:Object3D):Vector3;
   public function lerp(v:Vector3, a:Float):Vector3;
   public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
 }

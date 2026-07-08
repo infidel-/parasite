@@ -585,6 +585,7 @@ hr {
 /* area AI inspect tooltip content (panel shell from .beam-tip) */
 #hud-ai-info {
   max-width: min(44vw, 40ch);
+  font-size: calc(var(--tip-font-size) * 0.85);
 }
 .ai-tip-head {
   display: flex;

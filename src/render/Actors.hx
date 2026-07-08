@@ -12,6 +12,9 @@ import entities.Entity;
 import ai.AI;
 import objects.AreaObject;
 
+// per-AI badge anim: last badge-set signature (change detection) + the active change-pop (null idle)
+typedef BadgeAnim = { sig:String, pop:render.anim.Effect };
+
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
 // position slide + opacity fade + optional transient effect. owns the per-actor anim state and
 // paints through a shared Billboards surface; transient FX (blood, death crossfade) live in a
@@ -38,6 +41,10 @@ class Actors {
   var debris:Array<render.world.Debris.DebrisSpot> = null; // seed-derived street debris (render-only, not persisted)
   var flameLights:FlameLights = null;                   // pooled warm barrel lights (low-tier only; null elsewhere)
   var flameT:Float = 0.0;                               // shared flame clock (ms, raw dt) — flicker/embers/shadows sync to it
+  var badgeT:Float = 0.0;                               // badge anim clock (turn units, anim-speed scaled) — looping pulses
+  // per-AI badge change-pop state (last signature + active pop). ponytail: dead AI linger like the
+  // actors map, dropped whole on area rebuild
+  var badgeAnims:haxe.ds.ObjectMap<Entity, BadgeAnim> = new haxe.ds.ObjectMap();
   var flameTex:Texture = null;                          // barrel flame sprite (lazy-loaded once)
   var curBarrels:Array<FlameBarrel> = [];               // this frame's visible barrels (gathered once, reused by lit/body/shadow)
   var lampSrc:Array<Object3D> = null;                   // area's lamp spotlights (from StreetView) — cast fake shadows too
@@ -105,6 +112,7 @@ class Actors {
       gatherBarrels();
       if (curBarrels.length > 0)
         flameT += dtMs;
+      badgeT += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS; // turn-unit clock for badge pulses
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
@@ -140,7 +148,10 @@ class Actors {
               game.playerArea.sees(ai.x, ai.y);
             drawActor(ai.entity, vis, dtMs);
             if (vis)
-              drawAITarget(ai);
+              {
+                drawAITarget(ai);
+                drawBadges(ai, dtMs);
+              }
           }
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
@@ -547,6 +558,156 @@ class Actors {
         sprites.paint(a.x, floor + 0.06, a.z,
           sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false),
           1.0, TARGET_SCALE, true, 0.0, Sprites.ORD_MARK);
+    }
+
+// paint the AI's status badges (alert / npc / cultist / effect) as a small row of upright quads
+// just above its head. alert + npc render from scalable SVG (color-coded by state), effect +
+// cultist from the PNG atlas. mirrors the 2D AIEntity.draw badge stack. see ai.AI.getBadges
+  function drawBadges(ai:AI, dtMs:Float):Void
+    {
+      var a = actors.get(ai.entity);
+      if (a == null ||
+          a.op < 0.05)
+        return;
+      var badges = ai.getBadges();
+      // per-AI change-pop: pop the row whenever the badge set changes (alert level up/down, a new
+      // marker) — but not on first sight (settled silently) or when it clears to nothing
+      var ba = badgeAnims.get(ai.entity);
+      var sig = badgeSig(badges);
+      if (ba == null)
+        {
+          ba = { sig: sig, pop: null };
+          badgeAnims.set(ai.entity, ba);
+        }
+      else if (ba.sig != sig)
+        {
+          ba.sig = sig;
+          if (sig != '')
+            ba.pop = new Pop(RenderConfig.BASE_MS * 1.0);
+        }
+      if (badges.length == 0)
+        {
+          ba.pop = null;
+          return;
+        }
+      // advance the change-pop (row-wide scale bounce), clear when done
+      var popScale = 1.0;
+      if (ba.pop != null)
+        {
+          if (ba.pop.advance(dtMs))
+            ba.pop = null;
+          else popScale = ba.pop.scale;
+        }
+      var scale = 0.32;
+      // anchor the row along the camera's up/right axes (screen-space), not a fixed world +Y: the
+      // camera pitch flattens as it zooms in (CameraRig), which foreshortens a world-Y offset and
+      // drops the badges onto the forehead. a screen-up lift stays above the head at any pitch/zoom
+      var up = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);   // world dir = up on screen
+      var right = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion); // world dir = right on screen
+      var lift = Sprites.SIZE * 0.62;                                     // clears the head at any pitch
+      var spread = Sprites.SIZE * scale * 0.95;                           // per-badge screen-horizontal step
+      var bx = a.x + up.x * lift;                                         // head centre + screen-up lift
+      var by = WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5 + up.y * lift;
+      var bz = a.z + up.z * lift;
+      var s0 = -(badges.length - 1) / 2;                                 // centre the row
+      // looping pulse phase for the calling badge (period ~1.6 turn, anim-speed scaled via badgeT)
+      var wave = Math.sin(badgeT / 1.6 * 2 * Math.PI);
+      for (i in 0...badges.length)
+        {
+          var b = badges[i];
+          var tex = (b.svg != null)
+            ? badgeSvgTex(b.svg)
+            : sprites.tex('entities', b.col, b.row, false);
+          if (tex == null) // svg still decoding / atlas not ready — hole stays stable (index-placed)
+            continue;
+          var sc = scale * popScale;
+          var em = 1.0;
+          // calling: pulsating waves — breathe the glyph + glow so it reads as an active broadcast
+          if (b.svg == 'calling')
+            {
+              sc *= 1 + 0.16 * wave;
+              em = 0.8 + 0.5 * (0.5 + 0.5 * wave);
+            }
+          // self-lit (emissive white, shaped by the badge's own texture) so UI badges stay legible
+          // at night; depthTest off so a wall in front never occludes the marker (always-on-top UI)
+          var off = (s0 + i) * spread;
+          sprites.paint(bx + right.x * off, by + right.y * off, bz + right.z * off,
+            tex, a.op, sc, false, 0.0, Sprites.ORD_ACTOR, 0xffffff, em, false);
+        }
+    }
+
+// signature of a badge set (glyph keys / atlas cells) to detect changes for the status-change pop
+  inline function badgeSig(badges:Array<_Badge>):String
+    {
+      var s = '';
+      for (b in badges)
+        s += (b.svg != null ? b.svg : b.col + '_' + b.row) + ',';
+      return s;
+    }
+
+// rasterize a badge glyph (UISvg.badge) recolored to its state color, cached at a fixed px edge.
+// inject xmlns (a standalone data: <img> is parsed as bare XML — the UISvg glyphs omit it since
+// inline DOM infers it) + explicit width/height (a viewBox-only SVG can decode to naturalWidth 0)
+  inline function badgeSvgTex(key:String):CanvasTexture
+    {
+      var svg = StringTools.replace(ui.UISvg.badge(key), 'currentColor', badgeColor(key));
+      svg = StringTools.replace(svg, '<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" ');
+      return sprites.svgTex('svg:' + key, svg, 128);
+    }
+
+// state color for an SVG badge glyph — matches the 2D atlas art: "?" ramps white->yellow->orange
+// as alertness rises, "!"/search/calling are red. npc is self-colored (ignored here)
+  inline function badgeColor(key:String):String
+    {
+      // muted HUD tokens (app.css) not pure primaries, so badges read native to the moody palette
+      if (key == 'alert1') return '#eaebed';   // body-white — first suspicion (--text)
+      if (key == 'alert2') return '#e0b34a';   // amber (--text-color-time)
+      if (key == 'alert3') return '#ec894e';   // muted orange, between amber and alert-red
+      if (key == 'alerted') return '#f26a6a';  // danger-red — fully alerted (--text-color-alert)
+      if (key == 'search') return '#f26a6a';   // danger-red — hunting last-seen
+      if (key == 'calling') return '#f26a6a';  // danger-red — calling backup
+      return '#eaebed';
+    }
+
+// find the visible AI whose head projects nearest the given client point (within a px radius);
+// returns the AI + its projected client px (the tooltip beam anchor), or null. project-nearest
+// rather than raycasting the transparent, entity-less billboard quads
+  public function pickAI(clientX:Float, clientY:Float, rect:Dynamic):{ ai:AI, px:Float, py:Float }
+    {
+      var best:AI = null;
+      var bestPx = 0.0, bestPy = 0.0, bestD = 1e30;
+      var rad = 46.0;                                            // px hit radius around a head
+      var los = game.player.vars.losEnabled;
+      var v = new Vector3();
+      for (ai in game.area.getAllAI())
+        {
+          if (ai.entity == null ||
+              (los && !game.playerArea.sees(ai.x, ai.y)))
+            continue;
+          var a = actors.get(ai.entity);
+          if (a == null ||
+              a.op < 0.3)
+            continue;
+          v.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+          v.project(camera);
+          if (v.z > 1)                                          // behind the camera
+            continue;
+          var sx = rect.left + (v.x * 0.5 + 0.5) * rect.width;
+          var sy = rect.top + (-v.y * 0.5 + 0.5) * rect.height;
+          var dx = sx - clientX, dy = sy - clientY;
+          var d = dx * dx + dy * dy;
+          if (d < bestD &&
+              d <= rad * rad)
+            {
+              bestD = d;
+              best = ai;
+              bestPx = sx;
+              bestPy = sy;
+            }
+        }
+      if (best == null)
+        return null;
+      return { ai: best, px: bestPx, py: bestPy };
     }
 
 // throw a burst of blood from a target cell, biased away from the attacker; drops arc and

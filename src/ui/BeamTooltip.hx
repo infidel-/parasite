@@ -28,6 +28,11 @@ class BeamTooltip
   var tileY: Int;
   // current beam target id, to detect target changes for re-animation
   var targetID: Int;
+  // screen-anchored mode (3D street view): anchor is a fixed viewport px point (projected AI head)
+  // instead of a tile; updatePosition trusts anchorX/anchorY rather than the 2D tile->camera math
+  var screenAnchored: Bool;
+  var anchorX: Float;
+  var anchorY: Float;
   // pending fade-out timer (cancelled if the panel re-shows in time)
   var hideTimer: haxe.Timer;
 
@@ -39,6 +44,9 @@ class BeamTooltip
       tileX = 0;
       tileY = 0;
       targetID = -1;
+      screenAnchored = false;
+      anchorX = 0;
+      anchorY = 0;
 
       overlay = Browser.document.createDivElement();
       overlay.className = 'text beam-tip ' + extraClass;
@@ -73,6 +81,7 @@ class BeamTooltip
 // show the panel anchored to a tile, with html content and a target id for change detection
   function showBeam(tx: Int, ty: Int, id: Int, html: String)
     {
+      screenAnchored = false;
       // same target while already shown: keep the beam tracking, no re-animation
       if (visible &&
           tx == tileX &&
@@ -108,6 +117,44 @@ class BeamTooltip
         }
       overlay.classList.add('visible');
       // incoming beam draws in (old one animates out simultaneously)
+      restartBeam();
+    }
+
+// show the panel anchored at a fixed viewport px point (3D street view: the projected AI head)
+// instead of a tile. id detects target changes for re-animation; the driver re-calls each frame so
+// the anchor tracks the follow-camera
+  public function showBeamAt(cx: Float, cy: Float, id: Int, html: String)
+    {
+      screenAnchored = true;
+      anchorX = cx;
+      anchorY = cy;
+      // same target while shown: just re-place (the anchor moves as the camera eases)
+      if (visible &&
+          id == targetID)
+        {
+          updatePosition();
+          return;
+        }
+      overlay.innerHTML = html;
+      if (hideTimer != null)
+        {
+          hideTimer.stop();
+          hideTimer = null;
+        }
+      overlay.style.display = 'block';
+      linkEl.style.display = 'block';
+      var wasVisible = visible;
+      if (wasVisible)
+        snapshotOldBeam();
+      targetID = id;
+      visible = true;
+      updatePosition();
+      if (!wasVisible)
+        {
+          overlay.classList.remove('visible');
+          untyped overlay.offsetWidth;
+        }
+      overlay.classList.add('visible');
       restartBeam();
     }
 
@@ -156,11 +203,24 @@ class BeamTooltip
       if (!visible)
         return;
       var ratio = Browser.window.devicePixelRatio;
-      var ts = Const.TILE_SIZE;
-      // tile center in viewport css px (cameraX/cameraY are device px)
-      var cx = (tileX * ts + ts / 2 - game.scene.cameraX) / ratio;
-      var cy = (tileY * ts + ts / 2 - game.scene.cameraY) / ratio;
-      var half = (ts / 2) / ratio;
+      var cx: Float;
+      var cy: Float;
+      var half: Float;
+      // 3D street view: anchor is a fixed projected px point; half is ~a head for the placement gap
+      if (screenAnchored)
+        {
+          cx = anchorX;
+          cy = anchorY;
+          half = 18.0;
+        }
+      // 2D: tile center in viewport css px (cameraX/cameraY are device px)
+      else
+        {
+          var ts = Const.TILE_SIZE;
+          cx = (tileX * ts + ts / 2 - game.scene.cameraX) / ratio;
+          cy = (tileY * ts + ts / 2 - game.scene.cameraY) / ratio;
+          half = (ts / 2) / ratio;
+        }
       var vw = Browser.window.innerWidth;
       var vh = Browser.window.innerHeight;
       var w: Float = overlay.offsetWidth;
@@ -203,22 +263,32 @@ class BeamTooltip
             bestT = t;
           }
       };
-      // exact preferred placements first (precise when clear), then a coarse grid
-      tryPos(idealLeft, idealTop);
-      tryPos(cx - half - gap - w, cy - h / 2 + dir * half);
-      tryPos(cx - w / 2, cy + half + gap);
-      tryPos(cx - w / 2, cy - half - gap - h);
-      var step = 48.0;
-      var gy = MARGIN;
-      while (gy <= vh - MARGIN - h)
+      // 3D street view: lock the panel to the AI's side (no far-flung relocation), just clamped
+      // into view. 2D: search the viewport for the clear spot nearest the ideal
+      if (screenAnchored)
         {
-          var gx = MARGIN;
-          while (gx <= vw - MARGIN - w)
+          bestL = Math.max(MARGIN, Math.min(idealLeft, vw - MARGIN - w));
+          bestT = Math.max(MARGIN, Math.min(idealTop, vh - MARGIN - h));
+        }
+      else
+        {
+          // exact preferred placements first (precise when clear), then a coarse grid
+          tryPos(idealLeft, idealTop);
+          tryPos(cx - half - gap - w, cy - h / 2 + dir * half);
+          tryPos(cx - w / 2, cy + half + gap);
+          tryPos(cx - w / 2, cy - half - gap - h);
+          var step = 48.0;
+          var gy = MARGIN;
+          while (gy <= vh - MARGIN - h)
             {
-              tryPos(gx, gy);
-              gx += step;
+              var gx = MARGIN;
+              while (gx <= vw - MARGIN - w)
+                {
+                  tryPos(gx, gy);
+                  gx += step;
+                }
+              gy += step;
             }
-          gy += step;
         }
       var left = bestL;
       var top = bestT;
@@ -255,6 +325,7 @@ class BeamTooltip
         return;
       visible = false;
       targetID = -1;
+      screenAnchored = false;
       overlay.classList.remove('visible');
       linkEl.classList.remove('show');
       if (hideTimer != null)

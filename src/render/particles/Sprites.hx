@@ -29,7 +29,8 @@ class Sprites {
   var game:Game;                                        // for the sprite-atlas image provider
   var actorGroup:Group;                                 // scene group holding all sprite quads
   var pool:Array<Mesh> = [];                            // reused quad meshes
-  var texCache:Map<String, CanvasTexture> = new Map();  // atlas-crop -> texture
+  var texCache:Map<String, CanvasTexture> = new Map();  // atlas-crop / svg -> texture
+  var svgImgs:Map<String, Dynamic> = new Map();         // svg cache key -> decoding <img> (async)
   var contentCache:Map<String, GroundSprite> = new Map(); // atlas-crop -> content-trimmed sprite
   var shadowCache:Map<String, GroundSprite> = new Map();  // atlas-crop -> black soft-edged silhouette
   var idx:Int = 0;                                      // next free pool slot this frame
@@ -54,7 +55,7 @@ class Sprites {
 // place/reuse a sprite quad at world (wx,wy,wz): texture tex, opacity op, uniform scale (of
 // SIZE); flat lays it on the ground as a decal (yaw rotates it there). no-op if the atlas
 // isn't decoded yet (tex == null) — the slot is not consumed
-  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0):Void
+  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true):Void
     {
       if (tex == null) return;
       var m = slot(tex, op, wx, wy, wz, scale);
@@ -70,6 +71,8 @@ class Sprites {
       var mat:Dynamic = m.material;
       untyped mat.emissive.setHex(emissive);
       mat.emissiveIntensity = emissiveInt;
+      // depthTest off = always-on-top UI (entity badges): never occluded by walls in front
+      untyped mat.depthTest = depthTest;
       m.visible = true;
       idx++;
     }
@@ -163,6 +166,7 @@ class Sprites {
       untyped mat.emissiveMap = tex;
       untyped mat.emissive.setHex(0);
       mat.emissiveIntensity = 0;
+      untyped mat.depthTest = true;
       m.renderOrder = 0;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
@@ -189,6 +193,33 @@ class Sprites {
       cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
       if (mul < 1.0)
         darkenCanvas(cx, t, t, mul);
+      var tex = new CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      texCache.set(key, tex);
+      return tex;
+    }
+
+// rasterize a fully-colored inline SVG string to a cached CanvasTexture at px edge; null until the
+// SVG <img> decodes (retry next frame, like tex()). key uniquely ids the svg markup + px. lets
+// entity badges scale crisply (SVG source) instead of baking to a fixed atlas cell
+  public function svgTex(key:String, svg:String, px:Int):CanvasTexture
+    {
+      if (texCache.exists(key)) return texCache.get(key);
+      var img:Dynamic = svgImgs.get(key);
+      if (img == null)
+        {
+          img = Browser.document.createElement('img');
+          img.src = 'data:image/svg+xml;charset=utf-8,' + StringTools.urlEncode(svg);
+          svgImgs.set(key, img);
+        }
+      // retry next frame until the async decode completes
+      if (!img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = px; cv.height = px;
+      var cx = cv.getContext('2d');
+      cx.drawImage(img, 0, 0, px, px);
       var tex = new CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;
       texCache.set(key, tex);

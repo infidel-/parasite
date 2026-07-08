@@ -45,6 +45,8 @@ class StreetView {
   public static var DEBUG_HOLES = false; // [wallhole] trace each wall tracer impact + hole decision (toggle: `perf hole`)
 
   public var running(default, null):Bool = false;
+  var svMouseX:Float = 0;                                 // last cursor client px over #streetview (AI-hover tooltip anchor)
+  var svMouseY:Float = 0;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
   var _lastProgs = 0;     // shader program count last frame; a jump == a (re)compile stall (perf street)
@@ -82,6 +84,12 @@ class StreetView {
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
       if (!running || debug.on || rig == null) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
+    });
+    // track the cursor over #streetview in raw client px for the AI-hover tooltip (the shared 2D
+    // game.scene.mouseX/Y is device-px and stale here — #streetview sits over #canvas)
+    canvas.addEventListener('mousemove', function(e:js.html.MouseEvent) {
+      svMouseX = e.clientX;
+      svMouseY = e.clientY;
     });
   }
 
@@ -547,6 +555,25 @@ class StreetView {
         actors.seedFadeIn(e);
     }
 
+// drive the AI-hover tooltip while inspecting (Ctrl held): pick the AI nearest the cursor and
+// anchor the DOM panel at its projected head px. runs every frame so the beam tracks the
+// follow-camera. the 2D AITooltip stands down while this view runs (see AITooltip.update)
+  function updateHoverTooltip():Void {
+    var tip = game.ui.hud.aiTooltip;
+    // not inspecting (no Ctrl / window open / mouse off): make sure it's hidden
+    if (!game.ui.hud.isAIInspectMode()) {
+      tip.hide();
+      return;
+    }
+    var rect:Dynamic = canvas.getBoundingClientRect();
+    var hit = actors.pickAI(svMouseX, svMouseY, rect);
+    if (hit == null) {
+      tip.hide();
+      return;
+    }
+    tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
+  }
+
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
     if (renderer == null) return;
@@ -622,6 +649,7 @@ class StreetView {
       }
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
     actors.update(dtMs);
+    updateHoverTooltip();
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
     // turn/street-actor profilers — catch it here. a jump in the program count == a compile.
