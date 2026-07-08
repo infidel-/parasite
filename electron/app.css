@@ -6551,6 +6551,9 @@ select {
   margin: 0;
   font-size: var(--text-font-size);
   line-height: 1.5;
+  /* reserve tallest flavor (5-line scenario A) so shorter scenarios don't shrink the window */
+  min-height: calc(1.5em * 5);
+  box-sizing: content-box;
   font-style: italic;
   color: color-mix(in srgb, var(--newgame-accent) 32%, #e6e8f0);
   background: color-mix(in srgb, var(--newgame-accent) 9%, rgba(6,4,12,.5));
