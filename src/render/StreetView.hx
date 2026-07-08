@@ -28,8 +28,10 @@ class StreetView {
   var bloomPass:UnrealBloomPass;
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
-  var pointLights:Array<Object3D>; // per-lamp point lights (debug 5 toggle)
+  var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
+  var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
+  var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
   var city:City;
 
   var actorGroup:Group;
@@ -154,6 +156,8 @@ class StreetView {
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
     pointLights = bundle.pointLights;
+    lampLights = bundle.lampLights;
+    lampPosts = bundle.lampPosts;
     World.build(scene, city, seed);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings);
@@ -175,7 +179,6 @@ class StreetView {
     scene.add(actorGroup);
     // fresh area: new actor layer so billboards/slides/effects start clean
     actors = new Actors(game, actorGroup, camera);
-    actors.setLamps(pointLights); // lamps cast fake shadows too (mirrors barrels)
     // seed-derived street debris (render-only, deterministic from the seed — no save cost); old
     // seedless saves (seed -1) skip it
     if (seed != -1)
@@ -648,6 +651,10 @@ class StreetView {
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
+    // park the live-spotlight pool on the nearest lamps to the player, then hand the lit ones to the
+    // actor layer so it casts fake shadows only from lamps that are actually lit this frame
+    lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y);
+    actors.setLamps(lampLights.active());
     actors.update(dtMs);
     updateHoverTooltip();
 

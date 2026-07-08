@@ -4,6 +4,8 @@ import three.Three;
 import js.Browser;
 import citygen.CityConfig;
 import citygen.CityModel.City;
+import render.particles.LampLights;
+import render.particles.LampPost;
 
 // persistent renderer + camera (created once; the WebGL context is expensive and
 // browsers cap the number, so it is reused across area entries)
@@ -18,7 +20,9 @@ typedef SceneBundle = {
   toggleLighting:Void->Bool,
   setLightsOff:Void->Void,
   fill:Array<Object3D>, // [ambient, hemisphere, moon] — the global fill lights (debug 2/3/4 toggles)
-  pointLights:Array<Object3D>, // per-lamp point lights (debug 5 toggle)
+  pointLights:Array<Object3D>, // lamp spotlight pool + cone group (debug 5 toggle)
+  lampLights:LampLights, // fixed live-spotlight pool, ticked per frame to follow the player
+  lampPosts:Array<LampPost>, // every placed lamp (bulb world x/z + cell) for the pool
 };
 
 class SceneSetup {
@@ -69,36 +73,37 @@ class SceneSetup {
     var moon = add(new DirectionalLight(0x8294c0, 0.8));
     moon.position.set(-1, 2, 1.5);
 
+    // street lamps: MANY cheap posts + cones (instanced) decoupled from a small FIXED pool of live
+    // spotlights that follow the player (render.particles.LampLights), so the city can place hundreds
+    // of lamps while NUM_SPOT_LIGHTS stays constant. yaw faces the post toward its road (Lamp.dir);
+    // the bulb is pushed out over the road edge (local dz rotated by yaw) so the light lands on the road
+    var L = RenderConfig.LAMP_LIGHT;
+    var coneGroup = new Group();
+    scene.add(coneGroup);
+    var lampPosts:Array<LampPost> = [];
+    var placements:Array<{ x:Float, z:Float, yaw:Float }> = [];
+    var bulbs:Array<{ x:Float, z:Float }> = [];
     for (lamp in city.lamps) {
       var w = CityConfig.cellToWorld(lamp.col, lamp.row);
-      var yaw = 0.0; // TODO: per-lamp facing (rotate model + light offset together)
-      // physical lamp post model, sized so its head sits near the light height
-      Models.place(scene, RenderConfig.MODELS.streetLamp, w.x, w.z, CityConfig.CELL * 1.6, yaw);
-      // conical spotlight at the bulb, aimed at a ground target so the cone is a downward street
-      // pool (not an omni glow on the post). bulb pos + ground target both use the local dx/dz|tdx/tdz
-      // knobs rotated by the lamp yaw
-      var L = RenderConfig.LAMP_LIGHT; // pairs with MODELS.streetLamp2 placed above
+      // dir -> yaw so local +z points toward the road (0:+z, 1:-z, 2:+x, 3:-x)
+      var yaw = switch (lamp.dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; };
       var cos = Math.cos(yaw), sin = Math.sin(yaw);
-      var light = new SpotLight(0xffb866, 45, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
-      light.position.set(w.x + L.dx * cos + L.dz * sin, CityConfig.CELL * L.yMul, w.z - L.dx * sin + L.dz * cos);
-      // aim target on the ground; must be in the scene graph for its world matrix to update
-      var tgt = new Group();
-      tgt.position.set(w.x + L.tdx * cos + L.tdz * sin, 0, w.z - L.tdx * sin + L.tdz * cos);
-      scene.add(tgt);
-      light.target = tgt;
-      add(light);
-      pts.push(light);
-      // volumetric shaft: hollow additive cone aimed down the same bulb->target axis as the light,
-      // so its base matches the lit circle. parented to the light, so it toggles with it
-      var lh = CityConfig.CELL * L.yMul;
-      LightCone.add(light, tgt.position.x, tgt.position.z, lh * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul);
-      // tuning marker: small bright sphere at the light position to gauge it vs the model
-      if (L.markerVisible) {
-        var marker = new Mesh(new SphereGeometry(0.15, 8, 8), new MeshBasicMaterial({ color: 0xff2020 }));
-        marker.position.copy(light.position);
-        scene.add(marker);
-      }
+      var px = w.x + L.pdx * cos + L.pdz * sin; // post nudged within its cell (edge / toward wall)
+      var pz = w.z - L.pdx * sin + L.pdz * cos;
+      var bx = px + L.dx * cos + L.dz * sin;    // bulb offset FROM the post, over the road edge
+      var bz = pz - L.dx * sin + L.dz * cos;
+      placements.push({ x: px, z: pz, yaw: yaw });
+      bulbs.push({ x: bx, z: bz });
+      lampPosts.push({ x: bx, z: bz, col: lamp.col, row: lamp.row });
     }
+    // posts + cones: one instanced draw call each, regardless of lamp count
+    Models.instanced(scene, RenderConfig.MODELS.streetLamp, placements, CityConfig.CELL * 1.6);
+    var bulbY = CityConfig.CELL * L.yMul;
+    LightCone.instanced(coneGroup, bulbs, bulbY, bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul);
+    // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles
+    var lampLights = new LampLights(scene);
+    for (l in lampLights.debugList()) { lights.push(l); pts.push(l); } // WYSIWYG (1) + setLightsOff + 5/0
+    pts.push(coneGroup); // debug 5/0 hides the cones alongside the lamp lights
 
     // debug full-bright WYSIWYG: ambient intensity = π so albedo×1 = raw texel
     var debugAmbient = new AmbientLight(0xffffff, Math.PI);
@@ -114,6 +119,6 @@ class SceneSetup {
     };
     var setLightsOff = function():Void { for (l in lights) l.visible = false; };
 
-    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff, fill: [ambient, hemi, moon], pointLights: pts };
+    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff, fill: [ambient, hemi, moon], pointLights: pts, lampLights: lampLights, lampPosts: lampPosts };
   }
 }

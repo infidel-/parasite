@@ -47,7 +47,7 @@ class Actors {
   var badgeAnims:haxe.ds.ObjectMap<Entity, BadgeAnim> = new haxe.ds.ObjectMap();
   var flameTex:Texture = null;                          // barrel flame sprite (lazy-loaded once)
   var curBarrels:Array<FlameBarrel> = [];               // this frame's visible barrels (gathered once, reused by lit/body/shadow)
-  var lampSrc:Array<Object3D> = null;                   // area's lamp spotlights (from StreetView) — cast fake shadows too
+  var lampSrc:Array<LampPost> = null;                   // lamps lit this frame (from the pool) — cast fake shadows too
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
@@ -81,11 +81,11 @@ class Actors {
       lastState = game.player.state;
     }
 
-// receive the area's lamp spotlights so actors cast fake shadows from them (mirrors barrels). read
-// each frame for their world position + visibility, so debug light toggles drop the shadows too
-  public function setLamps(lights:Array<Object3D>):Void
+// receive the lamps lit this frame (the pool's active set) so actors cast fake shadows from them
+// (mirrors barrels). called each frame; only currently-lit lamps are passed, so no visibility gate
+  public function setLamps(lamps:Array<LampPost>):Void
     {
-      lampSrc = lights;
+      lampSrc = lamps;
     }
 
 // attach a transient effect to an actor's billboard (build it from render.anim.*, e.g.
@@ -149,8 +149,10 @@ class Actors {
             drawActor(ai.entity, vis, dtMs);
             if (vis)
               {
+                var badges = ai.getBadges();
                 drawAITarget(ai);
-                drawBadges(ai, dtMs);
+                drawXray(ai, badges);
+                drawBadges(ai, badges, dtMs);
               }
           }
       var tAI = haxe.Timer.stamp();
@@ -372,18 +374,17 @@ class Actors {
           x: b.x, z: b.z, range: brange, lenMul: F.shadowLenMul,
           op: F.shadowOp, fade: F.shadowFade, flicker: FlameLights.flicker(flameT, b.phase),
         });
-      // lamps: steady, and only while the spotlight is on (so debug 0/5 drops these shadows too)
+      // lamps: steady; only the lamps lit this frame are in lampSrc, so no visibility gate needed
       var lampLights:Array<CastShadows.ShadowLight> = [];
       if (lampSrc != null)
         {
           var L = RenderConfig.LAMP_SHADOW;
           var lrange = L.rangeCells * CityConfig.CELL;
-          for (light in lampSrc)
-            if (light.visible)
-              lampLights.push({
-                x: light.position.x, z: light.position.z, range: lrange, lenMul: L.lenMul,
-                op: L.op, fade: L.fade, flicker: 1.0,
-              });
+          for (lp in lampSrc)
+            lampLights.push({
+              x: lp.x, z: lp.z, range: lrange, lenMul: L.lenMul,
+              op: L.op, fade: L.fade, flicker: 1.0,
+            });
         }
       if (barrelLights.length == 0 &&
           lampLights.length == 0)
@@ -560,16 +561,59 @@ class Actors {
           1.0, TARGET_SCALE, true, 0.0, Sprites.ORD_MARK);
     }
 
+// through-wall x-ray outline: a colored, patterned silhouette of the AI's own sprite, drawn ONLY
+// where the AI is occluded from the camera. depthTest stays on but depthFunc = GreaterDepth, so a
+// fragment passes only where the depth buffer holds something NEARER (a wall in front) — meaning a
+// clear-view AI draws nothing, while one hidden behind a wall (but still in the player's LOS) glows
+// through so it stays spottable. color = current alert status (followers cult-pink)
+  function drawXray(ai:AI, badges:Array<_Badge>):Void
+    {
+      // never x-ray the player's own host: buildings in front of it get made transparent instead
+      if (game.player.host == ai)
+        return;
+      var a = actors.get(ai.entity);
+      if (a == null ||
+          a.op < 0.05)
+        return;
+      var e = ai.entity;
+      var tex = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
+        RenderConfig.XRAY.fill, RenderConfig.XRAY.hatchSpacing, RenderConfig.XRAY.hatchThick);
+      if (tex == null)
+        return;
+      var col = outlineColor(ai, badges);
+      var wy = WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5;
+      // emissive = the state color so the pattern reads at night; GreaterDepth = occluded-only
+      sprites.paint(a.x, wy, a.z,
+        tex, a.op, RenderConfig.XRAY.grow, false, 0.0, Sprites.ORD_ACTOR, col, RenderConfig.XRAY.emissive, true, THREE.GreaterDepth);
+    }
+
+// outline color for an AI: followers read cult-pink; otherwise the current alert status (matching
+// the alert badge color), or a dim slate when calm/idle. colors mirror the app.css HUD tokens
+  function outlineColor(ai:AI, badges:Array<_Badge>):Int
+    {
+      if (ai.isPlayerCultist())
+        return 0xfd97ff;                                 // cult pink (--text-color-cultist)
+      for (b in badges)
+        {
+          if (b.svg == 'alert1') return 0xeaebed;        // first suspicion
+          if (b.svg == 'alert2') return 0xe0b34a;        // amber
+          if (b.svg == 'alert3') return 0xec894e;        // orange
+          if (b.svg == 'alerted' ||
+              b.svg == 'search' ||
+              b.svg == 'calling') return 0xf26a6a;       // danger-red
+        }
+      return 0x6b7078;                                   // calm/idle — dim slate
+    }
+
 // paint the AI's status badges (alert / npc / cultist / effect) as a small row of upright quads
 // just above its head. alert + npc render from scalable SVG (color-coded by state), effect +
 // cultist from the PNG atlas. mirrors the 2D AIEntity.draw badge stack. see ai.AI.getBadges
-  function drawBadges(ai:AI, dtMs:Float):Void
+  function drawBadges(ai:AI, badges:Array<_Badge>, dtMs:Float):Void
     {
       var a = actors.get(ai.entity);
       if (a == null ||
           a.op < 0.05)
         return;
-      var badges = ai.getBadges();
       // per-AI change-pop: pop the row whenever the badge set changes (alert level up/down, a new
       // marker) — but not on first sight (settled silently) or when it clears to nothing
       var ba = badgeAnims.get(ai.entity);
@@ -604,7 +648,7 @@ class Actors {
       // drops the badges onto the forehead. a screen-up lift stays above the head at any pitch/zoom
       var up = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);   // world dir = up on screen
       var right = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion); // world dir = right on screen
-      var lift = Sprites.SIZE * 0.62;                                     // clears the head at any pitch
+      var lift = Sprites.SIZE * RenderConfig.BADGE_LIFT;                  // clears the head at any pitch
       var spread = Sprites.SIZE * scale * 0.95;                           // per-badge screen-horizontal step
       var bx = a.x + up.x * lift;                                         // head centre + screen-up lift
       var by = WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5 + up.y * lift;

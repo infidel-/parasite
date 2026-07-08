@@ -39,26 +39,24 @@ class LightCone {
       return 'rgb(' + v + ',' + v + ',' + v + ')';
     }
 
-// build the shaft for a lamp's SpotLight, aimed down the bulb->ground-target axis (so its base sits
-// exactly on the SpotLight's lit circle, not straight-down-under-the-bulb), and parent it to the
-// light. targetX/Z = the light's ground-aim point (world); radius = cone ground radius
-  public static function add(light:Object3D, targetX:Float, targetZ:Float, radius:Float):Void
+// build ALL lamp cones as ONE InstancedMesh (shared geometry, one draw call) — a straight-down shell
+// per bulb. `bulbs` = each lamp's bulb ground x/z (already pushed out over the road edge); bulbY =
+// bulb height; radius = cone ground radius. added to `group` (toggled with the lamps in debug)
+  public static function instanced(group:Object3D, bulbs:Array<{ x:Float, z:Float }>, bulbY:Float, radius:Float):Void
     {
+      if (bulbs.length == 0)
+        return;
       var C = RenderConfig.LAMP_CONE;
-      // bulb -> ground-target axis in light-LOCAL space. the SpotLight object keeps identity
-      // rotation (aiming is internal shading), so local = world - the light's own position
-      var tx = targetX - light.position.x;
-      var ty = -light.position.y;              // target is on the ground (y = 0)
-      var tz = targetZ - light.position.z;
-      var len = Math.sqrt(tx * tx + ty * ty + tz * tz);
-      var dirX = tx / len, dirY = ty / len, dirZ = tz / len;
-      // the shaft spans startFrac..1 of the axis; a top radius that follows the cone at that fraction
+      // the shaft spans startFrac..1 of the bulb->ground axis; a top radius that follows the cone there
       var s = C.startFrac;
-      var h = len * (1 - s);
+      var h = bulbY * (1 - s);
       var rTop = radius * s;
       if (rTop < C.topR)
         rTop = C.topR;
       var geo = new CylinderGeometry(rTop, radius, h, C.seg, 1, true);
+      // fold the vertical placement into the geometry so an instance sitting at the bulb has its base
+      // on the ground: center offset = -bulbY*(1+startFrac)/2 below the bulb
+      geo.translate(0, -bulbY * (1 + s) / 2, 0);
       var mat = new MeshBasicMaterial({
         color: C.color,
         transparent: true,
@@ -68,14 +66,15 @@ class LightCone {
         blending: untyped THREE.AdditiveBlending,
         alphaMap: gradient(),
       });
-      var cone = new Mesh(geo, mat);
-      // rotate the cylinder's big (bottom, -Y) end to point down the bulb->target direction
-      var q = new Quaternion();
-      q.setFromUnitVectors(new Vector3(0, -1, 0), new Vector3(dirX, dirY, dirZ));
-      cone.quaternion.copy(q);
-      // center the shaft segment along the axis (top at s*len, base at len = the ground target)
-      var mid = (s + 1) * 0.5 * len;
-      cone.position.set(dirX * mid, dirY * mid, dirZ * mid);
-      light.add(cone);
+      var inst = new InstancedMesh(geo, mat, bulbs.length);
+      var q = new Quaternion(), mtx = new Matrix4(), pos = new Vector3(), one = new Vector3(1, 1, 1);
+      for (i in 0...bulbs.length)
+        {
+          pos.set(bulbs[i].x, bulbY, bulbs[i].z);
+          mtx.compose(pos, q, one); // identity rotation: straight-down shell
+          inst.setMatrixAt(i, mtx);
+        }
+      untyped inst.instanceMatrix.needsUpdate = true;
+      group.add(inst);
     }
 }

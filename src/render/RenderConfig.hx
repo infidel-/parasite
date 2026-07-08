@@ -240,6 +240,20 @@ class RenderConfig {
     vspread: 0.12,     // vertical scatter (cells): kept small so holes cluster near aim height
                        // (full `spread` vertically would range knee->head and read as random)
   };
+  // AI through-wall x-ray outline: a colored, patterned silhouette of an AI's own sprite drawn ONLY
+  // where a wall hides it from the camera (GreaterDepth depth compare) while the player still has LOS
+  // — clear-view AIs show nothing. color = alert state (cult-pink for followers, see Actors)
+  public static final XRAY = {
+    fill: 'scan',        // interior pattern: 'diag' | 'cross' | 'scan' | 'dots' | 'solid'
+    hatchSpacing: 7,     // pattern line period (crop px)
+    hatchThick: 2,       // pattern line width (crop px)
+    grow: 1.0,          // silhouette scale vs the sprite
+    emissive: 0.9,       // silhouette self-glow (legibility at night)
+  };
+  // AI status badges float this fraction of Sprites.SIZE above the head (screen-up lift; clears the
+  // head at any camera pitch — see Actors.drawBadges)
+  public static inline var BADGE_LIFT = 0.65;
+
   // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
   // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)
   public static inline var WALLDECAL_PCT = 35;
@@ -269,12 +283,19 @@ class RenderConfig {
   public static final LAMP_LIGHT = {         // pairs with MODELS.streetLamp
     yMul: 1.4,   // light height = CityConfig.CELL * this
     dx: 0.0,     // local +X offset toward the bulb (world units)
-    dz: 0.7,     // local +Z offset toward the bulb (world units)
+    dz: 0.6,     // local +Z (toward-road) offset of the bulb — pushes it out over the road edge
+    pdx: 2.0,    // post local +X offset from cell centre (slides along the road/wall) — CELL/2 = corner
+    pdz: 2.6,    // post local +Z offset: +toward road edge, -toward the wall — CELL/2 = road/walkway edge
     angle: Math.PI / 5,  // cone half-angle (radians)
     penumbra: 0.2,       // soft-edge fraction 0..1
     tdx: 0.0,    // ground-target local +X offset (aim the pool along the street)
     tdz: 0.0,    // ground-target local +Z offset
     markerVisible: false, // draw a small red sphere at the light position (tuning aid)
+    // lamps everywhere, bounded spotlight budget: only POOL live spotlights exist, following the
+    // nearest lamps to the player (render.particles.LampLights); every post shows its model + cone
+    pool: 8,             // number of live SpotLights (fixed → NUM_SPOT_LIGHTS constant, no recompile)
+    intensity: 45.0,     // live-lamp spotlight intensity
+    lightRangeCells: 16, // a lamp within this many cells of the player may claim one of the pool lights
   };
   // volumetric shaft (render.LightCone): a hollow additive amber cone hung under the bulb, faking
   // the cone of lit air the SpotLight can't render. radius = bulb height * tan(LAMP_LIGHT.angle) *

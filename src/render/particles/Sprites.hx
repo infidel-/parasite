@@ -16,7 +16,7 @@ typedef GroundSprite = { tex:CanvasTexture, fw:Float, fh:Float };
 // -> end(); paint() consumes the next pooled quad, end() hides the leftover tail. mirrors the
 // role the 2D CanvasRenderingContext2D plays for particles.Particle
 class Sprites {
-  public static inline var SIZE = CityConfig.CELL * 0.85; // base quad size (scale multiplies it)
+  public static inline var SIZE = CityConfig.CELL * 0.75; // base quad size (scale multiplies it)
   public static inline var TILT = 0.6;                 // radians an upright sprite leans back toward the overhead camera
   // transparent draw layering (higher = on top): ground decals < fake shadow < target markers <
   // upright actor icon. all these share this pool + depthWrite:false, so renderOrder (not Y) fixes
@@ -55,7 +55,7 @@ class Sprites {
 // place/reuse a sprite quad at world (wx,wy,wz): texture tex, opacity op, uniform scale (of
 // SIZE); flat lays it on the ground as a decal (yaw rotates it there). no-op if the atlas
 // isn't decoded yet (tex == null) — the slot is not consumed
-  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true):Void
+  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true, depthFunc:Dynamic = null):Void
     {
       if (tex == null) return;
       var m = slot(tex, op, wx, wy, wz, scale);
@@ -71,8 +71,11 @@ class Sprites {
       var mat:Dynamic = m.material;
       untyped mat.emissive.setHex(emissive);
       mat.emissiveIntensity = emissiveInt;
-      // depthTest off = always-on-top UI (entity badges): never occluded by walls in front
+      // depthTest off = always-on-top UI (entity badges): never occluded by walls in front.
+      // depthFunc (when set) flips the compare — GreaterDepth draws only where occluded (x-ray)
       untyped mat.depthTest = depthTest;
+      if (depthFunc != null)
+        untyped mat.depthFunc = depthFunc;
       m.visible = true;
       idx++;
     }
@@ -167,6 +170,7 @@ class Sprites {
       untyped mat.emissive.setHex(0);
       mat.emissiveIntensity = 0;
       untyped mat.depthTest = true;
+      untyped mat.depthFunc = THREE.LessEqualDepth;
       m.renderOrder = 0;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
@@ -224,6 +228,64 @@ class Sprites {
       tex.colorSpace = THREE.SRGBColorSpace;
       texCache.set(key, tex);
       return tex;
+    }
+
+// solid-white silhouette of an atlas cell (sprite alpha kept, RGB forced white) → cached
+// CanvasTexture. tinted at paint time (emissive) into a flat colored silhouette for the AI
+// through-wall x-ray outline. null until the atlas image decodes (retry next frame, like tex())
+  public function silTex(imageName:String, ix:Int, iy:Int, male:Bool, fill:String, spacing:Int, thick:Int):CanvasTexture
+    {
+      var key = 'sil:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + fill + ':' + spacing + ':' + thick;
+      if (texCache.exists(key)) return texCache.get(key);
+      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      if (img == null ||
+          !img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var t = Const.TILE_SIZE_CLEAN;
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = t; cv.height = t;
+      var cx = cv.getContext('2d');
+      // same crop as tex() (the +1/-1 kludge avoids atlas bleed), then whiten + carve the pattern
+      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      patternWhiten(cx, t, t, fill, spacing, thick);
+      var tex = new CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      texCache.set(key, tex);
+      return tex;
+    }
+
+// force every pixel's RGB to white (a tintable mask; the soft alpha edge stays anti-aliased) and
+// carve an interior pattern into the sprite's alpha — 'solid' keeps the whole shape, 'diag'/'cross'
+// hatch lines, 'scan' horizontal lines, 'dots' stipple. pattern lives in texture space (rides the
+// billboard). spacing = line period, thick = line width, both in crop px
+  inline function patternWhiten(ctx:Dynamic, w:Int, h:Int, fill:String, spacing:Int, thick:Int):Void
+    {
+      var id = ctx.getImageData(0, 0, w, h);
+      var d = id.data;
+      for (y in 0...h)
+        for (x in 0...w)
+          {
+            var i = (y * w + x) << 2;
+            d[i] = 255;
+            d[i + 1] = 255;
+            d[i + 2] = 255;
+            if (d[i + 3] == 0) // outside the sprite already — nothing to carve
+              continue;
+            var on = switch (fill)
+              {
+                case 'diag': (x + y) % spacing < thick;
+                case 'cross': (x + y) % spacing < thick ||
+                              ((x - y) % spacing + spacing) % spacing < thick;
+                case 'scan': y % spacing < thick;
+                case 'dots': x % spacing < thick &&
+                             y % spacing < thick;
+                default: true; // solid
+              }
+            if (!on)
+              d[i + 3] = 0;
+          }
+      ctx.putImageData(id, 0, 0);
     }
 
 // multiply a canvas's RGB down by `mul` (alpha preserved) so a lit 3D decal reads darker without a

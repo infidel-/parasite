@@ -28,7 +28,8 @@ class CityConfig {
   public static inline var COURT_RING = 3;             // min cells kept between the courtyard and the block edge
   public static inline var COURT_MIN = 3;              // min courtyard side
   public static inline var CARVE_TRIES = 16;           // attempts to find a carve that leaves no size-1 buildings
-  public static inline var MAX_LAMPS = 16;             // cap on placed street lamps
+  public static inline var LAMP_SPACING = 8;           // cells between lamp posts along a road edge
+  public static inline var MAX_LAMPS = 400;            // safety cap on placed street lamps (posts+cones are instanced, lights pooled)
 
   // floors: a storefront ground band + stacked window floors on a shared vertical
   // grid (so neighbours line up); height is quantized to whole floors. GROUND_H ==

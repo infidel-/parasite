@@ -666,14 +666,38 @@ class CityGen {
     }
     var shopspots = [for (b in buildings) if (b.shop >= 0) shopSpot(b)];
 
-    // lamps at road intersections, capped
-    var lamps:Array<Cell> = [];
+    // lamp posts on the walkway edges flanking every road, both sides, ~LAMP_SPACING apart. dir points
+    // from the post toward the road it lights. only on WALKWAY cells (not building/alley/road), deduped
+    // where two roads' edges share a cell. posts+cones are instanced and lights pooled, so many is cheap
+    var lamps:Array<Lamp> = [];
+    var lampSet = new Map<Int, Bool>();
+    inline function addLamp(c:Int, r:Int, dir:Int):Void {
+      if (c < 0 || r < 0 || c >= GRID || r >= GRID) return;
+      if (tiles[r][c] != Tile.Walkway) return;
+      if (lamps.length >= MAX_LAMPS) return;
+      var key = r * GRID + c;
+      if (lampSet.exists(key)) return;
+      lampSet.set(key, true);
+      lamps.push({ col: c, row: r, dir: dir });
+    }
+    // horizontal roads span all columns: lamp on the walkway row above (road below = +z, dir 0) and
+    // below (road above = -z, dir 1), stepping columns citywide-aligned so both edges line up
     for (h in hroads) {
-      if (lamps.length >= MAX_LAMPS) break;
-      for (v in vroads) {
-        if (lamps.length >= MAX_LAMPS) break;
-        var col = v.pos + (v.w >> 1), row = h.pos + (h.w >> 1);
-        if (isRoad(col, row)) lamps.push({ col: col, row: row }); // skip dead-ended tips
+      var c = 0;
+      while (c < GRID) {
+        addLamp(c, h.pos - 1, 0);
+        addLamp(c, h.pos + h.w, 1);
+        c += LAMP_SPACING;
+      }
+    }
+    // vertical roads (row extent [a,b)): lamp on the walkway col left (road right = +x, dir 2) and
+    // right (road left = -x, dir 3)
+    for (v in vroads) {
+      var r = v.a;
+      while (r < v.b) {
+        addLamp(v.pos - 1, r, 2);
+        addLamp(v.pos + v.w, r, 3);
+        r += LAMP_SPACING;
       }
     }
 

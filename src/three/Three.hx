@@ -14,6 +14,9 @@ package three;
   static var DoubleSide:Dynamic;
   static var ACESFilmicToneMapping:Dynamic;
   static var NoToneMapping:Dynamic;
+  // depth-compare funcs (Material.depthFunc); GreaterDepth draws only where occluded (x-ray outline)
+  static var LessEqualDepth:Dynamic;
+  static var GreaterDepth:Dynamic;
 }
 
 @:native("THREE.Vector2") extern class Vector2 {
@@ -190,6 +193,7 @@ typedef RendererInfo = {
 @:native("THREE.CylinderGeometry") extern class CylinderGeometry {
   public function new(rt:Float, rb:Float, h:Float, ?radial:Int, ?heightSeg:Int, ?openEnded:Bool, ?thetaStart:Float, ?thetaLength:Float);
   public function rotateZ(a:Float):CylinderGeometry; // bakes rotation into vertices (from BufferGeometry)
+  public function translate(x:Float, y:Float, z:Float):CylinderGeometry; // bakes translation into vertices
   public function scale(x:Float, y:Float, z:Float):CylinderGeometry;
 }
 @:native("THREE.EdgesGeometry") extern class EdgesGeometry {

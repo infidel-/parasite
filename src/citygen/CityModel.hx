@@ -42,6 +42,10 @@ class Building {
 
 typedef Cell = { col:Int, row:Int };
 
+// a street lamp post: its walkway cell + the direction toward the road it lights
+// (0=+z/below, 1=-z/above, 2=+x/right, 3=-x/left) — the render layer aims the post + light that way
+typedef Lamp = { col:Int, row:Int, dir:Int };
+
 // a carved inner-courtyard rect (cell coords, inclusive): an enclosed open pocket ringed by
 // buildings. used by the game layer to place clutter that must not block a through-corridor
 typedef CourtRect = { x0:Int, y0:Int, x1:Int, y1:Int };
@@ -62,7 +66,7 @@ typedef ShapeGroup = { pieces:Array<Building>, ps:PShape, ?frontDir:Int };
 typedef City = {
   tiles:Array<Array<Tile>>,
   buildings:Array<Building>,
-  lamps:Array<Cell>,
+  lamps:Array<Lamp>,
   start:Cell,
   deadends:Int,
   turns:Int,

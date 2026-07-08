@@ -91,4 +91,51 @@ class Models {
           scene.add(m);
         });
     }
+
+// find the first mesh (has geometry) in a subtree — the source for instancing
+  static function firstMesh(root:Object3D):Object3D
+    {
+      var found:Object3D = null;
+      root.traverse(function(o)
+        {
+          if (found == null && o.geometry != null)
+            found = o;
+        });
+      return found;
+    }
+
+// place MANY copies of a prop as ONE InstancedMesh (shared geometry+material, one draw call) — for
+// props placed in bulk (street lamps). each placement: world (x,z) + yaw, scaled so height == targetH,
+// base on the ground. reuses the prop's single mesh; the template recenter is folded into each
+// instance matrix analytically (assumes the mesh sits at the template root — true for our baked glbs)
+  public static function instanced(scene:Object3D, path:String, placements:Array<{ x:Float, z:Float, yaw:Float }>, targetH:Float):Void
+    {
+      if (placements.length == 0)
+        return;
+      get(path, function(t)
+        {
+          var root = t.pivot.children[0]; // normalize() wrapped the recentered root in the pivot
+          var mesh:Dynamic = firstMesh(root);
+          if (mesh == null)
+            return;
+          var s = t.height > 0 ? targetH / t.height : 1.0;
+          // recenter offset baked by normalize() onto root.position — scaled + yaw-rotated per instance
+          var rx = root.position.x * s, ry = root.position.y * s, rz = root.position.z * s;
+          var inst = new InstancedMesh(mesh.geometry, mesh.material, placements.length);
+          var q = new Quaternion(), mtx = new Matrix4(), pos = new Vector3(), scl = new Vector3(s, s, s);
+          var up = new Vector3(0, 1, 0);
+          for (i in 0...placements.length)
+            {
+              var pl = placements[i];
+              var cos = Math.cos(pl.yaw), sin = Math.sin(pl.yaw);
+              // world = T(x,0,z) · Ry(yaw) · S(s) · T(recenter) → compose with the recenter rotated in
+              pos.set(pl.x + rx * cos + rz * sin, ry, pl.z - rx * sin + rz * cos);
+              q.setFromAxisAngle(up, pl.yaw);
+              mtx.compose(pos, q, scl);
+              inst.setMatrixAt(i, mtx);
+            }
+          untyped inst.instanceMatrix.needsUpdate = true;
+          scene.add(inst);
+        });
+    }
 }
