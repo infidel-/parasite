@@ -671,7 +671,19 @@ class CityGen {
     // where two roads' edges share a cell. posts+cones are instanced and lights pooled, so many is cheap
     var lamps:Array<Lamp> = [];
     var lampSet = new Map<Int, Bool>();
+    inline function isRoad(c:Int, r:Int):Bool
+      return c >= 0 && r >= 0 && c < GRID && r < GRID && tiles[r][c] == Tile.Road;
     inline function addLamp(c:Int, r:Int, dir:Int):Void {
+      // never on a corner: if the walkway cell touches a crossing road along the walkway axis
+      // (columns for h-roads, rows for v-roads), step one tile back down the walkway, away from it
+      if (dir == 0 || dir == 1) {
+        if (isRoad(c + 1, r)) c -= 1;
+        else if (isRoad(c - 1, r)) c += 1;
+      }
+      else {
+        if (isRoad(c, r + 1)) r -= 1;
+        else if (isRoad(c, r - 1)) r += 1;
+      }
       if (c < 0 || r < 0 || c >= GRID || r >= GRID) return;
       if (tiles[r][c] != Tile.Walkway) return;
       if (lamps.length >= MAX_LAMPS) return;

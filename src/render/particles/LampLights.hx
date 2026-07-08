@@ -12,7 +12,9 @@ import render.RenderConfig;
 class LampLights {
   var lights:Array<SpotLight> = [];
   var targets:Array<Group> = [];
-  var activeList:Array<LampPost> = []; // lamps that got a live light this frame (drives fake shadows)
+  var owners:Array<LampPost> = [];        // the lamp each slot currently serves (null = free)
+  var intens:Array<Float> = [];           // eased intensity per slot (ramps toward its target)
+  var activeList:Array<LampPost> = []; // lamps lit above epsilon this frame (drives fake shadows)
   var bulbY:Float;
 
   public function new(group:Object3D)
@@ -30,6 +32,8 @@ class LampLights {
           group.add(l);
           lights.push(l);
           targets.push(t);
+          owners.push(null);
+          intens.push(0);
         }
     }
 
@@ -41,17 +45,14 @@ class LampLights {
   public inline function active():Array<LampPost>
     return activeList;
 
-// park a pool light (aimed straight down) on each of the nearest lamps to the player within range;
-// every other pool light idles at intensity 0. call once per frame before the actor pass
-  public function update(lamps:Array<LampPost>, playerCol:Int, playerRow:Int):Void
+// pool slots stick to their lamp and ramp intensity so lamps fade in/out instead of blinking: each
+// frame the POOL nearest in-range lamps are "desired"; a slot keeps serving its lamp (target = full)
+// until the lamp leaves the desired set (target = 0, fades out), then frees for a new lamp. call once
+// per frame before the actor pass
+  public function update(lamps:Array<LampPost>, playerCol:Int, playerRow:Int, dtMs:Float):Void
     {
       var L = RenderConfig.LAMP_LIGHT;
-      for (l in lights)
-        untyped l.intensity = 0;
-      activeList = [];
-      if (lamps.length == 0)
-        return;
-      // lamps within range, nearest the player first, capped to the pool size (cell distance)
+      // desired = the pool-nearest in-range lamps, nearest first
       var range2 = L.lightRangeCells * L.lightRangeCells;
       var near:Array<LampPost> = [];
       for (lp in lamps)
@@ -67,14 +68,42 @@ class LampLights {
           var db = (b.col - playerCol) * (b.col - playerCol) + (b.row - playerRow) * (b.row - playerRow);
           return da - db;
         });
-      var n = near.length < lights.length ? near.length : lights.length;
-      for (i in 0...n)
+      var desired = near.length < lights.length ? near : near.slice(0, lights.length);
+      // targets: an owned slot stays lit while its lamp is still desired, else fades out
+      var targetI = [for (i in 0...lights.length) (owners[i] != null && desired.indexOf(owners[i]) >= 0) ? L.intensity : 0.0];
+      // hand faded-out / free slots to desired lamps that no owner is serving yet (nearest first)
+      for (lp in desired)
         {
-          var lp = near[i];
-          lights[i].position.set(lp.x, bulbY, lp.z);
-          targets[i].position.set(lp.x, 0, lp.z); // straight down
-          untyped lights[i].intensity = L.intensity;
-          activeList.push(lp);
+          var served = false;
+          for (o in owners)
+            if (o == lp) { served = true; break; }
+          if (served)
+            continue;
+          for (i in 0...lights.length)
+            if (intens[i] <= 0.001 && (owners[i] == null || desired.indexOf(owners[i]) < 0))
+              {
+                owners[i] = lp;
+                lights[i].position.set(lp.x, bulbY, lp.z); // teleport while dark — no visible jump
+                targets[i].position.set(lp.x, 0, lp.z);    // straight down
+                targetI[i] = L.intensity;
+                break;
+              }
+        }
+      // ease every slot toward its target and publish the lit lamps
+      var step = L.intensity * dtMs * RenderConfig.ANIM_SPEED / (RenderConfig.BASE_MS * L.fadeMul);
+      activeList = [];
+      for (i in 0...lights.length)
+        {
+          var tgt = targetI[i];
+          if (intens[i] < tgt)
+            intens[i] = Math.min(tgt, intens[i] + step);
+          else if (intens[i] > tgt)
+            intens[i] = Math.max(tgt, intens[i] - step);
+          untyped lights[i].intensity = intens[i];
+          if (intens[i] <= 0.001)
+            owners[i] = null; // fully dark → free for reuse
+          else if (owners[i] != null)
+            activeList.push(owners[i]);
         }
     }
 }

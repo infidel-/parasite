@@ -293,9 +293,10 @@ class RenderConfig {
     markerVisible: false, // draw a small red sphere at the light position (tuning aid)
     // lamps everywhere, bounded spotlight budget: only POOL live spotlights exist, following the
     // nearest lamps to the player (render.particles.LampLights); every post shows its model + cone
-    pool: 8,             // number of live SpotLights (fixed → NUM_SPOT_LIGHTS constant, no recompile)
+    pool: 12,            // number of live SpotLights (fixed → NUM_SPOT_LIGHTS constant, no recompile)
     intensity: 45.0,     // live-lamp spotlight intensity
     lightRangeCells: 16, // a lamp within this many cells of the player may claim one of the pool lights
+    fadeMul: 4.0,        // fade in/out duration = BASE_MS * this — ramps intensity so lamps don't blink
   };
   // volumetric shaft (render.LightCone): a hollow additive amber cone hung under the bulb, faking
   // the cone of lit air the SpotLight can't render. radius = bulb height * tan(LAMP_LIGHT.angle) *

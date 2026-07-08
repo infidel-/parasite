@@ -653,7 +653,7 @@ class StreetView {
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
     // park the live-spotlight pool on the nearest lamps to the player, then hand the lit ones to the
     // actor layer so it casts fake shadows only from lamps that are actually lit this frame
-    lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y);
+    lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y, dtMs);
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
     updateHoverTooltip();
