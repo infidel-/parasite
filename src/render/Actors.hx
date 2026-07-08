@@ -660,6 +660,8 @@ class Actors {
       var swing = Math.sin(badgeT / 5.6 * 2 * Math.PI);
       // alerted badge phase (period ~6.4 turn): slow scale breath on the red "!" so it reads as a live threat
       var breath = Math.sin(badgeT / 6.4 * 2 * Math.PI);
+      // question badge phase (period ~8.0 turn): slower/subtler breath on the "?" — rising suspicion, not yet a threat
+      var think = Math.sin(badgeT / 8.0 * 2 * Math.PI);
       for (i in 0...badges.length)
         {
           var b = badges[i];
@@ -683,6 +685,14 @@ class Actors {
           // alerted: slow scale breath on the red "!" — a live, sustained threat
           else if (b.svg == 'alerted')
             sc *= 1 + 0.10 * breath;
+          // question: slower, subtler breath on the "?" — amplitude grows with suspicion (alert1<2<3),
+          // staying under the fully-alerted "!" (0.10)
+          else if (b.svg == 'alert1')
+            sc *= 1 + 0.04 * think;
+          else if (b.svg == 'alert2')
+            sc *= 1 + 0.06 * think;
+          else if (b.svg == 'alert3')
+            sc *= 1 + 0.08 * think;
           // search: rock the magnifier ±~15° about its handle tip so the lens swings in an arc, like an
           // AI sweeping for the player. three rotates the quad about its centre, so translate by
           // (h - rot(h)) to hold the handle fixed. h = handle tip offset from the glyph centre:
