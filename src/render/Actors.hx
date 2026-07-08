@@ -654,8 +654,12 @@ class Actors {
       var by = WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5 + up.y * lift;
       var bz = a.z + up.z * lift;
       var s0 = -(badges.length - 1) / 2;                                 // centre the row
-      // looping pulse phase for the calling badge (period ~1.6 turn, anim-speed scaled via badgeT)
-      var wave = Math.sin(badgeT / 1.6 * 2 * Math.PI);
+      // looping pulse phase for the calling badge (period ~6.4 turn, anim-speed scaled via badgeT)
+      var wave = Math.sin(badgeT / 6.4 * 2 * Math.PI);
+      // search badge sweep phase (period ~5.6 turn): the magnifier rocks side to side like scanning
+      var swing = Math.sin(badgeT / 5.6 * 2 * Math.PI);
+      // alerted badge phase (period ~6.4 turn): slow scale breath on the red "!" so it reads as a live threat
+      var breath = Math.sin(badgeT / 6.4 * 2 * Math.PI);
       for (i in 0...badges.length)
         {
           var b = badges[i];
@@ -666,17 +670,42 @@ class Actors {
             continue;
           var sc = scale * popScale;
           var em = 1.0;
+          var roll = 0.0;
+          var pvx = 0.0; // pivot-compensation world offset so search rocks about the handle tip
+          var pvy = 0.0;
+          var pvz = 0.0;
           // calling: pulsating waves — breathe the glyph + glow so it reads as an active broadcast
           if (b.svg == 'calling')
             {
               sc *= 1 + 0.16 * wave;
               em = 0.8 + 0.5 * (0.5 + 0.5 * wave);
             }
+          // alerted: slow scale breath on the red "!" — a live, sustained threat
+          else if (b.svg == 'alerted')
+            sc *= 1 + 0.10 * breath;
+          // search: rock the magnifier ±~15° about its handle tip so the lens swings in an arc, like an
+          // AI sweeping for the player. three rotates the quad about its centre, so translate by
+          // (h - rot(h)) to hold the handle fixed. h = handle tip offset from the glyph centre:
+          // ≈(+8.5,+8.5) of 24 viewBox units (image +y = screen-down = -up)
+          else if (b.svg == 'search')
+            {
+              roll = 0.26 * swing;
+              var u = Sprites.SIZE * sc / 24;
+              var hx = 8.5 * u;    // along screen-right
+              var hy = -8.5 * u;   // along screen-up
+              var c = Math.cos(roll);
+              var s = Math.sin(roll);
+              var dx = hx - (hx * c - hy * s);
+              var dy = hy - (hx * s + hy * c);
+              pvx = right.x * dx + up.x * dy;
+              pvy = right.y * dx + up.y * dy;
+              pvz = right.z * dx + up.z * dy;
+            }
           // self-lit (emissive white, shaped by the badge's own texture) so UI badges stay legible
           // at night; depthTest off so a wall in front never occludes the marker (always-on-top UI)
           var off = (s0 + i) * spread;
-          sprites.paint(bx + right.x * off, by + right.y * off, bz + right.z * off,
-            tex, a.op, sc, false, 0.0, Sprites.ORD_ACTOR, 0xffffff, em, false);
+          sprites.paint(bx + right.x * off + pvx, by + right.y * off + pvy, bz + right.z * off + pvz,
+            tex, a.op, sc, false, roll, Sprites.ORD_ACTOR, 0xffffff, em, false);
         }
     }
 

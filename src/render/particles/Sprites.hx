@@ -64,7 +64,7 @@ class Sprites {
       if (flat)
         m.rotation.set(-Math.PI / 2, 0, yaw);
       else
-        m.rotation.set(-TILT, 0, 0);
+        m.rotation.set(-TILT, 0, yaw); // yaw doubles as in-plane roll for upright sprites (badge wiggle)
       m.renderOrder = order;
       // warm self-glow (flame flickering on a nearby actor): emissiveMap = the sprite, so the glow
       // is shaped by the sprite and flickers with emissiveInt. default 0 = no glow (unchanged path)
