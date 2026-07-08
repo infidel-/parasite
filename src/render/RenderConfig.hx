@@ -142,6 +142,8 @@ class RenderConfig {
   public static final DECAL = {
     bloodMul: 0.6,       // blood-splat crop darken factor
     debrisMul: 0.55,     // street-debris crop darken factor
+    actorMul: 0.7,       // actor-sprite crop darken factor (knock the full-bright atlas down so AI
+                         // don't read too white in the surrounding night; 1.0 = off, lit-only)
   };
   // burning barrels that actually burn (low-tier only): a pooled warm point light (MuzzleLights
   // pattern, constant NUM_POINT_LIGHTS), an uneven flicker, a soft additive flame body + rising

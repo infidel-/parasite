@@ -700,5 +700,5 @@ class Actors {
 
 // texture for an entity's current atlas cell
   function texFor(e:Entity):CanvasTexture
-    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas);
+    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas, RenderConfig.DECAL.actorMul);
 }
