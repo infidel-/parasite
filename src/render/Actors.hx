@@ -163,7 +163,11 @@ class Actors {
       // seed-derived street debris + persisted decals (ground blood + wall bullet holes), then the
       // barrel flame body/embers + fake cast shadows (barrels + lamps drawn after the decals so they
       // darken them), then the fire loop + transient FX (blood, death ghosts, gun shots)
-      decals.paint();
+      // decals fade in/out by radius around the player's smoothed billboard pos (falls back to the
+      // logical cell only while the parasite sprite is dropped mid-host-invade)
+      var pp = actors.get(game.playerArea.entity);
+      var pw = CityConfig.cellToWorld(game.playerArea.x, game.playerArea.y);
+      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z);
       flames.bodyAndShadows(dtMs);
       flames.driveFireLoop();
       particles.update(dtMs, paint);

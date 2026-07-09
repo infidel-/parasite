@@ -172,6 +172,8 @@ class RenderConfig {
     debrisMul: 0.55,     // street-debris crop darken factor
     actorMul: 0.7,       // actor-sprite crop darken factor (knock the full-bright atlas down so AI
                          // don't read too white in the surrounding night; 1.0 = off, lit-only)
+    radiusCells: 20.0,   // ground-decal reveal radius (cells) around the smoothed player pos; replaces LOS
+    fadeCells: 1.5,      // soft edge band (cells): opaque inside (radius-fade), invisible past radius
   };
   // burning barrels that actually burn (low-tier only): a pooled warm point light (MuzzleLights
   // pattern, constant NUM_POINT_LIGHTS), an uneven flicker, a soft additive flame body + rising
