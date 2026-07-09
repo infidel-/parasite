@@ -23,6 +23,7 @@ typedef SceneBundle = {
   pointLights:Array<Object3D>, // lamp spotlight pool + cone group (debug 5 toggle)
   lampLights:LampLights, // fixed live-spotlight pool, ticked per frame to follow the player
   lampPosts:Array<LampPost>, // every placed lamp (bulb world x/z + cell) for the pool
+  lampProp:render.Models.InstancedProp, // instanced lamp meshes, frustum-culled per frame
 };
 
 class SceneSetup {
@@ -97,7 +98,7 @@ class SceneSetup {
       lampPosts.push({ x: bx, z: bz, col: lamp.col, row: lamp.row });
     }
     // posts + cones: one instanced draw call each, regardless of lamp count
-    Models.instanced(scene, RenderConfig.MODELS.streetLamp, placements, CityConfig.CELL * 1.6);
+    var lampProp = Models.instanced(scene, RenderConfig.MODELS.streetLamp, placements, CityConfig.CELL * 1.6);
     var bulbY = CityConfig.CELL * L.yMul;
     LightCone.instanced(coneGroup, bulbs, bulbY, bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul);
     // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles
@@ -119,6 +120,6 @@ class SceneSetup {
     };
     var setLightsOff = function():Void { for (l in lights) l.visible = false; };
 
-    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff, fill: [ambient, hemi, moon], pointLights: pts, lampLights: lampLights, lampPosts: lampPosts };
+    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff, fill: [ambient, hemi, moon], pointLights: pts, lampLights: lampLights, lampPosts: lampPosts, lampProp: lampProp };
   }
 }

@@ -9,6 +9,15 @@ typedef ModelTemplate = {
   var height:Float;   // native world height, for target-height scaling
 };
 
+// handle for a bulk-instanced prop: the mesh plus every placement's precomputed world matrix and
+// centre, so a per-frame cull() can pack only the visible instances into the draw. three frustum-
+// culls per OBJECT, so one InstancedMesh draws ALL instances whenever any is on screen
+typedef InstancedProp = {
+  var mesh:InstancedMesh;      // null until the glb finishes loading
+  var matrices:Array<Matrix4>; // full per-placement transforms (all instances)
+  var centres:Array<Vector3>;  // per-placement world position, for the frustum test
+};
+
 // loads + caches optimized glb props (baked by `make models` into app/models/). one GLTFLoader,
 // one cached template per path; clones are cheap. mirrors render.Textures for models
 class Models {
@@ -108,10 +117,11 @@ class Models {
 // props placed in bulk (street lamps). each placement: world (x,z) + yaw, scaled so height == targetH,
 // base on the ground. reuses the prop's single mesh; the template recenter is folded into each
 // instance matrix analytically (assumes the mesh sits at the template root — true for our baked glbs)
-  public static function instanced(scene:Object3D, path:String, placements:Array<{ x:Float, z:Float, yaw:Float }>, targetH:Float):Void
+  public static function instanced(scene:Object3D, path:String, placements:Array<{ x:Float, z:Float, yaw:Float }>, targetH:Float):InstancedProp
     {
+      var prop:InstancedProp = { mesh: null, matrices: [], centres: [] };
       if (placements.length == 0)
-        return;
+        return prop;
       get(path, function(t)
         {
           var root = t.pivot.children[0]; // normalize() wrapped the recentered root in the pivot
@@ -122,20 +132,53 @@ class Models {
           // recenter offset baked by normalize() onto root.position — scaled + yaw-rotated per instance
           var rx = root.position.x * s, ry = root.position.y * s, rz = root.position.z * s;
           var inst = new InstancedMesh(mesh.geometry, mesh.material, placements.length);
-          var q = new Quaternion(), mtx = new Matrix4(), pos = new Vector3(), scl = new Vector3(s, s, s);
+          var q = new Quaternion(), scl = new Vector3(s, s, s);
           var up = new Vector3(0, 1, 0);
           for (i in 0...placements.length)
             {
               var pl = placements[i];
               var cos = Math.cos(pl.yaw), sin = Math.sin(pl.yaw);
               // world = T(x,0,z) · Ry(yaw) · S(s) · T(recenter) → compose with the recenter rotated in
-              pos.set(pl.x + rx * cos + rz * sin, ry, pl.z - rx * sin + rz * cos);
+              var pos = new Vector3(pl.x + rx * cos + rz * sin, ry, pl.z - rx * sin + rz * cos);
               q.setFromAxisAngle(up, pl.yaw);
+              var mtx = new Matrix4();
               mtx.compose(pos, q, scl);
               inst.setMatrixAt(i, mtx);
+              // keep the transform + centre so cull() can repack the visible subset each frame
+              prop.matrices.push(mtx);
+              prop.centres.push(pos);
             }
           untyped inst.instanceMatrix.needsUpdate = true;
           scene.add(inst);
+          prop.mesh = inst;
         });
+      return prop;
+    }
+
+// per-frame frustum cull for a bulk-instanced prop: pack only the instances whose centre is within
+// the camera frustum (plus a per-instance radius margin) into the front of the buffer and cap count.
+// without this a single InstancedMesh draws every instance whenever any one is on screen
+  static var _frustum = new Frustum();
+  static var _projScreen = new Matrix4();
+  static var _sph = new Sphere();
+  public static function cull(prop:InstancedProp, camera:PerspectiveCamera, radius:Float):Void
+    {
+      if (prop.mesh == null)
+        return;
+      camera.updateMatrixWorld();
+      _projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      _frustum.setFromProjectionMatrix(_projScreen);
+      _sph.radius = radius;
+      var k = 0;
+      for (i in 0...prop.centres.length)
+        {
+          _sph.center.copy(prop.centres[i]);
+          if (!_frustum.intersectsSphere(_sph))
+            continue;
+          prop.mesh.setMatrixAt(k, prop.matrices[i]);
+          k++;
+        }
+      prop.mesh.count = k;
+      untyped prop.mesh.instanceMatrix.needsUpdate = true;
     }
 }

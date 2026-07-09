@@ -63,6 +63,19 @@ package three;
 @:native("THREE.Matrix4") extern class Matrix4 {
   public function new();
   public function compose(pos:Vector3, quat:Quaternion, scl:Vector3):Matrix4;
+  public function multiplyMatrices(a:Matrix4, b:Matrix4):Matrix4;
+}
+
+@:native("THREE.Sphere") extern class Sphere {
+  public function new();
+  public var center:Vector3;
+  public var radius:Float;
+}
+
+@:native("THREE.Frustum") extern class Frustum {
+  public function new();
+  public function setFromProjectionMatrix(m:Matrix4):Frustum;
+  public function intersectsSphere(s:Sphere):Bool;
 }
 
 @:native("THREE.Color") extern class Color {
@@ -115,6 +128,8 @@ package three;
 @:native("THREE.PerspectiveCamera") extern class PerspectiveCamera extends Object3D {
   public function new(fov:Float, aspect:Float, near:Float, far:Float);
   public var aspect:Float;
+  public var projectionMatrix:Matrix4;
+  public var matrixWorldInverse:Matrix4;
   public function updateProjectionMatrix():Void;
 }
 
@@ -239,6 +254,7 @@ typedef RendererInfo = {
 @:native("THREE.InstancedMesh") extern class InstancedMesh extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic, count:Int);
   public var instanceMatrix:Dynamic;
+  public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
 }
 @:native("THREE.LineSegments") extern class LineSegments extends Object3D {

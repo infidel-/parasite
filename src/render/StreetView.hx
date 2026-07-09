@@ -32,6 +32,7 @@ class StreetView {
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
+  var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
   var city:City;
 
   var actorGroup:Group;
@@ -158,6 +159,7 @@ class StreetView {
     pointLights = bundle.pointLights;
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
+    lampProp = bundle.lampProp;
     World.build(scene, city, seed);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings);
@@ -654,6 +656,9 @@ class StreetView {
     // park the live-spotlight pool on the nearest lamps to the player, then hand the lit ones to the
     // actor layer so it casts fake shadows only from lamps that are actually lit this frame
     lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y, dtMs);
+    // drop offscreen lamp meshes: one InstancedMesh otherwise draws all ~280 whenever any is
+    // visible. radius CELL*2 covers a lamp's full height as an edge margin so none pop at screen edges
+    render.Models.cull(lampProp, camera, CityConfig.CELL * 2);
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
     updateHoverTooltip();
