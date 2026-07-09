@@ -155,9 +155,11 @@ class Saves extends UIWindow
   function doLoad(slot: Int)
     {
       game.scene.sounds.play('click-menu');
-      game.load(slot);
+      // close the window BEFORE loading (like New Game) so nothing heavy runs after the
+      // load's fader.cover — the black cover then paints in sync with the 3D build timer
       game.ui.closeWindow();
       game.ui.canvas.style.visibility = 'visible';
+      game.load(slot);
     }
 
 // save into a slot (game.save handles difficulty prompt + caps), then close

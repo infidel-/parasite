@@ -33,13 +33,30 @@ class Fader
     }
 
 // fade to opaque black over ms, then call onOpaque once black is solid (run the stall there).
-// a small buffer past ms guarantees the transition has actually finished before the callback
+// onOpaque fires on the real transitionend (the frame the cover has actually PAINTED to black),
+// not a timer — a timer started here expires mid-fade if a busy main thread delays the paint
+// (e.g. the load stall), which would run the stall over a half-faded cover. setTimeout is only
+// a fallback for when no transition runs at all (opacity already 1 / zero duration)
   public function cover(ms:Int, ?onOpaque:Void->Void):Void
     {
+      if (onOpaque != null)
+        {
+          var fired = false;
+          var onEnd: Dynamic = null;
+          var fire = function()
+            {
+              if (fired)
+                return;
+              fired = true;
+              el.removeEventListener('transitionend', onEnd);
+              onOpaque();
+            };
+          onEnd = function(_) fire();
+          el.addEventListener('transitionend', onEnd);
+          Browser.window.setTimeout(fire, ms + 200);
+        }
       el.style.transition = 'opacity ' + ms + 'ms linear';
       el.style.opacity = '1';
-      if (onOpaque != null)
-        Browser.window.setTimeout(onOpaque, ms + 20);
     }
 
 // fade back to transparent over ms

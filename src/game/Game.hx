@@ -108,7 +108,7 @@ class Game extends _SaveObject
     }
 
 // init game stuff
-  public function init(firstTime: Bool)
+  public function init(firstTime: Bool, ?worldGen: Bool = true)
     {
       trace('init');
       var scen = '';
@@ -140,13 +140,24 @@ class Game extends _SaveObject
       cult.isPlayer = true;
       cults.push(cult);
 
-      // generate world
+      // allocate world/timeline/goals (loadObject refills these from the save)
       world = new World(this);
-      world.generate();
-
-      // generate timeline from a scenario
       timeline = new Timeline(this);
       goals = new Goals(this);
+
+      // load scaffold: the object graph is now ready for loadObject to refill, so
+      // skip the heavy world/area generation + starting-area entry (the save has it all)
+      if (!worldGen)
+        {
+          // region entity isn't serialized (see PlayerRegion._ignoredFields); build it
+          // here so playerRegion.loadPost can reposition it (coords come from the save)
+          playerRegion.createEntity(0, 0);
+          isInited = true;
+          return;
+        }
+
+      // fresh game: generate world + starting timeline
+      world.generate();
       timeline.create();
 
       // set random region (currently only 1 at all)
@@ -896,7 +907,11 @@ class Game extends _SaveObject
       isStarted = true;
       ui.hud.goals.rebuild(); // resync goal rows to the loaded model (no animation)
       ui.hud.update();
-      scene.draw();
+      // first area render is the LAST act of load (like New Game's restart): drawCity3D's
+      // fader.cover defers the heavy 3D build on its own timer, so the black cover paints
+      // fully before the build stalls the thread. (the mid-load 3D draw was removed from
+      // Loader so this is the first — and only — city entry.)
+      scene.updateCamera();
     }
 
 #if demo
