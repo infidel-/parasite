@@ -21,6 +21,7 @@ class TopbarHud
   var fpsFrames: Int = 0;          // frames counted in the current sample window
   var fpsSample: Float = 0;        // rAF timestamp of the current sample window start (0 = fresh)
   var fpsRunning: Bool = false;    // is the rAF meter loop live?
+  var debugStats: Bool = false;    // street-debug mode forces the readout on regardless of config
   var lastTurn: Int = -1;          // detects turn advance for odometer tick
   var lastLocName: String = '';    // detects area change for decode + pin ping
   var decodeGen: Int = 0;          // generation token: cancels stale in-flight decode loops
@@ -58,8 +59,9 @@ class TopbarHud
 // called from the constructor, update(), and the Video toggle (immediate response)
   public function ensureFps()
     {
-      fpsEl.style.display = (game.config.vidShowFps ? '' : 'none');
-      if (game.config.vidShowFps && !fpsRunning)
+      var show = game.config.vidShowFps || debugStats;
+      fpsEl.style.display = (show ? '' : 'none');
+      if (show && !fpsRunning)
         {
           fpsRunning = true;
           fpsFrames = 0;
@@ -68,11 +70,20 @@ class TopbarHud
         }
     }
 
+// street-debug mode keeps the perf readout (fps/dc/tri) live even with the config toggle
+// off, and forces the topbar itself visible over the hidden game HUD (parent visibility)
+  public function setDebugStats(on: Bool)
+    {
+      debugStats = on;
+      topbar.style.visibility = (on ? 'visible' : '');
+      ensureFps();
+    }
+
 // per-frame meter: count rAF callbacks, report averaged FPS every ~500ms. self-stops
 // (and hides) when config.vidShowFps turns off, so it costs nothing while disabled
   function fpsTick(now: Float)
     {
-      if (!game.config.vidShowFps)
+      if (!game.config.vidShowFps && !debugStats)
         {
           fpsRunning = false;
           fpsEl.style.display = 'none';

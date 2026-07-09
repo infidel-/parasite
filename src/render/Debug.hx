@@ -64,9 +64,12 @@ class Debug {
     if (o) {
       hudWasVisible = game.ui.hud.isVisible();
       if (hudWasVisible) game.ui.hud.hide();
+      // keep the topbar's perf readout (fps/dc/tri) up over the overlay, forced on
+      game.ui.hud.topbar.setDebugStats(true);
     } else {
       if (freeCam != null) freeCam.deactivate();
       Tools.setMode('none');
+      game.ui.hud.topbar.setDebugStats(false);
       if (hudWasVisible) game.ui.hud.show();
     }
     if (el != null) el.style.display = o ? 'block' : 'none';
