@@ -132,6 +132,10 @@ class Models {
           // recenter offset baked by normalize() onto root.position — scaled + yaw-rotated per instance
           var rx = root.position.x * s, ry = root.position.y * s, rz = root.position.z * s;
           var inst = new InstancedMesh(mesh.geometry, mesh.material, placements.length);
+          // cull() does exact per-instance frustum culling every frame; three's coarse whole-mesh
+          // cull tests a cached boundingSphere built from the reduced count and drops the whole mesh
+          // at extreme camera (e.g. full zoom-out) — turn it off so only our cull() decides visibility
+          untyped inst.frustumCulled = false;
           var q = new Quaternion(), scl = new Vector3(s, s, s);
           var up = new Vector3(0, 1, 0);
           for (i in 0...placements.length)
