@@ -36,7 +36,10 @@ class Occlusion {
           var b = buildings[i];
           var c = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
           var hw = b.w * CELL / 2, hd = b.d * CELL / 2;
-          occ.push({ minX: c.x - hw, maxX: c.x + hw, minZ: c.z - hd, maxZ: c.z + hd, maxY: b.h,
+          // top the AABB at the parapet, not the roofline: the parapet rim sits above b.h and
+          // can hide the player while the wall grazes clear — cover the tallest (brick) variant
+          occ.push({ minX: c.x - hw, maxX: c.x + hw, minZ: c.z - hd, maxZ: c.z + hd,
+            maxY: b.h + RenderConfig.PARAPET_H_BRICK,
             cx: c.x, cz: c.z, mats: [], fade: 1.0, target: 1.0 });
           idxOf.set(b, i);
         }
