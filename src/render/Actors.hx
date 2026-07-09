@@ -275,6 +275,13 @@ class Actors {
       particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay));
     }
 
+// spawn a glowing melee attack-arc for the swing from attacker (ax,ay,az) to target (bx,by,bz);
+// the shape/color/orientation/motion come from the weapon's _AttackEffect
+  public function slashArc(effect:String, ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float):Void
+    {
+      particles.add(new SlashArc3D(effect, ax, ay, az, bx, by, bz));
+    }
+
 // pulse a pooled muzzle light at the shooter (constant scene light count, no recompile)
   public function muzzleFlash(x:Float, y:Float, z:Float):Void
     {

@@ -8,6 +8,7 @@ typedef WeaponInfo = {
   var verb1: String;
   var verb2: String;
   var type: _WeaponType;
+  @:optional var attackEffect: _AttackEffect;
   @:optional var spawnBlood: Bool;
   @:optional var projectile: String;
   var canConceal: Bool;

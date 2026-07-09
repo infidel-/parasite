@@ -222,7 +222,7 @@ class CommonLogic
             return false;
           return game.scene.city3d.playMelee(atkE, hit ? tgtE : null,
             attacker.x, attacker.y, target.x, target.y,
-            sound != null ? sound.file : null,
+            sound != null ? sound.file : null, weapon.attackEffect,
             hit && weapon.spawnBlood, bloodIc.row, bloodIc.col);
         }
 

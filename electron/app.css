@@ -1035,8 +1035,8 @@ hr {
   top: 78px;
   left: 26px;
   width: fit-content;
-  /* grow horizontally with long lines, capped so a long hint truncates instead of overflowing */
-  max-width: min(48ch, calc(100vw - 52px));
+  /* grow horizontally with long lines, capped at half the screen so a long hint truncates */
+  max-width: min(50vw, calc(100vw - 52px));
   padding: 8px 11px;
   background-color: var(--hud-panel);
 }

@@ -20,6 +20,7 @@ class BrassKnuckles extends Weapon
         verb1: 'slug',
         verb2: 'slugs',
         type: WEAPON_MELEE,
+        attackEffect: PUNCH,
         canConceal: true,
         sound: {
           file: 'attack-fists',

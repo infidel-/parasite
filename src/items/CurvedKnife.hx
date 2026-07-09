@@ -21,6 +21,7 @@ class CurvedKnife extends Weapon
         verb1: 'stab',
         verb2: 'stabs',
         type: WEAPON_MELEE,
+        attackEffect: SLASH_LIGHT,
         spawnBlood: true,
         canConceal: true,
         sound: {

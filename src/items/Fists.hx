@@ -20,6 +20,7 @@ class Fists extends Weapon
         verb1: 'punch',
         verb2: 'punches',
         type: WEAPON_MELEE,
+        attackEffect: PUNCH,
         canConceal: true,
         sound: {
           file: 'attack-fists',

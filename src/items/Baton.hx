@@ -20,6 +20,7 @@ class Baton extends Weapon
         verb1: 'hit',
         verb2: 'hits',
         type: WEAPON_MELEE,
+        attackEffect: BLUNT,
         canConceal: true,
         sound: {
           file: 'attack-baton',

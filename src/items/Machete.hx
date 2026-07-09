@@ -20,6 +20,7 @@ class Machete extends Weapon
         verb1: 'slash',
         verb2: 'slashes',
         type: WEAPON_MELEE,
+        attackEffect: SLASH_HEAVY,
         spawnBlood: true,
         canConceal: true,
         sound: {

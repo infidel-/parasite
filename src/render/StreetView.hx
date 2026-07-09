@@ -279,7 +279,7 @@ class StreetView {
 // false when no city view / no attacker actor, so the caller plays the sound itself
   public function playMelee(atkE:Entity, tgtE:Entity,
       atkCol:Int, atkRow:Int, tgtCol:Int, tgtRow:Int,
-      soundFile:String, spawnBlood:Bool, bloodRow:Int, bloodFirstCol:Int):Bool
+      soundFile:String, attackEffect:String, spawnBlood:Bool, bloodRow:Int, bloodFirstCol:Int):Bool
     {
       if (!running ||
           actors == null ||
@@ -306,6 +306,16 @@ class StreetView {
             RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
         if (spawnBlood)
           actors.burst(tgtCol, tgtRow, dx, dz, bloodRow, bloodFirstCol);
+        // the attack arc for the swing attacker->target, at each end's chest height. the attacker
+        // origin is its *lunged* position (it has already reached toward the target at the apex),
+        // so a travelling effect (punch) starts from there, not the resting cell
+        if (attackEffect != null)
+          {
+            var ch = render.particles.Sprites.SIZE * 0.4;
+            actors.slashArc(attackEffect,
+              a.x + dx / len * reach, render.world.WorldCtx.floorY(atkCol, atkRow) + ch, a.z + dz / len * reach,
+              b.x, render.world.WorldCtx.floorY(tgtCol, tgtRow) + ch, b.z);
+          }
       };
       var lunge = new MeleeLunge(RenderConfig.MELEE.lungeMs,
         dx / len * reach, dz / len * reach, onDone);

@@ -122,10 +122,35 @@ class RenderConfig {
   // impact sound + target shake + blood burst fire. drops arc ballistically and land as SPLAT
   // ground decorations (rendered flat, persisted + cleared on area exit like 2D splats)
   public static final MELEE = {
-    lungeMs: 200.0,      // lunge duration (ms); sound/shake/blood fire at its end
+    lungeMs: 260.0,      // lunge duration (ms); sound/shake/blood/arc fire at the apex dwell
     lungeReach: 0.55,    // lunge peak reach toward the target, as a fraction of a CELL
+    apexStart: 0.42,     // progress where the reach lands + the impact beat/arc fire
+    apexEnd: 0.58,       // progress where the retreat begins (dwell = apexStart..apexEnd)
     shakeMs: 150.0,      // target hit-shake duration
     shakeAmp: 0.10,      // target hit-shake amplitude, as a fraction of a CELL
+  };
+  // melee attack-arc visuals: a glowing procedural swing sprite spawned at the strike apex, keyed
+  // by the weapon's _AttackEffect. per kind: color (emissive tint), scale (of Sprites.SIZE), sweep
+  // (roll swept over the life, radians), flat (lie the sprite on the ground vs upright billboard),
+  // travel (slide attacker->target over the life, e.g. a thrown punch)
+  public static final ARC = {
+    lifeMult: 1.3,       // arc life as a multiple of BASE_MS (all kinds share the base timing)
+    emissiveInt: 1.3,    // emissive intensity — bright enough to read at night, low enough to keep tint
+    px: 128,             // rasterized shape texture edge (px)
+    kinds: {
+      // horizontal blade streak lying flat on the ground, aligned to the swing
+      SLASH_LIGHT: { color: 0xcfe6ff, scale: 1.1, sweep: 0.4, flat: true,  travel: false, travelMult: 1.0 },
+      // big horizontal blade streak lying flat on the ground (like the knife, wider)
+      SLASH_HEAVY: { color: 0xffffff, scale: 1.7, sweep: 0.3, flat: true, travel: false, travelMult: 1.0 },
+      // short fat upright impact arc
+      BLUNT:       { color: 0xf0e2c0, scale: 1.0, sweep: 0.4, flat: false, travel: false, travelMult: 1.0 },
+      // a fist thrust from attacker to target (travelMult > 1 = flies faster, lands before life ends)
+      PUNCH:       { color: 0xffffff, scale: 0.55, sweep: 0.0, flat: false, travel: true, travelMult: 1.5 },
+      // triple horizontal claw slash
+      BITE:        { color: 0xff5030, scale: 1.0, sweep: 0.0, flat: false, travel: false, travelMult: 1.0 },
+      // blue electric bolt
+      STUN:        { color: 0x66ccff, scale: 1.0, sweep: 0.0, flat: false, travel: false, travelMult: 1.0 },
+    },
   };
   public static final BLOOD = {
     drops: 7,            // droplets thrown per bloody hit
