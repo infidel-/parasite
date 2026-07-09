@@ -111,6 +111,9 @@ class RenderConfig {
   public static final OCCLUSION = {
     fade: 0.22,    // opacity an occluding building fades to (0 = invisible, 1 = solid)
     lerp: 0.15,    // per-30fps-frame ease of fade toward its target (dt-compensated)
+    snap: 0.15,    // lock fade to target once within this gap: skips the slow exponential tail
+                   // (invisible on the flat wall) so windows crisp back + bloom the moment the
+                   // wall reads solid, instead of ~0.8s later
     margin: 1.0,   // XZ expansion when bucketing face-proud decals into their building
     aimGrow: 1.5   // targeting-mode: cells of lateral slack, so buildings flanking the
                    // cam->player / cam->target line fade too (not just strict occluders)

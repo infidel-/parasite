@@ -115,7 +115,7 @@ class Occlusion {
           o.target = blocked ? RenderConfig.OCCLUSION.fade : 1.0;
           if (o.fade == o.target && o.target == 1.0) continue; // solid and staying solid
           o.fade += (o.target - o.fade) * k;
-          if (Math.abs(o.fade - o.target) < 0.003) o.fade = o.target;
+          if (Math.abs(o.fade - o.target) < RenderConfig.OCCLUSION.snap) o.fade = o.target;
           apply(o);
         }
     }
