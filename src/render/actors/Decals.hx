@@ -131,6 +131,18 @@ class Decals {
           if (tex == null)
             return false;
           var sc = (d.scale != null ? d.scale : 1.0);
+          // wall blood: a drop that flew into a wall stands its splat upright on the struck face
+          // (like a bullet hole), nudged proud of the face; same wet sheen as the ground splats
+          if (d.face != null)
+            {
+              var fdir:Int = d.face;
+              var dv = render.world.Geom.DIRV[fdir];
+              var wy = (d.height != null ? d.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
+              sprites.paintWall(w.x + dv[0] * 0.12, wy, w.z + dv[1] * 0.12, tex, op, sc,
+                render.world.Geom.faceRotY(fdir), (d.angle != null ? d.angle : 0.0),
+                RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
+              return true;
+            }
           // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular
           // glint off the moon/lamp/flame lights. all intervening args are their paint() defaults
           sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, op, sc, true,

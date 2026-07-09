@@ -135,13 +135,17 @@ class Sprites {
 // place/reuse a quad standing on a wall face at world (wx,wy,wz): its normal points outward
 // along faceRotY (see Geom.faceRotY), spun in-plane by roll. same pool as paint(); used for
 // bullet-hole decals
-  public function paintWall(wx:Float, wy:Float, wz:Float, tex:Texture, op:Float, scale:Float, faceRotY:Float, roll:Float):Void
+  public function paintWall(wx:Float, wy:Float, wz:Float, tex:Texture, op:Float, scale:Float, faceRotY:Float, roll:Float, rough:Float = 1.0, metal:Float = 0.0):Void
     {
       if (tex == null) return;
       var m = slot(tex, op, wx, wy, wz, scale);
       // roll about the plane's own normal (local Z), then yaw to face the wall dir (Y). default
       // Euler XYZ applies Z before Y, so the roll stays about the reoriented outward normal
       m.rotation.set(0, faceRotY, roll);
+      // wet sheen for wall blood (rough < 1); bullet holes pass neither and stay matte via slot()'s reset
+      var mat:Dynamic = m.material;
+      mat.roughness = rough;
+      mat.metalness = metal;
       m.visible = true;
       idx++;
     }

@@ -14,6 +14,8 @@ class BloodDrop3D extends Particle3D {
   var vx:Float; var vy:Float; var vz:Float;             // world velocity (units/sec)
   var floor:Float;                                      // ground height it lands on
   var ix:Int; var iy:Int;                               // blood atlas cell for the landed splat
+  var prevCol:Int; var prevRow:Int;                     // last open cell flown through (wall-face pick)
+  var hitWall:Bool = false;                             // died entering a solid cell -> splat its face
 
   public function new(game:Game, x:Float, y:Float, z:Float, vx:Float, vy:Float, vz:Float, floor:Float, ix:Int, iy:Int)
     {
@@ -23,6 +25,8 @@ class BloodDrop3D extends Particle3D {
       this.vx = vx; this.vy = vy; this.vz = vz;
       this.floor = floor;
       this.ix = ix; this.iy = iy;
+      prevCol = Math.round(x / CityConfig.CELL + CityConfig.GRID / 2 - 0.5);
+      prevRow = Math.round(z / CityConfig.CELL + CityConfig.GRID / 2 - 0.5);
     }
 
 // throw a burst of drops from a target cell, biased away from the attacker; each arcs then lands
@@ -60,6 +64,17 @@ class BloodDrop3D extends Particle3D {
       x += vx * dt;
       y += vy * dt;
       z += vz * dt;
+      // entered a solid cell: stick to that wall (checked before the floor so the drop dies on the
+      // wall it flew into, not the ground past it). else remember this open cell as the last one
+      // before a possible wall and keep arcing until it drops to the floor
+      var col = Math.round(x / CityConfig.CELL + CityConfig.GRID / 2 - 0.5);
+      var row = Math.round(z / CityConfig.CELL + CityConfig.GRID / 2 - 0.5);
+      if (!game.area.canSeeThrough(col, row))
+        {
+          hitWall = true;
+          return false;
+        }
+      prevCol = col; prevRow = row;
       return y > floor;
     }
 
@@ -76,17 +91,46 @@ class BloodDrop3D extends Particle3D {
       var colF = x / CityConfig.CELL + CityConfig.GRID / 2 - 0.5;
       var rowF = z / CityConfig.CELL + CityConfig.GRID / 2 - 0.5;
       var col = Math.round(colF), row = Math.round(rowF);
+      var t = Const.TILE_SIZE;
+      var dx = Std.int((colF - col) * t);
+      var dy = Std.int((rowF - row) * t);
+      var scale = Const.round2(RenderConfig.BLOOD.scaleMin +
+        (RenderConfig.BLOOD.scaleMax - RenderConfig.BLOOD.scaleMin) * Math.random());
+      var angle = Const.round2(2 * Math.PI * Math.random());
+      // hit a wall mid-arc: stand the splat upright on the struck face (like a bullet hole). face =
+      // the side whose neighbour toward the last open cell is actually exposed; tie -> dominant axis
+      if (hitWall)
+        {
+          var ddx = prevCol - col, ddy = prevRow - row;
+          var xOpen = ddx != 0 && game.area.canSeeThrough(col + (ddx > 0 ? 1 : -1), row);
+          var zOpen = ddy != 0 && game.area.canSeeThrough(col, row + (ddy > 0 ? 1 : -1));
+          var dir = (xOpen && zOpen) ? render.world.Geom.faceToward(ddx, ddy)
+            : xOpen ? (ddx > 0 ? 2 : 3)
+            : zOpen ? (ddy > 0 ? 0 : 1)
+            : render.world.Geom.faceToward(ddx, ddy);
+          game.area.addTileDecoration(col, row, {
+            layerID: game.area.getTileset().splatLayerID,
+            icon: { row: iy, col: ix },
+            face: dir,
+            height: y,
+            dx: dx,
+            dy: dy,
+            scale: scale,
+            angle: angle,
+            tag: 'SPLAT',
+          });
+          return;
+        }
+      // flat ground splat
       if (!game.area.isWalkable(col, row))
         return;
-      var t = Const.TILE_SIZE;
       game.area.addTileDecoration(col, row, {
         layerID: game.area.getTileset().splatLayerID,
         icon: { row: iy, col: ix },
-        dx: Std.int((colF - col) * t),
-        dy: Std.int((rowF - row) * t),
-        scale: Const.round2(RenderConfig.BLOOD.scaleMin +
-          (RenderConfig.BLOOD.scaleMax - RenderConfig.BLOOD.scaleMin) * Math.random()),
-        angle: Const.round2(2 * Math.PI * Math.random()),
+        dx: dx,
+        dy: dy,
+        scale: scale,
+        angle: angle,
         tag: 'SPLAT',
       });
     }
