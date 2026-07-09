@@ -130,6 +130,39 @@ class Sparks {
       idx++;
     }
 
+// draw a soft round glow at (cx,cy,cz), size w: fixed front-facing + leaned back by Sprites.TILT
+// (like flameQuad / the actor sprites) so it stays coplanar with the flame body instead of spinning
+// to camera. uses the internal soft radial dot, centered (no base-pivot shift). tinted, additive
+  public function glowQuad(cx:Float, cy:Float, cz:Float, w:Float, color:Int, op:Float, order:Int = 0):Void
+    {
+      var m = pool[idx];
+      if (m == null)
+        {
+          m = new Mesh(new PlaneGeometry(1, 1),
+            new MeshBasicMaterial({
+              map: tex,
+              color: 0xffffff,
+              transparent: true,
+              opacity: 1.0,
+              depthWrite: false,
+              side: THREE.DoubleSide,
+              blending: untyped THREE.AdditiveBlending,
+            }));
+          pool[idx] = m;
+          actorGroup.add(m);
+        }
+      var mat:Dynamic = m.material;
+      mat.opacity = op;
+      untyped mat.color.setHex(color);
+      untyped mat.map = tex;
+      m.position.set(cx, cy, cz);
+      m.rotation.set(-Sprites.TILT, 0, 0);
+      m.scale.set(w, w, 1);
+      m.renderOrder = order;
+      m.visible = true;
+      idx++;
+    }
+
 // end a frame: hide every pool quad left untouched this frame
   public function end():Void
     {

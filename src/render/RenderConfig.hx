@@ -188,7 +188,7 @@ class RenderConfig {
     lightDistance: 16.0,    // point-light reach (world units, 4 cells): falls to 0 by here (decay curve)
     lightRangeCells: 10,    // only barrels within this many cells of the player claim a pool light
     litRangeCells: 4,       // an actor this many or more cells from a barrel gets no warm flicker glow (like shadows)
-    rimY: 2.2,              // flame + light height above the barrel's ground (world units)
+    rimY: 1.8,              // flame + light height above the barrel's ground (world units)
     // flicker: two summed sines on a raw-dt clock, per-barrel phase (freqs are per-ms)
     flickFreqA: 0.017,
     flickFreqB: 0.031,

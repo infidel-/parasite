@@ -148,8 +148,25 @@ class FlameShadows {
         {
           drawFlameBody(b);
           if (Math.random() < dtMs / F.emberMs)
-            particles.add(new FlameEmber3D(b.x, b.floor + F.rimY, b.z, b.phase));
+            {
+              var an = rimAnchor(b);
+              particles.add(new FlameEmber3D(b.x, an.y, an.z, b.phase));
+            }
         }
+    }
+
+// world anchor of a barrel's flame: the drum rim, leaned back exactly like the barrel sprite
+// (Sprites.paint tilts the upright quad -TILT about its centre). without this the flame/glow/embers
+// sit at the un-leaned cell centre and float ~0.45u toward the camera off the tilted rim — invisible
+// from the near-overhead default view, a clear gap under a free/fly camera. rimY is the un-leaned
+// rim height above the floor; project it through the same centre-pivot lean the barrel uses
+  function rimAnchor(b:FlameBarrel):{ y:Float, z:Float }
+    {
+      var u = RenderConfig.FLAME.rimY - Sprites.SIZE * 0.5;   // rim height above the barrel quad's centre
+      return {
+        y: b.floor + Sprites.SIZE * 0.5 + u * Math.cos(Sprites.TILT),
+        z: b.z - u * Math.sin(Sprites.TILT),
+      };
     }
 
 // draw one barrel's flame: a short column of warm camera-facing soft dots rising off the rim,
@@ -165,21 +182,25 @@ class FlameShadows {
         }
       var fl = FlameLights.flicker(flameT, b.phase);
       var fl2 = FlameLights.flicker(flameT, b.phase + 2.3);   // inner layer flickers on its own beat
-      var baseY = b.floor + F.rimY;
-      // soft glow halo at the rim (low additive alpha, centered — no sway)
-      sparks.streak(b.x, baseY + F.bodyRise * 0.2, b.z, 0, 1, 0,
-        F.glowW, F.glowW, F.colorHot, F.glowAlpha * (0.6 + 0.4 * fl), Sprites.ORD_ACTOR);
+      // base pinned to the barrel's leaned rim (matches the tilted drum in depth, not the cell centre)
+      var an = rimAnchor(b);
+      var baseY = an.y;
+      var az = an.z;
+      // soft glow halo at the rim (low additive alpha, centered — no sway). front-facing like the
+      // flame body so it stays coplanar with the barrel instead of spinning to camera
+      sparks.glowQuad(b.x, baseY + F.bodyRise * 0.2, az,
+        F.glowW, F.colorHot, F.glowAlpha * (0.6 + 0.4 * fl), Sprites.ORD_ACTOR);
       // outer flame layer: cooler + bigger, gentle vertical bob, base pinned at the rim
       var hO = F.bodyRise * 1.1 * (0.8 + 0.35 * fl);
       var wO = F.bodyW * 1.15 * (0.75 + 0.4 * fl);
       var bobO = Math.sin(flameT * 0.012 + b.phase) * 0.05 * F.bodyRise;
-      sparks.flameQuad(b.x, baseY + hO * 0.5 + bobO, b.z, wO, hO, flameTex, F.colorTip,
+      sparks.flameQuad(b.x, baseY + hO * 0.5 + bobO, az, wO, hO, flameTex, F.colorTip,
         F.bodyAlpha * (0.5 + 0.4 * fl) * 0.8, Sprites.ORD_ACTOR);
       // inner flame layer: hotter + smaller + shorter, faster bob
       var hI = F.bodyRise * 0.72 * (0.85 + 0.4 * fl2);
       var wI = F.bodyW * 0.7 * (0.7 + 0.5 * fl2);
       var bobI = Math.sin(flameT * 0.02 + b.phase * 1.7) * 0.06 * F.bodyRise;
-      sparks.flameQuad(b.x, baseY + hI * 0.5 + bobI, b.z, wI, hI, flameTex, F.colorHot,
+      sparks.flameQuad(b.x, baseY + hI * 0.5 + bobI, az, wI, hI, flameTex, F.colorHot,
         F.bodyAlpha * (0.6 + 0.4 * fl2), Sprites.ORD_ACTOR);
     }
 

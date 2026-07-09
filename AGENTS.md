@@ -32,6 +32,7 @@
 - compatibility shims are allowed only for real pre-existing persisted formats already in production saves; otherwise reject over-defensive parsing.
 - any `Dynamic` usage in game logic MUST have an inline comment that states the trust boundary and why typed data is not possible.
 - in `parasite-mod-sdk/externs/`, ALWAYS comment EVERY field and EVERY function of every typedef/extern (one-line summary above the line; first letter lowercase). Externs are the mod author's primary documentation surface — uncommented fields ship as silent API to third parties.
+- Object/AI visual effects (flames, glows, auras, hit sparks tied to a world entity) must be FRONTAL-facing (fixed yaw, leaned back by `Sprites.TILT`, like the actor sprites) so they stay coplanar with and glued to their source from every camera angle — NOT camera-facing billboards. Camera-facing is only for free transient FX with no world anchor (loose embers/impact sparks). See `render.particles.Sparks` `flameQuad`/`glowQuad` (frontal) vs `streak` (camera-facing).
 - Animation timing: every timed anim derives from [`render.RenderConfig.BASE_MS`](src/render/RenderConfig.hx) (base one-turn duration) as a plain multiplier (0.5×/1×/1.5×…), advanced each frame by `dtMs * ANIM_SPEED / BASE_MS` and scaled by the global `ANIM_SPEED`. NEVER hardcode milliseconds — a new anim's duration is `BASE_MS * <mult>`. (bullets etc. bypass and use raw dt.)
 
 ## Textures & image generation (3D city art)
