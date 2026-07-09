@@ -55,10 +55,14 @@ class Sprites {
 // place/reuse a sprite quad at world (wx,wy,wz): texture tex, opacity op, uniform scale (of
 // SIZE); flat lays it on the ground as a decal (yaw rotates it there). no-op if the atlas
 // isn't decoded yet (tex == null) — the slot is not consumed
-  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true, depthFunc:Dynamic = null):Void
+  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true, depthFunc:Dynamic = null, faceX:Float = 1.0):Void
     {
       if (tex == null) return;
       var m = slot(tex, op, wx, wy, wz, scale);
+      // horizontal facing (side-view actor turning): scale x by faceX in [-1..1], squashing through
+      // 0 for the turn. mirrors the mesh, not the shared cached texture
+      if (faceX != 1.0)
+        m.scale.x = scale * faceX;
       // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
       // tracking) leaned back toward the overhead camera by TILT so it reads flatter
       if (flat)

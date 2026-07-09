@@ -185,6 +185,9 @@ class CommonLogic
       if (target.type == TARGET_AI)
         targetBloodType = target.ai.bloodType();
 
+      // attacker turns to face what it hits (same billboard flip as a move)
+      if (attacker.ai != null)
+        attacker.ai.faceToward(target.x);
       // entities + blood icon for the 3D combat bridges (melee lunge / ranged shot)
       var atkE = (attacker.ai != null ? attacker.ai.entity : null);
       var tgtE = (target.type == TARGET_AI ? target.ai.entity : null);

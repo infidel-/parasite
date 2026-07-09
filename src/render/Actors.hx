@@ -46,6 +46,7 @@ class Actors {
   var _pObj = 0.0; var _pAI = 0.0; var _pPass = 0.0;   // accumulated ms: objects, AI, my passes
 
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
+  static inline var TURN_SPEED = 2.0;                  // facing flip eases at this * base speed (full turn ~1 BASE_MS)
   static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
   static inline var ATTACH_SCALE = 1.0;                // attached parasite is drawn this much smaller (sits on the head)
 
@@ -310,7 +311,7 @@ class Actors {
         return;
       var w = CityConfig.cellToWorld(e.mx, e.my);
       actors.set(e, { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
-                      op: 0.0, opTarget: 1.0, fx: null });
+                      op: 0.0, opTarget: 1.0, fx: null, face: 1.0 });
     }
 
 // advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
@@ -330,10 +331,11 @@ class Actors {
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
       var order = flat ? Sprites.ORD_DECAL : Sprites.ORD_ACTOR;
       var emInt = flat ? 0.0 : flames.litAt(a);
+      // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       if (a.fx != null)
-        sprites.paint(a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt);
+        sprites.paint(a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt, true, null, a.face);
       else
-        sprites.paint(a.x, wy, a.z, texFor(e), a.op, baseScale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt);
+        sprites.paint(a.x, wy, a.z, texFor(e), a.op, baseScale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt, true, null, a.face);
     }
 
 // launch the parasite's leap onto the host's head: snap its slide onto the host cell so
@@ -384,11 +386,14 @@ class Actors {
     {
       var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       var a = actors.get(e);
+      // facing target: side-view actors (dogs) mirror toward their move/attack direction; others +1
+      var aie = Std.downcast(e, entities.AIEntity);
+      var tf = (aie != null && aie.ai != null && aie.ai.flipsOnMove() && aie.ai.faceRight) ? -1.0 : 1.0;
       if (a == null)
         {
           var w = CityConfig.cellToWorld(e.mx, e.my);
           a = { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
-                op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null };
+                op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null, face: tf };
           actors.set(e, a);
           return a;
         }
@@ -403,6 +408,9 @@ class Actors {
       var opStep = step * FADE_SPEED;
       if (a.op < a.opTarget) a.op = Math.min(a.opTarget, a.op + opStep);
       else if (a.op > a.opTarget) a.op = Math.max(a.opTarget, a.op - opStep);
+      // facing channel: ease the mirror toward the target, linear through 0 (a horizontal turn)
+      var fStep = step * TURN_SPEED;
+      a.face += Math.max(-fStep, Math.min(fStep, tf - a.face));
       // transient effect: advance it (computes its offsets, fires onFinish), clear when done
       if (a.fx != null &&
           a.fx.advance(dtMs))

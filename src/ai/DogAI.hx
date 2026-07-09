@@ -43,6 +43,12 @@ class DogAI extends AI
       super.initPost(onLoad);
     }
 
+// dog art is side-view, so its 3D billboard mirrors with facing
+  public override function flipsOnMove(): Bool
+    {
+      return true;
+    }
+
 // check if this AI should use "it" pronouns
   public override function isIt(): Bool
     {

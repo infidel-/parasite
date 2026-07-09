@@ -16,7 +16,7 @@ import mods.ModEventRegistry;
 class AI extends AIData
 {
   static var _ignoredFields = [ 'entity', 'event', 'npc', 'sounds',
-    'isTracing',
+    'isTracing', 'faceRight',
   ];
   public var entity: AIEntity; // gui entity
   public var event(get, null): scenario.Event; // event link (for scenario npcs)
@@ -43,6 +43,7 @@ class AI extends AIData
   public var guardTargetX: Int;
   public var guardTargetY: Int;
   public var direction: Int; // direction of movement
+  public var faceRight: Bool; // 3D billboard faces right (mirrored) — set by the last east/west move or attack
 
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
   var _turnsInvisible: Int; // number of turns passed since player saw this AI
@@ -101,6 +102,7 @@ class AI extends AIData
       enemies = new List();
       command = new CommandParams();
       direction = 0;
+      faceRight = false;
       parasiteAttached = false;
       isTracing = false;
 
@@ -277,9 +279,27 @@ public function show()
                 return;
             }
         }
+      faceToward(vx); // turn to face the move direction (east/west)
       x = vx;
       y = vy;
       entity.setPosition(x, y);
+    }
+
+// turn the 3D billboard to face a target column (east = right, west = left; keeps facing on a
+// purely vertical delta). also used on attacks so the attacker turns toward what it hits
+  public function faceToward(tx: Int)
+    {
+      if (tx > x)
+        faceRight = true;
+      else if (tx < x)
+        faceRight = false;
+    }
+
+// whether this AI's 3D billboard mirrors with its facing (side-view art like the dog); front-view
+// art (humans) leaves it false so nothing flips
+  public dynamic function flipsOnMove(): Bool
+    {
+      return false;
     }
 
 

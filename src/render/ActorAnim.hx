@@ -21,7 +21,8 @@ typedef PosSlide = {
 typedef Actor = {
   > PosSlide,
   op:Float, opTarget:Float,  // opacity channel: eased toward want-visible (1/0)
-  fx:Effect                  // one-shot transient effect (render.anim.*), null = none
+  fx:Effect,                 // one-shot transient effect (render.anim.*), null = none
+  face:Float                 // horizontal facing: +1 art default, -1 mirrored; eased on a turn
 };
 
 class ActorAnim {
