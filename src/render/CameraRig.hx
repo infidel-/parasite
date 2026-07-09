@@ -25,11 +25,18 @@ class CameraRig {
   var ztDone:Void->Void = null;                           // fires once when the active tween completes
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
   var recoil = new Vector3();                              // transient player-shot camera kick, decays to 0
+  var lampCorners:Map<Int,Int> = null;                    // grid vertex -> lamp dir; follow target bends past a post too
 
   public function new(game:Game, camera:PerspectiveCamera)
     {
       this.game = game;
       this.camera = camera;
+    }
+
+// receive the lamp-corner map (built once per scene) so the follow target bends past posts
+  public function setLampCorners(corners:Map<Int,Int>):Void
+    {
+      lampCorners = corners;
     }
 
 // snap the camera to the player on (re)build so the first frame is framed correctly
@@ -137,7 +144,7 @@ class CameraRig {
       // same way the player billboard does so the camera never cuts diagonally through a wall
       var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       var bend = (camSlide != null ?
-        ActorAnim.cornerBend(game.area, camSlide.col, camSlide.row, game.playerArea.x, game.playerArea.y) : null);
+        ActorAnim.cornerBend(game.area, camSlide.col, camSlide.row, game.playerArea.x, game.playerArea.y, lampCorners) : null);
       camSlide = ActorAnim.slideTo(camSlide, game.playerArea.x, game.playerArea.y, step,
         bend != null ? bend.col : -1,
         bend != null ? bend.row : -1);

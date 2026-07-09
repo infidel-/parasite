@@ -23,6 +23,7 @@ typedef SceneBundle = {
   pointLights:Array<Object3D>, // lamp spotlight pool + cone group (debug 5 toggle)
   lampLights:LampLights, // fixed live-spotlight pool, ticked per frame to follow the player
   lampPosts:Array<LampPost>, // every placed lamp (bulb world x/z + cell) for the pool
+  lampCorners:Map<Int,Int>, // grid vertex (ActorAnim.lampVertexKey) -> lamp dir, so the slide bends past a post
   lampProp:render.Models.InstancedProp, // instanced lamp meshes, frustum-culled per frame
 };
 
@@ -82,6 +83,7 @@ class SceneSetup {
     var coneGroup = new Group();
     scene.add(coneGroup);
     var lampPosts:Array<LampPost> = [];
+    var lampCorners:Map<Int,Int> = new Map(); // grid vertex -> lamp dir, so the actor/camera slide bends past a post
     var placements:Array<{ x:Float, z:Float, yaw:Float }> = [];
     var bulbs:Array<{ x:Float, z:Float }> = [];
     for (lamp in city.lamps) {
@@ -96,6 +98,10 @@ class SceneSetup {
       placements.push({ x: px, z: pz, yaw: yaw });
       bulbs.push({ x: bx, z: bz });
       lampPosts.push({ x: bx, z: bz, col: lamp.col, row: lamp.row });
+      // the cell corner (grid vertex) the post stands on, keyed for cornerBend to query
+      var a = (lamp.dir == 1 || lamp.dir == 3) ? lamp.col - 1 : lamp.col;
+      var b = (lamp.dir == 1 || lamp.dir == 2) ? lamp.row - 1 : lamp.row;
+      lampCorners.set(ActorAnim.lampVertexKey(a, b), lamp.dir);
     }
     // posts + cones: one instanced draw call each, regardless of lamp count
     var lampProp = Models.instanced(scene, RenderConfig.MODELS.streetLamp, placements, CityConfig.CELL * 1.6);
@@ -120,6 +126,16 @@ class SceneSetup {
     };
     var setLightsOff = function():Void { for (l in lights) l.visible = false; };
 
-    return { scene: scene, toggleLighting: toggleLighting, setLightsOff: setLightsOff, fill: [ambient, hemi, moon], pointLights: pts, lampLights: lampLights, lampPosts: lampPosts, lampProp: lampProp };
+    return {
+      scene: scene,
+      toggleLighting: toggleLighting,
+      setLightsOff: setLightsOff,
+      fill: [ ambient, hemi, moon ],
+      pointLights: pts,
+      lampLights: lampLights,
+      lampPosts: lampPosts,
+      lampCorners: lampCorners,
+      lampProp: lampProp
+    };
   }
 }

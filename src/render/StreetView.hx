@@ -160,6 +160,7 @@ class StreetView {
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
     lampProp = bundle.lampProp;
+    rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
     World.build(scene, city, seed);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings);
@@ -181,6 +182,7 @@ class StreetView {
     scene.add(actorGroup);
     // fresh area: new actor layer so billboards/slides/effects start clean
     actors = new Actors(game, actorGroup, camera);
+    actors.setLampCorners(bundle.lampCorners); // route the actor slide around lamp posts
     // seed-derived street debris (render-only, deterministic from the seed — no save cost); old
     // seedless saves (seed -1) skip it
     if (seed != -1)

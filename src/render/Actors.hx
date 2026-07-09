@@ -38,6 +38,7 @@ class Actors {
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
+  var lampCorners:Map<Int,Int> = null;                  // grid vertex -> lamp dir; slides bend past a post on the cut corner
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
@@ -73,6 +74,12 @@ class Actors {
   public function setLamps(lamps:Array<LampPost>):Void
     {
       flames.setLamps(lamps);
+    }
+
+// receive the lamp-corner map (built once per scene) so the position slide bends past posts
+  public function setLampCorners(corners:Map<Int,Int>):Void
+    {
+      lampCorners = corners;
     }
 
 // attach a transient effect to an actor's billboard (build it from render.anim.*, e.g.
@@ -378,9 +385,9 @@ class Actors {
           actors.set(e, a);
           return a;
         }
-      // position channel. a one-step diagonal move sharing a corner with a building clips
-      // that corner; route it through the open shoulder as an L-path (double orthogonal move)
-      var bend = ActorAnim.cornerBend(game.area, a.col, a.row, e.mx, e.my);
+      // position channel. a one-step diagonal move sharing a corner with a building (or a lamp
+      // post) clips it; route it through the open shoulder as an L-path (double orthogonal move)
+      var bend = ActorAnim.cornerBend(game.area, a.col, a.row, e.mx, e.my, lampCorners);
       ActorAnim.slideTo(a, e.mx, e.my, step,
         bend != null ? bend.col : -1,
         bend != null ? bend.row : -1);

@@ -25,10 +25,18 @@ typedef Actor = {
 };
 
 class ActorAnim {
+// key a grid vertex V(a,b) (the +x/+z corner shared by cells (a,b)..(a+1,b+1)) into a Map
+// int. offset by 1 because a lamp corner can land on a=-1/b=-1; shared by SceneSetup (build)
+// and cornerBend (query) so both agree
+  public static inline function lampVertexKey(a:Int, b:Int):Int
+    return (a + 1) * (CityConfig.GRID + 2) + (b + 1);
+
 // L-path bend for a one-step diagonal move from (fc,fr) to (tc,tr): if exactly one shoulder
 // cell is a wall, returns the open shoulder to route the slide through; null = go straight.
-// keeps the camera follow and the actor slide bending the same way past a building corner
-  public static function cornerBend(area:game.AreaGame, fc:Int, fr:Int, tc:Int, tr:Int):{ col:Int, row:Int }
+// keeps the camera follow and the actor slide bending the same way past a building corner.
+// lampCorners (vertex key -> lamp dir) additionally bends past a lamp post standing on the
+// cut corner even when both shoulders are open — routing on the pavement side, away from the road
+  public static function cornerBend(area:game.AreaGame, fc:Int, fr:Int, tc:Int, tr:Int, lampCorners:Map<Int,Int> = null):{ col:Int, row:Int }
     {
       var dc = tc - fc, dr = tr - fr;
       if (dc < -1 || dc > 1 ||
@@ -41,6 +49,21 @@ class ActorAnim {
         return { col: tc, row: fr };
       if (vOpen && !hOpen)
         return { col: fc, row: tr };
+      // both shoulders open: bend only if a lamp post sits on the corner this diagonal cuts
+      if (hOpen && vOpen && lampCorners != null)
+        {
+          var dir = lampCorners.get(lampVertexKey(fc < tc ? fc : tc, fr < tr ? fr : tr));
+          if (dir != null)
+            // pick the shoulder stepping AWAY from the post's road (dir), so it rounds the
+            // post on the sidewalk; both are walkable, so the choice is purely cosmetic
+            return switch (dir)
+              {
+                case 0: fr < tr ? { col: tc, row: fr } : { col: fc, row: tr }; // road +row: lower row
+                case 1: fr > tr ? { col: tc, row: fr } : { col: fc, row: tr }; // road -row: higher row
+                case 2: tc < fc ? { col: tc, row: fr } : { col: fc, row: tr }; // road +col: lower col
+                default: tc > fc ? { col: tc, row: fr } : { col: fc, row: tr }; // road -col: higher col
+              };
+        }
       return null;
     }
 
