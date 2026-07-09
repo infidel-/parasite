@@ -15,6 +15,7 @@ class Inventory extends _SaveObject
   var game: Game;
   var _list: List<_Item>; // list of items
   public var weaponID: String; // currently active weapon
+  public var forceMelee: Bool = false; // transient: melee-attack key wants melee/fists, never a ranged weapon
 
   // item slots
   public var clothing(default, null): _Item;

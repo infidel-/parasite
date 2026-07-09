@@ -621,15 +621,9 @@ class PlayerArea extends _SaveObject
       };
 
       var inventory = player.host.inventory;
-      var oldWeaponID = inventory.weaponID;
-      if (preferMelee)
-        {
-          var meleeWeapon = getKnownMeleeWeapon();
-          if (meleeWeapon != null)
-            inventory.weaponID = meleeWeapon.id;
-        }
+      inventory.forceMelee = preferMelee;
       CommonLogic.logicAttack(Attacker.fromAI(game, player.host, true), target);
-      inventory.weaponID = oldWeaponID;
+      inventory.forceMelee = false;
 
       actionPost(); // post-action call
     }
@@ -655,13 +649,7 @@ class PlayerArea extends _SaveObject
         return;
 
       var inventory = player.host.inventory;
-      var oldWeaponID = inventory.weaponID;
-      if (preferMelee)
-        {
-          var meleeWeapon = getKnownMeleeWeapon();
-          if (meleeWeapon != null)
-            inventory.weaponID = meleeWeapon.id;
-        }
+      inventory.forceMelee = preferMelee;
       var weapon = player.host.getCurrentWeaponItemInfo().weapon;
       if (!weapon.isRanged &&
           !isNearObject(obj))
@@ -675,7 +663,7 @@ class PlayerArea extends _SaveObject
             }
           if (!isNearObject(obj))
             {
-              inventory.weaponID = oldWeaponID;
+              inventory.forceMelee = false;
               return;
             }
         }
@@ -689,7 +677,7 @@ class PlayerArea extends _SaveObject
       };
 
       CommonLogic.logicAttack(Attacker.fromAI(game, player.host, true), target);
-      inventory.weaponID = oldWeaponID;
+      inventory.forceMelee = false;
 
       actionPost(); // post-action call
     }
