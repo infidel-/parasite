@@ -162,6 +162,8 @@ class RenderConfig {
     scaleMin: 0.15,      // landed splat min scale
     scaleMax: 0.5,       // landed splat max scale
     splatMax: 80,        // per-area SPLAT decoration cap (oldest evicted)
+    wetRough: 0.4,       // landed-splat specular roughness (< 1 = wet sheen off moon/lamps; 1 = matte)
+    wetMetal: 0.5,       // landed-splat metalness (> 0 tints the glint by the red albedo; stronger, wetter)
   };
   // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the
   // lit 3D rig (full ambient+hemisphere+moon on an up-facing quad) it reads too bright. multiply the

@@ -131,8 +131,11 @@ class Decals {
           if (tex == null)
             return false;
           var sc = (d.scale != null ? d.scale : 1.0);
+          // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular
+          // glint off the moon/lamp/flame lights. all intervening args are their paint() defaults
           sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, op, sc, true,
-            (d.angle != null ? d.angle : 0.0));
+            (d.angle != null ? d.angle : 0.0), Sprites.ORD_DECAL, 0, 0.0, true, null, 1.0,
+            RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
           return true;
         }
       // bullet hole: stand it on its wall face, radius-fade around the player

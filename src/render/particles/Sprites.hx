@@ -55,7 +55,7 @@ class Sprites {
 // place/reuse a sprite quad at world (wx,wy,wz): texture tex, opacity op, uniform scale (of
 // SIZE); flat lays it on the ground as a decal (yaw rotates it there). no-op if the atlas
 // isn't decoded yet (tex == null) — the slot is not consumed
-  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true, depthFunc:Dynamic = null, faceX:Float = 1.0):Void
+  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true, depthFunc:Dynamic = null, faceX:Float = 1.0, rough:Float = 1.0, metal:Float = 0.0):Void
     {
       if (tex == null) return;
       var m = slot(tex, op, wx, wy, wz, scale);
@@ -75,6 +75,11 @@ class Sprites {
       var mat:Dynamic = m.material;
       untyped mat.emissive.setHex(emissive);
       mat.emissiveIntensity = emissiveInt;
+      // wet sheen: rough < 1 lets this quad catch a soft specular highlight off the scene lights
+      // (moon/lamp/flame) instead of full-matte. blood splats use it; everything else stays 1.
+      // metal > 0 tints that glint by the (dark red) albedo for a stronger, wetter sheen
+      mat.roughness = rough;
+      mat.metalness = metal;
       // depthTest off = always-on-top UI (entity badges): never occluded by walls in front.
       // depthFunc (when set) flips the compare — GreaterDepth draws only where occluded (x-ray)
       untyped mat.depthTest = depthTest;
@@ -175,6 +180,8 @@ class Sprites {
       mat.emissiveIntensity = 0;
       untyped mat.depthTest = true;
       untyped mat.depthFunc = THREE.LessEqualDepth;
+      mat.roughness = 1;
+      mat.metalness = 0;
       m.renderOrder = 0;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
