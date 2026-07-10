@@ -11,6 +11,27 @@ import game.Game;
 // true pixel footprint, centered on the point, instead of stretched across the whole SIZE quad
 typedef GroundSprite = { tex:CanvasTexture, fw:Float, fh:Float };
 
+// options for paint(): required position/texture/opacity/scale plus named optional overrides,
+// replacing the old 16-positional-arg signature
+typedef PaintOpts = {
+  var x:Float;                       // world position
+  var y:Float;
+  var z:Float;
+  var tex:CanvasTexture;             // sprite texture (null = atlas not decoded yet, no-op)
+  var op:Float;                      // opacity
+  var scale:Float;                   // uniform scale of SIZE
+  @:optional var flat:Bool;          // lie flat on the ground as a decal (default false)
+  @:optional var yaw:Float;          // ground rotation (flat) / in-plane roll (upright), default 0
+  @:optional var order:Int;          // renderOrder (ORD_*), default 0
+  @:optional var emissive:Int;       // self-glow color, default 0 = no glow
+  @:optional var emissiveInt:Float;  // self-glow intensity, default 0
+  @:optional var depthTest:Bool;     // false = always-on-top UI, default true
+  @:optional var depthFunc:Dynamic;  // three.js depth-func const (untyped extern), default null
+  @:optional var faceX:Float;        // horizontal facing mirror in [-1..1], default 1.0
+  @:optional var rough:Float;        // material roughness (wet sheen < 1), default 1.0
+  @:optional var metal:Float;        // material metalness, default 0
+}
+
 // the 3D "canvas": a pool of reused sprite quads + an atlas-crop texture cache. one paint
 // surface shared by the actor layer and every Particle3D. a frame is begin() -> many paint()
 // -> end(); paint() consumes the next pooled quad, end() hides the leftover tail. mirrors the
@@ -52,39 +73,40 @@ class Sprites {
       idx = 0;
     }
 
-// place/reuse a sprite quad at world (wx,wy,wz): texture tex, opacity op, uniform scale (of
-// SIZE); flat lays it on the ground as a decal (yaw rotates it there). no-op if the atlas
-// isn't decoded yet (tex == null) — the slot is not consumed
-  public function paint(wx:Float, wy:Float, wz:Float, tex:CanvasTexture, op:Float, scale:Float, flat:Bool = false, yaw:Float = 0.0, order:Int = 0, emissive:Int = 0, emissiveInt:Float = 0.0, depthTest:Bool = true, depthFunc:Dynamic = null, faceX:Float = 1.0, rough:Float = 1.0, metal:Float = 0.0):Void
+// place/reuse a sprite quad (see PaintOpts); flat lays it on the ground as a decal (yaw rotates
+// it there). no-op if the atlas isn't decoded yet (tex == null) — the slot is not consumed
+  public function paint(o:PaintOpts):Void
     {
-      if (tex == null) return;
-      var m = slot(tex, op, wx, wy, wz, scale);
+      if (o.tex == null) return;
+      var m = slot(o.tex, o.op, o.x, o.y, o.z, o.scale);
+      var yaw = (o.yaw != null ? o.yaw : 0.0);
       // horizontal facing (side-view actor turning): scale x by faceX in [-1..1], squashing through
       // 0 for the turn. mirrors the mesh, not the shared cached texture
-      if (faceX != 1.0)
-        m.scale.x = scale * faceX;
+      if (o.faceX != null &&
+          o.faceX != 1.0)
+        m.scale.x = o.scale * o.faceX;
       // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
       // tracking) leaned back toward the overhead camera by TILT so it reads flatter
-      if (flat)
+      if (o.flat)
         m.rotation.set(-Math.PI / 2, 0, yaw);
       else
         m.rotation.set(-TILT, 0, yaw); // yaw doubles as in-plane roll for upright sprites (badge wiggle)
-      m.renderOrder = order;
+      m.renderOrder = (o.order != null ? o.order : 0);
       // warm self-glow (flame flickering on a nearby actor): emissiveMap = the sprite, so the glow
       // is shaped by the sprite and flickers with emissiveInt. default 0 = no glow (unchanged path)
       var mat:Dynamic = m.material;
-      untyped mat.emissive.setHex(emissive);
-      mat.emissiveIntensity = emissiveInt;
+      untyped mat.emissive.setHex(o.emissive != null ? o.emissive : 0);
+      mat.emissiveIntensity = (o.emissiveInt != null ? o.emissiveInt : 0.0);
       // wet sheen: rough < 1 lets this quad catch a soft specular highlight off the scene lights
       // (moon/lamp/flame) instead of full-matte. blood splats use it; everything else stays 1.
       // metal > 0 tints that glint by the (dark red) albedo for a stronger, wetter sheen
-      mat.roughness = rough;
-      mat.metalness = metal;
+      mat.roughness = (o.rough != null ? o.rough : 1.0);
+      mat.metalness = (o.metal != null ? o.metal : 0.0);
       // depthTest off = always-on-top UI (entity badges): never occluded by walls in front.
       // depthFunc (when set) flips the compare — GreaterDepth draws only where occluded (x-ray)
-      untyped mat.depthTest = depthTest;
-      if (depthFunc != null)
-        untyped mat.depthFunc = depthFunc;
+      untyped mat.depthTest = (o.depthTest != false);
+      if (o.depthFunc != null)
+        untyped mat.depthFunc = o.depthFunc;
       m.visible = true;
       idx++;
     }

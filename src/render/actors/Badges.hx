@@ -75,13 +75,27 @@ class Badges {
         return;
       var floor = WorldCtx.floorY(a.col, a.row);
       if (framed)
-        sprites.paint(a.x, floor + 0.05, a.z,
-          sprites.tex('entities', Const.FRAME_TARGET_FRAME, Const.ROW_REGION_ICON, false),
-          1.0, TARGET_SCALE, true, 0.0, Sprites.ORD_MARK);
+        sprites.paint({
+          x: a.x,
+          y: floor + 0.05,
+          z: a.z,
+          tex: sprites.tex('entities', Const.FRAME_TARGET_FRAME, Const.ROW_REGION_ICON, false),
+          op: 1.0,
+          scale: TARGET_SCALE,
+          flat: true,
+          order: Sprites.ORD_MARK,
+        });
       if (cursor)
-        sprites.paint(a.x, floor + 0.06, a.z,
-          sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false),
-          1.0, TARGET_SCALE, true, 0.0, Sprites.ORD_MARK);
+        sprites.paint({
+          x: a.x,
+          y: floor + 0.06,
+          z: a.z,
+          tex: sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false),
+          op: 1.0,
+          scale: TARGET_SCALE,
+          flat: true,
+          order: Sprites.ORD_MARK,
+        });
     }
 
 // through-wall x-ray outline: a colored, patterned silhouette of the AI's own sprite, drawn ONLY
@@ -106,8 +120,18 @@ class Badges {
       var col = outlineColor(ai, badges);
       var wy = WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5;
       // emissive = the state color so the pattern reads at night; GreaterDepth = occluded-only
-      sprites.paint(a.x, wy, a.z,
-        tex, a.op, RenderConfig.XRAY.grow, false, 0.0, Sprites.ORD_ACTOR, col, RenderConfig.XRAY.emissive, true, THREE.GreaterDepth);
+      sprites.paint({
+        x: a.x,
+        y: wy,
+        z: a.z,
+        tex: tex,
+        op: a.op,
+        scale: RenderConfig.XRAY.grow,
+        order: Sprites.ORD_ACTOR,
+        emissive: col,
+        emissiveInt: RenderConfig.XRAY.emissive,
+        depthFunc: THREE.GreaterDepth,
+      });
     }
 
 // outline color for an AI: followers read cult-pink; otherwise the current alert status (matching
@@ -237,8 +261,19 @@ class Badges {
           // self-lit (emissive white, shaped by the badge's own texture) so UI badges stay legible
           // at night; depthTest off so a wall in front never occludes the marker (always-on-top UI)
           var off = (s0 + i) * spread;
-          sprites.paint(bx + right.x * off + pvx, by + right.y * off + pvy, bz + right.z * off + pvz,
-            tex, a.op, sc, false, roll, Sprites.ORD_ACTOR, 0xffffff, em, false);
+          sprites.paint({
+            x: bx + right.x * off + pvx,
+            y: by + right.y * off + pvy,
+            z: bz + right.z * off + pvz,
+            tex: tex,
+            op: a.op,
+            scale: sc,
+            yaw: roll,
+            order: Sprites.ORD_ACTOR,
+            emissive: 0xffffff,
+            emissiveInt: em,
+            depthTest: false,
+          });
         }
     }
 

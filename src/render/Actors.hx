@@ -345,9 +345,33 @@ class Actors {
       var emInt = flat ? 0.0 : flames.litAt(a);
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       if (a.fx != null)
-        sprites.paint(a.x + a.fx.offx, wy + a.fx.offy, a.z + a.fx.offz, texFor(e), a.op, baseScale * a.fx.scale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt, true, null, a.face);
+        sprites.paint({
+          x: a.x + a.fx.offx,
+          y: wy + a.fx.offy,
+          z: a.z + a.fx.offz,
+          tex: texFor(e),
+          op: a.op,
+          scale: baseScale * a.fx.scale,
+          flat: flat,
+          order: order,
+          emissive: RenderConfig.FLAME.litColor,
+          emissiveInt: emInt,
+          faceX: a.face,
+        });
       else
-        sprites.paint(a.x, wy, a.z, texFor(e), a.op, baseScale, flat, 0.0, order, RenderConfig.FLAME.litColor, emInt, true, null, a.face);
+        sprites.paint({
+          x: a.x,
+          y: wy,
+          z: a.z,
+          tex: texFor(e),
+          op: a.op,
+          scale: baseScale,
+          flat: flat,
+          order: order,
+          emissive: RenderConfig.FLAME.litColor,
+          emissiveInt: emInt,
+          faceX: a.face,
+        });
     }
 
 // launch the parasite's leap onto the host's head: snap its slide onto the host cell so

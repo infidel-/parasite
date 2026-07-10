@@ -93,11 +93,27 @@ class Projectile3D extends Particle3D {
             d = 0;
           var sway = dripSide[i] * P.dripSway * C +
             Math.sin(t * 10 + i * 1.5) * P.wobbleAmp * C;
-          g.paint(mx + dxn * d - dzn * sway, my, mz + dzn * d + dxn * sway,
-            tex, alpha * (0.9 - 0.15 * i), scale * (0.92 - 0.12 * i), false, 0, 0, glow, glowInt);
+          g.paint({
+            x: mx + dxn * d - dzn * sway,
+            y: my,
+            z: mz + dzn * d + dxn * sway,
+            tex: tex,
+            op: alpha * (0.9 - 0.15 * i),
+            scale: scale * (0.92 - 0.12 * i),
+            emissive: glow,
+            emissiveInt: glowInt,
+          });
         }
       // main blob on top of the trail
-      g.paint(mx + dxn * headDist, my, mz + dzn * headDist, tex, alpha, scale,
-        false, 0, 0, glow, glowInt);
+      g.paint({
+        x: mx + dxn * headDist,
+        y: my,
+        z: mz + dzn * headDist,
+        tex: tex,
+        op: alpha,
+        scale: scale,
+        emissive: glow,
+        emissiveInt: glowInt,
+      });
     }
 }

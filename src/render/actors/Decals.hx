@@ -179,11 +179,22 @@ class Decals {
               drawStar(hash, w.x, WorldCtx.floorY(x, y), w.z, sc, op);
             }
           // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular
-          // glint off the moon/lamp/flame lights. all intervening args are their paint() defaults
-          sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, op, sc, true,
-            (d.angle != null ? d.angle : 0.0), Sprites.ORD_DECAL,
-            em, emInt, true, null, 1.0,
-            RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
+          // glint off the moon/lamp/flame lights
+          sprites.paint({
+            x: w.x,
+            y: WorldCtx.floorY(x, y) + 0.04,
+            z: w.z,
+            tex: tex,
+            op: op,
+            scale: sc,
+            flat: true,
+            yaw: (d.angle != null ? d.angle : 0.0),
+            order: Sprites.ORD_DECAL,
+            emissive: em,
+            emissiveInt: emInt,
+            rough: RenderConfig.BLOOD.wetRough,
+            metal: RenderConfig.BLOOD.wetMetal,
+          });
           return true;
         }
       // bullet hole: stand it on its wall face, radius-fade around the player
@@ -321,10 +332,18 @@ class Decals {
       var r = sc * Sprites.SIZE * 0.3;
       var ox = (((hash * 40503) & 0xffff) / 0xffff - 0.5) * 2 * r;
       var oz = (((hash * 20261) & 0xffff) / 0xffff - 0.5) * 2 * r;
-      sprites.paint(wx + ox, floorY + 0.06, wz + oz, tex,
-        op * e * RenderConfig.BLOOD.blackStarAlpha,
-        RenderConfig.BLOOD.blackStarScale * e, true, 0.0, Sprites.ORD_DECAL + 1,
-        0xeeddff, RenderConfig.BLOOD.blackGlintInt * e);
+      sprites.paint({
+        x: wx + ox,
+        y: floorY + 0.06,
+        z: wz + oz,
+        tex: tex,
+        op: op * e * RenderConfig.BLOOD.blackStarAlpha,
+        scale: RenderConfig.BLOOD.blackStarScale * e,
+        flat: true,
+        order: Sprites.ORD_DECAL + 1,
+        emissive: 0xeeddff,
+        emissiveInt: RenderConfig.BLOOD.blackGlintInt * e,
+      });
     }
 
   // white (tintable) 4-ray star shape for the point glint

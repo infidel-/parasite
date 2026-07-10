@@ -104,9 +104,16 @@ class BloodDrop3D extends Particle3D {
       var g = p.sprites;
       var black = iy == Const.ROW_BLOOD &&
         ix >= Const.BLACK_BLOOD_LARGE;
-      g.paint(x, y, z, g.tex('entities', ix, iy, false), 1.0, RenderConfig.BLOOD.dropScale, false,
-        0, 0, black ? RenderConfig.BLOOD.blackFlightGlow : 0,
-        black ? RenderConfig.BLOOD.glowIntFlight : 0.0);
+      g.paint({
+        x: x,
+        y: y,
+        z: z,
+        tex: g.tex('entities', ix, iy, false),
+        op: 1.0,
+        scale: RenderConfig.BLOOD.dropScale,
+        emissive: black ? RenderConfig.BLOOD.blackFlightGlow : 0,
+        emissiveInt: black ? RenderConfig.BLOOD.glowIntFlight : 0.0,
+      });
     }
 
 // on landing, write the drop as a persisted SPLAT tile decoration (cell + sub-cell offset)

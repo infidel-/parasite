@@ -89,8 +89,19 @@ class AttackFX3D extends Particle3D {
       // flat kinds lie on the ground yawed to the swing (bow away from the attacker); a travelling
       // fist points at the target; other upright kinds roll-sweep in their plane
       var orient = flat ? baseYaw + Math.PI : (travel ? travelYaw : sweep * (u - 0.5));
-      p.sprites.paint(cx, cy, cz, tex, 1 - u, scale * (0.6 + 0.5 * u), flat, orient,
-        Sprites.ORD_ACTOR + 1, color, RenderConfig.ATTACK_FX.emissiveInt);
+      p.sprites.paint({
+        x: cx,
+        y: cy,
+        z: cz,
+        tex: tex,
+        op: 1 - u,
+        scale: scale * (0.6 + 0.5 * u),
+        flat: flat,
+        yaw: orient,
+        order: Sprites.ORD_ACTOR + 1,
+        emissive: color,
+        emissiveInt: RenderConfig.ATTACK_FX.emissiveInt,
+      });
     }
 
 // maps an attack-effect kind to its shape
