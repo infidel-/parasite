@@ -103,6 +103,8 @@ class RenderConfig {
     zoomStep: 0.12,       // zoom delta per wheel notch
     parasiteZoom: 0.30,   // parasite + attached: cap AND resting target (much smaller than max)
     hostZoom: 0.60,       // host: auto pull-out target on invade (cap stays 1.0 = far/max)
+    sideAngle: Math.PI / 36, // 5-degree orbit toward a wall-side view
+    sideTurnLerp: 0.2,     // half-speed easing: fraction of the remaining angle per BASE_MS
     introMult: 6.0,       // enter effect: zoom-out from closest to resting target, BASE_MS multiples
     exitMult: 6.0         // leave effect: zoom-in to closest over the frozen last frame, then tear down
   };

@@ -3,6 +3,7 @@ package render;
 import three.Three;
 import render.ActorAnim;
 import game.Game;
+import Const;
 import _UIState;
 
 // the street view's follow camera: eases a target toward the player's cell, holds a
@@ -21,6 +22,8 @@ class CameraRig {
 
   var zoom = 1.0;                                          // current normalized zoom 0..1
   var zoomTarget = 1.0;                                    // eased-toward zoom
+  var sideAngle = 0.0;                                     // current walkway-side camera angle
+  var sideAngleTarget = 0.0;                               // desired walkway-side camera angle
   var zt:{ from:Float, to:Float, dur:Float, p:Float, gated:Bool } = null; // active fixed-duration zoom tween (intro/outro); dur in BASE_MS multiples; gated holds while a UI window is up
   var ztDone:Void->Void = null;                           // fires once when the active tween completes
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
@@ -45,6 +48,8 @@ class CameraRig {
       camSlide = null;
       zt = null;
       ztDone = null;
+      sideAngle = 0.0;
+      sideAngleTarget = 0.0;
       lastState = game.player.state;
       zoom = zoomTarget = targetFor(lastState);
       update(0, true);
@@ -149,6 +154,8 @@ class CameraRig {
         bend != null ? bend.col : -1,
         bend != null ? bend.row : -1);
       pWorld.set(camSlide.x, 0, camSlide.z);
+      sideAngleTarget = targetSideAngle();
+      updateSideAngle(dtMs);
       // state drives the auto zoom target: close as a parasite, pulled out as a host
       var st = game.player.state;
       if (st != lastState)
@@ -182,7 +189,40 @@ class CameraRig {
   function applyOffset():Void
     {
       var n = RenderConfig.CAMERA.near, f = RenderConfig.CAMERA.far;
-      offset.set(n.x + (f.x - n.x) * zoom, n.y + (f.y - n.y) * zoom, n.z + (f.z - n.z) * zoom);
+      var ox = n.x + (f.x - n.x) * zoom;
+      var oy = n.y + (f.y - n.y) * zoom;
+      var oz = n.z + (f.z - n.z) * zoom;
+      var c = Math.cos(sideAngle);
+      var s = Math.sin(sideAngle);
+      offset.set(ox * c + oz * s, oy, -ox * s + oz * c);
+    }
+
+// ease the camera's side angle toward its current walkway-side target
+  function updateSideAngle(dtMs:Float):Void
+    {
+      var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      var k = 1 - Math.pow(1 - RenderConfig.CAMERA.sideTurnLerp, step);
+      sideAngle += (sideAngleTarget - sideAngle) * k;
+      if (Math.abs(sideAngleTarget - sideAngle) < 0.001)
+        sideAngle = sideAngleTarget;
+    }
+
+// choose a small orbit that exposes a building directly beside the walkway
+  function targetSideAngle():Float
+    {
+      var col = game.playerArea.x;
+      var row = game.playerArea.y;
+      var tile = game.area.getCellType(col, row);
+      if (tile != Const.TILE_WALKWAY)
+        return 0.0;
+      var left = game.area.getCellType(col - 1, row);
+      var right = game.area.getCellType(col + 1, row);
+      var sideLeft = left == Const.TILE_BUILDING || left == Const.TILE_ALLEY;
+      var sideRight = right == Const.TILE_BUILDING || right == Const.TILE_ALLEY;
+      if (sideLeft == sideRight)
+        return 0.0;
+      // positive Y rotation moves the camera toward +X; stand outside the left wall, and vice versa
+      return sideLeft ? RenderConfig.CAMERA.sideAngle : -RenderConfig.CAMERA.sideAngle;
     }
 
 // auto zoom target on entering a state (host pulls out, parasite/attached stay close)
