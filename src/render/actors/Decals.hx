@@ -143,10 +143,18 @@ class Decals {
                 RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
               return true;
             }
+          // acid/slime goop glows faintly: emissive through the splat's own sprite (alpha-shaped),
+          // bright enough for the hottest pixels to catch the bloom pass. keyed by the atlas row
+          var em = 0;
+          if (d.icon.row == Const.ROW_SPACESHIP1)
+            em = RenderConfig.BLOOD.acidGlow;
+          else if (d.icon.row == Const.ROW_SPACESHIP2)
+            em = RenderConfig.BLOOD.slimeGlow;
           // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular
           // glint off the moon/lamp/flame lights. all intervening args are their paint() defaults
           sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, op, sc, true,
-            (d.angle != null ? d.angle : 0.0), Sprites.ORD_DECAL, 0, 0.0, true, null, 1.0,
+            (d.angle != null ? d.angle : 0.0), Sprites.ORD_DECAL,
+            em, (em != 0 ? RenderConfig.BLOOD.glowInt : 0.0), true, null, 1.0,
             RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
           return true;
         }

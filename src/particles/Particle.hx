@@ -47,6 +47,10 @@ class Particle
   public static function createProjectile(type: String, scene: GameScene, x: Int,
       y: Int, point: _Point, ?hit: Bool = true, ?bloodType: String = 'red')
     {
+      // 3D street view takes over when live (a 2D particle would be hidden under it)
+      if (scene.city3d != null &&
+          scene.city3d.playProjectile(type, x, y, point.x, point.y, hit, bloodType))
+        return;
       switch (type)
         {
           case 'acidSpit', 'slimeSpit', 'paralysisSpit':

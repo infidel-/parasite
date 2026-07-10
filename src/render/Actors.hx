@@ -273,6 +273,14 @@ class Actors {
       particles.add(new Shot3D(muzzle, impact, startDelay, onImpact));
     }
 
+// spawn one thrown 3D projectile (spit clot / needle) racing src->dst at chest height; the
+// impact beat (splat burst + sound) fires via the onImpact closure on arrival
+  public function projectile(src:Vector3, dst:Vector3, col:Int, row:Int, glow:Int,
+      scale:Float, drips:Int, travelMs:Float, onImpact:Void->Void):Void
+    {
+      particles.add(new Projectile3D(src, dst, col, row, glow, scale, drips, travelMs, onImpact));
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
   public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void
@@ -280,11 +288,11 @@ class Actors {
       particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay));
     }
 
-// spawn a glowing melee attack-arc for the swing from attacker (ax,ay,az) to target (bx,by,bz);
-// the shape/color/orientation/motion come from the weapon's _AttackEffect
-  public function slashArc(effect:String, ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float):Void
+// spawn a glowing attack-FX sprite from (ax,ay,az) to (bx,by,bz): a melee swing arc keyed by the
+// weapon's _AttackEffect, or an IMPACT mark stamped on a struck target
+  public function attackFX(effect:String, ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float):Void
     {
-      particles.add(new SlashArc3D(effect, ax, ay, az, bx, by, bz));
+      particles.add(new AttackFX3D(effect, ax, ay, az, bx, by, bz));
     }
 
 // pulse a pooled muzzle light at the shooter (constant scene light count, no recompile)

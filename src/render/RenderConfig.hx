@@ -129,12 +129,13 @@ class RenderConfig {
     shakeMs: 150.0,      // target hit-shake duration
     shakeAmp: 0.10,      // target hit-shake amplitude, as a fraction of a CELL
   };
-  // melee attack-arc visuals: a glowing procedural swing sprite spawned at the strike apex, keyed
-  // by the weapon's _AttackEffect. per kind: color (emissive tint), scale (of Sprites.SIZE), sweep
-  // (roll swept over the life, radians), flat (lie the sprite on the ground vs upright billboard),
-  // travel (slide attacker->target over the life, e.g. a thrown punch)
-  public static final ARC = {
-    lifeMult: 1.3,       // arc life as a multiple of BASE_MS (all kinds share the base timing)
+  // attack-FX sprite visuals: a glowing procedural rasterized-SVG shape — melee swings spawned at
+  // the strike apex (keyed by the weapon's _AttackEffect) and impact marks stamped on a struck
+  // target. per kind: color (emissive tint), scale (of Sprites.SIZE), sweep (roll swept over the
+  // life, radians), flat (lie the sprite on the ground vs upright billboard), travel (slide
+  // attacker->target over the life, e.g. a thrown punch)
+  public static final ATTACK_FX = {
+    lifeMult: 1.3,       // fx life as a multiple of BASE_MS (all kinds share the base timing)
     emissiveInt: 1.3,    // emissive intensity — bright enough to read at night, low enough to keep tint
     px: 128,             // rasterized shape texture edge (px)
     kinds: {
@@ -150,6 +151,8 @@ class RenderConfig {
       BITE:        { color: 0xff5030, scale: 1.0, sweep: 0.0, flat: false, travel: false, travelMult: 1.0 },
       // blue electric bolt
       STUN:        { color: 0x66ccff, scale: 1.0, sweep: 0.0, flat: false, travel: false, travelMult: 1.0 },
+      // curved-X mark stamped on the target when a thrown projectile connects
+      IMPACT:      { color: 0x98b4f0, scale: 0.9, sweep: 0.4, flat: false, travel: false, travelMult: 1.0 },
     },
   };
   public static final BLOOD = {
@@ -163,6 +166,13 @@ class RenderConfig {
     scaleMax: 0.5,       // landed splat max scale
     splatMax: 80,        // per-area SPLAT decoration cap (oldest evicted)
     wetRough: 0.4,       // landed-splat specular roughness (< 1 = wet sheen off moon/lamps; 1 = matte)
+    // acid/slime goop glow: emissive tint pushed through the splat's own sprite (emissiveMap), so
+    // the glow is alpha-shaped; intensity compensates the DECAL.bloodMul-darkened crop and lets the
+    // hottest pixels cross BLOOM_THRESHOLD for a faint halo. 0 intensity = off
+    acidGlow: 0x58ff3c,  // acid emissive tint (in-flight blob + landed splat)
+    slimeGlow: 0x7ddc46, // slime emissive tint
+    glowInt: 1.0,        // landed-splat emissive intensity
+    glowIntFlight: 0.8,  // in-flight blob emissive intensity (full-bright atlas crop, needs less)
     wetMetal: 0.5,       // landed-splat metalness (> 0 tints the glint by the red albedo; stronger, wetter)
   };
   // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the
@@ -258,6 +268,18 @@ class RenderConfig {
       rifle:   { pellets: 3, spread: 0.15, stagger: 45.0, range: 14 },
       shotgun: { pellets: 5, spread: 0.5,  stagger: 0.0,  range: 5 },
     },
+  };
+
+  // 3D thrown-projectile choreography (spit clots / spine needles): an entities-atlas blob with
+  // trailing drips races source->target at chest height, then the impact splat beat (burst
+  // decals + splat sound) fires. timings mirror the 2D ParticleSpit/ParticleNeedle feel
+  public static final PROJECTILE = {
+    spit:   { travelMs: 150.0, scale: 0.3,  drips: 3 },  // spit clot: fat blob + drip trail
+    needle: { travelMs: 110.0, scale: 0.16, drips: 2 },  // spine needle: small + fast afterimages
+    dripGap: 0.2,        // spacing between trail blobs along the flight line (cells)
+    dripSway: 0.1,       // per-drip lateral offset amplitude (cells)
+    wobbleAmp: 0.04,     // sine wobble amplitude on the drips (cells)
+    fadeFrac: 0.2,       // trailing fraction of the flight over which everything fades out
   };
 
   // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
