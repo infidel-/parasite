@@ -167,7 +167,7 @@ class Actors {
       // logical cell only while the parasite sprite is dropped mid-host-invade)
       var pp = actors.get(game.playerArea.entity);
       var pw = CityConfig.cellToWorld(game.playerArea.x, game.playerArea.y);
-      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z);
+      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z, dtMs);
       flames.bodyAndShadows(dtMs);
       flames.driveFireLoop();
       particles.update(dtMs, paint);
@@ -261,9 +261,9 @@ class Actors {
 
 // throw a burst of blood from a target cell, biased away from the attacker; drops arc and
 // land as SPLAT ground decals. bloodRow/bloodFirstCol pick the blood variant by type
-  public function burst(tgtCol:Int, tgtRow:Int, awayX:Float, awayZ:Float, bloodRow:Int, bloodFirstCol:Int):Void
+  public function burst(tgtCol:Int, tgtRow:Int, awayX:Float, awayZ:Float, bloodRow:Int, bloodFirstCol:Int, drops:Int = 0):Void
     {
-      BloodDrop3D.burst(particles, game, tgtCol, tgtRow, awayX, awayZ, bloodRow, bloodFirstCol);
+      BloodDrop3D.burst(particles, game, tgtCol, tgtRow, awayX, awayZ, bloodRow, bloodFirstCol, drops);
     }
 
 // spawn one 3D gun-shot pellet (tracer + muzzle flash); blood + impact sound fire via the

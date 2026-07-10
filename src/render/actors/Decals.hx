@@ -21,6 +21,10 @@ class Decals {
   var debris:Array<render.world.Debris.DebrisSpot> = null; // seed-derived street debris (render-only, not persisted)
   var px:Float = 0.0;                                     // smoothed player world x for this frame's radius fade
   var pz:Float = 0.0;                                     // smoothed player world z for this frame's radius fade
+  var clock:Float = 0.0;                                  // black-blood shimmer clock (BASE_MS units)
+  var frameNo:Int = 0;                                    // paint-pass counter (star slot liveness stamp)
+  var starOn:Map<Int,Int> = new Map();                    // active star slots: splat hash -> last frame drawn
+  var starDenied:Map<Int,Int> = new Map();                // splat hash -> glint bucket refused a slot (stays dark)
   // last decal pass counts (leak/perf check), read by Actors.perfLog
   public var decalScan(default, null):Int = 0;
   public var decalDraw(default, null):Int = 0;
@@ -39,11 +43,17 @@ class Decals {
 
 // paint this frame's render-only debris, then the persisted tile decals (blood + bullet holes),
 // in the order the actor pass expects them. px/pz is the player's smoothed world pos driving the
-// radius fade that replaced the old LOS gate
-  public function paint(px:Float, pz:Float):Void
+// radius fade that replaced the old LOS gate; dtMs advances the black-blood shimmer clock
+  public function paint(px:Float, pz:Float, dtMs:Float):Void
     {
       this.px = px;
       this.pz = pz;
+      clock += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      frameNo++;
+      // free star slots whose splat vanished (not drawn last frame - removed decal, faded out)
+      for (h in starOn.keys())
+        if (starOn.get(h) < frameNo - 1)
+          starOn.remove(h);
       drawDebris();
       drawDecals();
     }
@@ -144,17 +154,35 @@ class Decals {
               return true;
             }
           // acid/slime goop glows faintly: emissive through the splat's own sprite (alpha-shaped),
-          // bright enough for the hottest pixels to catch the bloom pass. keyed by the atlas row
+          // bright enough for the hottest pixels to catch the bloom pass. keyed by the atlas row.
+          // black blood instead shimmers: iridescent hue film + rare star glints (otherworldly)
           var em = 0;
+          var emInt = 0.0;
           if (d.icon.row == Const.ROW_SPACESHIP1)
-            em = RenderConfig.BLOOD.acidGlow;
+            {
+              em = RenderConfig.BLOOD.acidGlow;
+              emInt = RenderConfig.BLOOD.glowInt;
+            }
           else if (d.icon.row == Const.ROW_SPACESHIP2)
-            em = RenderConfig.BLOOD.slimeGlow;
+            {
+              em = RenderConfig.BLOOD.slimeGlow;
+              emInt = RenderConfig.BLOOD.glowInt;
+            }
+          else if (d.icon.row == Const.ROW_BLOOD &&
+                   d.icon.col >= Const.BLACK_BLOOD_LARGE)
+            {
+              // iridescent film; the star glint is its own tiny point quad below (lighting the
+              // whole alpha-shaped stain read as a bug)
+              var hash = x * 31 + y * 17 + (d.dx != null ? d.dx : 0);
+              em = shimmerColor(hash);
+              emInt = RenderConfig.BLOOD.blackShimmerInt;
+              drawStar(hash, w.x, WorldCtx.floorY(x, y), w.z, sc, op);
+            }
           // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular
           // glint off the moon/lamp/flame lights. all intervening args are their paint() defaults
           sprites.paint(w.x, WorldCtx.floorY(x, y) + 0.04, w.z, tex, op, sc, true,
             (d.angle != null ? d.angle : 0.0), Sprites.ORD_DECAL,
-            em, (em != 0 ? RenderConfig.BLOOD.glowInt : 0.0), true, null, 1.0,
+            em, emInt, true, null, 1.0,
             RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
           return true;
         }
@@ -209,5 +237,116 @@ class Decals {
           tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping;
           tx;
         }];
+    }
+
+// iridescent black-blood film color: hue ping-pongs over the teal->violet->magenta arc on the
+// shimmer clock (fire/acid hues avoided), phase-offset per splat so puddles cycle out of sync
+  function shimmerColor(hash:Int):Int
+    {
+      // scrambled phase: neighbouring splats have nearly equal hashes, a raw modulo would sync them
+      var ph = ((hash * 48271) & 0x7fffffff) % 97;
+      var t = clock / RenderConfig.BLOOD.blackCycleMult + ph / 97.0;
+      t -= Math.floor(t);
+      var tri = t < 0.5 ? t * 2 : 2 - t * 2;
+      return hsl(0.5 + 0.45 * tri, 0.85, 0.6);
+    }
+
+// current glint time-bucket for a splat (same phase math as glintEnv, for slot denial keying)
+  function glintBucket(hash:Int):Int
+    {
+      var ph0 = ((hash * 83492791) & 0x7fffffff) % 89;
+      return Std.int(Math.floor(clock / RenderConfig.BLOOD.blackGlintMult + ph0 / 89.0));
+    }
+
+// star-glint envelope (0..1): time is bucketed per splat (phase-offset), a hash of (splat,
+// bucket) turns a fraction of buckets on, and the lit window swells + fades on a sine bell so
+// the glint breathes in and out instead of snapping
+  function glintEnv(hash:Int):Float
+    {
+      var B = RenderConfig.BLOOD;
+      // scrambled phase: neighbouring splats have nearly equal hashes, a raw modulo would sync
+      // their buckets and their stars would all spawn at once
+      var ph0 = ((hash * 83492791) & 0x7fffffff) % 89;
+      var t = clock / B.blackGlintMult + ph0 / 89.0;
+      var bucket = Math.floor(t);
+      var r = ((hash * 73856093) ^ (Std.int(bucket) * 19349663)) % 100;
+      if (r < 0)
+        r = -r;
+      if (r >= B.blackGlintPct)
+        return 0.0;
+      // frac is capped at 1: the bell must complete inside its bucket, or it snaps to zero at
+      // the bucket roll instead of fading out (want a longer swell -> raise blackGlintMult)
+      var f = B.blackGlintFrac > 1 ? 1.0 : B.blackGlintFrac;
+      var ph = (t - bucket) / f;
+      if (ph >= 1)
+        return 0.0;
+      return Math.sin(Math.PI * ph);
+    }
+
+// point star glint: a tiny 4-ray star quad at a fixed hash-picked point inside the stain; alpha,
+// scale AND emissive all ride the sine envelope, so it scales in from nothing while fading in and
+// never pops (a constant emissive still bloomed hard at low alpha and read as a blink). own quad,
+// so only the point lights up — never the whole alpha-shaped splat
+  function drawStar(hash:Int, wx:Float, floorY:Float, wz:Float, sc:Float, op:Float):Void
+    {
+      var e = glintEnv(hash);
+      if (e <= 0.001)
+        {
+          starOn.remove(hash);
+          return;
+        }
+      // hard concurrency cap: an active star keeps its slot to the end of its bell; a new one
+      // spawns only into a free slot, and a refused bucket stays refused so the star cannot pop
+      // in mid-bell when a slot frees later
+      if (starOn.exists(hash))
+        starOn.set(hash, frameNo);
+      else
+        {
+          var bucket = glintBucket(hash);
+          if (starDenied.get(hash) == bucket)
+            return;
+          var n = 0;
+          for (_ in starOn)
+            n++;
+          if (n >= RenderConfig.BLOOD.blackStarMax)
+            {
+              starDenied.set(hash, bucket);
+              return;
+            }
+          starOn.set(hash, frameNo);
+        }
+      var tex = sprites.svgTex('blackstar:32', STAR_SVG, 32);
+      if (tex == null)
+        return;
+      var r = sc * Sprites.SIZE * 0.3;
+      var ox = (((hash * 40503) & 0xffff) / 0xffff - 0.5) * 2 * r;
+      var oz = (((hash * 20261) & 0xffff) / 0xffff - 0.5) * 2 * r;
+      sprites.paint(wx + ox, floorY + 0.06, wz + oz, tex,
+        op * e * RenderConfig.BLOOD.blackStarAlpha,
+        RenderConfig.BLOOD.blackStarScale * e, true, 0.0, Sprites.ORD_DECAL + 1,
+        0xeeddff, RenderConfig.BLOOD.blackGlintInt * e);
+    }
+
+  // white (tintable) 4-ray star shape for the point glint
+  static inline var STAR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 5 L58 42 L95 50 L58 58 L50 95 L42 58 L5 50 L42 42 Z" fill="#fff"/></svg>';
+
+// hsl (all 0..1) -> 0xRRGGBB
+  static function hsl(h:Float, s:Float, l:Float):Int
+    {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      inline function chan(t:Float):Int
+        {
+          t -= Math.floor(t);
+          var v = p;
+          if (t < 1 / 6)
+            v = p + (q - p) * 6 * t;
+          else if (t < 0.5)
+            v = q;
+          else if (t < 2 / 3)
+            v = p + (q - p) * (2 / 3 - t) * 6;
+          return Std.int(v * 255);
+        }
+      return (chan(h + 1 / 3) << 16) | (chan(h) << 8) | chan(h - 1 / 3);
     }
 }

@@ -79,6 +79,12 @@ class BodyObject extends AreaObject
         parentType == 'choir of discord');
     }
 
+// choir bodies stay standing (otherworldly), everything else lies flat as a ground decal
+  public override function isGroundDecal(): Bool
+    {
+      return !isChoirBody();
+    }
+
 // update actions
   override function updateActionList()
     {

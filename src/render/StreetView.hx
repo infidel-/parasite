@@ -441,6 +441,28 @@ class StreetView {
       return true;
     }
 
+// splat-only choreography (bleeding drips, black noise — non-combat splats with no attack beat):
+// a small unbiased 3D blood burst at the cell (biased away from the source when given) whose
+// drops land as the same persisted SPLAT decals the 2D splat would write, plus the splat-land
+// sound. returns true if the view took over (caller then skips the 2D particle)
+  public function playSplat(type:String, x:Int, y:Int, ?source:_Point):Bool
+    {
+      if (!running ||
+          actors == null)
+        return false;
+      var dx = 0.0;
+      var dz = 0.0;
+      if (source != null)
+        {
+          dx = x - source.x;
+          dz = y - source.y;
+        }
+      var ic = particles.ParticleSplat.bloodIcon(type);
+      actors.burst(x, y, dx, dz, ic.row, ic.col, RenderConfig.BLOOD.dripDrops);
+      game.scene.sounds.play('fx-splat', { x: x, y: y });
+      return true;
+    }
+
 // thrown-projectile choreography (spit clot / spine needle): a sprite blob with trailing drips
 // races source->target at chest height, and the impact splat beat (acid/slime/blood burst +
 // splat sound) fires on arrival. returns true if the view took over (caller then skips the 2D

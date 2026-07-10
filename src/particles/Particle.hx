@@ -66,6 +66,10 @@ class Particle
   public static function createSplat(type: String, scene: GameScene, pt: _Point,
       ?source: _Point)
     {
+      // 3D street view takes over when live (a 2D particle would be hidden under it)
+      if (scene.city3d != null &&
+          scene.city3d.playSplat(type, pt.x, pt.y, source))
+        return;
       switch (type)
         {
           case 'red', 'black', 'acid', 'slime':

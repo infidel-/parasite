@@ -157,6 +157,7 @@ class RenderConfig {
   };
   public static final BLOOD = {
     drops: 7,            // droplets thrown per bloody hit
+    dripDrops: 3,        // droplets for a non-combat splat (bleeding drip, black noise) — smaller, unbiased
     dropMs: 260.0,       // droplet flight time before it lands as a decal
     speed: 3.6,          // horizontal launch speed spread (cells worth, away from attacker)
     up: 9.6,             // upward launch impulse
@@ -173,6 +174,20 @@ class RenderConfig {
     slimeGlow: 0x7ddc46, // slime emissive tint
     glowInt: 1.0,        // landed-splat emissive intensity
     glowIntFlight: 0.8,  // in-flight blob emissive intensity (full-bright atlas crop, needs less)
+    // otherworldly black blood: an iridescent oil-slick film (emissive hue ping-ponging over the
+    // teal->violet->magenta arc on a slow clock, each splat phase-offset by a cell hash) plus rare
+    // star glints (short deterministic emissive spikes over BLOOM_THRESHOLD). timing in BASE_MS
+    // multiples; in-flight black drops get a fixed violet glow (too short-lived to cycle)
+    blackShimmerInt: 0.55, // iridescent film emissive intensity
+    blackCycleMult: 32.0,  // hue-cycle period (BASE_MS multiples)
+    blackGlintMult: 6.0,   // glint time-bucket size per splat (BASE_MS multiples)
+    blackGlintFrac: 1.7,   // fraction of a bucket the glint swell lasts (sine bell in + out)
+    blackGlintPct: 5,     // % of buckets where a splat actually glints
+    blackGlintInt: 2.5,    // glint emissive spike intensity (well over the bloom threshold)
+    blackStarMax: 2,      // max concurrent point stars; new spawns hard-blocked while slots full
+    blackStarScale: 0.1,   // point-star quad scale at glint peak (of a billboard)
+    blackStarAlpha: 0.9,    // point-star opacity cap (subdues the glint; emissive still glows through)
+    blackFlightGlow: 0x8a5cff, // in-flight black-drop violet tint
     wetMetal: 0.5,       // landed-splat metalness (> 0 tints the glint by the red albedo; stronger, wetter)
   };
   // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the

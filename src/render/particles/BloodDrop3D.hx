@@ -29,23 +29,42 @@ class BloodDrop3D extends Particle3D {
       prevRow = Math.round(z / CityConfig.CELL + CityConfig.GRID / 2 - 0.5);
     }
 
-// throw a burst of drops from a target cell, biased away from the attacker; each arcs then lands
-// as a SPLAT decal. bloodRow/bloodFirstCol pick the blood variant by type
-  public static function burst(particles:Particles3D, game:Game, tgtCol:Int, tgtRow:Int, awayX:Float, awayZ:Float, bloodRow:Int, bloodFirstCol:Int):Void
+// throw a burst of drops from a target cell, biased away from the attacker (a zero away vector
+// scatters each drop in a random direction instead — bleeding drips with no attacker); each arcs
+// then lands as a SPLAT decal. bloodRow/bloodFirstCol pick the blood variant by type; drops <= 0
+// falls back to the full combat count
+  public static function burst(particles:Particles3D, game:Game, tgtCol:Int, tgtRow:Int, awayX:Float, awayZ:Float, bloodRow:Int, bloodFirstCol:Int, drops:Int = 0):Void
     {
       var origin = CityConfig.cellToWorld(tgtCol, tgtRow);
       var floor = WorldCtx.floorY(tgtCol, tgtRow);
-      // normalize the away-from-attacker direction (fallback: random)
+      if (drops <= 0)
+        drops = RenderConfig.BLOOD.drops;
+      // normalize the away-from-attacker direction (zero = unbiased, random per drop)
       var len = Math.sqrt(awayX * awayX + awayZ * awayZ);
-      if (len < 0.001)
-        { awayX = 1; awayZ = 0; len = 1; }
-      awayX /= len; awayZ /= len;
-      for (_ in 0...RenderConfig.BLOOD.drops)
+      var biased = len >= 0.001;
+      if (biased)
         {
-          // spread each drop around the away direction with a random sideways kick + speed
-          var side = (Math.random() - 0.5) * 1.4;
-          var dirX = awayX + -awayZ * side;
-          var dirZ = awayZ + awayX * side;
+          awayX /= len;
+          awayZ /= len;
+        }
+      for (_ in 0...drops)
+        {
+          // spread each drop around the away direction with a random sideways kick + speed,
+          // or fully around the circle when unbiased
+          var dirX;
+          var dirZ;
+          if (biased)
+            {
+              var side = (Math.random() - 0.5) * 1.4;
+              dirX = awayX + -awayZ * side;
+              dirZ = awayZ + awayX * side;
+            }
+          else
+            {
+              var a = 2 * Math.PI * Math.random();
+              dirX = Math.cos(a);
+              dirZ = Math.sin(a);
+            }
           var spd = RenderConfig.BLOOD.speed * CityConfig.CELL * (0.4 + Math.random());
           particles.add(new BloodDrop3D(game,
             origin.x, floor + Sprites.SIZE * 0.4, origin.z,
@@ -78,11 +97,16 @@ class BloodDrop3D extends Particle3D {
       return y > floor;
     }
 
-// draw the in-flight droplet as a small flat quad
+// draw the in-flight droplet as a small flat quad; black blood glows faint violet in flight
+// (otherworldly, matching its landed shimmer — too short-lived to hue-cycle)
   override public function draw(p:Paint3D):Void
     {
       var g = p.sprites;
-      g.paint(x, y, z, g.tex('entities', ix, iy, false), 1.0, RenderConfig.BLOOD.dropScale, false);
+      var black = iy == Const.ROW_BLOOD &&
+        ix >= Const.BLACK_BLOOD_LARGE;
+      g.paint(x, y, z, g.tex('entities', ix, iy, false), 1.0, RenderConfig.BLOOD.dropScale, false,
+        0, 0, black ? RenderConfig.BLOOD.blackFlightGlow : 0,
+        black ? RenderConfig.BLOOD.glowIntFlight : 0.0);
     }
 
 // on landing, write the drop as a persisted SPLAT tile decoration (cell + sub-cell offset)
