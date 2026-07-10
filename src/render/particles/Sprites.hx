@@ -6,32 +6,6 @@ import citygen.CityConfig;
 import render.RenderConfig;
 import game.Game;
 
-// a content-cropped atlas cell: texture trimmed to the cell's opaque bounding box, plus that
-// box's size as a fraction (0..1) of the full cell. lets small sprites (debris) paint at their
-// true pixel footprint, centered on the point, instead of stretched across the whole SIZE quad
-typedef GroundSprite = { tex:CanvasTexture, fw:Float, fh:Float };
-
-// options for paint(): required position/texture/opacity/scale plus named optional overrides,
-// replacing the old 16-positional-arg signature
-typedef PaintOpts = {
-  var x:Float;                       // world position
-  var y:Float;
-  var z:Float;
-  var tex:CanvasTexture;             // sprite texture (null = atlas not decoded yet, no-op)
-  var op:Float;                      // opacity
-  var scale:Float;                   // uniform scale of SIZE
-  @:optional var flat:Bool;          // lie flat on the ground as a decal (default false)
-  @:optional var yaw:Float;          // ground rotation (flat) / in-plane roll (upright), default 0
-  @:optional var order:Int;          // renderOrder (ORD_*), default 0
-  @:optional var emissive:Int;       // self-glow color, default 0 = no glow
-  @:optional var emissiveInt:Float;  // self-glow intensity, default 0
-  @:optional var depthTest:Bool;     // false = always-on-top UI, default true
-  @:optional var depthFunc:Dynamic;  // three.js depth-func const (untyped extern), default null
-  @:optional var faceX:Float;        // horizontal facing mirror in [-1..1], default 1.0
-  @:optional var rough:Float;        // material roughness (wet sheen < 1), default 1.0
-  @:optional var metal:Float;        // material metalness, default 0
-}
-
 // the 3D "canvas": a pool of reused sprite quads + an atlas-crop texture cache. one paint
 // surface shared by the actor layer and every Particle3D. a frame is begin() -> many paint()
 // -> end(); paint() consumes the next pooled quad, end() hides the leftover tail. mirrors the
@@ -114,60 +88,59 @@ class Sprites {
 // paint a content-cropped ground sprite (from texContent) flat on the ground, sized to its real
 // pixel footprint (fw/fh of a cell) * scale and centered on the point, yaw-rotated in-plane. used
 // for debris so a small off-centre atlas sprite lands at its true size where we place it
-  public function paintGround(wx:Float, wy:Float, wz:Float, gs:GroundSprite, op:Float, scale:Float, yaw:Float, order:Int = 0):Void
+  public function paintGround(o:PaintGroundOpts):Void
     {
-      if (gs == null || gs.tex == null) return;
-      var m = slot(gs.tex, op, wx, wy, wz, scale);
+      if (o.gs == null || o.gs.tex == null) return;
+      var m = slot(o.gs.tex, o.op, o.x, o.y, o.z, o.scale);
       // geometry is SIZE x SIZE; scale each ground axis by the content fraction so the quad
       // matches the trimmed sprite's true aspect + size
-      m.scale.set(gs.fw * scale, gs.fh * scale, 1);
-      m.rotation.set(-Math.PI / 2, 0, yaw);
-      m.renderOrder = order;
+      m.scale.set(o.gs.fw * o.scale, o.gs.fh * o.scale, 1);
+      m.rotation.set(-Math.PI / 2, 0, o.yaw);
+      m.renderOrder = (o.order != null ? o.order : 0);
       m.visible = true;
       idx++;
     }
 
 // paint a fake cast shadow: a flat black silhouette (from shadowContent) rooted at the feet
-// (feetX,feetZ) on the ground and stretched lenWorld along (dirX,dirZ) — the direction away from
-// the light — widWorld across. no shadow map; just an oriented, darkened, alpha-shaped copy of the
+// (feetX,feetZ) on the ground and stretched len along (dirX,dirZ) — the direction away from
+// the light — wid across. no shadow map; just an oriented, darkened, alpha-shaped copy of the
 // sprite laid on the road (dir is the away-from-barrel unit vector; len/wid are world units)
-  public function paintShadow(feetX:Float, floorY:Float, feetZ:Float, gs:GroundSprite, dirX:Float, dirZ:Float, lenWorld:Float, widWorld:Float, op:Float, order:Int = 0):Void
+  public function paintShadow(o:PaintShadowOpts):Void
     {
-      if (gs == null || gs.tex == null) return;
+      if (o.gs == null || o.gs.tex == null) return;
       // rooted at the feet: centre sits half the length out along the away direction
-      var cx = feetX + dirX * lenWorld * 0.5;
-      var cz = feetZ + dirZ * lenWorld * 0.5;
-      var m = slot(gs.tex, op, cx, floorY, cz, 1.0);
+      var cx = o.feetX + o.dirX * o.len * 0.5;
+      var cz = o.feetZ + o.dirZ * o.len * 0.5;
+      var m = slot(o.gs.tex, o.op, cx, o.floorY, cz, 1.0);
       // basis: sprite local +Y (image up / head) -> length dir (so the silhouette lies head-away,
       // feet-near), local +X (image width) -> perpendicular, local +Z (normal) -> world up
       // right-handed basis (det +1) so setFromRotationMatrix stays a proper rotation and the quad
       // lies FLAT: local +Y -> length dir, local +X -> width (mirrored, harmless), local +Z -> up
-      _sa.set(-dirZ, 0, dirX);
-      _sb.set(dirX, 0, dirZ);
+      _sa.set(-o.dirZ, 0, o.dirX);
+      _sb.set(o.dirX, 0, o.dirZ);
       _sc.set(0, 1, 0);
       untyped _smtx.makeBasis(_sa, _sb, _sc);
       untyped m.quaternion.setFromRotationMatrix(_smtx);
       // geometry is SIZE square; scale each axis so the quad spans the world width/length
-      m.scale.set(widWorld / SIZE, lenWorld / SIZE, 1);
-      m.renderOrder = order;
+      m.scale.set(o.wid / SIZE, o.len / SIZE, 1);
+      m.renderOrder = (o.order != null ? o.order : 0);
       m.visible = true;
       idx++;
     }
 
-// place/reuse a quad standing on a wall face at world (wx,wy,wz): its normal points outward
-// along faceRotY (see Geom.faceRotY), spun in-plane by roll. same pool as paint(); used for
-// bullet-hole decals
-  public function paintWall(wx:Float, wy:Float, wz:Float, tex:Texture, op:Float, scale:Float, faceRotY:Float, roll:Float, rough:Float = 1.0, metal:Float = 0.0):Void
+// place/reuse a quad standing on a wall face: its normal points outward along faceRotY (see
+// Geom.faceRotY), spun in-plane by roll. same pool as paint(); used for bullet-hole decals
+  public function paintWall(o:PaintWallOpts):Void
     {
-      if (tex == null) return;
-      var m = slot(tex, op, wx, wy, wz, scale);
+      if (o.tex == null) return;
+      var m = slot(o.tex, o.op, o.x, o.y, o.z, o.scale);
       // roll about the plane's own normal (local Z), then yaw to face the wall dir (Y). default
       // Euler XYZ applies Z before Y, so the roll stays about the reoriented outward normal
-      m.rotation.set(0, faceRotY, roll);
+      m.rotation.set(0, o.faceRotY, o.roll);
       // wet sheen for wall blood (rough < 1); bullet holes pass neither and stay matte via slot()'s reset
       var mat:Dynamic = m.material;
-      mat.roughness = rough;
-      mat.metalness = metal;
+      mat.roughness = (o.rough != null ? o.rough : 1.0);
+      mat.metalness = (o.metal != null ? o.metal : 0.0);
       m.visible = true;
       idx++;
     }

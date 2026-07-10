@@ -88,7 +88,15 @@ class Decals {
           var op = radiusOp(w.x, w.z);
           if (op <= 0.001)
             continue;
-          sprites.paintGround(w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z, gs, op, s.scale, s.angle);
+          sprites.paintGround({
+            x: w.x,
+            y: WorldCtx.floorY(s.col, s.row) + 0.04,
+            z: w.z,
+            gs: gs,
+            op: op,
+            scale: s.scale,
+            yaw: s.angle,
+          });
         }
     }
 
@@ -148,9 +156,18 @@ class Decals {
               var fdir:Int = d.face;
               var dv = render.world.Geom.DIRV[fdir];
               var wy = (d.height != null ? d.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
-              sprites.paintWall(w.x + dv[0] * 0.12, wy, w.z + dv[1] * 0.12, tex, op, sc,
-                render.world.Geom.faceRotY(fdir), (d.angle != null ? d.angle : 0.0),
-                RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
+              sprites.paintWall({
+                x: w.x + dv[0] * 0.12,
+                y: wy,
+                z: w.z + dv[1] * 0.12,
+                tex: tex,
+                op: op,
+                scale: sc,
+                faceRotY: render.world.Geom.faceRotY(fdir),
+                roll: (d.angle != null ? d.angle : 0.0),
+                rough: RenderConfig.BLOOD.wetRough,
+                metal: RenderConfig.BLOOD.wetMetal,
+              });
               return true;
             }
           // acid/slime goop glows faintly: emissive through the splat's own sprite (alpha-shaped),
@@ -218,8 +235,16 @@ class Decals {
           var wy = (d.height != null ? d.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
           // nudge proud of the wall face along the outward normal (clears the opaque
           // face so the hole isn't depth-culled; no z-fight since depthWrite is off)
-          sprites.paintWall(w.x + dv[0] * 0.12, wy, w.z + dv[1] * 0.12,
-            hts[variant], op, sc, render.world.Geom.faceRotY(fdir), roll);
+          sprites.paintWall({
+            x: w.x + dv[0] * 0.12,
+            y: wy,
+            z: w.z + dv[1] * 0.12,
+            tex: hts[variant],
+            op: op,
+            scale: sc,
+            faceRotY: render.world.Geom.faceRotY(fdir),
+            roll: roll,
+          });
           return true;
         }
       return false;

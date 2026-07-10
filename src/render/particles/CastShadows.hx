@@ -1,7 +1,6 @@
 package render.particles;
 
 import three.Three;
-import render.particles.Sprites.GroundSprite;
 
 // a light that casts fake shadows: ground position + the projection knobs. barrels and lamps both
 // build these, so the projector below stays light-agnostic (no barrel/lamp specifics leak in)
@@ -63,7 +62,18 @@ class CastShadows {
           // fade with distance from the light: darker close to it, more transparent far off
           var distFade = 1 - dh / l.range;
           var op = l.op * actorOp * edge * distFade * (0.7 + 0.3 * l.flicker);
-          sprites.paintShadow(ax, floorY, az, gs, dx, dz, len, widWorld, op, Sprites.ORD_SHADOW);
+          sprites.paintShadow({
+            feetX: ax,
+            floorY: floorY,
+            feetZ: az,
+            gs: gs,
+            dirX: dx,
+            dirZ: dz,
+            len: len,
+            wid: widWorld,
+            op: op,
+            order: Sprites.ORD_SHADOW,
+          });
         }
     }
 }
