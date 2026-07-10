@@ -71,6 +71,25 @@ class AITooltip extends BeamTooltip
       if (ai.isAttrsKnown)
         buf.add(attrPills(ai.strength, ai.constitution, ai.intellect, ai.psyche));
 
+      // active effects (body window style, always shown)
+      var effects = [];
+      for (effect in ai.effects)
+        if (!effect.isHidden)
+          effects.push(effect);
+      if (effects.length > 0)
+        {
+          effects.sort(function(a, b) {
+            return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+          });
+          buf.add('<div class="ai-tip-effects">');
+          for (effect in effects)
+            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+              (effect.isTimer ? '<span class="body-eff-t">' +
+                UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
+              '</div>');
+          buf.add('</div>');
+        }
+
       if (Const.isDebug)
         addDebugBlock(buf, ai);
       return buf.toString();
@@ -108,7 +127,7 @@ class AITooltip extends BeamTooltip
       buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');
       buf.add(Const.smalldebug('[debug] alertness: ' + ai.alertness) + '<br/>');
       addDebugListRow(buf, 'abilities', getAbilitiesText(ai));
-      addDebugListRow(buf, 'effects', ai.effects.toString());
+      addDebugListRow(buf, 'hidden effects', getHiddenEffectsText(ai));
       addDebugListRow(buf, 'inventory', ai.inventory.toString());
       addDebugListRow(buf, 'skills', ai.skills.toString());
       addDebugListRow(buf, 'organs', ai.organs.toString());
@@ -127,6 +146,16 @@ class AITooltip extends BeamTooltip
             s += ' [' + ability.timeout + ']';
           list.push(s);
         }
+      return list.join(', ');
+    }
+
+// get hidden effects text for debug tooltip (visible ones show in the normal block)
+  function getHiddenEffectsText(ai: AI): String
+    {
+      var list = [];
+      for (effect in ai.effects)
+        if (effect.isHidden)
+          list.push(effect.type + ' pts:' + effect.points);
       return list.join(', ');
     }
 

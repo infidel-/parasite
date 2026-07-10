@@ -641,6 +641,10 @@ hr {
   font-weight: 600;
   margin-left: 5px;
 }
+/* active effects block: rows reuse the body window's effect-row style */
+.ai-tip-effects {
+  margin-top: 8px;
+}
 .ai-tip-debug {
   margin-top: 9px;
   padding-top: 8px;
