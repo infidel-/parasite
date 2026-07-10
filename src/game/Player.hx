@@ -202,6 +202,11 @@ class Player extends _SaveObject
 // parasite death: either rebirth or game over
   public function death(text: String)
     {
+      // 3D: topple + fade the free parasite's billboard on death (it has no corpse body). only
+      // the visible free parasite — attached/hidden states would snap from the head to the ground
+      if (state == PLR_STATE_PARASITE)
+        game.scene.city3d.playDeathFade(game.playerArea.entity);
+
       // last life
       var ovum = evolutionManager.ovum;
       if (ovum.level == 0)

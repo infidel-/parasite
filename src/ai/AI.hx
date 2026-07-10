@@ -1005,8 +1005,9 @@ public function show()
         area: game.area,
       });
       var o = new BodyObject(game, game.area.id, x, y, type);
-      // 3D: fade the body in from transparent (crossfades with the dying billboard above)
-      game.scene.city3d.fadeInEntity(o.entity);
+      // 3D: fade the body in from transparent, but only once the dying sprite has fallen flat
+      // (bound to the death ghost's landing) so the corpse doesn't appear mid-spin
+      game.scene.city3d.bindBodyFadeIn(o.entity);
 
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);

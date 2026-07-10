@@ -674,6 +674,16 @@ class StreetView {
         actors.seedFadeIn(e);
     }
 
+// fade a freshly-spawned corpse body in, but only once the dying sprite has fallen flat (bound
+// to the death ghost's landing); falls back to an immediate fade when the view is off
+  public function bindBodyFadeIn(e:Entity):Void
+    {
+      if (running &&
+          actors != null &&
+          e != null)
+        actors.bindBodyFadeIn(e);
+    }
+
 // drive the AI-hover tooltip while inspecting (Ctrl held): pick the AI nearest the cursor and
 // anchor the DOM panel at its projected head px. runs every frame so the beam tracks the
 // follow-camera. the 2D AITooltip stands down while this view runs (see AITooltip.update)

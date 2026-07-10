@@ -34,6 +34,10 @@ class Sprites {
   var _sb:Vector3 = new Vector3();
   var _sc:Vector3 = new Vector3();
   var _smtx:Matrix4 = new Matrix4();
+  // scratch reused by paintTopple (death topple) so it allocates nothing per frame
+  var _te:Euler = new Euler();
+  var _tq:Quaternion = new Quaternion();
+  var _yAxis:Vector3 = new Vector3(0, 1, 0);
 
   public function new(game:Game, actorGroup:Group)
     {
@@ -97,6 +101,32 @@ class Sprites {
       m.scale.set(o.gs.fw * o.scale, o.gs.fh * o.scale, 1);
       m.rotation.set(-Math.PI / 2, 0, o.yaw);
       m.renderOrder = (o.order != null ? o.order : 0);
+      m.visible = true;
+      idx++;
+    }
+
+// place a toppling actor sprite for the death animation: from the live upright rest pose (fall 0)
+// to flat on the ground (fall 1), spun about the vertical by spinY radians. pivots at the planted
+// feet (topples over, doesn't slide) — head falls away from the camera so it lands face-up
+  public function paintTopple(o:PaintToppleOpts):Void
+    {
+      if (o.tex == null) return;
+      // gravity-ish ease-in; vertical (no camera lean) through the spin so it doesn't wobble,
+      // then tips flat over the fall
+      var e = o.fall * o.fall;
+      var half = SIZE * 0.5 * o.scale;
+      var tip = -(Math.PI / 2) * e;                 // tip about local X: 0 upright -> -PI/2 flat
+      // the FEET stay planted (o.x,o.z) and the center rides the tip arc — a true topple, not a
+      // slide. head (local +Y) swings to -Z (away from camera), so it lands face-up, feet anchored
+      var cy = o.y + half * Math.cos(tip) + 0.05 * e;
+      var cz = o.z + half * Math.sin(tip);
+      var m = slot(o.tex, o.op, o.x, cy, cz, o.scale);
+      // quaternion = spin * tip: the local X-tip applies first, then the world-vertical spin
+      _te.set(tip, 0, 0);
+      _tq.setFromEuler(_te);
+      m.quaternion.setFromAxisAngle(_yAxis, o.spinY);
+      m.quaternion.multiply(_tq);
+      m.renderOrder = ORD_ACTOR;
       m.visible = true;
       idx++;
     }

@@ -38,6 +38,8 @@ class Actors {
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
+  var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
+  var _heldBodies:haxe.ds.ObjectMap<Entity, Bool> = new haxe.ds.ObjectMap(); // corpse bodies kept invisible until their death ghost lands
   var lampCorners:Map<Int,Int> = null;                  // grid vertex -> lamp dir; slides bend past a post on the cut corner
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
@@ -124,9 +126,11 @@ class Actors {
         if (o.entity != null)
           {
             var vis =
-              !game.player.vars.losEnabled ||
-              game.playerArea.sees(o.x, o.y) ||
-              (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable());
+              (!game.player.vars.losEnabled ||
+               game.playerArea.sees(o.x, o.y) ||
+               (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable())) &&
+              // a corpse body is held invisible until its death ghost has fallen flat
+              !_heldBodies.exists(o.entity);
             drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
             if (vis)
               badges.drawObjTarget(o);
@@ -305,15 +309,39 @@ class Actors {
 // nulled), so the billboard eases out instead of hard-cutting to the corpse
   public function startDeathFade(e:Entity):Void
     {
+      _deathGhost = null;
       var a = actors.get(e);
       if (a == null)
         return;
       var tex = texFor(e);
       if (tex == null)
         return;
-      particles.add(new DeathFade3D(tex,
-        a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z,
-        1.0, a.op));
+      // snapshot the feet-planted pose; the ghost topples from here and plays the item-drop
+      // sound (positional at the actor's cell) when it lands flat
+      var col = a.col;
+      var row = a.row;
+      var ghost = new DeathFade3D(tex,
+        a.x, WorldCtx.floorY(a.col, a.row), a.z,
+        1.0, a.op,
+        function()
+          game.scene.sounds.play('item-drop',
+            {
+              x: col,
+              y: row,
+            }));
+      particles.add(ghost);
+      _deathGhost = ghost; // so the corpse body can bind its fade-in to this ghost's landing
+    }
+
+// keep a freshly-spawned corpse body invisible until the last death ghost lands, so it only
+// appears once the dying sprite has fallen flat (not during the spin); the object loop skips a
+// held body, so when released it seeds at op 0 and eases in. no ghost (view off) = reveal now
+  public function bindBodyFadeIn(e:Entity):Void
+    {
+      if (_deathGhost == null)
+        return;
+      _heldBodies.set(e, true);
+      _deathGhost.onLandExtra = function() _heldBodies.remove(e);
     }
 
 // seed a new entity's actor at zero opacity so it fades in (the body appearing on death)
