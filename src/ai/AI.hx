@@ -1223,6 +1223,9 @@ public function show()
       // berserk cannot call for help
       if (effects.has(EFFECT_BERSERK))
         return false;
+      // paralyzed cannot call for help
+      if (effects.has(EFFECT_PARALYSIS))
+        return false;
       // cultists cannot call for help
       if (isCultist)
         return false;

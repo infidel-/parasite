@@ -143,6 +143,17 @@ class AreaManager extends _SaveObject
               continue;
             }
 
+          // paralyzed caller cannot phone/radio: postpone the call until the effect ends
+          if (e.ai != null &&
+              e.ai.effects.has(EFFECT_PARALYSIS) &&
+              (e.type == AREAEVENT_CALL_LAW ||
+               e.type == AREAEVENT_CALL_BACKUP ||
+               e.type == AREAEVENT_CALL_TEAM_BACKUP))
+            {
+              e.turns = 1;
+              continue;
+            }
+
           // run this event
 //      Const.p(game.turns + ': AreaManager.run(): ' + e.id + ' ' + e.type);
 
