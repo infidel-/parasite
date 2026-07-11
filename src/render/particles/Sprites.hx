@@ -199,9 +199,12 @@ class Sprites {
           actorGroup.add(m);
         }
       var mat:Dynamic = m.material;
+      // swap the crop texture + reset per-frame state. NO material.needsUpdate: the material is
+      // created once with map+emissiveMap present (stable defines), so swapping to another cached
+      // texture only rebinds a uniform — forcing a version bump every quad every frame made three.js
+      // re-derive the program each frame for nothing. (texture upload is driven by texture.version)
       mat.map = tex;
       mat.opacity = op;
-      mat.needsUpdate = true;
       // reset per-frame overridables to their defaults; specialized paints re-set as needed. keeps
       // pool reuse from leaking one call's emissive/renderOrder into the next slot user
       untyped mat.emissiveMap = tex;
