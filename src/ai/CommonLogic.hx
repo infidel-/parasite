@@ -190,7 +190,16 @@ class CommonLogic
         attacker.ai.faceToward(target.x);
       // entities + blood icon for the 3D combat bridges (melee lunge / ranged shot)
       var atkE = (attacker.ai != null ? attacker.ai.entity : null);
-      var tgtE = (target.type == TARGET_AI ? target.ai.entity : null);
+      // target entity for the hit shake: an AI, or the player's visible body (host or parasite)
+      var tgtE = switch (target.type)
+        {
+          case TARGET_AI: target.ai.entity;
+          case TARGET_PLAYER:
+            (game.player.state == PLR_STATE_HOST ?
+              game.player.host.entity :
+              game.playerArea.entity);
+          case TARGET_OBJECT: null;
+        };
       var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
 
       // draw attack effects

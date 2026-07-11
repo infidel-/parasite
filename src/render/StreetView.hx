@@ -26,6 +26,7 @@ class StreetView {
   var scene:Scene;
   var composer:EffectComposer;
   var bloomPass:UnrealBloomPass;
+  var shockwave:Shockwave;                                // screen-space ripple pass + pulse driver (silent scream)
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
@@ -191,6 +192,10 @@ class StreetView {
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
+    // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
+    // glow ripples with it. disabled (zero post cost) unless a pulse is live
+    shockwave = new Shockwave(camera);
+    composer.addPass(shockwave.pass);
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
       RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD);
@@ -244,6 +249,7 @@ class StreetView {
     if (debug.on) setDebug(false);
     scene = null;
     composer = null;
+    shockwave = null;
     actorGroup = null;
     ring = null;
     actors = null;
@@ -460,6 +466,18 @@ class StreetView {
       var ic = particles.ParticleSplat.bloodIcon(type);
       actors.burst(x, y, dx, dz, ic.row, ic.col, RenderConfig.BLOOD.dripDrops);
       game.scene.sounds.play('fx-splat', { x: x, y: y });
+      return true;
+    }
+
+// silent-scream choreography (choir of discord): an expanding ghostly dome + a screen-space
+// shockwave ripple at the caster cell. returns true if the view took over (caller then skips
+// the 2D particle). 3D port of ParticleSilentScream
+  public function playScream(x:Int, y:Int):Bool
+    {
+      if (!running ||
+          actors == null)
+        return false;
+      shockwave.add(actors.scream(x, y));
       return true;
     }
 
@@ -785,6 +803,7 @@ class StreetView {
     render.Models.cull(lampProp, camera, CityConfig.CELL * 2);
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
+    shockwave.update();
     updateHoverTooltip();
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the

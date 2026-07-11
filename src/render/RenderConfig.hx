@@ -299,6 +299,25 @@ class RenderConfig {
     fadeFrac: 0.2,       // trailing fraction of the flight over which everything fades out
   };
 
+  // choir silent scream: an expanding ghostly dome (additive hemisphere mesh) + a screen-space
+  // shockwave ripple (post pass before bloom) that distorts the image under the wave front.
+  // timing in BASE_MS multiples; the 2D particle ran 320ms over 5 tiles
+  public static final SCREAM = {
+    lifeMult: 8.0,        // pulse duration (BASE_MS multiples)
+    radiusCells: 5.0,     // wave end radius (cells; matches the black-noise effect radius)
+    easePow: 5.0,         // radius ease-out exponent (higher = harder slowdown near the end)
+    domeColor: 0xc0c8dc,  // dome tint (the 2D light pulse's pale blue-white)
+    domeAlpha: 0.18,      // dome peak opacity (additive)
+    domeSquash: 0.5,      // dome height vs radius (1 = full hemisphere)
+    domeSegs: 48,         // hemisphere segments around
+    noisePx: 3.0,         // dome static: screen-space grain size (px)
+    noiseRate: 3.0,       // dome static: noise re-rolls per BASE_MS (TV-static flicker speed)
+    rippleAmp: 0.025,     // shockwave UV displacement at full strength (screen fractions)
+    rippleWidth: 0.35,    // ripple band half-width as a fraction of the current ring radius
+    rippleCycles: 3.0,    // sine waves across the band (water rings; more = finer ripples)
+    maxPulses: 4,         // shader uniform slots (max simultaneous screams rippling)
+  };
+
   // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
   // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
   // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none

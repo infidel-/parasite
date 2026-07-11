@@ -241,6 +241,10 @@ typedef RendererInfo = {
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
   public function new(params:Dynamic);
 }
+@:native("THREE.ShaderMaterial") extern class ShaderMaterial {
+  public function new(params:Dynamic);
+  public var uniforms:Dynamic;
+}
 @:native("THREE.LineBasicMaterial") extern class LineBasicMaterial {
   public function new(params:Dynamic);
 }
@@ -320,6 +324,11 @@ typedef Intersection = {
 }
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();
+}
+@:native("THREE.ShaderPass") extern class ShaderPass {
+  public function new(shader:Dynamic);
+  public var enabled:Bool;
+  public var uniforms:Dynamic; // the pass's CLONED uniform set (write values here, not on the source shader object)
 }
 // glb loader (re-exported onto the THREE global by the vendor bundle); gltf.scene is the root Group
 @:native("THREE.GLTFLoader") extern class GLTFLoader {

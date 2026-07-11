@@ -285,6 +285,21 @@ class Actors {
       particles.add(new Projectile3D(src, dst, col, row, glow, scale, drips, travelMs, onImpact));
     }
 
+// spawn a silent-scream pulse dome at cell (x,y); returns the pulse so the street view can
+// drive its screen-space shockwave ripple pass from the same wave front
+  public function scream(x:Int, y:Int):render.particles.ScreamPulse3D
+    {
+      var w = CityConfig.cellToWorld(x, y);
+      var s = new render.particles.ScreamPulse3D(actorGroup,
+        w.x, render.world.WorldCtx.floorY(x, y) + 0.05, w.z, game,
+        function(e) {
+          playFx(e, new render.anim.Shake(RenderConfig.MELEE.shakeMs,
+            RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
+        });
+      particles.add(s);
+      return s;
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
   public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void
