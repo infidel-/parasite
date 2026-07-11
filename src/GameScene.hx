@@ -6,6 +6,7 @@ import haxe.Timer;
 
 import ui.*;
 import game.Game;
+import citygen.CityModel.Tile;
 
 class GameScene
 {
@@ -13,6 +14,7 @@ class GameScene
   public var area: AreaView; // area view
   public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
+  public var city3d: render.StreetView; // 3D street view (city areas only)
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -37,6 +39,10 @@ class GameScene
   public var cameraSubX: Int;
   public var cameraSubY: Int;
 
+  var fader: Fader; // full-screen black fade masking area<->region transition stalls
+  var _city3dArea: Int = -1; // id of the area currently shown in the 3D view
+  var _cityEnter: Bool = false; // an enter-city fade+build is in flight (guard re-entry)
+  static inline var FADE_MS = 150; // transition fade duration (1x BASE_MS)
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
   var _renderStatsArea: _RenderStats;
   var _renderStatsRegion: _RenderStats;
@@ -87,17 +93,17 @@ class GameScene
       area = new AreaView(this);
       areaLighting = new AreaLighting(this);
       region = new RegionView(this);
+      city3d = new render.StreetView(game);
+      fader = new Fader();
 
       // init sound
       sounds = new Sounds(this);
 
-      // partial game init
-      game.init(true);
-
       // update AI hear, view distance
       // clamp so that 4k players do not have it hard
-      var xmin = cameraTileX2 - cameraTileX1;
-      var ymin = cameraTileY2 - cameraTileY1;
+      // derive visible span from canvas (no area yet: world builds on New Game/Load)
+      var xmin = Std.int(canvas.width / Const.TILE_SIZE);
+      var ymin = Std.int(canvas.height / Const.TILE_SIZE);
       ai.AI.VIEW_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) / 2.5);
       ai.AI.HEAR_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) * 1.5 / 2.5);
       if (ai.AI.VIEW_DISTANCE > 6)
@@ -200,11 +206,115 @@ class GameScene
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.textAlign = 'center';
 
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
+      if (game.location == LOCATION_AREA && isCityArea())
+        drawCity3D();
+
+      else if (game.location == LOCATION_AREA)
+        {
+          hideCity3D();
+          game.scene.area.draw();
+        }
 
       else if (game.location == LOCATION_REGION)
-        game.scene.region.draw();
+        {
+          // leaving a city area: let the zoom-in outro finish (it covers the region); its
+          // completion (onCityExitDone) covers to black, then draws/generates the region under
+          // black. don't draw the region now — that would run the heavy first-draw gen stall
+          // straight into the outro's frames
+          if (city3d.running)
+            {
+              hideCity3D();
+              return;
+            }
+          hideCity3D();
+          game.scene.region.draw();
+        }
+    }
+
+// is the current area a 3D-rendered city area?
+  inline function isCityArea(): Bool
+    {
+      return game.area != null &&
+        game.area.info.type == 'city';
+    }
+
+// show/refresh the 3D street view for the current city area (skips 2D area draw).
+// (re)builds only when the shown area changes; seeded areas regenerate from the
+// seed, old seedless saves reconstruct plain boxes from the saved tile grid
+  function drawCity3D()
+    {
+      if (_cityEnter)
+        return;
+      if (game.area.id == _city3dArea && city3d.running)
+        return;
+      // cover to black, then build the city + arm the zoom-out intro UNDER black (the geometry
+      // build + async texture decode is the enter stall), then reveal as the intro plays
+      _cityEnter = true;
+      _city3dArea = game.area.id;
+      fader.cover(FADE_MS, function()
+        {
+          if (game.area.cityGenSeed >= 0)
+            city3d.show(game.area.cityGenSeed);
+          else city3d.showCity(reconstructCity());
+          _cityEnter = false;
+          // reveal only once the view has PRESENTED a frame: the first composer.render
+          // compiles every scene shader (a multi-second stall on a cold driver cache) and
+          // would otherwise run over an already-revealed, never-drawn black canvas.
+          // timeout = backstop so black never sticks if the loop dies before a frame
+          var revealed = false;
+          var reveal = function()
+            {
+              if (revealed)
+                return;
+              revealed = true;
+              fader.reveal(FADE_MS);
+            };
+          city3d.onFirstFrame(reveal);
+          Browser.window.setTimeout(reveal, 5000);
+        });
+    }
+
+// hide the 3D view and forget the shown area (so re-entry rebuilds). the outro plays first;
+// onCityExitDone then reveals the region
+  inline function hideCity3D()
+    {
+      _city3dArea = -1;
+      city3d.hide(onCityExitDone);
+    }
+
+// city-area exit outro finished: cover to black, tear the 3D view down and draw the region
+// (its first-draw map gen is a heavy synchronous stall) UNDER black, then reveal the region
+  function onCityExitDone()
+    {
+      fader.cover(FADE_MS, function()
+        {
+          city3d.teardown();
+          game.scene.region.draw();
+          fader.reveal(FADE_MS);
+        });
+    }
+
+// rebuild a citygen City from the saved game tile grid (old saves without a seed)
+  function reconstructCity(): citygen.CityModel.City
+    {
+      var cells = game.area.getCells();
+      var g = citygen.CityConfig.GRID;
+      var tiles = [for (r in 0...g) [for (c in 0...g) gameTileToCity(cells[c][r])]];
+      return citygen.CityGen.fromTiles(tiles);
+    }
+
+// map a game tile constant to the matching citygen Tile
+  inline function gameTileToCity(t: Int): citygen.CityModel.Tile
+    {
+      if (t == Const.TILE_ROAD ||
+          t == Const.TILE_CROSSWALKV ||
+          t == Const.TILE_CROSSWALKH)
+        return Road;
+      if (t == Const.TILE_ALLEY)
+        return Alley;
+      if (t == Const.TILE_BUILDING)
+        return Building;
+      return Walkway;
     }
 
 // begin render timing sample
@@ -347,6 +457,8 @@ class GameScene
 // common clear path (both images and list)
   public inline function clearPath()
     {
+      if (!game.isInited)
+        return;
       area.clearPath(true);
       region.clearPath(true);
     }
@@ -357,6 +469,8 @@ class GameScene
     {
       canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
+      if (city3d != null)
+        city3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
       updateCamera();
       if (game.location == LOCATION_AREA)
         {

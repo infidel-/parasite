@@ -6,10 +6,10 @@
       content="default-src 'none';
                script-src 'self' 'sha256-e0+uF2c7XOBHlpTXl0si1dtiyznyYaP0JsxRs5ATi+M=' mod:;
                style-src 'self' 'unsafe-inline' mod:;
-               img-src 'self' data: mod:;
+               img-src 'self' data: blob: mod:;
                media-src 'self' data: mod:;
                font-src 'self' data: mod:;
-               connect-src 'self' mod:;
+               connect-src 'self' blob: mod:;
                base-uri 'none';
                form-action 'none'">
 	<meta id="viewport" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -271,6 +271,9 @@
 <script>
   var SoundManager = soundManager;
 </script>
+<!-- vendored three.js global (core + postprocessing addons) — must load before parasite.js
+     so the compiled 3D street renderer can bind window.THREE -->
+<script src="three.global.js"></script>
 <script type="text/javascript" src="parasite.js"></script>
 
 </body>

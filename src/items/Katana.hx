@@ -21,6 +21,7 @@ class Katana extends Weapon
         verb2: 'cuts',
         skill: SKILL_KATANA,
         type: WEAPON_MELEE,
+        attackEffect: SLASH_HEAVY,
         spawnBlood: true,
         canConceal: false,
         sound: {

@@ -237,10 +237,24 @@ class PlayerArea extends _SaveObject
                 isAgreeable: true,
                 obj: o,
               });
-            // object known - add all actions defined by object
+            // object known - add all actions defined by object. item-pickup actions (body
+            // loot, loose pickups) are grouped into one action / submenu after the loop
             else if (o.known())
               o.updateActionList();
           }
+
+      // gettable items on the player's tile: one -> a single Get action (as before);
+      // several -> one action that opens the pickup submenu (full list)
+      var items = getTileItemActions();
+      if (items.length == 1)
+        game.ui.hud.addAction(items[0]);
+      else if (items.length > 1)
+        game.ui.hud.addAction({
+          id: 'pickupMenu',
+          type: ACTION_AREA,
+          name: 'Pick up items… ' + Const.col('inventory-item', '(' + items.length + ')'),
+          isVirtual: true,
+        });
 
       // leave area action
       if (canLeaveArea())
@@ -258,6 +272,19 @@ class PlayerArea extends _SaveObject
 
 // do a player action
 // action energy availability is checked when the list is formed
+// all item-pickup actions offered by objects on the player's own tile (body loot + loose
+// pickups). used both to group them (one Get vs submenu) and to fill the open submenu
+  public function getTileItemActions(): Array<_PlayerAction>
+    {
+      // no known() gate: unknown items are grabbable too (they show as their unknown name,
+      // same as loot on a searched body). each object's getItemActions() applies its own rule
+      var list: Array<_PlayerAction> = [];
+      for (o in game.area.getObjectsAt(x, y))
+        for (a in o.getItemActions())
+          list.push(a);
+      return list;
+    }
+
   public function action(action: _PlayerAction)
     {
       // restart
@@ -325,6 +352,18 @@ class PlayerArea extends _SaveObject
       // plant false memories
       else if (action.id == 'plantMemories')
         ret = plantMemoriesAction();
+      // open the ground-items submenu (several pickups on the tile)
+      else if (action.id == 'pickupMenu')
+        {
+          game.ui.hud.state = HUD_PICKUP_MENU;
+          game.updateHUD();
+        }
+      // close the ground-items submenu (Back)
+      else if (action.id == 'pickupMenu.abort')
+        {
+          game.ui.hud.state = HUD_DEFAULT;
+          game.updateHUD();
+        }
       // learn about object
       else if (action.id == 'learnObject')
         learnObjectAction(action.obj);
@@ -582,15 +621,9 @@ class PlayerArea extends _SaveObject
       };
 
       var inventory = player.host.inventory;
-      var oldWeaponID = inventory.weaponID;
-      if (preferMelee)
-        {
-          var meleeWeapon = getKnownMeleeWeapon();
-          if (meleeWeapon != null)
-            inventory.weaponID = meleeWeapon.id;
-        }
+      inventory.forceMelee = preferMelee;
       CommonLogic.logicAttack(Attacker.fromAI(game, player.host, true), target);
-      inventory.weaponID = oldWeaponID;
+      inventory.forceMelee = false;
 
       actionPost(); // post-action call
     }
@@ -616,13 +649,7 @@ class PlayerArea extends _SaveObject
         return;
 
       var inventory = player.host.inventory;
-      var oldWeaponID = inventory.weaponID;
-      if (preferMelee)
-        {
-          var meleeWeapon = getKnownMeleeWeapon();
-          if (meleeWeapon != null)
-            inventory.weaponID = meleeWeapon.id;
-        }
+      inventory.forceMelee = preferMelee;
       var weapon = player.host.getCurrentWeaponItemInfo().weapon;
       if (!weapon.isRanged &&
           !isNearObject(obj))
@@ -636,7 +663,7 @@ class PlayerArea extends _SaveObject
             }
           if (!isNearObject(obj))
             {
-              inventory.weaponID = oldWeaponID;
+              inventory.forceMelee = false;
               return;
             }
         }
@@ -650,7 +677,7 @@ class PlayerArea extends _SaveObject
       };
 
       CommonLogic.logicAttack(Attacker.fromAI(game, player.host, true), target);
-      inventory.weaponID = oldWeaponID;
+      inventory.forceMelee = false;
 
       actionPost(); // post-action call
     }
@@ -709,7 +736,10 @@ class PlayerArea extends _SaveObject
         }
 
       game.profile.addPediaArticle('hostInvading');
-      game.scene.sounds.play('parasite-attach');
+      // the 3D leap plays the attach sound on landing; play it here only when that view
+      // isn't running (other area types / debug) so it isn't doubled or lost
+      if (!game.scene.city3d.running)
+        game.scene.sounds.play('parasite-attach');
       ai.onAttach(); // callback to AI
 
       return true;
@@ -720,6 +750,9 @@ class PlayerArea extends _SaveObject
   function hardenGripAction()
     {
       log('You harden your grip on the host.');
+
+      // 3D street view: parasite + host shake against each other (the struggle)
+      game.scene.city3d.playGripStruggle(entity, attachHost.entity);
 
       // improv: harden grip bonus
       var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
@@ -1158,6 +1191,8 @@ class PlayerArea extends _SaveObject
             throw 'nowhere to move!';
           nx = x + Const.dirx[dir];
           ny = y + Const.diry[dir];
+          // shake the host as it lurches off the commanded path
+          game.scene.city3d.playResistShake(player.host.entity);
         }
 
       // frob objects on this position
@@ -1487,7 +1522,10 @@ class PlayerArea extends _SaveObject
       // scene and survive across host swaps
       game.ui.hud.targeting.clearTarget();
 
-      game.scene.sounds.play('parasite-detach');
+      // the 3D leap-off plays the detach sound on launch; play it here only when that view
+      // isn't running (other area types / debug) so it isn't doubled or lost
+      if (!game.scene.city3d.running)
+        game.scene.sounds.play('parasite-detach');
     }
 
 

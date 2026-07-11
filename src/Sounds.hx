@@ -16,8 +16,9 @@ class Sounds
   var music: SMSound;
   var menuMusic: SMSound;
   var aboutMusic: SMSound;
-  var ambient: _SoundInfo; 
+  var ambient: _SoundInfo;
   var ambientNext: _SoundInfo;
+  var fireLoop: SMSound; // looping positional fire sound near burning barrels (volume set per frame)
   var ambientLocation: _SoundAmbientLocation;
   var initDone: Bool;
 
@@ -65,6 +66,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 !ambientNext.sound.muted)
               ambientNext.sound.mute();
+            if (fireLoop != null &&
+                !fireLoop.muted)
+              fireLoop.mute();
             return;
           }
         else if (game.ui.state == UISTATE_ABOUT)
@@ -98,6 +102,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 ambientNext.sound.muted)
               ambientNext.sound.unmute();
+            if (fireLoop != null &&
+                fireLoop.muted)
+              fireLoop.unmute();
           }
         ambientTick(ambient);
         ambientTick(ambientNext);
@@ -106,6 +113,7 @@ class Sounds
       music = null;
       menuMusic = null;
       aboutMusic = null;
+      fireLoop = null;
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
@@ -305,6 +313,9 @@ class Sounds
 // after entering area
   public function onEnterArea()
     {
+      // barrels are per-area; silence any fire loop so it does not bleed into the next area/region
+      if (fireLoop != null)
+        fireLoop.setVolume(0);
       var oldType = locationType;
       // check for area-specific music
       if (game.location == LOCATION_AREA)
@@ -442,6 +453,30 @@ class Sounds
         }
     }
 
+// drive the looping fire sound from the render loop: frac is 0 (silent, out of range) .. 1 (full,
+// on top of a barrel); lazy-creates the loop on first audible frame, keeps it looping silently
+// otherwise so there is no start/stop thrash as the player crosses the radius
+  public function updateFireLoop(frac: Float)
+    {
+#if !free
+      if (fireLoop == null)
+        {
+          if (frac <= 0)
+            return;
+          fireLoop = SoundManager.createSound({
+            id: 'ambient-fire',
+            url: AssetPath.resolve('sound/ambient-fire.mp3'),
+            volume: 0,
+            loops: 10000,
+          });
+          fireLoop.play();
+        }
+      var vol = frac <= 0 ? 0 : Std.int(game.config.effectsVolume * frac);
+      if (fireLoop.volume != vol)
+        fireLoop.setVolume(vol);
+#end
+    }
+
 // play given sound from the library
 // add random delay
   public function play(key: String, ?opts: _SoundOptions = null)
@@ -465,13 +500,23 @@ class Sounds
   function playNow(key: String, opts: _SoundOptions)
     {
 #if !free
+      // explicit variant: caller passed a name ending in a digit (e.g. 'fx-splat3') whose
+      // digit-stripped base is a library key — play that exact file, no random pick
+      var lastCh = key.charCodeAt(key.length - 1);
+      var explicit =
+        lastCh >= 48 &&
+        lastCh <= 57 &&
+        sounds[key] == null &&
+        sounds[key.substr(0, key.length - 1)] != null;
       var res = sounds[key];
-      if (res == null)
+      if (res == null &&
+          !explicit)
         {
           game.log('Sound [' + key + '] not found.');
           return;
         }
-      if (res[0] != -1)
+      if (!explicit &&
+          res[0] != -1)
         {
           // pick a variant, excluding the last one played for this key
           var variant = res[0];
@@ -503,7 +548,7 @@ class Sounds
           else volume = Std.int(volume * 0.1); // make silent instead?
         }
       var id = key + '|' + Std.random(4); // make it so sounds can repeat
-      if (game.player.vars.debugSoundEnabled)
+      if (game.player != null && game.player.vars.debugSoundEnabled)
         game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')');
       SoundManager.destroySound(id); // clear previous sound
       var sound = SoundManager.createSound({

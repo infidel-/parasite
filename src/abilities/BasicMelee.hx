@@ -41,12 +41,15 @@ class BasicMelee extends Ability
         chance = 99;
       if (Std.random(100) >= chance)
         {
+          playMelee3D(ai, target, false);
           ai.log('tries to attack ' + target.theName() + ', but misses.');
           return true;
         }
 
+      // 3D lunge + target shake; when the view takes over it owns the attack audio too
+      var handled = playMelee3D(ai, target, true);
       if (sound != null)
-        ai.emitSound(sound);
+        ai.emitSound(sound, !handled);
 
       // roll damage
       var damage = __Math.damage({
@@ -62,5 +65,18 @@ class BasicMelee extends Ability
       // apply damage
       target.onDamage(damage);
       return true;
+    }
+
+// 3D melee choreography for the ability path (it bypasses the CommonLogic weapon bridge):
+// lunge + hit sound + target shake, no blood (ability damage spawns none in 2D either).
+// returns true if the view took over (the caller then skips the attack audio)
+  function playMelee3D(ai: AI, target: AttackTarget, hit: Bool): Bool
+    {
+      var scene = target.game.scene;
+      if (scene.city3d == null)
+        return false;
+      return scene.city3d.playMelee(ai.entity, hit ? target.entity() : null,
+        ai.x, ai.y, target.x, target.y,
+        hit && sound != null ? sound.file : null, null, false, 0, 0);
     }
 }

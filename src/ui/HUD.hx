@@ -28,7 +28,7 @@ class HUD
   public var targeting: Targeting;
   public var command: Command;
   // per-block sub-classes (each owns its DOM, appended to container)
-  var topbar: TopbarHud;
+  public var topbar: TopbarHud;
   var log: LogHud;
   public var goals: GoalsHud;
   public var infoHud: InfoHud;
@@ -440,6 +440,8 @@ public function onMouseLeave()
             targeting.exit(false);
           case HUD_COMMAND_MENU:
             command.exit();
+          case HUD_PICKUP_MENU:
+            state = HUD_DEFAULT;
           case HUD_BASE_BUILDING:
             state = HUD_DEFAULT;
           case HUD_DEFAULT:

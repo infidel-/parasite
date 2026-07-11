@@ -15,7 +15,7 @@ class AreaGame extends _SaveObject
 {
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
-    'info', 'clueSpawnPoints',
+    'info', 'clueSpawnPoints', '_splatCells', '_wallHoleCells',
   ];
   var game: Game;
   var region: RegionGame;
@@ -28,6 +28,7 @@ class AreaGame extends _SaveObject
   public var typeID: _AreaType; // area type id - city block, military base, etc
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated?
+  public var cityGenSeed: Int; // seed for the 3D city generator (city areas); -1 = none/old save
   public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
   public var highCrime: Bool; // low density area can become high crime
@@ -63,6 +64,8 @@ class AreaGame extends _SaveObject
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
   var _tileset: Tileset;
+  var _splatCells: Array<{ x: Int, y: Int }>; // transient FIFO of blood-splat cells (cap eviction; not saved)
+  var _wallHoleCells: Array<{ x: Int, y: Int }>; // transient FIFO of bullet-hole cells (cap eviction; not saved)
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
@@ -88,6 +91,7 @@ class AreaGame extends _SaveObject
       typeID = AREA_GROUND;
       events = [];
       isGenerated = false;
+      cityGenSeed = -1;
       isEntering = false;
       isKnown = false;
       isHabitat = false;
@@ -115,6 +119,8 @@ class AreaGame extends _SaveObject
       _objects = new Map();
       _pathEngine = null;
       _tileset = null;
+      _splatCells = [];
+      _wallHoleCells = [];
     }
 
 // called after load or creation
@@ -155,6 +161,26 @@ class AreaGame extends _SaveObject
       for (o in orphan)
         _objects.remove(o.id);
       Inventory.loadOrphanCount += orphan.length;
+
+      migrateCityGrid();
+    }
+
+// save migration: older saves shrank city areas below the CityGen grid (GRID=100), leaving
+// visible-but-unreachable streets past the cut. rebuild the tile grid to full size from the
+// stored seed so the player can walk the whole block again. objects are untouched
+  function migrateCityGrid()
+    {
+      if (!isCity() ||
+          cityGenSeed == -1 ||
+          !isGenerated ||
+          (width >= info.width && height >= info.height))
+        return;
+      width = info.width;
+      height = info.height;
+      game.areaGenerator.city.rebuildCells(this);
+      // grid grew: drop the cached tile mirror + path engine so they rebuild at the new size
+      tiles = null;
+      _pathEngine = new aPath.Engine(this, width, height);
     }
 
 // enter this area: generate if needed and update view
@@ -447,7 +473,7 @@ class AreaGame extends _SaveObject
         if (o.isStatic || isHabitat)
           o.hide();
         else removeObject(o);
-      clearTemporarySplatDecorations();
+      clearTemporaryDecorations();
 
       // leave area with active team
       if (game.group.team != null)
@@ -463,8 +489,8 @@ class AreaGame extends _SaveObject
       game.cults[0].onLeaveArea();
     }
 
-// remove temporary splat decorations from tile data
-  function clearTemporarySplatDecorations()
+// remove temporary decorations (blood splats + bullet holes) from tile data on area exit
+  function clearTemporaryDecorations()
     {
       if (tiles == null ||
           tiles.length == 0)
@@ -479,19 +505,21 @@ class AreaGame extends _SaveObject
                 tile.decoration.length == 0)
               continue;
 
-            var hasSplat = false;
+            var hasTemp = false;
             for (decoration in tile.decoration)
-              if (decoration.tag == 'SPLAT')
+              if (decoration.tag == 'SPLAT' ||
+                  decoration.tag == 'WALLHOLE')
                 {
-                  hasSplat = true;
+                  hasTemp = true;
                   break;
                 }
-            if (!hasSplat)
+            if (!hasTemp)
               continue;
 
             var filtered = [];
             for (decoration in tile.decoration)
-              if (decoration.tag != 'SPLAT')
+              if (decoration.tag != 'SPLAT' &&
+                  decoration.tag != 'WALLHOLE')
                 filtered.push(decoration);
             tile.decoration = filtered;
           }
@@ -968,7 +996,11 @@ class AreaGame extends _SaveObject
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
       info = WorldConst.getAreaInfo(typeID);
-      if (typeID == AREA_HABITAT)
+      // habitat and city areas use exact info dims. city especially: the 3D street renderer
+      // rebuilds the full CityGen grid (GRID=100) from the seed, so shrinking the walkable
+      // grid would leave visible-but-unreachable streets past the cut edge
+      if (typeID == AREA_HABITAT ||
+          isCity())
         {
           width = info.width;
           height = info.height;
@@ -985,6 +1017,14 @@ class AreaGame extends _SaveObject
         name = NameConst.generate('%baseA1% %baseB1%');
       else if (typeID == AREA_FACILITY)
         name = NameConst.generate('%tree1% %geo1% %lab1%');
+    }
+
+// is this one of the procedural city area types?
+  public inline function isCity(): Bool
+    {
+      return typeID == AREA_CITY_LOW ||
+        typeID == AREA_CITY_MEDIUM ||
+        typeID == AREA_CITY_HIGH;
     }
 
 // whether the parasite knows human area names yet (gated on society knowledge)
@@ -1326,10 +1366,60 @@ class AreaGame extends _SaveObject
       if (tile.decoration == null)
         tile.decoration = [];
       tile.decoration.push(decoration);
+      // cap blood splats: FIFO-evict the oldest tracked splat once past the per-area max so a
+      // long killing spree can't grow tiles/save unbounded (transient tracker, rebuilt post-load)
+      if (decoration.tag == 'SPLAT')
+        {
+          if (_splatCells == null) // transient: null on freshly-loaded areas
+            _splatCells = [];
+          _splatCells.push({ x: x, y: y });
+          if (_splatCells.length > render.RenderConfig.BLOOD.splatMax)
+            {
+              var old = _splatCells.shift();
+              removeOneDecorAt(old.x, old.y, 'SPLAT');
+            }
+        }
+      // bullet holes on walls: same FIFO cap so a firefight can't grow tiles/save unbounded
+      else if (decoration.tag == 'WALLHOLE')
+        {
+          if (_wallHoleCells == null) // transient: null on freshly-loaded areas
+            _wallHoleCells = [];
+          _wallHoleCells.push({ x: x, y: y });
+          if (_wallHoleCells.length > render.RenderConfig.WALLHOLE.max)
+            {
+              var old = _wallHoleCells.shift();
+              removeOneDecorAt(old.x, old.y, 'WALLHOLE');
+            }
+        }
       if (game != null &&
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
+    }
+
+// current tracked blood-splat count (debug/instrumentation; session-added only)
+  public function splatCount(): Int
+    {
+      return (_splatCells != null ? _splatCells.length : 0);
+    }
+
+// remove a single decoration with the given tag from a cell (oldest-first FIFO eviction)
+  function removeOneDecorAt(x: Int, y: Int, tag: String)
+    {
+      if (tiles == null ||
+          x < 0 || y < 0 ||
+          x >= width || y >= height)
+        return;
+      var tile = tiles[x][y];
+      if (tile == null ||
+          tile.decoration == null)
+        return;
+      for (d in tile.decoration)
+        if (d.tag == tag)
+          {
+            tile.decoration.remove(d);
+            return;
+          }
     }
 
 
@@ -1424,7 +1514,7 @@ class AreaGame extends _SaveObject
     }
 
 // get cached tileset for this area type
-  function getTileset(): Tileset
+  public function getTileset(): Tileset
     {
       if (_tileset == null &&
           game != null &&
@@ -1484,8 +1574,9 @@ class AreaGame extends _SaveObject
     }
 
 // check if x1, y1 sees x2, y2
-// bresenham copied from wikipedia with one slight modification
-  public function isVisible(x1: Int, y1: Int, x2: Int, y2: Int, ?doTrace: Bool)
+// bresenham copied from wikipedia with one slight modification.
+// strict (used by AI gun-fire): a diagonal step may not cut through a solid wall corner
+  public function isVisible(x1: Int, y1: Int, x2: Int, y2: Int, ?doTrace: Bool, ?strict: Bool)
     {
       var startx = x1, starty = y1, finx = x2, finy = y2;
       var steep: Bool = (Math.abs(y2 - y1) > Math.abs(x2 - x1));
@@ -1558,12 +1649,53 @@ class AreaGame extends _SaveObject
           error -= dy;
           if (error < 0)
             {
+              // strict corner block: the line steps diagonally from (xx,yy) to (xx+1,yy+ystep);
+              // if BOTH tiles straddling that corner are opaque, it's a solid corner -> no sight
+              if (strict == true)
+                {
+                  var ny = yy + ystep;
+                  var a = (steep ? canSeeThrough(ny, xx) : canSeeThrough(xx, ny));
+                  var b = (steep ? canSeeThrough(yy, xx + 1) : canSeeThrough(xx + 1, yy));
+                  if (!a && !b)
+                    return false;
+                }
               yy = yy + ystep;
               error = error + dx;
             }
         }
 
       return true;
+    }
+
+// walk a straight ray from (sx,sy) toward (tx,ty) and return the first wall tile hit within
+// maxTiles (wall=true), else the last in-bounds tile reached (wall=false, faded off-camera).
+// fromCol/fromRow = the last OPEN cell before the hit (the exposed face the ray entered through),
+// used to place a bullet hole on the real surface. used to stop a missed bullet's tracer at a wall
+  public function rayToWall(sx: Int, sy: Int, tx: Int, ty: Int, maxTiles: Int): { col: Int, row: Int, wall: Bool, fromCol: Int, fromRow: Int }
+    {
+      var dx = tx - sx, dy = ty - sy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 0.001)
+        return { col: sx, row: sy, wall: false, fromCol: sx, fromRow: sy };
+      var stepX = dx / dist, stepY = dy / dist;   // unit step, ~one tile per iteration
+      var lastCol = sx, lastRow = sy;
+      var i = 1;
+      while (i <= maxTiles)
+        {
+          var col = Math.round(sx + stepX * i);
+          var row = Math.round(sy + stepY * i);
+          if (col != lastCol || row != lastRow)
+            {
+              // off the map: fade there, no spark
+              if (col < 0 || col >= width || row < 0 || row >= height)
+                return { col: lastCol, row: lastRow, wall: false, fromCol: lastCol, fromRow: lastRow };
+              if (!canSeeThrough(col, row))
+                return { col: col, row: row, wall: true, fromCol: lastCol, fromRow: lastRow };
+              lastCol = col; lastRow = row;
+            }
+          i++;
+        }
+      return { col: lastCol, row: lastRow, wall: false, fromCol: lastCol, fromRow: lastRow };
     }
 
 // add AI to map

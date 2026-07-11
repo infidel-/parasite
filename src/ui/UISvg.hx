@@ -457,6 +457,73 @@ class UISvg
         'M12 6.6C9.8 6.6 8.6 8.4 8.6 10.4 8.6 12.4 10 13.8 12 13.8 14 13.8 15.4 12.4 15.4 10.4 15.4 8.4 14.2 6.6 12 6.6Z"/></svg>'; // shadowed face void
     }
 
+// resolve an AI entity badge glyph key (see ai.AI.getBadges) to its inline SVG, matching the 2D
+// entities atlas art. rising alertness is a "?" (tinted white->yellow->orange by the 3D badge
+// pass), full alert a "!"
+  public static function badge(key: String): String
+    {
+      switch (key)
+        {
+          case 'alert1', 'alert2', 'alert3':
+            return badgeQuestion();
+          case 'alerted':
+            return badgeWarn();
+          case 'calling':
+            return badgeCalling();
+          case 'search':
+            return badgeSearch();
+          case 'npc':
+            return badgeNpc();
+        }
+      return badgeWarn();
+    }
+
+// question mark (rising alertness — suspicious)
+  public static function badgeQuestion(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M7.7 8.4 A4.3 4.3 0 1 1 12.2 12.6 C11 13.4 11 14 11 15.4"/>' +   // hook + stem
+        '<circle cx="11" cy="19.4" r="1.7" fill="currentColor" stroke="none"/></svg>'; // dot
+    }
+
+// exclamation mark (fully alerted)
+  public static function badgeWarn(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+        '<path d="M9.6 3 H14.4 L13.3 15 H10.7 Z"/>' +   // tapering bar
+        '<circle cx="12" cy="19.2" r="2.1"/></svg>';    // dot
+    }
+
+// broadcast waves ((•)) (calling law / backup)
+  public static function badgeCalling(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/>' +
+        '<path d="M7.5 7.5 A6.4 6.4 0 0 0 7.5 16.5"/>' +     // inner arcs
+        '<path d="M16.5 7.5 A6.4 6.4 0 0 1 16.5 16.5"/>' +
+        '<path d="M4.6 4.6 A10.4 10.4 0 0 0 4.6 19.4"/>' +   // outer arcs
+        '<path d="M19.4 4.6 A10.4 10.4 0 0 1 19.4 19.4"/></svg>';
+    }
+
+// magnifier (searching last-seen / area)
+  public static function badgeSearch(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="10.5" cy="10.5" r="6"/>' +
+        '<line x1="15" y1="15" x2="20.5" y2="20.5"/></svg>';
+    }
+
+// pale disc with a neutral face (npc / mission target). self-colored (not currentColor) — the
+// two-tone face can't be a single tint
+  public static function badgeNpc(): String
+    {
+      return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="10.5" fill="#f2f2f2"/>' +          // face disc
+        '<circle cx="8.3" cy="10" r="1.8" fill="#2a2a2a"/>' +          // eyes
+        '<circle cx="15.7" cy="10" r="1.8" fill="#2a2a2a"/>' +
+        '<rect x="7.8" y="15" width="8.4" height="2.3" rx="1.15" fill="#2a2a2a"/></svg>'; // mouth
+    }
+
 // rotating organism sigil (inner group .mainmenu-sigil-in counter-spins)
   public static function sigil(): String
     {

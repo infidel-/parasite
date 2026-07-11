@@ -16,7 +16,7 @@ import mods.ModEventRegistry;
 class AI extends AIData
 {
   static var _ignoredFields = [ 'entity', 'event', 'npc', 'sounds',
-    'isTracing',
+    'isTracing', 'faceRight',
   ];
   public var entity: AIEntity; // gui entity
   public var event(get, null): scenario.Event; // event link (for scenario npcs)
@@ -43,6 +43,7 @@ class AI extends AIData
   public var guardTargetX: Int;
   public var guardTargetY: Int;
   public var direction: Int; // direction of movement
+  public var faceRight: Bool; // 3D billboard faces right (mirrored) — set by the last east/west move or attack
 
   var _objectsSeen: List<Int>; // list of object IDs this AI has seen
   var _turnsInvisible: Int; // number of turns passed since player saw this AI
@@ -101,6 +102,7 @@ class AI extends AIData
       enemies = new List();
       command = new CommandParams();
       direction = 0;
+      faceRight = false;
       parasiteAttached = false;
       isTracing = false;
 
@@ -277,9 +279,27 @@ public function show()
                 return;
             }
         }
+      faceToward(vx); // turn to face the move direction (east/west)
       x = vx;
       y = vy;
       entity.setPosition(x, y);
+    }
+
+// turn the 3D billboard to face a target column (east = right, west = left; keeps facing on a
+// purely vertical delta). also used on attacks so the attacker turns toward what it hits
+  public function faceToward(tx: Int)
+    {
+      if (tx > x)
+        faceRight = true;
+      else if (tx < x)
+        faceRight = false;
+    }
+
+// whether this AI's 3D billboard mirrors with its facing (side-view art like the dog); front-view
+// art (humans) leaves it false so nothing flips
+  public dynamic function flipsOnMove(): Bool
+    {
+      return false;
     }
 
 
@@ -292,8 +312,8 @@ public function show()
     }
 
 
-// does this AI sees this position?
-  public function seesPosition(xx: Int, yy: Int): Bool
+// does this AI sees this position? (strict: block sight through solid wall corners, for gun-fire)
+  public function seesPosition(xx: Int, yy: Int, ?strict: Bool): Bool
     {
       // too far away
       var distSqr = Const.distanceSquared(x, y, xx, yy);
@@ -304,7 +324,7 @@ public function show()
         return false;
 
       // check for visibility
-      if (!game.area.isVisible(x, y, xx, yy))
+      if (!game.area.isVisible(x, y, xx, yy, null, strict))
         return false;
 
       return true;
@@ -468,6 +488,68 @@ public function show()
 
       entity.setAlert(alertFrame);
       entity.setEffect(effects.getIcon());
+    }
+
+
+// ordered active entity badges (alert / npc / cultist / effect) for the world entity. shared
+// source for the 3D street-view badge pass; mirrors the 2D AIEntity.draw ordering + updateEntity's
+// alert-frame pick. alert + npc carry a UISvg glyph key (scalable 3D render); effect + cultist are
+// left as PNG atlas cells (svg == null)
+  public function getBadges(): Array<_Badge>
+    {
+      var out: Array<_Badge> = [];
+      // alert badge: same pick as updateEntity, then the search-state glyph override
+      var alertFrame = Const.FRAME_EMPTY;
+      if (state == AI_STATE_ALERT ||
+          state == AI_STATE_SEARCH_LAST_SEEN ||
+          state == AI_STATE_SEARCH_AREA)
+        alertFrame = Const.FRAME_ALERTED;
+      else if (state == AI_STATE_IDLE ||
+          state == AI_STATE_MOVE_TARGET ||
+          state == AI_STATE_INVESTIGATE)
+        {
+          if (alertness > 75)
+            alertFrame = Const.FRAME_ALERT3;
+          else if (alertness > 50)
+            alertFrame = Const.FRAME_ALERT2;
+          else if (alertness > 0)
+            alertFrame = Const.FRAME_ALERT1;
+        }
+      if (game.managerArea.hasAI(this, AREAEVENT_CALL_LAW) ||
+          game.managerArea.hasAI(this, AREAEVENT_CALL_BACKUP) ||
+          game.managerArea.hasAI(this, AREAEVENT_CALL_TEAM_BACKUP))
+        alertFrame = Const.FRAME_CALLING;
+      if (alertFrame != Const.FRAME_EMPTY)
+        {
+          if (state == AI_STATE_SEARCH_LAST_SEEN ||
+              state == AI_STATE_SEARCH_AREA)
+            out.push({ col: Const.FRAME_SEARCH, row: Const.ROW_EFFECT, svg: 'search' });
+          else out.push({ col: alertFrame, row: Const.ROW_ALERT, svg: alertSvg(alertFrame) });
+        }
+      // npc / mission-target marker
+      if (isNPC || entity.isMissionTarget)
+        out.push({ col: Const.FRAME_EVENT_NPC_AREA, row: Const.ROW_REGION_ICON, svg: 'npc' });
+      // cultist mark (png)
+      if (isPlayerCultist())
+        out.push({ col: Const.FRAME_CULTIST0, row: Const.ROW_EFFECT });
+      else if (isCultist)
+        out.push({ col: Const.FRAME_CULTIST_UNKNOWN, row: Const.ROW_EFFECT });
+      // active effect icon (png; single or MULTIPLE)
+      var eff = effects.getIcon();
+      if (eff != null)
+        out.push({ col: eff.col, row: eff.row });
+      return out;
+    }
+
+// map an alert atlas frame to its UISvg glyph key (3D scalable render)
+  inline function alertSvg(frame: Int): String
+    {
+      if (frame == Const.FRAME_ALERT1) return 'alert1';
+      if (frame == Const.FRAME_ALERT2) return 'alert2';
+      if (frame == Const.FRAME_ALERT3) return 'alert3';
+      if (frame == Const.FRAME_ALERTED) return 'alerted';
+      if (frame == Const.FRAME_CALLING) return 'calling';
+      return null;
     }
 
 
@@ -775,7 +857,7 @@ public function show()
 
 // emit specific sound (both visual and audio if it exists)
 // also handle sound propagation here
-  public function emitSound(sound: AISound)
+  public function emitSound(sound: AISound, ?playAudio: Bool = true)
     {
       if (sound == null)
         return;
@@ -794,7 +876,10 @@ public function show()
           sound.text != null &&
           entity != null)
         entity.setText(sound.text, 2, lang);
-      if (sound.file != null)
+      // playAudio=false defers only the audible SFX (the 3D melee lunge plays it on impact);
+      // alert propagation + bark text below still run
+      if (playAudio &&
+          sound.file != null)
         {
           var file = sound.file;
           if (isHuman && !isMale && file.indexOf('male') == 0)
@@ -907,6 +992,9 @@ public function show()
         entity: entity,
         attacker: attacker,
       });
+      // 3D: fade the dying billboard out (entity still live here) so it crossfades into the
+      // body that spawns just below, instead of the sprite hard-cutting to the corpse
+      game.scene.city3d.playDeathFade(entity);
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook
@@ -917,6 +1005,9 @@ public function show()
         area: game.area,
       });
       var o = new BodyObject(game, game.area.id, x, y, type);
+      // 3D: fade the body in from transparent, but only once the dying sprite has fallen flat
+      // (bound to the death ghost's landing) so the corpse doesn't appear mid-spin
+      game.scene.city3d.bindBodyFadeIn(o.entity);
 
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);
@@ -1132,6 +1223,9 @@ public function show()
         return false;
       // berserk cannot call for help
       if (effects.has(EFFECT_BERSERK))
+        return false;
+      // paralyzed cannot call for help
+      if (effects.has(EFFECT_PARALYSIS))
         return false;
       // cultists cannot call for help
       if (isCultist)

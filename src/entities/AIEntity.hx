@@ -9,7 +9,7 @@ import game.Game;
 
 class AIEntity extends PawnEntity
 {
-  var ai: AI; // AI link
+  public var ai: AI; // AI link
   // -1, 0: do not draw
   var alertx: Int; // alert frame (new draw)
   var effectIcon: _Icon; // currently active effect icon

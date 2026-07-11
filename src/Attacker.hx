@@ -136,10 +136,13 @@ class Attacker
       return ai != null && !isPlayer;
     }
 
-// returns true when attacker can move toward a target
+// returns true when attacker can move toward a target; never the player's host — its position
+// is owned by playerArea, an AI-driven move desyncs the two
   public function canMoveToTarget(): Bool
     {
-      return ai != null && !isPlayer;
+      return ai != null &&
+        !isPlayer &&
+        !ai.isPlayerHost();
     }
 
 // returns true when attacker needs ranged line of sight in common logic
@@ -154,12 +157,12 @@ class Attacker
       return (Math.abs(tx - x) <= 1 && Math.abs(ty - y) <= 1);
     }
 
-// checks whether attacker sees a target tile
-  public function seesPosition(tx: Int, ty: Int): Bool
+// checks whether attacker sees a target tile (strict: block sight through wall corners, gun-fire)
+  public function seesPosition(tx: Int, ty: Int, ?strict: Bool): Bool
     {
       if (ai != null)
-        return ai.seesPosition(tx, ty);
-      return game.area.isVisible(x, y, tx, ty);
+        return ai.seesPosition(tx, ty, strict);
+      return game.area.isVisible(x, y, tx, ty, null, strict);
     }
 
 // moves attacker toward a target tile when possible
@@ -170,15 +173,16 @@ class Attacker
     }
 
 // emits attacker sound and alertness
-  public function emitSound(sound: AISound)
+  public function emitSound(sound: AISound, ?playAudio: Bool = true)
     {
       if (ai != null)
         {
-          ai.emitSound(sound);
+          ai.emitSound(sound, playAudio);
           return;
         }
 
-      if (sound.file != null)
+      if (playAudio &&
+          sound.file != null)
         game.scene.sounds.play(sound.file, {
           x: x,
           y: y,

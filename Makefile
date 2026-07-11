@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models model-export
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -19,6 +19,30 @@ git-diff:
 	@echo ---
 	@git --no-pager diff HEAD
 	@git --no-pager status --short
+
+# 3D street-view texture pipeline: downscale/bake textures-src/ 1024px sources
+# straight into the app dir (app/textures/, per textures.json). textures-src is a
+# symlink to the asset store; sources are NOT committed.
+tex:
+	python3 tools/textures.py
+
+# adopt freshly generated gpt drops into textures-src/ without baking
+adopt:
+	python3 tools/textures.py --rename
+
+# 3D model pipeline: one-time install of the node bake tooling (gltf-transform + meshopt + sharp)
+model-deps:
+	npm --prefix tools install
+
+# 3D model pipeline: decimate + shrink embedded textures of models-src/ .glb sources
+# straight into app/models/ (per models.json). models-src is a symlink; sources are NOT committed.
+models:
+	node tools/models.mjs
+
+# dump a source glb's embedded textures to models-src/ (base -> <label>-base.png etc) for authoring
+# an emissive/edited map off them. usage: make model-export label=street-lamp
+model-export:
+	node tools/models.mjs --export $(label)
 
 testmod:
 	cd examples/testmod/ && $(MAKE)

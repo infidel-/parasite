@@ -115,14 +115,15 @@ class CommonLogic
           return;
         }
 
-      // check for line of sight on ranged
+      // check for line of sight on ranged (strict: no shooting through a solid wall corner)
       if (attacker.needsRangedLineOfSight() &&
           weapon.isRanged &&
-          !attacker.seesPosition(target.x, target.y))
+          !attacker.seesPosition(target.x, target.y, true))
         {
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'move for ranged line of sight');
-          attacker.logicMoveTo(target.x, target.y);
+          if (attacker.canMoveToTarget())
+            attacker.logicMoveTo(target.x, target.y);
           return;
         }
 
@@ -185,16 +186,49 @@ class CommonLogic
       if (target.type == TARGET_AI)
         targetBloodType = target.ai.bloodType();
 
+      // attacker turns to face what it hits (same billboard flip as a move)
+      if (attacker.ai != null)
+        attacker.ai.faceToward(target.x);
+      // entities + blood icon for the 3D combat bridges (melee lunge / ranged shot)
+      var atkE = (attacker.ai != null ? attacker.ai.entity : null);
+      // target entity for the hit shake: an AI, or the player's visible body (host or parasite)
+      var tgtE = target.entity();
+      var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
+
       // draw attack effects
+      var handledShot = false;
       if (weapon.isRanged)
         {
           if (weapon.projectile != null)
             Particle.createProjectile(weapon.projectile, game.scene,
               attacker.x, attacker.y, { x: target.x, y: target.y },
               roll, targetBloodType);
-          else Particle.createShot(
-            weapon.sound.file, game.scene, attacker.x, attacker.y,
-            { x: target.x, y: target.y }, roll, targetBloodType);
+          else
+            {
+              // 3D gun-shot choreography; when the view handles it, skip the 2D tracer (it is
+              // hidden under the street view) so blood/impact aren't doubled
+              handledShot = game.scene.city3d != null &&
+                game.scene.city3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
+                  roll, weapon.spawnBlood, bloodIc.row, bloodIc.col,
+                  weapon.sound.file, attacker.isPlayer);
+              if (!handledShot)
+                Particle.createShot(
+                  weapon.sound.file, game.scene, attacker.x, attacker.y,
+                  { x: target.x, y: target.y }, roll, targetBloodType);
+            }
+        }
+
+      // 3D melee choreography: the attacker lunges and the hit sound fires on impact (not
+      // now). blood/shake are added on a hit below. handled => the view took over the audio
+      inline function melee(sound: AISound, hit: Bool): Bool
+        {
+          if (weapon.isRanged ||
+              game.scene.city3d == null)
+            return false;
+          return game.scene.city3d.playMelee(atkE, hit ? tgtE : null,
+            attacker.x, attacker.y, target.x, target.y,
+            sound != null ? sound.file : null, weapon.attackEffect,
+            hit && weapon.spawnBlood, bloodIc.row, bloodIc.col);
         }
 
       // roll skill
@@ -203,7 +237,7 @@ class CommonLogic
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'attack misses');
           var sound = (weapon.soundMiss != null ? weapon.soundMiss : weapon.sound);
-          attacker.emitSound(sound);
+          attacker.emitSound(sound, !melee(sound, false));
           attacker.log('tries to ' + weapon.verb1 + ' ' +
             target.theName() + ', but misses.');
 
@@ -217,15 +251,20 @@ class CommonLogic
             }
           return;
         }
-      else
+      var handledHit = false;
+      if (roll)
         {
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'attack hits');
-          attacker.emitSound(weapon.sound);
+          handledHit = melee(weapon.sound, true);
+          attacker.emitSound(weapon.sound, !handledHit);
         }
 
-      // blood effect on hit
-      if (weapon.spawnBlood)
+      // blood effect on hit (2D). skipped when the 3D melee handled it — the lunge's blood
+      // burst writes the same SPLAT decorations on impact instead (no double splat)
+      if (weapon.spawnBlood &&
+          !handledHit &&
+          !handledShot)
         Particle.createSplat(targetBloodType, game.scene,
           { x: target.x, y: target.y }, {
             x: attacker.x,

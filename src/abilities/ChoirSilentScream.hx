@@ -7,6 +7,9 @@ import particles.ParticleSilentScream;
 
 class ChoirSilentScream extends Ability
 {
+  // effect radius (cells); the 3D scream visuals (RenderConfig.SCREAM.radiusCells) derive from it
+  public static inline var RADIUS = 5;
+
   public function new()
     {
       super();
@@ -35,7 +38,7 @@ class ChoirSilentScream extends Ability
       // apply black noise to nearby AIs
       var area = target.game.area;
       var affected = 0;
-      for (other in area.getAIinRadius(ai.x, ai.y, 5, false))
+      for (other in area.getAIinRadius(ai.x, ai.y, RADIUS, false))
         {
           if (other == ai ||
               other.state == AI_STATE_DEAD)
@@ -48,10 +51,14 @@ class ChoirSilentScream extends Ability
       if (affected == 0)
         return false;
 
-      new ParticleSilentScream(target.game.scene, {
-        x: ai.x,
-        y: ai.y
-      });
+      // 3D street view live: expanding dome + screen shockwave instead of the flat 2D rings
+      var scene = target.game.scene;
+      if (scene.city3d == null ||
+          !scene.city3d.playScream(ai.x, ai.y))
+        new ParticleSilentScream(scene, {
+          x: ai.x,
+          y: ai.y
+        });
       target.game.scene.sounds.play('ability-silent-scream', {
         x: ai.x,
         y: ai.y,

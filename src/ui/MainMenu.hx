@@ -266,9 +266,11 @@ class MainMenu extends UIWindow
 // handle in-menu keys: arrows move the highlight, Enter activates it
   public override function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
     {
-      if (code == 'ArrowDown')
+      if (code == 'ArrowDown' ||
+          key == 'ArrowDown')
         navMove(1);
-      else if (code == 'ArrowUp')
+      else if (code == 'ArrowUp' ||
+          key == 'ArrowUp')
         navMove(-1);
       else if (key == 'Enter' ||
           key == 'NumpadEnter')
@@ -510,9 +512,11 @@ override function update()
           if (!yes)
             return;
           Browser.window.setTimeout(function() {
-            game.load(Game.AUTOSAVE_SLOT);
+            // close BEFORE loading (like New Game) so the load's fader.cover paints in sync
+            // with the 3D build timer instead of being desynced by post-load UI work
             game.ui.closeWindow();
             game.ui.canvas.style.visibility = 'visible';
+            game.load(Game.AUTOSAVE_SLOT);
           }, 0);
         }
       };

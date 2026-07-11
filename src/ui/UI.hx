@@ -169,6 +169,14 @@ class UI
 // grab key presses
   function onKey(e: KeyboardEvent)
     {
+      // street-debug mode owns the keyboard (fly cam / editor / inspector, on their own window
+      // listeners) — suppress ALL game input while it is active. backtick toggles it off via
+      // StreetView's own listener, so exiting still works
+      if (game.location == LOCATION_AREA &&
+          game.scene.city3d != null &&
+          game.scene.city3d.debugActive())
+        return;
+
       // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
       if (e.key == 'Control' &&
           !game.scene.controlPressed &&
@@ -196,6 +204,15 @@ class UI
           return;
         }
 
+      // Escape closes the ground-items submenu
+      if (hud.state == HUD_PICKUP_MENU &&
+          e.code == 'Escape')
+        {
+          hud.state = HUD_DEFAULT;
+          game.updateHUD();
+          return;
+        }
+
       // handle targeting mode keys
       if (hud.state == HUD_TARGETING)
         {
@@ -215,10 +232,15 @@ class UI
       // default state
       if (_state == UISTATE_DEFAULT)
         {
-          // toggle hud
+          // 3D city view: Space toggles the tactical overhead view (HUD stays up);
+          // elsewhere it toggles the HUD
           if (e.code == 'Space')
             {
-              hud.toggle();
+              if (game.location == LOCATION_AREA &&
+                  game.scene.city3d != null &&
+                  game.scene.city3d.running)
+                game.scene.city3d.toggleTactical();
+              else hud.toggle();
               return;
             }
 
@@ -580,6 +602,8 @@ class UI
             // no message
           case HUD_COMMAND_MENU:
             game.actionFailed('You cannot move while commanding followers.');
+          case HUD_PICKUP_MENU:
+            game.actionFailed('You cannot move while picking up items.');
           default:
         }
       return true;
@@ -660,6 +684,12 @@ class UI
         }
 
       if (cannotMove())
+        return false;
+
+      // street-debug mode owns numpad/arrows for the 3D fly camera
+      if (game.location == LOCATION_AREA &&
+          game.scene.city3d != null &&
+          game.scene.city3d.debugActive())
         return false;
 
       // area mode

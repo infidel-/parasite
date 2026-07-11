@@ -14,6 +14,11 @@ class AITooltip extends BeamTooltip
 // show area AI tooltip when inspect mode is active
   public function update()
     {
+      // the 3D street view drives its own hover tooltip (projected anchor via StreetView.loop);
+      // the 2D tile mapping is wrong under the perspective camera, so stand down there
+      if (game.scene.city3d != null &&
+          game.scene.city3d.running)
+        return;
       if (!hud.isAIInspectMode())
         {
           hide();
@@ -46,8 +51,8 @@ class AITooltip extends BeamTooltip
       showBeam(ai.x, ai.y, ai.id, getTooltipText(ai));
     }
 
-// get tooltip HTML for hovered AI
-  function getTooltipText(ai: AI): String
+// get tooltip HTML for hovered AI (public: the 3D street-view hover driver reuses it verbatim)
+  public function getTooltipText(ai: AI): String
     {
       var buf = new StringBuf();
       // header: name + optional cultist mark
@@ -65,6 +70,25 @@ class AITooltip extends BeamTooltip
       // attribute pills
       if (ai.isAttrsKnown)
         buf.add(attrPills(ai.strength, ai.constitution, ai.intellect, ai.psyche));
+
+      // active effects (body window style, always shown)
+      var effects = [];
+      for (effect in ai.effects)
+        if (!effect.isHidden)
+          effects.push(effect);
+      if (effects.length > 0)
+        {
+          effects.sort(function(a, b) {
+            return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
+          });
+          buf.add('<div class="ai-tip-effects">');
+          for (effect in effects)
+            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+              (effect.isTimer ? '<span class="body-eff-t">' +
+                UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
+              '</div>');
+          buf.add('</div>');
+        }
 
       if (Const.isDebug)
         addDebugBlock(buf, ai);
@@ -103,7 +127,7 @@ class AITooltip extends BeamTooltip
       buf.add(Const.smalldebug('[debug] pos: (' + ai.x + ',' + ai.y + ')') + '<br/>');
       buf.add(Const.smalldebug('[debug] alertness: ' + ai.alertness) + '<br/>');
       addDebugListRow(buf, 'abilities', getAbilitiesText(ai));
-      addDebugListRow(buf, 'effects', ai.effects.toString());
+      addDebugListRow(buf, 'hidden effects', getHiddenEffectsText(ai));
       addDebugListRow(buf, 'inventory', ai.inventory.toString());
       addDebugListRow(buf, 'skills', ai.skills.toString());
       addDebugListRow(buf, 'organs', ai.organs.toString());
@@ -122,6 +146,16 @@ class AITooltip extends BeamTooltip
             s += ' [' + ability.timeout + ']';
           list.push(s);
         }
+      return list.join(', ');
+    }
+
+// get hidden effects text for debug tooltip (visible ones show in the normal block)
+  function getHiddenEffectsText(ai: AI): String
+    {
+      var list = [];
+      for (effect in ai.effects)
+        if (effect.isHidden)
+          list.push(effect.type + ' pts:' + effect.points);
       return list.join(', ');
     }
 

@@ -58,6 +58,20 @@ class ActionsHud
           hud.command.updateActions();
           return;
         }
+      // ground-items submenu: the full list of tile pickups + a Back item. nothing else
+      // (no movement, no other actions) is offered while it is open
+      if (hud.state == HUD_PICKUP_MENU)
+        {
+          for (a in game.playerArea.getTileItemActions())
+            addAction(a);
+          addAction({
+            id: 'pickupMenu.abort',
+            type: ACTION_AREA,
+            name: 'Back',
+            isVirtual: true,
+          });
+          return;
+        }
 
       // trying to chat
       if (hud.state == HUD_CHAT)

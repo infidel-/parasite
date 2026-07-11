@@ -72,6 +72,13 @@ class Options extends UIWindow
           game.scene.sounds.ambientVolumeChanged();
         });
 
+      // ---- VIDEO ----
+      addCard('Video');
+      addOptRadio('FPS cap', [30, 60, 75, 90, 144], game.config.vidFpsCap,
+        function (v) game.config.set('vidFpsCap', '' + v, true));
+      addOptToggle('Show FPS counter', 'vidShowFps', game.config.vidShowFps,
+        function (on) game.ui.hud.topbar.ensureFps());
+
       // ---- INTERFACE ----
       addCard('Interface');
       addOptSlider('Repeat delay', game.config.repeatDelay, 0, 500, 10, 'int', 'ms',
@@ -124,7 +131,7 @@ class Options extends UIWindow
 
       // ---- GAMEPLAY ----
       addCard('Gameplay');
-      addOptToggle('Skip tutorial ' + Const.smallgray('(needs overall difficulty set)'),
+      addOptToggle('Skip tutorial <span class="evolution-tip opt-help" data-tip="Needs overall difficulty set">?</span>',
         'skipTutorial', game.config.skipTutorial);
       addOptToggle('Enable fullscreen', 'fullscreen', game.config.fullscreen);
       addOptToggle('Enable AI-generated artwork', 'aiArtEnabled', game.config.aiArtEnabled);
@@ -261,8 +268,9 @@ class Options extends UIWindow
       ctl.appendChild(val);
     }
 
-// toggle switch row (replaces the offset-checkbox)
-  function addOptToggle(label: String, id: String, value: Bool)
+// toggle switch row (replaces the offset-checkbox). optional onSet runs after the
+// config write, for toggles that need to act immediately (e.g. start the FPS meter)
+  function addOptToggle(label: String, id: String, value: Bool, ?onSet: Bool -> Void)
     {
       var ctl = addRow(label);
       var sw = Browser.document.createDivElement();
@@ -271,8 +279,34 @@ class Options extends UIWindow
         var on = !sw.classList.contains('on');
         sw.classList.toggle('on', on);
         game.config.set(id, (on ? '1' : '0'), true);
+        if (onSet != null)
+          onSet(on);
       };
       ctl.appendChild(sw);
+    }
+
+// segmented radio row: one lit button per int value. onSet gets the picked value
+  function addOptRadio(label: String, values: Array<Int>, selected: Int, onSet: Int -> Void)
+    {
+      var ctl = addRow(label);
+      var seg = Browser.document.createDivElement();
+      seg.className = 'options-seg';
+      var btns: Array<DivElement> = [];
+      for (v in values)
+        {
+          var b = Browser.document.createDivElement();
+          b.className = 'options-seg-btn' + (v == selected ? ' on' : '');
+          b.innerHTML = '' + v;
+          b.onclick = function (e) {
+            for (x in btns)
+              x.classList.remove('on');
+            b.classList.add('on');
+            onSet(v);
+          };
+          btns.push(b);
+          seg.appendChild(b);
+        }
+      ctl.appendChild(seg);
     }
 
 // select row (styled native); presets adds the inline PRESETS button (difficulty)

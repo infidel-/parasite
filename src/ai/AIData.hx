@@ -277,11 +277,20 @@ class AIData extends _SaveObject
               inventory.has(inventory.weaponID))
             item = inventory.get(inventory.weaponID);
 
-          // try any known weapon from inventory
+          // melee-attack key: a ranged active weapon is rejected so it falls
+          // back to a melee weapon (or fists), never fires the active gun
+          if (inventory.forceMelee &&
+              item != null &&
+              item.info.weapon != null &&
+              item.info.weapon.isRanged)
+            item = null;
+
+          // try any known weapon from inventory (melee-only when forcing melee)
           if (item == null)
             for (ii in inventory)
               if (ii.info.weapon != null &&
-                  game.player.knowsItem(ii.id))
+                  game.player.knowsItem(ii.id) &&
+                  (!inventory.forceMelee || !ii.info.weapon.isRanged))
                 {
                   item = ii;
                   break;

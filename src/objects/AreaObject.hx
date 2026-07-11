@@ -117,6 +117,11 @@ class AreaObject extends _SaveObject
   public function sensable(): Bool
     { return false; }
 
+// should the 3D street view lay this object flat on the ground (like a decal) instead of
+// standing it up as an upright billboard? true for most objects; upright ones override
+  public function isGroundDecal(): Bool
+    { return true; }
+
 // can be activated when player is next to it?
   public function canActivateNear(): Bool
     { return false; }
@@ -189,6 +194,11 @@ class AreaObject extends _SaveObject
 // dynamic: current list of object actions
   public dynamic function updateActionList()
     {}
+
+// item-pickup actions this object offers on the player's tile (loose pickup, body loot, ...).
+// collected across the tile and grouped into the pickup submenu when several exist. default none
+  public dynamic function getItemActions(): Array<_PlayerAction>
+    { return []; }
 
 // get static atmosphere light emitted by this object
   public dynamic function getAtmosphereLight(): _AtmosphereLightMeta

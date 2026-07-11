@@ -7,6 +7,24 @@ class ParticleSplat extends Particle
 {
   public static var SPLAT_NUM = 5;
   public static var SPLAT_TAG = 'SPLAT';
+
+// blood atlas cell (row + first variant col) for a blood type; shared by the 2D splat and
+// the 3D blood burst so both draw the same sprite
+  public static function bloodIcon(type: String): _Icon
+    {
+      var row = Const.ROW_BLOOD, col = Const.BLOOD_LARGE;
+      switch (type)
+        {
+          case 'black':
+            row = Const.ROW_BLOOD; col = Const.BLACK_BLOOD_LARGE;
+          case 'acid':
+            row = Const.ROW_SPACESHIP1; col = Const.ACID_LARGE;
+          case 'slime':
+            row = Const.ROW_SPACESHIP2; col = Const.SLIME_LARGE;
+          default:
+        }
+      return { row: row, col: col };
+    }
   static var SPLAT_CONE_HALF_COS = 0.5;
 
   // area x,y
@@ -20,21 +38,9 @@ class ParticleSplat extends Particle
       super(s);
       this.pt = pt;
       this.source = source;
-      row = Const.ROW_BLOOD;
-      firstCol = Const.BLOOD_LARGE;
-      switch (type)
-        {
-          case 'black':
-            row = Const.ROW_BLOOD;
-            firstCol = Const.BLACK_BLOOD_LARGE;
-          case 'acid':
-            row = Const.ROW_SPACESHIP1;
-            firstCol = Const.ACID_LARGE;
-          case 'slime':
-            row = Const.ROW_SPACESHIP2;
-            firstCol = Const.SLIME_LARGE;
-          default:
-        }
+      var ic = bloodIcon(type);
+      row = ic.row;
+      firstCol = ic.col;
       this.time = 80;
       game.scene.area.addParticle(this);
     }

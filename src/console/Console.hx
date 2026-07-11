@@ -19,6 +19,7 @@ class Console
   var stageConsole: Stage;
   var cultConsole: Cult;
   var modsConsole: Mods;
+  var perfConsole: Perf;
   public var completion: ConsoleCompletion;
 
 
@@ -36,6 +37,7 @@ class Console
       stageConsole = new Stage(this);
       cultConsole = new Cult(this);
       modsConsole = new Mods(this);
+      perfConsole = new Perf(this);
       completion = new ConsoleCompletion(this);
     }
 
@@ -143,6 +145,7 @@ class Console
               //
               'oa - organ action,<br/>' +
               'mods [list|enable <id>|disable <id>|errors|rescan],<br/>' +
+              'perf [turn|street] - toggle profiler,<br/>' +
               'snd - play sound, r/restart, ' +
               's - set player stage, ' +
               'spa - spawn ai, ' +
@@ -159,6 +162,7 @@ class Console
               'debug colors, ' +
               'load - load game, ' +
               'mods [list|enable <id>|disable <id>|errors|rescan], ' +
+              'perf [turn|street] - toggle profiler, ' +
               'restart, ' +
               'save - save game, ' +
               'quit.');
@@ -167,6 +171,10 @@ class Console
       // XXX mods commands (release + debug)
       else if (char0 == 'm')
         modsConsole.run(arr);
+
+      // XXX perf turn|street - toggle profiler overlays
+      else if (char0 == 'p' && arr[0] == 'perf')
+        perfConsole.run(cmd);
 
       // XXX info commands
       else if (Const.isDebug && char0 == 'i')

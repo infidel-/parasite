@@ -12,10 +12,16 @@ class Loader
 // load game from a slot and restore all runtime links
   public static function load(game: Game, slotID: Int)
     {
-      // clear old game state before loading
-      trace('====== RESTART PRE ' + game.area.id);
+      // no game graph yet (booted straight to menu without generating a world):
+      // build the scaffold init(true) used to create at boot, so the restore has a
+      // valid object graph (player/playerArea/managers/area) to overwrite in place.
+      if (!game.isInited)
+        game.init(true, false);
+
+      // clear old game state before loading (area is null on a fresh load from menu)
+      trace('====== RESTART PRE ' + (game.area == null ? -1 : game.area.id));
       game.restartPre();
-      trace('====== LOAD ' + game.area.id);
+      trace('====== LOAD ' + (game.area == null ? -1 : game.area.id));
 
       // reset orphan counters — scrub pass during load may bump these when a
       // mod that supplied items/skills is no longer enabled
@@ -64,7 +70,8 @@ class Loader
       for (cult in game.cults)
         cult.loadPost();
       rebuildAIDataMaxID(game);
-      game.scene.updateCamera();
+      // camera + first render are deferred to applyLoaded (one tick later) so the
+      // fader's cover transition can paint before the 3D city build stalls the thread
       game.log('Game loaded from slot ' + slotID + '.');
 
       // surface scrubbed mod content as a single end-of-load message

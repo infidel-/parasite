@@ -30,25 +30,30 @@ class Pickup extends AreaObject
     }
 
 
-// update actions
-  override function updateActionList()
+// can the player pick this up right now? (human host with inventory space)
+  public function canGet(): Bool
     {
-      if (game.player.state != PLR_STATE_HOST ||
-          !game.player.host.isHuman ||
-          game.player.host.inventory.length() >=
-          game.player.host.maxItems)
-        return;
+      return game.player.state == PLR_STATE_HOST &&
+        game.player.host.isHuman &&
+        game.player.host.inventory.length() < game.player.host.maxItems;
+    }
+
+// item-pickup action (grouped into the tile's Get action / pickup submenu by PlayerArea)
+  public override function getItemActions(): Array<_PlayerAction>
+    {
+      if (!canGet())
+        return [];
 
       var itemName = (game.player.knowsItem(item.info.id) ?
         item.name : item.info.unknown);
-      game.ui.hud.addAction({
+      return [{
         id: 'get',
         type: ACTION_OBJECT,
         name: 'Get ' + Const.col('inventory-item', itemName),
         energy: 5,
         isAgreeable: true,
         obj: this
-      });
+      }];
     }
 
 // is this item known to player?

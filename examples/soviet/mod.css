@@ -486,6 +486,22 @@ button:disabled,
 #hud-goals .hud-od { color: var(--soviet-green-dim); }
 #hud-goals .hud-obj.done { color: var(--soviet-green-bright); }
 #hud-goals .hud-obj.fail { color: var(--soviet-red); }
+/* vein spine connector between goals: hardcoded purple gradient → phosphor */
+#hud-goals .hud-grp::before {
+  background: linear-gradient(180deg, rgba(45, 255, 102, 0.8), rgba(26, 162, 71, 0.42)) !important;
+}
+/* "optional" pill: grey-purple border/bg → green */
+#hud-goals .hud-opt {
+  border-color: var(--soviet-green-dim) !important;
+  background: rgba(45, 255, 102, 0.09) !important;
+  color: var(--soviet-green-bright) !important;
+}
+/* new-goal arrival flash: purple → green (redefining the keyframe by name;
+   later stylesheet wins) */
+@keyframes hud-goal-arrive-flash {
+  0%   { background: rgba(45, 255, 102, 0.22); }
+  100% { background: transparent; }
+}
 
 /* ---- log ---- */
 #hud-log .hud-row .ts { color: var(--soviet-green-dim); }
@@ -732,6 +748,86 @@ body::after {
   74.4%       { filter: brightness(0.97); }
   74.7%       { filter: brightness(1); }
   100%        { filter: brightness(1); }
+}
+
+/* ===== style pass 2 — push the CRT feel further, same phosphor soul ===== */
+
+/* --- segmented LED meters ---
+   the engine draws faint whitish quarter-ticks over each bar
+   (.hud-bar-track::after). repurpose that same pseudo into dense phosphor
+   segmentation so the continuous fill reads as discrete LED cells, like the
+   reference reactor meters. overlay only — fill width/--pct stay code-driven.
+   the same track is horizontal by default and vertical in compact mode, so the
+   segment lines run across the bar's long axis in each case. */
+.hud-bar-track::after {
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(0, 0, 0, 0)       0px,
+      rgba(0, 0, 0, 0)       3px,
+      rgba(3, 10, 6, 0.85)   3px,
+      rgba(3, 10, 6, 0.85)   4px) !important;
+  mix-blend-mode: multiply;
+}
+#hud-info.hud-compact .hud-bar-track::after {
+  background:
+    repeating-linear-gradient(to bottom,
+      rgba(0, 0, 0, 0)       0px,
+      rgba(0, 0, 0, 0)       3px,
+      rgba(3, 10, 6, 0.85)   3px,
+      rgba(3, 10, 6, 0.85)   4px) !important;
+}
+
+/* --- screen-wide CRT glass: top curvature glare + tube vignette ---
+   today only dialogs get a vignette; this wraps the whole viewport (incl. the
+   game view) so everything sits under one curved phosphor tube. sits just
+   under the scanline layer (body::after, z50). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 49;
+  background:
+    radial-gradient(130% 80% at 50% -20%, rgba(180, 255, 200, 0.055), transparent 55%),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* --- chromatic aberration on the big glowing type ---
+   subtle red/cyan misconvergence like a real shadow-mask tube. reasserts the
+   full glow stack + a horizontal RGB split; later source order beats the
+   earlier !important title rule. */
+#window-mainmenu-title,
+#window-options-title,
+#window-newgame-title,
+.mods-title,
+.about-titleline,
+.presets-title,
+.spoon-title,
+.yesno-text,
+.difficulty-title,
+.choice-title,
+.finish-title,
+.message-heading,
+#hud-topbar .hud-turn {
+  text-shadow:
+    -0.6px 0 rgba(255, 70, 70, 0.35),
+     0.6px 0 rgba(70, 200, 255, 0.30),
+    0 0 3px rgba(180, 255, 200, 1),
+    0 0 8px rgba(45, 255, 102, 0.95),
+    0 0 18px rgba(45, 255, 102, 0.65) !important;
+}
+
+/* --- brighter refresh sweep ---
+   reference sweeps a bright screen-blended band; ours was a flat tint. give it
+   a luminous core + screen blend so it actually glows as it travels. */
+.window-bg::before {
+  background: linear-gradient(180deg,
+    rgba(45, 255, 102, 0)     0%,
+    rgba(45, 255, 102, 0.05) 35%,
+    rgba(180, 255, 200, 0.14) 50%,
+    rgba(45, 255, 102, 0.05) 65%,
+    rgba(45, 255, 102, 0)     100%) !important;
+  mix-blend-mode: screen;
 }
 
 @media (prefers-reduced-motion: reduce) {
