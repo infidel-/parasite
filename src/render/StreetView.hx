@@ -732,12 +732,12 @@ class StreetView {
 
 // fade a freshly-spawned corpse body in, but only once the dying sprite has fallen flat (bound
 // to the death ghost's landing); falls back to an immediate fade when the view is off
-  public function bindBodyFadeIn(e:Entity):Void
+  public function bindBodyFadeIn(e:Entity, id:Int, ground:Bool):Void
     {
       if (running &&
           actors != null &&
           e != null)
-        actors.bindBodyFadeIn(e);
+        actors.bindBodyFadeIn(e, id, ground);
     }
 
 // drive the AI-hover tooltip while inspecting (Ctrl held): pick the AI nearest the cursor and

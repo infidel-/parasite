@@ -134,7 +134,19 @@ class Actors {
                (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable())) &&
               // a corpse body is held invisible until its death ghost has fallen flat
               !_heldBodies.exists(o.entity);
-            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
+            // a fallen corpse rests at a small stable yaw/offset (id-derived) so bodies read as
+            // having fallen where they died, not stamped on the grid
+            var yaw = 0.0, ox = 0.0, oz = 0.0;
+            var b = Std.downcast(o, objects.BodyObject);
+            if (b != null &&
+                o.isGroundDecal())
+              {
+                var p = bodyPose(o.id);
+                yaw = p.yaw;
+                ox = p.ox;
+                oz = p.oz;
+              }
+            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz);
             if (vis)
               badges.drawObjTarget(o);
           }
@@ -399,12 +411,22 @@ class Actors {
 // keep a freshly-spawned corpse body invisible until the last death ghost lands, so it only
 // appears once the dying sprite has fallen flat (not during the spin); the object loop skips a
 // held body, so when released it seeds at op 0 and eases in. no ghost (view off) = reveal now
-  public function bindBodyFadeIn(e:Entity):Void
+  public function bindBodyFadeIn(e:Entity, id:Int, ground:Bool):Void
     {
       if (_deathGhost == null)
         return;
       _heldBodies.set(e, true);
       _deathGhost.onLandExtra = function() _heldBodies.remove(e);
+      // land the topple at the corpse's own resting pose (one full turn, then settle facing the
+      // body's yaw + offset) so it doesn't always fall to the front. upright bodies (choir) keep
+      // the default front-facing topple
+      if (ground)
+        {
+          var p = bodyPose(id);
+          _deathGhost.targetSpin = Math.PI * 2 + p.yaw;
+          _deathGhost.offx = p.ox;
+          _deathGhost.offz = p.oz;
+        }
     }
 
 // seed a new entity's actor at zero opacity so it fades in (the body appearing on death)
@@ -417,10 +439,32 @@ class Actors {
                       op: 0.0, opTarget: 1.0, fx: null, face: 1.0 });
     }
 
+// stable pseudo-random in [-1,1) from an int key+salt (so a corpse keeps its fallen pose
+// across save/load without persisting the jitter)
+  static function jitter(id:Int, salt:Int):Float
+    {
+      var h = id * 374761393 + salt * 668265263;
+      h = (h ^ (h >> 13)) * 1274126177;
+      h = h ^ (h >> 16);
+      return (h & 0xffff) / 32768.0 - 1.0;
+    }
+
+// deterministic resting pose (full-360 yaw + small offset) for a corpse body from its id — the
+// single source shared by the object-loop decal and the death-topple landing, so the fall ends
+// where the body lies
+  function bodyPose(id:Int): { yaw:Float, ox:Float, oz:Float }
+    {
+      return {
+        yaw: jitter(id, 1) * Math.PI,                     // full 360 deg
+        ox: jitter(id, 2) * 0.12 * CityConfig.CELL,
+        oz: jitter(id, 3) * 0.12 * CityConfig.CELL,
+      };
+    }
+
 // advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
 // running). baseY/baseScale set the resting pose (nonzero for the attached parasite riding a
 // host's head). flat lays the sprite on the ground as a decal instead of standing it up
-  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false):Void
+  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0):Void
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
@@ -437,9 +481,9 @@ class Actors {
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       if (a.fx != null)
         sprites.paint({
-          x: a.x + a.fx.offx,
+          x: a.x + a.fx.offx + offx,
           y: wy + a.fx.offy,
-          z: a.z + a.fx.offz,
+          z: a.z + a.fx.offz + offz,
           tex: texFor(e),
           op: a.op,
           scale: baseScale * a.fx.scale,
@@ -448,12 +492,13 @@ class Actors {
           emissive: RenderConfig.FLAME.litColor,
           emissiveInt: emInt,
           faceX: a.face,
+          yaw: yaw,
         });
       else
         sprites.paint({
-          x: a.x,
+          x: a.x + offx,
           y: wy,
-          z: a.z,
+          z: a.z + offz,
           tex: texFor(e),
           op: a.op,
           scale: baseScale,
@@ -462,6 +507,7 @@ class Actors {
           emissive: RenderConfig.FLAME.litColor,
           emissiveInt: emInt,
           faceX: a.face,
+          yaw: yaw,
         });
     }
 

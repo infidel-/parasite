@@ -87,6 +87,9 @@ class AreaObject extends _SaveObject
           entity.dx = o.dx;
           entity.dy = o.dy;
         }
+      // a loaded body crops the dead actor's atlas cell, so restore its gender atlas
+      else if (type == 'body')
+        entity.isMaleAtlas = (cast this : BodyObject).isMaleAtlas;
     }
 
 // show object on screen
