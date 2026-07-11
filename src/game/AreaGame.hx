@@ -211,6 +211,8 @@ class AreaGame extends _SaveObject
             o.show();
         }
       recalcAllTiles();
+      // re-track persisted blood/bullet-hole decorations + enforce the cap (trackers aren't saved)
+      rebuildDecorTrackers();
 
       // reinit spawn points
       initSpawnPoints();
@@ -335,6 +337,8 @@ class AreaGame extends _SaveObject
       for (o in _objects)
         o.show();
       recalcAllTiles();
+      // re-track persisted blood/bullet-hole decorations + enforce the cap (trackers aren't saved)
+      rebuildDecorTrackers();
 
       // reinit spawn points
       initSpawnPoints();
@@ -1401,6 +1405,50 @@ class AreaGame extends _SaveObject
   public function splatCount(): Int
     {
       return (_splatCells != null ? _splatCells.length : 0);
+    }
+
+// rebuild the transient blood-splat / bullet-hole FIFO trackers from the persisted tile
+// decorations. the trackers aren't saved (in _ignoredFields), so after a load they'd start empty
+// while the decorations themselves persist in tiles — the per-area cap would then never see the
+// old splats and they'd accumulate unbounded across save/load cycles. run on area enter/load to
+// re-track and trim any over-cap accumulation (oldest-in-scan-order first — exact death order
+// isn't persisted)
+  public function rebuildDecorTrackers()
+    {
+      _splatCells = [];
+      _wallHoleCells = [];
+      if (tiles == null)
+        return;
+      for (x in 0...width)
+        {
+          if (tiles[x] == null)
+            continue;
+          for (y in 0...height)
+            {
+              var tile = tiles[x][y];
+              if (tile == null ||
+                  tile.decoration == null)
+                continue;
+              for (d in tile.decoration)
+                {
+                  if (d.tag == 'SPLAT')
+                    _splatCells.push({ x: x, y: y });
+                  else if (d.tag == 'WALLHOLE')
+                    _wallHoleCells.push({ x: x, y: y });
+                }
+            }
+        }
+      // trim accumulation past the cap, oldest (scan-order) first
+      while (_splatCells.length > render.RenderConfig.BLOOD.splatMax)
+        {
+          var old = _splatCells.shift();
+          removeOneDecorAt(old.x, old.y, 'SPLAT');
+        }
+      while (_wallHoleCells.length > render.RenderConfig.WALLHOLE.max)
+        {
+          var old = _wallHoleCells.shift();
+          removeOneDecorAt(old.x, old.y, 'WALLHOLE');
+        }
     }
 
 // remove a single decoration with the given tag from a cell (oldest-first FIFO eviction)
