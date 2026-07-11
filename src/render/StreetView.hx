@@ -41,9 +41,12 @@ class StreetView {
   var ringY:Float = 0;                                    // eased ring floor height (curb step)
   var exiting = false;                                    // playing the leave zoom-in outro over the frozen last frame
   var exitDone:Void->Void = null;                         // runs when the outro completes (fade orchestration hook), else teardown
+  var firstFrame:Void->Void = null;                       // one-shot, fires after the next presented frame (enter-fade reveal hook)
   var actors:Actors;                                      // the billboard actor layer
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
+  var tacticalGrid:TacticalGrid;
+  var tactical = false;
 
   var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
   public static var DEBUG_HOLES = false; // [wallhole] trace each wall tracer impact + hole decision (toggle: `perf hole`)
@@ -104,11 +107,39 @@ class StreetView {
     js.Syntax.code("(function(){ if (window.__texWarnFiltered) return; window.__texWarnFiltered = true; var w = console.warn.bind(console); console.warn = function(m){ if (typeof m === 'string' && m.indexOf('Texture marked for update but no image data') >= 0) return; return w.apply(console, arguments); }; })()");
   }
 
+// register a one-shot callback fired right after the next rendered frame (see the loop)
+  public function onFirstFrame(cb:Void->Void):Void
+    {
+      firstFrame = cb;
+    }
+
 // is street-debug mode active? (the game suppresses movement input while it is)
   public inline function debugActive():Bool return debug.on;
 
 // enter/leave street-debug mode (fly/editor/inspector + HUD — see render.Debug)
   public inline function setDebug(on:Bool):Void debug.set(on);
+
+// enter/leave the tactical city view (no-op while idle or during the exit outro, which owns
+// the zoom tween that setTactical would cancel)
+  public function setTactical(v:Bool):Void
+    {
+      if (!running ||
+          exiting ||
+          tactical == v)
+        return;
+      tactical = v;
+      rig.setTactical(tactical);
+      occlusion.setTactical(tactical);
+      if (tactical)
+        tacticalGrid.show(game.playerArea.x, game.playerArea.y);
+      else tacticalGrid.hide();
+    }
+
+// toggle the tactical city view and restore the normal follow view on exit
+  public function toggleTactical():Void
+    {
+      setTactical(!tactical);
+    }
 
 // create the overlay WebGL canvas if absent (above the 2D #canvas, below the DOM HUD)
   function ensureCanvas():Void {
@@ -164,7 +195,8 @@ class StreetView {
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
     World.build(scene, city, seed);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
-    occlusion = new Occlusion(scene, city.buildings);
+    occlusion = new Occlusion(scene, city.buildings, city.tiles);
+    tacticalGrid = new TacticalGrid(scene, game.area);
 
     // player marker ring + the group holding all actor billboards
     ring = new Mesh(
@@ -206,6 +238,7 @@ class StreetView {
     renderer.info.autoReset = false;
 
     exiting = false;   // cancel any in-flight outro from a prior area
+    tactical = false;
     rig.reset();
     rig.startIntro();  // enter effect: start closest, zoom out to the resting target
 
@@ -224,6 +257,10 @@ class StreetView {
 // black first and tear the view down under it (see GameScene.onCityExitDone)
   public function hide(?onExitDone:Void->Void):Void {
     if (!running || exiting) return;
+    setTactical(false);
+    // kill any live scream: nothing ticks pulses during the outro, a live one would freeze
+    // as a static dome + stuck ripple over the whole exit
+    shockwave.clear();
     exiting = true;
     exitDone = onExitDone;
     rig.zoomTweenTo(0, RenderConfig.CAMERA.exitMult, false, onOutroDone); // ungated: outro runs regardless of any window
@@ -254,6 +291,8 @@ class StreetView {
     ring = null;
     actors = null;
     occlusion = null;
+    tacticalGrid = null;
+    tactical = false;
     if (canvas != null) canvas.style.display = 'none';
   }
 
@@ -308,8 +347,7 @@ class StreetView {
         if (soundFile != null)
           game.scene.sounds.play(soundFile, { x: tgtCol, y: tgtRow });
         if (tgtE != null)
-          actors.playFx(tgtE, new Shake(RenderConfig.MELEE.shakeMs,
-            RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
+          actors.hitShake(tgtE);
         if (spawnBlood)
           actors.burst(tgtCol, tgtRow, dx, dz, bloodRow, bloodFirstCol);
         // the attack arc for the swing attacker->target, at each end's chest height. the attacker
@@ -367,8 +405,7 @@ class StreetView {
             var ai = game.area.getAI(tx, ty);
             if (ai != null &&
                 ai.entity != null)
-              actors.playFx(ai.entity, new Shake(RenderConfig.MELEE.shakeMs,
-                RenderConfig.MELEE.shakeAmp * C, 0));
+              actors.hitShake(ai.entity);
             actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
             game.scene.sounds.play('attack-bullet-hit', { always: true, x: tx, y: ty });
           }
@@ -537,8 +574,7 @@ class StreetView {
             var ai = game.area.getAI(tx, ty);
             if (ai != null &&
                 ai.entity != null)
-              actors.playFx(ai.entity, new Shake(RenderConfig.MELEE.shakeMs,
-                RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
+              actors.hitShake(ai.entity);
             // paralysis leaves no splat; stamp the curved-X impact mark on the target instead
             if (type == 'paralysisSpit')
               actors.attackFX('IMPACT', src.x, src.y, src.z, dst.x, dst.y, dst.z);
@@ -795,6 +831,9 @@ class StreetView {
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
+    // keep the tactical grid centered on the player (rebuilds only when the cell changes)
+    if (tactical)
+      tacticalGrid.show(game.playerArea.x, game.playerArea.y);
     // park the live-spotlight pool on the nearest lamps to the player, then hand the lit ones to the
     // actor layer so it casts fake shadows only from lamps that are actually lit this frame
     lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y, dtMs);
@@ -826,6 +865,14 @@ class StreetView {
     renderer.info.reset(); // manual per-frame reset (autoReset off); total accumulates over the passes
     var tR = haxe.Timer.stamp();
     composer.render();
+    // first presented frame after (re)build: the enter fade reveals here, so the first-render
+    // shader-compile stall (multi-second on a cold driver cache) stays hidden under black
+    if (firstFrame != null)
+      {
+        var cb = firstFrame;
+        firstFrame = null;
+        cb();
+      }
     lastCalls = renderer.info.render.calls; // scene + a few post-FX quads — HUD draw-call readout
     lastTris = renderer.info.render.triangles;
     if (debug.on) Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)

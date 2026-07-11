@@ -52,17 +52,15 @@ class BlackNoise extends Effect
                 nearest = other;
                 bestDist = dist;
               }
-            // the player's host must not chase: its position is owned by playerArea (an AI move
-            // desyncs the two), so it lashes out only at an adjacent target
-            var isHost = (game.player.state == PLR_STATE_HOST &&
-              game.player.host == ai);
+            // an attacker that cannot chase (the player's host) lashes out only when adjacent
+            var attacker = Attacker.fromAI(game, ai, false);
             if (nearest == null ||
-                (isHost && !ai.isNear(nearest.x, nearest.y)))
+                (!attacker.canMoveToTarget() && !ai.isNear(nearest.x, nearest.y)))
               ai.log('stands catatonic, staring into nothingness.');
             else
               {
                 ai.log('lashes out through black static.');
-                CommonLogic.logicAttack(Attacker.fromAI(game, ai, false), {
+                CommonLogic.logicAttack(attacker, {
                   game: game,
                   type: TARGET_AI,
                   ai: nearest,

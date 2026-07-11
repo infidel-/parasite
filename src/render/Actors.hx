@@ -285,17 +285,20 @@ class Actors {
       particles.add(new Projectile3D(src, dst, col, row, glow, scale, drips, travelMs, onImpact));
     }
 
+// the standard hit shake on a struck entity (melee/shot/projectile impact, scream front)
+  public function hitShake(e:Entity):Void
+    {
+      playFx(e, new render.anim.Shake(RenderConfig.MELEE.shakeMs,
+        RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
+    }
+
 // spawn a silent-scream pulse dome at cell (x,y); returns the pulse so the street view can
 // drive its screen-space shockwave ripple pass from the same wave front
   public function scream(x:Int, y:Int):render.particles.ScreamPulse3D
     {
       var w = CityConfig.cellToWorld(x, y);
       var s = new render.particles.ScreamPulse3D(actorGroup,
-        w.x, render.world.WorldCtx.floorY(x, y) + 0.05, w.z, game,
-        function(e) {
-          playFx(e, new render.anim.Shake(RenderConfig.MELEE.shakeMs,
-            RenderConfig.MELEE.shakeAmp * CityConfig.CELL, 0));
-        });
+        w.x, render.world.WorldCtx.floorY(x, y) + 0.05, w.z, game, hitShake);
       particles.add(s);
       return s;
     }

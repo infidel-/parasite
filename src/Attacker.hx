@@ -136,10 +136,13 @@ class Attacker
       return ai != null && !isPlayer;
     }
 
-// returns true when attacker can move toward a target
+// returns true when attacker can move toward a target; never the player's host — its position
+// is owned by playerArea, an AI-driven move desyncs the two
   public function canMoveToTarget(): Bool
     {
-      return ai != null && !isPlayer;
+      return ai != null &&
+        !isPlayer &&
+        !ai.isPlayerHost();
     }
 
 // returns true when attacker needs ranged line of sight in common logic

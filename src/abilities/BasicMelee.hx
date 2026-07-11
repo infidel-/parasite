@@ -75,16 +75,7 @@ class BasicMelee extends Ability
       var scene = target.game.scene;
       if (scene.city3d == null)
         return false;
-      var tgtE = switch (target.type)
-        {
-          case TARGET_AI: target.ai.entity;
-          case TARGET_PLAYER:
-            (target.game.player.state == PLR_STATE_HOST ?
-              target.game.player.host.entity :
-              target.game.playerArea.entity);
-          case TARGET_OBJECT: null;
-        };
-      return scene.city3d.playMelee(ai.entity, hit ? tgtE : null,
+      return scene.city3d.playMelee(ai.entity, hit ? target.entity() : null,
         ai.x, ai.y, target.x, target.y,
         hit && sound != null ? sound.file : null, null, false, 0, 0);
     }

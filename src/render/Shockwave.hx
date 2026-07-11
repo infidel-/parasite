@@ -25,6 +25,15 @@ class Shockwave {
       screams.push(s);
     }
 
+// kill every live pulse and disable the pass (area exit: nothing ticks pulses during the outro)
+  public function clear():Void
+    {
+      for (s in screams)
+        s.kill();
+      screams = [];
+      pass.enabled = false;
+    }
+
 // build the shockwave pass: for each live pulse slot (uv center, ring radius in aspect-corrected
 // uv, amplitude) pixels in a band around the expanding ring are displaced radially, warping the
 // image under the wave front. slots with amplitude 0 are dead
@@ -107,9 +116,15 @@ void main() {
             continue;
           var r = s.radius();
           // the ground ring is an ellipse on screen; take the wider of a world-x and a world-z
-          // radius offset so the ripple band always covers the dome's leading edge
-          var rx = uvDist(c, new Vector3(s.cx + r, s.cy, s.cz).project(camera));
-          var rz = uvDist(c, new Vector3(s.cx, s.cy, s.cz + r).project(camera));
+          // radius offset so the ripple band always covers the dome's leading edge. a side point
+          // behind the camera projects garbage (w~0 -> NaN uv) — drop it, use the other axis
+          var px = new Vector3(s.cx + r, s.cy, s.cz).project(camera);
+          var pz = new Vector3(s.cx, s.cy, s.cz + r).project(camera);
+          var rx = px.z > 1 ? -1.0 : uvDist(c, px);
+          var rz = pz.z > 1 ? -1.0 : uvDist(c, pz);
+          if (rx < 0 &&
+              rz < 0)
+            continue;
           arr[slot * 4] = (c.x + 1) / 2;
           arr[slot * 4 + 1] = (c.y + 1) / 2;
           arr[slot * 4 + 2] = Math.max(rx, rz);

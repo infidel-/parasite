@@ -122,7 +122,8 @@ class CommonLogic
         {
           if (attacker.ai != null)
             attacker.ai.traceAI('CommonLogic', 'move for ranged line of sight');
-          attacker.logicMoveTo(target.x, target.y);
+          if (attacker.canMoveToTarget())
+            attacker.logicMoveTo(target.x, target.y);
           return;
         }
 
@@ -191,15 +192,7 @@ class CommonLogic
       // entities + blood icon for the 3D combat bridges (melee lunge / ranged shot)
       var atkE = (attacker.ai != null ? attacker.ai.entity : null);
       // target entity for the hit shake: an AI, or the player's visible body (host or parasite)
-      var tgtE = switch (target.type)
-        {
-          case TARGET_AI: target.ai.entity;
-          case TARGET_PLAYER:
-            (game.player.state == PLR_STATE_HOST ?
-              game.player.host.entity :
-              game.playerArea.entity);
-          case TARGET_OBJECT: null;
-        };
+      var tgtE = target.entity();
       var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
 
       // draw attack effects

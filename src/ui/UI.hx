@@ -232,10 +232,15 @@ class UI
       // default state
       if (_state == UISTATE_DEFAULT)
         {
-          // toggle hud
+          // 3D city view: Space toggles the tactical overhead view (HUD stays up);
+          // elsewhere it toggles the HUD
           if (e.code == 'Space')
             {
-              hud.toggle();
+              if (game.location == LOCATION_AREA &&
+                  game.scene.city3d != null &&
+                  game.scene.city3d.running)
+                game.scene.city3d.toggleTactical();
+              else hud.toggle();
               return;
             }
 

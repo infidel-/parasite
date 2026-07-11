@@ -3,13 +3,16 @@ package render;
 import three.Three;
 import citygen.CityConfig;
 import citygen.CityConfig.cellToWorld;
+import citygen.CityConfig.worldToCell;
 import citygen.CityModel.Building;
+import citygen.CityModel.Tile;
 
 // one fadeable material + the base state we lerp its opacity down from and back to.
 // curT tracks the live transparent flag so we recompile (needsUpdate) only when it flips
 typedef FadeMat = { mat:Dynamic, opacity:Float, transparent:Bool, depthWrite:Bool, emissive:Float, curT:Bool };
 // per-building fade record: its world AABB, its (de-shared) materials, and the eased fade
 typedef Occ = {
+  b:Building,
   minX:Float, maxX:Float, minZ:Float, maxZ:Float, maxY:Float, cx:Float, cz:Float,
   mats:Array<FadeMat>, fade:Float, target:Float
 };
@@ -25,9 +28,17 @@ class Occlusion {
   static var checked = false;
 
   var occ:Array<Occ> = [];
+  var tiles:Array<Array<Tile>>;
+  var tactical = false;
+  var tacticalSelected:haxe.ds.ObjectMap<Building, Bool> = new haxe.ds.ObjectMap();
+  var tacticalCol = -1;
+  var tacticalRow = -1;
+  var tacticalColDir = 0;
+  var tacticalRowDir = 0;
 
-  public function new(scene:Scene, buildings:Array<Building>)
+  public function new(scene:Scene, buildings:Array<Building>, tiles:Array<Array<Tile>>)
     {
+      this.tiles = tiles;
       if (!checked) { checked = true; if (!demo()) js.Browser.console.warn('[occlusion] self-check FAILED'); }
       // one fade record + world AABB per building; map Building -> index for userData bucketing
       var idxOf = new haxe.ds.ObjectMap<Building, Int>();
@@ -38,9 +49,19 @@ class Occlusion {
           var hw = b.w * CELL / 2, hd = b.d * CELL / 2;
           // top the AABB at the parapet, not the roofline: the parapet rim sits above b.h and
           // can hide the player while the wall grazes clear — cover the tallest (brick) variant
-          occ.push({ minX: c.x - hw, maxX: c.x + hw, minZ: c.z - hd, maxZ: c.z + hd,
+          occ.push({
+            b: b,
+            minX: c.x - hw,
+            maxX: c.x + hw,
+            minZ: c.z - hd,
+            maxZ: c.z + hd,
             maxY: b.h + RenderConfig.PARAPET_H_BRICK,
-            cx: c.x, cz: c.z, mats: [], fade: 1.0, target: 1.0 });
+            cx: c.x,
+            cz: c.z,
+            mats: [],
+            fade: 1.0,
+            target: 1.0,
+          });
           idxOf.set(b, i);
         }
       // bucket every mesh into its building and de-share its materials
@@ -57,6 +78,18 @@ class Occlusion {
           }
         else o.material = own(m, bi);
       });
+    }
+
+// enable or clear the road-bounded tactical building selection
+  public function setTactical(v:Bool):Void
+    {
+      if (tactical == v)
+        return;
+      tactical = v;
+      tacticalCol = -1;
+      tacticalRow = -1;
+      if (!tactical)
+        tacticalSelected = new haxe.ds.ObjectMap();
     }
 
 // which building a mesh belongs to: its userData.b tag if present (box + window meshes),
@@ -111,16 +144,165 @@ class Occlusion {
       // frame-rate-independent smoothing (same exponential decay as CameraRig zoom)
       var k = 1 - Math.pow(1 - RenderConfig.OCCLUSION.lerp, dtMs / (1000 / 30));
       var grow = wide ? RenderConfig.OCCLUSION.aimGrow * CELL : 0.0;
+      if (tactical)
+        updateTacticalSelection(camPos, player);
       for (o in occ)
         {
-          var blocked = occludes(o, camPos, player, grow)
-            || (target != null && occludes(o, camPos, target, grow));
+          // tactical fades the whole selected block, but the camera is not truly top-down —
+          // keep the sightline fade on top so an adjacent tall building never hides the player
+          var blocked = (tactical && tacticalSelected.exists(o.b)) ||
+            occludes(o, camPos, player, grow) ||
+            (target != null && occludes(o, camPos, target, grow));
           o.target = blocked ? RenderConfig.OCCLUSION.fade : 1.0;
           if (o.fade == o.target && o.target == 1.0) continue; // solid and staying solid
           o.fade += (o.target - o.fade) * k;
           if (Math.abs(o.fade - o.target) < RenderConfig.OCCLUSION.snap) o.fade = o.target;
           apply(o);
         }
+    }
+
+// select every building in the nearest camera-side block bounded by roads
+  function updateTacticalSelection(cam:Vector3, player:Vector3):Void
+    {
+      var cell = worldToCell(player.x, player.z);
+      var dx = cam.x - player.x;
+      var dz = cam.z - player.z;
+      var dc = 0;
+      var dr = 0;
+      if (Math.abs(dx) > Math.abs(dz))
+        dc = dx > 0 ? 1 : -1;
+      else
+        dr = dz > 0 ? 1 : -1;
+      if (cell.col == tacticalCol &&
+          cell.row == tacticalRow &&
+          dc == tacticalColDir &&
+          dr == tacticalRowDir)
+        return;
+      tacticalCol = cell.col;
+      tacticalRow = cell.row;
+      tacticalColDir = dc;
+      tacticalRowDir = dr;
+      tacticalSelected = new haxe.ds.ObjectMap();
+
+      var onRoad = nearRoad(cell.col, cell.row);
+      // inside a block the scans stay road-bounded: an alley must select the SURROUNDING
+      // block, not wander down its length across roads to some block across town
+      selectBlock(cell.col, cell.row, dc, dr, !onRoad);
+      // fade the flanking blocks too: on/beside a road the view corridor runs along it and
+      // the camera-side scan misses them; inside a block the side scans find the alley's own
+      // walls. road-bounded so a scan along the road degrades to a no-op
+      selectBlock(cell.col, cell.row, dr, dc, true);
+      selectBlock(cell.col, cell.row, -dr, -dc, true);
+    }
+
+// player cell is a road, or a walkway bordering one (a sidewalk); deep-in-block walkways and
+// alleys don't count — flanking fades there would strip cover the player is actually behind
+  function nearRoad(col:Int, row:Int):Bool
+    {
+      if (tiles[row][col] == Tile.Road)
+        return true;
+      if (tiles[row][col] != Tile.Walkway)
+        return false;
+      var rows = tiles.length;
+      var cols = tiles[0].length;
+      for (dir in 0...4)
+        {
+          var c = col + (dir == 0 ? 1 : dir == 1 ? -1 : 0);
+          var r = row + (dir == 2 ? 1 : dir == 3 ? -1 : 0);
+          if (c >= 0 &&
+              r >= 0 &&
+              c < cols &&
+              r < rows &&
+              tiles[r][c] == Tile.Road)
+            return true;
+        }
+      return false;
+    }
+
+// add every building of the first road-bounded block hit scanning from a cell in a direction
+  function selectBlock(col:Int, row:Int, dc:Int, dr:Int, stopAtRoad:Bool):Void
+    {
+      var seen = tacticalBlock(tiles, col, row, dc, dr, stopAtRoad);
+      if (seen == null)
+        return;
+      for (o in occ)
+        if (isSelected(o.b, seen))
+          tacticalSelected.set(o.b, true);
+    }
+
+// find the road-bounded city block first reached from a player cell in one direction;
+// stopAtRoad keeps the scan inside the starting block (null once it would cross a road)
+  static function tacticalBlock(tiles:Array<Array<Tile>>, playerCol:Int, playerRow:Int,
+      dc:Int, dr:Int, stopAtRoad:Bool = false):Array<Array<Bool>>
+    {
+      var rows = tiles.length;
+      var cols = tiles[0].length;
+      var col = playerCol + dc;
+      var row = playerRow + dr;
+      var scan = rows + cols;
+      for (_ in 0...scan)
+        {
+          if (col < 0 ||
+              row < 0 ||
+              col >= cols ||
+              row >= rows)
+            return null;
+          if (tiles[row][col] == Tile.Building)
+            break;
+          if (stopAtRoad &&
+              tiles[row][col] == Tile.Road)
+            return null;
+          col += dc;
+          row += dr;
+        }
+      if (col < 0 ||
+          row < 0 ||
+          col >= cols ||
+          row >= rows ||
+          tiles[row][col] != Tile.Building)
+        return null;
+
+      var seen = [for (_ in 0...rows) [for (_ in 0...cols) false]];
+      var queue:Array<{ col:Int, row:Int }> = [
+        {
+          col: col,
+          row: row,
+        },
+      ];
+      seen[row][col] = true;
+      var next = 0;
+      while (next < queue.length)
+        {
+          var here = queue[next++];
+          for (dir in 0...4)
+            {
+              var nextCol = here.col + (dir == 0 ? 1 : dir == 1 ? -1 : 0);
+              var nextRow = here.row + (dir == 2 ? 1 : dir == 3 ? -1 : 0);
+              if (nextCol < 0 ||
+                  nextRow < 0 ||
+                  nextCol >= cols ||
+                  nextRow >= rows ||
+                  seen[nextRow][nextCol] ||
+                  tiles[nextRow][nextCol] == Tile.Road)
+                continue;
+              seen[nextRow][nextCol] = true;
+              queue.push({
+                col: nextCol,
+                row: nextRow,
+              });
+            }
+        }
+      return seen;
+    }
+
+// return whether any cell in a building belongs to the selected road-bounded block
+  function isSelected(b:Building, seen:Array<Array<Bool>>):Bool
+    {
+      for (row in b.row...b.row + b.d)
+        for (col in b.col...b.col + b.w)
+          if (seen[row][col])
+            return true;
+      return false;
     }
 
 // building o blocks camera->endpoint? only counts if o is in FRONT of the endpoint (its centre
@@ -185,6 +367,19 @@ class Occlusion {
       var side = segHitsBox(0, 0, -10, 0, 0, 10, 5, 7, -1, 1, 2);
       // box beyond the far endpoint (player at z=10, box at z=20..22)
       var beyond = segHitsBox(0, 0, -10, 0, 0, 10, -1, 1, 20, 22, 2);
-      return hit && !side && !beyond;
+      var tiles:Array<Array<Tile>> = [
+        [Tile.Road, Tile.Road, Tile.Road, Tile.Road, Tile.Road, Tile.Road],
+        [Tile.Road, Tile.Walkway, Tile.Building, Tile.Alley, Tile.Building, Tile.Road],
+        [Tile.Road, Tile.Road, Tile.Road, Tile.Road, Tile.Road, Tile.Road],
+      ];
+      var block = tacticalBlock(tiles, 1, 1, 1, 0);
+      var tactical = block != null &&
+        block[1][2] &&
+        block[1][4] &&
+        !block[1][0] &&
+        !block[1][5];
+      // road-bounded scan: walking toward the road must yield nothing, not cross it
+      var stopped = tacticalBlock(tiles, 1, 1, -1, 0, true);
+      return hit && !side && !beyond && tactical && stopped == null;
     }
 }

@@ -80,6 +80,7 @@ package three;
 
 @:native("THREE.Color") extern class Color {
   public function new(?hex:Int);
+  public function multiplyScalar(s:Float):Color;
 }
 
 @:native("THREE.Object3D") extern class Object3D {

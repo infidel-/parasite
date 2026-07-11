@@ -257,7 +257,20 @@ class GameScene
             city3d.show(game.area.cityGenSeed);
           else city3d.showCity(reconstructCity());
           _cityEnter = false;
-          fader.reveal(FADE_MS);
+          // reveal only once the view has PRESENTED a frame: the first composer.render
+          // compiles every scene shader (a multi-second stall on a cold driver cache) and
+          // would otherwise run over an already-revealed, never-drawn black canvas.
+          // timeout = backstop so black never sticks if the loop dies before a frame
+          var revealed = false;
+          var reveal = function()
+            {
+              if (revealed)
+                return;
+              revealed = true;
+              fader.reveal(FADE_MS);
+            };
+          city3d.onFirstFrame(reveal);
+          Browser.window.setTimeout(reveal, 5000);
         });
     }
 

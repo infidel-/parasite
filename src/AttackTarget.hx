@@ -1,6 +1,7 @@
 // attack target (player, AI, or object)
 // helps with stats and events
 import ai.AI;
+import entities.Entity;
 import game.Game;
 import objects.AreaObject;
 
@@ -82,6 +83,25 @@ class AttackTarget
             return obj.getTargetCenterY();
           default:
             return 0;
+        }
+    }
+
+// returns target's visible world entity for 3D combat effects: an AI's billboard, or the
+// player's current body (host or the parasite itself); null for objects
+  public function entity(): Entity
+    {
+      switch (type)
+        {
+          case TARGET_AI:
+            return ai.entity;
+          case TARGET_PLAYER:
+            return (game.player.state == PLR_STATE_HOST ?
+              game.player.host.entity :
+              game.playerArea.entity);
+          case TARGET_OBJECT:
+            return null;
+          default:
+            return null;
         }
     }
 

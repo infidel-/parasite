@@ -6,6 +6,11 @@ import game.Game;
 import Const;
 import _UIState;
 
+typedef TacticalCameraState = {
+  var zoomTarget:Float;
+  var sideAngleTarget:Float;
+}
+
 // the street view's follow camera: eases a target toward the player's cell, holds a
 // state-driven zoom (parasite close, host pulled out) and derives the camera offset +
 // angle from it (closer = more parallel to the ground). wheel zooms in/out; free-cam
@@ -29,6 +34,8 @@ class CameraRig {
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
   var recoil = new Vector3();                              // transient player-shot camera kick, decays to 0
   var lampCorners:Map<Int,Int> = null;                    // grid vertex -> lamp dir; follow target bends past a post too
+  var tactical = false;
+  var tacticalCamera:TacticalCameraState = null;
 
   public function new(game:Game, camera:PerspectiveCamera)
     {
@@ -50,6 +57,8 @@ class CameraRig {
       ztDone = null;
       sideAngle = 0.0;
       sideAngleTarget = 0.0;
+      tactical = false;
+      tacticalCamera = null;
       lastState = game.player.state;
       zoom = zoomTarget = targetFor(lastState);
       update(0, true);
@@ -126,8 +135,34 @@ class CameraRig {
 // nudge the zoom target one wheel notch (dir: +1 = out, -1 = in), clamped to the state cap
   public function zoomBy(dir:Int):Void
     {
+      if (tactical)
+        return;
       zoomTarget = Math.max(0, Math.min(maxFor(game.player.state),
         zoomTarget + dir * RenderConfig.CAMERA.zoomStep));
+    }
+
+// switch between the player's saved follow zoom and the tactical overhead zoom; both ways
+// retarget and let update()'s exponential eases animate the transition (no snap)
+  public function setTactical(v:Bool):Void
+    {
+      if (tactical == v)
+        return;
+      tactical = v;
+      if (tactical)
+        {
+          tacticalCamera = {
+            zoomTarget: zoomTarget,
+            sideAngleTarget: sideAngleTarget,
+          };
+          zt = null;
+          ztDone = null;
+          zoomTarget = 1.0;
+          sideAngleTarget = 0.0;
+          return;
+        }
+      zoomTarget = tacticalCamera.zoomTarget;
+      sideAngleTarget = tacticalCamera.sideAngleTarget;
+      tacticalCamera = null;
     }
 
 // punch the camera back along a shot direction (world dx,dz), plus a slight upward jolt;
@@ -154,16 +189,24 @@ class CameraRig {
         bend != null ? bend.col : -1,
         bend != null ? bend.row : -1);
       pWorld.set(camSlide.x, 0, camSlide.z);
-      sideAngleTarget = targetSideAngle();
+      // tactical pins the side-angle target at 0: no walkway-side orbit (it would swing the
+      // camera and flip the occlusion block selection); the ease still runs both ways
+      if (!tactical)
+        sideAngleTarget = targetSideAngle();
       updateSideAngle(dtMs);
       // state drives the auto zoom target: close as a parasite, pulled out as a host
       var st = game.player.state;
       if (st != lastState)
         {
-          zoomTarget = targetFor(st);
+          // during tactical the live zoom is pinned; retarget the saved state instead so the
+          // exit restore lands on the new state's zoom, not the one saved at entry
+          if (tactical)
+            tacticalCamera.zoomTarget = targetFor(st);
+          else zoomTarget = targetFor(st);
           lastState = st;
         }
-      // ease the zoom (fixed-duration intro/outro tween, else exponential toward zoomTarget)
+      // ease the zoom (fixed-duration intro/outro tween, else exponential toward zoomTarget;
+      // tactical rides the same ease with its target pinned at 1.0 by setTactical)
       tickZoom(dtMs);
       applyOffset();
       if (!followCamera) return;

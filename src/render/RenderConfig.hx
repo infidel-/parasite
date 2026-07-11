@@ -304,7 +304,7 @@ class RenderConfig {
   // timing in BASE_MS multiples; the 2D particle ran 320ms over 5 tiles
   public static final SCREAM = {
     lifeMult: 8.0,        // pulse duration (BASE_MS multiples)
-    radiusCells: 5.0,     // wave end radius (cells; matches the black-noise effect radius)
+    radiusCells: 1.0 * abilities.ChoirSilentScream.RADIUS, // wave end radius (cells) = the gameplay effect radius
     easePow: 5.0,         // radius ease-out exponent (higher = harder slowdown near the end)
     domeColor: 0xc0c8dc,  // dome tint (the 2D light pulse's pale blue-white)
     domeAlpha: 0.18,      // dome peak opacity (additive)
