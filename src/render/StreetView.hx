@@ -57,6 +57,7 @@ class StreetView {
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
   var _lastProgs = 0;     // shader program count last frame; a jump == a (re)compile stall (perf street)
+  var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
   public static var lastCalls = 0; // draw calls last frame (HUD counter, when vidShowFps)
   public static var lastTris = 0;  // triangles drawn last frame (HUD counter, when vidShowFps)
 
@@ -236,6 +237,24 @@ class StreetView {
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
     // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
     renderer.info.autoReset = false;
+
+    // pre-warm shader programs: on a cold GL context (fresh page/app launch) the first presented
+    // frame otherwise stalls multiple seconds compiling every program at once. do it here, under
+    // the enter fade, so the first real frame just draws. renderer.compile warms the scene
+    // materials; one throwaway composer pass warms the post-FX (bloom/output) programs it can't
+    // reach. only the first city build per GL context pays this — the program cache survives
+    // teardown (materials are never disposed), so later builds reuse it and skip the cost
+    if (!_warmed)
+      {
+        _warmed = true;
+        var tWarm = haxe.Timer.stamp();
+        var progWarm0 = renderer.info.programs != null ? renderer.info.programs.length : 0;
+        renderer.compile(scene, camera);
+        composer.render();
+        var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
+        trace('[street-warmup] compile+postfx ' + r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
+          ' programs ' + progWarm0 + '->' + progWarm1);
+      }
 
     exiting = false;   // cancel any in-flight outro from a prior area
     tactical = false;

@@ -150,6 +150,7 @@ package three;
   public function setScissor(x:Float, y:Float, w:Float, h:Float):Void;
   public function setScissorTest(on:Bool):Void;
   public function render(scene:Scene, camera:Dynamic):Void;
+  public function compile(scene:Scene, camera:Dynamic):Void; // pre-warm: compile all scene materials' shader programs up front (avoids first-frame stall)
 }
 
 @:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {
