@@ -289,6 +289,8 @@ class StreetView {
     shockwave = null;
     actorGroup = null;
     ring = null;
+    if (actors != null)
+      actors.dispose();
     actors = null;
     occlusion = null;
     tacticalGrid = null;

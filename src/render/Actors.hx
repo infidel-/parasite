@@ -36,6 +36,8 @@ class Actors {
   var decals:Decals;                                     // ground/wall decoration + street debris
   var flames:FlameShadows;                               // barrel flame body/glow + fake cast shadows
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
+  var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
+  var _ov = new Vector3();                               // scratch projection vector (off-screen test)
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
@@ -70,6 +72,7 @@ class Actors {
       decals = new Decals(game, sprites);
       flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
+      offscreen = game.ui.hud.offscreen;
       lastState = game.player.state;
     }
 
@@ -137,6 +140,7 @@ class Actors {
           }
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
+      offscreen.begin();
       for (ai in game.area.getAllAI())
         if (ai.entity != null)
           {
@@ -150,8 +154,10 @@ class Actors {
                 badges.drawAITarget(ai);
                 badges.drawXray(ai, bs);
                 badges.drawBadges(ai, bs, dtMs);
+                markOffscreen(ai, bs);
               }
           }
+      offscreen.end();
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
@@ -220,6 +226,45 @@ class Actors {
   public function setDebris(list:Array<render.world.Debris.DebrisSpot>):Void
     {
       decals.setDebris(list);
+    }
+
+// queue a screen-edge indicator for a seen AI whose head projects outside the viewport: the
+// alert badge glyph (dot when calm) tinted by the same ramp as the 3D outlines
+  function markOffscreen(ai:AI, bs:Array<_Badge>):Void
+    {
+      var a = actors.get(ai.entity);
+      if (a == null ||
+          a.op < 0.3)
+        return;
+      _ov.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+      _ov.project(camera);
+      var behind = _ov.z > 1;
+      if (!behind &&
+          _ov.x >= -1 && _ov.x <= 1 &&
+          _ov.y >= -1 && _ov.y <= 1)
+        return;
+      // behind-camera projections come out point-mirrored — flip back to the correct side
+      var ndcX = behind ? -_ov.x : _ov.x;
+      var ndcY = behind ? -_ov.y : _ov.y;
+      // glyph: the current alert-ish badge if any (npc is two-tone, not tintable — skip it)
+      var key = '';
+      for (b in bs)
+        if (b.svg != null &&
+            b.svg != 'npc')
+          {
+            key = b.svg;
+            break;
+          }
+      // edge icons breathe between 0.9 and 0.95 on the badge clock; calm dots sit at the middle
+      var scale = (key == '' ? 0.925 : 0.9 + 0.05 * badges.pulse01(key));
+      offscreen.show(key, '#' + StringTools.hex(badges.outlineColor(ai, bs), 6), ndcX, ndcY,
+        scale);
+    }
+
+// street view teardown: hide the HUD-owned edge indicators (nothing drives them anymore)
+  public function dispose():Void
+    {
+      offscreen.clear();
     }
 
 // find the visible AI whose head projects nearest the given client point (within a px radius);

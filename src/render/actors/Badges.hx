@@ -45,6 +45,18 @@ class Badges {
       badgeT += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
     }
 
+// normalized looping pulse phase (0..1) for a badge glyph key, on the same clock/periods as the
+// drawBadges breaths; used by the HUD edge indicators so they breathe in sync with the badges
+  public function pulse01(key:String):Float
+    {
+      var period =
+        (key == 'alert1' ||
+         key == 'alert2' ||
+         key == 'alert3') ? 8.0 :
+        (key == 'search') ? 5.6 : 6.4;
+      return 0.5 + 0.5 * Math.sin(badgeT / period * 2 * Math.PI);
+    }
+
 // paint the targeting markers under a visible AI: the stored-target frame and/or the
 // currently-cycled reticle (mirrors the 2D FRAME/RETICLE sprites, laid flat on the ground)
   public function drawAITarget(ai:AI):Void
@@ -136,7 +148,7 @@ class Badges {
 
 // outline color for an AI: followers read cult-pink; otherwise the current alert status (matching
 // the alert badge color), or a dim slate when calm/idle. colors mirror the app.css HUD tokens
-  function outlineColor(ai:AI, badges:Array<_Badge>):Int
+  public function outlineColor(ai:AI, badges:Array<_Badge>):Int
     {
       if (ai.isPlayerCultist())
         return 0xfd97ff;                                 // cult pink (--text-color-cultist)
