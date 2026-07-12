@@ -14,7 +14,9 @@ typedef FadeMat = { mat:Dynamic, opacity:Float, transparent:Bool, depthWrite:Boo
 typedef Occ = {
   b:Building,
   minX:Float, maxX:Float, minZ:Float, maxZ:Float, maxY:Float, cx:Float, cz:Float,
-  mats:Array<FadeMat>, fade:Float, target:Float
+  mats:Array<FadeMat>, fade:Float, target:Float,
+  plate:Mesh,   // flat ground fill marker, shown only while this building is faded
+  outline:Mesh  // glowing emissive band hugging the footprint edge (visible under any lighting)
 };
 
 // fades a building to semi-transparent while it sits between the camera and the player, so
@@ -61,12 +63,17 @@ class Occlusion {
             mats: [],
             fade: 1.0,
             target: 1.0,
+            plate: makePlate(scene, c.x, c.z, b.w * CELL, b.d * CELL),
+            outline: makeOutline(scene, c.x, c.z, b.w * CELL, b.d * CELL),
           });
           idxOf.set(b, i);
         }
       // bucket every mesh into its building and de-share its materials
       scene.traverse(function(o:Object3D) {
         if (untyped o.isMesh != true && o.isInstancedMesh != true) return;
+        // skip our own footprint markers (already in the scene): bucketing them would fold their
+        // material into the building's fade set and clobber the opacity we drive in apply()
+        if (untyped o.userData != null && o.userData.occMarker == true) return;
         var bi = pick(o, idxOf);
         if (bi < 0) return;
         var m:Dynamic = o.material;
@@ -78,6 +85,110 @@ class Occlusion {
           }
         else o.material = own(m, bi);
       });
+    }
+
+// build one building-footprint marker: a flat semi-transparent quad laid on the ground over the
+// footprint, hidden until the building fades (opacity driven in apply). building cells are
+// unpaved, so this is the only sign a see-through building still stands there
+  function makePlate(scene:Scene, cx:Float, cz:Float, w:Float, d:Float):Mesh
+    {
+      var m = new Mesh(
+        new PlaneGeometry(w, d),
+        new MeshBasicMaterial({
+          color: RenderConfig.OCCLUSION.plateColor,
+          transparent: true,
+          opacity: 0.0,
+          depthWrite: false,
+        }));
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(cx, RenderConfig.OCCLUSION.plateY, cz);
+      m.visible = false;
+      untyped m.userData.occMarker = true; // exclude from the de-share bucketing traverse
+      scene.add(m);
+      return m;
+    }
+
+// build the glowing footprint outline: a DASHED thin ground line tracing the footprint perimeter,
+// in the tactical-grid recipe (HDR MeshBasic quad strip, toneMapped off) so it blooms and reads
+// under any lighting. hidden until the building fades (opacity driven in apply)
+  function makeOutline(scene:Scene, cx:Float, cz:Float, w:Float, d:Float):Mesh
+    {
+      var ox = w / 2, oz = d / 2;                            // footprint half-extents (edge)
+      var hw = CELL * RenderConfig.OCCLUSION.outlineWidth;   // dash half-width (world)
+      var dash = RenderConfig.OCCLUSION.outlineDash, gap = RenderConfig.OCCLUSION.outlineGap;
+      var lift = RenderConfig.OCCLUSION.plateY + 0.02;       // rest this far above the ground surface
+      var pos:Array<Float> = [];
+      var idx:Array<Int> = [];
+      // one dash quad from (ax,az) to (bx,bz) at local height qy, widened by hw across its normal
+      inline function quad(ax:Float, az:Float, bx:Float, bz:Float, qy:Float):Void
+        {
+          var base = Std.int(pos.length / 3);
+          if (az == bz)
+            {
+              // x-run: widen across z
+              pos.push(ax); pos.push(qy); pos.push(az - hw);
+              pos.push(bx); pos.push(qy); pos.push(az - hw);
+              pos.push(bx); pos.push(qy); pos.push(az + hw);
+              pos.push(ax); pos.push(qy); pos.push(az + hw);
+            }
+          else
+            {
+              // z-run: widen across x
+              pos.push(ax - hw); pos.push(qy); pos.push(az);
+              pos.push(ax + hw); pos.push(qy); pos.push(az);
+              pos.push(ax + hw); pos.push(qy); pos.push(bz);
+              pos.push(ax - hw); pos.push(qy); pos.push(bz);
+            }
+          idx.push(base); idx.push(base + 2); idx.push(base + 1);
+          idx.push(base); idx.push(base + 3); idx.push(base + 2);
+        }
+      // walk one axis-aligned edge, emitting a dash every dash+gap over its full length. each dash
+      // rests on the surface OUTSIDE the footprint edge (odx,odz = outward normal): a walkway there
+      // sits a curb above the road, so a flat line would tunnel under it — sample the floor per dash
+      function edge(x0:Float, z0:Float, x1:Float, z1:Float, odx:Float, odz:Float):Void
+        {
+          var dx = x1 - x0, dz = z1 - z0;
+          var L = Math.sqrt(dx * dx + dz * dz);
+          if (L < 1e-4)
+            return;
+          var ux = dx / L, uz = dz / L;
+          var t = 0.0;
+          while (t < L)
+            {
+              var e = Math.min(t + dash, L);
+              // sample the cell just outside the edge at the dash midpoint (world coords = local + center)
+              var mid = (t + e) / 2;
+              var sc = worldToCell(cx + x0 + ux * mid + odx * CELL * 0.5,
+                                   cz + z0 + uz * mid + odz * CELL * 0.5);
+              var qy = render.world.WorldCtx.floorY(sc.col, sc.row) + lift;
+              quad(x0 + ux * t, z0 + uz * t, x0 + ux * e, z0 + uz * e, qy);
+              t += dash + gap;
+            }
+        }
+      edge(-ox, -oz, ox, -oz, 0, -1); // top (-z)
+      edge(-ox, oz, ox, oz, 0, 1);    // bottom (+z)
+      edge(-ox, -oz, -ox, oz, -1, 0); // left (-x)
+      edge(ox, -oz, ox, oz, 1, 0);    // right (+x)
+      var geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+      geo.setIndex(idx);
+      // HDR color (past 1) + toneMapped off = crosses the bloom threshold for a soft glow, like
+      // the tactical grid; unlit MeshBasic so it reads under any scene lighting
+      var m = new Mesh(geo,
+        new MeshBasicMaterial({
+          color: new Color(RenderConfig.OCCLUSION.outlineColor).multiplyScalar(RenderConfig.OCCLUSION.outlineGlow),
+          transparent: true,
+          opacity: 0.0,
+          depthWrite: false,
+          toneMapped: false,
+          side: THREE.DoubleSide,
+        }));
+      m.position.set(cx, 0, cz); // dash verts already carry their per-dash world height
+      m.visible = false;
+      m.renderOrder = 1;
+      untyped m.userData.occMarker = true; // exclude from the de-share bucketing traverse
+      scene.add(m);
+      return m;
     }
 
 // enable or clear the road-bounded tactical building selection
@@ -321,6 +432,12 @@ class Occlusion {
   function apply(o:Occ):Void
     {
       var f = o.fade, faded = f < 0.999;
+      // footprint marker: fade-in the ground plate + glowing edge outline as the building goes
+      // see-through (both hidden while solid). the outline self-emits so it reads under any lighting
+      o.plate.visible = faded;
+      untyped o.plate.material.opacity = (1 - f) * RenderConfig.OCCLUSION.plateAlpha;
+      o.outline.visible = faded;
+      untyped o.outline.material.opacity = (1 - f) * RenderConfig.OCCLUSION.outlineAlpha;
       for (fm in o.mats)
         {
           var m = fm.mat;

@@ -137,8 +137,23 @@ class RenderConfig {
                    // (invisible on the flat wall) so windows crisp back + bloom the moment the
                    // wall reads solid, instead of ~0.8s later
     margin: 1.0,   // XZ expansion when bucketing face-proud decals into their building
-    aimGrow: 1.5   // targeting-mode: cells of lateral slack, so buildings flanking the
+    aimGrow: 1.5,  // targeting-mode: cells of lateral slack, so buildings flanking the
                    // cam->player / cam->target line fade too (not just strict occluders)
+    // footprint plate: a flat semi-transparent quad on the ground over each building, shown only
+    // while the building is faded (building cells are unpaved, so a see-through wall would leave
+    // no sign the building stands there). alpha scales with how faded the building is
+    plateColor: 0x3a4152, // plate tint (cool grey-blue, reads as a footprint marker)
+    plateAlpha: 0.38,     // plate opacity at full fade (scaled by 1 - fade each frame)
+    plateY: 0.05,         // plate height above the (unpaved) building-cell ground
+    // glowing footprint outline: a dashed thin ground line tracing the footprint edge, drawn in the
+    // tactical-grid recipe — an unlit MeshBasic quad strip whose color is multiplied past 1 (HDR,
+    // toneMapped off) so it clears the bloom threshold and glows regardless of scene lighting
+    outlineColor: 0x74c0ff,  // outline tint (cool cyan-blue)
+    outlineGlow: 5.0,        // HDR color multiplier (like TacticalGrid.GLOW) so the dashes bloom
+    outlineAlpha: 0.7,       // outline opacity at full fade (scaled by 1 - fade each frame)
+    outlineWidth: 0.015,     // dash half-width as a fraction of a cell (matches the tactical grid line)
+    outlineDash: 0.6,        // dash length (world units)
+    outlineGap: 0.4          // gap between dashes (world units)
   };
   // melee choreography + 3D blood. lunge = attacker there-and-back reach; on lunge finish the
   // impact sound + target shake + blood burst fire. drops arc ballistically and land as SPLAT
