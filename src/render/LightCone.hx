@@ -67,6 +67,15 @@ class LightCone {
         alphaMap: gradient(),
       });
       var inst = new InstancedMesh(geo, mat, bulbs.length);
+      // instances are scattered across the city, but three's whole-mesh cull tests a boundingSphere
+      // from the base geometry at origin — wrong place, so it pops all cones in/out of frustum on
+      // zoom. disable the coarse cull (one cheap draw call regardless)
+      untyped inst.frustumCulled = false;
+      // above Sprites.ORD_ACTOR: the additive shaft draws LAST among transparents, so anything seen
+      // THROUGH the beam (ground, decals, bodies, AI behind it) gets the amber tint — else the beam
+      // reads as fake glass over an untinted object. a UNIQUE order (nothing else sits here) also
+      // avoids the decal-slot tie it had at the default 0, which flipped cone-over-blood on zoom
+      untyped inst.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
       var q = new Quaternion(), mtx = new Matrix4(), pos = new Vector3(), one = new Vector3(1, 1, 1);
       for (i in 0...bulbs.length)
         {
