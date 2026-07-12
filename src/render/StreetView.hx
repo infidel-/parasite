@@ -465,8 +465,12 @@ class StreetView {
       if (Math.abs(sx - game.playerArea.x) <= S.lightRangeCells &&
           Math.abs(sy - game.playerArea.y) <= S.lightRangeCells)
         actors.muzzleFlash(mw.x, muzzleY, mw.z);
+      // per-weapon pellet pattern + tracer style
+      var kind = (soundKind == 'attack-shotgun' ? S.kinds.shotgun :
+        (soundKind == 'attack-assault-rifle' ? S.kinds.rifle :
+        (soundKind == 'attack-stun-rifle' ? S.kinds.stun : S.kinds.pistol)));
       // the impact beat: on a hit, the usual hit shake on the struck AI (looked up at impact
-      // time) + blood away from the shooter (guns always draw blood, like the old 2D shot) + the
+      // time) + blood away from the shooter (real bullets only — a stun bolt draws none) + the
       // hit sound; on a miss, just the miss sound (spark handled per-pellet)
       var onImpact = function() {
         if (hit)
@@ -475,23 +479,50 @@ class StreetView {
             if (ai != null &&
                 ai.entity != null)
               actors.hitShake(ai.entity);
-            actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
+            if (kind.bullet)
+              actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
+            // energy bolt: a blue sparkle spray off the struck target instead of blood; origin
+            // pulled toward the shooter so sparks fly in front of the actor sprite, not behind it
+            else
+              {
+                var bx = mw.x - iw.x, bz = mw.z - iw.z;
+                var bl = Math.sqrt(bx * bx + bz * bz);
+                if (bl < 0.001) bl = 1;
+                var pull = C * 0.3;
+                actors.sparkBurst(iw.x + bx / bl * pull, impactY, iw.z + bz / bl * pull,
+                  bx, bz, 0, kind.color);
+              }
             game.scene.sounds.play('attack-bullet-hit', { always: true, x: tx, y: ty });
           }
         else game.scene.sounds.play('attack-bullet-miss', { always: true, x: tx, y: ty });
       };
-      // per-weapon pellet pattern
-      var kind = (soundKind == 'attack-shotgun' ? S.kinds.shotgun :
-        (soundKind == 'attack-assault-rifle' ? S.kinds.rifle : S.kinds.pistol));
       // base impact: a hit stops at the target cell (flesh, no spark); a miss flies on to the
       // first wall along its path (spark there) or fades at max range (off-camera, no spark)
       var baseX = iw.x, baseY = impactY, baseZ = iw.z;
+      // stun bolt hit: stop at the body front (same pull as the sparkle spray) so the slow wide
+      // shaft doesn't cross the actor's sprite plane and render behind it
+      if (hit &&
+          !kind.bullet)
+        {
+          var bx = mw.x - iw.x, bz = mw.z - iw.z;
+          var bl = Math.sqrt(bx * bx + bz * bz);
+          if (bl < 0.001) bl = 1;
+          baseX += bx / bl * C * 0.3;
+          baseZ += bz / bl * C * 0.3;
+        }
       var sparkAtEnd = false;
       var wallCol = -1, wallRow = -1; // struck wall cell (for the bullet-hole decal), -1 = none
       var wallFromCol = -1, wallFromRow = -1; // last open cell before the hit = the exposed face
       if (!hit)
         {
-          var e = game.area.rayToWall(sx, sy, tx, ty, kind.range);
+          // skew the aim 1-2 tiles sideways (perpendicular to the shot line) so the missed
+          // tracer visibly flies past the target instead of straight through the body
+          var pdx = tx - sx, pdy = ty - sy;
+          var pl = Math.sqrt(pdx * pdx + pdy * pdy);
+          if (pl < 0.001) pl = 1;
+          var off = (Math.random() < 0.5 ? -1 : 1) * (1 + Std.int(Math.random() * 2));
+          var e = game.area.rayToWall(sx, sy,
+            Math.round(tx - pdy / pl * off), Math.round(ty + pdx / pl * off), kind.range);
           var ew = CityConfig.cellToWorld(e.col, e.row);
           baseX = ew.x; baseZ = ew.z;
           baseY = render.world.WorldCtx.floorY(e.col, e.row) + render.particles.Sprites.SIZE * 0.4;
@@ -517,7 +548,7 @@ class StreetView {
               if (holeDebug())
                 trace('[wallhit] cell(' + e.col + ',' + e.row + ') facade=' + wallFacade(e.col, e.row) + ' sound=' + (metal ? 'fx-wall-metal' : 'fx-wall-stone'));
               game.scene.sounds.play(metal ? 'fx-wall-metal' : 'fx-wall-stone',
-                { always: true, delay: Std.int(S.travelMs), x: e.col, y: e.row });
+                { always: true, delay: Std.int(S.travelMs * kind.travelMult), x: e.col, y: e.row });
             }
         }
       for (i in 0...kind.pellets)
@@ -538,13 +569,16 @@ class StreetView {
           var muz = new Vector3(mw.x + jit(), muzzleY + jit() * 0.5, mw.z + jit());
           var ex = baseX + jx + jit(), ez = baseZ + jz + jit();
           var impact = new Vector3(ex, baseY + jy + jit() * 0.5, ez);
-          actors.shot(muz, impact, i * kind.stagger, i == 0 ? onImpact : null);
+          actors.shot(muz, impact, i * kind.stagger, kind, i == 0 ? onImpact : null);
           // wall strike: spray sparks back off the wall once the tracer arrives
           if (sparkAtEnd)
-            actors.sparkBurst(ex, baseY, ez, mw.x - ex, mw.z - ez, i * kind.stagger + S.travelMs);
+            actors.sparkBurst(ex, baseY, ez, mw.x - ex, mw.z - ez,
+              i * kind.stagger + S.travelMs * kind.travelMult,
+              kind.bullet ? null : kind.color);
           // and leave a persisted hole at the PRIMARY pellet's exact impact so hole and tracer
-          // line up (bare walls only; scatters shot-to-shot via the same jitter as the tracer)
-          if (sparkAtEnd && i == 0)
+          // line up (bare walls only; scatters shot-to-shot via the same jitter as the tracer;
+          // real bullets only — a stun bolt leaves no hole)
+          if (sparkAtEnd && i == 0 && kind.bullet)
             spawnBulletHole(wallFromCol, wallFromRow, wallCol, wallRow, muz, impact);
         }
       // recoil: kick the camera back along the shot (player's own shots only)

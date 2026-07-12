@@ -2,6 +2,19 @@ package render;
 
 typedef DetailType = { tex:String, w:Float, d:Float, crop:Float };
 typedef CropXY = { x:Float, y:Float };
+// one SHOT.kinds entry: per-weapon pellet pattern + tracer style (see the kinds block)
+typedef ShotKind = {
+  pellets:Int,
+  spread:Float,
+  stagger:Float,
+  range:Int,
+  color:Int,
+  width:Float,
+  waveAmp:Float,
+  waveLen:Float,
+  travelMult:Float,
+  bullet:Bool,
+};
 
 // rendering constants (texture tiling, parapet, windows, bloom, camera); grid and
 // floor constants plus cellToWorld live in citygen.CityConfig (shared, pure)
@@ -255,11 +268,9 @@ class RenderConfig {
   // a small camera recoil. per-weapon pellet counts mirror the 2D shot feel. sizes marked
   // "cells" are fractions of CityConfig.CELL; ms are durations; colors are warm muzzle tones
   public static final SHOT = {
-    tracerWidth: 0.03,      // tracer quad width (cells)
     tracerJitter: 0.1,      // random offset on both tracer ends so shots don't share one exact line (cells)
     tailFrac: 0.55,         // streak visible length as a fraction of the full muzzle->impact run
     travelMs: 55.0,         // time the tracer head takes to race to the target
-    tracerColor: 0xfff2c8,  // warm-white tracer
     flashSize: 0.1,         // muzzle flash quad size (cells)
     flashMs: 70.0,          // muzzle flash fade time
     flashColor: 0xffdf9c,   // muzzle flash tint
@@ -280,12 +291,17 @@ class RenderConfig {
     sparkColor: 0xfff0d0,   // ember tint
     recoilAmp: 0.9,         // player-shot camera kick (world units, back along the shot)
     recoilMs: 160.0,        // camera recoil settle time
-    // per-weapon: pellets fired, target jitter (cells), stagger between pellets (ms), and the
-    // max tiles a missed bullet flies before it fades off-camera (shotgun stops short)
+    waveMs: 250.0,          // stun-bolt wave drift period (one sine cycle slithers per this)
+    // per-weapon: pellets fired, target jitter (cells), stagger between pellets (ms), the max
+    // tiles a missed bullet flies before it fades off-camera (shotgun stops short), tracer
+    // color/width, sine-wave shape (waveAmp 0 = straight; waveLen = cells per cycle),
+    // travelMult = travelMs multiplier (stun bolt flies slower), and bullet = real slug
+    // (blood burst + wall hole) vs energy bolt (neither)
     kinds: {
-      pistol:  { pellets: 1, spread: 0.0,  stagger: 0.0,  range: 14 },
-      rifle:   { pellets: 3, spread: 0.15, stagger: 45.0, range: 14 },
-      shotgun: { pellets: 5, spread: 0.5,  stagger: 0.0,  range: 5 },
+      pistol:  { pellets: 1, spread: 0.0,  stagger: 0.0,  range: 14, color: 0xfff2c8, width: 0.03, waveAmp: 0.0,  waveLen: 1.0, travelMult: 1.0, bullet: true },
+      rifle:   { pellets: 3, spread: 0.15, stagger: 45.0, range: 14, color: 0xfff2c8, width: 0.03, waveAmp: 0.0,  waveLen: 1.0, travelMult: 1.0, bullet: true },
+      shotgun: { pellets: 5, spread: 0.5,  stagger: 0.0,  range: 5,  color: 0xfff2c8, width: 0.03, waveAmp: 0.0,  waveLen: 1.0, travelMult: 1.0, bullet: true },
+      stun:    { pellets: 1, spread: 0.0,  stagger: 0.0,  range: 14, color: 0x66ccff, width: 0.06, waveAmp: 0.08, waveLen: 0.8, travelMult: 2.0, bullet: false },
     },
   };
 

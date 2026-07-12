@@ -331,9 +331,10 @@ class Actors {
 
 // spawn one 3D gun-shot pellet (tracer + muzzle flash); blood + impact sound fire via the
 // onImpact closure when the tracer lands (null for extra pellets so it fires once)
-  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, onImpact:Void->Void):Void
+  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float,
+      kind:RenderConfig.ShotKind, onImpact:Void->Void):Void
     {
-      particles.add(new Shot3D(muzzle, impact, startDelay, onImpact));
+      particles.add(new Shot3D(muzzle, impact, startDelay, kind, onImpact));
     }
 
 // spawn one thrown 3D projectile (spit clot / needle) racing src->dst at chest height; the
@@ -405,9 +406,10 @@ class Actors {
 
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
-  public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void
+  public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float,
+      ?color:Int):Void
     {
-      particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay));
+      particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay, color));
     }
 
 // spawn a glowing attack-FX sprite from (ax,ay,az) to (bx,by,bz): a melee swing arc keyed by the

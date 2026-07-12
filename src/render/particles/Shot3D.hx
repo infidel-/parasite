@@ -3,6 +3,7 @@ package render.particles;
 import three.Three;
 import citygen.CityConfig;
 import render.RenderConfig;
+import render.RenderConfig.ShotKind;
 
 // one gun-shot pellet in the 3D view: a blooming tracer streak that races muzzle->impact plus a
 // muzzle flash. pure state — all visuals are painted each frame onto the shared Beams pool (no
@@ -14,6 +15,7 @@ class Shot3D extends Particle3D {
   var ix:Float; var iz:Float;                           // impact world pos (same height as muzzle)
   var len:Float;                                        // full muzzle->impact ground length
   var yaw:Float;                                        // ground yaw of the tracer, muzzle->impact
+  var kind:ShotKind;                                    // per-weapon tracer style (color/width/wave)
   var onImpact:Void->Void;                              // impact beat (blood + sound); nullable
 
   var startDelay:Float;                                 // stagger before this pellet fires (ms)
@@ -21,10 +23,12 @@ class Shot3D extends Particle3D {
   var elapsed:Float = 0.0;                              // ms since this pellet started
   var impacted:Bool = false;                            // onImpact fired yet?
 
-  public function new(muzzle:Vector3, impact:Vector3, startDelay:Float, onImpact:Void->Void)
+  public function new(muzzle:Vector3, impact:Vector3, startDelay:Float,
+      kind:ShotKind, onImpact:Void->Void)
     {
       super();
       this.startDelay = startDelay;
+      this.kind = kind;
       this.onImpact = onImpact;
       mx = muzzle.x; my = muzzle.y; mz = muzzle.z;
       ix = impact.x; iz = impact.z;
@@ -47,13 +51,14 @@ class Shot3D extends Particle3D {
         }
       elapsed += dtMs;
       var S = RenderConfig.SHOT;
+      var travel = S.travelMs * kind.travelMult;
       if (!impacted &&
-          elapsed >= S.travelMs)
+          elapsed >= travel)
         {
           impacted = true;
           if (onImpact != null) onImpact();
         }
-      return elapsed < S.travelMs + S.sparkMs;
+      return elapsed < travel + S.sparkMs;
     }
 
 // paint the shot's visuals onto the bright-FX pool
@@ -72,22 +77,62 @@ class Shot3D extends Particle3D {
           g.quad(mx, my, mz, fs, fs, 0, S.flashColor, 1 - fe);
         }
       // tracer: a short streak racing to the target, then the full run fading out
-      var width = S.tracerWidth * C;
-      var p0 = elapsed / S.travelMs;
+      var width = kind.width * C;
+      var travel = S.travelMs * kind.travelMult;
+      var p0 = elapsed / travel;
       if (p0 < 1)
         {
           var tailP = p0 - S.tailFrac;
           if (tailP < 0) tailP = 0;
-          var ax = lerpX(tailP), az = lerpZ(tailP);
-          var bx = lerpX(p0), bz = lerpZ(p0);
-          var seg = Math.sqrt((bx - ax) * (bx - ax) + (bz - az) * (bz - az));
-          if (seg < 0.01) seg = 0.01;
-          g.quad((ax + bx) / 2, my, (az + bz) / 2, seg, width, yaw, S.tracerColor, 1.0);
+          span(g, tailP, p0, width, 1.0);
         }
       else
         {
-          var q = (elapsed - S.travelMs) / S.sparkMs;
-          g.quad((mx + ix) / 2, my, (mz + iz) / 2, len, width, yaw, S.tracerColor, Math.max(0, 1 - q));
+          var q = (elapsed - travel) / S.sparkMs;
+          span(g, 0, 1, width, Math.max(0, 1 - q));
+        }
+    }
+
+// paint the [a..b] fraction of the muzzle->impact run: one quad when straight, a chain of
+// short quads tracing an animated sine (perpendicular, in the ground plane) when wavy
+  function span(g:Beams, a:Float, b:Float, width:Float, op:Float):Void
+    {
+      var S = RenderConfig.SHOT;
+      var C = CityConfig.CELL;
+      if (kind.waveAmp == 0)
+        {
+          var ax = lerpX(a), az = lerpZ(a);
+          var bx = lerpX(b), bz = lerpZ(b);
+          var seg = Math.sqrt((bx - ax) * (bx - ax) + (bz - az) * (bz - az));
+          if (seg < 0.01) seg = 0.01;
+          g.quad((ax + bx) / 2, my, (az + bz) / 2, seg, width, yaw, kind.color, op);
+          return;
+        }
+      // ground-plane unit perpendicular to the run + the drifting wave phase
+      var px = -(iz - mz) / (len < 0.001 ? 1 : len);
+      var pz = (ix - mx) / (len < 0.001 ? 1 : len);
+      var phase = elapsed / S.waveMs * Math.PI * 2;
+      var n = Std.int((b - a) * len / C * 4);
+      if (n < 4) n = 4;
+      var x0 = 0.0, z0 = 0.0;
+      for (i in 0...n + 1)
+        {
+          var t = a + (b - a) * i / n;
+          // sine offset, pinched to zero at both ends so the bolt stays anchored
+          var pinch = Math.min(1, Math.min(t * 4, (1 - t) * 4));
+          var off = kind.waveAmp * C * pinch * Math.sin(t * len / (kind.waveLen * C) * Math.PI * 2 - phase);
+          var x1 = lerpX(t) + px * off;
+          var z1 = lerpZ(t) + pz * off;
+          if (i > 0)
+            {
+              var dx = x1 - x0, dz = z1 - z0;
+              var seg = Math.sqrt(dx * dx + dz * dz);
+              if (seg < 0.001) seg = 0.001;
+              g.quad((x0 + x1) / 2, my, (z0 + z1) / 2, seg * 1.05, width,
+                Math.atan2(-dz, dx), kind.color, op);
+            }
+          x0 = x1;
+          z0 = z1;
         }
     }
 
