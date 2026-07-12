@@ -393,7 +393,9 @@ class Sprites {
         darkenCanvas(tcx, cw, ch, mul);
       var tex = new CanvasTexture(tc);
       tex.colorSpace = THREE.SRGBColorSpace;
-      var gs:GroundSprite = { tex: tex, fw: cw / t, fh: ch / t };
+      // bottom margin: empty cell rows below the content (py grows downward, so t-1-maxY),
+      // as a cell fraction — lets an upright sprite drop its content bottom onto the ground
+      var gs:GroundSprite = { tex: tex, fw: cw / t, fh: ch / t, by: (t - 1 - maxY) / t };
       contentCache.set(key, gs);
       return gs;
     }
@@ -421,7 +423,7 @@ class Sprites {
       var tex = new CanvasTexture(bc);
       tex.colorSpace = THREE.SRGBColorSpace;
       var t = Const.TILE_SIZE_CLEAN;
-      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t };
+      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: 0.0 };
       shadowCache.set(key, gs);
       return gs;
     }

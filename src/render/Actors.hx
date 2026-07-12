@@ -147,7 +147,7 @@ class Actors {
                 ox = p.ox;
                 oz = p.oz;
               }
-            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz);
+            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz, true);
             if (vis)
               badges.drawObjTarget(o);
           }
@@ -509,7 +509,7 @@ class Actors {
 // advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
 // running). baseY/baseScale set the resting pose (nonzero for the attached parasite riding a
 // host's head). flat lays the sprite on the ground as a decal instead of standing it up
-  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0):Void
+  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0, groundAnchor:Bool = false):Void
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
@@ -519,6 +519,16 @@ class Actors {
       var floor = WorldCtx.floorY(a.col, a.row);
       // decals hug the ground; upright sprites centre at half their height
       var wy = flat ? floor + 0.05 : floor + Sprites.SIZE * 0.5 + baseY;
+      // upright ground item (e.g. a generic pickup box): actor art fills the frame feet-at-bottom,
+      // but a small item icon sits mid-cell and would hang in the air — drop it by the sprite's
+      // empty bottom margin so its opaque content rests on the floor
+      if (groundAnchor &&
+          !flat)
+        {
+          var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas);
+          if (gs != null)
+            wy -= Sprites.SIZE * gs.by;
+        }
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
       var order = flat ? Sprites.ORD_DECAL : Sprites.ORD_ACTOR;
