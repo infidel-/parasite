@@ -35,6 +35,8 @@ class HUD
   var navbar: NavbarHud;
   var console: ConsoleHud;
   var actions: ActionsHud;
+  // screen-edge off-screen AI indicators (driven per-frame by render.Actors)
+  public var offscreen: OffscreenHud;
   var lastMouseX: Float = -1;
   var lastMouseY: Float = -1;
   var lastRegionTileX: Int = -1;       // committed (shown) hovered tile
@@ -112,6 +114,7 @@ class HUD
 
       navbar = new NavbarHud(game, this);
       actions = new ActionsHud(game, this);
+      offscreen = new OffscreenHud(game, this);
     }
 
 // show blinking text and set timeout
@@ -419,8 +422,12 @@ public function onMouseLeave()
         ', team timeout: ' + game.group.teamTimeout + '<br/>');
       if (game.group.team != null)
         buf.add('Team: ' + game.group.team + '<br/>');
-      buf.add('<br/>' + game.scene.getRegionRenderStatsText() + '<br/>');
-      buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
+      // render stats for the active view only: region timing in region mode,
+      // 2D area timing in area mode unless the 3D street view is rendering
+      if (game.location == LOCATION_REGION)
+        buf.add('<br/>' + game.scene.getRegionRenderStatsText() + '<br/>');
+      else if (!game.scene.city3d.running)
+        buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);
       debugInfo.innerHTML = buf.toString();

@@ -19,6 +19,9 @@ class DeathFade3D extends Particle3D {
   var op:Float;
   var onLand:Void->Void;                                    // item-drop sound, fired once on landing
   public var onLandExtra:Void->Void = null;                 // extra landing hook (corpse body fade-in), bound after spawn
+  public var targetSpin:Float = Math.PI * 2;                // total Y-spin; ends flat facing this yaw (= the corpse's resting yaw, set after spawn)
+  public var offx:Float = 0.0;                              // feet drift toward the corpse's resting offset over the topple
+  public var offz:Float = 0.0;
   var age:Float = 0.0;                                      // ms elapsed (anim-speed scaled)
   var landed:Bool = false;
 
@@ -60,12 +63,14 @@ class DeathFade3D extends Particle3D {
 // draw the toppling ghost: a full spin about Y through the spin phase, then tip flat
   override public function draw(p:Paint3D):Void
     {
-      var spinY = Math.min(1.0, age / SPIN_MS) * Math.PI * 2;
+      var spinY = Math.min(1.0, age / SPIN_MS) * targetSpin;
       var fall = Math.max(0.0, Math.min(1.0, (age - SPIN_MS) / FALL_MS));
+      // drift the feet toward the corpse's resting offset as it topples, so the ghost lands
+      // exactly where the body decal lies
       p.sprites.paintTopple({
-        x: x,
+        x: x + offx * fall,
         y: y,
-        z: z,
+        z: z + offz * fall,
         tex: tex,
         op: op,
         scale: scale,

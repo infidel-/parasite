@@ -475,7 +475,7 @@ class Game extends _SaveObject
                   ' goals=' + Std.int((tGoals - tMgr) * 1000) +
                   ' vis=' + Std.int((tVis - tGoals) * 1000) +
                   ' | ai=' + Lambda.count(area.getAllAI()) +
-                  ' splats=' + area.splatCount());
+                  ' decals=' + area.dynamicDecalCount());
             }
         }
 

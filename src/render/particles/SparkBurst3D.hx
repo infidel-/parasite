@@ -15,13 +15,16 @@ class SparkBurst3D extends Particle3D {
   // per-ember world position + velocity (units, units/sec)
   var px:Array<Float> = []; var py:Array<Float> = []; var pz:Array<Float> = [];
   var vx:Array<Float> = []; var vy:Array<Float> = []; var vz:Array<Float> = [];
+  var color:Int;                                        // ember tint (warm bullet vs blue stun)
 
   // ox,oy,oz = impact point; backX,backZ = direction back off the wall (toward the shooter)
-  public function new(ox:Float, oy:Float, oz:Float, backX:Float, backZ:Float, startDelay:Float)
+  public function new(ox:Float, oy:Float, oz:Float, backX:Float, backZ:Float, startDelay:Float,
+      ?color:Int)
     {
       super();
       this.startDelay = startDelay;
       var S = RenderConfig.SHOT;
+      this.color = (color != null ? color : S.sparkColor);
       maxLife = S.sparkMs;
       n = S.sparkCount;
       var base = S.sparkSpeed * CityConfig.CELL;         // world units/sec
@@ -81,7 +84,7 @@ class SparkBurst3D extends Particle3D {
           var sp = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]);
           var len = sp * S.sparkStreak;                  // motion-blur length (seconds of travel)
           if (len < width) len = width;                  // slow embers read as round dots
-          p.sparks.streak(px[i], py[i], pz[i], vx[i], vy[i], vz[i], len, width, S.sparkColor, op);
+          p.sparks.streak(px[i], py[i], pz[i], vx[i], vy[i], vz[i], len, width, color, op);
         }
     }
 }

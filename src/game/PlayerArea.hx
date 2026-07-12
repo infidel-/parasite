@@ -515,6 +515,10 @@ class PlayerArea extends _SaveObject
 
           var newx = ai.x, newy = ai.y;
           ai.setPosition(x, y, true);
+          // the AI takes its own turn later this same action; if it steps further away the
+          // renderer sees a 2-cell net jump and would snap (teleport). flag the slide so it
+          // animates the contiguous move instead
+          ai.entity.slideNoSnap = true;
           moveTo(newx, newy);
           log('Your host pushes past ' + ai.getName() + '.');
           ret = true;

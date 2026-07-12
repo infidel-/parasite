@@ -27,6 +27,10 @@ class Entity
   // displacement inside of tile
   public var dx: Int;
   public var dy: Int;
+  // render hint: next slide is a real contiguous multi-cell move (push-past swap + own
+  // AI move applied atomically in one turn), so the slide must not treat the 2-cell jump
+  // as a teleport and snap. consumed (reset) once by the renderer. see render.ActorAnim.slideTo
+  public var slideNoSnap: Bool;
 
 
   public function new(g: Game, layer: Int)
@@ -40,6 +44,7 @@ class Entity
       angle = 0.0;
       dx = 0;
       dy = 0;
+      slideNoSnap = false;
     }
 
 // randomize scale

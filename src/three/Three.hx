@@ -150,6 +150,7 @@ package three;
   public function setScissor(x:Float, y:Float, w:Float, h:Float):Void;
   public function setScissorTest(on:Bool):Void;
   public function render(scene:Scene, camera:Dynamic):Void;
+  public function compile(scene:Scene, camera:Dynamic):Void; // pre-warm: compile all scene materials' shader programs up front (avoids first-frame stall)
 }
 
 @:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {
@@ -165,7 +166,7 @@ typedef RendererInfo = {
   var autoReset:Bool;
   function reset():Void;
   var render:{ var triangles:Int; var calls:Int; };
-  var memory:{ var textures:Int; };
+  var memory:{ var geometries:Int; var textures:Int; };
   var programs:Array<Dynamic>;   // compiled shader programs; length jumps == a (re)compile happened
 };
 
@@ -261,6 +262,12 @@ typedef RendererInfo = {
   public var instanceMatrix:Dynamic;
   public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
+  public function dispose():Void; // release GPU buffers when the mesh is thrown away
+}
+@:native("THREE.InstancedBufferAttribute") extern class InstancedBufferAttribute {
+  public function new(array:Dynamic, itemSize:Int); // one value per instance (e.g. per-decal alpha)
+  public var needsUpdate:Bool; // set true after writing `array` to re-upload
+  public function setUsage(usage:Dynamic):InstancedBufferAttribute; // DynamicDrawUsage for per-frame updates
 }
 @:native("THREE.LineSegments") extern class LineSegments extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic);
@@ -315,6 +322,7 @@ typedef Intersection = {
   public function addPass(p:Dynamic):Void;
   public function render():Void;
   public function setSize(w:Float, h:Float):Void;
+  public function dispose():Void; // release the composer's render targets (bloom etc.) on teardown
 }
 @:native("THREE.RenderPass") extern class RenderPass {
   public function new(scene:Scene, camera:Object3D);

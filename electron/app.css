@@ -738,6 +738,33 @@ hr {
   height: 100%;
 }
 
+/* ---- screen-edge off-screen AI indicators (ui.hud.OffscreenHud) ---- */
+#offscreen-ai {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20; /* under the HUD panels (z30), above the tint layers */
+}
+.offscreen-ai-icon {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+}
+/* glyph keeps its former px size (26px circle at 68%) inside the tighter circle */
+.offscreen-ai-icon svg {
+  width: 17.7px;
+  height: 17.7px;
+  flex-shrink: 0;
+}
+
 /* panels sit above the region tooltip beam/panel (which use z-index ≤ 25) */
 .hud-panel {
   position: fixed;

@@ -7,6 +7,7 @@ import render.world.WorldCtx;
 import render.anim.*;
 import render.particles.*;
 import render.actors.*;
+import render.decals.Decals;
 import game.Game;
 import entities.Entity;
 import ai.AI;
@@ -36,6 +37,8 @@ class Actors {
   var decals:Decals;                                     // ground/wall decoration + street debris
   var flames:FlameShadows;                               // barrel flame body/glow + fake cast shadows
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
+  var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
+  var _ov = new Vector3();                               // scratch projection vector (off-screen test)
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
@@ -67,9 +70,10 @@ class Actors {
       particles = new Particles3D();
       // per-frame sub-passes of the actor layer; each is handed the shared actor-pose map so it can
       // read poses (FlameShadows/Badges) — Actors stays its sole writer
-      decals = new Decals(game, sprites);
+      decals = new Decals(game, sprites, actorGroup);
       flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
+      offscreen = game.ui.hud.offscreen;
       lastState = game.player.state;
     }
 
@@ -131,12 +135,25 @@ class Actors {
                (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable())) &&
               // a corpse body is held invisible until its death ghost has fallen flat
               !_heldBodies.exists(o.entity);
-            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal());
+            // a fallen corpse rests at a small stable yaw/offset (id-derived) so bodies read as
+            // having fallen where they died, not stamped on the grid
+            var yaw = 0.0, ox = 0.0, oz = 0.0;
+            var b = Std.downcast(o, objects.BodyObject);
+            if (b != null &&
+                o.isGroundDecal())
+              {
+                var p = bodyPose(o.id);
+                yaw = p.yaw;
+                ox = p.ox;
+                oz = p.oz;
+              }
+            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz);
             if (vis)
               badges.drawObjTarget(o);
           }
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
+      offscreen.begin();
       for (ai in game.area.getAllAI())
         if (ai.entity != null)
           {
@@ -150,8 +167,10 @@ class Actors {
                 badges.drawAITarget(ai);
                 badges.drawXray(ai, bs);
                 badges.drawBadges(ai, bs, dtMs);
+                markOffscreen(ai, bs);
               }
           }
+      offscreen.end();
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
@@ -222,6 +241,46 @@ class Actors {
       decals.setDebris(list);
     }
 
+// queue a screen-edge indicator for a seen AI whose head projects outside the viewport: the
+// alert badge glyph (dot when calm) tinted by the same ramp as the 3D outlines
+  function markOffscreen(ai:AI, bs:Array<_Badge>):Void
+    {
+      var a = actors.get(ai.entity);
+      if (a == null ||
+          a.op < 0.3)
+        return;
+      _ov.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+      _ov.project(camera);
+      var behind = _ov.z > 1;
+      if (!behind &&
+          _ov.x >= -1 && _ov.x <= 1 &&
+          _ov.y >= -1 && _ov.y <= 1)
+        return;
+      // behind-camera projections come out point-mirrored — flip back to the correct side
+      var ndcX = behind ? -_ov.x : _ov.x;
+      var ndcY = behind ? -_ov.y : _ov.y;
+      // glyph: the current alert-ish badge if any (npc is two-tone, not tintable — skip it)
+      var key = '';
+      for (b in bs)
+        if (b.svg != null &&
+            b.svg != 'npc')
+          {
+            key = b.svg;
+            break;
+          }
+      // edge icons breathe between 0.9 and 0.95 on the badge clock; calm dots sit at the middle
+      var scale = (key == '' ? 0.925 : 0.9 + 0.05 * badges.pulse01(key));
+      offscreen.show(key, '#' + StringTools.hex(badges.outlineColor(ai, bs), 6), ndcX, ndcY,
+        scale);
+    }
+
+// street view teardown: hide the HUD-owned edge indicators (nothing drives them anymore)
+  public function dispose():Void
+    {
+      offscreen.clear();
+      decals.dispose();
+    }
+
 // find the visible AI whose head projects nearest the given client point (within a px radius);
 // returns the AI + its projected client px (the tooltip beam anchor), or null. project-nearest
 // rather than raycasting the transparent, entity-less billboard quads
@@ -272,9 +331,10 @@ class Actors {
 
 // spawn one 3D gun-shot pellet (tracer + muzzle flash); blood + impact sound fire via the
 // onImpact closure when the tracer lands (null for extra pellets so it fires once)
-  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float, onImpact:Void->Void):Void
+  public function shot(muzzle:Vector3, impact:Vector3, startDelay:Float,
+      kind:RenderConfig.ShotKind, onImpact:Void->Void):Void
     {
-      particles.add(new Shot3D(muzzle, impact, startDelay, onImpact));
+      particles.add(new Shot3D(muzzle, impact, startDelay, kind, onImpact));
     }
 
 // spawn one thrown 3D projectile (spit clot / needle) racing src->dst at chest height; the
@@ -303,11 +363,53 @@ class Actors {
       return s;
     }
 
+// throw a fountain of money bills from cell (x,y): each bill picks a random walkable landing
+// spot in the throw radius (a few tries, else at the thrower's feet) and flies there tumbling
+  public function money(x:Int, y:Int, range:Int):Void
+    {
+      var M = RenderConfig.MONEY;
+      var w = CityConfig.cellToWorld(x, y);
+      var sy = render.world.WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4;
+      for (_ in 0...M.bills)
+        {
+          // random landing cell in the radius, kept on walkable ground
+          var lc = x, lr = y;
+          for (_ in 0...4)
+            {
+              var ang = Math.random() * Math.PI * 2;
+              var d = M.minDist + Math.random() * (range - M.minDist);
+              var cx = Math.round(x + Math.cos(ang) * d);
+              var cy = Math.round(y + Math.sin(ang) * d);
+              if (game.area.isWalkable(cx, cy))
+                {
+                  lc = cx;
+                  lr = cy;
+                  break;
+                }
+            }
+          // sub-cell scatter + a tiny per-bill height offset so resting bills don't z-fight
+          var lw = CityConfig.cellToWorld(lc, lr);
+          particles.add(new MoneyBill3D(w.x, sy, w.z,
+            lw.x + (Math.random() - 0.5) * 0.8 * CityConfig.CELL,
+            render.world.WorldCtx.floorY(lc, lr) + 0.02 + Math.random() * 0.02,
+            lw.z + (Math.random() - 0.5) * 0.8 * CityConfig.CELL));
+        }
+    }
+
+// lay the lingering money ground stains over the throw radius: one flat decal per walkable cell
+// within range. ~MONEY.permFrac stay permanent (persisted tile-decorations in the shared dynamic-
+// decal FIFO, like blood splats); the rest are view-side stains that fade out
+  public function moneyGround(x:Int, y:Int, range:Int):Void
+    {
+      decals.throwMoney(x, y, range);
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
-  public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void
+  public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float,
+      ?color:Int):Void
     {
-      particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay));
+      particles.add(new SparkBurst3D(x, y, z, backX, backZ, startDelay, color));
     }
 
 // spawn a glowing attack-FX sprite from (ax,ay,az) to (bx,by,bz): a melee swing arc keyed by the
@@ -354,12 +456,22 @@ class Actors {
 // keep a freshly-spawned corpse body invisible until the last death ghost lands, so it only
 // appears once the dying sprite has fallen flat (not during the spin); the object loop skips a
 // held body, so when released it seeds at op 0 and eases in. no ghost (view off) = reveal now
-  public function bindBodyFadeIn(e:Entity):Void
+  public function bindBodyFadeIn(e:Entity, id:Int, ground:Bool):Void
     {
       if (_deathGhost == null)
         return;
       _heldBodies.set(e, true);
       _deathGhost.onLandExtra = function() _heldBodies.remove(e);
+      // land the topple at the corpse's own resting pose (one full turn, then settle facing the
+      // body's yaw + offset) so it doesn't always fall to the front. upright bodies (choir) keep
+      // the default front-facing topple
+      if (ground)
+        {
+          var p = bodyPose(id);
+          _deathGhost.targetSpin = Math.PI * 2 + p.yaw;
+          _deathGhost.offx = p.ox;
+          _deathGhost.offz = p.oz;
+        }
     }
 
 // seed a new entity's actor at zero opacity so it fades in (the body appearing on death)
@@ -372,10 +484,32 @@ class Actors {
                       op: 0.0, opTarget: 1.0, fx: null, face: 1.0 });
     }
 
+// stable pseudo-random in [-1,1) from an int key+salt (so a corpse keeps its fallen pose
+// across save/load without persisting the jitter)
+  static function jitter(id:Int, salt:Int):Float
+    {
+      var h = id * 374761393 + salt * 668265263;
+      h = (h ^ (h >> 13)) * 1274126177;
+      h = h ^ (h >> 16);
+      return (h & 0xffff) / 32768.0 - 1.0;
+    }
+
+// deterministic resting pose (full-360 yaw + small offset) for a corpse body from its id — the
+// single source shared by the object-loop decal and the death-topple landing, so the fall ends
+// where the body lies
+  function bodyPose(id:Int): { yaw:Float, ox:Float, oz:Float }
+    {
+      return {
+        yaw: jitter(id, 1) * Math.PI,                     // full 360 deg
+        ox: jitter(id, 2) * 0.12 * CityConfig.CELL,
+        oz: jitter(id, 3) * 0.12 * CityConfig.CELL,
+      };
+    }
+
 // advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
 // running). baseY/baseScale set the resting pose (nonzero for the attached parasite riding a
 // host's head). flat lays the sprite on the ground as a decal instead of standing it up
-  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false):Void
+  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0):Void
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
@@ -392,9 +526,9 @@ class Actors {
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       if (a.fx != null)
         sprites.paint({
-          x: a.x + a.fx.offx,
+          x: a.x + a.fx.offx + offx,
           y: wy + a.fx.offy,
-          z: a.z + a.fx.offz,
+          z: a.z + a.fx.offz + offz,
           tex: texFor(e),
           op: a.op,
           scale: baseScale * a.fx.scale,
@@ -403,12 +537,13 @@ class Actors {
           emissive: RenderConfig.FLAME.litColor,
           emissiveInt: emInt,
           faceX: a.face,
+          yaw: yaw,
         });
       else
         sprites.paint({
-          x: a.x,
+          x: a.x + offx,
           y: wy,
-          z: a.z,
+          z: a.z + offz,
           tex: texFor(e),
           op: a.op,
           scale: baseScale,
@@ -417,6 +552,7 @@ class Actors {
           emissive: RenderConfig.FLAME.litColor,
           emissiveInt: emInt,
           faceX: a.face,
+          yaw: yaw,
         });
     }
 
@@ -484,7 +620,9 @@ class Actors {
       var bend = ActorAnim.cornerBend(game.area, a.col, a.row, e.mx, e.my, lampCorners);
       ActorAnim.slideTo(a, e.mx, e.my, step,
         bend != null ? bend.col : -1,
-        bend != null ? bend.row : -1);
+        bend != null ? bend.row : -1,
+        e.slideNoSnap);
+      e.slideNoSnap = false; // consume the push-past hint (one slide only)
       // opacity channel: ease toward the visibility target (LOS fade, slower than moves)
       a.opTarget = vis ? 1.0 : 0.0;
       var opStep = step * FADE_SPEED;

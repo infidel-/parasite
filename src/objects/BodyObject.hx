@@ -13,6 +13,7 @@ class BodyObject extends AreaObject
   public var isSearched: Bool; // is this body searched?
   public var isDecayAccel: Bool; // is this body with decay acceleration?
   public var organPoints: Int; // amount of organs on this body
+  public var isMaleAtlas: Bool; // actor atlas gender (else male-atlas corpses crop wrong)
   var parentType: String;
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int, parentType: String)
@@ -37,6 +38,7 @@ class BodyObject extends AreaObject
       isSearched = false;
       organPoints = 0;
       isDecayAccel = false;
+      isMaleAtlas = false;
       parentType = 'civilian';
     }
 
@@ -50,6 +52,20 @@ class BodyObject extends AreaObject
           imageCol = icon.col;
         }
       super.initPost(onLoad);
+    }
+
+// adopt a dead actor's own sprite cell so the corpse shows the actor, not a generic body tile
+  public function setActorSprite(img: String, ix: Int, iy: Int, male: Bool)
+    {
+      imageName = img;
+      imageCol = ix;
+      imageRow = iy;
+      isMaleAtlas = male;
+      if (entity != null)
+        {
+          entity.setIcon(img, ix, iy);
+          entity.isMaleAtlas = male;
+        }
     }
 
 // check if this body can be searched for loot
