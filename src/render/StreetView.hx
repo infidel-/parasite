@@ -60,6 +60,10 @@ class StreetView {
   var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
   public static var lastCalls = 0; // draw calls last frame (HUD counter, when vidShowFps)
   public static var lastTris = 0;  // triangles drawn last frame (HUD counter, when vidShowFps)
+  // GPU-resource counts (no byte API in WebGL) — a steady climb across area re-entries == a leak
+  public static var lastGeo = 0;   // live geometries in the renderer's cache
+  public static var lastTex = 0;   // live textures in the renderer's cache
+  public static var lastProg = 0;  // compiled shader programs
 
 
   public function new(game:Game) {
@@ -182,6 +186,10 @@ class StreetView {
 // (re)build the scene for a city and start the render loop
   function buildFrom(c:City, seed:Int):Void {
     ensureCore();
+    // a load/rebuild replaces the scene without going through the menu-exit outro, so free the
+    // previous build's GPU resources here too — otherwise every load orphans a whole city's
+    // geometry in the (persistent) renderer's cache and geom climbs ~one city per load
+    disposeBuild();
     city = c;
     shownSeed = seed;
 
@@ -303,19 +311,59 @@ class StreetView {
     exiting = false;
     shownSeed = -2;
     if (debug.on) setDebug(false);
+    disposeBuild();
     scene = null;
     composer = null;
     shockwave = null;
     actorGroup = null;
     ring = null;
-    if (actors != null)
-      actors.dispose();
     actors = null;
     occlusion = null;
     tacticalGrid = null;
     tactical = false;
     if (canvas != null) canvas.style.display = 'none';
   }
+
+// free the current build's GPU resources: actor pools, then the scene graph geometry/materials,
+// then the composer's render targets. run on both teardown (menu exit) AND at the top of a
+// rebuild (load) — the renderer persists across builds, so anything not disposed here stays in
+// three's cache and geom climbs one whole city per load. does not null the fields (teardown
+// handles that; a rebuild reassigns them immediately)
+  function disposeBuild():Void
+    {
+      // actors own their pooled Sprites/DecalBatch buffers, so let them free first
+      if (actors != null)
+        actors.dispose();
+      disposeScene();
+      if (composer != null)
+        composer.dispose(); // bloom + other post-FX render targets
+    }
+
+// dispose every geometry + material in the current scene graph. textures are shared and cached
+// (Textures.hx, reused by the next build), so they're deliberately left alone — material.dispose()
+// does not touch them. dispose() is idempotent, so actor meshes already freed above are harmless
+  function disposeScene():Void
+    {
+      if (scene == null)
+        return;
+      scene.traverse(function(o:Object3D)
+        {
+          var g:Dynamic = untyped o.geometry;
+          if (g != null)
+            g.dispose();
+          var m:Dynamic = untyped o.material;
+          if (m == null)
+            return;
+          // material may be a single material or an array (multi-material meshes)
+          if (Std.isOfType(m, Array))
+            {
+              var arr:Array<Dynamic> = m;
+              for (mm in arr)
+                mm.dispose();
+            }
+          else m.dispose();
+        });
+    }
 
 // grip-struggle shake: jitter the parasite and its host out of phase (different amplitude,
 // duration and wave phase) so they read as wrestling. no-op unless a city view is live
@@ -896,6 +944,10 @@ class StreetView {
       }
     lastCalls = renderer.info.render.calls; // scene + a few post-FX quads — HUD draw-call readout
     lastTris = renderer.info.render.triangles;
+    // GPU-resource counts (memory.* survives reset(), only render counters reset) — leak signal
+    lastGeo = renderer.info.memory.geometries;
+    lastTex = renderer.info.memory.textures;
+    lastProg = (renderer.info.programs != null ? renderer.info.programs.length : 0);
     if (debug.on) Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
     if (render.Actors.DEBUG_PERF)
       {

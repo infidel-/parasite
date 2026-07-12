@@ -166,7 +166,7 @@ typedef RendererInfo = {
   var autoReset:Bool;
   function reset():Void;
   var render:{ var triangles:Int; var calls:Int; };
-  var memory:{ var textures:Int; };
+  var memory:{ var geometries:Int; var textures:Int; };
   var programs:Array<Dynamic>;   // compiled shader programs; length jumps == a (re)compile happened
 };
 
@@ -322,6 +322,7 @@ typedef Intersection = {
   public function addPass(p:Dynamic):Void;
   public function render():Void;
   public function setSize(w:Float, h:Float):Void;
+  public function dispose():Void; // release the composer's render targets (bloom etc.) on teardown
 }
 @:native("THREE.RenderPass") extern class RenderPass {
   public function new(scene:Scene, camera:Object3D);
