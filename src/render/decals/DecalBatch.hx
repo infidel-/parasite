@@ -1,4 +1,4 @@
-package render.actors;
+package render.decals;
 
 import three.Three;
 import render.particles.Sprites;
