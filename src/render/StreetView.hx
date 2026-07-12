@@ -102,6 +102,24 @@ class StreetView {
       svMouseX = e.clientX;
       svMouseY = e.clientY;
     });
+    // hold RMB (button 2) and drag to orbit the follow camera around the player (yaw + pitch);
+    // release eases it back to the resting view. suppress the context menu so RMB is free
+    canvas.addEventListener('contextmenu', function(e:js.html.MouseEvent) e.preventDefault());
+    canvas.addEventListener('mousedown', function(e:js.html.MouseEvent) {
+      if (!running || debug.on || tactical || exiting || e.button != 2 || rig == null) return;
+      rig.orbitStart();
+      canvas.style.cursor = 'none'; // hide the cursor while orbiting so it doesn't drift off-screen
+    });
+    // mouseup + orbit-drag on window so a release or fast drag that leaves the canvas still counts;
+    // orbitDrag no-ops unless an orbit is live, so the window mousemove is cheap otherwise
+    Browser.window.addEventListener('mouseup', function(e:js.html.MouseEvent) {
+      if (e.button != 2 || rig == null) return;
+      rig.orbitEnd();
+      canvas.style.cursor = ''; // restore the cursor on release
+    });
+    Browser.window.addEventListener('mousemove', function(e:js.html.MouseEvent) {
+      if (running && rig != null) rig.orbitDrag(e.movementX, e.movementY);
+    });
   }
 
 // drop one benign three.js warning: world tile textures load async, so their per-building

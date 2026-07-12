@@ -118,6 +118,13 @@ class RenderConfig {
     hostZoom: 0.60,       // host: auto pull-out target on invade (cap stays 1.0 = far/max)
     sideAngle: Math.PI / 36, // 5-degree orbit toward a wall-side view
     sideTurnLerp: 0.2,     // half-speed easing: fraction of the remaining angle per BASE_MS
+    orbitSens: 0.006,      // radians of orbit per mouse pixel (hold-RMB drag)
+    orbitPitchMin: -0.9,   // added-pitch clamp (rad): how far the camera can rise toward overhead
+    orbitPitchMax: 0.15,   // added-pitch clamp (rad): lowest camera = only a little below the default view
+    orbitYawMax: Math.PI / 6, // max left/right orbit from the default heading (rad) — ±30 degrees
+    orbitElevMax: 1.5,     // hard cap (rad, ~86deg) on the camera's total elevation so a raise at
+                           // high zoom-out can't carry it past vertical and flip over the top
+    orbitReturnLerp: 0.15, // per-BASE_MS ease of the orbit back to 0 on RMB release
     introMult: 6.0,       // enter effect: zoom-out from closest to resting target, BASE_MS multiples
     exitMult: 6.0         // leave effect: zoom-in to closest over the frozen last frame, then tear down
   };
