@@ -7,8 +7,7 @@ import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
 import entities.Entity;
-import render.anim.Shake;
-import render.anim.MeleeLunge;
+import render.choreo.Choreo;
 
 // controller for the 3D street view. Owns a persistent renderer/camera on its own
 // WebGL canvas and a per-city scene + bloom composer; runs its own rAF loop while a
@@ -43,13 +42,13 @@ class StreetView {
   var exitDone:Void->Void = null;                         // runs when the outro completes (fade orchestration hook), else teardown
   var firstFrame:Void->Void = null;                       // one-shot, fires after the next presented frame (enter-fade reveal hook)
   var actors:Actors;                                      // the billboard actor layer
+  var choreo:Choreo;                                      // combat/particle choreography context (render.choreo modules)
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
   var tacticalGrid:TacticalGrid;
   var tactical = false;
 
   var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
-  public static var DEBUG_HOLES = false; // [wallhole] trace each wall tracer impact + hole decision (toggle: `perf hole`)
 
   public var running(default, null):Bool = false;
   var svMouseX:Float = 0;                                 // last cursor client px over #streetview (AI-hover tooltip anchor)
@@ -237,6 +236,9 @@ class StreetView {
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
     shockwave = new Shockwave(camera);
     composer.addPass(shockwave.pass);
+    // combat/particle choreography context: bundles the game + this build's actor/camera/shockwave
+    // layers for the render.choreo modules the game drives through (playShot/playMelee/…)
+    choreo = new Choreo(game, actors, rig, shockwave);
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
       RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD);
@@ -318,6 +320,7 @@ class StreetView {
     actorGroup = null;
     ring = null;
     actors = null;
+    choreo = null;
     occlusion = null;
     tacticalGrid = null;
     tactical = false;
@@ -365,494 +368,77 @@ class StreetView {
         });
     }
 
-// grip-struggle shake: jitter the parasite and its host out of phase (different amplitude,
-// duration and wave phase) so they read as wrestling. no-op unless a city view is live
+// grip-struggle shake (parasite + host wrestle) — see render.choreo.Reactions
   public function playGripStruggle(parasite:Entity, host:Entity):Void
     {
-      if (!running ||
-          actors == null)
-        return;
-      var amp = CityConfig.CELL * 0.09;
-      actors.playFx(parasite, new Shake(RenderConfig.BASE_MS, amp, 0));
-      actors.playFx(host, new Shake(RenderConfig.BASE_MS * 1.3, amp * 0.7, Math.PI));
+      if (running)
+        render.choreo.Reactions.gripStruggle(choreo, parasite, host);
     }
 
-// resist shake: jitter an actor as it lurches off in a direction the parasite didn't
-// command (host resisting control mid-move). no-op unless a city view is live
+// resist shake (host lurches off in a direction the parasite didn't command) — see render.choreo.Reactions
   public function playResistShake(e:Entity):Void
     {
-      if (!running ||
-          actors == null)
-        return;
-      actors.playFx(e, new Shake(RenderConfig.BASE_MS, CityConfig.CELL * 0.07, 0));
+      if (running)
+        render.choreo.Reactions.resistShake(choreo, e);
     }
 
-// melee choreography: attacker lunges toward the target and, on the lunge landing, fires the
-// impact beat — plays the attack sound, shakes the target, and throws blood (bloody weapons).
-// returns true if it took over the sound (caller then stays silent to avoid a double play);
-// false when no city view / no attacker actor, so the caller plays the sound itself
+// melee choreography (attacker lunge -> impact beat: sound + shake + blood) — see render.choreo.Melee
   public function playMelee(atkE:Entity, tgtE:Entity,
       atkCol:Int, atkRow:Int, tgtCol:Int, tgtRow:Int,
       soundFile:String, attackEffect:String, spawnBlood:Bool, bloodRow:Int, bloodFirstCol:Int):Bool
     {
-      if (!running ||
-          actors == null ||
-          atkE == null)
-        return false;
-      // lunge reach: unit vector attacker->target, scaled to a fraction of a cell
-      var a = CityConfig.cellToWorld(atkCol, atkRow);
-      var b = CityConfig.cellToWorld(tgtCol, tgtRow);
-      var dx = b.x - a.x, dz = b.z - a.z;
-      var len = Math.sqrt(dx * dx + dz * dz);
-      if (len < 0.001)
-        {
-          dx = 0;
-          dz = 1;
-          len = 1;
-        }
-      var reach = RenderConfig.MELEE.lungeReach * CityConfig.CELL;
-      // the impact beat, fired when the lunge lands
-      var onDone = function() {
-        if (soundFile != null)
-          game.scene.sounds.play(soundFile, { x: tgtCol, y: tgtRow });
-        if (tgtE != null)
-          actors.hitShake(tgtE);
-        if (spawnBlood)
-          actors.burst(tgtCol, tgtRow, dx, dz, bloodRow, bloodFirstCol);
-        // the attack arc for the swing attacker->target, at each end's chest height. the attacker
-        // origin is its *lunged* position (it has already reached toward the target at the apex),
-        // so a travelling effect (punch) starts from there, not the resting cell
-        if (attackEffect != null)
-          {
-            var ch = render.particles.Sprites.SIZE * 0.4;
-            actors.attackFX(attackEffect,
-              a.x + dx / len * reach, render.world.WorldCtx.floorY(atkCol, atkRow) + ch, a.z + dz / len * reach,
-              b.x, render.world.WorldCtx.floorY(tgtCol, tgtRow) + ch, b.z);
-          }
-      };
-      var lunge = new MeleeLunge(RenderConfig.MELEE.lungeMs,
-        dx / len * reach, dz / len * reach, onDone);
-      // if the attacker has no live billboard (off-screen), fire the beat now so nothing is lost
-      if (!actors.playFx(atkE, lunge))
-        onDone();
-      return true;
+      return running &&
+        render.choreo.Melee.play(choreo, atkE, tgtE, atkCol, atkRow, tgtCol, tgtRow,
+          soundFile, attackEffect, spawnBlood, bloodRow, bloodFirstCol);
     }
 
-// gun-shot choreography: a blooming tracer races muzzle->impact with a muzzle flash + light,
-// and on landing fires the impact beat (blood + hit/miss sound). fires per-weapon pellets
-// (pistol 1, rifle 3 staggered, shotgun 5 spread); only the first pellet carries the beat so
-// blood/sound happen once. player shots kick the camera. returns true if the view took over
-// (caller then skips the 2D tracer); false when no city view / no shooter actor
+// gun-shot choreography (tracer + muzzle flash -> impact beat: blood/spark/sound, wall holes,
+// player recoil) — see render.choreo.Shot
   public function playShot(atkE:Entity, sx:Int, sy:Int, tx:Int, ty:Int,
       hit:Bool, spawnBlood:Bool, bloodRow:Int, bloodCol:Int, soundKind:String, byPlayer:Bool):Bool
     {
-      if (!running ||
-          actors == null ||
-          atkE == null)
-        return false;
-      var S = RenderConfig.SHOT;
-      var C = CityConfig.CELL;
-      // muzzle + impact at chest height (the blood-burst convention)
-      var mw = CityConfig.cellToWorld(sx, sy);
-      var iw = CityConfig.cellToWorld(tx, ty);
-      var muzzleY = render.world.WorldCtx.floorY(sx, sy) + render.particles.Sprites.SIZE * 0.4;
-      var impactY = render.world.WorldCtx.floorY(tx, ty) + render.particles.Sprites.SIZE * 0.4;
-      // small random offset applied to both tracer ends (full on x/z, half on y) so pellets/shots
-      // don't all share one exact muzzle->impact line
-      var jit = function() return S.tracerJitter * C * (Math.random() - 0.5);
-      // muzzle light only for near-camera shots (pooled, constant count); distant shots in a
-      // 50-NPC firefight get just the emissive flash quad, no light
-      if (Math.abs(sx - game.playerArea.x) <= S.lightRangeCells &&
-          Math.abs(sy - game.playerArea.y) <= S.lightRangeCells)
-        actors.muzzleFlash(mw.x, muzzleY, mw.z);
-      // per-weapon pellet pattern + tracer style
-      var kind = (soundKind == 'attack-shotgun' ? S.kinds.shotgun :
-        (soundKind == 'attack-assault-rifle' ? S.kinds.rifle :
-        (soundKind == 'attack-stun-rifle' ? S.kinds.stun : S.kinds.pistol)));
-      // the impact beat: on a hit, the usual hit shake on the struck AI (looked up at impact
-      // time) + blood away from the shooter (real bullets only — a stun bolt draws none) + the
-      // hit sound; on a miss, just the miss sound (spark handled per-pellet)
-      var onImpact = function() {
-        if (hit)
-          {
-            var ai = game.area.getAI(tx, ty);
-            if (ai != null &&
-                ai.entity != null)
-              actors.hitShake(ai.entity);
-            if (kind.bullet)
-              actors.burst(tx, ty, tx - sx, ty - sy, bloodRow, bloodCol);
-            // energy bolt: a blue sparkle spray off the struck target instead of blood; origin
-            // pulled toward the shooter so sparks fly in front of the actor sprite, not behind it
-            else
-              {
-                var bx = mw.x - iw.x, bz = mw.z - iw.z;
-                var bl = Math.sqrt(bx * bx + bz * bz);
-                if (bl < 0.001) bl = 1;
-                var pull = C * 0.3;
-                actors.sparkBurst(iw.x + bx / bl * pull, impactY, iw.z + bz / bl * pull,
-                  bx, bz, 0, kind.color);
-              }
-            game.scene.sounds.play('attack-bullet-hit', { always: true, x: tx, y: ty });
-          }
-        else game.scene.sounds.play('attack-bullet-miss', { always: true, x: tx, y: ty });
-      };
-      // base impact: a hit stops at the target cell (flesh, no spark); a miss flies on to the
-      // first wall along its path (spark there) or fades at max range (off-camera, no spark)
-      var baseX = iw.x, baseY = impactY, baseZ = iw.z;
-      // stun bolt hit: stop at the body front (same pull as the sparkle spray) so the slow wide
-      // shaft doesn't cross the actor's sprite plane and render behind it
-      if (hit &&
-          !kind.bullet)
-        {
-          var bx = mw.x - iw.x, bz = mw.z - iw.z;
-          var bl = Math.sqrt(bx * bx + bz * bz);
-          if (bl < 0.001) bl = 1;
-          baseX += bx / bl * C * 0.3;
-          baseZ += bz / bl * C * 0.3;
-        }
-      var sparkAtEnd = false;
-      var wallCol = -1, wallRow = -1; // struck wall cell (for the bullet-hole decal), -1 = none
-      var wallFromCol = -1, wallFromRow = -1; // last open cell before the hit = the exposed face
-      if (!hit)
-        {
-          // skew the aim 1-2 tiles sideways (perpendicular to the shot line) so the missed
-          // tracer visibly flies past the target instead of straight through the body
-          var pdx = tx - sx, pdy = ty - sy;
-          var pl = Math.sqrt(pdx * pdx + pdy * pdy);
-          if (pl < 0.001) pl = 1;
-          var off = (Math.random() < 0.5 ? -1 : 1) * (1 + Std.int(Math.random() * 2));
-          var e = game.area.rayToWall(sx, sy,
-            Math.round(tx - pdy / pl * off), Math.round(ty + pdx / pl * off), kind.range);
-          var ew = CityConfig.cellToWorld(e.col, e.row);
-          baseX = ew.x; baseZ = ew.z;
-          baseY = render.world.WorldCtx.floorY(e.col, e.row) + render.particles.Sprites.SIZE * 0.4;
-          sparkAtEnd = e.wall;
-          if (holeDebug() && !e.wall)
-            trace('[wallhole] miss FADED at cell(' + e.col + ',' + e.row + ') range=' + kind.range + ' — no wall in range, no spark/hole');
-          // a wall tile's center sits inside the opaque wall (occludes the spark) -> pull the
-          // endpoint back half a cell along the ray so the tracer/spark land on the near face
-          if (e.wall)
-            {
-              var dxm = baseX - mw.x, dzm = baseZ - mw.z;
-              var dl = Math.sqrt(dxm * dxm + dzm * dzm);
-              if (dl > 0.001)
-                {
-                  baseX -= dxm / dl * C * 0.5;
-                  baseZ -= dzm / dl * C * 0.5;
-                }
-              wallCol = e.col; wallRow = e.row;
-              wallFromCol = e.fromCol; wallFromRow = e.fromRow;
-              // wall-hit sound at impact time: corrugated steel (facade 3) rings metal, all
-              // masonry (concrete/brick/stone) reads as one stone thud
-              var metal = wallFacade(e.col, e.row) == 3;
-              if (holeDebug())
-                trace('[wallhit] cell(' + e.col + ',' + e.row + ') facade=' + wallFacade(e.col, e.row) + ' sound=' + (metal ? 'fx-wall-metal' : 'fx-wall-stone'));
-              game.scene.sounds.play(metal ? 'fx-wall-metal' : 'fx-wall-stone',
-                { always: true, delay: Std.int(S.travelMs * kind.travelMult), x: e.col, y: e.row });
-            }
-        }
-      for (i in 0...kind.pellets)
-        {
-          // spread jitters each pellet's visual impact (blood still lands on the true tile)
-          var jx = kind.spread * C * (Math.random() - 0.5);
-          var jz = kind.spread * C * (Math.random() - 0.5);
-          var jy = 0.0;
-          // wall miss: extra shared scatter so successive tracers/sparks/holes at one wall
-          // spread out (and stay aligned with each other) instead of piling on one point
-          if (sparkAtEnd)
-            {
-              var ws = RenderConfig.WALLHOLE.spread * C;
-              jx += ws * (Math.random() - 0.5);
-              jz += ws * (Math.random() - 0.5);
-              jy = RenderConfig.WALLHOLE.vspread * C * (Math.random() - 0.5); // smaller vertical spread
-            }
-          var muz = new Vector3(mw.x + jit(), muzzleY + jit() * 0.5, mw.z + jit());
-          var ex = baseX + jx + jit(), ez = baseZ + jz + jit();
-          var impact = new Vector3(ex, baseY + jy + jit() * 0.5, ez);
-          actors.shot(muz, impact, i * kind.stagger, kind, i == 0 ? onImpact : null);
-          // wall strike: spray sparks back off the wall once the tracer arrives
-          if (sparkAtEnd)
-            actors.sparkBurst(ex, baseY, ez, mw.x - ex, mw.z - ez,
-              i * kind.stagger + S.travelMs * kind.travelMult,
-              kind.bullet ? null : kind.color);
-          // and leave a persisted hole at the PRIMARY pellet's exact impact so hole and tracer
-          // line up (bare walls only; scatters shot-to-shot via the same jitter as the tracer;
-          // real bullets only — a stun bolt leaves no hole)
-          if (sparkAtEnd && i == 0 && kind.bullet)
-            spawnBulletHole(wallFromCol, wallFromRow, wallCol, wallRow, muz, impact);
-        }
-      // recoil: kick the camera back along the shot (player's own shots only)
-      if (byPlayer)
-        rig.kick(sx - tx, sy - ty);
-      return true;
+      return running &&
+        render.choreo.Shot.play(choreo, atkE, sx, sy, tx, ty,
+          hit, spawnBlood, bloodRow, bloodCol, soundKind, byPlayer);
     }
 
-// splat-only choreography (bleeding drips, black noise — non-combat splats with no attack beat):
-// a small unbiased 3D blood burst at the cell (biased away from the source when given) whose
-// drops land as the same persisted SPLAT decals the 2D splat would write, plus the splat-land
-// sound. returns true if the view took over (caller then skips the 2D particle)
+// non-combat splat (bleeding drips / black noise, no attack beat) — see render.choreo.Splat
   public function playSplat(type:String, x:Int, y:Int, ?source:_Point):Bool
     {
-      if (!running ||
-          actors == null)
-        return false;
-      var dx = 0.0;
-      var dz = 0.0;
-      if (source != null)
-        {
-          dx = x - source.x;
-          dz = y - source.y;
-        }
-      var ic = particles.ParticleSplat.bloodIcon(type);
-      actors.burst(x, y, dx, dz, ic.row, ic.col, RenderConfig.BLOOD.dripDrops);
-      game.scene.sounds.play('fx-splat', { x: x, y: y });
-      return true;
+      return running && render.choreo.Splat.play(choreo, type, x, y, source);
     }
 
-// silent-scream choreography (choir of discord): an expanding ghostly dome + a screen-space
-// shockwave ripple at the caster cell. returns true if the view took over (caller then skips
-// the 2D particle). 3D port of ParticleSilentScream
+// silent-scream choreography (ghostly dome + screen shockwave ripple) — see render.choreo.Scream
   public function playScream(x:Int, y:Int):Bool
     {
-      if (!running ||
-          actors == null)
-        return false;
-      shockwave.add(actors.scream(x, y));
-      return true;
+      return running && render.choreo.Scream.play(choreo, x, y);
     }
 
-// thrown-projectile choreography (spit clot / spine needle): a sprite blob with trailing drips
-// races source->target at chest height, and the impact splat beat (acid/slime/blood burst +
-// splat sound) fires on arrival. returns true if the view took over (caller then skips the 2D
-// particle); false when no city view is running. 3D port of Particle.createProjectile
+// thrown-projectile choreography (spit clot / spine needle -> impact splat beat) — see render.choreo.Projectile
   public function playProjectile(type:String, sx:Int, sy:Int, tx:Int, ty:Int,
       hit:Bool, bloodType:String):Bool
     {
-      if (!running ||
-          actors == null)
-        return false;
-      var P = RenderConfig.PROJECTILE;
-      // a missed needle flies past the target into a neighbour cell, like the 2D particle
-      if (type == 'needle' &&
-          !hit)
-        {
-          tx += Const.roll(-1, 1);
-          ty += Const.roll(-1, 1);
-        }
-      var kind = (type == 'needle' ? P.needle : P.spit);
-      // atlas frame of the blob sprite (the needle reuses the paralysis-spit dart, like 2D)
-      var frame = switch (type)
-        {
-          case 'acidSpit': Const.FRAME_PARTICLE_ACID_SPIT;
-          case 'slimeSpit': Const.FRAME_PARTICLE_SLIME_SPIT;
-          default: Const.FRAME_PARTICLE_PARALYSIS_SPIT;
-        };
-      // source/impact at chest height (the blood-burst convention)
-      var sw = CityConfig.cellToWorld(sx, sy);
-      var tw = CityConfig.cellToWorld(tx, ty);
-      var ch = render.particles.Sprites.SIZE * 0.4;
-      var src = new Vector3(sw.x, render.world.WorldCtx.floorY(sx, sy) + ch, sw.z);
-      var dst = new Vector3(tw.x, render.world.WorldCtx.floorY(tx, ty) + ch, tw.z);
-      // the impact splat variant: acid/slime always, blood only on a needle hit, nothing for
-      // paralysis spit (mirrors the 2D onDeath splat chain)
-      var splat = switch (type)
-        {
-          case 'acidSpit': 'acid';
-          case 'slimeSpit': 'slime';
-          case 'needle': (hit ? bloodType : null);
-          default: null;
-        };
-      // faint goop glow on the in-flight blob (acid/slime only)
-      var glow = switch (type)
-        {
-          case 'acidSpit': RenderConfig.BLOOD.acidGlow;
-          case 'slimeSpit': RenderConfig.BLOOD.slimeGlow;
-          default: 0;
-        };
-      // the impact beat: the usual hit shake on the struck AI (looked up at impact time — it may
-      // have died/moved during the flight) + the splat burst/sound, mirroring the 2D splat chain
-      var onImpact = function() {
-        if (hit)
-          {
-            var ai = game.area.getAI(tx, ty);
-            if (ai != null &&
-                ai.entity != null)
-              actors.hitShake(ai.entity);
-            // paralysis leaves no splat; stamp the curved-X impact mark on the target instead
-            if (type == 'paralysisSpit')
-              actors.attackFX('IMPACT', src.x, src.y, src.z, dst.x, dst.y, dst.z);
-          }
-        if (splat != null)
-          {
-            var ic = particles.ParticleSplat.bloodIcon(splat);
-            actors.burst(tx, ty, tx - sx, ty - sy, ic.row, ic.col);
-            game.scene.sounds.play('fx-splat', { x: tx, y: ty });
-          }
-      };
-      actors.projectile(src, dst, frame, Const.ROW_EFFECT, glow,
-        kind.scale, kind.drips, kind.travelMs, onImpact);
-      return true;
+      return running && render.choreo.Projectile.play(choreo, type, sx, sy, tx, ty, hit, bloodType);
     }
 
-// thrown-money choreography: a chaotic fountain of tumbling bills flies out of the thrower's
-// cell over the throw radius, landing flat and fading, plus lingering money ground stains over the
-// radius (some permanent, some fading). returns true if the view took over (caller then skips the
-// per-tile 2D particles). 3D port of ParticleMoney + its onDeath ground decal
+// thrown-money choreography (tumbling-bill fountain + lingering ground stains) — see render.choreo.Money
   public function playMoney(x:Int, y:Int, range:Int):Bool
     {
-      if (!running ||
-          actors == null)
-        return false;
-      actors.money(x, y, range);
-      actors.moneyGround(x, y, range);
-      return true;
+      return running && render.choreo.Money.play(choreo, x, y, range);
     }
 
-// facade material (0 concrete,1 brick,2 stone,3 metal) of the building owning wall cell (col,row);
-// -1 if no building owns it. used to pick the wall-hit sound
-  function wallFacade(col:Int, row:Int):Int
-    {
-      for (b in render.world.WorldCtx.buildings)
-        if (col >= b.col &&
-            col < b.col + b.w &&
-            row >= b.row &&
-            row < b.row + b.d)
-          return b.facade;
-      return -1;
-    }
-
-// leave a persisted bullet-hole decal on the wall cell (wcol,wrow) struck by a shot. (muz,impact)
-// are the pellet-0 tracer endpoints; the hole lands where that segment actually crosses the struck
-// face plane (true entry point — correct for angled shots, not just head-on). (fromCol,fromRow) is
-// the last OPEN cell before the hit — the exposed face the ray entered through. gated off glass:
-// skips shops + the ground-floor storefront band; skipped if not a building
-  function spawnBulletHole(fromCol:Int, fromRow:Int, wcol:Int, wrow:Int, muz:Vector3, impact:Vector3):Void
-    {
-      // struck face: pick the side of the wall cell whose NEIGHBOUR is actually open (exposed),
-      // toward the cell the ray came from. a diagonal entry (delta (1,1)) has two candidate axes —
-      // faceToward would tie-break to an axis whose neighbour is still solid (interior boundary);
-      // choosing the axis with an open neighbour lands the hole on the real outer surface
-      var ddx = fromCol - wcol, ddy = fromRow - wrow;
-      var xOpen = ddx != 0 && game.area.canSeeThrough(wcol + (ddx > 0 ? 1 : -1), wrow);
-      var zOpen = ddy != 0 && game.area.canSeeThrough(wcol, wrow + (ddy > 0 ? 1 : -1));
-      var dir = (xOpen && zOpen) ? render.world.Geom.faceToward(ddx, ddy) // convex corner: dominant axis
-        : xOpen ? (ddx > 0 ? 2 : 3)
-        : zOpen ? (ddy > 0 ? 0 : 1)
-        : render.world.Geom.faceToward(ddx, ddy);                         // fallback (shouldn't hit)
-      // which building owns this wall cell
-      var b = null;
-      for (bb in render.world.WorldCtx.buildings)
-        if (wcol >= bb.col &&
-            wcol < bb.col + bb.w &&
-            wrow >= bb.row &&
-            wrow < bb.row + bb.d)
-          {
-            b = bb;
-            break;
-          }
-      var dbg = holeDebug();
-      var where = 'cell(' + wcol + ',' + wrow + ') dir=' + dir + ' [0=+z 1=-z 2=+x 3=-x]';
-      // holes land on any masonry wall that isn't glass: skip single-story shops and the
-      // ground-floor storefront band (the glass facade). plain street fronts + alley/back walls
-      // both qualify — holes sit at chest height, below the upper-floor windows
-      if (b == null)
-        {
-          if (dbg)
-            trace('[wallhole] ' + where + ' -> SKIP: no building owns this cell (opaque tile/object, not a building)');
-          return;
-        }
-      var bc = CityConfig.cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
-      var hw = b.w * CityConfig.CELL / 2, hd = b.d * CityConfig.CELL / 2;
-      var info = ' bldg(col=' + b.col + ' row=' + b.row + ' w=' + b.w + ' d=' + b.d + ' facade=' + b.facade
-        + ' shop=' + b.shop + ' worn=' + render.world.Geom.isWornFace(b, dir)
-        + ' storefront=' + render.world.Geom.storefrontFace(b, dir) + ') box x['
-        + fnum(bc.x - hw) + '..' + fnum(bc.x + hw) + '] z[' + fnum(bc.z - hd) + '..' + fnum(bc.z + hd) + ']';
-      if (b.shop >= 0)
-        {
-          if (dbg)
-            trace('[wallhole] ' + where + info + ' -> SKIP: single-story shop');
-          return;
-        }
-      if (render.world.Geom.storefrontFace(b, dir))
-        {
-          if (dbg)
-            trace('[wallhole] ' + where + info + ' -> SKIP: storefront (glass) face');
-          return;
-        }
-      // intersect the pellet-0 tracer segment (muz -> impact) with the struck cell's OUTER face
-      // plane: this is where the trail visually enters the wall — correct for angled shots, unlike
-      // snapping the normal axis while keeping the impact's (ray-pulled-back) tangential coord
-      var dv = render.world.Geom.DIRV[dir];
-      var half = CityConfig.CELL / 2;
-      var cc = CityConfig.cellToWorld(wcol, wrow);
-      var normalPos = (dir >= 2) ? cc.x + dv[0] * half : cc.z + dv[1] * half; // face plane on the normal axis
-      var n0 = (dir >= 2) ? muz.x : muz.z;       // tracer normal-axis coord at muzzle
-      var n1 = (dir >= 2) ? impact.x : impact.z; // and at impact
-      var t = (Math.abs(n1 - n0) > 0.001) ? (normalPos - n0) / (n1 - n0) : 1.0;
-      t = Math.max(0.0, Math.min(1.0, t));       // clamp to the segment
-      var hy = muz.y + t * (impact.y - muz.y);   // entry height along the trail
-      var hx = (dir >= 2) ? normalPos : muz.x + t * (impact.x - muz.x);
-      var hz = (dir >= 2) ? muz.z + t * (impact.z - muz.z) : normalPos;
-      // clamp the along-face (tangential) coord to the building box so a grazing/near-corner trail
-      // can't put the hole past the wall edge into the air
-      var m = 0.35;
-      if (dir >= 2) hz = Math.max(bc.z - hd + m, Math.min(bc.z + hd - m, hz));
-      else hx = Math.max(bc.x - hw + m, Math.min(bc.x + hw - m, hx));
-      // store as a sub-cell dx/dy offset (invert cellToWorld) so the draw reproduces this point
-      var T = Const.TILE_SIZE;
-      var dx = Std.int((hx / CityConfig.CELL + CityConfig.GRID / 2 - 0.5 - wcol) * T);
-      var dy = Std.int((hz / CityConfig.CELL + CityConfig.GRID / 2 - 0.5 - wrow) * T);
-      var W = RenderConfig.WALLHOLE;
-      game.area.addTileDecoration(wcol, wrow,
-        {
-          layerID: -1,
-          tag: 'WALLHOLE',
-          face: dir,
-          height: hy,
-          metal: b.facade == 3, // metal warehouse -> steel-dent hole set
-          angle: Math.random() * Math.PI * 2,
-          scale: W.scale + (Math.random() - 0.5) * 2 * W.scaleVar,
-          dx: dx,
-          dy: dy,
-        });
-      if (dbg) trace('[wallhole] ' + where + info + ' -> HOLE on face at world(' + fnum(hx) + ',' + fnum(hy) + ',' + fnum(hz)
-        + ') | ray muz(' + fnum(muz.x) + ',' + fnum(muz.y) + ',' + fnum(muz.z) + ') -> impact(' + fnum(impact.x) + ',' + fnum(impact.y) + ',' + fnum(impact.z)
-        + ') facePlane=' + fnum(normalPos) + ' t=' + fnum(t));
-    }
-
-// [wallhole] debug on? toggled by the `perf hole` console command
-  inline function holeDebug():Bool
-    return DEBUG_HOLES;
-
-// one-decimal number for compact traces
-  inline function fnum(v:Float):String
-    return '' + Std.int(v * 10) / 10;
-
-// snapshot a dying actor into a fade-out ghost (before its entity is nulled)
+// snapshot a dying actor into a fade-out ghost (before its entity is nulled) — see render.choreo.Reactions
   public function playDeathFade(e:Entity):Void
     {
-      if (running &&
-          actors != null)
-        actors.startDeathFade(e);
+      if (running)
+        render.choreo.Reactions.deathFade(choreo, e);
     }
 
-// fade a freshly-spawned entity (the body) in from transparent instead of popping
-  public function fadeInEntity(e:Entity):Void
-    {
-      if (running &&
-          actors != null &&
-          e != null)
-        actors.seedFadeIn(e);
-    }
-
-// fade a freshly-spawned corpse body in, but only once the dying sprite has fallen flat (bound
-// to the death ghost's landing); falls back to an immediate fade when the view is off
+// fade a freshly-spawned corpse body in, bound to the death ghost's landing — see render.choreo.Reactions
   public function bindBodyFadeIn(e:Entity, id:Int, ground:Bool):Void
     {
-      if (running &&
-          actors != null &&
-          e != null)
-        actors.bindBodyFadeIn(e, id, ground);
+      if (running)
+        render.choreo.Reactions.bindBodyFadeIn(choreo, e, id, ground);
     }
 
 // drive the AI-hover tooltip while inspecting (Ctrl held): pick the AI nearest the cursor and
