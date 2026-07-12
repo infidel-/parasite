@@ -73,18 +73,20 @@ class ActorAnim {
 // (null => fresh settled slide at the cell). restarting mid-slide keeps motion continuous.
 // bendCol/bendRow (>=0) route a diagonal step through an intermediate cell as an L-path so
 // the sprite doesn't cut across a building corner
-  public static function slideTo(s:PosSlide, col:Int, row:Int, step:Float, bendCol:Int = -1, bendRow:Int = -1):PosSlide
+  public static function slideTo(s:PosSlide, col:Int, row:Int, step:Float, bendCol:Int = -1, bendRow:Int = -1, noSnap:Bool = false):PosSlide
     {
       var w = CityConfig.cellToWorld(col, row);
       if (s == null)
         return { col: col, row: row, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1 };
-      // cell changed: snap on a big jump, else start a fresh slide from the current pos
+      // cell changed: snap on a big jump (teleport/stairs), else start a fresh slide from the
+      // current pos. noSnap forces a slide even past the limit (push-past: a real 2-cell move)
       if (col != s.col ||
           row != s.row)
         {
           var dx = w.x - s.x, dz = w.z - s.z;
           var lim = CityConfig.CELL * 1.9;
-          if (dx * dx + dz * dz > lim * lim)
+          if (!noSnap &&
+              dx * dx + dz * dz > lim * lim)
             { s.x = w.x; s.z = w.z; s.t = 1; s.bx = null; }
           else
             {

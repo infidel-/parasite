@@ -361,6 +361,39 @@ class Actors {
       return s;
     }
 
+// throw a fountain of money bills from cell (x,y): each bill picks a random walkable landing
+// spot in the throw radius (a few tries, else at the thrower's feet) and flies there tumbling
+  public function money(x:Int, y:Int, range:Int):Void
+    {
+      var M = RenderConfig.MONEY;
+      var w = CityConfig.cellToWorld(x, y);
+      var sy = render.world.WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4;
+      for (_ in 0...M.bills)
+        {
+          // random landing cell in the radius, kept on walkable ground
+          var lc = x, lr = y;
+          for (_ in 0...4)
+            {
+              var ang = Math.random() * Math.PI * 2;
+              var d = M.minDist + Math.random() * (range - M.minDist);
+              var cx = Math.round(x + Math.cos(ang) * d);
+              var cy = Math.round(y + Math.sin(ang) * d);
+              if (game.area.isWalkable(cx, cy))
+                {
+                  lc = cx;
+                  lr = cy;
+                  break;
+                }
+            }
+          // sub-cell scatter + a tiny per-bill height offset so resting bills don't z-fight
+          var lw = CityConfig.cellToWorld(lc, lr);
+          particles.add(new MoneyBill3D(w.x, sy, w.z,
+            lw.x + (Math.random() - 0.5) * 0.8 * CityConfig.CELL,
+            render.world.WorldCtx.floorY(lc, lr) + 0.02 + Math.random() * 0.02,
+            lw.z + (Math.random() - 0.5) * 0.8 * CityConfig.CELL));
+        }
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
   public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void
@@ -576,7 +609,9 @@ class Actors {
       var bend = ActorAnim.cornerBend(game.area, a.col, a.row, e.mx, e.my, lampCorners);
       ActorAnim.slideTo(a, e.mx, e.my, step,
         bend != null ? bend.col : -1,
-        bend != null ? bend.row : -1);
+        bend != null ? bend.row : -1,
+        e.slideNoSnap);
+      e.slideNoSnap = false; // consume the push-past hint (one slide only)
       // opacity channel: ease toward the visibility target (LOS fade, slower than moves)
       a.opTarget = vis ? 1.0 : 0.0;
       var opStep = step * FADE_SPEED;

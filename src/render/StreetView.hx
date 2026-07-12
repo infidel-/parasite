@@ -660,6 +660,18 @@ class StreetView {
       return true;
     }
 
+// thrown-money choreography: a chaotic fountain of tumbling bills flies out of the thrower's
+// cell over the throw radius, landing flat and fading. returns true if the view took over
+// (caller then skips the per-tile 2D particles). 3D port of ParticleMoney
+  public function playMoney(x:Int, y:Int, range:Int):Bool
+    {
+      if (!running ||
+          actors == null)
+        return false;
+      actors.money(x, y, range);
+      return true;
+    }
+
 // facade material (0 concrete,1 brick,2 stone,3 metal) of the building owning wall cell (col,row);
 // -1 if no building owns it. used to pick the wall-hit sound
   function wallFacade(col:Int, row:Int):Int

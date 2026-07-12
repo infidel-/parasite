@@ -299,6 +299,24 @@ class RenderConfig {
     fadeFrac: 0.2,       // trailing fraction of the flight over which everything fades out
   };
 
+  // thrown money crowd control: a chaotic fountain of tumbling bills launched from the thrower,
+  // arcing out over the throw radius, landing flat on the ground and fading out after a rest.
+  // 3D port of ParticleMoney (real flying bills instead of per-tile pops)
+  public static final MONEY = {
+    bills: 80,           // bills per throw
+    flyMult: 2.5,        // per-bill flight duration (BASE_MS multiples)
+    flyVar: 1.0,         // random flight-duration spread (+/-, BASE_MS multiples)
+    staggerMult: 1.5,    // random per-bill launch delay window (BASE_MS multiples)
+    restMult: 5.0,       // landed rest before fading (BASE_MS multiples)
+    fadeMult: 2.0,       // landed fade-out duration (BASE_MS multiples)
+    scale: 0.44,         // bill scale (of a billboard)
+    arcHeight: 0.8,      // arc peak above the launch line (cells)
+    spinMax: 6.0,        // horizontal-mirror tumble speed cap (rad per BASE_MS)
+    rollMax: 3.0,        // in-plane roll speed cap (+/-, rad per BASE_MS)
+    flutter: 0.12,       // lateral flutter amplitude at landing speed (cells)
+    minDist: 0.4,        // min landing distance from the thrower (cells)
+  };
+
   // choir silent scream: an expanding ghostly dome (additive hemisphere mesh) + a screen-space
   // shockwave ripple (post pass before bloom) that distorts the image under the wave front.
   // timing in BASE_MS multiples; the 2D particle ran 320ms over 5 tiles
