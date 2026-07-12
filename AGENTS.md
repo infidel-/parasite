@@ -10,6 +10,7 @@
 - `list_pages` shows both the game (`file:.../app.html`) and, if open, DevTools — match `file:` + `app.html`. First MCP call may transient-fail; retry once.
 
 - NEVER detach HEAD! NEVER!
+- NEVER sweep stray .md files (review reports, notes, scratch docs) into commits unless directly asked; check `git status` for them before `git add -A`, or stage explicit paths.
 - ALWAYS respond in English!
 - ALWAYS run tests at the end of each task: cd src/ && make
 - When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant). Note that you should ask whether it is needed when planning (there might not have been a release yet)
