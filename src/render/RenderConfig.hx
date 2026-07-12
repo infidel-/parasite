@@ -167,7 +167,7 @@ class RenderConfig {
     dropScale: 0.3,      // in-flight droplet quad scale (of a billboard)
     scaleMin: 0.15,      // landed splat min scale
     scaleMax: 0.5,       // landed splat max scale
-    splatMax: 80,        // per-area SPLAT decoration cap (oldest evicted)
+    splatMax: 256,       // per-area SPLAT decoration cap (oldest evicted); high headroom since decals are instanced (one draw call per texture, not per splat)
     wetRough: 0.4,       // landed-splat specular roughness (< 1 = wet sheen off moon/lamps; 1 = matte)
     // acid/slime goop glow: emissive tint pushed through the splat's own sprite (emissiveMap), so
     // the glow is alpha-shaped; intensity compensates the DECAL.bloodMul-darkened crop and lets the

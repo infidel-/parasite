@@ -262,6 +262,12 @@ typedef RendererInfo = {
   public var instanceMatrix:Dynamic;
   public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
+  public function dispose():Void; // release GPU buffers when the mesh is thrown away
+}
+@:native("THREE.InstancedBufferAttribute") extern class InstancedBufferAttribute {
+  public function new(array:Dynamic, itemSize:Int); // one value per instance (e.g. per-decal alpha)
+  public var needsUpdate:Bool; // set true after writing `array` to re-upload
+  public function setUsage(usage:Dynamic):InstancedBufferAttribute; // DynamicDrawUsage for per-frame updates
 }
 @:native("THREE.LineSegments") extern class LineSegments extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic);

@@ -16,6 +16,7 @@ import game.Game;
 class Decals {
   var game:Game;
   var sprites:Sprites;                                    // lit ground/wall paint surface (shared)
+  var batch:DecalBatch;                                   // instanced flat-decal draw (plain blood + debris)
   var holeTex:Array<Texture> = null;                     // masonry bullet-hole wall textures (lazy-loaded once)
   var holeTexMetal:Array<Texture> = null;                // metal-wall bullet-hole textures (lazy-loaded once)
   var debris:Array<render.world.Debris.DebrisSpot> = null; // seed-derived street debris (render-only, not persisted)
@@ -29,10 +30,17 @@ class Decals {
   public var decalScan(default, null):Int = 0;
   public var decalDraw(default, null):Int = 0;
 
-  public function new(game:Game, sprites:Sprites)
+  public function new(game:Game, sprites:Sprites, actorGroup:Object3D)
     {
       this.game = game;
       this.sprites = sprites;
+      batch = new DecalBatch(actorGroup);
+    }
+
+// release the instanced-decal GPU buffers on view teardown
+  public function dispose():Void
+    {
+      batch.dispose();
     }
 
 // set the seed-derived debris scatter for the current city (render-only, rebuilt per show)
@@ -54,8 +62,10 @@ class Decals {
       for (h in starOn.keys())
         if (starOn.get(h) < frameNo - 1)
           starOn.remove(h);
+      batch.begin();
       drawDebris();
       drawDecals();
+      batch.end();
     }
 
 // world-space reveal opacity: fully opaque inside the radius, linear fade to 0 across the edge band.
@@ -88,15 +98,10 @@ class Decals {
           var op = radiusOp(w.x, w.z);
           if (op <= 0.001)
             continue;
-          sprites.paintGround({
-            x: w.x,
-            y: WorldCtx.floorY(s.col, s.row) + 0.04,
-            z: w.z,
-            gs: gs,
-            op: op,
-            scale: s.scale,
-            yaw: s.angle,
-          });
+          // instanced: one draw call per debris texture instead of one quad each. geometry is a
+          // unit quad, so bake the content footprint (SIZE * fw/fh) and scale into the instance size
+          batch.add(gs.tex, w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z,
+            Sprites.SIZE * gs.fw * s.scale, Sprites.SIZE * gs.fh * s.scale, s.angle, op, 1.0, 0.0);
         }
     }
 
@@ -196,22 +201,28 @@ class Decals {
               drawStar(hash, w.x, WorldCtx.floorY(x, y), w.z, sc, op);
             }
           // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular
-          // glint off the moon/lamp/flame lights
-          sprites.paint({
-            x: w.x,
-            y: WorldCtx.floorY(x, y) + 0.04,
-            z: w.z,
-            tex: tex,
-            op: op,
-            scale: sc,
-            flat: true,
-            yaw: (d.angle != null ? d.angle : 0.0),
-            order: Sprites.ORD_DECAL,
-            emissive: em,
-            emissiveInt: emInt,
-            rough: RenderConfig.BLOOD.wetRough,
-            metal: RenderConfig.BLOOD.wetMetal,
-          });
+          // glint off the moon/lamp/flame lights. acid/slime/black glow (emInt > 0) keeps the
+          // per-quad path (per-instance emissive isn't batched); plain blood goes instanced
+          if (emInt > 0.0)
+            sprites.paint({
+              x: w.x,
+              y: WorldCtx.floorY(x, y) + 0.04,
+              z: w.z,
+              tex: tex,
+              op: op,
+              scale: sc,
+              flat: true,
+              yaw: (d.angle != null ? d.angle : 0.0),
+              order: Sprites.ORD_DECAL,
+              emissive: em,
+              emissiveInt: emInt,
+              rough: RenderConfig.BLOOD.wetRough,
+              metal: RenderConfig.BLOOD.wetMetal,
+            });
+          else
+            batch.add(tex, w.x, WorldCtx.floorY(x, y) + 0.04, w.z,
+              Sprites.SIZE * sc, Sprites.SIZE * sc, (d.angle != null ? d.angle : 0.0),
+              op, RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
           return true;
         }
       // bullet hole: stand it on its wall face, radius-fade around the player

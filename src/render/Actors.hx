@@ -69,7 +69,7 @@ class Actors {
       particles = new Particles3D();
       // per-frame sub-passes of the actor layer; each is handed the shared actor-pose map so it can
       // read poses (FlameShadows/Badges) — Actors stays its sole writer
-      decals = new Decals(game, sprites);
+      decals = new Decals(game, sprites, actorGroup);
       flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
@@ -277,6 +277,7 @@ class Actors {
   public function dispose():Void
     {
       offscreen.clear();
+      decals.dispose();
     }
 
 // find the visible AI whose head projects nearest the given client point (within a px radius);
