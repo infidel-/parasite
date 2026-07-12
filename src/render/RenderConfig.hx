@@ -167,7 +167,6 @@ class RenderConfig {
     dropScale: 0.3,      // in-flight droplet quad scale (of a billboard)
     scaleMin: 0.15,      // landed splat min scale
     scaleMax: 0.5,       // landed splat max scale
-    splatMax: 256,       // per-area SPLAT decoration cap (oldest evicted); high headroom since decals are instanced (one draw call per texture, not per splat)
     wetRough: 0.4,       // landed-splat specular roughness (< 1 = wet sheen off moon/lamps; 1 = matte)
     // acid/slime goop glow: emissive tint pushed through the splat's own sprite (emissiveMap), so
     // the glow is alpha-shaped; intensity compensates the DECAL.bloodMul-darkened crop and lets the
@@ -198,11 +197,14 @@ class RenderConfig {
   // (it draws from the source image, not these crops). blood stays a touch more vivid than debris
   public static final DECAL = {
     bloodMul: 0.6,       // blood-splat crop darken factor
-    debrisMul: 0.55,     // street-debris crop darken factor
+    debrisMul: 0.55,     // street-debris + thrown-money crop darken factor (matte trash, no bright glow)
     actorMul: 0.7,       // actor-sprite crop darken factor (knock the full-bright atlas down so AI
                          // don't read too white in the surrounding night; 1.0 = off, lit-only)
     radiusCells: 20.0,   // ground-decal reveal radius (cells) around the smoothed player pos; replaces LOS
     fadeCells: 1.5,      // soft edge band (cells): opaque inside (radius-fade), invisible past radius
+    // shared FIFO cap for dynamic decals (blood splats + thrown money + bullet holes): oldest evicted
+    // past this. high headroom since decals are instanced (one draw call per texture, not per decal)
+    dynamicMax: 384,
   };
   // burning barrels that actually burn (low-tier only): a pooled warm point light (MuzzleLights
   // pattern, constant NUM_POINT_LIGHTS), an uneven flicker, a soft additive flame body + rising
@@ -315,6 +317,16 @@ class RenderConfig {
     rollMax: 3.0,        // in-plane roll speed cap (+/-, rad per BASE_MS)
     flutter: 0.12,       // lateral flutter amplitude at landing speed (cells)
     minDist: 0.4,        // min landing distance from the thrower (cells)
+    // lingering ground stains: a flat money decal laid on every walkable tile in the throw radius.
+    // ~permFrac of them are permanent (persisted tile decorations in the shared dynamic-decal FIFO,
+    // like blood splats), the rest fade out after a short rest (view-side). 3D port of 2D
+    // ParticleMoney.onDeath's addEffect ground decal
+    groundScaleMin: 0.9, // ground-stain scale min (of a billboard)
+    groundScaleMax: 1.0, // ground-stain scale max
+    groundScatter: 0.3,  // per-tile sub-cell random offset (cells)
+    permFrac: 0.5,       // fraction of stains that stay permanent (rest fade out)
+    tempHoldMult: 6.0,   // fading stain: full-opacity rest before fading (BASE_MS multiples)
+    tempFadeMult: 3.0,   // fading stain: fade-out duration (BASE_MS multiples)
   };
 
   // choir silent scream: an expanding ghostly dome (additive hemisphere mesh) + a screen-space
@@ -340,7 +352,6 @@ class RenderConfig {
   // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
   // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none
   public static final WALLHOLE = {
-    max: 60,           // per-area bullet-hole cap (oldest evicted)
     scale: 0.13,       // hole quad scale (of Sprites.SIZE)
     scaleVar: 0.04,    // +/- random scale spread
     spread: 0.35,      // horizontal wall-miss scatter (cells): tracer end + spark + hole SHARE it,

@@ -661,14 +661,16 @@ class StreetView {
     }
 
 // thrown-money choreography: a chaotic fountain of tumbling bills flies out of the thrower's
-// cell over the throw radius, landing flat and fading. returns true if the view took over
-// (caller then skips the per-tile 2D particles). 3D port of ParticleMoney
+// cell over the throw radius, landing flat and fading, plus lingering money ground stains over the
+// radius (some permanent, some fading). returns true if the view took over (caller then skips the
+// per-tile 2D particles). 3D port of ParticleMoney + its onDeath ground decal
   public function playMoney(x:Int, y:Int, range:Int):Bool
     {
       if (!running ||
           actors == null)
         return false;
       actors.money(x, y, range);
+      actors.moneyGround(x, y, range);
       return true;
     }
 

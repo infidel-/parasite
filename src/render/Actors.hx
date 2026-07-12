@@ -394,6 +394,36 @@ class Actors {
         }
     }
 
+// lay the lingering money ground stains over the throw radius: one flat decal per walkable cell
+// within range. ~MONEY.permFrac stay permanent (persisted tile-decorations in the shared dynamic-
+// decal FIFO, like blood splats); the rest are view-side stains that fade out
+  public function moneyGround(x:Int, y:Int, range:Int):Void
+    {
+      var M = RenderConfig.MONEY;
+      var t = Const.TILE_SIZE;
+      for (yy in y - range...y + range + 1)
+        for (xx in x - range...x + range + 1)
+          {
+            if (!game.area.isWalkable(xx, yy))
+              continue;
+            if (Const.distanceSquared(x, y, xx, yy) > range * range)
+              continue;
+            if (Math.random() < M.permFrac)
+              // permanent: a model tile-decoration. layerID -1 => 2D floor-decoration draw skips it
+              // (money uses the 3D entities atlas, not a 2D splat layer); 3D draws it via drawDecal
+              game.area.addTileDecoration(xx, yy, {
+                layerID: -1,
+                icon: { row: Const.ROW_EFFECT, col: Const.FRAME_EFFECT_MONEY },
+                dx: Std.int((Math.random() - 0.5) * 2 * M.groundScatter * t),
+                dy: Std.int((Math.random() - 0.5) * 2 * M.groundScatter * t),
+                scale: M.groundScaleMin + Math.random() * (M.groundScaleMax - M.groundScaleMin),
+                angle: Math.random() * Math.PI * 2,
+                tag: 'MONEY',
+              });
+            else decals.addMoney(xx, yy);
+          }
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
   public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float):Void

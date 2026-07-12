@@ -13,6 +13,18 @@ import game.Game;
 // edge), which replaced the old binary LOS gate. paints through the shared lit Sprites surface;
 // owns only its lazy bullet-hole texture caches + the current debris scatter. driven once a frame
 // by Actors.update via paint()
+// one lingering thrown-money ground stain: a cell + randomized look. `age` (BASE_MS units, real
+// time) is only used by the fading (temporary) stains; permanent stains ignore it
+typedef MoneySpot = {
+  col:Int,         // tile column
+  row:Int,         // tile row
+  scale:Float,     // stain scale (of a billboard)
+  angle:Float,     // in-plane rotation
+  dx:Float,        // sub-cell x offset (cells)
+  dz:Float,        // sub-cell z offset (cells)
+  age:Float,       // lifetime clock for temporary stains (BASE_MS units)
+};
+
 class Decals {
   var game:Game;
   var sprites:Sprites;                                    // lit ground/wall paint surface (shared)
@@ -20,6 +32,7 @@ class Decals {
   var holeTex:Array<Texture> = null;                     // masonry bullet-hole wall textures (lazy-loaded once)
   var holeTexMetal:Array<Texture> = null;                // metal-wall bullet-hole textures (lazy-loaded once)
   var debris:Array<render.world.Debris.DebrisSpot> = null; // seed-derived street debris (render-only, not persisted)
+  var moneyTemp:Array<MoneySpot> = [];                   // fading money stains (view-side, real-time rest+fade). permanent ones are model tile-decorations (tag 'MONEY'), drawn by drawDecal
   var px:Float = 0.0;                                     // smoothed player world x for this frame's radius fade
   var pz:Float = 0.0;                                     // smoothed player world z for this frame's radius fade
   var clock:Float = 0.0;                                  // black-blood shimmer clock (BASE_MS units)
@@ -65,7 +78,61 @@ class Decals {
       batch.begin();
       drawDebris();
       drawDecals();
+      drawMoney(dtMs);
       batch.end();
+    }
+
+// register a fading (temporary) money ground stain on a walkable cell (col,row): rests at full
+// opacity then fades out and drops. randomized scale/angle/offset like the 2D onDeath decal.
+// permanent stains are NOT registered here — they are model tile-decorations (see moneyGround)
+  public function addMoney(col:Int, row:Int):Void
+    {
+      var M = RenderConfig.MONEY;
+      moneyTemp.push({
+        col: col,
+        row: row,
+        scale: M.groundScaleMin + Math.random() * (M.groundScaleMax - M.groundScaleMin),
+        angle: Math.random() * Math.PI * 2,
+        dx: (Math.random() - 0.5) * 2 * M.groundScatter,
+        dz: (Math.random() - 0.5) * 2 * M.groundScatter,
+        age: 0.0,
+      });
+    }
+
+// draw the fading money stains: each advances its real-time rest+fade clock and drops once fully
+// faded (removed back-to-front so splice keeps indices). flat matte quad from the money atlas,
+// darkened like trash + radius-faded around the player. (permanent stains draw via drawDecal)
+  function drawMoney(dtMs:Float):Void
+    {
+      if (moneyTemp.length == 0)
+        return;
+      var M = RenderConfig.MONEY;
+      var tex = sprites.tex('entities', Const.FRAME_EFFECT_MONEY, Const.ROW_EFFECT, false, RenderConfig.DECAL.debrisMul);
+      if (tex == null)
+        return;
+      var dt = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      var i = moneyTemp.length - 1;
+      while (i >= 0)
+        {
+          var m = moneyTemp[i];
+          m.age += dt;
+          // rest at full opacity, then a smooth linear fade-out, then drop
+          var op = 1.0;
+          if (m.age > M.tempHoldMult)
+            op = 1 - (m.age - M.tempHoldMult) / M.tempFadeMult;
+          if (op <= 0.0)
+            {
+              moneyTemp.splice(i, 1);
+              i--;
+              continue;
+            }
+          var w = CityConfig.cellToWorld(m.col + m.dx, m.row + m.dz);
+          var rop = radiusOp(w.x, w.z) * op;
+          if (rop > 0.001)
+            batch.add(tex, w.x, WorldCtx.floorY(m.col, m.row) + 0.03, w.z,
+              Sprites.SIZE * m.scale, Sprites.SIZE * m.scale, m.angle, rop, 1.0, 0.0);
+          i--;
+        }
     }
 
 // world-space reveal opacity: fully opaque inside the radius, linear fade to 0 across the edge band.
@@ -223,6 +290,27 @@ class Decals {
             batch.add(tex, w.x, WorldCtx.floorY(x, y) + 0.04, w.z,
               Sprites.SIZE * sc, Sprites.SIZE * sc, (d.angle != null ? d.angle : 0.0),
               op, RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
+          return true;
+        }
+      // permanent thrown-money stain: flat matte ground quad from the money atlas, darkened like
+      // trash (no wet sheen), radius-faded around the player. the fading ones live in moneyTemp
+      else if (d.tag == 'MONEY')
+        {
+          if (d.icon == null)
+            return false;
+          var dx = (d.dx != null ? d.dx : 0) / t;
+          var dy = (d.dy != null ? d.dy : 0) / t;
+          var w = CityConfig.cellToWorld(x + dx, y + dy);
+          var op = radiusOp(w.x, w.z);
+          if (op <= 0.001)
+            return false;
+          var tex = sprites.tex('entities', d.icon.col, d.icon.row, false, RenderConfig.DECAL.debrisMul);
+          if (tex == null)
+            return false;
+          var sc = (d.scale != null ? d.scale : 1.0);
+          batch.add(tex, w.x, WorldCtx.floorY(x, y) + 0.03, w.z,
+            Sprites.SIZE * sc, Sprites.SIZE * sc, (d.angle != null ? d.angle : 0.0),
+            op, 1.0, 0.0);
           return true;
         }
       // bullet hole: stand it on its wall face, radius-fade around the player

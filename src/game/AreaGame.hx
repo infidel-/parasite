@@ -15,7 +15,7 @@ class AreaGame extends _SaveObject
 {
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
-    'info', 'clueSpawnPoints', '_splatCells', '_wallHoleCells',
+    'info', 'clueSpawnPoints', '_decalCells',
   ];
   var game: Game;
   var region: RegionGame;
@@ -64,8 +64,7 @@ class AreaGame extends _SaveObject
   var _objects: Map<Int, AreaObject>; // area objects list
   var _pathEngine: aPath.Engine;
   var _tileset: Tileset;
-  var _splatCells: Array<{ x: Int, y: Int }>; // transient FIFO of blood-splat cells (cap eviction; not saved)
-  var _wallHoleCells: Array<{ x: Int, y: Int }>; // transient FIFO of bullet-hole cells (cap eviction; not saved)
+  var _decalCells: Array<{ x: Int, y: Int, tag: String }>; // transient FIFO of dynamic-decal cells (blood splats + money + bullet holes; cap eviction; not saved)
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
@@ -119,8 +118,7 @@ class AreaGame extends _SaveObject
       _objects = new Map();
       _pathEngine = null;
       _tileset = null;
-      _splatCells = [];
-      _wallHoleCells = [];
+      _decalCells = [];
     }
 
 // called after load or creation
@@ -493,7 +491,7 @@ class AreaGame extends _SaveObject
       game.cults[0].onLeaveArea();
     }
 
-// remove temporary decorations (blood splats + bullet holes) from tile data on area exit
+// remove temporary decorations (blood splats + thrown money + bullet holes) from tile data on area exit
   function clearTemporaryDecorations()
     {
       if (tiles == null ||
@@ -512,6 +510,7 @@ class AreaGame extends _SaveObject
             var hasTemp = false;
             for (decoration in tile.decoration)
               if (decoration.tag == 'SPLAT' ||
+                  decoration.tag == 'MONEY' ||
                   decoration.tag == 'WALLHOLE')
                 {
                   hasTemp = true;
@@ -523,6 +522,7 @@ class AreaGame extends _SaveObject
             var filtered = [];
             for (decoration in tile.decoration)
               if (decoration.tag != 'SPLAT' &&
+                  decoration.tag != 'MONEY' &&
                   decoration.tag != 'WALLHOLE')
                 filtered.push(decoration);
             tile.decoration = filtered;
@@ -1370,29 +1370,25 @@ class AreaGame extends _SaveObject
       if (tile.decoration == null)
         tile.decoration = [];
       tile.decoration.push(decoration);
-      // cap blood splats: FIFO-evict the oldest tracked splat once past the per-area max so a
-      // long killing spree can't grow tiles/save unbounded (transient tracker, rebuilt post-load)
-      if (decoration.tag == 'SPLAT')
+      // cap dynamic decals (blood splats + thrown money + bullet holes): FIFO-evict the oldest
+      // tracked one once past the shared per-area max so a long firefight/spree can't grow tiles/save
+      // unbounded (transient tracker, rebuilt post-load)
+      if (decoration.tag == 'SPLAT' ||
+          decoration.tag == 'MONEY' ||
+          decoration.tag == 'WALLHOLE')
         {
-          if (_splatCells == null) // transient: null on freshly-loaded areas
-            _splatCells = [];
-          _splatCells.push({ x: x, y: y });
-          if (_splatCells.length > render.RenderConfig.BLOOD.splatMax)
+          if (_decalCells == null) // transient: null on freshly-loaded areas
+            _decalCells = [];
+          _decalCells.push({
+            x: x,
+            y: y,
+            tag: decoration.tag
+          });
+          if (_decalCells.length >
+              render.RenderConfig.DECAL.dynamicMax)
             {
-              var old = _splatCells.shift();
-              removeOneDecorAt(old.x, old.y, 'SPLAT');
-            }
-        }
-      // bullet holes on walls: same FIFO cap so a firefight can't grow tiles/save unbounded
-      else if (decoration.tag == 'WALLHOLE')
-        {
-          if (_wallHoleCells == null) // transient: null on freshly-loaded areas
-            _wallHoleCells = [];
-          _wallHoleCells.push({ x: x, y: y });
-          if (_wallHoleCells.length > render.RenderConfig.WALLHOLE.max)
-            {
-              var old = _wallHoleCells.shift();
-              removeOneDecorAt(old.x, old.y, 'WALLHOLE');
+              var old = _decalCells.shift();
+              removeOneDecorAt(old.x, old.y, old.tag);
             }
         }
       if (game != null &&
@@ -1401,10 +1397,10 @@ class AreaGame extends _SaveObject
         game.scene.areaLighting.invalidateArea(this);
     }
 
-// current tracked blood-splat count (debug/instrumentation; session-added only)
-  public function splatCount(): Int
+// current tracked dynamic ground-decal count (blood splats + money; debug/instrumentation; session-added only)
+  public function dynamicDecalCount(): Int
     {
-      return (_splatCells != null ? _splatCells.length : 0);
+      return (_decalCells != null ? _decalCells.length : 0);
     }
 
 // rebuild the transient blood-splat / bullet-hole FIFO trackers from the persisted tile
@@ -1415,8 +1411,7 @@ class AreaGame extends _SaveObject
 // isn't persisted)
   public function rebuildDecorTrackers()
     {
-      _splatCells = [];
-      _wallHoleCells = [];
+      _decalCells = [];
       if (tiles == null)
         return;
       for (x in 0...width)
@@ -1430,24 +1425,17 @@ class AreaGame extends _SaveObject
                   tile.decoration == null)
                 continue;
               for (d in tile.decoration)
-                {
-                  if (d.tag == 'SPLAT')
-                    _splatCells.push({ x: x, y: y });
-                  else if (d.tag == 'WALLHOLE')
-                    _wallHoleCells.push({ x: x, y: y });
-                }
+                if (d.tag == 'SPLAT' ||
+                    d.tag == 'MONEY' ||
+                    d.tag == 'WALLHOLE')
+                  _decalCells.push({ x: x, y: y, tag: d.tag });
             }
         }
       // trim accumulation past the cap, oldest (scan-order) first
-      while (_splatCells.length > render.RenderConfig.BLOOD.splatMax)
+      while (_decalCells.length > render.RenderConfig.DECAL.dynamicMax)
         {
-          var old = _splatCells.shift();
-          removeOneDecorAt(old.x, old.y, 'SPLAT');
-        }
-      while (_wallHoleCells.length > render.RenderConfig.WALLHOLE.max)
-        {
-          var old = _wallHoleCells.shift();
-          removeOneDecorAt(old.x, old.y, 'WALLHOLE');
+          var old = _decalCells.shift();
+          removeOneDecorAt(old.x, old.y, old.tag);
         }
     }
 
