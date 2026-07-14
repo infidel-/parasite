@@ -301,7 +301,7 @@ class EvolutionManager extends _SaveObject
       // evolution feature row: helix glyph + name + turn-eta pill
       var imp = getImprov((taskID : _Improv));
       var turns = Math.round((EvolutionConst.epCostImprovement[imp.level] - imp.ep) / __Math.epPerTurn());
-      return '<div class="hud-feat hud-feat-evo">' +
+      return '<div class="hud-feat hud-feat-evo" data-feat-key="evo-dir">' +
         '<span class="hud-feat-ic">' + ui.UISvg.hudNavEvo() + '</span>' +
         '<span class="hud-feat-name">' + EvolutionConst.getInfo((taskID : _Improv)).name + '</span>' +
         ui.UISvg.turnPill(turns) + '</div>';

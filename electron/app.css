@@ -1474,6 +1474,27 @@ hr {
 }
 .hud-feat-evo { color: var(--text-color-evolution-title); }
 .hud-feat-organ { color: var(--text-color-organ); }
+/* compact-mode name abbreviation (first letter); hidden in full layout */
+.hud-feat-abbr { display: none; }
+/* feature rows are reconciled by key: appearing rows slide+expand in,
+   vanishing rows collapse+slide out then self-remove (InfoHud.reconcileFeats) */
+@keyframes hud-feat-in {
+  from { opacity: 0; max-height: 0; transform: translateX(-10px); }
+  to   { opacity: 1; max-height: 44px; transform: none; }
+}
+@keyframes hud-feat-out {
+  from { opacity: 1; max-height: 44px; transform: none; }
+  to   { opacity: 0; max-height: 0; transform: translateX(10px); }
+}
+.hud-feat-enter {
+  overflow: hidden;
+  animation: hud-feat-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hud-feat-exit {
+  overflow: hidden;
+  pointer-events: none;
+  animation: hud-feat-out 0.26s cubic-bezier(0.55, 0, 0.68, 0.3) both;
+}
 /* evolution strip: full-bleed cyan band behind evo + organ rows */
 .hud-evo-strip {
   margin: 9px -14px 0;
@@ -1483,6 +1504,8 @@ hr {
   border-bottom: 1px solid rgba(115, 243, 255, 0.08);
   box-shadow: inset 2px 0 0 rgba(115, 243, 255, 0.45);
 }
+/* empty strip carries no band (rows removed after their exit anim) */
+.hud-evo-strip:empty { display: none; }
 .hud-evo-strip .hud-feat { margin: 3px 0; }
 .hud-evo-strip .hud-feat:first-child { margin-top: 0; }
 .hud-evo-strip .hud-feat:last-child { margin-bottom: 0; }
@@ -1735,6 +1758,13 @@ hr {
 #hud-info.hud-compact .hud-feat {
   margin: 2px 0;
   gap: 7px;
+}
+/* compact: swap full name for its first-letter abbreviation */
+#hud-info.hud-compact .hud-feat-abbr {
+  display: inline-flex;
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.02em;
 }
 
 /* ---- action menu ---- */

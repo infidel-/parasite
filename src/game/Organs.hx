@@ -50,13 +50,10 @@ class Organs extends _SaveObject
       if (currentOrgan != null)
         {
           var turns = Math.round((currentOrgan.info.gp - currentOrgan.gp) / __Math.gpPerTurn());
-          buf.add('<div class="hud-feat hud-feat-organ">' +
-            '<span class="hud-feat-ic">' + ui.UISvg.featOrgan() + '</span>' +
-            '<span class="hud-feat-name">' + currentOrgan.info.name + '</span>' +
-            ui.UISvg.turnPill(turns) + '</div>');
+          buf.add(featRow('organ-grow', 'hud-feat-organ', currentOrgan.info.name, turns));
         }
 
-      // show organs on timeout
+      // organs on cooldown: same feature row, timeout turns as the pill
       for (organ in game.player.host.organs)
         {
           if (!organ.isActive)
@@ -65,13 +62,22 @@ class Organs extends _SaveObject
           if (!organ.info.hasTimeout || organ.timeout == 0)
             continue;
 
-          buf.add("<font color='#DDDD00'>" + organ.info.name + "</font>");
-          buf.add(' ');
-          buf.add(organ.level);
-          buf.add(' (timeout: ' + organ.timeout + ')<br>');
+          buf.add(featRow('organ-cd-' + organ.id, 'hud-feat-organ', organ.info.name, organ.timeout));
         }
 
       return buf.toString();
+    }
+
+
+// build one organ feature row: glyph + name (first letter only in compact) + turn pill.
+// key is a stable data-feat-key so the hud can animate row appear/disappear
+  function featRow(key: String, cls: String, name: String, turns: Int): String
+    {
+      return '<div class="hud-feat ' + cls + '" data-feat-key="' + key + '">' +
+        '<span class="hud-feat-ic">' + ui.UISvg.featOrgan() + '</span>' +
+        '<span class="hud-feat-name">' + name + '</span>' +
+        '<span class="hud-feat-abbr">' + name.charAt(0) + '</span>' +
+        ui.UISvg.turnPill(turns) + '</div>';
     }
 
 

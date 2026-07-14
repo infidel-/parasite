@@ -328,6 +328,105 @@ class InfoHud
         prevCultVals.push((cast vals.item(i) : Element).textContent);
     }
 
+// reconcile the evo/organ feature rows by data-feat-key so rows animate in on
+// appear and out on disappear, while per-turn pill updates poke content in place
+// (no re-anim). returns whether the strip holds any rows (live or exiting)
+  function reconcileFeats(html: String): Bool
+    {
+      // parse incoming rows into a scratch container, keyed by data-feat-key
+      var scratch = document.createDivElement();
+      scratch.innerHTML = (html != null ? html : '');
+      var incoming = scratch.children;
+      var seen = new Map<String, Bool>();
+      var anchor: Element = null; // last placed row, drives ordering
+      for (i in 0...incoming.length)
+        {
+          var nr: Element = cast incoming.item(i);
+          var key = nr.getAttribute('data-feat-key');
+          seen.set(key, true);
+          var cur = liveFeat(key);
+          // new row: clone in, play the enter animation
+          if (cur == null)
+            {
+              cur = cast nr.cloneNode(true);
+              cur.classList.add('hud-feat-enter');
+              clearFeatEnter(cur);
+              if (anchor == null)
+                evoStrip.insertBefore(cur, evoStrip.firstChild);
+              else insertFeatAfter(cur, anchor);
+            }
+          // existing row: refresh content in place, keep source order
+          else
+            {
+              if (cur.innerHTML != nr.innerHTML)
+                cur.innerHTML = nr.innerHTML;
+              if (anchor == null)
+                {
+                  if (evoStrip.firstChild != cur)
+                    evoStrip.insertBefore(cur, evoStrip.firstChild);
+                }
+              else if (cur.previousElementSibling != anchor)
+                insertFeatAfter(cur, anchor);
+            }
+          anchor = cur;
+        }
+      // rows no longer present: play the exit animation, then self-remove
+      var live = evoStrip.children;
+      for (i in 0...live.length)
+        {
+          var el: Element = cast live.item(i);
+          if (el.classList.contains('hud-feat-exit'))
+            continue;
+          var key = el.getAttribute('data-feat-key');
+          if (key == null || !seen.exists(key))
+            {
+              el.classList.add('hud-feat-exit');
+              removeOnFeatExit(el);
+            }
+        }
+      return evoStrip.children.length > 0;
+    }
+
+// find a non-exiting evo-strip row by key (null if none)
+  function liveFeat(key: String): Element
+    {
+      var c = evoStrip.children;
+      for (i in 0...c.length)
+        {
+          var el: Element = cast c.item(i);
+          if (el.getAttribute('data-feat-key') == key &&
+              !el.classList.contains('hud-feat-exit'))
+            return el;
+        }
+      return null;
+    }
+
+// insert el right after ref in the evo strip
+  inline function insertFeatAfter(el: Element, ref: Element)
+    {
+      if (ref.nextSibling != null)
+        evoStrip.insertBefore(el, ref.nextSibling);
+      else evoStrip.appendChild(el);
+    }
+
+// drop the enter class once its animation ends so max-height returns to auto
+  function clearFeatEnter(el: Element)
+    {
+      var h: js.html.Event -> Void = null;
+      h = function (e)
+        {
+          el.classList.remove('hud-feat-enter');
+          el.removeEventListener('animationend', h);
+        };
+      el.addEventListener('animationend', h);
+    }
+
+// remove the row once its exit animation ends
+  function removeOnFeatExit(el: Element)
+    {
+      el.addEventListener('animationend', function (e) el.remove());
+    }
+
 // pulse evo/organ turn-eta pills that changed since last render
   function flashEvo()
     {
@@ -466,7 +565,7 @@ class InfoHud
             feat += game.player.evolutionManager.getEvolutionDirectionInfo();
           feat += game.player.host.organs.getInfo();
         }
-      var shownEvo = setRegion(evoStrip, 'evo', feat);
+      var shownEvo = reconcileFeats(feat);
       if (shownEvo)
         flashEvo();
 
