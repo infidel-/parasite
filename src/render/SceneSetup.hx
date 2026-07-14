@@ -32,7 +32,10 @@ class SceneSetup {
 // create the renderer + camera once, bound to the given canvas. The resize
 // listener is registered here (once) so it does not pile up per city entry.
   public static function createCore(canvas:Dynamic):Core {
-    var renderer = new WebGLRenderer({ canvas: canvas, antialias: true });
+    // no default-framebuffer MSAA: every city frame goes through the EffectComposer, whose
+    // final OutputPass blits a fullscreen quad (no geometry edges to smooth). real AA lives on
+    // the composer's offscreen render targets instead (StreetView.setAA, config vidAntialias)
+    var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
     renderer.setPixelRatio(Math.min(Browser.window.devicePixelRatio, 1.25));
     renderer.setSize(Browser.window.innerWidth, Browser.window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;

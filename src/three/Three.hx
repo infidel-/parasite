@@ -327,6 +327,8 @@ typedef Intersection = {
 // --- postprocessing addons (re-exported onto the same THREE global by the vendor bundle) ---
 @:native("THREE.EffectComposer") extern class EffectComposer {
   public function new(renderer:WebGLRenderer);
+  public var renderTarget1:Dynamic; // composer's primary offscreen RT (set .samples for MSAA)
+  public var renderTarget2:Dynamic; // composer's ping-pong RT (kept in sync with rt1)
   public function addPass(p:Dynamic):Void;
   public function render():Void;
   public function setSize(w:Float, h:Float):Void;

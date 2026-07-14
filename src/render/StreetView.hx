@@ -276,6 +276,7 @@ class StreetView {
 
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
+    setAA(game.config.vidAntialias); // MSAA sample count onto the fresh composer targets
     composer.addPass(new RenderPass(scene, camera));
     // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
@@ -511,6 +512,21 @@ class StreetView {
     }
     tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
   }
+
+// apply MSAA sample count to the running composer's render targets. n=0 disables.
+// samples survive resize (composer.setSize clones renderTarget1, which copies samples);
+// dispose() forces a realloc so a live change takes effect on the next composer.render()
+  public function setAA(n:Int):Void
+    {
+      if (composer == null)
+        return;
+      var rt1:Dynamic = composer.renderTarget1;
+      var rt2:Dynamic = composer.renderTarget2;
+      rt1.samples = n;
+      rt2.samples = n;
+      rt1.dispose();
+      rt2.dispose();
+    }
 
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {

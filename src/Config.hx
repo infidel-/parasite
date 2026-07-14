@@ -25,6 +25,7 @@ class Config
   public var spoonNoSavesLimit: Bool;
   public var aiArtEnabled: Bool;
   public var vidShowFps: Bool;
+  public var vidAntialias: Int;
 
   public var font: String;
   public var fontSize: Int;
@@ -67,6 +68,7 @@ class Config
       aiArtEnabled = true;
       vidShowFps = false;
       vidFpsCap = 60;
+      vidAntialias = 4;
 
       font = 'Virtucorp';
       fontSize = 14;
@@ -99,6 +101,7 @@ class Config
       map['aiArtEnabled'] = '1';
       map['vidShowFps'] = '0';
       map['vidFpsCap'] = '60';
+      map['vidAntialias'] = '4';
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -188,6 +191,17 @@ class Config
           if (vidFpsCap == null ||
               vidFpsCap <= 0)
             vidFpsCap = 60;
+        }
+      // settings.json is user-editable (trust boundary): only 0/2/4/8 are valid MSAA
+      // sample counts, snap anything else to 4 so a bad value can't break the composer
+      else if (key == 'vidAntialias')
+        {
+          vidAntialias = Std.parseInt(val);
+          if (vidAntialias != 0 &&
+              vidAntialias != 2 &&
+              vidAntialias != 4 &&
+              vidAntialias != 8)
+            vidAntialias = 4;
         }
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
