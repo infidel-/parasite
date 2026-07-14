@@ -15,20 +15,31 @@ class PolyProbe {
     var ndc = new Vector2();
     var hl:Group = null; // current 3D highlight (fill mesh + edge lines), null when nothing selected
 
-    // texture-view overlay (upper-right): canvas for the base map + a caption strip
+    // texture-view overlay (upper-right): stacked panes (base-color map + emissive map), each
+    // showing the clicked triangle's UVs over the texel grid, plus a caption strip
     var box = Browser.document.createElement('div');
     box.style.cssText = 'position:fixed;top:8px;right:8px;z-index:320;display:none;pointer-events:none;font:11px monospace';
-    var canvas:Dynamic = Browser.document.createElement('canvas');
-    canvas.width = TEX;
-    canvas.height = TEX;
-    canvas.style.cssText = 'display:block;border:1px solid #6cf;background:#111;image-rendering:pixelated';
+    // one labeled pixelated canvas pane; returns its 2d ctx + canvas + label (hidden when unused)
+    function mkPane(title:String, border:String):{ x:Dynamic, c:Dynamic, lbl:Dynamic } {
+      var lbl = Browser.document.createElement('div');
+      lbl.textContent = title;
+      lbl.style.cssText = 'background:#000c;color:#cde;padding:2px 6px';
+      var c:Dynamic = Browser.document.createElement('canvas');
+      c.width = TEX;
+      c.height = TEX;
+      c.style.cssText = 'display:block;border:1px solid ${border};background:#111;image-rendering:pixelated';
+      var x:Dynamic = c.getContext('2d');
+      x.imageSmoothingEnabled = false; // show raw texels, not a blurred interpolation
+      box.appendChild(lbl);
+      box.appendChild(c);
+      return { x: x, c: c, lbl: lbl };
+    }
+    var basePane = mkPane('base map', '#6cf');
+    var emisPane = mkPane('emissive map', '#fc6');
     var cap = Browser.document.createElement('div');
     cap.style.cssText = 'background:#000c;color:#cde;padding:4px 6px;white-space:pre;max-width:${TEX}px';
-    box.appendChild(canvas);
     box.appendChild(cap);
     Browser.document.body.appendChild(box);
-    var ctx:Dynamic = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false; // show raw texels, not a blurred interpolation
 
     inline function active() return Tools.mode == 'poly';
 
@@ -42,13 +53,22 @@ class PolyProbe {
     }
 
 // build the over-everything highlight for one triangle: translucent red fill + yellow edges,
-// in world space (verts baked through the mesh's world matrix so it sits on the real surface)
-    function highlight(obj:Object3D, a:Int, b:Int, c:Int):Void {
+// in world space. for an InstancedMesh the clicked instance's matrix is folded in (instanceId >= 0),
+// else the mesh's own world matrix — without this the highlight lands at the origin for instanced
+// props (lamps/windows/most bulk geometry), which is why it stopped showing in the 3D view
+    function highlight(obj:Object3D, instanceId:Int, a:Int, b:Int, c:Int):Void {
       var pos:Dynamic = (cast obj).geometry.attributes.position;
+      // surface world matrix: mesh world · (this instance's matrix, when instanced)
+      var mw = obj.matrixWorld;
+      if ((cast obj).isInstancedMesh && instanceId >= 0) {
+        var im = new Matrix4();
+        (cast obj).getMatrixAt(instanceId, im);
+        mw = new Matrix4().multiplyMatrices(obj.matrixWorld, im);
+      }
       var w:Array<Vector3> = [];
       for (vi in [a, b, c]) {
         var v = new Vector3(pos.getX(vi), pos.getY(vi), pos.getZ(vi));
-        v.applyMatrix4(obj.matrixWorld);
+        v.applyMatrix4(mw);
         w.push(v);
       }
       var g = new BufferGeometry();
@@ -71,12 +91,11 @@ class PolyProbe {
       getScene().add(hl);
     }
 
-// draw the clicked triangle onto the texture view: base map filling the canvas, then the face's
-// 3 UVs outlined + dotted over it. flipY decides the v axis (glb maps are flipY=false, three's
-// own textures flipY=true). repeat/offset applied; rotation ignored (models bake identity)
-    function drawTex(mat:Dynamic, a:Int, b:Int, c:Int, uv:Dynamic):Void {
+// draw the clicked triangle onto a texture pane: the given texture fills the canvas, then the
+// face's 3 UVs are outlined + dotted over it. flipY decides the v axis (glb maps are flipY=false,
+// three's own textures flipY=true). repeat/offset applied; rotation ignored (models bake identity)
+    function paintTex(ctx:Dynamic, tex:Dynamic, flipY:Bool, a:Int, b:Int, c:Int, uv:Dynamic):Void {
       ctx.clearRect(0, 0, TEX, TEX);
-      var tex:Dynamic = mat != null ? mat.map : null;
       if (tex != null && tex.image != null) {
         try ctx.drawImage(tex.image, 0, 0, TEX, TEX)
         catch (_:Dynamic) {
@@ -89,7 +108,6 @@ class PolyProbe {
       }
       if (uv == null)
         return;
-      var flipY:Bool = tex != null && tex.flipY == false ? false : true;
       var rx:Float = tex != null ? tex.repeat.x : 1.0;
       var ry:Float = tex != null ? tex.repeat.y : 1.0;
       var ox:Float = tex != null ? tex.offset.x : 0.0;
@@ -121,6 +139,19 @@ class PolyProbe {
       }
     }
 
+// is a mesh actually shown? the raycaster ignores visibility, so a hidden object (e.g. the lamp
+// cones toggled off with debug 5) still reports hits — walk the parent chain and reject if any
+// ancestor is invisible
+    function isShown(o:Object3D):Bool {
+      var cur:Object3D = o;
+      while (cur != null) {
+        if (!cur.visible)
+          return false;
+        cur = cur.parent;
+      }
+      return true;
+    }
+
 // raycast the cursor, take the nearest triangle hit, and light it up in both views
     function pick(ev:js.html.MouseEvent):Void {
       var r = dom.getBoundingClientRect();
@@ -132,25 +163,43 @@ class PolyProbe {
         var obj = h.object;
         if (face == null || (cast obj).geometry == null || (cast obj).geometry.attributes.uv == null)
           continue;
+        // skip hidden meshes (debug light/cone toggles) — the raycaster hits them regardless
+        if (!isShown(obj))
+          continue;
         // skip our own highlight fill so re-clicking picks the surface under it
         if (hl != null && (cast obj).parent == hl)
           continue;
         var a:Int = face.a, b:Int = face.b, c:Int = face.c;
+        // instanced hit → the clicked instance id (else -1 for a plain mesh)
+        var iid:Dynamic = (cast h).instanceId;
+        var instanceId:Int = iid == null ? -1 : iid;
         var m:Dynamic = obj.material;
         var mat:Dynamic = Std.isOfType(m, Array) ? m[face.materialIndex] : m;
         clear();
-        highlight(obj, a, b, c);
+        highlight(obj, instanceId, a, b, c);
         var g:Dynamic = (cast obj).geometry;
-        drawTex(mat, a, b, c, g.attributes.uv);
-        // caption: mesh + material + face + texture facts + the 3 raw UVs
+        // paint both panes over the same UVs; hide the emissive pane when the material has none.
+        // one shared flipY (from whichever map exists) so an absent base map can't mirror the
+        // emissive pane against it — maps + emissive of a material share a vertical convention
+        var bmap:Dynamic = mat != null ? mat.map : null;
+        var emap:Dynamic = mat != null ? mat.emissiveMap : null;
+        var refTex:Dynamic = bmap != null ? bmap : emap;
+        var flipY:Bool = refTex != null && refTex.flipY == false ? false : true;
+        paintTex(basePane.x, bmap, flipY, a, b, c, g.attributes.uv);
+        paintTex(emisPane.x, emap, flipY, a, b, c, g.attributes.uv);
+        emisPane.c.style.display = emap != null ? 'block' : 'none';
+        emisPane.lbl.style.display = emap != null ? 'block' : 'none';
+        // caption: mesh + face (+ instance) + base/emissive texture facts + the 3 raw UVs
         var tex:Dynamic = mat != null ? mat.map : null;
-        var img:Dynamic = tex != null ? tex.image : null;
-        var dim = img != null ? (img.width + 'x' + img.height) : 'no map';
+        inline function dimOf(t:Dynamic, none:String)
+          return t != null && t.image != null ? (t.image.width + 'x' + t.image.height) : none;
         var flip = tex != null ? (tex.flipY == false ? 'flipY=0' : 'flipY=1') : '';
         inline function uvs(i:Int) return round3(g.attributes.uv.getX(i)) + ',' + round3(g.attributes.uv.getY(i));
         cap.textContent =
-          'mesh: ' + (obj.name != '' ? obj.name : '(unnamed)') + '   face #' + h.faceIndex + '\n' +
-          'tex: ' + dim + ' ' + flip + '\n' +
+          'mesh: ' + (obj.name != '' ? obj.name : '(unnamed)') + '   face #' + h.faceIndex +
+          (instanceId >= 0 ? '   inst#' + instanceId : '') + '\n' +
+          'base: ' + dimOf(tex, 'no map') + ' ' + flip + '\n' +
+          'emis: ' + dimOf(emap, 'none') + '\n' +
           'uv a ' + uvs(a) + '\n' +
           'uv b ' + uvs(b) + '\n' +
           'uv c ' + uvs(c);

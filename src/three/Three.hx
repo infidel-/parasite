@@ -94,6 +94,7 @@ package three;
   public var userData:Dynamic;
   public var name:String;
   public var children:Array<Object3D>;
+  public var parent:Null<Object3D>; // set by add()/remove(); null at a subtree root
   public var geometry:Dynamic;   // present on meshes; Dynamic for editor traversal
   public var material:Dynamic;
   public var isInstancedMesh:Bool;

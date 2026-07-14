@@ -30,6 +30,7 @@ class StreetView {
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
+  var emissiveOff = false; // debug 6: kill all emissive (isolate lit/albedo from self-glow)
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
   var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
@@ -89,6 +90,30 @@ class StreetView {
         lightsOff = !lightsOff;
         for (f in fill) f.visible = !lightsOff;
         for (p in pointLights) p.visible = !lightsOff;
+      }
+      // 6: kill all emissive (self-glow) so only lit/albedo remains — stash each material's
+      // original intensity in userData so the restore is exact regardless of per-material value
+      else if (debug.on && e.code == 'Digit6' && scene != null) {
+        emissiveOff = !emissiveOff;
+        scene.traverse(function(o) {
+          var m:Dynamic = o.material;
+          if (m == null)
+            return;
+          var mats:Array<Dynamic> = Std.isOfType(m, Array) ? m : [m];
+          for (mm in mats) {
+            if (mm.emissive == null)
+              continue; // only emissive-capable materials (MeshStandard/Phong; skips MeshBasic)
+            if (emissiveOff) {
+              if (mm.userData.emiI0 == null)
+                mm.userData.emiI0 = mm.emissiveIntensity;
+              mm.emissiveIntensity = 0;
+            }
+            else if (mm.userData.emiI0 != null) {
+              mm.emissiveIntensity = mm.userData.emiI0;
+              mm.userData.emiI0 = null;
+            }
+          }
+        });
       }
     });
     // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel

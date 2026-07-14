@@ -114,7 +114,7 @@ class Debug {
       'E  UV editor   ·   in E-mode: wheel = offset, Ctrl+C copy, R reset\n' +
       '1  WYSIWYG lighting (bloom) toggle\n' +
       '2  ambient   3  hemisphere   4  moon   (fill)   5  lamp point lights\n' +
-      '0  all lights on/off</div>' +
+      '0  all lights on/off     6  kill emissive (self-glow)</div>' +
       '</div>';
     Browser.document.body.appendChild(d);
     el = d;
