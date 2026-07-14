@@ -109,6 +109,11 @@ class Buildings {
       var box = new Mesh(boxGeo, render.Poly.flattenBox(boxGeo, boxMats, 'wall-$k', '$k wall', cleanPath));
       box.position.set(center.x, b.h / 2, center.z);
       box.userData.b = b; box.userData.bidx = bi; // Inspector: alt+click → record
+      // the building volume is the real shadow caster (moon + nearby lamps) and receiver (neighbour
+      // shadows land on its walls). wall-overlay bands stay flush with the box faces, so they don't
+      // need to cast — the box covers them
+      box.castShadow = true;
+      box.receiveShadow = true;
       scene.add(box);
 
       // storefront overlay: tile 2-cell-wide 16:9 bays across each street face. One bay per

@@ -21,6 +21,13 @@ class Ground {
 
   public static function build(scene:Scene):Void {
     var tiles = WorldCtx.tiles;
+    // add a ground mesh that catches shadows (road/alley/walkway/markings all receive building + lamp
+    // shadows; they never cast — flat surfaces)
+    function addRecv(m:Mesh):Void
+      {
+        m.receiveShadow = true;
+        scene.add(m);
+      }
     var half = (GRID * CELL) / 2;
     var types = [
       { tile: Tile.Road, tex: TEXTURES.asphalt, kind: 'asphalt', tileW: RenderConfig.ROAD_TILE, y: 0.0 },
@@ -332,7 +339,7 @@ class Ground {
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
       var map = Textures.loadTexture(types[i].tex, types[i].kind, 1);
-      scene.add(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
 
     if (borderBuf.idx.length > 0) {
@@ -342,7 +349,7 @@ class Ground {
       geo.setIndex(borderBuf.idx);
       geo.computeVertexNormals();
       var map = Textures.loadTexture(TEXTURES.walkwayBorder, 'wall', 1);
-      scene.add(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
 
     if (markBuf.idx.length > 0) {
@@ -354,7 +361,7 @@ class Ground {
       var map = Textures.loadTexture(TEXTURES.roadPaint, 'asphalt', 1);
       // opaque + non-emissive: lit like the road, so it darkens at night / brightens by day with
       // the lighting. the texture's keyed scuff pixels render as opaque grey wear (no cutout jaggies)
-      scene.add(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
   }
 }

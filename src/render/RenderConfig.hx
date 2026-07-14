@@ -486,6 +486,25 @@ class RenderConfig {
     intensity: 45.0,     // live-lamp spotlight intensity
     lightRangeCells: 16, // a lamp within this many cells of the player may claim one of the pool lights
     fadeMul: 4.0,        // fade in/out duration = BASE_MS * this — ramps intensity so lamps don't blink
+    // real spotlight shadows: of `pool`, this many slots cast a shadow map. FIXED (not toggled per
+    // frame): castShadow is part of the material program key (NUM_SPOT_LIGHT_SHADOWS), so flipping it
+    // live would trigger the very recompile the fixed pool exists to avoid. nearest lit lamps tend to
+    // occupy the low-index slots (LampLights fills nearest-first), so these casters follow the player
+    shadowCasters: 3,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
+    shadowMapSize: 512,   // per-caster shadow map edge — cone is local + small, 512 is plenty
+    shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
+  };
+  // real moon (DirectionalLight) shadow: a single ortho shadow map that FOLLOWS the player each frame
+  // (SceneSetup.fitMoon) — the box tracks the focus so shadows appear across the whole visible area, not
+  // just world origin. one extra depth pass per frame. all tuning knobs live here (bias/box/res)
+  public static final MOON_SHADOW = {
+    mapSize: 2048,      // shadow map resolution per edge (bump to 4096 if building-edge stairstepping shows)
+    halfExtent: 90.0,   // ortho box half-width around the focus (world units) — sized to the on-screen area
+    distance: 120.0,    // how far up-light the shadow camera sits from the focus (must clear tallest building)
+    near: 1.0,          // shadow camera near plane
+    far: 260.0,         // shadow camera far plane (>= 2*distance)
+    bias: -0.0004,      // depth bias to kill self-shadow acne on box walls (tune)
+    normalBias: 0.04,   // normal-offset bias — pushes the sample along the surface normal (box corners)
   };
   // volumetric shaft (render.LightCone): a hollow additive amber cone hung under the bulb, faking
   // the cone of lit air the SpotLight can't render. radius = bulb height * tan(LAMP_LIGHT.angle) *

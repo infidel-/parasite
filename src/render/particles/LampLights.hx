@@ -29,6 +29,20 @@ class LampLights {
           group.add(t);
           var l = new SpotLight(0xffb866, 0, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
           l.target = t;
+          // FIXED shadow casters: the first `shadowCasters` slots cast real shadows for their whole
+          // life. never toggle castShadow per frame — it is part of the material program key
+          // (NUM_SPOT_LIGHT_SHADOWS), so flipping it live forces the recompile this fixed pool avoids.
+          // the nearest lit lamps tend to grab these low-index slots (update() fills nearest-first)
+          if (i < L.shadowCasters)
+            {
+              l.castShadow = true;
+              untyped l.shadow.mapSize.set(L.shadowMapSize, L.shadowMapSize);
+              l.shadow.bias = L.shadowBias;
+              var sc:Dynamic = l.shadow.camera;
+              sc.near = 0.5;
+              sc.far = CityConfig.CELL * 12;
+              sc.updateProjectionMatrix();
+            }
           group.add(l);
           lights.push(l);
           targets.push(t);

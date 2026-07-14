@@ -123,6 +123,7 @@ class Windows {
         for (k in 0...mats.length) inst.setMatrixAt(k, mats[k]);
         inst.instanceMatrix.needsUpdate = true;
         inst.userData.b = b;
+        inst.receiveShadow = true; // so windows darken with the wall in shadow (don't cast — thin planes)
         scene.add(inst);
       }
     }

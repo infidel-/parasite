@@ -28,6 +28,7 @@ class StreetView {
   var shockwave:Shockwave;                                // screen-space ripple pass + pulse driver (silent scream)
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
+  var moon:DirectionalLight; // shadow-casting moon, repositioned each frame to follow the player
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
   var emissiveOff = false; // debug 6: kill all emissive (isolate lit/albedo from self-glow)
@@ -239,6 +240,7 @@ class StreetView {
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
+    moon = bundle.moon;
     pointLights = bundle.pointLights;
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
@@ -554,6 +556,8 @@ class StreetView {
     rig.update(dtMs, !freeing);
     if (freeing) debug.freeCam.update(dtMs);
     var p = rig.playerWorld();
+    // keep the moon's shadow box centered on the player so building/lamp shadows track the view
+    SceneSetup.fitMoon(moon, p);
     // rest the ring on the ground under its *smooth* position, at the HIGHEST floor its whole
     // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it
     // straddles gets its overhanging arc buried and blinks. floating over the lower side reads

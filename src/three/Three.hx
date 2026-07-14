@@ -17,6 +17,7 @@ package three;
   // depth-compare funcs (Material.depthFunc); GreaterDepth draws only where occluded (x-ray outline)
   static var LessEqualDepth:Dynamic;
   static var GreaterDepth:Dynamic;
+  static var PCFSoftShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — percentage-closer soft shadows
 }
 
 @:native("THREE.Vector2") extern class Vector2 {
@@ -33,6 +34,7 @@ package three;
   public var z:Float;
   public function set(x:Float, y:Float, z:Float):Vector3;
   public function copy(v:Vector3):Vector3;
+  public function normalize():Vector3; // scale to unit length in place, returns this
   public function add(v:Vector3):Vector3;
   public function addScaledVector(v:Vector3, s:Float):Vector3;
   public function applyQuaternion(q:Quaternion):Vector3;
@@ -89,6 +91,8 @@ package three;
   public var quaternion:Quaternion;
   public var scale:Vector3;
   public var visible:Bool;
+  public var castShadow:Bool;    // this object's geometry is rendered into shadow maps
+  public var receiveShadow:Bool; // shadow maps are sampled onto this object's material
   public var renderOrder:Float;
   public var matrixWorld:Matrix4;
   public var userData:Dynamic;
@@ -179,6 +183,8 @@ typedef RendererInfo = {
 }
 @:native("THREE.DirectionalLight") extern class DirectionalLight extends Object3D {
   public function new(color:Int, intensity:Float);
+  public var target:Object3D; // the point the light aims at (must be in the scene graph to update)
+  public var shadow:Dynamic;  // LightShadow: .mapSize (Vector2), .bias, .normalBias, .camera (ortho)
 }
 @:native("THREE.PointLight") extern class PointLight extends Object3D {
   public function new(color:Int, intensity:Float, ?distance:Float, ?decay:Float);
@@ -192,6 +198,7 @@ typedef RendererInfo = {
   public var penumbra:Float;    // soft-edge fraction (0 = hard, 1 = fully soft)
   public var distance:Float;    // falloff end
   public var intensity:Float;
+  public var shadow:Dynamic;    // LightShadow: .mapSize (Vector2), .bias, .camera (perspective, from angle)
 }
 
 @:native("THREE.BoxGeometry") extern class BoxGeometry {
