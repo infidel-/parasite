@@ -110,7 +110,7 @@ class Debug {
       '`  toggle debug off     F  fly on/off\n' +
       'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
       'B  inspect building / ground spot (report → clipboard)\n' +
-      'P  probe polygon: click a face → highlight + texture/UV view (upper-right)\n' +
+      'P  probe polygon: click a face → highlight + texture/UV view (upper-right)   G  emissive-face map\n' +
       'E  UV editor   ·   in E-mode: wheel = offset, Ctrl+C copy, R reset\n' +
       '1  WYSIWYG lighting (bloom) toggle\n' +
       '2  ambient   3  hemisphere   4  moon   (fill)   5  lamp point lights\n' +
