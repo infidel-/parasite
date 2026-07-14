@@ -363,6 +363,31 @@ class Actors {
       return s;
     }
 
+// spawn a lingering gas cloud at cell (x,y): a cluster of lit alpha puff sprites that billows in
+// then settles + fades. kind picks the tint (panic reddish / paralysis blue) + which 2D gas frame
+// blends in
+  public function gasCloud(x:Int, y:Int, kind:String, range:Int):Void
+    {
+      var G = RenderConfig.GAS;
+      var w = CityConfig.cellToWorld(x, y);
+      var color = (kind == 'paralysis' ? G.paralysisColor : G.panicColor);
+      // pull the game's own 2D gas sprite from the entities atlas to blend into the cluster (kept at
+      // its default smooth filtering). null until the atlas decodes -> that cast is baked-blob only
+      var frame = (kind == 'paralysis' ? Const.FRAME_PARALYSIS_GAS : Const.FRAME_PANIC_GAS);
+      var atlas = sprites.tex('entities', frame, Const.ROW_EFFECT, false);
+      // tile passability probe: keeps puffs out of wall/building tiles (visible in tactical view,
+      // where building meshes are hidden and only the floor grid shows the footprint)
+      var area = game.area;
+      var walkable = function(wx:Float, wz:Float):Bool
+        {
+          var c = CityConfig.worldToCell(wx, wz);
+          return area.isWalkable(c.col, c.row);
+        };
+      particles.add(new render.particles.GasCloud3D(actorGroup,
+        w.x, render.world.WorldCtx.floorY(x, y) + 0.05, w.z,
+        color, range, G.lifeMult * RenderConfig.BASE_MS, atlas, walkable));
+    }
+
 // throw a fountain of money bills from cell (x,y): each bill picks a random walkable landing
 // spot in the throw radius (a few tries, else at the thrower's feet) and flies there tumbling
   public function money(x:Int, y:Int, range:Int):Void

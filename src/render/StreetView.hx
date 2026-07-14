@@ -445,6 +445,13 @@ class StreetView {
       return running && render.choreo.Money.play(choreo, x, y, range);
     }
 
+// organ gas-cloud choreography (wide low additive shader dome: activation burst then lingering
+// fade) — see render.choreo.Gas
+  public function playGas(kind:String, x:Int, y:Int, range:Int):Bool
+    {
+      return running && render.choreo.Gas.play(choreo, kind, x, y, range);
+    }
+
 // snapshot a dying actor into a fade-out ghost (before its entity is nulled) — see render.choreo.Reactions
   public function playDeathFade(e:Entity):Void
     {

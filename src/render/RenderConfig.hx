@@ -386,6 +386,38 @@ class RenderConfig {
     maxPulses: 4,         // shader uniform slots (max simultaneous screams rippling)
   };
 
+  // organ gas clouds (panic / paralysis): a cluster of soft, LIT, alpha-blended puff sprites over the
+  // emission cell. lit (like actor sprites) so the gas catches the lamp spotlights + moon instead of
+  // self-glowing; a baked spherical normal map rounds each puff. the cluster billows in (activation
+  // burst), drifts up + spreads low and wide, then fades over its life. cosmetic only (entering re-
+  // applies nothing). colors are desaturated/light so the lit tint stays readable at night
+  public static final GAS = {
+    panicColor: 0xe0907a,     // panic gas tint (dusty light red)
+    paralysisColor: 0x6ab0ff, // paralysis spore tint (light dodger blue)
+    speed: 1.5,               // playback speed multiplier for the whole cloud (life + drift + spin)
+    atlasFrac: 0.4,           // fraction of puffs drawn with the game's own 2D gas frame (entities
+                              // ROW_EFFECT / FRAME_*_GAS) instead of the baked blob — blends the art in
+    pixelSize: 40,            // baked puff texture resolution (px); low + NearestFilter = chunky pixels
+    puffDensity: 9.0,         // puffs per cell² of footprint (count scales with range² for even density)
+    puffMin: 30,              // floor on puff count (tiny clouds still read solid)
+    puffCap: 120,             // ceiling on puff count (overdraw budget)
+    puffScaleMin: 1.6,        // per-puff base size (multiples of Sprites.SIZE)
+    puffScaleMax: 2.8,
+    startScale: 0.6,          // fraction of base size at spawn (grows toward base+growth)
+    growth: 1.1,              // extra size added over the full life (fraction of base)
+    spread: 1.0,              // footprint jitter radius = gas range (cells) * CELL * this (= the
+                              // Euclidean effect radius; puff size then softly overspills the edge)
+    drift: 0.5,               // outward drift speed (cells/sec)
+    rise: 0.4,                // upward drift speed (cells/sec) — gentle, ground-hugging
+    spin: 0.5,                // baked-blob in-plane roll speed cap (rad/sec, +/-)
+    atlasSpin: 0.6,           // atlas-sprite roll speed cap (rad/sec, +/-) — subtle, recognizable art
+    alpha: 0.38,              // peak per-puff opacity (many overlap -> denser centre; kept low for smooth buildup)
+    normalScale: 1.0,         // spherical normal-map strength (how rounded the lamp shading reads)
+    lifeMult: 24.0,           // total cloud lifetime (BASE_MS multiples) ~ a few seconds
+    burstMult: 2.0,           // billow-in window: puff appear stagger + ramp (BASE_MS multiples)
+    fadeFrac: 0.4,            // trailing fraction of life over which the cloud fades out
+  };
+
   // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
   // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
   // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none
