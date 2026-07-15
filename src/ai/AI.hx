@@ -534,11 +534,33 @@ public function show()
         out.push({ col: Const.FRAME_CULTIST0, row: Const.ROW_EFFECT });
       else if (isCultist)
         out.push({ col: Const.FRAME_CULTIST_UNKNOWN, row: Const.ROW_EFFECT });
-      // active effect icon (png; single or MULTIPLE)
+      // active effect icon (scalable svg; single glyph or the MULTIPLE triangle with live count)
       var eff = effects.getIcon();
       if (eff != null)
-        out.push({ col: eff.col, row: eff.row });
+        {
+          // FRAME_MULTIPLE_EFFECTS shares its column with FRAME_PANIC — disambiguate by row
+          if (eff.col == Const.FRAME_MULTIPLE_EFFECTS &&
+              eff.row == Const.ROW_EFFECT)
+            out.push({
+              col: eff.col,
+              row: eff.row,
+              svg: 'multieffect',
+              count: effects.iconCount(),
+            });
+          else out.push({ col: eff.col, row: eff.row, svg: effectSvg(eff.col) });
+        }
       return out;
+    }
+
+// map a single-effect atlas frame to its UISvg glyph key (3D scalable render)
+  inline function effectSvg(frame: Int): String
+    {
+      if (frame == Const.FRAME_PARALYSIS) return 'paralysis';
+      if (frame == Const.FRAME_PANIC) return 'panic';
+      if (frame == Const.FRAME_SLIME) return 'slime';
+      if (frame == Const.FRAME_BLEEDING) return 'bleeding';
+      if (frame == Const.FRAME_BLACK_NOISE) return 'blacknoise';
+      return null;
     }
 
 // map an alert atlas frame to its UISvg glyph key (3D scalable render)
@@ -1093,8 +1115,8 @@ public function show()
       entity.setMask(-1);
     }
 
-// event: on receiving effect
-  public inline function onEffect(effect: Effect)
+// event: on receiving effect (virtual — subclasses may filter, e.g. immunities)
+  public function onEffect(effect: Effect)
     {
       effects.add(effect);
 

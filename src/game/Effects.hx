@@ -105,6 +105,18 @@ class Effects extends _SaveObject
       return single;
     }
 
+// number of active effects that show a badge icon (non-null icon); drives the
+// multiple-effects triangle count
+  public function iconCount(): Int
+    {
+      var count = 0;
+      for (effect in _list)
+        if (effect.icon() != null)
+          count++;
+
+      return count;
+    }
+
 
 // returns all damage modifiers from active effects for given weapon
   public function damageMods(weapon: WeaponInfo): Array<_DamageBonus>
