@@ -68,20 +68,19 @@ class LampLights {
       var L = RenderConfig.LAMP_LIGHT;
       // desired = the pool-nearest in-range lamps, nearest first
       var range2 = L.lightRangeCells * L.lightRangeCells;
-      var near:Array<LampPost> = [];
-      for (lp in lamps)
+      // squared cell distance player->lamp — drives the in-range filter, the nearest-first desired
+      // order, and the shadow-caster routing below
+      function d2(lp:LampPost):Int
         {
           var dc = lp.col - playerCol;
           var dr = lp.row - playerRow;
-          if (dc * dc + dr * dr <= range2)
-            near.push(lp);
+          return dc * dc + dr * dr;
         }
-      near.sort(function(a, b)
-        {
-          var da = (a.col - playerCol) * (a.col - playerCol) + (a.row - playerRow) * (a.row - playerRow);
-          var db = (b.col - playerCol) * (b.col - playerCol) + (b.row - playerRow) * (b.row - playerRow);
-          return da - db;
-        });
+      var near:Array<LampPost> = [];
+      for (lp in lamps)
+        if (d2(lp) <= range2)
+          near.push(lp);
+      near.sort(function(a, b) return d2(a) - d2(b));
       var desired = near.length < lights.length ? near : near.slice(0, lights.length);
       // targets: an owned slot stays lit while its lamp is still desired, else fades out
       var targetI = [for (i in 0...lights.length) (owners[i] != null && desired.indexOf(owners[i]) >= 0) ? L.intensity : 0.0];
@@ -96,16 +95,13 @@ class LampLights {
           for (i in 0...lights.length)
             if (intens[i] <= 0.001 && (owners[i] == null || desired.indexOf(owners[i]) < 0))
               {
-                owners[i] = lp;
-                lights[i].position.set(lp.x, bulbY, lp.z); // teleport while dark — no visible jump
-                targets[i].position.set(lp.x, 0, lp.z);    // straight down
+                owners[i] = lp; // position + intensity applied in the publish pass below
                 targetI[i] = L.intensity;
                 break;
               }
         }
-      // ease every slot toward its target and publish the lit lamps
+      // ease every slot toward its target
       var step = L.intensity * dtMs * RenderConfig.ANIM_SPEED / (RenderConfig.BASE_MS * L.fadeMul);
-      activeList = [];
       for (i in 0...lights.length)
         {
           var tgt = targetI[i];
@@ -113,11 +109,52 @@ class LampLights {
             intens[i] = Math.min(tgt, intens[i] + step);
           else if (intens[i] > tgt)
             intens[i] = Math.max(tgt, intens[i] - step);
-          untyped lights[i].intensity = intens[i];
           if (intens[i] <= 0.001)
             owners[i] = null; // fully dark → free for reuse
-          else if (owners[i] != null)
-            activeList.push(owners[i]);
+        }
+      // route nearest lit lamps into the low (shadow-casting) slots: sort the slot CONTENTS (owner +
+      // eased intensity) by distance so slots 0..shadowCasters-1 always serve the nearest lit lamps.
+      // the physical SpotLights and their FIXED castShadow never move — only which lamp each serves —
+      // so no light visibly jumps; only the shadow hands off to the nearer post. dark slots sort last
+      var order = [for (i in 0...lights.length) i];
+      order.sort(function(a, b)
+        {
+          var da = owners[a] == null ? 0x7fffffff : d2(owners[a]);
+          var db = owners[b] == null ? 0x7fffffff : d2(owners[b]);
+          return da - db;
+        });
+      owners = [for (i in 0...lights.length) owners[order[i]]];
+      intens = [for (i in 0...lights.length) intens[order[i]]];
+      // publish: apply each slot's intensity and move its SpotLight onto its (distance-sorted) owner
+      activeList = [];
+      for (i in 0...lights.length)
+        {
+          untyped lights[i].intensity = intens[i];
+          var o = owners[i];
+          if (o != null)
+            {
+              lights[i].position.set(o.x, bulbY, o.z);
+              targets[i].position.set(o.x, 0, o.z);
+              activeList.push(o);
+            }
+        }
+      // fade the shadow (not the light) near the casting-set boundary: three's shadow.intensity scales
+      // shadow darkness 0..1 without touching brightness. edge = distance of the nearest lamp that did
+      // NOT win a casting slot (owners[shadowCasters]); ramp each caster's shadow to 0 within fadeBand
+      // cells of that edge, so a lamp swapping across the boundary hands its shadow off instead of
+      // popping. no boundary lamp (fewer lit than casters+1) -> full-strength shadows, nothing to fade
+      var casters = L.shadowCasters;
+      var edge = (casters < lights.length && owners[casters] != null) ? Math.sqrt(d2(owners[casters])) : 1e9;
+      for (i in 0...casters)
+        {
+          var o = owners[i];
+          var s = 0.0;
+          if (o != null)
+            {
+              s = (edge - Math.sqrt(d2(o))) / L.shadowFadeBand;
+              s = s < 0 ? 0 : (s > 1 ? 1 : s);
+            }
+          untyped lights[i].shadow.intensity = s;
         }
     }
 }

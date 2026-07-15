@@ -490,9 +490,11 @@ class RenderConfig {
     // frame): castShadow is part of the material program key (NUM_SPOT_LIGHT_SHADOWS), so flipping it
     // live would trigger the very recompile the fixed pool exists to avoid. nearest lit lamps tend to
     // occupy the low-index slots (LampLights fills nearest-first), so these casters follow the player
-    shadowCasters: 3,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
+    shadowCasters: 6,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
     shadowMapSize: 512,   // per-caster shadow map edge — cone is local + small, 512 is plenty
     shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
+    shadowFadeBand: 4.0,  // cells over which a caster's shadow.intensity ramps to 0 as it nears the
+                          // casting-set boundary — so a lamp crossing the boundary fades its shadow, no pop
   };
   // real moon (DirectionalLight) shadow: a single ortho shadow map that FOLLOWS the player each frame
   // (SceneSetup.fitMoon) — the box tracks the focus so shadows appear across the whole visible area, not
