@@ -294,35 +294,48 @@ class StreetView {
     // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
     renderer.info.autoReset = false;
 
+    // present: cancel any in-flight outro, reset the rig and start the enter intro + render loop.
+    // deferred behind the cold-context warm below so the first real frame never stalls on an
+    // on-demand shader compile (see below); runs immediately on warm entries
+    var present = function()
+      {
+        exiting = false;   // cancel any in-flight outro from a prior area
+        tactical = false;
+        rig.reset();
+        rig.startIntro();  // enter effect: start closest, zoom out to the resting target
+        canvas.style.display = 'block';
+        if (!running)
+          {
+            running = true;
+            last = 0;
+            Browser.window.requestAnimationFrame(loop);
+          }
+      };
+
     // pre-warm shader programs: on a cold GL context (fresh page/app launch) the first presented
-    // frame otherwise stalls multiple seconds compiling every program at once. do it here, under
-    // the enter fade, so the first real frame just draws. renderer.compile warms the scene
-    // materials; one throwaway composer pass warms the post-FX (bloom/output) programs it can't
-    // reach. only the first city build per GL context pays this — the program cache survives
-    // teardown (materials are never disposed), so later builds reuse it and skip the cost
+    // frame otherwise stalls multiple seconds compiling every program at once. compileAsync hands
+    // all scene programs to the driver in PARALLEL (KHR_parallel_shader_compile) without blocking
+    // the JS thread — the window/HUD/audio stay live during the warm, and total time drops to the
+    // slowest single program instead of the serial sum. we present only once it resolves (then one
+    // throwaway composer pass warms the post-FX bloom/output programs compile can't reach). only the
+    // first city build per GL context pays this — the program cache survives teardown (materials are
+    // never disposed), so later builds reuse it, skip the warm, and present() runs right away
     if (!_warmed)
       {
         _warmed = true;
         var tWarm = haxe.Timer.stamp();
         var progWarm0 = renderer.info.programs != null ? renderer.info.programs.length : 0;
-        renderer.compile(scene, camera);
-        composer.render();
-        var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
-        trace('[street-warmup] compile+postfx ' + r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
-          ' programs ' + progWarm0 + '->' + progWarm1);
+        renderer.compileAsync(scene, camera).then(function(_)
+          {
+            composer.render();
+            var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
+            trace('[street-warmup] compileAsync+postfx ' + r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
+              ' programs ' + progWarm0 + '->' + progWarm1);
+            present();
+          });
       }
-
-    exiting = false;   // cancel any in-flight outro from a prior area
-    tactical = false;
-    rig.reset();
-    rig.startIntro();  // enter effect: start closest, zoom out to the resting target
-
-    canvas.style.display = 'block';
-    if (!running) {
-      running = true;
-      last = 0;
-      Browser.window.requestAnimationFrame(loop);
-    }
+    else
+      present();
   }
 
 // begin leaving: play the zoom-in outro over the frozen last frame, then hand off. the game

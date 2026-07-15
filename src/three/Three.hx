@@ -156,6 +156,7 @@ package three;
   public function setScissorTest(on:Bool):Void;
   public function render(scene:Scene, camera:Dynamic):Void;
   public function compile(scene:Scene, camera:Dynamic):Void; // pre-warm: compile all scene materials' shader programs up front (avoids first-frame stall)
+  public function compileAsync(scene:Scene, camera:Dynamic):Dynamic; // like compile() but parallel + non-blocking (KHR_parallel_shader_compile); returns a Promise resolving when programs are ready
 }
 
 @:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {
