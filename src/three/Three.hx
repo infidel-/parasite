@@ -17,7 +17,7 @@ package three;
   // depth-compare funcs (Material.depthFunc); GreaterDepth draws only where occluded (x-ray outline)
   static var LessEqualDepth:Dynamic;
   static var GreaterDepth:Dynamic;
-  static var PCFSoftShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — percentage-closer soft shadows
+  static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
 }
 
 @:native("THREE.Vector2") extern class Vector2 {

@@ -46,7 +46,7 @@ class SceneSetup {
     // explicitly at each mesh creation site — never a blanket scene.traverse (would drag sprites/
     // transparent quads into the depth pass and cast square blobs)
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // far plane clipped to just past the fog wall (fog is opaque at span*1.2): beyond it every
     // building is solid fog yet still drawn, so a shallow/parallel camera would render the whole
