@@ -29,6 +29,13 @@ class StreetView {
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
   var moon:DirectionalLight; // shadow-casting moon, repositioned each frame to follow the player
+  var perf:StreetPerf; // perf instrumentation + debug keys 7/8/9 (see render.StreetPerf)
+  // static-city spatial chunks: the world builder adds ~5.4k flat children to the scene, and three
+  // walks + frustum-tests every one of them each frame to find the ~400 it draws. bucketing them under
+  // chunk groups lets projectObject early-out on a whole block at once (an invisible parent is O(1))
+  var chunks:Array<{ g:Group, sphere:Sphere }> = [];
+  var chunkFrustum = new Frustum();
+  var chunkMat = new Matrix4();
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
   var emissiveOff = false; // debug 6: kill all emissive (isolate lit/albedo from self-glow)
@@ -57,14 +64,8 @@ class StreetView {
   var svMouseY:Float = 0;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
-  var _lastProgs = 0;     // shader program count last frame; a jump == a (re)compile stall (perf street)
+  static inline var CHUNK_CELLS = 16; // spatial chunk edge, in city cells (16 * CELL 4 = 64 world units)
   var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
-  public static var lastCalls = 0; // draw calls last frame (HUD counter, when vidShowFps)
-  public static var lastTris = 0;  // triangles drawn last frame (HUD counter, when vidShowFps)
-  // GPU-resource counts (no byte API in WebGL) — a steady climb across area re-entries == a leak
-  public static var lastGeo = 0;   // live geometries in the renderer's cache
-  public static var lastTex = 0;   // live textures in the renderer's cache
-  public static var lastProg = 0;  // compiled shader programs
 
 
   public function new(game:Game) {
@@ -116,6 +117,9 @@ class StreetView {
           }
         });
       }
+      // 7/8/9: perf A/B + readouts (shadow-sampling toggle, peak reset, scene dump) — see render.StreetPerf
+      else if (debug.on && perf != null)
+        perf.onKey(e.code);
     });
     // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
@@ -213,6 +217,7 @@ class StreetView {
     renderer = core.renderer;
     camera = core.camera;
     rig = new CameraRig(game, camera);
+    perf = new StreetPerf(renderer, function() return scene);
   }
 
 // show a city generated from a seed (new areas)
@@ -246,7 +251,11 @@ class StreetView {
     lampPosts = bundle.lampPosts;
     lampProp = bundle.lampProp;
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
+    // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
+    // pass only ever touches static geometry the world builder adds below
+    var preBuild = scene.children.copy();
     World.build(scene, city, seed);
+    chunkStatics(preBuild);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings, city.tiles);
     tacticalGrid = new TacticalGrid(scene, game.area);
@@ -329,7 +338,7 @@ class StreetView {
           {
             composer.render();
             var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
-            trace('[street-warmup] compileAsync+postfx ' + r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
+            trace('[street-warmup] compileAsync+postfx ' + StreetPerf.r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
               ' programs ' + progWarm0 + '->' + progWarm1);
             present();
           });
@@ -565,6 +574,7 @@ class StreetView {
     // most ~2 frames of anim; the anim runs a hair behind real time instead of jumping
     if (dtMs > frameMs * 2)
       dtMs = frameMs * 2;
+    var tFrame = haxe.Timer.stamp(); // frame-start: update-CPU = tR - tFrame (all pre-render work), idle = the rest
 
     // leaving: play the frozen zoom-in outro (no game reads) until its tween tears the view
     // down. teardown may fire mid-drift (nulls composer) — guard the render on it
@@ -617,6 +627,7 @@ class StreetView {
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
+    cullChunks(p); // hide whole offscreen blocks so three skips their subtrees entirely
     // keep the tactical grid centered on the player (rebuilds only when the cell changes)
     if (tactical)
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
@@ -632,25 +643,15 @@ class StreetView {
     updateHoverTooltip();
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
-    // turn/street-actor profilers — catch it here. a jump in the program count == a compile.
-    // while profiling, first do a standalone base-scene render to expose per-frame draw-call /
-    // triangle counts (composer's OutputPass resets renderer.info, so it can't show scene stats)
-    // and to split base-scene cost from post-FX (bloom+output) cost — this doubles the scene
-    // render, so it's gated behind the toggle and its cost is excluded from the reported numbers
-    var baseMs = 0.0, calls = 0, tris = 0;
-    if (render.Actors.DEBUG_PERF)
-      {
-        // standalone base-scene render for the split; reset first so the counts are scene-only
-        renderer.info.reset();
-        var tB = haxe.Timer.stamp();
-        renderer.render(scene, camera);
-        baseMs = (haxe.Timer.stamp() - tB) * 1000;
-        calls = renderer.info.render.calls;
-        tris = renderer.info.render.triangles;
-      }
+    // turn/street-actor profilers — catch it here. frame = true rAF frame delta (dtMs), vsync-capped
+    // at ~16.7ms @60fps = the real fps signal; submit = the cpu cost of queueing the render. the
+    // breakdown, the real GPU timer and the on-screen readout all live in render.StreetPerf
     renderer.info.reset(); // manual per-frame reset (autoReset off); total accumulates over the passes
     var tR = haxe.Timer.stamp();
+    perf.beginRender(debug.on);
     composer.render();
+    perf.endRender();
+    var submit = (haxe.Timer.stamp() - tR) * 1000;
     // first presented frame after (re)build: the enter fade reveals here, so the first-render
     // shader-compile stall (multi-second on a cold driver cache) stays hidden under black
     if (firstFrame != null)
@@ -659,32 +660,94 @@ class StreetView {
         firstFrame = null;
         cb();
       }
-    lastCalls = renderer.info.render.calls; // scene + a few post-FX quads — HUD draw-call readout
-    lastTris = renderer.info.render.triangles;
-    // GPU-resource counts (memory.* survives reset(), only render counters reset) — leak signal
-    lastGeo = renderer.info.memory.geometries;
-    lastTex = renderer.info.memory.textures;
-    lastProg = (renderer.info.programs != null ? renderer.info.programs.length : 0);
-    if (debug.on) Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
-    if (render.Actors.DEBUG_PERF)
-      {
-        var ms = (haxe.Timer.stamp() - tR) * 1000;
-        var progs = (renderer.info.programs != null ? renderer.info.programs.length : 0);
-        var compiled = progs - _lastProgs;
-        if (ms > 8 ||
-            compiled != 0)
-          // full=composer total, base=scene-only, post=bloom+output, calls/tris=scene draw load
-          trace('[street-render] full=' + r2(ms) + 'ms base=' + r2(baseMs) +
-            ' post=' + r2(ms - baseMs) + ' calls=' + calls + ' tris=' + tris +
-            ' programs=' + progs +
-            (compiled != 0 ? ' (COMPILE ' + (compiled > 0 ? '+' : '') + compiled + ')' : ''));
-        _lastProgs = progs;
-      }
+    perf.report(dtMs, submit, (tR - tFrame) * 1000); // upd = all pre-render work (occlusion/lamps/actors/tooltip)
+    if (debug.on)
+      Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
   }
 
-// round a float to 2 decimals for perf logging
-  static inline function r2(v: Float): Float
+// a mesh's local bounding radius — used to spot city-spanning geometry that must NOT be chunked
+  static function objRadius(d:Dynamic):Float
     {
-      return Std.int(v * 100) / 100;
+      var g:Dynamic = d.geometry;
+      if (g == null)
+        return 1e9;
+      var r:Float;
+      if (d.isInstancedMesh == true)
+        {
+          d.computeBoundingSphere(); // instance-aware: a per-building window mesh is small, the city-wide lamp prop is not
+          r = d.boundingSphere != null ? d.boundingSphere.radius : 1e9;
+        }
+      else
+        {
+          if (g.boundingSphere == null)
+            g.computeBoundingSphere();
+          r = g.boundingSphere != null ? g.boundingSphere.radius : 1e9;
+        }
+      var s:Dynamic = d.scale;
+      return r * Math.max(s.x, Math.max(s.y, s.z));
     }
+
+// bucket the static city into spatial chunk groups. the groups sit at identity, so every child keeps its
+// local position and world matrix — pixel-identical output, only the traversal changes. world matrices
+// are baked once here and the subtree then opts out of the per-frame matrix walk (nothing moves)
+  function chunkStatics(pre:Array<Object3D>):Void
+    {
+      var CH = CityConfig.CELL * CHUNK_CELLS;
+      var skip = new Map<String,Bool>();
+      for (o in pre)
+        skip.set(untyped o.uuid, true);
+      var groups = new Map<String, Group>();
+      for (o in scene.children.copy())
+        {
+          var d:Dynamic = o;
+          if (skip.exists(d.uuid) ||
+              (d.isMesh != true && d.isInstancedMesh != true))
+            continue;
+          // city-spanning meshes (ground, roads) keep their scene parent: bucketed by their single
+          // origin they would pop out entirely the moment that one chunk culls
+          if (objRadius(d) > CH)
+            continue;
+          var key = Math.floor(o.position.x / CH) + ':' + Math.floor(o.position.z / CH);
+          var g = groups.get(key);
+          if (g == null)
+            {
+              g = new Group();
+              groups.set(key, g);
+              scene.add(g);
+            }
+          g.add(o); // reparent — group is at identity, so the child's world transform is unchanged
+        }
+      scene.updateMatrixWorld(true); // bake every world matrix once, before the subtrees freeze
+      chunks = [];
+      for (g in groups)
+        {
+          var b = new Box3().setFromObject(g);
+          var size = b.getSize(new Vector3());
+          var sph = new Sphere();
+          sph.center = b.getCenter(new Vector3());
+          sph.radius = Math.sqrt(size.x * size.x + size.y * size.y + size.z * size.z) / 2;
+          untyped g.matrixWorldAutoUpdate = false; // static: skip this subtree in updateMatrixWorld forever
+          chunks.push({ g: g, sphere: sph });
+        }
+      trace('[chunks] ' + chunks.length + ' groups (' + CHUNK_CELLS + ' cells each)');
+    }
+
+// per frame: frustum-test each CHUNK instead of each mesh. a chunk inside the moon's shadow box stays
+// visible even when offscreen, else its buildings would stop casting shadows into view
+  function cullChunks(p:Vector3):Void
+    {
+      if (chunks.length == 0)
+        return;
+      chunkMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      chunkFrustum.setFromProjectionMatrix(chunkMat);
+      var R = RenderConfig.MOON_SHADOW.halfExtent;
+      for (c in chunks)
+        {
+          var dx = c.sphere.center.x - p.x;
+          var dz = c.sphere.center.z - p.z;
+          var reach = R + c.sphere.radius;
+          c.g.visible = (dx * dx + dz * dz) <= reach * reach || chunkFrustum.intersectsSphere(c.sphere);
+        }
+    }
+
 }

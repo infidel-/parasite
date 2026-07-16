@@ -99,12 +99,12 @@ class TopbarHud
           // and a red badge when the post-gen checklist found issues
           if (game.location == LOCATION_AREA)
             {
-              txt += ' | ' + render.StreetView.lastCalls + 'dc | ' +
-                (Math.round(render.StreetView.lastTris / 100) / 10) + 'k tri';
+              txt += ' | ' + render.StreetPerf.lastCalls + 'dc | ' +
+                (Math.round(render.StreetPerf.lastTris / 100) / 10) + 'k tri';
               // GPU-resource counts (no byte API) — watch these climb on area re-entry == leak
-              txt += ' | ' + render.StreetView.lastGeo + ' geom | ' +
-                render.StreetView.lastTex + ' tex | ' +
-                render.StreetView.lastProg + ' prog';
+              txt += ' | ' + render.StreetPerf.lastGeo + ' geom | ' +
+                render.StreetPerf.lastTex + ' tex | ' +
+                render.StreetPerf.lastProg + ' prog';
               if (render.world.Check.lastFails > 0)
                 txt += ' | <span style="color:#f66">✗' +
                   render.world.Check.lastFails + ' CHECK</span>';

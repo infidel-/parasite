@@ -13,6 +13,11 @@ class LampLights {
   var lights:Array<SpotLight> = [];
   var targets:Array<Group> = [];
   var owners:Array<LampPost> = [];        // the lamp each slot currently serves (null = free)
+  var prevOwners:Array<LampPost> = [];    // last frame's owner per slot — a change means the caster's shadow map must re-render
+  var shadowDirty:Array<Bool> = [];       // caster slots whose owner changed and still owe a shadow re-render
+  var shadowCursor:Int = 0;               // round-robin start so a multi-slot reshuffle spreads one re-render per frame
+  public static var lastShadowRenders = 0; // observability: lamp shadow passes dispatched this frame (0/1 with the cap)
+  public static var lastShadowBacklog = 0; // observability: caster slots still owing a re-render (a burst shows here, drains 1/frame)
   var intens:Array<Float> = [];           // eased intensity per slot (ramps toward its target)
   var activeList:Array<LampPost> = []; // lamps lit above epsilon this frame (drives fake shadows)
   var bulbY:Float;
@@ -36,6 +41,10 @@ class LampLights {
           if (i < L.shadowCasters)
             {
               l.castShadow = true;
+              // static shadow map: the map re-renders only when this slot's owner lamp changes (see
+              // update()), NOT every frame — posts never move, and intensity/shadow.intensity easing
+              // are main-pass uniforms, not depth inputs. cuts up to `shadowCasters` passes per frame
+              untyped l.shadow.autoUpdate = false;
               untyped l.shadow.mapSize.set(L.shadowMapSize, L.shadowMapSize);
               l.shadow.bias = L.shadowBias;
               var sc:Dynamic = l.shadow.camera;
@@ -47,6 +56,8 @@ class LampLights {
           lights.push(l);
           targets.push(t);
           owners.push(null);
+          prevOwners.push(null);
+          shadowDirty.push(false);
           intens.push(0);
         }
     }
@@ -130,6 +141,10 @@ class LampLights {
       for (i in 0...lights.length)
         {
           untyped lights[i].intensity = intens[i];
+          // mark this caster's shadow dirty when its owner lamp actually changes (posts never move,
+          // so the depth map is otherwise valid); the re-render is dispatched at most one-per-frame below
+          if (i < L.shadowCasters && owners[i] != prevOwners[i])
+            shadowDirty[i] = true;
           var o = owners[i];
           if (o != null)
             {
@@ -138,6 +153,27 @@ class LampLights {
               activeList.push(o);
             }
         }
+      // re-render at most ONE caster's shadow per frame: a full reshuffle dirties several slots at once,
+      // and running all their whole-scene shadow-cull traversals in one frame is the submit spike. spread
+      // them round-robin — the <=few-frame lag is hidden by the shadow.intensity cross-fade below
+      lastShadowRenders = 0;
+      for (n in 0...L.shadowCasters)
+        {
+          var idx = (shadowCursor + n) % L.shadowCasters;
+          if (shadowDirty[idx])
+            {
+              untyped lights[idx].shadow.needsUpdate = true;
+              shadowDirty[idx] = false;
+              shadowCursor = (idx + 1) % L.shadowCasters;
+              lastShadowRenders = 1;
+              break;
+            }
+        }
+      // publish the remaining backlog for the perf trace (0 normally; jumps on a multi-slot reshuffle)
+      lastShadowBacklog = 0;
+      for (i in 0...L.shadowCasters)
+        if (shadowDirty[i])
+          lastShadowBacklog++;
       // fade the shadow (not the light) near the casting-set boundary: three's shadow.intensity scales
       // shadow darkness 0..1 without touching brightness. edge = distance of the nearest lamp that did
       // NOT win a casting slot (owners[shadowCasters]); ramp each caster's shadow to 0 within fadeBand
@@ -156,5 +192,7 @@ class LampLights {
             }
           untyped lights[i].shadow.intensity = s;
         }
+      // remember this frame's owners so the next frame can detect a caster hand-off (shadow re-render)
+      prevOwners = owners.copy();
     }
 }
