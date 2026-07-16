@@ -13,5 +13,8 @@ export { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 export { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 export { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 
+// geometry merging (static world batching: many same-material meshes -> one draw call)
+export { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
 // glb prop loader (street lamps etc); assets baked by `make models`
 export { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';

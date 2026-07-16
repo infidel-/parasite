@@ -18,6 +18,9 @@ package three;
   static var LessEqualDepth:Dynamic;
   static var GreaterDepth:Dynamic;
   static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
+  // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
+  // single draw call, so each source's placement must already be baked into its verts (see geo.translate)
+  static function mergeGeometries(geos:Array<Dynamic>, ?useGroups:Bool):Dynamic;
 }
 
 @:native("THREE.Vector2") extern class Vector2 {
@@ -204,6 +207,7 @@ typedef RendererInfo = {
 
 @:native("THREE.BoxGeometry") extern class BoxGeometry {
   public function new(w:Float, h:Float, d:Float);
+  public function translate(x:Float, y:Float, z:Float):BoxGeometry; // bakes the offset into vertices (from BufferGeometry), so a merged mesh needs no per-source transform
 }
 @:native("THREE.PlaneGeometry") extern class PlaneGeometry {
   public function new(w:Float, h:Float);
