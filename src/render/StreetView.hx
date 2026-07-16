@@ -66,6 +66,7 @@ class StreetView {
   var last = 0.0;
   static inline var CHUNK_CELLS = 16; // spatial chunk edge, in city cells (16 * CELL 4 = 64 world units)
   var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
+  var warming = false;    // that warm is in flight: the scene is built but `running` waits on it, so show() must not treat this build as absent and rebuild over it
 
 
   public function new(game:Game) {
@@ -222,7 +223,10 @@ class StreetView {
 
 // show a city generated from a seed (new areas)
   public function show(seed:Int):Void {
-    if (running && shownSeed == seed) return;
+    // a build whose shader warm is still in flight counts as shown: the warm holds `running` false for
+    // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
+    // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
+    if ((running || warming) && shownSeed == seed) return;
     buildFrom(CityGen.generate(seed), seed);
   }
 
@@ -327,15 +331,20 @@ class StreetView {
     // the JS thread — the window/HUD/audio stay live during the warm, and total time drops to the
     // slowest single program instead of the serial sum. we present only once it resolves (then one
     // throwaway composer pass warms the post-FX bloom/output programs compile can't reach). only the
-    // first city build per GL context pays this — the program cache survives teardown (materials are
-    // never disposed), so later builds reuse it, skip the warm, and present() runs right away
+    // first city build per GL context pays this — the program CACHE is keyed by shader source and
+    // survives a rebuild, so later builds reuse it, skip the warm, and present() runs right away.
+    // the warm does NOT survive its scene: compileAsync polls each material every 10ms from a timer,
+    // so disposing them mid-warm (a rebuild) makes three throw out of that timer — the promise then
+    // never settles and no catch can see it. `warming` keeps show() from rebuilding over this build
     if (!_warmed)
       {
         _warmed = true;
+        warming = true;
         var tWarm = haxe.Timer.stamp();
         var progWarm0 = renderer.info.programs != null ? renderer.info.programs.length : 0;
         renderer.compileAsync(scene, camera).then(function(_)
           {
+            warming = false;
             composer.render();
             var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
             trace('[street-warmup] compileAsync+postfx ' + StreetPerf.r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
