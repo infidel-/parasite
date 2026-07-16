@@ -31,7 +31,10 @@ class Check {
       // FAIL: doorless. Only SIMPLE buildings carry the hard guarantee (a front door, street face or
       // anyFront fallback). Composite (+/T/L) pieces door only their own street faces — a buried inner
       // piece legitimately has none while the overall footprint still has doors, so they're exempt.
-      if (fi.simple && !doorSeen.exists(b)) { doorless.push(i); fails.push({ id: i, reason: 'doorless', line: BDump.bline(i, b) }); }
+      // A storefront band IS an entrance: Entrances deliberately skips the door quad on a store that
+      // has a street face (the band covers it), so bandSeen satisfies the guarantee on its own —
+      // otherwise an island store, banded on every face, reads as doorless.
+      if (fi.simple && !doorSeen.exists(b) && !bandSeen.exists(b)) { doorless.push(i); fails.push({ id: i, reason: 'doorless', line: BDump.bline(i, b) }); }
       // FAIL: windows expected but none emitted (landlocked — every face buried / store with no street face)
       if (Geom.expectWindows(b) && !winSeen.exists(b)) { windowless.push(i); fails.push({ id: i, reason: 'windows expected, none emitted (landlocked?)', line: BDump.bline(i, b) }); }
       // INFO: intended blank box — simple bldg, windows not expected, no storefront band (just a door)

@@ -645,6 +645,21 @@ class CityGen {
     }
     for (b in buildings) if (b.facade == 3 && (b.w < 3 || b.d < 3 || flushNeighbour(b))) b.facade = 0;
 
+    // drop blank boxes: a concrete/brick/stone building whose every wall is buried can show no
+    // window at all (CityFaces.windowable is the same rule the render's window pass uses), and a
+    // windowless box is an anomaly the checklist FAILs. runs AFTER the metal downgrade above so
+    // `facade` is final — a warehouse demoted to concrete still owes windows — and after the
+    // landlocked drop so `tiles` already reflect it. one pass suffices: reverting a footprint to
+    // alley only ever UNBURIES its neighbours, so a drop can never create a new blank box.
+    // shapeKeep composites are exempt, as at the landlocked drop: an L/T/+ survives or dies whole,
+    // and pulling one buried piece out would leave a broken shape behind.
+    var windowed:Array<Building> = [];
+    for (b in buildings) {
+      if (b.shapeKeep || CityFaces.windowable(tiles, b)) { windowed.push(b); continue; }
+      fillRect(tiles, b.col, b.row, b.w, b.d, Tile.Alley);
+    }
+    buildings = windowed;
+
     // debug locators for the downgraded single-story shops (derived from the final
     // building list so it survives courtyard/L-turn re-subtraction). each carries a
     // `front` street cell (just outside the storefront) the cycler teleports the
