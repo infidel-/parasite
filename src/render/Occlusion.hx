@@ -7,8 +7,9 @@ import citygen.CityConfig.worldToCell;
 import citygen.CityModel.Building;
 import citygen.CityModel.Tile;
 
-// one fadeable building mesh + its lazily-built ghost overlay: a geometry-sharing clone whose unlit
-// MeshBasic materials sample no shadows/lights. as the building fades, the ghost dissolves IN over
+// one fadeable building mesh + its lazily-built ghost overlay: a geometry-sharing clone whose
+// materials sample no shadow maps (lit Lambert for a lit source, MeshBasic for an unlit one). as the
+// building fades, the ghost dissolves IN over
 // the still-solid real (cross-dissolving lit->ghost with no appearance pop); once it fully covers,
 // the real is hidden and the ghost eases on down to see-through. cheap per fragment, so the
 // see-through overdraw no longer pays the full shadowed PBR
@@ -281,21 +282,28 @@ class Occlusion {
       return best;
     }
 
-// build one stand-in material for a faded facade slot: a LIT-but-shadowless Lambert (the ghost mesh
-// keeps receiveShadow off, so it samples the moon/lamps but not the shadow maps — the expensive
-// part). the building mats are pure diffuse (roughness 1, metalness 0), so this matches the real's
-// shading closely and the cross-dissolve barely shifts brightness. blended + depth-open so it reads
-// see-through; emissive carried over so lit windows still glow while faded
-  static function makeGhost(real:Dynamic):Dynamic
+// does this source material sample lights? unlit MeshBasic facades must stay unlit as ghosts
+  static inline function isLit(m:Dynamic):Bool
+    return untyped m.isMeshBasicMaterial != true;
+
+// build one stand-in material for a faded facade slot: for a LIT source, a LIT-but-shadowless Lambert
+// (the ghost mesh keeps receiveShadow off, so it samples the moon/lamps but not the shadow maps — the
+// expensive part). the building mats are pure diffuse (roughness 1, metalness 0), so this matches the
+// real's shading closely and the cross-dissolve barely shifts brightness. blended + depth-open so it
+// reads see-through; emissive carried over so lit windows still glow while faded.
+// `lit` false -> unlit MeshBasic, matching an unlit source (see makeGhostMesh: a lit ghost over
+// normal-less geometry renders NaN, and bloom smears that NaN over the whole frame)
+  static function makeGhost(real:Dynamic, lit:Bool):Dynamic
     {
-      var g:Dynamic = new MeshLambertMaterial({
+      var opts = {
         map: real.map,
         transparent: true,
         opacity: 1.0,
         depthWrite: false,
         fog: true,
         side: real.side,
-      });
+      };
+      var g:Dynamic = lit ? new MeshLambertMaterial(opts) : new MeshBasicMaterial(opts);
       // ghostDim is a small tint/dim knob (1.0 = match the lit real); the lighting supplies brightness
       var col:Dynamic = (real.color != null ? real.color.clone() : new Color(0xffffff));
       col.multiplyScalar(RenderConfig.OCCLUSION.ghostDim);
@@ -321,9 +329,13 @@ class Occlusion {
   static function makeGhostMesh(real:Dynamic):Dynamic
     {
       var m:Dynamic = real.material;
+      // a ghost may only go LIT when the geometry actually carries normals: the single-story shopfronts
+      // ship an unlit MeshBasic over position+uv geometry, and a lit material reading the absent normal
+      // renders NaN fragments — which bloom then blurs across the entire frame (whole screen goes black)
+      var hasNormals = untyped real.geometry.attributes.normal != null;
       var gmat:Dynamic = Std.isOfType(m, Array)
-        ? [for (mm in (m : Array<Dynamic>)) makeGhost(mm)]
-        : makeGhost(m);
+        ? [for (mm in (m : Array<Dynamic>)) makeGhost(mm, hasNormals && isLit(mm))]
+        : makeGhost(m, hasNormals && isLit(m));
       var gm:Dynamic;
       if (untyped real.isInstancedMesh == true)
         {
