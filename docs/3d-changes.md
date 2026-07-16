@@ -56,6 +56,7 @@ Measured this way, **tactical = 513 calls: 175 shadow / 324 main / 14 post**.
 | `forceSinglePass` on decal materials | 513 → 458 calls (−55, −11%), no visual change | **landed** |
 | Merged city-wide shadow caster | shadow pass 175 → 16 calls | **landed** |
 | ^ the two together, measured in-game | calls −44/−52%, **submit −25%**, +2ms idle | **landed** |
+| Decals sample the atlas (per-instance UV rect) | 55 → **2** decal calls; 210 → 158 total | **landed** |
 | Roof-detail material hoist | ~750 → 6 materials; **0 draw calls** | **landed** (harmless) |
 | GTAO ambient occlusion | +994 calls, +10ms submit; 60 → 45fps | **landed, default OFF** `870d0f8` |
 | BatchedMesh for roof details | **+4 calls, +2ms submit, −3ms idle** | **reverted — worse** |
@@ -164,14 +165,44 @@ a 30-unit building throws a ~27-unit shadow). Shrinking XY silently deletes thos
 existing `halfExtent: 90` vs footprint 69 is about the right margin. Best safe win was ~21 calls;
 the merge above got 158 without touching coverage.
 
-## Open leads (measured, not yet acted on)
+### Decals sample the atlas directly — 55 decal calls → 2
+Closes the "`DecalBatch` groups are per-texture" open lead, and the lead named the wrong cause.
 
-### `DecalBatch` groups are per-texture and never culled
-55 live groups, `frustumCulled = false` (deliberate — the shuffling instances leave the bounding
-sphere stale), so **all of them draw every frame regardless of visibility**. The instance histogram
-is mostly empty draws: **49 groups hold a single instance**, 26 hold two, and the largest holds 24.
-After `forceSinglePass` that is still ~55 always-on calls. Fewer/atlassed textures or a real cull
-would take most of it. Untried.
+`Sprites.tex()`/`texContent()` take the packed `entities` atlas and cut **every cell into its own
+`CanvasTexture`** (cached per `imageName:ix:iy:male:mul`). `DecalBatch` keyed its groups on
+`tex.uuid`, so each cell opened its own group: **55 groups for 122 decals**, one draw each. We were
+un-atlasing an atlas and then paying per cell for it.
+
+Fix: keep one full-atlas texture per `(imageName, male, mul)` — `mul` has only 2 values — and pass
+each cell's UV rect on an `instanceUV` vec4 attribute beside the existing `instanceAlpha`, remapping
+`vMapUv` after `#include <uv_vertex>`. The group key becomes the atlas + `rough`/`metal`:
+
+| | groups | decal calls | total calls |
+|---|---|---|---|
+| before | 55 | 55 | 210 |
+| after | **2** | **2** | **158** |
+
+The two survivors are exactly the two materials: matte debris/money (`rough 1`, 106 instances) and
+wet blood (`rough 0.4`, 16). 210 − 158 = 52 ≈ the 53 groups removed, so nothing else moved.
+
+Facts worth keeping:
+- **Mipmaps had to go off** (`generateMipmaps = false`, `minFilter = LinearFilter`). Cells sit
+  edge-to-edge, so a coarse mip averages neighbouring cells and a decal samples its neighbour's
+  pixels at distance. The per-cell crops could mip safely *because* each owned a texture; an atlas
+  cell cannot. Decals radius-fade out before they minify far enough for aliasing to beat the bleed —
+  visually signed off. If shimmer ever shows up, the fix is padded atlas gutters, not a revert.
+- **Half-texel inset on every rect**, same reason: a linear tap exactly on a cell boundary pulls in
+  the neighbour. Verified in the buffer: cells come out `63×62` px, not `64×64`.
+- The `tex()` crop path stays for the quad decals (wall blood, emissive acid/slime/black). Only the
+  batched path moved, so a crop is now cut only for splats that actually need one.
+- Costs **~19MB of GPU texture** (two darkened 768×3072 atlas copies) the tiny crops didn't. Folding
+  `mul` into `material.color` would halve that but multiplies in linear space, not sRGB like
+  `darkenCanvas` — a different look for no draw-call gain. Not done.
+
+Verifying UV plumbing without a screenshot: read `instanceUV` off the geometry in the census wrapper
+and check the rects are in-bounds, distinct, and land on the cell grid (`u` stepped by exactly
+`64/768`). That caught nothing here, but it is what separates "rects are self-consistent" from "each
+decal got its own cell" — only the second is visible, and only to a human.
 
 ## Reverted / rejected
 

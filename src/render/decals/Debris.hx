@@ -28,18 +28,21 @@ class Debris {
     {
       if (list == null)
         return;
+      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
+      if (atlas == null)
+        return;
       for (s in list)
         {
-          var gs = d.sprites.texContent('entities', s.ix, s.iy, false, RenderConfig.DECAL.debrisMul);
-          if (gs == null)
+          var r = d.sprites.contentRect('entities', s.ix, s.iy, false);
+          if (r == null)
             continue;
           var w = CityConfig.cellToWorld(s.col + s.dx, s.row + s.dy);
           var op = d.radiusOp(w.x, w.z);
           if (op <= 0.001)
             continue;
           // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size
-          d.batch.add(gs.tex, w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z,
-            Sprites.SIZE * gs.fw * s.scale, Sprites.SIZE * gs.fh * s.scale, s.angle, op, 1.0, 0.0);
+          d.batch.add(atlas, r, w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z,
+            Sprites.SIZE * r.fw * s.scale, Sprites.SIZE * r.fh * s.scale, s.angle, op, 1.0, 0.0);
         }
     }
 }

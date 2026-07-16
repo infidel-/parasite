@@ -28,6 +28,7 @@ class Sprites {
   var svgImgs:Map<String, Dynamic> = new Map();         // svg cache key -> decoding <img> (async)
   var contentCache:Map<String, GroundSprite> = new Map(); // atlas-crop -> content-trimmed sprite
   var shadowCache:Map<String, GroundSprite> = new Map();  // atlas-crop -> black soft-edged silhouette
+  var rectCache:Map<String, AtlasRect> = new Map();       // atlas cell -> UV rect into the shared atlas texture
   var idx:Int = 0;                                      // next free pool slot this frame
   // scratch reused by paintShadow so a shadow pass allocates nothing
   var _sa:Vector3 = new Vector3();
@@ -398,6 +399,117 @@ class Sprites {
       var gs:GroundSprite = { tex: tex, fw: cw / t, fh: ch / t, by: (t - 1 - maxY) / t };
       contentCache.set(key, gs);
       return gs;
+    }
+
+// the whole sprite atlas as ONE texture, darkened by mul — the shared map behind every batched
+// ground decal. tex()/texContent() cut each cell into a texture of its own, which forces DecalBatch
+// to open a group (a draw call) per cell; sampling the atlas directly with a per-instance UV rect
+// collapses those to one group per material. null until the atlas image decodes (retry, like tex())
+  public function atlasTex(imageName:String, male:Bool, mul:Float = 1.0):CanvasTexture
+    {
+      var key = 'atlas:' + imageName + ':' + male + ':' + mul;
+      if (texCache.exists(key)) return texCache.get(key);
+      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      // retry next frame if the atlas image isn't decoded yet
+      if (img == null ||
+          !img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = img.naturalWidth;
+      cv.height = img.naturalHeight;
+      var cx = cv.getContext('2d');
+      cx.drawImage(img, 0, 0);
+      if (mul < 1.0)
+        darkenCanvas(cx, cv.width, cv.height, mul);
+      var tex = new CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      // mipmaps OFF: cells sit edge-to-edge, so a coarse mip averages neighbouring cells into each
+      // other and a decal would sample its neighbour's pixels at distance. the per-cell crops could
+      // mip safely because each owned its own texture; an atlas cell cannot. decals radius-fade out
+      // well before they minify far enough for the aliasing to beat the bleed
+      // ponytail: no-mips over rebuilding the atlas with padded gutters — revisit if decals shimmer
+      untyped tex.generateMipmaps = false;
+      untyped tex.minFilter = THREE.LinearFilter;
+      texCache.set(key, tex);
+      return tex;
+    }
+
+// one whole atlas cell as a UV rect into atlasTex()
+  public function cellRect(imageName:String, ix:Int, iy:Int, male:Bool):AtlasRect
+    {
+      var key = 'cell:' + imageName + ':' + ix + ':' + iy + ':' + male;
+      if (rectCache.exists(key)) return rectCache.get(key);
+      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      if (img == null ||
+          !img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var t = Const.TILE_SIZE_CLEAN;
+      // same source box tex() crops (the +1/-1 kludge avoids atlas bleed)
+      var r = uvRect(img.naturalWidth, img.naturalHeight, ix * t, iy * t + 1, t, t - 1, 1.0, 1.0);
+      rectCache.set(key, r);
+      return r;
+    }
+
+// one atlas cell trimmed to its opaque content box, as a UV rect into atlasTex() + the box size as
+// a cell fraction — the atlas-sampling twin of texContent(), keeping the pixels where they are
+// instead of cropping them into their own texture. scans the cell's alpha once per unique cell
+  public function contentRect(imageName:String, ix:Int, iy:Int, male:Bool):AtlasRect
+    {
+      var key = 'content:' + imageName + ':' + ix + ':' + iy + ':' + male;
+      if (rectCache.exists(key)) return rectCache.get(key);
+      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      if (img == null ||
+          !img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var t = Const.TILE_SIZE_CLEAN;
+      // draw the full cell to a scratch canvas, then scan its alpha for the opaque bounding box
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = t; cv.height = t;
+      var cx = cv.getContext('2d');
+      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      var data = cx.getImageData(0, 0, t, t).data;
+      var minX = t, minY = t, maxX = -1, maxY = -1;
+      for (py in 0...t)
+        for (px in 0...t)
+          {
+            if (data[(py * t + px) * 4 + 3] <= 8) // near-transparent -> not content
+              continue;
+            if (px < minX) minX = px;
+            if (px > maxX) maxX = px;
+            if (py < minY) minY = py;
+            if (py > maxY) maxY = py;
+          }
+      // fully transparent cell: fall back to the whole cell so we still return something valid
+      if (maxX < minX)
+        {
+          minX = 0; minY = 0; maxX = t - 1; maxY = t - 1;
+        }
+      var cw = maxX - minX + 1, ch = maxY - minY + 1;
+      // the scan canvas stretched t-1 source rows over t rows (that same bleed kludge), so undo the
+      // scale on the way back to real atlas pixels
+      var sy = (t - 1) / t;
+      var r = uvRect(img.naturalWidth, img.naturalHeight,
+        ix * t + minX, iy * t + 1 + minY * sy, cw, ch * sy, cw / t, ch / t);
+      rectCache.set(key, r);
+      return r;
+    }
+
+// atlas pixel box -> UV rect. inset by half a texel on every edge: cells sit edge-to-edge, so a
+// linear tap exactly on the boundary would pull in the neighbouring cell's texel. v is flipped
+// (CanvasTexture uploads flipY, so v grows upward while atlas rows grow downward)
+  function uvRect(aw:Float, ah:Float, px:Float, py:Float, pw:Float, ph:Float, fw:Float, fh:Float):AtlasRect
+    {
+      return {
+        u: (px + 0.5) / aw,
+        v: 1 - (py + ph - 0.5) / ah,
+        w: (pw - 1) / aw,
+        h: (ph - 1) / ah,
+        fw: fw,
+        fh: fh,
+      };
     }
 
 // build a black, soft-edged silhouette of an atlas cell for a fake cast shadow. reuses texContent
