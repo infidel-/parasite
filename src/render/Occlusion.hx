@@ -339,7 +339,11 @@ class Occlusion {
       var gm:Dynamic;
       if (untyped real.isInstancedMesh == true)
         {
-          gm = new InstancedMesh(real.geometry, gmat, real.count);
+          // size the ghost by the source's CAPACITY, not its live count: pooled/culled instanced meshes
+          // (Models.cull packs visible instances per frame, DecalBatch allocates at CAP) keep a full-size
+          // instanceMatrix and drive count down under it, so allocating by count overflows the copy below
+          var cap = Std.int((untyped real.instanceMatrix.array.length) / 16);
+          gm = new InstancedMesh(real.geometry, gmat, cap);
           untyped gm.instanceMatrix.array.set(real.instanceMatrix.array);
           untyped gm.instanceMatrix.needsUpdate = true;
           gm.count = real.count;
