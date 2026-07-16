@@ -26,14 +26,15 @@ typedef Occ = {
 // fades a building to a translucent ghost while it sits between the camera and the player, so
 // the player never hides behind a wall. Built once per city: derives each building's world
 // AABB and buckets every scene mesh into the building it belongs to (by userData.b, else by
-// position). Each frame a segment/AABB slab test picks the occluders and eases a fade; a faded
-// mesh swaps to a cheap unlit ghost material so the see-through overdraw is affordable. StreetView
-// owns and drives it.
+// position + a size guard — see pick). Each frame a segment/AABB slab test picks the occluders and
+// eases a fade; a faded mesh swaps to a cheap ghost material that samples no shadow maps, so the
+// see-through overdraw is affordable. StreetView owns and drives it.
 class Occlusion {
   static inline var CELL = CityConfig.CELL;
   static var checked = false;
 
   var occ:Array<Occ> = [];
+  var skipped:Array<Dynamic> = []; // meshes pick() left unbucketed (never fade) — __occ.skipped()
   var tiles:Array<Array<Tile>>;
   var tactical = false;
   var tacticalSelected:haxe.ds.ObjectMap<Building, Bool> = new haxe.ds.ObjectMap();
@@ -79,7 +80,19 @@ class Occlusion {
         // material into the building's fade set and clobber the opacity we drive in apply()
         if (untyped o.userData != null && o.userData.occMarker == true) return;
         var bi = pick(o, idxOf);
-        if (bi < 0) return;
+        if (bi < 0)
+          {
+            // unbucketed = never fades. the ground/lamp/roof-shadow meshes land here by design
+            // (see pick), so record them: a future world-baked mesh that silently stops fading
+            // with its building shows up in this list instead of being invisible
+            var s = xzSize(o);
+            var mm:Dynamic = o.material;
+            skipped.push({
+              cls: StreetPerf.matCls(Std.isOfType(mm, Array) ? (mm : Array<Dynamic>)[0] : mm),
+              size: [Math.round(s.x * 10) / 10, Math.round(s.z * 10) / 10],
+            });
+            return;
+          }
         if (o.material == null) return;
         occ[bi].meshes.push({ mesh: o, ghost: null, ghostVisible: false, realHidden: false });
       });
@@ -87,10 +100,10 @@ class Occlusion {
     }
 
 // console debug helpers (persistent) — what each building actually fades.
-//   __occ.stats() -> { buildings, meshes, bad }
-//   __occ.bad()   -> [{ cls, radius, foot, pos, col, row }]  meshes bucketed into a building smaller
-//                    than they are: pick()'s position fallback maps world-baked geometry (position
-//                    0,0,0 — the ground meshes) onto whatever building covers the city centre
+//   __occ.stats()   -> { buildings, meshes, skipped }
+//   __occ.skipped() -> [{ cls, size:[x,z] }]  meshes pick() left unbucketed, so they never fade:
+//                      the city-wide ground/lamp/roof-shadow meshes (by design), plus anything the
+//                      size guard rejected. audits the guard's own decisions
   function attachDbg():Void
     {
       untyped js.Browser.window.__occ = {
@@ -102,49 +115,11 @@ class Occlusion {
             return {
               buildings: occ.length,
               meshes: n,
-              bad: badList().length,
+              skipped: skipped.length,
             };
           },
-        bad: function() return badList(),
+        skipped: function() return skipped,
       };
-    }
-
-// meshes whose world radius dwarfs the footprint of the building they were bucketed into — a mesh
-// that big cannot belong to one building, so every entry here is a mis-bucket that will vanish
-// (or go see-through) the moment that building fades
-  function badList():Array<Dynamic>
-    {
-      var out:Array<Dynamic> = [];
-      for (o in occ)
-        {
-          var fx = o.maxX - o.minX;
-          var fz = o.maxZ - o.minZ;
-          var foot = Math.sqrt(fx * fx + fz * fz) / 2; // footprint half-diagonal
-          for (fm in o.meshes)
-            {
-              var d:Dynamic = fm.mesh;
-              var g:Dynamic = d.geometry;
-              if (g == null)
-                continue;
-              if (g.boundingSphere == null)
-                g.computeBoundingSphere();
-              if (g.boundingSphere == null)
-                continue;
-              var r:Float = g.boundingSphere.radius * Math.max(d.scale.x, Math.max(d.scale.y, d.scale.z));
-              if (r <= foot)
-                continue;
-              var m:Dynamic = d.material;
-              out.push({
-                cls: StreetPerf.matCls(Std.isOfType(m, Array) ? (m : Array<Dynamic>)[0] : m),
-                radius: Math.round(r * 10) / 10,
-                foot: Math.round(foot * 10) / 10,
-                pos: [d.position.x, d.position.y, d.position.z],
-                col: o.b.col,
-                row: o.b.row,
-              });
-            }
-        }
-      return out;
     }
 
 // build one building-footprint marker: a flat semi-transparent quad laid on the ground over the
@@ -263,19 +238,38 @@ class Occlusion {
         tacticalSelected = new haxe.ds.ObjectMap();
     }
 
+// world XZ size of a mesh, instances included: Box3.setFromObject unions over an InstancedMesh's
+// per-instance matrices, which is where the city-wide spread of the lamps/roof-shadows lives —
+// their geometry is one small quad at the origin. SIZE, not position: the static-city chunk groups
+// have matrixWorldAutoUpdate off (see makeGhostMesh), so a matrixWorld here may be stale, and size
+// is translation-invariant. XZ only: a 3D radius is dominated by a building's HEIGHT
+  static function xzSize(o:Object3D):Vector3
+    {
+      return new Box3().setFromObject(o).getSize(new Vector3());
+    }
+
 // which building a mesh belongs to: its userData.b tag if present (box + window meshes),
 // else the nearest-centre building whose AABB (margin-expanded for face-proud decals) holds it
+// AND whose footprint is big enough to contain it. -1 = belongs to no building, never fades
   function pick(o:Object3D, idxOf:haxe.ds.ObjectMap<Building, Int>):Int
     {
       var b:Building = (o.userData != null) ? o.userData.b : null;
-      if (b != null && idxOf.exists(b)) return idxOf.get(b);
+      if (b != null && idxOf.exists(b)) return idxOf.get(b); // tag wins: mergeBand/gable roofs are
+                                                             // world-baked at (0,0,0) too, and only
+                                                             // the tag saves them from the size guard
       var px = o.position.x, pz = o.position.z, m = RenderConfig.OCCLUSION.margin;
+      var size = xzSize(o);
       var best = -1;
       var bestD = 1e18;
       for (i in 0...occ.length)
         {
           var e = occ[i];
           if (px < e.minX - m || px > e.maxX + m || pz < e.minZ - m || pz > e.maxZ + m) continue;
+          // a mesh wider than the building itself cannot be part of it. world-baked geometry and
+          // instanced city-wide meshes never set position, so they sit at (0,0,0) — the exact grid
+          // centre — and would otherwise bucket into whatever building covers it and go see-through
+          // with it. CELL of slack: a parapet coping rim overhangs its own footprint by ~0.74
+          if (size.x > (e.maxX - e.minX) + CELL || size.z > (e.maxZ - e.minZ) + CELL) continue;
           var dx = px - e.cx, dz = pz - e.cz, d = dx * dx + dz * dz;
           if (d < bestD) { bestD = d; best = i; }
         }
