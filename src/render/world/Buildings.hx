@@ -52,6 +52,11 @@ class Buildings {
     doorTex.wrapS = doorTex.wrapT = THREE.ClampToEdgeWrapping;       // single image per door, no tiling
     var roofMetalTex = Textures.loadTexture(TEXTURES.roofMetal, 'wall'); // gable-roof slopes (metal warehouse)
 
+    // every building box baked into ONE position-only caster (built after the loop) — see the note
+    // at the box below for why the boxes themselves stop casting
+    var shadowPos:Array<Float> = [];
+    var shadowIdx:Array<Int> = [];
+
     for (bi in 0...buildings.length) {
       var b = buildings[bi];
       var wWorld = b.w * CELL;
@@ -111,10 +116,25 @@ class Buildings {
       box.userData.b = b; box.userData.bidx = bi; // Inspector: alt+click → record
       // the building volume is the real shadow caster (moon + nearby lamps) and receiver (neighbour
       // shadows land on its walls). wall-overlay bands stay flush with the box faces, so they don't
-      // need to cast — the box covers them
-      box.castShadow = true;
+      // need to cast — the box covers them.
+      // the box does NOT cast directly: flattenBox leaves ~3 material groups on it, and the depth
+      // pass draws one call PER GROUP even though every group resolves to the same depth material —
+      // 160 shadow calls citywide. bake the box into the merged caster below instead (depth wants
+      // position only, no uv/normal). measured: 175 -> 16 shadow calls, 462 -> 304 total
+      box.castShadow = false;
       box.receiveShadow = true;
       scene.add(box);
+      // world-bake: BoxGeometry is origin-centred and the box is never rotated, so the mesh
+      // position IS the offset
+      var bgeo:BufferGeometry = cast boxGeo;
+      var bpos = bgeo.attributes.position;
+      var vbase = Std.int(shadowPos.length / 3);
+      for (i in 0...(bpos.count : Int)) {
+        shadowPos.push(bpos.getX(i) + center.x);
+        shadowPos.push(bpos.getY(i) + b.h / 2);
+        shadowPos.push(bpos.getZ(i) + center.z);
+      }
+      for (k in 0...(bgeo.index.count : Int)) shadowIdx.push(vbase + bgeo.index.getX(k));
 
       // storefront overlay: tile 2-cell-wide 16:9 bays across each street face. One bay per
       // face carries the entrance door (chosen from shopDoor), the rest are the door-less
@@ -205,7 +225,33 @@ class Buildings {
         Roofs.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
       }
     }
+    addShadowCaster(scene, shadowPos, shadowIdx);
   }
+
+// the whole city's building volumes as ONE caster: every box baked into a single position-only
+// geometry (the depth material reads nothing else — walls are opaque, no alphaTest), so the moon's
+// depth pass costs one call instead of one per material group per building. the city is only ~2.7k
+// tris, so the geometry is free; this is pure draw-call overhead being removed.
+// it must also sit in the beauty pass: three has no shadow-only object (WebGLShadowMap tests
+// object.layers against the VIEW camera, so a layer the camera can't see hides it from the shadow
+// map too), hence colorWrite off — one draw that writes nothing.
+// Occlusion leaves it alone: world-baked verts put it at the origin, so pick()'s size guard rejects
+// it into __occ.skipped() like the other city-wide meshes. it is invisible, so it must not fade
+  static function addShadowCaster(scene:Scene, pos:Array<Float>, idx:Array<Int>):Void
+    {
+      var g = new BufferGeometry();
+      g.setAttribute('position', new Float32BufferAttribute(pos, 3));
+      g.setIndex(idx);
+      var m = new Mesh(g, new MeshBasicMaterial({
+        colorWrite: false,
+        depthWrite: false,
+        depthTest: false,
+      }));
+      m.castShadow = true;
+      // spans the city, so its bounding sphere is always on screen — the test would never reject it
+      untyped m.frustumCulled = false;
+      scene.add(m);
+    }
 
   // merge upright wall-band quads that all share ONE material into a single mesh (one draw
   // call): each quad is fw×h, centred at world (fx, h/2, fz), rotated rotY about Y, with
