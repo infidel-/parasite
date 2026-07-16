@@ -281,7 +281,7 @@ class StreetPerf {
 
 // a material's Poly.tag class (userData.cls) for the scene dump — the only meaningful label on these
 // materials; falls back to name then type
-  static function matCls(m:Dynamic):String
+  public static function matCls(m:Dynamic):String
     {
       if (m == null)
         return '?';

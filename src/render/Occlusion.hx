@@ -82,6 +82,68 @@ class Occlusion {
         if (o.material == null) return;
         occ[bi].meshes.push({ mesh: o, ghost: null, ghostVisible: false, realHidden: false });
       });
+      attachDbg();
+    }
+
+// console debug helpers (persistent) — what each building actually fades.
+//   __occ.stats() -> { buildings, meshes, bad }
+//   __occ.bad()   -> [{ cls, radius, foot, pos, col, row }]  meshes bucketed into a building smaller
+//                    than they are: pick()'s position fallback maps world-baked geometry (position
+//                    0,0,0 — the ground meshes) onto whatever building covers the city centre
+  function attachDbg():Void
+    {
+      untyped js.Browser.window.__occ = {
+        stats: function()
+          {
+            var n = 0;
+            for (o in occ)
+              n += o.meshes.length;
+            return {
+              buildings: occ.length,
+              meshes: n,
+              bad: badList().length,
+            };
+          },
+        bad: function() return badList(),
+      };
+    }
+
+// meshes whose world radius dwarfs the footprint of the building they were bucketed into — a mesh
+// that big cannot belong to one building, so every entry here is a mis-bucket that will vanish
+// (or go see-through) the moment that building fades
+  function badList():Array<Dynamic>
+    {
+      var out:Array<Dynamic> = [];
+      for (o in occ)
+        {
+          var fx = o.maxX - o.minX;
+          var fz = o.maxZ - o.minZ;
+          var foot = Math.sqrt(fx * fx + fz * fz) / 2; // footprint half-diagonal
+          for (fm in o.meshes)
+            {
+              var d:Dynamic = fm.mesh;
+              var g:Dynamic = d.geometry;
+              if (g == null)
+                continue;
+              if (g.boundingSphere == null)
+                g.computeBoundingSphere();
+              if (g.boundingSphere == null)
+                continue;
+              var r:Float = g.boundingSphere.radius * Math.max(d.scale.x, Math.max(d.scale.y, d.scale.z));
+              if (r <= foot)
+                continue;
+              var m:Dynamic = d.material;
+              out.push({
+                cls: StreetPerf.matCls(Std.isOfType(m, Array) ? (m : Array<Dynamic>)[0] : m),
+                radius: Math.round(r * 10) / 10,
+                foot: Math.round(foot * 10) / 10,
+                pos: [d.position.x, d.position.y, d.position.z],
+                col: o.b.col,
+                row: o.b.row,
+              });
+            }
+        }
+      return out;
     }
 
 // build one building-footprint marker: a flat semi-transparent quad laid on the ground over the
