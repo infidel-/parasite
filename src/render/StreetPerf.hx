@@ -96,8 +96,8 @@ class StreetPerf {
         }
     }
 
-// one-shot draw-call breakdown — group every VISIBLE drawable by material, sorted desc. names what
-// fills the ~490 draws, so batching effort goes where the draws really are
+// one-shot draw-call breakdown — group every drawable three would actually reach by material, sorted
+// desc. names what fills the ~490 draws, so batching effort goes where the draws really are
   function dumpScene(scene:Scene):Void
     {
       var byName = new Map<String,Int>();
@@ -107,7 +107,9 @@ class StreetPerf {
         {
           total++;
           var d:Dynamic = o;
-          if ((d.isMesh != true && d.isInstancedMesh != true) || d.visible != true)
+          if (d.isMesh != true && d.isInstancedMesh != true)
+            return;
+          if (!reached(o))
             return;
           drawables++;
           var m:Dynamic = d.material;
@@ -136,6 +138,21 @@ class StreetPerf {
       var txt = buf.toString();
       trace(txt + '\n(copied to clipboard)');
       copyText(txt);
+    }
+
+// would three's projectObject descend to this object at all? it early-outs on the first invisible
+// ANCESTOR, so an object's own .visible proves nothing on its own — the chunk cull hides whole parent
+// groups and leaves every child visible=true. walk up to the root, the same test three applies down
+  static function reached(o:Object3D):Bool
+    {
+      var n:Object3D = o;
+      while (n != null)
+        {
+          if (!n.visible)
+            return false;
+          n = n.parent;
+        }
+      return true;
     }
 
 // open a GPU timer query around the composer render (free when not profiling). only ONE TIME_ELAPSED
