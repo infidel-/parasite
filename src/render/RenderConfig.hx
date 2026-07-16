@@ -132,6 +132,12 @@ class RenderConfig {
   // stays visible, then eases back to solid when it no longer blocks the sightline
   public static final OCCLUSION = {
     fade: 0.22,    // opacity an occluding building fades to (0 = invisible, 1 = solid)
+    ghostDim: 1.0,  // faded facades swap to a LIT-but-shadowless Lambert ghost (samples moon/lamps,
+                    // NOT the shadow maps — the costly part); the lighting supplies brightness so this
+                    // is just a tint/dim knob (1.0 = match the lit real, lower to darken the ghost)
+    ghostCross: 0.6, // fade level where the ghost has fully dissolved IN over the still-solid real
+                     // (real is hidden below this, ghost eases on to see-through above it). raises =
+                     // longer lit->ghost cross-dissolve, less pop; must stay above `fade`
     lerp: 0.15,    // per-30fps-frame ease of fade toward its target (dt-compensated)
     snap: 0.15,    // lock fade to target once within this gap: skips the slow exponential tail
                    // (invisible on the flat wall) so windows crisp back + bloom the moment the
@@ -490,7 +496,7 @@ class RenderConfig {
     // frame): castShadow is part of the material program key (NUM_SPOT_LIGHT_SHADOWS), so flipping it
     // live would trigger the very recompile the fixed pool exists to avoid. nearest lit lamps tend to
     // occupy the low-index slots (LampLights fills nearest-first), so these casters follow the player
-    shadowCasters: 6,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
+    shadowCasters: 8,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
     shadowMapSize: 512,   // per-caster shadow map edge — cone is local + small, 512 is plenty
     shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
     shadowFadeBand: 4.0,  // cells over which a caster's shadow.intensity ramps to 0 as it nears the

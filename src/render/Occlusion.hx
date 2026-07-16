@@ -7,24 +7,27 @@ import citygen.CityConfig.worldToCell;
 import citygen.CityModel.Building;
 import citygen.CityModel.Tile;
 
-// one fadeable material + the base state we lerp its opacity down from and back to.
-// curT tracks the live transparent flag so we recompile (needsUpdate) only when it flips
-typedef FadeMat = { mat:Dynamic, opacity:Float, transparent:Bool, depthWrite:Bool, emissive:Float, curT:Bool };
-// per-building fade record: its world AABB, its (de-shared) materials, and the eased fade
+// one fadeable building mesh + its lazily-built ghost overlay: a geometry-sharing clone whose unlit
+// MeshBasic materials sample no shadows/lights. as the building fades, the ghost dissolves IN over
+// the still-solid real (cross-dissolving lit->ghost with no appearance pop); once it fully covers,
+// the real is hidden and the ghost eases on down to see-through. cheap per fragment, so the
+// see-through overdraw no longer pays the full shadowed PBR
+typedef FadeMesh = { mesh:Dynamic, ghost:Dynamic, ghostVisible:Bool, realHidden:Bool };
+// per-building fade record: its world AABB, its fadeable meshes, and the eased fade
 typedef Occ = {
   b:Building,
   minX:Float, maxX:Float, minZ:Float, maxZ:Float, maxY:Float, cx:Float, cz:Float,
-  mats:Array<FadeMat>, fade:Float, target:Float,
+  meshes:Array<FadeMesh>, fade:Float, target:Float,
   plate:Mesh,   // flat ground fill marker, shown only while this building is faded
   outline:Mesh  // glowing emissive band hugging the footprint edge (visible under any lighting)
 };
 
-// fades a building to semi-transparent while it sits between the camera and the player, so
+// fades a building to a translucent ghost while it sits between the camera and the player, so
 // the player never hides behind a wall. Built once per city: derives each building's world
 // AABB and buckets every scene mesh into the building it belongs to (by userData.b, else by
-// position), cloning any material shared between buildings so each fades independently. Each
-// frame a segment/AABB slab test picks the occluders and eases their opacity. StreetView owns
-// and drives it.
+// position). Each frame a segment/AABB slab test picks the occluders and eases a fade; a faded
+// mesh swaps to a cheap unlit ghost material so the see-through overdraw is affordable. StreetView
+// owns and drives it.
 class Occlusion {
   static inline var CELL = CityConfig.CELL;
   static var checked = false;
@@ -60,7 +63,7 @@ class Occlusion {
             maxY: b.h + RenderConfig.PARAPET_H_BRICK,
             cx: c.x,
             cz: c.z,
-            mats: [],
+            meshes: [],
             fade: 1.0,
             target: 1.0,
             plate: makePlate(scene, c.x, c.z, b.w * CELL, b.d * CELL),
@@ -68,7 +71,7 @@ class Occlusion {
           });
           idxOf.set(b, i);
         }
-      // bucket every mesh into its building and de-share its materials
+      // bucket every mesh into its building and register each material slot for fading
       scene.traverse(function(o:Object3D) {
         if (untyped o.isMesh != true && o.isInstancedMesh != true) return;
         // skip our own footprint markers (already in the scene): bucketing them would fold their
@@ -76,14 +79,8 @@ class Occlusion {
         if (untyped o.userData != null && o.userData.occMarker == true) return;
         var bi = pick(o, idxOf);
         if (bi < 0) return;
-        var m:Dynamic = o.material;
-        if (m == null) return;
-        if (Std.isOfType(m, Array))
-          {
-            var arr:Array<Dynamic> = m;
-            for (k in 0...arr.length) arr[k] = own(arr[k], bi);
-          }
-        else o.material = own(m, bi);
+        if (o.material == null) return;
+        occ[bi].meshes.push({ mesh: o, ghost: null, ghostVisible: false, realHidden: false });
       });
     }
 
@@ -222,28 +219,85 @@ class Occlusion {
       return best;
     }
 
-// hand back a material private to building bi, recording its base state once: return it as-is
-// the first time (tagged owner=bi), skip if already ours, clone it if another building owns it
-  function own(m:Dynamic, bi:Int):Dynamic
+// build one stand-in material for a faded facade slot: a LIT-but-shadowless Lambert (the ghost mesh
+// keeps receiveShadow off, so it samples the moon/lamps but not the shadow maps — the expensive
+// part). the building mats are pure diffuse (roughness 1, metalness 0), so this matches the real's
+// shading closely and the cross-dissolve barely shifts brightness. blended + depth-open so it reads
+// see-through; emissive carried over so lit windows still glow while faded
+  static function makeGhost(real:Dynamic):Dynamic
     {
-      var owner:Null<Int> = untyped m.__occOwner;
-      if (owner == bi) return m;               // already ours + recorded
-      if (owner == null) { untyped m.__occOwner = bi; record(m, bi); return m; }
-      var c:Dynamic = m.clone();               // shared with another building -> private copy
-      untyped c.__occOwner = bi;
-      record(c, bi);
-      return c;
+      var g:Dynamic = new MeshLambertMaterial({
+        map: real.map,
+        transparent: true,
+        opacity: 1.0,
+        depthWrite: false,
+        fog: true,
+        side: real.side,
+      });
+      // ghostDim is a small tint/dim knob (1.0 = match the lit real); the lighting supplies brightness
+      var col:Dynamic = (real.color != null ? real.color.clone() : new Color(0xffffff));
+      col.multiplyScalar(RenderConfig.OCCLUSION.ghostDim);
+      g.color = col;
+      if (real.emissive != null)
+        g.emissive = real.emissive.clone();
+      if (real.emissiveMap != null)
+        g.emissiveMap = real.emissiveMap;
+      if (real.emissiveIntensity != null)
+        g.emissiveIntensity = real.emissiveIntensity;
+      // keep the source alpha cutout (window frames, cut-out details) so the ghost holds its silhouette
+      if (real.alphaMap != null)
+        g.alphaMap = real.alphaMap;
+      if (real.alphaTest != null && real.alphaTest > 0)
+        g.alphaTest = real.alphaTest;
+      return g;
     }
 
-// snapshot a material's solid-state values so fade can scale from them and restore them
-  function record(m:Dynamic, bi:Int):Void
+// build the ghost OVERLAY mesh for a real building mesh: a geometry-sharing clone (Mesh or
+// InstancedMesh) carrying ghost materials, parked in the scene next to the real at the same
+// transform, hidden until the fade needs it. drawn ON TOP of the still-solid real during the
+// cross-dissolve, then alone once the real hides
+  static function makeGhostMesh(real:Dynamic):Dynamic
     {
-      occ[bi].mats.push({ mat: m,
-        opacity: (m.opacity == null ? 1.0 : m.opacity),
-        transparent: (m.transparent == true),
-        depthWrite: (m.depthWrite == null ? true : m.depthWrite),
-        emissive: (m.emissiveIntensity == null ? -1.0 : m.emissiveIntensity),
-        curT: (m.transparent == true) });
+      var m:Dynamic = real.material;
+      var gmat:Dynamic = Std.isOfType(m, Array)
+        ? [for (mm in (m : Array<Dynamic>)) makeGhost(mm)]
+        : makeGhost(m);
+      var gm:Dynamic;
+      if (untyped real.isInstancedMesh == true)
+        {
+          gm = new InstancedMesh(real.geometry, gmat, real.count);
+          untyped gm.instanceMatrix.array.set(real.instanceMatrix.array);
+          untyped gm.instanceMatrix.needsUpdate = true;
+          gm.count = real.count;
+        }
+      else
+        gm = new Mesh(real.geometry, gmat);
+      gm.position.copy(real.position);
+      gm.quaternion.copy(real.quaternion);
+      gm.scale.copy(real.scale);
+      // the ghost carries the real's shadow casting: the shadow pass renders its own depth material
+      // (ignores the ghost's blend/depthWrite=false), so while the real is hidden the ghost still
+      // casts the building's moon/lamp shadow — no shadow drop-out on fade
+      gm.castShadow = (real.castShadow == true);
+      untyped gm.userData.occMarker = true; // exclude from any re-bucketing traverse
+      gm.visible = false;
+      real.parent.add(gm);
+      // the static-city chunk groups have matrixWorldAutoUpdate off, so this subtree is skipped by the
+      // per-frame matrix walk — bake the ghost's world matrix here or it would render at the origin
+      gm.updateMatrixWorld(true);
+      return gm;
+    }
+
+// drive the overlay's blend (all its ghost slots share one eased opacity)
+  static function setGhostOpacity(ghost:Dynamic, op:Float):Void
+    {
+      var m:Dynamic = ghost.material;
+      if (Std.isOfType(m, Array))
+        {
+          var arr:Array<Dynamic> = m;
+          for (mm in arr) mm.opacity = op;
+        }
+      else m.opacity = op;
     }
 
 // per frame: fade buildings blocking the camera->player sightline; while aiming (wide) widen
@@ -428,26 +482,55 @@ class Occlusion {
         o.minX, o.maxX, o.minZ, o.maxZ, o.maxY, grow);
     }
 
-// push the current fade onto a building's materials (opacity + see-through depth + bloom cut)
+// push the current fade onto a building: cross-dissolve the ghost overlay IN over the still-solid
+// real while f eases from 1 down to ghostCross, then hide the real and ease the ghost on down to the
+// see-through target. reverse on un-fade. no appearance pop — the lit->unlit change is a dissolve
   function apply(o:Occ):Void
     {
-      var f = o.fade, faded = f < 0.999;
+      var f = o.fade;
+      var C = RenderConfig.OCCLUSION;
       // footprint marker: fade-in the ground plate + glowing edge outline as the building goes
       // see-through (both hidden while solid). the outline self-emits so it reads under any lighting
+      var faded = f < 0.999;
       o.plate.visible = faded;
-      untyped o.plate.material.opacity = (1 - f) * RenderConfig.OCCLUSION.plateAlpha;
+      untyped o.plate.material.opacity = (1 - f) * C.plateAlpha;
       o.outline.visible = faded;
-      untyped o.outline.material.opacity = (1 - f) * RenderConfig.OCCLUSION.outlineAlpha;
-      for (fm in o.mats)
+      untyped o.outline.material.opacity = (1 - f) * C.outlineAlpha;
+      // the fade SNAPS to its target within `snap` (crisp window bloom on solidify), so the ghost
+      // must be fully OUT (solid) above `hi` and flat at the see-through `rest` below `lo` — else the
+      // snap jump removes/adds a mid-opacity ghost in one frame = a pop. cross-dissolve only in
+      // between: ghost eases IN over the still-solid real from hi down to mid, then the real hides and
+      // the ghost eases on to rest from mid down to lo
+      var mid = C.ghostCross;   // ghost fully covers here (real hidden below)
+      var rest = C.fade;        // see-through opacity at rest
+      var hi = 1 - C.snap;      // at/above: solid (snap parks the fade at 1.0 up here)
+      var lo = rest + C.snap;   // at/below: parked see-through (snap parks the fade at rest down here)
+      var solid = f >= hi;
+      for (fm in o.meshes)
         {
-          var m = fm.mat;
-          var wantT = fm.transparent || faded;
-          // three keeps the opaque shader until needsUpdate; only recompile on the actual flip
-          if (wantT != fm.curT) { fm.curT = wantT; m.needsUpdate = true; }
-          m.transparent = wantT;
-          m.opacity = fm.opacity * f;
-          m.depthWrite = faded ? false : fm.depthWrite;
-          if (fm.emissive >= 0) m.emissiveIntensity = fm.emissive * f; // lit windows stop blooming
+          if (solid)
+            {
+              if (fm.ghostVisible) { fm.ghost.visible = false; fm.ghostVisible = false; }
+              if (fm.realHidden) { fm.mesh.visible = true; fm.realHidden = false; }
+              continue;
+            }
+          if (fm.ghost == null)
+            fm.ghost = makeGhostMesh(fm.mesh);
+          if (!fm.ghostVisible) { fm.ghost.visible = true; fm.ghostVisible = true; }
+          var op:Float;
+          if (f >= mid)
+            {
+              // cross-dissolve: ghost fades IN (0 at hi -> 1 at mid) over the still-visible real
+              if (fm.realHidden) { fm.mesh.visible = true; fm.realHidden = false; }
+              op = (hi - f) / (hi - mid);
+            }
+          else
+            {
+              // ghost fully covers: hide the real, ease the ghost from 1 (at mid) down to rest (at lo)
+              if (!fm.realHidden) { fm.mesh.visible = false; fm.realHidden = true; }
+              op = f <= lo ? rest : rest + (f - lo) / (mid - lo) * (1 - rest);
+            }
+          setGhostOpacity(fm.ghost, op);
         }
     }
 

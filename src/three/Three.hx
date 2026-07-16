@@ -252,6 +252,9 @@ typedef RendererInfo = {
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
   public function new(params:Dynamic);
 }
+@:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
+  public function new(params:Dynamic);
+}
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
   public function new(params:Dynamic);
   public var uniforms:Dynamic;
