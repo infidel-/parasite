@@ -94,6 +94,11 @@ class DecalBatch
         transparent: true,
         depthWrite: false,
         side: untyped THREE.DoubleSide,
+        // three draws a transparent DoubleSide material TWICE (back pass then front pass, each
+        // flagging needsUpdate). that split only matters for closed geometry where both faces can
+        // show at once; a flat decal quad shows one face, so the back pass is a pure duplicate.
+        // measured: 513 -> 458 calls citywide
+        forceSinglePass: true,
         roughness: rough,
         metalness: metal,
       });
