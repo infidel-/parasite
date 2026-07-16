@@ -345,6 +345,16 @@ typedef Intersection = {
   public function new(resolution:Vector2, strength:Float, radius:Float, threshold:Float);
   public var enabled:Bool;
 }
+// ground-truth ambient occlusion; renders its own depth + normal prepass of the scene each frame,
+// so it is enabled-gated (a disabled pass is skipped whole by the composer) — see StreetView.setAO
+@:native("THREE.GTAOPass") extern class GTAOPass {
+  public function new(scene:Scene, camera:Object3D, width:Float, height:Float);
+  public var enabled:Bool;                                 // false = composer skips the pass and its prepass entirely
+  public var blendIntensity:Float;                         // AO darkening strength over the beauty pass
+  public function setSize(w:Float, h:Float):Void;          // resize the AO/denoise/prepass render targets
+  public function updateGtaoMaterial(params:Dynamic):Void; // radius/distanceExponent/thickness/scale/samples
+  public function dispose():Void;                          // frees its RTs/noise textures — composer.dispose() does NOT touch passes
+}
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();
 }

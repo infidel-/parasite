@@ -88,6 +88,8 @@ class Options extends UIWindow
           game.config.set('vidAntialias', val, true);
           game.scene.city3d.setAA(Std.parseInt(val));
         });
+      addOptToggle('Ambient occlusion', 'vidAO', game.config.vidAO,
+        function (on) game.scene.city3d.setAO(on));
 
       // ---- INTERFACE ----
       addCard('Interface');

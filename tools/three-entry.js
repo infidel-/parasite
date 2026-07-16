@@ -9,6 +9,7 @@ export { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 export { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 export { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 export { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+export { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 export { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 export { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 

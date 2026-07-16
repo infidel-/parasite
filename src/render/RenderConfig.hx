@@ -105,6 +105,19 @@ class RenderConfig {
   public static inline var BLOOM_RADIUS = 0.1;     // bloom spread radius
   public static inline var BLOOM_THRESHOLD = 0.9;  // luminance above which pixels bloom
 
+  // --- ambient occlusion (GTAOPass; only runs when config vidAO) --------------
+  // kept subtle on purpose: this should read as contact shadow where geometry meets, not as
+  // photoreal dirt — the city art is flat/hand-painted. tune blendIntensity first, radius second
+  public static final GTAO = {
+    blendIntensity: 0.6,    // AO strength over the beauty pass (1 = full darkening)
+    radius: 1.5,            // world-space sample radius, ~a third of a cell (CityConfig.CELL = 4);
+                            // must be scaled against CELL — below ~0.5 the effect is invisible at city scale
+    distanceExponent: 1.0,  // falloff curve with distance from the sample point
+    thickness: 1.0,         // assumed occluder thickness (higher = less light leak behind edges)
+    scale: 1.0,             // overall AO scale before blending
+    samples: 16,            // per-pixel AO samples; lower = cheaper + noisier (denoiser cleans up)
+  };
+
   // camera: offset lerps near..far by a normalized zoom (0=close/parallel, 1=far/top-down);
   // far is the absolute max distance, ~20deg tilt from vertical, trailing to +Z (south)
   public static final CAMERA = {

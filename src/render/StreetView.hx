@@ -25,6 +25,7 @@ class StreetView {
   var scene:Scene;
   var composer:EffectComposer;
   var bloomPass:UnrealBloomPass;
+  var gtaoPass:GTAOPass;                                  // ambient occlusion; skipped whole unless config vidAO
   var shockwave:Shockwave;                                // screen-space ripple pass + pulse driver (silent scream)
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
@@ -291,6 +292,15 @@ class StreetView {
     composer = new EffectComposer(renderer);
     setAA(game.config.vidAntialias); // MSAA sample count onto the fresh composer targets
     composer.addPass(new RenderPass(scene, camera));
+    // ambient occlusion: darkens where geometry meets (wall/ground, lamp bases, corners). before
+    // bloom so the darkened crevices don't feed the glow. it renders its own depth + normal prepass
+    // of the whole scene, so it stays enabled-gated — a disabled pass is skipped by the composer
+    // and costs nothing (see setAO)
+    gtaoPass = new GTAOPass(scene, camera, Browser.window.innerWidth, Browser.window.innerHeight);
+    gtaoPass.blendIntensity = RenderConfig.GTAO.blendIntensity;
+    gtaoPass.updateGtaoMaterial(RenderConfig.GTAO);
+    gtaoPass.enabled = game.config.vidAO;
+    composer.addPass(gtaoPass);
     // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
     shockwave = new Shockwave(camera);
@@ -393,6 +403,7 @@ class StreetView {
     disposeBuild();
     scene = null;
     composer = null;
+    gtaoPass = null;
     shockwave = null;
     actorGroup = null;
     ring = null;
@@ -417,6 +428,10 @@ class StreetView {
       disposeScene();
       if (composer != null)
         composer.dispose(); // bloom + other post-FX render targets
+      // composer.dispose() only frees its OWN targets, never its passes: without this the AO pass
+      // orphans 3 render targets + 2 noise textures in three's cache on every rebuild
+      if (gtaoPass != null)
+        gtaoPass.dispose();
     }
 
 // dispose every geometry + material in the current scene graph. textures are shared and cached
@@ -559,6 +574,14 @@ class StreetView {
       rt2.dispose();
     }
 
+// toggle the ambient-occlusion pass live. a disabled pass is skipped whole by the composer, so
+// off means its depth/normal prepass never runs (no cost) — hence a plain enabled flip is enough
+  public function setAO(on:Bool):Void
+    {
+      if (gtaoPass != null)
+        gtaoPass.enabled = on;
+    }
+
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
     if (renderer == null) return;
@@ -566,6 +589,7 @@ class StreetView {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     if (composer != null) composer.setSize(w, h);
+    if (gtaoPass != null) gtaoPass.setSize(w, h); // its own AO/prepass targets aren't sized by the composer
   }
 
 // rAF loop: follow the player (or fly), mirror actors, render the bloom frame
