@@ -461,6 +461,9 @@ class RenderConfig {
   // AI status badges float this fraction of Sprites.SIZE above the head (screen-up lift; clears the
   // head at any camera pitch — see Actors.drawBadges)
   public static inline var BADGE_LIFT = 0.65;
+  // chat bubbles anchor their tail this fraction of Sprites.SIZE above the head (same screen-up
+  // lift as the badges, but clear of them — see Actors.drawBubble)
+  public static inline var BUBBLE_LIFT = 0.95;
 
   // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
   // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)

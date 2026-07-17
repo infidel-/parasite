@@ -55,6 +55,7 @@ class RawSmash extends ItemInfo
       game.scene.sounds.play('item-' + action.item.id);
       host.emitSound({
         text: '*WAIL*',
+        kind: 'bark',
         radius: 6,
         alertness: 12
       });

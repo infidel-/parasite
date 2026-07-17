@@ -146,6 +146,7 @@ class ThugAI extends HumanAI
             setState(AI_STATE_ALERT);
           emitSound({
             text: 'PIG!',
+            kind: 'shout',
             radius: 5,
             alertness: 10
           });

@@ -13,10 +13,15 @@ class PawnEntity extends Entity
   // new draw
   // mask sprite map (invaded state)
   var maskx: Int;
-  var text: String;
-  var textFont: String;
+  public var text: String;
+  public var textFont: String;
   var textFontFormatted: String;
-  var textFontFamily: String;
+  public var textFontFamily: String;
+  // bubble identity: bumped on every setText, so the 3D bubble layer can tell a NEW bark from the
+  // same one still showing (the string alone cannot — two identical barks in a row are common)
+  public var textID: Int;
+  // bubble variant css class: 'shout' | 'bark' | 'say' (classified in AISound.kind)
+  public var textKind: String;
 
   public function new(g: Game, xx: Int, yy: Int)
     {
@@ -28,13 +33,19 @@ class PawnEntity extends Entity
       textFont = null;
       textFontFormatted = null;
       textFontFamily = null;
+      textID = 0;
+      textKind = null;
       setPosition(xx, yy);
     }
 
 
-// set text
-  public function setText(s: String, timer: Int, ?lang: String)
+// set text from an AI sound: its raw line + the chat-bubble variant it already carries (AISound.kind)
+  public function setText(sound: AISound, timer: Int, ?lang: String)
     {
+      textKind = sound.kind;
+      textID++;
+      var s = sound.text;
+
       // load font if needed
       if (lang != null &&
           lang != '')
@@ -75,6 +86,7 @@ class PawnEntity extends Entity
           textFont = null;
           textFontFormatted = null;
           textFontFamily = null;
+          textKind = null;
         }
     }
 

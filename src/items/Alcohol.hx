@@ -55,6 +55,7 @@ class Alcohol extends ItemInfo
       game.scene.sounds.play('item-' + item.id);
       host.emitSound({
         text: '*glug*',
+        kind: 'bark',
         radius: 2,
         alertness: 2
       });

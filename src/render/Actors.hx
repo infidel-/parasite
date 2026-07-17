@@ -38,7 +38,9 @@ class Actors {
   var flames:FlameShadows;                               // barrel flame body/glow + fake cast shadows
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
+  var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
+  var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
@@ -74,6 +76,7 @@ class Actors {
       flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
+      bubbles = game.ui.hud.bubbles;
       lastState = game.player.state;
     }
 
@@ -154,6 +157,7 @@ class Actors {
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
       offscreen.begin();
+      bubbles.begin();
       for (ai in game.area.getAllAI())
         if (ai.entity != null)
           {
@@ -168,9 +172,11 @@ class Actors {
                 badges.drawXray(ai, bs);
                 badges.drawBadges(ai, bs, dtMs);
                 markOffscreen(ai, bs);
+                drawBubble(ai);
               }
           }
       offscreen.end();
+      bubbles.end();
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
@@ -241,6 +247,46 @@ class Actors {
       decals.setDebris(list);
     }
 
+// the world point at an actor's head — the anchor every screen overlay projects from (edge
+// indicators, the hover tooltip, chat bubbles)
+  inline function headPoint(a:Actor, out:Vector3):Void
+    {
+      out.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+    }
+
+// queue this AI's live bark as a chat bubble above its head. the text/font/variant are set by
+// PawnEntity.setText and expire on its turn timer, so nothing here tracks lifetime — the bubble
+// layer retires whatever stops being queued
+  function drawBubble(ai:AI):Void
+    {
+      var e = ai.entity;
+      if (e.text == null)
+        return;
+      var a = actors.get(e);
+      if (a == null ||
+          a.op < 0.3)
+        return;
+      // lift along the camera's screen-up axis rather than world +Y: the pitch flattens as the rig
+      // zooms in, which would foreshorten a world-Y offset and drop the bubble onto the head (same
+      // reasoning as the badge row, see Badges.drawBadges)
+      _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      var lift = Sprites.SIZE * RenderConfig.BUBBLE_LIFT;
+      headPoint(a, _ov);
+      _ov.set(_ov.x + _up.x * lift, _ov.y + _up.y * lift, _ov.z + _up.z * lift);
+      _ov.project(camera);
+      // behind or off the sides: the AI already has a screen-edge indicator (markOffscreen), a
+      // bubble pinned next to it would just fight it for space
+      if (_ov.z > 1 ||
+          _ov.x < -1 || _ov.x > 1 ||
+          _ov.y < -1 || _ov.y > 1)
+        return;
+      // cult-speak (a lang-rendered bark) gets its own class: bold + full-size, not the shrunk default
+      var kind = e.textFont != null ? e.textKind + ' cultspeak' : e.textKind;
+      bubbles.show('ai:' + ai.id, e.textID, e.text, e.textFontFamily, kind,
+        (_ov.x * 0.5 + 0.5) * js.Browser.document.body.clientWidth,
+        (-_ov.y * 0.5 + 0.5) * js.Browser.document.body.clientHeight);
+    }
+
 // queue a screen-edge indicator for a seen AI whose head projects outside the viewport: the
 // alert badge glyph (dot when calm) tinted by the same ramp as the 3D outlines
   function markOffscreen(ai:AI, bs:Array<_Badge>):Void
@@ -249,7 +295,7 @@ class Actors {
       if (a == null ||
           a.op < 0.3)
         return;
-      _ov.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+      headPoint(a, _ov);
       _ov.project(camera);
       var behind = _ov.z > 1;
       if (!behind &&
@@ -274,10 +320,11 @@ class Actors {
         scale);
     }
 
-// street view teardown: hide the HUD-owned edge indicators (nothing drives them anymore)
+// street view teardown: drop the HUD-owned edge indicators + bubbles (nothing drives them anymore)
   public function dispose():Void
     {
       offscreen.clear();
+      bubbles.clear();
       decals.dispose();
     }
 
@@ -300,7 +347,7 @@ class Actors {
           if (a == null ||
               a.op < 0.3)
             continue;
-          v.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+          headPoint(a, v);
           v.project(camera);
           if (v.z > 1)                                          // behind the camera
             continue;

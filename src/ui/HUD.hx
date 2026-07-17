@@ -37,6 +37,8 @@ class HUD
   var actions: ActionsHud;
   // screen-edge off-screen AI indicators (driven per-frame by render.Actors)
   public var offscreen: OffscreenHud;
+  // speech bubbles over speakers in the 3D view (driven per-frame by render.Actors)
+  public var bubbles: ChatBubbles;
   var lastMouseX: Float = -1;
   var lastMouseY: Float = -1;
   var lastRegionTileX: Int = -1;       // committed (shown) hovered tile
@@ -115,6 +117,7 @@ class HUD
       navbar = new NavbarHud(game, this);
       actions = new ActionsHud(game, this);
       offscreen = new OffscreenHud(game, this);
+      bubbles = new ChatBubbles(game, this);
     }
 
 // show blinking text and set timeout

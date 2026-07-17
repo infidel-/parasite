@@ -19,6 +19,14 @@
 - **`window.host`** — Electron preload bridge (`save`, `settings`, `profile`, `mods`, `shell`, `debug`, …). `contextIsolation:true, sandbox:true` — no node APIs in the renderer.
 - **In-engine debug keys** (street-debug mode, backtick): `1` lighting/bloom, `2`/`3`/`4` ambient/hemi/moon fill, `5` lamp spotlights, `0` all lights, `6` emissive, `7` shadow SAMPLING A/B, `8` reset perf peak, `9` draw-call breakdown dump (traced + copied to clipboard). `7`/`8`/`9` + the perf HUD live in `render/StreetPerf.hx`; the console `perf street` toggle (`render.Actors.DEBUG_PERF`) shows the same HUD **without** locking game input, so it is the one to use while walking (debug mode owns the keyboard for the fly-cam).
 
+## Console commands (`src/console/`)
+- A new console command is **THREE edits, not one**. Miss any and it half-works:
+  1. the handler + its routing branch (`src/console/<Group>.hx`, e.g. `Cult.hx`);
+  2. its line in that group's **help block** (the `arr.length == 1` listing);
+  3. its node in the **completion table** — `src/console/ConsoleCompletion.hx` (e.g. `cultSubs`, shared by the `cu`/`cult` aliases). Skip this and the command works but autocompletes nothing.
+- Command aliases (`occasio`/`occ`) are routed in the handler, but only the **primary** name goes in the completion table.
+- Args are declared in the completion table as `slot` nodes (`{ lit: 'br', next: [ { slot: '[amount]' } ] }`) — keep the slot names identical to the help line's.
+
 - NEVER detach HEAD! NEVER!
 - NEVER sweep stray .md files (review reports, notes, scratch docs) into commits unless directly asked; check `git status` for them before `git add -A`, or stage explicit paths.
 - ALWAYS respond in English!

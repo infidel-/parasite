@@ -7,14 +7,16 @@ class AISound
   public var alertness: Int; // amount of alertness that AIs in this radius gain
   @:optional public var params: Dynamic; // state-specific parameters
   @:optional public var file: String; // sound files prefix
+  @:optional public var kind: String; // chat-bubble variant for the 3D speech bubble: 'shout' | 'bark' | 'say'
 
   public function new(?text: String, radius: Int, alertness: Int,
-      ?params: Dynamic, ?file: String)
+      ?params: Dynamic, ?file: String, ?kind: String)
     {
       this.text = text;
       this.radius = radius;
       this.alertness = alertness;
       this.params = params;
       this.file = file;
+      this.kind = kind;
     }
 }

@@ -53,6 +53,7 @@ class AssimilationCavity extends HabitatObject
       game.scene.sounds.play('object-assimilation');
       game.player.host.emitSound({
         text: '*GASP*',
+        kind: 'bark',
         radius: 5,
         alertness: 10
       });

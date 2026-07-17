@@ -523,17 +523,38 @@ public function show()
         {
           if (state == AI_STATE_SEARCH_LAST_SEEN ||
               state == AI_STATE_SEARCH_AREA)
-            out.push({ col: Const.FRAME_SEARCH, row: Const.ROW_EFFECT, svg: 'search' });
-          else out.push({ col: alertFrame, row: Const.ROW_ALERT, svg: alertSvg(alertFrame) });
+            out.push({
+              col: Const.FRAME_SEARCH,
+              row: Const.ROW_EFFECT,
+              svg: 'search',
+            });
+          else out.push({
+              col: alertFrame,
+              row: Const.ROW_ALERT,
+              svg: alertSvg(alertFrame),
+            });
         }
       // npc / mission-target marker
       if (isNPC || entity.isMissionTarget)
-        out.push({ col: Const.FRAME_EVENT_NPC_AREA, row: Const.ROW_REGION_ICON, svg: 'npc' });
-      // cultist mark (png)
+        out.push({
+          col: Const.FRAME_EVENT_NPC_AREA,
+          row: Const.ROW_REGION_ICON,
+          svg: 'npc',
+        });
+      // cultist mark: the full-color medallion, disc tinted by allegiance — pink for the player's
+      // own cult, gray for an enemy cult
       if (isPlayerCultist())
-        out.push({ col: Const.FRAME_CULTIST0, row: Const.ROW_EFFECT });
+        out.push({
+          col: Const.FRAME_CULTIST0,
+          row: Const.ROW_EFFECT,
+          svg: 'cultist',
+        });
       else if (isCultist)
-        out.push({ col: Const.FRAME_CULTIST_UNKNOWN, row: Const.ROW_EFFECT });
+        out.push({
+          col: Const.FRAME_CULTIST_UNKNOWN,
+          row: Const.ROW_EFFECT,
+          svg: 'cultistx',
+        });
       // active effect icon (scalable svg; single glyph or the MULTIPLE triangle with live count)
       var eff = effects.getIcon();
       if (eff != null)
@@ -547,7 +568,11 @@ public function show()
               svg: 'multieffect',
               count: effects.iconCount(),
             });
-          else out.push({ col: eff.col, row: eff.row, svg: effectSvg(eff.col) });
+          else out.push({
+              col: eff.col,
+              row: eff.row,
+              svg: effectSvg(eff.col),
+            });
         }
       return out;
     }
@@ -897,7 +922,7 @@ public function show()
       if (sound.text != '' &&
           sound.text != null &&
           entity != null)
-        entity.setText(sound.text, 2, lang);
+        entity.setText(sound, 2, lang);
       // playAudio=false defers only the audible SFX (the 3D melee lunge plays it on impact);
       // alert propagation + bark text below still run
       if (playAudio &&

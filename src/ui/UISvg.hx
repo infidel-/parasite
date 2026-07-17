@@ -457,6 +457,17 @@ class UISvg
         'M12 6.6C9.8 6.6 8.6 8.4 8.6 10.4 8.6 12.4 10 13.8 12 13.8 14 13.8 15.4 12.4 15.4 10.4 15.4 8.4 14.2 6.6 12 6.6Z"/></svg>'; // shadowed face void
     }
 
+// cultist badge: full-color medallion (gray hooded figure on a colored disc), used above the head
+// in the 3D street view. the disc tints by allegiance — pink for the player's own cult, gray for an
+// enemy cult. unlike badgeCultist() (a monochrome currentColor glyph for HTML lists), this keeps its
+// own colors so it reads as an image icon rather than a recolored mark
+  public static function badgeCultistImage(disc: String): String
+    {
+      return '<svg viewBox="0 0 512 512" fill-rule="evenodd" aria-hidden="true">' +
+        '<path transform="translate(19.2376623791484, 21.4999963172448)" opacity="0.99" fill="' + disc + '" d="M478.775 238.875C478.775 155.925 436.403 82.8497 372.08 40.0249C350.657 25.7624 326.8 14.8552 301.262 8.05597C281.525 2.80114 260.784 0 239.387 0C227.578 0 215.969 0.853271 204.617 2.5014C88.8859 19.3049 0 118.732 0 238.875C0 370.802 107.177 477.75 239.387 477.75C371.597 477.75 478.775 370.802 478.775 238.875Z"/>' + // allegiance-tinted disc
+        '<path transform="translate(92.374996008423, 81.2461135955195)" fill="#525252" stroke="#4c4c4c" stroke-width="1" d="M122.937 15.9471C140.555 2.09799 143.171 0.442594 169.765 0.0790389C194.269 -0.723209 196.997 4.58868 211.355 15.695C223.659 31.3409 228.625 47.7661 232.398 65.8559C239.02 94.1844 245.85 121.313 244.009 147.368C243.633 159.362 240.767 163.132 235.312 173.047C234.353 173.001 270.736 176.695 290.973 198.722C302.076 210.807 311.709 224.317 316.863 250.135C325.511 280.212 332.091 317.696 332.625 340.757C304.951 375.461 253.693 393.922 240.787 398.51C194.996 416.551 136.374 410.678 107.473 403.824C48.6977 387.15 17.6054 357.958 0.78907 340.957C-4.38811 330.83 17.4945 257.809 20.4282 238.288C23.1719 219.885 33.9845 209.893 38.085 203.478C41.6592 190.674 86.8043 174.62 97.5048 172.716C93.4818 172.522 96.4863 164.261 92.4633 164.067C89.2716 154.548 89.5298 147.441 89.4932 135.237C89.4634 125.308 91.8568 117.024 92.7701 107.193C94.4044 89.6011 100.981 73.5785 104.147 58.4817C108.068 39.7873 113.171 27.7727 122.937 15.9471Z"/></svg>'; // gray hooded figure
+    }
+
 // paralysis: lightning burst (inline SVG effect glyph)
   public static function effectParalysis(): String
     {
@@ -534,6 +545,10 @@ class UISvg
             return effectBlackNoise();
           case 'npc':
             return badgeNpc();
+          case 'cultist':
+            return badgeCultistImage('#ffc0c0');   // player cult — pink disc
+          case 'cultistx':
+            return badgeCultistImage('#c0c0c0');   // enemy cult — neutral gray disc
         }
       return badgeWarn();
     }

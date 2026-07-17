@@ -143,6 +143,7 @@ class CommonLogic
                 attacker.ai.traceAI('CommonLogic', 'hesitates attached human');
               attacker.emitSound({
                 text: 'Shit!',
+                kind: 'shout',
                 radius: 5,
                 alertness: 10
               });

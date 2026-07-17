@@ -146,6 +146,8 @@ class ConsoleCompletion
           ] });
           // cult sub-commands (shared by the cu/cult aliases)
           var cultSubs: Array<CompNode> = [
+            { lit: 'start' },
+            { lit: 'members' },
             { lit: 'gr' },
             { lit: 'br', next: [ { slot: '[amount]' } ] },
             { lit: 'def', next: [ { slot: '[cultID]' } ] },

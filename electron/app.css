@@ -2,6 +2,8 @@
   --text-font-size: 16px;
   /* one common font size for every tooltip (beam tips + .evolution-tip chips) */
   --tip-font-size: calc(var(--text-font-size) * 1.1);
+  /* speech bubbles over AI in the 3D street view */
+  --bubble-font-size: calc(var(--text-font-size) * 0.85);
   --text-font: Orkney-Regular;
   --text-font-title: Orkney-Regular;
   --text-font-alien1: Green-Martian;
@@ -763,6 +765,101 @@ hr {
   width: 17.7px;
   height: 17.7px;
   flex-shrink: 0;
+}
+
+/* ---- speech bubbles over speakers in the 3D street view (ui.hud.ChatBubbles) ---- */
+#chat-bubbles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25; /* under the HUD panels (z30), above the off-screen AI icons (z20) */
+}
+/* the bubble shell: dark glass, same family as .beam-tip but tighter and text-only.
+   translated up off its anchor so left/top is the tail tip, on the speaker's head.
+   font-family is set inline (the speaker's lang font, else the ui default) */
+.chat-bubble {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin: 0;
+  padding: 5px 10px 6px;
+  border: 1px solid rgba(164, 95, 224, 0.34);
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(20, 14, 28, 0.94), rgba(11, 9, 16, 0.96));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  color: var(--text);
+  font-size: var(--bubble-font-size);
+  line-height: 1.25;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+  /* the appear anims scale from the tail, so the bubble grows out of the head */
+  transform-origin: var(--tail-x, 50%) 100%;
+}
+/* the tail: a rotated square cut in half by the bubble's own edge, so it inherits the border and
+   reads as one shape. --tail-x tracks the speaker when the bubble clamps at a screen side */
+.chat-bubble::after {
+  content: "";
+  position: absolute;
+  left: var(--tail-x, 50%);
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  background: rgba(11, 9, 16, 0.96);
+  border-right: 1px solid rgba(164, 95, 224, 0.34);
+  border-bottom: 1px solid rgba(164, 95, 224, 0.34);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+/* a noise (*GROWL*, *choke*) rather than speech — muted apart from any spoken words beside it */
+.chat-bubble .chat-noise {
+  color: var(--text-color-gray);
+}
+/* cult-speak (a lang-rendered bark): bold and full-size, so the ritual chatter reads louder than the shrunk default */
+.chat-bubble.cultspeak {
+  font-weight: bold;
+  font-size: var(--text-font-size);
+}
+/* lang glyphs are already gibberish, so the *…* noise/word split is meaningless — keep it all one color */
+.chat-bubble.cultspeak .chat-noise {
+  color: inherit;
+}
+/* say: a calm remark rises into place */
+.chat-bubble.say.in {
+  animation: bubble-in-say 0.24s ease-out both;
+}
+/* bark: an animal noise snaps in, no fade */
+.chat-bubble.bark.in {
+  animation: bubble-in-bark 0.16s cubic-bezier(0.2, 1.7, 0.5, 1) both;
+}
+/* shout: hard pop, then a jitter beat */
+.chat-bubble.shout.in {
+  animation: bubble-in-shout 0.34s cubic-bezier(0.2, 1.9, 0.4, 1) both;
+}
+/* every variant leaves the same way: shrink back into the head */
+.chat-bubble.out {
+  animation: bubble-out 0.26s ease-in both;
+}
+@keyframes bubble-in-say {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 6px)) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+@keyframes bubble-in-bark {
+  from { opacity: 1; transform: translate(-50%, -100%) scale(0.7); }
+  60%  { opacity: 1; transform: translate(-50%, -100%) scale(1.06); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+@keyframes bubble-in-shout {
+  from { opacity: 0; transform: translate(-50%, -100%) scale(0.55); }
+  45%  { opacity: 1; transform: translate(-50%, -100%) scale(1.14); }
+  62%  { transform: translate(calc(-50% - 2px), -100%) scale(1.04); }
+  78%  { transform: translate(calc(-50% + 2px), -100%) scale(1.02); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+@keyframes bubble-out {
+  from { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, calc(-100% + 4px)) scale(0.8); }
 }
 
 /* panels sit above the region tooltip beam/panel (which use z-index ≤ 25) */
