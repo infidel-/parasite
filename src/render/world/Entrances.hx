@@ -49,6 +49,8 @@ class Entrances {
         'door-$k' + (worn ? '-worn' : ''), '$k door' + (worn ? ' (service)' : ''),
         worn ? TEXTURES.doorsWorn[b.facade] : TEXTURES.doors[b.facade]);
       WorldCtx.doorSeen.set(b, true); // checklist: this building rendered at least one door
+      // publish the along-face span so WallDecals keeps graffiti off it (off = center offset, s = door side)
+      WorldCtx.doorSpans.push({ b: b, dir: f.dir, lo: off - s / 2, hi: off + s / 2 });
       var mesh = new Mesh(new PlaneGeometry(s, s), mat);
       mesh.rotation.y = f.rotY;
       var eps = 0.01; // effectively flush (was 0.06 → visible gap); polygonOffset -2 does the z-fight work, this hair just guards grazing angles

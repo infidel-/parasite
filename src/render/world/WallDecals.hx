@@ -12,7 +12,8 @@ import render.Poly.tag;
 // faces at city build. deterministic per building col/row/dir hash — no Math.random, so the
 // same city looks identical across reloads and nothing is saved (re-derived from the seed).
 // each decal is one alpha quad set proud of the wall, tagged userData.b so Occlusion fades it
-// with its building. windowed/glass faces are skipped, so a decal never lands on a facade.
+// with its building. windowed/glass faces are skipped, so a decal never lands on a facade;
+// decals overlapping a placed door's along-face span are skipped too (WorldCtx.doorSpans).
 class WallDecals {
   static inline var CELL = CityConfig.CELL;
   static inline var EPS = 0.07;      // proud of the wall (avoid z-fight)
@@ -54,8 +55,20 @@ class WallDecals {
         var y = cat.baseY + size / 2 + ((hh >> 18) % 100) / 100.0 * 1.2;
         if (y + size / 2 > b.h - 0.3) y = b.h - 0.3 - size / 2;
         if (y < size / 2) y = size / 2;
-        // ponytail: no per-face door-run avoidance — a worn side door is occasionally overlapped;
-        // upgrade to a Geom.doorRuns overlap test if posters visibly clip doors
+        // skip a decal that would clip a door on this same face (Entrances published the door's
+        // along-face span; same center + off convention, so compare intervals directly)
+        var dLo = off - size / 2, dHi = off + size / 2;
+        var onDoor = false;
+        for (ds in WorldCtx.doorSpans)
+          if (ds.b == b &&
+              ds.dir == f.dir &&
+              dLo < ds.hi &&
+              dHi > ds.lo)
+            {
+              onDoor = true;
+              break;
+            }
+        if (onDoor) continue;
         var mat = tag(new MeshStandardMaterial({ map: texv, roughness: 1, metalness: 0,
           transparent: true, alphaTest: 0.35, depthWrite: false,
           polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),

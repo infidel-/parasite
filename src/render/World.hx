@@ -33,6 +33,7 @@ class World {
     WorldCtx.doorSeen = new haxe.ds.ObjectMap();
     WorldCtx.bandSeen = new haxe.ds.ObjectMap();
     WorldCtx.noBackDoor = [];
+    WorldCtx.doorSpans = [];
 
     Ground.build(scene);          // ground tiles, road markings, kerb edging
     Buildings.build(scene);       // per-building box loop (delegates parapet/gable to Roofs)
