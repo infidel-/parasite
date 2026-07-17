@@ -168,7 +168,9 @@ class ChatBubbles
               // it came back mid-exit (or the view tore down): show()/clear() own the element now
               if (!b.dying)
                 return;
-              container.removeChild(b.el);
+              // remove() (not container.removeChild) so a bubble already detached by a container
+              // rebuild during the OUT_MS window is a no-op, not a "node not a child" throw
+              b.el.remove();
               live.remove(key);
             }, OUT_MS);
         }
@@ -180,7 +182,7 @@ class ChatBubbles
       for (b in live)
         {
           b.dying = false; // disarm any in-flight exit timer before its element goes away
-          container.removeChild(b.el);
+          b.el.remove();   // detach wherever it currently lives; no-throw if already detached
         }
       live.clear();
     }
