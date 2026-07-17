@@ -546,7 +546,7 @@ class UISvg
           case 'npc':
             return badgeNpc();
           case 'cultist':
-            return badgeCultistImage('#ffc0c0');   // player cult — pink disc
+            return badgeCultistImage('#ff8fc4');   // player cult — pink disc
           case 'cultistx':
             return badgeCultistImage('#c0c0c0');   // enemy cult — neutral gray disc
         }
