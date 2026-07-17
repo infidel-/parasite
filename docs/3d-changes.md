@@ -3,15 +3,23 @@
 Append-only ledger of every 3D/render experiment — landed, reverted, or rejected — with its
 measured result. **Read this before proposing a render change**, and add to it after trying one.
 It exists because the expensive mistakes here are the ones already made once: the roof-detail
-batching below was disproved a second time despite `perf-static-city-merge.md` already saying so.
+batching below was disproved a second time despite a note already saying so in two lines.
 
 Baseline hardware for all numbers: **RTX 3050**, 60fps cap, 1080p-ish, `vidAntialias=4`.
-See also [`perf-static-city-merge.md`](perf-static-city-merge.md) (deferred two-tier city merge).
+
+**Which view a number came from matters more than the number.** Gameplay is a zoom lerp, not a set of
+modes (`RenderConfig.CAMERA`, `CameraRig`): zoom 0 = close, ~30° above ground; zoom 1 = top-down.
+Resting targets are capped (`parasiteZoom: 0.30`, `hostZoom: 0.60`) and `tactical` is pinned at 1.0.
+Measured across views and spots, **gameplay runs 158–288 calls**. Separately, the street-debug
+**free-cam** (backtick) can go fully parallel and render the whole city — ~230 buildings — which no
+gameplay camera does. It is a dev tool; the two-tier merge lead below is the only entry targeting it.
 
 ## How to measure (and how not to)
 
 - **`calls=` in the `[street-render]` trace is the only draw-call number.** Enable the `perf street`
-  console toggle (`render.Actors.DEBUG_PERF`) or street-debug mode (backtick).
+  console toggle (`render.Actors.DEBUG_PERF`) or street-debug mode (backtick). The trace is emitted
+  by `StreetPerf.hx:228` (`frame=/GPU=/submit=/upd=/idle=/calls=/tris=/programs=/shdw=/heap=`) — it
+  used to live in `StreetView.hx` with `full=`/`base=`/`post=` fields, which no longer exist.
 - **The scene dump (`9`) is an INVENTORY, not a draw list.** `visibleDrawables` counts objects whose
   `visible` chain is true — frustum culling then discards most of them. Real ratio measured here:
   **1616 visibleDrawables → 435 calls**. A big number in the dump means nothing until you confirm
@@ -19,6 +27,8 @@ See also [`perf-static-city-merge.md`](perf-static-city-merge.md) (deferred two-
 - **`submit` is the CPU draw-call wall** — time inside `composer.render()` (scene walk + issuing
   draws + any driver blocking). It is the ceiling that a better GPU does **not** fix. `upd` (engine
   CPU) is ~1ms and irrelevant. `GPU=` is a real timer query (`EXT_disjoint_timer_query_webgl2`).
+  Compare the two before assuming which wall you are on: they sit at `4.75` vs `4.66` with AO off,
+  but AO flips the frame GPU-bound (see the GTAO entry). "Submit is the wall" is the default, not a law.
 - **Always A/B against a measured baseline in the same view.** Both `follow` and `tactical` — they
   differ (tactical draws ~80 more calls and ~2ms more submit).
 
@@ -57,6 +67,11 @@ Measured this way, **tactical = 513 calls: 175 shadow / 324 main / 14 post**.
 | Merged city-wide shadow caster | shadow pass 175 → 16 calls | **landed** |
 | ^ the two together, measured in-game | calls −44/−52%, **submit −25%**, +2ms idle | **landed** |
 | Decals sample the atlas (per-instance UV rect) | 55 → **2** decal calls; 210 → 158 total | **landed** |
+| Atlas the WALL textures the same way | walls tile; an atlas cannot wrap inside a sub-rect | **rejected — wrong tool** |
+| Texture array for walls (3 calls/box → 1) | ~20 calls in one sample; enables the static merge | **open lead, unmeasured** |
+| Two-tier static city merge | ~3k → ~200 calls **in the debug free-cam only**; gameplay is 158–288 | **open lead, deferred** |
+| Pull the fog / view distance in | shorter sightlines — look/feel | **rejected** |
+| Per-building merges of doors/covers/roof furniture | low ROI; doors are ~5 calls in view | **rejected** |
 | Roof-detail material hoist | ~750 → 6 materials; **0 draw calls** | **landed** (harmless) |
 | GTAO ambient occlusion | +994 calls, +10ms submit; 60 → 45fps | **landed, default OFF** `870d0f8` |
 | BatchedMesh for roof details | **+4 calls, +2ms submit, −3ms idle** | **reverted — worse** |
@@ -67,6 +82,28 @@ Measured this way, **tactical = 513 calls: 175 shadow / 324 main / 14 post**.
 | `RenderPixelatedPass` | total aesthetic pivot, not an enhancement | **rejected** |
 
 ## Landed
+
+### `flattenBox` + `mergeBand` — `6a20c75`, `8240e4d` (the original draw-call fix)
+The founding entry, kept because it explains why boxes cost what they cost today. Symptom: **~150ms
+render with GPU *and* CPU near idle** (one core pegged issuing draws) at only ~65k triangles — the
+cost was draw-call **count**, not fill. Cause: every multi-material `BoxGeometry` cost one draw call
+**per face group** (6 per box), times every visible building, on one JS thread.
+
+- **`Poly.flattenBox`** (`Poly.hx:47`) — collapses a multi-material box to **one call per distinct
+  texture** by baking each face's texture matrix into the geometry UVs and reordering the index so
+  same-image faces form one contiguous group. Coping (single image) → 1; parapet (clean+worn) → 2;
+  building box (walls+roof) → 3. A self-check cross-validates the UV math against three's own
+  `Texture.matrix`. **That 3 is a floor, not a bug** — see the texture-array lead below.
+- **`Buildings.mergeBand`** (`Buildings.hx:273`) — merges each building's upright wall-band quads
+  (grime, storefront bays, ground bands) into one mesh per material, baking rotation+position into
+  verts with explicit +z-rotated normals so shading is identical. `userData.b` kept so `Occlusion`
+  still fades per building.
+- Camera far-plane clipped to just past the fog wall (`SceneSetup.hx:51-58`,
+  `far = CELL * GRID * 1.25`): past it every building is solid fog yet still drawn, so a parallel
+  camera rendered the far half of the city for nothing. Clipping lets three frustum-cull it.
+
+**Free-cam parallel view: 10,595 → ~3,000 calls, 6 → ~30fps, no visual change.** Those numbers are
+from the free-cam, not gameplay — do not compare them to the 158–288 figures elsewhere in this doc.
 
 ### MSAA antialiasing — `729c064`
 The renderer asked for `antialias: true`, but **every frame goes through the `EffectComposer`**,
@@ -251,6 +288,77 @@ and check the rects are in-bounds, distinct, and land on the cell grid (`u` step
 `64/768`). That caught nothing here, but it is what separates "rects are self-consistent" from "each
 decal got its own cell" — only the second is visible, and only to a human.
 
+## Open leads (not yet acted on)
+
+### Walls cost 3 calls per box — an atlas will NOT fix it, a texture array would
+`flattenBox`'s floor is **one call per distinct texture**, so a building box costs 3 (walls, worn,
+roof) and a parapet 2. In one follow-view census that was ~10 boxes × 3 = 30 calls; collapsing them
+to 1 each saves ~20 of 158. **Unmeasured beyond that sample — get a real A/B before believing it.**
+
+**Why the decal fix does not transfer.** Walls *tile*: `repeat.set(wWorld / TILE, …)`
+(`Buildings.hx:72`) runs UVs 0→4 across a face and the wrap mode turns `u = 3.2` back into `0.2`,
+which is what gives real brick at any building size without stretching. Wrapping is a property of the
+**whole texture**, not of a sub-rectangle inside it — walk `u` past your cell's edge in an atlas and
+you do not restart the brick, **you slide into the neighbouring image**. Decals could be atlassed
+precisely because a decal quad samples its cell **once** (UV 0→1, nothing to wrap). Same word,
+different problem. `fract()` in the shader fakes the wrap but breaks mipmapping — the UV jump at each
+tile seam blows up the derivatives and the GPU picks the blurriest mip, a visible seam per tile
+(fixable with `textureGrad` + padding, i.e. owning custom sampling for every wall in the game).
+
+**The right tool is `DataArrayTexture`**: N full textures as layers, sampled
+`texture(tMap, vec3(u, v, layer))`. Each layer is its own complete 0→1 space, so wrapping, mipmaps and
+anisotropy all work per layer and brick in layer 3 cannot reach layer 4. `flattenBox` already bakes
+per-face texture matrices into the geometry UVs — this adds a per-face `layer` attribute beside them
+plus an `onBeforeCompile` patch to sample the array (same move as `instanceUV` in `DecalBatch`).
+
+**The strategic half is bigger than the ~20 calls.** Every wall box would share **one material**,
+which is the precondition for welding buildings into a few giant meshes — see the two-tier merge lead
+below. The array does not remove that plan's real blocker (`Occlusion` fades one building at a time),
+it removes the texture obstacle under it.
+
+**Cost:** all layers must share size + format; the array is built by blitting every wall PNG into one
+buffer (build step or load-time canvas); ~20 layers × 512² ≈ 20MB + mips; per-texture `roughness` has
+to go uniform or ride another attribute; and every wall material becomes a custom shader we own.
+Subsystem-scale. Weigh against a frame that currently runs **158 calls / 4.66ms submit / 11.4ms idle**
+— i.e. ~30% used. **Measure on the weak-hardware target before spending this.**
+
+### Two-tier static city merge — for the debug free-cam, not for players
+Absorbed from `perf-static-city-merge.md` (deleted; see git history for the original). **Read the
+scope line first, because the doc it came from was written before the scope was obvious:** this
+targets the **street-debug free-cam at a parallel angle**, the one view that renders the whole city.
+The goal was making that dev view usable, not player framerate.
+
+Gameplay does not need it, and that is measured, not assumed: the city is **226–233 buildings**
+(`CityGen.generate`, seeds 1-3), while gameplay runs **158–288 calls** (follow 158, zoom-out ~202,
+tactical 288). Fog + the far-plane clip + frustum culling already discard ~200 of ~230 buildings
+before a draw is issued. **Do not cite this entry as a player-facing perf win.**
+
+The idea: the city is static, so weld every piece sharing a texture into a few giant meshes — "all
+brick walls citywide", "all coping", "all roofs" — ~10–20 meshes for the whole map. The free-cam then
+draws ~200 calls instead of ~3,000. Standard merged-static-geometry technique.
+
+**The blocker is `Occlusion`.** It fades an *individual* building while it blocks the camera→player
+sightline, by owning that building's materials and easing their opacity. One welded mesh + one
+material = all-or-nothing fading. The fix is tiering:
+
+- **Near tier** — the handful of buildings that can actually occlude the player. Stays on today's
+  individual fadeable meshes, code path unchanged.
+- **Far tier** — everything else, welded, never fades (too far to occlude anyway).
+- Re-tier on **area movement**, not per frame, re-welding when a building crosses the boundary.
+  `Occlusion` only ever sees the near tier.
+
+Notes: welding reuses the bake already written for `flattenBox`/`mergeBand` (per-face UV transform →
+geometry UVs, world transform → verts) — the merge is the same vertex concat, and the new work is the
+tiering + re-weld bookkeeping. Weld granularity is capped at one mesh per texture because each wall
+texture is its own `Texture`; a `DataArrayTexture` (lead above) would lift that cap, though it does
+**not** touch the `Occlusion` blocker. Transparent/cutout passes (windows are already `InstancedMesh`,
+doors are alphaTest) can stay as-is. Watch the near/far boundary for pop — geometry is identical
+either side (same bake), only fadeability changes.
+
+**Verdict: deferred.** Only path to a big cut in the free-cam view, but it is a real subsystem —
+tiering, `Occlusion` rework, re-weld on movement. Player-facing perf does not need it. Do it only if
+the debug free-cam's usability is worth a subsystem.
+
 ## Reverted / rejected
 
 ### BatchedMesh for roof details — reverted, measured worse
@@ -270,7 +378,8 @@ It still lost, in tactical (the view where every rooftop is on screen):
 Two reasons, both worth remembering:
 1. **Roof details contribute ~0 draws in any view.** They sit on rooftops; the follow cam is ~30°
    above ground looking *at* the player. Even in tactical, unbatched cost 4 *fewer* calls. They were
-   already culled for free. `perf-static-city-merge.md` said this in 2 lines; it was ignored.
+   already culled for free. The old merge notes said this in 2 lines and it was ignored — which is
+   why that entry now lives above rather than in a doc nobody opened.
    Later confirmed by the census: of 513 tactical calls, roof details are **1**.
 2. **`BatchedMesh` is a pessimization for mostly-culled geometry.** `perObjectFrustumCulled = true`
    frustum-tests **every instance on the CPU every frame** and rebuilds the multi-draw list. An
@@ -284,6 +393,17 @@ silhouette, always visible). Roof furniture does not.
 `addRoofDetails` allocated a fresh `MeshStandardMaterial` per (building × type) — ~750 identical
 materials where 6 do. Hoisted; correct and harmless. **Zero draw-call change** — shared materials do
 not merge draws. Kept for hygiene, not perf.
+
+### Pull the fog / view distance in
+Would cut what the parallel free-cam draws at the root. Rejected: shorter sightlines change the
+look/feel. The far-plane clip (`SceneSetup.hx:51-58`) already takes the free half of this — it culls
+what the fog has *already* made invisible, which costs nothing visually.
+
+### Per-building merges of doors / covers / roof furniture
+Safe (no visual change) but low ROI, and the original note's "~150–250 dc each" is meaningless now —
+that was a share of a 3,000-call free-cam frame, and the whole gameplay frame is ~158. Current census
+puts doors at ~5 four-vert `PlaneGeometry` objects, 1 call each. The conclusion survives its number:
+several merges would be needed to move anything, so it stays unmerged.
 
 ### Tone mapping: AgX / Neutral
 Added in r162/r165, so they are a one-line swap from `ACESFilmicToneMapping` with no bundle change
