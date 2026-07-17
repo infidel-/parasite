@@ -544,7 +544,9 @@ class UISvg
           case 'blacknoise':
             return effectBlackNoise();
           case 'npc':
-            return badgeNpc();
+            return badgeNpc('#d98a10');            // timeline npc — saturated timeline amber (bloom desaturates toward accent #f7af46)
+          case 'missiontarget':
+            return badgeNpc('#e84fe0');            // mission target — saturated cult magenta (bloom desaturates toward cult pink #fd97ff)
           case 'cultist':
             return badgeCultistImage('#ff8fc4');   // player cult — pink disc
           case 'cultistx':
@@ -588,12 +590,12 @@ class UISvg
         '<line x1="15" y1="15" x2="20.5" y2="20.5"/></svg>';
     }
 
-// pale disc with a neutral face (npc / mission target). self-colored (not currentColor) — the
-// two-tone face can't be a single tint
-  public static function badgeNpc(): String
+// disc with a neutral face (npc / mission target). self-colored (not currentColor) — the
+// two-tone face can't be a single tint; disc color set by caller (timeline yellow / cult pink)
+  public static function badgeNpc(disc: String = '#f2f2f2'): String
     {
       return '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-        '<circle cx="12" cy="12" r="10.5" fill="#f2f2f2"/>' +          // face disc
+        '<circle cx="12" cy="12" r="10.5" fill="' + disc + '"/>' +     // face disc
         '<circle cx="8.3" cy="10" r="1.8" fill="#2a2a2a"/>' +          // eyes
         '<circle cx="15.7" cy="10" r="1.8" fill="#2a2a2a"/>' +
         '<rect x="7.8" y="15" width="8.4" height="2.3" rx="1.15" fill="#2a2a2a"/></svg>'; // mouth

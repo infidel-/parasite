@@ -534,8 +534,14 @@ public function show()
               svg: alertSvg(alertFrame),
             });
         }
-      // npc / mission-target marker
-      if (isNPC || entity.isMissionTarget)
+      // npc / mission-target marker: mission target wins (cult-pink disc), else timeline npc (yellow)
+      if (entity.isMissionTarget)
+        out.push({
+          col: Const.FRAME_EVENT_NPC_AREA,
+          row: Const.ROW_REGION_ICON,
+          svg: 'missiontarget',
+        });
+      else if (isNPC)
         out.push({
           col: Const.FRAME_EVENT_NPC_AREA,
           row: Const.ROW_REGION_ICON,

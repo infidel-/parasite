@@ -325,11 +325,12 @@ class Actors {
       // behind-camera projections come out point-mirrored — flip back to the correct side
       var ndcX = behind ? -_ov.x : _ov.x;
       var ndcY = behind ? -_ov.y : _ov.y;
-      // glyph: the current alert-ish badge if any (npc is two-tone, not tintable — skip it)
+      // glyph: the current alert-ish badge if any (npc/mission-target are two-tone discs, not tintable — skip)
       var key = '';
       for (b in bs)
         if (b.svg != null &&
-            b.svg != 'npc')
+            b.svg != 'npc' &&
+            b.svg != 'missiontarget')
           {
             key = b.svg;
             break;
