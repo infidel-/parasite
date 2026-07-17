@@ -13,7 +13,7 @@ typedef PaintOpts = {
   var scale:Float;                   // uniform scale of SIZE
   @:optional var flat:Bool;          // lie flat on the ground as a decal (default false)
   @:optional var yaw:Float;          // ground rotation (flat) / in-plane roll (upright), default 0
-  @:optional var order:Int;          // renderOrder (ORD_*), default 0
+  @:optional var order:Float;        // renderOrder (ORD_*, fractional allowed to break ties), default 0
   @:optional var emissive:Int;       // self-glow color, default 0 = no glow
   @:optional var emissiveInt:Float;  // self-glow intensity, default 0
   @:optional var depthTest:Bool;     // false = always-on-top UI, default true

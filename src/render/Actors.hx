@@ -46,6 +46,14 @@ class Actors {
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
   var _heldBodies:haxe.ds.ObjectMap<Entity, Bool> = new haxe.ds.ObjectMap(); // corpse bodies kept invisible until their death ghost lands
+  // corpse -> the count of ground decals in its cell when it first landed = its appearance slot.
+  // snapshotted on first sighting (render-only, no save field): blood present then paints under it,
+  // blood sprayed later paints over it. ponytail: on a reload mid-fight the exact pre-existing order
+  // is lost (the body re-snapshots above all its current blood) — cosmetic
+  var _bodyStackSlot:haxe.ds.ObjectMap<Entity, Int> = new haxe.ds.ObjectMap();
+  // cellKey (col*height+row) -> resting-corpse landing slot, rebuilt each frame in the object loop
+  // and handed to decals.paint so blood past the slot in that cell paints over the body
+  var _corpseCells:Map<Int,Int> = new Map();
   var lampCorners:Map<Int,Int> = null;                  // grid vertex -> lamp dir; slides bend past a post on the cut corner
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
@@ -112,6 +120,7 @@ class Actors {
       sprites.begin();
       beams.begin();
       sparks.begin();
+      _corpseCells.clear();                               // rebuilt below by the object loop, before decals.paint reads it
       muzzleLights.update(dtMs);
       // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
       // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
@@ -200,7 +209,7 @@ class Actors {
       // logical cell only while the parasite sprite is dropped mid-host-invade)
       var pp = actors.get(game.playerArea.entity);
       var pw = CityConfig.cellToWorld(game.playerArea.x, game.playerArea.y);
-      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z, dtMs);
+      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z, dtMs, _corpseCells);
       flames.bodyAndShadows(dtMs);
       flames.driveFireLoop();
       particles.update(dtMs, paint);
@@ -602,6 +611,20 @@ class Actors {
       var floor = WorldCtx.floorY(a.col, a.row);
       // decals hug the ground; upright sprites centre at half their height
       var wy = flat ? floor + 0.05 : floor + Sprites.SIZE * 0.5 + baseY;
+      // a flat corpse records its landing slot (the count of ground decals in its cell when it first
+      // appeared) into _corpseCells, so blood sprayed here afterwards paints over it (Blood.draw). the
+      // body renders at ORD_CORPSE, above the blood already present when it fell
+      if (flat)
+        {
+          var slot = _bodyStackSlot.get(e);
+          if (slot == null)
+            {
+              var tl = game.area.tiles[a.col] != null ? game.area.tiles[a.col][a.row] : null;
+              slot = (tl != null && tl.decoration != null) ? tl.decoration.length : 0;
+              _bodyStackSlot.set(e, slot);
+            }
+          _corpseCells.set(a.col * game.area.height + a.row, slot);
+        }
       // upright ground item (e.g. a generic pickup box): actor art fills the frame feet-at-bottom,
       // but a small item icon sits mid-cell and would hang in the air — drop it by the sprite's
       // empty bottom margin so its opaque content rests on the floor
@@ -614,7 +637,7 @@ class Actors {
         }
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
-      var order = flat ? Sprites.ORD_DECAL : Sprites.ORD_ACTOR;
+      var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
       var emInt = flat ? 0.0 : flames.litAt(a);
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       if (a.fx != null)

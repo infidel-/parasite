@@ -413,6 +413,46 @@ Added in r162/r165, so they are a one-line swap from `ACESFilmicToneMapping` wit
 ### `reversedDepthBuffer` (r181)
 Flips custom `depthFunc` and decal polygon offsets — doors vanish. Do not enable.
 
+### Corpse-vs-blood layering (z-fight flip, then flicker) — depthWrite fails, renderOrder tiers win
+**Symptom:** flat corpses and blood splats sit ~coplanar, all `depthWrite:false` at the same
+`renderOrder` (`ORD_DECAL`). three sorts equal-renderOrder transparents by camera distance, so the
+tiny depth tie between a body and the blood under it flipped sign as the camera orbited — who's on
+top changed every camera move. The old 0.01 Y offsets were invisible (depth never written).
+
+**Attempt 1 — depthWrite + per-cell Y slot → REVERTED (z-fight flicker).** Made the whole
+ground-decal layer `depthWrite:true` and encoded appearance order as a tiny Y bump per cell-slot
+(`layerBase/layerEps/layerMax`, alphaTest to stop transparent corners depth-clipping). Killed the
+flip but **traded it for per-pixel z-fight flicker** — worse. Why it can't work here: camera
+`near=0.1`, `far=CELL·GRID·1.25=500`, non-reversed depth → resolvable Y-gap `Δz ≈ 6e-7·z²` ≈ 0.002
+at mid-range, 0.006 at the far edge. The body↔adjacent-blood gap was a half-slot = **0.0025**, under
+precision → flicker. And the Y budget is capped: decals must stay under the 0.06 fake-shadow plane,
+so `0.03 headroom / ~0.015 min-safe-gap ≈ 2 layers` — nowhere near enough for N-deep appearance
+stacks. **This is the `Entrances.hx:54` / `reversedDepthBuffer` lesson again: coplanar decal
+layering here is done with `renderOrder` or `polygonOffset`, never tiny Y nudges.** depthWrite
+between near-coplanar transparent quads z-fights, full stop.
+
+**Attempt 2 — renderOrder tiers, hybrid batch (landed).** Everything back to `depthWrite:false` (no
+depth compare between decals = no flicker, no flip possible). Layering is pure paint order via
+`renderOrder`, with new tiers in `Sprites`: `ORD_DECAL(0) < ORD_CORPSE(1) < ORD_BLOODOVER(2) <
+ORD_SHADOW(3) < ORD_MARK(4) < ORD_ACTOR(5)`.
+- Bulk blood + debris + blood that *predates* a corpse in its cell → stay batched at `ORD_DECAL` (one
+  InstancedMesh draws its instances in insertion order, so blood-vs-blood is already stable — that
+  never flipped; only body-vs-batch did).
+- Flat corpse → `ORD_CORPSE`, painted over the blood present when it fell.
+- Blood sprayed *after* a corpse (its per-cell push-index ≥ the corpse's landing slot) → pulled from
+  the batch to an **individual** quad at `ORD_BLOODOVER + idx*0.001` (fractional bump breaks
+  same-cell ties) so it paints over the body. This is the only extra-draw-call path, and it fires
+  **only in corpse cells for post-corpse splats** — bulk blood everywhere else is untouched.
+- Corpse landing slot = decoration count in its cell on first sighting, snapshotted render-side
+  (`Actors._bodyStackSlot`, no save field). Cells with a corpse are published each frame in
+  `Actors._corpseCells` (object loop runs before `decals.paint`) and read via `Decals.corpseSlotAt`.
+- **(a) corpses cast no shadow** already — `FlameShadows.castShadows` skips `isGroundDecal()`.
+- **Known ceiling (accepted):** `renderOrder` overrides the transparent distance-sort, so a corpse
+  (1) / over-blood (2) can paint over a spatially-nearer *bulk* decal in a different cell. Flat
+  ground decals rarely overlap across cells at the near-overhead street cam, so it's cosmetic — and
+  it's *stable* (no flicker/flip), which is the whole point. **TODO measure:** confirm at a grazing
+  angle, and check the per-quad count in a corpse-heavy view (`calls=`).
+
 ## Standing notes
 
 - **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via

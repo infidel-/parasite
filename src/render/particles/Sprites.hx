@@ -13,13 +13,17 @@ import game.Game;
 class Sprites {
   public static inline var SIZE = CityConfig.CELL * 0.75; // base quad size (scale multiplies it)
   public static inline var TILT = 0.6;                 // radians an upright sprite leans back toward the overhead camera
-  // transparent draw layering (higher = on top): ground decals < fake shadow < target markers <
-  // upright actor icon. all these share this pool + depthWrite:false, so renderOrder (not Y) fixes
-  // their stacking deterministically at any camera angle
-  public static inline var ORD_DECAL = 0;              // blood/debris/flat ground-decal objects
-  public static inline var ORD_SHADOW = 1;             // fake cast shadow (above decals -> darkens them)
-  public static inline var ORD_MARK = 2;               // targeting frame / reticle (above the shadow)
-  public static inline var ORD_ACTOR = 3;              // upright actor billboard (above its own shadow)
+  // transparent draw layering (higher = on top): ground decals < corpse < blood-over-corpse < fake
+  // shadow < target markers < upright actor icon. all share this pool + depthWrite:false, so
+  // renderOrder (NOT Y — tiny Y gaps z-fight at this near/far, see docs/3d-changes.md) fixes layering.
+  // a corpse sits over the blood already present when it fell (ORD_DECAL, batched); blood sprayed
+  // AFTER it (in its cell) is pulled from the batch to ORD_BLOODOVER so it paints over the body
+  public static inline var ORD_DECAL = 0;              // debris + batched blood (bulk, + blood predating a corpse in its cell)
+  public static inline var ORD_CORPSE = 1;             // flat corpse body (over the blood present when it fell)
+  public static inline var ORD_BLOODOVER = 2;          // blood in a corpse cell sprayed after it (individual quad, over the body)
+  public static inline var ORD_SHADOW = 3;             // fake cast shadow (above decals -> darkens them)
+  public static inline var ORD_MARK = 4;               // targeting frame / reticle (above the shadow)
+  public static inline var ORD_ACTOR = 5;              // upright actor billboard (above its own shadow)
 
   var game:Game;                                        // for the sprite-atlas image provider
   var actorGroup:Group;                                 // scene group holding all sprite quads
