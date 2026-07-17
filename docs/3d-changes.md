@@ -453,6 +453,19 @@ ORD_SHADOW(3) < ORD_MARK(4) < ORD_ACTOR(5)`.
   it's *stable* (no flicker/flip), which is the whole point. **TODO measure:** confirm at a grazing
   angle, and check the per-quad count in a corpse-heavy view (`calls=`).
 
+### Wall graffiti clipping doors — door-span overlap skip (landed)
+`WallDecals` bakes graffiti/posters/cracks only on **worn** faces; doors also land on worn faces
+(side/maintenance at `BACK_ENTRANCE_WORN_PCT`, rarely a windowless worn street front), so the two
+roamed the same face independently and occasionally overlapped — the deferral was self-marked at
+`WallDecals.hx` (old `ponytail:` comment) and in `CLAUDE.md`. `doorRuns` alone can't fix it: it
+returns candidate open runs, not the placed door's jittered interval (over-rejects yet still misses).
+**Fix (landed):** `Entrances.place()` publishes each door's along-face span into
+`WorldCtx.doorSpans` (`{b, dir, lo, hi}`, same face-center + `off` convention decals use); `WallDecals`
+skips any decal whose `[off±size/2]` overlaps a span on the same building+face. `Entrances.add` runs
+before `WallDecals.add`, so spans exist first. Along-face interval only — decals vertically overlap
+door height nearly always, so the horizontal test is sufficient and conservative. Render-only, no save
+field. **Skipped:** cover-lintel avoidance (covers sit narrow + above the door, not the reported clip).
+
 ## Standing notes
 
 - **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via
