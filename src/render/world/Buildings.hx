@@ -15,6 +15,9 @@ import render.Poly.tag;
 class Buildings {
   static inline var CELL = CityConfig.CELL;
   static inline var GROUND_H = CityConfig.GROUND_H;
+  // how far a flush wall overlay stands proud of its wall. Entrances tuned 0.06 → visible gap and
+  // 0.01 → flush; this sits between: enough depth margin to survive a pass that drops polygonOffset
+  static inline var OVERLAY_EPS = 0.02;
 
   static inline function imax(a:Float, b:Float):Float return a > b ? a : b;
 
@@ -150,7 +153,11 @@ class Buildings {
         // collect all bays, then merge into two draw calls per shop (door image + plain image)
         var doorQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
         var ndQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
-        for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
+        // OVERLAY_EPS, not flush: polygonOffset alone keeps a flush bay off the wall in the beauty
+        // pass, but an overrideMaterial pass replaces the material and drops the offset, so bay and
+        // wall z-fight — GTAO's prepass does this and the shopfront flickers. a real gap survives
+        // any pass. a shop bay covers its whole wall, which is why this reads worst here
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, OVERLAY_EPS)) {
           if (!Geom.faceIsStreet(b, f.dir)) continue;
           var n = Std.int(imax(1, Math.round(f.faceW / bayW)));
           var doorBay = (b.shopDoor + f.dir) % n; // which bay holds the door on this face
@@ -246,6 +253,12 @@ class Buildings {
         colorWrite: false,
         depthWrite: false,
         depthTest: false,
+        // a scene.overrideMaterial pass REPLACES the material, which would throw away the three
+        // flags above and let this volume write depth + normals coplanar with the real walls — GTAO
+        // does exactly that for its prepass, and the whole facade z-fights. allowOverride keeps our
+        // own material on this mesh, so it goes on writing nothing no matter who renders the scene.
+        // the shadow map is unaffected either way (WebGLShadowMap swaps in its own depth material)
+        allowOverride: false,
       }));
       m.castShadow = true;
       // spans the city, so its bounding sphere is always on screen — the test would never reject it

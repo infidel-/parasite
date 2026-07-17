@@ -91,16 +91,58 @@ Two traps, both real:
   dump labels both identically and **will not show this bug**.
 
 ### GTAO ambient occlusion — `870d0f8`, default OFF
-Opt-in only. Costs **+994 calls, +318k tris, +10ms submit, +8ms GPU → 60fps drops to ~45**.
-Why so expensive: `GTAOPass._renderOverride` calls a **full `renderer.render()`**, which re-runs the
-shadow-map pass — so the moon's 2048² shadow map renders **twice per frame**, the second time to feed
-a `MeshNormalMaterial` that cannot sample shadows. (Measured 4.07× triangles; double-rendering alone
-predicts 2×, so there is a second unidentified factor.) A disabled pass is skipped whole by the
-composer, so default-off costs nothing but idle memory.
+Opt-in only. Why it costs anything: `GTAOPass._renderOverride` calls a **full `renderer.render()`**
+with `scene.overrideMaterial` set, so the whole scene is drawn a second time through a
+`MeshNormalMaterial` — and that re-runs the shadow-map pass too (the moon's 2048² map renders twice
+per frame, the second time to feed a material that cannot sample shadows). A disabled pass is skipped
+whole by the composer, so default-off costs nothing but idle memory.
+
+**Its cost is a function of the scene, so it fell as the scene shrank.** Originally
+**+994 calls, +318k tris, +10ms submit, +8ms GPU → 60fps drops to ~45**. Re-measured after the decal
++ shadow work (same spot, follow view):
+
+| | calls | tris | GPU | submit | idle |
+|---|---|---|---|---|---|
+| AO off | 158 | 95k | 4.75 | 4.66 | 11.4 |
+| AO on | 298 | 177k | 10.2 | 8.1 | 7.85 |
+
+**+140 calls, +5.4ms GPU, +3.5ms submit — holds 60fps with ~7.8ms idle.** ~7× cheaper in calls than
+the original measurement, purely because AO re-draws whatever the scene is.
+
+**It also flips which wall is being hit, and that is the part that matters.** AO off:
+`GPU 4.71 ≈ submit 4.70` — CPU/draw-call-bound, the regime everything else in this doc targets. AO on:
+`GPU 10.14 > submit 8.89` — **GPU-bound**. The standing note "a better GPU does not fix submit" stops
+applying with AO on; the inverse does. That is why it still ships **off by default** despite now
+fitting the frame: this machine absorbs +5.4ms of GPU, and the weak-laptop target is exactly the case
+these numbers cannot speak for. Flip the default only after measuring there.
 
 Tuning trap: `radius` is **world-space** and `CityConfig.CELL = 4`. The initial `radius: 0.25` was 6%
 of one cell — invisible at city scale. Usable range starts ~1.5. Note the effect fights the art
 direction ("even flat lighting, NO soft photographic shadows"), which is why it ships off.
+
+### `scene.overrideMaterial` silently discards per-material depth tricks
+Two AO bugs, one root cause — worth stating once because nothing about it is local to GTAO. Any pass
+that renders through `scene.overrideMaterial` **replaces the material outright**
+(`WebGLRenderer.js:1996`), so every flag the object relied on is gone: `colorWrite`, `depthTest`,
+`polygonOffset`. Both bugs were invisible until someone actually turned AO on.
+
+1. **The merged shadow caster wrote depth into the AO prepass.** It is only invisible because of
+   `colorWrite: false`; under the override it drew its building volumes coplanar with the real walls
+   and the whole facade z-fought. Fix: **`allowOverride: false`** (`Material.js:437`, default true) —
+   three's own opt-out, which keeps our material on the mesh so it goes on writing nothing no matter
+   who renders the scene. The shadow map is unaffected either way (`WebGLShadowMap` swaps in its own
+   depth material, and ignores `overrideMaterial` entirely).
+2. **Flush wall overlays z-fought.** Storefront bays, doors, grime bands, wall decals and entrances
+   all sit dead flush and rely on `polygonOffset` to win. The override drops it. `allowOverride` is
+   **not** the fix here — unlike the caster, these *should* appear in the normal buffer, and opting
+   them out would make them write albedo into it instead of normals. Fix: stand them physically proud
+   (`Geom.buildingFaces(..., eps)`), `OVERLAY_EPS = 0.02`. Only the shopfront was visibly bad — a bay
+   covers its entire wall, while the others are small patches — so only it was changed. `Entrances.hx`
+   had already tuned this by hand: 0.06 gaps visibly, 0.01 is flush.
+
+Rule of thumb: **an object that renders correctly only because of a material flag is a bug waiting for
+the next override pass.** Prefer real geometric separation, or `allowOverride: false` when the object
+is meant to be invisible everywhere.
 
 ### Ghost overlay capacity fix — `5a6ae04`
 `makeGhostMesh` allocated the ghost at `real.count` then copied the source's *entire*
@@ -131,6 +173,11 @@ and make it the sole caster; the boxes keep `receiveShadow` and lose `castShadow
 **462 → 304 calls, shadow 175 → 16**, verified by live A/B (add proxy → measure → revert → baseline
 returned). Whole city = **2.7k tris**, so the merge is free — this was pure call overhead, the exact
 opposite of the roof-detail case below (batch only what isn't already culled *and* is call-bound).
+
+The caster is invisible **only** because of `colorWrite: false`, which any `overrideMaterial` pass
+throws away — it shipped in `f465c1d` flickering the whole facade under GTAO, and nobody saw it
+because AO defaults off. It now carries `allowOverride: false`; see the `overrideMaterial` entry
+below before giving this mesh any new material flag.
 
 In-game result of this + `forceSinglePass`, measured at one spot in both views:
 
