@@ -73,7 +73,11 @@ class ChatBubbles
         {
           b.id = id;
           b.dying = false; // disarms the in-flight exit timer (it re-checks this)
-          setText(b.el, text);
+          // a 'talk' bubble is the animated ... of a converser: three dots css reveals one-by-one,
+          // so its content is dot spans rather than the (ignored) text line
+          if (kind.indexOf('talk') >= 0)
+            setDots(b.el);
+          else setText(b.el, text);
           b.el.style.fontFamily = fontFamily;
           b.el.className = 'chat-bubble ' + kind; // also drops any leftover .out
           untyped b.el.offsetWidth;               // reflow, so a replay restarts from frame 0
@@ -129,6 +133,21 @@ class ChatBubbles
         }
       if (at < text.length)
         el.appendChild(document.createTextNode(text.substr(at)));
+    }
+
+// fills a talking bubble with three dots as separate spans, so css can reveal them one after another
+// (the ... of someone mid-sentence). the dots always occupy their space (only opacity cycles), so the
+// bubble width stays stable while they animate
+  function setDots(el:DivElement):Void
+    {
+      el.textContent = '';
+      for (_ in 0...3)
+        {
+          var d = document.createSpanElement();
+          d.className = 'dot';
+          d.textContent = '.';
+          el.appendChild(d);
+        }
     }
 
 // end a frame: retire every bubble nothing touched this frame (its turn timer expired, or the

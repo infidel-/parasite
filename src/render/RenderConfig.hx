@@ -465,6 +465,16 @@ class RenderConfig {
   // lift as the badges, but clear of them — see Actors.drawBubble)
   public static inline var BUBBLE_LIFT = 0.95;
 
+  // chat-mode talking bubbles (render.actors.ChatConvo): the ... bubbles alternating over the two
+  // conversers; turn/jump timing in BASE_MS multiples, hop height in screen px
+  public static var CHAT_BUBBLE = {
+    turnMin: 8.0,        // shortest speaker turn before handing off (BASE_MS multiples)
+    turnVar: 8.0,        // random extra turn length (BASE_MS multiples); turn = [turnMin .. turnMin+turnVar]
+    jumpMult: 2.0,       // the bubble hops during this final window of the turn (BASE_MS multiples)
+    hops: 2.0,           // number of little hops in that window
+    jumpPx: 5.0,         // hop height in screen px
+  };
+
   // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
   // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)
   public static inline var WALLDECAL_PCT = 35;

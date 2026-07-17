@@ -39,6 +39,7 @@ class Actors {
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
   var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
+  var convo:ChatConvo;                                   // chat-mode "talking" bubbles over the two conversers
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
   var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
 
@@ -77,6 +78,7 @@ class Actors {
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
       bubbles = game.ui.hud.bubbles;
+      convo = new ChatConvo(game, camera, actors, bubbles);
       lastState = game.player.state;
     }
 
@@ -176,6 +178,8 @@ class Actors {
               }
           }
       offscreen.end();
+      // chat-mode talking bubbles over the two conversers (queued after the barks, before end())
+      convo.drive(dtMs);
       bubbles.end();
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
@@ -261,6 +265,13 @@ class Actors {
     {
       var e = ai.entity;
       if (e.text == null)
+        return;
+      // mid-chat the two participants talk through the convo bubbles (ChatConvo); mute their barks
+      // so a stray line can't fight the talking bubble over the same head
+      if (game.ui.hud.state == HUD_CHAT &&
+          game.player.chat.target != null &&
+          (ai == game.player.host ||
+           ai == game.player.chat.target))
         return;
       var a = actors.get(e);
       if (a == null ||
