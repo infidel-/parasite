@@ -6,6 +6,7 @@ import citygen.CityGen;
 import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
+import _UIState;
 import entities.Entity;
 import render.choreo.Choreo;
 
@@ -123,9 +124,10 @@ class StreetView {
       else if (debug.on && perf != null)
         perf.onKey(e.code);
     });
-    // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
+    // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel.
+    // a GUI window open (inventory/body/etc) overlays the view — let it scroll, don't zoom
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
-      if (!running || debug.on || rig == null) return;
+      if (!running || debug.on || rig == null || game.ui.state != UISTATE_DEFAULT) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
     // track the cursor over #streetview in raw client px for the AI-hover tooltip (the shared 2D
