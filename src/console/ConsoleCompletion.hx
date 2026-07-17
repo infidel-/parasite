@@ -137,6 +137,7 @@ class ConsoleCompletion
             { lit: 'event', next: [ { slot: '[index]' } ] },
             { lit: 'improvement', next: [
               { slot: '<name>', values: function() return [ 'all' ].concat(improv()), next: [ { slot: '<level>' } ] } ] },
+            { lit: 'npcs', next: [ { slot: '[count]' } ] },
             { lit: 'region' },
             { lit: 'timeline' },
           ] });
