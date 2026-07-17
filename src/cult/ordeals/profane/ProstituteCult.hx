@@ -16,6 +16,7 @@ class ProstituteCult
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
+          spawnNearType: 'burning_barrel',
           targets: [
             {
               target: {

@@ -19,6 +19,7 @@ class Combat extends Mission
   public var targetIDs: Array<Int>;
   public var clusterX: Int;
   public var clusterY: Int;
+  public var spawnNearType: String; // object type to muster the cluster near, or null
 
 // create a combat mission with configured template
   public function new(g: Game, combatInfo: _CombatMissionInfo)
@@ -33,6 +34,7 @@ class Combat extends Mission
       template = combatInfo.template;
       if (template == null)
         template = TARGET_WITH_GUARDS;
+      spawnNearType = combatInfo.spawnNearType;
 
       if (difficulty == null ||
           difficulty == UNSET)
@@ -84,6 +86,7 @@ class Combat extends Mission
       targetIDs = [];
       clusterX = -1;
       clusterY = -1;
+      spawnNearType = null;
       difficulty = UNSET;
     }
 

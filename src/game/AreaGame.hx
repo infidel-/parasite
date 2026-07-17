@@ -776,6 +776,40 @@ class AreaGame extends _SaveObject
     }
 
 
+// find an empty walkable cell beside a random object of the given type that the player can't
+// currently see, so spawns muster around it (e.g. burning barrels for cult combat ordeals).
+// returns { x: -1, y: -1 } when no such object / free cell exists
+  public function findLocationNearObject(type: String): _Point
+    {
+      var list = [];
+      for (o in _objects)
+        {
+          if (o.type != type)
+            continue;
+          // same hidden-from-player rule as findUnseenEmptyLocation
+          if (!isEntering)
+            {
+              if (game.player.state != PLR_STATE_HOST &&
+                  Const.distanceSquared(game.playerArea.x, game.playerArea.y, o.x, o.y) < 6 * 6)
+                continue;
+              if (game.player.state == PLR_STATE_HOST &&
+                  isVisible(game.playerArea.x, game.playerArea.y, o.x, o.y))
+                continue;
+            }
+          list.push(o);
+        }
+      if (list.length == 0)
+        return { x: -1, y: -1 };
+
+      // object cell may be unwalkable (barrels are); take a free cell beside a random hidden one
+      var o = list[Std.random(list.length)];
+      var loc = findEmptyLocationNear(o.x, o.y, 2);
+      if (loc == null)
+        return { x: -1, y: -1 };
+      return loc;
+    }
+
+
 // find empty location on map (to spawn stuff)
   public function findEmptyLocation(): _Point
     {
