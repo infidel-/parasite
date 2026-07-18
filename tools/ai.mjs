@@ -16,15 +16,21 @@ function sourceStamp(path)
   return Math.floor(statSync(path).mtimeMs);
 }
 
-// returns gender-ordered SVG source names from the old PNG atlas membership.
-function sourcesFor(type, gender)
+// returns every source cell for one gender, including explicitly positioned specials.
+function cellsFor(type, gender)
 {
   const svgDir = join(SRC, type.svgDir);
   const genderDir = join(SRC, type.genderDirs[gender]);
-  return readdirSync(genderDir)
+  const cells = readdirSync(genderDir)
     .map(name => name.replace(/\.[^.]+$/, ''))
     .filter(name => existsSync(join(svgDir, name + '.svg')))
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map((name, index) => ({
+      src: type.svgDir + '/' + name + '.svg',
+      x: index % type.cols,
+      y: Math.floor(index / type.cols),
+    }));
+  return cells.concat(type.specials?.[gender] ?? []);
 }
 
 // returns the output filename suffix for a skin variant.
@@ -39,21 +45,45 @@ async function rasterize(path, type, info, variant)
   const skin = info.skin;
   let svg = readFileSync(path, 'utf8');
   for (let i = 0; i < skin.src.length; i++)
-    svg = svg.replaceAll('#' + skin.src[i], '#' + skin[variant][i]);
-  return sharp(Buffer.from(svg))
+    svg = svg.replace(new RegExp('#' + skin.src[i], 'gi'), '#' + skin[variant][i]);
+  const raster = await sharp(Buffer.from(svg))
     .resize(type.tile, type.tile)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  for (let p = 0; p < raster.data.length; p += raster.info.channels)
+    for (let i = 0; i < skin.src.length; i++)
+      {
+        const color = parseInt(skin.src[i], 16);
+        if (raster.data[p] === ((color >> 16) & 255)
+            && raster.data[p + 1] === ((color >> 8) & 255)
+            && raster.data[p + 2] === (color & 255))
+          {
+            const target = parseInt(skin[variant][i], 16);
+            raster.data[p] = target >> 16;
+            raster.data[p + 1] = (target >> 8) & 255;
+            raster.data[p + 2] = target & 255;
+          }
+      }
+  return sharp(raster.data, {
+      raw: {
+        width: raster.info.width,
+        height: raster.info.height,
+        channels: raster.info.channels,
+      },
+    })
     .modulate({ saturation: info.saturation })
     .png()
     .toBuffer();
 }
 
 // builds or updates one gender/skin atlas, reusing unchanged cells from its old output.
-async function buildAtlas(type, info, gender, variant, names, changed, full)
+async function buildAtlas(type, info, gender, variant, cells, changed, full)
 {
   const suffix = variantSuffix(variant);
   const out = join(OUT, gender + suffix + type.tile + '.png');
   const width = type.cols * type.tile;
-  const height = Math.ceil(names.length / type.cols) * type.tile;
+  const height = Math.max(...cells.map(cell => cell.y + 1)) * type.tile;
   const rebuild = full || !existsSync(out);
   if (!rebuild && changed.length === 0)
     {
@@ -70,18 +100,33 @@ async function buildAtlas(type, info, gender, variant, names, changed, full)
       },
     })
     : sharp(out);
-  const cells = rebuild ? names : changed;
-  const composites = await Promise.all(cells.map(async name =>
+  const draw = rebuild ? cells : changed;
+  const tiles = await Promise.all(draw.map(async cell =>
     {
-      const index = names.indexOf(name);
       return {
-        input: await rasterize(join(SRC, type.svgDir, name + '.svg'), type, info, variant),
-        left: (index % type.cols) * type.tile,
-        top: Math.floor(index / type.cols) * type.tile,
+        input: await rasterize(join(SRC, cell.src), type, info, variant),
+        left: cell.x * type.tile,
+        top: cell.y * type.tile,
       };
     }));
+  const composites = rebuild
+    ? tiles
+    : tiles.flatMap(tile => [
+      {
+        input: Buffer.alloc(type.tile * type.tile * 4, 255),
+        raw: {
+          width: type.tile,
+          height: type.tile,
+          channels: 4,
+        },
+        blend: 'dest-out',
+        left: tile.left,
+        top: tile.top,
+      },
+      tile,
+    ]);
   writeFileSync(out, await image.composite(composites).png().toBuffer());
-  console.log('  built ' + gender + suffix + type.tile + '.png  ' + cells.length + ' tile(s)');
+  console.log('  built ' + gender + suffix + type.tile + '.png  ' + draw.length + ' tile(s)');
   return true;
 }
 
@@ -98,33 +143,31 @@ async function main()
   for (const type of Object.values(info.types))
     {
       const genders = Object.keys(type.genderDirs);
-      const names = Object.fromEntries(genders.map(gender => [gender, sourcesFor(type, gender)]));
+      const cells = Object.fromEntries(genders.map(gender => [gender, cellsFor(type, gender)]));
       const signature = createHash('sha256').update(JSON.stringify({
-        names,
+        cells,
         cols: type.cols,
         tile: type.tile,
         saturation: info.saturation,
         skin: info.skin,
       })).digest('hex');
-      const allNames = [...new Set(genders.flatMap(gender => names[gender]))];
-      const changed = allNames.filter(name =>
+      const allCells = genders.flatMap(gender => cells[gender]);
+      const changed = allCells.filter(cell =>
         {
-          const rel = type.svgDir + '/' + name + '.svg';
-          return info.sources[rel] !== sourceStamp(join(SRC, rel));
+          return info.sources[cell.src] !== sourceStamp(join(SRC, cell.src));
         });
       const full = type.last_sig !== signature;
 
       for (const gender of genders)
         for (const variant of Object.keys(info.skin))
           {
-            if (await buildAtlas(type, info, gender, variant, names[gender], changed.filter(name => names[gender].includes(name)), full))
+            if (await buildAtlas(type, info, gender, variant, cells[gender], changed.filter(cell => cells[gender].includes(cell)), full))
               built++;
           }
 
-      for (const name of allNames)
+      for (const cell of allCells)
         {
-          const rel = type.svgDir + '/' + name + '.svg';
-          info.sources[rel] = sourceStamp(join(SRC, rel));
+          info.sources[cell.src] = sourceStamp(join(SRC, cell.src));
         }
       type.last_sig = signature;
     }
