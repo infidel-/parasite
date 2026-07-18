@@ -9,6 +9,7 @@ import js.Browser.document;
 import js.html.DivElement;
 
 import game.Game;
+import render.Viewport;
 
 // one live bubble: its element plus the text identity it was built for
 typedef Bubble = {
@@ -16,6 +17,8 @@ typedef Bubble = {
   id: Int,              // the speaker's textID this bubble was built for
   seen: Bool,           // touched by show() this frame?
   dying: Bool,          // playing the exit anim (its detach timer is armed)
+  w: Float,             // cached offsetWidth, measured only on rebuild (size changes with text, not position)
+  h: Float,             // cached offsetHeight, same
 };
 
 class ChatBubbles
@@ -63,6 +66,8 @@ class ChatBubbles
             id: -1,
             seen: true,
             dying: false,
+            w: 0,
+            h: 0,
           };
           live.set(key, b);
         }
@@ -80,26 +85,27 @@ class ChatBubbles
           else setText(b.el, text);
           b.el.style.fontFamily = fontFamily;
           b.el.className = 'chat-bubble ' + kind; // also drops any leftover .out
-          untyped b.el.offsetWidth;               // reflow, so a replay restarts from frame 0
+          // measure here (size only changes with text/kind) and cache: this reflow doubles as the
+          // one forcing the replay to restart from frame 0. steady frames then reuse b.w/b.h
+          b.w = b.el.offsetWidth;
+          b.h = b.el.offsetHeight;
           b.el.classList.add('in');
         }
 
       // clamp the bubble inside the screen, then point the tail back at the anchor. the div is
       // translated (-50%, -100%) from its left/top, so left = the bubble's horizontal centre and
       // top = where the tail tip lands
-      var vw = document.body.clientWidth;
-      var vh = document.body.clientHeight;
-      var half = b.el.offsetWidth / 2;
+      var half = b.w / 2;
       var cx = x;
       if (cx - half < MARGIN)
         cx = MARGIN + half;
-      if (cx + half > vw - MARGIN)
-        cx = vw - MARGIN - half;
+      if (cx + half > Viewport.w - MARGIN)
+        cx = Viewport.w - MARGIN - half;
       var cy = y;
-      if (cy - b.el.offsetHeight < MARGIN)
-        cy = MARGIN + b.el.offsetHeight;
-      if (cy > vh - MARGIN)
-        cy = vh - MARGIN;
+      if (cy - b.h < MARGIN)
+        cy = MARGIN + b.h;
+      if (cy > Viewport.h - MARGIN)
+        cy = Viewport.h - MARGIN;
       var tail = x - (cx - half);
       if (tail < TAIL_INSET)
         tail = TAIL_INSET;

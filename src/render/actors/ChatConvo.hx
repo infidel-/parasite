@@ -120,8 +120,8 @@ class ChatConvo {
           _v.x < -1 || _v.x > 1 ||
           _v.y < -1 || _v.y > 1)
         return false;
-      _px = (_v.x * 0.5 + 0.5) * js.Browser.document.body.clientWidth;
-      _py = (-_v.y * 0.5 + 0.5) * js.Browser.document.body.clientHeight;
+      _px = (_v.x * 0.5 + 0.5) * render.Viewport.w;
+      _py = (-_v.y * 0.5 + 0.5) * render.Viewport.h;
       return true;
     }
 }

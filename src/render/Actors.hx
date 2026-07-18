@@ -71,6 +71,7 @@ class Actors {
       this.game = game;
       this.camera = camera;
       this.actorGroup = actorGroup;
+      Viewport.init(); // cache viewport size on resize so the per-frame hud never forces a reflow
       sprites = new Sprites(game, actorGroup);
       beams = new Beams(actorGroup);
       sparks = new Sparks(actorGroup, camera);
@@ -303,8 +304,8 @@ class Actors {
       // cult-speak (a lang-rendered bark) gets its own class: bold + full-size, not the shrunk default
       var kind = e.textFont != null ? e.textKind + ' cultspeak' : e.textKind;
       bubbles.show('ai:' + ai.id, e.textID, e.text, e.textFontFamily, kind,
-        (_ov.x * 0.5 + 0.5) * js.Browser.document.body.clientWidth,
-        (-_ov.y * 0.5 + 0.5) * js.Browser.document.body.clientHeight);
+        (_ov.x * 0.5 + 0.5) * Viewport.w,
+        (-_ov.y * 0.5 + 0.5) * Viewport.h);
     }
 
 // queue a screen-edge indicator for a seen AI whose head projects outside the viewport: the
