@@ -514,9 +514,12 @@ diff (menu baseline vs first entry):**
    are 5 in normal cities, 10 in low-tier. That count is baked into EVERY lit program. The warm must carry
    the SAME pool set as the target area or all ~15 MeshStandard programs recompile on entry (measured: warm
    with 0 pools → +24 on entry; warm with both pools/10 → still +24 because live was 5; warm with just
-   `MuzzleLights`/5 → +7). `warmup()` adds only `MuzzleLights` (the common, non-barrel count). **Low-tier
-   cities pay a one-off recompile of the lit set on first entry** — a pre-existing per-area-class cost the
-   old on-entry warm also never covered; warming both counts would need two warm passes, not done.
+   `MuzzleLights`/5 → +7). **Both counts are warmed via TWO `compileAsync` passes**: pass 1 with
+   `MuzzleLights` only (5), then `new FlameLights(g)` bumps `NUM_POINT_LIGHTS` to 10 and pass 2 recompiles
+   the lit set at 10. Both program sets persist (three releases a program only on `material.dispose()`, and
+   the warm scene is retained), so BOTH the common cities AND the low-tier **new-game start** (which is
+   `AREA_CITY_LOW`) enter with zero lit recompiles. Verified via `__progs()`: 14 physical programs at
+   `,1,5,12,` (5 point lights) + 14 at `,1,10,12,` (10) — exact mirror, 28 total.
 - **Shadow depth programs need the shadow PASS to actually run.** `compileAsync` doesn't compile the
   shadow-map depth materials. `warmup()` calls `SceneSetup.fitMoon(moon, cityCentre)` so the moon's shadow
   box covers the city-wide caster, then the throwaway `composer.render()` runs the depth pass and compiles

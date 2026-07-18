@@ -261,9 +261,8 @@ class StreetView {
       // the muzzle-flash point-light pool the real build adds via Actors: it sits in the scene forever at
       // intensity 0 so NUM_POINT_LIGHTS is constant, and that count is baked into EVERY lit material's
       // program — so the warm scene must carry it or every MeshStandard program compiles at the wrong
-      // light count and recompiles on entry. NOTE: barrel FlameLights are added ONLY in AREA_CITY_LOW
-      // (FlameShadows), so that area class has a DIFFERENT count (10 vs 5) and pays a one-off recompile on
-      // its first entry — warming the common (non-barrel) count here covers every other city
+      // light count and recompiles on entry. this is the 5-light count (every non-barrel city); the
+      // 10-light AREA_CITY_LOW variant is warmed by the second compile pass below (FlameLights added)
       new render.particles.MuzzleLights(g);
       for (m in render.particles.GasCloud3D.warmupMeshes()) // gas puffs (explicit front/back MeshStandard)
         g.add(m);
@@ -330,8 +329,16 @@ class StreetView {
       // culled), so this warms every material's real program in parallel, view-independent
       untyped renderer.setRenderTarget(comp.renderTarget1);
       // compileAsync hands all scene programs to the driver in parallel (KHR_parallel_shader_compile)
-      // without blocking; one composer pass then warms the post-FX programs compile can't reach
+      // without blocking; one composer pass then warms the post-FX programs compile can't reach.
+      // TWO passes: NUM_POINT_LIGHTS is baked into every lit material's program, and low-tier cities
+      // (AREA_CITY_LOW, where a NEW GAME starts) carry the barrel FlameLights pool -> 10 point lights
+      // vs 5 everywhere else. warm the 5-count first, then add FlameLights and warm the 10-count, so
+      // both variants are cached and neither the new-game start nor any later city recompiles on entry
       renderer.compileAsync(s, camera).then(function(_)
+        {
+          new render.particles.FlameLights(g);
+          return renderer.compileAsync(s, camera);
+        }).then(function(_)
         {
           untyped renderer.setRenderTarget(null);
           comp.render();
