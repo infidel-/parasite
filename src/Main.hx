@@ -44,6 +44,10 @@ class Main
       game.scene.init();
       mods.ModLoader.load(game).then(function(_) {
         game.ui.state = UISTATE_MAINMENU;
+        // pre-warm the 3D street shaders off the menu idle so the first city entry doesn't stall ~2s
+        // under black compiling them on demand (see StreetView.warmup). the street canvas is hidden
+        // (#streetview display:none) so this is invisible; delayed a beat so the menu paints first
+        Browser.window.setTimeout(function() game.scene.city3d.warmup(), 300);
         return null;
       });
     }

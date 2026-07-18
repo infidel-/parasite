@@ -488,6 +488,73 @@ made when the DoubleSide object is actually two-pass rendered), and (c) disposin
 from the refcounted cache immediately. Also added `window.__progs()` debug hook (`StreetView`, shader
 cacheKey cache) — the tool that cracked this; keep it.
 
+### Boot pre-warm — first city entry stalled ~2s under black compiling the whole material set (landed)
+The gas fix warmed one on-demand effect; this generalizes it. First city entry per GL context stalled
+~2s of black-with-HUD-on-top because `StreetView.buildFrom` ran the shader warm (`compileAsync` + a
+throwaway `composer.render()`) **inline on entry, under the fader** — the driver compiled every
+MeshStandard permutation (buildings/windows/ground/roofs/entrances/walldecals + instanced variants) on
+demand, one entry, in view of the player. **Fix (landed):** `StreetView.warmup()`, fired off the **menu
+idle** (`Main`, 300ms after mods load, on the hidden `#streetview` canvas → invisible). It builds a
+**throwaway city with the REAL builders** — `CityGen.generate(1)` + `SceneSetup.buildScene` +
+`World.build` — so the material / instancing set is correct *by construction* with zero enumeration to
+rot. Sets `_warmed` so the real entry skips its inline warm and `present()`s immediately.
+
+**Two bugs this cost live-testing to find (both would silently defeat any warm), measured via `__progs()`
+diff (menu baseline vs first entry):**
+
+1. **`compileAsync` compiles for the CURRENTLY-BOUND render target's color space.** The game renders
+   scene → the `EffectComposer`'s LINEAR intermediate target (`srgb-linear`), then `OutputPass` converts to
+   sRGB. `compileAsync(scene, camera)` with the default framebuffer bound compiles the `srgb` variant — the
+   WRONG program — and every real `srgb-linear` program still compiles on entry. The color space is baked
+   into the cacheKey (`srgb` vs `srgb-linear` field). **Fix:** `renderer.setRenderTarget(comp.renderTarget1)`
+   BEFORE `compileAsync`, restore `null` after. `compile()` walks the whole scene (not frustum-culled), so
+   this warms every material's real program in parallel, view-independent — no camera framing needed.
+2. **`NUM_POINT_LIGHTS` is NOT constant across cities.** `MuzzleLights` (pool 5) is always added by `Actors`,
+   but `FlameLights` is added by `FlameShadows` **only in `AREA_CITY_LOW`** (barrel cities) — so point lights
+   are 5 in normal cities, 10 in low-tier. That count is baked into EVERY lit program. The warm must carry
+   the SAME pool set as the target area or all ~15 MeshStandard programs recompile on entry (measured: warm
+   with 0 pools → +24 on entry; warm with both pools/10 → still +24 because live was 5; warm with just
+   `MuzzleLights`/5 → +7). `warmup()` adds only `MuzzleLights` (the common, non-barrel count). **Low-tier
+   cities pay a one-off recompile of the lit set on first entry** — a pre-existing per-area-class cost the
+   old on-entry warm also never covered; warming both counts would need two warm passes, not done.
+- **Shadow depth programs need the shadow PASS to actually run.** `compileAsync` doesn't compile the
+  shadow-map depth materials. `warmup()` calls `SceneSetup.fitMoon(moon, cityCentre)` so the moon's shadow
+  box covers the city-wide caster, then the throwaway `composer.render()` runs the depth pass and compiles
+  them. (Cutout/alphaTest depth variants for windows/doors still compile on entry — cheap, left.)
+
+Facts that made it work (and the traps):
+- **On-demand effects aren't in the static scene**, so they're parked as throwaway meshes for the warm:
+  gas via `GasCloud3D.warmupMeshes()`, actor sprites via new `Sprites.warmupMeshes()` (1×1 placeholder
+  map/emissiveMap — the program key needs the DEFINES present, not pixels), beams/sparks by calling their
+  **real spawn code** once (no material config to drift). Silent-scream (`ScreamPulse3D` ctor reads live
+  `game.area`) and occlusion **ghosts** (`MeshLambert`, compile on first *fade*) are left on-demand — both
+  cheap one-off first-use hitches; add their own `warmupMeshes` later if ever noticed.
+- **The DoubleSide two-pass law is general, so the clone pass is general.** Per the gas entry, a
+  `transparent`+`DoubleSide`+`!forceSinglePass` material renders as two `flipSided` passes = two programs,
+  and `compileAsync` on the DoubleSide material compiles a `doubleSided` program the runtime never uses.
+  `warmup()` traverses the built scene and, for each such material, adds explicit **FrontSide + BackSide**
+  clone meshes — one pass covers windows, sprites, beams, sparks, everything, instead of per-module code.
+- **Blending is render STATE, not a shader define** → not in the program cacheKey. So MeshBasic transparent
+  DoubleSide no-map (beams / spark streaks / the player **ring**) all share ONE program, and the map variant
+  (spark glow/flame) another. Warming beams+sparks covers ring and tactical for free.
+- **Do NOT dispose the warm geometry.** Several geometries are shared static models / particle quads
+  (`Models.instanced`, gas `quadGeo`); disposing them breaks the real build. The whole warm scene is
+  retained in a static (`warmHold`) — three releases a program only on `material.dispose()`, so holding the
+  materials keeps the programs cached. Cost: one throwaway city's geometry resident. Upgrade path if boot
+  RAM matters: selectively dispose only the per-build `World.build` geometries (the safe ones).
+- Textures need only be **assigned**, not decoded, for the correct program — `Textures.loadTexture` returns
+  the `Texture` object synchronously, so warming at the menu (before any decode) still keys every `map`
+  define right. **KHR_parallel_shader_compile is present** (measured), so `compileAsync` is genuinely parallel.
+
+**Verified (measured, normal city):** first city entry compiles **7** programs vs the full lit set before
+— 3 position/alphaTest `depth` (shadow cutout variants), 2 `MeshLambert` occlusion ghosts (deferred by
+design — compile on first *fade*), 1 actor `DecalBatch` (`decalInstanceAlpha`, actor-side, compiles on
+first blood/debris decal), 1 `MeshStandard` GLTF prop material (models load async; not decoded at the
+300ms menu warm — timing-bound, not worth forcing model-load into the warm path). The whole expensive
+MeshStandard bulk (buildings/windows/ground/roofs/walls/sprites) is warmed at the menu. **`(c)` progress
+bar** from the ask is moot: with the warm moved off entry, entry is just the fast synchronous build, no
+long black — nothing to put a bar on.
+
 ## Standing notes
 
 - **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via

@@ -232,6 +232,121 @@ class StreetView {
       };
   }
 
+// boot shader pre-warm: compile every street shader program on a THROWAWAY city (built by the real
+// builders, so the material / instancing / light-count set matches the game exactly) BEFORE the player
+// ever enters one, so the first real city entry reuses the cached programs and presents instantly
+// instead of stalling ~2s under black compiling MeshStandard permutations on demand. runs once per GL
+// context, off the menu idle (Main). the throwaway scene is retained (warmHold) so its materials keep
+// their programs in three's refcounted, cacheKey-shared cache; a matching-key material in the real
+// build then reuses them. covers the full static city + post-FX + gas + actor sprites + beams/sparks
+// (ring/tactical share those programs — blending is render state, not a shader define). NOT covered, on
+// purpose: silent-scream (its ctor needs live area state) and occlusion ghosts (compile on first fade) —
+// both cheap one-off first-use hitches, warmed later via their own warmupMeshes if ever noticed
+  static var warmHold:Dynamic = null;   // retains the warm scene so its materials' programs stay cached
+  public function warmup():Void
+    {
+      if (_warmed || warmHold != null)
+        return;
+      _warmed = true;
+      ensureCore();
+      // real builders on a throwaway city -> exact programs, complete by construction, zero enumeration
+      var seed = 1;
+      var city = CityGen.generate(seed);
+      var bundle = SceneSetup.buildScene(renderer, city); // base scene + fixed light pools + lamp cones
+      var s = bundle.scene;
+      World.build(s, city, seed);                          // all lit world geometry (instanced MeshStandard)
+      // on-demand effects never present at static-build time: park throwaway instances so they warm too
+      var g = new Group();
+      s.add(g);
+      // the muzzle-flash point-light pool the real build adds via Actors: it sits in the scene forever at
+      // intensity 0 so NUM_POINT_LIGHTS is constant, and that count is baked into EVERY lit material's
+      // program — so the warm scene must carry it or every MeshStandard program compiles at the wrong
+      // light count and recompiles on entry. NOTE: barrel FlameLights are added ONLY in AREA_CITY_LOW
+      // (FlameShadows), so that area class has a DIFFERENT count (10 vs 5) and pays a one-off recompile on
+      // its first entry — warming the common (non-barrel) count here covers every other city
+      new render.particles.MuzzleLights(g);
+      for (m in render.particles.GasCloud3D.warmupMeshes()) // gas puffs (explicit front/back MeshStandard)
+        g.add(m);
+      for (m in render.particles.Sprites.warmupMeshes())    // actor billboards (MeshStandard + map/emissiveMap)
+        g.add(m);
+      // beams + hit sparks: spawn once via the REAL code so the exact materials get built (no config to
+      // drift). streak (no map) + glow (map) cover both MeshBasic variants; beams share streak's program
+      var beams = new render.particles.Beams(g);
+      beams.quad(0, 0, 0, 1, 0, 0, 0xffffff, 1);
+      var sparks = new render.particles.Sparks(g, camera);
+      sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
+      sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
+      // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
+      // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
+      // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-changes.md).
+      // so for every such material in the scene, add explicit FrontSide + BackSide clone meshes so BOTH
+      // real programs get cached instead of recompiling on the first render
+      var quad = new PlaneGeometry(1, 1);
+      var seen = new haxe.ds.ObjectMap<Dynamic, Bool>();
+      var clones:Array<Mesh> = [];
+      s.traverse(function(o:Object3D)
+        {
+          var mat:Dynamic = untyped o.material;
+          if (mat == null)
+            return;
+          var mats:Array<Dynamic> = Std.isOfType(mat, Array) ? mat : [ mat ];
+          for (mm in mats)
+            {
+              if (mm == null
+                || seen.exists(mm))
+                continue;
+              seen.set(mm, true);
+              if (mm.transparent == true
+                && mm.side == THREE.DoubleSide
+                && mm.forceSinglePass != true)
+                for (side in [ THREE.FrontSide, THREE.BackSide ])
+                  {
+                    var c = mm.clone();
+                    c.side = side;
+                    clones.push(new Mesh(quad, c));
+                  }
+            }
+        });
+      for (c in clones)
+        s.add(c);
+      // park the moon's shadow box over the city so the composer pass below actually runs the shadow
+      // depth pass — otherwise the box sits at world origin, the city-wide shadow caster falls outside it,
+      // no depth material renders, and the position-only shadow programs compile on the first real frame
+      var span = CityConfig.CELL * CityConfig.GRID;
+      SceneSetup.fitMoon(bundle.moon, new Vector3(span / 2, 0, span / 2));
+      // minimal composer (RenderPass + bloom + output) to warm the always-on post-FX programs; GTAO and
+      // the shockwave pass are disabled/on-demand and compile on toggle regardless, so they're left out
+      var comp = new EffectComposer(renderer);
+      comp.addPass(new RenderPass(s, camera));
+      comp.addPass(new UnrealBloomPass(
+        new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
+        RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD));
+      comp.addPass(new OutputPass());
+      // CRITICAL: the game renders scene -> the composer's LINEAR intermediate target (srgb-linear),
+      // then OutputPass converts to sRGB. a program's cacheKey bakes in the bound target's color space,
+      // so compileAsync against the default framebuffer (srgb) compiles the WRONG variant and the real
+      // srgb-linear programs still compile on entry. bind the composer's linear target first so compile
+      // produces exactly the programs the real render uses. compile walks the whole scene (not frustum-
+      // culled), so this warms every material's real program in parallel, view-independent
+      untyped renderer.setRenderTarget(comp.renderTarget1);
+      // compileAsync hands all scene programs to the driver in parallel (KHR_parallel_shader_compile)
+      // without blocking; one composer pass then warms the post-FX programs compile can't reach
+      renderer.compileAsync(s, camera).then(function(_)
+        {
+          untyped renderer.setRenderTarget(null);
+          comp.render();
+          comp.dispose();
+          // retain the whole warm scene: three releases a program only on material.dispose(), so holding
+          // the materials keeps their programs cached. geometry is deliberately NOT disposed — several
+          // geometries here are shared static models / particle quads, and disposing them would break the
+          // real build. ponytail: one throwaway city's geometry stays resident; if boot RAM matters,
+          // selectively dispose only the per-build World.build geometries (the safe ones) later
+          warmHold = s;
+          if (renderer.info.programs != null)
+            js.Browser.console.log('[street-warmup] boot pre-warm: ' + renderer.info.programs.length + ' programs cached');
+        });
+    }
+
 // show a city generated from a seed (new areas)
   public function show(seed:Int):Void {
     // a build whose shader warm is still in flight counts as shown: the warm holds `running` false for
