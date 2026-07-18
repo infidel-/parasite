@@ -12,6 +12,8 @@ package three;
   static var RepeatWrapping:Dynamic;
   static var ClampToEdgeWrapping:Dynamic;
   static var DoubleSide:Dynamic;
+  static var FrontSide:Dynamic;
+  static var BackSide:Dynamic;
   static var ACESFilmicToneMapping:Dynamic;
   static var NoToneMapping:Dynamic;
   // depth-compare funcs (Material.depthFunc); GreaterDepth draws only where occluded (x-ray outline)

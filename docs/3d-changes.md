@@ -466,6 +466,28 @@ before `WallDecals.add`, so spans exist first. Along-face interval only — deca
 door height nearly always, so the horizontal test is sufficient and conservative. Render-only, no save
 field. **Skipped:** cover-lintel avoidance (covers sit narrow + above the door, not the reported clip).
 
+### First gas burst hitch — shader pre-warm of the puff programs (landed)
+First `panicGas`/`paralysisGas` per GL context stalled ~150–200ms (measured via `__progs()` diff +
+`StreetPerf` trace `COMPILE +4`): `GasCloud3D` spawns puffs on demand, so their shader programs were
+not in the scene at street warm and the driver compiled them mid-burst. **Root cause (fully decoded):**
+the puff material is `MeshStandardMaterial` transparent + **DoubleSide**, which three renders as TWO
+single-side passes — a FrontSide (`flipSided=false`) and a BackSide (`flipSided=true`) draw, each its
+own program — times TWO material variants (baked-blob w/ `normalMap` vs atlas-art w/o) = **4 programs**.
+Confirmed by diffing `renderer.info.programs` cacheKeys: 1st layer mask bit 7 = `normalMapTangentSpace`,
+2nd layer mask bit 12 = `flipSided`. **Fix (landed):** `GasCloud3D.warmupMeshes()` builds 4 throwaway
+meshes ({blob, atlas} × {`FrontSide`, `BackSide`} — explicit per-side so `compileAsync` compiles both
+from params alone, no in-frustum render needed); `StreetView` parks them in the scene for the warm,
+renders once, then removes the **meshes** but **retains the materials** in `GasCloud3D.warmMats`
+(static). three's program cache is refcounted + **cacheKey-shared**, so keeping the 4 materials alive
+keeps the 4 programs cached for the GL context, and every real puff (different material instance, same
+key) reuses them. **Verified:** first burst `addedN=0` new programs, zero frame spike (was 167ms).
+**Failed approaches (do not repeat):** (a) warming a single normalMap mesh, or (b) two meshes both
+`DoubleSide`, or (c) removing+**disposing** the warm meshes — all still recompiled: (a)/(b) missed the
+`flipSided` back-side program (`compile()` derives one side from params, the back-side program is only
+made when the DoubleSide object is actually two-pass rendered), and (c) disposing releases the program
+from the refcounted cache immediately. Also added `window.__progs()` debug hook (`StreetView`, shader
+cacheKey cache) — the tool that cracked this; keep it.
+
 ## Standing notes
 
 - **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via

@@ -28,6 +28,7 @@ class GasCloud3D extends Particle3D {
   static var quadGeo:PlaneGeometry = null;              // shared unit quad (scaled per puff)
   static var puffTex:Texture = null;                    // shared soft lumpy blob alpha
   static var puffNormal:Texture = null;                 // shared spherical normal (round shading)
+  static var warmMats:Array<Dynamic> = null;            // pre-warm materials, kept alive so their compiled shader programs stay in three's (refcounted, cacheKey-shared) cache for every later burst
   var group:Group;
   var puffs:Array<GasPuff> = [];
   var durationMs:Float;
@@ -179,6 +180,57 @@ class GasCloud3D extends Particle3D {
           untyped p.mat.dispose();
         }
       puffs = [];
+    }
+
+// pre-warm: build the shared assets and return throwaway puff meshes covering every program the first
+// gas burst would otherwise compile mid-game (a visible frame hitch). the real puff material is
+// transparent + DoubleSide, which three renders as TWO single-side passes (a front and a flipSided
+// back), each its own program — so warm FOUR meshes: {baked-blob w/ normalMap, atlas-art w/o normalMap}
+// x {FrontSide, BackSide}. giving explicit per-side materials lets compileAsync compile all four from
+// their params alone (no in-frustum render needed). the caller adds these before compileAsync, renders
+// once, then removes the MESHES (no per-frame draw cost) — but the MATERIALS are retained in warmMats
+// and never disposed, so their programs stay in three's refcounted, cacheKey-shared cache and every
+// later real puff (a different material instance, same key) reuses them instead of recompiling. (keys
+// depend on FEATURE presence, not texture identity, so puffTex stands in for the not-yet-decoded atlas)
+  public static function warmupMeshes():Array<Mesh>
+    {
+      ensureAssets();
+      // idempotent: the program cache is per GL context, so one warm covers every later city build
+      if (warmMats != null)
+        return [];
+      var G = RenderConfig.GAS;
+      warmMats = [];
+      var out = [];
+      for (side in [THREE.FrontSide, THREE.BackSide])
+        {
+          // baked-blob variant: map + normalMap
+          var blob = new MeshStandardMaterial({
+            transparent: true,
+            depthWrite: false,
+            side: side,
+            roughness: 1,
+            metalness: 0,
+            map: puffTex,
+            opacity: 0.0,
+          });
+          untyped blob.normalMap = puffNormal;
+          untyped blob.normalScale.set(G.normalScale, G.normalScale);
+          warmMats.push(blob);
+          out.push(new Mesh(quadGeo, blob));
+          // atlas-art variant: map only, no normalMap
+          var atlas = new MeshStandardMaterial({
+            transparent: true,
+            depthWrite: false,
+            side: side,
+            roughness: 1,
+            metalness: 0,
+            map: puffTex,
+            opacity: 0.0,
+          });
+          warmMats.push(atlas);
+          out.push(new Mesh(quadGeo, atlas));
+        }
+      return out;
     }
 
 // build the shared quad + baked textures once (first cloud). puff alpha = a lumpy metaball blob

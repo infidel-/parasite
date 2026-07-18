@@ -222,6 +222,14 @@ class StreetView {
     camera = core.camera;
     rig = new CameraRig(game, camera);
     perf = new StreetPerf(renderer, function() return scene);
+    // perf debug hook: live shader-program cache as cacheKeys. diff __progs() before/after an action
+    // (e.g. first gas burst) to see which MeshStandardMaterial permutations the driver compiles on
+    // first use — those first-use compiles are the frame hitches. count is the array length
+    untyped js.Browser.window.__progs = function()
+      {
+        var ps:Array<Dynamic> = renderer.info.programs;
+        return [for (p in ps) p.cacheKey];
+      };
   }
 
 // show a city generated from a seed (new areas)
@@ -354,10 +362,21 @@ class StreetView {
         warming = true;
         var tWarm = haxe.Timer.stamp();
         var progWarm0 = renderer.info.programs != null ? renderer.info.programs.length : 0;
+        // gas clouds spawn on demand, so their 4 puff programs (2 material variants x front/back side of
+        // the transparent DoubleSide material) are not otherwise in the scene at warm time and the first
+        // burst compiles them mid-game (a visible hitch). park throwaway puff meshes in the scene for
+        // this warm only, then remove once compileAsync resolves
+        var gasWarm = render.particles.GasCloud3D.warmupMeshes();
+        for (m in gasWarm)
+          scene.add(m);
         renderer.compileAsync(scene, camera).then(function(_)
           {
             warming = false;
             composer.render();
+            // remove the meshes (no per-frame draw cost) but DON'T dispose the materials — they are
+            // retained in GasCloud3D.warmMats so their compiled programs stay cached for real bursts
+            for (m in gasWarm)
+              scene.remove(m);
             var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
             trace('[street-warmup] compileAsync+postfx ' + StreetPerf.r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
               ' programs ' + progWarm0 + '->' + progWarm1);
