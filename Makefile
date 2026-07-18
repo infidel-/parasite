@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models model-export
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models model-export ai
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -29,6 +29,10 @@ tex:
 # adopt freshly generated gpt drops into textures-src/ without baking
 adopt:
 	python3 tools/textures.py --rename
+
+# AI sprite pipeline: profession SVGs -> partial 128px gender atlases.
+ai:
+	node tools/ai.mjs
 
 # 3D model pipeline: one-time install of the node bake tooling (gltf-transform + meshopt + sharp)
 model-deps:
