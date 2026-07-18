@@ -126,7 +126,7 @@ class Badges {
         return;
       var e = ai.entity;
       var tex = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
-        RenderConfig.XRAY.fill, RenderConfig.XRAY.hatchSpacing, RenderConfig.XRAY.hatchThick);
+        RenderConfig.XRAY.fill, RenderConfig.XRAY.hatchSpacing, RenderConfig.XRAY.hatchThick, e.skinColor);
       if (tex == null)
         return;
       var col = outlineColor(ai, badges);

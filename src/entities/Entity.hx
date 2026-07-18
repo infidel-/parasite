@@ -13,6 +13,7 @@ class Entity
   var game: Game; // game state
   public var type: String;
   public var isMaleAtlas: Bool;
+  public var skinColor: Int; // 3D actor skin tone (mirrors AIData.skinColor; 0 for non-actors)
   // new draw
   // entities image (entities, male, female)
   public var imageName: String;
@@ -40,6 +41,7 @@ class Entity
       ix = iy = mx = my = 0;
       type = 'undefined';
       isMaleAtlas = false;
+      skinColor = 0;
       scale = 1.0;
       angle = 0.0;
       dx = 0;

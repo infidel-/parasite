@@ -632,7 +632,7 @@ class Actors {
       if (groundAnchor &&
           !flat)
         {
-          var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas);
+          var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, 1.0, e.skinColor);
           if (gs != null)
             wy -= Sprites.SIZE * gs.by;
         }
@@ -757,5 +757,5 @@ class Actors {
 
 // texture for an entity's current atlas cell
   function texFor(e:Entity):CanvasTexture
-    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas, RenderConfig.DECAL.actorMul);
+    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas, RenderConfig.DECAL.actorMul, e.skinColor);
 }

@@ -195,6 +195,7 @@ public function show()
 
       // create entity and set correct icon
       entity = new AIEntity(this, game, x, y);
+      entity.skinColor = skinColor; // 3D actor atlas skin variant
       var atlasID = (iconID != null ? iconID : type);
       var useMaleSpecialAtlas = (
         !isMale &&

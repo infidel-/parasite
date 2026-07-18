@@ -85,6 +85,10 @@ class HumanAI extends AI
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+      // roll skin tone on creation only — never on load, so old saves (no saved
+      // skinColor) keep the yellow default from init() instead of re-randomizing
+      if (!onLoad)
+        skinColor = Std.random(3); // even 1/3 yellow/dark/white
     }
 
 // event: despawn live AI

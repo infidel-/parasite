@@ -21,6 +21,7 @@ class AIData extends _SaveObject
   public var isNPC: Bool;
   public var tileAtlasX: Int; // tile atlas info
   public var tileAtlasY: Int;
+  public var skinColor: _SkinColor; // 3D actor skin tone (default yellow)
   public var name: _AIName; // AI name (can be unique and capitalized)
   public var soundsID: String; // sound set id (e.g. 'civilian')
   public var lang: String; // speech language
@@ -83,6 +84,7 @@ class AIData extends _SaveObject
       income = 0;
       tileAtlasX = -1;
       tileAtlasY = -1;
+      skinColor = SKIN_YELLOW;
       name = {
         real: 'undefined',
         realCapped: 'undefined',

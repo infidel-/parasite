@@ -225,19 +225,30 @@ class Sprites {
       return m;
     }
 
+// resolve an actor atlas to its source image + file tile px. male/female use the new 128px
+// skin-variant sheets (3D only); every other atlas stays on the 64px sheet the 2D view shares
+  function atlasFor(imageName:String, male:Bool, skin:Int):{ img:Dynamic, t:Int }
+    {
+      if (imageName == 'male' ||
+          imageName == 'female')
+        return { img: game.scene.images.getAtlas128(imageName, male, skin), t: 128 };
+      return { img: game.scene.images.getImage(imageName, male), t: Const.TILE_SIZE_CLEAN };
+    }
+
 // crop one atlas cell (imageName, ix, iy) into a cached texture; null until the image decodes.
 // mul < 1 darkens the crop's RGB (ground decals — see darkenCanvas); actors pass the default 1.0
-  public function tex(imageName:String, ix:Int, iy:Int, male:Bool, mul:Float = 1.0):CanvasTexture
+  public function tex(imageName:String, ix:Int, iy:Int, male:Bool, mul:Float = 1.0, skin:Int = 0):CanvasTexture
     {
-      var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul;
+      var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      var src = atlasFor(imageName, male, skin);
+      var img:Dynamic = src.img;
       // retry next frame if the atlas image isn't decoded yet
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = src.t;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
       var cx = cv.getContext('2d');
@@ -281,16 +292,17 @@ class Sprites {
 // solid-white silhouette of an atlas cell (sprite alpha kept, RGB forced white) → cached
 // CanvasTexture. tinted at paint time (emissive) into a flat colored silhouette for the AI
 // through-wall x-ray outline. null until the atlas image decodes (retry next frame, like tex())
-  public function silTex(imageName:String, ix:Int, iy:Int, male:Bool, fill:String, spacing:Int, thick:Int):CanvasTexture
+  public function silTex(imageName:String, ix:Int, iy:Int, male:Bool, fill:String, spacing:Int, thick:Int, skin:Int = 0):CanvasTexture
     {
-      var key = 'sil:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + fill + ':' + spacing + ':' + thick;
+      var key = 'sil:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + fill + ':' + spacing + ':' + thick + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      var src = atlasFor(imageName, male, skin);
+      var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = src.t;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
       var cx = cv.getContext('2d');
@@ -356,16 +368,17 @@ class Sprites {
 // crop an atlas cell to its opaque content rect; cache the trimmed texture + normalized (0..1)
 // content size. null until the atlas image decodes. scans the cell's alpha once per unique cell.
 // mul < 1 darkens the crop's RGB (ground decals — see darkenCanvas)
-  public function texContent(imageName:String, ix:Int, iy:Int, male:Bool, mul:Float = 1.0):GroundSprite
+  public function texContent(imageName:String, ix:Int, iy:Int, male:Bool, mul:Float = 1.0, skin:Int = 0):GroundSprite
     {
-      var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul;
+      var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (contentCache.exists(key)) return contentCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      var src = atlasFor(imageName, male, skin);
+      var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = src.t;
       // draw the full cell to a scratch canvas, then scan its alpha for the opaque bounding box
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
@@ -519,12 +532,12 @@ class Sprites {
 // build a black, soft-edged silhouette of an atlas cell for a fake cast shadow. reuses texContent
 // with mul=0 (black RGB, sprite alpha kept), then blurs that tight crop into a padded canvas so the
 // edge is soft (shadowSoftPx). cached per cell; null until the atlas image decodes
-  public function shadowContent(imageName:String, ix:Int, iy:Int, male:Bool):GroundSprite
+  public function shadowContent(imageName:String, ix:Int, iy:Int, male:Bool, skin:Int = 0):GroundSprite
     {
-      var key = imageName + ':' + ix + ':' + iy + ':' + male;
+      var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + skin;
       if (shadowCache.exists(key)) return shadowCache.get(key);
       // black tight silhouette (mul=0 -> RGB 0, alpha preserved)
-      var base = texContent(imageName, ix, iy, male, 0.0);
+      var base = texContent(imageName, ix, iy, male, 0.0, skin);
       if (base == null)
         return null;
       var tx:Dynamic = base.tex;
@@ -538,7 +551,7 @@ class Sprites {
       bcx.drawImage(src, pad, pad);
       var tex = new CanvasTexture(bc);
       tex.colorSpace = THREE.SRGBColorSpace;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = atlasFor(imageName, male, skin).t; // 128 for actor sheets, 64 otherwise
       var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: 0.0 };
       shadowCache.set(key, gs);
       return gs;
