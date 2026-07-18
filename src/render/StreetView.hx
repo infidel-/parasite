@@ -327,7 +327,7 @@ class StreetView {
       // srgb-linear programs still compile on entry. bind the composer's linear target first so compile
       // produces exactly the programs the real render uses. compile walks the whole scene (not frustum-
       // culled), so this warms every material's real program in parallel, view-independent
-      untyped renderer.setRenderTarget(comp.renderTarget1);
+      renderer.setRenderTarget(comp.renderTarget1);
       // compileAsync hands all scene programs to the driver in parallel (KHR_parallel_shader_compile)
       // without blocking; one composer pass then warms the post-FX programs compile can't reach.
       // TWO passes: NUM_POINT_LIGHTS is baked into every lit material's program, and low-tier cities
@@ -340,7 +340,7 @@ class StreetView {
           return renderer.compileAsync(s, camera);
         }).then(function(_)
         {
-          untyped renderer.setRenderTarget(null);
+          renderer.setRenderTarget(null);
           comp.render();
           comp.dispose();
           // retain the whole warm scene: three releases a program only on material.dispose(), so holding
