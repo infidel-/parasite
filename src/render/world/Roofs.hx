@@ -267,6 +267,57 @@ class Roofs {
     copingCorners(scene, copingTex, covered, bxMin, bxMax, bzMin, bzMax, capY, capBoxH, ALONG, ACROSS, T / 2);
   }
 
+  // downtown flat roof: a thin coping ring (like the non-masonry parapet) plus a mechanical
+  // penthouse bulkhead box (elevator/stair core + HVAC massing) on tall-enough towers. the
+  // penthouse is real occluding massing, so it is baked into the merged moon caster (shadowPos/
+  // shadowIdx, appended by the caller) exactly like the main building box, and userData.b tagged
+  // so Occlusion fades it with its building
+  public static function addDowntownRoof(scene:Scene, b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float,
+      copingTex:Texture, penthouseTex:Texture, shadowPos:Array<Float>, shadowIdx:Array<Int>):Void {
+    var T = RenderConfig.PARAPET_T;
+    var covered = Geom.coveredEdges(b);
+    var h = RenderConfig.PARAPET_H, embed = RenderConfig.PARAPET_EMBED, E = 0.12;
+    var capY = b.h + h / 2 - embed / 2, capBoxH = h + embed;
+    // single flat-roof coping ring, dropped at same-height junctions (extend=0 → stops at the cut)
+    parapetRing(scene, b, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,
+      capY, capBoxH, copingMats(copingTex, 8, 0.0), T + 2 * E, covered, 0);
+    if (penthouseTex == null || !b.roofPenthouse) return; // lower setback tiers: coping only, no bulkhead
+    // only on buildings tall + wide enough to carry a bulkhead
+    var minSide = wWorld < dWorld ? wWorld : dWorld;
+    if (b.h < CityConfig.GROUND_H + 6 * CityConfig.FLOOR_H || minSide < 5 * CELL) return;
+    // deterministic size/offset from the footprint (stable across reloads, unlike the detail shuffle)
+    var hsh = b.col * 53 + b.row * 131;
+    var pw = minSide * (0.4 + (hsh % 3) * 0.08);
+    var pd = minSide * (0.4 + ((hsh >> 2) % 3) * 0.08);
+    var ph = CityConfig.FLOOR_H * (1.4 + (hsh % 2) * 0.6);
+    var ox = ((hsh >> 4) % 5 - 2) * (wWorld / 2 - pw / 2) / 3;
+    var oz = ((hsh >> 6) % 5 - 2) * (dWorld / 2 - pd / 2) / 3;
+    var px = center.x + ox, pz = center.z + oz, py = b.h + ph / 2;
+    var geo = new BoxGeometry(pw, ph, pd);
+    var t = penthouseTex.clone();
+    t.needsUpdate = true;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(imax(1, Math.round(pw / RenderConfig.WALL_TILE)), imax(1, Math.round(ph / RenderConfig.WALL_TILE)));
+    var mat = tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
+      'penthouse', 'mechanical penthouse', WorldCtx.style.penthouseWall);
+    var mesh = new Mesh(geo, mat);
+    mesh.position.set(px, py, pz);
+    mesh.userData.b = b;
+    mesh.castShadow = false; // the merged caster below carries it
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+    // bake the penthouse volume into the city-wide moon caster (position-only, world-baked)
+    var bgeo:BufferGeometry = cast geo;
+    var bpos = bgeo.attributes.position;
+    var vbase = Std.int(shadowPos.length / 3);
+    for (i in 0...(bpos.count : Int)) {
+      shadowPos.push(bpos.getX(i) + px);
+      shadowPos.push(bpos.getY(i) + py);
+      shadowPos.push(bpos.getZ(i) + pz);
+    }
+    for (k in 0...(bgeo.index.count : Int)) shadowIdx.push(vbase + bgeo.index.getX(k));
+  }
+
   // small pitched gable cap for a stone FRONT-door cover: 2 sloped quads (ridge parallel to the
   // wall, along local x) + 2 triangular gable ends. local frame: x = door width, y up from 0,
   // z out from wall; eaves at z=±cd/2,y=0; ridge at z=0,y=rise. UV world-tiled by `tile`.
@@ -385,7 +436,7 @@ class Roofs {
       arr.push(new Matrix4().compose(pos, q, scl));
     }
     for (b in buildings) {
-      if (b.facade == 3) continue; // metal warehouses have a gable roof, not a flat parapet roof
+      if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof, not a flat parapet roof
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
@@ -466,7 +517,7 @@ class Roofs {
     var decalGeo = new PlaneGeometry(1, 1);
 
     for (b in buildings) {
-      if (b.facade == 3) continue; // metal warehouses have a gable roof — no rooftop details
+      if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof — no rooftop details
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var hx = wWorld / 2 - RenderConfig.ROOF_DETAIL_MARGIN;

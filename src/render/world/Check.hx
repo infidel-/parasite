@@ -27,7 +27,7 @@ class Check {
       var b = buildings[i];
       var fi = Geom.frontInfo(b);
       if (fi.simple) { nSimple++; if (fi.small) nSmall++; else if (fi.store) nStore++; else nPlain++; }
-      var exemptArt = b.shop >= 0 || b.facade == 3; // shop/metal: doors+closures baked into the art
+      var exemptArt = b.shop >= 0 || WorldCtx.style.isSpecial(b.facade); // shop/metal: doors+closures baked into the art
       // FAIL: doorless. Only SIMPLE buildings carry the hard guarantee (a front door, street face or
       // anyFront fallback). Composite (+/T/L) pieces door only their own street faces — a buried inner
       // piece legitimately has none while the overall footprint still has doors, so they're exempt.

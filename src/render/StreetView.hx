@@ -255,6 +255,11 @@ class StreetView {
       var bundle = SceneSetup.buildScene(renderer, city); // base scene + fixed light pools + lamp cones
       var s = bundle.scene;
       World.build(s, city, seed);                          // all lit world geometry (instanced MeshStandard)
+      // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
+      // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
+      // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
+      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(true));
+      World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true));
       // on-demand effects never present at static-build time: park throwaway instances so they warm too
       var g = new Group();
       s.add(g);
@@ -360,7 +365,7 @@ class StreetView {
     // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
     // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
     if ((running || warming) && shownSeed == seed) return;
-    buildFrom(CityGen.generate(seed), seed);
+    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(game.area.downtownGen)), seed);
   }
 
 // show a pre-reconstructed city (old saves with no seed)
@@ -391,7 +396,7 @@ class StreetView {
     // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
     // pass only ever touches static geometry the world builder adds below
     var preBuild = scene.children.copy();
-    World.build(scene, city, seed);
+    World.build(scene, city, seed, render.world.AreaStyle.forDowntown(game.area.downtownGen));
     chunkStatics(preBuild);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings, city.tiles);

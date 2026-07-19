@@ -555,9 +555,12 @@ class RenderConfig {
   public static final MOON_SHADOW = {
     mapSize: 2048,      // shadow map resolution per edge (bump to 4096 if building-edge stairstepping shows)
     halfExtent: 90.0,   // ortho box half-width around the focus (world units) — sized to the on-screen area
-    distance: 120.0,    // how far up-light the shadow camera sits from the focus (must clear tallest building)
+    distance: 200.0,    // how far up-light the shadow camera sits from the focus. MUST clear the tallest
+                        // building or the light plane sits below a tower top and its shadow truncates —
+                        // downtown full-glass towers reach ~113 (30 floors), needing y-offset dist*0.74 > 113.
+                        // ortho shadow quality is independent of distance (only halfExtent/mapSize set texel size)
     near: 1.0,          // shadow camera near plane
-    far: 260.0,         // shadow camera far plane (>= 2*distance)
+    far: 400.0,         // shadow camera far plane (>= 2*distance)
     bias: -0.0004,      // depth bias to kill self-shadow acne on box walls (tune)
     normalBias: 0.04,   // normal-offset bias — pushes the sample along the surface normal (box corners)
   };

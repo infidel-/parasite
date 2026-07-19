@@ -28,6 +28,8 @@ class Building {
   public var drop:Bool = false; // transient: generator marks degenerate shape pieces for removal
   public var shapeKeep:Bool = false; // transient: keep inner pieces of a valid composite shape
   public var skipWindowFloor:Int = -1; // transient/render hint: omit one zero-based window floor
+  public var winFloorLo:Int = 0;   // transient/render hint: first window floor to draw (setback tiers skip floors buried in the tier below)
+  public var roofPenthouse:Bool = true; // transient/render hint: a downtown roof may carry a mechanical penthouse (false for lower setback tiers — the tier above occupies their centre)
   public var shop:Int = -1;       // -1 = normal building; 0..N-1 = single-story shop type index
   public var shopOpen:Bool = false; // shop only: lit/open (glows at night) vs dark/closed
   public var shopDoor:Int = 0;      // shop only: entrance-cell selector (hashed per street face)

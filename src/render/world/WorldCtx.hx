@@ -13,6 +13,8 @@ class WorldCtx {
   public static var tiles:Array<Array<Tile>>;
   // citygen seed of the current city (-1 = seedless reconstruction) — for check traces
   public static var seed:Int = -1;
+  // per-area render style (textures + facade behavior) for this build; DEFAULT = residential
+  public static var style:AreaStyle;
 
   // post-gen checklist: presence of each feature per building, recorded AT the render
   // chokepoints (so the check verifies what actually rendered, not a re-derivation)

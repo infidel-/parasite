@@ -23,12 +23,13 @@ class Buildings {
 
   public static function build(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
+    var st = WorldCtx.style;
 
-    var roofBases = [for (p in TEXTURES.roofBases) Textures.loadTexture(p, 'roof')];
-    var wallTex = [for (p in TEXTURES.walls) Textures.loadTexture(p, 'wall')];
-    var wornTex = [for (p in TEXTURES.wornWalls) Textures.loadTexture(p, 'wall')];
-    var metalWallTex = [for (p in TEXTURES.metalWalls) Textures.loadTexture(p, 'wall')]; // per-building metal variants
-    var metalWornTex = [for (p in TEXTURES.metalWorn) Textures.loadTexture(p, 'wall')];
+    var roofBases = [for (p in st.roofBases) Textures.loadTexture(p, 'roof')];
+    var wallTex = [for (p in st.walls) Textures.loadTexture(p, 'wall')];
+    var wornTex = [for (p in st.wornWalls) Textures.loadTexture(p, 'wall')];
+    var metalWallTex = [for (p in st.metalWalls) Textures.loadTexture(p, 'wall')]; // per-building metal variants
+    var metalWornTex = [for (p in st.metalWorn) Textures.loadTexture(p, 'wall')];
     var copingTex = Textures.loadCroppedTexture(TEXTURES.coping, 1, 0.42);
     var shopWornTex = Textures.loadTexture(TEXTURES.shopWorn, 'wall');           // shop box wall
     var shopCopingTex = Textures.loadCroppedTexture(TEXTURES.shopCoping, 1, 0.42); // shop parapet cap
@@ -54,6 +55,8 @@ class Buildings {
     var doorTex = Textures.loadTexture(TEXTURES.doorMetal, 'wall'); // closed warehouse door (metal facade)
     doorTex.wrapS = doorTex.wrapT = THREE.ClampToEdgeWrapping;       // single image per door, no tiling
     var roofMetalTex = Textures.loadTexture(TEXTURES.roofMetal, 'wall'); // gable-roof slopes (metal warehouse)
+    // downtown mechanical-penthouse bulkhead wall (flat-roof buildings only)
+    var penthouseTex = st.penthouseWall != null ? Textures.loadTexture(st.penthouseWall, 'wall') : null;
 
     // every building box baked into ONE position-only caster (built after the loop) — see the note
     // at the box below for why the boxes themselves stop casting
@@ -75,15 +78,23 @@ class Buildings {
       roof.repeat.set(wWorld / RenderConfig.ROOF_TILE, dWorld / RenderConfig.ROOF_TILE);
       roof.offset.set((center.x - wWorld / 2) / RenderConfig.ROOF_TILE, -(center.z + dWorld / 2) / RenderConfig.ROOF_TILE);
 
-      var wallH = imax(1, Math.round(b.h / RenderConfig.WALL_TILE));
+      // per-facade wall tiling. glass curtain slots (winPerCell > 0) lock the window grid to the CELL
+      // grid: an integer number of window tiles per cell face → whole windows at every edge AND an
+      // identical pitch (CELL/k) on every tower, with zero per-footprint scale drift (faces are always
+      // an integer number of cells). Needs a seamless single-window texture. Others tile normally.
+      var wpc = st.winPerCell != null ? st.winPerCell[b.facade % st.winPerCell.length] : 0;
+      var cellLock = wpc > 0;
+      var wallH = cellLock
+        ? imax(1, Math.round(b.h / (CELL / wpc)))
+        : imax(1, Math.round(b.h / RenderConfig.WALL_TILE));
       var clean = wallTex[b.facade % wallTex.length];
       var worn = wornTex[b.facade % wornTex.length];
-      var cleanPath = TEXTURES.walls[b.facade % TEXTURES.walls.length];
-      var wornPath = TEXTURES.wornWalls[b.facade % TEXTURES.wornWalls.length];
-      if (b.facade == 3) { // metal warehouse: pick a corrugated-steel variant per-building (deterministic by footprint)
+      var cleanPath = st.walls[b.facade % st.walls.length];
+      var wornPath = st.wornWalls[b.facade % st.wornWalls.length];
+      if (st.isSpecial(b.facade)) { // metal warehouse: pick a corrugated-steel variant per-building (deterministic by footprint)
         var mv = ((b.col * 31 + b.row * 17) % metalWallTex.length + metalWallTex.length) % metalWallTex.length;
         clean = metalWallTex[mv]; worn = metalWornTex[mv];
-        cleanPath = TEXTURES.metalWalls[mv]; wornPath = TEXTURES.metalWorn[mv];
+        cleanPath = st.metalWalls[mv]; wornPath = st.metalWorn[mv];
       }
       var masonry = b.facade == 1 || b.facade == 2; // brick + stone: wall-continuation parapet (concrete + metal get thin rim)
       var k = RenderConfig.FACADE_NAMES[b.facade];
@@ -91,7 +102,9 @@ class Buildings {
         var isWorn = Geom.isWornFace(b, dir);
         var base = isWorn ? worn : clean;
         var t = base.clone(); t.needsUpdate = true;
-        t.repeat.set(imax(1, Math.round(faceLen / RenderConfig.WALL_TILE)), wallH);
+        // cell-lock: repeat = (whole cells on this face) × windows-per-cell → always integer, whole windows
+        var rh = cellLock ? Math.round(faceLen / CELL) * wpc : imax(1, Math.round(faceLen / RenderConfig.WALL_TILE));
+        t.repeat.set(rh, wallH);
         var mat = new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 });
         return tag(mat, 'wall-$k' + (isWorn ? '-worn' : ''), '$k wall' + (isWorn ? ' (worn)' : ''),
           isWorn ? wornPath : cleanPath);
@@ -109,7 +122,7 @@ class Buildings {
       var px = shop ? shopFace(2, dWorld) : faceMat(2, dWorld), nx = shop ? shopFace(3, dWorld) : faceMat(3, dWorld);
       var pz = shop ? shopFace(0, wWorld) : faceMat(0, wWorld), nz = shop ? shopFace(1, wWorld) : faceMat(1, wWorld);
       var top = tag(new MeshStandardMaterial({ map: roof, roughness: 1, metalness: 0 }),
-        'roof-$k', '$k roof', TEXTURES.roofBases[b.facade % TEXTURES.roofBases.length]);
+        'roof-$k', '$k roof', st.roofBases[b.facade % st.roofBases.length]);
       // collapse the 6-material box to one draw call per distinct image (walls clean/worn + roof
       // -> ~3, from 6) by baking each face's UV transform; walls stay pixel-identical
       var boxGeo = new BoxGeometry(wWorld, b.h, dWorld);
@@ -177,7 +190,7 @@ class Buildings {
         mergeBand(scene, ndQ, bayMat(ndTex), b, false);
       }
 
-      var gable = !shop && b.facade == 3; // citygen guarantees all metal is a standalone rectangle
+      var gable = !shop && st.isSpecial(b.facade); // citygen guarantees all metal is a standalone rectangle
 
       // metal warehouse: one big closed roll-up door, centred and glued to the ground.
       // prefer a street-facing GABLE-END wall (door "under the angle"); but if neither gable
@@ -208,7 +221,7 @@ class Buildings {
       // the ground floor (street faces) so the storefront reads solo. non-metal, non-shop.
       // (per-face quad like shop-front/door overlays; if draws bite, merge into one
       // BufferGeometry per variant like Ground.build.)
-      if (!shop && b.facade != 3) {
+      if (!shop && !st.isSpecial(b.facade)) {
         var gv = ((b.col * 7 + b.row * 13) % grimeTex.length + grimeTex.length) % grimeTex.length;
         inline function hasStorefront(dir:Int):Bool
           return Geom.faceIsStreet(b, dir)
@@ -225,9 +238,12 @@ class Buildings {
         mergeBand(scene, gq, grimeMat[gv], b, true);
       }
 
-      // roof: metal warehouses get a gable (no parapet); everyone else keeps their parapet
+      // roof: metal warehouses get a gable (no parapet); downtown gets a flat roof + mechanical
+      // penthouse; everyone else keeps their parapet
       if (gable) {
         Roofs.addGableRoof(scene, b, center, wWorld, dWorld, clean, worn, roofMetalTex);
+      } else if (st.roofDowntown && !shop) {
+        Roofs.addDowntownRoof(scene, b, center, wWorld, dWorld, copingTex, penthouseTex, shadowPos, shadowIdx);
       } else {
         Roofs.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
       }
@@ -313,16 +329,17 @@ class Buildings {
   // ground-floor storefront band on street-facing walls
   public static function addGround(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
-    var texes = [for (p in TEXTURES.storefronts) Textures.loadTexture(p, 'wall')];
+    var st = WorldCtx.style;
+    var texes = [for (p in st.storefronts) Textures.loadTexture(p, 'wall')];
     // one shared band material per facade; horizontal tiling is baked into the merged quad UVs
     // (so no per-face texture clone), matching the old per-face texture.repeat
     var mats = [for (i in 0...texes.length)
       tag(new MeshStandardMaterial({ map: texes[i], roughness: 1, metalness: 0,
         polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
         'storefront-' + RenderConfig.FACADE_NAMES[i % RenderConfig.FACADE_NAMES.length],
-        'storefront band', TEXTURES.storefronts[i])];
+        'storefront band', st.storefronts[i])];
     for (b in buildings) {
-      if (b.shop >= 0 || b.facade == 3) continue; // shop face is its own storefront; metal warehouse has doors, no band
+      if (b.shop >= 0 || st.isSpecial(b.facade)) continue; // shop face is its own storefront; metal warehouse has doors, no band
       var fi = Geom.frontInfo(b);
       if (fi.simple && !fi.store) continue; // plain/small building: no storefront band (entrance + maybe windows instead)
       var wWorld = b.w * CELL;

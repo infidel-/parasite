@@ -21,24 +21,26 @@ class Windows {
 
   public static function add(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
-    var dark = [for (i in 0...TEXTURES.windows.length) spriteTex(TEXTURES.windows[i], i)];
-    var lit = [for (i in 0...TEXTURES.litWindows.length) spriteTex(TEXTURES.litWindows[i], i)];
+    var st = WorldCtx.style;
+    var dark = [for (i in 0...st.windows.length) spriteTex(st.windows[i], st.winCrop[i])];
+    var lit = [for (i in 0...st.litWindows.length) spriteTex(st.litWindows[i], st.winCrop[i])];
     var variants = dark.length;
 
     // one shared unit quad; windows are instanced PER BUILDING (own material) so the occlusion
     // fade can turn a single building's windows transparent without touching the rest of the city
     var geo = new PlaneGeometry(1, 1);
-    var litColor = new Color(RenderConfig.WINDOW_LIT_COLOR);
+    var litColor = new Color(st.litColor);
     var q = new Quaternion();
     var pos = new Vector3();
 
     for (b in buildings) {
       if (b.shop >= 0) continue; // single-story shops have no upper-floor windows
-      if (b.facade == 3) continue; // metal warehouses: no windows (closed doors instead)
+      if (st.isSpecial(b.facade)) continue; // metal warehouses: no windows (closed doors instead)
+      if (st.noWinSlots != null && st.noWinSlots.indexOf(b.facade) >= 0) continue; // glass curtain towers: windows live in the facade art
       if (Geom.frontInfo(b).simple && !Geom.frontInfo(b).windows) continue; // plain (window-roll fail) or small building: no windows
       var v = b.facade % variants;
       var buckets:Array<Array<Matrix4>> = [[], []]; // this building's [dark, lit] instance matrices
-      var crop = RenderConfig.WINDOW_SPRITE_CROP[v];
+      var crop = st.winCrop[v];
       var winH = RenderConfig.WIN_W * (crop.y / crop.x);
       var scl = new Vector3(RenderConfig.WIN_W, winH, 1);
       var wWorld = b.w * CELL;
@@ -63,12 +65,12 @@ class Windows {
         function emit(cx:Float):Void {
           WorldCtx.winSeen.set(b, true); // checklist: this building rendered at least one window
           var p = f.place(cx - centerAlong);
-          for (j in 0...floors) {
+          for (j in b.winFloorLo...floors) {
             if (j == b.skipWindowFloor) continue;
             var y = GROUND_H + (j + 0.5) * FLOOR_H;
             pos.set(p.x, y, p.z);
             var m = new Matrix4().compose(pos, q, scl);
-            var isLit = Math.random() < RenderConfig.LIT_RATIO ? 1 : 0;
+            var isLit = Math.random() < st.litRatio ? 1 : 0;
             buckets[isLit].push(m);
           }
         }
@@ -113,11 +115,11 @@ class Windows {
         });
         tag(mat, l == 1 ? 'window-lit-${v + 1}' : 'window-${v + 1}',
           l == 1 ? 'lit window ${v + 1}' : 'window ${v + 1}',
-          (l == 1 ? TEXTURES.litWindows : TEXTURES.windows)[v]);
+          (l == 1 ? st.litWindows : st.windows)[v]);
         if (l == 1) {
           mat.emissive = litColor;
           mat.emissiveMap = tex;
-          mat.emissiveIntensity = RenderConfig.WINDOW_LIT_INTENSITY;
+          mat.emissiveIntensity = st.litIntensity;
         }
         var inst = new InstancedMesh(geo, mat, mats.length);
         for (k in 0...mats.length) inst.setMatrixAt(k, mats[k]);
@@ -129,8 +131,7 @@ class Windows {
     }
   }
 
-  static function spriteTex(path:String, variant:Int):Texture {
-    var crop = RenderConfig.WINDOW_SPRITE_CROP[variant];
+  static function spriteTex(path:String, crop:{ x:Float, y:Float }):Texture {
     var tex = Textures.loadCroppedTexture(path, crop.x, crop.y);
     tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
     return tex;

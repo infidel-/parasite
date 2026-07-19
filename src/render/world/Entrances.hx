@@ -38,8 +38,11 @@ class Entrances {
 
     inline function place(b:Building, f:{faceW:Float, rotY:Float, dir:Int, fx:Float, fz:Float}, off:Float, s:Float):Void {
       var worn = Geom.isWornFace(b, f.dir);
-      var tx = worn ? doorWornTex[b.facade] : doorTex[b.facade];
-      var k = RenderConfig.FACADE_NAMES[b.facade];
+      // door art is a masonry set (concrete/brick/stone); downtown facade 3 (glass) has no door art,
+      // so wrap the index (facade 3 → concrete door). identity for residential facades 0-2.
+      var di = b.facade % doorTex.length;
+      var tx = worn ? doorWornTex[di] : doorTex[di];
+      var k = RenderConfig.FACADE_NAMES[di];
       // s = SQUARE quad side (square texture → no stretch); passed in (full face for front/composite, open-run-capped for side)
       var mat = tag(new MeshStandardMaterial({ map: tx, roughness: 1, metalness: 0,
         transparent: false, alphaTest: 0.5, // hand-painted alpha = cutout: discard the transparent wall surround (wall behind shows). matches windows
@@ -47,7 +50,7 @@ class Entrances {
         // physical gap needed. grime is transparent+depthWrite:false, so a nearer door bias keeps grime off it.
         polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
         'door-$k' + (worn ? '-worn' : ''), '$k door' + (worn ? ' (service)' : ''),
-        worn ? TEXTURES.doorsWorn[b.facade] : TEXTURES.doors[b.facade]);
+        worn ? TEXTURES.doorsWorn[di] : TEXTURES.doors[di]);
       WorldCtx.doorSeen.set(b, true); // checklist: this building rendered at least one door
       // publish the along-face span so WallDecals keeps graffiti off it (off = center offset, s = door side)
       WorldCtx.doorSpans.push({ b: b, dir: f.dir, lo: off - s / 2, hi: off + s / 2 });
@@ -65,11 +68,12 @@ class Entrances {
       var cw = s * RenderConfig.COVER_WIDTH_FRAC;                            // ~ door-panel width (not wall-wide)
       var cd = RenderConfig.COVER_DEPTH;
       var mt = RenderConfig.COVER_MAT_TILE;
-      var k = RenderConfig.FACADE_NAMES[b.facade];
-      var ct = coverTex[b.facade].clone();
+      var di = b.facade % coverTex.length; // door-cover art is masonry-only; wrap glass facade 3 → concrete
+      var k = RenderConfig.FACADE_NAMES[di];
+      var ct = coverTex[di].clone();
       ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
       ct.needsUpdate = true;
-      var cmat = tag(new MeshStandardMaterial({ map: ct, roughness: 1, metalness: 0, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', TEXTURES.doorCovers[b.facade]);
+      var cmat = tag(new MeshStandardMaterial({ map: ct, roughness: 1, metalness: 0, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', TEXTURES.doorCovers[di]);
       // world pos of the local origin (door-top-center on the wall), shifted `off` along the face,
       // `outN` along the outward normal. rotation.y = f.rotY makes local +z = outward for every dir.
       inline function setPos(cover:Mesh, y:Float, outN:Float):Void {
@@ -79,7 +83,7 @@ class Entrances {
       }
       var anchor = s * RenderConfig.COVER_Y_FRAC; // cover BOTTOM sits here — just above the visible door, small gap
       var cover:Mesh;
-      switch (b.facade) {
+      switch (di) {
         case 0: // concrete: HALF-BARREL — half-cylinder, axis along door width, flat back on wall, curve bulges out
           ct.repeat.set(cw / mt, 1);
           var R = RenderConfig.COVER_BARREL_R;
@@ -113,7 +117,7 @@ class Entrances {
 
     for (b in buildings) {
       var fi = Geom.frontInfo(b);
-      var composite = b.shop < 0 && b.facade != 3 && !fi.simple; // T/L/+/courtyard pieces (winForce/winBlock set)
+      var composite = b.shop < 0 && !WorldCtx.style.isSpecial(b.facade) && !fi.simple; // T/L/+/courtyard pieces (winForce/winBlock set)
       if (!fi.simple && !composite) continue; // shops + metal keep their own entrances
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;

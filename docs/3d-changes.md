@@ -558,6 +558,96 @@ MeshStandard bulk (buildings/windows/ground/roofs/walls/sprites) is warmed at th
 bar** from the ask is moot: with the warm moved off entry, entry is just the fast synchronous build, no
 long black — nothing to put a bar on.
 
+## Downtown area style (LANDED) — per-area render + gen split
+
+Downtown (`AREA_CITY_HIGH`) now generates + renders distinctly from residential. Two split
+points, both defaulting to the old behavior so LOW/MEDIUM stay byte-identical:
+
+- **Gen:** `citygen.CityProfile` (typedef of every area-dependent knob) + `Profiles.DEFAULT`
+  (verbatim old `CityConfig` values) + `profiles.DowntownProfile` + `Downtown.emitTower`
+  (stacked concentric setback-tower massing, Option A — no `CityModel` change). `CityGen.generate`
+  gained `?profile`; both call sites (`CityAreaGenerator`, `StreetView.show`) pass
+  `Profiles.forDowntown(area.downtownGen)`. Persisted `AreaGame.downtownGen` bool (default false)
+  keeps old-save downtown areas on the residential profile so their persisted `_cells` still match
+  the render. **Measured headless (seed 1): default 226 buildings / maxH 30 / 0 tall (unchanged);
+  downtown 43 buildings / maxH 113 / avg width 6.7 / 15 towers >60u.**
+- **Render:** `render.world.AreaStyle` (texture sets + facade behavior) + `DowntownStyle`, threaded
+  via `WorldCtx.style` from `World.build(?style)`. `DEFAULT` reuses the exact `TEXTURES` arrays +
+  `RenderConfig` constants (identical refs → residential pixel-identical). Every render-side
+  `b.facade == 3` "metal warehouse" test became `style.isSpecial(facade)` (`specialSlot` = 3
+  residential, −1 downtown), so downtown facade-3 is a glass tower (windows + flat roof), not a
+  gable warehouse. Downtown: unique plaza walkway + service alley tiles, glass curtain facades,
+  **dark back-face material** on worn/buried faces (NOT geometry removal — keeps the merged shadow
+  caster + Occlusion full-box invariants, see the caster entry above), `Roofs.addDowntownRoof`
+  (thin coping ring + a mechanical-penthouse box **baked into the merged moon caster** like the main
+  box). 10 new `textures/downtown/*` (1k, chroma-keyed glass window sprites).
+- **Deferred (ponytail):** `warmup()` still warms only the DEFAULT style, so the first downtown
+  city entry per GL context pays a one-off shader compile for the downtown-only materials (glass
+  emissive / dark back / penthouse). Add a second `World.build(..., DowntownStyle.get())` warm pass
+  (mirrors the existing 10-light second pass) if that hitch is ever noticed. Glass windows reuse the
+  punched-window instanced placement (not an edge-to-edge curtain) over a baked mullion facade —
+  upgrade to a dedicated Curtain placement if the spacing reads wrong.
+
+### Follow-ups (iterated on feedback — LANDED)
+
+Five reported issues, all fixed. Measured headless (seed 1496888906): downtown **38 → 109
+buildings**, building tiles **793 → 2096**, alley coverage **52% → 39%**, 0 blank boxes; residential
+unchanged (seeds 1/1337/99999 → 226/221/202).
+
+- **(a) Tower shadows truncated ("too small"):** `MOON_SHADOW.distance` 120 → **200** (+ `far`
+  260 → 400). The moon's up-offset is `distance * MOON_DIR.y (0.74)`; at 120 that put the light plane
+  at ~89, **below** a ~113-unit full-glass tower top, so the shadow cast from a point above the light
+  truncated. Ortho shadow quality is **independent of distance** (only `halfExtent`/`mapSize` set texel
+  size), so this is free for residential. `halfExtent` left at 90 — a tower's ~102u shadow can clip at
+  the box edge when far from the player; accepted.
+- **(b) Empty blocks + no small buildings + tight spacing:** root cause — interior downtown boxes
+  front only a 1-cell **alley**, and `hasOuter` (landlocked drop) counts road/walkway only, so every
+  non-tower box was dropped and the block read empty (all survivors were `shapeKeep` towers). Fixes:
+  `CityProfile.keepAlleyFront` (downtown) keeps any box that isn't fully buried (`notBuried`);
+  `CityProfile.blockGap` (residential 1 → identical stream; downtown **3**) widens split gaps to real
+  back alleys; downtown `minFloors` 6 → **2** + concrete/stone caps 16/14 → **12/10** so small
+  footprints stay mid-rise (medium-city look); a **facade remap** on the existing single draw makes big
+  footprints glass towers (2/3) and small ones concrete/stone mid-rises (0/1). Result: 80 mid-rises +
+  29 glass towers.
+- **(c) Full-glass skyscrapers:** facade 3 = new `downtown/facade-glass-full` (dense edge-to-edge
+  curtain, tiles both axes) + residential 0/1 keep punched windows, so 3 reads as a glass wall vs 2's
+  mullioned spandrel. `floorCap[3]` 30 (tallest).
+- **(d) Penthouse punched through the setback shaft:** `addDowntownRoof` drew a mechanical penthouse
+  on **every** tier's centre, but a lower tier's centre is occupied by the tier above. `Building.roofPenthouse`
+  (new transient) — `Downtown.tryTower` marks all but the topmost tier false; only the top tier gets a
+  bulkhead. Lower tiers keep their coping ring.
+- **(e) Upper-tier windows clipped into the tier-below roof:** stacked ground-anchored tiers drew
+  windows from floor 0, so an upper shaft's lowest exposed row sank into the setback deck.
+  `Building.winFloorLo` (new transient) — `tryTower` starts each upper tier's windows just above the
+  tier-below roofline (`round((prevH-GROUND_H)/FLOOR_H)`); `Windows.add` loops `winFloorLo...floors`.
+  Also drops the buried hidden-window emission (perf).
+- **warmup** now builds a throwaway downtown city into the warm scene (the deferral noted above is
+  resolved), so the first downtown entry reuses cached programs (58 warmed, console clean).
+
+### Glass-tower window scale + edge alignment (iterated — LANDED)
+
+- **Symptom chain:** the baked glass curtain read at inconsistent scale between towers, and windows
+  were cut mid-pane at the wall edges.
+- **Why (scale):** wall tiling used `round(faceLen / WALL_TILE)` with `WALL_TILE=12` — only 1–2 tiles
+  fit a 3–6-cell (12–24u) tower face, so integer rounding made the effective tile size drift 10–16u
+  building-to-building (a ~20% scale mismatch). A first pass switched glass to exact `faceLen/tile`
+  (constant pitch) — but a **non-integer** repeat then cut the texture mid-window at the edge.
+- **Root tension:** faces are quantized to the 4u `CELL` grid. Whole windows need an **integer**
+  repeat; identical scale needs constant pitch. Both hold only when pitch divides the cell, so the
+  largest no-drift window pitch is **one window per cell (4u)**. Bigger windows on a 3-cell face force
+  either drift or a cut — unavoidable.
+- **Landed (cell-lock):** `AreaStyle.winPerCell` (per facade; downtown `[0,0,1,1]`). Glass slots tile
+  `repeat_h = wholeCells × k` (integer → whole windows), `repeat_v = round(b.h/(CELL/k))`; pitch
+  `= CELL/k = 4u`, **identical on every tower, zero drift**. `k=1` shipped. Non-glass + residential keep
+  the rounded tiling (`winPerCell` null). Replaced the earlier `wallScale` exact-tiling stopgap.
+- **Textures:** `facade-glass-1` (silver) + `facade-glass-full` (blue-grey) regen'd as **single-window
+  seamless tiles** — one pane + half-mullion on each of the four edges, so integer tiling butts into a
+  continuous grid with no half windows. Overlay window quads stay off on glass (`noWinSlots=[2,3]`);
+  the window grid lives entirely in the baked facade.
+- **Alternatives rejected:** round-to-whole-window (whole edges but ~30% pitch drift on narrow faces at
+  big window sizes); instanced glass panels (guaranteed alignment via the existing per-floor system, but
+  more instances on tall towers). Cell-lock chosen — only option with both exact alignment and no drift.
+
 ## Standing notes
 
 - **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via

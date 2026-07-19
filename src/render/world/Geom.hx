@@ -62,7 +62,7 @@ class Geom {
   // per-face gate EXACTLY (incl. composite T/L/+ pieces, which also draw bands — the old
   // `fi.simple` test missed them, so composites got a door slapped on top of their storefront).
   public static function storefrontFace(b:Building, dir:Int):Bool {
-    if (b.shop >= 0 || b.facade == 3) return false;
+    if (b.shop >= 0 || WorldCtx.style.isSpecial(b.facade)) return false;
     var fi = frontInfo(b);
     if (fi.simple && !fi.store) return false; // plain/small simple building: no band
     return faceIsStreet(b, dir)
@@ -156,7 +156,7 @@ class Geom {
   // only — no store band, no windows. (NOT narrow-front: a 4-deep building with a 2-wide street
   // face is a real building and keeps windows.) hashed off col/row like the metal/grime picks.
   public static function frontInfo(b:Building):{ simple:Bool, small:Bool, store:Bool, windows:Bool } {
-    if (b.shop >= 0 || b.facade == 3 || b.winForce != null || b.winBlock != null)
+    if (b.shop >= 0 || WorldCtx.style.isSpecial(b.facade) || b.winForce != null || b.winBlock != null)
       return { simple: false, small: false, store: true, windows: true };
     var small = b.w <= 2 && b.d <= 2;
     var h = ((b.col * 73856093) ^ (b.row * 19349663)) & 0x7fffffff;
@@ -169,7 +169,7 @@ class Geom {
   // should this building show upper-floor windows? shops (storefront, no upper windows) and
   // metal warehouses (closed) never do; composites force them; simple buildings use frontInfo.
   public static function expectWindows(b:Building):Bool {
-    if (b.shop >= 0 || b.facade == 3) return false;
+    if (b.shop >= 0 || WorldCtx.style.isSpecial(b.facade)) return false;
     var fi = frontInfo(b);
     return fi.simple ? fi.windows : true; // composite (winForce/winBlock) forces windows
   }

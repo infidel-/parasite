@@ -28,11 +28,12 @@ class Ground {
         m.receiveShadow = true;
         scene.add(m);
       }
+    var st = WorldCtx.style;
     var half = (GRID * CELL) / 2;
     var types = [
-      { tile: Tile.Road, tex: TEXTURES.asphalt, kind: 'asphalt', tileW: RenderConfig.ROAD_TILE, y: 0.0 },
-      { tile: Tile.Alley, tex: TEXTURES.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
-      { tile: Tile.Walkway, tex: TEXTURES.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
+      { tile: Tile.Road, tex: st.asphalt, kind: 'asphalt', tileW: RenderConfig.ROAD_TILE, y: 0.0 },
+      { tile: Tile.Alley, tex: st.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
+      { tile: Tile.Walkway, tex: st.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
     ];
     var bufs = [for (_ in types) { pos: ([] : Array<Float>), uv: ([] : Array<Float>), idx: ([] : Array<Int>) }];
     var borderBuf:GroundBuf = { pos: [], uv: [], idx: [] }; // kerb-edging stripe on walkway tops (own mesh/tex)
@@ -348,7 +349,7 @@ class Ground {
       geo.setAttribute('uv', new Float32BufferAttribute(borderBuf.uv, 2));
       geo.setIndex(borderBuf.idx);
       geo.computeVertexNormals();
-      var map = Textures.loadTexture(TEXTURES.walkwayBorder, 'wall', 1);
+      var map = Textures.loadTexture(st.walkwayBorder, 'wall', 1);
       addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
 
@@ -358,7 +359,7 @@ class Ground {
       geo.setAttribute('uv', new Float32BufferAttribute(markBuf.uv, 2));
       geo.setIndex(markBuf.idx);
       geo.computeVertexNormals();
-      var map = Textures.loadTexture(TEXTURES.roadPaint, 'asphalt', 1);
+      var map = Textures.loadTexture(st.roadPaint, 'asphalt', 1);
       // opaque + non-emissive: lit like the road, so it darkens at night / brightens by day with
       // the lighting. the texture's keyed scuff pixels render as opaque grey wear (no cutout jaggies)
       addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
