@@ -245,6 +245,27 @@ class RenderConfig {
     blackFlightGlow: 0x8a5cff, // in-flight black-drop violet tint
     wetMetal: 0.5,       // landed-splat metalness (> 0 tints the glint by the red albedo; stronger, wetter)
   };
+  // green slime the free (unhosted) parasite leaves as it crawls, plus a lingering puddle where it
+  // lands from a leap on/off a host. both are render-only (NOT persisted): the trail is a triangle
+  // strip rebuilt each frame along the parasite's recent path (follows turns, dissolves over the
+  // last ~lengthCells tiles), the puddle a fading ground quad. reuses BLOOD.slimeGlow for the green
+  public static final SLIME = {
+    sampleCells: 0.3,     // commit a new ribbon spine point once the parasite has moved this far (cells)
+    lengthCells: 4.0,     // path length kept behind the parasite; older trimmed (the ~4-tile tail)
+    widthCells: 0.42,     // ribbon width (cells); tapered to a point at the tail
+    fadeCells: 1.5,       // tail dissolve band (cells): width + alpha ramp 0 -> 1 over this length from the tail
+    headFadeCells: 0.5,   // head shaping band (cells): the leading end narrows over this length so it isn't a flat cut
+    headMinFrac: 0.35,    // head width at the very tip as a fraction of full: 0 = sharp comet point, 0.35 = rounded nub, 1 = flat cut
+    waveAmpCells: 0.22,   // max lateral wander of the ribbon centerline (cells); a random-walk per sample = gentle meander (0 = dead straight)
+    waveStepCells: 0.12,  // random-walk step per sample toward that wander (bigger = wavier / faster wobble)
+    widthJitter: 0.25,    // per-point width variation as a fraction (0.25 = +/-25%) for irregular, non-parallel edges
+    yOff: 0.05,           // ribbon/puddle height above the floor (like the ground decals)
+    baseAlpha: 0.7,       // overall ribbon opacity (multiplies the tail-fade vertex alpha; head caps here)
+    glowInt: 0.0,         // slime emissive intensity (BLOOD.slimeGlow tint), catches the bloom faintly. TEST: 0 = no glow (restore ~0.7)
+    fadeOutMult: 6.0,     // when the parasite stops crawling (jumps on a host), the frozen trail fades out over this (BASE_MS multiples) instead of vanishing
+    puddleScale: 0.8,     // landing-puddle quad scale (of a billboard)
+    puddleLifeMult: 24.0, // puddle fade-out duration (BASE_MS multiples)
+  };
   // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the
   // lit 3D rig (full ambient+hemisphere+moon on an up-facing quad) it reads too bright. multiply the
   // 3D texture crop down so decals sit in the road instead of glowing on top. 2D is unaffected
@@ -625,5 +646,6 @@ class RenderConfig {
     graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
+    slimeTrail: 'textures/slime-trail.png', // green slime ribbon behind the free parasite (chroma-keyed, tiled along length)
   };
 }

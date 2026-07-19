@@ -27,6 +27,7 @@ class Actors {
   var sprites:Sprites;                                    // lit billboard/decal paint surface (quad pool + atlas cache)
   var beams:Beams;                                        // unlit additive bright-FX pool (gun tracers, muzzle flash)
   var sparks:Sparks;                                      // camera-facing soft-ember pool (impact sprays)
+  var slimeTrail:SlimeTrail;                              // green slime ribbon + landing puddles behind the free parasite
   var muzzleLights:MuzzleLights;                          // fixed muzzle-light pool (constant scene light count)
   var paint:Paint3D;                                      // the two surfaces handed to each particle each frame
   var particles:Particles3D;                              // transient 3D FX (blood, death crossfade, gun shots)
@@ -83,6 +84,7 @@ class Actors {
       // per-frame sub-passes of the actor layer; each is handed the shared actor-pose map so it can
       // read poses (FlameShadows/Badges) — Actors stays its sole writer
       decals = new Decals(game, sprites, actorGroup);
+      slimeTrail = new SlimeTrail(actorGroup, sprites);
       flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
@@ -211,6 +213,12 @@ class Actors {
       var pp = actors.get(game.playerArea.entity);
       var pw = CityConfig.cellToWorld(game.playerArea.x, game.playerArea.y);
       decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z, dtMs, _corpseCells);
+      // green slime trail behind the free parasite (render-only ribbon): only while it crawls the
+      // ground, not while riding on / hidden inside a host. head = its smoothed billboard pos
+      slimeTrail.update(dtMs,
+        st == _PlayerState.PLR_STATE_PARASITE && pp != null,
+        pp != null ? pp.x : pw.x,
+        pp != null ? pp.z : pw.z);
       flames.bodyAndShadows(dtMs);
       flames.driveFireLoop();
       particles.update(dtMs, paint);
@@ -348,6 +356,7 @@ class Actors {
       offscreen.clear();
       bubbles.clear();
       decals.dispose();
+      slimeTrail.dispose();
     }
 
 // find the visible AI whose head projects nearest the given client point (within a px radius);
@@ -691,6 +700,8 @@ class Actors {
       // offsets are relative to the resting head pose (decay to 0 on landing); the effect
       // owns its launch/landing sounds
       a.fx = new JumpOnFace(game, RenderConfig.BASE_MS, startX - w.x, -ATTACH_HEAD_Y, startZ - w.z, Sprites.SIZE * 0.5);
+      // leave a slime puddle where it pushed off the ground
+      slimeTrail.addPuddle(startX, WorldCtx.floorY(pe.mx, pe.my), startZ);
     }
 
 // launch the parasite's leap off the host back to the ground: arc down from the head to the
@@ -714,6 +725,8 @@ class Actors {
       a.fromX = w.x; a.fromZ = w.z; a.x = w.x; a.z = w.z; a.t = 1;
       // starts at the head (offset up + horizontal) and lands on the resting ground pose
       a.fx = new LeaveHost(game, RenderConfig.BASE_MS, px, ATTACH_HEAD_Y, pz, Sprites.SIZE * 0.5);
+      // leave a slime puddle where it lands back on the ground
+      slimeTrail.addPuddle(w.x, WorldCtx.floorY(pe.mx, pe.my), w.z);
     }
 
 // get/create an actor's anim state and advance it one frame (position slide, opacity

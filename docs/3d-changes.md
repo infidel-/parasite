@@ -569,3 +569,64 @@ long black — nothing to put a bar on.
   meshes out (they land in `__occ.skipped()`), and a `userData.b` tag overrides the guard.
 - `addRoofDetails` uses `Math.random()` for the type shuffle and yaw, so roof furniture is **not**
   seed-deterministic (unlike `Debris`) and reshuffles on re-entry. Unexamined; may be intentional.
+
+## Slime trail (LANDED) — free-parasite crawl ribbon + landing puddle
+
+- **What:** `render/particles/SlimeTrail.hx`. Green slime ribbon behind the free (`PLR_STATE_PARASITE`)
+  parasite as it crawls, plus a fading ground puddle on each leap on/off a host. Config in
+  `RenderConfig.SLIME`, texture `textures/slime-trail.png` (chroma `#5a5d63`). Driven from
+  `Actors.update` (one `slimeTrail.update` after `decals.paint`); puddles dropped in
+  `startJumpOnFace`/`startLeaveHost`.
+- **Chose hand-built triangle strip over `three.meshline`/`TubeGeometry`.** No MeshLine in the vendored
+  three; the externs already have `BufferGeometry.setAttribute/setIndex` + `Float32BufferAttribute`, so
+  the ribbon is one `Mesh` whose geometry is rebuilt each frame from a ~13-point position history
+  (tail→head). No new bundle, no new extern. One draw call, ~26 verts — `submit` cost negligible.
+- **Ribbon shape:** miter tangent = average of the two adjacent segment dirs (plain bevel at corners, no
+  miter-length spike — safe on sharp turns). Width + **vertex-color alpha** both ramp 0→1 over
+  `fadeCells` from the tail, so it necks to a point and dissolves; head stays full-width, glued under the
+  parasite sprite. `uv.u` = cumulative path length in tiles → the slime texture tiles down the length
+  (UV stretch on uneven spacing is fine, by design). Needs `vertexColors:true` + RGBA color attribute
+  (three 0.181 applies vertex alpha) + explicit up-normals (flat strip, else black under lighting).
+- **`frustumCulled = false`** on the mesh: geometry is rebuilt every frame so the cached bounding sphere
+  goes stale; the mesh is tiny and always hugs the player, so skipping the cull is cheaper than
+  recomputing bounds. Set `untyped` (not in the `Object3D` extern).
+- **Occlusion:** the >guard-size ribbon lands in `__occ.skipped()` like the lamp cones — it will **not**
+  wrongly fade, but also will **not** hide when the parasite ducks behind a wall. Accepted for a ground trail.
+- **Render-only, NOT persisted** (no save fields). Trade-off: trail clears on host-entry / area-exit /
+  reload; the puddle fades rather than lingering like a blood `SPLAT`. Upgrade path if a persistent puddle
+  is wanted: drop a real slime `SPLAT` decoration (`ParticleSplat` row `ROW_SPACESHIP2`/`SLIME_LARGE`,
+  already green-glow + save-safe) at the jump cell instead of `addPuddle`.
+- **Verified:** builds clean; street view loads with no console error and no texture-fallback warning
+  (module constructs + `update` runs every frame). The active ribbon/puddle path fires only when the
+  player is a moving free parasite — **not** self-testable from CDP (no JS path to the live `Game`); needs
+  an in-game detach-and-walk to eyeball.
+
+### Follow-ups (iterated on feedback)
+
+- **Head shape:** the flat leading cut read as a straight line under the parasite. Tried a round
+  slime-blob sprite overlay glued at the head (rejected — didn't like it). Landed on a **width taper**:
+  the head narrows to `headMinFrac` of full over `headFadeCells` (mirror of the tail taper but width-only,
+  alpha stays full so the fresh end still reads). `headMinFrac` is the live knob: 0 = comet point, 0.35 =
+  rounded nub (shipped), 1 = old flat cut.
+- **Waviness:** each committed spine point stores a lateral **off** (random-walk, clamped to
+  `waveAmpCells` — smooth meander, not per-frame jitter) and a **ww** width multiplier
+  (`widthJitter`, irregular non-parallel edges). Stored at commit so they don't swim as the ribbon
+  scrolls; the live head inherits the last committed `off` for continuity. `Math.random()` is fine here
+  (render-only FX, not seed-sensitive).
+- **Curb step (the real bug), final approach:** the ribbon bridged the `CURB_H` (0.2) road↔walkway step.
+  Confirmed via `parasiteHx['render.world.WorldCtx'].floorY(col,row)` from CDP that floor height is correct
+  (walkway cols = 0.2, road = 0), so the bug was purely how the strip spanned the step. Iterations:
+  (1) per-point `y` sampled at each point's **own world pos** (`CityConfig.worldToCell` + `WorldCtx.floorY`),
+  not the parasite's logical cell (which snaps mid-slide) — kept; (2) force a spine commit the instant
+  floor height changes (`stepThresh = CURB_H*0.5`) so a point lands on each side of the curb — kept, keeps
+  the rise sharp; (3) tried **breaking** the strip at the step — REJECTED, the gap read as the trail
+  vanishing at the curb, and where it didn't fire a ramp clipped *into* the raised walkway ("goes under the
+  walkway"); (4) **`depthTest:false` on the ribbon material** — SHIPPED. The curb can't occlude the trail,
+  so it drapes continuously over the step drawn on top. Verified in-game (drove the parasite across a curb
+  via CDP key-presses + screenshots). Trade-off: a foreground occluder between trail and camera (lamp post,
+  wall corner) won't hide the trail — rare in the follow view, the parasite itself still draws over it via
+  `renderOrder`.
+- **CDP driving notes (for next time):** the wheel-zoom listener is gated on `game.ui.state==DEFAULT` +
+  `!debug.on` (the objectives panel blocks it) — synthetic wheel events do nothing; don't fight it. Menu
+  buttons are HTML but screenshot px ≠ CSS px (viewport ~1108 wide vs 1920 shot) — find buttons by
+  `getBoundingClientRect`, not screenshot coords. Movement via `press_key` ArrowKeys works regardless.
