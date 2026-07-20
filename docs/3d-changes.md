@@ -648,6 +648,28 @@ unchanged (seeds 1/1337/99999 → 226/221/202).
   big window sizes); instanced glass panels (guaranteed alignment via the existing per-floor system, but
   more instances on tall towers). Cell-lock chosen — only option with both exact alignment and no drift.
 
+### Glass-tower window variety — sparse scattered accents (LANDED)
+
+- **Why:** the cell-locked baked grid is uniform (every pane identical). Wanted per-window tint/texture
+  variety + lit/glowing panes without losing the cheap baked base or the alignment.
+- **Approach (sparse overlay):** keep the uniform baked tile as the base; `Windows.addGlassAccents`
+  instances a *fraction* of the cells as tint/lit panes over it, on the **same** cell grid (repeat_v =
+  `round(b.h/CELL)`, cell centres match the baked tiling exactly). Deterministic per-cell hash (stable
+  frame-to-frame, no `Math.random` swim): ~6% lit, ~15% one-of-4 tint variants, ~79% stay base (no
+  instance). Bucketed **per building** (`userData.b`) so Occlusion fades them with the tower; skips
+  `isWornFace` faces (baked blank `facade-glass-back`). Lit = emissive+bloom (`glassAccentLit`, warm).
+- **Style knobs:** `AreaStyle.glassAccents[4]` + `glassAccentLit` + `glassAccentRatio`/`glassLitRatio`.
+  Textures: 5 new `downtown/glass-accent-{1..4,lit}` single-window seamless tiles (256²).
+- **Why not the other two:** every-window instanced = full scatter but ~2–3× the instances (GPU) for a
+  similar draw count; baked per-face canvas = zero extra draws but VRAM + build-hitch + most code. Sparse
+  keeps the cheap base and adds only accent buckets.
+- **Perf:** buckets are per-building-per-variant (Occlusion needs per-building meshes), so **~5 draws per
+  glass tower** — same mechanism/scale as the residential window instancing already shipped, not free but
+  in-band. **Measure `calls=` in a downtown area;** if it bites, atlas the 4 tints into one material via a
+  per-instance UV/`instanceColor` to collapse the dark buckets to one (→ ~2 draws/tower).
+- **Note:** `__check` counts glass towers + landlocked interior tiers as `winless` (no window *instances*
+  — baked/interior). Pre-existing false-positive, unrelated to accents.
+
 ## Standing notes
 
 - **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via

@@ -396,7 +396,8 @@ class StreetView {
     // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
     // pass only ever touches static geometry the world builder adds below
     var preBuild = scene.children.copy();
-    World.build(scene, city, seed, render.world.AreaStyle.forDowntown(game.area.downtownGen));
+    var areaStyle = render.world.AreaStyle.forDowntown(game.area.downtownGen);
+    World.build(scene, city, seed, areaStyle);
     chunkStatics(preBuild);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings, city.tiles);
@@ -447,7 +448,7 @@ class StreetView {
     choreo = new Choreo(game, actors, rig, shockwave);
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
-      RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD);
+      RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, areaStyle.bloomThreshold); // per-area: WHEN the glow starts
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise

@@ -39,6 +39,7 @@ class World {
     Ground.build(scene);          // ground tiles, road markings, kerb edging
     Buildings.build(scene);       // per-building box loop (delegates parapet/gable to Roofs)
     Windows.add(scene);
+    Windows.addGlassAccents(scene); // sparse scattered tint/lit panes over the baked glass-tower grid
     Buildings.addGround(scene);   // ground-floor storefront bands
     Entrances.add(scene);
     WallDecals.add(scene);        // static graffiti/posters/cracks on bare walls

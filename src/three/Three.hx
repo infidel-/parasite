@@ -254,6 +254,7 @@ typedef RendererInfo = {
   public var emissive:Color;
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
+  public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
   public var userData:Dynamic;
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {

@@ -64,6 +64,33 @@ class DowntownStyle {
       s.litIntensity = 1.9;
       s.noWinSlots = [2, 3];   // glass towers: windows are in the curtain-wall art, no overlay quads
       s.winPerCell = [0, 0, 1, 1]; // glass towers (2/3): one window per cell, cell-locked → whole windows, constant scale
+      // sparse scattered accents over the uniform baked glass grid (4 tint variants + 1 lit pane),
+      // split into two distinct families so the two glass tower types read differently:
+      // facade 2 (glass-1, silver base) → LIGHT family, facade 3 (glass-full, blue base) → DARK family
+      var lightAccents = [
+        'textures/downtown/glass-accent-light-1.png',
+        'textures/downtown/glass-accent-light-2.png',
+        'textures/downtown/glass-accent-light-3.png',
+        'textures/downtown/glass-accent-light-4.png',
+      ];
+      var darkAccents = [
+        'textures/downtown/glass-accent-dark-1.png',
+        'textures/downtown/glass-accent-dark-2.png',
+        'textures/downtown/glass-accent-dark-3.png',
+        'textures/downtown/glass-accent-dark-4.png',
+      ];
+      s.glassAccents = [null, null, lightAccents, darkAccents];
+      s.glassAccentLit = [
+        null,
+        null,
+        'textures/downtown/glass-accent-light-lit.png',
+        'textures/downtown/glass-accent-dark-lit.png',
+      ];
+      s.glassAccentRatio = 0.15;   // ~15% of panes get a tint variant
+      s.glassLitRatio = 0.06;      // ~6% lit/glowing
+      s.glassLitIntensity = 2.2;   // skyscraper glow strength (tune here, separate from mid-rise window glow)
+      s.glassLitColor = 0xffe6c2;  // warm office glow (multiplies the already-warm lit texture)
+      s.bloomThreshold = 0.5;      // WHEN the skyscraper glow starts (luminance cutoff); lower = glows sooner. per downtown-area, separate from residential
       s.specialSlot = -1;      // no metal warehouses
       s.roofDowntown = true;
       s.penthouseWall = 'textures/downtown/wall-mechanical.png';

@@ -136,4 +136,99 @@ class Windows {
     tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
     return tex;
   }
+
+// sparse scattered accents over the baked glass-curtain grid: a fraction of the (already
+// cell-locked) window cells get a tint variant or a lit/glowing pane, breaking the uniform
+// tiled look. deterministic per cell (stable frame-to-frame), instanced PER BUILDING so
+// Occlusion fades them with the tower. runs only for glass slots (winPerCell > 0); the 80%+
+// of base cells stay the cheap baked texture with no instance at all.
+  public static function addGlassAccents(scene:Scene):Void {
+    var st = WorldCtx.style;
+    if (st.glassAccents == null || st.winPerCell == null) return;
+    // accent texture sets are per-facade (distinct families per glass tower type); load lazily & cache
+    var setCache = new Map<Int, { tints:Array<Texture>, lit:Texture }>();
+    inline function accentSet(f:Int):{ tints:Array<Texture>, lit:Texture } {
+      if (!setCache.exists(f))
+        setCache.set(f, { tints: [for (p in st.glassAccents[f]) accentTex(p)], lit: accentTex(st.glassAccentLit[f]) });
+      return setCache.get(f);
+    }
+    var geo = new PlaneGeometry(1, 1);
+    var litColor = new Color(st.glassLitColor); // glass-tower glow tint (separate knob)
+    var q = new Quaternion();
+    var pos = new Vector3();
+    var eps = 0.07; // stand proud of the baked face (matches Windows.add standoff, avoids z-fight)
+
+    for (b in WorldCtx.buildings) {
+      var wpc = st.winPerCell[b.facade % st.winPerCell.length];
+      if (wpc <= 0 || st.glassAccents[b.facade] == null) continue; // not a glass tower / no accent set
+      var set = accentSet(b.facade);
+      var tints = set.tints;
+      var litTex = set.lit;
+      var nVar = tints.length;
+      var wWorld = b.w * CELL;
+      var dWorld = b.d * CELL;
+      var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+      // vertical grid matches the baked tiling exactly (repeat_v = round(b.h/CELL))
+      var rows = Std.int(imax(1, Math.round(b.h / CELL)));
+      var rowH = b.h / rows;
+      var buckets:Array<Array<Matrix4>> = [for (i in 0...nVar + 1) []]; // per tint variant + lit
+      var faces = [
+        { n: b.w, rotY: 0.0,          dir: 0, place: function(u:Float) return { x: center.x + u, z: center.z + dWorld / 2 + eps } },
+        { n: b.w, rotY: Math.PI,      dir: 1, place: function(u:Float) return { x: center.x + u, z: center.z - dWorld / 2 - eps } },
+        { n: b.d, rotY: Math.PI / 2,  dir: 2, place: function(u:Float) return { x: center.x + wWorld / 2 + eps, z: center.z + u } },
+        { n: b.d, rotY: -Math.PI / 2, dir: 3, place: function(u:Float) return { x: center.x - wWorld / 2 - eps, z: center.z + u } },
+      ];
+      var scl = new Vector3(CELL, rowH, 1);
+      for (f in faces) {
+        if (Geom.isWornFace(b, f.dir)) continue; // back/service face is baked blank (facade-glass-back) — no windows there
+        q.setFromEuler(new Euler(0, f.rotY, 0));
+        for (i in 0...f.n) {
+          var p = f.place((i - (f.n - 1) / 2) * CELL); // this cell's centre along the face
+          for (j in 0...rows) {
+            // deterministic hash of the cell → base / tint variant / lit
+            var hv = (b.col * 92837111) ^ (b.row * 689287499) ^ (f.dir * 283923481) ^ (i * 374761393) ^ (j * 668265263);
+            hv = hv ^ (hv >>> 15);
+            var r = (hv & 0xffff) / 65536;
+            var bucket = -1;
+            if (r < st.glassLitRatio) bucket = nVar; // lit pane
+            else if (r < st.glassLitRatio + st.glassAccentRatio) bucket = (hv >>> 16) % nVar; // tint variant
+            if (bucket < 0) continue; // base cell: baked grid shows through, no instance
+            pos.set(p.x, rowH * (j + 0.5), p.z);
+            buckets[bucket].push(new Matrix4().compose(pos, q, scl));
+          }
+        }
+      }
+      // one instanced mesh per used bucket, tagged with the building so Occlusion fades it too
+      for (bk in 0...buckets.length) {
+        var mats = buckets[bk];
+        if (mats.length == 0) continue;
+        var lit = bk == nVar;
+        var tex = lit ? litTex : tints[bk];
+        var mat = new MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 });
+        tag(mat, lit ? 'glass-lit-${b.facade}' : 'glass-accent-${b.facade}-${bk + 1}', lit ? 'lit glass pane' : 'glass accent ${bk + 1}',
+          lit ? st.glassAccentLit[b.facade] : st.glassAccents[b.facade][bk]);
+        if (lit) {
+          mat.emissive = litColor;
+          mat.emissiveMap = tex;
+          mat.emissiveIntensity = st.glassLitIntensity; // skyscraper glow, independent of mid-rise windows
+          // hand-cut window alpha on the lit tile: only the glowing glass draws (mullion/surround
+          // transparent → baked wall shows through), so bloom is confined to the window, not the whole
+          // cell. no-op while the texture is still fully opaque; activates once the alpha is painted.
+          mat.alphaTest = 0.5;
+        }
+        var inst = new InstancedMesh(geo, mat, mats.length);
+        for (k in 0...mats.length) inst.setMatrixAt(k, mats[k]);
+        inst.instanceMatrix.needsUpdate = true;
+        inst.userData.b = b;
+        inst.receiveShadow = true;
+        scene.add(inst);
+      }
+    }
+  }
+
+  static function accentTex(path:String):Texture {
+    var tex = Textures.loadTexture(path, 'wall');
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    return tex;
+  }
 }
