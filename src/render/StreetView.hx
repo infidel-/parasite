@@ -254,12 +254,12 @@ class StreetView {
       var city = CityGen.generate(seed);
       var bundle = SceneSetup.buildScene(renderer, city); // base scene + fixed light pools + lamp cones
       var s = bundle.scene;
-      World.build(s, city, seed);                          // all lit world geometry (instanced MeshStandard)
+      World.build(s, city, seed, null, false);             // all lit world geometry (instanced MeshStandard); audit off — throwaway city
       // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
       // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
       // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
       var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(true));
-      World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true));
+      World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true), false);
       // on-demand effects never present at static-build time: park throwaway instances so they warm too
       var g = new Group();
       s.add(g);

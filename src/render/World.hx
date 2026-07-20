@@ -18,7 +18,7 @@ import render.world.Check;
 class World {
   static var checked = false;
 
-  public static function build(scene:Scene, city:City, seed:Int = -1, ?style:render.world.AreaStyle):Void {
+  public static function build(scene:Scene, city:City, seed:Int = -1, ?style:render.world.AreaStyle, audit = true):Void {
     // one-time geometry self-check (face-dir/rotation invariants)
     if (!checked)
       {
@@ -46,6 +46,6 @@ class World {
     Roofs.addRoofShadows(scene);
     Roofs.addRoofDetails(scene);
 
-    Check.run();
+    if (audit) Check.run(); // skip on throwaway warmup cities — nobody walks them, so the audit is pure spam
   }
 }
