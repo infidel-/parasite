@@ -882,3 +882,65 @@ Downtown over 30 seeds: 0 starved tiers, 0 non-CELL glass heights, 100% / 99% wa
 **Residual: 4 clearance breaks over 30 seeds** (~1 city in 8 has one pair of towers 1–2 cells apart),
 all traceable to carve fragments. Left alone — enforcing it needs the trimming machinery the step-back
 approach was chosen to avoid.
+
+## SHIPPED — Downtown band scale + band z-fight (2026-07-23)
+
+Two follow-ups on the podium/cap bands from the entry above, both reported from in-engine.
+
+- **The bands tiled at their own height, not at the window pitch.** The podium quad is
+  `GLASS_PODIUM_ROWS * CELL` = 8 tall and I set `rx = faceW / podH`, `ry = 1` — one texture tile
+  spanning 2 cells × 2 rows, so the plinth stonework rendered at double the size of the panes directly
+  above it and read giant. Both bands now tile at `CELL` on both axes (`rx = faceW / CELL`,
+  `ry = h / CELL`), which is the window pitch, so the tile size is continuous up the facade. Cap was
+  already right by accident (`capH == CELL`). The cell-locked entrance had the same bug by construction
+  — `doorSide` returned `GLASS_PODIUM_ROWS * CELL`; now `CELL`, one podium tile, and ~the residential
+  `DOOR_SIZE` 3.9 so it reads as a door again. `snapOff` needs no change: it steps by whatever `s` is.
+- **`BAND_EPS = 0.004` z-fought with the wall as the camera pulled back** — flush-plus-`polygonOffset`
+  is not enough, for the reason already written next to the shop bays: a pass that swaps the material
+  (GTAO's prepass) drops the offset, and only a real geometric gap survives it. 0.004 held up close and
+  lost at distance. `BAND_EPS = OVERLAY_EPS` (0.02) now, the same value the shop bays landed on. Doors
+  have to stay in front of the band they sit on, so cell-locked entrances moved 0.01 → 0.03; residential
+  doors are untouched at 0.01 (0.06 was measured as a visible gap there).
+
+Third time this codebase has paid for assuming `polygonOffset` alone holds a coplanar overlay off a
+wall. **If an overlay is coplanar with a wall, give it a physical gap.**
+
+## SHIPPED — Downtown: parapet on the wall head (cap band deleted), aspect rule (2026-07-23)
+
+**The whole `GLASS_CAP_ROWS` mechanism was solving a self-inflicted problem and is gone.** The
+downtown coping ring hung `PARAPET_EMBED` (0.6) *over* the top of the wall, guillotining the top window
+row; I paid for that with an extra CELL of tower height carrying an opaque spandrel band. Wrong end of
+the problem. The ring's inner face is already exactly flush with the wall plane
+(`wWorld/2 + T/2 + E` centre, `(T + 2E)/2` half-width → inner face at `wWorld/2`) and its footprint is
+entirely *outside* the roof, so there is **nothing coplanar for the embed to protect against** — the
+0.6 was pure inheritance from the masonry parapet, which is a genuine wall continuation. Downtown now
+uses `embed = 0.05`, purely to kill a grazing-angle seam. The coping rides on the wall head, the top
+row is a real window floor, and `GLASS_CAP_ROWS` / `AreaStyle.glassCap` / the cap `mergeBand` /
+`glassHeight`'s extra row / the row clamp in `addGlassAccents` all deleted. `tryTower`'s minimum rise
+becomes a plain `2 * CELL`. Bonus: with the embed gone, `glassHeight` is idempotent again, which was
+the subtle bug in the entry above.
+
+**MAX_ASPECT = 3 (longest:shortest footprint side), enforced in two places.** Reported case: a 2×15
+mid-rise and a 3×13 tower tier. Three independent producers, so one fix was not enough:
+- **The split.** `cut = x0 + 3 + rng() * (w - 6 - (gap - 1))` can leave a child **2** cells wide, not
+  the ">= 3" its comment claims. Downtown now refuses to stop subdividing a rect over the ratio
+  (`thin`, gated on `p.downtown` so the residential rng stream is untouched — `&&` short-circuits
+  before the `earlyLeafChance` draw).
+- **`tryTower`.** An inset eats the short side twice as fast in relative terms, so an oblong base
+  reaches a slab in one step (5×15 → 3×13). Tiers now stop on ratio as well as on size. The base is
+  tested too, so `tryTower` can now emit **zero** pieces and must return false — it was returning true
+  with an empty `pieces`, which would have left a silent hole.
+- **A final post-pass**, because neither of the above can see the real footprint: a square leaf still
+  becomes a razor blade by stepping back (9×16 leaf → 5×16 tower) or by being carved (an L-turn road
+  leaves a 2×14 strip). Over-ratio buildings get their long side trimmed; setback tiers can only be
+  dropped, since trimming would slide them off their deck.
+
+Measured, 30 seeds: **51 over-ratio buildings → 0, worst ratio 7.00 → exactly 3.00.** Cost is nil —
+118.9 → 118.5 buildings/city, 43.2% → 42.9% building tiles. Tower health unchanged: 670/670 upper-tier
+decks land on a window-row boundary, 0 starved tiers, 0 non-CELL glass heights, and no tower is so
+short the podium swallows it (minimum 1 glass row above the plinth).
+
+**`Check` was failing every downtown city — 57 of 107 "windowless".** Glass facades are in
+`noWinSlots`: `Windows.add` skips them because the window grid is baked into the curtain-wall art, so
+`winSeen` is never set for a tower and `expectWindows` fires on every one. `noWinSlots` now joins
+shop/metal in `exemptArt`, which is the same idea — the art carries what the pass would have emitted.

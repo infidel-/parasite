@@ -18,9 +18,11 @@ class Buildings {
   // how far a flush wall overlay stands proud of its wall. Entrances tuned 0.06 → visible gap and
   // 0.01 → flush; this sits between: enough depth margin to survive a pass that drops polygonOffset
   static inline var OVERLAY_EPS = 0.02;
-  // glass-tower band standoff. depth order on a tower face: wall 0 < bands < doors (0.01,
-  // polygonOffset -2), so an entrance still reads on top of its podium
-  static inline var BAND_EPS = 0.004;
+  // glass-tower band standoff. 0.004 z-fought against the wall once the camera pulled back
+  // (polygonOffset is dropped by the passes that swap the material, so only a real gap counts —
+  // same reason the shop bays use OVERLAY_EPS). depth order on a tower face:
+  // wall 0 < bands < cell-locked doors (Entrances bumps those to clear this)
+  static inline var BAND_EPS = OVERLAY_EPS;
 
   static inline function imax(a:Float, b:Float):Float return a > b ? a : b;
 
@@ -74,7 +76,6 @@ class Buildings {
       }), '$cls-$i', label, paths[i])];
     }
     var podiumMat = bandMats(st.glassPodium, 'glass-podium', 'tower podium');
-    var capMat = bandMats(st.glassCap, 'glass-cap', 'tower parapet spandrel');
 
     // every building box baked into ONE position-only caster (built after the loop) — see the note
     // at the box below for why the boxes themselves stop casting
@@ -257,27 +258,19 @@ class Buildings {
         mergeBand(scene, gq, grimeMat[gv], b, true);
       }
 
-      // glass towers: opaque bands over the baked curtain wall — a solid street-level plinth
-      // (bottom GLASS_PODIUM_ROWS rows) and the spandrel the parapet coping sits on (top
-      // GLASS_CAP_ROWS rows), which is why glassHeight budgets an extra row. both tile on the
-      // cell grid (podium tile = 2 cells × 2 rows, cap tile = 1 cell × 1 row), so no stretch
-      if (cellLock) {
-        var pm = podiumMat != null ? podiumMat[b.facade % podiumMat.length] : null;
-        var cm = capMat != null ? capMat[b.facade % capMat.length] : null;
+      // glass towers: an opaque solid street-level plinth (bottom GLASS_PODIUM_ROWS rows) over
+      // the baked curtain wall, tiled at the window pitch — one CELL square per tile, so the
+      // stonework reads the same size as the panes above it (a band-sized tile came out giant)
+      // and nothing stretches. the top row stays glass: the coping now rides on the wall head
+      var pm = podiumMat != null ? podiumMat[b.facade % podiumMat.length] : null;
+      // a setback tier that rises out of the tier below has its base enclosed there — nothing
+      // of its podium is ever visible, so skip it
+      if (cellLock && pm != null && b.buriedH <= 0) {
         var podH = CityConfig.GLASS_PODIUM_ROWS * CELL;
-        var capH = CityConfig.GLASS_CAP_ROWS * CELL;
         var pq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
-        var cq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
-        for (f in Geom.buildingFaces(center, wWorld, dWorld, BAND_EPS)) {
-          // a setback tier that rises out of the tier below has its base enclosed there —
-          // nothing of its podium is ever visible, so skip it
-          if (pm != null && b.buriedH <= 0)
-            pq.push({ fw: f.faceW, h: podH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / podH, ry: 1.0 });
-          if (cm != null)
-            cq.push({ fw: f.faceW, h: capH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / capH, ry: 1.0 });
-        }
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, BAND_EPS))
+          pq.push({ fw: f.faceW, h: podH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / CELL, ry: podH / CELL });
         mergeBand(scene, pq, pm, b, true);
-        mergeBand(scene, cq, cm, b, true, b.h - capH);
       }
 
       // roof: metal warehouses get a gable (no parapet); downtown gets a flat roof + mechanical

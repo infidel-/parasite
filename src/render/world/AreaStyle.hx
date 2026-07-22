@@ -39,9 +39,8 @@ class AreaStyle {
   public var glassLitRatio:Float = 0.05;        // fraction of glass cells that are lit/glowing
   public var glassLitIntensity:Float = 1.9;     // glow strength of lit glass panes — separate from the mid-rise window glow (litIntensity)
   public var glassLitColor:Array<Int> = null;   // per facade: glow tint of lit glass panes (multiplies the lit texture); null entry = white (texture colour only)
-  // --- glass-tower opaque bands (Buildings.addGlassBands), indexed by Building.facade ---
+  // --- glass-tower opaque band (Buildings), indexed by Building.facade ---
   public var glassPodium:Array<String> = null;  // per facade: solid street-level plinth over the bottom CityConfig.GLASS_PODIUM_ROWS window rows; null (or null entry) = none
-  public var glassCap:Array<String> = null;     // per facade: spandrel over the top CityConfig.GLASS_CAP_ROWS rows, the band the parapet coping sits on; null (or null entry) = none
   // --- entrances (Entrances.hx), indexed by Building.facade ---
   public var doors:Array<String>;        // clean street-facing pedestrian door art
   public var doorsWorn:Array<String>;    // service/maintenance door art for worn faces

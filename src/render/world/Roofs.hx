@@ -295,7 +295,12 @@ class Roofs {
       copingTex:Texture, penthouseTex:Texture, shadowPos:Array<Float>, shadowIdx:Array<Int>):Void {
     var T = RenderConfig.PARAPET_T;
     var covered = Geom.coveredEdges(b);
-    var h = RenderConfig.PARAPET_H, embed = RenderConfig.PARAPET_EMBED, E = 0.12;
+    // the ring sits ON the wall head, not sunk into it: the full PARAPET_EMBED (0.6) hangs over
+    // the top of the wall, and on a cell-locked glass tower that is a visibly guillotined top
+    // window row. the ring's inner face is already flush with the wall plane and its footprint is
+    // entirely OUTSIDE the roof, so there is nothing coplanar to z-fight — this hair is only to
+    // stop a grazing-angle seam at the junction
+    var h = RenderConfig.PARAPET_H, embed = 0.05, E = 0.12;
     var capY = b.h + h / 2 - embed / 2, capBoxH = h + embed;
     // single flat-roof coping ring, dropped at same-height junctions (extend=0 → stops at the cut)
     parapetRing(scene, b, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,

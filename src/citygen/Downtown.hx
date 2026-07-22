@@ -14,11 +14,10 @@ class Downtown {
   // (GROUND_H == CELL) and every setback deck then land on a row boundary instead of
   // slicing a window in half. the raw GROUND_H + f*FLOOR_H + TOP_MARGIN quantization
   // shares no common grid with CELL and misaligned on ~95% of decks.
-  // GLASS_CAP_ROWS extra rows carry the spandrel band the parapet coping sits on, so the
-  // coping's overhang no longer eats the top window row (the podium comes out of the rows
-  // the raw formula already has)
+  // the top row stays a real window floor: the downtown coping sits ON the wall head instead
+  // of hanging over it (Roofs.addDowntownRoof), so nothing has to be spent capping it
   public static inline function glassHeight(f:Int):Float
-    return CELL * (Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL) + GLASS_CAP_ROWS);
+    return CELL * Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL);
 
   // try to emit a stepped setback tower into `out` from a leaf footprint: N concentric
   // ground-anchored pieces, each tier inset per side and TALLER than the one below, so
@@ -70,16 +69,20 @@ class Downtown {
         f += grow + Std.int(rng() * 2);
         if (f > cap) f = cap;
       }
-      // stop if a tier would collapse below a real footprint
-      if (cx1 - cx0 < 2 ||
-          cy1 - cy0 < 2)
+      // stop if a tier would collapse below a real footprint, or turn into a razor blade —
+      // an inset eats the SHORT side twice as fast in relative terms, so a merely oblong
+      // base (5x15) reaches a 3x13 slab in one step
+      var tw = cx1 - cx0 + 1, td = cy1 - cy0 + 1;
+      if (tw < 3 ||
+          td < 3 ||
+          (tw > td ? tw : td) > (tw < td ? tw : td) * MAX_ASPECT)
         break;
       var h = glassHeight(f);
-      // a tier has to clear the deck it stands on by a real amount, else its whole exposed
-      // shaft is parapet (glass: the cap row) or a sliver of wall with the window grid
-      // running down inside the tier below. seen at both extremes: tiers rising one CELL,
-      // and tiers landing at EXACTLY the height below (invisible, coplanar roofs)
-      var minH = prevH + (GLASS_CAP_ROWS + 1) * CELL;
+      // a tier has to clear the deck it stands on by a real amount, else its exposed shaft is
+      // a sliver of wall with the window grid running down inside the tier below. seen at both
+      // extremes: tiers rising one CELL, and tiers landing at EXACTLY the height below
+      // (invisible, coplanar roofs)
+      var minH = prevH + 2 * CELL;
       if (h < minH) h = minH;
       if (h > glassHeight(cap)) break; // grown past this facade's storey cap — stop stacking
       var b = new Building(cx0, cy0, cx1 - cx0 + 1, cy1 - cy0 + 1,
@@ -93,6 +96,7 @@ class Downtown {
       out.push(b);
       prevH = h;
     }
+    if (pieces.length == 0) return false; // the base itself failed the footprint/aspect test — let the caller box it
     // only the topmost tier carries a mechanical penthouse — every lower tier's centre is
     // occupied by the tier above it, so a penthouse there would punch through that shaft
     for (i in 0...pieces.length - 1) pieces[i].roofPenthouse = false;

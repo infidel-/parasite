@@ -35,14 +35,14 @@ class Entrances {
     var coverTex = [for (p in st.doorCovers) Textures.loadTexture(p, 'wall')]; // full material swatch (not a band)
 
     // a glass tower's facade is a cell-locked window grid, so its entrance is sized and
-    // placed on that grid: a square exactly GLASS_PODIUM_ROWS cells wide and tall, filling
-    // the podium band. everything else keeps the free-floating masonry door
+    // placed on that grid: one CELL square, matching a single podium tile. everything else
+    // keeps the free-floating masonry door
     inline function cellLocked(b:Building):Bool
       return st.winPerCell != null && st.winPerCell[b.facade % st.winPerCell.length] > 0;
 
     inline function doorSide(b:Building, faceW:Float):Float
       return cellLocked(b)
-        ? (faceW >= 2 * CELL ? CityConfig.GLASS_PODIUM_ROWS * CELL : CELL)
+        ? (CELL : Float)
         : Math.min(RenderConfig.DOOR_SIZE, Math.min(b.h * 0.9, faceW * 0.9));
 
     // snap an along-face offset so a cell-locked entrance covers exactly ONE podium tile.
@@ -75,7 +75,9 @@ class Entrances {
       WorldCtx.doorSpans.push({ b: b, dir: f.dir, lo: off - s / 2, hi: off + s / 2 });
       var mesh = new Mesh(new PlaneGeometry(s, s), mat);
       mesh.rotation.y = f.rotY;
-      var eps = 0.01; // effectively flush (was 0.06 → visible gap); polygonOffset -2 does the z-fight work, this hair just guards grazing angles
+      // effectively flush (was 0.06 → visible gap); polygonOffset -2 does the z-fight work, this hair
+      // just guards grazing angles. a glass tower's door sits on the podium band, so it clears that instead
+      var eps = cellLocked(b) ? 0.03 : 0.01;
       if (f.dir < 2) mesh.position.set(f.fx + off, s / 2, f.fz + (f.dir == 0 ? eps : -eps));
       else mesh.position.set(f.fx + (f.dir == 2 ? eps : -eps), s / 2, f.fz + off);
       scene.add(mesh);

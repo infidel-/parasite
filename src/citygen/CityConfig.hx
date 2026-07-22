@@ -58,7 +58,7 @@ class CityConfig {
   // (which lays the opaque bands over the baked curtain wall) — one source of truth
   public static inline var TOWER_CLEAR = 2;       // cells a glass-tower footprint steps in per side, so it keeps a 3-cell ring (block gap 1 + 2) to every neighbour
   public static inline var GLASS_PODIUM_ROWS = 2; // bottom window rows covered by the solid street-level plinth
-  public static inline var GLASS_CAP_ROWS = 1;    // top window rows covered by the spandrel under the parapet coping (which would otherwise clip them)
+  public static inline var MAX_ASPECT = 3;        // downtown: longest:shortest footprint side. beyond this a leaf keeps splitting and a tower stops stacking (no razor-blade slabs)
 
   // a plain rectangle wider than BIG_W on one side and deeper than BIG_D on both is
   // reshaped into an L or a central-courtyard (P) ring — no oversized blank boxes

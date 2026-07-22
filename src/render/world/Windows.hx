@@ -172,7 +172,7 @@ class Windows {
       // vertical grid matches the baked tiling exactly (repeat_v = round(b.h/CELL))
       var rowsAll = Std.int(imax(1, Math.round(b.h / CELL)));
       var rowH = b.h / rowsAll;
-      var rows = rowsAll - CityConfig.GLASS_CAP_ROWS; // top rows carry the parapet spandrel band
+      var rows = rowsAll; // top row is a real window floor — the coping rides on the wall head
       // a setback tier's rows below its deck are enclosed by the tier beneath — nothing there is
       // ever visible, so skip them (~29% of all glass cells on a stepped tower). glass heights are
       // CELL multiples, so the deck lands exactly on a row boundary. the bottom rows are the

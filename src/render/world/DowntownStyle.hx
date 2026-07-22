@@ -91,16 +91,14 @@ class DowntownStyle {
       s.glassLitIntensity = 2.2;   // skyscraper glow strength (tune here, separate from mid-rise window glow)
       // per glass tower type: facade 2 (light) → emerald-green Tokyo glow, facade 3 (dark) → warm office
       s.glassLitColor = [0, 0, 0x9fe8c6, 0xffe6c2];
-      // opaque bands over the baked curtain wall: a polished-granite plinth at street level
-      // (the bottom two floors read solid, not glass) and a dark spandrel cap the parapet
-      // coping sits on — the coping's overhang used to eat the top window row
+      // opaque band over the baked curtain wall: a polished-granite plinth at street level, so
+      // the bottom two floors read solid, not glass
       s.glassPodium = [
         null,
         null,
         'textures/downtown/podium-light.png',
         'textures/downtown/podium-dark.png',
       ];
-      s.glassCap = [null, null, back, back];
       // entrances: 0 concrete + 1 STONE mid-rise reuse the residential masonry door art
       // (facade 1 is wall-3/stone downtown, not brick), the glass towers get lobby doors,
       // a shared steel service door on their blanked backs, and a flat metal canopy

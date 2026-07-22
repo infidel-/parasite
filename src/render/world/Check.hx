@@ -27,7 +27,13 @@ class Check {
       var b = buildings[i];
       var fi = Geom.frontInfo(b);
       if (fi.simple) { nSimple++; if (fi.small) nSmall++; else if (fi.store) nStore++; else nPlain++; }
-      var exemptArt = b.shop >= 0 || WorldCtx.style.isSpecial(b.facade); // shop/metal: doors+closures baked into the art
+      var st = WorldCtx.style;
+      // art carries what a render pass would otherwise have to emit: a shop's doors/closures, a
+      // metal warehouse's roll-up, and a glass curtain wall's ENTIRE window grid (noWinSlots —
+      // Windows.add skips those facades by design, so winSeen is never set for a tower)
+      var exemptArt = b.shop >= 0
+        || st.isSpecial(b.facade)
+        || (st.noWinSlots != null && st.noWinSlots.indexOf(b.facade) >= 0);
       // FAIL: doorless. Only SIMPLE buildings carry the hard guarantee (a front door, street face or
       // anyFront fallback). Composite (+/T/L) pieces door only their own street faces — a buried inner
       // piece legitimately has none while the overall footprint still has doors, so they're exempt.
@@ -36,7 +42,7 @@ class Check {
       // otherwise an island store, banded on every face, reads as doorless.
       if (fi.simple && !doorSeen.exists(b) && !bandSeen.exists(b)) { doorless.push(i); fails.push({ id: i, reason: 'doorless', line: BDump.bline(i, b) }); }
       // FAIL: windows expected but none emitted (landlocked — every face buried / store with no street face)
-      if (Geom.expectWindows(b) && !winSeen.exists(b)) { windowless.push(i); fails.push({ id: i, reason: 'windows expected, none emitted (landlocked?)', line: BDump.bline(i, b) }); }
+      if (!exemptArt && Geom.expectWindows(b) && !winSeen.exists(b)) { windowless.push(i); fails.push({ id: i, reason: 'windows expected, none emitted (landlocked?)', line: BDump.bline(i, b) }); }
       // INFO: intended blank box — simple bldg, windows not expected, no storefront band (just a door)
       if (!exemptArt && fi.simple && !Geom.expectWindows(b) && !winSeen.exists(b) && !bandSeen.exists(b)) blank.push(i);
     }

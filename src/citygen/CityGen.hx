@@ -272,7 +272,12 @@ class CityGen {
 
     var big = w > p.splitOver || d > p.splitOver;
     var capW = w > p.maxBuilding, capD = d > p.maxBuilding; // hard cap on either axis
-    if (!capW && !capD && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < p.earlyLeafChance))) { leaf(); return; }
+    // downtown: a rect more than MAX_ASPECT times longer than it is wide is a razor blade (the
+    // cut range lets a child come out 2 cells wide, so a 10x15 block can leave a 2x15 sliver).
+    // keep splitting its long axis rather than stopping on it — the split branch below always
+    // shortens the long side, and the final else still terminates anything too small to cut
+    var thin = p.downtown && (w > d ? w : d) > (w < d ? w : d) * MAX_ASPECT;
+    if (!capW && !capD && !thin && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < p.earlyLeafChance))) { leaf(); return; }
     // force a split along any over-cap axis (wider one first); else normal big-block split
     // split leaves blockGap empty cells between siblings (residential 1 → cut+2, identical
     // stream). the cut range shrinks by the extra gap so both children keep a >=3-cell
@@ -662,18 +667,36 @@ class CityGen {
     // grid has a pitch of exactly CELL (see Downtown.glassHeight). this catches the plain
     // boxes and carved pieces that came through mk(); heights alone, footprints unaffected.
     // tower tiers are EXCLUDED (shapeKeep is theirs alone this early — composites are tagged
-    // later, in keepComposite): glassHeight does not survive a round trip through its own
-    // output, because the reverse derivation can't see the GLASS_CAP_ROWS it added, so
-    // re-snapping an already-snapped tier inflates it a row past the deck buriedH recorded
+    // later, in keepComposite): a tier is already snapped AND its deck was recorded in the tier
+    // above's buriedH, so re-deriving a floor count from its height and re-snapping can only
+    // move it off that deck
+    // the same pass enforces the MAX_ASPECT rule on the FINAL footprints. it cannot live at the
+    // split: a perfectly square leaf still becomes a razor blade later, either by stepping back
+    // (a 9x16 leaf insets to a 5x16 tower) or by being carved (an L-turn road leaves a 2x14 strip)
     if (profile.downtown)
-      for (b in buildings) if (profile.glassTypes.indexOf(b.facade) >= 0)
+      for (b in buildings)
       {
-        if (!b.shapeKeep)
-          b.h = Downtown.glassHeight(Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H)));
-        // a road/courtyard carve can leave a tower as a sliver: a 2-cell-wide shaft at 20+
-        // storeys reads as a wall, not a building, and has lost the clearance ring the leaf
-        // inset gave it. drop it — the footprint reverts to alley like any other dropped box
-        if (b.w < 3 || b.d < 3) b.drop = true;
+        if (b.drop) continue;
+        if (profile.glassTypes.indexOf(b.facade) >= 0)
+        {
+          if (!b.shapeKeep)
+            b.h = Downtown.glassHeight(Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H)));
+          // a road/courtyard carve can leave a tower as a sliver: a 2-cell-wide shaft at 20+
+          // storeys reads as a wall, not a building, and has lost the clearance ring the leaf
+          // inset gave it. drop it — the footprint reverts to alley like any other dropped box
+          if (b.w < 3 || b.d < 3)
+          {
+            b.drop = true;
+            continue;
+          }
+        }
+        var mn = b.w < b.d ? b.w : b.d;
+        if ((b.w > b.d ? b.w : b.d) <= mn * MAX_ASPECT) continue;
+        // a setback tier has to stay concentric with the stack it belongs to, so trimming it
+        // would slide it off its deck — a tier this thin can only be dropped
+        if (b.shapeKeep) b.drop = true;
+        else if (b.w > b.d) b.w = mn * MAX_ASPECT;
+        else b.d = mn * MAX_ASPECT;
       }
 
     // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
