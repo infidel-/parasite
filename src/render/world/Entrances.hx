@@ -24,22 +24,41 @@ class Entrances {
   //   on a clean face, worn door on a worn face). all deterministic — no rng, no citygen desync.
   public static function add(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
-    var doorTex = [for (p in TEXTURES.doors) Textures.loadTexture(p, 'wall')];
-    var doorWornTex = [for (p in TEXTURES.doorsWorn) Textures.loadTexture(p, 'wall')];
+    var st = WorldCtx.style;
+    var doorTex = [for (p in st.doors) Textures.loadTexture(p, 'wall')];
+    var doorWornTex = [for (p in st.doorsWorn) Textures.loadTexture(p, 'wall')];
     for (t in doorTex) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; }
     for (t in doorWornTex) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; }
 
     // per-facade entrance-cover lintel texture [concrete, brick, stone], world-tiled per cover.
     // NEVER a flat colour. cropped to the centre band (like coping) then cloned + repeat-set per slab.
-    var coverTex = [for (p in TEXTURES.doorCovers) Textures.loadTexture(p, 'wall')]; // full material swatch (not a band)
+    var coverTex = [for (p in st.doorCovers) Textures.loadTexture(p, 'wall')]; // full material swatch (not a band)
+
+    // a glass tower's facade is a cell-locked window grid, so its entrance is sized and
+    // placed on that grid: a square exactly GLASS_PODIUM_ROWS cells wide and tall, filling
+    // the podium band. everything else keeps the free-floating masonry door
+    inline function cellLocked(b:Building):Bool
+      return st.winPerCell != null && st.winPerCell[b.facade % st.winPerCell.length] > 0;
 
     inline function doorSide(b:Building, faceW:Float):Float
-      return Math.min(RenderConfig.DOOR_SIZE, Math.min(b.h * 0.9, faceW * 0.9));
+      return cellLocked(b)
+        ? (faceW >= 2 * CELL ? CityConfig.GLASS_PODIUM_ROWS * CELL : CELL)
+        : Math.min(RenderConfig.DOOR_SIZE, Math.min(b.h * 0.9, faceW * 0.9));
+
+    // snap an along-face offset so a cell-locked entrance covers exactly ONE podium tile.
+    // the podium band tiles every `s` world units from the face edge and the entrance art is
+    // that same tile with a door cut into it, so a half-tile offset would break the stonework
+    inline function snapOff(faceW:Float, off:Float, s:Float):Float {
+      var k = Std.int(Math.round((off + faceW / 2 - s / 2) / s));
+      var span = Std.int((faceW - s) / s); // whole tiles that fit beside the door
+      if (k > span) k = span;
+      if (k < 0) k = 0;
+      return k * s + s / 2 - faceW / 2;
+    }
 
     inline function place(b:Building, f:{faceW:Float, rotY:Float, dir:Int, fx:Float, fz:Float}, off:Float, s:Float):Void {
       var worn = Geom.isWornFace(b, f.dir);
-      // door art is a masonry set (concrete/brick/stone); downtown facade 3 (glass) has no door art,
-      // so wrap the index (facade 3 → concrete door). identity for residential facades 0-2.
+      // the style's door set is per facade; wrap for safety (identity on both current styles)
       var di = b.facade % doorTex.length;
       var tx = worn ? doorWornTex[di] : doorTex[di];
       var k = RenderConfig.FACADE_NAMES[di];
@@ -50,7 +69,7 @@ class Entrances {
         // physical gap needed. grime is transparent+depthWrite:false, so a nearer door bias keeps grime off it.
         polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
         'door-$k' + (worn ? '-worn' : ''), '$k door' + (worn ? ' (service)' : ''),
-        worn ? TEXTURES.doorsWorn[di] : TEXTURES.doors[di]);
+        worn ? st.doorsWorn[di] : st.doors[di]);
       WorldCtx.doorSeen.set(b, true); // checklist: this building rendered at least one door
       // publish the along-face span so WallDecals keeps graffiti off it (off = center offset, s = door side)
       WorldCtx.doorSpans.push({ b: b, dir: f.dir, lo: off - s / 2, hi: off + s / 2 });
@@ -68,12 +87,12 @@ class Entrances {
       var cw = s * RenderConfig.COVER_WIDTH_FRAC;                            // ~ door-panel width (not wall-wide)
       var cd = RenderConfig.COVER_DEPTH;
       var mt = RenderConfig.COVER_MAT_TILE;
-      var di = b.facade % coverTex.length; // door-cover art is masonry-only; wrap glass facade 3 → concrete
+      var di = b.facade % coverTex.length;
       var k = RenderConfig.FACADE_NAMES[di];
       var ct = coverTex[di].clone();
       ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
       ct.needsUpdate = true;
-      var cmat = tag(new MeshStandardMaterial({ map: ct, roughness: 1, metalness: 0, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', TEXTURES.doorCovers[di]);
+      var cmat = tag(new MeshStandardMaterial({ map: ct, roughness: 1, metalness: 0, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', st.doorCovers[di]);
       // world pos of the local origin (door-top-center on the wall), shifted `off` along the face,
       // `outN` along the outward normal. rotation.y = f.rotY makes local +z = outward for every dir.
       inline function setPos(cover:Mesh, y:Float, outN:Float):Void {
@@ -83,7 +102,7 @@ class Entrances {
       }
       var anchor = s * RenderConfig.COVER_Y_FRAC; // cover BOTTOM sits here — just above the visible door, small gap
       var cover:Mesh;
-      switch (di) {
+      switch (st.coverShape[di]) {
         case 0: // concrete: HALF-BARREL — half-cylinder, axis along door width, flat back on wall, curve bulges out
           ct.repeat.set(cw / mt, 1);
           var R = RenderConfig.COVER_BARREL_R;
@@ -109,10 +128,23 @@ class Entrances {
     // main entrance on a frontage: a thick wall (> 5 window columns wide) gets TWO doors at the
     // quarter points instead of one centred, so a wide facade doesn't read as a single lonely door.
     // each FRONT door also gets a tinted cover (service doors via sideDoor are left coverless).
-    inline function placeFront(b:Building, f:{faceW:Float, rotY:Float, dir:Int, fx:Float, fz:Float}, s:Float):Void {
+    function placeFront(b:Building, f:{faceW:Float, rotY:Float, dir:Int, fx:Float, fz:Float}, s:Float):Void {
+      var lock = cellLocked(b);
+      inline function one(off:Float):Void {
+        place(b, f, off, s);
+        placeCover(b, f, off, s);
+      }
       if (Geom.centeredCols(-f.faceW / 2, f.faceW / 2).length > 5) {
-        var o = f.faceW / 4; place(b, f, -o, s); placeCover(b, f, -o, s); place(b, f, o, s); placeCover(b, f, o, s);
-      } else { place(b, f, 0, s); placeCover(b, f, 0, s); }
+        var o = f.faceW / 4;
+        var lo = lock ? snapOff(f.faceW, -o, s) : -o;
+        var hi = lock ? snapOff(f.faceW, o, s) : o;
+        if (hi - lo >= s) {
+          one(lo);
+          one(hi);
+          return;
+        }
+      }
+      one(lock ? snapOff(f.faceW, 0, s) : 0);
     }
 
     for (b in buildings) {

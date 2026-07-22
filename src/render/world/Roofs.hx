@@ -267,6 +267,25 @@ class Roofs {
     copingCorners(scene, copingTex, covered, bxMin, bxMax, bzMin, bzMax, capY, capBoxH, ALONG, ACROSS, T / 2);
   }
 
+// footprint of the mechanical penthouse on a downtown roof, or null when the building carries
+// none (a lower setback tier, whose centre the tier above occupies, or too short/narrow).
+// deterministic from the footprint (stable across reloads, unlike the detail shuffle) so the
+// roof-detail pass can reserve the same rect without the penthouse having been built yet
+  public static function penthouseRect(b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float):{x:Float, z:Float, w:Float, d:Float} {
+    if (!b.roofPenthouse) return null;
+    var minSide = wWorld < dWorld ? wWorld : dWorld;
+    if (b.h < CityConfig.GROUND_H + 6 * CityConfig.FLOOR_H || minSide < 5 * CELL) return null;
+    var hsh = b.col * 53 + b.row * 131;
+    var pw = minSide * (0.4 + (hsh % 3) * 0.08);
+    var pd = minSide * (0.4 + ((hsh >> 2) % 3) * 0.08);
+    return {
+      x: center.x + ((hsh >> 4) % 5 - 2) * (wWorld / 2 - pw / 2) / 3,
+      z: center.z + ((hsh >> 6) % 5 - 2) * (dWorld / 2 - pd / 2) / 3,
+      w: pw,
+      d: pd,
+    };
+  }
+
   // downtown flat roof: a thin coping ring (like the non-masonry parapet) plus a mechanical
   // penthouse bulkhead box (elevator/stair core + HVAC massing) on tall-enough towers. the
   // penthouse is real occluding massing, so it is baked into the merged moon caster (shadowPos/
@@ -281,18 +300,12 @@ class Roofs {
     // single flat-roof coping ring, dropped at same-height junctions (extend=0 → stops at the cut)
     parapetRing(scene, b, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,
       capY, capBoxH, copingMats(copingTex, 8, 0.0), T + 2 * E, covered, 0);
-    if (penthouseTex == null || !b.roofPenthouse) return; // lower setback tiers: coping only, no bulkhead
-    // only on buildings tall + wide enough to carry a bulkhead
-    var minSide = wWorld < dWorld ? wWorld : dWorld;
-    if (b.h < CityConfig.GROUND_H + 6 * CityConfig.FLOOR_H || minSide < 5 * CELL) return;
-    // deterministic size/offset from the footprint (stable across reloads, unlike the detail shuffle)
-    var hsh = b.col * 53 + b.row * 131;
-    var pw = minSide * (0.4 + (hsh % 3) * 0.08);
-    var pd = minSide * (0.4 + ((hsh >> 2) % 3) * 0.08);
-    var ph = CityConfig.FLOOR_H * (1.4 + (hsh % 2) * 0.6);
-    var ox = ((hsh >> 4) % 5 - 2) * (wWorld / 2 - pw / 2) / 3;
-    var oz = ((hsh >> 6) % 5 - 2) * (dWorld / 2 - pd / 2) / 3;
-    var px = center.x + ox, pz = center.z + oz, py = b.h + ph / 2;
+    if (penthouseTex == null) return;
+    var r = penthouseRect(b, center, wWorld, dWorld);
+    if (r == null) return; // lower setback tiers / too small: coping only, no bulkhead
+    var pw = r.w, pd = r.d;
+    var ph = CityConfig.FLOOR_H * (1.4 + ((b.col * 53 + b.row * 131) % 2) * 0.6);
+    var px = r.x, pz = r.z, py = b.h + ph / 2;
     var geo = new BoxGeometry(pw, ph, pd);
     var t = penthouseTex.clone();
     t.needsUpdate = true;
@@ -518,12 +531,19 @@ class Roofs {
 
     for (b in buildings) {
       if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof — no rooftop details
+      // an intermediate setback deck is a one-cell ring around the tier rising out of it —
+      // a top-down decal there runs straight into that wall. only lower tiers clear the flag
+      if (!b.roofPenthouse) continue;
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var hx = wWorld / 2 - RenderConfig.ROOF_DETAIL_MARGIN;
       var hz = dWorld / 2 - RenderConfig.ROOF_DETAIL_MARGIN;
       if (hx <= 0 || hz <= 0) continue;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+      // the mechanical penthouse is real massing standing on this roof — a decal under it
+      // pokes through its walls, so reserve its footprint
+      var pen = WorldCtx.style.roofDowntown && WorldCtx.style.penthouseWall != null
+        ? penthouseRect(b, center, wWorld, dWorld) : null;
 
       var cols = Std.int(imax(1, Math.round((2 * hx) / RenderConfig.ROOF_SECTOR)));
       var rows = Std.int(imax(1, Math.round((2 * hz) / RenderConfig.ROOF_SECTOR)));
@@ -548,6 +568,13 @@ class Roofs {
           var yaw = Std.int(Math.random() * 4) * (Math.PI / 2);
           var x = center.x - hx + (ci + 0.5) * secW;
           var z = center.z - hz + (cj + 0.5) * secD;
+          // yaw is a multiple of 90°, so the decal's world AABB is its size or its transpose
+          var dx = (Math.abs(Math.cos(yaw)) > 0.5 ? type.w : type.d) / 2;
+          var dz = (Math.abs(Math.cos(yaw)) > 0.5 ? type.d : type.w) / 2;
+          if (pen != null
+              && Math.abs(x - pen.x) < pen.w / 2 + dx
+              && Math.abs(z - pen.z) < pen.d / 2 + dz)
+            continue;
           q.setFromAxisAngle(up, yaw).multiply(qx);
           pos.set(x, b.h + 0.05, z);
           scl.set(type.w, type.d, 1);

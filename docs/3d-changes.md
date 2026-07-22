@@ -785,3 +785,100 @@ tiers → **0** unsnapped heights, 0 sliced decks, 0 coplanar tier walls, 0 orph
 **Found but NOT fixed (pre-existing, downtown-only):** `subdivide` emits zero-area footprints under the
 downtown profile (`w=0` or `d=0`, ~4 per city, facade 0/1, never tiers — residential produces none).
 Most likely the wider `blockGap: 3` / `setback: 2`. Out of scope here; fixing it moves downtown layout.
+
+## SHIPPED — Downtown: per-type spacing, podium + parapet bands, tower entrances (2026-07-22)
+
+Seven follow-up defects on the same downtown pass.
+
+- **(a) `blockGap: 3` spaced EVERY downtown building 3 cells apart** — only skyscrapers should get the
+  ring; mid-rises should read as a medium city. Fixed without any post-pass trimming: `blockGap` goes
+  back to the residential `1`, and a glass leaf insets itself `CityConfig.TOWER_CLEAR = 2` cells per side
+  in `leaf()` before `tryTower`/`mk`. Gaps come out tower↔anything `2+1 = 3`, mid↔mid `1`, tower↔tower `5`,
+  tower↔road `setback 2 + 2 = 4`. `keepAlleyFront` deleted (with `notBuried`) so downtown obeys the
+  residential landlocked-drop / back-wall rule; `courtyardChance` → 0 because that branch runs *before*
+  the tower branch and would bypass the inset.
+  **Density trap:** the inset forces the glass threshold from `minSide>=5` to `>=5+2*TOWER_CLEAR = 9`, and
+  at the old `maxBuilding: 14` / `earlyLeafChance: 0.15` almost no leaf is that square — measured **2.5
+  towers per city**, down from ~30 glass pieces. Swept the two knobs headlessly (12 combinations);
+  `16 / 0.7` restores **~9.6 tower bases + 11.2 setback tiers per city**. Worth remembering: leaf
+  *squareness*, not block size, is what gates tower count.
+- **(b) The parapet coping ate the top window row.** The coping ring sits `PARAPET_T/2 + E` proud of the
+  wall and sinks `PARAPET_EMBED` into it, so it overhangs the top of a cell-locked grid that ran to the
+  very top of the box. `glassHeight` now budgets `GLASS_CAP_ROWS = 1` extra row, drawn as an opaque
+  spandrel band — which is what a real curtain wall does at the parapet.
+- **(e) Bottom two floors are now a solid podium** (`GLASS_PODIUM_ROWS = 2`), same band machinery, new
+  `downtown/podium-light|dark` granite art. Both bands are merged quads through `mergeBand` (extended
+  with `baseY` + a vertical UV repeat `ry`), so they cost **one draw call each per tower** and keep
+  `userData.b` for Occlusion. Podium is skipped on a tier with `buriedH > 0` (its base is inside the tier
+  below). Both tile on the cell grid — podium tile 2 cells × 2 rows, cap tile 1 × 1 — so nothing stretches.
+  Depth order on a tower face: wall `0` → bands `BAND_EPS 0.004 / offset -1` → doors `0.01 / -2`. The
+  grime band is skipped on glass towers: at `eps 0` with `depthWrite:false` it would lose the depth test
+  to the podium anyway, and the podium owns that band now.
+- **(c)/(d) Roof decals.** `addRoofDetails` now skips any building with `roofPenthouse == false` — only
+  lower setback tiers clear that flag, and their exposed deck is a one-cell ring, so a top-down decal ran
+  straight into the tier wall above. And the penthouse placement moved into a pure
+  `Roofs.penthouseRect(b, center, w, d)` so the detail pass can reserve the same rect and drop the sectors
+  under it (decals were poking through the bulkhead).
+- **(f)/(g) Tower entrances.** `Entrances` read `TEXTURES.doors` (a 3-entry masonry set) indexed
+  `facade % 3`, so glass facade 2 got a stone door and facade 3 a concrete one — and downtown facade 1 is
+  *stone* (`wall-3`) yet got the *brick* door. Door/worn/cover sets and a new `coverShape` (which cover
+  geometry a facade uses) moved onto `AreaStyle`; DEFAULT reproduces the old `switch (di)` exactly. Glass
+  towers get generated lobby doors + a shared steel service door + a flat metal canopy. The quad is now
+  cell-locked for glass slots: a square `GLASS_PODIUM_ROWS * CELL` (= 2 cells × 2 rows, filling the
+  podium) with its along-face offset snapped to cell boundaries, so it lines up with the window grid
+  instead of floating at `DOOR_SIZE 3.9`.
+
+**Verification.** Residential byte-identical again (same 10-seed hash / stash / rebuild / re-hash method —
+all 10 identical). Downtown over 40 seeds: **0** clearance violations at either rule, **0** non-`CELL`
+heights, min glass footprint side 3. Flush (`gap == 0`) pairs are excluded from the spacing scan — those
+are attached pieces of one carved building, normal in residential too.
+
+**Gotcha found while measuring:** a road/courtyard carve could leave a glass tower as a 2-cell-wide sliver
+at 20+ storeys — a wall, not a building, and with its clearance ring gone (5 cases / 40 seeds). Now
+dropped alongside the height snap. The zero-area-footprint bug noted in the previous entry is gone with
+`blockGap: 3`.
+
+## SHIPPED — Downtown: clearance vs the street, density, mid-rise stacks (2026-07-23)
+
+Follow-up on the entry above: the uniform tower step-back was measurably wrong in three ways at once.
+
+- **The step-back must not apply toward the street.** Insetting a tower on all four sides put a 2-cell
+  ring of *alley* between it and the walkway. Fixed by threading an `edges` bitmask through `subdivide`
+  (which of a rect's four sides are still the BLOCK's outer edge; a split clears the bit it created), and
+  stepping back only on interior sides. A block edge already faces the road setback, so a tower now sits
+  directly on the walkway like everything else. The glass test moved onto the POST-step-back footprint,
+  which is also what let the two knobs come back down. Measured: **99% of tower bases touch a walkway.**
+- **`setback: 2` was hiding the walkway.** A cell two out from a road is not road-adjacent, so
+  `touchesRoad` classified it ALLEY — every downtown building sat one dead strip back from its pavement.
+  Set to `1`, like residential. **100% of mid-rises now touch a walkway** (was 89%).
+- **Downtown was mostly empty: 15.9% building / 47.3% alley** (residential 37.9 / 13.5). The two fixes
+  above are most of it; result **43.7% building / 19.8% alley**, i.e. denser than residential, which is
+  right for downtown. Tile-class histograms over 30 seeds are the cheap way to see this — a building
+  count alone hides it completely.
+- **`tryTower` ran for mid-rise facades too.** Facade 0/1 leaves were becoming setback stacks, and
+  `tryTower` marks every piece `shapeKeep`, which exempts it from the landlocked drop — so stranded
+  mid-rise wedding cakes survived fronting nothing but alley (11% of them). They also went through
+  `Windows.add` (glass slots don't), which draws the punched grid from floor 0, so the windows ran down
+  *inside the tier below* — the reported "windows intersect with roof". `tryTower` is now gated to
+  `glassTypes`; mid-rises are plain boxes under the ordinary residential rules.
+- **Degenerate tiers.** Tiers were emitted that rise one CELL above their deck — or *exactly* the deck
+  height (invisible, coplanar roofs). For glass the entire exposed shaft was then the parapet cap row, so
+  no glass showed at all. `tryTower` now enforces `h >= prevH + (GLASS_CAP_ROWS + 1) * CELL` and stops
+  stacking once that pushes past the facade's storey cap. **0 starved tiers / 716.**
+
+**`glassHeight` does not survive a round trip through its own output** — worth remembering. The
+end-of-`generate` snap re-derives a floor count as `(h - GROUND_H - TOP_MARGIN) / FLOOR_H`, which cannot
+see the `GLASS_CAP_ROWS` that `glassHeight` added, so re-snapping an already-snapped height inflates it
+one row — **for all 29 valid floor counts, not an edge case**. Tower tiers were being inflated *after*
+`buriedH` recorded the deck below, leaving every stack's deck off by a row (found because a dump showed
+`buried=76` under a tier of `h=80`). The snap now skips `shapeKeep` pieces, which this early are exactly
+`tryTower`'s (composites are tagged later, in `keepComposite`). Deck now matches exactly on **702/716**
+tiers; the remaining 14 are tiers whose host was trimmed by a road carve so the tier overhangs its deck
+by a cell — the known carve interaction, not inflation.
+
+**Verification.** Residential byte-identical (same 10-seed hash method) after every one of these — the
+`edges` parameter and the glass gate are inside `if (p.downtown)` / `glassTypes`, so no rng moves.
+Downtown over 30 seeds: 0 starved tiers, 0 non-CELL glass heights, 100% / 99% walkway adjacency.
+**Residual: 4 clearance breaks over 30 seeds** (~1 city in 8 has one pair of towers 1–2 cells apart),
+all traceable to carve fragments. Left alone — enforcing it needs the trimming machinery the step-back
+approach was chosen to avoid.

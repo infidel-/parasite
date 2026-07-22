@@ -170,12 +170,15 @@ class Windows {
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
       // vertical grid matches the baked tiling exactly (repeat_v = round(b.h/CELL))
-      var rows = Std.int(imax(1, Math.round(b.h / CELL)));
-      var rowH = b.h / rows;
+      var rowsAll = Std.int(imax(1, Math.round(b.h / CELL)));
+      var rowH = b.h / rowsAll;
+      var rows = rowsAll - CityConfig.GLASS_CAP_ROWS; // top rows carry the parapet spandrel band
       // a setback tier's rows below its deck are enclosed by the tier beneath — nothing there is
       // ever visible, so skip them (~29% of all glass cells on a stepped tower). glass heights are
-      // CELL multiples, so the deck lands exactly on a row boundary
+      // CELL multiples, so the deck lands exactly on a row boundary. the bottom rows are the
+      // solid podium band, which no accent may show through either
       var row0 = Std.int(Math.round(b.buriedH / rowH));
+      if (row0 < CityConfig.GLASS_PODIUM_ROWS) row0 = CityConfig.GLASS_PODIUM_ROWS;
       var buckets:Array<Array<Matrix4>> = [for (i in 0...nVar + 1) []]; // per tint variant + lit
       var faces = [
         { n: b.w, rotY: 0.0,          dir: 0, place: function(u:Float) return { x: center.x + u, z: center.z + dWorld / 2 + eps } },

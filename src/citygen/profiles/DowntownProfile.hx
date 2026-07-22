@@ -12,16 +12,22 @@ class DowntownProfile {
     // larger blocks + more spacing between buildings
     minBlock: 12,
     maxBlock: 26,
-    setback: 2,
+    // 1, like residential: a wider setback puts a dead alley strip between the building and
+    // the walkway (a cell 2 out from a road is not road-adjacent, so it classifies as alley)
+    setback: 1,
     subdivDepth: 5,
-    // bigger acreage per building
+    // bigger acreage per building. maxBuilding/earlyLeafChance are what actually decide how
+    // many leaves come out square enough (min side >= 5 + 2*TOWER_CLEAR) to be glass towers:
+    // at 14/0.15 a city produced ~2 towers, at 16/0.7 it produces ~10
     splitOver: 20,
-    maxBuilding: 14,
-    // 3 empty cells between split siblings → wide back alleys / plaza gaps
-    blockGap: 3,
-    earlyLeafChance: 0.15,
-    // suppress the residential shape rolls; downtown uses tower massing instead
-    courtyardChance: 0.1,
+    maxBuilding: 16,
+    // 1 empty cell between split siblings, exactly like residential: mid-rises pack tight
+    // and only the glass towers step back (CityConfig.TOWER_CLEAR) for their 3-cell ring
+    blockGap: 1,
+    earlyLeafChance: 0.7,
+    // suppress the residential shape rolls; downtown uses tower massing instead. courtyard
+    // included: its branch runs before the tower branch and would bypass the tower inset
+    courtyardChance: 0.0,
     lChance: 0.0,
     tChance: 0.0,
     plusChance: 0.0,
@@ -41,7 +47,6 @@ class DowntownProfile {
     bigW: 14,
     bigD: 12,
     downtown: true,
-    keepAlleyFront: true,
     metalWarehouses: false,
     towerStepChance: 0.7,
     towerMinTiers: 2,

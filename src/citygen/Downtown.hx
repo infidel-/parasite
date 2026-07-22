@@ -14,8 +14,11 @@ class Downtown {
   // (GROUND_H == CELL) and every setback deck then land on a row boundary instead of
   // slicing a window in half. the raw GROUND_H + f*FLOOR_H + TOP_MARGIN quantization
   // shares no common grid with CELL and misaligned on ~95% of decks.
+  // GLASS_CAP_ROWS extra rows carry the spandrel band the parapet coping sits on, so the
+  // coping's overhang no longer eats the top window row (the podium comes out of the rows
+  // the raw formula already has)
   public static inline function glassHeight(f:Int):Float
-    return CELL * Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL);
+    return CELL * (Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL) + GLASS_CAP_ROWS);
 
   // try to emit a stepped setback tower into `out` from a leaf footprint: N concentric
   // ground-anchored pieces, each tier inset per side and TALLER than the one below, so
@@ -72,6 +75,13 @@ class Downtown {
           cy1 - cy0 < 2)
         break;
       var h = glassHeight(f);
+      // a tier has to clear the deck it stands on by a real amount, else its whole exposed
+      // shaft is parapet (glass: the cap row) or a sliver of wall with the window grid
+      // running down inside the tier below. seen at both extremes: tiers rising one CELL,
+      // and tiers landing at EXACTLY the height below (invisible, coplanar roofs)
+      var minH = prevH + (GLASS_CAP_ROWS + 1) * CELL;
+      if (h < minH) h = minH;
+      if (h > glassHeight(cap)) break; // grown past this facade's storey cap — stop stacking
       var b = new Building(cx0, cy0, cx1 - cx0 + 1, cy1 - cy0 + 1,
         h, roof, facade, [0, 1, 2, 3]);
       b.shapeKeep = true; // buried inner tiers must survive the landlocked/blank drops

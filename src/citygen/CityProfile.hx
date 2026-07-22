@@ -38,7 +38,6 @@ typedef CityProfile = {
   bigD:Int,
   // --- downtown switches (ignored on the default path) ---
   downtown:Bool,            // downtown massing/facades active
-  keepAlleyFront:Bool,      // keep a building that only fronts an alley (downtown back-alley blocks); else drop like a landlocked box
   metalWarehouses:Bool,     // facade 3 behaves as a squat metal warehouse (DEFAULT true; downtown false)
   towerStepChance:Float,    // chance a downtown leaf becomes a stepped setback tower
   towerMinTiers:Int,        // fewest tiers in a stepped tower
@@ -75,7 +74,6 @@ class Profiles {
     bigW: 8,
     bigD: 6,
     downtown: false,
-    keepAlleyFront: false,
     metalWarehouses: true,
     towerStepChance: 0,
     towerMinTiers: 0,

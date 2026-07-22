@@ -53,11 +53,15 @@ class CityGen {
   }
 
   // recursively split a block rect into building footprints. `full` = still the
-  // whole un-split block (so it shouldn't become an L with a back courtyard)
+  // whole un-split block (so it shouldn't become an L with a back courtyard).
+  // `edges` = which of this rect's four sides are still the BLOCK's outer edge (bit 1 -z,
+  // 2 +z, 4 -x, 8 +x); a split clears the bit on the side the cut created. Downtown-only:
+  // a tower steps back from its siblings but never from a block edge (that side faces the
+  // road setback / walkway). Unused on the default path, so no rng is touched
   static function subdivide(x0:Int, y0:Int, x1:Int, y1:Int, depth:Int, rng:Void->Float, p:CityProfile,
       out:Array<Building>, pOut:Array<PGroup>, lOut:Array<ShapeGroup>, tOut:Array<ShapeGroup>, plusOut:Array<ShapeGroup>,
       nearMaxStreet:(Int, Int, Int, Int, Bool) -> Bool, nearestStreetSide:(Int, Int, Int, Int) -> Int,
-      full:Bool = true):Void {
+      full:Bool = true, edges:Int = 15):Void {
     var w = x1 - x0 + 1;
     var d = y1 - y0 + 1;
 
@@ -71,9 +75,30 @@ class CityGen {
       // downtown: remap the one facade draw (no extra rng) so a big footprint reads as a
       // glass office tower (2 mostly-glass / 3 full-glass) and a small one as a concrete/
       // stone mid-rise (0/1) — the medium-city buildings interspersed among the towers
+      // a glass tower steps TOWER_CLEAR cells back from its SIBLINGS (the interior split
+      // lines), so with blockGap 1 it keeps a 3-cell ring of alley. it never steps back
+      // from a BLOCK EDGE — that side faces the road setback, and a tower has to sit right
+      // on the walkway like every other building. so the glass test runs on the footprint
+      // that survives the step-back, not on the raw leaf: an 8x8 leaf in a block corner
+      // still makes a tower (only 2 sides step in), an 8x8 one in the middle does not.
+      // downtown reaches only the tower/plain-box branches below (its courtyard/L/T/+
+      // rolls are all 0), so stepping back here covers every glass leaf
+      var gx0 = x0, gy0 = y0, gx1 = x1, gy1 = y1;
       if (p.downtown) {
-        var ms = w < d ? w : d;
-        facade = ms >= 5 ? (2 + (facade & 1)) : (facade & 1);
+        gx0 += (edges & 4) != 0 ? 0 : TOWER_CLEAR;
+        gx1 -= (edges & 8) != 0 ? 0 : TOWER_CLEAR;
+        gy0 += (edges & 1) != 0 ? 0 : TOWER_CLEAR;
+        gy1 -= (edges & 2) != 0 ? 0 : TOWER_CLEAR;
+        var gw = gx1 - gx0 + 1, gd = gy1 - gy0 + 1;
+        facade = (gw < gd ? gw : gd) >= 5 ? (2 + (facade & 1)) : (facade & 1);
+        // a mid-rise keeps no clearance ring — it fills its whole leaf, 1 cell from its neighbour
+        if (facade < 2)
+        {
+          gx0 = x0;
+          gy0 = y0;
+          gx1 = x1;
+          gy1 = y1;
+        }
       }
       // small/thin footprints stay low: cap total floors by the smaller side
       inline function mk(col:Int, row:Int, bw:Int, bd:Int, ?winForce:Array<Int>, ?winBlock:Array<Int>, winInset:Float = 0):Building {
@@ -222,9 +247,14 @@ class CityGen {
       }
       // downtown: tall stepped setback tower instead of a plain box; falls through to a
       // plain (still tall) office box when the roll fails or the footprint is too small
-      if (p.downtown && Downtown.tryTower(out, x0, y0, x1, y1, floors, roof, facade, rng, p))
+      // only a GLASS leaf stacks into a setback tower. a mid-rise staying a plain box is what
+      // keeps it under the residential rules: tryTower marks its pieces shapeKeep, which
+      // exempts them from the landlocked drop, and a stranded mid-rise stack ends up fronting
+      // nothing but alley (11% of them did)
+      if (p.downtown && p.glassTypes.indexOf(facade) >= 0
+          && Downtown.tryTower(out, gx0, gy0, gx1, gy1, floors, roof, facade, rng, p))
         return;
-      var b = mk(x0, y0, w, d);
+      var b = mk(gx0, gy0, gx1 - gx0 + 1, gy1 - gy0 + 1);
       // single-story shop: only when the STREET-facing side is 2 or 4 tiles, so a 2-cell-
       // wide 16:9 storefront tiles a whole number of times across it (no odd 3-tile face),
       // and the depth is shallow (<=2). street side chosen by nearestStreetSide.
@@ -245,17 +275,17 @@ class CityGen {
     if (!capW && !capD && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < p.earlyLeafChance))) { leaf(); return; }
     // force a split along any over-cap axis (wider one first); else normal big-block split
     // split leaves blockGap empty cells between siblings (residential 1 → cut+2, identical
-    // stream; downtown 3 → wider back alleys). the cut range shrinks by the extra gap so both
-    // children keep a >=3-cell footprint
+    // stream). the cut range shrinks by the extra gap so both children keep a >=3-cell
+    // footprint. each child loses the block-edge bit on the side the cut just created
     var gap = p.blockGap;
     if (capW || (!capD && w >= d && w >= 7)) {
       var cut = x0 + 3 + Std.int(rng() * (w - 6 - (gap - 1)));
-      subdivide(x0, y0, cut, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
-      subdivide(cut + 1 + gap, y0, x1, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
+      subdivide(x0, y0, cut, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~8);
+      subdivide(cut + 1 + gap, y0, x1, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~4);
     } else if (capD || d >= 7) {
       var cut = y0 + 3 + Std.int(rng() * (d - 6 - (gap - 1)));
-      subdivide(x0, y0, x1, cut, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
-      subdivide(x0, cut + 1 + gap, x1, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
+      subdivide(x0, y0, x1, cut, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~2);
+      subdivide(x0, cut + 1 + gap, x1, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~1);
     } else {
       leaf();
     }
@@ -629,12 +659,22 @@ class CityGen {
     buildings = shaped;
 
     // every glass curtain-wall building gets a CELL-multiple height so its cell-locked window
-    // grid has a pitch of exactly CELL (see Downtown.glassHeight). tryTower already emits its
-    // tiers snapped; this catches the plain boxes, courtyard strips and finishP-adjusted pieces
-    // that came through mk()/piece(). heights alone — footprints and tiles are unaffected
+    // grid has a pitch of exactly CELL (see Downtown.glassHeight). this catches the plain
+    // boxes and carved pieces that came through mk(); heights alone, footprints unaffected.
+    // tower tiers are EXCLUDED (shapeKeep is theirs alone this early — composites are tagged
+    // later, in keepComposite): glassHeight does not survive a round trip through its own
+    // output, because the reverse derivation can't see the GLASS_CAP_ROWS it added, so
+    // re-snapping an already-snapped tier inflates it a row past the deck buriedH recorded
     if (profile.downtown)
       for (b in buildings) if (profile.glassTypes.indexOf(b.facade) >= 0)
-        b.h = Downtown.glassHeight(Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H)));
+      {
+        if (!b.shapeKeep)
+          b.h = Downtown.glassHeight(Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H)));
+        // a road/courtyard carve can leave a tower as a sliver: a 2-cell-wide shaft at 20+
+        // storeys reads as a wall, not a building, and has lost the clearance ring the leaf
+        // inset gave it. drop it — the footprint reverts to alley like any other dropped box
+        if (b.w < 3 || b.d < 3) b.drop = true;
+      }
 
     // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
     var tiles:Array<Array<Tile>> = [for (r in 0...GRID) [for (c in 0...GRID) isRoad(c, r) ? Tile.Road : Tile.Walkway]];
@@ -657,16 +697,6 @@ class CityGen {
     function hasOuter(b:Building):Bool {
       for (c in b.col...b.col + b.w) if (isStreet(c, b.row - 1) || isStreet(c, b.row + b.d)) return true;
       for (r in b.row...b.row + b.d) if (isStreet(b.col - 1, r) || isStreet(b.col + b.w, r)) return true;
-      return false;
-    }
-    // downtown keeps interior buildings that only front an alley (wide back-alley blocks) —
-    // any non-building perimeter cell (alley/walkway/road/off-grid) counts as exposure; only a
-    // fully-buried box (every neighbour another building) still drops
-    inline function openCell(c:Int, r:Int):Bool
-      return c < 0 || r < 0 || c >= GRID || r >= GRID || tiles[r][c] != Tile.Building;
-    function notBuried(b:Building):Bool {
-      for (c in b.col...b.col + b.w) if (openCell(c, b.row - 1) || openCell(c, b.row + b.d)) return true;
-      for (r in b.row...b.row + b.d) if (openCell(b.col - 1, r) || openCell(b.col + b.w, r)) return true;
       return false;
     }
     function faceStreet(b:Building, dir:Int):Bool {
@@ -718,7 +748,7 @@ class CityGen {
     var kept:Array<Building> = [];
     for (b in buildings) {
       if (!b.drop
-          && (b.shapeKeep || hasOuter(b) || (profile.keepAlleyFront && notBuried(b)))) { kept.push(b); continue; }
+          && (b.shapeKeep || hasOuter(b))) { kept.push(b); continue; }
       fillRect(tiles, b.col, b.row, b.w, b.d, Tile.Alley);
     }
     buildings = kept;

@@ -18,6 +18,9 @@ class Buildings {
   // how far a flush wall overlay stands proud of its wall. Entrances tuned 0.06 → visible gap and
   // 0.01 → flush; this sits between: enough depth margin to survive a pass that drops polygonOffset
   static inline var OVERLAY_EPS = 0.02;
+  // glass-tower band standoff. depth order on a tower face: wall 0 < bands < doors (0.01,
+  // polygonOffset -2), so an entrance still reads on top of its podium
+  static inline var BAND_EPS = 0.004;
 
   static inline function imax(a:Float, b:Float):Float return a > b ? a : b;
 
@@ -57,6 +60,21 @@ class Buildings {
     var roofMetalTex = Textures.loadTexture(TEXTURES.roofMetal, 'wall'); // gable-roof slopes (metal warehouse)
     // downtown mechanical-penthouse bulkhead wall (flat-roof buildings only)
     var penthouseTex = st.penthouseWall != null ? Textures.loadTexture(st.penthouseWall, 'wall') : null;
+    // glass-tower opaque bands. UV repeat is baked into the merged quad verts, so ONE shared
+    // material per facade covers the whole city (same trick as the grime band)
+    function bandMats(paths:Array<String>, cls:String, label:String):Array<MeshStandardMaterial> {
+      if (paths == null) return null;
+      return [for (i in 0...paths.length) paths[i] == null ? null : tag(new MeshStandardMaterial({
+        map: Textures.loadTexture(paths[i], 'wall'),
+        roughness: 1,
+        metalness: 0,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+      }), '$cls-$i', label, paths[i])];
+    }
+    var podiumMat = bandMats(st.glassPodium, 'glass-podium', 'tower podium');
+    var capMat = bandMats(st.glassCap, 'glass-cap', 'tower parapet spandrel');
 
     // every building box baked into ONE position-only caster (built after the loop) — see the note
     // at the box below for why the boxes themselves stop casting
@@ -164,8 +182,8 @@ class Buildings {
         var ndTex   = open ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length];
         var bayW:Float = CELL * 2;
         // collect all bays, then merge into two draw calls per shop (door image + plain image)
-        var doorQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
-        var ndQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
+        var doorQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
+        var ndQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
         // OVERLAY_EPS, not flush: polygonOffset alone keeps a flush bay off the wall in the beauty
         // pass, but an overrideMaterial pass replaces the material and drops the offset, so bay and
         // wall z-fight — GTAO's prepass does this and the shopfront flickers. a real gap survives
@@ -178,7 +196,7 @@ class Buildings {
             var off = (i - (n - 1) / 2) * bayW; // bay centre offset along the face
             var fx = (f.dir < 2) ? f.fx + off : f.fx;
             var fz = (f.dir < 2) ? f.fz : f.fz + off;
-            var q = { fw: bayW, h: b.h, fx: fx, fz: fz, rotY: f.rotY, rx: 1.0 };
+            var q = { fw: bayW, h: b.h, fx: fx, fz: fz, rotY: f.rotY, rx: 1.0, ry: 1.0 };
             if (i == doorBay) doorQ.push(q);
             else ndQ.push(q);
           }
@@ -221,7 +239,8 @@ class Buildings {
       // the ground floor (street faces) so the storefront reads solo. non-metal, non-shop.
       // (per-face quad like shop-front/door overlays; if draws bite, merge into one
       // BufferGeometry per variant like Ground.build.)
-      if (!shop && !st.isSpecial(b.facade)) {
+      // (glass towers excluded: the podium band owns their base, and grime sits behind it)
+      if (!shop && !st.isSpecial(b.facade) && !cellLock) {
         var gv = ((b.col * 7 + b.row * 13) % grimeTex.length + grimeTex.length) % grimeTex.length;
         inline function hasStorefront(dir:Int):Bool
           return Geom.faceIsStreet(b, dir)
@@ -229,13 +248,36 @@ class Buildings {
             && !(b.winBlock != null && b.winBlock.indexOf(dir) >= 0);
         var bandH = Math.min(RenderConfig.GRIME_H, b.h - 0.5);
         // one merged grime mesh per building (was one draw call per worn face)
-        var gq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
+        var gq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
         for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
           if (hasStorefront(f.dir)) continue; // storefront owns the ground floor here — leave it solo
           var rx = imax(1, Math.round(f.faceW / RenderConfig.GRIME_TILE)); // horizontal repeats
-          gq.push({ fw: f.faceW, h: bandH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: rx });
+          gq.push({ fw: f.faceW, h: bandH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: rx, ry: 1 });
         }
         mergeBand(scene, gq, grimeMat[gv], b, true);
+      }
+
+      // glass towers: opaque bands over the baked curtain wall — a solid street-level plinth
+      // (bottom GLASS_PODIUM_ROWS rows) and the spandrel the parapet coping sits on (top
+      // GLASS_CAP_ROWS rows), which is why glassHeight budgets an extra row. both tile on the
+      // cell grid (podium tile = 2 cells × 2 rows, cap tile = 1 cell × 1 row), so no stretch
+      if (cellLock) {
+        var pm = podiumMat != null ? podiumMat[b.facade % podiumMat.length] : null;
+        var cm = capMat != null ? capMat[b.facade % capMat.length] : null;
+        var podH = CityConfig.GLASS_PODIUM_ROWS * CELL;
+        var capH = CityConfig.GLASS_CAP_ROWS * CELL;
+        var pq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
+        var cq:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
+        for (f in Geom.buildingFaces(center, wWorld, dWorld, BAND_EPS)) {
+          // a setback tier that rises out of the tier below has its base enclosed there —
+          // nothing of its podium is ever visible, so skip it
+          if (pm != null && b.buriedH <= 0)
+            pq.push({ fw: f.faceW, h: podH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / podH, ry: 1.0 });
+          if (cm != null)
+            cq.push({ fw: f.faceW, h: capH, fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / capH, ry: 1.0 });
+        }
+        mergeBand(scene, pq, pm, b, true);
+        mergeBand(scene, cq, cm, b, true, b.h - capH);
       }
 
       // roof: metal warehouses get a gable (no parapet); downtown gets a flat roof + mechanical
@@ -283,12 +325,13 @@ class Buildings {
     }
 
   // merge upright wall-band quads that all share ONE material into a single mesh (one draw
-  // call): each quad is fw×h, centred at world (fx, h/2, fz), rotated rotY about Y, with
-  // horizontal UV repeat rx. rotation+position baked into verts; a +z-rotated face normal is
-  // written when the material is lit (MeshStandard). userData.b keeps Occlusion fading it
+  // call): each quad is fw×h, sitting on baseY, centred at world (fx, baseY + h/2, fz),
+  // rotated rotY about Y, with UV repeat rx×ry. rotation+position baked into verts; a
+  // +z-rotated face normal is written when the material is lit (MeshStandard). userData.b
+  // keeps Occlusion fading it
   static function mergeBand(scene:Scene,
-      quads:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }>,
-      mat:Dynamic, b:Dynamic, lit:Bool):Void {
+      quads:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }>,
+      mat:Dynamic, b:Dynamic, lit:Bool, baseY:Float = 0):Void {
     if (quads.length == 0) return;
     var gpos:Array<Float> = [];
     var gnrm:Array<Float> = [];
@@ -304,7 +347,7 @@ class Buildings {
       for (i in 0...(pos.count:Int)) {
         var x:Float = pos.getX(i), y:Float = pos.getY(i), z:Float = pos.getZ(i);
         gpos.push(x * cosR + z * sinR + q.fx); // rotateY(rotY) then translate to the face
-        gpos.push(y + q.h / 2);
+        gpos.push(y + q.h / 2 + baseY);
         gpos.push(-x * sinR + z * cosR + q.fz);
         if (lit) {
           gnrm.push(sinR); // rotateY(rotY) of the plane's +z normal
@@ -312,7 +355,7 @@ class Buildings {
           gnrm.push(cosR);
         }
         guv.push(uv.getX(i) * q.rx);
-        guv.push(uv.getY(i));
+        guv.push(uv.getY(i) * q.ry);
       }
       for (k in 0...(idx.count:Int)) gidx.push(vbase + idx.getX(k));
     }
@@ -346,11 +389,11 @@ class Buildings {
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
       // one merged band mesh per building (was one draw call per street face)
-      var q:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float }> = [];
+      var q:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
       for (f in Geom.buildingFaces(center, wWorld, dWorld, 0)) {
         if ((b.winForce != null && b.winForce.indexOf(f.dir) >= 0) || (b.winBlock != null && b.winBlock.indexOf(f.dir) >= 0)) continue;
         if (!Geom.faceIsStreet(b, f.dir)) continue;
-        q.push({ fw: f.faceW, h: (GROUND_H : Float), fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / GROUND_H });
+        q.push({ fw: f.faceW, h: (GROUND_H : Float), fx: f.fx, fz: f.fz, rotY: f.rotY, rx: f.faceW / GROUND_H, ry: 1 });
         WorldCtx.bandSeen.set(b, true); // checklist: this building rendered a storefront band
       }
       mergeBand(scene, q, mats[b.facade % texes.length], b, true);

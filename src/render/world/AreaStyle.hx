@@ -39,6 +39,14 @@ class AreaStyle {
   public var glassLitRatio:Float = 0.05;        // fraction of glass cells that are lit/glowing
   public var glassLitIntensity:Float = 1.9;     // glow strength of lit glass panes — separate from the mid-rise window glow (litIntensity)
   public var glassLitColor:Array<Int> = null;   // per facade: glow tint of lit glass panes (multiplies the lit texture); null entry = white (texture colour only)
+  // --- glass-tower opaque bands (Buildings.addGlassBands), indexed by Building.facade ---
+  public var glassPodium:Array<String> = null;  // per facade: solid street-level plinth over the bottom CityConfig.GLASS_PODIUM_ROWS window rows; null (or null entry) = none
+  public var glassCap:Array<String> = null;     // per facade: spandrel over the top CityConfig.GLASS_CAP_ROWS rows, the band the parapet coping sits on; null (or null entry) = none
+  // --- entrances (Entrances.hx), indexed by Building.facade ---
+  public var doors:Array<String>;        // clean street-facing pedestrian door art
+  public var doorsWorn:Array<String>;    // service/maintenance door art for worn faces
+  public var doorCovers:Array<String>;   // material swatch for the lintel/canopy over a front door
+  public var coverShape:Array<Int>;      // which cover geometry a facade uses: 0 half-barrel, 1 flat metal slab, 2 inset sloped cap
   // --- bloom (post-process, per area) ---
   public var bloomThreshold:Float = RenderConfig.BLOOM_THRESHOLD; // luminance a pane must exceed before it visibly blooms — WHEN the glow starts. lower = glows sooner/easier. per-area (downtown can differ from residential); note bloom is one global pass, so this affects all glow in that area's scene
   public var specialSlot:Int;            // metal-warehouse facade slot (gable roof, roll-up door, no windows); -1 = none
@@ -75,6 +83,10 @@ class AreaStyle {
       s.litColor = RenderConfig.WINDOW_LIT_COLOR;
       s.litRatio = RenderConfig.LIT_RATIO;
       s.litIntensity = RenderConfig.WINDOW_LIT_INTENSITY;
+      s.doors = t.doors;
+      s.doorsWorn = t.doorsWorn;
+      s.doorCovers = t.doorCovers;
+      s.coverShape = [0, 1, 2]; // concrete half-barrel, brick flat slab, stone inset cap
       s.specialSlot = 3;         // metal warehouse
       s.roofDowntown = false;
       s.penthouseWall = null;
