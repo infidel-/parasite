@@ -34,11 +34,11 @@ class AreaStyle {
   public var winPerCell:Array<Int> = null;  // glass curtain slots: windows per CELL. locks the window grid to the cell grid (integer tiling → whole windows, identical pitch CELL/k on every tower); needs a seamless single-window texture. null/0 = normal tiling
   // --- glass-tower sparse accents (Windows.addGlassAccents), indexed by Building.facade ---
   public var glassAccents:Array<Array<String>> = null; // per facade: the tint-variant tiles scattered over that slot's baked glass grid; null (or null entry) = no accents
-  public var glassAccentLit:Array<String> = null;      // per facade: lit/glowing single-window tile (emissive + bloom)
+  public var glassAccentLit:Array<String> = null;      // per facade: lit/glowing single-window tile (emissive + bloom); null (or null entry) = no lit panes
   public var glassAccentRatio:Float = 0.15;     // fraction of glass cells that get a scattered tint accent
   public var glassLitRatio:Float = 0.05;        // fraction of glass cells that are lit/glowing
   public var glassLitIntensity:Float = 1.9;     // glow strength of lit glass panes — separate from the mid-rise window glow (litIntensity)
-  public var glassLitColor:Int = 0xffffff;      // glow tint of lit glass panes (the lit texture already carries a warm colour)
+  public var glassLitColor:Array<Int> = null;   // per facade: glow tint of lit glass panes (multiplies the lit texture); null entry = white (texture colour only)
   // --- bloom (post-process, per area) ---
   public var bloomThreshold:Float = RenderConfig.BLOOM_THRESHOLD; // luminance a pane must exceed before it visibly blooms — WHEN the glow starts. lower = glows sooner/easier. per-area (downtown can differ from residential); note bloom is one global pass, so this affects all glow in that area's scene
   public var specialSlot:Int;            // metal-warehouse facade slot (gable roof, roll-up door, no windows); -1 = none

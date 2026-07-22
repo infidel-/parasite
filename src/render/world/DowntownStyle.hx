@@ -21,8 +21,8 @@ class DowntownStyle {
       s.walls = [
         'textures/wall-1.png',
         'textures/wall-3.png',
-        'textures/downtown/facade-glass-1.png',
-        'textures/downtown/facade-glass-full.png',
+        'textures/downtown/glass-light.png',
+        'textures/downtown/glass-dark.png',
       ];
       // 0/1 keep their residential worn/alley backs; glass towers go to the dark spandrel service
       // back ("no back walls")
@@ -89,7 +89,8 @@ class DowntownStyle {
       s.glassAccentRatio = 0.15;   // ~15% of panes get a tint variant
       s.glassLitRatio = 0.06;      // ~6% lit/glowing
       s.glassLitIntensity = 2.2;   // skyscraper glow strength (tune here, separate from mid-rise window glow)
-      s.glassLitColor = 0xffe6c2;  // warm office glow (multiplies the already-warm lit texture)
+      // per glass tower type: facade 2 (light) → emerald-green Tokyo glow, facade 3 (dark) → warm office
+      s.glassLitColor = [0, 0, 0x9fe8c6, 0xffe6c2];
       s.bloomThreshold = 0.5;      // WHEN the skyscraper glow starts (luminance cutoff); lower = glows sooner. per downtown-area, separate from residential
       s.specialSlot = -1;      // no metal warehouses
       s.roofDowntown = true;

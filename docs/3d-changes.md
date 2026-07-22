@@ -742,3 +742,46 @@ unchanged (seeds 1/1337/99999 → 226/221/202).
   `!debug.on` (the objectives panel blocks it) — synthetic wheel events do nothing; don't fight it. Menu
   buttons are HTML but screenshot px ≠ CSS px (viewport ~1108 wide vs 1920 shot) — find buttons by
   `getBoundingClientRect`, not screenshot coords. Movement via `press_key` ArrowKeys works regardless.
+
+## Downtown setback towers: window-grid alignment + tier survival (2026-07-22) — SHIPPED
+
+Three defects reported from `BDump` dumps ("windows still partially in roof", "bldgs occupy same
+space"). Diagnosed headlessly via `parasiteHx['citygen.CityGen'].generate(seed, DowntownProfile.INSTANCE)`
+— no save load needed. Note `BDump` prints `facade` **by parity only** (`facade%2==1 ? 'brick' : 'plain'`),
+so a dumped glass tower reads as "plain"/"brick"; check the floor count against `floorCap` to recover the
+real slot.
+
+- **(a) The setback deck sliced a window row — two mismatched vertical grids.** Height quantizes as
+  `GROUND_H + f*FLOOR_H + TOP_MARGIN` (`4 + 3.6f + 1.2`); the cell-locked curtain wall tiles at
+  `rows = round(h/CELL)`, pitch `h/rows`, anchored at `y=0`. The two grids share no common factor, so a
+  tier's roofline landed mid-row of the tier above — **70 of 74 decks across 5 seeds cut a window**
+  (`h=88` standing on `h=73.6` → deck at 18.4 rows). Fixed with `Downtown.glassHeight`: glass-tower
+  heights snap to a whole number of `CELL`s, making the pitch exactly `CELL`, so the ground band
+  (`GROUND_H == CELL`) and every deck land on a row boundary. `tryTower` emits snapped; a pass after
+  `buildings = shaped` catches the plain boxes, courtyard strips and `finishP`-adjusted pieces. Heights
+  only — footprints and tiles are untouched.
+- **(b) `winFloorLo` was dead code.** Set by `tryTower`, read only at `Windows.add:68` — which bails on
+  `noWinSlots=[2,3]`. And `tryTower` needs `minSide>=5`, which the facade remap always sends to slot 2/3,
+  so **every tier is glass** (143/143 over 5 seeds) → the buried-floor suppression never ran once.
+  Replaced the field with `Building.buriedH:Float` (the deck's world height, not a floor index) and taught
+  `addGlassAccents` to start at `round(buriedH/rowH)`. Skips **~28% of all glass cell-faces** — they are
+  enclosed by the tier below and never visible. Extreme case: 22 of one tier's 23 rows.
+- **(c) Carves shredded tower stacks.** `carveCourtyard` and the L-turn road carve run `subtractRect` over
+  *every* building in a block, tiers included, and `subtractRect` minted fresh `Building`s carrying only
+  geometry — dropping `shapeKeep`, `winFloorLo`, `winForce`, `roofPenthouse`. Measured consequences:
+  pieces became drop-eligible, lower tiers regained a penthouse that punches into the shaft above, and one
+  rect cutting the whole stack along the same line left coplanar walls (4 pairs in seed 269197337).
+  `reshapeLarge` already exempted `winForce`/`winBlock` pieces; `carveCourtyard` did not. Fixes: (1) skip
+  the courtyard carve on any block holding a `shapeKeep` piece — the roll is still drawn so the stream is
+  untouched; (2) `subtractRect` propagates the massing hints, gated on `b.shapeKeep`, which only tower
+  tiers carry that early; (3) a pass after the road carves restores the ledge by pulling a tier in one cell
+  on any face it still shares with the tier it rises out of.
+
+**Verification.** Residential had to stay byte-identical: hashed `generate(seed)` output (footprint,
+height, facade, winForce/winBlock, shop, shapeKeep, penthouse) over 10 seeds, `git stash`ed the change,
+rebuilt, re-hashed — **all 10 hashes identical**. Downtown: 40 seeds / 1226 glass buildings / 467 setback
+tiers → **0** unsnapped heights, 0 sliced decks, 0 coplanar tier walls, 0 orphan tiers, 0 ghost penthouses.
+
+**Found but NOT fixed (pre-existing, downtown-only):** `subdivide` emits zero-area footprints under the
+downtown profile (`w=0` or `d=0`, ~4 per city, facade 0/1, never tiers — residential produces none).
+Most likely the wider `blockGap: 3` / `setback: 2`. Out of scope here; fixing it moves downtown layout.

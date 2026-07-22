@@ -269,8 +269,23 @@ class CityGen {
     var ix1 = Std.int(Math.min(bx1, cx1)), iy1 = Std.int(Math.min(by1, cy1));
     if (ix0 > ix1 || iy0 > iy1) return [b]; // no overlap
     var out = [];
-    inline function piece(col:Int, row:Int, w:Int, d:Int, dir:Int)
-      out.push(new Building(col, row, w, d, b.h, b.roof, b.facade, null, tag ? [dir] : null));
+    inline function piece(col:Int, row:Int, w:Int, d:Int, dir:Int) {
+      // a clipped setback tier is still a setback tier, so it carries its massing hints across:
+      // buried below its deck, no penthouse, exempt from the landlocked/blank drops, and (road
+      // carve only — a tagged cut fronts a courtyard) windows forced on the new street wall.
+      // only tower tiers are shapeKeep this early, so the residential stream is untouched
+      var keep = b.shapeKeep;
+      var np = new Building(col, row, w, d, b.h, b.roof, b.facade,
+        (keep && !tag) ? b.winForce : null, tag ? [dir] : null);
+      if (keep)
+      {
+        np.shapeKeep = true;
+        np.buriedH = b.buriedH;
+        np.roofPenthouse = b.roofPenthouse;
+        np.skipWindowFloor = b.skipWindowFloor;
+      }
+      out.push(np);
+    }
     if (ix0 > bx0) piece(bx0, by0, ix0 - bx0, b.d, 2);              // left strip  (court at +x)
     if (ix1 < bx1) piece(ix1 + 1, by0, bx1 - ix1, b.d, 3);         // right strip (court at -x)
     if (iy0 > by0) piece(ix0, by0, ix1 - ix0 + 1, iy0 - by0, 0);   // top strip   (court at +z)
@@ -512,7 +527,14 @@ class CityGen {
         var blockP:Array<PGroup> = [];
         var blockL:Array<ShapeGroup> = [], blockT:Array<ShapeGroup> = [], blockPlus:Array<ShapeGroup> = [];
         subdivide(x0, y0, x1, y1, profile.subdivDepth, rng, profile, block, blockP, blockL, blockT, blockPlus, nearMaxStreet, nearestStreetSide);
-        var carved = rng() < profile.courtyardBlockChance ? carveCourtyard(block, x0, y0, x1, y1, rng, courtyards) : null;
+        // a setback tower is a stack of concentric tiers: one courtyard rect cuts every tier
+        // along the SAME line, so the pieces end up with coplanar walls (z-fighting) and the
+        // stack stops reading as a wedding cake. skip the carve for such a block — same
+        // exemption reshapeLarge already makes for winForce/winBlock pieces. the roll is still
+        // drawn so the residential stream is untouched (nothing has shapeKeep here but towers)
+        var carveRoll = rng() < profile.courtyardBlockChance;
+        for (b in block) if (b.shapeKeep) { carveRoll = false; break; }
+        var carved = carveRoll ? carveCourtyard(block, x0, y0, x1, y1, rng, courtyards) : null;
         // a carved block re-subtracts its buildings, so leaf-shape pieces may change
         // identity — only trust their locators when the block wasn't carved
         if (carved != null) for (b in carved) buildings.push(b);
@@ -545,6 +567,38 @@ class CityGen {
       }
     }
 
+    // a road carve can trim a setback tier and the tier below it back to the SAME line, so
+    // their walls end up coplanar (z-fighting, and the stack stops reading as a wedding cake).
+    // pull the upper tier in one cell on every face it still shares with the tier it rises out
+    // of, restoring the ledge; a tier that collapses below 2 cells is dropped
+    for (b in buildings) {
+      if (b.buriedH <= 0) continue;
+      for (c in buildings) {
+        if (c == b ||
+            Math.abs(c.h - b.buriedH) > 0.01 ||
+            b.col > c.col + c.w - 1 ||
+            c.col > b.col + b.w - 1 ||
+            b.row > c.row + c.d - 1 ||
+            c.row > b.row + b.d - 1)
+          continue;
+        if (b.col == c.col)
+        {
+          b.col++;
+          b.w--;
+        }
+        if (b.col + b.w == c.col + c.w)
+          b.w--;
+        if (b.row == c.row)
+        {
+          b.row++;
+          b.d--;
+        }
+        if (b.row + b.d == c.row + c.d)
+          b.d--;
+      }
+      if (b.w < 2 || b.d < 2) b.drop = true;
+    }
+
     // no oversized blank boxes: any plain rectangle bigger than BIG_W x BIG_D becomes
     // an L or a П-courtyard (before tiling, so courtyard holes read as alley). The П
     // opening is steered toward a non-street side so its three walls face the street
@@ -573,6 +627,14 @@ class CityGen {
       if (res.ps != null) pgroups.push({ strips: res.pieces, ps: res.ps });
     }
     buildings = shaped;
+
+    // every glass curtain-wall building gets a CELL-multiple height so its cell-locked window
+    // grid has a pitch of exactly CELL (see Downtown.glassHeight). tryTower already emits its
+    // tiers snapped; this catches the plain boxes, courtyard strips and finishP-adjusted pieces
+    // that came through mk()/piece(). heights alone — footprints and tiles are unaffected
+    if (profile.downtown)
+      for (b in buildings) if (profile.glassTypes.indexOf(b.facade) >= 0)
+        b.h = Downtown.glassHeight(Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H)));
 
     // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
     var tiles:Array<Array<Tile>> = [for (r in 0...GRID) [for (c in 0...GRID) isRoad(c, r) ? Tile.Road : Tile.Walkway]];

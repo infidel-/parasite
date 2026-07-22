@@ -65,7 +65,7 @@ class Windows {
         function emit(cx:Float):Void {
           WorldCtx.winSeen.set(b, true); // checklist: this building rendered at least one window
           var p = f.place(cx - centerAlong);
-          for (j in b.winFloorLo...floors) {
+          for (j in 0...floors) {
             if (j == b.skipWindowFloor) continue;
             var y = GROUND_H + (j + 0.5) * FLOOR_H;
             pos.set(p.x, y, p.z);
@@ -153,7 +153,6 @@ class Windows {
       return setCache.get(f);
     }
     var geo = new PlaneGeometry(1, 1);
-    var litColor = new Color(st.glassLitColor); // glass-tower glow tint (separate knob)
     var q = new Quaternion();
     var pos = new Vector3();
     var eps = 0.07; // stand proud of the baked face (matches Windows.add standoff, avoids z-fight)
@@ -162,6 +161,8 @@ class Windows {
       var wpc = st.winPerCell[b.facade % st.winPerCell.length];
       if (wpc <= 0 || st.glassAccents[b.facade] == null) continue; // not a glass tower / no accent set
       var set = accentSet(b.facade);
+      var cc = st.glassLitColor != null ? st.glassLitColor[b.facade] : 0;
+      var litColor = new Color(cc != 0 ? cc : 0xffffff); // this tower type's glow tint (0/absent → white)
       var tints = set.tints;
       var litTex = set.lit;
       var nVar = tints.length;
@@ -171,6 +172,10 @@ class Windows {
       // vertical grid matches the baked tiling exactly (repeat_v = round(b.h/CELL))
       var rows = Std.int(imax(1, Math.round(b.h / CELL)));
       var rowH = b.h / rows;
+      // a setback tier's rows below its deck are enclosed by the tier beneath — nothing there is
+      // ever visible, so skip them (~29% of all glass cells on a stepped tower). glass heights are
+      // CELL multiples, so the deck lands exactly on a row boundary
+      var row0 = Std.int(Math.round(b.buriedH / rowH));
       var buckets:Array<Array<Matrix4>> = [for (i in 0...nVar + 1) []]; // per tint variant + lit
       var faces = [
         { n: b.w, rotY: 0.0,          dir: 0, place: function(u:Float) return { x: center.x + u, z: center.z + dWorld / 2 + eps } },
@@ -184,7 +189,7 @@ class Windows {
         q.setFromEuler(new Euler(0, f.rotY, 0));
         for (i in 0...f.n) {
           var p = f.place((i - (f.n - 1) / 2) * CELL); // this cell's centre along the face
-          for (j in 0...rows) {
+          for (j in row0...rows) {
             // deterministic hash of the cell → base / tint variant / lit
             var hv = (b.col * 92837111) ^ (b.row * 689287499) ^ (f.dir * 283923481) ^ (i * 374761393) ^ (j * 668265263);
             hv = hv ^ (hv >>> 15);

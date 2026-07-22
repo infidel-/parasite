@@ -8,9 +8,14 @@ import citygen.CityProfile;
 // delegates here only when profile.downtown, so none of this touches the default
 // generation stream.
 class Downtown {
-  // convert a floor count to a building height (same quantization as CityGen.leaf)
-  static inline function heightFor(f:Int):Float
-    return GROUND_H + f * FLOOR_H + TOP_MARGIN;
+  // convert a floor count to a glass-tower height, snapped to a whole number of CELLs.
+  // the curtain wall is cell-locked (Buildings.faceMat: repeat_v = round(h/CELL)), so a
+  // CELL-multiple height gives the window grid a pitch of exactly CELL — the ground band
+  // (GROUND_H == CELL) and every setback deck then land on a row boundary instead of
+  // slicing a window in half. the raw GROUND_H + f*FLOOR_H + TOP_MARGIN quantization
+  // shares no common grid with CELL and misaligned on ~95% of decks.
+  public static inline function glassHeight(f:Int):Float
+    return CELL * Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL);
 
   // try to emit a stepped setback tower into `out` from a leaf footprint: N concentric
   // ground-anchored pieces, each tier inset per side and TALLER than the one below, so
@@ -66,13 +71,14 @@ class Downtown {
       if (cx1 - cx0 < 2 ||
           cy1 - cy0 < 2)
         break;
-      var h = heightFor(f);
+      var h = glassHeight(f);
       var b = new Building(cx0, cy0, cx1 - cx0 + 1, cy1 - cy0 + 1,
         h, roof, facade, [0, 1, 2, 3]);
       b.shapeKeep = true; // buried inner tiers must survive the landlocked/blank drops
-      // an upper tier's lower floors are buried inside the tier below — start its windows just
-      // above that tier's roofline so they don't clip up through the setback deck
-      if (i > 0) b.winFloorLo = Std.int(Math.round((prevH - GROUND_H) / FLOOR_H));
+      // everything below the tier below's roofline is enclosed by that tier — record the deck
+      // height so the renderer skips windows/accents there (both heights are CELL multiples,
+      // so the deck sits exactly on a window-row boundary)
+      b.buriedH = prevH;
       pieces.push(b);
       out.push(b);
       prevH = h;

@@ -162,9 +162,9 @@ def main():
     # Untracked sources (ignore the json and any un-renamed gpt drops). Walk subdirs so
     # tracked paths like "decals/foo.png" match and stray files in subfolders are flagged.
     for root, _dirs, files in os.walk(SRC_DIR):
-        # skip the unused/ shelf: retired sources parked out of the pipeline, not deleted
-        if "unused" in _dirs:
-            _dirs.remove("unused")
+        # skip the unused/ and used/ shelves (any case): sources parked out of the pipeline, not deleted
+        for d in [d for d in _dirs if d.lower() in ("unused", "used")]:
+            _dirs.remove(d)
         for f in files:
             # sweep editor backup files (*~) instead of leaving them to clutter the source tree
             if f.endswith("~"):
