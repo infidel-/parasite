@@ -25,12 +25,13 @@ class DowntownProfile {
     // and only the glass towers step back (CityConfig.TOWER_CLEAR) for their 3-cell ring
     blockGap: 1,
     earlyLeafChance: 0.7,
-    // suppress the residential shape rolls; downtown uses tower massing instead. courtyard
-    // included: its branch runs before the tower branch and would bypass the tower inset
-    courtyardChance: 0.0,
-    lChance: 0.0,
-    tChance: 0.0,
-    plusChance: 0.0,
+    // the residential shape rolls, at residential rates. CityGen.leaf() gates them to the
+    // MID-RISE infill (facade 0/1): a shape is built on the raw leaf rect, so on a glass leaf
+    // it would throw away the tower step-back, and a tower's tiered massing is the point
+    courtyardChance: 0.3,
+    lChance: 0.35,
+    tChance: 0.6,
+    plusChance: 0.85,
     courtyardBlockChance: 0.15,
     // roads unchanged
     turnChance: 0.55,

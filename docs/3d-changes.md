@@ -944,3 +944,37 @@ short the podium swallows it (minimum 1 glass row above the plinth).
 `noWinSlots`: `Windows.add` skips them because the window grid is baked into the curtain-wall art, so
 `winSeen` is never set for a tower and `expectWindows` fires on every one. `noWinSlots` now joins
 shop/metal in `exemptArt`, which is the same idea — the art carries what the pass would have emitted.
+
+## SHIPPED — Downtown: no back walls on high-rises, shape rolls re-enabled (2026-07-23)
+
+**High-rises are windowed on all four faces — done in the RENDER layer, not citygen.** The obvious
+implementation is `winForce = [0,1,2,3]` in the generator, and it is wrong: `Geom.frontInfo` bails to
+"composite" the moment `winForce != null`, so **63% of downtown buildings would have silently lost
+their storefront band** (and their `Check` doorless guarantee) as a side effect of a texture decision.
+Built and measured that version before backing it out. It is now `AreaStyle.noBackWallsFloors` (6
+downtown, 0 = off), read by `Geom.noBackWalls` and OR'd into the `forceWin` term in `isWornFace` and
+`Windows.add`. Footprints, `frontInfo`, `Check` and the band all stay as they were. One trap in the
+wiring: `Windows.add`'s inset-grid branch (`forced && b.winInset > 0`) has to keep keying off the
+building's OWN `winForce`, or a tall courtyard strip's street faces get dragged onto the inner wall's
+centred inset grid.
+
+**The courtyard/L/T/+ rolls are back on downtown, at residential rates**, gated in `leaf()` to the
+mid-rise infill (facade 0/1). A shape is built on the RAW leaf rect, so on a glass leaf it would throw
+away the step-back that buys a tower its clearance ring — and the tiered massing is the point of that
+facade. The `&& shapes` term is appended AFTER the `rng()` draw in each roll, so the draw still happens
+either way. Result: downtown P/L/T/+ per city = 0.0 / 0.8 / 0.7 / 0.3 against residential's
+0.2 / 0.6 / 0.9 / 0.3 — parity. Towers untouched at ~10 stacks (50.6 glass pieces, 40.9 upper tiers).
+
+**Composite pieces are now exempt from the MAX_ASPECT and thin-footprint rules**, which the previous
+entry's post-pass would otherwise have wrecked: a courtyard arm is deliberately 2 cells thick and a
+T/+ stem is deliberately tall (`piece()` bypasses `mk`'s cap on purpose). They are not `shapeKeep` yet
+at that point in the pipeline — `keepComposite` tags them later — so the pass builds an `ObjectMap`
+from the group arrays and skips by identity. Object identity is sound here precisely because a carve
+replaces a piece with a NEW `Building`, which `keepComposite` then drops the whole group for.
+
+**Carve fragments kept their parent's height.** Reported: a 2×15 footprint 12 storeys tall. `mk` caps a
+thin leaf's storeys by its short side, but an L-turn road carve slices a 6×6/12-storey box down to
+2 cells wide and copies `b.h` across untouched. Same post-pass re-applies the cap to the final
+footprint (tiers and composites exempt). Over 30 seeds: **0 non-composite buildings over the ratio or
+over the thin-footprint storey cap**, worst ratio exactly 3.00. Residential is untouched throughout —
+every gate is `p.downtown`, and it still measures 213.4 bldgs/city with identical shape counts.

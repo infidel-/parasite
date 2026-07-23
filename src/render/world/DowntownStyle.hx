@@ -64,6 +64,7 @@ class DowntownStyle {
       s.litIntensity = 1.9;
       s.noWinSlots = [2, 3];   // glass towers: windows are in the curtain-wall art, no overlay quads
       s.winPerCell = [0, 0, 1, 1]; // glass towers (2/3): one window per cell, cell-locked → whole windows, constant scale
+      s.noBackWallsFloors = 6;     // a downtown high-rise is windowed on all four sides — office towers don't have alley backs
       // sparse scattered accents over the uniform baked glass grid (4 tint variants + 1 lit pane),
       // split into two distinct families so the two glass tower types read differently:
       // facade 2 (glass-1, silver base) → LIGHT family, facade 3 (glass-full, blue base) → DARK family

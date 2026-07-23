@@ -100,6 +100,11 @@ class CityGen {
           gy1 = y1;
         }
       }
+      // the courtyard/L/T/+ rolls are for the mid-rise infill only. a glass leaf has to reach
+      // the tower branch at the bottom: a shape is built on the RAW leaf rect, so it would
+      // throw away the step-back that gives a tower its clearance ring, and tryTower's tiered
+      // massing is the whole point of the facade
+      var shapes = !p.downtown || facade < 2;
       // small/thin footprints stay low: cap total floors by the smaller side
       inline function mk(col:Int, row:Int, bw:Int, bd:Int, ?winForce:Array<Int>, ?winBlock:Array<Int>, winInset:Float = 0):Building {
         var m = bw < bd ? bw : bd;
@@ -113,7 +118,7 @@ class CityGen {
       }
       var t = COURTYARD_WALL;
       // courtyard: a U of 3 wall-strips (one side left open); inner faces get windows
-      if (w >= 2 * t + 3 && d >= 2 * t + 3 && rng() < p.courtyardChance) {
+      if (w >= 2 * t + 3 && d >= 2 * t + 3 && rng() < p.courtyardChance && shapes) {
         var strips = [
           mk(x0, y0, w, t, [0], null, t * CELL),            // top    (inner +z)
           mk(x0, y1 - t + 1, w, t, [1], null, t * CELL),    // bottom (inner -z)
@@ -130,7 +135,7 @@ class CityGen {
         return;
       }
       // L-shape with a back-courtyard notch (non-full-block leaves only)
-      if (!full && w >= 7 && d >= 7 && rng() < p.lChance) {
+      if (!full && w >= 7 && d >= 7 && rng() < p.lChance && shapes) {
         var right = rng() < 0.5;
         var bottom = rng() < 0.5;
         var nw = 3 + Std.int(rng() * (w - 5));
@@ -157,7 +162,7 @@ class CityGen {
       }
       // T-shape: a full-width crossbar + a centred stem (the "middle line"), shorter
       // than the crossbar's side arms. Stem hangs below by default; CHANCE it sits above
-      if (w >= 7 && d >= 7 && rng() < p.tChance) {
+      if (w >= 7 && d >= 7 && rng() < p.tChance && shapes) {
         var cb = 3, sw = 3;
         rng(); // ponytail: keep seeded stream stable after deterministic T orientation
         var grp:Array<Building>;
@@ -199,7 +204,7 @@ class CityGen {
         return;
       }
       // plus: crossing bars with an optionally taller centre ("middle point going up")
-      if (w >= 7 && d >= 7 && rng() < p.plusChance) {
+      if (w >= 7 && d >= 7 && rng() < p.plusChance && shapes) {
         var qx0 = x0, qy0 = y0, qx1 = x1, qy1 = y1;
         var side = w < d ? w : d;
         var arm = Std.int((side - 3) / 2);
@@ -670,13 +675,45 @@ class CityGen {
     // later, in keepComposite): a tier is already snapped AND its deck was recorded in the tier
     // above's buriedH, so re-deriving a floor count from its height and re-snapping can only
     // move it off that deck
-    // the same pass enforces the MAX_ASPECT rule on the FINAL footprints. it cannot live at the
-    // split: a perfectly square leaf still becomes a razor blade later, either by stepping back
-    // (a 9x16 leaf insets to a 5x16 tower) or by being carved (an L-turn road leaves a 2x14 strip)
+    // the same pass enforces the MAX_ASPECT rule and the thin-footprint storey cap on the FINAL
+    // footprints. neither can live where mk() applies them: a leaf that was square and squat when
+    // built still turns into a tall razor blade later, by stepping back (a 9x16 leaf insets to a
+    // 5x16 tower) or by being carved (an L-turn road leaves a 2x14 strip off a 12-storey box)
     if (profile.downtown)
+    {
+      // a courtyard/L/T/+ piece is EXEMPT from both: its arms are deliberately thin and, for a
+      // T/+ stem, deliberately tall (piece() bypasses mk's cap so a centre can rise). they are
+      // not shapeKeep yet — keepComposite tags them below — so identity is the only handle
+      var composite = new haxe.ds.ObjectMap<Building, Bool>();
+      for (g in pgroups) for (s in g.strips) composite.set(s, true);
+      for (gs in [lgroups, tgroups, plusgroups]) for (g in gs) for (s in g.pieces) composite.set(s, true);
       for (b in buildings)
       {
         if (b.drop) continue;
+        if (!composite.exists(b))
+        {
+          var mn = b.w < b.d ? b.w : b.d;
+          if ((b.w > b.d ? b.w : b.d) > mn * MAX_ASPECT)
+          {
+            // a setback tier has to stay concentric with the stack it belongs to, so trimming it
+            // would slide it off its deck — a tier this thin can only be dropped
+            if (b.shapeKeep)
+            {
+              b.drop = true;
+              continue;
+            }
+            if (b.w > b.d) b.w = mn * MAX_ASPECT;
+            else b.d = mn * MAX_ASPECT;
+            mn = b.w < b.d ? b.w : b.d;
+          }
+          // mk caps a thin leaf's storeys by its short side; a tier is exempt (it is thin by
+          // design and its height carries the whole stack)
+          if (mn <= 3 && !b.shapeKeep)
+          {
+            var f = Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H));
+            if (f > mn) b.h = GROUND_H + mn * FLOOR_H + TOP_MARGIN;
+          }
+        }
         if (profile.glassTypes.indexOf(b.facade) >= 0)
         {
           if (!b.shapeKeep)
@@ -690,14 +727,8 @@ class CityGen {
             continue;
           }
         }
-        var mn = b.w < b.d ? b.w : b.d;
-        if ((b.w > b.d ? b.w : b.d) <= mn * MAX_ASPECT) continue;
-        // a setback tier has to stay concentric with the stack it belongs to, so trimming it
-        // would slide it off its deck — a tier this thin can only be dropped
-        if (b.shapeKeep) b.drop = true;
-        else if (b.w > b.d) b.w = mn * MAX_ASPECT;
-        else b.d = mn * MAX_ASPECT;
       }
+    }
 
     // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
     var tiles:Array<Array<Tile>> = [for (r in 0...GRID) [for (c in 0...GRID) isRoad(c, r) ? Tile.Road : Tile.Walkway]];

@@ -57,7 +57,8 @@ class Windows {
 
       var floors = Std.int(imax(1, Math.round((b.h - GROUND_H) / FLOOR_H)));
       for (f in faces) {
-        var forced = b.winForce != null && b.winForce.indexOf(f.dir) >= 0;
+        var wf = b.winForce != null && b.winForce.indexOf(f.dir) >= 0;
+        var forced = wf || Geom.noBackWalls(b);
         var blocked = b.winBlock != null && b.winBlock.indexOf(f.dir) >= 0;
         var centerAlong = f.dir < 2 ? center.x : center.z;
         q.setFromEuler(new Euler(0, f.rotY, 0));
@@ -74,8 +75,10 @@ class Windows {
             buckets[isLit].push(m);
           }
         }
-        // forced courtyard wall: own centred grid, inset from the face edges
-        if (forced && b.winInset > 0) {
+        // forced courtyard wall: own centred grid, inset from the face edges. keyed off the
+        // building's OWN winForce, not the style's no-back-walls rule — that one must not pull
+        // a tall courtyard strip's street faces onto the inner wall's inset grid
+        if (wf && b.winInset > 0) {
           var half = f.faceW / 2 - b.winInset;
           for (cx in Geom.centeredCols(centerAlong - half, centerAlong + half)) emit(cx);
           continue;

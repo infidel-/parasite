@@ -32,6 +32,7 @@ class AreaStyle {
   // --- facade behavior ---
   public var noWinSlots:Array<Int> = null;  // facade slots that skip the window overlay (glass curtain walls carry windows in the facade art); null = none
   public var winPerCell:Array<Int> = null;  // glass curtain slots: windows per CELL. locks the window grid to the cell grid (integer tiling → whole windows, identical pitch CELL/k on every tower); needs a seamless single-window texture. null/0 = normal tiling
+  public var noBackWallsFloors:Int = 0;     // from this storey count up, a building has NO back: every face is clean + windowed, whatever it abuts (a blank worn wall a dozen storeys tall reads as a mistake). 0 = off, backs everywhere
   // --- glass-tower sparse accents (Windows.addGlassAccents), indexed by Building.facade ---
   public var glassAccents:Array<Array<String>> = null; // per facade: the tint-variant tiles scattered over that slot's baked glass grid; null (or null entry) = no accents
   public var glassAccentLit:Array<String> = null;      // per facade: lit/glowing single-window tile (emissive + bloom); null (or null entry) = no lit panes

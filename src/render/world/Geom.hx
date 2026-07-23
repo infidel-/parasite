@@ -138,12 +138,21 @@ class Geom {
     return [for (k in 0...n) mid + (k - (n - 1) / 2) * pitch];
   }
 
+// is this building tall enough that the style gives it no back wall at all? (see
+// AreaStyle.noBackWallsFloors — a downtown high-rise is windowed on every side). kept out of
+// citygen on purpose: winForce would also flip frontInfo to "composite" and cost the building
+// its storefront band, and this is a look, not a footprint rule
+  public static inline function noBackWalls(b:Building):Bool {
+    var n = WorldCtx.style.noBackWallsFloors;
+    return n > 0 && b.h >= CityConfig.GROUND_H + n * CityConfig.FLOOR_H + CityConfig.TOP_MARGIN;
+  }
+
   // wall texture: clean wherever the face shows windows, worn otherwise. mirrors
   // the window rule in Windows.add — forced courtyard faces, street frontages (not
   // blocked), and inner walls opening onto a notch/alley are clean; everything
   // else (blocked frontages, cramped/buried back walls) is worn
   public static function isWornFace(b:Building, dir:Int):Bool {
-    var forceWin = b.winForce != null && b.winForce.indexOf(dir) >= 0;
+    var forceWin = noBackWalls(b) || (b.winForce != null && b.winForce.indexOf(dir) >= 0);
     var blockWin = b.winBlock != null && b.winBlock.indexOf(dir) >= 0;
     var hasWin = forceWin || (faceIsStreet(b, dir) && !blockWin) || openWinRuns(b, dir, blockWin).length > 0;
     return !hasWin;
