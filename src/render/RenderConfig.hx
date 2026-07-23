@@ -266,6 +266,25 @@ class RenderConfig {
     puddleScale: 0.8,     // landing-puddle quad scale (of a billboard)
     puddleLifeMult: 24.0, // puddle fade-out duration (BASE_MS multiples)
   };
+  // mouse-hover move path preview in the 3D street view (render.PathLine): a thin, greenish, wavy
+  // bloom-glowing ribbon from the player to the hovered tile, ending in a slightly larger target dot.
+  // waviness is driven by host control (low control = wavy, full control / free parasite = straight).
+  // render-only, rebuilt from the pathfinder's cell list whenever the hover target changes
+  public static final PATH = {
+    color: 0x7ddc46,      // sickly alien-slime green (matches BLOOD.slimeGlow) at FULL control, HDR-multiplied by glow so bloom picks it up
+    lostColor: 0xd0452a,  // discolored toward this toxic rust-red as host control is lost (0 control = full shift)
+    glow: 3.2,            // HDR color multiplier (must clear the bloom threshold; lower = softer glow)
+    alpha: 0.85,          // overall ribbon/dot opacity
+    widthCells: 0.010,    // ribbon half-width (cells); thinner than the tactical grid marks (0.015)
+    dotScaleCells: 0.053, // target-dot disc radius (cells) at the path end
+    dotPulse: 0.18,       // target-dot pulse depth (fraction of its size; 0 = no pulse)
+    dotPulseMult: 32.0,    // dot pulse speed as a BASE_MS multiplier (one throb per this many base-turns)
+    samplesPerCell: 16,   // Catmull-Rom resample density per cell segment (curve smoothness; higher = smoother wavy line at low control)
+    waveAmpCells: 0.30,   // max lateral wander of the centerline (cells) at ZERO host control (fully wavy)
+    waveLenCells: 1.4,    // wavelength of the sine wobble (cells); smaller = tighter waves
+    waveSpeedMult: 0.2,   // wobble scroll speed as a BASE_MS multiplier (phase advance per turn)
+    yOff: 0.06,           // height above the floor (like the tactical grid / ring)
+  };
   // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the
   // lit 3D rig (full ambient+hemisphere+moon on an up-facing quad) it reads too bright. multiply the
   // 3D texture crop down so decals sit in the road instead of glowing on top. 2D is unaffected

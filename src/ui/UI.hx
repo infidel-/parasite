@@ -73,6 +73,13 @@ class UI
       }
 #if electron
       Browser.window.onerror = onError;
+      // window.onerror only catches SYNC throws; a rejected promise fires a separate
+      // unhandledrejection event (e.g. a throw inside a .then, which Chromium otherwise
+      // prints as a bare stackless "Uncaught (in promise)"). route it through the same log
+      Browser.window.addEventListener('unhandledrejection', function(e:Dynamic)
+        {
+          onError('Unhandled promise rejection: ' + e.reason, '', 0, 0, e.reason);
+        });
 #end
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO ];
@@ -109,8 +116,10 @@ class UI
   public function onError(msg: Dynamic, url: String, line: Int, col: Int, err: Dynamic): Bool
     {
       var date = DateTools.format(Date.now(), "%d %b %Y %H:%M:%S");
+      // err may be a non-Error rejection value (no .stack) — fall back to its string form
+      var stack = (err != null && err.stack != null) ? err.stack : Std.string(err);
       var l = date + ' v' + Version.getVersion() + ' ' + msg + ', ' +
-        err.stack + ', line ' + line + ', col ' + col + '\n';
+        stack + ', line ' + line + ', col ' + col + '\n';
       trace(l);
       game.log('An exception has occured and was logged. Please send the log-YYYY-MM-DD.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
       try {

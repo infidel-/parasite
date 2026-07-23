@@ -57,6 +57,7 @@ class StreetView {
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
   var tacticalGrid:TacticalGrid;
+  var pathLine:PathLine;                                  // mouse-hover move-path preview (wavy glowing ribbon + target dot)
   var tactical = false;
 
   var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
@@ -131,10 +132,23 @@ class StreetView {
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
     // track the cursor over #streetview in raw client px for the AI-hover tooltip (the shared 2D
-    // game.scene.mouseX/Y is device-px and stale here — #streetview sits over #canvas)
+    // game.scene.mouseX/Y is device-px and stale here — #streetview sits over #canvas). also feed
+    // game.scene.mouseX/Y (device px, like UI.hx does for #canvas) + drive the mouse cursor/path so
+    // the 3D view gets the old 2D hover behaviour (#streetview covers #canvas, so #canvas never sees it)
     canvas.addEventListener('mousemove', function(e:js.html.MouseEvent) {
       svMouseX = e.clientX;
       svMouseY = e.clientY;
+      game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
+      game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
+      if (running && !debug.on && game.playerArea != null)
+        game.scene.mouse.update();
+    });
+    // click moves the player to / attacks the hovered tile (old 2D rules, via ui.Mouse.onClick).
+    // LMB only; RMB owns camera orbit (handled below) and is left to onClick's own button gating
+    canvas.addEventListener('click', function(e:js.html.MouseEvent) {
+      if (!running || debug.on || exiting)
+        return;
+      game.scene.mouse.onClick(e);
     });
     // hold RMB (button 2) and drag to orbit the follow camera around the player (yaw + pitch);
     // release eases it back to the resting view. suppress the context menu so RMB is free
@@ -149,7 +163,10 @@ class StreetView {
     Browser.window.addEventListener('mouseup', function(e:js.html.MouseEvent) {
       if (e.button != 2 || rig == null) return;
       rig.orbitEnd();
-      canvas.style.cursor = ''; // restore the cursor on release
+      // restore the game move/attack cursor on release (force re-apply), not the OS arrow
+      if (running && !debug.on && game.playerArea != null)
+        game.scene.mouse.update(true);
+      else canvas.style.cursor = '';
     });
     Browser.window.addEventListener('mousemove', function(e:js.html.MouseEvent) {
       if (running && rig != null) rig.orbitDrag(e.movementX, e.movementY);
@@ -402,6 +419,7 @@ class StreetView {
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings, city.tiles);
     tacticalGrid = new TacticalGrid(scene, game.area);
+    pathLine = new PathLine(game, scene);
 
     // player marker ring + the group holding all actor billboards
     ring = new Mesh(
@@ -560,6 +578,7 @@ class StreetView {
     choreo = null;
     occlusion = null;
     tacticalGrid = null;
+    pathLine = null;
     tactical = false;
     if (canvas != null) canvas.style.display = 'none';
   }
@@ -708,6 +727,70 @@ class StreetView {
     tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
   }
 
+// pick the city cell under a client-px cursor: unproject the cursor to a world ray, intersect the
+// ground plane at the player's floor height, take that cell, then refine once at that cell's own
+// floor height (curb cells sit a step up). returns {x:-1,y:-1} for the horizon / off-grid, which
+// ui.Mouse treats as out-of-bounds. no Raycaster — the ground is a plane, not geometry
+  public function pickCell(clientX:Float, clientY:Float):{ x:Int, y:Int }
+    {
+      var miss = { x: -1, y: -1 };
+      if (camera == null)
+        return miss;
+      var rect:Dynamic = canvas.getBoundingClientRect();
+      var ndcX = (clientX - rect.left) / rect.width * 2 - 1;
+      var ndcY = -((clientY - rect.top) / rect.height * 2 - 1);
+      // unproject a near-plane point to world, then the ray dir is (world - camera pos)
+      var world = new Vector3(ndcX, ndcY, 0.5).unproject(camera);
+      var ox = camera.position.x, oy = camera.position.y, oz = camera.position.z;
+      var dx = world.x - ox, dy = world.y - oy, dz = world.z - oz;
+      if (dy >= 0) // pointing at or above the horizon: no ground hit
+        return miss;
+      // intersect the plane y = planeY, twice: first at the player's floor, then at the hit cell's own
+      // floor so a curb-height tile picks correctly
+      var planeY = rig.playerWorld().y;
+      var cell = miss;
+      for (pass in 0...2)
+        {
+          var t = (planeY - oy) / dy;
+          var hx = ox + dx * t;
+          var hz = oz + dz * t;
+          var c = CityConfig.worldToCell(hx, hz);
+          if (c.col < 0 ||
+              c.row < 0 ||
+              c.col >= CityConfig.GRID ||
+              c.row >= CityConfig.GRID)
+            return miss;
+          cell = { x: c.col, y: c.row };
+          var fy = render.world.WorldCtx.floorY(c.col, c.row);
+          if (fy == planeY)
+            break;
+          planeY = fy; // refine at the cell's true height
+        }
+      return cell;
+    }
+
+// set the CSS cursor on the street-view canvas (ui.Mouse routes cursor art here in the 3D view)
+  public function setCursorCSS(css:String):Void
+    {
+      if (canvas != null)
+        canvas.style.cursor = css;
+    }
+
+// show the move-path preview (wavy glowing ribbon + target dot) for a pathfinder cell list; no-op
+// when the view isn't running (ui.Mouse funnels every hover path through AreaView.updatePath)
+  public function setPathPreview(path:Array<aPath.Node>):Void
+    {
+      if (running && pathLine != null)
+        pathLine.set(path);
+    }
+
+// hide the move-path preview
+  public function clearPathPreview():Void
+    {
+      if (pathLine != null)
+        pathLine.clear();
+    }
+
 // apply MSAA sample count to the running composer's render targets. n=0 disables.
 // samples survive resize (composer.setSize clones renderTarget1, which copies samples);
 // dispose() forces a realloc so a live change takes effect on the next composer.render()
@@ -823,6 +906,16 @@ class StreetView {
     actors.update(dtMs);
     shockwave.update();
     updateHoverTooltip();
+    // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a
+    // still cursor, so the picked tile changes with no mousemove. ui.Mouse's own stale-check keeps
+    // this to one plane-pick when nothing moved. then scroll/rebuild the path-preview wobble.
+    // gated on a live player so a load/exit transition (running still true, area despawned) can't
+    // fault the render loop
+    if (!debug.on &&
+        game.playerArea != null)
+      game.scene.mouse.update();
+    if (pathLine != null)
+      pathLine.update(dtMs);
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
     // turn/street-actor profilers — catch it here. frame = true rAF frame delta (dtMs), vsync-capped

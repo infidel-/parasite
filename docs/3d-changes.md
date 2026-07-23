@@ -978,3 +978,32 @@ thin leaf's storeys by its short side, but an L-turn road carve slices a 6×6/12
 footprint (tiers and composites exempt). Over 30 seeds: **0 non-composite buildings over the ratio or
 over the thin-footprint storey cap**, worst ratio exactly 3.00. Residential is untouched throughout —
 every gate is `p.downtown`, and it still measures 213.4 bldgs/city with identical shape counts.
+
+## Mouse move-path preview + click-to-move (2D mouse support in 3D)
+
+**Landed.** The old 2D area-mouse behaviour (`ui.Mouse`) now drives the 3D street view too: hover
+re-paths, LMB moves/attacks the hovered tile, and the cursor art swaps move/blocked/melee/ranged/info
+by the tile under it. `#streetview` (zIndex 1) covers `#canvas`, so `#canvas`'s own listeners never fire
+in a city — the move/click listeners were added on the street canvas in `StreetView` and forwarded to
+`game.scene.mouse`. `ui.Mouse` got a `street()` branch on three view-specific bits only: the tile pick
+(`StreetView.pickCell` — unproject the cursor, intersect the ground plane at the player's floor, refine
+once at the hit cell's own curb height; no `Raycaster`, the ground is a plane), the cursor's target
+element (`#streetview` vs `#canvas`), and LOS (`game.scene.area.isVisible` reads the 2D tile cache,
+which isn't maintained in 3D → fall back to `playerArea.sees`, same source `Actors.pickAI` uses). Every
+attack/move/reach/targeting/forma rule is reused unchanged. `ui.Mouse` is ticked every frame from the
+render loop because the camera + player move under a still cursor; its own stale-check (picked cell +
+player cell) keeps that to one plane-pick when nothing moved.
+
+**The preview ribbon** (`render.PathLine`) is one triangle-strip ground ribbon + a `RingGeometry` target
+dot, both on a single HDR `MeshBasicMaterial` (`toneMapped:false`, green ×5 glow so bloom picks it up,
+`depthTest:false` so it drapes over curbs and stays readable around corners — same choice as the slime
+trail). The centreline is the pathfinder's cell list resampled at 6 samples/cell, offset by a scrolling
+sine tapered to 0 at both ends (stays glued to the player + dot). **Waviness is host-control-driven**:
+`amp ∝ (100 - hostControl)/100`, so full control (or a free parasite, treated as 100) draws dead
+straight and losing control grows the wobble. Fed through the existing single funnel
+`AreaView.updatePath`/`clearPath` (which every `Mouse` path call already routes through), so targeting
+and forma modes clear it for free. **Cost: 2 draw calls** (ribbon + dot) only while a walkable tile is
+hovered, both frustum-culling-exempt small meshes; geometry rebuilt per frame while visible (same
+pattern + budget as `SlimeTrail`, which is also a per-frame strip rebuild). No new `submit` measurement
+taken yet — it only draws during hover and is 2 unlit quads, well under the ~435-call follow-view
+baseline; measure `calls=` before/after a hover in the follow view if it ever looks suspect.

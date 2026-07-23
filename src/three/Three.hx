@@ -45,6 +45,7 @@ package three;
   public function applyQuaternion(q:Quaternion):Vector3;
   public function applyMatrix4(m:Matrix4):Vector3;
   public function project(cam:Object3D):Vector3;
+  public function unproject(cam:Object3D):Vector3; // NDC -> world (inverse of project); used for cursor->ground picking
   public function lerp(v:Vector3, a:Float):Vector3;
   public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
 }
@@ -88,6 +89,8 @@ package three;
 @:native("THREE.Color") extern class Color {
   public function new(?hex:Int);
   public function multiplyScalar(s:Float):Color;
+  public function copy(c:Color):Color;                   // copy another color's channels in place
+  public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
 }
 
 @:native("THREE.Object3D") extern class Object3D {
@@ -259,6 +262,7 @@ typedef RendererInfo = {
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
   public function new(params:Dynamic);
+  public var color:Color; // base color (mutate in place, e.g. lerpColors, for live tinting)
 }
 @:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);

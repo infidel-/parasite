@@ -4,6 +4,7 @@ package ui;
 
 import game.Game;
 import ai.AI;
+import js.Browser;
 import js.html.MouseEvent;
 import mods.AssetPath;
 import objects.AreaObject;
@@ -18,6 +19,9 @@ class Mouse
   var oldy: Float;
   public var forceNextUpdate: Int; // kludge for update
   var oldPos: { x: Int, y: Int };
+  var oldPlayerX: Int; // last player cell the cursor/path was resolved against (3D view: camera + player
+  var oldPlayerY: Int; // move under a still cursor, so a stale-check on mouse px alone would freeze it)
+  var playerMoved: Bool; // did the player cell change since the last update? (3D view: re-path so it shortens)
 
   public function new(g: Game)
     {
@@ -26,8 +30,27 @@ class Mouse
       oldx = 0;
       oldy = 0;
       oldPos = { x: -1, y: -1 };
+      oldPlayerX = -1;
+      oldPlayerY = -1;
       sceneState = game.ui.state;
       forceNextUpdate = 0;
+    }
+
+// is the 3D street view currently showing? cursor picking / path / cursor art route through it then
+  inline function street(): Bool
+    {
+      return (game.scene.city3d != null &&
+        game.scene.city3d.running);
+    }
+
+// LOS test that works in both views: the 2D tile cache (area.isVisible) is only maintained while the
+// 2D view draws, so in the 3D view fall back to the player's own vision (same source Actors.pickAI uses)
+  inline function seesTile(x: Int, y: Int): Bool
+    {
+      if (street())
+        return (!game.player.vars.losEnabled ||
+          game.playerArea.sees(x, y));
+      return game.scene.area.isVisible(x, y);
     }
 
 // mouse click (through canvas directly)
@@ -112,7 +135,7 @@ class Mouse
       // attack AI or move
       var ai = game.area.getAI(pos.x, pos.y);
       var obj = getAttackableObject(pos.x, pos.y);
-      var isVisible = game.scene.area.isVisible(pos.x, pos.y);
+      var isVisible = seesTile(pos.x, pos.y);
       if (isVisible)
         {
           // try to attack
@@ -179,7 +202,21 @@ class Mouse
       // position and state unchanged, return
       if (!force)
         {
-          if (oldx == game.scene.mouseX &&
+          // 3D view: the camera + player move under a still cursor, so a raw mouse-px check would
+          // freeze the hover — re-pick the ground cell and also gate on the player cell (the path
+          // re-shortens as the player advances). ui.Mouse is ticked every frame in that view
+          if (street() &&
+              game.playerArea != null)
+            {
+              var pos = getXY();
+              if (pos.x == oldPos.x &&
+                  pos.y == oldPos.y &&
+                  oldPlayerX == game.playerArea.x &&
+                  oldPlayerY == game.playerArea.y &&
+                  sceneState == game.ui.state)
+                return;
+            }
+          else if (oldx == game.scene.mouseX &&
               oldy == game.scene.mouseY &&
               sceneState == game.ui.state)
             return;
@@ -189,6 +226,14 @@ class Mouse
 
       oldx = game.scene.mouseX;
       oldy = game.scene.mouseY;
+      // track the player cell for the 3D re-path (area mode only; playerArea is null in region/menu)
+      if (game.playerArea != null)
+        {
+          playerMoved = (oldPlayerX != game.playerArea.x ||
+            oldPlayerY != game.playerArea.y);
+          oldPlayerX = game.playerArea.x;
+          oldPlayerY = game.playerArea.y;
+        }
 
       // window open, reset state
       if (game.isInputLocked() ||
@@ -219,6 +264,13 @@ class Mouse
 // get tile x,y that mouse cursor is on
   public inline function getXY(): { x: Int, y: Int }
     {
+      // 3D view: unproject the cursor onto the ground plane (mouseX/Y is device px, pickCell wants
+      // CSS client px, so divide out the dpr)
+      if (street())
+        {
+          var dpr = Browser.window.devicePixelRatio;
+          return game.scene.city3d.pickCell(game.scene.mouseX / dpr, game.scene.mouseY / dpr);
+        }
       return {
         x: Math.floor((game.scene.cameraX + game.scene.mouseX) / Const.TILE_SIZE),
         y: Math.floor((game.scene.cameraY + game.scene.mouseY) / Const.TILE_SIZE)
@@ -279,7 +331,7 @@ class Mouse
           oldPos = pos;
           posChanged = true;
         }
-      var isVisible = game.scene.area.isVisible(pos.x, pos.y);
+      var isVisible = seesTile(pos.x, pos.y);
       var ai = game.area.getAI(pos.x, pos.y);
       var obj = getAttackableObject(pos.x, pos.y);
       if (isVisible)
@@ -309,8 +361,10 @@ class Mouse
             {
               c = CURSOR_MOVE;
 
-              // check if tile position changed
-              if (posChanged)
+              // rebuild the path when the hovered tile changed, or (3D view) when the player advanced
+              // along it so the preview re-shortens to the remaining route
+              if (posChanged ||
+                  (street() && playerMoved))
                 game.scene.area.updatePath(
                   game.playerArea.x, game.playerArea.y,
                   pos.x, pos.y);
@@ -425,16 +479,40 @@ class Mouse
         return;
 
       cursor = c;
-      // window-open arrow: clear inline style so the themed --ui-cursor-default
-      // (set on #canvas in CSS) shows, instead of the legacy mouse0.png pointer
-      if (c == CURSOR_ARROW)
+      setCursorCSS(cursorCSS(c));
+    }
+
+// the CSS cursor value for a cursor id. the 3D street view uses the new themed SVG cursors (the
+// --ui-cursor* vars in app.css) for destination / cannot-go / info / idle — the old mouseN.png set
+// is retiring; attack + ranged have no new art yet, so they keep the PNGs. the 2D view keeps the
+// legacy PNGs (the window-open arrow clears inline so the #canvas --ui-cursor-default rule shows)
+  function cursorCSS(c: Int): String
+    {
+      if (street())
         {
-          game.ui.canvas.style.cursor = '';
-          return;
+          if (c == CURSOR_MOVE)
+            return 'var(--ui-cursor)';
+          if (c == CURSOR_BLOCKED)
+            return 'var(--ui-cursor-disabled)';
+          if (c == CURSOR_INFO)
+            return 'var(--ui-cursor-help)';
+          if (c == CURSOR_ARROW)
+            return 'var(--ui-cursor-default)';
         }
-      game.ui.canvas.style.cursor = 'url(' +
+      else if (c == CURSOR_ARROW)
+        return '';
+      return 'url(' +
         AssetPath.resolve('img/mouse' + c + '.png') + ') ' +
         '16 16, auto';
+    }
+
+// write the cursor CSS to the active view's canvas: #streetview in the 3D view (it covers #canvas),
+// else the 2D #canvas
+  inline function setCursorCSS(css: String)
+    {
+      if (street())
+        game.scene.city3d.setCursorCSS(css);
+      else game.ui.canvas.style.cursor = css;
     }
 
 // mouse cursor images
