@@ -29,6 +29,9 @@ class CameraRig {
   var zoomTarget = 1.0;                                    // eased-toward zoom
   var sideAngle = 0.0;                                     // current walkway-side camera angle
   var sideAngleTarget = 0.0;                               // desired walkway-side camera angle
+  var orbitYaw = 0.0;                                      // hold-RMB drag: horizontal orbit, added to sideAngle
+  var orbitPitch = 0.0;                                    // hold-RMB drag: vertical orbit (tilt), clamped
+  var orbiting = false;                                    // RMB held: hold the orbit; released: ease back to 0
   var zt:{ from:Float, to:Float, dur:Float, p:Float, gated:Bool } = null; // active fixed-duration zoom tween (intro/outro); dur in BASE_MS multiples; gated holds while a UI window is up
   var ztDone:Void->Void = null;                           // fires once when the active tween completes
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
@@ -49,6 +52,38 @@ class CameraRig {
       lampCorners = corners;
     }
 
+// begin a hold-RMB orbit: subsequent orbitDrag calls accumulate; released via orbitEnd
+  public function orbitStart():Void
+    {
+      orbiting = true;
+    }
+
+// end the hold-RMB orbit: update() eases the accumulated orbit back to the resting view
+  public function orbitEnd():Void
+    {
+      orbiting = false;
+    }
+
+// accumulate a mouse-drag delta into the orbit while RMB is held (dx = yaw, dy = pitch);
+// pitch clamped so the camera never tilts below level or swings past straight overhead
+  public function orbitDrag(dx:Float, dy:Float):Void
+    {
+      if (!orbiting)
+        return;
+      // inverted drag: dragging right/down swings the camera the opposite way (grab-the-world feel)
+      orbitYaw -= dx * RenderConfig.CAMERA.orbitSens;
+      orbitPitch -= dy * RenderConfig.CAMERA.orbitSens;
+      var ym = RenderConfig.CAMERA.orbitYawMax;
+      if (orbitYaw < -ym)
+        orbitYaw = -ym;
+      else if (orbitYaw > ym)
+        orbitYaw = ym;
+      if (orbitPitch < RenderConfig.CAMERA.orbitPitchMin)
+        orbitPitch = RenderConfig.CAMERA.orbitPitchMin;
+      else if (orbitPitch > RenderConfig.CAMERA.orbitPitchMax)
+        orbitPitch = RenderConfig.CAMERA.orbitPitchMax;
+    }
+
 // snap the camera to the player on (re)build so the first frame is framed correctly
   public function reset():Void
     {
@@ -57,6 +92,9 @@ class CameraRig {
       ztDone = null;
       sideAngle = 0.0;
       sideAngleTarget = 0.0;
+      orbitYaw = 0.0;
+      orbitPitch = 0.0;
+      orbiting = false;
       tactical = false;
       tacticalCamera = null;
       lastState = game.player.state;
@@ -88,6 +126,7 @@ class CameraRig {
   public function driftZoom(dtMs:Float):Void
     {
       tickZoom(dtMs);
+      easeOrbitBack(dtMs); // drain any residual RMB orbit so the outro frames the player
       applyOffset();
       camera.position.copy(pWorld).add(offset);
       lookAt.copy(pWorld);
@@ -194,6 +233,7 @@ class CameraRig {
       if (!tactical)
         sideAngleTarget = targetSideAngle();
       updateSideAngle(dtMs);
+      easeOrbitBack(dtMs);
       // state drives the auto zoom target: close as a parasite, pulled out as a host
       var st = game.player.state;
       if (st != lastState)
@@ -235,9 +275,34 @@ class CameraRig {
       var ox = n.x + (f.x - n.x) * zoom;
       var oy = n.y + (f.y - n.y) * zoom;
       var oz = n.z + (f.z - n.z) * zoom;
-      var c = Math.cos(sideAngle);
-      var s = Math.sin(sideAngle);
-      offset.set(ox * c + oz * s, oy, -ox * s + oz * c);
+      // hold-RMB pitch: tilt the (behind, up) = (oz, oy) pair in its vertical plane (distance kept).
+      // effective elevation = base atan2(oy,oz) - pitch; cap it below vertical so a raise at high
+      // zoom-out can't carry the camera past the top and flip it around to the front
+      var pit = orbitPitch;
+      var minPit = Math.atan2(oy, oz) - RenderConfig.CAMERA.orbitElevMax;
+      if (pit < minPit)
+        pit = minPit;
+      var cp = Math.cos(pit);
+      var sp = Math.sin(pit);
+      var ry = oy * cp - oz * sp;
+      var rz = oy * sp + oz * cp;
+      // yaw = walkway side-angle + hold-RMB drag yaw, rotated about Y
+      var a = sideAngle + orbitYaw;
+      var c = Math.cos(a);
+      var s = Math.sin(a);
+      offset.set(ox * c + rz * s, ry, -ox * s + rz * c);
+    }
+
+// while RMB is released, ease the hold-RMB orbit (yaw + pitch) back toward the resting view
+  function easeOrbitBack(dtMs:Float):Void
+    {
+      if (orbiting)
+        return;
+      // 2x return speed: the snap back to the resting view is twice as fast as the hold-drag ease
+      var step = 2 * dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      var k = 1 - Math.pow(1 - RenderConfig.CAMERA.orbitReturnLerp, step);
+      orbitYaw += (0 - orbitYaw) * k;
+      orbitPitch += (0 - orbitPitch) * k;
     }
 
 // ease the camera's side angle toward its current walkway-side target

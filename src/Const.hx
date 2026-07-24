@@ -40,22 +40,6 @@ class Const
     COLOR_SYMBIOSIS => '#98ff97',
     COLOR_CULT => '#fd97ff',
   ];
-/*
-  // copy-pasted for now
-  // TODO: move to TEXT_COLORS
-  public static var TEXT_COLORS_INT: Map<_TextColor, Int> = [
-    COLOR_DEFAULT => 0xFFFFFF,
-    COLOR_DEBUG => 0x777777,
-    COLOR_ALERT => 0xFF2222,
-    COLOR_EVOLUTION => 0x00FFFF,
-    COLOR_ORGAN => 0xDDDD00,
-    COLOR_HINT => 0xA020F0,
-    COLOR_TIMELINE => 0xF03378,
-    COLOR_MESSAGE => 0x1CD450,
-    COLOR_GOAL => 0x4788FF,
-    COLOR_PEDIA => 0xC8D8DA,
-    COLOR_SYMBIOSIS => 0x98ff97,
-  ];*/
 
   // TODO: remove from here
   // entity spritemap indexes

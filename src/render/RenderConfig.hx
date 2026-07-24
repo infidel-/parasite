@@ -55,10 +55,13 @@ class RenderConfig {
   public static inline var DOOR_PATH_MAX_DEPTH = 5;  // a windowed wall with a clear straight path (≤ this many non-building tiles) to a road earns an extra door, even off the street
 
   // --- front-door entrance covers (thin per-facade lintel/canopy over each FRONT door) ----
+  // DEFAULTS ONLY. a style can override them per facade slot via AreaStyle.coverDims (see
+  // DowntownStyle) — these values are what a slot gets when it says nothing. COVER_EMBED and
+  // COVER_ARC_SEG stay global (not per-facade)
   public static inline var COVER_WIDTH_FRAC = 0.7; // cover width = this fraction of the door quad side (~ door-panel width, not wall-wide)
   public static inline var COVER_DEPTH = 0.8;  // how far it juts OUT from the wall (door sits 0.06 proud; cover overhangs it)
   public static inline var COVER_EMBED = 0.1;  // sink the back/bottom into wall+door so there is no seam/gap
-  public static inline var COVER_Y_FRAC = 0.8; // cover BOTTOM sits at this fraction of the door quad height — just above the visible door, small gap
+  public static inline var COVER_Y_FRAC = 0.9; // cover BOTTOM sits at this fraction of the door quad height — just above the visible door, small gap
   // per-facade cover geometry: brick = thin flat metal awning, stone = inset slope, concrete = half-barrel
   public static inline var COVER_METAL_H  = 0.07; // brick: thin painted-metal awning slab (metal reads thin)
   public static inline var COVER_SLOPE_RISE = 0.5; // stone: eave→ridge rise (inset so only the front slope shows)
@@ -86,13 +89,18 @@ class RenderConfig {
     { tex: 'textures/detail-sky.png',    w: 3.4, d: 3.4, crop: 0.82 },
     { tex: 'textures/detail-tank.png',   w: 3.2, d: 3.2, crop: 0.80 },
   ];
+  // helicopter pad: a big centred deck marking that takes over a tall tower's roof (the style
+  // supplies the texture + the odds — AreaStyle.helipadTex/helipadChance; Roofs.helipadRect)
+  public static inline var HELIPAD_SIZE = 16.0;      // max pad side (shrinks to fit inside ROOF_DETAIL_MARGIN)
+  public static inline var HELIPAD_MIN_FLOORS = 12;  // only towers at least this tall get one
+  public static inline var HELIPAD_MIN_CELLS = 4;    // ...and at least this many cells on the short side (a setback tower's top tier is usually 4-5 cells)
 
   // --- windows (instanced quads placed on plain walls) ----------------------
   // crop fraction of each cell that is just the window+frame, per facade variant
   // (concrete = square, brick = tall); used to cut an opaque window sprite
   public static final WINDOW_SPRITE_CROP:Array<CropXY> = [{ x: 0.42, y: 0.42 }, { x: 0.30, y: 0.52 }, { x: 0.46, y: 0.82 }, { x: 0.42, y: 0.42 }];
   // facade variant names by Building.facade index (inspector tags + per-variant logic)
-  public static final FACADE_NAMES = ['concrete', 'brick', 'stone', 'metal'];
+  public static final FACADE_NAMES = ['concrete', 'brick', 'stone', 'metal', 'sleek'];
   public static inline var WIN_W = 1.6;        // window world width (height derived from sprite aspect)
   public static inline var WIN_PITCH_X = 2.6;  // horizontal center-to-center spacing (vertical = FLOOR_H)
   public static inline var WIN_MARGIN = 0.9;   // min plain-wall border at face edges
@@ -104,6 +112,19 @@ class RenderConfig {
   public static inline var BLOOM_STRENGTH = 0.25;  // overall bloom amount
   public static inline var BLOOM_RADIUS = 0.1;     // bloom spread radius
   public static inline var BLOOM_THRESHOLD = 0.9;  // luminance above which pixels bloom
+
+  // --- ambient occlusion (GTAOPass; only runs when config vidAO) --------------
+  // kept subtle on purpose: this should read as contact shadow where geometry meets, not as
+  // photoreal dirt — the city art is flat/hand-painted. tune blendIntensity first, radius second
+  public static final GTAO = {
+    blendIntensity: 0.6,    // AO strength over the beauty pass (1 = full darkening)
+    radius: 1.5,            // world-space sample radius, ~a third of a cell (CityConfig.CELL = 4);
+                            // must be scaled against CELL — below ~0.5 the effect is invisible at city scale
+    distanceExponent: 1.0,  // falloff curve with distance from the sample point
+    thickness: 1.0,         // assumed occluder thickness (higher = less light leak behind edges)
+    scale: 1.0,             // overall AO scale before blending
+    samples: 16,            // per-pixel AO samples; lower = cheaper + noisier (denoiser cleans up)
+  };
 
   // camera: offset lerps near..far by a normalized zoom (0=close/parallel, 1=far/top-down);
   // far is the absolute max distance, ~20deg tilt from vertical, trailing to +Z (south)
@@ -118,6 +139,13 @@ class RenderConfig {
     hostZoom: 0.60,       // host: auto pull-out target on invade (cap stays 1.0 = far/max)
     sideAngle: Math.PI / 36, // 5-degree orbit toward a wall-side view
     sideTurnLerp: 0.2,     // half-speed easing: fraction of the remaining angle per BASE_MS
+    orbitSens: 0.006,      // radians of orbit per mouse pixel (hold-RMB drag)
+    orbitPitchMin: -0.9,   // added-pitch clamp (rad): how far the camera can rise toward overhead
+    orbitPitchMax: 0.15,   // added-pitch clamp (rad): lowest camera = only a little below the default view
+    orbitYawMax: Math.PI / 6, // max left/right orbit from the default heading (rad) — ±30 degrees
+    orbitElevMax: 1.5,     // hard cap (rad, ~86deg) on the camera's total elevation so a raise at
+                           // high zoom-out can't carry it past vertical and flip over the top
+    orbitReturnLerp: 0.15, // per-BASE_MS ease of the orbit back to 0 on RMB release
     introMult: 6.0,       // enter effect: zoom-out from closest to resting target, BASE_MS multiples
     exitMult: 6.0         // leave effect: zoom-in to closest over the frozen last frame, then tear down
   };
@@ -125,13 +153,34 @@ class RenderConfig {
   // stays visible, then eases back to solid when it no longer blocks the sightline
   public static final OCCLUSION = {
     fade: 0.22,    // opacity an occluding building fades to (0 = invisible, 1 = solid)
+    ghostDim: 1.0,  // faded facades swap to a LIT-but-shadowless Lambert ghost (samples moon/lamps,
+                    // NOT the shadow maps — the costly part); the lighting supplies brightness so this
+                    // is just a tint/dim knob (1.0 = match the lit real, lower to darken the ghost)
+    ghostCross: 0.6, // fade level where the ghost has fully dissolved IN over the still-solid real
+                     // (real is hidden below this, ghost eases on to see-through above it). raises =
+                     // longer lit->ghost cross-dissolve, less pop; must stay above `fade`
     lerp: 0.15,    // per-30fps-frame ease of fade toward its target (dt-compensated)
     snap: 0.15,    // lock fade to target once within this gap: skips the slow exponential tail
                    // (invisible on the flat wall) so windows crisp back + bloom the moment the
                    // wall reads solid, instead of ~0.8s later
     margin: 1.0,   // XZ expansion when bucketing face-proud decals into their building
-    aimGrow: 1.5   // targeting-mode: cells of lateral slack, so buildings flanking the
+    aimGrow: 1.5,  // targeting-mode: cells of lateral slack, so buildings flanking the
                    // cam->player / cam->target line fade too (not just strict occluders)
+    // footprint plate: a flat semi-transparent quad on the ground over each building, shown only
+    // while the building is faded (building cells are unpaved, so a see-through wall would leave
+    // no sign the building stands there). alpha scales with how faded the building is
+    plateColor: 0x3a4152, // plate tint (cool grey-blue, reads as a footprint marker)
+    plateAlpha: 0.38,     // plate opacity at full fade (scaled by 1 - fade each frame)
+    plateY: 0.05,         // plate height above the (unpaved) building-cell ground
+    // glowing footprint outline: a dashed thin ground line tracing the footprint edge, drawn in the
+    // tactical-grid recipe — an unlit MeshBasic quad strip whose color is multiplied past 1 (HDR,
+    // toneMapped off) so it clears the bloom threshold and glows regardless of scene lighting
+    outlineColor: 0x74c0ff,  // outline tint (cool cyan-blue)
+    outlineGlow: 5.0,        // HDR color multiplier (like TacticalGrid.GLOW) so the dashes bloom
+    outlineAlpha: 0.7,       // outline opacity at full fade (scaled by 1 - fade each frame)
+    outlineWidth: 0.015,     // dash half-width as a fraction of a cell (matches the tactical grid line)
+    outlineDash: 0.6,        // dash length (world units)
+    outlineGap: 0.4          // gap between dashes (world units)
   };
   // melee choreography + 3D blood. lunge = attacker there-and-back reach; on lunge finish the
   // impact sound + target shake + blood burst fire. drops arc ballistically and land as SPLAT
@@ -203,6 +252,46 @@ class RenderConfig {
     blackStarAlpha: 0.9,    // point-star opacity cap (subdues the glint; emissive still glows through)
     blackFlightGlow: 0x8a5cff, // in-flight black-drop violet tint
     wetMetal: 0.5,       // landed-splat metalness (> 0 tints the glint by the red albedo; stronger, wetter)
+  };
+  // green slime the free (unhosted) parasite leaves as it crawls, plus a lingering puddle where it
+  // lands from a leap on/off a host. both are render-only (NOT persisted): the trail is a triangle
+  // strip rebuilt each frame along the parasite's recent path (follows turns, dissolves over the
+  // last ~lengthCells tiles), the puddle a fading ground quad. reuses BLOOD.slimeGlow for the green
+  public static final SLIME = {
+    sampleCells: 0.3,     // commit a new ribbon spine point once the parasite has moved this far (cells)
+    lengthCells: 4.0,     // path length kept behind the parasite; older trimmed (the ~4-tile tail)
+    widthCells: 0.42,     // ribbon width (cells); tapered to a point at the tail
+    fadeCells: 1.5,       // tail dissolve band (cells): width + alpha ramp 0 -> 1 over this length from the tail
+    headFadeCells: 0.5,   // head shaping band (cells): the leading end narrows over this length so it isn't a flat cut
+    headMinFrac: 0.35,    // head width at the very tip as a fraction of full: 0 = sharp comet point, 0.35 = rounded nub, 1 = flat cut
+    waveAmpCells: 0.22,   // max lateral wander of the ribbon centerline (cells); a random-walk per sample = gentle meander (0 = dead straight)
+    waveStepCells: 0.12,  // random-walk step per sample toward that wander (bigger = wavier / faster wobble)
+    widthJitter: 0.25,    // per-point width variation as a fraction (0.25 = +/-25%) for irregular, non-parallel edges
+    yOff: 0.05,           // ribbon/puddle height above the floor (like the ground decals)
+    baseAlpha: 0.7,       // overall ribbon opacity (multiplies the tail-fade vertex alpha; head caps here)
+    glowInt: 0.0,         // slime emissive intensity (BLOOD.slimeGlow tint), catches the bloom faintly. TEST: 0 = no glow (restore ~0.7)
+    fadeOutMult: 6.0,     // when the parasite stops crawling (jumps on a host), the frozen trail fades out over this (BASE_MS multiples) instead of vanishing
+    puddleScale: 0.8,     // landing-puddle quad scale (of a billboard)
+    puddleLifeMult: 24.0, // puddle fade-out duration (BASE_MS multiples)
+  };
+  // mouse-hover move path preview in the 3D street view (render.PathLine): a thin, greenish, wavy
+  // bloom-glowing ribbon from the player to the hovered tile, ending in a slightly larger target dot.
+  // waviness is driven by host control (low control = wavy, full control / free parasite = straight).
+  // render-only, rebuilt from the pathfinder's cell list whenever the hover target changes
+  public static final PATH = {
+    color: 0x7ddc46,      // sickly alien-slime green (matches BLOOD.slimeGlow) at FULL control, HDR-multiplied by glow so bloom picks it up
+    lostColor: 0xd0452a,  // discolored toward this toxic rust-red as host control is lost (0 control = full shift)
+    glow: 3.2,            // HDR color multiplier (must clear the bloom threshold; lower = softer glow)
+    alpha: 0.85,          // overall ribbon/dot opacity
+    widthCells: 0.010,    // ribbon half-width (cells); thinner than the tactical grid marks (0.015)
+    dotScaleCells: 0.053, // target-dot disc radius (cells) at the path end
+    dotPulse: 0.18,       // target-dot pulse depth (fraction of its size; 0 = no pulse)
+    dotPulseMult: 32.0,    // dot pulse speed as a BASE_MS multiplier (one throb per this many base-turns)
+    samplesPerCell: 16,   // Catmull-Rom resample density per cell segment (curve smoothness; higher = smoother wavy line at low control)
+    waveAmpCells: 0.30,   // max lateral wander of the centerline (cells) at ZERO host control (fully wavy)
+    waveLenCells: 1.4,    // wavelength of the sine wobble (cells); smaller = tighter waves
+    waveSpeedMult: 0.2,   // wobble scroll speed as a BASE_MS multiplier (phase advance per turn)
+    yOff: 0.06,           // height above the floor (like the tactical grid / ring)
   };
   // 3D ground-decal albedo darkening (0..1): decal art was authored for the unlit 2D view, so in the
   // lit 3D rig (full ambient+hemisphere+moon on an up-facing quad) it reads too bright. multiply the
@@ -364,6 +453,38 @@ class RenderConfig {
     maxPulses: 4,         // shader uniform slots (max simultaneous screams rippling)
   };
 
+  // organ gas clouds (panic / paralysis): a cluster of soft, LIT, alpha-blended puff sprites over the
+  // emission cell. lit (like actor sprites) so the gas catches the lamp spotlights + moon instead of
+  // self-glowing; a baked spherical normal map rounds each puff. the cluster billows in (activation
+  // burst), drifts up + spreads low and wide, then fades over its life. cosmetic only (entering re-
+  // applies nothing). colors are desaturated/light so the lit tint stays readable at night
+  public static final GAS = {
+    panicColor: 0xe0907a,     // panic gas tint (dusty light red)
+    paralysisColor: 0x6ab0ff, // paralysis spore tint (light dodger blue)
+    speed: 1.5,               // playback speed multiplier for the whole cloud (life + drift + spin)
+    atlasFrac: 0.4,           // fraction of puffs drawn with the game's own 2D gas frame (entities
+                              // ROW_EFFECT / FRAME_*_GAS) instead of the baked blob — blends the art in
+    pixelSize: 40,            // baked puff texture resolution (px); low + NearestFilter = chunky pixels
+    puffDensity: 9.0,         // puffs per cell² of footprint (count scales with range² for even density)
+    puffMin: 30,              // floor on puff count (tiny clouds still read solid)
+    puffCap: 120,             // ceiling on puff count (overdraw budget)
+    puffScaleMin: 1.6,        // per-puff base size (multiples of Sprites.SIZE)
+    puffScaleMax: 2.8,
+    startScale: 0.6,          // fraction of base size at spawn (grows toward base+growth)
+    growth: 1.1,              // extra size added over the full life (fraction of base)
+    spread: 1.0,              // footprint jitter radius = gas range (cells) * CELL * this (= the
+                              // Euclidean effect radius; puff size then softly overspills the edge)
+    drift: 0.5,               // outward drift speed (cells/sec)
+    rise: 0.4,                // upward drift speed (cells/sec) — gentle, ground-hugging
+    spin: 0.5,                // baked-blob in-plane roll speed cap (rad/sec, +/-)
+    atlasSpin: 0.6,           // atlas-sprite roll speed cap (rad/sec, +/-) — subtle, recognizable art
+    alpha: 0.38,              // peak per-puff opacity (many overlap -> denser centre; kept low for smooth buildup)
+    normalScale: 1.0,         // spherical normal-map strength (how rounded the lamp shading reads)
+    lifeMult: 24.0,           // total cloud lifetime (BASE_MS multiples) ~ a few seconds
+    burstMult: 2.0,           // billow-in window: puff appear stagger + ramp (BASE_MS multiples)
+    fadeFrac: 0.4,            // trailing fraction of life over which the cloud fades out
+  };
+
   // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
   // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
   // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none
@@ -388,6 +509,19 @@ class RenderConfig {
   // AI status badges float this fraction of Sprites.SIZE above the head (screen-up lift; clears the
   // head at any camera pitch — see Actors.drawBadges)
   public static inline var BADGE_LIFT = 0.65;
+  // chat bubbles anchor their tail this fraction of Sprites.SIZE above the head (same screen-up
+  // lift as the badges, but clear of them — see Actors.drawBubble)
+  public static inline var BUBBLE_LIFT = 0.95;
+
+  // chat-mode talking bubbles (render.actors.ChatConvo): the ... bubbles alternating over the two
+  // conversers; turn/jump timing in BASE_MS multiples, hop height in screen px
+  public static var CHAT_BUBBLE = {
+    turnMin: 8.0,        // shortest speaker turn before handing off (BASE_MS multiples)
+    turnVar: 8.0,        // random extra turn length (BASE_MS multiples); turn = [turnMin .. turnMin+turnVar]
+    jumpMult: 2.0,       // the bubble hops during this final window of the turn (BASE_MS multiples)
+    hops: 2.0,           // number of little hops in that window
+    jumpPx: 5.0,         // hop height in screen px
+  };
 
   // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
   // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)
@@ -432,6 +566,30 @@ class RenderConfig {
     intensity: 45.0,     // live-lamp spotlight intensity
     lightRangeCells: 16, // a lamp within this many cells of the player may claim one of the pool lights
     fadeMul: 4.0,        // fade in/out duration = BASE_MS * this — ramps intensity so lamps don't blink
+    // real spotlight shadows: of `pool`, this many slots cast a shadow map. FIXED (not toggled per
+    // frame): castShadow is part of the material program key (NUM_SPOT_LIGHT_SHADOWS), so flipping it
+    // live would trigger the very recompile the fixed pool exists to avoid. nearest lit lamps tend to
+    // occupy the low-index slots (LampLights fills nearest-first), so these casters follow the player
+    shadowCasters: 8,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
+    shadowMapSize: 512,   // per-caster shadow map edge — cone is local + small, 512 is plenty
+    shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
+    shadowFadeBand: 4.0,  // cells over which a caster's shadow.intensity ramps to 0 as it nears the
+                          // casting-set boundary — so a lamp crossing the boundary fades its shadow, no pop
+  };
+  // real moon (DirectionalLight) shadow: a single ortho shadow map that FOLLOWS the player each frame
+  // (SceneSetup.fitMoon) — the box tracks the focus so shadows appear across the whole visible area, not
+  // just world origin. one extra depth pass per frame. all tuning knobs live here (bias/box/res)
+  public static final MOON_SHADOW = {
+    mapSize: 2048,      // shadow map resolution per edge (bump to 4096 if building-edge stairstepping shows)
+    halfExtent: 90.0,   // ortho box half-width around the focus (world units) — sized to the on-screen area
+    distance: 200.0,    // how far up-light the shadow camera sits from the focus. MUST clear the tallest
+                        // building or the light plane sits below a tower top and its shadow truncates —
+                        // downtown full-glass towers reach ~113 (30 floors), needing y-offset dist*0.74 > 113.
+                        // ortho shadow quality is independent of distance (only halfExtent/mapSize set texel size)
+    near: 1.0,          // shadow camera near plane
+    far: 400.0,         // shadow camera far plane (>= 2*distance)
+    bias: -0.0004,      // depth bias to kill self-shadow acne on box walls (tune)
+    normalBias: 0.04,   // normal-offset bias — pushes the sample along the surface normal (box corners)
   };
   // volumetric shaft (render.LightCone): a hollow additive amber cone hung under the bulb, faking
   // the cone of lit air the SpotLight can't render. radius = bulb height * tan(LAMP_LIGHT.angle) *
@@ -518,5 +676,6 @@ class RenderConfig {
     graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
+    slimeTrail: 'textures/slime-trail.png', // green slime ribbon behind the free parasite (chroma-keyed, tiled along length)
   };
 }

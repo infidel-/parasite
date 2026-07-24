@@ -18,7 +18,7 @@ import render.world.Check;
 class World {
   static var checked = false;
 
-  public static function build(scene:Scene, city:City, seed:Int = -1):Void {
+  public static function build(scene:Scene, city:City, seed:Int = -1, ?style:render.world.AreaStyle, audit = true):Void {
     // one-time geometry self-check (face-dir/rotation invariants)
     if (!checked)
       {
@@ -29,20 +29,23 @@ class World {
     WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
     WorldCtx.seed = seed;
+    WorldCtx.style = style != null ? style : render.world.AreaStyle.DEFAULT;
     WorldCtx.winSeen = new haxe.ds.ObjectMap();
     WorldCtx.doorSeen = new haxe.ds.ObjectMap();
     WorldCtx.bandSeen = new haxe.ds.ObjectMap();
     WorldCtx.noBackDoor = [];
+    WorldCtx.doorSpans = [];
 
     Ground.build(scene);          // ground tiles, road markings, kerb edging
     Buildings.build(scene);       // per-building box loop (delegates parapet/gable to Roofs)
     Windows.add(scene);
+    Windows.addGlassAccents(scene); // sparse scattered tint/lit panes over the baked glass-tower grid
     Buildings.addGround(scene);   // ground-floor storefront bands
     Entrances.add(scene);
     WallDecals.add(scene);        // static graffiti/posters/cracks on bare walls
     Roofs.addRoofShadows(scene);
     Roofs.addRoofDetails(scene);
 
-    Check.run();
+    if (audit) Check.run(); // skip on throwaway warmup cities — nobody walks them, so the audit is pure spam
   }
 }

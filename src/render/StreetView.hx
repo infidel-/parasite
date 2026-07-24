@@ -6,6 +6,7 @@ import citygen.CityGen;
 import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
+import _UIState;
 import entities.Entity;
 import render.choreo.Choreo;
 
@@ -25,11 +26,21 @@ class StreetView {
   var scene:Scene;
   var composer:EffectComposer;
   var bloomPass:UnrealBloomPass;
+  var gtaoPass:GTAOPass;                                  // ambient occlusion; skipped whole unless config vidAO
   var shockwave:Shockwave;                                // screen-space ripple pass + pulse driver (silent scream)
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
+  var moon:DirectionalLight; // shadow-casting moon, repositioned each frame to follow the player
+  var perf:StreetPerf; // perf instrumentation + debug keys 7/8/9 (see render.StreetPerf)
+  // static-city spatial chunks: the world builder adds ~5.4k flat children to the scene, and three
+  // walks + frustum-tests every one of them each frame to find the ~400 it draws. bucketing them under
+  // chunk groups lets projectObject early-out on a whole block at once (an invisible parent is O(1))
+  var chunks:Array<{ g:Group, sphere:Sphere }> = [];
+  var chunkFrustum = new Frustum();
+  var chunkMat = new Matrix4();
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
+  var emissiveOff = false; // debug 6: kill all emissive (isolate lit/albedo from self-glow)
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
   var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
@@ -46,6 +57,7 @@ class StreetView {
   var rig:CameraRig;                                      // the follow camera + zoom
   var occlusion:Occlusion;                                // fades buildings blocking the player
   var tacticalGrid:TacticalGrid;
+  var pathLine:PathLine;                                  // mouse-hover move-path preview (wavy glowing ribbon + target dot)
   var tactical = false;
 
   var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
@@ -55,14 +67,9 @@ class StreetView {
   var svMouseY:Float = 0;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
-  var _lastProgs = 0;     // shader program count last frame; a jump == a (re)compile stall (perf street)
+  static inline var CHUNK_CELLS = 16; // spatial chunk edge, in city cells (16 * CELL 4 = 64 world units)
   var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
-  public static var lastCalls = 0; // draw calls last frame (HUD counter, when vidShowFps)
-  public static var lastTris = 0;  // triangles drawn last frame (HUD counter, when vidShowFps)
-  // GPU-resource counts (no byte API in WebGL) — a steady climb across area re-entries == a leak
-  public static var lastGeo = 0;   // live geometries in the renderer's cache
-  public static var lastTex = 0;   // live textures in the renderer's cache
-  public static var lastProg = 0;  // compiled shader programs
+  var warming = false;    // that warm is in flight: the scene is built but `running` waits on it, so show() must not treat this build as absent and rebuild over it
 
 
   public function new(game:Game) {
@@ -90,17 +97,79 @@ class StreetView {
         for (f in fill) f.visible = !lightsOff;
         for (p in pointLights) p.visible = !lightsOff;
       }
+      // 6: kill all emissive (self-glow) so only lit/albedo remains — stash each material's
+      // original intensity in userData so the restore is exact regardless of per-material value
+      else if (debug.on && e.code == 'Digit6' && scene != null) {
+        emissiveOff = !emissiveOff;
+        scene.traverse(function(o) {
+          var m:Dynamic = o.material;
+          if (m == null)
+            return;
+          var mats:Array<Dynamic> = Std.isOfType(m, Array) ? m : [m];
+          for (mm in mats) {
+            if (mm.emissive == null)
+              continue; // only emissive-capable materials (MeshStandard/Phong; skips MeshBasic)
+            if (emissiveOff) {
+              if (mm.userData.emiI0 == null)
+                mm.userData.emiI0 = mm.emissiveIntensity;
+              mm.emissiveIntensity = 0;
+            }
+            else if (mm.userData.emiI0 != null) {
+              mm.emissiveIntensity = mm.userData.emiI0;
+              mm.userData.emiI0 = null;
+            }
+          }
+        });
+      }
+      // 7/8/9: perf A/B + readouts (shadow-sampling toggle, peak reset, scene dump) — see render.StreetPerf
+      else if (debug.on && perf != null)
+        perf.onKey(e.code);
     });
-    // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel
+    // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel.
+    // a GUI window open (inventory/body/etc) overlays the view — let it scroll, don't zoom
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
-      if (!running || debug.on || rig == null) return;
+      if (!running || debug.on || rig == null || game.ui.state != UISTATE_DEFAULT) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
     // track the cursor over #streetview in raw client px for the AI-hover tooltip (the shared 2D
-    // game.scene.mouseX/Y is device-px and stale here — #streetview sits over #canvas)
+    // game.scene.mouseX/Y is device-px and stale here — #streetview sits over #canvas). also feed
+    // game.scene.mouseX/Y (device px, like UI.hx does for #canvas) + drive the mouse cursor/path so
+    // the 3D view gets the old 2D hover behaviour (#streetview covers #canvas, so #canvas never sees it)
     canvas.addEventListener('mousemove', function(e:js.html.MouseEvent) {
       svMouseX = e.clientX;
       svMouseY = e.clientY;
+      game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
+      game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
+      if (running && !debug.on && game.playerArea != null)
+        game.scene.mouse.update();
+    });
+    // click moves the player to / attacks the hovered tile (old 2D rules, via ui.Mouse.onClick).
+    // LMB only; RMB owns camera orbit (handled below) and is left to onClick's own button gating
+    canvas.addEventListener('click', function(e:js.html.MouseEvent) {
+      if (!running || debug.on || exiting)
+        return;
+      game.scene.mouse.onClick(e);
+    });
+    // hold RMB (button 2) and drag to orbit the follow camera around the player (yaw + pitch);
+    // release eases it back to the resting view. suppress the context menu so RMB is free
+    canvas.addEventListener('contextmenu', function(e:js.html.MouseEvent) e.preventDefault());
+    canvas.addEventListener('mousedown', function(e:js.html.MouseEvent) {
+      if (!running || debug.on || tactical || exiting || e.button != 2 || rig == null) return;
+      rig.orbitStart();
+      canvas.style.cursor = 'none'; // hide the cursor while orbiting so it doesn't drift off-screen
+    });
+    // mouseup + orbit-drag on window so a release or fast drag that leaves the canvas still counts;
+    // orbitDrag no-ops unless an orbit is live, so the window mousemove is cheap otherwise
+    Browser.window.addEventListener('mouseup', function(e:js.html.MouseEvent) {
+      if (e.button != 2 || rig == null) return;
+      rig.orbitEnd();
+      // restore the game move/attack cursor on release (force re-apply), not the OS arrow
+      if (running && !debug.on && game.playerArea != null)
+        game.scene.mouse.update(true);
+      else canvas.style.cursor = '';
+    });
+    Browser.window.addEventListener('mousemove', function(e:js.html.MouseEvent) {
+      if (running && rig != null) rig.orbitDrag(e.movementX, e.movementY);
     });
   }
 
@@ -169,12 +238,151 @@ class StreetView {
     renderer = core.renderer;
     camera = core.camera;
     rig = new CameraRig(game, camera);
+    perf = new StreetPerf(renderer, function() return scene);
+    // perf debug hook: live shader-program cache as cacheKeys. diff __progs() before/after an action
+    // (e.g. first gas burst) to see which MeshStandardMaterial permutations the driver compiles on
+    // first use — those first-use compiles are the frame hitches. count is the array length
+    untyped js.Browser.window.__progs = function()
+      {
+        var ps:Array<Dynamic> = renderer.info.programs;
+        return [for (p in ps) p.cacheKey];
+      };
   }
+
+// boot shader pre-warm: compile every street shader program on a THROWAWAY city (built by the real
+// builders, so the material / instancing / light-count set matches the game exactly) BEFORE the player
+// ever enters one, so the first real city entry reuses the cached programs and presents instantly
+// instead of stalling ~2s under black compiling MeshStandard permutations on demand. runs once per GL
+// context, off the menu idle (Main). the throwaway scene is retained (warmHold) so its materials keep
+// their programs in three's refcounted, cacheKey-shared cache; a matching-key material in the real
+// build then reuses them. covers the full static city + post-FX + gas + actor sprites + beams/sparks
+// (ring/tactical share those programs — blending is render state, not a shader define). NOT covered, on
+// purpose: silent-scream (its ctor needs live area state) and occlusion ghosts (compile on first fade) —
+// both cheap one-off first-use hitches, warmed later via their own warmupMeshes if ever noticed
+  static var warmHold:Dynamic = null;   // retains the warm scene so its materials' programs stay cached
+  public function warmup():Void
+    {
+      if (_warmed || warmHold != null)
+        return;
+      _warmed = true;
+      ensureCore();
+      // real builders on a throwaway city -> exact programs, complete by construction, zero enumeration
+      var seed = 1;
+      var city = CityGen.generate(seed);
+      var bundle = SceneSetup.buildScene(renderer, city); // base scene + fixed light pools + lamp cones
+      var s = bundle.scene;
+      World.build(s, city, seed, null, false);             // all lit world geometry (instanced MeshStandard); audit off — throwaway city
+      // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
+      // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
+      // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
+      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(true));
+      World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true), false);
+      // on-demand effects never present at static-build time: park throwaway instances so they warm too
+      var g = new Group();
+      s.add(g);
+      // the muzzle-flash point-light pool the real build adds via Actors: it sits in the scene forever at
+      // intensity 0 so NUM_POINT_LIGHTS is constant, and that count is baked into EVERY lit material's
+      // program — so the warm scene must carry it or every MeshStandard program compiles at the wrong
+      // light count and recompiles on entry. this is the 5-light count (every non-barrel city); the
+      // 10-light AREA_CITY_LOW variant is warmed by the second compile pass below (FlameLights added)
+      new render.particles.MuzzleLights(g);
+      for (m in render.particles.GasCloud3D.warmupMeshes()) // gas puffs (explicit front/back MeshStandard)
+        g.add(m);
+      for (m in render.particles.Sprites.warmupMeshes())    // actor billboards (MeshStandard + map/emissiveMap)
+        g.add(m);
+      // beams + hit sparks: spawn once via the REAL code so the exact materials get built (no config to
+      // drift). streak (no map) + glow (map) cover both MeshBasic variants; beams share streak's program
+      var beams = new render.particles.Beams(g);
+      beams.quad(0, 0, 0, 1, 0, 0, 0xffffff, 1);
+      var sparks = new render.particles.Sparks(g, camera);
+      sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
+      sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
+      // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
+      // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
+      // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-changes.md).
+      // so for every such material in the scene, add explicit FrontSide + BackSide clone meshes so BOTH
+      // real programs get cached instead of recompiling on the first render
+      var quad = new PlaneGeometry(1, 1);
+      var seen = new haxe.ds.ObjectMap<Dynamic, Bool>();
+      var clones:Array<Mesh> = [];
+      s.traverse(function(o:Object3D)
+        {
+          var mat:Dynamic = untyped o.material;
+          if (mat == null)
+            return;
+          var mats:Array<Dynamic> = Std.isOfType(mat, Array) ? mat : [ mat ];
+          for (mm in mats)
+            {
+              if (mm == null
+                || seen.exists(mm))
+                continue;
+              seen.set(mm, true);
+              if (mm.transparent == true
+                && mm.side == THREE.DoubleSide
+                && mm.forceSinglePass != true)
+                for (side in [ THREE.FrontSide, THREE.BackSide ])
+                  {
+                    var c = mm.clone();
+                    c.side = side;
+                    clones.push(new Mesh(quad, c));
+                  }
+            }
+        });
+      for (c in clones)
+        s.add(c);
+      // park the moon's shadow box over the city so the composer pass below actually runs the shadow
+      // depth pass — otherwise the box sits at world origin, the city-wide shadow caster falls outside it,
+      // no depth material renders, and the position-only shadow programs compile on the first real frame
+      var span = CityConfig.CELL * CityConfig.GRID;
+      SceneSetup.fitMoon(bundle.moon, new Vector3(span / 2, 0, span / 2));
+      // minimal composer (RenderPass + bloom + output) to warm the always-on post-FX programs; GTAO and
+      // the shockwave pass are disabled/on-demand and compile on toggle regardless, so they're left out
+      var comp = new EffectComposer(renderer);
+      comp.addPass(new RenderPass(s, camera));
+      comp.addPass(new UnrealBloomPass(
+        new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
+        RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD));
+      comp.addPass(new OutputPass());
+      // CRITICAL: the game renders scene -> the composer's LINEAR intermediate target (srgb-linear),
+      // then OutputPass converts to sRGB. a program's cacheKey bakes in the bound target's color space,
+      // so compileAsync against the default framebuffer (srgb) compiles the WRONG variant and the real
+      // srgb-linear programs still compile on entry. bind the composer's linear target first so compile
+      // produces exactly the programs the real render uses. compile walks the whole scene (not frustum-
+      // culled), so this warms every material's real program in parallel, view-independent
+      renderer.setRenderTarget(comp.renderTarget1);
+      // compileAsync hands all scene programs to the driver in parallel (KHR_parallel_shader_compile)
+      // without blocking; one composer pass then warms the post-FX programs compile can't reach.
+      // TWO passes: NUM_POINT_LIGHTS is baked into every lit material's program, and low-tier cities
+      // (AREA_CITY_LOW, where a NEW GAME starts) carry the barrel FlameLights pool -> 10 point lights
+      // vs 5 everywhere else. warm the 5-count first, then add FlameLights and warm the 10-count, so
+      // both variants are cached and neither the new-game start nor any later city recompiles on entry
+      renderer.compileAsync(s, camera).then(function(_)
+        {
+          new render.particles.FlameLights(g);
+          return renderer.compileAsync(s, camera);
+        }).then(function(_)
+        {
+          renderer.setRenderTarget(null);
+          comp.render();
+          comp.dispose();
+          // retain the whole warm scene: three releases a program only on material.dispose(), so holding
+          // the materials keeps their programs cached. geometry is deliberately NOT disposed — several
+          // geometries here are shared static models / particle quads, and disposing them would break the
+          // real build. ponytail: one throwaway city's geometry stays resident; if boot RAM matters,
+          // selectively dispose only the per-build World.build geometries (the safe ones) later
+          warmHold = s;
+          if (renderer.info.programs != null)
+            js.Browser.console.log('[street-warmup] boot pre-warm: ' + renderer.info.programs.length + ' programs cached');
+        });
+    }
 
 // show a city generated from a seed (new areas)
   public function show(seed:Int):Void {
-    if (running && shownSeed == seed) return;
-    buildFrom(CityGen.generate(seed), seed);
+    // a build whose shader warm is still in flight counts as shown: the warm holds `running` false for
+    // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
+    // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
+    if ((running || warming) && shownSeed == seed) return;
+    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(game.area.downtownGen)), seed);
   }
 
 // show a pre-reconstructed city (old saves with no seed)
@@ -196,15 +404,22 @@ class StreetView {
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
+    moon = bundle.moon;
     pointLights = bundle.pointLights;
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
     lampProp = bundle.lampProp;
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
-    World.build(scene, city, seed);
+    // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
+    // pass only ever touches static geometry the world builder adds below
+    var preBuild = scene.children.copy();
+    var areaStyle = render.world.AreaStyle.forDowntown(game.area.downtownGen);
+    World.build(scene, city, seed, areaStyle);
+    chunkStatics(preBuild);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
     occlusion = new Occlusion(scene, city.buildings, city.tiles);
     tacticalGrid = new TacticalGrid(scene, game.area);
+    pathLine = new PathLine(game, scene);
 
     // player marker ring + the group holding all actor billboards
     ring = new Mesh(
@@ -231,7 +446,17 @@ class StreetView {
 
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
+    setAA(game.config.vidAntialias); // MSAA sample count onto the fresh composer targets
     composer.addPass(new RenderPass(scene, camera));
+    // ambient occlusion: darkens where geometry meets (wall/ground, lamp bases, corners). before
+    // bloom so the darkened crevices don't feed the glow. it renders its own depth + normal prepass
+    // of the whole scene, so it stays enabled-gated — a disabled pass is skipped by the composer
+    // and costs nothing (see setAO)
+    gtaoPass = new GTAOPass(scene, camera, Browser.window.innerWidth, Browser.window.innerHeight);
+    gtaoPass.blendIntensity = RenderConfig.GTAO.blendIntensity;
+    gtaoPass.updateGtaoMaterial(RenderConfig.GTAO);
+    gtaoPass.enabled = game.config.vidAO;
+    composer.addPass(gtaoPass);
     // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
     shockwave = new Shockwave(camera);
@@ -241,42 +466,71 @@ class StreetView {
     choreo = new Choreo(game, actors, rig, shockwave);
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
-      RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD);
+      RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, areaStyle.bloomThreshold); // per-area: WHEN the glow starts
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
     // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
     renderer.info.autoReset = false;
 
+    // present: cancel any in-flight outro, reset the rig and start the enter intro + render loop.
+    // deferred behind the cold-context warm below so the first real frame never stalls on an
+    // on-demand shader compile (see below); runs immediately on warm entries
+    var present = function()
+      {
+        exiting = false;   // cancel any in-flight outro from a prior area
+        tactical = false;
+        rig.reset();
+        rig.startIntro();  // enter effect: start closest, zoom out to the resting target
+        canvas.style.display = 'block';
+        if (!running)
+          {
+            running = true;
+            last = 0;
+            Browser.window.requestAnimationFrame(loop);
+          }
+      };
+
     // pre-warm shader programs: on a cold GL context (fresh page/app launch) the first presented
-    // frame otherwise stalls multiple seconds compiling every program at once. do it here, under
-    // the enter fade, so the first real frame just draws. renderer.compile warms the scene
-    // materials; one throwaway composer pass warms the post-FX (bloom/output) programs it can't
-    // reach. only the first city build per GL context pays this — the program cache survives
-    // teardown (materials are never disposed), so later builds reuse it and skip the cost
+    // frame otherwise stalls multiple seconds compiling every program at once. compileAsync hands
+    // all scene programs to the driver in PARALLEL (KHR_parallel_shader_compile) without blocking
+    // the JS thread — the window/HUD/audio stay live during the warm, and total time drops to the
+    // slowest single program instead of the serial sum. we present only once it resolves (then one
+    // throwaway composer pass warms the post-FX bloom/output programs compile can't reach). only the
+    // first city build per GL context pays this — the program CACHE is keyed by shader source and
+    // survives a rebuild, so later builds reuse it, skip the warm, and present() runs right away.
+    // the warm does NOT survive its scene: compileAsync polls each material every 10ms from a timer,
+    // so disposing them mid-warm (a rebuild) makes three throw out of that timer — the promise then
+    // never settles and no catch can see it. `warming` keeps show() from rebuilding over this build
     if (!_warmed)
       {
         _warmed = true;
+        warming = true;
         var tWarm = haxe.Timer.stamp();
         var progWarm0 = renderer.info.programs != null ? renderer.info.programs.length : 0;
-        renderer.compile(scene, camera);
-        composer.render();
-        var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
-        trace('[street-warmup] compile+postfx ' + r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
-          ' programs ' + progWarm0 + '->' + progWarm1);
+        // gas clouds spawn on demand, so their 4 puff programs (2 material variants x front/back side of
+        // the transparent DoubleSide material) are not otherwise in the scene at warm time and the first
+        // burst compiles them mid-game (a visible hitch). park throwaway puff meshes in the scene for
+        // this warm only, then remove once compileAsync resolves
+        var gasWarm = render.particles.GasCloud3D.warmupMeshes();
+        for (m in gasWarm)
+          scene.add(m);
+        renderer.compileAsync(scene, camera).then(function(_)
+          {
+            warming = false;
+            composer.render();
+            // remove the meshes (no per-frame draw cost) but DON'T dispose the materials — they are
+            // retained in GasCloud3D.warmMats so their compiled programs stay cached for real bursts
+            for (m in gasWarm)
+              scene.remove(m);
+            var progWarm1 = renderer.info.programs != null ? renderer.info.programs.length : 0;
+            trace('[street-warmup] compileAsync+postfx ' + StreetPerf.r2((haxe.Timer.stamp() - tWarm) * 1000) + 'ms' +
+              ' programs ' + progWarm0 + '->' + progWarm1);
+            present();
+          });
       }
-
-    exiting = false;   // cancel any in-flight outro from a prior area
-    tactical = false;
-    rig.reset();
-    rig.startIntro();  // enter effect: start closest, zoom out to the resting target
-
-    canvas.style.display = 'block';
-    if (!running) {
-      running = true;
-      last = 0;
-      Browser.window.requestAnimationFrame(loop);
-    }
+    else
+      present();
   }
 
 // begin leaving: play the zoom-in outro over the frozen last frame, then hand off. the game
@@ -316,6 +570,7 @@ class StreetView {
     disposeBuild();
     scene = null;
     composer = null;
+    gtaoPass = null;
     shockwave = null;
     actorGroup = null;
     ring = null;
@@ -323,6 +578,7 @@ class StreetView {
     choreo = null;
     occlusion = null;
     tacticalGrid = null;
+    pathLine = null;
     tactical = false;
     if (canvas != null) canvas.style.display = 'none';
   }
@@ -340,6 +596,10 @@ class StreetView {
       disposeScene();
       if (composer != null)
         composer.dispose(); // bloom + other post-FX render targets
+      // composer.dispose() only frees its OWN targets, never its passes: without this the AO pass
+      // orphans 3 render targets + 2 noise textures in three's cache on every rebuild
+      if (gtaoPass != null)
+        gtaoPass.dispose();
     }
 
 // dispose every geometry + material in the current scene graph. textures are shared and cached
@@ -427,6 +687,13 @@ class StreetView {
       return running && render.choreo.Money.play(choreo, x, y, range);
     }
 
+// organ gas-cloud choreography (wide low additive shader dome: activation burst then lingering
+// fade) — see render.choreo.Gas
+  public function playGas(kind:String, x:Int, y:Int, range:Int):Bool
+    {
+      return running && render.choreo.Gas.play(choreo, kind, x, y, range);
+    }
+
 // snapshot a dying actor into a fade-out ghost (before its entity is nulled) — see render.choreo.Reactions
   public function playDeathFade(e:Entity):Void
     {
@@ -460,6 +727,93 @@ class StreetView {
     tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
   }
 
+// pick the city cell under a client-px cursor: unproject the cursor to a world ray, intersect the
+// ground plane at the player's floor height, take that cell, then refine once at that cell's own
+// floor height (curb cells sit a step up). returns {x:-1,y:-1} for the horizon / off-grid, which
+// ui.Mouse treats as out-of-bounds. no Raycaster — the ground is a plane, not geometry
+  public function pickCell(clientX:Float, clientY:Float):{ x:Int, y:Int }
+    {
+      var miss = { x: -1, y: -1 };
+      if (camera == null)
+        return miss;
+      var rect:Dynamic = canvas.getBoundingClientRect();
+      var ndcX = (clientX - rect.left) / rect.width * 2 - 1;
+      var ndcY = -((clientY - rect.top) / rect.height * 2 - 1);
+      // unproject a near-plane point to world, then the ray dir is (world - camera pos)
+      var world = new Vector3(ndcX, ndcY, 0.5).unproject(camera);
+      var ox = camera.position.x, oy = camera.position.y, oz = camera.position.z;
+      var dx = world.x - ox, dy = world.y - oy, dz = world.z - oz;
+      if (dy >= 0) // pointing at or above the horizon: no ground hit
+        return miss;
+      // intersect the plane y = planeY, twice: first at the player's floor, then at the hit cell's own
+      // floor so a curb-height tile picks correctly
+      var planeY = rig.playerWorld().y;
+      var cell = miss;
+      for (pass in 0...2)
+        {
+          var t = (planeY - oy) / dy;
+          var hx = ox + dx * t;
+          var hz = oz + dz * t;
+          var c = CityConfig.worldToCell(hx, hz);
+          if (c.col < 0 ||
+              c.row < 0 ||
+              c.col >= CityConfig.GRID ||
+              c.row >= CityConfig.GRID)
+            return miss;
+          cell = { x: c.col, y: c.row };
+          var fy = render.world.WorldCtx.floorY(c.col, c.row);
+          if (fy == planeY)
+            break;
+          planeY = fy; // refine at the cell's true height
+        }
+      return cell;
+    }
+
+// set the CSS cursor on the street-view canvas (ui.Mouse routes cursor art here in the 3D view)
+  public function setCursorCSS(css:String):Void
+    {
+      if (canvas != null)
+        canvas.style.cursor = css;
+    }
+
+// show the move-path preview (wavy glowing ribbon + target dot) for a pathfinder cell list; no-op
+// when the view isn't running (ui.Mouse funnels every hover path through AreaView.updatePath)
+  public function setPathPreview(path:Array<aPath.Node>):Void
+    {
+      if (running && pathLine != null)
+        pathLine.set(path);
+    }
+
+// hide the move-path preview
+  public function clearPathPreview():Void
+    {
+      if (pathLine != null)
+        pathLine.clear();
+    }
+
+// apply MSAA sample count to the running composer's render targets. n=0 disables.
+// samples survive resize (composer.setSize clones renderTarget1, which copies samples);
+// dispose() forces a realloc so a live change takes effect on the next composer.render()
+  public function setAA(n:Int):Void
+    {
+      if (composer == null)
+        return;
+      var rt1:Dynamic = composer.renderTarget1;
+      var rt2:Dynamic = composer.renderTarget2;
+      rt1.samples = n;
+      rt2.samples = n;
+      rt1.dispose();
+      rt2.dispose();
+    }
+
+// toggle the ambient-occlusion pass live. a disabled pass is skipped whole by the composer, so
+// off means its depth/normal prepass never runs (no cost) — hence a plain enabled flip is enough
+  public function setAO(on:Bool):Void
+    {
+      if (gtaoPass != null)
+        gtaoPass.enabled = on;
+    }
+
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
     if (renderer == null) return;
@@ -467,6 +821,7 @@ class StreetView {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     if (composer != null) composer.setSize(w, h);
+    if (gtaoPass != null) gtaoPass.setSize(w, h); // its own AO/prepass targets aren't sized by the composer
   }
 
 // rAF loop: follow the player (or fly), mirror actors, render the bloom frame
@@ -484,6 +839,7 @@ class StreetView {
     // most ~2 frames of anim; the anim runs a hair behind real time instead of jumping
     if (dtMs > frameMs * 2)
       dtMs = frameMs * 2;
+    var tFrame = haxe.Timer.stamp(); // frame-start: update-CPU = tR - tFrame (all pre-render work), idle = the rest
 
     // leaving: play the frozen zoom-in outro (no game reads) until its tween tears the view
     // down. teardown may fire mid-drift (nulls composer) — guard the render on it
@@ -504,6 +860,8 @@ class StreetView {
     rig.update(dtMs, !freeing);
     if (freeing) debug.freeCam.update(dtMs);
     var p = rig.playerWorld();
+    // keep the moon's shadow box centered on the player so building/lamp shadows track the view
+    SceneSetup.fitMoon(moon, p);
     // rest the ring on the ground under its *smooth* position, at the HIGHEST floor its whole
     // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it
     // straddles gets its overhanging arc buried and blinks. floating over the lower side reads
@@ -534,6 +892,7 @@ class StreetView {
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
+    cullChunks(p); // hide whole offscreen blocks so three skips their subtrees entirely
     // keep the tactical grid centered on the player (rebuilds only when the cell changes)
     if (tactical)
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
@@ -547,27 +906,27 @@ class StreetView {
     actors.update(dtMs);
     shockwave.update();
     updateHoverTooltip();
+    // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a
+    // still cursor, so the picked tile changes with no mousemove. ui.Mouse's own stale-check keeps
+    // this to one plane-pick when nothing moved. then scroll/rebuild the path-preview wobble.
+    // gated on a live player so a load/exit transition (running still true, area despawned) can't
+    // fault the render loop
+    if (!debug.on &&
+        game.playerArea != null)
+      game.scene.mouse.update();
+    if (pathLine != null)
+      pathLine.update(dtMs);
 
     // render pass timing: the composer stall (incl. any shader (re)compile) is invisible to the
-    // turn/street-actor profilers — catch it here. a jump in the program count == a compile.
-    // while profiling, first do a standalone base-scene render to expose per-frame draw-call /
-    // triangle counts (composer's OutputPass resets renderer.info, so it can't show scene stats)
-    // and to split base-scene cost from post-FX (bloom+output) cost — this doubles the scene
-    // render, so it's gated behind the toggle and its cost is excluded from the reported numbers
-    var baseMs = 0.0, calls = 0, tris = 0;
-    if (render.Actors.DEBUG_PERF)
-      {
-        // standalone base-scene render for the split; reset first so the counts are scene-only
-        renderer.info.reset();
-        var tB = haxe.Timer.stamp();
-        renderer.render(scene, camera);
-        baseMs = (haxe.Timer.stamp() - tB) * 1000;
-        calls = renderer.info.render.calls;
-        tris = renderer.info.render.triangles;
-      }
+    // turn/street-actor profilers — catch it here. frame = true rAF frame delta (dtMs), vsync-capped
+    // at ~16.7ms @60fps = the real fps signal; submit = the cpu cost of queueing the render. the
+    // breakdown, the real GPU timer and the on-screen readout all live in render.StreetPerf
     renderer.info.reset(); // manual per-frame reset (autoReset off); total accumulates over the passes
     var tR = haxe.Timer.stamp();
+    perf.beginRender(debug.on);
     composer.render();
+    perf.endRender();
+    var submit = (haxe.Timer.stamp() - tR) * 1000;
     // first presented frame after (re)build: the enter fade reveals here, so the first-render
     // shader-compile stall (multi-second on a cold driver cache) stays hidden under black
     if (firstFrame != null)
@@ -576,32 +935,94 @@ class StreetView {
         firstFrame = null;
         cb();
       }
-    lastCalls = renderer.info.render.calls; // scene + a few post-FX quads — HUD draw-call readout
-    lastTris = renderer.info.render.triangles;
-    // GPU-resource counts (memory.* survives reset(), only render counters reset) — leak signal
-    lastGeo = renderer.info.memory.geometries;
-    lastTex = renderer.info.memory.textures;
-    lastProg = (renderer.info.programs != null ? renderer.info.programs.length : 0);
-    if (debug.on) Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
-    if (render.Actors.DEBUG_PERF)
-      {
-        var ms = (haxe.Timer.stamp() - tR) * 1000;
-        var progs = (renderer.info.programs != null ? renderer.info.programs.length : 0);
-        var compiled = progs - _lastProgs;
-        if (ms > 8 ||
-            compiled != 0)
-          // full=composer total, base=scene-only, post=bloom+output, calls/tris=scene draw load
-          trace('[street-render] full=' + r2(ms) + 'ms base=' + r2(baseMs) +
-            ' post=' + r2(ms - baseMs) + ' calls=' + calls + ' tris=' + tris +
-            ' programs=' + progs +
-            (compiled != 0 ? ' (COMPILE ' + (compiled > 0 ? '+' : '') + compiled + ')' : ''));
-        _lastProgs = progs;
-      }
+    perf.report(dtMs, submit, (tR - tFrame) * 1000); // upd = all pre-render work (occlusion/lamps/actors/tooltip)
+    if (debug.on)
+      Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
   }
 
-// round a float to 2 decimals for perf logging
-  static inline function r2(v: Float): Float
+// a mesh's local bounding radius — used to spot city-spanning geometry that must NOT be chunked
+  static function objRadius(d:Dynamic):Float
     {
-      return Std.int(v * 100) / 100;
+      var g:Dynamic = d.geometry;
+      if (g == null)
+        return 1e9;
+      var r:Float;
+      if (d.isInstancedMesh == true)
+        {
+          d.computeBoundingSphere(); // instance-aware: a per-building window mesh is small, the city-wide lamp prop is not
+          r = d.boundingSphere != null ? d.boundingSphere.radius : 1e9;
+        }
+      else
+        {
+          if (g.boundingSphere == null)
+            g.computeBoundingSphere();
+          r = g.boundingSphere != null ? g.boundingSphere.radius : 1e9;
+        }
+      var s:Dynamic = d.scale;
+      return r * Math.max(s.x, Math.max(s.y, s.z));
     }
+
+// bucket the static city into spatial chunk groups. the groups sit at identity, so every child keeps its
+// local position and world matrix — pixel-identical output, only the traversal changes. world matrices
+// are baked once here and the subtree then opts out of the per-frame matrix walk (nothing moves)
+  function chunkStatics(pre:Array<Object3D>):Void
+    {
+      var CH = CityConfig.CELL * CHUNK_CELLS;
+      var skip = new Map<String,Bool>();
+      for (o in pre)
+        skip.set(untyped o.uuid, true);
+      var groups = new Map<String, Group>();
+      for (o in scene.children.copy())
+        {
+          var d:Dynamic = o;
+          if (skip.exists(d.uuid) ||
+              (d.isMesh != true && d.isInstancedMesh != true))
+            continue;
+          // city-spanning meshes (ground, roads) keep their scene parent: bucketed by their single
+          // origin they would pop out entirely the moment that one chunk culls
+          if (objRadius(d) > CH)
+            continue;
+          var key = Math.floor(o.position.x / CH) + ':' + Math.floor(o.position.z / CH);
+          var g = groups.get(key);
+          if (g == null)
+            {
+              g = new Group();
+              groups.set(key, g);
+              scene.add(g);
+            }
+          g.add(o); // reparent — group is at identity, so the child's world transform is unchanged
+        }
+      scene.updateMatrixWorld(true); // bake every world matrix once, before the subtrees freeze
+      chunks = [];
+      for (g in groups)
+        {
+          var b = new Box3().setFromObject(g);
+          var size = b.getSize(new Vector3());
+          var sph = new Sphere();
+          sph.center = b.getCenter(new Vector3());
+          sph.radius = Math.sqrt(size.x * size.x + size.y * size.y + size.z * size.z) / 2;
+          untyped g.matrixWorldAutoUpdate = false; // static: skip this subtree in updateMatrixWorld forever
+          chunks.push({ g: g, sphere: sph });
+        }
+      trace('[chunks] ' + chunks.length + ' groups (' + CHUNK_CELLS + ' cells each)');
+    }
+
+// per frame: frustum-test each CHUNK instead of each mesh. a chunk inside the moon's shadow box stays
+// visible even when offscreen, else its buildings would stop casting shadows into view
+  function cullChunks(p:Vector3):Void
+    {
+      if (chunks.length == 0)
+        return;
+      chunkMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      chunkFrustum.setFromProjectionMatrix(chunkMat);
+      var R = RenderConfig.MOON_SHADOW.halfExtent;
+      for (c in chunks)
+        {
+          var dx = c.sphere.center.x - p.x;
+          var dz = c.sphere.center.z - p.z;
+          var reach = R + c.sphere.radius;
+          c.g.visible = (dx * dx + dz * dz) <= reach * reach || chunkFrustum.intersectsSphere(c.sphere);
+        }
+    }
+
 }

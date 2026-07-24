@@ -195,6 +195,7 @@ public function show()
 
       // create entity and set correct icon
       entity = new AIEntity(this, game, x, y);
+      entity.skinColor = skinColor; // 3D actor atlas skin variant
       var atlasID = (iconID != null ? iconID : type);
       var useMaleSpecialAtlas = (
         !isMale &&
@@ -523,22 +524,75 @@ public function show()
         {
           if (state == AI_STATE_SEARCH_LAST_SEEN ||
               state == AI_STATE_SEARCH_AREA)
-            out.push({ col: Const.FRAME_SEARCH, row: Const.ROW_EFFECT, svg: 'search' });
-          else out.push({ col: alertFrame, row: Const.ROW_ALERT, svg: alertSvg(alertFrame) });
+            out.push({
+              col: Const.FRAME_SEARCH,
+              row: Const.ROW_EFFECT,
+              svg: 'search',
+            });
+          else out.push({
+              col: alertFrame,
+              row: Const.ROW_ALERT,
+              svg: alertSvg(alertFrame),
+            });
         }
-      // npc / mission-target marker
-      if (isNPC || entity.isMissionTarget)
-        out.push({ col: Const.FRAME_EVENT_NPC_AREA, row: Const.ROW_REGION_ICON, svg: 'npc' });
-      // cultist mark (png)
+      // npc / mission-target marker: mission target wins (cult-pink disc), else timeline npc (yellow)
+      if (entity.isMissionTarget)
+        out.push({
+          col: Const.FRAME_EVENT_NPC_AREA,
+          row: Const.ROW_REGION_ICON,
+          svg: 'missiontarget',
+        });
+      else if (isNPC)
+        out.push({
+          col: Const.FRAME_EVENT_NPC_AREA,
+          row: Const.ROW_REGION_ICON,
+          svg: 'npc',
+        });
+      // cultist mark: the full-color medallion, disc tinted by allegiance — pink for the player's
+      // own cult, gray for an enemy cult
       if (isPlayerCultist())
-        out.push({ col: Const.FRAME_CULTIST0, row: Const.ROW_EFFECT });
+        out.push({
+          col: Const.FRAME_CULTIST0,
+          row: Const.ROW_EFFECT,
+          svg: 'cultist',
+        });
       else if (isCultist)
-        out.push({ col: Const.FRAME_CULTIST_UNKNOWN, row: Const.ROW_EFFECT });
-      // active effect icon (png; single or MULTIPLE)
+        out.push({
+          col: Const.FRAME_CULTIST_UNKNOWN,
+          row: Const.ROW_EFFECT,
+          svg: 'cultistx',
+        });
+      // active effect icon (scalable svg; single glyph or the MULTIPLE triangle with live count)
       var eff = effects.getIcon();
       if (eff != null)
-        out.push({ col: eff.col, row: eff.row });
+        {
+          // FRAME_MULTIPLE_EFFECTS shares its column with FRAME_PANIC — disambiguate by row
+          if (eff.col == Const.FRAME_MULTIPLE_EFFECTS &&
+              eff.row == Const.ROW_EFFECT)
+            out.push({
+              col: eff.col,
+              row: eff.row,
+              svg: 'multieffect',
+              count: effects.iconCount(),
+            });
+          else out.push({
+              col: eff.col,
+              row: eff.row,
+              svg: effectSvg(eff.col),
+            });
+        }
       return out;
+    }
+
+// map a single-effect atlas frame to its UISvg glyph key (3D scalable render)
+  inline function effectSvg(frame: Int): String
+    {
+      if (frame == Const.FRAME_PARALYSIS) return 'paralysis';
+      if (frame == Const.FRAME_PANIC) return 'panic';
+      if (frame == Const.FRAME_SLIME) return 'slime';
+      if (frame == Const.FRAME_BLEEDING) return 'bleeding';
+      if (frame == Const.FRAME_BLACK_NOISE) return 'blacknoise';
+      return null;
     }
 
 // map an alert atlas frame to its UISvg glyph key (3D scalable render)
@@ -875,7 +929,7 @@ public function show()
       if (sound.text != '' &&
           sound.text != null &&
           entity != null)
-        entity.setText(sound.text, 2, lang);
+        entity.setText(sound, 2, lang);
       // playAudio=false defers only the audible SFX (the 3D melee lunge plays it on impact);
       // alert propagation + bark text below still run
       if (playAudio &&
@@ -1093,8 +1147,8 @@ public function show()
       entity.setMask(-1);
     }
 
-// event: on receiving effect
-  public inline function onEffect(effect: Effect)
+// event: on receiving effect (virtual — subclasses may filter, e.g. immunities)
+  public function onEffect(effect: Effect)
     {
       effects.add(effect);
 

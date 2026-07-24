@@ -3,6 +3,7 @@
 package ai;
 
 import game.Game;
+import game.Effect;
 
 class ChoirOfDiscord extends AI
 {
@@ -47,6 +48,16 @@ class ChoirOfDiscord extends AI
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+    }
+
+// immune to panic and paralysis — the choir's mind is too discordant to fear or freeze
+  public override function onEffect(effect: Effect)
+    {
+      if (effect.type == EFFECT_PANIC ||
+          effect.type == EFFECT_PARALYSIS)
+        return;
+
+      super.onEffect(effect);
     }
 
 // check if this AI should use "it" pronouns

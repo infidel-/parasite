@@ -9,4 +9,5 @@ typedef GroundSprite = {
   var tex:CanvasTexture; // content-trimmed texture
   var fw:Float;          // content width as a fraction of the full cell
   var fh:Float;          // content height as a fraction of the full cell
+  var by:Float;          // empty space BELOW the content as a fraction of the cell (0 = content reaches the bottom edge)
 };

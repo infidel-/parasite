@@ -10,7 +10,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'electron/three.global.js');
 const TMP = OUT + '.new';
 // symbols the game reaches as THREE.* (Haxe externs); build fails if any go missing
-const REQUIRED = ['EffectComposer', 'RenderPass', 'UnrealBloomPass', 'OutputPass', 'ShaderPass', 'GLTFLoader'];
+const REQUIRED = ['EffectComposer', 'RenderPass', 'UnrealBloomPass', 'GTAOPass', 'OutputPass', 'ShaderPass', 'GLTFLoader', 'mergeGeometries'];
 
 await esbuild.build({
   entryPoints: [join(ROOT, 'tools/three-entry.js')],

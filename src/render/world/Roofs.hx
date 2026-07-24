@@ -29,18 +29,43 @@ class Roofs {
   // rim grows +T to fill the concave-corner square (overlap hidden under the cap),
   // while the cap retracts -E to butt against the perpendicular cap's outer edge
   // instead of overrunning the neighbour wall and z-fighting that cap's overhang
-  public static function parapetRing(scene:Scene, cx:Float, cz:Float, halfX:Float, halfZ:Float, yMid:Float, rimH:Float,
+  public static function parapetRing(scene:Scene, b:Building, cx:Float, cz:Float, halfX:Float, halfZ:Float, yMid:Float, rimH:Float,
       matsFor:(Float, Float, Float, Role) -> Array<MeshStandardMaterial>, ?T:Float, ?covered:Array<Array<{a:Float, b:Float}>>, ?extend:Float):Void {
     if (T == null) T = RenderConfig.PARAPET_T;
     var EX = extend == null ? RenderConfig.PARAPET_T : extend;
     var ix = halfX - T / 2, iz = halfZ - T / 2;
+    // a single-tex segment collapses to a baked-UV material with an identity map, so segments sharing a
+    // texture differ only by placement: bake that into the verts and merge them into ONE mesh. bucket by
+    // texture SOURCE, not just "collapsed or not" — a brick ring mixes clean and worn faces (isWornFace)
+    // and an all-clean and an all-worn segment BOTH collapse, to different textures; merging those
+    // together would repaint the worn ones clean. a ring is one building's, so the merge stays inside
+    // the fade granularity Occlusion needs
+    var mergeSrcs:Array<Dynamic> = [];
+    var mergeMats:Array<Dynamic> = [];
+    var mergeGeos:Array<Array<Dynamic>> = [];
     inline function add(w:Float, d:Float, x:Float, z:Float, post:Bool, outDir:Int) {
       var role:Role = { post: post, outDir: outDir, cx: x, cz: z };
       var geo = new BoxGeometry(w, rimH, d);
       var mats:Array<Dynamic> = cast matsFor(w, rimH, d, role);
       // single-tex coping collapses to one draw call (baked UVs); mixed-tex brick keeps its array
       var single = render.Poly.flattenBox(geo, mats, 'parapet-coping', 'parapet coping', 'textures/coping.png');
-      var m = new Mesh(geo, single != null ? single : mats);
+      if (!Std.isOfType(single, Array))
+        {
+          geo.translate(x, yMid, z);
+          var src:Dynamic = untyped single.map.source; // clones share their source, so this groups by image
+          var bi = mergeSrcs.indexOf(src);
+          if (bi < 0)
+            {
+              bi = mergeSrcs.length;
+              mergeSrcs.push(src);
+              mergeMats.push(single);
+              mergeGeos.push([]);
+            }
+          mergeGeos[bi].push(geo);
+          return;
+        }
+      var m = new Mesh(geo, single);
+      m.userData.b = b;
       m.position.set(x, yMid, z);
       scene.add(m);
     }
@@ -67,6 +92,15 @@ class Roofs {
         if (d > 1e-6) add(T, d, x, (seg.a + seg.b) / 2, false, dir);
       }
     }
+    // one merged mesh per texture. their verts are world-baked, so each sits at the origin and pick()'s
+    // position fallback would bucket it into whatever building covers the city centre — the userData
+    // tag is what keeps Occlusion fading it with its own building
+    for (i in 0...mergeGeos.length)
+      {
+        var m = new Mesh(THREE.mergeGeometries(mergeGeos[i], false), mergeMats[i]);
+        m.userData.b = b;
+        scene.add(m);
+      }
   }
 
   // coping face materials: world-tiled side lips (joints on a global grid) + a
@@ -213,14 +247,14 @@ class Roofs {
       // neighbour abuts (T/L junction); extend=0 so the rim stops at the cut (no
       // overshoot). the terminating building's own corner post already fills the
       // concave corner — no patch block needed (unlike brick, whose cap posts inset)
-      parapetRing(scene, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,
+      parapetRing(scene, b, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,
         capY, capBoxH, copingMats(copingTex, 8, 0.0), T + 2 * E, covered, 0);
       return;
     }
     var H = RenderConfig.PARAPET_H_BRICK;
-    parapetRing(scene, center.x, center.z, wWorld / 2, dWorld / 2, b.h + H / 2, H, brickMats(b, clean, worn), null, covered);
+    parapetRing(scene, b, center.x, center.z, wWorld / 2, dWorld / 2, b.h + H / 2, H, brickMats(b, clean, worn), null, covered);
     var capH = 0.3, capEmbed = 0.18, E = 0.08;
-    parapetRing(scene, center.x, center.z, wWorld / 2 + E, dWorld / 2 + E,
+    parapetRing(scene, b, center.x, center.z, wWorld / 2 + E, dWorld / 2 + E,
       b.h + H + capH / 2 - capEmbed / 2, capH + capEmbed,
       copingMats(copingTex, 8, 0, 'coping-cap', 'brick cap coping'), T + 2 * E, covered);
 
@@ -231,6 +265,102 @@ class Roofs {
     var capY = b.h + H + capH / 2 - capEmbed / 2, capBoxH = capH + capEmbed;
     var ACROSS = 2 * (T + E), ALONG = T + 2 * E; // across edge / along edge
     copingCorners(scene, copingTex, covered, bxMin, bxMax, bzMin, bzMax, capY, capBoxH, ALONG, ACROSS, T / 2);
+  }
+
+// footprint of the mechanical penthouse on a downtown roof, or null when the building carries
+// none (a lower setback tier, whose centre the tier above occupies, or too short/narrow).
+// deterministic from the footprint (stable across reloads, unlike the detail shuffle) so the
+// roof-detail pass can reserve the same rect without the penthouse having been built yet
+  public static function penthouseRect(b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float):{x:Float, z:Float, w:Float, d:Float} {
+    if (!b.roofPenthouse) return null;
+    var minSide = wWorld < dWorld ? wWorld : dWorld;
+    if (b.h < CityConfig.GROUND_H + 6 * CityConfig.FLOOR_H || minSide < 5 * CELL) return null;
+    var hsh = b.col * 53 + b.row * 131;
+    var pw = minSide * (0.4 + (hsh % 3) * 0.08);
+    var pd = minSide * (0.4 + ((hsh >> 2) % 3) * 0.08);
+    return {
+      x: center.x + ((hsh >> 4) % 5 - 2) * (wWorld / 2 - pw / 2) / 3,
+      z: center.z + ((hsh >> 6) % 5 - 2) * (dWorld / 2 - pd / 2) / 3,
+      w: pw,
+      d: pd,
+    };
+  }
+
+// centred helicopter landing deck on a tall, wide roof, or null when this roof carries none.
+// deterministic from the footprint (like penthouseRect) so the roof pass and the detail pass agree
+// on it without sharing state. a pad OWNS the roof: its building gets no mechanical penthouse and
+// no sector detail decals, because both would stand in the middle of the landing area
+  public static function helipadRect(b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float):{x:Float, z:Float, w:Float, d:Float}
+    {
+      var st = WorldCtx.style;
+      if (st.helipadTex == null
+          || !b.roofPenthouse // a lower setback tier's deck is a one-cell ring — nothing lands there
+          || (st.helipadFacades != null && st.helipadFacades.indexOf(b.facade) < 0)) // skyscrapers only, not the mid-rises/sleek
+        return null;
+      var minSide = wWorld < dWorld ? wWorld : dWorld;
+      if (b.h < CityConfig.GROUND_H + RenderConfig.HELIPAD_MIN_FLOORS * CityConfig.FLOOR_H
+          || minSide < RenderConfig.HELIPAD_MIN_CELLS * CELL)
+        return null;
+      if ((b.col * 197 + b.row * 71) % 100 >= Std.int(st.helipadChance * 100))
+        return null;
+      var s = Math.min(RenderConfig.HELIPAD_SIZE, minSide - 2 * RenderConfig.ROOF_DETAIL_MARGIN);
+      return {
+        x: center.x,
+        z: center.z,
+        w: s,
+        d: s,
+      };
+    }
+
+  // downtown flat roof: a thin coping ring (like the non-masonry parapet) plus a mechanical
+  // penthouse bulkhead box (elevator/stair core + HVAC massing) on tall-enough towers. the
+  // penthouse is real occluding massing, so it is baked into the merged moon caster (shadowPos/
+  // shadowIdx, appended by the caller) exactly like the main building box, and userData.b tagged
+  // so Occlusion fades it with its building
+  public static function addDowntownRoof(scene:Scene, b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float,
+      copingTex:Texture, penthouseTex:Texture, shadowPos:Array<Float>, shadowIdx:Array<Int>):Void {
+    var T = RenderConfig.PARAPET_T;
+    var covered = Geom.coveredEdges(b);
+    // the ring sits ON the wall head, not sunk into it: the full PARAPET_EMBED (0.6) hangs over
+    // the top of the wall, and on a cell-locked glass tower that is a visibly guillotined top
+    // window row. the ring's inner face is already flush with the wall plane and its footprint is
+    // entirely OUTSIDE the roof, so there is nothing coplanar to z-fight — this hair is only to
+    // stop a grazing-angle seam at the junction
+    var h = RenderConfig.PARAPET_H, embed = 0.05, E = 0.12;
+    var capY = b.h + h / 2 - embed / 2, capBoxH = h + embed;
+    // single flat-roof coping ring, dropped at same-height junctions (extend=0 → stops at the cut)
+    parapetRing(scene, b, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,
+      capY, capBoxH, copingMats(copingTex, 8, 0.0), T + 2 * E, covered, 0);
+    if (penthouseTex == null) return;
+    if (helipadRect(b, center, wWorld, dWorld) != null) return; // the pad is centred — no bulkhead standing on it
+    var r = penthouseRect(b, center, wWorld, dWorld);
+    if (r == null) return; // lower setback tiers / too small: coping only, no bulkhead
+    var pw = r.w, pd = r.d;
+    var ph = CityConfig.FLOOR_H * (1.4 + ((b.col * 53 + b.row * 131) % 2) * 0.6);
+    var px = r.x, pz = r.z, py = b.h + ph / 2;
+    var geo = new BoxGeometry(pw, ph, pd);
+    var t = penthouseTex.clone();
+    t.needsUpdate = true;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(imax(1, Math.round(pw / RenderConfig.WALL_TILE)), imax(1, Math.round(ph / RenderConfig.WALL_TILE)));
+    var mat = tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
+      'penthouse', 'mechanical penthouse', WorldCtx.style.penthouseWall);
+    var mesh = new Mesh(geo, mat);
+    mesh.position.set(px, py, pz);
+    mesh.userData.b = b;
+    mesh.castShadow = false; // the merged caster below carries it
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+    // bake the penthouse volume into the city-wide moon caster (position-only, world-baked)
+    var bgeo:BufferGeometry = cast geo;
+    var bpos = bgeo.attributes.position;
+    var vbase = Std.int(shadowPos.length / 3);
+    for (i in 0...(bpos.count : Int)) {
+      shadowPos.push(bpos.getX(i) + px);
+      shadowPos.push(bpos.getY(i) + py);
+      shadowPos.push(bpos.getZ(i) + pz);
+    }
+    for (k in 0...(bgeo.index.count : Int)) shadowIdx.push(vbase + bgeo.index.getX(k));
   }
 
   // small pitched gable cap for a stone FRONT-door cover: 2 sloped quads (ridge parallel to the
@@ -351,7 +481,7 @@ class Roofs {
       arr.push(new Matrix4().compose(pos, q, scl));
     }
     for (b in buildings) {
-      if (b.facade == 3) continue; // metal warehouses have a gable roof, not a flat parapet roof
+      if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof, not a flat parapet roof
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
@@ -414,21 +544,58 @@ class Roofs {
   public static function addRoofDetails(scene:Scene):Void {
     var buildings = WorldCtx.buildings;
     var sprites = [for (t in DETAIL_TYPES) Textures.loadKeyedTexture(t.tex, t.crop, RenderConfig.DETAIL_BOX_COLOR)];
+    // one material per detail type, shared by every building: only `map` differs between types, so
+    // allocating per building left ~750 identical materials live citywide where 6 do the same job
+    var mats = [for (t in 0...DETAIL_TYPES.length) new MeshStandardMaterial({
+      map: sprites[t],
+      roughness: 1,
+      metalness: 0,
+      transparent: false,
+      alphaTest: 0.5,
+      side: THREE.DoubleSide,
+    })];
     var q = new Quaternion();
     var qx = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
     var up = new Vector3(0, 1, 0);
     var pos = new Vector3();
     var scl = new Vector3();
     var decalGeo = new PlaneGeometry(1, 1);
+    // one shared helipad material for the whole city (null outside an area style that has pads)
+    var padMat = WorldCtx.style.helipadTex == null ? null : tag(new MeshStandardMaterial({
+      map: Textures.loadTexture(WorldCtx.style.helipadTex, 'facade'),
+      roughness: 1,
+      metalness: 0,
+      side: THREE.DoubleSide,
+    }), 'roof-helipad', 'rooftop helipad', WorldCtx.style.helipadTex);
 
     for (b in buildings) {
-      if (b.facade == 3) continue; // metal warehouses have a gable roof — no rooftop details
+      if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof — no rooftop details
+      // an intermediate setback deck is a one-cell ring around the tier rising out of it —
+      // a top-down decal there runs straight into that wall. only lower tiers clear the flag
+      if (!b.roofPenthouse) continue;
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var hx = wWorld / 2 - RenderConfig.ROOF_DETAIL_MARGIN;
       var hz = dWorld / 2 - RenderConfig.ROOF_DETAIL_MARGIN;
       if (hx <= 0 || hz <= 0) continue;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+      // a helipad takes the whole roof: one centred deck instead of the sector grid (and
+      // addDowntownRoof drops the penthouse for the same building)
+      var pad = helipadRect(b, center, wWorld, dWorld);
+      if (pad != null)
+        {
+          var m = new Mesh(decalGeo, padMat);
+          m.rotation.x = -Math.PI / 2;
+          m.scale.set(pad.w, pad.d, 1);
+          m.position.set(pad.x, b.h + 0.05, pad.z);
+          m.userData.b = b;
+          scene.add(m);
+          continue;
+        }
+      // the mechanical penthouse is real massing standing on this roof — a decal under it
+      // pokes through its walls, so reserve its footprint
+      var pen = WorldCtx.style.roofDowntown && WorldCtx.style.penthouseWall != null
+        ? penthouseRect(b, center, wWorld, dWorld) : null;
 
       var cols = Std.int(imax(1, Math.round((2 * hx) / RenderConfig.ROOF_SECTOR)));
       var rows = Std.int(imax(1, Math.round((2 * hz) / RenderConfig.ROOF_SECTOR)));
@@ -453,6 +620,13 @@ class Roofs {
           var yaw = Std.int(Math.random() * 4) * (Math.PI / 2);
           var x = center.x - hx + (ci + 0.5) * secW;
           var z = center.z - hz + (cj + 0.5) * secD;
+          // yaw is a multiple of 90°, so the decal's world AABB is its size or its transpose
+          var dx = (Math.abs(Math.cos(yaw)) > 0.5 ? type.w : type.d) / 2;
+          var dz = (Math.abs(Math.cos(yaw)) > 0.5 ? type.d : type.w) / 2;
+          if (pen != null
+              && Math.abs(x - pen.x) < pen.w / 2 + dx
+              && Math.abs(z - pen.z) < pen.d / 2 + dz)
+            continue;
           q.setFromAxisAngle(up, yaw).multiply(qx);
           pos.set(x, b.h + 0.05, z);
           scl.set(type.w, type.d, 1);
@@ -462,15 +636,7 @@ class Roofs {
       // one instanced mesh per used type, tagged with the building so Occlusion fades them too
       for (t in 0...DETAIL_TYPES.length) {
         if (decalM[t].length == 0) continue;
-        var mat = new MeshStandardMaterial({
-          map: sprites[t],
-          roughness: 1,
-          metalness: 0,
-          transparent: false,
-          alphaTest: 0.5,
-          side: THREE.DoubleSide,
-        });
-        var decals = new InstancedMesh(decalGeo, mat, decalM[t].length);
+        var decals = new InstancedMesh(decalGeo, mats[t], decalM[t].length);
         for (k in 0...decalM[t].length) decals.setMatrixAt(k, decalM[t][k]);
         decals.instanceMatrix.needsUpdate = true;
         decals.userData.b = b;

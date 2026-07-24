@@ -35,6 +35,8 @@ class Cult
           if (arr.length == 1)
             {
               log('Cult commands:');
+              log('cu/cult start - start the cult with the current human host as its leader');
+              log('cu/cult members - add 3-5 randomly generated followers');
               log('cu/cult gr - give +10 all resources and +100k money');
               log('cu/cult br [amount] - give base resources (default +100)');
               log('cu/cult def [cultID] - add rival base defense ordeal');
@@ -47,6 +49,20 @@ class Cult
               return true;
             }
           
+          // cu/cult start - start the cult
+          if (arr[1] == 'start')
+            {
+              startCult();
+              return true;
+            }
+
+          // cu/cult members - add random followers
+          if (arr[1] == 'members')
+            {
+              addRandomFollowers();
+              return true;
+            }
+
           // cu/cult gr - give resources
           if (arr[1] == 'gr')
             {
@@ -115,6 +131,61 @@ class Cult
         }
       
       return false;
+    }
+
+// start the cult with the current host as its leader
+// NOTE: the player cult object always exists (Game.init creates it at cults[0]), so this
+// activates the existing inactive/dead one rather than making a new one
+  function startCult()
+    {
+      var cult = game.cults[0];
+      if (cult.state == CULT_STATE_ACTIVE)
+        {
+          log('Cult is already active, led by ' + cult.leader.TheName() + '.');
+          return;
+        }
+
+      // the leader is a real in-world AI, so it has to be a human host we currently ride
+      if (game.player.state != PLR_STATE_HOST ||
+          !game.player.host.isHuman)
+        {
+          log('Needs a human host to lead the cult. Invade one first.');
+          return;
+        }
+
+      cult.addLeader(game.player.host);
+      log('Started ' + cult.customName() + ', led by ' + cult.leader.TheName() + '.');
+    }
+
+// add 3-5 randomly generated followers to the cult.
+// RecruitFollower builds a properly-jobbed AIData per power type (a bare CivilianAI would keep
+// job 'undefined' and be rejected), so reuse it as the generator like `cu r` does. the ordeal is
+// discarded and never enters cult.ordeals.list, so it locks no members (see Cult.getFreeMembers)
+  function addRandomFollowers()
+    {
+      var cult = game.cults[0];
+      if (cult.state != CULT_STATE_ACTIVE)
+        {
+          log('No active cult. Use cu start first.');
+          return;
+        }
+
+      var followerTypes = ['combat', 'media', 'lawfare', 'corporate', 'political'];
+      var amount = 3 + Std.random(3);
+      var added = 0;
+      for (i in 0...amount)
+        {
+          var memberCount = cult.members.length;
+          var ordeal = new RecruitFollower(game, followerTypes[Std.random(followerTypes.length)]);
+          ordeal.onSuccess();
+          if (cult.members.length > memberCount)
+            added++;
+        }
+
+      // addAIData enforces cult size + per-level job limits, so a roll can legitimately be refused
+      if (added < amount)
+        log('Added ' + added + ' of ' + amount + ' followers (the rest hit cult size/level limits).');
+      else log('Added ' + added + ' followers.');
     }
 
 // recruit follower by power type

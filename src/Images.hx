@@ -25,6 +25,8 @@ class Images
   public var undergroundLabObjects1: Image;
   public var male: Image;
   public var female: Image;
+  public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
+  public var female128: Array<Image>;
   public var tileset: Image;
   public var cursors: Array<Image>;
   var defaultTileset: Default;
@@ -52,6 +54,9 @@ class Images
       male.src = AssetPath.resolve('img/male64.png');
       female = new Image();
       female.src = AssetPath.resolve('img/female64.png');
+      // 3D-only 128px skin-variant atlases (2D views keep using the 64px sheets above)
+      male128 = loadAtlas128('male');
+      female128 = loadAtlas128('female');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();
@@ -66,6 +71,27 @@ class Images
           cursors.push(img);
         }
       }
+
+// load the 3 skin-variant 128px atlases for a gender ([yellow, dark, white])
+  function loadAtlas128(gender: String): Array<Image>
+    {
+      var out = [];
+      for (suffix in ['', '-dark', '-white'])
+        {
+          var img = new Image();
+          img.src = AssetPath.resolve('img/' + gender + suffix + '128.png');
+          out.push(img);
+        }
+      return out;
+    }
+
+// 3D actor atlas: pick the 128px skin-variant sheet for a gender.
+// mirrors getImage's male-atlas fallback (male-only specials draw off the male sheet)
+  public function getAtlas128(imageName: String, isMaleAtlas: Bool, skin: Int): Image
+    {
+      var useMale = (imageName == 'male' || isMaleAtlas);
+      return (useMale ? male128 : female128)[skin];
+    }
 
 // get area-appropriate tileset wrapper
   public function getTileset(?areaTypeID: _AreaType): Tileset

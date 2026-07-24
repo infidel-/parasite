@@ -126,7 +126,7 @@ class Badges {
         return;
       var e = ai.entity;
       var tex = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
-        RenderConfig.XRAY.fill, RenderConfig.XRAY.hatchSpacing, RenderConfig.XRAY.hatchThick);
+        RenderConfig.XRAY.fill, RenderConfig.XRAY.hatchSpacing, RenderConfig.XRAY.hatchThick, e.skinColor);
       if (tex == null)
         return;
       var col = outlineColor(ai, badges);
@@ -225,7 +225,7 @@ class Badges {
         {
           var b = badges[i];
           var tex = (b.svg != null)
-            ? badgeSvgTex(b.svg)
+            ? badgeSvgTex(b.svg, b.count)
             : sprites.tex('entities', b.col, b.row, false);
           if (tex == null) // svg still decoding / atlas not ready — hole stays stable (index-placed)
             continue;
@@ -294,18 +294,25 @@ class Badges {
     {
       var s = '';
       for (b in badges)
-        s += (b.svg != null ? b.svg : b.col + '_' + b.row) + ',';
+        s += (b.svg != null ? b.svg : b.col + '_' + b.row) +
+          (b.count != null ? ':' + b.count : '') + ',';
       return s;
     }
 
 // rasterize a badge glyph (UISvg.badge) recolored to its state color, cached at a fixed px edge.
 // inject xmlns (a standalone data: <img> is parsed as bare XML — the UISvg glyphs omit it since
 // inline DOM infers it) + explicit width/height (a viewBox-only SVG can decode to naturalWidth 0)
-  inline function badgeSvgTex(key:String):CanvasTexture
+  inline function badgeSvgTex(key:String, count:Null<Int>):CanvasTexture
     {
-      var svg = StringTools.replace(ui.UISvg.badge(key), 'currentColor', badgeColor(key));
+      // multieffect bakes the live count into its triangle → its own markup + per-count cache key;
+      // every other glyph resolves through the shared UISvg.badge() dispatch
+      var markup = (key == 'multieffect')
+        ? ui.UISvg.effectMultiple(count)
+        : ui.UISvg.badge(key);
+      var cacheKey = (key == 'multieffect') ? 'multieffect:' + count : key;
+      var svg = StringTools.replace(markup, 'currentColor', badgeColor(key));
       svg = StringTools.replace(svg, '<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" ');
-      return sprites.svgTex('svg:' + key, svg, 128);
+      return sprites.svgTex('svg:' + cacheKey, svg, 128);
     }
 
 // state color for an SVG badge glyph — matches the 2D atlas art: "?" ramps white->yellow->orange
@@ -319,6 +326,13 @@ class Badges {
       if (key == 'alerted') return '#f26a6a';  // danger-red — fully alerted (--text-color-alert)
       if (key == 'search') return '#f26a6a';   // danger-red — hunting last-seen
       if (key == 'calling') return '#f26a6a';  // danger-red — calling backup
+      // effect glyphs — thematic tints so the effect reads at a glance
+      if (key == 'paralysis') return '#e0d24a';   // yellow — lightning jolt
+      if (key == 'panic') return '#ec894e';       // orange — fear
+      if (key == 'slime') return '#6fca6f';       // green — slime / slow
+      if (key == 'bleeding') return '#f26a6a';    // red — blood
+      if (key == 'blacknoise') return '#a45fe0';  // parasite purple — black noise
+      if (key == 'multieffect') return '#eaebed'; // white — generic multiple
       return '#eaebed';
     }
 }

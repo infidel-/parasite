@@ -8,6 +8,7 @@ import js.Browser.document;
 import js.html.DivElement;
 
 import game.Game;
+import render.Viewport;
 
 class OffscreenHud
 {
@@ -66,18 +67,16 @@ class OffscreenHud
       var m = Math.max(Math.abs(ndcX), Math.abs(ndcY));
       if (m < 1e-6)
         m = 1e-6;
-      var w = document.body.clientWidth;
-      var h = document.body.clientHeight;
-      var x = (ndcX / m * 0.5 + 0.5) * w;
-      var y = (-ndcY / m * 0.5 + 0.5) * h;
+      var x = (ndcX / m * 0.5 + 0.5) * Viewport.w;
+      var y = (-ndcY / m * 0.5 + 0.5) * Viewport.h;
       if (x < MARGIN)
         x = MARGIN;
-      if (x > w - MARGIN)
-        x = w - MARGIN;
+      if (x > Viewport.w - MARGIN)
+        x = Viewport.w - MARGIN;
       if (y < MARGIN)
         y = MARGIN;
-      if (y > h - MARGIN)
-        y = h - MARGIN;
+      if (y > Viewport.h - MARGIN)
+        y = Viewport.h - MARGIN;
       el.style.left = x + 'px';
       el.style.top = y + 'px';
       el.style.transform = (scale == 1 ? '' : 'scale(' + scale + ')');

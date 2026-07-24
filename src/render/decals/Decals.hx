@@ -27,6 +27,7 @@ class Decals {
   var money:Money;                                        // MONEY thrown-money perm + fading stains
   var wallhole:WallHole;                                  // WALLHOLE bullet holes on their wall face
   var debris:Debris;                                      // seed-derived street debris (render-only)
+  var corpseCells:Map<Int,Int> = null;                    // cellKey (x*height+y) -> resting corpse's appearance slot; blood past it paints over the body (set each frame by Actors before paint())
   // last decal pass counts (leak/perf check), read by Actors.perfLog
   public var decalScan(default, null):Int = 0;
   public var decalDraw(default, null):Int = 0;
@@ -64,11 +65,13 @@ class Decals {
 // paint this frame's render-only debris, then the persisted tile decals (blood + money + bullet
 // holes), then the fading money stains, in the order the actor pass expects. px/pz is the player's
 // smoothed world pos driving the radius fade that replaced the old LOS gate; dtMs advances the
-// black-blood shimmer clock + the money fade
-  public function paint(px:Float, pz:Float, dtMs:Float):Void
+// black-blood shimmer clock + the money fade. corpseCells (cellKey -> resting-corpse appearance
+// slot, built by Actors' object loop this frame) lets blood sprayed after a corpse paint over it
+  public function paint(px:Float, pz:Float, dtMs:Float, corpseCells:Map<Int,Int>):Void
     {
       this.px = px;
       this.pz = pz;
+      this.corpseCells = corpseCells;
       clock += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       frameNo++;
       blood.beginFrame();
@@ -115,21 +118,36 @@ class Decals {
                   tile.decoration == null ||
                   tile.decoration.length == 0)
                 continue;
-              for (d in tile.decoration)
-                if (dispatch(d, x, y, t))
+              // idx = the decoration's position in the push-ordered array = its appearance order
+              // within this cell; it becomes the depth slot (newer splat -> higher -> on top)
+              for (idx in 0...tile.decoration.length)
+                if (dispatch(tile.decoration[idx], x, y, t, idx))
                   draw++;
             }
         }
       decalScan = scan; decalDraw = draw;
     }
 
-// route one tile decoration to its type module by tag; returns true if a quad was drawn
-  function dispatch(d:tiles.Decoration, x:Int, y:Int, t:Float):Bool
+// the appearance slot of a corpse resting in cell (x,y), or -1 if none. blood added at/after this
+// slot (its push-index in the cell) was sprayed after the body landed and must paint over it; blood
+// before it predates the body and stays under (batched). the map is rebuilt each frame by Actors'
+// object loop (which runs before paint()) and handed in via paint()
+  inline function corpseSlotAt(x:Int, y:Int):Int
+    {
+      if (corpseCells == null)
+        return -1;
+      var s = corpseCells.get(x * game.area.height + y);
+      return s != null ? s : -1;
+    }
+
+// route one tile decoration to its type module by tag; idx is its per-cell appearance slot (blood
+// uses it to layer over/under a corpse in the cell); returns true if a quad was drawn
+  function dispatch(d:tiles.Decoration, x:Int, y:Int, t:Float, idx:Int):Bool
     {
       switch (d.tag)
         {
           case 'SPLAT':
-            return blood.draw(d, x, y, t);
+            return blood.draw(d, x, y, t, idx);
           case 'MONEY':
             return money.draw(d, x, y, t);
           case 'WALLHOLE':

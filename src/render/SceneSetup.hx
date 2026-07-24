@@ -20,6 +20,7 @@ typedef SceneBundle = {
   toggleLighting:Void->Bool,
   setLightsOff:Void->Void,
   fill:Array<Object3D>, // [ambient, hemisphere, moon] — the global fill lights (debug 2/3/4 toggles)
+  moon:DirectionalLight, // the shadow-casting moon, ticked per frame by fitMoon to follow the player
   pointLights:Array<Object3D>, // lamp spotlight pool + cone group (debug 5 toggle)
   lampLights:LampLights, // fixed live-spotlight pool, ticked per frame to follow the player
   lampPosts:Array<LampPost>, // every placed lamp (bulb world x/z + cell) for the pool
@@ -31,13 +32,21 @@ class SceneSetup {
 // create the renderer + camera once, bound to the given canvas. The resize
 // listener is registered here (once) so it does not pile up per city entry.
   public static function createCore(canvas:Dynamic):Core {
-    var renderer = new WebGLRenderer({ canvas: canvas, antialias: true });
+    // no default-framebuffer MSAA: every city frame goes through the EffectComposer, whose
+    // final OutputPass blits a fullscreen quad (no geometry edges to smooth). real AA lives on
+    // the composer's offscreen render targets instead (StreetView.setAA, config vidAntialias)
+    var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
     renderer.setPixelRatio(Math.min(Browser.window.devicePixelRatio, 1.25));
     renderer.setSize(Browser.window.innerWidth, Browser.window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.5;
-    renderer.shadowMap.enabled = false;
+    // real shadows: one ortho pass for the moon (follows the player, see fitMoon) + a few fixed lamp
+    // spotlight casters (LampLights). PCFSoft = cheap soft edges. casters/receivers are flagged
+    // explicitly at each mesh creation site — never a blanket scene.traverse (would drag sprites/
+    // transparent quads into the depth pass and cast square blobs)
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // far plane clipped to just past the fog wall (fog is opaque at span*1.2): beyond it every
     // building is solid fog yet still drawn, so a shallow/parallel camera would render the whole
@@ -57,6 +66,21 @@ class SceneSetup {
     return { renderer: renderer, camera: camera };
   }
 
+// moon direction (light comes FROM here toward the focus) — fixed, matches moon.position hint
+  static var MOON_DIR = new Vector3(-1, 2, 1.5).normalize();
+
+// park the moon's shadow box on the player each frame: sit the light up-direction from the focus and
+// aim its target at the focus, so the fixed-size ortho shadow map covers the on-screen area (not just
+// world origin). the box size/bias are static (RenderConfig.MOON_SHADOW) — only position/target move,
+// which three folds into the shadow camera during render. call once per frame with the player world pos
+  public static function fitMoon(moon:DirectionalLight, focus:Vector3):Void
+    {
+      var d = RenderConfig.MOON_SHADOW.distance;
+      moon.position.set(focus.x + MOON_DIR.x * d, focus.y + MOON_DIR.y * d, focus.z + MOON_DIR.z * d);
+      moon.target.position.copy(focus);
+      moon.target.updateMatrixWorld();
+    }
+
 // build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city
   public static function buildScene(renderer:WebGLRenderer, city:City):SceneBundle {
     var scene = new Scene();
@@ -72,8 +96,26 @@ class SceneSetup {
     // the global fill lights, kept as refs so debug hotkeys (2/3/4) can toggle them individually
     var ambient = add(new AmbientLight(0x4a5874, 1.6));
     var hemi = add(new HemisphereLight(0x5a6a92, 0x1a2030, 1.3));
-    var moon = add(new DirectionalLight(0x8294c0, 0.8));
+    // moon intensity bumped (was 0.8) so its removal in shadow actually reads against the ambient/hemi
+    // fill — tune alongside ambient/hemi if the night mood shifts too far
+    var moon = cast(add(new DirectionalLight(0x8294c0, 1.3)), DirectionalLight);
     moon.position.set(-1, 2, 1.5);
+    // real moon shadow: one ortho shadow camera, box + bias from config. the box is repositioned each
+    // frame by fitMoon so shadows track the player instead of sitting at world origin
+    var MS = RenderConfig.MOON_SHADOW;
+    moon.castShadow = true;
+    untyped moon.shadow.mapSize.set(MS.mapSize, MS.mapSize);
+    moon.shadow.bias = MS.bias;
+    untyped moon.shadow.normalBias = MS.normalBias;
+    var sc:Dynamic = moon.shadow.camera;
+    sc.near = MS.near;
+    sc.far = MS.far;
+    sc.left = -MS.halfExtent;
+    sc.right = MS.halfExtent;
+    sc.top = MS.halfExtent;
+    sc.bottom = -MS.halfExtent;
+    sc.updateProjectionMatrix();
+    scene.add(moon.target); // target must live in the scene graph so its world matrix updates each frame
 
     // street lamps: MANY cheap posts + cones (instanced) decoupled from a small FIXED pool of live
     // spotlights that follow the player (render.particles.LampLights), so the city can place hundreds
@@ -131,6 +173,7 @@ class SceneSetup {
       toggleLighting: toggleLighting,
       setLightsOff: setLightsOff,
       fill: [ ambient, hemi, moon ],
+      moon: moon,
       pointLights: pts,
       lampLights: lampLights,
       lampPosts: lampPosts,

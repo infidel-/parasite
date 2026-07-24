@@ -27,6 +27,7 @@ class UI
   var uiQueuePrev: _UIEvent; // previous UI event
   public var shiftPressed: Bool; // true when shift is held
   var awaitingNextKey: Bool; // true when waiting for second key press for quick menu
+  var quickMenuKeyup: String; // code of a quick-menu key whose keyup must be swallowed
   public var cult(get, never): ui.Cult;
   public var pedia(get, never): ui.Pedia;
   public var difficulty(get, never): ui.Difficulty;
@@ -42,6 +43,7 @@ class UI
       uiQueuePrev = null;
       shiftPressed = false;
       awaitingNextKey = false;
+      quickMenuKeyup = null;
       hud = new HUD(this, game);
       canvas = cast Browser.document.getElementById('canvas');
       canvas.style.visibility = 'hidden';
@@ -71,6 +73,13 @@ class UI
       }
 #if electron
       Browser.window.onerror = onError;
+      // window.onerror only catches SYNC throws; a rejected promise fires a separate
+      // unhandledrejection event (e.g. a throw inside a .then, which Chromium otherwise
+      // prints as a bare stackless "Uncaught (in promise)"). route it through the same log
+      Browser.window.addEventListener('unhandledrejection', function(e:Dynamic)
+        {
+          onError('Unhandled promise rejection: ' + e.reason, '', 0, 0, e.reason);
+        });
 #end
 
       uiLocked = [ UISTATE_DIFFICULTY, UISTATE_CHOICE, UISTATE_YESNO ];
@@ -107,8 +116,10 @@ class UI
   public function onError(msg: Dynamic, url: String, line: Int, col: Int, err: Dynamic): Bool
     {
       var date = DateTools.format(Date.now(), "%d %b %Y %H:%M:%S");
+      // err may be a non-Error rejection value (no .stack) — fall back to its string form
+      var stack = (err != null && err.stack != null) ? err.stack : Std.string(err);
       var l = date + ' v' + Version.getVersion() + ' ' + msg + ', ' +
-        err.stack + ', line ' + line + ', col ' + col + '\n';
+        stack + ', line ' + line + ', col ' + col + '\n';
       trace(l);
       game.log('An exception has occured and was logged. Please send the log-YYYY-MM-DD.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
       try {
@@ -139,6 +150,15 @@ class UI
 
       if (hud.consoleVisible())
         return;
+
+      // swallow the keyup of a quick-menu second key so it does not double as its
+      // gameplay bind (e.g. 't' entering targeting); matched by exact code set on
+      // the keydown, so an interleaved release order does not eat the wrong keyup
+      if (e.code == quickMenuKeyup)
+        {
+          quickMenuKeyup = null;
+          return;
+        }
 
       // enter targeting mode
       if (e.code == 'KeyT')
@@ -197,7 +217,10 @@ class UI
           (e.keyCode >= 48 && e.keyCode <= 57))
         e.preventDefault();
 
-      if (hud.state == HUD_COMMAND_MENU &&
+      // hud sub-modes only own the keyboard when no GUI window is open, so an
+      // open window's Escape-to-close is not eaten by clearing a live target etc.
+      if (_state == UISTATE_DEFAULT &&
+          hud.state == HUD_COMMAND_MENU &&
           e.code == 'Escape')
         {
           hud.command.exit();
@@ -205,7 +228,8 @@ class UI
         }
 
       // Escape closes the ground-items submenu
-      if (hud.state == HUD_PICKUP_MENU &&
+      if (_state == UISTATE_DEFAULT &&
+          hud.state == HUD_PICKUP_MENU &&
           e.code == 'Escape')
         {
           hud.state = HUD_DEFAULT;
@@ -214,7 +238,8 @@ class UI
         }
 
       // handle targeting mode keys
-      if (hud.state == HUD_TARGETING)
+      if (_state == UISTATE_DEFAULT &&
+          hud.state == HUD_TARGETING)
         {
           handleTargetingKey(e.key, e.code);
           return;
@@ -226,7 +251,13 @@ class UI
           var handled = handleQuickMenu(e.key);
           awaitingNextKey = false;
           if (handled)
-            return;
+            {
+              // swallow THIS key's keyup (matched by code) so it does not also
+              // fire its gameplay bind; keyed by code, not a shared flag, so a
+              // fast release order (q-up before t-up) can't consume it early
+              quickMenuKeyup = e.code;
+              return;
+            }
         }
 
       // default state
@@ -354,24 +385,28 @@ class UI
 // handle quick menu double key press
   function handleQuickMenu(key: String): Bool
     {
-      // simulate the key press that handleWindows expects
+      // simulate the key press that handleWindows expects, then always report
+      // handled so onKey does not re-process the same letter as a gameplay bind
+      // (handleWindows returns false even when it opens a window, so 't' would
+      // otherwise open the timeline AND fall through to the Target action)
       switch (key)
         {
           case 'g': // goals - simulate F1
-            return handleWindows('', 'F1', false, false);
+            handleWindows('', 'F1', false, false);
           case 'b': // body - simulate F2
-            return handleWindows('', 'F2', false, false);
+            handleWindows('', 'F2', false, false);
           case 'l': // log - simulate F3
-            return handleWindows('', 'F3', false, false);
+            handleWindows('', 'F3', false, false);
           case 't': // timeline - simulate F4
-            return handleWindows('', 'F4', false, false);
+            handleWindows('', 'F4', false, false);
           case 'e': // evolution - simulate F5
-            return handleWindows('', 'F5', false, false);
+            handleWindows('', 'F5', false, false);
           case 'c': // cult - simulate F6
-            return handleWindows('', 'F6', false, false);
+            handleWindows('', 'F6', false, false);
           default:
             return false;
         }
+      return true;
     }
 
 // handle opening and closing windows

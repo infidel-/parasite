@@ -98,7 +98,7 @@ class PediaConst
         {
           id: 'keyboardShortcuts',
           name: 'Keyboard shortcuts',
-          text: "Space - toggle HUD<br>
+          text: "Space - toggle tactical mode<br>
 ESC/Enter - close any window, including message dialog<br>
 NumPad - movement<br>
 NumPad5, Z - wait a turn<br>

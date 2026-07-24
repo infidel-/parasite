@@ -33,12 +33,14 @@ class Learn
             event(arr);
           case 'improvement':
             improvement(arr);
+          case 'npcs':
+            npcs(arr);
           case 'region':
             region();
           case 'timeline':
             timeline();
           case '':
-            log('Usage: learn [clues|event [index]|improvement <name> <level>|region|timeline]');
+            log('Usage: learn [clues|event [index]|improvement <name> <level>|npcs [count]|region|timeline]');
           default:
             log('Unknown learn command: ' + sub + '.');
         }
@@ -117,6 +119,41 @@ class Learn
         lv = info.maxLevel;
       game.player.evolutionManager.addImprov(match.value, lv);
       log('Learned ' + info.name + ' ' + lv);
+    }
+
+// fully learns some timeline npcs: learn npcs [count] (default 5)
+  function npcs(arr: Array<String>)
+    {
+      var count = (arr.length > 2 ? Std.parseInt(arr[2]) : 5);
+      if (count == null || count < 1)
+        count = 5;
+
+      // gather all timeline npcs
+      var all = [];
+      for (e in game.timeline)
+        for (npc in e.npc)
+          if (!npc.fullyKnown())
+            all.push(npc);
+      if (all.length == 0)
+        {
+          log('No unknown timeline npcs left.');
+          return;
+        }
+
+      // fully learn a random subset
+      var n = 0;
+      while (n < count && all.length > 0)
+        {
+          var npc = all.splice(Std.random(all.length), 1)[0];
+          npc.nameKnown = true;
+          npc.jobKnown = true;
+          npc.areaKnown = true;
+          npc.statusKnown = true;
+          n++;
+        }
+      game.player.vars.npcEnabled = true;
+      game.timeline.update(); // update event numbering
+      log('Fully learned ' + n + ' timeline npc(s).');
     }
 
 // opens the whole region map

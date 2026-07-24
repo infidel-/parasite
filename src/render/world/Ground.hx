@@ -21,11 +21,19 @@ class Ground {
 
   public static function build(scene:Scene):Void {
     var tiles = WorldCtx.tiles;
+    // add a ground mesh that catches shadows (road/alley/walkway/markings all receive building + lamp
+    // shadows; they never cast — flat surfaces)
+    function addRecv(m:Mesh):Void
+      {
+        m.receiveShadow = true;
+        scene.add(m);
+      }
+    var st = WorldCtx.style;
     var half = (GRID * CELL) / 2;
     var types = [
-      { tile: Tile.Road, tex: TEXTURES.asphalt, kind: 'asphalt', tileW: RenderConfig.ROAD_TILE, y: 0.0 },
-      { tile: Tile.Alley, tex: TEXTURES.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
-      { tile: Tile.Walkway, tex: TEXTURES.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
+      { tile: Tile.Road, tex: st.asphalt, kind: 'asphalt', tileW: RenderConfig.ROAD_TILE, y: 0.0 },
+      { tile: Tile.Alley, tex: st.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
+      { tile: Tile.Walkway, tex: st.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
     ];
     var bufs = [for (_ in types) { pos: ([] : Array<Float>), uv: ([] : Array<Float>), idx: ([] : Array<Int>) }];
     var borderBuf:GroundBuf = { pos: [], uv: [], idx: [] }; // kerb-edging stripe on walkway tops (own mesh/tex)
@@ -332,7 +340,7 @@ class Ground {
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
       var map = Textures.loadTexture(types[i].tex, types[i].kind, 1);
-      scene.add(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
 
     if (borderBuf.idx.length > 0) {
@@ -341,8 +349,8 @@ class Ground {
       geo.setAttribute('uv', new Float32BufferAttribute(borderBuf.uv, 2));
       geo.setIndex(borderBuf.idx);
       geo.computeVertexNormals();
-      var map = Textures.loadTexture(TEXTURES.walkwayBorder, 'wall', 1);
-      scene.add(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      var map = Textures.loadTexture(st.walkwayBorder, 'wall', 1);
+      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
 
     if (markBuf.idx.length > 0) {
@@ -351,10 +359,10 @@ class Ground {
       geo.setAttribute('uv', new Float32BufferAttribute(markBuf.uv, 2));
       geo.setIndex(markBuf.idx);
       geo.computeVertexNormals();
-      var map = Textures.loadTexture(TEXTURES.roadPaint, 'asphalt', 1);
+      var map = Textures.loadTexture(st.roadPaint, 'asphalt', 1);
       // opaque + non-emissive: lit like the road, so it darkens at night / brightens by day with
       // the lighting. the texture's keyed scuff pixels render as opaque grey wear (no cutout jaggies)
-      scene.add(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
     }
   }
 }

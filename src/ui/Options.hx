@@ -78,6 +78,18 @@ class Options extends UIWindow
         function (v) game.config.set('vidFpsCap', '' + v, true));
       addOptToggle('Show FPS counter', 'vidShowFps', game.config.vidShowFps,
         function (on) game.ui.hud.topbar.ensureFps());
+      addOptSelect('Antialiasing', 'vidAntialias', [
+          { title: 'Off', val: '0', isSelected: (game.config.vidAntialias == 0) },
+          { title: '2×', val: '2', isSelected: (game.config.vidAntialias == 2) },
+          { title: '4×', val: '4', isSelected: (game.config.vidAntialias == 4) },
+          { title: '8×', val: '8', isSelected: (game.config.vidAntialias == 8) },
+        ],
+        function (val) {
+          game.config.set('vidAntialias', val, true);
+          game.scene.city3d.setAA(Std.parseInt(val));
+        });
+      addOptToggle('Ambient occlusion', 'vidAO', game.config.vidAO,
+        function (on) game.scene.city3d.setAO(on));
 
       // ---- INTERFACE ----
       addCard('Interface');

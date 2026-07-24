@@ -2,6 +2,7 @@ package citygen;
 
 import citygen.CityConfig.*;
 import citygen.CityModel;
+import citygen.CityProfile;
 
 // a road line: position + width along its own axis; [a, b) is the extent it
 // occupies on the perpendicular axis (full span by default; shortened for dead-ends)
@@ -52,11 +53,15 @@ class CityGen {
   }
 
   // recursively split a block rect into building footprints. `full` = still the
-  // whole un-split block (so it shouldn't become an L with a back courtyard)
-  static function subdivide(x0:Int, y0:Int, x1:Int, y1:Int, depth:Int, rng:Void->Float,
+  // whole un-split block (so it shouldn't become an L with a back courtyard).
+  // `edges` = which of this rect's four sides are still the BLOCK's outer edge (bit 1 -z,
+  // 2 +z, 4 -x, 8 +x); a split clears the bit on the side the cut created. Downtown-only:
+  // a tower steps back from its siblings but never from a block edge (that side faces the
+  // road setback / walkway). Unused on the default path, so no rng is touched
+  static function subdivide(x0:Int, y0:Int, x1:Int, y1:Int, depth:Int, rng:Void->Float, p:CityProfile,
       out:Array<Building>, pOut:Array<PGroup>, lOut:Array<ShapeGroup>, tOut:Array<ShapeGroup>, plusOut:Array<ShapeGroup>,
       nearMaxStreet:(Int, Int, Int, Int, Bool) -> Bool, nearestStreetSide:(Int, Int, Int, Int) -> Int,
-      full:Bool = true):Void {
+      full:Bool = true, edges:Int = 15):Void {
     var w = x1 - x0 + 1;
     var d = y1 - y0 + 1;
 
@@ -64,23 +69,58 @@ class CityGen {
     // live inside leaf()). Hoisting them would consume rng on internal nodes too
     // and desync the whole seeded stream
     function leaf():Void {
-      var floors = MIN_FLOORS + Std.int(rng() * (MAX_FLOORS - MIN_FLOORS + 1));
+      var floors = p.minFloors + Std.int(rng() * (p.maxFloors - p.minFloors + 1));
       var roof = rng() < 0.5 ? 0 : 1;
       var facade = Std.int(rng() * 4); // 0 concrete, 1 brick, 2 stone, 3 metal (one rng draw → stream stays in sync)
+      // downtown: remap the one facade draw (no extra rng) so a big footprint reads as a
+      // glass office tower (2 glass-light / 3 glass-dark / 4 sleek modern) and a small one as
+      // a concrete/stone mid-rise (0/1) — the medium-city buildings interspersed among the towers
+      // a glass tower steps TOWER_CLEAR cells back from its SIBLINGS (the interior split
+      // lines), so with blockGap 1 it keeps a 3-cell ring of alley. it never steps back
+      // from a BLOCK EDGE — that side faces the road setback, and a tower has to sit right
+      // on the walkway like every other building. so the glass test runs on the footprint
+      // that survives the step-back, not on the raw leaf: an 8x8 leaf in a block corner
+      // still makes a tower (only 2 sides step in), an 8x8 one in the middle does not.
+      // downtown reaches only the tower/plain-box branches below (its courtyard/L/T/+
+      // rolls are all 0), so stepping back here covers every glass leaf
+      var gx0 = x0, gy0 = y0, gx1 = x1, gy1 = y1;
+      if (p.downtown) {
+        gx0 += (edges & 4) != 0 ? 0 : TOWER_CLEAR;
+        gx1 -= (edges & 8) != 0 ? 0 : TOWER_CLEAR;
+        gy0 += (edges & 1) != 0 ? 0 : TOWER_CLEAR;
+        gy1 -= (edges & 2) != 0 ? 0 : TOWER_CLEAR;
+        var gw = gx1 - gx0 + 1, gd = gy1 - gy0 + 1;
+        // big footprint → one of the three tall glass types {2,3,4} via facade%3 (draw 0..3 →
+        // 2,3,4,2: glass-light 50% / glass-dark 25% / sleek 25%); small → concrete/stone {0,1}
+        facade = (gw < gd ? gw : gd) >= 5 ? (2 + facade % 3) : (facade & 1);
+        // a mid-rise keeps no clearance ring — it fills its whole leaf, 1 cell from its neighbour
+        if (facade < 2)
+        {
+          gx0 = x0;
+          gy0 = y0;
+          gx1 = x1;
+          gy1 = y1;
+        }
+      }
+      // the courtyard/L/T/+ rolls are for the mid-rise infill only. a glass leaf has to reach
+      // the tower branch at the bottom: a shape is built on the RAW leaf rect, so it would
+      // throw away the step-back that gives a tower its clearance ring, and tryTower's tiered
+      // massing is the whole point of the facade
+      var shapes = !p.downtown || facade < 2;
       // small/thin footprints stay low: cap total floors by the smaller side
       inline function mk(col:Int, row:Int, bw:Int, bd:Int, ?winForce:Array<Int>, ?winBlock:Array<Int>, winInset:Float = 0):Building {
         var m = bw < bd ? bw : bd;
-        var cap = m <= 3 ? m : MAX_FLOORS;
-        var vc = MAX_FLOORS_VARIANT[facade]; if (cap > vc) cap = vc; // per-facade storey cap
+        var cap = m <= 3 ? m : p.maxFloors;
+        var vc = p.floorCap[facade]; if (cap > vc) cap = vc; // per-facade storey cap
         var f = floors < cap ? floors : cap;
         // metal warehouses: vary 2 or 3 stories (1–2 window floors) instead of always 2,
         // keyed off the existing floors draw (no extra rng → stream stays in sync)
-        if (facade == 3) f = (floors % 2 == 0) ? 2 : 1;
+        if (p.metalWarehouses && facade == 3) f = (floors % 2 == 0) ? 2 : 1;
         return new Building(col, row, bw, bd, GROUND_H + f * FLOOR_H + TOP_MARGIN, roof, facade, winForce, winBlock, winInset);
       }
       var t = COURTYARD_WALL;
       // courtyard: a U of 3 wall-strips (one side left open); inner faces get windows
-      if (w >= 2 * t + 3 && d >= 2 * t + 3 && rng() < COURTYARD_CHANCE) {
+      if (w >= 2 * t + 3 && d >= 2 * t + 3 && rng() < p.courtyardChance && shapes) {
         var strips = [
           mk(x0, y0, w, t, [0], null, t * CELL),            // top    (inner +z)
           mk(x0, y1 - t + 1, w, t, [1], null, t * CELL),    // bottom (inner -z)
@@ -91,13 +131,13 @@ class CityGen {
         var grp:Array<Building> = [];
         for (i in 0...strips.length) if (i != omit) { out.push(strips[i]); grp.push(strips[i]); }
         // centre = the strip opposite the opening (top↔bottom, left↔right)
-        finishP(grp, (omit == 0) ? 1 : (omit == 1) ? 0 : (omit == 2) ? 3 : 2, rng);
+        finishP(grp, (omit == 0) ? 1 : (omit == 1) ? 0 : (omit == 2) ? 3 : 2, rng, p);
         var cw = cellToWorld(x0 + (w - 1) / 2, y0 + (d - 1) / 2);
         pOut.push({ strips: grp, ps: { x: cw.x, z: cw.z, r: (w > d ? w : d) * CELL / 2 } });
         return;
       }
       // L-shape with a back-courtyard notch (non-full-block leaves only)
-      if (!full && w >= 7 && d >= 7 && rng() < L_CHANCE) {
+      if (!full && w >= 7 && d >= 7 && rng() < p.lChance && shapes) {
         var right = rng() < 0.5;
         var bottom = rng() < 0.5;
         var nw = 3 + Std.int(rng() * (w - 5));
@@ -116,15 +156,15 @@ class CityGen {
       // a shape piece at an explicit floor count (bypasses the small-side cap so a
       // narrow stem/centre can rise); clamped to the facade's storey max
       inline function piece(col:Int, row:Int, bw:Int, bd:Int, fl:Int):Building {
-        var typeMax = MAX_FLOORS_VARIANT[facade];
+        var typeMax = p.floorCap[facade];
         if (fl > typeMax) fl = typeMax;
         if ((bw < bd ? bw : bd) <= 2 && fl > 3) fl = 3; // 2-wide stem/arm stays <=3 storeys
-        if (fl < MIN_FLOORS) fl = MIN_FLOORS;
+        if (fl < p.minFloors) fl = p.minFloors;
         return new Building(col, row, bw, bd, GROUND_H + fl * FLOOR_H + TOP_MARGIN, roof, facade);
       }
       // T-shape: a full-width crossbar + a centred stem (the "middle line"), shorter
       // than the crossbar's side arms. Stem hangs below by default; CHANCE it sits above
-      if (w >= 7 && d >= 7 && rng() < T_CHANCE) {
+      if (w >= 7 && d >= 7 && rng() < p.tChance && shapes) {
         var cb = 3, sw = 3;
         rng(); // ponytail: keep seeded stream stable after deterministic T orientation
         var grp:Array<Building>;
@@ -166,7 +206,7 @@ class CityGen {
         return;
       }
       // plus: crossing bars with an optionally taller centre ("middle point going up")
-      if (w >= 7 && d >= 7 && rng() < PLUS_CHANCE) {
+      if (w >= 7 && d >= 7 && rng() < p.plusChance && shapes) {
         var qx0 = x0, qy0 = y0, qx1 = x1, qy1 = y1;
         var side = w < d ? w : d;
         var arm = Std.int((side - 3) / 2);
@@ -187,10 +227,10 @@ class CityGen {
         // 2-wide rule can't leave the centre towering far above it
         inline function effFloors(bw:Int, bd:Int):Int {
           var f = floors;
-          var tm = MAX_FLOORS_VARIANT[facade];
+          var tm = p.floorCap[facade];
           if (f > tm) f = tm;
           if ((bw < bd ? bw : bd) <= 2 && f > 3) f = 3;
-          if (f < MIN_FLOORS) f = MIN_FLOORS;
+          if (f < p.minFloors) f = p.minFloors;
           return f;
         }
         var leaf = effFloors(cx - qx0, hb);
@@ -212,14 +252,23 @@ class CityGen {
         plusOut.push({ pieces: grp, ps: locatorFor(grp) });
         return;
       }
-      var b = mk(x0, y0, w, d);
+      // downtown: tall stepped setback tower instead of a plain box; falls through to a
+      // plain (still tall) office box when the roll fails or the footprint is too small
+      // only a GLASS leaf stacks into a setback tower. a mid-rise staying a plain box is what
+      // keeps it under the residential rules: tryTower marks its pieces shapeKeep, which
+      // exempts them from the landlocked drop, and a stranded mid-rise stack ends up fronting
+      // nothing but alley (11% of them did)
+      if (p.downtown && p.glassTypes.indexOf(facade) >= 0
+          && Downtown.tryTower(out, gx0, gy0, gx1, gy1, floors, roof, facade, rng, p))
+        return;
+      var b = mk(gx0, gy0, gx1 - gx0 + 1, gy1 - gy0 + 1);
       // single-story shop: only when the STREET-facing side is 2 or 4 tiles, so a 2-cell-
       // wide 16:9 storefront tiles a whole number of times across it (no odd 3-tile face),
       // and the depth is shallow (<=2). street side chosen by nearestStreetSide.
       var front = nearestStreetSide(x0, y0, x1, y1);      // 0=+z,1=-z,2=+x,3=-x
       var streetLen = (front == 2 || front == 3) ? d : w; // tiles along the storefront face
       var shopDepth = (front == 2 || front == 3) ? w : d; // perpendicular depth
-      if ((streetLen == 2 || streetLen == 4) && shopDepth <= 2 && rng() < DOWNGRADE_CHANCE) {
+      if ((streetLen == 2 || streetLen == 4) && shopDepth <= 2 && rng() < p.downgradeChance) {
         b.shop = Std.int(rng() * SHOP_TYPES);
         b.shopOpen = rng() < SHOP_OPEN_CHANCE;
         b.shopDoor = Std.int(rng() * 0x7fffffff); // entrance-cell selector
@@ -228,18 +277,27 @@ class CityGen {
       out.push(b);
     }
 
-    var big = w > SPLIT_OVER || d > SPLIT_OVER;
-    var capW = w > MAX_BUILDING, capD = d > MAX_BUILDING; // hard cap on either axis
-    if (!capW && !capD && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < EARLY_LEAF_CHANCE))) { leaf(); return; }
+    var big = w > p.splitOver || d > p.splitOver;
+    var capW = w > p.maxBuilding, capD = d > p.maxBuilding; // hard cap on either axis
+    // downtown: a rect more than MAX_ASPECT times longer than it is wide is a razor blade (the
+    // cut range lets a child come out 2 cells wide, so a 10x15 block can leave a 2x15 sliver).
+    // keep splitting its long axis rather than stopping on it — the split branch below always
+    // shortens the long side, and the final else still terminates anything too small to cut
+    var thin = p.downtown && (w > d ? w : d) > (w < d ? w : d) * MAX_ASPECT;
+    if (!capW && !capD && !thin && (depth <= 0 || (w < 7 && d < 7) || (!full && !big && rng() < p.earlyLeafChance))) { leaf(); return; }
     // force a split along any over-cap axis (wider one first); else normal big-block split
+    // split leaves blockGap empty cells between siblings (residential 1 → cut+2, identical
+    // stream). the cut range shrinks by the extra gap so both children keep a >=3-cell
+    // footprint. each child loses the block-edge bit on the side the cut just created
+    var gap = p.blockGap;
     if (capW || (!capD && w >= d && w >= 7)) {
-      var cut = x0 + 3 + Std.int(rng() * (w - 6));
-      subdivide(x0, y0, cut, y1, depth - 1, rng, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
-      subdivide(cut + 2, y0, x1, y1, depth - 1, rng, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
+      var cut = x0 + 3 + Std.int(rng() * (w - 6 - (gap - 1)));
+      subdivide(x0, y0, cut, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~8);
+      subdivide(cut + 1 + gap, y0, x1, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~4);
     } else if (capD || d >= 7) {
-      var cut = y0 + 3 + Std.int(rng() * (d - 6));
-      subdivide(x0, y0, x1, cut, depth - 1, rng, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
-      subdivide(x0, cut + 2, x1, y1, depth - 1, rng, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false);
+      var cut = y0 + 3 + Std.int(rng() * (d - 6 - (gap - 1)));
+      subdivide(x0, y0, x1, cut, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~2);
+      subdivide(x0, cut + 1 + gap, x1, y1, depth - 1, rng, p, out, pOut, lOut, tOut, plusOut, nearMaxStreet, nearestStreetSide, false, edges & ~1);
     } else {
       leaf();
     }
@@ -253,8 +311,23 @@ class CityGen {
     var ix1 = Std.int(Math.min(bx1, cx1)), iy1 = Std.int(Math.min(by1, cy1));
     if (ix0 > ix1 || iy0 > iy1) return [b]; // no overlap
     var out = [];
-    inline function piece(col:Int, row:Int, w:Int, d:Int, dir:Int)
-      out.push(new Building(col, row, w, d, b.h, b.roof, b.facade, null, tag ? [dir] : null));
+    inline function piece(col:Int, row:Int, w:Int, d:Int, dir:Int) {
+      // a clipped setback tier is still a setback tier, so it carries its massing hints across:
+      // buried below its deck, no penthouse, exempt from the landlocked/blank drops, and (road
+      // carve only — a tagged cut fronts a courtyard) windows forced on the new street wall.
+      // only tower tiers are shapeKeep this early, so the residential stream is untouched
+      var keep = b.shapeKeep;
+      var np = new Building(col, row, w, d, b.h, b.roof, b.facade,
+        (keep && !tag) ? b.winForce : null, tag ? [dir] : null);
+      if (keep)
+      {
+        np.shapeKeep = true;
+        np.buriedH = b.buriedH;
+        np.roofPenthouse = b.roofPenthouse;
+        np.skipWindowFloor = b.skipWindowFloor;
+      }
+      out.push(np);
+    }
     if (ix0 > bx0) piece(bx0, by0, ix0 - bx0, b.d, 2);              // left strip  (court at +x)
     if (ix1 < bx1) piece(ix1 + 1, by0, bx1 - ix1, b.d, 3);         // right strip (court at -x)
     if (iy0 > by0) piece(ix0, by0, ix1 - ix0 + 1, iy0 - by0, 0);   // top strip   (court at +z)
@@ -266,12 +339,12 @@ class CityGen {
   // courtyard-facing walls become windowed (winForce, windows on every floor but the
   // ground) and (b) the centre strip — the bar opposite the opening, identified by
   // centreDir — grows/shrinks ±2 floors, clamped to [MIN_FLOORS, type max]
-  static function finishP(strips:Array<Building>, centreDir:Int, rng:Void->Float):Void {
+  static function finishP(strips:Array<Building>, centreDir:Int, rng:Void->Float, p:CityProfile):Void {
     for (s in strips) if (s.winBlock != null) { s.winForce = s.winBlock; s.winBlock = null; }
     for (s in strips) if (s.winForce != null && s.winForce[0] == centreDir) {
-      var typeMax = s.facade == 1 ? MAX_FLOORS_BRICK : MAX_FLOORS;
+      var typeMax = s.facade == 1 ? p.maxFloorsBrick : p.maxFloors;
       var f = Math.round((s.h - GROUND_H - TOP_MARGIN) / FLOOR_H) + Std.int(rng() * 5) - 2;
-      if (f < MIN_FLOORS) f = MIN_FLOORS;
+      if (f < p.minFloors) f = p.minFloors;
       if (f > typeMax) f = typeMax;
       s.h = GROUND_H + f * FLOOR_H + TOP_MARGIN;
     }
@@ -282,7 +355,7 @@ class CityGen {
   // `open` (0 top/1 bottom/2 left/3 right) = which edge the П opens toward — chosen by
   // the caller to face an interior side so the walled three sides face the street. ps
   // is the П locator (null for the L fallback)
-  static function reshapeLarge(b:Building, rng:Void->Float, open:Int):{ pieces:Array<Building>, ps:PShape } {
+  static function reshapeLarge(b:Building, rng:Void->Float, open:Int, p:CityProfile):{ pieces:Array<Building>, ps:PShape } {
     if (b.w >= 2 * COURT_RING + COURT_MIN && b.d >= 2 * COURT_RING + COURT_MIN && rng() < 0.6) {
       // cut flush to one edge → subtractRect drops that strip, leaving a П. baseDir =
       // the strip opposite the opening (the connecting bar = the П's centre piece)
@@ -296,7 +369,7 @@ class CityGen {
         default: cx1 = b.col + b.w - 1; baseDir = 2;      // open right → base +x
       }
       var pieces = subtractRect(b, cx0, cy0, cx1, cy1);
-      finishP(pieces, baseDir, rng);
+      finishP(pieces, baseDir, rng, p);
       var cw = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
       return { pieces: pieces, ps: { x: cw.x, z: cw.z, r: (b.w > b.d ? b.w : b.d) * CELL / 2 } };
     }
@@ -337,21 +410,22 @@ class CityGen {
   }
 
   // one axis of roads: intervals with variable gaps, one interior road widened to main
-  static function roadLines(len:Int, rng:Void->Float):Array<RoadLine> {
+  static function roadLines(len:Int, rng:Void->Float, prof:CityProfile):Array<RoadLine> {
     var lines:Array<RoadLine> = [];
     var p = 0;
     while (p < len) {
       lines.push({ pos: p, w: ROAD_W, a: 0, b: len });
-      p += ROAD_W + MIN_BLOCK + Std.int(rng() * (MAX_BLOCK - MIN_BLOCK + 1));
+      p += ROAD_W + prof.minBlock + Std.int(rng() * (prof.maxBlock - prof.minBlock + 1));
     }
     if (lines.length > 2) lines[1 + Std.int(rng() * (lines.length - 2))].w = MAIN_ROAD_W;
     return lines;
   }
 
-  public static function generate(seed:Int = 1337):City {
+  public static function generate(seed:Int = 1337, ?profile:CityProfile):City {
+    if (profile == null) profile = Profiles.DEFAULT; // residential default when unspecified
     var rng = mulberry32(seed);
-    var vroads = roadLines(GRID, rng); // columns
-    var hroads = roadLines(GRID, rng); // rows
+    var vroads = roadLines(GRID, rng, profile); // columns
+    var hroads = roadLines(GRID, rng, profile); // rows
 
     // each non-main interior vertical road gets ONE treatment: first try an L-turn
     // (bend mid-block, a horizontal connector carrying it to a full-span neighbour),
@@ -365,7 +439,7 @@ class CityGen {
       if (v.w == MAIN_ROAD_W) continue;
 
       // --- L-turn attempt -----------------------------------------------------
-      if (hroads.length >= 3 && rng() < TURN_CHANCE) {
+      if (hroads.length >= 3 && rng() < profile.turnChance) {
         // a full-span neighbour vertical road to connect into
         var cands = [];
         if (vi > 0) { var l = vroads[vi - 1]; if (l.a == 0 && l.b >= GRID) cands.push(l); }
@@ -404,7 +478,7 @@ class CityGen {
       }
 
       // --- dead-end fallback --------------------------------------------------
-      if (hroads.length >= 2 && rng() < DEADEND_CHANCE) {
+      if (hroads.length >= 2 && rng() < profile.deadendChance) {
         if (rng() < 0.5) v.a = hroads[1].pos;                                          // top tip removed
         else v.b = hroads[hroads.length - 1].pos + hroads[hroads.length - 1].w;        // bottom tip removed
       }
@@ -477,8 +551,8 @@ class CityGen {
     var pgroups:Array<PGroup> = []; // every П candidate (leaf U-courtyards + reshaped), validated later
     var lgroups:Array<ShapeGroup> = [], tgroups:Array<ShapeGroup> = [], plusgroups:Array<ShapeGroup> = []; // composite candidates, validated later
     for (hi in 0...hroads.length) {
-      var y0 = hroads[hi].pos + hroads[hi].w + SETBACK;
-      var y1 = (hi + 1 < hroads.length ? hroads[hi + 1].pos : GRID) - 1 - SETBACK;
+      var y0 = hroads[hi].pos + hroads[hi].w + profile.setback;
+      var y1 = (hi + 1 < hroads.length ? hroads[hi + 1].pos : GRID) - 1 - profile.setback;
       if (y1 - y0 < 2) continue;
       // the band's cross-road rows; a vertical road is a cut here only if it spans them
       var bandTop = hroads[hi].pos;
@@ -488,14 +562,21 @@ class CityGen {
       var bandBot = Std.int(Math.min(GRID, (hi + 1 < hroads.length ? hroads[hi + 1].pos + hroads[hi + 1].w : GRID)));
       var cuts = [for (v in vroads) if (v.a <= bandTop && v.b >= bandBot) v];
       for (k in 0...cuts.length) {
-        var x0 = cuts[k].pos + cuts[k].w + SETBACK;
-        var x1 = (k + 1 < cuts.length ? cuts[k + 1].pos : GRID) - 1 - SETBACK;
+        var x0 = cuts[k].pos + cuts[k].w + profile.setback;
+        var x1 = (k + 1 < cuts.length ? cuts[k + 1].pos : GRID) - 1 - profile.setback;
         if (x1 - x0 < 2) continue;
         var block:Array<Building> = [];
         var blockP:Array<PGroup> = [];
         var blockL:Array<ShapeGroup> = [], blockT:Array<ShapeGroup> = [], blockPlus:Array<ShapeGroup> = [];
-        subdivide(x0, y0, x1, y1, SUBDIV_DEPTH, rng, block, blockP, blockL, blockT, blockPlus, nearMaxStreet, nearestStreetSide);
-        var carved = rng() < COURTYARD_BLOCK_CHANCE ? carveCourtyard(block, x0, y0, x1, y1, rng, courtyards) : null;
+        subdivide(x0, y0, x1, y1, profile.subdivDepth, rng, profile, block, blockP, blockL, blockT, blockPlus, nearMaxStreet, nearestStreetSide);
+        // a setback tower is a stack of concentric tiers: one courtyard rect cuts every tier
+        // along the SAME line, so the pieces end up with coplanar walls (z-fighting) and the
+        // stack stops reading as a wedding cake. skip the carve for such a block — same
+        // exemption reshapeLarge already makes for winForce/winBlock pieces. the roll is still
+        // drawn so the residential stream is untouched (nothing has shapeKeep here but towers)
+        var carveRoll = rng() < profile.courtyardBlockChance;
+        for (b in block) if (b.shapeKeep) { carveRoll = false; break; }
+        var carved = carveRoll ? carveCourtyard(block, x0, y0, x1, y1, rng, courtyards) : null;
         // a carved block re-subtracts its buildings, so leaf-shape pieces may change
         // identity — only trust their locators when the block wasn't carved
         if (carved != null) for (b in carved) buildings.push(b);
@@ -517,8 +598,8 @@ class CityGen {
     // road, not a courtyard (no worn windows). Only the true cells were painted road
     for (t in turns) {
       var rects = [
-        [t.sx0 - SETBACK, t.sy0 - SETBACK, t.sx1 + SETBACK, t.sy1 + SETBACK], // stub
-        [t.cx0 - SETBACK, t.cy0 - SETBACK, t.cx1 + SETBACK, t.cy1 + SETBACK], // connector
+        [t.sx0 - profile.setback, t.sy0 - profile.setback, t.sx1 + profile.setback, t.sy1 + profile.setback], // stub
+        [t.cx0 - profile.setback, t.cy0 - profile.setback, t.cx1 + profile.setback, t.cy1 + profile.setback], // connector
       ];
       for (rect in rects) {
         var next:Array<Building> = [];
@@ -526,6 +607,38 @@ class CityGen {
           if (p.w >= 2 && p.d >= 2) next.push(p);
         buildings = next;
       }
+    }
+
+    // a road carve can trim a setback tier and the tier below it back to the SAME line, so
+    // their walls end up coplanar (z-fighting, and the stack stops reading as a wedding cake).
+    // pull the upper tier in one cell on every face it still shares with the tier it rises out
+    // of, restoring the ledge; a tier that collapses below 2 cells is dropped
+    for (b in buildings) {
+      if (b.buriedH <= 0) continue;
+      for (c in buildings) {
+        if (c == b ||
+            Math.abs(c.h - b.buriedH) > 0.01 ||
+            b.col > c.col + c.w - 1 ||
+            c.col > b.col + b.w - 1 ||
+            b.row > c.row + c.d - 1 ||
+            c.row > b.row + b.d - 1)
+          continue;
+        if (b.col == c.col)
+        {
+          b.col++;
+          b.w--;
+        }
+        if (b.col + b.w == c.col + c.w)
+          b.w--;
+        if (b.row == c.row)
+        {
+          b.row++;
+          b.d--;
+        }
+        if (b.row + b.d == c.row + c.d)
+          b.d--;
+      }
+      if (b.w < 2 || b.d < 2) b.drop = true;
     }
 
     // no oversized blank boxes: any plain rectangle bigger than BIG_W x BIG_D becomes
@@ -542,7 +655,7 @@ class CityGen {
     }
     var shaped:Array<Building> = [];
     for (b in buildings) {
-      var big = (b.w > BIG_W || b.d > BIG_W) && (b.w > BIG_D && b.d > BIG_D);
+      var big = (b.w > profile.bigW || b.d > profile.bigW) && (b.w > profile.bigD && b.d > profile.bigD);
       if (b.winForce != null || b.winBlock != null || !big) { shaped.push(b); continue; }
       // which of b's four sides face a street; opening should avoid those
       var sN = false, sS = false, sW = false, sE = false;
@@ -551,11 +664,73 @@ class CityGen {
       var cand = [];
       if (!sN) cand.push(0); if (!sS) cand.push(1); if (!sW) cand.push(2); if (!sE) cand.push(3);
       var open = cand.length > 0 ? cand[Std.int(rng() * cand.length)] : Std.int(rng() * 4);
-      var res = reshapeLarge(b, rng, open);
+      var res = reshapeLarge(b, rng, open, profile);
       for (p in res.pieces) shaped.push(p);
       if (res.ps != null) pgroups.push({ strips: res.pieces, ps: res.ps });
     }
     buildings = shaped;
+
+    // every glass curtain-wall building gets a CELL-multiple height so its cell-locked window
+    // grid has a pitch of exactly CELL (see Downtown.glassHeight). this catches the plain
+    // boxes and carved pieces that came through mk(); heights alone, footprints unaffected.
+    // tower tiers are EXCLUDED (shapeKeep is theirs alone this early — composites are tagged
+    // later, in keepComposite): a tier is already snapped AND its deck was recorded in the tier
+    // above's buriedH, so re-deriving a floor count from its height and re-snapping can only
+    // move it off that deck
+    // the same pass enforces the MAX_ASPECT rule and the thin-footprint storey cap on the FINAL
+    // footprints. neither can live where mk() applies them: a leaf that was square and squat when
+    // built still turns into a tall razor blade later, by stepping back (a 9x16 leaf insets to a
+    // 5x16 tower) or by being carved (an L-turn road leaves a 2x14 strip off a 12-storey box)
+    if (profile.downtown)
+    {
+      // a courtyard/L/T/+ piece is EXEMPT from both: its arms are deliberately thin and, for a
+      // T/+ stem, deliberately tall (piece() bypasses mk's cap so a centre can rise). they are
+      // not shapeKeep yet — keepComposite tags them below — so identity is the only handle
+      var composite = new haxe.ds.ObjectMap<Building, Bool>();
+      for (g in pgroups) for (s in g.strips) composite.set(s, true);
+      for (gs in [lgroups, tgroups, plusgroups]) for (g in gs) for (s in g.pieces) composite.set(s, true);
+      for (b in buildings)
+      {
+        if (b.drop) continue;
+        if (!composite.exists(b))
+        {
+          var mn = b.w < b.d ? b.w : b.d;
+          if ((b.w > b.d ? b.w : b.d) > mn * MAX_ASPECT)
+          {
+            // a setback tier has to stay concentric with the stack it belongs to, so trimming it
+            // would slide it off its deck — a tier this thin can only be dropped
+            if (b.shapeKeep)
+            {
+              b.drop = true;
+              continue;
+            }
+            if (b.w > b.d) b.w = mn * MAX_ASPECT;
+            else b.d = mn * MAX_ASPECT;
+            mn = b.w < b.d ? b.w : b.d;
+          }
+          // mk caps a thin leaf's storeys by its short side; a tier is exempt (it is thin by
+          // design and its height carries the whole stack)
+          if (mn <= 3 && !b.shapeKeep)
+          {
+            var f = Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H));
+            if (f > mn) b.h = GROUND_H + mn * FLOOR_H + TOP_MARGIN;
+          }
+        }
+        if (profile.glassTypes.indexOf(b.facade) >= 0)
+        {
+          if (!b.shapeKeep)
+            b.h = Downtown.glassHeight(Std.int(Math.round((b.h - GROUND_H - TOP_MARGIN) / FLOOR_H)));
+          // a road/courtyard carve can leave a tower as a sliver: a 2-cell-wide shaft at 20+
+          // storeys reads as a wall, not a building, and has lost the clearance ring the leaf
+          // inset gave it. drop it — the footprint reverts to alley like any other dropped box
+          if (b.w < 3 || b.d < 3)
+          {
+            b.drop = true;
+            continue;
+          }
+        }
+      }
+    }
 
     // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
     var tiles:Array<Array<Tile>> = [for (r in 0...GRID) [for (c in 0...GRID) isRoad(c, r) ? Tile.Road : Tile.Walkway]];
@@ -628,7 +803,8 @@ class CityGen {
 
     var kept:Array<Building> = [];
     for (b in buildings) {
-      if (!b.drop && (b.shapeKeep || hasOuter(b))) { kept.push(b); continue; }
+      if (!b.drop
+          && (b.shapeKeep || hasOuter(b))) { kept.push(b); continue; }
       fillRect(tiles, b.col, b.row, b.w, b.d, Tile.Alley);
     }
     buildings = kept;
@@ -643,7 +819,22 @@ class CityGen {
       for (r in b.row...b.row + b.d) if (bld(b.col - 1, r) || bld(b.col + b.w, r)) return true;
       return false;
     }
-    for (b in buildings) if (b.facade == 3 && (b.w < 3 || b.d < 3 || flushNeighbour(b))) b.facade = 0;
+    for (b in buildings) if (profile.metalWarehouses && b.facade == 3 && (b.w < 3 || b.d < 3 || flushNeighbour(b))) b.facade = 0;
+
+    // drop blank boxes: a concrete/brick/stone building whose every wall is buried can show no
+    // window at all (CityFaces.windowable is the same rule the render's window pass uses), and a
+    // windowless box is an anomaly the checklist FAILs. runs AFTER the metal downgrade above so
+    // `facade` is final — a warehouse demoted to concrete still owes windows — and after the
+    // landlocked drop so `tiles` already reflect it. one pass suffices: reverting a footprint to
+    // alley only ever UNBURIES its neighbours, so a drop can never create a new blank box.
+    // shapeKeep composites are exempt, as at the landlocked drop: an L/T/+ survives or dies whole,
+    // and pulling one buried piece out would leave a broken shape behind.
+    var windowed:Array<Building> = [];
+    for (b in buildings) {
+      if (b.shapeKeep || CityFaces.windowable(tiles, b)) { windowed.push(b); continue; }
+      fillRect(tiles, b.col, b.row, b.w, b.d, Tile.Alley);
+    }
+    buildings = windowed;
 
     // debug locators for the downgraded single-story shops (derived from the final
     // building list so it survives courtyard/L-turn re-subtraction). each carries a

@@ -41,7 +41,12 @@ class CombatTargetsWithGuards extends Combat
       if (clusterX < 0 ||
           clusterY < 0)
         {
-          var center = game.area.findUnseenEmptyLocation();
+          // muster around a chosen object type (e.g. burning barrels) when the ordeal asks for it
+          var center: _Point = { x: -1, y: -1 };
+          if (spawnNearType != null)
+            center = game.area.findLocationNearObject(spawnNearType);
+          if (center.x < 0)
+            center = game.area.findUnseenEmptyLocation();
           if (center.x < 0)
             center = game.area.findEmptyLocationNear(
               game.playerArea.x, game.playerArea.y, 5);

@@ -75,6 +75,9 @@ class MoneyBill3D extends Particle3D {
             scale: M.scale,
             yaw: phase + roll * a,
             faceX: Math.cos(spin * a + phase),
+            // airborne: actor tier so a flying bill isn't hidden behind an AI (default 0 = ground
+            // decal tier -> drew under every actor). the landed bill below stays ground-tier
+            order: Sprites.ORD_ACTOR,
           });
           return;
         }

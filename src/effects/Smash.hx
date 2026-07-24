@@ -35,6 +35,7 @@ class Smash extends Effect
 
       ai.emitSound({
         text: '*WAIL*',
+        kind: 'bark',
         radius: 6,
         alertness: 12
       });

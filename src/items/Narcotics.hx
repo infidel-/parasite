@@ -52,6 +52,7 @@ class Narcotics extends ItemInfo
       game.scene.sounds.play('item-' + item.id);
       host.emitSound({
         text: '*snort*',
+        kind: 'bark',
         radius: 5,
         alertness: 5
       });

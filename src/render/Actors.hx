@@ -27,6 +27,7 @@ class Actors {
   var sprites:Sprites;                                    // lit billboard/decal paint surface (quad pool + atlas cache)
   var beams:Beams;                                        // unlit additive bright-FX pool (gun tracers, muzzle flash)
   var sparks:Sparks;                                      // camera-facing soft-ember pool (impact sprays)
+  var slimeTrail:SlimeTrail;                              // green slime ribbon + landing puddles behind the free parasite
   var muzzleLights:MuzzleLights;                          // fixed muzzle-light pool (constant scene light count)
   var paint:Paint3D;                                      // the two surfaces handed to each particle each frame
   var particles:Particles3D;                              // transient 3D FX (blood, death crossfade, gun shots)
@@ -38,11 +39,22 @@ class Actors {
   var flames:FlameShadows;                               // barrel flame body/glow + fake cast shadows
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
+  var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
+  var convo:ChatConvo;                                   // chat-mode "talking" bubbles over the two conversers
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
+  var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
   var _heldBodies:haxe.ds.ObjectMap<Entity, Bool> = new haxe.ds.ObjectMap(); // corpse bodies kept invisible until their death ghost lands
+  // corpse -> the count of ground decals in its cell when it first landed = its appearance slot.
+  // snapshotted on first sighting (render-only, no save field): blood present then paints under it,
+  // blood sprayed later paints over it. ponytail: on a reload mid-fight the exact pre-existing order
+  // is lost (the body re-snapshots above all its current blood) — cosmetic
+  var _bodyStackSlot:haxe.ds.ObjectMap<Entity, Int> = new haxe.ds.ObjectMap();
+  // cellKey (col*height+row) -> resting-corpse landing slot, rebuilt each frame in the object loop
+  // and handed to decals.paint so blood past the slot in that cell paints over the body
+  var _corpseCells:Map<Int,Int> = new Map();
   var lampCorners:Map<Int,Int> = null;                  // grid vertex -> lamp dir; slides bend past a post on the cut corner
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
@@ -60,6 +72,7 @@ class Actors {
       this.game = game;
       this.camera = camera;
       this.actorGroup = actorGroup;
+      Viewport.init(); // cache viewport size on resize so the per-frame hud never forces a reflow
       sprites = new Sprites(game, actorGroup);
       beams = new Beams(actorGroup);
       sparks = new Sparks(actorGroup, camera);
@@ -71,9 +84,12 @@ class Actors {
       // per-frame sub-passes of the actor layer; each is handed the shared actor-pose map so it can
       // read poses (FlameShadows/Badges) — Actors stays its sole writer
       decals = new Decals(game, sprites, actorGroup);
+      slimeTrail = new SlimeTrail(actorGroup, sprites);
       flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
+      bubbles = game.ui.hud.bubbles;
+      convo = new ChatConvo(game, camera, actors, bubbles);
       lastState = game.player.state;
     }
 
@@ -107,6 +123,7 @@ class Actors {
       sprites.begin();
       beams.begin();
       sparks.begin();
+      _corpseCells.clear();                               // rebuilt below by the object loop, before decals.paint reads it
       muzzleLights.update(dtMs);
       // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
       // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
@@ -147,13 +164,14 @@ class Actors {
                 ox = p.ox;
                 oz = p.oz;
               }
-            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz);
+            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz, true);
             if (vis)
               badges.drawObjTarget(o);
           }
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
       offscreen.begin();
+      bubbles.begin();
       for (ai in game.area.getAllAI())
         if (ai.entity != null)
           {
@@ -168,9 +186,13 @@ class Actors {
                 badges.drawXray(ai, bs);
                 badges.drawBadges(ai, bs, dtMs);
                 markOffscreen(ai, bs);
+                drawBubble(ai);
               }
           }
       offscreen.end();
+      // chat-mode talking bubbles over the two conversers (queued after the barks, before end())
+      convo.drive(dtMs);
+      bubbles.end();
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
@@ -190,7 +212,13 @@ class Actors {
       // logical cell only while the parasite sprite is dropped mid-host-invade)
       var pp = actors.get(game.playerArea.entity);
       var pw = CityConfig.cellToWorld(game.playerArea.x, game.playerArea.y);
-      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z, dtMs);
+      decals.paint(pp != null ? pp.x : pw.x, pp != null ? pp.z : pw.z, dtMs, _corpseCells);
+      // green slime trail behind the free parasite (render-only ribbon): only while it crawls the
+      // ground, not while riding on / hidden inside a host. head = its smoothed billboard pos
+      slimeTrail.update(dtMs,
+        st == _PlayerState.PLR_STATE_PARASITE && pp != null,
+        pp != null ? pp.x : pw.x,
+        pp != null ? pp.z : pw.z);
       flames.bodyAndShadows(dtMs);
       flames.driveFireLoop();
       particles.update(dtMs, paint);
@@ -241,6 +269,53 @@ class Actors {
       decals.setDebris(list);
     }
 
+// the world point at an actor's head — the anchor every screen overlay projects from (edge
+// indicators, the hover tooltip, chat bubbles)
+  inline function headPoint(a:Actor, out:Vector3):Void
+    {
+      out.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+    }
+
+// queue this AI's live bark as a chat bubble above its head. the text/font/variant are set by
+// PawnEntity.setText and expire on its turn timer, so nothing here tracks lifetime — the bubble
+// layer retires whatever stops being queued
+  function drawBubble(ai:AI):Void
+    {
+      var e = ai.entity;
+      if (e.text == null)
+        return;
+      // mid-chat the two participants talk through the convo bubbles (ChatConvo); mute their barks
+      // so a stray line can't fight the talking bubble over the same head
+      if (game.ui.hud.state == HUD_CHAT &&
+          game.player.chat.target != null &&
+          (ai == game.player.host ||
+           ai == game.player.chat.target))
+        return;
+      var a = actors.get(e);
+      if (a == null ||
+          a.op < 0.3)
+        return;
+      // lift along the camera's screen-up axis rather than world +Y: the pitch flattens as the rig
+      // zooms in, which would foreshorten a world-Y offset and drop the bubble onto the head (same
+      // reasoning as the badge row, see Badges.drawBadges)
+      _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      var lift = Sprites.SIZE * RenderConfig.BUBBLE_LIFT;
+      headPoint(a, _ov);
+      _ov.set(_ov.x + _up.x * lift, _ov.y + _up.y * lift, _ov.z + _up.z * lift);
+      _ov.project(camera);
+      // behind or off the sides: the AI already has a screen-edge indicator (markOffscreen), a
+      // bubble pinned next to it would just fight it for space
+      if (_ov.z > 1 ||
+          _ov.x < -1 || _ov.x > 1 ||
+          _ov.y < -1 || _ov.y > 1)
+        return;
+      // cult-speak (a lang-rendered bark) gets its own class: bold + full-size, not the shrunk default
+      var kind = e.textFont != null ? e.textKind + ' cultspeak' : e.textKind;
+      bubbles.show('ai:' + ai.id, e.textID, e.text, e.textFontFamily, kind,
+        (_ov.x * 0.5 + 0.5) * Viewport.w,
+        (-_ov.y * 0.5 + 0.5) * Viewport.h);
+    }
+
 // queue a screen-edge indicator for a seen AI whose head projects outside the viewport: the
 // alert badge glyph (dot when calm) tinted by the same ramp as the 3D outlines
   function markOffscreen(ai:AI, bs:Array<_Badge>):Void
@@ -249,7 +324,7 @@ class Actors {
       if (a == null ||
           a.op < 0.3)
         return;
-      _ov.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+      headPoint(a, _ov);
       _ov.project(camera);
       var behind = _ov.z > 1;
       if (!behind &&
@@ -259,11 +334,12 @@ class Actors {
       // behind-camera projections come out point-mirrored — flip back to the correct side
       var ndcX = behind ? -_ov.x : _ov.x;
       var ndcY = behind ? -_ov.y : _ov.y;
-      // glyph: the current alert-ish badge if any (npc is two-tone, not tintable — skip it)
+      // glyph: the current alert-ish badge if any (npc/mission-target are two-tone discs, not tintable — skip)
       var key = '';
       for (b in bs)
         if (b.svg != null &&
-            b.svg != 'npc')
+            b.svg != 'npc' &&
+            b.svg != 'missiontarget')
           {
             key = b.svg;
             break;
@@ -274,11 +350,13 @@ class Actors {
         scale);
     }
 
-// street view teardown: hide the HUD-owned edge indicators (nothing drives them anymore)
+// street view teardown: drop the HUD-owned edge indicators + bubbles (nothing drives them anymore)
   public function dispose():Void
     {
       offscreen.clear();
+      bubbles.clear();
       decals.dispose();
+      slimeTrail.dispose();
     }
 
 // find the visible AI whose head projects nearest the given client point (within a px radius);
@@ -300,7 +378,7 @@ class Actors {
           if (a == null ||
               a.op < 0.3)
             continue;
-          v.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+          headPoint(a, v);
           v.project(camera);
           if (v.z > 1)                                          // behind the camera
             continue;
@@ -361,6 +439,31 @@ class Actors {
         w.x, render.world.WorldCtx.floorY(x, y) + 0.05, w.z, game, hitShake);
       particles.add(s);
       return s;
+    }
+
+// spawn a lingering gas cloud at cell (x,y): a cluster of lit alpha puff sprites that billows in
+// then settles + fades. kind picks the tint (panic reddish / paralysis blue) + which 2D gas frame
+// blends in
+  public function gasCloud(x:Int, y:Int, kind:String, range:Int):Void
+    {
+      var G = RenderConfig.GAS;
+      var w = CityConfig.cellToWorld(x, y);
+      var color = (kind == 'paralysis' ? G.paralysisColor : G.panicColor);
+      // pull the game's own 2D gas sprite from the entities atlas to blend into the cluster (kept at
+      // its default smooth filtering). null until the atlas decodes -> that cast is baked-blob only
+      var frame = (kind == 'paralysis' ? Const.FRAME_PARALYSIS_GAS : Const.FRAME_PANIC_GAS);
+      var atlas = sprites.tex('entities', frame, Const.ROW_EFFECT, false);
+      // tile passability probe: keeps puffs out of wall/building tiles (visible in tactical view,
+      // where building meshes are hidden and only the floor grid shows the footprint)
+      var area = game.area;
+      var walkable = function(wx:Float, wz:Float):Bool
+        {
+          var c = CityConfig.worldToCell(wx, wz);
+          return area.isWalkable(c.col, c.row);
+        };
+      particles.add(new render.particles.GasCloud3D(actorGroup,
+        w.x, render.world.WorldCtx.floorY(x, y) + 0.05, w.z,
+        color, range, G.lifeMult * RenderConfig.BASE_MS, atlas, walkable));
     }
 
 // throw a fountain of money bills from cell (x,y): each bill picks a random walkable landing
@@ -509,7 +612,7 @@ class Actors {
 // advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
 // running). baseY/baseScale set the resting pose (nonzero for the attached parasite riding a
 // host's head). flat lays the sprite on the ground as a decal instead of standing it up
-  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0):Void
+  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0, groundAnchor:Bool = false):Void
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
@@ -519,9 +622,33 @@ class Actors {
       var floor = WorldCtx.floorY(a.col, a.row);
       // decals hug the ground; upright sprites centre at half their height
       var wy = flat ? floor + 0.05 : floor + Sprites.SIZE * 0.5 + baseY;
+      // a flat corpse records its landing slot (the count of ground decals in its cell when it first
+      // appeared) into _corpseCells, so blood sprayed here afterwards paints over it (Blood.draw). the
+      // body renders at ORD_CORPSE, above the blood already present when it fell
+      if (flat)
+        {
+          var slot = _bodyStackSlot.get(e);
+          if (slot == null)
+            {
+              var tl = game.area.tiles[a.col] != null ? game.area.tiles[a.col][a.row] : null;
+              slot = (tl != null && tl.decoration != null) ? tl.decoration.length : 0;
+              _bodyStackSlot.set(e, slot);
+            }
+          _corpseCells.set(a.col * game.area.height + a.row, slot);
+        }
+      // upright ground item (e.g. a generic pickup box): actor art fills the frame feet-at-bottom,
+      // but a small item icon sits mid-cell and would hang in the air — drop it by the sprite's
+      // empty bottom margin so its opaque content rests on the floor
+      if (groundAnchor &&
+          !flat)
+        {
+          var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, 1.0, e.skinColor);
+          if (gs != null)
+            wy -= Sprites.SIZE * gs.by;
+        }
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
-      var order = flat ? Sprites.ORD_DECAL : Sprites.ORD_ACTOR;
+      var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
       var emInt = flat ? 0.0 : flames.litAt(a);
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       if (a.fx != null)
@@ -573,6 +700,8 @@ class Actors {
       // offsets are relative to the resting head pose (decay to 0 on landing); the effect
       // owns its launch/landing sounds
       a.fx = new JumpOnFace(game, RenderConfig.BASE_MS, startX - w.x, -ATTACH_HEAD_Y, startZ - w.z, Sprites.SIZE * 0.5);
+      // leave a slime puddle where it pushed off the ground
+      slimeTrail.addPuddle(startX, WorldCtx.floorY(pe.mx, pe.my), startZ);
     }
 
 // launch the parasite's leap off the host back to the ground: arc down from the head to the
@@ -596,6 +725,8 @@ class Actors {
       a.fromX = w.x; a.fromZ = w.z; a.x = w.x; a.z = w.z; a.t = 1;
       // starts at the head (offset up + horizontal) and lands on the resting ground pose
       a.fx = new LeaveHost(game, RenderConfig.BASE_MS, px, ATTACH_HEAD_Y, pz, Sprites.SIZE * 0.5);
+      // leave a slime puddle where it lands back on the ground
+      slimeTrail.addPuddle(w.x, WorldCtx.floorY(pe.mx, pe.my), w.z);
     }
 
 // get/create an actor's anim state and advance it one frame (position slide, opacity
@@ -640,5 +771,5 @@ class Actors {
 
 // texture for an entity's current atlas cell
   function texFor(e:Entity):CanvasTexture
-    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas, RenderConfig.DECAL.actorMul);
+    return sprites.tex(e.imageName, e.ix, e.iy, e.isMaleAtlas, RenderConfig.DECAL.actorMul, e.skinColor);
 }

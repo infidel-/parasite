@@ -87,12 +87,14 @@ class Money {
       var op = d.radiusOp(w.x, w.z);
       if (op <= 0.001)
         return false;
-      var tex = d.sprites.tex('entities', dec.icon.col, dec.icon.row, false, RenderConfig.DECAL.debrisMul);
-      if (tex == null)
+      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
+      var r = d.sprites.cellRect('entities', dec.icon.col, dec.icon.row, false);
+      if (atlas == null ||
+          r == null)
         return false;
       var sc = (dec.scale != null ? dec.scale : 1.0);
       // +0.05: sit proud of the road (more depth margin than blood's +0.04 to kill z-fighting)
-      d.batch.add(tex, w.x, WorldCtx.floorY(x, y) + 0.05, w.z,
+      d.batch.add(atlas, r, w.x, WorldCtx.floorY(x, y) + 0.05, w.z,
         Sprites.SIZE * sc, Sprites.SIZE * sc, (dec.angle != null ? dec.angle : 0.0),
         op, 1.0, 0.0);
       return true;
@@ -106,8 +108,10 @@ class Money {
       if (temp.length == 0)
         return;
       var M = RenderConfig.MONEY;
-      var tex = d.sprites.tex('entities', Const.FRAME_EFFECT_MONEY, Const.ROW_EFFECT, false, RenderConfig.DECAL.debrisMul);
-      if (tex == null)
+      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
+      var r = d.sprites.cellRect('entities', Const.FRAME_EFFECT_MONEY, Const.ROW_EFFECT, false);
+      if (atlas == null ||
+          r == null)
         return;
       var dt = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       var i = temp.length - 1;
@@ -128,7 +132,7 @@ class Money {
           var w = CityConfig.cellToWorld(m.col + m.dx, m.row + m.dz);
           var rop = d.radiusOp(w.x, w.z) * op;
           if (rop > 0.001)
-            d.batch.add(tex, w.x, WorldCtx.floorY(m.col, m.row) + 0.05, w.z,
+            d.batch.add(atlas, r, w.x, WorldCtx.floorY(m.col, m.row) + 0.05, w.z,
               Sprites.SIZE * m.scale, Sprites.SIZE * m.scale, m.angle, rop, 1.0, 0.0);
           i--;
         }

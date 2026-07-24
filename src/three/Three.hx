@@ -12,11 +12,17 @@ package three;
   static var RepeatWrapping:Dynamic;
   static var ClampToEdgeWrapping:Dynamic;
   static var DoubleSide:Dynamic;
+  static var FrontSide:Dynamic;
+  static var BackSide:Dynamic;
   static var ACESFilmicToneMapping:Dynamic;
   static var NoToneMapping:Dynamic;
   // depth-compare funcs (Material.depthFunc); GreaterDepth draws only where occluded (x-ray outline)
   static var LessEqualDepth:Dynamic;
   static var GreaterDepth:Dynamic;
+  static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
+  // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
+  // single draw call, so each source's placement must already be baked into its verts (see geo.translate)
+  static function mergeGeometries(geos:Array<Dynamic>, ?useGroups:Bool):Dynamic;
 }
 
 @:native("THREE.Vector2") extern class Vector2 {
@@ -33,11 +39,13 @@ package three;
   public var z:Float;
   public function set(x:Float, y:Float, z:Float):Vector3;
   public function copy(v:Vector3):Vector3;
+  public function normalize():Vector3; // scale to unit length in place, returns this
   public function add(v:Vector3):Vector3;
   public function addScaledVector(v:Vector3, s:Float):Vector3;
   public function applyQuaternion(q:Quaternion):Vector3;
   public function applyMatrix4(m:Matrix4):Vector3;
   public function project(cam:Object3D):Vector3;
+  public function unproject(cam:Object3D):Vector3; // NDC -> world (inverse of project); used for cursor->ground picking
   public function lerp(v:Vector3, a:Float):Vector3;
   public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
 }
@@ -81,6 +89,8 @@ package three;
 @:native("THREE.Color") extern class Color {
   public function new(?hex:Int);
   public function multiplyScalar(s:Float):Color;
+  public function copy(c:Color):Color;                   // copy another color's channels in place
+  public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
 }
 
 @:native("THREE.Object3D") extern class Object3D {
@@ -89,11 +99,14 @@ package three;
   public var quaternion:Quaternion;
   public var scale:Vector3;
   public var visible:Bool;
+  public var castShadow:Bool;    // this object's geometry is rendered into shadow maps
+  public var receiveShadow:Bool; // shadow maps are sampled onto this object's material
   public var renderOrder:Float;
   public var matrixWorld:Matrix4;
   public var userData:Dynamic;
   public var name:String;
   public var children:Array<Object3D>;
+  public var parent:Null<Object3D>; // set by add()/remove(); null at a subtree root
   public var geometry:Dynamic;   // present on meshes; Dynamic for editor traversal
   public var material:Dynamic;
   public var isInstancedMesh:Bool;
@@ -150,7 +163,9 @@ package three;
   public function setScissor(x:Float, y:Float, w:Float, h:Float):Void;
   public function setScissorTest(on:Bool):Void;
   public function render(scene:Scene, camera:Dynamic):Void;
+  public function setRenderTarget(target:Dynamic):Void; // bind an offscreen WebGLRenderTarget (null = default framebuffer); its color space is baked into every program's cacheKey
   public function compile(scene:Scene, camera:Dynamic):Void; // pre-warm: compile all scene materials' shader programs up front (avoids first-frame stall)
+  public function compileAsync(scene:Scene, camera:Dynamic):Dynamic; // like compile() but parallel + non-blocking (KHR_parallel_shader_compile); returns a Promise resolving when programs are ready
 }
 
 @:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {
@@ -178,6 +193,8 @@ typedef RendererInfo = {
 }
 @:native("THREE.DirectionalLight") extern class DirectionalLight extends Object3D {
   public function new(color:Int, intensity:Float);
+  public var target:Object3D; // the point the light aims at (must be in the scene graph to update)
+  public var shadow:Dynamic;  // LightShadow: .mapSize (Vector2), .bias, .normalBias, .camera (ortho)
 }
 @:native("THREE.PointLight") extern class PointLight extends Object3D {
   public function new(color:Int, intensity:Float, ?distance:Float, ?decay:Float);
@@ -191,10 +208,12 @@ typedef RendererInfo = {
   public var penumbra:Float;    // soft-edge fraction (0 = hard, 1 = fully soft)
   public var distance:Float;    // falloff end
   public var intensity:Float;
+  public var shadow:Dynamic;    // LightShadow: .mapSize (Vector2), .bias, .camera (perspective, from angle)
 }
 
 @:native("THREE.BoxGeometry") extern class BoxGeometry {
   public function new(w:Float, h:Float, d:Float);
+  public function translate(x:Float, y:Float, z:Float):BoxGeometry; // bakes the offset into vertices (from BufferGeometry), so a merged mesh needs no per-source transform
 }
 @:native("THREE.PlaneGeometry") extern class PlaneGeometry {
   public function new(w:Float, h:Float);
@@ -238,9 +257,14 @@ typedef RendererInfo = {
   public var emissive:Color;
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
+  public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
   public var userData:Dynamic;
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
+  public function new(params:Dynamic);
+  public var color:Color; // base color (mutate in place, e.g. lerpColors, for live tinting)
+}
+@:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);
 }
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
@@ -319,6 +343,8 @@ typedef Intersection = {
 // --- postprocessing addons (re-exported onto the same THREE global by the vendor bundle) ---
 @:native("THREE.EffectComposer") extern class EffectComposer {
   public function new(renderer:WebGLRenderer);
+  public var renderTarget1:Dynamic; // composer's primary offscreen RT (set .samples for MSAA)
+  public var renderTarget2:Dynamic; // composer's ping-pong RT (kept in sync with rt1)
   public function addPass(p:Dynamic):Void;
   public function render():Void;
   public function setSize(w:Float, h:Float):Void;
@@ -330,6 +356,16 @@ typedef Intersection = {
 @:native("THREE.UnrealBloomPass") extern class UnrealBloomPass {
   public function new(resolution:Vector2, strength:Float, radius:Float, threshold:Float);
   public var enabled:Bool;
+}
+// ground-truth ambient occlusion; renders its own depth + normal prepass of the scene each frame,
+// so it is enabled-gated (a disabled pass is skipped whole by the composer) — see StreetView.setAO
+@:native("THREE.GTAOPass") extern class GTAOPass {
+  public function new(scene:Scene, camera:Object3D, width:Float, height:Float);
+  public var enabled:Bool;                                 // false = composer skips the pass and its prepass entirely
+  public var blendIntensity:Float;                         // AO darkening strength over the beauty pass
+  public function setSize(w:Float, h:Float):Void;          // resize the AO/denoise/prepass render targets
+  public function updateGtaoMaterial(params:Dynamic):Void; // radius/distanceExponent/thickness/scale/samples
+  public function dispose():Void;                          // frees its RTs/noise textures — composer.dispose() does NOT touch passes
 }
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();

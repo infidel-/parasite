@@ -33,3 +33,4 @@ textures-src
 # written into the app dir by `make models`. tools/node_modules is local bake tooling.
 models-src
 tools/node_modules
+ai-src

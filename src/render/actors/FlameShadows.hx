@@ -255,7 +255,7 @@ class FlameShadows {
       if (a == null ||
           a.op < 0.05)
         return;
-      var gs = sprites.shadowContent(e.imageName, e.ix, e.iy, e.isMaleAtlas);
+      var gs = sprites.shadowContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, e.skinColor);
       if (gs == null)
         return;
       var floor = WorldCtx.floorY(a.col, a.row) + 0.06;   // just above the splat/debris plane (+0.04)

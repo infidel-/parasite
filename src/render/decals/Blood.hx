@@ -29,8 +29,10 @@ class Blood {
     }
 
 // paint one SPLAT decoration; returns true if a quad was drawn. ground blood lays flat; a drop that
-// flew into a wall stands upright on the struck face. both radius-fade around the player
-  public function draw(dec:tiles.Decoration, x:Int, y:Int, t:Float):Bool
+// flew into a wall stands upright on the struck face. both radius-fade around the player. slot is the
+// splat's push-index within its cell (its appearance order); compared to a resting corpse's landing
+// slot it decides whether the splat paints under (batched) or over (individual quad) the body
+  public function draw(dec:tiles.Decoration, x:Int, y:Int, t:Float, slot:Int):Bool
     {
       if (dec.icon == null)
         return false;
@@ -40,14 +42,16 @@ class Blood {
       var op = d.radiusOp(w.x, w.z);
       if (op <= 0.001)
         return false;
-      var tex = d.sprites.tex('entities', dec.icon.col, dec.icon.row, false, RenderConfig.DECAL.bloodMul);
-      if (tex == null)
-        return false;
       var sc = (dec.scale != null ? dec.scale : 1.0);
       // wall blood: a drop that flew into a wall stands its splat upright on the struck face (like a
-      // bullet hole), nudged proud of the face; same wet sheen as the ground splats
+      // bullet hole), nudged proud of the face; same wet sheen as the ground splats.
+      // the quad paths (here + the emissive glow below) each crop their own cell — only the batched
+      // path samples the shared atlas, so a crop is cut only for the splats that actually need one
       if (dec.face != null)
         {
+          var tex = d.sprites.tex('entities', dec.icon.col, dec.icon.row, false, RenderConfig.DECAL.bloodMul);
+          if (tex == null)
+            return false;
           var fdir:Int = dec.face;
           var dv = render.world.Geom.DIRV[fdir];
           var wy = (dec.height != null ? dec.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
@@ -90,29 +94,49 @@ class Blood {
           emInt = RenderConfig.BLOOD.blackShimmerInt;
           drawStar(hash, w.x, WorldCtx.floorY(x, y), w.z, sc, op);
         }
+      // corpse layering: a splat whose per-cell push-index reaches the corpse's landing slot was
+      // sprayed AFTER the body fell here, so it must paint OVER it — it leaves the batch for an
+      // individual quad at ORD_BLOODOVER (+ a tiny per-index bump to break same-cell ties). blood
+      // predating the corpse, and all blood in corpse-free cells, stays batched under the corpse tier
+      var cs = d.corpseSlotAt(x, y);
+      var over = cs >= 0 && slot >= cs;
+      var fy = WorldCtx.floorY(x, y);
       // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular glint off
       // the moon/lamp/flame lights. acid/slime/black glow (emInt > 0) keeps the per-quad path
-      // (per-instance emissive isn't batched); plain blood goes instanced
-      if (emInt > 0.0)
-        d.sprites.paint({
-          x: w.x,
-          y: WorldCtx.floorY(x, y) + 0.04,
-          z: w.z,
-          tex: tex,
-          op: op,
-          scale: sc,
-          flat: true,
-          yaw: (dec.angle != null ? dec.angle : 0.0),
-          order: Sprites.ORD_DECAL,
-          emissive: em,
-          emissiveInt: emInt,
-          rough: RenderConfig.BLOOD.wetRough,
-          metal: RenderConfig.BLOOD.wetMetal,
-        });
+      // (per-instance emissive isn't batched); over-corpse blood goes per-quad too; plain blood batches
+      if (emInt > 0.0 ||
+          over)
+        {
+          var tex = d.sprites.tex('entities', dec.icon.col, dec.icon.row, false, RenderConfig.DECAL.bloodMul);
+          if (tex == null)
+            return false;
+          d.sprites.paint({
+            x: w.x,
+            y: fy + 0.04,
+            z: w.z,
+            tex: tex,
+            op: op,
+            scale: sc,
+            flat: true,
+            yaw: (dec.angle != null ? dec.angle : 0.0),
+            order: over ? Sprites.ORD_BLOODOVER + slot * 0.001 : Sprites.ORD_DECAL,
+            emissive: em,
+            emissiveInt: emInt,
+            rough: RenderConfig.BLOOD.wetRough,
+            metal: RenderConfig.BLOOD.wetMetal,
+          });
+        }
       else
-        d.batch.add(tex, w.x, WorldCtx.floorY(x, y) + 0.04, w.z,
-          Sprites.SIZE * sc, Sprites.SIZE * sc, (dec.angle != null ? dec.angle : 0.0),
-          op, RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
+        {
+          var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.bloodMul);
+          var r = d.sprites.cellRect('entities', dec.icon.col, dec.icon.row, false);
+          if (atlas == null ||
+              r == null)
+            return false;
+          d.batch.add(atlas, r, w.x, fy + 0.04, w.z,
+            Sprites.SIZE * sc, Sprites.SIZE * sc, (dec.angle != null ? dec.angle : 0.0),
+            op, RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
+        }
       return true;
     }
 
